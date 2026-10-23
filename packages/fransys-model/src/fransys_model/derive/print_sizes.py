@@ -2,26 +2,22 @@
 
 Reached as `fransys_model.derive.print_sizes.<name>`, never re-exported from `derive/__init__.py`.
 A text size is a capital height (ISO 3098's h); `font_size_mm` turns it into the font size by the
-bundled font's capital ratio, so no package keeps a ratio of its own.
+library font's capital ratio, which the model's `DrawingLibrary` record holds (GRID-HOME G6), so
+no package keeps a ratio or a role height of its own.
 """
 
 from decimal import Decimal
 from enum import Enum
+from typing import TYPE_CHECKING
 
-from fransys_model.derive._text_widths import (
-    ASCENT_UNITS,
-    CAP_HEIGHT_UNITS,
-    DESCENT_UNITS,
-    UNITS_PER_EM,
-)
+from fransys_model.derive.library_grid import library_grid, text_height
+
+if TYPE_CHECKING:
+    from fransys_model.kernel import Model
 
 __all__ = [
-    "ASCENT_RATIO",
-    "CAPITAL_RATIO",
     "DASH_GAP_MM",
     "DASH_LONG_MM",
-    "DESCENDER_RATIO",
-    "HOUSE_TEXT_HEIGHT_MM",
     "JUNCTION_DOT_MM",
     "LINE_RULE_MM",
     "LINE_THICK_MM",
@@ -30,16 +26,11 @@ __all__ = [
     "SYMBOL_DASH_GAP_MM",
     "SYMBOL_DASH_MM",
     "TextRole",
+    "ascent_ratio",
     "font_size_mm",
+    "house_text_height_mm",
     "role_height_mm",
 ]
-
-# Exact: UNITS_PER_EM is 2**11, so each ratio has a finite decimal form.
-CAPITAL_RATIO = Decimal(CAP_HEIGHT_UNITS) / Decimal(UNITS_PER_EM)
-ASCENT_RATIO = Decimal(ASCENT_UNITS) / Decimal(UNITS_PER_EM)
-# How far the regular face's descenders (p, g, y, j) reach below the baseline per font size:
-# DejaVu Sans Condensed glyf yMin of "p", 426 units, read by write_text_widths.py (model-0287).
-DESCENDER_RATIO = Decimal(DESCENT_UNITS) / Decimal(UNITS_PER_EM)
 
 
 class TextRole(Enum):
@@ -51,17 +42,13 @@ class TextRole(Enum):
     HEADING_1 = "heading-1"
 
 
-# Capital heights of the roles (ISO 3098's h); read only through `role_height_mm`.
-_ROLE_HEIGHT_MM = {
-    TextRole.LABEL: Decimal("1.8"),
-    TextRole.BODY: Decimal("2.5"),
-    TextRole.HEADING_2: Decimal("3.5"),
-    TextRole.HEADING_1: Decimal(5),
+# The library height each role prints at; the heights themselves are the record's.
+_ROLE_HEIGHT_NAME = {
+    TextRole.LABEL: "smallest",
+    TextRole.BODY: "body",
+    TextRole.HEADING_2: "heading_2",
+    TextRole.HEADING_1: "heading_1",
 }
-
-# The house text height: the label prints at it (E10), and the other roles' heights above are
-# the house sizes the title-block stack is proportioned to.
-HOUSE_TEXT_HEIGHT_MM = _ROLE_HEIGHT_MM[TextRole.LABEL]
 
 # Line roles: stroke widths.
 LINE_THIN_MM = Decimal("0.25")
@@ -77,17 +64,27 @@ SYMBOL_DASH_GAP_MM = Decimal("0.625")
 JUNCTION_DOT_MM = Decimal(1)
 
 
-def font_size_mm(capital_height_mm: Decimal) -> Decimal:
+def font_size_mm(model: Model, capital_height_mm: Decimal) -> Decimal:
     """The font size, in mm, whose capitals are `capital_height_mm` high."""
-    return capital_height_mm / CAPITAL_RATIO
+    return capital_height_mm / library_grid(model).capital_ratio
 
 
-def role_height_mm(role: TextRole, profile_text_height_mm: Decimal) -> Decimal:
+def ascent_ratio(model: Model) -> Decimal:
+    """How far the font's ascent reaches above the baseline per font size."""
+    return library_grid(model).ascent_ratio
+
+
+def house_text_height_mm(model: Model) -> Decimal:
+    """The house text height: the library's smallest capital height; a label prints at it (E10)."""
+    return text_height(model, _ROLE_HEIGHT_NAME[TextRole.LABEL])
+
+
+def role_height_mm(model: Model, role: TextRole, profile_text_height_mm: Decimal) -> Decimal:
     """The capital height, in mm, that text of `role` prints at: the one place that decides it.
 
     `text_height_mm` sets the smallest text on every page kind (E10): a label prints at it, and a
-    larger role at its own size or at it, whichever is larger. The house value 1.8 changes nothing.
+    larger role at its library height or at it, whichever is larger.
     """
     if role is TextRole.LABEL:
         return profile_text_height_mm
-    return max(_ROLE_HEIGHT_MM[role], profile_text_height_mm)
+    return max(text_height(model, _ROLE_HEIGHT_NAME[role]), profile_text_height_mm)

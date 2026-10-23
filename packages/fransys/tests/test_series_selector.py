@@ -4,14 +4,7 @@ from typing import NamedTuple
 
 import fransys as fr
 import pytest
-
-from fransys_layout.engines.schematic.read.functions import function_spec
-from fransys_layout.stages.resolve import throw_port
-from fransys_model.derive.drawing_text import label_text
-from fransys_model.derive.indexes import build_indexes
-from fransys_model.layout import Label, LabelKind, Orientation, SymbolPlacement, layout_of
-from fransys_model.vocab.enums import FunctionKind
-from fransys_model.vocab.tables import functions
+from _drawn_pages import drawn_pages
 
 
 class _Io(NamedTuple):
@@ -51,26 +44,13 @@ def test_supply_a_reaches_the_make_throws_and_the_commons_feed_the_motor(built) 
 
 
 def test_the_selector_is_drawn_turned_with_its_commons_toward_the_load(built) -> None:
-    model = built.model
     (placed,) = (
-        p
-        for p in layout_of(model, SymbolPlacement).values()
-        if functions(model)[p.function].key[-3:] == ("Q1", "fn", "co")
+        symbol
+        for drawing in drawn_pages(built.model).values()
+        for symbol in drawing.symbols
+        if symbol.key == "change-over-contact"
     )
-    assert placed.orientation in {Orientation.R180, Orientation.MR180}
-
-
-def test_each_pole_binds_its_own_symbol_throws_in_marking_order(built) -> None:
-    """Pole N's common and throws (N1, N2, N4) bind to the symbol's pole N, never another's."""
-    model = built.model
-    (fn,) = (f for f in functions(model).values() if f.key[-3:] == ("Q1", "fn", "co"))
-    spec = function_spec(model, build_indexes(model), fn, {})
-    bound = {p.name: throw_port(spec, p) for p in spec.ports if p.throw is not None}
-    assert bound == {
-        f"{n}{t}": f"{n}.{s}"
-        for n in (1, 2, 3)
-        for t, s in (("1", "com"), ("2", "nc"), ("4", "no"))
-    }
+    assert placed.orient in {"R180", "MR180"}
 
 
 def test_q1s_unwired_coil_is_not_drawn_and_its_contacts_print_q1_with_no_cell(built) -> None:
@@ -80,19 +60,15 @@ def test_q1s_unwired_coil_is_not_drawn_and_its_contacts_print_q1_with_no_cell(bu
 
     # UNDO: engines/schematic/read/loose.py, `without_loose` returns `inputs` unchanged
     """
-    model = built.model
-    table = functions(model)
-    q1 = {f for f, one in table.items() if one.key[-3] == "Q1"}
-    coil = {f for f in q1 if table[f].kind is FunctionKind.COIL}
-    placed = {p.function for p in layout_of(model, SymbolPlacement).values()}
-    labels = tuple(layout_of(model, Label).values())
-    assert coil, "the selector has a coil"
-    assert not coil & placed, "no coil symbol for -Q1"
-    assert not [one for one in labels if one.function in coil], "no contact table, no tag"
-    contacts = (q1 & placed) - coil
-    assert contacts, "the selector's contacts are drawn"
-    for function in contacts:
-        own = [one for one in labels if one.function == function]
-        tags = [label_text(model, one) for one in own if one.kind is LabelKind.TAG]
-        assert tags == ["-Q1"]
-        assert not [one for one in own if one.kind is LabelKind.CROSS_REFERENCE]
+    drawings = tuple(drawn_pages(built.model).values())
+    symbols = [symbol for drawing in drawings for symbol in drawing.symbols]
+    texts = [text for drawing in drawings for text in drawing.texts if "Q1" in text.text]
+    assert not [s for s in symbols if s.key in {"operating-device", "contact-head"}], (
+        "no coil symbol and no contact table for -Q1"
+    )
+    assert [s for s in symbols if s.key == "change-over-contact"], (
+        "the selector's contacts are drawn"
+    )
+    assert [(text.text, text.kind) for text in texts] == [("-Q1", "TAG")], (
+        "the drawn contact prints its tag and no cross-reference"
+    )

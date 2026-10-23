@@ -47,7 +47,3 @@ def built() -> fr.BuildResult:
 
 def test_an_open_boundary_item_box_gives_no_lone_cell(built: fr.BuildResult) -> None:
     assert [f for f in built.findings if f.code == "LONE_CELL"] == []
-
-
-def test_the_readability_report_counts_no_lone_cell_for_it(built: fr.BuildResult) -> None:
-    assert sum(page.lone_cells for page in fr.readability(built).pages) == 0

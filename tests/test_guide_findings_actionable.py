@@ -17,6 +17,7 @@ import pytest
 PACKAGES = Path(__file__).resolve().parent.parent / "packages"
 FINDINGS_PAGES = (
     "findings-validators",
+    "findings-release",
     "findings-render",
     "findings-pdf",
     "findings-kicad",

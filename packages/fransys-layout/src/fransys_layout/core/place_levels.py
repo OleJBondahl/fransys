@@ -6,6 +6,7 @@ from collections import defaultdict
 from itertools import combinations, permutations
 from typing import TYPE_CHECKING, NamedTuple
 
+from .band import level_offset
 from .intervals import levels
 from .keys import natural_key
 from .place_trunk import trunk_node
@@ -47,7 +48,7 @@ def trunk_levels(g: Graph, spans: Sequence[Span], options: Options) -> frozenset
             for j in range(i + 1, len(order)):
                 if level[j] > level[i] and _overlap(upper, order[j]):
                     a, b = trunk_node(upper.fan, upper.row), trunk_node(order[j].fan, order[j].row)
-                    g.after(a, b, options.wiring_grid * upper.lanes)
+                    g.after(a, b, level_offset(upper.lanes, 0, options.wiring_grid))
                     below[g.uf.find(a)[0]].add(g.uf.find(b)[0])
                     lowered |= {a, b}
     return frozenset(lowered)
@@ -61,7 +62,7 @@ def _groups(spans: Sequence[Span]) -> list[list[Span]]:
     """The trunks of one row and side that overlap in a chain, each group leftmost first."""
     groups: list[list[Span]] = []
     right = 0
-    for s in sorted(spans, key=lambda s: (s.row, s.side, s.x0, s.fan)):
+    for s in sorted(spans, key=lambda s: (s.row, s.side, s.x0, natural_key(s.fan))):
         if groups and (groups[-1][0].row, groups[-1][0].side) == (s.row, s.side) and s.x0 <= right:
             groups[-1].append(s)
             right = max(right, s.x1)

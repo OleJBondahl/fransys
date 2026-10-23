@@ -25,3 +25,11 @@ def test_the_overview_html_of_the_demo_cabinet_keeps_its_bytes(tmp_path: Path) -
     """Breaks if any overview placement, route or label moves."""
     digest = hashlib.sha256(_overview_html(tmp_path)).hexdigest()
     assert digest == _GOLDEN.read_text(encoding="utf-8").strip()
+
+
+def test_the_overview_of_the_demo_cabinet_builds_with_no_error() -> None:
+    """R145: the bytes may move, an ERROR finding may not."""
+    parts = fransys_parts.load("demo_parts")
+    design, _field1, _field2 = _system_design(parts)
+    result = fr.build(parts, design.draft())
+    assert [f.code for f in result.findings if f.severity is fr.Severity.ERROR] == []

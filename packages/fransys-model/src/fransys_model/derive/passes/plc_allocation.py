@@ -5,6 +5,7 @@ from collections import deque
 from typing import TYPE_CHECKING, Final
 
 from fransys_kernel import require_origin
+from fransys_model.derive.facts.roles import plc_channel_facets
 from fransys_model.derive.lookups import unit_chain
 from fransys_model.derive.order import (
     ChannelTie,
@@ -22,7 +23,8 @@ from fransys_model.derive.passes._plc_wired import (
     wired_requests,
 )
 from fransys_model.kernel import Finding, Model, Severity, evolve, make_id
-from fransys_model.vocab.facets.plc import PlcBindingFacet, PlcChannelFacet, PlcRequestFacet
+from fransys_model.vocab.codes import fix_text
+from fransys_model.vocab.facets.plc import PlcBindingFacet, PlcRequestFacet
 from fransys_model.vocab.finding_ref import ref
 from fransys_model.vocab.tables import facets_of, functions, items
 
@@ -30,6 +32,7 @@ if TYPE_CHECKING:
     from fransys_model.kernel import Id, Origin
     from fransys_model.vocab.core import Function, Unit
     from fransys_model.vocab.enums import SignalType
+    from fransys_model.vocab.facets.plc import PlcChannelFacet
 
 PLC_REQUEST_UNSERVABLE: Final[str] = "PLC_REQUEST_UNSERVABLE"
 
@@ -38,15 +41,15 @@ _NO_RACK: Final[ModuleKey] = ((0, 0), natural_key(""), ())
 type _Order = tuple[ModuleKey, ModuleKey, ChannelTie]
 
 
-def _ranked(model: Model) -> list[tuple[Function, SignalType]]:
-    """Every channel function with its signal, in the one global serving order.
+def _ranked(model: Model) -> list[tuple[Function, PlcChannelFacet]]:
+    """Every channel function with its facts, in the one global serving order.
 
     The order is `plc_rack_key`, `plc_module_key`, `plc_channel_tie`.
     No designation is read; `_channels` cuts it into one queue per (unit, signal).
     """
-    channel_of = {facet.subject: facet for facet in facets_of(model, PlcChannelFacet).values()}
+    channel_of = plc_channel_facets(model)
     modules = items(model)
-    ranked: list[tuple[_Order, Function, SignalType]] = []
+    ranked: list[tuple[_Order, Function, PlcChannelFacet]] = []
     for function in functions(model).values():
         facet = channel_of.get(function.template)
         if facet is None:
@@ -54,12 +57,12 @@ def _ranked(model: Model) -> list[tuple[Function, SignalType]]:
         module = modules[function.item]
         rack = _NO_RACK if module.parent is None else plc_rack_key(modules[module.parent])
         order = (rack, plc_module_key(module), plc_channel_tie(facet.channel, function))
-        ranked.append((order, function, facet.signal))
-    return [(function, signal) for _, function, signal in sorted(ranked, key=lambda r: r[0])]
+        ranked.append((order, function, facet))
+    return [(function, facet) for _, function, facet in sorted(ranked, key=lambda r: r[0])]
 
 
 def _channels(
-    model: Model, ranked: list[tuple[Function, SignalType]]
+    model: Model, ranked: list[tuple[Function, PlcChannelFacet]]
 ) -> dict[tuple[Id[Unit] | None, SignalType], list[Function]]:
     """`ranked` cut into channel functions by (unit, signal), each list in serving order.
 
@@ -67,8 +70,8 @@ def _channels(
     it exists here (a module in a nested unit counts for that unit only).
     """
     channels: dict[tuple[Id[Unit] | None, SignalType], list[Function]] = {}
-    for function, signal in ranked:
-        channels.setdefault((unit_of(model, function), signal), []).append(function)
+    for function, facet in ranked:
+        channels.setdefault((unit_of(model, function), facet.signal), []).append(function)
     return channels
 
 
@@ -100,6 +103,7 @@ def _unservable(function: Function, request: PlcRequestFacet, *, declared: bool)
         message=(
             f"{ref(function)} asks for {request.signal.value} as {request.signal_name!r}, {cause}"
         ),
+        fix=fix_text(PLC_REQUEST_UNSERVABLE),
     )
 
 
@@ -133,7 +137,7 @@ def allocate_plc(model: Model) -> tuple[Model, tuple[Finding, ...]]:
         requests,
         skip=bound_subjects,
         taken=existing,
-        ranked={function.id: (place, signal) for place, (function, signal) in enumerate(ranked)},
+        ranked={function.id: (place, facts) for place, (function, facts) in enumerate(ranked)},
     )
     taken = existing | set(pick.bound.values()) | set(pick.contested)
     channels = _channels(model, ranked)

@@ -3,10 +3,11 @@
 import dataclasses
 from decimal import Decimal
 
+from derive_helpers import frozen_with_library
 from layout_examples import sheet_format
 
 from fransys_model.derive import text_room, text_room_g
-from fransys_model.kernel import Draft, Id, Model, Origin, Record, freeze, make_id
+from fransys_model.kernel import Draft, Id, Model, Origin, Record, make_id
 from fransys_model.layout import Profile, default_profile, profile_of
 from fransys_model.vocab.core import Unit, UnitRelease
 
@@ -48,7 +49,7 @@ def _board_unit() -> tuple[UnitRelease, Unit]:
 def _freeze(*records: Record) -> Model:
     draft = Draft()
     draft.extend(records, origin=Origin(file="test_profile_of.py", line=1, note="fixture"))
-    return freeze(draft)
+    return frozen_with_library(draft)
 
 
 def test_a_profile_per_unit_and_one_for_the_top_freeze_and_profile_of_reads_each() -> None:
@@ -85,6 +86,6 @@ def test_text_room_reads_the_unit_profile_and_its_sheet_not_the_tops() -> None:
     own = dataclasses.replace(_profile("b"), unit=unit.id, text_height_mm=Decimal("3.5"))
     sheet = sheet_format()
     model = _freeze(sheet, release, unit, _profile("a"), own)
-    assert text_room(model) == text_room_g(Decimal("1.8"), sheet.module_mm)
-    assert text_room(model, unit.id) == text_room_g(Decimal("3.5"), sheet.module_mm)
+    assert text_room(model) == text_room_g(model, Decimal("1.8"), sheet)
+    assert text_room(model, unit.id) == text_room_g(model, Decimal("3.5"), sheet)
     assert text_room(model) != text_room(model, unit.id)

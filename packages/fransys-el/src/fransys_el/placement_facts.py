@@ -1,22 +1,23 @@
-"""`Facts` (facts 6, 11, 12, 13): keep-whole sets, units with their boundary, mates, row tags."""
+"""`Facts` (facts 6, 11, 12): keep-whole sets, units with their boundary, mates."""
 
 from typing import TYPE_CHECKING
 
-from fransys_layout.core import Facts, Size, Unit, natural_key
+from fransys_layout.core import Facts, Unit, natural_key
 from fransys_model.derive import (
+    function_ports,
     item_functions,
-    item_tag_text,
     keep_whole_sets,
     mate_ports,
     unit_boundary_pins,
     unit_chain,
     unit_ids,
 )
-from fransys_model.derive.text_width import text_width
 from fransys_model.kernel import render_id
 
-from .placement_env import pin_ref
-from .placement_skips import FUNCTION_WITHOUT_SYMBOL, Skipped, in_order
+from .kit_keys import function_of
+from .placement_env import drawn_pins, pin_ref
+from .placement_series import bridges_of, series_of, trees
+from .placement_skips import FUNCTION_UNWIRED, FUNCTION_WITHOUT_SYMBOL, Skipped, in_order
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
@@ -37,9 +38,25 @@ def _sorted_sets(found: Iterable[frozenset[str]]) -> tuple[frozenset[str], ...]:
     return tuple(sorted(kept, key=lambda s: sorted(natural_key(i) for i in s)))
 
 
-def _owners(env: Env, drawn: Iterable[Id[Function]]) -> frozenset[str]:
+def _drawn_by(env: Env) -> dict[Id[Function], set[str]]:
+    """Each drawn function with its symbols: a connector's are its pins' (el-0014, el-0053)."""
+    found: dict[Id[Function], set[str]] = {}
+    for key, symbol in env.owner.items():
+        found.setdefault(function_of(env.model, key), set()).add(symbol)
+    return found
+
+
+def _owners(
+    drawn_by: dict[Id[Function], set[str]], drawn: Iterable[Id[Function]]
+) -> frozenset[str]:
     """The symbols that draw `drawn`; a function with no symbol is left out."""
-    return frozenset(env.owner[f] for f in drawn if f in env.owner)
+    return frozenset(s for f in drawn for s in drawn_by.get(f, ()))
+
+
+def _why(env: Env, function: Id[Function]) -> str:
+    """Unwired when no pin of the function is drawn (R364), else it has no symbol (el-0053)."""
+    own = function_ports(env.model, function)
+    return FUNCTION_UNWIRED if own and set(own) <= env.undrawn else FUNCTION_WITHOUT_SYMBOL
 
 
 def _function_sets(env: Env) -> list[frozenset[Id[Function]]]:
@@ -54,13 +71,14 @@ def _function_sets(env: Env) -> list[frozenset[Id[Function]]]:
 def keep_whole(env: Env) -> tuple[tuple[frozenset[str], ...], tuple[Skipped, ...]]:
     """Fact 11: each set as symbol ids (under two symbols is dropped), and the functions lost."""
     sets = _function_sets(env)
+    drawn_by = _drawn_by(env)
     lost = {
-        Skipped("function", render_id(f), FUNCTION_WITHOUT_SYMBOL)
+        Skipped("function", render_id(f), _why(env, f))
         for s in sets
         for f in s
-        if f not in env.owner
+        if f not in drawn_by and f not in env.spare
     }
-    return _sorted_sets([_owners(env, s) for s in sets]), in_order(lost)
+    return _sorted_sets([_owners(drawn_by, s) for s in sets]), in_order(lost)
 
 
 def _parent(env: Env, unit: Id[UnitRecord]) -> str | None:
@@ -75,26 +93,18 @@ def units_of(env: Env) -> tuple[Unit, ...]:
         Unit(
             u.value,
             _parent(env, u),
-            tuple(pin_ref(env, p) for p in unit_boundary_pins(env.model, u)),
+            drawn_pins(env, unit_boundary_pins(env.model, u)),
         )
         for u in unit_ids(env.model)
     ]
     return tuple(sorted(found, key=lambda u: natural_key(u.id)))
 
 
-def row_tags(env: Env, syms: Sequence[Sym]) -> tuple[tuple[str, Size], ...]:
-    """Fact 13: each strip's id with the size of its tag text."""
-    height = env.conventions.text_height
-    strips = {s.row_group for s in syms if s.row_group}
-    by_value = {i.value: i for i in env.parents.values()}
-    return tuple(
-        (g, Size(text_width(item_tag_text(env.model, by_value[g]), height=height), height))
-        for g in sorted(strips, key=natural_key)
-    )
-
-
 def facts_of(env: Env, syms: Sequence[Sym]) -> tuple[Facts, tuple[Skipped, ...]]:
     """The `Facts`, and the functions the keep-whole sets lost for want of a symbol."""
-    mates = tuple((pin_ref(env, a), pin_ref(env, b)) for a, b in mate_ports(env.model))
+    pairs = (pair for pair in mate_ports(env.model) if not env.undrawn.intersection(pair))
+    mates = tuple((pin_ref(env, a), pin_ref(env, b)) for a, b in pairs)
     sets, skipped = keep_whole(env)
-    return Facts(sets, units_of(env), mates, row_tags(env, syms)), skipped
+    found = trees(env, syms)
+    facts = Facts(sets, units_of(env), mates, series=series_of(found))
+    return facts, (*skipped, *bridges_of(env, found))

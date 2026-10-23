@@ -11,8 +11,8 @@ lazy from collections.abc import Mapping, Sequence
 
 from fransys_layout.engines.overview.lanes.plan_channel import Net, Plan, rise
 from fransys_layout.geometry import WIRING_GRID, Box, Facing, Point
-from fransys_layout.stages.grid_path import Field, axes_of, grid_path
-from fransys_layout.stages.space import Cell, End, Obstacle
+from fransys_layout.routing.grid_path import Field, axes_of, grid_path
+from fransys_layout.routing.space import Cell, End, Obstacle
 
 G = WIRING_GRID
 

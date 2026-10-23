@@ -1,17 +1,16 @@
 """Validator: revision history entries."""
 
 import re
-from typing import TYPE_CHECKING, Any, Final
+from typing import TYPE_CHECKING, Final
 
+from fransys_model.checks._finding import finding, ordered
 from fransys_model.kernel import Finding, Severity
 from fransys_model.vocab.finding_ref import ref
 from fransys_model.vocab.revision_text import revision_text
 from fransys_model.vocab.tables import projects, revisions, unit_releases
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
-
-    from fransys_model.kernel import Id, Model
+    from fransys_model.kernel import Model
 
 REVISION_CURRENT_MISSING: Final[str] = "REVISION_CURRENT_MISSING"
 REVISION_DATE_FORMAT: Final[str] = "REVISION_DATE_FORMAT"
@@ -19,10 +18,6 @@ REVISION_INITIALS_MISSING: Final[str] = "REVISION_INITIALS_MISSING"
 
 _DATE_RE: Final = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}")
 _ADD_ENTRY: Final[str] = "add one with its date, text and author initials"
-
-
-def _finding(code: str, severity: Severity, subjects: Iterable[Id[Any]], message: str) -> Finding:
-    return Finding(code=code, severity=severity, subjects=tuple(subjects), message=message)
 
 
 def _current_missing(model: Model) -> list[Finding]:
@@ -36,12 +31,12 @@ def _current_missing(model: Model) -> list[Finding]:
         if (release.id, release.version, release.revision) in current:
             continue
         message = f"{ref(release)}: its current revision has no Revision entry: {_ADD_ENTRY}"
-        found.append(_finding(REVISION_CURRENT_MISSING, Severity.ERROR, (release.id,), message))
+        found.append(finding(REVISION_CURRENT_MISSING, Severity.ERROR, (release.id,), message))
     for project in projects(model).values():
         if (None, project.version, project.revision) not in current:
             text = revision_text(project.version, project.revision)
             message = f"project's current revision {text} has no Revision entry: {_ADD_ENTRY}"
-            found.append(_finding(REVISION_CURRENT_MISSING, Severity.ERROR, (project.id,), message))
+            found.append(finding(REVISION_CURRENT_MISSING, Severity.ERROR, (project.id,), message))
     return found
 
 
@@ -51,7 +46,7 @@ def _date_format(model: Model) -> list[Finding]:
         if not _DATE_RE.fullmatch(entry.date):
             text = revision_text(entry.version, entry.revision)
             message = f"revision {text}'s date {entry.date!r} is not YYYY-MM-DD"
-            found.append(_finding(REVISION_DATE_FORMAT, Severity.ERROR, (entry.id,), message))
+            found.append(finding(REVISION_DATE_FORMAT, Severity.ERROR, (entry.id,), message))
     return found
 
 
@@ -61,7 +56,7 @@ def _initials_missing(model: Model) -> list[Finding]:
         if entry.created == "":
             text = revision_text(entry.version, entry.revision)
             message = f"revision {text} has no created initials"
-            found.append(_finding(REVISION_INITIALS_MISSING, Severity.ERROR, (entry.id,), message))
+            found.append(finding(REVISION_INITIALS_MISSING, Severity.ERROR, (entry.id,), message))
     return found
 
 
@@ -76,4 +71,4 @@ def check_revisions(model: Model) -> tuple[Finding, ...]:
         *_date_format(model),
         *_initials_missing(model),
     ]
-    return tuple(sorted(found, key=lambda f: (f.code, f.subjects, f.message)))
+    return ordered(found)

@@ -6,13 +6,14 @@ from dataclasses import replace
 from typing import TYPE_CHECKING
 
 import pytest
+from options_fixtures import core_options
 
-from fransys_layout.core import Box, Options, PlacementProblem
+from fransys_layout.core import Box, PlacementProblem, Size
 from fransys_layout.core.outputs import Placed, Routes, Wire
 from fransys_layout.core.route import route_page, route_pages
 from fransys_layout.core.route_counts import collinear, demand
 
-from .conftest import MARKER_BOX
+from .conftest import MARKER
 from .cut_fixtures import elem
 from .cycle_fixtures import ring_problem
 from .pipeline_fixtures import cut_of, placed_of, routed_of
@@ -25,6 +26,7 @@ from .route_fixtures import (
     net_points,
     pin_reached,
     reversing_pair,
+    three_end_env,
     two_links_one_gap,
 )
 
@@ -112,7 +114,7 @@ def test_a_boxed_in_link_is_a_finding_with_no_wire_and_the_others_still_route() 
     wall = Box(0, 0, 2000, 400)
     placed = {**env.placed, "wall": Placed("wall", 1, 0, 0, "R0", wall, wall, ())}
     page, failed, findings = route_page(replace(env, placed=placed))
-    assert failed == ("n3",)
+    assert [r.net for r in failed] == ["n3"]
     (finding,) = findings
     assert (finding.code, finding.subject, finding.page) == ("ROUTE_FAILED", "n3", 1)
     assert "n3" in finding.text
@@ -121,11 +123,20 @@ def test_a_boxed_in_link_is_a_finding_with_no_wire_and_the_others_still_route() 
     assert {w.net for w in page.wires} >= {"n1", "n2", "n4", "n5"}
 
 
-def test_a_net_cut_into_references_is_drawn_as_references_not_routed() -> None:
+def test_a_cut_net_is_still_joined_among_its_ends_on_one_page() -> None:
+    """The cut adds references and removes no wire among one page's ends (R417)."""
     (env,) = envs_of(link_across_box())
     page, failed, findings = route_page(replace(env, cut_nets=frozenset({"n3"})))
     assert (failed, findings) == ((), ())
-    assert not [w for w in page.wires if w.net == "n3"]
+    assert [w for w in page.wires if w.net == "n3"]
+
+
+def test_a_cut_three_end_net_joins_all_three_ends_on_its_page() -> None:
+    env = three_end_env()
+    page, failed, _ = route_page(replace(env, cut_nets=frozenset({"t"})))
+    assert failed == ()
+    ends = {(x, y) for w in page.wires if w.net == "t" for x, y in (w.points[0], w.points[-1])}
+    assert {(40, 40), (200, 40), (120, 40)} <= ends
 
 
 def test_a_link_with_an_end_on_another_page_is_a_finding_unless_it_is_cut() -> None:
@@ -133,7 +144,7 @@ def test_a_link_with_an_end_on_another_page_is_a_finding_unless_it_is_cut() -> N
     page, failed, findings = route_page(
         replace(env, placed={s: p for s, p in env.placed.items() if s != "s"})
     )
-    assert failed == ("n3",)
+    assert [r.net for r in failed] == ["n3"]
     assert "another page" in next(f.text for f in findings if f.subject == "n3")
     assert not [w for w in page.wires if w.net == "n3"]
 
@@ -146,7 +157,17 @@ def ripple(rounds: int) -> RouteEnv:
         "h1": (264, 120, "W"),
     }
     opts = replace(
-        Options(marker=MARKER_BOX), crossing_penalty=100, bend_penalty=1, reroute_rounds=rounds
+        core_options(
+            marker=MARKER,
+            flip_turn="R180",
+            tag_stagger=True,
+            label_gap=8,
+            driver_first=True,
+            arrow_sides=("E", "W"),
+        ),
+        crossing_penalty=100,
+        bend_penalty=1,
+        reroute_rounds=rounds,
     )
     return link_env(pins, {"v": ("v0", "v1"), "h": ("h0", "h1")}, opts)
 
@@ -161,5 +182,36 @@ def test_route_pages_is_the_public_entry_and_matches_the_stage_functions() -> No
     prob = link_across_box()
     cut = cut_of(prob)
     placement = placed_of(prob)
-    routes = route_pages(placement, cut, prob, Options(marker=MARKER_BOX))
+    routes = route_pages(
+        placement,
+        cut,
+        prob,
+        core_options(
+            marker=MARKER,
+            flip_turn="R180",
+            tag_stagger=True,
+            label_gap=8,
+            driver_first=True,
+            arrow_sides=("E", "W"),
+        ),
+    )
     assert routes == routed_of(prob)
+
+
+def test_the_route_grid_spans_the_content_box_not_the_drawn_extent() -> None:
+    """A wire may pass below everything drawn: the grid is the box the caller passes (R424)."""
+    opts = core_options(
+        marker=MARKER,
+        flip_turn="R180",
+        tag_stagger=True,
+        label_gap=8,
+        driver_first=True,
+        arrow_sides=("E", "W"),
+        spare_cells=0,
+    )
+    env = link_env({"a": (40, 40, "S"), "b": (200, 40, "S")}, {"x": ("a", "b")}, opts)
+    wall = Box(80, 0, 40, 64)
+    placed = {**env.placed, "wall": Placed("wall", 1, 80, 0, "R0", wall, wall, ())}
+    page, failed, _ = route_page(replace(env, placed=placed, area=Size(320, 200)))
+    assert failed == ()
+    assert max(y for w in page.wires if w.net == "x" for _, y in w.points) >= 64

@@ -12,13 +12,12 @@ The invented parts are `demo_parts`' contactor, its `DEMO-CTR-BLOCK-1NO1NC` bloc
 """
 
 import fransys as fr
+from _drawn_pages import drawn_pages
 from _model_build_cover import cabinet_document
+from _tables_on import TABLES_ON
 from fransys.colours import BU
 
 from fransys_model.derive import designation_list, item_designation
-from fransys_model.derive.drawing_text import label_text
-from fransys_model.layout import Label, LabelKind, layout_of
-from fransys_model.vocab.tables import functions
 
 
 def _build() -> tuple[fr.Model, fr.Device, fr.Device]:
@@ -40,7 +39,7 @@ def _build() -> tuple[fr.Model, fr.Device, fr.Device]:
     d.detail.wire(block.no["54"], load, wire=wire)
     d.detail.wire(feed, block.nc["61"], wire=wire)
     d.detail.wire(block.nc["62"], load, wire=wire)
-    return fr.build(d, cabinet_document(_cabinet)).model, block, overload
+    return fr.build(d, cabinet_document(_cabinet), settings=TABLES_ON).model, block, overload
 
 
 def test_the_block_prints_the_contactors_designation_and_has_no_row() -> None:
@@ -51,11 +50,10 @@ def test_the_block_prints_the_contactors_designation_and_has_no_row() -> None:
     assert item_designation(model, overload.id) != "K1"
     assert overload.id in rows
     tags = {
-        label_text(model, label)
-        for label in layout_of(model, Label).values()
-        if label.kind is LabelKind.TAG
-        and label.function
-        and functions(model)[label.function].item == block.id
+        t.text
+        for drawing in drawn_pages(model).values()
+        for t in drawing.texts
+        if t.kind == "TAG" and not t.text.startswith("-X1")
     }
     assert tags == {"-K1"}
 
@@ -63,10 +61,11 @@ def test_the_block_prints_the_contactors_designation_and_has_no_row() -> None:
 def test_the_contactors_contact_table_lists_the_block_contacts() -> None:
     model, _, _ = _build()
     (table,) = (
-        label_text(model, label).split("\n")
-        for label in layout_of(model, Label).values()
-        if label.kind is LabelKind.CROSS_REFERENCE and label.slot == "contacts"
+        one.texts
+        for drawing in drawn_pages(model).values()
+        for one in drawing.symbols
+        if one.key == "contact-head"
     )
-    entries = [entry.split(" ")[0] for line in table[1:] for entry in line.split(" | ")]
+    entries = [cell.split(" ")[0] for row in table[1:] for cell in row if cell]
     assert "53-54" in entries
     assert "61-62" in entries

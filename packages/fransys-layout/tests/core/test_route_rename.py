@@ -8,12 +8,12 @@ from dataclasses import replace
 from typing import TYPE_CHECKING, Any, NamedTuple
 
 import pytest
+from options_fixtures import core_options
 
-from fransys_layout.core import Options
 from fransys_layout.core.place import place_pages
 from fransys_layout.core.route import route_page, route_pages
 
-from .conftest import MARKER_BOX
+from .conftest import MARKER
 from .cut_respell import back_of, id_sets, make_maps, respell_cut, respell_problem
 from .pipeline_fixtures import cut_of
 from .place_fixtures import two_edge_card
@@ -27,7 +27,14 @@ if TYPE_CHECKING:
     from fransys_layout.core.outputs import Routes
     from fransys_layout.core.values import CutResult
 
-OPTIONS = Options(marker=MARKER_BOX)
+OPTIONS = core_options(
+    marker=MARKER,
+    flip_turn="R180",
+    tag_stagger=True,
+    label_gap=8,
+    driver_first=True,
+    arrow_sides=("E", "W"),
+)
 STEP = OPTIONS.wiring_grid
 
 
@@ -107,7 +114,7 @@ def canon_routes(routes: Routes, back: Callable[[str | None], str | None]) -> tu
         for p in routes.pages
     )
     finds = tuple(sorted((f.code, f.page, back(f.subject)) for f in routes.findings))
-    return pages, tuple(sorted(back(n) or "" for n in routes.failed)), finds
+    return pages, tuple(sorted(back(r.net) or "" for r in routes.failed)), finds
 
 
 def routed(case: Case, cut: CutResult, prob: PlacementProblem, ids: dict[str, str]) -> Routes:

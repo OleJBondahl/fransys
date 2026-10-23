@@ -12,7 +12,7 @@ The two-locations variant and the `_first_only` one are guards that pass on the 
 fail there.
 
 Built through the `fransys` facade from `examples/demo-parts` (`DEMO-CONN-2P`, two pins, so six
-wires are six single-wire pairs or three pairs of two pins); read from `layout.*` records.
+wires are six single-wire pairs or three pairs of two pins); read from the page Drawings.
 """
 
 from typing import Any
@@ -20,19 +20,12 @@ from typing import Any
 import fransys as fr
 import fransys_author
 import fransys_parts
+from _dd_core import designation_of, pages_of, set_of
+from _dd_core_b import is_stub, marker_strings, markers
 from _model_build_cover import layout_trigger_document
 
 from fransys_model.derive import unit_release
 from fransys_model.kernel import Severity
-from fransys_model.layout import (
-    DrawingSet,
-    LinkMarker,
-    Page,
-    StarKind,
-    SymbolPlacement,
-    layout_of,
-)
-from fransys_model.vocab.tables import functions, ports
 
 _PROJECT: dict[str, Any] = {
     "title": "Cut end",
@@ -78,13 +71,8 @@ def _build(
 
 
 def _pages_of(model, name: str) -> dict:
-    """The pages the function `x1` of the item `name` stands on, page id -> its drawing set."""
-    pages, sets = layout_of(model, Page), layout_of(model, DrawingSet)
-    return {
-        placement.page: sets[pages[placement.page].drawing_set]
-        for placement in layout_of(model, SymbolPlacement).values()
-        if functions(model)[placement.function].key[1] == name
-    }
+    """The pages the item `name` is drawn on, page id -> its drawing set."""
+    return {page: set_of(model, page) for page in pages_of(model, name)}
 
 
 def _severed(model, pairs: int) -> list[int]:
@@ -101,12 +89,13 @@ def _has_replica(model, i: int) -> bool:
     return any(d.unit is None for d in _pages_of(model, f"panel{i}").values())
 
 
-def _ends(model, name: str) -> list[LinkMarker]:
-    """The markers standing on ports of the function `x1` of the item `name`."""
+def _ends(model, name: str) -> list[tuple]:
+    """(page, marker) of the markers that name the item `name`."""
+    des = designation_of(model, name)
     return [
-        m
-        for m in layout_of(model, LinkMarker).values()
-        if functions(model)[ports(model)[m.port].function].key[1] == name
+        (page, marker)
+        for page, marker in markers(model)
+        if any(des in text for text in marker_strings(marker))
     ]
 
 
@@ -116,24 +105,20 @@ def _errors(result) -> list[str]:
 
 
 def _assert_cut_in_the_unit(result, severed: list[int]) -> None:
-    """0 ERROR, and both functions of every severed pair carry markers, each on a page of a
-    drawing set of the unit `u1` itself (never the unit-less set's replica page). A marker pair
-    names each other across two pages."""
+    """0 ERROR, and both items of every severed pair carry markers, each on a page of a drawing
+    set of the unit `u1` itself (never the unit-less set's replica page). The two ends of a
+    pair stand on different pages."""
     model = result.model
     assert _errors(result) == []
-    pages, sets = layout_of(model, Page), layout_of(model, DrawingSet)
-    markers = layout_of(model, LinkMarker)
     for i in severed:
         panel_ends, peer_ends = _ends(model, f"panel{i}"), _ends(model, f"peer{i}")
         assert panel_ends
         assert peer_ends
-        for marker in (*panel_ends, *peer_ends):
-            owner = sets[pages[marker.page].drawing_set].unit
+        for page, _ in (*panel_ends, *peer_ends):
+            owner = set_of(model, page).unit
             assert owner is not None
             assert unit_release(model, owner).name == "u1"
-            assert markers[marker.partner].partner == marker.id
-            assert marker.partner != marker.id
-            assert markers[marker.partner].page != marker.page
+        assert {page for page, _ in panel_ends}.isdisjoint({page for page, _ in peer_ends})
 
 
 def test_one_location_six_boundary_wires_are_cut_in_the_unit() -> None:
@@ -186,7 +171,7 @@ def test_boundary_panels_at_another_location_stay_clean() -> None:
     assert severed == [2]
     assert all(_has_replica(result.model, i) for i in severed)
     _assert_cut_in_the_unit(result, severed)
-    assert not any(m.star is StarKind.OFF for m in layout_of(result.model, LinkMarker).values())
+    assert not any(is_stub(m) for _, m in markers(result.model))
 
 
 def test_two_top_level_locations_of_one_unit_draw_no_off_stubs() -> None:
@@ -197,9 +182,9 @@ def test_two_top_level_locations_of_one_unit_draw_no_off_stubs() -> None:
     #     b.drawing_set_key` (two top-level locations cross again: off stubs on every pair)
     result = _build(pairs=3, pins=2, boundary=(), panel_at="PNL")
     assert _errors(result) == []
-    markers = layout_of(result.model, LinkMarker).values()
-    assert markers
-    assert not any(m.star is StarKind.OFF for m in markers)
+    drawn = markers(result.model)
+    assert drawn
+    assert not any(is_stub(m) for _, m in drawn)
     for i in (0, 1):
         assert not _ends(result.model, f"panel{i}")
         assert not _ends(result.model, f"peer{i}")
@@ -210,9 +195,9 @@ def test_top_level_control_two_locations_still_draw_off_stubs() -> None:
     between them still ends in an off stub at both ends."""
     result = _build(pairs=3, pins=2, boundary=None, panel_at="PNL")
     assert _errors(result) == []
-    markers = list(layout_of(result.model, LinkMarker).values())
-    assert markers
-    assert all(m.star is StarKind.OFF for m in markers)
+    drawn = markers(result.model)
+    assert drawn
+    assert all(is_stub(m) for _, m in drawn)
 
 
 def test_three_boundary_pairs_of_two_pins_are_cut_in_the_unit() -> None:

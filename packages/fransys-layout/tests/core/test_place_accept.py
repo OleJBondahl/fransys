@@ -5,8 +5,8 @@ from __future__ import annotations
 from dataclasses import replace
 
 import pytest
+from options_fixtures import core_options
 
-from fransys_layout.core import Options
 from fransys_layout.core.constraints import Graph
 from fransys_layout.core.place import place_pages
 from fransys_layout.core.place_accept import accept, trial
@@ -15,7 +15,7 @@ from fransys_layout.core.place_x import place_x
 from fransys_layout.core.place_y import YCycleError, _settle, _spans, _y_graph
 
 from . import align_fixtures as fx
-from .conftest import MARKER_BOX
+from .conftest import MARKER
 from .pipeline_fixtures import cut_of
 from .test_place_plants import lamp_ring, ring_fan
 from .test_place_x import env_of
@@ -27,7 +27,7 @@ def _base(prob: object) -> tuple[Graph, tuple[Align, ...]]:
     x, _ = place_x(env)
     spans = _spans(env, x)
     tangled, _ = _settle(env, spans, {}, {})
-    return _y_graph(env, spans, tangled, {}, {})[0], tuple(page_aligns(env))
+    return _y_graph(env, spans, (tangled, frozenset()), {}, {})[0], tuple(page_aligns(env))
 
 
 def test_all_aligns_that_hold_solve_in_one_pass() -> None:
@@ -121,7 +121,18 @@ def test_a_page_the_stacks_and_trunks_contradict_alone_still_raises_ycycleerror(
     cut = cut_of(prob)
     ring = replace(cut.flow, fans=(ring_fan(cut.flow),), cross_links=())
     with pytest.raises(YCycleError):
-        place_pages(replace(cut, flow=ring), prob, Options(marker=MARKER_BOX))
+        place_pages(
+            replace(cut, flow=ring),
+            prob,
+            core_options(
+                marker=MARKER,
+                flip_turn="R180",
+                tag_stagger=True,
+                label_gap=8,
+                driver_first=True,
+                arrow_sides=("E", "W"),
+            ),
+        )
 
 
 def test_one_finding_per_dropped_item_names_it() -> None:

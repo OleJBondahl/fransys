@@ -1,0 +1,20 @@
+schema = 1
+name = "Marker box (shared reference marker)"
+kind = "element"
+status = "unverified"
+# our own shared reference box: a plain rectangle from the origin, its top-left corner, with the
+# reference lines centred in it; it grows on both axes with the text (fitted_symbol)
+reference = { standard = "IEC 60617", number = "marker-box" }
+
+elements = [
+  { polyline = [[0, 0], [2.25, 0], [2.25, 1.5], [0, 1.5]], closed = true },
+]
+
+stretch = [{ axis = "x", at = 1.125 }, { axis = "y", at = 0.75 }]
+
+lint_allow = [
+  { rule = "slot-overlap-body", reason = "the text box is centred in the box and its size is the text's: it lies inside the outline" },
+]
+
+[slots]
+ref = { at = [1.125, 0.75], side = "C", box = [1.75, 1] }

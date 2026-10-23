@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING
 
 from .constraints import Graph
 from .geometry import box_reach, column_extent
+from .node_names import HIGH, LOW, box_node, col_node, pin_node, slot_node
 from .pack_sep import separation
 from .values import Lane
 
@@ -19,7 +20,8 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
 
     from .pack import Attached, LanePins, PlacedColumn
-    from .values import Block, Options, Sym
+    from .sym_values import Sym
+    from .values import Block, Options
 
 Reach = tuple[str, int]
 
@@ -42,6 +44,7 @@ class RowSpec:
     reserves: dict[tuple[str, str], int] = field(default_factory=dict)
     more_pins: LanePins = field(default_factory=dict)
     lead_extra: int = 0  # x kept free before the first column (an arrow at the row's left end)
+    floors: dict[str, int] = field(default_factory=dict)  # a column's least x (a fitted box)
     tail_extra: int = 0  # x kept free after the last column (an arrow at the right end)
 
 
@@ -69,9 +72,9 @@ def extent(spec: RowSpec, col: str) -> tuple[int, int]:
 
 
 def _margin(spec: RowSpec, box: str) -> int:
-    """Body beyond the end pins of a box: its spec margin, else 16 G."""
+    """Body beyond the end pins of a box: its spec margin, else `Options.box_margin`."""
     box_spec = spec.syms[box].box
-    return box_spec.margin if box_spec else 16
+    return box_spec.margin if box_spec else spec.options.box_margin
 
 
 def _sep(spec: RowSpec, a: str, b: str) -> int:
@@ -107,6 +110,8 @@ def build_row_graph(spec: RowSpec, extra: int) -> tuple[Graph, list[Reach]]:
         prev = right
         rights.append(right)
     _reserve(g, spec, extra)
+    for col, floor in spec.floors.items():
+        g.at_least(col_node(col), floor)
     return g, rights
 
 
@@ -116,10 +121,10 @@ def _segment(
     """Constrain one segment; its left and right node with the reach past each."""
     if block is not None:
         _card(g, spec, block, here, extra)
-        return (f"slot:{block.id}:L", 0), (f"slot:{block.id}:R", 0)
+        return (slot_node(block.id, LOW), 0), (slot_node(block.id, HIGH), 0)
     _run(g, spec, here, extra)
-    return (f"col:{here[0]}", -extent(spec, here[0])[0]), (
-        f"col:{here[-1]}",
+    return (col_node(here[0]), -extent(spec, here[0])[0]), (
+        col_node(here[-1]),
         extent(spec, here[-1])[1],
     )
 
@@ -133,21 +138,22 @@ def _reserve(g: Graph, spec: RowSpec, extra: int) -> None:
     for (a, b), tracks in sorted(spec.reserves.items()):
         if tracks > 1 and a in here and b in here:
             g.after(
-                f"col:{a}",
-                f"col:{b}",
+                col_node(a),
+                col_node(b),
                 _sep(spec, a, b) + extra + reserve_extra(spec, a, b),
             )
 
 
 def _run(g: Graph, spec: RowSpec, cols: Sequence[str], extra: int) -> None:
     for a, b in pairwise(cols):
-        g.after(f"col:{a}", f"col:{b}", _sep(spec, a, b) + extra)
+        g.after(col_node(a), col_node(b), _sep(spec, a, b) + extra)
 
 
 def _card(g: Graph, spec: RowSpec, block: Block, cols: Sequence[str], extra: int) -> None:
     """Pins in marking order per edge at least the pitch apart; each attached column on its pin."""
     box = block.anchor or ""
     edge_of = dict(block.pin_edges)
+    extra = extra if spec.options.justify_cards else 0
     for edge in ("N", "S"):
         _pin_chain(g, spec, box, [p for p, e in block.pin_edges if e == edge], extra)
         _run(
@@ -157,23 +163,44 @@ def _card(g: Graph, spec: RowSpec, block: Block, cols: Sequence[str], extra: int
             extra,
         )
     _card_columns(g, spec, block.id, box, cols)
+    _pair_pins(g, spec, box, block)
     lead, tail = box_reach(spec.syms[box])
-    g.after(f"slot:{block.id}:L", f"box:{box}:L", lead)
-    g.after(f"box:{box}:R", f"slot:{block.id}:R", tail)
+    g.after(slot_node(block.id, LOW), box_node(box, LOW), lead)
+    g.after(box_node(box, HIGH), slot_node(block.id, HIGH), tail)
     g.after(
-        f"box:{box}:L", f"box:{box}:R", 2 * _margin(spec, box) if cols else spec.syms[box].body.w
+        box_node(box, LOW),
+        box_node(box, HIGH),
+        2 * _margin(spec, box) if cols else spec.syms[box].body.w,
     )
+
+
+def _pair_pins(g: Graph, spec: RowSpec, box: str, block: Block) -> None:
+    """Pin k of one edge and pin k of its paired edge share one x, whatever each column's extent.
+
+    Only two edges with as many pins each pair, and only a pin held by a one-pin column; any other
+    pin keeps its own x. Pairing is a preference, not a rule (layout-0341).
+    """
+    held = {
+        spec.attach[c][1] for c in block.columns if c in spec.attach and c not in spec.more_pins
+    }
+    for first, second in spec.options.pin_pairs:
+        pins = [[p for p, e in block.pin_edges if e == edge] for edge in (first, second)]
+        if len(pins[0]) != len(pins[1]):
+            continue
+        for a, b in zip(*pins, strict=True):
+            if a in held and b in held:
+                g.equal(pin_node(box, a), pin_node(box, b))
 
 
 def _card_columns(g: Graph, spec: RowSpec, block: str, box: str, cols: Sequence[str]) -> None:
     for c in cols:
         if c in spec.attach and spec.options.box_pins != "fixed":
-            g.equal(f"col:{c}", f"pin:{box}:{spec.attach[c][1]}", spec.attach[c][2])
+            g.equal(col_node(c), pin_node(box, spec.attach[c][1]), spec.attach[c][2])
             for pin, offset in spec.more_pins.get(c, ()):
-                g.equal(f"col:{c}", f"pin:{box}:{pin}", offset)
+                g.equal(col_node(c), pin_node(box, pin), offset)
         lo, hi = extent(spec, c)
-        g.after(f"slot:{block}:L", f"col:{c}", -lo)
-        g.after(f"col:{c}", f"slot:{block}:R", hi)
+        g.after(slot_node(block, LOW), col_node(c), -lo)
+        g.after(col_node(c), slot_node(block, HIGH), hi)
 
 
 def _one_column(spec: RowSpec, a: str, b: str) -> bool:
@@ -194,12 +221,12 @@ def _pin_chain(g: Graph, spec: RowSpec, box: str, pins: Sequence[str], extra: in
         if _one_column(spec, a, b):
             continue
         if spec.options.box_pins == "fixed":
-            g.equal(f"pin:{box}:{a}", f"pin:{box}:{b}", pitch)
+            g.equal(pin_node(box, a), pin_node(box, b), pitch)
         else:
-            g.after(f"pin:{box}:{a}", f"pin:{box}:{b}", pitch + extra)
+            g.after(pin_node(box, a), pin_node(box, b), pitch + extra)
     if pins:
-        g.after(f"box:{box}:L", f"pin:{box}:{pins[0]}", margin)
-        g.after(f"pin:{box}:{pins[-1]}", f"box:{box}:R", margin)
+        g.after(box_node(box, LOW), pin_node(box, pins[0]), margin)
+        g.after(pin_node(box, pins[-1]), box_node(box, HIGH), margin)
 
 
 def _solve(spec: RowSpec, extra: int) -> tuple[dict[str, int], int] | None:

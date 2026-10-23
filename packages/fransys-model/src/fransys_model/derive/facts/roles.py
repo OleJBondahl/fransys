@@ -21,6 +21,7 @@ from fransys_model.vocab.roles import (
     function_role_of,
 )
 from fransys_model.vocab.tables import (
+    HasTables,
     conductors,
     facets_of,
     function_templates,
@@ -37,10 +38,14 @@ lazy from fransys_model.vocab.roles_types import (
     LinkRole,
     NetClassRole,
 )
-lazy from fransys_model.vocab.templates import InternalLink, Part, PortTemplate
+lazy from fransys_model.vocab.templates import (
+    FunctionTemplate,
+    InternalLink,
+    Part,
+)
 
 
-def _refined(model: Model, function: Function, channels: frozenset[Id[Any]]) -> FunctionRole:
+def _refined(model: Model, function: Function, channels: frozenset[Id[Any] | None]) -> FunctionRole:
     """The row of `function.kind`, refined by its template, its rating and its holder."""
     role = function_role_of(function.kind)
     template = None if function.template is None else function_templates(model)[function.template]
@@ -57,9 +62,21 @@ def _refined(model: Model, function: Function, channels: frozenset[Id[Any]]) -> 
 
 
 @digest_cached(DIGEST_CACHE_SIZE)
+def plc_channel_facets(model: Model) -> frozendict[Id[FunctionTemplate] | None, PlcChannelFacet]:
+    """The one reading of "is a PLC channel": each channel template's facet, keyed by it."""
+    return frozendict({f.subject: f for f in facets_of(model, PlcChannelFacet).values()})
+
+
+def function_channel(model: Model, function: Id[Function]) -> PlcChannelFacet | None:
+    """The `plc_channel` facet of `function`'s template, or `None` when it is not a channel."""
+    template = functions(model)[function].template
+    return None if template is None else plc_channel_facets(model).get(template)
+
+
+@digest_cached(DIGEST_CACHE_SIZE)
 def _function_roles(model: Model) -> frozendict[Id[Function], FunctionRole]:
     """Every function's refined role, built once per model digest."""
-    channels = frozenset(f.subject for f in facets_of(model, PlcChannelFacet).values())
+    channels = frozenset(plc_channel_facets(model))
     return frozendict({f.id: _refined(model, f, channels) for f in functions(model).values()})
 
 
@@ -74,7 +91,7 @@ def function_role(model: Model, function: Id[Function]) -> FunctionRole:
     return _function_roles(model)[function]
 
 
-def link_role(model: Model, link: Id[InternalLink]) -> LinkRole:
+def link_role(model: HasTables, link: Id[InternalLink]) -> LinkRole:
     """The role of an internal link: its kind's row, with the pole and rest the function adds.
 
     A protection's conductive link is a pole; a switched link rests as declared, else as its
@@ -109,14 +126,14 @@ def port_role(model: Model, port: Id[Port]) -> PortRole:
     return ports(model)[port].role
 
 
+def is_pe_role(role: PortRole) -> bool:
+    """Whether `role` is PE: the one compare of `PortRole.PE`."""
+    return role is PortRole.PE
+
+
 def is_pe_port(model: Model, port: Id[Port]) -> bool:
-    """Whether `port` has role PE: the one compare of `PortRole.PE` on a port."""
-    return port_role(model, port) is PortRole.PE
-
-
-def is_pe_pin(model: Model, template: Id[PortTemplate]) -> bool:
-    """Whether the port template `template` has role PE."""
-    return port_templates(model)[template].role is PortRole.PE
+    """Whether `port` has role PE."""
+    return is_pe_role(port_role(model, port))
 
 
 def changeover_functions(model: Model) -> set[tuple[Id[Part], str]]:

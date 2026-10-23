@@ -130,3 +130,16 @@ def test_a_stand_spaces_the_ports_at_the_wider_pitch_and_keeps_the_plain_body_ma
     assert [p.position.x for p in symbol.ports] == [0, 0, 3]
     assert body_box(symbol) == Box(Point(-2, -2), Point(5, 2))
     assert _box(("a", "b", "c"), stand=0) == _box(("a", "b", "c"))
+
+
+@pytest.mark.parametrize("count", [8, 9, 16])
+def test_the_kth_north_and_south_pin_of_a_half_split_box_share_one_x(count: int):
+    """BOX-SIDES D: the half split (first half N, rest S) puts pin k over pin k at one pitch."""
+    names = tuple(f"p{i:02d}" for i in range(count))
+    north = (count + 1) // 2
+    sides = ("n",) * north + ("s",) * (count - north)
+    symbol = _box(names, sides=sides)
+    x = {port.id: port.position.x for port in symbol.ports}
+    over, under = names[:north], names[north:]
+    assert [x[a] for a in over[: len(under)]] == [x[b] for b in under]
+    assert x[names[1]] - x[names[0]] == box_pitch(_widths(names))

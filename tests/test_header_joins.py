@@ -10,9 +10,10 @@ from typing import TYPE_CHECKING
 import fransys as fr
 import fransys_parts
 from fransys_author import Design
+from root_library import freeze
 
 from fransys_model.derive import net_of, port_designation, port_is_unused, port_rails
-from fransys_model.kernel import Id, Model, freeze, merge
+from fransys_model.kernel import Id, Model, merge
 from fransys_model.vocab.tables import functions, ports
 
 if TYPE_CHECKING:

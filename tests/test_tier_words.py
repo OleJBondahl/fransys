@@ -27,6 +27,7 @@ OUTPUT = tuple(
 TIERS = {
     "fr.design": "Core",
     "fr.unit": "Core",
+    "fr.settings": "Core",
     "fr.parts": "Detail",
     "fr.parts_module": "Detail",
     "fr.lint": "Read",

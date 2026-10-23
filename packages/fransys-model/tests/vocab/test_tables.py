@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any
 import pytest
 from examples import core_model, relay_part_bundle
 
-from fransys_model.derive.designation import own_designation_or_none
+from fransys_model.derive.designation_label import own_designation_or_none
 from fransys_model.kernel import (
     Draft,
     Model,

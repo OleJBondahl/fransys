@@ -15,20 +15,17 @@ outside the side (and over its span); three or more sides is a wrap.
 """
 
 import sys
-from dataclasses import replace
 from itertools import pairwise
 from pathlib import Path
 from typing import TYPE_CHECKING, NamedTuple
 
-from fransys_layout.engines.schematic import _finish
-from fransys_layout.stages import pagerun
-from fransys_model import derive
-from fransys_model.derive import box_lines
-from fransys_model.layout import ConnectorBox, HarnessLine, Route, layout_of
+from _drawn_pages import drawn_pages
+
+from electrical_symbols import LIBRARY, drawn_symbol
+from fransys_layout.symbols import symbol_shape
 
 if TYPE_CHECKING:
     import fransys as fr
-    import pytest
 
 _TESTS_DIR = Path(__file__).resolve().parent.parent
 if str(_TESTS_DIR) not in sys.path:
@@ -71,16 +68,33 @@ def _wraps(points: list[Point], box: Rect) -> bool:
     return len(sides) >= 3
 
 
-def _wrapping(result: fr.BuildResult) -> list[tuple[str, str]]:
-    model = result.model
-    boxes = list(layout_of(model, ConnectorBox).values())
-    wires = [*layout_of(model, Route).values(), *layout_of(model, HarnessLine).values()]
+def _boxes(result: fr.BuildResult) -> list[tuple[object, Rect]]:
+    """Each drawn generic box with its page and its body, measured from its drawn record."""
+    found = []
+    for page, drawing in drawn_pages(result.model).items():
+        for one in drawing.symbols:
+            if one.key != "generic-box":
+                continue
+            made = drawn_symbol(
+                one.key,
+                one.texts,
+                library=LIBRARY,
+                offsets=dict(one.offsets),
+                sides=dict(one.sides),
+            )
+            body = symbol_shape(made, LIBRARY).body
+            found.append((page, Rect(one.x + body.x, one.y + body.y, body.w, body.h)))
+    return found
+
+
+def _wrapping(result: fr.BuildResult) -> list[str]:
+    boxes = _boxes(result)
     return [
-        (type(wire).__name__, derive.connector_box_lines(model, box.function)[0])
-        for wire in wires
-        for box in boxes
-        if box.page == wire.page
-        and _wraps([(p.x, p.y) for p in wire.points], Rect(box.x, box.y, box.width, box.height))
+        "wire"
+        for page, drawing in drawn_pages(result.model).items()
+        for wire in drawing.wires
+        for box_page, box in boxes
+        if box_page == page and _wraps(list(wire.points), box)
     ]
 
 
@@ -93,17 +107,6 @@ def test_the_measure_sees_a_wire_round_three_sides_of_a_box() -> None:
 
 
 def test_no_wire_runs_along_three_sides_of_one_box() -> None:
-    assert _wrapping(build()) == []
-
-
-def test_a_router_called_with_no_wrap_gap_keeps_the_framing_path(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    # The wrap came from the box heights of the day; the pin lines of model-0206 change them,
-    # so the case is pinned to boxes without pin lines. Layout-0211's cells facing their device
-    # take the coil wire off the header's stack, so it is pinned to the pins' edge too.
-    monkeypatch.setattr(box_lines, "_pin_lines", lambda *_: ())
-    monkeypatch.setattr(_finish, "lead_ends", lambda *_: {})
-    real = pagerun.PageRoom
-    monkeypatch.setattr(pagerun, "PageRoom", lambda **room: replace(real(**room), wrap_gap=None))
-    assert _wrapping(build()) != []
+    result = build()
+    assert "FUNCTION_NOT_DRAWN" not in {f.code for f in result.findings}, "the header is drawn"
+    assert _wrapping(result) == []

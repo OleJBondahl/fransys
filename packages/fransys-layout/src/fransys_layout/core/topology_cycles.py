@@ -10,11 +10,17 @@ from __future__ import annotations
 from collections import defaultdict
 from typing import TYPE_CHECKING, Any
 
+from .errors import CoreError
+
 if TYPE_CHECKING:
     from collections.abc import Callable, Mapping, Sequence
     from collections.abc import Set as AbstractSet
 
     type Edge = tuple[str, str, frozenset[str]]
+
+
+class CycleCutError(CoreError):
+    """A y cycle holds only fixed edges, so no net can be cut to open it."""
 
 
 def _finish_order(adj: Mapping[str, Sequence[str]], nodes: Sequence[str]) -> list[str]:
@@ -66,16 +72,23 @@ def _pick(
     parts: Sequence[frozenset[str]],
     cut: AbstractSet[str],
     rank: Callable[[str], Any],
+    key: Callable[[str], Any],
 ) -> str:
-    """The cheapest owner of an edge inside a cyclic part; the rank breaks a tie."""
+    """The cheapest owner of an edge inside a cyclic part; the rank breaks a tie.
+
+    With none to cut it raises CycleCutError, its nodes in `key` order.
+    """
     where = {n: i for i, part in enumerate(parts) for n in part}
     owners = {
         o for a, b, os in edges if where.get(a, -1) == where.get(b, -2) and not os & cut for o in os
     }
     if not owners:
-        nodes = ", ".join(sorted(n for part in parts for n in part))
-        text = f"a cycle through {nodes} has no edge that can be cut"
-        raise ValueError(text)
+        nodes = ", ".join(sorted((n for part in parts for n in part), key=key))
+        text = (
+            f"a cycle through {nodes} has no edge that can be cut: every edge in it is a fixed "
+            "stack or join tie; give one of the ties an owner net, or remove the tie"
+        )
+        raise CycleCutError(text)
     return min(owners, key=rank)
 
 
@@ -85,7 +98,7 @@ def y_cycle_cuts(
     """Owners to cut so the rest is acyclic: cheapest first, `key` breaks a tie, none redundant."""
     cut: list[str] = []
     while parts := cyclic_parts(_live(edges, frozenset(cut))):
-        cut.append(_pick(edges, parts, frozenset(cut), lambda o: (cost[o], key(o))))
+        cut.append(_pick(edges, parts, frozenset(cut), lambda o: (cost[o], key(o)), key))
     for owner in reversed(list(cut)):
         rest = frozenset(cut) - {owner}
         if not cyclic_parts(_live(edges, rest)):

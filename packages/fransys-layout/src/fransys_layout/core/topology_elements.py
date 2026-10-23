@@ -7,17 +7,16 @@ from typing import TYPE_CHECKING
 lazy from collections.abc import Set as AbstractSet
 
 from .keys import natural_key
-from .values import Net, Pin, PinRef, PlacementProblem, Sym
+from .values import Net, Pin, PinRef, PlacementProblem
+lazy from .sym_values import Sym
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
-STAND_POWERS = frozenset({"SUPPLY", "GROUND", "PE"})
-
 
 @dataclass(frozen=True, slots=True)
 class Elem:
-    """One placeable thing in a lane: a pole (n and s pin), a free-sided symbol, or a single pin."""
+    """One placeable thing in a lane: a pin pair (n and s), a free-sided symbol, or a single pin."""
 
     key: str
     sym: str
@@ -36,36 +35,24 @@ class NetEnd:
     site: str
 
 
-def is_wiring(net: Net) -> bool:
-    return net.rail is None or net.rail.power not in STAND_POWERS
-
-
 def is_free_sided(sym: Sym) -> bool:
     """T2: all pins one node, so a wire may leave from any of them."""
     return len(sym.nodes) == 1 and len(sym.pins) > 1
 
 
 def wired_pins(problem: PlacementProblem) -> dict[PinRef, str]:
-    """Pin to wiring net, for nets that join two or more symbols."""
-    out: dict[PinRef, str] = {}
-    for net in problem.nets:
-        if is_wiring(net) and len({r.sym for r in net.pins}) > 1:
-            for ref in net.pins:
-                out[ref] = net.id
-    return out
+    """Pin to net, for every net it is given: a net end alone on its symbol set is a net end too."""
+    return {ref: net.id for net in problem.nets for ref in net.pins}
 
 
 def connected(sym: Sym, wired: Mapping[PinRef, str]) -> list[Pin]:
-    return [p for p in sym.pins if p.stand is not None or PinRef(sym.id, p.id) in wired]
-
-
-def drawn_symbols(problem: PlacementProblem, wired: Mapping[PinRef, str]) -> tuple[Sym, ...]:
-    """A symbol draws when a wire or a stand touches it (no loose symbols)."""
-    return tuple(s for s in problem.symbols if connected(s, wired))
+    """The pins that carry a net or an end bias; a symbol with none is placed by all its pins."""
+    used = [p for p in sym.pins if p.end_bias != 0 or PinRef(sym.id, p.id) in wired]
+    return used or list(sym.pins)
 
 
 def elements(sym: Sym, wired: Mapping[PinRef, str]) -> tuple[Elem, ...]:
-    """Poles pair a connected N pin with a connected S pin at one dx; the rest are singles."""
+    """Pin pairs join a connected N pin with a connected S pin at one dx; the rest are singles."""
     if sym.box is not None:
         return ()
     pins = connected(sym, wired)

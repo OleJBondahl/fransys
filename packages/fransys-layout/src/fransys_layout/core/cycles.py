@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections import defaultdict
 
 from .keys import natural_key
-from .topology_elements import is_free_sided, is_wiring
+from .topology_elements import is_free_sided
 from .unionfind import UnionFind
 from .values import CycleSplit, PlacementProblem
 
@@ -17,7 +17,7 @@ BIG_NET = 4
 def _net_groups(problem: PlacementProblem) -> tuple[dict[str, set[str]], dict[str, int]]:
     """Per merged net (junctions join their nets): its non-junction symbols and pin count."""
     syms = {s.id: s for s in problem.symbols}
-    wiring = [n for n in problem.nets if is_wiring(n)]
+    wiring = list(problem.nets)
     uf = UnionFind()
     for net in wiring:
         for ref in net.pins:

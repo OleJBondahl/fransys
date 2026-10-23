@@ -18,10 +18,11 @@ if str(_LAYOUT_TESTS) not in sys.path:
 
 from fransys_author import Design  # noqa: E402
 from layout_cabinet import build_cabinet  # noqa: E402
+from root_library import freeze  # noqa: E402 -- after the sys.path insert
 
 from fransys_model.derive import item_description  # noqa: E402
-from fransys_model.derive.designation import own_designation_or_none  # noqa: E402
-from fransys_model.kernel import Draft, Origin, freeze, merge  # noqa: E402
+from fransys_model.derive.designation_label import own_designation_or_none  # noqa: E402
+from fransys_model.kernel import Draft, Origin, merge  # noqa: E402 -- after the sys.path insert
 from fransys_model.vocab import (  # noqa: E402
     CableProductFacet,
     FunctionKind,

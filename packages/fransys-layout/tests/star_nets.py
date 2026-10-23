@@ -7,8 +7,9 @@ A net of three ports is drawn as markers (R7 B4), one `#n` number each, so the n
 from functools import cache
 
 from layout_cabinet import _ORIGIN, _Builder, _specs
+from layout_library import freeze
 
-from fransys_model.kernel import Draft, Model, freeze
+from fransys_model.kernel import Draft, Model
 from fransys_model.vocab import Aspect, FunctionKind
 
 

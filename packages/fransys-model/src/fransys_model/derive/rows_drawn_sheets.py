@@ -43,8 +43,8 @@ class SheetGroup:
 
 @value
 class CableBlockSize:
-    """A laid-out cable block's `width` and `height` in G, and the `module_mm` of its sheet."""
+    """A laid-out cable block's size in G (`width`, `height`) and its sheet's `mm_per_division`."""
 
     width: int
     height: int
-    module_mm: Decimal
+    mm_per_division: Decimal

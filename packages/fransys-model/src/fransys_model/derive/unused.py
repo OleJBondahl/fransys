@@ -3,11 +3,13 @@
 Layout and the contact table both call these, so a drawn contact is never listed as a spare.
 """
 
+from fransys_model.derive.facts.children import unit_parent
 from fransys_model.derive.facts.conductor_facts import is_bridge
 from fransys_model.derive.facts.joins import joined_ports
+from fransys_model.derive.facts.unit_index import item_unit
 from fransys_model.derive.facts.units import in_unit_subtree
 from fransys_model.derive.indexes import build_indexes
-from fransys_model.vocab.tables import conductors, functions, items, ports, units
+from fransys_model.vocab.tables import conductors, functions, ports
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.core import Function, Port
 
@@ -57,9 +59,8 @@ def port_is_reached(model: Model, port: Id[Port]) -> bool:
     indexes = build_indexes(model)
     if indexes.nets_by_port.get(port):
         return True
-    item = items(model)[functions(model)[ports(model)[port].function].item]
-    unit = item.unit
-    scope = None if unit is None or units(model)[unit].parent is None else unit  # None: any wire
+    unit = item_unit(model, functions(model)[ports(model)[port].function].item)
+    scope = None if unit is None or unit_parent(model, unit) is None else unit  # None: any wire
     for conductor in indexes.conductors_by_port.get(port, ()):
         record = conductors(model)[conductor]
         if is_bridge(model, conductor):

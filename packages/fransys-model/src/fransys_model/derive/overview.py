@@ -9,11 +9,8 @@ from fransys_model.derive.facts.units import unit_items
 from fransys_model.kernel import DIGEST_CACHE_SIZE, Model, digest_cached
 from fransys_model.vocab.tables import conductors, functions, items, mates, parts
 
-from .designation import (
-    designation_holder,
-    own_designation_or_none,
-    printed_designation,
-)
+from .designation import printed_designation
+from .designation_label import designation_holder, own_designation_or_none
 from .facts.closure import physical_nets
 from .lookups import (
     item_description,

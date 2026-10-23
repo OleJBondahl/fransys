@@ -258,3 +258,19 @@ def test_part_without_operated_by_loads_none(tmp_path):
 
     (part,) = parts(freeze(fransys_parts.load_path(_root(tmp_path)))).values()
     assert part.operated_by is None
+
+
+def test_class_code_letter_rules_come_from_the_designation_scheme(tmp_path):
+    """A, I, O are forbidden and D, L, V, Y, Z reserved (IEC 81346-2); X is clean (EL-9 part F)."""
+    for code, rule in (
+        ("A", "forbidden"),
+        ("O", "forbidden"),
+        ("D", "reserved"),
+        ("Z", "reserved"),
+    ):
+        part = _CLEAN_PART.replace('class_code = "X"', f'class_code = "{code}"')
+        found = [
+            f for f in _findings(_root(tmp_path, parts={"p.toml": part})) if f.code == "CLASS_CODE"
+        ]
+        assert [rule in f.message for f in found] == [True], code
+    assert "CLASS_CODE" not in _codes(_root(tmp_path))

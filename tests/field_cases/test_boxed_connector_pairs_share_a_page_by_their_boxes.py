@@ -12,33 +12,15 @@ no cell leave their columns, and a boxed connector takes one packing column of i
 """
 
 import tempfile
-from functools import cache
 from pathlib import Path
-from typing import Any
-from unittest import mock
 
 import fransys as fr
+from _drawn_pages import drawn_pages
 from fransys.colours import BK
 
-from fransys_layout.engines.schematic import engine
-from fransys_model.layout import ConnectorBox, Page, layout_of
+from fransys_model.layout import Page, layout_of
 
 PAIRS = 8
-
-
-@cache
-def _built() -> tuple[fr.BuildResult, int]:
-    """The build, and how many pin views the layout placed (one build serves both tests)."""
-    real = engine.stage_layout
-    placed: list[int] = []
-
-    def counting(model: Any, inputs: Any) -> Any:
-        staged = real(model, inputs)
-        placed.append(len(staged[0].layout.placed))
-        return staged
-
-    with mock.patch.object(engine, "stage_layout", counting):
-        return _build(), placed[-1]
 
 
 def _build() -> fr.BuildResult:
@@ -59,13 +41,28 @@ def _build() -> fr.BuildResult:
 
 
 def test_the_eight_pairs_stand_on_one_page() -> None:
-    model = _built()[0].model
-    boxes = layout_of(model, ConnectorBox).values()
+    model = _build().model
+    pages = drawn_pages(model)
+    boxes = [
+        (page, s)
+        for page, drawing in pages.items()
+        for s in drawing.symbols
+        if s.key == "connector-fixed"
+    ]
     assert len(boxes) == 3 * PAIRS
-    assert len({b.page for b in boxes}) == 1
+    assert len({page for page, _ in boxes}) == 1
     assert len(layout_of(model, Page)) == 1
 
 
 def test_a_plugs_pin_views_with_no_cell_or_wire_leave_their_columns() -> None:
-    """Eight lamps, the headers' four celled views each, and one view for each of 16 plugs."""
-    assert _built()[1] == PAIRS * (1 + 4 + 2)
+    """Only the eight lamps draw as symbols; no pin of a boxed connector keeps a column of its own.
+
+    A pin view that kept its column would show as a per-pin symbol drawn beside the box.
+    """
+    others = [
+        s
+        for drawing in drawn_pages(_build().model).values()
+        for s in drawing.symbols
+        if s.key not in ("connector-fixed", "junction-dot")
+    ]
+    assert len(others) == PAIRS

@@ -9,8 +9,10 @@ from __future__ import annotations
 from dataclasses import replace
 
 import pytest
+from options_fixtures import core_options
+from turn_fixtures import refit
 
-from fransys_layout.core import Box, Hints, Options, PlacementProblem, order_blocks
+from fransys_layout.core import Box, Facts, Hints, Options, PlacementProblem, order_blocks
 from fransys_layout.core.cut_costs import column_items
 from fransys_layout.core.cut_pack import left_pack
 
@@ -18,13 +20,19 @@ from .cut_fixtures import AREA, box_sym, chain, elem, net
 from .cut_oracle import window_misses
 from .pipeline_fixtures import blocks_of, flow_of
 
-OPTIONS = Options()
+OPTIONS = core_options(
+    flip_turn="R180",
+    tag_stagger=True,
+    label_gap=8,
+    driver_first=True,
+    arrow_sides=("E", "W"),
+)
 PAGE_H = AREA.h - 2 * OPTIONS.margin.h
 
 
 def staggered(sym_id: str, body: int, text: int, group: str) -> object:
     """A column symbol whose text is wider than its body: the stagger packs it closer."""
-    return replace(elem(sym_id, body, 32, group), footprint=Box(-text // 2, -16, text, 32))
+    return refit(elem(sym_id, body, 32, group), footprint=Box(-text // 2, -16, text, 32))
 
 
 def free_mixed() -> tuple[list, list, Hints | None]:
@@ -76,7 +84,13 @@ CASES = {
 
 def unit_of(case: str, options: Options = OPTIONS):
     syms, nets, hints = CASES[case]()
-    prob = PlacementProblem(AREA, tuple(syms), tuple(nets), hints=hints or Hints())
+    prob = PlacementProblem(
+        AREA,
+        tuple(syms),
+        tuple(nets),
+        hints=hints or Hints(),
+        facts=Facts(),
+    )
     flow = flow_of(prob, options)
     unit = order_blocks(blocks_of(prob, options), flow, options)[0]
     return prob, flow, unit

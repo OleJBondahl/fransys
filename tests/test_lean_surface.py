@@ -42,6 +42,8 @@ _EXPECTED_SURFACE_MODULES = (
     "fransys_kicad",
     "fransys_layout",
     "fransys_layout.core",
+    "fransys_layout.drawing",
+    "fransys_layout.symbols",
     "fransys_model.derive",
     "fransys_model.derive.baseline",
     "fransys_model.derive.block_diagram",

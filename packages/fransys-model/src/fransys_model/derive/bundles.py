@@ -14,9 +14,9 @@ from fransys_model.vocab import Function, Port, PortTemplate
 from fransys_model.vocab.tables import ports
 
 from .pole_lists import poles_of
-from .rows_bundles import Bundle, BundleCross, BundleNet, BundlePole
+from .rows_bundles import Bundle, BundleNet
 
-__all__ = ["Bundle", "BundleCross", "BundleNet", "BundlePole", "bundle_of", "bundles"]
+__all__ = ["Bundle", "BundleNet", "bundle_of", "bundles"]
 
 _MULTI = 2  # poles a function needs to bundle its nets
 _End = tuple[Id[Function], int]  # a function and its end: 0 line, 1 load
@@ -71,25 +71,6 @@ def _net_ends(model: Model) -> dict[Id[Port], dict[_End, int]]:
     return {n: at for n, at in nets.items() if n not in lone or not wired.intersection(at)}
 
 
-def _crosses(
-    members: list[Id[Port]], nets: dict[Id[Port], dict[_End, int]], pole: dict[Id[Port], int]
-) -> tuple[BundleCross, ...]:
-    """The ends where a function's poles take the nets in another order than the bundle's."""
-    pairs: defaultdict[_End, list[tuple[int, int]]] = defaultdict(list)
-    for net in members:
-        for end, index in nets[net].items():
-            pairs[end].append((index, pole[net]))
-    return tuple(
-        BundleCross(
-            function=end[0],
-            end=end[1],
-            poles=tuple(BundlePole(local=a, lane=b) for a, b in sorted(found)),
-        )
-        for end, found in sorted(pairs.items())
-        if any(local != lane for local, lane in found)
-    )
-
-
 def _bundle(members: list[Id[Port]], nets: dict[Id[Port], dict[_End, int]]) -> Bundle | None:
     """The bundle of one trunk, poles taken at its source end; `None` for a ragged trunk."""
     source = min(end for net in members for end in nets[net])
@@ -98,7 +79,7 @@ def _bundle(members: list[Id[Port]], nets: dict[Id[Port], dict[_End, int]]) -> B
         return None
     ordered = sorted(members, key=lambda net: (pole[net], net))
     lanes = tuple(BundleNet(net=net, pole=pole[net]) for net in ordered)
-    return Bundle(id=ordered[0], nets=lanes, crosses=_crosses(members, nets, pole))
+    return Bundle(id=ordered[0], nets=lanes)
 
 
 @digest_cached(DIGEST_CACHE_SIZE)

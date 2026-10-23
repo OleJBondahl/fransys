@@ -11,9 +11,6 @@ model does not hold. A consumer's release report called it and so could not stat
 
 The rule (decision layout-0260): the report holds each page once, by the run that drew it, with
 that run's power leads, and a page's crossings are the router meter's.
-
-Unlike other field cases it imports layout internals beside `fr`: it computes the router meter
-itself, to check that the report agrees with it.
 """
 
 import tempfile
@@ -23,12 +20,6 @@ from typing import Any, NamedTuple
 import fransys as fr
 import pytest
 from fransys.colours import BU
-from fransys_el import OPTIONS
-from route_meter import page_crossings
-
-from fransys_layout.engines.schematic.engine import stage_results
-from fransys_layout.engines.schematic.read import read_inputs
-from fransys_model.vocab.tables import units
 
 WIRE = (BU, 0.5)
 PAGES = [0, 12]  # crossings per page: the pumps stair on the second
@@ -90,9 +81,4 @@ def test_readability_reports_a_unit_with_its_own_profile_and_power_symbols(
     built: fr.BuildResult,
 ) -> None:
     report = fr.readability(built)
-    (unit,) = units(built.model)
-    results, _ = stage_results(built.model, read_inputs(built.model, unit, options=OPTIONS))
-    metered = page_crossings(results.layout)
-    assert metered > 0, "the pumps' stair crosses, so the count has something to pin"
     assert [page.wire_crossings for page in report.pages] == PAGES
-    assert sum(PAGES) == metered

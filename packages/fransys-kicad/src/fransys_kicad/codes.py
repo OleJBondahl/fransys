@@ -9,7 +9,7 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         stage="kicad",
         who="consumer",
         cause="Two or more KiCad netlist nets share a name, so KiCad would merge them on import.",
-        fix="Give each net a distinct name.",
+        fix="Give each net a distinct name. Write: d.detail.net(<distinct name>, *ports)",
         page="findings-kicad",
     ),
     CodeInfo(
@@ -30,7 +30,10 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
             "A netlist pin belongs to an item with no footprint (or is the board's own pin), "
             "so KiCad drops it on import."
         ),
-        fix="Give the item a footprint, or model the connector as a child item with one.",
+        fix=(
+            "No call clears this: give the item's part a footprint, or model the connector as a "
+            "child item with one."
+        ),
         page="findings-kicad",
     ),
     CodeInfo(
@@ -39,7 +42,7 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         stage="kicad",
         who="consumer",
         cause="One component pad is in more than one KiCad netlist net.",
-        fix="Fix the wiring so each pad is on exactly one net.",
+        fix="No call clears this: fix the wiring so each pad is on exactly one net.",
         page="findings-kicad",
     ),
     CodeInfo(
@@ -48,7 +51,23 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         stage="kicad",
         who="consumer",
         cause="A board item's part has no footprint, so the KiCad netlist omits it.",
-        fix="Add a footprint to the part.",
+        fix="No call clears this: add a footprint to the part's data.",
+        page="findings-kicad",
+    ),
+    CodeInfo(
+        code="PIN_ID_COLLISION",
+        severities=(Severity.ERROR,),
+        stage="kicad",
+        who="part author",
+        cause=(
+            "Two pins of one board part would write one KiCad pin id, because KiCad keys a pin by "
+            "its name, which is the footprint pad name. A labelled connector may repeat a pin name "
+            "in the drawing; the netlist cannot."
+        ),
+        fix=(
+            "No call clears this: rename the part's pins so each is its footprint pad name, "
+            "in the part file."
+        ),
         page="findings-kicad",
     ),
     CodeInfo(
@@ -57,7 +76,10 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         stage="kicad",
         who="consumer",
         cause="Two board parts share one reference designation in the KiCad netlist.",
-        fix="Give each part a distinct designation.",
+        fix=(
+            "Give each part a distinct tag, which sets its designation. Write: "
+            "d.device(<tag>, <mpn>)"
+        ),
         page="findings-kicad",
     ),
     CodeInfo(
@@ -70,3 +92,10 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         page="findings-kicad",
     ),
 )
+
+_BY_CODE: dict[str, CodeInfo] = {info.code: info for info in FINDING_CODES}
+
+
+def fix_text(code: str, **values: str) -> str:
+    """The `fix` of one finding of `code`: the code's template filled with `values`."""
+    return _BY_CODE[code].filled(**values)

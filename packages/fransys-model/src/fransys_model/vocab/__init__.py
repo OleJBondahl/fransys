@@ -4,9 +4,11 @@ from fransys_model.kernel import register_namespaces, register_schema_version
 
 from .aspects import AspectNode, Placement
 from .codes import FINDING_CODES
-from .colours import BASE_COLOURS, COLOUR_GRAMMAR, RESERVED_COLOURS, split_colour
+from .colours import BASE_COLOURS, COLOUR_GRAMMAR, RESERVED_CODES, split_colour
+from .conductor_marks import CONDUCTOR_MARKS
 from .connectivity import Conductor, Mate, Net
 from .core import Function, Item, Port, Unit, UnitRelease
+from .designation_scheme import DESIGNATION_SCHEME
 from .document import Document
 from .enums import (
     Aspect,
@@ -66,17 +68,12 @@ from .markings import (
     Pole,
     function_poles,
     identifier,
-    is_pole_by_role,
-    marking_key,
     pole_order,
-    poles_by_role,
-    port_order_key,
-    unlinked_poles,
 )
 from .project import Project
+from .rail_defaults import RAIL_DEFAULTS
 from .ratings import BreakingPoint, Operating, Rating, effective_rating
 from .revision import Revision
-from .roles import function_role_of
 from .schema_version import SCHEMA_VERSION
 from .supply_system import Rail, SupplySystem, rail_phase_problem, supply_rail_row
 from .tables import (
@@ -92,7 +89,6 @@ from .tables import (
     functions,
     internal_links,
     items,
-    mates,
     nets,
     part_libraries,
     parts,
@@ -104,9 +100,9 @@ from .tables import (
     supply_systems,
     unit_releases,
     units,
-    unused_boundaries,
 )
 from .templates import FunctionTemplate, InternalLink, Part, PartLibrary, PortTemplate
+from .throws import THROWS
 from .wiring_rows import WiringRow, control_of, is_control, rail_row
 
 # The kernel knows only `core`; the layers above name the rest, once, in this order. A
@@ -119,9 +115,13 @@ register_schema_version(SCHEMA_VERSION)
 __all__ = [
     "BASE_COLOURS",
     "COLOUR_GRAMMAR",
+    "CONDUCTOR_MARKS",
+    "DESIGNATION_SCHEME",
     "FINDING_CODES",
-    "RESERVED_COLOURS",
+    "RAIL_DEFAULTS",
+    "RESERVED_CODES",
     "SCHEMA_VERSION",
+    "THROWS",
     "Aspect",
     "AspectNode",
     "AssignedDesignationFacet",
@@ -207,24 +207,18 @@ __all__ = [
     "facet_subject",
     "facets_of",
     "function_poles",
-    "function_role_of",
     "function_templates",
     "functions",
     "identifier",
     "instantiate",
     "internal_links",
     "is_control",
-    "is_pole_by_role",
     "items",
-    "marking_key",
-    "mates",
     "nets",
     "part_libraries",
     "parts",
     "placements",
     "pole_order",
-    "poles_by_role",
-    "port_order_key",
     "port_templates",
     "ports",
     "projects",
@@ -237,6 +231,4 @@ __all__ = [
     "supply_systems",
     "unit_releases",
     "units",
-    "unlinked_poles",
-    "unused_boundaries",
 ]

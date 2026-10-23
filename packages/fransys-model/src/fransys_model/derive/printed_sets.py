@@ -1,8 +1,9 @@
-"""The drawing sets a document prints, one fact in one place (decision model-0201).
+"""The drawing sets a document prints, one fact in one place (decision model-0201, model-0360).
 
-A location subject prints the one set at that location with no unit of its own, since a nested
-unit's set can share the node (model-0041). A unit subject prints that unit's sets. Layout orders
-sets unit-then-location (layout-0045), so sorting by `number` gives "in location order" (U3).
+Each set is printed by exactly one document: `document_scope` holds the sets of each (R331, R361).
+A place document prints that place's top-level set; a unit document prints its unit's sets, the
+sets of its undocumented nested units and the top-level sets of the items its strips feed. Layout
+orders sets unit-then-location (layout-0045), so sorting by `number` gives "in location order".
 """
 
 from fransys_model.layout import DrawingSet, layout_of
@@ -10,25 +11,19 @@ from fransys_model.vocab.tables import documents
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.document import Document
 
-from .document_unit import document_unit
+from .document_scope import document_scope
 
 __all__ = ["document_drawing_sets", "printed_drawing_sets"]
 
 
 def document_drawing_sets(model: Model, document: Id[Document]) -> tuple[DrawingSet, ...]:
-    """The drawing sets of `document` by `number`: a location's top-level set, a unit's sets.
+    """The drawing sets `document` prints, by `number`: `document_scope`'s `drawing_sets`.
 
     `document` is the document's id.
     """
-    record = documents(model)[document]
-    all_sets = layout_of(model, DrawingSet).values()
-    if record.location is not None:
-        matching = [s for s in all_sets if s.location == record.location and s.unit is None]
-    elif (unit := document_unit(model, document)) is not None:
-        matching = [s for s in all_sets if s.unit == unit]
-    else:
-        matching = []
-    return tuple(sorted(matching, key=lambda found: found.number))
+    held = set(document_scope(model, document).drawing_sets)
+    found = [s for s in layout_of(model, DrawingSet).values() if s.id in held]
+    return tuple(sorted(found, key=lambda s: s.number))
 
 
 def printed_drawing_sets(model: Model) -> tuple[DrawingSet, ...]:

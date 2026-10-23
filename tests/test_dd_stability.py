@@ -9,19 +9,13 @@ import dataclasses
 import importlib.util
 import sys
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING
 
 import pytest
+from _dd_core import strings
+from _drawn_pages import drawn_pages
 
-from fransys_model.layout import (
-    Label,
-    LinkMarker,
-    Page,
-    Route,
-    StarKind,
-    SymbolPlacement,
-    layout_of,
-)
+from fransys_model.layout import Page, layout_of
 
 if TYPE_CHECKING:
     from fransys_model.kernel import Model
@@ -37,23 +31,48 @@ if _FIXTURE is None:
     sys.modules["dd_stability_fixture"] = _FIXTURE
     _SPEC.loader.exec_module(_FIXTURE)
 
-build = _FIXTURE.build
-build_result = _FIXTURE.build_result
+_DRAWN: dict = {}  # model digest -> page Drawings, read at build time (the facade's memo is short)
+
+
+def build_result(**options):
+    """The fixture's build with its page Drawings kept here."""
+    assert _FIXTURE is not None
+    for _ in range(2):
+        result = _FIXTURE.build_result(**options)
+        if result.model.digest in _DRAWN:
+            return result
+        try:
+            _DRAWN[result.model.digest] = dict(drawn_pages(result.model))
+        except LookupError:  # the fixture's own cache outlived the memo: build again
+            _FIXTURE.build_result.cache_clear()
+        else:
+            return result
+    return result
+
+
+def build(**options) -> Model:
+    return build_result(**options).model
+
+
+def _drawn_of(model: Model) -> dict:
+    return _DRAWN[model.digest]
+
+
 group_names = _FIXTURE.group_names
 
-_KINDS = (SymbolPlacement, Route, Label, LinkMarker)
+_ALL = ("symbols", "wires", "markers", "texts", "outlines")
+_GEOMETRY = ("symbols", "wires", "texts", "outlines")  # the old placements, routes and labels
 
 
-def _page_dump(model: Model, page_id) -> tuple:
-    """Every placement, route, label and marker on one page, in a canonical order."""
-    return tuple(
-        sorted(
-            (kind.__name__, id_.value, repr(record))
-            for kind in _KINDS
-            for id_, record in layout_of(model, kind).items()
-            if record.page == page_id
-        )
-    )
+def _dump(drawn: dict, page_id, parts: tuple = _ALL) -> tuple:
+    """What one page's Drawing holds of `parts`, in the order the core drew it."""
+    drawing = drawn.get(page_id)
+    return () if drawing is None else tuple(repr(getattr(drawing, part)) for part in parts)
+
+
+def _page_dump(drawn: dict, page_id) -> tuple:
+    """Every symbol, wire, marker, text and outline on one page."""
+    return _dump(drawn, page_id)
 
 
 def _pages_off_the_group(before: Model, after: Model, group: str) -> set:
@@ -65,11 +84,12 @@ def _pages_off_the_group(before: Model, after: Model, group: str) -> set:
     return {p.id for p in pages if not {names[g.group] for g in p.groups} & sharing}
 
 
-def _moved_off_the_group(before: Model, after: Model, group: str) -> list[str]:
+def _moved_off_the_group(before: Model, after: Model, group: str, drawn_after=None) -> list[str]:
     """The pages holding no group that shares a page with `group` whose records differ."""
     free = _pages_off_the_group(before, after, group)
+    one, other = dict(_drawn_of(before)), dict(drawn_after or _drawn_of(after))
     return sorted(
-        page.value[:8] for page in free if _page_dump(before, page) != _page_dump(after, page)
+        page.value[:8] for page in free if _page_dump(one, page) != _page_dump(other, page)
     )
 
 
@@ -81,28 +101,28 @@ def test_a_relay_in_the_last_device_group_moves_only_the_pages_of_that_group() -
     assert _moved_off_the_group(before, after, "F") == []
     free = _pages_off_the_group(before, after, "F")
     assert len(free) >= 2
-    assert all(_page_dump(before, page) for page in free)
-    added = set(layout_of(after, SymbolPlacement)) - set(layout_of(before, SymbolPlacement))
-    assert added
-    # model-0220: KX's wire makes X1's F terminal a star; it stands at each relay of =F
-    placed = layout_of(after, SymbolPlacement)
-    copies = {
-        placed[i].key[placed[i].key.index("at") + 1] for i in added if placed[i].key[3] == "X1"
+    assert all(_page_dump(_drawn_of(before), page) for page in free)
+    drawn_before, drawn_after = _drawn_of(before), _drawn_of(after)
+    seen = {s.id for d in drawn_before.values() for s in d.symbols}
+    added_on = {
+        page: {s.id for s in d.symbols} - seen
+        for page, d in drawn_after.items()
+        if page not in free
     }
-    assert {placed[i].key[3] for i in added} == {"KX", "X1"}
-    assert copies == {"KX", "KF"}
-    assert {layout_of(after, SymbolPlacement)[i].page for i in added} <= set(
-        layout_of(after, Page)
-    ) - free
+    assert any(added_on.values())
+    # model-0220: KX's wire makes X1's F terminal a star; it stands at each relay of =F
+    printed = {text for page, ids in added_on.items() if ids for text in strings(drawn_after[page])}
+    assert "-KX" in printed
+    assert {t for t in printed if t.startswith("-X1")}
+    assert {page for page, ids in added_on.items() if ids} <= set(layout_of(after, Page)) - free
 
 
-def _tampered(model: Model, kind_table: str, id_, **changes) -> Model:
-    """`model` with one record altered through `dataclasses.replace`."""
-    table = model.tables[kind_table]
-    edited = type(table)({**table, id_: dataclasses.replace(cast("Any", table[id_]), **changes)})
-    return dataclasses.replace(
-        model, tables=type(model.tables)({**model.tables, kind_table: edited})
-    )
+def _moved(drawn: dict, page_id) -> dict:
+    """`drawn` with the first symbol of page `page_id` moved 8 G right."""
+    drawing = drawn[page_id]
+    first, *rest = drawing.symbols
+    symbols = (dataclasses.replace(first, x=first.x + 8), *rest)
+    return {**drawn, page_id: dataclasses.replace(drawing, symbols=symbols)}
 
 
 def test_the_stability_check_can_fail() -> None:
@@ -113,35 +133,11 @@ def test_the_stability_check_can_fail() -> None:
     on = {p.id for p in layout_of(after, Page).values()} - off
     assert off
     assert on
-    table = layout_of(after, SymbolPlacement)
-    on_page = next(i for i, r in table.items() if r.page in on)
-    off_page = next(i for i, r in table.items() if r.page in off)
-    assert _moved_off_the_group(
-        before, _tampered(after, "layout.symbol_placement", off_page, x=table[off_page].x + 8), "F"
-    )
-    assert (
-        _moved_off_the_group(
-            before,
-            _tampered(after, "layout.symbol_placement", on_page, x=table[on_page].x + 8),
-            "F",
-        )
-        == []
-    )
-
-
-_GEOMETRY = (SymbolPlacement, Route, Label)
-
-
-def _dump(model: Model, page_id, kinds: tuple) -> tuple:
-    """Every record of `kinds` on one page, in a canonical order."""
-    return tuple(
-        sorted(
-            (kind.__name__, id_.value, repr(record))
-            for kind in kinds
-            for id_, record in layout_of(model, kind).items()
-            if record.page == page_id
-        )
-    )
+    drawn = dict(_drawn_of(after))
+    on_page = next(p for p in drawn if p in on)
+    off_page = next(p for p in drawn if p in off)
+    assert _moved_off_the_group(before, after, "F", _moved(drawn, off_page))
+    assert _moved_off_the_group(before, after, "F", _moved(drawn, on_page)) == []
 
 
 def _by_group_set(model: Model) -> dict:
@@ -163,22 +159,28 @@ def _first_page(before: Model, after: Model, group: str) -> int:
     )
 
 
-def _moved_before_the_group(before: Model, after: Model, group: str, kinds: tuple) -> list:
+def _moved_before_the_group(
+    before: Model, after: Model, group: str, kinds: tuple, drawn_after=None
+) -> list:
     """The pages numbered before `group`'s first page whose records differ."""
     first = _first_page(before, after, group)
     early = [p.id for p in layout_of(before, Page).values() if p.number < first]
-    return [page for page in early if _dump(before, page, kinds) != _dump(after, page, kinds)]
+    one, other = dict(_drawn_of(before)), dict(drawn_after or _drawn_of(after))
+    return [page for page in early if _dump(one, page, kinds) != _dump(other, page, kinds)]
 
 
-def _moved_on_kept_pages(before: Model, after: Model, kinds: tuple, changed: str) -> list:
+def _moved_on_kept_pages(
+    before: Model, after: Model, kinds: tuple, changed: str, drawn_after=None
+) -> list:
     """Pages that keep their set of groups and hold no `changed` group whose
     records differ. A page holding the changed group changes by definition: it is exempt."""
     one, other = _by_group_set(before), _by_group_set(after)
+    d_one, d_other = dict(_drawn_of(before)), dict(drawn_after or _drawn_of(after))
     return sorted(
         (sorted(kept), one[kept].value[:8])
         for kept in one.keys() & other.keys()
         if changed not in kept
-        and _dump(before, one[kept], kinds) != _dump(after, other[kept], kinds)
+        and _dump(d_one, one[kept], kinds) != _dump(d_other, other[kept], kinds)
     )
 
 
@@ -191,8 +193,9 @@ def test_the_pages_before_the_changed_groups_first_page_are_byte_identical(extra
     first = _first_page(before, after, extra)
     assert first >= 2
     assert _moved_before_the_group(before, after, extra, _GEOMETRY) == []
+    drawn = dict(_drawn_of(before))
     assert all(
-        _dump(before, p.id, _GEOMETRY) for p in layout_of(before, Page).values() if p.number < first
+        _dump(drawn, p.id, _GEOMETRY) for p in layout_of(before, Page).values() if p.number < first
     )
 
 
@@ -209,17 +212,17 @@ def test_a_page_that_keeps_its_groups_is_byte_identical_apart_from_its_number(ex
 
 def _marker_keys_on_kept_pages(before: Model, after: Model, changed: str) -> list:
     """On pages that keep their group set and hold no `changed` group, the pages
-    whose link-marker keys changed."""
+    whose marker ids (the render ids of the marker records, which their keys make) changed."""
     one, other = _by_group_set(before), _by_group_set(after)
-    markers = [layout_of(m, LinkMarker) for m in (before, after)]
+    drawn = [dict(_drawn_of(m)) for m in (before, after)]
 
-    def keys(model_markers, page) -> set:
-        return {r.key for r in model_markers.values() if r.page == page}
+    def keys(model_drawn, page) -> set:
+        return {m.id for m in model_drawn[page].markers}
 
     return sorted(
         sorted(kept)
         for kept in one.keys() & other.keys()
-        if changed not in kept and keys(markers[0], one[kept]) != keys(markers[1], other[kept])
+        if changed not in kept and keys(drawn[0], one[kept]) != keys(drawn[1], other[kept])
     )
 
 
@@ -256,8 +259,8 @@ def test_a_marker_key_survives_an_extra_relay_that_shifts_a_later_page() -> None
     last = frozenset({"F", "PLC"})
     assert last in shifted
     stars = [
-        {r.key for r in layout_of(m, LinkMarker).values() if r.page == ids[last] and r.star}
-        for m, ids in ((before, one), (after, other))
+        {m.id for m in dict(_drawn_of(model))[ids[last]].markers}
+        for model, ids in ((before, one), (after, other))
     ]
     assert stars[0]
     assert stars[0] == stars[1]
@@ -273,19 +276,24 @@ def test_a_star_marker_key_survives_an_earlier_branch_in_another_group(branch: s
     # `{A}` names its first branch, which the new branch `KV` sorts before).
     before, after = build(), build(branch=branch)
     one, other = _by_group_set(before), _by_group_set(after)
+    drawn = [dict(_drawn_of(m)) for m in (before, after)]
     seen = set()
     for kept in one.keys() & other.keys():
         if branch in kept:
             continue
         stars = [
-            {r.key: r.star for r in layout_of(m, LinkMarker).values() if r.page == ids[kept]}
-            for m, ids in ((before, one), (after, other))
+            {m.id: m.key for m in model_drawn[ids[kept]].markers}
+            for model_drawn, ids in ((drawn[0], one), (drawn[1], other))
         ]
-        seen |= {kind for kind in stars[0].values() if kind is not None}
+        seen |= set(stars[0].values())
         assert stars[0] == stars[1], sorted(kept)
-    assert seen == {StarKind.REF, StarKind.BRANCH}  # both stand on pages that kept their groups
-    new = set(layout_of(after, LinkMarker)) - set(layout_of(before, LinkMarker))
+    assert len(seen) == 2  # a reference and a branch marker (the library key tells them apart)
+    new = {m.id for m in _all_markers(drawn[1])} - {m.id for m in _all_markers(drawn[0])}
     assert new  # the added branch is a marker of its own
+
+
+def _all_markers(drawn: dict) -> list:
+    return [m for drawing in drawn.values() for m in drawing.markers]
 
 
 @pytest.mark.parametrize("terminal", ["D", "E"])
@@ -299,16 +307,14 @@ def test_a_star_marker_key_survives_a_new_reference_pick_in_another_group(termin
     before, after = build(), build(terminal=terminal)
     one, other = _by_group_set(before), _by_group_set(after)
     kept = [pages for pages in one.keys() & other.keys() if terminal not in pages]
+    drawn = [dict(_drawn_of(m)) for m in (before, after)]
 
-    def reference_ports(model: Model, ids: dict) -> set:
-        return {
-            r.port
-            for pages in kept
-            for r in layout_of(model, LinkMarker).values()
-            if r.page == ids[pages] and r.star is StarKind.REF
-        }
+    def reference_markers(model_drawn: dict, ids: dict) -> set:
+        """The (id, library key) of the markers on the kept pages."""
+        return {(m.id, m.key) for pages in kept for m in model_drawn[ids[pages]].markers}
 
-    assert reference_ports(before, one) != reference_ports(after, other)  # the pick did move
+    # the pick did move: a marker keeps its id and its library key (the role) flips
+    assert reference_markers(drawn[0], one) != reference_markers(drawn[1], other)
     assert {frozenset({"A"}), frozenset({"F", "PLC"})} <= set(kept)  # both markers are compared
     assert _marker_keys_on_kept_pages(before, after, terminal) == []
 
@@ -327,29 +333,22 @@ def test_no_route_crosses_a_text_on_the_d_page() -> None:
     # UNDO: stages/pagerun.py `first_labels`: drop `*markers` from `occupied` and this fails.
     result = build_result(terminal="D")
     ids = _by_group_set(result.model)
-    references = [
-        r
-        for r in layout_of(result.model, LinkMarker).values()
-        if r.page == ids[frozenset({"F", "PLC"})] and r.star is StarKind.REF
-    ]
+    references = dict(_drawn_of(result.model))[ids[frozenset({"F", "PLC"})]].markers
     assert references  # the moved reference is drawn on the page
     assert [f for f in result.findings if f.code == "TEXT_CROSSED_BY_ROUTE"] == []
 
 
 def test_the_new_stability_checks_can_fail() -> None:
-    """A placement moved on an earlier or a kept page is flagged; on the changed page it is not."""
+    """A symbol moved on an earlier or a kept page is flagged; on the changed page it is not."""
     # UNDO: `_moved_before_the_group` / `_moved_on_kept_pages` return [] and this test fails.
     before, after = build(), build(extra="F")
-    table = layout_of(after, SymbolPlacement)
+    drawn = dict(_drawn_of(after))
     names = group_names(after)
     pages = {p.id: {names[g.group] for g in p.groups} for p in layout_of(after, Page).values()}
-    early = next(i for i, r in table.items() if pages[r.page] == {"A"})
-    changed = next(i for i, r in table.items() if "F" in pages[r.page])
-
-    def moved(id_):
-        return _tampered(after, "layout.symbol_placement", id_, x=table[id_].x + 8)
-
-    assert _moved_before_the_group(before, moved(early), "F", _GEOMETRY)
-    assert _moved_on_kept_pages(before, moved(early), _GEOMETRY, "F")
-    assert _moved_before_the_group(before, moved(changed), "F", _GEOMETRY) == []
-    assert _moved_on_kept_pages(before, moved(changed), _GEOMETRY, "F") == []
+    early = next(i for i in drawn if pages[i] == {"A"})
+    changed = next(i for i in drawn if "F" in pages[i])
+    on_early, on_changed = _moved(drawn, early), _moved(drawn, changed)
+    assert _moved_before_the_group(before, after, "F", _GEOMETRY, on_early)
+    assert _moved_on_kept_pages(before, after, _GEOMETRY, "F", on_early)
+    assert _moved_before_the_group(before, after, "F", _GEOMETRY, on_changed) == []
+    assert _moved_on_kept_pages(before, after, _GEOMETRY, "F", on_changed) == []

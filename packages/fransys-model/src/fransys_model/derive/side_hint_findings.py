@@ -4,6 +4,7 @@ from typing import Final
 
 from fransys_model.kernel import Finding, Model, Severity
 from fransys_model.layout import SideHint, layout_of
+from fransys_model.vocab.codes import fix_text
 
 from .designation import connector_designation
 from .line_end_fact import connector_at_line_end
@@ -31,6 +32,7 @@ def check_side_hints(model: Model) -> tuple[Finding, ...]:
                 severity=Severity.WARNING,
                 subjects=(hint.function,),
                 message=message,
+                fix=fix_text(SIDE_HINT_NO_HARNESS_LINE),
             )
         )
     return tuple(sorted(found, key=lambda f: (f.code, f.subjects, f.message)))

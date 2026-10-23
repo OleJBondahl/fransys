@@ -4,6 +4,7 @@ import difflib
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from fransys_model.kernel import natural_join
 from fransys_model.vocab import (
     CableProductFacet,
     FunctionTemplate,
@@ -75,7 +76,7 @@ class Catalogue:
         for template in templates:
             if template.name == function:
                 return template
-        names = ", ".join(sorted(template.name for template in templates)) or "none"
+        names = natural_join(template.name for template in templates) or "none"
         msg = (
             f"part {part.mpn!r} has no function named {function!r} "
             f"(a function is named by its str name); it has: {names}"

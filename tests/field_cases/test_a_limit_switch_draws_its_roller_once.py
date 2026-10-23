@@ -16,12 +16,12 @@ from typing import TYPE_CHECKING
 
 import fransys as fr
 import pytest
+from _drawn_pages import drawn_pages
 from _model_build_cover import cabinet_document
 from fransys.colours import BU
 
-from fransys_model.derive.drawing_text import contact_image, label_text
-from fransys_model.layout import Label, LabelKind, SymbolPlacement, layout_of
-from fransys_model.vocab.tables import functions, items
+if TYPE_CHECKING:
+    from fransys_layout.drawing import Drawing, DrawnSymbol
 
 
 @pytest.fixture(scope="module")
@@ -44,45 +44,45 @@ def model() -> Model:
     return fr.build(d, cabinet_document(cabinet)).model
 
 
-def _drawn(model: Model) -> dict[str, SymbolPlacement]:
-    """B1's placements by function name."""
-    return {
-        functions(model)[p.function].name: p
-        for p in layout_of(model, SymbolPlacement).values()
-        if items(model)[functions(model)[p.function].item].key[-1] == "B1"
+def _drawn(model: Model) -> tuple[Drawing, dict[str, DrawnSymbol]]:
+    """B1's page and its contact symbols by function name (the NO has pins 13-14, the NC 21-22)."""
+    ((page,),) = [[d] for d in drawn_pages(model).values()]
+    pins = {"no": "13", "nc": "21"}
+    found = {
+        name: s for name, pin in pins.items() for s in page.symbols if pin in dict(s.slots).values()
     }
+    return page, found
 
 
-def _labels(model: Model, name: str, kind: LabelKind, slot: str) -> list[Label]:
-    function = _drawn(model)[name].function
-    return [
-        one
-        for one in layout_of(model, Label).values()
-        if one.function == function and one.kind is kind and one.slot.startswith(slot)
-    ]
+def _tag(page: Drawing, symbol: DrawnSymbol) -> str:
+    """The tag text that stands nearest to `symbol`."""
+    tags = [t for t in page.texts if t.kind == "TAG"]
+    near = min(tags, key=lambda t: abs(t.box.x - symbol.x) + abs(t.box.y - symbol.y))
+    return near.text
 
 
 def test_the_no_contact_draws_the_roller_and_the_nc_draws_plain(model: Model) -> None:
     """One roller symbol for B1, on the NO (the lead); the NC is a plain break contact."""
-    drawn = {name: p.symbol for name, p in _drawn(model).items()}
+    drawn = {name: s.key for name, s in _drawn(model)[1].items()}
     assert drawn == {"no": "position-switch-make", "nc": "break-contact"}
 
 
 def test_the_nc_refers_to_the_no(model: Model) -> None:
     """The NC carries a reference whose partner is the NO's page, and the NO prints B1."""
-    (tag,) = _labels(model, "no", LabelKind.TAG, "tag")
-    assert label_text(model, tag).endswith("B1")
-    (reference,) = _labels(model, "nc", LabelKind.CROSS_REFERENCE, "tag")
-    assert {p.page for p in reference.partners} == {_drawn(model)["no"].page}
-    cell = contact_image(model, _labels(model, "no", LabelKind.CROSS_REFERENCE, "contacts")[0])[0]
-    assert label_text(model, reference) == cell[0].split(" ")[1]  # the NO's own cell
+    page, found = _drawn(model)
+    assert _tag(page, found["no"]).endswith("B1")
+    (reference,) = (s for s in page.symbols if s.key == "reference-marker")
+    (table,) = (s for s in page.symbols if s.key == "contact-head")
+    cell = table.texts[1][0]
+    assert dict(reference.slots)["ref"] == cell.split(" ")[1]  # the NO's own cell
 
 
 def test_the_table_under_the_no_lists_both_contacts(model: Model) -> None:
     """NO column "13-14 ...", NC column "21-22 ..."; the NC has no table of its own."""
-    assert _labels(model, "nc", LabelKind.CROSS_REFERENCE, "contacts") == []
-    (table,) = _labels(model, "no", LabelKind.CROSS_REFERENCE, "contacts")
-    no, nc = contact_image(model, table)
+    page, _ = _drawn(model)
+    (table,) = (s for s in page.symbols if s.key == "contact-head")
+    rows = table.texts[1:]
+    no, nc = ([row[i] for row in rows if row[i]] for i in (0, 1))
     assert [entry[:6] for entry in no] == ["13-14 "]
     assert [entry[:6] for entry in nc] == ["21-22 "]
 

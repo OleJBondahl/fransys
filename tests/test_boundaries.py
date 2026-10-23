@@ -43,7 +43,7 @@ ALLOWED: dict[str, frozenset[str]] = {
     "fransys_author": frozenset({"fransys_model"}),
     "fransys_layout": frozenset({"fransys_model", "electrical_symbols"}),
     "fransys_el": frozenset({"fransys_model", "fransys_layout", "electrical_symbols"}),
-    "fransys_render": frozenset({"fransys_model", "electrical_symbols"}),
+    "fransys_render": frozenset({"fransys_model", "fransys_layout", "electrical_symbols"}),
     "fransys_reports": frozenset({"fransys_model"}),
     "fransys_pdf": frozenset({"fransys_model"}),
     "fransys_kicad": frozenset({"fransys_model"}),
@@ -105,16 +105,13 @@ def _source_packages() -> list[Path]:
     """Every `packages/*/src/<name>` directory that holds at least one real `*.py` file.
 
     A directory left holding only a stale `__pycache__` (git deletes a package's tracked
-    files but not the interpreter's cache) is not a package: `__pycache__` is skipped, so a
-    directory holding nothing else has no `*.py` under it. Unlike requiring `__init__.py`,
-    this still counts a namespace-style package (real `.py` files, no `__init__.py`): that
-    directory is a real source package too, and every source package must be checked.
+    files but not the interpreter's cache) is not a package: its `.pyc` files never match
+    `*.py`, so a directory holding nothing else has no `*.py` under it. Unlike requiring
+    `__init__.py`, this still counts a namespace-style package (real `.py` files, no
+    `__init__.py`): that directory is a real source package too, and every source package
+    must be checked.
     """
-    return sorted(
-        p
-        for p in PACKAGES_ROOT.glob("*/src/*")
-        if p.is_dir() and any("__pycache__" not in f.parts for f in p.rglob("*.py"))
-    )
+    return sorted(p for p in PACKAGES_ROOT.glob("*/src/*") if p.is_dir() and any(p.rglob("*.py")))
 
 
 def test_every_source_package_is_in_the_table():
@@ -187,11 +184,11 @@ def test_inputs_import_no_layout_name_beyond_the_frozen_list():
         for path in files
         for line, name in extra_layout_names(path.read_text(encoding="utf-8"))
     ]
-    assert extra == [], "an input imports no `layout` name beyond the 13 frozen ones (M10)"
+    assert extra == [], "an input imports no `layout` name beyond the 14 frozen ones (M10)"
 
 
 def test_the_frozen_layout_list_check_can_fail():
-    assert len(LAYOUT_FOR_INPUTS) == 13
+    assert len(LAYOUT_FOR_INPUTS) == 14
     ok = "from fransys_model.layout import Side, Chain\n"
     assert extra_layout_names(ok) == []
     bad = "x = 1\nfrom fransys_model.layout import Side, Page\n"
@@ -221,9 +218,9 @@ def core_violations(source: str) -> set[str]:
 
 
 def test_the_placement_core_imports_nothing_outside_the_standard_library():
-    """layout-0269, E2: the core imports no workspace package and no third-party package."""
-    files = sorted(CORE_DIR.glob("*.py"))
-    assert len(files) > 1
+    """layout-0269, E2: the core and `drawing.py` (layout-0315) import only the standard library."""
+    files = [*sorted(CORE_DIR.glob("*.py")), CORE_DIR.parent / "drawing.py"]
+    assert len(files) > 2
     found = {
         f"{path.name}: {name}"
         for path in files
@@ -423,10 +420,10 @@ def test_the_surface_check_can_fail():
     )
     # A facade import from layout's internals fails; the same name from
     # layout's own top level passes.
-    assert surface_violations(
-        "fransys", "from fransys_layout.engines.schematic import lay_out_schematic"
-    ) == {"fransys_layout.engines.schematic.lay_out_schematic"}
-    assert surface_violations("fransys", "from fransys_layout import lay_out_schematic") == set()
+    assert surface_violations("fransys", "from fransys_layout.engines import lay_out_cables") == {
+        "fransys_layout.engines.lay_out_cables"
+    }
+    assert surface_violations("fransys", "from fransys_layout import lay_out_cables") == set()
     # Module binding: `baseline.listing` passes; `baseline._common_location`
     # and a submodule bound directly (`designation`, not one of the named modules) both fail.
     assert (
@@ -839,15 +836,6 @@ def test_the_cycle_check_catches_a_cycle_through_a_package_init(tmp_path: Path):
     assert import_cycles(tmp_path) == [["pkg.m", "pkg.sub.n"]]
 
 
-def test_the_model_copy_of_g_per_module_matches_its_home():
-    """`fransys_model` keeps one copy, `text_width.G_PER_MODULE`; it must agree with its home."""
-    import electrical_symbols
-    from fransys_model.derive import frame_position, text_width
-
-    assert text_width.G_PER_MODULE == electrical_symbols.G_PER_MODULE
-    assert frame_position.G_PER_MODULE is text_width.G_PER_MODULE
-
-
 # Gate 2 (root-0212): render calls no derive function except the title-block-text names, and may
 # read derive's row types and constants. The scanners and the counts (`one-home.toml`
 # `[render_derive_imports]`, `[render_svg_literals]`) belong to `test_one_home.py`; the counts
@@ -931,11 +919,8 @@ ROW_EXEMPT: frozenset[tuple[str, str]] = frozenset(
         ("fransys-pdf/src/fransys_pdf/_bridge.py", "_BridgeMark"),
         # The signal-format option of the WAGO export: a setting, not a model row.
         ("fransys-wago/src/fransys_wago/signals.py", "SignalFormat"),
-        # Geometry values of the shorts check and a pen: strokes, not rows about a model thing.
+        # A pen: a stroke value, not a row about a model thing.
         ("fransys-render/src/fransys_render/_cable_pen.py", "Pen"),
-        ("fransys-render/src/fransys_render/_drawn_shorts.py", "Stroke"),
-        ("fransys-render/src/fransys_render/_drawn_shorts.py", "Body"),
-        ("fransys-render/src/fransys_render/_drawn_shorts.py", "Short"),
         # A search result local to the block diagram drawing.
         ("fransys-render/src/fransys_render/diagram.py", "_Found"),
     }
@@ -978,3 +963,12 @@ def test_the_row_type_gate_can_fail():
     )
     assert row_types(source) == {"A", "B", "C"}
     assert row_types("class P(Protocol): ...\n") == set()
+
+
+DRAW_SOURCE = RENDER_SRC / "fransys_render" / "draw.py"
+
+
+def test_draw_imports_no_fransys_model():
+    """layout-0315: `svg` takes values and a library; render's new `draw.py` knows no model."""
+    assert {n for n in _imported(DRAW_SOURCE.read_text(encoding="utf-8")) if "model" in n} == set()
+    assert _imported("from fransys_model import Model\n") == {"fransys_model"}

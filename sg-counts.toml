@@ -1,0 +1,86 @@
+# The stocks of the ast-grep rules in rules/ (spec CONSOLIDATE C2; decision root-0356). One table per
+# rule file id: `stock` = sites found by `ast-grep scan`; `mark` = "forbid" (any site fails) or
+# "count" (above or below the stock fails); `home` = where the concept lives; `forbid_after` = when
+# a count reaches 0. A stock only falls: a raised stock or a new table above 0 needs a `Root-line:`
+# in the commit message (internal/scripts/count_rise.py).
+
+[r13-dead-tree-skip]
+stock = 0
+mark = "forbid"
+home = "scripts/ci_gates.py source_files"
+forbid_after = "now (L14 part 1)"
+
+# Rules 1 (order) and 8 (designation parsing) wait for TIE-KEY to land: no rule file, no table yet.
+# Covered by: GATES-TESTS rules 1, 8 - after TIE-KEY.
+
+[r02-grid-snap]
+stock = 7
+mark = "count"
+home = "the one grid snap function"
+forbid_after = "L7"
+
+[r03-side-table]
+stock = 3
+mark = "count"
+home = "fransys_layout/core/sides.py"
+forbid_after = "one table (stock 1)"
+
+[r04-kind-compare]
+stock = 34
+mark = "count"
+home = "the named facts in fransys_model/derive (item_kind and siblings); replaces the rejected PLR2004 setting (C3)"
+forbid_after = "as the facts replace the compares"
+
+[r05-text-measure]
+stock = 1
+mark = "count"
+home = "fransys_model/derive/text_width.py"
+forbid_after = "L4"
+
+[r06-svg-literal]
+stock = 8
+mark = "count"
+home = "symdef / electrical_symbols data"
+forbid_after = "the symdef release"
+
+[r07-size-decimal]
+stock = 5
+mark = "count"
+home = "the package TOML settings"
+forbid_after = "L0 and L6"
+
+[r07b-size-option]
+stock = 9
+mark = "count"
+home = "the package TOML settings"
+forbid_after = "L0 and L6"
+
+[r09-pass-through]
+stock = 0
+mark = "count"
+home = "none: call the target"
+forbid_after = "stays 0; the pattern as written fits unannotated parameters only, so it cannot fire in typed code (an ast form finds 26 sites; reported, not built)"
+
+[r10-flip-literal]
+stock = 5
+mark = "count"
+home = "fransys_layout/symbols and electrical_symbols"
+forbid_after = "L8"
+
+[r11-power-literal]
+stock = 9
+mark = "count"
+home = "vocab/enums.py power_literals"
+forbid_after = "power_literals fold"
+
+[r12-union-find]
+stock = 13
+mark = "count"
+home = "fransys_kernel, derive/indexes.py, fransys_layout/core"
+forbid_after = "L12"
+
+[r14-ascent-baseline]
+stock = 2
+mark = "count"
+home = "symdef"
+forbid_after = "the flip"

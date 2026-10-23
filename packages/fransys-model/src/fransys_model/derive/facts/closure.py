@@ -5,31 +5,36 @@ A fact of `derive`: the checks import it from here (EL-3).
 
 import dataclasses
 from typing import TYPE_CHECKING, Final, Literal, cast
+lazy from collections.abc import Callable, Iterator
 
 from fransys_model.derive.facts.contacts import link_state
 from fransys_model.derive.facts.joins import port_joins
+from fransys_model.derive.facts.units import enclosing_boards
 from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, digest_cached, value
 from fransys_model.vocab.core import Function, Port
 from fransys_model.vocab.tables import (
+    HasTables,
     conductors,
     functions,
     internal_links,
+    items,
     mates,
     nets,
     ports,
     supply_of_potential,
 )
+lazy from fransys_model.vocab.core import Item
+lazy from fransys_model.vocab.roles_types import LinkRole
+lazy from fransys_model.vocab.templates import InternalLink
 
 from .components import components
 from .net_facts import net_potential
 from .roles import link_role
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Iterable, Iterator, Sequence
+    from collections.abc import Iterable, Sequence
 
-    from fransys_model.vocab.core import Item
-    from fransys_model.vocab.roles_types import LinkRole
-    from fransys_model.vocab.templates import InternalLink, PortTemplate
+    from fransys_model.vocab.templates import PortTemplate
 
 # The links each closure joins, read from the link's role: the physical net joins `joins_net`; a
 # rail also passes a `switched` link (every contact closed) and a `protective` one (closed in
@@ -86,7 +91,7 @@ class LinkGroup:
     """The ports one link of one item ties together, with the item and function it acts in.
 
     `function` is the function of the first port, the one `link_state` is asked about.
-    Package-internal: `derive` does not re-export it.
+    Returned by `link_groups`.
     """
 
     link: InternalLink
@@ -95,7 +100,9 @@ class LinkGroup:
     ports: tuple[Id[Port], ...]
 
 
-def link_groups(model: Model, select: Callable[[LinkRole], bool] = any_link) -> Iterator[LinkGroup]:
+def link_groups(
+    model: HasTables, select: Callable[[LinkRole], bool] = any_link
+) -> Iterator[LinkGroup]:
     """Yield, per item, the ports whose templates a link whose role `select` accepts connects.
 
     The one home of the grouping. The scope is the item, not the function: a link is a part fact.
@@ -117,7 +124,7 @@ def link_groups(model: Model, select: Callable[[LinkRole], bool] = any_link) -> 
             yield LinkGroup(link, item, first.function, (first.id, *others))
 
 
-def _mate_joins(model: Model) -> Iterator[Sequence[Id[Port]]]:
+def _mate_joins(model: HasTables) -> Iterator[Sequence[Id[Port]]]:
     """Yield each header join's two ports, then, per port name, the ports of two mated functions."""
     yield from port_joins(model)
     by_function: dict[Id[Function], list[Port]] = {}
@@ -141,7 +148,7 @@ def _nets_from(groups: Iterable[Sequence[Id[Port]]]) -> tuple[PhysicalNet, ...]:
 
 
 @digest_cached(DIGEST_CACHE_SIZE)
-def _closure(model: Model) -> _Closure:
+def _closure(model: HasTables) -> _Closure:
     joins: list[Sequence[Id[Port]]] = [(c.a, c.b) for c in conductors(model).values()]
     joins.extend(group.ports for group in link_groups(model, _physical))
     joins.extend(_mate_joins(model))
@@ -151,7 +158,7 @@ def _closure(model: Model) -> _Closure:
     )
 
 
-def physical_nets(model: Model) -> tuple[PhysicalNet, ...]:
+def physical_nets(model: HasTables) -> tuple[PhysicalNet, ...]:
     """Union-find `model`'s ports into physical nets.
 
     Ports join through `Conductor`s, `conductive` `InternalLink`s (per item, through each port's
@@ -401,3 +408,23 @@ def port_groups(groups: Iterable[Sequence[Id[Port]]]) -> tuple[PhysicalNet, ...]
     """
     fixed = [tuple(group) for group in groups]
     return _nets_from(components({port for group in fixed for port in group}, fixed))
+
+
+def port_item(model: HasTables, port: Id[Port]) -> Id[Item]:
+    """The item that owns `port`, through its function."""
+    return functions(model)[ports(model)[port].function].item
+
+
+@digest_cached(DIGEST_CACHE_SIZE)
+def _boards_of(model: Model) -> frozendict[Id[Item], frozenset[Id[Item]]]:
+    return frozendict({item: frozenset(enclosing_boards(model, item)) for item in items(model)})
+
+
+def net_on_one_board(model: Model, net_ports: Iterable[Id[Port]]) -> bool:
+    """Whether one board item is an ancestor-or-self of every port's item (model-0040)."""
+    boards = _boards_of(model)
+    common = None
+    for port in net_ports:
+        mine = boards[port_item(model, port)]
+        common = mine if common is None else common & mine
+    return bool(common)

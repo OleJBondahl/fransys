@@ -2,14 +2,14 @@ Fransys output: document assembly to Typst source.
 
 Output contract: pure function of a Model returning str, bytes or a tuple of pages. No file I/O, no clock, no randomness. Same model digest, same bytes.
 
-`source(model, document, svgs) -> str` returns the complete, self-contained Typst source of
-one document: every drawing SVG is inlined, so the source references no file. The facade
+`source(model, document, svgs, sheets, bridges, *, links, list_share_pct, list_gutter_pct) -> str` returns the complete, self-contained Typst source of
+one document: every drawing SVG is inlined, so the source references no file. `links` maps each drawn page to its reference links, which the layout returns and the facade passes: the source places one box per link. The facade
 compiles it (third-party dependency `typst`, pinned per the pdf spec's decision record); this
 package never depends on `typst` itself. `check(model, svgs, built=()) -> tuple[Finding, ...]` takes the
 same SVG mapping, because it is the only way to tell a missing drawing-set page from one that
 is present. `built` takes the build's own findings, so a missing drawing names the finding
-that caused it, such as DIAGRAM_COLUMN_TOO_TALL. `font_dir()` returns the path to the vendored DejaVu Sans Condensed
-faces, through `importlib.resources`, reading nothing.
+that caused it, such as DIAGRAM_COLUMN_TOO_TALL. This package holds no font file: the drawing
+font's faces are symbol data, at `electrical_symbols.font_dir()`.
 
 The page list is `derive.document_page_kinds(model, document)` in `fransys_model`: its preset's
 pages, plus `add`, minus `remove`, in canonical order, the notes page dropped when there is no

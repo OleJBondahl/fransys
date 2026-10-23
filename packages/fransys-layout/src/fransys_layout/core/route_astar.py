@@ -74,8 +74,14 @@ def anchor(pin: XY, fp: Box, step: int) -> tuple[XY, ...]:
     return tidy((pin, corner, (gx, gy)))
 
 
-def _step_cost(grid: Occupancy, net: str, cell: XY, axis: str, options: Options) -> int | None:
-    """None when the cell is blocked or carries another net along the same axis."""
+def _step_cost(grid: Occupancy, leg: Leg, cell: XY, axis: str, options: Options) -> int | None:
+    """None when the cell is blocked, or an end or the goal would lie on another net's wire."""
+    net = leg.net
+    if cell in leg.free or cell == leg.goal or cell in leg.targets:
+        if grid.foreign(cell, net):
+            return None
+        if cell in leg.free:
+            return grid.step
     if grid.blocked(cell, axis, net):
         return None
     return grid.step + options.crossing_penalty * grid.crossing(cell, axis, net)
@@ -88,13 +94,16 @@ def _inside(grid: Occupancy, leg: Leg, cell: XY) -> bool:
     )
 
 
-def _moves(grid: Occupancy, leg: Leg, cell: XY, options: Options) -> list[tuple[XY, str, int]]:
+def _moves(grid: Occupancy, leg: Leg, state: State, options: Options) -> list[tuple[XY, str, int]]:
+    """Steps from a state; a path turns only off another net's wire (R391)."""
+    cell, arrived = state
+    on_foreign = bool(arrived) and grid.foreign(cell, leg.net)
     out = []
     for dx, dy, axis in MOVES:
         nxt = (cell[0] + dx, cell[1] + dy)
-        if not _inside(grid, leg, nxt):
+        if not _inside(grid, leg, nxt) or (on_foreign and axis != arrived):
             continue
-        cost = grid.step if nxt in leg.free else _step_cost(grid, leg.net, nxt, axis, options)
+        cost = _step_cost(grid, leg, nxt, axis, options)
         if cost is not None:
             out.append((nxt, axis, cost))
     return out
@@ -102,6 +111,8 @@ def _moves(grid: Occupancy, leg: Leg, cell: XY, options: Options) -> list[tuple[
 
 def astar(grid: Occupancy, leg: Leg, options: Options) -> tuple[XY, ...] | None:
     """Grid cells from start to goal, or None when no path exists."""
+    if grid.foreign(leg.start, leg.net):
+        return None
     best: dict[State, int] = {}
     goals = {leg.goal, *leg.targets}
     heap: list[tuple[int, int, XY, str, tuple[XY, ...]]] = [(0, 0, leg.start, "", (leg.start,))]
@@ -111,7 +122,7 @@ def astar(grid: Occupancy, leg: Leg, options: Options) -> tuple[XY, ...] | None:
             return path
         if best.get((cell, axis), INF) < g:
             continue
-        for nxt, nxt_axis, cost in _moves(grid, leg, cell, options):
+        for nxt, nxt_axis, cost in _moves(grid, leg, (cell, axis), options):
             bend = options.bend_penalty if axis and axis != nxt_axis else 0
             if g + cost + bend < best.get((nxt, nxt_axis), INF):
                 ng = g + cost + bend

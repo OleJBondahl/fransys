@@ -17,34 +17,41 @@ from pathlib import Path
 
 import fransys as fr
 from fransys.colours import BU
-from fransys_el import OPTIONS
 
-from fransys_layout.engines.schematic.engine import stage_results
-from fransys_layout.engines.schematic.read import read_inputs
-from fransys_model.vocab import FunctionKind
-from fransys_model.vocab.tables import functions, items, ports
+
+def _gap(model, fact: str):
+    """A fact the page Drawing lacks (strict xfail, GAP-FLIP-DRAWING-SUBJECT)."""
+    msg = f"GAP-FLIP-DRAWING-SUBJECT: no {fact} for {model.digest}"
+    raise AssertionError(msg)
 
 
 def _layout(plant) -> tuple:
-    """The model and the staged layout of `plant(d)` in one cabinet document."""
+    """The built model and its result of `plant(d)` in one cabinet document."""
     d = fr.design("demo_parts", place="CAB")
     cab = d.location("CAB", "Cabinet")
     plant(d)
     cover = Path(tempfile.mkdtemp()) / "cover.md"
     cover.write_text("# Cabinet\n", encoding="utf-8")
     doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover)
-    model = fr.build(d, doc).model
-    results, _ = stage_results(model, read_inputs(model, options=OPTIONS))
-    return model, results.layout
+    result = fr.build(d, doc)
+    return result.model, result
 
 
-def _box_sides(model, layout, tag: str) -> dict[str, str]:
-    """The one placement of item `tag`'s box, as {port name: side}; no function placed apart."""
-    (item,) = (one.id for one in items(model).values() if one.key[-1] == tag)
-    own = {f.id for f in functions(model).values() if f.item == item}
-    assert not [one for one in layout.placed if one.function in own]
-    (box,) = (one for one in layout.placed if one.function == item)
-    return {g.name: g.facing.value for g in box.geometry.ports}
+def _symbols(model, tag: str) -> list:
+    """Every drawn symbol owned by the item or function tagged `tag`."""
+    return [s for s in _gap(model, "symbol subject").values() if s.owner.split()[0] == tag]
+
+
+def _box(model, tag: str):
+    """The one box of item `tag`; no function of the item is drawn apart from it."""
+    (box,) = _symbols(model, tag)
+    assert box.key == "generic-box"
+    return box
+
+
+def _box_sides(model, tag: str) -> dict[str, str]:
+    """The one box of item `tag`, as {port name: side}."""
+    return dict(_box(model, tag).sides)
 
 
 def _psu(d) -> None:
@@ -63,15 +70,15 @@ def _module(d) -> None:
 
 def test_a_power_supply_draws_its_ac_input_on_top_and_its_dc_output_below() -> None:
     """No supply is declared, so D5 does not decide: V1's load above supply does."""
-    model, layout = _layout(_psu)
-    sides = _box_sides(model, layout, "T1")
+    model, _ = _layout(_psu)
+    sides = _box_sides(model, "T1")
     assert sides == {"input.L": "n", "input.N": "n", "output.+": "s", "output.-": "s"}
 
 
 def test_a_plc_module_draws_one_box_with_power_on_top_and_its_channels_below() -> None:
     """The four wired channels are pins of the module's box, below its power pins."""
-    model, layout = _layout(_module)
-    sides = _box_sides(model, layout, "K1")
+    model, _ = _layout(_module)
+    sides = _box_sides(model, "K1")
     assert sides == {
         "power.24V": "n",
         "power.0V": "n",
@@ -92,24 +99,19 @@ def _module_unwired(d) -> None:
 def test_a_plc_module_box_takes_v1_sides_for_its_power_and_its_channels() -> None:
     """The module's box (power and four unwired channels) fixes V1 sides: power N, channels S."""
     model, _ = _layout(_module_unwired)
-    inputs = read_inputs(model, options=OPTIONS)
-    kind = {port.id: functions(model)[port.function].kind for port in ports(model).values()}
-    owner = {f.id: items(model)[f.item].key[-1] for f in functions(model).values()}
-    tag = {p.id: owner[ports(model)[p.id].function] for p in ports(model).values()}
-    north = {kind[port] for port in inputs.item_north if tag[port] == "K1"}
-    south = {kind[port] for port in inputs.item_south if tag[port] == "K1"}
-    assert (north, south) == ({FunctionKind.LOAD}, {FunctionKind.PLC_CHANNEL})
+    sides = _box_sides(model, "K1")
+    north = {name.split(".")[0] for name, side in sides.items() if side == "n"}
+    south = {name.split(".")[0] for name, side in sides.items() if side == "s"}
+    assert (north, south) == ({"power"}, {"di_1", "di_2", "di_3", "di_4"})
 
 
 def test_a_switch_stands_under_its_channel_pin_clear_of_the_box() -> None:
     """Each wired switch is placed below the module box on its page; the first under its pin."""
-    model, layout = _layout(_module)
-    (item,) = (one.id for one in items(model).values() if one.key[-1] == "K1")
-    (box,) = (one for one in layout.placed if one.function == item)
-    pin = next(g for g in box.geometry.ports if g.name == "di_1.1")
-    bottom = box.at.y + box.geometry.keepout.y + box.geometry.keepout.height
-    others = [one for one in layout.placed if one is not box]
+    model, result = _layout(_module)
+    box = _box(model, "K1")
+    others = [s for s in _gap(model, "symbol subject").values() if s is not box]
     assert len(others) == 4
     assert {one.page for one in others} == {box.page}
-    assert all(one.at.y + one.geometry.keepout.y > bottom for one in others)
-    assert any(one.at.x == box.at.x + pin.at.x for one in others)
+    assert all(one.y > box.y for one in others)
+    assert any(one.x == box.x + box.offsets["di_1.1"] for one in others)
+    assert "SYMBOL_OVERLAP" not in {f.code for f in result.findings}

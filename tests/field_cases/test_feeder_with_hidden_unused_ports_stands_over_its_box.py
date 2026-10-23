@@ -16,15 +16,14 @@ from pathlib import Path
 
 import fransys as fr
 from fransys.colours import BN, BU
-from fransys_el import OPTIONS
 
-from fransys_layout.engines.schematic.engine import stage_results
-from fransys_layout.engines.schematic.read import read_inputs
+from fransys_layout.geometry import GENERIC_BOX_KEY
+from fransys_model.layout import LinkMarker, layout_of
 from fransys_model.vocab.tables import functions, items, ports
 
 
-def _built(mpn: str, plus: str, minus: str) -> tuple:
-    """The model and layout: two supplies of `mpn` from terminals into one redundancy module."""
+def _built(mpn: str, plus: str, minus: str):
+    """The built model: two supplies of `mpn` from terminals into one redundancy module."""
     d = fr.design("demo_parts", place="CAB")
     d.layout.profile(hide_unused_pins=True)
     cab = d.location("CAB", "Cabinet")
@@ -46,43 +45,58 @@ def _built(mpn: str, plus: str, minus: str) -> tuple:
     cover = Path(tempfile.mkdtemp()) / "cover.md"
     cover.write_text("# Cabinet\n", encoding="utf-8")
     doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover)
-    model = fr.build(d, doc).model
-    return model, stage_results(model, read_inputs(model, options=OPTIONS))[0].layout
+    return fr.build(d, doc).model
 
 
-def _box(model, layout, tag: str):
+def _gap(model, fact: str):
+    """A fact the page Drawing lacks (strict xfail, GAP-FLIP-DRAWING-SUBJECT)."""
+    msg = f"GAP-FLIP-DRAWING-SUBJECT: no {fact} for {model.digest}"
+    raise AssertionError(msg)
+
+
+def _box(model, tag: str) -> tuple:
+    """The page and the generic box drawn for the item tagged `tag`."""
     (item,) = (one.id for one in items(model).values() if one.key[-1] in (f"G/{tag}", tag))
-    return next(one for one in layout.placed if one.function == item)
+    owned = {f.id.value for f in functions(model).values() if f.item == item}
+    boxes = [
+        (page, s)
+        for page, drawing in _gap(model, "symbol subject").items()
+        for s in drawing.symbols
+        if s.key == GENERIC_BOX_KEY and s.owner and s.owner.split(":")[-1] in owned
+    ]
+    assert len(boxes) == 1, f"{tag} draws {len(boxes)} boxes, not one"
+    return boxes[0]
 
 
 def _pin_x(box, name: str) -> int:
-    (pin,) = (g for g in box.geometry.ports if g.name == name)
-    return box.at.x + pin.at.x
+    return box.x + dict(box.offsets)[name]
 
 
-def _check(model, layout, plus: str, minus: str) -> None:
+def _check(model, plus: str, minus: str) -> None:
     """No marker to the module, the drawn output pins over the input pins, one page."""
-    module = _box(model, layout, "M1")
-    psus = {n: _box(model, layout, f"G{n}") for n in (1, 2)}
-    boxes = {module.function, *(p.function for p in psus.values())}
+    module_page, module = _box(model, "M1")
+    psus = {n: _box(model, f"G{n}") for n in (1, 2)}
+    boxed = {i.id for i in items(model).values() if i.key[-1].split("/")[-1] in ("M1", "G1", "G2")}
     fn_of = {pid: functions(model)[p.function] for pid, p in ports(model).items()}
     wires = [
-        m for m in layout.markers if fn_of[m.port].item in boxes and fn_of[m.port].key[-1] != "out"
+        m
+        for m in layout_of(model, LinkMarker).values()
+        if fn_of[m.port].item in boxed and fn_of[m.port].key[-1] != "out"
     ]
     assert not wires, "a wire between a supply and the module is a link marker"
-    for n, psu in psus.items():
+    for n, (_, psu) in psus.items():
         assert _pin_x(psu, f"output.{plus}") == _pin_x(module, f"in_{n}.{n}+")
         assert _pin_x(psu, f"output.{minus}") == _pin_x(module, f"in_{n}.{n}-")
-    assert {one.page for one in (module, *psus.values())} == {module.page}
+    assert {module_page, *(page for page, _ in psus.values())} == {module_page}
 
 
 def test_two_pin_output_stands_over_the_module() -> None:
     """The control: a two-pin output pairs today."""
-    model, layout = _built("DEMO-PSU-24", "+", "-")
-    _check(model, layout, "+", "-")
+    model = _built("DEMO-PSU-24", "+", "-")
+    _check(model, "+", "-")
 
 
 def test_five_pin_output_with_two_wired_stands_over_the_module() -> None:
     """The three unwired pins are hidden, so the output draws two pins and pairs."""
-    model, layout = _built("DEMO-PSU-24-5OUT", "+1", "-1")
-    _check(model, layout, "+1", "-1")
+    model = _built("DEMO-PSU-24-5OUT", "+1", "-1")
+    _check(model, "+1", "-1")

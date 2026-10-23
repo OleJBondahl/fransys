@@ -2,19 +2,15 @@
 
 > Offline copy. Read the official docs for your version at https://olejbondahl.github.io/fransys/X.Y.Z/ (X.Y.Z is `fransys.__version__`), or https://olejbondahl.github.io/fransys/X.Y.Z/llms.txt. Use this copy only offline.
 
-The official Fransys documentation is the site, one version per release. Read it there, never in the
-installed package folder (`site-packages/fransys/`). Paste this block into your project's
-`CLAUDE.md` or `AGENTS.md` so every agent that works on the project finds it:
+The official Fransys documentation is the site, one version per release. Paste this block into
+your project's `CLAUDE.md` or `AGENTS.md` so every agent that works on the project finds it:
 
 ```markdown
 ## Fransys documentation
-
-- The official documentation is https://olejbondahl.github.io/fransys/ .
-- Take the version from the installed package: `importlib.metadata.version("fransys")` is `X.Y.Z`.
-- Start at https://olejbondahl.github.io/fransys/X.Y.Z/llms.txt. Its `llms-full.txt` is the whole guide in one file.
-- Read a page as Markdown at its URL plus `index.md`, such as https://olejbondahl.github.io/fransys/X.Y.Z/guide/index.md.
+- Official docs for the installed version: https://olejbondahl.github.io/fransys/X.Y.Z/llms.txt, where X.Y.Z is `importlib.metadata.version("fransys")`.
+- Look a public name or a finding code up with `python -m fransys help KEY`: it prints the signature, the docstring and the guide page.
 - Import only `fransys`. Write with the calls the guide index names under "Which call first".
-- Do not read `site-packages/fransys/`. Its guide is an offline fallback for when the site is unreachable.
+- Offline only: the installed guide is `importlib.resources.files("fransys").joinpath("guide")`; start at `index.md`.
 ```
 
 The part-file format is in

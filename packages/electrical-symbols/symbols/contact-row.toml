@@ -2,23 +2,22 @@ schema = 1
 name = "Contact row (contact table)"
 kind = "element"
 status = "unverified"
-# our own table row: one contact of a device, its marking and the place it is used
+# our own table row: row k holds the k-th NO contact and the k-th NC contact of a device, each cell
+# one text "{mark} {place}". One module high (a text line); a pad (0.25) left, between and right.
+# Each cell's slot box is two divisions wide and one high (a turned box grows up, so a tall one
+# would overlap its neighbour) with an x cut strictly inside it: fitted_table grows the cut to the
+# widest text of its column, so a column is as wide as its widest text (CONTACT-TABLE-DATA).
 reference = { standard = "IEC 60617", number = "contact-row" }
 
-ports = [
-  { id = "ref", at = [-2, 1], dir = "W", description = "cross-reference side" },
-]
-
 elements = [
-  { line = [[-2, 1], [0, 1]], port = "ref" },
-  { polyline = [[0, 0], [8, 0], [8, 2], [0, 2]], closed = true },
+  { polyline = [[0, 0], [1.25, 0], [1.25, 1], [0, 1]], closed = true },
 ]
 
-lint_allow = [
-  { rule = "slot-overlap-body", reason = "the text box is wider than the cell is tall; a table cell is drawn unrotated and its text stays inside the outline" },
-  { rule = "port-isolated", reason = "a contact row ends its circuit at the table; no path of this symbol continues it" },
-]
+stretch = [{ axis = "x", at = 0.375 }, { axis = "x", at = 0.875 }]
 
 [slots]
-"marking.ref" = { at = [0.25, 1], side = "E", box = [1.5, 1] }
-place = { at = [2, 1], side = "E", box = [5.5, 1] }
+no = { at = [0.25, 0.5], side = "E", box = [0.25, 0.125] }
+nc = { at = [0.75, 0.5], side = "E", box = [0.25, 0.125] }
+# no text goes here: its box only extends the keepout one pad (0.25) below the row, so the stacked
+# rows' union ends a pad under the last row (the table's closing pad)
+pad = { at = [0.625, 1.0], side = "S", box = [0.25, 0.25] }

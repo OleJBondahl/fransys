@@ -7,8 +7,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from .marker_flags import with_rooms
 from .outputs import Placement
-from .place_assemble import assemble
+from .place_assemble import assemble, placed_rooms
 from .place_env import page_envs
 from .place_x import place_x
 from .place_y import place_y
@@ -31,8 +32,9 @@ def place_pages(
     """
     pages = []
     findings: list[Finding] = []
-    for env in page_envs(cut, problem, options, reserves):
-        x, wide = place_x(env)
+    for bare in page_envs(cut, problem, options, reserves):
+        x, wide = place_x(bare)
+        env = with_rooms(bare, x, placed_rooms(bare, x))
         y, dropped = place_y(env, x)
         pages.append(assemble(env, x, y))
         findings.extend((*wide, *dropped))

@@ -1,22 +1,18 @@
-"""`readability`: how readable the schematic pages of a build are (decision 0182)."""
+"""`readability`: how readable the drawn schematic pages of a build are (el-0043, R218)."""
 
-from fransys_el import OPTIONS
+import fransys_el
 
-from fransys_layout import page_readability
-lazy from fransys_model.derive import ReadabilityReport
+lazy from fransys_model.derive import DrawnReading
 
 lazy from .pipeline import BuildResult
 
 
-def readability(result: BuildResult) -> ReadabilityReport:
-    """Read: one row for each schematic page of `result`, and one for each unit.
+def readability(result: BuildResult) -> DrawnReading:
+    """Read: one row of counts for each page drawn in `result.drawings`, in their order.
 
-    A page row counts what a reader of the print feels: the profile's text height against
-    `min_text_height_mm`, how much of the page the drawing fills, wires crossing wires, text struck
-    by a wire, text overlaps, cells alone on a page, and the references the page makes. A unit row
-    adds its pages up. Pure: the same model gives the same rows. The layout runs again on
-    `result.model`, as `build` ran it, so the cost is about that of the layout.
+    A page row counts its symbols, markers, wire crossings, bends and length, texts struck by a wire
+    and text overlaps. An error build has no drawings and gives no rows. Pure.
 
-    Does not write a file, emit anything from `write`, or raise on findings.
+    Does not write a file, lay the pages out again or raise on findings.
     """
-    return page_readability(result.model, OPTIONS)
+    return fransys_el.readability(result.drawings)

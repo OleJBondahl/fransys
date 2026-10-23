@@ -3,13 +3,13 @@
 from typing import cast
 
 from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, digest_cached, index_ids
-from fransys_model.vocab.tables import aspect_nodes, items, units
+from fransys_model.vocab.tables import HasTables, aspect_nodes, items, units
 lazy from fransys_model.vocab.aspects import AspectNode
 lazy from fransys_model.vocab.core import Item, Unit
 
 
 @digest_cached(DIGEST_CACHE_SIZE)
-def children_index(model: Model) -> frozendict[Id[Item], tuple[Id[Item], ...]]:
+def children_index(model: HasTables) -> frozendict[Id[Item], tuple[Id[Item], ...]]:
     """Every item's children by `Item.parent`, in `Id` order."""
     pairs = ((i.parent, i.id) for i in items(model).values() if i.parent is not None)
     return cast("frozendict[Id[Item], tuple[Id[Item], ...]]", index_ids(pairs))
@@ -20,12 +20,12 @@ def child_items(model: Model, item: Id[Item]) -> tuple[Id[Item], ...]:
     return children_index(model).get(item, ())
 
 
-def parent_item(model: Model, item: Id[Item]) -> Id[Item] | None:
+def parent_item(model: HasTables, item: Id[Item]) -> Id[Item] | None:
     """The id of `item`'s parent by `Item.parent`; `None` for a root."""
     return items(model)[item].parent
 
 
-def unit_parent(model: Model, unit: Id[Unit]) -> Id[Unit] | None:
+def unit_parent(model: HasTables, unit: Id[Unit]) -> Id[Unit] | None:
     """The id of `unit`'s parent by `Unit.parent`; `None` for a root."""
     return units(model)[unit].parent
 

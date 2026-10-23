@@ -7,13 +7,12 @@ they never import `fransys_layout` (the boundary gate holds render to
 The golden's own recorded `library_version` (a snapshot from whenever it was regenerated) is
 replaced on load by the currently INSTALLED `electrical_symbols.library_version()` (decision
 layout-0046's normalisation, applied here to the installed value rather than a fixed
-placeholder): `check.py`'s `LIBRARY_VERSION_MISMATCH` compares a placement's recorded value
-against exactly that installed value, so leaving the golden's own stale recording in place
-would fire `LIBRARY_VERSION_MISMATCH` on every release that moves electrical-symbols' version,
-for a reason that has nothing to do with the layout itself. `produced_by` is untouched: no
+placeholder), so a release that moves electrical-symbols' version leaves the goldens alone.
+`produced_by` is untouched: no
 render check reads it.
 """
 
+import sys
 from dataclasses import replace
 from pathlib import Path
 from typing import TYPE_CHECKING, cast
@@ -29,6 +28,10 @@ if TYPE_CHECKING:
     from _typeshed import DataclassInstance
 
     from fransys_model.kernel import Record
+
+# --import-mode=importlib leaves this directory off sys.path; the tests import `render_library`
+# by name (workspace rule: append, never insert(0)).
+sys.path.append(str(Path(__file__).parent))
 
 _GOLDEN_DIR = (
     next(

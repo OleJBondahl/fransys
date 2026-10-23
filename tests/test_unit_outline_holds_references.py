@@ -12,9 +12,8 @@ import importlib.util
 from pathlib import Path
 
 import pytest
-
-from fransys_layout.geometry import PAGE_PAD
-from fransys_model.layout import Label, LinkMarker, Outline, layout_of
+from _core_boxes import outline_rect
+from _drawn_pages import drawn_pages
 
 _SOURCE = Path(__file__).resolve().parent / "test_dd_boundary_draw.py"
 _spec = importlib.util.spec_from_file_location("_boundary_draw_for_outlines", _SOURCE)
@@ -29,34 +28,21 @@ def model():
     return _boundary_draw._build_pass_through().model
 
 
-def _marker_and_outline(model):
-    """The pass-through pin's off-stub markers, each with the outlines of its page."""
-    pin = _boundary_draw._pin_one(model, "x1")
-    outlines = list(layout_of(model, Outline).values())
-    return [
-        (marker, [o for o in outlines if o.page == marker.page])
-        for marker in layout_of(model, LinkMarker).values()
-        if marker.port == pin
-    ]
-
-
 def test_an_outline_holds_the_reference_box_and_its_title_stands_above_it(model) -> None:
     """The pin's marker box, with its stub, lies inside its page's outline; the title is above."""
     # UNDO: stages/outlines.py `unit_outlines`: the `texts += [_marker_reach(...)]` line keeps no
     #   member port's marker (`if marker.port in ()`), and the box stands past the outline's edge
-    titles = [t for t in layout_of(model, Label).values() if t.slot == "outline_title"]
     held = 0
-    for marker, outlines in _marker_and_outline(model):
-        for outline in outlines:
-            if not outline.x <= marker.x < outline.x + outline.width:
-                continue
-            held += 1
-            # an N marker's box grows up from its port: `y` is the port end, `height` the length
-            assert marker.vertical
-            assert outline.y <= marker.y - marker.height
-            assert marker.y <= outline.y + outline.height
-            (title,) = (
-                t for t in titles if t.page == outline.page and t.x == max(outline.x, PAGE_PAD + 8)
-            )  # layout-0104: a title keeps the 8 G text gap inside the inset
-            assert title.y + title.height <= outline.y
+    for drawing in drawn_pages(model).values():
+        for outline in drawing.outlines:
+            left, top, right, bottom = outline_rect(outline)
+            for marker in drawing.markers:
+                if not left <= marker.x < right:
+                    continue
+                held += 1
+                assert marker.side in {"n", "s"}  # a vertical box
+                assert top <= marker.y <= bottom
+                assert outline.label is not None
+                title = outline.label.box
+                assert title.y + title.h <= top
     assert held

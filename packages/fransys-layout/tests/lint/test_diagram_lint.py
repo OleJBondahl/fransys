@@ -1,11 +1,17 @@
 """The six ERROR checks: each has a failing hand case and a clean twin one coordinate away."""
 
-from samples import hid
+from typing import Any
 
 from fransys_layout.geometry import Box, Point
 from fransys_layout.lint import lint_diagram
 from fransys_layout.lint._diagram_scene import Scene, SceneBox, SceneLine, SceneText
-from fransys_model.kernel import Severity
+from fransys_model.kernel import Id, Severity
+
+
+def hid(kind: str, number: int) -> Id[Any]:
+    """An invented id of `kind`; equal `number`, equal id."""
+    return Id(kind=kind, value=f"{number:032x}")
+
 
 A, B, C, CABLE = hid("item", 1), hid("item", 2), hid("item", 3), hid("cable", 9)
 G = 8

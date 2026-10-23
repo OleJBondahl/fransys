@@ -11,7 +11,7 @@ from fransys_model.derive.facts.children import parent_item, unit_parent
 from fransys_model.derive.facts.item_predicates import cable_items
 from fransys_model.kernel import DIGEST_CACHE_SIZE, Model, digest_cached, index_ids, parent_chain
 from fransys_model.vocab.facets.pcb import PcbFacet
-from fransys_model.vocab.tables import boundaries, facets_of, items
+from fransys_model.vocab.tables import HasTables, boundaries, facets_of, items
 from fransys_model.vocab.tables import units as units_table
 lazy from fransys_model.kernel import Id
 lazy from fransys_model.vocab.core import Function, Item, Unit
@@ -58,7 +58,7 @@ class UnitIndex:
     boundary_of: frozendict[Id[Unit], tuple[Id[Function], ...]]
 
 
-def _external_items(model: Model, all_items: frozendict[Id[Item], Item]) -> frozenset[Id[Item]]:
+def _external_items(model: HasTables, all_items: frozendict[Id[Item], Item]) -> frozenset[Id[Item]]:
     """The external items, one memoised `parent` walk per item; a `parent` cycle ends its walk."""
     verdict: dict[Id[Item], bool] = {}
     for start in all_items.values():
@@ -84,7 +84,7 @@ def _external_items(model: Model, all_items: frozendict[Id[Item], Item]) -> froz
 
 
 def _own_roots(
-    model: Model, all_items: frozendict[Id[Item], Item], external: frozenset[Id[Item]]
+    model: HasTables, all_items: frozendict[Id[Item], Item], external: frozenset[Id[Item]]
 ) -> dict[Id[Unit], list[Id[Item]]]:
     """Each unit -> its items whose parent is in no unit or another unit, external ones left out."""
     roots: dict[Id[Unit], list[Id[Item]]] = {}
@@ -110,7 +110,7 @@ def _containing(
 
 
 def _boundary_of(
-    model: Model, all_units: frozendict[Id[Unit], Unit]
+    model: HasTables, all_units: frozendict[Id[Unit], Unit]
 ) -> frozendict[Id[Unit], tuple[Id[Function], ...]]:
     """Each unit -> its boundary functions, one pass over the `Boundary` table."""
     grouped = index_ids({(record.unit, record.function) for record in boundaries(model).values()})
@@ -123,7 +123,16 @@ def boundary_unit(model: Model, boundary: Id[Boundary]) -> Id[Unit]:
 
 
 @digest_cached(DIGEST_CACHE_SIZE)
-def unit_index(model: Model) -> UnitIndex:
+def boundary_owners(model: HasTables) -> frozendict[Id[Function], tuple[Id[Unit], ...]]:
+    """Each boundary function -> the unit of each of its `Boundary` records, repeats kept."""
+    found: dict[Id[Function], list[Id[Unit]]] = {}
+    for record in boundaries(model).values():
+        found.setdefault(record.function, []).append(record.unit)
+    return frozendict({function: tuple(owners) for function, owners in found.items()})
+
+
+@digest_cached(DIGEST_CACHE_SIZE)
+def unit_index(model: HasTables) -> UnitIndex:
     """The `UnitIndex` of `model`, built once per digest and kept for the last few models.
 
     Every field holds ids only and is immutable, so a caller may keep or share it freely.

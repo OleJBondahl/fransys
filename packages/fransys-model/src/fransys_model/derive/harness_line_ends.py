@@ -3,8 +3,10 @@
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from fransys_model.derive.facts.children import parent_item
 from fransys_model.derive.facts.item_predicates import is_cable
 from fransys_model.derive.facts.roles import function_role
+from fransys_model.derive.facts.unit_index import item_unit
 from fransys_model.derive.facts.units import is_harness
 from fransys_model.kernel import Id, Model, SchemaError
 from fransys_model.vocab.tables import conductors, items, ports
@@ -41,7 +43,7 @@ def _cables_of(model: Model, subject: Id[Item]) -> tuple[HarnessCable, ...]:
     require(items(model).get(subject), "item", subject)
     if is_harness(model, subject):
         return harness_cables(model, subject)
-    unit = items(model)[subject].unit
+    unit = item_unit(model, subject)
     reading = reading_cables(model, unit)
     found = tuple(cable for cable in reading if cable.cable == subject)
     if not found:
@@ -86,17 +88,15 @@ def plug_of(
     model: Model,
     item: Id[Item],
     connector: Id[Function] | None,
-    parents: set[Id[Item]] | None = None,
+    parents: set[Id[Item]],
 ) -> Id[Function] | None:
     """`connector` when `item` is a plug: a non-cable direct child of a line, a connector landed.
 
-    The line is one of `parents`, or any cable or harness when `parents` is `None` (model-0175).
+    The line is one of `parents` (model-0175).
     """
-    parent = items(model)[item].parent
+    parent = parent_item(model, item)
     if connector is None or parent is None or is_cable(model, item):
         return None
-    if parents is None:
-        parents = {parent} if is_cable(model, parent) or is_harness(model, parent) else set()
     return connector if parent in parents else None
 
 

@@ -4,12 +4,14 @@ from __future__ import annotations
 
 from dataclasses import replace
 
-from fransys_layout.core import Hints, Options, PlacementProblem, order_blocks
+from options_fixtures import core_options
+
+from fransys_layout.core import Facts, Hints, PlacementProblem, order_blocks
 from fransys_layout.core.cut import cut_pages
 from fransys_layout.core.values import Block, BlockList, CycleSplit, FlowGraph
 
 from .blocks_fixtures import AREA, column, sym
-from .conftest import MARKER_BOX
+from .conftest import MARKER
 from .cut_fixtures import chain, cut_of, elem, net
 from .pack_fixtures import free_block
 from .pipeline_fixtures import blocks_of, flow_of
@@ -26,8 +28,20 @@ def test_page_plan_groups_list_the_groups_of_the_page_in_order() -> None:
     cols = [column(f"c{i}", f"s{i}") for i in range(1, 5)]
     blocks = tuple(_block(f"b{i}", f"c{i}", g) for i, g in enumerate(groups, 1))
     flow = FlowGraph(tuple(cols), (), (), (), CycleSplit(0, 0, 0), ())
-    prob = PlacementProblem(AREA, tuple(syms), ())
-    result = cut_pages((BlockList("u", blocks),), flow, prob, Options(marker=MARKER_BOX))
+    prob = PlacementProblem(AREA, tuple(syms), (), facts=Facts())
+    result = cut_pages(
+        (BlockList("u", blocks),),
+        flow,
+        prob,
+        core_options(
+            marker=MARKER,
+            flip_turn="R180",
+            tag_stagger=True,
+            label_gap=8,
+            driver_first=True,
+            arrow_sides=("E", "W"),
+        ),
+    )
     (page,) = result.spec.pages
     assert page.groups == ("g2", "g1")
 
@@ -38,11 +52,35 @@ def test_the_cut_result_carries_the_flow_after_tall_splits() -> None:
     assert [c.id for c in result.flow.columns] == ["c:k00#a", "c:k00#b"]
     assert result.blocks[0].blocks[0].columns == ("c:k00#a", "c:k00#b")
     small = [elem(i, 40, 32) for i in ids]
-    prob = PlacementProblem(AREA, tuple(small), tuple(chain(ids)))
+    prob = PlacementProblem(AREA, tuple(small), tuple(chain(ids)), facts=Facts())
     flow = flow_of(prob)
-    lists = order_blocks(blocks_of(prob), flow, Options(marker=MARKER_BOX))
+    lists = order_blocks(
+        blocks_of(prob),
+        flow,
+        core_options(
+            marker=MARKER,
+            flip_turn="R180",
+            tag_stagger=True,
+            label_gap=8,
+            driver_first=True,
+            arrow_sides=("E", "W"),
+        ),
+    )
     assert (
-        cut_pages(lists, flow, prob, Options(marker=MARKER_BOX)).flow is flow
+        cut_pages(
+            lists,
+            flow,
+            prob,
+            core_options(
+                marker=MARKER,
+                flip_turn="R180",
+                tag_stagger=True,
+                label_gap=8,
+                driver_first=True,
+                arrow_sides=("E", "W"),
+            ),
+        ).flow
+        is flow
     )  # nothing tall: the flow is kept
 
 

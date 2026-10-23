@@ -1,14 +1,14 @@
 """A port's or an item's designation with its `+<label>` location prefix (decision model-0032)."""
 
 from fransys_model.derive.designation import (
-    _own_designation,
     own_location_node,
     port_designation,
     printed_designation,
-    terminal_of,
 )
-from fransys_model.derive.frame_position import location_path, location_prefix
+from fransys_model.derive.designation_label import own_label, terminal_of
 from fransys_model.derive.lookups import effective_placement
+from fransys_model.derive.texts.context import PrintContext
+from fransys_model.derive.texts.designation_render import node_text
 from fransys_model.derive.unit_nodes import end_context, stub_place
 from fransys_model.vocab.enums import Aspect
 from fransys_model.vocab.tables import functions, items, ports
@@ -62,8 +62,7 @@ def _located(
     The one prefix step of `port_designation_in` and `product_designation_in`.
     Either `node` or `context` may be `None` (an empty path).
     """
-    labels = location_prefix(location_path(model, context), location_path(model, node))
-    return "".join(f"+{label}" for label in labels) + text
+    return node_text(model, node, PrintContext(location=context)) + text
 
 
 def far_end(
@@ -81,7 +80,7 @@ def far_end(
     text = port_designation(model, port, unit=unit)
     rec = ports(model)[port]
     owner = items(model)[functions(model)[rec.function].item]
-    tail = ":" + (_own_designation(model, owner.id) if terminal_of(model, owner.id) else rec.name)
+    tail = ":" + (own_label(model, owner.id) if terminal_of(model, owner.id) else rec.name)
     head = text.removesuffix(tail)  # a bar's end prints no screw (model-0221): no tail
     node = effective_placement(model, owner.id, Aspect.LOCATION)
     place = end_context(model, owner.id, node, context, unit)

@@ -22,7 +22,9 @@ from fransys_model.vocab import conductors, ports
 
 
 def _finding(severity: Severity, *subjects: Any) -> Finding:
-    return Finding(code="DEMO_FINDING", severity=severity, subjects=subjects, message="demo")
+    return Finding(
+        code="DEMO_FINDING", severity=severity, subjects=subjects, message="demo", fix="Write: x"
+    )
 
 
 def _page(*findings: Finding) -> dict[str, Any]:

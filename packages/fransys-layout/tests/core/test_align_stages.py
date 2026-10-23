@@ -5,17 +5,26 @@ from __future__ import annotations
 from dataclasses import replace
 from typing import TYPE_CHECKING
 
-from fransys_layout.core import Facts, Options
+from options_fixtures import core_options
+
+from fransys_layout.core import Facts
 
 from . import align_fixtures as fx
-from .conftest import MARKER_BOX
+from .conftest import MARKER
 from .pipeline_fixtures import placed_of
 from .place_fixtures import all_pins
 
 if TYPE_CHECKING:
     from fransys_layout.core import Placement
 
-GRID = Options(marker=MARKER_BOX).wiring_grid
+GRID = core_options(
+    marker=MARKER,
+    flip_turn="R180",
+    tag_stagger=True,
+    label_gap=8,
+    driver_first=True,
+    arrow_sides=("E", "W"),
+).wiring_grid
 
 
 def _origins(pl: Placement) -> dict[str, int]:
@@ -25,7 +34,21 @@ def _origins(pl: Placement) -> dict[str, int]:
 def test_bands_align_through_the_stages() -> None:
     """Rank 1 and rank 2 cells of the two columns stand at one y each; unheld, they do not."""
     prob = fx.two_band_columns()
-    held, free = placed_of(prob), placed_of(prob, Options(marker=MARKER_BOX, band_align=False))
+    held, free = (
+        placed_of(prob),
+        placed_of(
+            prob,
+            core_options(
+                marker=MARKER,
+                band_align=False,
+                flip_turn="R180",
+                tag_stagger=True,
+                label_gap=8,
+                driver_first=True,
+                arrow_sides=("E", "W"),
+            ),
+        ),
+    )
     y, y_free = _origins(held), _origins(free)
     assert held.findings == ()
     assert y["a1"] == y["b1"]

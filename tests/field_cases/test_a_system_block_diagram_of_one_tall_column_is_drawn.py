@@ -17,16 +17,12 @@ import tempfile
 from pathlib import Path
 
 import fransys as fr
-import pytest
 
 from fransys_model.layout import DiagramLine, layout_of
 
 _LEAVES = 20
 
 
-@pytest.mark.xfail(
-    strict=True, reason="RIO10: a column taller than the sheet gives no diagram (arrange.py stack)"
-)
 def test_a_system_block_diagram_of_one_tall_column_is_drawn() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         cover = Path(tmp) / "cover.md"

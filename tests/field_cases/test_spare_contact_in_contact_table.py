@@ -18,11 +18,10 @@ from pathlib import Path
 
 import fransys as fr
 import pytest
+from _contact_tables import contact_table
+from _drawn_pages import drawn_pages
+from _tables_on import TABLES_ON
 from fransys.colours import BU
-
-from fransys_model.derive.drawing_text import contact_image
-from fransys_model.layout import Label, LabelKind, SymbolPlacement, layout_of
-from fransys_model.vocab.tables import functions, items
 
 
 def _plant(d) -> None:
@@ -55,59 +54,45 @@ def _built(*, hide: bool):
     cover = Path(tempfile.mkdtemp()) / "cover.md"
     cover.write_text("# Cabinet\n", encoding="utf-8")
     doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover)
-    return fr.build(d, doc)
+    return fr.build(d, doc, settings=TABLES_ON)
 
 
-def _placed(model, name: str) -> list:
-    """Every placement of Q1's function `name`."""
-    (item,) = (one.id for one in items(model).values() if one.key[-1] == "Q1")
+def _placed(model, pin: str) -> list:
+    """Every drawn symbol that prints the pin marking `pin`."""
     return [
-        p
-        for p in layout_of(model, SymbolPlacement).values()
-        if functions(model)[p.function].item == item and functions(model)[p.function].name == name
+        s
+        for drawing in drawn_pages(model).values()
+        for s in drawing.symbols
+        if any(slot.startswith("marking.") and text == pin for slot, text in s.slots)
     ]
 
 
-def _table(model) -> tuple[list[str], list[str]]:
-    """Q1's contact table, its NO and NC entries as render prints them."""
-    (item,) = (one.id for one in items(model).values() if one.key[-1] == "Q1")
-    (label,) = (
-        one
-        for one in layout_of(model, Label).values()
-        if one.kind is LabelKind.CROSS_REFERENCE
-        and one.slot == "contacts"
-        and one.function is not None
-        and functions(model)[one.function].item == item
-    )
-    return contact_image(model, label)
-
-
 def test_the_unwired_contact_is_on_no_page_with_the_switch_on() -> None:
-    """The NC auxiliary has no placement; the NO auxiliary has one."""
+    """The NC auxiliary (pin 21) has no symbol; the NO auxiliary (pin 13) has one."""
     model = _built(hide=True).model
-    assert _placed(model, "aux_nc") == []
-    assert _placed(model, "aux")
+    assert _placed(model, "21") == []
+    assert _placed(model, "13")
 
 
 def test_the_unwired_contact_is_on_no_page_with_the_switch_off() -> None:
-    """The switch does not matter: aux_nc has no placement, aux has one."""
+    """The switch does not matter: the pin 21 contact has no symbol, the pin 13 one has."""
     # UNDO: layout, draw a contact without a conductor again (the unused-contact filter removed)
     model = _built(hide=False).model
-    assert _placed(model, "aux_nc") == []
-    assert _placed(model, "aux")
+    assert _placed(model, "21") == []
+    assert _placed(model, "13")
 
 
 def test_the_table_reads_na_for_the_unwired_contact_with_the_switch_on() -> None:
     """The NC row is "21-22 N/A"."""
     # UNDO: derive/contact_entries.py:spare_entries, return two empty lists
-    _, nc = _table(_built(hide=True).model)
+    _, nc = contact_table(_built(hide=True).model)
     assert nc == ["21-22 N/A"]
 
 
 def test_the_table_reads_na_for_the_unwired_contact_with_the_switch_off() -> None:
     """The NC row is "21-22 N/A" with the switch off too."""
     # UNDO: derive/contact_entries.py:spare_entries, the N/A text removed
-    _, nc = _table(_built(hide=False).model)
+    _, nc = contact_table(_built(hide=False).model)
     assert nc == ["21-22 N/A"]
 
 
@@ -115,7 +100,7 @@ def test_the_table_reads_na_for_the_unwired_contact_with_the_switch_off() -> Non
 def test_a_same_page_entry_prints_the_cell_only(*, hide: bool) -> None:
     """The NO rows are "13-14 2A"-shaped: the pair, then a bare cell, never "p1:"."""
     # UNDO: derive, print the page prefix on a same-page reference again
-    no, _ = _table(_built(hide=hide).model)
+    no, _ = contact_table(_built(hide=hide).model)
     assert {entry.split(" ")[0] for entry in no} == {"13-14", "1-2", "3-4", "5-6"}
     assert not any("p1:" in entry for entry in no)
     assert all(re.fullmatch(r"\d+[A-Z]+", entry.split(" ")[1]) for entry in no)

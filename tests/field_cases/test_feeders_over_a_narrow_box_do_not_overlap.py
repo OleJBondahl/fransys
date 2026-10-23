@@ -16,20 +16,19 @@ from pathlib import Path
 
 import fransys as fr
 import pytest
+from _drawn_pages import drawn_pages
 from fransys.colours import BN, BU
-from fransys_el import OPTIONS
 
-from fransys_layout.engines.schematic.engine import stage_results
-from fransys_layout.engines.schematic.read import read_inputs
-from fransys_layout.geometry import overlaps
-from fransys_layout.stages.lookups import placed_keepout
-from fransys_model.vocab.tables import items
+from fransys_layout.geometry import GENERIC_BOX_KEY, generic_box_geometry, overlaps, translate
+from fransys_layout.geometry.symbols import symbol_geometry
+from fransys_model.layout import Orientation
+from fransys_model.vocab.tables import functions, items
 
 _LONG = "SUPPLY-PUMP-STATION-NUMBER-ONE-FEEDER-"
 _TAGS = pytest.mark.parametrize("name", ["T", _LONG], ids=["short", "long-tags"])
 
 
-def _built(name: str = "T") -> tuple:
+def _built(name: str = "T") -> fr.BuildResult:
     d = fr.design("demo_parts", place="CAB")
     cab = d.location("CAB", "Cabinet")
     live = d.terminal_strip("X1", "DEMO-TB-2.5", 1).run("L", 1)
@@ -46,42 +45,67 @@ def _built(name: str = "T") -> tuple:
     cover = Path(tempfile.mkdtemp()) / "cover.md"
     cover.write_text("# Cabinet\n", encoding="utf-8")
     doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover)
-    result = fr.build(d, doc)
-    return result, stage_results(result.model, read_inputs(result.model, options=OPTIONS))[0].layout
+    return fr.build(d, doc)
 
 
-def _box(model, layout, tag: str):
+def _gap(model, fact: str):
+    """A fact the page Drawing lacks (strict xfail, GAP-FLIP-DRAWING-SUBJECT)."""
+    msg = f"GAP-FLIP-DRAWING-SUBJECT: no {fact} for {model.digest}"
+    raise AssertionError(msg)
+
+
+def _box(model, tag: str):
+    """The generic box drawn for the item tagged `tag`."""
     (item,) = (one.id for one in items(model).values() if one.key[-1] in (f"G/{tag}", tag))
-    return next(one for one in layout.placed if one.function == item)
+    owned = {f.id.value for f in functions(model).values() if f.item == item}
+    boxes = [
+        s
+        for s in _gap(model, "symbol subject").values()
+        if s.key == GENERIC_BOX_KEY and s.owner and s.owner.split(":")[-1] in owned
+    ]
+    assert len(boxes) == 1, f"{tag} draws {len(boxes)} boxes, not one"
+    return boxes[0]
 
 
 def _pin_x(box, name: str) -> int:
-    (pin,) = (g for g in box.geometry.ports if g.name == name)
-    return box.at.x + pin.at.x
+    return box.x + dict(box.offsets)[name]
+
+
+def _keepout(one):
+    """The keep-out of a drawn symbol on its page."""
+    if one.key == GENERIC_BOX_KEY:
+        offsets, sides = dict(one.offsets), dict(one.sides)
+        names = tuple(offsets)
+        sides = tuple(sides.get(n, "s") for n in names)
+        offsets = tuple(v / 8 for v in offsets.values())
+        geometry = generic_box_geometry(names, sides, offsets=offsets)
+    else:
+        geometry = symbol_geometry(one.key, poles=one.poles, orientation=Orientation[one.orient])
+    return translate(geometry.keepout, dx=one.x, dy=one.y)
 
 
 @_TAGS
 def test_the_build_reports_no_symbol_overlap(name: str) -> None:
     """The lint finds no two keep-outs sharing interior."""
-    result, _ = _built(name)
+    result = _built(name)
     assert "SYMBOL_OVERLAP" not in {f.code for f in result.findings}
 
 
 @_TAGS
 def test_no_two_symbols_of_a_page_overlap(name: str) -> None:
     """No two placed keep-out rectangles of one page intersect."""
-    _, layout = _built(name)
-    for one, other in itertools.combinations(layout.placed, 2):
-        if (one.drawing_set, one.page) == (other.drawing_set, other.page):
-            assert not overlaps(placed_keepout(one), placed_keepout(other))
+    for drawing in drawn_pages(_built(name).model).values():
+        for one, other in itertools.combinations(drawing.symbols, 2):
+            if "junction-dot" not in (one.key, other.key):
+                assert not overlaps(_keepout(one), _keepout(other))
 
 
 @_TAGS
 def test_each_feeder_stands_over_its_own_group(name: str) -> None:
     """Each supply's output pins stand over its group's pins, the supplies apart."""
-    result, layout = _built(name)
-    module = _box(result.model, layout, "M1")
+    model = _built(name).model
+    module = _box(model, "M1")
     for n in (1, 2):
-        psu = _box(result.model, layout, f"{name}{n}")
+        psu = _box(model, f"{name}{n}")
         for out in ("+", "-"):
             assert _pin_x(psu, f"output.{out}") == _pin_x(module, f"in_{n}.{n}{out}")

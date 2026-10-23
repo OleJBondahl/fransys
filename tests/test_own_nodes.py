@@ -12,7 +12,7 @@ from pathlib import Path
 import pytest
 
 from fransys_model.derive import units
-from fransys_model.derive.designation import own_nodes
+from fransys_model.derive.unit_nodes import own_nodes
 from fransys_model.kernel import SchemaError, make_id
 from fransys_model.vocab import Unit
 from fransys_model.vocab.tables import aspect_nodes

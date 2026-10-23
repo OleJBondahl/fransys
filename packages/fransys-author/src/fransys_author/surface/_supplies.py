@@ -1,113 +1,36 @@
 """Surface mixin for supplies and rails: `ac_supply`, `dc_supply` and their rail handles."""
 
-from dataclasses import dataclass
 from decimal import Decimal
 from typing import TYPE_CHECKING, cast
-lazy from collections.abc import Iterable, Sequence
+lazy from collections.abc import Sequence
 
 from fransys_author.errors import AuthorError
-from fransys_author.surface._handles import Fn
-from fransys_author.surface._pairing import End, Ends
+from fransys_author.surface._supplies_dc import (
+    MID,
+    MINUS,
+    PLUS,
+    _bare_facts,
+    _dc_facts,
+    _dc_rails,
+    _forbid_voltage,
+    _source,
+    rail_row,
+)
+from fransys_author.surface._supply_rails import AcSupply, DcSupply, SupplyRail
 from fransys_author.surface._wire import _port
-from fransys_model.vocab import ConductorMark, Earthing, WiringRow, rail_row
+from fransys_model.vocab import RAIL_DEFAULTS, ConductorMark, Earthing
 lazy from fransys_author.handles import Port, Terminal
 lazy from fransys_author.surface._device import Device
+lazy from fransys_author.surface._handles import Fn
 
 if TYPE_CHECKING:
-    from fransys_author.handles import Fn as EngineFn
     from fransys_author.surface.design import Design
-    from fransys_model.vocab import Part
 
-PLUS, MINUS, MID = ConductorMark.L_PLUS, ConductorMark.L_MINUS, ConductorMark.M
-_AC = ((ConductorMark.L1, 0), (ConductorMark.L2, 120), (ConductorMark.L3, 240))
+_AC = cast("tuple[tuple[ConductorMark, int], ...]", RAIL_DEFAULTS["ac"])
+_NEUTRAL = cast("ConductorMark", RAIL_DEFAULTS["ac_neutral"])
 _ONE_OR_THREE = (1, 3)
-_TWO_OR_THREE = (2, 3)  # names= is (plus, minus) or (plus, minus, mid)
 _Number = str | int | Decimal
 _FAULT_KEYS = ("fault_current_a", "fault_time_constant_ms")
-
-
-@dataclass(frozen=True)
-class SupplyRail:
-    """One rail of a supply: its source pin, the potential it carries and its conductor mark.
-
-    Does not wire itself: it stands in a `series` as a one-conductor element.
-    """
-
-    name: str
-    pin: Port
-    potential: str
-    mark: ConductorMark
-    phase: int | None
-    row: WiringRow
-
-    def _series_width(self) -> int | None:
-        return 1
-
-    def _conductor_rows(self) -> tuple[WiringRow, ...]:
-        return (self.row,)
-
-    def _series_ends(self, design: Design, width: int | None) -> Ends:  # noqa: ARG002 -- the SeriesElement protocol
-        end = (End(self.pin, self.mark),)
-        return Ends(end, end)
-
-
-class _Rails:
-    """The rails of one supply by attribute; a misspelt rail raises and lists the real ones."""
-
-    def __init__(self, name: str, rails: Iterable[SupplyRail]) -> None:
-        self._name, self._rails = name, tuple(rails)
-        self.__dict__.update({rail.name: rail for rail in self._rails})
-
-    _whole_supply = True  # a series that starts on a whole supply is a power path (S3)
-
-    def _series_width(self) -> int | None:
-        return len(self._rails)
-
-    def _series_ends(self, design: Design, width: int | None) -> Ends:  # noqa: ARG002 -- the SeriesElement protocol
-        """The first `width` rails: a path with no N pole leaves N, the last rail, unwired."""
-        # `ac_supply` appends N after the phases, so N is always the last rail.
-        ends = tuple(End(rail.pin, rail.mark) for rail in self._rails[:width])
-        return Ends(ends, ends)
-
-    def _conductor_rows(self) -> tuple[WiringRow, ...]:
-        return tuple(rail.row for rail in self._rails)
-
-    if not TYPE_CHECKING:  # the subclass declares its rails; ty must see no catch-all
-
-        def __getattr__(self, name: str) -> SupplyRail:
-            """The rail `name`.
-
-            Does not guess: an unknown rail raises and lists the rails.
-            """
-            if name.startswith("_"):
-                raise AttributeError(name)
-            names = ", ".join(rail.name for rail in self._rails)
-            msg = f"no rail {name!r}; rails: {names}"
-            raise AuthorError(msg)
-
-
-class AcSupply(_Rails):
-    """An AC supply: `L1`, `L2`, `L3` and `N` when it was given one.
-
-    Does not hold a voltage of its own: each rail's potential carries the declared voltage.
-    """
-
-    L1: SupplyRail
-    L2: SupplyRail
-    L3: SupplyRail
-    N: SupplyRail
-
-
-class DcSupply(_Rails):
-    """A DC supply: `plus`, `minus` and `mid` when the source has an M conductor.
-
-    Stands in a series whole, as a power path's poles, or by one rail, as a control path's.
-    Does not have a `mid` rail unless the source has an M conductor.
-    """
-
-    plus: SupplyRail
-    minus: SupplyRail
-    mid: SupplyRail
 
 
 def _declare(  # noqa: PLR0913, PLR0917 -- the supply's own fields plus the two fault values
@@ -136,116 +59,6 @@ def _declare(  # noqa: PLR0913, PLR0917 -- the supply's own fields plus the two 
         design._engine.net(rail.potential, rail.pin, cls="power", potential=rail.potential)
 
 
-def _marked(design: Design, fn: EngineFn, mark: ConductorMark, given: Port | None) -> Port | None:
-    """The pin `given`, else the one pin of `fn` with `mark`; two such pins raise."""
-    if given is not None:
-        return given
-    found = [port for port in fn.ports if design._pairing_facts.mark(port) is mark]
-    if len(found) > 1:
-        pins = ", ".join(sorted(port.name for port in found))
-        msg = f"{fn.name!r} has several {mark.value} pins ({pins}): pass plus= and minus="
-        raise AuthorError(msg)
-    return found[0] if found else None
-
-
-def _source(
-    design: Design, source: Device | Fn, given: dict[ConductorMark, Port | None]
-) -> tuple[str, EngineFn]:
-    """The label and engine function a `dc_supply` source stands for."""
-    if isinstance(source, Fn):
-        return source._label, source._fn
-    functions = source._item.functions
-    fits = [
-        fn
-        for fn in functions
-        if all(_marked(design, fn, mark, pin) is not None for mark, pin in given.items())
-    ]
-    pool = fits or (list(functions) if len(functions) == 1 else [])
-    if len(pool) != 1:
-        found = ", ".join(sorted(fn.name for fn in pool or functions)) or "none"
-        msg = f"{source._label} needs exactly one function with L+ and L- pins; candidates: {found}"
-        raise AuthorError(msg)
-    return source._label, pool[0]
-
-
-def _nominal(design: Design, fn: EngineFn) -> Decimal | None:
-    template = design._pairing_facts.function_template(fn)
-    part = cast("Part", design.library.record_of(template.part))
-    operating = design._engine.operating((part.manufacturer, part.mpn), template.name)
-    return None if operating is None else operating.nominal_voltage_v
-
-
-def _forbid_voltage(
-    design: Design, label: str, fn: EngineFn, voltage: str | int | Decimal | None
-) -> None:
-    """A source whose part states its nominal voltage takes no `voltage=`."""
-    nominal = _nominal(design, fn)
-    if nominal is not None and voltage is not None:
-        msg = f"{label} states {format(nominal.normalize(), 'f')} V: drop voltage="
-        raise AuthorError(msg)
-
-
-def _dc_facts(
-    design: Design,
-    where: str,
-    fn: EngineFn,
-    given: dict[ConductorMark, Port | None],
-    voltage: str | int | Decimal | None,
-) -> tuple[Port, Port, Port | None, Decimal]:
-    """The L+, L- and M pins and the voltage of `fn`; a missing one raises by name."""
-    plus, minus = (_marked(design, fn, mark, given.get(mark)) for mark in (PLUS, MINUS))
-    mid = _marked(design, fn, MID, given.get(MID))
-    if mid in (plus, minus) and MID not in given:
-        mid = None  # a pin the call names as L+ or L- is not also its mid
-    volts = _nominal(design, fn) if voltage is None else Decimal(str(voltage))
-    if plus is None or minus is None or volts is None:
-        facts = (("L+ pin", plus), ("L- pin", minus), ("nominal voltage", volts))
-        msg = f"{where} lacks {', '.join(text for text, found in facts if found is None)}"
-        raise AuthorError(msg)
-    return plus, minus, mid, volts
-
-
-def _bare_facts(
-    name: str, given: dict[ConductorMark, Port | None], voltage: str | int | Decimal | None
-) -> tuple[Port, Port, Port | None, Decimal]:
-    """The facts of a `dc_supply` with no source: `plus=`, `minus=` and `voltage=` all given."""
-    plus, minus = given[PLUS], given[MINUS]
-    facts = (("plus=", plus), ("minus=", minus), ("voltage=", voltage))
-    if plus is None or minus is None or voltage is None:
-        missing = ", ".join(text for text, found in facts if found is None)
-        msg = f"dc_supply {name!r} has no source, so it needs {missing}"
-        raise AuthorError(msg)
-    return plus, minus, given.get(MID), Decimal(str(voltage))
-
-
-def _dc_rails(
-    volts: Decimal, pins: tuple[Port, Port, Port | None], names: tuple[str, ...] | None
-) -> list[tuple[SupplyRail, str | Decimal]]:
-    """Without a mid, minus is 0 V; with one, mid is 0 V and minus is -volts."""
-    if names is not None and len(names) not in _TWO_OR_THREE:
-        msg = f"names= is (plus, minus) or (plus, minus, mid), not {names!r}"
-        raise AuthorError(msg)
-    plus, minus, middle = pins
-    label = f"{format(volts.normalize(), 'f')}V"
-    up, down, *rest = names or ((label, "0V") if middle is None else (label, f"-{label}"))
-    mid = middle is not None
-    rails: list[tuple[SupplyRail, str | Decimal]] = [
-        (SupplyRail("plus", plus, up, PLUS, None, rail_row(PLUS, has_mid=mid)), volts),
-        (
-            SupplyRail("minus", minus, down, MINUS, None, rail_row(MINUS, has_mid=mid)),
-            "0" if middle is None else -volts,
-        ),
-    ]
-    if middle is not None:
-        rails.append(
-            (
-                SupplyRail("mid", middle, (*rest, "0V")[0], MID, None, rail_row(MID, has_mid=mid)),
-                "0",
-            )
-        )
-    return rails
-
-
 def _refuse_branch(design: Design, name: str, pins: tuple[Port, ...]) -> None:
     """A pin of a fuse or breaker feeds a branch; it is no source (authoring guide, author-0055)."""
     for pin in pins:
@@ -271,7 +84,7 @@ def _phases(design: Design, name: str, phases: tuple[Port | Terminal, ...]) -> t
 
 def _ac_names(phases: int, names: tuple[str, ...] | None, *, has_n: bool) -> tuple[str, ...]:
     """The printed rail names: L1.. then N by default; `names=` must give one per pin."""
-    default = tuple(mark.value for mark, _ in _AC[:phases]) + (("N",) if has_n else ())
+    default = tuple(mark.value for mark, _ in _AC[:phases]) + ((_NEUTRAL.value,) if has_n else ())
     if names is None:
         return default
     if len(names) != len(default):
@@ -319,7 +132,7 @@ class Supplies:
             neutral = _port(self, n)
             _refuse_branch(self, name, (neutral,))
             rail = SupplyRail(
-                "N", neutral, printed[-1], ConductorMark.N, None, rail_row(ConductorMark.N)
+                _NEUTRAL.value, neutral, printed[-1], _NEUTRAL, None, rail_row(_NEUTRAL)
             )
             rails.append((rail, "0"))
         _declare(self, name, "ac", rails, earthing, (fault_current_a, None))

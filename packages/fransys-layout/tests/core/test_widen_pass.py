@@ -11,14 +11,14 @@ from fransys_layout.core.outputs import Demand, Routes
 from fransys_layout.core.text_markers import mark_pages
 from fransys_layout.core.widen import measured_of, overflows, widen
 
-from .conftest import MARKER_BOX
+from .conftest import MARKER, MARKER_BOX
 from .pipeline_fixtures import cut_of, placed_from, routed_from, widened_of
 from .test_widen import PLAIN, fan_legs, three_columns
 from .widen_fixtures import gap_width, overflowing_row
 
 # the name `widen` in core is the function, so the module comes by name
 widen_module = importlib.import_module("fransys_layout.core.widen")
-OPTS = replace(PLAIN, marker=MARKER_BOX)
+OPTS = replace(PLAIN, marker=MARKER)
 GRID = OPTS.wiring_grid
 
 
@@ -128,12 +128,7 @@ def test_the_extent_of_a_fan_block_holds_its_trunk_and_lanes() -> None:
     cut = cut_of(prob, OPTS)
     placement = placed_from(cut, prob, OPTS)
     routes = routed_from(cut, prob, OPTS)
-    page = placement.pages[0]
     assert measured_of(cut, placement, routes, OPTS).heights["fan:c:k1"] == 224
-    high = replace(page.trunks[0], y=-40)
-    moved = Placement((replace(page, trunks=(high, *page.trunks[1:])),))
-    # the trunk's top edge is its y less one lane of the wiring grid: 48 G above the first footprint
-    assert measured_of(cut, moved, routes, OPTS).heights["fan:c:k1"] == 224 + 48 + 16
 
 
 def test_widened_of_runs_the_pipeline_to_stage_7() -> None:

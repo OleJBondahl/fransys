@@ -5,6 +5,7 @@ import dataclasses
 import fransys_render
 import pytest
 from _build import (
+    FLOW,
     cable_facet,
     cable_product_facet,
     conductor,
@@ -24,11 +25,12 @@ from _build import (
     project,
     revision_entry,
     sheet_format,
+    source,
     terminal,
     unit,
     wire_facet,
 )
-from fransys_pdf import _lists, source
+from fransys_pdf import _lists
 from fransys_pdf._drawings import schematic_pages
 from fransys_pdf._geometry import document_heading
 from fransys_pdf._pages import cover_page
@@ -961,16 +963,33 @@ def test_a_list_page_declares_two_columns_of_forty_percent(page):
     """A3 (pdf-0026): the source of each flowing list page is one 100 % block of two columns
     with a 20 % gutter, so each column is 40 % of the content width."""
     m, doc = _list_pages_model()
-    text = getattr(_lists, page)(m, document_row(m, doc.id))
+    text = getattr(_lists, page)(m, document_row(m, doc.id), **FLOW)
     assert text.startswith("#block(width: 100%)[#columns(2, gutter: 20%)[")
     assert text.count("#columns(") == 1
+
+
+@pytest.mark.parametrize("page", _FLOWING)
+def test_a_list_page_reads_its_share_and_gutter_from_the_caller(page):
+    """A hardcoded share would print 40 % whatever is passed; 41 and 21 must reach the page."""
+    m, doc = _list_pages_model()
+    text = getattr(_lists, page)(m, document_row(m, doc.id), share_pct=41, gutter_pct=21)
+    assert text.startswith("#block(width: 103%)[#columns(2, gutter: 20.3883%)[")
+
+
+def test_source_passes_the_list_share_down_to_the_list_pages():
+    """`source(list_share_pct=41)` changes the list pages against 40: the value is read."""
+    m, doc = _list_pages_model()
+    sheets = fransys_render.sheets(document_sheets_of(m))
+    wide = source(m, doc.id, {}, sheets, list_share_pct=41, list_gutter_pct=20)
+    assert wide != source(m, doc.id, {}, sheets)
+    assert "#block(width: 102%)[" in wide
 
 
 @pytest.mark.parametrize("page", _FLOWING)
 def test_every_flowing_list_page_has_content_inside_its_columns(page):
     """A3 (pdf-0026, B1): the page has rows, so the columns block is not vacuously absent."""
     m, doc = _list_pages_model()
-    text = getattr(_lists, page)(m, document_row(m, doc.id))
+    text = getattr(_lists, page)(m, document_row(m, doc.id), **FLOW)
     assert "#table(" in text
 
 
@@ -1013,7 +1032,7 @@ def _boards_model(keys, *, on_net):
                 ),
             )
     m = model(*records)
-    return _lists.connector_list_page(m, document_row(m, doc.id))
+    return _lists.connector_list_page(m, document_row(m, doc.id), **FLOW)
 
 
 def test_each_wired_board_of_the_connector_list_keeps_its_heading():

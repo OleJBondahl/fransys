@@ -38,10 +38,9 @@ class SheetFormat:
 def default_sheet_format() -> SheetFormat:
     """The house sheet: A3 landscape, content 410 x 267 mm at (5, 5), 8 x 6 frame, 2.5 mm module.
 
-    A constant of the model, not a record of any model: a derived `Page` with no
-    `sheet_format` is drawn on it (design/layout-namespace.md), so the layout engine and an output
-    module that draws the page frame read the same numbers and no pass has to write an authored
-    kind. Its id is fixed and is never put into a model. The content box sits at (5, 5), not
+    Stock until SETTINGS-C: `settings.toml` holds the same numbers (a test keeps them equal) and
+    the facade writes the build's A3 record from it. `sheet_for` reads the build's `PaperChoice`,
+    not this. The content box sits at (5, 5), not
     (10, 10): the owner's second appearance pass (decision
     model-0051) halves the margin to 5 mm on every side, cutting in half the default margin
     without narrowing the title-block band, which stays 20 mm between the bottom of the
@@ -86,7 +85,7 @@ class Profile:
     id: Id[Profile]
     key: AuthoringKey
     unit: Id[Unit] | None = None
-    # `None` is the house sheet (`default_sheet_format()`), which is no record.
+    # `None` is the build's default paper (`PaperChoice`).
     sheet_format: Id[SheetFormat] | None = None
     # Gaps in grid units G (1 M = 8 G): column gap 48, row gap 32. Pole pitch is the
     # symbol library's, not a tunable.

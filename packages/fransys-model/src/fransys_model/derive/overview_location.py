@@ -13,7 +13,7 @@ lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.aspects import AspectNode
 lazy from fransys_model.vocab.core import Item
 
-from .designation import unit_location
+from .designation import location_node_designation, unit_location
 from .lookups import effective_placement
 from .order import natural_key
 from .overview_levels import overview_level
@@ -21,7 +21,7 @@ from .overview_names import node_lines
 from .rows_overview import LocationBox, LocationFold, LocationLine
 lazy from .rows import OverviewLevel
 
-__all__ = ["location_fold", "location_place_title", "top_place_of"]
+__all__ = ["location_fold", "location_place_title", "location_texts", "top_place_of"]
 
 _MIN_PLACES = 2
 
@@ -104,3 +104,12 @@ def location_fold(model: Model) -> LocationFold | None:
     made.sort(key=lambda b: (b.place is None, tuple(natural_key(t) for t in b.lines)))
     rank = {box.place: at for at, box in enumerate(made)}
     return LocationFold(boxes=tuple(made), lines=_lines(level, where, rank))
+
+
+def location_texts(model: Model) -> dict[str, str]:
+    """Each location label (the class key) with the designation boxes and panels print for it."""
+    texts: dict[str, str] = {}
+    for node in aspect_nodes(model).values():
+        if node.aspect is Aspect.LOCATION:
+            texts.setdefault(node.label, location_node_designation(model, node.id))
+    return texts

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import replace
+from itertools import pairwise
 
 import pytest
 
@@ -83,7 +84,7 @@ def test_a_lane_wire_between_cells_and_a_box_wire_are_drawn() -> None:
     drawn = lane_wires(env, env.columns[0])
     (box_wire,) = drawn.wires
     assert box_wire.net == "c1"
-    assert box_wire.points == ((58, 136), (58, 144))
+    assert box_wire.points == ((58, 144), (58, 152))
     assert drawn.findings == ()
 
 
@@ -159,11 +160,11 @@ def test_a_join_is_a_z_wire_nested_with_the_jogs_and_its_source_is_the_joined_la
     assert (drawn.wires, jog.drawn_as, jog.source_top) == ((), "join", source_top)
     assert jog.source_x == 650
     (wire,) = nest_jogs(env, drawn.jogs).wires
-    a = (58, 176) if home_pin == "s" else (58, 144)
-    m = (650, 144) if member_pin == "n" else (650, 176)
+    a = (58, 184) if home_pin == "s" else (58, 152)
+    m = (650, 152) if member_pin == "n" else (650, 184)
     assert wire.kind == "join"
     assert {wire.points[0], wire.points[-1]} == {a, m}
-    assert 144 < wire.points[1][1] < 176
+    assert 152 < wire.points[1][1] < 184
 
 
 def lanes_joining_lane_zero(order: tuple[int, ...] = (0, 1, 2)) -> list[Jog]:
@@ -201,7 +202,7 @@ def test_level_join_pins_are_one_run() -> None:
     env = card_env()
     col = join_column(env, "n", "n", foot=False)
     (wire,) = join_wires(env, col).wires
-    assert wire.points == ((58, 144), (650, 144))
+    assert wire.points == ((58, 152), (650, 152))
 
 
 def ring_env() -> tuple[RouteEnv, Column]:
@@ -221,13 +222,13 @@ def test_two_cells_of_a_lane_on_different_nets_are_a_finding() -> None:
     assert "different nets" in finding.text
 
 
-def test_a_cell_pin_with_no_net_is_reached_by_a_trunk_and_draws_no_lane_wire() -> None:
+def test_a_cell_pin_with_no_net_draws_no_lane_wire_and_is_a_finding() -> None:
     env, col = ring_env()
     b = col.lanes[0].cells[1]
     bare = {k: v for k, v in env.net_of.items() if k != PinRef(b.sym, b.top_pin or "")}
     whole = lane_wires(env, col)
     drawn = lane_wires(replace(env, net_of=bare), col)
-    assert drawn.findings == ()
+    assert [f.code for f in drawn.findings] == ["LANE_WIRE_DROPPED"]
     assert len(drawn.wires) == len(whole.wires) - 1
 
 
@@ -237,11 +238,11 @@ def stub_points(orient: str = "R0", open_stub: int = 8) -> list[tuple[tuple[int,
 
 
 def test_an_open_end_draws_a_stub_of_open_stub_out_along_its_side() -> None:
-    assert stub_points() == [((650, 176), (650, 184))]
+    assert stub_points() == [((650, 184), (650, 192))]
 
 
 def test_a_turned_symbol_draws_its_stub_along_the_turned_side() -> None:
-    assert stub_points("R180") == [((650, 176), (650, 168))]
+    assert stub_points("R180") == [((650, 184), (650, 176))]
 
 
 def test_open_stub_zero_draws_no_stub() -> None:
@@ -262,3 +263,72 @@ def test_an_open_end_naming_a_pin_not_on_the_page_is_a_finding_not_an_empty_stub
     drawn = lane_wires(env, col)
     assert stub_of(drawn) == ()
     assert [f for f in drawn.findings if f"{sym}.{pin}" in f.text]
+
+
+def far_box_env(*, foot: bool = False) -> RouteEnv:
+    """The card's box pin moved right of its lane and well above it; `foot`: it ends the lane."""
+    env = card_env()
+    box = env.placed["A1"]
+    pins = tuple(replace(q, x=100, y=40) if q.pin == "p1" else q for q in box.pin_xy)
+    env = replace(env, placed={**env.placed, "A1": replace(box, pin_xy=pins)})
+    if not foot:
+        return env
+    col = env.columns[0]
+    gone = End("open", None, None, None, None)
+    ends = {"heads": (gone,), "feet": col.heads}
+    nets = {**env.net_of, PinRef("k1", "s"): "c1"}
+    lane = replace(col.lanes[0], cells=(replace(col.lanes[0].cells[0], bottom_pin="s"),))
+    col = replace(col, lanes=(lane, *col.lanes[1:]), **ends)
+    return replace(env, net_of=nets, columns=(col, *env.columns[1:]))
+
+
+def box_wire(env: RouteEnv) -> tuple[tuple[int, int], ...]:
+    drawn = lane_wires(env, env.columns[0])
+    wires = (*drawn.wires, *nest_jogs(env, drawn.jogs).wires)
+    (wire,) = (w for w in wires if w.net == "c1" and len(w.points) > 2)
+    return wire.points
+
+
+def test_a_box_wire_to_a_head_pin_runs_long_on_the_box_column_and_turns_above_the_cell() -> None:
+    """SHORTS-ROUTE: the long vertical on the lane's pin column ran through the lane's cells."""
+    assert box_wire(far_box_env()) == ((100, 40), (100, 144), (58, 144), (58, 152))
+
+
+def test_a_box_wire_to_a_foot_pin_comes_in_from_below_the_cell() -> None:
+    """The foot pin faces south: the wire passes the cell on the box column, never over its body."""
+    assert box_wire(far_box_env(foot=True)) == ((100, 40), (100, 192), (58, 192), (58, 184))
+
+
+def test_a_stair_with_no_turn_row_draws_nothing_and_says_so() -> None:
+    """SHORTS-ROUTE: pin levels one grid apart left no row; the clamp bent on a pin row."""
+    env = card_env()
+    grid = env.options.wiring_grid
+    drawn = nest_jogs(env, [Jog("j", (100, 100), (40, 100 + grid))])
+    (finding,) = drawn.findings
+    assert finding.code == "ROUTE_FAILED"
+    assert "j" in finding.text
+    assert "wire_min" in finding.text
+    assert drawn.wires == ()
+
+
+def _cells(points: tuple[tuple[int, int], ...]) -> set[tuple[int, int]]:
+    """Every 2-unit step along a wire's segments."""
+    out = set()
+    for (x0, y0), (x1, y1) in pairwise(points):
+        n = max(abs(x1 - x0), abs(y1 - y0)) // 2
+        out |= {(x0 + (x1 - x0) * k // n, y0 + (y1 - y0) * k // n) for k in range(n + 1)}
+    return out
+
+
+def test_two_box_wires_beside_neighbouring_cells_share_no_point() -> None:
+    """Two box wires on one side: the second comes in on the first one's box column."""
+    env = card_env()
+    box, cell = env.placed["A1"], env.placed["k2"]
+    at = {"p1": 100, "p2": 116}
+    pins = tuple(replace(q, x=at[q.pin], y=40) if q.pin in at else q for q in box.pin_xy)
+    moved = tuple(replace(q, x=100) if q.pin == "n" else q for q in cell.pin_xy)
+    placed = {**env.placed, "A1": replace(box, pin_xy=pins), "k2": replace(cell, pin_xy=moved)}
+    env = replace(env, placed=placed)
+    wires = [w for col in env.columns[:2] for w in lane_wires(env, col).wires]
+    first, second = wires
+    assert not _cells(first.points) & _cells(second.points)

@@ -25,6 +25,7 @@ lazy from fransys_model.derive.numbering_pins import NumberingPins
 
 from . import _revision_pins
 from ._baseline_findings import baseline_findings
+from ._codes import fix_text
 from ._history_gate import history_findings
 from ._release_files import folder_findings
 from ._release_reader import manifest_readable, read_stored, stored_listing
@@ -85,6 +86,7 @@ def _revision_already_released_finding(
         code="REVISION_ALREADY_RELEASED",
         severity=Severity.ERROR,
         subjects=(unit,) if unit is not None else (),
+        fix=fix_text("REVISION_ALREADY_RELEASED"),
         message=(
             f"{release.name} {revision_text(release.version, release.revision)} is already "
             f"released and differs in: {sections}"
@@ -105,6 +107,7 @@ def _nested_release_findings(model: Model, unit: Id[ModelUnit] | None, into: Pat
                     code="RELEASE_NESTED_UNRELEASED",
                     severity=Severity.ERROR,
                     subjects=(nested,),
+                    fix=fix_text("RELEASE_NESTED_UNRELEASED"),
                     message=(
                         f"{nested_release.name} {nested_revision_text}, nested in this "
                         "release, has not been released"
@@ -168,6 +171,7 @@ def changes_by_name_findings(model: Model, releases: Path | None) -> list[Findin
             code="CHANGES_BY_NAME",
             severity=Severity.INFO,
             subjects=(),
+            fix=fix_text("CHANGES_BY_NAME"),
             message=(
                 f"renames are not followed: the listing of {label} has no "
                 "item keys; fr.rebaseline re-cuts it with them"
@@ -203,6 +207,7 @@ def _interface_not_bumped_findings(
             code="INTERFACE_NOT_BUMPED",
             severity=Severity.ERROR,
             subjects=(unit,),
+            fix=fix_text("INTERFACE_NOT_BUMPED"),
             message=(
                 f"{release.name} {previous_revision} already has interface "
                 f"{listing_interface(previous)!r} with a different boundary"
@@ -222,6 +227,7 @@ def _release_no_history_finding(
         code="RELEASE_NO_HISTORY",
         severity=Severity.ERROR,
         subjects=(unit,) if unit is not None else (),
+        fix=fix_text("RELEASE_NO_HISTORY"),
         message=(
             f"{release.name} {revision_text(release.version, release.revision)} has no "
             "Revision history entry"

@@ -12,15 +12,13 @@ element whatever the designations are, as it already is for a suppressor that is
 """
 
 import fransys as fr
+from _drawn_pages import drawn_pages
 from _model_build_cover import cabinet_document
 from fransys.colours import BU
 
-from fransys_model.layout import SymbolPlacement, layout_of
-from fransys_model.vocab.tables import functions
 
-
-def _columns() -> dict[str, int]:
-    """The x of the coil K1, the suppressor D1 and the two terminals, by their tags."""
+def _columns() -> dict[str, list[int]]:
+    """The x of the coil K1, the suppressor D1 and the two terminals, by their drawn symbol."""
     d = fr.design("demo_parts", place="CAB")
     d.project(title="Coil", number="P-1", customer="Example Co", revision=1, author="OJB")
     d.revision(1, date="2026-10-02", text="First issue", created="XX")
@@ -35,13 +33,15 @@ def _columns() -> dict[str, int]:
     d.detail.wire(k1.coil["A1"], d1["1"], wire=wire)
     d.detail.wire(k1.coil["A2"], d1["2"], wire=wire)
     model = fr.build(d, cabinet_document(_cabinet)).model
-    return {
-        "/".join(functions(model)[p.function].key[:-2]): p.x
-        for p in layout_of(model, SymbolPlacement).values()
-    }
+    columns: dict[str, list[int]] = {}
+    for drawing in drawn_pages(model).values():
+        for symbol in drawing.symbols:
+            columns.setdefault(symbol.key, []).append(symbol.x)
+    return columns
 
 
 def test_the_coil_stands_in_the_terminals_column_and_the_suppressor_beside_it() -> None:
     at = _columns()
-    assert at["G/K1"] == at["X1/terminal/1"] == at["X2/terminal/1"]
-    assert at["G/D1"] != at["G/K1"]
+    (coil,) = at["operating-device"]
+    assert at["terminal"] == [coil, coil]
+    assert at["fuse"] != [coil]

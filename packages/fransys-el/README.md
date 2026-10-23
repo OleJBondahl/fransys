@@ -9,3 +9,5 @@ Role contract: conventions as values, and the placement-problem builder. `fransy
 - `fransys_el.REF_TINTS`: the eight net-reference fill tints, in link-slot order (el-0001).
 
 Imports: `fransys_model`, `fransys_layout` and `electrical_symbols`, through their top-level surfaces. Decision: `docs/decisions/layout-0192-*.md`.
+
+- `fransys_el.lay_out_drawn`, `style(library)`: the page `Drawing` values laid out straight from the core, and the pens and sizes `svg` takes from the build's `Library` (el-0004, layout-0323).

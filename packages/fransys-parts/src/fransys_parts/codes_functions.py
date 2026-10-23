@@ -13,8 +13,8 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
             "their `name`."
         ),
         fix=(
-            "Give one connector function a different `marking` under `[function.connector]`, "
-            "or a different `name`."
+            "Each connector prints its own label, its `marking` or else its `name`. "
+            'Write: marking = "X2"'
         ),
         page="findings-parts",
     ),
@@ -24,7 +24,7 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         stage="library load",
         who="part author",
         cause="A function whose `kind` is not `supply` or `load` sets `energy`.",
-        fix="Remove `energy` from the function, or change its `kind` to `supply` or `load`.",
+        fix='Only a `supply` or `load` function takes `energy`. Write: kind = "load"',
         page="findings-parts",
     ),
     CodeInfo(
@@ -33,7 +33,7 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         stage="library load",
         who="part author",
         cause="Two `[[function]]` entries of one part have the same `name`.",
-        fix="Give one of the functions a different `name`.",
+        fix='Each `[[function]]` has its own `name`. Write: name = "co_3"',
         page="findings-parts",
     ),
     CodeInfo(
@@ -42,7 +42,7 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         stage="library load",
         who="part author",
         cause="A `bar` function names a `symbol`; a bar is never drawn.",
-        fix="Remove the function's `symbol` key.",
+        fix=('A `bar` function takes no `symbol`, since a bar is never drawn. Write: kind = "bar"'),
         page="findings-parts",
     ),
     CodeInfo(
@@ -51,7 +51,10 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         stage="library load",
         who="part author",
         cause="A `[[function]]` other than a `bar` has an empty `ports` list.",
-        fix="Add at least one entry to the function's `ports` array, or remove the function.",
+        fix=(
+            "A `[[function]]` other than a `bar` lists at least one port in `ports`. "
+            'Write: ports = [{{ name = "1", role = "generic" }}]'
+        ),
         page="findings-parts",
     ),
     CodeInfo(
@@ -60,7 +63,10 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         stage="library load",
         who="part author",
         cause="A header pin's `joins` names a port of a `connector` function.",
-        fix="Point `joins` at a port of a non-connector function of the same part.",
+        fix=(
+            "A header pin `joins` a port of a non-connector function of the same part. "
+            'Write: joins = "k1.A1"'
+        ),
         page="findings-parts",
     ),
     CodeInfo(
@@ -69,7 +75,7 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         stage="library load",
         who="part author",
         cause="Two header pins of one part both `joins` the same function port.",
-        fix="Remove the `joins` from one of the two header pins, or point it at a different port.",
+        fix=('Each function port is joined by at most one header pin. Write: joins = "k1.A2"'),
         page="findings-parts",
     ),
     CodeInfo(
@@ -82,8 +88,8 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
             "is not `<function>.<port>`."
         ),
         fix=(
-            "Set `joins` to `<function>.<port>` naming an existing port of another function of "
-            "this part."
+            "`joins` is `<function>.<port>`, naming a port of another function of this part. "
+            'Write: joins = "k1.A1"'
         ),
         page="findings-parts",
     ),
@@ -93,7 +99,10 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         stage="library load",
         who="part author",
         cause="Two `links` entries of one function join the same pair of ports, in either order.",
-        fix="Remove the repeated `links` entry.",
+        fix=(
+            "Each pair of ports is linked once in a function, in either order. "
+            'Write: links = [{{ a = "11", b = "12", kind = "switched" }}]'
+        ),
         page="findings-parts",
     ),
     CodeInfo(
@@ -102,7 +111,7 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         stage="library load",
         who="part author",
         cause="A `links` entry's `a` or `b` is not a `name` in the function's `ports`.",
-        fix="Set `a` and `b` to names from the function's `ports`, or add the missing port.",
+        fix='Each `a` and `b` names a port listed in `ports`. Write: a = "11"',
         page="findings-parts",
     ),
     CodeInfo(
@@ -111,7 +120,7 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         stage="library load",
         who="part author",
         cause="A `links` entry has the same port as `a` and `b`.",
-        fix="Set `b` to a different port from `a`.",
+        fix='`a` and `b` name two different ports. Write: b = "12"',
         page="findings-parts",
     ),
     CodeInfo(
@@ -122,7 +131,7 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         cause=(
             "Two `[function.plc_channel]` tables of one part have the same `channel` and `signal`."
         ),
-        fix="Give one of the channels a different `channel` number, or a different `signal`.",
+        fix="Each `[function.plc_channel]` has its own `channel` and `signal`. Write: channel = 4",
         page="findings-parts",
     ),
     CodeInfo(
@@ -131,7 +140,7 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         stage="library load",
         who="part author",
         cause="Two ports of one function have the same `name`.",
-        fix="Rename one of the ports so each port name in the function is unique.",
+        fix='Each port of one function has its own `name`. Write: name = "A2"',
         page="findings-parts",
     ),
     CodeInfo(
@@ -143,7 +152,10 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
             "Two functions of one part give a port the same name, and their printed "
             "designations would be the same."
         ),
-        fix="Rename the port on one of the two functions so the printed designations differ.",
+        fix=(
+            "Each port name is unique across the part, so the printed designations differ. "
+            'Write: name = "A3"'
+        ),
         page="findings-parts",
     ),
     CodeInfo(
@@ -156,8 +168,8 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
             "`[function.rating]`."
         ),
         fix=(
-            "Keep `power_loss_w` in one place: remove it from `[rating]` or from the "
-            "`[function.rating]` it repeats."
+            "`power_loss_w` is stated once, in `[rating]` or in one `[function.rating]`. "
+            'Write: power_loss_w = "2.5"'
         ),
         page="findings-parts",
     ),
@@ -167,7 +179,10 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         stage="library load",
         who="part author",
         cause="A port sets `symbol_port`, but its function has no `symbol`.",
-        fix="Add a `symbol` to the function, or remove `symbol_port` from the port.",
+        fix=(
+            "A port with `symbol_port` needs its function to have a `symbol`. "
+            'Write: symbol = "operating-device"'
+        ),
         page="findings-parts",
     ),
     CodeInfo(
@@ -177,8 +192,8 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         who="part author",
         cause="A function's `symbol` is not a lowercase, hyphenated slug.",
         fix=(
-            "Rewrite `symbol` in lowercase letters and digits, joined by single hyphens, such "
-            "as `change-over-contact`."
+            "`symbol` is lowercase letters and digits joined by single hyphens, such as "
+            '`change-over-contact`. Write: symbol = "change-over-contact"'
         ),
         page="findings-parts",
     ),

@@ -20,9 +20,7 @@ from pathlib import Path
 from typing import NamedTuple
 
 import fransys as fr
-
-from fransys_model.derive.drawing_text import CONTACTS_HEADED, label_text
-from fransys_model.layout import Label, LabelKind, layout_of
+from _drawn_pages import drawn_pages
 
 
 class _Io(NamedTuple):
@@ -77,10 +75,14 @@ def _built(count: int) -> fr.BuildResult:
 
 def test_a_headed_table_names_its_coil_as_the_coil_is_drawn() -> None:
     """Each heading line is a coil's drawn tag (`-K3`), never the long `-U1-K3`."""
-    model = _built(4).model
-    labels = layout_of(model, Label).values()
-    drawn = {label_text(model, r) for r in labels if r.kind is LabelKind.TAG}
-    heads = [label_text(model, r).split("\n")[0] for r in labels if r.slot == CONTACTS_HEADED]
+    pages = drawn_pages(_built(4).model).values()
+    drawn = {t.text for d in pages for t in d.texts if t.kind == "TAG"}
+    heads = [
+        dict(s.slots)["heading"].split("\n")[0]
+        for d in pages
+        for s in d.symbols
+        if s.key == "contact-head" and "heading" in dict(s.slots)
+    ]
     assert len(heads) == 4
     assert all(head in drawn for head in heads)
     assert not any("U1" in head for head in heads)

@@ -2,20 +2,21 @@
 
 import fransys as fr
 import pytest
+from conventions_fixtures import house
 from fransys_el.placement_env import Env, make_env
 from fransys_el.placement_hints import hints_of
 from fransys_el.placement_kit import ProblemError
-from fransys_el.placement_options import Conventions
 from fransys_el.placement_syms import syms_of
 from placement_fixtures import kit_for, sid
 
+from electrical_symbols import LIBRARY
 lazy from fransys_layout.core import Hints, Sym
 lazy from fransys_model.kernel import Model
 
 
 def _built(model: Model) -> tuple[Env, tuple[Sym, ...]]:
     """The env and syms of `model`."""
-    env = make_env(model, kit_for(model), Conventions())
+    env = make_env(model, kit_for(model), house(), LIBRARY)
     return env, syms_of(env)
 
 
@@ -31,6 +32,7 @@ def hinted() -> tuple[Env, tuple[Sym, ...], Hints]:
     with d.function("POWER", "Breaker"):
         q1 = d.device("Q1", "DEMO-MCB-3P")
     d.series(dc.plus, s1.sw, k1.coil, dc.minus, wire=2.5)
+    d.detail.wire(g1.output["+"], q1.element["1"], wire=2.5)
     d.layout.chain(s1.sw, k1.coil, q1.element)
     with d.function("PUMP", "Draw target") as pump:
         pass

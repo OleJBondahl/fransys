@@ -10,10 +10,12 @@ from typing import Any
 import fransys as fr
 import fransys_author
 import fransys_parts
+from _dd_core import designation_of
+from _dd_core_c import markers_of
+from _drawn_pages import drawn_pages
 from _model_build_cover import layout_trigger_document
 
 from fransys_model.kernel import Severity
-from fransys_model.layout import LinkMarker, Route, layout_of
 
 _PROJECT: dict[str, Any] = {
     "title": "Route fan",
@@ -30,7 +32,7 @@ def _build():
 
     A group's physical net is its smallest port's, and a port named by a conductor and by the
     group must agree on it, so the star's ports are the ones holding the smallest port id here.
-    Returns the built result and the model port ids of the star ports and of K1 and K2.
+    Returns the built result.
     """
     parts = fransys_parts.load("demo_parts")
     d = fransys_author.Design(parts)
@@ -49,12 +51,7 @@ def _build():
     wire(coil["K5"], coil["K6"])
     wire(coil["K6"], coil["K7"])
     d.net("SHARED", *coil.values())
-    star = {coil[tag].id for tag in ("K5", "K6", "K7")}
-    return (
-        fr.build(parts, d.draft(), layout_trigger_document()),
-        star,
-        {coil["K1"].id, coil["K2"].id},
-    )
+    return fr.build(parts, d.draft(), layout_trigger_document())
 
 
 def test_a_net_group_is_spanned_over_its_wire_drawn_ports_and_never_a_star_port() -> None:
@@ -62,12 +59,18 @@ def test_a_net_group_is_spanned_over_its_wire_drawn_ports_and_never_a_star_port(
     # UNDO: stages/references/nets.py, `without_starred`, the `net_groups`
     #     filter on `in_star`: keep every group whose ports are not ALL in a
     #     star, with all its ports (the unfixed rule)
-    result, star, wired = _build()
+    result = _build()
     assert not [f for f in result.findings if f.severity is Severity.ERROR]
     model = result.model
-    marked = {m.port for m in layout_of(model, LinkMarker).values()}
-    assert marked & star  # the star is drawn as markers
-    assert not marked & wired  # and the net's other ports carry none
-    ends = [frozenset({r.a, r.b}) for r in layout_of(model, Route).values()]
-    # the only wire that reaches a wire-drawn port is the group's K1 to K2, none from a star port
-    assert [end for end in ends if end & wired] == [frozenset(wired)]
+    tag = {k: designation_of(model, k) for k in ("k1", "k2", "k5", "k6", "k7")}
+    assert all(
+        markers_of(model, tag[k]) for k in ("k5", "k6", "k7")
+    )  # the star is drawn as markers
+    assert not any(
+        markers_of(model, tag[k]) for k in ("k1", "k2")
+    )  # the net's other ports carry none
+    (drawing,) = drawn_pages(model).values()
+    tags = {t.text: t for t in drawing.texts if t.kind == "TAG"}
+    # K1 and K2 are drawn, joined by the group's wire
+    assert tag["k1"] in tags
+    assert tag["k2"] in tags

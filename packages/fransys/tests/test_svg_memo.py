@@ -9,7 +9,6 @@ page), not against a stub.
 
 import fransys as fr
 import fransys_author
-import fransys_render
 import pytest
 from demo_designs import cabinet_design
 from fransys import pipeline
@@ -65,7 +64,7 @@ def test_two_writes_of_the_same_result_draw_only_once(result, tmp_path, monkeypa
     """Two `write`s of one model share the one draw the memo holds (decision 0054): without
     it, the second write would render again for a digest already drawn.
     """
-    calls = _spy(monkeypatch, fransys_render, "pages")
+    calls = _spy(monkeypatch, pipeline, "draw_on_core")
 
     first = fr.write(result, tmp_path / "out1", unit=None)
     second = fr.write(result, tmp_path / "out2", unit=None)
@@ -76,7 +75,7 @@ def test_two_writes_of_the_same_result_draw_only_once(result, tmp_path, monkeypa
 
 
 def test_a_changed_model_draws_again(result, tmp_path, monkeypatch):
-    """A model with a different digest is not served the stale memo: `render.pages` runs once
+    """A model with a different digest is not served the stale memo: `draw_on_core` runs once
     per distinct digest, twice here for two digests, never once for both.
     """
     parts = fr.parts("demo_parts")
@@ -85,7 +84,7 @@ def test_a_changed_model_draws_again(result, tmp_path, monkeypatch):
     changed = _document_build(parts, cover_dir, text="# Demo cabinet v2\n")
     assert changed.model.digest != result.model.digest, "the perturbed cover must change the digest"
 
-    calls = _spy(monkeypatch, fransys_render, "pages")
+    calls = _spy(monkeypatch, pipeline, "draw_on_core")
 
     fr.write(result, tmp_path / "out1", unit=None)
     fr.write(changed, tmp_path / "out2", unit=None)
@@ -112,12 +111,12 @@ def test_svgs_hands_out_a_fresh_copy_every_call(result):
     """`_svgs` returns `dict(_svgs_cache(model))`, a copy, every call: a caller that mutates
     what it got back must never affect the memo's held value or a later caller's dict.
     """
-    svgs1 = pipeline._svgs(result.model)
+    svgs1 = pipeline._svgs(result.model, result.drawings)
     real_keys = set(svgs1)
     svgs1["bogus"] = "x"
     svgs1.clear()
 
-    svgs2 = pipeline._svgs(result.model)
+    svgs2 = pipeline._svgs(result.model, result.drawings)
 
     assert svgs2 is not svgs1
     assert set(svgs2) == real_keys

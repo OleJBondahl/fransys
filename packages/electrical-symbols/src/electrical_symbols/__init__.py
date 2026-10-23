@@ -1,6 +1,7 @@
 """Electrical graphical symbols as data, drawn after the conventions of IEC 60617."""
 
 from symdef import LIBRARY_VERSION as _SYMDEF_LIBRARY_VERSION
+from symdef import Library, SymdefError
 
 from electrical_symbols._library import LIBRARY
 from electrical_symbols._version import LIBRARY_VERSION
@@ -20,8 +21,18 @@ from electrical_symbols.box_ports import (
     is_generic_box,
 )
 from electrical_symbols.bridge_mark import BridgePiece, bridge_mark, bridge_mark_room
+from electrical_symbols.drawn_symbol import drawn_slots, drawn_symbol
+from electrical_symbols.font_files import font_dir
 from electrical_symbols.generic_box import box_pitch, generic_box
+from electrical_symbols.marker_keys import (
+    MARKER_FACING,
+    MARKER_SLOT,
+    MARKER_TURN_FACING,
+    MARKER_TURNED,
+    marker_symbol,
+)
 from electrical_symbols.natural import Natural, natural
+from electrical_symbols.power_symbols import power_symbol_key
 from electrical_symbols.sheet import (
     frame_border,
     frame_strip,
@@ -44,6 +55,10 @@ __all__ = [
     "G_PER_MODULE",
     "LIBRARY",
     "LIBRARY_VERSION",
+    "MARKER_FACING",
+    "MARKER_SLOT",
+    "MARKER_TURNED",
+    "MARKER_TURN_FACING",
     "NORTH",
     "PORT_PITCH",
     "PORT_PITCH_G",
@@ -52,7 +67,9 @@ __all__ = [
     "TITLE_BLOCK_MIN_WIDTH_MM",
     "WIRING_GRID",
     "BridgePiece",
+    "Library",
     "Natural",
+    "SymdefError",
     "TitleBlock",
     "bold_layer",
     "box_pitch",
@@ -63,13 +80,18 @@ __all__ = [
     "default_order",
     "default_sides",
     "draw_order",
+    "drawn_slots",
+    "drawn_symbol",
+    "font_dir",
     "frame_border",
     "frame_strip",
     "generic_box",
     "is_generic_box",
     "library_version",
+    "marker_symbol",
     "natural",
     "notice_table",
+    "power_symbol_key",
     "sheet_svg",
     "slot_box_mm",
     "slot_room",

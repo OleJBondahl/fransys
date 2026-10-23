@@ -2,7 +2,7 @@
 
 from fransys_layout.engines.overview.lanes.labels import label_at, label_box, label_clear
 from fransys_layout.geometry import Box, Point
-from fransys_layout.stages.space import run_of
+from fransys_layout.routing.space import run_of
 
 _LINE = (Point(x=0, y=40), Point(x=96, y=40))
 _TH = 8

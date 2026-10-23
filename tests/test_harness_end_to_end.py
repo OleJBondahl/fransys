@@ -12,9 +12,9 @@ from typing import NamedTuple
 
 import fransys as fr
 import pytest
+from _drawn_pages import drawn_pages
 
 from fransys_model import derive
-from fransys_model.layout import HarnessLine, layout_of
 
 _TESTS_DIR = Path(__file__).resolve().parent
 if str(_TESTS_DIR) not in sys.path:
@@ -48,11 +48,19 @@ def test_the_write_runs_with_no_error_finding(written: _Written) -> None:
 
 def test_every_harness_line_is_drawn_as_a_polyline_with_its_label(written: _Written) -> None:
     model = written.result.model
-    lines = list(layout_of(model, HarnessLine).values())
-    assert lines
+    ends = [
+        (owner, end.branch)
+        for owner in derive.line_conductors(model)
+        for end in derive.harness_line_ends(model, owner)
+    ]
+    assert ends
+    drawn = [w for d in drawn_pages(model).values() for w in d.wires if w.label is not None]
     polylines = re.findall(r'<polyline class="harness-line" points="[^"]+"/>', written.svg)
-    assert len(polylines) == len(lines)
-    labels = {derive.line_designation(model, line.harness, line.branch) for line in lines}
+    assert len(polylines) == len(ends)
+    labels = {derive.line_designation(model, owner, branch) for owner, branch in ends}
+    assert {
+        w.label.text for w in drawn if w.label is not None
+    } >= labels  # the core's drawings carry each line label
     assert {label.split(".")[0] for label in labels} == _HARNESSES  # branches read -W12.1
     for label in labels:
         assert f">{label}</text>" in written.svg

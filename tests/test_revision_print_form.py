@@ -14,8 +14,9 @@ import fransys as fr
 import fransys_author
 import fransys_parts
 import fransys_render
+from _drawn_pages import drawn_pages
 from _model_build_cover import layout_trigger_document
-from fransys_pdf import source
+from _pdf_lists import source
 from fransys_pdf._lists import bom_page
 from fransys_reports import bom_csv
 
@@ -27,9 +28,7 @@ from fransys_model.derive import (
     unit_release,
     units,
 )
-from fransys_model.derive.drawing_text import label_text
 from fransys_model.kernel import Origin, Severity, evolve, make_id
-from fransys_model.layout import Label, Outline, layout_of
 from fransys_model.vocab import Document, DocumentPreset, PageKind
 
 _ORIGIN = Origin(
@@ -177,12 +176,11 @@ def test_the_bom_csv_unit_row_prints_2_1():
 def test_the_black_box_title_prints_rev_2_1():
     """(e) The board unit's outline on its parent's page: the outline title label."""
     model = _build()
-    board = _unit_id(model, _BOARD)
-    (outline,) = [o for o in layout_of(model, Outline).values() if o.unit == board]
     titles = [
-        label_text(model, lb)
-        for lb in layout_of(model, Label).values()
-        if lb.page == outline.page and lb.slot == "outline_title"
+        outline.label.text
+        for drawing in drawn_pages(model).values()
+        for outline in drawing.outlines
+        if outline.label is not None and outline.label.text.startswith(f"{_BOARD} rev")
     ]
     assert f"{_BOARD} rev 2.1" in titles
     for old in ("2", "1", "01"):

@@ -14,9 +14,10 @@ from typing import NamedTuple
 
 import fransys as fr
 import pytest
+from _drawn_pages import drawn_pages
 from fransys.colours import BK, BN, BU
 
-from fransys_model.layout import HarnessLine, PowerSymbol, layout_of
+from fransys_model.layout import PowerSymbol, layout_of
 
 CTRL = (BU, 0.75)
 
@@ -69,5 +70,6 @@ def test_neighbouring_power_symbols_stand_apart(built: fr.BuildResult) -> None:
 
 
 def test_neighbouring_power_symbols_and_a_harness_line_draw_no_short(built: fr.BuildResult) -> None:
-    assert layout_of(built.model, HarnessLine)
+    # a harness line is a drawn wire of a style other than the plain conductor's
+    assert [w for d in drawn_pages(built.model).values() for w in d.wires if w.style != "wire"]
     assert _shorts(built) == []

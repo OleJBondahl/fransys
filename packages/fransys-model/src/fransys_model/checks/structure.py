@@ -2,8 +2,10 @@
 
 from typing import TYPE_CHECKING, Any, Final
 
+from fransys_model.checks._finding import ordered
 from fransys_model.derive.facts.children import aspect_parent, parent_item, unit_parent
 from fransys_model.kernel import Finding, Severity
+from fransys_model.vocab.codes import fix_text
 from fransys_model.vocab.finding_ref import ref
 from fransys_model.vocab.tables import aspect_nodes, items, placements, units
 
@@ -20,7 +22,13 @@ UNIT_CYCLE: Final[str] = "UNIT_CYCLE"
 
 
 def _finding(code: str, subjects: Iterable[Id[Any]], message: str) -> Finding:
-    return Finding(code=code, severity=Severity.ERROR, subjects=tuple(subjects), message=message)
+    return Finding(
+        code=code,
+        severity=Severity.ERROR,
+        subjects=tuple(subjects),
+        message=message,
+        fix=fix_text(code),
+    )
 
 
 def _cycles[K](parent_of: Mapping[Id[K], Id[K] | None]) -> list[tuple[Id[K], ...]]:
@@ -129,4 +137,4 @@ def check_structure(model: Model) -> tuple[Finding, ...]:
         *_containment_findings(model),
         *_unit_findings(model),
     ]
-    return tuple(sorted(found, key=lambda f: (f.code, f.subjects, f.message)))
+    return ordered(found)

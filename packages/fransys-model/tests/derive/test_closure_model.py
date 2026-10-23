@@ -54,3 +54,15 @@ def test_only_a_conductive_link_joins_the_physical_net() -> None:
 
 
 # ---- the cache ---------------------------------------------------------------------------
+
+
+def test_link_groups_is_a_derive_name_that_names_the_linked_ports() -> None:
+    """`derive.link_groups` yields, per item, the ports of a link the selector accepts."""
+    from fransys_model import derive
+
+    plant, ports = _fuse(LinkKind.CONDUCTIVE, "g1")
+    model = plant.model()
+    (group,) = derive.link_groups(model, lambda role: role.joins_net)
+    assert isinstance(group, derive.LinkGroup)
+    assert set(group.ports) == set(ports["g1"])
+    assert not list(derive.link_groups(model, lambda role: role.switched))

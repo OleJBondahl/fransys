@@ -147,11 +147,11 @@ def test_a_device_owns_its_contacts_and_not_a_held_switch() -> None:
 def test_contact_entries_and_the_list_key_of_each_function() -> None:
     got = {k: contact_entries(MODEL, functions(MODEL)[IDS[k]]) for k in IDS if k != "head"}
     assert got == {
-        "no": ([(False, 13, "13-14")], []),
-        "nc": ([], [(False, 21, "21-22")]),
-        "co": ([(True, 11, "11-14")], [(True, 11, "11-12")]),
-        "sw_nc": ([], [(False, 31, "31-32")]),
-        "sw_no": ([(False, 43, "43-44")], []),
+        "no": ([(False, "13", "13-14")], []),
+        "nc": ([], [(False, "21", "21-22")]),
+        "co": ([(True, "11", "11-14")], [(True, "11", "11-12")]),
+        "sw_nc": ([], [(False, "31", "31-32")]),
+        "sw_no": ([(False, "43", "43-44")], []),
         "coil": ([], []),
         "conn": ([], []),
     }

@@ -5,8 +5,9 @@ from typing import TYPE_CHECKING, Any
 
 import pytest
 from layout_cabinet import build_cabinet
+from layout_library import freeze
 
-from fransys_model.kernel import freeze, make_id
+from fransys_model.kernel import make_id
 from fransys_model.layout import Chain, GroupHint, layout_of
 from fransys_model.vocab import (
     Item,
@@ -88,7 +89,10 @@ def test_one_group_hint_and_no_other_layout_kind_but_chains_and_symbol_choices()
     assert len(layout_of(model, GroupHint)) == 1
     assert {kind for kind in model.tables if kind.startswith("layout.")} == {
         "layout.chain",
+        "layout.drawing_library",
         "layout.group_hint",
+        "layout.paper",
+        "layout.sheet_format",
         "layout.symbol_choice",
     }
 

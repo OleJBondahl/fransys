@@ -37,6 +37,7 @@ What `place=` changes, on every call that takes it.
 A place sorts the lists by place and sets the `+` part of the printed designation. It does not move a cell on a drawing: `d.layout.draw_in` does.
 
 `d.device(tag, part, place=, parent=, mounted_on=, joins=, interface=, unused=, name=)` adds one device.
+`unused=` works on a boundary device and on an internal one.
 `joins={1: K1.coil["A1"]}` with `parent=K1` fits a housing on K1's own leads: pin 1 is that pin, no wire.
 A contact block with `parent=` an operator head prints the head's tag, as `-S1:11` (guide `parts.md`).
 `part` is a manufacturer part number such as `"DEMO-LAMP-24"`.

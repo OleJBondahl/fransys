@@ -9,15 +9,18 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from fransys_model.derive import implied_rest, is_contact_kind
+from fransys_model.vocab import FunctionKind
+
 from . import _toml
 
 if TYPE_CHECKING:
     from fransys_model.kernel import Finding
 
 # A contact kind that implies its rest state; a changeover implies it per throw, by roles.
-_IMPLIED = {"contact_no": "open", "contact_nc": "closed"}
+_IMPLIED = {k.value: rest for k in FunctionKind if (rest := implied_rest(k)) is not None}
 _DECLARES = frozenset({"switch", "generic"})
-_CONTACTS = frozenset({"contact_no", "contact_nc", "contact_co", "switch"})
+_CONTACTS = frozenset(k.value for k in FunctionKind if is_contact_kind(k))
 _SYMBOL_REST = {
     "make-contact": "open",
     "break-contact": "closed",

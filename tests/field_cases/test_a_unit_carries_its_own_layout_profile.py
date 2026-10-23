@@ -20,9 +20,9 @@ from typing import TYPE_CHECKING, Any, NamedTuple
 
 import fransys as fr
 import pytest
+from _drawn_pages import drawn_pages
 
-from fransys_model.layout import DrawingSet, Page, SymbolPlacement, layout_of
-from fransys_model.vocab.tables import functions, items
+from fransys_model.layout import DrawingSet, Page, layout_of
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -95,23 +95,26 @@ def _build(
     return fr.build(d, *documents)
 
 
+def _pin_tags(model: Any, prefix: str) -> list[str]:
+    """The pin part of every tag under `prefix` (`-U9-`) that the layout draws, lower case.
+
+    The unit's own document prints `-U9-p1`, a container's `-U1-U9-p1` (DESIGNATION-DRAWN).
+    """
+    tags = (
+        t.text.removeprefix("-U1")
+        for d in drawn_pages(model).values()
+        for t in d.texts
+        if t.kind == "TAG"
+    )
+    return sorted({t.removeprefix(prefix).lower() for t in tags if t.startswith(prefix)})
+
+
 def _unit_drawn(result: fr.BuildResult) -> list[str]:
-    """The name of every function of the unit's items that the layout draws.
+    """The name of every port connector of the unit's switch that the layout draws.
 
     A device box draws several functions: its pins name them (layout-0215, "p1.1").
     """
-    model = result.model
-    return sorted(
-        {
-            name
-            for p in layout_of(model, SymbolPlacement).values()
-            if items(model)[functions(model)[p.function].item].unit is not None
-            for name in (
-                {pin.split(".")[0] for pin in p.ports} or {functions(model)[p.function].key[-1]}
-            )
-            if name != "lamp"
-        }
-    )
+    return sorted({name.split(":")[0] for name in _pin_tags(result.model, "-U9-")})
 
 
 def _unit_pdf(result: fr.BuildResult, out: Path) -> bytes:
@@ -197,12 +200,7 @@ def _plc_unit_ports(tmp_path: Path, *, parent_hides: bool, unit_hides: bool) -> 
     (tmp_path / "plc.md").write_text("# Plc box\n", encoding="utf-8")
     preset = fr.DocumentPreset.CABINET_SCHEMATIC
     model = fr.build(d, fr.document(preset, "demo-plc-box", cover=tmp_path / "plc.md")).model
-    return sorted(
-        port
-        for p in layout_of(model, SymbolPlacement).values()
-        if items(model)[functions(model)[p.function].item].unit is not None
-        for port in p.ports
-    )
+    return [name.replace(":", ".") for name in _pin_tags(model, "-A1-")]
 
 
 def test_a_parent_hiding_idle_pins_leaves_a_wired_supply_unit_with_its_idle_pins(

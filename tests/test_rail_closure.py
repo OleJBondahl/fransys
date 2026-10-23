@@ -17,10 +17,11 @@ from typing import TYPE_CHECKING
 import fransys_parts
 import pytest
 from fransys_author import Design, Port
+from root_library import freeze
 
 from fransys_model.derive import PhysicalNet, net_of, physical_nets, port_rails
 from fransys_model.derive.facts import closure
-from fransys_model.kernel import Id, Model, evolve, freeze, merge
+from fransys_model.kernel import Id, Model, evolve, merge
 from fransys_model.vocab import LinkKind
 from fransys_model.vocab import Port as ModelPort
 from fransys_model.vocab.tables import conductors, internal_links, ports

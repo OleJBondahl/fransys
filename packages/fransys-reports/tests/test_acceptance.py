@@ -11,7 +11,7 @@ from fransys_reports import (
 )
 
 from fransys_model.derive import connector_rows
-from fransys_model.derive.designation import own_designation_or_none
+from fransys_model.derive.designation_label import own_designation_or_none
 from fransys_model.kernel import make_id
 from fransys_model.vocab.core import Item
 

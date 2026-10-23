@@ -6,9 +6,9 @@ model's own table, so nothing is copied, and an empty table when the model holds
 that kind.
 """
 
-from typing import Any, cast
+from typing import Any, Protocol, cast
 
-from fransys_model.kernel import Id, Model, Record, SchemaError, namespace_of
+from fransys_model.kernel import Id, Record, SchemaError, namespace_of
 
 from .aspects import AspectNode, Placement
 from .connectivity import Conductor, Mate, Net
@@ -19,6 +19,16 @@ from .revision import Revision
 from .supply_system import SupplySystem
 from .templates import FunctionTemplate, InternalLink, Part, PartLibrary, PortTemplate
 from .units import Boundary, UnusedBoundary
+
+
+class HasTables(Protocol):
+    """Anything that holds `tables`: a frozen `Model`, or a `Draft.tables()` view of a draft."""
+
+    @property
+    def tables(self) -> frozendict[str, frozendict[Id[Any], Record]]:
+        """The records as `kind -> id -> record`."""
+        ...
+
 
 _NO_RECORDS: frozendict[Id[Any], Any] = frozendict()
 
@@ -45,37 +55,37 @@ def kind_of(record_type: type) -> str:
     return cast("str", kind)  # vars() values are Any; `@record` sets `__kind__` to a str
 
 
-def table_of[R](model: Model, record_type: type[R]) -> frozendict[Id[R], R]:
+def table_of[R](model: HasTables, record_type: type[R]) -> frozendict[Id[R], R]:
     """The model's table of `record_type`, or an empty one."""
     return cast("frozendict[Id[R], R]", model.tables.get(kind_of(record_type), _NO_RECORDS))
 
 
-def parts(model: Model) -> frozendict[Id[Part], Part]:
+def parts(model: HasTables) -> frozendict[Id[Part], Part]:
     """Return every `Part` in `model`, by id."""
     return table_of(model, Part)
 
 
-def part_libraries(model: Model) -> frozendict[Id[PartLibrary], PartLibrary]:
+def part_libraries(model: HasTables) -> frozendict[Id[PartLibrary], PartLibrary]:
     """Return every `PartLibrary` in `model`, by id."""
     return table_of(model, PartLibrary)
 
 
-def function_templates(model: Model) -> frozendict[Id[FunctionTemplate], FunctionTemplate]:
+def function_templates(model: HasTables) -> frozendict[Id[FunctionTemplate], FunctionTemplate]:
     """Return every `FunctionTemplate` in `model`, by id."""
     return table_of(model, FunctionTemplate)
 
 
-def port_templates(model: Model) -> frozendict[Id[PortTemplate], PortTemplate]:
+def port_templates(model: HasTables) -> frozendict[Id[PortTemplate], PortTemplate]:
     """Return every `PortTemplate` in `model`, by id."""
     return table_of(model, PortTemplate)
 
 
-def internal_links(model: Model) -> frozendict[Id[InternalLink], InternalLink]:
+def internal_links(model: HasTables) -> frozendict[Id[InternalLink], InternalLink]:
     """Return every `InternalLink` in `model`, by id."""
     return table_of(model, InternalLink)
 
 
-def items(model: Model) -> frozendict[Id[Item], Item]:
+def items(model: HasTables) -> frozendict[Id[Item], Item]:
     """Return every `Item` in `model`, by id.
 
     Args:
@@ -88,7 +98,7 @@ def items(model: Model) -> frozendict[Id[Item], Item]:
     return table_of(model, Item)
 
 
-def functions(model: Model) -> frozendict[Id[Function], Function]:
+def functions(model: HasTables) -> frozendict[Id[Function], Function]:
     """Return every `Function` in `model`, by id.
 
     Args:
@@ -101,7 +111,7 @@ def functions(model: Model) -> frozendict[Id[Function], Function]:
     return table_of(model, Function)
 
 
-def ports(model: Model) -> frozendict[Id[Port], Port]:
+def ports(model: HasTables) -> frozendict[Id[Port], Port]:
     """Return every `Port` in `model`, by id.
 
     Args:
@@ -114,7 +124,7 @@ def ports(model: Model) -> frozendict[Id[Port], Port]:
     return table_of(model, Port)
 
 
-def nets(model: Model) -> frozendict[Id[Net], Net]:
+def nets(model: HasTables) -> frozendict[Id[Net], Net]:
     """Return every `Net` in `model`, by id.
 
     Args:
@@ -127,7 +137,7 @@ def nets(model: Model) -> frozendict[Id[Net], Net]:
     return table_of(model, Net)
 
 
-def conductors(model: Model) -> frozendict[Id[Conductor], Conductor]:
+def conductors(model: HasTables) -> frozendict[Id[Conductor], Conductor]:
     """Return every `Conductor` in `model`, by id.
 
     Args:
@@ -140,12 +150,12 @@ def conductors(model: Model) -> frozendict[Id[Conductor], Conductor]:
     return table_of(model, Conductor)
 
 
-def mates(model: Model) -> frozendict[Id[Mate], Mate]:
+def mates(model: HasTables) -> frozendict[Id[Mate], Mate]:
     """Return every `Mate` in `model`, by id."""
     return table_of(model, Mate)
 
 
-def units(model: Model) -> frozendict[Id[Unit], Unit]:
+def units(model: HasTables) -> frozendict[Id[Unit], Unit]:
     """Return every `Unit` in `model`, by id.
 
     Args:
@@ -158,7 +168,7 @@ def units(model: Model) -> frozendict[Id[Unit], Unit]:
     return table_of(model, Unit)
 
 
-def unit_releases(model: Model) -> frozendict[Id[UnitRelease], UnitRelease]:
+def unit_releases(model: HasTables) -> frozendict[Id[UnitRelease], UnitRelease]:
     """Return every `UnitRelease` in `model`, by id.
 
     Args:
@@ -171,7 +181,7 @@ def unit_releases(model: Model) -> frozendict[Id[UnitRelease], UnitRelease]:
     return table_of(model, UnitRelease)
 
 
-def boundaries(model: Model) -> frozendict[Id[Boundary], Boundary]:
+def boundaries(model: HasTables) -> frozendict[Id[Boundary], Boundary]:
     """Return every `Boundary` in `model`, by id.
 
     Args:
@@ -184,7 +194,7 @@ def boundaries(model: Model) -> frozendict[Id[Boundary], Boundary]:
     return table_of(model, Boundary)
 
 
-def supply_systems(model: Model) -> frozendict[Id[SupplySystem], SupplySystem]:
+def supply_systems(model: HasTables) -> frozendict[Id[SupplySystem], SupplySystem]:
     """Return every `SupplySystem` in `model`, by id.
 
     Args:
@@ -197,18 +207,18 @@ def supply_systems(model: Model) -> frozendict[Id[SupplySystem], SupplySystem]:
     return table_of(model, SupplySystem)
 
 
-def supply_of_potential(model: Model, potential: str) -> SupplySystem | None:
+def supply_of_potential(model: HasTables, potential: str) -> SupplySystem | None:
     """The supply declaring `potential` as a rail (smallest `(name, id)` if two), else `None`."""
     declaring = [supply for supply in supply_systems(model).values() if potential in supply.rails]
     return min(declaring, key=lambda supply: (supply.name, supply.id)) if declaring else None
 
 
-def unused_boundaries(model: Model) -> frozendict[Id[UnusedBoundary], UnusedBoundary]:
+def unused_boundaries(model: HasTables) -> frozendict[Id[UnusedBoundary], UnusedBoundary]:
     """Return every `UnusedBoundary` in `model`, by id."""
     return table_of(model, UnusedBoundary)
 
 
-def aspect_nodes(model: Model) -> frozendict[Id[AspectNode], AspectNode]:
+def aspect_nodes(model: HasTables) -> frozendict[Id[AspectNode], AspectNode]:
     """Return every `AspectNode` in `model`, by id.
 
     Args:
@@ -221,7 +231,7 @@ def aspect_nodes(model: Model) -> frozendict[Id[AspectNode], AspectNode]:
     return table_of(model, AspectNode)
 
 
-def placements(model: Model) -> frozendict[Id[Placement], Placement]:
+def placements(model: HasTables) -> frozendict[Id[Placement], Placement]:
     """Return every `Placement` in `model`, by id.
 
     Args:
@@ -234,22 +244,22 @@ def placements(model: Model) -> frozendict[Id[Placement], Placement]:
     return table_of(model, Placement)
 
 
-def documents(model: Model) -> frozendict[Id[Document], Document]:
+def documents(model: HasTables) -> frozendict[Id[Document], Document]:
     """Return every `Document` in `model`, by id."""
     return table_of(model, Document)
 
 
-def projects(model: Model) -> frozendict[Id[Project], Project]:
+def projects(model: HasTables) -> frozendict[Id[Project], Project]:
     """Return the `Project` in `model`, by id; empty or one entry (`Project` is a singleton)."""
     return table_of(model, Project)
 
 
-def revisions(model: Model) -> frozendict[Id[Revision], Revision]:
+def revisions(model: HasTables) -> frozendict[Id[Revision], Revision]:
     """Return every `Revision` in `model`, by id."""
     return table_of(model, Revision)
 
 
-def facets_of[F](model: Model, facet_type: type[F]) -> frozendict[Id[F], F]:
+def facets_of[F](model: HasTables, facet_type: type[F]) -> frozendict[Id[F], F]:
     """Return every facet of `facet_type` in `model`, keyed by the facet's own id.
 
     Not by its `subject`: a subject may carry several facets of different kinds, and

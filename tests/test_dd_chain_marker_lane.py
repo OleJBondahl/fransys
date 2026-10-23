@@ -18,18 +18,15 @@ import fransys as fr
 import fransys_author
 import fransys_parts
 import pytest
+from _drawn_pages import drawn_pages
 from _model_build_cover import layout_trigger_document
 
 from fransys_model.kernel import Origin, Severity, make_id
 from fransys_model.layout import (
-    LinkMarker,
     Profile,
-    Route,
     SheetFormat,
-    SymbolPlacement,
     default_profile,
     default_sheet_format,
-    layout_of,
 )
 
 _PROJECT: dict[str, Any] = {
@@ -75,6 +72,21 @@ def _build(n: int, *, width_mm: int | None = None):
     return fr.build(parts, draft, layout_trigger_document())
 
 
+def _terminal_tags(model) -> dict[str, tuple]:
+    """The strip index of each terminal (the tag's last part) -> (page id, tag box, symbol)."""
+    found = {}
+    for page, drawing in drawn_pages(model).items():
+        tags = [t for t in drawing.texts if t.kind == "TAG" and t.text.startswith("-X1:")]
+        terminals = [s for s in drawing.symbols if s.key == "terminal"]
+        for tag in tags:
+            found[tag.text.rsplit(":", 1)[1]] = (page, tag.box, terminals)
+    return found
+
+
+def _wires(model) -> list:
+    return [w for drawing in drawn_pages(model).values() for w in drawing.wires]
+
+
 @pytest.mark.parametrize("n", [3, 4, 5, 6, 8, 12])
 def test_a_chain_of_terminals_builds_with_every_conductor_drawn(n: int) -> None:
     """No ERROR finding (`ROUTE_FAILED`, `CONNECTION_NOT_DRAWN`) and wires are drawn: a chain's
@@ -86,7 +98,7 @@ def test_a_chain_of_terminals_builds_with_every_conductor_drawn(n: int) -> None:
     result = _build(n)
     errors = [(f.code, f.severity.name) for f in result.findings if f.severity is Severity.ERROR]
     assert errors == []
-    assert layout_of(result.model, Route)
+    assert _wires(result.model)
 
 
 @pytest.mark.parametrize("n", [5, 12])
@@ -95,16 +107,20 @@ def test_a_chain_of_terminals_stands_in_one_row_on_one_line(n: int) -> None:
     their links are wires on one line below it, and no link is a reference (no `LinkMarker`)."""
     # UNDO: engines/schematic/engine.py: `all_columns = join_terminal_rows(` ... `)` is removed
     #     (the terminals stack in columns again and their links become references)
-    result = _build(n)
-    placed = sorted(layout_of(result.model, SymbolPlacement).values(), key=lambda p: p.x)
-    assert [p.key[5] for p in placed] == [str(k) for k in range(1, n + 1)]
-    assert len({p.y for p in placed}) == 1
-    routes = list(layout_of(result.model, Route).values())
+    model = _build(n).model
+    tags = _terminal_tags(model)
+    placed = sorted(tags.items(), key=lambda item: item[1][1].x)
+    assert [k for k, _ in placed] == [str(k) for k in range(1, n + 1)]
+    terminals = [
+        s for drawing in drawn_pages(model).values() for s in drawing.symbols if s.key == "terminal"
+    ]
+    assert len({s.y for s in terminals}) == 1
+    routes = _wires(model)
     assert len(routes) == n - 1
-    runs = {a.y for r in routes for a, b in pairwise(r.points) if a.y == b.y}
+    runs = {a[1] for r in routes for a, b in pairwise(r.points) if a[1] == b[1]}
     assert len(runs) == 1
-    assert runs != {placed[0].y}
-    assert not layout_of(result.model, LinkMarker)
+    assert runs != {terminals[0].y}
+    assert not [m for drawing in drawn_pages(model).values() for m in drawing.markers]
 
 
 def test_a_chain_too_long_for_one_row_stays_drawn_where_its_links_share_a_page() -> None:
@@ -114,14 +130,14 @@ def test_a_chain_too_long_for_one_row_stays_drawn_where_its_links_share_a_page()
     # UNDO: stages/terminal_rows.py `join_terminal_rows`: `if not fits(built):` -> `if False:`
     #     (the row is built too wide, so no terminal is left stacked and the page count differs)
     result = _build(12, width_mm=100)
-    placed = {p.key[5]: p for p in layout_of(result.model, SymbolPlacement).values()}
-    assert len({p.page for p in placed.values()}) > 1
-    same_page = sum(placed[str(k)].page == placed[str(k + 1)].page for k in range(1, 12))
+    page = {k: v[0] for k, v in _terminal_tags(result.model).items()}
+    assert len(set(page.values())) > 1
+    same_page = sum(page[str(k)] == page[str(k + 1)] for k in range(1, 12))
     assert same_page > 0
     # In natural order (layout-0193) a page holds terminals 1, 2 and 3 as a stack of two beside
     # one: the join aligner cannot level link 2-3 and reports JOIN_UNALIGNED (drawn as references).
     unaligned = sum(f.code == "JOIN_UNALIGNED" for f in result.findings)
-    assert len(layout_of(result.model, Route)) + unaligned == same_page
+    assert len(_wires(result.model)) + unaligned == same_page
     # Natural order leaves 2 same-page links as references; a join aligner is a FUTURE row.
     assert unaligned <= 2
     assert [f.code for f in result.findings if f.severity is Severity.ERROR] == []

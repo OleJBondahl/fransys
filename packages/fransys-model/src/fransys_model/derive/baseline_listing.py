@@ -36,7 +36,7 @@ from .facts.net_facts import net_class_name, net_potential
 from .lone_cable import lone_cable
 from .mate_rows import mates
 from .release_identity import release_identity
-from .reports import _conductor_unit, _lowest_common_unit
+from .report_scope import _conductor_unit, _lowest_common_unit
 from .rows_baseline import (
     BaselineBoundary,
     BaselineConductor,

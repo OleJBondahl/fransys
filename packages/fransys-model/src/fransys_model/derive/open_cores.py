@@ -6,11 +6,12 @@ lazy from fransys_model.vocab.core import Item, Unit
 
 from .core_pairs import _product_colours, open_core_is_spare
 from .designation import port_designation, printed_designation, unit_list_context
-from .far_ends import end_text
 from .lookups import require
 from .open_core_ends import _open_by_cable
 from .rows_cores import OpenCoreRow
-lazy from .reports import _require_unit
+from .texts.context import PrintContext
+from .texts.end_text import FAR_END, end_text
+lazy from .report_scope import _require_unit
 
 
 def open_core_rows(
@@ -41,7 +42,7 @@ def open_core_rows(
         elif unit is None:
             text = port_designation(model, facet.at)
         else:
-            text = end_text(model, facet.at, context, unit)
+            text = end_text(model, facet.at, FAR_END, PrintContext(reading=unit, location=context))
         rows.append(
             OpenCoreRow(
                 cable=cable,

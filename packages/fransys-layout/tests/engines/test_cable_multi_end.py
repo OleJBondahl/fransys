@@ -15,14 +15,15 @@ import fransys_parts
 import pytest
 from cable_checks import assert_no_shared_stretch, assert_on_the_grid, assert_outside_the_box
 from cable_facts import block_facts
+from layout_library import freeze
 
 from fransys_layout import lay_out_cables
 from fransys_layout.engines.cable.place import place_block
-from fransys_layout.engines.schematic.read.reading import profile_and_sheet
 from fransys_layout.geometry import WIRING_GRID, LayoutError, snap_up, text_width
+from fransys_model.derive import text_room
 from fransys_model.derive.cable_drawing import block_cables, core_text, end_label
 from fransys_model.derive.passes.numbering import number as number_pass
-from fransys_model.kernel import freeze, merge
+from fransys_model.kernel import merge
 from fransys_model.layout import BlockRow, CableBlock, CableBox, CoreWire, EndBox, layout_of
 
 _PROJECT: dict[str, Any] = {
@@ -123,10 +124,8 @@ def _check(block):
 def _label_gaps(s, head, bottom):
     """The gap of each neighbouring pair: one pitch, or more where their labels would come
     within a grid unit. One-pin boxes: the centres stand `apart` from each other."""
-    profile, _, _ = profile_and_sheet(s.frozen)
-    widths = [
-        text_width(end_label(s.frozen, e.item, None), height=profile.text_height) for e in bottom
-    ]
+    height = text_room(s.frozen)
+    widths = [text_width(end_label(s.frozen, e.item, None), height=height) for e in bottom]
     apart = [(a + b + 1) // 2 + G for a, b in pairwise(widths)]
     return [max(head.pitch, snap_up(one) - head.pitch) for one in apart]
 

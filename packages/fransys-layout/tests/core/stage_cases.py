@@ -5,22 +5,26 @@ from __future__ import annotations
 from dataclasses import replace
 from typing import TYPE_CHECKING
 
+from options_fixtures import core_options
+from turn_fixtures import refit
+
 from fransys_layout.core import build_flow
-from fransys_layout.core.values import Bundle, Options, Rail
+from fransys_layout.core.values import Bundle
 
 from .chain_fixtures import facing_chain
-from .conftest import MARKER_BOX
+from .conftest import MARKER
 from .flow_builders import elem, net, poles, problem
 
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from fransys_layout.core.values import PlacementProblem, Sym
+    from fransys_layout.core.sym_values import Sym
+    from fransys_layout.core.values import PlacementProblem
 
 
 def _mirrored(sym: Sym) -> Sym:
     """Poles in reverse x order, so the lane order depends on which shared symbol binds."""
-    return replace(sym, pins=tuple(replace(p, dx=-p.dx) for p in sym.pins))
+    return refit(sym, pins=tuple(replace(p, dx=-p.dx) for p in sym.pins))
 
 
 def _mixed_flow() -> PlacementProblem:
@@ -39,8 +43,6 @@ def _mixed_flow() -> PlacementProblem:
         net("w9", "K2.n", "K9.s"),
         net("w10", "K9.n", "K10.s"),
         net("w11", "K10.n", "K11.s"),
-        net("L+", "K11.n", rail=Rail(0, "SUPPLY")),
-        net("L-", "K1.s", rail=Rail(1, "GROUND")),
         net("p2", "A3.n", "A10.n"),
         net("p10", "A3.s", "A10.s"),
         net("bus12", "H2.s", "T1.n", "T2.n", "T10.n"),
@@ -55,7 +57,17 @@ def _mixed_flow() -> PlacementProblem:
 
 
 def _run_flow(prob: PlacementProblem) -> object:
-    return build_flow(prob, Options(marker=MARKER_BOX))
+    return build_flow(
+        prob,
+        core_options(
+            marker=MARKER,
+            flip_turn="R180",
+            tag_stagger=True,
+            label_gap=8,
+            driver_first=True,
+            arrow_sides=("E", "W"),
+        ),
+    )
 
 
 def _chain_flow() -> PlacementProblem:

@@ -113,6 +113,7 @@ def test_describe_parts_keeps_the_head_and_each_subject_apart() -> None:
         severity=Severity.WARNING,
         subjects=(_HOLDER, _MISSING),
         message="two lines\nof text",
+        fix="Write: x",
     )
     parts = describe_parts(finding, _holder_source(), {_HOLDER: "pump 1"})
     assert parts.head == "DEMO (warning): two lines\nof text"

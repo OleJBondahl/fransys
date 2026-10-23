@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING
 from .cut_costs import ref_name
 from .keys import natural_key
 from .ref_kind import kind_of
-from .values import Ref, RefEnd
+from .values import Ref, RefEnd, RefKind
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
@@ -92,3 +92,41 @@ def link_over_pinless(refs: Sequence[Ref]) -> list[Ref]:
         last[key] = len(out)
         out.append(kept)
     return [r for r in out if r is not None]
+
+
+def link_over_empty_rows(
+    refs: Sequence[Ref], rows: Mapping[str, frozenset[tuple[int, int]]]
+) -> list[Ref]:
+    """An arrow end stands only in a (page, row) where its fan has a trunk (layout-0337).
+
+    Two arrows of one fan meeting in a row with none become one; an arrow left with an end in
+    such a row is dropped, the copy or the next page carrying the net.
+    """
+    out: list[Ref | None] = []
+    last: dict[str, int] = {}
+    for ref in refs:
+        kept = ref
+        if kind_of(ref) is RefKind.ARROW:
+            prev = out[last[ref.net]] if ref.net in last else None
+            if prev is not None and _meets_empty(prev, ref, rows[ref.net]):
+                kept = replace(ref, ends=(prev.ends[0], ref.ends[1]))
+                out[last[ref.net]] = None
+            last[ref.net] = len(out)
+        out.append(kept)
+    return [r for r in out if r is not None and _stands(r, rows)]
+
+
+def _empty(end: RefEnd, rows: frozenset[tuple[int, int]]) -> bool:
+    return (end.page, end.row) not in rows
+
+
+def _meets_empty(prev: Ref, ref: Ref, rows: frozenset[tuple[int, int]]) -> bool:
+    return (prev.ends[1].page, prev.ends[1].row) == (ref.ends[0].page, ref.ends[0].row) and _empty(
+        ref.ends[0], rows
+    )
+
+
+def _stands(ref: Ref, rows: Mapping[str, frozenset[tuple[int, int]]]) -> bool:
+    if kind_of(ref) is not RefKind.ARROW:
+        return True
+    return not any(_empty(e, rows[ref.net]) for e in ref.ends)

@@ -9,6 +9,7 @@ Each query lives in the module of its concern (`wiring`, `reports`, `structure`,
 
 from .black_box import drawing_set_is_replica_only, is_black_box_item
 from .bom import TOP_LEVEL, bom_lines
+from .cable_cores import cable_rows, core_colour
 from .connectors import (
     connector_item,
     connector_items,
@@ -16,6 +17,7 @@ from .connectors import (
     connector_rows_of,
     unit_connector_items,
 )
+from .designation_list import designation_list
 from .document_unit import document_unit
 from .harness import (
     cable_list_rows,
@@ -36,17 +38,10 @@ from .lookups import (
     no_conductor_at,
 )
 from .overview import overview_graph
+from .plc_list import plc_channel_rows
 from .plc_rack import is_plc_module, plc_rack_modules
 from .release_order import release_order, same_version
-from .reports import (
-    cable_rows,
-    core_colour,
-    designation_list,
-    plc_channel_rows,
-    unit_boards,
-    unit_strips,
-    wire_rows,
-)
+from .report_scope import unit_boards, unit_strips
 from .revision_text import revision_text
 from .revisions import current_revision, revision_history
 from .structure import (
@@ -65,6 +60,7 @@ from .structure import (
     units,
 )
 from .unit_release import unit_release
+from .wire_list import wire_rows
 from .wiring import (
     conductors_on_item,
     first_leg,

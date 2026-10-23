@@ -2,10 +2,10 @@
 
 lazy from decimal import Decimal
 
+from fransys_model.derive.library_grid import mm_per_division
 from fransys_model.derive.placement_reads import node_label
 from fransys_model.derive.set_rank import set_rank
 from fransys_model.derive.sheet_forms import set_page_text
-from fransys_model.derive.text_width import G_PER_MODULE
 from fransys_model.derive.unit_nodes import chain_up
 from fransys_model.kernel import Id, Model
 from fransys_model.layout import (
@@ -97,21 +97,22 @@ def location_prefix(own_path: LocationPath, partner_path: LocationPath) -> tuple
     return tuple(label for _, label in partner_path[common:])
 
 
-def content_extent(millimetres: int, module_mm: Decimal) -> int:
-    """Whole grid units that fit in `millimetres`: `floor(mm / (module_mm / 8))`.
+def content_extent(millimetres: int, mm_per_division: Decimal) -> int:
+    """Whole grid units that fit in `millimetres`: `floor(mm / mm_per_division)`.
 
     Sheet sizes are not multiples of G (297 mm is 950.4 G), so a sheet format stores integer
     millimetres and this is the one place they become grid units. Decimal `//` truncates toward
     zero, which is the floor for the positive size of a sheet.
     """
-    return int(millimetres * G_PER_MODULE // module_mm)
+    return int(millimetres // mm_per_division)
 
 
 def cell(model: Model, page: Page, x: int, y: int) -> tuple[int, str]:
     """The frame-grid `(column, row letter)` the point `x`, `y` falls in on `page`'s sheet."""
     sheet = sheet_format_of(model, page.sheet_format)
-    wide = content_extent(sheet.content_width_mm, sheet.module_mm)
-    high = content_extent(sheet.content_height_mm, sheet.module_mm)
+    per_division = mm_per_division(model, sheet)
+    wide = content_extent(sheet.content_width_mm, per_division)
+    high = content_extent(sheet.content_height_mm, per_division)
     return frame_column(wide, sheet.frame_columns, x), frame_row(high, sheet.frame_rows, y)
 
 

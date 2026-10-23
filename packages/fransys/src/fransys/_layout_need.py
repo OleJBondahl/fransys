@@ -3,9 +3,8 @@
 from typing import TYPE_CHECKING, cast
 
 from fransys_author import AuthorError
-from fransys_el import OPTIONS
 
-from fransys_layout import HintError, SymbolPortError, lay_out_diagrams, lay_out_schematic
+from fransys_layout import HintError, SymbolPortError, lay_out_diagrams
 from fransys_model.derive import (
     document_ids,
     document_page_kinds,
@@ -15,7 +14,13 @@ from fransys_model.derive import (
 from fransys_model.kernel import Finding, Severity, describe
 from fransys_model.vocab import PageKind
 
+from ._codes import fix_text
+from ._layout_core import NO_DRAWINGS, NO_LINKS, Laid, lay_out_on_core
+
 if TYPE_CHECKING:
+    from collections.abc import Mapping
+
+    from electrical_symbols import Library
     from fransys_model.kernel import Id, Model
     from fransys_model.vocab import Function
 
@@ -42,30 +47,29 @@ def hint_error_to_author_error(model: Model, error: HintError) -> AuthorError:
     return AuthorError(describe(error, model))
 
 
-def _schematic_if_needed(model: Model) -> tuple[Model, tuple[Finding, ...]]:
+def _schematic_if_needed(
+    model: Model, library: Library, layout: Mapping[str, object] | None
+) -> Laid:
     if not needs_schematic_layout(model):
-        return model, ()
-    try:
-        return lay_out_schematic(model, OPTIONS)
-    except HintError as error:
-        raise hint_error_to_author_error(model, error) from error
-    except SymbolPortError as error:
-        return model, (symbol_port_missing_finding(model, error),)
+        return model, (), NO_DRAWINGS, NO_LINKS
+    return lay_out_on_core(model, library, layout)
 
 
-def lay_out_if_needed(model: Model) -> tuple[Model, tuple[Finding, ...]]:
-    """`lay_out_schematic` and `lay_out_diagrams` when a document keeps their page, else nothing.
+def lay_out_if_needed(
+    model: Model, library: Library, layout: Mapping[str, object] | None = None
+) -> Laid:
+    """The core layout and `lay_out_diagrams` when a document keeps their page, else nothing.
 
-    A layout `SymbolPortError` becomes one `SYMBOL_PORT_MISSING` `ERROR`, the model unchanged.
+    Also the page `Drawing`s and reference links of the core layout (empty when it did not run).
     """
-    model, findings = _schematic_if_needed(model)
+    model, findings, drawn, links = _schematic_if_needed(model, library, layout)
     if not needs_diagram_layout(model):
-        return model, findings
+        return model, findings, drawn, links
     try:
         model, diagram_findings = lay_out_diagrams(model)
     except HintError as error:
         raise hint_error_to_author_error(model, error) from error
-    return model, (*findings, *diagram_findings)
+    return model, (*findings, *diagram_findings), drawn, links
 
 
 def symbol_port_missing_finding(model: Model, error: SymbolPortError) -> Finding:
@@ -82,5 +86,6 @@ def symbol_port_missing_finding(model: Model, error: SymbolPortError) -> Finding
         code="SYMBOL_PORT_MISSING",
         severity=Severity.ERROR,
         subjects=(subject,),
+        fix=fix_text("SYMBOL_PORT_MISSING"),
         message=f"part {mpn!r}: {error}",
     )

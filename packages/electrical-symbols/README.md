@@ -14,7 +14,8 @@ Status: alpha, under construction, a package of the Fransys workspace
   `reference.number` and the name other symbols use to compose it.
 - `library.toml`: the library's settings, and its `[grid]` and `[font]`, the one home of the drawing grid and the Regular text font (es-0069).
 - `src/electrical_symbols/`: a thin Python package exposing `LIBRARY`, loaded from the bundled
-  `bundle.json`; `generic_box(port_names)` and `GENERIC_BOX_KEY`, the labelled-box placeholder
+  `bundle.json`; `font_dir()`, the path to the vendored DejaVu Sans Condensed faces and their
+  licence, which the facade passes to the PDF compiler; `generic_box(port_names)` and `GENERIC_BOX_KEY`, the labelled-box placeholder
   layout draws for a function with no symbol; and `library_version()` /
   `LIBRARY_VERSION`, the one home of the version string placements record and
   `fransys_render.check` compares.
@@ -60,6 +61,7 @@ copied from the standard.
 | `contact` | Connector contact, no stated gender | symbol |
 | `contact-female` | Connector contact, female (socket) | symbol |
 | `contact-head` | Contact head (contact table) | element |
+| `contact-head-headed` | Contact head, headed (contact table) | element |
 | `contact-male` | Connector contact, male (plug) | symbol |
 | `contact-row` | Contact row (contact table) | element |
 | `converter-dc-dc` | DC/DC converter | symbol |
@@ -97,6 +99,9 @@ copied from the standard.
 | `rectifier-pe` | Rectifier, with protective earth terminal | symbol |
 | `rectifier` | Rectifier | symbol |
 | `reference-marker` | Reference marker (continuation flag) | element |
+| `marker-arrow` | Marker arrow (reference marker, horizontal text) | element |
+| `marker-arrow-turned` | Marker arrow (reference marker, text along the wire) | element |
+| `marker-box` | Marker box (shared reference marker) | element |
 | `residual-current-core` | Residual current sensing core | qualifier |
 | `resistor` | Resistor, general symbol | symbol |
 | `selector-break` | Switch, manually operated, turning, with stay-put, break contact | symbol |

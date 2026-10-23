@@ -1,0 +1,21 @@
+schema = 1
+name = "Contact head, headed (contact table)"
+kind = "element"
+status = "unverified"
+# the contact head of a table that shares its foot with another: one module higher than
+# `contact-head`, the extra line on top for the coil's designation (layout-0170, es-0075). The
+# heading line, a pad, the NO and NC title line, a pad, then the rule; same cuts as `contact-head`.
+# The heading text starts at the table's left, above the NO column, as the drawn heading does.
+reference = { standard = "IEC 60617", number = "contact-head-headed" }
+
+elements = [
+  { polyline = [[0, -2.5], [1.25, -2.5], [1.25, 0], [0, 0]], closed = true },
+  { line = [[0, -0.25], [1.25, -0.25]] },
+]
+
+stretch = [{ axis = "x", at = 0.375 }, { axis = "x", at = 0.875 }]
+
+[slots]
+heading = { at = [0.25, -2.0], side = "E", box = [0.25, 0.125] }
+no = { at = [0.25, -0.75], side = "E", box = [0.25, 0.125] }
+nc = { at = [0.75, -0.75], side = "E", box = [0.25, 0.125] }

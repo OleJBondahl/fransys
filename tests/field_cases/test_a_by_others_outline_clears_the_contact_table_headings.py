@@ -19,9 +19,9 @@ from pathlib import Path
 from typing import NamedTuple
 
 import fransys as fr
-
-from fransys_model.derive.drawing_text import CONTACTS_HEADED
-from fransys_model.layout import ExternalOutline, Label, layout_of
+from _drawn_extent import body_g
+from _drawn_pages import drawn_pages
+from _tables_on import TABLES_ON
 
 
 class _Io(NamedTuple):
@@ -71,7 +71,7 @@ def _built(count: int) -> fr.BuildResult:
         d = fr.design("demo_parts")
         d.add(_bank(count), "U1")
         document = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, "demo-bank", cover=cover)
-        return fr.build(d, document)
+        return fr.build(d, document, settings=TABLES_ON)
 
 
 def _clear(a, b) -> bool:
@@ -79,17 +79,31 @@ def _clear(a, b) -> bool:
     return a[0] + a[2] <= b[0] or b[0] + b[2] <= a[0] or a[1] + a[3] <= b[1] or b[1] + b[3] <= a[1]
 
 
-def _rect(record) -> tuple[int, int, int, int]:
-    return (record.x, record.y, record.width, record.height)
+def _rect(box: tuple[int, int, int, int]) -> tuple[int, int, int, int]:
+    """(x0, y0, x1, y1) as (x, y, width, height)."""
+    return (box[0], box[1], box[2] - box[0], box[3] - box[1])
+
+
+def _drawn(model) -> tuple[list, list, list]:
+    """The headed tables, the by-others notes and the outlines the core drew, all pages."""
+    tables, notes, outlines = [], [], []
+    for d in drawn_pages(model).values():
+        tables += [s for s in d.symbols if s.key == "contact-head"]
+        notes += [_rect_of_text(t) for t in d.texts if t.kind == "external_note"]
+        for o in d.outlines:
+            xs, ys = [p[0] for p in o.points], [p[1] for p in o.points]
+            outlines.append((min(xs), min(ys), max(xs) - min(xs), max(ys) - min(ys)))
+    return tables, notes, outlines
+
+
+def _rect_of_text(t) -> tuple[int, int, int, int]:
+    return (t.box.x, t.box.y, t.box.w, t.box.h)
 
 
 def test_a_by_others_outline_and_note_clear_every_contact_table_heading() -> None:
     """No headed table overlaps the controller's dashed outline or its "by others" note."""
-    model = _built(2).model
-    labels = layout_of(model, Label).values()
-    tables = [_rect(r) for r in labels if r.slot == CONTACTS_HEADED]
-    notes = [_rect(r) for r in labels if r.slot == "external_note"]
-    outlines = [_rect(o) for o in layout_of(model, ExternalOutline).values()]
+    tables, notes, outlines = _drawn(_built(2).model)
+    tables = [_rect(body_g(s)) for s in tables]
     assert len(tables) == 2
     assert len(notes) == 1
     assert len(outlines) == 1
@@ -102,10 +116,9 @@ def test_the_tables_of_a_band_move_down_together_and_keep_their_stagger() -> Non
     Only the first row meets the outline, but the second row moves with it, so the first row stays
     level (-K1 with -K3) and the second row stays level (-K2 with -K4).
     """
-    labels = layout_of(_built(4).model, Label).values()
-    tables = sorted((r for r in labels if r.slot == CONTACTS_HEADED), key=lambda r: r.x)
+    tables = sorted(_drawn(_built(4).model)[0], key=lambda s: s.x)
     assert len(tables) == 4
-    first, second, third, fourth = (r.y for r in tables)
+    first, second, third, fourth = (s.y for s in tables)
     assert first == third
     assert second == fourth
     assert first != second

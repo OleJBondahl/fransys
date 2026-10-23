@@ -14,16 +14,17 @@ import fransys_author
 import fransys_parts
 from cable_checks import assert_no_shared_stretch, assert_on_the_grid, assert_outside_the_box
 from cable_facts import block_facts
+from layout_library import freeze
 
 from fransys_layout import lay_out_cables
 from fransys_layout.engines.cable.place import _widest, block_pitch, place_block
 from fransys_layout.engines.cable.read.facts import block_facts as block_facts_of
 from fransys_layout.engines.cable.values import CableFacts, CoreFacts, EndFacts, PinFacts
-from fransys_layout.engines.schematic.read.reading import profile_and_sheet
 from fransys_layout.geometry import WIRING_GRID, text_width
+from fransys_model.derive import text_room
 from fransys_model.derive.cable_drawing import block_cables, cable_heading
 from fransys_model.derive.passes.numbering import number as number_pass
-from fransys_model.kernel import freeze, make_id, merge
+from fransys_model.kernel import make_id, merge
 from fransys_model.layout import (
     BlockRow,
     BoxKind,
@@ -32,6 +33,7 @@ from fransys_model.layout import (
     CoreWire,
     EndBox,
     layout_of,
+    profile_of,
 )
 from fransys_model.vocab import Conductor, Item, Port
 
@@ -269,11 +271,11 @@ def test_a_short_cable_box_grows_the_pitch_until_its_heading_fits():
     """
     s = _short()
     head, boxes, _, _ = _block(s.model, s.harness)
-    profile, _, _ = profile_and_sheet(s.model)
+    profile = profile_of(s.model, None)
     cables = {c.cable: c for c in block_cables(s.frozen, s.harness, None)}
     for box in (b for b in boxes if b.kind is BoxKind.CABLE):
         heading = cable_heading(s.frozen, cables[box.item], None)
-        wide = text_width(heading, height=profile.text_height) + 2 * profile.marker_padding
+        wide = text_width(heading, height=text_room(s.model)) + 2 * profile.marker_padding
         assert box.width >= wide
     assert cable_heading(s.frozen, cables[s.w1], None).endswith("5000 mm")
     plain = block_pitch(_widest(block_facts_of(s.frozen, s.harness, None)))

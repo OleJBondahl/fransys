@@ -12,13 +12,8 @@ lazy from fransys_model.vocab.aspects import AspectNode
 lazy from fransys_model.vocab.core import Item, Unit
 
 from .contact_lines import contact_counts
-from .designation import (
-    designation_holder,
-    is_own_unit_root,
-    location_designation,
-    printed_designation,
-    takes_parents_designation,
-)
+from .designation import is_own_unit_root, location_designation, printed_designation
+from .designation_label import designation_holder, takes_parents_designation
 from .external import external
 from .facts.subjects import subject_kind
 from .indexes import Indexes, build_indexes

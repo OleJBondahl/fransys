@@ -18,9 +18,7 @@ import importlib.util
 from pathlib import Path
 
 import pytest
-
-from fransys_model.layout import LinkMarker, Route, SymbolPlacement, layout_of
-from fransys_model.vocab.tables import functions, ports
+from _drawn_pages import drawn_pages
 
 # `--import-mode=importlib` (root pyproject.toml) never puts a test directory on `sys.path`, and
 # ty cannot resolve a `sys.path` insert; the field case's own build is loaded from its file.
@@ -42,30 +40,26 @@ def model(tmp_path_factory):
     return _field_case._build(tmp_path_factory.mktemp("second_row"), in_unit=True).model
 
 
-def _placed(model, *key: str) -> SymbolPlacement:
-    fns = functions(model)
-    (placement,) = [
-        p for p in layout_of(model, SymbolPlacement).values() if fns[p.function].key == key
+def _pole(model, pole: int):
+    """The (page, symbol) of the changeover contact of pole `pole`; its common is `<pole>1`."""
+    (found,) = [
+        (page, s)
+        for page, drawing in drawn_pages(model).items()
+        for s in drawing.symbols
+        if s.key == "change-over-contact" and dict(s.slots).get("marking.com") == f"{pole}1"
     ]
-    return placement
+    return found
 
 
-def _pole(model, pole: int) -> SymbolPlacement:
-    return _placed(model, "UNIT", "K1", "fn", f"co_{pole}")
-
-
-def _terminal(model, strip: str, pole: int) -> SymbolPlacement:
-    return _placed(model, "UNIT", strip, "terminal", f"RUN{pole}", "1", "fn", "terminal")
-
-
-def _make_route(model, pole: int) -> Route:
-    """The route of the wire from pole `pole`'s make throw to its field terminal."""
-    function = _pole(model, pole).function
-    (port,) = [
-        pid for pid, p in ports(model).items() if p.function == function and p.name == f"{pole}4"
+def _rows_under(model, pole: int) -> list:
+    """The terminals in the pole's column on its page, one list per row, top row first."""
+    page, head = _pole(model, pole)
+    column = [
+        s
+        for s in drawn_pages(model)[page].symbols
+        if s.key == "terminal" and abs(s.x - head.x) <= 16
     ]
-    (route,) = [r for r in layout_of(model, Route).values() if port in (r.a, r.b)]
-    return route
+    return [[s for s in column if s.y == y] for y in sorted({s.y for s in column})]
 
 
 @pytest.mark.parametrize("pole", _POLES)
@@ -73,23 +67,25 @@ def test_the_make_throw_stands_in_row_two_under_its_pole_on_a_straight_wire(mode
     """Row 0 the pole, row 1 its break terminal, row 2 its make terminal, all on the pole's page;
     the make wire runs straight down from the throw to the terminal, a reference at neither end.
     """
-    head, brk, make = (
-        _pole(model, pole),
-        _terminal(model, "X02", pole),
-        _terminal(model, "X01", pole),
-    )
-    assert head.page == brk.page == make.page
+    page, head = _pole(model, pole)
+    rows = _rows_under(model, pole)
+    assert len(rows) == 2  # row 1 the break terminal, row 2 the make terminal
+    (brk,), (make,) = (sorted(row, key=lambda s: s.x) for row in rows)
     assert head.y < brk.y < make.y
-    route = _make_route(model, pole)
-    assert len(route.points) == 2
-    assert {point.x for point in route.points} == {make.x}
-    assert not [m for m in layout_of(model, LinkMarker).values() if m.port in (route.a, route.b)]
+    drawing = drawn_pages(model)[page]
+    straight = [
+        w for w in drawing.wires if len(w.points) == 2 and {x for x, _ in w.points} == {make.x}
+    ]
+    assert straight
+    assert not drawing.markers
 
 
 def test_each_throw_row_holds_both_poles_in_pole_order(model) -> None:
     """The break terminals share row 1 and the make terminals row 2, pole 3's lane left of 4's."""
-    brk = [_terminal(model, "X02", pole) for pole in _POLES]
-    make = [_terminal(model, "X01", pole) for pole in _POLES]
+    rows = [_rows_under(model, pole) for pole in _POLES]
+    assert all(len(row) == 2 for row in rows)
+    brk = [row[0][0] for row in rows]
+    make = [row[1][0] for row in rows]
     assert len({p.y for p in brk}) == 1
     assert len({p.y for p in make}) == 1
     assert brk[0].x < brk[1].x

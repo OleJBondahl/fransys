@@ -11,7 +11,8 @@ from .values import Finding
 if TYPE_CHECKING:
     from collections.abc import Iterable, Mapping, Sequence
 
-    from .values import Block, Sym
+    from .sym_values import Sym
+    from .values import Block
 
 
 def box_findings(

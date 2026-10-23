@@ -67,7 +67,7 @@ from ._design_support import (
 )
 from ._earth import Earths
 from ._enums import member
-from ._hint_writes import _write_group_hint, _write_side_hint
+from ._hint_writes import _write_group_hint, _write_pins_below_hint, _write_side_hint
 from ._keys import scoped, sorted_pair, spliced
 from ._origin import caller_origin
 from ._release import unit_release
@@ -123,7 +123,7 @@ class Scope(LinkScope, SupplyScope):
         self._group = group
         self._unit = unit
         self._release = release
-        self._held: list[tuple[Boundary, Origin]] | None = None
+        self._held: list[tuple[Boundary, Origin, bool]] | None = None
 
     # -- structure --------------------------------------------------------------
 
@@ -375,9 +375,33 @@ class Scope(LinkScope, SupplyScope):
         if self._held is None:
             self._design._add(record, origin)
         else:  # `d.add` writes it once the interface names it (model-0174)
-            self._held.append((record, origin))
+            self._held.append((record, origin, False))
         if facet is not None:
             self._design._add(facet, origin)
+
+    def boundary_if_returned(
+        self, target: Fn | Item | Terminal, *, accessory: bool = False
+    ) -> None:
+        """Like `boundary()`, but a unit's `d.add` writes it only if the interface holds `target`.
+
+        A scope with no unit writes nothing for an `accessory` (an untagged device with `parent=`)
+        and raises for any other; a scope not held by `d.add` writes it at once.
+
+        Raises:
+            AuthorError: this scope has no unit and `target` is no accessory's.
+        """
+        if self._unit is None:
+            if not accessory:
+                msg = (
+                    "unused= on a tagged or parentless device needs a unit: write this scope "
+                    "as a unit with @fr.unit, or make the device an untagged accessory with parent="
+                )
+                raise AuthorError(msg)
+            return
+        self.boundary(target)
+        if self._held:
+            record, origin, _ = self._held.pop()
+            self._held.append((record, origin, True))
 
     def operating(self, mpn: str | tuple[str, str], function: str) -> Operating | None:
         """The operating envelope of function template `function` of part `mpn`.
@@ -686,7 +710,7 @@ class Scope(LinkScope, SupplyScope):
         resolved = [_as_function(function) for function in functions]
         host = None if beside is None else _as_function(beside)
         if host is not None:
-            check_beside(self._design._draft.records(), resolved, host)
+            check_beside(self._design._draft, resolved, host)
         entries = tuple(
             ChainEntry(function=fn.id, index=index) for index, fn in enumerate(resolved)
         )
@@ -810,6 +834,10 @@ class Scope(LinkScope, SupplyScope):
         """Hint the edge of its unit's outline that the boundary `function` stands on."""
         _write_side_hint(self._design, function, side, caller_origin())
 
+    def pins_below(self, function: Fn) -> None:
+        """Hint that every pin of the generic box `function` stands on its south side."""
+        _write_pins_below_hint(self._design, function, caller_origin())
+
     # -- shared placement --------------------------------------------------------------
 
     def _place(
@@ -845,6 +873,7 @@ class Design(Scope):
     """The builder: holds the draft being written and the part catalogue."""
 
     __slots__ = (
+        "__weakref__",
         "_added_units",
         "_assumed_version",
         "_catalogue",
@@ -924,6 +953,8 @@ class Design(Scope):
         Unlike `Scope.revision`, a bare `Design` has no release (the project's own history, the
         valid case), so no guard. `version=None` is the project's version (`d.project(version=)`),
         or 1 when `project()` has not been called yet; `project()` then refuses another version.
+        An entry with no `version` is numbered as the project's `version`; two entries of one
+        version and revision must match, else `MergeConflict`.
         """
         entry_version = version if version is not None else self._project_version
         if entry_version is None:

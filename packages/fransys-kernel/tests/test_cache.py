@@ -26,7 +26,7 @@ def _counted(maxsize: int):
     @digest_cached(maxsize)
     def build(model: Model) -> object:
         """Build a fresh object for `model`."""
-        built.append(model.digest)
+        built.append(getattr(model, "digest", "view"))
         return object()
 
     return build, built
@@ -103,3 +103,13 @@ def test_the_builder_keeps_its_name_and_docstring() -> None:
     build, _ = _counted(2)
     assert build.__name__ == "build"
     assert build.__doc__ == "Build a fresh object for `model`."
+
+
+def test_a_view_with_no_digest_is_built_uncached_every_call() -> None:
+    """A `Draft.tables()` view hashes nothing: each call builds, and the cache holds nothing."""
+    build, built = _counted(2)
+    view = cast("Model", object())
+    first, second = build(view), build(view)
+    assert first is not second
+    assert len(built) == 2
+    assert build.builds == 0

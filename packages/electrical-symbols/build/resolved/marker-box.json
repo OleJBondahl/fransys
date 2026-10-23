@@ -1,0 +1,89 @@
+{
+  "anchors": [],
+  "body_box": [
+    [
+      0,
+      0
+    ],
+    [
+      2.25,
+      1.5
+    ]
+  ],
+  "elements": [
+    {
+      "closed": true,
+      "fill": "none",
+      "polyline": [
+        [
+          0,
+          0
+        ],
+        [
+          2.25,
+          0
+        ],
+        [
+          2.25,
+          1.5
+        ],
+        [
+          0,
+          1.5
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    }
+  ],
+  "keepout_box": [
+    [
+      0,
+      0
+    ],
+    [
+      2.25,
+      1.5
+    ]
+  ],
+  "kind": "element",
+  "lint_allow": [
+    {
+      "reason": "the text box is centred in the box and its size is the text's: it lies inside the outline",
+      "rule": "slot-overlap-body"
+    }
+  ],
+  "name": "Marker box (shared reference marker)",
+  "nodes": [],
+  "paths": [],
+  "ports": [],
+  "reference": {
+    "number": "marker-box",
+    "standard": "IEC 60617"
+  },
+  "schema": 1,
+  "slots": {
+    "ref": {
+      "at": [
+        1.125,
+        0.75
+      ],
+      "box": [
+        1.75,
+        1
+      ],
+      "side": "C"
+    }
+  },
+  "status": "unverified",
+  "stretch": [
+    {
+      "at": 1.125,
+      "axis": "x"
+    },
+    {
+      "at": 0.75,
+      "axis": "y"
+    }
+  ]
+}

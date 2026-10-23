@@ -3,10 +3,11 @@
 import re
 
 from fransys_author.errors import AuthorError
+from fransys_model.vocab import DESIGNATION_SCHEME
 
 from ._tags import bare
 
-_CLASS_CODE = re.compile(r"[A-Z]{1,3}")
+_CLASS_CODE = re.compile(DESIGNATION_SCHEME.class_code)
 
 
 def class_code_of(code: str | None) -> str:

@@ -1,0 +1,90 @@
+{
+  "anchors": [],
+  "body_box": [
+    [
+      -0.75,
+      0
+    ],
+    [
+      0.75,
+      2.25
+    ]
+  ],
+  "elements": [
+    {
+      "closed": true,
+      "fill": "tint",
+      "polyline": [
+        [
+          0,
+          0
+        ],
+        [
+          -0.75,
+          0.375
+        ],
+        [
+          -0.75,
+          2.25
+        ],
+        [
+          0.75,
+          2.25
+        ],
+        [
+          0.75,
+          0.375
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    }
+  ],
+  "keepout_box": [
+    [
+      -0.75,
+      0
+    ],
+    [
+      0.75,
+      2.25
+    ]
+  ],
+  "kind": "element",
+  "lint_allow": [
+    {
+      "reason": "the text box is centred in the flag and its length is the text's: it lies inside the outline",
+      "rule": "slot-overlap-body"
+    }
+  ],
+  "name": "Marker arrow (reference marker, text along the wire)",
+  "nodes": [],
+  "paths": [],
+  "ports": [],
+  "reference": {
+    "number": "marker-arrow-turned",
+    "standard": "IEC 60617"
+  },
+  "schema": 1,
+  "slots": {
+    "ref": {
+      "at": [
+        0,
+        1.125
+      ],
+      "box": [
+        1,
+        1.75
+      ],
+      "side": "C",
+      "turn": true
+    }
+  },
+  "status": "unverified",
+  "stretch": [
+    {
+      "at": 1.125,
+      "axis": "y"
+    }
+  ]
+}

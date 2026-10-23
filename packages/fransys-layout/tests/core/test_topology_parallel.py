@@ -5,24 +5,33 @@ from __future__ import annotations
 from dataclasses import replace
 
 import pytest
+from options_fixtures import core_options
 
 from fransys_layout.core.topology import build_flow
 from fransys_layout.core.values import (
     Bundle,
     FlowGraph,
     Net,
-    Options,
     Pin,
     PinRef,
     PlacementProblem,
-    Sym,
 )
+lazy from fransys_layout.core.sym_values import Sym
 
 from .flow_builders import elem, free, net, poles, problem
 
 
 def flow_of(syms: list[Sym], nets: list[Net]) -> FlowGraph:
-    return build_flow(problem(syms, nets), Options())
+    return build_flow(
+        problem(syms, nets),
+        core_options(
+            flip_turn="R180",
+            tag_stagger=True,
+            label_gap=8,
+            driver_first=True,
+            arrow_sides=("E", "W"),
+        ),
+    )
 
 
 def lanes_of(flow: FlowGraph) -> list[list[list[str]]]:
@@ -45,7 +54,16 @@ def mid_chain() -> PlacementProblem:
 
 
 def test_seal_in_is_one_column_of_two_lanes() -> None:
-    (column,) = build_flow(seal_in(), Options()).columns
+    (column,) = build_flow(
+        seal_in(),
+        core_options(
+            flip_turn="R180",
+            tag_stagger=True,
+            label_gap=8,
+            driver_first=True,
+            arrow_sides=("E", "W"),
+        ),
+    ).columns
     assert len(column.lanes) == 2
 
 
@@ -54,16 +72,47 @@ def test_three_parallel_members_make_three_lanes() -> None:
         [elem("a"), elem("b"), elem("c")],
         [net("x", "a.n", "b.n", "c.n"), net("y", "a.s", "b.s", "c.s")],
     )
-    assert lanes_of(build_flow(prob, Options())) == [[["a"], ["b"], ["c"]]]
+    assert lanes_of(
+        build_flow(
+            prob,
+            core_options(
+                flip_turn="R180",
+                tag_stagger=True,
+                label_gap=8,
+                driver_first=True,
+                arrow_sides=("E", "W"),
+            ),
+        )
+    ) == [[["a"], ["b"], ["c"]]]
 
 
 def test_pair_inside_a_chain_keeps_the_chain_in_lane_zero() -> None:
-    assert lanes_of(build_flow(mid_chain(), Options())) == [[["src", "a", "coil"], ["b"]]]
+    assert lanes_of(
+        build_flow(
+            mid_chain(),
+            core_options(
+                flip_turn="R180",
+                tag_stagger=True,
+                label_gap=8,
+                driver_first=True,
+                arrow_sides=("E", "W"),
+            ),
+        )
+    ) == [[["src", "a", "coil"], ["b"]]]
 
 
 def test_a_member_with_its_pins_the_other_way_up_is_turned() -> None:
     prob = problem([elem("a"), elem("b")], [net("x", "a.n", "b.s"), net("y", "a.s", "b.n")])
-    (column,) = build_flow(prob, Options()).columns
+    (column,) = build_flow(
+        prob,
+        core_options(
+            flip_turn="R180",
+            tag_stagger=True,
+            label_gap=8,
+            driver_first=True,
+            arrow_sides=("E", "W"),
+        ),
+    ).columns
     turned = [
         (lane.cells[0].sym, lane.cells[0].orient, lane.cells[0].top_pin) for lane in column.lanes
     ]
@@ -168,14 +217,16 @@ def lamp_beside_coil() -> PlacementProblem:
     return problem(syms, [net("n1", "src.s", "coil.n", "lamp.a"), net("n2", "lamp.b", "kc.n")])
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "one symbol is dealt into two lanes of one column (t01, README Known gaps); "
-        "the owner stopped the fix"
-    ),
-)
 def test_no_symbol_is_dealt_into_two_lanes_of_one_column() -> None:
-    for column in build_flow(lamp_beside_coil(), Options()).columns:
+    for column in build_flow(
+        lamp_beside_coil(),
+        core_options(
+            flip_turn="R180",
+            tag_stagger=True,
+            label_gap=8,
+            driver_first=True,
+            arrow_sides=("E", "W"),
+        ),
+    ).columns:
         seen = [c.sym for lane in column.lanes for c in lane.cells]
         assert len(seen) == len(set(seen))

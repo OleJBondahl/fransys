@@ -1,33 +1,20 @@
 """Validator: declared nets vs the physical closure (design/connectivity.md)."""
 
-from typing import TYPE_CHECKING, Any, Final
+from typing import TYPE_CHECKING, Final
 
-from fransys_model.checks._natural_join import natural_join
-from fransys_model.derive.facts.closure import net_of, physical_nets
-from fransys_model.derive.facts.joins import joined_ports
-from fransys_model.derive.facts.net_facts import is_earth_net
+from fransys_model.checks._finding import finding, ordered
+from fransys_model.derive.facts.closure import net_of, net_on_one_board, physical_nets, port_item
+from fransys_model.derive.facts.net_crossings import net_crossings
+from fransys_model.derive.facts.net_facts import declared_nets_of, is_earth_net
 from fransys_model.derive.facts.potentials import physical_potentials
-from fransys_model.derive.facts.roles import function_role
-from fransys_model.derive.facts.units import enclosing_boards
-from fransys_model.kernel import Finding, Severity
-from fransys_model.vocab.facets.cable import OpenCoreFacet
+from fransys_model.derive.facts.wired_ports import half_connected
+from fransys_model.kernel import Finding, Severity, natural_join
 from fransys_model.vocab.finding_ref import ref
-from fransys_model.vocab.tables import (
-    conductors,
-    facets_of,
-    functions,
-    items,
-    mates,
-    nets,
-    ports,
-)
+from fransys_model.vocab.tables import conductors, items, nets
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
-
     from fransys_model.kernel import Id, Model
     from fransys_model.vocab.connectivity import Net
-    from fransys_model.vocab.core import Function, Item, Port
 
 NET_UNREALISED: Final[str] = "NET_UNREALISED"
 NET_SHORTED: Final[str] = "NET_SHORTED"
@@ -36,142 +23,85 @@ CONDUCTOR_ON_UNINSTALLED: Final[str] = "CONDUCTOR_ON_UNINSTALLED"
 NET_POTENTIAL_CONFLICT: Final[str] = "NET_POTENTIAL_CONFLICT"
 
 
-def _finding(code: str, severity: Severity, subjects: Iterable[Id[Any]], message: str) -> Finding:
-    return Finding(code=code, severity=severity, subjects=tuple(subjects), message=message)
-
-
 def _label(net: Net) -> str:
     """What a person calls a net: its name if it has one, else its reference."""
     return net.name if net.name is not None else ref(net)
 
 
-class _Plant:
-    """The lookups the checks share, built once per model."""
-
-    def __init__(self, model: Model) -> None:
-        self.model = model
-        self.nets = nets(model)
-        self.ports = ports(model)
-        self.conductors = conductors(model)
-        self.items = items(model)
-        self.functions = functions(model)
-        self.closure = physical_nets(model)
-        self.declared: dict[Id[Port], list[Id[Net]]] = {}
-        for net in self.nets.values():
-            for port in net.ports:
-                self.declared.setdefault(port, []).append(net.id)
-        names: dict[Id[Function], set[str]] = {}
-        for port in self.ports.values():
-            names.setdefault(port.function, set()).add(port.name)
-        # a port is on a mate when the partner function has a port of the same name
-        self.mated = {
-            (end, name)
-            for mate in mates(model).values()
-            for end, partner in ((mate.a, mate.b), (mate.b, mate.a))
-            for name in names.get(end, set()) & names.get(partner, set())
-        }
-        self._boards_of: dict[Id[Item], frozenset[Id[Item]]] = {}
-
-    def item_of(self, port: Id[Port]) -> Item:
-        return self.items[self.functions[self.ports[port].function].item]
-
-    def boards_of(self, item: Item) -> frozenset[Id[Item]]:
-        """The board items among `item` and its ancestors (`enclosing_boards`, model-0040)."""
-        if item.id not in self._boards_of:
-            self._boards_of[item.id] = frozenset(enclosing_boards(self.model, item.id))
-        return self._boards_of[item.id]
-
-    def board_realised(self, net: Net) -> bool:
-        """Whether one board item is an ancestor-or-self of every port's item."""
-        common: frozenset[Id[Item]] | None = None
-        for port in net.ports:
-            boards = self.boards_of(self.item_of(port))
-            common = boards if common is None else common & boards
-        return bool(common)
-
-
-def _unrealised(plant: _Plant) -> list[Finding]:
+def _unrealised(model: Model) -> list[Finding]:
     found = []
-    for net in plant.nets.values():
-        if is_earth_net(plant.model, net.id):
+    for net in nets(model).values():
+        if is_earth_net(model, net.id) or net.id in net_crossings(model):
             continue
-        pieces = {net_of(plant.model, port) for port in net.ports}
-        if len(pieces) > 1 and not plant.board_realised(net):
+        pieces = {net_of(model, port) for port in net.ports}
+        if len(pieces) > 1 and not net_on_one_board(model, net.ports):
             message = f"net {_label(net)} falls into {len(pieces)} physical nets"
-            found.append(_finding(NET_UNREALISED, Severity.WARNING, (net.id,), message))
+            found.append(finding(NET_UNREALISED, Severity.WARNING, (net.id,), message))
     return found
 
 
-def _one_intent(plant: _Plant, declared: set[Id[Net]]) -> bool:
+def _one_intent(model: Model, declared: set[Id[Net]]) -> bool:
     """Whether every declared net is named, and all share one name (model-0156)."""
-    names = {plant.nets[net].name for net in declared}
+    names = {nets(model)[net].name for net in declared}
     return len(names) == 1 and None not in names
 
 
-def _per_physical_net(plant: _Plant) -> list[Finding]:
+def _shorting_nets(model: Model, declared: set[Id[Net]]) -> set[Id[Net]]:
+    """The declared nets that count for a short: a crossing net drops its unnamed neighbours.
+
+    A net across a unit boundary has its own finding (layout-0322), which replaces only the
+    cascade it causes; two differently named nets that meet are a short, boundary or not.
+    """
+    if not net_crossings(model).keys() & declared:
+        return declared
+    return {net for net in declared if nets(model)[net].name is not None}
+
+
+def _per_physical_net(model: Model) -> list[Finding]:
     found = []
-    for physical in plant.closure:
-        declared = {net for port in physical.ports for net in plant.declared.get(port, ())}
-        if len(declared) > 1 and not _one_intent(plant, declared):
-            names = natural_join(_label(plant.nets[net]) for net in declared)
-            message = f"one physical net joins the declared nets {names}"
-            found.append(_finding(NET_SHORTED, Severity.ERROR, declared, message))
+    for physical in physical_nets(model):
+        declared = {net for port in physical.ports for net in declared_nets_of(model, port)}
         if len(declared) <= 1:
             continue
-        by_potential = physical_potentials(plant.model, physical)
+        shorting = _shorting_nets(model, declared)
+        if len(shorting) > 1 and not _one_intent(model, shorting):
+            names = natural_join(_label(nets(model)[net]) for net in shorting)
+            message = f"one physical net joins the declared nets {names}"
+            found.append(finding(NET_SHORTED, Severity.ERROR, shorting, message))
+        by_potential = physical_potentials(model, physical)
         if len(by_potential) > 1:
             message = f"one physical net joins the rails {natural_join(by_potential)}"
             rails = (net for ids in by_potential.values() for net in ids)
-            found.append(_finding(NET_POTENTIAL_CONFLICT, Severity.ERROR, rails, message))
+            found.append(finding(NET_POTENTIAL_CONFLICT, Severity.ERROR, rails, message))
     return found
 
 
-def _conductor_findings(plant: _Plant) -> list[Finding]:
+def _conductor_findings(model: Model) -> list[Finding]:
     found = []
-    for conductor in plant.conductors.values():
+    for conductor in conductors(model).values():
         pulled = {
             item.id: item
-            for item in (plant.item_of(conductor.a), plant.item_of(conductor.b))
+            for item in (items(model)[port_item(model, end)] for end in (conductor.a, conductor.b))
             if not item.installed
         }
         if pulled:
             names = natural_join(ref(item) for item in pulled.values())
             message = f"conductor {ref(conductor)} lands on an item that is not installed: {names}"
-            found.append(
-                _finding(
-                    CONDUCTOR_ON_UNINSTALLED, Severity.WARNING, (conductor.id, *pulled), message
-                )
-            )
+            subjects = (conductor.id, *pulled)
+            found.append(finding(CONDUCTOR_ON_UNINSTALLED, Severity.WARNING, subjects, message))
     return found
 
 
-_TWO_PORTS: Final = 2
-
-
-def _half_connected(plant: _Plant) -> list[Finding]:
-    wired = {end for conductor in plant.conductors.values() for end in (conductor.a, conductor.b)}
-    wired |= joined_ports(plant.model)
-    wired |= {f.at for f in facets_of(plant.model, OpenCoreFacet).values() if f.at is not None}
-    by_function: dict[Id[Function], list[Port]] = {}
-    for port in plant.ports.values():
-        by_function.setdefault(port.function, []).append(port)
-    found = []
-    for function_id, held in by_function.items():
-        function = plant.functions[function_id]
-        if len(held) != _TWO_PORTS or not function_role(plant.model, function_id).through:
-            continue
-        used = [
-            port.id in plant.declared
-            or port.id in wired
-            or (port.function, port.name) in plant.mated
-            for port in held
-        ]
-        if used.count(True) != 1:
-            continue
-        opened = held[used.index(False)]
-        message = f"{ref(function)} is connected at one port and open at {ref(opened)}"
-        found.append(_finding(FUNCTION_HALF_CONNECTED, Severity.WARNING, (opened.id,), message))
-    return found
+def _half_connected(model: Model) -> list[Finding]:
+    return [
+        finding(
+            FUNCTION_HALF_CONNECTED,
+            Severity.WARNING,
+            (opened.id,),
+            f"{ref(function)} is connected at one port and open at {ref(opened)}",
+        )
+        for function, opened in half_connected(model)
+    ]
 
 
 def check_connectivity(model: Model) -> tuple[Finding, ...]:
@@ -179,11 +109,11 @@ def check_connectivity(model: Model) -> tuple[Finding, ...]:
 
     Findings come back sorted by `(code, subjects, message)`.
     """
-    plant = _Plant(model)
-    found = [
-        *_unrealised(plant),
-        *_per_physical_net(plant),
-        *_conductor_findings(plant),
-        *_half_connected(plant),
-    ]
-    return tuple(sorted(found, key=lambda f: (f.code, f.subjects, f.message)))
+    return ordered(
+        [
+            *_unrealised(model),
+            *_per_physical_net(model),
+            *_conductor_findings(model),
+            *_half_connected(model),
+        ]
+    )

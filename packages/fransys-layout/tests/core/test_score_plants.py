@@ -20,7 +20,7 @@ def _pin(name: str, x: int, y: int, net: str | None, **kw) -> ScenePin:
         kw.pop("side", "S"),
         net,
         kw.pop("node", None),
-        kw.pop("stand", False),
+        kw.pop("biased", False),
         kw.pop("box", False),
         kw.pop("head", False),
     )
@@ -201,4 +201,4 @@ def test_a_planted_layout_scores_end_to_end_through_outputs_scene() -> None:
 
 def test_scene_pin_without_head_raises() -> None:
     with pytest.raises(TypeError):
-        ScenePin("1", 0, 0, "S", None, None, stand=False, box=False)  # ty: ignore[missing-argument] the test proves head is required
+        ScenePin("1", 0, 0, "S", None, None, biased=False, box=False)  # ty: ignore[missing-argument] the test proves head is required

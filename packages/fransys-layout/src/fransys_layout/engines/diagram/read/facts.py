@@ -4,7 +4,7 @@ from typing import Any
 
 from fransys_layout.engines.overview.sheet_values import BoxFacts, DiagramFacts, LineFacts
 from fransys_layout.geometry import text_width
-from fransys_model.derive import text_room_g
+from fransys_model.derive import mm_per_division, text_room_g
 from fransys_model.derive.block_diagram import box_dashed, box_lines, box_order, diagram_lines
 from fransys_model.derive.drawing_text import content_extent
 from fransys_model.layout.tables import profile_of, sheet_for
@@ -45,7 +45,8 @@ def diagram_reading(model: Model, unit: Id[Any] | None) -> DiagramFacts | None:
     if not lines:
         return None
     profile, sheet = profile_of(model), sheet_for(model, PageKind.BLOCK_DIAGRAM)
-    height = text_room_g(profile.text_height_mm, sheet.module_mm)
+    height = text_room_g(model, profile.text_height_mm, sheet)
+    per_division = mm_per_division(model, sheet)
     reached = {box for line in lines for box in (line.a, line.b)}
     boxes = sorted(reached, key=lambda box: box_order(model, box, unit))
     return DiagramFacts(
@@ -55,7 +56,7 @@ def diagram_reading(model: Model, unit: Id[Any] | None) -> DiagramFacts | None:
         text_height=height,
         turn_penalty=profile.route_turn_penalty,
         crossing_penalty=profile.route_crossing_penalty,
-        width=content_extent(sheet.content_width_mm, sheet.module_mm),
-        height=content_extent(sheet.content_height_mm, sheet.module_mm),
+        width=content_extent(sheet.content_width_mm, per_division),
+        height=content_extent(sheet.content_height_mm, per_division),
         nest_same=True,
     )

@@ -131,24 +131,6 @@ def test_directory_exempt_does_not_skip_an_exact_numeric_site():
     assert violations == (lean_ceilings.Violation(site=site, measured=20, limit=15, listed=False),)
 
 
-# --- the D8 module_code_lines exemption, real repo ------------------------------------------
-
-
-def test_module_code_lines_first_run_excludes_the_d8_exempt_file():
-    """The D8-exempt file never appears in a fresh `[module_code_lines]` baseline.
-
-    `types.py` is over 300 code lines today (real measurement), and an `[exempt]` site never gets
-    a ceilings entry from `first_run`.
-    """
-    measured = lean_check.lean_code_shape.measure_module_code_lines(ROOT, limit=300)
-    types_py = "packages/fransys-layout/src/fransys_layout/stages/types.py"
-    assert types_py in measured
-
-    file = lean_check.build_ceilings(None, {"module_code_lines": measured})
-
-    assert types_py not in file.sections["module_code_lines"]
-
-
 # --- robustness: a raising checker never partially writes ----------------------------------
 
 

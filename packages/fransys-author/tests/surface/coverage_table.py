@@ -73,6 +73,7 @@ ROWS: dict[str, tuple[Entry, ...]] = {
     "Scope.unit_id": surface("Design.add"),
     "Scope.boundary": surface("Fn.limits") + surface("Design.device(interface=)"),
     "Scope.unused": surface("Design.device(unused=)"),
+    "Scope.boundary_if_returned": surface("Design.device(unused=)"),
     "Scope.revision": surface("Design.revision"),
     "Design.project": surface("Design.project"),
     "Design.revision": surface("Design.revision"),
@@ -86,6 +87,7 @@ ROWS: dict[str, tuple[Entry, ...]] = {
     "Scope.symbol": surface("Layout.symbol"),
     "Scope.draw_in": surface("Layout.draw_in"),
     "Scope.side": surface("Layout.side"),
+    "Scope.pins_below": surface("Layout.pins_below"),
     "Scope.sheet": surface("Layout.sheet"),
     "Scope.profile": surface("Layout.profile"),
 }

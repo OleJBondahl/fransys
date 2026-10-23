@@ -7,7 +7,7 @@ outline's edge toward the plug sits on the mating line (the top edge at a bottom
 edge at a top end), and mates at opposite ends stand in two outlines, so no outline mixes the
 two edges.
 
-Built through the `fransys` facade from `examples/demo-parts`; read from `layout.*` records.
+Built through the `fransys` facade from `examples/demo-parts`; read from the page Drawings.
 """
 
 from typing import Any
@@ -16,11 +16,12 @@ import fransys as fr
 import fransys_author
 import fransys_parts
 import pytest
+from _drawn_pages import drawn_pages
 from _model_build_cover import layout_trigger_document
 
+from fransys_model.derive import item_designation
 from fransys_model.kernel import Severity
-from fransys_model.layout import Outline, SymbolPlacement, layout_of
-from fransys_model.vocab.tables import functions
+from fransys_model.vocab.tables import items
 
 _PROJECT: dict[str, Any] = {
     "title": "Outline crash",
@@ -92,13 +93,18 @@ def _two_boundary_connectors():
     return fr.build(parts, d.draft(), layout_trigger_document()).model, ("cab",)
 
 
-def _placed(model, page, key):
-    """Every placement on `page` of a function whose key starts with `key`."""
-    return [
-        p
-        for p in layout_of(model, SymbolPlacement).values()
-        if p.page == page and functions(model)[p.function].key[: len(key)] == key
-    ]
+def _symbols(model, key):
+    """(drawing, symbols) of the connector symbols tagged for the item whose key ends in `key`,
+    read as the symbols in the column of the item's tag text `-<designation>:1`."""
+    (item,) = (i for i in items(model).values() if i.key[-len(key) :] == key)
+    tag = f"-{item_designation(model, item.id)}:1"
+    for drawing in drawn_pages(model).values():
+        for text in drawing.texts:
+            if text.text == tag:
+                boxes = [s for s in drawing.symbols if s.key.startswith("connector")]
+                x = min((s.x for s in boxes), key=lambda x: abs(x - text.box.x - 56))
+                return drawing, [s for s in boxes if s.x == x], text
+    return None, [], None
 
 
 def _assert_edge_on_the_mating_line(model, scope, ends: tuple[str, str]) -> None:
@@ -107,20 +113,27 @@ def _assert_edge_on_the_mating_line(model, scope, ends: tuple[str, str]) -> None
     holding the pair is the mating line (halfway between the two pins); at `"top"` the plug is
     below the pin and the outline's bottom edge is the mating line. The two ends stand in two
     outlines, each of positive height."""
-    outlines = list(layout_of(model, Outline).values())
-    (page,) = {o.page for o in outlines}
-    assert len(outlines) == len(set(ends))
+    pages = [d for d in drawn_pages(model).values() if d.outlines]
+    (drawing,) = pages
+    assert len(drawing.outlines) == len(set(ends))
     for n, end in enumerate(ends, 1):
-        (plug,) = _placed(model, page, (f"P{n}",) if len(scope) == 1 else ("cab", f"J{n}"))
-        (pin,) = _placed(model, page, (*scope, f"J{n}" if len(scope) > 1 else f"X{n}"))
-        (outline,) = (o for o in outlines if o.x <= pin.x <= o.x + o.width)
-        assert outline.height > 0
+        key = (f"P{n}",) if len(scope) == 1 else ("cab", f"J{n}")
+        _, column, tag = _symbols(model, key)
+        plug = min(column, key=lambda s: abs(s.y - tag.box.y - 24))
+        (pin,) = (s for s in column if s is not plug)
+        (outline,) = (
+            o
+            for o in drawing.outlines
+            if min(x for x, _ in o.points) <= pin.x <= max(x for x, _ in o.points)
+        )
+        top, bottom = min(y for _, y in outline.points), max(y for _, y in outline.points)
+        assert bottom > top
         if end == "top":
             assert pin.y < plug.y
-            assert (outline.y + outline.height) * 2 == plug.y + pin.y
+            assert bottom * 2 == plug.y + pin.y
         else:
             assert plug.y < pin.y
-            assert outline.y * 2 == plug.y + pin.y
+            assert top * 2 == plug.y + pin.y
 
 
 @pytest.mark.parametrize(

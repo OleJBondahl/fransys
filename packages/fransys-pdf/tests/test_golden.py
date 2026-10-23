@@ -10,8 +10,7 @@ the design the owner reviewed and accepted -- the values, the cover's dropped fa
 unfinished default. A future change to it is a design change, not a routine regeneration.
 """
 
-from _build import document, location, model, project, revision_entry
-from fransys_pdf import source
+from _build import document, location, model, project, revision_entry, source
 
 from fransys_model.derive import SheetBackground, SheetKey
 from fransys_model.vocab import DocumentPreset, PageKind

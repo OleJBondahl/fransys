@@ -22,9 +22,11 @@ from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
 
 import pytest
+from gate_scan import src_modules
+from order_sites_scan import core_order_sites, core_text_keys, order_id_reads, order_sites
+from text_joins_scan import text_joins
 
 ROOT = Path(__file__).resolve().parent.parent
-PACKAGES_ROOT = ROOT / "packages"
 ALLOWLIST = ROOT / "one-home.toml"
 
 HEADER = """\
@@ -50,6 +52,12 @@ HEADER = """\
 # (an output: any `vocab` name beyond four). Layout is exempt until P7.7. Only falls (root-0220).
 # [vocab_reexports]: "name" = reads of a lowercase `vocab` name outside `fransys_model`. Only
 # falls; a name at zero can leave `vocab` (VOCAB-CLOSE, after P7.7; root-0220).
+# [order_sites]: "module::function" = a sort, `reversed`, keyed `min` or `max`, reverse slice or
+# set loop outside the order homes (spec NUMBER-SORT K13). Falls to zero.
+# [core_order_sites]: the same sites in `fransys_layout.core`. Only refuses a rise.
+# [core_text_keys]: `natural_key`, a `str` method, a `re` call or a string literal in a core sort
+# key. Falls to zero with NS-7.
+# [order_id_reads]: an `Id` read in a key body of `derive/order*.py`. Falls to zero in NS-4.
 """
 
 # Record field -> the one module that may read it (design 7.1). The home modules do not exist
@@ -72,8 +80,13 @@ HOME_OF_ATTR = {name.split(".")[1]: home for name, home in FACT_FIELDS.items()}
 # `bound.kind` of a `CurrentBound` is a `Current`, `bound.role` a `LimitRole`: values of a fact, not
 # a function kind or port role, so no role table replaces them (root-0215). Such a receiver is
 # skipped only in a module that names `Current` or `LimitRole`; it stays counted anywhere else.
+# `marker.kind` of a core `Marker` is a layout `RefKind` (stub, tag, arrow), a value of the core's
+# own output and no model record's field (designer Ruling 78 §4): only `fransys_el.write_markers`
+# skips it, on the receiver `marker`; any other module, even one naming `Marker`, still counts it.
 NON_FACT_ENUMS = frozenset(["Current", "LimitRole"])
 NON_FACT_RECEIVERS = frozenset(["bound", "limit", "load", "fault", "chosen"])
+MARKER_MODULE = "fransys_el.write_markers"
+MARKER_RECEIVER = "marker"
 
 # The record-table accessors of `fransys_model.vocab.tables`.
 TABLE_FUNCTIONS = frozenset(
@@ -138,6 +151,7 @@ def _in_core(module: str) -> bool:
 # "Field devices (" is in two derive modules; `overview_field` is the home, the other is a site.
 HOMES = {
     "Block diagram": "fransys_model.derive.page_headings",
+    " (cont.)": "fransys_model.derive.page_headings",
     "Own drawing: ": "fransys_model.derive.overview_tree",
     "Field devices (": "fransys_model.derive.overview_field",
     "electrical-symbols ": "electrical_symbols",
@@ -213,6 +227,7 @@ LAYOUT_FOR_INPUTS = frozenset(
         "PoleGroup",
         "SymbolChoice",
         "PageTitle",
+        "PinsBelowHint",
     ]
 )
 INPUTS = frozenset(["fransys_author", "fransys_parts"])
@@ -221,19 +236,6 @@ VOCAB_MODULE = "fransys_model.vocab"
 
 Sites = dict[str, list[int | str]]
 Scanner = Callable[[ast.AST, str], list[tuple[str, int]]]
-
-
-def source_files() -> list[tuple[str, Path]]:
-    """Every real `packages/*/src` .py file with its dotted module name, sorted."""
-    found = []
-    for path in sorted(PACKAGES_ROOT.glob("*/src/**/*.py")):
-        if "__pycache__" in path.parts:
-            continue
-        parts = (
-            path.relative_to(next(p for p in path.parents if p.name == "src")).with_suffix("").parts
-        )
-        found.append((".".join(parts[:-1] if parts[-1] == "__init__" else parts), path))
-    return found
 
 
 def scan(scanner: Scanner, source: str, module: str) -> Sites:
@@ -249,7 +251,7 @@ def scan(scanner: Scanner, source: str, module: str) -> Sites:
 
 def scan_tree(scanner: Scanner) -> Sites:
     """`scan` over every source file; fails first if the walk found no file."""
-    files = source_files()
+    files = src_modules()
     assert files, "the source walk found no file"
     sites: Sites = {}
     for module, path in files:
@@ -258,11 +260,12 @@ def scan_tree(scanner: Scanner) -> Sites:
     return sites
 
 
-def _non_fact_receivers(tree: ast.AST) -> frozenset[str]:
-    """`NON_FACT_RECEIVERS` when the module names `Current` or `LimitRole`, else none."""
+def _non_fact_receivers(tree: ast.AST, module: str) -> frozenset[str]:
+    """`NON_FACT_RECEIVERS` when the module names `Current` or `LimitRole`; `marker` in its home."""
     names = {n.id for n in ast.walk(tree) if isinstance(n, ast.Name)}
     names |= {a.name for n in ast.walk(tree) if isinstance(n, ast.ImportFrom) for a in n.names}
-    return NON_FACT_RECEIVERS if names & NON_FACT_ENUMS else frozenset()
+    found = NON_FACT_RECEIVERS if names & NON_FACT_ENUMS else frozenset()
+    return found | {MARKER_RECEIVER} if module == MARKER_MODULE else found
 
 
 def _is_non_fact_value(node: ast.Attribute, receivers: frozenset[str]) -> bool:
@@ -311,7 +314,7 @@ def field_reads(tree: ast.AST, module: str) -> list[tuple[str, int]]:
     if _in_core(module):
         return []
     found = []
-    skip = _non_fact_receivers(tree)
+    skip = _non_fact_receivers(tree, module)
     for node in ast.walk(tree):
         if isinstance(node, ast.Attribute) and isinstance(node.ctx, ast.Load):
             if not (_is_non_fact_value(node, skip)):
@@ -613,7 +616,7 @@ def derive_modules(sources: dict[str, str] | None = None) -> Resolved:
     if sources is None:
         sources = {
             module: path.read_text(encoding="utf-8")
-            for module, path in source_files()
+            for module, path in src_modules()
             if module.split(".")[0] == "fransys_model"
         }
     defs: Defs = {
@@ -887,6 +890,11 @@ SCANNERS: dict[str, Scanner] = {
     "render_svg_literals": render_svg_literals,
     "model_doors": model_doors,
     "vocab_reexports": vocab_reexports,
+    "order_sites": order_sites,
+    "core_order_sites": core_order_sites,
+    "core_text_keys": core_text_keys,
+    "order_id_reads": order_id_reads,
+    "text_joins": text_joins,
 }
 
 
@@ -924,10 +932,16 @@ def write() -> None:
     ALLOWLIST.write_text(text, encoding="utf-8", newline="\n")
 
 
-def gate(section: str) -> list[str]:
-    """The problems of one gate; fails first if the tree or the allowlist has no site."""
+def gate(section: str, *, done: bool = False) -> list[str]:
+    """The problems of one gate; `done` marks a section at zero: no site, an empty table."""
     sites = scan_tree(SCANNERS[section])
     allowed = load_allowlist()[section]
+    if done:
+        found = [f"{key}: {', '.join(map(str, lines))}" for key, lines in sorted(sites.items())]
+        msg = f"[{section}] stock reached zero; read the fact in fransys_model.derive instead: "
+        assert not sites, msg + "; ".join(found)
+        assert not allowed, f"[{section}] of one-home.toml must be empty: its stock reached zero"
+        return []
     assert sites, f"the {section} walk found no site"
     assert allowed, f"[{section}] of one-home.toml is empty"
     return compare(sites, allowed)
@@ -1005,6 +1019,17 @@ def test_a_bound_receiver_counts_where_no_current_is_named():
     assert scan(kind_reads, source, "fransys_model.derive.x")
 
 
+def test_a_core_marker_kind_is_skipped_only_in_write_markers():
+    named = "from fransys_layout.core import Marker\nk = marker.kind\n"
+    assert scan(field_reads, named, MARKER_MODULE) == {}
+    planted = named + "j = item.kind\n"
+    sites = scan(field_reads, planted, MARKER_MODULE)
+    assert {k.split("::")[1]: v for k, v in sites.items()} == {"kind": [3]}
+    for other in ("fransys_el.x", "fransys_el.write_markers_x"):
+        sites = scan(field_reads, named, other)
+        assert {k.split("::")[1]: v for k, v in sites.items()} == {"kind": [2]}
+
+
 def test_the_raw_table_gate_can_fail():
     module = "fransys_layout.stages.x"
     source = "a = ports(model)\nb = tables.items(model)\nc = model.tables['x']\nd = items.get(1)\n"
@@ -1057,14 +1082,14 @@ def test_the_kind_gate_can_fail():
 def test_no_homed_literal_outside_its_home():
     sites = scan_tree(literal_homes)
     assert compare(sites, load_allowlist()["literal_homes"]) == []
-    files = dict(source_files())
+    files = dict(src_modules())
     for literal, home in HOMES.items():
         assert home in files, f"HOMES home {home} does not exist: drop the row"
         assert literal in files[home].read_text(encoding="utf-8"), f"{literal!r} not in {home}"
 
 
 def test_a_selection_is_defined_in_one_module():
-    sources = {m: p.read_text(encoding="utf-8") for m, p in source_files()}
+    sources = {m: p.read_text(encoding="utf-8") for m, p in src_modules()}
     found = definitions(sources)
     assert {n: m for n, m in found.items() if len(m) != 1} == {}, "define it in one module"
 
@@ -1257,7 +1282,7 @@ def test_a_camel_case_derive_function_is_flagged():
 
 
 def test_no_package_uses_a_model_door_it_may_not():
-    assert gate("model_doors") == []
+    assert gate("model_doors", done=True) == []
 
 
 def test_no_vocab_reexport_gains_a_reader():

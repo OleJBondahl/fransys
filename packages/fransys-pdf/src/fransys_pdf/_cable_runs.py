@@ -1,12 +1,14 @@
 """Cable drawing pages grouped by part (pdf-0020): one run per part number, blocks inside it.
 
 A run is one Typst `#page` whose header carries the part line (pdf-0021), so a run that flows onto
-further pages repeats it there, with " (cont.)" after it. Its cable blocks fill a column
+further pages repeats it there as a continued heading. Its cable blocks fill a column
 from the top, then the next column to the right, then a new page; a block always stays whole.
 A block taller than the page body never reaches the flow: `check` stops it first (pdf-0022).
 """
 
 from typing import TYPE_CHECKING
+
+from fransys_model.derive import continued_heading
 
 from ._geometry import PADDING_MM, text_margin
 from ._labels import RESTART
@@ -74,10 +76,11 @@ def _flow(bodies: list[str], width_mm: float, height_mm: float) -> str:
 
 
 def _header(heading: str, label: str) -> str:
-    """The page header: the part number, plus " (cont.)" on every page after the run's first."""
+    """The page header: the part number, continued on every page after the run's first."""
     return (
         f"context {{ let first = query(label({literal(label)})).first().location().page(); "
-        f'strong(text({literal(heading)} + if here().page() > first {{ " (cont.)" }})) }}'
+        f"strong(text(if here().page() > first {{ {literal(continued_heading(heading))} }} "
+        f"else {{ {literal(heading)} }})) }}"
     )
 
 

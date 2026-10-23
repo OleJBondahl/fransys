@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+from collections import defaultdict
 from itertools import pairwise
 from typing import TYPE_CHECKING
 
+from .anchor_rooms import anchor_rooms
 from .arrow_reserve import arrow_ends, reserve
 from .geometry import (
     box_reach,
@@ -12,13 +14,15 @@ from .geometry import (
     cell_footprint,
     column_extent,
     pin_xy,
-    rotate_box,
     shift,
+    view_of,
 )
 from .keys import natural_key
+from .node_names import HIGH, LOW, box_node, box_y_node, col_node
 from .outputs import Gap, PagePlacement, PinXY, Placed, Trunk
 from .pack import cell_node
-from .place_trunk import box_pin_x, trunk_node
+from .place_span import solved_spans
+from .place_trunk import box_pin_x, in_row, trunk_node
 from .values import Box, Lane
 
 if TYPE_CHECKING:
@@ -26,13 +30,14 @@ if TYPE_CHECKING:
 
     from .pack import PlacedColumn
     from .place_env import PageEnv
+    from .room import Room
     from .values import Attach, Cell, Fan
 
 
 def _placed_cell(env: PageEnv, cell: Cell, ox: int, oy: int) -> Placed:
     """A cell's symbol with its origin at (ox, oy): body, footprint and pins all absolute."""
     sym = env.syms[cell.sym]
-    body = shift(rotate_box(sym.body, cell.orient), ox, oy)
+    body = shift(view_of(sym, cell.orient).body, ox, oy)
     fp = shift(cell_footprint(sym, cell, in_row=cell.sym in env.in_row), ox, oy)
     offsets = {p.id: pin_xy(sym, cell, p.id) for p in sym.pins}
     pins = tuple(PinXY(pin, ox + dx, oy + dy) for pin, (dx, dy) in offsets.items())
@@ -47,7 +52,7 @@ def _cells(env: PageEnv, x: Mapping[str, int], y: Mapping[str, int]) -> dict[str
             for i, cell in enumerate(cells):
                 if cell.sym not in out:
                     ax, _ = cell_anchor(env.syms[cell.sym], cell)
-                    ox = x[f"col:{pc.id}"] + pc.offsets[lane] - ax
+                    ox = x[col_node(pc.id)] + pc.offsets[lane] - ax
                     out[cell.sym] = _placed_cell(env, cell, ox, y[cell_node(pc.id, lane, i)])
     return out
 
@@ -69,7 +74,7 @@ def _placed_box(
 ) -> Placed:
     """A box spans its solved left to right edge; its footprint grows with the body."""
     sym = env.syms[box]
-    left, right = x[f"box:{box}:L"], x[f"box:{box}:R"]
+    left, right = x[box_node(box, LOW)], x[box_node(box, HIGH)]
     body = Box(left, oy + sym.body.y, right - left, sym.body.h)
     lead, tail = box_reach(sym)
     fp = sym.footprint
@@ -83,7 +88,7 @@ def _boxes(env: PageEnv, x: Mapping[str, int], y: Mapping[str, int]) -> dict[str
     for row in env.plan.rows:
         for b in (env.blocks[name] for name in row.blocks):
             if b.is_card and b.anchor:
-                oy = y[f"box:{b.anchor}"]
+                oy = y[box_y_node(b.anchor)]
                 out[b.anchor] = _placed_box(env, b.anchor, dict(b.pin_edges), x, oy)
     return out
 
@@ -102,10 +107,10 @@ def _gaps(env: PageEnv, x: Mapping[str, int], y: Mapping[str, int]) -> tuple[Gap
     out = []
     for r, row in enumerate(env.plan.rows):
         top, bottom = _row_bounds(env, y, r)
-        ordered = sorted(row.columns, key=lambda c: x[f"col:{c}"])
+        ordered = sorted(row.columns, key=lambda c: x[col_node(c)])
         for k, (a, b) in enumerate(pairwise(ordered)):
-            x0 = x[f"col:{a}"] + _extent(env, env.pcs[a])[1]
-            x1 = x[f"col:{b}"] + _extent(env, env.pcs[b])[0]
+            x0 = x[col_node(a)] + _extent(env, env.pcs[a])[1]
+            x1 = x[col_node(b)] + _extent(env, env.pcs[b])[0]
             out.append(
                 Gap(f"g:{env.plan.page}:{r}:{k}", env.plan.page, a, b, x0, x1, 0, top, bottom)
             )
@@ -113,23 +118,22 @@ def _gaps(env: PageEnv, x: Mapping[str, int], y: Mapping[str, int]) -> tuple[Gap
 
 
 def _attach_x(
-    env: PageEnv, a: Attach, placed: Mapping[str, Placed], x: Mapping[str, int], row: int
+    env: PageEnv, a: Attach, placed: Mapping[str, Placed], x: Mapping[str, int]
 ) -> int | None:
-    """The x of a trunk's attachment in this row: a column's lane wire or a box pin."""
+    """The x of a trunk's attachment (`in_row` holds): a column's lane wire or a box pin."""
     here = placed.get(a.pin.sym)
     pin = next((q.x for q in here.pin_xy if q.pin == a.pin.pin), None) if here else None
-    if a.column is None:
+    if a.column is None or pin is not None:
         return pin
-    pc = env.pcs.get(a.column)
-    if pc is None or pc.row != row:
-        return None
-    return pin if pin is not None else x[f"col:{pc.id}"] + pc.offsets[a.lane]
+    pc = env.pcs[a.column]
+    return x[col_node(pc.id)] + pc.offsets[a.lane]
 
 
 def _span(
     env: PageEnv, fan: Fan, r: int, placed: Mapping[str, Placed], x: Mapping[str, int]
 ) -> tuple[int, int] | None:
-    xs = [_attach_x(env, a, placed, x, r) for a in (*fan.drivers, *fan.legs)]
+    ends = (*fan.drivers, *fan.legs)
+    xs = [_attach_x(env, a, placed, x) for a in ends if in_row(env, fan, a, r)]
     here = [v for v in xs if v is not None]
     return (min(here), max(here)) if here else None
 
@@ -165,16 +169,23 @@ def _rows(
     return tuple(out)
 
 
-def assemble(env: PageEnv, x: Mapping[str, int], y: Mapping[str, int]) -> PagePlacement:
+def placed_rooms(env: PageEnv, x: Mapping[str, int]) -> Mapping[str, Room]:
+    """The anchors' rooms of the page's symbols at `x`: a room is an offset, so any y gives it."""
+    zero: defaultdict[str, int] = defaultdict(int)
+    return anchor_rooms(env.problem, {**_cells(env, x, zero), **_boxes(env, x, zero)})
+
+
+def assemble(
+    env: PageEnv,
+    x: Mapping[str, int],
+    y: Mapping[str, int],
+) -> PagePlacement:
     """The page's Placed symbols (by natural id order), gaps with no tracks yet, trunks, rows."""
     placed = {**_cells(env, x, y), **_boxes(env, x, y)}
     ordered = tuple(placed[k] for k in sorted(placed, key=natural_key))
     bands = tuple(_row_bounds(env, y, r) for r in range(len(env.plan.rows)))
+    trunks = _trunks(env, placed, x, y)
+    spans = solved_spans(env, placed, trunks, [t for t, _ in bands], env.rooms)
     return PagePlacement(
-        env.plan.page,
-        ordered,
-        _gaps(env, x, y),
-        _trunks(env, placed, x, y),
-        _rows(env, placed, y),
-        bands,
+        env.plan.page, ordered, _gaps(env, x, y), trunks, _rows(env, placed, y), bands, spans
     )

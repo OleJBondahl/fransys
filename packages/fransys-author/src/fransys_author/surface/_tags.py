@@ -1,23 +1,25 @@
 """The bare-tag rule: a call gives the aspect's prefix, the author never writes it."""
 
 from fransys_author.errors import AuthorError
+from fransys_model.vocab import DESIGNATION_SCHEME, Aspect
 
-_PREFIX = {
-    "device": "-",
-    "terminal_strip": "-",
-    "cable": "-",
-    "harness": "-",
-    "rack": "-",
-    "add": "-",
-    "location": "+",
-    "function": "=",
+_ASPECT = {
+    "device": Aspect.PRODUCT,
+    "terminal_strip": Aspect.PRODUCT,
+    "cable": Aspect.PRODUCT,
+    "harness": Aspect.PRODUCT,
+    "rack": Aspect.PRODUCT,
+    "add": Aspect.PRODUCT,
+    "location": Aspect.LOCATION,
+    "function": Aspect.FUNCTION,
 }
 
 
 def bare(tag: str, call: str) -> str:
     """`tag` unchanged; one that starts with `-`, `+` or `=` raises, naming `call`'s own prefix."""
-    if not tag or tag[0] in "-+=":
-        msg = f"write {tag[1:] or '<tag>'}; {call}() adds the {_PREFIX[call]}"
+    if not tag or tag[0] in DESIGNATION_SCHEME.sign_characters():
+        sign = DESIGNATION_SCHEME.sign(_ASPECT[call])
+        msg = f"write {tag[1:] or '<tag>'}; {call}() adds the {sign}"
         raise AuthorError(msg)
     return tag
 

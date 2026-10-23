@@ -12,7 +12,15 @@ from typing import Any
 import pytest
 from hypothesis import settings
 
-from fransys_model.kernel import Draft, Id, Model, Origin, freeze, make_id
+from fransys_model.kernel import Draft, Id, Model, Origin, Record, evolve, make_id
+from fransys_model.kernel import freeze as kernel_freeze
+from fransys_model.layout import (
+    DrawingLibrary,
+    PaperChoice,
+    a2_sheet_format,
+    default_sheet_format,
+)
+from fransys_model.vocab import PageKind
 from fransys_model.vocab.aspects import AspectNode, Placement
 from fransys_model.vocab.connectivity import Conductor, Mate, Net
 from fransys_model.vocab.core import Function, Item, Port, Unit, UnitRelease
@@ -36,6 +44,49 @@ from fransys_model.vocab.templates import FunctionTemplate, Part
 # same name with the same settings is a no-op); see that file's comment.
 settings.register_profile("fransys", deadline=None, derandomize=True, max_examples=25)
 settings.load_profile("fransys")
+
+
+_LIBRARY_KEY = ("test", "library")
+_EM = Decimal(2048)
+
+
+def paper_records() -> tuple[Record, Record, PaperChoice]:
+    """The paper records the facade writes: A3 by default, the block diagram on A2 (stock)."""
+    a3, a2 = default_sheet_format(), a2_sheet_format()
+    key = ("test", "paper")
+    by_kind = frozendict({PageKind.BLOCK_DIAGRAM.value: a2.id})
+    return (
+        a3,
+        a2,
+        PaperChoice(id=make_id(PaperChoice, key), key=key, default=a3.id, by_kind=by_kind),
+    )
+
+
+def freeze(draft: Draft) -> Model:
+    """`draft` frozen, with the drawing library record the facade writes (GRID-HOME G6)."""
+    record = DrawingLibrary(
+        id=make_id(DrawingLibrary, _LIBRARY_KEY),
+        key=_LIBRARY_KEY,
+        module_mm=Decimal("2.5"),
+        divisions=8,
+        wire_pitch=8,
+        wire_pitch_fine=4,
+        font_family="DejaVu Sans",
+        capital_ratio=Decimal(1493) / _EM,
+        ascent_ratio=Decimal(1556) / _EM,
+        descent_ratio=Decimal(426) / _EM,
+        heights=frozendict(
+            {
+                "smallest": Decimal("1.8"),
+                "body": Decimal("2.5"),
+                "heading_2": Decimal("3.5"),
+                "heading_1": Decimal(5),
+            }
+        ),
+    )
+    origin = Origin(file="conftest.py", line=0, note="test library")
+    return evolve(kernel_freeze(draft), put=(record, *paper_records()), origin=origin)
+
 
 _ORIGIN = Origin(file="conftest.py", line=1, note="fixture")
 

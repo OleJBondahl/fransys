@@ -4,17 +4,16 @@ from typing import Any
 
 from fransys_model.kernel import Id, Model, SchemaError, namespace_of
 from fransys_model.vocab.core import Unit  # noqa: TC001 -- signature hints resolve at runtime
-from fransys_model.vocab.enums import PageKind
 from fransys_model.vocab.tables import kind_of, table_of
+lazy from fransys_model.vocab.enums import PageKind
 
 from .formats import (
     Profile,
     SheetFormat,
-    a2_sheet_format,
     default_profile,
-    default_sheet_format,
 )
 from .kinds import DERIVED_KINDS
+from .paper import PaperChoice
 from .results import DrawingSet, Page
 
 
@@ -49,22 +48,36 @@ def profile_of_page(model: Model, page: Page) -> Profile:
     return profile_of(model, layout_of(model, DrawingSet)[page.drawing_set].unit)
 
 
+def paper_of(model: Model) -> PaperChoice:
+    """The build's `PaperChoice`; raises when the facade wrote none (a model never built)."""
+    found = layout_of(model, PaperChoice)
+    if not found:
+        msg = (
+            "this model carries no layout.paper record, so it has no default sheet: "
+            "build it through `fransys.build`, which writes the paper from `fr.settings`"
+        )
+        raise SchemaError(msg, kind="layout.paper")
+    return next(iter(found.values()))
+
+
 def sheet_format_of(model: Model, sheet_format: Id[SheetFormat] | None) -> SheetFormat:
-    """The sheet a page names by `sheet_format`, or the house sheet for `None`."""
+    """The sheet a page names by `sheet_format`, or the build's default paper for `None`."""
     if sheet_format is None:
-        return default_sheet_format()
+        sheet_format = paper_of(model).default
     return layout_of(model, SheetFormat)[sheet_format]
 
 
 def sheet_for(model: Model, kind: PageKind, unit: Id[Unit] | None = None) -> SheetFormat:
     """The sheet of a page of `kind` of `unit`: the one function that gives a page kind's sheet.
 
-    A block diagram is on the house A2 sheet; every other kind is on the unit's profile's sheet,
-    the authored `SheetFormat` it names or the house A3.
+    In order: the sheet the unit's profile names (until SETTINGS-C), the build's paper for
+    `kind`, then the build's default paper (ST4).
     """
-    if kind is PageKind.BLOCK_DIAGRAM:
-        return a2_sheet_format()
-    return sheet_format_of(model, profile_of(model, unit).sheet_format)
+    authored = profile_of(model, unit).sheet_format
+    if authored is not None:
+        return sheet_format_of(model, authored)
+    paper = paper_of(model)
+    return sheet_format_of(model, paper.by_kind.get(kind.value, paper.default))
 
 
 def derived_layout_ids(

@@ -7,16 +7,16 @@ from dataclasses import replace
 from typing import TYPE_CHECKING
 
 import pytest
+from options_fixtures import core_options
 
-from fransys_layout.core import Options
+from fransys_layout.core import place_annexes
 from fransys_layout.core.outputs import Annotations
 from fransys_layout.core.place import place_pages
 from fransys_layout.core.route import route_pages
-from fransys_layout.core.text_labels import label_pages
 from fransys_layout.core.text_markers import mark_pages
 
 from . import pipeline_fixtures
-from .conftest import MARKER_BOX
+from .conftest import MARKER
 from .cut_respell import back_of, id_sets, make_maps, respell_cut, respell_problem
 from .test_cut_rename import SPELLINGS
 from .text_fixtures import PLANTS
@@ -24,15 +24,22 @@ from .text_fixtures import PLANTS
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from fransys_layout.core.outputs import Label
+    from fransys_layout.core import AnnexBox
 
-OPTIONS = Options(marker=MARKER_BOX)
+OPTIONS = core_options(
+    marker=MARKER,
+    flip_turn="R180",
+    tag_stagger=True,
+    label_gap=8,
+    driver_first=True,
+    arrow_sides=("E", "W"),
+)
 
 
-def _canon(labels: tuple[Label, ...], back: Callable[[str | None], str | None]) -> list:
+def _canon(labels: tuple[AnnexBox, ...], back: Callable[[str | None], str | None]) -> list:
     # Respelling can change the order of owners within a page, so the labels compare as sorted
-    # (page, canonical id, box, corner) rows; the order of the stage's own output is not the claim.
-    return sorted((lab.page, back(lab.owner), lab.box, lab.corner) for lab in labels)
+    # (page, canonical id, box, spot) rows; the order of the stage's own output is not the claim.
+    return sorted((lab.page, back(lab.owner), lab.box, lab.spot) for lab in labels)
 
 
 @pytest.mark.parametrize("name", PLANTS)
@@ -47,7 +54,8 @@ def test_labels_do_not_depend_on_how_ids_are_spelled(name: str, form: str) -> No
     placement = place_pages(cut2, prob2, OPTIONS)
     routes = route_pages(placement, cut2, prob2, OPTIONS)
     markers = mark_pages(cut2, placement, prob2, OPTIONS)
-    got, _ = label_pages(placement, routes, Annotations(markers=markers), prob2, OPTIONS)
+    labelled = pipeline_fixtures.with_annexes(prob2, OPTIONS)
+    got, _ = place_annexes(placement, routes, Annotations(markers=markers), labelled, OPTIONS)
     assert got
     assert _canon(got, back_of(maps)) == _canon(want, back_of({}))
 
@@ -66,5 +74,8 @@ def test_labels_do_not_depend_on_the_order_of_the_input_tuples(name: str) -> Non
     placement = place_pages(cut2, prob2, OPTIONS)
     routes = route_pages(placement, cut2, prob2, OPTIONS)
     markers = mark_pages(cut2, placement, prob2, OPTIONS)
-    got, _ = label_pages(placement, routes, Annotations(markers=markers), prob2, OPTIONS)
+    # The annexes are the caller's, in the caller's order (R345: the core sorts nothing); the
+    # symbol, net and flow tuples it is handed in reverse change no box.
+    labelled = replace(prob2, annexes=pipeline_fixtures.with_annexes(prob, OPTIONS).annexes)
+    got, _ = place_annexes(placement, routes, Annotations(markers=markers), labelled, OPTIONS)
     assert got == want

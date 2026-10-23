@@ -19,15 +19,14 @@ from typing import TYPE_CHECKING, Any
 
 import fransys as fr
 import pytest
+from _drawn_pages import drawn_pages
 from _model_build_cover import cabinet_document
 from fransys.colours import BU
 
-from fransys_layout.geometry import Orientation
-from fransys_model.layout import SymbolPlacement, layout_of
-from fransys_model.vocab.tables import functions, items
-
 if TYPE_CHECKING:
     from pathlib import Path
+
+    from fransys_layout.drawing import Drawing, DrawnSymbol
 
 type _Chain = Callable[[SimpleNamespace], tuple[Any, ...]]
 
@@ -61,16 +60,25 @@ def _build(chain: _Chain | None, *, box_feeds: str, out: Path | None = None) -> 
     return result
 
 
-def _contact_turn(chain: _Chain | None, *, box_feeds: str, out: Path | None = None) -> Orientation:
-    """The orientation of relay K7's contact."""
+def _contact_turn(chain: _Chain | None, *, box_feeds: str, out: Path | None = None) -> str:
+    """The orientation of relay K7's contact, from the core's drawing."""
     model = _build(chain, box_feeds=box_feeds, out=out).model
     (turn,) = (
-        p.orientation
-        for p in layout_of(model, SymbolPlacement).values()
-        if functions(model)[p.function].name == "co_1"
-        and items(model)[functions(model)[p.function].item].tag == "K7"
+        s.orient
+        for d in drawn_pages(model).values()
+        for s in d.symbols
+        if s.key == "change-over-contact"
     )
     return turn
+
+
+def _near(drawing: Drawing, key: str, tag: str) -> DrawnSymbol:
+    """The symbol of library `key` whose own tag text `-tag` stands nearest to it."""
+    (text,) = (t for t in drawing.texts if t.text.endswith(f"-{tag}"))
+    return min(
+        (s for s in drawing.symbols if s.key == key),
+        key=lambda s: abs(s.x - text.box.x) + abs(s.y - text.box.y),
+    )
 
 
 def test_a_chain_may_start_at_a_plc_channel(tmp_path: Path) -> None:
@@ -79,8 +87,8 @@ def test_a_chain_may_start_at_a_plc_channel(tmp_path: Path) -> None:
     chained = _contact_turn(
         lambda n: (n.di.di_1, n.k1.co_1, n.h1.lamp), box_feeds="14", out=tmp_path
     )
-    assert free is Orientation.R0
-    assert chained is Orientation.MR180
+    assert free == "R0"
+    assert chained == "MR180"
 
 
 def test_the_box_of_a_chains_head_keeps_the_column_it_shares_with_its_other_channel() -> None:
@@ -104,11 +112,10 @@ def test_the_box_of_a_chains_head_keeps_the_column_it_shares_with_its_other_chan
     d.detail.wire(k2.co_1["11"], psu.output["+"], wire=wire)
     d.layout.chain(di.di_1, k1.co_1, h1.lamp)
     model = fr.build(d, cabinet_document(cab)).model
-    at = {
-        (items(model)[functions(model)[p.function].item].tag, functions(model)[p.function].name): p
-        for p in layout_of(model, SymbolPlacement).values()
-    }
-    module, relay = at["A7", "di_1"], at["K8", "co_1"]
+    (page,) = (
+        p for p in drawn_pages(model).values() if any(t.text.endswith("-K8") for t in p.texts)
+    )
+    module, relay = _near(page, "generic-box", "A7"), _near(page, "change-over-contact", "K8")
     assert abs(module.x - relay.x) <= 32  # One column
     assert module.y > relay.y
 
@@ -117,15 +124,15 @@ def test_a_chain_may_end_at_a_supply_output(tmp_path: Path) -> None:
     """The supply lands on pin 11 and ends the chain: the contact leaves at 11, drawn turned."""
     free = _contact_turn(None, box_feeds="11")
     chained = _contact_turn(lambda n: (n.k1.co_1, n.psu.output), box_feeds="11", out=tmp_path)
-    assert free is Orientation.R0
-    assert chained is Orientation.MR180
+    assert free == "R0"
+    assert chained == "MR180"
 
 
 def test_a_longer_chain_may_end_at_a_supply_output(tmp_path: Path) -> None:
     chained = _contact_turn(
         lambda n: (n.k1.co_1, n.h1.lamp, n.psu.output), box_feeds="14", out=tmp_path
     )
-    assert chained is Orientation.R0  # entered at 11 (N), the supply closes the path below
+    assert chained == "R0"  # entered at 11 (N), the supply closes the path below
 
 
 def test_a_chain_may_not_pass_through_a_box_drawn_function() -> None:

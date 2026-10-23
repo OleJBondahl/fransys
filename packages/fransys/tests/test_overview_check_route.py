@@ -18,7 +18,9 @@ _PLANTED = "DIAGRAM_BOX_OVERLAP"
 
 def _plant_error(monkeypatch):
     """Make the overview call report one ERROR for any model."""
-    error = Finding(code=_PLANTED, severity=Severity.ERROR, subjects=(), message="planted")
+    error = Finding(
+        code=_PLANTED, severity=Severity.ERROR, subjects=(), message="planted", fix="Write: x"
+    )
     monkeypatch.setattr(pipeline, "_overview", lambda model: (model, (error,)))
 
 

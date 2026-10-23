@@ -1,4 +1,5 @@
 # FRANSYS PLACEMENT INSTANCE test_a_wide_bank_of_relays_fed_from_a_controllers_pins_builds__1
+# sides: half split of fransys_el; today and route lines as exported
 # Units G. Wiring grid 8 G. Text height 8 G. Pin offsets and boxes are relative to the
 # symbol origin, at orientation R0. A pin's side is the way its wire leaves.
 # [rail rank=r power=K]: the net carries a declared supply potential; smaller rank is drawn
@@ -217,7 +218,7 @@ sym =R12-U1-K12.co_1 group=R12 body=-16,-16,16,32 keepout=-80,-16,94,32
 sym =R8-U1-K8.coil group=R8 body=-16,-24,32,48 keepout=-68,-24,84,48
   pin in N 0,-24
   pin out S 0,24
-sym =PLC-U1-A1.box group=PLC body=-16,-16,944,32 keepout=-16,-16,996,32
+sym =PLC-U1-A1.box group=PLC body=-16,-16,496,32 keepout=-16,-16,548,32
   pin CH01- N 0,-16
   pin CH02- N 56,-16
   pin CH03- N 112,-16
@@ -226,14 +227,14 @@ sym =PLC-U1-A1.box group=PLC body=-16,-16,944,32 keepout=-16,-16,996,32
   pin CH06- N 280,-16
   pin CH07- N 336,-16
   pin CH08- N 392,-16
-  pin CH09- N 448,-16
-  pin CH10- N 512,-16
-  pin CH11- N 576,-16
-  pin CH12- N 640,-16
-  pin CH13- N 704,-16
-  pin CH14- N 768,-16
-  pin CH15- N 832,-16
-  pin CH16- N 896,-16
+  pin CH09- S 0,16
+  pin CH10- S 56,16
+  pin CH11- S 112,16
+  pin CH12- S 168,16
+  pin CH13- S 224,16
+  pin CH14- S 280,16
+  pin CH15- S 336,16
+  pin CH16- S 392,16
 sym =R3-U1-P3.lamp group=R3 body=-16,-16,32,32 keepout=-16,-16,84,32
   pin 1 N 0,-16
   pin 2 S 0,16

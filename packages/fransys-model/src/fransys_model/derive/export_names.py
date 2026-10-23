@@ -5,6 +5,7 @@ A function of the model alone, so `write` and the overview page name a file the 
 
 import re
 
+from fransys_model.vocab.designation_scheme import DESIGNATION_SCHEME
 from fransys_model.vocab.enums import DocumentPreset
 from fransys_model.vocab.tables import projects
 lazy from fransys_model.kernel import Id, Model
@@ -17,7 +18,8 @@ from .designation import (
     printed_designation,
     reference_designation,
 )
-from .document_unit import document_unit
+from .document_unit import document_unit, record_unit
+from .overview_tree import unit_system_designation
 from .release_identity import release_identity
 from .revision_text import revision_text
 
@@ -31,7 +33,7 @@ __all__ = [
     "reference_fragment",
 ]
 
-_REF_SPECIAL = re.compile(r"[+=-]")
+_REF_SPECIAL = re.compile("[" + re.escape(DESIGNATION_SCHEME.sign_characters()) + "]")
 
 
 def export_fragment(designation: str) -> str:
@@ -101,16 +103,28 @@ def export_name(
     return f"{joined}.{extension}"
 
 
+def _placement_fragment(model: Model, record: Document) -> str | None:
+    """A document of one placement (no `unit_name`) is named by its instance's tag in the system."""
+    own_unit = record_unit(model, record)
+    if own_unit is None or record.unit_name is not None:
+        return None
+    tag = unit_system_designation(model, own_unit)
+    return export_fragment(tag) if tag else None
+
+
 def document_export_name(model: Model, unit: Id[Unit] | None, record: Document) -> str:
     """One document's PDF name, from its own subject, never its cover.
 
-    Unit subject (`record.unit`, or `record.unit_name` via `document_unit`): its own prefix.
+    Unit subject (`record.unit`, or `record.unit_name` via `document_unit`): its own prefix; a
+    placement (no `unit_name`) adds the instance's tag in the system.
     Location, item, SYSTEM: the write scope's; empty prefix gives bare `<cover-stem>.pdf` here.
     """
     document_own_unit = document_unit(model, record.id)
     if document_own_unit is not None:
         kind = "harness" if record.preset is DocumentPreset.HARNESS_DRAWING else None
-        return export_name(model, document_own_unit, "pdf", kind=kind)
+        return export_name(
+            model, document_own_unit, "pdf", kind=kind, fragment=_placement_fragment(model, record)
+        )
     if not export_prefix(model, unit):
         return export_name(model, unit, "pdf", fragment=record.key[1])
     if record.location is not None:

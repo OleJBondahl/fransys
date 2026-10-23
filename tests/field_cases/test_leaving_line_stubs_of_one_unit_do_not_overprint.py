@@ -15,15 +15,16 @@ line runs through another's box.
 """
 
 from itertools import pairwise
-from typing import Any, NamedTuple
+from typing import TYPE_CHECKING, Any, NamedTuple
 
 import fransys as fr
 import pytest
+from _drawn_pages import drawn_pages
 from _model_build_cover import cabinet_document
 
-from fransys_layout.geometry import G_PER_MODULE, Box, boxes_meet, through
+from fransys_layout.geometry import G_PER_MODULE, Box, boxes_meet, text_width, through
 from fransys_layout.geometry.units import Point
-from fransys_model.layout import HarnessLine, LinkMarker, Side, layout_of
+from fransys_model.derive import text_room
 
 _CABLES = 3
 _VALVE = (("coil", "A1"), ("coil", "A2"), ("co_1", "11"), ("co_1", "14"))
@@ -82,23 +83,23 @@ def built() -> fr.BuildResult:
     return fr.build(d, cabinet_document("demo-outer"))
 
 
-def _box(marker: LinkMarker) -> Box:
-    """The box as drawn: one module out of the port along `facing`, `box_x` when it was slid."""
-    out = (
-        marker.y - G_PER_MODULE - marker.height
-        if marker.facing is Side.N
-        else marker.y + G_PER_MODULE
-    )
-    x = marker.x - marker.width // 2 if marker.box_x is None else marker.box_x
-    return Box(x=x, y=out, width=marker.width, height=marker.height)
+def _box(marker: DrawnMarker, text_height: int) -> Box:
+    """The box as drawn: one module out of the port along `side`, as wide as its longest text."""
+    width = max(text_width(text, height=text_height) for _, text in marker.texts)
+    out = marker.y - G_PER_MODULE - text_height if marker.side == "N" else marker.y + G_PER_MODULE
+    return Box(x=marker.x - width // 2, y=out, width=width, height=text_height)
 
 
 def _stubs(built: fr.BuildResult) -> list[tuple[Any, Box]]:
-    """Each leaving-line stub as `(page, box)`; the case's stubs face north or south."""
+    """Each leaving-line stub as `(page, box)`; the case's stubs face north or south.
+
+    The Drawing marks no stub as a leaving line's, so every marker counts.
+    """
+    height = text_room(built.model)
     return [
-        (m.page, _box(m))
-        for m in layout_of(built.model, LinkMarker).values()
-        if m.carrier is not None
+        (page, _box(m, height))
+        for page, drawing in drawn_pages(built.model).items()
+        for m in drawing.markers
     ]
 
 
@@ -110,6 +111,7 @@ def test_the_case_has_three_stubs_in_one_row(built: fr.BuildResult) -> None:
 
 def test_no_two_stub_boxes_meet(built: fr.BuildResult) -> None:
     boxes = [box for _, box in _stubs(built)]
+    assert len(boxes) == _CABLES, "the check would pass over nothing"
     meeting = [
         (a, b)
         for n, a in enumerate(boxes)
@@ -121,12 +123,19 @@ def test_no_two_stub_boxes_meet(built: fr.BuildResult) -> None:
 
 def test_no_line_runs_through_a_stub_box(built: fr.BuildResult) -> None:
     stubs = _stubs(built)
+    assert len(stubs) == _CABLES, "the check would pass over nothing"
     hits = [
-        (line.page, box)
-        for line in layout_of(built.model, HarnessLine).values()
-        for page, box in stubs
-        if page == line.page
+        (page, box)
+        for page, drawing in drawn_pages(built.model).items()
+        for line in drawing.wires
+        if line.style != "wire"
+        for stub_page, box in stubs
+        if stub_page == page
         for a, b in pairwise(line.points)
-        if through((Point(x=a.x, y=a.y), Point(x=b.x, y=b.y)), box)
+        if through((Point(x=a[0], y=a[1]), Point(x=b[0], y=b[1])), box)
     ]
     assert hits == []
+
+
+if TYPE_CHECKING:
+    from fransys_layout.drawing import DrawnMarker

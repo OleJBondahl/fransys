@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, NamedTuple
 
+from .band import level_offset, trunk_room
 from .geometry import pin_of, pin_xy
+from .node_names import LOW, box_node, box_y_node, pin_node
 from .pack import cell_node
 
 if TYPE_CHECKING:
@@ -28,8 +30,8 @@ def trunk_node(fan: str, row: int) -> str:
 def box_pin_x(env: PageEnv, x: Mapping[str, int], box: str, pin: str) -> int:
     """The solved x of a box pin: its own node when the row solved one, else its offset."""
     sym = env.syms[box]
-    default = x[f"box:{box}:L"] - sym.body.x + next(p.dx for p in sym.pins if p.id == pin)
-    return x.get(f"pin:{box}:{pin}", default)
+    default = x[box_node(box, LOW)] - sym.body.x + next(p.dx for p in sym.pins if p.id == pin)
+    return x.get(pin_node(box, pin), default)
 
 
 def box_at(env: PageEnv, sym: str) -> tuple[str, int] | None:
@@ -37,8 +39,22 @@ def box_at(env: PageEnv, sym: str) -> tuple[str, int] | None:
     for r, row in enumerate(env.plan.rows):
         for b in row.blocks:
             if env.blocks[b].is_card and env.blocks[b].anchor == sym:
-                return f"box:{sym}", r
+                return box_y_node(sym), r
     return None
+
+
+def in_row(env: PageEnv, fan: Fan, a: Attach, row: int) -> bool:
+    """The attachment stands on the fan's trunk in `row`: levelled and drawn by this one test.
+
+    A column's lane stands in its column's row; a box pin on its box's row and on every row
+    where the fan has a column, since that row's trunk reaches the pin too.
+    """
+    if a.column is not None:
+        return a.column in env.pcs and env.pcs[a.column].row == row
+    at = box_at(env, a.pin.sym)
+    if at is not None and at[1] == row:
+        return True
+    return any(b.column is not None and in_row(env, fan, b, row) for b in (*fan.drivers, *fan.legs))
 
 
 def _cell_of(pc: PlacedColumn, a: Attach) -> tuple[Cell, int]:
@@ -51,7 +67,7 @@ def _cell_of(pc: PlacedColumn, a: Attach) -> tuple[Cell, int]:
 def _clear(env: PageEnv, fan: Fan, a: Attach, crossed: CrossedRooms) -> int:
     """The y from the trunk to a crossed attachment's pin: grid * (lanes + levels), else 0."""
     levels = crossed.get((fan.id, a.pin.sym), 0)
-    return env.options.wiring_grid * (fan.lanes + levels) if levels else 0
+    return level_offset(fan.lanes, levels, env.options.wiring_grid) if levels else 0
 
 
 def _driver(g: Graph, fan: Fan, a: Attach, env: PageEnv, crossed: CrossedRooms) -> None:
@@ -81,7 +97,7 @@ class _Hang(NamedTuple):
 def _leg(g: Graph, h: _Hang, a: Attach, env: PageEnv) -> str | None:
     """Hang the leg `depth` under the trunk; the trunk when the stacks hold the cell elsewhere."""
     fan, tangled = h.fan, h.tangled
-    depth = max(env.options.wiring_grid * fan.lanes, _clear(env, fan, a, h.crossed))
+    depth = max(level_offset(fan.lanes, 0, env.options.wiring_grid), _clear(env, fan, a, h.crossed))
     if a.column is None:
         at = box_at(env, a.pin.sym)
         if at is not None:
@@ -102,6 +118,27 @@ def _leg(g: Graph, h: _Hang, a: Attach, env: PageEnv) -> str | None:
     return None
 
 
+def fan_roles(env: PageEnv, fan: Fan) -> tuple[tuple[Attach, ...], tuple[Attach, ...]]:
+    """Drivers and legs as the page stands them: a fan wholly in flipped columns is upside down.
+
+    A flip reverses the stacks, not the fan: stage 1 put drivers above legs in the natural
+    order, so a fan whose every attachment is in a flipped column swaps its two sides.
+    """
+    ends = [a for a in (*fan.drivers, *fan.legs) if a.column is not None]
+    pcs = [env.pcs.get(a.column or "") for a in ends]
+    boxed = len(ends) < len(fan.drivers) + len(fan.legs)
+    if boxed or not pcs or not all(pc is not None and pc.flipped for pc in pcs):
+        return fan.drivers, fan.legs
+    return fan.legs, fan.drivers
+
+
+def fan_side(env: PageEnv, fan: Fan) -> str:
+    """The trunk side as the page stands the fan: a swapped fan lies on the other side."""
+    if fan_roles(env, fan)[0] is fan.drivers:
+        return fan.side
+    return "below" if fan.side == "above" else "above"
+
+
 def trunk_constraints(
     g: Graph,
     fan: Fan,
@@ -115,20 +152,20 @@ def trunk_constraints(
     with a leg the stacks would not let hang exactly: they belong in `tangled`.
     """
     opts = env.options
-    for a in fan.drivers:
+    drivers, legs = fan_roles(env, fan)
+    for a in drivers:
         _driver(g, fan, a, env, crossed)
     hang = _Hang(fan, tangled, crossed)
-    refused = {t for a in fan.legs if (t := _leg(g, hang, a, env)) is not None}
+    refused = {t for a in legs if (t := _leg(g, hang, a, env)) is not None}
     rows = {
         env.pcs[a.column].row
         for a in (*fan.drivers, *fan.legs)
         if a.column is not None and a.column in env.pcs
-    }
+    } | {at[1] for a in (*fan.drivers, *fan.legs) if (at := box_at(env, a.pin.sym)) is not None}
+    above, below = trunk_room(fan.lanes, opts.wiring_grid)
     for row in rows:
-        g.after(f"row:{row}", trunk_node(fan.id, row), opts.wiring_grid)
-        g.after(
-            trunk_node(fan.id, row), f"row:{row + 1}", opts.wiring_grid * fan.lanes + opts.row_gap
-        )
+        g.after(f"row:{row}", trunk_node(fan.id, row), above)
+        g.after(trunk_node(fan.id, row), f"row:{row + 1}", below + opts.row_gap)
     return frozenset(refused)
 
 

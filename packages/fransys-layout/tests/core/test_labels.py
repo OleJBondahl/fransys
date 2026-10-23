@@ -1,26 +1,26 @@
-"""Self-tests of the label invariant checkers on hand-built labels; label_pages is not called."""
+"""Self-tests of the label invariant checkers on hand-built labels, then place_annexes itself."""
 
 from __future__ import annotations
 
 import pytest
+from options_fixtures import core_options
 
-from fransys_layout.core import Box, Options, natural_key, text_labels
+from fransys_layout.core import AnnexBox, Box, natural_key, text_labels
+from fransys_layout.core.annex import spot_box
 from fransys_layout.core.geometry import overlaps
 from fransys_layout.core.occupancy import Occupancy
-from fransys_layout.core.outputs import Label
-from fransys_layout.core.text_label_cands import candidates
 from fransys_layout.core.text_labels import Cover, descend, first_pass
 from fransys_layout.core.values import Finding
 
-from .conftest import MARKER_BOX
+from .conftest import MARKER
 from .label_fixtures import (
     colliding_neighbours,
     dense,
     lone,
     marker_over_candidate,
     under_wire,
-    with_slot,
 )
+from .pipeline_fixtures import with_annexes
 from .test_invariants import (
     check_first_free,
     check_label_conflicts,
@@ -28,8 +28,16 @@ from .test_invariants import (
     check_one_label,
 )
 
-OVER_WIRE = Label("S1", 1, Box(80, 112, 16, 8), "BL")
-TEXT_OVERLAP = Finding("TEXT_OVERLAP", "no free corner", page=1, subject="S1")
+OPTIONS = core_options(
+    marker=MARKER,
+    flip_turn="R180",
+    tag_stagger=True,
+    label_gap=8,
+    driver_first=True,
+    arrow_sides=("E", "W"),
+)
+OVER_WIRE = AnnexBox("S1", 1, Box(80, 112, 16, 8), "BL")
+ANNEX_UNPLACED = Finding("ANNEX_UNPLACED", "no free corner", page=1, subject="S1")
 
 
 def _conflicts(case, labels, findings=()):
@@ -42,7 +50,7 @@ def _conflicts(case, labels, findings=()):
         labels,
         findings,
         case.problem.area,
-        Options(marker=MARKER_BOX),
+        OPTIONS,
     )
 
 
@@ -55,16 +63,16 @@ def _first_free(case, labels, findings=()):
         case.tables,
         labels,
         findings,
-        case.problem,
-        Options(marker=MARKER_BOX),
+        with_annexes(case.problem, OPTIONS),
+        OPTIONS,
     )
 
 
 def _cands(case):
-    """The candidate list of the case's only symbol."""
-    sym = case.problem.symbols[0]
+    """The (spot, box) list of the case's only symbol: its designation annex's spots at R0."""
+    (annex,) = with_annexes(case.problem, OPTIONS).annexes
     placed = case.placement.pages[0].placed[0]
-    return candidates(sym, placed, Options(marker=MARKER_BOX))
+    return [(s.name, spot_box(placed, annex.size, s, 0)) for s in annex.spots[placed.orient]]
 
 
 def test_one_label_holds_on_lone() -> None:
@@ -86,7 +94,7 @@ def test_one_label_flags_missing() -> None:
 
 def test_conflicts_hold_on_lone() -> None:
     case = lone()
-    assert _conflicts(case, [Label("S1", 1, _cands(case)[0][1], "BL")]) == []
+    assert _conflicts(case, [AnnexBox("S1", 1, _cands(case)[0][1], "BL")]) == []
 
 
 def test_conflicts_flags_label_over_wire() -> None:
@@ -96,12 +104,12 @@ def test_conflicts_flags_label_over_wire() -> None:
 
 
 def test_conflicts_accepts_flagged_overlap() -> None:
-    assert _conflicts(under_wire(), [OVER_WIRE], [TEXT_OVERLAP]) == []
+    assert _conflicts(under_wire(), [OVER_WIRE], [ANNEX_UNPLACED]) == []
 
 
 def test_conflicts_flags_two_labels_on_one_box() -> None:
     case = colliding_neighbours()
-    twin = Label("S2", 1, Box(80, 112, 16, 8), "BL")
+    twin = AnnexBox("S2", 1, Box(80, 112, 16, 8), "BL")
     msgs = _conflicts(case, [OVER_WIRE, twin])
     assert any("S1" in m and "S2" in m for m in msgs)
 
@@ -109,25 +117,31 @@ def test_conflicts_flags_two_labels_on_one_box() -> None:
 def test_first_free_holds_at_first_candidate() -> None:
     case = lone()
     corner, box = _cands(case)[0]
-    assert _first_free(case, [Label("S1", 1, box, corner)]) == []
+    assert _first_free(case, [AnnexBox("S1", 1, box, corner)]) == []
 
 
 def test_first_free_flags_second_candidate() -> None:
     case = lone()
     corner, box = _cands(case)[1]
-    msgs = _first_free(case, [Label("S1", 1, box, corner)])
+    msgs = _first_free(case, [AnnexBox("S1", 1, box, corner)])
     assert msgs
     assert "S1" in msgs[0]
 
 
 def test_label_order_holds() -> None:
-    labels = [Label("S2", 1, Box(0, 0, 16, 8), "BL"), Label("S10", 1, Box(0, 16, 16, 8), "BL")]
+    labels = [
+        AnnexBox("S2", 1, Box(0, 0, 16, 8), "BL"),
+        AnnexBox("S10", 1, Box(0, 16, 16, 8), "BL"),
+    ]
     assert sorted(["S10", "S2"], key=natural_key) == ["S2", "S10"]
     assert check_label_order(lone().placement, labels) == []
 
 
 def test_label_order_flags_reverse() -> None:
-    labels = [Label("S10", 1, Box(0, 16, 16, 8), "BL"), Label("S2", 1, Box(0, 0, 16, 8), "BL")]
+    labels = [
+        AnnexBox("S10", 1, Box(0, 16, 16, 8), "BL"),
+        AnnexBox("S2", 1, Box(0, 0, 16, 8), "BL"),
+    ]
     msgs = check_label_order(lone().placement, labels)
     assert msgs
     assert "S2" in msgs[0]
@@ -136,7 +150,7 @@ def test_label_order_flags_reverse() -> None:
 # Parts B and C: the stage itself.
 def _corners(case, options=None):
     labels, findings = case.run(options)
-    return {label.owner: label.corner for label in labels}, labels, findings
+    return {label.owner: label.spot for label in labels}, labels, findings
 
 
 def test_a_lone_symbol_takes_its_first_corner_at_slack_zero() -> None:
@@ -164,35 +178,54 @@ def test_two_neighbours_do_not_share_a_box() -> None:
     assert findings == ()
 
 
-def test_a_slot_candidate_comes_first() -> None:
-    corners, _, _ = _corners(with_slot())
-    assert corners == {"S1": "KL"}
-
-
 def test_the_dense_page_reports_text_overlap_and_is_repeatable() -> None:
     first = dense().run()
     assert {f.subject for f in first[1]} == {"S1", "S2", "S3"}
-    assert {f.code for f in first[1]} == {"TEXT_OVERLAP"}
+    assert {f.code for f in first[1]} == {"ANNEX_UNPLACED"}
     assert dense().run() == first
 
 
 def test_corner_order_bl_only_makes_the_neighbours_test_fail() -> None:
     case = colliding_neighbours()
-    only = Options(corner_order=("BL",), slack=(0,), marker=MARKER_BOX)
+    only = core_options(
+        corner_order=("BL",),
+        slack=(0,),
+        marker=MARKER,
+        flip_turn="R180",
+        tag_stagger=True,
+        label_gap=8,
+        driver_first=True,
+        arrow_sides=("E", "W"),
+    )
     _, findings = case.run(only)
     assert findings
 
 
-def test_a_slot_only_corner_order_without_a_slot_names_the_symbol_and_the_fix() -> None:
-    only = Options(corner_order=("KL", "KR"), marker=MARKER_BOX)
-    with pytest.raises(
-        ValueError, match=r"no label candidate for symbol 'S1'.*add BL, TL, BR or TR"
-    ):
+def test_a_slot_corner_is_unknown_since_the_side_slots_left() -> None:
+    """KL and KR left with text_label_cands (R345): el names them as unknown corners."""
+    only = core_options(
+        corner_order=("KL", "KR"),
+        marker=MARKER,
+        flip_turn="R180",
+        tag_stagger=True,
+        label_gap=8,
+        driver_first=True,
+        arrow_sides=("E", "W"),
+    )
+    with pytest.raises(ValueError, match=r"unknown label corner 'KL'.*BL"):
         lone().run(only)
 
 
 def test_an_unknown_corner_names_the_corner_and_the_choices() -> None:
-    bad = Options(corner_order=("XX",), marker=MARKER_BOX)
+    bad = core_options(
+        corner_order=("XX",),
+        marker=MARKER,
+        flip_turn="R180",
+        tag_stagger=True,
+        label_gap=8,
+        driver_first=True,
+        arrow_sides=("E", "W"),
+    )
     with pytest.raises(ValueError, match=r"unknown label corner 'XX'.*BL"):
         lone().run(bad)
 
@@ -220,3 +253,26 @@ def test_no_rounds_leave_the_crowded_first_pass(monkeypatch) -> None:
     first_pass(cover, cands)
     assert descend(cover, cands) == 0
     assert cover.choice == [0, 0]
+
+
+def test_a_candidate_shared_by_two_symbols_keeps_each_ones_own_body_exempt() -> None:
+    """A's first box touches only A's body; B lists the same box and does not take A's exemption."""
+    body_a, body_b = Box(0, 16, 32, 32), Box(0, 120, 32, 32)
+    shared = Box(0, 8, 32, 8)  # flush on A's top edge
+    cover = Cover(Occupancy(20, 20, 8), 0, None, [body_a, body_b])
+    assert cover.blocked(shared, body_a) == 0
+    first_pass(cover, [[("TL", shared), ("BL", Box(64, 8, 32, 8))], [("TL", shared)]])
+    assert cover.choice == [0, 0]
+
+
+def test_a_free_label_moves_to_an_earlier_free_candidate_once_it_frees_up() -> None:
+    """B stands on its second box; A's move frees B's first, so B takes it (I8.3, promote)."""
+    cover = Cover(Occupancy(20, 20, 8))
+    a1, a2 = Box(0, 0, 16, 8), Box(0, 64, 16, 8)
+    z = Box(8, 0, 16, 8)
+    b1, b2 = Box(0, 0, 8, 8), Box(0, 128, 16, 8)
+    cands = [[("BL", a1), ("TL", a2)], [("BL", z)], [("BL", b1), ("TL", b2)]]
+    first_pass(cover, cands)
+    assert cover.choice == [0, 0, 1]
+    assert descend(cover, cands) == 2
+    assert cover.choice == [1, 0, 0]

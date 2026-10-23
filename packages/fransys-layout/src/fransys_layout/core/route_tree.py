@@ -35,6 +35,12 @@ def end_anchors(env: RouteEnv, link: CrossLink) -> list[tuple[XY, ...]]:
     return [anchor(pin, env.placed[a.pin.sym].footprint, step) for a, pin in [*found[:2], *rest]]
 
 
+def mark_anchors(env: RouteEnv, grid: Occupancy, link: CrossLink) -> None:
+    """The link's anchor runs on the map, so another net's wire keeps off its ends (R391)."""
+    for anchors in end_anchors(env, link):
+        grid.mark_wire(link.net, anchors)
+
+
 def _cell(p: XY, step: int) -> XY:
     return (p[0] // step, p[1] // step)
 

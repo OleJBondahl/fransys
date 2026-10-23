@@ -1,40 +1,29 @@
 """Validator: a net potential that no supply declares gives no rank and no power symbol."""
 
-from typing import TYPE_CHECKING, Final
+from typing import Final
 
-from fransys_model.derive.facts.net_facts import net_potential
-from fransys_model.derive.facts.rail_reach import earth_potentials
-from fransys_model.kernel import Finding, Severity
+from fransys_model.checks._finding import finding, ordered
+from fransys_model.derive.facts.potential_without_supply import (
+    declared_rails,
+    potentials_without_supply,
+)
+from fransys_model.kernel import Finding, Model, Severity
 from fransys_model.vocab.finding_ref import ref
-from fransys_model.vocab.tables import nets, supply_of_potential, supply_systems
-
-if TYPE_CHECKING:
-    from fransys_model.kernel import Model
+from fransys_model.vocab.tables import nets
 
 POTENTIAL_WITHOUT_SUPPLY: Final[str] = "POTENTIAL_WITHOUT_SUPPLY"
 
 
 def check_potential_without_supply(model: Model) -> tuple[Finding, ...]:
     """Warn once per net whose `potential` is no supply's rail and no earth rail (model-0085)."""
-    earth = earth_potentials(model)
-    declared = sorted({name for s in supply_systems(model).values() for name in s.rails})
-    named = ", ".join(declared) or "none"
+    named = ", ".join(declared_rails(model)) or "none"
     found = []
-    for net in nets(model).values():
-        potential = net_potential(model, net.id)
-        if potential is None or potential in earth or supply_of_potential(model, potential):
-            continue
-        origin = model.origins[net.id]
+    for net_id, potential in potentials_without_supply(model):
+        origin = model.origins[net_id]
         message = (
-            f"net {ref(net)} ({origin.file}:{origin.line}) carries potential {potential!r}, "
-            f"which no supply declares (declared: {named}): it gets no rank and no power symbol"
+            f"net {ref(nets(model)[net_id])} ({origin.file}:{origin.line}) carries potential "
+            f"{potential!r}, which no supply declares (declared: {named}): it gets no rank and "
+            "no power symbol"
         )
-        found.append(
-            Finding(
-                code=POTENTIAL_WITHOUT_SUPPLY,
-                severity=Severity.WARNING,
-                subjects=(net.id,),
-                message=message,
-            )
-        )
-    return tuple(sorted(found, key=lambda f: (f.code, f.subjects, f.message)))
+        found.append(finding(POTENTIAL_WITHOUT_SUPPLY, Severity.WARNING, (net_id,), message))
+    return ordered(found)

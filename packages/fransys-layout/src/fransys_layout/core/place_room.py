@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING, NamedTuple
 from .geometry import cell_anchor, pin_xy
 from .intervals import levels
 from .keys import natural_key
+from .node_names import col_node
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -36,7 +37,7 @@ def _net_of(env: PageEnv) -> dict[tuple[str, str], str]:
     return {(r.sym, r.pin): n.id for n in env.problem.nets for r in n.pins}
 
 
-def _origins(env: PageEnv, x: Mapping[str, int]) -> dict[str, int]:
+def origins(env: PageEnv, x: Mapping[str, int]) -> dict[str, int]:
     """The x origin of each symbol: where its first lane puts it, as stage 5 assembles it."""
     out: dict[str, int] = {}
     for pc in env.pcs.values():
@@ -44,13 +45,13 @@ def _origins(env: PageEnv, x: Mapping[str, int]) -> dict[str, int]:
             for cell in cells:
                 if cell.sym not in out:
                     ax, _ = cell_anchor(env.syms[cell.sym], cell)
-                    out[cell.sym] = x[f"col:{pc.id}"] + pc.offsets[lane] - ax
+                    out[cell.sym] = x[col_node(pc.id)] + pc.offsets[lane] - ax
     return out
 
 
 def _jogs(env: PageEnv, x: Mapping[str, int]) -> list[_Jog]:
     """Every wire between consecutive cells of a lane whose two pins differ in x."""
-    nets, origin = _net_of(env), _origins(env, x)
+    nets, origin = _net_of(env), origins(env, x)
     out = []
     for pc in env.pcs.values():
         for li, cells in enumerate(pc.lanes):
@@ -80,7 +81,7 @@ def step_rooms(env: PageEnv, x: Mapping[str, int]) -> dict[Step, int]:
         )
         spans = [(min(j.top_x, j.bottom_x), max(j.top_x, j.bottom_x)) for j in ordered]
         for j, level in zip(ordered, levels(spans, range(len(ordered))), strict=True):
-            need = grid * (level + 2)
+            need = grid * (level + env.options.jog_lanes)
             rooms[j.step] = max(rooms.get(j.step, 0), need, env.options.wire_min)
     return rooms
 
@@ -88,13 +89,13 @@ def step_rooms(env: PageEnv, x: Mapping[str, int]) -> dict[Step, int]:
 def crossed_levels(env: PageEnv, x: Mapping[str, int]) -> CrossedRooms:
     """The levels stage 6 draws per (fan id, symbol), one per moved lane.
 
-    A lane moves when its pole sits at another x than its own lane's; stage 6 gives each its level.
+    A lane moves when its index sits at another x than its own lane's; stage 6 gives each its level.
     """
     out: CrossedRooms = {}
     for fan in env.flow.fans:
         for sym, perm in fan.crossed:
             xs = {
-                a.lane: x[f"col:{a.column}"] + env.pcs[a.column].offsets[a.lane]
+                a.pole: x[col_node(a.column)] + env.pcs[a.column].offsets[a.lane]
                 for a in (*fan.drivers, *fan.legs)
                 if a.pin.sym == sym and a.column is not None and a.column in env.pcs
             }

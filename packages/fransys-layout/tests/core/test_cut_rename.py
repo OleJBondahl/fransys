@@ -6,11 +6,12 @@ from __future__ import annotations
 from dataclasses import replace
 
 import pytest
+from options_fixtures import core_options
 
-from fransys_layout.core import Hints, Options, PlacementProblem, order_blocks
+from fransys_layout.core import Facts, Hints, PlacementProblem, order_blocks
 from fransys_layout.core.cut import cut_pages
 
-from .conftest import MARKER_BOX
+from .conftest import MARKER
 from .cut_fixtures import AREA, box_sym, chain, elem, free, net
 from .cut_respell import (
     back_of,
@@ -23,7 +24,14 @@ from .cut_respell import (
 )
 from .pipeline_fixtures import blocks_of, flow_of
 
-OPTIONS = Options(marker=MARKER_BOX)
+OPTIONS = core_options(
+    marker=MARKER,
+    flip_turn="R180",
+    tag_stagger=True,
+    label_gap=8,
+    driver_first=True,
+    arrow_sides=("E", "W"),
+)
 SPELLINGS = ("{}", "{:04d}")  # each keeps the natural order of the ranks, spells it anew
 
 
@@ -35,7 +43,7 @@ def two_page_fan() -> PlacementProblem:
         legs = (f"a{tag}x{i}.n" for i in (1, 2, 3))
         nets.append(net(f"feed{tag}", f"t{tag}.e", *legs))
     hints = Hints(group_order=("G2", "G10"))
-    return PlacementProblem(AREA, tuple(syms), tuple(nets), hints=hints)
+    return PlacementProblem(AREA, tuple(syms), tuple(nets), hints=hints, facts=Facts())
 
 
 def card_that_wraps() -> PlacementProblem:
@@ -46,7 +54,7 @@ def card_that_wraps() -> PlacementProblem:
     nets = [net(f"n{i:02d}", f"A1.p{i}", f"k{i:02d}.n") for i in range(1, 17)]
     nets += [net("fr", "f0.s", "f1.n"), net("gr", "g0.s", "g1.n")]
     hints = Hints(group_order=("FR", "PLC", "CH", "GR"))
-    return PlacementProblem(AREA, tuple(syms), tuple(nets), hints=hints)
+    return PlacementProblem(AREA, tuple(syms), tuple(nets), hints=hints, facts=Facts())
 
 
 def forced_break() -> PlacementProblem:
@@ -56,14 +64,14 @@ def forced_break() -> PlacementProblem:
         syms += [elem(f"a{g}", 100, 32, f"G{g}"), elem(f"b{g}", 100, 32, f"G{g}")]
         nets.append(net(f"n{g}", f"a{g}.s", f"b{g}.n"))
     hints = Hints(group_order=("G2", "G10", "G11"), break_before=frozenset({"G10"}))
-    return PlacementProblem(AREA, tuple(syms), tuple(nets), hints=hints)
+    return PlacementProblem(AREA, tuple(syms), tuple(nets), hints=hints, facts=Facts())
 
 
 def tall_column() -> PlacementProblem:
     """Twelve cells of 96 G in one column: the cut folds it into c#a and c#b over one tag."""
     ids = [f"k{i:02d}" for i in range(12)]
     syms = tuple(elem(i, 40, 96) for i in ids)
-    return PlacementProblem(AREA, syms, tuple(chain(ids)))
+    return PlacementProblem(AREA, syms, tuple(chain(ids)), facts=Facts())
 
 
 CASES = {

@@ -1,8 +1,8 @@
 """The cover's Typst measurement and the finding its panic becomes (pdf-0047)."""
 
 import fransys_render
-from _build import document, location, model, project, revision_entry
-from fransys_pdf import cover_overflow_finding, source
+from _build import document, location, model, project, revision_entry, source
+from fransys_pdf import cover_overflow_finding
 
 from fransys_model.derive import document_sheets_of
 from fransys_model.kernel import Severity

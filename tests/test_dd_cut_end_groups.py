@@ -10,7 +10,7 @@ Measured on the base: the build has no ERROR finding, and the top-level set carr
 pair for the net between `h` and `f`'s replica page. The net group's cuts take the lowest port
 on each page and no ruling about a conductor's end pages applies to them: this passes unchanged.
 
-Built through the `fransys` facade from `examples/demo-parts`; read from `layout.*` records.
+Built through the `fransys` facade from `examples/demo-parts`; read from the page Drawings.
 """
 
 from typing import Any
@@ -18,18 +18,12 @@ from typing import Any
 import fransys as fr
 import fransys_author
 import fransys_parts
+from _dd_core import pages_of, set_of
+from _dd_core_b import markers
 from _model_build_cover import layout_trigger_document
 
 from fransys_model.kernel import Severity
-from fransys_model.layout import (
-    DrawingSet,
-    LinkMarker,
-    MarkerSide,
-    Page,
-    SymbolPlacement,
-    layout_of,
-)
-from fransys_model.vocab.tables import functions, ports
+from fransys_model.layout import Page, layout_of
 
 _PROJECT: dict[str, Any] = {
     "title": "Cut end net group",
@@ -62,23 +56,10 @@ def _build():
     return fr.build(parts, d.draft(), layout_trigger_document())
 
 
-def _pin_one(model, name: str):
-    """The id of pin 1 of the connector function `name` (its one `x1` function)."""
-    (function,) = (f.id for f in functions(model).values() if f.key[-3:] == (name, "fn", "x1"))
-    (port,) = (p.id for p in ports(model).values() if p.function == function and p.name == "1")
-    return port
-
-
-def _top_level_page_of(model, port):
-    """The one `Page` of the top-level drawing set that `port`'s function stands on (a connector
+def _top_level_page_of(model, name: str):
+    """The one `Page` of the top-level drawing set that the item `name` is drawn on (a connector
     is one view per wired pin, all on one page here)."""
-    function = ports(model)[port].function
-    sets, pages = layout_of(model, DrawingSet), layout_of(model, Page)
-    (found,) = {
-        pages[p.page]
-        for p in layout_of(model, SymbolPlacement).values()
-        if p.function == function and sets[pages[p.page].drawing_set].unit is None
-    }
+    (found,) = {page for page in pages_of(model, name) if set_of(model, page).unit is None}
     return found
 
 
@@ -91,19 +72,12 @@ def test_a_net_over_a_boundary_functions_replica_page_builds_and_is_cut_there() 
     result = _build()
     model = result.model
     assert [f.code for f in result.findings if f.severity is Severity.ERROR] == []
-    f1, g1, h1 = (_pin_one(model, name) for name in ("f", "g", "h"))
-    f_page, h_page = _top_level_page_of(model, f1), _top_level_page_of(model, h1)
-    assert f_page.number != h_page.number  # the shape needs the cut: two pages, one replica
-    sets = layout_of(model, DrawingSet)
-    pair = [
-        m
-        for m in layout_of(model, LinkMarker).values()
-        if m.port in {f1, h1}
-        and m.star is None
-        and sets[layout_of(model, Page)[m.page].drawing_set].unit is None
-    ]
-    owner, user = sorted(pair, key=lambda m: m.side is MarkerSide.USER)
-    assert (owner.port, owner.page) == (h1, h_page.id)
-    assert (user.port, user.page) == (f1, f_page.id)
-    assert (owner.partner, user.partner) == (user.id, owner.id)
-    assert g1 not in {m.port for m in pair}
+    f_page, h_page = _top_level_page_of(model, "f"), _top_level_page_of(model, "h")
+    pages = layout_of(model, Page)
+    assert pages[f_page].number != pages[h_page].number  # the shape needs the cut: two pages
+    on_page = {page: [m for p, m in markers(model) if p == page] for page in (f_page, h_page)}
+    assert on_page[h_page]  # the net's owner marker on `h`'s page
+    assert on_page[f_page]  # and its user marker on `f`'s replica page
+    # g stands in the unit's own set: the net's pair is in the top-level set only
+    assert all(set_of(model, page).unit is None for page in on_page)
+    assert not set(pages_of(model, "g")) & set(on_page)

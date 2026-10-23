@@ -1,8 +1,9 @@
 """Part-file finding codes about files, tables and fields (BUILD-MESSAGES M1)."""
 
 from fransys_model.kernel import CodeInfo, Severity
+from fransys_model.vocab import FINDING_CODES as MODEL_CODES
 
-from . import codes_contacts, codes_functions
+from . import codes_contacts, codes_files, codes_functions
 
 _OWN: tuple[CodeInfo, ...] = (
     CodeInfo(
@@ -12,8 +13,8 @@ _OWN: tuple[CodeInfo, ...] = (
         who="part author",
         cause='A part with `category = "board"` has no `[pcb]` table.',
         fix=(
-            "Add a `[pcb]` table with a `revision` string, or change `category` to the part's "
-            "real category."
+            "A board has a `[pcb]` table with a string `revision`, or a `category` other than "
+            'board. Write: revision = "A"'
         ),
         page="findings-parts",
     ),
@@ -27,8 +28,9 @@ _OWN: tuple[CodeInfo, ...] = (
             "two pairs, or `SH`, or a `screen` is not a unique `SH` core."
         ),
         fix=(
-            "Give each `pairs` entry two integer `cores` in range, none `SH` and none in "
-            "another pair, and a `screen` that is one unique `SH` core."
+            "Each `pairs` entry has two integer `cores` in range, neither `SH` nor in another "
+            "pair, and a `screen` that is one unique `SH` core. "
+            "Write: pairs = [{{ cores = [1, 2], screen = 3 }}]"
         ),
         page="findings-parts",
     ),
@@ -42,8 +44,8 @@ _OWN: tuple[CodeInfo, ...] = (
             "another category has one."
         ),
         fix=(
-            "Add a `[cable_product]` table to a cable part, or remove `[cable_product]` from a "
-            "part whose `category` is not `cable`."
+            'A `category = "cable"` part has a `[cable_product]` table, and no other part does. '
+            "Write: [cable_product]"
         ),
         page="findings-parts",
     ),
@@ -57,8 +59,8 @@ _OWN: tuple[CodeInfo, ...] = (
             "with D, L, V, Y or Z."
         ),
         fix=(
-            "Set `class_code` to 1 to 3 uppercase letters, first letter as in IEC 81346-2, "
-            "such as `K` or `QA`."
+            "Use 1 to 3 uppercase letters, the first as in IEC 81346-2, such as `K` or `QA`. "
+            'Write: class_code = "K"'
         ),
         page="findings-parts",
     ),
@@ -69,8 +71,8 @@ _OWN: tuple[CodeInfo, ...] = (
         who="part author",
         cause="A field typed as an enum holds a string that is no member of that enum.",
         fix=(
-            "Set the field to one of the values the message lists, such as a `kind` or `role` "
-            "value."
+            "The field takes one of the values the message lists, spelled as the contract gives "
+            'them. Write: kind = "load"'
         ),
         page="findings-parts",
     ),
@@ -84,8 +86,8 @@ _OWN: tuple[CodeInfo, ...] = (
             "`[function.plc_channel]` on one whose `kind` is not `plc_channel`."
         ),
         fix=(
-            "Change the function's `kind` to match the sub-table, or move the sub-table to the "
-            "right `[[function]]`."
+            'A `[function.connector]` needs `kind = "connector"`, and a `[function.plc_channel]` '
+            'needs `kind = "plc_channel"`. Write: kind = "connector"'
         ),
         page="findings-parts",
     ),
@@ -99,8 +101,8 @@ _OWN: tuple[CodeInfo, ...] = (
             "field of a table."
         ),
         fix=(
-            "Add the `schema = 1` line, the `[part]` table, or the required field the message "
-            "names."
+            "Each file needs `schema`, its `[part]` table and each required field, with values "
+            "the contract allows. Write: schema = 1"
         ),
         page="findings-parts",
     ),
@@ -114,8 +116,8 @@ _OWN: tuple[CodeInfo, ...] = (
             "a quantity or a table where a list belongs."
         ),
         fix=(
-            "Write the value as the type the message names, such as a quoted string for a "
-            "rating or an integer for `schema`."
+            "Write the value as the type the message names, a quoted string for a rating or an "
+            "integer for `schema`. Write: schema = 1"
         ),
         page="findings-parts",
     ),
@@ -125,7 +127,10 @@ _OWN: tuple[CodeInfo, ...] = (
         stage="library load",
         who="part author",
         cause="A table holds a key the part-file contract does not name for that table.",
-        fix="Remove the key, or correct its spelling to a field the part-file contract names.",
+        fix=(
+            "A table takes only the keys the part-file contract names for it. "
+            "Write: <contract key> = <same value>"
+        ),
         page="findings-parts",
     ),
     CodeInfo(
@@ -137,7 +142,10 @@ _OWN: tuple[CodeInfo, ...] = (
             "A part file's name has characters other than lowercase letters, digits, hyphens "
             "and underscores."
         ),
-        fix="Rename the file using only lowercase letters, digits, hyphens and underscores.",
+        fix=(
+            "A part file name uses only lowercase letters, digits, hyphens and underscores. "
+            "Write: relay-2co-24vdc.toml"
+        ),
         page="findings-parts",
     ),
     CodeInfo(
@@ -146,7 +154,10 @@ _OWN: tuple[CodeInfo, ...] = (
         stage="library load",
         who="consumer",
         cause="A part-file could not be read (missing file, permission error, or bad encoding).",
-        fix="Fix the path, permissions or encoding (UTF-8).",
+        fix=(
+            "No call clears this: fix the path, the file permissions or the UTF-8 encoding, then "
+            "load again."
+        ),
         page="findings-validators",
     ),
     CodeInfo(
@@ -158,7 +169,10 @@ _OWN: tuple[CodeInfo, ...] = (
             "A part-file has a bare TOML float, which the contract forbids (quote values as "
             "strings)."
         ),
-        fix="Quote the numeric value as a string.",
+        fix=(
+            "A number is a quoted string in a part file, never a bare TOML float. "
+            'Write: voltage_dc_v = "24.5"'
+        ),
         page="findings-validators",
     ),
     CodeInfo(
@@ -167,7 +181,10 @@ _OWN: tuple[CodeInfo, ...] = (
         stage="library load",
         who="part author",
         cause="The library root has no `library.toml` file.",
-        fix="Add `library.toml` at the library package root with `schema`, `name` and `version`.",
+        fix=(
+            "The library root holds a `library.toml` with `schema`, `name` and `version`. "
+            "Write: schema = 1"
+        ),
         page="findings-parts",
     ),
     CodeInfo(
@@ -176,7 +193,10 @@ _OWN: tuple[CodeInfo, ...] = (
         stage="library load",
         who="consumer",
         cause="A part-file string contains a line break, which the contract forbids.",
-        fix="Use a single-line string, or TOML's escaped `\\n`.",
+        fix=(
+            "A string stays on one line; a line break is written as TOML's escaped `\\n`. "
+            'Write: description = "one line"'
+        ),
         page="findings-validators",
     ),
     CodeInfo(
@@ -186,8 +206,8 @@ _OWN: tuple[CodeInfo, ...] = (
         who="part author",
         cause="Two part files declare the same `manufacturer` and `mpn` pair.",
         fix=(
-            "Remove one of the files, or correct the `mpn` or `manufacturer` of the one "
-            "declared in error."
+            "Each `manufacturer` and `mpn` pair is declared by one part file only. "
+            'Write: mpn = "DEMO-RLY-2CO-24"'
         ),
         page="findings-parts",
     ),
@@ -197,7 +217,7 @@ _OWN: tuple[CodeInfo, ...] = (
         stage="library load",
         who="part author",
         cause="A `[function.connector]` has a `pincount` below 1.",
-        fix="Set `pincount` to 1 or more.",
+        fix="A connector `pincount` is an integer of 1 or more. Write: pincount = 2",
         page="findings-parts",
     ),
     CodeInfo(
@@ -206,7 +226,10 @@ _OWN: tuple[CodeInfo, ...] = (
         stage="library load",
         who="part author",
         cause="A `[rating]`, `[function.rating]` or `[function.operating]` table has no field.",
-        fix="Add at least one value to the table, or delete the table.",
+        fix=(
+            "A rating table holds at least one value, or the table is deleted. "
+            'Write: voltage_dc_v = "24"'
+        ),
         page="findings-parts",
     ),
     CodeInfo(
@@ -219,8 +242,9 @@ _OWN: tuple[CodeInfo, ...] = (
             "positive value, or a breaking point list is malformed."
         ),
         fix=(
-            'Write each value as a quoted plain decimal such as "24", above zero in ratings, '
-            "and each breaking point with `voltage_v` and `current_a`."
+            "Each rating value is a quoted plain decimal, above zero in a rating, and each "
+            "breaking point has `voltage_v` and `current_a`. "
+            'Write: voltage_dc_v = "24"'
         ),
         page="findings-parts",
     ),
@@ -231,8 +255,8 @@ _OWN: tuple[CodeInfo, ...] = (
         who="part author",
         cause="A part file's `schema` differs from the `schema` in its library's `library.toml`.",
         fix=(
-            "Set the file's `schema` to the value `library.toml` names, or change "
-            "`library.toml` and every file in one commit."
+            "The file's `schema` is the value `library.toml` names, or both change in one "
+            "commit. Write: schema = 1"
         ),
         page="findings-parts",
     ),
@@ -242,34 +266,22 @@ _OWN: tuple[CodeInfo, ...] = (
         stage="library load",
         who="part author",
         cause="A `schema` value is not in `SUPPORTED_SCHEMAS`, which today holds only 1.",
-        fix="Set `schema = 1`, the only supported value today.",
+        fix="The `schema` is an integer in the supported set, only 1 today. Write: schema = 1",
         page="findings-parts",
-    ),
-    CodeInfo(
-        code="TABLE_UNKNOWN",
-        severities=(Severity.ERROR,),
-        stage="library load",
-        who="part author",
-        cause=(
-            "The file has a top-level table that is neither `schema` nor a part-file table the "
-            "contract names."
-        ),
-        fix="Remove the table, or rename it to a table the part-file contract names.",
-        page="findings-parts",
-    ),
-    CodeInfo(
-        code="TOML_INVALID",
-        severities=(Severity.ERROR,),
-        stage="library load",
-        who="consumer",
-        cause="A part-file is not valid TOML.",
-        fix="Fix the TOML syntax error named.",
-        page="findings-validators",
     ),
 )
 
 FINDING_CODES: tuple[CodeInfo, ...] = (
     *_OWN,
+    *codes_files.FINDING_CODES,
     *codes_contacts.FINDING_CODES,
     *codes_functions.FINDING_CODES,
 )
+
+# `lint.py` raises two model codes (CABLE_CORE_COUNT, CABLE_WITHOUT_PRODUCT)
+_BY_CODE: dict[str, CodeInfo] = {info.code: info for info in (*MODEL_CODES, *FINDING_CODES)}
+
+
+def fix_text(code: str, **values: str) -> str:
+    """The `fix` of one finding of `code`: the code's template filled with `values`."""
+    return _BY_CODE[code].filled(**values)

@@ -1,20 +1,16 @@
 """Overview engine, reading: the lane of each box of a lanes view (O4).
 
-One lane per function group, in the schematic's group order (ranks, then order hints); the strips
+One lane per function group, in `function_groups_in_order` (ranks, then order hints); the strips
 and the boxes with no group stand in the no-group lane, which stands last. A stub box takes its
 host's lane.
 """
 
-from typing import Any
 lazy from collections.abc import Sequence
-lazy from collections.abc import Set as AbstractSet
 
 from fransys_layout.engines.overview.read.lane_rule import lane_rule
 from fransys_layout.engines.overview.read.values import LanePlan
-from fransys_layout.engines.schematic.read.reading import group_infos, page_hints
-from fransys_layout.geometry import HintError
-from fransys_layout.stages import group_order
 from fransys_model.derive import (
+    function_groups_in_order,
     lane_head,
     natural_key,
     overview_lane_nodes,
@@ -24,22 +20,9 @@ from fransys_model.derive import (
     overview_stub_west,
 )
 from fransys_model.layout import BoxKey
-from fransys_model.layout.tables import profile_of
-lazy from fransys_layout.stages import GroupInfo
 lazy from fransys_model.derive import ViewBox, ViewRows
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.core import Unit
-
-
-def _ordered(model: Model, unit: Id[Any] | None, used: AbstractSet[Id[Any]]) -> list[Id[Any]]:
-    """`used` groups in the shared order; a hint cycle (the schematic reports it) is ignored."""
-    infos: list[GroupInfo] = [i for i in group_infos(model) if i.group in used]
-    ranks = profile_of(model, unit).group_ranks
-    try:
-        found = group_order(infos, group_ranks=ranks, order_hints=page_hints(model).order)
-    except HintError:
-        found = group_order(infos, group_ranks=ranks, order_hints=())
-    return [i.group for i in found]
 
 
 def reader_rank(boxes: Sequence[ViewBox]) -> tuple[int, ...]:
@@ -65,7 +48,7 @@ def inner_keys(boxes: Sequence[ViewBox], rank: Sequence[int]) -> list[BoxKey]:
 def lane_plan(model: Model, unit: Id[Unit], rows: ViewRows) -> LanePlan:
     """Each box's lane (LO4), the west stubs (LO1) and power lines (LO2), and each lane's text."""
     nodes = overview_lane_nodes(model, unit)
-    order = _ordered(model, unit, {n for n in nodes.values() if n is not None})
+    order = function_groups_in_order(model, unit, {n for n in nodes.values() if n is not None})
     rank = reader_rank(rows.boxes)
     keys = inner_keys(rows.boxes, rank)
     pairs = [(ln.a, ln.b) for ln in rows.lines if ln.a in keys and ln.b in keys]

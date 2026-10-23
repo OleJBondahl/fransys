@@ -12,6 +12,7 @@ __all__ = [
     "PAGE_HEADINGS",
     "PRESET_HEADINGS",
     "SCHEMATIC_TITLE",
+    "continued_heading",
 ]
 
 DIAGRAM_TITLE = "Block diagram"
@@ -37,3 +38,8 @@ PRESET_HEADINGS: dict[DocumentPreset, str] = {
     DocumentPreset.PCB_SCHEMATIC: "PCB schematic",
     DocumentPreset.SYSTEM: "System",
 }
+
+
+def continued_heading(title: str) -> str:
+    """The heading a table or run carried onto a further column or page prints."""
+    return f"{title} (cont.)"

@@ -12,6 +12,7 @@ from fransys_model.derive.facts.roles import function_role, link_rest, link_role
 from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, digest_cached, value
 from fransys_model.vocab.enums import LinkKind, LinkRest, PortRole
 from fransys_model.vocab.tables import functions, internal_links, port_templates, ports
+from fransys_model.vocab.throws import THROWS
 lazy from fransys_model.vocab.core import Function, Port
 lazy from fransys_model.vocab.templates import InternalLink, PortTemplate
 
@@ -42,10 +43,9 @@ def _pole(a_role: PortRole, b_role: PortRole) -> tuple[bool, PortRole] | None:
     The one home of "a link joins a common to a throw". Returns `(common_is_a, throw)`, the
     throw `BREAK` or `MAKE`, if one end is `COMMON` and the other a throw, either way; else `None`.
     """
-    throws = (PortRole.BREAK, PortRole.MAKE)
-    if a_role is PortRole.COMMON and b_role in throws:
+    if THROWS[a_role].common and THROWS[b_role].throw:
         return True, b_role
-    if b_role is PortRole.COMMON and a_role in throws:
+    if THROWS[b_role].common and THROWS[a_role].throw:
         return False, a_role
     return None
 
@@ -150,7 +150,7 @@ def _changeover_state(model: Model, link: InternalLink) -> LinkState:
     pole = None if a is None or b is None else _pole(a.role, b.role)
     if pole is None:
         return "both"
-    return "rest" if pole[1] is PortRole.BREAK else "operated"
+    return "rest" if THROWS[pole[1]].closed_at_rest else "operated"
 
 
 def link_state(model: Model, function: Id[Function], link: Id[InternalLink]) -> LinkState:

@@ -1,6 +1,9 @@
 """Hand-built Sym, Column, Block and PlacedColumn values for the packing tests."""
 
+from turn_fixtures import views_of
+
 from fransys_layout.core.pack import PlacedColumn
+from fransys_layout.core.sym_values import Sym
 from fransys_layout.core.values import (
     Block,
     Box,
@@ -13,7 +16,6 @@ from fransys_layout.core.values import (
     PinRef,
     RowPlan,
     Size,
-    Sym,
 )
 
 
@@ -26,37 +28,38 @@ def elem(
 ) -> Sym:
     """A two-pin element, pin n above and pin s below; keepout and footprint default to the body."""
     box = body or Box(-8, -16, 16, 32)
+    keepout = keepout or box
+    footprint = footprint or box
     pins = (Pin("n", "N", 0, -16, 0), Pin("s", "S", 0, 16, 1))
     return Sym(
         sym_id,
         None,
         "",
         Size(0, 0),
-        box,
-        keepout or box,
-        footprint or box,
         pins,
         (("n",), ("s",)),
-        frozenset({"R0", "R180"}),
+        views=views_of(box, keepout, footprint, pins, ("R0", "R180")),
     )
 
 
-def card(sym_id: str, pin_count: int, pitch: int = 16) -> Sym:
-    """A box symbol whose pins p1.. face south in marking order."""
+def card(sym_id: str, pin_count: int, pitch: int = 16, north: int = 0) -> Sym:
+    """A box symbol whose pins p1.. face south in marking order; the first `north` face north."""
     body = Box(0, 0, pitch * (pin_count + 1), 32)
-    pins = tuple(Pin(f"p{i}", "S", pitch * i, 32, i - 1) for i in range(1, pin_count + 1))
+    pins = tuple(
+        Pin(f"p{i}", "N", pitch * i, 0, i - 1)
+        if i <= north
+        else Pin(f"p{i}", "S", pitch * i, 32, i - 1)
+        for i in range(1, pin_count + 1)
+    )
     spec = BoxSpec(tuple(p.id for p in pins), "S", pitch, pitch)
     return Sym(
         sym_id,
         None,
         "",
         Size(0, 0),
-        body,
-        body,
-        body,
         pins,
         tuple((p.id,) for p in pins),
-        frozenset({"R0"}),
+        views=views_of(body, body, body, pins, ("R0",)),
         box=spec,
     )
 

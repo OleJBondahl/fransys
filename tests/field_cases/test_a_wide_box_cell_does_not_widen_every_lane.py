@@ -18,9 +18,7 @@ from itertools import pairwise
 from pathlib import Path
 
 import fransys as fr
-
-from fransys_model.layout import SymbolPlacement, layout_of
-from fransys_model.vocab.tables import functions
+from _drawn_pages import drawn_pages
 
 _COLOURS = ("BU", 0.5)
 _CONTACT_PITCH = 56  # the contacts' own step: their keep-out plus one wiring grid
@@ -50,11 +48,14 @@ def _build() -> fr.BuildResult:
 
 
 def _contact_xs(result: fr.BuildResult) -> list[int]:
-    names = {f"co_{n}" for n in range(1, 5)}
+    """The x of the changeover's four contacts, by the pin number each takes in (11, 21, 31, 41)."""
+    pins = {f"{n}1": n for n in range(1, 5)}
     found = {
-        functions(result.model)[p.function].name: p.x
-        for p in layout_of(result.model, SymbolPlacement).values()
-        if functions(result.model)[p.function].name in names
+        pins[text]: one.x
+        for drawing in drawn_pages(result.model).values()
+        for one in drawing.symbols
+        for slot, text in one.slots
+        if slot == "marking.in" and text in pins
     }
     return [found[name] for name in sorted(found)]
 

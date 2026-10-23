@@ -2,7 +2,7 @@
  "instances": {
   "p01_sixteen_channel": {
    "P": {
-    "attached_off_pin": 0,
+    "attached_off_pin": 8,
     "head_off_legs": 0,
     "junction_off_line": 0,
     "loose": 0,
@@ -320,7 +320,7 @@
   },
   "w08_wide_relay_bank": {
    "P": {
-    "attached_off_pin": 0,
+    "attached_off_pin": 8,
     "head_off_legs": 0,
     "junction_off_line": 0,
     "loose": 0,
@@ -705,8 +705,8 @@
  },
  "sha": "bc1f5c36b",
  "totals": {
-  "P": 42,
-  "attached_off_pin": 0,
+  "P": 58,
+  "attached_off_pin": 16,
   "bends": 274,
   "crossings": 156,
   "detour_g": 4400,

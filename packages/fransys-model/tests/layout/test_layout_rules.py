@@ -5,7 +5,6 @@ from typing import Any
 
 import pytest
 from layout_examples import (
-    PRODUCED_BY,
     drawing_set,
     drawn_function,
     function_id,
@@ -28,14 +27,10 @@ from fransys_model.layout import (
     Chain,
     ChainEntry,
     KeepTogether,
-    Label,
-    LabelKind,
     MarkerSide,
     Orientation,
     PageRole,
     PlacementView,
-    Route,
-    RoutePoint,
     Side,
     StarKind,
 )
@@ -87,48 +82,12 @@ def _plant() -> tuple[Any, ...]:
     )
 
 
-def _route(**changes: Any) -> Route:
-    fields: dict[str, Any] = {
-        "id": Id(kind="layout.route", value="6" * 32),
-        "key": ("layout", "route"),
-        "page": page().id,
-        "conductor": _CONDUCTOR,
-        "net": None,
-        "a": _LOW,
-        "b": _HIGH,
-        "points": (RoutePoint(index=0, x=1, y=2), RoutePoint(index=1, x=3, y=4)),
-        "produced_by": PRODUCED_BY,
-    }
-    return Route(**{**fields, **changes})
-
-
-def _label(**changes: Any) -> Label:
-    fields: dict[str, Any] = {
-        "id": Id(kind="layout.label", value="5" * 32),
-        "key": ("layout", "label"),
-        "page": page().id,
-        "function": function_id("c"),
-        "port": None,
-        "conductor": None,
-        "kind": LabelKind.TAG,
-        "slot": "tag",
-        "x": 1,
-        "y": 2,
-        "width": 8,
-        "height": 4,
-        "produced_by": PRODUCED_BY,
-        "partners": (),
-    }
-    return Label(**{**fields, **changes})
-
-
 # ---- enums --------------------------------------------------------------------------------
 
 _ENUMS = {
     Orientation: {"R0", "R90", "R180", "R270", "MR0", "MR90", "MR180", "MR270"},
     PageRole: {"POWER", "CONTROL", "SIGNAL"},
     MarkerSide: {"OWNER", "USER"},
-    LabelKind: {"TAG", "MARKING", "WIRE", "CROSS_REFERENCE"},
     PlacementView: {"FUNCTION", "ITEM", "PIN"},
     StarKind: {"OFF", "REF", "BRANCH"},
     Side: {"N", "E", "S", "W"},
@@ -250,6 +209,7 @@ _FIELDS: dict[type, set[str]] = {
     layout.BreakBefore: {"group"},
     layout.OrderHint: {"before", "after"},
     layout.PageTitle: {"text", "block", "function", "item", "unit"},
+    layout.PinsBelowHint: {"function"},
     layout.PoleGroup: {"functions", "selector"},
     layout.SideHint: {"function", "side"},
     layout.SymbolChoice: {"function", "template", "part", "kind", "symbol", "port_map"},
@@ -282,44 +242,6 @@ _FIELDS: dict[type, set[str]] = {
     },
     layout.DrawingSet: {"location", "unit", "number", "produced_by"},
     layout.Page: {"drawing_set", "number", "role", "sheet_format", "groups", "produced_by"},
-    layout.SymbolPlacement: {
-        "function",
-        "page",
-        "x",
-        "y",
-        "orientation",
-        "poles",
-        "symbol",
-        "library_version",
-        "produced_by",
-        "view",
-        "ports",
-        "sides",
-        "port_offsets",
-    },
-    layout.HarnessLine: {"page", "harness", "branch", "points", "text_x", "text_y", "produced_by"},
-    layout.ConnectorBox: {
-        "page",
-        "function",
-        "x",
-        "y",
-        "width",
-        "height",
-        "texts",
-        "cells",
-        "produced_by",
-    },
-    layout.HarnessFanOut: {
-        "page",
-        "harness",
-        "branch",
-        "x",
-        "y",
-        "legs",
-        "produced_by",
-    },
-    layout.StubEnd: {"marker", "index", "port", "page", "x", "y", "produced_by"},
-    layout.Route: {"page", "conductor", "net", "a", "b", "points", "produced_by"},
     layout.LinkMarker: {
         "page",
         "port",
@@ -352,23 +274,6 @@ _FIELDS: dict[type, set[str]] = {
         "pin_y",
         "orientation",
         "produced_by",
-    },
-    # A black box's dash-dot outline, drawn by render as layout placed it
-    layout.Outline: {"unit", "page", "x", "y", "width", "height", "produced_by"},
-    layout.ExternalOutline: {"item", "page", "x", "y", "width", "height", "produced_by"},
-    layout.Label: {
-        "page",
-        "function",
-        "port",
-        "conductor",
-        "kind",
-        "slot",
-        "x",
-        "y",
-        "width",
-        "height",
-        "produced_by",
-        "partners",
     },
 }
 
@@ -406,20 +311,6 @@ def test_keep_together_refuses_a_group_listed_twice() -> None:
     assert excinfo.value.record_id == Id(kind="layout.keep_together", value="2" * 32)
 
 
-def test_a_route_with_one_point_or_none_turns_round_without_trouble() -> None:
-    """Degenerate polylines are still routes."""
-    assert _route(a=_HIGH, b=_LOW, points=()).points == ()
-    single = (RoutePoint(index=0, x=5, y=5),)
-    assert _route(a=_HIGH, b=_LOW, points=single).points == single
-
-
-def test_a_route_refusal_names_the_route() -> None:
-    """The error carries the record id."""
-    with pytest.raises(SchemaError) as excinfo:
-        _route(net=Id(kind="net", value="7" * 32))
-    assert excinfo.value.record_id == Id(kind="layout.route", value="6" * 32)
-
-
 # ---- labels -------------------------------------------------------------------------------
 
 
@@ -428,7 +319,6 @@ def test_a_route_refusal_names_the_route() -> None:
 
 _A_LIST: Any = []
 _A_LIST_OF_STR: Any = ["x"]
-_TWO_INTS_IN_A_LIST: Any = [1, 2]
 
 
 def _bad_chain() -> Chain:
@@ -446,12 +336,8 @@ def _bad_keep() -> KeepTogether:
     [
         (_bad_chain, "Chain.entries"),
         (_bad_keep, "KeepTogether.groups"),
-        (lambda: _route(points=_TWO_INTS_IN_A_LIST), "Route.points"),
-        (lambda: _route(a="x", b=3), "Route.a"),
-        (lambda: _route(a=_UNHASHABLE, b=_UNHASHABLE), "Route.a"),
-        (lambda: _label(kind="tag"), "Label.kind"),
     ],
-    ids=["chain-list", "keep-list", "route-points", "route-ends", "route-equal-ends", "label-kind"],
+    ids=["chain-list", "keep-list"],
 )
 def test_wrongly_shaped_input_is_left_for_freeze_to_report(make: Any, field: str) -> None:
     """No `TypeError` escapes a constructor; freeze refuses the field, by name, in a full plant."""
@@ -470,4 +356,3 @@ def test_wrongly_shaped_input_is_left_for_freeze_to_report(make: Any, field: str
 # ---- guards, one by one -------------------------------------------------------------------
 
 _MIXED: Any = "x"
-_UNHASHABLE: Any = []

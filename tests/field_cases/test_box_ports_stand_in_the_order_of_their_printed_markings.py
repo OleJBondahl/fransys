@@ -17,13 +17,8 @@ from pathlib import Path
 import fransys as fr
 import fransys_parts
 from fransys.colours import BU
-from fransys_el import OPTIONS
 
-from fransys_layout.engines.schematic.engine import stage_results
-from fransys_layout.engines.schematic.read import read_inputs
-from fransys_layout.geometry import draw_order
 from fransys_model.kernel import merge
-from fransys_model.vocab.tables import items
 
 _LIBRARY = 'schema = 1\nname = "t"\nversion = "0.0.0"\ndescription = "d"\n'
 _PART = """schema = 1
@@ -52,6 +47,12 @@ ports = [{ name = "S21", role = "generic" }, { name = "S22", role = "generic" }]
 """
 
 
+def _gap(model, fact: str):
+    """A fact the page Drawing lacks (strict xfail, GAP-FLIP-DRAWING-SUBJECT)."""
+    msg = f"GAP-FLIP-DRAWING-SUBJECT: no {fact} for {model.digest}"
+    raise AssertionError(msg)
+
+
 def _box_marking_order() -> list[str]:
     """The markings of the relay's box, left to right (N before S at one x)."""
     root = Path(tempfile.mkdtemp())
@@ -66,11 +67,14 @@ def _box_marking_order() -> list[str]:
     (root / "cover.md").write_text("# Cabinet\n", encoding="utf-8")
     doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=root / "cover.md")
     model = fr.build(d, doc).model
-    results, _ = stage_results(model, read_inputs(model, options=OPTIONS))
-    (item,) = (one.id for one in items(model).values() if one.key[-1] == "K1")
-    (box,) = (one for one in results.layout.placed if one.function == item)
-    drawn = sorted(box.geometry.ports, key=lambda p: draw_order(p.at.x, p.facing.value))
-    return [port.name.rsplit(".", 1)[-1] for port in drawn]
+    (box,) = (
+        one
+        for one in _gap(model, "symbol subject")
+        if one.key == "generic-box" and one.owner.startswith("K1 ")
+    )
+    offsets, sides = dict(box.offsets), dict(box.sides)
+    drawn = sorted(offsets, key=lambda name: (offsets[name], sides[name] != "n"))
+    return [name.rsplit(".", 1)[-1] for name in drawn]
 
 
 def test_an_estop_relay_box_reads_its_terminals_in_marking_order() -> None:

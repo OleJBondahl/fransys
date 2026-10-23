@@ -1,56 +1,15 @@
 """Every finding code this repo emits, in one list.
 
-A stage code is defined in the stage that emits it, because `stages` may not import
-`lint`; it is re-exported here so this module is the complete list. Codes are stable.
+Codes are stable.
 """
 
-from fransys_layout.lint import codes_blocks, codes_defects, codes_design
-from fransys_layout.stages.columns import (
-    FUNCTION_UNPLACED_IN_COLUMN,
-)
-from fransys_layout.stages.partition import (
-    GROUP_SPLIT,
-    KEEP_TOGETHER_UNMET,
-    ORDER_HINT_UNDONE,
-    ORDER_HINT_UNMET,
-    UNIT_GROUP_SPLIT,
-)
-from fransys_layout.stages.place import PAGE_OVERFULL
-from fransys_layout.stages.references import (
-    JOIN_UNALIGNED,
-    LINK_FANOUT,
-    LINK_PARTNER_UNLOCATED,
-    REFERENCE_BOX_EXCEEDS_ROOM,
-)
-from fransys_layout.stages.resolve import PIN_MAP_INCOMPLETE, SYMBOL_DEFAULTED
-from fransys_layout.stages.route import ROUTE_FAILED, ROUTE_NEAR_FLAG_STUB
-from fransys_layout.stages.stub_stack import STUBS_NOT_STACKED
-from fransys_layout.stages.texts.place_texts import LABEL_UNPLACED
-from fransys_layout.stages.texts.power_lead import POWER_SYMBOL_UNPLACED
-from fransys_model.kernel import Severity
+from fransys_layout.lint import codes_defects, codes_design, codes_design_more
 
-# lint/geometric.py (TEXT_CROSSED_BY_ROUTE and TEXT_OVERLAP in its private _texts.py), all WARNING
-WIRE_NOT_ORTHOGONAL = "WIRE_NOT_ORTHOGONAL"
-WIRE_THROUGH_SYMBOL = "WIRE_THROUGH_SYMBOL"
-WIRE_OVER_LABEL = "WIRE_OVER_LABEL"
-REDUNDANT_JOG = "REDUNDANT_JOG"
-SYMBOL_OVERLAP = "SYMBOL_OVERLAP"
-OUT_OF_CONTENT_BOX = "OUT_OF_CONTENT_BOX"
-TEXT_CROSSED_BY_ROUTE = "TEXT_CROSSED_BY_ROUTE"
+# Emitted by the drawing engine (fransys_el and the layout core), all WARNING
+KEEP_TOGETHER_UNMET = "KEEP_TOGETHER_UNMET"
+ORDER_HINT_UNMET = "ORDER_HINT_UNMET"
+ROUTE_FAILED = "ROUTE_FAILED"
 TEXT_OVERLAP = "TEXT_OVERLAP"
-# lint/_harness.py, WARNING: a harness line drawn along a unit outline's edge (layout-0158)
-LINE_ON_OUTLINE = "LINE_ON_OUTLINE"
-
-# lint/chains.py, both WARNING
-LONE_CELL = "LONE_CELL"
-CHAIN_BROKEN = "CHAIN_BROKEN"
-
-# lint/coherence.py, all ERROR
-CONNECTION_NOT_DRAWN = "CONNECTION_NOT_DRAWN"
-CONNECTION_DRAWN_TWICE = "CONNECTION_DRAWN_TWICE"
-ROUTE_WRONG_PORT = "ROUTE_WRONG_PORT"
-ROUTE_SHORTS_NETS = "ROUTE_SHORTS_NETS"
-MARKER_UNPAIRED = "MARKER_UNPAIRED"
 
 # lint/diagram.py, all ERROR
 DIAGRAM_BOX_OVERLAP = "DIAGRAM_BOX_OVERLAP"
@@ -63,18 +22,16 @@ DIAGRAM_TEXT_OVERLAP = "DIAGRAM_TEXT_OVERLAP"
 # engines/overview/engine.py, ERROR: a view the diagram placer finds no room plan for
 OVERVIEW_UNPLACED = "OVERVIEW_UNPLACED"
 
-# engines/schematic/read/ (`__init__.py`, `sheets.py`): SHEET_FORMAT_UNUSED and TEXT_TOO_SMALL, both
-# WARNING. Defined here, imported there, because `lint` may not import `engines`.
+# fransys_el.read_findings (R258): SHEET_FORMAT_UNUSED and TEXT_TOO_SMALL, both
+# WARNING. The code rows stay here, the source of FINDING_CODES (R219).
 SHEET_FORMAT_UNUSED = "SHEET_FORMAT_UNUSED"
 TEXT_TOO_SMALL = "TEXT_TOO_SMALL"
-# lint/fill.py, INFO.
-PAGE_UNDERFILLED = "PAGE_UNDERFILLED"
-CONNECTION_TO_UNDRAWN = "CONNECTION_TO_UNDRAWN"
+CONNECTION_TO_UNDRAWN = "CONNECTION_TO_UNDRAWN"  # fransys_el.read_findings (R267)
+# fransys_el, WARNING (layout-0322)
+BOARD_NETS_NOT_DRAWN = "BOARD_NETS_NOT_DRAWN"
 
 ALL_CODES: tuple[str, ...] = (
-    CHAIN_BROKEN,
-    CONNECTION_DRAWN_TWICE,
-    CONNECTION_NOT_DRAWN,
+    BOARD_NETS_NOT_DRAWN,
     CONNECTION_TO_UNDRAWN,
     DIAGRAM_BOX_OVERLAP,
     DIAGRAM_LABEL_STRUCK,
@@ -82,40 +39,12 @@ ALL_CODES: tuple[str, ...] = (
     DIAGRAM_LINE_THROUGH_BOX,
     DIAGRAM_LINES_SHARE_TRACK,
     DIAGRAM_TEXT_OVERLAP,
-    FUNCTION_UNPLACED_IN_COLUMN,
-    GROUP_SPLIT,
-    JOIN_UNALIGNED,
     KEEP_TOGETHER_UNMET,
-    LABEL_UNPLACED,
-    LINE_ON_OUTLINE,
-    LINK_FANOUT,
-    LINK_PARTNER_UNLOCATED,
-    LONE_CELL,
-    MARKER_UNPAIRED,
-    ORDER_HINT_UNDONE,
     ORDER_HINT_UNMET,
-    OUT_OF_CONTENT_BOX,
-    PAGE_OVERFULL,
-    PAGE_UNDERFILLED,
-    PIN_MAP_INCOMPLETE,
-    POWER_SYMBOL_UNPLACED,
-    REDUNDANT_JOG,
-    REFERENCE_BOX_EXCEEDS_ROOM,
     ROUTE_FAILED,
-    ROUTE_NEAR_FLAG_STUB,
-    ROUTE_SHORTS_NETS,
-    ROUTE_WRONG_PORT,
     SHEET_FORMAT_UNUSED,
-    STUBS_NOT_STACKED,
-    SYMBOL_DEFAULTED,
-    SYMBOL_OVERLAP,
-    TEXT_CROSSED_BY_ROUTE,
     TEXT_OVERLAP,
     TEXT_TOO_SMALL,
-    UNIT_GROUP_SPLIT,
-    WIRE_NOT_ORTHOGONAL,
-    WIRE_OVER_LABEL,
-    WIRE_THROUGH_SYMBOL,
 )
 
 # Drawing defects no consumer action clears: INFO with `codes_defects.COULD_NOT_DRAW` (layout-0252)
@@ -123,27 +52,13 @@ UNCLEARABLE: frozenset[str] = frozenset(
     {
         DIAGRAM_LABEL_STRUCK,
         DIAGRAM_LINES_SHARE_TRACK,
-        JOIN_UNALIGNED,
-        LINE_ON_OUTLINE,
-        POWER_SYMBOL_UNPLACED,
-        REDUNDANT_JOG,
-        SYMBOL_OVERLAP,
-        TEXT_CROSSED_BY_ROUTE,
         TEXT_OVERLAP,
-        WIRE_NOT_ORTHOGONAL,
-        WIRE_OVER_LABEL,
-        WIRE_THROUGH_SYMBOL,
     }
 )
 
 
-def severity_of(code: str) -> Severity:
-    """INFO for a drawing defect the consumer cannot clear, WARNING for the rest of a drawn lint."""
-    return Severity.INFO if code in UNCLEARABLE else Severity.WARNING
-
-
 FINDING_CODES = (
-    *codes_blocks.FINDING_CODES,
     *codes_defects.FINDING_CODES,
     *codes_design.FINDING_CODES,
+    *codes_design_more.FINDING_CODES,
 )

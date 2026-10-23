@@ -2,7 +2,6 @@
 
 import fransys as fr
 
-from fransys_layout.engines.schematic.read.reading import group_infos
 from fransys_model.derive import location_node_designation
 from fransys_model.vocab import Aspect, aspect_nodes
 
@@ -27,5 +26,6 @@ def test_the_layout_names_an_unnamed_group_by_that_designation() -> None:
     d.location("CAB", "Cabinet")
     with d.function("G", ""):
         d.device("K1", "DEMO-RLY-2CO-24")
-    (info,) = group_infos(fr.build(d).model)
-    assert (info.description, info.designation) == ("", "=G")
+    model = fr.build(d).model
+    (group,) = (node for node in aspect_nodes(model).values() if node.aspect is Aspect.FUNCTION)
+    assert (group.label, location_node_designation(model, group.id)) == ("G", "=G")

@@ -58,7 +58,7 @@ def builds() -> tuple[BuildCounts, BuildCounts]:
 
 
 def test_no_layout_code_object_grows_faster_than_2_5x_per_doubling(builds):
-    # UNDO 1: tests/scale_counter.py, `_PASS_CODE = pagerun._place_each.__code__`
+    # UNDO 1: tests/scale_counter.py, `_PASS_CODE = core_solve.__code__`
     #     -> `_PASS_CODE = (lambda: 0).__code__` (no pass is ever seen: the passes assert fails)
     # UNDO 2: below, `"stages/place.py:place:"` -> `"stages/place.py:nowhere:"`
     #     (the layout assert fails)

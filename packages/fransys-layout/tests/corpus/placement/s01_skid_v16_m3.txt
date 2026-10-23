@@ -1,4 +1,5 @@
 # FRANSYS PLACEMENT INSTANCE skid_v16_m3
+# sides: half split of fransys_el; today and route lines as exported
 # Units G. Wiring grid 8 G. Text height 8 G. Pin offsets and boxes are relative to the
 # symbol origin, at orientation R0. A pin's side is the way its wire leaves.
 # [rail rank=r power=K]: the net carries a declared supply potential; smaller rank is drawn
@@ -405,21 +406,21 @@ sym =G3+CAB-DO7.item group=G3 body=-16,-16,96,32 keepout=-16,-16,148,32
   pin do_2.2 S 64,16
 sym =G3+CAB-DI1.item group=G3 body=-16,-16,368,32 keepout=-16,-16,420,32
   pin di_1.1 N 0,-16
-  pin di_10.10 S 192,16
-  pin di_11.11 N 240,-16
-  pin di_12.12 S 240,16
-  pin di_13.13 N 288,-16
-  pin di_14.14 S 288,16
-  pin di_15.15 N 336,-16
+  pin di_10.10 S 48,16
+  pin di_11.11 S 96,16
+  pin di_12.12 S 144,16
+  pin di_13.13 S 192,16
+  pin di_14.14 S 240,16
+  pin di_15.15 S 288,16
   pin di_16.16 S 336,16
-  pin di_2.2 S 0,16
-  pin di_3.3 N 48,-16
-  pin di_4.4 S 48,16
-  pin di_5.5 N 96,-16
-  pin di_6.6 S 96,16
-  pin di_7.7 N 144,-16
-  pin di_8.8 S 144,16
-  pin di_9.9 N 192,-16
+  pin di_2.2 N 48,-16
+  pin di_3.3 N 96,-16
+  pin di_4.4 N 144,-16
+  pin di_5.5 N 192,-16
+  pin di_6.6 N 240,-16
+  pin di_7.7 N 288,-16
+  pin di_8.8 N 336,-16
+  pin di_9.9 S 0,16
 sym =G3+CAB-DO4.item group=G3 body=-16,-16,88,32 keepout=-16,-16,140,32
   pin do_1.1 S 0,16
   pin do_2.2 S 56,16

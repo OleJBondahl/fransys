@@ -2,11 +2,14 @@
 
 import fransys as fr
 import pytest
+from conventions_fixtures import house
 from fransys.colours import BU
-from fransys_el import Conventions, ProblemError, build
+from fransys_el import ProblemError, build
+from fransys_el.placement_env import make_env
 from placement_fixtures import _feed, demo_model, kit_for, planted_model, sid
 
-from fransys_layout.core import PlacementProblem, from_plain, natural_key, to_plain
+from electrical_symbols import LIBRARY
+from fransys_layout.core import PlacementProblem, from_plain, to_plain
 from fransys_model.derive import port_designation
 from fransys_model.vocab import ports
 lazy from fransys_model.kernel import Model
@@ -16,14 +19,14 @@ lazy from fransys_model.kernel import Model
 def planted() -> tuple[Model, PlacementProblem]:
     """The all-features planted model and its problem, built once for the module."""
     model = planted_model()
-    return model, build(model, kit_for(model), Conventions())[0]
+    return model, build(model, kit_for(model), house(), LIBRARY)[0]
 
 
 @pytest.fixture(scope="module")
 def demo() -> PlacementProblem:
     """The demo model's problem, built once for the module."""
     model = demo_model()
-    return build(model, kit_for(model), Conventions())[0]
+    return build(model, kit_for(model), house(), LIBRARY)[0]
 
 
 def _reversed_model() -> Model:
@@ -35,6 +38,9 @@ def _reversed_model() -> Model:
     j2 = d.device("J2", "DEMO-CONN-2P")
     j1 = d.device("J1", "DEMO-CONN-2P")
     d.mate(j1.x1, j2.x1)
+    with d.function("MATED", "Mated feed"):
+        d.detail.wire(g1.output["+"], j1.x1["1"], wire=(BU, 0.75))
+        d.detail.wire(g1.output["-"], j2.x1["1"], wire=(BU, 0.75))
     io = d.add(_feed, "U1")
     with d.function("FIELD", "Unit feed"):
         d.series(dc.plus, io.X1[1], dc.minus, wire=(BU, 0.75))
@@ -71,14 +77,14 @@ def test_round_trip_planted_all_features(planted: tuple[Model, PlacementProblem]
 def test_build_twice_gives_equal_problems(planted: tuple[Model, PlacementProblem]) -> None:
     """Building the same model twice gives equal problems."""
     model, problem = planted
-    assert build(model, kit_for(model), Conventions())[0] == problem
+    assert build(model, kit_for(model), house(), LIBRARY)[0] == problem
 
 
 def test_authoring_order_does_not_change_problem(planted: tuple[Model, PlacementProblem]) -> None:
     """The same design authored in reverse order gives an equal problem."""
     _, problem = planted
     model = _reversed_model()
-    assert build(model, kit_for(model), Conventions())[0] == problem
+    assert build(model, kit_for(model), house(), LIBRARY)[0] == problem
 
 
 def test_every_net_pin_names_a_pin_of_a_symbol(planted: tuple[Model, PlacementProblem]) -> None:
@@ -92,12 +98,14 @@ def test_every_net_pin_names_a_pin_of_a_symbol(planted: tuple[Model, PlacementPr
             assert ref.pin in pins_of[ref.sym]
 
 
-def test_symbols_are_in_natural_id_order(planted: tuple[Model, PlacementProblem]) -> None:
-    """The symbols of the problem come in natural order of their ids."""
-    _, problem = planted
+def test_symbols_keep_the_kit_order(planted: tuple[Model, PlacementProblem]) -> None:
+    """The symbols come in the kit's order; `syms_of` sorts nowhere (R349); loose ones drop."""
+    model, problem = planted
+    env = make_env(model, kit_for(model), house(), LIBRARY)
     ids = [s.id for s in problem.symbols]
     assert len(ids) > 1
-    assert ids == sorted(ids, key=natural_key)
+    kept = set(ids)
+    assert ids == [i for i in (env.ids[lead] for lead in env.kit) if i in kept]
 
 
 def test_strip_terminals_carry_row_fields_and_two_pin_sensor_does_not(
@@ -126,7 +134,7 @@ def test_missing_pick_raises_problem_with_fix(planted: tuple[Model, PlacementPro
     lead = next(iter(kit))
     partial = frozendict({f: pick for f, pick in kit.items() if f != lead})
     with pytest.raises(ProblemError) as info:
-        build(model, partial, Conventions())
+        build(model, partial, house(), LIBRARY)
     assert info.value.fix
     own = [p for p, r in ports(model).items() if r.function == lead]
     assert any(info.value.subject == f"port {port_designation(model, p)}" for p in own)

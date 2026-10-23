@@ -1,6 +1,7 @@
 """The typed parts module generator: names, collisions, determinism, digest."""
 
 import ast
+import sys
 
 import pytest
 from fransys.parts_module import library_digest, parts_module
@@ -28,6 +29,9 @@ def _plant(tmp_path, monkeypatch, name: str, parts: dict[str, str]) -> str:
     for file, text in parts.items():
         (package / "parts" / f"{file}.toml").write_text(text, encoding="utf-8")
     monkeypatch.syspath_prepend(str(tmp_path))
+    # A package of this name an earlier test imported is in `sys.modules` and would be served
+    # in place of this one, so the result would depend on test order.
+    monkeypatch.delitem(sys.modules, name, raising=False)
     return name
 
 

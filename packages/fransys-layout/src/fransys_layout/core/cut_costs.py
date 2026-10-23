@@ -11,7 +11,6 @@ if TYPE_CHECKING:
     from .cut_pack import Pack
     from .values import Block, BlockList, Column, Fan, FlowGraph, Options, Seat
 
-HEIGHT_WIRES = 3  # grids a column's estimated height holds beyond its cells
 TWO_ENDS = 2  # a trunk with two attachments is a two-pin net
 
 
@@ -33,6 +32,7 @@ class Item:
     lead: int
     tail: int
     seat: Seat
+    rise: int = 0
 
     @property
     def bare(self) -> bool:
@@ -57,14 +57,14 @@ class Boundary:
     copies: int = 0
 
 
-def with_wires(height: int, grid: int) -> int:
+def with_wires(height: int, options: Options) -> int:
     """The one home of the wires margin a column's height holds beyond its cells."""
-    return height + HEIGHT_WIRES * grid
+    return height + options.column_wire_lanes * options.wiring_grid
 
 
 def item_height(column: Column, options: Options) -> int:
     """The one home of a column's row height: its cells and the wires round them."""
-    return with_wires(column.height, options.wiring_grid)
+    return with_wires(column.height, options)
 
 
 def column_items(

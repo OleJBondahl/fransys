@@ -6,7 +6,7 @@ Types come from `handles` only for annotation, so this module never imports it a
 from typing import TYPE_CHECKING
 
 from fransys_model.kernel import AuthoringKey, Id, make_id
-from fransys_model.layout import GroupHint, Side, SideHint
+from fransys_model.layout import GroupHint, PinsBelowHint, Side, SideHint
 from fransys_model.vocab import Item as ModelItem
 from fransys_model.vocab import Placement
 
@@ -43,3 +43,10 @@ def _write_placement(
     key = scoped(item_key, "at", *node.key)
     placement = Placement(id=make_id(Placement, key), key=key, item=item_id, node=node.id)
     recorder._add(placement, origin)
+
+
+def _write_pins_below_hint(recorder: _Recorder, function: Fn, origin: Origin) -> None:
+    """Write one `layout.pins_below` for the generic box `function` (`d.layout.pins_below`)."""
+    key = scoped(function.key, "pins_below")
+    hint = PinsBelowHint(id=make_id(PinsBelowHint, key), key=key, function=function.id)
+    recorder._add(hint, origin)

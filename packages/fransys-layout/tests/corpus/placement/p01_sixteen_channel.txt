@@ -1,4 +1,5 @@
 # FRANSYS PLACEMENT INSTANCE test_a_sixteen_channel_output_card_keeps_every_coil_under_its_pin__1
+# sides: half split of fransys_el; today and route lines as exported
 # Units G. Wiring grid 8 G. Text height 8 G. Pin offsets and boxes are relative to the
 # symbol origin, at orientation R0. A pin's side is the way its wire leaves.
 # [rail rank=r power=K]: the net carries a declared supply potential; smaller rank is drawn
@@ -166,23 +167,23 @@ sym =G1+CAB-P13.lamp group=G1 body=-16,-16,32,32 keepout=-16,-16,84,32
 sym =G1+CAB-K12.coil group=G1 body=-16,-24,32,48 keepout=-68,-24,84,48
   pin in N 0,-24
   pin out S 0,24 stand=16
-sym =G0+CAB-K1.item group=G0 body=-16,-16,936,32 keepout=-16,-16,988,32
-  pin do_1.1 S 0,16
-  pin do_10.10 S 520,16
-  pin do_11.11 S 584,16
-  pin do_12.12 S 648,16
-  pin do_13.13 S 712,16
-  pin do_14.14 S 776,16
-  pin do_15.15 S 840,16
-  pin do_16.16 S 904,16
-  pin do_2.2 S 56,16
-  pin do_3.3 S 112,16
-  pin do_4.4 S 168,16
-  pin do_5.5 S 224,16
-  pin do_6.6 S 280,16
-  pin do_7.7 S 336,16
-  pin do_8.8 S 392,16
-  pin do_9.9 S 456,16
+sym =G0+CAB-K1.item group=G0 body=-16,-16,488,32 keepout=-16,-16,540,32
+  pin do_1.1 N 0,-16
+  pin do_10.10 S 56,16
+  pin do_11.11 S 112,16
+  pin do_12.12 S 168,16
+  pin do_13.13 S 224,16
+  pin do_14.14 S 280,16
+  pin do_15.15 S 336,16
+  pin do_16.16 S 392,16
+  pin do_2.2 N 56,-16
+  pin do_3.3 N 112,-16
+  pin do_4.4 N 168,-16
+  pin do_5.5 N 224,-16
+  pin do_6.6 N 280,-16
+  pin do_7.7 N 336,-16
+  pin do_8.8 N 392,-16
+  pin do_9.9 S 0,16
 net n0 [rail rank=1 power=GROUND] =G1+CAB-K10.coil.out =G1+CAB-K11.coil.out =G1+CAB-K12.coil.out =G1+CAB-K13.coil.out =G1+CAB-K14.coil.out =G1+CAB-K15.coil.out =G1+CAB-K16.coil.out =G1+CAB-K17.coil.out =G1+CAB-K2.coil.out =G1+CAB-K3.coil.out =G1+CAB-K4.coil.out =G1+CAB-K5.coil.out =G1+CAB-K6.coil.out =G1+CAB-K7.coil.out =G1+CAB-K8.coil.out =G1+CAB-K9.coil.out =G1+CAB-P1.lamp.2 =G1+CAB-P10.lamp.2 =G1+CAB-P11.lamp.2 =G1+CAB-P12.lamp.2 =G1+CAB-P13.lamp.2 =G1+CAB-P14.lamp.2 =G1+CAB-P15.lamp.2 =G1+CAB-P16.lamp.2 =G1+CAB-P2.lamp.2 =G1+CAB-P3.lamp.2 =G1+CAB-P4.lamp.2 =G1+CAB-P5.lamp.2 =G1+CAB-P6.lamp.2 =G1+CAB-P7.lamp.2 =G1+CAB-P8.lamp.2 =G1+CAB-P9.lamp.2
 net n1 =G0+CAB-K1.item.do_2.2 =G1+CAB-K3.coil.in
 net n5 [rail rank=0 power=NONE] =G1+CAB-K14.co_1.no =G1+CAB-P13.lamp.1

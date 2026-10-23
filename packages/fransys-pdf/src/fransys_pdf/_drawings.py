@@ -34,7 +34,7 @@ if TYPE_CHECKING:
         SheetBackground,
         SheetRow,
     )
-    from fransys_model.derive.page_nav import OutlineSheet
+    from fransys_model.derive.page_nav import OutlineSheet, ReferenceLink
     from fransys_model.kernel import Model
 
 NO_DRAWINGS = '#par(text("No drawings."))'
@@ -62,11 +62,14 @@ def schematic_missing_keys(
 
 
 def _sheet_extras(
-    model: Model, sheet: SheetRow, page: PageId, entry: OutlineSheet, known: set[PageId]
+    model: Model,
+    sheet: SheetRow,
+    entry: OutlineSheet,
+    links: tuple[ReferenceLink, ...],
 ) -> tuple[str, str, str]:
     """The page's numbering argument, what precedes its image (label, marks) and its links."""
     numbering, start = sheet_label(entry.number)
-    return numbering, f"{start}{sheet_mark(entry)}", page_links(model, page, sheet, known)
+    return numbering, f"{start}{sheet_mark(entry)}", page_links(model, sheet, links)
 
 
 def schematic_source(  # noqa: PLR0913, PLR0917 -- the document, its paper, pages, drawings and backgrounds
@@ -76,6 +79,7 @@ def schematic_source(  # noqa: PLR0913, PLR0917 -- the document, its paper, page
     pages_found: tuple[PageId, ...],
     svgs: Mapping[str, str],
     sheets: Mapping[SheetKey, SheetBackground],
+    links: Mapping[PageId, tuple[ReferenceLink, ...]],
 ) -> str:
     """The SCHEMATIC section: full-bleed pages, `n / N` counted per drawing set."""
     kind = PageKind.SCHEMATIC
@@ -85,12 +89,14 @@ def schematic_source(  # noqa: PLR0913, PLR0917 -- the document, its paper, page
         return f"#page(margin: {margin}, background: {back})[{RESTART}\n{NO_DRAWINGS}]"
     blocks = []
     outline = outline_sheets(model, pages_found)
-    known = set(pages_found)
+    printed = {entry.destination for entry in outline}  # a link to a page not printed here dangles
     for index, (page, entry) in enumerate(zip(pages_found, outline, strict=True)):
         image = f'#image(bytes({literal(svgs[render_id(page)])}), format: "svg")'
         back = page_background(model, record, sheets, SheetKey(record.id, kind, index))
-        numbering, before, links = _sheet_extras(model, sheet, page, entry, known)
-        blocks.append(f"#page(margin: 0mm, background: {back}{numbering})[{before}{image}{links}]")
+        numbering, before, boxes = _sheet_extras(
+            model, sheet, entry, tuple(k for k in links[page] if k.target in printed)
+        )
+        blocks.append(f"#page(margin: 0mm, background: {back}{numbering})[{before}{image}{boxes}]")
     return "\n#pagebreak()\n".join(blocks)
 
 

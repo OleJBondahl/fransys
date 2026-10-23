@@ -65,6 +65,8 @@ _EXTRA_MODULES: tuple[str, ...] = (
     "fransys_author.surface",
     "fransys_author.surface.colours",
     "fransys_layout.core",
+    "fransys_layout.drawing",
+    "fransys_layout.symbols",
 )
 
 _DEF_TYPES = (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)

@@ -4,22 +4,32 @@ from __future__ import annotations
 
 from dataclasses import replace
 
-from fransys_layout.core import Options, PinRef, PlacementProblem, Size, order_blocks
+from options_fixtures import core_options
+
+from fransys_layout.core import Facts, PinRef, PlacementProblem, Room, Size, order_blocks
 from fransys_layout.core.cut import cut_pages
-from fransys_layout.core.cut_costs import HEIGHT_WIRES
 from fransys_layout.core.cut_measured import Measured
 from fransys_layout.core.outputs import Demand, PagePlacement
 from fransys_layout.core.place import place_pages
+from fransys_layout.core.row_extent import extent
 from fransys_layout.core.values import CutResult, Ref, RefEnd, RefKind
 from fransys_layout.core.widen import measured_of, reserves_of
 
-from .conftest import MARKER_BOX
+from .conftest import MARKER
 from .cut_fixtures import AREA, chain, elem, free, net, page_of
 from .pipeline_fixtures import blocks_of, cut_of, flow_of, placed_from, routed_from
 from .place_fixtures import card_with_coils, wide_row
 from .widen_fixtures import gap_width
 
-PLAIN = Options(justify=False, marker=MARKER_BOX)
+PLAIN = core_options(
+    justify=False,
+    marker=MARKER,
+    flip_turn="R180",
+    tag_stagger=True,
+    label_gap=8,
+    driver_first=True,
+    arrow_sides=("E", "W"),
+)
 
 
 def three_columns() -> PlacementProblem:
@@ -27,7 +37,7 @@ def three_columns() -> PlacementProblem:
     names = [[f"{c}{k}" for k in range(2)] for c in "abc"]
     syms = tuple(elem(n) for col in names for n in col)
     nets = tuple(n for col in names for n in chain(col, prefix=col[0]))
-    return PlacementProblem(AREA, syms, nets)
+    return PlacementProblem(AREA, syms, nets, facts=Facts())
 
 
 def planted() -> list[PlacementProblem]:
@@ -114,7 +124,12 @@ def test_a_measured_width_over_the_page_moves_the_column_to_a_new_row() -> None:
 
 def fan_legs() -> PlacementProblem:
     syms = (free("t0"), *(elem(f"k{i}", 40, 32) for i in (1, 2, 3)))
-    return PlacementProblem(Size(100, 854), syms, (net("feed", "t0.e", "k1.n", "k2.n", "k3.n"),))
+    return PlacementProblem(
+        Size(100, 854),
+        syms,
+        (net("feed", "t0.e", "k1.n", "k2.n", "k3.n"),),
+        facts=Facts(),
+    )
 
 
 def test_a_measured_height_over_the_page_moves_the_block_down_and_its_reference_follows() -> None:
@@ -134,7 +149,7 @@ def two_heights() -> PlacementProblem:
     """Two columns in one row: a stack of two 150 G elements and a stack of two 60 G ones."""
     syms = (elem("a0", 16, 150), elem("a1", 16, 150), elem("b0", 16, 60), elem("b1", 16, 60))
     nets = (*chain(["a0", "a1"], "a"), *chain(["b0", "b1"], "b"))
-    return PlacementProblem(AREA, syms, tuple(nets))
+    return PlacementProblem(AREA, syms, tuple(nets), facts=Facts())
 
 
 def test_measured_height_is_the_blocks_own_extent_never_its_rows() -> None:
@@ -143,7 +158,9 @@ def test_measured_height_is_the_blocks_own_extent_never_its_rows() -> None:
     placement = placed_from(cut, prob, PLAIN)
     measured = measured_of(cut, placement, routed_from(cut, prob, PLAIN), PLAIN)
     feet = {
-        p.sym: (p.footprint.y, p.footprint.y + p.footprint.h) for p in placement.pages[0].placed
+        p.sym: (p.y - up, p.y + down)
+        for p in placement.pages[0].placed
+        for up, down in [extent(replace(p.footprint, y=p.footprint.y - p.y), Room(), PLAIN)]
     }
     own = {
         k: max(feet[s][1] for s in v) - min(feet[s][0] for s in v)
@@ -159,7 +176,7 @@ def fan_rows() -> PlacementProblem:
     """One fan block of five 40 x 32 legs 100 G wide: its legs stack in five rows."""
     syms = (free("t0"), *(elem(f"k{i}", 40, 32) for i in range(1, 6)))
     pins = ["t0.e", *(f"k{i}.n" for i in range(1, 6))]
-    return PlacementProblem(Size(100, 854), syms, (net("feed", *pins),))
+    return PlacementProblem(Size(100, 854), syms, (net("feed", *pins),), facts=Facts())
 
 
 def test_a_columns_measured_height_is_its_own_never_its_blocks_so_its_rows_stay_on_a_page() -> None:
@@ -169,7 +186,12 @@ def test_a_columns_measured_height_is_its_own_never_its_blocks_so_its_rows_stay_
     measured = measured_of(cut, placement, routed_from(cut, prob, PLAIN), PLAIN)
     block = measured.heights["fan:c:k1"]
     assert block > 300 > 2 * max(measured.columns.values())
+    page = placement.pages[0]
+    foot = {p.sym: p.footprint for p in page.placed}
+    # a leg's own trunk counts (layout-0374): its line stands above the leg's footprint
+    rise = [foot[f"k{i}"].y - next(t.y for t in page.trunks if t.row == i - 1) for i in range(2, 6)]
+    assert rise == [8] * 4
     assert [measured.columns[f"c:k{i}"] for i in range(2, 6)] == [
-        32 + HEIGHT_WIRES * PLAIN.wiring_grid
-    ] * 4
+        32 + 8 + PLAIN.wiring_grid + PLAIN.column_wire_lanes * PLAIN.wiring_grid
+    ] * 4  # the leg, its rise, the step held above the trunk line (trunk_room), the lanes
     assert set(page_of(recut(prob, measured)).values()) == {1}

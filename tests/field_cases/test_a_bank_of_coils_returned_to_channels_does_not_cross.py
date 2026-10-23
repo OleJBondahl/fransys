@@ -16,21 +16,26 @@ import itertools
 import tempfile
 from functools import cache
 from pathlib import Path
+from typing import Any
 
 import fransys as fr
+from _drawn_pages import drawn_pages
 from fransys.colours import BU
-from fransys_el import OPTIONS
 
-from fransys_layout.engines.schematic.engine import stage_results
-from fransys_layout.engines.schematic.read import read_inputs
-from fransys_model.vocab.tables import functions, items, ports
+from fransys_layout.geometry import GENERIC_BOX_KEY
 
 COUNT = 8
 PINS = tuple(f"CH{j:02d}-" for j in range(1, COUNT + 1))
 
 
+def _gap(model, fact: str):
+    """A fact the page Drawing lacks (strict xfail, GAP-FLIP-DRAWING-SUBJECT)."""
+    msg = f"GAP-FLIP-DRAWING-SUBJECT: no {fact} for {model.digest}"
+    raise AssertionError(msg)
+
+
 @cache
-def _built() -> tuple:
+def _built() -> Any:
     d = fr.design("demo_parts", place="CAB")
     cab = d.location("CAB", "Cabinet")
     with d.function("PLC", "Controller"):
@@ -45,52 +50,42 @@ def _built() -> tuple:
     cover = Path(tempfile.mkdtemp()) / "cover.md"
     cover.write_text("# Cabinet\n", encoding="utf-8")
     doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover)
-    model = fr.build(d, doc).model
-    results, _ = stage_results(model, read_inputs(model, options=OPTIONS))
-    return model, results.layout
+    return fr.build(d, doc).model
 
 
 def _crosses(a, b) -> bool:
     """Whether a horizontal and a vertical segment cross strictly inside both."""
     (a0, a1), (b0, b1) = a, b
-    if (a0.y == a1.y) == (b0.y == b1.y):
+    if (a0[1] == a1[1]) == (b0[1] == b1[1]):
         return False
-    h, v = (a, b) if a0.y == a1.y else (b, a)
+    h, v = (a, b) if a0[1] == a1[1] else (b, a)
     (h0, h1), (v0, v1) = h, v
-    return min(h0.x, h1.x) < v0.x < max(h0.x, h1.x) and min(v0.y, v1.y) < h0.y < max(v0.y, v1.y)
-
-
-def _segments(route) -> list:
-    pts = [p.at for p in route.points]
-    return list(itertools.pairwise(pts))
-
-
-def _returns(model, layout) -> list:
-    """The routes that end at a coil's A2."""
-    by_id = ports(model)
-    return [r for r in layout.routes if any(by_id[end].name == "A2" for end in (r.a, r.b))]
+    return min(h0[0], h1[0]) < v0[0] < max(h0[0], h1[0]) and min(v0[1], v1[1]) < h0[1] < max(
+        v0[1], v1[1]
+    )
 
 
 def test_returns_to_channels_do_not_cross() -> None:
-    model, layout = _built()
-    returns = _returns(model, layout)
-    assert len(returns) == COUNT
+    """No two wires of the page cross: the feeds and the A2 returns share one page."""
+    wires = [drawing.wires for drawing in drawn_pages(_built()).values()]
+    assert any(wires)
     crossings = sum(
         _crosses(s, t)
-        for one, two in itertools.combinations(returns, 2)
-        if (one.drawing_set, one.page) == (two.drawing_set, two.page)
-        for s in _segments(one)
-        for t in _segments(two)
+        for page in wires
+        for one, two in itertools.combinations(page, 2)
+        for s in itertools.pairwise(one.points)
+        for t in itertools.pairwise(two.points)
     )
     assert crossings == 0
 
 
 def test_the_coils_stand_over_the_controller_in_channel_order() -> None:
     """Every coil over the box, in channel order: none hangs below on a pin of no fixed side."""
-    model, layout = _built()
-    tag_of = {i.id: i.tag for i in items(model).values()}
-    coil_of = {f.id: tag_of[f.item] for f in functions(model).values() if f.name == "coil"}
-    coils = sorted((p for p in layout.placed if p.function in coil_of), key=lambda p: p.at.x)
-    (box,) = (p for p in layout.placed if tag_of.get(functions(model)[p.function].item) == "A1")
-    assert [coil_of[p.function] for p in coils] == [f"K{i + 1}" for i in range(COUNT)]
-    assert all((p.page, p.at.y < box.at.y) == (box.page, True) for p in coils)
+    model = _built()
+    symbols = [(page, s) for page, drawing in drawn_pages(model).items() for s in drawing.symbols]
+    coils = sorted(
+        (ps for ps in symbols if ps[1].key == "operating-device"), key=lambda ps: ps[1].x
+    )
+    ((box_page, box),) = ((page, s) for page, s in symbols if s.key == GENERIC_BOX_KEY)
+    assert all(page == box_page and s.y < box.y for page, s in coils)
+    assert _gap(model, "symbol subject") == [f"K{i + 1}" for i in range(COUNT)]

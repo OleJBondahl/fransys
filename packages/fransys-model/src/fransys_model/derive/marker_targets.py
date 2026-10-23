@@ -9,6 +9,7 @@ The first of them is a terminal of the net when it has one (`target_order`, mode
 from typing import TYPE_CHECKING
 lazy from collections.abc import Sequence
 
+from fransys_model.derive.frame_position import position_text, row_letter
 from fransys_model.derive.kinds import item_role
 from fransys_model.vocab.tables import functions, ports
 
@@ -58,3 +59,15 @@ def target_order(model: Model, marker: LinkMarker, ends: Sequence[LinkMarker]) -
         if item_role(model, functions(model)[ports(model)[one.port].function].item).terminal
     ]
     return [*terminals[:1], *(one for one in others if one not in terminals[:1])]
+
+
+def widest_target_line(digits: int, columns: int, rows: int, digit: str) -> str:
+    """The longest line a marker can print: `target_lines`' `+k` form with every number `digit`s.
+
+    `digits` is the digit count of a page or net number, `columns` and `rows` the highest frame
+    column and row, `digit` the widest digit the caller measured. Layout sizes a marker box with it
+    before the pages exist.
+    """
+    wide = int(digit * digits)
+    position = position_text(wide, int(digit * len(str(columns))), row_letter(rows - 1), ())
+    return target_lines(wide, [position])[0] + more_text(int(digit))

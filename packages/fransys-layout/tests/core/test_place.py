@@ -7,14 +7,15 @@ from itertools import combinations
 from typing import TYPE_CHECKING
 
 import pytest
+from options_fixtures import core_options
 
-from fransys_layout.core import Options, PlacementProblem
 from fransys_layout.core.geometry import overlaps
 from fransys_layout.core.pack_row import row_width
 from fransys_layout.core.place_env import page_envs
 from fransys_layout.core.place_x import row_specs
+lazy from fransys_layout.core import PlacementProblem
 
-from .conftest import MARKER_BOX
+from .conftest import MARKER
 from .cut_respell import id_sets, make_maps, respell_problem
 from .pipeline_fixtures import blocks_of, cut_of, flow_of, placed_of
 from .place_fixtures import (
@@ -41,7 +42,14 @@ PLANTED = {
 
 @pytest.mark.parametrize("name", PLANTED)
 def test_every_pin_of_every_placed_symbol_lies_on_the_wiring_grid(name: str) -> None:
-    step = Options(marker=MARKER_BOX).wiring_grid
+    step = core_options(
+        marker=MARKER,
+        flip_turn="R180",
+        tag_stagger=True,
+        label_gap=8,
+        driver_first=True,
+        arrow_sides=("E", "W"),
+    ).wiring_grid
     for (sym, pin), (x, y) in all_pins(placed_of(PLANTED[name]())).items():
         assert x % step == 0, (sym, pin, x)
         assert y % step == 0, (sym, pin, y)
@@ -65,7 +73,15 @@ def test_no_two_footprints_of_one_row_overlap(name: str) -> None:
 
 def _row_extent(prob: PlacementProblem) -> tuple[int, int]:
     """(placed extent, row_width) of the first row of the first page, justify off."""
-    options = Options(marker=MARKER_BOX, justify=False)
+    options = core_options(
+        marker=MARKER,
+        justify=False,
+        flip_turn="R180",
+        tag_stagger=True,
+        label_gap=8,
+        driver_first=True,
+        arrow_sides=("E", "W"),
+    )
     cut = cut_of(prob, options)
     env = page_envs(cut, prob, options)[0]
     spec = row_specs(env)[0]

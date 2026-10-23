@@ -47,11 +47,11 @@ def document_heading(model: Model, record: DocumentRow) -> str:
     return f"{words} — {subject}"
 
 
-def preamble(sizes: Sizes, sheet: SheetRow) -> str:
+def preamble(sizes: Sizes, sheet: SheetRow, family: str) -> str:
     """Text, page size and type sizes, once; margin and background are per page kind."""
     return "\n".join(
         [
-            f'#set text(font: "DejaVu Sans", size: {font_mm(sizes.body)})',
+            f'#set text(font: "{family}", size: {font_mm(sizes.body)})',
             f"#set page(width: {sheet.width_mm}mm, height: {sheet.height_mm}mm, {ROMAN})",
             f"#show heading.where(level: 1): set text(size: {font_mm(sizes.heading_1)})",
             f"#show heading.where(level: 2): set text(size: {font_mm(sizes.heading_2)})",

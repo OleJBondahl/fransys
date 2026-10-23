@@ -1,8 +1,40 @@
 """The options a caller passes the layout passes: its conventions as frozen values (seam 1)."""
 
-from fransys_layout.geometry import LayoutError
-from fransys_layout.stages.texts.candidates import TextKind, TextPlacement
-from fransys_model.kernel import value
+from enum import Enum
+
+from fransys_layout.geometry import Facing, LayoutError
+from fransys_model.kernel import register_enum, value
+
+
+@register_enum
+class TextKind(Enum):
+    """What a text is, for the table and key order (not `LabelKind`, which `write` maps)."""
+
+    REFERENCE = "reference"
+    STUB = "stub"
+    TAG = "tag"
+    MARKING = "marking"
+    CONTACT_IMAGE = "contact_image"
+    CROSS_REFERENCE = "cross_reference"
+    POWER = "power"
+    HARNESS_LINE = "harness_line"
+
+
+@value
+class Side:
+    """One side of a table row: where the text stands, and its steps along it ."""
+
+    facing: Facing | None
+    steps: tuple[int, ...]
+    mirror: bool = False
+
+
+@value
+class TextPlacement:
+    """Where one kind of text may stand, and when it is placed."""
+
+    priority: int  # a lower number is placed first
+    sides: tuple[Side, ...]
 
 
 @value

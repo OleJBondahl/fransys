@@ -37,6 +37,10 @@ instance is of. It is the one reader of a unit's release facts.
 `fransys.derive.unit_location(model, unit)` returns the location node `unit` is placed at:
 its root items' own location, or their nearest common ancestor; `None` when no root is placed.
 
+`fransys.derive.unit_parent(model, unit)` returns the id of `unit`'s parent unit; `None` for a root.
+
+`fransys.derive.location_texts(model)` returns each location label with its printed designation.
+
 `fransys.derive.project_facts(model)` returns the title block's six facts of the project, as
 `(title, number, customer, revision, revision_date, author)`; all are empty with no `Project`.
 

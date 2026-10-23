@@ -4,13 +4,13 @@ A join is a part fact stored once on the header port's template. It carries no c
 reader that asks whether a port is connected reads `port_joins` as well.
 """
 
-from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, digest_cached
-from fransys_model.vocab.tables import functions, port_templates, ports
+from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, digest_cached
+from fransys_model.vocab.tables import HasTables, functions, port_templates, ports
 lazy from fransys_model.vocab.core import Port
 
 
 @digest_cached(DIGEST_CACHE_SIZE)
-def _joins(model: Model) -> tuple[tuple[Id[Port], Id[Port]], ...]:
+def _joins(model: HasTables) -> tuple[tuple[Id[Port], Id[Port]], ...]:
     item_of = {function.id: function.item for function in functions(model).values()}
     by_item_template = {
         (item_of[port.function], port.template): port.id
@@ -29,7 +29,7 @@ def _joins(model: Model) -> tuple[tuple[Id[Port], Id[Port]], ...]:
     return tuple(sorted(pairs))
 
 
-def port_joins(model: Model) -> tuple[tuple[Id[Port], Id[Port]], ...]:
+def port_joins(model: HasTables) -> tuple[tuple[Id[Port], Id[Port]], ...]:
     """Each (header port, function port) pair the model's header joins make, sorted.
 
     The pair is on one item: the join names a port template of the header's own part. A join whose
@@ -38,6 +38,6 @@ def port_joins(model: Model) -> tuple[tuple[Id[Port], Id[Port]], ...]:
     return _joins(model)
 
 
-def joined_ports(model: Model) -> frozenset[Id[Port]]:
+def joined_ports(model: HasTables) -> frozenset[Id[Port]]:
     """Every port on either end of a header join: the ports a join counts as connected."""
     return frozenset(end for pair in _joins(model) for end in pair)

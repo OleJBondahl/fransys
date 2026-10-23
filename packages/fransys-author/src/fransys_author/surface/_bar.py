@@ -8,7 +8,7 @@ from fransys_author.errors import AuthorError
 from fransys_author.handles import Port
 from fransys_author.surface._bar_pe import join_pe
 from fransys_author.surface._handles import Fn
-from fransys_model.kernel import make_id
+from fransys_model.kernel import first_free, make_id
 from fransys_model.vocab import FunctionKind, PortRole
 from fransys_model.vocab import Port as PortRecord
 
@@ -57,17 +57,18 @@ def take_screw(design: Design | None, fn: Fn) -> Port:
     A function that is no bar is not a pin, and a call with no design takes no screw: both raise.
     """
     design = _taker(design, fn)
-    taken = design._screws.get(fn.id, 0)
+    taken = design._screws.setdefault(fn.id, set())
+    number = first_free(taken)
     if fn.pins:
-        if taken == len(fn.pins):
+        if number > len(fn.pins):
             msg = (
-                f"{fn._label}.{fn._fn.name} has {taken} screws and all are taken: "
+                f"{fn._label}.{fn._fn.name} has {len(taken)} screws and all are taken: "
                 "another landing needs a second bar"
             )
             raise AuthorError(msg)
-        screw = fn.pins[taken]
+        screw = fn.pins[number - 1]
     else:
-        screw = _new_screw(fn, str(taken + 1))
-    design._screws[fn.id] = taken + 1
+        screw = _new_screw(fn, str(number))
+    taken.add(number)
     join_pe(fn._fn, screw)
     return screw

@@ -5,7 +5,7 @@ The caller maps each pin's symbol facing onto `sides`; a port missing from it is
 
 lazy from collections.abc import Mapping
 
-from fransys_model.derive.facts.closure import net_of
+from fransys_model.derive.facts.potentials import is_wired
 from fransys_model.derive.pole_lists import poles_of
 from fransys_model.derive.rows_series_pairs import SeriesPair
 from fransys_model.layout import Side
@@ -43,11 +43,5 @@ def _lone_wired(
     model: Model, pins: tuple[Id[Port], ...], sides: Mapping[Id[Port], Side], side: Side
 ) -> Id[Port] | None:
     """The one wired pin of `pins` facing `side`, or `None` when there is not exactly one."""
-    wired = [p for p in pins if sides.get(p) is side and _is_wired(model, p)]
+    wired = [p for p in pins if sides.get(p) is side and is_wired(model, p)]
     return wired[0] if len(wired) == 1 else None
-
-
-def _is_wired(model: Model, port: Id[Port]) -> bool:
-    """A port is wired when its physical net holds another port."""
-    net = net_of(model, port)
-    return net is not None and len(net.ports) > 1

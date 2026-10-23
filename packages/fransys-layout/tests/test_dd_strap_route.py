@@ -14,71 +14,17 @@ The second test is the reviewer's mixed chain (`test_dd_turned_poles.py`): the s
 two-port net, where D9's markers never apply.
 """
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
-from dd_chain_fixtures import (
-    MCB,
-    TERMINAL,
-    build,
-    design,
-    markers_on,
-    placed,
-    route_between,
-    terminal_key,
-)
+from dd_chain_fixtures import MCB, TERMINAL, build, design, pin_at, placed, wires_ending_at
 
-from fransys_layout.geometry import WIRING_GRID, Facing, Point
-from fransys_layout.stages.grid_path import reserve_exits
-from fransys_layout.stages.space import End
-from fransys_model.layout import Route, StarKind, SymbolPlacement, layout_of
-from fransys_model.vocab.tables import functions, ports
-
-if TYPE_CHECKING:
-    from fransys_model.kernel import Model
-
-K1, K2 = ("K1", "fn", "main"), ("K2", "fn", "main")
-Q1 = ("Q1", "fn", "element")
+K1, K2 = ("-K1", "make-contact", 3), ("-K2", "make-contact", 3)
 CTR = "DEMO-CTR-3P-24"
-
-
-def _routes_on(model: Model, key: tuple[str, ...], name: str) -> int:
-    """How many routes end on port `name` of the function keyed `key`."""
-    return sum(
-        1
-        for route in layout_of(model, Route).values()
-        for end in (route.a, route.b)
-        if functions(model)[ports(model)[end].function].key == key
-        and ports(model)[end].name == name
-    )
 
 
 def _errors(result: Any) -> list[str]:
     """The codes of the two errors a port left with no wire and no marker gives."""
     return [f.code for f in result.findings if f.code in {"ROUTE_FAILED", "CONNECTION_NOT_DRAWN"}]
-
-
-def test_a_port_reserves_the_cell_in_front_of_it_along_its_own_axis() -> None:
-    """The cell one step out of a S facing port is its net's, along "v" only."""
-    # UNDO: stages/grid_path.py reserve_exits, `axis = "h"` for every facing
-    south, east = (
-        End(at=Point(x=0, y=0), facing=Facing.S),
-        End(at=Point(x=80, y=0), facing=Facing.E),
-    )
-    assert reserve_exits([("a", south), ("b", east)]) == {
-        (0, WIRING_GRID): {"a": frozenset({"v"})},
-        (80 + WIRING_GRID, 0): {"b": frozenset({"h"})},
-    }
-
-
-def test_a_cell_in_front_of_two_nets_ports_is_reserved_for_neither() -> None:
-    """Two facing ports two steps apart share their step: no net can keep it, so none does."""
-    # UNDO: stages/grid_path.py reserve_exits, `if len(nets) == 1` -> `if nets`
-    down, up = (
-        End(at=Point(x=0, y=0), facing=Facing.S),
-        End(at=Point(x=0, y=2 * WIRING_GRID), facing=Facing.N),
-    )
-    assert reserve_exits([("a", down), ("b", up)]) == {}
-    assert reserve_exits([("a", down), ("a", up)]) == {(0, WIRING_GRID): {"a": frozenset({"v"})}}
 
 
 def test_a_strap_between_neighbouring_cells_is_drawn_when_a_wire_turns_before_its_port() -> None:
@@ -102,15 +48,14 @@ def test_a_strap_between_neighbouring_cells_is_drawn_when_a_wire_turns_before_it
     # the fault stays reproduced: K2 beside K1, nothing between them
     assert (one.page, one.y) == (two.page, two.y)
     assert one.x < two.x
-    assert not [
-        p
-        for p in layout_of(model, SymbolPlacement).values()
-        if p.page == one.page and one.x < p.x < two.x
-    ]
+    assert not [s for s in one.drawing.symbols if one.x < s.x < two.x]
     assert _errors(result) == []
-    for key in (K1, K2):
-        assert _routes_on(model, key, "1") + len(markers_on(model, key, "1")) >= 1
-    assert route_between(model, (K1, "1"), (K2, "1")).points
+    for p in (one, two):
+        top = pin_at(p, "1.in")
+        assert wires_ending_at(p.drawing, top) or [m for m in p.drawing.markers if m.x == top[0]]
+    assert [
+        w for w in one.drawing.wires if {pin_at(one, "1.in"), pin_at(two, "1.in")} <= set(w.points)
+    ], "no strap between K1:1 and K2:1"
 
 
 def test_a_neighbours_straight_run_no_longer_crosses_a_ports_own_first_step() -> None:
@@ -162,9 +107,15 @@ def test_a_wire_round_a_symbol_does_not_seal_the_exit_of_another_port() -> None:
     wire(k1["3"], t4.inner)
     result = build(parts, d)
     assert _errors(result) == []
-    assert route_between(result.model, (Q1, "2"), (K1, "4")).points
-    strip_4 = (terminal_key("XA", 4), "internal")
-    (reference,) = markers_on(result.model, *strip_4)
-    (branch,) = markers_on(result.model, K1, "3")
-    assert (reference.star, branch.star) == (StarKind.REF, StarKind.BRANCH)
-    assert branch.partner == reference.id
+    q1 = placed(result.model, "-Q1", "circuit-breaker")
+    k1 = placed(result.model, *K1)
+    assert [
+        w
+        for w in q1.drawing.wires
+        if q1.x in {x for x, _ in w.points} and k1.x in {x for x, _ in w.points}
+    ], "Q1:2 - K1:4 is not drawn"
+    # a reference at XA:4 and a branch at K1:3 (the marker's star kind is not on the Drawing):
+    # two markers, one standing over K1's lane
+    markers = q1.drawing.markers
+    assert len(markers) == 2
+    assert sum(m.x == k1.x for m in markers) == 1

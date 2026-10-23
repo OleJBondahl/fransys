@@ -6,13 +6,13 @@ import shutil
 import tempfile
 from functools import cache, partial
 from pathlib import Path
+from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, cast
-lazy from collections.abc import Callable
+lazy from collections.abc import Callable, Mapping
 
 import fransys_pdf
 import fransys_render
 import typst
-from fransys_el import REF_TINTS
 from fransys_kicad import check as kicad_check
 from fransys_kicad import netlist as kicad_netlist
 from fransys_overview import html as overview_html
@@ -37,12 +37,15 @@ from fransys_reports import (
 )
 from fransys_wago import modules_xml as modules_xml_of
 
+import electrical_symbols
 from fransys_layout import lay_out_cables, lay_out_overview
 from fransys_model.derive import (
     ALL_VALIDATORS,
     allocate_plc,
     baseline,
+    check_pins_below,
     check_side_hints,
+    check_unprinted_sets,
     document_sheets_of,
     document_stems,
     errors_of,
@@ -68,6 +71,7 @@ from fransys_model.derive import (
 )
 from fransys_model.derive.numbering_pins import NumberingPins, name_findings
 from fransys_model.derive.order import finding_order_key, findings_in_order
+from fransys_model.derive.page_nav import reference_links
 from fransys_model.kernel import (
     Finding,
     Id,
@@ -78,13 +82,19 @@ from fransys_model.kernel import (
     merge,
 )
 from fransys_model.kernel import dumps as model_dumps
+lazy from fransys_layout.drawing import Drawing
 lazy from fransys_model.kernel import Draft, Model, Origin
+lazy from fransys_model.layout import Page
 lazy from fransys_model.vocab import Unit as ModelUnit
 
 from . import _args, _revision_pins, _subjects
 from ._baseline_findings import baseline_findings
+from ._drawing_library import refuse_authored_library, with_drawing_library
+from ._export_ledger import _DATA_DIR, _ExportLedger, _placed
 from ._finding_text import described, fix_lines, headed
+from ._layout_core import draw_on_core
 from ._layout_need import lay_out_if_needed, needs_schematic_layout
+from ._paper import refuse_authored_paper, with_paper
 from ._rebaseline import plan_rebaseline, write_plan
 from ._release_checks import (
     _changes_since,
@@ -100,24 +110,20 @@ from ._release_files import release_file_findings
 from ._release_manifest import _manifest
 from ._release_reader import BASELINE_FILES, stored_listing
 from ._seed_facets import assigned_facets, reserved_facets, tag_facets
+from ._settings_findings import new_engine_only_findings
+from ._settings_library import build_library, font_dirs
 from ._times import TIMES_FILE, BuildTimes, Timer
 from .documents import engine_subject
+from .settings import Settings
+from .settings import settings as fr_settings
 
 if TYPE_CHECKING:
+    from electrical_symbols import Library
     from fransys_model.derive import SheetBackground, SheetKey
     from fransys_model.derive.baseline import ListingDiff
     from fransys_model.vocab import UnitRelease
 
 _SEVERITY_RANK = {Severity.ERROR: 0, Severity.WARNING: 1, Severity.INFO: 2}
-
-# CSV and XML exports live in `<out_dir>/data/`; PDFs, `overview.html` and `changes.md` stay on top.
-_DATA_DIR = "data"
-_DATA_SUFFIXES = (".csv", ".xml")
-
-
-def _placed(name: str) -> str:
-    """`name` as its path from `out_dir`: CSV and XML go into `data/`, the rest stay (0197)."""
-    return f"{_DATA_DIR}/{name}" if name.endswith(_DATA_SUFFIXES) else name
 
 
 def _put(path: Path, data: bytes) -> None:
@@ -128,11 +134,15 @@ def _put(path: Path, data: bytes) -> None:
 
 @dataclasses.dataclass(frozen=True, slots=True, kw_only=True)
 class BuildResult:
-    """A frozen, laid-out model plus every finding collected while building it."""
+    """A frozen, laid-out model, every finding collected while building it and its `Settings`."""
 
     model: Model
     findings: tuple[Finding, ...]
+    settings: Settings = dataclasses.field(default_factory=fr_settings)
     times: BuildTimes = dataclasses.field(default=BuildTimes(), compare=False, repr=False)
+    drawings: Mapping[Id[Page], Drawing] = dataclasses.field(
+        default=MappingProxyType({}), compare=False, repr=False
+    )
 
 
 class BuildErrors(Exception):  # noqa: N818 -- plural on purpose: it carries every error finding
@@ -140,39 +150,19 @@ class BuildErrors(Exception):  # noqa: N818 -- plural on purpose: it carries eve
 
     No escape hatch: there is no `allow_errors`, `force` or `draft` parameter anywhere in
     this package, and none will be added. `findings` holds every `ERROR` of the run that
-    raised; the exception's own message is each finding, then its fix and findings-row URL.
+    raised, each with its own `fix` template: tests read `exc.findings`, not the message. The
+    message is each finding, then its printed fix (`<subject>` and `<other>` filled) and its
+    code's findings-row URL.
     `write`'s own findings are resolved through `describe` first (`check`'s own contract);
     `release`'s interface-bump findings are never `describe`d -- their `message` is already
     self-contained, naming the unit, revision and differing sections in plain text.
     """
 
-    def __init__(self, findings: tuple[Finding, ...]) -> None:
+    def __init__(self, findings: tuple[Finding, ...], *, model: Model) -> None:
         """Store every `ERROR` finding of the run that raised, in `check`'s order."""
         self.findings = findings
-        super().__init__("\n".join("\n".join([headed(f), *fix_lines(f)]) for f in findings))
-
-
-class ExportNameClash(Exception):  # noqa: N818 -- the exact name the contract gives it
-    """Two subjects resolve to the same export file name in `out_dir`."""
-
-
-def _export_name_clash(
-    name: str, a: Id[Any], b: Id[Any], model: Model, *, hint: str | None = None
-) -> ExportNameClash:
-    if hint is None:
-        message = f"two subjects both resolve to the export name {name!r}"
-    else:
-        message = (
-            f"two units, both instances of release {hint!r}, both export the file {name!r}; "
-            "keep one document per release."
-        )
-    finding = Finding(
-        code="EXPORT_NAME_CLASH",
-        severity=Severity.ERROR,
-        subjects=(a, b),
-        message=message,
-    )
-    return ExportNameClash(described(finding, model))
+        text = ("\n".join([headed(f), *fix_lines(f, model)]) for f in findings)
+        super().__init__("\n".join(text))
 
 
 def parts(*packages: str) -> Draft:
@@ -242,41 +232,62 @@ def _seed_designation_pins(model: Model, sources: dict[Id[ModelUnit], NumberingP
     return dataclasses.replace(evolved, origins=merged_origins)
 
 
-def build(*drafts: Draft | _args.Design, releases: Path | None = None) -> BuildResult:
+def build(
+    *drafts: Draft | _args.Design, releases: Path | None = None, settings: Settings | None = None
+) -> BuildResult:
     """Output: merge, freeze and lay out drafts or a `Design` into a `BuildResult`.
 
     Runs PLC allocation, numbering, every validator and layout, collecting each pass's findings.
     The schematic lays out only when no `ERROR` was found and a `Document` keeps a SCHEMATIC
     page; a layout `SymbolPortError` becomes one `SYMBOL_PORT_MISSING` `ERROR`. `releases` seeds
-    numbering pins from that release root; `None` numbers freely. Raises `FreezeError` on a
-    structural problem in the merged draft.
+    numbering pins from that release root; `None` numbers freely. `settings` is `fr.settings(...)`;
+    `None` takes our defaults. Raises `FreezeError` on a structural problem in the merged draft.
 
     Does not write files, run `check` or raise on findings; does not seed pins when `releases`
     is `None`.
     """
     timer = Timer()
-    model = timer.run("merge and freeze", _frozen, drafts)
+    chosen = fr_settings() if settings is None else settings
+    library = build_library(chosen.grid, chosen.font, "the settings")
+    model = timer.run("merge and freeze", _frozen, drafts, chosen, library)
     model, row_findings = timer.run("wire rows", resolve_wire_rows, model)
     model, plc_findings = timer.run("PLC allocation", allocate_plc, model)
     model, number_findings = timer.run("numbering", _numbered, model, releases)
     found = timer.run(
-        "validators", _validated, model, (*row_findings, *plc_findings, *number_findings)
+        "validators",
+        _validated,
+        model,
+        (*new_engine_only_findings(chosen), *row_findings, *plc_findings, *number_findings),
     )
     if refuses(found) or not _has_document(model):
         return BuildResult(
-            model=model, findings=_by_code_in_reader_order(found, model), times=timer.times()
+            model=model,
+            findings=_by_code_in_reader_order(found, model),
+            settings=chosen,
+            times=timer.times(),
         )
-    model, layout_findings = timer.run("schematic layout", lay_out_if_needed, model)
+    model, layout_findings, drawn, _links = timer.run(
+        "schematic layout", lay_out_if_needed, model, library, chosen.layout
+    )
     model, cable_findings = timer.run("cable layout", lay_out_cables, model)
-    found = (*found, *layout_findings, *cable_findings)
+    found = (*found, *layout_findings, *cable_findings, *check_unprinted_sets(model))
     return BuildResult(
-        model=model, findings=_by_code_in_reader_order(found, model), times=timer.times()
+        model=model,
+        findings=_by_code_in_reader_order(found, model),
+        settings=chosen,
+        times=timer.times(),
+        drawings=MappingProxyType(dict(drawn)),
     )
 
 
-def _frozen(drafts: tuple[Draft | _args.Design, ...]) -> Model:
-    """The drafts merged and frozen."""
-    return freeze(merge(*_args.drafts_of(drafts)))
+def _frozen(
+    drafts: tuple[Draft | _args.Design, ...], settings: Settings, library: Library
+) -> Model:
+    """The drafts merged and frozen, with the build's drawing library and paper records."""
+    merged = merge(*_args.drafts_of(drafts))
+    refuse_authored_library(merged)
+    refuse_authored_paper(merged)
+    return with_paper(with_drawing_library(freeze(merged), library), settings)
 
 
 def _numbered(model: Model, releases: Path | None) -> tuple[Model, tuple[Finding, ...]]:
@@ -294,6 +305,7 @@ def _validated(model: Model, earlier: tuple[Finding, ...]) -> tuple[Finding, ...
     """`earlier` and every validator's findings, each named."""
     found = [finding for validator in ALL_VALIDATORS for finding in validator(model)]
     found.extend(check_side_hints(model))
+    found.extend(check_pins_below(model))
     return name_findings(model, (*earlier, *found))
 
 
@@ -325,15 +337,32 @@ def _resolved(findings: tuple[Finding, ...], model: Model) -> tuple[Finding, ...
     )
 
 
-def _draw_svgs(model: Model) -> dict[str, str]:
-    """Page key to SVG text of `fransys_render`'s pages and cable blocks; only with a document.
+@dataclasses.dataclass(frozen=True, slots=True)
+class _Drawn:
+    """A model with the page `drawings` its build kept: what `digest_cached` keys by the digest.
+
+    The key names the drawings too: one model drawn with other drawings is another result. The
+    cache entry keeps `drawings` alive, so its `id` is not reused while the entry stands.
+    """
+
+    model: Model
+    drawings: Mapping[Id[Page], Drawing]
+
+    @property
+    def digest(self) -> str:
+        return f"{self.model.digest}/{id(self.drawings)}"
+
+
+def _draw_svgs(drawn: _Drawn) -> dict[str, str]:
+    """Page key to SVG text of the core's pages and `fransys_render`'s cable blocks and sheets.
 
     A cable block is keyed by `cable_block_key`, a schematic page by its page id.
     Built once per write/check, reused by `_check`, `_write_intermediates`, `_exports`.
     """
-    pages: dict[str, str] = (
-        dict(fransys_render.pages(model, tints=REF_TINTS)) if needs_schematic_layout(model) else {}
-    )
+    model = drawn.model
+    pages: dict[str, str] = {}
+    if needs_schematic_layout(model):
+        pages = draw_on_core(model, drawn.drawings, electrical_symbols.LIBRARY)
     return {**pages, **fransys_render.cable_blocks(model), **fransys_render.diagram_sheets(model)}
 
 
@@ -363,19 +392,19 @@ _sheets = digest_cached(1)(_draw_sheets)
 _bridges = cache(fransys_render.bridge_pieces)  # the same two drawings for every model
 
 
-def _svgs(model: Model) -> dict[str, str]:
+def _svgs(model: Model, drawings: Mapping[Id[Page], Drawing]) -> dict[str, str]:
     """`_draw_svgs(model)` memoised on `model.digest`, last model only (decision 0054); fresh dict.
 
     `check`, `write` and `release` are its only callers and treat the dict as read-only;
     the copy keeps that safe by contract.
     """
-    return dict(_svgs_cache(model))
+    return dict(_svgs_cache(_Drawn(model, drawings)))
 
 
 def _result_svgs(result: BuildResult) -> dict[str, str]:
     """The drawing of a laid-out `result` (no `ERROR`, a `Document`); `{}` otherwise."""
     laid_out = not refuses(result.findings) and _has_document(result.model)
-    return _svgs(result.model) if laid_out else {}
+    return _svgs(result.model, result.drawings) if laid_out else {}
 
 
 def _raw_findings(result: BuildResult, svgs: dict[str, str]) -> tuple[Finding, ...]:
@@ -394,7 +423,7 @@ def _raw_findings(result: BuildResult, svgs: dict[str, str]) -> tuple[Finding, .
         raw.extend(fransys_pdf.check(model, svgs, result.findings))
         raw.extend(fransys_render.sheet_check(model, document_sheets_of(model)))
         if needs_schematic_layout(model):
-            raw.extend(fransys_render.check(model))
+            raw.extend(fransys_render.check(model, result.findings))
     return tuple(raw)
 
 
@@ -425,7 +454,13 @@ def _file_safe(page_key: str) -> str:
     return page_key.replace(":", "-")
 
 
-def _write_intermediates(model: Model, svgs: dict[str, str], intermediates: Path) -> None:
+def _write_intermediates(
+    model: Model,
+    drawings: Mapping[Id[Page], Drawing],
+    svgs: dict[str, str],
+    intermediates: Path,
+    pdf: Mapping[str, object],
+) -> None:
     """Page SVGs, netlists and Typst source that never reach `out_dir`; written before the gate.
 
     A half-finished design still draws; an errored build has no pages (decision 0028, model-0077).
@@ -439,62 +474,56 @@ def _write_intermediates(model: Model, svgs: dict[str, str], intermediates: Path
             text.encode("utf-8")
         )
     for document_id, stem in document_stems(model):
-        source_text = fransys_pdf.source(model, document_id, svgs, _sheets(model), _bridges())
+        source_text = _pdf_source(model, drawings, document_id, svgs, pdf)
         (intermediates / f"{stem}.typ").write_bytes(source_text.encode("utf-8"))
 
 
-class _ExportLedger:
-    """Export names, and with `names_only=False` their bytes, refusing a name two subjects want.
-
-    `names` maps `(kind, subject)` to the name: one traversal gives `write` its bytes and
-    `export_names` its names, so the naming rule has one home.
-    """
-
-    def __init__(
-        self, model: Model, *, names_only: bool = False, timer: Timer | None = None
-    ) -> None:
-        self._model = model
-        self._timer = timer or Timer()
-        self._names_only = names_only
-        self.exports: dict[str, bytes] = {}
-        self.names: dict[tuple[str, Id[Any] | None], str] = {}
-        self._subjects_by_name: dict[str, Id[Any] | None] = {}
-
-    def add(
-        self,
-        kind: str,
-        name: str,
-        subject: Id[Any] | None,
-        data: Callable[[], str | bytes],
-        *,
-        hint: str | None = None,
-    ) -> None:
-        name = _placed(name)
-        held = self._subjects_by_name.get(name)
-        if held is not None and subject is not None and held != subject:
-            raise _export_name_clash(name, held, subject, self._model, hint=hint)
-        self.names[(kind, subject)] = name
-        self._subjects_by_name[name] = subject
-        if not self._names_only:
-            made = self._timer.run(name, data)
-            self.exports[name] = made.encode("utf-8") if isinstance(made, str) else made
+def _pdf_source(
+    model: Model,
+    drawings: Mapping[Id[Page], Drawing],
+    document_id: Id[Any],
+    svgs: dict[str, str],
+    pdf: Mapping[str, object],
+) -> str:
+    """One document's Typst source, with the list-page shares from the `[pdf]` settings."""
+    known = frozenset(drawings)
+    return fransys_pdf.source(
+        model,
+        document_id,
+        svgs,
+        _sheets(model),
+        _bridges(),
+        links={page: reference_links(model, page, known) for page in known},
+        list_share_pct=cast("float", pdf["list_share_pct"]),
+        list_gutter_pct=cast("float", pdf["list_gutter_pct"]),
+    )
 
 
-def _compile_pdf(model: Model, document_id: Id[Any], svgs: dict[str, str]) -> bytes:
+def _compile_pdf(  # noqa: PLR0913 -- the build's drawings join the model, document, svgs, fonts and pdf settings
+    model: Model,
+    drawings: Mapping[Id[Page], Drawing],
+    document_id: Id[Any],
+    svgs: dict[str, str],
+    fonts: tuple[Path, ...] = (),
+    *,
+    pdf: Mapping[str, object],
+) -> bytes:
     """One document's Typst source, compiled to PDF bytes (decision pdf-0001).
 
     Touches font files, so only here, never in pure `fransys_pdf`; passes no `timestamp=`:
     the date is the source's `#set document(date: ...)`; Typst reads one only for `auto` (0030).
     """
-    source_text = fransys_pdf.source(model, document_id, svgs, _sheets(model), _bridges())
-    compiler = typst.Compiler(font_paths=[fransys_pdf.font_dir()], ignore_system_fonts=True)
+    source_text = _pdf_source(model, drawings, document_id, svgs, pdf)
+    compiler = typst.Compiler(
+        font_paths=list(fonts) or [electrical_symbols.font_dir()], ignore_system_fonts=True
+    )
     try:
         compiled = compiler.compile(input=source_text.encode("utf-8"))
     except typst.TypstError as error:
         overflow = fransys_pdf.cover_overflow_finding(document_id, str(error))
         if overflow is None:
             raise
-        raise BuildErrors(_resolved((overflow,), model)) from error
+        raise BuildErrors(_resolved((overflow,), model), model=model) from error
     # typst.Compiler.compile's stub types every call `bytes | list[bytes] | None` because the
     # union also covers `output=<path>` (writes to disk, returns `None`) and multi-file input
     # (returns `list[bytes]`); this call passes neither, so it always returns `bytes` (confirmed
@@ -531,12 +560,15 @@ def _produce(make: Callable[[Id[Any]], Callable[[], str | bytes]], subject: Id[A
     return make(subject)()
 
 
-def _producers(
+def _producers(  # noqa: PLR0913, PLR0917 -- one parameter per input of the exports, as `_ledger`
     model: Model,
+    drawings: Mapping[Id[Page], Drawing],
     svgs: dict[str, str],
     unit: Id[ModelUnit] | None,
     findings: tuple[Finding, ...],
     changes: ListingDiff | None,
+    fonts: tuple[Path, ...],
+    pdf: Mapping[str, object],
 ) -> dict[str, Callable[[Id[Any]], Callable[[], str | bytes]]]:
     """The bytes' producer of each kind of `export_set`, by the row's subject."""
     context = partial(_list_context, model, unit)
@@ -553,12 +585,13 @@ def _producers(
         "terminals": lambda s: partial(terminal_csv_of, model, s, unit=unit, context=context(s)),
         "connectors": lambda s: partial(connectors_csv_of, model, s, unit=unit, context=context(s)),
         "wago": lambda s: partial(modules_xml_of, model, s, unit=unit),
-        "pdf": lambda s: partial(_compile_pdf, model, s, svgs),
+        "pdf": lambda s: partial(_compile_pdf, model, drawings, s, svgs, fonts, pdf=pdf),
     }
 
 
 def _ledger(  # noqa: PLR0913 -- one parameter per input of the exports, all keyword
     model: Model,
+    drawings: Mapping[Id[Page], Drawing],
     svgs: dict[str, str],
     unit: Id[ModelUnit] | None,
     *,
@@ -566,9 +599,11 @@ def _ledger(  # noqa: PLR0913 -- one parameter per input of the exports, all key
     findings: tuple[Finding, ...] = (),
     changes: ListingDiff | None = None,
     timer: Timer | None = None,
+    fonts: tuple[Path, ...] = (),
+    pdf: Mapping[str, object],
 ) -> _ExportLedger:
     ledger = _ExportLedger(model, names_only=names_only, timer=timer)
-    made = _producers(model, svgs, unit, findings, changes)
+    made = _producers(model, drawings, svgs, unit, findings, changes, fonts, pdf)
     for row in export_set(model, unit):
         ledger.add(
             row.export_kind,
@@ -582,15 +617,28 @@ def _ledger(  # noqa: PLR0913 -- one parameter per input of the exports, all key
 
 def _exports(  # noqa: PLR0913 -- one keyword per input of the exports, as `_ledger`
     model: Model,
+    drawings: Mapping[Id[Page], Drawing],
     svgs: dict[str, str],
     *,
     unit: Id[ModelUnit] | None = None,
     findings: tuple[Finding, ...] = (),
     changes: ListingDiff | None = None,
     timer: Timer | None = None,
+    fonts: tuple[Path, ...] = (),
+    pdf: Mapping[str, object],
 ) -> dict[str, bytes]:
     """Every export of `model` by name: `unit` restricts them to that unit; no netlist."""
-    return _ledger(model, svgs, unit, findings=findings, changes=changes, timer=timer).exports
+    return _ledger(
+        model,
+        drawings,
+        svgs,
+        unit,
+        findings=findings,
+        changes=changes,
+        timer=timer,
+        fonts=fonts,
+        pdf=pdf,
+    ).exports
 
 
 def export_names(
@@ -606,7 +654,9 @@ def export_names(
     Does not write a file, compile a PDF or run `check`.
     """
     model = result.model
-    return _ledger(model, {}, _resolve_unit(model, unit), names_only=True).names
+    return _ledger(
+        model, {}, {}, _resolve_unit(model, unit), names_only=True, pdf=result.settings.pdf
+    ).names
 
 
 def _remove_prefixed(out_dir: Path, name: str) -> None:
@@ -649,8 +699,8 @@ def write(
     sources) go only to `intermediates`, if given. `releases` is a release root as `release`'s
     `into`: with a stored release of the system there, `overview.html` marks what changed since it
     (the release at the model's revision, else the previous one); `None` marks nothing. Any
-    `ERROR` in `check(result)` raises `BuildErrors` and leaves `out_dir` without an export,
-    whole-model, with no escape hatch.
+    `ERROR` in `check(result)` raises `BuildErrors`, writes no export, and removes the exports
+    an earlier `write` left in `out_dir` and `out_dir/data`; no escape hatch.
     Also raises `ExportNameClash`, `TypeError` or `ValueError` for a bad `unit`.
 
     Does not write when `check` finds an ERROR; does not touch files in `out_dir` it does not own.
@@ -661,20 +711,23 @@ def write(
     out_dir.mkdir(parents=True, exist_ok=True)
     if intermediates is not None:
         intermediates.mkdir(parents=True, exist_ok=True)
-        _write_intermediates(model, svgs, intermediates)
+        _write_intermediates(model, result.drawings, svgs, intermediates, result.settings.pdf)
     findings = _resolved(raw := _raw_findings(result, svgs), model)
     _clean_stale_exports(out_dir, model, resolved_unit)
     errors = errors_of(findings)
     if errors:
-        raise BuildErrors(errors)
+        raise BuildErrors(errors, model=model)
     timer = Timer(result.times.steps)
     exports = _exports(
         model,
+        result.drawings,
         svgs,
         unit=resolved_unit,
         findings=raw,
         changes=_changes_since(model, releases, resolved_unit),
         timer=timer,
+        fonts=font_dirs(result.settings.font),
+        pdf=result.settings.pdf,
     )
     if intermediates is not None:
         _put(intermediates / TIMES_FILE, timer.times().as_json().encode("utf-8"))
@@ -709,7 +762,7 @@ def release(result: BuildResult, into: Path, *, unit: object = None) -> Path:
     findings = _resolved(raw_findings, model)
     errors = errors_of((*findings, *l4))
     if errors:
-        raise BuildErrors(errors)
+        raise BuildErrors(errors, model=model)
 
     target_info = _release_target(model, resolved_unit, into)
     target = target_info.path
@@ -722,7 +775,14 @@ def release(result: BuildResult, into: Path, *, unit: object = None) -> Path:
     if stored_text is not None and baseline.matches(stored_text, new_listing):
         return target
 
-    exports = _exports(model, svgs, unit=resolved_unit)
+    exports = _exports(
+        model,
+        result.drawings,
+        svgs,
+        unit=resolved_unit,
+        fonts=font_dirs(result.settings.font),
+        pdf=result.settings.pdf,
+    )
     baseline_files = {
         BASELINE_FILES["listing"]: new_listing_text.encode("utf-8"),
         BASELINE_FILES["model"]: model_dumps(model).encode("utf-8"),
@@ -848,5 +908,5 @@ def rebaseline(
     model = result.model
     plan = plan_rebaseline(model, baselines, _resolve_unit(model, unit))
     if plan.findings:
-        raise BuildErrors(_resolved(plan.findings, model))
+        raise BuildErrors(_resolved(plan.findings, model), model=model)
     return write_plan(plan)

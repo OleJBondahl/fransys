@@ -4,62 +4,18 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from .sides import CLOCKWISE, opposite
-from .values import Box, Cell, Lane, Options, Orientation, Pin, Side, Sym
+from .errors import CoreError
+from .values import Box, Cell, Lane, Options, Orientation, Pin, RefKind, Size
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
     from .outputs import Marker
+    from .sym_values import PinTurn, Sym, Turned
+    from .values import PinRef
 
 
-# Orientation to (mirror in x first, clockwise quarter turns), as symdef's `orient` reads it.
-_TURNS: Mapping[str, tuple[bool, int]] = frozendict(
-    {
-        "R0": (False, 0),
-        "R90": (False, 1),
-        "R180": (False, 2),
-        "R270": (False, 3),
-        "MR0": (True, 0),
-        "MR90": (True, 1),
-        "MR180": (True, 2),
-        "MR270": (True, 3),
-    }
-)
-
-
-def _turns(func: str, orient: str) -> tuple[bool, int]:
-    """The mirror flag and quarter turns of orient; any other string is a ValueError."""
-    if orient not in _TURNS:
-        msg = f"{func}: orientation {orient} is not one of the eight"
-        raise ValueError(msg)
-    return _TURNS[orient]
-
-
-def rotate_xy(dx: int, dy: int, orient: str) -> tuple[int, int]:
-    """Offsets at orient: x negated first for an MR, then turned clockwise (y grows down)."""
-    mirror, turns = _turns("rotate_xy", orient)
-    if mirror:
-        dx = -dx
-    for _ in range(turns):
-        dx, dy = -dy, dx
-    return dx, dy
-
-
-def rotate_box(box: Box, orient: str) -> Box:
-    """The box turned about the symbol origin as symdef's `orient` does; w and h swap on R90."""
-    _turns("rotate_box", orient)
-    x0, y0 = rotate_xy(box.x, box.y, orient)
-    x1, y1 = rotate_xy(box.x + box.w, box.y + box.h, orient)
-    return Box(min(x0, x1), min(y0, y1), abs(x1 - x0), abs(y1 - y0))
-
-
-def rotate_side(side: Side, orient: Orientation) -> Side:
-    """The side a pin faces after the cell is mirrored (E and W swap) and turned clockwise."""
-    mirror, turns = _turns("rotate_side", orient)
-    if mirror and side in ("E", "W"):
-        side = opposite(side)
-    return CLOCKWISE[(CLOCKWISE.index(side) + turns) % 4]
+_LINKS = (RefKind.ARROW,)  # R350: only an arrow is sized by its widest text; its flag is level
 
 
 def shift(box: Box, x: int, y: int) -> Box:
@@ -67,21 +23,39 @@ def shift(box: Box, x: int, y: int) -> Box:
     return Box(box.x + x, box.y + y, box.w, box.h)
 
 
-def marker_box_at(x: int, y: int, options: Options, orient: Orientation = "R0") -> Box:
-    """A marker's footprint: `Options.marker`, turned to orient, moved to the symbol origin (x, y).
+def marker_box_at(
+    x: int,
+    y: int,
+    options: Options,
+    orient: Orientation = "R0",
+    key: tuple[PinRef, str] | None = None,
+) -> Box:
+    """A marker's footprint at orient, moved to the symbol origin (x, y).
 
-    The origin is the point the drawing hands symdef (layout-0305); no anchor rule is added here.
-    `rotate_box` turns the box about the origin as symdef's `orient` does (layout-0306).
+    The box is `Options.marker_fit[key]` (the marker's pin and kind) when named, else `link_fit`
+    for a link kind, else `Options.marker`; the symdef layer measured every orientation (SB4).
     """
-    if options.marker is None:
-        msg = "Options.marker is unset; fransys_el passes the reference-marker symbol's keepout box"
+    boxes = options.marker_fit.get(key) if key is not None else None
+    if boxes is None and key is not None and key[1] in _LINKS:
+        boxes = options.link_fit
+    boxes = boxes or options.marker
+    if boxes is None:
+        msg = "Options.marker is unset; the symdef layer sets the marker symbol's keepout boxes"
         raise ValueError(msg)
-    return shift(rotate_box(options.marker, orient), x, y)
+    if orient not in boxes:
+        msg = f"Options.marker has no box for {orient}; the symdef layer measures all eight"
+        raise CoreError(msg)
+    return shift(boxes[orient], x, y)
 
 
 def marker_box(marker: Marker, options: Options) -> Box:
-    """The one home of a marker's footprint: `marker_box_at` its origin and orientation."""
-    return marker_box_at(marker.x, marker.y, options, marker.orient)
+    """The one home of a marker's footprint: `marker_box_at` its origin, orientation and key."""
+    return marker_box_at(marker.x, marker.y, options, marker.orient, (marker.end, str(marker.kind)))
+
+
+def corners(box: Box) -> tuple[int, int, int, int]:
+    """The box as left, top, right and bottom."""
+    return box.x, box.y, box.x + box.w, box.y + box.h
 
 
 def union(a: Box, b: Box) -> Box:
@@ -96,19 +70,45 @@ def overlaps(a: Box, b: Box) -> bool:
     return a.x < b.x + b.w and b.x < a.x + a.w and a.y < b.y + b.h and b.y < a.y + a.h
 
 
+def inside(box: Box, area: Size) -> bool:
+    """True when `box` lies wholly within the page `area`, edges included."""
+    return box.x >= 0 and box.y >= 0 and box.x + box.w <= area.w and box.y + box.h <= area.h
+
+
 def pin_of(sym: Sym, pin_id: str) -> Pin:
     """The pin of sym with pin_id; a missing id is a KeyError."""
     for p in sym.pins:
         if p.id == pin_id:
             return p
     msg = f"{sym.id} has no pin {pin_id}"
-    raise KeyError(msg)
+    raise CoreError(msg)
+
+
+def view_of(sym: Sym, orient: Orientation) -> Turned:
+    """The symbol at orient, as the symdef layer measured it; a missing view is a ValueError."""
+    view = sym.views.get(orient)
+    if view is None:
+        msg = (
+            f"symbol {sym.id} has no view at {orient}: its views are {list(sym.views)}; "
+            "the symdef layer measures every orientation the symbol is allowed"
+        )
+        raise CoreError(msg)
+    return view
+
+
+def pin_turn(sym: Sym, orient: Orientation, pin_id: str) -> PinTurn:
+    """Pin_id's offset and side at orient: the view's entry at the pin's place in Sym.pins."""
+    for p, turn in zip(sym.pins, view_of(sym, orient).pins, strict=True):
+        if p.id == pin_id:
+            return turn
+    msg = f"{sym.id} has no pin {pin_id}"
+    raise CoreError(msg)
 
 
 def cell_footprint(sym: Sym, cell: Cell, *, in_row: bool) -> Box:
     """The footprint at the cell's orient; the row variant when the cell stands in a row group."""
-    base = sym.row_footprint if in_row and sym.row_footprint is not None else sym.footprint
-    return rotate_box(base, cell.orient)
+    view = view_of(sym, cell.orient)
+    return view.row_footprint if in_row and view.row_footprint is not None else view.footprint
 
 
 def cell_anchor(sym: Sym, cell: Cell) -> tuple[int, int]:
@@ -116,14 +116,13 @@ def cell_anchor(sym: Sym, cell: Cell) -> tuple[int, int]:
     pin_id = cell.top_pin if cell.top_pin is not None else cell.bottom_pin
     if pin_id is None:
         return 0, 0
-    p = pin_of(sym, pin_id)
-    return rotate_xy(p.dx, p.dy, cell.orient)
+    return pin_xy(sym, cell, pin_id)
 
 
 def pin_xy(sym: Sym, cell: Cell, pin_id: str) -> tuple[int, int]:
     """Offset of pin_id from the symbol origin, at the cell's orient."""
-    p = pin_of(sym, pin_id)
-    return rotate_xy(p.dx, p.dy, cell.orient)
+    turn = pin_turn(sym, cell.orient, pin_id)
+    return turn.dx, turn.dy
 
 
 def stack_lane(
@@ -193,3 +192,13 @@ def box_reach(sym: Sym) -> tuple[int, int]:
         msg = f"{sym.id}: footprint {fp} lies inside body {body}; a card's footprint holds its body"
         raise ValueError(msg)
     return left, right
+
+
+def offset_to(box: Box, x: int, y: int) -> tuple[int, int]:
+    """The move that takes `box`'s top-left corner to (`x`, `y`)."""
+    return x - box.x, y - box.y
+
+
+def stair_room(y0: int, y1: int, grid: int) -> int:
+    """Turn rows a stair between y0 and y1 has: whole grids apart, minus one."""
+    return (y1 - y0) // grid - 1

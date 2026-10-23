@@ -1,49 +1,59 @@
-"""Stage 8b: one designation Label for each placed symbol, on its page grid (layout-0304).
+"""The cover the annex stage places on: a page grid plus the cells the annexes hold (layout-0304).
 
-The first pass takes, in natural order, the first candidate whose cells are free, else the one with
-the fewest blocked cells, and marks it. Then the label with the most blocked cells moves to its best
-candidate while that lowers its count (at most `ROUNDS` moves). A label left with blocked cells is
-reported as TEXT_OVERLAP. The box is `Sym.label` at the corner: no text size is computed here.
+The first pass takes, in the order given, the first candidate whose cells are free, else the one
+with the fewest blocked cells, and marks it. Then the annex with the most blocked cells moves to
+its best candidate while that lowers its count (at most `ROUNDS` moves).
 """
 
 from __future__ import annotations
 
 from collections import Counter
-from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from .keys import natural_key
-from .outputs import Annotations, Label
-from .text_label_cands import candidates
-from .text_label_grid import page_grid, page_obstacles
-from .values import XY, Finding
+from .values import XY, Box
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping, Sequence
+    from collections.abc import Sequence
 
     from .occupancy import Occupancy
-    from .outputs import PagePlacement, Placement, Routes
-    from .values import Box, Options, PlacementProblem, Sym
+    from .values import Size
 
 ROUNDS = 50  # most descent moves on one page
-FIX = "move the symbol, shorten the designation, or raise the row gap"
 
 
-@dataclass(frozen=True, slots=True)
-class PageLabels:
-    """One page's labels and findings, the moves made and the cells held."""
-
-    labels: tuple[Label, ...]
-    findings: tuple[Finding, ...]
-    rounds: int
-    cells: int
+def on_outline(box: Box, body: Box) -> bool:
+    """True when `box` meets the outline of `body`: touches or crosses it, not strictly inside."""
+    meets = (
+        box.x <= body.x + body.w
+        and body.x <= box.x + box.w
+        and box.y <= body.y + body.h
+        and body.y <= box.y + box.h
+    )
+    inside = (
+        body.x < box.x
+        and box.x + box.w < body.x + body.w
+        and body.y < box.y
+        and box.y + box.h < body.y + body.h
+    )
+    return meets and not inside
 
 
 class Cover:
     """The page grid plus the cells the labels hold; a cell is blocked by either."""
 
-    def __init__(self, base: Occupancy) -> None:
+    def __init__(
+        self,
+        base: Occupancy,
+        gap: int = 0,
+        bounds: Size | None = None,
+        owns: Sequence[Box] = (),
+        outlines: Sequence[Box] = (),
+    ) -> None:
         self.base = base
+        self.owns = tuple(owns)  # the body of each annex, in annex order
+        self.outlines = tuple(set(outlines or owns))  # every body outline of the page
+        self.gap = gap  # a label keeps this far from every wire (Options.label_gap)
+        self.bounds = bounds  # the content box: a label stands inside it
         self.held: Counter[XY] = Counter()
         self.choice: list[int] = []  # the candidate index each label stands at, in label order
 
@@ -61,25 +71,73 @@ class Cover:
     def unmark(self, box: Box) -> None:
         self.held.subtract(self.cells(box))
 
-    def blocked(self, box: Box) -> int:
-        """The cells of the box that are hard, carry a wire or are held by another label."""
+    def outside(self, box: Box) -> int:
+        """The cells of the box that lie past the content box."""
+        if self.bounds is None:
+            return 0
+        step, area = self.base.step, self.bounds
+        return sum(
+            1
+            for i, j in self.cells(box)
+            if min(i, j) < 0 or (i + 1) * step > area.w or (j + 1) * step > area.h
+        )
+
+    def wires_in(self, box: Box) -> int:
+        """The exact wire runs that pass through `box`, their ends and sides not touching it."""
+        count = 0
+        for (horizontal, at), runs in self.base.runs.items():
+            lo, hi = (box.y, box.y + box.h) if horizontal else (box.x, box.x + box.w)
+            if not lo < at < hi:
+                continue
+            a, z = (box.x, box.x + box.w) if horizontal else (box.y, box.y + box.h)
+            count += sum(1 for r0, r1, _ in runs if r0 < z and r1 > a)
+        return count
+
+    def near_wires(self, box: Box) -> int:
+        """The wire runs within `gap` of the box that do not cross it."""
+        gap = self.gap
+        if gap == 0:
+            return 0
+        wide = Box(box.x - gap, box.y - gap, box.w + 2 * gap, box.h + 2 * gap)
+        return self.wires_in(wide) - self.wires_in(box)
+
+    def on_outlines(self, box: Box, own: Box | None = None) -> int:
+        """The body outlines, other than `own` (its symbol's body), that the box touches or crosses.
+
+        A designation stands clear of every drawn line (CORE-TEXTS ruling 100.2).
+        """
+        return sum(1 for o in self.outlines if o != own and on_outline(box, o))
+
+    def own_of(self, index: int) -> Box | None:
+        """The body of label `index`; None for a cover built without bodies."""
+        return self.owns[index] if index < len(self.owns) else None
+
+    def blocked(self, box: Box, own: Box | None = None) -> int:
+        """Blocked cells: hard, wired, held by a label or outside the content box, plus near wires.
+
+        A wire closer than `gap` counts one, so a label keeps its distance from it; an outline
+        touched counts one.
+        """
         b = self.base
-        return sum(1 for c in self.cells(box) if c in b.hard or c in b.used or self.held[c] > 0)
+        cells = {c for c in self.cells(box) if c in b.hard or c in b.used or self.held[c] > 0}
+        return len(cells) + self.outside(box) + self.near_wires(box) + self.on_outlines(box, own)
 
 
 def first_pass(cover: Cover, cands: Sequence[Sequence[tuple[str, Box]]]) -> None:
-    """Natural order; each label takes its first free candidate, else its least blocked."""
-    for options in cands:
-        counts = [cover.blocked(box) for _, box in options]
+    """In the order given; each annex takes its first free candidate, else its least blocked."""
+    for i, options in enumerate(cands):
+        own = cover.own_of(i)
+        counts = [cover.blocked(box, own) for _, box in options]
         pick = counts.index(min(counts))
         cover.mark(options[pick][1])
         cover.choice.append(pick)
 
 
-def own_counts(cover: Cover, boxes: Sequence[Box], held: Box) -> list[int]:
-    """Blocked cells of each box with the label standing at `held` taken out."""
+def own_counts(cover: Cover, boxes: Sequence[Box], held: Box, index: int) -> list[int]:
+    """Blocked cells of each box of label `index` with that label standing at `held` taken out."""
     cover.unmark(held)
-    counts = [cover.blocked(box) for box in boxes]
+    own = cover.own_of(index)
+    counts = [cover.blocked(box, own) for box in boxes]
     cover.mark(held)
     return counts
 
@@ -88,14 +146,14 @@ def improve(cover: Cover, cands: Sequence[Sequence[tuple[str, Box]]]) -> bool:
     """Move the most blocked label that has a better candidate; False when none has."""
     choice = cover.choice
     now = [
-        own_counts(cover, [cands[i][choice[i]][1]], cands[i][choice[i]][1])[0]
+        own_counts(cover, [cands[i][choice[i]][1]], cands[i][choice[i]][1], i)[0]
         for i in range(len(cands))
     ]
     for i in sorted(range(len(cands)), key=lambda k: (-now[k], k)):
         if now[i] == 0:
             return False
         held = cands[i][choice[i]][1]
-        counts = own_counts(cover, [box for _, box in cands[i]], held)
+        counts = own_counts(cover, [box for _, box in cands[i]], held, i)
         best = counts.index(min(counts))
         if counts[best] < now[i]:
             cover.unmark(held)
@@ -105,65 +163,23 @@ def improve(cover: Cover, cands: Sequence[Sequence[tuple[str, Box]]]) -> bool:
     return False
 
 
+def promote(cover: Cover, cands: Sequence[Sequence[tuple[str, Box]]]) -> bool:
+    """Move a label with no blocked cell to an earlier candidate that is also free (I8.3)."""
+    choice = cover.choice
+    for i, options in enumerate(cands):
+        held = options[choice[i]][1]
+        counts = own_counts(cover, [box for _, box in options], held, i)
+        if counts[choice[i]] == 0 and 0 in counts[: choice[i]]:
+            cover.unmark(held)
+            cover.mark(options[counts.index(0)][1])
+            choice[i] = counts.index(0)
+            return True
+    return False
+
+
 def descend(cover: Cover, cands: Sequence[Sequence[tuple[str, Box]]]) -> int:
     """Moves made, at most ROUNDS."""
     for rounds in range(ROUNDS):
-        if not improve(cover, cands):
+        if not (improve(cover, cands) or promote(cover, cands)):
             return rounds
     return ROUNDS
-
-
-def label_page(
-    page: PagePlacement, grid: Occupancy, syms: Mapping[str, Sym], options: Options
-) -> PageLabels:
-    """The labels of one page on its grid."""
-    order = sorted(page.placed, key=lambda p: (natural_key(p.sym), p.sym))
-    cands = [candidates(syms[p.sym], p, options) for p in order]
-    cover = Cover(grid)
-    first_pass(cover, cands)
-    rounds = descend(cover, cands)
-    labels, findings = [], []
-    for p, options_, pick in zip(order, cands, cover.choice, strict=True):
-        corner, box = options_[pick]
-        labels.append(Label(p.sym, page.page, box, corner))
-        left = own_counts(cover, [box], box)[0]
-        if left:
-            text = f"label of {p.sym} on page {page.page} has {left} blocked cells: {FIX}"
-            findings.append(Finding("TEXT_OVERLAP", text, page.page, p.sym))
-    return PageLabels(tuple(labels), tuple(findings), rounds, sum(cover.held.values()))
-
-
-def label_run(
-    placement: Placement,
-    routes: Routes,
-    notes: Annotations,
-    problem: PlacementProblem,
-    options: Options,
-) -> list[PageLabels]:
-    """label_page for every page in page order; `notes` holds the markers and tables."""
-    syms = {s.id: s for s in problem.symbols}
-    wires = {r.page: r.wires for r in routes.pages}
-    out = []
-    for page in sorted(placement.pages, key=lambda p: p.page):
-        boxes = page_obstacles(page, notes.markers, notes.tables, options)
-        grid = page_grid(page, wires.get(page.page, ()), boxes, problem.area, options.wiring_grid)
-        out.append(label_page(page, grid, syms, options))
-    return out
-
-
-def label_pages(
-    placement: Placement,
-    routes: Routes,
-    notes: Annotations,
-    problem: PlacementProblem,
-    options: Options,
-) -> tuple[tuple[Label, ...], tuple[Finding, ...]]:
-    """One designation Label per Placed per page; `notes` holds the markers and tables.
-
-    A TEXT_OVERLAP finding names each label left with blocked cells.
-    """
-    runs = label_run(placement, routes, notes, problem, options)
-    return (
-        tuple(label for r in runs for label in r.labels),
-        tuple(f for r in runs for f in r.findings),
-    )

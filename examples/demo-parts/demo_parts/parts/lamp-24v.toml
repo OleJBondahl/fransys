@@ -10,9 +10,10 @@ class_code = "P"
 [[function]]
 name = "lamp"
 kind = "load"
+symbol = "lamp"
 ports = [
-    { name = "1", role = "generic", side = "line" },
-    { name = "2", role = "generic", side = "load" },
+    { name = "1", role = "generic", side = "line", symbol_port = "in" },
+    { name = "2", role = "generic", side = "load", symbol_port = "out" },
 ]
 
 [function.operating]

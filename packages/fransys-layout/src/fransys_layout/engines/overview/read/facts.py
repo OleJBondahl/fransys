@@ -66,7 +66,7 @@ def view_facts(
     column, left = open_column(model, unit, open_, specs)
     profile = profile_of(model)
     height = text_room_g(
-        profile.text_height_mm, sheet_format_of(model, profile.sheet_format).module_mm
+        model, profile.text_height_mm, sheet_format_of(model, profile.sheet_format)
     )
     diagram = DiagramFacts(
         unit=unit,

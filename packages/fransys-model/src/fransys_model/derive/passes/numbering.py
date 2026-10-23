@@ -10,15 +10,17 @@ from fransys_kernel import require_origin
 from fransys_model.derive.designation import (
     can_print_designation,
     connector_segment,
-    designating_ancestors,
-    own_designation_or_none,
     port_designation,
     product_designation,
     reference_designation,
+)
+from fransys_model.derive.designation_label import (
+    own_designation_or_none,
     reference_leaves,
     takes_parents_designation,
 )
 from fransys_model.derive.facts.bars import bar_items
+from fransys_model.derive.facts.units import designating_ancestors
 from fransys_model.derive.harness import all_cables, all_unit_cables
 from fransys_model.derive.indexes import build_indexes
 from fransys_model.derive.lone_cable import lone_cable_harness
@@ -31,6 +33,7 @@ from fransys_model.derive.passes.numbering_units import (
 from fransys_model.derive.unit_relative_key import unit_relative_key
 from fransys_model.derive.unit_release import unit_release
 from fransys_model.kernel import Finding, Model, Severity, evolve
+from fransys_model.vocab.codes import fix_text
 from fransys_model.vocab.enums import Aspect
 from fransys_model.vocab.facets.reserved_designation import ReservedDesignationFacet
 from fransys_model.vocab.finding_ref import ref
@@ -115,6 +118,7 @@ def _reference_duplicates(model: Model, terminals: frozenset[Id[Item]]) -> list[
             severity=Severity.ERROR,
             subjects=tuple(sorted(item.id for item in group)),
             message=(f"reference designation {text!r} is shared by {len(group)} items"),
+            fix=fix_text(REFERENCE_DESIGNATION_DUPLICATE),
         )
         for text, group in by_text.items()
         if len(group) > 1
@@ -165,6 +169,7 @@ def _product_duplicates(model: Model, terminals: frozenset[Id[Item]]) -> list[Fi
             severity=Severity.ERROR,
             subjects=tuple(sorted(item.id for item in group)),
             message=(f"product designation {text!r} is shared by {len(group)} items"),
+            fix=fix_text(PRODUCT_DESIGNATION_DUPLICATE),
         )
         for text, group in by_text.items()
         if len(group) > 1
@@ -175,6 +180,7 @@ def _product_duplicates(model: Model, terminals: frozenset[Id[Item]]) -> list[Fi
             severity=Severity.ERROR,
             subjects=tuple(sorted(item.id for item in group)),
             message=(f"product designation {text!r} is shared by {len(group)} items"),
+            fix=fix_text(PRODUCT_DESIGNATION_DUPLICATE),
         )
         for (_unit, text), group in by_unit_text.items()
         if len(group) > 1
@@ -212,6 +218,7 @@ def _harness_end_ambiguities(model: Model) -> list[Finding]:
                                 f"two ends of {cable.designation} print {text!r}{where}; "
                                 "place the unit instances at locations or tag the strips apart"
                             ),
+                            fix=fix_text(HARNESS_END_AMBIGUOUS),
                         )
                     )
     return findings
@@ -247,6 +254,7 @@ def _port_duplicates(model: Model, terminals: frozenset[Id[Item]]) -> list[Findi
                     "two pins in every list and drawing, so the part's pin markings must "
                     "tell them apart"
                 ),
+                fix=fix_text(PORT_DESIGNATION_DUPLICATE),
             )
             for text, group in by_text.items()
             if len(group) > 1
@@ -301,6 +309,7 @@ def _duplicates(model: Model, siblings: list[Item], reserved: frozenset[str]) ->
                 severity=Severity.ERROR,
                 subjects=(item.id,),
                 message=f"item {ref(item)} has the designation {text!r}, which {reason}",
+                fix=fix_text(DESIGNATION_DUPLICATE),
             )
         )
     return findings

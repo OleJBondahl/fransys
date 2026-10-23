@@ -2,10 +2,11 @@
 
 from typing import TYPE_CHECKING, Final
 
-from fransys_model.derive.designation import item_label
+from fransys_model.derive.designation_label import item_label
+from fransys_model.derive.facts.roles import plc_channel_facets
 from fransys_model.kernel import Finding, Severity
-from fransys_model.vocab.facets.plc import PlcChannelFacet
-from fransys_model.vocab.tables import facets_of, functions
+from fransys_model.vocab.codes import fix_text
+from fransys_model.vocab.tables import functions
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
@@ -31,11 +32,11 @@ def ambiguous_findings(
     if not ambiguous:
         return []
     all_functions = functions(model)
+    channel_of = plc_channel_facets(model)
     number = {
-        function.id: facet.channel
-        for facet in facets_of(model, PlcChannelFacet).values()
+        function.id: channel_of[function.template].channel
         for function in all_functions.values()
-        if function.template == facet.subject
+        if function.template in channel_of
     }
     found: list[Finding] = []
     for request in requests:
@@ -55,6 +56,7 @@ def ambiguous_findings(
                     f"{request.signal.value} as {request.signal_name!r}, but its wiring ties "
                     f"channels {names}: wire it to one channel directly, or free the others"
                 ),
+                fix=fix_text(PLC_REQUEST_AMBIGUOUS),
             )
         )
     return found

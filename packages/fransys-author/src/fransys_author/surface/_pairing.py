@@ -3,20 +3,16 @@
 from typing import TYPE_CHECKING, NamedTuple, Protocol, cast, runtime_checkable
 
 from fransys_author.errors import AuthorError
-from fransys_model.kernel import make_id
+from fransys_model.derive import poles_of_template
 from fransys_model.vocab import (
     ConductorMark,
     FunctionTemplate,
     InternalLink,
-    LinkKind,
     PlcChannelFacet,
     PlcRequestFacet,
+    Pole,
     PortRole,
     PortTemplate,
-    function_role_of,
-    pole_order,
-    poles_by_role,
-    port_order_key,
 )
 from fransys_model.vocab import Port as ModelPort
 
@@ -25,7 +21,7 @@ if TYPE_CHECKING:
 
     from fransys_author.handles import Fn, Port
     from fransys_model.kernel import Draft, Id
-    from fransys_model.vocab import Function, Pole
+    from fransys_model.vocab import Function
 
     from .design import Design
 
@@ -182,9 +178,9 @@ class PartFacts:
 
 
 def _need_sides(fn: Fn, found: tuple[Pole, ...]) -> None:
-    """Raise when a pole has no line side; its pins are named in the message only."""
+    """Raise when a two-pin pole has no line side; its pins are named in the message only."""
     for pole in found:
-        if pole.line is None:
+        if pole.line is None and pole.ends[0] != pole.ends[1]:
             a, b = pole.ends
             msg = f"{fn.name!r} pole {a.name}/{b.name} has no line side: {NO_SIDE_FIX}"
             raise AuthorError(msg)
@@ -194,50 +190,23 @@ def _phase(end: End) -> int:
     return _PHASE.index(cast("ConductorMark", end.mark))
 
 
-def marking_order(facts: PartFacts, ports: list[Port]) -> list[Port]:
-    """`ports` in the vocab's marking order: the key `pole_order` sorts a pole's ends by."""
-    templates = {port: facts.port_template(port) for port in ports}
-    return sorted(ports, key=lambda port: port_order_key(templates[port]))
-
-
-def _line_load(facts: PartFacts, ports: list[Port]) -> list[tuple[Port, Port]]:
-    """The vocab's pole of two pins, as (line, load); empty when neither pin is a line side."""
-    a, b = (facts.port_template(port) for port in ports)
-    key = (*a.key, "pair", b.name)
-    link = InternalLink(
-        id=make_id(InternalLink, key), key=key, a=a.id, b=b.id, kind=LinkKind.SWITCHED
+def template_poles(facts: PartFacts, fn: Fn) -> tuple[Pole, ...]:
+    """The part's poles of `fn`: `poles_of_template`, sideless: no stated side, no poles."""
+    ports = {facts.port_template(port).id for port in fn.ports}
+    templates = (facts.templates[i] for i in ports)
+    return poles_of_template(
+        facts.function_template(fn).kind, templates, facts.links(fn), sideless=True
     )
-    (pole,) = pole_order([link], facts.templates)
-    if pole.line is None:
-        return []
-    by_template = {facts.port_template(port).id: port for port in ports}
-    return [(by_template[pole.ends[0].id], by_template[pole.ends[1].id])]
-
-
-def _without_links(facts: PartFacts, fn: Fn) -> list[tuple[Port, Port]]:
-    """One-port function, a line/load pair of pins, or pins carrying marks (a motor)."""
-    ports = [port for port in fn.ports if port.role is not PortRole.PE]
-    if len(ports) == 1:
-        return [(ports[0], ports[0])]
-    if len(ports) == 2 and (pair_ := _line_load(facts, ports)):  # noqa: PLR2004 -- a pole has two ends
-        return pair_
-    if ports and all(facts.mark(port) is not None for port in ports):
-        return [(port, port) for port in marking_order(facts, ports)]
-    return []
 
 
 def poles(facts: PartFacts, fn: Fn, *, partless_ok: bool = False) -> list[tuple[Port, Port]]:
     """The poles of `fn` as (line port, load port), in the model's pole order.
 
-    Layout twin: `fransys_layout.stages.resolve.poles_and_pairs`; the model's `poles_by_role`.
-    Does not read a name or a marking or guess a side. `partless_ok`: pins are poles, in order.
+    Does not read a name or guess a side: `poles_of_template` does. `partless_ok`: pins are poles.
     """
     if partless_ok and facts.partless(fn):
         return [(port, port) for port in fn.ports if port.role is not PortRole.PE]
-    template = facts.function_template(fn)
-    found = poles_by_role(function_role_of(template.kind), facts.links(fn), facts.templates)
-    if not found:
-        return _without_links(facts, fn)
+    found = template_poles(facts, fn)
     _need_sides(fn, found)
     by_template = {facts.port_template(port).id: port for port in fn.ports}
     return [(by_template[pole.ends[0].id], by_template[pole.ends[1].id]) for pole in found]

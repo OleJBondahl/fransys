@@ -5,13 +5,16 @@ from typing import TYPE_CHECKING
 
 from fransys_model.derive import (
     PAGE_HEADINGS,
+    ListKey,
+    PageForm,
     SheetKey,
     document_page_kinds,
     document_row,
     document_sheet,
+    font_family,
     harness_cables_for,
+    page_preset,
 )
-from fransys_model.vocab import PageKind
 
 from ._background import page_background
 from ._contents import contents_page
@@ -38,15 +41,16 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Mapping
 
     from fransys_model.derive import (
-        BridgePiece,
+        BridgePieceRow,
         DocumentId,
         DocumentRow,
+        PageId,
         SheetBackground,
         SheetRow,
     )
+    from fransys_model.derive.page_nav import ReferenceLink
     from fransys_model.kernel import Model
-
-_SELF_FRAMED = (PageKind.BLOCK_DIAGRAM, PageKind.SCHEMATIC, PageKind.HARNESS_DRAWING)
+    from fransys_model.vocab import PageKind
 
 
 def _section_prefix(
@@ -61,15 +65,18 @@ def _section_prefix(
     return f"#set page(margin: {text_margin(sheet)}, background: {back})\n{RESTART}"
 
 
-def _list_pages(bridges: Mapping[str, BridgePiece] | None) -> dict[PageKind, Callable[..., str]]:
-    """Each list page kind's builder; the terminal list also takes the Bridge mark pieces."""
+def _list_pages(
+    bridges: Mapping[str, BridgePieceRow] | None, share_pct: float, gutter_pct: float
+) -> dict[ListKey, Callable[..., str]]:
+    """Each list key's builder; the terminal list also takes the Bridge mark pieces."""
+    flow = {"share_pct": share_pct, "gutter_pct": gutter_pct}
     return {
-        PageKind.PLC_LIST: plc_list_page,
-        PageKind.TERMINAL_LIST: partial(terminal_list_page, bridges=bridges),
-        PageKind.CONNECTOR_LIST: connector_list_page,
-        PageKind.WIRE_LABEL_LIST: wire_label_list_page,
-        PageKind.DESIGNATION_LIST: designation_list_page,
-        PageKind.BOM: bom_page,
+        ListKey.PLC: partial(plc_list_page, **flow),
+        ListKey.TERMINAL: partial(terminal_list_page, bridges=bridges, **flow),
+        ListKey.CONNECTOR: partial(connector_list_page, **flow),
+        ListKey.WIRE_LABEL: partial(wire_label_list_page, **flow),
+        ListKey.DESIGNATION: partial(designation_list_page, **flow),
+        ListKey.BOM: bom_page,
     }
 
 
@@ -79,19 +86,26 @@ def _text_page(  # noqa: PLR0913, PLR0917 -- one branch per `PageKind`, plus `sh
     record: DocumentRow,
     pages: tuple[PageKind, ...],
     sheets: Mapping[SheetKey, SheetBackground],
-    bridges: Mapping[str, BridgePiece] | None,
+    bridges: Mapping[str, BridgePieceRow] | None,
+    *,
+    share_pct: float,
+    gutter_pct: float,
 ) -> str:
-    if kind is PageKind.COVER:
+    preset = page_preset(kind)
+    if preset.form is PageForm.COVER:
         return cover_page(model, record)
-    if kind is PageKind.NOTES:
+    if preset.form is PageForm.NOTES:
         return notes_page(record)
-    if kind is PageKind.SHEET_INDEX:
-        return sheet_index_page(model, record, pages, sheets)
-    if kind is PageKind.CONTENTS:
+    if preset.form is PageForm.SHEET_INDEX:
+        return sheet_index_page(
+            model, record, pages, sheets, share_pct=share_pct, gutter_pct=gutter_pct
+        )
+    if preset.form is PageForm.CONTENTS:
         return contents_page(model, record, pages)
-    if kind is PageKind.CABLE_LIST:
+    if preset.form is PageForm.CABLE_LIST:
         return cable_list_page(model, record)
-    body = _list_pages(bridges)[kind](model, record)
+    assert preset.list_key is not None  # noqa: S101 -- LIST is the last form and has a key
+    body = _list_pages(bridges, share_pct, gutter_pct)[preset.list_key](model, record)
     return list_mark(body, PAGE_HEADINGS[kind])
 
 
@@ -103,55 +117,82 @@ def _page_source(  # noqa: PLR0913, PLR0917 -- one branch per `PageKind`, plus `
     pages: tuple[PageKind, ...],
     sheet: SheetRow,
     sheets: Mapping[SheetKey, SheetBackground],
-    bridges: Mapping[str, BridgePiece] | None,
+    bridges: Mapping[str, BridgePieceRow] | None,
+    *,
+    links: Mapping[PageId, tuple[ReferenceLink, ...]],
+    share_pct: float,
+    gutter_pct: float,
 ) -> str:
     """The Typst source of one page kind; the two drawing kinds set their own frame."""
-    if kind is PageKind.SCHEMATIC:
+    form = page_preset(kind).form
+    if form is PageForm.SCHEMATIC:
         if schematic_yields(model, record, pages):  # pdf-0033: no drawing set, no page
             return ""
         found = schematic_pages(model, record, pages)
-        return schematic_source(model, record, sheet, found, svgs, sheets)
-    if kind is PageKind.HARNESS_DRAWING:
+        return schematic_source(model, record, sheet, found, svgs, sheets, links)
+    if form is PageForm.HARNESS_DRAWING:
         cables = harness_cables_for(model, record.id, pages)
         return harness_drawing_source(model, record, sheet, cables, svgs, sheets)
-    if kind is PageKind.BLOCK_DIAGRAM:
+    if form is PageForm.BLOCK_DIAGRAM:
         return diagram_source(model, record, svgs, sheets)
-    return _text_page(kind, model, record, pages, sheets, bridges)
+    return _text_page(
+        kind, model, record, pages, sheets, bridges, share_pct=share_pct, gutter_pct=gutter_pct
+    )
 
 
-def source(
+def source(  # noqa: PLR0913 -- the document's inputs, plus the two list-share values from `[pdf]`
     model: Model,
     document: DocumentId,
     svgs: Mapping[str, str],
     sheets: Mapping[SheetKey, SheetBackground],
-    bridges: Mapping[str, BridgePiece] | None = None,
+    bridges: Mapping[str, BridgePieceRow] | None = None,
+    *,
+    links: Mapping[PageId, tuple[ReferenceLink, ...]],
+    list_share_pct: float,
+    list_gutter_pct: float,
 ) -> str:
     """The complete, self-contained Typst source of one document.
 
     Args:
         model: A laid-out model.
         document: Id of the document.
-        svgs: Page key to SVG text (``fransys_render.pages``): each `SCHEMATIC` SVG is inlined as
-            an `image`; a `HARNESS_DRAWING` page reads one per cable block (`cable_block_key`).
-        sheets: Page key to its background (``fransys_render.sheets``): frame, grid and title
-            block as one SVG, and the boxes for the page counter and the logo.
+        svgs: Page key to SVG text (drawn by the facade), inlined as an `image`.
+        sheets: Page key to its background (``fransys_render.sheets``): frame, grid, title block.
         bridges: ``fransys_render.bridge_pieces()``; a jumper group without it is a `KeyError`.
+        links: Page id to its reference links, placed over the drawing; every drawn page is in it.
+        list_share_pct: A list page's column, % of the content width.
+        list_gutter_pct: The gutter between a list page's two columns, % of the content width.
 
     Returns:
-        The Typst source, pure in `model`, `svgs` and `sheets`; each page's background is its
-        sheet. An empty section body is skipped, not joined as a bare `#pagebreak()`.
+        The Typst source, pure in its inputs. An empty section body is skipped.
     """
     record = document_row(model, document)
     pages = document_page_kinds(model, document)
     sheet = document_sheet(model, record.id, pages)
     page_bodies = []
     for kind in pages:
-        body = _page_source(kind, model, record, svgs, pages, sheet, sheets, bridges)
+        body = _page_source(
+            kind,
+            model,
+            record,
+            svgs,
+            pages,
+            sheet,
+            sheets,
+            bridges,
+            links=links,
+            share_pct=list_share_pct,
+            gutter_pct=list_gutter_pct,
+        )
         if not body:
             continue
-        if kind not in _SELF_FRAMED:
+        if not page_preset(kind).self_framed:
             body = _section_prefix(model, record, sheet, kind, sheets) + "\n" + body
         page_bodies.append(body)
-    head = document_metadata(model, record) + "\n" + preamble(sizes_of(model, record.id), sheet)
+    head = (
+        document_metadata(model, record)
+        + "\n"
+        + preamble(sizes_of(model, record.id), sheet, font_family(model))
+    )
     body = "\n#pagebreak()\n".join(page_bodies)
     return f"{head}\n{body}\n#metadata(none) <{LAST_PAGE}>\n"

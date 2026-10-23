@@ -9,27 +9,36 @@ from __future__ import annotations
 from dataclasses import replace
 
 import pytest
+from options_fixtures import core_options
 
-from fransys_layout.core import Options, PlacementProblem
+from fransys_layout.core import Box, Facts, PlacementProblem
 from fransys_layout.core.arrow_reserve import arrow_ends, reserve
 from fransys_layout.core.place_env import page_envs
 from fransys_layout.core.place_x import place_x, row_specs
 from fransys_layout.core.place_y import _spans
 from fransys_layout.core.values import Ref, RefEnd, RefKind
 
-from .conftest import MARKER_BOX
+from .conftest import MARKER, MARKER_BOX
 from .cut_fixtures import AREA, box_sym
 from .flow_builders import net, poles
 from .pipeline_fixtures import cut_of
 
-OPTIONS = Options(marker=MARKER_BOX, justify=False)
+OPTIONS = core_options(
+    marker=MARKER,
+    justify=False,
+    flip_turn="R180",
+    tag_stagger=True,
+    label_gap=8,
+    driver_first=True,
+    arrow_sides=("E", "W"),
+)
 W = MARKER_BOX.w
 
 
 def _env():
     syms = (box_sym(2), poles("L", 2), poles("M", 2))
     nets = (net("n1", "A1.p1", "L.n0", "M.n0"), net("n2", "A1.p2", "L.n1", "M.n1"))
-    prob = PlacementProblem(AREA, syms, nets)
+    prob = PlacementProblem(AREA, syms, nets, facts=Facts())
     (env,) = page_envs(cut_of(prob, OPTIONS), prob, OPTIONS)
     return env
 
@@ -71,6 +80,46 @@ def test_a_row_without_an_arrow_is_unchanged() -> None:
 
 
 def test_an_arrow_with_no_marker_box_is_refused_and_no_arrow_needs_none() -> None:
-    assert reserve(0, Options()) == 0
+    assert (
+        reserve(
+            0,
+            core_options(
+                flip_turn="R180",
+                tag_stagger=True,
+                label_gap=8,
+                driver_first=True,
+                arrow_sides=("E", "W"),
+            ),
+        )
+        == 0
+    )
     with pytest.raises(ValueError, match=r"Options\.marker is unset"):
-        reserve(1, Options())
+        reserve(
+            1,
+            core_options(
+                flip_turn="R180",
+                tag_stagger=True,
+                label_gap=8,
+                driver_first=True,
+                arrow_sides=("E", "W"),
+            ),
+        )
+
+
+def test_a_link_fit_box_sets_the_reserve_and_the_two_end_marker_boxes() -> None:
+    """R350: the widest arrow's box is the reserve and the box of an arrow.
+
+    A tag, star or stub keeps `Options.marker` (a stub's own fit is `marker_fit`'s)..
+    """
+    from turn_fixtures import marker_views
+
+    from fransys_layout.core import PinRef
+    from fransys_layout.core.geometry import marker_box_at
+
+    wide = replace(OPTIONS, link_fit=marker_views(Box(0, -8, 60, 16)))
+    assert reserve(1, OPTIONS) == W
+    assert reserve(1, wide) == 60
+    pin = PinRef("s", "p")
+    assert marker_box_at(0, 0, wide, "R0", (pin, "arrow")).w == 60
+    assert marker_box_at(0, 0, wide, "R0", (pin, "stub")).w == W
+    assert marker_box_at(0, 0, wide, "R0", (pin, "tag")).w == W

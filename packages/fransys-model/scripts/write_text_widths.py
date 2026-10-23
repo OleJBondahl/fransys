@@ -1,11 +1,10 @@
 """Write `derive/_text_widths.py` from the DejaVu Sans Condensed TTFs; no network.
 
 Usage: `uv run python packages/fransys-model/scripts/write_text_widths.py`. Build-time tool: it
-reads the two fonts under `fransys-pdf` with fontTools (a dev dependency) and writes the tracked
-module of advance widths, in font units, for ASCII, Latin-1 and the few symbols drawings print,
-with the capital height (the glyph H's top: the font's OS/2 table is version 1, so it has no
-`sCapHeight`) and the typographic ascent (`sTypoAscender`), and the descender depth (the glyph
-p's bottom), all in font units.
+reads the two fonts under `electrical_symbols` with fontTools (a dev dependency) and writes
+the tracked module of advance widths, in font units, for ASCII, Latin-1 and the few symbols
+drawings print.
+The font heights live in `electrical_symbols/library.toml`.
 """
 
 import hashlib
@@ -16,7 +15,7 @@ from typing import Any, cast
 from fontTools.ttLib import TTFont
 
 ROOT = Path(__file__).resolve().parents[2]
-FONTS = ROOT / "fransys-pdf" / "src" / "fransys_pdf" / "fonts"
+FONTS = ROOT / "electrical-symbols" / "src" / "electrical_symbols" / "fonts"
 TARGET = ROOT / "fransys-model" / "src" / "fransys_model" / "derive" / "_text_widths.py"
 # ASCII, Latin-1 (without the C1 controls), and the dashes, ellipsis, euro and ohm signs
 CODEPOINTS = (
@@ -31,17 +30,15 @@ CODEPOINTS = (
 )
 _HEADER = '''"""DejaVu Sans Condensed advance widths, in font units; GENERATED, do not edit.
 
-Written by `scripts/write_text_widths.py` from the two TTFs under `fransys_pdf/fonts/` (Bitstream
-Vera licence), so one table serves every text width (model-0190). The capital height and the
-ascent come from the regular face. Each string holds `codepoint-in-hex=advance` pairs.
+Written by `scripts/write_text_widths.py` from the two TTFs under
+`electrical_symbols/fonts/` (Bitstream Vera licence), so one table serves every text
+width (model-0190).
+Each string holds `codepoint-in-hex=advance` pairs.
 sha256 Regular {regular}
 sha256 Bold    {bold}
 """
 
 UNITS_PER_EM = {upem}
-CAP_HEIGHT_UNITS = {cap}
-ASCENT_UNITS = {ascent}
-DESCENT_UNITS = {descent}
 
 '''
 
@@ -67,17 +64,10 @@ def main() -> None:
     upems = {cast("Any", f["head"]).unitsPerEm for f in fonts.values()}
     assert len(upems) == 1, upems  # noqa: S101 - build-time script: stop on mixed units-per-em
     sha = {w: hashlib.sha256(p.read_bytes()).hexdigest() for w, p in paths.items()}
-    regular = fonts["Regular"]
-    cap = cast("Any", regular["glyf"])[cast("Any", regular.getBestCmap())[ord("H")]].yMax
-    ascent = cast("Any", regular["OS/2"]).sTypoAscender
-    descent = -cast("Any", regular["glyf"])[cast("Any", regular.getBestCmap())[ord("p")]].yMin
     text = _HEADER.format(
         regular=sha["Regular"],
         bold=sha["Bold"],
         upem=upems.pop(),
-        cap=cap,
-        ascent=ascent,
-        descent=descent,
     )
     text += _literal("REGULAR_PAIRS", _pairs(fonts["Regular"]))
     text += _literal("BOLD_PAIRS", _pairs(fonts["Bold"]))

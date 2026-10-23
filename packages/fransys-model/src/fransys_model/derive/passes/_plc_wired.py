@@ -10,6 +10,7 @@ from collections import Counter
 from typing import TYPE_CHECKING
 
 from fransys_model.derive.facts.plc_wiring import (
+    channel_takes,
     direct_neighbours,
     owner_of_port,
     wired_functions,
@@ -24,8 +25,7 @@ if TYPE_CHECKING:
 
     from fransys_model.kernel import Id, Model
     from fransys_model.vocab.core import Function, Port, Unit
-    from fransys_model.vocab.enums import SignalType
-    from fransys_model.vocab.facets.plc import PlcRequestFacet
+    from fransys_model.vocab.facets.plc import PlcChannelFacet, PlcRequestFacet
 
 
 def unit_of(model: Model, function: Function) -> Id[Unit] | None:
@@ -54,7 +54,7 @@ class WiredPick:
 def narrow(
     request: PlcRequestFacet,
     eligible: Collection[Id[Function]],
-    signal_of: Mapping[Id[Function], SignalType],
+    facts_of: Mapping[Id[Function], PlcChannelFacet],
     adjacent: Collection[Id[Function]],
 ) -> list[Id[Function]]:
     """The channels left of `eligible` after W2 (the asked kind) and W3 (a direct conductor).
@@ -62,7 +62,7 @@ def narrow(
     W2 keeps the channels of the request's signal; with none, all stay (the binding then raises
     `PLC_BINDING_SIGNAL_MISMATCH`). W3 keeps the channels one conductor from the request, if any.
     """
-    kept = [c for c in eligible if signal_of.get(c) is request.signal] or list(eligible)
+    kept = [c for c in eligible if channel_takes(facts_of[c], request.signal)] or list(eligible)
     return [c for c in kept if c in adjacent] or kept
 
 
@@ -74,7 +74,7 @@ class _Wiring:
     by_function: Mapping[Id[Function], list[Id[Port]]]
     channel_owner: Mapping[Id[Port], Id[Function]]
     request_owner: Mapping[Id[Port], Id[Function]]
-    ranked: Mapping[Id[Function], tuple[int, SignalType]]
+    ranked: Mapping[Id[Function], tuple[int, PlcChannelFacet]]
     neighbours: Mapping[Id[Function], frozenset[Id[Function]]]
 
     def eligible(
@@ -102,15 +102,15 @@ class _Wiring:
         self, request: PlcRequestFacet, claimed: Collection[Id[Function]]
     ) -> list[Id[Function]]:
         """The channels left for `request` after W1 to W3, in serving order."""
-        signal_of = {channel: signal for channel, (_, signal) in self.ranked.items()}
+        facts_of = {channel: facts for channel, (_, facts) in self.ranked.items()}
         adjacent = self.neighbours.get(request.subject, ())
-        found = narrow(request, self.eligible(request, claimed), signal_of, adjacent)
+        found = narrow(request, self.eligible(request, claimed), facts_of, adjacent)
         return sorted(found, key=lambda channel: self.ranked[channel][0])
 
 
 def uncontested(
     picked: Mapping[Id[Function], Id[Function]],
-    ranked: Mapping[Id[Function], tuple[int, SignalType]],
+    ranked: Mapping[Id[Function], tuple[int, PlcChannelFacet]],
     requests: Sequence[PlcRequestFacet],
 ) -> tuple[dict[Id[Function], Id[Function]], dict[Id[Function], tuple[Id[Function], ...]]]:
     """W5 (model-0211): the uncontested picks, and each channel picked by 2+ matched requests.
@@ -118,7 +118,7 @@ def uncontested(
     A pick of the wrong kind (W2 found none) yields to a kind-matched pick of that channel.
     """
     kind = {request.subject: request.signal for request in requests}
-    matched = {s for s, c in picked.items() if ranked[c][1] is kind[s]}
+    matched = {s for s, c in picked.items() if channel_takes(ranked[c][1], kind[s])}
     held = {picked[subject] for subject in matched}
     pool = {s: c for s, c in picked.items() if s in matched or c not in held}
     counts = Counter(pool.values())
@@ -136,11 +136,11 @@ def wired_requests(
     *,
     skip: Collection[Id[Function]],
     taken: Collection[Id[Function]],
-    ranked: Mapping[Id[Function], tuple[int, SignalType]],
+    ranked: Mapping[Id[Function], tuple[int, PlcChannelFacet]],
 ) -> WiredPick:
     """Which requests bind by wiring (model-0211): W1 candidates, `narrow` (W2, W3), then W4.
 
-    `ranked` maps each channel to its place and signal; one candidate binds, several bind none.
+    `ranked` maps each channel to its place and facts; one candidate binds, several bind none.
     W5: two kind-matched picks of one channel bind neither (contested); wrong-kind picks yield.
     """
     by_function = ports_by_function(model)

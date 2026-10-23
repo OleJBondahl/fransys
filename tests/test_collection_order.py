@@ -13,8 +13,16 @@ conftest = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(conftest)
 
 
-def _item(name: str) -> SimpleNamespace:
-    return SimpleNamespace(path=Path("/x") / name)
+def _item(name: str, *, marked: bool = False) -> SimpleNamespace:
+    added: list[object] = []
+    return SimpleNamespace(
+        path=Path("/x") / name,
+        get_closest_marker=lambda marker: (
+            object() if marked and marker == "private_input" else None
+        ),
+        add_marker=added.append,
+        added=added,
+    )
 
 
 def _order(workers: int | None, names: list[str]) -> list[str]:
@@ -57,3 +65,20 @@ def test_with_workers_each_scale_module_starts_a_slice():
         "test_c.py",
         "test_d.py",
     ]
+
+
+def _skips(monkeypatch, *, export: bool) -> list[bool]:
+    """Whether each of (a private_input item, a plain item) was given a skip marker."""
+    monkeypatch.setattr(conftest, "is_export", lambda: export)
+    items = [_item("test_a.py", marked=True), _item("test_b.py")]
+    conftest.pytest_collection_modifyitems(SimpleNamespace(), items)
+    return [bool(i.added) for i in items]
+
+
+def test_the_export_skips_a_private_input_item_and_only_that(monkeypatch):
+    """R462: the skip is keyed on the missing `internal/` root, and only the marked item gets it."""
+    assert _skips(monkeypatch, export=True) == [True, False]
+
+
+def test_the_private_tree_skips_nothing(monkeypatch):
+    assert _skips(monkeypatch, export=False) == [False, False]

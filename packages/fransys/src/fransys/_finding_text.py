@@ -4,7 +4,15 @@ from typing import Any
 
 from fransys_model.derive.docs_site import finding_url
 from fransys_model.derive.numbering_pins import subject_text
-from fransys_model.kernel import DescribedFinding, Finding, Id, Model, describe, describe_parts
+from fransys_model.kernel import (
+    DescribedFinding,
+    Finding,
+    Id,
+    Model,
+    SchemaError,
+    describe,
+    describe_parts,
+)
 
 from ._codes import BY_CODE
 from ._version import __version__
@@ -30,14 +38,33 @@ def headed(finding: Finding) -> str:
     return finding.message if finding.message.startswith(head) else head + finding.message
 
 
-def fix_lines(finding: Finding) -> list[str]:
-    """The code's fix and the URL of its row on this release's findings page, as two lines.
+def filled_fix(finding: Finding, model: Model) -> str:
+    """The finding's fix with `<subject>` and `<other>` set to its first and second subject.
 
-    BUILD-MESSAGES M2, DOCS-FOR-AGENTS D6. A code with no registry entry gives none.
+    A subject prints as its `at:` line does. Any other `<...>` stays; a missing subject raises.
+    """
+    shown = described_parts(finding, model).subjects
+    fix = finding.fix or ""
+    for placeholder, index in (("<subject>", 0), ("<other>", 1)):
+        if placeholder not in fix:
+            continue
+        if index >= len(shown):
+            msg = (
+                f"{finding.code}: the fix holds {placeholder} but the finding has no subject "
+                f"there; name the thing and the fix: {finding.fix!r}"
+            )
+            raise SchemaError(msg, kind="Finding")
+        fix = fix.replace(placeholder, shown[index])
+    return fix
+
+
+def fix_lines(finding: Finding, model: Model) -> list[str]:
+    """The finding's own fix and the URL of its code's row on this release's findings page.
+
+    BUILD-MESSAGES M2, DOCS-FOR-AGENTS D6, API-FINDINGS: the fix is the row's `fix`, never the
+    registry's text. A code with no registry entry gives no URL; an INFO row without a fix, none.
     """
     info = BY_CODE.get(finding.code)
-    return (
-        []
-        if info is None
-        else [f"  fix: {info.fix}", f"  see: {finding_url(__version__, info.see)}"]
-    )
+    fix = [f"  fix: {filled_fix(finding, model)}"] if finding.fix else []
+    url = [] if info is None else [f"  see: {finding_url(__version__, info.see)}"]
+    return [*fix, *url]

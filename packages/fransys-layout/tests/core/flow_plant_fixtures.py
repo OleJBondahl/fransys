@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
-from fransys_layout.core.values import Box, BoxSpec, Net, Pin, PlacementProblem, Size, Sym
+from turn_fixtures import views_of
+
+from fransys_layout.core.sym_values import Sym
+from fransys_layout.core.values import Box, BoxSpec, Net, Pin, PlacementProblem, Size
 
 from .flow_builders import net, problem
 
@@ -19,7 +22,14 @@ def _part(
     """A symbol at R0 whose nodes are one per pin unless the caller groups them."""
     node_groups = nodes or tuple((p.id,) for p in pins)
     return Sym(
-        sym_id, None, "", LABEL, body, body, body, pins, node_groups, frozenset({"R0"}), box=box
+        sym_id,
+        None,
+        "",
+        LABEL,
+        pins,
+        node_groups,
+        views=views_of(body, body, body, pins, ("R0",)),
+        box=box,
     )
 
 

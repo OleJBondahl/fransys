@@ -7,6 +7,7 @@ producing their schematics, parts lists and manufacturing exports from one model
 lists every consumer task with its one spelling, then the install and the shape of a script.
 
 Fransys is in Beta: the API may change between minor versions until 1.0.0, and each release's guide says what changed.
+Paste the block in [AGENTS.md](AGENTS.md) into your project's `AGENTS.md` or `CLAUDE.md`, so a coding agent finds the docs and `python -m fransys help KEY`.
 
 ## The public surface
 
@@ -50,7 +51,7 @@ and give layout the structure it draws. The detail calls in the table are for th
 | `d.detail.wire(a, b, wire=...)` | two named pins off any path, such as a signal pair; one signal daisy-chained, `d.detail.wire(a, b, c)`; a hop whose printed wire differs from its row |
 | `X1[3]`, `.inner`, `.outer` | a terminal whose number or side is fixed: a published pinout, or several wires on one terminal |
 | `W1.core(BN, a, b)` | a core whose colour or number a termination plan fixes |
-| `d.detail.net(name, *pins)` | a named net that no wire joins, such as a bus shown by its label |
+| `d.detail.net(name, *pins)` | a named net that no wire joins, such as a bus; its name prints in the connector list |
 | `d.detail.busbar(a, b)`, `d.detail.rail_bond(a, b)` | a rack's internal jumper; terminals bonded through their rail |
 
 `d.series` raises `has no pole pair: its part states no line side` when a part does not say which pin is the line
@@ -101,8 +102,9 @@ from `fransys.colours`.
 | wire a path to a PLC channel | `d.series(dc.plus, s1.no, a1)`; fixed: `a1.di_7` | authoring.md, how channels are numbered |
 | title block, revision | `d.project(...)`, `d.revision(...)` | authoring.md, title block, revision |
 | read a part's rating while authoring | `d.rating(part, fn)`, `d.operating(part, fn)` | parts.md, Reading a part's rating while authoring |
-| advise the drawing | `d.layout.chain`, `keep_together`, `break_before`, `order`, `symbol`, `draw_in`, `side`, `sheet`, `profile` | detail.md, Layout profile |
+| advise the drawing | `d.layout.chain`, `keep_together`, `break_before`, `order`, `symbol`, `draw_in`, `side`, `pins_below`, `sheet`, `profile` | detail.md, Layout profile |
 | put a unit's interface above or below its outline | `d.layout.side(u1.bus_in, fr.ABOVE)`, `fr.BELOW` | detail.md, Layout profile |
+| draw all of a box's pins below its body | `d.layout.pins_below(a1)` | detail.md, Layout profile |
 | define a unit | `@fr.unit(name, revision=, interface_version=, ...)` | units.md, define a unit |
 | add a unit instance, reach its boundary | `d.add(fn, "U1")` returns the unit's `NamedTuple`, `io.X1` | units.md, Nesting units |
 | mark some terminals of a strip a unit boundary | `d.terminal_strip("X1", P.X, 4, interface=(1, 2))`, `unused=` the same | units.md, The boundary |
@@ -110,6 +112,7 @@ from `fransys.colours`.
 | leave one placed instance's boundary open | `d.add(fn, "U2", unused=("X1",))` | units.md, Leaving one instance open |
 | state a boundary's values | `X1.power.limits(rating=, operating=)` | units.md, The boundary |
 | build the model | `fr.build(d, *documents)` | build.md |
+| set the paper or a consumer's settings for a build | `s = fr.settings("fransys.toml", paper={fr.PageKind.BLOCK_DIAGRAM: "A2"})`, then `fr.build(d, settings=s)` | settings.md |
 | add a document | `fr.document(preset, subject, cover=)` | documents.md |
 | all findings of a build | `fr.check(result)` | build.md, `fr.check` sees more |
 | a readable report of them | `fr.report(result)` | build.md, `fr.report` |
@@ -205,7 +208,7 @@ fr.write(result, Path("out"))
 
 ### Findings
 
-- `findings.md`: every finding code, what it means and the usual fix, on five pages by source: `findings-validators.md`, `findings-render.md`, `findings-pdf.md`, `findings-kicad.md` and `findings-parts.md`.
+- `findings.md`: every finding code, what it means and the usual fix, on six pages by source: `findings-validators.md`, `findings-release.md`, `findings-render.md`, `findings-pdf.md`, `findings-kicad.md` and `findings-parts.md`.
 
 ### Reference
 

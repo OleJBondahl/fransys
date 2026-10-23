@@ -17,7 +17,7 @@ import fransys as fr
 import fransys_author
 import fransys_parts
 import pytest
-from fransys_pdf import _lists
+from _pdf_lists import connector_list_page, terminal_list_page
 
 from fransys_model.derive import document_rows
 from fransys_model.vocab import DocumentPreset
@@ -32,6 +32,7 @@ _BUILD_PATH = (
 if "_pdf_tests_build" in sys.modules:
     _build = sys.modules["_pdf_tests_build"]
 else:
+    sys.path.append(str(_BUILD_PATH.parent))  # `_build` imports its sibling `pdf_library`
     _build_spec = importlib.util.spec_from_file_location("_pdf_tests_build", _BUILD_PATH)
     assert _build_spec is not None
     assert _build_spec.loader is not None
@@ -78,7 +79,7 @@ def board_strip():
 
 def test_a_units_own_terminal_list_heads_its_strip_unit_relative(board_strip):
     model, unit_doc, _location_doc = board_strip
-    page = _lists.terminal_list_page(model, unit_doc)
+    page = terminal_list_page(model, unit_doc)
     assert '#heading(level: 2, text("-X2"))' in page
     assert "-JB1-X2" not in page.split("#table")[0]  # not in the heading
     assert 'text("-X2:T:1")' in page  # the table's row is there, unit-relative too
@@ -86,7 +87,7 @@ def test_a_units_own_terminal_list_heads_its_strip_unit_relative(board_strip):
 
 def test_a_location_documents_terminal_list_keeps_the_strips_full_heading(board_strip):
     model, _unit_doc, location_doc = board_strip
-    page = _lists.terminal_list_page(model, location_doc)
+    page = terminal_list_page(model, location_doc)
     assert '#heading(level: 2, text("-JB1-X2"))' in page
     assert 'text("-JB1-X2:T:1")' in page
 
@@ -152,7 +153,7 @@ def _terminal_page(tmp_path: Path, markings: dict[str, tuple[str | None, str | N
     model = fr.build(parts, d.draft(), document).model
     location = next(node.id for node in aspect_nodes(model).values() if node.label == "C1")
     (record,) = (r for r in document_rows(model) if r.location == location)
-    return _lists.terminal_list_page(model, record)
+    return terminal_list_page(model, record)
 
 
 def _headers(page: str) -> list[str]:
@@ -253,7 +254,7 @@ def board_in_board():
 
 def test_a_units_own_connector_list_heads_an_inner_board_unit_relative(board_in_board):
     model, unit_doc, _location_doc = board_in_board
-    page = _lists.connector_list_page(model, unit_doc)
+    page = connector_list_page(model, unit_doc)
     assert '#heading(level: 2, text("-JB2"))' in page
     assert "-JB1-JB2" not in page
     assert 'strong(text("Pin"))' in page  # the connector's pin table is there
@@ -261,5 +262,5 @@ def test_a_units_own_connector_list_heads_an_inner_board_unit_relative(board_in_
 
 def test_a_location_documents_connector_list_keeps_the_inner_boards_full_heading(board_in_board):
     model, _unit_doc, location_doc = board_in_board
-    page = _lists.connector_list_page(model, location_doc)
+    page = connector_list_page(model, location_doc)
     assert '#heading(level: 2, text("-JB1-JB2"))' in page

@@ -9,8 +9,8 @@ from fransys_model.derive.document_unit import document_unit
 from fransys_model.derive.facts.subjects import subject_kind
 from fransys_model.derive.facts.units import unit_items, unit_subtree
 from fransys_model.derive.lookups import unit_chain
+from fransys_model.kernel import natural_key
 from fransys_model.vocab.enums import SubjectKind
-from fransys_model.vocab.markings import marking_key
 from fransys_model.vocab.revision_text import revision_text
 from fransys_model.vocab.tables import (
     documents,
@@ -125,11 +125,11 @@ def part_function_pins(model: Model) -> dict[Id[Part], list[tuple[str, list[str]
     for port in port_templates(model).values():
         pins_of.setdefault(port.function, []).append(port.name)
     for pins in pins_of.values():
-        pins.sort(key=marking_key)
+        pins.sort(key=natural_key)
     by_part: dict[Id[Part], list[tuple[str, list[str]]]] = {}
     for template in function_templates(model).values():
         by_part.setdefault(template.part, []).append((template.name, pins_of.get(template.id, [])))
-    return {part: sorted(fns, key=lambda fn: marking_key(fn[0])) for part, fns in by_part.items()}
+    return {part: sorted(fns, key=lambda fn: natural_key(fn[0])) for part, fns in by_part.items()}
 
 
 def listing_interface(listing: Listing) -> str:

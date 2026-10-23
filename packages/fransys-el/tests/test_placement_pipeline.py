@@ -9,9 +9,12 @@ from typing import TYPE_CHECKING
 
 import fransys as fr
 import pytest
+from conventions_fixtures import house
 from fransys.colours import BU
 from fransys_el import Conventions, build, options
 from placement_fixtures import demo_model, kit_for, placed
+
+from electrical_symbols import LIBRARY
 
 if TYPE_CHECKING:
     from fransys_layout.core import Placement
@@ -35,13 +38,13 @@ def strip_model(terminals: int) -> Model:
 @pytest.fixture(scope="module")
 def demo() -> Placement:
     model = demo_model()
-    return placed(model, kit_for(model), Conventions())
+    return placed(model, kit_for(model), house())
 
 
 @pytest.fixture(scope="module")
 def wide() -> Placement:
     model = strip_model(40)
-    return placed(model, kit_for(model), Conventions())
+    return placed(model, kit_for(model), house())
 
 
 def test_the_demo_model_places_without_a_wider_than_page_finding(demo: Placement) -> None:
@@ -51,12 +54,12 @@ def test_the_demo_model_places_without_a_wider_than_page_finding(demo: Placement
 
 def test_the_same_model_gives_the_same_placement_twice(demo: Placement) -> None:
     model = demo_model()
-    assert placed(model, kit_for(model), Conventions()) == demo
+    assert placed(model, kit_for(model), house()) == demo
 
 
 def strip_group(model: Model, conventions: Conventions) -> str:
     """The one row group the problem holds: the strip's."""
-    prob, _ = build(model, kit_for(model), conventions)
+    prob, _ = build(model, kit_for(model), conventions, LIBRARY)
     groups = {s.row_group for s in prob.symbols if s.row_group}
     assert len(groups) == 1
     return groups.pop()
@@ -68,12 +71,12 @@ def test_a_wide_strip_wraps_and_drops_only_its_row_group_alignment(wide: Placeme
     Its row group asks one y for all members at a column end (spec P6, row_group_aligns),
     which rows at different heights cannot give: the one finding is ALIGN_DROPPED for that group.
     """
-    group = strip_group(strip_model(40), Conventions())
+    group = strip_group(strip_model(40), house())
     assert [(f.code, f.subject) for f in wide.findings] == [("ALIGN_DROPPED", group)]
     assert len(wide.pages[0].rows) > 1
 
 
 def test_a_strip_wider_than_the_area_gives_exactly_one_wider_than_page_when_not_wrapped() -> None:
     model = strip_model(40)
-    conventions = Conventions(options=replace(options(Conventions()), wrap_wide_fans=False))
+    conventions = replace(house(), options=replace(options(house(), LIBRARY), wrap_wide_fans=False))
     assert [f.code for f in placed(model, kit_for(model), conventions).findings] == [WIDER]

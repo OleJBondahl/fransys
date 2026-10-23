@@ -95,9 +95,8 @@ def mutable_module_bindings(tree: ast.Module) -> list[tuple[int, str]]:
     return found
 
 
-# The one recorded module-level mutable: the fact registry, written only by `@fact` at import
-# (decision layout-0111). A stale entry fails `test_the_registry_allowance_is_live`.
-ALLOWED_STATE = frozenset({"conventions/facts.py:FACTS"})
+# The recorded module-level mutables: none since the fact registry went with the old engine (R338).
+ALLOWED_STATE: frozenset[str] = frozenset()
 
 
 def scan(src_root: Path, allowed: frozenset[str] = frozenset()) -> list[str]:
@@ -166,9 +165,3 @@ def test_immutable_and_local_bindings_pass(tmp_path):
 
 def test_package_is_pure():
     assert scan(SRC_ROOT, ALLOWED_STATE) == []
-
-
-def test_the_registry_allowance_is_live():
-    """Without the allowance the fact registry is flagged, so the entry is not stale."""
-    flagged = {h.split(":")[0] + ":" + h.rsplit(" ", 1)[1] for h in scan(SRC_ROOT)}
-    assert flagged >= ALLOWED_STATE

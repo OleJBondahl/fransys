@@ -99,7 +99,7 @@
 <circle class="grid" cx="2" cy="2" r="0.06" fill="#888" stroke="none"/>
 <circle class="grid" cx="3" cy="2" r="0.06" fill="#888" stroke="none"/>
 <rect class="body-box" x="-1.5" y="-2" width="3" height="3" fill="none" stroke="#0a0" stroke-width="0.05" stroke-dasharray="0.2 0.2"/>
-<rect class="keepout-box" x="-8" y="-2" width="9.75" height="3" fill="none" stroke="#a0a" stroke-width="0.05" stroke-dasharray="0.2 0.2" stroke-dashoffset="0.2"/>
+<rect class="keepout-box" x="-1.5" y="-2" width="3" height="3" fill="none" stroke="#a0a" stroke-width="0.05" stroke-dasharray="0.2 0.2" stroke-dashoffset="0.2"/>
 <rect class="slot-box" x="0.25" y="-2" width="1.5" height="1" fill="#06c" fill-opacity="0.12" stroke="#06c" stroke-width="0.03"/>
 <text class="slot-id" x="0.25" y="-2.1" font-size="0.3" text-anchor="start" fill="#06c" stroke="none" font-family="sans-serif">marking.earth</text>
 <rect class="slot-box" x="-8" y="-0.5" width="6" height="1" fill="#06c" fill-opacity="0.12" stroke="#06c" stroke-width="0.03"/>

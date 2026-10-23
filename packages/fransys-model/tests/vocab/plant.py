@@ -6,6 +6,8 @@ hex string. Nothing here names a real project.
 
 from typing import Any
 
+from derive_helpers import with_library
+
 from fransys_model.kernel import Draft, Id, Model, Origin, freeze, make_id
 from fransys_model.vocab.connectivity import Conductor, Mate, Net
 from fransys_model.vocab.core import Function, Item, Port, Unit, UnitRelease
@@ -333,10 +335,10 @@ class Plant:
         return part.id
 
     def model(self) -> Model:
-        """Freeze everything added."""
+        """Freeze everything added, with the drawing library record the facade writes."""
         draft = Draft()
         draft.extend(self.records, origin=_ORIGIN)
-        return freeze(draft)
+        return with_library(freeze(draft))
 
     def _key_of(self, record_id: Id[Any]) -> tuple[str, ...]:
         return next(record.key for record in self.records if record.id == record_id)

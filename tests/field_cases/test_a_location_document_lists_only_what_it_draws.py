@@ -20,8 +20,8 @@ from pathlib import Path
 from typing import Any
 
 import fransys as fr
-import fransys_pdf
 import fransys_render
+from _pdf_lists import source
 from fransys.colours import RD
 
 from fransys_model.derive import document_sheets_of
@@ -53,7 +53,7 @@ def _built() -> tuple[fr.BuildResult, dict[str, str], Any]:
             fr.document(fr.DocumentPreset.SYSTEM, None, cover=cover),
         )
     texts = {
-        str(record.preset): fransys_pdf.source(
+        str(record.preset): source(
             built.model, doc_id, {}, fransys_render.sheets(document_sheets_of(built.model))
         )
         for doc_id, record in documents(built.model).items()

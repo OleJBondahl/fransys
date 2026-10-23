@@ -11,6 +11,14 @@ from .rows_baseline import NumberingItem, NumberingPins, NumberingRetired
 from .rows_numbering import DesignationMove, PinPosition
 
 
+def same_place(pin: NumberingItem, current: NumberingItem | PinPosition) -> bool:
+    """Whether `current` still sits where `pin` was stored: the same scope and class code.
+
+    The one answer to "is this pin still matched" (DES-20, DES-21); the caller matches the key.
+    """
+    return (current.scope, current.code) == (pin.scope, pin.code)
+
+
 def gone_or_moved(
     source: NumberingPins, current: Iterable[NumberingItem | PinPosition]
 ) -> tuple[NumberingRetired, ...]:
@@ -23,9 +31,7 @@ def gone_or_moved(
     newly_retired = [
         NumberingRetired(scope=entry.scope, code=entry.code, text=entry.text)
         for entry in source.items
-        if (match := current_by_key.get(entry.key)) is None
-        or match.scope != entry.scope
-        or match.code != entry.code
+        if (match := current_by_key.get(entry.key)) is None or not same_place(entry, match)
     ]
     combined = (*source.retired, *newly_retired)
     return tuple(
@@ -46,11 +52,10 @@ def designation_moves(source: NumberingPins, current: NumberingPins) -> tuple[De
         DesignationMove(key=entry.key, old_text=entry.text, new_text=match.text)
         for entry in source.items
         if (match := current_by_key.get(entry.key)) is not None
-        and match.scope == entry.scope
-        and match.code == entry.code
+        and same_place(entry, match)
         and match.text != entry.text
     ]
     return tuple(sorted(moves, key=lambda m: m.key))
 
 
-__all__ = ["designation_moves", "gone_or_moved"]
+__all__ = ["designation_moves", "gone_or_moved", "same_place"]

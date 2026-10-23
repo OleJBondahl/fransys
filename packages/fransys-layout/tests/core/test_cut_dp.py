@@ -9,10 +9,13 @@ from __future__ import annotations
 import re
 from dataclasses import replace
 
-from fransys_layout.core import Box, Hints, Options, Sym
+from options_fixtures import core_options
+from turn_fixtures import refit
+
+from fransys_layout.core import Box, Hints, Sym
 lazy from fransys_layout.core.values import CutResult
 
-from .conftest import MARKER_BOX
+from .conftest import MARKER
 from .cut_fixtures import box_sym, cut_of, elem, net, side
 from .pack_fixtures import card
 
@@ -32,7 +35,7 @@ def test_wide_fan_wraps_to_a_second_row_of_the_same_page() -> None:
 
 def test_card_block_is_never_split_across_rows() -> None:
     """Four 320 G coils on a card are over the 1280 G row; cut by column they would split."""
-    syms = [card("box", 4), *(elem(f"k{i}", 320) for i in range(1, 5))]
+    syms = [card("box", 4, north=2), *(elem(f"k{i}", 320) for i in range(1, 5))]
     result = cut_of(syms, [net(f"c{i}", f"box.p{i}", f"k{i}.n") for i in range(1, 5)])
     (block,) = (b for lst in result.blocks for b in lst.blocks)
     (page,) = result.spec.pages
@@ -81,7 +84,15 @@ def test_the_same_page_cut_wins_when_the_pair_violation_costs_nothing() -> None:
         pair_case(200),
         PAIR_NETS,
         hints=PAIR_ORDER,
-        options=Options(marker=MARKER_BOX, w_violation=0.0),
+        options=core_options(
+            marker=MARKER,
+            w_violation=0.0,
+            flip_turn="R180",
+            tag_stagger=True,
+            label_gap=8,
+            driver_first=True,
+            arrow_sides=("E", "W"),
+        ),
     )
     assert rows_of(result) == [[("c:a0", "c:b")], [("c:c", "c:d0")]]
 
@@ -119,7 +130,18 @@ def test_a_page_under_the_minimum_fill_is_refused_unless_it_is_the_last() -> Non
         text,
     ), text
     relaxed = cut_of(
-        fill_syms(), FILL_NETS, hints=a_first, options=Options(marker=MARKER_BOX, min_fill=0.0)
+        fill_syms(),
+        FILL_NETS,
+        hints=a_first,
+        options=core_options(
+            marker=MARKER,
+            min_fill=0.0,
+            flip_turn="R180",
+            tag_stagger=True,
+            label_gap=8,
+            driver_first=True,
+            arrow_sides=("E", "W"),
+        ),
     )
     assert relaxed.spec.findings == ()  # can fail: only min_fill differs
     assert rows_of(relaxed) == [[("c:a0",)], [("c:b0",)]]
@@ -165,13 +187,24 @@ def test_neighbours_whose_texts_stagger_pack_at_the_narrow_pitch_but_the_row_cou
     with the stagger off the pitch is 112 and 11 columns span 10 * 112 + 100 = 1220.
     """
     syms = [
-        replace(elem(f"{p}{i:02d}", 56), footprint=Box(-50, -16, 100, 32))
+        refit(elem(f"{p}{i:02d}", 56), footprint=Box(-50, -16, 100, 32))
         for i in range(20)
         for p in "ab"
     ]
     nets = [net(f"n{i:02d}", f"a{i:02d}.s", f"b{i:02d}.n") for i in range(20)]
     staggered, plain = (
-        cut_of(syms, nets, options=Options(marker=MARKER_BOX, tag_stagger=on)).spec.pages
+        cut_of(
+            syms,
+            nets,
+            options=core_options(
+                marker=MARKER,
+                tag_stagger=on,
+                label_gap=8,
+                flip_turn="R180",
+                driver_first=True,
+                arrow_sides=("E", "W"),
+            ),
+        ).spec.pages
         for on in (True, False)
     )
     assert [len(row.columns) for row in staggered[0].rows] == [14, 6]
@@ -201,7 +234,32 @@ def test_a_row_after_the_first_holds_only_short_columns() -> None:
     """L7: y is 350 G tall (not short: 0.4 of the page is 329 G), so it cannot be the second row."""
     syms = [side("x", 700, 300), side("y", 700, 350)]
     nets = [net("m", "x.e", "y.e")]
-    apart = cut_of(syms, nets, options=Options(marker=MARKER_BOX, min_fill=0.0))
+    apart = cut_of(
+        syms,
+        nets,
+        options=core_options(
+            marker=MARKER,
+            min_fill=0.0,
+            flip_turn="R180",
+            tag_stagger=True,
+            label_gap=8,
+            driver_first=True,
+            arrow_sides=("E", "W"),
+        ),
+    )
     assert rows_of(apart) == [[("c:x",)], [("c:y",)]]
-    short = cut_of(syms, nets, options=Options(marker=MARKER_BOX, min_fill=0.0, short_height=0.5))
+    short = cut_of(
+        syms,
+        nets,
+        options=core_options(
+            marker=MARKER,
+            min_fill=0.0,
+            short_height=0.5,
+            flip_turn="R180",
+            tag_stagger=True,
+            label_gap=8,
+            driver_first=True,
+            arrow_sides=("E", "W"),
+        ),
+    )
     assert rows_of(short) == [[("c:x",), ("c:y",)]]  # y is short at 0.5: it takes a second row

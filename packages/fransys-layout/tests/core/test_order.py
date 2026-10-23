@@ -11,8 +11,9 @@ from dataclasses import replace
 from typing import TYPE_CHECKING, ClassVar
 
 import pytest
+from options_fixtures import core_options
 
-from fransys_layout.core import Options, order, order_search
+from fransys_layout.core import order, order_search
 from fransys_layout.core.values import Block, BlockList, Fan, Finding, FlowGraph
 
 from .order_fixtures import (
@@ -99,12 +100,38 @@ def test_thirteen_columns_go_through_the_median_sweep_and_reach_the_same_cost(
 
 def test_exact_order_limit_option_picks_the_search(monkeypatch: pytest.MonkeyPatch) -> None:
     blk13, fl13 = comb(13)
-    assert ordered(blk13, fl13, Options(exact_order_limit=13)) == grouped(
-        13
-    )  # exact: natural-first of the best
+    assert ordered(
+        blk13,
+        fl13,
+        core_options(
+            exact_order_limit=13,
+            flip_turn="R180",
+            tag_stagger=True,
+            label_gap=8,
+            driver_first=True,
+            arrow_sides=("E", "W"),
+        ),
+    ) == grouped(13)  # exact: natural-first of the best
     monkeypatch.setattr(order, "exact_search", refuse_exact)
     blk12, fl12 = comb(12)
-    assert ref_cost(ordered(blk12, fl12, Options(exact_order_limit=11)), fl12) == 0  # sweep
+    assert (
+        ref_cost(
+            ordered(
+                blk12,
+                fl12,
+                core_options(
+                    exact_order_limit=11,
+                    flip_turn="R180",
+                    tag_stagger=True,
+                    label_gap=8,
+                    driver_first=True,
+                    arrow_sides=("E", "W"),
+                ),
+            ),
+            fl12,
+        )
+        == 0
+    )  # sweep
 
 
 @pytest.mark.parametrize("seed", range(12))
@@ -213,7 +240,24 @@ def test_median_passes_get_past_a_cost_that_swaps_of_two_columns_cannot_lower() 
     assert (
         ref_cost(order._swap_pairs(start, spans, {c: frozenset() for c in start}), fl) == 2
     )  # swaps alone stop here
-    assert ref_cost(ordered(block(start), fl, Options(exact_order_limit=0)), fl) == 1
+    assert (
+        ref_cost(
+            ordered(
+                block(start),
+                fl,
+                core_options(
+                    exact_order_limit=0,
+                    flip_turn="R180",
+                    tag_stagger=True,
+                    label_gap=8,
+                    driver_first=True,
+                    arrow_sides=("E", "W"),
+                ),
+            ),
+            fl,
+        )
+        == 1
+    )
 
 
 def test_the_sweep_keeps_the_best_order_a_median_pass_gave_not_the_last() -> None:
@@ -224,7 +268,24 @@ def test_the_sweep_keeps_the_best_order_a_median_pass_gave_not_the_last() -> Non
     spans = [s for s in order._spans(start, fl) if len(s[0]) < len(start)]
     assert ref_cost(start, fl) == 4
     assert ref_cost(order._median_pass(start, spans, {c: frozenset() for c in start}), fl) == 5
-    assert ref_cost(ordered(block(start), fl, Options(exact_order_limit=0)), fl) == 2
+    assert (
+        ref_cost(
+            ordered(
+                block(start),
+                fl,
+                core_options(
+                    exact_order_limit=0,
+                    flip_turn="R180",
+                    tag_stagger=True,
+                    label_gap=8,
+                    driver_first=True,
+                    arrow_sides=("E", "W"),
+                ),
+            ),
+            fl,
+        )
+        == 2
+    )
 
 
 # ---- the node budget -----------------------------------------------------------------------------
@@ -244,13 +305,52 @@ class Counted(order_search.Search):
 
 def test_a_search_cut_short_returns_the_sweeps_order_deterministically() -> None:
     blk, fl = dense()
-    sweep = ordered(blk, fl, Options(exact_order_limit=0))
+    sweep = ordered(
+        blk,
+        fl,
+        core_options(
+            exact_order_limit=0,
+            flip_turn="R180",
+            tag_stagger=True,
+            label_gap=8,
+            driver_first=True,
+            arrow_sides=("E", "W"),
+        ),
+    )
     assert ref_cost(ordered(blk, fl), fl) < ref_cost(
         sweep, fl
     )  # planted: the default budget finds a better order
     for budget in (0, 1, 12):  # fewer nodes than the 13 that reach one leaf
-        assert ordered(blk, fl, Options(exact_order_nodes=budget)) == sweep
-        assert ordered(blk, fl, Options(exact_order_nodes=budget)) == sweep
+        assert (
+            ordered(
+                blk,
+                fl,
+                core_options(
+                    exact_order_nodes=budget,
+                    flip_turn="R180",
+                    tag_stagger=True,
+                    label_gap=8,
+                    driver_first=True,
+                    arrow_sides=("E", "W"),
+                ),
+            )
+            == sweep
+        )
+        assert (
+            ordered(
+                blk,
+                fl,
+                core_options(
+                    exact_order_nodes=budget,
+                    flip_turn="R180",
+                    tag_stagger=True,
+                    label_gap=8,
+                    driver_first=True,
+                    arrow_sides=("E", "W"),
+                ),
+            )
+            == sweep
+        )
 
 
 def test_a_cut_search_expands_exactly_its_budget_in_nodes(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -258,20 +358,67 @@ def test_a_cut_search_expands_exactly_its_budget_in_nodes(monkeypatch: pytest.Mo
     blk, fl = dense()
     for budget in (0, 1, 5, 13, 100, 1000):
         Counted.made.clear()
-        ordered(blk, fl, Options(exact_order_nodes=budget))
+        ordered(
+            blk,
+            fl,
+            core_options(
+                exact_order_nodes=budget,
+                flip_turn="R180",
+                tag_stagger=True,
+                label_gap=8,
+                driver_first=True,
+                arrow_sides=("E", "W"),
+            ),
+        )
         (search,) = Counted.made
         assert search.nodes == budget
     Counted.made.clear()
-    ordered(blk, fl, Options(exact_order_nodes=10**9))
+    ordered(
+        blk,
+        fl,
+        core_options(
+            exact_order_nodes=10**9,
+            flip_turn="R180",
+            tag_stagger=True,
+            label_gap=8,
+            driver_first=True,
+            arrow_sides=("E", "W"),
+        ),
+    )
     assert Counted.made[0].nodes < 10_000  # this search finishes by itself
 
 
 def test_more_nodes_never_give_a_worse_order_and_none_is_worse_than_the_sweep() -> None:
     blk, fl = dense()
-    sweep_cost = ref_cost(ordered(blk, fl, Options(exact_order_limit=0)), fl)
+    sweep_cost = ref_cost(
+        ordered(
+            blk,
+            fl,
+            core_options(
+                exact_order_limit=0,
+                flip_turn="R180",
+                tag_stagger=True,
+                label_gap=8,
+                driver_first=True,
+                arrow_sides=("E", "W"),
+            ),
+        ),
+        fl,
+    )
     costs = []
     for budget in (0, 1, 12, 13, 14, 40, 200, 1000, 5000, 10**9):
-        got = ordered(blk, fl, Options(exact_order_nodes=budget))
+        got = ordered(
+            blk,
+            fl,
+            core_options(
+                exact_order_nodes=budget,
+                flip_turn="R180",
+                tag_stagger=True,
+                label_gap=8,
+                driver_first=True,
+                arrow_sides=("E", "W"),
+            ),
+        )
         assert sorted(got) == sorted(blk.columns)
         costs.append(ref_cost(got, fl))
     assert costs == sorted(costs, reverse=True)

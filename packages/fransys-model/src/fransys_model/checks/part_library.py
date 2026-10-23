@@ -4,6 +4,7 @@ from collections import defaultdict
 from typing import TYPE_CHECKING, Final
 
 from fransys_model.kernel import Finding, Severity
+from fransys_model.vocab.codes import fix_text
 from fransys_model.vocab.tables import part_libraries
 
 if TYPE_CHECKING:
@@ -31,6 +32,7 @@ def check_part_library(model: Model) -> tuple[Finding, ...]:
                 f"part library {name} is recorded with versions "
                 + ", ".join(sorted({library.version for library in libraries}))
             ),
+            fix=fix_text(PART_LIBRARY_VERSION_CONFLICT),
         )
         for name, libraries in by_name.items()
         if len({library.version for library in libraries}) > 1

@@ -6,16 +6,27 @@ from dataclasses import replace
 from itertools import combinations, pairwise
 from typing import TYPE_CHECKING
 
+from options_fixtures import core_options
+
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
-from fransys_layout.core import Box, Bundle, Net, Options, PinRef, Placement, PlacementProblem
+from fransys_layout.core import (
+    Box,
+    Bundle,
+    Facts,
+    Net,
+    Options,
+    PinRef,
+    Placement,
+    PlacementProblem,
+)
 from fransys_layout.core.outputs import PagePlacement, PageRoutes, PinXY, Placed, Routes, Wire
 from fransys_layout.core.route import route_page
 from fransys_layout.core.route_env import Drawn, RouteEnv, route_envs
 from fransys_layout.core.values import Attach, Column, CrossLink, CutResult, End, Fan
 
-from .conftest import MARKER_BOX
+from .conftest import MARKER
 from .cut_fixtures import AREA, elem
 from .cycle_fixtures import ring_problem
 from .flow_builders import net, poles
@@ -30,7 +41,7 @@ def jog_stair(*, mirror: bool = False) -> PlacementProblem:
     order = (2, 1, 0) if mirror else (0, 1, 2)
     syms = [elem(f"u{k}", 16) for k in range(3)] + [elem(f"v{k}", 16) for k in range(3)]
     nets = [net(f"j{k}", f"u{k}.s", f"v{k}.n") for k in order]
-    return PlacementProblem(AREA, tuple(syms), tuple(nets))
+    return PlacementProblem(AREA, tuple(syms), tuple(nets), facts=Facts())
 
 
 def reversing_pair(perm: Sequence[int] = (2, 1, 0)) -> PlacementProblem:
@@ -44,7 +55,7 @@ def reversing_pair(perm: Sequence[int] = (2, 1, 0)) -> PlacementProblem:
         net(f"T{k + 1}", f"K1.s{k}", f"K2.s{k}", f"M1.n{k}", bundle=Bundle("bT", k))
         for k in range(3)
     ]
-    return PlacementProblem(AREA, tuple(syms), tuple(nets))
+    return PlacementProblem(AREA, tuple(syms), tuple(nets), facts=Facts())
 
 
 def with_crossed(
@@ -69,7 +80,7 @@ def two_links_one_gap() -> PlacementProblem:
         for k, p in rings
         for n in p.nets
     )
-    return PlacementProblem(AREA, syms, nets)
+    return PlacementProblem(AREA, syms, nets, facts=Facts())
 
 
 def _wires(routes: Routes) -> list[Wire]:
@@ -142,7 +153,14 @@ def envs_of(
     prob: PlacementProblem, options: Options | None = None, cut: CutResult | None = None
 ) -> tuple[RouteEnv, ...]:
     """The stage 6 environments of a problem; a test may pass an edited cut (Fan.crossed)."""
-    opts = options or Options(marker=MARKER_BOX)
+    opts = options or core_options(
+        marker=MARKER,
+        flip_turn="R180",
+        tag_stagger=True,
+        label_gap=8,
+        driver_first=True,
+        arrow_sides=("E", "W"),
+    )
     cut = cut or cut_of(prob, opts)
     return route_envs(placed_from(cut, prob, opts), cut, prob, opts)
 
@@ -186,7 +204,15 @@ def link_env(
         (),
         cross,
         frozenset(),
-        options or Options(marker=MARKER_BOX),
+        options
+        or core_options(
+            marker=MARKER,
+            flip_turn="R180",
+            tag_stagger=True,
+            label_gap=8,
+            driver_first=True,
+            arrow_sides=("E", "W"),
+        ),
     )
 
 
@@ -239,7 +265,18 @@ def open_end_env(
     """Coil k2 of a card page with its foot an open end on `pin`; k2 is turned to `orient`."""
     from .place_fixtures import card_with_coils
 
-    env = envs_of(card_with_coils(3), Options(marker=MARKER_BOX, open_stub=open_stub))[0]
+    env = envs_of(
+        card_with_coils(3),
+        core_options(
+            marker=MARKER,
+            open_stub=open_stub,
+            flip_turn="R180",
+            tag_stagger=True,
+            label_gap=8,
+            driver_first=True,
+            arrow_sides=("E", "W"),
+        ),
+    )[0]
     col = env.columns[1]
     placed = replace(env.placed["k2"], orient=orient)
     env = replace(env, placed={**env.placed, "k2": placed})

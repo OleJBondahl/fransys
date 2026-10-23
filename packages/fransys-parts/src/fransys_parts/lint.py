@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING
 
 from fransys_model.derive import connector_label, connector_segments
 from fransys_model.kernel import Finding, Severity
+from fransys_model.vocab import DESIGNATION_SCHEME
 
 from . import (
     _cable_pairs,
@@ -20,6 +21,7 @@ from . import (
     _fields,
     _function_facts,
     _joins,
+    _lint_ports,
     _power_loss,
     _ratings,
     _toml,
@@ -32,13 +34,7 @@ SUPPORTED_SCHEMAS: frozenset[int] = frozenset({1})
 
 _FILE_NAME = re.compile(r"^[a-z0-9_-]+$")
 _SYMBOL_SLUG = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
-_CLASS_CODE = re.compile(r"^[A-Z]{1,3}$")
-
-# IEC 81346-2:2019: "The letters A, I and O shall not be used as a class code."
-_FORBIDDEN_CLASS_CODES: frozenset[str] = frozenset({"A", "I", "O"})
-# IEC 81346-2:2019 reserves D, L, V, Y and Z. J is also reserved by the standard but is
-# deliberately not in this set: the owner overrides IEC on J for connectors.
-_RESERVED_CLASS_CODES: frozenset[str] = frozenset({"D", "L", "V", "Y", "Z"})
+_CLASS_CODE = re.compile(DESIGNATION_SCHEME.class_code)
 
 _PART_FILE_TABLES = frozenset(
     {"part", "function", "supply", "footprint", "cable_product", "pcb", "rating"}
@@ -219,10 +215,8 @@ def _check_class_code(class_code: object, path: str, line: int) -> list[Finding]
         return []
     if _CLASS_CODE.fullmatch(class_code) is None:
         text = f"class_code {class_code!r} must be 1 to 3 uppercase letters"
-    elif class_code[0] in _FORBIDDEN_CLASS_CODES:
-        text = f"class_code {class_code!r} is forbidden by IEC 81346-2:2019"
-    elif class_code[0] in _RESERVED_CLASS_CODES:
-        text = f"class_code {class_code!r} is reserved by IEC 81346-2:2019"
+    elif (rule := DESIGNATION_SCHEME.letter_rule(class_code)) is not None:
+        text = f"class_code {class_code!r} is {rule} by IEC 81346-2:2019"
     else:
         return []
     return [_toml.finding("CLASS_CODE", path, line, text)]
@@ -398,9 +392,9 @@ def _check_function_entry(
             )
         )
 
-    findings.extend(_check_ports(entry, symbol, path, line))
+    findings.extend(_lint_ports.check_ports(entry, symbol, path, line))
     findings.extend(_check_port_names_shared(entry, path, line, state, index))
-    findings.extend(_check_links(entry, path, line))
+    findings.extend(_lint_ports.check_links(entry, path, line))
     findings.extend(_changeover.check(entry, path, line))
     findings.extend(_function_facts.check(entry, path, line))
     findings.extend(_check_connector_facet(entry, path, line))
@@ -533,85 +527,4 @@ def _check_plc_channel_facet(
             )
         else:
             plc_seen.add(dup_key)
-    return findings
-
-
-def _check_ports(entry: _toml.Table, symbol: object, path: str, line: int) -> list[Finding]:
-    ports = entry.get("ports")
-    if type(ports) is not list:
-        return []
-    if len(ports) == 0 and entry.get("kind") != "bar":
-        return [_toml.finding("FUNCTION_WITHOUT_PORTS", path, line, "function has no ports")]
-    findings: list[Finding] = []
-    names_seen: set[str] = set()
-    for port in ports:
-        if type(port) is not dict:
-            findings.append(_toml.finding("FIELD_TYPE", path, line, "port entry must be a table"))
-            continue
-        findings.extend(
-            _fields.check_fields(port, _fields.PORT_FIELDS, path=path, line=line, table_name="port")
-        )
-        name = port.get("name")
-        if type(name) is str:
-            if name in names_seen:
-                findings.append(
-                    _toml.finding(
-                        "PORT_NAME_DUPLICATE",
-                        path,
-                        line,
-                        f"port name {name!r} repeats within this function",
-                    )
-                )
-            names_seen.add(name)
-        if "symbol_port" in port and type(symbol) is not str:
-            findings.append(
-                _toml.finding(
-                    "SYMBOL_PORT_WITHOUT_SYMBOL",
-                    path,
-                    line,
-                    f"port {name!r} has symbol_port with no function symbol",
-                )
-            )
-    return findings
-
-
-def _check_links(entry: _toml.Table, path: str, line: int) -> list[Finding]:
-    links = entry.get("links")
-    if type(links) is not list:
-        return []
-    ports = entry.get("ports")
-    port_names = {p.get("name") for p in ports if type(p) is dict} if type(ports) is list else set()
-    findings: list[Finding] = []
-    seen_pairs: set[tuple[str, str]] = set()
-    for link in links:
-        if type(link) is not dict:
-            findings.append(_toml.finding("FIELD_TYPE", path, line, "link entry must be a table"))
-            continue
-        findings.extend(
-            _fields.check_fields(link, _fields.LINK_FIELDS, path=path, line=line, table_name="link")
-        )
-        a, b = link.get("a"), link.get("b")
-        if type(a) is not str or type(b) is not str:
-            continue
-        if a not in port_names or b not in port_names:
-            findings.append(
-                _toml.finding(
-                    "LINK_PORT_UNKNOWN",
-                    path,
-                    line,
-                    f"link ({a!r}, {b!r}) names a port this function lacks",
-                )
-            )
-        elif a == b:
-            findings.append(
-                _toml.finding("LINK_SELF", path, line, f"link joins port {a!r} to itself")
-            )
-        else:
-            pair = (a, b) if a < b else (b, a)
-            if pair in seen_pairs:
-                findings.append(
-                    _toml.finding("LINK_DUPLICATE", path, line, f"link ({a!r}, {b!r}) repeats")
-                )
-            else:
-                seen_pairs.add(pair)
     return findings

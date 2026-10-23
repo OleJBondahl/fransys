@@ -17,10 +17,12 @@ import fransys_author
 import fransys_parts
 import pytest
 from _model_build_cover import system_document
-from fransys.pipeline import BuildResult, ExportNameClash, _placed
+from fransys._export_ledger import ExportNameClash, _placed
+from fransys.pipeline import BuildResult
 
 # `test_declared_dependencies.py`'s own pattern for importing a sibling root test module by name.
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+from root_library import freeze
 from test_units_worked_example import _system_design
 from test_write_unit_worked_example import (
     _ALL_WRITE_FILES,
@@ -36,7 +38,7 @@ from fransys_model.derive import (
     export_set_name,
     stale_patterns,
 )
-from fransys_model.kernel import Draft, Origin, freeze, make_id, merge
+from fransys_model.kernel import Draft, Origin, make_id, merge
 from fransys_model.vocab import (
     Document,
     DocumentPreset,

@@ -4,38 +4,30 @@ The pair label (`P1`), the mark on a core's row, the heading's pair form and the
 Cores cell each have one function here; layout, render and the lists call them.
 """
 
+from fransys_model.derive.facts.cables import cable_products_by_part
 from fransys_model.derive.facts.potentials import on_pe_net
-from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, digest_cached, value
-from fransys_model.vocab.facets.cable import CableProductFacet
-from fransys_model.vocab.tables import facets_of, items
+from fransys_model.kernel import Id, Model, value
+from fransys_model.vocab.colours import RESERVED_CODES
+from fransys_model.vocab.tables import items
 lazy from fransys_model.vocab.core import Item, Port
-lazy from fransys_model.vocab.facets.cable import CorePair
-lazy from fransys_model.vocab.templates import Part
+lazy from fransys_model.vocab.facets.cable import CableProductFacet, CorePair
 
-SCREEN = "SH"
+SCREEN = RESERVED_CODES["shield"]
 
 
-@digest_cached(DIGEST_CACHE_SIZE)
-def _cable_products_by_part(model: Model) -> frozendict[Id[Part], CableProductFacet]:
-    """Every `CableProductFacet` by the part it describes, built once per model digest.
+def cable_product(model: Model, cable: Id[Item]) -> CableProductFacet | None:
+    """The `cable_product` of `cable`'s part, `None` when it has none.
 
-    The facet's `unique=True` allows at most one per part, so no first-match tie-break is needed.
+    Reads `cable_products_by_part`, an `Id[Part]`-keyed index built once per model digest.
     """
-    return frozendict(
-        {facet.subject: facet for facet in facets_of(model, CableProductFacet).values()}
-    )
+    part = items(model)[cable].part
+    return None if part is None else cable_products_by_part(model).get(part)
 
 
 def _product_colours(model: Model, cable: Id[Item]) -> tuple[str, ...]:
-    """The `core_colours` of `cable`'s part's `cable_product`, `()` when it has none.
-
-    Reads `_cable_products_by_part`, an `Id[Part]`-keyed index built once per model digest.
-    """
-    part = items(model)[cable].part
-    if part is None:
-        return ()
-    facet = _cable_products_by_part(model).get(part)
-    return () if facet is None else facet.core_colours
+    """The `core_colours` of `cable`'s part's `cable_product`, `()` when it has none."""
+    product = cable_product(model, cable)
+    return () if product is None else product.core_colours
 
 
 def open_core_is_spare(model: Model, colour: str, at: Id[Port] | None) -> bool:
@@ -64,7 +56,7 @@ class DrawnPair:
 def cable_pairs(model: Model, cable: Id[Item]) -> tuple[CorePair, ...]:
     """The pairs of `cable`'s product, `()` when it has none or no part."""
     part = items(model)[cable].part
-    facet = None if part is None else _cable_products_by_part(model).get(part)
+    facet = None if part is None else cable_products_by_part(model).get(part)
     return () if facet is None else facet.pairs
 
 

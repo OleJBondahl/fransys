@@ -8,29 +8,13 @@ demand, never store the surface separately) rather than a mocked fixture.
 
 from __future__ import annotations
 
-import importlib.util
 import re
-import sys
-from pathlib import Path
 
 import fransys
 import pytest
+from gate_scan import load_script
 
-ROOT = Path(__file__).resolve().parents[1]
-
-
-def _load(module_name: str, filename: str):
-    spec = importlib.util.spec_from_file_location(module_name, ROOT / "scripts" / filename)
-    if spec is None or spec.loader is None:
-        msg = f"could not load scripts/{filename}"
-        raise ImportError(msg)
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[module_name] = module
-    spec.loader.exec_module(module)
-    return module
-
-
-lean_api = _load("fransys_lean_api_under_test", "lean_api.py")
+lean_api = load_script("fransys_lean_api_under_test", "lean_api.py")
 
 _HEADER_RE = re.compile(r"^(fransys[\w.]*)\.(\w+)", re.MULTILINE)
 
@@ -41,7 +25,7 @@ def _headers(output: str) -> list[tuple[str, str]]:
 
 
 def test_fransys_pdf_gives_exactly_its_five_surface_names():
-    """`fransys_pdf`'s `__all__` has 5 names; `api()` prints exactly those 5,
+    """`fransys_pdf`'s `__all__` has 4 names; `api()` prints exactly those 4,
     including `FINDING_CODES`, a plain data value with no signature.
     """
     import fransys_pdf
@@ -50,7 +34,6 @@ def test_fransys_pdf_gives_exactly_its_five_surface_names():
         "FINDING_CODES",
         "check",
         "cover_overflow_finding",
-        "font_dir",
         "source",
     )
     output = lean_api.api("fransys_pdf")

@@ -20,6 +20,7 @@ from fransys_author.surface._strip_marks import (
 )
 from fransys_author.surface._tags import floating_name
 from fransys_author.surface._unit_strip import take
+from fransys_model.kernel import first_free
 lazy from fransys_author._hint_writes import _write_placement
 lazy from fransys_author._origin import caller_origin
 lazy from fransys_author.design import Scope
@@ -154,12 +155,11 @@ class TerminalStrip:
 
     def _free(self, count: int) -> list[int]:
         """The `count` lowest numbers not used; raise when `count` strip terminals run out."""
+        taken = set(self._used)
         numbers: list[int] = []
-        number = 0
-        while len(numbers) < count:
-            number += 1
-            if number not in self._used:
-                numbers.append(number)
+        for _ in range(count):
+            numbers.append(first_free(taken))
+            taken.add(numbers[-1])
         if self._count is not None and numbers and numbers[-1] > self._count:
             msg = f"{self._tag} has {self._count} terminals; the series needs {numbers[-1]}"
             raise AuthorError(msg)

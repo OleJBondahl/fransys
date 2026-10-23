@@ -10,12 +10,12 @@ from fransys_model.vocab.enums import PartCategory
 from fransys_model.vocab.facets.assigned_designation import AssignedDesignationFacet
 from fransys_model.vocab.facets.cable import CableProductFacet
 from fransys_model.vocab.facets.terminal import TerminalFacet
-from fransys_model.vocab.tables import facets_of, items, parts
+from fransys_model.vocab.tables import HasTables, facets_of, items, parts
 lazy from fransys_model.vocab.core import Item
 
 
 @digest_cached(DIGEST_CACHE_SIZE)
-def cable_items(model: Model) -> frozenset[Id[Item]]:
+def cable_items(model: HasTables) -> frozenset[Id[Item]]:
     """Every item whose part carries a `cable_product` facet, built once per digest.
 
     The one selection rule behind `is_cable`: an item is in this set exactly when its `Item.part`

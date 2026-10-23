@@ -18,15 +18,14 @@ from typing import Any
 import fransys as fr
 import fransys_author
 import fransys_parts
+from _drawn_pages import drawn_pages
 from _model_build_cover import layout_trigger_document
 from fransys_reports import connectors_csv
 
-from fransys_model.derive import connector_box_lines, item_designation
-from fransys_model.derive.drawing_text import marker_text
+from fransys_model.derive import item_designation
 from fransys_model.derive.queries import connector_rows
 from fransys_model.kernel import Severity
-from fransys_model.layout import ConnectorBox, Label, LabelKind, LinkMarker, StarKind, layout_of
-from fransys_model.vocab.tables import functions, items, ports
+from fransys_model.vocab.tables import items
 
 _PROJECT: dict[str, Any] = {
     "title": "Two connectors",
@@ -60,6 +59,15 @@ def _a1(model):
     return next(i for i in items(model).values() if item_designation(model, i.id) == "A1")
 
 
+def _markers(model):
+    """Every drawn marker of every page, in drawn order."""
+    return [m for drawing in drawn_pages(model).values() for m in drawing.markers]
+
+
+def _marker_texts(model) -> list[str]:
+    return sorted(value for m in _markers(model) for _, value in m.texts)
+
+
 def test_the_build_completes_and_carries_no_error_finding() -> None:
     """(a) The two connectors of one device build: no `LayoutError`, no ERROR finding."""
     # UNDO: fransys_model/derive/designation.py: `connector_segment`'s last `return` -> `return ""`
@@ -69,9 +77,8 @@ def test_the_build_completes_and_carries_no_error_finding() -> None:
     assert Severity.ERROR not in severities
     assert severities <= {Severity.WARNING, Severity.INFO}
     # The line -W1 leaves each of its two sets in one stub, not one per core
-    stubs = layout_of(result.model, LinkMarker).values()
+    stubs = _markers(result.model)
     assert len(stubs) == 2
-    assert all("line_stub" in m.key and m.star is StarKind.OFF for m in stubs)
 
 
 def test_the_connector_list_names_each_connector_of_the_device_behind_its_tag() -> None:
@@ -95,19 +102,12 @@ def test_the_drawn_boxes_of_the_device_name_the_connector() -> None:
     #   printed_designation(model, item, unit=unit) + segment` -> `return printed_designation(model,
     #   item, unit=unit)` (both boxes of `A1` read `-A1`)
     model = _build().model
-    tags = [
-        label
-        for label in layout_of(model, Label).values()
-        if label.kind is LabelKind.TAG and label.slot.startswith("tag.pin.")
-    ]
+    drawings = drawn_pages(model).values()
+    tags = [t for d in drawings for t in d.texts if t.text.startswith("-A1:")]
     assert tags == []
-    designations = set()
-    for box in layout_of(model, ConnectorBox).values():
-        lines = connector_box_lines(model, box.function)
-        assert len(box.texts) == len(lines)
-        assert box.cells == ()  # every pin is wired by a conductor the line carries
-        designations.add(lines[0])
-    assert designations == {"-A1-X1", "-A1-X2", "-P1", "-P2"}
+    boxes = [s for d in drawings for s in d.symbols if s.texts]
+    assert boxes
+    assert {s.texts[0][0] for s in boxes} == {"-A1-X1", "-A1-X2", "-P1", "-P2"}
 
 
 def test_the_two_stubs_on_the_cabinet_side_name_different_connectors_of_the_far_device() -> None:
@@ -116,13 +116,5 @@ def test_the_two_stubs_on_the_cabinet_side_name_different_connectors_of_the_far_
     One stub per line, so `+A` prints one far device and `+B` names `+A-P1`."""
     # UNDO: fransys_model/derive/designation.py: `connector_segment`'s last `return` -> `return ""`
     #   (both connectors print `-A1`: an ERROR finding, and the stub no longer reads `-A1-X1`)
-    model = _build().model
-    stubs = sorted(
-        (
-            item_designation(model, functions(model)[ports(model)[m.port].function].item),
-            marker_text(model, m).replace("\N{LEFTWARDS ARROW}", _ARROW),
-        )
-        for m in layout_of(model, LinkMarker).values()
-        if m.star is StarKind.OFF
-    )
-    assert stubs == [("A1", f"-W1 {_ARROW} +A-P1"), ("P1", f"-W1 {_ARROW} +B-A1-X1")]
+    texts = [t.replace("\N{LEFTWARDS ARROW}", _ARROW) for t in _marker_texts(_build().model)]
+    assert texts == [f"-W1 {_ARROW} +A-P1", f"-W1 {_ARROW} +B-A1-X1"]

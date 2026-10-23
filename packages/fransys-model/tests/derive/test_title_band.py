@@ -3,20 +3,24 @@
 from decimal import Decimal
 
 import pytest
+from derive_helpers import frozen_with_library
 
 from fransys_model.derive.print_sizes import TextRole, font_size_mm, role_height_mm
 from fransys_model.derive.title_band import title_band_need
+from fransys_model.kernel import Draft
+
+MODEL = frozen_with_library(Draft())
 
 
 def _fonts(text_height: str) -> tuple[float, float]:
     def font(role):
-        return float(font_size_mm(role_height_mm(role, Decimal(text_height))))
+        return float(font_size_mm(MODEL, role_height_mm(MODEL, role, Decimal(text_height))))
 
     return font(TextRole.LABEL), font(TextRole.BODY)
 
 
 def _need(text_height: str) -> float:
-    return title_band_need(*_fonts(text_height))
+    return title_band_need(MODEL, *_fonts(text_height))
 
 
 def test_title_band_at_the_house_sizes_is_20():

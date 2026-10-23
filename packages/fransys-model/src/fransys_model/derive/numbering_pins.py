@@ -21,7 +21,8 @@ from fransys_model.vocab.tables import items
 from fransys_model.vocab.tables import units as units_table
 lazy from fransys_model.vocab.core import Item, Unit
 
-from .designation import designating_ancestors, own_designation_or_none
+from .designation_label import own_designation_or_none
+from .facts.units import designating_ancestors
 from .finding_names import name_findings, name_of, subject_text
 from .instance_tag import instance_name, unit_tag
 from .lookups import terminal_items

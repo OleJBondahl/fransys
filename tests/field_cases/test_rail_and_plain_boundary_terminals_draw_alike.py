@@ -12,9 +12,9 @@ The decision that pins it: layout-0120.
 from typing import TYPE_CHECKING, Any, NamedTuple
 
 import fransys as fr
+from _drawn_pages import drawn_pages
 
-from fransys_model.layout import DrawingSet, LinkMarker, Page, Route, SymbolPlacement, layout_of
-from fransys_model.vocab.tables import functions, items, ports
+from fransys_model.layout import DrawingSet, Page, layout_of
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -67,26 +67,33 @@ def _build(tmp_path: Path) -> fr.BuildResult:
 
 
 def _drawn(model: Any, designation: str) -> list[tuple[Any, ...]]:
-    """What the container's pages hold for one boundary terminal, as comparable shapes."""
+    """What the container's pages hold for one boundary terminal, as comparable shapes.
+
+    The terminal's symbol is the one nearest its printed designation (a drawn symbol names no
+    subject); its stubs are the markers that print the designation.
+    """
     sets = layout_of(model, DrawingSet)
     container = {p.id for p in layout_of(model, Page).values() if sets[p.drawing_set].unit is None}
-    (item,) = (i for i in items(model) if fr.derive.printed_designation(model, i) == designation)
-    funcs = {f.id for f in functions(model).values() if f.item == item}
-    mine = {p.id for p in ports(model).values() if p.function in funcs}
-    out: list[tuple[Any, ...]] = [
-        ("symbol", s.view, s.symbol, s.poles, s.orientation, s.ports, s.sides)
-        for s in layout_of(model, SymbolPlacement).values()
-        if s.page in container and s.function in funcs
-    ]
-    out.extend(
-        ("route", r.conductor is not None, len(r.points))
-        for r in layout_of(model, Route).values()
-        if r.page in container and mine & {r.a, r.b}
-    )
-    for m in layout_of(model, LinkMarker).values():
-        if m.page in container and (m.port in mine or m.far in mine):
-            shape = (m.side, m.star, m.facing, m.vertical, m.stub_extra, m.via_x is None)
-            out.append(("marker", m.port in mine, *shape))
+    out: list[tuple[Any, ...]] = []
+    for page, drawing in drawn_pages(model).items():
+        if page not in container:
+            continue
+        for tag in (t for t in drawing.texts if t.text == designation):
+            mine = min(
+                drawing.symbols,
+                key=lambda s, tag=tag: abs(s.x - tag.box.x) + abs(s.y - tag.box.y),
+            )
+            out.append(("symbol", mine.key, mine.poles, mine.orient, mine.offsets, mine.sides))
+            out.extend(
+                ("route", len(w.points))
+                for w in drawing.wires
+                if (mine.x, mine.y) in {w.points[0], w.points[-1]}
+            )
+        out.extend(
+            ("marker", m.key, m.side)
+            for m in drawing.markers
+            if any(designation in text for _, text in m.texts)
+        )
     return out
 
 

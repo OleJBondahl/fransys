@@ -1,0 +1,231 @@
+# The stocks of the SURFACE-COHERENCE ratchets (spec R1; decision root-0233). Each only falls:
+# a test fails above its stock and fails below it ("lower tests/ratchets.toml"). A raised value or a
+# new key above 0 needs a `Root-line:` trailer (internal/scripts/count_rise.py).
+
+# E9 exact clones (bodies of 25+ AST nodes), 3 groups measured. Three die at the layout flips:
+#   fransys_layout.engines.cable.write.records:65 _points == ...schematic.write.harness:101 _route
+#   fransys_layout.engines.overview.lanes.diagram_route:31 _straight == fransys_layout.stages._sides:150 _collinear
+#   fransys_layout.geometry.boxes:72 translate == fransys_layout.stages.middle_fold:84 _by
+[clones]
+stock = 0
+
+[clones_tests]
+# Exact clones (bodies of 25+ AST nodes) among tests/ and packages/*/tests helpers.
+stock = 114
+
+[unread_doors]
+# E19: public names of the kernel, vocab and derive doors with no outside and no transitive reader (25 + 21 + 124).
+stock = 171
+
+# E20 mutable surface: surface names that are a dict, list or set, or a class that is not a frozen
+# dataclass, Enum, exception, Protocol, NamedTuple or TypedDict (the builders kernel `Draft` and
+# consumer `Design` exempt). Each object counts once, so a re-export counts once (designer ruling
+# 2026-10-16; was 38 counting each `module.name`). The five dicts die with T13 in EL-8:
+# fransys_model.derive CONNECTOR_LABELS, PAGE_HEADINGS, PRESET_HEADINGS, TERMINAL_LABELS,
+# WIRE_LABELS. The rest are author handles (Cable, Fn, Throw, ...), which fall with API-AUTHOR,
+# fransys_model.derive.TopLevelScope, and UnionFind.
+[mutable_surface]
+stock = 22
+
+[own_errors_electrical_symbols]
+base = "none"
+stock = 3
+
+[own_errors_fransys]
+base = "none"
+stock = 7
+
+[own_errors_fransys_author]
+base = "AuthorError"
+stock = 6
+
+[own_errors_fransys_el]
+base = "none"
+stock = 0
+
+[own_errors_fransys_kernel]
+base = "ModelError"
+stock = 0
+
+[own_errors_fransys_kicad]
+base = "none"
+stock = 8
+
+[own_errors_fransys_layout]
+base = "LayoutError"
+stock = 30
+
+[own_errors_fransys_model]
+base = "ModelError"
+stock = 3
+
+[own_errors_fransys_overview]
+base = "none"
+stock = 1
+
+[own_errors_fransys_parts]
+base = "PartLibraryError"
+stock = 1
+
+[own_errors_fransys_pdf]
+base = "none"
+stock = 2
+
+[own_errors_fransys_render]
+base = "none"
+stock = 0
+
+[own_errors_fransys_reports]
+base = "none"
+stock = 0
+
+[own_errors_fransys_wago]
+base = "none"
+stock = 0
+
+# E21 (spec S6/R8): objects (by identity, scalars skipped) in two or more surface `__all__`s, and
+# names bound to two different objects across surface modules. Measured 2026-10-16. The facade
+# `fransys` is not a door: its re-export of the same object is no twin (designer ruling 2026-10-16,
+# invariant 2); a facade name bound to a different object still counts as a clash. Twins were 126.
+# Clashes: BridgePiece (electrical_symbols vs fransys_model.derive; cross-package), Cable, Design,
+# Fn, Pin, build, check, design, diff, lint, parts (fransys vs author/layout/kicad/pdf/render/
+# parts/model), Item, Port, dumps, loads, FINDING_CODES, Side, Net, Orientation, Placement, Rail,
+# Unit, natural_key, OverviewBox, OverviewLine, cable_blocks, diagram_sheets, mates, sheets,
+# BoxKey, DiagramLine, DrawnWire (across fransys_model.derive*/layout/vocab, fransys_layout(.core),
+# fransys_author, fransys_kernel, fransys_render).
+[twin_doors]
+twins = 101
+clashes = 32
+
+# RR3 (spec rules-register): register rows whose gate is still `pending = "<ORDER>"`.
+[pending_rules]
+stock = 16
+
+# HOMES-GATES (root-0350): typed setting literals (numeric value bound to a name ending _mm, _pct,
+# _g, _pt, _gap, _pitch, _margin, _height, _penalty or _width), in packages/*/src. Base 47, 45 after Part B,
+# 40 after SIZES-TOML phase 3, 39 after its phase 2 (R319.5, R338).
+[settings_literals]
+stock = 38
+
+# HOMES-GATES (root-0350): Callable parameters in fransys_layout/core (a fact arrives as a value).
+[core_callables]
+stock = 3
+
+# HOMES-GATES (root-0350): terminal/strip branches in fransys_layout/core code (docstrings excluded).
+[core_terminal_kind]
+stock = 2
+
+# HOMES-GATES (root-0350): "fransys" in the public electrical-symbols library's docs and sources.
+[public_lib_names]
+stock = 6
+
+# C3 (spec CONSOLIDATE; root-0356): `# noqa` codes and `# ty: ignore` rules in packages/*/src. The total is
+# the sum of the per-code table. Old-engine hatches die at FLIP-NOW and lower these.
+[escape_hatches]
+total = 177
+
+[escape_hatches_codes]
+PLR0913 = 57
+PLR2004 = 18
+ty-invalid-argument-type = 15
+S101 = 15
+PLR0917 = 11
+ANN401 = 10
+ARG002 = 8
+TC001 = 7
+ty-invalid-method-override = 5
+PLW0603 = 4
+TC003 = 3
+F401 = 3
+N818 = 3
+ty-redundant-condition-strict = 3
+ty-unresolved-attribute = 3
+ARG001 = 2
+UP037 = 2
+BLE001 = 1
+E731 = 1
+PLR0911 = 1
+PLW2901 = 1
+SLF001 = 2
+ty-unsound-assignment = 1
+ty-unsupported-operator = 1
+
+# DRAWN-NETLIST (el-0052, R388, R412) with DRAWING-INVARIANTS (el-0048, R360): what the finished-drawing
+# sweep finds on the six corpus cases (internal/tests/test_corpus_drawing_invariants.py). OVERLAP and
+# OUT_OF_PAGE count members; the other codes count findings. A stock only falls; a code is an ERROR
+# in the commit that brings its stock to 0. OVERLAP is DI's members plus el-0052's wire-through-body
+# class (R387, R388), measured on the merge of DI dfe952a66: page overlaps 22, 26, 31, 6 plus
+# wires through bodies 157, 12, 102, 15. On the merge of frames b9b12623e (MARKER-KEEPS-WIRE R453
+# counts overlap, SHORTS-ROUTE R454, COPY-JOIN R457): page overlaps 23, 26, 31, 6 plus 157, 13, 102,
+# 15. DRAWING_SHORTS_NETS is 0 on every build since ROUTING (R439) and SHORTS-ROUTE, so it is an ERROR.
+[drawing_overlap]
+distribution_board = 0
+machine_panel = 180
+mcc = 39
+panel_di16p = 133
+remote_io = 21
+skid = 0
+
+[drawing_out_of_page]
+distribution_board = 0
+machine_panel = 0
+mcc = 0
+panel_di16p = 0
+remote_io = 0
+skid = 0
+
+[drawing_connection_not_drawn]
+distribution_board = 0
+machine_panel = 2
+mcc = 0
+panel_di16p = 2
+remote_io = 3
+skid = 0
+
+[drawing_shorts_nets]
+distribution_board = 0
+machine_panel = 0
+mcc = 0
+panel_di16p = 0
+remote_io = 0
+skid = 0
+
+[drawing_route_wrong_port]
+distribution_board = 0
+machine_panel = 0
+mcc = 0
+panel_di16p = 0
+remote_io = 0
+skid = 0
+
+[drawing_marker_unpaired]
+distribution_board = 0
+machine_panel = 0
+mcc = 0
+panel_di16p = 0
+remote_io = 0
+skid = 0
+
+[drawing_connection_drawn_twice]
+distribution_board = 0
+machine_panel = 0
+mcc = 0
+panel_di16p = 0
+remote_io = 0
+skid = 0
+
+[drawing_wire_not_orthogonal]
+distribution_board = 0
+machine_panel = 0
+mcc = 0
+panel_di16p = 0
+remote_io = 0
+skid = 0
+
+[drawing_missing_junction_dot]
+distribution_board = 0
+machine_panel = 0
+mcc = 0
+panel_di16p = 0
+remote_io = 0
+skid = 0

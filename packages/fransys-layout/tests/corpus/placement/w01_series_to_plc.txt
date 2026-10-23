@@ -1,4 +1,5 @@
 # FRANSYS PLACEMENT INSTANCE test_a_series_to_a_plc_module_takes_its_lowest_free_channel__1
+# sides: half split of fransys_el; today and route lines as exported
 # Units G. Wiring grid 8 G. Text height 8 G. Pin offsets and boxes are relative to the
 # symbol origin, at orientation R0. A pin's side is the way its wire leaves.
 # [rail rank=r power=K]: the net carries a declared supply potential; smaller rank is drawn
@@ -57,15 +58,15 @@ sym +C1-G1.supply group=- body=-16,-16,56,32 keepout=-16,-16,108,32
   pin input.N N 24,-16
   pin output.+ S 0,16 stand=16
   pin output.- S 24,16 stand=16
-sym +C1-A1.item group=- body=-16,-16,272,32 keepout=-16,-16,324,32
+sym +C1-A1.item group=- body=-16,-16,144,32 keepout=-16,-16,196,32
   pin di_1.1 N 0,-16
-  pin di_10.10 N 144,-16
-  pin di_11.11 N 160,-16
-  pin di_12.12 N 176,-16
-  pin di_13.13 N 192,-16
-  pin di_14.14 N 208,-16
-  pin di_15.15 N 224,-16
-  pin di_16.16 N 240,-16
+  pin di_10.10 S 16,16
+  pin di_11.11 S 32,16
+  pin di_12.12 S 48,16
+  pin di_13.13 S 64,16
+  pin di_14.14 S 80,16
+  pin di_15.15 S 96,16
+  pin di_16.16 S 112,16
   pin di_2.2 N 16,-16
   pin di_3.3 N 32,-16
   pin di_4.4 N 48,-16
@@ -73,7 +74,7 @@ sym +C1-A1.item group=- body=-16,-16,272,32 keepout=-16,-16,324,32
   pin di_6.6 N 80,-16
   pin di_7.7 N 96,-16
   pin di_8.8 N 112,-16
-  pin di_9.9 N 128,-16
+  pin di_9.9 S 0,16
 net n0 [rail rank=0 power=NONE] +C1-A1.item.di_15.15 +C1-S15.sw.out
 net n2 [rail rank=0 power=NONE] +C1-A1.item.di_4.4 +C1-S4.sw.out
 net n3 [rail rank=0 power=NONE] +C1-A1.item.di_3.3 +C1-S3.sw.out

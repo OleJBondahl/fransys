@@ -8,34 +8,25 @@ so no two of them are. The wire counts as drawn between neighbours and the neigh
 takes no marker; but the pair is neighbours in one set only, and in the other `-X3:1` must
 still show its branch. Where the terminals share a page (`fill` 1) same-side pins are joined
 by wires at any column distance, so the unit's set draws wires and no marker. Built
-through the `fransys` facade from `examples/demo-parts`, read from `layout.*` records and
-`marker_text`.
+through the `fransys` facade from `examples/demo-parts`, read from the core path's Drawings
+(a terminal by the TAG text it prints, see `_dd_core_c`).
 
 `_build` asserts no ERROR finding. The control (`-X1:2` beside the hub in both sets): a marker
 is never added where a wire is drawn.
 """
 
+from itertools import pairwise
 from typing import Any
 
 import fransys as fr
 import fransys_author
 import fransys_parts
 import pytest
+from _dd_core_c import beside, in_own_set, markers_of, stands
+from _drawn_pages import drawn_pages
 from _model_build_cover import layout_trigger_document
 
-from fransys_model.derive.drawing_text import marker_text
-from fransys_model.derive.marker_text import reference_number
-from fransys_model.kernel import Id, Severity
-from fransys_model.layout import (
-    DrawingSet,
-    LinkMarker,
-    Page,
-    Route,
-    StarKind,
-    SymbolPlacement,
-    layout_of,
-)
-from fransys_model.vocab.tables import ports
+from fransys_model.kernel import Severity
 
 _PROJECT: dict[str, Any] = {
     "title": "Star per set",
@@ -53,7 +44,7 @@ def _build(spec: tuple[tuple[str, int], ...], *, fill: int):
     """A cabinet unit `+C1` with one boundary terminal per `spec` entry, the first wired to each
     other on the inner side (one PE net). Each terminal's outer side is wired to a relay coil of
     its group; `fill` relays stand in each group in all, so a group of 3 fills a page of its own.
-    Returns the model and the terminals' inner ports, in `spec` order."""
+    Returns the model and the terminals' printed tags, in `spec` order."""
     parts = fransys_parts.load("demo_parts")
     d = fransys_author.Design(parts)
     d.project(**_PROJECT)
@@ -84,45 +75,68 @@ def _build(spec: tuple[tuple[str, int], ...], *, fill: int):
                 blue(terminal.outer, relay.fn("coil")["A1"])
     result = fr.build(parts, d.draft(), layout_trigger_document())
     assert not [f for f in result.findings if f.severity is Severity.ERROR]
-    return result.model, [terminal.inner.id for terminal in terminals]
+    seen: dict[str, int] = {}
+    tags = []
+    for name, _ in spec:
+        seen[name] = seen.get(name, 0) + 1
+        tags.append(f"-{name}:{seen[name]}")
+    return result.model, tags
 
 
-def _stands(model, port: Id) -> dict[bool, SymbolPlacement]:
-    """`port`'s function's placement by set: True is the unit's own set, False the top-level one."""
-    pages, sets = layout_of(model, Page), layout_of(model, DrawingSet)
-    function = ports(model)[port].function
-    found = {
-        sets[pages[p.page].drawing_set].unit is not None: p
-        for p in layout_of(model, SymbolPlacement).values()
-        if p.function == function
-    }
+def _stands(model, tag: str) -> dict:
+    """`tag`'s terminal by set: True is the unit's own set, False the top-level one."""
+    found = {own: [spot] for own, spots in stands(model, tag).items() for spot in spots}
     assert set(found) == {True, False}  # one placement in each of the two sets
-    return found
+    return {own: spot[0] for own, spot in found.items()}
 
 
-def _beside(model, a: Id, b: Id, *, own: bool) -> bool:
+def _beside(model, a: str, b: str, *, own: bool) -> bool:
     """Whether `a` and `b` stand on one page of the set at one y with nothing between them."""
-    pa, pb = _stands(model, a)[own], _stands(model, b)[own]
-    if (pa.page, pa.y) != (pb.page, pb.y):
-        return False
-    low, high = sorted((pa.x, pb.x))
-    return not [
-        p
-        for p in layout_of(model, SymbolPlacement).values()
-        if p.page == pa.page and low < p.x < high and p.function not in (pa.function, pb.function)
-    ]
+    return beside(model, _stands(model, a)[own], _stands(model, b)[own])
 
 
-def _own_page(model, port: Id):
-    return _stands(model, port)[True].page
+def _own_page(model, tag: str):
+    return _stands(model, tag)[True][0]
 
 
-def _star_markers(model, port: Id, kind: StarKind, page=None) -> list[LinkMarker]:
-    return [
-        m
-        for m in layout_of(model, LinkMarker).values()
-        if m.port == port and m.star is kind and (page is None or m.page == page)
-    ]
+def _star_markers(model, tag: str, kind: str, page=None) -> list:
+    """The markers of library key `kind` printing `tag`, on `page` when given."""
+    return markers_of(model, tag, kind, page)
+
+
+def _on(point, a, b) -> bool:
+    """Whether `point` lies on the straight segment a-b."""
+    (x, y), (x0, y0), (x1, y1) = point, a, b
+    return min(x0, x1) <= x <= max(x0, x1) and min(y0, y1) <= y <= max(y0, y1)
+
+
+def _joined(model, page, a, b) -> bool:
+    """Whether the pin (8 G above its terminal symbol) of `a` and of `b` lie on one run of wires
+    of `page`: wires that touch share a run."""
+    wires = [w.points for w in drawn_pages(model)[page].wires]
+    runs: list[set[int]] = []
+    for i, points in enumerate(wires):
+        touching = [
+            run
+            for run in runs
+            if any(
+                _on(p, q0, q1) or _on(q0, *pair) or _on(q1, *pair)
+                for j in run
+                for pair in pairwise(points)
+                for p in wires[j]
+                for q0, q1 in zip(wires[j], wires[j][1:], strict=False)
+            )
+        ]
+        merged = {i}.union(*touching)
+        runs = [run for run in runs if run not in touching] + [merged]
+    pins = [(s.x, s.y - 8) for s in (a, b)]
+    return any(
+        all(
+            any(_on(pin, *seg) for j in run for seg in zip(wires[j], wires[j][1:], strict=False))
+            for pin in pins
+        )
+        for run in runs
+    )
 
 
 @pytest.mark.parametrize("fill", [1, 3], ids=["same-page", "other-page"])
@@ -142,12 +156,9 @@ def test_a_port_apart_from_the_reference_in_the_unit_set_gets_a_branch_there(fil
         _joined_by_wires(model, hub, near, far)
         return
     assert _own_page(model, hub) != _own_page(model, near)
-    markers = layout_of(model, LinkMarker)
-    branches = _star_markers(model, near, StarKind.BRANCH, _own_page(model, near))
+    branches = _star_markers(model, near, "branch", _own_page(model, near))
     assert len(branches) == 1, "-X3:1 stands apart from -X1:1 in the unit's set and shows no branch"
-    ref = markers[branches[0].partner]
-    assert ref.port == hub
-    assert ref.star is StarKind.REF
+    assert _star_markers(model, hub, "ref", _own_page(model, hub))
 
 
 @pytest.mark.parametrize("fill", [1, 3], ids=["same-page", "other-page"])
@@ -163,40 +174,34 @@ def test_the_reference_in_the_unit_set_lists_the_branch_of_the_port_apart_from_i
     if fill == 1:
         _joined_by_wires(model, hub, near, far)
         return
-    markers = layout_of(model, LinkMarker)
     own = _own_page(model, hub)
     refs = [
-        m for m in _star_markers(model, hub, StarKind.REF) if m.page in {own, _own_page(model, far)}
+        (p, m) for p, m in _star_markers(model, hub, "ref") if p in {own, _own_page(model, far)}
     ]
     assert refs
-    branches = [
-        m
-        for m in markers.values()
-        if m.star is StarKind.BRANCH and m.partner in {r.id for r in refs}
-    ]
-    assert {m.port for m in branches} == {near, far}, "the reference does not list -X3:1"
+    branches = [(p, m) for tag in (near, far) for p, m in _star_markers(model, tag, "branch")]
+    assert {tag for tag in (near, far) if _star_markers(model, tag, "branch")} == {near, far}, (
+        "the reference does not list -X3:1"
+    )
     own_lines = [
         line
-        for r in refs
-        for line in marker_text(model, r).split("\n")
-        if line.startswith(f"#{reference_number(model, r)}-")
+        for _, r in refs
+        for _, value in r.texts
+        for line in value.split("\n")
+        if line.startswith("#")
     ]
     assert len(own_lines) == len(branches) == 2
 
 
-def _on_top_set(model, marker: LinkMarker) -> bool:
-    pages, sets = layout_of(model, Page), layout_of(model, DrawingSet)
-    return sets[pages[marker.page].drawing_set].unit is None
-
-
-def _joined_by_wires(model, hub: Id, near: Id, far: Id) -> None:
+def _joined_by_wires(model, hub: str, near: str, far: str) -> None:
     """Terminals standing on one page of the unit's set, apart as they are, are joined by
     wires at any column distance (the pins face the same side), so the net takes no marker."""
     own = _own_page(model, hub)
     assert _own_page(model, near) == _own_page(model, far) == own
-    routes = {frozenset((r.a, r.b)) for r in layout_of(model, Route).values() if r.page == own}
-    assert {frozenset((hub, near)), frozenset((hub, far))} <= routes
-    assert not [m for m in layout_of(model, LinkMarker).values() if m.port in {hub, near, far}]
+    symbols = {tag: _stands(model, tag)[True][1] for tag in (hub, near, far)}
+    assert _joined(model, own, symbols[hub], symbols[near])
+    assert _joined(model, own, symbols[hub], symbols[far])
+    assert not [m for tag in (hub, near, far) for m in _star_markers(model, tag, "")]
 
 
 @pytest.mark.parametrize("fill", [1, 3], ids=["same-page", "other-page"])
@@ -210,20 +215,19 @@ def test_in_the_top_level_set_the_pair_stands_beside_and_takes_no_branch(fill: i
     #     statement to `return []`: FAILED on `(branch,) = ...` (other-page); same-page as in
     #     the first test
     model, (hub, near, far) = _build(_APART, fill=fill)
-    row = {_stands(model, port)[False] for port in (hub, near, far)}
-    assert len({(p.page, p.y) for p in row}) == 1  # one row of one top-level page
+    row = {_stands(model, tag)[False] for tag in (hub, near, far)}
+    assert len({(page, symbol.y) for page, symbol in row}) == 1  # one row of one top-level page
     assert _beside(model, hub, near, own=False)
-    markers = layout_of(model, LinkMarker)
-    assert not [m for m in _star_markers(model, near, StarKind.BRANCH) if _on_top_set(model, m)]
+    assert not [p for p, _ in _star_markers(model, near, "branch") if not in_own_set(model, p)]
     if fill == 1:
         _joined_by_wires(model, hub, near, far)
-        assert not _star_markers(model, near, StarKind.BRANCH)
+        assert not _star_markers(model, near, "branch")
         return
-    (branch,) = _star_markers(model, near, StarKind.BRANCH)
-    ref = markers[branch.partner]
-    assert ref.star is StarKind.REF
-    assert ref.page == _own_page(model, hub)
-    assert not _on_top_set(model, ref)
+    (branch,) = _star_markers(model, near, "branch")
+    ref_page = next(p for p, _ in _star_markers(model, hub, "ref"))
+    assert ref_page == _own_page(model, hub)
+    assert in_own_set(model, ref_page)
+    assert branch
 
 
 def test_control_a_pair_beside_each_other_in_both_sets_gets_no_marker_pair() -> None:
@@ -239,9 +243,10 @@ def test_control_a_pair_beside_each_other_in_both_sets_gets_no_marker_pair() -> 
     assert _beside(model, hub, beside, own=False)
     assert not _beside(model, hub, apart, own=True)
     assert not _beside(model, hub, apart, own=False)
-    assert not _star_markers(model, beside, StarKind.BRANCH)
-    assert not _star_markers(model, beside, StarKind.REF)
-    assert any({r.a, r.b} == {hub, beside} for r in layout_of(model, Route).values())
-    assert len(_star_markers(model, apart, StarKind.BRANCH)) == 1
-    refs = _star_markers(model, hub, StarKind.REF)
-    assert [len(marker_text(model, r).split()) for r in refs] == [1]
+    assert not _star_markers(model, beside, "branch")
+    assert not _star_markers(model, beside, "ref")
+    page, a = _stands(model, hub)[True]
+    assert _joined(model, page, a, _stands(model, beside)[True][1])
+    assert len(_star_markers(model, apart, "branch")) == 1
+    refs = _star_markers(model, hub, "ref")
+    assert [len(value.split()) for _, r in refs for _, value in r.texts] == [1]

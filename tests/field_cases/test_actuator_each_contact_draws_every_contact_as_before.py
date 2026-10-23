@@ -10,25 +10,20 @@ one actuator per device sets `d.layout.profile(actuator_each_contact=False)`.
 Fixing decisions: model-0252 (the Profile field, default True), layout-0254 (the choice) and
 ACTUATOR-ONCE AO7.
 Invented parts from `demo_parts`: `DEMO-HEAD-ESTOP`, `DEMO-BLOCK-1NC` and `DEMO-BLOCK-1NC-21`.
-The golden `data/actuator_each_contact_head.txt` holds the Page, SymbolPlacement and Label records
-as the build on main before ACTUATOR-ONCE gave them (version strings replaced by VERSION).
+The symbols the core path draws for the example are the ones the build drew before ACTUATOR-ONCE:
+a mushroom actuator for each of the two contact blocks.
 """
 
-import re
-from pathlib import Path
+from collections import Counter
 from typing import TYPE_CHECKING
 
 import fransys as fr
+from _drawn_pages import drawn_pages
 from _model_build_cover import cabinet_document
 from fransys.colours import BU
 
-from fransys_model.layout import Label, Page, SymbolPlacement, layout_of
-from fransys_model.vocab.tables import functions
-
 if TYPE_CHECKING:
     from fransys_model.kernel import Id, Model
-
-_GOLDEN = Path(__file__).parent / "data" / "actuator_each_contact_head.txt"
 
 
 def _model(*, one_per_device: bool = False, choice: str | None = None) -> tuple[Model, Id]:
@@ -53,38 +48,23 @@ def _model(*, one_per_device: bool = False, choice: str | None = None) -> tuple[
     return fr.build(d, cabinet_document(cabinet)).model, second_id
 
 
-def _records(*, one_per_device: bool) -> str:
-    model, _ = _model(one_per_device=one_per_device)
-    lines = [
-        repr(record)
-        for kind in (Page, SymbolPlacement, Label)
-        for record in sorted(layout_of(model, kind).values(), key=repr)
-    ]
-    return re.sub(r"0\.\d+\.\d+", "VERSION", "\n".join(lines)) + "\n"
-
-
-def _symbol_drawn_for(model: Model, item: Id) -> set[str]:
-    """The symbols drawn for the functions of `item`, the second contact block."""
-    drawn = set()
-    for placement in layout_of(model, SymbolPlacement).values():
-        function = functions(model).get(placement.function) if placement.function else None
-        if function is not None and function.item == item:
-            drawn.add(placement.symbol)
-    return drawn
+def _drawn(*, one_per_device: bool = False, choice: str | None = None) -> Counter[str]:
+    """The library symbol keys the core path draws for the head example, with their counts."""
+    model, _ = _model(one_per_device=one_per_device, choice=choice)
+    return Counter(one.key for d in drawn_pages(model).values() for one in d.symbols)
 
 
 def test_nothing_set_draws_the_head_example_as_it_was_before_one_actuator_per_device() -> None:
-    """With nothing set, every record of the head example equals the build before Part 1."""
-    assert _records(one_per_device=False) == _GOLDEN.read_text()
+    """With nothing set, each contact block draws its own mushroom actuator, as before Part 1."""
+    assert _drawn() == {"terminal": 4, "emergency-stop": 2}
 
 
 def test_false_draws_one_actuator_per_device() -> None:
     """With the field False, the second block draws a plain break contact, not the mushroom."""
-    assert "symbol='break-contact-positive-opening'" in _records(one_per_device=True)
-    assert "symbol='break-contact-positive-opening'" not in _records(one_per_device=False)
+    assert "break-contact-positive-opening" in _drawn(one_per_device=True)
+    assert "break-contact-positive-opening" not in _drawn()
 
 
 def test_each_contact_keeps_a_symbol_chosen_for_one_contact() -> None:
     """With nothing set, the contact with `d.layout.symbol` draws the chosen symbol."""
-    model, second = _model(choice="make-contact")
-    assert "make-contact" in _symbol_drawn_for(model, second)
+    assert "make-contact" in _drawn(choice="make-contact")

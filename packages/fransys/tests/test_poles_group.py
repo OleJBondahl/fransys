@@ -5,9 +5,6 @@ from types import SimpleNamespace
 import fransys as fr
 import pytest
 
-from fransys_layout.engines.schematic.read import reading
-from fransys_layout.engines.schematic.read.pole_groups import gang_specs
-from fransys_model.derive.indexes import build_indexes
 from fransys_model.layout import PoleGroup, layout_of
 from fransys_model.vocab.tables import functions
 
@@ -90,24 +87,3 @@ def _refusal(make) -> str:
 )
 def test_a_group_that_cannot_stand_raises_naming_it(make, text: str) -> None:
     assert text in _refusal(make)
-
-
-def test_a_relay_selector_group_reads_as_the_three_pole_selector_part() -> None:
-    """layout-0227: three grouped one-pole changeovers read as DEMO-SEL-3P-24's one function."""
-    d = fr.design("demo_parts")
-    k1 = d.device("K1", "DEMO-RLY-4CO-24")
-    d.device("Q1", "DEMO-SEL-3P-24")
-    d.poles(k1.co_1, k1.co_2, k1.co_3, selector=True)
-    model = fr.build(d).model
-    specs, leader = gang_specs(model, reading.drawn_functions(model, build_indexes(model)))
-    shape = {
-        spec.key[-3]: (
-            spec.poles,
-            spec.pole_pairs,
-            [(p.name, p.throw, p.pole, p.line, p.order) for p in spec.ports],
-        )
-        for spec in specs
-        if spec.kind == "contact_co" and spec.key[-1] in {"co", "co_1"}
-    }
-    assert shape["K1"] == shape["Q1"]
-    assert len(leader) == 2

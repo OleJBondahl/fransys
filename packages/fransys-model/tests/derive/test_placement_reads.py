@@ -16,6 +16,7 @@ from fransys_model.derive import (
     item_parents,
     item_unit,
     node_label,
+    port_function,
     port_name,
 )
 from fransys_model.kernel import Model, make_id
@@ -129,6 +130,13 @@ def test_port_name_is_the_name_the_port_was_planted_with(model: Model) -> None:
     assert port_name(model, CAB_P1) == "p1"
     assert port_name(model, CAB_P2) == "2"
     assert port_name(model, RAIL_P1) == "p1"
+
+
+def test_port_function_is_the_function_the_port_was_planted_on(model: Model) -> None:
+    """Each planted port names its function; a port the model lacks has none."""
+    assert port_function(model, CAB_P1) == CAB_FN
+    assert port_function(model, RAIL_P1) == RAIL_FN
+    assert port_function(model, make_id(Port, ("cab_item", "cab_fn", "nowhere"))) is None
 
 
 def test_node_label_is_the_aspect_node_label(model: Model) -> None:

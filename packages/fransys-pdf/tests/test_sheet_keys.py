@@ -4,8 +4,7 @@ import dataclasses
 
 import fransys_render
 import pytest
-from _build import document, drawing_set, layout_page, location, model
-from fransys_pdf import source
+from _build import document, drawing_set, layout_page, location, model, source
 
 from fransys_model.derive import SheetKey, document_sheets_of, sheet_key_text
 from fransys_model.kernel import render_id
@@ -16,17 +15,24 @@ _REMOVE = (K.PLC_LIST, K.TERMINAL_LIST, K.BOM, K.SHEET_INDEX)
 
 
 def _two_documents():
-    c1 = location("C1", "Demo cabinet")
-    ds = drawing_set("ds1", location=c1)
-    page = layout_page("p1", drawing_set=ds, number=1)
+    c1, c2 = location("C1", "Demo cabinet"), location("C2", "Second cabinet")
+    ds1, ds2 = drawing_set("ds1", location=c1), drawing_set("ds2", location=c2)
+    pages = [
+        layout_page("p1", drawing_set=ds1, number=1),
+        layout_page("p2", drawing_set=ds2, number=1),
+    ]
     docs = [
         document(
-            key, preset=DocumentPreset.CABINET_SCHEMATIC, subject=c1, cover="# Cover",
+            key, preset=DocumentPreset.CABINET_SCHEMATIC, subject=where, cover="# Cover",
             notes=None, remove=_REMOVE,
         )
-        for key in ("a", "b")
+        for key, where in (("a", c1), ("b", c2))
     ]  # fmt: skip
-    return model(c1, ds, page, *docs), docs, {render_id(page.id): "<svg>one</svg>"}
+    return (
+        model(c1, c2, ds1, ds2, *pages, *docs),
+        docs,
+        {render_id(pages[0].id): "<svg>one</svg>"},
+    )  # one printer per set (R331)
 
 
 _M, (_A, _B), _SVGS = _two_documents()

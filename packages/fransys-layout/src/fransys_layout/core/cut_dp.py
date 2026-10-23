@@ -52,10 +52,14 @@ class RowState:
 Plan = list[tuple[int, int, RowState]]
 
 
-def wide_fan(cut: Cut, block: str) -> bool:
+def wraps(block: Block, page_w: int, options: Options) -> bool:
     """True for a keep-whole fan wider alone than the page: it wraps at a column (layout-0309)."""
-    b = cut.by_id[block]
-    return cut.options.wrap_wide_fans and b.fan is not None and b.width_est > cut.page_w
+    return options.wrap_wide_fans and block.fan is not None and block.width_est > page_w
+
+
+def wide_fan(cut: Cut, block: str) -> bool:
+    """`wraps` for the block of this id in the cut."""
+    return wraps(cut.by_id[block], cut.page_w, cut.options)
 
 
 def splits_block(cut: Cut, i: int, j: int) -> bool:
@@ -69,14 +73,16 @@ def splits_block(cut: Cut, i: int, j: int) -> bool:
 def row_size(cut: Cut, i: int, j: int) -> tuple[int, int]:
     """Width (the pack modules' own) and estimated height of items i..j in one row."""
     seq = cut.seq
-    height = 0
+    spans: list[tuple[int, int]] = []
     seen: set[str] = set()
     for item in seq[i : j + 1]:
         if not item.whole:
-            height = max(height, item.height)
+            spans.append((item.rise, item.rise + item.height))
         elif item.block not in seen:
             seen.add(item.block)
-            height = max(height, cut.by_id[item.block].height_est)
+            b = cut.by_id[item.block]
+            spans.append((b.rise, b.rise + b.height_est))
+    height = max(b for _, b in spans) - min(a for a, _ in spans) if spans else 0
     lead = reserve(cut.bounds[i - 1].arrows if i > 0 else 0, cut.options)
     tail = reserve(cut.bounds[j].arrows if j < len(cut.bounds) else 0, cut.options)
     return seq[j].at - seq[i].at + seq[i].lead + seq[j].tail + lead + tail, height
@@ -235,7 +241,10 @@ def page_findings(
     for p, (i, k, state) in enumerate(plan):
         block = cut.seq[first_row(state).start].block
         if first_row(state).height > cut.page_h:
-            text = f"{block}: a row {first_row(state).height} G high on a page {cut.page_h} G high"
+            text = (
+                f"{block}: a row {first_row(state).height} G high on a page {cut.page_h} G high:"
+                " enlarge the page or shorten the row"
+            )
             out.append(Finding("PAGE_OVERFLOW", text, first + p, block))
         last = k == len(cut.seq) - 1 or cut.seq[k + 1].forced_break_before
         if relaxed and not last and fill(state, cut) < cut.options.min_fill:

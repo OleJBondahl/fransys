@@ -5,8 +5,8 @@ lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.core import Item
 
 from .lookups import require
-from .reports import _all_wire_rows
 from .wire_harness import harness_of_wire
+from .wire_list import _all_wire_rows
 lazy from .rows import WireRow
 
 

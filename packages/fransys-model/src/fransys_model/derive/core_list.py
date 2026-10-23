@@ -3,10 +3,10 @@
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.core import Item, Unit
 
+from .cable_cores import cable_rows
 from .core_pairs import core_pair_word, drawn_pairs
 from .harness import cable_list_rows
 from .open_cores import open_core_rows
-from .reports import cable_rows
 from .rows_cores import CoreListRow
 
 

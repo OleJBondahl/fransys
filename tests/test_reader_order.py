@@ -275,17 +275,11 @@ def _rows(run: _Run, suffix: str) -> list[dict[str, str]]:
 # ---- O1: the canary -------------------------------------------------------------------------
 
 
-def _open(reason: str) -> pytest.MarkDecorator:
-    """A site whose fix has not landed: strict, so its test flips when the fix does."""
-    return pytest.mark.xfail(strict=True, reason=reason)
-
-
-def _params(cases: list[tuple], open_sites: dict[tuple, str]) -> list:
-    """Each case as a param; a case in `open_sites` carries that site's strict xfail."""
+def _params(cases: list[tuple]) -> list:
+    """Each case as a param, its id the case joined by dashes."""
     return [
         pytest.param(
             *case,
-            marks=_open(open_sites[case]) if case in open_sites else (),
             id="-".join(map(str, case)),
         )
         for case in cases
@@ -296,7 +290,6 @@ def _params(cases: list[tuple], open_sites: dict[tuple, str]) -> list:
     "name",
     _params(
         [(name,) for name in _CSVS],
-        {},
     ),
 )
 def test_each_csv_prints_its_tags_in_natural_order(first: _Run, name: str) -> None:
@@ -327,7 +320,6 @@ def test_a_terminals_far_ends_print_in_natural_order(first: _Run) -> None:
             for title in titles
             if title not in _NOT_LISTS
         ],
-        {},
     ),
 )
 def test_each_pdf_list_prints_its_tags_in_natural_order(first: _Run, pdf: str, title: str) -> None:
@@ -406,7 +398,6 @@ def test_the_rename_changes_no_file_name(first: _Run, second: _Run) -> None:
     "name",
     _params(
         [(name,) for name in _CSVS],
-        {},
     ),
 )
 def test_a_rename_leaves_each_csv_byte_identical(first: _Run, second: _Run, name: str) -> None:
@@ -424,7 +415,6 @@ def test_a_rename_leaves_the_overview_page_byte_identical(first: _Run, second: _
     ("pdf", "title"),
     _params(
         [(pdf, title) for pdf, titles in _PAGES.items() for title in titles],
-        {},
     ),
 )
 def test_a_rename_leaves_each_pdf_page_text_identical(

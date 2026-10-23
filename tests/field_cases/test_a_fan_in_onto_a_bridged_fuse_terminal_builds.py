@@ -24,26 +24,17 @@ from itertools import pairwise
 from typing import TYPE_CHECKING, NamedTuple
 
 import fransys as fr
-import pytest
+from _drawn_pages import drawn_pages
 from fransys.colours import BU
 
-from fransys_model.derive.indexes import build_indexes
-from fransys_model.layout import (
-    DrawingSet,
-    LinkMarker,
-    Page,
-    PowerSymbol,
-    Route,
-    SymbolPlacement,
-    layout_of,
-)
-from fransys_model.vocab.enums import ConductorKind, FunctionKind
-from fransys_model.vocab.tables import conductors, functions, ports
+from fransys_model.layout import DrawingSet, Page, layout_of
+
+Pt = tuple[int, int]
 
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from fransys_model.kernel import Id
+    from fransys_layout.drawing import Drawing, DrawnSymbol
 
 
 class _Cab(NamedTuple):
@@ -95,6 +86,59 @@ def _turns_back(points: list[tuple[int, int]]) -> bool:
     return False
 
 
+def _paths(drawing: Drawing, start: DrawnSymbol, ends: list[DrawnSymbol]) -> list[list[Pt]]:
+    """The vertex path of drawn wires from `start`'s pin to each of `ends`' pins.
+
+    Wire vertices are the nodes; a junction dot on a segment splits it, so wires that join there
+    join in the graph.
+    """
+    dots = {(s.x, s.y) for s in drawing.symbols if s.key == "junction-dot"}
+    graph: dict[Pt, set[Pt]] = defaultdict(set)
+    for wire in drawing.wires:
+        for a, b in pairwise(wire.points):
+            cut = sorted(
+                [a, b, *(d for d in dots if _between(d, a, b))],
+                key=lambda p: abs(p[0] - a[0]) + abs(p[1] - a[1]),
+            )
+            for u, v in pairwise(cut):
+                graph[u].add(v)
+                graph[v].add(u)
+
+    def pin(s: DrawnSymbol) -> Pt:
+        return min((p for p in graph if p[0] == s.x), key=lambda p: abs(p[1] - s.y))
+
+    def walk(here: Pt, goal: Pt, seen: tuple[Pt, ...]) -> list[Pt] | None:
+        if here == goal:
+            return [*seen, here]
+        for nxt in sorted(graph[here] - set(seen)):
+            found = walk(nxt, goal, (*seen, here))
+            if found:
+                return found
+        return None
+
+    return [p for end in ends if (p := walk(pin(start), pin(end), ()))]
+
+
+def _between(p: Pt, a: Pt, b: Pt) -> bool:
+    """Whether `p` lies strictly inside the straight segment a-b."""
+    on_line = (p[0] - a[0]) * (b[1] - a[1]) == (p[1] - a[1]) * (b[0] - a[0])
+    return (
+        on_line
+        and p not in (a, b)
+        and min(a[0], b[0]) <= p[0] <= max(a[0], b[0])
+        and min(a[1], b[1]) <= p[1] <= max(a[1], b[1])
+    )
+
+
+def _terminal(drawing: Drawing, tag: str) -> DrawnSymbol:
+    """The terminal whose own tag text `-tag` stands nearest to it."""
+    (text,) = (t for t in drawing.texts if t.text.endswith(tag))
+    return min(
+        (s for s in drawing.symbols if s.key == "terminal"),
+        key=lambda s: abs(s.x - text.box.x) + abs(s.y - text.box.y),
+    )
+
+
 def test_the_wire_from_the_fuse_terminal_reaches_the_fan_in_without_a_u_turn(
     tmp_path: Path,
 ) -> None:
@@ -104,22 +148,15 @@ def test_the_wire_from_the_fuse_terminal_reaches_the_fan_in_without_a_u_turn(
     model = fr.build(
         d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, "cab", cover=tmp_path / "cover.md")
     ).model
-    port_key = {p.id: p.key for p in ports(model).values()}
-    routes = [
-        r
-        for r in layout_of(model, Route).values()
-        if ("U1", "X1", "terminal", "24V", "6", "fn", "terminal", "port", "external")
-        in (port_key[r.a], port_key[r.b])
-    ]
+    (page,) = (
+        p for p in drawn_pages(model).values() if any(t.text.endswith("X1:24V:6") for t in p.texts)
+    )
+    ends = [_terminal(page, "X2:1"), _terminal(page, "X2:2")]
+    routes = _paths(page, _terminal(page, "X1:24V:6"), ends)
     assert len(routes) == 2  # one per X2 terminal
-    assert not any(_turns_back([(p.x, p.y) for p in r.points]) for r in routes)
+    assert not any(_turns_back(r) for r in routes)
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="model-0220: the three stand in U1's black box in the top-level set, wired inside U1"
-    " only; no copy rule draws a box cell's wire in its parent",
-)
 def test_the_top_level_set_draws_no_terminal_that_no_wire_meets(tmp_path: Path) -> None:
     """Decision layout-0216: no terminal stands as a box cell on a top-level page with no route,
     marker or power symbol of that page at its ports (today U1/X1:24V:6, U1/X2:1 and U1/X2:2)."""
@@ -129,21 +166,12 @@ def test_the_top_level_set_draws_no_terminal_that_no_wire_meets(tmp_path: Path) 
     model = fr.build(
         d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, "cab", cover=tmp_path / "cover.md")
     ).model
-    kinds, pages, sets = conductors(model), layout_of(model, Page), layout_of(model, DrawingSet)
-    met: dict[Id, set[Id]] = defaultdict(set)
-    for route in layout_of(model, Route).values():
-        if route.conductor is None or kinds[route.conductor].kind is not ConductorKind.JUMPER:
-            met[route.page] |= {route.a, route.b}
-    for marker in layout_of(model, LinkMarker).values():
-        met[marker.page].add(marker.port)
-    for power in layout_of(model, PowerSymbol).values():
-        met[power.page].add(power.port)
-    function_ports = build_indexes(model).ports_by_function
-    loose = [
-        p.function
-        for p in layout_of(model, SymbolPlacement).values()
-        if functions(model)[p.function].kind is FunctionKind.TERMINAL
-        and sets[pages[p.page].drawing_set].unit is None
-        and not set(function_ports.get(p.function, ())) & met[p.page]
-    ]
+    pages, sets = layout_of(model, Page), layout_of(model, DrawingSet)
+    loose = []
+    for pid, drawing in drawn_pages(model).items():
+        if sets[pages[pid].drawing_set].unit is not None:
+            continue
+        met = {x for w in drawing.wires for x, _ in w.points}
+        met |= {s.x for s in drawing.symbols if s.key != "terminal"}
+        loose += [(s.x, s.y) for s in drawing.symbols if s.key == "terminal" and s.x not in met]
     assert loose == []

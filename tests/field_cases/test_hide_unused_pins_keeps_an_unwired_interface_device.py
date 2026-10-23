@@ -8,15 +8,16 @@ The bug: building raised RefError "the id names no record" when the layout runs 
 its own run named its page differently, and the cabinet's cross-reference kept the top run's id.
 The rule: a spliced cross-reference names the page and the column the unit's own run draws.
 Hiding the lamps shifts the interface port's column, so the base run's x would print a stale cell.
+Read from the core path: every reference marker names a page the build draws.
 """
 
-from dataclasses import replace
+import re
 from typing import TYPE_CHECKING, NamedTuple
 
 import fransys as fr
+from _drawn_pages import drawn_pages
 
-from fransys_model.derive.contact_image import cross_reference_text
-from fransys_model.layout import Label, layout_of
+from fransys_model.layout import Page, layout_of
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -44,16 +45,10 @@ def test_an_unwired_redundancy_interface_builds(tmp_path: Path) -> None:
     preset = fr.DocumentPreset.CABINET_SCHEMATIC
     own = fr.document(preset, "demo-idle-red", cover=tmp_path / "own.md")
     result = fr.build(d, own, fr.document(preset, cabinet, cover=tmp_path / "c.md"))
-    labels = [one for one in layout_of(result.model, Label).values() if one.partners]
-    own_x = {e.port: e.x for one in labels for e in one.partners if e.page == one.page}
-    spliced = [
-        one for one in labels if one.partners[0].port in own_x and one.partners[0].page != one.page
-    ]
-    assert spliced
-    for one in spliced:
-        end = one.partners[0]
-        unit_end = replace(end, x=own_x[end.port])
-        assert end.x != 0
-        assert cross_reference_text(result.model, one) == cross_reference_text(
-            result.model, replace(one, partners=(unit_end,))
-        )
+    drawings = drawn_pages(result.model)
+    numbers = {layout_of(result.model, Page)[page].number for page in drawings}
+    refs = [text for drawing in drawings.values() for m in drawing.markers for _, text in m.texts]
+    assert refs, "the cabinet's references to the unit's boundary are drawn"
+    named = [int(n) for ref in refs for n in re.findall(r"p(\d+):", ref)]
+    assert named
+    assert set(named) <= numbers

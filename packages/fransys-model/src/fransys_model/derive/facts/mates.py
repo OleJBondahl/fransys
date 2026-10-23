@@ -2,6 +2,7 @@
 
 from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, digest_cached
 from fransys_model.vocab.tables import mates, ports
+lazy from fransys_model.vocab.connectivity import Mate
 lazy from fransys_model.vocab.core import Function, Port
 
 
@@ -37,3 +38,19 @@ def _mated(model: Model) -> frozendict[tuple[Id[Port], Id[Function]], Id[Port]]:
 def mate_port_of(model: Model, port: Id[Port], function: Id[Function]) -> Id[Port] | None:
     """The port of `function` mated to `port` by name (the lowest id of that name), else `None`."""
     return _mated(model).get((port, function))
+
+
+@digest_cached(DIGEST_CACHE_SIZE)
+def _port_names(model: Model) -> frozendict[Id[Function], frozenset[str]]:
+    found: dict[Id[Function], set[str]] = {}
+    for port in ports(model).values():
+        found.setdefault(port.function, set()).add(port.name)
+    return frozendict({function: frozenset(names) for function, names in found.items()})
+
+
+def unmatched_port_names(model: Model, mate: Id[Mate]) -> frozenset[str]:
+    """The port names held by only one side of `mate`; empty when both sides name the same ports."""
+    names = _port_names(model)
+    record = mates(model)[mate]
+    empty = frozenset[str]()
+    return frozenset(names.get(record.a, empty) ^ names.get(record.b, empty))

@@ -19,6 +19,8 @@ from typing import TYPE_CHECKING, Any
 
 from fransys_model.kernel import Finding, Severity
 
+from .codes import fix_text
+
 if TYPE_CHECKING:
     from pathlib import Path
 
@@ -55,7 +57,13 @@ def finding(
     code: str, path: str, line: int, text: str, *, severity: Severity = Severity.ERROR
 ) -> Finding:
     """One `Finding` with no subjects; the message carries `path` and `line`."""
-    return Finding(code=code, severity=severity, subjects=(), message=location(path, line, text))
+    return Finding(
+        code=code,
+        severity=severity,
+        subjects=(),
+        message=location(path, line, text),
+        fix=fix_text(code),
+    )
 
 
 def parse(file_path: Path, *, relative_to: Path) -> ParsedFile:

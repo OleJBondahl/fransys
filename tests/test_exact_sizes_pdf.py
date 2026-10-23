@@ -1,8 +1,7 @@
-"""EXACT-SIZES A1, A2 and A4 over the content of compiled PDFs; the symbol measures sit in
-`test_exact_sizes_symbols_pdf`.
+"""EXACT-SIZES A1, A2 and A4 over the content of compiled PDFs.
 
 One small invented document carries a marked word in every text role (`HEKone` is a heading 1,
-`HEKlabel` an SVG drawing label, `HEKtable` a revision-table cell, ...). The PDF is compiled
+`HEKtable` a revision-table cell, ...). The PDF is compiled
 once and measured with `_pdf_measure`: the capital heights of H, E and K, the stroke widths,
 and the fonts.
 """
@@ -19,32 +18,28 @@ import fransys_render
 import pytest
 import typst
 from _model_build_cover import system_document
+from _pdf_lists import source
 from _pdf_measure import capital_boxes, font_names, stroke_widths, text_objects
-from fransys_el import REF_TINTS
-from fransys_pdf import font_dir, source
-from fransys_render import pages
+from fransys._layout_core import draw_on_core
+from root_library import freeze, role_height_mm
 from symdef import Line, Polyline
 from test_units_worked_example import _system_design
 
-from electrical_symbols import title_block, title_logo
+import electrical_symbols
+from electrical_symbols import font_dir, title_block, title_logo
 from fransys_model.derive import document_sheets_of, sheet_frame, unit_release
 from fransys_model.derive.print_sizes import (
     LINE_RULE_MM,
     LINE_THICK_MM,
     LINE_THIN_MM,
     TextRole,
-    role_height_mm,
 )
-from fransys_model.kernel import Draft, Origin, freeze, make_id
+from fransys_model.kernel import Draft, Origin, make_id
 from fransys_model.layout import (
     DrawingSet,
-    Label,
-    LabelKind,
-    Orientation,
     Page,
     PageRole,
     SheetFormat,
-    SymbolPlacement,
     default_profile,
     default_sheet_format,
     sheet_for,
@@ -54,12 +49,7 @@ from fransys_model.vocab import (
     AspectNode,
     Document,
     DocumentPreset,
-    Function,
-    FunctionKind,
-    Item,
     PageKind,
-    Port,
-    PortRole,
     Project,
     Revision,
 )
@@ -86,12 +76,11 @@ _ROLE_OF_WORD = {
     "HEKnotes": _role(TextRole.BODY),
     "HEKtitle": _role(TextRole.BODY),
     "HEKtable": _role(TextRole.LABEL),
-    "HEKlabel": _role(TextRole.LABEL),
 }
 _SIZES_MM = {_role(role) for role in TextRole}
 
 
-def _model(*, symbols: tuple[str, ...] = (), module_mm: str = "2.5"):
+def _model(*, module_mm: str = "2.5"):
     draft = Draft()
     location = AspectNode(
         id=make_id(AspectNode, ("location", "c1")),
@@ -139,48 +128,6 @@ def _model(*, symbols: tuple[str, ...] = (), module_mm: str = "2.5"):
         groups=(),
         produced_by="test",
     )
-    item = Item(
-        id=make_id(Item, ("item", "k1")),
-        key=("item", "k1"),
-        part=None,
-        parent=None,
-        position=None,
-        tag="K1",
-        description="Invented",
-        installed=True,
-    )
-    function = Function(
-        id=make_id(Function, ("function", "k1")),
-        key=("function", "k1"),
-        item=item.id,
-        template=None,
-        name="f",
-        kind=FunctionKind.GENERIC,
-    )
-    port_key = ("function", "k1", "1")
-    port = Port(
-        id=make_id(Port, port_key),
-        key=port_key,
-        function=function.id,
-        template=None,
-        name="HEKlabel",
-        role=PortRole.GENERIC,
-    )
-    label = Label(
-        id=make_id(Label, ("label", "l1")),
-        key=("label", "l1"),
-        page=page.id,
-        function=None,
-        port=port.id,
-        conductor=None,
-        kind=LabelKind.MARKING,
-        slot="",
-        x=80,
-        y=80,
-        width=4,
-        height=2,
-        produced_by="test",
-    )
     document = Document(
         id=make_id(Document, ("document", "d1")),
         key=("document", "d1"),
@@ -198,40 +145,19 @@ def _model(*, symbols: tuple[str, ...] = (), module_mm: str = "2.5"):
         revision,
         drawing_set,
         page,
-        item,
-        function,
-        port,
-        label,
         document,
         sheet,
     ]
-    for number, symbol in enumerate(symbols):  # motor-3ph carries the only texts, "M" and "3"
-        key = ("symbol_placement", f"s{number}")
-        records.append(
-            SymbolPlacement(
-                id=make_id(SymbolPlacement, key),
-                key=key,
-                function=function.id,
-                page=page.id,
-                x=40 + 40 * number,
-                y=160,
-                orientation=Orientation.R0,
-                poles=1,
-                symbol=symbol,
-                library_version="test",
-                produced_by="test",
-            )
-        )
     draft.extend(records, origin=_ORIGIN)
     return freeze(draft), document
 
 
-def _compile(*, symbols: tuple[str, ...] = (), module_mm: str = "2.5") -> bytes:
-    model, document = _model(symbols=symbols, module_mm=module_mm)
+def _compile(*, module_mm: str = "2.5") -> bytes:
+    model, document = _model(module_mm=module_mm)
     text = source(
         model,
         document.id,
-        pages(model, tints=REF_TINTS),
+        draw_on_core(model, {}, electrical_symbols.LIBRARY),
         fransys_render.sheets(document_sheets_of(model)),
     )
     compiler = typst.Compiler(font_paths=[font_dir()], ignore_system_fonts=True)
@@ -295,17 +221,6 @@ def _faces(pdf: bytes) -> set[str]:
 def test_every_embedded_font_is_dejavu_sans_condensed(built_pdf):
     """A4, non-symbol half: every character is set in a DejaVu Sans Condensed face."""
     assert _faces(built_pdf) == {"DejaVuSansCondensed", "DejaVuSansCondensed-Bold"}
-
-
-def test_a_symbol_text_is_dejavu_sans_condensed_too():
-    """A4, symbol half: the motor symbol's "M" and "3" are set in the same face.
-
-    With system fonts off, symdef's generic `sans-serif` resolves to the bundled face.
-    """
-    assert _faces(_compile(symbols=("motor-3ph",))) <= {
-        "DejaVuSansCondensed",
-        "DejaVuSansCondensed-Bold",
-    }
 
 
 def _on_a_role(cap_mm: float) -> bool:

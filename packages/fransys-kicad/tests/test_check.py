@@ -3,7 +3,8 @@ from fransys_kicad import check, netlist
 
 from fransys_model.checks.connectivity import NET_SHORTED, check_connectivity
 from fransys_model.derive import board_netlist
-from fransys_model.derive.designation import item_designation, item_label
+from fransys_model.derive.designation import item_designation
+from fransys_model.derive.designation_label import item_label
 from fransys_model.derive.passes.numbering import number
 from fransys_model.kernel import SchemaError, Severity
 
@@ -230,6 +231,29 @@ def test_two_ports_with_one_pad_name_in_one_net_is_one_pad(new_design):
     codes = _codes(check(design.freeze(), board.item))
     assert "PAD_ON_MULTIPLE_NETS" not in codes
     assert "UNCONNECTED_PIN" not in codes
+
+
+def test_two_pins_of_one_part_with_one_pad_name_are_a_pin_id_collision_wired_or_not(new_design):
+    design, board, part = _board_with(
+        new_design, {"a": ("1", "6"), "b": ("1", "6")}, footprint=("Lib", "U")
+    )
+    u1 = design.item(part, "jb1-u1", "U1", parent=board)
+    found = [f for f in check(design.freeze(), board.item) if f.code == "PIN_ID_COLLISION"]
+    assert len(found) == 2
+    assert {f.severity for f in found} == {Severity.ERROR}
+    assert {f.subjects for f in found} == {
+        (u1.pin("1", "a"), u1.pin("1", "b")),
+        (u1.pin("6", "a"), u1.pin("6", "b")),
+    }
+    assert all("would write the one KiCad pin id U1:" in f.message for f in found)
+
+
+def test_pins_with_unique_names_are_no_pin_id_collision(new_design):
+    design, board, part = _board_with(
+        new_design, {"a": ("1", "6"), "b": ("2", "7")}, footprint=("Lib", "U")
+    )
+    design.item(part, "jb1-u1", "U1", parent=board)
+    assert "PIN_ID_COLLISION" not in _codes(check(design.freeze(), board.item))
 
 
 def test_a_pin_in_no_net(demo_board):

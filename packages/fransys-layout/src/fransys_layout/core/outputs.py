@@ -1,14 +1,14 @@
 """Values of the placer core, output side: placement, routes, text, layout, score, scene."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
-from .geometry import rotate_side
 from .scene_facts import SceneFacts, page_fill, scene_facts
 
 if TYPE_CHECKING:  # jsonform resolves these names from the module, so no run-time import
     from collections.abc import Mapping
 
+    from .annex_values import AnnexBox
     from .values import (
         XY,
         Box,
@@ -90,6 +90,8 @@ class PagePlacement:
     """(height, width) of each row, in G."""
     bands: tuple[tuple[int, int], ...]
     """(top, bottom) of each row in grid units, in row order."""
+    spans: Mapping[str, tuple[int, int]] = field(default_factory=dict)
+    """(top, bottom) the solve placed for each column id and block id, in G (layout-0374)."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -141,22 +143,24 @@ class PageRoutes:
 
 
 @dataclass(frozen=True, slots=True)
-class Routes:
-    """failed lists the net ids the router gave up on."""
+class Refused:
+    """A net the router gave up on; `ends` are the two pins of the link it refused, if it has any.
 
-    pages: tuple[PageRoutes, ...]
-    failed: tuple[str, ...] = ()
-    findings: tuple[Finding, ...] = ()
+    A link of more than two ends names its first two; a refusal that is no link (a trunk, a rise)
+    names none. No refused net gets a tag in its place: the ERROR stands alone (R424).
+    """
+
+    net: str
+    ends: tuple[PinRef, PinRef] | None = None
 
 
 @dataclass(frozen=True, slots=True)
-class Label:
-    """A label printed at a corner of a box on one page."""
+class Routes:
+    """failed lists the nets the router gave up on, each with the pins of its refused link."""
 
-    owner: str
-    page: int
-    box: Box
-    corner: str
+    pages: tuple[PageRoutes, ...]
+    failed: tuple[Refused, ...] = ()
+    findings: tuple[Finding, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -197,13 +201,32 @@ class WireLabel:
 
 
 @dataclass(frozen=True, slots=True)
-class Annotations:
-    """The labels, tables, markers and wire labels printed on the pages."""
+class Anchored:
+    """An anchored item placed: its origin, turn, absolute outline, port point and lead on a page.
 
-    labels: tuple[Label, ...] = ()
+    `lead` runs from the pin to `port`.
+    """
+
+    sym: str
+    pin: str
+    page: int
+    x: int
+    y: int
+    orient: Orientation
+    outline: Box
+    port: tuple[int, int]
+    lead: tuple[tuple[int, int], tuple[int, int]]
+
+
+@dataclass(frozen=True, slots=True)
+class Annotations:
+    """The annexes (tags and the like), tables, markers and wire labels printed on the pages."""
+
+    annexes: tuple[AnnexBox, ...] = ()
     tables: tuple[Table, ...] = ()
     markers: tuple[Marker, ...] = ()
     wire_labels: tuple[WireLabel, ...] = ()
+    anchored: tuple[Anchored, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -222,7 +245,10 @@ class Score:
 
 @dataclass(frozen=True, slots=True)
 class CoreLayout:
-    """The placer core's full result: area, pages, placement, routes, text, score, findings."""
+    """The placer core's full result: area, pages, placement, routes, text, score, findings.
+
+    wired: each wired pin with its net, as `solve` computed them with its Options.
+    """
 
     area: Size
     pages: tuple[PagePlan, ...]
@@ -230,13 +256,14 @@ class CoreLayout:
     routes: Routes
     annotations: Annotations
     references: tuple[Ref, ...]
+    wired: frozenset[tuple[PinRef, str]]
     score: Score | None = None
     findings: tuple[Finding, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
 class ScenePin:
-    """One pin at its absolute place; side is the way a wire leaves, stand a drawn supply stand.
+    """One pin at its absolute place; side is the way a wire leaves, biased a chain-end pin.
 
     Pins of one node are one electrical point; box marks a movable-pin box pin.
     """
@@ -247,7 +274,7 @@ class ScenePin:
     side: Side
     net: str | None
     node: int | None
-    stand: bool
+    biased: bool
     box: bool
     head: bool
 
@@ -315,10 +342,10 @@ class SceneTable:
 
 @dataclass(frozen=True, slots=True)
 class Scene:
-    """The scorer's input: boxes with pins, wire polylines, markers, supply rails, page fill.
+    """The scorer's input: boxes with pins, wire polylines, markers, skipped nets, page fill.
 
-    rails names the nets that carry a declared supply; fill is one fraction per page, or empty
-    when the source (a dump of today's engine) has no rows.
+    `rails` names the nets the pair-cut score skips: a problem has none, a dump of today's engine
+    names its fixed-level nets; fill is one fraction per page, or empty without rows.
     """
 
     area: Size
@@ -344,9 +371,9 @@ def _scene_box(p: Placed, facts: SceneFacts) -> SceneBox:
         if f is None:
             msg = f"scene: {p.sym}.{xy.pin} is not a pin of the problem"
             raise ValueError(msg)
-        side = rotate_side(f.side, p.orient)
+        side = f.sides[p.orient]
         head = (p.sym, xy.pin) in facts.heads
-        pins.append(ScenePin(xy.pin, xy.x, xy.y, side, f.net, f.node, f.stand, f.box, head))
+        pins.append(ScenePin(xy.pin, xy.x, xy.y, side, f.net, f.node, f.biased, f.box, head))
     return SceneBox(
         p.sym,
         p.page,
@@ -360,7 +387,7 @@ def _scene_box(p: Placed, facts: SceneFacts) -> SceneBox:
 
 
 def _scene_marker(m: Marker, facts: SceneFacts, orient: Mapping[str, Orientation]) -> SceneMarker:
-    side = rotate_side(facts.pins[(m.end.sym, m.end.pin)].side, orient[m.end.sym])
+    side = facts.pins[(m.end.sym, m.end.pin)].sides[orient[m.end.sym]]
     return SceneMarker(m.net, m.kind, m.page, m.x, m.y, m.end.sym, m.end.pin, m.cell, side)
 
 
@@ -375,7 +402,7 @@ def scene(layout: CoreLayout, problem: PlacementProblem, flow: FlowGraph) -> Sce
     )
     orient = {b.sym: b.orient for b in boxes}
     markers = tuple(_scene_marker(m, facts, orient) for m in layout.annotations.markers)
-    labels = tuple(SceneLabel(a.owner, a.page, a.box, a.corner) for a in layout.annotations.labels)
+    labels = tuple(SceneLabel(a.owner, a.page, a.box, a.spot) for a in layout.annotations.annexes)
     tables = tuple(
         SceneTable(t.coil, t.page, t.box, t.cells, t.tier) for t in layout.annotations.tables
     )
@@ -385,7 +412,7 @@ def scene(layout: CoreLayout, problem: PlacementProblem, flow: FlowGraph) -> Sce
         boxes,
         wires,
         markers,
-        facts.rails,
+        frozenset(),
         page_fill(layout),
         labels,
         tables,

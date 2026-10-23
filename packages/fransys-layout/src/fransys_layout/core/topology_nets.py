@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from copy import deepcopy
+from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING
 
 from .keys import natural_key
@@ -12,9 +13,10 @@ from .values import Attach, CrossLink, Fan, PinRef
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
+    from .sym_values import Sym
     from .topology_chains import Link
     from .topology_elements import Elem, NetEnd
-    from .values import Bundle, Sym
+    from .values import Bundle
 
 MIN_ATTS = 2
 
@@ -31,6 +33,8 @@ class FanEnv:
     elems: dict[str, Elem]
     syms: dict[str, Sym]
     bundle_of: dict[str, Bundle]
+    one_side: bool = False  # Options.bundle_direction: a bundle's box takes one side
+    apart: frozenset[str] = frozenset()  # symbols dealt to their own column, not a leg lane
 
 
 def fans_of(
@@ -51,34 +55,88 @@ def fans_of(
             ]
             attached[(lane.column, lane.index, where)] = pin
         elif not _fan_net(net, ends, parts, env):
-            cross.append((net, [e for e in ends if e.site != "through"]))
+            cross.append((net, _cross_ends(ends, env.elems)))
     ordered = sorted(parts.items(), key=lambda kv: natural_key(kv[0]))
-    fans = tuple(_fan(_merged(key, items)) for key, items in ordered)
-    return fans, tuple(_cross(net, ends, env.lanes) for net, ends in cross), attached
+    fans = tuple(_fan(_merged(key, items, one_side=env.one_side)) for key, items in ordered)
+    return fans, tuple(cross_link(net, ends, env.lanes) for net, ends in cross), attached
+
+
+def fans_split(
+    ends_by_net: Mapping[str, tuple[NetEnd, ...]], links: Mapping[str, Link], env: FanEnv
+) -> tuple[tuple[Fan, ...], tuple[CrossLink, ...], Attached]:
+    """`fans_of` with the symbols a trial deal splits over two columns dealt apart (R283)."""
+    return fans_of(ends_by_net, links, replace(env, apart=_split_symbols(ends_by_net, links, env)))
+
+
+def _split_symbols(
+    ends_by_net: Mapping[str, tuple[NetEnd, ...]], links: Mapping[str, Link], env: FanEnv
+) -> frozenset[str]:
+    """Symbols a trial deal puts in two columns, by lane index: they take their own (R283)."""
+    if len({e.sym for e in env.elems.values()}) == len(env.elems):
+        return frozenset[str]()
+    slot, lanes = deepcopy((env.slot, env.lanes))
+    fans_of(ends_by_net, links, replace(env, slot=slot, lanes=lanes))
+    cols: dict[str, set[str]] = {}
+    for lane in lanes:
+        for c in lane.cells:
+            cols.setdefault(c.sym, set()).add(lane.column)
+    return frozenset(sym for sym, homes in cols.items() if len(homes) > 1)
+
+
+def _cross_ends(ends: tuple[NetEnd, ...], elems: Mapping[str, Elem]) -> list[NetEnd]:
+    """The ends a cross-link joins; a net alone on one element's pins is a bridge between them."""
+    wired = [e for e in ends if e.site != "through"]
+    if wired or len(ends) != 1 or ends[0].elem is None:
+        return wired
+    one, elem = ends[0], elems[ends[0].elem]
+    return [replace(one, pin=PinRef(one.pin.sym, p)) for p in (elem.n_pin, elem.s_pin) if p]
 
 
 def _fan_net(net: str, ends: tuple[NetEnd, ...], parts: Parts, env: FanEnv) -> bool:
-    """Deal one net into its fan with its pole (a bundle shares one fan); False: a cross-link."""
+    """Deal one net into its fan with its lane index (a bundle shares a fan); False: cross-link."""
     drivers, legs, throughs, is_cross = classify(ends, env.slot, env.syms)
     if is_cross or len(drivers) + len(legs) + len(throughs) < MIN_ATTS:
         return False
     bundle = env.bundle_of.get(net)
     key = bundle.id if bundle else net
     one = FanDraft(f"f:{key}", [net], drivers, legs)
-    env.lanes.extend(deal(one, throughs, env.elems, "c:"))
+    env.lanes.extend(deal(one, throughs, env.elems, "c:", env.apart))
     parts.setdefault(key, []).append((bundle.pole if bundle else 0, net, one))
     return True
 
 
-def _merged(key: str, parts: Sequence[tuple[int, str, FanDraft]]) -> FanDraft:
-    """One fan from its nets: nets and hub by net id, drivers and legs by pole then net id."""
+def _merged(key: str, parts: Sequence[tuple[int, str, FanDraft]], *, one_side: bool) -> FanDraft:
+    """One fan from its nets: nets and hub by net id, drivers and legs by lane index then net id."""
     by_id = sorted(parts, key=lambda p: natural_key(p[1]))
     by_pole = sorted(by_id, key=lambda p: p[0])
-    drivers = [a for _, _, one in by_pole for a in one.drivers]
-    legs = [a for _, _, one in by_pole for a in one.legs]
+    leg_box = _box_sides(by_pole) if one_side and len(parts) > 1 else {}
+    ends = [(pole, a, leg) for pole, _, one in by_pole for a, leg in _sided(one, leg_box)]
+    drivers = [replace(a, pole=pole) for pole, a, leg in ends if not leg]
+    legs = [replace(a, pole=pole) for pole, a, leg in ends if leg]
     hub = next((one.hub for _, _, one in by_id if one.hub), None)
     nets = [net for _, net, _ in by_id]
     return FanDraft(f"f:{key}", nets, drivers, legs, hub, max(pole for pole, _, _ in parts) + 1)
+
+
+def _box_sides(by_pole: Sequence[tuple[int, str, FanDraft]]) -> dict[str, bool]:
+    """Box symbol to whether it is a bundle leg, by its lowest lane index (BUNDLE)."""
+    out: dict[str, bool] = {}
+    for _, _, one in by_pole:
+        for a, leg in _sided(one, {}):
+            if box := _box_of(a):
+                out.setdefault(box, leg)
+    return out
+
+
+def _box_of(a: Att) -> str | None:
+    """The box symbol an end attaches to, or None when the end is not on a box pin."""
+    return a.pin.sym if a.where == "boxpin" and a.pin else None
+
+
+def _sided(one: FanDraft, leg_box: Mapping[str, bool]) -> list[tuple[Att, bool]]:
+    """Each end of a net with whether it is a leg; a bundle's box pins take the box's one side."""
+    both = [*((a, False) for a in one.drivers), *((a, True) for a in one.legs)]
+    return [(a, leg_box.get(box, leg) if (box := _box_of(a)) else leg) for a, leg in both]
 
 
 def _fan(d: FanDraft) -> Fan:
@@ -86,10 +144,12 @@ def _fan(d: FanDraft) -> Fan:
     side = "above" if any(a.where in ("head", "after-hub", "boxpin") for a in d.legs) else "below"
     drivers = tuple(resolve(a) for a in d.drivers)
     legs = tuple(resolve(a) for a in d.legs)
-    return Fan(d.id, tuple(d.nets), drivers, legs, d.hub, d.lanes, side)
+    head = drivers[0] if len(drivers) == 1 else None  # the head policy, made once here
+    return Fan(d.id, tuple(d.nets), drivers, legs, d.hub, d.lanes, side, head=head)
 
 
-def _cross(net: str, ends: Sequence[NetEnd], lanes: Sequence[LaneDraft]) -> CrossLink:
+def cross_link(net: str, ends: Sequence[NetEnd], lanes: Sequence[LaneDraft]) -> CrossLink:
+    """The net as a wire between its ends: a lane cell, or a box pin."""
     where = {
         c.sym: (lane.column, lane.index, i) for lane in lanes for i, c in enumerate(lane.cells)
     }

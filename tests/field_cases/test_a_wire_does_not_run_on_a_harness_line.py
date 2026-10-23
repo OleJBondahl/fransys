@@ -14,9 +14,8 @@ from typing import Any, NamedTuple
 
 import fransys as fr
 import pytest
+from _drawn_pages import drawn_pages
 from fransys.colours import BK
-
-from fransys_model.layout import HarnessFanOut, HarnessLine, Route, layout_of
 
 
 class _Io(NamedTuple):
@@ -59,8 +58,6 @@ def built(tmp_path_factory: pytest.TempPathFactory) -> fr.BuildResult:
 
 
 def test_no_wire_is_drawn_joined_to_a_harness_line(built: fr.BuildResult) -> None:
-    model = built.model
-    assert layout_of(model, HarnessLine) != {}
-    assert layout_of(model, HarnessFanOut) != {}
-    assert layout_of(model, Route) != {}
+    wires = [w for drawing in drawn_pages(built.model).values() for w in drawing.wires]
+    assert {w.style for w in wires} >= {"trunk", "wire"}  # the harness line and a plain wire
     assert [f for f in fr.check(built) if f.code == "DRAWING_SHORTS_NETS"] == []

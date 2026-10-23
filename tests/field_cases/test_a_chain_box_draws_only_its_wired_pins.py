@@ -15,16 +15,20 @@ import tempfile
 from itertools import pairwise
 
 import fransys as fr
+from _drawn_pages import drawn_pages
 from fransys.colours import BK, RD
-from fransys_el import OPTIONS
 
-from fransys_layout.engines.schematic.engine import stage_results
-from fransys_layout.engines.schematic.read import read_inputs
-from fransys_model.vocab.tables import items
+from fransys_model.vocab.tables import ports
+
+
+def _gap(model, fact: str):
+    """A fact the page Drawing lacks (strict xfail, GAP-FLIP-DRAWING-SUBJECT)."""
+    msg = f"GAP-FLIP-DRAWING-SUBJECT: no {fact} for {model.digest}"
+    raise AssertionError(msg)
 
 
 def _ports_drawn(*, hide: bool) -> dict[str, set[str]]:
-    """Each module's drawn port names, over all placements, from a three-module chain."""
+    """Each module's drawn port names, over all drawn symbols, from a three-module chain."""
     d = fr.design("demo_parts", place="CAB")
     if hide:
         d.layout.profile(hide_unused_pins=True)
@@ -39,19 +43,22 @@ def _ports_drawn(*, hide: bool) -> dict[str, set[str]]:
     cover.write_text("# cover\n", encoding="utf-8")
     doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover)
     model = fr.build(d, doc).model
-    results, _ = stage_results(model, read_inputs(model, options=OPTIONS))
-    tag_of = {one.id: one.tag for one in items(model).values()}
+    by_id = {p.id.value: p.id for p in ports(model).values()}
     drawn: dict[str, set[str]] = {}
-    for one in results.layout.placed:
-        tag = tag_of.get(one.function)
-        if tag is not None:
-            drawn.setdefault(tag, set()).update(g.name for g in one.geometry.ports)
+    for drawing in drawn_pages(model).values():
+        for one in drawing.symbols:
+            tag, thing = _gap(model, "symbol subject")
+            if thing.startswith("port:"):
+                names = {fr.derive.port_designation(model, by_id[thing.removeprefix("port:")])}
+            else:
+                names = {port for port, _ in one.sides}
+            drawn.setdefault(tag, set()).update(names)
     return drawn
 
 
 def test_the_house_profile_draws_no_unwired_pin_of_a_chain_member() -> None:
     drawn = _ports_drawn(hide=False)
-    assert any(name.startswith("OUT") for name in drawn["D1"])  # wired pins are drawn
-    assert not [name for name in drawn["D1"] if name.startswith("IN")]
-    assert not [name for name in drawn["D3"] if name.startswith("OUT")]
-    assert any(name.startswith("IN") for name in drawn["D2"])
+    assert any("-OUT:" in name for name in drawn["D1"])  # wired pins are drawn
+    assert not [name for name in drawn["D1"] if "-IN:" in name]
+    assert not [name for name in drawn["D3"] if "-OUT:" in name]
+    assert any("-IN:" in name for name in drawn["D2"])

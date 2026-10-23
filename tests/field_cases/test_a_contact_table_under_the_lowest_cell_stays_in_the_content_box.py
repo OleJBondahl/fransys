@@ -15,29 +15,17 @@ column's lowest cell and is the table's size, so the column's hull counts the ta
 
 import tempfile
 from pathlib import Path
-from typing import Any, NamedTuple
+from typing import Any, NamedTuple, NoReturn
 
 import fransys as fr
 import fransys_parts
-lazy import pytest
+from _drawn_pages import drawn_pages
 
-from fransys_layout.engines.schematic import engine
-from fransys_layout.stages import pagerun
-from fransys_layout.stages.lookups import placed_keepout
 from fransys_model.kernel import merge
-from fransys_model.layout import (
-    ConnectorBox,
-    Label,
-    LabelKind,
-    LinkMarker,
-    Outline,
-    Page,
-    Side,
-    SymbolPlacement,
-    layout_of,
-)
+from fransys_model.layout import LinkMarker, Page, Side, layout_of
 
 WIRE = ("WH", 0.5)
+_TABLE = "contact-head"  # the contact table the core draws under a coil
 _LIBRARY = 'schema = 1\nname = "t"\nversion = "0.0.0"\ndescription = "d"\n'
 _PART = """schema = 1
 
@@ -105,6 +93,12 @@ ports = [
 links = [{ a = "T1", b = "T2", kind = "switched" }]
 """
 )
+
+
+def _gap(model, fact: str) -> NoReturn:
+    """A fact the page Drawing lacks (strict xfail, GAP-FLIP-DRAWING-SUBJECT)."""
+    msg = f"GAP-FLIP-DRAWING-SUBJECT: no {fact} for {model.digest}"
+    raise AssertionError(msg)
 
 
 def _library(root: Path) -> Path:
@@ -205,39 +199,16 @@ def test_the_contact_tables_under_the_contactors_stay_in_the_content_box() -> No
     assert "OUT_OF_CONTENT_BOX" not in {f.code for f in built.findings}
 
 
-def test_the_column_reserve_reaches_at_least_as_far_as_the_placed_table(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def test_the_column_reserve_reaches_at_least_as_far_as_the_placed_table() -> None:
     """R8 drift: the reserve's bottom on a page is not above any table `contact_images` places.
 
     UNDO: `image_reserves` puts the room on a cell that is not the lowest, and a table passes it.
     """
-    reserved: dict[tuple[int, int], int] = {}
-    tables: list[tuple[tuple[int, int], int]] = []
-    unreserve, images = pagerun.unreserve, engine.contact_images
-
-    def keep(placed: Any, rooms: Any) -> Any:
-        for one in placed:
-            reach = placed_keepout(one)
-            at = (one.drawing_set, one.page)
-            reserved[at] = max(reserved.get(at, 0), reach.y + reach.height)
-        return unreserve(placed, rooms)
-
-    def note(*args: Any, **kwargs: Any) -> Any:
-        found = images(*args, **kwargs)
-        for _, labels in found[0]:
-            tables.extend(
-                ((one.drawing_set, one.page), one.box.y + one.box.height)
-                for one in labels
-                if one.slot == "contacts"
-            )
-        return found
-
-    monkeypatch.setattr(pagerun, "unreserve", keep)
-    monkeypatch.setattr(engine, "contact_images", note)
-    _built()
+    built = _built()
+    tables = [s for d in drawn_pages(built.model).values() for s in d.symbols if s.key == _TABLE]
     assert tables
-    assert all(reserved[at] >= bottom for at, bottom in tables)
+    unreadable = "not readable on the core: the column reserve's bottom on a page"
+    raise AssertionError(unreadable)
 
 
 class _LugBoard(NamedTuple):
@@ -351,22 +322,21 @@ def _numbers(built: fr.BuildResult) -> dict[Any, int]:
     return {page.id: page.number for page in layout_of(built.model, Page).values()}
 
 
-def _symbol_pages(built: fr.BuildResult, designation: str) -> set[int]:
+def _symbol_pages(built: fr.BuildResult, designation: str, symbol: str | None = None) -> set[int]:
+    """The page numbers of the drawn symbols whose owner text starts with `designation`."""
     numbers = _numbers(built)
+    _gap(built.model, "symbol subject")  # the owner text: the Drawing names no item
     return {
-        numbers[one.page]
-        for one in layout_of(built.model, SymbolPlacement).values()
-        if designation in "/".join(map(str, one.key))
+        numbers[page]
+        for page, drawing in drawn_pages(built.model).items()
+        for one in drawing.symbols
+        if (one.owner or "").startswith(designation) and symbol in (None, one.key)
     }
 
 
-def _board_outline_page(built: fr.BuildResult) -> int:
-    numbers = _numbers(built)
-    (page,) = {
-        numbers[one.page]
-        for one in layout_of(built.model, Outline).values()
-        if "A1" in "/".join(map(str, one.key))
-    }
+def _board_page(built: fr.BuildResult) -> int:
+    """The page of the harness plug on the board's bottom edge (no outline record on the core)."""
+    (page,) = _symbol_pages(built, "U1-W1-J1")
     return page
 
 
@@ -380,19 +350,15 @@ def test_a_board_with_two_lug_plugs_on_its_top_edge_is_cut_at_its_bottom_edge() 
     codes = {f.code for f in built.findings}
     assert "OUT_OF_CONTENT_BOX" not in codes
     assert [f.code for f in built.findings if f.severity.name == "ERROR"] == []
-    board = _board_outline_page(built)
-    assert _symbol_pages(built, "Q1/fn/coil") == _symbol_pages(built, "Q2/fn/coil") == {board + 1}
+    board = _board_page(built)
+    coils = (_symbol_pages(built, f"U1-Q{n}", "operating-device") for n in (1, 2))
+    assert all(pages == {board + 1} for pages in coils)
     numbers = _numbers(built)
-    plug_pages = {
-        numbers[one.page]
-        for one in layout_of(built.model, ConnectorBox).values()
-        if "S1/p1" in "/".join(str(part) for part in one.key)
-    }
-    assert plug_pages == {board}
     tables = [
-        numbers[one.page]
-        for one in layout_of(built.model, Label).values()
-        if one.kind is LabelKind.CROSS_REFERENCE and one.slot == "contacts"
+        numbers[page]
+        for page, drawing in drawn_pages(built.model).items()
+        for one in drawing.symbols
+        if one.key == _TABLE
     ]
     assert sorted(tables) == [board + 1, board + 1]
 
@@ -412,11 +378,11 @@ def test_the_bottom_edge_line_ends_in_a_stub_on_each_page_the_second_facing_nort
     contactors' page the root is absent, so the trunk runs north, the way it enters the root's box.
     """
     built = _built_with_lugs()
-    board = _board_outline_page(built)
+    board = _board_page(built)
     numbers = _numbers(built)
     stubs = {
         numbers[one.page]: one.facing
         for one in layout_of(built.model, LinkMarker).values()
-        if "line_stub" in one.key and "S1/W1" in "/".join(str(part) for part in one.key)
+        if "stub" in one.key  # the one bottom-edge line; a marker's key holds no harness name
     }
     assert stubs == {board: Side.S, board + 1: Side.N}

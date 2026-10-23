@@ -19,8 +19,8 @@ def _compile(monkeypatch: pytest.MonkeyPatch, tmp_path, source_text: str):
     doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cabinet, cover=tmp_path / "c.md")
     model = fr.build(d, doc).model
     (document_id,) = documents(model)
-    monkeypatch.setattr(fransys_pdf, "source", lambda *_args: source_text)
-    return pipeline._compile_pdf(model, document_id, {})
+    monkeypatch.setattr(fransys_pdf, "source", lambda *_args, **_kwargs: source_text)
+    return pipeline._compile_pdf(model, {}, document_id, {}, pdf=fr.settings().pdf)
 
 
 def test_another_typst_error_is_re_raised_untouched(monkeypatch, tmp_path):

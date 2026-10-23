@@ -8,6 +8,7 @@ lazy from fransys_model.vocab import Document, Item
 from .cable_drawing import cable_block_key, cable_subject
 from .document_scope import document_scope
 from .rows_cable_run import CableBlockRef
+from .texts.core_text import cross_section_text
 lazy from .rows import HarnessCable
 
 __all__ = [
@@ -53,7 +54,7 @@ def _part_line(cable: HarnessCable) -> str:
     """The page's part line (pdf-0021): mpn, description, cores x gauge; unset ones omitted."""
     composite = None
     if cable.core_count is not None and cable.gauge_mm2 is not None:
-        composite = f"{cable.core_count} x {cable.gauge_mm2} mm²"
+        composite = f"{cable.core_count} x {cross_section_text(cable.gauge_mm2)}"
     return _join_part_line(cable.mpn, cable.description, composite)
 
 

@@ -5,9 +5,6 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
-SHARE_PCT = 40  # a list page's column, of the content width (pdf-0026, L1)
-GUTTER_PCT = 20
-
 
 def flow_columns(sections: Iterable[str], *, share_pct: float, gutter_pct: float) -> str:
     """Typst for `sections` in two columns of `share_pct` width, `gutter_pct` apart (pdf-0026).

@@ -4,9 +4,7 @@ from typing import TYPE_CHECKING, cast
 
 from fransys_model.derive.facts.units import boundary, unit_own_roots
 from fransys_model.kernel import SchemaError
-from fransys_model.vocab.enums import Aspect
 from fransys_model.vocab.tables import (
-    aspect_nodes,
     functions,
     items,
     ports,
@@ -17,82 +15,19 @@ lazy from fransys_model.vocab.core import Item, Unit
 from .baseline_keys import instance_key, listing_key
 from .baseline_rules import CURRENT, ListingRules
 from .baseline_unchecked import UNPRINTABLE
-from .designation import (
-    _own_designation,
-    _segment,
-    printed_designation,
-    reference_leaves,
-    terminal_of,
-)
+from .designation import printed_designation
+from .designation_label import own_label, terminal_of
 from .instance_tag import instance_name, instance_tags
 from .lookups import printed_port_name
 from .rows_baseline import BaselineEnd
-from .unit_nodes import SIGNS, chain_up
+from .texts.context import PrintContext, Scope
+from .texts.designation_render import aspect_text
 
 if TYPE_CHECKING:
-    from fransys_model.vocab.aspects import AspectNode
     from fransys_model.vocab.core import Function, Port
 
 
 # -- unit_designation -------------------------------------------------------------------
-
-
-def _own_location_leaves(model: Model, unit: Id[Unit]) -> set[Id[AspectNode]]:
-    leaves: set[Id[AspectNode]] = set()
-    for item in items(model).values():
-        if item.unit != unit:
-            continue
-        leaf = reference_leaves(model, item.id).get(Aspect.LOCATION)
-        if leaf is not None:
-            leaves.add(leaf.id)
-    return leaves
-
-
-def _shared_prefix(
-    common: list[Id[AspectNode]], chain: list[Id[AspectNode]]
-) -> list[Id[AspectNode]]:
-    shared = 0
-    for own, other in zip(common, chain, strict=False):
-        if own != other:
-            break
-        shared += 1
-    return common[:shared]
-
-
-def _common_location(model: Model, unit: Id[Unit] | None) -> Id[AspectNode] | None:
-    """The deepest location that holds every located item of `unit`'s own items.
-
-    Own items only, each read via `reference_leaves`; an unlocated item does not count.
-    `unit=None` (the system listing) gives `None`: a top-level item keeps its whole location.
-    """
-    if unit is None:
-        return None
-    nodes = aspect_nodes(model)
-    leaves = _own_location_leaves(model, unit)
-    if not leaves:
-        return None
-    chains = [list(reversed(list(chain_up(nodes, leaf)))) for leaf in leaves]
-    common = chains[0]
-    for chain in chains[1:]:
-        common = _shared_prefix(common, chain)
-    return common[-1] if common else None
-
-
-def _location_keep(
-    nodes: frozendict[Id[AspectNode], AspectNode],
-    leaf: Id[AspectNode],
-    common: Id[AspectNode] | None,
-) -> frozenset[Id[AspectNode]]:
-    """The nodes of `leaf`'s chain strictly below `common`; every node with `common=None`."""
-    chain = list(chain_up(nodes, leaf))
-    if common is None:
-        return frozenset(chain)
-    keep = []
-    for node in chain:
-        if node == common:
-            break
-        keep.append(node)
-    return frozenset(keep)
 
 
 def unit_designation(
@@ -101,7 +36,7 @@ def unit_designation(
     """`item`'s designation relative to `unit`.
 
     `reference_designation`'s rule, except the `+` (location) segment drops `unit`'s own common
-    location (`_common_location`); the `=` (group) segment is never truncated, as a group move
+    location (`common_location`); the `=` (group) segment is never truncated, as a group move
     changes the release. The product part is `printed_designation(unit=unit)`.
 
     Args:
@@ -115,17 +50,8 @@ def unit_designation(
     """
     # Not `reference_designation(unit=unit)`'s `own_nodes` rule: that truncates both segments,
     # the wrong rule here, as it is meant for drawing inside the unit's own document set.
-    nodes = aspect_nodes(model)
-    leaves = reference_leaves(model, item)
-    common = _common_location(model, unit)
-    segments = []
-    for aspect, sign in SIGNS.items():
-        leaf = leaves.get(aspect)
-        if leaf is None:
-            continue
-        keep = _location_keep(nodes, leaf.id, common) if aspect is Aspect.LOCATION else None
-        segments.append(_segment(nodes, leaf, sign, keep=keep))
-    return "".join(segments) + _printed(model, item, unit, rules)
+    ctx = PrintContext(reading=unit, scope=Scope.BELOW_COMMON)
+    return aspect_text(model, item, ctx) + _printed(model, item, unit, rules)
 
 
 def _printed(model: Model, item: Id[Item], unit: Id[Unit] | None, rules: ListingRules) -> str:
@@ -176,9 +102,7 @@ def _plain_port_end(
     key = listing_key(model, owner.id)
     if owner.parent is not None and terminal_of(model, owner.id) is not None:
         strip_text = unit_designation(model, render_unit, owner.parent, rules)
-        return BaselineEnd(
-            text=f"{strip_text}:{_own_designation(model, owner.id)}", key=key, pin=""
-        )
+        return BaselineEnd(text=f"{strip_text}:{own_label(model, owner.id)}", key=key, pin="")
     text = unit_designation(model, render_unit, owner.id, rules)
     name = printed_port_name(model, port_id, bar_screw=not rules.bar_end_without_screw)
     return BaselineEnd(text=f"{text}:{name}" if name else text, key=key, pin=name)

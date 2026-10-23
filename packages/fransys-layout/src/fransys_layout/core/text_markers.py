@@ -3,8 +3,8 @@
 Ends of a reference go in the order (page, row of the column, pin); every tie breaks by
 `natural_key`. A marker names the cell of the far end: the next end of its reference in that
 order, cyclically (layout-0296), or the hub itself for a copy. Markers on one side of one row whose
-boxes overlap along the edge take `intervals.levels`, one box further out per level. It reads no
-`Routes`; the text printed beside it is the builder's.
+boxes overlap along the edge take `intervals.stem_levels`, one box further out per level. It reads
+no `Routes`; the text printed beside it is the builder's.
 """
 
 from __future__ import annotations
@@ -13,20 +13,20 @@ from dataclasses import replace
 from typing import TYPE_CHECKING
 
 from . import intervals
-from .geometry import marker_box, marker_box_at, overlaps
+from .geometry import inside, marker_box, marker_box_at
 from .keys import natural_key
 from .outputs import Marker
 from .ref_kind import kind_of
 from .text_cells import cell_of
 from .text_ends import end_stand, hub_xy, mark_env, who
-from .values import RefKind
+from .values import Finding, RefKind
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
     from .outputs import Placement
     from .text_ends import MarkEnv, Stand
-    from .values import CutResult, Options, PlacementProblem, Ref, RefEnd
+    from .values import CutResult, Options, PlacementProblem, Ref, RefEnd, Size
 
 
 def _order(ref: Ref, end: RefEnd) -> tuple[object, ...]:
@@ -50,13 +50,19 @@ def _far(env: MarkEnv, ref: Ref, stands: Sequence[Stand], end: RefEnd, i: int) -
     return other.x, other.y
 
 
+def _inside(at: tuple[int, int], area: Size) -> tuple[int, int]:
+    """The point held inside the area: a stand pushed past the page names its nearest cell."""
+    return min(max(at[0], 0), area.w), min(max(at[1], 0), area.h)
+
+
 def stand_ref(env: MarkEnv, ref: Ref) -> list[tuple[Marker, Stand]]:
     """One marker and its stand for each end of `ref`, in the order of its ends."""
     ends = sorted(ref.ends, key=lambda e: _order(ref, e))
     stands = [end_stand(env, ref, e, i) for i, e in enumerate(ends)]
     out = []
     for i, (end, st) in enumerate(zip(ends, stands, strict=True)):
-        cell = cell_of(*_far(env, ref, stands, end, i), env.area, env.options.cells)
+        far = _far(env, ref, stands, end, i)
+        cell = cell_of(*_inside(far, env.area), env.area, env.options.cells)
         mk = Marker(ref.net, kind_of(ref), end.page, cell, st.x, st.y, st.end, st.orient)
         out.append((mk, st))
     return out
@@ -74,18 +80,20 @@ def _span(m: Marker, st: Stand, options: Options) -> tuple[int, int]:
 
 def _moved(m: Marker, st: Stand, level: int, options: Options) -> Marker:
     """The marker `level` boxes further out on its side."""
-    box = marker_box_at(0, 0, options, m.orient)
+    box = marker_box_at(0, 0, options, m.orient, (m.end, str(m.kind)))
     sign = 1 if st.side in "ES" else -1
     if _along_x(st):
         return replace(m, y=m.y + sign * level * box.h)
     return replace(m, x=m.x + sign * level * box.w)
 
 
-def stagger(pairs: Sequence[tuple[Marker, Stand]], options: Options) -> list[Marker]:
+def stagger(
+    pairs: Sequence[tuple[Marker, Stand]], options: Options, area: Size
+) -> list[Marker | None]:
     """Markers on one side of one row that overlap along the edge stand one box further out each.
 
-    A row's side is a page, a turned side and the coordinate across it; the order is the position
-    along it. The levels are `intervals.levels` over the boxes (touching overlaps).
+    A row's side is a page, a turned side and the coordinate across it. Levels are `stem_levels`;
+    a box leaving `area` is None (R436); no other step, an overlap is counted (R453).
     """
     groups: dict[tuple[object, ...], list[int]] = {}
     for i, (m, st) in enumerate(pairs):
@@ -95,52 +103,44 @@ def stagger(pairs: Sequence[tuple[Marker, Stand]], options: Options) -> list[Mar
     for idx in groups.values():
         idx.sort(key=lambda i: out[i].x if _along_x(pairs[i][1]) else out[i].y)
         spans = [_span(*pairs[i], options) for i in idx]
-        for i, lv in zip(idx, intervals.levels(spans, range(len(idx))), strict=True):
+        for i, lv in zip(idx, intervals.stem_levels(spans, range(len(idx))), strict=True):
             out[i] = _moved(*pairs[i], lv, options)
-    return _cleared(out, [st for _, st in pairs], options)
+    return [m and _kept(m, options, area) for m in out]
 
 
-def _first_hit(out: Sequence[Marker], options: Options) -> tuple[int, int] | None:
-    """The first pair (earlier, later) of one page whose boxes overlap, else None."""
-    return next(
-        (
-            (i, j)
-            for j in range(len(out))
-            for i in range(j)
-            if out[i].page == out[j].page
-            and overlaps(marker_box(out[i], options), marker_box(out[j], options))
-        ),
-        None,
-    )
+def _kept(m: Marker, options: Options, area: Size) -> Marker | None:
+    """The marker, or None when its box leaves the page area (R436)."""
+    return m if inside(marker_box(m, options), area) else None
 
 
-def _cleared(placed: Sequence[Marker], stands: Sequence[Stand], options: Options) -> list[Marker]:
-    """Markers of different sides that still overlap: the later one steps one box further out.
+def placed_marks(
+    cut: CutResult, placement: Placement, problem: PlacementProblem, options: Options
+) -> tuple[tuple[Marker, ...], tuple[Finding, ...]]:
+    """The markers inside the page, in the plan's order, and MARKER_UNPLACED for each other.
 
-    A copy at a pin and an arrow at the trunk end can meet; each step is the stagger's own. When
-    the rounds run out with an overlap left, it raises: the overlap is never kept silently.
+    A pair or star with an end that fits nowhere draws none of its ends; a stub's or copy's
+    ends stand alone (R436).
     """
-    out = list(placed)
-    for _ in out:
-        if (hit := _first_hit(out, options)) is None:
-            return out
-        out[hit[1]] = _moved(out[hit[1]], stands[hit[1]], 1, options)
-    if (hit := _first_hit(out, options)) is not None:
-        a, b = out[hit[0]], out[hit[1]]
-        msg = (
-            f"marks: page {b.page}: markers {a.net} at ({a.x}, {a.y}) and "
-            f"{b.net} at ({b.x}, {b.y}) still overlap after {len(out)} rounds of "
-            "stepping outward; give the page more room beside them or a smaller Options.marker"
-        )
-        raise ValueError(msg)
-    return out
+    env = mark_env(cut, placement, problem, options)
+    per_ref = [stand_ref(env, ref) for ref in cut.spec.reference_plan]
+    out = iter(stagger([p for ps in per_ref for p in ps], options, problem.area))
+    kept: list[Marker] = []
+    missed: list[Finding] = []
+    for ref, ps in zip(cut.spec.reference_plan, per_ref, strict=True):
+        got = [next(out) for _ in ps]
+        missed += [_unplaced(m) for (m, _), k in zip(ps, got, strict=True) if k is None]
+        alone = kind_of(ref) in {RefKind.STUB, RefKind.COPY}
+        kept += [k for k in got if k is not None] if alone or None not in got else []
+    return tuple(kept), tuple(missed)
+
+
+def _unplaced(m: Marker) -> Finding:
+    text = f"{m.kind} marker at {m.end.sym}/{m.end.pin}: no place inside page {m.page}"
+    return Finding("MARKER_UNPLACED", text, m.page, f"{m.end.sym},{m.net}")
 
 
 def mark_pages(
     cut: CutResult, placement: Placement, problem: PlacementProblem, options: Options
 ) -> tuple[Marker, ...]:
     """The markers of every reference in the cut's plan, in the plan's order, staggered."""
-    env = mark_env(cut, placement, problem, options)
-    return tuple(
-        stagger([p for ref in cut.spec.reference_plan for p in stand_ref(env, ref)], options)
-    )
+    return placed_marks(cut, placement, problem, options)[0]

@@ -7,6 +7,7 @@ lazy from pathlib import Path
 
 from fransys_model.kernel import AuthoringKey, Finding, Id, Model, Severity
 from fransys_model.vocab import ref
+from fransys_model.vocab.codes import fix_text
 from fransys_model.vocab.tables import items
 lazy from fransys_model.vocab.core import Item, Unit
 
@@ -42,6 +43,7 @@ def moved_findings(
             code="DESIGNATION_MOVED",
             severity=Severity.ERROR,
             subjects=(subjects[move.key],),
+            fix=fix_text("DESIGNATION_MOVED", subject=ref(subjects[move.key])),
             message=(
                 f"{ref(subjects[move.key])} was pinned to {move.old_text!r} in {where}, "
                 f"and now prints {move.new_text!r}"
@@ -60,6 +62,7 @@ def new_in_revision_findings(model: Model, unit: Id[Unit], source: NumberingPins
             code=NEW_IN_REVISION,
             severity=Severity.INFO,
             subjects=(subjects[row.key],),
+            fix=fix_text(NEW_IN_REVISION),
             message=f"{ref(subjects[row.key])} is new in this revision and takes {row.text!r}",
         )
         for row in pins(model, unit).items

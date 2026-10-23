@@ -119,6 +119,12 @@ Use `d.series` through the cable first: it takes the next free core. Use `core` 
 | [`target`](detail.md#layout-profile) | required | A field of a unit's interface, as `u1.bus_in`. An interface with no harness line ignores it. | `d.layout.side(f1, fr.ABOVE)` |
 | [`side`](detail.md#layout-profile) | required | `fr.ABOVE` or `fr.BELOW`: the edge the interface stands on. | `d.layout.side(f1, fr.BELOW)` |
 
+## `d.layout.pins_below`
+
+| keyword | default | effect | example |
+|---|---|---|---|
+| [`box`](detail.md#layout-profile) | required | A device or one function of it: every pin of the generic box is drawn on its south side. A second call on the same box raises `AuthorError`; a device with fewer than two ports warns `PINS_BELOW_NOT_A_BOX`. | `d.layout.pins_below(a1)` |
+
 ## `d.layout.symbol`
 
 | keyword | default | effect | example |

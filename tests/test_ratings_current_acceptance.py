@@ -17,12 +17,13 @@ from pathlib import Path
 
 import fransys_parts
 from fransys_author import Design, Item
+from root_library import freeze
 
 from fransys_model.checks.ratings_current import (
     RATING_CURRENT_BELOW_BRANCH,
     check_ratings_current,
 )
-from fransys_model.kernel import Model, freeze, merge
+from fransys_model.kernel import Model, merge
 from fransys_model.vocab import Operating, Rating
 
 DEMO = Path(__file__).resolve().parents[1] / "examples" / "demo-parts" / "demo_parts"

@@ -11,26 +11,34 @@ The rule (layout-0264): every column wired to a box's pins, above or below, take
 the pins it lands on; a device's poles may reverse their column order to match.
 """
 
+import itertools
 import tempfile
 from functools import cache
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import fransys as fr
+from _drawn_pages import drawn_pages
 from fransys.colours import BU
-from fransys_el import OPTIONS
-from route_meter import page_crossings
 
-from fransys_layout.engines.schematic.engine import stage_results
-from fransys_layout.engines.schematic.read import read_inputs
-from fransys_model.vocab.tables import functions, items
+from fransys_model.vocab.tables import functions
+
+if TYPE_CHECKING:
+    from fransys_model.kernel import Model
 
 WIRE = (BU, 0.5)
 PINS = ("13", "23", "43")
 FEEDS = {1: "43", 2: "23", 3: "13"}  # pole -> the card pin its make throw feeds
 
 
+def _gap(model, fact: str):
+    """A fact the page Drawing lacks (strict xfail, GAP-FLIP-DRAWING-SUBJECT)."""
+    msg = f"GAP-FLIP-DRAWING-SUBJECT: no {fact} for {model.digest}"
+    raise AssertionError(msg)
+
+
 @cache
-def _built() -> tuple:
+def _built() -> Model:
     d = fr.design("demo_parts", place="CAB")
     cab = d.location("CAB", "Cabinet")
     with d.function("A", "Outputs"):
@@ -45,33 +53,51 @@ def _built() -> tuple:
         d.detail.wire(contact[f"{pole}4"], card[pin], wire=WIRE)
     cover = Path(tempfile.mkdtemp()) / "cover.md"
     cover.write_text("# Cabinet\n", encoding="utf-8")
-    model = fr.build(d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover)).model
-    results, _ = stage_results(model, read_inputs(model, options=OPTIONS))
-    return model, results.layout
+    return fr.build(d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover)).model
 
 
-def _x_of_poles_and_pins() -> tuple[dict[int, float], dict[str, float]]:
-    model, layout = _built()
-    tag_of = {i.id: i.tag for i in items(model).values()}
-    named = {f.id: (tag_of[f.item], f.name) for f in functions(model).values()}
-    poles, pins = {}, {}
-    for placed in layout.placed:
-        tag, name = named.get(placed.function, ("", ""))
+def _crossings(wires: tuple) -> int:
+    """Horizontal-over-vertical crossings, strictly inside both segments, between drawn wires."""
+    found = 0
+    for one, two in itertools.combinations(wires, 2):
+        for (a0, a1), (b0, b1) in itertools.product(
+            itertools.pairwise(one.points), itertools.pairwise(two.points)
+        ):
+            if (a0[1] == a1[1]) == (b0[1] == b1[1]):
+                continue
+            (h0, h1), (v0, v1) = ((a0, a1), (b0, b1)) if a0[1] == a1[1] else ((b0, b1), (a0, a1))
+            found += min(h0[0], h1[0]) < v0[0] < max(h0[0], h1[0]) and min(v0[1], v1[1]) < h0[
+                1
+            ] < max(v0[1], v1[1])
+    return found
+
+
+def _x_of_poles_and_pins() -> tuple[dict[int, int], dict[str, int], dict[str, str]]:
+    """The x of each K1 pole's symbol, of each DO1 pin (box origin plus offset) and its side."""
+    model = _built()
+    name_of = {f"function:{f.id.value}": f.name for f in functions(model).values()}
+    poles, pins, sides = {}, {}, {}
+    for drawn in _gap(model, "symbol subject").values():
+        tag, _, ref = (drawn.owner or "").partition(" ")  # the owner text: "<tag> <handle>"
         if tag == "K1":
-            (com,) = (g for g in placed.geometry.ports if g.name == "com")
-            poles[int(name[-1])] = placed.at.x + com.at.x
+            poles[int(name_of[ref][-1])] = drawn.x
         elif tag == "DO1":
-            pins = {g.name: placed.at.x + g.at.x for g in placed.geometry.ports}
-    return poles, pins
+            pins = {pin: drawn.x + offset for pin, offset in dict(drawn.offsets).items()}
+            sides = dict(drawn.sides)
+    return poles, pins, sides
 
 
 def test_the_card_prints_its_pins_in_marking_order() -> None:
-    _, pins = _x_of_poles_and_pins()
-    assert sorted(PINS, key=pins.__getitem__) == list(PINS)
+    """The box is two-sided (BOX-SIDES): the first pins stand on the north side, then the rest."""
+    _, pins, sides = _x_of_poles_and_pins()
+    north = sorted((p for p in PINS if sides[p] == "n"), key=pins.__getitem__)
+    south = sorted((p for p in PINS if sides[p] == "s"), key=pins.__getitem__)
+    assert north + south == list(PINS)
 
 
 def test_the_poles_stand_in_the_order_of_the_pins_they_feed_and_no_wire_crosses() -> None:
-    poles, pins = _x_of_poles_and_pins()
+    poles, pins, _ = _x_of_poles_and_pins()
     assert sorted(poles, key=lambda pole: pins[FEEDS[pole]]) == sorted(poles, key=poles.__getitem__)
-    assert len(_built()[1].routes) == 6, "every wire is drawn"
-    assert page_crossings(_built()[1]) == 0
+    drawings = drawn_pages(_built()).values()
+    assert sum(len(d.wires) for d in drawings) == 6, "every wire is drawn"
+    assert sum(_crossings(d.wires) for d in drawings) == 0

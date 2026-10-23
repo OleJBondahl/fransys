@@ -6,7 +6,7 @@ import re
 import pytest
 from fransys_el.placement_ids import pin_names, symbol_ids
 from fransys_el.placement_kit import ProblemError
-from placement_fixtures import kit_for, planted_model
+from placement_fixtures import kit_for, leads, planted_model
 
 from fransys_layout.core import PinRef
 from fransys_model.derive import item_designation
@@ -19,16 +19,15 @@ def _function_named(model, name):
     return next(f for f, record in functions(model).items() if record.name == name)
 
 
-def test_symbol_ids_are_the_id_text_and_unique() -> None:
-    """Each symbol id is its function Id's text (S1), never a printed designation; all unique."""
+def test_symbol_ids_are_the_designation_then_the_id_text_and_unique() -> None:
+    """Each symbol id is the item's designation, a space, the function Id's text (el-0006)."""
     model = planted_model()
     kit = kit_for(model)
     ids = symbol_ids(model, kit)
     assert len(set(ids.values())) == len(kit)
-    for function, text in ids.items():
-        assert text == render_id(function)
+    for function, text in leads(ids).items():
         record = functions(model)[function]
-        assert text != f"{item_designation(model, record.item)}.{record.name}"
+        assert text == f"{item_designation(model, record.item)} {render_id(function)}"
 
 
 def test_missing_port_is_refused_by_name() -> None:

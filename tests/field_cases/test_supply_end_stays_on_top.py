@@ -7,15 +7,13 @@ designation text says. This guards that rule; it never failed, so it carries no 
 """
 
 import fransys as fr
+from _drawn_pages import drawn_pages
 from _model_build_cover import cabinet_document
 from fransys.colours import BU
 
-from fransys_model.layout import SymbolPlacement, layout_of
-from fransys_model.vocab.tables import functions, items
 
-
-def _rows() -> dict[str | None, int]:
-    """Each breaker's drawn y: Q2 next to `+`, Q1 next to `-`, the lamp H1 between their pins 2."""
+def _rows() -> dict[str, int]:
+    """Each breaker's drawn y (its tag text's top): Q2 next to `+`, Q1 next to `-`."""
     d = fr.design("demo_parts", place="CAB")
     d.project(title="Chain", number="P-1", customer="Example Co", revision=1, author="OJB")
     d.revision(1, date="2026-10-02", text="First issue", created="XX")
@@ -33,8 +31,10 @@ def _rows() -> dict[str | None, int]:
     d.detail.wire(q1["1"], psu.output["-"], wire=wire)
     model = fr.build(d, cabinet_document(_cabinet)).model
     return {
-        items(model)[functions(model)[p.function].item].tag: p.y
-        for p in layout_of(model, SymbolPlacement).values()
+        text.text.removeprefix("-"): text.box.y
+        for drawing in drawn_pages(model).values()
+        for text in drawing.texts
+        if text.kind == "TAG"
     }
 
 

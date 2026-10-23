@@ -16,17 +16,16 @@ from functools import cache
 from pathlib import Path
 
 import fransys as fr
-from fransys_el import OPTIONS
+from _drawn_pages import drawn_pages
 
-from fransys_layout.engines.schematic.engine import stage_results
-from fransys_layout.engines.schematic.read import read_inputs
+from electrical_symbols import LIBRARY
 from fransys_layout.geometry import PAGE_PAD
-from fransys_layout.stages.lookups import placed_keepout
+from fransys_layout.symbols import library_symbol, symbol_shape
 
 
 @cache
-def _placed_boxes() -> tuple:
-    """The keep-out boxes of every function the layout placed, for one fed relay."""
+def _left_edges() -> tuple:
+    """The left edge of the keep-out (body and text slots) of every drawn symbol, for one relay."""
     d = fr.design("demo_parts", place="CAB")
     cab = d.location("CAB", "Cabinet")
     with d.function("G", "Group"):
@@ -37,13 +36,15 @@ def _placed_boxes() -> tuple:
     cover = Path(tempfile.mkdtemp()) / "cover.md"
     cover.write_text("# Cabinet\n", encoding="utf-8")
     doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover)
-    model = fr.build(d, doc).model
-    results, _ = stage_results(model, read_inputs(model, options=OPTIONS))
-    return tuple(placed_keepout(one) for one in results.layout.placed)
+    edges = []
+    for drawing in drawn_pages(fr.build(d, doc).model).values():
+        for one in drawing.symbols:
+            shape = symbol_shape(library_symbol(LIBRARY, one.key), LIBRARY)
+            edges.append(one.x + min(box.x for box in (shape.body, *shape.slots.values())))
+    return tuple(edges)
 
 
 def test_a_box_at_the_left_edge_clears_the_frame_line_by_the_page_pad() -> None:
-    """The leftmost placed box's left edge is at least `PAGE_PAD` from x = 0."""
-    box = min(_placed_boxes(), key=lambda one: one.x)
-    assert box.width > 0
-    assert box.x >= PAGE_PAD, (box.x, PAGE_PAD)
+    """The leftmost drawn box's left edge is at least `PAGE_PAD` from x = 0."""
+    edge = min(_left_edges())
+    assert edge >= PAGE_PAD, (edge, PAGE_PAD)

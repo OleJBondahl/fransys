@@ -1,4 +1,5 @@
 # FRANSYS PLACEMENT INSTANCE test_a_strip_wired_outside_routes_every_wire_to_a_plc_module_under_it__1
+# sides: half split of fransys_el; today and route lines as exported
 # Units G. Wiring grid 8 G. Text height 8 G. Pin offsets and boxes are relative to the
 # symbol origin, at orientation R0. A pin's side is the way its wire leaves.
 # [rail rank=r power=K]: the net carries a declared supply potential; smaller rank is drawn
@@ -54,23 +55,23 @@ sym +C1-X9:2.terminal group=- body=-8,-8,16,16 keepout=-8,-30,60,38
   pin n N 0,-8 node=0
   pin s S 0,8 node=0
   pin w W -8,0 node=0
-sym +C1-U1-K1.item group=- body=-16,-16,176,32 keepout=-16,-16,228,32
+sym +C1-U1-K1.item group=- body=-16,-16,224,32 keepout=-16,-16,276,32
   pin di_1.1 N 0,-16
-  pin di_10.10 S 32,16
-  pin di_11.11 N 112,-16
-  pin di_12.12 S 48,16
-  pin di_13.13 N 128,-16
-  pin di_14.14 S 64,16
-  pin di_15.15 N 144,-16
-  pin di_16.16 S 80,16
+  pin di_10.10 S 96,16
+  pin di_11.11 S 112,16
+  pin di_12.12 S 128,16
+  pin di_13.13 S 144,16
+  pin di_14.14 S 160,16
+  pin di_15.15 S 176,16
+  pin di_16.16 S 192,16
   pin di_2.2 N 16,-16
   pin di_3.3 N 32,-16
-  pin di_4.4 N 48,-16
-  pin di_5.5 N 64,-16
-  pin di_6.6 S 0,16
-  pin di_7.7 N 80,-16
-  pin di_8.8 S 16,16
-  pin di_9.9 N 96,-16
+  pin di_4.4 S 0,16
+  pin di_5.5 S 16,16
+  pin di_6.6 S 32,16
+  pin di_7.7 S 48,16
+  pin di_8.8 S 64,16
+  pin di_9.9 S 80,16
 net n0 +C1-U1-K1.item.di_3.3 +C1-U1-X:3.terminal.n +C1-U1-X:3.terminal.s +C1-X9:3.terminal.n +C1-X9:3.terminal.s
 net n2 +C1-U1-K1.item.di_5.5 +C1-U1-X:5.terminal.n +C1-U1-X:5.terminal.s +C1-X9:5.terminal.n +C1-X9:5.terminal.s
 net n3 +C1-U1-K1.item.di_4.4 +C1-U1-X:4.terminal.n +C1-U1-X:4.terminal.s +C1-X9:4.terminal.n +C1-X9:4.terminal.s

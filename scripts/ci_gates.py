@@ -89,22 +89,13 @@ ALWAYS_RUN: tuple[tuple[str, str], ...] = (
     ("tests/test_wire_label_one_home.py", "ast of packages/*/src"),
     ("packages/electrical-symbols/tests/test_decisions_hygiene.py", "decision records text"),
     ("packages/electrical-symbols/tests/test_hygiene.py", "git ls-files text"),
-    ("packages/fransys-layout/tests/conventions/test_facts.py", "ast of layout src"),
-    ("packages/fransys-layout/tests/engines/test_adjacent_cell_wire.py", "ast of layout src"),
     ("packages/fransys-layout/tests/lint/test_fan_out_exempt.py", "text of lint/*.py"),
-    ("packages/fransys-layout/tests/lint/test_geometric.py", "regex over layout src"),
-    ("packages/fransys-layout/tests/stages/test_grid_path_home.py", "ast of layout src"),
-    ("packages/fransys-layout/tests/test_design_map.py", "rules/*.md and stages src"),
-    (
-        "packages/fransys-layout/tests/test_design_map_repo.py",
-        "design-map rows against the layout src's public functions",
-    ),
+    ("packages/fransys-layout/tests/routing/test_grid_path_home.py", "ast of layout src"),
     ("packages/fransys-layout/tests/test_layering.py", "ast of layout src"),
     ("packages/fransys-layout/tests/test_one_port_exit.py", "layout src text"),
     ("packages/fransys-layout/tests/test_one_port_position.py", "layout src text"),
     ("packages/fransys-layout/tests/test_purity.py", "ast of layout src"),
     ("packages/fransys-layout/tests/test_samples.py", "text of its own tests"),
-    ("packages/fransys-layout/tests/test_stage_vocabulary.py", "stages and conventions src"),
     ("packages/fransys-layout/tests/test_suppressions.py", "noqa scan of layout src"),
     ("packages/fransys-model/tests/test_layering.py", "ast of model src"),
     ("packages/fransys-overview/tests/test_vendor.py", "generated _vendor_cytoscape.py"),
@@ -158,6 +149,11 @@ def tracked_files(root: Path) -> list[str]:
         check=True,
     )
     return [p.decode() for p in done.stdout.split(b"\0") if p]
+
+
+def source_files(root: Path) -> list[Path]:
+    """Every `.py` under `root/packages/*/src`, sorted: the one walk of the source tree."""
+    return sorted(root.glob("packages/*/src/**/*.py"))
 
 
 def data_manifest(root: Path, paths: list[str]) -> dict[str, str]:

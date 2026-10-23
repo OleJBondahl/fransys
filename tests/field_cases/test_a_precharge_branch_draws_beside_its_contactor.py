@@ -15,19 +15,14 @@ import re
 import tempfile
 from itertools import pairwise
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, NamedTuple
+from typing import Any, NamedTuple
 
 import fransys as fr
-from fransys_el import OPTIONS
+from _drawn_pages import drawn_pages
 
-from fransys_layout.engines.schematic.engine import stage_results
-from fransys_layout.engines.schematic.read import read_inputs
-from fransys_layout.stages.lookups import placed_keepout
-from fransys_model.layout import Route, layout_of
-from fransys_model.vocab.tables import functions
-
-if TYPE_CHECKING:
-    from fransys_layout.geometry import Box
+from electrical_symbols import LIBRARY
+from fransys_layout.symbols import library_symbol, symbol_shape
+lazy from fransys_layout.drawing import DrawnSymbol
 
 _UNIT: dict[str, Any] = {
     "revision": 1,
@@ -95,28 +90,87 @@ def test_a_precharge_branch_draws_beside_its_contactor() -> None:
 
 _GRID = 16  # the wiring grid: a join leaves a crowded host pin by one grid
 
+type Point = tuple[int, int]
 
-def _points(result: fr.BuildResult, branch: str, host: str) -> list[tuple[int, int]]:
-    """The one route whose key names `branch` and `host`, as (x, y) points."""
-    routes = [r for r in layout_of(result.model, Route).values() if branch in "/".join(r.key)]
-    (wire,) = (r for r in routes if host in "/".join(r.key))
-    return [(p.x, p.y) for p in wire.points]
+
+def _gap(model, fact: str):
+    """A fact the page Drawing lacks (strict xfail, GAP-FLIP-DRAWING-SUBJECT)."""
+    msg = f"GAP-FLIP-DRAWING-SUBJECT: no {fact} for {model.digest}"
+    raise AssertionError(msg)
+
+
+def _drawn(result: fr.BuildResult, tag: str) -> DrawnSymbol:
+    """The one drawn symbol of the item `tag` (the owner text starts with it)."""
+    (one,) = (
+        r for r in _gap(result.model, "symbol subject").values() if (r.owner or "").startswith(tag)
+    )
+    return one
+
+
+def _shape(one: DrawnSymbol):  # the symbol's pins and body at R0, from symdef's data
+    return symbol_shape(library_symbol(LIBRARY, one.key, one.poles), LIBRARY)
+
+
+def _pin(result: fr.BuildResult, tag: str, pin: str) -> Point:
+    one, turn = _drawn(result, tag), _shape(_drawn(result, tag)).pins[pin]
+    return one.x + turn.dx, one.y + turn.dy
+
+
+def _join(result: fr.BuildResult, start: Point, end: Point) -> list[Point]:
+    """The corners of the drawn wires from `start` to `end`: wires meet end to end or at a dot."""
+    wires = [list(w.points) for d in drawn_pages(result.model).values() for w in d.wires]
+    dots = {p for w in wires for p in w}
+    edges: dict[Point, set[Point]] = {}
+    for wire in wires:
+        for a, b in pairwise(wire):
+            on = sorted(
+                p
+                for p in dots
+                if min(a, b) <= p <= max(a, b) and (p[0] == a[0] == b[0] or p[1] == a[1] == b[1])
+            )
+            for p, q in pairwise(on if a <= b else on[::-1]):
+                edges.setdefault(p, set()).add(q)
+                edges.setdefault(q, set()).add(p)
+    came, queue = {start: start}, [start]
+    for here in queue:
+        for n in sorted(edges.get(here, ())):
+            if n not in came:
+                came[n] = here
+                queue.append(n)
+    assert end in came, f"no drawn wires join {start} to {end}"
+    path = [end]
+    while path[-1] != start:
+        path.append(came[path[-1]])
+    path.reverse()
+    return [
+        p
+        for i, p in enumerate(path)
+        if i in (0, len(path) - 1)
+        or not (
+            path[i - 1][0] == p[0] == path[i + 1][0] or path[i - 1][1] == p[1] == path[i + 1][1]
+        )
+    ]
 
 
 def test_the_branch_fuse_joins_the_host_fuse_by_one_straight_horizontal() -> None:
     result, _ = _build()
-    points = _points(result, "F3", "F1")
+    points = _join(result, _pin(result, "U1-F3", "out"), _pin(result, "U1-F1", "out"))
     assert len(points) == 2
     assert points[0][1] == points[1][1]
     assert points[0][0] != points[1][0]
 
 
+def _branch_join(result: fr.BuildResult) -> list[Point]:
+    """The join from K1's first pole output to the precharge lamp's input."""
+    return _join(result, _pin(result, "U1-K1", "1.out"), _pin(result, "U1-R1", "in"))
+
+
 def test_a_join_leaves_a_multi_pole_host_pin_before_it_turns_to_the_branch() -> None:
     """K1's other poles end on the pin's row: a level join would run through their pin ends."""
     result, _ = _build()
-    points = _points(result, "R1/2:fn/4:lamp/4:port/1:1", "K1")
-    host, first, second, branch = points if points[0][0] == points[1][0] else points[::-1]
+    points = _branch_join(result)
     assert len(points) == 4
+    host, first, second, branch = points
     assert host[0] == first[0], "it leaves the pin along the pin's own direction"
     assert abs(first[1] - host[1]) >= _GRID, "by at least one grid"
     assert first[1] == second[1], "then runs level"
@@ -131,24 +185,17 @@ def test_no_beside_join_runs_through_a_symbol_or_a_label() -> None:
     assert not codes & {"WIRE_THROUGH_SYMBOL", "WIRE_OVER_LABEL"}
 
 
-def _host_keepout(result: fr.BuildResult) -> Box:
-    """K1's main function keep-out on its page, from the one keep-out function."""
-    layout = stage_results(result.model, read_inputs(result.model, options=OPTIONS))[0].layout
-    (host,) = (
-        f.id for f in functions(result.model).values() if "/".join(f.key).endswith("K1/fn/main")
-    )
-    (one,) = (p for p in layout.placed if p.function == host)
-    return placed_keepout(one)
-
-
 def test_no_beside_join_segment_meets_the_host_keepout_except_at_its_pin() -> None:
     """A join that touches the host's keep-out anywhere but its pin end crosses the host's ink."""
     result, _ = _build()
-    keep = _host_keepout(result)
-    points = _points(result, "R1/2:fn/4:lamp/4:port/1:1", "K1")
-    pin = next(p for p in points if p[1] == keep.y + keep.height)
+    host = _drawn(result, "U1-K1")
+    body = _shape(host).body  # the keep-out: the body, which reaches the pin ends
+    left, top = host.x + body.x, host.y + body.y
+    right, bottom = left + body.w, top + body.h
+    points = _branch_join(result)
+    pin = points[0]
     for (ax, ay), (bx, by) in pairwise(points):
-        x0, x1 = max(min(ax, bx), keep.x), min(max(ax, bx), keep.x + keep.width)
-        y0, y1 = max(min(ay, by), keep.y), min(max(ay, by), keep.y + keep.height)
+        x0, x1 = max(min(ax, bx), left), min(max(ax, bx), right)
+        y0, y1 = max(min(ay, by), top), min(max(ay, by), bottom)
         meets = x0 <= x1 and y0 <= y1
         assert not meets or (x0, y0, x1, y1) == (*pin, *pin)

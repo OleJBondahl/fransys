@@ -1,26 +1,23 @@
 """The text of an off stub and of a leaving line's stub (decision model-0032)."""
 
-from collections import defaultdict
 from typing import cast
 lazy from collections.abc import Iterable, Sequence
 
 from fransys_model.derive.designation import (
     printed_designation,
 )
-from fransys_model.derive.frame_position import place_text
 from fransys_model.derive.line_fact import draws_as_line
 from fransys_model.derive.location_text import stub_far_end
-from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, digest_cached
 from fransys_model.layout import (
     DrawingSet,
     LinkMarker,
     Page,
     Side,
     StarKind,
-    StubEnd,
     layout_of,
 )
-lazy from fransys_model.vocab.core import Port, Unit
+lazy from fransys_model.kernel import Id, Model
+lazy from fransys_model.vocab.core import Item, Port, Unit
 
 
 def off_stub_line(cable: str, *, north: bool, far: str, ports: Iterable[str]) -> str:
@@ -52,34 +49,32 @@ def _stub_end_of(model: Model, marker: LinkMarker, unit: Id[Unit] | None) -> tup
     return stub_far_end(model, cast("Id[Port]", marker.far), marker.port, unit=unit)
 
 
-@digest_cached(DIGEST_CACHE_SIZE)
-def _stub_ends(model: Model) -> dict[Id[LinkMarker], list[StubEnd]]:
-    found: dict[Id[LinkMarker], list[StubEnd]] = defaultdict(list)
-    for end in sorted(layout_of(model, StubEnd).values(), key=lambda e: (e.marker, e.index)):
-        found[end.marker].append(end)
-    return found
+def _cable_and_head(
+    model: Model, unit: Id[Unit] | None, carrier: Id[Item] | None, far: Id[Port], port: Id[Port]
+) -> tuple[str, str, str]:
+    """The printed carrier (`""` for none), the far device and the far port's tail in `unit`."""
+    cable = "" if carrier is None else printed_designation(model, carrier, unit=unit)
+    head, tail = stub_far_end(model, far, port, unit=unit)
+    return cable, head, tail
 
 
-def _line_stub_far(
-    model: Model, marker: LinkMarker, unit: Id[Unit] | None, head: str
-) -> list[tuple[str, str]]:
-    """A line stub's far devices with their places, from its `StubEnd` records.
+def stub_text_at(
+    model: Model,
+    unit: Id[Unit] | None,
+    ends: tuple[Id[Port], Id[Port], Id[Item] | None],
+    *,
+    north: bool,
+) -> str:
+    """The text of a lone off stub before it is placed: what `off_stub_text` prints for it.
 
-    A stub with none keeps its `far` port's device alone (a hand-made marker, an old model).
+    `ends` is `stub_far`'s `(near, far, carrier)`. The stub stands in no run and no line end is
+    drawn yet (layout sizes its box from this text).
     """
-    ends = _stub_ends(model).get(marker.id)
-    if not ends:
-        return [(head, "")]
-    pages = layout_of(model, Page)
-    return [
-        (
-            stub_far_end(model, end.port, marker.port, unit=unit)[0],
-            ""
-            if end.page is None
-            else place_text(model, pages[marker.page], pages[end.page], end.x, end.y),
-        )
-        for end in ends
-    ]
+    port, far, carrier = ends
+    cable, head, tail = _cable_and_head(model, unit, carrier, far, port)
+    if carrier is not None and draws_as_line(model, carrier):
+        return line_stub_line(cable, north=north, far=[(head, "")])
+    return off_stub_line(cable, north=north, far=head, ports=(tail,))
 
 
 def off_stub_text(model: Model, marker: LinkMarker) -> str:
@@ -92,11 +87,9 @@ def off_stub_text(model: Model, marker: LinkMarker) -> str:
         msg = "off_stub_text needs an off stub (star OFF) with a far port"
         raise ValueError(msg)
     unit = layout_of(model, DrawingSet)[layout_of(model, Page)[marker.page].drawing_set].unit
-    cable = "" if marker.carrier is None else printed_designation(model, marker.carrier, unit=unit)
-    head, _ = stub_far_end(model, marker.far, marker.port, unit=unit)
+    cable, head, _ = _cable_and_head(model, unit, marker.carrier, marker.far, marker.port)
     if marker.carrier is not None and draws_as_line(model, marker.carrier):
-        far = _line_stub_far(model, marker, unit, head)
-        return line_stub_line(cable, north=marker.facing is Side.N, far=far)
+        return line_stub_line(cable, north=marker.facing is Side.N, far=[(head, "")])
     run = [marker]
     if marker.box_x is not None:
         run = sorted(

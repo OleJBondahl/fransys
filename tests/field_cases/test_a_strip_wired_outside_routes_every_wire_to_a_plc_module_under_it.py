@@ -20,10 +20,10 @@ from pathlib import Path
 from typing import Any, NamedTuple
 
 import fransys as fr
+from _drawn_pages import drawn_pages
 from fransys.colours import BU
 
 from fransys_model.kernel import Severity
-from fransys_model.layout import Route, layout_of
 
 _COUNT = 5
 
@@ -61,10 +61,17 @@ def test_no_wire_fails_to_route() -> None:
 
 
 def test_every_strip_to_module_wire_is_drawn() -> None:
-    model = _built().model
-    drawn = [
-        r
-        for r in layout_of(model, Route).values()
-        if "K1" in str((model.key_of(r.a), model.key_of(r.b)))
-    ]
-    assert len(drawn) == _COUNT
+    drawn = 0
+    for drawing in drawn_pages(_built().model).values():
+        tags = [t for t in drawing.texts if t.kind == "TAG"]
+        for wire in drawing.wires:
+            for x, y in (wire.points[0], wire.points[-1]):
+                at = [s for s in drawing.symbols if abs(s.x - x) + abs(s.y - y) <= 24]
+                near = [
+                    min(tags, key=lambda t, s=s: abs(t.box.x - s.x) + abs(t.box.y - s.y))
+                    for s in at
+                ]
+                if any(t.text.endswith("-K1") for t in near):
+                    drawn += 1
+                    break
+    assert drawn == _COUNT

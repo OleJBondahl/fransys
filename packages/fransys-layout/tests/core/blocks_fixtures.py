@@ -10,7 +10,10 @@ from __future__ import annotations
 from dataclasses import replace
 lazy from collections.abc import Sequence
 
-from fransys_layout.core import Box, Hints, Options, PinRef, PlacementProblem, Size, Sym
+from options_fixtures import core_options
+from turn_fixtures import views_of
+
+from fransys_layout.core import Box, Facts, Hints, PinRef, PlacementProblem, Size, Sym
 from fransys_layout.core.values import (
     Attach,
     Block,
@@ -33,12 +36,20 @@ LABEL = Size(16, 8)
 def sym(sid: str, group: str | None, unit: str = "", reach: tuple[int, int] | None = None) -> Sym:
     """A column symbol: 16 wide on its wire, or with reach (left, right) that wide all hard."""
     body = Box(-reach[0], 0, sum(reach), 32) if reach else Box(-8, 0, 16, 32)
-    return Sym(sid, group, unit, LABEL, body, body, body, (), (), frozenset({"R0"}))
+    return Sym(
+        sid,
+        group,
+        unit,
+        LABEL,
+        (),
+        (),
+        views=views_of(body, body, body, (), ("R0", "R180")),
+    )
 
 
-def box_sym(sid: str, group: str | None, pins: int, unit: str = "") -> Sym:
-    """A box with pins p1.. facing south in marking order, margin and pitch 16."""
-    return replace(card_sym(sid, pins), group=group, unit=unit, label=LABEL)
+def box_sym(sid: str, group: str | None, pins: int, unit: str = "", north: int = 0) -> Sym:
+    """A box with pins p1.. in marking order (the first `north` face north, the rest south)."""
+    return replace(card_sym(sid, pins, north=north), group=group, unit=unit, label=LABEL)
 
 
 def column(cid: str, *cells: str, pin: tuple[str, str] | None = None) -> Column:
@@ -57,7 +68,7 @@ def fan(fid: str, *cols: str) -> Fan:
 def problem_of(
     syms: Sequence[Sym], hints: Hints | None = None, area: Size = AREA
 ) -> PlacementProblem:
-    return PlacementProblem(area, tuple(syms), (), hints=hints or Hints())
+    return PlacementProblem(area, tuple(syms), (), hints=hints or Hints(), facts=Facts())
 
 
 def build(
@@ -71,7 +82,17 @@ def build(
     from fransys_layout.core.blocks import assign_blocks
 
     flow = FlowGraph(tuple(cols), tuple(fans), (), (), CycleSplit(0, 0, 0), ())
-    return assign_blocks(flow, problem_of(syms, hints, area), Options())
+    return assign_blocks(
+        flow,
+        problem_of(syms, hints, area),
+        core_options(
+            flip_turn="R180",
+            tag_stagger=True,
+            label_gap=8,
+            driver_first=True,
+            arrow_sides=("E", "W"),
+        ),
+    )
 
 
 def flat(lists: Sequence[BlockList]) -> list[Block]:
@@ -95,14 +116,14 @@ def loose(*groups: str, reach: tuple[int, int] | None = None) -> tuple[list[Sym]
 
 
 def shaped_box(
-    reaches: Sequence[tuple[int, int]], *, reverse: bool = False
+    reaches: Sequence[tuple[int, int]], *, reverse: bool = False, north: int = 0
 ) -> tuple[list[Sym], list[Column]]:
     """Box A1 (group PLC), column ci with symbol ki of reach (left, right) on pin pi.
 
     reverse puts column ci on pin p(n+1-i).
     """
     n = len(reaches)
-    syms = [box_sym("A1", "PLC", n)]
+    syms = [box_sym("A1", "PLC", n, north=north)]
     syms += [sym(f"k{i}", "CH", reach=r) for i, r in enumerate(reaches, 1)]
     cols = [
         column(f"c{i}", f"k{i}", pin=("A1", f"p{n + 1 - i if reverse else i}"))
@@ -111,6 +132,8 @@ def shaped_box(
     return syms, cols
 
 
-def box_case(n: int, width: int, *, reverse: bool = False) -> tuple[list[Sym], list[Column]]:
+def box_case(
+    n: int, width: int, *, reverse: bool = False, north: int = 0
+) -> tuple[list[Sym], list[Column]]:
     """Box A1 with n columns, each symbol's footprint width wide and centred on its wire."""
-    return shaped_box([(width // 2, width // 2)] * n, reverse=reverse)
+    return shaped_box([(width // 2, width // 2)] * n, reverse=reverse, north=north)

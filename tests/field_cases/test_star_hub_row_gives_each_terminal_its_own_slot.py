@@ -15,9 +15,8 @@ from typing import Any
 import fransys as fr
 import fransys_author
 import fransys_parts
+from _drawn_pages import drawn_pages
 from _model_build_cover import cabinet_document
-
-from fransys_model.layout import SymbolPlacement, layout_of
 
 _PROJECT: dict[str, Any] = {
     "title": "Star hub row",
@@ -51,8 +50,8 @@ def _built() -> fr.BuildResult:
 
 def test_two_terminals_above_one_hub_stand_apart() -> None:
     result = _built()
-    placements = layout_of(result.model, SymbolPlacement).values()
-    spots = [(p.page, p.x, p.y) for p in placements]
+    pages = drawn_pages(result.model)
+    spots = [(page, s.x, s.y) for page, drawing in pages.items() for s in drawing.symbols]
     assert len(spots) >= 4  # the layout ran
     assert len(spots) == len(set(spots))
     assert "SYMBOL_OVERLAP" not in {f.code for f in result.findings}

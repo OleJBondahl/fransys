@@ -6,8 +6,8 @@ import fransys as fr
 import fransys_author
 import fransys_render
 import typst
+from _pdf_lists import source
 from demo_designs import cabinet_design
-from fransys_pdf import source
 
 from fransys_model.derive import document_page_kinds, document_sheets_of
 from fransys_model.kernel import render_id
@@ -19,7 +19,7 @@ from fransys_model.vocab import documents
 _PDF_PAGE = re.compile(rb"/Type\s*/Page(?![A-Za-z])")
 
 # A minimal valid SVG, sized to the house sheet's content box: enough
-# for Typst to place and compile, standing in for `fransys_render.pages` (still a
+# for Typst to place and compile, standing in for the facade's page SVGs (still a
 # scaffold) so a `SCHEMATIC` page can be compiled at all.
 _STUB_DRAWING_SVG = (
     '<svg xmlns="http://www.w3.org/2000/svg" width="400mm" height="257mm" '
@@ -106,7 +106,7 @@ def test_document_pdf_has_the_expected_pages_and_embedded_font(demo_cabinet_docu
 
     # The page SVGs land in intermediates too (`_write_intermediates`,
     # `_file_safe`'s `:` -> `-`): one `layout.page-*.svg` per `layout.page` record of the
-    # WHOLE model (`fransys_render.pages`' own contract) -- this cabinet lays out
+    # WHOLE model (the facade draws every page of the model) -- this cabinet lays out
     # two drawing sets (one at C1, one location-less), so two, not one; not scoped to just
     # this document's own schematic pages (`schematic_pages` returns only one of the two).
     render_svgs = list(intermediates.glob("layout.page-*.svg"))

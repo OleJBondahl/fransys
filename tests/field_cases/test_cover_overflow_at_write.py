@@ -49,7 +49,7 @@ def test_a_cover_taller_than_the_page_stops_the_write_and_names_the_heights(tmp_
     assert "revision table" in text
     assert "mm" in text
     assert "subject:" in text  # the document is named
-    assert "shorten the cover or the revision text" in text.lower()
+    assert "shorten the cover file or the revision table" in text.lower()
     assert not list(out.glob("*"))  # nothing written
 
 

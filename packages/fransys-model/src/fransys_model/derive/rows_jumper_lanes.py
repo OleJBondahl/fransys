@@ -23,7 +23,7 @@ class JumperLanes:
 
 
 @dataclass(frozen=True)  # plain: the closed value set bans float
-class BridgePiece:
+class BridgePieceRow:
     """One drawn Bridge mark piece (`bridge_piece_key`): its SVG and its size in mm.
 
     The SVG is `width_mm` by `height_mm`; pdf places it in a row's cell and, for a lane's `line`

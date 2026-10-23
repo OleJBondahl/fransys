@@ -14,17 +14,22 @@ over their paired pins.
 
 import tempfile
 from pathlib import Path
+from typing import Any
 
 import fransys as fr
 from fransys.colours import BN, BU
-from fransys_el import OPTIONS
 
-from fransys_layout.engines.schematic.engine import stage_results
-from fransys_layout.engines.schematic.read import read_inputs
+from fransys_model.layout import LinkMarker, layout_of
 from fransys_model.vocab.tables import functions, items, ports
 
 
-def _built() -> tuple:
+def _gap(model, fact: str):
+    """A fact the page Drawing lacks (strict xfail, GAP-FLIP-DRAWING-SUBJECT)."""
+    msg = f"GAP-FLIP-DRAWING-SUBJECT: no {fact} for {model.digest}"
+    raise AssertionError(msg)
+
+
+def _built() -> Any:
     d = fr.design("demo_parts", place="CAB")
     cab = d.location("CAB", "Cabinet")
     ac = d.terminal_strip("X1", "DEMO-TB-2.5", 2)
@@ -45,40 +50,57 @@ def _built() -> tuple:
     cover = Path(tempfile.mkdtemp()) / "cover.md"
     cover.write_text("# Cabinet\n", encoding="utf-8")
     doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover)
-    model = fr.build(d, doc).model
-    return model, stage_results(model, read_inputs(model, options=OPTIONS))[0].layout
+    return fr.build(d, doc).model
 
 
-def _box(model, layout, tag: str):
-    (item,) = (one.id for one in items(model).values() if one.key[-1] in (f"G/{tag}", tag))
-    return next(one for one in layout.placed if one.function == item)
+def _box(model, tag: str) -> tuple[object, Any]:
+    """The (page, generic box) drawn for the function of item `tag`."""
+    (found,) = (
+        (page, one)
+        for page, drawing in _gap(model, "symbol subject").items()
+        for one in drawing.symbols
+        if one.key == "generic-box" and one.owner.startswith(f"{tag} ")
+    )
+    return found
+
+
+def _held_by(model, held: set) -> list[tuple[object, Any]]:
+    """The (page, drawn symbol) pairs drawn for the functions in `held`."""
+    return [
+        (page, one)
+        for page, drawing in _gap(model, "symbol subject").items()
+        for one in drawing.symbols
+        if (one.owner or "").rpartition(":")[2] in held
+    ]
 
 
 def _pin_x(box, name: str) -> int:
-    (pin,) = (g for g in box.geometry.ports if g.name == name)
-    return box.at.x + pin.at.x
+    return box.x + dict(box.offsets)[name]
 
 
 def test_supplies_fed_from_terminals_stand_over_the_module_pin_over_pin() -> None:
     """No marker to the module, output pins over input pins, strip terminals on the same page."""
-    model, layout = _built()
-    module = _box(model, layout, "M1")
-    psus = {n: _box(model, layout, f"G{n}") for n in (1, 2)}
-    boxes = {module.function, *(p.function for p in psus.values())}
+    model = _built()
+    module_page, module = _box(model, "M1")
+    psus = {n: _box(model, f"G{n}") for n in (1, 2)}
+    boxes = [module, *(box for _, box in psus.values())]
+    box_items = {
+        f.item
+        for f in functions(model).values()
+        if f.id.value in {b.owner.rpartition(":")[2] for b in boxes}
+    }
     fn_of = {pid: functions(model)[p.function] for pid, p in ports(model).items()}
     wires = [
-        m for m in layout.markers if fn_of[m.port].item in boxes and fn_of[m.port].key[-1] != "out"
+        m
+        for m in layout_of(model, LinkMarker).values()
+        if fn_of[m.port].item in box_items and fn_of[m.port].key[-1] != "out"
     ]
     assert not wires, "a wire between a supply and the module is a link marker"
-    for n, psu in psus.items():
+    for n, (_, psu) in psus.items():
         for out in ("+", "-"):
             assert _pin_x(psu, f"output.{out}") == _pin_x(module, f"in_{n}.{n}{out}")
     strip = {i for i, one in items(model).items() if one.key[0] == "X1" and len(one.key) == 4}
-    held = functions(model)  # a placed box names its item, any other placed thing its function
-    terminals = [
-        one
-        for one in layout.placed
-        if (held[one.function].item if one.function in held else one.function) in strip
-    ]
+    held = {f.id.value for f in functions(model).values() if f.item in strip}
+    terminals = _held_by(model, held)
     assert len(terminals) == 4
-    assert {one.page for one in (*terminals, module, *psus.values())} == {module.page}
+    assert {p for p, _ in (*terminals, (module_page, module), *psus.values())} == {module_page}

@@ -1,6 +1,6 @@
 """`check_units` does work in proportion to the ends it checks, not ends times units (model-0067).
 
-The count of `_Plant.crosses` calls stands in for time: it is exact and needs no wall clock.
+The count of `end_crosses` calls stands in for time: it is exact and needs no wall clock.
 Doubling the instances doubles the ends and the units, so linear work is 2x; the old loop of
 every end over every unit was 4x.
 """
@@ -24,21 +24,22 @@ from scale_units_fixture import (  # noqa: E402
 )
 
 from fransys_model.checks import units as validators  # noqa: E402
+from fransys_model.derive.facts import unit_crossings  # noqa: E402 - path set above
 from fransys_model.derive.numbering_pins import name_findings  # noqa: E402
 from fransys_model.kernel import Severity  # noqa: E402
 
 
 def _crosses_calls(monkeypatch, model):
-    """How many times `check_units(model)` calls `_Plant.crosses`, counted from zero."""
+    """How many times `check_units(model)` calls `end_crosses`, counted from zero."""
     calls = 0
-    original = validators._Plant.crosses
+    original = unit_crossings.end_crosses
 
-    def counting(self, subtree, item, other):
+    def counting(*args):
         nonlocal calls
         calls += 1
-        return original(self, subtree, item, other)
+        return original(*args)
 
-    monkeypatch.setattr(validators._Plant, "crosses", counting)
+    monkeypatch.setattr(unit_crossings, "end_crosses", counting)
     validators.check_units(model)
     return calls
 

@@ -17,14 +17,15 @@ from typing import TYPE_CHECKING, NamedTuple
 
 import fransys as fr
 import pytest
+from _drawn_pages import drawn_pages
+from _tables_on import TABLES_ON
 
-from fransys_model.derive.contact_image import cross_reference_text
-from fransys_model.layout import DrawingSet, Label, Page, SymbolPlacement, layout_of
-from fransys_model.vocab.tables import functions
+from fransys_model.layout import DrawingSet, Page, layout_of
 
 if TYPE_CHECKING:
     from pathlib import Path
 
+    from fransys_layout.drawing import Drawing, DrawnSymbol
     from fransys_model.kernel import Model
 
 
@@ -53,38 +54,37 @@ def model(tmp_path_factory: pytest.TempPathFactory) -> Model:
     d = fr.design("demo_parts")
     d.add(_cab, "U1")
     return fr.build(
-        d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, "demo-cab", cover=root / "own.md")
+        d,
+        fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, "demo-cab", cover=root / "own.md"),
+        settings=TABLES_ON,
     ).model
 
 
-def _set_of(model: Model, label: Label) -> int:
-    pages = layout_of(model, Page)
-    return layout_of(model, DrawingSet)[pages[label.page].drawing_set].number
-
-
-def _label(model: Model, name: str, slot: str) -> Label:
-    (found,) = (
-        one
-        for one in layout_of(model, Label).values()
-        if one.function is not None
-        and one.partners
-        and one.slot == slot
-        and functions(model)[one.function].name == name
-    )
-    return found
+def _symbols(model: Model, key: str) -> list[tuple[int, DrawnSymbol, Drawing]]:
+    """Each drawn symbol of library `key` with the number of the drawing set of its page."""
+    pages, sets = layout_of(model, Page), layout_of(model, DrawingSet)
+    return [
+        (sets[pages[pid].drawing_set].number, s, d)
+        for pid, d in drawn_pages(model).items()
+        for s in d.symbols
+        if s.key == key
+    ]
 
 
 def test_the_table_stands_on_the_units_own_page(model: Model) -> None:
     """The coil's table is in the set that also draws the contact, not the parent's black box."""
-    table = _label(model, "coil", "contacts")
-    contact_set = _set_of(model, _label(model, "co_1", "tag"))
-    assert _set_of(model, table) == contact_set
-    own = {(p.function, p.page) for p in layout_of(model, SymbolPlacement).values()}
-    assert (table.function, table.page) in own
+    (table_set, _, table_page) = _symbols(model, "contact-head")[0]
+    contact_sets = {number for number, _, _ in _symbols(model, "change-over-contact")}
+    assert table_set in contact_sets
+    assert any(s.key == "operating-device" for s in table_page.symbols), "the coil is on the page"
 
 
 def test_the_contacts_tag_names_a_page_of_its_own_set(model: Model) -> None:
     """co_1's tag reads a bare page and cell: no set prefix, so no page of another set."""
-    text = cross_reference_text(model, _label(model, "co_1", "tag"))
-    assert text
-    assert "." not in text.split(":")[0]
+    ((_, contact, page),) = _symbols(model, "change-over-contact")
+    tag = min(
+        (t for t in page.texts if t.kind == "TAG"),
+        key=lambda t: abs(t.box.x - contact.x) + abs(t.box.y - contact.y),
+    )
+    assert ":" in tag.text, "the tag carries the coil's page and cell"
+    assert "." not in tag.text.split(":")[0]

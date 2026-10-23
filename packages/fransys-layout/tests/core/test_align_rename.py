@@ -7,8 +7,9 @@ from dataclasses import replace
 from typing import TYPE_CHECKING
 
 import pytest
+from options_fixtures import core_options
 
-from fransys_layout.core import Facts, Options, PinRef
+from fransys_layout.core import Facts, PinRef
 from fransys_layout.core.place import place_pages
 
 from . import align_fixtures as fx
@@ -28,7 +29,13 @@ if TYPE_CHECKING:
 
     from fransys_layout.core import PlacementProblem
 
-OPTIONS = Options()
+OPTIONS = core_options(
+    flip_turn="R180",
+    tag_stagger=True,
+    label_gap=8,
+    driver_first=True,
+    arrow_sides=("E", "W"),
+)
 CASES: dict[str, Callable[[], PlacementProblem]] = {
     "band": fx.two_band_columns,
     "mate": fx.mate_columns,
@@ -39,7 +46,7 @@ def _mates(prob: PlacementProblem, maps: dict[str, str]) -> Facts:
     return Facts(
         mates=tuple(
             (PinRef(maps[a.sym], a.pin), PinRef(maps[b.sym], b.pin)) for a, b in prob.facts.mates
-        )
+        ),
     )
 
 

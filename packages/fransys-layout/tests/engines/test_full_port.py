@@ -9,9 +9,9 @@ Can-fail, checked by hand on the old `full_port` (a join of `stub_far_end`'s pai
 """
 
 from layout_cabinet import build_cabinet
+from layout_library import freeze
 
 from fransys_model.derive.drawing_text import stub_far_end
-from fransys_model.kernel import freeze
 from fransys_model.vocab.tables import functions, items, ports
 
 

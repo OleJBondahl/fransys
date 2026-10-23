@@ -21,7 +21,8 @@ from fransys_author.surface._poles import Poles, group
 from fransys_author.surface._potential import Given, hops, wire_rows
 from fransys_author.surface._rows import AC_N
 from fransys_author.surface._shorts import refuse_lone_tied_poles, refuse_tied_poles
-from fransys_author.surface._supplies import Supplies, _Rails
+from fransys_author.surface._supplies import Supplies
+from fransys_author.surface._supply_rails import _Rails
 from fransys_author.surface._throws import turn_throws
 from fransys_author.surface._wire import PoleWire, RowWire, WireArg, read_wire
 
@@ -72,7 +73,10 @@ def _width(design: Design, elements: tuple[object, ...]) -> int:
         return width
     if (first := next(filter(None, map(fixed_count, elements)), None)) is not None:
         return first
-    msg = "name a supply, a rail or a function with poles to set the width"
+    msg = (
+        "name a supply, a rail or a function with poles to set the width; "
+        "for two bare pins use d.detail.wire(a, b, wire=...)"
+    )
     raise AuthorError(msg)
 
 

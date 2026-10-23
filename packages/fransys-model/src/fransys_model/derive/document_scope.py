@@ -6,18 +6,20 @@ The unit, location and item branches live here once; the pdf lists and drawings 
 from fransys_model.vocab.enums import DocumentPreset
 from fransys_model.vocab.tables import documents
 lazy from fransys_model.kernel import Id, Model
+lazy from fransys_model.layout import DrawingSet
 lazy from fransys_model.vocab.core import Item, Unit
 lazy from fransys_model.vocab.document import Document
 
 from .bom import bom_lines
 from .cable_drawing import drawn_blocks
 from .connectors import connector_items, unit_connector_items
+from .document_sets import set_printers
 from .document_undrawn import undrawn_items
 from .document_unit import record_unit
 from .drawn_wires import wire_harness_subjects
 from .harness import harness_cables, reading_cables
 from .memo import Memo
-from .reports import unit_strips
+from .report_scope import unit_strips
 from .rows_document import DocumentScope
 from .structure import boards, items_at
 from .wiring import terminal_strips
@@ -89,6 +91,11 @@ def _boards(model: Model, document: Document) -> tuple[Id[Item], ...]:
     return (item,) if item is not None and item in boards(model) else ()
 
 
+def _drawing_sets(model: Model, document: Document) -> tuple[Id[DrawingSet], ...]:
+    """The drawing sets `document` prints, by set id: the one printer of each set (R331)."""
+    return tuple(s for s, printer in set_printers(model).items() if printer == document.id)
+
+
 def _document_scope(model: Model, document: Document) -> DocumentScope:
     """What `document` selects from `model`: its unit, cables, harnesses, BOM scope and lists."""
     unit = record_unit(model, document)
@@ -102,10 +109,11 @@ def _document_scope(model: Model, document: Document) -> DocumentScope:
         bom_location=document.location,
         bom_item=document.item,
         bom_without=undrawn,
-        bom_top_level=unit is None and document.preset is DocumentPreset.SYSTEM,
+        top_level=unit is None and document.preset is DocumentPreset.SYSTEM,
         strips=_strips(model, document, unit),
         connector_items=_connector_items(model, document, unit, undrawn),
         boards=_boards(model, document),
+        drawing_sets=_drawing_sets(model, document),
     )
 
 

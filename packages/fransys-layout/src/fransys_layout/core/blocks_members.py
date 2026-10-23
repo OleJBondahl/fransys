@@ -10,8 +10,10 @@ from collections import Counter
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
+from .band import centred_span
 from .blocks_card import box_pin, pin_order
 from .keys import natural_key
+from .marker_room import lowered
 from .unionfind import UnionFind
 from .values import Block
 
@@ -19,7 +21,8 @@ if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
     from .blocks_card import CardEdges
-    from .values import BlockKind, Column, Fan, FlowGraph, Options, PlacementProblem, Sym
+    from .sym_values import Sym
+    from .values import BlockKind, Column, Fan, FlowGraph, Options, PlacementProblem
 
 
 @dataclass(frozen=True, slots=True)
@@ -126,8 +129,8 @@ def members(env: Env, box_of: Mapping[str, str], spill: Sequence[str]) -> list[M
 
 
 def chain_boxes(flow: FlowGraph) -> set[str]:
-    """The boxes that are cells of a chain column: the column's block holds them (layout-0289)."""
-    return {c.sym for col in flow.columns if col.is_chain for c in col.lanes[0].cells}
+    """The boxes in any lane of a chain column: the column's block holds them (layout-0289)."""
+    return {c.sym for col in flow.columns if col.is_chain for ln in col.lanes for c in ln.cells}
 
 
 def _free_boxes(env: Env, box_of: Mapping[str, str]) -> list[Member]:
@@ -213,9 +216,8 @@ def height_est(block: Block, env: Env) -> int:
         tall: dict[str, int] = {}
         for c in block.columns:
             edge = edge_of.get(box_pin(env.columns[c]) or "", "S")
-            tall[edge] = max(tall.get(edge, 0), env.columns[c].height)
+            tall[edge] = max(tall.get(edge, 0), lowered(env.columns[c].height, [env.columns[c]], o))
         return env.syms[block.anchor].body.h + sum(h + o.wire_min for h in tall.values())
     fan = next((f for f in env.flow.fans if f.id == block.fan), None)
-    return max(env.columns[c].height for c in block.columns) + (
-        fan.lanes * o.wiring_grid * 2 if fan else 0
-    )
+    tallest = max(lowered(env.columns[c].height, [env.columns[c]], o) for c in block.columns)
+    return tallest + (centred_span(fan.lanes, o.wiring_grid) if fan else 0)

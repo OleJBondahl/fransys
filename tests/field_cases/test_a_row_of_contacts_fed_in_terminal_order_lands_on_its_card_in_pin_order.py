@@ -11,25 +11,27 @@ The rule (layout-0264): every column wired to a box's pins takes the order of th
 on, inside a group as between groups.
 """
 
+import itertools
 import tempfile
 from functools import cache
 from pathlib import Path
 
 import fransys as fr
+from _drawn_pages import drawn_pages
 from fransys.colours import BU
-from fransys_el import OPTIONS
-from route_meter import page_crossings
-
-from fransys_layout.engines.schematic.engine import stage_results
-from fransys_layout.engines.schematic.read import read_inputs
-from fransys_model.vocab.tables import functions, items
 
 WIRE = (BU, 0.5)
 LANDS = {"F5": 6, "F6": 4, "F7": 5}  # contact -> the channel it feeds, fed from terminal 1, 2, 3
 
 
+def _gap(model, fact: str):
+    """A fact the page Drawing lacks (strict xfail, GAP-FLIP-DRAWING-SUBJECT)."""
+    msg = f"GAP-FLIP-DRAWING-SUBJECT: no {fact} for {model.digest}"
+    raise AssertionError(msg)
+
+
 @cache
-def _built() -> tuple:
+def _built() -> fr.BuildResult:
     d = fr.design("demo_parts", place="CAB")
     cab = d.location("CAB", "Cabinet")
     with d.function("G0", "PLC inputs"):
@@ -42,20 +44,37 @@ def _built() -> tuple:
             d.detail.wire(contact.no["14"], getattr(card, f"di_{channel}")[str(channel)], wire=WIRE)
     cover = Path(tempfile.mkdtemp()) / "cover.md"
     cover.write_text("# Cabinet\n", encoding="utf-8")
-    model = fr.build(d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover)).model
-    results, _ = stage_results(model, read_inputs(model, options=OPTIONS))
-    return model, results.layout
+    return fr.build(d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover))
 
 
-def test_the_contacts_stand_in_the_order_of_the_channels_they_feed() -> None:
-    model, layout = _built()
-    tag_of = {i.id: i.tag for i in items(model).values()}
-    named = {f.id: tag_of[f.item] for f in functions(model).values()}
-    x = {named[p.function]: p.at.x for p in layout.placed if named.get(p.function) in LANDS}
-    assert sorted(LANDS, key=x.__getitem__) == sorted(LANDS, key=LANDS.__getitem__)
+def _crossings(wires: tuple) -> int:
+    """Horizontal-over-vertical crossings, strictly inside both segments, between drawn wires."""
+    found = 0
+    for one, two in itertools.combinations(wires, 2):
+        for (a0, a1), (b0, b1) in itertools.product(
+            itertools.pairwise(one.points), itertools.pairwise(two.points)
+        ):
+            if (a0[1] == a1[1]) == (b0[1] == b1[1]):
+                continue
+            (h0, h1), (v0, v1) = ((a0, a1), (b0, b1)) if a0[1] == a1[1] else ((b0, b1), (a0, a1))
+            found += min(h0[0], h1[0]) < v0[0] < max(h0[0], h1[0]) and min(v0[1], v1[1]) < h0[
+                1
+            ] < max(v0[1], v1[1])
+    return found
+
+
+def test_the_contacts_stand_in_the_order_of_the_channel_pins_they_feed() -> None:
+    """A card stands channels on two sides: the contacts follow the pins x, not the numbers."""
+    model = _built().model
+    drawn = {(r.owner or "").partition(" ")[0]: r for r in _gap(model, "symbol subject").values()}
+    card = drawn["K1"]
+    pin_x = {tag: card.x + dict(card.offsets)[f"di_{ch}.{ch}"] for tag, ch in LANDS.items()}
+    x = {tag: drawn[tag].x for tag in LANDS}
+    assert sorted(LANDS, key=x.__getitem__) == sorted(LANDS, key=pin_x.__getitem__)
+    assert x == pin_x, "each contact stands over the pin it feeds"
 
 
 def test_no_wire_crosses_on_the_way_to_the_card() -> None:
-    layout = _built()[1]
-    assert len(layout.routes) == 6, "every wire is drawn"
-    assert page_crossings(layout) == 0
+    result = _built()
+    assert {f.code for f in fr.check(result)} & {"FUNCTION_NOT_DRAWN", "NET_NOT_DRAWN"} == set()
+    assert sum(_crossings(d.wires) for d in drawn_pages(result.model).values()) == 0

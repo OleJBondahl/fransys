@@ -68,7 +68,6 @@ STARTING_EXEMPT: dict[str, str] = {
     "packages/fransys-overview/src/fransys_overview/_vendor_cytoscape.py": (
         "generated (overview-0001)"
     ),
-    "packages/fransys-layout/src/fransys_layout/stages/types.py": ("D8 exemption, unchanged (LC2)"),
 }
 
 
@@ -93,6 +92,7 @@ def _load(name: str, filename: str) -> types.ModuleType:
 
 
 lean_ceilings = _load("fransys_lean_ceilings", "lean_ceilings.py")
+ci_gates = _load("fransys_ci_gates", "ci_gates.py")
 lean_surface = _load("fransys_lean_surface", "lean_surface.py")
 lean_code_gates = _load("fransys_lean_code_gates", "lean_code_gates.py")
 lean_code_shape = _load("fransys_lean_code_shape", "lean_code_shape.py")
@@ -210,7 +210,7 @@ def measure_all(root: Path, limits: dict[str, int]) -> Measurement:
     }
 
     docstrings_measured = len(surface_keys) + len(docstring_lines)
-    files_walked = len(lean_code_shape.package_src_files(root)) + len(md_files)
+    files_walked = len(ci_gates.source_files(root)) + len(md_files)
     functions_measured = (
         sum(len(ruff_sections[name]) for name in ("statements", "complexity", "branches"))
         + len(nested_defs)

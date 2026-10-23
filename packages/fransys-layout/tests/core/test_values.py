@@ -5,11 +5,21 @@ import dataclasses
 import pathlib
 import re
 import typing
+from collections.abc import Mapping
 from typing import Any
 
 import pytest
+from options_fixtures import core_options
 
-from fransys_layout.core import jsonform, outputs, values
+from fransys_layout.core import (
+    CoreError,
+    annex_values,
+    jsonform,
+    outputs,
+    series_values,
+    sym_values,
+    values,
+)
 from fransys_layout.core.keys import natural_key
 from fransys_layout.core.outputs import CoreLayout
 from fransys_layout.core.values import Block, Cell, End, Options, PlacementProblem
@@ -19,7 +29,7 @@ from .values_fixtures import all_values, layout, problem
 
 CLASSES = [
     c
-    for m in (values, outputs)
+    for m in (values, sym_values, series_values, outputs, annex_values)
     for c in vars(m).values()
     if isinstance(c, type) and dataclasses.is_dataclass(c) and c.__module__ == m.__name__
 ]
@@ -52,6 +62,9 @@ def _walk(value: object):
             yield from _walk(getattr(value, f.name))
     elif isinstance(value, tuple | frozenset):
         for v in value:
+            yield from _walk(v)
+    elif isinstance(value, Mapping):
+        for v in value.values():
             yield from _walk(v)
 
 
@@ -103,7 +116,7 @@ def test_the_hand_built_values_set_every_optional_field_once():
 
 def test_the_optional_field_check_can_fail():
     bare = values.Pin("1", "N", 0, 0, 0)
-    assert ("Pin", "stand") in _fields_with_defaults() - _set_once(bare)
+    assert ("Pin", "end_bias") in _fields_with_defaults() - _set_once(bare)
 
 
 @pytest.mark.parametrize("make", [problem, layout], ids=["problem", "layout"])
@@ -152,9 +165,7 @@ def _put(data: Any, path: list, value: object) -> None:
 
 VOCAB = [
     (problem, ["symbols", 0, "pins", 0, "side"], "Pin.side"),
-    (problem, ["symbols", 0, "pins", 0, "stand"], "Pin.stand"),
-    (problem, ["symbols", 0, "orientations", 0], "Sym.orientations"),
-    (problem, ["nets", 0, "rail", "power"], "Rail.power"),
+    (problem, ["symbols", 0, "views", "R0", "pins", 0, "side"], "PinTurn.side"),
     (layout, ["routes", "pages", 0, "wires", 0, "kind"], "Wire.kind"),
     (layout, ["annotations", "markers", 0, "kind"], "Marker.kind"),
     (layout, ["references", 0, "kind"], "Ref.kind"),
@@ -169,6 +180,14 @@ def test_a_vocabulary_rejects_an_unknown_string_naming_the_field(make, path, fie
     _put(plain, path, "NOPE")
     with pytest.raises(ValueError, match=rf"{field}: 'NOPE' is not one of"):
         jsonform.from_plain(type(make()), plain)
+
+
+def test_a_views_key_outside_the_orientations_is_refused_naming_the_field():
+    plain = plain_of(problem())
+    views = plain["symbols"][0]["views"]
+    views["NOPE"] = views.pop("R0")
+    with pytest.raises(ValueError, match=r"Sym.views: 'NOPE' is not one of"):
+        jsonform.from_plain(PlacementProblem, plain)
 
 
 def test_the_stage_values_reject_an_unknown_string_naming_the_field():
@@ -196,7 +215,13 @@ def test_natural_key_orders_digits_as_numbers():
 
 
 def test_options_defaults_follow_the_design_with_e4():
-    o = Options()
+    o = core_options(
+        flip_turn="R180",
+        tag_stagger=True,
+        label_gap=8,
+        driver_first=True,
+        arrow_sides=("E", "W"),
+    )
     assert o.box_pins == "spread"
     assert o.justify is True
 
@@ -208,11 +233,13 @@ def test_the_unread_options_are_gone(name):
 
 def test_c3_contract_shape():
     names = {c.__name__: {f.name for f in dataclasses.fields(c)} for c in CLASSES}
-    assert {"label", "table"} <= names["Sym"]
-    assert not {"text", "text_w", "table_rows"} & names["Sym"]
+    assert {"label"} <= names["Sym"]
+    assert not {"text", "text_w", "table_rows", "table"} & names["Sym"]
+    assert "row_tags" not in names["Facts"]
+    assert "keep_whole" in names["Facts"]
     assert "failed" in names["Routes"]
     assert "row" in names["RefEnd"]
-    assert {"stand", "fan"} <= names["End"]
+    assert "fan" in names["End"]
     assert "ref" not in names["End"]
     assert "tracks" in names["Gap"]
     assert "reserved" not in names["Gap"]
@@ -225,12 +252,20 @@ def test_c3_contract_shape():
 
 
 def test_a_value_with_no_json_form_is_refused():
-    with pytest.raises(TypeError, match="no JSON form for dict"):
-        jsonform.to_plain({"a": 1})
+    with pytest.raises(TypeError, match="no JSON form for set"):
+        jsonform.to_plain({1})
 
 
 def test_a_wrong_scalar_type_is_refused_and_an_int_reads_as_a_float():
-    plain = plain_of(Options())
+    plain = plain_of(
+        core_options(
+            flip_turn="R180",
+            tag_stagger=True,
+            label_gap=8,
+            driver_first=True,
+            arrow_sides=("E", "W"),
+        )
+    )
     plain["min_fill"] = 1
     assert jsonform.from_plain(Options, plain).min_fill == 1.0
     plain["wire_min"] = "8"
@@ -256,19 +291,24 @@ def test_the_marker_names_the_pin_it_stands_at():
 
 
 def test_the_options_carry_geometry_for_the_placement_strings_and_no_colours():
-    o = Options()
+    o = core_options(
+        flip_turn="R180",
+        tag_stagger=True,
+        label_gap=8,
+        driver_first=True,
+        arrow_sides=("E", "W"),
+    )
     assert o.open_stub == 0
     assert o.box_columns is True
     assert o.wrap_wide_fans is True
     assert o.cells == (8, 6)
-    assert o.wire_label_sides == ("N", "S")
+    assert o.wire_label_sides == (("horiz", "N", "S"), ("vert", "E", "W"))
     assert o.marker is None  # layout-0305: symdef data, passed in, never typed in the core
     assert "colours" not in {f.name for f in dataclasses.fields(Options)}
 
 
 def test_the_new_size_fields_default_to_none_or_empty():
     assert values.Net("N", ()).label is None
-    assert values.Facts().row_tags == ()
     names = {c.__name__: {f.name for f in dataclasses.fields(c)} for c in CLASSES}
     assert "page_titles" not in names["Hints"]
     assert "groups" in names["PagePlan"]
@@ -277,7 +317,8 @@ def test_the_new_size_fields_default_to_none_or_empty():
 
 def test_a_label_has_no_text_and_a_table_has_cells_not_rows():
     names = {c.__name__: {f.name for f in dataclasses.fields(c)} for c in CLASSES}
-    assert "text" not in names["Label"]
+    assert "text" not in names["AnnexBox"]
+    assert "Label" not in names
     assert "cells" in names["Table"]
     assert "rows" not in names["Table"]
 
@@ -315,3 +356,27 @@ def test_no_stage_ties_by_a_designation():
 def test_every_orientation_has_a_json_form_that_reads_back(orient):
     box = dataclasses.replace(values_fixtures.scene_value().boxes[0], orient=orient)
     assert jsonform.from_plain(type(box), plain_of(box)) == box
+
+
+def test_options_without_conventions_raises():
+    with pytest.raises(TypeError, match="tag_stagger"):
+        Options()  # ty: ignore[missing-argument]  # the missing value must fail loudly
+
+
+@pytest.mark.parametrize("name", ["tag_stagger", "driver_first", "arrow_sides"])
+def test_options_without_a_convention_raises(name):
+    given: dict[str, Any] = {
+        "tag_stagger": True,
+        "driver_first": True,
+        "arrow_sides": ("E", "W"),
+    }
+    del given[name]
+    with pytest.raises(TypeError, match=name):
+        Options(**given)
+
+
+def test_from_plain_refuses_a_layout_without_wired_naming_the_key():
+    plain = plain_of(layout())
+    del plain["wired"]
+    with pytest.raises(CoreError, match="missing required key 'wired'"):
+        jsonform.from_plain(CoreLayout, plain)

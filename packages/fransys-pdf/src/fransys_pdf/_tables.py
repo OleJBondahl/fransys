@@ -1,20 +1,21 @@
-"""One Typst table for every list: whole rows, two on each side of a split, " (cont.)" (pdf-0027).
+"""One Typst table for every list: whole rows, two on each side of a split, a continued heading.
 
 A zero-width guide column carries the `rowspan: 2` cells that keep the first two and the last two
 body rows together; a table of fewer than four rows is one unbreakable block.
 """
 
+from fransys_model.derive import continued_heading
+
 from ._sizes import RULE
 from ._typst import literal
 
 _MIN_SPLIT_ROWS = 4  # fewer body rows than twice the two-row rule: the table moves whole
-_CONT = " (cont.)"
 _PLAIN = "table.cell(stroke: none, inset: 0pt)[]"
 _SPAN = "table.cell(rowspan: 2, stroke: none, inset: 0pt)[]"
 
 
 def _title_cell(columns: int, title: str, label: str) -> str:
-    """The header's first row: empty on the table's first fragment, the heading + (cont.) after.
+    """The header's first row: empty on the table's first fragment, the continued heading after.
 
     The header repeats on each fragment, and `context` re-evaluates per repeat: a fragment whose
     position is the table's own (`label`) is the first.
@@ -23,8 +24,9 @@ def _title_cell(columns: int, title: str, label: str) -> str:
         f"let p = here().position(); let q = locate(<{label}>).position(); "
         "let first = p.page == q.page and calc.abs(p.x - q.x) < 3mm and calc.abs(p.y - q.y) < 5mm"
     )
+    text = literal(continued_heading(title))
     carried = (
-        f"heading(level: 2, outlined: false, bookmarked: false, text({literal(title + _CONT)}))"
+        f"heading(level: 2, outlined: false, bookmarked: false, text({text})); block(height: 0pt)"
     )
     return (
         f"table.cell(colspan: {columns + 1}, stroke: none, inset: 0pt)"

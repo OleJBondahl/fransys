@@ -7,7 +7,7 @@ ends. A median sweep and swaps of any two columns give an order first. Up to
 `options.exact_order_limit` columns, branch and bound (`order_search`) then looks for a better one
 and stops after `options.exact_order_nodes` nodes, so the answer is never worse than the sweep's.
 The columns stand in natural order and natural order wins every tie. A fan block puts its driver
-first and a bundle's legs keep pole order. The stage reads no symbol kind and no id text beyond
+first and a bundle's legs keep lane order. The stage reads no symbol kind and no id text beyond
 `natural_key`.
 """
 
@@ -61,7 +61,7 @@ def order_cost(order: Sequence[str], flow: FlowGraph) -> int:
 
 def _search(block: Block, flow: FlowGraph, options: Options) -> list[str]:
     natural = sorted(block.columns, key=natural_key)
-    before = _precedence(natural, block, flow)
+    before = _precedence(natural, block, flow, options)
     start = _extend(natural, before)
     # a span of every column costs every order alike
     spans = [s for s in _spans(start, flow) if len(s[0]) < len(start)]
@@ -175,13 +175,17 @@ def _extend(order: Sequence[str], before: Before) -> list[str]:
     return out
 
 
-def _precedence(cols: Sequence[str], block: Block, flow: FlowGraph) -> Before:
-    pairs = [*_driver_pairs(cols, block, flow), *_pole_pairs(cols, flow)]
+def _precedence(cols: Sequence[str], block: Block, flow: FlowGraph, options: Options) -> Before:
+    pairs = [*_driver_pairs(cols, block, flow, options), *_pole_pairs(cols, flow)]
     return {c: frozenset(a for a, b in pairs if b == c) for c in cols}
 
 
-def _driver_pairs(cols: Sequence[str], block: Block, flow: FlowGraph) -> list[tuple[str, str]]:
-    """A fan block's driver column stands first, unless it is also a leg."""
+def _driver_pairs(
+    cols: Sequence[str], block: Block, flow: FlowGraph, options: Options
+) -> list[tuple[str, str]]:
+    """With `driver_first`, a fan block's driver column stands first, unless it is also a leg."""
+    if not options.driver_first:
+        return []
     fan = next((f for f in flow.fans if f.id == block.fan), None)
     if fan is None:
         return []
@@ -193,7 +197,7 @@ def _driver_pairs(cols: Sequence[str], block: Block, flow: FlowGraph) -> list[tu
 
 
 def _pole_pairs(cols: Sequence[str], flow: FlowGraph) -> list[tuple[str, str]]:
-    """A bundle's legs, one column each, keep the order the fan lists them in (pole order)."""
+    """A bundle's legs, one column each, keep the order the fan lists them in (lane order)."""
     here = set(cols)
     pairs: list[tuple[str, str]] = []
     for fan in flow.fans:

@@ -6,11 +6,10 @@ from fransys_author import AuthorError
 from fransys_parts import load as parts_load
 
 from fransys_model.derive import changeover_functions, part_function_pins, part_records
-from fransys_model.kernel import Model, freeze, merge
+from fransys_model.kernel import Model, freeze, merge, natural_key
 from fransys_model.vocab import (
     Part,
     identifier,
-    marking_key,
 )
 
 _TRIPLE = '"' * 3
@@ -66,7 +65,7 @@ def _part_class(cls: str, part: Part, functions: list[tuple[str, list[str]]]) ->
     unique = [pin for pin in all_pins if all_idents.count(identifier(pin)) == 1]
     fn_names = {fn for fn, _ in functions}
     names = (
-        f"Literal[{', '.join(map(repr, sorted(fn_names, key=marking_key)))}]"
+        f"Literal[{', '.join(map(repr, sorted(fn_names, key=natural_key)))}]"
         if fn_names
         else "Never"
     )

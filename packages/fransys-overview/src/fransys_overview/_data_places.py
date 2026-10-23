@@ -6,14 +6,13 @@ They come from `derive.location_fold`: the page lists them and recomputes no pla
 from typing import TYPE_CHECKING, Any
 
 from fransys_model.derive import (
-    location_node_designation,
+    OverviewRefKind,
     location_place_title,
+    node_label,
     place_members,
     unit_location,
     unit_system_designation,
 )
-from fransys_model.layout import OverviewRefKind
-from fransys_model.vocab import Aspect, aspect_nodes
 
 if TYPE_CHECKING:
     from fransys_model.derive import ViewBox
@@ -37,7 +36,7 @@ def _member(tables: _Tables, member: Id[Any]) -> list[Any]:
 
 def place_label(model: Model, node: Id[Any]) -> str:
     """The class key of a place under "Colour by location": the node's label, as an item's is."""
-    return aspect_nodes(model)[node].label
+    return node_label(model, node)
 
 
 def unit_place_label(model: Model, unit: Id[Any]) -> str | None:
@@ -52,15 +51,6 @@ def place_title(model: Model, box: ViewBox) -> str | None:
     if ref.kind is not OverviewRefKind.PLACE or ref.node is None:
         return None
     return location_place_title(model, ref.node)
-
-
-def location_texts(model: Model) -> dict[str, str]:
-    """Each location label (the class key) with the designation boxes and panels print for it."""
-    texts: dict[str, str] = {}
-    for node in aspect_nodes(model).values():
-        if node.aspect is Aspect.LOCATION:
-            texts.setdefault(node.label, location_node_designation(model, node.id))
-    return texts
 
 
 def unit_system_label(model: Model, unit: Id[Any], label: str) -> str | None:

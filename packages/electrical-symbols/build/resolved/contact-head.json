@@ -3,10 +3,10 @@
   "body_box": [
     [
       0,
-      -2
+      -1.5
     ],
     [
-      8,
+      1.25,
       0
     ]
   ],
@@ -17,14 +17,14 @@
       "polyline": [
         [
           0,
-          -2
+          -1.5
         ],
         [
-          8,
-          -2
+          1.25,
+          -1.5
         ],
         [
-          8,
+          1.25,
           0
         ],
         [
@@ -34,25 +34,33 @@
       ],
       "style": "solid",
       "weight": "normal"
+    },
+    {
+      "line": [
+        [
+          0,
+          -0.25
+        ],
+        [
+          1.25,
+          -0.25
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
     }
   ],
   "keepout_box": [
     [
       0,
-      -2
+      -1.5
     ],
     [
-      8,
+      1.25,
       0
     ]
   ],
   "kind": "element",
-  "lint_allow": [
-    {
-      "reason": "the text box is wider than the cell is tall; a table cell is drawn unrotated and its text stays inside the outline",
-      "rule": "slot-overlap-body"
-    }
-  ],
   "name": "Contact head (contact table)",
   "nodes": [],
   "paths": [],
@@ -63,17 +71,38 @@
   },
   "schema": 1,
   "slots": {
-    "heading": {
+    "nc": {
       "at": [
-        0.25,
-        -1
+        0.75,
+        -0.75
       ],
       "box": [
-        7.5,
-        1
+        0.25,
+        0.125
+      ],
+      "side": "E"
+    },
+    "no": {
+      "at": [
+        0.25,
+        -0.75
+      ],
+      "box": [
+        0.25,
+        0.125
       ],
       "side": "E"
     }
   },
-  "status": "unverified"
+  "status": "unverified",
+  "stretch": [
+    {
+      "at": 0.375,
+      "axis": "x"
+    },
+    {
+      "at": 0.875,
+      "axis": "x"
+    }
+  ]
 }

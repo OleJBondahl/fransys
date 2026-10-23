@@ -59,6 +59,16 @@ def test_a_pin_of_a_part_in_no_net_is_unconnected_and_one_in_a_net_is_not() -> N
     assert [(pin_text(p), p.item) for p in pins.unconnected] == [("U1:2", u1)]
 
 
+def test_part_pins_lists_every_pin_of_every_part_wired_or_not() -> None:
+    plant, board, u1, u2 = _plant_board()
+    a1 = plant.port(plant.function(u1, "main"), "1")
+    plant.port(plant.function(u1, "main"), "2")
+    b1 = plant.port(plant.function(u2, "main"), "1")
+    plant.net("n", (a1, b1), name="N")
+    pins = board_pins(plant.model(), board)
+    assert sorted(pin_text(p) for p in pins.part_pins) == ["U1:1", "U1:2", "U2:1"]
+
+
 def test_a_pin_of_an_item_without_a_part_row_takes_its_board_relative_designation() -> None:
     plant, board, u1, _ = _plant_board()
     a1 = plant.port(plant.function(u1, "main"), "1")

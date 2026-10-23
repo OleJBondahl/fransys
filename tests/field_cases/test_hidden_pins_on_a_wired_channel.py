@@ -10,17 +10,9 @@ Fix: a lone PLC channel with two or more ports is a view too (read/views.py). It
 rule (layout-0112's views), so no decision number.
 """
 
-from typing import TYPE_CHECKING
-
 import fransys as fr
 import pytest
-from fransys_el import OPTIONS
-
-from fransys_layout.engines.schematic.engine import stage_results
-from fransys_layout.engines.schematic.read import read_inputs
-
-if TYPE_CHECKING:
-    from fransys_layout.geometry import Facing, Point
+from _drawn_pages import drawn_pages
 
 
 def _build(
@@ -40,12 +32,16 @@ def _build(
     return fr.build(d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover))
 
 
-def _channel_ports(result: fr.BuildResult) -> list[tuple[str, Point, Facing]]:
-    """Channel 1's ports of the module's box: its name, place and facing."""
-    model = result.model
-    results, _ = stage_results(model, read_inputs(model, options=OPTIONS))
-    (box,) = (one.geometry for one in results.layout.placed if one.geometry.key == "generic-box")
-    return [(p.name, p.at, p.facing) for p in box.ports if p.name.startswith("ai_1.")]
+def _channel_ports(result: fr.BuildResult) -> list[tuple[str, int, str]]:
+    """Channel 1's ports of the module's box: its name, offset along the side and side."""
+    (box,) = (
+        one
+        for drawing in drawn_pages(result.model).values()
+        for one in drawing.symbols
+        if one.key == "generic-box"
+    )
+    offsets, sides = dict(box.offsets), dict(box.sides)
+    return [(n, offsets[n], side) for n, side in sides.items() if n.startswith("ai_1.")]
 
 
 @pytest.mark.parametrize("crossed", [False, True])

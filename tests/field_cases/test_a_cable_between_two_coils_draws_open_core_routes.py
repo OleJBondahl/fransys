@@ -23,8 +23,7 @@ from typing import Any, NamedTuple
 
 import fransys as fr
 import pytest
-
-from fransys_model.layout import HarnessFanOut, HarnessLine, SymbolPlacement, layout_of
+from _drawn_pages import drawn_pages
 
 _STEP = 8  # the wiring grid: every drawn vertex is a multiple of it
 Pt = tuple[int, int]
@@ -72,22 +71,21 @@ def _grid(points: tuple[Pt, ...]) -> list[Pt]:
 
 
 class _Drawn(NamedTuple):
-    bundle: tuple[Pt, ...]
-    legs: dict[int, dict[Any, tuple[Pt, ...]]]  # branch -> conductor -> split, knee, pin
+    bundles: tuple[tuple[Pt, ...], ...]  # wires drawn as a bundle (lanes above one)
+    routes: tuple[tuple[Pt, ...], ...]  # each single-lane wire: one core's route, pin to pin
     coils: tuple[tuple[int, int], ...]  # each coil's x and y
 
 
 def _drawn(*, in_unit: bool) -> _Drawn:
-    """The one bundle polyline, each end's legs, and the coils, read from the layout records."""
-    model = _built(in_unit=in_unit).model
-    (line,) = layout_of(model, HarnessLine).values()
-    legs: dict[int, dict[Any, tuple[Pt, ...]]] = {}
-    for fan in layout_of(model, HarnessFanOut).values():
-        legs[fan.branch] = {
-            leg.conductor: tuple((p.x, p.y) for p in leg.points) for leg in fan.legs
-        }
-    coils = tuple((c.x, c.y) for c in layout_of(model, SymbolPlacement).values())
-    return _Drawn(tuple((p.x, p.y) for p in line.points), legs, coils)
+    """The bundles, the core routes and the coils, read from the core's drawings."""
+    pages = drawn_pages(_built(in_unit=in_unit).model).values()
+    wires = [w for d in pages for w in d.wires]
+    coils = tuple((s.x, s.y) for d in pages for s in d.symbols if s.key == "operating-device")
+    return _Drawn(
+        tuple(w.points for w in wires if w.lanes > 1),
+        tuple(w.points for w in wires if w.lanes == 1),
+        coils,
+    )
 
 
 def _on(point: Pt, run: tuple[Pt, Pt]) -> bool:
@@ -95,69 +93,43 @@ def _on(point: Pt, run: tuple[Pt, Pt]) -> bool:
     return min(x1, x2) <= point[0] <= max(x1, x2) and min(y1, y2) <= point[1] <= max(y1, y2)
 
 
-def _entry(leg: tuple[Pt, ...], bundle: tuple[Pt, ...]) -> Pt:
-    """Where a core leaves the bundle: the last leg point of the prefix that lies on it."""
-    runs = list(pairwise(bundle))
-    entry = leg[0]
-    for point in leg:
-        if not any(_on(point, run) for run in runs):
-            break
-        entry = point
-    return entry
-
-
-def _route(drawn: _Drawn, conductor: Any, branch: int) -> list[Pt]:
-    """A core's drawn route from its pin at `branch` to its pin at the other end, grid points."""
-    other = next(b for b in drawn.legs if b != branch)
-    mine, theirs = drawn.legs[branch][conductor], drawn.legs[other][conductor]
-    a, b = (_along(drawn.bundle, leg[0]) for leg in (mine, theirs))
-    lo, hi = sorted((a, b))
-    stretch = [p for p in _grid(drawn.bundle) if lo <= _along(drawn.bundle, p) <= hi]
-    return [*_grid(mine), *stretch, *_grid(theirs)]
-
-
-def _along(bundle: tuple[Pt, ...], point: Pt) -> int:
-    """The distance along the bundle at which `point` lies (the first time it passes it)."""
-    done = 0
-    for run in pairwise(bundle):
-        if _on(point, run):
-            return done + abs(point[0] - run[0][0]) + abs(point[1] - run[0][1])
-        done += abs(run[1][0] - run[0][0]) + abs(run[1][1] - run[0][1])
-    return done
-
-
-def _column_run(route: list[Pt], col: int) -> set[Pt]:
+def _column_run(route: tuple[Pt, ...], col: int) -> set[Pt]:
     """The grid points of `route` where it runs along the column `col`, not just crosses it."""
-    on = {p for p in route if p[0] == col}
+    on = {p for p in _grid(route) if p[0] == col}
     return {p for p in on if (p[0], p[1] + _STEP) in on or (p[0], p[1] - _STEP) in on}
 
 
-def _coil_of(drawn: _Drawn, pin: Pt) -> tuple[int, int]:
-    (coil,) = (c for c in drawn.coils if c[0] == pin[0])
-    return coil
+def _pin_ends(drawn: _Drawn) -> list[tuple[tuple[Pt, ...], Pt, tuple[int, int]]]:
+    """Each route end that stands on a coil's column: (route, pin, coil)."""
+    return [
+        (route, pin, coil)
+        for route in drawn.routes
+        for pin in (route[0], route[-1])
+        for coil in drawn.coils
+        if coil[0] == pin[0]
+    ]
 
 
 @_WHERE
 def test_no_bundle_segment_runs_past_its_last_core_entry(where: str) -> None:
-    """Each end of the bundle polyline is where a core leaves it."""
+    """Each end of a bundle polyline is where a core leaves it; the cores are not drawn as one."""
     drawn = _drawn(in_unit=where == "unit")
-    entries = {
-        _entry(leg, drawn.bundle) for by_core in drawn.legs.values() for leg in by_core.values()
-    }
-    assert {drawn.bundle[0], drawn.bundle[-1]} <= entries
+    assert len(drawn.routes) + len(drawn.bundles) >= 2, "the two cores are drawn"
+    entries = {p for route in drawn.routes for p in (route[0], route[-1])}
+    for bundle in drawn.bundles:
+        assert {bundle[0], bundle[-1]} <= entries
 
 
 @_WHERE
 def test_no_core_route_re_enters_its_own_coils_column_on_the_far_side(where: str) -> None:
     """A core that leaves its coil at one pin never runs back along the column beyond the other."""
     drawn = _drawn(in_unit=where == "unit")
-    for branch, by_core in drawn.legs.items():
-        for conductor, leg in by_core.items():
-            pin = leg[-1]
-            col, mid = _coil_of(drawn, pin)
-            run = _column_run(_route(drawn, conductor, branch), col)
-            behind = sorted(p for p in run if (p[1] - mid) * (pin[1] - mid) < 0)
-            assert not behind, f"core of the pin at {pin} re-enters the column at {behind}"
+    ends = _pin_ends(drawn)
+    assert ends, "a core route ends at a coil pin"
+    for route, pin, (col, mid) in ends:
+        run = _column_run(route, col)
+        behind = sorted(p for p in run if (p[1] - mid) * (pin[1] - mid) < 0)
+        assert not behind, f"core of the pin at {pin} re-enters the column at {behind}"
 
 
 @_WHERE
@@ -167,11 +139,13 @@ def test_a1_and_a2_share_no_run_along_the_coils_column(where: str) -> None:
     A fan's split is one point by design (layout-0172): a shared point is no fault, a shared run is.
     """
     drawn = _drawn(in_unit=where == "unit")
-    for branch, by_core in drawn.legs.items():
+    for col, _ in drawn.coils:
         in_column = [
-            _column_run(_route(drawn, c, branch), _coil_of(drawn, leg[-1])[0])
-            for c, leg in by_core.items()
+            _column_run(route, col)
+            for route in drawn.routes
+            if any(pin[0] == col for pin in (route[0], route[-1]))
         ]
+        assert len(in_column) == 2, "both cores of the coil end on its column"
         assert not set.intersection(*in_column), (
             f"both cores of a coil run along its column at {in_column}"
         )

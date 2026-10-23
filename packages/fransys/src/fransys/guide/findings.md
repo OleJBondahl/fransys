@@ -8,7 +8,10 @@ A finding's message names each thing as the drawings print it. An item reads as 
 
 "Who acts" is one of four. `consumer`: change your design as the fix says. `part author`: the part library's author fixes the part file as the fix says. `Fransys`: a defect in layout or an output, so send the smallest model that shows it. `note`: nothing is wrong.
 
-- [`findings-validators.md`](findings-validators.md): the model checks, the build, `release`, `verify` and the library load.
+Every `Finding` row carries its own `fix`: `<valid values>. Write: <corrected call>`, filled with that finding's names and values. A test reads `exc.findings` (from `BuildErrors`) or `fr.check(result)` and finds the template: `<subject>` and `<other>` stand for the finding's first and second subject. `fr.report` and the `BuildErrors` message print them filled with those subjects' names. A code no call clears starts with `No call clears this:`. The worked example is in `build.md`, under "write".
+
+- [`findings-validators.md`](findings-validators.md): the model checks and the library load.
+- [`findings-release.md`](findings-release.md): the build, `release`, `verify` and the baseline check.
 - [`findings-render.md`](findings-render.md): layout and the drawing stage.
 - [`findings-pdf.md`](findings-pdf.md): the PDF output.
 - [`findings-kicad.md`](findings-kicad.md): the KiCad import.

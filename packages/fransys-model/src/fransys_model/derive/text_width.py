@@ -13,12 +13,7 @@ from fransys_model.derive._text_widths import BOLD_PAIRS, REGULAR_PAIRS, UNITS_P
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
-__all__ = ["G_PER_MODULE", "UNITS_PER_EM", "marking_widths", "text_units", "text_width"]
-
-# Grid units in one module unit (DESIGN 6.1); a port marking is set one M high. The model's one
-# copy of the grid fact `electrical_symbols.box_ports.G_PER_MODULE` (that package imports nothing
-# here and this one imports nothing at all); `tests/test_boundaries.py` pins the two equal.
-G_PER_MODULE = 8
+__all__ = ["UNITS_PER_EM", "marking_widths", "text_units", "text_width"]
 
 
 def _table(pairs: str) -> frozendict[str, int]:
@@ -42,6 +37,6 @@ def text_width(text: str, *, height: int, bold: bool = False) -> int:
     return -(-text_units(text, bold=bold) * height // UNITS_PER_EM)
 
 
-def marking_widths(markings: Iterable[str]) -> tuple[int, ...]:
-    """Each port marking's width in grid units, set one module high, for a generic box."""
-    return tuple(text_width(marking, height=G_PER_MODULE) for marking in markings)
+def marking_widths(markings: Iterable[str], *, height: int) -> tuple[int, ...]:
+    """Each port marking's width in grid units, set `height` high, for a generic box."""
+    return tuple(text_width(marking, height=height) for marking in markings)

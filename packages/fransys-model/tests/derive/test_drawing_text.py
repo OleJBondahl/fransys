@@ -1,20 +1,20 @@
 """WP "drawing text": `derive.drawing_text` (decision model-0032).
 
 Hand-built records only, on the model's synthetic plant: every formatter case and every
-branch of every reader (`marker_text`, `cross_reference_text`, `label_text`, `page_title`).
+branch of every reader (`marker_text`, `page_title`).
 """
 
 import itertools
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 
-from derive_helpers import add_all
+from derive_helpers import add_all, frozen_with_library
 
 from fransys_model.derive.drawing_text import (
     marker_text,
     position_text,
 )
-from fransys_model.kernel import Draft, Id, Origin, freeze
+from fransys_model.kernel import Draft, Id, Origin
 from fransys_model.layout import (
     DrawingSet,
     LinkMarker,
@@ -170,26 +170,6 @@ def _conductor(new_id: Callable[[str], Id[Any]], *, a: Id[Port], b: Id[Port]) ->
 # --------------------------------------------------------------------------------------
 
 
-# --------------------------------------------------------------------------------------
-# label_text
-# --------------------------------------------------------------------------------------
-
-
-# --------------------------------------------------------------------------------------
-# cross_reference_text
-# --------------------------------------------------------------------------------------
-#
-# The old model-0032 conductor-walking tests no longer apply under the new `Label`-taking
-# signature: `cross_reference_text` no longer looks up a function, so there is
-# nothing "unknown" for it to raise on; and it no longer walks conductors to find whether a
-# function is placed, so there is no "unplaced function" path either -- it only formats
-# `label.partners`, which `Label.__post_init__` (task 1) already guarantees is non-empty for
-# every `CROSS_REFERENCE` label, so an "empty" case is not constructible any more. Both old
-# tests are dropped rather than forced to keep a scenario that can no longer happen; this
-# mirrors `marker_text`, whose partner is likewise trusted from persisted, referentially
-# valid records and carries no "unknown" test of its own.
-
-
 def _star_text(origin: Origin, branch_xs: tuple[int, ...]) -> str:
     """The reference marker's text for a star whose branches stand at `branch_xs` on one page."""
     new_id = _ids()
@@ -241,7 +221,7 @@ def _star_text(origin: Origin, branch_xs: tuple[int, ...]) -> str:
             )
         )
     add_all(draft, sheet, ds, page_a, page_b, item, fn, ref_port, *ports, *markers, origin=origin)
-    return marker_text(freeze(draft), markers[0])
+    return marker_text(frozen_with_library(draft), markers[0])
 
 
 def test_marker_text_keeps_two_different_lines(origin: Origin) -> None:

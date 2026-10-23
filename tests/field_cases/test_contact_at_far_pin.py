@@ -19,7 +19,6 @@ layout-0125: a keep-out holds the ink drawn, so contacts under adjacent channel 
 """
 
 import tempfile
-from dataclasses import astuple
 from functools import cache
 from hashlib import sha256
 from itertools import combinations, pairwise
@@ -27,15 +26,19 @@ from pathlib import Path
 
 import fransys as fr
 import pytest
+from _drawn_pages import drawn_pages
 from fransys.colours import BU
-from fransys_el import OPTIONS
 
-from fransys_layout.engines.schematic.engine import stage_results
-from fransys_layout.engines.schematic.read import read_inputs
 from fransys_layout.geometry import GENERIC_BOX_KEY, WIRING_GRID, symbol_geometry
 from fransys_layout.geometry.symbols import channel_pitch
-from fransys_model.layout import PowerSymbol, SymbolPlacement, layout_of
+from fransys_model.layout import PowerSymbol, layout_of
 from fransys_model.vocab.tables import functions, items, ports
+
+
+def _gap(model, fact: str):
+    """A fact the page Drawing lacks (strict xfail, GAP-FLIP-DRAWING-SUBJECT)."""
+    msg = f"GAP-FLIP-DRAWING-SUBJECT: no {fact} for {model.digest}"
+    raise AssertionError(msg)
 
 
 def _plant(d, *, split: bool = False) -> None:
@@ -63,7 +66,7 @@ def _plant(d, *, split: bool = False) -> None:
 
 @cache
 def _staged(*, split: bool = False, sixteen: bool = False) -> tuple:
-    """The model, the staged layout and its findings of one circuit, built once; read only."""
+    """The built model and its findings of one circuit, built once; read only."""
     d = fr.design("demo_parts", place="CAB")
     cab = d.location("CAB", "Cabinet")
     if sixteen:
@@ -73,108 +76,152 @@ def _staged(*, split: bool = False, sixteen: bool = False) -> tuple:
     cover = Path(tempfile.mkdtemp()) / "cover.md"
     cover.write_text("# Cabinet\n", encoding="utf-8")
     doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover)
-    model = fr.build(d, doc).model
-    results, findings = stage_results(model, read_inputs(model, options=OPTIONS))
-    return model, results.layout, findings
+    built = fr.build(d, doc)
+    return built.model, built.findings
 
 
-def _built(*, split: bool = False) -> tuple:
-    model, layout, _ = _staged(split=split)
-    return model, layout
+def _built(*, split: bool = False):
+    return _staged(split=split)[0]
 
 
-def _placed(model, layout, tag: str, name: str) -> list:
+def _placed(model, tag: str, name: str, symbol: str | None = None) -> list:
+    """The drawn symbols of function `name` of item `tag`, optionally of one library symbol."""
     tag_of = {i.id: i.tag for i in items(model).values()}
+    wanted = {
+        f.id.value for f in functions(model).values() if f.name == name and tag_of[f.item] == tag
+    }
     return [
-        p
-        for f in functions(model).values()
-        for p in layout.placed
-        if p.function == f.id and f.name == name and tag_of[f.item] == tag
+        s
+        for s in _gap(model, "symbol subject").values()
+        if s.owner and s.owner.split(":")[-1] in wanted and symbol in (None, s.symbol)
     ]
 
 
+def _home(model, placed) -> tuple:
+    """The drawing set and the page a drawn symbol stands on."""
+    return _gap(model, "document fact")[placed.page].drawing_set, placed.page
+
+
+def _port_at(placed, port: str) -> tuple[int, int]:
+    """The page position of port `port` of the drawn symbol `placed`."""
+    if placed.symbol == GENERIC_BOX_KEY:
+        return placed.x + placed.offsets[port], placed.y
+    geometry = symbol_geometry(placed.symbol, poles=placed.poles, orientation=placed.orient)
+    (found,) = (g for g in geometry.ports if g.name == port)
+    return placed.x + found.at.x, placed.y + found.at.y
+
+
 def _pin_x(placed, port: str) -> int:
-    (geometry,) = (g for g in placed.geometry.ports if g.name == port)
-    return placed.at.x + geometry.at.x
+    return _port_at(placed, port)[0]
 
 
 def _port_y(placed, port: str) -> int:
-    (geometry,) = (g for g in placed.geometry.ports if g.name == port)
-    return placed.at.y + geometry.at.y
+    return _port_at(placed, port)[1]
+
+
+def _channel_box(model):
+    """The PLC module's box: the one generic box with channel (`di_`) ports."""
+    (box,) = (
+        s
+        for s in _gap(model, "symbol subject").values()
+        if s.symbol == GENERIC_BOX_KEY and any("di_" in n for n in s.offsets)
+    )
+    return box
+
+
+def _fid(model, placed):
+    """The id of the function a drawn symbol belongs to."""
+    (found,) = (
+        f.id for f in functions(model).values() if f.id.value == placed.owner.split(":")[-1]
+    )
+    return found
+
+
+def _cross_references(model) -> list:
+    return [x for x in _gap(model, "text subject").values() if x.kind.name == "CROSS_REFERENCE"]
+
+
+def _pages(model, partners) -> list:
+    return [(_gap(model, "document fact")[p.page].drawing_set, p.page) for p in partners]
 
 
 def test_each_single_wire_contact_stands_once_under_its_channel() -> None:
-    model, layout = _built()
-    (box,) = (p for p in layout.placed if p.function in {i.id for i in items(model).values()})
+    model = _built()
+    box = _channel_box(model)
     for number in (2, 3):
-        (contact,) = _placed(model, layout, f"K{number}", "aux")
-        assert (contact.drawing_set, contact.page) == (box.drawing_set, box.page)
-        assert contact.at.y > box.at.y
+        (contact,) = _placed(model, f"K{number}", "aux")
+        assert _home(model, contact) == _home(model, box)
+        assert contact.y > box.y
         assert _pin_x(contact, "out") == _pin_x(box, f"di_{number - 1}.{number - 1}")
 
 
 def test_each_moved_contact_references_its_coil_and_the_coil_lists_it() -> None:
-    model, layout = _built()
+    model = _built()
     for number in (2, 3):
-        (contact,) = _placed(model, layout, f"K{number}", "aux")
-        (coil,) = _placed(model, layout, f"K{number}", "coil")
-        refs = [one for one in layout.labels if one.kind.name == "CROSS_REFERENCE"]
-        (home,) = (r for r in refs if r.subject == contact.function)
-        assert [(p.drawing_set, p.page) for p in home.partners] == [(coil.drawing_set, coil.page)]
-        table = [r for r in refs if r.subject == coil.function]
-        assert any(
-            (p.drawing_set, p.page) == (contact.drawing_set, contact.page)
-            for r in table
-            for p in r.partners
-        )
+        (contact,) = _placed(model, f"K{number}", "aux")
+        (coil,) = _placed(model, f"K{number}", "coil", "operating-device")
+        refs = _cross_references(model)
+        (home,) = (r for r in refs if r.function == _fid(model, contact))
+        assert _pages(model, home.partners) == [_home(model, coil)]
+        table = [r for r in refs if r.function == _fid(model, coil)]
+        assert any(_home(model, contact) in _pages(model, [p]) for r in table for p in r.partners)
 
 
 def test_a_contact_with_a_second_wire_stays_in_its_own_group() -> None:
-    model, layout = _built()
-    (contact,) = _placed(model, layout, "K4", "aux")
-    (coil,) = _placed(model, layout, "K4", "coil")
-    assert (contact.drawing_set, contact.page) == (coil.drawing_set, coil.page)
+    model = _built()
+    (contact,) = _placed(model, "K4", "aux")
+    (coil,) = _placed(model, "K4", "coil", "operating-device")
+    assert _home(model, contact) == _home(model, coil)
 
 
 def test_a_box_stays_on_its_group_page_when_its_contacts_come_from_two_groups() -> None:
     """layout-0103: the contacts of two groups under one box never home the box on the last page."""
-    model, layout = _built(split=True)
-    (box,) = (p for p in layout.placed if p.function in {i.id for i in items(model).values()})
-    coils = [_placed(model, layout, f"K{n}", "coil")[0] for n in (2, 3)]
-    assert all((box.drawing_set, box.page) != (c.drawing_set, c.page) for c in coils)
-    assert box.page == min(p.page for p in layout.placed if p.drawing_set == box.drawing_set)
+    model = _built(split=True)
+    box = _channel_box(model)
+    coils = [_placed(model, f"K{n}", "coil", "operating-device")[0] for n in (2, 3)]
+    assert all(_home(model, box) != _home(model, c) for c in coils)
+    pages = _gap(model, "document fact")
+    same_set = [
+        pages[p.page].number
+        for p in _gap(model, "symbol subject").values()
+        if _home(model, p)[0] == _home(model, box)[0]
+    ]
+    assert pages[box.page].number == min(same_set)
     for number in (2, 3):
-        (contact,) = _placed(model, layout, f"K{number}", "aux")
+        (contact,) = _placed(model, f"K{number}", "aux")
         assert (contact.drawing_set, contact.page) == (box.drawing_set, box.page)
 
 
 def _boxes(model) -> list:
-    return [p for p in layout_of(model, SymbolPlacement).values() if p.symbol == GENERIC_BOX_KEY]
+    """The generic boxes the core path draws, all pages."""
+    return [
+        s
+        for drawing in drawn_pages(model).values()
+        for s in drawing.symbols
+        if s.key == GENERIC_BOX_KEY
+    ]
 
 
 def test_channel_pins_stand_one_and_a_half_pole_pitches_apart_and_their_texts_keep_the_gap() -> (
     None
 ):
     """V5 pitch: pins 1.5 pole pitches apart (texts widen it only where needed), no text nearer."""
-    model, layout = _built()
-    (box,) = (p for p in _boxes(model) if any("di_" in n for n in p.ports))
-    south = sorted(
-        x for x, side in zip(box.port_offsets, box.sides, strict=True) if side.value == "s"
-    )
+    model = _built()
+    (box,) = (p for p in _boxes(model) if any("di_" in n for n, _ in p.offsets))
+    sides = dict(box.sides)
+    south = sorted(x for port, x in box.offsets if sides[port] == "s")
     assert [b - a for a, b in pairwise(south)] == [channel_pitch()] * (len(south) - 1)
     assert channel_pitch() * 2 == 3 * (symbol_geometry("circuit-breaker", poles=3).ports[2].at.x)
-    placed = [_placed(model, layout, f"K{n}", "aux")[0] for n in (2, 3)]
-    x0, x1 = min(p.at.x for p in placed), max(p.at.x for p in placed)
-    y0 = min(p.at.y for p in placed)
+    placed = [_placed(model, f"K{n}", "aux")[0] for n in (2, 3)]
+    x0, x1 = min(p.x for p in placed), max(p.x for p in placed)
+    y0 = min(p.y for p in placed)
     under = [
-        label.box
-        for label in layout.labels
-        if label.page == placed[0].page
-        and x0 - 20 <= label.box.x <= x1 + 90
-        and label.box.y >= y0 - 40
+        label
+        for label in _gap(model, "text subject").values()
+        if label.page == placed[0].page and x0 - 20 <= label.x <= x1 + 90 and label.y >= y0 - 40
     ]
     assert len(under) >= 6, "the contacts' texts were not found: the check would pass over nothing"
-    pins = sorted(p.at.x for p in placed)
+    pins = sorted(p.x for p in placed)
     owner = lambda box: max(x for x in pins if x <= box.x)  # noqa: E731 -- local, one use
     for one, other in combinations(under, 2):
         if owner(one) == owner(other):
@@ -207,19 +254,18 @@ def test_a_contact_hangs_straight_down_and_its_column_ends_in_a_downward_supply_
     cover = Path(tempfile.mkdtemp()) / "cover.md"
     cover.write_text("# Cabinet\n", encoding="utf-8")
     model = fr.build(d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover)).model
-    layout = stage_results(model, read_inputs(model, options=OPTIONS))[0].layout
-    (box,) = (p for p in layout.placed if p.function in {i.id for i in items(model).values()})
-    (contact,) = _placed(model, layout, "K2", "aux")
+    box = _channel_box(model)
+    (contact,) = _placed(model, "K2", "aux")
     line = _pin_x(box, "di_1.1")
     assert _pin_x(contact, "out") == line, "the contact stands in its channel pin's column"
     assert _port_y(contact, "out") < _port_y(contact, "in"), "98/14 above 97/13"
-    (route,) = (r for r in layout.routes if {p.at.x for p in r.points} == {line})
-    assert len({p.at.x for p in route.points}) == 1, "no horizontal wire, no turn back"
+    (route,) = (r for r in _gap(model, "wire net").values() if {p.x for p in r.points} == {line})
+    assert len({p.x for p in route.points}) == 1, "no horizontal wire, no turn back"
     port_of = {(p.function, p.name): pid for pid, p in ports(model).items()}
     (bar,) = (
         s
         for s in layout_of(model, PowerSymbol).values()
-        if s.port == port_of[contact.function, "13"]
+        if s.port == port_of[_fid(model, contact), "13"]
     )
     assert bar.symbol == "power-supply"
     assert bar.y > _port_y(contact, "in"), "the bar stands below the contact"
@@ -239,6 +285,11 @@ def _plant_16(d) -> None:
         d.detail.wire(contactor.aux["14"], channel, wire=(BU, 0.5))
 
 
+def _content_width(model, page) -> int:
+    """The content width in G of the sheet a page is drawn on (the house sheet)."""
+    return _gap(model, "document fact")[page]
+
+
 def test_a_sixteen_channel_module_fits_one_page_with_a_contact_under_every_channel() -> None:
     """V5 (layout-0103): 16 channels at 1.5 pole pitches fit a page; none falls back to a reference.
 
@@ -246,61 +297,52 @@ def test_a_sixteen_channel_module_fits_one_page_with_a_contact_under_every_chann
     auxiliary contact of a contactor in a second group. The bug: at the house column spacing the
     module was 16 columns wide, so its widened slots could not fit and its contacts stayed home.
     """
-    model, layout, _ = _staged(sixteen=True)
-    (box,) = (p for p in layout.placed if p.function in {i.id for i in items(model).values()})
-    keepout = box.geometry.keepout
-    assert (
-        box.at.x + keepout.x + keepout.width
-        <= read_inputs(model, options=OPTIONS).sheet.content_width
-    )
+    model = _staged(sixteen=True)[0]
+    box = _channel_box(model)
+    assert box.x + max(box.offsets.values()) <= _content_width(model, box.page)
     for number in range(1, 17):
-        (contact,) = _placed(model, layout, f"K{number + 1}", "aux")
-        assert (contact.drawing_set, contact.page) == (box.drawing_set, box.page), number
+        (contact,) = _placed(model, f"K{number + 1}", "aux")
+        assert _home(model, contact) == _home(model, box), number
         assert _pin_x(contact, "out") == _pin_x(box, f"di_{number}.{number}"), number
 
 
-def _built_16() -> tuple:
-    _, layout, findings = _staged(sixteen=True)
-    return layout, findings
-
-
-def _built_with_findings(*, split: bool = False) -> tuple:
-    _, layout, findings = _staged(split=split)
-    return layout, findings
-
-
-def _drawing(layout) -> str:
+def _drawing(model) -> str:
     """A digest of what is drawn: placements, label boxes and routes, no keep-out."""
+    pages = _gap(model, "document fact")
     placed = sorted(
-        (p.function.value, p.drawing_set, p.page, p.at.x, p.at.y) for p in layout.placed
+        (p.owner or "", p.symbol, pages[p.page].drawing_set.value, p.page.value, p.x, p.y)
+        for p in _gap(model, "symbol subject").values()
     )
     texts = sorted(
-        (o.subject.value, o.slot, o.kind.value, o.drawing_set, o.page, *astuple(o.box))
-        for o in layout.labels
+        (o.function and o.function.value, o.slot, o.kind.value, o.page.value, o.x, o.y)
+        for o in _gap(model, "text subject").values()
     )
-    routes = sorted(repr(r) for r in layout.routes)
+    routes = sorted(
+        (r.page.value, r.style, tuple((p.x, p.y) for p in r.points))
+        for r in _gap(model, "wire net").values()
+    )
     return sha256(repr((placed, texts, routes)).encode()).hexdigest()[:16]
 
 
-# the digests moved with the page inset (layout-0187): every page starts PAGE_PAD in
-_DRAWING = {"plain": "c35c39d5d9a1a09b", "split": "d409b25944633745", "sixteen": "42ab3d28889a939f"}
+# the digests of the core's drawing of each circuit (the old engine's digests cannot hold)
+_DRAWING = {"plain": "68479d336d11ef21", "split": "7f46f7b04577fe03", "sixteen": "a2c5fc2659d765c5"}
 
 
 @pytest.fixture(scope="module")
 def builds() -> dict:
     """The three circuits, built once for the digest and overlap tests."""
     return {
-        "plain": _built_with_findings(),
-        "split": _built_with_findings(split=True),
-        "sixteen": _built_16(),
+        "plain": _staged(),
+        "split": _staged(split=True),
+        "sixteen": _staged(sixteen=True),
     }
 
 
 @pytest.mark.parametrize("name", list(_DRAWING))
 def test_the_contact_drawing_is_as_it_was_before_the_keep_out_fix(name: str, builds: dict) -> None:
     """layout-0125: the keep-out is cut after placing, so placements, texts and routes stay."""
-    layout, _ = builds[name]
-    assert _drawing(layout) == _DRAWING[name]
+    model, _ = builds[name]
+    assert _drawing(model) == _DRAWING[name]
 
 
 @pytest.mark.parametrize("name", list(_DRAWING))

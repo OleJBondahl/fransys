@@ -8,6 +8,8 @@ from enum import Enum
 from functools import cache
 from typing import TYPE_CHECKING
 
+import symdef
+from symdef import Box as LibraryBox
 from symdef import Orientation as LibraryOrientation
 from symdef import UnknownSymbolError as LibraryUnknownSymbolError
 from symdef import body_box, keepout_box, nodes_of, orient, repeat, slot_box
@@ -23,11 +25,14 @@ from electrical_symbols import (
     default_order,
     default_sides,
     draw_order,
+    drawn_symbol,
     generic_box,
     is_generic_box,
+    power_symbol_key,
 )
 from electrical_symbols import library_version as _electrical_symbols_library_version
 from fransys_layout.core.sides import opposite
+from fransys_layout.symbols import fitted_marker
 from fransys_model.derive.drawing_text import pole_prefix
 from fransys_model.derive.text_width import marking_widths, text_width
 from fransys_model.kernel import register_enum, value
@@ -49,15 +54,19 @@ __all__ = (  # re-exported by `geometry`: the generic box's home is `electrical_
     "default_order",
     "default_sides",
     "draw_order",
+    "port_points",
+    "power_symbol_key",
     "text_width",
 )
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
-    from symdef import Box as LibraryBox
     from symdef import Point as LibraryPoint
     from symdef import Symbol
+
+    from fransys_layout.core.values import XY
+    from fransys_layout.drawing import DrawnSymbol
 
 
 @register_enum
@@ -68,6 +77,21 @@ class Facing(Enum):
     E = "e"
     S = "s"
     W = "w"
+
+
+@register_enum
+class SlotSide(Enum):
+    """The side of a label space: a `Facing` side, or `C` for one centred on its anchor.
+
+    Mirrors symdef's `Direction | Centre`, which a record cannot hold as a union. The turned
+    reference marker's label space is a `C` one. Match it exhaustively.
+    """
+
+    N = "n"
+    E = "e"
+    S = "s"
+    W = "w"
+    C = "c"
 
 
 OPPOSITE: Mapping[Facing, Facing] = frozendict({f: Facing[opposite(f.name)] for f in Facing})
@@ -93,7 +117,7 @@ class SlotGeometry:
 
     slot: str
     at: Point
-    side: Facing
+    side: SlotSide
     box: Box
 
 
@@ -192,7 +216,7 @@ def _generic(
     stand: int = 0,
 ) -> SymbolGeometry:
     """One generic box converted to grid units."""
-    widths = marking_widths(box_port_marking(name) for name in port_names)
+    widths = marking_widths((box_port_marking(name) for name in port_names), height=G_PER_MODULE)
     return convert(
         orient(
             generic_box(port_names, sides, offsets, stand, marking_widths=widths),
@@ -226,7 +250,7 @@ def convert(symbol: Symbol, *, poles: int, orientation: Orientation) -> SymbolGe
         SlotGeometry(
             slot=slot.id,
             at=_point(slot.position),
-            side=Facing[slot.side.name],
+            side=SlotSide[slot.side.name],
             box=_box(slot_box(slot)),
         )
         for slot in symbol.slots
@@ -237,12 +261,20 @@ def convert(symbol: Symbol, *, poles: int, orientation: Orientation) -> SymbolGe
         poles=poles,
         orientation=orientation,
         body=_box(body_box(symbol)),
-        keepout=_box(keepout_box(symbol)),
+        keepout=_box(old_keepout(symbol)),
         through=through,
         ports=tuple(sorted(ports, key=lambda port: port.name)),
         slots=tuple(sorted(slots, key=lambda slot: slot.slot)),
         nodes=node_groups,
     )
+
+
+def old_keepout(symbol: Symbol) -> LibraryBox:
+    """The symdef 0.21 keep-out: `keepout_box` united with every slot box. Old-until-flip.
+
+    SCHEMATIC-FLIP deletes this; the one place layout reads a keep-out until then (KEEP-OUT).
+    """
+    return LibraryBox.union(keepout_box(symbol), *(slot_box(slot) for slot in symbol.slots))
 
 
 def _point(point: LibraryPoint) -> Point:
@@ -257,3 +289,31 @@ def _box(box: LibraryBox) -> Box:
 def library_version() -> str:
     """Return the symbol library version recorded in every `layout.symbol_placement`."""
     return _electrical_symbols_library_version()
+
+
+def _turned(symbol: DrawnSymbol, library: symdef.Library) -> symdef.Symbol:
+    """The library symbol `symbol` draws: texts, repeats, fitted slots, leads and turn applied.
+
+    A stretched symbol is a marker: its slot is fitted to its text as placement fits it (R430.1).
+    """
+    made = drawn_symbol(
+        symbol.key,
+        symbol.texts,
+        library=library,
+        offsets=dict(symbol.offsets),
+        sides=dict(symbol.sides),
+    )
+    built = symdef.repeat(made, symbol.poles) if symbol.poles > 1 else made
+    for slot, text in symbol.slots if symbol.stretch else ():
+        built = fitted_marker(built, slot, text, library)
+    return symdef.orient(symdef.leads(built, symbol.leads), symdef.Orientation[symbol.orient])
+
+
+def port_points(symbol: DrawnSymbol, library: symdef.Library) -> tuple[tuple[XY, str], ...]:
+    """Each port of `symbol` as (its point on the page in G, its symdef port id), in port order.
+
+    The symbol is built as placement measures it and measured at R0 (R391, R430.1), so each
+    port sits where the drawing puts its wire end.
+    """
+    found = symdef.measure(_turned(symbol, library), symdef.Orientation.R0, library)
+    return tuple(((symbol.x + p.x, symbol.y + p.y), p.id) for p in found.ports.values())

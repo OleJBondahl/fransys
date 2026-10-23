@@ -53,9 +53,9 @@ def test_keepout_margins_rebuild_the_keepout_box(key):
     assert (g(body.max.x) + right, g(body.max.y) + bottom) == (g(keep.max.x), g(keep.max.y))
 
 
-def test_keepout_counts_a_slot_beyond_the_body():
-    """plc-channel's tag box stands 6 M wide beside its body: the left margin is that text box."""
-    assert natural("plc-channel").keepout[0] == g(6.5)
+def test_keepout_leaves_out_a_slot_beyond_the_body():
+    """plc-channel's tag box stands 6 M wide beside its body: symdef 0.22 keeps it out (D101)."""
+    assert natural("plc-channel").keepout[0] == 0
 
 
 @pytest.mark.parametrize("key", STRETCHABLE)

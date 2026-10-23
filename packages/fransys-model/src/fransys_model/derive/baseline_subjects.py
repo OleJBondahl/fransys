@@ -16,7 +16,7 @@ from .baseline_diff_units import unit_subject_text
 from .baseline_listing import _listing_unit
 from .baseline_rules import CURRENT
 from .lone_cable import lone_cable
-from .reports import _conductor_unit
+from .report_scope import _conductor_unit
 from .unit_release import unit_release
 
 Subjects = dict[tuple[str, str], "Id[Any]"]

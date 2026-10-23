@@ -5,6 +5,7 @@ from itertools import accumulate
 from typing import TYPE_CHECKING
 lazy from collections.abc import Mapping, Sequence
 
+from fransys_layout.engines.overview.lanes.corridor import LONG
 from fransys_layout.engines.overview.lanes.diagram_route import tidy
 from fransys_layout.engines.overview.lanes.labels import label_lines
 from fransys_layout.engines.overview.sheet_values import (
@@ -15,7 +16,6 @@ from fransys_layout.engines.overview.sheet_values import (
 )
 from fransys_layout.engines.overview.sizes import TRACK_PITCH, tab_reach
 from fransys_layout.geometry import PAGE_PAD, Box, Facing, Point
-from fransys_layout.stages.corridor import LONG
 lazy from fransys_layout.engines.overview.lanes.channels import Channel
 
 if TYPE_CHECKING:

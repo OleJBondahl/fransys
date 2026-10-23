@@ -16,10 +16,8 @@ from pathlib import Path
 
 import fransys as fr
 import pytest
-
-from fransys_model.derive.drawing_text import contact_image
-from fransys_model.layout import Label, LabelKind, Orientation, SymbolPlacement, layout_of
-from fransys_model.vocab.tables import functions, ports
+from _contact_tables import contact_table
+from _drawn_pages import drawn_pages
 
 _SEL = "-Q1's part already states a selector: pass q1.co"
 _TOP = 4  # the three poles, as (pole, QA/QB load pin, motor pin)
@@ -66,30 +64,24 @@ def test_supply_a_reaches_the_make_throws_b_the_breaks_and_the_commons_feed_m1()
     assert sum(f"-K1:{_TOP}" in r.from_ + r.to for r in rows) == 0, "co_4 stays apart"
 
 
+def _symbols(model) -> list:
+    return [s for drawing in drawn_pages(model).values() for s in drawing.symbols]
+
+
 def test_the_group_draws_one_three_pole_symbol_turned(
     tmp_path_factory: pytest.TempPathFactory,
 ) -> None:
     model = _model(tmp_path_factory)
-    table = functions(model)
-    co = {f for f, one in table.items() if one.key[-1] in {"co_1", "co_2", "co_3"}}
-    drawn = [p for p in layout_of(model, SymbolPlacement).values() if p.function in co]
+    drawn = [s for s in _symbols(model) if s.poles > 1]
     assert len(drawn) == 1, "one symbol for the three contacts"
     assert drawn[0].poles == _TOP - 1
-    assert drawn[0].orientation in {Orientation.R180, Orientation.MR180}
+    assert drawn[0].orient in {"R180", "MR180"}
 
 
 def test_the_coils_table_lists_each_contact_with_a_place(
     tmp_path_factory: pytest.TempPathFactory,
 ) -> None:
-    model = _model(tmp_path_factory)
-    table = functions(model)
-    (coil,) = (f for f, one in table.items() if one.key[-1] == "coil" and "K1" in one.key)
-    (label,) = (
-        one
-        for one in layout_of(model, Label).values()
-        if one.function == coil and one.kind is LabelKind.CROSS_REFERENCE
-    )
-    no, nc = contact_image(model, label)
+    no, nc = contact_table(_model(tmp_path_factory))
     for pole in range(1, _TOP):
         (make,) = (text for text in no if text.startswith(f"{pole}1-{pole}4 "))
         (brk,) = (text for text in nc if text.startswith(f"{pole}1-{pole}2 "))
@@ -102,9 +94,7 @@ def test_every_pin_of_the_group_prints_its_marking(
 ) -> None:
     model = _model(tmp_path_factory)
     marked = {
-        ports(model)[one.port].name
-        for one in layout_of(model, Label).values()
-        if one.kind is LabelKind.MARKING and one.port is not None
+        text for s in _symbols(model) for slot, text in s.slots if slot.startswith("marking.")
     }
     assert {f"{pole}{end}" for pole in range(1, _TOP) for end in "124"} <= marked
 

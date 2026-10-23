@@ -2,8 +2,8 @@
 
 Decision 0101: the one named shape for a golden regeneration, so an order names a recipe and not an
 ad-hoc command chain. It refuses on `main`: agents cannot discard tracked changes there. PKG is
-`model`, `layout`, `listing` or empty for all three. Layout runs only the test files that read
-the option.
+`model`, `layout`, `render`, `listing` or empty for all four. Layout runs only the test files
+that read the option.
 Run via `uv run python scripts/regen_goldens.py [PKG]`.
 """
 
@@ -16,12 +16,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 LAYOUT_DIR = "packages/fransys-layout/tests"
 # Alphabetical: drawing_text_equality must run before test_usecases (narrow digest).
-LAYOUT_GOLDEN_TESTS = (
-    f"{LAYOUT_DIR}/engines/test_cable_golden.py",
-    f"{LAYOUT_DIR}/usecases/test_drawing_text_equality.py",
-    f"{LAYOUT_DIR}/usecases/test_power_golden.py",
-    f"{LAYOUT_DIR}/usecases/test_usecases.py",
-)
+LAYOUT_GOLDEN_TESTS = (f"{LAYOUT_DIR}/engines/test_cable_golden.py",)
 RUNS = {
     "model": (
         ["uv", "run", "python", "packages/fransys-model/tests/usecases/regenerate_goldens.py"],
@@ -30,6 +25,10 @@ RUNS = {
     "layout": (
         ["uv", "run", "pytest", *LAYOUT_GOLDEN_TESTS, "--regenerate-golden", "-q"],
         "packages/fransys-layout/tests/golden",
+    ),
+    "render": (
+        ["uv", "run", "python", "packages/fransys-render/tests/test_drawing_golden.py"],
+        "packages/fransys-render/tests/golden",
     ),
     "listing": (["uv", "run", "python", "tests/listing_golden_cases.py"], "tests/golden/listing"),
 }

@@ -17,7 +17,6 @@ from typing import NamedTuple
 lazy from pathlib import Path
 
 import fransys as fr
-import pytest
 from fransys.colours import BK, RD, WH
 
 _CODES = {"OUT_OF_CONTENT_BOX", "LABEL_UNPLACED"}
@@ -125,10 +124,6 @@ def _build(tmp_path: Path) -> fr.BuildResult:
     return fr.build(d, doc)
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="harness family switch (UNIT-MATE-SCOPE part A): the -W4 line leaves the content box",
-)
 def test_a_harness_line_to_a_plc_module_stays_in_the_content_box(tmp_path: Path) -> None:
     result = _build(tmp_path)
     found = [

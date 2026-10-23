@@ -16,20 +16,29 @@ and the box prints its pins in marking order.
 import tempfile
 from functools import cache
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import fransys as fr
+from _drawn_pages import drawn_pages
 from fransys.colours import BU
-from fransys_el import OPTIONS
 
-from fransys_layout.engines.schematic.engine import stage_results
-from fransys_layout.engines.schematic.read import read_inputs
-from fransys_model.vocab.tables import functions, items, ports
+from fransys_model.layout import LinkMarker, layout_of
+from fransys_model.vocab.tables import functions, ports
+
+if TYPE_CHECKING:
+    from fransys_layout.drawing import DrawnSymbol
 
 COUNT = 16
 
 
+def _gap(model, fact: str):
+    """A fact the page Drawing lacks (strict xfail, GAP-FLIP-DRAWING-SUBJECT)."""
+    msg = f"GAP-FLIP-DRAWING-SUBJECT: no {fact} for {model.digest}"
+    raise AssertionError(msg)
+
+
 @cache
-def _built() -> tuple:
+def _built() -> fr.BuildResult:
     d = fr.design("demo_parts", place="CAB")
     cab = d.location("CAB", "Cabinet")
     with d.function("G0", "PLC outputs"):
@@ -51,57 +60,53 @@ def _built() -> tuple:
     cover = Path(tempfile.mkdtemp()) / "cover.md"
     cover.write_text("# Cabinet\n", encoding="utf-8")
     doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover)
-    model = fr.build(d, doc).model
-    results, _ = stage_results(model, read_inputs(model, options=OPTIONS))
-    return model, results.layout
+    return fr.build(d, doc)
 
 
-def _named(model) -> dict:
-    """Each function's (item tag, function name)."""
-    tag_of = {i.id: i.tag for i in items(model).values()}
-    return {f.id: (tag_of[f.item], f.name) for f in functions(model).values()}
-
-
-def _box_pins(model, layout) -> dict:
-    """Each channel's (box placement, pin x): the card is drawn as one box, keyed by its item."""
-    (card,) = (i.id for i in items(model).values() if i.tag == "K1")
-    (box,) = (p for p in layout.placed if p.function == card)
-    return {
-        int(g.name.split("_")[1].split(".")[0]): (box, box.at.x + g.at.x)
-        for g in box.geometry.ports
-    }
+def _box_pins() -> tuple[object, DrawnSymbol, dict[int, int]]:
+    """The card's drawn box and its page; each channel's pin x (box origin plus the pin offset)."""
+    model = _built().model
+    page, box = next(
+        (page, r)
+        for page, drawing in drawn_pages(model).items()
+        for r in drawing.symbols
+        if r.key == "generic-box" and _gap(model, "symbol subject")
+    )
+    offsets = dict(box.offsets)
+    return page, box, {i: box.x + offsets[f"do_{i}.{i}"] for i in range(1, COUNT + 1)}
 
 
 def test_every_coil_hangs_under_its_own_channel_pin() -> None:
-    model, layout = _built()
-    named = _named(model)
-    pins = _box_pins(model, layout)
+    page, _, pins = _box_pins()
+    model = _built().model
     coils = {
-        int(named[p.function][0][1:]) - 1: p
-        for p in layout.placed
-        if named.get(p.function, ("", ""))[1] == "coil"
+        int(tag[1:]) - 1: (coil_page, r)
+        for coil_page, drawing in drawn_pages(model).items()
+        for r in drawing.symbols
+        if r.key == "operating-device"
+        for tag in [_gap(model, "symbol subject")]
     }
     assert sorted(coils) == list(range(1, COUNT + 1))
-    for channel, coil in coils.items():
-        box, x = pins[channel]
-        (inlet,) = (g for g in coil.geometry.ports if g.name == "in")
-        assert (coil.drawing_set, coil.page) == (box.drawing_set, box.page), channel
-        assert coil.at.x + inlet.at.x == x, channel
+    for channel, (coil_page, coil) in coils.items():
+        assert coil_page == page, channel
+        assert coil.x == pins[channel], channel
 
 
 def test_no_channel_wire_leaves_by_a_marker() -> None:
-    """No coil reference back to the card; the coils' A2 rail markers show markers are read."""
-    model, layout = _built()
-    named = _named(model)
-    by_id = ports(model)
+    """No coil reference back to the card: no marker stands on a card pin or a coil's A1."""
+    model = _built().model
     marked = [
-        (*named.get(by_id[m.port].function, ("", "")), by_id[m.port].name) for m in layout.markers
+        (functions(model)[ports(model)[m.port].function].name, ports(model)[m.port].name)
+        for m in layout_of(model, LinkMarker).values()
     ]
-    assert not [n for n in marked if n[0] == "K1" or (n[1], n[2]) == ("coil", "A1")]
-    assert [n for n in marked if (n[1], n[2]) == ("coil", "A2")]
+    assert [one for one in marked if one[1] == "A1" or one[0] == "box"] == []
 
 
 def test_the_card_prints_its_pins_in_marking_order() -> None:
-    model, layout = _built()
-    pins = _box_pins(model, layout)
-    assert sorted(pins, key=lambda channel: pins[channel][1]) == list(range(1, COUNT + 1))
+    """The card is two-sided (BOX-SIDES): the first pins stand on the north side, then the rest."""
+    _, box, pins = _box_pins()
+    sides = dict(box.sides)
+    north = [i for i in pins if sides[f"do_{i}.{i}"] == "n"]
+    south = [i for i in pins if sides[f"do_{i}.{i}"] == "s"]
+    order = sorted(north, key=pins.__getitem__) + sorted(south, key=pins.__getitem__)
+    assert order == list(range(1, COUNT + 1))

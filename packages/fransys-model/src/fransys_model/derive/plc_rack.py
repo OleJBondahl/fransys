@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, cast
 
 from fransys_model.derive.facts.item_predicates import is_plc_module
+from fransys_model.derive.facts.roles import plc_channel_facets
 from fransys_model.derive.facts.units import external
 from fransys_model.kernel import DIGEST_CACHE_SIZE, digest_cached
 from fransys_model.vocab.facets.plc import PlcChannelFacet, PlcRequestFacet
@@ -33,7 +34,7 @@ if TYPE_CHECKING:
 class _Facts:
     """What a channel's field side is read from, looked up once per query."""
 
-    channel_of: frozendict[Id[FunctionTemplate], PlcChannelFacet]
+    channel_of: frozendict[Id[FunctionTemplate] | None, PlcChannelFacet]
     requests: frozendict[Id[Function], PlcRequestFacet]
     scalings: frozendict[Id[Function], ScalingFacet]
     devices: frozendict[Id[Function], Id[Function]]
@@ -148,9 +149,7 @@ def plc_rack_modules(
     require(items(model).get(rack), "item", rack)
     idx = build_indexes(model)
     facts = _Facts(
-        channel_of=frozendict(
-            {facet.subject: facet for facet in facets_of(model, PlcChannelFacet).values()}
-        ),
+        channel_of=plc_channel_facets(model),
         requests=frozendict(
             {facet.subject: facet for facet in facets_of(model, PlcRequestFacet).values()}
         ),
@@ -164,11 +163,12 @@ def plc_rack_modules(
 
 @digest_cached(DIGEST_CACHE_SIZE)
 def channel_pins(model: Model) -> frozenset[Id[Port]]:
-    """The pins that are a channel: a PLC channel template's, and every pin of a part-less device.
+    """Count the channel pins: those of a PLC channel template, and every pin of a part-less device.
 
-    The second case is an external item with no part: its channels are unknown, so each pin is one.
+    It counts channel pins; "is a PLC channel" is `plc_channel_facets`. The second
+    case is an external item with no part: its channels are unknown, so each pin is one.
     """
-    templates = {facet.subject for facet in facets_of(model, PlcChannelFacet).values()}
+    templates = plc_channel_facets(model)
     all_functions, all_items = functions(model), items(model)
     found = set()
     for pin in ports(model).values():

@@ -2,13 +2,13 @@
 
 from typing import TYPE_CHECKING, Final
 
-from fransys_model.derive.facts.cores import core_colour_list, is_core
+from fransys_model.checks._finding import finding, ordered
+from fransys_model.derive.facts.colours import unknown_core_colours, unknown_wire_colours
+from fransys_model.derive.facts.cores import is_core
 from fransys_model.kernel import Finding, Severity
-from fransys_model.vocab.colours import COLOUR_GRAMMAR, split_colour
-from fransys_model.vocab.facets.cable import CableProductFacet
-from fransys_model.vocab.facets.wire import WireFacet
+from fransys_model.vocab.colours import COLOUR_GRAMMAR
 from fransys_model.vocab.finding_ref import ref
-from fransys_model.vocab.tables import conductors, facets_of, parts
+from fransys_model.vocab.tables import conductors, parts
 
 if TYPE_CHECKING:
     from fransys_model.kernel import Model
@@ -22,38 +22,18 @@ def check_colours(model: Model) -> tuple[Finding, ...]:
     `WIRE_COLOUR_UNKNOWN` (`ERROR`), one per bad value of a `wire` facet or `core_colours` entry.
     Empty colour is legal; the message states the grammar; sorted by `(code, subjects, message)`.
     """
-    all_conductors = conductors(model)
-    all_parts = parts(model)
     found: list[Finding] = []
-    for facet in facets_of(model, WireFacet).values():
-        if split_colour(facet.colour) is not None:
-            continue
-        conductor = all_conductors[facet.subject]
+    for facet in unknown_wire_colours(model):
+        conductor = conductors(model)[facet.subject]
         what = "core" if is_core(model, conductor.id) else "wire"
-        found.append(
-            Finding(
-                code=WIRE_COLOUR_UNKNOWN,
-                severity=Severity.ERROR,
-                subjects=(conductor.id, facet.id),
-                message=(
-                    f"{what} {ref(conductor)} has colour {facet.colour!r}, "
-                    f"which is not {COLOUR_GRAMMAR}"
-                ),
-            )
+        text = f"{what} {ref(conductor)} has colour {facet.colour!r}, which is not {COLOUR_GRAMMAR}"
+        found.append(finding(WIRE_COLOUR_UNKNOWN, Severity.ERROR, (conductor.id, facet.id), text))
+    for product, index, colour in unknown_core_colours(model):
+        text = (
+            f"cable part {parts(model)[product.subject].mpn} core colour "
+            f"{index} is {colour!r}, which is not {COLOUR_GRAMMAR}"
         )
-    for product in facets_of(model, CableProductFacet).values():
-        for index, colour in core_colour_list(product):
-            if split_colour(colour) is not None:
-                continue
-            found.append(
-                Finding(
-                    code=WIRE_COLOUR_UNKNOWN,
-                    severity=Severity.ERROR,
-                    subjects=(product.subject, product.id),
-                    message=(
-                        f"cable part {all_parts[product.subject].mpn} core colour "
-                        f"{index} is {colour!r}, which is not {COLOUR_GRAMMAR}"
-                    ),
-                )
-            )
-    return tuple(sorted(found, key=lambda f: (f.code, f.subjects, f.message)))
+        found.append(
+            finding(WIRE_COLOUR_UNKNOWN, Severity.ERROR, (product.subject, product.id), text)
+        )
+    return ordered(found)

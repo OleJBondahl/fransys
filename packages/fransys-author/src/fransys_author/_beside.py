@@ -2,14 +2,13 @@
 
 from typing import TYPE_CHECKING, Any
 
-from fransys_model.vocab import Conductor
+from fransys_model.derive import physical_nets
 
+from ._draft_view import draft_view
 from .errors import AuthorError
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
-
-    from fransys_model.kernel import Id, Record
+    from fransys_model.kernel import Draft, Id
 
     from .handles import Fn
 
@@ -20,9 +19,9 @@ type _Net = frozenset[_PortId]
 type _Nets = dict[_PortId, _Net]
 
 
-def check_beside(records: Iterable[Record], steps: list[Fn], host: Fn) -> None:
+def check_beside(draft: Draft, steps: list[Fn], host: Fn) -> None:
     """Raise `AuthorError` unless a chain end net is a net of `host`'s wired ports (one or two)."""
-    nets = _nets(records)
+    nets = _nets(draft)
     first, last = _end_nets(steps, nets)
     host_nets = _wired(host, nets)
     why = _fault(len(steps), first, last, host_nets)
@@ -50,15 +49,12 @@ def _fault(count: int, first: set[_Net], last: set[_Net], host_nets: set[_Net]) 
     return ""
 
 
-def _nets(records: Iterable[Record]) -> _Nets:
-    """Each wired port's net: the set of ports its conductors join."""
-    joined: dict[_PortId, set[_PortId]] = {}
-    for record in records:
-        if isinstance(record, Conductor):
-            both = joined.setdefault(record.a, {record.a}) | joined.setdefault(record.b, {record.b})
-            for port in both:
-                joined[port] = both
-    return {port: frozenset(found) for port, found in joined.items()}
+def _nets(draft: Draft) -> _Nets:
+    """Each wired port's net: its physical net when that joins two or more ports."""
+    joined = physical_nets(draft_view(draft))
+    return {
+        port: frozenset(net.ports) for net in joined if len(net.ports) > 1 for port in net.ports
+    }
 
 
 def _wired(fn: Fn, nets: _Nets) -> set[_Net]:

@@ -6,7 +6,7 @@ A run is a sequence of points with `.x` and `.y`, from a `PlacedWire` or a `Core
 from itertools import combinations, pairwise
 
 from fransys_layout.geometry import WIRING_GRID, Point
-from fransys_layout.stages.grid_path import axes_of, cells_of, clean_crossing
+from fransys_layout.routing.grid_path import axes_of, cells_of, clean_crossing
 
 
 def _points(run) -> tuple[Point, ...]:

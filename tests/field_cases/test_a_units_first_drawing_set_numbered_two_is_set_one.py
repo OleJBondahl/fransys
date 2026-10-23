@@ -15,11 +15,11 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, NamedTuple
 
 import fransys as fr
-from fransys_render.check import _about  # the render check's text has no public caller
+from _drawn_pages import drawn_pages
 
-from fransys_model.derive.drawing_text import place_text
 from fransys_model.derive.page_destination import page_destination
-from fransys_model.layout import DrawingSet, Page, SymbolPlacement, layout_of
+from fransys_model.derive.page_reference_text import page_reference_text
+from fransys_model.layout import DrawingSet, Page, layout_of
 
 if TYPE_CHECKING:
     from fransys_model.kernel import Model
@@ -60,7 +60,8 @@ def _built() -> Model:
     root = Path(tempfile.mkdtemp())
     (root / "c.md").write_text("# c\n", encoding="utf-8")
     cover = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, "demo-container", cover=root / "c.md")
-    return fr.build(d, cover).model
+    inner = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, "demo-supply-cab", cover=root / "c.md")
+    return fr.build(d, cover, inner).model  # its own document: one printer per set (R331)
 
 
 def _inner_page(model: Model) -> Page:
@@ -72,8 +73,15 @@ def _inner_page(model: Model) -> Page:
 def test_a_units_first_set_numbered_two_is_named_set_one_everywhere() -> None:
     model = _built()
     page = _inner_page(model)
-    other = next(p for p in layout_of(model, Page).values() if p.id != page.id)
-    placement = next(s for s in layout_of(model, SymbolPlacement).values() if s.page == page.id)
     assert page_destination(model, page) == "p1.1"
-    assert _about(model, placement).startswith(" (p1.1:")
-    assert place_text(model, other, page, 0, 0).startswith("p1.1:")
+    assert page_reference_text(model, page, with_location=True).endswith("p1.1")
+
+
+def test_a_reference_from_another_page_names_the_units_first_set_one() -> None:
+    model = _built()
+    page = _inner_page(model)
+    other = next(p for p in layout_of(model, Page).values() if p.id != page.id)
+    drawing = drawn_pages(model)[other.id]
+    shown = [t.text for t in drawing.texts]
+    shown += [text for one in drawing.symbols for _, text in one.slots]
+    assert any(text.startswith("p1.1:") for text in shown)

@@ -19,11 +19,11 @@ from pathlib import Path
 from typing import Any, NamedTuple
 
 import fransys as fr
+from _drawn_pages import drawn_pages
 from fransys.colours import BU
 
-from fransys_model.layout import DrawingSet, Page, Route, SymbolPlacement, layout_of
-from fransys_model.vocab.enums import FunctionKind
-from fransys_model.vocab.tables import aspect_nodes, functions, ports
+from fransys_model.layout import DrawingSet, Page, layout_of
+from fransys_model.vocab.tables import aspect_nodes
 
 _REL: dict[str, Any] = {"revision": 1, "interface_version": 1, "date": "2026-01-01"}
 
@@ -64,14 +64,6 @@ def built() -> _Built:
     return _Built(result, (root / "im" / "c.typ").read_text(encoding="utf-8"))
 
 
-def _strip_functions(model: Any) -> list[Any]:
-    return [
-        f.id
-        for f in functions(model).values()
-        if f.kind is FunctionKind.TERMINAL and f.key[1] == "X2"
-    ]
-
-
 def test_the_build_raises_nothing_and_has_no_error() -> None:
     assert [f.code for f in built().result.findings if f.severity.name == "ERROR"] == []
 
@@ -94,23 +86,17 @@ def test_the_parent_draws_nothing() -> None:
     )
 
 
-def _box_pages(model: Any) -> set[Any]:
-    """Pages holding the box device `A1`: its function placement or a pin view of its ports."""
-    own = {f.id for f in functions(model).values() if f.key[1].endswith("A1")}
-    ids: set[Any] = own | {k for k, r in ports(model).items() if r.function in own}
-    return {p.page for p in layout_of(model, SymbolPlacement).values() if p.function in ids}
-
-
 def test_each_terminal_stands_once_on_the_page_of_its_wire() -> None:
-    model = built().result.model
-    places = list(layout_of(model, SymbolPlacement).values())
-    routes = list(layout_of(model, Route).values())
-    for function in _strip_functions(model):
-        mine = [p for p in places if p.function == function]
-        assert len(mine) == 1
-        assert mine[0].page in _box_pages(model)
-        own = {k for k, r in ports(model).items() if r.function == function}
-        assert any(r.page == mine[0].page and own & {r.a, r.b} for r in routes)
+    drawings = list(drawn_pages(built().result.model).values())
+    stood = [(d, one) for d in drawings for one in d.symbols if one.key == "terminal"]
+    assert len(stood) == 4
+    for drawing, terminal in stood:
+        assert any(t.text.endswith("-A1") for t in drawing.texts), "the page of the box device"
+        assert any(
+            abs(x - terminal.x) + abs(y - terminal.y) <= 24
+            for wire in drawing.wires
+            for x, y in (wire.points[0], wire.points[-1])
+        )
 
 
 def test_the_terminal_table_lists_the_strip() -> None:

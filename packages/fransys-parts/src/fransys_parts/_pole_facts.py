@@ -1,66 +1,34 @@
 """The pole side and conductor of a port: the stated value, else the one a standard marking gives.
 
-Decision parts-0010. One function, `facts`, so the marking tables live here only.
+Decision parts-0010. The rules are `fransys_model.derive.pole_side` and `conductor_of`; this
+module only reads the pole pins off the raw entry, which has no templates yet.
 """
 
 from __future__ import annotations
 
+from dataclasses import replace
 from typing import TYPE_CHECKING
 
-from fransys_model.vocab import (
-    ConductorMark,
-    FunctionKind,
-    LinkKind,
-    PoleSide,
-    function_role_of,
-    is_pole_by_role,
-)
+from fransys_model.derive import conductor_of, pole_pin_names, pole_side
+from fransys_model.vocab import FunctionKind, LinkKind
 
 if TYPE_CHECKING:
+    from fransys_model.vocab import PortTemplate
+
     from . import _toml
 
-# IEC 60445 designations as marked, `+` and `-` as the DC conductors, IEC 60034-8 motor ends.
-_CONDUCTOR_MARKINGS = {
-    **{mark.value: mark for mark in ConductorMark},
-    "+": ConductorMark.L_PLUS,
-    "-": ConductorMark.L_MINUS,
-    "U": ConductorMark.L1,
-    "U1": ConductorMark.L1,
-    "V": ConductorMark.L2,
-    "V1": ConductorMark.L2,
-    "W": ConductorMark.L3,
-    "W1": ConductorMark.L3,
-}
-_COIL_SIDES = {"A1": PoleSide.LINE, "A2": PoleSide.LOAD}
 
-
-def _pole_ports(entry: _toml.Table) -> set[str]:
+def pole_ports(entry: _toml.Table) -> set[str]:
     """The names of the ports on a switched or protective link of this function."""
-    role = function_role_of(FunctionKind(entry["kind"]))
-    links = entry.get("links", ())
-    return {
-        link[end]
-        for link in links
-        if "kind" in link and is_pole_by_role(role, LinkKind(link["kind"]))
-        for end in ("a", "b")
-    }
-
-
-def _side_from_marking(entry: _toml.Table, port: _toml.Table, marking: str) -> PoleSide | None:
-    if entry["kind"] == "coil":
-        return _COIL_SIDES.get(marking)
-    if marking.isdigit() and port["name"] in _pole_ports(entry):
-        return PoleSide.LINE if int(marking) % 2 else PoleSide.LOAD
-    return None
-
-
-def facts(entry: _toml.Table, port: _toml.Table) -> tuple[PoleSide | None, ConductorMark | None]:
-    """`(pole_side, conductor_mark)` of one port of a function entry; a stated key wins."""
-    marking = port.get("marking") or port["name"]
-    side = PoleSide(port["side"]) if "side" in port else _side_from_marking(entry, port, marking)
-    conductor = (
-        ConductorMark(port["conductor"])
-        if "conductor" in port
-        else _CONDUCTOR_MARKINGS.get(marking)
+    links = (
+        (link["a"], link["b"], LinkKind(link["kind"]))
+        for link in entry.get("links", ())
+        if "kind" in link
     )
-    return side, conductor
+    return set(pole_pin_names(FunctionKind(entry["kind"]), links))
+
+
+def with_facts(template: PortTemplate, entry: _toml.Table, pole_pins: set[str]) -> PortTemplate:
+    """The template with its side and conductor filled in; a stated one wins."""
+    side = pole_side(template, FunctionKind(entry["kind"]), pole_pins)
+    return replace(template, pole_side=side, conductor_mark=conductor_of(template))

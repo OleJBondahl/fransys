@@ -23,9 +23,11 @@ if TYPE_CHECKING:
         CutResult,
         Fan,
         Options,
+        Orientation,
         PinRef,
         PlacementProblem,
         Side,
+        Size,
         WireKind,
     )
 
@@ -99,7 +101,9 @@ class RouteEnv:
     cut_nets: frozenset[str]
     options: Options
     obstacles: tuple[Box, ...] = ()
-    sides: Mapping[tuple[str, str], Side] = field(default_factory=dict)
+    sides: Mapping[tuple[str, str, Orientation], Side] = field(default_factory=dict)
+    # layout-0334: the content box; the router searches no cell past it (None: no bound)
+    area: Size | None = None
 
 
 def failed(env: RouteEnv, subject: str, text: str) -> Finding:
@@ -126,9 +130,14 @@ def _page_columns(cut: CutResult, page: int) -> tuple[Column, ...]:
     return tuple(c for c in cut.flow.columns if c.id in named)
 
 
-def pin_sides(problem: PlacementProblem) -> dict[tuple[str, str], Side]:
-    """The turned side of every pin, keyed by (symbol id, pin id)."""
-    return {(s.id, p.id): p.side for s in problem.symbols for p in s.pins}
+def pin_sides(problem: PlacementProblem) -> dict[tuple[str, str, Orientation], Side]:
+    """The side every pin faces at each orientation its symbol has a view for."""
+    return {
+        (s.id, p.id, o): turn.side
+        for s in problem.symbols
+        for o, view in s.views.items()
+        for p, turn in zip(s.pins, view.pins, strict=True)
+    }
 
 
 def _page_env(
@@ -157,6 +166,7 @@ def _page_env(
         options,
         tuple(obstacles),
         pin_sides(problem),
+        problem.area,
     )
 
 

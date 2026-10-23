@@ -303,9 +303,11 @@ def test_library_toml_declares_its_keys_words_and_rules():
         "wire": [
             {"id": "wire", "weight": "normal", "style": "solid"},
             {"id": "trunk", "weight": "thick", "style": "solid"},
+            {"id": "marker", "weight": "normal", "style": "solid"},
             {"id": "link", "weight": "normal", "style": "dashed"},
             {"id": "by_others", "weight": "normal", "style": "dashed"},
         ],
+        "lines": {"normal": 0.25, "thick": 0.5},
     }
 
 

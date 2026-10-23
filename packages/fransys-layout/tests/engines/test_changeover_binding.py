@@ -12,11 +12,12 @@ import fransys as fr
 import fransys_author
 import fransys_parts
 import pytest
+from _drawn_pages import drawn_pages
 from _model_build_cover import layout_trigger_document
 from workspace_root import WORKSPACE_ROOT
 
-from fransys_model.layout import Route, SymbolPlacement, layout_of
-from fransys_model.vocab.tables import ports
+from electrical_symbols import LIBRARY
+from fransys_layout.symbols import library_symbol, symbol_shape
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -92,26 +93,34 @@ def _built(tmp_path: Path, names: tuple[str, str, str]):
     return fr.build(parts, d.draft(), layout_trigger_document()).model
 
 
+def _changeovers(model):
+    """Every drawn changeover symbol with the Drawing it stands on."""
+    return [
+        (drawing, symbol)
+        for drawing in drawn_pages(model).values()
+        for symbol in drawing.symbols
+        if symbol.key == "change-over-contact"
+    ]
+
+
 def _drawn(model, names: tuple[str, str, str]):
     """The changeover's symbol and turn, and where each of its ports is reached.
 
-    A port's anchor is the end of its route at that port, relative to the symbol's origin (a
-    longer port name can shift the column). The middle of a route is the router's, not the
-    binding's, so it is left out.
+    A role's marking is the symbol slot that names it. A port's anchor is its pin, relative to
+    the symbol's origin, when a wire ends on it (a longer port name can shift the column). The
+    middle of a route is the router's, not the binding's, so it is left out.
     """
-    by_name = dict(zip(names, ("common", "break", "make"), strict=True))
-    role_of = {
-        port.id: by_name[port.name] for port in ports(model).values() if port.name in by_name
-    }
-    (placement,) = (
-        p for p in layout_of(model, SymbolPlacement).values() if p.symbol == "change-over-contact"
-    )
-    anchors: dict[str, set[tuple[int, int]]] = {role: set() for role in by_name.values()}
-    for route in layout_of(model, Route).values():
-        for end, point in ((route.a, route.points[0]), (route.b, route.points[-1])):
-            if end in role_of:
-                anchors[role_of[end]].add((point.x - placement.x, point.y - placement.y))
-    return placement.symbol, placement.orientation, anchors
+    ((drawing, symbol),) = _changeovers(model)
+    shape = symbol_shape(library_symbol(LIBRARY, symbol.key, symbol.poles), LIBRARY)
+    slots = dict(symbol.slots)
+    pins = {"common": "com", "break": "nc", "make": "no"}
+    assert [slots[f"marking.{pin}"] for pin in pins.values()] == list(names)
+    anchors: dict[str, set[tuple[int, int]]] = {role: set() for role in pins}
+    for role, pin in pins.items():
+        point = (symbol.x + shape.pins[pin].dx, symbol.y + shape.pins[pin].dy)
+        if any(point in (w.points[0], w.points[-1]) for w in drawing.wires):
+            anchors[role].add((point[0] - symbol.x, point[1] - symbol.y))
+    return symbol.key, symbol.orient, anchors
 
 
 @pytest.mark.parametrize("names", [("COM", "NC", "NO"), ("I", "II", "III")], ids=["com", "roman"])
@@ -192,5 +201,4 @@ def test_two_changeovers_of_one_item_stay_two_symbols(tmp_path) -> None:
     ):
         wire(terminal.inner, s1.fn(function)[port])
     model = fr.build(parts, d.draft(), layout_trigger_document()).model
-    symbols = [p.symbol for p in layout_of(model, SymbolPlacement).values()]
-    assert symbols.count("change-over-contact") == 2
+    assert len(_changeovers(model)) == 2

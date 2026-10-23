@@ -153,7 +153,9 @@ def test_finding_order_key_reads_an_item_or_a_port_and_skips_the_rest() -> None:
     """An item and a port give a natural key; a function, conductor or unit sorts after them."""
 
     def key(subject: Id[Any]) -> tuple[int, object]:
-        finding = Finding(code="X", severity=Severity.WARNING, message="m", subjects=(subject,))
+        finding = Finding(
+            code="X", severity=Severity.WARNING, message="m", subjects=(subject,), fix="Write: x"
+        )
         return finding_order_key(MODEL, finding)
 
     assert key(ITEM_A)[0] == 0

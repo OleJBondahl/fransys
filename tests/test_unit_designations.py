@@ -13,11 +13,11 @@ tests below fail.
 import importlib.util
 from pathlib import Path
 
+from _drawn_pages import drawn_pages
 from _model_build_cover import layout_trigger_document
 
-from fransys_model.derive import connector_box_lines, unit_release
-from fransys_model.derive.drawing_text import label_text
-from fransys_model.layout import ConnectorBox, DrawingSet, Label, LabelKind, Page, layout_of
+from fransys_model.derive import unit_release
+from fransys_model.layout import DrawingSet, Page, layout_of
 from fransys_model.vocab.tables import units
 
 # the worked example's own builder, loaded by path (root tests are not a package)
@@ -35,12 +35,10 @@ def _tag_texts_by_set():
     model = _build_system()[0].model
     pages, sets = layout_of(model, Page), layout_of(model, DrawingSet)
     found: dict = {}
-    for label in layout_of(model, Label).values():
-        if label.kind is not LabelKind.TAG:
-            continue
-        drawing_set = sets[pages[label.page].drawing_set]
+    for page, drawing in drawn_pages(model).items():
+        drawing_set = sets[pages[page].drawing_set]
         name = unit_release(model, drawing_set.unit).name if drawing_set.unit else None
-        found.setdefault(name, set()).add(label_text(model, label))
+        found.setdefault(name, set()).update(t.text for t in drawing.texts if t.kind == "TAG")
     return found
 
 
@@ -52,14 +50,13 @@ def test_the_board_units_own_set_prints_item_designations_below_its_root() -> No
     model = _build_system()[0].model
     pages, sets = layout_of(model, Page), layout_of(model, DrawingSet)
     designations = []
-    for box in layout_of(model, ConnectorBox).values():
-        unit = sets[pages[box.page].drawing_set].unit
+    for page, drawing in drawn_pages(model).items():
+        unit = sets[pages[page].drawing_set].unit
         if unit is None or unit_release(model, unit).name != "demo-io-board":
             continue
-        lines = connector_box_lines(model, box.function, unit=unit)
-        assert len(box.texts) == len(lines)
-        assert box.cells == ()  # a unit interface box has no cells
-        designations.append(lines[0])
+        for box in (s for s in drawing.symbols if s.key == "generic-box"):
+            assert len(box.texts) == 1  # a unit interface box has no cells
+            designations.extend(cell for row in box.texts for cell in row if cell == "-X1")
     assert designations == ["-X1", "-X1"]  # one box in each of the two board sets
 
 
@@ -104,7 +101,7 @@ def test_a_top_level_cables_end_plug_in_a_units_location_leaves_that_location_ow
     import fransys_author
     import fransys_parts
 
-    from fransys_model.derive.designation import own_nodes
+    from fransys_model.derive.unit_nodes import own_nodes
     from fransys_model.vocab.tables import aspect_nodes
 
     parts = fransys_parts.load("demo_parts")

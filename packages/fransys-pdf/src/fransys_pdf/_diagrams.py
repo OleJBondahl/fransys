@@ -3,8 +3,10 @@
 from typing import TYPE_CHECKING, Any
 
 from fransys_model.derive import (
+    PageForm,
     SheetKey,
     diagram_sheets,
+    document_scope,
     document_unit,
     kind_sheet,
     page_destination,
@@ -12,9 +14,10 @@ from fransys_model.derive import (
 from fransys_model.derive.block_diagram import diagram_lines
 from fransys_model.derive.page_nav import outline_sheets
 from fransys_model.kernel import render_id
-from fransys_model.vocab import DocumentPreset, PageKind
+from fransys_model.vocab import PageKind
 
 from ._background import page_background
+from ._forms import has_form
 from ._labels import sheet_label
 from ._marks import sheet_mark
 from ._typst import literal
@@ -64,10 +67,10 @@ def diagram_no_drawings_messages(
 
     The tall-column pointer appears only when the build named that diagram's column.
     """
-    unit = None if record.preset is DocumentPreset.SYSTEM else document_unit(model, record.id)
-    reading = record.preset is DocumentPreset.SYSTEM or unit is not None
+    unit = document_unit(model, record.id)  # None for the SYSTEM document: it has no subject
+    reading = document_scope(model, record.id).top_level or unit is not None
     lines = diagram_lines(model, unit) if reading else ()
-    if PageKind.BLOCK_DIAGRAM not in pages or not lines:
+    if not has_form(pages, PageForm.BLOCK_DIAGRAM) or not lines:
         return []
     found = diagram_sheets(model, record.id)
     if not found:

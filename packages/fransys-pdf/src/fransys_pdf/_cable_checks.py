@@ -43,10 +43,8 @@ def _too_big_messages(
         found = laid.get(block.key)
         if found is None:
             continue
-        room = (
-            content_extent(width_mm, found.module_mm),
-            content_extent(height_mm, found.module_mm),
-        )
+        per_division = found.mm_per_division
+        room = (content_extent(width_mm, per_division), content_extent(height_mm, per_division))
         if found.width > room[0] or found.height > room[1]:
             messages.append(
                 f"HARNESS_DRAWING: block {block.key} is {found.width} x {found.height} G, "

@@ -4,20 +4,14 @@ from typing import TYPE_CHECKING
 
 from fransys_author.errors import AuthorError
 from fransys_author.surface._handles import Fn
-from fransys_author.surface._pairing import Ends, ends_of, poles
+from fransys_author.surface._pairing import Ends, ends_of, template_poles
 from fransys_author.surface._throws import THROWS, Throw, states_selector
-from fransys_model.vocab import FunctionKind, PortRole
+from fransys_model.derive import contact_kind_of, is_contact_kind, pole_count
 
 if TYPE_CHECKING:
     from fransys_author.surface._pairing import PartFacts
     from fransys_author.surface.design import Design
 
-KINDS = (
-    FunctionKind.CONTACT_NO,
-    FunctionKind.CONTACT_NC,
-    FunctionKind.CONTACT_CO,
-    FunctionKind.SWITCH,
-)
 _KIND_WORDS = "contact_no, contact_nc, contact_co or switch"
 
 
@@ -33,7 +27,7 @@ class Poles:
         self._label = f"{members[0]._label}.{members[0]._fn.name}"
 
     def _changeover(self) -> bool:
-        return self._members[0]._fn.kind is FunctionKind.CONTACT_CO
+        return contact_kind_of(self._members[0]._fn.kind) == "co"
 
     def _throw(self, name: str) -> Throw:
         if not self._changeover():
@@ -65,16 +59,13 @@ class Poles:
 
 
 def _pole_count(facts: PartFacts, member: Fn) -> int:
-    fn = member._fn
-    if fn.kind is FunctionKind.CONTACT_CO:
-        return sum(port.role is PortRole.COMMON for port in fn.ports)
-    return len(poles(facts, fn))
+    return pole_count(template_poles(facts, member._fn))
 
 
 def _selector_refusal(facts: PartFacts, member: Fn) -> str | None:
     """Why `selector=True` cannot turn `member`: its part states sides, or it has no throws."""
     fn, label = member._fn, member._label
-    if fn.kind is not FunctionKind.CONTACT_CO:
+    if contact_kind_of(fn.kind) != "co":
         where = f"{label}.{fn.name}"
         return f"selector=True turns changeover throws; {where} is a {fn.kind.value} function"
     if states_selector(facts, fn):
@@ -85,7 +76,7 @@ def _selector_refusal(facts: PartFacts, member: Fn) -> str | None:
 def _refusal(facts: PartFacts, first: Fn, member: Fn) -> str | None:
     """Why `member` cannot stand in a group led by `first`, `None` when it can."""
     fn, where = member._fn, f"{member._label}.{member._fn.name}"
-    if fn.kind not in KINDS:
+    if not is_contact_kind(fn.kind):
         return f"{where} is a {fn.kind.value} function: d.poles groups {_KIND_WORDS} functions"
     if fn.item != first._fn.item:
         return f"{where} is not a function of {first._label}: d.poles groups one device's contacts"

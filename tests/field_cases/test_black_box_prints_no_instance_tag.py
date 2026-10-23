@@ -12,11 +12,9 @@ The decision that fixes it: model-0134.
 from typing import Any, NamedTuple
 
 import fransys as fr
+from _drawn_pages import drawn_pages
 from _model_build_cover import cabinet_document
 from fransys.colours import BU
-
-from fransys_model.derive.drawing_text import label_text
-from fransys_model.layout import DrawingSet, Label, Page, layout_of
 
 
 class _Io(NamedTuple):
@@ -30,7 +28,7 @@ def _board(u: Any) -> _Io:
 
 
 def _container_texts() -> tuple[fr.Model, list[str], list[str]]:
-    """The model, the black box title lines and the pin texts of the container's own set."""
+    """The model, the black box title lines and the pin texts the container's pages draw."""
     d = fr.design("demo_parts", place="C1")
     d.project(title="Box", number="P-1", customer="Example Co", revision=1, author="OJB")
     d.revision(1, date="2026-10-05", text="First issue", created="XX")
@@ -39,17 +37,10 @@ def _container_texts() -> tuple[fr.Model, list[str], list[str]]:
     lamp = d.device("M1", "DEMO-LAMP-24")
     d.detail.wire(lamp["1"], board.J1["1"], wire=(BU, 0.5))
     model = fr.build(d, cabinet_document(_cabinet)).model
-    sets = layout_of(model, DrawingSet)
-    pages = layout_of(model, Page)
     titles, pins = [], []
-    for label in layout_of(model, Label).values():
-        if sets[pages[label.page].drawing_set].unit is not None:
-            continue
-        text = label_text(model, label)
-        if label.slot == "outline_title":
-            titles.append(text)
-        elif label.slot.startswith("tag.pin."):
-            pins.append(text)
+    for drawing in drawn_pages(model).values():
+        titles += [o.label.text for o in drawing.outlines if o.label]
+        pins += [t.text for t in drawing.texts if t.text.startswith("-U2-")]
     return model, titles, pins
 
 

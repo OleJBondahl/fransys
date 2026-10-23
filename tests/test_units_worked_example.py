@@ -16,20 +16,18 @@ hand-back).
 """
 
 import dataclasses
-from collections import Counter
 from typing import Any
 
 import fransys as fr
 import fransys_author
 import fransys_parts
+from _core_boxes import connector_names, named_boxes
+from _drawn_pages import drawn_pages
 from _model_build_cover import layout_trigger_document
-from fransys_el import OPTIONS
 from fransys_kicad import netlist as kicad_netlist
+from root_library import freeze
 
-from fransys_layout.engines.schematic.engine import lay_out_schematic, stage_results
-from fransys_layout.engines.schematic.read import read_inputs
 from fransys_layout.lint.codes import CONNECTION_TO_UNDRAWN
-from fransys_layout.stages import LinkCase
 from fransys_model.checks.units import (
     BOUNDARY_NOT_IN_UNIT,
     BOUNDARY_UNCONNECTED,
@@ -39,44 +37,20 @@ from fransys_model.checks.units import (
 )
 from fransys_model.derive import boundary as unit_boundary
 from fransys_model.derive import (
-    connector_box_lines,
     reference_designation,
     standalone,
     unit_release,
     units,
 )
-from fransys_model.derive.designation import own_designation_or_none
+from fransys_model.derive.designation_label import own_designation_or_none
 from fransys_model.derive.passes.numbering import REFERENCE_DESIGNATION_DUPLICATE
 from fransys_model.derive.passes.numbering import number as number_pass
-from fransys_model.derive.stub_text import off_stub_text
-from fransys_model.kernel import Draft, Origin, evolve, freeze, make_id, merge
+from fransys_model.kernel import Origin, evolve, merge
 from fransys_model.layout import (
-    BreakBefore,
-    ConnectorBox,
     DrawingSet,
-    LinkMarker,
-    Outline,
     Page,
-    Route,
-    StarKind,
-    SymbolPlacement,
 )
 from fransys_model.layout import layout_of as layout_of_model
-from fransys_model.vocab import (
-    Aspect,
-    AspectNode,
-    Boundary,
-    Conductor,
-    ConductorKind,
-    Function,
-    FunctionKind,
-    Item,
-    Placement,
-    Port,
-    PortRole,
-    Unit,
-    UnitRelease,
-)
 from fransys_model.vocab.tables import boundaries, mates
 from fransys_model.vocab.tables import conductors as conductors_of
 from fransys_model.vocab.tables import functions as functions_of
@@ -395,6 +369,9 @@ def test_the_system_builds_field_terminals_are_wired_and_boundary_unconnected_cl
     assert len(boundaries(result.model)) == 6
 
 
+_ANNEX_UNPLACED_STOCK = 0  # R420: only falls; the text stage (TS) places all six
+
+
 def test_the_two_connector_markers_above_the_terminal_row_each_find_a_place():
     """On each cabinet the two sibling pins of the connector row carry a tall
     marker box over a 112-high gap above the terminal row. Each box stands beside the pins'
@@ -404,6 +381,8 @@ def test_the_two_connector_markers_above_the_terminal_row_each_find_a_place():
     result, _, _ = _build_system()
     codes = _codes(result)
     assert codes.count("LABEL_UNPLACED") == 0
+    # R420: a falling stock; on the text-stage tip every annex finds a free spot.
+    assert codes.count("ANNEX_UNPLACED") == _ANNEX_UNPLACED_STOCK
     assert codes.count("WIRE_OVER_LABEL") == 0
 
 
@@ -524,25 +503,43 @@ def _port_named(model, function_id, name):
     )
 
 
-def _pages_of(model, function_id):
-    """Every page `function_id` is placed on, as a set of `(drawing_set, number)`."""
-    pages = layout_of_model(model, Page)
+def _unit_pages(model, unit):
+    """Every page of the drawing sets of `unit`, as `{page id: (drawing_set, number)}`."""
+    pages, sets = layout_of_model(model, Page), layout_of_model(model, DrawingSet)
     return {
-        (pages[p.page].drawing_set, pages[p.page].number)
-        for p in layout_of_model(model, SymbolPlacement).values()
-        if p.function == function_id
+        p.id: (p.drawing_set, p.number) for p in pages.values() if sets[p.drawing_set].unit == unit
+    }
+
+
+def _coil_pages(model, unit):
+    """Every page of `unit`'s sets that draws a relay coil (operating device with A1 and A2)."""
+    drawn = drawn_pages(model)
+    return {
+        where
+        for page, where in _unit_pages(model, unit).items()
+        if any(
+            s.key == "operating-device" and {"A1", "A2"} <= {v for _, v in s.slots}
+            for s in drawn[page].symbols
+        )
     }
 
 
 def _box_pages_of(model, function_id):
     """Every page `function_id` stands on as a connector box, as `(drawing_set, number)`."""
-    pages, sets = layout_of_model(model, Page), layout_of_model(model, DrawingSet)
-    boxes = [b for b in layout_of_model(model, ConnectorBox).values() if b.function == function_id]
-    for b in boxes:
-        unit = sets[pages[b.page].drawing_set].unit
-        assert len(b.texts) == len(connector_box_lines(model, function_id, unit=unit))
-        assert b.cells == ()  # a plug box and a unit interface box have no cells
-    return {(pages[b.page].drawing_set, pages[b.page].number) for b in boxes}
+    pages = layout_of_model(model, Page)
+    name = connector_names(model)[function_id]
+    found = set()
+    for page, drawing in drawn_pages(model).items():
+        for box in named_boxes(drawing, {name}).values():
+            assert box.texts  # a plug box and a unit interface box print their lines
+            found.add((pages[page].drawing_set, pages[page].number))
+    return found
+
+
+def _wires_on(model, unit):
+    """How many wires the pages of `unit`'s drawing sets draw."""
+    drawn = drawn_pages(model)
+    return sum(len(drawn[page].wires) for page in _unit_pages(model, unit))
 
 
 def test_step_4b_board_internal_wiring_and_net_now_route_in_the_boards_own_unit() -> None:
@@ -568,15 +565,15 @@ def test_step_4b_board_internal_wiring_and_net_now_route_in_the_boards_own_unit(
     Per layout-0155, `X1` and `P1` stand at the harness line's end, so each is a box.
     Per layout-0153, the cable cores are the line's, no route; the board is a middle
     outline.
+
+    The page Drawings name no conductor, net or port of a wire, so the routes are counted: the
+    board's own sets draw a wire for each internal conductor and net, and `P1`'s page draws the
+    board as one middle outline.
     """
     result = _build_system()[0]
     model = result.model
     assert [f for f in result.findings if f.code == CONNECTION_TO_UNDRAWN] == []
     touched_by_findings = {s for f in result.findings for s in f.subjects}
-    routes = layout_of_model(model, Route)
-    route_ports = {end for r in routes.values() for end in (r.a, r.b)}
-    route_conductors = {r.conductor for r in routes.values() if r.conductor is not None}
-    route_nets = {r.net for r in routes.values() if r.net is not None}
 
     by_key = {item.key: item.id for item in items_of(model).values()}
     for prefix in ("pump1", "pump2"):
@@ -601,20 +598,21 @@ def test_step_4b_board_internal_wiring_and_net_now_route_in_the_boards_own_unit(
         }
         assert len(internal_conductors) == 2, "the two X1-K1 wires, per cabinet"
         assert not (internal_conductors & touched_by_findings)
-        assert internal_conductors & route_conductors == internal_conductors, (
-            "both X1-K1 wires now route in the board's own home set"
-        )
 
         internal_nets = {n.id for n in nets_of(model).values() if set(n.ports) <= internal_ports}
         assert len(internal_nets) == 1, "the one internal net, per cabinet"
         assert not (internal_nets & touched_by_findings)
-        assert internal_nets & route_nets == internal_nets, "the internal net now routes too"
+
+        board = items_of(model)[x1_item].unit
+        assert _wires_on(model, board) >= len(internal_conductors) + len(internal_nets), (
+            "both X1-K1 wires and the internal net now route in the board's own home set"
+        )
 
         assert reference_designation(model, x1_item).endswith("-U1-X1")
 
         x1_fn = _function_of(model, x1_item, "x1")
         p1_fn = _function_of(model, p1_item, "x1")
-        coil_pages = _pages_of(model, coil_fn)
+        coil_pages = _coil_pages(model, board)
         x1_pages = _box_pages_of(model, x1_fn.id)
         (p1_page,) = _box_pages_of(model, p1_fn.id)
         assert len(coil_pages) == 1, "K1's coil is drawn once, in the board's own home set"
@@ -622,17 +620,16 @@ def test_step_4b_board_internal_wiring_and_net_now_route_in_the_boards_own_unit(
             "X1 is boxed at home (with K1) and again on P1's page, face to face with it"
         )
 
-        p1_ports = _ports_of(model, p1_fn.id)
-        x1_ports = _ports_of(model, x1_fn.id)
         # Per layout-0153, the cable WH1 is a harness line, so its cores are no route; the
         # line draws them, and P1's page draws the board as one middle outline
-        assert not (p1_ports & route_ports), "the cable cores no longer route onto P1"
-        board = items_of(model)[x1_item].unit
-        page_of = {p.id: (p.drawing_set, p.number) for p in layout_of_model(model, Page).values()}
-        board_outlines = [o for o in layout_of_model(model, Outline).values() if o.unit == board]
-        assert len(board_outlines) == 1, "the board draws one outline"
-        assert page_of[board_outlines[0].page] == p1_page, "on P1's page"
-        assert x1_ports & route_ports, "X1's own wires to K1 now route onto X1 too"
+        pages = layout_of_model(model, Page)
+        board_outlines = [
+            page
+            for page, drawing in drawn_pages(model).items()
+            for _ in drawing.outlines
+            if (pages[page].drawing_set, pages[page].number) == p1_page
+        ]
+        assert len(board_outlines) == 1, "the board draws one outline, on P1's page"
 
 
 def _cabinet_terminal_straight_to_board_relay(s, *, name):
@@ -716,485 +713,6 @@ def test_a_cabinet_terminal_wired_straight_to_the_board_relay_bypasses_its_own_u
     unconnected = [f for f in result.findings if f.code == BOUNDARY_UNCONNECTED]
     assert len(unconnected) == 1
     assert x1_fn.id in unconnected[0].subjects
-
-
-# -- cross-unit cuts -------------------------------------------------------
-
-
-def _probe_release(name: str) -> UnitRelease:
-    """The release record of a hand-built probe unit called `name` (revision "1", version 1)."""
-    key = ("unit_release", name, "1", "1")
-    return UnitRelease(
-        id=make_id(UnitRelease, key), key=key, name=name, version=1, revision=1, interface="1"
-    )
-
-
-def _cross_unit_probe_model():
-    """A hand-built model with a real declared `Boundary` (`P1` outside a nested unit, `X1`
-    its boundary connector, wired straight across) alongside an ordinary same-unit severed
-    cut (`P1` to `P2`, one unit, one location, `P2` on its own page) -- so the fixture
-    actually exercises cut classification (the worked example alone gives zero decisions of
-    any case, which proves nothing ran) while still containing the cross-unit wire that must
-    never classify `CROSS_UNIT`.
-    """
-    top_release, child_release = _probe_release("top"), _probe_release("child")
-    top = Unit(
-        id=make_id(Unit, ("probe", "top")),
-        key=("probe", "top"),
-        release=top_release.id,
-        parent=None,
-    )
-    child = Unit(
-        id=make_id(Unit, ("probe", "child")),
-        key=("probe", "child"),
-        release=child_release.id,
-        parent=top.id,
-    )
-    grp_fld = AspectNode(
-        id=make_id(AspectNode, ("probe", "fld")),
-        key=("probe", "fld"),
-        aspect=Aspect.FUNCTION,
-        parent=None,
-        label="FLD",
-        description="field",
-    )
-    grp_sub = AspectNode(
-        id=make_id(AspectNode, ("probe", "sub")),
-        key=("probe", "sub"),
-        aspect=Aspect.FUNCTION,
-        parent=None,
-        label="SUB",
-        description="sub",
-    )
-    grp_xtr = AspectNode(
-        id=make_id(AspectNode, ("probe", "xtr")),
-        key=("probe", "xtr"),
-        aspect=Aspect.FUNCTION,
-        parent=None,
-        label="XTR",
-        description="extra",
-    )
-    c1 = AspectNode(
-        id=make_id(AspectNode, ("probe", "c1")),
-        key=("probe", "c1"),
-        aspect=Aspect.LOCATION,
-        parent=None,
-        label="C1",
-        description="c1",
-    )
-    c2 = AspectNode(
-        id=make_id(AspectNode, ("probe", "c2")),
-        key=("probe", "c2"),
-        aspect=Aspect.LOCATION,
-        parent=None,
-        label="C2",
-        description="c2",
-    )
-    p1_item = Item(
-        id=make_id(Item, ("probe", "p1")),
-        key=("probe", "p1"),
-        part=None,
-        parent=None,
-        position=None,
-        tag="P1",
-        description="p1",
-        unit=top.id,
-    )
-    p2_item = Item(
-        id=make_id(Item, ("probe", "p2")),
-        key=("probe", "p2"),
-        part=None,
-        parent=None,
-        position=None,
-        tag="P2",
-        description="p2",
-        unit=top.id,
-    )
-    x1_item = Item(
-        id=make_id(Item, ("probe", "x1")),
-        key=("probe", "x1"),
-        part=None,
-        parent=None,
-        position=None,
-        tag="X1",
-        description="x1",
-        unit=child.id,
-    )
-    p1_fn = Function(
-        id=make_id(Function, ("probe", "p1", "fn")),
-        key=("probe", "p1", "fn"),
-        item=p1_item.id,
-        template=None,
-        name="fn",
-        kind=FunctionKind.CONNECTOR,
-    )
-    p2_fn = Function(
-        id=make_id(Function, ("probe", "p2", "fn")),
-        key=("probe", "p2", "fn"),
-        item=p2_item.id,
-        template=None,
-        name="fn",
-        kind=FunctionKind.CONNECTOR,
-    )
-    x1_fn = Function(
-        id=make_id(Function, ("probe", "x1", "fn")),
-        key=("probe", "x1", "fn"),
-        item=x1_item.id,
-        template=None,
-        name="fn",
-        kind=FunctionKind.CONNECTOR,
-    )
-    p1_port_a = Port(
-        id=make_id(Port, ("probe", "p1", "fn", "1")),
-        key=("probe", "p1", "fn", "1"),
-        function=p1_fn.id,
-        template=None,
-        name="1",
-        role=PortRole.GENERIC,
-    )
-    p1_port_b = Port(
-        id=make_id(Port, ("probe", "p1", "fn", "2")),
-        key=("probe", "p1", "fn", "2"),
-        function=p1_fn.id,
-        template=None,
-        name="2",
-        role=PortRole.GENERIC,
-    )
-    p2_port = Port(
-        id=make_id(Port, ("probe", "p2", "fn", "1")),
-        key=("probe", "p2", "fn", "1"),
-        function=p2_fn.id,
-        template=None,
-        name="1",
-        role=PortRole.GENERIC,
-    )
-    x1_port = Port(
-        id=make_id(Port, ("probe", "x1", "fn", "1")),
-        key=("probe", "x1", "fn", "1"),
-        function=x1_fn.id,
-        template=None,
-        name="1",
-        role=PortRole.GENERIC,
-    )
-
-    def placements(item, group, loc):
-        for node in (group, loc):
-            key = (*item.key, "at", *node.key)
-            yield Placement(id=make_id(Placement, key), key=key, item=item.id, node=node.id)
-
-    cross_unit_wire = Conductor(
-        id=make_id(Conductor, ("probe", "wire-boundary")),
-        key=("probe", "wire-boundary"),
-        a=p1_port_a.id,
-        b=x1_port.id,
-        kind=ConductorKind.WIRE,
-        carrier=None,
-    )
-    same_unit_wire = Conductor(
-        id=make_id(Conductor, ("probe", "wire-severed")),
-        key=("probe", "wire-severed"),
-        a=p1_port_b.id,
-        b=p2_port.id,
-        kind=ConductorKind.WIRE,
-        carrier=None,
-    )
-    boundary_key = ("probe", "child", "boundary")
-    boundary_record = Boundary(
-        id=make_id(Boundary, boundary_key), key=boundary_key, unit=child.id, function=x1_fn.id
-    )
-
-    draft = Draft()
-    draft.extend(
-        (
-            top_release,
-            child_release,
-            top,
-            child,
-            grp_fld,
-            grp_sub,
-            c1,
-            c2,
-            p1_item,
-            p2_item,
-            x1_item,
-            p1_fn,
-            p2_fn,
-            x1_fn,
-            p1_port_a,
-            p1_port_b,
-            p2_port,
-            x1_port,
-            *placements(p1_item, grp_fld, c1),
-            *placements(p2_item, grp_xtr, c1),
-            *placements(x1_item, grp_sub, c1),
-            # Per layout-0090, a conductor between two locations is a stub, never a cut, so
-            # the same-unit cut is P1 to P2 in one location, P2's `=XTR` on a page of its own
-            grp_xtr,
-            BreakBefore(
-                id=make_id(BreakBefore, ("probe", "xtr", "break")),
-                key=("probe", "xtr", "break"),
-                group=grp_xtr.id,
-            ),
-            cross_unit_wire,
-            same_unit_wire,
-            boundary_record,
-        ),
-        origin=Origin(file="<cross-unit probe>", line=1, note="cross-unit probe"),
-    )
-    return freeze(draft)
-
-
-_SEVERED_CUT_COUNT = 1
-
-
-def test_no_cross_unit_decision_for_a_correctly_authored_boundary() -> None:
-    """Layout side of U2, proven non-vacuously: an ordinary same-unit severed cut
-    (`_SEVERED_CUT_COUNT`, `P1`-`P2` across two pages) proves the fixture actually
-    exercises cut classification at all, while the cross-unit wire (`P1`-`X1`, `X1` a
-    correctly declared boundary of a nested unit) must still never classify `CROSS_UNIT`.
-    Checked at the stage level, since `LinkDecision` is never written to the model (not in
-    the `write/` package's record list, confirmed by reading it).
-    """
-    model = _cross_unit_probe_model()
-    results, _ = stage_results(model, read_inputs(model, options=OPTIONS))
-    cases = Counter(decision.case for decision in results.layout.decisions)
-    assert cases[LinkCase.SEVERED] >= _SEVERED_CUT_COUNT
-    assert cases[LinkCase.CROSS_UNIT] == 0
-
-
-def _cabinet_terminal_straight_to_unit_relay(s, *, name):
-    """Guard shape: a field terminal wired straight to another unit's relay
-    coil, both ends drawn, no board involved at all (unlike
-    `_cabinet_terminal_straight_to_board_relay`, which is a board-unit case and, since the
-    board-unit ruling, model-0041, is also a `UNIT_BOUNDARY_BYPASSED` case rather
-    than the `CONNECTION_TO_UNDRAWN` it used to be -- see that fixture's own test for the
-    current split between the model-level finding and any layout-side classification).
-    `replicate_terminals` now refuses a replica whose asking column's unit differs from the
-    terminal's own home unit, whatever group is involved, so the bypass
-    always reaches `links` as a genuine cross-unit cut rather than being silently patched
-    onto the wrong unit's pages by ordinary group-crossing replication.
-    """
-    u = s.unit("demo-pump-cabinet", revision=2, interface="1")
-    u.revision(2, date="2026-01-01", text="First release", created="XX")
-    c = u.location(name, "Pump cabinet")
-    grp = u.group("FLD", "Field wiring")
-    x2 = u.strip("X2", at=c)
-    field = [x2.terminal("DEMO-TB-2.5", group=grp) for _ in range(2)]
-    io = u.scope("io", at=c)
-    io_u = io.unit("demo-io-board", revision=3, interface="2")
-    io_u.revision(3, date="2026-01-01", text="First release", created="XX")
-    k1 = io_u.item("DEMO-RLY-2CO-24", name="k1", group=grp)
-    wire = u.wiring(colour="BU", gauge="0.5")
-    wire(field[0].outer, k1.fn("coil")["A1"])
-    for t in field:
-        u.boundary(t)
-    return field
-
-
-def test_a_wire_bypassing_a_units_boundary_is_caught_and_drawn_cross_unit() -> None:
-    """Both halves of the guard: (a) the model-level mistake is `UNIT_BOUNDARY_BYPASSED` (no
-    `Boundary` declared on `demo-io-board` for `k1`'s coil), and (b) the layout-side result is
-    one `CROSS_UNIT` decision with no marker -- ruling out an absent decision (undrawn, or
-    never cut) as the reason for the zero markers, by counting the decision's own case.
-    """
-    parts = fransys_parts.load("demo_parts")
-    d = fransys_author.Design(parts)
-    d.project(**_PROJECT)
-    d.revision(1, date="2026-09-22", text="First issue", created="XX")
-    er = d.location("ER", "Engine room")
-    _cabinet_terminal_straight_to_unit_relay(d.scope("pump1", at=er), name="C1")
-    result = fr.build(parts, d.draft(), layout_trigger_document())
-
-    bypassed = [f for f in result.findings if f.code == UNIT_BOUNDARY_BYPASSED]
-    assert len(bypassed) == 1
-
-    results, _ = stage_results(result.model, read_inputs(result.model, options=OPTIONS))
-    assert len(results.layout.decisions) > 0
-    by_case = Counter(decision.case for decision in results.layout.decisions)
-    assert by_case[LinkCase.CROSS_UNIT] == 1
-    assert results.layout.markers == ()
-
-
-def _top_level_boundary_to_unitless_probe_model():
-    """A top-level unit's own declared boundary (`X1`), wired to unitless content (`P1`) at
-    the same location: "or the top level" -- the black-box replica this fix
-    adds gives `X1` a page in the top-level set alongside `P1`, so the two share a page and
-    the wire is an ordinary same-set connection, not a cut of any case.
-    """
-    top_release = _probe_release("top")
-    top = Unit(
-        id=make_id(Unit, ("top-probe", "top")),
-        key=("top-probe", "top"),
-        release=top_release.id,
-        parent=None,
-    )
-    grp = AspectNode(
-        id=make_id(AspectNode, ("top-probe", "grp")),
-        key=("top-probe", "grp"),
-        aspect=Aspect.FUNCTION,
-        parent=None,
-        label="FLD",
-        description="field",
-    )
-    loc = AspectNode(
-        id=make_id(AspectNode, ("top-probe", "loc")),
-        key=("top-probe", "loc"),
-        aspect=Aspect.LOCATION,
-        parent=None,
-        label="C1",
-        description="c1",
-    )
-    x1_item = Item(
-        id=make_id(Item, ("top-probe", "x1")),
-        key=("top-probe", "x1"),
-        part=None,
-        parent=None,
-        position=None,
-        tag="X1",
-        description="x1",
-        unit=top.id,
-    )
-    p1_item = Item(
-        id=make_id(Item, ("top-probe", "p1")),
-        key=("top-probe", "p1"),
-        part=None,
-        parent=None,
-        position=None,
-        tag="P1",
-        description="p1",
-        unit=None,
-    )
-    x1_fn = Function(
-        id=make_id(Function, ("top-probe", "x1", "fn")),
-        key=("top-probe", "x1", "fn"),
-        item=x1_item.id,
-        template=None,
-        name="fn",
-        kind=FunctionKind.CONNECTOR,
-    )
-    p1_fn = Function(
-        id=make_id(Function, ("top-probe", "p1", "fn")),
-        key=("top-probe", "p1", "fn"),
-        item=p1_item.id,
-        template=None,
-        name="fn",
-        kind=FunctionKind.CONNECTOR,
-    )
-    x1_port = Port(
-        id=make_id(Port, ("top-probe", "x1", "fn", "1")),
-        key=("top-probe", "x1", "fn", "1"),
-        function=x1_fn.id,
-        template=None,
-        name="1",
-        role=PortRole.GENERIC,
-    )
-    p1_port = Port(
-        id=make_id(Port, ("top-probe", "p1", "fn", "1")),
-        key=("top-probe", "p1", "fn", "1"),
-        function=p1_fn.id,
-        template=None,
-        name="1",
-        role=PortRole.GENERIC,
-    )
-
-    def placements(item):
-        for node in (grp, loc):
-            key = (*item.key, "at", *node.key)
-            yield Placement(id=make_id(Placement, key), key=key, item=item.id, node=node.id)
-
-    wire = Conductor(
-        id=make_id(Conductor, ("top-probe", "wire")),
-        key=("top-probe", "wire"),
-        a=x1_port.id,
-        b=p1_port.id,
-        kind=ConductorKind.WIRE,
-        carrier=None,
-    )
-    boundary_key = ("top-probe", "top", "boundary")
-    boundary_record = Boundary(
-        id=make_id(Boundary, boundary_key), key=boundary_key, unit=top.id, function=x1_fn.id
-    )
-
-    draft = Draft()
-    draft.extend(
-        (
-            top_release,
-            top,
-            grp,
-            loc,
-            x1_item,
-            p1_item,
-            x1_fn,
-            p1_fn,
-            x1_port,
-            p1_port,
-            *placements(x1_item),
-            *placements(p1_item),
-            wire,
-            boundary_record,
-        ),
-        origin=Origin(file="<top-level boundary probe>", line=1, note="boundary probe"),
-    )
-    return freeze(draft)
-
-
-def test_a_top_level_units_boundary_wired_to_unitless_content_ends_in_a_stub_at_each_end() -> None:
-    """Can-fail: restore `replicate_boundaries`'s old `if unit.parent is None: continue` and
-    this fails -- `X1` then has no top-level replica, so the wire has no shared page with
-    `P1` and is classified `CROSS_UNIT` instead. With the fix, the top-level set (`unit=None`)
-    holds both `X1`'s black-box replica and `P1`, so the wire is no decision of any case,
-    cross-unit least of all, and no cut. Layout-0080: a wire leaving a
-    top-level unit's set is not drawn between the replica and `P1` (no `Route`): it ends in an
-    off stub at each end, `X1`'s in the unit's own set naming `P1`, `P1`'s in the top-level
-    set naming `X1`.
-
-    Not asserted here: U2's own text also promises a cross-reference marker back on `X1`'s
-    *home* page ("the boundary port gets a cross-reference marker to that page, like any cut
-    connection"). `results.layout.markers` is `()` for this fixture -- `_cuts` never treats a
-    function's home placement and its own replica as two ends of anything (by construction), so
-    nothing currently asks for that marker, on a top-level boundary or a
-    nested one. That gap predates and is outside this fix; not asserted as correct here.
-    """
-    model = _top_level_boundary_to_unitless_probe_model()
-    results, _ = stage_results(model, read_inputs(model, options=OPTIONS))
-    by_case = Counter(decision.case for decision in results.layout.decisions)
-    assert by_case[LinkCase.CROSS_UNIT] == 0
-    assert not results.layout.decisions, "no cut of any case"
-    assert not results.layout.routes, "nothing is drawn between the replica and P1"
-
-    by_key = {item.key: item.id for item in items_of(model).values()}
-    x1_fn = _function_of(model, by_key[("top-probe", "x1")], "fn").id
-    p1_fn = _function_of(model, by_key[("top-probe", "p1")], "fn").id
-    laid, _ = lay_out_schematic(model, OPTIONS)
-    sets, laid_pages = layout_of_model(laid, DrawingSet), layout_of_model(laid, Page)
-    stubs = {
-        m.port: (sets[laid_pages[m.page].drawing_set].unit, off_stub_text(laid, m))
-        for m in layout_of_model(laid, LinkMarker).values()
-        if m.star is StarKind.OFF
-    }
-    x1_pin, p1_pin = _port_named(model, x1_fn, "1"), _port_named(model, p1_fn, "1")
-    assert len(stubs) == 2, "one stub at each end, no duplicate"
-    x1_unit, x1_text = stubs[x1_pin]
-    p1_unit, p1_text = stubs[p1_pin]
-    assert x1_unit is not None, "X1's stub stands in the unit's own set"
-    assert p1_unit is None, "P1's stub stands in the top-level set"
-    # UNDO: fransys_layout/stages/offstubs.py:ends_in_stubs
-    #     `return any(...)` becomes `return False` (the wire is a Route again, no stub)
-    assert x1_text.endswith("-P1:1"), "X1's stub names P1's pin"
-    assert p1_text.endswith("-X1:1"), "P1's stub names X1's pin"
-    top_level_pages = [plan for plan in results.layout.pages if plan.unit is None]
-    assert len(top_level_pages) == 1, "one top-level page, holding both X1's replica and P1"
-    (page,) = top_level_pages
-    page_column_keys = {planned.column for planned in page.columns}
-    functions_in_page = {
-        cell.function
-        for column in results.columns
-        if column.key in page_column_keys
-        for cell in column.cells
-    }
-    # A connector is drawn as one view per pin, keyed by the pin's port
-    pins = {_port_named(model, x1_fn, "1"), _port_named(model, p1_fn, "1")}
-    assert pins <= functions_in_page
 
 
 # -- The board-relative fix threaded into pin_of's fallback --------------------

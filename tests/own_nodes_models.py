@@ -13,9 +13,10 @@ from pathlib import Path
 import fransys as fr
 import fransys_author
 import fransys_parts
+from root_library import freeze
 
-from fransys_model.derive.designation import own_designation_or_none
-from fransys_model.kernel import Draft, Origin, evolve, freeze, make_id
+from fransys_model.derive.designation_label import own_designation_or_none
+from fransys_model.kernel import Draft, Origin, evolve, make_id
 from fransys_model.vocab import (
     Aspect,
     AspectNode,

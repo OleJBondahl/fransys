@@ -8,7 +8,8 @@ cut nothing, and `T`'s home in its own set kept an inner port that nothing cover
 `CONNECTION_NOT_DRAWN`. Now nothing is asked across locations and `links` draws the wire with a
 marker pair. With FIELD and CAB at the top level (layout-0090) it is a pair of off stubs.
 
-Built through the `fransys` facade from `examples/demo-parts`; read from `layout.*` records.
+Built through the `fransys` facade from `examples/demo-parts`;
+read from the drawn pages, a marker found by the texts it prints.
 """
 
 from typing import Any
@@ -16,11 +17,12 @@ from typing import Any
 import fransys as fr
 import fransys_author
 import fransys_parts
+from _dd_core import designation_of
+from _dd_core_c import markers_of
+from _drawn_pages import drawn_pages
 from _model_build_cover import layout_trigger_document
 
 from fransys_model.kernel import Severity
-from fransys_model.layout import LinkMarker, StarKind, SymbolPlacement, layout_of
-from fransys_model.vocab.tables import functions, ports
 
 _PROJECT: dict[str, Any] = {
     "title": "Terminal across locations",
@@ -52,17 +54,9 @@ def _build(*, under_box: bool):
     return fr.build(parts, d.draft(), layout_trigger_document())
 
 
-def _ends_of_the_wire(model) -> list[LinkMarker]:
-    """The markers on `T.inner` and on `k`'s pin 1: the two ends of the wire between them."""
-    found = []
-    for marker in layout_of(model, LinkMarker).values():
-        port = ports(model)[marker.port]
-        function = functions(model)[port.function]
-        if (function.key[-2:] == ("fn", "terminal") and port.name == "internal") or (
-            function.name == "x1" and port.name == "1" and "k" in function.key
-        ):
-            found.append(marker)
-    return found
+def _ends_of_the_wire(model) -> list:
+    """The (page, marker) pairs of the wire between `k` pin 1 and `T.inner`: markers naming both."""
+    return markers_of(model, designation_of(model, "k"))
 
 
 def test_a_terminal_wired_across_two_leaf_locations_gets_a_marker_pair_and_no_replica() -> None:
@@ -75,16 +69,16 @@ def test_a_terminal_wired_across_two_leaf_locations_gets_a_marker_pair_and_no_re
     assert [f.code for f in result.findings if f.severity is Severity.ERROR] == []
     model = result.model
     terminals = [
-        p
-        for p in layout_of(model, SymbolPlacement).values()
-        if functions(model)[p.function].key[-2:] == ("fn", "terminal")
+        symbol
+        for drawing in drawn_pages(model).values()
+        for symbol in drawing.symbols
+        if symbol.key == "terminal"
     ]
     assert len(terminals) == 1
-    first, second = _ends_of_the_wire(model)
-    assert (first.partner, second.partner) == (second.id, first.id)
-    assert first.star is None
-    assert second.star is None
-    assert first.page != second.page
+    (first_page, first), (second_page, second) = _ends_of_the_wire(model)
+    assert first.key == second.key  # a pair, neither a star kind
+    assert "star" not in first.key
+    assert first_page != second_page
 
 
 def test_the_same_wire_across_top_level_locations_is_a_pair_of_off_stubs() -> None:
@@ -94,4 +88,4 @@ def test_the_same_wire_across_top_level_locations_is_a_pair_of_off_stubs() -> No
     assert [f.code for f in result.findings if f.severity is Severity.ERROR] == []
     ends = _ends_of_the_wire(result.model)
     assert len(ends) == 2
-    assert {m.star for m in ends} == {StarKind.OFF}
+    assert all("off" in marker.key for _, marker in ends)

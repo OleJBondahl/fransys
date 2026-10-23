@@ -9,10 +9,11 @@ import fransys_author
 import fransys_parts
 import pytest
 from diagram_models import chain, fanout, one_box, station
+from layout_library import freeze
 
 from fransys_layout.engines.overview import lay_out_overview
 from fransys_model.derive.passes.numbering import number as number_pass
-from fransys_model.kernel import freeze, merge
+from fransys_model.kernel import merge
 from fransys_model.layout import OverviewBox, OverviewLine, OverviewView, layout_of
 
 

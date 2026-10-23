@@ -48,7 +48,9 @@ Handles are the objects a design returns and the reader holds. A consumer does n
 - `Throw`: one throw of a changeover, `k1.co.no` or `k1.co.nc`. It stands in a `d.series` call as an element. A consumer does not build one (its `fns` are the changeover functions). A generated parts module declares it on every changeover function.
 - `TypedDevice`: the base a generated parts module subclasses once for each part. Its `mpn` is its whole contract. It adds no behaviour: the subclass only declares functions and pins.
 - `TypedFn`: the base a generated parts module subclasses for one function of one part. It adds no behaviour. Its subclass declares pins for the type checker.
-- `BuildResult`: the result of `fr.build`. It holds `model`, the frozen and laid-out `Model`, and `findings`, every finding collected while building it.
+- `BuildResult`: the result of `fr.build`. It holds `model`, the frozen and laid-out `Model`, `findings`, every finding collected while building it, and `settings`, the `Settings` the build used.
+- `Settings`: the frozen value of `fr.settings(...)`, with the fields `paper`, `paper_by_kind`, `pdf`, `look` and `layout` (settings.md).
+- `SettingsError`: raised by `fr.settings` for a file or `paper=` that is wrong. Its message names the file, the key and the keys known there.
 
 ## Type checking
 

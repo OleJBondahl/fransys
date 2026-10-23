@@ -19,20 +19,12 @@ import fransys as fr
 import fransys_author
 import fransys_parts
 import pytest
+from _dd_core import pages_of, set_of
+from _drawn_pages import drawn_pages
 from _model_build_cover import layout_trigger_document
 
 from fransys_model.derive import unit_release
-from fransys_model.derive.stub_text import off_stub_text
 from fransys_model.kernel import Severity
-from fransys_model.layout import (
-    DrawingSet,
-    LinkMarker,
-    Page,
-    Route,
-    StarKind,
-    layout_of,
-)
-from fransys_model.vocab.tables import functions, ports
 
 _PROJECT: dict[str, Any] = {
     "title": "Boundary draw",
@@ -43,16 +35,9 @@ _PROJECT: dict[str, Any] = {
 }
 
 
-def _pin_one(model, name: str):
-    """The id of pin 1 of the connector function `name` (the one `x1` function of that item)."""
-    (function,) = (f.id for f in functions(model).values() if f.key[-3:] == (name, "fn", "x1"))
-    (port,) = (p.id for p in ports(model).values() if p.function == function and p.name == "1")
-    return port
-
-
 def _set_name(model, page) -> str | None:
     """The unit name of the drawing set `page` is in (`None`: the top-level set)."""
-    one = layout_of(model, DrawingSet)[layout_of(model, Page)[page].drawing_set]
+    one = set_of(model, page)
     return None if one.unit is None else unit_release(model, one.unit).name
 
 
@@ -61,20 +46,24 @@ def _errors(result) -> list[tuple[str, tuple]]:
     return sorted((f.code, f.subjects) for f in result.findings if f.severity is Severity.ERROR)
 
 
-def _off_stubs(model) -> dict[str | None, list[str]]:
-    """The text of every OFF marker, by the unit name of the drawing set it stands in."""
+def _stubs(model) -> dict[str | None, list[str]]:
+    """The text of every drawn marker, by the unit name of the drawing set it stands in.
+
+    The Drawing does not carry a marker's star kind, so every marker counts as a stub here.
+    """
     found: dict[str | None, list[str]] = {}
-    for marker in layout_of(model, LinkMarker).values():
-        if marker.star is StarKind.OFF:
-            found.setdefault(_set_name(model, marker.page), []).append(off_stub_text(model, marker))
+    for page, drawing in drawn_pages(model).items():
+        for marker in drawing.markers:
+            found.setdefault(_set_name(model, page), []).extend(v for _, v in marker.texts)
     return {name: sorted(texts) for name, texts in found.items()}
 
 
-def _covered_in(model, unit_name: str | None, port) -> bool:
-    """Whether a route ends at `port`, or a marker names it, on a page of that unit's set."""
-    routes = (r for r in layout_of(model, Route).values() if port in (r.a, r.b))
-    markers = (m for m in layout_of(model, LinkMarker).values() if m.port == port)
-    return any(_set_name(model, one.page) == unit_name for one in (*routes, *markers))
+def _covered_in(model, unit_name: str | None, name: str) -> bool:
+    """Whether a page of that unit's set prints item `name` and draws a wire or a marker."""
+    return any(
+        _set_name(model, page) == unit_name and (drawing.wires or drawing.markers)
+        for page, drawing in pages_of(model, name).items()
+    )
 
 
 def _build_top_level_units(*, second_unit: bool, same: bool):
@@ -124,7 +113,7 @@ def test_a_unit_boundary_pin_wired_to_the_top_level_gets_a_stub_pair(same, expec
     #   boundary-pin clause)
     result = _build_top_level_units(second_unit=False, same=same)
     assert _errors(result) == []
-    assert _off_stubs(result.model) == expected
+    assert _stubs(result.model) == expected
 
 
 @pytest.mark.parametrize(
@@ -143,7 +132,7 @@ def test_two_top_level_units_boundary_pins_wired_together_get_a_stub_each(same, 
     #   boundary-pin clause)
     result = _build_top_level_units(second_unit=True, same=same)
     assert _errors(result) == []
-    assert _off_stubs(result.model) == expected
+    assert _stubs(result.model) == expected
 
 
 def _build_mated_units():
@@ -177,7 +166,7 @@ def test_two_top_level_units_boundary_connectors_mated_get_a_stub_each_through_t
     #   boundary-pin clause)
     result = _build_mated_units()
     assert _errors(result) == []
-    assert _off_stubs(result.model) == {"ua": ["← +C1-X4:1"], "ub": ["← +C1-X2:1"]}
+    assert _stubs(result.model) == {"ua": ["← +C1-X4:1"], "ub": ["← +C1-X2:1"]}
 
 
 def _build_pass_through():
@@ -210,7 +199,7 @@ def test_a_pass_through_boundary_pin_wired_to_the_top_level_gets_a_stub_pair() -
     #   of a nested unit (the pass-through pin is then not a top-level unit's boundary pin)
     result = _build_pass_through()
     assert _errors(result) == []
-    assert _off_stubs(result.model) == {None: ["← -X1:1"], "a": ["← +C1-X2:1"]}
+    assert _stubs(result.model) == {None: ["← -X1:1"], "a": ["← +C1-X2:1"]}
 
 
 def _build_nested_wire():
@@ -240,10 +229,9 @@ def test_a_nested_units_boundary_wire_is_drawn_in_the_parent_set_with_no_stub() 
     #   `False` (the nested pin is covered and reported in its own set again)
     result = _build_nested_wire()
     model = result.model
-    f, h = _pin_one(model, "f"), _pin_one(model, "h")
+    f, h = "f", "h"
     assert _errors(result) == []
-    assert _off_stubs(model) == {}
-    assert [m for m in layout_of(model, LinkMarker).values() if m.star is StarKind.OFF] == []
+    assert _stubs(model) == {}
     assert _covered_in(model, "p", f)
     assert _covered_in(model, "p", h)
 
@@ -296,12 +284,13 @@ def test_a_net_through_nested_units_boundary_pins_is_drawn_in_the_parent_set_onl
     own_sets = {f"u{i}" for i in range(units_count)}
     assert _errors(result) == []
     inside = [
-        (_set_name(model, m.page), m.star)
-        for m in layout_of(model, LinkMarker).values()
-        if m.star in (StarKind.REF, StarKind.BRANCH) and _set_name(model, m.page) in own_sets
+        _set_name(model, page)
+        for page, drawing in drawn_pages(model).items()
+        for _ in drawing.markers
+        if _set_name(model, page) in own_sets
     ]
     assert inside == []
-    assert all(_covered_in(model, "p", _pin_one(model, name)) for name in names)
+    assert all(_covered_in(model, "p", name) for name in names)
 
 
 def test_wiring_inside_one_unit_is_untouched() -> None:
@@ -325,6 +314,6 @@ def test_wiring_inside_one_unit_is_untouched() -> None:
     result = fr.build(parts, d.draft(), layout_trigger_document())
     model = result.model
     assert _errors(result) == []
-    assert _off_stubs(model) == {}
-    assert _covered_in(model, "ua", _pin_one(model, "f"))
-    assert _covered_in(model, "ua", _pin_one(model, "g"))
+    assert _stubs(model) == {}
+    assert _covered_in(model, "ua", "f")
+    assert _covered_in(model, "ua", "g")

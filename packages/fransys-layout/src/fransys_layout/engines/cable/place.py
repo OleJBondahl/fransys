@@ -44,7 +44,7 @@ from fransys_layout.engines.cable.values import (
 )
 from fransys_layout.engines.overview.lanes.plan_channel import Plan, plan_channel, rise
 from fransys_layout.geometry import PORT_PITCH_G, WIRING_GRID, Box, LayoutError, Point, snap_up
-from fransys_layout.stages.space import Obstacle
+from fransys_layout.routing.space import Obstacle
 
 G = WIRING_GRID
 ROW = 2 * G  # label room, end-box height and the band between an end box and the cable box

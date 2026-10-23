@@ -2,6 +2,7 @@
 
 from typing import TYPE_CHECKING, Final
 
+from fransys_model.checks._finding import finding, ordered
 from fransys_model.derive.facts.item_predicates import has_own_designation
 from fransys_model.derive.facts.units import is_harness
 from fransys_model.kernel import Finding, Severity
@@ -21,16 +22,14 @@ def check_harness_without_tag(model: Model) -> tuple[Finding, ...]:
     `ERROR`, so `build` never lets `_ancestor_label` raise a bare `SchemaError`.
     """
     found = [
-        Finding(
-            code=HARNESS_WITHOUT_TAG,
-            severity=Severity.ERROR,
-            subjects=(item.id,),
-            message=(
-                f"{ref(item)} reads as a harness (a marked harness or a cable child), "
-                "but has no designation: give it a tag: d.harness(tag=...), or tag= on the item"
-            ),
+        finding(
+            HARNESS_WITHOUT_TAG,
+            Severity.ERROR,
+            (item.id,),
+            f"{ref(item)} reads as a harness (a marked harness or a cable child), "
+            "but has no designation: give it a tag: d.harness(tag=...), or tag= on the item",
         )
         for item in items(model).values()
         if is_harness(model, item.id) and not has_own_designation(model, item)
     ]
-    return tuple(sorted(found, key=lambda f: (f.code, f.subjects, f.message)))
+    return ordered(found)

@@ -13,19 +13,10 @@ from typing import Any
 import fransys as fr
 import fransys_author
 import fransys_parts
+from _drawn_pages import drawn_pages
 from _model_build_cover import layout_trigger_document
 
-from fransys_model.derive import item_designation
-from fransys_model.derive.stub_text import off_stub_text
-from fransys_model.layout import (
-    DrawingSet,
-    HarnessLine,
-    LinkMarker,
-    Page,
-    StarKind,
-    SymbolPlacement,
-    layout_of,
-)
+from fransys_model.layout import DrawingSet, Page, layout_of
 from fransys_model.vocab.tables import functions, ports
 
 _PROJECT: dict[str, Any] = {
@@ -77,20 +68,22 @@ def test_the_units_boundary_pins_carry_the_top_level_harnesss_off_stub() -> None
     result = _build()
     model = result.model
     stubs = [
-        m
-        for m in layout_of(model, LinkMarker).values()
-        if m.star is StarKind.OFF and _in_cabinet_set(model, m.page)
+        (page, marker)
+        for page, drawing in drawn_pages(model).items()
+        if _in_cabinet_set(model, page)
+        for marker in drawing.markers
+        if any("W3" in text for _, text in marker.texts)
     ]
-    (stub,) = stubs  # One stub for the line, not one per X1 pin
-    assert "line_stub" in stub.key
-    assert stub.carrier is not None
-    assert item_designation(model, stub.carrier) == "W3"
-    text = off_stub_text(model, stub)
+    ((page, stub),) = stubs  # One stub for the line, not one per X1 pin
+    text = " ".join(shown for _, shown in stub.texts)
     assert text.startswith("-W3")
     assert "+FLD" in text
     assert "P2" in text
     assert ":" not in text
-    assert any(line.page == stub.page for line in layout_of(model, HarnessLine).values())
+    assert any(
+        wire.label is not None and wire.label.text.startswith("-W3.")
+        for wire in drawn_pages(model)[page].wires
+    )
     # the X1 pins stand in a column, not alone ("in no chain"); only the far plug P2 does
     x1 = {p for p in ports(model) if _owner(model, p).key[:2] == ("cab", "X1")}
     lone = {
@@ -108,6 +101,11 @@ def test_a_boundary_declared_unused_draws_no_pin() -> None:
         for port, record in ports(model).items()
         if functions(model)[record.function].key[:2] == ("cab", "X2")
     }
-    placed = {p.function for p in layout_of(model, SymbolPlacement).values()}
     assert x2
-    assert not placed & (x2 | {ports(model)[p].function for p in x2})
+    printed = {
+        text.text
+        for drawing in drawn_pages(model).values()
+        for text in drawing.texts
+        if text.kind == "TAG"
+    }
+    assert not {text for text in printed if text.startswith("-X2")}

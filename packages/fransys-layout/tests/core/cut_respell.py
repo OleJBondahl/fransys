@@ -110,13 +110,13 @@ def respell_flow(flow: FlowGraph, m: Maps) -> FlowGraph:
         replace(x, net=m[x.net], ends=tuple(_attach(a, m) for a in x.ends))
         for x in flow.cross_links
     )
-    stands = tuple(replace(s, sym=m[s.sym]) for s in flow.stands)
+    stands = tuple(replace(s, sym=m[s.sym]) for s in flow.biased)
     return replace(
         flow,
         columns=cols,
         fans=fans,
         cross_links=links,
-        stands=stands,
+        biased=stands,
         drawn=tuple(m[d] for d in flow.drawn),
     )
 

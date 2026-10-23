@@ -1,0 +1,27 @@
+schema = 1
+
+[part]
+mpn = "DEMO-MCB-1PN"
+manufacturer = "Demo"
+description = "Miniature circuit breaker, 1-pole plus neutral, one device"
+category = "protection"
+class_code = "F"
+
+[[function]]
+name = "pole"
+kind = "protection"
+symbol = "circuit-breaker"
+ports = [
+    { name = "1", role = "generic", symbol_port = "1.in" },
+    { name = "2", role = "generic", symbol_port = "1.out" },
+    { name = "3", role = "generic", symbol_port = "2.in" },
+    { name = "4", role = "generic", symbol_port = "2.out" },
+]
+links = [
+    { a = "1", b = "2", kind = "conductive" },
+    { a = "3", b = "4", kind = "conductive" },
+]
+
+[rating]
+voltage_ac_v = "250"
+current_ac_a = "6"

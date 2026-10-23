@@ -13,6 +13,7 @@ lazy from fransys_model.vocab import Document, Unit
 from .cable_drawing import cable_block_key
 from .document_pages import drawn_pages, is_replica_only_undrawn
 from .document_sheets import document_sheet_format
+from .library_grid import mm_per_division
 from .printed_sets import document_drawing_sets
 from .rows_drawn_sheets import CableBlockSize, ReplicaOnlySet, SheetGroup, SheetRow
 from .schematic_subject import has_schematic_subject
@@ -100,7 +101,7 @@ def cable_block_sizes(model: Model) -> dict[str, CableBlockSize]:
         cable_block_key(found.unit, found.subject): CableBlockSize(
             width=found.width,
             height=found.height,
-            module_mm=sheet_format_of(model, found.sheet_format).module_mm,
+            mm_per_division=mm_per_division(model, sheet_format_of(model, found.sheet_format)),
         )
         for found in layout_of(model, CableBlock).values()
     }

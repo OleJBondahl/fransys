@@ -1,7 +1,8 @@
 """The links and the outline the PDF reads from the model (NV2, NV3, PAGES-NAV).
 
 The canary design (several drawing sets, cross references between pages) is built once. Every
-link comes from a `Label.partners` record; nothing parses a printed text.
+link is a rectangle of a page's drawing that jumps to the partner's page; nothing parses a printed
+text.
 """
 
 from typing import TYPE_CHECKING
@@ -9,19 +10,23 @@ from typing import TYPE_CHECKING
 import fransys as fr
 import pypdfium2
 import pytest
+from _drawn_pages import drawn_pages
 from pypdfium2 import raw
 from test_reader_order import _design
 
-from fransys_model.derive import page_destination
-from fransys_model.derive.contact_image import cross_reference_text
+from fransys_model.derive import mm_per_division, page_destination
 from fransys_model.derive.grid_mm import grid_to_mm
-from fransys_model.derive.page_nav import outline_sheets, reference_links
+from fransys_model.derive.page_destination import sheet_text
+from fransys_model.derive.page_nav import reference_links
 from fransys_model.derive.sheets import sheets
-from fransys_model.layout import Label, LabelKind, Page, layout_of, sheet_format_of
+from fransys_model.layout import Page, layout_of, sheet_format_of
 from fransys_model.vocab import PageKind, documents
 
 if TYPE_CHECKING:
     from pathlib import Path
+
+    from fransys_model.derive.page_nav import ReferenceLink
+    from fransys_model.kernel import Id
 
 
 @pytest.fixture(scope="module")
@@ -34,67 +39,40 @@ def built(tmp_path_factory: pytest.TempPathFactory) -> tuple[fr.BuildResult, obj
     return result, doc
 
 
-def _tag_references(model) -> list[Label]:
-    return [
-        label
-        for label in layout_of(model, Label).values()
-        if label.kind is LabelKind.CROSS_REFERENCE and label.slot == "tag"
-    ]
+def links_of(model) -> dict:
+    """Each drawn page's reference links, as the build gives the PDF."""
+    known = frozenset(drawn_pages(model))
+    return {page: reference_links(model, page, known) for page in known}
 
 
-def _sheet_ids(found):
-    """The page ids of `found`, a diagram sheet kept as it is (`outline_sheets` takes either)."""
-    return [s.id if isinstance(s, Page) else s for s in found]
+def _all_links(model) -> list[tuple[Id[Page], ReferenceLink]]:
+    """Each link the build kept, with the page it lies on."""
+    return [(page, link) for page, found in links_of(model).items() for link in found]
 
 
 def test_a_single_partner_label_links_its_whole_text_to_the_partners_page(built) -> None:
     model = built[0].model
     pages = layout_of(model, Page)
-    known = set(pages)
-    label = next(ref for ref in _tag_references(model) if ref.partners[0].page != ref.page)
-    (link,) = [
-        found
-        for found in reference_links(model, label.page, known)
-        if (found.x, found.y) == (label.x, label.y)
-    ]
-    assert link.target == page_destination(model, pages[label.partners[0].page])
-    assert link.height == label.height
-    assert link.width <= label.width
-    assert cross_reference_text(model, label)
+    drawn = drawn_pages(model)
+    page, link = next(
+        (page, link)
+        for page, link in _all_links(model)
+        if link.target != page_destination(model, pages[page])
+    )
+    assert link.target in {page_destination(model, other) for other in pages.values()}
+    (text,) = [t for t in drawn[page].texts if (t.box.x, t.box.y) == (link.x, link.y)]
+    assert link.height == text.box.h
+    assert link.width <= text.box.w
 
 
 def test_a_partner_outside_the_pdf_or_on_the_same_page_gets_no_link(built) -> None:
     model = built[0].model
     pages = layout_of(model, Page)
-    label = next(ref for ref in _tag_references(model) if ref.partners[0].page != ref.page)
-    here = label.page
-    others = set(pages) - {label.partners[0].page}
-    assert not [
-        found
-        for found in reference_links(model, here, others)
-        if (found.x, found.y) == (label.x, label.y)
-    ]
-
-
-def test_the_outline_has_a_sheet_entry_per_sheet_and_no_terminals_or_pins(built) -> None:
-    model = built[0].model
-    (record,) = documents(model).values()
-    found = sheets(model, record.id, (PageKind.SCHEMATIC,))
-    outline = outline_sheets(model, _sheet_ids(found))
-    assert [entry.destination for entry in outline] == [page_destination(model, s) for s in found]
-    assert all(entry.title.startswith("Sheet ") for entry in outline)
-    everything = [name for entry in outline for name in entry.entries]
-    assert everything
-    assert not [name for name in everything if ":" in name]
-
-
-def test_an_item_on_two_sheets_has_an_entry_under_each_in_designation_order(built) -> None:
-    model = built[0].model
-    outline = outline_sheets(model, layout_of(model, Page))
-    with_relays = [e for e in outline if {"-K1", "-K2", "-K10"} <= set(e.entries)]
-    assert len(with_relays) >= 2
-    for entry in with_relays:
-        assert entry.entries.index("-K2") < entry.entries.index("-K10")
+    found = _all_links(model)
+    assert found
+    here = {page: page_destination(model, pages[page]) for page in pages}
+    assert not [page for page, link in found if link.target == here[page]]
+    assert {link.target for _, link in found} <= set(here.values())
 
 
 def _toc(pdf: pypdfium2.PdfDocument) -> list[tuple[int, str, int]]:
@@ -121,6 +99,54 @@ def _written(root: Path, cover_pages: int) -> tuple[fr.BuildResult, pypdfium2.Pd
     return result, pypdfium2.PdfDocument(pdf_path)
 
 
+def _sheet_entries(toc) -> list[tuple[int, str, list[str]]]:
+    """Each "Sheet " entry as (landing page, title, the level-1 names under it), in order."""
+    found: list[tuple[int, str, list[str]]] = []
+    inside = False
+    for level, title, page in toc:
+        if level == 0:
+            inside = title.startswith("Sheet ")
+            if inside:
+                found.append((page, title, []))
+        elif inside:
+            assert page == found[-1][0]
+            found[-1][2].append(title)
+    return found
+
+
+def test_the_outline_has_a_sheet_entry_per_sheet_and_no_terminals_or_pins(tmp_path) -> None:
+    result, pdf = _written(tmp_path, 0)
+    try:
+        model = result.model
+        (record,) = documents(model).values()
+        found = sheets(model, record.id, (PageKind.SCHEMATIC,))
+        entries = _sheet_entries(_toc(pdf))
+        assert [page for page, _, _ in entries] == [
+            _landing(pdf, page_destination(model, s)) for s in found
+        ]
+        assert all(
+            title.startswith(f"Sheet {sheet_text(model, s)}")
+            for (_, title, _), s in zip(entries, found, strict=True)
+        )
+        everything = [name for _, _, names in entries for name in names]
+        assert everything
+        assert not [name for name in everything if ":" in name]
+    finally:
+        pdf.close()
+
+
+def test_an_item_on_two_sheets_has_an_entry_under_each_in_designation_order(tmp_path) -> None:
+    _, pdf = _written(tmp_path, 0)
+    try:
+        entries = _sheet_entries(_toc(pdf))
+    finally:
+        pdf.close()
+    with_relays = [names for _, _, names in entries if {"-K1", "-K2", "-K10"} <= set(names)]
+    assert len(with_relays) >= 2
+    for names in with_relays:
+        assert names.index("-K2") < names.index("-K10")
+
+
 @pytest.mark.parametrize("cover_pages", [0, 16])
 def test_the_pdf_outline_nests_designations_under_each_sheet_and_lands_on_its_page(
     tmp_path: Path, cover_pages: int
@@ -129,17 +155,17 @@ def test_the_pdf_outline_nests_designations_under_each_sheet_and_lands_on_its_pa
     try:
         model = result.model
         (record,) = documents(model).values()
-        expected = outline_sheets(
-            model, _sheet_ids(sheets(model, record.id, (PageKind.SCHEMATIC,)))
-        )
+        found = sheets(model, record.id, (PageKind.SCHEMATIC,))
         toc = _toc(pdf)
         at = [i for i, (_, title, _) in enumerate(toc) if title.startswith("Sheet ")]
-        assert len(at) == len(expected)
-        for start, entry in zip(at, expected, strict=True):
-            level, title, page = toc[start]
-            assert (level, title, page) == (0, entry.title, _landing(pdf, entry.destination))
-            below = toc[start + 1 : start + 1 + len(entry.entries)]
-            assert below == [(1, name, page) for name in entry.entries]
+        assert len(at) == len(found)
+        entries = _sheet_entries(toc)
+        for start, sheet, (page, title, names) in zip(at, found, entries, strict=True):
+            level, _, landing = toc[start]
+            assert (level, landing) == (0, _landing(pdf, page_destination(model, sheet)))
+            assert title.startswith(f"Sheet {sheet_text(model, sheet)}")
+            below = toc[start + 1 : start + 1 + len(names)]
+            assert below == [(1, name, page) for name in names]
     finally:
         pdf.close()
 
@@ -179,29 +205,38 @@ def test_each_reference_label_is_a_link_over_its_box_to_the_partners_sheet(tmp_p
         printed = [
             p for p in sheets(model, record.id, (PageKind.SCHEMATIC,)) if isinstance(p, Page)
         ]
-        pages = {page.id: page for page in printed}
         total = 0
         for page in printed:
             sheet = sheet_format_of(model, page.sheet_format)
-            expected = reference_links(model, page.id, set(pages))
+            expected = links_of(model)[page.id]
             actual = _link_annotations(pdf, _landing(pdf, page_destination(model, page)))
             total += len(expected)
             got = sorted(actual)
             want = sorted(
                 (
                     (
-                        float(grid_to_mm(sheet.content_x_mm, link.x, sheet.module_mm)),
-                        float(grid_to_mm(sheet.content_y_mm, link.y, sheet.module_mm)),
+                        float(
+                            grid_to_mm(sheet.content_x_mm, link.x, mm_per_division(model, sheet))
+                        ),
+                        float(
+                            grid_to_mm(sheet.content_y_mm, link.y, mm_per_division(model, sheet))
+                        ),
                         round(
                             float(
-                                grid_to_mm(sheet.content_x_mm, link.x + link.width, sheet.module_mm)
+                                grid_to_mm(
+                                    sheet.content_x_mm,
+                                    link.x + link.width,
+                                    mm_per_division(model, sheet),
+                                )
                             ),
                             1,
                         ),
                         round(
                             float(
                                 grid_to_mm(
-                                    sheet.content_y_mm, link.y + link.height, sheet.module_mm
+                                    sheet.content_y_mm,
+                                    link.y + link.height,
+                                    mm_per_division(model, sheet),
                                 )
                             ),
                             1,

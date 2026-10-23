@@ -3,6 +3,7 @@
 from typing import TYPE_CHECKING, Final
 
 from fransys_model.kernel import Finding, Severity
+from fransys_model.vocab.codes import fix_text
 from fransys_model.vocab.finding_ref import ref
 from fransys_model.vocab.tables import functions
 
@@ -31,6 +32,7 @@ def contested_findings(
                 "one channel reads one signal: keep one request, "
                 "or wire each request to its own channel"
             ),
+            fix=fix_text(PLC_CHANNEL_CONTESTED),
         )
         for channel, requests in contested.items()
     ]

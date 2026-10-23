@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
-from fransys_layout.core.values import Box, BoxSpec, Pin, PlacementProblem, Size, Sym
+from turn_fixtures import views_of
+
+from fransys_layout.core.sym_values import Sym
+from fransys_layout.core.values import Box, BoxSpec, Pin, PlacementProblem, Size
 
 from .flow_builders import net, problem
 
@@ -22,12 +25,9 @@ def link_box(sid: str, wires: int, *, first: bool = False, last: bool = False) -
         group=None,
         unit="",
         label=Size(16, 8),
-        body=body,
-        keepout=body,
-        footprint=body,
         pins=tuple(pins),
         nodes=tuple((p.id,) for p in pins),
-        orientations=frozenset({"R0"}),
+        views=views_of(body, body, body, pins, ("R0",)),
         box=BoxSpec(tuple(p.id for p in pins), "S", 16, 16),
     )
 

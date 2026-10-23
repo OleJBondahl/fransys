@@ -16,6 +16,7 @@ import sys
 from dataclasses import replace
 from pathlib import Path
 
+import fransys as fr
 import pytest
 from fransys.pipeline import _exports
 from fransys_pdf._lists import (
@@ -34,6 +35,7 @@ from fransys_model.vocab import DocumentPreset, Mate
 _BUILD_PATH = (
     Path(__file__).resolve().parent.parent / "packages" / "fransys-pdf" / "tests" / "_build.py"
 )
+sys.path.append(str(_BUILD_PATH.parent))  # `_build` imports its sibling `pdf_library`
 _build_spec = importlib.util.spec_from_file_location("_pdf_tests_build", _BUILD_PATH)
 assert _build_spec is not None
 assert _build_spec.loader is not None
@@ -113,12 +115,12 @@ def _read(exports, prefix):
 
 def _unit_exports(built):
     m, unit_id, *_ = built
-    return _exports(m, {}, unit=unit_id)
+    return _exports(m, {}, {}, unit=unit_id, pdf=fr.settings().pdf)
 
 
 def _all_exports(built):
     m, *_ = built
-    return _exports(m, {})
+    return _exports(m, {}, {}, pdf=fr.settings().pdf)
 
 
 def _pdf_terminal_cells(built):

@@ -24,18 +24,16 @@ from fransys_model.vocab.tables import (
 from fransys_model.vocab.tables import units as units_table
 lazy from fransys_model.vocab.core import Item, Unit
 
+from .cable_cores import cable_rows
 from .cable_end_rank import cable_end_owner, cable_end_rank
 from .core_pairs import cable_pairs, conductor_count
 from .designation import (
-    _own_designation,
-    connector_segment,
     end_outside_nested_unit,
     printed_designation,
     prints_connector_label,
-    product_designation,
     unit_list_context,
 )
-from .location_text import product_designation_in
+from .designation_label import own_label
 from .lookups import (
     connector_facets,
     item_of_port,
@@ -46,8 +44,9 @@ from .lookups import (
 from .memo import Memo
 from .open_cores import open_core_rows
 from .order import natural_key
-from .reports import cable_rows
 from .rows import CableListRow, ContentsRow, HarnessCable, HarnessCore, HarnessEnd, HarnessPin
+from .texts.context import PrintContext
+from .texts.end_text import LIST_END, end_designation, end_text
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -87,27 +86,14 @@ def _pin_marking(model: Model, port: Id[Port]) -> str:
     """
     owner = item_of_port(model, port)
     if terminal_strip(model, owner) is not None:
-        return _own_designation(model, owner)
+        return own_label(model, owner)
     return ports(model)[port].name
-
-
-def _end_designation(model: Model, item: Id[Item], facts: _Facts) -> str:
-    """The text of the end at `item`: `product_designation`, or `facts.unit`'s own reading of it.
-
-    With a unit it is `""` outside a nested unit, else `product_designation_in` at its location.
-    A unit's drawing shows nothing above the unit.
-    """
-    if facts.unit is None:
-        return product_designation(model, item)
-    if end_outside_nested_unit(model, item, facts.unit):
-        return ""
-    return product_designation_in(model, item, facts.context, unit=facts.unit)
 
 
 def _end(model: Model, item: Id[Item], landed: list[Id[Port]], facts: _Facts) -> HarnessEnd:
     """The end at `item`: its connector, when a core lands on one, and the pins landed on.
 
-    `designation` is `product_designation`, or `_end_designation`'s reading in a unit's drawing.
+    `designation` is `end_designation`'s reading: absolute, or the unit's drawing.
     An end outside the unit blanks every fact: `connector`, `style`, `pincount`, `gender`, `mpn`.
     """
     shapes = facts.shapes
@@ -130,7 +116,9 @@ def _end(model: Model, item: Id[Item], landed: list[Id[Port]], facts: _Facts) ->
     part_id = items(model)[item].part
     return HarnessEnd(
         item=item,
-        designation=_end_designation(model, item, facts),
+        designation=end_designation(
+            model, item, PrintContext(reading=facts.unit, location=facts.context)
+        ),
         connector=None if outside else connector,
         style=None if outside or shape is None else shape.style,
         pincount=None if outside or shape is None else shape.pincount,
@@ -381,17 +369,15 @@ def _readable_cables(
     return tuple(sorted(found, key=lambda cable: (natural_key(cable.designation), cable.cable)))
 
 
-def end_text(model: Model, end: HarnessEnd) -> str:
-    """The end's designation, behind it the connector's segment when the device prints one."""
-    if end.connector is None or not end.designation:
-        return end.designation
-    return end.designation + connector_segment(model, end.connector)
+def _list_end(model: Model, end: HarnessEnd, ctx: PrintContext) -> str:
+    return end_text(model, end.item, LIST_END, ctx, end.connector)
 
 
 def _list_row(model: Model, cable: Id[Item], facts: _Facts) -> CableListRow:
     """The cable's `CableListRow`, read with `facts`."""
     cable_facts = _cable_facts(model, cable, facts)
     kept = cable_facts.ends
+    ctx = PrintContext(reading=facts.unit, location=facts.context)
     return CableListRow(
         cable=cable,
         designation=cable_facts.designation,
@@ -400,8 +386,8 @@ def _list_row(model: Model, cable: Id[Item], facts: _Facts) -> CableListRow:
         core_count=cable_facts.core_count,
         gauge_mm2=cable_facts.gauge_mm2,
         length_mm=cable_facts.length_mm,
-        from_label=end_text(model, kept[0]) if kept else "",
-        to_label=", ".join(end_text(model, end) for end in kept[1:]),
+        from_label=_list_end(model, kept[0], ctx) if kept else "",
+        to_label=", ".join(_list_end(model, end, ctx) for end in kept[1:]),
         pairs=len(cable_pairs(model, cable)) or None,
     )
 

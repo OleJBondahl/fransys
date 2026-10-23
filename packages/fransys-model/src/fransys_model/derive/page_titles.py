@@ -3,7 +3,7 @@
 `page_title_forms` is the one source: `drawing_text.page_title` returns its first text, and the
 PDF frame prints the first one that fits its cell. The source of the entries, first match: the
 texts of `layout.page_title` hints whose thing the page draws; the texts of the page's own
-blocks (`page_title_groups`); the designations its item labels print, each once, in drawn order.
+blocks (`page_title_groups`); the designations of the items it draws (`page_designations`).
 The forms shorten from the joined entries to "first to last" (one unit only) and "first and n
 more" (layout-0268).
 """
@@ -11,36 +11,45 @@ more" (layout-0268).
 lazy from collections.abc import Mapping
 
 from fransys_model.layout import (
-    ConnectorBox,
     DrawingSet,
-    Label,
-    LabelKind,
-    Outline,
     Page,
     PageTitle,
-    SymbolPlacement,
+    Shown,
     layout_of,
 )
-from fransys_model.vocab import aspect_nodes, functions, items
+from fransys_model.layout.page_slices import page_members
+from fransys_model.vocab import aspect_nodes, functions, items, ports
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab import AspectNode, Function, Item, Unit
 
-from .designation import terminal_of
-from .drawing_text import label_text, page_title_groups, strip_tag_text, unit_label
+from .designation_label import terminal_of
+from .drawing_text import page_title_groups, strip_tag_text, unit_label
 from .lookups import black_box_unit, unit_chain
-from .order import drawn_on_page
+from .tag_text import tag_text
 from .unit_nodes import own_nodes_by_unit
 
 _JOIN = ", "
+
+
+def _drawn_functions(model: Model, page: Page) -> tuple[Id[Function], ...]:
+    """The functions `page` draws in drawn order: its membership rows."""
+    return _member_functions(model, page)
+
+
+def _drawn_items(model: Model, page: Page) -> tuple[Id[Item], ...]:
+    """The items `page` draws: its membership item and function rows."""
+    found = [row.item for row in page_members(model, page) if row.item is not None]
+    found += [functions(model)[function].item for function in _member_functions(model, page)]
+    return tuple(found)
 
 
 def _item_chains(model: Model, page: Page) -> list[frozenset[Id[Item]]]:
     """Per symbol of the page in drawn order, its item and every item above it."""
     records = items(model)
     chains = []
-    for placement in drawn_on_page(model, SymbolPlacement, page):
+    for function in _drawn_functions(model, page):
         chain: list[Id[Item]] = []
-        item: Id[Item] | None = functions(model)[placement.function].item
+        item: Id[Item] | None = functions(model)[function].item
         while item is not None and item not in chain:
             chain.append(item)
             item = records[item].parent
@@ -49,16 +58,10 @@ def _item_chains(model: Model, page: Page) -> list[frozenset[Id[Item]]]:
 
 
 def _draws_unit(model: Model, page: Page, unit: Id[Unit]) -> bool:
-    """Whether `page`, of another set, draws `unit`: its outline, a symbol or a connector box."""
+    """Whether `page`, of another set, draws `unit`: a symbol or a connector box of its items."""
     if layout_of(model, DrawingSet)[page.drawing_set].unit == unit:
         return False
-    if any(outline.unit == unit for outline in drawn_on_page(model, Outline, page)):
-        return True
-    drawn = (
-        *drawn_on_page(model, SymbolPlacement, page),
-        *drawn_on_page(model, ConnectorBox, page),
-    )
-    owners = (items(model)[functions(model)[one.function].item].unit for one in drawn)
+    owners = (items(model)[item].unit for item in _drawn_items(model, page))
     return any(owner is not None and unit in unit_chain(model, owner) for owner in owners)
 
 
@@ -83,8 +86,7 @@ def _hint_entries(model: Model, page: Page) -> tuple[str, ...]:
     if not hints:
         return ()
     blocks = {group.group: group.index for group in page.groups}
-    placements = drawn_on_page(model, SymbolPlacement, page)
-    drawn = [placement.function for placement in placements]
+    drawn = list(_drawn_functions(model, page))
     chains = _item_chains(model, page)
     ranked = [
         ((*rank, hint.key), hint.text)
@@ -99,23 +101,32 @@ def _hint_entries(model: Model, page: Page) -> tuple[str, ...]:
     return tuple(dict.fromkeys(text for _, text in sorted(ranked)))
 
 
-def _designation_entries(model: Model, page: Page) -> tuple[str, ...]:
-    """The designations the page's item labels print, each once, in drawn order (G1)."""
-    labels = drawn_on_page(model, Label, page)
-    texts = (
-        _entry_text(model, label)
-        for label in labels
-        if label.kind is LabelKind.TAG and label.slot != "outline_title"
-    )
+def _member_functions(model: Model, page: Page) -> tuple[Id[Function], ...]:
+    """The functions `page` draws, in reading order: its function rows and drawn port rows."""
+    owner = {port: one.function for port, one in ports(model).items()}
+    found: list[Id[Function]] = []
+    for row in page_members(model, page):
+        if row.function is not None:
+            found.append(row.function)
+        elif row.port is not None and row.shown is Shown.DRAWN:
+            found.append(owner[row.port])
+    return tuple(found)
+
+
+def page_designations(model: Model, page: Page) -> tuple[str, ...]:
+    """The designations the items on `page` print, each once, in drawn order (G1, model-0348).
+
+    A page is read from its `layout.membership` rows. No text record is ever the source of a title.
+    """
+    texts = [_function_text(model, function) for function in _member_functions(model, page)]
     return tuple(dict.fromkeys(text for text in texts if text))
 
 
-def _entry_text(model: Model, label: Label) -> str:
-    """The label's text; a strip terminal stands as its strip, "-X1" not "-X1:SIG:1" (PT2.3)."""
-    function = label.function
-    if function is not None and terminal_of(model, functions(model)[function].item) is not None:
+def _function_text(model: Model, function: Id[Function]) -> str:
+    """A core symbol's entry: a strip terminal stands as its strip, any other as its tag."""
+    if terminal_of(model, functions(model)[function].item) is not None:
         return strip_tag_text(model, function)
-    return label_text(model, label)
+    return tag_text(model, function)
 
 
 def _nested_unit(model: Model, set_unit: Id[Unit], node: Id[AspectNode]) -> Id[Unit] | None:
@@ -154,7 +165,7 @@ def _entries(model: Model, page: Page) -> tuple[tuple[str, Id[Unit] | None], ...
     blocks = _block_entries(model, page)
     if blocks or layout_of(model, DrawingSet)[page.drawing_set].unit is not None:
         return blocks
-    return tuple((text, None) for text in _designation_entries(model, page))
+    return tuple((text, None) for text in page_designations(model, page))
 
 
 def page_title_entries(model: Model, page: Page) -> tuple[str, ...]:

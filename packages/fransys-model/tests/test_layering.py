@@ -173,7 +173,7 @@ def _kernel_model_imports(root: Path) -> list[str]:
 
 def test_the_kernel_package_imports_no_fransys_model() -> None:
     """`fransys_kernel` sits under `fransys_model`: it never imports it (decision 0208)."""
-    assert len(list(KERNEL_SRC.rglob("*.py"))) == 27
+    assert len(list(KERNEL_SRC.rglob("*.py"))) == 29
     assert _kernel_model_imports(KERNEL_SRC) == []
 
 
@@ -211,3 +211,36 @@ def test_the_role_module_check_fails_on_a_derive_import() -> None:
         "fransys_model.derive.facts",
         "fransys_model.derive.facts.children",
     ]
+
+
+def _derive_imports_outside_facts(root: Path) -> list[str]:
+    """Each `checks` import of a `derive` module that is not `derive.facts` (model-0320)."""
+    problems = []
+    for path in sorted((root / "checks").rglob("*.py")):
+        parts = path.relative_to(root.parent).with_suffix("").parts
+        imported = _imported_modules(
+            ".".join(parts), path.read_text(encoding="utf-8"), is_init=parts[-1] == "__init__"
+        )
+        problems.extend(
+            f"{path}: imports {bad}"
+            for bad in sorted(imported)
+            if bad.startswith("fransys_model.derive")
+            and bad != "fransys_model.derive"
+            and not bad.startswith("fransys_model.derive.facts")
+        )
+    return problems
+
+
+def test_checks_read_derive_through_facts_only() -> None:
+    """A check imports `derive.facts` and `vocab`; no other `derive` module (model-0320)."""
+    assert _derive_imports_outside_facts(SRC_ROOT) == []
+
+
+def test_checks_facts_only_rule_fails_on_a_synthetic_violation(tmp_path: Path) -> None:
+    """The facts-only rule catches a check importing `derive.bom`."""
+    root = tmp_path / "fransys_model"
+    (root / "checks").mkdir(parents=True)
+    (root / "checks" / "bad.py").write_text("from fransys_model.derive.bom import x\n")
+    problems = _derive_imports_outside_facts(root)
+    assert problems
+    assert "fransys_model.derive.bom" in problems[0]

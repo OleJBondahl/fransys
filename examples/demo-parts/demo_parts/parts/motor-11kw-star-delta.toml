@@ -25,7 +25,7 @@ nominal_current_a = "21"
 
 [[function]]
 name = "end"
-kind = "actuator"
+kind = "generic"
 ports = [
     { name = "W2", role = "generic", conductor = "L1" },
     { name = "U2", role = "generic", conductor = "L2" },

@@ -6,6 +6,7 @@ from fransys_author.errors import AuthorError
 from fransys_author.surface._carrier import carrier_function
 from fransys_author.surface._handles import Fn
 from fransys_author.surface._pairing import ends_of, pair, poles
+from fransys_model.kernel import natural_join
 
 if TYPE_CHECKING:
     from fransys_author.handles import Fn as EngineFn
@@ -58,7 +59,7 @@ def _mount_marks(design: Design, fn: EngineFn, carrier: Device | Fn, mounted: De
             msg = f"{where}; {_label(carrier)} has no pin of that conductor"
             raise AuthorError(msg)
         if len(hits) > 1:
-            names = ", ".join(sorted(f"{c.name}.{p.name}" for c, p in hits))
+            names = natural_join(f"{c.name}.{p.name}" for c, p in hits)
             msg = f"{where}; {_label(carrier)} has several: {names}"
             raise AuthorError(msg)
         design._engine.link(hits[0][1], port, kind="mount")

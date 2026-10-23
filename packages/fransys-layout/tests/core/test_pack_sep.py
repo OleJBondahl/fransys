@@ -2,9 +2,12 @@
 
 import random
 
+from options_fixtures import core_options
+
 from fransys_layout.core.geometry import column_extent, overlaps
 from fransys_layout.core.pack_sep import placed_cells, separation
-from fransys_layout.core.values import Box, Lane, Options, Sym
+from fransys_layout.core.values import Box, Lane, Options
+lazy from fransys_layout.core.sym_values import Sym
 
 from .pack_fixtures import elem, placed
 
@@ -29,7 +32,13 @@ def test_a_tall_and_a_wide_column_pack_closer_than_their_full_extents() -> None:
     thin = elem("thin", body=Box(-8, -50, 16, 100))
     wide = elem("wide", body=Box(-50, -16, 100, 32))
     syms = {s.id: s for s in (thin, wide)}
-    options = Options()
+    options = core_options(
+        flip_turn="R180",
+        tag_stagger=True,
+        label_gap=8,
+        driver_first=True,
+        arrow_sides=("E", "W"),
+    )
     a, b = placed("a", "thin", "wide"), placed("b", "wide")
     full = full_extent_separation(("thin", "wide"), ("wide",), syms, options)
     packed = separation(a, b, syms, frozenset(), options)
@@ -43,8 +52,38 @@ def test_cells_whose_text_slots_overlap_pack_at_hard_plus_soft_and_not_the_footp
     cell = elem("e", footprint=Box(-20, -16, 40, 32))
     syms = {"e": cell}
     a, b = placed("a", "e"), placed("b", "e")
-    assert separation(a, b, syms, frozenset(), Options()) == 40
-    assert separation(a, b, syms, frozenset(), Options(tag_stagger=False)) == 48
+    assert (
+        separation(
+            a,
+            b,
+            syms,
+            frozenset(),
+            core_options(
+                flip_turn="R180",
+                tag_stagger=True,
+                label_gap=8,
+                driver_first=True,
+                arrow_sides=("E", "W"),
+            ),
+        )
+        == 40
+    )
+    assert (
+        separation(
+            a,
+            b,
+            syms,
+            frozenset(),
+            core_options(
+                tag_stagger=False,
+                label_gap=8,
+                flip_turn="R180",
+                driver_first=True,
+                arrow_sides=("E", "W"),
+            ),
+        )
+        == 48
+    )
 
 
 def random_sym(rng: random.Random, sym_id: str) -> Sym:
@@ -59,7 +98,13 @@ def random_sym(rng: random.Random, sym_id: str) -> Sym:
 def test_a_hard_box_never_overlaps_another_hard_box() -> None:
     """50 seeded column pairs: at the separation only soft boxes meet other soft boxes."""
     rng = random.Random(0)  # noqa: S311 - seeded test data
-    options = Options()
+    options = core_options(
+        flip_turn="R180",
+        tag_stagger=True,
+        label_gap=8,
+        driver_first=True,
+        arrow_sides=("E", "W"),
+    )
     for _ in range(50):
         names_a = tuple(f"a{i}" for i in range(rng.randrange(1, 4)))
         names_b = tuple(f"b{i}" for i in range(rng.randrange(1, 4)))
@@ -80,7 +125,14 @@ def test_separation_is_on_the_wiring_grid() -> None:
     """Whatever the box sizes, the answer is a multiple of the grid."""
     rng = random.Random(1)  # noqa: S311 - seeded test data
     for grid in (8, 16):
-        options = Options(wiring_grid=grid)
+        options = core_options(
+            wiring_grid=grid,
+            flip_turn="R180",
+            tag_stagger=True,
+            label_gap=8,
+            driver_first=True,
+            arrow_sides=("E", "W"),
+        )
         for _ in range(20):
             syms = {n: random_sym(rng, n) for n in ("x", "y")}
             assert (

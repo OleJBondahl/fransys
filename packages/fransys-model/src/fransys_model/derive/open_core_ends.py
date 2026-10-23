@@ -14,6 +14,7 @@ from .core_pairs import _product_colours, open_core_is_spare
 from .designation import printed_designation
 from .facts.roles import port_role
 from .indexes import build_indexes
+from .texts.core_text import join_words
 lazy from .rows_cores import OpenCoreRow
 
 
@@ -28,16 +29,12 @@ def _open_by_cable(model: Model) -> frozendict[Id[Item], tuple[OpenCoreFacet, ..
     )
 
 
-def _words(*words: str) -> str:
-    return " ".join(word for word in words if word)
-
-
 def open_core_text(row: OpenCoreRow, mark: str = "") -> str:
     """An open core's text on the cable drawing: index, colour, its pair mark, then `spare`.
 
     Example: `3 GY spare`, or `5 SH screen P1` for a screen.
     """
-    return _words(str(row.index), row.colour, mark, "spare" if row.spare else "")
+    return join_words(str(row.index), row.colour, mark, "spare" if row.spare else "")
 
 
 def open_ends_at(
@@ -64,7 +61,7 @@ def open_ends_at(
             colour = colours[facet.index - 1] if 1 <= facet.index <= len(colours) else ""
             designation = printed_designation(model, cable, unit=unit)
             found.append(
-                _words(
+                join_words(
                     designation,
                     colour,
                     "spare" if open_core_is_spare(model, colour, facet.at) else "",

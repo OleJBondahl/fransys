@@ -15,7 +15,9 @@ from fransys_model.vocab import conductors
 
 
 def _finding(severity, *subjects):
-    return Finding(code="DEMO", severity=severity, subjects=subjects, message="demo")
+    return Finding(
+        code="DEMO", severity=severity, subjects=subjects, message="demo", fix="Write: x"
+    )
 
 
 def _unit_view():

@@ -22,11 +22,11 @@ from pathlib import Path
 from typing import Any, NamedTuple
 
 import fransys as fr
+from _drawn_pages import drawn_pages
 from _model_build_cover import system_document
 from fransys.colours import BU
 
-from fransys_model.derive.drawing_text import label_text
-from fransys_model.layout import DrawingSet, Label, Page, layout_of
+from fransys_model.layout import DrawingSet, Page, layout_of
 
 
 class _Io(NamedTuple):
@@ -76,12 +76,15 @@ def _texts(model: fr.Model, release: str | None) -> list[str]:
     """The label texts of the drawing sets of the unit release `release`, or of the system."""
     sets = layout_of(model, DrawingSet)
     pages = layout_of(model, Page)
-
-    def of(label: Label) -> str | None:
-        unit = sets[pages[label.page].drawing_set].unit
-        return None if unit is None else fr.derive.unit_release(model, unit).name
-
-    return [label_text(model, la) for la in layout_of(model, Label).values() if of(la) == release]
+    found: list[str] = []
+    for page, drawing in drawn_pages(model).items():
+        unit = sets[pages[page].drawing_set].unit
+        if (None if unit is None else fr.derive.unit_release(model, unit).name) != release:
+            continue
+        found.extend(t.text for t in drawing.texts)
+        found.extend(text for s in drawing.symbols for _, text in s.slots)
+        found.extend(text for m in drawing.markers for _, text in m.texts)
+    return found
 
 
 def test_the_own_document_prints_the_board_without_the_cabinet_tag() -> None:

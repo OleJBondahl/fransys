@@ -16,9 +16,10 @@ from itertools import pairwise
 
 import fransys as fr
 import pytest
+from _drawn_pages import drawn_pages
 from fransys.colours import BU, WH
 
-from fransys_model.layout import LinkMarker, PowerSymbol, Route, RoutePoint, layout_of
+from fransys_model.layout import PowerSymbol, layout_of
 from fransys_model.vocab.tables import ports
 
 
@@ -58,12 +59,12 @@ def _pump(tmp_path) -> fr.BuildResult:
     return _finish(tmp_path, d, cab)
 
 
-def _interior(point: tuple[int, int], points: tuple[RoutePoint, ...]) -> bool:
+def _interior(point: tuple[int, int], points: tuple[tuple[int, int], ...]) -> bool:
     """Whether `point` lies on a segment of the polyline and is not one of its two ends."""
-    ends = {(points[0].x, points[0].y), (points[-1].x, points[-1].y)}
+    ends = {points[0], points[-1]}
     x, y = point
     on_segment = any(
-        min(p.x, q.x) <= x <= max(p.x, q.x) and min(p.y, q.y) <= y <= max(p.y, q.y)
+        min(p[0], q[0]) <= x <= max(p[0], q[0]) and min(p[1], q[1]) <= y <= max(p[1], q[1])
         for p, q in pairwise(points)
     )
     return on_segment and point not in ends
@@ -82,19 +83,20 @@ def _named(model, symbol: str) -> set[str]:
 def test_each_rail_pin_draws_its_symbol_and_no_wire_joins_two_of_them(board) -> None:
     assert _named(board, "power-supply") == {"1", "11"}
     assert _named(board, "ground") == {"1", "A2"}
-    ends = {s.port for s in layout_of(board, PowerSymbol).values()}
-    assert len(ends) == 6
-    assert [r for r in layout_of(board, Route).values() if r.a in ends and r.b in ends] == []
+    symbols = layout_of(board, PowerSymbol).values()
+    assert len({s.port for s in symbols}) == 6
+    ends = {(s.pin_x, s.pin_y) for s in symbols}
+    wires = [w for d in drawn_pages(board).values() for w in d.wires]
+    assert [w for w in wires if w.points[0] in ends and w.points[-1] in ends] == []
 
 
 def test_no_power_symbol_anchor_is_an_interior_point_of_a_drawn_route(board) -> None:
     symbols = layout_of(board, PowerSymbol).values()
     assert symbols
     for symbol in symbols:
-        for route in layout_of(board, Route).values():
-            if route.page == symbol.page:
-                assert not _interior((symbol.pin_x, symbol.pin_y), route.points)
-                assert not _interior((symbol.x, symbol.y), route.points)
+        for wire in drawn_pages(board)[symbol.page].wires:
+            assert not _interior((symbol.pin_x, symbol.pin_y), wire.points)
+            assert not _interior((symbol.x, symbol.y), wire.points)
 
 
 def test_an_overload_a2_wired_to_a_rail_terminal_draws_ground_and_no_reference_pair(
@@ -102,4 +104,4 @@ def test_an_overload_a2_wired_to_a_rail_terminal_draws_ground_and_no_reference_p
 ) -> None:
     model = _pump(tmp_path).model
     assert _named(model, "ground") == {"A2"}
-    assert not layout_of(model, LinkMarker)
+    assert not [m for d in drawn_pages(model).values() for m in d.markers]

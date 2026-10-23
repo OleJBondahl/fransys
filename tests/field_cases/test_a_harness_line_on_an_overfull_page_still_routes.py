@@ -23,23 +23,18 @@ import re
 import tempfile
 from functools import cache
 from pathlib import Path
-from typing import Any, NamedTuple
+from typing import TYPE_CHECKING, Any, NamedTuple
 
 import fransys as fr
 import fransys_parts
-import pytest
+from _drawn_extent import body_g
+from _drawn_pages import drawn_pages
 
 from fransys_model.kernel import merge
-from fransys_model.layout import (
-    ConnectorBox,
-    HarnessLine,
-    LinkMarker,
-    Outline,
-    Page,
-    Side,
-    SymbolPlacement,
-    layout_of,
-)
+from fransys_model.layout import Page, layout_of
+
+if TYPE_CHECKING:
+    from fransys_layout.drawing import Drawing, DrawnSymbol, DrawnWire
 
 _PART = """schema = 1
 
@@ -252,7 +247,8 @@ def test_one_contactor_builds() -> None:
 def test_two_contactors_build_and_the_four_looms_each_draw_a_line() -> None:
     built = _built(2)
     assert _errors(built) == []
-    assert len({line.harness for line in layout_of(built.model, HarnessLine).values()}) == 4
+    harnesses = {w.label.text for _, d in _pages(built) for w in _lines(d) if w.label}
+    assert len(harnesses) == 4
 
 
 def test_the_cut_group_leaves_no_page_overfull() -> None:
@@ -260,41 +256,73 @@ def test_the_cut_group_leaves_no_page_overfull() -> None:
     assert not codes & {"OUT_OF_CONTENT_BOX", "PAGE_OVERFULL"}
 
 
-def _numbers(built: fr.BuildResult) -> dict[Any, int]:
-    return {page.id: page.number for page in layout_of(built.model, Page).values()}
+def _pages(built: fr.BuildResult) -> list[tuple[int, Drawing]]:
+    """Each drawn page with its page number, in page order."""
+    numbers = {page.id: page.number for page in layout_of(built.model, Page).values()}
+    pairs = ((numbers[pid], d) for pid, d in drawn_pages(built.model).items())
+    return sorted(pairs, key=lambda p: p[0])
+
+
+def _lines(drawing: Drawing) -> list[DrawnWire]:
+    """The harness lines of a page: the wires drawn as a bundle (lanes above one)."""
+    return [w for w in drawing.wires if w.lanes > 1]
+
+
+def _w1(wire: DrawnWire) -> bool:
+    return wire.label is not None and "W1" in wire.label.text
+
+
+def _of_symbol(built: fr.BuildResult, designation: str) -> list[tuple[int, Drawing, DrawnSymbol]]:
+    """Each page and symbol of `designation`: the symbol that stands nearest to its tag text."""
+    found = []
+    for number, d in _pages(built):
+        for text in d.texts:
+            if text.kind == "TAG" and text.text.endswith(f"-{designation}"):
+                near = min(
+                    (s for s in d.symbols if s.key != "junction-dot"),
+                    key=lambda s: abs(s.x - text.box.x) + abs(s.y - text.box.y),
+                )
+                found.append((number, d, near))
+    return found
 
 
 def _page_of_symbol(built: fr.BuildResult, designation: str) -> int:
-    """The page of the one placed symbol whose key names `designation`."""
-    numbers = _numbers(built)
-    found = {
-        numbers[one.page]
-        for one in layout_of(built.model, SymbolPlacement).values()
-        if designation in one.key
-    }
+    """The page of the one placed symbol whose tag names `designation`."""
+    found = {number for number, _, _ in _of_symbol(built, designation)}
     assert len(found) == 1, (designation, found)
     return found.pop()
 
 
+def _rect(outline) -> tuple[int, int, int, int]:
+    xs, ys = [p[0] for p in outline.points], [p[1] for p in outline.points]
+    return (min(xs), min(ys), max(xs), max(ys))
+
+
+def _outline(built: fr.BuildResult) -> tuple[int, Drawing]:
+    """The page number and Drawing of the one page that draws an outline."""
+    ((number, d),) = [(n, d) for n, d in _pages(built) if d.outlines]
+    return number, d
+
+
 def _outline_page(built: fr.BuildResult) -> int:
-    (outline,) = layout_of(built.model, Outline).values()
-    return _numbers(built)[outline.page]
+    return _outline(built)[0]
 
 
 def _w1_line_pages(built: fr.BuildResult) -> set[int]:
-    numbers = _numbers(built)
-    return {
-        numbers[one.page] for one in layout_of(built.model, HarnessLine).values() if "W1" in one.key
-    }
+    return {number for number, d in _pages(built) for w in _lines(d) if _w1(w)}
+
+
+def _stubs(drawing: Drawing) -> list[DrawnSymbol]:
+    """The reference markers on `drawing` that stand for the cable `-W1`."""
+    return [
+        s
+        for s in drawing.symbols
+        if s.key == "reference-marker" and any("W1" in v for _, v in s.slots)
+    ]
 
 
 def _w1_stub_pages(built: fr.BuildResult) -> list[int]:
-    numbers = _numbers(built)
-    return [
-        numbers[one.page]
-        for one in layout_of(built.model, LinkMarker).values()
-        if "line_stub" in one.key and "W1" in one.key
-    ]
+    return [number for number, d in _pages(built) for _ in _stubs(d)]
 
 
 def test_t_a_the_contactors_stand_on_one_page_and_the_board_with_its_lower_ends_on_the_next() -> (
@@ -315,14 +343,15 @@ def test_t_a_the_contactors_stand_on_one_page_and_the_board_with_its_lower_ends_
 _HELD = "TALL-PAGE T4 held (R3)"
 
 
-@pytest.mark.xfail(strict=True, reason=_HELD)
 def test_t_b_lower_ends_that_pass_the_bottom_stand_beside_the_outline() -> None:
     built = _built(2, 3)
     assert "OUT_OF_CONTENT_BOX" not in {f.code for f in built.findings}
-    (outline,) = layout_of(built.model, Outline).values()
-    tail = [one for one in layout_of(built.model, SymbolPlacement).values() if "K1" in one.key]
-    assert {one.page for one in tail} == {outline.page}
-    assert all(one.x >= outline.x + outline.width for one in tail)
+    number, page = _outline(built)
+    (outline,) = page.outlines
+    tail = _of_symbol(built, "K1")
+    assert tail
+    assert {n for n, _, _ in tail} == {number}
+    assert all(s.x >= _rect(outline)[2] for _, _, s in tail)
 
 
 def test_t_c_a_page_that_still_overflows_reports_page_overfull_and_builds() -> None:
@@ -348,17 +377,17 @@ def test_t_c_a_line_end_below_the_box_of_a_page_no_cut_helps_still_routes() -> N
     )
 
 
-def _crossings(built: fr.BuildResult, page: Any) -> list[tuple[Any, Any]]:
-    """Harness-line segments of `page` that enter the inside of a connector box of `page`."""
-    boxes = [b for b in layout_of(built.model, ConnectorBox).values() if b.page == page]
+def _crossings(page: Drawing) -> list[tuple[str, str]]:
+    """Harness-line segments of `page` that enter the inside of a box of `page`."""
+    boxes = [(s.id, body_g(s)) for s in page.symbols if s.key == "generic-box"]
     found = []
-    for line in (h for h in layout_of(built.model, HarnessLine).values() if h.page == page):
-        for a, b in zip(line.points, line.points[1:], strict=False):
-            x0, x1, y0, y1 = min(a.x, b.x), max(a.x, b.x), min(a.y, b.y), max(a.y, b.y)
+    for line in _lines(page):
+        for (ax, ay), (bx, by) in zip(line.points, line.points[1:], strict=False):
+            x0, x1, y0, y1 = min(ax, bx), max(ax, bx), min(ay, by), max(ay, by)
             found += [
-                (line.key, box.key)
-                for box in boxes
-                if x0 < box.x + box.width and x1 > box.x and y0 < box.y + box.height and y1 > box.y
+                (line.id, key)
+                for key, (bx0, by0, bx1, by1) in boxes
+                if x0 < bx1 and x1 > bx0 and y0 < by1 and y1 > by0
             ]
     return found
 
@@ -367,9 +396,9 @@ def test_t_a_no_line_of_the_outline_page_crosses_a_box_and_its_lower_band_keeps_
     None
 ):
     """R2: the frame stands as the uncut fold has it from the lower columns (no trunk on a box)."""
-    built = _built(2)
-    (outline,) = layout_of(built.model, Outline).values()
-    assert _crossings(built, outline.page) == []
+    page = _outline(_built(2))[1]
+    assert _lines(page), "the outline page draws harness lines"
+    assert _crossings(page) == []
 
 
 def test_t_a_the_cut_line_ends_in_a_stub_south_of_its_bar_and_no_line_crosses_a_box() -> None:
@@ -379,45 +408,42 @@ def test_t_a_the_cut_line_ends_in_a_stub_south_of_its_bar_and_no_line_crosses_a_
     `_branches` keeps the bar one polyline and the rule has no line to carry its label.
     """
     built = _built(2)
-    (page,) = {
-        one.page for one in layout_of(built.model, SymbolPlacement).values() if "Q1" in one.key
-    }
-    (stub,) = (
-        one
-        for one in layout_of(built.model, LinkMarker).values()
-        if "line_stub" in one.key and "W1" in one.key and one.page == page
-    )
-    lines = [h for h in layout_of(built.model, HarnessLine).values() if h.page == page]
-    bar_y = min(point.y for h in lines if "W1" in h.key for point in h.points)
-    assert {h.branch for h in lines if "W1" in h.key} == {1, 2, 3}  # each end its own branch
-    assert stub.facing is Side.S
+    ((_, page, _),) = {id(d): (n, d, s) for n, d, s in _of_symbol(built, "Q1")}.values()
+    (stub,) = _stubs(page)
+    lines = [w for w in _lines(page) if _w1(w)]
+    bar_y = min(y for w in lines for _, y in w.points)
+    assert len(lines) == 3  # each end its own branch
+    assert stub.orient == "R270"  # the marker hangs south of the wire that arrives from the north
     assert stub.y > bar_y
-    assert _crossings(built, page) == []
+    assert _crossings(page) == []
 
 
-def _segments(built: fr.BuildResult, page: Any) -> list[tuple[Any, Any, Any]]:
+Pt = tuple[int, int]
+Segment = tuple[str, Pt, Pt]
+
+
+def _segments(page: Drawing) -> list[Segment]:
     """Each harness segment of `page` as (harness, first point, second point), a run at a time."""
     return [
-        (line.harness, a, b)
-        for line in layout_of(built.model, HarnessLine).values()
-        if line.page == page
-        for a, b in zip(line.points, line.points[1:], strict=False)
+        (w.label.text if w.label else w.id, a, b)
+        for w in _lines(page)
+        for a, b in zip(w.points, w.points[1:], strict=False)
     ]
 
 
-def _along_or_tee(one: Any, other: Any) -> bool:
+def _along_or_tee(one: Segment, other: Segment) -> bool:
     """Whether segment `one` runs along `other`, or ends strictly inside it (a T)."""
-    (_, a, b), (_, c, d) = one, other
-    horizontal = a.y == b.y == c.y == d.y
-    vertical = a.x == b.x == c.x == d.x
-    if horizontal and min(max(a.x, b.x), max(c.x, d.x)) > max(min(a.x, b.x), min(c.x, d.x)):
+    (_, (ax, ay), (bx, by)), (_, (cx, cy), (dx, dy)) = one, other
+    horizontal = ay == by == cy == dy
+    vertical = ax == bx == cx == dx
+    if horizontal and min(max(ax, bx), max(cx, dx)) > max(min(ax, bx), min(cx, dx)):
         return True
-    if vertical and min(max(a.y, b.y), max(c.y, d.y)) > max(min(a.y, b.y), min(c.y, d.y)):
+    if vertical and min(max(ay, by), max(cy, dy)) > max(min(ay, by), min(cy, dy)):
         return True
     return any(
-        (c.x == d.x and p.x == c.x and min(c.y, d.y) < p.y < max(c.y, d.y))
-        or (c.y == d.y and p.y == c.y and min(c.x, d.x) < p.x < max(c.x, d.x))
-        for p in (a, b)
+        (cx == dx and px == cx and min(cy, dy) < py < max(cy, dy))
+        or (cy == dy and py == cy and min(cx, dx) < px < max(cx, dx))
+        for px, py in ((ax, ay), (bx, by))
     )
 
 
@@ -426,9 +452,8 @@ def test_t_a_two_harness_lines_never_run_along_each_other_or_meet_in_a_t() -> No
 
     UNDO: `draw_lines` hands each line an empty `busy`, and -S1 runs on -T1's row.
     """
-    built = _built(2)
-    (outline,) = layout_of(built.model, Outline).values()
-    found = _segments(built, outline.page)
+    found = _segments(_outline(_built(2))[1])
+    assert found, "the outline page draws harness lines"
     bad = [
         (one[0], other[0])
         for n, one in enumerate(found)

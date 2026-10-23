@@ -13,8 +13,9 @@ from typing import TYPE_CHECKING
 import fransys_parts
 from fransys_author import Design
 from ratings_fixtures import rated
+from root_library import freeze
 
-from fransys_model.kernel import Id, Model, freeze, merge
+from fransys_model.kernel import Id, Model, merge
 from fransys_model.vocab.ratings import Operating, Rating
 
 if TYPE_CHECKING:

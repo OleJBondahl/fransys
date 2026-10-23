@@ -6,7 +6,7 @@ import pytest
 from fransys_kicad import netlist
 
 from fransys_model.derive import board_netlist
-from fransys_model.derive.designation import own_designation_or_none
+from fransys_model.derive.designation_label import own_designation_or_none
 from fransys_model.kernel import SchemaError
 from fransys_model.vocab.tables import functions, items, ports
 

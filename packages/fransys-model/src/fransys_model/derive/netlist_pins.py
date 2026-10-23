@@ -3,6 +3,7 @@
 from fransys_model.kernel import Id, Model  # noqa: TC001 -- signature tests resolve hints at runtime
 from fransys_model.vocab import ports
 from fransys_model.vocab.core import Item, Port  # noqa: TC001 -- signature tests resolve hints at runtime
+from fransys_model.vocab.tables import unused_boundaries
 
 from .designation import item_designation
 from .indexes import build_indexes
@@ -44,8 +45,8 @@ def _pin(
 def board_pins(model: Model, board: Id[Item]) -> BoardPins:
     """`board_netlist`'s nets with each pin resolved once, and the open pins of its parts.
 
-    A pin of an item with no part row takes its board-relative designation. `unconnected` lists,
-    per part in `board_netlist` order, every port of its functions whose `ref:pad` is in no net.
+    An item with no part row takes its board-relative designation. `part_pins` is every port of
+    each part's functions; `unconnected` those in no net, minus any of an `unused=` function.
 
     Args:
         model: The model to read.
@@ -69,11 +70,17 @@ def board_pins(model: Model, board: Id[Item]) -> BoardPins:
     connected = {(pin.ref, pin.pad) for net in nets for pin in net.pins}
     idx = build_indexes(model)
     all_ports = ports(model)
-    open_pins = tuple(
+    quiet = {unused.function for unused in unused_boundaries(model).values()}
+    quiet_ports = {port for function in quiet for port in idx.ports_by_function.get(function, ())}
+    part_pins = tuple(
         NetlistPin(port=port, item=part.item, ref=part.designation, pad=all_ports[port].name)
         for part in rows.parts
         for function in idx.functions_by_item.get(part.item, ())
         for port in idx.ports_by_function.get(function, ())
-        if (part.designation, all_ports[port].name) not in connected
     )
-    return BoardPins(nets=nets, unconnected=open_pins)
+    open_pins = tuple(
+        pin
+        for pin in part_pins
+        if (pin.ref, pin.pad) not in connected and pin.port not in quiet_ports
+    )
+    return BoardPins(nets=nets, unconnected=open_pins, part_pins=part_pins)

@@ -1,7 +1,8 @@
 """Generic layer: records, ids, freeze, canonical form, merge. Knows nothing about engineering."""
 
+from .allocate import first_free
 from .cache import DIGEST_CACHE_SIZE, ByDigest, digest_cached
-from .canonical import dumps, from_data, loads, to_data
+from .canonical_forms import dumps, from_data, loads, to_data
 from .codes import WHO_ACTS, CodeInfo
 from .diff import ModelDiff, diff
 from .draft import Draft
@@ -23,6 +24,7 @@ from .ids import AuthoringKey, Id, make_id, render_id
 from .jsonread import read_json
 from .merge import merge
 from .model import Model
+from .naturals import NaturalKey, canonical, natural_join, natural_key, natural_sorted
 from .origin import DescribedFinding, Origin, OriginSource, describe, describe_parts, require_origin
 from .parents import parent_chain
 from .record import FieldSpec, Record, field_specs, key_text, record, value
@@ -53,6 +55,7 @@ __all__ = [
     "Model",
     "ModelDiff",
     "ModelError",
+    "NaturalKey",
     "Origin",
     "OriginSource",
     "Record",
@@ -63,6 +66,7 @@ __all__ = [
     "UnionFind",
     "Value",
     "ValueTypeError",
+    "canonical",
     "check_value",
     "decimal_text",
     "describe",
@@ -72,6 +76,7 @@ __all__ = [
     "dumps",
     "evolve",
     "field_specs",
+    "first_free",
     "freeze",
     "from_data",
     "index_ids",
@@ -81,6 +86,9 @@ __all__ = [
     "make_id",
     "merge",
     "namespace_of",
+    "natural_join",
+    "natural_key",
+    "natural_sorted",
     "parent_chain",
     "read_json",
     "record",

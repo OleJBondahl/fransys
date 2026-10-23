@@ -1,13 +1,11 @@
-"""Execution counts of `fransys_layout` and `fransys_render` code on the scale fixture.
+"""Execution counts of `fransys_layout` code on the scale fixture.
 
-One harness for both counts: the layout check (layout-0086) and the render count
-(render-0006). `count_render(n)`
-counts `fransys_render.pages` on `build_scale(n, with_document=True)`, no pass normalisation.
+The harness of the layout count (layout-0086).
 
 `count_build(n)` runs `build_scale(n)` under stdlib `sys.monitoring` and counts, per code object of
 `fransys_layout`, calls (PY_START), generator resumes (PY_RESUME) and loop iterations (JUMP).
 The key is `file:qualname:firstlineno`, the file relative to the `fransys_layout/` folder with
-forward slashes. Counts of events that happen while a `stages/pagerun.py:_place_each` call is on
+forward slashes. Counts of events that happen while a `core/solve.py:solve` call is on
 the stack are divided by the number of such calls (a "pass"); events outside a pass count whole.
 
 Stated limit: a C-level scan (`x in a_tuple`, `sorted`) is seen only through a Python callee.
@@ -24,18 +22,15 @@ from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-import fransys_render
-from fransys_el import REF_TINTS
 from scale_units_fixture import build_scale
 
-from fransys_layout.stages import pagerun
+from fransys_layout.core import solve as core_solve
 
 if TYPE_CHECKING:
     from collections.abc import Callable
 
 _LAYOUT_MARK = "/fransys_layout/"
-_RENDER_MARK = "/fransys_render/"
-_PASS_CODE = pagerun._place_each.__code__
+_PASS_CODE = core_solve.__code__
 
 
 @dataclass(frozen=True)
@@ -178,18 +173,8 @@ def count_build(n: int, *, warm: tuple[int, ...] = ()) -> BuildCounts:
     return _counts(_monitored(_LAYOUT_MARK, _PASS_CODE, lambda: build_scale(n, with_document=True)))
 
 
-def count_render(n: int, *, warm: tuple[int, ...] = ()) -> BuildCounts:
-    """Count `fransys_render.pages` alone on `build_scale(n)`; the build is not monitored."""
-    for size in (2, *warm):
-        fransys_render.pages(build_scale(size, with_document=True).model, tints=REF_TINTS)
-    model = build_scale(n, with_document=True).model
-    return _counts(
-        _monitored(_RENDER_MARK, None, lambda: fransys_render.pages(model, tints=REF_TINTS))
-    )
-
-
 def _child(counter: str, n: int, warm: tuple[int, ...]) -> BuildCounts:
-    return {"build": count_build, "render": count_render}[counter](n, warm=warm)
+    return {"build": count_build}[counter](n, warm=warm)
 
 
 def count_pair(counter: str, small: int, big: int) -> tuple[BuildCounts, BuildCounts]:

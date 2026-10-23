@@ -1,7 +1,7 @@
 """Fransys facade: pipeline, findings policy, file writing.
 
 Documentation: https://olejbondahl.github.io/fransys/ (the site is the official copy,
-not the installed files).
+not the installed files). Look a name or a finding code up with `python -m fransys help KEY`.
 """
 
 from fransys_author import AuthorError
@@ -73,6 +73,7 @@ from .pipeline import (
     write,
 )
 from .readability import readability
+from .settings import Settings, SettingsError, settings
 
 __doc__ += (
     f"\nThis install, {__version__}: {version_url(__version__)}"
@@ -123,6 +124,8 @@ __all__ = [
     "Release",
     "ReleasePin",
     "Run",
+    "Settings",
+    "SettingsError",
     "Severity",
     "SignalType",
     "SupplyRail",
@@ -147,6 +150,7 @@ __all__ = [
     "release",
     "releases",
     "report",
+    "settings",
     "unit",
     "verify",
     "write",

@@ -12,9 +12,14 @@ from fransys_layout.engines.cable.values import (
     EndFacts,
     PinFacts,
 )
-from fransys_layout.engines.schematic.read.reading import profile_and_sheet
 from fransys_layout.geometry import WIRING_GRID, text_width
-from fransys_model.derive import HarnessCable, HarnessCore, bar_items, printed_designation
+from fransys_model.derive import (
+    HarnessCable,
+    HarnessCore,
+    bar_items,
+    printed_designation,
+    text_room,
+)
 from fransys_model.derive.cable_drawing import (
     DrawnOpen,
     block_brackets,
@@ -31,6 +36,7 @@ from fransys_model.derive.cable_drawing import (
     row_links,
 )
 from fransys_model.derive.designation import end_outside_nested_unit
+from fransys_model.layout import profile_of
 lazy from fransys_model.kernel import Id, Model
 
 
@@ -162,14 +168,14 @@ def _bracket_room(
 
 def block_facts(model: Model, subject: Id[Any], unit: Id[Any] | None) -> BlockFacts:
     """The facts of one drawable block."""
-    profile, _, sheet_format = profile_and_sheet(model)
-    height = profile.text_height
+    profile = profile_of(model, None)
+    height = text_room(model)
     top, bottom = end_rows(model, subject, unit)
     keys = count(1)
     return BlockFacts(
         subject=subject,
         unit=unit,
-        sheet_format=sheet_format,
+        sheet_format=profile.sheet_format,
         text_height=height,
         turn_penalty=profile.route_turn_penalty,
         crossing_penalty=profile.route_crossing_penalty,

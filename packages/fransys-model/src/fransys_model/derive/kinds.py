@@ -19,7 +19,7 @@ lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.core import Item
 lazy from fransys_model.vocab.roles_types import ItemRole
 
-from .designation import takes_parents_designation
+from .designation_label import takes_parents_designation
 from .facts.children import child_items
 from .facts.roles import function_role
 from .indexes import build_indexes

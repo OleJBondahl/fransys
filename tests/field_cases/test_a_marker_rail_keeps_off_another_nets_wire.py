@@ -15,9 +15,8 @@ Fixed by layout-0243: the router keeps off every marker's drawn stub, rail and b
 from typing import NamedTuple
 
 import fransys as fr
+from _drawn_pages import drawn_pages
 from fransys.colours import BK, BU
-
-from fransys_model.layout import LinkMarker, Route, layout_of
 
 
 class _Io(NamedTuple):
@@ -56,6 +55,7 @@ def test_no_net_is_drawn_across_a_markers_rail(tmp_path) -> None:
     cover = tmp_path / "cover.md"
     cover.write_text("# Starter\n", encoding="utf-8")
     result = fr.build(d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, "starter", cover=cover))
-    assert layout_of(result.model, LinkMarker)
-    assert layout_of(result.model, Route)
+    pages = drawn_pages(result.model).values()
+    assert [s for d in pages for s in d.symbols if s.key == "reference-marker"]
+    assert [w for d in pages for w in d.wires]
     assert [f for f in fr.check(result) if f.code == "DRAWING_SHORTS_NETS"] == []

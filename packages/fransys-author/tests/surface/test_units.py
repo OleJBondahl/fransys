@@ -130,7 +130,7 @@ def _cabinet(*, mate: bool, unused: bool = False):
 
 def test_interface_and_unused_write_the_boundary_records() -> None:
     d = _cabinet(mate=True, unused=True)
-    assert len(_records(d, Boundary)) == 2
+    assert len(_records(d, Boundary)) == 1  # X2 is `unused=` alone and no field: no boundary
     assert len(_records(d, UnusedBoundary)) == 1
     assert len(_records(d, Mate)) == 1
 
@@ -164,6 +164,18 @@ def test_unused_alone_makes_a_boundary_and_silences_it() -> None:
     d = _one_device_unit(unused=True)
     assert len(_records(d, Boundary)) == 1
     assert len(_records(d, UnusedBoundary)) == 1
+
+
+def test_unused_alone_on_a_device_the_unit_does_not_return_writes_no_boundary() -> None:
+    @unit("demo-io-board", revision=1, interface_version=1, date="d", text="t", by="XX")
+    def board(d: Design) -> _One:
+        d.device("X2", "DEMO-CONN-2P", unused=True)
+        return _One(d.device("X1", "DEMO-CONN-2P", interface=True))
+
+    d = design(pair_library(), place="C1")
+    d.add(board, "IO")
+    assert len(_records(d, Boundary)) == 1  # X1 only
+    assert len(_records(d, UnusedBoundary)) == 1  # X2 is open on purpose, no boundary
 
 
 def test_interface_with_unused_writes_one_boundary_and_one_unused() -> None:

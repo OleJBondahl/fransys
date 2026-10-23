@@ -77,3 +77,14 @@ def test_collinear_ignores_two_runs_of_one_net() -> None:
     grid.mark_wire("a", ((0, 8), (40, 8)))
     grid.mark_wire("a", ((16, 8), (56, 8)))
     assert grid.collinear() == 0
+
+
+def test_a_wire_end_on_another_nets_run_is_a_touch_in_both_directions() -> None:
+    """R439: a trunk ending on a foreign drop, and the drop passing a trunk end, both touch."""
+    drop, trunk = ((24, 8), (24, 80)), ((24, 40), (64, 40))
+    grid = _grid()
+    grid.mark_wire("drop", drop)
+    assert grid.touches("trunk", trunk)
+    grid = _grid()
+    grid.mark_wire("trunk", trunk)
+    assert grid.touches("drop", drop)

@@ -228,5 +228,13 @@ def corpus_names() -> list[str]:
     return sorted(p.name.removesuffix(".score.json") for p in CORPUS.glob("*.score.json"))
 
 
+def resided_names() -> frozenset[str]:
+    """The instances whose card pins were moved to the half split (BOX-SIDES Q1).
+
+    Their `today` and `route` lines stay as exported, so only pin-position checks skip them.
+    """
+    return frozenset((CORPUS / "resided.names").read_text(encoding="utf-8").split())
+
+
 def read_score(name: str) -> dict:
     return json.loads((CORPUS / f"{name}.score.json").read_text(encoding="utf-8"))

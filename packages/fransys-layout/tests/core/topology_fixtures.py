@@ -10,16 +10,16 @@ from fransys_layout.core.topology_elements import (
     Elem,
     NetEnd,
     elements,
-    is_wiring,
     net_ends,
     wired_pins,
 )
 from fransys_layout.core.values import BoxSpec, PinRef
 
-from .flow_builders import elem, problem
+from .flow_builders import OPTIONS, elem, problem
 
 if TYPE_CHECKING:
-    from fransys_layout.core.values import Net, Sym
+    from fransys_layout.core.sym_values import Sym
+    from fransys_layout.core.values import Net
 
 
 @dataclass(frozen=True, slots=True)
@@ -33,7 +33,14 @@ class Read:
 
     @property
     def facts(self) -> Facts:
-        return Facts(self.elems, self.syms, self.ends_by_net, self.net_of)
+        return Facts(
+            self.elems,
+            self.syms,
+            self.ends_by_net,
+            self.net_of,
+            OPTIONS.end_bias_weight,
+            OPTIONS.flip_turn,
+        )
 
 
 def read(syms: list[Sym], nets: list[Net]) -> Read:
@@ -45,7 +52,7 @@ def read(syms: list[Sym], nets: list[Net]) -> Read:
         PinRef(e.sym, pin): e for e in elems.values() for pin in (e.n_pin, e.s_pin) if pin
     }
     by_id = {s.id: s for s in prob.symbols}
-    ends = {n.id: net_ends(n, elem_of_pin, by_id) for n in prob.nets if is_wiring(n)}
+    ends = {n.id: net_ends(n, elem_of_pin, by_id) for n in prob.nets}
     return Read(elems, ends, by_id, wired)
 
 

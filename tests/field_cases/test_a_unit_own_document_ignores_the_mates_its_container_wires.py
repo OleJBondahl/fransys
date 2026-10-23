@@ -21,7 +21,6 @@ from pathlib import Path
 from typing import NamedTuple
 
 import fransys as fr
-import pytest
 from fransys.colours import RD, WH
 
 
@@ -97,13 +96,6 @@ def _own_pdf(*, container: bool, tmp: Path) -> bytes:
     return pdf.read_bytes()
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "P7.4: a unit's own document is byte-identical whatever contains it; "
-        "the container still boxes the nested header (0155)"
-    ),
-)
 def test_the_board_own_document_is_byte_identical_inside_a_container() -> None:
     with tempfile.TemporaryDirectory() as name:
         tmp = Path(name)

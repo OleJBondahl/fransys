@@ -8,7 +8,7 @@ is above the parent-side pin, the plug is turned so its wire leaves downward int
 outline's bottom edge is on the mating line and the outline stands above the plug; its title is
 below-left when free, else above-left inside the top room (page y >= 0).
 
-Built through the `fransys` facade from `examples/demo-parts`; read from `layout.*` records.
+Built through the `fransys` facade from `examples/demo-parts`; read from the page Drawings.
 The mating line is the middle of the plug's and the replica's origins: the two symbols are turned
 face to face, each body reaches from its origin to the line (the convention of
 `test_dd_outline_mate_crash.py`, `outline.y * 2 == plug.y + pin.y`).
@@ -18,23 +18,18 @@ stands below the plug); `coil_A2` runs coil -> plug (the mate at the bottom end,
 """
 
 from functools import cache
-from typing import Any, NamedTuple
+from typing import TYPE_CHECKING, Any, NamedTuple
 
 import fransys as fr
 import fransys_author
 import fransys_parts
+from _drawn_pages import drawn_pages
 from _model_build_cover import layout_trigger_document
 
 from fransys_model.kernel import Severity
-from fransys_model.layout import (
-    Label,
-    Orientation,
-    Outline,
-    Route,
-    SymbolPlacement,
-    layout_of,
-)
-from fransys_model.vocab.tables import functions, ports
+
+if TYPE_CHECKING:
+    from fransys_layout.drawing import Drawing, DrawnOutline, DrawnSymbol, DrawnText, DrawnWire
 
 _PROJECT: dict[str, Any] = {
     "title": "Mate ends",
@@ -87,45 +82,49 @@ def _nested_board(first: str, second: str):
 
 
 class _Mate(NamedTuple):
-    """What the layout drew for the mate `J<n>`: the parent-side pin, the boundary pin's replica
-    beside it, the outline holding the replica, its title, the routes of the plug's wire, and the
-    other placements of the plug's column."""
+    """What the core drew for the mate `J<n>`: the parent-side pin, the boundary pin's replica
+    beside it, the outline holding the replica, its title, the wires of the plug's column, and the
+    other symbols of the plug's column."""
 
-    plug: SymbolPlacement
-    pin: SymbolPlacement
-    outline: Outline
-    title: Label
-    wires: list[Route]
-    column: list[SymbolPlacement]
+    plug: DrawnSymbol
+    pin: DrawnSymbol
+    outline: DrawnOutline
+    title: DrawnText
+    wires: list[DrawnWire]
+    column: list[DrawnSymbol]
+
+
+def _box(outline: DrawnOutline) -> tuple[int, int, int, int]:
+    """The outline's (x, y, width, height)."""
+    xs, ys = [x for x, _ in outline.points], [y for _, y in outline.points]
+    return min(xs), min(ys), max(xs) - min(xs), max(ys) - min(ys)
+
+
+def _plug_page(model, n: int) -> tuple[Drawing, DrawnText]:
+    """The page that prints the plug's tag `-J<n>:1`, and that tag."""
+    found = [
+        (drawing, text)
+        for drawing in drawn_pages(model).values()
+        for text in drawing.texts
+        if text.text == f"-J{n}:1"
+    ]
+    (one,) = found
+    return one
 
 
 def _mate(model, n: int) -> _Mate:
     """The drawn mate `J<n>`, all read from the page of the plug."""
-    named = functions(model)
-    every = list(layout_of(model, SymbolPlacement).values())
-    (plug,) = (p for p in every if named[p.function].key[:2] == ("cab", f"J{n}"))
-    (pin,) = (
-        p
-        for p in every
-        if p.page == plug.page and named[p.function].key[:3] == ("cab", "a2", f"J{n}")
-    )
-    (outline,) = (
-        o
-        for o in layout_of(model, Outline).values()
-        if o.page == plug.page and o.x <= pin.x <= o.x + o.width
-    )
-    (title,) = (
-        label
-        for label in layout_of(model, Label).values()
-        if label.page == plug.page and label.slot == "outline_title" and label.x == outline.x
-    )
-    plug_ports = {port.id for port in ports(model).values() if port.function == plug.function}
-    wires = [
-        r
-        for r in layout_of(model, Route).values()
-        if r.page == plug.page and (r.a in plug_ports or r.b in plug_ports)
-    ]
-    column = [p for p in every if p.page == plug.page and p.x == plug.x and p not in (plug, pin)]
+    drawing, tag = _plug_page(model, n)
+    boxes = [s for s in drawing.symbols if s.key.startswith("connector")]
+    column_x = min((s.x for s in boxes), key=lambda x: abs(x - tag.box.x - 56))
+    same = [s for s in boxes if s.x == column_x]
+    plug = min(same, key=lambda s: abs(s.y - tag.box.y - 24))
+    (pin,) = (s for s in same if s is not plug)
+    (outline,) = (o for o in drawing.outlines if _box(o)[0] <= pin.x <= _box(o)[0] + _box(o)[2])
+    title = outline.label
+    assert title is not None
+    wires = [w for w in drawing.wires if any(x == plug.x for x, _ in w.points)]
+    column = [s for s in drawing.symbols if s.x == plug.x and s not in (plug, pin)]
     assert len(wires) == 1
     return _Mate(plug, pin, outline, title, wires, column)
 
@@ -150,10 +149,10 @@ def test_at_a_top_end_the_parent_side_pin_faces_the_replica_and_its_wire_leaves_
     """The plug is turned round (R180: its wire port on the S side, the replica's body across from
     its body), and no point of its wire's route is above the plug: the wire goes into the column."""
     for mate in _mates(_TOP):
-        assert mate.plug.orientation is Orientation.R180
-        assert mate.pin.orientation is Orientation.R0
+        assert mate.plug.orient == "R180"
+        assert mate.pin.orient == "R0"
         (wire,) = mate.wires
-        assert min(point.y for point in wire.points) >= mate.plug.y
+        assert min(y for _, y in wire.points) >= mate.plug.y
 
 
 def test_at_a_top_end_the_outline_bottom_edge_is_on_the_mating_line_above_the_plug() -> None:
@@ -161,10 +160,11 @@ def test_at_a_top_end_the_outline_bottom_edge_is_on_the_mating_line_above_the_pl
     replica is inside it, and the plug, whose body reaches from its origin up to the line, is
     outside: the plug's origin is at or below the bottom edge."""
     for mate in _mates(_TOP):
-        outline, plug, pin = mate.outline, mate.plug, mate.pin
-        assert (outline.y + outline.height) * 2 == plug.y + pin.y
-        assert outline.y <= pin.y
-        assert outline.y + outline.height <= plug.y
+        plug, pin = mate.plug, mate.pin
+        _, oy, _, oh = _box(mate.outline)
+        assert (oy + oh) * 2 == plug.y + pin.y
+        assert oy <= pin.y
+        assert oy + oh <= plug.y
 
 
 def test_at_a_top_end_the_title_is_below_left_when_free_else_above_left_inside_the_top_room() -> (
@@ -177,10 +177,11 @@ def test_at_a_top_end_the_title_is_below_left_when_free_else_above_left_inside_t
     mates = _mates(_TOP)
     assert len({m.outline for m in mates}) == 1
     title, outline = mates[0].title, mates[0].outline
-    assert title.x == outline.x
-    assert title.y >= 0
-    assert title.y + title.height <= outline.y
-    assert any(title.x <= m.plug.x <= title.x + title.width for m in mates), (
+    ox, oy, _, _ = _box(outline)
+    assert title.box.x == ox
+    assert title.box.y >= 0
+    assert title.box.y + title.box.h <= oy
+    assert any(title.box.x <= m.plug.x <= title.box.x + title.box.w for m in mates), (
         "below-left would cover a plug"
     )
 
@@ -190,19 +191,20 @@ def test_at_a_bottom_end_nothing_changes() -> None:
     the plug's wire leaves upward, the outline's top edge is on the mating line and the outline
     stands below the plug; its title is below-left, above-left being the plug's own place."""
     for mate in _mates(_BOTTOM):
-        outline, plug, pin, title = mate.outline, mate.plug, mate.pin, mate.title
+        plug, pin, title = mate.plug, mate.pin, mate.title
+        ox, oy, _, oh = _box(mate.outline)
         assert pin.x == plug.x
         assert pin.y > plug.y
-        assert plug.orientation is Orientation.R0
-        assert pin.orientation is Orientation.R180
+        assert plug.orient == "R0"
+        assert pin.orient == "R180"
         (wire,) = mate.wires
-        assert max(point.y for point in wire.points) <= plug.y
-        assert outline.y * 2 == plug.y + pin.y
-        assert outline.y >= plug.y
-        assert outline.y + outline.height >= pin.y
-        assert title.x == outline.x
-        assert title.y >= outline.y + outline.height
-        assert title.x <= plug.x <= title.x + title.width, "above-left would cover the plug"
+        assert max(y for _, y in wire.points) <= plug.y
+        assert oy * 2 == plug.y + pin.y
+        assert oy >= plug.y
+        assert oy + oh >= pin.y
+        assert title.box.x == ox
+        assert title.box.y >= oy + oh
+        assert title.box.x <= plug.x <= title.box.x + title.box.w, "above-left would cover the plug"
 
 
 def test_a_top_end_and_a_bottom_end_mate_in_one_unit_get_two_outlines() -> None:
@@ -211,11 +213,13 @@ def test_a_top_end_and_a_bottom_end_mate_in_one_unit_get_two_outlines() -> None:
     # contact_14 faces S like coil_A2: the contact stands above the plug, a bottom end
     model = _nested_board(_TOP, "contact_14")
     top, bottom = _mate(model, 1), _mate(model, 2)
-    assert top.plug.page == bottom.plug.page
+    drawing, _ = _plug_page(model, 1)
+    assert _plug_page(model, 2)[0] is drawing
     assert top.outline != bottom.outline
-    on_page = [o for o in layout_of(model, Outline).values() if o.page == top.plug.page]
-    assert len(on_page) == 2
-    assert top.outline.y + top.outline.height <= top.plug.y
-    assert (top.outline.y + top.outline.height) * 2 == top.plug.y + top.pin.y
-    assert bottom.outline.y >= bottom.plug.y
-    assert bottom.outline.y * 2 == bottom.plug.y + bottom.pin.y
+    assert len(drawing.outlines) == 2
+    _, ty, _, th = _box(top.outline)
+    _, by, _, _ = _box(bottom.outline)
+    assert ty + th <= top.plug.y
+    assert (ty + th) * 2 == top.plug.y + top.pin.y
+    assert by >= bottom.plug.y
+    assert by * 2 == bottom.plug.y + bottom.pin.y

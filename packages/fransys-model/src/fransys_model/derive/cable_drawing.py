@@ -24,17 +24,19 @@ from .core_pairs import (
     pair_form,
     screened_pairs,
 )
-from .designation import connector_segment
 from .drawing_text import external_note
 from .drawn_marks import DrawnBracket, PairRoom, pair_room
 from .drawn_wires import DrawnWire, block_wires, wire_cores, wire_ends, wire_harness_subjects
-from .harness import _end_designation, _facts_of, _pin_marking, all_cables, all_unit_cables
+from .harness import _facts_of, _pin_marking, all_cables, all_unit_cables
 from .indexes import build_indexes
 from .lone_cable import lone_cable_harness
 from .lookups import item_of_port, pin_order
 from .open_core_ends import open_core_text
 from .open_drawn import DrawnOpen, drawn_open_cores
 from .order import designation_key, port_designation_key
+from .texts.context import PrintContext
+from .texts.core_text import core_text as core_text_of
+from .texts.end_text import DRAWN_END, end_text
 lazy from .rows import HarnessCable, HarnessCore
 
 __all__ = [
@@ -366,7 +368,7 @@ def core_text(core: HarnessCore, mark: str = "") -> str:
 
     `mark` is `core_mark`'s pair word for the core, `""` for none.
     """
-    return " ".join(part for part in (str(core.index), core.colour, core.label, mark) if part)
+    return core_text_of(core.index, core.colour, core.label, mark)
 
 
 def end_by_others(model: Model, item: Id[Item]) -> bool:
@@ -382,13 +384,10 @@ def end_label(
     With the block's `subject`, a device that prints its connectors as sub-parts names the
     connector the block's cores land on behind its designation: `+C1-A1-X1`.
     """
-    label = _end_designation(model, item, _facts_of(model, unit))
-    function = None if subject is None or not label else _end_connector(model, subject, unit, item)
-    if function is not None:
-        label += connector_segment(model, function)
-    if end_by_others(model, item):
-        return f"{label} ({external_note()})"
-    return label
+    facts = _facts_of(model, unit)
+    ctx = PrintContext(reading=unit, location=facts.context)
+    function = None if subject is None else _end_connector(model, subject, unit, item)
+    return end_text(model, item, DRAWN_END, ctx, function)
 
 
 def cable_heading(model: Model, cable: HarnessCable, unit: Id[Unit] | None) -> str:  # noqa: ARG001 - the reading no longer decides; callers keep one signature

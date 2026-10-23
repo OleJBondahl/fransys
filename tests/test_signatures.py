@@ -27,16 +27,6 @@ SURFACES = (
 )
 
 #: symbols whose annotation names a type imported only under TYPE_CHECKING (strict xfail)
-KNOWN_FAILURES: frozenset[str] = frozenset(
-    {
-        # `Record` names Id, AuthoringKey and Value, and kernel.ids/values import kernel.record
-        # at runtime: a runtime import would close an import cycle (test_boundaries).
-        "fransys_model.kernel.Record.id",
-        "fransys_model.kernel.Record.key",
-        "fransys_model.kernel.Record.ext",
-    }
-)
-REASON = "resolves when Record or Id/AuthoringKey/Value leave the kernel.record import cycle"
 
 
 def _callables() -> list[tuple[str, object]]:
@@ -61,8 +51,7 @@ def _callables() -> list[tuple[str, object]]:
 
 
 def _param(symbol: str, obj: object) -> object:
-    marks = [pytest.mark.xfail(reason=REASON, strict=True)] if symbol in KNOWN_FAILURES else []
-    return pytest.param(obj, id=symbol, marks=marks)
+    return pytest.param(obj, id=symbol)
 
 
 def _public_methods(label: str, obj: object) -> list[tuple[str, object]]:

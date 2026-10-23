@@ -9,6 +9,8 @@ elements = [
   { polyline = [[0, 0], [1, -1], [6, -1], [6, 1], [1, 1]], closed = true },
 ]
 
+stretch = [{ axis = "x", at = 3.5 }]
+
 lint_allow = [
   { rule = "slot-overlap-body", reason = "the reference text box does not rotate and is wider than the flag is tall; the marker is drawn unrotated and the text stays inside the outline" },
 ]

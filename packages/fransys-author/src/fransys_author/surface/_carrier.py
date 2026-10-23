@@ -5,6 +5,7 @@ lazy from collections.abc import Callable
 
 from fransys_author.errors import AuthorError
 from fransys_author.surface._pairing import NO_SIDE_FIX
+from fransys_model.kernel import natural_join
 
 if TYPE_CHECKING:
     from fransys_author.handles import Fn
@@ -28,7 +29,7 @@ def _mount_error(label: str, k: int | None, counts: list[tuple[Fn, int]], where:
     fit = " and ".join(sorted(fn.name for fn, count in counts if count == k))
     if fit:
         return f"{where} has {k} poles; {label} has {fit} with {k} poles: say which"
-    has = ", ".join(sorted(f"{fn.name} ({count})" for fn, count in counts)) or "none"
+    has = natural_join(f"{fn.name} ({count})" for fn, count in counts) or "none"
     return (
         f"{where} has {k} poles; {label} has no function of {k} poles; it has: {has}. "
         "Mount it on a carrier function of that pole count"

@@ -1,18 +1,19 @@
 # FRANSYS PLACEMENT INSTANCE test_plc_list_pin_of_a_later_channel__1
+# sides: half split of fransys_el; today and route lines as exported
 # Units G. Wiring grid 8 G. Text height 8 G. Pin offsets and boxes are relative to the
 # symbol origin, at orientation R0. A pin's side is the way its wire leaves.
 # [rail rank=r power=K]: the net carries a declared supply potential; smaller rank is drawn
 # higher (AC by phase, DC high to low, 0 V, PE last). power=SUPPLY/GROUND/PE draws a symbol.
 area 1312 854
-sym +C1-A2.item group=- body=-16,-16,144,32 keepout=-16,-16,196,32
+sym +C1-A2.item group=- body=-16,-16,80,32 keepout=-16,-16,132,32
   pin ai_1.1 N 0,-16
   pin ai_1.2 N 16,-16
-  pin ai_2.5 N 64,-16
-  pin ai_2.6 N 80,-16
+  pin ai_2.5 S 0,16
+  pin ai_2.6 S 16,16
   pin ai_3.3 N 32,-16
   pin ai_3.4 N 48,-16
-  pin ai_4.7 N 96,-16
-  pin ai_4.8 N 112,-16
+  pin ai_4.7 S 32,16
+  pin ai_4.8 S 48,16
 sym +C1-J2.connector group=- body=-2,-16,4,32 keepout=-66,-16,80,32
   pin in N 0,-16
 sym +C1-J3.connector group=- body=-2,-16,4,32 keepout=-66,-16,80,32

@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING
 from fransys_model.derive import revision_history, revision_text, unit_release
 from fransys_model.kernel import Finding, Id, Severity
 
+from ._codes import fix_text
 from ._release_reader import released_revisions
 
 if TYPE_CHECKING:
@@ -53,6 +54,7 @@ def history_findings(
             code="RELEASE_HISTORY_UNRELEASED",
             severity=Severity.ERROR,
             subjects=() if unit is None else (unit,),
+            fix=fix_text("RELEASE_HISTORY_UNRELEASED"),
             message=(
                 f"{name} {revision_text(*current)}: history entry {revision_text(*pair)} names "
                 "a revision that was never released"

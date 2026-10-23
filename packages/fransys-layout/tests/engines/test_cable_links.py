@@ -15,8 +15,8 @@ from cable_models import l1_picture, ring
 from fransys_layout.engines.cable.place import place_block
 from fransys_layout.engines.cable.read import read_blocks
 from fransys_layout.engines.overview.lanes.plan_channel import plan_channel, rise
-from fransys_layout.engines.schematic.read.reading import profile_and_sheet
 from fransys_layout.geometry import WIRING_GRID, text_width
+from fransys_model.derive import text_room
 from fransys_model.derive.cable_drawing import block_cables, cable_heading, core_text, row_links
 from fransys_model.derive.cable_drawing import end_label as label_of
 from fransys_model.layout import (
@@ -28,6 +28,7 @@ from fransys_model.layout import (
     EndBox,
     EndStyle,
     layout_of,
+    profile_of,
 )
 
 G = WIRING_GRID
@@ -48,8 +49,7 @@ def _texts(model, block):
 
     Copied from test_cable_engine.py: the test modules do not import each other.
     """
-    profile, _, _ = profile_and_sheet(model)
-    h, pad = profile.text_height, profile.marker_padding
+    h, pad = text_room(model), profile_of(model, None).marker_padding
     cables = {c.cable: c for c in block_cables(model, block.subject, block.unit)}
     cores = {c.conductor: c for cable in cables.values() for c in cable.cores}
     links = set(row_links(model, block.subject, block.unit))

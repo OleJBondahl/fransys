@@ -7,7 +7,7 @@ lazy from fransys_model.vocab.aspects import AspectNode
 lazy from fransys_model.vocab.core import Unit
 
 from .designation import printed_designation
-from .reports import plc_channel_pairs
+from .plc_list import plc_channel_pairs
 from .rows_plc import PlcTable
 
 

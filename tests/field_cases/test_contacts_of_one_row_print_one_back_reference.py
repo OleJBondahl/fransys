@@ -14,16 +14,19 @@ tag. The coil's contact table still lists every pole.
 from typing import TYPE_CHECKING
 
 import fransys as fr
+from _drawn_pages import drawn_pages
 from _model_build_cover import cabinet_document
+from _tables_on import TABLES_ON
 from fransys.colours import BU
 
-from fransys_model.layout import Label, LabelKind, Page, layout_of
-from fransys_model.vocab.tables import functions, items
+from fransys_model.layout import Page, layout_of
 
 if TYPE_CHECKING:
-    from fransys_model.kernel import Model
+    from fransys_layout.drawing import DrawnText
+    from fransys_model.kernel import Id, Model
 
 _WIRE = (BU, 0.5)
+_BESIDE = 24  # G: how near a text stands to count as beside the tag
 
 
 def _built() -> fr.BuildResult:
@@ -52,19 +55,23 @@ def _built() -> fr.BuildResult:
             d.detail.wire(x1[i + 1], pole[f"{i + 1}1"], wire=_WIRE)
             d.detail.wire(pole[f"{i + 1}4"], next_pole[f"{i + 1}1"], wire=_WIRE)
             d.detail.wire(next_pole[f"{i + 1}4"], lamps[i].lamp[1], wire=_WIRE)
-    return fr.build(d, cabinet_document(cabinet))
+    return fr.build(d, cabinet_document(cabinet), settings=TABLES_ON)
 
 
-def _pole_references(model: Model, tag: str) -> list[Label]:
-    """The back references the poles of the relay `tag` print, one label each."""
+def _pole_references(model: Model, tag: str) -> list[tuple[Id, DrawnText]]:
+    """The back references printed beside the relay `tag`'s tag texts, as (page, text).
+
+    The Drawing names no subject, so a reference belongs to the tag text it stands beside.
+    """
     return [
-        one
-        for one in layout_of(model, Label).values()
-        if one.kind is LabelKind.CROSS_REFERENCE
-        and one.slot == "tag"
-        and one.function is not None
-        and functions(model)[one.function].name.startswith("co_")
-        and items(model)[functions(model)[one.function].item].tag == tag
+        (page, one)
+        for page, drawing in drawn_pages(model).items()
+        for name in drawing.texts
+        if name.text == f"-{tag}"
+        for one in drawing.texts
+        if one.kind == "CROSS_REFERENCE"
+        and abs(one.box.x - name.box.x) <= _BESIDE
+        and abs(one.box.y - name.box.y) <= _BESIDE
     ]
 
 
@@ -73,10 +80,10 @@ def test_three_poles_in_one_row_print_one_back_reference() -> None:
     pages = layout_of(model, Page)
     for tag in ("K1", "K2"):
         references = _pole_references(model, tag)
-        assert {pages[one.page].number for one in references} == {2}  # the poles stand on page 2
+        assert {pages[page].number for page, _ in references} == {2}  # the poles stand on page 2
         assert len(references) == 1, tag
 
 
 def test_the_row_raises_no_text_finding() -> None:
     codes = {f.code for f in _built().findings}
-    assert not {"TEXT_OVERLAP", "LABEL_UNPLACED"} & codes
+    assert not {"TEXT_OVERLAP", "LABEL_UNPLACED", "ANNEX_UNPLACED"} & codes

@@ -6,17 +6,19 @@ from collections import defaultdict
 from itertools import pairwise
 from typing import TYPE_CHECKING
 
-from .geometry import rotate_side
+from .geometry import stair_room
 from .intervals import levels
+from .jog_rows import bend_rows
 from .keys import natural_key
 from .outputs import Wire
 from .route_env import Drawn, Jog, failed, pin_point, z_wire
-from .sides import SIDE_STEP
-from .values import PinRef
+from .sides import step_out
+from .values import Finding, PinRef
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
+    from .jog_rows import Taken
     from .route_env import RouteEnv
     from .values import XY, Cell, Column, End
 
@@ -38,19 +40,46 @@ def _pair(env: RouteEnv, net: str, a: PinRef, b: PinRef) -> Drawn | None:
     return Drawn(jogs=(item,)) if isinstance(item, Jog) else Drawn(wires=(item,))
 
 
+def _box_pair(env: RouteEnv, net: str, box: PinRef, cell: PinRef) -> Drawn | None:
+    """A box pin's wire to a cell pin below it: long on the box's pin column, in by the pin's side.
+
+    A jog nested from the top would run its long vertical on the lane's own pin column, through
+    the lane's cells (SHORTS-ROUTE, layout-0381).
+    """
+    pb, pc = pin_point(env, box.sym, box.pin), pin_point(env, cell.sym, cell.pin)
+    placed = env.placed.get(cell.sym)
+    side = None if placed is None else env.sides.get((cell.sym, cell.pin, placed.orient))
+    if pb is None or pc is None or side not in ("N", "S") or pb[0] == pc[0] or pb[1] >= pc[1]:
+        return _pair(env, net, box, cell)
+    stub = step_out(side, *pc, env.options.wiring_grid)
+    if pb[1] >= stub[1]:
+        return _pair(env, net, box, cell)
+    return Drawn(wires=(Wire(net, env.page, (pb, (pb[0], stub[1]), stub, pc), "straight"),))
+
+
 def _refused(env: RouteEnv, subject: str, text: str) -> Drawn:
     return Drawn(findings=(failed(env, subject, text),))
+
+
+def _dropped(env: RouteEnv, col: Column, i: int, cells: tuple[Cell, Cell], why: str) -> Drawn:
+    """A WARNING for two consecutive cells that get no wire (R324): the cells and the cause."""
+    a, b = cells
+    text = (
+        f"cells {a.sym} and {b.sym} of lane {i} in column {col.id}: {why}, so no wire is "
+        "drawn between them"
+    )
+    return Drawn(findings=(Finding("LANE_WIRE_DROPPED", text, env.page, a.sym),))
 
 
 def _between(env: RouteEnv, col: Column, i: int, cells: tuple[Cell, Cell]) -> Drawn:
     """The wire between two consecutive cells of lane i, joined at their facing pins."""
     a, b = cells
     if not (a.bottom_pin and b.top_pin):
-        return Drawn()
+        return _dropped(env, col, i, cells, "has no pin facing the other")
     ref_a, ref_b = PinRef(a.sym, a.bottom_pin), PinRef(b.sym, b.top_pin)
     net, other = env.net_of.get(ref_a), env.net_of.get(ref_b)
     if net is None or other is None:
-        return Drawn()  # a pin with no net of its own is reached by a trunk, not a lane wire
+        return _dropped(env, col, i, cells, "has a facing pin on no net")
     if net != other:
         text = (
             f"cells {a.sym} and {b.sym} of lane {i} in column {col.id} are on different nets at "
@@ -100,7 +129,9 @@ def _box_wire(env: RouteEnv, col: Column, slot: tuple[bool, int], end: End) -> D
             f"{col.id}, so no wire is drawn from it: wire it to a pin of that lane's end cell"
         )
         return _refused(env, box.sym, text)
-    return _pair(env, net, box, PinRef(cell.sym, pin)) or _refused(
+    if net in env.cut_nets and box.sym not in env.placed:
+        return Drawn()  # a spilled column's box stands on another page: the tag pair is the join
+    return _box_pair(env, net, box, PinRef(cell.sym, pin)) or _refused(
         env, box.sym, f"box {box.sym} is not placed on page {env.page}; place it or cut its net"
     )
 
@@ -147,16 +178,14 @@ def _stub(env: RouteEnv, end: End) -> Drawn:
         return Drawn()
     placed = env.placed.get(ref.sym)
     start = pin_point(env, ref.sym, ref.pin)
-    side = env.sides.get((ref.sym, ref.pin))
+    side = None if placed is None else env.sides.get((ref.sym, ref.pin, placed.orient))
     if placed is None or start is None or side is None:
         text = (
             f"open end {ref.sym}.{ref.pin} of net {end.net} has no placed pin or side on page "
             f"{env.page}, so no stub is drawn: place {ref.sym} on this page or fix the pin name"
         )
         return _refused(env, end.net, text)
-    dx, dy = SIDE_STEP[rotate_side(side, placed.orient)]
-    n = env.options.open_stub
-    stop = (start[0] + dx * n, start[1] + dy * n)
+    stop = step_out(side, *start, env.options.open_stub)
     return Drawn(wires=(Wire(end.net, env.page, (start, stop), "straight"),))
 
 
@@ -183,17 +212,33 @@ def _join_end(env: RouteEnv, col: Column, lane: int, which: tuple[int, End, str]
 
 
 def join_wires(env: RouteEnv, col: Column) -> Drawn:
-    """Each folded member lane is wired, at head and foot, to the pin its join End names."""
+    """Each folded member lane is wired, at head and foot, to the pin its join End names.
+
+    A join with no net only stands the lane level with that pin's cell: no wire is drawn.
+    """
     out = Drawn()
     for i, lane in enumerate(col.lanes):
         head, foot = lane.cells[0], lane.cells[-1]
         for third, end, pin in ((1, col.heads[i], head.top_pin), (2, col.feet[i], foot.bottom_pin)):
-            if end.is_join and pin is not None:
+            if end.is_join and pin is not None and end.net is not None:
                 out += _join_end(env, col, i, (third, end, pin))
     return out
 
 
-def _stair(env: RouteEnv, key: tuple[int, int, bool], members: Sequence[Jog]) -> Drawn:
+def _no_row(env: RouteEnv, jogs: Sequence[Jog], levels_: tuple[int, int], deep: int) -> Drawn:
+    """No row between the two pin levels: none of the jogs is drawn, one finding names them."""
+    y0, y1 = levels_
+    nets = ", ".join(j.net for j in jogs)
+    text = (
+        f"{len(jogs)} jogs ({nets}) between pin levels {y0} and {y1} have no row to turn "
+        f"on, so none is drawn: raise Options.wire_min to {env.options.wiring_grid * (deep + 1)}"
+    )
+    return Drawn(findings=(failed(env, jogs[0].net, text),))
+
+
+def _stair(
+    env: RouteEnv, key: tuple[int, int, bool], members: Sequence[Jog], taken: Sequence[Taken]
+) -> Drawn:
     """One group of jogs and joins between the same two pin levels, shifting the same way (E6).
 
     Nearest the top first: the end furthest along the shift turns highest, by source x, then by
@@ -206,33 +251,43 @@ def _stair(env: RouteEnv, key: tuple[int, int, bool], members: Sequence[Jog]) ->
     )
     spans = [(min(j.top[0], j.bottom[0]), max(j.top[0], j.bottom[0])) for j in ordered]
     level = levels(spans, range(len(ordered)))
-    room = max((y1 - y0) // grid - 1, 1)
+    room = stair_room(y0, y1, grid)
+    deep = max(level) + 1
+    if room < 1:
+        return _no_row(env, ordered, (y0, y1), deep)
+    by_level = [[s for k, s in zip(level, spans, strict=True) if k == n] for n in range(deep)]
+    rows = bend_rows(y0, grid, room, by_level, taken)
     wires = tuple(
-        z_wire(j.net, env.page, (j.top, j.bottom), y0 + grid * (min(k, room - 1) + 1), j.drawn_as)
+        z_wire(
+            j.net,
+            env.page,
+            (j.top, j.bottom),
+            y0 + grid * ((rows[k] if k < room else room - 1) + 1),
+            j.drawn_as,
+        )
         for k, j in zip(level, ordered, strict=True)
     )
     over = [j for k, j in zip(level, ordered, strict=True) if k >= room]
     if not over:
         return Drawn(wires=wires)
-    deep = max(level) + 1
-    nets = ", ".join(j.net for j in ordered)
     text = (
-        f"{len(ordered)} jogs ({nets}) between pin levels {y0} and {y1} have {room} turn "
-        f"levels and overlapping spans need {deep}, so the last ones share a horizontal and "
-        f"overlap: raise Options.wire_min to {grid * (deep + 1)}"
+        f"{len(ordered)} jogs ({', '.join(j.net for j in ordered)}) between pin levels {y0} and "
+        f"{y1} have {room} turn levels and overlapping spans need {deep}, so the last ones share "
+        f"a horizontal and overlap: raise Options.wire_min to {grid * (deep + 1)}"
     )
     return Drawn(wires=wires, findings=(failed(env, over[0].net, text),))
 
 
-def nest_jogs(env: RouteEnv, jogs: Sequence[Jog]) -> Drawn:
+def nest_jogs(env: RouteEnv, jogs: Sequence[Jog], taken: Sequence[Taken] = ()) -> Drawn:
     """E6: jogs between the same levels that shift one way nest; the outermost source turns highest.
 
     Shifting left the furthest-left source turns highest, shifting right the furthest-right one.
+    A bend row on a run in `taken` (y, x0, x1) moves to the next free row (R428).
     """
     groups: dict[tuple[int, int, bool], list[Jog]] = defaultdict(list)
     for j in jogs:
         groups[(j.top[1], j.bottom[1], j.bottom[0] < j.top[0])].append(j)
     out = Drawn()
     for key in sorted(groups):
-        out += _stair(env, key, groups[key])
+        out += _stair(env, key, groups[key], taken)
     return out

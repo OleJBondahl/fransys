@@ -9,10 +9,10 @@ from typing import Any
 from plant import Plant
 from roles_plants import roles_plant
 
+from fransys_model.derive import cable_rows, designation_list, wire_rows
 from fransys_model.derive.bundles import bundles
 from fransys_model.derive.line_fact import draws_as_line, line_conductors
 from fransys_model.derive.loose import function_is_loose
-from fransys_model.derive.reports import cable_rows, designation_list, wire_rows
 from fransys_model.derive.unused import (
     function_is_reached,
     function_is_unused,

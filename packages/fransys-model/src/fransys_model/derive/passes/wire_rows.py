@@ -10,10 +10,11 @@ import dataclasses
 from typing import TYPE_CHECKING, Final
 
 from fransys_model.derive.facts.closure import net_of, port_rails
+from fransys_model.derive.facts.roles import plc_channel_facets
 from fransys_model.derive.lookups import item_of_port, unit_chain
 from fransys_model.kernel import Finding, Model, Severity, evolve, make_id
+from fransys_model.vocab.codes import fix_text
 from fransys_model.vocab.enums import SignalType
-from fransys_model.vocab.facets.plc import PlcChannelFacet
 from fransys_model.vocab.facets.wire import WireFacet
 from fransys_model.vocab.facets.wire_row_hint import WireRowHint
 from fransys_model.vocab.finding_ref import ref
@@ -49,7 +50,7 @@ def _sourced(model: Model, net_ports: tuple[Id[Port], ...]) -> set[WiringRow]:
 
 
 def _signal_on(model: Model, net_ports: tuple[Id[Port], ...]) -> bool:
-    channels = {f.subject: f.signal for f in facets_of(model, PlcChannelFacet).values()}
+    channels = {t: f.signal for t, f in plc_channel_facets(model).items()}
     fns, table = functions(model), ports(model)
     return any(
         channels.get(fns[table[p].function].template) in _DC_SIGNALS
@@ -113,6 +114,7 @@ def _unresolved(model: Model, hint: WireRowHint, conductor: Conductor, why: str)
         severity=Severity.ERROR,
         subjects=(hint.id, conductor.id),
         message=message,
+        fix=fix_text(WIRE_ROW_UNRESOLVED),
     )
 
 

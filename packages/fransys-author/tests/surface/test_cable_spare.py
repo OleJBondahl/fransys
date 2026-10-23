@@ -100,3 +100,13 @@ def test_series_marks_an_unlanded_gnye_core_spare(lib: Draft) -> None:
     q1, x1 = d.device("Q1", "TEST-MCB-3P"), d.terminal_strip("X1", "TEST-TERM")  # no PE anywhere
     d.series(q1.main, d.cable("W1", FOUR), x1, wire=("BK", 2.5))
     assert 4 in _open(d)
+
+
+def test_a_screen_core_lands_on_a_pe_port_and_a_conductor_core_does_not(lib: Draft) -> None:
+    # MUTATION: `core_on_pe_not_gnye` drops the `SH` exemption
+    d = design(lib)
+    m1 = d.device("M1", "TEST-MOTOR-3P")
+    w9 = _screened(d)
+    w9.core(SH, m1.load["U"], m1.load["PE"])
+    with pytest.raises(AuthorError, match="core 1 is BN: the PE core is GNYE"):
+        w9.core(BN, m1.load["V"], m1.load["PE"])

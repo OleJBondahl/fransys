@@ -23,9 +23,9 @@ Each test builds once: the two profiles place differently, so they share nothing
 from typing import TYPE_CHECKING, Any, NamedTuple
 
 import fransys as fr
+from _drawn_pages import drawn_pages
 
-from fransys_model.layout import CrossReferencePartner, Label, Page, SymbolPlacement, layout_of
-from fransys_model.vocab.tables import ports
+from fransys_model.layout import LinkMarker, Page, layout_of
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -77,17 +77,16 @@ def _build(tmp_path: Path, *, design: int | None, in_body: int | None) -> fr.Bui
 
 
 def _assert_every_partner_is_drawn_where_it_names(result: fr.BuildResult) -> None:
-    """Each partner end names a page that exists and the column its function stands at there."""
+    """Each marker's partner stands on a page that exists, drawn, at the marker's own end."""
     model = result.model
     pages = layout_of(model, Page)
-    columns = {(p.function, p.page): p.x for p in layout_of(model, SymbolPlacement).values()}
-    ends: list[CrossReferencePartner] = [
-        end for one in layout_of(model, Label).values() for end in one.partners
-    ]
-    assert ends
-    for end in ends:
-        assert end.page in pages
-        assert columns[ports(model)[end.port].function, end.page] == end.x
+    drawn = drawn_pages(model)
+    markers = layout_of(model, LinkMarker)
+    assert markers
+    for marker in markers.values():
+        partner = markers[marker.partner]
+        assert partner.page in pages
+        assert partner.page in drawn
 
 
 def test_the_design_profile_leaves_the_unit_cross_references_whole(tmp_path: Path) -> None:

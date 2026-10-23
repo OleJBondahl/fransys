@@ -10,19 +10,19 @@ pattern `packages/fransys-kicad/tests/conftest.py` uses for its own invented boa
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
-from fransys_model.kernel import Draft, Origin, freeze, make_id
+import fransys_pdf
+from pdf_library import freeze
+
+from fransys_model.kernel import Draft, Origin, make_id
 from fransys_model.layout import (
     DrawingSet,
     LinkMarker,
     MarkerSide,
-    Orientation,
     Page,
     PageGroup,
     PageRole,
-    Route,
-    RoutePoint,
     SheetFormat,
-    SymbolPlacement,
+    layout_of,
 )
 from fransys_model.vocab import (
     Aspect,
@@ -57,7 +57,6 @@ from fransys_model.vocab.facets.cable import CableFacet, CableProductFacet, Core
 
 if TYPE_CHECKING:
     from fransys_model.kernel import Id
-    from fransys_model.vocab import Net
 
 _ORIGIN = Origin(file="packages/fransys-pdf/tests/_build.py", line=1, note="invented document")
 
@@ -343,48 +342,6 @@ def document(  # noqa: PLR0913 -- one keyword per thing a test varies, as the ki
         notes=notes,
         logo=logo,
         notice=notice,
-    )
-
-
-def symbol_placement(key_part: str, *, function: Id[Function], page: Id[Page]) -> SymbolPlacement:
-    """A `layout.symbol_placement` of `function` on `page` (the black-box reader)."""
-    key = ("symbol_placement", key_part)
-    return SymbolPlacement(
-        id=make_id(SymbolPlacement, key),
-        key=key,
-        function=function,
-        page=page,
-        x=0,
-        y=0,
-        orientation=Orientation.R0,
-        poles=1,
-        symbol="test",
-        library_version="1",
-        produced_by="test",
-    )
-
-
-def route(  # noqa: PLR0913 -- one keyword per invented fact, as `document()` above
-    key_part: str,
-    *,
-    page: Id[Page],
-    a: Id[Port],
-    b: Id[Port],
-    conductor: Id[Conductor] | None = None,
-    net: Id[Net] | None = None,
-) -> Route:
-    """A `layout.route` on `page` between ports `a` and `b` (the conductor check)."""
-    key = ("route", key_part)
-    return Route(
-        id=make_id(Route, key),
-        key=key,
-        page=page,
-        conductor=conductor,
-        net=net,
-        a=a,
-        b=b,
-        points=(RoutePoint(index=0, x=0, y=0), RoutePoint(index=1, x=10, y=10)),
-        produced_by="test",
     )
 
 
@@ -688,3 +645,21 @@ def model(*records):
         origin=_ORIGIN,
     )
     return freeze(draft)
+
+
+LIST_SHARE = 40  # the facade's `[pdf]` values, typed here for tests that call `source` directly
+LIST_GUTTER = 20
+FLOW = {"share_pct": LIST_SHARE, "gutter_pct": LIST_GUTTER}
+
+
+def page_links(model):
+    """Every page's reference links: a hand-built model draws no marker, so none (F7)."""
+    return dict.fromkeys(layout_of(model, Page), ())
+
+
+def source(model, document, svgs, sheets, bridges=None, **flow):
+    """`fransys_pdf.source` with the house list shares and the links of `page_links`."""
+    flow = {"list_share_pct": LIST_SHARE, "list_gutter_pct": LIST_GUTTER, **flow}
+    return fransys_pdf.source(
+        model, document, svgs, sheets, bridges, links=page_links(model), **flow
+    )

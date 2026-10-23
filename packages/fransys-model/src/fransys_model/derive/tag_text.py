@@ -4,16 +4,16 @@ from functools import partial
 from typing import Any, cast
 
 from fransys_model.derive.designation import (
-    _own_designation,
     connector_designation,
     item_designation,
     port_designation,
-    terminal_designation,
-    terminal_of,
 )
+from fransys_model.derive.designation_label import own_label, terminal_of
 from fransys_model.derive.indexes import build_indexes
 from fransys_model.derive.instance_tag import dashed
 from fransys_model.derive.port_marking import port_marking
+from fransys_model.derive.texts.context import PrintContext
+from fransys_model.derive.texts.terminal_text import terminal_text
 from fransys_model.vocab.tables import functions, items, ports
 lazy from fransys_model.derive.facts.roles import function_role
 lazy from fransys_model.kernel import Id, Model
@@ -41,16 +41,17 @@ def item_tag_text(model: Model, item: Id[Item], *, unit: Id[Unit] | None = None)
     return dashed(item_designation(model, item, unit=unit))
 
 
-def tag_text(model: Model, function: Id[Function]) -> str:
-    """A TAG label's text: the designation the layout engine used.
+def tag_text(model: Model, function: Id[Function], *, unit: Id[Unit] | None = None) -> str:
+    """A TAG label's text, as the lists of `unit`'s own document print it (`None`: whole model).
 
     A terminal function's tag is the designation of its lowest-handle port; every other
     function's tag is its item's `item_tag_text`.
     """
     record = functions(model)[function]
     if function_role(model, function).terminal:
-        return port_designation(model, min(build_indexes(model).ports_by_function[function]))
-    return item_tag_text(model, record.item)
+        port = min(build_indexes(model).ports_by_function[function])
+        return port_designation(model, port, unit=unit)
+    return item_tag_text(model, record.item, unit=unit)
 
 
 def strip_tag_text(model: Model, function: Id[Function]) -> str:
@@ -84,9 +85,9 @@ def run_point_text(model: Model, function: Id[Function]) -> str:
     """A strip terminal's point text in a run, "L2:1".
 
     The terminal's own `group:index`, the strip's designation left out (`strip_tag_text` prints it).
-    A terminal that is no part of a run prints `terminal_designation`, never this.
+    A terminal that is no part of a run prints `terminal_text`, never this.
     """
-    return _own_designation(model, functions(model)[function].item)
+    return own_label(model, functions(model)[function].item)
 
 
 def point_text(model: Model, function: Id[Function]) -> str:
@@ -140,7 +141,7 @@ def unit_tag_text(
         return (
             None
             if is_device_terminal(model, function)
-            else terminal_designation(model, record.item, unit=unit)
+            else terminal_text(model, record.item, PrintContext(reading=unit))
         )
     return short(record.item)
 

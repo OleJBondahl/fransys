@@ -3,8 +3,8 @@
 A box wired by trunks alone is a card block with `columns=()` (layout-0283). It takes the place
 right after the fan block that most trunk ends at the box reach, the smaller natural key of the
 block id breaking a tie. With no such block, and no box-to-box hop, it stands at the unit's end
-in a row of its own. A box in a box-to-box chain that stage 1 refused (CHAIN_REFUSED, 0289)
-is not seated, and the guard reports it. Stage 4 cuts only seated cards.
+in a row of its own, as does a box of a chain that stage 1 refused (CHAIN_REFUSED, 0289, R348):
+a refusal degrades to a drawing plus a finding. Stage 4 cuts only seated cards.
 """
 
 from __future__ import annotations
@@ -43,17 +43,16 @@ def seat_bare_cards(unit: BlockList, flow: FlowGraph) -> BlockList:
     rest = [b for b in unit.blocks if not is_bare(b)]
     after: dict[str, list[Block]] = {}
     end: list[Block] = []
-    kept: list[Block] = []
     for card in bare:
         host = _host(card, rest, flow)
         if host is not None:
             after.setdefault(host.id, []).append(replace(card, seat="beside"))
         elif is_chain_box(card.anchor, flow):
-            kept.append(card)
+            end.append(replace(card, seat="beside"))
         else:
             end.append(replace(card, seat="alone"))
     out = [x for b in rest for x in (b, *after.get(b.id, ()))]
-    return replace(unit, blocks=(*out, *end, *kept))
+    return replace(unit, blocks=(*out, *end))
 
 
 def _host(card: Block, blocks: Sequence[Block], flow: FlowGraph) -> Block | None:

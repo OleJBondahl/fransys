@@ -5,6 +5,7 @@ from pathlib import Path
 
 from fransys_model.kernel import Finding, Severity
 
+from ._codes import fix_text
 from ._release_reader import (
     BASELINE_FILES,
     file_bytes,
@@ -25,6 +26,7 @@ def _finding(code: str, release_name: str, folder: Path, detail: str) -> Finding
         severity=Severity.ERROR,
         subjects=(),
         message=f"{release_name} {folder.name}: {detail}",
+        fix=fix_text(code),
     )
 
 

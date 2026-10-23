@@ -9,6 +9,7 @@ from fractions import Fraction
 from typing import TYPE_CHECKING
 
 from fransys_model.derive.facts.closure import port_rails, rail_pairs
+from fransys_model.kernel import DIGEST_CACHE_SIZE, digest_cached
 from fransys_model.vocab import voltage
 from fransys_model.vocab.enums import Current, Earthing
 from fransys_model.vocab.tables import nets, ports, supply_of_potential, supply_systems
@@ -128,6 +129,20 @@ def reach_of(
     """The `RailReach` of `function`, built the one way every check builds it."""
     reached = [port_rails(model, port) for port in ports_of.get(function, ())]
     return RailReach(lookup, reached, sorted(rail_pairs(model, function)))
+
+
+@digest_cached(DIGEST_CACHE_SIZE)
+def _reach_inputs(
+    model: Model,
+) -> tuple[dict[str, voltage.RailV], dict[Id[Function], list[Id[Port]]]]:
+    """The rails by potential and the ports by function, built once per model digest."""
+    return rails_by_potential(model), ports_by_function(model)
+
+
+def function_reach(model: Model, function: Id[Function]) -> RailReach:
+    """The `RailReach` of `function` over the model's rails; empty when the model has none."""
+    lookup, ports_of = _reach_inputs(model)
+    return reach_of(model, function, lookup, ports_of)
 
 
 def worst_stand(stands: Sequence[Stand]) -> Stand:

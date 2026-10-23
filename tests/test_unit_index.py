@@ -10,10 +10,11 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from root_library import freeze
 
 from fransys_model.derive.facts import units as membership
 from fransys_model.derive.facts.unit_index import unit_index
-from fransys_model.kernel import Draft, Origin, SchemaError, freeze, make_id
+from fransys_model.kernel import Draft, Origin, SchemaError, make_id
 from fransys_model.vocab import (
     CableFacet,
     CableProductFacet,

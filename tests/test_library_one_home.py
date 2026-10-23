@@ -4,7 +4,7 @@ The scan fails on a second `[grid]` or `[font]` table, on the divisions factor t
 (a `G_PER_MODULE = 8` binding, a `round(x * 8)` converter, `* 8` in a `_g` or `to_grid`), on a
 second font advance table. Each message names the file, the line and the home.
 Reads of the name `G_PER_MODULE` are fine
-(`fransys_layout/geometry/units.py`, `fransys_render/_slots.py`, `_symbol_geometry.py` hold no
+(`fransys_layout/geometry/units.py`, `fransys_render/_slots.py` hold no
 literal). The allowlist names the two sites that still hold the copy, each with the order that
 ends it. The sheet formats' `module_mm` (`formats.py`, STOCK) is named, not
 checked: its fate is GRID-HOME-B.
@@ -24,7 +24,6 @@ FONT_PAIR = re.compile(r"\b20=585\b")
 
 # (path relative to the root, what it holds): the order that deletes it.
 ALLOWED = {
-    ("packages/fransys-model/src/fransys_model/derive/text_width.py", "factor"): "MODEL-TEXT",
     ("packages/fransys-model/src/fransys_model/derive/_text_widths.py", "font"): "MODEL-TEXT",
 }
 
@@ -165,9 +164,12 @@ def test_the_named_stock_is_still_there() -> None:
         )
 
 
-def test_the_models_copy_of_the_factor_equals_the_library_grid() -> None:
-    """Until MODEL-TEXT deletes `derive`'s copy, it must equal the library's one home."""
-    from electrical_symbols import LIBRARY
-    from fransys_model.derive import text_width
+def test_the_models_record_of_the_factor_equals_the_library_grid() -> None:
+    """The facade writes the library's grid into the model; `derive` reads the factor there."""
+    from fransys._drawing_library import with_drawing_library
 
-    assert LIBRARY.grid.divisions_per_module == text_width.G_PER_MODULE
+    from electrical_symbols import LIBRARY
+    from fransys_model.derive.library_grid import divisions
+    from fransys_model.kernel import Draft, freeze
+
+    assert divisions(with_drawing_library(freeze(Draft()))) == LIBRARY.grid.divisions_per_module

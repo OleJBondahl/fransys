@@ -71,9 +71,10 @@ class Side(Enum):
 class PageRole(Enum):
     """The drawing role of a `Page`; roles may share a page.
 
-    A `POWER` group and a `CONTROL` group can be drawn on one page; the page's `role` is its
-    first group's (decision layout-0048). Coarser than `NetClass` on purpose:
-    an engine draws power and PE nets on `POWER` pages, control and generic nets on
+    A `POWER` group and a `CONTROL` group can be drawn on one page; the old engine's page `role`
+    is its first unit's, a packing artefact (decision layout-0048). Coarser than
+    `NetClass` on purpose:
+    an engine draws power nets on `POWER` pages (PE nets do not vote), control and generic nets on
     `CONTROL` pages, signal nets on `SIGNAL` pages.
     The member names are a contract: `fransys-layout` converts its stage-side role
     enum to this one by member name.
@@ -82,20 +83,6 @@ class PageRole(Enum):
     POWER = "power"
     CONTROL = "control"
     SIGNAL = "signal"
-
-
-@register_enum
-class LabelKind(Enum):
-    """What a `Label` shows; the text itself is rendered from the model, never stored.
-
-    `TAG` is the item designation at a function, `MARKING` a port name, `WIRE` a conductor
-    label, `CROSS_REFERENCE` where the other functions of the same item are drawn.
-    """
-
-    TAG = "tag"
-    MARKING = "marking"
-    WIRE = "wire"
-    CROSS_REFERENCE = "cross_reference"
 
 
 @register_enum
@@ -122,3 +109,29 @@ class EndStyle(Enum):
     DASHED = "dashed"
     BLANK = "blank"
     EARTH = "earth"
+
+
+@register_enum
+class Corner(Enum):
+    """The corner of a drawn text's box that its position is: a free label is anchored by it."""
+
+    NW = "nw"
+    NE = "ne"
+    SW = "sw"
+    SE = "se"
+
+
+@register_enum
+class SheetKind(Enum):
+    """Which family of drawing a `LayoutSheet` holds: a cable drawing or a block diagram."""
+
+    CABLE = "cable"
+    BLOCK = "block"
+
+
+@register_enum
+class Shown(Enum):
+    """How a membership's subject stands on its page: drawn there, or only a reference marker."""
+
+    DRAWN = "drawn"
+    REFERENCE = "reference"

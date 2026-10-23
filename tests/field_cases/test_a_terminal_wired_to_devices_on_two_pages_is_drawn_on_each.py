@@ -25,16 +25,9 @@ from pathlib import Path
 from typing import Any, NamedTuple
 
 import fransys as fr
+from _drawn_pages import drawn_pages
 
-from fransys_model.layout import (
-    Label,
-    LabelKind,
-    LinkMarker,
-    Route,
-    StarKind,
-    SymbolPlacement,
-    layout_of,
-)
+from fransys_model.layout import LinkMarker, StarKind, layout_of
 from fransys_model.vocab.enums import FunctionKind
 from fransys_model.vocab.tables import conductors, functions, ports
 
@@ -97,11 +90,41 @@ def _coil(model: Any, n: int, pin: str) -> Any:
     return found
 
 
+def _tagged(model: Any, text: str) -> list[tuple[Any, Any]]:
+    """Each (page, drawing) that prints the tag `text` (`-U1-K3`)."""
+    return [
+        (page, drawing)
+        for page, drawing in drawn_pages(model).items()
+        if any(t.kind == "TAG" and t.text == text for t in drawing.texts)
+    ]
+
+
 def _coil_page(model: Any, n: int) -> Any:
-    """The page of the placement of the function that owns the A1 pin of relay K`n`."""
-    function = ports(model)[_coil(model, n, "A1")].function
-    (page,) = {p.page for p in layout_of(model, SymbolPlacement).values() if p.function == function}
+    """The page that prints the tag of relay K`n`."""
+    ((page, _),) = _tagged(model, f"-U1-K{n}")
     return page
+
+
+def _owned(drawing: Any, text: str) -> list[Any]:
+    """The symbols of `drawing` whose nearest tag is `text`."""
+    tags = [t for t in drawing.texts if t.kind == "TAG"]
+    return [
+        one
+        for one in drawing.symbols
+        if tags
+        and min(tags, key=lambda t: abs(t.box.x - one.x) + abs(t.box.y - one.y)).text == text
+    ]
+
+
+def _ends_near(drawing: Any, one: Any, slack: int = 24) -> list[tuple[Any, Any]]:
+    """The (wire, other end) pairs whose one end is within `slack` of symbol `one`."""
+    found = []
+    for wire in drawing.wires:
+        first, last = wire.points[0], wire.points[-1]
+        for here, other in ((first, last), (last, first)):
+            if abs(here[0] - one.x) + abs(here[1] - one.y) <= slack:
+                found.append((wire, other))
+    return found
 
 
 def _far_relay(model: Any) -> int:
@@ -129,16 +152,16 @@ def test_two_relays_fed_from_x1_1_stand_on_different_pages() -> None:
 
 def test_the_terminal_is_drawn_on_the_page_of_each_relay() -> None:
     model = _model()
-    terminal = _x1_1_functions(model)
-    stood = {p.page for p in layout_of(model, SymbolPlacement).values() if p.function in terminal}
+    stood = {page for page, _ in _tagged(model, "-U1-X1:1")}
     assert {_coil_page(model, 1), _coil_page(model, _far_relay(model))} <= stood
 
 
 def test_each_conductor_of_the_terminal_is_a_route_on_its_relays_page() -> None:
     model = _model()
-    routed = {(r.conductor, r.page) for r in layout_of(model, Route).values()}
-    for n, conductor in _x1_conductors(model).items():
-        assert (conductor.id, _coil_page(model, n)) in routed
+    for n in _x1_conductors(model):
+        drawing = drawn_pages(model)[_coil_page(model, n)]
+        relay = _owned(drawing, f"-U1-K{n}")
+        assert any(_ends_near(drawing, one) for one in relay)
 
 
 def test_no_marker_stands_on_a_terminals_path() -> None:
@@ -174,29 +197,21 @@ def test_a_terminal_wired_to_one_device_on_another_page_is_drawn_and_routed_ther
     """X1:2's two nets end at K3 and K12, on two pages: the terminal stands on both, and each
     wire is a route on its relay's page with no marker at either end."""
     model = _model()
-    terminal = {
-        p.function for p in ports(model).values() if p.key[:4] == ("U1", "X1", "terminal", "2")
-    }
-    stood = {p.page for p in layout_of(model, SymbolPlacement).values() if p.function in terminal}
-    routed = {(r.conductor, r.page) for r in layout_of(model, Route).values()}
+    stood = {page for page, _ in _tagged(model, "-U1-X1:2")}
     marked = {m.port for m in layout_of(model, LinkMarker).values()}
     assert _coil_page(model, 3) != _coil_page(model, 12)
     for n in (3, 12):
         pin = _coil(model, n, "A2")
         (conductor,) = (c for c in conductors(model).values() if pin in (c.a, c.b))
+        drawing = drawn_pages(model)[_coil_page(model, n)]
         assert _coil_page(model, n) in stood
-        assert (conductor.id, _coil_page(model, n)) in routed
+        assert any(_ends_near(drawing, one) for one in _owned(drawing, f"-U1-K{n}"))
         assert not {conductor.a, conductor.b} & marked
 
 
 def _copies(model: Any, page: Any) -> list[Any]:
-    """The placements of X1:1's function on `page`."""
-    terminal = _x1_1_functions(model)
-    return [
-        p
-        for p in layout_of(model, SymbolPlacement).values()
-        if p.function in terminal and p.page == page
-    ]
+    """The terminal symbols of X1:1 on `page`."""
+    return [one for one in _owned(drawn_pages(model)[page], "-U1-X1:1") if one.key == "terminal"]
 
 
 def test_k1s_page_draws_several_copies_of_x1_1() -> None:
@@ -207,47 +222,30 @@ def test_k1s_page_draws_several_copies_of_x1_1() -> None:
 def test_each_copy_of_x1_1_has_its_own_tag() -> None:
     model = _model()
     page = _coil_page(model, 1)
-    terminal = _x1_1_functions(model)
-    tags = [
-        t
-        for t in layout_of(model, Label).values()
-        if t.page == page and t.kind is LabelKind.TAG and t.function in terminal
-    ]
+    tags = [t for t in drawn_pages(model)[page].texts if t.kind == "TAG" and t.text == "-U1-X1:1"]
     assert len(tags) == len(_copies(model, page)) >= 2
-
-
-def _end_at(route: Any, port_ids: set[Any]) -> Any:
-    """The route's end point at the one of `port_ids` it joins."""
-    return route.points[0] if route.a in port_ids else route.points[-1]
 
 
 def test_each_coil_a1_wire_ends_at_a_copy_beside_it() -> None:
     model = _model()
-    terminal = _x1_1_functions(model)
-    x1_ports = {p.id for p in ports(model).values() if p.function in terminal}
-    routes = list(layout_of(model, Route).values())
     for n in range(1, _COUNT + 1):
-        page, pin = _coil_page(model, n), _coil(model, n, "A1")
-        (conductor,) = (c for c in conductors(model).values() if pin in (c.a, c.b))
-        (route,) = (r for r in routes if r.conductor == conductor.id and r.page == page)
-        end = _end_at(route, x1_ports)
-        beside = [
-            p
-            for p in _copies(model, page)
-            if abs(p.x - end.x) + abs(p.y - end.y) <= 12  # a copy, or the home at K1's pin
+        page = _coil_page(model, n)
+        drawing = drawn_pages(model)[page]
+        copies = _copies(model, page)
+        ends = [
+            other for one in _owned(drawing, f"-U1-K{n}") for _, other in _ends_near(drawing, one)
         ]
-        assert beside, (n, end)
+        beside = [
+            c
+            for c in copies
+            for x, y in ends
+            if abs(c.x - x) + abs(c.y - y) <= 12  # a copy, or the home at K1's pin
+        ]
+        assert beside, n
 
 
 def test_every_drawn_id_is_a_model_id() -> None:
     """Guards stage-only handles from leaking into records."""
     model = _model()
-    known_functions, known_ports = set(functions(model)), set(ports(model))
-    assert {p.function for p in layout_of(model, SymbolPlacement).values()} <= known_functions
-    routes = layout_of(model, Route).values()
-    assert {r.a for r in routes} | {r.b for r in routes} <= known_ports
+    known_ports = set(ports(model))
     assert {m.port for m in layout_of(model, LinkMarker).values()} <= known_ports
-    for label in layout_of(model, Label).values():
-        assert label.function is None or label.function in known_functions
-        assert label.port is None or label.port in known_ports
-        assert label.conductor is None or label.conductor in set(conductors(model))

@@ -10,6 +10,7 @@ Output contract: pure function of a Model returning str, bytes or a tuple of pag
   - `REFERENCE_DUPLICATE` (error): two parts of the board with one designation.
   - `NET_NAME_DUPLICATE` (error): two nets with one name; KiCad merges them.
   - `PAD_ON_MULTIPLE_NETS` (error): one component and pad name in more than one net.
+  - `PIN_ID_COLLISION` (error): two pins of one part that would write one KiCad pin id, wired or not (kicad-0006).
   - `UNCONNECTED_PIN` (info): a pin of a part of the board that is in no net.
 
   Not checked: output conflicts from `PortRole` and explicit no-connects, since the model has neither an input or output role nor a no-connect record.
@@ -28,7 +29,7 @@ $ uv run python -m fransys_kicad path/to/library.kicad_sym DEMO-RLY-2U > new-par
 writes the skeleton to `new-part.toml`, ready to drop under a part library's `parts/` and fill
 in by hand.
 
-Status: `netlist`, `check` and `part_file_skeleton` implemented (seven `check` rules; a part
+Status: `netlist`, `check` and `part_file_skeleton` implemented (eight `check` rules; a part
 that is not installed is marked do-not-populate). The manual KiCad import check (design
 section 8) passed on 2026-09-21 with KiCad 9.0.6.
 

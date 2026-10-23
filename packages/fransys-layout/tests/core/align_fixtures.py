@@ -5,6 +5,8 @@ from __future__ import annotations
 from dataclasses import replace
 from typing import TYPE_CHECKING
 
+from turn_fixtures import refit
+
 from fransys_layout.core import Box, Facts, PinRef, PlacementProblem, Sym
 from fransys_layout.core.geometry import pin_xy
 from fransys_layout.core.pack import cell_node
@@ -31,7 +33,7 @@ def _wide(sym_id: str, band: int | None = None) -> Sym:
 def _padded(sym: Sym, extra: int) -> Sym:
     """The symbol with `extra` G more footprint above its body."""
     fp = sym.footprint
-    return replace(sym, footprint=Box(fp.x, fp.y - extra, fp.w, fp.h + extra))
+    return refit(sym, footprint=Box(fp.x, fp.y - extra, fp.w, fp.h + extra))
 
 
 def _problem(syms: list[Sym], nets: list[Net], facts: Facts | None = None) -> PlacementProblem:

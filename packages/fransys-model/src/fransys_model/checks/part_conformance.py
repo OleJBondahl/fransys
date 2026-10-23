@@ -8,6 +8,7 @@ from fransys_model.derive.facts.bars import screws_made_by_landing
 from fransys_model.derive.facts.roles import port_role
 from fransys_model.derive.facts.unit_index import unit_index
 from fransys_model.kernel import Finding, Severity
+from fransys_model.vocab.codes import fix_text
 from fransys_model.vocab.finding_ref import ref
 from fransys_model.vocab.tables import (
     function_templates,
@@ -77,7 +78,11 @@ def _pair_up[I: Function | Port, T: FunctionTemplate | PortTemplate](
 
 def _mismatch(message: str, *subjects: Id[Any]) -> Finding:
     return Finding(
-        code=ITEM_PART_MISMATCH, severity=Severity.ERROR, subjects=subjects, message=message
+        code=ITEM_PART_MISMATCH,
+        severity=Severity.ERROR,
+        subjects=subjects,
+        message=message,
+        fix=fix_text(ITEM_PART_MISMATCH),
     )
 
 
@@ -183,6 +188,7 @@ def check_part_conformance(model: Model) -> tuple[Finding, ...]:
                     severity=Severity.INFO,
                     subjects=(item.id,),
                     message=f"item {ref(item)} has no part: its functions are not checked",
+                    fix=fix_text(ITEM_WITHOUT_PART),
                 )
             )
         else:

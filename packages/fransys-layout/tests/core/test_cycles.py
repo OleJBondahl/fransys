@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from fransys_layout.core.cycles import cycle_split
-from fransys_layout.core.values import CycleSplit, PlacementProblem, Rail
+from fransys_layout.core.values import CycleSplit, PlacementProblem
 
 from .flow_builders import elem, free, net, problem
 
@@ -20,9 +20,7 @@ def independent_rank(prob: PlacementProblem) -> int:
             x = parent[x]
         return x
 
-    wires = [
-        n for n in prob.nets if n.rail is None or n.rail.power not in {"SUPPLY", "GROUND", "PE"}
-    ]
+    wires = list(prob.nets)
     for n in wires:
         for ref in n.pins:
             if ref.sym in junction:
@@ -76,12 +74,10 @@ def test_a_triangle_is_one_cross_link() -> None:
     assert _split_and_rank(prob)[0] == CycleSplit(0, 0, 1)
 
 
-def test_a_junction_merges_its_nets_and_a_rail_leaves_the_graph() -> None:
+def test_a_junction_merges_its_nets() -> None:
     syms = [elem("a"), elem("b"), free("j")]
     nets = [net("w1", "a.s", "j.n"), net("w2", "j.s", "b.n"), net("w3", "a.n", "b.s")]
     assert _split_and_rank(problem(syms, nets))[0] == CycleSplit(1, 0, 0)
-    rail = net("w3", "a.n", "b.s", rail=Rail(0, "SUPPLY"))
-    assert _split_and_rank(problem(syms, [*nets[:2], rail]))[0] == CycleSplit(0, 0, 0)
 
 
 def test_ties_between_net_ids_follow_natural_order() -> None:

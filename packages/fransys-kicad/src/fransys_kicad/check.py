@@ -3,8 +3,16 @@
 from collections import defaultdict
 from typing import TYPE_CHECKING, Any, Final
 
-from fransys_model.derive import board_netlist, board_pins, item_label, pin_text
+from fransys_model.derive import (
+    board_netlist,
+    board_pins,
+    item_label,
+    pin_text,
+    port_designation,
+)
 from fransys_model.kernel import Finding, Severity
+
+from .codes import fix_text
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -19,10 +27,17 @@ REFERENCE_DUPLICATE: Final[str] = "REFERENCE_DUPLICATE"
 NET_NAME_DUPLICATE: Final[str] = "NET_NAME_DUPLICATE"
 PAD_ON_MULTIPLE_NETS: Final[str] = "PAD_ON_MULTIPLE_NETS"
 UNCONNECTED_PIN: Final[str] = "UNCONNECTED_PIN"
+PIN_ID_COLLISION: Final[str] = "PIN_ID_COLLISION"
 
 
 def _finding(code: str, severity: Severity, subjects: Iterable[Id[Any]], message: str) -> Finding:
-    return Finding(code=code, severity=severity, subjects=tuple(subjects), message=message)
+    return Finding(
+        code=code,
+        severity=severity,
+        subjects=tuple(subjects),
+        message=message,
+        fix=fix_text(code),
+    )
 
 
 def _single_pin(nets: tuple[PinNet, ...]) -> list[Finding]:
@@ -118,6 +133,23 @@ def _pad_on_multiple_nets(nets: tuple[PinNet, ...]) -> list[Finding]:
     ]
 
 
+def _collision(model: Model, first: NetlistPin, other: NetlistPin) -> Finding:
+    names = port_designation(model, first.port), port_designation(model, other.port)
+    pad = pin_text(first)
+    message = (
+        f"pins {names[0]} and {names[1]} would write the one KiCad pin id {pad}; "
+        "KiCad keys a pin by its name, which is the pad name"
+    )
+    return _finding(PIN_ID_COLLISION, Severity.ERROR, (first.port, other.port), message)
+
+
+def _pin_id_collision(model: Model, part_pins: tuple[NetlistPin, ...]) -> list[Finding]:
+    by_pad: defaultdict[tuple[str, str], list[NetlistPin]] = defaultdict(list)
+    for pin in part_pins:
+        by_pad[pin.ref, pin.pad].append(pin)
+    return [_collision(model, first, other) for first, *rest in by_pad.values() for other in rest]
+
+
 def _unconnected_pin(unconnected: tuple[NetlistPin, ...]) -> list[Finding]:
     return [
         _finding(UNCONNECTED_PIN, Severity.INFO, (pin.port,), f"pin {pin_text(pin)} is in no net")
@@ -151,6 +183,7 @@ def check(model: Model, board: ItemId) -> tuple[Finding, ...]:
         *_reference_duplicate(rows),
         *_net_name_duplicate(nets),
         *_pad_on_multiple_nets(nets),
+        *_pin_id_collision(model, pins.part_pins),
         *_unconnected_pin(pins.unconnected),
     ]
     return tuple(sorted(found, key=lambda f: (f.code, f.subjects, f.message)))

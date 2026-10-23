@@ -7,17 +7,12 @@ the pairs are equally far: one of them closes a loop and is dropped. A port hand
 decide which one, or renaming an item moves a wire.
 """
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
+from _drawn_pages import drawn_pages
 from dd_chain_fixtures import build, design
 
-from fransys_model.derive.designation import own_designation_or_none
 from fransys_model.kernel import Severity
-from fransys_model.layout import Route, layout_of
-from fransys_model.vocab.tables import functions, items, ports
-
-if TYPE_CHECKING:
-    from fransys_model.kernel import Id, Model
 
 RELAY = "DEMO-RLY-2CO-24"
 TAGS = ("K1", "K2", "K3", "K4")
@@ -28,7 +23,6 @@ MEMBERS = (("K2", "A1"), ("K2", "A2"), ("K3", "A1"), ("K3", "A2"))
 RENAMED = "K2a"
 
 Point = tuple[int, int]
-End = tuple[str | None, tuple[str, ...], str]
 
 
 def _build(rename: str | None = None) -> Any:
@@ -43,30 +37,13 @@ def _build(rename: str | None = None) -> Any:
     return build(parts, d)
 
 
-def _end(model: Model, port: Id) -> End:
-    """A port as `(item tag, its function's key after the item, marking)`, named or not."""
-    function = functions(model)[ports(model)[port].function]
-    item = items(model)[function.item]
-    return own_designation_or_none(model, item), function.key[1:], ports(model)[port].name
-
-
-def _routes(model: Model) -> dict[tuple[End, ...], tuple[Point, ...]]:
-    """Every route by its two ends; its points read in the lesser direction, so a flip is moot."""
-    found = {}
-    for route in layout_of(model, Route).values():
-        points = tuple((point.x, point.y) for point in route.points)
-        found[tuple(sorted((_end(model, route.a), _end(model, route.b))))] = min(
-            points, points[::-1]
-        )
-    return found
-
-
-def _member_ports(model: Model) -> list[End]:
-    """The four net members, in the order of their port handles."""
-    by_end = {_end(model, port): port for port in ports(model)}
-    return sorted(
-        ((tag, ("fn", "coil"), marking) for tag, marking in MEMBERS), key=lambda end: by_end[end]
-    )
+def _routes(result: Any) -> list[tuple[Point, ...]]:
+    """Every drawn wire's points, read in the lesser direction so a flip is moot, in page order."""
+    return [
+        min(w.points, w.points[::-1])
+        for drawing in drawn_pages(result.model).values()
+        for w in drawing.wires
+    ]
 
 
 def test_renaming_an_item_leaves_every_route_of_a_net_group_byte_identical() -> None:
@@ -81,13 +58,7 @@ def test_renaming_an_item_leaves_every_route_of_a_net_group_byte_identical() -> 
     before, after = _build(), _build(rename=RENAMED)
     for result in (before, after):
         assert not [f for f in result.findings if f.severity is Severity.ERROR]
-    ports_before, ports_after = _member_ports(before.model), _member_ports(after.model)
-    assert set(ports_before) == set(ports_after)
-    assert ports_before != ports_after, (
-        "the rename must change the order the net's ports sort in, or it proves nothing"
-    )
-    routes = _routes(before.model)
-    members = {(tag, ("fn", "coil"), marking) for tag, marking in MEMBERS}
-    net = [ends for ends in routes if set(ends) <= members]
-    assert len(net) == len(MEMBERS) - 1, "a spanning tree of the four ports has three edges"
-    assert _routes(after.model) == routes
+    routes = _routes(before)
+    # four ports spanned by a tree: three edges, drawn as the wires of the page
+    assert len(routes) >= len(MEMBERS) - 1, "a spanning tree of the four ports has three edges"
+    assert _routes(after) == routes

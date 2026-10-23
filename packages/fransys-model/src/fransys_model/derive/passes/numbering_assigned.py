@@ -2,14 +2,14 @@
 
 from typing import TYPE_CHECKING
 
-from fransys_model.derive.designation import (
-    designating_ancestors,
+from fransys_model.derive.designation_label import (
     own_designation_or_none,
     takes_parents_designation,
 )
 from fransys_model.derive.facts.item_predicates import item_class_code
-from fransys_model.derive.passes.numbering_units import instance_tags_in
-from fransys_model.kernel import Model, make_id
+from fransys_model.derive.facts.units import designating_ancestors
+from fransys_model.derive.passes.numbering_units import Suffixed, instance_tags_in
+from fransys_model.kernel import Model, first_free, make_id
 from fransys_model.vocab.facets.assigned_designation import AssignedDesignationFacet
 
 if TYPE_CHECKING:
@@ -23,13 +23,6 @@ def _taken_texts(model: Model, siblings: list[Item], reserved: frozenset[str]) -
     if siblings and not designating_ancestors(model, siblings[0].id):
         taken |= instance_tags_in(model, siblings[0].unit)  # One count with the instances
     return taken
-
-
-def _first_free(code: str, taken: set[str]) -> str:
-    counter = 1
-    while f"{code}{counter}" in taken:
-        counter += 1
-    return f"{code}{counter}"
 
 
 def _assigned_facet(item: Item, text: str) -> AssignedDesignationFacet:
@@ -59,7 +52,7 @@ def assigned_facets(
         code = item_class_code(model, item.id)
         if not code:
             continue
-        candidate = _first_free(code, taken)
+        candidate = f"{code}{first_free(Suffixed(code, taken))}"
         taken.add(candidate)
         numbered.append(_assigned_facet(item, candidate))
     return numbered

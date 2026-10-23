@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 from fransys_layout.core.fan_head import fan_head, head_short
+from fransys_layout.core.topology_fans import Att, FanDraft
+from fransys_layout.core.topology_nets import _fan
 from fransys_layout.core.values import Attach, Fan, PinRef
 
 from .cut_fixtures import cut_of, elem, net, page_of
@@ -12,15 +14,26 @@ def attach(sym: str) -> Attach:
     return Attach(column=f"c:{sym}", lane=0, cell=0, pin=PinRef(sym, "s"))
 
 
-def fan_with(drivers: tuple[Attach, ...]) -> Fan:
-    return Fan("f:feed", ("feed",), drivers, (attach("k1"),), None, 1, "top")
+def fan_with(drivers: tuple[Attach, ...], head: Attach | None = None) -> Fan:
+    return Fan("f:feed", ("feed",), drivers, (attach("k1"),), None, 1, "top", head=head)
 
 
-def test_fan_head_is_the_one_driver_and_none_otherwise() -> None:
-    one = attach("d0")
-    assert fan_head(fan_with((one,))) == one
-    assert fan_head(fan_with(())) is None
-    assert fan_head(fan_with((one, attach("d1")))) is None
+def test_fan_head_is_the_field_the_builder_filled() -> None:
+    """The core holds no head policy: it reads `Fan.head`, whatever the drivers are."""
+    one, two = attach("d0"), attach("d1")
+    assert fan_head(fan_with((one, two), head=two)) == two
+    assert fan_head(fan_with((one,))) is None
+
+
+def _drafted(*syms: str) -> Fan:
+    draft = FanDraft("f:x", ["x"], [Att(None, "boxpin", PinRef(s, "s")) for s in syms])
+    return _fan(draft)
+
+
+def test_the_builder_heads_a_fan_with_exactly_one_driver() -> None:
+    assert _drafted("d0").head == Attach(None, 0, 0, PinRef("d0", "s"))
+    assert _drafted().head is None
+    assert _drafted("d0", "d1").head is None
 
 
 def test_head_short_reports_the_page_with_most_other_legs() -> None:

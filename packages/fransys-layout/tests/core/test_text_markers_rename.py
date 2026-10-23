@@ -7,13 +7,13 @@ from dataclasses import replace
 from typing import TYPE_CHECKING
 
 import pytest
+from options_fixtures import core_options
 
-from fransys_layout.core import Options
 from fransys_layout.core.place import place_pages
 from fransys_layout.core.text_markers import mark_pages
 
 from . import pipeline_fixtures
-from .conftest import MARKER_BOX
+from .conftest import MARKER
 from .cut_respell import back_of, id_sets, make_maps, respell_cut, respell_problem
 from .test_cut_rename import SPELLINGS
 from .text_fixtures import PLANTS
@@ -23,7 +23,14 @@ if TYPE_CHECKING:
 
     from fransys_layout.core.outputs import Marker
 
-OPTIONS = Options(marker=MARKER_BOX)
+OPTIONS = core_options(
+    marker=MARKER,
+    flip_turn="R180",
+    tag_stagger=True,
+    label_gap=8,
+    driver_first=True,
+    arrow_sides=("E", "W"),
+)
 
 
 def _canon(markers: tuple[Marker, ...], back: Callable[[str | None], str | None]) -> list:

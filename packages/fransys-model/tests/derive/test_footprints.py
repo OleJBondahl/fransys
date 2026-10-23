@@ -1,4 +1,4 @@
-"""A symbol's footprint: measured tag, a coil's contact table tiers, a strip row."""
+"""A symbol's footprint: measured tag, a coil's contact table, a strip row."""
 
 from typing import TYPE_CHECKING
 
@@ -56,11 +56,11 @@ def _function(model: Model, tag: str, kind: FunctionKind) -> Id[Function]:
     )
 
 
-def _foot(model: Model, function: Id[Function], geometry: tuple, tiers: int = 2):
+def _foot(model: Model, function: Id[Function], geometry: tuple):
     body, slots, side = geometry
     return footprints(
         model, function, body=body, slots=slots, tag_side=side,
-        text_height=_HEIGHT, step=_STEP, pad=_PAD, tiers=tiers,
+        text_height=_HEIGHT, step=_STEP, pad=_PAD,
     )  # fmt: skip
 
 
@@ -90,25 +90,27 @@ def test_a_long_designation_widens_the_tag_slot_toward_its_side(model: Model) ->
     assert long.in_strip_row == short.in_strip_row
 
 
-def test_a_coil_adds_its_contact_table_tiers_below_and_a_non_coil_adds_nothing(
+def test_a_coil_adds_its_one_contact_table_below_and_a_non_coil_adds_nothing(
     model: Model,
 ) -> None:
     coil = _function(model, "-K1", FunctionKind.COIL)
     keepout = _e(-56, -16, 70, 32)  # the library keep-out
     contact = _function(model, "-K1", FunctionKind.CONTACT_CO)
     assert _foot(model, contact, _COIL).standalone == keepout
-    for tiers in (1, 2):
-        foot = _foot(model, coil, _COIL, tiers=tiers)
-        rows = 2  # the two changeovers: one NO and one NC entry each
-        room = tiers * table_geometry(rows, _STEP, _PAD, headed=False).height
-        assert (foot.standalone.x, foot.standalone.y) == (keepout.x, keepout.y)
-        assert foot.standalone.height == keepout.height + room
-        assert foot.in_strip_row == _e(-4, -16, 18, 32)  # body and marking, no tag
+    foot = _foot(model, coil, _COIL)
+    rows = 2  # the two changeovers: one NO and one NC entry each
+    room = table_geometry(rows, _STEP, _PAD, headed=False).height
+    assert (foot.standalone.x, foot.standalone.y) == (keepout.x, keepout.y)
+    assert foot.standalone.height == keepout.height + room
+    assert foot.alone == keepout
+    assert len(foot.no_cells) == len(foot.nc_cells) == rows
+    assert foot.in_strip_row == _e(-4, -16, 18, 32)  # body and marking, no tag
 
 
-def test_a_coil_with_no_contact_table_reserves_no_tiers(model: Model) -> None:
-    """Catches tiers reserved under a coil whose item owns no contacts (a relay module)."""
+def test_a_coil_with_no_contact_table_reserves_no_room(model: Model) -> None:
+    """Catches a table reserved under a coil whose item owns no contacts (a relay module)."""
     coil = _function(model, "-A1", FunctionKind.COIL)
     keepout = _e(-56, -16, 70, 32)
-    for tiers in (0, 1, 2):
-        assert _foot(model, coil, _COIL, tiers=tiers).standalone == keepout
+    foot = _foot(model, coil, _COIL)
+    assert foot.standalone == keepout
+    assert foot.no_cells == foot.nc_cells == ()

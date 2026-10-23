@@ -10,11 +10,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from .geometry import marker_box_at, rotate_side
+from .geometry import marker_box_at
 from .keys import natural_key
 from .ref_kind import kind_of
 from .route_env import pin_sides
-from .sides import SIDE_STEP
+from .sides import step_out
 from .values import RefKind
 
 if TYPE_CHECKING:
@@ -48,7 +48,7 @@ class MarkEnv:
     options: Options
     area: Size
     pins: Mapping[tuple[str, str], PinAt]
-    sides: Mapping[tuple[str, str], Side]
+    sides: Mapping[tuple[str, str, Orientation], Side]
     trunks: Mapping[tuple[int, str], tuple[Trunk, ...]]
     fans: Mapping[str, Fan]
 
@@ -92,13 +92,12 @@ def who(ref: Ref) -> str:
     return f"net {ref.net} ({kind_of(ref)})"
 
 
-def _abut(options: Options, side: Side, x: int, y: int, end: PinRef) -> Stand:
+def _abut(options: Options, side: Side, x: int, y: int, key: tuple[PinRef, str]) -> Stand:
     """The stand whose box has its near edge at (x, y) on `side`; the box turns to face it."""
     turned = _FACING[side]
-    box = marker_box_at(0, 0, options, turned)  # the box about an origin of (0, 0)
-    near = {"E": box.x, "W": box.x + box.w, "S": box.y, "N": box.y + box.h}[side]
-    dx, dy = SIDE_STEP[side]
-    return Stand(x - near if dx else x, y - near if dy else y, end, turned)
+    box = marker_box_at(0, 0, options, turned, key)  # the box about an origin of (0, 0)
+    depth = {"E": -box.x, "W": box.x + box.w, "S": -box.y, "N": box.y + box.h}[side]
+    return Stand(*step_out(side, x, y, depth), key[0], turned)
 
 
 def pin_stand(env: MarkEnv, pin: PinRef, page: int, ref: Ref) -> Stand:
@@ -110,8 +109,8 @@ def pin_stand(env: MarkEnv, pin: PinRef, page: int, ref: Ref) -> Stand:
     if at != page:
         msg = f"marks: {who(ref)} names {pin.sym}.{pin.pin} on page {page}, not {at}"
         raise ValueError(msg)
-    side = rotate_side(env.sides[(pin.sym, pin.pin)], orient)
-    return _abut(env.options, side, x, y, pin)
+    side = env.sides[(pin.sym, pin.pin, orient)]
+    return _abut(env.options, side, x, y, (pin, str(kind_of(ref))))
 
 
 def _trunk_of(env: MarkEnv, fan: str, end: RefEnd, ref: Ref) -> tuple[Trunk, ...]:
@@ -139,8 +138,9 @@ def arrow_stand(env: MarkEnv, ref: Ref, end: RefEnd, index: int) -> Stand:
         msg = f"marks: {who(ref)} page {end.page}: no trunk in row {end.row}"
         raise ValueError(msg)
     t = trunks[0]
-    x, side = (t.x1, "E") if index == 0 else (t.x0, "W")
-    return _abut(env.options, side, x, t.y, _named(ref, end))
+    side = env.options.arrow_sides[int(index != 0)]
+    x = t.x1 if side == "E" else t.x0
+    return _abut(env.options, side, x, t.y, (_named(ref, end), str(kind_of(ref))))
 
 
 def copy_stand(env: MarkEnv, ref: Ref, end: RefEnd) -> Stand:

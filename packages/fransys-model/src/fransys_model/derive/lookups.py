@@ -16,15 +16,17 @@ from fransys_model.kernel import (
     DIGEST_CACHE_SIZE,
     Id,
     Model,
+    NaturalKey,
     digest_cached,
     key_text,
+    natural_key,
     parent_chain,
 )
 from fransys_model.vocab.enums import Aspect
 from fransys_model.vocab.facets.connector import ConnectorFacet
 from fransys_model.vocab.facets.plc import PlcBindingFacet
-from fransys_model.vocab.markings import marking_key
 from fransys_model.vocab.tables import (
+    HasTables,
     aspect_nodes,
     facets_of,
     functions,
@@ -85,15 +87,13 @@ def net_name(net: Net) -> str:
     return net.name if net.name is not None else key_text(net)
 
 
-def pin_order(
-    marking: str, port: Id[Port]
-) -> tuple[tuple[tuple[int, int, str], ...], str, Id[Port]]:
-    """The sort key of a pin: `marking_key` (digit runs by value, `A2` before `A10`), then the port.
+def pin_order(marking: str, port: Id[Port]) -> tuple[NaturalKey, str, Id[Port]]:
+    """The sort key of a pin: `natural_key` (digit runs by value, `A2` before `A10`), then the port.
 
     The marking text and the port id break ties; no designation is parsed. Shared by
     `connector_rows`, `harness_cables`, `overview_graph` and `fn.pins`.
     """
-    return (marking_key(marking), marking, port)
+    return (natural_key(marking), marking, port)
 
 
 def connector_facets(model: Model) -> frozendict[Id[FunctionTemplate], ConnectorFacet]:
@@ -251,7 +251,7 @@ def no_conductor_at(model: Model, port: Id[Port]) -> bool:
     return not build_indexes(model).conductors_by_port.get(port)
 
 
-def item_of_port(model: Model, port: Id[Port]) -> Id[Item]:
+def item_of_port(model: HasTables, port: Id[Port]) -> Id[Item]:
     """The item whose function owns `port`."""
     return functions(model)[ports(model)[port].function].item
 

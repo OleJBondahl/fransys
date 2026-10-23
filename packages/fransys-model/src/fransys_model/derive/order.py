@@ -2,7 +2,7 @@
 
 Reached as `fransys_model.derive.order.<name>`; `derive/__init__.py` re-exports only the names
 `derive.__all__` already held. A key over a printed designation needs the model, so it lives here,
-above `vocab`, whose `marking_key` stays the text primitive.
+above `vocab`; the text key itself is the kernel's `natural_key` (NUMBER-SORT K7).
 """
 
 from typing import TYPE_CHECKING, Any, Protocol
@@ -11,20 +11,23 @@ from fransys_model.derive.designation import (
     function_designation,
     item_designation,
     port_designation,
-    terminal_of,
 )
+from fransys_model.derive.designation_label import terminal_of
 from fransys_model.derive.facts.item_predicates import is_plc_module
 from fransys_model.derive.facts.subjects import subject_kind
+from fransys_model.derive.instance_tag import instance_name, instance_tags
 from fransys_model.derive.lookups import position_rank
-from fransys_model.kernel import Finding, Id, Model, SchemaError
-from fransys_model.layout import DrawingSet, HarnessLine, Page, layout_of, page_slice
-from fransys_model.vocab import marking_key
+from fransys_model.kernel import Finding, Id, Model, NaturalKey, SchemaError, natural_key
+from fransys_model.layout import DrawingSet, Page, layout_of, page_slice
 from fransys_model.vocab.enums import SubjectKind
-from fransys_model.vocab.tables import items
+from fransys_model.vocab.tables import aspect_nodes, items
+lazy from fransys_model.derive.rows_series_parallel import SeriesRowPart
+lazy from fransys_model.vocab.aspects import AspectNode
+lazy from fransys_model.vocab.connectivity import Conductor
 lazy from fransys_model.vocab.core import Function, Item, Port, Unit
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Iterable, Sequence
+    from collections.abc import Iterable, Mapping
 
 
 __all__ = [
@@ -32,11 +35,13 @@ __all__ = [
     "bom_sort_key",
     "by_place",
     "designation_key",
-    "drawn_lines_on_page",
     "drawn_on_page",
+    "echo_entry_key",
     "finding_order_key",
     "findings_in_order",
     "in_designation_order",
+    "location_key",
+    "locations_in_order",
     "natural_key",
     "plc_channel_key",
     "plc_channel_tie",
@@ -44,7 +49,12 @@ __all__ = [
     "plc_rack_key",
     "plc_racks",
     "port_designation_key",
-    "wire_run",
+    "reading_ranks",
+    "record_id_order",
+    "series_part_key",
+    "stub_far_key",
+    "unit_designation_key",
+    "units_in_order",
 ]
 
 
@@ -58,20 +68,35 @@ class _Placed(Protocol):
     def y(self) -> int: ...
 
 
-type NaturalKey = tuple[tuple[tuple[int, int, str], ...], str]
-
-
-def natural_key(text: str) -> NaturalKey:
-    """Sort key of a printed text: digit runs by value, so `-W2` sorts before `-W10`.
-
-    Text runs compare as strings and sort after numbers; the whole text breaks a tie.
-    """
-    return marking_key(text), text
+def echo_entry_key(entry: tuple[int, int, int, str]) -> tuple[int, int, int, str]:
+    """A tag echo's partner order: set rank, page, frame column, then text (layout-0089)."""
+    return entry
 
 
 def designation_key(model: Model, item: Id[Item]) -> NaturalKey:
     """`natural_key` of `item`'s printed designation: the one spelling of "by designation"."""
     return natural_key(item_designation(model, item))
+
+
+def location_key(model: Model, node: Id[AspectNode]) -> tuple[NaturalKey, str]:
+    """A `+` location's drawing-set order: its label in natural order, then the label (PAGE-02)."""
+    label = aspect_nodes(model)[node].label
+    return natural_key(label), label
+
+
+def locations_in_order(model: Model, nodes: Iterable[Id[AspectNode]]) -> tuple[Id[AspectNode], ...]:
+    """`nodes` in the order the drawing sets of a unit follow: by `location_key`, then by id."""
+    return tuple(sorted(sorted(nodes), key=lambda node: location_key(model, node)))
+
+
+def unit_designation_key(model: Model, unit: Id[Unit]) -> NaturalKey:
+    """A unit's drawing-set order: its instance designation, naturally (`-U2` before `-U10`)."""
+    return natural_key(instance_name(instance_tags(model, unit, None)))
+
+
+def units_in_order(model: Model, units: Iterable[Id[Unit]]) -> tuple[Id[Unit], ...]:
+    """`units` as their drawing sets follow the top level: by `unit_designation_key`, then id."""
+    return tuple(sorted(sorted(units), key=lambda unit: unit_designation_key(model, unit)))
 
 
 def port_designation_key(
@@ -139,7 +164,7 @@ def plc_channel_tie(number: int, function: Function) -> ChannelTie:
     """Sort key of a channel within a module: its number, then the part's own function name.
 
     DI 1 and DO 1 share number 1; the template name (`di_1`, `do_1`) is the part's, so no id,
-    which hashes the block tag, decides the tie (model-0259). The id only breaks a repeat.
+    which hashes the block tag, decides the tie. The id only breaks a repeat.
     """
     return number, natural_key(function.name), function.id
 
@@ -162,18 +187,35 @@ def plc_channel_key(
     return (1, designation_key(model, item), 0, ((0, 0), natural_key(""), ()), tail)
 
 
-def by_place[T: _Placed](
-    drawn: Iterable[T], local: Callable[[T], NaturalKey] | None = None
-) -> tuple[T, ...]:
-    """`drawn` top-down, left to right; a tie breaks on `local`, then on the order it came in.
+def by_place[T: _Placed](drawn: Iterable[T]) -> tuple[T, ...]:
+    """`drawn` top-down, left to right; a tie keeps the order it came in.
 
     A page draws its symbols, labels and markers in this order, so no id (which follows the
-    instance path) decides which is drawn first. `local` is the thing's designation as printed
-    within its unit (`_local_designation`), never the instance tag.
+    instance path) decides which is drawn first.
     """
-    if local is None:
-        return tuple(sorted(drawn, key=lambda one: (one.y, one.x)))
-    return tuple(sorted(drawn, key=lambda one: (one.y, one.x, local(one))))
+    return tuple(sorted(drawn, key=lambda one: (one.y, one.x)))
+
+
+def reading_ranks[K](points: Mapping[K, tuple[int, int]]) -> dict[K, int]:
+    """Each key's reading order from 0 over its `(y, x)`: `by_place`'s order, a tie by arrival."""
+    keys = sorted(points, key=lambda one: points[one])
+    return {key: rank for rank, key in enumerate(keys)}
+
+
+def record_id_order(ids: Iterable[str]) -> tuple[str, ...]:
+    """Rendered record ids in the order the model's tables hold their records (`Id` order).
+
+    The order of the record path, kept so the bytes of a drawing stay identical. The ids are of
+    one kind, so the rendered `kind:value` text orders like the `Id`.
+    """
+    return tuple(sorted(ids))
+
+
+def series_part_key(part: SeriesRowPart) -> NaturalKey:
+    """A part of a parallel by its first symbol key, in natural order (SERIES-PARALLEL SP2)."""
+    while not isinstance(part, str):
+        part = part.parts[0]
+    return natural_key(part)
 
 
 def _local_designation(model: Model, record: object, unit: Id[Unit] | None) -> NaturalKey:
@@ -195,35 +237,17 @@ def _local_designation(model: Model, record: object, unit: Id[Unit] | None) -> N
 
 
 def drawn_on_page[R: _Placed](model: Model, record_type: type[R], page: Page) -> tuple[R, ...]:
-    """The page's `record_type` records in drawn order: `by_place`, then the local designation."""
-    unit = layout_of(model, DrawingSet)[page.drawing_set].unit
-    return by_place(
-        page_slice(model, record_type, page), lambda one: _local_designation(model, one, unit)
-    )
+    """The page's `record_type` records in drawn order: top-down, left to right, then designation.
 
-
-def drawn_lines_on_page(model: Model, page: Page) -> tuple[HarnessLine, ...]:
-    """The page's harness lines by `wire_run` of their points, then the harness designation."""
+    A tie breaks on the designation as printed within the unit, then on the order it came in.
+    """
     unit = layout_of(model, DrawingSet)[page.drawing_set].unit
     return tuple(
         sorted(
-            page_slice(model, HarnessLine, page),
-            key=lambda line: (
-                wire_run([(point.x, point.y) for point in line.points]),
-                _local_designation(model, line, unit),
-            ),
+            page_slice(model, record_type, page),
+            key=lambda one: (one.y, one.x, _local_designation(model, one, unit)),
         )
     )
-
-
-def wire_run(points: Sequence[tuple[int, int]]) -> tuple[tuple[int, int], ...]:
-    """A drawn wire's `(x, y)` points read from its upper end, then its left one.
-
-    The run is also the wire's order key: wires draw top-down, left to right, from their own
-    ends, so a name above the unit (an id) never picks the end or the place.
-    """
-    run = tuple(points)
-    return min(run, run[::-1], key=lambda way: (way[0][1], way[0][0], way[-1][1], way[-1][0]))
 
 
 def _printed(model: Model, subject: Id[Any]) -> str | None:
@@ -252,3 +276,9 @@ def finding_order_key(model: Model, finding: Finding) -> tuple[int, NaturalKey |
 def findings_in_order(model: Model, findings: Iterable[Finding]) -> list[Finding]:
     """`findings` in print order: `finding_order_key`, then the message."""
     return sorted(findings, key=lambda f: (finding_order_key(model, f), f.message))
+
+
+def stub_far_key(pick: tuple[Id[Port], Id[Port], Id[Conductor]]) -> tuple[str, str, str]:
+    """A stub's far-end order of a `(near, far, conductor)`: far port, near port, conductor."""
+    near, far, conductor = pick
+    return far.value, near.value, conductor.value

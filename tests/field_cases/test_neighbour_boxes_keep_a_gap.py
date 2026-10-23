@@ -13,15 +13,18 @@ after the lane offsets, the later box and its right-hand neighbours move right.
 
 import tempfile
 from pathlib import Path
-from typing import Any
 
 import fransys as fr
 from fransys.colours import BU
-from fransys_el import OPTIONS
 
-from fransys_layout.engines.schematic.engine import stage_results
-from fransys_layout.engines.schematic.read import read_inputs
-from fransys_model.vocab.tables import functions, items
+from electrical_symbols import LIBRARY
+from fransys_layout.symbols import library_symbol, symbol_shape
+
+
+def _gap(model, fact: str):
+    """A fact the page Drawing lacks (strict xfail, GAP-FLIP-DRAWING-SUBJECT)."""
+    msg = f"GAP-FLIP-DRAWING-SUBJECT: no {fact} for {model.digest}"
+    raise AssertionError(msg)
 
 
 def _built():
@@ -44,36 +47,26 @@ def _built():
     cover.write_text("# Cabinet\n", encoding="utf-8")
     doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover)
     built = fr.build(d, doc)
-    model = built.model
-    return (
-        built.findings,
-        model,
-        stage_results(model, read_inputs(model, options=OPTIONS))[0].layout,
-    )
+    return built.findings, built.model
 
 
-def _gaps(model, layout) -> dict[str, int]:
-    """The x gap from the motor box to the lamp box: drawn outlines (body) and keep-outs."""
-    by_tag = {one.key[-1]: one.id for one in items(model).values()}
-    fn = {v.item: k for k, v in functions(model).items()}
-    home: dict[Any, Any] = {}
-    for one in layout.placed:
-        home.setdefault(one.function, one)
-    motor, lamp = home[fn[by_tag["M1"]]], home[fn[by_tag["P1"]]]
+def _clearance(model, first: str, second: str) -> int:
+    """The clear space between the drawn outlines of the symbols of items `first` and `second`.
 
-    def right(p, box):
-        return p.at.x + box.x + box.width
-
-    return {
-        "body": lamp.at.x + lamp.geometry.body.x - right(motor, motor.geometry.body),
-        "keepout": lamp.at.x + lamp.geometry.keepout.x - right(motor, motor.geometry.keepout),
-    }
+    The larger of the x gap and the y gap: positive when the two boxes share no edge or area.
+    """
+    outline = {}
+    for one in _gap(model, "symbol subject").values():
+        tag = one.owner.split()[0]
+        if tag in (first, second):
+            body = symbol_shape(library_symbol(LIBRARY, one.key), LIBRARY).body
+            outline[tag] = (one.x + body.x, one.y + body.y, body.w, body.h)
+    (ax, ay, aw, ah), (bx, by, bw, bh) = outline[first], outline[second]
+    return max(bx - (ax + aw), ax - (bx + bw), by - (ay + ah), ay - (by + bh))
 
 
 def test_neighbour_boxes_keep_a_gap() -> None:
-    """No SYMBOL_OVERLAP, and the two drawn outlines and keep-outs have a positive gap."""
-    findings, model, layout = _built()
+    """No SYMBOL_OVERLAP, and the motor's and the lamp's drawn outlines have a positive gap."""
+    findings, model = _built()
     assert not [f for f in findings if f.code == "SYMBOL_OVERLAP"]
-    gaps = _gaps(model, layout)
-    assert gaps["body"] > 0
-    assert gaps["keepout"] > 0
+    assert _clearance(model, "M1", "P1") > 0

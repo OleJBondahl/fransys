@@ -6,7 +6,7 @@ from dataclasses import replace
 from itertools import combinations, pairwise
 from typing import TYPE_CHECKING
 
-from fransys_layout.core import Box, Options, PlacementProblem
+from fransys_layout.core import Box, Facts, Options, PlacementProblem
 from fransys_layout.core.geometry import (
     cell_anchor,
     cell_footprint,
@@ -14,6 +14,7 @@ from fransys_layout.core.geometry import (
     pin_xy,
     shift,
 )
+from fransys_layout.core.node_names import box_y_node, col_node
 from fransys_layout.core.pack import cell_node
 from fransys_layout.core.place_x import place_x
 from fransys_layout.core.place_y import grid_up, place_y
@@ -48,7 +49,7 @@ def _footprints(env: PageEnv, y: dict[str, int]) -> list[tuple[str, int, int, Bo
                 sym = env.syms[cell.sym]
                 ax, _ = cell_anchor(sym, cell)
                 fp = cell_footprint(sym, cell, in_row=cell.sym in env.in_row)
-                ox = x[f"col:{pc.id}"] + pc.offsets[li] - ax
+                ox = x[col_node(pc.id)] + pc.offsets[li] - ax
                 out.append((pc.id, li, i, shift(fp, ox, y[cell_node(pc.id, li, i)])))
     return out
 
@@ -99,7 +100,7 @@ def _two_heights() -> PlacementProblem:
     """Two coils of different heights hang on one box, both in row group G."""
     coils = [replace(elem("k1", 84, 32), row_group="G"), replace(elem("k2", 84, 48), row_group="G")]
     nets = [net(f"c{i}", f"A1.p{i}", f"k{i}.n") for i in (1, 2)]
-    return PlacementProblem(AREA, (box_sym(2), *coils), tuple(nets))
+    return PlacementProblem(AREA, (box_sym(2), *coils), tuple(nets), facts=Facts())
 
 
 def test_a_row_group_that_contradicts_a_stack_is_dropped_with_the_finding() -> None:
@@ -115,7 +116,7 @@ def test_a_row_group_that_contradicts_a_stack_is_dropped_with_the_finding() -> N
         cell = pc.lanes[0][0]
         dy = pin_xy(env.syms[cell.sym], cell, "n")[1]
         wire = env.options.wire_min
-        assert y[cell_node(col, 0, 0)] + dy == y["box:A1"] + box.y + box.h + wire
+        assert y[cell_node(col, 0, 0)] + dy == y[box_y_node("A1")] + box.y + box.h + wire
     assert y[cell_node("c:k1", 0, 0)] != y[cell_node("c:k2", 0, 0)]
 
 

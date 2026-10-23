@@ -14,8 +14,8 @@ from .title_band import title_band_need
 __all__ = ["sizes_of"]
 
 
-def _font_mm(role: TextRole, text_height_mm: Decimal) -> float:
-    return float(font_size_mm(role_height_mm(role, text_height_mm)))
+def _font_mm(model: Model, role: TextRole, text_height_mm: Decimal) -> float:
+    return float(font_size_mm(model, role_height_mm(model, role, text_height_mm)))
 
 
 def sizes_of(model: Model, document: Id[Document]) -> Sizes:
@@ -24,11 +24,11 @@ def sizes_of(model: Model, document: Id[Document]) -> Sizes:
     `document` is the document's id.
     """
     height = profile_of(model, document_unit(model, document)).text_height_mm
-    label, body = _font_mm(TextRole.LABEL, height), _font_mm(TextRole.BODY, height)
+    label, body = _font_mm(model, TextRole.LABEL, height), _font_mm(model, TextRole.BODY, height)
     return Sizes(
         label=label,
         body=body,
-        heading_2=_font_mm(TextRole.HEADING_2, height),
-        heading_1=_font_mm(TextRole.HEADING_1, height),
-        title_band_mm=title_band_need(label, body),
+        heading_2=_font_mm(model, TextRole.HEADING_2, height),
+        heading_1=_font_mm(model, TextRole.HEADING_1, height),
+        title_band_mm=title_band_need(model, label, body),
     )

@@ -7,12 +7,11 @@ the layout engine directly, the same pipeline `fr.build` will run.
 
 import fransys_parts
 from fransys_author import Design
-from fransys_el import OPTIONS
+from root_library import freeze
 
-from fransys_layout.engines.schematic import lay_out_schematic
 from fransys_model.checks import ALL_VALIDATORS
 from fransys_model.derive import allocate_plc, number
-from fransys_model.kernel import Severity, freeze, merge
+from fransys_model.kernel import Severity, merge
 
 
 def test_the_worked_example_runs_freezes_numbers_allocates_and_lays_out():
@@ -75,11 +74,9 @@ def test_the_worked_example_runs_freezes_numbers_allocates_and_lays_out():
 
     model, number_findings = number(model)
     model, allocation_findings = allocate_plc(model)
-    model, layout_findings = lay_out_schematic(model, OPTIONS)
 
-    all_findings = (*number_findings, *allocation_findings, *layout_findings)
+    all_findings = (*number_findings, *allocation_findings)
     assert [f for f in all_findings if f.severity is Severity.ERROR] == []
 
     assert model.digests["core"]
     assert model.digests["facet"]
-    assert model.digests["layout"]

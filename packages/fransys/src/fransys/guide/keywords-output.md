@@ -43,7 +43,7 @@ The design calls are in `keywords-design.md`, the handle methods and layout hint
 | [`preset`](documents.md#presets-cover-and-notes-text) | required | The `fr.DocumentPreset` that fixes the deliverable's default page kinds (documents.md). | `fr.document(fr.DocumentPreset.SYSTEM, None, cover=Path("cover.md"))` |
 | [`subject`](documents.md#subjects) | required | What the document is about: what `d.location(...)` returns, a `Device`, a unit release name, or `None` for the system preset. Another value raises `TypeError`. | `fr.document(preset, "pump-board", cover=cover)` |
 | [`cover`](documents.md#presets-cover-and-notes-text) | required | The Markdown cover file, stored verbatim. Its stem is the document's key. A missing file raises `FileNotFoundError`. A `<stem>.notes.md` beside it becomes the notes page. | `cover=Path("cover.md")` |
-| [`add`](documents.md#presets-cover-and-notes-text) | `()` | `fr.PageKind` values added to the preset's default pages. | `add=(fr.PageKind.OVERVIEW,)` |
+| [`add`](documents.md#presets-cover-and-notes-text) | `()` | `fr.PageKind` values added to the preset's default pages. | `add=(fr.PageKind.HARNESS_DRAWING,)` |
 | [`remove`](documents.md#presets-cover-and-notes-text) | `()` | `fr.PageKind` values removed from the preset's pages. | `remove=(fr.PageKind.NOTES,)` |
 | [`logo`](documents.md#presets-cover-and-notes-text) | `None` | An SVG file for the title block's logo cell. `None` leaves the cell empty. A missing file raises. | `logo=Path("logo.svg")` |
 | [`notice`](documents.md#presets-cover-and-notes-text) | `''` | The title block's IP notice text, printed on every page of this document. Empty leaves the cell empty. | `notice="Property of Demo Ltd"` |
@@ -54,6 +54,15 @@ The design calls are in `keywords-design.md`, the handle methods and layout hint
 |---|---|---|---|
 | `result` | required | The `BuildResult` to measure. The layout runs again on its model, and the call returns one row per schematic page and one per unit. | `fr.readability(result)` |
 
+## `fr.settings`
+
+`fr.settings(path=None, *, paper=None)` returns a `fr.Settings`: our defaults, the consumer's TOML file on top, and `paper` per drawing type (settings.md).
+
+| keyword | default | effect | example |
+|---|---|---|---|
+| [`path`](settings.md#the-toml-file) | `None` | The consumer's TOML file, merged key by key over our defaults. `None` gives our defaults. | `fr.settings("fransys.toml")` |
+| [`paper`](settings.md#the-paper-per-drawing-type) | `None` | A mapping of a `fr.PageKind` to a paper format's name, for that drawing type. | `fr.settings(paper={fr.PageKind.BLOCK_DIAGRAM: "A2"})` |
+
 ## `fr.build`
 
 `fr.build(*drafts, ...)` takes the drafts or `Design` objects to merge as `drafts`.
@@ -61,6 +70,7 @@ The design calls are in `keywords-design.md`, the handle methods and layout hint
 | keyword | default | effect | example |
 |---|---|---|---|
 | [`releases`](build.md#keeping-designations-fixed-across-revisions) | `None` | A release root. Numbering pins are seeded from the releases stored there, so a released unit keeps its numbers. `None` numbers freely. | `fr.build(d, releases=Path("releases"))` |
+| [`settings`](settings.md#frsettings) | `None` | The `fr.Settings` from `fr.settings(...)`, used for this build. `None` uses our defaults. | `fr.build(d, settings=fr.settings(paper={fr.PageKind.BLOCK_DIAGRAM: "A2"}))` |
 
 ## `fr.check`
 

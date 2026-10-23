@@ -14,9 +14,7 @@ findings equal the run without the switch.
 from typing import TYPE_CHECKING, Any, NamedTuple
 
 import fransys as fr
-
-from fransys_model.layout import SymbolPlacement, layout_of
-from fransys_model.vocab.tables import functions
+from _drawn_pages import drawn_pages
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -61,10 +59,11 @@ def _findings(result: fr.BuildResult) -> list[tuple[str, str]]:
 
 
 def _drawn(result: fr.BuildResult) -> list[tuple]:
-    """The key of every function the layout draws, with its count."""
-    model = result.model
+    """The key and markings of every symbol the layout draws, with its count."""
     return sorted(
-        functions(model)[p.function].key for p in layout_of(model, SymbolPlacement).values()
+        (symbol.key, symbol.slots)
+        for drawing in drawn_pages(result.model).values()
+        for symbol in drawing.symbols
     )
 
 

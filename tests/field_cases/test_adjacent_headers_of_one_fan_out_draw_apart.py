@@ -14,10 +14,11 @@ import sys
 import tempfile
 from functools import cache
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import fransys as fr
 import fransys_parts
+from _drawn_pages import drawn_pages
 
 sys.path.insert(
     0, str(Path(__file__).parent)
@@ -30,7 +31,6 @@ from test_a_harness_line_on_an_overfull_page_still_routes import (
 )
 
 from fransys_model.kernel import merge
-from fransys_model.layout import ConnectorBox, layout_of
 
 
 @cache
@@ -55,37 +55,45 @@ def _built() -> fr.BuildResult:
     return fr.build(d, doc)
 
 
-def _far_boxes() -> list[Any]:
-    return [
-        b
-        for b in layout_of(_built().model, ConnectorBox).values()
-        if b.key[4] in {"XA", "XB", "XC"}
-    ]
+def _far_boxes() -> dict[str, list[tuple[Any, Box]]]:
+    """Each far header's (page, box) pairs: the tag texts the core path prints for it."""
+    found: dict[str, list[tuple[Any, Box]]] = {}
+    for page, drawing in drawn_pages(_built().model).items():
+        for text in drawing.texts:
+            name = text.text.split(":")[0].removeprefix("-U1-").removeprefix("-")
+            if name in {"XA", "XB", "XC"}:
+                found.setdefault(name, []).append((page, text.box))
+    return found
 
 
 def test_the_three_far_headers_are_drawn_on_one_page() -> None:
     boxes = _far_boxes()
-    assert len(boxes) == 3, [b.key for b in boxes]
-    assert len({b.page for b in boxes}) == 1
+    assert len(boxes) == 3, boxes
+    assert len({page for texts in boxes.values() for page, _ in texts}) == 1
 
 
-def _overlaps(a: Any, b: Any) -> bool:
-    return (
-        a.x < b.x + b.width
-        and b.x < a.x + a.width
-        and a.y < b.y + b.height
-        and b.y < a.y + a.height
-    )
+def _overlaps(a: Box, b: Box) -> bool:
+    return a.x < b.x + b.w and b.x < a.x + a.w and a.y < b.y + b.h and b.y < a.y + a.h
 
 
 def test_no_two_far_header_boxes_overlap() -> None:
     boxes = _far_boxes()
     assert len(boxes) == 3
+    heads = list(boxes.values())
     assert not [
-        (a.key, b.key) for i, a in enumerate(boxes) for b in boxes[i + 1 :] if _overlaps(a, b)
+        (a, b)
+        for i, one in enumerate(heads)
+        for other in heads[i + 1 :]
+        for pa, a in one
+        for pb, b in other
+        if pa == pb and _overlaps(a, b)
     ]
 
 
 def test_the_page_reports_no_text_overlap() -> None:
     assert len(_far_boxes()) == 3
     assert "TEXT_OVERLAP" not in {f.code for f in _built().findings}
+
+
+if TYPE_CHECKING:
+    from fransys_layout.core import Box

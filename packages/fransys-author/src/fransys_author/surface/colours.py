@@ -6,7 +6,7 @@ Every value is read from the model's colour lists, so a code the model lacks can
 from typing import Final
 
 from fransys_author.errors import AuthorError
-from fransys_model.vocab import BASE_COLOURS, RESERVED_COLOURS, split_colour
+from fransys_model.vocab import BASE_COLOURS, RESERVED_CODES, split_colour
 
 
 def _code(name: str) -> str:
@@ -14,7 +14,7 @@ def _code(name: str) -> str:
 
     Does not accept a code the model lacks: that raises at import.
     """
-    if name not in BASE_COLOURS and name not in RESERVED_COLOURS:
+    if name not in BASE_COLOURS and name not in RESERVED_CODES.values():
         msg = f"colour code {name!r} is not in the model's colour lists"
         raise AuthorError(msg)
     return name
@@ -34,8 +34,8 @@ PK: Final = _code("PK")
 GD: Final = _code("GD")
 SR: Final = _code("SR")
 TQ: Final = _code("TQ")
-SH: Final = _code("SH")
-GNYE: Final = GN + YE
+SH: Final = RESERVED_CODES["shield"]
+GNYE: Final = RESERVED_CODES["protective earth"]
 
 if split_colour(GNYE) is None:
     _msg = f"GNYE ({GNYE!r}) is not a colour the model accepts"

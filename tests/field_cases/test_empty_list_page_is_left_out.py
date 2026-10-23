@@ -11,9 +11,11 @@ emitted; page numbers count only the emitted pages.
 
 import re
 import tempfile
+from itertools import pairwise
 from pathlib import Path
 
 import fransys as fr
+from _drawn_pages import drawn_pages
 from fransys.colours import BU
 
 
@@ -52,3 +54,30 @@ def test_the_cabinet_with_no_plc_channel_has_four_pages_and_no_none_page() -> No
     pdf, source = _pdf_and_source()
     assert len(re.findall(rb"/Type\s*/Page\b(?!s)", pdf)) == 4
     assert "None." not in source
+
+
+def test_no_drawn_wire_ends_on_the_run_of_another_net() -> None:
+    """SHORTS-ROUTE (layout-0381): the supplies' join to the module needs a turn row of its own.
+
+    A join between pins one grid apart bent on a pin row and ran through the module's next pin.
+    """
+    d = fr.design("demo_parts", place="CAB")
+    cab = d.location("CAB", "Cabinet")
+    _plant(d)
+    work = Path(tempfile.mkdtemp())
+    (work / "cover.md").write_text("# Cabinet\n", encoding="utf-8")
+    result = fr.build(
+        d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=work / "cover.md")
+    )
+    for drawing in drawn_pages(result.model).values():
+        for wire in drawing.wires:
+            for a, b in pairwise(wire.points):
+                for other in drawing.wires:
+                    ends = {other.points[0], other.points[-1]}
+                    on = [
+                        p
+                        for p in ends
+                        if min(a, b) < p <= max(a, b)
+                        and (p[0] == a[0] == b[0] or p[1] == a[1] == b[1])
+                    ]
+                    assert other.net == wire.net or not on, (wire.points, other.points)

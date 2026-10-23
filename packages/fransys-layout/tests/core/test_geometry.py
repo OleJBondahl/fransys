@@ -1,13 +1,7 @@
 """Tests for core/geometry.py: rotation, footprints, anchors and lane stacking."""
 
-from typing import Any, cast
-
-import pytest
-from symdef import Box as SBox
-from symdef import Direction, Line, Port, Reference, Status, Symbol, SymbolKind, body_box
-from symdef import Orientation as LibraryOrientation
-from symdef import Point as SPoint
-from symdef import orient as orient_symbol
+from options_fixtures import core_options
+from turn_fixtures import views_of
 
 from fransys_layout.core.geometry import (
     cell_anchor,
@@ -15,14 +9,12 @@ from fransys_layout.core.geometry import (
     column_extent,
     lane_extent,
     pin_xy,
-    rotate_box,
-    rotate_side,
-    rotate_xy,
     shape_key,
     stack_lane,
+    stair_room,
 )
-from fransys_layout.core.values import Box, Cell, Lane, Options, Orientation, Pin, Size, Sym
-from fransys_layout.geometry.units import to_grid
+from fransys_layout.core.sym_values import Sym
+from fransys_layout.core.values import Box, Cell, Lane, Orientation, Pin, Size
 
 R0_TO_R270 = ("R0", "R90", "R180", "R270")
 EIGHT = (*R0_TO_R270, "MR0", "MR90", "MR180", "MR270")
@@ -39,18 +31,16 @@ def make_sym(
     pins: tuple[Pin, ...] = (),
 ) -> Sym:
     """A symbol with the given footprint and pins; the other fields are inert."""
+    body = Box(-8, -8, 16, 16)
+    keepout = Box(-8, -16, 16, 32)
     return Sym(
         id=sym_id,
         group=None,
         unit="u",
         label=Size(0, 0),
-        body=Box(-8, -8, 16, 16),
-        keepout=Box(-8, -16, 16, 32),
-        footprint=footprint,
         pins=pins,
         nodes=(),
-        orientations=frozenset(R0_TO_R270),
-        row_footprint=row_footprint,
+        views=views_of(body, keepout, footprint, pins, R0_TO_R270, row_footprint=row_footprint),
     )
 
 
@@ -64,65 +54,23 @@ def make_cell(
     return Cell(sym=sym_id, orient=orient, top_pin=top, bottom_pin=bottom)
 
 
-def test_rotate_xy_r180() -> None:
-    """R180 negates both offsets; R90 and R270 turn a quarter in each direction."""
-    assert rotate_xy(16, -8, "R180") == (-16, 8)
-    assert rotate_xy(16, -8, "R90") == (8, 16)
-    assert rotate_xy(16, -8, "R270") == (-8, -16)
-
-
-def _oracle_symbol() -> Symbol:
-    """A non-square symbol whose body (4 by 3 modules) lies off the origin."""
-    top = Line(start=SPoint(-1, -2), end=SPoint(3, -2))
-    side = Line(start=SPoint(3, -2), end=SPoint(3, 1))
-    return Symbol(
-        name="oracle",
-        kind=SymbolKind.SYMBOL,
-        status=Status.UNVERIFIED,
-        reference=Reference(standard="test", number="0"),
-        elements=(top, side),
-        ports=tuple(
-            Port(id=d.name, position=SPoint(2 * d.dx, 3 * d.dy), direction=d) for d in Direction
-        ),
-    )
-
-
-def _grid_box(box: SBox) -> Box:
-    """A symdef box in modules as a core box in grid units; the one conversion (SB3 follow-up)."""
-    return Box(to_grid(box.min.x), to_grid(box.min.y), to_grid(box.width), to_grid(box.height))
-
-
-@pytest.mark.parametrize("orient", EIGHT)
-def test_rotate_box_equals_symdef_orient_body_box(orient: str) -> None:
-    """The oracle: turning the core box equals the body box of the symbol symdef turns."""
-    sym = _oracle_symbol()
-    want = _grid_box(body_box(orient_symbol(sym, LibraryOrientation[orient])))
-    assert rotate_box(_grid_box(body_box(sym)), orient) == want
-    assert {want.w, want.h} == {32, 24}
-
-
-@pytest.mark.parametrize("orient", EIGHT)
-def test_rotate_side_and_xy_equal_the_ports_of_symdef_orient(orient: Orientation) -> None:
-    """The oracle for sides and offsets: each port of the turned symbol is where we say."""
-    base = _oracle_symbol()
-    turned = orient_symbol(base, LibraryOrientation[orient])
-    for was, now in zip(base.ports, turned.ports, strict=True):
-        assert rotate_side(was.direction.name, orient) == now.direction.name
-        x, y = to_grid(was.position.x), to_grid(was.position.y)
-        assert rotate_xy(x, y, orient) == (to_grid(now.position.x), to_grid(now.position.y))
-
-
-def test_rotate_side_r180() -> None:
-    """A north pin faces south after R180; an east pin faces south after R90."""
-    assert rotate_side("N", "R180") == "S"
-    assert rotate_side("E", "R90") == "S"
-
-
 def test_stack_lane_puts_cells_a_wire_min_apart() -> None:
     """Two 32 G footprints with wire_min 8 stack 40 apart, leaving an 8 G gap."""
     syms = {"U1": make_sym()}
     cells = (make_cell(), make_cell())
-    ys, height = stack_lane(syms, cells, Options(wire_min=8), frozenset())
+    ys, height = stack_lane(
+        syms,
+        cells,
+        core_options(
+            wire_min=8,
+            flip_turn="R180",
+            tag_stagger=True,
+            label_gap=8,
+            driver_first=True,
+            arrow_sides=("E", "W"),
+        ),
+        frozenset(),
+    )
     assert ys == (16, 56)
     assert ys[1] - ys[0] == 40
     assert height == 72
@@ -178,9 +126,9 @@ def test_shape_key_is_equal_for_equal_shapes_and_differs_on_orientation() -> Non
     assert shape_key(syms, plain) != shape_key(syms, turned)
 
 
-@pytest.mark.parametrize("func", [rotate_xy, rotate_box, rotate_side])
-def test_an_unknown_orientation_raises_and_names_the_function(func) -> None:
-    """Only the eight orientations have a rule; a mirrored one no longer raises (layout-0306)."""
-    args = {rotate_xy: (16, -8), rotate_box: (Box(2, 4, 10, 6),), rotate_side: ("N",)}[func]
-    with pytest.raises(ValueError, match=f"{func.__name__}: orientation R45"):
-        func(*args, cast("Any", "R45"))
+def test_stair_room_is_whole_grids_apart_minus_one() -> None:
+    """A stair has one turn row per whole grid between its ends, less the one it starts from."""
+    assert stair_room(0, 20, 10) == 1
+    assert stair_room(0, 10, 10) == 0
+    assert stair_room(0, 19, 10) == 0
+    assert stair_room(0, 30, 10) == 2

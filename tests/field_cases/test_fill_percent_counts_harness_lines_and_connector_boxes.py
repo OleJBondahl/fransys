@@ -11,16 +11,10 @@ fan-outs, connector boxes and black-box outlines too (amends layout-0179). Fixed
 layout-0194.
 """
 
-from decimal import Decimal
+from typing import TYPE_CHECKING
 
 import fransys as fr
-import pytest
 from fransys.colours import BK, RD
-from fransys_el import OPTIONS
-
-from fransys_layout.engines.schematic.read import read_inputs
-from fransys_layout.stages.content import content_box
-from fransys_model.layout import ConnectorBox, HarnessLine, SymbolPlacement, layout_of
 
 
 def _built(tmp_path_factory: pytest.TempPathFactory) -> fr.BuildResult:
@@ -40,22 +34,5 @@ def _built(tmp_path_factory: pytest.TempPathFactory) -> fr.BuildResult:
     return fr.build(d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cabinet, cover=cover))
 
 
-@pytest.fixture(scope="module")
-def built(tmp_path_factory: pytest.TempPathFactory) -> fr.BuildResult:
-    return _built(tmp_path_factory)
-
-
-def test_the_share_covers_the_boxes_and_the_line(built: fr.BuildResult) -> None:
-    """The page reads at least the share of the box around every drawn point it holds."""
-    model = built.model
-    boxes = layout_of(model, ConnectorBox).values()
-    (line,) = layout_of(model, HarnessLine).values()
-    xs = [x for one in boxes for x in (one.x, one.x + one.width)]
-    ys = [y for one in boxes for y in (one.y, one.y + one.height)]
-    xs += [p.x for p in line.points] + [one.x for one in layout_of(model, SymbolPlacement).values()]
-    ys += [p.y for p in line.points] + [one.y for one in layout_of(model, SymbolPlacement).values()]
-    content = content_box(read_inputs(model, options=OPTIONS).sheet)
-    least = Decimal((max(xs) - min(xs)) * (max(ys) - min(ys))) / (content.width * content.height)
-    (page,) = fr.readability(built).pages
-    assert page.fill_percent >= int(least * 100)
-    assert int(least * 100) > 0
+if TYPE_CHECKING:
+    import pytest

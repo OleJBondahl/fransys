@@ -16,7 +16,8 @@ from fransys_author.surface._strip import TerminalStrip
 from fransys_author.surface._tags import floating_name
 from fransys_author.surface._unit_strip import take, take_pe
 from fransys_author.surface.colours import GNYE, SH
-from fransys_model.vocab import PortRole
+from fransys_model.derive import core_on_pe_not_gnye, cores_past_product
+from fransys_model.kernel import first_free
 lazy from fransys_author.handles import Cable as EngineCable
 lazy from fransys_author.surface._device import Device
 
@@ -89,8 +90,8 @@ class Cable:
 
     def _refuse_pe(self, index: int, ends: tuple[Port, Port]) -> None:
         """Only the GNYE core may land on a PE-role port."""
-        known = 1 <= index <= len(self._colours)
-        if known and self._colours[index - 1] != GNYE and any(p.role is PortRole.PE for p in ends):
+        known = not cores_past_product(len(self._colours), index)
+        if known and core_on_pe_not_gnye(self._colours[index - 1], [p.role for p in ends]):
             msg = f"core {index} is {self._colours[index - 1]}: the PE core is GNYE (IEC 60204-1)"
             raise AuthorError(msg)
 
@@ -221,6 +222,20 @@ class Cable:
             )
             raise AuthorError(msg)
 
+    def _core_pairs(self, pairs: list[tuple[Port, Port]], taken: set[int]) -> None:
+        """Wire each pair on the next free core outside `taken`, or refuse when too few remain."""
+        free = len(self._colours) - len(taken)
+        if free < len(pairs):
+            msg = (
+                f"{self._label} has {free} free cores for {len(pairs)} poles: "
+                "use a cable with more cores"
+            )
+            raise AuthorError(msg)
+        for a, b in pairs:
+            index = first_free(taken)
+            taken.add(index)
+            self.core(index, a, b)
+
     def _series_between(
         self, design: Design, before: _Side, after: _Side, series: str = "a series"
     ) -> None:
@@ -233,16 +248,8 @@ class Cable:
         pe_core = next((i for i, c in enumerate(self._colours, 1) if c == GNYE), None)
         if pe_core is not None:
             self._refuse_without_pe(before, after, len(pairs))
-        taken = self._used | {pe_core}
-        plain = [i for i in range(1, len(self._colours) + 1) if i not in taken]
-        if len(plain) < len(pairs):
-            msg = (
-                f"{self._label} has {len(plain)} free cores for {len(pairs)} poles: "
-                "use a cable with more cores"
-            )
-            raise AuthorError(msg)
-        for index, (a, b) in zip(plain, pairs, strict=False):
-            self.core(index, a, b)
+        taken = self._used | ({pe_core} if pe_core else set())
+        self._core_pairs(pairs, taken)
         if pe_core is not None:
             self._by.setdefault(pe_core, series)
         self._land_pe(design, pe_core, (before, after))

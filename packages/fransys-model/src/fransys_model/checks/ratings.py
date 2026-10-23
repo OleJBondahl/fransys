@@ -7,12 +7,12 @@ states a voltage for one current kind only, on a function that stands on rails o
 from fractions import Fraction
 from typing import TYPE_CHECKING, Final
 
+from fransys_model.checks._finding import finding, ordered
 from fransys_model.derive.facts.rail_reach import (
     RailReach,
     Stand,
-    ports_by_function,
+    function_reach,
     rails_by_potential,
-    reach_of,
     voltage_across,
     worst_stand,
 )
@@ -52,7 +52,7 @@ def _message(function: Function, limit: Decimal, stand: Stand, source: str) -> s
     return text + " (two AC supplies, no fixed phase: the sum of their voltages to earth)"
 
 
-def _finding(
+def _voltage_finding(
     function: Function, limit: Decimal, stands: list[Stand], source: str
 ) -> Finding | None:
     rating = Fraction(limit)
@@ -60,12 +60,8 @@ def _finding(
     if not firing:
         return None
     worst = worst_stand(firing)
-    return Finding(
-        code=RATING_VOLTAGE_BELOW_CIRCUIT,
-        severity=Severity.ERROR,
-        subjects=(function.id,),
-        message=_message(function, limit, worst, source),
-    )
+    message = _message(function, limit, worst, source)
+    return finding(RATING_VOLTAGE_BELOW_CIRCUIT, Severity.ERROR, (function.id,), message)
 
 
 def _source_findings(
@@ -81,9 +77,9 @@ def _source_findings(
         stands = reach.stands(ac=ac)
         if stands is None:
             continue
-        finding = _finding(function, limit, stands, label)
-        if finding is not None:
-            found.append(finding)
+        found_one = _voltage_finding(function, limit, stands, label)
+        if found_one is not None:
+            found.append(found_one)
     return found
 
 
@@ -101,16 +97,12 @@ def _kind_finding(
     have, other = ("AC", "DC") if stated_ac else ("DC", "AC")
     names = ", ".join(rail.name for rail in stand.rails)
     where = f"{other} rail{'s' if len(stand.rails) > 1 else ''} {names}"
-    return Finding(
-        code=RATING_CURRENT_KIND_UNSTATED,
-        severity=Severity.WARNING,
-        subjects=(function.id,),
-        message=(
-            f"{ref(function)} states a {have} rating only ({label}) and stands on {where} at "
-            f"{voltage.show(stand.volt)} V: state voltage_{other.lower()}_v in its part, "
-            f"or use a part rated for {other}"
-        ),
+    message = (
+        f"{ref(function)} states a {have} rating only ({label}) and stands on {where} at "
+        f"{voltage.show(stand.volt)} V: state voltage_{other.lower()}_v in its part, "
+        f"or use a part rated for {other}"
     )
+    return finding(RATING_CURRENT_KIND_UNSTATED, Severity.WARNING, (function.id,), message)
 
 
 def check_ratings(model: Model) -> tuple[Finding, ...]:
@@ -119,20 +111,18 @@ def check_ratings(model: Model) -> tuple[Finding, ...]:
     `RATING_VOLTAGE_BELOW_CIRCUIT` (`ERROR`), one per function, current kind and rating source,
     when V is strictly above the rating. V: highest voltage that can stand at once, else to earth.
     """
-    lookup = rails_by_potential(model)
-    if not lookup:
+    if not rails_by_potential(model):
         return ()
-    ports_of = ports_by_function(model)
     found: list[Finding] = []
     for function in functions(model).values():
         sources = function_ratings(model, function.id)
         if not sources:
             continue
-        reach = reach_of(model, function.id, lookup, ports_of)
+        reach = function_reach(model, function.id)
         for source in sources:
             label = rating_source_label(model, source)
             found += _source_findings(function, source, label, reach)
             kind = _kind_finding(function, source, label, reach)
             if kind is not None:
                 found.append(kind)
-    return tuple(sorted(found, key=lambda f: (f.code, f.subjects, f.message)))
+    return ordered(found)

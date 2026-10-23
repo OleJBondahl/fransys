@@ -260,9 +260,12 @@ lamp_operating = d.operating("DEMO-LAMP-24", "lamp")
 
 ## An accessory in its holder
 
-A part with no function, put in another device with `parent=`, is an accessory. A fuse link in its PCB
+A part with no function and no footprint, put in another device with `parent=`, is an accessory. A fuse link in its PCB
 holder is one: the link prints `F1` and has no number or row. An authored tag makes it an ordinary item.
 `parent=` also takes a terminal strip, for a jumper bar on a bridged run.
+
+An untagged device with `parent=` and `unused=True` is an accessory whatever its part holds, a function or a footprint.
+It prints its holder's designation and has no row or netlist line, and draws nothing. One BOM line counts the part's tagged and accessory uses.
 
 ```python
 import fransys as fr
@@ -276,4 +279,15 @@ bar = d.device(None, "DEMO-JUMPER-BAR-3P", name="bar", parent=x1)
 model = fr.build(d).model
 assert fr.derive.item_designation(model, link.id) == "F1"
 assert fr.derive.item_designation(model, bar.id) == "X1"
+```
+
+The BOM prints one line per part: count is its installed items, designations are the holders'. F1 is shown; with F2 alike, four bars give one line for the bar part, count 4, F1 F2; a name is unique, and the bars draw nothing.
+
+```python
+import fransys as fr
+
+d = fr.design("demo_parts")
+f1 = d.device("F1", "DEMO-FUSE-HOLDER-PCB")
+d.device(None, "DEMO-JUMPER-BAR-3P", name="f1_bar_a", parent=f1)
+d.device(None, "DEMO-JUMPER-BAR-3P", name="f1_bar_b", parent=f1)
 ```

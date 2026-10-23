@@ -11,12 +11,14 @@ from __future__ import annotations
 from dataclasses import replace
 from typing import TYPE_CHECKING
 
-from fransys_layout.core import Hints, Options, order_blocks
+from options_fixtures import core_options
+
+from fransys_layout.core import Hints, order_blocks
 from fransys_layout.core.cut import cut_pages
 from fransys_layout.core.cut_guard import unplaced
 
 from .blocks_fixtures import box_sym
-from .conftest import MARKER_BOX
+from .conftest import MARKER
 from .flow_builders import elem, free, net, problem
 from .pipeline_fixtures import blocks_of, cut_of, flow_of, placed_of
 from .test_box_blocks import chain_shape
@@ -51,7 +53,14 @@ def two_fans(ends_a: int, ends_b: int, *, a_first: bool = True) -> PlacementProb
 
 def _seated(prob: PlacementProblem) -> list[str]:
     """Stage 3's block ids for the problem's one unit, in order."""
-    opts = Options(marker=MARKER_BOX)
+    opts = core_options(
+        marker=MARKER,
+        flip_turn="R180",
+        tag_stagger=True,
+        label_gap=8,
+        driver_first=True,
+        arrow_sides=("E", "W"),
+    )
     lists = order_blocks(blocks_of(prob, opts), flow_of(prob, opts), opts)
     return [b.id for bl in lists for b in bl.blocks]
 
@@ -97,13 +106,26 @@ def test_a_card_with_no_trunk_and_no_hop_gets_a_row_of_its_own_at_the_end() -> N
     assert [f.code for f in result.spec.findings] == []
 
 
-def test_a_chain_box_is_not_seated_and_is_reported_not_dropped() -> None:
-    """A refused chain (pins do not face) is reported, not dropped: CHAIN_NOT_DRAWN."""
+def test_a_refused_chain_box_is_seated_and_drawn_not_dropped() -> None:
+    """R348: a refused chain (pins do not face) degrades to a drawing: every box has a row."""
     result = cut_of(chain_shape())
-    assert [(f.code, f.subject) for f in result.spec.findings] == [
-        ("CHAIN_NOT_DRAWN", f"card:A{i}") for i in (1, 2, 3)
-    ]
-    assert result.spec.pages == ()
+    placed = {b for p in result.spec.pages for r in p.rows for b in r.blocks}
+    assert placed == {f"card:A{i}" for i in (1, 2, 3)}
+    assert "CHAIN_NOT_DRAWN" not in {f.code for f in result.spec.findings}
+
+
+OPTIONS = core_options(
+    marker=MARKER,
+    flip_turn="R180",
+    tag_stagger=True,
+    label_gap=8,
+    driver_first=True,
+    arrow_sides=("E", "W"),
+)
+
+
+def _page_w(prob: PlacementProblem) -> int:
+    return prob.area.w - 2 * OPTIONS.margin.w
 
 
 def test_the_guard_names_a_block_in_no_row() -> None:
@@ -112,7 +134,15 @@ def test_the_guard_names_a_block_in_no_row() -> None:
     flow = flow_of(prob)
     lists = blocks_of(prob)  # stage 3 not run: the card keeps seat "none"
     found = unplaced(
-        lists, cut_pages(lists, flow, prob, Options(marker=MARKER_BOX)).spec.pages, flow
+        lists,
+        cut_pages(
+            lists,
+            flow,
+            prob,
+            OPTIONS,
+        ).spec.pages,
+        _page_w(prob),
+        OPTIONS,
     )
     assert [(f.code, f.subject) for f in found] == [("BLOCK_NOT_PLACED", "card:K")]
     assert "stage 4" in found[0].text
@@ -120,11 +150,10 @@ def test_the_guard_names_a_block_in_no_row() -> None:
 
 def test_the_guard_flags_a_whole_block_in_two_rows() -> None:
     prob = two_fans(1, 2)
-    flow = flow_of(prob)
     result = cut_of(prob)
     page = result.spec.pages[0]
     twice = replace(page, rows=(*page.rows, page.rows[-1]))
-    found = unplaced(result.blocks, (twice,), flow)
+    found = unplaced(result.blocks, (twice,), _page_w(prob), OPTIONS)
     assert [(f.code, f.subject) for f in found] == [("BLOCK_NOT_PLACED", "card:K")]
 
 

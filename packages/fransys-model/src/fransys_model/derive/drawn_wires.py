@@ -12,6 +12,7 @@ lazy from fransys_model.vocab import Conductor, Item, Port, Unit
 from .drawing_text import wire_text
 from .harness import _ends, _facts_of
 from .harness_wires import harness_wires
+from .texts.core_text import cross_section_text, join_words
 from .wire_ends import ordered_wire_ends
 lazy from .rows import HarnessCore, HarnessEnd
 
@@ -45,14 +46,10 @@ def block_wires(model: Model, subject: Id[Item], unit: Id[Unit] | None) -> tuple
     for index, row in enumerate(harness_wires(model, subject), 1):
         record = conductors(model)[row.conductor]
         end_a, end_b = ordered_wire_ends(model, record.a, record.b)
-        key = " ".join(
-            part
-            for part in (
-                wire_text(model, row.conductor, unit=unit),
-                row.colour,
-                f"{row.cross_section_mm2} mm²",
-            )
-            if part
+        key = join_words(
+            wire_text(model, row.conductor, unit=unit),
+            row.colour,
+            cross_section_text(row.cross_section_mm2),
         )
         found.append(
             DrawnWire(conductor=row.conductor, index=index, end_a=end_a, end_b=end_b, text=key)

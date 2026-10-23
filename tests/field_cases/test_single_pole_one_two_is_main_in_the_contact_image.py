@@ -10,11 +10,10 @@ The rule (decision model-0138): a pole with pins 1-2 (3-4, 5-6, ...) is main and
 """
 
 import fransys as fr
+from _contact_tables import contact_table
 from _model_build_cover import cabinet_document
+from _tables_on import TABLES_ON
 from fransys.colours import BU
-
-from fransys_model.derive.drawing_text import contact_image
-from fransys_model.layout import Label, LabelKind, layout_of
 
 
 def _poles() -> list[str]:
@@ -35,13 +34,8 @@ def _poles() -> list[str]:
     d.detail.wire(k1.aux["14"], load, wire=wire)
     d.detail.wire(feed, pole["1"], wire=wire)
     d.detail.wire(pole["2"], load, wire=wire)
-    model = fr.build(d, cabinet_document(_cabinet)).model
-    (label,) = (
-        one
-        for one in layout_of(model, Label).values()
-        if one.kind is LabelKind.CROSS_REFERENCE and one.slot == "contacts"
-    )
-    no, _ = contact_image(model, label)
+    model = fr.build(d, cabinet_document(_cabinet), settings=TABLES_ON).model
+    no, _ = contact_table(model)
     return [entry.split(" ")[0] for entry in no]
 
 

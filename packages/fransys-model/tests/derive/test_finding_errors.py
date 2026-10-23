@@ -5,7 +5,7 @@ from fransys_model.kernel import Finding, Severity
 
 
 def _finding(severity: Severity) -> Finding:
-    return Finding(code="X", severity=severity, subjects=(), message="m")
+    return Finding(code="X", severity=severity, subjects=(), message="m", fix="Write: x")
 
 
 def test_an_error_refuses_and_is_counted():

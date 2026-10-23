@@ -21,23 +21,18 @@ from pathlib import Path
 from typing import Any, NamedTuple
 
 import fransys as fr
+from _drawn_pages import drawn_pages
 
 from fransys_layout.geometry import Box, overlaps, symbol_geometry, translate
-from fransys_model import layout
-from fransys_model.derive.drawing_text import external_note, label_text
+from fransys_model.derive.tag_text import external_note
 from fransys_model.layout import (
     CableBlock,
     DiagramBox,
     EndBox,
     EndStyle,
-    HarnessFanOut,
-    HarnessLine,
-    Label,
-    Route,
-    SymbolPlacement,
+    Orientation,
     layout_of,
 )
-from fransys_model.vocab.tables import items
 
 
 class _Open(NamedTuple):
@@ -75,32 +70,46 @@ def _built() -> fr.BuildResult:
     return fr.build(d, schematic, looms)
 
 
-def _strip_functions() -> set[Any]:
-    """The functions of `X90`'s terminals."""
-    model = _built().model
-    strip = next(i.id for i in items(model).values() if i.tag == "X90")
-    terminals = {i.id for i in items(model).values() if i.parent == strip}
-    return {f.id for f in fr.derive.functions(model).values() if f.item in terminals}
+def _outline_boxes() -> list[tuple[Any, Box]]:
+    """Each external outline as (page, the box around its points)."""
+    return [
+        (page, _around(o.points))
+        for page, drawing in drawn_pages(_built().model).items()
+        for o in drawing.outlines
+    ]
+
+
+def _around(points: Any) -> Box:
+    xs, ys = [p[0] for p in points], [p[1] for p in points]
+    return Box(x=min(xs), y=min(ys), width=max(xs) - min(xs), height=max(ys) - min(ys))
+
+
+def _symbols() -> list[tuple[Any, Any]]:
+    """Every symbol the core path draws, as (page, symbol); the strip's are the terminals."""
+    return [
+        (page, s) for page, drawing in drawn_pages(_built().model).items() for s in drawing.symbols
+    ]
 
 
 def test_the_strips_terminals_stand_in_dashed_outlines_with_one_note() -> None:
     """Each terminal is inside an outline, no other symbol is, and the strip has one note."""
-    model = _built().model
-    outlines = list(layout_of(model, layout.ExternalOutline).values())
+    outlines = _outline_boxes()
     assert outlines
-    strip = _strip_functions()
 
-    def inside(s: SymbolPlacement) -> bool:
+    def inside(page: Any, s: Any) -> bool:
         return any(
-            o.page == s.page and o.x <= s.x <= o.x + o.width and o.y <= s.y <= o.y + o.height
-            for o in outlines
+            p == page and o.x <= s.x <= o.x + o.width and o.y <= s.y <= o.y + o.height
+            for p, o in outlines
         )
 
-    placements = layout_of(model, SymbolPlacement).values()
-    assert [s.function in strip for s in placements if inside(s)] == [True] * 3
-    notes = [lb for lb in layout_of(model, Label).values() if lb.slot == "external_note"]
+    assert [s.key == "terminal" for page, s in _symbols() if inside(page, s)] == [True] * 3
+    notes = [
+        t.text
+        for drawing in drawn_pages(_built().model).values()
+        for t in (*drawing.texts, *(o.label for o in drawing.outlines if o.label))
+        if t.text == external_note()
+    ]
     assert len(notes) == 1
-    assert label_text(model, notes[0]) == external_note()
 
 
 def test_the_unit_block_diagram_dashes_the_strip() -> None:
@@ -117,28 +126,21 @@ def test_the_cable_end_box_of_the_strip_is_dashed() -> None:
     assert styles.count(EndStyle.DASHED) == 1
 
 
+def _body(s: Any) -> Box:
+    """The body box of a drawn symbol, on the page."""
+    geometry = symbol_geometry(s.key, poles=s.poles, orientation=Orientation(s.orient))
+    return translate(geometry.body, dx=s.x, dy=s.y)
+
+
 def test_no_outline_box_holds_a_foreign_symbol() -> None:
     """BO6: the strip's terminals stand in two chain columns; a run is cut where K2 falls inside."""
-    model = _built().model
-    strip = _strip_functions()
-    outlines = [
-        (o.page, Box(x=o.x, y=o.y, width=o.width, height=o.height))
-        for o in layout_of(model, layout.ExternalOutline).values()
-    ]
     foreign = [
-        (
-            s.page,
-            translate(
-                symbol_geometry(s.symbol, poles=s.poles, orientation=s.orientation).body,
-                dx=s.x,
-                dy=s.y,
-            ),
-        )
-        for s in layout_of(model, SymbolPlacement).values()
-        if s.function not in strip
+        (page, _body(s)) for page, s in _symbols() if s.key not in {"terminal", "contact-head"}
     ]
     assert foreign
-    assert [(p, q) for p, o in outlines for r, q in foreign if p == r and overlaps(o, q)] == []
+    assert [
+        (p, q) for p, o in _outline_boxes() for r, q in foreign if p == r and overlaps(o, q)
+    ] == []
 
 
 def _edges(box: Box) -> list[tuple[int, int, int, int]]:
@@ -164,21 +166,19 @@ def _lies_on(one: tuple[int, int, int, int], two: tuple[int, int, int, int]) -> 
 
 def _segments(lines: list[tuple[Any, Any]]) -> list[tuple[Any, tuple[int, int, int, int]]]:
     """Each polyline's segments (x1, y1, x2, y2), by page."""
-    return [(page, (a.x, a.y, b.x, b.y)) for page, points in lines for a, b in pairwise(points)]
+    return [(page, (*a, *b)) for page, points in lines for a, b in pairwise(points)]
 
 
-def _routes(model: Any) -> list[tuple[Any, tuple[int, int, int, int]]]:
-    """Every routed wire's segments by page."""
-    return _segments([(r.page, r.points) for r in layout_of(model, Route).values()])
-
-
-def _cables(model: Any) -> list[tuple[Any, tuple[int, int, int, int]]]:
-    """Every harness line's and fan-out leg's segments by page."""
-    lines = [(h.page, h.points) for h in layout_of(model, HarnessLine).values()]
-    lines += [
-        (f.page, leg.points) for f in layout_of(model, HarnessFanOut).values() for leg in f.legs
-    ]
-    return _segments(lines)
+def _lines(*, cable: bool) -> list[tuple[Any, tuple[int, int, int, int]]]:
+    """The segments of the drawn wires by page: the cable styles, or the plain wires."""
+    return _segments(
+        [
+            (page, w.points)
+            for page, drawing in drawn_pages(_built().model).items()
+            for w in drawing.wires
+            if (w.style != "wire") is cable
+        ]
+    )
 
 
 def test_no_outline_edge_lies_on_a_wire_or_a_symbol_body_edge() -> None:
@@ -187,39 +187,26 @@ def test_no_outline_edge_lies_on_a_wire_or_a_symbol_body_edge() -> None:
     -X90:1's tag ends at 188 and the gap puts its edge at 192, where W1's trunk ran; the routers
     now refuse a run along an outline by others, so the trunk moves off it.
     """
-    model = _built().model
     bodies = [
-        (
-            s.page,
-            translate(
-                symbol_geometry(s.symbol, poles=s.poles, orientation=s.orientation).body,
-                dx=s.x,
-                dy=s.y,
-            ),
-        )
-        for s in layout_of(model, SymbolPlacement).values()
+        (page, _body(s)) for page, s in _symbols() if s.key not in {"terminal", "contact-head"}
     ]
+    bodies += [(page, _body(s)) for page, s in _symbols() if s.key == "terminal"]
     marks = (
-        _routes(model)
-        + _cables(model)
+        _lines(cable=False)
+        + _lines(cable=True)
         + [(page, edge) for page, box in bodies for edge in _edges(box)]
     )
-    outlines = layout_of(model, layout.ExternalOutline).values()
-    edges = [
-        (o.page, e)
-        for o in outlines
-        for e in _edges(Box(x=o.x, y=o.y, width=o.width, height=o.height))
-    ]
+    edges = [(p, e) for p, o in _outline_boxes() for e in _edges(o)]
     assert edges
     assert [(e, s) for p, e in edges for q, s in marks if p == q and _lies_on(e, s)] == []
 
 
 def test_no_harness_line_runs_along_a_routed_wire() -> None:
     """BO6-SHRINK: W1's trunk, moved off -X90:1's outline, never runs along the K1 to X90:1 wire."""
-    model = _built().model
-    wires = _routes(model)
+    wires, cables = _lines(cable=False), _lines(cable=True)
     assert wires
-    assert [(c, w) for p, c in _cables(model) for q, w in wires if p == q and _lies_on(c, w)] == []
+    assert cables, "the cable's trunk is drawn: the check would pass over nothing"
+    assert [(c, w) for p, c in cables for q, w in wires if p == q and _lies_on(c, w)] == []
 
 
 # BO6-SHRINK ratchet: harness lines drawn at tier 2 (along an outline by others); may only fall
@@ -231,20 +218,10 @@ def test_the_lines_along_an_outline_by_others_only_fall() -> None:
 
     Measured 0 over every field case's build (2026-10-14).
     """
-    model = _built().model
-    sides = [
-        (o.page, e)
-        for o in layout_of(model, layout.ExternalOutline).values()
-        for e in _edges(Box(x=o.x, y=o.y, width=o.width, height=o.height))
-    ]
-    lines = [(h.page, h.points) for h in layout_of(model, HarnessLine).values()]
+    sides = [(p, e) for p, o in _outline_boxes() for e in _edges(o)]
     along = [
-        points
-        for page, points in lines
-        if any(
-            p == page and _lies_on((a.x, a.y, b.x, b.y), e)
-            for a, b in pairwise(points)
-            for p, e in sides
-        )
+        (page, segment)
+        for page, segment in _lines(cable=True)
+        if any(p == page and _lies_on(segment, e) for p, e in sides)
     ]
     assert len(along) <= _TIER_TWO_LINES

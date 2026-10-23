@@ -70,8 +70,8 @@ def test_result_port_ends_are_port_ids():
     records = _result_records()
     rows = endpoint_fields(records)
     sites = {site for site, _ in rows}
-    assert {"Route.a", "Route.b", "LinkMarker.far", "StubEnd.port", "PinCell.port"} <= sites
-    assert len(rows) == 10, sites
+    assert {"LinkMarker.far", "PinCell.port", "PowerSymbol.port"} <= sites
+    assert len(rows) == 5, sites
     assert untyped_endpoints(rows) == []
 
 

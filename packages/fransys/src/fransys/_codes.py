@@ -1,5 +1,6 @@
 """The facade's finding codes: build, release and verify (BUILD-MESSAGES M1)."""
 
+import fransys_el
 import fransys_kicad
 import fransys_parts
 import fransys_pdf
@@ -20,10 +21,10 @@ _OWN: tuple[CodeInfo, ...] = (
             "differing from its released baseline."
         ),
         fix=(
-            "Release the nested unit's new revision, then the containing unit again, or find "
-            "why its content changed."
+            "Bump the changed unit's revision and release it again, or restore its content. "
+            "Write: fr.release(result, into, unit=<unit>)"
         ),
-        page="findings-validators",
+        page="findings-release",
     ),
     CodeInfo(
         code="BASELINE_RULES_MOVED",
@@ -34,8 +35,11 @@ _OWN: tuple[CodeInfo, ...] = (
             "A stored baseline's content is unchanged, but a later fransys prints its listing "
             "differently. `verify` notes it (INFO); `release` of a unit nesting it refuses (ERROR)."
         ),
-        fix="Run `fr.rebaseline(result, baselines)`, which re-cuts it under today's rules.",
-        page="findings-validators",
+        fix=(
+            "Re-cut the stored baseline under today's rules first. "
+            "Write: fr.rebaseline(result, baselines, unit=<unit>)"
+        ),
+        page="findings-release",
     ),
     CodeInfo(
         code="BASELINE_ROWS_UNCHECKED",
@@ -48,8 +52,11 @@ _OWN: tuple[CodeInfo, ...] = (
             "left out of the comparison. `verify` notes it (INFO); `release` of a unit nesting "
             "it refuses (ERROR)."
         ),
-        fix="Run `fr.rebaseline(result, baselines)`, which records them under today's rules.",
-        page="findings-validators",
+        fix=(
+            "Re-cut the stored baseline, which records its rows under today's rules. "
+            "Write: fr.rebaseline(result, baselines, unit=<unit>)"
+        ),
+        page="findings-release",
     ),
     CodeInfo(
         code="BASELINE_TOO_OLD",
@@ -61,10 +68,10 @@ _OWN: tuple[CodeInfo, ...] = (
             "rules this build knows, or its manifest records no fransys version."
         ),
         fix=(
-            "verify with the fransys release that cut this baseline, or release a new revision "
-            "of the unit, which stores a baseline under today's rules."
+            "Verify with the fransys release that cut the baseline, or release a new revision. "
+            "Write: fr.release(result, into, unit=<unit>)"
         ),
-        page="findings-validators",
+        page="findings-release",
     ),
     CodeInfo(
         code="CHANGES_BY_NAME",
@@ -80,28 +87,7 @@ _OWN: tuple[CodeInfo, ...] = (
             "The next release's change list follows renames; `fr.rebaseline` re-cuts the old "
             "release now."
         ),
-        page="findings-validators",
-    ),
-    CodeInfo(
-        code="DESIGNATION_MOVED",
-        severities=(Severity.ERROR,),
-        stage="release",
-        who="consumer",
-        cause=(
-            "An item or unit instance pinned in the previous release now prints a different "
-            "designation, written or numbered."
-        ),
-        fix="Restore the released tag; only a new version may change it.",
-        page="findings-validators",
-    ),
-    CodeInfo(
-        code="DESIGNATION_NEW_IN_REVISION",
-        severities=(Severity.INFO,),
-        stage="build, release",
-        who="note",
-        cause="A new untagged item or unit instance took the next free number in a later revision.",
-        fix="Nothing is wrong; tag it if its number must stay fixed.",
-        page="findings-validators",
+        page="findings-release",
     ),
     CodeInfo(
         code="EXPORT_NAME_CLASH",
@@ -113,11 +99,12 @@ _OWN: tuple[CodeInfo, ...] = (
             "`out_dir`."
         ),
         fix=(
-            "Give the colliding units, items or documents distinct names (or "
-            "locations/fragments); two instances of one release name need one document per "
-            "release."
+            "Give <subject> or <other> a distinct name, location or fragment; a placement of a "
+            "release is named by what `d.add` returned, which adds its tag to the PDF name. "
+            "Write: fr.unit(<distinct name>, revision=<n>, interface_version=<n>, "
+            "date=<date>, text=<text>, by=<by>)"
         ),
-        page="findings-validators",
+        page="findings-release",
     ),
     CodeInfo(
         code="INTERFACE_NOT_BUMPED",
@@ -128,8 +115,11 @@ _OWN: tuple[CodeInfo, ...] = (
             "The previous released revision of this unit (the highest below this one) has the "
             "same interface string but a different boundary."
         ),
-        fix="Bump the interface string if the boundary changed, or restore the previous boundary.",
-        page="findings-validators",
+        fix=(
+            "Bump the interface version of <subject> if its boundary changed, or restore the "
+            "previous boundary. Write: fr.unit(<name>, interface_version=<new>, ...)"
+        ),
+        page="findings-release",
     ),
     CodeInfo(
         code="RELEASE_FILE_CHANGED",
@@ -140,8 +130,11 @@ _OWN: tuple[CodeInfo, ...] = (
             "A released file's hash differs, the folder holds a file its manifest omits, or "
             "the manifest does not parse. A CRLF-only change in a text file passes."
         ),
-        fix="Restore the file from version control; a released revision never changes.",
-        page="findings-validators",
+        fix=(
+            "No call clears this: restore the file from version control; a released revision "
+            "never changes."
+        ),
+        page="findings-release",
     ),
     CodeInfo(
         code="RELEASE_FILE_MISSING",
@@ -149,8 +142,8 @@ _OWN: tuple[CodeInfo, ...] = (
         stage="verify",
         who="consumer",
         cause="A file its manifest lists, or the manifest itself, is gone from a release folder.",
-        fix="Restore it from version control.",
-        page="findings-validators",
+        fix="No call clears this: restore it from version control.",
+        page="findings-release",
     ),
     CodeInfo(
         code="RELEASE_HISTORY_UNRELEASED",
@@ -161,8 +154,11 @@ _OWN: tuple[CodeInfo, ...] = (
             "A history entry after the first released one names a revision with no folder "
             "under `into`, in its own version."
         ),
-        fix="Remove the entry, or release that revision first. Older entries are free text.",
-        page="findings-validators",
+        fix=(
+            "Remove the entry from history=, or release that revision first. "
+            "Write: fr.release(result, into, unit=<unit>)"
+        ),
+        page="findings-release",
     ),
     CodeInfo(
         code="RELEASE_NESTED_UNRELEASED",
@@ -173,8 +169,11 @@ _OWN: tuple[CodeInfo, ...] = (
             "A unit anywhere in the subtree being released (not only direct children) has no "
             "baseline folder yet."
         ),
-        fix="Release that nested unit first, then release the containing unit.",
-        page="findings-validators",
+        fix=(
+            "Release <subject> first, then release the containing unit. "
+            "Write: fr.release(result, into, unit=<nested unit>)"
+        ),
+        page="findings-release",
     ),
     CodeInfo(
         code="RELEASE_NO_HISTORY",
@@ -183,10 +182,10 @@ _OWN: tuple[CodeInfo, ...] = (
         who="consumer",
         cause="The revision being released has no matching `Revision` history entry.",
         fix=(
-            "Add the missing entry: `history=` on `@fr.unit`, or `Design.revision(...)` for a "
-            "system release."
+            "Add the missing entry: history= on fr.unit, or d.revision(...) for a system "
+            "release. Write: fr.unit(<name>, ..., history=[<revision entry>])"
         ),
-        page="findings-validators",
+        page="findings-release",
     ),
     CodeInfo(
         code="REVISION_ALREADY_RELEASED",
@@ -197,8 +196,27 @@ _OWN: tuple[CodeInfo, ...] = (
             "The unit (or system) being released already has a baseline folder whose listing "
             "differs from the one to be written."
         ),
-        fix="Bump the version or revision, or find why a frozen revision changed.",
-        page="findings-validators",
+        fix=(
+            "Bump the revision or version, or restore the frozen revision's content. "
+            "Write: fr.unit(<name>, revision=<new revision>, ...)"
+        ),
+        page="findings-release",
+    ),
+    CodeInfo(
+        code="SETTING_NEW_ENGINE_ONLY",
+        severities=(Severity.WARNING,),
+        stage="build",
+        who="consumer",
+        cause=(
+            "A settings file sets a `[grid]` or `[font]` key. It applies to drawings from the new "
+            "engine; the old engine, which draws every schematic today, keeps the built-in grid "
+            "and font until MODEL-TEXT, so this finding goes then."
+        ),
+        fix=(
+            "Keep the key for the new engine's drawings, or remove it from the settings file. "
+            "Write: fr.settings()"
+        ),
+        page="findings-release",
     ),
     CodeInfo(
         code="SYMBOL_PORT_MISSING",
@@ -206,7 +224,10 @@ _OWN: tuple[CodeInfo, ...] = (
         stage="render",
         who="consumer",
         cause="A model port matches no port on its drawn symbol by any of the three binding rules.",
-        fix="Fix the part's port names, or add a `port_map`/symbol choice.",
+        fix=(
+            "Fix the part's port names, or map them with port_map or a symbol choice. Write: "
+            "d.layout.symbol(<target>, <symbol>, port_map=<mapping>)"
+        ),
         page="findings-render",
     ),
 )
@@ -216,6 +237,7 @@ BY_CODE: dict[str, CodeInfo] = {
     for info in (
         *_OWN,
         *vocab.FINDING_CODES,
+        *fransys_el.FINDING_CODES,
         *fransys_layout.FINDING_CODES,
         *fransys_render.FINDING_CODES,
         *fransys_pdf.FINDING_CODES,
@@ -223,3 +245,8 @@ BY_CODE: dict[str, CodeInfo] = {
         *fransys_parts.FINDING_CODES,
     )
 }
+
+
+def fix_text(code: str, **values: str) -> str:
+    """The `fix` of one finding of `code`: the code's template filled with `values`."""
+    return BY_CODE[code].filled(**values)

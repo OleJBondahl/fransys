@@ -48,22 +48,29 @@ class Finding:
         severity: How much this finding should block a downstream output.
         subjects: The ids this finding is about, stored once each, in `Id` order.
         message: The human-readable text of the finding.
+        fix: The pasteable text that clears it, `<valid values>. Write: <corrected call>`,
+            from the code's `CodeInfo.filled`. Empty only on an INFO note.
     """
 
     code: str
     severity: Severity
     subjects: tuple[Id[Any], ...]
     message: str
+    fix: str = ""
 
     def __post_init__(self) -> None:
         """Refuse a malformed `code` or a subject that is not an `Id`; store subjects once each.
 
-        Raises `SchemaError` when `code` is not `UPPER_SNAKE`, or a subject is not an `Id`.
+        Raises `SchemaError` when `code` is not `UPPER_SNAKE`, a subject is not an `Id`, or an
+        ERROR or WARNING has no `fix`.
         """
         if CODE_SHAPE.fullmatch(self.code) is None:
             msg = f"finding code {self.code!r} is not UPPER_SNAKE"
             raise SchemaError(msg, kind=type(self).__qualname__)
         if not all(isinstance(subject, Id) for subject in self.subjects):
             msg = "every finding subject must be an Id"
+            raise SchemaError(msg, kind=type(self).__qualname__)
+        if not self.fix and self.severity is not Severity.INFO:
+            msg = f"finding {self.code!r} ({self.severity.value}) has no fix"
             raise SchemaError(msg, kind=type(self).__qualname__)
         object.__setattr__(self, "subjects", tuple(sorted(set(self.subjects))))

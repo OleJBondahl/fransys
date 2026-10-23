@@ -1,6 +1,6 @@
-"""intervals.levels: overlapping spans take distinct levels, the earlier in order lower."""
+"""levels: overlapping spans take distinct levels, the earlier in order lower."""
 
-from fransys_layout.core.intervals import levels
+from fransys_layout.core.intervals import levels, stem_levels
 
 
 def test_disjoint_spans_share_level_zero() -> None:
@@ -24,3 +24,15 @@ def test_the_order_decides_which_of_two_overlapping_spans_lies_lower() -> None:
 def test_a_chain_uses_as_many_levels_as_its_deepest_overlap() -> None:
     """a-b and b-c overlap, a-c do not: two levels when b comes first."""
     assert levels([(0, 4), (3, 8), (7, 12)], [1, 0, 2]) == (1, 0, 1)
+
+
+def test_a_row_of_boxes_each_touching_its_neighbour_by_a_little_needs_two_levels() -> None:
+    """Boxes 74 wide, stems 72 apart: a neighbour's stem is outside the box, so the levels cycle."""
+    spans = [(72 * i, 72 * i + 74) for i in range(15)]
+    assert max(stem_levels(spans, range(15))) == 1
+    assert max(levels(spans, range(15))) == 14
+
+
+def test_a_box_holding_an_earlier_stem_lies_above_it() -> None:
+    """The earlier box's stem runs through the later box, so the later one stands further out."""
+    assert stem_levels([(0, 74), (30, 104)], [0, 1]) == (0, 1)

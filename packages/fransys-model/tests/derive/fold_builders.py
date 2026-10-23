@@ -6,6 +6,7 @@ with Z1), and an ungrouped strip X9. Far unit `v` holds F1 and F2; B1 is in no u
 
 import dataclasses
 
+from derive_helpers import with_library
 from plant import Plant
 from query_builders import make_pin, make_terminal
 
@@ -97,4 +98,4 @@ def fold_plant(
         else r
         for r in plant.records
     ]
-    return plant.model(), outer, far
+    return with_library(plant.model()), outer, far

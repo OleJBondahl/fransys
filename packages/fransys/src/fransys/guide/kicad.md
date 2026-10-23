@@ -15,7 +15,11 @@ editor's File > Import > Netlist. The import is a manual step.
 intermediates folder, named `netlist-<board>.net`. A netlist is not an export, so it never lands in `out_dir`.
 
 `fr.check(result)` reports the KiCad findings. Read them first. An `ERROR` (`REFERENCE_DUPLICATE`,
-`NET_NAME_DUPLICATE`, `PAD_ON_MULTIPLE_NETS`) means do not import yet. Each code is in findings-kicad.md.
+`NET_NAME_DUPLICATE`, `PAD_ON_MULTIPLE_NETS`, `PIN_ID_COLLISION`) means do not import yet. Each code is in findings-kicad.md.
+
+### Pin names and pads
+
+A labelled connector function may repeat a pin name: the drawing prints `-B1-Main:1` and `-B1-Voltage:1`, so the label is not the KiCad pin. KiCad keys a pin by its name, which is the footprint pad name, so it needs each pin name unique per part. When two pins of one part would write the same KiCad pin id, `PIN_ID_COLLISION` is an `ERROR`, wired or not. Rename the part's pins so each is its footprint pad name.
 
 ## Import settings
 

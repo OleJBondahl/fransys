@@ -23,6 +23,7 @@ import fransys_author
 import fransys_parts
 import pytest
 from fransys_author import Design
+from root_library import freeze
 
 from fransys_model.checks import ALL_VALIDATORS
 from fransys_model.checks.ratings import (
@@ -36,7 +37,7 @@ from fransys_model.checks.supplies import (
     check_supplies,
 )
 from fransys_model.derive import function_operating, function_rating, part_rating
-from fransys_model.kernel import Draft, Origin, Severity, evolve, freeze
+from fransys_model.kernel import Draft, Origin, Severity, evolve
 from fransys_model.vocab.enums import LinkKind
 from fransys_model.vocab.finding_ref import ref
 from fransys_model.vocab.ratings import Operating, Rating

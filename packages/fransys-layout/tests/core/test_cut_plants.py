@@ -7,9 +7,9 @@ from __future__ import annotations
 
 from dataclasses import replace
 
-import pytest
+from options_fixtures import core_options
 
-from fransys_layout.core import Hints, Options, PlacementProblem, order_blocks
+from fransys_layout.core import Facts, Hints, PlacementProblem, order_blocks
 from fransys_layout.core.blocks import assign_blocks
 from fransys_layout.core.cut import cut_pages
 from fransys_layout.core.values import Cell, Column, CycleSplit, End, FlowGraph, Lane
@@ -18,10 +18,6 @@ from .blocks_fixtures import AREA
 from .cut_fixtures import cut_of, elem, net
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Multi-lane tall columns are not split: a two-lane column taller than the page stays",
-)
 def test_a_two_lane_column_taller_than_the_page_is_cut_into_columns() -> None:
     """Two lanes of twelve 96 G cells make a column 1240 G tall on an 822 G page."""
     ids = [f"k{n}{i:02d}" for n in (0, 1) for i in range(12)]
@@ -32,15 +28,45 @@ def test_a_two_lane_column_taller_than_the_page_is_cut_into_columns() -> None:
     )
     col = Column("c", lanes, (End("open"), End("open")), (End("open"), End("open")), 1240, 88)
     flow = FlowGraph((col,), (), (), (), CycleSplit(0, 0, 0), ())
-    prob = PlacementProblem(AREA, syms, ())
-    lists = order_blocks(assign_blocks(flow, prob, Options()), flow, Options())
-    result = cut_pages(lists, flow, prob, Options())
-    assert len(result.flow.columns) > 1
+    prob = PlacementProblem(AREA, syms, (), facts=Facts())
+    lists = order_blocks(
+        assign_blocks(
+            flow,
+            prob,
+            core_options(
+                flip_turn="R180",
+                tag_stagger=True,
+                label_gap=8,
+                driver_first=True,
+                arrow_sides=("E", "W"),
+            ),
+        ),
+        flow,
+        core_options(
+            flip_turn="R180",
+            tag_stagger=True,
+            label_gap=8,
+            driver_first=True,
+            arrow_sides=("E", "W"),
+        ),
+    )
+    result = cut_pages(
+        lists,
+        flow,
+        prob,
+        core_options(
+            flip_turn="R180",
+            tag_stagger=True,
+            label_gap=8,
+            driver_first=True,
+            arrow_sides=("E", "W"),
+        ),
+    )
+    assert [c.id for c in result.flow.columns] == ["c#a", "c#b"]
+    assert all(c.height <= 822 for c in result.flow.columns)
+    assert [len(c.lanes) for c in result.flow.columns] == [2, 2]
 
 
-@pytest.mark.xfail(
-    strict=True, reason="P6 is strict: the cut spreads a row group of three symbols over two rows"
-)
 def test_a_row_group_the_cut_would_spread_over_two_rows_stays_in_one() -> None:
     """Column x then three columns of one row group: the row break falls inside the group."""
     members = [replace(elem(f"r{i}", 300), row_group="R1") for i in (1, 2, 3)]

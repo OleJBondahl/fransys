@@ -16,7 +16,7 @@ lazy from fransys_model.vocab.aspects import AspectNode
 lazy from fransys_model.vocab.connectivity import Conductor, Net
 lazy from fransys_model.vocab.core import Item, Port, Unit
 
-from .designation import terminal_designation, unit_list_context
+from .designation import unit_list_context
 from .facts.children import child_items
 from .facts.closure import physical_nets
 from .facts.conductor_facts import is_bridge
@@ -27,6 +27,8 @@ from .lookups import conductors_by_role, item_of_port, require, strip_set, termi
 from .open_core_ends import open_ends_at
 from .order import in_designation_order, natural_key
 from .rows import TerminalRow
+from .texts.context import PrintContext
+from .texts.terminal_text import terminal_text
 
 if TYPE_CHECKING:
     from .indexes import Indexes
@@ -170,7 +172,7 @@ def terminal_rows(
         rows.append(
             TerminalRow(
                 terminal=child,
-                designation=terminal_designation(model, child, unit=unit),
+                designation=terminal_text(model, child, PrintContext(reading=unit)),
                 group=facets[child].group,
                 index=facets[child].index,
                 internal=internal,

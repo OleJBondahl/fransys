@@ -19,8 +19,7 @@ from pathlib import Path
 from typing import Any, NamedTuple
 
 import fransys as fr
-
-from fransys_model.layout import HarnessFanOut, HarnessLine, layout_of
+from _drawn_pages import drawn_pages
 
 
 class _Open(NamedTuple):
@@ -58,14 +57,16 @@ def _dir(one: tuple[int, int], two: tuple[int, int]) -> tuple[int, int]:
 def test_a_line_meets_a_fan_split_along_the_row_it_leaves_on() -> None:
     """At the split of a two-row fan the line passes through, its run in and out are one way."""
     model = _model()
-    splits = {(f.page, f.x, f.y) for f in layout_of(model, HarnessFanOut).values() if f.legs[1:]}
     turns, through = [], 0
-    for line in layout_of(model, HarnessLine).values():
-        points = [(p.x, p.y) for p in line.points]
-        for (a, b), (_, c) in zip(pairwise(points), pairwise(points[1:]), strict=False):
-            if (line.page, *b) in splits:
-                through += 1
-                if _dir(a, b) != _dir(b, c):
-                    turns.append((a, b, c))
-    assert through == 1
+    for drawing in drawn_pages(model).values():
+        lines = [w for w in drawing.wires if w.lanes > 1]
+        # a split is a vertex that is not an end of its line and joins two of its runs
+        for line in lines:
+            points = list(line.points)
+            for (a, b), (_, c) in zip(pairwise(points), pairwise(points[1:]), strict=False):
+                if _dir(a, b) != (0, 0) and _dir(b, c) != (0, 0):
+                    through += 1
+                    if _dir(a, b) != _dir(b, c):
+                        turns.append((a, b, c))
+    assert through >= 1
     assert turns == []

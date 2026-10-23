@@ -16,11 +16,8 @@ from typing import Any, NamedTuple
 
 import fransys as fr
 import pytest
+from _drawn_pages import drawn_pages
 from _model_build_cover import layout_trigger_document
-
-from fransys_model.derive import connector_box_lines
-from fransys_model.layout import ConnectorBox, layout_of
-from fransys_model.vocab.tables import boundaries
 
 
 class _Io(NamedTuple):
@@ -46,24 +43,21 @@ def built() -> fr.BuildResult:
     return fr.build(d, layout_trigger_document())
 
 
-def _boundary_lines(built: fr.BuildResult) -> dict[Any, tuple[str, ...]]:
-    model = built.model
-    boundary = {b.function for b in boundaries(model).values()}
-    return {
-        box.function: connector_box_lines(model, box.function)
-        for box in layout_of(model, ConnectorBox).values()
-        if box.function in boundary
-    }
+def _boundary_lines(built: fr.BuildResult) -> list[tuple[str, ...]]:
+    """The printed lines of each generic box of the unit's interface, from the core's drawings."""
+    boxes = [s for d in drawn_pages(built.model).values() for s in d.symbols]
+    lines = [tuple(c for row in s.texts for c in row) for s in boxes if s.key == "generic-box"]
+    return [box for box in lines if any(c.startswith("-IO-A1-X") for c in box)]
 
 
 def test_a_boundary_box_prints_no_field_name(built: fr.BuildResult) -> None:
     lines = _boundary_lines(built)
     assert len(lines) == 2
-    for box_lines in lines.values():
+    for box_lines in lines:
         assert not {"X1_L1", "X2_L2"} & set(box_lines)
 
 
 def test_a_boundary_box_prints_the_pins_its_core_lands_on(built: fr.BuildResult) -> None:
-    lines = sorted(_boundary_lines(built).values())
+    lines = sorted(_boundary_lines(built))
     assert [box[0] for box in lines] == ["-IO-A1-X1", "-IO-A1-X2"]
     assert [box[-1] for box in lines] == ["-IO-A1-X1:1", "-IO-A1-X2:1"]

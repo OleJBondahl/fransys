@@ -21,6 +21,7 @@ from typing import Any, NamedTuple
 import fransys as fr
 import fransys_pdf
 import fransys_render
+from _pdf_lists import source
 
 from fransys_model.derive import document_sheets_of
 from fransys_model.vocab.tables import documents
@@ -55,7 +56,7 @@ def _built() -> tuple[fr.BuildResult, dict[str, str]]:
             ),
         )
     texts = {
-        str(record.preset): fransys_pdf.source(
+        str(record.preset): source(
             built.model, doc_id, {}, fransys_render.sheets(document_sheets_of(built.model))
         )
         for doc_id, record in documents(built.model).items()
@@ -115,9 +116,7 @@ def _unit_loom_text() -> str:
         )
         built = fr.build(d, doc)
     (doc_id,) = documents(built.model)
-    return fransys_pdf.source(
-        built.model, doc_id, {}, fransys_render.sheets(document_sheets_of(built.model))
-    )
+    return source(built.model, doc_id, {}, fransys_render.sheets(document_sheets_of(built.model)))
 
 
 def test_a_unit_members_loom_document_lists_the_cable_it_draws() -> None:

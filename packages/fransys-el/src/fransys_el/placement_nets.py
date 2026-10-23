@@ -2,17 +2,18 @@
 
 from typing import TYPE_CHECKING
 
-from fransys_layout.core import Bundle, Net, Rail, natural_key
+from fransys_layout.core import Bundle, Net, natural_key
 from fransys_model.derive import (
     bundle_of,
     function_item,
     item_unit,
     physical_nets,
-    port_potential_rank,
+    port_function,
     port_power_kind,
 )
 
-from .placement_env import pin_ref
+from .kit_keys import PickKey, function_of
+from .placement_env import drawn_pins
 from .placement_skips import NET_UNDER_TWO_DRAWN_PINS, Skipped, in_order
 
 if TYPE_CHECKING:
@@ -21,28 +22,16 @@ if TYPE_CHECKING:
     from fransys_layout.core import PinRef, Sym
     from fransys_model.derive import PhysicalNet
     from fransys_model.kernel import Id
-    from fransys_model.vocab import Function, Port, Unit
+    from fransys_model.vocab import Port, Unit
 
     from .placement_env import Env
 
-__all__ = ["UNRANKED", "nets_of"]
-
-#: A rail whose potential no supply ranks draws below every ranked one.
-UNRANKED = 1000
+__all__ = ["nets_of"]
 
 
 def _pin_key(pin: PinRef) -> tuple[object, ...]:
     """Natural order of a pin: its symbol, then its name."""
     return (natural_key(pin.sym), natural_key(pin.pin))
-
-
-def _rail(env: Env, first: Id[Port]) -> Rail | None:
-    """`Rail` for a net whose first port has a potential rank or a power kind, else `None`."""
-    rank = port_potential_rank(env.model, first)
-    power = port_power_kind(env.model, first).name
-    if rank is None and power == "NONE":
-        return None
-    return Rail(UNRANKED if rank is None else rank, power)
 
 
 def _bundle(env: Env, first: Id[Port]) -> Bundle | None:
@@ -51,19 +40,27 @@ def _bundle(env: Env, first: Id[Port]) -> Bundle | None:
     return None if found is None else Bundle(found[0].value, found[1])
 
 
-def _unit(env: Env, lead: Id[Function]) -> Id[Unit] | None:
+def _unit(env: Env, lead: PickKey) -> Id[Unit] | None:
     """The unit the item of function `lead` is recorded in."""
-    return item_unit(env.model, function_item(env.model, lead))
+    return item_unit(env.model, function_item(env.model, function_of(env.model, lead)))
 
 
-def _net(env: Env, physical: PhysicalNet, unit_of: Mapping[str, Id[Unit] | None]) -> Net | Skipped:
-    """The `Net` of `physical`; a `Skipped` unless two of its ports are drawn."""
-    pins = sorted({pin_ref(env, p) for p in physical.ports}, key=_pin_key)
+def _net(
+    env: Env, physical: PhysicalNet, unit_of: Mapping[str, Id[Unit] | None]
+) -> Net | Skipped | None:
+    """The `Net` of `physical`; `None` for a lone port, a `Skipped` unless two ports are drawn."""
     first = physical.ports[0]
+    if all(port_function(env.model, p) in env.spare for p in physical.ports):
+        return None  # a spare terminal's own net is listed, not drawn (R356)
+    if len(physical.ports) < 2:  # noqa: PLR2004 - a pin with no second end is no net (Ruling 86)
+        return None
+    pins = sorted(set(drawn_pins(env, physical.ports)), key=_pin_key)
     if len(pins) < 2:  # noqa: PLR2004 - a net needs two ends to be a wire
         return Skipped("net", first.value, NET_UNDER_TWO_DRAWN_PINS)
+    if port_power_kind(env.model, first).name != "NONE":  # a power net is drawn by anchors
+        return None
     crosses = len({unit_of[p.sym] for p in pins}) > 1
-    return Net(first.value, tuple(pins), _rail(env, first), _bundle(env, first), crosses)
+    return Net(first.value, tuple(pins), _bundle(env, first), crosses)
 
 
 def nets_of(env: Env, syms: Sequence[Sym]) -> tuple[tuple[Net, ...], tuple[Skipped, ...]]:
@@ -72,4 +69,5 @@ def nets_of(env: Env, syms: Sequence[Sym]) -> tuple[tuple[Net, ...], tuple[Skipp
     unit_of = {s.id: _unit(env, lead_of[s.id]) for s in syms}
     found = [_net(env, physical, unit_of) for physical in physical_nets(env.model)]
     nets = sorted((n for n in found if isinstance(n, Net)), key=lambda n: _pin_key(n.pins[0]))
+    # a lone port gives None: neither a Net nor a Skipped
     return tuple(nets), in_order({n for n in found if isinstance(n, Skipped)})

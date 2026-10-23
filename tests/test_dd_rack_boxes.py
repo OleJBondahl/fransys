@@ -1,11 +1,13 @@
 """One undo test per ruling for rack order and page packing, item views and generic boxes, and
 PLC channels, built through the `fransys` facade from
-`examples/demo-parts` and read from the laid-out `layout.*` records only.
+`examples/demo-parts` and read from the core path's page Drawings only.
 
 Not covered: "the rack's supply is drawn as rails in their own band" and "an item
 whose functions all choose one named symbol is one view" (the PSU). Both need a multi-function
 part whose functions are not PLC channels and whose ports fit one symbol; the only such demo parts
 are the relay (8 ports) and the contactor (10), and no library symbol has more than 5.
+
+A Drawing carries no model id, so an item's box is the generic box nearest, in x, its TAG text.
 """
 
 import shutil
@@ -16,19 +18,12 @@ import fransys as fr
 import fransys_author
 import fransys_parts
 import pytest
+from _dd_core import designation_of
+from _drawn_pages import drawn_pages
 from _model_build_cover import layout_trigger_document
 
 from fransys_layout.geometry import generic_box_geometry
-from fransys_model.layout import (
-    Label,
-    LabelKind,
-    LinkMarker,
-    Page,
-    Route,
-    SymbolPlacement,
-    layout_of,
-)
-from fransys_model.vocab.tables import functions, ports
+from fransys_model.layout import Page, layout_of
 
 _PROJECT: dict[str, Any] = {
     "title": "Rack boxes",
@@ -50,31 +45,43 @@ def _design():
     return parts, design
 
 
-def _function(model, item, name):
-    """The id of function `name` of the item authored as `item`."""
-    return next(f.id for f in functions(model).values() if f.key[0] == item and f.name == name)
-
-
-def _placed(model, item, name):
-    """The one placement of function `name` of `item`."""
-    (found,) = (
-        p
-        for p in layout_of(model, SymbolPlacement).values()
-        if p.function == _function(model, item, name)
-    )
+def _tag_at(model, name):
+    """(Drawing, TAG text) of the one TAG text printing item `name`'s designation."""
+    text = f"-{designation_of(model, name)}"
+    (found,) = [
+        (d, t)
+        for d in drawn_pages(model).values()
+        for t in d.texts
+        if t.kind == "TAG" and t.text == text
+    ]
     return found
+
+
+def _nearest(drawing, tag, key):
+    """The symbol of library key `key` on the page whose x is nearest the tag's box."""
+    return min((s for s in drawing.symbols if s.key == key), key=lambda s: abs(s.x - tag.box.x))
 
 
 def _box(model, item):
-    """The one placement of the item authored as `item`: a PLC module is one box."""
-    (found,) = _placements_of_item(model, item)
-    return found
+    """(Drawing, generic box) drawn for the item authored as `item`: a PLC module is one box."""
+    drawing, tag = _tag_at(model, item)
+    return drawing, _nearest(drawing, tag, _GENERIC_BOX)
 
 
-def _placements_of_item(model, item):
-    """Every placement of every function of the item authored as `item`."""
-    ids = {f.id for f in functions(model).values() if f.key[0] == item}
-    return [p for p in layout_of(model, SymbolPlacement).values() if p.function in ids]
+def _marks(box):
+    """The marking strings of a box, by port name."""
+    return {s.split(".", 1)[1]: v for s, v in box.slots if s.startswith("marking.")}
+
+
+def _pin(box, port):
+    """(x, y, side) of box port `port`: its offset along the stretch axis,."""
+    side = dict(box.sides)[port]
+    y = box.y - _HALF_BODY if side == "n" else box.y + _HALF_BODY
+    return box.x + dict(box.offsets)[port], y, side
+
+
+def _wire_ends_at(drawing, x, y):
+    return any((x, y) in (w.points[0], w.points[-1]) for w in drawing.wires)
 
 
 def _rack_of_three_modules():
@@ -102,10 +109,11 @@ def test_a_racks_modules_and_their_attached_columns_stand_in_authored_position_o
     # UNDO: fransys_layout/stages/arrange.py:rack_order
     #     returns `columns` unchanged (modules then stand a, m, z)
     model = _rack_of_three_modules()
-    chan = [_box(model, module) for module in ("z", "a", "m")]
-    coil = [_placed(model, relay, "coil") for relay in ("k3", "k2", "k1")]
+    boxes = [_box(model, module) for module in ("z", "a", "m")]
+    coils = [_nearest(*_tag_at(model, relay), "operating-device") for relay in ("k3", "k2", "k1")]
+    chan = [box for _, box in boxes]
     assert chan[0].x < chan[1].x < chan[2].x
-    for at, (module, relay) in enumerate(zip(chan, coil, strict=True)):
+    for at, (module, relay) in enumerate(zip(chan, coils, strict=True)):
         assert module.x <= relay.x
         if at + 1 < len(chan):
             assert relay.x < chan[at + 1].x
@@ -146,41 +154,14 @@ def _plc_modules():
     return fr.build(parts, d.draft(), layout_trigger_document()).model
 
 
-def _marking_labels(model, placement, item):
-    """The MARKING labels of `item`'s ports, keyed by port name, that stand on `placement`."""
-    ids = {f.id for f in functions(model).values() if f.key[0] == item}
-    names = {p.id: p.name for p in ports(model).values() if p.function in ids}
-    return {
-        names[label.port]: label
-        for label in layout_of(model, Label).values()
-        if label.kind is LabelKind.MARKING
-        and label.port in names
-        and label.page == placement.page
-        and placement.x <= label.x <= placement.x + 48
-    }
-
-
 def test_an_item_of_generic_functions_is_one_box_showing_every_functions_ports() -> None:
     """Two or more generic functions of one item are one box carrying all their ports."""
     # UNDO: fransys_layout/engines/schematic/read/views.py:item_views
     #     never merges (`found.extend(group)` for every group)
     model = _plc_modules()
-    (box,) = _placements_of_item(model, "di")
-    assert box.symbol == _GENERIC_BOX
-    assert set(_marking_labels(model, box, "di")) == {"1", "2"}
-
-
-def _channel_pin_y(model, item, channel):
-    """The y where `channel`'s wire leaves `item`'s box: its route end, or its link marker."""
-    port = next(
-        p.id for p in ports(model).values() if p.function == _function(model, item, channel)
-    )
-    for route in layout_of(model, Route).values():
-        if port in (route.a, route.b):
-            points = sorted(route.points, key=lambda p: p.index)
-            return (points[-1] if route.b == port else points[0]).y
-    (marker,) = [m for m in layout_of(model, LinkMarker).values() if m.port == port]
-    return marker.y
+    _, box = _box(model, "di")
+    assert box.key == _GENERIC_BOX
+    assert set(_marks(box).values()) == {"1", "2"}
 
 
 def test_a_wired_plc_channel_is_a_pin_on_the_south_side_of_its_modules_box() -> None:
@@ -189,12 +170,13 @@ def test_a_wired_plc_channel_is_a_pin_on_the_south_side_of_its_modules_box() -> 
     #     returns `{}` for a box with a PLC channel (the old landing order): pins then take the
     #     default sides, not S
     model = _plc_modules()
-    box = _box(model, "do")
-    assert box.symbol == _GENERIC_BOX
-    assert set(_marking_labels(model, box, "do")) == {"1", "2"}
-    for channel, relay in (("do_1", "k1"), ("do_2", "k2")):
-        assert _placed(model, relay, "coil").page == box.page
-        assert _channel_pin_y(model, "do", channel) == box.y + _HALF_BODY
+    drawing, box = _box(model, "do")
+    assert box.key == _GENERIC_BOX
+    assert set(_marks(box).values()) == {"1", "2"}
+    for channel in ("do_1.1", "do_2.2"):
+        x, y, side = _pin(box, channel)
+        assert side == "s"
+        assert _wire_ends_at(drawing, x, y)
 
 
 def test_no_plc_module_is_drawn_with_channel_symbols_wired_or_not() -> None:
@@ -202,9 +184,9 @@ def test_no_plc_module_is_drawn_with_channel_symbols_wired_or_not() -> None:
     # UNDO: fransys_layout/engines/schematic/read/views.py:item_views
     #     keeps a wired one-port channel as its own view (gone with layout-0099)
     model = _plc_modules()
-    for item in ("do", "di"):
-        assert [p.symbol for p in _placements_of_item(model, item)] == [_GENERIC_BOX]
-    assert _CHANNEL not in {p.symbol for p in layout_of(model, SymbolPlacement).values()}
+    symbols = [s for d in drawn_pages(model).values() for s in d.symbols]
+    assert sum(s.key == _GENERIC_BOX for s in symbols) == 2
+    assert _CHANNEL not in {s.key for s in symbols}
 
 
 def test_a_module_tag_is_shown_once_on_its_box() -> None:
@@ -212,15 +194,10 @@ def test_a_module_tag_is_shown_once_on_its_box() -> None:
     # UNDO: fransys_layout/stages/tags.py:one_module_tag
     #     returns `requests` unchanged
     model = _plc_modules()
-    box = _box(model, "do")
-    ids = {f.id for f in functions(model).values() if f.key[0] == "do"}
-    tags = [
-        label
-        for label in layout_of(model, Label).values()
-        if label.kind is LabelKind.TAG and label.function in ids
-    ]
-    assert [label.function for label in tags] == [box.function]
-    assert box.x <= tags[0].x <= box.x + 48
+    drawing, box = _box(model, "do")
+    tags = [t for t in drawing.texts if t.text == f"-{designation_of(model, 'do')}"]
+    assert len(tags) == 1
+    assert box.x <= tags[0].box.x <= box.x + 48
 
 
 def test_a_boxs_port_pitch_comes_from_its_longest_port_name_in_whole_modules() -> None:
@@ -239,38 +216,35 @@ def test_a_boxs_port_pitch_comes_from_its_longest_port_name_in_whole_modules() -
 
 
 def test_the_engines_box_keeps_two_modules_between_ports_on_one_side() -> None:
-    """The unwired motor's ports on one side stand 2 M (16 G) apart."""
+    """The star-delta motor's end ports on one side stand 2 M (16 G) apart."""
     # UNDO: electrical_symbols/generic_box.py:_pitch returns 1.0
     parts, d = _design()
     c1, grp = d.location("C1", "Cabinet"), d.group("A", "A")
-    m1 = d.item("DEMO-MOTOR-4KW", tag="M1", name="m1", at=c1, group=grp)
-    # layout-0218: a relay coil on PE keeps the motor drawn; the pins keep their places
+    m1 = d.item("DEMO-MOTOR-11KW-YD", tag="M1", name="m1", at=c1, group=grp)
+    # layout-0218: a relay coil on V2 keeps the box drawn; the pins keep their places
     k1 = d.item("DEMO-RLY-2CO-24", tag="K1", name="k1", at=c1, group=grp)
-    d.wiring(colour="BU", gauge="0.5")(k1.fn("coil")["A2"], m1.fn("motor")["PE"])
+    d.wiring(colour="BU", gauge="0.5")(k1.fn("coil")["A2"], m1.fn("end")["V2"])
     model = fr.build(parts, d.draft(), layout_trigger_document()).model
-    motor = _placed(model, "m1", "motor")
-    marks = _marking_labels(model, motor, "m1")
-    assert marks["V"].y == marks["PE"].y
-    assert marks["W"].y == marks["U"].y
-    assert marks["V"].x - marks["PE"].x == 16
-    assert marks["W"].x - marks["U"].x == 16
+    _, motor = _box(model, "m1")
+    (ux, uy, _), (vx, vy, _), (wx, wy, _) = (_pin(motor, port) for port in ("U2", "V2", "W2"))
+    assert uy == vy == wy
+    assert vx - ux == 16
+    assert wx - vx == 16
 
 
 def _motor_with_partner(relay_function, relay_port, motor_port):
     parts, d = _design()
     c1, grp = d.location("C1", "Cabinet"), d.group("A", "A")
     k1 = d.item("DEMO-RLY-2CO-24", tag="K1", name="k1", at=c1, group=grp)
-    m1 = d.item("DEMO-MOTOR-4KW", tag="M1", name="m1", at=c1, group=grp)
+    m1 = d.item("DEMO-MOTOR-11KW-YD", tag="M1", name="m1", at=c1, group=grp)
     d.wiring(colour="BU", gauge="0.5")(k1.fn(relay_function)[relay_port], m1[motor_port])
-    return fr.build(parts, d.draft(), layout_trigger_document()).model, m1.fn("motor")[
-        motor_port
-    ].id
+    return fr.build(parts, d.draft(), layout_trigger_document()).model
 
 
 @pytest.mark.parametrize(
     ("relay_function", "relay_port", "motor_port", "partner_above"),
-    [("coil", "A2", "U", True), ("co_1", "11", "V", False)],
-    ids=["partner above turns U (default S) north", "partner below turns V (default N) south"],
+    [("coil", "A2", "U2", True), ("co_1", "11", "V2", False)],
+    ids=["partner above turns U2 north", "partner below turns V2 south"],
 )
 def test_box_ports_face_their_placed_partners(
     relay_function, relay_port, motor_port, partner_above
@@ -278,13 +252,14 @@ def test_box_ports_face_their_placed_partners(
     """A wired box port stands on the side that faces its partner."""
     # UNDO: fransys_layout/stages/pagerun.py:place_pages
     #     skips `stages.boxes.box_sides` (`turned = drawn`)
-    model, port = _motor_with_partner(relay_function, relay_port, motor_port)
-    box = _placed(model, "m1", "motor")
-    (route,) = layout_of(model, Route).values()
-    points = sorted(route.points, key=lambda p: p.index)
-    end = points[-1] if route.b == port else points[0]
-    assert (end.y < box.y) is partner_above
-    assert end.y == box.y + (-_HALF_BODY if partner_above else _HALF_BODY)
+    model = _motor_with_partner(relay_function, relay_port, motor_port)
+    drawing, box = _box(model, "m1")
+    x, y, _ = _pin(box, motor_port)
+    (wire,) = drawing.wires
+    end = wire.points[0] if (x, y) == wire.points[0] else wire.points[-1]
+    assert (end[1] < box.y) is partner_above
+    assert end == (x, y)
+    assert y == box.y + (-_HALF_BODY if partner_above else _HALF_BODY)
 
 
 def test_an_unwired_channel_of_a_half_wired_module_is_a_port_on_the_modules_box() -> None:
@@ -297,10 +272,12 @@ def test_an_unwired_channel_of_a_half_wired_module_is_a_port_on_the_modules_box(
     k1 = d.item("DEMO-RLY-2CO-24", tag="K1", name="k1", at=c1, group=plc)
     d.wiring(colour="BU", gauge="0.5")(do.fn("do_1")["1"], k1.fn("coil")["A1"])
     model = fr.build(parts, d.draft(), layout_trigger_document()).model
-    box = _box(model, "do")
-    assert box.symbol == _GENERIC_BOX
-    assert set(_marking_labels(model, box, "do")) == {"1", "2"}
-    assert _channel_pin_y(model, "do", "do_1") == box.y + _HALF_BODY
+    drawing, box = _box(model, "do")
+    assert box.key == _GENERIC_BOX
+    assert set(_marks(box).values()) == {"1", "2"}
+    x, y, _ = _pin(box, "do_1.1")
+    assert y == box.y + _HALF_BODY
+    assert _wire_ends_at(drawing, x, y)
 
 
 _THREE_CHANNEL_PART = """\
@@ -347,7 +324,9 @@ def test_a_three_channel_module_with_one_wired_channel_is_one_box_holding_all_th
     k1 = d.item("DEMO-RLY-2CO-24", tag="K1", name="k1", at=c1, group=plc)
     d.wiring(colour="BU", gauge="0.5")(do.fn("do_1")["1"], k1.fn("coil")["A1"])
     model = fr.build(parts, d.draft(), layout_trigger_document()).model
-    box = _box(model, "do")
-    assert box.symbol == _GENERIC_BOX
-    assert set(_marking_labels(model, box, "do")) == {"1", "2", "3"}
-    assert _channel_pin_y(model, "do", "do_1") == box.y + _HALF_BODY
+    drawing, box = _box(model, "do")
+    assert box.key == _GENERIC_BOX
+    assert set(_marks(box).values()) == {"1", "2", "3"}
+    x, y, _ = _pin(box, "do_1.1")
+    assert y == box.y + _HALF_BODY
+    assert _wire_ends_at(drawing, x, y)

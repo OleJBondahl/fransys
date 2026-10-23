@@ -2,6 +2,7 @@
 
 from typing import Any
 
+from fransys_layout.fix_text import fix_text
 from fransys_model.derive.block_diagram import (
     DIAGRAM_CABLE_FANOUT,
     DIAGRAM_CABLE_ONE_BOX,
@@ -13,7 +14,9 @@ lazy from fransys_model.kernel import Id, Model
 
 
 def _make(code: str, severity: Severity, message: str, subject: Id[Any]) -> Finding:
-    return Finding(code=code, severity=severity, subjects=(subject,), message=message)
+    return Finding(
+        code=code, severity=severity, subjects=(subject,), message=message, fix=fix_text(code)
+    )
 
 
 def _one_box(subject: Id[Any]) -> Finding:

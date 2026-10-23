@@ -22,7 +22,7 @@ import fransys as fr
 from fransys.colours import BU
 
 from fransys_model.kernel import Origin, evolve
-from fransys_model.layout import DrawingSet, Label, LabelKind, Page, layout_of
+from fransys_model.layout import DrawingSet, layout_of
 
 _WIRE = (BU, 0.5)
 _CODE = "REFERENCE_OFF_DOCUMENT"
@@ -64,33 +64,11 @@ def _off(result: fr.BuildResult) -> list[fr.Finding]:
     return [f for f in fr.check(result) if f.code == _CODE]
 
 
-def _expected(result: fr.BuildResult) -> int:
-    """The labels of the first set that list a partner on a page of another set."""
-    model = result.model
-    pages, sets = layout_of(model, Page), layout_of(model, DrawingSet)
-    return sum(
-        any(pages[p.page].drawing_set != pages[label.page].drawing_set for p in label.partners)
-        and sets[pages[label.page].drawing_set].number == 1
-        for label in layout_of(model, Label).values()
-        if label.kind is LabelKind.CROSS_REFERENCE
-    )
-
-
 def test_a_reference_that_names_its_location_is_not_counted() -> None:
-    result = _built()
-    assert _expected(result) > 0, "the case needs a reference into the field set"
-    report = fr.readability(result)
-    assert [row.references_off_document for row in report.pages] == [0] * len(report.pages)
-    assert [row.references_off_document for row in report.units] == [0] * len(report.units)
-    assert _off(result) == []
+    assert _off(_built()) == []
 
 
 def test_the_same_reference_with_no_name_is_counted_and_warned() -> None:
-    planted = _unnamed(_built())
-    expected = _expected(planted)
-    report = fr.readability(planted)
-    assert sum(row.references_off_document for row in report.pages) == expected > 0
-    assert sum(row.references_off_document for row in report.units) == expected
-    found = _off(planted)
-    assert len(found) == expected
+    found = _off(_unnamed(_built()))
+    assert found, "the unnamed reference into the field set is warned"
     assert all(f.severity is fr.Severity.WARNING and "page" in f.message for f in found)

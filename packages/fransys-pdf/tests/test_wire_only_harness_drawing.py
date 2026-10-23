@@ -7,8 +7,9 @@ from typing import Any
 
 import fransys as fr
 import fransys_render
+from _build import source
 from fransys.colours import BU
-from fransys_pdf import check, source
+from fransys_pdf import check
 
 from fransys_model.derive import document_sheets_of
 from fransys_model.derive.cable_drawing import cable_block_key

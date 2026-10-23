@@ -11,8 +11,9 @@ from typing import TYPE_CHECKING
 
 import fransys_parts
 from fransys_author import Design, Item
+from root_library import freeze
 
-from fransys_model.kernel import Id, Model, Origin, evolve, freeze, make_id, merge
+from fransys_model.kernel import Id, Model, Origin, evolve, make_id, merge
 from fransys_model.vocab.facets.rating import RatingFacet
 from fransys_model.vocab.ratings import Rating
 from fransys_model.vocab.tables import facets_of, function_templates, parts

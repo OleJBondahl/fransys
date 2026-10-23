@@ -1,0 +1,4 @@
+schema = 1
+name = "breaker-parts"
+version = "0.1.0"
+description = "One invented 1P+N breaker for a field case."

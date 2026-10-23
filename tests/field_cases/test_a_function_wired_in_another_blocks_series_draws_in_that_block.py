@@ -17,13 +17,18 @@ in two blocks wiring one function leave it in its device's block, with no findin
 `d.layout.draw_in` wins.
 """
 
-from typing import Any, NamedTuple
+from typing import TYPE_CHECKING, Any, NamedTuple
 lazy from pathlib import Path
 
 import fransys as fr
+from _drawn_pages import drawn_pages
+from _tables_on import TABLES_ON
 
-from fransys_model.layout import GroupHint, Label, LabelKind, SymbolPlacement, layout_of
+from fransys_model.layout import GroupHint, layout_of
 from fransys_model.vocab.tables import aspect_nodes, functions
+
+if TYPE_CHECKING:
+    from fransys_layout.drawing import Drawing, DrawnSymbol
 
 _UNIT: dict[str, Any] = {
     "revision": 1,
@@ -39,6 +44,7 @@ _FILL = {
     "single": 3,
 }  # coils in block A that push B's path to the next page
 _RELAY = "DEMO-RLY-2CO-24"
+_NOT_TAGGED = ("junction-dot", "contact-head", "power-supply", "ground", "protective-earth")
 
 
 class _Io(NamedTuple):
@@ -81,7 +87,7 @@ def _build(shape: str, tmp_path: Path, *, explicit: bool = False) -> fr.BuildRes
     d = fr.design("demo_parts")
     d.add(_unit(shape, _FILL[shape], explicit=explicit), "U1")
     cover = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, "demo-pb", cover=tmp_path / "c.md")
-    return fr.build(d, cover)
+    return fr.build(d, cover, settings=TABLES_ON)
 
 
 def _fn(result: fr.BuildResult, device: str, name: str) -> Any:
@@ -93,12 +99,30 @@ def _fn(result: fr.BuildResult, device: str, name: str) -> Any:
     return one
 
 
+def _tagged(result: fr.BuildResult, device: str) -> list[tuple[Any, Drawing, DrawnSymbol]]:
+    """Each page, Drawing and symbol whose tag text names `device`: the symbol nearest its tag."""
+    found = []
+    for pid, d in drawn_pages(result.model).items():
+        for text in d.texts:
+            if text.kind == "TAG" and text.text.endswith(f"-{device}"):
+                near = min(
+                    (s for s in d.symbols if s.key not in _NOT_TAGGED),
+                    key=lambda s: abs(s.x - text.box.x) + abs(s.y - text.box.y),
+                )
+                found.append((pid, d, near))
+    return found
+
+
 def _page(result: fr.BuildResult, device: str, name: str) -> Any:
-    fn = _fn(result, device, name)
-    (placement,) = (
-        p for p in layout_of(result.model, SymbolPlacement).values() if p.function == fn
-    )
-    return placement.page
+    """The page of the drawn `name` of `device`; a coil is its operating device."""
+    key = "operating-device" if name == "coil" else None
+    pages = {
+        pid
+        for pid, _, s in _tagged(result, device)
+        if (s.key == key if key else s.key != "operating-device")
+    }
+    (one,) = pages
+    return one
 
 
 def _codes(result: fr.BuildResult) -> set[str]:
@@ -106,14 +130,15 @@ def _codes(result: fr.BuildResult) -> set[str]:
 
 
 def _table_pages(result: fr.BuildResult, device: str) -> set[Any]:
-    """The pages the coil's contact table of `device` points to."""
-    coil = _fn(result, device, "coil")
-    (label,) = (
-        one
-        for one in layout_of(result.model, Label).values()
-        if one.kind is LabelKind.CROSS_REFERENCE and one.slot == "contacts" and one.function == coil
-    )
-    return {partner.page for partner in label.partners}
+    """The pages that hold a drawn row of the contact table under the coil of `device`."""
+    pages = set()
+    for pid, d, coil in _tagged(result, device):
+        if coil.key != "operating-device":
+            continue
+        for head in (s for s in d.symbols if s.key == "contact-head" and abs(s.x - coil.x) <= 8):
+            if any(v[:1].isdigit() and "N/A" not in v for _, v in head.slots):
+                pages.add(pid)
+    return pages
 
 
 def test_a_contact_in_blocks_series_stands_with_the_path_and_the_table_names_its_page(

@@ -14,30 +14,28 @@ import fransys as fr
 import fransys_author
 import fransys_parts
 from _model_build_cover import layout_trigger_document
-from fransys_el import REF_TINTS
+from fransys._layout_core import draw_on_core, lay_out_on_core
 
+import electrical_symbols
 from fransys_model.derive import document_row, document_sheets_of
 
 # `test_declared_dependencies.py`'s own pattern for importing a sibling root test module by
 # name: `--import-mode=importlib` (root pyproject.toml) never puts `tests/` on `sys.path`.
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import fransys_render
-from fransys_pdf import check, source
+from _drawn_pages import drawn_pages
+from _pdf_lists import source
+from fransys_pdf import check
 from fransys_pdf._drawings import replica_only_sets, schematic_pages
 from fransys_pdf._lists import _connector_rows_for_page, bom_page
 from fransys_render import cable_blocks as render_cable_blocks
-from fransys_render import pages as render_pages
 from test_units_worked_example import _PROJECT, io_board
 
 from fransys_layout import lay_out_cables
 from fransys_model.derive import SheetKey, document_scope, unit_release, units
 from fransys_model.kernel import Origin, Severity, evolve, make_id
-from fransys_model.layout import SymbolPlacement
-from fransys_model.layout import layout_of as layout_of_model
 from fransys_model.vocab import Document, DocumentPreset, Item, PageKind, PartCategory, documents
 from fransys_model.vocab.facets.cable import CableFacet, CableProductFacet
-from fransys_model.vocab.tables import functions as functions_table
-from fransys_model.vocab.tables import items as items_table
 from fransys_model.vocab.tables import units as units_table
 from fransys_model.vocab.templates import Part
 
@@ -428,23 +426,26 @@ def test_a_board_unit_documents_schematic_section_now_draws_its_own_content():
     pages_found = schematic_pages(model, record, (PageKind.SCHEMATIC,))
     assert len(pages_found) >= 1
 
-    svgs = dict(render_pages(model, tints=REF_TINTS))
+    svgs = draw_on_core(
+        model, lay_out_on_core(model, electrical_symbols.LIBRARY)[2], electrical_symbols.LIBRARY
+    )
     findings = check(model, svgs)
     own_errors = [f for f in findings if io_doc.id in f.subjects and f.severity == Severity.ERROR]
     assert own_errors == []
 
-    by_key = {item.key: item.id for item in items_table(model).values()}
-    k1_item = by_key[("pump1", "io", "k1")]
-    coil_fn = next(
-        f for f in functions_table(model).values() if f.item == k1_item and f.key[-1] == "coil"
-    )
     page_ids = set(pages_found)
-    placed_functions = {
-        placement.function
-        for placement in layout_of_model(model, SymbolPlacement).values()
-        if placement.page in page_ids
-    }
-    assert coil_fn.id in placed_functions, "K1's coil is actually on the board's own page"
+    on_page = [
+        symbol
+        for page, drawing in drawn_pages(model).items()
+        if page in page_ids
+        for symbol in drawing.symbols
+    ]
+    coil = [
+        s
+        for s in on_page
+        if s.key == "operating-device" and {"A1", "A2"} <= {v for _, v in s.slots}
+    ]
+    assert coil, "K1's coil is actually on the board's own page"
 
     text = source(model, io_doc.id, svgs, fransys_render.sheets(document_sheets_of(model)))
     assert '#par(text("No drawings."))' not in text

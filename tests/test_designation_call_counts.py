@@ -44,9 +44,10 @@ if str(_TESTS_DIR) not in sys.path:
 from fransys import pipeline  # noqa: E402
 from scale_units_fixture import build_scale  # noqa: E402
 
-from fransys_model.derive import designation  # noqa: E402
+from fransys_model.derive import designation, designation_label  # noqa: E402
 from fransys_model.derive.facts.unit_index import descendants  # noqa: E402
 from fransys_model.derive.passes import numbering  # noqa: E402
+from fransys_model.derive.texts import designation_render  # noqa: E402
 from fransys_model.kernel import make_id  # noqa: E402
 from fransys_model.vocab.core import Item  # noqa: E402
 
@@ -149,7 +150,7 @@ def test_descendants_py_start_frame_one_up_is_its_own_caller() -> None:
 
 def _count_render_and_descendants_calls(model: Model) -> tuple[int, int]:
     """One monitored `numbering.number(model)` call: counts calls into the new private
-    `designation._render_item_designation` (the live-render path) and calls into
+    `designation_render.designation_text` (the live-render path) and calls into
     `unit_index.descendants` attributed to `takes_parents_designation`'s own frame (the old
     per-item subtree BFS, which the aggregate set now fully replaces).
 
@@ -158,11 +159,11 @@ def _count_render_and_descendants_calls(model: Model) -> tuple[int, int]:
     `number(model)` call (simpler than clearing twice for two separate calls).
     """
     designation._plain_item_designations.cache_clear()
-    designation._items_with_a_function_at_or_below.cache_clear()
+    designation_label._items_with_a_function_at_or_below.cache_clear()
 
-    render_code = designation._render_item_designation.__code__
+    render_code = designation_render.designation_text.__code__
     descendants_code = descendants.__code__
-    takes_parents_code = designation.takes_parents_designation.__code__
+    takes_parents_code = designation_label.takes_parents_designation.__code__
 
     counts = {"render": 0, "descendants_from_takes_parents": 0}
 
@@ -198,7 +199,7 @@ def test_item_designation_render_and_accessory_subtree_check_stay_cheap(
     (pre-cache code, `build_scale(8)`'s captured model, one `numbering.number(model)` call)
     counted 464 live renders of `item_designation` -- the hardcoded
     `_BASELINE_ITEM_DESIGNATION_CALLS_N8` above. This test counts the same call shape against
-    the new private `_render_item_designation` after the plain-shape cache map sits in front
+    `designation_render.designation_text` after the plain-shape cache map sits in front
     of it, and measures 144: comfortably under `464 // 2 == 232`, the margin the
     "about one render per item" estimate implies (roughly an 8x reduction against the
     consumer-scale total), not merely under the bare baseline.
@@ -210,7 +211,7 @@ def test_item_designation_render_and_accessory_subtree_check_stay_cheap(
     """
     render_calls, descendants_calls = _count_render_and_descendants_calls(model_n8)
     assert render_calls < _BASELINE_ITEM_DESIGNATION_CALLS_N8 // 2, (
-        f"_render_item_designation ran {render_calls} times, not under half the n=8 baseline "
+        f"designation_text ran {render_calls} times, not under half the n=8 baseline "
         f"of {_BASELINE_ITEM_DESIGNATION_CALLS_N8} "
         f"({_BASELINE_ITEM_DESIGNATION_CALLS_N8 // 2}): the plain-shape cache is not shielding "
         "the live render path"

@@ -79,7 +79,9 @@ def _document_of(model, unit_scope):
 
 
 def _warn(code, *subjects):
-    return Finding(code=code, severity=Severity.WARNING, subjects=subjects, message=code)
+    return Finding(
+        code=code, severity=Severity.WARNING, subjects=subjects, message=code, fix="Write: x"
+    )
 
 
 def _codes(entries):

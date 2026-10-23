@@ -12,7 +12,7 @@ lazy from fransys_model.vocab.core import Item, Unit
 
 from .document_unit import document_unit
 from .export_names import document_export_name, export_name, export_ref, export_set_name
-from .reports import unit_boards, unit_strips
+from .report_scope import unit_boards, unit_strips
 from .rows_export_set import ExportRow
 from .structure import boards
 from .unit_racks import unit_racks

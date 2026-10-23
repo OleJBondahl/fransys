@@ -6,10 +6,7 @@ by them. Each pass removes only its own tuple's kinds (CT5, Q3).
 
 from .cable_results import CableBlock, CableBox, CoreWire, EndBox, OpenCoreWire
 from .diagram_results import DiagramBox, DiagramLine, DiagramMarker, DiagramSheet
-from .drawn_results import DrawnPage, DrawnSymbol, DrawnWire
-from .external_results import ExternalOutline
 from .formats import Profile, SheetFormat
-from .harness_results import ConnectorBox, HarnessFanOut, HarnessLine, StubEnd
 from .hints import (
     BreakBefore,
     Chain,
@@ -17,21 +14,17 @@ from .hints import (
     KeepTogether,
     OrderHint,
     PageTitle,
+    PinsBelowHint,
     PoleGroup,
     SideHint,
     SymbolChoice,
 )
+from .library import DrawingLibrary
+from .membership import Membership
 from .overview_results import OverviewBox, OverviewLine, OverviewView
-from .results import (
-    DrawingSet,
-    Label,
-    LinkMarker,
-    Outline,
-    Page,
-    PowerSymbol,
-    Route,
-    SymbolPlacement,
-)
+from .paper import PaperChoice
+from .results import DrawingSet, LinkMarker, Page, PowerSymbol
+from .sheets import LayoutSheet
 
 AUTHORED_KINDS: tuple[type, ...] = (
     BreakBefore,
@@ -40,28 +33,19 @@ AUTHORED_KINDS: tuple[type, ...] = (
     KeepTogether,
     OrderHint,
     PageTitle,
+    PinsBelowHint,
     PoleGroup,
     Profile,
     SheetFormat,
     SideHint,
     SymbolChoice,
 )
-DERIVED_KINDS: tuple[type, ...] = (
-    ConnectorBox,
-    DrawingSet,
-    ExternalOutline,
-    HarnessFanOut,
-    HarnessLine,
-    Label,
-    LinkMarker,
-    Outline,
-    Page,
-    PowerSymbol,
-    Route,
-    StubEnd,
-    SymbolPlacement,
-)
+DERIVED_KINDS: tuple[type, ...] = (DrawingSet, LinkMarker, Page, PowerSymbol)
 CABLE_KINDS: tuple[type, ...] = (CableBlock, CableBox, CoreWire, EndBox, OpenCoreWire)
 DIAGRAM_KINDS: tuple[type, ...] = (DiagramSheet, DiagramBox, DiagramLine, DiagramMarker)
 OVERVIEW_KINDS: tuple[type, ...] = (OverviewView, OverviewBox, OverviewLine)
-DRAWN_KINDS: tuple[type, ...] = (DrawnPage, DrawnSymbol, DrawnWire)
+# Written once by the facade from the build's symbol library, never authored, no pass removes it.
+LIBRARY_KINDS: tuple[type, ...] = (DrawingLibrary, PaperChoice)
+# Sheets and frame membership rows: written by the facade's switches, never authored (model-0355).
+# Not in DERIVED_KINDS: the schematic pass removes that tuple wholesale (write/__init__.py:57).
+SHEET_KINDS: tuple[type, ...] = (LayoutSheet, Membership)

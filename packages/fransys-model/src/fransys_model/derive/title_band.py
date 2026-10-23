@@ -4,7 +4,9 @@ The symbol's data is the other half: `title-block.toml` gives each row a y cut b
 box and its value box, and a test in `fransys-render` pins the two together.
 """
 
-from .print_sizes import HOUSE_TEXT_HEIGHT_MM, TextRole, font_size_mm, role_height_mm
+lazy from fransys_model.kernel import Model
+
+from .print_sizes import TextRole, font_size_mm, house_text_height_mm, role_height_mm
 
 __all__ = ["title_band_need"]
 
@@ -15,15 +17,20 @@ HOUSE_CENTRE_GAP_MM = 3.125
 # A band's growth lands on the six y cuts by weight (1, 4, 1 in each row). The middle cut, between
 # the label and the value, takes 4 of the 12 shares, so the gap grows by a third of the growth.
 GAP_SHARE = 4 / 12
-_HOUSE_LABEL = float(font_size_mm(role_height_mm(TextRole.LABEL, HOUSE_TEXT_HEIGHT_MM)))
-_HOUSE_BODY = float(font_size_mm(role_height_mm(TextRole.BODY, HOUSE_TEXT_HEIGHT_MM)))
 
 
-def title_band_need(label: float, body: float) -> float:
+def _house_size(model: Model, role: TextRole) -> float:
+    house = house_text_height_mm(model)
+    return float(font_size_mm(model, role_height_mm(model, role, house)))
+
+
+def title_band_need(model: Model, label: float, body: float) -> float:
     """The band in mm at which a label of font size `label` clears the value of font size `body`.
 
     The centre gap scales with the two font sizes from the house gap, so the house sizes keep the
     authored stack and need 20 mm exactly; the capitals and the descenders keep their proportions.
     """
-    gap_need = HOUSE_CENTRE_GAP_MM * ((label + body) / (_HOUSE_LABEL + _HOUSE_BODY))
+    gap_need = HOUSE_CENTRE_GAP_MM * (
+        (label + body) / (_house_size(model, TextRole.LABEL) + _house_size(model, TextRole.BODY))
+    )
     return HOUSE_BAND_MM + max(0.0, gap_need - HOUSE_CENTRE_GAP_MM) / GAP_SHARE

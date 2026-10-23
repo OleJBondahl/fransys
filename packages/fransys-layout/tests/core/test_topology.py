@@ -5,17 +5,29 @@ from __future__ import annotations
 from dataclasses import replace
 from typing import TYPE_CHECKING
 
+from options_fixtures import core_options
+
 from fransys_layout.core import build_flow
-from fransys_layout.core.values import Bundle, Options, Rail
+from fransys_layout.core.values import Bundle
 
 from .flow_builders import elem, free, net, poles, problem
 
 if TYPE_CHECKING:
-    from fransys_layout.core.values import FlowGraph, Net, Sym
+    from fransys_layout.core.sym_values import Sym
+    from fransys_layout.core.values import FlowGraph, Net
 
 
 def flow_of(syms: list[Sym], nets: list[Net]) -> FlowGraph:
-    return build_flow(problem(syms, nets), Options())
+    return build_flow(
+        problem(syms, nets),
+        core_options(
+            flip_turn="R180",
+            tag_stagger=True,
+            label_gap=8,
+            driver_first=True,
+            arrow_sides=("E", "W"),
+        ),
+    )
 
 
 def test_series_chain_between_stands_is_one_column_of_one_lane() -> None:
@@ -24,8 +36,6 @@ def test_series_chain_between_stands_is_one_column_of_one_lane() -> None:
     nets = [
         net("x", "k1.n", "k2.s"),
         net("y", "k2.n", "k3.s"),
-        net("L+", "k3.n", rail=Rail(0, "SUPPLY")),
-        net("L-", "k1.s", rail=Rail(1, "GROUND")),
     ]
     (column,) = flow_of(syms, nets).columns
     (lane,) = column.lanes

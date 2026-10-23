@@ -5,7 +5,9 @@ from __future__ import annotations
 from dataclasses import replace
 from itertools import pairwise
 
-from fransys_layout.core import Box, Options, PinRef
+from options_fixtures import core_options
+
+from fransys_layout.core import Box, PinRef
 from fransys_layout.core.occupancy import Occupancy, cells_between
 from fransys_layout.core.outputs import Gap, Trunk, Wire
 from fransys_layout.core.route import _grid, route_page, route_pages
@@ -29,7 +31,17 @@ def _cells(wires: tuple[Wire, ...]) -> set[tuple[int, int]]:
 def test_astar_ends_on_the_nearest_target_cell() -> None:
     grid = Occupancy(12, 7, STEP)
     leg = Leg("n", (0, 3), (11, 3), targets=frozenset({(5, 0), (5, 6)}))
-    path = astar(grid, leg, Options())
+    path = astar(
+        grid,
+        leg,
+        core_options(
+            flip_turn="R180",
+            tag_stagger=True,
+            label_gap=8,
+            driver_first=True,
+            arrow_sides=("E", "W"),
+        ),
+    )
     assert path is not None
     assert path[-1] in {(5, 0), (5, 6)}
 
@@ -39,8 +51,32 @@ def test_a_window_confines_the_search_and_search_retries_on_the_whole_page() -> 
     grid.hard.add((5, 3))
     leg = Leg("n", (0, 3), (11, 3))
     row = (0, 3, 11, 3)
-    assert astar(grid, replace(leg, window=row), Options()) is None
-    path = search(grid, leg, row, Options())
+    assert (
+        astar(
+            grid,
+            replace(leg, window=row),
+            core_options(
+                flip_turn="R180",
+                tag_stagger=True,
+                label_gap=8,
+                driver_first=True,
+                arrow_sides=("E", "W"),
+            ),
+        )
+        is None
+    )
+    path = search(
+        grid,
+        leg,
+        row,
+        core_options(
+            flip_turn="R180",
+            tag_stagger=True,
+            label_gap=8,
+            driver_first=True,
+            arrow_sides=("E", "W"),
+        ),
+    )
     assert path is not None
     assert (5, 3) not in path
 
@@ -74,11 +110,57 @@ def test_route_pages_obstacles_keep_every_wire_cell_out_of_the_boxes() -> None:
 def test_route_envs_carry_the_obstacles_of_route_pages() -> None:
     prob = jog_stair()
     cut = cut_of(prob)
-    placement = placed_from(cut, prob, Options())
+    placement = placed_from(
+        cut,
+        prob,
+        core_options(
+            flip_turn="R180",
+            tag_stagger=True,
+            label_gap=8,
+            driver_first=True,
+            arrow_sides=("E", "W"),
+        ),
+    )
     box = Box(0, 0, 8, 8)
-    assert all(e.obstacles == (box,) for e in route_envs(placement, cut, prob, Options(), (box,)))
-    assert route_pages(placement, cut, prob, Options()) == route_pages(
-        placement, cut, prob, Options(), ()
+    assert all(
+        e.obstacles == (box,)
+        for e in route_envs(
+            placement,
+            cut,
+            prob,
+            core_options(
+                flip_turn="R180",
+                tag_stagger=True,
+                label_gap=8,
+                driver_first=True,
+                arrow_sides=("E", "W"),
+            ),
+            (box,),
+        )
+    )
+    assert route_pages(
+        placement,
+        cut,
+        prob,
+        core_options(
+            flip_turn="R180",
+            tag_stagger=True,
+            label_gap=8,
+            driver_first=True,
+            arrow_sides=("E", "W"),
+        ),
+    ) == route_pages(
+        placement,
+        cut,
+        prob,
+        core_options(
+            flip_turn="R180",
+            tag_stagger=True,
+            label_gap=8,
+            driver_first=True,
+            arrow_sides=("E", "W"),
+        ),
+        (),
     )
 
 
@@ -123,10 +205,10 @@ def _cells_of_box(box: Box) -> set[tuple[int, int]]:
 
 
 def test_wanted_demand_is_what_the_links_want_alone_not_what_the_second_route_left() -> None:
-    """Both links want column 48 alone; the second detours to 40 once the first holds 48."""
-    pins = {"a1": (40, 24, "E"), "a2": (40, 40, "E"), "b1": (56, 56, "W"), "b2": (56, 72, "W")}
+    """Both links want column 48 alone; the second keeps off the first's ends and detours to 64."""
+    pins = {"a1": (40, 24, "E"), "a2": (40, 16, "E"), "b1": (56, 56, "W"), "b2": (56, 72, "W")}
     env = link_env(pins, {"n1": ("a1", "b1"), "n2": ("a2", "b2")})
-    env = replace(env, gaps=(Gap("g", 1, "L", "R", 36, 60, 1),), bands=((0, 120),))
+    env = replace(env, gaps=(Gap("g", 1, "L", "R", 36, 68, 1),), bands=((0, 120),))
     page = route_page(env)[0]
     assert page.demand[0].tracks == 1
     assert demand(page.wires, env.gaps)[0].tracks == 2
@@ -140,7 +222,7 @@ def test_a_rise_that_finds_no_path_is_a_finding_and_draws_no_wire() -> None:
     page, nets, findings = route_page(env)
     lost = [f for f in findings if f.code == "ROUTE_FAILED" and "p" in f.text]
     assert len(lost) == 1
-    assert nets.count("n") == 1
+    assert [r.net for r in nets].count("n") == 1
     assert not any(w.net == "n" and w.kind == drawn.rises[0].drawn_as for w in page.wires)
 
 

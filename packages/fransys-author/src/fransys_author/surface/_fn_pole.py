@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from fransys_author.errors import AuthorError
 from fransys_author.surface._pairing import NO_SIDE_FIX, Ends, ends_of
 from fransys_author.surface._throws import whole_changeover
-from fransys_model.vocab import FunctionKind
+from fransys_model.derive import contact_kind_of
 
 if TYPE_CHECKING:
     from fransys_author.surface._handles import Fn
@@ -27,7 +27,7 @@ class FnPole:
 
     def _series_ends(self, design: Design, width: int | None) -> Ends:  # noqa: ARG002 -- the SeriesElement protocol
         fn, label = self._fn, f"{self._fn._label}.{self._fn._fn.name}"
-        if fn._fn.kind is FunctionKind.CONTACT_CO:
+        if contact_kind_of(fn._fn.kind) == "co":
             raise whole_changeover(fn._label, fn._fn)
         ends = ends_of(design._pairing_facts, fn._fn)
         if not ends.line:

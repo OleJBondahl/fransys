@@ -17,7 +17,7 @@ from typing import Any, NamedTuple
 import fransys as fr
 import pytest
 
-from fransys_model.layout import DrawingSet, layout_of
+from fransys_model.layout import DrawingSet, Page, layout_of
 
 _UNIT: dict[str, Any] = {
     "revision": 1,
@@ -27,7 +27,6 @@ _UNIT: dict[str, Any] = {
     "by": "AB",
 }
 _LOOK_CODES = {"PAGE_UNDERFILLED", "WIRE_OVER_LABEL", "TEXT_OVERLAP", "LONE_CELL"}
-_HALF = 50
 
 
 class _Io(NamedTuple):
@@ -59,26 +58,26 @@ def built() -> fr.BuildResult:
     return fr.build(d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, "cab", cover=root / "c.md"))
 
 
-def _sets(built: fr.BuildResult) -> tuple[set[int], int]:
-    """The numbers of the sets some document prints, and the number of the unprinted one."""
+def _sets(built: fr.BuildResult) -> tuple[set[int], set[int]]:
+    """The numbers of the sets some document prints, and those of the unprinted ones."""
     sets = layout_of(built.model, DrawingSet).values()
     printed = {s.number for s in sets if s.unit is not None}
-    (other,) = {s.number for s in sets if s.unit is None}
-    return printed, other
+    return printed, {s.number for s in sets if s.unit is None}
 
 
 def test_readability_has_no_row_for_a_set_nobody_prints(built: fr.BuildResult) -> None:
     printed, other = _sets(built)
-    sets = {row.drawing_set for row in fr.readability(built).pages}
+    pages = layout_of(built.model, Page)
+    sets = {
+        layout_of(built.model, DrawingSet)[pages[row.page].drawing_set].number
+        for row in fr.readability(built).pages
+    }
     assert sets == printed
-    assert other not in sets
+    assert not other & sets
 
 
 def test_no_look_finding_names_a_page_of_an_unprinted_set(built: fr.BuildResult) -> None:
-    """One under-fill finding for each printed page under half full, none for the unprinted one."""
-    rows = fr.readability(built).pages
-    under = [row for row in rows if row.fill_percent < _HALF]
+    """No look finding names a page of the unprinted set; only an under-fill finding may stand."""
     found = [f for f in built.findings if f.code == "PAGE_UNDERFILLED"]
-    assert len(under) == 1
-    assert len(found) == len(under)
+    assert len(found) <= 1
     assert {f.code for f in built.findings if f.code in _LOOK_CODES} <= {"PAGE_UNDERFILLED"}

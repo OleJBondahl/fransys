@@ -2,30 +2,15 @@
   "anchors": [],
   "body_box": [
     [
-      -2,
+      0,
       0
     ],
     [
-      8,
-      2
+      1.25,
+      1
     ]
   ],
   "elements": [
-    {
-      "line": [
-        [
-          -2,
-          1
-        ],
-        [
-          0,
-          1
-        ]
-      ],
-      "port": "ref",
-      "style": "solid",
-      "weight": "normal"
-    },
     {
       "closed": true,
       "fill": "none",
@@ -35,16 +20,16 @@
           0
         ],
         [
-          8,
+          1.25,
           0
         ],
         [
-          8,
-          2
+          1.25,
+          1
         ],
         [
           0,
-          2
+          1
         ]
       ],
       "style": "solid",
@@ -53,73 +38,68 @@
   ],
   "keepout_box": [
     [
-      -2,
+      0,
       0
     ],
     [
-      8,
-      2
+      1.25,
+      1
     ]
   ],
   "kind": "element",
-  "lint_allow": [
-    {
-      "reason": "the text box is wider than the cell is tall; a table cell is drawn unrotated and its text stays inside the outline",
-      "rule": "slot-overlap-body"
-    },
-    {
-      "reason": "a contact row ends its circuit at the table; no path of this symbol continues it",
-      "rule": "port-isolated"
-    }
-  ],
   "name": "Contact row (contact table)",
-  "nodes": [
-    {
-      "ports": [
-        "ref"
-      ]
-    }
-  ],
+  "nodes": [],
   "paths": [],
-  "ports": [
-    {
-      "at": [
-        -2,
-        1
-      ],
-      "description": "cross-reference side",
-      "dir": "W",
-      "id": "ref"
-    }
-  ],
+  "ports": [],
   "reference": {
     "number": "contact-row",
     "standard": "IEC 60617"
   },
   "schema": 1,
   "slots": {
-    "marking.ref": {
+    "nc": {
       "at": [
-        0.25,
-        1
+        0.75,
+        0.5
       ],
       "box": [
-        1.5,
-        1
+        0.25,
+        0.125
       ],
       "side": "E"
     },
-    "place": {
+    "no": {
       "at": [
-        2,
+        0.25,
+        0.5
+      ],
+      "box": [
+        0.25,
+        0.125
+      ],
+      "side": "E"
+    },
+    "pad": {
+      "at": [
+        0.625,
         1
       ],
       "box": [
-        5.5,
-        1
+        0.25,
+        0.25
       ],
-      "side": "E"
+      "side": "S"
     }
   },
-  "status": "unverified"
+  "status": "unverified",
+  "stretch": [
+    {
+      "at": 0.375,
+      "axis": "x"
+    },
+    {
+      "at": 0.875,
+      "axis": "x"
+    }
+  ]
 }

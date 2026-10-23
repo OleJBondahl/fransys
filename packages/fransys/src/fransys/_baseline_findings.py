@@ -10,6 +10,7 @@ from fransys_model.derive import baseline, revision_text
 from fransys_model.kernel import Finding, Id, Severity
 
 from ._baseline_cause import sections_text
+from ._codes import fix_text
 from ._release_reader import manifest_readable, stored_fransys_version
 
 if TYPE_CHECKING:
@@ -26,6 +27,7 @@ def _finding(code: str, severity: Severity, unit: Id[ModelUnit] | None, message:
         severity=severity,
         subjects=(unit,) if unit is not None else (),
         message=message,
+        fix=fix_text(code),
     )
 
 

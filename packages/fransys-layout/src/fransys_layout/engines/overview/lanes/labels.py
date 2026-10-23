@@ -6,10 +6,10 @@ lazy from collections.abc import Sequence
 from fransys_layout.engines.overview.sizes import TEXT_LEAD
 from fransys_layout.geometry import WIRING_GRID as G
 from fransys_layout.geometry import Box, overlaps
-from fransys_layout.stages.space import crosses, run_of
+from fransys_layout.routing.space import crosses, run_of
 lazy from fransys_layout.engines.overview.sheet_values import LineFacts, PlacedBox, PlacedLine
 lazy from fransys_layout.geometry import Point
-lazy from fransys_layout.stages.space import Run
+lazy from fransys_layout.routing.space import Run
 
 
 def label_at(points: tuple[Point, ...], text_height: int) -> tuple[int, int]:

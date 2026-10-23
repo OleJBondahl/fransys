@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 from fransys_author.surface._ends import is_bridge
 from fransys_author.surface._strip import TerminalStrip
-from fransys_author.surface._supplies import _Rails
+from fransys_author.surface._supply_rails import _Rails
 
 if TYPE_CHECKING:
     from fransys_author.handles import Port

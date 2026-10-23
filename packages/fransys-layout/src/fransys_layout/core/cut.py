@@ -65,17 +65,18 @@ def cut_pages(
         for cell in (cell for lane in c.lanes for cell in lane.cells):
             done.where.setdefault(cell.sym, done.where[c.id])
     where = done.where
+    copied = copies(flow, where, copyable)
     refs = [
         *(on_pages(r, where) for r in folds),
         *done.refs,
         *spilled(blocks, flow, where, problem),
-        *copies(flow, where, copyable),
-        *stubs(problem, where),
+        *copied,
+        *stubs(problem, where, [*done.refs, *copied]),
     ]
     findings = (
         *done.findings,
         *head_off_legs(flow, where),
-        *unplaced(blocks, done.pages, flow),
+        *unplaced(blocks, done.pages, problem.area.w - 2 * options.margin.w, options),
     )
     return CutResult(PageSpec(tuple(done.pages), tuple(refs), findings), flow, blocks)
 
@@ -89,7 +90,7 @@ def plan_unit(
     """The unit's DP input, its page plan, and whether min_fill was given up."""
     flow, problem, options = env
     page_w = problem.area.w - 2 * options.margin.w
-    page_h = problem.area.h - 2 * options.margin.h
+    page_h = problem.area.h - options.page_headroom
     reserves = measured.reserves if measured else None
     seq = column_items(
         unit, flow, options, left_pack(unit, flow, problem, options, reserves), page_h

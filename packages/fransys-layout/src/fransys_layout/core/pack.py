@@ -14,7 +14,8 @@ from .values import Cell
 if TYPE_CHECKING:
     from collections.abc import Iterator, Mapping
 
-    from .values import Block, Column, PagePlan, Sym
+    from .sym_values import Sym
+    from .values import Block, Column, PagePlan
 
 Attached = dict[str, tuple[str, str, int]]
 LanePins = dict[str, tuple[tuple[str, int], ...]]
@@ -76,18 +77,20 @@ def _boxpin_ends(c: Column, holder: Mapping[str, str | None]) -> Iterator[tuple[
 def lane_pins(cols: tuple[Column, ...], blocks: Mapping[str, Block]) -> LanePins:
     """The further box pins a column's other lanes stand on, past the one `attachments` names.
 
-    A two-lane column (a symbol with two pins on one card) stands on both pins, so the card's
-    pin pitch between them is the lane offset.
+    A two-lane column stands on both card pins, so the pin pitch is the lane offset. A further
+    pin at an offset the column already stands on is left to the card's pitch (R391).
     """
     holder = {c: b.anchor for b in blocks.values() if b.is_card for c in b.columns}
     out: LanePins = {}
     for c in cols:
         ends = list(_boxpin_ends(c, holder))
         seen = {ends[0][1]} if ends else set()
+        offsets = {ends[0][2]} if ends else set()
         more = []
         for _, pin, off in ends[1:]:
-            if pin not in seen:
+            if pin not in seen and off not in offsets:
                 seen.add(pin)
+                offsets.add(off)
                 more.append((pin, off))
         if more:
             out[c.id] = tuple(more)

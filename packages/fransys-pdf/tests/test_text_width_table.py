@@ -4,14 +4,15 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Any, cast
 
-import fransys_pdf
 import pytest
 from fontTools.ttLib import TTFont
 
+import electrical_symbols
+from electrical_symbols import LIBRARY
 from fransys_model.derive import _text_widths as table
 from fransys_model.derive.text_width import text_units
 
-FONTS = Path(fransys_pdf.__file__).parent / "fonts"
+FONTS = Path(electrical_symbols.__file__).parent / "fonts"
 FILES = {"Regular": "DejaVuSansCondensed.ttf", "Bold": "DejaVuSansCondensed-Bold.ttf"}
 WEIGHTS = {"Regular": table.REGULAR_PAIRS, "Bold": table.BOLD_PAIRS}
 
@@ -44,11 +45,28 @@ def test_capital_ratio_and_ascent_equal_the_regular_ttf():
 
     The font's OS/2 table is version 1, so it has no `sCapHeight`; the H glyph's top is the cap.
     """
-    from fransys_model.derive import print_sizes
-
+    spec = LIBRARY.font
+    assert spec is not None
     font = TTFont(FONTS / FILES["Regular"])
     cmap: Any = font.getBestCmap()
     glyf: Any = font["glyf"]
     units = cast("Any", font["head"]).unitsPerEm
-    assert Decimal(glyf[cmap[ord("H")]].yMax) / units == print_sizes.CAPITAL_RATIO
-    assert Decimal(cast("Any", font["OS/2"]).sTypoAscender) / units == print_sizes.ASCENT_RATIO
+    assert Decimal(glyf[cmap[ord("H")]].yMax) / units == Decimal(spec.cap_height) / Decimal(
+        spec.units_per_em
+    )
+    assert Decimal(cast("Any", font["OS/2"]).sTypoAscender) / units == Decimal(
+        spec.ascent
+    ) / Decimal(spec.units_per_em)
+
+
+def test_descent_ratio_equals_the_regular_ttf():
+    """The descent ratio is the glyph p's bottom, negated, over unitsPerEm (A5, E4)."""
+    spec = LIBRARY.font
+    assert spec is not None
+    font = TTFont(FONTS / FILES["Regular"])
+    cmap: Any = font.getBestCmap()
+    glyf: Any = font["glyf"]
+    units = cast("Any", font["head"]).unitsPerEm
+    assert Decimal(-glyf[cmap[ord("p")]].yMin) / units == Decimal(spec.descent) / Decimal(
+        spec.units_per_em
+    )

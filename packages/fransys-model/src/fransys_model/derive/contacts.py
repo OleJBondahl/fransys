@@ -7,7 +7,7 @@ designation holder own" (model-0119).
 from types import MappingProxyType
 from typing import TYPE_CHECKING
 
-from fransys_model.derive.designation import designation_holder
+from fransys_model.derive.designation_label import designation_holder
 from fransys_model.derive.facts.contacts import (
     LinkState,
     Throws,

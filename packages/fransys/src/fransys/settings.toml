@@ -1,0 +1,31 @@
+[paper]
+default = "A3"
+
+[paper.formats.A3]
+name = "A3 landscape"
+width_mm = 420
+height_mm = 297
+content_x_mm = 5
+content_y_mm = 5
+content_width_mm = 410
+content_height_mm = 267
+frame_columns = 8
+frame_rows = 6
+
+[paper.formats.A2]
+name = "A2 landscape"
+width_mm = 594
+height_mm = 420
+content_x_mm = 5
+content_y_mm = 5
+content_width_mm = 584
+content_height_mm = 390
+frame_columns = 12
+frame_rows = 8
+
+[look]
+ref_tints = ["#ffc0aa", "#85e7cd", "#e4c0ff", "#efcc83", "#80e1fe", "#ffbad4", "#bbdf99", "#bbd1ff"]
+
+[pdf]
+list_share_pct = 40  # a list page's column, percent of the content width (pdf-0026, L1)
+list_gutter_pct = 20  # the gap between its two columns, same unit

@@ -9,7 +9,8 @@ from collections import defaultdict
 
 from fransys_model.derive.facts.units import boundary
 from fransys_model.kernel import Id, value
-from fransys_model.layout import DrawingSet, LinkMarker, Page, Route, SymbolPlacement, layout_of
+from fransys_model.layout import DrawingSet, LinkMarker, Page, layout_of
+from fransys_model.layout.page_slices import page_members
 from fransys_model.vocab.tables import documents, functions
 lazy from fransys_model.kernel import Model
 lazy from fransys_model.vocab.core import Item
@@ -18,7 +19,6 @@ lazy from fransys_model.vocab.document import Document
 from .black_box import drawing_set_is_replica_only
 from .drawing_text import position_text
 from .export_names import document_export_name
-from .frame_position import cell
 from .page_destination import page_destination
 from .printed_sets import document_drawing_sets
 from .set_rank import set_rank
@@ -34,18 +34,14 @@ __all__ = [
 
 
 def is_replica_only_undrawn(model: Model, drawing_set: DrawingSet) -> bool:
-    """Whether the set has placements, all replicas, and no conductor route or `LinkMarker`.
+    """Whether the set has drawn functions, all replicas, and no conductor row or `LinkMarker`.
 
-    A replica of the page unit's own boundary counts as drawn.
+    Read from the pages' `layout.membership` rows. A replica of the page unit's own boundary
+    counts as drawn.
     """
-    pages = {
-        page.id for page in layout_of(model, Page).values() if page.drawing_set == drawing_set.id
-    }
-    placed = [
-        placement.function
-        for placement in layout_of(model, SymbolPlacement).values()
-        if placement.page in pages
-    ]
+    pages = [page for page in layout_of(model, Page).values() if page.drawing_set == drawing_set.id]
+    rows = [row for page in pages for row in page_members(model, page)]
+    placed = [row.function for row in rows if row.function is not None]
     if not placed:
         return False
     # pdf-0025: a replica of the page unit's own boundary (a pass-through) is its drawing
@@ -53,13 +49,10 @@ def is_replica_only_undrawn(model: Model, drawing_set: DrawingSet) -> bool:
         return False
     if not drawing_set_is_replica_only(model, drawing_set.id):
         return False
-    has_conductor_route = any(
-        route.conductor is not None
-        for route in layout_of(model, Route).values()
-        if route.page in pages
-    )
-    has_marker = any(marker.page in pages for marker in layout_of(model, LinkMarker).values())
-    return not (has_conductor_route or has_marker)
+    has_conductor = any(row.conductor is not None for row in rows)
+    ids = {page.id for page in pages}
+    has_marker = any(marker.page in ids for marker in layout_of(model, LinkMarker).values())
+    return not (has_conductor or has_marker)
 
 
 @value
@@ -104,21 +97,20 @@ def item_pages(model: Model) -> dict[Id[Item], tuple[ItemPage, ...]]:
     """Every item with each drawing page of a whole-system write that draws one of its functions.
 
     The file is the one `write` names the document's PDF; the text is `position_text` of the
-    page and the frame cell of the first placement on it. Empty when the model has no document.
+    page and the frame cell of the first membership row on it. Empty when the model has no document.
     """
     found: dict[Id[Item], dict[tuple[str, str], ItemPage]] = defaultdict(dict)
-    by_page = defaultdict(list)
-    for placement in layout_of(model, SymbolPlacement).values():
-        by_page[placement.page].append(placement)
     funcs = functions(model)
     for record in documents(model).values():
         name = document_export_name(model, None, record)
         for page in drawn_pages(model, record.id):
             destination = page_destination(model, page)
-            for placement in sorted(by_page[page.id], key=lambda p: (p.y, p.x)):
-                column, row = cell(model, page, placement.x, placement.y)
+            for member in page_members(model, page):
+                if member.function is None:
+                    continue
+                column, row = member.cell.column, member.cell.row
                 text = position_text(page.number, column, row, (), set_number=set_rank(model, page))
-                item = funcs[placement.function].item
+                item = funcs[member.function].item
                 found[item].setdefault(
                     (name, destination), ItemPage(file=name, destination=destination, text=text)
                 )

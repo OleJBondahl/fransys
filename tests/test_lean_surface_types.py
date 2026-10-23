@@ -10,28 +10,13 @@ signatures never leak into a fixture's expected count.
 
 from __future__ import annotations
 
-import importlib.util
-import sys
-from pathlib import Path
+lazy from pathlib import Path
 
 import pytest
+from gate_scan import load_script
 
-ROOT = Path(__file__).resolve().parents[1]
-
-
-def _load(module_name: str, filename: str):
-    spec = importlib.util.spec_from_file_location(module_name, ROOT / "scripts" / filename)
-    if spec is None or spec.loader is None:
-        msg = f"could not load scripts/{filename}"
-        raise ImportError(msg)
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[module_name] = module
-    spec.loader.exec_module(module)
-    return module
-
-
-lean_surface = _load("fransys_lean_surface", "lean_surface.py")
-lean_surface_types = _load("fransys_lean_surface_types", "lean_surface_types.py")
+lean_surface = load_script("fransys_lean_surface", "lean_surface.py")
+lean_surface_types = load_script("fransys_lean_surface_types", "lean_surface_types.py")
 
 
 def _write(tmp_path: Path, name: str, body: str) -> Path:
@@ -279,9 +264,7 @@ def test_the_two_known_violators_are_closed_and_the_check_holds_them():
         "lay_out_cables",
         "lay_out_diagrams",
         "lay_out_overview",
-        "lay_out_schematic",
         "generic_box_geometry",
-        "page_readability",
         "symbol_geometry",
     }
     assert "write_json" in {

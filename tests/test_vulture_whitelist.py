@@ -71,8 +71,6 @@ _REASONED_ENTRY_RE = re.compile(r"^_\.(\w+)  # (FIELDS|DICT|OTHER|TESTS) (\S+):(
 # 2026-10-07: ceilings may rise; cleanup round lowers
 # +4: OperatedBy members (parts-0020), built by value in the loader, named by tests;
 # +1: d.detail (author-0042) read only by author tests and the guide;
-# +1: ReadabilityReport/ReadabilityUnit.loose_symbols, a public report field (GLASS-BOX,
-# 2026-10-15);
 # owner 2026-10-07: ceilings may rise; cleanup round lowers
 # 77: CLEANUP-CEILINGS-2 dropped 58 entries a per-package run without the whitelist never flags
 # +61: CORE-WAVE0 contract fields, read by later stages; cleanup round lowers
@@ -84,7 +82,19 @@ _REASONED_ENTRY_RE = re.compile(r"^_\.(\w+)  # (FIELDS|DICT|OTHER|TESTS) (\S+):(
 # +23: EL-2a role-table fields (model-0288), 2026-10-16
 # +4: SignalKind members built by value from SIGNAL_TYPES (EL-3), 2026-10-16; cleanup lowers
 # +7: core names cut from __all__ (decision 0226), read by layout tests until P6.1; cleanup lowers
-WHITELIST_CEILING = 189
+# +1: label_nets (P5.3), called by tests until P6.1, 2026-10-16; cleanup lowers
+# +1: PlacedView.lane_heads (OVERVIEW-ROWS), read only by fransys_overview, 2026-10-16
+# -15: CLEANUP-MODEL-3 dropped entries vulture no longer needs; +2: Settings.pdf and
+# Settings.look, read when SETTINGS-LOOK lands (SETTINGS-A1); cleanup lowers
+# +9 (measured): Style, Sheet and DrawnWire fields read only by layout tests (DRAWING-VALUE);
+# cleanup lowers
+# +5 (measured): DrawnText.turned and the Corner members, read by the Label/WireLabel mapping and
+# render (ELECTRICAL-MARKERS part F, model-0319); +3 (EL-7): SupplyRails L1-L3; +7 (KIT-FACTS): the
+# rows_device_chains, rows_pin_views and rows_undrawn fields read by fransys_layout's read package;
+# +2 (TABLE-T2): Footprints no_cells, nc_cells; cleanup lowers;
+# +2 (SHEETS, Ruling 128): SheetKind.BLOCK, LayoutSheet.sheet_kind
+# +1 FLIP: symbol_port_missing_finding (GAP-FLIP-203)
+WHITELIST_CEILING = 217  # +11 DEL-4 (deleted stored kind readers), +2 SHEETS; cleanup lowers
 IGNORE_NAMES_CEILING = 70  # 15 legacy + 51 names + 4 layout-0111 enum members
 
 _LEGACY_IGNORE_NAMES = frozenset(

@@ -10,6 +10,8 @@ from typing import TYPE_CHECKING
 
 from fransys_model.kernel import Finding, Severity
 
+from .codes import fix_text
+
 if TYPE_CHECKING:
     from fransys_model.derive import DocumentId
 
@@ -43,6 +45,7 @@ def cover_overflow_finding(document: DocumentId, typst_error: str) -> Finding | 
         code="COVER_OVERFLOW",
         severity=Severity.ERROR,
         subjects=(document,),
+        fix=fix_text("COVER_OVERFLOW"),
         message=(
             f"cover text {found['cover']} mm plus revision table {found['table']} mm exceeds "
             f"the {found['avail']} mm content box"

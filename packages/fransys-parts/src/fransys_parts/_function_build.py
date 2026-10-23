@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from fransys_model.kernel import Draft, Id, Origin, make_id
 from fransys_model.layout import SymbolChoice
 from fransys_model.vocab import (
+    ConductorMark,
     ConnectorFacet,
     Energy,
     FunctionKind,
@@ -15,6 +16,7 @@ from fransys_model.vocab import (
     LinkRest,
     Part,
     PlcChannelFacet,
+    PoleSide,
     PortRole,
     PortTemplate,
     ProtectionType,
@@ -67,29 +69,25 @@ def _add_ports(
     origin: Origin,
 ) -> dict[str, Id[PortTemplate]]:
     port_ids: dict[str, Id[PortTemplate]] = {}
+    pole_pins = _pole_facts.pole_ports(entry)
     for port in entry["ports"]:
-        pole_side, conductor_mark = _pole_facts.facts(entry, port)
         port_key = (*function_key, "port", port["name"])
         port_id = make_id(PortTemplate, port_key)
         port_ids[port["name"]] = port_id
-        draft.add(
-            PortTemplate(
-                id=port_id,
-                key=port_key,
-                function=function_id,
-                name=port["name"],
-                role=PortRole(port["role"]),
-                # model-0053: the part's own pin marking, when it differs from the name
-                marking=port.get("marking"),
-                pole_side=pole_side,
-                conductor_mark=conductor_mark,
-                source_row=WiringRow(port["source_row"]) if "source_row" in port else None,
-                joins=_joins.target_id(function_key[:-2], port["joins"])
-                if "joins" in port
-                else None,
-            ),
-            origin=origin,
+        template = PortTemplate(
+            id=port_id,
+            key=port_key,
+            function=function_id,
+            name=port["name"],
+            role=PortRole(port["role"]),
+            # model-0053: the part's own pin marking, when it differs from the name
+            marking=port.get("marking"),
+            pole_side=PoleSide(port["side"]) if "side" in port else None,
+            conductor_mark=ConductorMark(port["conductor"]) if "conductor" in port else None,
+            source_row=WiringRow(port["source_row"]) if "source_row" in port else None,
+            joins=_joins.target_id(function_key[:-2], port["joins"]) if "joins" in port else None,
         )
+        draft.add(_pole_facts.with_facts(template, entry, pole_pins), origin=origin)
     return port_ids
 
 

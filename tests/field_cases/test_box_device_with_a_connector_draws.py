@@ -14,14 +14,12 @@ import tempfile
 from pathlib import Path
 
 import fransys as fr
+import pytest
+from _drawn_pages import drawn_pages
 from fransys.colours import BN, BU
-from fransys_el import OPTIONS
-
-from fransys_layout.engines.schematic.engine import stage_results
-from fransys_layout.engines.schematic.read import read_inputs
 
 
-def _layout():
+def _built() -> fr.BuildResult:
     d = fr.design("demo_parts", place="CAB")
     cab = d.location("CAB", "Cabinet")
     live = d.terminal_strip("X1", "DEMO-TB-2.5", 2).run("L", 2, bridged=True)
@@ -39,10 +37,21 @@ def _layout():
     d.detail.wire(m1.svc["1"], live[2].outer, wire=(BN, 0.5))
     cover = Path(tempfile.mkdtemp()) / "cover.md"
     cover.write_text("# Cabinet\n", encoding="utf-8")
-    model = fr.build(d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover)).model
-    return stage_results(model, read_inputs(model, options=OPTIONS))[0].layout
+    return fr.build(d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover))
 
 
 def test_a_box_device_with_a_connector_is_drawn():
-    layout = _layout()
-    assert layout is not None
+    symbols = [one for drawing in drawn_pages(_built().model).values() for one in drawing.symbols]
+    assert any(one.key == "generic-box" for one in symbols), "the module's box is drawn"
+
+
+@pytest.mark.rule("SERIES-PARALLEL")
+def test_the_two_supplies_stand_side_by_side_above_the_module() -> None:
+    """Series(Parallel(T1, T2), M1): one column, no CHAIN_REFUSED (it was refused before P2)."""
+    built = _built()
+    assert "CHAIN_REFUSED" not in {f.code for f in built.findings}
+    boxes = [s for d in drawn_pages(built.model).values() for s in d.symbols]
+    tops = [s.y for s in boxes if s.key == "generic-box"]
+    assert len(tops) == 3
+    assert tops.count(min(tops)) == 2, "the two supplies stand on one row"
+    assert max(tops) > min(tops), "the module stands below them"

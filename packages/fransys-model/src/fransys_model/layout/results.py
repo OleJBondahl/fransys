@@ -7,15 +7,13 @@ never contains a page number or a position, so ids survive repagination; design/
 lists the discriminator each kind adds to its subject's key.
 """
 
-from itertools import pairwise
 from typing import NoReturn
 
 from fransys_model.kernel import AuthoringKey, Id, SchemaError, Value, record, value
 from fransys_model.vocab.aspects import AspectNode
-from fransys_model.vocab.connectivity import Conductor, Net
-from fransys_model.vocab.core import Function, Item, Port, Unit
+from fransys_model.vocab.core import Item, Port, Unit
 
-from .enums import LabelKind, MarkerSide, Orientation, PageRole, PlacementView, Side, StarKind
+from .enums import MarkerSide, Orientation, PageRole, Side, StarKind
 from .formats import SheetFormat
 from .order import by_index, holder_of
 
@@ -23,25 +21,15 @@ from .order import by_index, holder_of
 POWER_SLOT = "power"
 
 
-def _refuse(rec: Label | LinkMarker | Route, kind: str, msg: str) -> NoReturn:
+def _refuse(rec: LinkMarker, kind: str, msg: str) -> NoReturn:
     raise SchemaError(msg, kind=kind, record_id=holder_of(rec))
 
 
-def _check_size(rec: Label | LinkMarker, owner: str, kind: str) -> None:
+def _check_size(rec: LinkMarker, owner: str, kind: str) -> None:
     for name in ("width", "height"):
         size = getattr(rec, name)
         if type(size) is int and size <= 0:
             _refuse(rec, kind, f"{owner} {name} must be positive, got {size}")
-
-
-def _check_route_ends(rec: Route) -> bool:
-    if (rec.conductor is None) == (rec.net is None):
-        msg = "a route draws either a conductor or a leg of a net, not both and not neither"
-        _refuse(rec, "layout.route", msg)
-    ends_are_ids = type(rec.a) is Id and type(rec.b) is Id
-    if ends_are_ids and rec.a == rec.b:
-        _refuse(rec, "layout.route", "a route joins two different ports")
-    return ends_are_ids
 
 
 def _check_marker_numbers(rec: LinkMarker) -> None:
@@ -65,26 +53,6 @@ def _check_marker_stub(rec: LinkMarker) -> None:
         _refuse(rec, kind, "a link marker's far is set exactly when it is an off stub")
     if rec.carrier is not None and rec.far is None:
         _refuse(rec, kind, "a link marker's carrier needs a far")
-
-
-def _check_label_subject(rec: Label) -> None:
-    subjects = sum(subject is not None for subject in (rec.function, rec.port, rec.conductor))
-    if subjects != 1:
-        msg = f"a label has exactly one of function, port and conductor, not {subjects}"
-        _refuse(rec, "layout.label", msg)
-    if rec.kind is LabelKind.WIRE and rec.conductor is None:
-        _refuse(rec, "layout.label", "a wire label belongs to a conductor")
-
-
-def _check_label_partners(rec: Label) -> None:
-    partners = rec.partners
-    if type(partners) is not tuple or not all(type(p) is CrossReferencePartner for p in partners):
-        return
-    is_cross = rec.kind is LabelKind.CROSS_REFERENCE
-    if is_cross and not partners:
-        _refuse(rec, "layout.label", "a cross-reference label needs at least one partner")
-    if not is_cross and partners:
-        _refuse(rec, "layout.label", "only a cross-reference label carries partners")
 
 
 @record(kind="layout.drawing_set")
@@ -119,8 +87,7 @@ class Page:
     `role` is one `PageRole`, its first unit's; roles may share a page (deep-dive D4,
     decision layout-0048). The page title is rendered from the group descriptions in
     `index` order; it is not stored. `sheet_format` names the authored sheet the page
-    is drawn on; `None` is the house sheet (`default_sheet_format()`), which is no
-    record.
+    is drawn on; `None` is the build's default paper (`PaperChoice`).
     """
 
     id: Id[Page]
@@ -140,128 +107,13 @@ class Page:
             object.__setattr__(self, "groups", groups)
 
 
-@record(kind="layout.symbol_placement")
-class SymbolPlacement:
-    """One function drawn on one page: where, how turned, and with which symbol.
-
-    `x`, `y` is the symbol origin. `symbol` and `library_version` pin the geometry the
-    position was computed against. A terminal function may have a placement at each of its
-    wires, several on one page (model-0220). `view` says which view the placement draws. `ports`
-    and `sides` are parallel: render draws a generic box's ports (an item view's, or one whose
-    names or sides are not the default ones) on the `Side.N` (top) or `Side.S` (bottom)
-    side as listed; both are empty for a placement that is no such box. `port_offsets` is the
-    third parallel tuple: each port's x offset from the symbol origin, in model units (grid
-    units), rising along each side; empty means the default measured pitch (model-0129).
-    """
-
-    id: Id[SymbolPlacement]
-    key: AuthoringKey
-    function: Id[Function]
-    page: Id[Page]
-    x: int
-    y: int
-    orientation: Orientation
-    poles: int
-    symbol: str
-    library_version: str
-    produced_by: str
-    view: PlacementView = PlacementView.FUNCTION
-    ports: tuple[str, ...] = ()
-    sides: tuple[Side, ...] = ()
-    port_offsets: tuple[int, ...] = ()
-    ext: frozendict[str, Value] = frozendict()
-
-    def __post_init__(self) -> None:
-        """Require `ports` and `sides` to come together, one side each, `Side.N` or `Side.S`."""
-        ports, sides = self.ports, self.sides
-        self._check_offsets()
-        if type(ports) is tuple and type(sides) is tuple:
-            if len(ports) != len(sides):
-                msg = (
-                    f"a placement's ports and sides come together, "
-                    f"got {len(ports)} and {len(sides)}"
-                )
-                raise SchemaError(msg, kind="layout.symbol_placement", record_id=holder_of(self))
-            for side in sides:
-                if side not in (Side.N, Side.S):
-                    msg = f"a placement's side is Side.N or Side.S, got {side!r}"
-                    raise SchemaError(
-                        msg, kind="layout.symbol_placement", record_id=holder_of(self)
-                    )
-
-    def _check_offsets(self) -> None:
-        """Require `port_offsets` empty, or one per port and strictly rising along each side."""
-        offsets, ports, sides = self.port_offsets, self.ports, self.sides
-        if type(offsets) is not tuple or not offsets:
-            return
-        problem = None
-        if len(offsets) != len(ports):
-            problem = f"one per port, got {len(offsets)} for {len(ports)} ports"
-        elif len(sides) == len(ports):
-            for side in (Side.N, Side.S):
-                along = [x for x, one in zip(offsets, sides, strict=True) if one is side]
-                if any(b <= a for a, b in pairwise(along)):
-                    problem = f"strictly rising along side {side.value}, got {along}"
-        if problem:
-            msg = f"a placement's port_offsets are {problem}"
-            raise SchemaError(msg, kind="layout.symbol_placement", record_id=holder_of(self))
-
-
 @value
 class RoutePoint:
-    """One vertex of a `Route`; `index` is its place along the polyline."""
+    """One vertex of a polyline; `index` is its place along the polyline."""
 
     index: int
     x: int
     y: int
-
-
-def _turned_round(points: tuple[RoutePoint, ...]) -> tuple[RoutePoint, ...]:
-    """The polyline read the other way: the same `index` slots, the points in reverse."""
-    return tuple(
-        RoutePoint(index=slot.index, x=point.x, y=point.y)
-        for slot, point in zip(points, reversed(points), strict=True)
-    )
-
-
-@record(kind="layout.route")
-class Route:
-    """The orthogonal polyline drawing one connection between two ports on one page.
-
-    Exactly one of `conductor`, `net` is set: the `Conductor` it draws, or the declared
-    `Net` it draws a leg of when no conductor exists (a board-realised or unrealised
-    net). `a`/`b` are stored in id order; `points` run from `a` to `b`, ordered by
-    `index`. The reference back to the model is what lets a checker prove that what is
-    drawn is what is connected.
-    """
-
-    id: Id[Route]
-    key: AuthoringKey
-    page: Id[Page]
-    conductor: Id[Conductor] | None
-    net: Id[Net] | None
-    a: Id[Port]
-    b: Id[Port]
-    points: tuple[RoutePoint, ...]
-    produced_by: str
-    ext: frozendict[str, Value] = frozendict()
-
-    def __post_init__(self) -> None:
-        """Require exactly one of `conductor`/`net`; store `a`/`b` in id order, `points` sorted.
-
-        Turning `a` and `b` round reverses the polyline: the points keep their `index`
-        slots and swap places, so `points` still runs from `a` to `b`.
-        """
-        ends_are_ids = _check_route_ends(self)
-        points = by_index(self.points, RoutePoint, kind="layout.route", holder=holder_of(self))
-        if points is None:
-            return
-        if ends_are_ids and self.b < self.a:
-            first, second = self.a, self.b
-            object.__setattr__(self, "a", second)
-            object.__setattr__(self, "b", first)
-            points = _turned_round(points)
-        object.__setattr__(self, "points", points)
 
 
 @record(kind="layout.link_marker")
@@ -317,38 +169,6 @@ class LinkMarker:
         _check_marker_stub(self)
 
 
-@record(kind="layout.outline")
-class Outline:
-    """The dash-dot boundary of one unit instance's black box on one page.
-
-    `x`, `y` is the rectangle's top-left corner, `width`/`height` its size, in G. Layout
-    works it out from the black-box members' bodies and measured labels; render draws it
-    and never measures anything (I2a, deep dive; the title is an ordinary label, slot
-    `"outline_title"`).
-    """
-
-    id: Id[Outline]
-    key: AuthoringKey
-    unit: Id[Unit]
-    page: Id[Page]
-    x: int
-    y: int
-    width: int
-    height: int
-    produced_by: str
-    ext: frozendict[str, Value] = frozendict()
-
-    def __post_init__(self) -> None:
-        """Refuse a non-positive `width` or `height`."""
-        holder = holder_of(self)
-        if type(self.width) is int and self.width <= 0:
-            msg = f"an outline's width must be positive, got {self.width}"
-            raise SchemaError(msg, kind="layout.outline", record_id=holder)
-        if type(self.height) is int and self.height <= 0:
-            msg = f"an outline's height must be positive, got {self.height}"
-            raise SchemaError(msg, kind="layout.outline", record_id=holder)
-
-
 @record(kind="layout.power_symbol")
 class PowerSymbol:
     """One power symbol drawn at a port on one page: the bar, ground or protective earth.
@@ -385,39 +205,3 @@ class CrossReferencePartner:
     port: Id[Port]
     page: Id[Page]
     x: int
-
-
-@record(kind="layout.label")
-class Label:
-    """Where one piece of text sits; the text is rendered from its subject, never stored.
-
-    Exactly one of `function`, `port`, `conductor` is set: the subject whose
-    designation, name or wire label is shown. `slot` is the symbol slot the position
-    came from (`"tag"`, `"marking.13"`, `"value"`), or `""` for a wire label. `x`, `y`
-    is the top-left corner of the label box; `width`/`height` are its size in G, written
-    by layout from the box it reserved (D13). The subject of a `WIRE` label is always a
-    `conductor`: a net-realised route has no wire label. `partners` lists the other ends
-    of the same item for a `CROSS_REFERENCE` label, and is empty for every other kind.
-    """
-
-    id: Id[Label]
-    key: AuthoringKey
-    page: Id[Page]
-    function: Id[Function] | None
-    port: Id[Port] | None
-    conductor: Id[Conductor] | None
-    kind: LabelKind
-    slot: str
-    x: int
-    y: int
-    width: int
-    height: int
-    produced_by: str
-    partners: tuple[CrossReferencePartner, ...] = ()
-    ext: frozendict[str, Value] = frozendict()
-
-    def __post_init__(self) -> None:
-        """Require a positive size, one subject, a `WIRE` conductor, cross-reference partners."""
-        _check_size(self, "a label's", "layout.label")
-        _check_label_subject(self)
-        _check_label_partners(self)

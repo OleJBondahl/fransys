@@ -28,6 +28,7 @@ class Measured:
     reserves: Mapping[tuple[str, str], int] = field(default_factory=dict)
     heights: Mapping[str, int] = field(default_factory=dict)
     columns: Mapping[str, int] = field(default_factory=dict)
+    rises: Mapping[str, int] = field(default_factory=dict)
 
 
 def measured_blocks(
@@ -38,13 +39,18 @@ def measured_blocks(
     A column that is not part of a whole block takes its own measured height, never its block's,
     and is short when that is under limit. A whole block's row is its block extent.
     """
-    own = measured.columns
+    own, rises = measured.columns, measured.rises
     items = tuple(
-        replace(it, height=own[it.column], short=own[it.column] < limit)
+        replace(
+            it, height=own[it.column], short=own[it.column] < limit, rise=rises.get(it.column, 0)
+        )
         if not it.whole and it.column in own
         else it
         for it in seq
     )
     heights = measured.heights
-    blocks = {k: replace(b, height_est=heights[k]) if k in heights else b for k, b in by_id.items()}
+    blocks = {
+        k: replace(b, height_est=heights[k], rise=rises.get(k, 0)) if k in heights else b
+        for k, b in by_id.items()
+    }
     return items, blocks

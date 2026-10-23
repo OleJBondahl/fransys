@@ -19,6 +19,11 @@ def core_count(product: CableProductFacet) -> int:
     return len(product.core_colours)
 
 
+def cores_past_product(product_cores: int, asked: int) -> bool:
+    """True when core `asked` (1-based) is not one of a product's `product_cores` cores."""
+    return not 1 <= asked <= product_cores
+
+
 def core_colour_at(product: CableProductFacet, index: int) -> str | None:
     """The colour of core `index` (1-based) of `product`, `None` when it has no such core."""
     if 1 <= index <= len(product.core_colours):

@@ -15,23 +15,15 @@ line runs to it; an arrow box that leads elsewhere prints its page and cell. Dec
 import tempfile
 from functools import cache
 from pathlib import Path
-from typing import Any, NamedTuple
+from typing import TYPE_CHECKING, Any, NamedTuple
 
 import fransys as fr
+from _drawn_extent import Rect, body_g
+from _drawn_pages import drawn_pages
 from fransys.colours import BK
 
-from fransys_layout.engines.schematic.read.house import DEFAULT_PROFILE
-from fransys_layout.geometry import text_width
-from fransys_model.layout import (
-    ConnectorBox,
-    HarnessLine,
-    LinkMarker,
-    Outline,
-    Page,
-    StubEnd,
-    layout_of,
-)
-from fransys_model.vocab.tables import ports
+if TYPE_CHECKING:
+    from fransys_layout.drawing import Drawing, DrawnSymbol, DrawnWire
 
 
 class _Io(NamedTuple):
@@ -73,84 +65,85 @@ def _built() -> fr.BuildResult:
     return fr.build(d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, "demo-cab", cover=cover))
 
 
-def _line_stubs() -> list[LinkMarker]:
-    return [m for m in layout_of(_built().model, LinkMarker).values() if "line_stub" in m.key]
+def _pages() -> list[Drawing]:
+    return list(drawn_pages(_built().model).values())
+
+
+def _stub_markers() -> list[DrawnSymbol]:
+    """The reference markers that stand for the cable `-W1` (a stub to its far end)."""
+    return [
+        s
+        for d in _pages()
+        for s in d.symbols
+        if s.key == "reference-marker" and any("-W1" in v for _, v in s.slots)
+    ]
+
+
+def _boxes(d: Drawing) -> list[Rect]:
+    """The bodies of the interface connector `-U1-X7` on page `d`, found by its tag texts."""
+    tags = {t.text.split(":")[0] for t in d.texts if t.text.startswith("-C1-U1-X7")}
+    return [body_g(s) for s in d.symbols if s.key.startswith("connector") and tags]
 
 
 def test_the_line_runs_to_the_interface_box_on_its_own_page_and_leaves_no_stub() -> None:
-    assert _line_stubs() == []
+    assert _stub_markers() == []
 
 
 def test_the_line_reaches_the_interface_box() -> None:
-    model = _built().model
-    boxes = [b for b in layout_of(model, ConnectorBox).values() if "U1" in b.key and not b.cells]
-    lines = layout_of(model, HarnessLine).values()
     touched = [
-        (b, line)
-        for b in boxes
-        for line in lines
-        if line.page == b.page
-        and any(b.x <= p.x <= b.x + b.width and b.y <= p.y <= b.y + b.height for p in line.points)
+        (b, w)
+        for d in _pages()
+        for b in _boxes(d)
+        for w in d.wires
+        if w.lanes > 1 and any(b[0] <= x <= b[2] and b[1] <= y <= b[3] for x, y in w.points)
     ]
     assert touched != []
 
 
 def test_no_stub_end_names_a_box_of_its_own_drawing_set_without_a_page() -> None:
-    """The printed page of an arrow box is set whenever its far end's box is in the stub's set."""
-    model = _built().model
-    pages, markers = layout_of(model, Page), layout_of(model, LinkMarker)
-    boxed = {
-        (b.function, pages[b.page].drawing_set) for b in layout_of(model, ConnectorBox).values()
-    }
-    unpaged = [
-        end.key
-        for end in layout_of(model, StubEnd).values()
-        if end.page is None
-        and (ports(model)[end.port].function, pages[markers[end.marker].page].drawing_set) in boxed
-    ]
+    """A stub whose far end's box is in its own drawing set prints its page: here, none stands."""
+    unpaged = [m.slots for m in _stub_markers() if not any("/" in v for _, v in m.slots)]
     assert unpaged == []
 
 
-def _route() -> tuple[ConnectorBox, HarnessLine, ConnectorBox]:
+def _route() -> tuple[Rect, DrawnWire, Rect]:
     """`-U1-X7`'s box, `-W1`'s line on its page and `-J1`'s box beyond (the route's far end)."""
-    model = _built().model
-    boxes = list(layout_of(model, ConnectorBox).values())
-    line = next(iter(layout_of(model, HarnessLine).values()))
-    interface = next(b for b in boxes if "U1" in b.key and b.page == line.page)
-    other = next(b for b in boxes if "J1" in b.key and b.page == line.page)
-    return interface, line, other
+    for d in _pages():
+        line = next((w for w in d.wires if w.lanes > 1), None)
+        if line is not None:
+            boxes = sorted(_boxes(d), key=lambda b: b[1])
+            return boxes[0], line, boxes[-1]
+    msg = "no harness line is drawn"
+    raise AssertionError(msg)
 
 
 def test_the_line_ends_on_the_box_edge_facing_its_route_and_never_wraps_round_the_box() -> None:
     """The far box lies below, so the line ends on the bottom edge and stays below the box."""
     box, line, other = _route()
-    assert other.y > box.y + box.height
-    bottom = box.y + box.height
+    assert other[1] > box[3]
     ends = [line.points[0], line.points[-1]]
-    on_edge = [p for p in ends if p.y == bottom and box.x <= p.x <= box.x + box.width]
+    on_edge = [p for p in ends if p[1] == box[3] and box[0] <= p[0] <= box[2]]
     assert len(on_edge) == 1
-    assert all(p.y >= bottom for p in line.points)
+    assert all(p[1] >= box[3] for p in line.points)
 
 
 def test_the_cable_label_clears_the_interface_box_and_the_board_outline() -> None:
-    model = _built().model
     box, line, _ = _route()
-    outline = next(o for o in layout_of(model, Outline).values() if o.page == box.page)
-    height = DEFAULT_PROFILE.text_height
-    width = text_width("-W1", height=height)
-    label = (line.text_x - width // 2, line.text_y - height // 2, width, height)
-    assert not _meets(label, (box.x, box.y, box.width, box.height))
-    assert not _meets_border(label, (outline.x, outline.y, outline.width, outline.height))
+    assert line.label is not None
+    label = line.label.box
+    label_rect = (label.x, label.y, label.x + label.w, label.y + label.h)
+    (outline,) = (o for d in _pages() for o in d.outlines)
+    xs, ys = [p[0] for p in outline.points], [p[1] for p in outline.points]
+    assert not _meets(label_rect, box)
+    assert not _meets_border(label_rect, (min(xs), min(ys), max(xs), max(ys)))
 
 
-def _meets(a: tuple[int, int, int, int], b: tuple[int, int, int, int]) -> bool:
-    """Whether two rectangles (x, y, width, height) share a point, a touching edge too."""
-    return (
-        a[0] <= b[0] + b[2] and b[0] <= a[0] + a[2] and a[1] <= b[1] + b[3] and b[1] <= a[1] + a[3]
-    )
+def _meets(a: Rect, b: Rect) -> bool:
+    """Whether two rectangles (x0, y0, x1, y1) share a point, a touching edge too."""
+    return a[0] <= b[2] and b[0] <= a[2] and a[1] <= b[3] and b[1] <= a[3]
 
 
-def _meets_border(a: tuple[int, int, int, int], b: tuple[int, int, int, int]) -> bool:
+def _meets_border(a: Rect, b: Rect) -> bool:
     """Whether rectangle `a` meets `b` without lying wholly inside it."""
-    inside = b[0] < a[0] and b[1] < a[1] and a[0] + a[2] < b[0] + b[2] and a[1] + a[3] < b[1] + b[3]
+    inside = b[0] < a[0] and b[1] < a[1] and a[2] < b[2] and a[3] < b[3]
     return _meets(a, b) and not inside

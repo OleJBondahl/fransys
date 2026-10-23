@@ -1,16 +1,14 @@
 """DejaVu Sans Condensed advance widths, in font units; GENERATED, do not edit.
 
-Written by `scripts/write_text_widths.py` from the two TTFs under `fransys_pdf/fonts/` (Bitstream
-Vera licence), so one table serves every text width (model-0190). The capital height and the
-ascent come from the regular face. Each string holds `codepoint-in-hex=advance` pairs.
+Written by `scripts/write_text_widths.py` from the two TTFs under
+`electrical_symbols/fonts/` (Bitstream Vera licence), so one table serves every text
+width (model-0190).
+Each string holds `codepoint-in-hex=advance` pairs.
 sha256 Regular 8550cd5ca1acb65a8fc7877c46939cd0b4d909f8e7bc1e24716873d918c5e549
 sha256 Bold    38098d0b8edd8430a0f53fb2831b5d36037563a998a620d3c87a4d7591766d20
 """
 
 UNITS_PER_EM = 2048
-CAP_HEIGHT_UNITS = 1493
-ASCENT_UNITS = 1556
-DESCENT_UNITS = 426
 
 REGULAR_PAIRS = (
     "20=585 21=738 22=847 23=1544 24=1172 25=1751 26=1437 27=506 28=719 29=719 2a=921 2b=1544 "

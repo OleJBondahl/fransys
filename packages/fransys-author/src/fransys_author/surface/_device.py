@@ -15,7 +15,7 @@ lazy from fransys_author.surface import _contacts
 lazy from fransys_author.surface._joins import fit_leads
 lazy from fransys_author.surface._mount import mount
 lazy from fransys_author.surface._parent import parent_item
-lazy from fransys_model.kernel import Id
+lazy from fransys_model.kernel import Id, natural_join
 lazy from fransys_model.vocab import FunctionKind, identifier
 lazy from fransys_model.vocab import Item as ModelItem
 
@@ -101,7 +101,7 @@ class Device:
             pin_name = attribute_pin(name, pins)
             if any(pin.name == pin_name for _, pin in pins):
                 return self._screw(pick(self._label, pin_name, pins))
-            names = ", ".join(sorted(f.name for f in self._item.functions))
+            names = natural_join(f.name for f in self._item.functions)
             msg = f"{self._label} has no function or pin {name!r}; functions: {names}"
             raise AuthorAttributeError(msg)
 
@@ -213,7 +213,7 @@ def _named(item: Item | Terminal, what: str, *, spec: bool | tuple[str, ...]) ->
     have = {f.name: f for f in functions}
     for name in spec:
         if name not in have:
-            names = ", ".join(sorted(have))
+            names = natural_join(have)
             msg = f"{what}= names {name!r}, which the part lacks; functions: {names}"
             raise AuthorError(msg)
     return [have[name] for name in spec]
@@ -225,12 +225,19 @@ def _mark_boundary(
     *,
     interface: bool | tuple[str, ...],
     unused: bool | tuple[str, ...],
+    accessory: bool = False,
 ) -> None:
-    """Mark the named functions of `item` boundaries; `unused` ones are left open on purpose too."""
+    """Mark `interface` functions boundaries; `unused` ones are left open on purpose too.
+
+    A function only `unused` is a boundary just when the unit's interface holds it (author-0066).
+    """
     quiet = _named(item, "unused", spec=unused)
-    for fn in dict.fromkeys([*_named(item, "interface", spec=interface), *quiet]):
+    named = _named(item, "interface", spec=interface)
+    for fn in named:
         design._engine.boundary(fn)
     for fn in quiet:
+        if fn not in named:
+            design._engine.boundary_if_returned(fn, accessory=accessory)
         design._engine.unused(fn)
 
 
@@ -358,7 +365,13 @@ class Devices:
         )
         if mpn is None:
             item = with_box(self._engine, item, pins or ())
-        _mark_boundary(self, item, interface=interface, unused=unused)
+        _mark_boundary(
+            self,
+            item,
+            interface=interface,
+            unused=unused,
+            accessory=tag is None and holder is not None,
+        )
         _contacts.fit(self, item, contacts)
         cls = part if isinstance(part, type) else Device
         made = cls(name or tag or "", item, self._engine, tag)

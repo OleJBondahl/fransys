@@ -9,7 +9,7 @@ from fransys_author.design import Design as EngineDesign
 from fransys_author.errors import AuthorError
 lazy from fransys_author.design import Scope
 lazy from fransys_author.handles import Group, Location
-lazy from fransys_model.kernel import Draft, Id
+lazy from fransys_model.kernel import Draft, Id, natural_join
 lazy from fransys_model.vocab import Function
 
 from ._coverage import Coverage
@@ -54,7 +54,7 @@ class Design(Devices, Details, Strips, Series, Pairs, Coverage, Units):
         self._claimed: set[tuple[str | None, str]] = set()
         self._wiring = table(wiring, IEC)
         self._given: dict[PortId, Given] = {}  # the row a series gave each port (S4)
-        self._screws: dict[Id[Function], int] = {}  # screws taken so far on each PE bar
+        self._screws: dict[Id[Function], set[int]] = {}  # screw numbers taken on each PE bar
         self._wired_commons: set[PortId] = set()  # changeover commons a series wired (S7)
         self._carried: dict[PortId, tuple[str, str]] = {}  # a load's PE pin -> (label, series)
         self._taken_channels: set[Id[Function]] = set()  # PLC channels a series took (C6.5)
@@ -79,7 +79,7 @@ class Design(Devices, Details, Strips, Series, Pairs, Coverage, Units):
         """The place `within`, or a raise listing the places made so far."""
         bare(within, "location")
         if within not in self._locations:
-            have = ", ".join(sorted(self._locations)) or "none"
+            have = natural_join(self._locations) or "none"
             msg = f"no place {within!r} to put {name!r} within; places: {have}"
             raise AuthorError(msg)
         return self._locations[within][0]

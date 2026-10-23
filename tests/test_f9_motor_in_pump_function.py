@@ -22,8 +22,8 @@ import fransys_parts
 from _model_build_cover import layout_trigger_document
 
 from fransys_model.derive import designation_list, page_title, unit_release
-from fransys_model.derive.designation import own_nodes
 from fransys_model.derive.stub_text import off_stub_text
+from fransys_model.derive.unit_nodes import own_nodes
 from fransys_model.kernel import Severity
 from fransys_model.layout import DrawingSet, LinkMarker, Page, StarKind, layout_of
 from fransys_model.vocab.tables import aspect_nodes, units

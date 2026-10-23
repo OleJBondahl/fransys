@@ -10,6 +10,8 @@ from .pack import Attached, PlacedColumn, attachments, placed_columns
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
+    from .room import Room
+    from .sym_values import Sym
     from .values import (
         Block,
         Column,
@@ -19,7 +21,6 @@ if TYPE_CHECKING:
         PagePlan,
         PlacementProblem,
         Ref,
-        Sym,
     )
 
 
@@ -39,6 +40,12 @@ class PageEnv:
     columns: Mapping[str, Column]
     refs: tuple[Ref, ...] = ()
     reserves: Mapping[tuple[str, str], int] = field(default_factory=dict)
+    flag_room: Mapping[str, Room] = field(
+        default_factory=dict
+    )  # symbol -> G its staggered flags reach above and below it
+    rooms: Mapping[str, Room] = field(
+        default_factory=dict
+    )  # symbol -> G its row holds beyond its footprint; `row_extent.extent` reads it (R409)
 
 
 def _env(

@@ -14,11 +14,11 @@ from fransys_layout.core.topology_chains import (
     orient_chain,
 )
 
-from .flow_builders import elem, free, net
+from .flow_builders import Power, elem, free, net
 from .topology_fixtures import Read, box, read
 
 if TYPE_CHECKING:
-    from fransys_layout.core.values import Power, Sym
+    from fransys_layout.core.sym_values import Sym
 
 NO_DEALT: set[str] = set()
 
@@ -112,15 +112,16 @@ def test_head_follows_the_pin_side_when_nothing_else_decides_and_a_tie_keeps_the
 def test_a_cell_is_r180_when_an_s_pin_points_at_the_head_and_a_hub_never_flips() -> None:
     r = read([_stood("a"), _stood("b"), free("h")], [])
     path = (Node("a#0", "n", "s"), Node("b#0", "s", "n"), Node("h#0", "s", "n"))
-    cells = cells_of(path, r.elems, r.syms)
+    cells = cells_of(path, r.elems, r.syms, "R180")
     assert [c.orient for c in cells] == ["R0", "R180", "R0"]
     assert [(c.top_pin, c.bottom_pin) for c in cells] == [("n", "s"), ("s", "n"), ("s", "n")]
 
 
 def test_a_cell_stays_r0_when_the_symbol_has_no_r180() -> None:
-    fixed = replace(_stood("a"), orientations=frozenset({"R0"}))
+    base = _stood("a")
+    fixed = replace(base, views=frozendict({"R0": base.views["R0"]}))
     r = read([fixed], [])
-    (cell,) = cells_of((Node("a#0", "s", "n"),), r.elems, r.syms)
+    (cell,) = cells_of((Node("a#0", "s", "n"),), r.elems, r.syms, "R180")
     assert cell.orient == "R0"
 
 

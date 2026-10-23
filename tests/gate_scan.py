@@ -5,11 +5,29 @@ walks `packages/*/src`. A gate keeps its own rule; this file holds only the walk
 """
 
 import ast
+import importlib.util
+import sys
+import tomllib
 from pathlib import Path
 from typing import NamedTuple
 
 ROOT = Path(__file__).resolve().parent.parent
 PACKAGES_ROOT = ROOT / "packages"
+
+
+def load_script(module_name: str, filename: str):
+    """Load `scripts/<filename>` as the module `module_name`; the scripts are not a package."""
+    spec = importlib.util.spec_from_file_location(module_name, ROOT / "scripts" / filename)
+    if spec is None or spec.loader is None:
+        msg = f"could not load scripts/{filename}"
+        raise ImportError(msg)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[module_name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+ci_gates = load_script("fransys_ci_gates", "ci_gates.py")
 
 
 class Import(NamedTuple):
@@ -25,9 +43,7 @@ class Import(NamedTuple):
 def src_modules() -> list[tuple[str, Path]]:
     """Every `packages/*/src` .py file with its dotted module name, sorted; an empty walk fails."""
     found = []
-    for path in sorted(PACKAGES_ROOT.glob("*/src/**/*.py")):
-        if "__pycache__" in path.parts:
-            continue
+    for path in ci_gates.source_files(ROOT):
         src = next(p for p in path.parents if p.name == "src")
         parts = path.relative_to(src).with_suffix("").parts
         found.append((".".join(parts[:-1] if parts[-1] == "__init__" else parts), path))
@@ -113,3 +129,65 @@ def src_imports() -> list[Import]:
 def in_package(source: str, package: str) -> bool:
     """True when the dotted `source` is `package` or lies below it."""
     return source == package or source.startswith(f"{package}.")
+
+
+RATCHETS = ROOT / "tests" / "ratchets.toml"
+
+
+def stock(check: str, key: str = "stock") -> int:
+    """The stock of a ratchet: `[check] key` in `tests/ratchets.toml`; it only falls."""
+    with RATCHETS.open("rb") as handle:
+        return tomllib.load(handle)[check][key]
+
+
+def check_stock(check: str, found: int, stock_: int) -> None:
+    """Fail above the stock, and below it with the order to lower `tests/ratchets.toml`."""
+    assert found <= stock_, f"{check}: {found} above its stock {stock_}"
+    assert found >= stock_, f"{check}: {found} below its stock {stock_}: lower tests/ratchets.toml"
+
+
+def _qualnames(tree: ast.AST, prefix: str = "") -> set[str]:
+    """Every function and class name in `tree`, dotted by nesting (`Class.method`)."""
+    found: set[str] = set()
+    for node in ast.iter_child_nodes(tree):
+        if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef):
+            found.add(prefix + node.name)
+            found |= _qualnames(node, f"{prefix}{node.name}.")
+        else:
+            found |= _qualnames(node, prefix)
+    return found
+
+
+def stale_ceiling_keys(
+    ceilings: dict, root: Path = ROOT, *, skip_missing: bool = False
+) -> list[str]:
+    """One message per `ceilings.toml` key (`path::name`, or a bare file path) naming nothing.
+
+    `skip_missing` passes a key whose file is absent: the export lacks the private docs (R462).
+    """
+    cache: dict[str, set[str] | None] = {}
+    problems = []
+    for section, keys in ceilings.items():
+        for key in keys if section != "limits" else ():
+            path, _, name = key.partition("::")
+            if not path.endswith((".py", ".md")):
+                continue
+            if path not in cache:
+                file = root / path
+                cache[path] = (
+                    _qualnames(ast.parse(file.read_text()))
+                    if file.suffix == ".py" and file.exists()
+                    else None
+                )
+            if not (root / path).exists():
+                if not skip_missing:
+                    problems.append(
+                        f"ceilings.toml [{section}] key {key}: {path} does not exist; "
+                        "delete the key (the file was moved or removed)"
+                    )
+            elif name and name not in (cache[path] or set()):
+                problems.append(
+                    f"ceilings.toml [{section}] key {key}: {path} has no {name}; "
+                    "delete the key (the function was renamed or removed)"
+                )
+    return problems

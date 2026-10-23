@@ -1,8 +1,7 @@
 import fransys_render
 import pytest
-from fransys_el import REF_TINTS
-from fransys_pdf import source
-from fransys_render import pages
+from _build import source
+from fransys import BuildResult, pipeline
 
 from fransys_model.derive import document_page_kinds, document_sheets_of
 from fransys_model.kernel import Id
@@ -20,7 +19,7 @@ def test_document_source_is_typst(demo_cabinet):
     typst_source = source(
         demo_cabinet,
         _DOC,
-        pages(demo_cabinet, tints=REF_TINTS),
+        pipeline._result_svgs(BuildResult(model=demo_cabinet, findings=())),
         fransys_render.sheets(document_sheets_of(demo_cabinet)),
     )
     assert isinstance(typst_source, str)

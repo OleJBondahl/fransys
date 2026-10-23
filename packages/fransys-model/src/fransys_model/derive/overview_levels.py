@@ -18,12 +18,8 @@ lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.core import Function, Item, Unit
 
 from .block_diagram import BoxKey, box_dashed, box_lines, box_of, box_order, diagram_lines
-from .designation import (
-    connector_designation,
-    function_designation,
-    printed_designation,
-    terminal_of,
-)
+from .designation import connector_designation, function_designation, printed_designation
+from .designation_label import terminal_of
 from .drawing_text import stub_far_end
 from .facts.strips import strip_of
 from .kinds import item_kind

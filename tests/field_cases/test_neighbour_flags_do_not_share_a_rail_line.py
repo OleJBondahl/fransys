@@ -15,10 +15,8 @@ The crowded-marker order fixes it (designer 2026-10-14, Q4 (c)).
 from typing import NamedTuple
 
 import fransys as fr
-import pytest
+from _drawn_pages import drawn_pages
 from fransys.colours import BK
-
-from fransys_model.layout import LinkMarker, Route, layout_of
 
 
 class _Io(NamedTuple):
@@ -45,15 +43,13 @@ def _motor(d):
     return _Io()
 
 
-@pytest.mark.xfail(
-    strict=True, reason="a crowded marker row: its own order (designer 2026-10-14, Q4 (c))"
-)
 def test_no_two_markers_stubs_share_a_line(tmp_path) -> None:
     d = fr.design("demo_parts")
     d.add(_motor, "U1")
     cover = tmp_path / "cover.md"
     cover.write_text("# Motor\n", encoding="utf-8")
     result = fr.build(d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, "motor", cover=cover))
-    assert layout_of(result.model, LinkMarker)
-    assert layout_of(result.model, Route)
+    drawings = drawn_pages(result.model).values()
+    assert any(drawing.markers for drawing in drawings)
+    assert any(drawing.wires for drawing in drawings)
     assert [f for f in fr.check(result) if f.code == "DRAWING_SHORTS_NETS"] == []

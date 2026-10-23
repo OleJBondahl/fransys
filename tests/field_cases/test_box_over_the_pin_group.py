@@ -14,13 +14,17 @@ import tempfile
 from pathlib import Path
 
 import fransys as fr
+from _drawn_pages import drawn_pages
 from fransys.colours import BU
-from fransys_el import OPTIONS
 
-from fransys_layout.engines.schematic.engine import stage_results
-from fransys_layout.engines.schematic.read import read_inputs
 from fransys_model.layout import PowerSymbol, layout_of
 from fransys_model.vocab.tables import functions, items, ports
+
+
+def _gap(model, fact: str):
+    """A fact the page Drawing lacks (strict xfail, GAP-FLIP-DRAWING-SUBJECT)."""
+    msg = f"GAP-FLIP-DRAWING-SUBJECT: no {fact} for {model.digest}"
+    raise AssertionError(msg)
 
 
 def _plant(d, order: tuple[str, str]) -> None:
@@ -37,64 +41,76 @@ def _plant(d, order: tuple[str, str]) -> None:
         d.detail.wire(psus[tag].output["-"], group[f"{n}-"], wire=(BU, 0.5))
 
 
-def _built(order: tuple[str, str]) -> tuple:
-    """The model and layout of the two supplies and the module, authored in `order`."""
+def _built(order: tuple[str, str]):
+    """The model of the two supplies and the module, authored in `order`."""
     d = fr.design("demo_parts", place="CAB")
     cab = d.location("CAB", "Cabinet")
     _plant(d, order)
     cover = Path(tempfile.mkdtemp()) / "cover.md"
     cover.write_text("# Cabinet\n", encoding="utf-8")
     doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover)
-    model = fr.build(d, doc).model
-    return model, stage_results(model, read_inputs(model, options=OPTIONS))[0].layout
+    return fr.build(d, doc).model
 
 
-def _box(model, layout, tag: str):
-    (item,) = (one.id for one in items(model).values() if one.key[-1] == f"G/{tag}")
-    (box,) = (one for one in layout.placed if one.function == item)
-    return box
+def _box(model, tag: str):
+    """The generic box drawn for the item tagged `tag`; its owner text starts with the tag."""
+    found = [
+        one
+        for one in _gap(model, "symbol subject")
+        if one.key == "generic-box" and one.owner and one.owner.split()[0] == tag
+    ]
+    assert len(found) == 1, f"{tag} is drawn as {len(found)} boxes"
+    return found[0]
 
 
 def _pin_x(box, name: str) -> int:
-    (pin,) = (g for g in box.geometry.ports if g.name == name)
-    return box.at.x + pin.at.x
+    return box.x + dict(box.offsets)[name]
+
+
+def _overlap(a, b) -> bool:
+    """Two boxes of one page whose pin spans meet in x and stand at one y (the body is symdef's)."""
+
+    def span(box):
+        offsets = dict(box.offsets).values()
+        return box.x + min(offsets), box.x + max(offsets)
+
+    (ax0, ax1), (bx0, bx1) = span(a), span(b)
+    return a.page == b.page and a.y == b.y and ax0 <= bx1 and bx0 <= ax1
 
 
 def _check(order: tuple[str, str]) -> None:
-    model, layout = _built(order)
-    module = _box(model, layout, "U1")
+    model = _built(order)
+    module = _box(model, "U1")
     pairs = (("T1", "in_1", "1"), ("T2", "in_2", "2"))
+    outs_x = set()
     for tag, group, number in pairs:
-        psu = _box(model, layout, tag)
+        psu = _box(model, tag)
         for out, pin in (("+", "+"), ("-", "-")):
+            outs_x.add(_pin_x(psu, f"output.{out}"))
             assert _pin_x(psu, f"output.{out}") == _pin_x(module, f"{group}.{number}{pin}")
-    item_of = {pid: functions(model)[p.function].item for pid, p in ports(model).items()}
-    feeders = {_box(model, layout, t).function for t in ("T1", "T2")}
-    wires = [r for r in layout.routes if {item_of[r.a], item_of[r.b]} & feeders]
+    wires = [
+        w
+        for page, drawing in drawn_pages(model).items()
+        if page == module.page
+        for w in drawing.wires
+        if any(p[0] in outs_x for p in (w.points[0], w.points[-1]))
+    ]
     assert len(wires) == 4
-    assert all(len({p.at.x for p in r.points}) == 1 for r in wires), "a wire bends"
-    boxes = [_box(model, layout, tag) for tag in ("T1", "T2", "U1")]
+    assert all(len({p[0] for p in w.points}) == 1 for w in wires), "a wire bends"
+    boxes = [_box(model, tag) for tag in ("T1", "T2", "U1")]
     for i, a in enumerate(boxes):
         for b in boxes[i + 1 :]:
             assert not _overlap(a, b), "two boxes overlap"
+    (module_item,) = (one.id for one in items(model).values() if one.tag == "U1")
     outs = {
         pid
         for pid, p in ports(model).items()
-        if item_of[pid] == module.function and functions(model)[p.function].key[-1] == "out"
+        if functions(model)[p.function].item == module_item
+        and functions(model)[p.function].key[-1] == "out"
     }
     drawn = {s.port for s in layout_of(model, PowerSymbol).values()}
     assert len(outs) == 2
     assert outs <= drawn, "the module's output pins draw power symbols"
-
-
-def _overlap(a, b) -> bool:
-    def span(box):
-        k = box.geometry.keepout
-        return box.at.x + k.x, box.at.x + k.x + k.width, box.at.y + k.y, box.at.y + k.y + k.height
-
-    ax0, ax1, ay0, ay1 = span(a)
-    bx0, bx1, by0, by1 = span(b)
-    return a.page == b.page and ax0 < bx1 and bx0 < ax1 and ay0 < by1 and by0 < ay1
 
 
 def test_each_supply_stands_over_its_own_pin_group_of_the_redundancy_module() -> None:

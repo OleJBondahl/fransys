@@ -6,6 +6,7 @@ from fransys_layout.engines.overview.defaults import ENGINE_NAME, ENGINE_VERSION
 from fransys_layout.engines.overview.place import place_view, view_findings, view_scene
 from fransys_layout.engines.overview.read import read_views
 from fransys_layout.engines.overview.write import view_records, write_overview
+from fransys_layout.fix_text import fix_text
 from fransys_layout.lint.codes import OVERVIEW_UNPLACED
 from fransys_model.kernel import Finding, Id, Model, Severity
 
@@ -16,6 +17,7 @@ def _unplaced(first: Id[Any]) -> Finding:
         severity=Severity.ERROR,
         subjects=(first,),
         message="An overview view cannot be placed, so the page has no positions for it.",
+        fix=fix_text(OVERVIEW_UNPLACED),
     )
 
 

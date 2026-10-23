@@ -15,10 +15,8 @@ from functools import cache
 from pathlib import Path
 
 import fransys as fr
+from _drawn_pages import drawn_pages
 from fransys.colours import BU
-
-from fransys_model.layout import SymbolPlacement, layout_of
-from fransys_model.vocab.tables import functions, items
 
 
 def _build(design: fr.Design) -> fr.BuildResult:
@@ -30,12 +28,12 @@ def _build(design: fr.Design) -> fr.BuildResult:
 
 def _left_to_right(built: fr.BuildResult, *tags: str) -> list[str]:
     """The tags among `tags` in the order their first symbols stand across the page."""
-    model = built.model
     at = {}
-    for one in layout_of(model, SymbolPlacement).values():
-        tag = items(model)[functions(model)[one.function].item].tag
-        if tag in tags:
-            at[tag] = one.x
+    for drawing in drawn_pages(built.model).values():
+        for text in drawing.texts:
+            tag = text.text.removeprefix("-")
+            if tag in tags:
+                at.setdefault(tag, text.box.x)
     return sorted(at, key=at.__getitem__)
 
 

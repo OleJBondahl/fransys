@@ -32,7 +32,8 @@ lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.aspects import AspectNode
 lazy from fransys_model.vocab.core import Function, Item
 
-from .designation import footprint_facet, item_designation, takes_parents_designation
+from .designation import item_designation
+from .designation_label import footprint_facet, takes_parents_designation
 from .facts.closure import port_groups
 from .indexes import build_indexes
 from .lookups import descendants, effective_placement, item_of_port, net_name, require

@@ -21,6 +21,7 @@ from ._cable_pen import Pen
 from ._constants import DIAGRAM_TEXT_PAD_G
 from ._diagram_boxes import box_parts, ref_id
 from ._diagram_lines import line_parts, marker_parts
+from ._sheet_svg import sheet_svg
 from ._style import style_block
 
 if TYPE_CHECKING:
@@ -66,12 +67,11 @@ def _render_sheet(model: Model, sheet: DiagramSheet, found: _Found) -> str:
     """One sheet's SVG at full sheet size; the diagram sits at the content box offset."""
     page = sheet_for(model, PageKind.BLOCK_DIAGRAM)
     pen = Pen(page.module_mm, profile_of(model).text_height_mm, DIAGRAM_TEXT_PAD_G)
-    offset = f"{page.content_x_mm} {page.content_y_mm}"
-    return (
-        f'<svg xmlns="http://www.w3.org/2000/svg" width="{page.width_mm}mm" '
-        f'height="{page.height_mm}mm" viewBox="0 0 {page.width_mm} {page.height_mm}">'
-        f'{style_block()}<g transform="translate({offset})">'
-        f"{_sheet_body(model, pen, sheet, found)}</g></svg>"
+    return sheet_svg(
+        (page.width_mm, page.height_mm),
+        (page.content_x_mm, page.content_y_mm),
+        _sheet_body(model, pen, sheet, found),
+        style_block(),
     )
 
 

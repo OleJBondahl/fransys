@@ -16,13 +16,14 @@ from typing import TYPE_CHECKING, Any, NamedTuple
 
 import fransys as fr
 import pytest
+from _drawn_pages import drawn_pages
 from fransys.colours import GNYE
 
 from fransys_model.derive import ItemKind, item_kind
 from fransys_model.derive.facts.bars import bar_items, is_bar_port
-from fransys_model.layout import EndBox, EndStyle, PowerSymbol, SymbolPlacement, layout_of
+from fransys_model.layout import EndBox, EndStyle, PowerSymbol, layout_of
 from fransys_model.vocab import OpenCoreFacet
-from fransys_model.vocab.tables import conductors, facets_of, functions, items, ports
+from fransys_model.vocab.tables import conductors, facets_of, items, ports
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -114,11 +115,12 @@ def test_the_four_ends_take_four_screws(cab: fr.BuildResult) -> None:
 def test_the_bar_is_not_drawn_and_each_pe_pin_draws_the_symbol(cab: fr.BuildResult) -> None:
     """A2c: no placement for the bar's function; each motor's PE pin has one earth symbol."""
     model = cab.model
-    (bar,) = bar_items(model)
-    bar_functions = {f.id for f in functions(model).values() if f.item == bar}
-    placements = layout_of(model, SymbolPlacement).values()
-    assert placements
-    assert not [p for p in placements if p.function in bar_functions]
+    drawings = drawn_pages(model).values()
+    assert any(d.symbols for d in drawings)
+    # a drawn symbol names no subject: the bar is drawn when a tag or a marking prints its name
+    printed = [t.text for d in drawings for t in d.texts]
+    printed += [text for d in drawings for s in d.symbols for _, text in s.slots]
+    assert BAR not in printed
     drawn = [
         s.port for s in layout_of(model, PowerSymbol).values() if s.symbol == "protective-earth"
     ]

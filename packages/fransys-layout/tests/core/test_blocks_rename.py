@@ -9,17 +9,8 @@ from typing import TYPE_CHECKING, NamedTuple
 import pytest
 
 from fransys_layout.core import natural_key
-from fransys_layout.core.values import (
-    Attach,
-    Block,
-    Column,
-    End,
-    Fan,
-    Hints,
-    Lane,
-    PinRef,
-    Sym,
-)
+from fransys_layout.core.values import Attach, Block, Column, End, Fan, Hints, Lane, PinRef
+lazy from fransys_layout.core.sym_values import Sym
 
 from .blocks_fixtures import box_case, build, fan, loose
 

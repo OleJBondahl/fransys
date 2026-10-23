@@ -1,7 +1,7 @@
 """Overview and home gates E14 to E16 (spec SURFACE-COHERENCE R1): ids, page script, two homes.
 
 E14: no rendered id in the overview page. E15: no random, clock or network in the page script.
-E16: the library version string and the wago signal table each have one home (README-es-3, -wago-2).
+E16: the wago signal table has one home (README-wago-2); the version string's home is HOMES.
 """
 
 import ast
@@ -23,8 +23,6 @@ from fransys_model.kernel import render_id
 
 OVERVIEW_SRC = PACKAGES_ROOT / "fransys-overview" / "src" / "fransys_overview"
 FORBIDDEN_JS = ("Math.random", "Date", "fetch(", "XMLHttpRequest", "innerHTML")
-LIBRARY_VERSION_HOME = "electrical_symbols"
-LIBRARY_VERSION_TEXT = "electrical-symbols "
 SIGNAL_HOME = "fransys_wago.signals"
 
 
@@ -41,29 +39,6 @@ def forbidden_in(source: str) -> list[str]:
         if isinstance(n, ast.Constant) and isinstance(n.value, str)
     ]
     return sorted({word for word in FORBIDDEN_JS for text in texts if word in text})
-
-
-def library_version_sites(sources: dict[str, str]) -> list[str]:
-    """E16 (i): `module:line` of each string constant typing the version string outside its home."""
-    found = []
-    for module, source in sources.items():
-        if module == LIBRARY_VERSION_HOME:
-            continue
-        tree = ast.parse(source)
-        skip = {
-            id(n.value)
-            for n in ast.walk(tree)
-            if isinstance(n, ast.Expr) and isinstance(n.value, ast.Constant)
-        }
-        found += [
-            f"{module}:{n.lineno}"
-            for n in ast.walk(tree)
-            if isinstance(n, ast.Constant)
-            and isinstance(n.value, str)
-            and id(n) not in skip
-            and LIBRARY_VERSION_TEXT in n.value
-        ]
-    return found
 
 
 def signal_format_sites(sources: dict[str, str]) -> list[str]:
@@ -124,23 +99,13 @@ def test_the_script_gate_can_fail():
     assert forbidden_in('JS = "const x = 1;"') == []
 
 
-def test_the_library_version_string_has_one_home():
-    sources = _sources()
-    assert LIBRARY_VERSION_TEXT in sources[LIBRARY_VERSION_HOME], "the home lost the string"
-    assert library_version_sites(sources) == []
-
-
 def test_the_signal_table_has_one_home():
     sources = _sources()
     assert "SignalFormat(" in sources[SIGNAL_HOME], "the home lost the table"
     assert signal_format_sites(sources) == []
 
 
-def test_the_home_gates_can_fail():
-    assert library_version_sites({"fransys_render.x": 'v = f"electrical-symbols {1}"'}) == [
-        "fransys_render.x:1"
-    ]
-    assert library_version_sites({"fransys_render.x": '"""electrical-symbols key"""'}) == []
+def test_the_home_gate_can_fail():
     assert signal_format_sites({"fransys_wago.x": "SignalFormat(abbr='DI')"}) == [
         "fransys_wago.x:1"
     ]

@@ -192,7 +192,8 @@ def test_n_is_the_smallest_build_that_reaches_every_kind():
     assert _built_kinds(N - 1) < kinds_at_n
     assert _built_kinds(N + 1) == kinds_at_n
     assert kinds_at_n >= REQUIRED_KINDS
-    assert len(kinds_at_n) == 52  # layout.cable_*; diagram_*; facet.harness; layout.connector_box;
+    assert len(kinds_at_n) == 55  # layout.paper and layout.sheet_format (the facade's paper);
+    # layout.drawing_library; layout.cable_*; diagram_*; facet.harness; layout.connector_box;
     # the cabinet's -WH1 draws layout.harness_line and layout.harness_fan_out
 
 

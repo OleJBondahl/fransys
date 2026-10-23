@@ -21,7 +21,7 @@ from fransys_model.derive import (
     number,
     terminal_rows,
 )
-from fransys_model.derive.designation import own_designation_or_none
+from fransys_model.derive.designation_label import own_designation_or_none
 from fransys_model.kernel import Id, Model, Severity, dumps, evolve, freeze, merge
 from fransys_model.vocab.enums import ConductorKind
 from fransys_model.vocab.facets.cable import CoreFacet
@@ -78,7 +78,8 @@ def test_no_validator_reports_a_warning_or_an_error(name: str) -> None:
 
     `K1`'s open contact `14` is one (cabinet and merged). The other is the harness shell's `PE`
     port (H1), which rides a core to a pin on no declared PE net: `PE_PORT_OFF_PE` (G2) fires on
-    that port alone, on the board and on the merged design.
+    that port alone, on the board and on the merged design. The fan-out cable's `SH` core lands
+    there too and is no conductor core, so `CORE_ON_PE_NOT_GNYE` (EARTH-12) stays silent.
     """
     model = _design(name)
     findings = [f for check in ALL_VALIDATORS for f in check(model)]

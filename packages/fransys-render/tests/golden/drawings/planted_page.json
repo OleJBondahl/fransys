@@ -1,0 +1,97 @@
+{
+ "area": {
+  "h": 400,
+  "w": 800
+ },
+ "library_version": "planted",
+ "markers": [],
+ "outlines": [],
+ "symbols": [
+  {
+   "id": "s1",
+   "key": "break-contact",
+   "leads": [],
+   "muted": false,
+   "n": 1,
+   "net": "",
+   "offsets": [],
+   "orient": "R0",
+   "outline": null,
+   "poles": 1,
+   "ports": [],
+   "sides": [],
+   "slots": [
+    [
+     "tag",
+     "-K1"
+    ]
+   ],
+   "stretch": [],
+   "texts": [],
+   "tint": null,
+   "x": 80,
+   "y": 16
+  },
+  {
+   "id": "s2",
+   "key": "card",
+   "leads": [
+    "c1",
+    "c2"
+   ],
+   "muted": true,
+   "n": 1,
+   "net": "",
+   "offsets": [
+    [
+     "c1",
+     48
+    ],
+    [
+     "c2",
+     112
+    ]
+   ],
+   "orient": "MR90",
+   "outline": null,
+   "poles": 1,
+   "ports": [],
+   "sides": [],
+   "slots": [],
+   "stretch": [
+    [
+     "x",
+     320
+    ]
+   ],
+   "texts": [],
+   "tint": null,
+   "x": 160,
+   "y": 16
+  }
+ ],
+ "texts": [],
+ "wires": [
+  {
+   "id": "w1",
+   "label": null,
+   "lanes": 1,
+   "net": "",
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     80,
+     0
+    ],
+    [
+     80,
+     48
+    ]
+   ],
+   "style": "wire"
+  }
+ ]
+}

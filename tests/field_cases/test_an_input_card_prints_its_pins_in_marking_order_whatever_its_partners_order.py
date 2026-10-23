@@ -15,15 +15,14 @@ hung under it follow those pins.
 
 import tempfile
 from functools import cache
+from itertools import combinations, pairwise
 from pathlib import Path
 
 import fransys as fr
+from _drawn_pages import drawn_pages
 from fransys.colours import BU
-from fransys_el import OPTIONS
-from route_meter import page_crossings
 
-from fransys_layout.engines.schematic.engine import stage_results
-from fransys_layout.engines.schematic.read import read_inputs
+from fransys_model.kernel import render_id
 from fransys_model.vocab.tables import functions, items
 
 WIRE = (BU, 0.5)
@@ -31,7 +30,14 @@ INTERLEAVED = {"A": (1, 4), "B": (2, 5), "C": (3, 6)}
 
 
 @cache
-def _built(shape: str) -> tuple:
+def _gap(model, fact: str):
+    """A fact the page Drawing lacks (strict xfail, GAP-FLIP-DRAWING-SUBJECT)."""
+    msg = f"GAP-FLIP-DRAWING-SUBJECT: no {fact} for {model.digest}"
+    raise AssertionError(msg)
+
+
+@cache
+def _built(shape: str):
     d = fr.design("demo_parts", place="CAB")
     cab = d.location("CAB", "Cabinet")
     with d.function("G0", "PLC inputs"):
@@ -53,31 +59,55 @@ def _built(shape: str) -> tuple:
                 d.detail.wire(contact.no["14"], getattr(module, f"di_{n}")[str(n)], wire=WIRE)
     cover = Path(tempfile.mkdtemp()) / "cover.md"
     cover.write_text("# Cabinet\n", encoding="utf-8")
-    model = fr.build(d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover)).model
-    results, _ = stage_results(model, read_inputs(model, options=OPTIONS))
-    return model, results.layout
+    return fr.build(d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover)).model
 
 
-def _box_pins(model, layout) -> tuple:
-    """The card's placement and each channel's (pin x, pin y in the box)."""
-    (card,) = (i.id for i in items(model).values() if i.tag == "K1")
-    (box,) = (p for p in layout.placed if p.function == card)
+def _box_pins(model) -> tuple:
+    """The card's symbol and each channel's (pin x, side of the box: `n` or `s`)."""
+    (card,) = (i.tag for i in items(model).values() if i.tag == "K1")
+    (box,) = (
+        one
+        for one in _gap(model, "symbol subject").values()
+        if one.key == "generic-box" and one.owner and one.owner.split()[0] == card
+    )
     pins = {
-        int(g.name.split("_")[1].split(".")[0]): (box.at.x + g.at.x, g.at.y)
-        for g in box.geometry.ports
+        int(name.split("_")[1].split(".")[0]): (box.x + at, dict(box.sides)[name])
+        for name, at in dict(box.offsets).items()
     }
     return box, pins
 
 
-def _contacts(model, layout, name: str) -> dict:
-    """Each wired contact's placement, keyed by the channel its tag carries."""
-    tag_of = {i.id: i.tag or "" for i in items(model).values()}
-    named = {f.id: (tag_of[f.item], f.name) for f in functions(model).values()}
+def _contacts(model, name: str) -> dict:
+    """Each wired contact's symbol, keyed by the channel its tag carries."""
+    named = {render_id(f.id): f.name for f in functions(model).values()}
     return {
-        int(named[p.function][0][1:]): p
-        for p in layout.placed
-        if named.get(p.function, ("", ""))[1] == name
+        int(one.owner.split()[0][1:]): one
+        for one in _gap(model, "symbol subject").values()
+        if one.owner and named.get(one.owner.split()[-1]) == name
     }
+
+
+def _page_crossings(model) -> int:
+    """Wire-over-wire crossings, page by page: a horizontal and a vertical run crossing."""
+    by_page = {
+        page: [list(pairwise(wire.points)) for wire in drawing.wires]
+        for page, drawing in drawn_pages(model).items()
+    }
+    return sum(
+        _cross(s, t) or _cross(t, s)
+        for wires in by_page.values()
+        for one, two in combinations(wires, 2)
+        for s in one
+        for t in two
+    )
+
+
+def _cross(a: tuple, b: tuple) -> bool:
+    (ax0, ay0), (ax1, ay1) = a
+    (bx0, by0), (bx1, by1) = b
+    if ay0 != ay1 or bx0 != bx1:
+        return False
+    return min(ax0, ax1) < bx0 < max(ax0, ax1) and min(by0, by1) < ay0 < max(by0, by1)
 
 
 def _each_side_in_order(pins: dict) -> None:
@@ -88,32 +118,31 @@ def _each_side_in_order(pins: dict) -> None:
 
 
 def test_interleaved_groups_hang_six_straight_drops_under_pins_in_order() -> None:
-    model, layout = _built("interleaved")
-    box, pins = _box_pins(model, layout)
+    model = _built("interleaved")
+    box, pins = _box_pins(model)
     _each_side_in_order(pins)
     assert [pins[n][0] for n in range(1, 7)] == sorted(pins[n][0] for n in range(1, 7))
-    contacts = _contacts(model, layout, "aux")
+    contacts = _contacts(model, "aux")
     assert sorted(contacts) == list(range(1, 7))
     for n, contact in contacts.items():
-        (end,) = (g for g in contact.geometry.ports if g.name == "in")
-        assert (contact.drawing_set, contact.page) == (box.drawing_set, box.page), n
-        assert contact.at.x + end.at.x == pins[n][0], n
+        assert contact.page == box.page, n
+        assert contact.x == pins[n][0], n  # a contact's origin stands on its port axis: a drop
 
 
 def test_a_fan_of_contacts_lands_on_pins_in_marking_order() -> None:
-    model, layout = _built("fan")
-    _, pins = _box_pins(model, layout)
+    model = _built("fan")
+    _, pins = _box_pins(model)
     _each_side_in_order(pins)
     wired = [n for n in sorted(pins) if n <= 6]
     assert {pins[n][1] for n in wired} == {pins[1][1]}
     assert sorted(wired, key=lambda n: pins[n][0]) == [1, 2, 3, 4, 5, 6]
-    assert sorted(_contacts(model, layout, "no")) == [1, 2, 3, 4, 5, 6]
+    assert sorted(_contacts(model, "no")) == [1, 2, 3, 4, 5, 6]
 
 
 def test_the_fan_columns_stand_in_pin_order_and_cross_no_more_than_before_the_pins_moved() -> None:
     """Acceptance R11-COLUMNS: S1 sorted after S6 (its column took the card's group); 17 crossed."""
-    model, layout = _built("fan")
-    contacts = _contacts(model, layout, "no")
-    assert sorted(contacts, key=lambda n: contacts[n].at.x) == [1, 2, 3, 4, 5, 6]
-    assert len(layout.routes) == 12, "every wire is drawn"
-    assert page_crossings(layout) <= 4
+    model = _built("fan")
+    contacts = _contacts(model, "no")
+    assert sorted(contacts, key=lambda n: contacts[n].x) == [1, 2, 3, 4, 5, 6]
+    assert sum(len(d.wires) for d in drawn_pages(model).values()) == 12, "every wire is drawn"
+    assert _page_crossings(model) <= 4

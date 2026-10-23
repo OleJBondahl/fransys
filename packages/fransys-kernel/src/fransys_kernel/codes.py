@@ -15,7 +15,8 @@ class CodeInfo:
     Each package lists its codes as `CodeInfo` values in its codes module. The guide's
     findings rows are generated from them, and `fr.report` reads them. `who` is one of
     `WHO_ACTS`; `severities` holds more than one only when sites differ ("WARNING or ERROR").
-    `fix` is a `str.format` template; its placeholders take the finding's specifics.
+    `fix` is a `str.format` template, `<valid values>. Write: <corrected call>`; its placeholders
+    take the finding's specifics through `filled`.
     `page` is the guide page without `.md`; `see` is the anchor a message ends with.
     """
 
@@ -33,6 +34,17 @@ class CodeInfo:
         if problem is not None:
             msg = f"CodeInfo {self.code!r}: {problem}"
             raise SchemaError(msg, kind=type(self).__qualname__)
+
+    def filled(self, **values: str) -> str:
+        """The `fix` template with this finding's `values`; a missing value raises, naming the code.
+
+        Raises `SchemaError` when the template names a value that `values` does not give.
+        """
+        try:
+            return self.fix.format(**values)
+        except (KeyError, IndexError) as exc:
+            msg = f"CodeInfo {self.code!r}: the fix template needs the value {exc}"
+            raise SchemaError(msg, kind=type(self).__qualname__) from exc
 
     @property
     def see(self) -> str:

@@ -1,15 +1,20 @@
-"""Names gate: the old project name appears only in the allowed places.
+"""Names gates: the old name stays out of the tree; the library's project-word count only falls.
 
-Any tracked file outside the skip list that holds the word, in any case, fails. The allowances are
-the moving page that names the old spellings, the two seed strings that keep model ids and KiCad
-tstamps stable, the consumer-guide quote (an owner's words), and the two gitleaks history
-fingerprints, which name a file by its path in that commit.
+Any tracked file outside the skip list that holds the word, in any case, fails. The public
+electrical-symbols library's count of the project word is a ratchet (`[public_lib_names]`). The
+allowances are the moving page that names the old spellings, the two seed strings that keep model
+ids and KiCad tstamps stable, the consumer-guide quote (an owner's words), and the two gitleaks
+history fingerprints, which name a file by its path in that commit.
 """
 
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
+import pytest
+from gate_scan import ROOT, check_stock, stock
+
 OLD = "schematika"
+PUBLIC_LIB = "packages/electrical-symbols"
+PROJECT_WORD = "fransys"
 SKIP_PREFIXES = (
     "docs/decisions/",
     "docs/archive/",
@@ -88,3 +93,44 @@ def test_no_old_name_outside_the_allowed_places():
 def test_the_gate_fails_on_a_planted_import():
     planted = {"packages/fransys/src/fransys/x.py": "import schematika as sk\n"}
     assert hits(planted) == ["packages/fransys/src/fransys/x.py:1: import schematika as sk"]
+
+
+def count_in(text: str) -> int:
+    """Case-insensitive occurrences of the project word; a line with two counts two."""
+    return text.lower().count(PROJECT_WORD)
+
+
+def public_lib_files(root: Path = ROOT) -> list[Path]:
+    """The library's docs, README, library.toml and source files; generated files skipped."""
+    base = root / PUBLIC_LIB
+    found = [
+        base / "README.md",
+        base / "library.toml",
+        *base.glob("build/README.md"),
+        *base.glob("docs/**/*.md"),
+        *base.glob("src/**/*.py"),
+    ]
+    return sorted(path for path in found if path.is_file() and path.name != "_version.py")
+
+
+def public_lib_name_count(files: list[Path]) -> int:
+    """The project word's count over the given files."""
+    return sum(count_in(path.read_text(encoding="utf-8")) for path in files)
+
+
+@pytest.mark.private_input  # a private-gate count (R462)
+def test_public_lib_names_stock():
+    found = public_lib_name_count(public_lib_files())
+    check_stock("public_lib_names", found, stock("public_lib_names"))
+
+
+def test_synthetic_count_in_counts_each_case_and_each_occurrence():
+    assert count_in("Fransys and fransys\nFRANSYS") == 3
+    assert count_in("nothing here") == 0
+
+
+def test_synthetic_walk_counts_a_planted_readme(tmp_path):
+    readme = tmp_path / PUBLIC_LIB / "README.md"
+    readme.parent.mkdir(parents=True)
+    readme.write_text("Fransys\n", encoding="utf-8")
+    assert public_lib_name_count(public_lib_files(tmp_path)) == 1

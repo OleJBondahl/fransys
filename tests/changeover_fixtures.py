@@ -15,8 +15,9 @@ import dataclasses
 
 import fransys_parts
 from fransys_author import Design
+from root_library import freeze
 
-from fransys_model.kernel import Model, Origin, evolve, freeze, merge
+from fransys_model.kernel import Model, Origin, evolve, merge
 from fransys_model.vocab.enums import PortRole
 from fransys_model.vocab.tables import function_templates, parts, port_templates
 

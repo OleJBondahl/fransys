@@ -4,15 +4,13 @@ from dataclasses import dataclass
 from decimal import Decimal
 from xml.sax.saxutils import escape
 
-from fransys_model.derive import text_room_g
-from fransys_model.derive.grid_mm import grid_to_mm
 from fransys_model.derive.print_sizes import (
-    ASCENT_RATIO,
     DASH_GAP_MM,
     DASH_LONG_MM,
     LINE_THIN_MM,
 )
 
+from ._library import ASCENT_RATIO, grid_to_mm, text_room_g
 from ._numbers import format_decimal, printed_font_mm
 
 type Grid = int | Decimal

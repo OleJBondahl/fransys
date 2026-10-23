@@ -9,22 +9,24 @@ are never walked. Not a package module (loaded by file path, never imported): li
 from __future__ import annotations
 
 import ast
-from typing import TYPE_CHECKING, override
+import importlib.util
+import sys
+from pathlib import Path
+from typing import override
 
-if TYPE_CHECKING:
-    from pathlib import Path
+_ci_gates_spec = importlib.util.spec_from_file_location(
+    "fransys_ci_gates", Path(__file__).resolve().parent / "ci_gates.py"
+)
+if _ci_gates_spec is None or _ci_gates_spec.loader is None:
+    msg = "could not load scripts/ci_gates.py"
+    raise ImportError(msg)
+ci_gates = importlib.util.module_from_spec(_ci_gates_spec)
+sys.modules[_ci_gates_spec.name] = ci_gates
+_ci_gates_spec.loader.exec_module(ci_gates)
 
 _DEF_TYPES = (ast.FunctionDef, ast.AsyncFunctionDef)
 
 DEFAULT_MODULE_CODE_LINES_LIMIT = 300
-
-
-def package_src_files(root: Path) -> list[Path]:
-    """Every `.py` file under every `packages/*/src`, sorted, `__pycache__` excluded."""
-    files: list[Path] = []
-    for src_dir in sorted(root.glob("packages/*/src")):
-        files.extend(sorted(p for p in src_dir.rglob("*.py") if "__pycache__" not in p.parts))
-    return files
 
 
 class _ScopeWalker(ast.NodeVisitor):
@@ -74,7 +76,7 @@ def measure_nested_defs(root: Path) -> dict[str, int]:
     root-relative posix paths.
     """
     measured: dict[str, int] = {}
-    for path in package_src_files(root):
+    for path in ci_gates.source_files(root):
         walker = _ScopeWalker()
         walker.visit(ast.parse(path.read_text(encoding="utf-8")))
         rel = path.relative_to(root).as_posix()
@@ -150,7 +152,7 @@ def measure_module_code_lines(
     own 300; the real ceiling comes from `ceilings.toml`'s `[limits].module_code_lines`.
     """
     measured: dict[str, int] = {}
-    for path in package_src_files(root):
+    for path in ci_gates.source_files(root):
         source = path.read_text(encoding="utf-8")
         code_lines = count_code_lines(source)
         if code_lines > limit and not is_pure_reexport(source):

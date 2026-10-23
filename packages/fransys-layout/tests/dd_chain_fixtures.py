@@ -1,24 +1,27 @@
 """Small invented designs and readers for the tests.
 
 Designs are built through the author facade on `examples/demo-parts` (invented parts only), then
-laid out by `fr.build`. The readers look at the laid-out records only: `SymbolPlacement`,
-`Route` and `LinkMarker`, found by the function key the author gave (`("XA", "terminal", "1",
-"fn", "terminal")`, `("Q1", "fn", "element")`) and the port's marking.
+laid out by `fr.build`. The readers look at the page `Drawing`s of the core path
+(`drawn_pages`). A drawn symbol carries no subject, so `placed` finds one by its library
+key and the nearest TAG text of the designation the page prints (`-K1`, `-XA:1`); a wire is
+found by the points it ends on.
 """
 
 from itertools import pairwise
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, NamedTuple
 
 import fransys as fr
 import fransys_author
 import fransys_parts
+from _drawn_pages import drawn_pages
 from _model_build_cover import cabinet_document, layout_trigger_document
 
-from fransys_model.layout import LinkMarker, Route, SymbolPlacement, layout_of
-from fransys_model.vocab.tables import functions, ports
+from electrical_symbols import LIBRARY
+from fransys_layout.symbols import library_symbol, symbol_shape
 
 if TYPE_CHECKING:
-    from fransys_model.kernel import Model
+    from fransys_layout.drawing import Drawing, DrawnSymbol, DrawnWire
+    from fransys_model.kernel import Id, Model
 
 PROJECT: dict[str, Any] = {
     "title": "Chains",
@@ -117,36 +120,73 @@ def terminal_key(strip: str, index: int) -> tuple[str, ...]:
     return (strip, "terminal", str(index), "fn", "terminal")
 
 
-def placed(model: Model, *key: str) -> SymbolPlacement:
-    """The one placement of the function keyed `key`."""
-    found = [
-        p
-        for p in layout_of(model, SymbolPlacement).values()
-        if functions(model)[p.function].key == key
-    ]
-    assert len(found) == 1, f"{key}: {len(found)} placements"
+def terminal_tag(strip: str, index: int) -> str:
+    """The designation text a terminal prints."""
+    return f"-{strip}:{index}"
+
+
+class Placed(NamedTuple):
+    """A drawn symbol with the page it stands on and that page's Drawing."""
+
+    page: Id
+    drawing: Drawing
+    symbol: DrawnSymbol
+
+    @property
+    def x(self) -> int:
+        """The symbol's x in G."""
+        return self.symbol.x
+
+    @property
+    def y(self) -> int:
+        """The symbol's y in G."""
+        return self.symbol.y
+
+
+def placed(
+    model: Model, tag: str, symbol: str, poles: int = 1, marking: str | None = None
+) -> Placed:
+    """The one drawn `symbol` (library key) of `poles` poles whose nearest TAG text reads `tag`.
+
+    `marking`, if given, must be among its slot strings.
+
+    Each text is taken by the nearest symbol of that key on its page; one symbol is the answer.
+    """
+    found = []
+    for page, drawing in drawn_pages(model).items():
+        keyed = [
+            s
+            for s in drawing.symbols
+            if s.key == symbol
+            and s.poles == poles
+            and (marking is None or marking in dict(s.slots).values())
+        ]
+        for text in (t for t in drawing.texts if t.kind == "TAG" and t.text == tag):
+            if keyed:
+                nearest = min(keyed, key=lambda s: abs(s.x - text.box.x) + abs(s.y - text.box.y))
+                found.append(Placed(page, drawing, nearest))
+    assert len(set(found)) == 1, f"{tag} {symbol}: {len(set(found))} symbols"
     return found[0]
 
 
-def route_between(
-    model: Model, a: tuple[tuple[str, ...], str], b: tuple[tuple[str, ...], str]
-) -> Route:
-    """The one route whose two ends are the ports `(function key, marking)` `a` and `b`."""
-
-    def end(route_port: Any) -> tuple[tuple[str, ...], str]:
-        record = ports(model)[route_port]
-        return functions(model)[record.function].key, record.name
-
-    found = [r for r in layout_of(model, Route).values() if {end(r.a), end(r.b)} == {a, b}]
-    assert len(found) == 1, f"{a} - {b}: {len(found)} routes"
-    return found[0]
+def body_x(p: Placed) -> tuple[int, int]:
+    """The (left, right) of the symbol's body on its page, from the library's shape."""
+    shape = symbol_shape(library_symbol(LIBRARY, p.symbol.key, p.symbol.poles), LIBRARY)
+    assert p.symbol.orient in ("R0", "R180"), p.symbol.orient
+    body = shape.body
+    if p.symbol.orient == "R0":
+        return p.x + body.x, p.x + body.x + body.w
+    return p.x - body.x - body.w, p.x - body.x
 
 
-def markers_on(model: Model, key: tuple[str, ...], marking: str) -> list[LinkMarker]:
-    """Every link marker standing on the port `marking` of the function keyed `key`."""
-    return [
-        m
-        for m in layout_of(model, LinkMarker).values()
-        if ports(model)[m.port].name == marking
-        and functions(model)[ports(model)[m.port].function].key == key
-    ]
+def wires_ending_at(drawing: Drawing, point: tuple[int, int]) -> list[DrawnWire]:
+    """Every wire of the page with an end on `point`."""
+    return [w for w in drawing.wires if point in (w.points[0], w.points[-1])]
+
+
+def pin_at(p: Placed, pin: str) -> tuple[int, int]:
+    """Where the symbol's pin `pin` (a library pin id such as `1.in`) stands on the page (R0)."""
+    shape = symbol_shape(library_symbol(LIBRARY, p.symbol.key, p.symbol.poles), LIBRARY)
+    assert p.symbol.orient == "R0", p.symbol.orient
+    turn = shape.pins[pin]
+    return p.x + turn.dx, p.y + turn.dy

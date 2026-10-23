@@ -188,7 +188,9 @@ def test_demo_library_record_counts_and_keys():
     assert len(function_templates(model)) == 253
     assert len(port_templates(model)) == 531
     assert len(internal_links(model)) == 97
-    assert len(model.tables["layout.symbol_choice"]) == 64
+    assert (
+        len(model.tables["layout.symbol_choice"]) == 65
+    )  # Ruling 91: DEMO-LAMP-24 adds one, was 64
 
     relay = next(p for p in parts(model).values() if p.mpn == "DEMO-RLY-2CO-24")
     assert relay.key == ("part", "Demo", "DEMO-RLY-2CO-24")

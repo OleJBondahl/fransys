@@ -31,10 +31,10 @@ if str(_TESTS_DIR) not in sys.path:
     sys.path.insert(0, str(_TESTS_DIR))
 
 from fransys import pipeline  # noqa: E402
+from root_library import freeze  # noqa: E402 -- after the sys.path insert
 from scale_units_fixture import build_scale  # noqa: E402
 
 from fransys_kernel import schema  # noqa: E402
-from fransys_model.kernel import freeze  # noqa: E402
 
 if TYPE_CHECKING:
     from types import CodeType

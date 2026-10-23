@@ -13,8 +13,8 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
             "`common` with `break` or `make`."
         ),
         fix=(
-            "Make each `switched` link of the `contact_co` function join a `common` port to a "
-            "`break` or `make` port."
+            "Each `switched` link of a `contact_co` joins its `common` port to a `break` or "
+            '`make` port. Write: links = [{{ a = "11", b = "12", kind = "switched" }}]'
         ),
         page="findings-parts",
     ),
@@ -26,7 +26,9 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         cause=(
             "A port of a `contact_co` function has a `role` other than `common`, `break` or `make`."
         ),
-        fix="Set that port's `role` to `common`, `break` or `make`.",
+        fix=(
+            'A `contact_co` port takes the role `common`, `break` or `make`. Write: role = "common"'
+        ),
         page="findings-parts",
     ),
     CodeInfo(
@@ -36,8 +38,8 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         who="part author",
         cause="A port of a `contact_co` function sets `symbol_port`.",
         fix=(
-            "Remove `symbol_port` from the `contact_co` port; the drawing binds a changeover "
-            "by its throw roles."
+            "A `contact_co` port takes no `symbol_port`, since its throw roles bind the drawing. "
+            'Write: {{ name = "12", role = "break" }}'
         ),
         page="findings-parts",
     ),
@@ -51,8 +53,8 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
             "link in its `links`."
         ),
         fix=(
-            'Add a `links` entry with `kind = "switched"` joining its ports, or change the '
-            "function's `kind`."
+            "A contact or switch function has a `switched` link joining two of its ports, or a "
+            'different `kind`. Write: links = [{{ a = "1", b = "2", kind = "switched" }}]'
         ),
         page="findings-parts",
     ),
@@ -66,8 +68,8 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
             "does not fit its protection `type`."
         ),
         fix=(
-            'Use `kind = "protective"` for fuse, mcb, motor_breaker and rcd, and `kind = '
-            '"conductive"` for overload; never `switched`.'
+            "A fuse, mcb, motor_breaker or rcd link is `protective`, an overload link is "
+            '`conductive`, never `switched`. Write: kind = "protective"'
         ),
         page="findings-parts",
     ),
@@ -81,8 +83,8 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
             "with a `type`."
         ),
         fix=(
-            "Remove the `[function.protection]` table, or change the function's `kind` to "
-            "`protection`."
+            "Only a `protection` function has a `[function.protection]` table with a `type`. "
+            'Write: kind = "protection"'
         ),
         page="findings-parts",
     ),
@@ -93,8 +95,8 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         who="part author",
         cause="A `protection` function has no `type` in its `[function.protection]` table.",
         fix=(
-            "Add `type` to `[function.protection]`, one of fuse, mcb, motor_breaker, overload "
-            "or rcd."
+            "`[function.protection]` needs a `type`: fuse, mcb, motor_breaker, overload or rcd. "
+            'Write: type = "mcb"'
         ),
         page="findings-parts",
     ),
@@ -108,8 +110,8 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
             "open at rest, `contact_nc` is closed."
         ),
         fix=(
-            "Set `rest` to match `kind`, `open` for `contact_no` and `closed` for "
-            "`contact_nc`, or change `kind`."
+            "`rest` is `open` for `contact_no` and `closed` for `contact_nc`, or change `kind`. "
+            'Write: rest = "open"'
         ),
         page="findings-parts",
     ),
@@ -119,7 +121,7 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         stage="library load",
         who="part author",
         cause="A link whose `kind` is not `switched` sets `rest`.",
-        fix="Remove `rest` from the link, or change its `kind` to `switched`.",
+        fix='Only a `switched` link takes `rest`. Write: kind = "switched"',
         page="findings-parts",
     ),
     CodeInfo(
@@ -128,7 +130,10 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         stage="library load",
         who="part author",
         cause="A `switched` link of a `switch` or `generic` function sets no `rest`.",
-        fix='Add `rest = "open"` or `rest = "closed"` to the link.',
+        fix=(
+            "A `switched` link of a `switch` or `generic` function states its `rest`. "
+            'Write: rest = "open"'
+        ),
         page="findings-parts",
     ),
     CodeInfo(
@@ -142,8 +147,8 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
             "`kind`, are all at the other one."
         ),
         fix=(
-            "Change the `symbol`, or the `rest` of the switched links, so both name the same "
-            "rest state."
+            "The symbol and the switched links agree on one rest state: make-contact is open, "
+            'break-contact and emergency-stop are closed. Write: rest = "open"'
         ),
         page="findings-parts",
     ),
@@ -157,8 +162,8 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
             "protection `type` is another one."
         ),
         fix=(
-            "Make `type` match the symbol: `fuse` for `fuse`, `mcb` for `circuit-breaker`, or "
-            "change the `symbol`."
+            'A `fuse` symbol needs `type = "fuse"`, a `circuit-breaker` symbol needs '
+            '`type = "mcb"`. Write: type = "fuse"'
         ),
         page="findings-parts",
     ),

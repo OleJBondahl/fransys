@@ -5,20 +5,17 @@
 
 from typing import TYPE_CHECKING
 
-from fransys_model.derive.contacts import changeover_throws, link_state, owned_contacts
+from fransys_model.derive.contacts import changeover_throws, link_state
 from fransys_model.derive.indexes import build_indexes
 from fransys_model.derive.pole_lists import poles_of
-from fransys_model.derive.unused import function_is_unused
-from fransys_model.vocab import marking_key, poles_by_role
 from fransys_model.vocab.enums import FunctionKind
+from fransys_model.vocab.markings import poles_by_role
 from fransys_model.vocab.tables import functions, internal_links, port_templates, ports
 lazy from fransys_model.derive.facts.roles import function_role, link_role
-lazy from fransys_model.kernel import Id, Model
-lazy from fransys_model.vocab.core import Function, Item, Port
+lazy from fransys_model.kernel import Id, Model, NaturalKey, natural_key
+lazy from fransys_model.vocab.core import Function, Port
 
 if TYPE_CHECKING:
-    from collections.abc import Collection
-
     from fransys_model.vocab.templates import PortTemplate
 
 # What a contact image prints where a contact is drawn nowhere
@@ -28,10 +25,10 @@ NO_PLACE = "N/A"
 PAIR = 2
 
 # A contact image entry `(main, key, mark)` (`image_order`)
-type Entry = tuple[bool, int | str, str]
+type Entry = tuple[bool, str, str]
 
 # An entry's `image_order` key
-type EntryOrder = tuple[bool, tuple[tuple[int, int, str], ...], str]
+type EntryOrder = tuple[bool, NaturalKey, str]
 
 # `contact_list_key`'s value: three poles or more first, then the first entry's order
 type ListKey = tuple[bool, EntryOrder | tuple[()]]
@@ -50,13 +47,12 @@ def contact_entries(model: Model, function: Function) -> tuple[list[Entry], list
         # make port (NO) and with each break port (NC), the names as the part prints them
         for throws in changeover_throws(model, function.id):
             common = printed_name(model, throws.common)
-            key = int(common) if common.isdigit() else common
             for column, ends in ((no, throws.makes), (nc, throws.breaks)):
-                column.extend((True, key, f"{common}-{printed_name(model, e)}") for e in ends)
+                column.extend((True, common, f"{common}-{printed_name(model, e)}") for e in ends)
         return no, nc
     pairs = _poles(model, function)
     target = nc if function.kind is FunctionKind.CONTACT_NC else no
-    target.extend((_is_main(a, b), _key(a), a if a == b else f"{a}-{b}") for a, b in pairs)
+    target.extend((_is_main(a, b), a, a if a == b else f"{a}-{b}") for a, b in pairs)
     return no, nc
 
 
@@ -75,7 +71,7 @@ def _switch_entries(model: Model, function: Function) -> tuple[list[Entry], list
         (pole,) = poles_by_role(function_role(model, function.id), [link], templates)
         a, b = (printed_name(model, own[end.id].id) for end in pole.ends)
         closed = link_state(model, function.id, link.id) == "rest"
-        (nc if closed else no).append((_is_main(a, b), _key(a), f"{a}-{b}"))
+        (nc if closed else no).append((_is_main(a, b), a, f"{a}-{b}"))
     return no, nc
 
 
@@ -87,11 +83,6 @@ def _own_templates(model: Model, function: Function) -> dict[Id[PortTemplate] | 
 def _is_main(line: str, load: str) -> bool:
     """A pole is main when both pins are single-digit numbers (IEC 60947-1), else auxiliary."""
     return len(line) == 1 and len(load) == 1 and line != load and line.isdigit() and load.isdigit()
-
-
-def _key(name: str) -> int | str:
-    """A printed terminal number as an int, any other printed name as it is."""
-    return int(name) if name.isdigit() else name
 
 
 def _poles(model: Model, function: Function) -> list[tuple[str, str]]:
@@ -111,23 +102,10 @@ def printed_name(model: Model, port: Id[Port]) -> str:
 
 def image_order(entry: Entry) -> EntryOrder:
     """A contact image entry's order: main first, then numbered terminals, then named commons."""
-    # an entry is `(main, key, text)`; `key` is the terminal number, or the common's name when it
-    # is no number: named commons sort after every numbered one, by name, then by text
+    # an entry is `(main, key, text)`; `key` is the printed terminal name: numbers by value, named
+    # commons after every numbered one, by name, then by text
     main, key, text = entry
-    return (not main, marking_key(str(key)), text)
-
-
-def spare_entries(
-    model: Model, item: Id[Item], shown: Collection[Id[Function]]
-) -> tuple[list[Entry], list[Entry]]:
-    """The entries, `<mark> NO_PLACE`, of the bare contacts `item` owns not in `shown`."""
-    no, nc = list[Entry](), list[Entry]()
-    for function in (functions(model)[f] for f in owned_contacts(model, item) if f not in shown):
-        if function_is_unused(model, function.id):
-            spare_no, spare_nc = contact_entries(model, function)
-            no.extend((main, key, f"{mark} {NO_PLACE}") for main, key, mark in spare_no)
-            nc.extend((main, key, f"{mark} {NO_PLACE}") for main, key, mark in spare_nc)
-    return no, nc
+    return (not main, natural_key(key), text)
 
 
 def contact_list_key(model: Model, function: Id[Function]) -> ListKey:

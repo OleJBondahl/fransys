@@ -52,6 +52,7 @@ def _load(module_name: str, filename: str) -> types.ModuleType:
 
 lean_surface = _load("fransys_lean_surface", "lean_surface.py")
 lean_ceilings = _load("fransys_lean_ceilings", "lean_ceilings.py")
+ci_gates = _load("fransys_ci_gates", "ci_gates.py")
 
 DEFAULT_SURFACE_DOCSTRING_LINES_LIMIT = 15
 DEFAULT_DOCSTRING_LINES_LIMIT = 5
@@ -193,14 +194,6 @@ def measure_surface_docstring_lines(
     return measured
 
 
-def _package_src_files(root: Path) -> list[Path]:
-    """Every `.py` file under every `packages/*/src`, sorted, `__pycache__` excluded."""
-    files: list[Path] = []
-    for src_dir in sorted(root.glob("packages/*/src")):
-        files.extend(sorted(p for p in src_dir.rglob("*.py") if "__pycache__" not in p.parts))
-    return files
-
-
 def _iter_docstring_nodes(
     tree: ast.Module,
 ) -> Iterable[tuple[str, ast.ClassDef | ast.FunctionDef | ast.AsyncFunctionDef, ast.Constant]]:
@@ -232,7 +225,7 @@ def measure_docstring_lines(root: Path, surface: frozenset[str]) -> dict[str, in
     sites, `lean_ceilings.check`'s own contract.
     """
     measured: dict[str, int] = {}
-    for path in _package_src_files(root):
+    for path in ci_gates.source_files(root):
         tree = lean_surface.module_tree(path)
         rel = path.relative_to(root).as_posix()
         for qualname, _node, docstring in _iter_docstring_nodes(tree):
@@ -254,7 +247,7 @@ def banned_section_sites(root: Path, surface: frozenset[str]) -> tuple[str, ...]
     the genuinely new case -- short (`<= DEFAULT_DOCSTRING_LINES_LIMIT` lines) and still banned.
     """
     sites: list[str] = []
-    for path in _package_src_files(root):
+    for path in ci_gates.source_files(root):
         tree = lean_surface.module_tree(path)
         rel = path.relative_to(root).as_posix()
         for qualname, _node, docstring in _iter_docstring_nodes(tree):

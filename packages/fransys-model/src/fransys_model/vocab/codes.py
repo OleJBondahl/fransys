@@ -2,7 +2,7 @@
 
 from fransys_model.kernel import CodeInfo, Severity
 
-from . import codes_structure, codes_wiring
+from . import codes_drawn, codes_structure, codes_wiring, codes_wiring_more
 
 _OWN: tuple[CodeInfo, ...] = (
     CodeInfo(
@@ -15,8 +15,8 @@ _OWN: tuple[CodeInfo, ...] = (
             "to a sibling's text, or a retired or moved released one."
         ),
         fix=(
-            "Give the item a distinct tag, or none. A tag a released revision reserved needs a "
-            "new version."
+            "Give each item or unit instance under one parent its own tag, one no released "
+            'revision reserved. Write: d.device("X2", "DEMO-CONN-2P")'
         ),
         page="findings-validators",
     ),
@@ -74,7 +74,10 @@ _OWN: tuple[CodeInfo, ...] = (
         stage="build",
         who="consumer",
         cause="Two or more ends of one cable print the same text in its drawing.",
-        fix="Place the colliding unit instances at distinct locations, or tag the strips apart.",
+        fix=(
+            "Give each cable end its own text with distinct locations or distinct tags. "
+            'Write: d.device("X2", "DEMO-CONN-2P", place="A2")'
+        ),
         page="findings-validators",
     ),
     CodeInfo(
@@ -83,7 +86,7 @@ _OWN: tuple[CodeInfo, ...] = (
         stage="library load",
         who="consumer",
         cause="Two `PartLibrary` records share a name but declare different versions.",
-        fix="Load only one version of each named part library.",
+        fix='Load one version of each named part library. Write: fr.design("demo-parts")',
         page="findings-validators",
     ),
     CodeInfo(
@@ -97,8 +100,8 @@ _OWN: tuple[CodeInfo, ...] = (
             "none goes to the free queue."
         ),
         fix=(
-            "One channel reads one signal: keep one request, or wire each request to its own "
-            "channel."
+            "Keep one PLC request per channel and wire each other request to a channel of its"
+            ' own. Write: d.series(k1.coil["A1"], a1.di_1)'
         ),
         page="findings-validators",
     ),
@@ -111,7 +114,10 @@ _OWN: tuple[CodeInfo, ...] = (
             "A PLC request is wired so that several free channels of its signal tie: its net "
             "reaches them all, or all by a direct conductor. It gets no binding."
         ),
-        fix="Wire the request to one channel directly, or free the other channels.",
+        fix=(
+            "Wire the request straight to one channel of its signal, or free the other "
+            'channels. Write: d.series(k1.coil["A1"], a1.di_1)'
+        ),
         page="findings-validators",
     ),
     CodeInfo(
@@ -124,8 +130,9 @@ _OWN: tuple[CodeInfo, ...] = (
             "unit declares none, or every one is taken)."
         ),
         fix=(
-            "Add a channel of that signal type to the unit (or a parent unit), or move another "
-            "request off one."
+            "Add a PLC module with a free channel of the requested signal type to the unit or"
+            ' a parent unit, or move another request off one. Write: d.device("A1", "DEMO-'
+            'PLC-DI-16")'
         ),
         page="findings-validators",
     ),
@@ -138,7 +145,10 @@ _OWN: tuple[CodeInfo, ...] = (
             "Two or more ports of one item print the same designation text, so a drawing or "
             "list cannot tell them apart."
         ),
-        fix="Give the part's pin markings distinct names so each port prints a unique text.",
+        fix=(
+            "Give each port of one item its own printed pin marking in the part file. Write: "
+            'marking = "A2"'
+        ),
         page="findings-validators",
     ),
     CodeInfo(
@@ -150,7 +160,10 @@ _OWN: tuple[CodeInfo, ...] = (
             "Two items print the same product designation (location plus own label): both at "
             "one location or, unplaced, both unnumbered alike in one unit instance."
         ),
-        fix="Place one item at a distinct location, or tag it.",
+        fix=(
+            "Give each item a distinct location or label: place one elsewhere, or tag it. "
+            'Write: d.device("X2", "DEMO-CONN-2P", place="A2")'
+        ),
         page="findings-validators",
     ),
     CodeInfo(
@@ -162,7 +175,25 @@ _OWN: tuple[CodeInfo, ...] = (
             "Two items in the function or location aspect print the same full reference "
             "designation (e.g. two unit instances at one location)."
         ),
-        fix="Place one of them at a distinct location so the designations differ.",
+        fix=(
+            "Place the two items at different locations so their designations differ. Write: "
+            'd.device("X2", "DEMO-CONN-2P", place="A2")'
+        ),
+        page="findings-validators",
+    ),
+    CodeInfo(
+        code="PINS_BELOW_NOT_A_BOX",
+        severities=(Severity.WARNING,),
+        stage="build",
+        who="consumer",
+        cause=(
+            "A `d.layout.pins_below` hint names a device with fewer than two ports, which "
+            "is no box to split, so the hint does nothing."
+        ),
+        fix=(
+            "Remove the hint, or hint the box that holds the pins. Write: "
+            "d.layout.pins_below(plc.outputs)"
+        ),
         page="findings-validators",
     ),
     CodeInfo(
@@ -174,13 +205,49 @@ _OWN: tuple[CodeInfo, ...] = (
             "A `d.layout.side` hint names an interface that has no harness line, so the hint "
             "does nothing."
         ),
-        fix="Remove the hint, or connect the interface through a harness line.",
+        fix=(
+            "Remove the side hint, or join the interface to a harness line. Write: "
+            "d.detail.wire(x1[1], h1[1], wire=(fr.colours.BU, 0.75))"
+        ),
+        page="findings-validators",
+    ),
+    CodeInfo(
+        code="DESIGNATION_MOVED",
+        severities=(Severity.ERROR,),
+        stage="release",
+        who="consumer",
+        cause=(
+            "An item or unit instance pinned in the previous release now prints a different "
+            "designation, written or numbered."
+        ),
+        fix=(
+            "No call clears this: restore the released tag on {subject}; only a new version may "
+            "change it."
+        ),
+        page="findings-validators",
+    ),
+    CodeInfo(
+        code="DESIGNATION_NEW_IN_REVISION",
+        severities=(Severity.INFO,),
+        stage="build, release",
+        who="note",
+        cause="A new untagged item or unit instance took the next free number in a later revision.",
+        fix="Nothing is wrong; tag it if its number must stay fixed.",
         page="findings-validators",
     ),
 )
 
 FINDING_CODES: tuple[CodeInfo, ...] = (
     *_OWN,
+    *codes_drawn.FINDING_CODES,
     *codes_structure.FINDING_CODES,
     *codes_wiring.FINDING_CODES,
+    *codes_wiring_more.FINDING_CODES,
 )
+
+_BY_CODE: dict[str, CodeInfo] = {info.code: info for info in FINDING_CODES}
+
+
+def fix_text(code: str, **values: str) -> str:
+    """The `fix` of one finding of `code`: the code's template filled with `values`."""
+    return _BY_CODE[code].filled(**values)

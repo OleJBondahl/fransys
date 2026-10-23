@@ -7,16 +7,12 @@ the nets are cut, and each end of a cut is a power end. Nothing here names a rea
 """
 
 from decimal import Decimal
-from functools import cache
 from itertools import pairwise
 
-from fransys_el import OPTIONS
+from layout_library import freeze
 
-from fransys_layout.engines.schematic.engine import stage_results
-from fransys_layout.engines.schematic.read import read_inputs
-from fransys_layout.engines.schematic.read.house import DEFAULT_PROFILE
-from fransys_model.kernel import Draft, Model, Origin, freeze, make_id
-from fransys_model.layout import Profile, SheetFormat
+from fransys_model.kernel import Draft, Model, Origin, make_id
+from fransys_model.layout import Profile, SheetFormat, default_profile
 from fransys_model.vocab import (
     Conductor,
     ConductorKind,
@@ -31,6 +27,8 @@ from fransys_model.vocab import (
     Rail,
     SupplySystem,
 )
+
+_HOUSE = default_profile()
 
 _ORIGIN = Origin(file="tests/power_fixture.py", line=1, note="D5 power fixture")
 _LOADS = ("la", "lb", "lc")
@@ -128,18 +126,6 @@ def power_records() -> list:
     return records
 
 
-@cache
-def power_run() -> tuple:
-    """`(model, inputs, results, findings)` of the plant on a 60 mm sheet, built once.
-
-    Four pages and eleven power ends; every test module of the power symbols shares it.
-    """
-    model = power_model(60)
-    inputs = read_inputs(model, options=OPTIONS)
-    results, findings = stage_results(model, inputs)
-    return model, inputs, results, findings
-
-
 def power_model(width_mm: int | None = None) -> Model:
     """The plant, frozen; on an authored sheet of `width_mm` of content when given."""
     draft = Draft()
@@ -163,14 +149,14 @@ def power_model(width_mm: int | None = None) -> Model:
             id=make_id(Profile, ("test", "profile")),
             key=("test", "profile"),
             sheet_format=sheet.id,
-            column_gap=DEFAULT_PROFILE.column_gap,
-            row_gap=DEFAULT_PROFILE.row_gap,
-            route_margin=DEFAULT_PROFILE.route_margin,
-            marker_padding=DEFAULT_PROFILE.marker_padding,
-            route_turn_penalty=DEFAULT_PROFILE.route_turn_penalty,
-            route_crossing_penalty=DEFAULT_PROFILE.route_crossing_penalty,
-            band_ranks=DEFAULT_PROFILE.band_ranks,
-            group_ranks=DEFAULT_PROFILE.group_ranks,
+            column_gap=_HOUSE.column_gap,
+            row_gap=_HOUSE.row_gap,
+            route_margin=_HOUSE.route_margin,
+            marker_padding=_HOUSE.marker_padding,
+            route_turn_penalty=_HOUSE.route_turn_penalty,
+            route_crossing_penalty=_HOUSE.route_crossing_penalty,
+            band_ranks=_HOUSE.band_ranks,
+            group_ranks=_HOUSE.group_ranks,
         )
         draft.extend((sheet, profile), origin=_ORIGIN)
     return freeze(draft)

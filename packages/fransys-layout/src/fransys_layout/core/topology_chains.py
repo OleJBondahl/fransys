@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections import Counter, defaultdict
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 lazy from collections.abc import Set as AbstractSet
 
@@ -12,13 +12,15 @@ from .keys import natural_key
 from .topology_elements import Elem, NetEnd
 from .topology_fans import LaneDraft
 from .unionfind import UnionFind
-from .values import Cell, End, Options, Pin, PinRef, Sym
+from .values import Cell, End, Options, Pin, PinRef
+lazy from .sym_values import Sym
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
+    from .values import Orientation
+
 BOXPIN_WEIGHT = 6
-STAND_WEIGHT = 3
 PAIR = 2
 Rank = tuple[bool, bool, tuple[tuple[int, int | str], ...]]
 
@@ -52,6 +54,9 @@ class Facts:
     syms: dict[str, Sym]
     ends_by_net: Ends
     net_of: dict[PinRef, str]
+    end_bias_weight: int
+    flip_turn: Orientation
+    bundle_of: Mapping[str, str] = field(default_factory=dict)
 
 
 def links_of(ends_by_net: Ends) -> dict[str, Link]:
@@ -138,14 +143,14 @@ def _complete(key: str, top: str | None, bottom: str | None, elems: Mapping[str,
 
 
 def _end_score(node: Node, pin_id: str | None, facts: Facts) -> int:
-    """How much this extreme wants to be head: box pins first, stands next, then the pin side."""
+    """How much this extreme wants to be head: box pins first, biased ends, then the side."""
     if pin_id is None:
         return 0
     sym = facts.syms[facts.elems[node.elem].sym]
     pin = _pin_of(sym, pin_id)
     side = {"N": 1, "S": -1}.get(pin.side, 0)
-    if pin.stand is not None:
-        return side + (STAND_WEIGHT if pin.stand == "SUPPLY" else -STAND_WEIGHT)
+    if pin.end_bias:
+        return side - pin.end_bias * facts.end_bias_weight
     return side + _boxpin_bias(PinRef(sym.id, pin_id), facts)
 
 
@@ -163,23 +168,66 @@ def _boxpin_bias(ref: PinRef, facts: Facts) -> int:
     return BOXPIN_WEIGHT if _pin_of(facts.syms[box.sym], box.pin).side == "S" else -BOXPIN_WEIGHT
 
 
-def orient_chain(path: tuple[Node, ...], facts: Facts) -> tuple[Node, ...]:
-    """Put the head first: the extreme that scores higher, the first on a tie."""
-    s_head = _end_score(path[0], path[0].top, facts)
-    s_foot = _end_score(path[-1], path[-1].bottom, facts)
-    if s_foot > s_head:
+def orient_chain(
+    path: tuple[Node, ...], facts: Facts, *, turn: bool | None = None
+) -> tuple[Node, ...]:
+    """Put the head first: the extreme that scores higher, the first on a tie; turn forces it."""
+    if turn is None:
+        turn = _end_score(path[-1], path[-1].bottom, facts) > _end_score(
+            path[0], path[0].top, facts
+        )
+    if turn:
         return tuple(Node(n.elem, n.bottom, n.top) for n in reversed(path))
     return path
 
 
+def orient_chains(
+    paths: Sequence[tuple[Node, ...]], facts: Facts, *, together: bool
+) -> tuple[tuple[Node, ...], ...]:
+    """Orient every chain; the chains of one bundle turn together, by their summed scores (BUNDLE).
+
+    Every pin pair of a device takes the bundle's direction, never one direction per chain.
+    """
+    groups: dict[frozenset[str], list[int]] = defaultdict(list)
+    for i, path in enumerate(paths):
+        if together and (bundles := _bundles_of(path, facts)):
+            groups[bundles].append(i)
+    flip = {i for ids in groups.values() if _group_flips(ids, paths, facts) for i in ids}
+    bundled = {i for ids in groups.values() for i in ids}
+    return tuple(
+        orient_chain(p, facts, turn=i in flip if i in bundled else None)
+        for i, p in enumerate(paths)
+    )
+
+
+def _bundles_of(path: tuple[Node, ...], facts: Facts) -> frozenset[str]:
+    """The bundle ids of the nets a chain's end pins meet."""
+    pins = ((n.elem, pin) for n in path for pin in (n.top, n.bottom) if pin)
+    nets = (facts.net_of.get(PinRef(facts.elems[e].sym, pin)) for e, pin in pins)
+    return frozenset(facts.bundle_of[n] for n in nets if n is not None and n in facts.bundle_of)
+
+
+def _group_flips(ids: Sequence[int], paths: Sequence[tuple[Node, ...]], facts: Facts) -> bool:
+    gain = 0
+    for i in ids:
+        path = paths[i]
+        gain += _end_score(path[-1], path[-1].bottom, facts) - _end_score(
+            path[0], path[0].top, facts
+        )
+    return gain > 0
+
+
 def cells_of(
-    path: tuple[Node, ...], elems: Mapping[str, Elem], syms: Mapping[str, Sym]
+    path: tuple[Node, ...],
+    elems: Mapping[str, Elem],
+    syms: Mapping[str, Sym],
+    flip_turn: Orientation,
 ) -> tuple[Cell, ...]:
-    """Head to foot; R180 when an s pin points at the head or an n pin at the foot, if allowed."""
+    """Head to foot; the flip turn when an s pin points at the head or an n pin at the foot."""
     out: list[Cell] = []
     for node in path:
         e = elems[node.elem]
-        orient = "R180" if _flipped(node, e) and "R180" in syms[e.sym].orientations else "R0"
+        orient = flip_turn if _flipped(node, e) and flip_turn in syms[e.sym].views else "R0"
         out.append(Cell(e.sym, orient, node.top, node.bottom))
     return tuple(out)
 
@@ -218,7 +266,7 @@ class MemberDraft(LaneDraft):
 def fold_parallel(
     ends_by_net: Ends, elems: Mapping[str, Elem], syms: Mapping[str, Sym]
 ) -> tuple[Ends, dict[str, tuple[str, ...]]]:
-    """Two or more poles on the same two nets, either way up, fold into one column, a lane each.
+    """Two or more pin pairs on the same two nets, either way up, fold into one column, a lane each.
 
     The parent keeps the nets and its chain; the members leave them, and a net left with fewer
     than two ends is dropped. Returns the thinned ends and parent key to member keys.
@@ -246,9 +294,9 @@ def _nets_by_role(ends_by_net: Ends) -> dict[str, dict[str, str]]:
 def _parallel_groups(
     ends_by_net: Ends, elems: Mapping[str, Elem], syms: Mapping[str, Sym]
 ) -> dict[str, tuple[str, ...]]:
-    """Group the poles of one-element symbols by their unordered pair of nets.
+    """Group the pin pairs of one-element symbols by their unordered pair of nets.
 
-    Out of scope: a longer series run, poles of one multi-pole symbol, and a group whose net
+    Out of scope: a longer series run, pin pairs of one multi-pair symbol, and a group whose net
     carries a hub (a through end): the fan draws that.
     """
     on = _nets_by_role(ends_by_net)
@@ -292,12 +340,12 @@ def _pin_refs(cell: Cell) -> tuple[PinRef, PinRef]:
     return PinRef(cell.sym, cell.top_pin or ""), PinRef(cell.sym, cell.bottom_pin or "")
 
 
-def _member_offset(
-    column: Sequence[LaneDraft], cell: Cell, syms: Mapping[str, Sym], gap: Options
+def member_offset(
+    column: Sequence[LaneDraft], cells: tuple[Cell, ...], syms: Mapping[str, Sym], gap: Options
 ) -> int:
     """The member's x: right of the column's widest lane edge, plus the gap, on the wiring grid."""
     in_row = frozenset(s.id for s in syms.values() if s.row_group)
-    left, _ = lane_extent(syms, (cell,), in_row)
+    left, _ = lane_extent(syms, cells, in_row)
     edge = max(lane.offset + lane_extent(syms, tuple(lane.cells), in_row)[1] for lane in column)
     return -(-(edge + gap.column_gap_min - left) // gap.wiring_grid) * gap.wiring_grid
 
@@ -319,7 +367,7 @@ def member_lanes(
         for key in folds[parent]:
             column = [lane for lane in (*lanes, *out) if lane.column == home.column]
             cell = _member_cell(facts.elems[key], nets, facts)
-            offset = _member_offset(column, cell, facts.syms, options)
+            offset = member_offset(column, (cell,), facts.syms, options)
             ends = (End("join", nets[0], top), End("join", nets[1], bottom))
             out.append(
                 MemberDraft(
@@ -334,4 +382,4 @@ def _member_cell(e: Elem, nets: tuple[str, str], facts: Facts) -> Cell:
     """The member's cell: its pin on the parent's top net up, its pin on the bottom net down."""
     pins = {facts.net_of[PinRef(e.sym, p)]: p for p in (e.n_pin, e.s_pin) if p}
     node = Node(e.key, pins[nets[0]], pins[nets[1]])
-    return cells_of((node,), facts.elems, facts.syms)[0]
+    return cells_of((node,), facts.elems, facts.syms, facts.flip_turn)[0]

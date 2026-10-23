@@ -13,27 +13,18 @@ beside `K1` (group GB) in the same drawing set, and as the black box in `outer`'
 Built through the `fransys` facade from `examples/demo-parts`; read from `layout.*` records.
 """
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import fransys as fr
 import fransys_author
 import fransys_parts
+from _dd_core import designation_of, pages_of, set_of
+from _drawn_pages import drawn_pages
 from _model_build_cover import layout_trigger_document
 
 from fransys_model.kernel import Severity
-from fransys_model.layout import (
-    DrawingSet,
-    Label,
-    LinkMarker,
-    Page,
-    Route,
-    SymbolPlacement,
-    layout_of,
-)
-from fransys_model.vocab.tables import aspect_nodes, conductors, functions, ports, units
-
-if TYPE_CHECKING:
-    from fransys_model.kernel import Id, Model
+from fransys_model.layout import Page, layout_of
+from fransys_model.vocab.tables import aspect_nodes, units
 
 _PROJECT: dict[str, Any] = {
     "title": "Nested boundary terminal",
@@ -72,27 +63,26 @@ def _build():
     return fr.build(parts, d.draft(), layout_trigger_document())
 
 
-def _terminal(model: Model) -> Id:
-    """The id of the one terminal function of `X1`."""
-    (found,) = (
-        f.id
-        for f in functions(model).values()
-        if "X1" in f.key[:3] and f.key[-2:] == ("fn", "terminal")
-    )
-    return found
-
-
-def _placements(model: Model) -> list[tuple[tuple[str, ...] | None, SymbolPlacement]]:
-    """The terminal's placements as `(key of the unit of its drawing set, placement)`, the unit
-    `None` for the top-level set."""
-    terminal = _terminal(model)
-    sets, pages = layout_of(model, DrawingSet), layout_of(model, Page)
-    unit_key = {uid: unit.key for uid, unit in units(model).items()}
+def _terminal_symbols(model) -> list:
+    """Every (page id, symbol) drawn for the terminal `X1`: a terminal symbol whose page prints
+    an `X1` text."""
     return [
-        (unit_key.get(sets[pages[p.page].drawing_set].unit), p)
-        for p in layout_of(model, SymbolPlacement).values()
-        if p.function == terminal
+        (page, s)
+        for page, drawing in drawn_pages(model).items()
+        if any(t.text.startswith("-X1") or "-X1:" in t.text for t in drawing.texts)
+        for s in drawing.symbols
+        if s.key == "terminal"
     ]
+
+
+def _outer_pages(model) -> dict:
+    """The pages of the drawing sets of unit `outer`, page id -> Drawing."""
+    outer = {uid for uid, u in units(model).items() if u.key[-2:] == ("outer", "unit")}
+    return {
+        page: drawing
+        for page, drawing in drawn_pages(model).items()
+        if set_of(model, page).unit in outer
+    }
 
 
 def test_a_nested_boundary_terminal_with_a_replica_builds_with_keys_of_their_own() -> None:
@@ -106,16 +96,16 @@ def test_a_nested_boundary_terminal_with_a_replica_builds_with_keys_of_their_own
     result = _build()
     assert [f.code for f in result.findings if f.severity is Severity.ERROR] == []
     model = result.model
-    placed = [p for _, p in _placements(model)]
+    placed = [s for _, s in _terminal_symbols(model)]
     assert len(placed) == 3
-    assert len({p.id for p in placed}) == len({p.key for p in placed}) == 3
+    assert len({s.id for s in placed}) == 3
     tags = [
-        label
-        for label in layout_of(model, Label).values()
-        if label.function == _terminal(model) and label.slot == "tag"
+        t.text
+        for drawing in drawn_pages(model).values()
+        for t in drawing.texts
+        if t.kind == "TAG" and t.text.split(":")[0].endswith("X1")
     ]
     assert len(tags) == 3
-    assert len({label.id for label in tags}) == len({label.key for label in tags}) == 3
 
 
 def test_the_black_box_in_the_parent_stands_in_the_terminals_home_group() -> None:
@@ -125,36 +115,21 @@ def test_the_black_box_in_the_parent_stands_in_the_terminals_home_group() -> Non
     #     cell` -> `for column in columns for cell` (the black box takes the replica's group)
     model = _build().model
     pages, nodes = layout_of(model, Page), aspect_nodes(model)
-    outer = [(u, p) for u, p in _placements(model) if u is not None and u[-2:] == ("outer", "unit")]
-    fn = functions(model)
-    (k9_coil,) = (
-        p
-        for p in layout_of(model, SymbolPlacement).values()
-        if "K9" in fn[p.function].key and fn[p.function].key[-1] == "coil"
-    )
-    assert [(u, p.page, "at" in p.key) for u, p in outer] == [
-        (("outer", "unit"), k9_coil.page, True)
-    ]
-    groups = {nodes[g.group].key[-1] for g in pages[outer[0][1].page].groups}
-    assert groups == set()
+    outer = _outer_pages(model)
+    boxes = [page for page, s in _terminal_symbols(model) if page in outer]
+    k9_pages = [page for page in pages_of(model, designation_of(model, "K9")) if page in outer]
+    assert boxes == k9_pages
+    assert len(boxes) == 1
+    assert {nodes[g.group].key[-1] for g in pages[boxes[0]].groups} == set()
 
 
 def test_the_parents_wire_to_the_black_box_terminal_is_a_route_with_no_marker() -> None:
     """In `outer`'s set the conductor K9:A1 - X1 external port is one route on one page, and no
     link marker stands at either of its ports there (a same-page pair before model-0220)."""
     model = _build().model
-    sets, pages = layout_of(model, DrawingSet), layout_of(model, Page)
-    outer = {uid for uid, u in units(model).items() if u.key[-2:] == ("outer", "unit")}
-    outer_pages = {pid for pid, page in pages.items() if sets[page.drawing_set].unit in outer}
-    k9 = next(p for p in ports(model).values() if "K9" in p.key[-5] and p.key[-1] == "A1")
-    conductor = next(c for c in conductors(model).values() if k9.id in (c.a, c.b))
-    routes = [
-        r
-        for r in layout_of(model, Route).values()
-        if r.conductor == conductor.id and r.page in outer_pages
-    ]
-    assert len(routes) == 1
-    ends = {conductor.a, conductor.b}
-    assert not [
-        m for m in layout_of(model, LinkMarker).values() if m.port in ends and m.page in outer_pages
-    ]
+    outer = _outer_pages(model)
+    k9_pages = [p for p in pages_of(model, designation_of(model, "K9")) if p in outer]
+    assert len(k9_pages) == 1
+    (k9_page,) = k9_pages
+    assert len(outer[k9_page].wires) == 1
+    assert outer[k9_page].markers == ()

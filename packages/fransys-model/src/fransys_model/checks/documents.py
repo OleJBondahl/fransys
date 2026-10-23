@@ -1,26 +1,16 @@
 """Validator: a document's `unit_name` resolves to one unit (spec unit-subject-by-name)."""
 
-from typing import TYPE_CHECKING, Any, Final
+from typing import TYPE_CHECKING, Final
 
+from fransys_model.checks._finding import finding, ordered
 from fransys_model.derive.facts.unit_names import unit_name_unresolved, units_named
 from fransys_model.kernel import Finding, Severity
 from fransys_model.vocab.tables import documents
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
-
-    from fransys_model.kernel import Id, Model
+    from fransys_model.kernel import Model
 
 DOCUMENT_UNIT_UNRESOLVED: Final[str] = "DOCUMENT_UNIT_UNRESOLVED"
-
-
-def _finding(subjects: Iterable[Id[Any]], message: str) -> Finding:
-    return Finding(
-        code=DOCUMENT_UNIT_UNRESOLVED,
-        severity=Severity.ERROR,
-        subjects=tuple(subjects),
-        message=message,
-    )
 
 
 def check_documents(model: Model) -> tuple[Finding, ...]:
@@ -37,5 +27,5 @@ def check_documents(model: Model) -> tuple[Finding, ...]:
         if len(matches) == 1:
             continue
         message = unit_name_unresolved(model, document.unit_name)
-        found.append(_finding((document.id,), message))
-    return tuple(sorted(found, key=lambda f: (f.code, f.subjects, f.message)))
+        found.append(finding(DOCUMENT_UNIT_UNRESOLVED, Severity.ERROR, (document.id,), message))
+    return ordered(found)

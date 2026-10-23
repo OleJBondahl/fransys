@@ -79,5 +79,11 @@
       "side": "E"
     }
   },
-  "status": "unverified"
+  "status": "unverified",
+  "stretch": [
+    {
+      "at": 3.5,
+      "axis": "x"
+    }
+  ]
 }

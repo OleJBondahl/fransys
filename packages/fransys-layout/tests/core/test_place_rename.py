@@ -8,11 +8,11 @@ from dataclasses import replace
 from typing import TYPE_CHECKING
 
 import pytest
+from options_fixtures import core_options
 
-from fransys_layout.core import Options
 from fransys_layout.core.place import place_pages
 
-from .conftest import MARKER_BOX
+from .conftest import MARKER
 from .cut_respell import (
     back_of,
     canon_placement,
@@ -30,7 +30,14 @@ if TYPE_CHECKING:
 
     from fransys_layout.core import Placement, PlacementProblem
 
-OPTIONS = Options(marker=MARKER_BOX)
+OPTIONS = core_options(
+    marker=MARKER,
+    flip_turn="R180",
+    tag_stagger=True,
+    label_gap=8,
+    driver_first=True,
+    arrow_sides=("E", "W"),
+)
 
 
 def _wide_trunk(pl: Placement) -> bool:

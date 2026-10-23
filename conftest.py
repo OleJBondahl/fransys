@@ -26,6 +26,7 @@ _TESTS = str(_ROOT / "tests")  # the tests import their sibling test modules by 
 if _TESTS not in sys.path:
     sys.path.insert(0, _TESTS)
 
+from _export_signature import SKIP_REASON, is_export  # noqa: E402
 from _model_build_cover import cabinet_document  # noqa: E402
 from demo_designs import cabinet_design, harness_with_board_design  # noqa: E402
 
@@ -38,8 +39,8 @@ if TYPE_CHECKING:
 DEMO_PARTS = _ROOT / "examples" / "demo-parts"
 
 
-def _built(parts: Draft, design: Design) -> Model:
-    """`fr.build(parts, design.draft(), <a SYSTEM document>)`'s laid-out model.
+def _built(parts: Draft, design: Design) -> BuildResult:
+    """`fr.build(parts, design.draft(), <a SYSTEM document>)`: its result, the model laid out.
 
     Merges, freezes, numbers, allocates PLC and lays out. Structural problems (an unfrozen
     model, a `LayoutError`) raise; every pass's
@@ -52,21 +53,33 @@ def _built(parts: Draft, design: Design) -> Model:
     true again, unchanged from before PS1.
     """
     document = cabinet_document(fransys_author.Design(parts).location("C1", "Demo cabinet"))
-    return fr.build(parts, design.draft(), document).model
+    return fr.build(parts, design.draft(), document)
 
 
 @pytest.fixture
-def demo_cabinet() -> Model:
+def demo_cabinet_result() -> BuildResult:
     """A small cabinet: supply, one relay circuit, a terminal strip, one field cable."""
     parts = fransys_parts.load("demo_parts")
     return _built(parts, cabinet_design(parts))
 
 
 @pytest.fixture
-def demo_harness_with_board() -> Model:
+def demo_cabinet(demo_cabinet_result: BuildResult) -> Model:
+    """`demo_cabinet_result`'s model."""
+    return demo_cabinet_result.model
+
+
+@pytest.fixture
+def demo_harness_with_board_result() -> BuildResult:
     """A harness mated to a board that carries a relay and two connectors."""
     parts = fransys_parts.load("demo_parts")
     return _built(parts, harness_with_board_design(parts))
+
+
+@pytest.fixture
+def demo_harness_with_board(demo_harness_with_board_result: BuildResult) -> Model:
+    """`demo_harness_with_board_result`'s model."""
+    return demo_harness_with_board_result.model
 
 
 @pytest.fixture
@@ -95,6 +108,10 @@ def demo_cabinet_document(tmp_path: Path) -> BuildResult:
     return fr.build(parts, design.draft(), document_draft)
 
 
+pytest_plugins = (
+    "_gap_flip_hook",
+)  # the strict xfails of the tests still red on the core (FLIP-NOW F4)
+
 HEAVY_MODULES = ("test_scale_call_counts.py", "test_render_scale_counts.py")
 
 
@@ -103,6 +120,7 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
 
     Each module holds a worker for a `build_scale(16)`. xdist gives worker k the k-th slice of
     `len(items) // workers` tests and runs it in order. Order only; the rest keep theirs.
+    In the export (no `internal/` root) a `private_input` test is skipped (R462).
     """
     workers = getattr(config, "workerinput", {}).get("workercount", 1)
     names = [Path(str(item.path)).name for item in items]
@@ -112,3 +130,8 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
     for k in range(len(groups)):
         rest[k * step : k * step] = groups[k]
     items[:] = rest
+    if is_export():
+        skip = pytest.mark.skip(reason=SKIP_REASON)
+        for item in items:
+            if item.get_closest_marker("private_input"):
+                item.add_marker(skip)

@@ -1,33 +1,16 @@
-"""What a page's references say about their targets: spare contacts, other documents."""
+"""What a page's references say about their targets: those that point into another document."""
 
-from collections import Counter
 from typing import Any
 lazy from collections.abc import Mapping
 
-from fransys_model.derive.contact_image import CONTACT_SLOTS, image_entries
 from fransys_model.derive.frame_position import location_path, location_prefix
 from fransys_model.derive.printed_sets import document_drawing_sets
 from fransys_model.derive.rows_readability import OffDocumentReference
-from fransys_model.layout import DrawingSet, Label, LabelKind, LinkMarker, Page, layout_of
+from fransys_model.layout import DrawingSet, LinkMarker, Page, layout_of
 from fransys_model.vocab.tables import documents
 lazy from fransys_model.kernel import Id, Model
 
-__all__ = ["contacts_not_drawn", "references_off_document"]
-
-
-def contacts_not_drawn(model: Model) -> Counter[Id[Page]]:
-    """The contact-image entries that print N/A, by the page of the coil's image.
-
-    An entry is a spare contact when it names no partner port (`image_entries`).
-    """
-    return Counter(
-        label.page
-        for label in layout_of(model, Label).values()
-        if label.kind is LabelKind.CROSS_REFERENCE and label.slot in CONTACT_SLOTS
-        for column in image_entries(model, label)
-        for _, port in column
-        if port is None
-    )
+__all__ = ["references_off_document"]
 
 
 def _documents_of_sets(model: Model) -> dict[Id[DrawingSet], set[Id[Any]]]:
@@ -55,18 +38,13 @@ def _off_document(
 def references_off_document(model: Model) -> tuple[OffDocumentReference, ...]:
     """The printed references whose target is off the document and whose text names no other.
 
-    A reference is a cross-reference label with partners, or a link marker with its partner. It
+    A reference is a link marker with its partner. It
     is off the document when no document prints both its page's drawing set and its target's.
     Its text names the other document when it prints a location path (`location_prefix`).
     """
     pages, markers = layout_of(model, Page), layout_of(model, LinkMarker)
     printed = _documents_of_sets(model)
-    ends: list[tuple[Id[Any], Id[Page], Id[Page]]] = [
-        (label.id, label.page, partner.page)
-        for label in layout_of(model, Label).values()
-        for partner in label.partners
-    ]
-    ends += [(one.id, one.page, markers[one.partner].page) for one in markers.values()]
+    ends = [(one.id, one.page, markers[one.partner].page) for one in markers.values()]
     off: dict[Id[Any], OffDocumentReference] = {}
     for subject, page, target in sorted(ends):
         if subject not in off and _off_document(model, pages[page], pages[target], printed):

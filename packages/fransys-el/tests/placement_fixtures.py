@@ -1,23 +1,28 @@
 """Models and symbol kits the problem-builder tests share: a demo design and planted features."""
 
-from dataclasses import replace
 from typing import TYPE_CHECKING, NamedTuple
 
 import fransys as fr
 from fransys.colours import BU
 from fransys_el import Conventions, build, options
+from fransys_el.placement_ids import symbol_key
 from fransys_el.placement_kit import Pick, SymbolKit
 
-from fransys_layout.core import Box, Placement, build_flow, order_blocks
+from electrical_symbols import LIBRARY
+from fransys_layout.core import Placement, build_flow, order_blocks
 from fransys_layout.core.blocks import assign_blocks
 from fransys_layout.core.cut import cut_pages
 from fransys_layout.core.place import place_pages
 from fransys_model.derive import item_designation
-from fransys_model.kernel import render_id
 from fransys_model.vocab import functions, ports
 
 if TYPE_CHECKING:
-    from fransys_model.kernel import Model
+    from collections.abc import Mapping
+
+    from fransys_el.kit_keys import PickKey
+
+    from fransys_model.kernel import Id, Model
+    from fransys_model.vocab import Function
 
 __all__ = ["demo_model", "kit_for", "placed", "planted_model", "sid"]
 
@@ -102,6 +107,9 @@ def planted_model(*, crossed: bool = False, **features: bool) -> Model:
         j1 = d.device("J1", "DEMO-CONN-2P")
         j2 = d.device("J2", "DEMO-CONN-2P")
         d.mate(j1.x1, j2.x1)
+        with d.function("MATED", "Mated feed"):
+            d.detail.wire(g1.output["+"], j1.x1["1"], wire=(BU, 0.75))
+            d.detail.wire(g1.output["-"], j2.x1["1"], wire=(BU, 0.75))
     return fr.build(d).model
 
 
@@ -127,10 +135,15 @@ _SYMBOLS: dict[str, tuple[str, int, dict[str, str]]] = {
 }
 
 
+def leads[V](kit: Mapping[PickKey, V]) -> dict[Id[Function], V]:
+    """The entries of `kit` (or any map by pick key) keyed by a function: no pin pick."""
+    return {k: v for k, v in kit.items() if k.kind == "function"}  # ty: ignore[invalid-return-type] -- the kind test narrows a union ty cannot follow
+
+
 def kit_for(model: Model) -> SymbolKit:
     """The symbol kit of `model`: each function's symbol key, poles and port names."""
     all_ports = ports(model)
-    found = {}
+    found: dict[PickKey, Pick] = {}
     for function, record in functions(model).items():
         key, poles, names = _SYMBOLS[record.name]
         own = {port: names[p.name] for port, p in all_ports.items() if p.function == function}
@@ -139,9 +152,9 @@ def kit_for(model: Model) -> SymbolKit:
 
 
 def sid(model: Model, text: str) -> str:
-    """The symbol id (the function Id's text) of the one function printed `<designation>.<name>`."""
+    """The symbol id (`symbol_key`) of the one function printed `<designation>.<name>`."""
     found = [
-        render_id(f)
+        symbol_key(model, f)
         for f, record in functions(model).items()
         if f"{item_designation(model, record.item)}.{record.name}" == text
     ]
@@ -151,9 +164,8 @@ def sid(model: Model, text: str) -> str:
 
 def placed(model: Model, kit: SymbolKit, conventions: Conventions) -> Placement:
     """Problem, then the five stages in the order of the layout tests' `placed_of`."""
-    prob, _ = build(model, kit, conventions)
-    # the reserve of layout-0308 needs the marker keepout box; the el builder passes none yet
-    opts = replace(options(conventions), marker=Box(0, -8, 48, 16))
+    prob, _ = build(model, kit, conventions, LIBRARY)
+    opts = options(conventions, LIBRARY)
     flow = build_flow(prob, opts)
     lists = order_blocks(assign_blocks(flow, prob, opts), flow, opts)
     return place_pages(cut_pages(lists, flow, prob, opts), prob, opts)

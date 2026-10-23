@@ -7,7 +7,8 @@ from dataclasses import dataclass, field, replace
 from typing import TYPE_CHECKING, Any, Protocol
 lazy from decimal import Decimal
 
-from fransys_model.kernel import AuthoringKey, Id, make_id
+from fransys_model.derive import cores_past_product
+from fransys_model.kernel import AuthoringKey, Id, make_id, natural_join
 from fransys_model.vocab import (
     AspectNode,
     Conductor,
@@ -220,7 +221,7 @@ class Item:
         for function in self.functions:
             if function.name == name:
                 return function
-        names = ", ".join(sorted(f.name for f in self.functions)) or "none"
+        names = natural_join(f.name for f in self.functions) or "none"
         msg = f"this item has no function named {name!r}; it has: {names}"
         raise AuthorError(msg)
 
@@ -427,7 +428,7 @@ class Cable:
         Raises:
             AuthorError: `index` is not one of this cable's cores.
         """
-        if not 1 <= index <= len(self._core_colours):
+        if cores_past_product(len(self._core_colours), index):
             msg = f"core {index} is out of range: this cable has {len(self._core_colours)} core(s)"
             raise AuthorError(msg)
         a, b = as_port(a), as_port(b)
@@ -461,7 +462,7 @@ class Cable:
         Raises:
             AuthorError: `index` is not one of this cable's cores.
         """
-        if not 1 <= index <= len(self._core_colours):
+        if cores_past_product(len(self._core_colours), index):
             msg = f"core {index} is out of range: this cable has {len(self._core_colours)} core(s)"
             raise AuthorError(msg)
         key = scoped(self.key, "open_core", str(index))
@@ -504,7 +505,7 @@ def _item_from_stamped(key: AuthoringKey, stamped: tuple[Record, ...], recorder:
 def _port_by_marking(ports: Sequence[Port], marking: str, *, owner: str) -> Port:
     matches = [port for port in ports if port.name == marking]
     if not matches:
-        markings = ", ".join(sorted({port.name for port in ports})) or "none"
+        markings = natural_join({port.name for port in ports}) or "none"
         msg = f"this {owner} has no port marked {marking!r}; it has: {markings}"
         raise AuthorError(msg)
     if len(matches) > 1:

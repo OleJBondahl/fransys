@@ -5,24 +5,36 @@ The stubs stand out of the fold pins s of e1 (turned S) and n of e2 (turned N), 
 
 from __future__ import annotations
 
-from fransys_layout.core import Box, Options, PlacementProblem
+from options_fixtures import core_options
+
+from fransys_layout.core import Box, Facts, PlacementProblem
 from fransys_layout.core.route import route_pages
 
 from .cut_fixtures import AREA, chain, elem
 from .pipeline_fixtures import cut_of, placed_from
 
-FOOT = ((24, 630), (24, 638))  # e1.s (S) out 8 G
-HEAD = ((1288, 18), (1288, 10))  # e2.n (N) out 8 G
+FOOT = ((24, 638), (24, 646))  # e1.s (S) out 8 G
+HEAD = ((1288, 26), (1288, 18))  # e2.n (N) out 8 G
 
 
 def tall_problem() -> PlacementProblem:
     """Four 300 G elements in one chain: taller than the page, so cut_tall folds it in two."""
     syms = [elem(f"e{i}", height=300) for i in range(4)]
-    return PlacementProblem(AREA, tuple(syms), tuple(chain([s.id for s in syms])))
+    return PlacementProblem(AREA, tuple(syms), tuple(chain([s.id for s in syms])), facts=Facts())
 
 
 def routed(open_stub: int, obstacles: tuple[Box, ...] = ()):
-    prob, opts = tall_problem(), Options(open_stub=open_stub)
+    prob, opts = (
+        tall_problem(),
+        core_options(
+            open_stub=open_stub,
+            flip_turn="R180",
+            tag_stagger=True,
+            label_gap=8,
+            driver_first=True,
+            arrow_sides=("E", "W"),
+        ),
+    )
     cut = cut_of(prob, opts)
     return route_pages(placed_from(cut, prob, opts), cut, prob, opts, obstacles)
 
@@ -44,7 +56,7 @@ def test_no_stub_without_open_stub() -> None:
 
 
 def test_a_blocked_stub_target_is_drawn_and_counted_not_refused() -> None:
-    free, blocked = routed(8), routed(8, (Box(16, 632, 16, 16),))
+    free, blocked = routed(8), routed(8, (Box(16, 640, 16, 16),))
     assert FOOT in stubs(blocked)
     assert blocked.failed == ()
     assert blocked.findings == ()

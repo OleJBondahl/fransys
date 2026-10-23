@@ -7,29 +7,19 @@ drawing set and, as a boundary replica, in the top-level set. The engine re-keys
 the triangle, so the unit's home columns were counted as replicas too and one placement key stood
 twice. The chain (wired 1-2 and 2-3 only) and the same triangle with no unit are the controls.
 
-Built through the `fransys` facade from `examples/demo-parts`; read from `layout.*` records.
+Built through the `fransys` facade from `examples/demo-parts`; read from the core path's Drawings.
 """
 
-from collections import defaultdict
 from typing import Any
 
 import fransys as fr
 import fransys_author
 import fransys_parts
+from _dd_core_c import in_own_set, stands, tags_by_set
+from _drawn_pages import drawn_pages
 from _model_build_cover import layout_trigger_document
 
-from fransys_model.kernel import Id, Severity
-from fransys_model.layout import (
-    DrawingSet,
-    Label,
-    LabelKind,
-    LinkMarker,
-    Page,
-    Route,
-    SymbolPlacement,
-    layout_of,
-)
-from fransys_model.vocab.tables import functions, ports
+from fransys_model.kernel import Severity
 
 _PROJECT: dict[str, Any] = {
     "title": "Triangle of boundary terminals",
@@ -68,61 +58,21 @@ def _build(wired: tuple[tuple[int, int], ...], *, unit: bool = True):
     return fr.build(parts, d.draft(), layout_trigger_document())
 
 
-def _terminals(model) -> list[Id]:
-    """The ids of the three terminal functions of `X1`, in terminal order."""
-    found = sorted(
-        (f.key, f.id)
-        for f in functions(model).values()
-        if "X1" in f.key[:2] and f.key[-2:] == ("fn", "terminal")
-    )
-    assert len(found) == 3
-    return [fid for _, fid in found]
-
-
-def _unit_of_page(model, page: Id[Page]) -> Id | None:
-    """The unit whose drawing set `page` belongs to, `None` for the top-level set."""
-    sets = layout_of(model, DrawingSet)
-    return sets[layout_of(model, Page)[page].drawing_set].unit
-
-
-def _by_set(model, records, subject) -> dict:
-    """`records` (with `.page`) grouped by `subject(record)`, then by the unit of their drawing
-    set (`None`: the top-level set)."""
-    grouped: dict = defaultdict(lambda: defaultdict(list))
-    for record in records:
-        grouped[subject(record)][_unit_of_page(model, record.page)].append(record)
-    return grouped
+_TAGS = ("-X1:1", "-X1:2", "-X1:3")  # the three terminals of `X1`, in terminal order
 
 
 def _assert_once_per_set(model, *, in_unit: bool) -> None:
-    """Every terminal's placement, and each of its tag labels (a label's `slot` names which one:
-    `tag`, `tag.point`, `tag.strip`; the outline title is no terminal's), stands once in each
-    drawing set that draws it, each record under an id and a key of its own. With `in_unit` those
-    are two sets: the unit's own and the top-level one; without, the top-level one only."""
-    terminals = set(_terminals(model))
-    placed = _by_set(
-        model,
-        [p for p in layout_of(model, SymbolPlacement).values() if p.function in terminals],
-        lambda p: p.function,
-    )
-    tagged = _by_set(
-        model,
-        [
-            label
-            for label in layout_of(model, Label).values()
-            if label.kind is LabelKind.TAG
-            and label.slot != "outline_title"
-            and label.function in terminals
-        ],
-        lambda label: (label.function, label.slot),
-    )
-    assert len(placed) == 3
-    assert {function for function, _ in tagged} == terminals
-    for by_unit in (*placed.values(), *tagged.values()):
-        assert (len(by_unit) == 2 and None in by_unit) if in_unit else set(by_unit) == {None}
-        assert all(len(records) == 1 for records in by_unit.values())
-        records = [record for group in by_unit.values() for record in group]
-        assert len({r.id for r in records}) == len({r.key for r in records}) == len(records)
+    """Every terminal's symbol and its tag text stand once in each drawing set that draws it, the
+    symbols under an id of their own. With `in_unit` those are two sets: the unit's own and the
+    top-level one; without, the top-level one only."""
+    want = {True, False} if in_unit else {False}
+    for tag in _TAGS:
+        spots = stands(model, tag)
+        assert set(spots) == want
+        assert tags_by_set(model, tag) == dict.fromkeys(want, 1)
+        assert all(len(found) == 1 for found in spots.values())
+        ids = [symbol.id for found in spots.values() for _, symbol in found]
+        assert len(set(ids)) == len(ids)
 
 
 def test_triangle_of_boundary_terminals_builds() -> None:
@@ -149,20 +99,12 @@ def test_markers_of_the_star_net_follow_d9_in_each_set() -> None:
     marker)."""
     # UNDO: as in test_triangle_of_boundary_terminals_builds
     model = _build(_TRIANGLE).model
-    terminals = set(_terminals(model))
-    routes = defaultdict(list)
-    for route in layout_of(model, Route).values():
-        assert route.conductor is not None
-        assert {ports(model)[p].function for p in (route.a, route.b)} <= terminals
-        routes[_unit_of_page(model, route.page)].append(route)
-    markers = [
-        m
-        for m in layout_of(model, LinkMarker).values()
-        if ports(model)[m.port].function in terminals
-    ]
-    assert markers == []
-    assert None not in routes
-    assert [len(unit_routes) for unit_routes in routes.values()] == [3]
+    wires = {True: 0, False: 0}
+    for page, drawing in drawn_pages(model).items():
+        wires[in_own_set(model, page)] += len(drawing.wires)
+        assert drawing.markers == ()
+    assert wires[False] == 0
+    assert wires[True] == 3
 
 
 def test_chain_of_boundary_terminals_still_builds() -> None:

@@ -1,8 +1,8 @@
 """The facts `outputs.scene` reads from the problem and the flow, as plain lookups.
 
-A `CoreLayout` holds geometry only. The scorer also reads each pin's net, node, stand and side,
-whether a box pin is movable, which boxes head a hung column or a fan, a row-group tag and the
-supply rails. Each is read once here and never asked of a symbol kind.
+A `CoreLayout` holds geometry only. The scorer also reads each pin's net, node, end bias and side,
+whether a box pin is movable, which boxes head a hung column or a fan and a row-group tag.
+Each is read once here and never asked of a symbol kind.
 """
 
 from dataclasses import dataclass
@@ -11,18 +11,19 @@ from typing import TYPE_CHECKING
 from .fan_head import fan_head
 
 if TYPE_CHECKING:
-    from .outputs import CoreLayout
-    from .values import Column, End, FlowGraph, PlacementProblem, Side, Sym
+    from collections.abc import Mapping
 
-SUPPLIES = frozenset({"SUPPLY", "GROUND", "PE"})
+    from .outputs import CoreLayout
+    from .sym_values import Sym
+    from .values import Column, End, FlowGraph, Orientation, PlacementProblem, Side
 
 
 @dataclass(frozen=True, slots=True)
 class PinFact:
     net: str | None
     node: int
-    stand: bool
-    side: Side
+    biased: bool
+    sides: Mapping[Orientation, Side]
     box: bool
 
 
@@ -32,7 +33,6 @@ class SceneFacts:
     attached: frozenset[str]
     heads: frozenset[tuple[str, str]]
     strips: dict[str, str]
-    rails: frozenset[str]
 
 
 def _pin_facts(sym: Sym, nets: frozendict[tuple[str, str], str]) -> dict[tuple[str, str], PinFact]:
@@ -41,11 +41,11 @@ def _pin_facts(sym: Sym, nets: frozendict[tuple[str, str], str]) -> dict[tuple[s
         (sym.id, p.id): PinFact(
             nets.get((sym.id, p.id)),
             p.node,
-            p.stand is not None and p.stand in SUPPLIES,
-            p.side,
+            p.end_bias != 0,
+            frozendict({o: v.pins[i].side for o, v in sym.views.items()}),
             p.id in movable,
         )
-        for p in sym.pins
+        for i, p in enumerate(sym.pins)
     }
 
 
@@ -74,7 +74,6 @@ def scene_facts(problem: PlacementProblem, flow: FlowGraph) -> SceneFacts:
         _attached(flow),
         frozenset((h.pin.sym, h.pin.pin) for f in flow.fans if (h := fan_head(f)) is not None),
         {s.id: s.row_group for s in problem.symbols if s.row_group is not None},
-        frozenset(n.id for n in problem.nets if n.rail is not None and n.rail.power in SUPPLIES),
     )
 
 

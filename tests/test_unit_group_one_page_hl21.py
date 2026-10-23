@@ -12,9 +12,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import pytest
-
-from fransys_model import derive
-from fransys_model.layout import ConnectorBox, Outline, SymbolPlacement, layout_of
+from _core_boxes import connector_names, named_boxes
+from _drawn_pages import drawn_pages
 
 if TYPE_CHECKING:
     import fransys as fr
@@ -39,21 +38,21 @@ def board(request: pytest.FixtureRequest) -> fr.BuildResult:
 
 def _box_pages(result: fr.BuildResult) -> dict[str, list[Any]]:
     """Each box's pages among those with an outline (the unit's own pages draw its boxes too)."""
-    framed = {o.page for o in layout_of(result.model, Outline).values()}
+    names = set(connector_names(result.model).values())
     found: dict[str, list[Any]] = {}
-    for box in layout_of(result.model, ConnectorBox).values():
-        if box.page not in framed:
+    for page, drawing in drawn_pages(result.model).items():
+        if not drawing.outlines:
             continue
-        name = derive.connector_box_lines(result.model, box.function)[0]
-        found.setdefault(name, []).append(box.page)
+        for name in named_boxes(drawing, names):
+            found.setdefault(name, []).append(page)
     return found
 
 
 def _outline_page(result: fr.BuildResult) -> Any:
     """The one page holding a middle outline: the page every one of the group's boxes is on."""
     pages = _box_pages(result)
-    outlines = [o.page for o in layout_of(result.model, Outline).values()]
-    held = [page for page in outlines if all(page in pages[name] for name in BOXES)]
+    outlines = [page for page, d in drawn_pages(result.model).items() if d.outlines]
+    held = [page for page in outlines if all(page in pages.get(name, ()) for name in BOXES)]
     assert len(held) == 1, held
     return held[0]
 
@@ -61,23 +60,24 @@ def _outline_page(result: fr.BuildResult) -> Any:
 def test_every_box_of_the_group_stands_once_on_the_outlines_page(board: fr.BuildResult) -> None:
     page = _outline_page(board)
     pages = _box_pages(board)
-    assert {name: pages[name] for name in BOXES} == {name: [page] for name in BOXES}
+    assert {name: pages.get(name) for name in BOXES} == {name: [page] for name in BOXES}
 
 
 def test_the_unit_has_one_outline_and_no_second_copy_on_another_page(
     board: fr.BuildResult,
 ) -> None:
     page = _outline_page(board)
-    counted = Counter(o.page for o in layout_of(board.model, Outline).values())
+    counted = Counter(page for page, d in drawn_pages(board.model).items() for _ in d.outlines)
     assert counted[page] == 1
     pages = _box_pages(board)
-    assert not [name for name in BOXES if len(pages[name]) != 1]
+    assert not [name for name in BOXES if len(pages.get(name, ())) != 1]
 
 
 def test_the_band_columns_stand_on_the_outlines_page(board: fr.BuildResult) -> None:
     page = _outline_page(board)
     placed: dict[str, set[Any]] = {}
-    for one in layout_of(board.model, SymbolPlacement).values():
-        name = derive.function_designation(board.model, one.function)
-        placed.setdefault(name.split(":")[0] + ":", set()).add(one.page)
-    assert {item: placed[item] for item in BAND_ITEMS} == {item: {page} for item in BAND_ITEMS}
+    for where, drawing in drawn_pages(board.model).items():
+        for text in drawing.texts:
+            if text.kind == "TAG":
+                placed.setdefault(text.text.removeprefix("-").split(":")[0] + ":", set()).add(where)
+    assert {item: placed.get(item) for item in BAND_ITEMS} == {item: {page} for item in BAND_ITEMS}

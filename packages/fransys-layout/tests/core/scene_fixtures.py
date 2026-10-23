@@ -1,10 +1,13 @@
 """A planted two-page layout with its problem and flow, built through the contract dataclasses."""
 
+from options_fixtures import core_options
+from turn_fixtures import ALL_EIGHT, views_of
+
+from fransys_layout.core import AnnexBox
 from fransys_layout.core.outputs import (
     Annotations,
     CoreLayout,
     Counts,
-    Label,
     PagePlacement,
     PageRoutes,
     PinXY,
@@ -15,6 +18,7 @@ from fransys_layout.core.outputs import (
     Wire,
 )
 from fransys_layout.core.outputs import Marker as OutMarker
+from fransys_layout.core.sym_values import Sym
 from fransys_layout.core.values import (
     Attach,
     Box,
@@ -23,6 +27,7 @@ from fransys_layout.core.values import (
     Column,
     CycleSplit,
     End,
+    Facts,
     Fan,
     FlowGraph,
     Lane,
@@ -31,11 +36,9 @@ from fransys_layout.core.values import (
     Pin,
     PinRef,
     PlacementProblem,
-    Rail,
     RefKind,
     Side,
     Size,
-    Sym,
 )
 
 BODY = Box(-8, -16, 16, 32)
@@ -47,25 +50,31 @@ def sym(sid: str, pins: tuple[Pin, ...], **kw: object) -> Sym:
         None,
         "U1",
         Size(8, 8),
-        BODY,
-        BODY,
-        BODY,
         pins,
         tuple((p.id,) for p in pins),
-        frozenset({"R0", "R180"}),
+        views=views_of(BODY, BODY, BODY, pins, ALL_EIGHT),
         **kw,  # ty: ignore[invalid-argument-type] -- optional Sym fields by name
     )
 
 
-def pin(pid: str, side: Side, dy: int, node: int, stand: str | None = None) -> Pin:
-    return Pin(pid, side, 0, dy, node, stand)  # ty: ignore[invalid-argument-type] -- Power literal
+def pin(pid: str, side: Side, dy: int, node: int, end_bias: int = 0) -> Pin:
+    return Pin(pid, side, 0, dy, node, end_bias)
+
+
+OPTIONS = core_options(
+    flip_turn="R180",
+    tag_stagger=True,
+    label_gap=8,
+    driver_first=True,
+    arrow_sides=("E", "W"),
+)
 
 
 def problem() -> PlacementProblem:
     """K a box pin, A hung under it, F a fan head with a supply stand, T a strip terminal."""
     k = sym("K", (pin("c1", "S", 16, 0),), box=BoxSpec(("c1",), "N", 16, 8))
     a = sym("A", (pin("in", "N", -16, 0), pin("out", "S", 16, 1)))
-    f = sym("F", (pin("out", "S", 16, 0), pin("p", "N", -16, 1, "SUPPLY")), row_group=None)
+    f = sym("F", (pin("out", "S", 16, 0), pin("p", "N", -16, 1, -1)), row_group=None)
     t = sym("T", (pin("s", "S", 16, 0),), row_group="X1")
     return PlacementProblem(
         Size(100, 100),
@@ -73,8 +82,8 @@ def problem() -> PlacementProblem:
         (
             Net("n1", (PinRef("K", "c1"), PinRef("A", "in"))),
             Net("n2", (PinRef("F", "out"), PinRef("A", "out"), PinRef("T", "s"))),
-            Net("n3", (PinRef("F", "p"),), Rail(0, "SUPPLY")),
         ),
+        Facts(),
     )
 
 
@@ -87,7 +96,8 @@ def flow() -> FlowGraph:
         32,
         16,
     )
-    fan = Fan("F1", ("n2",), (Attach(None, 0, 0, PinRef("F", "out")),), (), "F", 1, "E")
+    driver = Attach(None, 0, 0, PinRef("F", "out"))
+    fan = Fan("F1", ("n2",), (driver,), (), "F", 1, "E", head=driver)
     return FlowGraph((column,), (fan,), (), (), CycleSplit(0, 0, 0), ("K", "A", "F", "T"))
 
 
@@ -127,9 +137,10 @@ def layout() -> CoreLayout:
         Placement((page1, page2)),
         Routes((PageRoutes(2, (wire,), (), Counts(0, 0, 0, 10, 0)),)),
         Annotations(
-            labels=(Label("K", 1, Box(1, 2, 3, 4), "BR"),),
+            annexes=(AnnexBox("K", 1, Box(1, 2, 3, 4), "BR"),),
             tables=(Table("K", 1, ("3C", "2:3C"), Box(5, 6, 7, 8), 2),),
             markers=(OutMarker("n1", RefKind.TAG, 2, "C3", 40, 46, PinRef("A", "in")),),
         ),
         (),
+        frozenset(),
     )

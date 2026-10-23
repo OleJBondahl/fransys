@@ -10,7 +10,7 @@ lazy from fransys_model.kernel import AuthoringKey, Id, Model
 lazy from fransys_model.vocab.core import Item, Unit
 
 from .lookups import terminal_items
-from .numbering_moves import gone_or_moved
+from .numbering_moves import gone_or_moved, same_place
 from .numbering_pins import item_position, unit_position
 from .rows_numbering import AssignedSeed, PinPosition, SeedRows, UnitTagSeed
 lazy from .rows_baseline import NumberingItem, NumberingPins
@@ -51,9 +51,7 @@ def pin_positions(model: Model, unit: Id[Unit]) -> tuple[PinPosition, ...]:
 
 def _pin_applies(pin: NumberingItem, position: PinPosition, *, tagged: bool) -> bool:
     """An unauthored pin gives an untagged thing its text while its scope and code still match."""
-    return (
-        not pin.authored and not tagged and (position.scope, position.code) == (pin.scope, pin.code)
-    )
+    return not pin.authored and not tagged and same_place(pin, position)
 
 
 def _assigned(model: Model, unit: Id[Unit], source: NumberingPins) -> tuple[AssignedSeed, ...]:

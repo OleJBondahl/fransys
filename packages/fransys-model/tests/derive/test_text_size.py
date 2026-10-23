@@ -4,17 +4,22 @@ from dataclasses import replace
 from decimal import Decimal
 
 import pytest
+from derive_helpers import frozen_with_library
 
 from fransys_model.derive import text_room_g, text_under_floor
-from fransys_model.derive.print_sizes import CAPITAL_RATIO, TextRole, role_height_mm
-from fransys_model.layout import default_profile
+from fransys_model.derive.print_sizes import TextRole, role_height_mm
+from fransys_model.kernel import Draft
+from fransys_model.layout import default_profile, default_sheet_format
 
-_MODULE = Decimal("2.5")
-_LABEL_MM = role_height_mm(TextRole.LABEL, default_profile().text_height_mm)
+_MODEL = frozen_with_library(Draft())
+_SHEET = default_sheet_format()
+_MODULE = _SHEET.module_mm
+CAPITAL_RATIO = Decimal(1493) / 2048
+_LABEL_MM = role_height_mm(_MODEL, TextRole.LABEL, default_profile().text_height_mm)
 
 
 def test_the_house_capital_height_is_eight_g_on_the_house_sheet() -> None:
-    assert text_room_g(_LABEL_MM, _MODULE) == 8
+    assert text_room_g(_MODEL, _LABEL_MM, _SHEET) == 8
 
 
 def test_the_house_profile_holds_the_label_role() -> None:
@@ -25,12 +30,12 @@ def test_the_house_profile_holds_the_label_role() -> None:
 
 def test_the_room_rounds_the_font_size_up_to_a_whole_g() -> None:
     """A font size of exactly one module is 8 G; a hair over it is 9 G (one G is 0.3125 mm)."""
-    assert text_room_g(_MODULE * CAPITAL_RATIO, _MODULE) == 8
-    assert text_room_g(_MODULE * CAPITAL_RATIO + Decimal("0.001"), _MODULE) == 9
+    assert text_room_g(_MODEL, _MODULE * CAPITAL_RATIO, _SHEET) == 8
+    assert text_room_g(_MODEL, _MODULE * CAPITAL_RATIO + Decimal("0.001"), _SHEET) == 9
 
 
 def test_a_smaller_module_gives_more_g() -> None:
-    assert text_room_g(_LABEL_MM, Decimal("1.25")) == 16
+    assert text_room_g(_MODEL, _LABEL_MM, replace(_SHEET, module_mm=Decimal("1.25"))) == 16
 
 
 @pytest.mark.parametrize(

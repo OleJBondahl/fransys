@@ -7,9 +7,10 @@ the rail (the fuse can open), yet it is in the rail closure (the fuse is closed 
 
 import fransys_parts
 from fransys_author import Design
+from root_library import freeze
 
 from fransys_model.derive import net_of, port_rails
-from fransys_model.kernel import freeze, merge
+from fransys_model.kernel import merge
 
 
 def _model():

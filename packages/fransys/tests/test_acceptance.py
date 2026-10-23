@@ -6,21 +6,19 @@ from pathlib import Path
 
 import fransys as fr
 import pytest
-from fransys._layout_need import symbol_port_missing_finding
+from fransys._drawing_library import with_drawing_library
+from fransys._export_ledger import ExportNameClash
+from fransys._paper import with_paper
 from fransys.pipeline import (
     BuildErrors,
     BuildResult,
-    ExportNameClash,
     _exports,
     _file_safe,
-    _resolved,
     _svgs,
     _svgs_cache,
 )
-from fransys_el import OPTIONS
+from fransys.settings import settings
 
-from fransys_layout.engines.schematic import lay_out_schematic
-from fransys_layout.geometry import SymbolPortError
 from fransys_model.kernel import Draft, Finding, Id, Origin, Severity, freeze, make_id
 from fransys_model.vocab import Document, DocumentPreset, PageKind
 from fransys_model.vocab.connectivity import Conductor
@@ -35,12 +33,22 @@ from ._board_and_rack import build_board_and_rack_model
 
 
 def _error_finding(subject: Id) -> Finding:
-    return Finding(code="DEMO_ERROR", severity=Severity.ERROR, subjects=(subject,), message="demo")
+    return Finding(
+        code="DEMO_ERROR",
+        severity=Severity.ERROR,
+        subjects=(subject,),
+        message="demo",
+        fix="Write: x",
+    )
 
 
 def _warning_finding(subject: Id) -> Finding:
     return Finding(
-        code="DEMO_WARNING", severity=Severity.WARNING, subjects=(subject,), message="demo"
+        code="DEMO_WARNING",
+        severity=Severity.WARNING,
+        subjects=(subject,),
+        message="demo",
+        fix="Write: x",
     )
 
 
@@ -60,9 +68,15 @@ def test_parts_loads_a_package():
 # -- F5: the findings policy, no escape hatch -----------------------------------
 
 
-def test_error_finding_blocks_every_export_and_raises_build_errors(demo_cabinet, tmp_path):
+def test_error_finding_blocks_every_export_and_raises_build_errors(
+    demo_cabinet, tmp_path, demo_cabinet_result
+):
     subject = next(iter(demo_cabinet.tables["item"]))
-    result = BuildResult(model=demo_cabinet, findings=(_error_finding(subject),))
+    result = BuildResult(
+        model=demo_cabinet,
+        findings=(_error_finding(subject),),
+        drawings=demo_cabinet_result.drawings,
+    )
     out_dir = tmp_path / "out"
     with pytest.raises(BuildErrors) as excinfo:
         fr.write(result, out_dir)
@@ -73,9 +87,13 @@ def test_error_finding_blocks_every_export_and_raises_build_errors(demo_cabinet,
     assert not out_dir.exists() or list(out_dir.iterdir()) == []
 
 
-def test_warning_finding_does_not_block_any_export(demo_cabinet, tmp_path):
+def test_warning_finding_does_not_block_any_export(demo_cabinet, tmp_path, demo_cabinet_result):
     subject = next(iter(demo_cabinet.tables["item"]))
-    result = BuildResult(model=demo_cabinet, findings=(_warning_finding(subject),))
+    result = BuildResult(
+        model=demo_cabinet,
+        findings=(_warning_finding(subject),),
+        drawings=demo_cabinet_result.drawings,
+    )
     out_dir = tmp_path / "out"
     written = fr.write(result, out_dir)
     assert written
@@ -83,7 +101,7 @@ def test_warning_finding_does_not_block_any_export(demo_cabinet, tmp_path):
 
 
 def test_a_blocked_write_draws_no_svg_where_the_unblocked_write_draws_them(
-    demo_harness_with_board, tmp_path
+    demo_harness_with_board, tmp_path, demo_harness_with_board_result
 ):
     """0028 amended (model-0077): an errored build's intermediates hold no drawn page.
 
@@ -95,7 +113,11 @@ def test_a_blocked_write_draws_no_svg_where_the_unblocked_write_draws_them(
     `svgs = _svgs(model)` (the SCHEMATIC page's SVG is written again).
     """
     subject = next(iter(demo_harness_with_board.tables["item"]))
-    result = BuildResult(model=demo_harness_with_board, findings=(_error_finding(subject),))
+    result = BuildResult(
+        model=demo_harness_with_board,
+        findings=(_error_finding(subject),),
+        drawings=demo_harness_with_board_result.drawings,
+    )
     out_dir, intermediates = tmp_path / "out", tmp_path / "intermediates"
     with pytest.raises(BuildErrors):
         fr.write(result, out_dir, intermediates=intermediates)
@@ -111,18 +133,22 @@ def test_file_safe_strips_the_colon_from_a_page_key():
     assert ":" not in _file_safe("item:0123456789abcdef")
 
 
-def test_a_harness_svg_intermediate_has_no_colon_in_its_name(demo_harness_with_board, tmp_path):
+def test_a_harness_svg_intermediate_has_no_colon_in_its_name(
+    demo_harness_with_board, tmp_path, demo_harness_with_board_result
+):
     """`write` names every render SVG from a sanitised page key, so the file really exists.
 
     CT1: `demo_harness_with_board`'s own cable page is a Typst table now, no SVG; the one SVG
     this fixture still writes is its `SYSTEM` document's rendered `SCHEMATIC` page
-    (`fransys_render.pages`), the same `_file_safe` sanitising this test has always pinned.
+    (drawn by the facade), the same `_file_safe` sanitising this test has always pinned.
     `:` is valid in a POSIX file name but not mid-name on Windows: it opens an NTFS
     alternate data stream instead of raising, so a naive `f"{page_key}.svg"` write
     silently writes zero bytes to a visible `.svg` file -- the failure mode this test
     guards against is not an exception, it is a page that quietly never gets drawn.
     """
-    result = BuildResult(model=demo_harness_with_board, findings=())
+    result = BuildResult(
+        model=demo_harness_with_board, findings=(), drawings=demo_harness_with_board_result.drawings
+    )
     intermediates = tmp_path / "intermediates"
     fr.write(result, tmp_path / "out", intermediates=intermediates)
     svgs = list(intermediates.glob("*.svg"))
@@ -166,8 +192,9 @@ def test_no_written_file_has_a_name_windows_forbids(fixture, request, tmp_path, 
     lists. So the names come from what `write` computes: the returned paths, the keys of
     `_exports`, and every path `Path.write_bytes` receives during the write (the intermediates).
     """
-    model = request.getfixturevalue(fixture)
-    result = BuildResult(model=model, findings=())
+    built = request.getfixturevalue(f"{fixture}_result")
+    model = built.model
+    result = BuildResult(model=model, findings=(), drawings=built.drawings)
     names: set[str] = set()
     original = Path.write_bytes
 
@@ -180,7 +207,8 @@ def test_no_written_file_has_a_name_windows_forbids(fixture, request, tmp_path, 
     monkeypatch.undo()
     names |= {path.name for path in written}
     _svgs_cache.cache_clear()
-    names |= {Path(name).name for name in _exports(model, _svgs(model))}
+    svgs = _svgs(model, result.drawings)
+    names |= {Path(n).name for n in _exports(model, result.drawings, svgs, pdf=result.settings.pdf)}
     assert names
     assert [name for name in sorted(names) if _windows_forbidden(name)] == []
 
@@ -190,7 +218,9 @@ def test_no_written_file_has_a_name_windows_forbids(fixture, request, tmp_path, 
     reason="NTFS alternate data streams: a colon in a file name opens one on Windows only; "
     "on Linux the colon is legal and the file appears",
 )
-def test_the_colon_bug_can_fail_the_naive_way(demo_harness_with_board, tmp_path):
+def test_the_colon_bug_can_fail_the_naive_way(
+    demo_harness_with_board, tmp_path, demo_harness_with_board_result
+):
     """Can-fail twin: writing the RAW (unsanitised) page key produces no visible `.svg`.
 
     Proves `_file_safe` is load-bearing, not cosmetic: skip it (write the raw
@@ -198,7 +228,7 @@ def test_the_colon_bug_can_fail_the_naive_way(demo_harness_with_board, tmp_path)
     disappears -- no exception, just an empty `intermediates` directory.
     """
     _svgs_cache.cache_clear()
-    svgs = _svgs(demo_harness_with_board)
+    svgs = _svgs(demo_harness_with_board, demo_harness_with_board_result.drawings)
     assert svgs
     intermediates = tmp_path / "intermediates"
     intermediates.mkdir()
@@ -220,10 +250,12 @@ def _plant_stale_files(out_dir):
     (out_dir / "keep" / "inside.csv").write_text("keep me too", encoding="utf-8")
 
 
-def test_stale_exports_are_removed_on_a_successful_write(demo_cabinet, tmp_path):
+def test_stale_exports_are_removed_on_a_successful_write(
+    demo_cabinet, tmp_path, demo_cabinet_result
+):
     out_dir = tmp_path / "out"
     _plant_stale_files(out_dir)
-    result = BuildResult(model=demo_cabinet, findings=())
+    result = BuildResult(model=demo_cabinet, findings=(), drawings=demo_cabinet_result.drawings)
     fr.write(result, out_dir)
     names = {p.name for p in out_dir.iterdir()}
     assert "old.pdf" not in names
@@ -235,11 +267,15 @@ def test_stale_exports_are_removed_on_a_successful_write(demo_cabinet, tmp_path)
     assert (out_dir / "keep" / "inside.csv").exists()
 
 
-def test_stale_exports_are_removed_on_the_raise_path(demo_cabinet, tmp_path):
+def test_stale_exports_are_removed_on_the_raise_path(demo_cabinet, tmp_path, demo_cabinet_result):
     out_dir = tmp_path / "out"
     _plant_stale_files(out_dir)
     subject = next(iter(demo_cabinet.tables["item"]))
-    result = BuildResult(model=demo_cabinet, findings=(_error_finding(subject),))
+    result = BuildResult(
+        model=demo_cabinet,
+        findings=(_error_finding(subject),),
+        drawings=demo_cabinet_result.drawings,
+    )
     with pytest.raises(BuildErrors):
         fr.write(result, out_dir)
     names = {p.name for p in out_dir.iterdir()}
@@ -254,8 +290,10 @@ def test_stale_exports_are_removed_on_the_raise_path(demo_cabinet, tmp_path):
 # -- F6: naming ------------------------------------------------------------------
 
 
-def test_terminal_export_is_named_from_the_strip_reference(demo_cabinet, tmp_path):
-    result = BuildResult(model=demo_cabinet, findings=())
+def test_terminal_export_is_named_from_the_strip_reference(
+    demo_cabinet, tmp_path, demo_cabinet_result
+):
+    result = BuildResult(model=demo_cabinet, findings=(), drawings=demo_cabinet_result.drawings)
     written = fr.write(result, tmp_path / "out")
     names = {p.name for p in written}
     assert "DEMO-1-v1.1-terminals-C1-X1.csv" in names
@@ -280,7 +318,9 @@ def test_board_netlist_is_written_to_intermediates_named_from_its_reference(tmp_
     assert (intermediates / "netlist-PCB1.net").exists()
 
 
-def test_out_dir_never_receives_an_svg(demo_harness_with_board, tmp_path):
+def test_out_dir_never_receives_an_svg(
+    demo_harness_with_board, tmp_path, demo_harness_with_board_result
+):
     """Decision-0011 regression guard: `out_dir` holds exports only, never a page SVG.
 
     `_exports()` cannot emit an `.svg` key today (it never calls a drawing function), so
@@ -289,7 +329,9 @@ def test_out_dir_never_receives_an_svg(demo_harness_with_board, tmp_path):
     `out_dir` with nothing else here to catch it. `demo_harness_with_board` guarantees at
     least one SVG actually exists (in intermediates), so this is not a vacuous check.
     """
-    result = BuildResult(model=demo_harness_with_board, findings=())
+    result = BuildResult(
+        model=demo_harness_with_board, findings=(), drawings=demo_harness_with_board_result.drawings
+    )
     out_dir, intermediates = tmp_path / "out", tmp_path / "intermediates"
     written = fr.write(result, out_dir, intermediates=intermediates)
     assert written
@@ -332,7 +374,7 @@ def _clashing_boards_model():
         parts_and_boards.extend([part, pcb, item])
     draft = Draft()
     draft.extend(parts_and_boards, origin=_CLASH_ORIGIN)
-    return freeze(draft)
+    return with_paper(with_drawing_library(freeze(draft)), settings())
 
 
 def test_a_deliberate_export_name_clash_raises(tmp_path):
@@ -410,7 +452,7 @@ def _two_units_of_one_release_with_clashing_documents():
         records.extend([unit, item, document])
     draft = Draft()
     draft.extend(records, origin=_CLASH_ORIGIN)
-    return freeze(draft)
+    return with_paper(with_drawing_library(freeze(draft)), settings())
 
 
 def test_a_deliberate_export_name_clash_of_two_units_in_one_release_raises(tmp_path):
@@ -429,8 +471,10 @@ def test_a_deliberate_export_name_clash_of_two_units_in_one_release_raises(tmp_p
 # -- Determinism -------------------------------------------------------------------
 
 
-def test_two_writes_of_one_result_give_byte_equal_files(demo_cabinet, tmp_path):
-    result = BuildResult(model=demo_cabinet, findings=())
+def test_two_writes_of_one_result_give_byte_equal_files(
+    demo_cabinet, tmp_path, demo_cabinet_result
+):
+    result = BuildResult(model=demo_cabinet, findings=(), drawings=demo_cabinet_result.drawings)
     first = fr.write(result, tmp_path / "out1")
     second = fr.write(result, tmp_path / "out2")
     assert {p.name for p in first} == {p.name for p in second}
@@ -442,9 +486,11 @@ def test_two_writes_of_one_result_give_byte_equal_files(demo_cabinet, tmp_path):
 _TEXT_SUFFIXES = {".csv", ".xml", ".md", ".json", ".html", ".txt"}
 
 
-def test_every_text_export_has_no_bom_and_no_carriage_return(demo_cabinet, tmp_path):
+def test_every_text_export_has_no_bom_and_no_carriage_return(
+    demo_cabinet, tmp_path, demo_cabinet_result
+):
     """Guide build.md: UTF-8, no byte order mark, `\\n` line ends, on every OS."""
-    result = BuildResult(model=demo_cabinet, findings=())
+    result = BuildResult(model=demo_cabinet, findings=(), drawings=demo_cabinet_result.drawings)
     written = [p for p in fr.write(result, tmp_path / "out") if p.suffix in _TEXT_SUFFIXES]
     assert {".csv"} <= {p.suffix for p in written}  # examined: text exports really were written
     bad = [
@@ -458,14 +504,28 @@ def test_every_text_export_has_no_bom_and_no_carriage_return(demo_cabinet, tmp_p
 # -- F4: check ordering -------------------------------------------------------------
 
 
-def test_check_orders_error_then_warning_then_info(demo_cabinet):
+def test_check_orders_error_then_warning_then_info(demo_cabinet, demo_cabinet_result):
     subject = next(iter(demo_cabinet.tables["item"]))
     findings = (
         Finding(code="Z_INFO", severity=Severity.INFO, subjects=(subject,), message="z"),
-        Finding(code="A_ERROR", severity=Severity.ERROR, subjects=(subject,), message="a"),
-        Finding(code="M_WARNING", severity=Severity.WARNING, subjects=(subject,), message="m"),
+        Finding(
+            code="A_ERROR",
+            severity=Severity.ERROR,
+            subjects=(subject,),
+            message="a",
+            fix="Write: x",
+        ),
+        Finding(
+            code="M_WARNING",
+            severity=Severity.WARNING,
+            subjects=(subject,),
+            message="m",
+            fix="Write: x",
+        ),
     )
-    result = BuildResult(model=demo_cabinet, findings=findings)
+    result = BuildResult(
+        model=demo_cabinet, findings=findings, drawings=demo_cabinet_result.drawings
+    )
     resolved = fr.check(result)
     rank = {"error": 0, "warning": 1, "info": 2}
     severities = [f.severity for f in resolved]
@@ -587,7 +647,7 @@ def _model_with_an_unlaid_out_function():
     draft.extend([item, function, port, _system_document("unlaid-out-function")], origin=origin)
     # layout-0218: a function with nothing connected is drawn on no page, so wire its port.
     _wired_to_a_partner(draft, port, origin)
-    return freeze(draft)
+    return with_paper(with_drawing_library(freeze(draft)), settings())
 
 
 def test_check_calls_fransys_render_check_for_the_model():
@@ -847,31 +907,6 @@ def _model_with_an_extra_port_symbol_mismatch() -> tuple[Draft, Id]:
     # layout-0218: an unconnected function is drawn on no page, so the extra port needs a wire.
     _wired_to_a_partner(draft, extra_port, _DESIGN_ORIGIN)
     return draft, part.id
-
-
-def test_symbol_port_missing_falls_back_to_the_part_with_no_matching_port_template():
-    """The extra-port case: no `PortTemplate` matches, so the origin falls back to the `Part`.
-
-    The extra port fires `ITEM_PART_MISMATCH` (an `ERROR`), so `fr.build` runs no layout
-    (decision 0028) and reports no `SYMBOL_PORT_MISSING`; the finding is built from the
-    `SymbolPortError` that layout raises on that model, called directly.
-    """
-    draft, part_id = _model_with_an_extra_port_symbol_mismatch()
-    result = fr.build(draft)
-
-    assert any(f.code == "ITEM_PART_MISMATCH" for f in result.findings)
-    assert not any(f.code == "SYMBOL_PORT_MISSING" for f in result.findings)
-    with pytest.raises(SymbolPortError) as raised:
-        lay_out_schematic(result.model, OPTIONS)
-    finding = symbol_port_missing_finding(result.model, raised.value)
-    assert finding.severity is Severity.ERROR
-    assert finding.subjects == (part_id,)
-    assert finding.message == (
-        "part 'DEMO-EXTRA-PORT-RLY': model port 'WRONG' has no port on symbol 'operating-device'"
-    )
-
-    (resolved,) = _resolved((finding,), result.model)
-    assert f"{_PART_HEADER_ORIGIN.file}:{_PART_HEADER_ORIGIN.line}" in resolved.message
 
 
 def _model_with_a_part_less_symbol_mismatch() -> tuple[Draft, Id]:

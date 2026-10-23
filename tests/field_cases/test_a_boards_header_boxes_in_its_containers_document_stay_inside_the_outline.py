@@ -20,11 +20,11 @@ from typing import NamedTuple
 lazy from pathlib import Path
 
 import fransys as fr
-import pytest
+from _drawn_extent import Rect, body_g
+from _drawn_pages import drawn_pages
 from fransys.colours import WH
 
-from fransys_model.kernel import Id
-from fransys_model.layout import BoxText, ConnectorBox, Outline, Route, layout_of
+lazy from fransys_layout.drawing import Drawing
 
 
 class _Headers(NamedTuple):
@@ -69,97 +69,80 @@ def _build(tmp_path: Path) -> fr.BuildResult:
     return fr.build(d, doc)
 
 
-def _through(box: ConnectorBox, route: Route) -> bool:
-    """Whether `route` has a segment through the interior of `box`."""
-    return route.page == box.page and _crosses(box, [(p.x, p.y) for p in route.points])
-
-
-def _crosses(box: ConnectorBox, pts: list[tuple[int, int]]) -> bool:
+def _crosses(box: Rect, pts: tuple[tuple[int, int], ...]) -> bool:
     """Whether a segment of the polyline `pts` passes through the interior of `box`."""
-    for (x1, y1), (x2, y2) in itertools.pairwise(pts):
-        low_x, high_x, low_y, high_y = min(x1, x2), max(x1, x2), min(y1, y2), max(y1, y2)
-        if (
-            low_x < box.x + box.width
-            and box.x < high_x
-            and low_y < box.y + box.height
-            and box.y < high_y
-        ):
+    x0, y0, x1, y1 = box
+    for (ax, ay), (bx, by) in itertools.pairwise(pts):
+        if min(ax, bx) < x1 and x0 < max(ax, bx) and min(ay, by) < y1 and y0 < max(ay, by):
             return True
     return False
 
 
-def _inside(box: ConnectorBox) -> bool:
-    """Whether every stored text anchor and cell of `box` lies inside its rectangle."""
-    right, foot = box.x + box.width, box.y + box.height
-    texts = all(box.x <= t.x < right and box.y <= t.y < foot for t in box.texts)
-    cells = all(
-        box.x <= c.x and c.x + c.width <= right and box.y <= c.y and c.y + c.height <= foot
-        for c in box.cells
-    )
-    return texts and cells
+def _inside(box: Rect, texts: list[Rect]) -> bool:
+    """Whether every stored text rectangle of `box` lies inside its rectangle."""
+    x0, y0, x1, y1 = box
+    return all(x0 <= a and b <= x1 and y0 <= c and d <= y1 for a, c, b, d in texts)
+
+
+def _boxes(drawing: Drawing) -> list[tuple[Rect, list[Rect]]]:
+    """Each box symbol of the page with the rectangles of the texts that touch it."""
+    out = []
+    for s in drawing.symbols:
+        if s.key != "generic-box":
+            continue
+        box = body_g(s)
+        texts = [
+            (t.box.x, t.box.y, t.box.x + t.box.w, t.box.y + t.box.h)
+            for t in drawing.texts
+            if t.box.x < box[2]
+            and box[0] < t.box.x + t.box.w
+            and t.box.y < box[3]
+            and box[1] < t.box.y + t.box.h
+        ]
+        out.append((box, texts))
+    return out
 
 
 def test_a_connector_box_holds_its_ink_and_no_wire_crosses_it(tmp_path: Path) -> None:
-    model = _build(tmp_path).model
-    boxes = list(layout_of(model, ConnectorBox).values())
+    pages = drawn_pages(_build(tmp_path).model).values()
+    boxes = [(b, t, d) for d in pages for b, t in _boxes(d)]
     assert len(boxes) >= 2  # positive half: the container's document boxes the headers
-    assert [b for b in boxes if not _inside(b)] == []
-    routes = list(layout_of(model, Route).values())
-    assert [(b.function, r.id) for b in boxes for r in routes if _through(b, r)] == []
-
-
-def _box(*, texts: tuple[BoxText, ...] = ()) -> ConnectorBox:
-    return ConnectorBox(
-        id=Id(kind="layout.connector_box", value="b"),
-        key=("k",),
-        page=Id(kind="layout.page", value="p"),
-        function=Id(kind="function", value="f"),
-        x=0,
-        y=0,
-        width=10,
-        height=10,
-        texts=texts,
-        cells=(),
-        produced_by="t",
-    )
+    assert [b for b, t, _ in boxes if not _inside(b, t)] == []
+    assert [(b, w.id) for b, _, d in boxes for w in d.wires if _crosses(b, w.points)] == []
 
 
 def test_the_two_checks_can_fail() -> None:
-    box = _box()
-    assert _crosses(box, [(-5, 5), (15, 5)])
-    assert not _crosses(box, [(-5, 10), (15, 10)])  # an edge is no interior
-    assert not _inside(_box(texts=(BoxText(index=0, x=20, y=5),)))
-    assert _inside(_box(texts=(BoxText(index=0, x=2, y=5),)))
+    box = (0, 0, 10, 10)
+    assert _crosses(box, ((-5, 5), (15, 5)))
+    assert not _crosses(box, ((-5, 10), (15, 10)))  # an edge is no interior
+    assert not _inside(box, [(20, 5, 22, 7)])
+    assert _inside(box, [(2, 5, 4, 7)])
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="P7.4: a header box is drawn on the board outline's edge, ink on ink; the boxes must "
-    "stand strictly inside the outline",
-)
 def test_the_header_boxes_stand_strictly_inside_the_board_outline(tmp_path: Path) -> None:
-    model = _build(tmp_path).model
-    outlines = list(layout_of(model, Outline).values())
-    boxes = list(layout_of(model, ConnectorBox).values())
-    pairs = [
-        (outline, b)
-        for outline in outlines
-        for b in boxes
-        if b.page == outline.page
-        and outline.x <= b.x
-        and b.x + b.width <= outline.x + outline.width
-        and outline.y <= b.y
-        and b.y + b.height <= outline.y + outline.height
-    ]
+    pairs = []
+    for d in drawn_pages(_build(tmp_path).model).values():
+        for o in d.outlines:
+            ox0, oy0 = min(p[0] for p in o.points), min(p[1] for p in o.points)
+            ox1, oy1 = max(p[0] for p in o.points), max(p[1] for p in o.points)
+            pairs += [
+                ((ox0, oy0, ox1, oy1), b)
+                for b, _ in _boxes(d)
+                if ox0 <= b[0] and b[2] <= ox1 and oy0 <= b[1] and b[3] <= oy1
+            ]
     assert len(pairs) >= 2  # positive half: the outline holds the header boxes
     offenders = [
-        (b.x, b.y, b.width, b.height)
-        for outline, b in pairs
-        if not (
-            outline.x < b.x
-            and b.x + b.width < outline.x + outline.width
-            and outline.y < b.y
-            and b.y + b.height < outline.y + outline.height
-        )
+        b
+        for (ox0, oy0, ox1, oy1), b in pairs
+        if not (ox0 < b[0] and b[2] < ox1 and oy0 < b[1] and b[3] < oy1)
     ]
     assert offenders == []
+
+
+def test_the_nested_board_is_drawn_inside_an_outline(tmp_path: Path) -> None:
+    """The nested board gets its frame and caption: one drawn outline per unit boundary.
+
+    The core path sets `outlines=()` (UNIT-SCOPE, pending OUTLINES; GAP-FLIP-208, designer R302).
+    Read from the drawn pages, as the test above does.
+    """
+    assert sum(len(d.outlines) for d in drawn_pages(_build(tmp_path).model).values()) >= 1

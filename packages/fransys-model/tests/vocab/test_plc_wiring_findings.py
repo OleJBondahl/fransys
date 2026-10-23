@@ -5,9 +5,8 @@ from typing import TYPE_CHECKING
 from plant import Plant
 from query_builders import make_channels
 
-from fransys_model.checks._natural_join import natural_join
 from fransys_model.checks.plc import check_plc_wiring
-from fransys_model.kernel import Id, make_id
+from fransys_model.kernel import Id, make_id, natural_join
 from fransys_model.vocab.enums import LinkKind, SignalType
 from fransys_model.vocab.facets.plc import PlcBindingFacet, PlcRequestFacet
 from fransys_model.vocab.finding_ref import ref

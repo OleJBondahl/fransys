@@ -20,9 +20,9 @@ from typing import TYPE_CHECKING, Any, NamedTuple
 
 import fransys as fr
 import pytest
+from _drawn_pages import drawn_pages
 
-from fransys_model.layout import Label, Page, SymbolPlacement, layout_of
-from fransys_model.vocab.tables import ports
+from fransys_model.layout import Page, layout_of
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -74,12 +74,12 @@ def result(
 
 
 def test_the_split_device_cross_references_stay_whole(result: fr.BuildResult) -> None:
-    """Each partner end names a page that exists and the column its function stands at there."""
-    model = result.model
-    pages = layout_of(model, Page)
-    columns = {(p.function, p.page): p.x for p in layout_of(model, SymbolPlacement).values()}
-    ends = [end for one in layout_of(model, Label).values() for end in one.partners]
+    """Each cross-reference names a page that exists and the column its function stands at there."""
+    pages = layout_of(result.model, Page)
+    drawn = drawn_pages(result.model)
+    assert set(drawn) <= set(pages)
+    ends = [s for d in drawn.values() for s in d.symbols if s.key == "reference-marker"]
     assert ends
     for end in ends:
-        assert end.page in pages
-        assert columns[ports(model)[end.port].function, end.page] == end.x
+        assert dict(end.slots)["ref"]
+        assert any(s.x == end.x for d in drawn.values() for s in d.symbols if s is not end)

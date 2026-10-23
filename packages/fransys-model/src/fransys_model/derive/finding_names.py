@@ -115,9 +115,15 @@ def _replace(model: Model, match: re.Match[str]) -> str:
     return name_of(model, Id(kind=match.group(1), value=match.group(2)))
 
 
+def _printed(model: Model, text: str) -> str:
+    return REF.sub(lambda m: _replace(model, m), text)
+
+
 def name_findings(model: Model, findings: tuple[Finding, ...]) -> tuple[Finding, ...]:
-    """Each finding with every reference in its message printed as `name_of`."""
+    """Each finding with every reference in its message and fix printed as `name_of`."""
     return tuple(
-        dataclasses.replace(finding, message=REF.sub(lambda m: _replace(model, m), finding.message))
+        dataclasses.replace(
+            finding, message=_printed(model, finding.message), fix=_printed(model, finding.fix)
+        )
         for finding in findings
     )

@@ -2,10 +2,9 @@
 
 from typing import TYPE_CHECKING
 
+from fransys_author._earth_net import earth_net
 from fransys_author._keys import scoped
 from fransys_author._origin import caller_origin
-from fransys_model.kernel import make_id
-from fransys_model.vocab import Net, NetClass
 
 if TYPE_CHECKING:
     from fransys_author.handles import Fn, Port
@@ -13,13 +12,5 @@ if TYPE_CHECKING:
 
 def join_pe(fn: Fn, screw: Port) -> None:
     """A one-port `PE` net per screw: one net of a name per scope would conflict on the next."""
-    key = scoped(screw.key, "pe")
-    net = Net(
-        id=make_id(Net, key),
-        key=key,
-        name="PE",
-        net_class=NetClass.PE,
-        ports=(screw.id,),
-        potential=None,
-    )
+    net = earth_net(scoped(screw.key, "pe"), (screw.id,))
     fn._recorder._add(net, caller_origin())

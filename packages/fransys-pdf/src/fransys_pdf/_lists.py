@@ -38,7 +38,7 @@ from fransys_model.derive import (
     wire_rows,
 )
 
-from ._flow import GUTTER_PCT, SHARE_PCT, flow_columns
+from ._flow import flow_columns
 from ._lists_cells import _cell_typst, _kept_columns, _widths
 from ._lists_terminal import _terminal_table
 from ._marks import LIST_HEADING
@@ -50,7 +50,7 @@ if TYPE_CHECKING:
 
     from fransys_model.derive import (
         AspectNodeId,
-        BridgePiece,
+        BridgePieceRow,
         CableListRow,
         ConnectorRow,
         DocumentRow,
@@ -74,7 +74,7 @@ def _table(  # noqa: PLR0913 -- the list, its wide columns, its heading, anchor 
 ) -> str:
     """The list table: `""` if no rows or all blank (pdf-0019, 0011); `wide`: `1fr` (0008).
 
-    `title` is the heading a carried table repeats with " (cont.)", `label` its anchor (pdf-0027),
+    `title` is the heading a carried table repeats, `label` its anchor (pdf-0027),
     `labels` the header text of a column whose field name reads badly (pdf-0030).
     """
     if not rows:
@@ -96,7 +96,7 @@ def plc_channel_rows_for(model: Model, record: DocumentRow) -> tuple[PlcChannelR
     return plc_channel_rows(model, unit=document_unit(model, record.id), context=record.location)
 
 
-def plc_list_page(model: Model, record: DocumentRow) -> str:
+def plc_list_page(model: Model, record: DocumentRow, *, share_pct: float, gutter_pct: float) -> str:
     """The PLC_LIST: a headed table per `plc_tables` entry in two columns, scoped to the unit."""
     unit = document_unit(model, record.id)
     sections = []
@@ -109,7 +109,7 @@ def plc_list_page(model: Model, record: DocumentRow) -> str:
                 PLC_COLUMNS, rows, ("wired_to", "signal_name"), title=title, label=f"plc{number}"
             )
         )
-    return flow_columns(sections, share_pct=SHARE_PCT, gutter_pct=GUTTER_PCT)
+    return flow_columns(sections, share_pct=share_pct, gutter_pct=gutter_pct)
 
 
 def _list_context(model: Model, record: DocumentRow, subject: ItemId) -> AspectNodeId | None:
@@ -144,17 +144,21 @@ def wire_rows_for(model: Model, record: DocumentRow) -> tuple[WireRow, ...]:
     return wire_rows(model, unit=document_unit(model, record.id), context=record.location)
 
 
-def wire_label_list_page(model: Model, record: DocumentRow) -> str:
+def wire_label_list_page(
+    model: Model, record: DocumentRow, *, share_pct: float, gutter_pct: float
+) -> str:
     """The WIRE_LABEL_LIST table: every `wire`-faceted conductor, scoped to the unit."""
     table = _table(
         WIRE_COLUMNS,
         column_rows(wire_rows_for(model, record), WIRE_COLUMNS),
         ("from_", "to", "label"),  # every free-text column: `auto` ones starve a `1fr` (pdf-0027)
     )
-    return flow_columns([table], share_pct=SHARE_PCT, gutter_pct=GUTTER_PCT)
+    return flow_columns([table], share_pct=share_pct, gutter_pct=gutter_pct)
 
 
-def designation_list_page(model: Model, record: DocumentRow) -> str:
+def designation_list_page(
+    model: Model, record: DocumentRow, *, share_pct: float, gutter_pct: float
+) -> str:
     """The DESIGNATION_LIST table: every item's designation, scoped to the unit."""
     table = _table(
         DESIGNATION_COLUMNS,
@@ -163,7 +167,7 @@ def designation_list_page(model: Model, record: DocumentRow) -> str:
         ),
         ("description",),
     )
-    return flow_columns([table], share_pct=SHARE_PCT, gutter_pct=GUTTER_PCT)
+    return flow_columns([table], share_pct=share_pct, gutter_pct=gutter_pct)
 
 
 def document_cable_rows(model: Model, record: DocumentRow) -> tuple[CableListRow, ...]:
@@ -209,7 +213,12 @@ def _list_heading(title: str) -> str:
 
 
 def terminal_list_page(
-    model: Model, record: DocumentRow, bridges: Mapping[str, BridgePiece] | None = None
+    model: Model,
+    record: DocumentRow,
+    bridges: Mapping[str, BridgePieceRow] | None = None,
+    *,
+    share_pct: float,
+    gutter_pct: float,
 ) -> str:
     """The TERMINAL_LIST section: a headed table per strip; unit-relative (pdf-0012)."""
     unit = document_unit(model, record.id)
@@ -230,7 +239,7 @@ def terminal_list_page(
                 bridges=bridges,
             )
         )
-    return flow_columns(sections, share_pct=SHARE_PCT, gutter_pct=GUTTER_PCT)
+    return flow_columns(sections, share_pct=share_pct, gutter_pct=gutter_pct)
 
 
 def _connector_rows_for_page(model: Model, record: DocumentRow) -> tuple[ConnectorRow, ...]:
@@ -263,10 +272,12 @@ def _connector_section(row: ConnectorRow, description: str, number: int) -> str:
     )
 
 
-def connector_list_page(model: Model, record: DocumentRow) -> str:
+def connector_list_page(
+    model: Model, record: DocumentRow, *, share_pct: float, gutter_pct: float
+) -> str:
     """The CONNECTOR_LIST section: a table per connector, headed by its designation (pdf-0030)."""
     sections = [
         _connector_section(row, item_description(model, connector_item(model, row.connector)), n)
         for n, row in enumerate(_connector_rows_for_page(model, record))
     ]
-    return flow_columns(sections, share_pct=SHARE_PCT, gutter_pct=GUTTER_PCT)
+    return flow_columns(sections, share_pct=share_pct, gutter_pct=gutter_pct)

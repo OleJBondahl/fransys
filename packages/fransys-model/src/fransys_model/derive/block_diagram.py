@@ -8,6 +8,7 @@ does. A diagram belongs to a reading: `unit=None` is the system, a unit its own.
 from typing import Any, cast
 
 from fransys_kernel import render_id
+from fransys_model.derive.facts.children import parent_item
 from fransys_model.derive.facts.item_predicates import is_cable
 from fransys_model.derive.facts.units import is_harness, item_chain, unit_own_roots
 from fransys_model.kernel import Id, Model, value
@@ -32,6 +33,7 @@ from .facts.subjects import is_unit_boundary
 from .harness import reading_cables
 from .harness_line_ends import mate_of, plug_of
 from .instance_tag import instance_name, instance_tags
+from .library_grid import mm_per_division
 from .lookups import item_of_port, terminal_strip, unit_chain
 from .order import NaturalKey, natural_key
 lazy from .rows import HarnessCable
@@ -141,7 +143,9 @@ def end_box(model: Model, port: Id[Port], unit: Id[Unit] | None) -> BoxEnd | Non
     landed = cable_end_owner(model, item)
     connector = _connector_of(model, port)
     anchored = terminal_strip(model, item) is not None or connector is not None
-    plug = plug_of(model, item, connector)
+    parent = parent_item(model, item)
+    line_parent = parent is not None and (is_cable(model, parent) or is_harness(model, parent))
+    plug = plug_of(model, item, connector, {parent} if line_parent else set())
     if plug is not None:
         mate = mate_of(model, plug)
         if mate is None:
@@ -295,9 +299,10 @@ def diagram_marker_text(model: Model, marker: DiagramMarker) -> str:
         and m.key[-3:] == marker.key[-3:]
     )
     page = sheet_for(model, PageKind.BLOCK_DIAGRAM)
-    width = content_extent(page.content_width_mm, page.module_mm)
+    per_division = mm_per_division(model, page)
+    width = content_extent(page.content_width_mm, per_division)
     column = frame_column(width, page.frame_columns, partner.x)
     row = frame_row(
-        content_extent(page.content_height_mm, page.module_mm), page.frame_rows, partner.y
+        content_extent(page.content_height_mm, per_division), page.frame_rows, partner.y
     )
     return partner_position_text((1, own.number, ()), (1, marker.at_sheet, ()), column, row)

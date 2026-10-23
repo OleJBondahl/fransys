@@ -2,10 +2,8 @@
 
 import dataclasses
 import functools
-from typing import Final
+from typing import Any, Final
 lazy from collections.abc import Callable
-
-lazy from .model import Model
 
 # Results kept by each `digest_cached` builder, least recently used out first. Each entry keeps
 # its whole `Model` alive, so the bound is also a bound on memory.
@@ -20,24 +18,28 @@ class ByDigest:
     """
 
     digest: str
-    model: Model = dataclasses.field(compare=False)
+    model: Any = dataclasses.field(compare=False)
 
 
-class DigestCached[T]:
-    """A builder `Model -> T`, called through a cache of its last `maxsize` results by digest.
+class DigestCached[M, T]:
+    """A builder `M -> T`, called through a cache of its last `maxsize` results by digest.
 
-    Two models with an equal digest get the identical result; a new digest builds afresh. Each
-    entry keeps its `Model` alive. Identity is guaranteed within one thread.
+    Equal digests give the identical result, each entry keeping its `Model` alive. An `M` with
+    no `digest` (a `Draft.tables()` view, which hashes nothing) is built uncached, every call.
     """
 
-    def __init__(self, build: Callable[[Model], T], maxsize: int) -> None:
+    def __init__(self, build: Callable[[M], T], maxsize: int) -> None:
         """Wrap `build`, keeping its name and docstring."""
+        self._build = build
         self._cached = functools.lru_cache(maxsize=maxsize)(lambda keyed: build(keyed.model))
         functools.update_wrapper(self, build)
 
-    def __call__(self, model: Model) -> T:
-        """The result for `model.digest`: cached, or built now."""
-        return self._cached(ByDigest(model.digest, model))
+    def __call__(self, model: M) -> T:
+        """The result for `model.digest`: cached, or built now; a view with no digest: built now."""
+        digest = getattr(model, "digest", None)
+        if digest is None:
+            return self._build(model)
+        return self._cached(ByDigest(digest, model))
 
     def cache_clear(self) -> None:
         """Forget every result and the build count: the next call of each digest builds again."""
@@ -49,10 +51,10 @@ class DigestCached[T]:
         return self._cached.cache_info().misses
 
 
-def digest_cached[T](maxsize: int) -> Callable[[Callable[[Model], T]], DigestCached[T]]:
-    """Decorate a builder `Model -> T` so it is cached on `model.digest`, `maxsize` results kept."""
+def digest_cached[M, T](maxsize: int) -> Callable[[Callable[[M], T]], DigestCached[M, T]]:
+    """Decorate a builder `M -> T` so it is cached on `model.digest`, `maxsize` results kept."""
 
-    def decorate(build: Callable[[Model], T]) -> DigestCached[T]:
+    def decorate(build: Callable[[M], T]) -> DigestCached[M, T]:
         return DigestCached(build, maxsize)
 
     return decorate

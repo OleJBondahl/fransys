@@ -16,14 +16,12 @@ import tempfile
 from pathlib import Path
 
 import fransys as fr
+from _contact_tables import table_body_g, table_symbols
 from fransys.colours import BU
 
-from fransys_model.derive.drawing_text import CONTACT_SLOTS, contact_heading
-from fransys_model.layout import Label, LabelKind, layout_of
 
-
-def _built() -> tuple:
-    """The model of the two-relay circuit and its contact tables."""
+def _built():
+    """The model of the two-relay circuit."""
     d = fr.design("demo_parts", place="CAB")
     cab = d.location("CAB", "Cabinet")
     with d.function("G1", "Relay group"):
@@ -44,29 +42,19 @@ def _built() -> tuple:
     cover = Path(tempfile.mkdtemp()) / "cover.md"
     cover.write_text("# Cabinet\n", encoding="utf-8")
     doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover)
-    model = fr.build(d, doc).model
-    return model, [
-        one
-        for one in layout_of(model, Label).values()
-        if one.kind is LabelKind.CROSS_REFERENCE and one.slot in CONTACT_SLOTS
-    ]
+    return fr.build(d, doc).model
 
 
-def _overlap(a: Label, b: Label) -> bool:
-    """True when the two boxes share area."""
-    return (
-        a.page == b.page
-        and a.x < b.x + b.width
-        and b.x < a.x + a.width
-        and a.y < b.y + b.height
-        and b.y < a.y + a.height
-    )
+def _overlap(a: tuple, b: tuple) -> bool:
+    """True when the two boxes (x0, y0, x1, y1) share area."""
+    return a[0] < b[2] and b[0] < a[2] and a[1] < b[3] and b[1] < a[3]
 
 
 def test_two_coil_tables_stack_in_coil_order_each_headed_by_its_coil() -> None:
     """Both coils have a table; no two overlap; K1's is above K2's; each prints its coil."""
-    model, tables = _built()
+    tables = table_symbols(_built())
     assert len(tables) == 2
-    assert not _overlap(*tables)
     top, bottom = sorted(tables, key=lambda t: t.y)
-    assert [contact_heading(model, t) for t in (top, bottom)] == ["-K1", "-K2"]
+    assert not _overlap(table_body_g(top), table_body_g(bottom))
+    # the heading row of a table is its coil's tag
+    assert [t.texts[0] for t in (top, bottom)] == [("-K1",), ("-K2",)]

@@ -7,12 +7,12 @@ from fransys_model.derive.facts.children import children_index
 from fransys_model.kernel import (
     DIGEST_CACHE_SIZE,
     Id,
-    Model,
     digest_cached,
     index_ids,
     namespace_of,
 )
 from fransys_model.vocab.tables import (
+    HasTables,
     aspect_nodes,
     conductors,
     facet_subject,
@@ -55,7 +55,7 @@ class Indexes:
 
 
 @digest_cached(DIGEST_CACHE_SIZE)
-def build_indexes(model: Model) -> Indexes:
+def build_indexes(model: HasTables) -> Indexes:
     """Build every index together off `model`.
 
     Cached on `model.digest`, holding the last few results: two calls with an equal digest

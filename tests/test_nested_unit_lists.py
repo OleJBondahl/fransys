@@ -16,11 +16,13 @@ import fransys as fr
 import fransys_author
 import fransys_parts
 import pytest
-from fransys_pdf import _lists, _lists_terminal
+from _pdf_lists import connector_list_page
+from fransys_pdf import _lists_terminal
 
 # `test_declared_dependencies.py`'s own pattern for importing a sibling root test module by
 # name: `--import-mode=importlib` (root pyproject.toml) never puts `tests/` on `sys.path`.
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+from root_library import freeze
 from test_units_worked_example import _PROJECT, _system_design
 
 from fransys_model.derive import (
@@ -36,7 +38,7 @@ from fransys_model.derive import (
     wire_rows,
 )
 from fransys_model.derive.passes.numbering import number as number_pass
-from fransys_model.kernel import Id, SchemaError, freeze, merge
+from fransys_model.kernel import Id, SchemaError, merge
 from fransys_model.vocab.tables import (
     aspect_nodes,
     documents,
@@ -112,7 +114,7 @@ def test_the_same_connector_row_without_a_unit_still_prints_its_mate(worked):
 
 def test_a_nested_units_connector_list_page_draws_no_mate_column(worked):
     result, _cabinet, board = worked
-    page = _lists.connector_list_page(result.model, _document_of(result.model, board))
+    page = connector_list_page(result.model, _document_of(result.model, board))
     assert "-X1" in page
     assert 'text("1")' in page
     assert 'text("2")' in page

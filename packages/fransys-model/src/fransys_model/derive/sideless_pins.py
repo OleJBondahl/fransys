@@ -2,7 +2,7 @@
 
 from typing import NamedTuple
 
-from fransys_model.vocab import port_order_key
+from fransys_model.vocab.markings import port_order_key
 lazy from fransys_model.vocab import PortTemplate
 
 __all__ = ["SidelessPins", "sideless_pins"]

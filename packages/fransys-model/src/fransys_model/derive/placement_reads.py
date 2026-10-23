@@ -14,6 +14,7 @@ __all__ = [
     "has_function",
     "item_functions",
     "node_label",
+    "port_function",
     "port_name",
 ]
 
@@ -44,6 +45,12 @@ def function_ports(model: Model, function: Id[Function]) -> tuple[Id[Port], ...]
 def port_name(model: Model, port: Id[Port]) -> str:
     """The raw name of `port` on its function, not the printed one (`printed_port_name`)."""
     return ports(model)[port].name
+
+
+def port_function(model: Model, port: Id[Port]) -> Id[Function] | None:
+    """The function `port` belongs to, or `None` when the model has no such port."""
+    found = ports(model).get(port)
+    return None if found is None else found.function
 
 
 def node_label(model: Model, node: Id[AspectNode]) -> str:

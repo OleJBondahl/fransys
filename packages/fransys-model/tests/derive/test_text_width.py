@@ -47,10 +47,10 @@ def test_one_em_at_em_height():
 
 
 def test_marking_widths_set_each_marking_one_module_high():
-    assert marking_widths(["A1", "", "W"]) == tuple(
+    assert marking_widths(["A1", "", "W"], height=8) == tuple(
         text_width(m, height=8) for m in ("A1", "", "W")
     )
-    assert marking_widths(["W"])[0] > marking_widths(["i"])[0] > 0
+    assert marking_widths(["W"], height=8)[0] > marking_widths(["i"], height=8)[0] > 0
 
 
 def _advances(weight):

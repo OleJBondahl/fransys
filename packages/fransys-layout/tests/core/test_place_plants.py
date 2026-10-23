@@ -8,8 +8,9 @@ from __future__ import annotations
 from dataclasses import replace
 
 import pytest
+from options_fixtures import core_options
 
-from fransys_layout.core import Hints, Options, PlacementProblem
+from fransys_layout.core import CoreError, Facts, Hints, PlacementProblem
 from fransys_layout.core.place import place_pages
 from fransys_layout.core.place_y import YCycleError
 from fransys_layout.core.values import Fan, FlowGraph
@@ -28,13 +29,23 @@ def lamp_ring() -> PlacementProblem:
         net("n4", "c.s", "d.n"),
         net("n5", "d.s", "lamp.n"),
     )
-    return PlacementProblem(AREA, syms, nets)
+    return PlacementProblem(AREA, syms, nets, facts=Facts())
 
 
 def test_a_symbol_dealt_into_two_lanes_of_one_column_is_placed() -> None:
     """The lamp heads one lane and foots the other: stage 1 takes the ring's fan net out (0285)."""
     prob = lamp_ring()
-    assert place_pages(cut_of(prob), prob, Options()).pages
+    assert place_pages(
+        cut_of(prob),
+        prob,
+        core_options(
+            flip_turn="R180",
+            tag_stagger=True,
+            label_gap=8,
+            driver_first=True,
+            arrow_sides=("E", "W"),
+        ),
+    ).pages
 
 
 def ring_fan(flow: FlowGraph) -> Fan:
@@ -50,14 +61,24 @@ def test_the_ring_raises_the_named_error_with_the_column_and_the_fix() -> None:
     cut = cut_of(prob)
     ring = replace(cut.flow, fans=(ring_fan(cut.flow),), cross_links=())
     with pytest.raises(
-        YCycleError, match=r"page 1: cyclic y constraints \(columns .*split the ring"
-    ):
-        place_pages(replace(cut, flow=ring), prob, Options())
+        YCycleError, match=r"page 1: cyclic y constraints through symbols .*"
+    ) as caught:
+        place_pages(
+            replace(cut, flow=ring),
+            prob,
+            core_options(
+                flip_turn="R180",
+                tag_stagger=True,
+                label_gap=8,
+                driver_first=True,
+                arrow_sides=("E", "W"),
+            ),
+        )
+    assert isinstance(caught.value, CoreError)
+    named = str(caught.value).split("through symbols ")[1].split(":")[0].split(", ")
+    assert named == ["a", "b", "c", "d", "lamp"]
 
 
-@pytest.mark.xfail(
-    strict=True, reason="P6 is strict: the cut spreads a row group over two rows, then y drops it"
-)
 def test_a_row_group_the_cut_spread_over_two_rows_is_not_dropped() -> None:
     """The cut plant's circuit (a row group of three beside a wide column): R1 is ALIGN_DROPPED.
 
@@ -68,6 +89,22 @@ def test_a_row_group_the_cut_spread_over_two_rows_is_not_dropped() -> None:
     syms += [elem(f"s{i}", 300, 32, "G1") for i in (1, 2, 3)]
     nets = [net("x", "x0.s", "x1.n")]
     nets += [net(f"m{i}", f"r{i}.s", f"s{i}.n") for i in (1, 2, 3)]
-    prob = PlacementProblem(AREA, tuple(syms), tuple(nets), hints=Hints(group_order=("G0", "G1")))
-    found = place_pages(cut_of(prob), prob, Options()).findings
+    prob = PlacementProblem(
+        AREA,
+        tuple(syms),
+        tuple(nets),
+        hints=Hints(group_order=("G0", "G1")),
+        facts=Facts(),
+    )
+    found = place_pages(
+        cut_of(prob),
+        prob,
+        core_options(
+            flip_turn="R180",
+            tag_stagger=True,
+            label_gap=8,
+            driver_first=True,
+            arrow_sides=("E", "W"),
+        ),
+    ).findings
     assert [f for f in found if f.code == "ALIGN_DROPPED"] == []

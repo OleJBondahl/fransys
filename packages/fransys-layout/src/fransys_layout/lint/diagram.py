@@ -2,8 +2,9 @@
 
 from itertools import combinations, pairwise
 
+from fransys_layout.fix_text import fix_text
 from fransys_layout.geometry import Box, Point, contains_point, overlaps
-from fransys_layout.stages.space import Run, crosses, run_of
+from fransys_layout.routing.space import Run, crosses, run_of
 from fransys_model.kernel import Finding, Severity
 
 from ._diagram_scene import Ident, Scene, SceneBox, SceneLine, shapes
@@ -21,7 +22,9 @@ from .codes import (
 def _error(code: str, subjects: tuple[Ident, ...], message: str) -> Finding:
     """ERROR, or INFO for a code in `UNCLEARABLE` (layout-0252)."""
     severity = Severity.INFO if code in UNCLEARABLE else Severity.ERROR
-    return Finding(code=code, severity=severity, subjects=subjects, message=message)
+    return Finding(
+        code=code, severity=severity, subjects=subjects, message=message, fix=fix_text(code)
+    )
 
 
 def check_box_overlap(scene: Scene) -> tuple[Finding, ...]:

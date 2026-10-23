@@ -2,6 +2,7 @@
 
 from typing import TYPE_CHECKING, Final
 
+from fransys_model.checks._finding import finding, ordered
 from fransys_model.derive.facts.children import parent_item
 from fransys_model.derive.facts.item_predicates import is_plc_module
 from fransys_model.derive.facts.units import marked_harnesses
@@ -22,16 +23,14 @@ def check_harness_holds_plc_module(model: Model) -> tuple[Finding, ...]:
     """
     marked = marked_harnesses(model)
     found = [
-        Finding(
-            code=HARNESS_HOLDS_PLC_MODULE,
-            severity=Severity.ERROR,
-            subjects=(item.id, parent),
-            message=(
-                f"{ref(item)} is a PLC module under the harness "
-                f"{ref(items(model)[parent])}: build the rack with d.rack, not d.harness"
-            ),
+        finding(
+            HARNESS_HOLDS_PLC_MODULE,
+            Severity.ERROR,
+            (item.id, parent),
+            f"{ref(item)} is a PLC module under the harness "
+            f"{ref(items(model)[parent])}: build the rack with d.rack, not d.harness",
         )
         for item in items(model).values()
         if (parent := parent_item(model, item.id)) in marked and is_plc_module(model, item)
     ]
-    return tuple(sorted(found, key=lambda f: (f.code, f.subjects, f.message)))
+    return ordered(found)

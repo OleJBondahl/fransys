@@ -16,9 +16,8 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
             "when fewer, ERROR when more)."
         ),
         fix=(
-            "Wire the missing cores, mark a core you leave unused with `w.spare(colour)` (or "
-            "`w.spare()` for all the rest), or correct the product's `core_colours` list. A "
-            "spare or one-ended screen counts as a core."
+            "Use as many cores as the product has colours, each wired or marked spare. Write:"
+            " W1.spare()"
         ),
         page="findings-validators",
     ),
@@ -28,7 +27,25 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         stage="validators",
         who="consumer",
         cause="A conductor lands on an item that is not marked installed.",
-        fix="Mark the item installed, or remove the conductor if it is absent.",
+        fix=(
+            "Mark the item installed, or remove the conductor that lands on it. Write: "
+            'd.device("Q9", "DEMO-MCB-3P")'
+        ),
+        page="findings-validators",
+    ),
+    CodeInfo(
+        code="CORE_ON_PE_NOT_GNYE",
+        severities=(Severity.ERROR,),
+        stage="validators",
+        who="consumer",
+        cause=(
+            "A cable core that is not green-yellow (GNYE) lands on a port with role PE; "
+            "a screen core (`SH`) is exempt."
+        ),
+        fix=(
+            "The PE core is GNYE (IEC 60204-1): land the GNYE core on the PE port, and another "
+            "core elsewhere. Write: W1.core(GNYE, a, b)"
+        ),
         page="findings-validators",
     ),
     CodeInfo(
@@ -40,7 +57,9 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
             "A green-yellow conductor is on a net that is not PE: an ERROR on a net a declared "
             "net lists, a WARNING on a net none lists (IEC 60445 keeps green-yellow for PE)."
         ),
-        fix="Recolour it, or connect it to the PE net and declare it with `d.earth`.",
+        fix=(
+            "Use green-yellow only on the PE net, which `d.earth` declares. Write: d.earth(*pins)"
+        ),
         page="findings-validators",
     ),
     CodeInfo(
@@ -49,7 +68,10 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         stage="validators",
         who="consumer",
         cause="The loads one limit bounds sum above it; none is above it alone.",
-        fix="If they run together, raise the limit or split the loads.",
+        fix=(
+            "Lower the loads' summed draw below the limit, or split them across more limits. "
+            'Write: nominal_current_a = "0.5"'
+        ),
         page="findings-validators",
     ),
     CodeInfo(
@@ -58,7 +80,10 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         stage="validators",
         who="consumer",
         cause="A load's stated draw is above the limit that bounds it.",
-        fix="Lower the draw or raise the limit.",
+        fix=(
+            "Lower the load's stated draw below its limit, or raise the source's limit. "
+            'Write: nominal_current_a = "0.5"'
+        ),
         page="findings-validators",
     ),
     CodeInfo(
@@ -70,7 +95,25 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
             "One physical net joins two declared nets that are rails of different supply "
             "potentials."
         ),
-        fix="Fix the wiring or net declarations so no net joins two potentials.",
+        fix=(
+            "Rewire or separate the nets so no physical net joins two supply potentials. "
+            'Write: d.detail.net("name", *pins)'
+        ),
+        page="findings-validators",
+    ),
+    CodeInfo(
+        code="NET_ACROSS_UNIT_BOUNDARY",
+        severities=(Severity.ERROR, Severity.WARNING),
+        stage="validators",
+        who="consumer",
+        cause=(
+            "A declared net joins pins in different units and no wire joins it; a net does not "
+            "cross a unit boundary (ERROR when a boundary pin has no other way across)."
+        ),
+        fix=(
+            "Join across the boundary with a wire, and keep nets inside one unit. Write: "
+            "d.detail.wire(a, b, wire=...)"
+        ),
         page="findings-validators",
     ),
     CodeInfo(
@@ -80,8 +123,8 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         who="consumer",
         cause="One physical net joins declared nets of different names.",
         fix=(
-            "Fix the wiring, or give the nets one name if they are one signal (same-name nets "
-            "join silently)."
+            "Give one signal one net name, since same-name nets join silently. Write: "
+            'd.detail.net("name", *pins)'
         ),
         page="findings-validators",
     ),
@@ -94,7 +137,7 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
             "A port of a `bar` function has a role other than `pe`. A bar carries protective "
             "earth only, until the copper bar drawing (owner question) is ruled."
         ),
-        fix='Set `role = "pe"` on the port in the part file.',
+        fix='Give every port of a bar function the role `pe`. Write: role = "pe"',
         page="findings-validators",
     ),
     CodeInfo(
@@ -107,8 +150,8 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
             "holds them all. Not for the PE net."
         ),
         fix=(
-            "Wire the missing conductors, or remove the ports that should not share the "
-            "declared net."
+            "Put every port of the declared net on one board, or wire them into one net. "
+            "Write: d.detail.wire(a, b)"
         ),
         page="findings-validators",
     ),
@@ -118,7 +161,10 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         stage="validators",
         who="consumer",
         cause="A single wire on a PE net is not green-yellow (an empty colour is not a finding).",
-        fix="Colour the wire GNYE.",
+        fix=(
+            "Colour a PE wire green-yellow. Write: d.detail.wire(a, b, wire=(fr.colours.GNYE,"
+            " 0.75))"
+        ),
         page="findings-validators",
     ),
     CodeInfo(
@@ -127,7 +173,7 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         stage="validators",
         who="consumer",
         cause="A port with role PE is on a net that is not PE.",
-        fix="Wire the port to the PE net.",
+        fix="Put a port with role PE on the PE net. Write: d.earth(*pins)",
         page="findings-validators",
     ),
     CodeInfo(
@@ -140,7 +186,10 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
             "is not a declared channel at all). The message names the asked kind, the channel, "
             "its kind and both fixes."
         ),
-        fix="Rewire the request to a channel of the asked kind, or ask for the channel's kind.",
+        fix=(
+            "Bind the request to a channel of the signal type it asked for. Write: "
+            'K1.coil.plc(fr.DO, "pump-run")'
+        ),
         page="findings-validators",
     ),
     CodeInfo(
@@ -152,7 +201,10 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
             "A PLC binding disagrees with the wiring: the request or channel function is wired "
             "to a different channel or request than its binding."
         ),
-        fix="Rebind the request/channel to match the wiring, or rewire it to match the binding.",
+        fix=(
+            "Wire the request to the channel its binding names, or change the binding. Write:"
+            ' K1.coil.plc(fr.DO, "pump-run")'
+        ),
         page="findings-validators",
     ),
     CodeInfo(
@@ -164,7 +216,7 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
             "A two-port coil, load, contact, switch, protection or actuator is connected "
             "at one port and open at the other."
         ),
-        fix="Wire the open port, or remove the half-wired function.",
+        fix="Wire both ports of the function. Write: d.detail.wire(a, b)",
         page="findings-validators",
     ),
     CodeInfo(
@@ -174,8 +226,8 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         who="consumer",
         cause="One potential name is a rail of two differently named supplies.",
         fix=(
-            "Rename one of the potentials, or merge the two supply declarations if they are "
-            "the same supply."
+            'Declare each rail name in one supply only. Write: d.dc_supply("24VDC", '
+            'd.device("G1", "DEMO-PSU-24"))'
         ),
         page="findings-validators",
     ),
@@ -185,7 +237,10 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         stage="validators",
         who="consumer",
         cause="A net potential no supply declares: its pins get no rank and no power symbol.",
-        fix="Declare the supply with that rail.",
+        fix=(
+            'Declare every net potential with a supply. Write: d.dc_supply("24VDC", '
+            'd.device("G1", "DEMO-PSU-24"))'
+        ),
         page="findings-validators",
     ),
     CodeInfo(
@@ -194,102 +249,9 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         stage="validators",
         who="consumer",
         cause="A protective device breaks less current than the prospective fault at its position.",
-        fix="Fit a higher-breaking device.",
-        page="findings-validators",
-    ),
-    CodeInfo(
-        code="RATING_BREAKING_NO_DATA",
-        severities=(Severity.WARNING,),
-        stage="validators",
-        who="consumer",
-        cause=(
-            "A device states breaking points, but none covers the circuit voltage or time constant."
-        ),
-        fix="Add a point for that voltage or time constant.",
-        page="findings-validators",
-    ),
-    CodeInfo(
-        code="RATING_CURRENT_BELOW_BRANCH",
-        severities=(Severity.ERROR,),
-        stage="validators",
-        who="consumer",
-        cause="A function's rated current is below the current its branch can carry.",
-        fix="Fit a part rated for the branch's current, or reduce the limit that sets the bound.",
-        page="findings-validators",
-    ),
-    CodeInfo(
-        code="RATING_CURRENT_KIND_UNSTATED",
-        severities=(Severity.WARNING,),
-        stage="validators",
-        who="consumer",
-        cause=(
-            "A function's part states a voltage rating for AC or for DC only, and the function "
-            "stands on rails of the other current kind."
-        ),
-        fix="State the missing voltage rating in the part, or use a part rated for that kind.",
-        page="findings-validators",
-    ),
-    CodeInfo(
-        code="RATING_VOLTAGE_BELOW_CIRCUIT",
-        severities=(Severity.ERROR,),
-        stage="validators",
-        who="consumer",
-        cause="A function's rated voltage is below the voltage that stands across it.",
         fix=(
-            "Fit a part rated for the circuit's voltage, or change the supply or wiring to "
-            "lower it."
-        ),
-        page="findings-validators",
-    ),
-    CodeInfo(
-        code="SUPPLY_DIFFERS",
-        severities=(Severity.ERROR,),
-        stage="validators",
-        who="consumer",
-        cause=(
-            "Two declarations of one supply name disagree in current, earthing or rails, or "
-            "two source declarations in fault current or time constant."
-        ),
-        fix="Make them agree, or give the differing declarations distinct names.",
-        page="findings-validators",
-    ),
-    CodeInfo(
-        code="WIRE_COLOUR_UNKNOWN",
-        severities=(Severity.ERROR,),
-        stage="validators",
-        who="consumer",
-        cause=(
-            "A wire or cable-product core colour is not a recognized IEC 60757 colour code (or "
-            "combination)."
-        ),
-        fix=(
-            "Use a base code, a combination of two, a base code with a core number, or shield "
-            "code `SH`."
-        ),
-        page="findings-validators",
-    ),
-    CodeInfo(
-        code="WIRE_ON_TWO_HARNESSES",
-        severities=(Severity.ERROR,),
-        stage="validators",
-        who="consumer",
-        cause="A wire joins plugs of two harnesses.",
-        fix="Wire to a plug of one harness, or use a cable.",
-        page="findings-validators",
-    ),
-    CodeInfo(
-        code="WIRE_ROW_UNRESOLVED",
-        severities=(Severity.ERROR,),
-        stage="build",
-        who="consumer",
-        cause=(
-            "A series or detail wire was written without a row, and at build end its net carries "
-            "no rail of its unit, states no `source_row` and holds no PLC channel signal, or "
-            "carries rails of two rows. The message names the net and the wire's two pins."
-        ),
-        fix=(
-            "Give `wire=` on that series: a `(colour, size)`, or a size with a row table. A rail "
-            "never reaches a wire across a unit boundary from its container."
+            "Use a protective device that breaks more than the prospective fault current. "
+            'Write: breaking_dc = [{{ voltage_v = "24", current_a = "15000" }}]'
         ),
         page="findings-validators",
     ),

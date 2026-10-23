@@ -24,7 +24,7 @@ def reserve(arrows: int, options: Options) -> int:
     if options.marker is None:
         msg = "arrow reserve: Options.marker is unset; pass the marker symbol keepout box"
         raise ValueError(msg)
-    return options.marker.w
+    return (options.link_fit or options.marker)["R0"].w
 
 
 def arrow_ends(refs: Iterable[Ref], page: int, row: int, fan: str | None = None) -> tuple[int, int]:

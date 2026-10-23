@@ -6,22 +6,30 @@ from dataclasses import replace
 from itertools import permutations
 
 import pytest
+from options_fixtures import core_options
 
-from fransys_layout.core import Box, Options, PinRef
+from fransys_layout.core import Box, PinRef
 from fransys_layout.core.outputs import PinXY, Placed, Trunk, Wire
 from fransys_layout.core.route_counts import collinear, counts
 from fransys_layout.core.route_env import RouteEnv
-from fransys_layout.core.route_trunk import drop_kind, trunk_wires
+from fransys_layout.core.route_trunk import TrunkError, drop_kind, trunk_wires
 from fransys_layout.core.score_wiring import bundles
 from fransys_layout.core.values import Attach, Fan
 
-from .conftest import MARKER_BOX
+from .conftest import MARKER
 from .cycle_fixtures import acyclic_problem
 from .pipeline_fixtures import cut_of
 from .place_fixtures import all_pins, bundle_fan
 from .route_fixtures import envs_of, inherent, overlaps, own_crossings, reversing_pair, with_crossed
 
-STEP = Options(marker=MARKER_BOX).wiring_grid
+STEP = core_options(
+    marker=MARKER,
+    flip_turn="R180",
+    tag_stagger=True,
+    label_gap=8,
+    driver_first=True,
+    arrow_sides=("E", "W"),
+).wiring_grid
 FULL = (2, 1, 0)
 
 
@@ -92,16 +100,26 @@ def test_a_riser_is_a_box_pin_that_is_not_a_leg() -> None:
     assert drop_kind(replace(fan, legs=(box,), drivers=()), box) == "drop"
 
 
-def synthetic(
-    perm: tuple[int, ...], xs: list[int], *, above: bool, skip: int | None = None, grid: int = STEP
+def synthetic(  # noqa: PLR0913 - a fixture builder; each knob is keyword-only
+    perm: tuple[int, ...],
+    xs: list[int],
+    *,
+    above: bool,
+    skip: int | None = None,
+    grid: int = STEP,
+    columns: tuple[int, ...] | None = None,
 ) -> tuple[RouteEnv, Trunk, int]:
-    """One function K whose pole p sits at xs[p], feeding (or fed by) a trunk of len(perm) lanes."""
+    """One function K whose pole p sits at xs[p], feeding (or fed by) a trunk of len(perm) lanes.
+
+    `columns[p]` is the column lane pole p stands in; by default the pole's own number.
+    """
     n, ty = len(perm), 100
     pin_y = ty - 2 * grid * n if above else ty + 2 * grid * n
     pins = tuple(PinXY(f"n{p}", xs[p], pin_y) for p in range(n) if p != skip)
     box = Box(min(xs) - 4, pin_y - 4, max(xs) - min(xs) + 8, 8)
     placed = {"K": Placed("K", 1, min(xs), pin_y, "R0", box, box, pins)}
-    atts = tuple(Attach("c:K", p, 0, PinRef("K", f"n{p}")) for p in range(n))
+    at = columns or tuple(range(n))
+    atts = tuple(Attach("c:K", at[p], 0, PinRef("K", f"n{p}"), p) for p in range(n))
     fan = Fan(
         "f:b",
         tuple(f"L{k}" for k in range(n)),
@@ -126,7 +144,17 @@ def synthetic(
         (band,),
         (),
         frozenset(),
-        replace(Options(marker=MARKER_BOX), wiring_grid=grid),
+        replace(
+            core_options(
+                marker=MARKER,
+                flip_turn="R180",
+                tag_stagger=True,
+                label_gap=8,
+                driver_first=True,
+                arrow_sides=("E", "W"),
+            ),
+            wiring_grid=grid,
+        ),
     )
     return env, trunk, pin_y
 
@@ -265,3 +293,38 @@ def test_a_drop_never_counts_against_its_own_trunk_but_counts_against_a_foreign_
     foreign = Wire("G", 1, ((xs[0] - 8, 100), (xs[-1] + 8, 100)), "trunk")
     drops = [w for w in wires if w.kind != "trunk"]
     assert counts([*drops, foreign], own).crossings == len(xs) - 1
+
+
+@pytest.mark.parametrize("perm", [(0, 1, 2, 3), (1, 0, 2, 3)], ids=["straight", "swapped"])
+def test_a_gapped_bundle_draws_each_drop_on_its_poles_line(perm: tuple[int, ...]) -> None:
+    """Column lanes 1, 2, 3, 6 hold poles 0..3: the line is the pole's, never the column lane's."""
+    xs = [100, 124, 148, 172]
+    env, trunk, pin_y = synthetic(perm, xs, above=False, columns=(1, 2, 3, 6))
+    wires = [w for w in trunk_wires(env, trunk).wires if w.kind != "trunk"]
+    assert lanes_reached(wires, pin_y, xs) == {perm[j]: trunk.y + STEP * j for j in range(4)}
+    assert {w.net for w in wires} == {f"L{k}" for k in range(4)}
+
+
+def test_a_pole_beyond_the_bundles_nets_raises_naming_the_bundle() -> None:
+    xs = [100, 124, 148]
+    env, trunk, _ = synthetic((0, 1, 2), xs, above=False)
+    short = replace(env, fans={"f:b": replace(env.fans["f:b"], nets=("L0", "L1"))})
+    with pytest.raises(TrunkError, match=r"bundle f:b: K n2 is on pole 2, but the bundle has 3"):
+        trunk_wires(short, trunk)
+
+
+def _runs_without_length(wires: list[Wire]) -> list[Wire]:
+    return [w for w in wires if any(a == b for a, b in zip(w.points, w.points[1:], strict=False))]
+
+
+@pytest.mark.rule("BUNDLE")
+@pytest.mark.parametrize("perm", [(0,), (0, 1, 2), FULL])
+def test_a_trunk_with_one_x_draws_no_line_of_no_length_and_still_its_drops(perm) -> None:
+    """Whole class: a trunk whose ends share one x draws no zero-length line (symdef refuses it)."""
+    xs = [100 + 24 * p for p in range(len(perm))]
+    env, trunk, _ = synthetic(perm, xs, above=False)
+    point = replace(trunk, x1=trunk.x0)
+    for t in (trunk, point):
+        wires = list(trunk_wires(replace(env, trunks=(t,)), t).wires)
+        assert [w for w in wires if w.kind != "trunk"]
+        assert _runs_without_length(wires) == []

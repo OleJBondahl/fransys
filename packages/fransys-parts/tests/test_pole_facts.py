@@ -199,3 +199,23 @@ def test_a_stated_source_row_loads_on_the_port_template_and_a_bad_one_is_refused
     bad = ports.replace("AC_L1", "AC_L9")
     with pytest.raises(PartLibraryError):
         _model(tmp_path, _function("generic", bad))
+
+
+def test_the_conductor_of_a_marking_is_the_models_table_not_a_parts_copy(tmp_path, monkeypatch):
+    """A marking added to the model's table reaches the loaded port: the parts keep no table."""
+    from fransys_model.derive.facts import part_poles
+
+    table = {**part_poles.CONDUCTOR_MARKS, "Q": ConductorMark.L2}
+    monkeypatch.setattr(part_poles, "CONDUCTOR_MARKS", table)
+    model = _model(tmp_path, _function("load", '{ name = "Q", role = "generic" }'))
+    assert _facts(model, "Q") == (None, ConductorMark.L2)
+
+
+def test_the_parts_lint_tables_follow_the_models_roles():
+    """The rest, contact and throw sets the lint reads are the vocab tables' rows."""
+    from fransys_parts import _changeover, _rest
+
+    assert _rest._IMPLIED == {"contact_no": "open", "contact_nc": "closed"}
+    assert {"contact_no", "contact_nc", "contact_co", "switch"} == _rest._CONTACTS
+    assert {"common", "break", "make"} == _changeover._THROW_ROLES
+    assert ({"common", "break"}, {"common", "make"}) == _changeover._CHANGEOVER_PAIRS

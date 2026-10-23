@@ -12,7 +12,7 @@ lazy from fransys_author.design import Scope
 lazy from fransys_author.handles import Fn as EngineFn
 lazy from fransys_author.surface import _fn_pole, _throws
 lazy from fransys_model.derive import pin_order
-lazy from fransys_model.kernel import Id
+lazy from fransys_model.kernel import Id, natural_join
 lazy from fransys_model.vocab import Function as ModelFunction
 lazy from fransys_model.vocab import FunctionKind, Operating, Rating, SignalType, identifier
 
@@ -30,10 +30,10 @@ def pick(
     if len(hits) == 1:
         return hits[0][1]
     if hits:
-        where = ", ".join(sorted(function for function, _ in hits))
+        where = natural_join(function for function, _ in hits)
         msg = f"{owner} pin {name!r} is on functions {where}; say {owner}.<function>[{name!r}]"
     else:
-        names = ", ".join(sorted({pin.name for _, pin in found})) or "none"
+        names = natural_join({pin.name for _, pin in found}) or "none"
         msg = f"{owner} has no pin {name!r}; pins: {names}"
     raise error(msg)
 

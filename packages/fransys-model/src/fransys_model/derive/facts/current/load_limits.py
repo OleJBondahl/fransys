@@ -126,3 +126,8 @@ def load_limits(model: Model) -> tuple[LoadLimit, ...]:
         elif load[2]:
             found += _added(model, raw, base, load)
     return tuple(sorted(found, key=lambda limit: limit.function))
+
+
+def bounded_loads(model: Model) -> list[tuple[LoadLimit, CurrentBound]]:
+    """The load entries that have a limit, each paired with it."""
+    return [(entry, entry.bound) for entry in load_limits(model) if entry.bound is not None]

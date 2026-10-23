@@ -2,8 +2,10 @@
 
 from typing import Any
 
+from derive_helpers import frozen_with_library
+
 from fransys_model.derive.block_diagram import diagram_marker_text
-from fransys_model.kernel import Draft, Id, Model, Origin, freeze, make_id
+from fransys_model.kernel import Draft, Id, Model, Origin, make_id
 from fransys_model.layout import (
     BoxRef,
     DiagramLine,
@@ -95,7 +97,7 @@ def _texts() -> dict[tuple[str, str], str]:
     records += _marker(decoy, w1, 1, 900, 800)
     draft = Draft()
     draft.extend(records, origin=_ORIGIN)
-    model: Model = freeze(draft)
+    model: Model = frozen_with_library(draft)
     return {
         (m.key[1], m.key[3]): diagram_marker_text(model, m)
         for m in layout_of(model, DiagramMarker).values()

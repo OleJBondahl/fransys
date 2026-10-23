@@ -3,29 +3,46 @@
 from __future__ import annotations
 
 import itertools
+from collections import Counter
 from dataclasses import replace
 from typing import TYPE_CHECKING
 
 import pytest
+from options_fixtures import core_options
+from turn_fixtures import marker_views, turn_pin
 
-from fransys_layout.core import Options, PinRef, Size
-from fransys_layout.core.geometry import marker_box, marker_box_at, overlaps
+from fransys_layout.core import PinRef, Size
+from fransys_layout.core.geometry import inside, marker_box, marker_box_at, overlaps
 from fransys_layout.core.outputs import Marker, Trunk
 from fransys_layout.core.place import place_pages
 from fransys_layout.core.text_cells import cell_of
-from fransys_layout.core.text_ends import MarkEnv, Stand, end_stand, hub_xy, pin_stand
-from fransys_layout.core.text_markers import _cleared, mark_pages, stagger, stand_ref
-from fransys_layout.core.values import Box, Fan, Ref, RefEnd, RefKind
+from fransys_layout.core.text_ends import MarkEnv, Stand, end_stand, hub_xy, mark_env, pin_stand
+from fransys_layout.core.text_markers import mark_pages, placed_marks, stagger, stand_ref
+from fransys_layout.core.values import Box, Fan, Finding, Pin, Ref, RefEnd, RefKind
 
 from . import pipeline_fixtures
-from .conftest import MARKER_BOX
+from .conftest import MARKER, MARKER_BOX
 from .text_fixtures import KIND_OF, PLANTS, marker_counts, plan_counts, star_two_tied
 
+AREA = Size(1312, 854)
+
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     from fransys_layout.core import Orientation, Placement
     from fransys_layout.core.values import CutResult
 
-OPTIONS = Options(marker=MARKER_BOX)
+OPTIONS = core_options(
+    marker=MARKER,
+    flip_turn="R180",
+    tag_stagger=True,
+    label_gap=8,
+    driver_first=True,
+    arrow_sides=("E", "W"),
+    marker_vertical=frozenset({"R90", "R270", "MR90", "MR270"}),
+    marker_above="R270",
+    marker_below="R90",
+)  # el's facing views: the rows keep the flags' room, so no end stands past the page (R436)
 PIN = PinRef("S", "p")
 STUB = Ref("n", RefKind.STUB, (RefEnd(1, None, PIN),))
 
@@ -38,7 +55,7 @@ def _env(side: str, orient: Orientation, trunks: tuple[Trunk, ...] = ()) -> Mark
         OPTIONS,
         Size(1312, 854),
         {("S", "p"): (1, 100, 200, orient)},
-        {("S", "p"): side},  # ty: ignore[invalid-argument-type] -- a Side literal
+        {("S", "p", orient): turn_pin(Pin("p", side, 0, 0, 0), orient).side},  # ty: ignore[invalid-argument-type] -- a Side literal
         by_fan,
         {},
     )
@@ -72,7 +89,22 @@ def test_a_pin_marker_stands_its_origin_so_the_box_touches_the_pin(side, orient,
 def test_the_near_edge_of_the_marker_option_sits_at_the_pin(side, xy) -> None:
     """A box that starts 4 inside its origin: the origin backs off, the near edge meets the pin."""
     env = _env(side, "R0")
-    got = pin_stand(replace(env, options=Options(marker=Box(4, -8, 44, 16))), PIN, 1, STUB)
+    got = pin_stand(
+        replace(
+            env,
+            options=core_options(
+                marker=marker_views(Box(4, -8, 44, 16)),
+                flip_turn="R180",
+                tag_stagger=True,
+                label_gap=8,
+                driver_first=True,
+                arrow_sides=("E", "W"),
+            ),
+        ),
+        PIN,
+        1,
+        STUB,
+    )
     assert (got.x, got.y) == xy
 
 
@@ -151,16 +183,34 @@ def built() -> dict[str, tuple[CutResult, Placement, tuple[Marker, ...]]]:
     return out
 
 
+@pytest.fixture(scope="module")
+def missed(built) -> dict[str, tuple[Finding, ...]]:
+    """MARKER_UNPLACED of each plant: these options keep no marker room, so a top end overhangs."""
+    return {
+        name: placed_marks(cut, pl, PLANTS[name](), OPTIONS)[1]
+        for name, (cut, pl, _) in built.items()
+    }
+
+
 @pytest.mark.parametrize("name", PLANTS)
-def test_each_plant_gets_one_marker_for_each_planned_end_of_each_kind(built, name: str) -> None:
+def test_each_plant_gets_one_marker_for_each_planned_end_of_each_kind(
+    built, missed, name: str
+) -> None:
+    """Each planned end is a marker inside the page, or a MARKER_UNPLACED finding (R436)."""
     cut, _, markers = built[name]
     assert plan_counts(cut)[KIND_OF[name]] > 0
-    assert marker_counts(markers) == plan_counts(cut)
+    unplaced = Counter(RefKind(f.text.split()[0]) for f in missed[name])
+    assert marker_counts(markers) + unplaced == plan_counts(cut)
 
 
 @pytest.mark.parametrize("name", PLANTS)
 def test_markers_come_in_the_plans_order_and_stand_on_their_ends_pages(built, name: str) -> None:
-    cut, _, markers = built[name]
+    """Each end's marker, placed or not (MARKER_UNPLACED drops it, R436), in the plan's order."""
+    cut, pl, placed = built[name]
+    env = mark_env(cut, pl, PLANTS[name](), OPTIONS)
+    pairs = [p for ref in cut.spec.reference_plan for p in stand_ref(env, ref)]
+    assert [m for m in stagger(pairs, OPTIONS, AREA) if m is not None] == list(placed)
+    markers = [m for m, _ in pairs]
     want = [(r.net, r.kind, sorted(e.page for e in r.ends)) for r in cut.spec.reference_plan]
     got, i = [], 0
     for _, _, pages in want:
@@ -170,11 +220,14 @@ def test_markers_come_in_the_plans_order_and_stand_on_their_ends_pages(built, na
     assert [(m.net, m.kind) for m in markers] == [(n, k) for n, k, pages in want for _ in pages]
 
 
-def test_a_stub_stands_at_each_boundary_pin_of_the_net(built) -> None:
+def test_a_stub_stands_at_each_boundary_pin_and_page_alone_end_of_the_net(built, missed) -> None:
     _, pl, markers = built["unit_boundary_stubs"]
     xy = {(p.sym, q.pin): (q.x, q.y) for g in pl.pages for p in g.placed for q in p.pin_xy}
     stubs = [m for m in markers if m.kind == "stub"]
-    assert [m.end for m in stubs] == [PinRef("x", "e"), PinRef("z", "e")]
+    assert [m.end for m in stubs] == [PinRef("x", "e")]  # z.e stands past the right edge (R436)
+    assert [(f.code, f.subject) for f in missed["unit_boundary_stubs"]] == [
+        ("MARKER_UNPLACED", "z,m")
+    ]
     for m in stubs:
         px, py = xy[(m.end.sym, m.end.pin)]
         assert (m.x - px, m.y - py) == (
@@ -287,6 +340,12 @@ def test_a_copy_whose_hub_has_no_placed_pin_raises_naming_the_net() -> None:
 # the stagger (I8.7) and the cyclic far end (I8.4)
 
 
+def _all(markers: Sequence[Marker | None]) -> list[Marker]:
+    """The markers, each placed (none dropped for want of room)."""
+    assert all(m is not None for m in markers)
+    return [m for m in markers if m is not None]
+
+
 def _box_of(m: Marker):
     return marker_box(m, OPTIONS)
 
@@ -313,13 +372,25 @@ def test_the_spilled_pair_overlaps_without_the_levels() -> None:
     pairs = stand_ref(_pair_env(), _pair_ref())
     plain = [m for m, _ in pairs]
     assert overlaps(_box_of(plain[0]), _box_of(plain[1]))
-    staggered = stagger(pairs, OPTIONS)
+    staggered = _all(stagger(pairs, OPTIONS, AREA))
     assert not overlaps(_box_of(staggered[0]), _box_of(staggered[1]))
+
+
+def test_a_marker_lifted_past_the_page_top_fits_nowhere() -> None:
+    """The pair's second level, moved one G over the page top, is None: no place (R436)."""
+    pairs = stand_ref(_pair_env(), _pair_ref())
+    lifted = stagger(pairs, OPTIONS, AREA)[1]
+    assert lifted is not None
+    dy = _box_of(lifted).y + 1
+    up = [(replace(m, y=m.y - dy), replace(st, y=st.y - dy)) for m, st in pairs]
+    got = stagger(up, OPTIONS, AREA)
+    assert got[0] is not None
+    assert got[1] is None
 
 
 def _pair_env() -> MarkEnv:
     pins = {("S", "p"): (1, 100, 200, "R0"), ("S", "q"): (1, 108, 200, "R0")}
-    sides = {("S", "p"): "N", ("S", "q"): "N"}
+    sides = {("S", "p", "R0"): "N", ("S", "q", "R0"): "N"}
     return replace(_env("N", "R0"), pins=pins, sides=sides)
 
 
@@ -344,34 +415,34 @@ def test_a_one_end_reference_names_its_own_cell() -> None:
     assert m.cell == cell_of(m.x, m.y, Size(1312, 854), OPTIONS.cells)
 
 
-def test_an_arrow_and_a_copy_of_two_sides_that_meet_are_parted() -> None:
+def test_an_arrow_and_a_copy_of_two_sides_that_meet_stay_at_their_anchors() -> None:
     arrow = Marker("f", RefKind.ARROW, 1, "1A", 120, 500, PIN, "R180")  # box west of x 120
     copy = Marker("f", RefKind.COPY, 1, "1A", 96, 500, PIN)  # box east of x 96
     pairs = [(arrow, Stand(120, 500, PIN, "R180")), (copy, Stand(96, 500, PIN, "R0"))]
     assert overlaps(_box_of(arrow), _box_of(copy))
-    got = stagger(pairs, OPTIONS)
-    assert not overlaps(_box_of(got[0]), _box_of(got[1]))
+    got = _all(stagger(pairs, OPTIONS, AREA))
+    assert got == [arrow, copy]  # the overlap is counted, a step would leave the wire (R453)
 
 
-def test_markers_that_cannot_be_parted_in_the_rounds_raise_and_name_the_fix() -> None:
-    """Six west boxes 8 apart make a wall the later east box cannot clear in its seven rounds."""
+def test_a_crowded_wall_leaves_every_marker_at_its_anchor_inside_the_page() -> None:
+    """Six west boxes and a late east box overlap: none steps off its wire end (R453)."""
     wall = [
         Marker(f"w{k}", RefKind.ARROW, 3, "1A", 200 + 56 * k, 500, PIN, "R180") for k in range(6)
     ]
     late = Marker("late", RefKind.COPY, 3, "1A", 120, 500, PIN)
     pairs = [(m, Stand(m.x, m.y, PIN, "R180")) for m in wall] + [(late, Stand(120, 500, PIN, "R0"))]
     assert not any(overlaps(_box_of(a), _box_of(b)) for a, b in itertools.pairwise(wall))
-    with pytest.raises(
-        ValueError, match=r"marks: page 3: markers w\d at \(\d+, 500\) and late at \(\d+, 500\)"
-    ) as e:
-        _cleared([m for m, _ in pairs], [s for _, s in pairs], OPTIONS)
-    assert "still overlap after 7 rounds" in str(e.value)
-    assert "give the page more room beside them or a smaller Options.marker" in str(e.value)
+    got = _all(stagger(pairs, OPTIONS, AREA))
+    assert [(m.x, m.y) for m in got] == [(m.x, m.y) for m, _ in pairs]  # each at its anchor
+    assert all(inside(_box_of(m), AREA) for m in got)
+    assert any(overlaps(_box_of(a), _box_of(b)) for a, b in itertools.combinations(got, 2))
 
 
 def test_a_two_end_star_tied_in_page_row_and_column_is_ordered_by_the_pin_id() -> None:
     pins = {("S", "p2"): (1, 100, 200, "R0"), ("S", "p10"): (1, 300, 200, "R0")}
-    env = replace(_env("E", "R0"), pins=pins, sides={("S", "p2"): "E", ("S", "p10"): "E"})
+    env = replace(
+        _env("E", "R0"), pins=pins, sides={("S", "p2", "R0"): "E", ("S", "p10", "R0"): "E"}
+    )
     pairs = stand_ref(env, star_two_tied())
     assert [m.end.pin for m, _ in pairs] == ["p2", "p10"]  # natural order, not input or text order
     first, second = (m for m, _ in pairs)

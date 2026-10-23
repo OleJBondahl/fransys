@@ -1,20 +1,21 @@
 [project]
 name = "fransys"
-version = "0.20.0"
-description = "Electrical drawings, lists and documents from Python. Docs: https://olejbondahl.github.io/fransys/latest/; for the installed version use /<fransys.__version__>/ and its llms.txt. Do not read site-packages."
+version = "0.21.1"
+description = "Electrical drawings, lists and documents from Python. Docs: https://olejbondahl.github.io/fransys/latest/; for the installed version use /<fransys.__version__>/ and its llms.txt. Offline only, when the site is unreachable: the installed guide, importlib.resources.files('fransys')/'guide'."
 requires-python = ">=3.15"
 dependencies = [
-    "fransys-model @ git+https://github.com/OleJBondahl/fransys@v0.20.0#subdirectory=packages/fransys-model",
-    "fransys-parts @ git+https://github.com/OleJBondahl/fransys@v0.20.0#subdirectory=packages/fransys-parts",
-    "fransys-author @ git+https://github.com/OleJBondahl/fransys@v0.20.0#subdirectory=packages/fransys-author",
-    "fransys-el @ git+https://github.com/OleJBondahl/fransys@v0.20.0#subdirectory=packages/fransys-el",
-    "fransys-layout @ git+https://github.com/OleJBondahl/fransys@v0.20.0#subdirectory=packages/fransys-layout",
-    "fransys-render @ git+https://github.com/OleJBondahl/fransys@v0.20.0#subdirectory=packages/fransys-render",
-    "fransys-reports @ git+https://github.com/OleJBondahl/fransys@v0.20.0#subdirectory=packages/fransys-reports",
-    "fransys-pdf @ git+https://github.com/OleJBondahl/fransys@v0.20.0#subdirectory=packages/fransys-pdf",
-    "fransys-kicad @ git+https://github.com/OleJBondahl/fransys@v0.20.0#subdirectory=packages/fransys-kicad",
-    "fransys-wago @ git+https://github.com/OleJBondahl/fransys@v0.20.0#subdirectory=packages/fransys-wago",
-    "fransys-overview @ git+https://github.com/OleJBondahl/fransys@v0.20.0#subdirectory=packages/fransys-overview",
+    "fransys-model @ git+https://github.com/OleJBondahl/fransys@v0.21.1#subdirectory=packages/fransys-model",
+    "fransys-parts @ git+https://github.com/OleJBondahl/fransys@v0.21.1#subdirectory=packages/fransys-parts",
+    "fransys-author @ git+https://github.com/OleJBondahl/fransys@v0.21.1#subdirectory=packages/fransys-author",
+    "fransys-el @ git+https://github.com/OleJBondahl/fransys@v0.21.1#subdirectory=packages/fransys-el",
+    "fransys-layout @ git+https://github.com/OleJBondahl/fransys@v0.21.1#subdirectory=packages/fransys-layout",
+    "fransys-render @ git+https://github.com/OleJBondahl/fransys@v0.21.1#subdirectory=packages/fransys-render",
+    "fransys-reports @ git+https://github.com/OleJBondahl/fransys@v0.21.1#subdirectory=packages/fransys-reports",
+    "fransys-pdf @ git+https://github.com/OleJBondahl/fransys@v0.21.1#subdirectory=packages/fransys-pdf",
+    "fransys-kicad @ git+https://github.com/OleJBondahl/fransys@v0.21.1#subdirectory=packages/fransys-kicad",
+    "fransys-wago @ git+https://github.com/OleJBondahl/fransys@v0.21.1#subdirectory=packages/fransys-wago",
+    "fransys-overview @ git+https://github.com/OleJBondahl/fransys@v0.21.1#subdirectory=packages/fransys-overview",
+    "electrical-symbols @ git+https://github.com/OleJBondahl/fransys@v0.21.1#subdirectory=packages/electrical-symbols",
     "typst==0.15.0",
 ]
 

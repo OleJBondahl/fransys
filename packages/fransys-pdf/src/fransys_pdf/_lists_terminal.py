@@ -18,7 +18,7 @@ from ._typst import literal
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
-    from fransys_model.derive import BridgePiece, TerminalRow
+    from fransys_model.derive import BridgePieceRow, TerminalRow
     from fransys_model.kernel import Model
 
     from ._bridge import _BridgeMark
@@ -43,7 +43,7 @@ def _terminal_table(  # noqa: PLR0913 -- one table's headings and keyword-only t
     *,
     title: str = "",
     label: str = "",
-    bridges: Mapping[str, BridgePiece] | None = None,
+    bridges: Mapping[str, BridgePieceRow] | None = None,
 ) -> str:
     """The TERMINAL_LIST table: data columns, then a Bridge column of placed marks (pdf-0049)."""
     if not rows:

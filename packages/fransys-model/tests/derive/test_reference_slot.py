@@ -11,10 +11,10 @@ from typing import Any
 lazy from collections.abc import Sequence
 
 import pytest
-from derive_helpers import add_all
+from derive_helpers import add_all, frozen_with_library
 
 from fransys_model.derive.marker_text import REF_SLOTS, reference_number, reference_slot
-from fransys_model.kernel import Draft, Id, Model, Origin, freeze
+from fransys_model.kernel import Draft, Id, Model, Origin
 from fransys_model.layout import (
     DrawingSet,
     LinkMarker,
@@ -145,7 +145,7 @@ def _build(
     add_all(
         draft, sheet, ds, *pages.values(), item, fn, *ports, *refs, *branches, stub, origin=origin
     )
-    return freeze(draft), refs, stub
+    return frozen_with_library(draft), refs, stub
 
 
 def test_the_slot_is_the_number_less_one_modulo_eight(origin: Origin) -> None:

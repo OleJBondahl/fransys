@@ -24,7 +24,7 @@ from fransys_model.derive import (
     terminal_rows,
     wire_rows,
 )
-from fransys_model.derive.designation import own_designation_or_none
+from fransys_model.derive.designation_label import own_designation_or_none
 from fransys_model.kernel import dumps, freeze
 from fransys_model.vocab.tables import items as items_of
 

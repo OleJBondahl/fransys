@@ -26,7 +26,8 @@ class PinNet:
 
 @value
 class BoardPins:
-    """A board's nets with every pin resolved, and the pins of its parts that are in no net."""
+    """A board's nets with every pin resolved, every pin of its parts, and those in no net."""
 
     nets: tuple[PinNet, ...]
     unconnected: tuple[NetlistPin, ...]
+    part_pins: tuple[NetlistPin, ...]

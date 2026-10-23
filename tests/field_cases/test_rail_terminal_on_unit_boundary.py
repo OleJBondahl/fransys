@@ -15,16 +15,10 @@ The decision that fixes it: layout-0120.
 from typing import TYPE_CHECKING, Any, NamedTuple
 
 import fransys as fr
+from _drawn_pages import drawn_pages
 
-from fransys_model.layout import (
-    DrawingSet,
-    LinkMarker,
-    Page,
-    PowerSymbol,
-    SymbolPlacement,
-    layout_of,
-)
-from fransys_model.vocab.tables import functions, items, ports, unit_releases, units
+from fransys_model.layout import DrawingSet, Page, PowerSymbol, layout_of
+from fransys_model.vocab.tables import unit_releases, units
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -85,16 +79,16 @@ def test_the_container_draws_the_boundary_terminal_and_the_unit_its_power_symbol
     assert [f for f in fr.check(result) if f.severity is fr.Severity.ERROR] == []
     model = result.model
     owner = _set_unit_names(model)
-    (item,) = (i for i in items(model) if fr.derive.printed_designation(model, i) == "-U1-X1:24V:1")
-    (first,) = (f.id for f in functions(model).values() if f.item == item)
-    drawn = {
-        owner[s.page] for s in layout_of(model, SymbolPlacement).values() if s.function == first
+    pages = drawn_pages(model)
+    designation = "-U1-X1:24V:1"
+    tagged = {
+        owner[page] for page, d in pages.items() if any(t.text == designation for t in d.texts)
     }
-    assert drawn == {None}  # the unit's own pages draw it as no terminal
+    assert tagged == {None}  # the unit's own pages draw it as no terminal
     # the container's wire to a black box: a stub on the lamp pin naming the terminal (0080)
-    stubs = layout_of(model, LinkMarker).values()
     assert any(
-        owner[m.page] is None and m.far is not None and ports(model)[m.far].function == first
-        for m in stubs
+        owner[page] is None and any(designation in text for _, text in m.texts)
+        for page, d in pages.items()
+        for m in d.markers
     )
     assert "demo-rail-box" in {owner[s.page] for s in layout_of(model, PowerSymbol).values()}

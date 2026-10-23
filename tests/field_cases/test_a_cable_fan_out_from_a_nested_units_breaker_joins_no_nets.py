@@ -16,7 +16,6 @@ from pathlib import Path
 from typing import Any, NamedTuple
 
 import fransys as fr
-import pytest
 from fransys.colours import BK
 
 WIRE = (BK, 0.75)
@@ -75,6 +74,5 @@ def _findings() -> list[fr.Finding]:
         return list(fr.check(fr.build(d, document)))
 
 
-@pytest.mark.xfail(strict=True, reason="LEGACY-SHORTS: 0.19.1 draws shorted nets, 0.18.7 drew none")
 def test_the_fan_out_draws_no_shorted_nets() -> None:
     assert [f for f in _findings() if f.code == "DRAWING_SHORTS_NETS"] == []

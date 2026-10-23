@@ -5,6 +5,8 @@ from __future__ import annotations
 import itertools
 import random
 
+from options_fixtures import core_options
+
 from fransys_layout.core import Options, PinRef, natural_key, order
 from fransys_layout.core.values import (
     Attach,
@@ -18,7 +20,13 @@ from fransys_layout.core.values import (
     FlowGraph,
 )
 
-OPTIONS = Options()
+OPTIONS = core_options(
+    flip_turn="R180",
+    tag_stagger=True,
+    label_gap=8,
+    driver_first=True,
+    arrow_sides=("E", "W"),
+)
 
 
 def att(col: str, sym: str | None = None) -> Attach:

@@ -6,9 +6,10 @@
 (and any documents), merges them into a model and runs the passes, the validators, and layout
 when there is a document.
 `check` collects every finding about a built model, including some `build` itself never sees.
-`write` writes the model's exports to a directory. It raises, and writes nothing, if any
-finding is an `ERROR`. `check` also places the system overview (`overview.html`) and returns its
+`write` writes the model's exports to a directory. If any finding is an `ERROR` it raises
+`BuildErrors`, writes no export, and removes the exports an earlier `write` left there. `check` also places the system overview (`overview.html`) and returns its
 findings, so a whole-system or a unit write meets them at the same gate; `build` never does.
+`settings=fr.settings(...)` sets the build's paper (settings.md).
 
 `fr.__version__` gives the installed Fransys version. It is not in `fr.__all__`.
 
@@ -121,7 +122,7 @@ result = fr.build(d, doc)
 assert len(fr.check(result)) == 4
 ```
 
-`fr.check(result)` holds three `DOCUMENT_EMPTY_LIST` `INFO` findings and, most importantly, one `ERROR`, `DOCUMENT_NO_DRAWINGS`,
+`fr.check(result)` holds three `DOCUMENT_EMPTY_LIST` `INFO` findings and one `ERROR`, `DOCUMENT_NO_DRAWINGS`,
 that only the drawing and PDF checks find. A symbol with nothing connected is not drawn, so the
 schematic page has no drawing and the document no other page. A script that asserted the design
 clean would have shipped it.
@@ -133,7 +134,7 @@ try:
     fr.write(result, Path("out"))
 except fr.BuildErrors as e:
     assert len(e.findings) == 1
-    assert all(f.severity is fr.Severity.ERROR for f in e.findings)
+    assert all(f.severity is fr.Severity.ERROR and f.fix for f in e.findings)
 else:
     raise AssertionError("expected BuildErrors")
 ```

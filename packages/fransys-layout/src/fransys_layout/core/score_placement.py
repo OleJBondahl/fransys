@@ -33,14 +33,14 @@ def _touching(box: SceneBox, vertices: frozenset[tuple[int, int, int]]) -> list[
 
 
 def loose(scene: Scene) -> list[str]:
-    """P5: a box no wire touches, with no stand and no marker on any pin."""
+    """P5: a box no wire touches, with no biased end and no marker on any pin."""
     vertices = _vertices(scene)
     marked = {(m.box, m.pin) for m in scene.markers}
     return [
         b.sym
         for b in scene.boxes
         if not _touching(b, vertices)
-        and not any(p.stand or (b.sym, p.pin) in marked for p in b.pins)
+        and not any(p.biased or (b.sym, p.pin) in marked for p in b.pins)
     ]
 
 
@@ -73,7 +73,7 @@ def _ends_on(wire: SceneWire, box: SceneBox) -> bool:
 
 
 def pair_cut(scene: Scene) -> list[str]:
-    """P2: a non-rail net of exactly two drawn pins whose boxes stand on different pages."""
+    """P2: a net outside `rails` of exactly two drawn pins whose boxes stand on two pages."""
     ends: dict[str, list[int]] = defaultdict(list)
     for box in scene.boxes:
         for pin in box.pins:

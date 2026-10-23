@@ -1,9 +1,10 @@
 """The one home of `Net.net_class` and `Net.potential` (EL-2 rail nature, model-0294)."""
 
+from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, digest_cached
 from fransys_model.vocab.roles import NET_CLASS_ROLES
 from fransys_model.vocab.tables import nets
-lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.connectivity import Net
+lazy from fransys_model.vocab.core import Port
 lazy from fransys_model.vocab.enums import NetClass
 
 
@@ -25,3 +26,17 @@ def is_earth_net(model: Model, net: Id[Net]) -> bool:
 def net_potential(model: Model, net: Id[Net]) -> str | None:
     """The potential `net` declares, or `None`: the one reader of `Net.potential`."""
     return nets(model)[net].potential
+
+
+@digest_cached(DIGEST_CACHE_SIZE)
+def _declared(model: Model) -> frozendict[Id[Port], tuple[Id[Net], ...]]:
+    found: dict[Id[Port], list[Id[Net]]] = {}
+    for net in nets(model).values():
+        for port in net.ports:
+            found.setdefault(port, []).append(net.id)
+    return frozendict({port: tuple(ids) for port, ids in found.items()})
+
+
+def declared_nets_of(model: Model, port: Id[Port]) -> tuple[Id[Net], ...]:
+    """The declared nets that list `port`, in net order; empty when none does."""
+    return _declared(model).get(port, ())

@@ -68,8 +68,8 @@ class Cabinet(NamedTuple):
 )
 def terminal_cabinet(c):
     x1 = c.terminal_strip("X1", "DEMO-TB-2.5", 2, description="Field strip")
-    k1 = c.device("K1", "DEMO-CO-4P-24")
-    c.series(x1, k1.coil, x1, wire=(BK, 1.5))
+    f1 = c.device("F1", "DEMO-FUSE-ABAT")
+    c.series(x1, f1.element, x1, wire=(BK, 1.5))
     return Cabinet()
 
 
@@ -99,6 +99,8 @@ A document's `subject` is a unit, an item, or a place where units stand. It is o
 - A device handle, what `d.device(...)` or `d.harness(...)` returns.
 - A unit release's name, a plain `str`, such as a cabinet's: resolved to the one instance of that release at build
   and write time, not at the `fr.document` call itself.
+- What `d.add(...)` returned: that one unit instance. Use it when a release stands more than once, since a name
+  then matches several units and `DOCUMENT_UNIT_UNRESOLVED` follows.
 
 Any other value, such as a bare design, is a `TypeError` at the call. The cabinet example above
 passes its release name. A unit added with `d.add(fn, "U1")` is named by its release name:
@@ -123,6 +125,18 @@ assert any(p.name == "demo-io-board-v1.1.pdf" for p in fr.write(board_result, Pa
 ```
 
 The PDF is named after the unit and its release, `demo-io-board-v1.1.pdf`.
+
+What `d.add` returned names its instance, so a document can follow the instance rather than the release name:
+
+```python
+d3 = fr.design("demo_parts")
+placed = d3.add(board, "U1")
+placed_document = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, placed, cover=cover)
+placed_result = fr.build(d3, placed_document)
+assert not [f for f in fr.check(placed_result) if f.severity is fr.Severity.ERROR]
+```
+
+A release added more than once resolves by name to no single unit. Name each instance by what `d.add` returned. Each placement writes its own PDF, `<release>-v<V>.<R>-<tag>.pdf`; the unit's own PDF stays `<release>-v<V>.<R>.pdf`.
 
 ## List pages
 

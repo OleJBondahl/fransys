@@ -1,29 +1,24 @@
 """The aspect nodes that are each unit's own, for every unit of a model in one pass (model-0067).
 
-`designation.own_nodes` reads this. The rule is stated there; here it is computed
+`own_nodes` (below) reads this. The rule is stated there; here it is computed
 once per model, cached by digest, instead of once per unit over every item.
 """
 
 import dataclasses
-from typing import TYPE_CHECKING
+lazy from collections.abc import Iterator
 
 from fransys_model.derive.facts.item_predicates import cable_items
 from fransys_model.derive.facts.unit_index import unit_index
 from fransys_model.derive.facts.units import in_reading, is_harness, item_chain, units
-from fransys_model.derive.lookups import effective_placement
+from fransys_model.derive.lookups import effective_placement, require
 from fransys_model.kernel import DIGEST_CACHE_SIZE, digest_cached, parent_chain
+from fransys_model.vocab.designation_scheme import DESIGNATION_SCHEME
 from fransys_model.vocab.enums import Aspect
 from fransys_model.vocab.tables import aspect_nodes, functions, items, ports
-
-if TYPE_CHECKING:
-    from collections.abc import Iterator
-
-    from fransys_model.kernel import Id, Model
-    from fransys_model.vocab.aspects import AspectNode
-    from fransys_model.vocab.core import Item, Port, Unit
-
-# The two aspects a designation renders a segment for, each with its sign.
-SIGNS = {Aspect.FUNCTION: "=", Aspect.LOCATION: "+"}
+from fransys_model.vocab.tables import units as units_table
+lazy from fransys_model.kernel import Id, Model
+lazy from fransys_model.vocab.aspects import AspectNode
+lazy from fransys_model.vocab.core import Item, Port, Unit
 
 
 @dataclasses.dataclass(frozen=True, slots=True)
@@ -38,6 +33,21 @@ def chain_up(
 ) -> Iterator[Id[AspectNode]]:
     """`node_id` and each ancestor above it, leaf first; a parent cycle ends the walk."""
     return parent_chain(lambda node: nodes[node].parent, node_id)
+
+
+def common_node(chains: list[list[Id[AspectNode]]]) -> Id[AspectNode] | None:
+    """The deepest node every root-first chain passes through, `None` with none shared."""
+    if not chains:
+        return None
+    common = chains[0]
+    for chain in chains[1:]:
+        shared = 0
+        for own, other in zip(common, chain, strict=False):
+            if own != other:
+                break
+            shared += 1
+        common = common[:shared]
+    return common[-1] if common else None
 
 
 def outside_unit(model: Model, item: Id[Item], unit: Id[Unit] | None) -> bool:
@@ -85,7 +95,9 @@ def _reached(
     """
     nodes = aspect_nodes(model)
     cables = set(cable_items(model))
-    reached: dict[Aspect, dict[Id[AspectNode], frozenset[Id[Unit]]]] = {a: {} for a in SIGNS}
+    reached: dict[Aspect, dict[Id[AspectNode], frozenset[Id[Unit]]]] = {
+        a: {} for a in DESIGNATION_SCHEME.reference_aspects
+    }
     for item in items(model).values():
         if _of_a_cable(model, item.id, cables):
             continue
@@ -125,3 +137,23 @@ def own_nodes_by_unit(model: Model) -> frozendict[Id[Unit], frozenset[Id[AspectN
     mapping. An unknown unit is not a key; ask through `own_nodes`, which refuses it.
     """
     return _unit_nodes(model).own
+
+
+def own_nodes(model: Model, unit: Id[Unit]) -> frozenset[Id[AspectNode]]:
+    """The aspect nodes that are `unit`'s own.
+
+    Location node: every item at or below it is in `unit`'s subtree (cables and harnesses ignored).
+    Function node: a unit item sits at or below it and no item of another unit does.
+
+    Args:
+        model: The frozen model to read.
+        unit: The unit whose own nodes to find.
+
+    Returns:
+        The set of aspect node ids that are `unit`'s own.
+
+    Raises:
+        SchemaError: `unit` is not a unit of `model`.
+    """
+    require(units_table(model).get(unit), "unit", unit)
+    return own_nodes_by_unit(model)[unit]

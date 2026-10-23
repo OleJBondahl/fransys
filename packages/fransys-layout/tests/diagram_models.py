@@ -11,9 +11,10 @@ from typing import Any
 
 import fransys_author
 import fransys_parts
+from layout_library import freeze
 
 from fransys_model.derive.passes.numbering import number as number_pass
-from fransys_model.kernel import Model, freeze, merge
+from fransys_model.kernel import Model, merge
 
 _PROJECT: dict[str, Any] = {
     "title": "Block diagram",

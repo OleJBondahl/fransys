@@ -1,4 +1,4 @@
-"""Stage 1, part 4: chains that share a symbol become lanes of one column, ordered by pin dx."""
+"""Stage 1, part 4: chains that share a symbol become lanes of one column, offset by pin dx."""
 
 from __future__ import annotations
 
@@ -13,46 +13,70 @@ from .topology_fans import LaneDraft
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
+    from .sym_values import Sym
     from .topology_elements import Elem
     from .topology_fans import Slot
-    from .values import Cell, Sym
+    from .values import Cell, Orientation
 
-SHARED = 2
+Lane = tuple["Cell", ...]
 
 
 def lanes_of(
-    paths: tuple[tuple[Node, ...], ...], elems: Mapping[str, Elem], syms: Mapping[str, Sym]
+    paths: tuple[tuple[Node, ...], ...],
+    elems: Mapping[str, Elem],
+    syms: Mapping[str, Sym],
+    flip_turn: Orientation,
 ) -> tuple[list[LaneDraft], Slot]:
-    """Chains sharing a symbol become lanes of one column, ordered and offset by its pins."""
+    """Chains sharing a symbol become lanes of one column, offset through the symbols they share."""
     lanes: list[LaneDraft] = []
     slot: Slot = {}
     for group in group_columns(paths, elems):
-        cells = [cells_of(paths[i], elems, syms) for i in group]
-        binder = _binder(cells)
-        keyed = sorted(zip(group, cells, strict=True), key=lambda gc: _lane_dx(gc[1], binder, syms))
-        base = _lane_dx(keyed[0][1], binder, syms)
-        column = f"c:{keyed[0][1][0].sym}"
-        for index, (i, lane_cells) in enumerate(keyed):
-            offset = _lane_dx(lane_cells, binder, syms) - base
-            lane = LaneDraft(column, index, list(lane_cells), offset)
+        cells = [cells_of(paths[i], elems, syms, flip_turn) for i in group]
+        offsets = _offsets(cells, syms)
+        order = sorted(range(len(group)), key=lambda k: offsets[k])
+        for index, k in enumerate(order):
+            lane = LaneDraft(f"c:{cells[order[0]][0].sym}", index, list(cells[k]), offsets[k])
             lanes.append(lane)
-            slot[(paths[i][0].elem, paths[i][0].top or "")] = (lane, "head")
-            slot[(paths[i][-1].elem, paths[i][-1].bottom or "")] = (lane, "foot")
+            first, last = paths[group[k]][0], paths[group[k]][-1]
+            slot[(first.elem, first.top or "")] = (lane, "head")
+            slot[(last.elem, last.bottom or "")] = (lane, "foot")
     return lanes, slot
 
 
-def _binder(cells: Sequence[tuple[Cell, ...]]) -> str | None:
-    """The first symbol (by natural key) that two or more lanes of the column share."""
-    counts: dict[str, int] = defaultdict(int)
-    for lane in cells:
+def _pin_dx(cells: Lane, sym: str, syms: Mapping[str, Sym]) -> int:
+    """The lane's wire x against the origin of `sym`: the pin dx of the lane's first cell of it."""
+    c = next(c for c in cells if c.sym == sym)
+    return pin_xy(syms[c.sym], c, c.top_pin or c.bottom_pin or "")[0]
+
+
+def _held(lanes: Sequence[Lane]) -> list[list[tuple[str, list[int]]]]:
+    """Per lane, its symbols in natural order, each with every lane that holds it."""
+    holders: dict[str, list[int]] = defaultdict(list)
+    for i, lane in enumerate(lanes):
         for sym in {c.sym for c in lane}:
-            counts[sym] += 1
-    shared = sorted((s for s, n in counts.items() if n >= SHARED), key=natural_key)
-    return shared[0] if shared else None
+            holders[sym].append(i)
+    return [
+        [(s, holders[s]) for s in sorted({c.sym for c in lane}, key=natural_key)] for lane in lanes
+    ]
 
 
-def _lane_dx(cells: tuple[Cell, ...], binder: str | None, syms: Mapping[str, Sym]) -> int:
-    for c in cells:
-        if c.sym == binder:
-            return pin_xy(syms[c.sym], c, c.top_pin or c.bottom_pin or "")[0]
-    return 0
+def _offsets(lanes: Sequence[Lane], syms: Mapping[str, Sym]) -> list[int]:
+    """Each lane's wire x in one frame, from lane to lane over the symbols lanes share.
+
+    A symbol stands once, so lane j is at lane i's x plus j's pin dx minus i's. The first path
+    in lane order wins; a second path with another answer is ignored (pins of another pitch).
+    """
+    held = _held(lanes)
+    at: dict[int, int] = {}
+    for start in range(len(lanes)):
+        queue = [] if start in at else [start]
+        at.setdefault(start, 0)
+        for i in queue:
+            for sym, others in held[i]:
+                for j in others:
+                    want = at[i] + _pin_dx(lanes[j], sym, syms) - _pin_dx(lanes[i], sym, syms)
+                    if j not in at:
+                        at[j] = want
+                        queue.append(j)
+    low = min(at.values())
+    return [at[k] - low for k in range(len(lanes))]

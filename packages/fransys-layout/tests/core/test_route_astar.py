@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from dataclasses import replace
 
-from fransys_layout.core import Box, Options
+from options_fixtures import core_options
+
+from fransys_layout.core import Box
 from fransys_layout.core.occupancy import Occupancy
 from fransys_layout.core.outputs import Wire
 from fransys_layout.core.route_astar import Leg, astar, simplify
@@ -18,7 +20,17 @@ def path_between(*, box: bool) -> tuple[Occupancy, tuple[tuple[int, int], ...]]:
     grid = Occupancy(12, 7, STEP)
     if box:
         grid.mark_box(Box(32, 16, 32, 24))
-    path = astar(grid, Leg("n", (0, 3), (11, 3)), Options())
+    path = astar(
+        grid,
+        Leg("n", (0, 3), (11, 3)),
+        core_options(
+            flip_turn="R180",
+            tag_stagger=True,
+            label_gap=8,
+            driver_first=True,
+            arrow_sides=("E", "W"),
+        ),
+    )
     assert path is not None
     return grid, path
 
@@ -34,16 +46,68 @@ def test_astar_goes_around_a_box_with_two_bends_and_straight_without() -> None:
 def test_a_free_cell_may_be_entered_although_blocked() -> None:
     grid = Occupancy(5, 1, STEP)
     grid.hard.add((2, 0))
-    assert astar(grid, Leg("n", (0, 0), (4, 0)), Options()) is None
-    assert astar(grid, Leg("n", (0, 0), (4, 0), frozenset({(2, 0)})), Options()) is not None
+    assert (
+        astar(
+            grid,
+            Leg("n", (0, 0), (4, 0)),
+            core_options(
+                flip_turn="R180",
+                tag_stagger=True,
+                label_gap=8,
+                driver_first=True,
+                arrow_sides=("E", "W"),
+            ),
+        )
+        is None
+    )
+    assert (
+        astar(
+            grid,
+            Leg("n", (0, 0), (4, 0), frozenset({(2, 0)})),
+            core_options(
+                flip_turn="R180",
+                tag_stagger=True,
+                label_gap=8,
+                driver_first=True,
+                arrow_sides=("E", "W"),
+            ),
+        )
+        is not None
+    )
 
 
 def test_a_cell_of_another_net_on_the_same_axis_is_blocked() -> None:
     grid = Occupancy(5, 1, STEP)
     grid.mark_wire("other", ((16, 0), (24, 0)))
-    assert astar(grid, Leg("n", (0, 0), (4, 0)), Options()) is None
+    assert (
+        astar(
+            grid,
+            Leg("n", (0, 0), (4, 0)),
+            core_options(
+                flip_turn="R180",
+                tag_stagger=True,
+                label_gap=8,
+                driver_first=True,
+                arrow_sides=("E", "W"),
+            ),
+        )
+        is None
+    )
     grid.remove_net("other")
-    assert astar(grid, Leg("n", (0, 0), (4, 0)), Options()) is not None
+    assert (
+        astar(
+            grid,
+            Leg("n", (0, 0), (4, 0)),
+            core_options(
+                flip_turn="R180",
+                tag_stagger=True,
+                label_gap=8,
+                driver_first=True,
+                arrow_sides=("E", "W"),
+            ),
+        )
+        is not None
+    )
 
 
 def _crossing_grid() -> Occupancy:
@@ -57,8 +121,36 @@ def test_a_perpendicular_cell_costs_the_crossing_penalty() -> None:
     """With a penalty of 1 the path crosses the wire; with 1000 it detours through the gap."""
     grid = _crossing_grid()
     leg = Leg("n", (0, 3), (10, 3))
-    cheap = astar(grid, leg, replace(Options(), crossing_penalty=1, bend_penalty=1))
-    dear = astar(grid, leg, replace(Options(), crossing_penalty=1000, bend_penalty=1))
+    cheap = astar(
+        grid,
+        leg,
+        replace(
+            core_options(
+                flip_turn="R180",
+                tag_stagger=True,
+                label_gap=8,
+                driver_first=True,
+                arrow_sides=("E", "W"),
+            ),
+            crossing_penalty=1,
+            bend_penalty=1,
+        ),
+    )
+    dear = astar(
+        grid,
+        leg,
+        replace(
+            core_options(
+                flip_turn="R180",
+                tag_stagger=True,
+                label_gap=8,
+                driver_first=True,
+                arrow_sides=("E", "W"),
+            ),
+            crossing_penalty=1000,
+            bend_penalty=1,
+        ),
+    )
     assert cheap is not None
     assert dear is not None
     assert len(cheap) < len(dear)
@@ -68,4 +160,17 @@ def test_a_perpendicular_cell_costs_the_crossing_penalty() -> None:
 
 def test_the_search_stays_on_the_map() -> None:
     grid = Occupancy(3, 3, STEP)
-    assert astar(grid, Leg("n", (0, 0), (5, 0)), Options()) is None
+    assert (
+        astar(
+            grid,
+            Leg("n", (0, 0), (5, 0)),
+            core_options(
+                flip_turn="R180",
+                tag_stagger=True,
+                label_gap=8,
+                driver_first=True,
+                arrow_sides=("E", "W"),
+            ),
+        )
+        is None
+    )

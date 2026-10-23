@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 
-from fransys_layout.core import Placement, PlacementProblem, Size
+from fransys_layout.core import Facts, Placement, PlacementProblem, Size
 
 from .cut_fixtures import AREA, chain, elem, net
 from .route_fixtures import two_links_one_gap
@@ -36,10 +36,15 @@ def cross_link_through_gap(area: Size = AREA) -> PlacementProblem:
 def overflowing_row(area: Size = AREA) -> PlacementProblem:
     """One element 8 G wider than the page, wired to a small one: the row overflows by one block."""
     wide = elem("wide", area.w + 8)
-    return PlacementProblem(area, (wide, elem("e")), (net("w", "wide.s", "e.n"),))
+    return PlacementProblem(area, (wide, elem("e")), (net("w", "wide.s", "e.n"),), facts=Facts())
 
 
 def tall_by_trunk_levels(area: Size = AREA_144X128) -> PlacementProblem:
     """Eight elements stacked in one column, too tall for the page, with no gap between columns."""
     names = [f"t{k}" for k in range(8)]
-    return PlacementProblem(area, tuple(elem(k) for k in names), tuple(chain(names)))
+    return PlacementProblem(
+        area,
+        tuple(elem(k) for k in names),
+        tuple(chain(names)),
+        facts=Facts(),
+    )

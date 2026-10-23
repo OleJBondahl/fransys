@@ -4,11 +4,13 @@ import dataclasses
 from collections.abc import Callable
 
 from fransys_kernel import require_origin
-from fransys_model.derive.designation import designating_ancestors, own_designation_or_none
+from fransys_model.derive.designation_label import own_designation_or_none
+from fransys_model.derive.facts.units import designating_ancestors
 from fransys_model.derive.instance_tag import unit_tag
 from fransys_model.derive.lookups import terminal_items
 from fransys_model.derive.unit_release import unit_release
-from fransys_model.kernel import Finding, Id, Model, Severity, evolve, make_id
+from fransys_model.kernel import Finding, Id, Model, Severity, evolve, first_free, make_id
+from fransys_model.vocab.codes import fix_text
 from fransys_model.vocab.facets.assigned_unit_tag import AssignedUnitTagFacet
 from fransys_model.vocab.finding_ref import ref
 from fransys_model.vocab.tables import items
@@ -16,6 +18,20 @@ from fransys_model.vocab.tables import units as units_table
 lazy from fransys_model.vocab.core import Unit
 
 type Reserved = Callable[..., frozenset[str]]
+
+
+@dataclasses.dataclass(frozen=True)
+class Suffixed:
+    """The numbers `n` for which `code + str(n)` is in `taken`, for `first_free`.
+
+    Lets the passes allocate by number while their taken sets hold whole texts.
+    """
+
+    code: str
+    taken: set[str]
+
+    def __contains__(self, number: int) -> bool:
+        return f"{self.code}{number}" in self.taken
 
 
 def _item_texts(model: Model, parent: Id[Unit] | None) -> set[str]:
@@ -59,9 +75,7 @@ def _facets(model: Model, reserved: Reserved) -> list[AssignedUnitTagFacet]:
     for unit in _floating(model):
         used = taken.setdefault(unit.parent, _taken(model, unit.parent, reserved))
         code = unit_release(model, unit.id).class_code
-        n = 1
-        while f"{code}{n}" in used:
-            n += 1
+        n = first_free(Suffixed(code, used))
         used.add(f"{code}{n}")
         key = (*unit.key, "assigned_unit_tag")
         facet_id = make_id(AssignedUnitTagFacet, key)
@@ -96,6 +110,7 @@ def unit_tag_duplicates(model: Model, code: str) -> list[Finding]:
             subjects=(unit.id,),
             message=f"unit instance {ref(unit)} has the tag {tag!r}, "
             "which another instance under the same parent has too",
+            fix=fix_text(code),
         )
         for (_, tag), same in groups.items()
         if len(same) > 1

@@ -4,10 +4,14 @@ from __future__ import annotations
 
 from dataclasses import replace
 
-from fransys_layout.core.topology_elements import NetEnd, elements, net_ends, wired_pins
-from fransys_layout.core.values import BoxSpec, Net, Pin, PinRef, Sym
+from turn_fixtures import refit
 
-from .flow_builders import elem, free, net, poles, problem
+from fransys_layout import core
+from fransys_layout.core.topology_elements import NetEnd, elements, net_ends, wired_pins
+from fransys_layout.core.values import BoxSpec, Net, Pin, PinRef
+lazy from fransys_layout.core.sym_values import Sym
+
+from .flow_builders import OPTIONS, elem, free, net, poles, problem
 
 
 def _ends(syms: list[Sym], nets: list[Net], net_id: str) -> tuple[NetEnd, ...]:
@@ -71,10 +75,16 @@ def test_net_ends_come_back_in_natural_key_order_whatever_the_input_order() -> N
 def test_elements_come_back_in_natural_key_order_whatever_the_pin_order() -> None:
     u = replace(
         elem("u"),
-        pins=(Pin("p10", "S", 16, 16, 1, "GROUND"), Pin("p2", "S", 0, 16, 0, "GROUND")),
+        pins=(Pin("p10", "S", 16, 16, 1, 1), Pin("p2", "S", 0, 16, 0, 1)),
         nodes=(("p2",), ("p10",)),
     )
     forward = elements(u, {})
-    reverse = elements(replace(u, pins=tuple(reversed(u.pins))), {})
+    reverse = elements(refit(u, pins=tuple(reversed(u.pins))), {})
     assert [e.key for e in forward] == ["u@p2", "u@p10"]
     assert forward == reverse
+
+
+def test_solve_carries_the_wired_pins_and_the_surface_does_not_export_the_function() -> None:
+    prob = problem([elem("a"), elem("b")], [net("x", "a.n", "b.n")])
+    assert "wired_pins" not in core.__all__
+    assert dict(core.solve(prob, OPTIONS).wired) == {PinRef("a", "n"): "x", PinRef("b", "n"): "x"}

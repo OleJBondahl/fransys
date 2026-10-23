@@ -4,7 +4,8 @@ Shared by `fransys_render`'s own outline reader and `fransys_pdf`'s replica-only
 check, since neither output package may import the other (DESIGN 4).
 """
 
-from fransys_model.layout import DrawingSet, Page, SymbolPlacement, layout_of
+from fransys_model.layout import DrawingSet, Page, layout_of
+from fransys_model.layout.page_slices import page_members
 from fransys_model.vocab.tables import functions, items
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.core import Item, Unit
@@ -47,8 +48,10 @@ def drawing_set_is_replica_only(model: Model, drawing_set: Id[DrawingSet]) -> bo
     all_functions = functions(model)
     pages = {page.id for page in layout_of(model, Page).values() if page.drawing_set == drawing_set}
     placed_items = {
-        all_functions[placement.function].item
-        for placement in layout_of(model, SymbolPlacement).values()
-        if placement.page in pages
+        all_functions[row.function].item
+        for page in layout_of(model, Page).values()
+        if page.id in pages
+        for row in page_members(model, page)
+        if row.function is not None
     }
     return all(is_black_box_item(model, item, found.unit) for item in placed_items)

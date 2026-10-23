@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 from fransys_layout.core import PinRef
-from fransys_layout.core.cut_ends import end_at
-from fransys_layout.core.values import RefEnd, RefKind
+from fransys_layout.core.cut_ends import end_at, link_over_empty_rows
+from fransys_layout.core.values import Ref, RefEnd, RefKind
 
 from .cut_fixtures import cut_of, elem, free, net, refs_of, side
 
@@ -48,3 +48,22 @@ def test_a_row_wrapped_fan_gives_its_arrows_the_rows_they_stand_in() -> None:
     (arrow,) = refs_of(result, RefKind.ARROW)
     assert [e.row for e in arrow.ends] == [0, 1]
     assert all(e.pin is not None for e in arrow.ends)
+
+
+def _arrow(a: int, b: int) -> Ref:
+    """An arrow of fan f:x from row `a` to row `b` of page 1."""
+    return Ref("f:x", RefKind.ARROW, (RefEnd(1, None, None, a), RefEnd(1, None, None, b)))
+
+
+def test_two_arrows_meeting_in_a_row_without_a_trunk_become_one() -> None:
+    """layout-0337: the fan has a trunk in rows 0 and 2 only; row 1 holds none."""
+    rows = {"f:x": frozenset({(1, 0), (1, 2)})}
+    assert link_over_empty_rows([_arrow(0, 1), _arrow(1, 2)], rows) == [_arrow(0, 2)]
+
+
+def test_an_arrow_left_with_an_end_in_a_row_without_a_trunk_is_dropped() -> None:
+    rows = {"f:x": frozenset({(1, 0)})}
+    assert link_over_empty_rows([_arrow(0, 1)], rows) == []
+    assert link_over_empty_rows([_arrow(0, 1)], {"f:x": frozenset({(1, 0), (1, 1)})}) == [
+        _arrow(0, 1)
+    ]

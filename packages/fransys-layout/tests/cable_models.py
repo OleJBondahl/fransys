@@ -12,10 +12,11 @@ from typing import Any
 import fransys_author
 import fransys_parts
 from demo_designs import cabinet_design, harness_with_board_design
+from layout_library import freeze
 
 from fransys_layout import lay_out_cables
 from fransys_model.derive.passes.numbering import number as number_pass
-from fransys_model.kernel import freeze, merge
+from fransys_model.kernel import merge
 
 _PROJECT: dict[str, Any] = {
     "title": "Cable blocks",

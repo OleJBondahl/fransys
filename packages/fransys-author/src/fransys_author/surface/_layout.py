@@ -8,6 +8,7 @@ from fransys_author.errors import AuthorError
 from fransys_author.handles import Item
 from fransys_author.surface._links import engine_handle
 from fransys_author.surface._page_title import hint_page_title
+from fransys_author.surface._pins_below import hint_pins_below
 from fransys_author.surface._side import hint_side
 from fransys_model.vocab import FunctionKind
 lazy from fransys_author.design import Design as EngineDesign
@@ -98,6 +99,13 @@ class Layout:
         the unit's interface, as `u1.bus_in`; an interface with no harness line ignores it.
         """
         hint_side(self._engine, target, side)
+
+    def pins_below(self, box: Fn | Device) -> None:
+        """Advise a generic box to draw all its pins on its south side, below the body.
+
+        Does not move anything itself: it only advises the layout engine. A repeat raises.
+        """
+        hint_pins_below(self._engine, box)
 
     def page_title(
         self, thing: Group | Fn | Device | TerminalStrip | NamedTuple, text: str

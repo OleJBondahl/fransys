@@ -18,12 +18,14 @@ longer paid at collection time by every one of the gate's workers).
 from __future__ import annotations
 
 import ast
+import importlib.util
 import re
 from dataclasses import dataclass, field
 from importlib.resources import files
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+import fransys_el
 import fransys_kicad
 import fransys_parts
 import fransys_pdf
@@ -346,6 +348,7 @@ def _findings_table_rows(markdown: str) -> list[list[str]]:
 
 FINDINGS_PAGES = (
     "findings-validators",
+    "findings-release",
     "findings-render",
     "findings-pdf",
     "findings-kicad",
@@ -374,6 +377,7 @@ def _registry() -> tuple[CodeInfo, ...]:
     return (
         *fransys_codes._OWN,
         *vocab.FINDING_CODES,
+        *fransys_el.FINDING_CODES,
         *fransys_layout.FINDING_CODES,
         *fransys_render.FINDING_CODES,
         *fransys_pdf.FINDING_CODES,
@@ -421,3 +425,20 @@ def test_no_todo_placeholder_remains() -> None:
     rows = _all_rows()
     stale = [row[0] for row in rows if row and "TODO" in row]
     assert not stale, f"still has a TODO cell: {stale}"
+
+
+def test_no_generated_findings_page_shows_doubled_braces() -> None:
+    """A template's `{{ }}` reads as `{ }` on a page, the way a finding's printed fix does."""
+    path = WORKSPACE_ROOT / "scripts" / "findings_guide.py"
+    spec = importlib.util.spec_from_file_location("findings_guide_braces", path)
+    assert spec is not None
+    assert spec.loader is not None
+    generator = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(generator)
+    guide_dir = Path(str(files("fransys").joinpath("guide")))
+    doubled = [
+        p.name
+        for p, text in generator.expected_pages(guide_dir).items()
+        if "{{" in text or "}}" in text
+    ]
+    assert doubled == []

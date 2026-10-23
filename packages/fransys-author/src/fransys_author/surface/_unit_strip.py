@@ -5,8 +5,9 @@ The one place that decides it (decision author-0023); the series and the wire bo
 
 from typing import TYPE_CHECKING, cast
 
+from fransys_author._draft_view import draft_view
 from fransys_author.errors import AuthorError
-from fransys_model.vocab import Conductor, Function, Item, Port, UnusedBoundary
+from fransys_model.derive import unused_functions, wired_inside_outside
 
 if TYPE_CHECKING:
     from fransys_author.design import Scope
@@ -14,6 +15,7 @@ if TYPE_CHECKING:
     from fransys_author.surface._strip import TerminalStrip
     from fransys_author.surface.design import Design
     from fransys_model.kernel import Id
+    from fransys_model.vocab import Function, Port
 
 
 def is_unit_strip(strip: TerminalStrip | Terminal, design: Design | None) -> bool:
@@ -27,18 +29,9 @@ def _unit_name(strip: TerminalStrip) -> str:
 
 def _boundary_reading(design: Design) -> tuple[set[Id[Port]], set[Id[Port]], set[Id[Function]]]:
     """Ports wired inside the unit, ports wired outside it, and the functions declared unused."""
-    records = design._engine._design._draft.records()
-    units = {r.id: r.unit for r in records if isinstance(r, Item)}
-    owner = {r.id: units[r.item] for r in records if isinstance(r, Function) and r.item in units}
-    unit_of = {r.id: owner.get(r.function) for r in records if isinstance(r, Port)}
-    inside: set[Id[Port]] = set()
-    outside: set[Id[Port]] = set()
-    for c in (r for r in records if isinstance(r, Conductor)):
-        for end, other in ((c.a, c.b), (c.b, c.a)):
-            held = unit_of[end]
-            (inside if unit_of[other] == held else outside).add(end)
-    unused = {r.function for r in records if isinstance(r, UnusedBoundary)}
-    return inside, outside, unused
+    view = draft_view(design._engine._design._draft)
+    inside, outside = wired_inside_outside(view)
+    return set(inside), set(outside), set(unused_functions(view))
 
 
 def _reach(strip: TerminalStrip, design: Design, count: int) -> tuple[Terminal, ...]:

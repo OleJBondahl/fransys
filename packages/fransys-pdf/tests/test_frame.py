@@ -16,8 +16,8 @@ from _build import (
     model,
     part,
     sheet_format,
+    source,
 )
-from fransys_pdf import source
 from fransys_pdf._background import PAGE_COUNTER_LABEL
 
 from fransys_model.derive import SheetKey, document_sheets_of, harness_cables_for

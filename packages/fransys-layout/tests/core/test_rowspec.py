@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from options_fixtures import core_options
+
 from fransys_layout.core.geometry import column_extent
 from fransys_layout.core.pack import PlacedColumn, attachments
 from fransys_layout.core.pack_row import RowSpec, row_width
@@ -10,12 +12,12 @@ from fransys_layout.core.rowspec import one_row
 from fransys_layout.core.values import (
     Box,
     CycleSplit,
+    Facts,
     FlowGraph,
     Lane,
-    Options,
     PlacementProblem,
-    Sym,
 )
+lazy from fransys_layout.core.sym_values import Sym
 
 from .blocks_fixtures import AREA
 from .pack_fixtures import boxpin_end, card, card_block, column, elem, free_block, lane, placed
@@ -25,14 +27,26 @@ NONE: frozenset[str] = frozenset()
 
 def world(syms: list[Sym], cols: list) -> tuple[FlowGraph, PlacementProblem]:
     flow = FlowGraph(tuple(cols), (), (), (), CycleSplit(0, 0, 0), ())
-    return flow, PlacementProblem(AREA, tuple(syms), ())
+    return flow, PlacementProblem(AREA, tuple(syms), (), facts=Facts())
 
 
 def test_a_lone_column_measures_its_extent() -> None:
     syms = [elem("a", footprint=Box(-20, -16, 50, 32))]
     cols = [column("c1", lane("a"))]
     flow, prob = world(syms, cols)
-    spec = one_row(("c1",), (free_block("f", ("c1",)),), flow, prob, Options())
+    spec = one_row(
+        ("c1",),
+        (free_block("f", ("c1",)),),
+        flow,
+        prob,
+        core_options(
+            flip_turn="R180",
+            tag_stagger=True,
+            label_gap=8,
+            driver_first=True,
+            arrow_sides=("E", "W"),
+        ),
+    )
     lo, hi = column_extent(spec.syms, (Lane(spec.pcs["c1"].lanes[0], 0),), NONE)
     assert row_width(spec) == hi - lo == 50
 
@@ -41,7 +55,13 @@ def test_two_free_columns_are_the_first_reach_plus_separation_plus_the_second_re
     syms = [elem("a", footprint=Box(-20, -16, 50, 32)), elem("b", footprint=Box(-9, -16, 40, 32))]
     cols = [column("c1", lane("a")), column("c2", lane("b"))]
     flow, prob = world(syms, cols)
-    options = Options()
+    options = core_options(
+        flip_turn="R180",
+        tag_stagger=True,
+        label_gap=8,
+        driver_first=True,
+        arrow_sides=("E", "W"),
+    )
     spec = one_row(("c1", "c2"), (free_block("f", ("c1", "c2")),), flow, prob, options)
     sep = separation(spec.pcs["c1"], spec.pcs["c2"], spec.syms, NONE, options)
     assert row_width(spec) == 20 + sep + 31
@@ -53,7 +73,13 @@ def test_a_card_block_measures_as_the_hand_built_row_spec() -> None:
     names = tuple(c.id for c in cols)
     block = card_block("box", names, tuple((f"p{i}", "S") for i in (1, 2, 3)))
     flow, prob = world(syms, cols)
-    options = Options()
+    options = core_options(
+        flip_turn="R180",
+        tag_stagger=True,
+        label_gap=8,
+        driver_first=True,
+        arrow_sides=("E", "W"),
+    )
     got = one_row(names, (block,), flow, prob, options)
     pcs = {c: placed(c, "a") for c in names}
     attach = attachments(tuple(cols), {block.id: block})
@@ -67,6 +93,18 @@ def test_a_column_attached_on_the_far_edge_is_flipped() -> None:
     cols = [column(f"c{i}", lane("a"), head=boxpin_end("box", f"p{i}")) for i in (1, 2)]
     block = card_block("box", ("c1", "c2"), (("p1", "N"), ("p2", "S")))
     flow, prob = world(syms, cols)
-    spec = one_row(("c1", "c2"), (block,), flow, prob, Options())
+    spec = one_row(
+        ("c1", "c2"),
+        (block,),
+        flow,
+        prob,
+        core_options(
+            flip_turn="R180",
+            tag_stagger=True,
+            label_gap=8,
+            driver_first=True,
+            arrow_sides=("E", "W"),
+        ),
+    )
     assert isinstance(spec.pcs["c1"], PlacedColumn)
     assert (spec.pcs["c1"].flipped, spec.pcs["c2"].flipped) == (True, False)

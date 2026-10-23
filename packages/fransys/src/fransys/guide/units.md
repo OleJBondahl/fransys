@@ -42,8 +42,10 @@ On a terminal strip `interface=(1, 2)` names terminals by number and `unused=` w
 container reaches only the boundary terminals, and `d.add(..., unused=("X1",))` covers only those.
 
 `d.device(tag, part, unused=True)` declares an interface device left unconnected on purpose,
-so the build does not ask for it to be wired. `unused=True` on a device that is not an
-interface marks it as one too. The tuple the function returns names the devices a
+so the build does not ask for it to be wired. `unused=` works on a boundary device and on an
+internal one. On an internal device it declares its functions open on purpose. No unused-pin
+finding is raised, and the device is no interface field. A device the unit returns is a boundary
+too. A function declared unused but wired gives `UNUSED_CONTRADICTED`. The tuple the function returns names the devices a
 container can reach: `io.X1` is the field `X1`. A misspelt field is a type-checker error. A field may hold a nested unit's interface field. That connector, strip, run or terminal becomes this unit's interface too, one level at a time, and prints its full path. The black box a page draws for a nested unit is the unit directly in the page's unit that holds it. A field that holds a strip, a run or a terminal is
 typed `fr.TerminalStrip`, `fr.Run` or `fr.Terminal`.
 `d.series` and `d.detail.wire` from a container reach the unit strip's free boundary terminals, the PE core the unit's PE run, and never add one.
@@ -251,6 +253,10 @@ A unit built alone, with nothing outside it, leaves its interface unconnected, a
 The finding fires once the unit sits inside something larger and an interface device is neither
 mated nor `unused`.
 
+Nets do not cross a unit boundary. Join across it with `d.detail.wire(a, b, wire=...)`, and keep
+`d.detail.net` for pins inside one unit. A net with pins in two units that no wire joins gives
+`NET_ACROSS_UNIT_BOUNDARY`, which names the net and the boundary pin.
+
 A nested unit with a harness line at one of its interfaces draws on its parent's page as one
 outline, with its columns above and below it. A unit with none keeps its usual frame. Inside stand
 only its interfaces, title and revision. Each line-end interface is a connector box on the outline,
@@ -266,6 +272,18 @@ Instance tags count up inside their parent, the cabinet unit: `-U1`, `-U2`, with
 up, in the top design, they print behind the cabinet's own tag: `-U1-U2-X1`. A circuit, such as one
 pump's or one string's, is a function block (`with d.function(...)`), never a place. A place is where
 units and field devices stand: a room, a site, a ship's hold.
+
+## A board with parts mounted on it
+
+A part installed on the board as part of its assembly (pressed or bolted onto its copper) is a
+child of the board: `parent=board`. The enclosure receptacles are not part of the board, so they
+stay in the enclosure. For the board's parts and nets to draw, the board must be the only top-level
+device of its own unit. So make the board assembly its own unit: the board plus its mounted parts.
+Nest that unit in the enclosure unit, which holds the receptacles. Join the board's interface
+connector to the receptacles with `d.detail.wire(..., wire=...)`; the wire crosses the unit
+boundary and draws as a boundary connection. The board's parts draw on the board unit's pages, not
+the enclosure's. A board that shares its unit with another top-level device draws as a black box,
+and `BOARD_NETS_NOT_DRAWN` names its dropped nets.
 
 ## Task: a board unit in a cabinet
 

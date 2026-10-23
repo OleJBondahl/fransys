@@ -11,7 +11,10 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         cause=(
             "An aspect node's parent belongs to a different aspect (function, location or product)."
         ),
-        fix="Move the node under a parent of the same aspect, or fix its authored parent.",
+        fix=(
+            "Give each location a parent of its own aspect, a location. Write: "
+            'd.location("BATT", "Battery bay", within="HOLD")'
+        ),
         page="findings-validators",
     ),
     CodeInfo(
@@ -20,7 +23,10 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         stage="validators",
         who="consumer",
         cause="An aspect node's parent chain loops back on itself.",
-        fix="Correct the parent authored on one of the looping nodes.",
+        fix=(
+            "Make the parents of locations form a tree, never a loop. Write: "
+            'd.location("BATT", "Battery bay", within="HOLD")'
+        ),
         page="findings-validators",
     ),
     CodeInfo(
@@ -30,8 +36,8 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         who="consumer",
         cause="A unit's boundary function belongs to an item outside that unit's subtree.",
         fix=(
-            "Declare the boundary on a function whose item is in the unit, or fix the item's "
-            "unit/parent."
+            "Declare as the unit's boundary only a function of an item built inside that "
+            'unit. Write: d.device("X1", "DEMO-CONN-2P", interface=True)'
         ),
         page="findings-validators",
     ),
@@ -42,9 +48,8 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         who="consumer",
         cause="A unit's boundary function is not connected across the unit nor declared unused.",
         fix=(
-            "Wire the boundary, or leave it open: `unused=` on `d.add` for one instance, on "
-            "`d.device` for all. A unit alone in its design never fires it, nor an interface "
-            "passed up from a nested unit."
+            "Wire each boundary function across the unit, or declare it unused on purpose. "
+            'Write: d.device("X2", "DEMO-CONN-2P", interface=True, unused=True)'
         ),
         page="findings-validators",
     ),
@@ -58,8 +63,8 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
             "whose part gender is male or female (neutral or unstated passes)."
         ),
         fix=(
-            "Mate a plug to the boundary connector (`u.mate(plug, connector)`) and wire the "
-            "plug's pin instead."
+            "Mate the connector to a plug and wire the plug's pin, not the connector. Write: "
+            "d.mate(plug, connector)"
         ),
         page="findings-validators",
     ),
@@ -69,7 +74,10 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         stage="validators",
         who="consumer",
         cause="An item's physical-containment parent chain loops back on itself.",
-        fix="Correct the parent authored on one of the looping items.",
+        fix=(
+            "Make physical containment a tree: no item sits inside itself. Write: "
+            'd.device("X1", "DEMO-CONN-2P", parent=k1)'
+        ),
         page="findings-validators",
     ),
     CodeInfo(
@@ -78,7 +86,11 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         stage="validators",
         who="consumer",
         cause="A document's `unit_name` matches no unit, or more than one.",
-        fix="Make the unit name unique so `unit_name` resolves to one instance.",
+        fix=(
+            "Document each placement with what `d.add` returned; the unit's own PDF comes from its "
+            "release write. Write: "
+            'fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, placed, cover=Path("cover.md"))'
+        ),
         page="findings-validators",
     ),
     CodeInfo(
@@ -87,7 +99,10 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         stage="validators",
         who="consumer",
         cause="A PLC module sits under an item made with `d.harness`.",
-        fix="Build the rack with `d.rack`, so its modules print flat.",
+        fix=(
+            "Put the PLC modules under a rack, not a harness, so they print flat. Write: "
+            'd.rack("U1", name="plc")'
+        ),
         page="findings-validators",
     ),
     CodeInfo(
@@ -99,7 +114,7 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
             "A harness (marked, or with a cable child) has no tag or assigned designation, so "
             "it has no label."
         ),
-        fix="Give it a tag: `d.harness(tag=...)`, or `tag=` on the item.",
+        fix='Give the harness a tag so it has a label. Write: d.harness("W5")',
         page="findings-validators",
     ),
     CodeInfo(
@@ -111,7 +126,10 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
             "An item's functions or ports do not match its part's templates (missing, extra, "
             "duplicated, or differing in name, kind, role or marking)."
         ),
-        fix="Fix the item's authored functions and ports (or the part's templates) so they agree.",
+        fix=(
+            "Make the item's functions and ports match its part's templates, by building it "
+            'from the part as it stands. Write: d.device("Q1", "DEMO-MCB-3P")'
+        ),
         page="findings-validators",
     ),
     CodeInfo(
@@ -132,7 +150,7 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         stage="validators",
         who="consumer",
         cause="A mate end is not a connector or terminal (a relay coil, say).",
-        fix="Mate a connector or terminal.",
+        fix="Mate only connector or terminal functions. Write: d.mate(plug, connector)",
         page="findings-validators",
     ),
     CodeInfo(
@@ -144,8 +162,8 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
             "A mate's two functions have different port names, so some ports have no counterpart."
         ),
         fix=(
-            "Example: a lettered inlet (L1, L2, L3, N, PE) mated to a numbered plug. Rename "
-            "the ports to match."
+            "Mate two connectors whose port names match, so every port has a counterpart. "
+            "Write: d.mate(j1, j2)"
         ),
         page="findings-validators",
     ),
@@ -157,7 +175,9 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         cause=(
             "One item is placed more than once in the same aspect (function, location or product)."
         ),
-        fix="Remove the duplicate placement so the item is placed once per aspect.",
+        fix=(
+            'Place each item once in each aspect. Write: d.device("X1", "DEMO-CONN-2P", place="A1")'
+        ),
         page="findings-validators",
     ),
     CodeInfo(
@@ -170,8 +190,8 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
             "entry, so a title block prints no date."
         ),
         fix=(
-            "Add the missing entry: `history=` on `@fr.unit`, or `Design.revision(rev, date=, "
-            "text=, created=)`."
+            "Add a history entry for the current revision. Write: d.revision(1, "
+            'date="2026-01-01", text="first", created="AB")'
         ),
         page="findings-validators",
     ),
@@ -181,7 +201,10 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         stage="validators",
         who="consumer",
         cause="A revision entry's date is not in `YYYY-MM-DD` format.",
-        fix="Rewrite the date as `YYYY-MM-DD`.",
+        fix=(
+            'Write each revision date as YYYY-MM-DD. Write: d.revision(1, date="2026-01-01", '
+            'text="first", created="AB")'
+        ),
         page="findings-validators",
     ),
     CodeInfo(
@@ -190,7 +213,10 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         stage="validators",
         who="consumer",
         cause="A revision entry has no `created` (author initials).",
-        fix="Add the author's initials to the revision entry's `created` field.",
+        fix=(
+            "Give each revision entry its author's initials in `created`. Write: "
+            'd.revision(1, date="2026-01-01", text="first", created="AB")'
+        ),
         page="findings-validators",
     ),
     CodeInfo(
@@ -202,7 +228,10 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
             "A part-less top-level item, usually a floating strip, has no tag and no class "
             "code (no terminals, or disagreeing ones)."
         ),
-        fix="Give it a part, a tag, or terminals of one class code.",
+        fix=(
+            "Give the strip a tag, a part, or terminals of one class code. Write: "
+            'd.terminal_strip("X1", "DEMO-TB-2.5", 4)'
+        ),
         page="findings-validators",
     ),
     CodeInfo(
@@ -214,7 +243,10 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
             "A conductor or mate crosses out of a unit at a function that is not declared that "
             "unit's boundary."
         ),
-        fix="Declare it the unit's boundary, or route it through an existing boundary function.",
+        fix=(
+            "Cross a unit's edge only at a function declared as its boundary. Write: "
+            'd.device("X1", "DEMO-CONN-2P", interface=True)'
+        ),
         page="findings-validators",
     ),
     CodeInfo(
@@ -223,7 +255,7 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         stage="validators",
         who="consumer",
         cause="A unit's parent chain loops back on itself.",
-        fix="Correct the parent authored on one of the looping units.",
+        fix='Nest units as a tree, adding each unit once. Write: d.add(cabinet, "U1")',
         page="findings-validators",
     ),
     CodeInfo(
@@ -232,10 +264,14 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         stage="validators",
         who="consumer",
         cause=(
-            "A boundary declared unused names a function that is no unit's boundary, or is "
-            "connected across the unit the declaration is on."
+            "A function declared unused is wired, or is a unit boundary connected across "
+            "the unit the declaration is on."
         ),
-        fix="Remove `unused=` if the function is wired, or fix the unit/function it names.",
+        fix=(
+            "Declare unused only a function that is wired nowhere, and for a boundary not across "
+            "its unit. "
+            'Write: d.device("X2", "DEMO-CONN-2P", interface=True, unused=True)'
+        ),
         page="findings-validators",
     ),
     CodeInfo(
@@ -244,7 +280,9 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         stage="validators",
         who="consumer",
         cause="A cable core is numbered past the core count of the cable's product.",
-        fix="Use a core from 1 to the product's core count, or choose a part with more cores.",
+        fix=(
+            "Number the cores from 1 to the product's core count. Write: W1.core(3, x1[1], x1[2])"
+        ),
         page="findings-validators",
     ),
 )

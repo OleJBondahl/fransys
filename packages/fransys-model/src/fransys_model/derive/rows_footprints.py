@@ -17,7 +17,14 @@ class Extent:
 
 @value
 class Footprints:
-    """The room a symbol takes: `standalone`, and `in_strip_row` without the strip's shared tag."""
+    """The room a symbol takes: `standalone`, and `in_strip_row` without the strip's shared tag.
+
+    `alone` is `standalone` without a coil's contact table; `no_cells` and `nc_cells` are its
+    two columns of cells.
+    """
 
     standalone: Extent
     in_strip_row: Extent
+    alone: Extent
+    no_cells: tuple[str, ...] = ()
+    nc_cells: tuple[str, ...] = ()

@@ -17,10 +17,10 @@ sys.path.insert(
     0, str(Path(__file__).resolve().parents[1] / "packages/fransys-model/tests/usecases")
 )
 from cabinet import build_cabinet  # ty: ignore[unresolved-import] -- the use case folder is put on sys.path above
+from root_library import freeze
 
 from fransys_layout.engines.overview import lay_out_overview
 from fransys_model.derive import signal_lens
-from fransys_model.kernel import freeze
 
 
 def _page_lens(model: Any) -> list[dict[str, Any]]:

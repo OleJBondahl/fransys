@@ -21,8 +21,7 @@ def engine(lib: Draft) -> Draft:
     x1 = io.item("DEMO-CONN-2P", name="X1", tag="X1")
     x2 = io.item("DEMO-CONN-2P", name="X2", tag="X2")
     io.boundary(x1, name="X1")
-    io.boundary(x2)
-    io.unused(x2)
+    io.unused(x2)  # `unused=` alone: x2 is no field of the interface, so no boundary
     p1 = e.item("DEMO-CONN-2P", name="P1", tag="P1", at=c1)
     e.mate(p1, x1)
     return e.draft()

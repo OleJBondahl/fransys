@@ -9,20 +9,21 @@ The bug: the tall-group cut (decision layout-0167) cuts at the outline's top edg
 a lower band; with none it cuts nothing, the page grows past the content box and reports
 OUT_OF_CONTENT_BOX and PAGE_OVERFULL, with the line's ink outside the box.
 The fix (decision layout-0234): such a group hands its shortest upper column down to stand
-below the outline on the next page, so the outline leaves the first page. The six-coil chain is
-taller than the page by itself (T4), so it stays held.
+below the outline on the next page, so the outline leaves the first page. The six-coil chain no
+longer outgrows the page: REACH's measure fits the whole group on one page (R410), inside the
+content box with no overflow, so it needs no cut.
 """
 
 import sys
 from pathlib import Path
 
-import pytest
+from _drawn_pages import drawn_pages
 lazy import fransys as fr
 
 sys.path.insert(0, str(Path(__file__).parent))  # the sibling case whose tall group this reuses
 from test_a_harness_line_on_an_overfull_page_still_routes import _built
 
-from fransys_model.layout import Outline, Page, SymbolPlacement, layout_of
+from fransys_model.layout import Page, layout_of
 
 _HELD = "CL8: the upper band alone is taller than the page (TALL-PAGE T4: held)"
 _OVER = {"OUT_OF_CONTENT_BOX", "PAGE_OVERFULL"}
@@ -37,15 +38,14 @@ def test_a_tall_upper_band_with_no_lower_band_stays_inside_the_content_box() -> 
     built = _built(2, 0, 2, looms=False)
     _drawn(built)
     assert not _OVER & {f.code for f in built.findings}
-    (outline,) = layout_of(built.model, Outline).values()
-    column = [
-        one for one in layout_of(built.model, SymbolPlacement).values() if one.page == outline.page
-    ]
+    (drawing,) = [d for d in drawn_pages(built.model).values() if d.outlines]
+    assert len(drawing.outlines) == 1
+    column = [one for one in drawing.symbols if one.key != "connector-fixed"]
     assert column, "the outline's page carries the column handed down"
 
 
-@pytest.mark.xfail(strict=True, reason=_HELD)
 def test_an_upper_band_taller_than_the_page_alone_stays_inside_the_content_box() -> None:
     built = _built(2, 0, 6, looms=False)
-    _drawn(built)
+    assert [f for f in built.findings if f.severity.name == "ERROR"] == []
+    assert len(layout_of(built.model, Page)) == 1
     assert not _OVER & {f.code for f in built.findings}

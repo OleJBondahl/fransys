@@ -13,20 +13,17 @@ with the head's tag and a reference to the lead, a contact table under the lead 
 contact of the group) and electrical-symbols D50 (the positive-opening break contact). Invented
 parts from `demo_parts`: `DEMO-HEAD-ESTOP`, `DEMO-BLOCK-1NC`, `DEMO-BLOCK-1NC-21` and
 `DEMO-BLOCK-1NC-31`.
-The records are layout records, read through `fransys_model.layout` as
-`test_contact_blocks_on_an_estop_head_draw_the_estop.py` does; the public API has no reader.
+The drawn things are read from the core path's page Drawings (`drawn_pages`), as
+`test_contact_blocks_on_an_estop_head_draw_the_estop.py` does.
 """
 
 from typing import TYPE_CHECKING
 
 import fransys as fr
 import pytest
+from _drawn_pages import drawn_pages
 from _model_build_cover import cabinet_document
 from fransys.colours import BU
-
-from fransys_model.derive.drawing_text import contact_image, cross_reference_text, label_text
-from fransys_model.layout import Label, LabelKind, SymbolPlacement, layout_of
-from fransys_model.vocab.tables import functions, items
 
 _BLOCKS = {"DEMO-BLOCK-1NC": "11", "DEMO-BLOCK-1NC-21": "21", "DEMO-BLOCK-1NC-31": "31"}
 
@@ -52,35 +49,46 @@ def model() -> Model:
     return fr.build(d, cabinet_document(cabinet)).model
 
 
-def _by_pin(model: Model) -> dict[str, SymbolPlacement]:
-    """Each block's placement, keyed by the first pin of its part ("11", "21", "31")."""
-    first = {f"G{n}/block-{n}": pin for n, pin in enumerate(_BLOCKS.values(), start=1)}
+def _by_pin(model: Model) -> dict[str, tuple[Any, DrawnSymbol]]:
+    """Each block's (page, symbol), keyed by the first pin of its part ("11", "21", "31")."""
     return {
-        first[items(model)[functions(model)[p.function].item].key[-1]]: p
-        for p in layout_of(model, SymbolPlacement).values()
-        if items(model)[functions(model)[p.function].item].key[-1] in first
+        dict(symbol.slots)["marking.in"]: (page, symbol)
+        for page, drawing in drawn_pages(model).items()
+        for symbol in drawing.symbols
+        if dict(symbol.slots).get("marking.in") in _BLOCKS.values()
     }
 
 
-def _labels(model: Model, pin: str, *, kind: LabelKind) -> list[Label]:
-    placement = _by_pin(model)[pin]
+def _texts(model: Model, pin: str, *, kind: str) -> list[DrawnText]:
+    """The texts of `kind` on the block's page that stand in the block's column."""
+    page, symbol = _by_pin(model)[pin]
     return [
         one
-        for one in layout_of(model, Label).values()
-        if one.function == placement.function and one.kind is kind and one.slot == "tag"
+        for one in drawn_pages(model)[page].texts
+        if one.kind == kind and symbol.x - 60 <= one.box.x <= symbol.x + 60
+    ]
+
+
+def _tables(model: Model) -> list[DrawnSymbol]:
+    """Every contact table the pages draw."""
+    return [
+        symbol
+        for drawing in drawn_pages(model).values()
+        for symbol in drawing.symbols
+        if symbol.key == "contact-head"
     ]
 
 
 def test_two_circuits_share_a_page_and_the_third_has_its_own(model: Model) -> None:
     """The shape holds: 11-12 and 21-22 on one page, 31-32 on another."""
-    pages = {pin: p.page for pin, p in _by_pin(model).items()}
+    pages = {pin: page for pin, (page, _) in _by_pin(model).items()}
     assert pages["11"] == pages["21"]
     assert pages["31"] != pages["11"]
 
 
 def test_exactly_the_lead_block_draws_the_emergency_stop(model: Model) -> None:
     """Only 11-12 draws the mushroom; the others draw the positive-opening break contact."""
-    drawn = {pin: p.symbol for pin, p in _by_pin(model).items()}
+    drawn = {pin: symbol.key for pin, (_, symbol) in _by_pin(model).items()}
     assert drawn == {
         "11": "emergency-stop",
         "21": "break-contact-positive-opening",
@@ -92,53 +100,37 @@ def test_exactly_the_lead_block_draws_the_emergency_stop(model: Model) -> None:
 def test_a_plain_contact_prints_the_heads_tag_and_refers_to_the_lead(
     model: Model, pin: str
 ) -> None:
-    """The plain contact prints "-S1" and a reference that is derive's text for the lead's cell."""
-    lead = _by_pin(model)["11"]
-    (tag,) = _labels(model, pin, kind=LabelKind.TAG)
-    assert label_text(model, tag).endswith("-S1")
-    (reference,) = _labels(model, pin, kind=LabelKind.CROSS_REFERENCE)
-    assert {p.page for p in reference.partners} == {lead.page}
-    text = cross_reference_text(model, reference)
-    assert text
-    cell = contact_image(model, _table(model))[1][0].split(" ")[1]  # the lead's own cell
-    assert text.endswith(cell)
-    assert (":" in text) == (_by_pin(model)[pin].page != lead.page)
-    assert label_text(model, reference) == text
+    """The plain contact prints "-S1" and a reference to the lead's cell (p1:1B on another page)."""
+    assert [one.text for one in _texts(model, pin, kind="TAG")] == ["-S1"]
+    (reference,) = _texts(model, pin, kind="CROSS_REFERENCE")
+    assert reference.text == {"21": "1B", "31": "p1:1B"}[pin]
 
 
 def test_the_references_print_the_leads_cell_as_the_coil_contacts_do(model: Model) -> None:
     """A coil contact's text (owner D2): the cell on the lead's page, page and cell elsewhere."""
     texts = {
-        pin: label_text(model, _labels(model, pin, kind=LabelKind.CROSS_REFERENCE)[0])
+        pin: [one.text for one in _texts(model, pin, kind="CROSS_REFERENCE")]
         for pin in ("21", "31")
     }
-    assert texts == {"21": "1B", "31": "p1:1B"}
-
-
-def _table(model: Model) -> Label:
-    lead = _by_pin(model)["11"]
-    (found,) = (
-        one
-        for one in layout_of(model, Label).values()
-        if one.kind is LabelKind.CROSS_REFERENCE
-        and one.slot.startswith("contacts")
-        and one.function == lead.function
-    )
-    return found
+    assert texts == {"21": ["1B"], "31": ["p1:1B"]}
 
 
 def test_one_contact_table_under_the_lead_lists_the_three_contacts(model: Model) -> None:
-    """The table's subject is 11-12's function; it has no NO entry and three NC entries."""
-    tables = [
-        one
-        for one in layout_of(model, Label).values()
-        if one.kind is LabelKind.CROSS_REFERENCE and one.slot.startswith("contacts")
+    """One table, on the lead's page, with no NO entry and three NC entries."""
+    (table,) = _tables(model)
+    lead_page = _by_pin(model)["11"][0]
+    assert table in drawn_pages(model)[lead_page].symbols
+    no_nc = table.texts[1:]
+    assert [row[1][:6] for row in no_nc if len(row) > 1 and row[1]] == [
+        "11-12 ",
+        "21-22 ",
+        "31-32 ",
     ]
-    assert tables == [_table(model)]
-    no, nc = contact_image(model, _table(model))
-    assert no == []
-    assert [entry[:6] for entry in nc] == ["11-12 ", "21-22 ", "31-32 "]
+    assert not [row[0] for row in no_nc if row[0]]
 
 
 if TYPE_CHECKING:
+    from typing import Any
+
+    from fransys_layout.drawing import DrawnSymbol, DrawnText
     from fransys_model.kernel import Model

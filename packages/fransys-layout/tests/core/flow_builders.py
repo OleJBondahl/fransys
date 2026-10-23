@@ -2,25 +2,42 @@
 
 from __future__ import annotations
 
-from dataclasses import replace
-from typing import Any
+from typing import Any, Literal
 
+from options_fixtures import core_options
+from turn_fixtures import refit, views_of
+
+from fransys_layout.core.sym_values import Sym
 from fransys_layout.core.values import (
     Box,
+    Facts,
     Hints,
     Net,
     Pin,
     PinRef,
     PlacementProblem,
-    Power,
     Side,
     Size,
-    Sym,
 )
 
 AREA = Size(1312, 854)
 LABEL = Size(16, 8)
+OPTIONS = core_options(
+    flip_turn="R180",
+    tag_stagger=True,
+    label_gap=8,
+    driver_first=True,
+    arrow_sides=("E", "W"),
+)
 _POLE_PINS: tuple[tuple[str, Side, int], ...] = (("n", "N", -16), ("s", "S", 16))
+
+
+Power = Literal["SUPPLY", "GROUND", "PE"]
+
+
+def _bias(power: Power | None) -> tuple[int, int]:
+    """The (end bias, rank) a power pin carries: supply to the head, ground and PE to the foot."""
+    return (0, 0) if power is None else (-1 if power == "SUPPLY" else 1, 0)
 
 
 def elem(
@@ -33,19 +50,16 @@ def elem(
 ) -> Sym:
     """A two-pin element: pin n on top, pin s below; body, keepout, footprint are `width` wide."""
     box = Box(-(width // 2), -16, width, 32)
-    pins = (Pin("n", "N", 0, -16, 0, stand_n), Pin("s", "S", 0, 16, 1, stand_s))
+    pins = (Pin("n", "N", 0, -16, 0, *_bias(stand_n)), Pin("s", "S", 0, 16, 1, *_bias(stand_s)))
     group = kw.pop("group", None)
     return Sym(
         sym_id,
         group,
         "",
         LABEL,
-        box,
-        box,
-        box,
         pins,
         (("n",), ("s",)),
-        frozenset({"R0", "R180"}),
+        views=views_of(box, box, box, pins, ("R0", "R180")),
         **kw,
     )
 
@@ -64,14 +78,11 @@ def free(sym_id: str, **kw: Any) -> Sym:
         None,
         "",
         LABEL,
-        box,
-        box,
-        box,
         pins,
         (("e", "n", "s", "w"),),
-        frozenset({"R0", "R180"}),
+        views=views_of(box, box, box, pins, ("R0", "R180")),
     )
-    return replace(sym, **kw)
+    return refit(sym, **kw)
 
 
 def poles(sym_id: str, count: int = 3) -> Sym:
@@ -83,11 +94,19 @@ def poles(sym_id: str, count: int = 3) -> Sym:
         for i, (c, side, dy) in enumerate(_POLE_PINS)
     )
     nodes = tuple((p.id,) for p in pins)
-    return Sym(sym_id, None, "", LABEL, box, box, box, pins, nodes, frozenset({"R0", "R180"}))
+    return Sym(
+        sym_id,
+        None,
+        "",
+        LABEL,
+        pins,
+        nodes,
+        views=views_of(box, box, box, pins, ("R0", "R180")),
+    )
 
 
 def net(net_id: str, *pins: str, **kw: Any) -> Net:
-    """A net over "sym.pin" strings; kw holds rail, bundle or label."""
+    """A net over "sym.pin" strings; kw holds bundle or label."""
     return Net(net_id, tuple(PinRef(*p.split(".")) for p in pins), **kw)
 
 
@@ -95,4 +114,5 @@ def problem(
     syms: list[Sym], nets: list[Net], hints: Hints | None = None, area: Size = AREA
 ) -> PlacementProblem:
     """A placement problem over the given symbols and nets, default hints and the test area."""
-    return PlacementProblem(area, tuple(syms), tuple(nets), hints=hints or Hints())
+    facts = Facts()
+    return PlacementProblem(area, tuple(syms), tuple(nets), facts, hints or Hints())

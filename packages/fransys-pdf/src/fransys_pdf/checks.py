@@ -11,6 +11,7 @@ pdf-0006) and `TITLE_BLOCK_UNIT_IDENTITY_MISSING` (a unit document whose unit ha
 from typing import TYPE_CHECKING, Any
 
 from fransys_model.derive import (
+    PageForm,
     cable_blocks,
     document_page_kinds,
     document_rows,
@@ -22,19 +23,21 @@ from fransys_model.derive import (
     unit_release,
 )
 from fransys_model.kernel import Finding, Severity
-from fransys_model.vocab import PageKind
 
 from ._cable_checks import harness_block_messages
 from ._diagrams import diagram_no_drawings_messages
 from ._drawings import replica_only_sets, schematic_missing_keys, schematic_pages
+from ._forms import has_form, list_pages
 from ._markdown import parse, unsupported
-from ._schematic_yield import _LIST_KINDS, list_rows, schematic_yields
+from ._schematic_yield import list_rows, schematic_yields
+from .codes import fix_text
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
     from fransys_model.derive import AspectNodeId, DocumentId, DocumentRow
     from fransys_model.kernel import Id, Model
+    from fransys_model.vocab import PageKind
 
     type _DocId = DocumentId
 
@@ -45,6 +48,7 @@ def _markdown_findings(subject: _DocId, field: str, text: str) -> tuple[Finding,
             code="MARKDOWN_UNSUPPORTED",
             severity=Severity.ERROR,
             subjects=(subject,),
+            fix=fix_text("MARKDOWN_UNSUPPORTED"),
             message=f"{field} line {line.line}: {line.construct}",
         )
         for line in unsupported(parse(text))
@@ -66,6 +70,7 @@ def _mixed_sheet_format_findings(model: Model, subject: _DocId) -> tuple[Finding
             code="DOCUMENT_MIXED_SHEET_FORMATS",
             severity=Severity.ERROR,
             subjects=(subject,),
+            fix=fix_text("DOCUMENT_MIXED_SHEET_FORMATS"),
             message=f"mixed sheet formats: {named}",
         ),
     )
@@ -87,6 +92,7 @@ def _unit_identity_findings(
             code="TITLE_BLOCK_UNIT_IDENTITY_MISSING",
             severity=Severity.WARNING,
             subjects=(subject,),
+            fix=fix_text("TITLE_BLOCK_UNIT_IDENTITY_MISSING"),
             message=(
                 f"unit document's unit has an empty {' and '.join(empty)}; that cell prints empty"
             ),
@@ -147,13 +153,17 @@ def _no_drawings_findings(  # noqa: PLR0913, PLR0917 -- the tall-diagram cables 
     tall_cables: frozenset[Id[Any]],
 ) -> tuple[Finding, ...]:
     schematic = _schematic_no_drawings_message(model, record, pages, svgs)
-    messages = [schematic] if PageKind.SCHEMATIC in pages and schematic is not None else []
-    if PageKind.HARNESS_DRAWING in pages:
+    messages = [schematic] if has_form(pages, PageForm.SCHEMATIC) and schematic is not None else []
+    if has_form(pages, PageForm.HARNESS_DRAWING):
         messages.extend(_harness_no_drawings_messages(model, record, pages, svgs))
     messages.extend(diagram_no_drawings_messages(model, record, pages, svgs, tall_cables))
     return tuple(
         Finding(
-            code="DOCUMENT_NO_DRAWINGS", severity=Severity.ERROR, subjects=(subject,), message=m
+            code="DOCUMENT_NO_DRAWINGS",
+            severity=Severity.ERROR,
+            subjects=(subject,),
+            message=m,
+            fix=fix_text("DOCUMENT_NO_DRAWINGS"),
         )
         for m in messages
     )
@@ -173,6 +183,7 @@ def _replica_only_findings(
             code="DRAWING_SET_REPLICA_ONLY",
             severity=Severity.INFO,
             subjects=(subject, drawing_set.id),
+            fix=fix_text("DRAWING_SET_REPLICA_ONLY"),
             message=(
                 f"drawing set {_set_where(model, drawing_set.location)} holds only "
                 "black-box replicas: not drawn"
@@ -186,7 +197,7 @@ def _no_top_level_cables_findings(
     model: Model, subject: _DocId, record: DocumentRow, pages: tuple[PageKind, ...]
 ) -> tuple[Finding, ...]:
     """`DOCUMENT_NO_TOP_LEVEL_CABLES` INFO, not an ERROR, for the `SYSTEM` preset."""
-    if PageKind.HARNESS_DRAWING not in pages:
+    if not has_form(pages, PageForm.HARNESS_DRAWING):
         return ()
     cables_found = harness_cables_for(model, record.id, pages)
     if not system_has_no_top_level_cables(model, record.id, cables_found):
@@ -196,6 +207,7 @@ def _no_top_level_cables_findings(
             code="DOCUMENT_NO_TOP_LEVEL_CABLES",
             severity=Severity.INFO,
             subjects=(subject,),
+            fix=fix_text("DOCUMENT_NO_TOP_LEVEL_CABLES"),
             message="HARNESS_DRAWING: the model has no top-level cable",
         ),
     )
@@ -209,10 +221,11 @@ def _empty_list_findings(
             code="DOCUMENT_EMPTY_LIST",
             severity=Severity.INFO,
             subjects=(subject,),
+            fix=fix_text("DOCUMENT_EMPTY_LIST"),
             message=f"{kind.name} has no rows: the page is left out",
         )
-        for kind in _LIST_KINDS
-        if kind in pages and not list_rows(model, record, kind)
+        for kind in list_pages(pages)
+        if not list_rows(model, record, kind)
     )
 
 

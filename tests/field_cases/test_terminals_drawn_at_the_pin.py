@@ -19,13 +19,16 @@ from pathlib import Path
 from typing import Any
 
 import fransys as fr
+from _drawn_pages import drawn_pages
 from fransys.colours import BU
-from fransys_el import OPTIONS
 
-from fransys_layout.engines.schematic.engine import stage_results
-from fransys_layout.engines.schematic.read import read_inputs
-from fransys_model.layout import SymbolPlacement, layout_of
 from fransys_model.vocab.tables import functions, items
+
+
+def _gap(model, fact: str):
+    """A fact the page Drawing lacks (strict xfail, GAP-FLIP-DRAWING-SUBJECT)."""
+    msg = f"GAP-FLIP-DRAWING-SUBJECT: no {fact} for {model.digest}"
+    raise AssertionError(msg)
 
 
 def _feed(d: fr.Design, groups: list[str], *, coils: list[int]) -> dict[int, Any]:
@@ -65,74 +68,79 @@ def _own_group(d: fr.Design, g: list[str]) -> None:
     _feed(d, g, coils=[0, 0])
 
 
-def _built(plant) -> tuple:
+def _built(plant) -> Any:
     d = fr.design("demo_parts", place="CAB")
     cab = d.location("CAB", "Cabinet")
     plant(d, [f"G{i}" for i in range(3)])
     cover = Path(tempfile.mkdtemp()) / "cover.md"
     cover.write_text("# Cabinet\n", encoding="utf-8")
     doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover)
-    model = fr.build(d, doc).model
-    results, _ = stage_results(model, read_inputs(model, options=OPTIONS))
-    return model, results.layout
+    return fr.build(d, doc).model
 
 
-def _placed_of(model, layout, tag: str, name: str) -> list:
-    """The placements of function `name` of item `tag`, or of the terminal when `tag` is ''."""
-    item_tag = {i.id: i.tag for i in items(model).values()}
+def _symbols(model, key: str) -> list[tuple[object, Any]]:
+    """The (page, drawn symbol) pairs of library symbol `key`, on every page."""
     return [
-        p
-        for f in functions(model).values()
-        for p in layout.placed
-        if p.function == f.id
-        and f.key[-1] == name
-        and (item_tag.get(f.item, "") == tag or (not tag and f.key[-1] == "terminal"))
+        (page, s)
+        for page, drawing in drawn_pages(model).items()
+        for s in drawing.symbols
+        if s.key == key
     ]
 
 
-def _assert_drawn_once_over_the_first_pin(model, layout) -> None:
-    """One terminal on the relays' page, over K1's pin; the other relays keep a wire."""
-    terminals = _placed_of(model, layout, "", "terminal")
-    (coil,) = _placed_of(model, layout, "K1", "coil")
-    on_page = [t for t in terminals if (t.drawing_set, t.page) == (coil.drawing_set, coil.page)]
+def _drawn(model, name: str, tag: str = "") -> list[tuple[object, Any]]:
+    """The (page, drawn symbol) pairs of function `name` of item `tag`, or of every terminal."""
+    item_tag = {i.id: i.tag for i in items(model).values()}
+    owned = {
+        f.id.value
+        for f in functions(model).values()
+        if f.key[-1] == name and (not tag or item_tag.get(f.item, "") == tag)
+    }
+    return [
+        (page, s)
+        for page, drawing in _gap(model, "symbol subject").items()
+        for s in drawing.symbols
+        if (s.owner or "").rpartition(":")[2] in owned
+    ]
+
+
+def _assert_terminal_over_pin(terminals, page, coil) -> None:
+    """One terminal on the relays' page, over the coil's pin; the other relays keep a wire."""
+    on_page = [t for p, t in terminals if p == page]
     assert len(on_page) == 1, f"{len(on_page)} terminals on the relays' page, one is the rule"
-    assert on_page[0].at.x == coil.at.x
-    assert on_page[0].at.y < coil.at.y, "the terminal is not over K1's pin"
-    assert len({(t.drawing_set, t.page) for t in terminals}) == len(terminals)
+    assert on_page[0].x == coil.x
+    assert on_page[0].y < coil.y, "the terminal is not over the coil's pin"
+    assert len({p for p, _ in terminals}) == len(terminals)
 
 
 def _assert_drawn_at_each_relays_pin(model, relays: int) -> None:
     """Model-0220: one terminal per relay on the page, each over its own relay's coil pin."""
-    item_tag = {i.id: i.tag for i in items(model).values()}
-    fn = {f.id: f for f in functions(model).values()}
-    placed = list(layout_of(model, SymbolPlacement).values())
-    terminals = [p for p in placed if fn[p.function].key[-1] == "terminal"]
-    for k in range(1, relays + 1):
-        (coil,) = (
-            p
-            for p in placed
-            if fn[p.function].key[-1] == "coil" and item_tag.get(fn[p.function].item) == f"K{k}"
-        )
-        over = [t for t in terminals if t.page == coil.page and t.x == coil.x and t.y < coil.y]
-        assert len(over) == 1, f"{len(over)} terminals over K{k}'s pin, one is the rule"
+    terminals = _symbols(model, "terminal")
+    coils = _symbols(model, "operating-device")
+    assert len(coils) == relays, f"{len(coils)} relay coils drawn, {relays} relays"
+    for page, coil in coils:
+        over = [t for p, t in terminals if p == page and t.x == coil.x and t.y < coil.y]
+        assert len(over) == 1, f"{len(over)} terminals over a relay's pin, one is the rule"
 
 
 def test_one_relay_on_a_later_page_has_the_terminal_replica_over_its_pin() -> None:
     """Passes today: the one-wire replica is attached to its host (R7 B8); no reference."""
-    model, layout = _built(_one_relay)
-    _assert_drawn_once_over_the_first_pin(model, layout)
+    model = _built(_one_relay)
+    ((page, coil),) = _symbols(model, "operating-device")
+    _assert_terminal_over_pin(_symbols(model, "terminal"), page, coil)
 
 
 def test_two_relays_of_one_group_have_the_terminal_at_each_relays_pin() -> None:
-    model, _ = _built(_two_relays_one_group)
+    model = _built(_two_relays_one_group)
     _assert_drawn_at_each_relays_pin(model, 2)
 
 
 def test_two_relays_of_two_groups_on_one_page_have_the_terminal_at_each_relays_pin() -> None:
-    model, _ = _built(_two_relays_two_groups)
+    model = _built(_two_relays_two_groups)
     _assert_drawn_at_each_relays_pin(model, 2)
 
 
 def test_two_relays_in_the_terminals_own_group_have_the_terminal_over_the_first_pin() -> None:
-    model, layout = _built(_own_group)
-    _assert_drawn_once_over_the_first_pin(model, layout)
+    model = _built(_own_group)
+    ((page, coil),) = (p for p in _drawn(model, "coil", "K1") if p[1].key == "operating-device")
+    _assert_terminal_over_pin(_drawn(model, "terminal"), page, coil)

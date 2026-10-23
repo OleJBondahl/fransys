@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from fransys_layout.core import natural_key
-from fransys_layout.core.topology_cycles import cyclic_parts, y_cycle_cuts
+from fransys_layout.core import CoreError, natural_key
+from fransys_layout.core.topology_cycles import CycleCutError, cyclic_parts, y_cycle_cuts
 from fransys_layout.core.topology_split import y_cycles
 
 from .cycle_fixtures import ring_problem
@@ -73,10 +73,11 @@ def test_the_result_does_not_depend_on_edge_order() -> None:
 
 
 def test_a_cycle_of_fixed_edges_cannot_be_cut() -> None:
-    """A cycle with no owned edge raises, naming the nodes of the cycle."""
-    edges = [("a", "b", FIXED), ("b", "a", FIXED)]
-    with pytest.raises(ValueError, match="no edge that can be cut"):
+    """A cycle with no owned edge raises a CoreError naming the nodes in natural-key order."""
+    edges = [("c:10", "c:9", FIXED), ("c:9", "c:10", FIXED), ("x", "y", frozenset({"n1"}))]
+    with pytest.raises(CycleCutError, match=r"through c:9, c:10 has no edge that can be cut") as e:
         _cuts(edges)
+    assert isinstance(e.value, CoreError)
 
 
 def test_an_owner_whose_cut_is_redundant_is_dropped() -> None:

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from itertools import pairwise
 
-from fransys_layout.core import PlacementProblem
+from fransys_layout.core import Facts, PlacementProblem
 
 from .cut_fixtures import AREA, elem, net
 
@@ -21,7 +21,7 @@ def ring_problem(extra: int = 0) -> PlacementProblem:
         net(f"n{k + 4}", "d.s", "lamp.n"),
     ]
     names = (*chain, "b", "c", "d", "s")
-    return PlacementProblem(AREA, tuple(elem(i, 60) for i in names), tuple(nets))
+    return PlacementProblem(AREA, tuple(elem(i, 60) for i in names), tuple(nets), facts=Facts())
 
 
 def acyclic_problem() -> PlacementProblem:
@@ -33,4 +33,4 @@ def acyclic_problem() -> PlacementProblem:
         net("f1", "a.s", "b.n"),
         net("f2", "b.s", "s.s", "c.n"),
     )
-    return PlacementProblem(AREA, syms, nets)
+    return PlacementProblem(AREA, syms, nets, facts=Facts())

@@ -238,7 +238,7 @@ Example: `d.pair(x8[1:3], w3, b1.sig)`.
 
 | keyword | default | effect | example |
 |---|---|---|---|
-| [`name`](detail.md#ddetailnet-ddetailbusbar-ddetailrail_bond) | required | The net's name. It prints on the net in the drawings and the wire list. | `d.detail.net("CAN", a[1], b[1])` |
+| [`name`](detail.md#ddetailnet-ddetailbusbar-ddetailrail_bond) | required | The net's name. Printed in the connector list and on new-engine drawings. | `d.detail.net("CAN", a[1], b[1])` |
 | [`kind`](detail.md#ddetailnet-ddetailbusbar-ddetailrail_bond) | `fr.CONTROL` | The `NetClass` of the net. It cannot make a `PE` or `POWER` net, which earth and supplies own. | `d.detail.net("CAN", a[1], b[1], kind=fr.SIGNAL)` |
 
 ## `d.detail.busbar`

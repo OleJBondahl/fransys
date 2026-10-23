@@ -12,7 +12,10 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
             "A document's cover text plus revision table, measured by Typst at write, are taller "
             "than the content box; the write raises and writes nothing."
         ),
-        fix="Shorten the cover or the revision text.",
+        fix=(
+            "Shorten the cover file or the revision table of <subject>. Write: "
+            "fr.document(<preset>, <subject>, cover=<shorter cover file>)"
+        ),
         page="findings-pdf",
     ),
     CodeInfo(
@@ -33,7 +36,11 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         stage="pdf",
         who="consumer",
         cause="A document's pages use more than one sheet format.",
-        fix="Give the document (or its unit/layout profile) one sheet format for all pages.",
+        fix=(
+            "Give <subject> one sheet format for all its pages. "
+            'Write: [paper] default = "A2" in the settings file, '
+            "passed as fr.build(settings=fr.settings(path))"
+        ),
         page="findings-pdf",
     ),
     CodeInfo(
@@ -48,7 +55,10 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
             "diagram whose tallest column is taller than one sheet (a known limit of the system "
             "diagram; `DIAGRAM_COLUMN_TOO_TALL` names the column)."
         ),
-        fix="Add the missing content, remove the page kind or shorten the texts.",
+        fix=(
+            "Add the missing content, shorten the texts, or remove the page kind from <subject>. "
+            "Write: fr.document(<preset>, <subject>, cover=<cover>, remove=(<page kind>,))"
+        ),
         page="findings-pdf",
     ),
     CodeInfo(
@@ -81,7 +91,10 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
             "A document's cover or notes text uses a Markdown construct the PDF renderer does "
             "not support."
         ),
-        fix="Rewrite it using only the supported Markdown subset.",
+        fix=(
+            "No call clears this: rewrite the cover or notes text of <subject> using only the "
+            "supported Markdown subset."
+        ),
         page="findings-pdf",
     ),
     CodeInfo(
@@ -93,7 +106,17 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
             "A unit document's unit has an empty `title` or `number`, so that title-block cell "
             "will print empty."
         ),
-        fix="Give the unit release a `title` and/or `number`.",
+        fix=(
+            "Give the unit release a title and a number. "
+            "Write: fr.unit(<name>, title=<title>, number=<number>, ...)"
+        ),
         page="findings-pdf",
     ),
 )
+
+_BY_CODE: dict[str, CodeInfo] = {info.code: info for info in FINDING_CODES}
+
+
+def fix_text(code: str, **values: str) -> str:
+    """The `fix` of one finding of `code`: the code's template filled with `values`."""
+    return _BY_CODE[code].filled(**values)

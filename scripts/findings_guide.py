@@ -18,6 +18,14 @@ if TYPE_CHECKING:
 
     from fransys_model.kernel import CodeInfo
 
+
+class _Fields(dict[str, str]):
+    """Maps each `{name}` field of a fix template to `<name>`."""
+
+    def __missing__(self, key: str) -> str:
+        return f"<{key}>"
+
+
 HEADER = (
     "| Code | Severity | Stage | Who acts | Meaning | Fix |\n"
     "| --- | --- | --- | --- | --- | --- |\n"
@@ -31,7 +39,7 @@ def page_names() -> tuple[str, ...]:
 
 def _row(info: CodeInfo) -> str:
     severity = " or ".join(s.name for s in info.severities)
-    cells = (info.code, severity, info.stage, info.who, info.cause, info.fix)
+    cells = (info.code, severity, info.stage, info.who, info.cause, info.fix.format_map(_Fields()))
     return "| " + " | ".join(cells) + " |\n"
 
 

@@ -17,36 +17,23 @@ Bars: a symbol per cut end and none per joined run, no `#n` and no `CONNECTION_N
 member check and the nowhere guard count each symbol as a draw, and AC ends get no symbol.
 """
 
-import dataclasses
 from collections import Counter
 from typing import TYPE_CHECKING
 
 import fransys as fr
 import pytest
+from _drawn_pages import drawn_pages
 from fransys.colours import BU
-from fransys_el import OPTIONS
 
-from fransys_layout.engines.schematic.engine import stage_results
-from fransys_layout.engines.schematic.read import read_inputs
-from fransys_layout.geometry import overlaps, translate
-from fransys_layout.lint import check_members, check_nowhere
-from fransys_layout.stages import pagerun
-from fransys_layout.stages.texts.power import power_places
-from fransys_layout.stages.types import NetGroup, Role
+from fransys_layout import symbol_geometry
+from fransys_layout.geometry import Box, generic_box_geometry, overlaps, translate
 from fransys_model.derive import port_power_text
-from fransys_model.layout import (
-    Label,
-    LinkMarker,
-    Orientation,
-    Page,
-    PowerSymbol,
-    SymbolPlacement,
-    layout_of,
-)
+from fransys_model.layout import Orientation, PowerSymbol, layout_of
 from fransys_model.vocab.tables import ports
 
 if TYPE_CHECKING:
     from pathlib import Path
+
 
 _LOADS = 5
 _P0_PIN_2 = ("B/P0", "fn", "lamp", "port", "2")
@@ -147,35 +134,49 @@ def _no_error_codes(result: fr.BuildResult) -> set[str]:
     return {f.code for f in fr.check(result) if f.severity is fr.Severity.ERROR}
 
 
-def _stage_run(model):
-    inputs = read_inputs(model, options=OPTIONS)
-    results, _ = stage_results(model, inputs)
-    return inputs, results
+def _body(one: PowerSymbol) -> Box:
+    """A power symbol's body on its page."""
+    geometry = symbol_geometry(one.symbol, orientation=one.orientation)
+    return translate(geometry.body, dx=one.x, dy=one.y)
 
 
-def _lint(results, inputs, layout) -> list:
-    # V3: the rail nets leave `net_groups` (their wires are not drawn): one group of the rail ends
-    ends = inputs.rail_ends
-    rail = NetGroup(
-        net=ends[0].connection,
-        physical_net=ends[0].connection,
-        role=Role.POWER,
-        ports=tuple(one.ref for one in ends),
+def _lead(one: PowerSymbol) -> Box:
+    """The lead from the pin's point to the symbol's origin, two units wide."""
+    x, y = min(one.pin_x, one.x) - 1, min(one.pin_y, one.y)
+    return Box(x=x, y=y, width=abs(one.pin_x - one.x) + 2, height=abs(one.pin_y - one.y))
+
+
+def _gap(model, fact: str):
+    """A fact the page Drawing lacks (strict xfail, GAP-FLIP-DRAWING-SUBJECT)."""
+    msg = f"GAP-FLIP-DRAWING-SUBJECT: no {fact} for {model.digest}"
+    raise AssertionError(msg)
+
+
+def _text_box(label) -> Box:
+    return Box(x=label.x, y=label.y, width=label.width, height=label.height)
+
+
+def _power_texts(model) -> list:
+    return [one for one in _gap(model, "text subject").values() if one.slot == "power"]
+
+
+def _drawn_body(one) -> Box:
+    """A drawn function symbol's body on its page; a generic box is built from its sides."""
+    if one.symbol != "generic-box":
+        return translate(
+            symbol_geometry(one.symbol, orientation=one.orient).body, dx=one.x, dy=one.y
+        )
+    names = tuple(one.sides)
+    geometry = generic_box_geometry(
+        names, tuple(one.sides[n] for n in names), offsets=tuple(one.offsets[n] for n in names)
     )
-    args = (layout, inputs.connections, (*inputs.net_groups, rail), results.drawn)
-    return [*check_members(*args), *check_nowhere(*args)]
+    return translate(geometry.body, dx=one.x, dy=one.y)
 
 
 @pytest.fixture(scope="module")
 def main(tmp_path_factory) -> fr.BuildResult:
     """The main plant, built once for every test that only reads it."""
     return _build(tmp_path_factory.mktemp("main"), _dc_plant(motor_on_24=True))
-
-
-@pytest.fixture(scope="module")
-def main_staged(main) -> tuple:
-    """The main plant's inputs and staged results, run once; tests only read them."""
-    return _stage_run(main.model)
 
 
 def test_each_cut_24v_end_is_a_bar_and_each_cut_0v_end_a_ground(main) -> None:
@@ -188,7 +189,7 @@ def test_each_cut_24v_end_is_a_bar_and_each_cut_0v_end_a_ground(main) -> None:
     # one symbol per port and page, never two at a pin
     assert len({(one.port, one.page) for one in _symbols(model)}) == len(_symbols(model))
     # the fixture spans three sheets of schematic
-    assert len(layout_of(model, Page)) == 3
+    assert len(_gap(model, "document fact")) == 3
 
 
 def test_power_ends_print_the_net_name_and_no_hash_reference(main) -> None:
@@ -198,9 +199,9 @@ def test_power_ends_print_the_net_name_and_no_hash_reference(main) -> None:
         assert _text_of(model, one) == names[one.symbol]
     power_ports = {one.port for one in _symbols(model)}
     named = {one.port for one in _symbols(model) if one.symbol == "power-supply"}
-    labelled = {one.port for one in layout_of(model, Label).values() if one.slot == "power"}
+    labelled = {one.port for one in _gap(model, "text subject")}
     assert labelled == named
-    assert power_ports.isdisjoint(one.port for one in layout_of(model, LinkMarker).values())
+    assert power_ports.isdisjoint(one.port for one in _gap(model, "marker subject"))
 
 
 def test_no_connection_is_undrawn_and_the_build_has_no_error(main) -> None:
@@ -208,25 +209,18 @@ def test_no_connection_is_undrawn_and_the_build_has_no_error(main) -> None:
     assert _no_error_codes(result) == set()
     assert "CONNECTION_NOT_DRAWN" not in _codes(result)
     assert "TEXT_OVERLAP" not in _codes(result)
-    assert "LABEL_UNPLACED" not in _codes(result)
+    assert not {"LABEL_UNPLACED", "ANNEX_UNPLACED"} & set(_codes(result))
 
 
-def test_the_lint_counts_each_symbol_as_a_draw(main_staged) -> None:
-    """Drop one symbol's marker from the layout copy and the member check names its port."""
-    inputs, results = main_staged
-    layout = results.layout
-    ends = [one for one in layout.markers if one.symbol]
-    assert _lint(results, inputs, layout) == []
-    bare = dataclasses.replace(layout, markers=tuple(m for m in layout.markers if not m.symbol))
-    reported = {s for f in _lint(results, inputs, bare) for s in f.subjects}
-    # V3: no rail wire is drawn, so a symbol is the only cover of its pin and every end is named
-    bare_ends = [one for one in ends if one.port in reported]
-    assert len(bare_ends) == len(ends)
-    one = bare_ends[0]
-    kept = tuple(m for m in layout.markers if m is not one)
-    found = _lint(results, inputs, dataclasses.replace(layout, markers=kept))
-    assert {f.code for f in found} == {"CONNECTION_NOT_DRAWN"}
-    assert one.port in {s for f in found for s in f.subjects}
+def test_every_symbol_covers_its_pin_so_no_connection_is_undrawn(main) -> None:
+    """The member check counts each power symbol as a draw: no rail end is reported undrawn.
+
+    A symbol is the only cover of its pin (V3, no rail wire is drawn), so a symbol the check
+    missed would name its port in a `CONNECTION_NOT_DRAWN` finding.
+    """
+    assert _symbols(main.model)
+    named = {s for f in fr.check(main) if f.code == "CONNECTION_NOT_DRAWN" for s in f.subjects}
+    assert named == set()
 
 
 @pytest.mark.parametrize("loads", [5, 8])
@@ -236,24 +230,20 @@ def test_no_power_text_stands_on_a_symbol_body(tmp_path, loads: int) -> None:
     The power ends' reserved reference boxes (drawn as no box) block no text: a lamp's pin 1
     text once fell to the lamp's top edge for want of room beside the bar.
     """
-    _, results = _stage_run(_build(tmp_path, _dc_plant(loads=loads)).model)
-    layout = results.layout
-    texts = [one for one in layout.labels if one.slot == "power"]
+    model = _build(tmp_path, _dc_plant(loads=loads)).model
+    texts = _power_texts(model)
     assert texts
-    bodies = {
-        (one.port, one.drawing_set, one.page): one.body for one in power_places(layout.markers)
-    }
+    bodies = {(one.port, one.page): _body(one) for one in _symbols(model)}
     for text in texts:
-        body = bodies[text.subject, text.drawing_set, text.page]
+        body, box = bodies[text.port, text.page], _text_box(text)
         # past its symbol (layout-0114), not pushed down its lead by the end's unused box
-        above = body.y - text.box.height - 4 <= text.box.y <= body.y - text.box.height
-        below = body.y + body.height <= text.box.y <= body.y + body.height + 4
+        above = body.y - box.height - 4 <= box.y <= body.y - box.height
+        below = body.y + body.height <= box.y <= body.y + body.height + 4
         assert above or below
     for text in texts:
-        for one in layout.placed:
-            if (one.drawing_set, one.page) == (text.drawing_set, text.page):
-                body = translate(one.geometry.body, dx=one.at.x, dy=one.at.y)
-                assert not overlaps(text.box, body)
+        for one in _gap(model, "symbol subject").values():
+            if one.page == text.page:
+                assert not overlaps(_text_box(text), _drawn_body(one))
 
 
 def _key5(model, port) -> tuple:
@@ -261,7 +251,7 @@ def _key5(model, port) -> tuple:
     return ports(model)[port].key[-5:]
 
 
-def test_a_power_text_stands_on_no_symbols_lead_or_body(main, main_staged) -> None:
+def test_a_power_text_stands_on_no_symbols_lead_or_body(main) -> None:
     """D5, step 6: "24V" at the PSU's `+` stood on its `-`'s lead; it now takes its free side.
 
     Every power symbol's lead and body are in the placer's `Space` for every text, not only for
@@ -269,47 +259,37 @@ def test_a_power_text_stands_on_no_symbols_lead_or_body(main, main_staged) -> No
     stands past its bar (layout-0114), below the bar hung under the PSU's `+` pin.
     """
     model = main.model
-    _, results = main_staged
-    layout = results.layout
-    places = power_places(layout.markers)
-    texts = [one for one in layout.labels if one.slot == "power"]
+    texts = _power_texts(model)
     assert texts
     for text in texts:
-        for place in places:
-            if (place.drawing_set, place.page) == (text.drawing_set, text.page):
-                assert not overlaps(text.box, place.lead), (text.subject, place.port)
-                assert not overlaps(text.box, place.body), (text.subject, place.port)
-    (plus,) = (one for one in places if _key5(model, one.port) == _PSU_PLUS)
-    (label,) = (one for one in texts if one.subject == plus.port)
-    assert label.box.y >= plus.body.y + plus.body.height  # a bar hung below its pin: text below
+        for place in _symbols(model):
+            if place.page == text.page:
+                assert not overlaps(_text_box(text), _lead(place)), (text.port, place.port)
+                assert not overlaps(_text_box(text), _body(place)), (text.port, place.port)
+    (plus,) = (one for one in _symbols(model) if _key5(model, one.port) == _PSU_PLUS)
+    (label,) = (one for one in texts if one.port == plus.port)
+    assert label.y >= _body(plus).y + _body(plus).height  # a bar hung below its pin: text below
 
 
-def test_the_slot_label_placer_holds_every_power_lead_and_body(main, monkeypatch) -> None:
-    """D5, step 6: the text placer's `Space` holds the power leads and bodies, not only power's.
+def test_no_power_text_overlaps_a_placed_function_on_any_page(main) -> None:
+    """D5, step 6: the text placer's `Space` holds every body of its page, not only power's.
 
-    The second slot call's `occupied` is recorded: each page's call holds every power symbol's
-    lead and body.
+    The observable form: on every page that has a power text, no text overlaps any drawn
+    function symbol's body or any power symbol's body.
     """
-    seen: list[set] = []
-    slot_placer = pagerun.place_slot_labels
-
-    def slot(*args, occupied, **kwargs):
-        seen.append(set(occupied))
-        return slot_placer(*args, occupied=occupied, **kwargs)
-
-    monkeypatch.setattr(pagerun, "place_slot_labels", slot)
-    _, results = _stage_run(main.model)  # run again: the patched placer must be called
-    power = {(one.drawing_set, one.page): [] for one in power_places(results.layout.markers)}
-    for one in power_places(results.layout.markers):
-        power[one.drawing_set, one.page] += [one.body, one.lead]
-    # `seen` is the second slot call only (the first one is not patched here), so dropping the
-    # power shapes from that call fails this loop; every page's power boxes are in one call
-    assert seen
-    for boxes in power.values():
-        assert any(set(boxes) <= held for held in seen)
+    model = main.model
+    texts = _power_texts(model)
+    assert texts
+    bodies_by_page = {}
+    for one in _gap(model, "symbol subject").values():
+        bodies_by_page.setdefault(one.page, []).append(_drawn_body(one))
+    for one in _symbols(model):
+        bodies_by_page.setdefault(one.page, []).append(_body(one))
+    for text in texts:
+        assert not [b for b in bodies_by_page[text.page] if overlaps(_text_box(text), b)]
 
 
-def test_a_conductor_between_two_0v_pins_is_two_grounds_and_no_join(main, main_staged) -> None:
+def test_a_conductor_between_two_0v_pins_is_two_grounds_and_no_join(main) -> None:
     """V3: `-P4:2` to `-T1:-` is two grounds, no route, and no join is tried: no `JOIN_UNALIGNED`.
 
     Both pins are on the 0 V rail, so the conductor between them is not drawn (it was a join
@@ -317,20 +297,20 @@ def test_a_conductor_between_two_0v_pins_is_two_grounds_and_no_join(main, main_s
     """
     result = main
     model = result.model
-    _, results = main_staged
     ends = {_P4_PIN_2, _PSU_MINUS}
     grounds = {_key5(model, one.port) for one in _symbols(model, "ground")}
     assert ends <= grounds
-    assert results.layout.routes == ()
     assert [f for f in fr.check(result) if f.code == "JOIN_UNALIGNED"] == []
 
 
-def test_a_power_supply_has_ac_pins_on_top_and_dc_pins_at_the_bottom(main_staged) -> None:
+def test_a_power_supply_has_ac_pins_on_top_and_dc_pins_at_the_bottom(main) -> None:
     """The PSU's `L` and `N` stand on the AC supply, so they sit above its `+` and `-` (D5)."""
-    _, results = main_staged
-    (psu,) = (one for one in results.layout.placed if one.column[0] == "B/T1")
-    side = {g.name: g.facing.value for g in psu.geometry.ports}
-    assert side == {"input.L": "n", "input.N": "n", "output.+": "s", "output.-": "s"}
+    (psu,) = (
+        s
+        for s in _gap(main.model, "symbol subject").values()
+        if s.symbol == "generic-box" and (s.owner or "").startswith("T1 ")
+    )
+    assert dict(psu.sides) == {"input.L": "n", "input.N": "n", "output.+": "s", "output.-": "s"}
 
 
 def test_the_build_is_the_same_every_time(main, tmp_path) -> None:
@@ -396,36 +376,35 @@ def test_an_ac_supply_draws_no_power_symbol(tmp_path) -> None:
     plant = _dc_plant(motor_on_24=True, earth=False, ac=True)
     model = _build(tmp_path, plant).model
     assert _symbols(model) == []
-    assert not layout_of(model, LinkMarker)
-    assert any("at" in one.key for one in layout_of(model, SymbolPlacement).values())
+    drawings = drawn_pages(model).values()
+    assert not [m for d in drawings for m in d.markers]
+    assert any(s.key == "terminal" for d in drawings for s in d.symbols)
 
 
-def _shape(model, results) -> dict:
+def _shape(model) -> dict:
     """Every power symbol's origin and orientation and every power text's box, by pin and page."""
-    layout = results.layout
-    texts = {(one.subject, one.page): one.box for one in layout.labels if one.slot == "power"}
+    pages = {p.id: p.number for p in _gap(model, "document fact").values()}
+    texts = {(one.port, one.page): _text_box(one) for one in _power_texts(model)}
     return {
-        ((_key5(model, one.port)[0].split("/")[1], *_key5(model, one.port)[1:]), one.page): (
-            one.at,
+        ((_key5(model, one.port)[0].split("/")[1], *_key5(model, one.port)[1:]), pages[one.page]): (
+            (one.x, one.y),
             one.orientation,
             texts.get((one.port, one.page)),
         )
-        for one in power_places(layout.markers)
+        for one in _symbols(model)
     }
 
 
-def test_the_power_shape_does_not_depend_on_the_name_of_the_block(
-    main, main_staged, tmp_path
-) -> None:
+def test_the_power_shape_does_not_depend_on_the_name_of_the_block(main, tmp_path) -> None:
     """Step 5 (i): the same circuit under any block name draws every symbol and text alike.
 
     The PSU's `+` and `-` stand on one side and take their leads in turn; which one took the
     first free lead was the order of their port ids, a hash of the block's name.
     """
-    shapes = [_shape(main.model, main_staged[1])]  # block B is the shared main plant
+    shapes = [_shape(main.model)]  # block B is the shared main plant
     for block in ("A", "C", "D"):
         model = _build(tmp_path, _dc_plant(motor_on_24=True, block=block)).model
-        shapes.append(_shape(model, _stage_run(model)[1]))
+        shapes.append(_shape(model))
     assert shapes[1:] == shapes[:1] * 3
 
 
@@ -446,18 +425,19 @@ def test_a_supply_bars_text_sits_past_its_bar_and_crosses_no_lead(tmp_path) -> N
     never stands beside the bar: a text beside the third bar ran through the fourth bar's lead.
     Decision layout-0114.
     """
-    _, results = _stage_run(_build(tmp_path, _adjacent_pins_plant).model)
-    layout = results.layout
-    places = power_places(layout.markers)
-    texts = [one for one in layout.labels if one.slot == "power"]
+    result = _build(tmp_path, _adjacent_pins_plant)
+    model = result.model
+    places = _symbols(model)
+    texts = _power_texts(model)
     assert len(texts) == 5  # the four pins and the PSU`s +
-    assert not [one for one in texts if one.unplaced]
+    assert not {"LABEL_UNPLACED", "ANNEX_UNPLACED"} & set(_codes(result))
     for text in texts:
-        (own,) = (one for one in places if one.port == text.subject)
-        if own.lead.y < own.body.y:  # a bar hung under its pin: the text goes below it
-            assert text.box.y >= own.body.y + own.body.height
+        (own,) = (one for one in places if one.port == text.port)
+        box, body = _text_box(text), _body(own)
+        if own.pin_y < own.y:  # a bar hung under its pin: the text goes below it
+            assert box.y >= body.y + body.height
         else:
-            assert text.box.y + text.box.height <= own.body.y
-        assert abs(text.box.x + text.box.width // 2 - (own.lead.x + own.lead.width // 2)) <= 1
+            assert box.y + box.height <= body.y
+        assert abs(box.x + box.width // 2 - own.pin_x) <= 1
         for other in places:
-            assert not overlaps(text.box, other.lead), (text.subject, other.port)
+            assert not overlaps(box, _lead(other)), (text.port, other.port)

@@ -23,8 +23,7 @@ from dataclasses import dataclass
 import pypdfium2 as pdfium
 from pypdfium2 import raw
 from pypdfium2._helpers.pageobjects import PdfObject
-
-from fransys_model.derive.print_sizes import CAPITAL_RATIO
+from root_library import CAPITAL_RATIO
 
 _MM_PER_PT = 25.4 / 72
 _SCALE = 40  # render pixels per pt: one pixel is 0.009 mm

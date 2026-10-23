@@ -7,6 +7,7 @@ lazy from types import EllipsisType
 
 from fransys_author.errors import AuthorError
 
+from ._added import added_unit, remember_added
 from ._boundary_names import write_boundaries
 from ._unit_tags import check_add, class_code_of
 from ._unused import mark_unused
@@ -58,6 +59,9 @@ def unit[R: tuple[Any, ...]](  # noqa: PLR0913 -- the release's own fields
     The interface is an instance of a `typing.NamedTuple` class, one field per boundary.
 
     Does not build anything: `d.add(fn, "U1")` does. `history` entries take `d.revision`'s keywords.
+    A `history=` entry with no `version` is numbered as this unit's own `version`; two entries of
+    one version and revision must match, else `d.add` raises (`AuthorError` for the unit's own
+    current revision, `MergeConflict` for another).
     `class_code` (1-3 uppercase letters) is the letter floating instances number from.
     `wiring` replaces IEC rows in the unit's body; a unit never takes its parent's rows.
     """
@@ -97,6 +101,10 @@ def check_history(definition: UnitDef[Any]) -> None:
 
 class Units:
     """The `add` call of `Design`."""
+
+    _added_unit = staticmethod(
+        added_unit
+    )  # the facade names a document's unit by what `add` returned
 
     def add[R: tuple[Any, ...]](
         self: "Design",
@@ -139,6 +147,6 @@ class Units:
             )
             raise AuthorError(msg)
         write_boundaries(scope, result)
-        scope._design._added_units[id(result)] = (result, scope._unit)
+        remember_added(scope._design, result, scope._unit)
         mark_unused(self, scope, result, unused)
         return result

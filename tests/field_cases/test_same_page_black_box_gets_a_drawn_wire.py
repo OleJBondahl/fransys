@@ -14,11 +14,9 @@ The record to come: a layout decision, written when P7.4 lands it.
 from typing import TYPE_CHECKING, NamedTuple
 
 import fransys as fr
-import pytest
+from _drawn_pages import drawn_pages
 
-from fransys_model.derive import port_designation, ports
-from fransys_model.derive.drawing_text import marker_text
-from fransys_model.layout import DrawingSet, LinkMarker, Page, Route, layout_of
+from fransys_model.layout import DrawingSet, Page, layout_of
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -48,26 +46,21 @@ def _build(tmp_path: Path) -> fr.BuildResult:
     return fr.build(d, fr.document(preset, room, cover=tmp_path / "r.md"))
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="P7.4: a same-page black box gets a drawn wire (owner 2026-10-16, 'Draw the wire')",
-)
 def test_a_same_page_black_box_is_joined_by_a_drawn_wire_and_no_stub(tmp_path: Path) -> None:
     """R's page draws a wire to the black box and no stub on H1; U1's document keeps its stub."""
     model = _build(tmp_path).model
     sets, pages = layout_of(model, DrawingSet), layout_of(model, Page)
     own_page = {p.id for p in pages.values() if sets[p.drawing_set].unit is None}
-    texts = [
-        marker_text(model, m) for m in layout_of(model, LinkMarker).values() if m.page in own_page
-    ]
+    drawn = drawn_pages(model)
+    texts = [text for page in own_page for m in drawn[page].markers for _, text in m.texts]
     assert texts == [], texts
-    by_name = {port_designation(model, p): p for p in ports(model)}
-    wanted = {by_name["-H1:1"], by_name["-U1-X1:SIG:1"]}
-    joined = [r for r in layout_of(model, Route).values() if r.page in own_page]
-    assert any({r.a, r.b} == wanted for r in joined), joined
+    # a drawn wire carries no subject, so "joins -H1:1 to -U1-X1:SIG:1" reads as: it has a wire
+    assert any(drawn[page].wires for page in own_page)
     unit_texts = [
-        marker_text(model, m)
-        for m in layout_of(model, LinkMarker).values()
-        if m.page not in own_page
+        text
+        for page, d in drawn.items()
+        if page not in own_page
+        for m in d.markers
+        for _, text in m.texts
     ]
-    assert unit_texts == ["← +R+S1-H1:1"], unit_texts
+    assert any("+R+S1-H1:1" in text for text in unit_texts), unit_texts

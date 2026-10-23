@@ -8,7 +8,6 @@ heights and finds each tick on the page, and checks the cell source holds no `li
 import io
 from itertools import pairwise
 
-import fransys_pdf
 import pytest
 import typst
 from fransys_pdf._bridge import bridge_cell_typst, bridge_geometry
@@ -16,18 +15,19 @@ from fransys_pdf._tables import table_source
 from fransys_pdf._typst import literal
 from PIL import Image
 
-from fransys_model.derive import BridgePiece, bridge_piece_key, jumper_lanes
+import electrical_symbols
+from fransys_model.derive import BridgePieceRow, bridge_piece_key, jumper_lanes
 
 PPI = 200
 _MM = PPI / 25.4
 PIECES = {
-    bridge_piece_key("line"): BridgePiece(
+    bridge_piece_key("line"): BridgePieceRow(
         svg='<svg xmlns="http://www.w3.org/2000/svg" width="3mm" height="1mm" viewBox="0 0 3 1">'
         '<line x1="1.5" y1="0" x2="1.5" y2="1" stroke="#000" stroke-width="0.18"/></svg>',
         width_mm=3.0,
         height_mm=1.0,
     ),
-    bridge_piece_key("tick"): BridgePiece(
+    bridge_piece_key("tick"): BridgePieceRow(
         svg='<svg xmlns="http://www.w3.org/2000/svg" width="2mm" height="1mm" viewBox="0 0 2 1">'
         '<line x1="0" y1="0.5" x2="2" y2="0.5" stroke="#000" stroke-width="0.18"/></svg>',
         width_mm=2.0,
@@ -53,7 +53,7 @@ def _page(groups: tuple[int | None, ...], texts: list[str]) -> Image.Image:
         "#set page(width: 70mm, height: auto, margin: 5mm)\n"
     )
     source = f"{head}{table}\n"
-    compiler = typst.Compiler(font_paths=[fransys_pdf.font_dir()], ignore_system_fonts=True)
+    compiler = typst.Compiler(font_paths=[electrical_symbols.font_dir()], ignore_system_fonts=True)
     png = compiler.compile(input=source.encode(), format="png", ppi=PPI)
     assert isinstance(png, bytes)  # one page: the stub also allows a list or None
     return Image.open(io.BytesIO(png)).convert("L")

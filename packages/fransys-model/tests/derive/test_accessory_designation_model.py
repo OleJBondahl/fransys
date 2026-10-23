@@ -17,8 +17,10 @@ from fransys_model.derive import (
     item_designation,
     takes_parents_designation,
 )
-from fransys_model.derive.designation import own_designation_or_none, terminal_designation
+from fransys_model.derive.designation_label import own_designation_or_none
 from fransys_model.derive.passes.numbering import number
+from fransys_model.derive.texts.context import PrintContext
+from fransys_model.derive.texts.terminal_text import terminal_text
 from fransys_model.kernel import make_id
 from fransys_model.vocab.facets.pcb import FootprintFacet
 from fransys_model.vocab.facets.terminal import TerminalFacet
@@ -76,6 +78,16 @@ def test_a_child_inside_a_board_prints_the_boards_designation_in_front() -> None
     model, _ = number(plant.model())
     assert item_designation(model, holder) == "A1-F11"
     assert item_designation(model, link) == "A1-F11"
+
+
+def test_an_untagged_item_takes_the_gap_in_the_taken_designations() -> None:
+    """R1, R2 and R4 are taken, so the untagged R-class item takes R3, not R5."""
+    plant = Plant()
+    for tag in ("R1", "R2", "R4"):
+        plant.item(f"tagged-{tag}", part=plant.part("R"), designation=tag)
+    free = plant.item("free", part=plant.part("R"))
+    model, _ = number(plant.model())
+    assert item_designation(model, free) == "R3"
 
 
 def test_the_designation_list_has_a_row_for_the_holder_and_none_for_its_children() -> None:
@@ -184,7 +196,7 @@ def test_a_terminal_child_of_a_designated_device_is_no_accessory() -> None:
     )
     model, _ = number(plant.model())
     assert not takes_parents_designation(model, terminal)
-    assert terminal_designation(model, terminal) == "-X1:L1:1"
+    assert terminal_text(model, terminal, PrintContext()) == "-X1:L1:1"
 
 
 def _footprint(plant: Plant, part: Id[Part]) -> None:
@@ -265,7 +277,7 @@ def test_an_item_with_a_function_in_its_subtree_is_no_accessory() -> None:
     model, _ = number(plant.model())
     assert not takes_parents_designation(model, strip)
     assert item_designation(model, strip) == "X1"
-    assert terminal_designation(model, terminal) == "-X1:L1:1"
+    assert terminal_text(model, terminal, PrintContext()) == "-X1:L1:1"
 
 
 def test_an_item_with_a_function_two_levels_below_it_is_no_accessory() -> None:

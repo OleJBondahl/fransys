@@ -3,16 +3,18 @@ name = "Contact head (contact table)"
 kind = "element"
 status = "unverified"
 # our own head of a contact table, authored in the row's frame: it sits before the first
-# row on the table's axis (y), its lower edge on the row's upper edge (y = 0)
+# row on the table's axis (y), its lower edge on the row's upper edge (y = 0). A pad, the NO and
+# NC title line (one module), a pad, then the rule; its titles sit over the row's cells and grow
+# at the same cuts.
 reference = { standard = "IEC 60617", number = "contact-head" }
 
 elements = [
-  { polyline = [[0, -2], [8, -2], [8, 0], [0, 0]], closed = true },
+  { polyline = [[0, -1.5], [1.25, -1.5], [1.25, 0], [0, 0]], closed = true },
+  { line = [[0, -0.25], [1.25, -0.25]] },
 ]
 
-lint_allow = [
-  { rule = "slot-overlap-body", reason = "the text box is wider than the cell is tall; a table cell is drawn unrotated and its text stays inside the outline" },
-]
+stretch = [{ axis = "x", at = 0.375 }, { axis = "x", at = 0.875 }]
 
 [slots]
-heading = { at = [0.25, -1], side = "E", box = [7.5, 1] }
+no = { at = [0.25, -0.75], side = "E", box = [0.25, 0.125] }
+nc = { at = [0.75, -0.75], side = "E", box = [0.25, 0.125] }

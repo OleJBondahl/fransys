@@ -4,22 +4,21 @@ The file holds both PLC checks: `check_plc` (signal type) and `check_plc_wiring`
 model-0068, the wiring is the truth).
 """
 
-import dataclasses
-from typing import TYPE_CHECKING, Any, Final
+from typing import TYPE_CHECKING, Final
 
-from fransys_model.checks._natural_join import natural_join
-from fransys_model.derive.facts.plc_wiring import owner_of_port, wired_functions
-from fransys_model.derive.facts.rail_reach import ports_by_function
-from fransys_model.kernel import Finding, Severity
-from fransys_model.vocab.facets.plc import PlcBindingFacet, PlcChannelFacet, PlcRequestFacet
+from fransys_model.checks._finding import finding, ordered
+from fransys_model.derive.facts.plc_wiring import binding_wiring, plc_requests, request_functions
+from fransys_model.derive.facts.roles import function_channel
+from fransys_model.kernel import Finding, Severity, natural_join
+from fransys_model.vocab.facets.plc import PlcBindingFacet
 from fransys_model.vocab.finding_ref import ref
-from fransys_model.vocab.tables import facets_of, functions
+from fransys_model.vocab.tables import facets_of
 
 if TYPE_CHECKING:
-    from collections.abc import Collection, Mapping
+    from collections.abc import Collection
 
     from fransys_model.kernel import Id, Model
-    from fransys_model.vocab.core import Function, Port
+    from fransys_model.vocab.core import Function
 
 PLC_BINDING_SIGNAL_MISMATCH: Final[str] = "PLC_BINDING_SIGNAL_MISMATCH"
 PLC_BINDING_WIRING_MISMATCH: Final[str] = "PLC_BINDING_WIRING_MISMATCH"
@@ -31,37 +30,28 @@ def check_plc(model: Model) -> tuple[Finding, ...]:
     `PLC_BINDING_SIGNAL_MISMATCH` (`ERROR`): channel's `plc_channel` signal differs or is absent.
     Subjects: binding, request function, channel function; sorted by `(code, subjects, message)`.
     """
-    requests = {facet.subject: facet for facet in facets_of(model, PlcRequestFacet).values()}
-    channels = {facet.subject: facet for facet in facets_of(model, PlcChannelFacet).values()}
-    all_functions = functions(model)
+    requests = plc_requests(model)
     found: list[Finding] = []
     for binding in facets_of(model, PlcBindingFacet).values():
         request = requests.get(binding.subject)
         if request is None:
             continue
-        target = all_functions[binding.channel]
-        channel = None if target.template is None else channels.get(target.template)
+        channel = function_channel(model, binding.channel)
         if channel is not None and channel.signal is request.signal:
             continue
-        asked = all_functions[binding.subject]
         offered, other = (
             ("is not declared a channel", "a declared channel")
             if channel is None
             else (f"is {channel.signal.value}", channel.signal.value)
         )
-        found.append(
-            Finding(
-                code=PLC_BINDING_SIGNAL_MISMATCH,
-                severity=Severity.ERROR,
-                subjects=(binding.id, binding.subject, binding.channel),
-                message=(
-                    f"{ref(asked)} asks for {request.signal.value} "
-                    f"but its channel {ref(target)} {offered}: rewire it to a "
-                    f"{request.signal.value} channel, or ask for {other}"
-                ),
-            )
+        message = (
+            f"{ref(binding.subject)} asks for {request.signal.value} "
+            f"but its channel {ref(binding.channel)} {offered}: rewire it to a "
+            f"{request.signal.value} channel, or ask for {other}"
         )
-    return tuple(sorted(found, key=lambda f: (f.code, f.subjects, f.message)))
+        subjects = (binding.id, binding.subject, binding.channel)
+        found.append(finding(PLC_BINDING_SIGNAL_MISMATCH, Severity.ERROR, subjects, message))
+    return ordered(found)
 
 
 def check_plc_wiring(model: Model) -> tuple[Finding, ...]:
@@ -70,74 +60,35 @@ def check_plc_wiring(model: Model) -> tuple[Finding, ...]:
     `PLC_BINDING_WIRING_MISMATCH` (`ERROR`): request or channel wired to others than the bound one.
     Subjects: binding, request, channel; sorted by `(code, subjects, message)`.
     """
-    request_functions = {facet.subject for facet in facets_of(model, PlcRequestFacet).values()}
-    channel_templates = {facet.subject for facet in facets_of(model, PlcChannelFacet).values()}
-    all_functions = functions(model)
-    channel_functions = {f.id for f in all_functions.values() if f.template in channel_templates}
-    by_function = ports_by_function(model)
-    wiring = _Wiring(
-        model=model,
-        by_function=by_function,
-        device_of=owner_of_port(by_function, request_functions),
-        channel_of=owner_of_port(by_function, channel_functions),
-    )
+    requests = request_functions(model)
     found = [
-        finding
+        item
         for binding in facets_of(model, PlcBindingFacet).values()
-        if binding.subject in request_functions
-        for finding in _binding_findings(wiring, binding)
+        if binding.subject in requests
+        for item in _binding_findings(model, binding)
     ]
-    return tuple(sorted(found, key=lambda f: (f.code, f.subjects, f.message)))
+    return ordered(found)
 
 
-@dataclasses.dataclass(frozen=True, slots=True)
-class _Wiring:
-    """The lookups `check_plc_wiring` reads: functions, ports by function, port owners."""
-
-    model: Model
-    by_function: Mapping[Id[Function], list[Id[Port]]]
-    device_of: Mapping[Id[Port], Id[Function]]
-    channel_of: Mapping[Id[Port], Id[Function]]
-
-
-def _binding_findings(wiring: _Wiring, binding: PlcBindingFacet) -> list[Finding]:
+def _binding_findings(model: Model, binding: PlcBindingFacet) -> list[Finding]:
     """The 0 to 2 findings of one binding whose function carries a `plc_request`."""
     request, channel = binding.subject, binding.channel
+    request_side, channel_side = binding_wiring(model, binding)
     subjects = (binding.id, request, channel)
-    found: list[Finding] = []
-    on_request = wiring.by_function.get(request, ())
-    request_side = wired_functions(wiring.model, on_request, wiring.channel_of) - {request}
+    messages: list[str] = []
     if request_side and channel not in request_side:
-        found.append(
-            _mismatch(
-                subjects,
-                f"{ref(request)} is wired to channel {_refs(request_side)} "
-                f"but bound to channel {ref(channel)}",
-            )
+        messages.append(
+            f"{ref(request)} is wired to channel {_refs(request_side)} "
+            f"but bound to channel {ref(channel)}"
         )
-    on_channel = wiring.by_function.get(channel, ())
-    channel_side = wired_functions(wiring.model, on_channel, wiring.device_of) - {channel}
     if channel_side and request not in channel_side:
-        found.append(
-            _mismatch(
-                subjects,
-                f"channel {ref(channel)} is wired to {_refs(channel_side)} "
-                f"but bound to request {ref(request)}",
-            )
+        messages.append(
+            f"channel {ref(channel)} is wired to {_refs(channel_side)} "
+            f"but bound to request {ref(request)}"
         )
-    return found
+    return [finding(PLC_BINDING_WIRING_MISMATCH, Severity.ERROR, subjects, m) for m in messages]
 
 
 def _refs(wired: Collection[Id[Function]]) -> str:
     """The references to several functions, sorted and joined with `, `."""
     return natural_join(ref(function) for function in wired)
-
-
-def _mismatch(subjects: tuple[Id[Any], ...], message: str) -> Finding:
-    """A `PLC_BINDING_WIRING_MISMATCH` `ERROR` on `subjects`."""
-    return Finding(
-        code=PLC_BINDING_WIRING_MISMATCH,
-        severity=Severity.ERROR,
-        subjects=subjects,
-        message=message,
-    )

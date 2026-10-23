@@ -1,13 +1,15 @@
 """Name each held `Boundary` by the interface field that holds its function (model-0174)."""
 
 import dataclasses
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
+from fransys_author._draft_view import draft_view
 from fransys_author._keys import scoped, spliced
 from fransys_author._origin import caller_origin
 from fransys_author.errors import AuthorError
+from fransys_model.derive import nested_boundary_functions
 from fransys_model.kernel import make_id
-from fransys_model.vocab import Boundary, Function, Unit
+from fransys_model.vocab import Boundary, Function
 
 from ._unused import _handles, _own
 
@@ -28,10 +30,9 @@ def _field_functions(value: object, field: str) -> list[Any]:
 
 def _nested_boundaries(scope: Scope) -> dict[Any, Function]:
     """The functions that are a boundary of a unit nested directly in `scope`'s unit, by id."""
-    records = scope._design._draft.records()
-    nested = {r.id for r in records if isinstance(r, Unit) and r.parent == scope._unit}
-    offered = {r.function for r in records if isinstance(r, Boundary) and r.unit in nested}
-    return {r.id: r for r in records if isinstance(r, Function) and r.id in offered}
+    draft = scope._design._draft
+    offered = nested_boundary_functions(draft_view(draft), scope._unit)
+    return {f: cast("Function", draft.record_of(f)) for f in offered}
 
 
 def _pass_through(scope: Scope, names: dict[Any, str]) -> None:
@@ -64,7 +65,9 @@ def write_boundaries(scope: Scope, result: Any) -> None:  # noqa: ANN401 -- the 
         for function in _field_functions(getattr(result, field), field):
             names.setdefault(function.id, field)
     held, scope._held = scope._held or [], None
-    for record, origin in held:
+    for record, origin, only_if_named in held:
+        if only_if_named and record.function not in names:
+            continue  # `unused=` alone marks a boundary only on a function the interface holds
         scope._design._add(
             dataclasses.replace(record, name=record.name or names.get(record.function)), origin
         )

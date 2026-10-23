@@ -16,12 +16,8 @@ from pathlib import Path
 
 import fransys as fr
 import pytest
+from _drawn_pages import drawn_pages
 from fransys.colours import BU
-
-from fransys_layout.engines.schematic.read.reading import profile_and_sheet
-from fransys_layout.geometry import text_width
-from fransys_model.derive.drawing_text import contact_image
-from fransys_model.layout import Label, LabelKind, layout_of
 
 _WIRE = (BU, 0.5)
 
@@ -50,26 +46,26 @@ def _built():
 
 
 @pytest.fixture(scope="module")
-def tables() -> list[tuple[Label, list[str], int]]:
-    """Each contact label, its entries (NO then NC), and the width its text needs."""
-    model = _built().model
-    profile, _, _ = profile_and_sheet(model)
-    found = []
-    for label in layout_of(model, Label).values():
-        if label.kind is LabelKind.CROSS_REFERENCE and label.slot == "contacts":
-            no, nc = contact_image(model, label)
-            texts = (*no, *nc, "NO", "NC")
-            column = max(text_width(t, height=profile.text_height) for t in texts)
-            found.append((label, [*no, *nc], 2 * (column + 2 * profile.marker_padding)))
-    return found
+def tables() -> list[list[str]]:
+    """Each contact table the pages draw, as its entries (NO then NC): the strings that size it."""
+    return [
+        [cell for row in symbol.texts[1:] for cell in row if cell]
+        for drawing in drawn_pages(_built().model).values()
+        for symbol in drawing.symbols
+        if symbol.key == "contact-head"
+    ]
 
 
 def test_an_entry_names_a_place_in_another_set(tables) -> None:
     """The case is not vacuous: one entry carries the location prefix."""
-    assert any("+FLD" in entry for _, entries, _ in tables for entry in entries)
+    assert any("+FLD" in entry for entries in tables for entry in entries)
 
 
 def test_the_box_is_as_wide_as_its_widest_text(tables) -> None:
-    """Every contact image box is at least as wide as two columns of its widest printed entry."""
+    """The box is sized from the text derive prints: the other set's entry holds its prefix whole.
+
+    The Drawing carries no table width (symdef fits the table to these strings), so the texts that
+    size the box are what is read.
+    """
     assert tables
-    assert all(label.width >= needed for label, _, needed in tables)
+    assert any(entry.startswith("53-54 +FLD") for entries in tables for entry in entries)

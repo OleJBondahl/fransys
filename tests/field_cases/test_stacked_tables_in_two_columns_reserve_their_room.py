@@ -19,15 +19,11 @@ from typing import Any
 
 import fransys as fr
 import pytest
+from _contact_tables import table_body_g, table_symbols
+from _drawn_pages import drawn_pages
 from fransys.colours import BU
 
-from fransys_layout.stages import pagerun
-from fransys_layout.stages.lookups import placed_keepout
-from fransys_model.derive.drawing_text import CONTACT_SLOTS, content_extent
-from fransys_model.layout import Label, LabelKind, Route, layout_of, sheet_for
-from fransys_model.vocab import PageKind
-
-Box = tuple[int, int, int, int]  # x, y, width, height
+Box = tuple[int, int, int, int]  # x0, y0, x1, y1
 PADDING = 2  # the profile's marker padding: the reserve may exceed a stack by one of it
 
 
@@ -43,47 +39,7 @@ def _chain(d: Any, first: int, live: Any, rail: Any, lamps: Any) -> None:
         d.detail.wire(p.lamp["2"], end, wire=(BU, 0.5))
 
 
-class _Built:
-    """The built model with what the placement stages kept of the page."""
-
-    def __init__(self) -> None:
-        self.cells: list[Box] = []
-        self.reserve_bottom: dict[Any, int] = {}  # column -> bottom of the room reserved in it
-        self.spans: dict[Any, list[tuple[int, int]]] = {}  # column -> x spans of its cells
-        self.tables: list[Label] = []
-        self.model: Any = None
-        self.findings: Any = ()
-
-
-@pytest.fixture(scope="module")
-def got() -> _Built:
-    """Build the two-chain circuit once, keeping the cells' boxes and the reserved room's bottom."""
-    with pytest.MonkeyPatch.context() as monkeypatch:
-        return _built(monkeypatch, chains=2)
-
-
-@pytest.fixture(scope="module")
-def one_column() -> _Built:
-    """The control: one chain, so one column holding one stack of two tables."""
-    with pytest.MonkeyPatch.context() as monkeypatch:
-        return _built(monkeypatch, chains=1)
-
-
-def _built(monkeypatch: pytest.MonkeyPatch, chains: int) -> _Built:
-    got = _Built()
-    unreserve = pagerun.unreserve
-
-    def keep(placed: Any, rooms: Any) -> Any:
-        for one in placed:
-            bottom = placed_keepout(one).y + placed_keepout(one).height
-            got.reserve_bottom[one.column] = max(got.reserve_bottom.get(one.column, 0), bottom)
-            k = placed_keepout(one)
-            got.spans.setdefault(one.column, []).append((k.x, k.x + k.width))
-        done = unreserve(placed, rooms)
-        got.cells = [(b.x, b.y, b.width, b.height) for b in (placed_keepout(one) for one in done)]
-        return done
-
-    monkeypatch.setattr(pagerun, "unreserve", keep)
+def _built(chains: int) -> fr.BuildResult:
     d = fr.design("demo_parts", place="CAB")
     cab = d.location("CAB", "Cabinet")
     with d.function("G1", "Relay group"):
@@ -95,66 +51,69 @@ def _built(monkeypatch: pytest.MonkeyPatch, chains: int) -> _Built:
             _chain(d, 3, live[2], rail[3].outer, (rail[6].outer, rail[7].outer))
     cover = Path(tempfile.mkdtemp()) / "cover.md"
     cover.write_text("# Cabinet\n", encoding="utf-8")
-    result = fr.build(d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover))
-    got.model, got.findings = result.model, result.findings
-    got.tables = [
-        one
-        for one in layout_of(result.model, Label).values()
-        if one.kind is LabelKind.CROSS_REFERENCE and one.slot in CONTACT_SLOTS
-    ]
-    return got
+    return fr.build(d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover))
 
 
-def _box(one: Label) -> Box:
-    return one.x, one.y, one.width, one.height
+@pytest.fixture(scope="module")
+def got() -> fr.BuildResult:
+    """The two-chain circuit, built once."""
+    return _built(chains=2)
+
+
+@pytest.fixture(scope="module")
+def one_column() -> fr.BuildResult:
+    """The control: one chain, so one column holding one stack of two tables."""
+    return _built(chains=1)
 
 
 def _share(a: Box, b: Box) -> bool:
     """True when the two boxes share area."""
-    return a[0] < b[0] + b[2] and b[0] < a[0] + a[2] and a[1] < b[1] + b[3] and b[1] < a[1] + a[3]
+    return a[0] < b[2] and b[0] < a[2] and a[1] < b[3] and b[1] < a[3]
 
 
-def _segments(route: Route) -> list[Box]:
-    """The thin boxes of a route's segments."""
-    points = sorted(route.points, key=lambda p: p.index)
+def _segments(points: tuple) -> list[Box]:
+    """The thin boxes of a wire's segments."""
     return [
-        (min(p.x, q.x), min(p.y, q.y), abs(p.x - q.x) + 1, abs(p.y - q.y) + 1)
+        (min(p[0], q[0]), min(p[1], q[1]), max(p[0], q[0]) + 1, max(p[1], q[1]) + 1)
         for p, q in pairwise(points)
     ]
 
 
 def test_four_tables_in_two_stacks_stand_in_the_sheet_and_clear_of_everything(
-    got: _Built,
+    got: fr.BuildResult,
 ) -> None:
     """Four tables in two stacks: inside the sheet, off every cell, wire, label and other table."""
     assert [f.code for f in got.findings if f.severity.name == "ERROR"] == []
-    assert len(got.tables) == 4
-    assert len({t.x for t in got.tables}) == 2  # two stacks, one per column
-    sheet = sheet_for(got.model, PageKind.SCHEMATIC)
-    width = content_extent(sheet.content_width_mm, sheet.module_mm)
-    height = content_extent(sheet.content_height_mm, sheet.module_mm)
-    for t in got.tables:
-        assert t.x >= 0
-        assert t.y >= 0
-        assert t.x + t.width <= width
-        assert t.y + t.height <= height
-    others = [_box(one) for one in layout_of(got.model, Label).values() if one not in got.tables]
-    wires = [seg for route in layout_of(got.model, Route).values() for seg in _segments(route)]
-    for i, t in enumerate(got.tables):
-        clear = [*got.cells, *others, *wires, *(_box(u) for u in got.tables[:i])]
-        assert not [b for b in clear if _share(_box(t), b)]
+    tables = table_symbols(got.model)
+    assert len(tables) == 4
+    assert len({t.x for t in tables}) == 2  # two stacks, one per column
+    (drawing,) = drawn_pages(got.model).values()
+    boxes = [table_body_g(t) for t in tables]
+    for x0, y0, x1, y1 in boxes:
+        assert x0 >= 0
+        assert y0 >= 0
+        assert x1 <= drawing.area.w
+        assert y1 <= drawing.area.h
+    cells = [
+        table_body_g(s) for s in drawing.symbols if s not in tables and s.key != "junction-dot"
+    ]
+    others = [(t.box.x, t.box.y, t.box.x + t.box.w, t.box.y + t.box.h) for t in drawing.texts]
+    wires = [seg for w in drawing.wires for seg in _segments(w.points)]
+    for i, box in enumerate(boxes):
+        clear = [*cells, *others, *wires, *boxes[:i]]
+        assert not [b for b in clear if _share(box, b)]
 
 
-def _spare_room(got: _Built) -> list[int]:
-    """Per stack column: the reserved room's bottom less its tallest stack's bottom (>= 0 holds)."""
-    stacks: dict[Any, int] = {}
-    for t in got.tables:
-        (column,) = {c for c, spans in got.spans.items() if any(a <= t.x < b for a, b in spans)}
-        stacks[column] = max(stacks.get(column, 0), t.y + t.height)
-    return [got.reserve_bottom[column] - bottom for column, bottom in stacks.items()]
+def _spare_room(built: fr.BuildResult) -> list[int]:
+    """Per stack column: the page room below its tallest stack's bottom (>= 0 holds)."""
+    (drawing,) = drawn_pages(built.model).values()
+    stacks: dict[int, int] = {}
+    for t in table_symbols(built.model):
+        stacks[t.x] = max(stacks.get(t.x, 0), table_body_g(t)[3])
+    return [drawing.area.h - bottom for bottom in stacks.values()]
 
 
-def test_the_room_reserved_below_the_row_holds_the_tallest_stack(got: _Built) -> None:
+def test_the_room_reserved_below_the_row_holds_the_tallest_stack(got: fr.BuildResult) -> None:
     """Each column's reserve holds its stack, the first table pushed below the A2 marker (0171).
 
     `contact_images` pushes the first table below the ground symbol under the foot coil's A2;
@@ -165,9 +124,9 @@ def test_the_room_reserved_below_the_row_holds_the_tallest_stack(got: _Built) ->
     assert all(0 <= one <= PADDING for one in spare)
 
 
-def test_one_column_reserves_the_room_of_its_stack_too(one_column: _Built) -> None:
+def test_one_column_reserves_the_room_of_its_stack_too(one_column: fr.BuildResult) -> None:
     """The control: one column holding one stack of two tables reserves its room too."""
-    assert len(one_column.tables) == 2
+    assert len(table_symbols(one_column.model)) == 2
     spare = _spare_room(one_column)
     assert len(spare) == 1
     assert all(0 <= one <= PADDING for one in spare)

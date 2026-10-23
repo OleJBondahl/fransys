@@ -2,7 +2,7 @@
 
 from collections import Counter
 
-from fransys_model.kernel import DescribedFinding, Finding, Severity
+from fransys_model.kernel import DescribedFinding, Finding, Model, Severity
 
 from ._finding_text import described, described_parts, fix_lines
 from .pipeline import BuildResult, _raw_findings, _resolved, _result_svgs
@@ -15,8 +15,8 @@ def report(result: BuildResult) -> str:
 
     It holds a summary line, each ERROR and WARNING, then the notes.
 
-    Each ERROR and WARNING prints its message, then an `at:` line per subject, its fix and its
-    findings-row URL from the code's registry entry. INFO notes print counted per code on one line.
+    Each ERROR and WARNING prints its message, then an `at:` line per subject, its own `fix` and
+    the URL of its code's findings row. INFO notes print counted per code on one line.
     The text only reads the findings and their `CodeInfo`; it adds no rule of its own.
 
     Does not write files, raise on an ERROR, or drop a finding.
@@ -27,7 +27,7 @@ def report(result: BuildResult) -> str:
     lines = [_summary(counts)]
     for finding, parts in entries:
         if finding.severity is not Severity.INFO:
-            lines.extend(_entry(finding, parts))
+            lines.extend(_entry(finding, parts, result.model))
     notes = Counter(f.code for f in findings if f.severity is Severity.INFO)
     if notes:
         ranked = sorted(notes.items(), key=lambda pair: (-pair[1], pair[0]))
@@ -52,6 +52,6 @@ def _described(result: BuildResult) -> list[tuple[Finding, DescribedFinding]]:
     return [(f, parts[f.code, f.subjects, f.message]) for f in _resolved(raw, model)]
 
 
-def _entry(finding: Finding, parts: DescribedFinding) -> list[str]:
+def _entry(finding: Finding, parts: DescribedFinding, model: Model) -> list[str]:
     at = [f"  at: {subject}" for subject in parts.subjects]
-    return [*parts.head.splitlines(), *at, *fix_lines(finding)]
+    return [*parts.head.splitlines(), *at, *fix_lines(finding, model)]

@@ -11,10 +11,10 @@ import fransys_render
 import pypdfium2 as pdfium
 import pypdfium2.raw as pdfium_raw
 import typst
-from _build import document, drawing_set, layout_page, location, model, unit
-from fransys_pdf import font_dir, source
+from _build import document, drawing_set, layout_page, location, model, source, unit
 from fransys_pdf._labels import sheet_label
 
+from electrical_symbols import font_dir
 from fransys_model.derive import document_sheets_of, page_destination, sheet_text
 from fransys_model.kernel import make_id, render_id
 from fransys_model.layout import DiagramSheet

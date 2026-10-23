@@ -3,8 +3,9 @@
 from typing import TYPE_CHECKING
 
 from fransys_model.kernel import make_id
-from fransys_model.vocab import Net, NetClass
+from fransys_model.vocab import Net
 
+from ._earth_net import earth_net
 from ._keys import scoped
 from .errors import AuthorError
 
@@ -64,15 +65,7 @@ class Earths:
         self.closed = True
         found = []
         for prefix in self._ports:
-            key = pe_key(prefix)
-            net = Net(
-                id=make_id(Net, key),
-                key=key,
-                name="PE",
-                net_class=NetClass.PE,
-                ports=self.ports_of(prefix),
-                potential=None,
-            )
+            net = earth_net(pe_key(prefix), self.ports_of(prefix))
             found.append((net, self._origin[prefix]))
         return found
 

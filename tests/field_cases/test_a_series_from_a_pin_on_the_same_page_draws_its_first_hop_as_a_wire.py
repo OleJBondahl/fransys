@@ -18,9 +18,7 @@ from pathlib import Path
 from typing import NamedTuple
 
 import fransys as fr
-
-from fransys_model.layout import LinkMarker, Route, layout_of
-from fransys_model.vocab.tables import ports
+from _drawn_pages import drawn_pages
 
 
 class _Io(NamedTuple):
@@ -63,20 +61,21 @@ def _built():
 
 
 def _hop(model):
-    """The route between K1:12 and K3:A1, or `None`."""
-    table = ports(model)
-    for route in layout_of(model, Route).values():
-        ends = {(table[p].key[-5], table[p].key[-1]) for p in (route.a, route.b)}
-        if ends == {("K1", "12"), ("K3", "A1")}:
-            return route
+    """The wire that leaves K1's break throw (below the contact) for K3's coil, or `None`."""
+    ((page,),) = [[d] for d in drawn_pages(model).values()]
+    (k1,) = (s for s in page.symbols if s.key == "change-over-contact")
+    for wire in page.wires:
+        if any(x == k1.x and y > k1.y + 8 for x, y in wire.points):
+            return wire
     return None
 
 
 def test_the_hop_from_the_break_throw_to_the_second_coil_is_a_wire() -> None:
-    """No marker stands on the page, and the hop is a route."""
+    """No marker stands on the page, and the hop is a wire."""
     # UNDO: references/hung.py `hung_joins`: return `joins` unchanged
     model = _built()
-    assert not layout_of(model, LinkMarker)
+    ((page,),) = [[d] for d in drawn_pages(model).values()]
+    assert not [s for s in page.symbols if s.key == "reference-marker"]
     assert _hop(model) is not None
 
 
@@ -84,5 +83,5 @@ def test_the_hop_runs_downward_and_never_climbs_back() -> None:
     """Its points never rise above the pin it leaves: no 180 degree turn round K1."""
     route = _hop(_built())
     assert route is not None
-    ys = [p.y for p in sorted(route.points, key=lambda p: p.index)]
+    ys = [y for _, y in route.points]
     assert ys in (sorted(ys), sorted(ys, reverse=True))  # `a` to `b` is in id order

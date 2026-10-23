@@ -22,10 +22,11 @@ from typing import TYPE_CHECKING, NamedTuple
 
 import fransys as fr
 import pytest
+from _drawn_pages import drawn_pages
 from fransys.colours import BK, BU, RD
 
 from fransys_model.derive import net_of
-from fransys_model.layout import LinkMarker, Route, StarKind, layout_of
+from fransys_model.layout import LinkMarker, StarKind, layout_of
 
 if TYPE_CHECKING:
     from fransys_model.kernel import Id
@@ -106,8 +107,25 @@ def test_a_reference_never_shows_a_single_branch_on_one_page(built: fr.BuildResu
     assert _lone_branches(built) == 0
 
 
+def _wired_contacts(result: fr.BuildResult, tag: str) -> list[object]:
+    """The pin-11 contact symbols whose nearest tag is `tag` and that a drawn wire ends at."""
+    found = []
+    for drawing in drawn_pages(result.model).values():
+        ends = {point for wire in drawing.wires for point in (wire.points[0], wire.points[-1])}
+        tags = [t for t in drawing.texts if t.kind == "TAG"]
+        for symbol in drawing.symbols:
+            if ("marking.in", "11") not in symbol.slots or not tags:
+                continue
+            near = min(tags, key=lambda t: abs(t.box.x - symbol.x) + abs(t.box.y - symbol.y))
+            if near.text.endswith(f"-{tag}") and any(
+                abs(x - symbol.x) + abs(y - symbol.y) <= 24 for x, y in ends
+            ):
+                found.append(symbol)
+    return found
+
+
 def test_the_second_contact_is_wired_to_its_terminal_not_flagged(built: fr.BuildResult) -> None:
     """Contact 11 of circuit 2 stands beside a copy of its terminal: a route, no marker."""
     pin = _pin(built, "C02")
     assert pin not in {m.port for m in layout_of(built.model, LinkMarker).values()}
-    assert pin in {end for r in layout_of(built.model, Route).values() for end in (r.a, r.b)}
+    assert _wired_contacts(built, "K2")

@@ -8,11 +8,12 @@ from fransys_model.derive.print_sizes import (
     OUTLINE_DASHES_MM,
 )
 
+from ._library import FONT_FAMILY
 from ._numbers import format_decimal
 
 _THIN = format_decimal(LINE_THIN_MM)
 _THICK = format_decimal(LINE_THICK_MM)
-FONT_NAME = "DejaVu Sans"
+FONT_NAME = FONT_FAMILY
 _FONT_FAMILY = f"{FONT_NAME}, sans-serif"
 _OUTLINE_DASH_ARRAY = ",".join(format_decimal(dash) for dash in OUTLINE_DASHES_MM)
 # The by-others dash, the same long dash and gap `_cable_pen.Pen` draws its dashed boxes with.

@@ -15,7 +15,7 @@ is a `fr.Detail` handle, as `d.layout` is a `fr.Layout`.
 | `X1[3]`, `.inner`, `.outer` | a terminal whose number or side is fixed: a published pinout, or several wires on one terminal |
 | `d.pair(a, w1, b)` | a signal pair through a cable, pin for pin, with no line or load side; it is a verb, not a detail |
 | `W1.core(BN, a, b)` | a core whose colour or number a termination plan fixes |
-| `d.detail.net(name, *pins)` | a named net that no wire joins, such as a bus shown by its label |
+| `d.detail.net(name, *pins)` | a named net that no wire joins, such as a bus; its name prints in the connector list |
 | `d.detail.busbar(a, b)`, `d.detail.rail_bond(a, b)` | a rack's internal power jumper; terminals bonded through their mounting rail |
 
 A real circuit that no core call and no row here can write is a gap in Fransys. Report it with its
@@ -130,6 +130,9 @@ w2.core(5, pe1.pe)  # the one-ended screen, screw 2
 (the default), `fr.SIGNAL` or `fr.GENERIC`. It does not make a `PE` or supply net: those have
 `d.earth` and the supply calls.
 
+The name prints in the connector list, and on drawings from the new engine. A net stays inside one
+unit. To join across a unit boundary use `d.detail.wire(a, b, wire=...)`.
+
 `d.detail.busbar(a, b)` joins two pins by a rack's internal power jumper. `d.detail.rail_bond(a, b)`
 joins two terminals bonded through their mounting rail. Neither has a wire-list row, colour or
 gauge, and both close the net like a conductor.
@@ -241,9 +244,9 @@ for pole, terminal in enumerate((1, 2, 3)):
 ## Flat wiring and fixed terminals on a page
 
 Two drawing effects need a detail call to show, and `drawing.md` states the rules. Point-to-point
-`d.detail.wire` hops with no declared supply give layout nets only: one large connected circuit
-piles onto a single page and overflows it (`OUT_OF_CONTENT_BOX`). Declare the supply and write each
-path as a series, and the same twelve relays spread over pages. A lamp wired from one fixed
+`d.detail.wire` hops with no declared supply give layout nets only, and one large connected circuit
+crowds a page. Declare the supply and write each path as a series. Check the result through
+`fr.readability` and the listings, not by position. A lamp wired from one fixed
 terminal of a shared run adds no marker, and neither does a terminal taken in each block.
 
 ```python
@@ -276,25 +279,6 @@ def built(body):
     return fr.build(d, doc)
 
 
-def relays(c, declare):
-    psu = c.device("G1", "DEMO-PSU-24")
-    dc = c.dc_supply("24VDC", psu.output) if declare else None
-    for i in range(1, 13):
-        with c.function(f"F{i}", f"Relay {i}"):
-            k = c.device(f"K{i}", "DEMO-RLY-2CO-24")
-        if dc is not None:
-            c.series(dc.plus, k.coil, dc.minus, wire=(BU, 0.75))
-        else:
-            c.detail.wire(psu.output["+"], k.coil["A1"], wire=(BU, 0.75))
-            c.detail.wire(k.coil["A2"], psu.output["-"], wire=(BU, 0.75))
-
-
-flat = {f.code for f in fr.check(built(lambda c: relays(c, declare=False)))}
-declared = {f.code for f in fr.check(built(lambda c: relays(c, declare=True)))}
-assert "OUT_OF_CONTENT_BOX" in flat
-assert "OUT_OF_CONTENT_BOX" not in declared
-
-
 def markers(own):
     """Count the link markers of 30 lamp blocks fed from one 24 V run."""
 
@@ -317,9 +301,11 @@ assert markers(own=True) == markers(own=False)
 ## Layout profile
 
 `d.layout` advises the drawing and connects nothing: `chain`, `keep_together`, `break_before`, `order`,
-`symbol`, `draw_in`, `side`, `sheet`, `page_title` and `profile`. Add it last, only where the structure
+`symbol`, `draw_in`, `side`, `pins_below`, `sheet`, `page_title` and `profile`. Add it last, only where the structure
 leaves the drawing a choice. `d.layout.side(u1.bus_in, fr.ABOVE)` puts a unit's interface above its
 outline, and `fr.BELOW` below it. An interface with no harness line ignores it.
+`d.layout.pins_below(a1)` draws every pin of the generic box `a1` on its south side, below the body; a
+device with fewer than two ports gets a `PINS_BELOW_NOT_A_BOX` warning.
 `d.layout.page_title(x1, "Field terminals")` names the pages drawing a block, function, device or nested unit.
 
 The profile keywords, and the rule that a unit sets its own, are in [`layout-numbers.md`](layout-numbers.md#profile-keywords).
@@ -338,4 +324,15 @@ with d.function("LAMPS", "Lamps") as lamps:
     d.device("H1", "DEMO-LAMP-24")
 d.layout.order(run, lamps)
 d.layout.profile(hide_unused_pins=True)
+```
+
+A 16-channel output card draws all its channels below its body:
+
+```python
+import fransys as fr
+
+d = fr.design("demo_parts")
+with d.function("OUTPUTS", "PLC outputs"):
+    card = d.device("A1", "DEMO-PLC-DO-16")
+d.layout.pins_below(card)
 ```

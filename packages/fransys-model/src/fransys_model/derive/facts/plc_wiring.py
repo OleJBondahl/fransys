@@ -8,7 +8,12 @@ with a function's ports. It is answered here, over `vocab.closure.net_of`, and n
 from typing import TYPE_CHECKING
 
 from fransys_model.derive.facts.closure import net_of
-from fransys_model.vocab.tables import conductors, ports
+from fransys_model.derive.facts.rail_reach import ports_by_function
+from fransys_model.derive.facts.roles import plc_channel_facets
+from fransys_model.kernel import DIGEST_CACHE_SIZE, digest_cached
+from fransys_model.vocab.facets.plc import PlcBindingFacet, PlcChannelFacet, PlcRequestFacet
+from fransys_model.vocab.tables import conductors, facets_of, functions, ports
+lazy from fransys_model.vocab.enums import SignalType
 
 if TYPE_CHECKING:
     from collections.abc import Collection, Mapping
@@ -52,3 +57,58 @@ def direct_neighbours(model: Model) -> dict[Id[Function], frozenset[Id[Function]
         found.setdefault(a, set()).add(b)
         found.setdefault(b, set()).add(a)
     return {function: frozenset(others) for function, others in found.items()}
+
+
+@digest_cached(DIGEST_CACHE_SIZE)
+def plc_requests(model: Model) -> frozendict[Id[Function], PlcRequestFacet]:
+    """Each function that asks for a PLC signal, mapped to its `plc_request` facet."""
+    return frozendict({f.subject: f for f in facets_of(model, PlcRequestFacet).values()})
+
+
+def request_functions(model: Model) -> frozenset[Id[Function]]:
+    """The functions that carry a `plc_request`."""
+    return frozenset(plc_requests(model))
+
+
+def channel_functions(model: Model) -> frozenset[Id[Function]]:
+    """The functions whose template is a declared PLC channel."""
+    channels = plc_channel_facets(model)
+    return frozenset(f.id for f in functions(model).values() if f.template in channels)
+
+
+@digest_cached(DIGEST_CACHE_SIZE)
+def _owners(
+    model: Model,
+) -> tuple[
+    dict[Id[Function], list[Id[Port]]], dict[Id[Port], Id[Function]], dict[Id[Port], Id[Function]]
+]:
+    """Ports by function, and the port owners among the requests and among the channels."""
+    by_function = ports_by_function(model)
+    return (
+        by_function,
+        owner_of_port(by_function, request_functions(model)),
+        owner_of_port(by_function, channel_functions(model)),
+    )
+
+
+def binding_wiring(
+    model: Model, binding: PlcBindingFacet
+) -> tuple[frozenset[Id[Function]], frozenset[Id[Function]]]:
+    """The channels wired to the bound request, then the requests wired to the bound channel.
+
+    Each side leaves out the bound function itself; the check compares it with the binding.
+    """
+    by_function, device_of, channel_of = _owners(model)
+    request, channel = binding.subject, binding.channel
+    request_side = wired_functions(model, by_function.get(request, ()), channel_of) - {request}
+    channel_side = wired_functions(model, by_function.get(channel, ()), device_of) - {channel}
+    return request_side, channel_side
+
+
+def channel_takes(channel_facts: PlcChannelFacet, signal: SignalType) -> bool:
+    """Whether a channel with these facts takes a request or path of `signal` (PLC-10).
+
+    The one eligibility for a PLC channel: `allocate_plc` and the author's module pick both ask it.
+    Example: a `di` channel takes `SignalType.DI` and nothing else.
+    """
+    return channel_facts.signal is signal

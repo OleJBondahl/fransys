@@ -21,16 +21,13 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, NamedTuple
 
 import fransys as fr
-from fransys_el import OPTIONS
 
-from fransys_layout.engines.schematic.engine import stage_results
-from fransys_layout.engines.schematic.read import read_inputs
-from fransys_layout.stages.lookups import placed_keepout
-from fransys_model.layout import Route, layout_of
-from fransys_model.vocab.tables import functions
+from electrical_symbols import LIBRARY
+from fransys_layout.symbols import library_symbol, symbol_shape
+from fransys_model.layout import Page, layout_of
 
 if TYPE_CHECKING:
-    from fransys_layout.geometry import Box
+    from fransys_layout.drawing import DrawnSymbol
 
 _UNIT: dict[str, Any] = {
     "revision": 1,
@@ -40,7 +37,6 @@ _UNIT: dict[str, Any] = {
     "by": "AB",
 }
 _RED, _BLACK = ("RD", 50), ("BK", 50)
-_LOWER_JOIN = "R1/2:fn/4:lamp/4:port/1:1"
 
 
 class _Strips(NamedTuple):
@@ -93,18 +89,65 @@ def _build() -> tuple[fr.BuildResult, str]:
 
 _RESULT, _DC_PAGE = _build()
 
+type Point = tuple[int, int]
 
-def _placed(suffix: str):  # the engine's placed function, a layout type
-    layout = stage_results(_RESULT.model, read_inputs(_RESULT.model, options=OPTIONS))[0].layout
-    (host,) = (f.id for f in functions(_RESULT.model).values() if "/".join(f.key).endswith(suffix))
-    (one,) = (p for p in layout.placed if p.function == host)
+
+def _gap(model, fact: str):
+    """A fact the page Drawing lacks (strict xfail, GAP-FLIP-DRAWING-SUBJECT)."""
+    msg = f"GAP-FLIP-DRAWING-SUBJECT: no {fact} for {model.digest}"
+    raise AssertionError(msg)
+
+
+def _drawn(tag: str) -> DrawnSymbol:
+    """The one drawn symbol of the item `tag` (the owner text starts with it)."""
+    (one,) = (r for r in _gap(_RESULT.model, "symbol subject") if (r.owner or "").startswith(tag))
     return one
 
 
-def _points(branch: str, host: str) -> list[tuple[int, int]]:
-    routes = [r for r in layout_of(_RESULT.model, Route).values() if branch in "/".join(r.key)]
-    (wire,) = (r for r in routes if host in "/".join(r.key))
-    return [(p.x, p.y) for p in wire.points]
+def _shape(one: DrawnSymbol):  # the symbol's pins and body at R0, from symdef's data
+    return symbol_shape(library_symbol(LIBRARY, one.key, one.poles), LIBRARY)
+
+
+def _pin(tag: str, pin: str) -> Point:
+    one = _drawn(tag)
+    turn = _shape(one).pins[pin]
+    return one.x + turn.dx, one.y + turn.dy
+
+
+def _join(start: Point, end: Point) -> list[Point]:
+    """The corners of the drawn wires from `start` to `end`: wires meet end to end or at a dot."""
+    wires = [list(w.points) for d in _RESULT.drawings.values() for w in d.wires]
+    dots = {p for w in wires for p in w}
+    edges: dict[Point, set[Point]] = {}
+    for wire in wires:
+        for a, b in pairwise(wire):
+            on = sorted(
+                p
+                for p in dots
+                if min(a, b) <= p <= max(a, b) and (p[0] == a[0] == b[0] or p[1] == a[1] == b[1])
+            )
+            for p, q in pairwise(on if a <= b else on[::-1]):
+                edges.setdefault(p, set()).add(q)
+                edges.setdefault(q, set()).add(p)
+    came, queue = {start: start}, [start]
+    for here in queue:
+        for n in sorted(edges.get(here, ())):
+            if n not in came:
+                came[n] = here
+                queue.append(n)
+    assert end in came, f"no drawn wires join {start} to {end}"
+    path = [end]
+    while path[-1] != start:
+        path.append(came[path[-1]])
+    path.reverse()
+    return [
+        p
+        for i, p in enumerate(path)
+        if i in (0, len(path) - 1)
+        or not (
+            path[i - 1][0] == p[0] == path[i + 1][0] or path[i - 1][1] == p[1] == path[i + 1][1]
+        )
+    ]
 
 
 def test_the_page_is_not_overfull_and_draws_no_marker() -> None:
@@ -113,29 +156,32 @@ def test_the_page_is_not_overfull_and_draws_no_marker() -> None:
 
 
 def test_the_host_contactor_stays_on_the_band_of_the_other_contactors() -> None:
-    rows = {name: _placed(f"{name}/fn/main").at.y for name in ("K1", "K2", "K3")}
+    rows = {name: _drawn(f"U1-{name}").y for name in ("K1", "K2", "K3")}
     assert rows["K1"] == rows["K2"] == rows["K3"], rows
 
 
 def test_the_first_join_is_level() -> None:
-    points = _points("F3", "F1")
+    points = _join(_pin("U1-F3", "out"), _pin("U1-F1", "out"))
     assert len(points) == 2
     assert points[0][1] == points[1][1]
 
 
 def test_the_taller_branchs_other_join_runs_as_an_l_clear_of_the_host() -> None:
-    points = _points(_LOWER_JOIN, "K1")
+    points = _join(_pin("U1-K1", "1.out"), _pin("U1-R1", "in"))
     assert len(points) >= 3
-    keep: Box = placed_keepout(_placed("K1/fn/main"))
-    pin = next(p for p in points if p[1] == keep.y + keep.height)
+    host = _drawn("U1-K1")
+    body = _shape(host).body  # the keep-out: the body, which reaches the pin ends
+    left, top = host.x + body.x, host.y + body.y
+    right, bottom = left + body.w, top + body.h
+    pin = points[0]
     for (ax, ay), (bx, by) in pairwise(points):
-        x0, x1 = max(min(ax, bx), keep.x), min(max(ax, bx), keep.x + keep.width)
-        y0, y1 = max(min(ay, by), keep.y), min(max(ay, by), keep.y + keep.height)
+        x0, x1 = max(min(ax, bx), left), min(max(ax, bx), right)
+        y0, y1 = max(min(ay, by), top), min(max(ay, by), bottom)
         meets = x0 <= x1 and y0 <= y1
         assert not meets or (x0, y0, x1, y1) == (*pin, *pin)
 
 
 def test_the_dc_function_fits_one_sheet_of_the_unit() -> None:
-    layout = stage_results(_RESULT.model, read_inputs(_RESULT.model, options=OPTIONS))[0].layout
-    unit_pages = [p for p in layout.pages if p.unit is not None]
-    assert [p.number for p in unit_pages] == [1], unit_pages
+    """Everything of the unit stands on one page, the first."""
+    pages = {p for p, d in _RESULT.drawings.items() if d.symbols}
+    assert [layout_of(_RESULT.model, Page)[p].number for p in pages] == [1]

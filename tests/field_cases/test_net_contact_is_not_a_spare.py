@@ -15,12 +15,10 @@ import tempfile
 from pathlib import Path
 
 import fransys as fr
+from _contact_tables import contact_table
+from _drawn_pages import drawn_pages
 from _model_build_cover import cabinet_document
 from fransys.colours import BU
-
-from fransys_model.derive.drawing_text import contact_image
-from fransys_model.layout import Label, LabelKind, SymbolPlacement, layout_of
-from fransys_model.vocab.tables import functions, items
 
 
 def _built_net_contact():
@@ -65,36 +63,23 @@ def _built_block():
     return fr.build(d, cabinet_document(_cabinet)).model
 
 
-def _table(model, tag: str) -> tuple[list[str], list[str]]:
-    """The contact table of the item tagged `tag`, its NO and NC entries as render prints them."""
-    (item,) = (one.id for one in items(model).values() if one.tag == tag)
-    (label,) = (
-        one
-        for one in layout_of(model, Label).values()
-        if one.kind is LabelKind.CROSS_REFERENCE
-        and one.slot == "contacts"
-        and one.function is not None
-        and functions(model)[one.function].item == item
-    )
-    return contact_image(model, label)
-
-
 def test_a_contact_on_a_net_is_drawn_and_not_a_spare() -> None:
     """The NC contact is placed, and its table entry carries a place, not the bare "21-22"."""
     model = _built_net_contact()
     placed = [
-        p
-        for p in layout_of(model, SymbolPlacement).values()
-        if functions(model)[p.function].name == "aux_nc"
+        s
+        for drawing in drawn_pages(model).values()
+        for s in drawing.symbols
+        if any(slot.startswith("marking.") and text == "21" for slot, text in s.slots)
     ]
     assert placed
-    _, nc = _table(model, "Q1")
+    _, nc = contact_table(model)
     assert len(nc) == 1
     assert nc[0].startswith("21-22 ")
 
 
 def test_a_spare_on_an_add_on_block_is_listed_under_the_contactors_reference() -> None:
     """The block's NC contact 61-62 is a bare entry in K1's table; its wired 53-54 keeps a place."""
-    no, nc = _table(_built_block(), "K1")
+    no, nc = contact_table(_built_block())
     assert nc == ["61-62 N/A"]  # layout-0112: no place for a bare contact
     assert any(entry.startswith("53-54 ") for entry in no)

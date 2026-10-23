@@ -17,16 +17,23 @@ from typing import TYPE_CHECKING, Any
 
 import fransys as fr
 import pytest
+from _drawn_pages import drawn_pages
 from fransys.colours import BK
-from fransys_el import OPTIONS
 
-from fransys_layout.engines.schematic.engine import stage_results
-from fransys_layout.engines.schematic.read import read_inputs
+from fransys_model.derive.drawing_text import external_note
+from fransys_model.vocab.tables import functions
 
 if TYPE_CHECKING:
+    from fransys_layout.drawing import DrawnSymbol, DrawnText
     from fransys_model.kernel import Id, Model
 
 _NO_PART = "part must be an MPN string"
+
+
+def _gap(model, fact: str):
+    """A fact the page Drawing lacks (strict xfail, GAP-FLIP-DRAWING-SUBJECT)."""
+    msg = f"GAP-FLIP-DRAWING-SUBJECT: no {fact} for {model.digest}"
+    raise AssertionError(msg)
 
 
 def _plant(d: fr.Design) -> tuple[fr.TerminalStrip, fr.Device]:
@@ -68,27 +75,30 @@ def test_a_part_less_external_strip_and_device_build_and_write(tmp_path: Path) -
     assert "Q8" not in bom
 
 
+def _drawn(model: Model, key: tuple[str, ...]) -> tuple[DrawnSymbol, list[DrawnText]]:
+    """The symbol drawn for the function with this authoring key, and the texts it owns."""
+    (fid,) = (f.id for f in functions(model).values() if tuple(model.key_of(f.id) or ()) == key)
+    (symbol,) = (s for s in _gap(model, "symbol subject").values() if s.owner.endswith(fid.value))
+    texts = [t for t in _gap(model, "text subject") if t.owner.endswith(fid.value)]
+    return symbol, texts
+
+
 def test_the_schematic_draws_q8_as_a_box_of_five_pins_and_x8_as_terminals() -> None:
     model = _built().model
-    layout = stage_results(model, read_inputs(model, options=OPTIONS))[0].layout
-    drawn = {tuple(model.key_of(p.function) or ()): p for p in layout.placed}
-    box = drawn[("G/Q8", "fn", "box")]
-    assert box.geometry.key == "generic-box"
-    terminal = drawn[("X8", "terminal", "1", "fn", "terminal")]
-    assert terminal.geometry.key == "terminal"
-    own = [
-        lb for lb in layout.labels if lb.slot != "external_note"
-    ]  # the BO2 notes are not designations
-    assert {lb.kind.value for lb in own if lb.subject == terminal.function} == {"tag"}
-    labels = [lb for lb in own if lb.subject == box.function]
-    assert [lb.kind.value for lb in labels] == ["tag"]
-    pins = {
-        lb.slot
-        for lb in layout.labels
-        if lb.kind.value == "marking" and (model.key_of(lb.subject) or ())[:2] == ("G/Q8", "fn")
-    }
-    assert sum(lb.slot == "external_note" for lb in layout.labels) == 2  # one per external item
+    box, box_texts = _drawn(model, ("G/Q8", "fn", "box"))
+    assert box.key == "generic-box"
+    terminal, terminal_texts = _drawn(model, ("X8", "terminal", "1", "fn", "terminal"))
+    assert terminal.key == "terminal"
+    assert {t.kind for t in terminal_texts} == {"TAG"}
+    assert [t.kind for t in box_texts] == ["TAG"]
+    pins = {slot for slot in dict(box.slots) if slot.startswith("marking.")}
     assert pins == {f"marking.{pin}" for pin in ("L1", "L2", "L3", "N", "PE")}
+
+
+def test_each_external_item_draws_one_by_others_note() -> None:
+    model = _built().model
+    notes = [t for d in drawn_pages(model).values() for t in d.texts if t.text == external_note()]
+    assert len(notes) == 2  # one per external item
 
 
 def test_a_part_less_strip_offers_only_its_outer_side() -> None:

@@ -12,6 +12,7 @@ from fransys_model.kernel import Finding, Severity
 from fransys_model.vocab import documents
 
 from ._sheet_draw import notice_room, title_rooms, title_symbol
+from .codes import fix_text
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -35,6 +36,7 @@ def _no_room(subject: Id[Document], name: str, frame: SheetFrame) -> Finding | N
         code="TITLE_BLOCK_NO_ROOM",
         severity=Severity.WARNING,
         subjects=(subject,),
+        fix=fix_text("TITLE_BLOCK_NO_ROOM"),
         message=f"sheet format {name!r}: {short}",
     )
 
@@ -47,6 +49,7 @@ def _stack_overlap(subject: Id[Document], name: str, band: float, sizes: Sizes) 
         code="TITLE_BLOCK_STACK_OVERLAP",
         severity=Severity.ERROR,
         subjects=(subject,),
+        fix=fix_text("TITLE_BLOCK_STACK_OVERLAP"),
         message=(
             f"sheet format {name!r}: the title-block band is {band:g} mm and the text height "
             f"needs at least {sizes.title_band_mm:g} mm; use a sheet format whose title-block "
@@ -61,6 +64,7 @@ def _overflow(subject: Id[Document], field: str, where: str, shown: str) -> Find
         code="TITLE_BLOCK_TEXT_OVERFLOW",
         severity=Severity.WARNING,
         subjects=(subject,),
+        fix=fix_text("TITLE_BLOCK_TEXT_OVERFLOW"),
         message=(
             f"{field} ({where}): {shown!r} does not fit its title-block cell, cut with '…'{remedy}"
         ),
@@ -72,6 +76,7 @@ def _notice(subject: Id[Document], chars: int) -> Finding:
         code="TITLE_BLOCK_NOTICE_OVERFLOW",
         severity=Severity.WARNING,
         subjects=(subject,),
+        fix=fix_text("TITLE_BLOCK_NOTICE_OVERFLOW"),
         message=(
             "the notice does not fit the title block's notice cell, cut; "
             f"the cell holds about {chars} characters; shorten fr.document(notice=...)"

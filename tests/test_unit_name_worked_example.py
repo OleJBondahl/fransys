@@ -113,6 +113,7 @@ def test_unit_name_subject_with_two_instances_gives_one_document_unit_unresolved
         severity=Severity.ERROR,
         subjects=(),
         message=unit_name_unresolved(result.model, "demo-pump-cabinet"),
+        fix="Write: x",
     )
     expected = name_findings(result.model, (raw,))[0].message
     assert unresolved[0].message == expected

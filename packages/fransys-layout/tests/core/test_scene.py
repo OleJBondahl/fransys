@@ -6,7 +6,6 @@ import pytest
 from scene_fixtures import flow, layout, problem
 
 from fransys_layout.core import outputs
-from fransys_layout.core.geometry import rotate_side
 from fransys_layout.core.outputs import PinXY, Placed
 from fransys_layout.core.values import Box, Cell, Column, End, FlowGraph, Lane, PinRef
 
@@ -26,10 +25,10 @@ def test_the_scene_carries_the_area_the_pages_and_the_wires():
     assert [(b.sym, b.page) for b in SCENE.boxes] == [("K", 1), ("F", 1), ("A", 2), ("T", 2)]
 
 
-def test_a_pin_carries_its_net_node_stand_and_box_flag():
+def test_a_pin_carries_its_net_node_bias_and_box_flag():
     k, f, a = _pins("K")["c1"], _pins("F"), _pins("A")
-    assert (k.net, k.node, k.box, k.stand) == ("n1", 0, True, False)
-    assert (f["p"].net, f["p"].node, f["p"].stand, f["p"].box) == ("n3", 1, True, False)
+    assert (k.net, k.node, k.box, k.biased) == ("n1", 0, True, False)
+    assert (f["p"].net, f["p"].node, f["p"].biased, f["p"].box) == (None, 1, True, False)
     assert (a["in"].net, a["in"].x, a["in"].y) == ("n1", 40, 46)
 
 
@@ -52,10 +51,6 @@ def test_a_fan_hub_is_marked_head():
     assert {b.sym for b in SCENE.boxes if any(p.head for p in b.pins)} == {"F"}
 
 
-def test_rails_are_the_nets_with_a_declared_supply():
-    assert SCENE.rails == frozenset({"n3"})
-
-
 def test_fill_is_the_row_span_over_the_area_per_page():
     assert SCENE.fill == (20 * 50 / 10_000, 0.0)
 
@@ -68,7 +63,7 @@ def test_a_marker_stands_at_the_pin_its_end_names():
 def test_a_marker_carries_its_cell_and_the_turned_side_of_its_pin():
     m = SCENE.markers[0]
     assert m.cell == layout().annotations.markers[0].cell == "C3"
-    assert m.side == rotate_side("N", "R180") == "S"
+    assert m.side == "S"
 
 
 def test_a_box_carries_the_orient_it_was_placed_with():
@@ -134,9 +129,6 @@ def test_a_head_end_with_a_lane_marks_only_that_lanes_cell_attached():
     assert _attached_syms(End("boxpin", "n1", PinRef("K", "c1"), lane=1)) == {"F"}
 
 
-@pytest.mark.xfail(
-    strict=True, reason="P1.3 fills End.lane; until then a multi-lane head over-marks"
-)
 def test_a_multi_lane_head_end_marks_only_the_lane_on_the_pin():
     """Stage 1 writes no lane today, so every lane's cell is marked; only lane 0 hangs on K.c1."""
     assert _attached_syms(End("boxpin", "n1", PinRef("K", "c1"))) == {"A"}
@@ -155,11 +147,3 @@ def test_a_new_scene_field_has_no_default(cls, field):
     given = {f.name: None for f in dataclasses.fields(cls) if f.name != field}
     with pytest.raises(TypeError, match=field):
         cls(**given)
-
-
-@pytest.mark.parametrize(
-    ("orient", "side", "turned"),
-    [("MR0", "E", "W"), ("MR0", "N", "N"), ("MR180", "E", "E"), ("MR180", "N", "S")],
-)
-def test_the_mirror_swaps_east_and_west_before_the_turn(orient, side, turned):
-    assert rotate_side(side, orient) == turned

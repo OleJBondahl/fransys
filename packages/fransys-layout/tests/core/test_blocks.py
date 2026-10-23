@@ -4,10 +4,12 @@ from __future__ import annotations
 
 from dataclasses import replace
 
+from options_fixtures import core_options
+
 from fransys_layout.core.blocks_members import column_group
 from fransys_layout.core.pack_row import row_width
 from fransys_layout.core.rowspec import one_row
-from fransys_layout.core.values import BlockList, Cell, CycleSplit, FlowGraph, Hints, Lane, Options
+from fransys_layout.core.values import BlockList, Cell, CycleSplit, FlowGraph, Hints, Lane
 
 from .blocks_fixtures import (
     AREA,
@@ -80,7 +82,7 @@ def test_each_unit_gets_its_own_list_and_the_empty_flow_one_empty_list() -> None
 
 
 def test_a_card_keeps_its_columns_in_pin_order_and_its_edges() -> None:
-    syms, cols = box_case(16, 94)
+    syms, cols = box_case(16, 94, north=8)
     lists = build(syms, cols)
     card = flat(lists)[0]
     assert card.columns == tuple(f"c{i}" for i in range(1, 17))
@@ -90,7 +92,7 @@ def test_a_card_keeps_its_columns_in_pin_order_and_its_edges() -> None:
 
 
 def test_card_overfull_spilled_columns_become_free_blocks_with_a_finding() -> None:
-    syms, cols = box_case(40, 64)
+    syms, cols = box_case(40, 64, north=20)
     lists = build(syms, cols)
     blocks = by_anchor(lists)
     spilled = {"c18", "c19", "c20", "c38", "c39", "c40"}
@@ -110,7 +112,19 @@ def test_width_est_is_the_row_width_of_the_blocks_own_row() -> None:
     flow_cols = tuple(cols)
 
     flow = FlowGraph(flow_cols, (), (), (), CycleSplit(0, 0, 0), ())
-    row = one_row(block.columns, (block,), flow, problem_of(syms), Options())
+    row = one_row(
+        block.columns,
+        (block,),
+        flow,
+        problem_of(syms),
+        core_options(
+            flip_turn="R180",
+            tag_stagger=True,
+            label_gap=8,
+            driver_first=True,
+            arrow_sides=("E", "W"),
+        ),
+    )
     assert block.width_est == row_width(row) > 0
 
 
@@ -118,7 +132,17 @@ def test_estimates_short_and_keep_whole() -> None:
     syms, cols = box_case(4, 64)
     card = flat(build(syms, cols))[0]
     assert card.height_est == 32 + 32 + 8  # box body, the tallest column on the one edge, a wire
-    assert card.short is (card.height_est < Options().short_height * AREA.h)
+    assert card.short is (
+        card.height_est
+        < core_options(
+            flip_turn="R180",
+            tag_stagger=True,
+            label_gap=8,
+            driver_first=True,
+            arrow_sides=("E", "W"),
+        ).short_height
+        * AREA.h
+    )
     assert card.keep_whole
     syms, cols = loose("A", "A")
     fanned = flat(build(syms, cols, [fan("f1", "c1", "c2")]))[0]

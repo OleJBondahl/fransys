@@ -4,9 +4,7 @@ On the demo cabinet document, for every
 schematic page, the SVG's `width`/`height`/`viewBox` equal the sheet `resolve_sheet_format`
 gives PDF, and every coordinate the SVG draws lies inside that sheet's content box. Root
 tests are the one place `fransys_render` and `fransys_pdf` may both be imported (spec
-section 5's boundary table holds neither to import the other; mirrors
-`tests/test_marker_text_compiles_inside_box.py` and
-`tests/test_symbol_not_installed_compiles_grey.py`'s cross-package pattern).
+section 5's boundary table holds neither to import the other).
 `resolve_sheet_format` and `schematic_pages` are not in
 `fransys_pdf`'s `__all__`, so they are imported from their own private modules directly,
 the same way that package's own `tests/test_source.py` and `tests/test_determinism.py`
@@ -20,11 +18,11 @@ from typing import TYPE_CHECKING
 import fransys as fr
 import fransys_author
 import fransys_parts
-import fransys_render
 from demo_designs import cabinet_design
-from fransys_el import REF_TINTS
+from fransys._layout_core import draw_on_core
 from fransys_pdf._drawings import schematic_pages
 
+import electrical_symbols
 from fransys_model.derive import document_page_kinds, document_row
 from fransys_model.derive import document_sheet_format as resolve_sheet_format
 from fransys_model.kernel import render_id
@@ -55,7 +53,7 @@ _FRAGMENT_POINT_TAGS = frozenset({"line", "polygon", "polyline", "circle", "text
 _FRAGMENT_IGNORED_TAGS = frozenset({"g", "path"})
 
 
-def _built_document_model(tmp_path: Path):
+def _built_document(tmp_path: Path):
     """A cabinet document with real laid-out `SCHEMATIC` pages (mirrors `demo_cabinet_document`)."""
     parts = fransys_parts.load("demo_parts")
     design = cabinet_design(parts)
@@ -63,8 +61,7 @@ def _built_document_model(tmp_path: Path):
     cover = tmp_path / "cabinet.md"
     cover.write_text("# Demo cabinet\n", encoding="utf-8")
     document_draft = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, c1, cover=cover)
-    result = fr.build(parts, design.draft(), document_draft)
-    return result.model
+    return fr.build(parts, design.draft(), document_draft)
 
 
 def _mm_attr(value: str) -> float:
@@ -183,21 +180,31 @@ def _all_coordinates(root: ET.Element) -> tuple[tuple[float, float], ...]:
     return tuple(coords)
 
 
-def test_render_pages_fit_the_sheet_and_every_coordinate_lies_in_the_content_box(tmp_path):
-    model = _built_document_model(tmp_path)
+def _core_pages(tmp_path: Path):
+    """The sheet and each schematic page's `(page, SVG root)`, drawn on the core."""
+    built = _built_document(tmp_path)
+    model = built.model
     (document_id,) = documents(model)
     record = document_row(model, document_id)
     pages = document_page_kinds(model, document_id)
     sheet = resolve_sheet_format(model, record.id, pages)
-    svgs = fransys_render.pages(model, tints=REF_TINTS)
-
+    svgs = draw_on_core(model, built.drawings, electrical_symbols.LIBRARY)
     schematic = schematic_pages(model, record, pages)
     assert len(schematic) >= _MIN_PAGE_COUNT, "no real schematic page to check"
+    return sheet, [(page, ET.fromstring(svgs[render_id(page)])) for page in schematic]  # noqa: S314
 
-    page_data = [
-        (page, ET.fromstring(svgs[render_id(page)]))  # noqa: S314 -- render's own trusted output
-        for page in schematic
-    ]
+
+def test_render_pages_fit_the_sheet(tmp_path):
+    sheet, page_data = _core_pages(tmp_path)
+    for page, root in page_data:
+        key = render_id(page)
+        assert _mm_attr(root.attrib["width"]) == float(sheet.width_mm), key
+        assert _mm_attr(root.attrib["height"]) == float(sheet.height_mm), key
+        assert root.attrib["viewBox"] == f"0 0 {sheet.width_mm} {sheet.height_mm}", key
+
+
+def test_every_coordinate_lies_in_the_content_box(tmp_path):
+    sheet, page_data = _core_pages(tmp_path)
     page_coords = [(page, root, _all_coordinates(root)) for page, root in page_data]
     total_coordinates = sum(len(coords) for _page, _root, coords in page_coords)
     assert total_coordinates >= _MIN_COORDINATE_COUNT, "no coordinate drawn to check"
@@ -207,11 +214,8 @@ def test_render_pages_fit_the_sheet_and_every_coordinate_lies_in_the_content_box
     content_x1 = content_x0 + float(sheet.content_width_mm)
     content_y1 = content_y0 + float(sheet.content_height_mm)
 
-    for page, root, coords in page_coords:
+    for page, _root, coords in page_coords:
         key = render_id(page)
-        assert _mm_attr(root.attrib["width"]) == float(sheet.width_mm), key
-        assert _mm_attr(root.attrib["height"]) == float(sheet.height_mm), key
-        assert root.attrib["viewBox"] == f"0 0 {sheet.width_mm} {sheet.height_mm}", key
         for x, y in coords:
             assert content_x0 <= x <= content_x1, (key, x, y, "x outside content box")
             assert content_y0 <= y <= content_y1, (key, x, y, "y outside content box")

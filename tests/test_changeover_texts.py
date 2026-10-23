@@ -23,9 +23,10 @@ from itertools import combinations
 from pathlib import Path
 
 import pytest
+from _drawn_pages import drawn_pages
 
-from fransys_model.layout import Label, LabelKind, default_sheet_format, layout_of
-from fransys_model.vocab.tables import functions
+from fransys_model.layout import default_sheet_format
+lazy from fransys_layout.drawing import DrawnText
 
 # `--import-mode=importlib` (root pyproject.toml) never puts a test directory on `sys.path`, and
 # ty cannot resolve a `sys.path` insert; the field case's own build is loaded from its file.
@@ -45,12 +46,12 @@ def model(tmp_path_factory):
     return _field_case._build(tmp_path_factory.mktemp("texts"), in_unit=True).model
 
 
-def _interiors_meet(a: Label, b: Label) -> bool:
+def _interiors_meet(a: DrawnText, b: DrawnText) -> bool:
     return (
-        a.x < b.x + b.width
-        and b.x < a.x + a.width
-        and a.y < b.y + b.height
-        and b.y < a.y + a.height
+        a.box.x < b.box.x + b.box.w
+        and b.box.x < a.box.x + a.box.w
+        and a.box.y < b.box.y + b.box.h
+        and b.box.y < a.box.y + a.box.h
     )
 
 
@@ -58,12 +59,11 @@ def test_the_row_one_terminals_strip_tag_and_point_text_do_not_overlap(model) ->
     """(d): the terminal under throw 32 prints its two tags apart."""
     # UNDO: stages/texts/place_texts.py: a step past a side's first admitted only within the
     #     label's own keep-out along the side: the strip tag stands at its home, over the point
-    fns = functions(model)
-    key = ("UNIT", "X02", "terminal", "RUN3", "1", "fn", "terminal")
     tags = [
-        one
-        for one in layout_of(model, Label).values()
-        if one.kind is LabelKind.TAG and one.function is not None and fns[one.function].key == key
+        text
+        for drawing in drawn_pages(model).values()
+        for text in drawing.texts
+        if text.kind == "TAG" and text.text.endswith("X02:RUN3:1")
     ]
     assert len(tags) == 2  # the strip tag and the point text
     assert not any(_interiors_meet(a, b) for a, b in combinations(tags, 2))
@@ -76,12 +76,18 @@ def test_every_cross_reference_stays_inside_the_content_box(model) -> None:
     width = round(sheet.content_width_mm * 8 / Decimal(sheet.module_mm))
     height = round(sheet.content_height_mm * 8 / Decimal(sheet.module_mm))
     references = [
-        one for one in layout_of(model, Label).values() if one.kind is LabelKind.CROSS_REFERENCE
+        text
+        for drawing in drawn_pages(model).values()
+        for text in drawing.texts
+        if text.kind == "CROSS_REFERENCE"
     ]
     assert references
     outside = [
         one
         for one in references
-        if one.x < 0 or one.y < 0 or one.x + one.width > width or one.y + one.height > height
+        if one.box.x < 0
+        or one.box.y < 0
+        or one.box.x + one.box.w > width
+        or one.box.y + one.box.h > height
     ]
     assert outside == []

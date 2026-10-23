@@ -12,7 +12,6 @@ from typing import Any
 import fransys as fr
 import fransys_author
 import fransys_parts
-import pytest
 from _model_build_cover import layout_trigger_document
 
 from fransys_model.derive.stub_text import off_stub_text
@@ -91,15 +90,6 @@ def test_a_boundary_pin_whose_mate_has_two_conductors_shows_two_stubs_each_namin
     assert "R1" in texts[1]
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "layout-0093 known limit (ruling (a), 2026-10-02): two OFF stubs of one carrier "
-        "to one far end on stacked neighbouring S pins of one column should share one box, but "
-        "the upper pin's stub runs into the lower pin's body, so no box stands clear of both; "
-        "the pair keeps two boxes and the first stands on the lower pin"
-    ),
-)
 def test_two_stubs_of_one_carrier_to_one_far_end_on_stacked_pins_share_one_box() -> None:
     """On the plug's page the two stacked pins of the plug each stub "-> +C1-X1:1": the
     same carrier and far end, so one box, one position and size for both."""

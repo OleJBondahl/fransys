@@ -2,7 +2,7 @@
 
 The oracle is the old test, `item_kind(..) is ItemKind.TERMINAL`, read at the three sites:
 `kinds.py` (`terminal_items`), `marker_targets.py` (a terminal first) and `page_nav.py`
-(`_NO_ENTRY`: terminals and connector housings get no outline entry).
+(the outline entry rule, gone with the outline entries).
 """
 
 import fransys as fr
@@ -11,7 +11,6 @@ from fransys.colours import BU
 
 from fransys_model.derive import ItemKind, item_kind, item_role
 from fransys_model.derive.facts.item_predicates import terminal_items
-from fransys_model.derive.page_nav import _has_entry
 from fransys_model.vocab.roles import ITEM_ROLES
 from fransys_model.vocab.tables import items
 
@@ -37,13 +36,6 @@ def test_the_flag_is_the_terminal_branch_on_every_item(model: fr.Model) -> None:
     for item in items(model):
         assert item_role(model, item).terminal == (item in terminal_items(model))
         assert item_role(model, item).terminal == (item_kind(model, item) is ItemKind.TERMINAL)
-
-
-def test_the_outline_entry_is_the_old_no_entry_rule(model: fr.Model) -> None:
-    """Catches page_nav dropping the connector half of NV3 or listing a terminal."""
-    no_entry = (ItemKind.TERMINAL, ItemKind.CONNECTOR)
-    for item in items(model):
-        assert _has_entry(model, item) == (item_kind(model, item) not in no_entry)
 
 
 def test_only_the_terminal_row_sets_the_flag() -> None:

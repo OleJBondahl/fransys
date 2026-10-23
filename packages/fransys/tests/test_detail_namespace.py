@@ -31,7 +31,15 @@ _MOVED = ("wire", "net", "busbar", "rail_bond")
 # files removed the digest is the pin before them (810ebd7ff..., checked on the library without).
 # WIRE-ROWS P6 (model-0260) adds `source_row` to the demo `vfd-4kw.toml` outputs; with that file
 # set back the digest is the pin before it (8a8774887..., checked on a copy of the merged tree).
-_DIGEST_BEFORE_THE_MOVE = "8463a3d4fdc1486db51947e394128980f669ca1328b86972bfaaf2e44d02172a"
+# GRID-HOME-A (decision 0230, designer ruling Q1 2026-10-16) writes the `layout.drawing_library`
+# record into every built model, so the digest moves once; the pin before it ended 8463a3d4fdc1...
+# CLEANUP-ROUND-2-A rider R sets `psu-24v-dcok.toml` `dc_ok` to `contact_no` (pin before it
+# b5bc2973599f...). SETTINGS-A1 (0237, model-0312) writes `layout.paper` and two sheet formats:
+# it moves again; the pin before it ended cc38391d2251... Ruling 91 (DEMO-LAMP-24 draws the lamp
+# symbol: `lamp-24v.toml` symbol and port map) moves it again; the pin before it ended
+# 68a5c7009a99... SYMBOL-RULES E sets the star-delta demo motor's `end` function to kind `generic`:
+# it moves; the pin before the merge of the two ended 8fd14fdf0932...
+_DIGEST_BEFORE_THE_MOVE = "2f72879e404becda08cbe0baf33a23f4d9bafe45a2adc8acbe99baafaea93a0a"
 
 
 def test_each_moved_call_builds_the_model_it_built_on_d():

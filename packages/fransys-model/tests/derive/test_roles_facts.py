@@ -2,6 +2,7 @@
 
 from decimal import Decimal
 
+import pytest
 from current_plant import device, rate
 from plant import Plant
 from roles_plants import every_kind_member, function_of, roles_plant
@@ -9,6 +10,7 @@ from test_breaking_check import _battery, _fn
 
 from fransys_model.checks.ratings_breaking import check_breaking
 from fransys_model.derive import (
+    conductor_ends,
     conductor_role,
     function_role,
     item_role,
@@ -167,3 +169,13 @@ def test_a_protections_conductive_link_is_a_pole_a_loads_is_not() -> None:
         (link,) = internal_links(model).values()
         assert link.kind is LinkKind.CONDUCTIVE
         assert link_role(model, link.id).pole is pole
+
+
+def test_conductor_ends_are_the_authored_a_then_b_and_an_unknown_conductor_raises() -> None:
+    """Each planted conductor gives `(a, b)` in that order (model-0340)."""
+    assert conductors(MODEL)
+    for c in conductors(MODEL).values():
+        assert conductor_ends(MODEL, c.id) == (c.a, c.b)
+        assert c.a != c.b
+    with pytest.raises(KeyError):
+        conductor_ends(MODEL, next(iter(ports(MODEL))))  # ty: ignore[invalid-argument-type] -- a port id, no conductor

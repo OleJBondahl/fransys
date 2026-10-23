@@ -1,6 +1,6 @@
 """One undo test per ruling for connectors and mated pairs and for fan-out nets, built
 through the `fransys` facade from `examples/demo-parts` and read from
-the laid-out `layout.*` records and `fransys_model.derive.drawing_text.marker_text` only.
+the page Drawings only (the Drawing carries no star kind and no port: R243).
 
 Not covered: the cross-unit mate with its boundary pin as a replica cell under the parent-side
 pin (needs the units worked example's fixture, which other tests own).
@@ -12,23 +12,14 @@ import fransys as fr
 import fransys_author
 import fransys_parts
 import pytest
+from _dd_core import pages_with, set_of
+from _dd_core_b import is_stub, marker_strings, markers, symbols_of, tags_of
+from _drawn_pages import drawn_pages
 from _model_build_cover import layout_trigger_document
 
-from fransys_model.derive import connector_box_lines
+from fransys_model.derive import item_designation
 from fransys_model.derive.designation import port_designation
-from fransys_model.derive.drawing_text import marker_text
-from fransys_model.derive.stub_text import off_stub_text
-from fransys_model.layout import (
-    ConnectorBox,
-    DrawingSet,
-    LinkMarker,
-    Page,
-    Route,
-    StarKind,
-    SymbolPlacement,
-    layout_of,
-)
-from fransys_model.vocab.tables import functions, ports
+from fransys_model.vocab.tables import functions
 
 _PROJECT: dict[str, Any] = {
     "title": "Mates and fan-out",
@@ -47,11 +38,12 @@ def _design():
     return parts, design, design.location("C1", "Cabinet"), design.group("A", "A")
 
 
-def _placements(model, item, name):
-    """Every placement of function `name` of the item authored as `item`, top to bottom."""
-    ids = {f.id for f in functions(model).values() if f.key[0] == item and f.name == name}
-    found = [p for p in layout_of(model, SymbolPlacement).values() if p.function in ids]
-    return sorted(found, key=lambda p: (p.page, p.x, p.y))
+def _placements(model, item, _function=None):
+    """Every symbol drawn for the item authored as `item`, ordered by page, x and y.
+
+    `_function` is not carried by the Drawing: the symbols beside the item's tags.
+    """
+    return [symbol for _, symbol in symbols_of(model, item)]
 
 
 # -- connectors and mated pairs --------------------------------------------------------
@@ -181,15 +173,26 @@ def _star_of_relays(*wires, strip=False):
 
 
 def _star(model):
-    """The star's (reference marker, branch markers), told apart by the persisted `star` field:
-    `StarKind.REF` is the reference, `StarKind.BRANCH` every branch (both markers now
-    print the identical symmetric text, a list of `#n-...` lines naming every other end, so
-    there is no longer any text-shape difference to guess from)."""
-    every = list(layout_of(model, LinkMarker).values())
-    text = {m.id: marker_text(model, m) for m in every}
-    refs = [m for m in every if m.star is StarKind.REF]
-    (ref,) = refs
-    return ref, [m for m in every if m is not ref], text
+    """The star's (reference marker, branch markers, text by marker).
+
+    The Drawing carries no star kind (R243): the reference is the first marker drawn."""
+    every = [m for _, m in markers(model)]
+    text = {id(m): "\n".join(marker_strings(m)) for m in every}
+    (ref, *branches) = every
+    return ref, branches, text
+
+
+def _named_by(model, marker) -> str:
+    """The `-<tag>` of the item whose operating symbol stands nearest to `marker`."""
+    candidates = [
+        (abs(s.x - marker.x) + abs(s.y - marker.y), tag.text)
+        for drawing in drawn_pages(model).values()
+        if marker in drawing.markers
+        for tag in drawing.texts
+        for s in drawing.symbols
+        if s.key == "operating-device" and abs(s.x - tag.box.x - 56) <= 2
+    ]
+    return min(candidates)[1]
 
 
 _CHAIN = (("K4.A2", "K2.A1"), ("K2.A1", "K1.A2"), ("K1.A2", "K3.A1"))
@@ -201,15 +204,9 @@ def test_a_fanout_net_gets_one_marker_per_port_and_no_wires() -> None:
     # UNDO: fransys_layout/stages/references/nets.py:star_nets
     #     returns `()` (wires drawn, no markers)
     model = _star_of_relays(*_CHAIN)
-    chain_ports = {
-        p.id
-        for p in ports(model).values()
-        if port_designation(model, p.id).rsplit("-", 1)[-1] in {"K4:A2", "K2:A1", "K1:A2", "K3:A1"}
-    }
-    marked = [m.port for m in layout_of(model, LinkMarker).values()]
-    assert len(chain_ports) == 4
-    assert sorted(marked) == sorted(chain_ports)
-    assert not [r for r in layout_of(model, Route).values() if {r.a, r.b} & chain_ports]
+    drawn = markers(model)
+    assert len(drawn) == 4
+    assert not [w for d in drawn_pages(model).values() for w in d.wires]
 
 
 def test_the_reference_is_the_hub_not_the_first_designation() -> None:
@@ -218,7 +215,7 @@ def test_the_reference_is_the_hub_not_the_first_designation() -> None:
     #     drop `-degree[port]` from the `ref` sort key
     model = _star_of_relays(*_HUB_K3)
     ref, _, _ = _star(model)
-    assert port_designation(model, ref.port).endswith("K3:A1")
+    assert _named_by(model, ref) == "-K3"
 
 
 def test_a_tie_for_hub_falls_to_the_port_whose_designation_sorts_first() -> None:
@@ -227,7 +224,7 @@ def test_a_tie_for_hub_falls_to_the_port_whose_designation_sorts_first() -> None
     #     reverse the designation in the `ref` sort key
     model = _star_of_relays(*_CHAIN)
     ref, _, _ = _star(model)
-    assert port_designation(model, ref.port).endswith("K1:A2")
+    assert _named_by(model, ref) == "-K1"
 
 
 def test_a_single_terminal_point_is_the_reference_even_beside_a_bigger_hub() -> None:
@@ -236,7 +233,8 @@ def test_a_single_terminal_point_is_the_reference_even_beside_a_bigger_hub() -> 
     #     `if len(points) == 1` becomes `if False`
     model = _star_of_relays(("K3.A1", "K1.A2"), ("K3.A1", "K2.A2"), strip=True)
     ref, _, _ = _star(model)
-    assert port_designation(model, ref.port).endswith("X1:1")
+    assert any(t.text == "-X1:1" for _, t in tags_of(model, "X1"))
+    assert _named_by(model, ref).startswith("-X1")
 
 
 def test_the_reference_lists_its_branches_and_each_branch_names_the_reference() -> None:
@@ -251,13 +249,12 @@ def test_the_reference_lists_its_branches_and_each_branch_names_the_reference() 
     ref, branches, text = _star(model)
     assert len(branches) == 3
     for member in (ref, *branches):
-        lines = text[member.id].split("\n")
+        lines = text[id(member)].split("\n")
         assert len(branches) == 3
         assert len(lines) == 1  # three other ends print the first and a count
         assert lines[0].endswith(" +2")  # every OTHER member but the first, once each
-    markers = layout_of(model, LinkMarker)
-    assert all(markers[m.partner] is ref for m in branches)
-    assert markers[ref.partner] in branches
+    # each branch names the reference: its text lists the reference's end
+    assert all(_named_by(model, ref).lstrip("-") in text[id(m)] for m in branches)
 
 
 def test_a_black_box_pin_carries_no_star_marker() -> None:
@@ -282,24 +279,22 @@ def test_a_black_box_pin_carries_no_star_marker() -> None:
         wire(k.fn("co_2")["21"], k.fn("co_2")["24"])
     model = fr.build(parts, d.draft(), layout_trigger_document()).model
     pin = terminal.outer.id
-    sets = layout_of(model, DrawingSet)
-    unit_of = {page.id: sets[page.drawing_set].unit for page in layout_of(model, Page).values()}
-    every = list(layout_of(model, LinkMarker).values())
-    assert {m.star for m in every} == {StarKind.OFF}  # no reference, no branch: no star
-    assert all(m.partner == m.id for m in every)  # a stub has no partner marker
-    on_pin = [m for m in every if m.port == pin]
-    assert {unit_of[m.page] is not None for m in on_pin} == {True}  # the unit's own set only
-    assert sorted(off_stub_text(model, m).rsplit("-", 1)[1] for m in on_pin) == ["K1:A1", "K2:A1"]
-    shown = {
-        p.page
-        for p in layout_of(model, SymbolPlacement).values()
-        if p.function == terminal.function.id
-    }
-    assert {page for page, u in unit_of.items() if u is None} <= shown  # the pin is drawn there
-    mirrors = [m for m in every if m.port != pin]
-    assert {unit_of[m.page] is None for m in mirrors} == {True}  # the top-level set
-    assert len(mirrors) == 2
-    assert all(off_stub_text(model, m).endswith(port_designation(model, pin)) for m in mirrors)
+    every = markers(model)
+    assert all(is_stub(m) for _, m in every)  # no reference, no branch: no star
+    on_pin = [(page, m) for page, m in every if set_of(model, page).unit is not None]
+    tails = sorted(text.rsplit("-", 1)[1] for _, m in on_pin for text in marker_strings(m))
+    assert tails == ["K1:A1", "K2:A1"]  # the unit's own set only
+    terminal_item = functions(model)[terminal.function.id].item
+    shown = set(pages_with(model, item_designation(model, terminal_item)))
+    top = {page for page in drawn_pages(model) if set_of(model, page).unit is None}
+    assert top <= shown  # the pin is drawn there
+    mirrors = [(page, m) for page, m in every if set_of(model, page).unit is None]
+    assert len(mirrors) == 2  # the top-level set
+    assert all(
+        text.endswith(port_designation(model, pin))
+        for _, m in mirrors
+        for text in marker_strings(m)
+    )
 
 
 def test_a_cross_unit_mate_stands_at_the_end_of_its_column_the_chain_enters_from() -> None:
@@ -323,18 +318,18 @@ def test_a_cross_unit_mate_stands_at_the_end_of_its_column_the_chain_enters_from
     d.wiring(colour="BU", gauge="0.5")(plug["1"], relay.fn("coil")["A1"])
     d.mate(plug, inner)
     model = fr.build(parts, d.draft(), layout_trigger_document()).model
-    sets, pages = layout_of(model, DrawingSet), layout_of(model, Page)
-    parent = {p.id for p in pages.values() if sets[p.drawing_set].unit is None}
+    parent = {page for page in drawn_pages(model) if set_of(model, page).unit is None}
     by_tag = {
-        connector_box_lines(model, box.function)[0]: box
-        for box in layout_of(model, ConnectorBox).values()
-        if box.page in parent
+        symbol.texts[0][0]: (page, symbol)
+        for page, drawing in drawn_pages(model).items()
+        for symbol in drawing.symbols
+        if page in parent and symbol.texts
     }
-    plug, boundary = by_tag["-W3-P1"], by_tag["-X1"]
-    assert plug.page == boundary.page
-    # no pin symbol of X1 stands on the page its box draws it (no marker there)
-    assert [p for p in _placements(model, "cab", "x1") if p.page == boundary.page] == []
-    assert boundary.x < plug.x + plug.width
-    assert plug.x < boundary.x + boundary.width
+    (plug_page, plug), (boundary_page, boundary) = by_tag["-W3-P1"], by_tag["-X1"]
+    assert plug_page == boundary_page
+    width, height = dict(boundary.stretch).get("x", 0), dict(boundary.stretch).get("y", 0)
+    plug_width = dict(plug.stretch).get("x", 0)
+    assert boundary.x < plug.x + plug_width
+    assert plug.x < boundary.x + width
     # the chain runs on from P1 down to Z9, so X1 stands above and P1 below, face to face
-    assert boundary.y + boundary.height == plug.y
+    assert boundary.y + height == plug.y

@@ -23,7 +23,7 @@ from fransys_model.kernel import (
     parent_chain,
 )
 from fransys_model.vocab.facets.harness import HarnessFacet
-from fransys_model.vocab.tables import facets_of, items
+from fransys_model.vocab.tables import HasTables, facets_of, items
 from fransys_model.vocab.tables import units as units_table
 lazy from fransys_model.vocab.core import Function, Item, Unit
 
@@ -58,7 +58,7 @@ def unit_subtree(model: Model, unit: Id[Unit]) -> frozenset[Id[Unit]]:
     return unit_index(model).subtree_of[unit]
 
 
-def unit_items(model: Model, unit: Id[Unit]) -> frozenset[Id[Item]]:
+def unit_items(model: HasTables, unit: Id[Unit]) -> frozenset[Id[Item]]:
     """Every item of `model` whose `unit` is in `unit_subtree(model, unit)`.
 
     Reads the per-model unit index.
@@ -84,7 +84,7 @@ def standalone(model: Model, unit: Id[Unit]) -> bool:
     return len(unit_index(model).items_of[unit]) == len(items(model))
 
 
-def boundary(model: Model, unit: Id[Unit]) -> tuple[Id[Function], ...]:
+def boundary(model: HasTables, unit: Id[Unit]) -> tuple[Id[Function], ...]:
     """The functions that are part of `unit`'s interface, in `Id` order.
 
     One function may be `unit`'s boundary through more than one `Boundary` record; it is
@@ -229,7 +229,7 @@ def in_reading(model: Model, item: Id[Item], unit: Id[Unit] | None) -> bool:
     return in_unit_subtree(model, item, unit)
 
 
-def crosses_unit(model: Model, one: Id[Item], other: Id[Item]) -> bool:
+def crosses_unit(model: HasTables, one: Id[Item], other: Id[Item]) -> bool:
     """Whether the two items lie in different units, strictly.
 
     A sub-unit is a different unit from its parent, so a nested unit's item crosses against

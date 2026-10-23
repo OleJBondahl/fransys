@@ -9,9 +9,9 @@ import pypdfium2 as pdfium
 import pypdfium2.raw as pdfium_raw
 import pytest
 import typst
-from _build import document, drawing_set, layout_page, location, model, unit
-from fransys_pdf import font_dir, source
+from _build import document, drawing_set, layout_page, location, model, source, unit
 
+from electrical_symbols import font_dir
 from fransys_model.derive import document_sheets_of, page_destination
 from fransys_model.kernel import render_id
 from fransys_model.vocab import DocumentPreset, PageKind

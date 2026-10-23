@@ -12,9 +12,10 @@ from typing import Any
 
 import fransys_parts
 from fransys_author import Design
+from root_library import freeze
 
 from fransys_model.derive import port_potential_current, port_potential_rank
-from fransys_model.kernel import Id, Model, freeze, merge
+from fransys_model.kernel import Id, Model, merge
 from fransys_model.vocab import Current
 from fransys_model.vocab import Port as ModelPort
 

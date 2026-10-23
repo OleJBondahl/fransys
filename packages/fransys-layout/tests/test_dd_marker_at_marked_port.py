@@ -12,31 +12,26 @@ The PE net here is the pump station's: three terminals, `-X1:1` (the hub) wired 
 outer side unwired. In the top-level set the three pins stand in one row, so `-X1:1` and `-X3:1`
 are side by side and that wire is drawn there; in the unit's own set no two are, so both `-X3`
 terminals take a branch marker. The two must stand alike: at the N port, the inner one.
-Built through the `fransys` facade from `examples/demo-parts`, read from `layout.*` records.
+Built through the `fransys` facade from `examples/demo-parts`, read from the page Drawings.
 
 The last test is the other half of that rule: a terminal whose inner port carries a wire drawn on
 the marker's own page still leaves by its free S port.
 """
 
 from functools import cache
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import fransys as fr
 import fransys_author
 import fransys_parts
+from _drawn_pages import drawn_pages
 from _model_build_cover import layout_trigger_document
 
-from fransys_model.kernel import Id, Severity
-from fransys_model.layout import (
-    DrawingSet,
-    LinkMarker,
-    Orientation,
-    Page,
-    StarKind,
-    SymbolPlacement,
-    layout_of,
-)
-from fransys_model.vocab.tables import ports
+from fransys_model.kernel import Severity
+from fransys_model.layout import DrawingSet, Page, layout_of
+
+if TYPE_CHECKING:
+    from fransys_layout.drawing import DrawnMarker, DrawnSymbol
 
 _PROJECT: dict[str, Any] = {
     "title": "Marker at port",
@@ -56,7 +51,7 @@ def _build(spec: tuple[tuple[str, int], ...], *, pair: bool = False):
     other on the inner side (one PE net). Outer sides run to another location. Three relays stand
     in each group, so a group's terminal is on a page of its own in the unit's set. With `pair` the
     second and third terminals are also wired to each other. Returns the model and the terminals'
-    inner ports, in `spec` order."""
+    designations, in `spec` order."""
     parts = fransys_parts.load("demo_parts")
     d = fransys_author.Design(parts)
     d.project(**_PROJECT)
@@ -86,29 +81,36 @@ def _build(spec: tuple[tuple[str, int], ...], *, pair: bool = False):
             blue(relay.fn(contact)[pins[0]], relay.fn(contact)[pins[1]])
     result = fr.build(parts, d.draft(), layout_trigger_document())
     assert not [f for f in result.findings if f.severity is Severity.ERROR]
-    return result.model, [terminal.inner.id for terminal in terminals]
+    return result.model, [f"-{name}:{n}" for name, n in (("X1", 1), ("X3", 1), ("X3", 2))]
 
 
-def _own_branches(model, port: Id) -> list[tuple[LinkMarker, SymbolPlacement]]:
-    """`port`'s branch markers in a unit's own set, each with its terminal's placement there."""
+def _own_branches(model, tag: str) -> list[tuple[DrawnMarker, DrawnSymbol]]:
+    """The markers in a unit's own set standing at the terminal printed `tag`, with that terminal.
+
+    A marker names no subject, so it belongs to the terminal whose x it stands on.
+    """
     pages, sets = layout_of(model, Page), layout_of(model, DrawingSet)
-    function = ports(model)[port].function
-    stands = layout_of(model, SymbolPlacement).values()
-    return [
-        (m, next(p for p in stands if p.function == function and p.page == m.page))
-        for m in layout_of(model, LinkMarker).values()
-        if m.port == port
-        and m.star is StarKind.BRANCH
-        and sets[pages[m.page].drawing_set].unit is not None
-    ]
+    found = []
+    for page, drawing in drawn_pages(model).items():
+        if sets[pages[page].drawing_set].unit is None:
+            continue
+        text = next(t for t in drawing.texts if t.text == tag)
+        terminal = min(
+            (s for s in drawing.symbols if s.key == "terminal"),
+            key=lambda s: abs(s.x - text.box.x) + abs(s.y - text.box.y),
+        )
+        found += [(m, terminal) for m in drawing.markers if m.x == terminal.x]
+    return found
 
 
-def _inward(model, port: Id) -> int:
-    """The marker's stub end less its terminal's y, signed so that above zero is the inner port's
+def _inward(model, tag: str) -> int:
+    """The marker's y less its terminal's y, signed so that above zero is the inner port's
     side: the inner port faces N when the terminal is `R0`, S when it is `R180`."""
-    ((marker, terminal),) = _own_branches(model, port)
-    assert terminal.orientation in (Orientation.R0, Orientation.R180)
-    return (marker.y - terminal.y) * (-1 if terminal.orientation is Orientation.R0 else 1)
+    found = _own_branches(model, tag)
+    assert found, f"no branch marker stands at {tag}"
+    ((marker, terminal),) = found
+    assert terminal.orient in ("R0", "R180")
+    return (marker.y - terminal.y) * (-1 if terminal.orient == "R0" else 1)
 
 
 def test_a_marker_stands_at_its_ports_side_though_its_wire_is_drawn_in_another_set() -> None:

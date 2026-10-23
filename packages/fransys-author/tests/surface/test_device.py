@@ -187,3 +187,15 @@ def test_a_device_reports_the_tag_it_was_given_or_none(parts: Draft) -> None:
     assert d.device(None, "TEST-RLY-2CO", name="spare").tag is None
     assert d.harness("W1").tag == "W1"
     assert d.rack("A1").tag == "A1"
+
+
+def test_unused_outside_a_unit_raises_unless_the_device_is_an_untagged_accessory(
+    parts: Draft,
+) -> None:
+    with pytest.raises(AuthorError, match="needs a unit"):
+        design(parts).device("K1", "TEST-RLY-2CO", unused=True)
+    d = design(parts)
+    k1 = d.device("K1", "TEST-RLY-2CO")
+    with pytest.raises(AuthorError, match="needs a unit"):
+        d.device("K2", "TEST-RLY-2CO", parent=k1, unused=True)  # tagged: no accessory
+    d.device(None, "TEST-RLY-2CO", name="link", parent=k1, unused=True)  # untagged accessory

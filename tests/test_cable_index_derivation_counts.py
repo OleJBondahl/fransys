@@ -1,6 +1,6 @@
-"""Speed guard: `derive.reports`'s two cable indexes build once per digest.
+"""Speed guard: `derive.cable_cores`'s two cable indexes build once per digest.
 
-`_cable_products_by_part` (`derive/core_pairs.py`) and `_cores_by_cable` (`derive/reports.py`)
+`cable_products_by_part` (`derive/facts/cables.py`) and `_cores_by_cable` (`derive/cable_cores.py`)
 replace two per-call O(n) scans (`_product_colours`'s linear search over every
 `CableProductFacet`, and
 `cable_rows`'s per-call rebuild of `core_of` plus its scan of every conductor) with a
@@ -35,11 +35,11 @@ if str(_TESTS_DIR) not in sys.path:
 
 from scale_units_fixture import build_scale  # noqa: E402
 
-from fransys_model.derive.core_pairs import _cable_products_by_part  # noqa: E402
-from fransys_model.derive.reports import (  # noqa: E402
+from fransys_model.derive.cable_cores import (  # noqa: E402
     _cores_by_cable,
     cable_rows,
 )
+from fransys_model.derive.facts.cables import cable_products_by_part  # noqa: E402
 from fransys_model.vocab.facets.cable import CableFacet  # noqa: E402
 from fransys_model.vocab.tables import facets_of  # noqa: E402
 
@@ -49,7 +49,7 @@ if TYPE_CHECKING:
     from fransys_model.kernel import Id, Model
     from fransys_model.vocab.core import Item
 
-_TARGETS = (_cable_products_by_part, _cores_by_cable)
+_TARGETS = (cable_products_by_part, _cores_by_cable)
 
 
 def _cable_ids(model: Model) -> tuple[Id[Item], ...]:
@@ -97,7 +97,7 @@ def test_cable_indexes_build_once_per_digest_not_once_per_cable() -> None:
     model16 = build_scale(16).model
     counts8 = _sweep_counts(model8)
     counts16 = _sweep_counts(model16)
-    for name in ("_cable_products_by_part", "_cores_by_cable"):
+    for name in ("cable_products_by_part", "_cores_by_cable"):
         assert counts8[name] > 0, f"{name} never ran: the counter saw nothing"
         assert counts8[name] == 1, (
             f"{name} ran {counts8[name]} times at n=8: built once per digest, not once per cable"

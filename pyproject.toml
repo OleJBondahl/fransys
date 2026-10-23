@@ -7,31 +7,32 @@ dependencies = []
 
 [dependency-groups]
 dev = [
-    "hypothesis==6.170.0",
+    "hypothesis==6.170.8",
     "pytest==9.1.1",
     "pytest-cov==7.1.0",
     "pytest-testmon==2.2.0",
     "pytest-timeout==2.4.0",
     "pytest-xdist==3.8.0",
-    "ruff==0.17.1",
-    "ty==0.0.89",
+    "ruff==0.17.2",
+    "ty==0.0.91",
     "fonttools==4.67.0",
     "typst==0.15.0",
     "vulture==2.16",
-    "symdef==0.12.0",
+    "symdef==0.24.1",
     "electrical-symbols",
     "fransys-kernel",
     "fransys-model",
     "fransys-layout",
     "fransys",
     "demo-parts",
-    "pillow==12.3.0",
+    "pillow==13.0.0",
     "pypdfium2==5.14.0",
     "rust-just==1.59.0",
+    "ast-grep-cli==0.51.0",
 ]
 # experimental (like uv audit, decision 0052): in [tool.uv] default-groups so the landing gate runs the built-site tests
 site = [
-    "zensical==0.0.70",
+    "zensical==0.0.71",
 ]
 
 [tool.uv]
@@ -151,7 +152,7 @@ runtime-evaluated-decorators = [
 [tool.pytest.ini_options]
 testpaths = ["tests", "packages", "internal"]
 addopts = "-ra --strict-markers --import-mode=importlib"
-markers = ["wp(name): the work package that implements this acceptance test"]
+markers = ["wp(name): the work package that implements this acceptance test", "rule(id): the docs/rules.toml row this test holds (RR3)", "private_input: reads internal/ or rules/, skipped in the export (R462)"]
 # A hung test stops itself (decision 0222): 180 s is over 5x the slowest gate entry (34.43 s setup, 18.22 s slowest call).
 timeout = 180
 # The cap charges the test function only, so a module fixture's build is not charged; a hung fixture is not covered.
@@ -210,6 +211,6 @@ ignore_names = [
     "NEUTRAL", "CABINET_SCHEMATIC", "HARNESS_DRAWING", "PCB_SCHEMATIC", "COVER",
     "NOTES", "CONTENTS", "SCHEMATIC", "PLC_LIST", "TERMINAL_LIST",
     "CONNECTOR_LIST", "WIRE_LABEL_LIST", "DESIGNATION_LIST", "CABLE_LIST", "BOM",
-    "FREE", "CONTACT_IMAGE", "TERMINAL_ECHO", "CROSS_UNIT",
+    "CONTACT_IMAGE",
 ]
 ignore_decorators = ["@fact"]

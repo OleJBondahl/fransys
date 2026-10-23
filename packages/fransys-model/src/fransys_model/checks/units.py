@@ -1,37 +1,39 @@
 """Validator: a unit's boundary."""
 
-from typing import TYPE_CHECKING, Any, Final
+from typing import TYPE_CHECKING, Final
 
-from fransys_model.checks._natural_join import natural_join
+from fransys_model.checks._finding import finding, ordered
+from fransys_model.derive.facts.mates import unmatched_port_names
+from fransys_model.derive.facts.net_crossings import crossing_functions, net_crossings
 from fransys_model.derive.facts.roles import function_role
-from fransys_model.derive.facts.unit_index import boundary_unit, unit_index
+from fransys_model.derive.facts.unit_crossings import (
+    crossed_units,
+    crosses_out_of,
+    declared_owners,
+    ends,
+    function_gender,
+    open_boundaries,
+)
+from fransys_model.derive.facts.unit_index import boundary_owners, boundary_unit, unit_index
 from fransys_model.derive.facts.units import declared_unit
-from fransys_model.derive.facts.units import standalone as unit_standalone
-from fransys_model.derive.facts.units import units as unit_ids
-from fransys_model.kernel import Finding, Severity
-from fransys_model.vocab.enums import Gender
-from fransys_model.vocab.facets.connector import ConnectorFacet
+from fransys_model.kernel import Finding, Severity, natural_join
 from fransys_model.vocab.finding_ref import ref
 from fransys_model.vocab.tables import (
     boundaries,
     conductors,
-    facets_of,
     functions,
     items,
     mates,
+    nets,
     ports,
-    units,
     unused_boundaries,
 )
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
-
-    from fransys_model.kernel import Id, Model
-    from fransys_model.vocab.core import Function, Item, Unit
-    from fransys_model.vocab.units import UnusedBoundary
+    from fransys_model.kernel import Model
 
 BOUNDARY_UNCONNECTED: Final[str] = "BOUNDARY_UNCONNECTED"
+NET_ACROSS_UNIT_BOUNDARY: Final[str] = "NET_ACROSS_UNIT_BOUNDARY"
 UNIT_BOUNDARY_BYPASSED: Final[str] = "UNIT_BOUNDARY_BYPASSED"
 MATE_PORT_MISMATCH: Final[str] = "MATE_PORT_MISMATCH"
 CONNECTOR_WIRED_WITHOUT_MATE: Final[str] = "CONNECTOR_WIRED_WITHOUT_MATE"
@@ -39,240 +41,145 @@ UNUSED_CONTRADICTED: Final[str] = "UNUSED_CONTRADICTED"
 BOUNDARY_NOT_IN_UNIT: Final[str] = "BOUNDARY_NOT_IN_UNIT"
 MATE_NOT_CONNECTOR: Final[str] = "MATE_NOT_CONNECTOR"
 
-_GENDERED: Final = frozenset({Gender.MALE, Gender.FEMALE})
 
-
-def _finding(code: str, severity: Severity, subjects: Iterable[Id[Any]], message: str) -> Finding:
-    return Finding(code=code, severity=severity, subjects=tuple(subjects), message=message)
-
-
-class _Plant:
-    """The lookups every check shares, built once per model."""
-
-    def __init__(self, model: Model) -> None:
-        self.model = model
-        self.units = units(model)
-        self.items = items(model)
-        self.functions = functions(model)
-        self.ports = ports(model)
-        self.mates = mates(model)
-        self.conductors = conductors(model)
-        self.boundaries = boundaries(model)
-        self.unused = unused_boundaries(model)
-        self.all_units = unit_ids(model)
-        index = unit_index(model)
-        self.subtree_of = index.subtree_of
-        self.containing = index.containing
-        self.boundary_of = {unit: frozenset(found) for unit, found in index.boundary_of.items()}
-
-        names: dict[Id[Function], set[str]] = {}
-        for port in self.ports.values():
-            names.setdefault(port.function, set()).add(port.name)
-        self.port_names = names
-        facets = facets_of(model, ConnectorFacet)
-        gender_of = {facet.subject: facet.gender for facet in facets.values()}
-        self.gendered = {
-            function.id: gender
-            for function in self.functions.values()
-            if function.template is not None
-            and (gender := gender_of.get(function.template)) in _GENDERED
-        }
-
-        ends: list[tuple[Id[Function], Id[Item], Id[Item], Id[Any]]] = []
-        for conductor in self.conductors.values():
-            fn_a = self.ports[conductor.a].function
-            fn_b = self.ports[conductor.b].function
-            ends.extend(self._ends_of(fn_a, fn_b, conductor.id))
-        for mate in self.mates.values():
-            ends.extend(self._ends_of(mate.a, mate.b, mate.id))
-        self.ends = ends
-        self.ends_by_function: dict[Id[Function], list[tuple[Id[Item], Id[Item]]]] = {}
-        for function, item, other, _record in ends:
-            self.ends_by_function.setdefault(function, []).append((item, other))
-
-    def _ends_of(
-        self, fn_a: Id[Function], fn_b: Id[Function], record_id: Id[Any]
-    ) -> list[tuple[Id[Function], Id[Item], Id[Item], Id[Any]]]:
-        item_a, item_b = self.functions[fn_a].item, self.functions[fn_b].item
-        return [(fn_a, item_a, item_b, record_id), (fn_b, item_b, item_a, record_id)]
-
-    def item_unit(self, item: Id[Item]) -> Id[Unit] | None:
-        return declared_unit(self.items[item])
-
-    def crosses(self, subtree: frozenset[Id[Unit]], item: Id[Item], other: Id[Item]) -> bool:
-        """Whether an end on `item` crosses out of the unit whose subtree is `subtree`."""
-        return self.item_unit(item) in subtree and self.item_unit(other) not in subtree
-
-    def crosses_out_of(self, unit: Id[Unit], function: Id[Function]) -> bool:
-        """Whether at least one conductor or mate end on `function` crosses out of `unit`.
-
-        Declared `Net`s do not count: `self.ends` is built from conductors and mates only.
-        """
-        subtree = self.subtree_of[unit]
-        return any(
-            self.crosses(subtree, item, other)
-            for item, other in self.ends_by_function.get(function, ())
-        )
-
-
-def _offered_up(plant: _Plant, unit: Id[Unit], function: Id[Function]) -> bool:
-    """Whether a standalone unit enclosing `unit` holds `function` as its boundary (model-0184)."""
-    return any(
-        function in plant.boundary_of[outer] and unit_standalone(plant.model, outer)
-        for outer in plant.containing[unit] - {unit}
-    )
-
-
-def _boundary_unconnected(plant: _Plant) -> list[Finding]:
-    unused_functions = {unused.function for unused in plant.unused.values()}
+def _boundary_unconnected(model: Model) -> list[Finding]:
+    """A net that crosses the boundary has its own finding, `NET_ACROSS_UNIT_BOUNDARY`."""
+    carried = crossing_functions(model)
     found = []
-    for unit in plant.all_units:
-        if unit_standalone(plant.model, unit):
+    for unit, function in open_boundaries(model):
+        if function in carried:
             continue
-        for function in plant.boundary_of[unit]:
-            if plant.crosses_out_of(unit, function) or function in unused_functions:
-                continue
-            if _offered_up(plant, unit, function):
-                continue
-            message = (
-                f"boundary function {ref(function)} of "
-                f"{ref(unit)} is not connected across it and has no "
-                "declared UnusedBoundary"
-            )
-            found.append(_finding(BOUNDARY_UNCONNECTED, Severity.ERROR, (unit, function), message))
+        message = (
+            f"boundary function {ref(function)} of "
+            f"{ref(unit)} is not connected across it and has no "
+            "declared UnusedBoundary"
+        )
+        found.append(finding(BOUNDARY_UNCONNECTED, Severity.ERROR, (unit, function), message))
     return found
 
 
-def _unit_boundary_bypassed(plant: _Plant) -> list[Finding]:
+def _net_across_unit_boundary(model: Model) -> list[Finding]:
+    """One finding per net with pins in two units that no conductor or mate joins (layout-0322).
+
+    ERROR when a boundary pin of the net is joined across by nothing else, else WARNING.
+    """
+    open_functions = {function for _, function in open_boundaries(model)}
+    all_ports = ports(model)
     found = []
-    for function, item, other, record in plant.ends:
-        item_unit = plant.item_unit(item)
-        crossable = (
-            frozenset() if item_unit is None else plant.containing.get(item_unit, frozenset())
+    for net_id, held in net_crossings(model).items():
+        pins = natural_join(ref(all_ports[port]) for port in held)
+        net = nets(model)[net_id]
+        message = (
+            f"net {net.name or ref(net)} joins pins in different units ({pins}); "
+            "a net does not cross a unit boundary"
         )
-        for unit in crossable:
-            if not plant.crosses(plant.subtree_of[unit], item, other):
-                continue
-            if function in plant.boundary_of[unit]:
+        open_pin = any(all_ports[port].function in open_functions for port in held)
+        severity = Severity.ERROR if open_pin else Severity.WARNING
+        found.append(finding(NET_ACROSS_UNIT_BOUNDARY, severity, (net_id, *held), message))
+    return found
+
+
+def _unit_boundary_bypassed(model: Model) -> list[Finding]:
+    boundary_of = unit_index(model).boundary_of
+    found = []
+    for function, item, other, record in ends(model):
+        for unit in crossed_units(model, item, other):
+            if function in boundary_of[unit]:
                 continue
             message = (
                 f"function {ref(function)} crosses out of {ref(unit)} without being its boundary"
             )
-            found.append(
-                _finding(UNIT_BOUNDARY_BYPASSED, Severity.ERROR, (unit, function, record), message)
-            )
+            subjects = (unit, function, record)
+            found.append(finding(UNIT_BOUNDARY_BYPASSED, Severity.ERROR, subjects, message))
     return found
 
 
-def _mate_port_mismatch(plant: _Plant) -> list[Finding]:
+def _mate_port_mismatch(model: Model) -> list[Finding]:
     found = []
-    for mate in plant.mates.values():
-        names_a = plant.port_names.get(mate.a, set())
-        names_b = plant.port_names.get(mate.b, set())
-        if names_a == names_b:
+    for mate in mates(model).values():
+        unmatched = unmatched_port_names(model, mate.id)
+        if not unmatched:
             continue
-        unmatched = natural_join(names_a ^ names_b)
-        message = f"mate {ref(mate)} joins ports named {unmatched} that have no match"
+        message = f"mate {ref(mate)} joins ports named {natural_join(unmatched)} that have no match"
         found.append(
-            _finding(MATE_PORT_MISMATCH, Severity.WARNING, (mate.id, mate.a, mate.b), message)
+            finding(MATE_PORT_MISMATCH, Severity.WARNING, (mate.id, mate.a, mate.b), message)
         )
     return found
 
 
-def _mate_not_connector(plant: _Plant) -> list[Finding]:
+def _mate_not_connector(model: Model) -> list[Finding]:
     found = []
-    for mate in plant.mates.values():
+    for mate in mates(model).values():
         for end in (mate.a, mate.b):
-            function = plant.functions[end]
-            role = function_role(plant.model, end)
+            function = functions(model)[end]
+            role = function_role(model, end)
             if role.terminal or role.pin_group:
                 continue
             message = (
                 f"mate {ref(mate)} has end {ref(function)} of kind "
                 f"{function.kind.value}, not connector or terminal"
             )
-            found.append(_finding(MATE_NOT_CONNECTOR, Severity.ERROR, (mate.id, end), message))
+            found.append(finding(MATE_NOT_CONNECTOR, Severity.ERROR, (mate.id, end), message))
     return found
 
 
-def _connector_wired_without_mate(plant: _Plant) -> list[Finding]:
+def _connector_wired_without_mate(model: Model) -> list[Finding]:
+    boundary_of = unit_index(model).boundary_of
+    wires = conductors(model)
     found = []
-    for function, item, other, record in plant.ends:
-        if record not in plant.conductors or function not in plant.gendered:
+    for function, item, other, record in ends(model):
+        gender = function_gender(model, function)
+        if record not in wires or gender is None:
             continue
-        item_unit = plant.item_unit(item)
-        if item_unit is None:
-            continue
-        for unit in plant.containing.get(item_unit, frozenset()):
-            if function not in plant.boundary_of[unit]:
-                continue
-            if not plant.crosses(plant.subtree_of[unit], item, other):
+        for unit in crossed_units(model, item, other):
+            if function not in boundary_of[unit]:
                 continue
             message = (
                 f"a conductor lands directly on {ref(function)}, the "
-                f"{plant.gendered[function].value} boundary connector of "
+                f"{gender.value} boundary connector of "
                 f"{ref(unit)}; wire a mating plug and mate it instead"
             )
             subjects = (unit, function, record)
-            found.append(
-                _finding(CONNECTOR_WIRED_WITHOUT_MATE, Severity.WARNING, subjects, message)
-            )
+            found.append(finding(CONNECTOR_WIRED_WITHOUT_MATE, Severity.WARNING, subjects, message))
     return found
 
 
-def _declared_at(plant: _Plant, unused: UnusedBoundary, owners: list[Id[Unit]]) -> list[Id[Unit]]:
-    """The owners of the function whose instance carries the declaration (model-0210).
-
-    The key is the declaring scope's path, then `unused_boundary`, then the function. An owner
-    counts when its instance path is that scope or a direct child of it; none does: all owners.
-    """
-    scope = unused.key[:-2]
-    near = [
-        unit
-        for unit in owners
-        if plant.units[unit].key[: len(scope)] == scope
-        and len(plant.units[unit].key) - 1 <= len(scope) + 1
-    ]
-    return near or owners
-
-
-def _unused_contradicted(plant: _Plant) -> list[Finding]:
-    boundary_units_of: dict[Id[Function], list[Id[Unit]]] = {}
-    for boundary in plant.boundaries.values():
-        boundary_units_of.setdefault(boundary.function, []).append(
-            boundary_unit(plant.model, boundary.id)
-        )
+def _unused_contradicted(model: Model) -> list[Finding]:
+    owners_of = boundary_owners(model)
+    wired = {function for function, *_ in ends(model)}
     found = []
-    for unused in plant.unused.values():
+    for unused in unused_boundaries(model).values():
         function = unused.function
-        owners = boundary_units_of.get(function, [])
+        owners = list(owners_of.get(function, ()))
         if not owners:
-            message = f"UnusedBoundary names {ref(function)}, which is the boundary of no unit"
-            found.append(_finding(UNUSED_CONTRADICTED, Severity.WARNING, (function,), message))
+            if function in wired:
+                message = f"UnusedBoundary names {ref(function)}, which is wired, so not unused"
+                found.append(finding(UNUSED_CONTRADICTED, Severity.WARNING, (function,), message))
             continue
-        for unit in _declared_at(plant, unused, owners):
-            if not plant.crosses_out_of(unit, function):
+        for unit in declared_owners(model, unused, owners):
+            if not crosses_out_of(model, unit, function):
                 continue
             message = (
                 f"UnusedBoundary names {ref(function)}, which is "
                 f"connected across {ref(unit)} it is a boundary of"
             )
-            found.append(_finding(UNUSED_CONTRADICTED, Severity.WARNING, (unit, function), message))
+            found.append(finding(UNUSED_CONTRADICTED, Severity.WARNING, (unit, function), message))
     return found
 
 
-def _boundary_membership(plant: _Plant) -> list[Finding]:
+def _boundary_membership(model: Model) -> list[Finding]:
+    subtree_of = unit_index(model).subtree_of
     found = []
-    for boundary in plant.boundaries.values():
-        function = plant.functions[boundary.function]
-        item_unit = declared_unit(plant.items[function.item])
-        unit = boundary_unit(plant.model, boundary.id)
-        if item_unit not in plant.subtree_of[unit]:
+    for record in boundaries(model).values():
+        function = functions(model)[record.function]
+        unit = boundary_unit(model, record.id)
+        if declared_unit(items(model)[function.item]) not in subtree_of[unit]:
             message = (
                 f"boundary function {ref(function)}'s item does not belong to {ref(unit)}'s subtree"
             )
-            subjects = (unit, boundary.function)
-            found.append(_finding(BOUNDARY_NOT_IN_UNIT, Severity.ERROR, subjects, message))
+            found.append(
+                finding(BOUNDARY_NOT_IN_UNIT, Severity.ERROR, (unit, record.function), message)
+            )
     return found
 
 
@@ -282,14 +189,15 @@ def check_units(model: Model) -> tuple[Finding, ...]:
     `ERROR`: the boundary codes `BOUNDARY_UNCONNECTED`, `UNIT_BOUNDARY_BYPASSED`,
     `BOUNDARY_NOT_IN_UNIT`, and `MATE_NOT_CONNECTOR`; the others `WARNING`. Sorted by code.
     """
-    plant = _Plant(model)
-    found = [
-        *_boundary_unconnected(plant),
-        *_unit_boundary_bypassed(plant),
-        *_mate_port_mismatch(plant),
-        *_mate_not_connector(plant),
-        *_connector_wired_without_mate(plant),
-        *_unused_contradicted(plant),
-        *_boundary_membership(plant),
-    ]
-    return tuple(sorted(found, key=lambda f: (f.code, f.subjects, f.message)))
+    return ordered(
+        [
+            *_boundary_unconnected(model),
+            *_net_across_unit_boundary(model),
+            *_unit_boundary_bypassed(model),
+            *_mate_port_mismatch(model),
+            *_mate_not_connector(model),
+            *_connector_wired_without_mate(model),
+            *_unused_contradicted(model),
+            *_boundary_membership(model),
+        ]
+    )

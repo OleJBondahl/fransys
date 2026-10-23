@@ -15,13 +15,12 @@ lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.aspects import AspectNode
 lazy from fransys_model.vocab.core import Item, Unit
 
-from .designation import own_nodes
 from .lookups import effective_placement
 from .order import natural_key
 from .overview_levels import level_box
 from .overview_names import node_lines
 from .rows_overview import FoldBox
-from .unit_nodes import chain_up
+from .unit_nodes import chain_up, own_nodes
 lazy from .rows import OverviewBox
 
 __all__ = [

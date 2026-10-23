@@ -20,3 +20,9 @@ CLOCKWISE: tuple[Side, ...] = tuple(SIDE_STEP)
 def opposite(side: Side) -> Side:
     """The side across: N and S, E and W."""
     return CLOCKWISE[(CLOCKWISE.index(side) + 2) % 4]
+
+
+def step_out(side: Side, x: int, y: int, length: int) -> tuple[int, int]:
+    """The point `length` out from (x, y) along `side`: a stub's end, a marker box's stand."""
+    dx, dy = SIDE_STEP[side]
+    return x + dx * length, y + dy * length

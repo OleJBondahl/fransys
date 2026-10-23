@@ -2,12 +2,11 @@
 
 from typing import TYPE_CHECKING
 
+from fransys_author._earth_net import earth_net
 from fransys_author._keys import scoped
 from fransys_author._origin import caller_origin
 from fransys_author.errors import AuthorError
 from fransys_author.surface._ends import Parallel
-from fransys_model.kernel import make_id
-from fransys_model.vocab import Net, NetClass
 
 if TYPE_CHECKING:
     from fransys_author.handles import Port
@@ -42,13 +41,5 @@ def refuse_carried(design: Design | None, ports: tuple[Port, ...]) -> None:
 
 def earth_pin(design: Design, port: Port) -> None:
     """Join `port` to the `PE` net alone, as `d.earth` does (PE-BAR B0); one net per pin."""
-    key = scoped(port.key, "pe")
-    net = Net(
-        id=make_id(Net, key),
-        key=key,
-        name="PE",
-        net_class=NetClass.PE,
-        ports=(port.id,),
-        potential=None,
-    )
+    net = earth_net(scoped(port.key, "pe"), (port.id,))
     design._engine._design._add(net, caller_origin())

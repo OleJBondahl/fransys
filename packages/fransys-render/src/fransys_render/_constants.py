@@ -3,7 +3,6 @@
 # How far the arrow's point is pulled in from the box's two near-edge corners, along the
 # facing axis (render's own choice, unpinned by the spec): small relative to the box so the
 # point reads as a spike, not a wedge.
-MARKER_ARROW_DEPTH_G = 3
 
 # A diagram box's text and tab margins, in G. They equal the layout engine's `TEXT_PAD`,
 # `TEXT_LEAD` and `TAB_PAD` (diagram/sizes.py): render imports no layout constant (render-0009),

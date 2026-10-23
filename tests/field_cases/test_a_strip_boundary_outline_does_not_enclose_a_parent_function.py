@@ -15,10 +15,10 @@ from pathlib import Path
 from typing import Any, NamedTuple
 
 import fransys as fr
+from _drawn_pages import drawn_pages
 
 from fransys_layout.geometry import Box, overlaps, translate
 from fransys_layout.geometry.symbols import generic_box_geometry
-from fransys_model.layout import Label, Outline, SymbolPlacement, layout_of
 
 _UNIT: dict[str, Any] = {
     "revision": 1,
@@ -60,20 +60,18 @@ def _built() -> fr.BuildResult:
 
 
 def test_no_parent_function_is_drawn_inside_the_unit_outline() -> None:
-    model = _built().model
-    outlines = list(layout_of(model, Outline).values())
-    assert len(outlines) == 2  # the foreign lamp splits the unit's pins: one outline per run
-    (page,) = {one.page for one in outlines}
+    drawings = list(drawn_pages(_built().model).values())
+    placed = [(drawing, one) for drawing in drawings for one in drawing.outlines]
+    assert len(placed) == 2  # the foreign lamp splits the unit's pins: one outline per run
+    assert len({id(drawing) for drawing, _ in placed}) == 1
+    (drawing,) = {d for d, _ in placed}
     # both outlines are the same unit and each prints its title
-    titles = [lb for lb in layout_of(model, Label).values() if lb.slot == "outline_title"]
-    assert len([lb for lb in titles if lb.page == page]) == 2
+    assert len([one for _, one in placed if one.label is not None]) == 2
     # the lamp is the page's one function drawn as a plain two-pin box: the parent's own
-    lamps = [
-        one
-        for one in layout_of(model, SymbolPlacement).values()
-        if one.page == page and one.symbol == "generic-box" and not one.ports
-    ]
+    lamps = [one for one in drawing.symbols if one.key == "generic-box" and not one.texts]
     assert len(lamps) == 1
     body = translate(generic_box_geometry(("1", "2")).body, dx=lamps[0].x, dy=lamps[0].y)
-    for one in outlines:
-        assert not overlaps(Box(x=one.x, y=one.y, width=one.width, height=one.height), body)
+    for _, one in placed:
+        xs, ys = [x for x, _ in one.points], [y for _, y in one.points]
+        box = Box(x=min(xs), y=min(ys), width=max(xs) - min(xs), height=max(ys) - min(ys))
+        assert not overlaps(box, body)

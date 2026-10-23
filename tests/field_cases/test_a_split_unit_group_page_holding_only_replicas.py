@@ -26,14 +26,16 @@ import tempfile
 from functools import cache
 from itertools import pairwise
 from pathlib import Path
-from typing import Any, NamedTuple
+from typing import TYPE_CHECKING, Any, NamedTuple
 
 import fransys as fr
 import fransys_parts
+from _drawn_pages import drawn_pages
 
-from fransys_model import derive
 from fransys_model.kernel import merge
-from fransys_model.layout import ConnectorBox, Outline, Route, SymbolPlacement, layout_of
+
+if TYPE_CHECKING:
+    from fransys_layout.drawing import Drawing, DrawnOutline
 
 _PART = """schema = 1
 
@@ -198,19 +200,30 @@ def _built_ctr() -> fr.BuildResult:
     return _build(_top_ctr, "fld-top-ctr")
 
 
+def _plug_pages(model: Any) -> set[Any]:
+    """The pages that draw a harness line (a trunk wire): the pages that hold the plug."""
+    return {
+        page
+        for page, drawing in drawn_pages(model).items()
+        if any(wire.style == "trunk" for wire in drawing.wires)
+    }
+
+
+def _outlines(model: Any) -> list[tuple[Any, DrawnOutline]]:
+    """Every drawn outline with its page; the board is the one unit that draws any."""
+    return [(page, one) for page, drawing in drawn_pages(model).items() for one in drawing.outlines]
+
+
 def test_the_original_input_with_a_contactor_is_cut_and_builds() -> None:
     built = _built_ctr()
     assert [f.code for f in built.findings if f.severity.name == "ERROR"] == []
     assert "OUT_OF_CONTENT_BOX" not in {f.code for f in built.findings}
-    model = built.model
-    board = next(
-        u for u in derive.units(model) if derive.unit_release(model, u).name == "fld-board"
-    )
-    outlines = [o for o in layout_of(model, Outline).values() if o.unit == board]
-    plug_pages = {b.page for b in layout_of(model, ConnectorBox).values()}
+    outlines = _outlines(built.model)
     assert len(outlines) == 2
-    assert {o.y for o in outlines} == {outlines[0].y}
-    assert {o.page for o in outlines} <= plug_pages
+    assert {min(y for _, y in one.points) for _, one in outlines} == {
+        min(y for _, y in outlines[0][1].points)
+    }
+    assert {page for page, _ in outlines} <= _plug_pages(built.model)
 
 
 def test_the_build_finishes_with_no_error() -> None:
@@ -220,30 +233,22 @@ def test_the_build_finishes_with_no_error() -> None:
 
 def test_the_boards_outline_draws_on_both_pages_with_its_plug() -> None:
     model = _built().model
-    board = next(
-        u for u in derive.units(model) if derive.unit_release(model, u).name == "fld-board"
-    )
-    pages = {o.page for o in layout_of(model, Outline).values() if o.unit == board}
+    pages = {page for page, _ in _outlines(model)}
     assert len(pages) == 2
-    plug_pages = {b.page for b in layout_of(model, ConnectorBox).values()}
-    assert pages & plug_pages
+    assert pages & _plug_pages(model)
 
 
-def _replica_only_page() -> tuple[Outline, Any]:
+def _replica_only_page() -> tuple[DrawnOutline, Drawing]:
     model = _built().model
-    plug_pages = {b.page for b in layout_of(model, ConnectorBox).values()}
-    outline = next(o for o in layout_of(model, Outline).values() if o.page not in plug_pages)
-    return outline, model
+    plug_pages = _plug_pages(model)
+    page, outline = next((p, o) for p, o in _outlines(model) if p not in plug_pages)
+    return outline, drawn_pages(model)[page]
 
 
 def _pins_left_to_right(tag: str) -> list[str]:
-    """The pin names of device `tag`'s placements on the replica-only page, by x."""
-    outline, model = _replica_only_page()
-    found = [
-        (p.x, p.key[-1])
-        for p in layout_of(model, SymbolPlacement).values()
-        if p.page == outline.page and tag in p.key
-    ]
+    """The pin names of device `tag`'s tags on the replica-only page, by x."""
+    _, drawing = _replica_only_page()
+    found = [(t.box.x, t.text.rsplit(":", 1)[-1]) for t in drawing.texts if f"-{tag}:" in t.text]
     return [pin for _, pin in sorted(found)]
 
 
@@ -258,24 +263,23 @@ def test_the_far_pins_run_in_pin_order() -> None:
     assert _pins_left_to_right("Z2") == _NATURAL
 
 
-def _inside(a: tuple[int, int], b: tuple[int, int], box: Outline) -> bool:
+def _inside(a: tuple[int, int], b: tuple[int, int], box: DrawnOutline) -> bool:
     """Whether the segment a-b has a piece strictly inside the box's open rectangle."""
     (x0, y0), (x1, y1) = a, b
-    left, right, top, bottom = box.x, box.x + box.width, box.y, box.y + box.height
+    left, right = min(x for x, _ in box.points), max(x for x, _ in box.points)
+    top, bottom = min(y for _, y in box.points), max(y for _, y in box.points)
     if x0 == x1:
         return left < x0 < right and min(y0, y1) < bottom and max(y0, y1) > top
     return top < y0 < bottom and min(x0, x1) < right and max(x0, x1) > left
 
 
 def _wires_inside_the_outline() -> list[tuple[Any, ...]]:
-    """Each route segment inside the outline other than the one stub down from its replica."""
-    outline, model = _replica_only_page()
-    bottom = outline.y + outline.height
+    """Each wire segment inside the outline other than the one stub down from its replica."""
+    outline, drawing = _replica_only_page()
+    bottom = max(y for _, y in outline.points)
     bad = []
-    for route in layout_of(model, Route).values():
-        if route.page != outline.page:
-            continue
-        pts = [(p.x, p.y) for p in route.points]
+    for wire in drawing.wires:
+        pts = list(wire.points)
         ends = {0: (pts[0], pts[1]), len(pts) - 2: (pts[-1], pts[-2])}
         for i, (a, b) in enumerate(pairwise(pts)):
             if not _inside(a, b, outline):
@@ -283,7 +287,7 @@ def _wires_inside_the_outline() -> list[tuple[Any, ...]]:
             at_replica = i in ends and a[0] == b[0] and max(a[1], b[1]) >= bottom > min(a[1], b[1])
             if at_replica and ends[i][0][1] < bottom:
                 continue
-            bad.append((route.key[-1], a, b))
+            bad.append((wire.id, a, b))
     return bad
 
 

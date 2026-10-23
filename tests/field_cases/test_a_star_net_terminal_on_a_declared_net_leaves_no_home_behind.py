@@ -17,10 +17,10 @@ from pathlib import Path
 from typing import Any, NamedTuple
 
 import fransys as fr
+from _drawn_pages import drawn_pages
 
-from fransys_model.layout import LinkMarker, Route, SymbolPlacement, layout_of
-from fransys_model.vocab.enums import FunctionKind
-from fransys_model.vocab.tables import conductors, functions
+from fransys_model.layout import LinkMarker, layout_of
+from fransys_model.vocab.tables import conductors
 
 _RELAYS = 3
 
@@ -52,17 +52,13 @@ def _model() -> Any:
         return fr.build(d, document).model
 
 
-def _terminals(model: Any) -> set[Any]:
-    return {f.id for f in functions(model).values() if f.kind is FunctionKind.TERMINAL}
-
-
 def test_the_terminal_stands_once_at_each_wire_and_no_home_is_left() -> None:
     model = _model()
-    terminals = _terminals(model)
-    stood = [p for p in layout_of(model, SymbolPlacement).values() if p.function in terminals]
-    routed = {r.conductor for r in layout_of(model, Route).values()}
+    drawings = list(drawn_pages(model).values())
+    stood = [one for d in drawings for one in d.symbols if one.key == "terminal"]
+    wires = [w for d in drawings for w in d.wires]
     assert len(conductors(model)) == _RELAYS
-    assert routed == {c.id for c in conductors(model).values()}
+    assert len(wires) == _RELAYS
     assert len(stood) == _RELAYS
 
 

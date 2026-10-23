@@ -206,6 +206,20 @@ class SideHint:
             raise SchemaError(msg, kind="layout.side_hint", record_id=holder_of(self))
 
 
+@record(kind="layout.pins_below", subject="function", unique=True)
+class PinsBelowHint:
+    """Draw every pin of this generic box on its south side, whatever the other rules say.
+
+    Example: a 16-channel output card hinted this way hangs all its channels below the body.
+    The layout engine's box rules (rank split, halves) give way to it. At most one per function.
+    """
+
+    id: Id[PinsBelowHint]
+    key: AuthoringKey
+    function: Id[Function]
+    ext: frozendict[str, Value] = frozendict()
+
+
 @record(kind="layout.page_title")
 class PageTitle:
     """The title every drawing page that draws this block, function or device prints.

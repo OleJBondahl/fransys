@@ -1,10 +1,5 @@
 """Layout engines for Fransys: geometry <- stages <- lint <- engines."""
 
-from .engines import page_readability
-from .engines.cable import lay_out_cables
-from .engines.diagram import lay_out_diagrams
-from .engines.overview import lay_out_overview
-from .engines.schematic import lay_out_schematic
 from .geometry import (
     Facing,
     HintError,
@@ -13,9 +8,11 @@ from .geometry import (
     generic_box_geometry,
     symbol_geometry,
 )
-from .lint.codes import FINDING_CODES
-from .options import LayoutOptions
-from .stages.texts.candidates import Side, TextKind, TextPlacement
+from .options import LayoutOptions, Side, TextKind, TextPlacement
+lazy from .engines.cable import lay_out_cables
+lazy from .engines.diagram import lay_out_diagrams
+lazy from .engines.overview import lay_out_overview
+lazy from .lint.codes import FINDING_CODES
 
 __all__ = (
     "FINDING_CODES",
@@ -31,7 +28,5 @@ __all__ = (
     "lay_out_cables",
     "lay_out_diagrams",
     "lay_out_overview",
-    "lay_out_schematic",
-    "page_readability",
     "symbol_geometry",
 )

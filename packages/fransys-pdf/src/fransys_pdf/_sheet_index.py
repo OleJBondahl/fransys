@@ -11,7 +11,7 @@ from fransys_model.derive import SheetKey, field_printed, sheet_index_rows
 from fransys_model.vocab import PageKind
 
 from ._background import physical_page, sheet_of
-from ._flow import GUTTER_PCT, SHARE_PCT, flow_columns
+from ._flow import flow_columns
 from ._sizes import RULE, sizes_of
 from ._typst import literal
 
@@ -24,11 +24,14 @@ if TYPE_CHECKING:
 _COLUMNS = ("Sheet", "Title", "Page")
 
 
-def sheet_index_page(
+def sheet_index_page(  # noqa: PLR0913 -- the page's inputs, plus the two list-share values the facade passes
     model: Model,
     record: DocumentRow,
     kinds: tuple[PageKind, ...],
     sheets: Mapping[SheetKey, SheetBackground],
+    *,
+    share_pct: float,
+    gutter_pct: float,
 ) -> str:
     """The two-column index table, `""` for fewer than two sheets (empty-list rule)."""
     rows = sheet_index_rows(model, record.id, kinds)
@@ -47,4 +50,4 @@ def sheet_index_page(
         shown = (f"text({literal(row.sheet)})", f"text({literal(title)})", page)
         cells.extend(f"link(<{row.destination}>, {cell})" for cell in shown)
     table = f"#table(columns: (auto, 1fr, auto), stroke: {RULE}, " + ", ".join(cells) + ")"
-    return flow_columns([table], share_pct=SHARE_PCT, gutter_pct=GUTTER_PCT)
+    return flow_columns([table], share_pct=share_pct, gutter_pct=gutter_pct)

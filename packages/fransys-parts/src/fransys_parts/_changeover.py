@@ -4,13 +4,17 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from fransys_model.vocab import THROWS, PortRole
+
 from . import _toml
 
 if TYPE_CHECKING:
     from fransys_model.kernel import Finding
 
-_THROW_ROLES: frozenset[str] = frozenset({"common", "break", "make"})
-_CHANGEOVER_PAIRS: tuple[set[str], ...] = ({"common", "break"}, {"common", "make"})
+_COMMONS = [role.value for role in PortRole if THROWS[role].common]
+_THROWS = [role.value for role in PortRole if THROWS[role].throw]
+_THROW_ROLES: frozenset[str] = frozenset(_COMMONS + _THROWS)
+_CHANGEOVER_PAIRS: tuple[set[str], ...] = tuple({c, t} for c in _COMMONS for t in _THROWS)
 
 
 def check(entry: _toml.Table, path: str, line: int) -> list[Finding]:

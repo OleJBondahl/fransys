@@ -1,8 +1,10 @@
 """Kernel draft: the mutable collector of records (design/kernel-model.md 5.5)."""
 
+from itertools import groupby
 from typing import Any
 lazy from collections.abc import Iterable
 
+from .checks import kind_of
 from .errors import MergeConflict, SchemaError
 from .ids import Id
 lazy from .ids import AuthoringKey
@@ -81,6 +83,23 @@ class Draft:
     def records(self) -> tuple[Record, ...]:
         """Every record, sorted by id."""
         return tuple(sorted(self._records.values(), key=lambda record: record.id))
+
+    def tables(self) -> frozendict[str, frozendict[Id[Record], Record]]:
+        """The records added so far as `kind -> id -> record`, laid out as `Model.tables` is.
+
+        A read-only snapshot, later `add` calls do not reach it. It is not a freeze: aliases are
+        not applied, no reference or schema is checked, nothing is hashed, and it yields no
+        `Model`. A fact over it (any object with this `tables`, built uncached) is right only
+        where the records it reads are complete. Excluded: a fact that reads an alias, and one
+        that reads a kind the draft does not hold, such as a catalogue `PortTemplate`,
+        `InternalLink` or `Part` that only the facade merges in.
+        """
+        return frozendict(
+            {
+                kind: frozendict({record.id: record for record in group})
+                for kind, group in groupby(self.records(), key=kind_of)
+            }
+        )
 
     def origins(self) -> frozendict[Id[Any], Origin]:
         """Where each record was authored."""

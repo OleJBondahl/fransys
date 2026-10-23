@@ -4,20 +4,20 @@ A path that ends at the module gives an input, a path that starts at it an outpu
 from the request on a function of the path, else from the module's only kind for that direction.
 """
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from fransys_author.errors import AuthorError
 from fransys_author.surface._device import Device
 from fransys_author.surface._ends import Parallel
 from fransys_author.surface._handles import Fn
-from fransys_model.derive import signal_kind
+from fransys_model.derive import channel_takes, plc_channel_tie, signal_kind
 lazy from fransys_model.vocab import SignalType
 
 if TYPE_CHECKING:
     from fransys_author.handles import Fn as EngineFn
     from fransys_author.surface._pairing import PartFacts
     from fransys_model.kernel import Id
-    from fransys_model.vocab import Function, PlcRequestFacet
+    from fransys_model.vocab import Function, PlcChannelFacet, PlcRequestFacet
 
     from .design import Design
 
@@ -25,14 +25,14 @@ _INPUTS = ("digital_in", "analogue_in")
 _SHORT = {"di": "DI", "do": "DO", "ai_current": "AI", "ao_current": "AO"}
 
 
-def _channels(facts: PartFacts, device: Device) -> list[tuple[SignalType, int, EngineFn]]:
-    """The channel functions of `device` as (signal, number, function), in channel order."""
+def _channels(facts: PartFacts, device: Device) -> list[tuple[PlcChannelFacet, EngineFn]]:
+    """The channel functions of `device` as (facts, function), in `plc_channel_tie` order."""
     found = []
     for fn in device._item.functions:
         facet = facts.channel(fn)
         if facet is not None:
-            found.append((facet.signal, facet.channel, fn))
-    return sorted(found, key=lambda c: (c[0].value, c[1], c[2].id))
+            found.append((facet, fn))
+    return sorted(found, key=lambda c: plc_channel_tie(c[0].channel, cast("Function", c[1])))
 
 
 def _spell(signal: SignalType) -> str:
@@ -85,12 +85,12 @@ def _take(design: Design, device: Device, elements: tuple[object, ...], index: i
     every = _channels(facts, device)
     inward = index != 0
     kinds = sorted(
-        {s for s, _, _ in every if (signal_kind(s).value in _INPUTS) == inward},
+        {c.signal for c, _ in every if (signal_kind(c.signal).value in _INPUTS) == inward},
         key=lambda s: s.value,
     )
     way = "input" if inward else "output"
     signal = _kind(device._label, way, kinds, _requested(elements, index, facts.requests()))
-    free = [fn for s, _, fn in every if s is signal and fn.id not in design._taken_channels]
+    free = [f for c, f in every if channel_takes(c, signal) and f.id not in design._taken_channels]
     if not free:
         msg = f"every {signal.value} channel of {device._label} is taken: use another module"
         raise AuthorError(msg)

@@ -11,8 +11,7 @@ Fixing decisions: parts-0020 (`[part] operated_by`), model-0222 (the holder's op
 blocks under a stating head print its designation) and layout-0220 (a switch draws by its
 operator). Invented parts from `demo_parts`: `DEMO-HEAD-ESTOP`, `DEMO-BLOCK-1NC` and
 `DEMO-BLOCK-1NC-21`.
-The drawn symbol is a layout record, read through `fransys_model.layout` as
-`test_add_on_block_carries_device_designation.py` does; the public API has no reader for it.
+The drawn symbols are read from the core path's page Drawings (`drawn_pages`).
 """
 
 import csv
@@ -20,11 +19,9 @@ import io
 from typing import TYPE_CHECKING
 
 import fransys as fr
+from _drawn_pages import drawn_pages
 from _model_build_cover import cabinet_document
 from fransys.colours import BU
-
-from fransys_model.layout import SymbolPlacement, layout_of
-from fransys_model.vocab.tables import functions
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -53,15 +50,16 @@ def _design() -> tuple[fr.Design, object, fr.Device, fr.Device]:
 
 def test_the_lead_block_draws_the_emergency_stop_and_the_other_its_contact() -> None:
     """ACTUATOR-ONCE (layout-0237): one mushroom, at 11-12; 21-22 keeps its positive opening."""
-    d, cabinet, first, second = _design()
+    d, cabinet, _, _ = _design()
     model = fr.build(d, cabinet_document(cabinet)).model
-    blocks = {first.id, second.id}
-    drawn = [
-        p.symbol
-        for p in layout_of(model, SymbolPlacement).values()
-        if p.function and functions(model)[p.function].item in blocks
-    ]
-    assert drawn == ["emergency-stop", "break-contact-positive-opening"]
+    pins = {"11", "21"}  # each block's first pin, the marking on its drawn symbol
+    drawn = {
+        dict(symbol.slots)["marking.in"]: symbol.key
+        for drawing in drawn_pages(model).values()
+        for symbol in drawing.symbols
+        if dict(symbol.slots).get("marking.in") in pins
+    }
+    assert drawn == {"11": "emergency-stop", "21": "break-contact-positive-opening"}
 
 
 def test_the_wire_list_prints_the_heads_designation_on_both_blocks(tmp_path: Path) -> None:

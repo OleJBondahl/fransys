@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import pytest
+from options_fixtures import core_options
 
-from fransys_layout.core import Options, natural_key
+from fransys_layout.core import natural_key
 from fransys_layout.core.constraints import Graph
 from fransys_layout.core.place_levels import EXACT_LIMIT, Span, trunk_levels
 from fransys_layout.core.place_trunk import trunk_node
@@ -29,7 +30,17 @@ def levels(spelled: dict[str, str]) -> list[str]:
     g = Graph()
     for s in spans:
         g.add(trunk_node(s.fan, 0))
-    trunk_levels(g, spans, Options())
+    trunk_levels(
+        g,
+        spans,
+        core_options(
+            flip_turn="R180",
+            tag_stagger=True,
+            label_gap=8,
+            driver_first=True,
+            arrow_sides=("E", "W"),
+        ),
+    )
     y = g.solve()
     assert y is not None
     return sorted((s.fan for s in spans), key=lambda f: y[trunk_node(f, 0)])

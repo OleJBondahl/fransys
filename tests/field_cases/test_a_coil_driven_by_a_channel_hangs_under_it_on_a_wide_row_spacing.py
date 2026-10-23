@@ -16,21 +16,27 @@ a column too tall for its sheet continues as the next column (LC1, layout-0215).
 import tempfile
 from functools import cache
 from pathlib import Path
+from typing import Any
 
 import fransys as fr
 from fransys.colours import BU
-from fransys_el import OPTIONS
 
-from fransys_layout.engines.schematic.engine import stage_results
-from fransys_layout.engines.schematic.read import read_inputs
+from fransys_model.layout import LinkMarker, layout_of
 from fransys_model.vocab.tables import functions, items, ports
+
+
+def _gap(model, fact: str):
+    """A fact the page Drawing lacks (strict xfail, GAP-FLIP-DRAWING-SUBJECT)."""
+    msg = f"GAP-FLIP-DRAWING-SUBJECT: no {fact} for {model.digest}"
+    raise AssertionError(msg)
+
 
 COUNT = 6
 PINS = tuple(f"CH{j:02d}-" for j in range(1, COUNT + 1))
 
 
 @cache
-def _built() -> tuple:
+def _built() -> Any:
     d = fr.design("demo_parts", place="CAB")
     cab = d.location("CAB", "Cabinet")
     d.layout.profile(hide_unused_pins=True, column_gap=4, row_spacing=400)
@@ -51,9 +57,7 @@ def _built() -> tuple:
     cover = Path(tempfile.mkdtemp()) / "cover.md"
     cover.write_text("# Cabinet\n", encoding="utf-8")
     doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover)
-    model = fr.build(d, doc).model
-    results, _ = stage_results(model, read_inputs(model, options=OPTIONS))
-    return model, results.layout
+    return fr.build(d, doc).model
 
 
 def _tagged(model) -> dict:
@@ -62,26 +66,27 @@ def _tagged(model) -> dict:
     return {f.id: (tag_of[f.item], f.name) for f in functions(model).values()}
 
 
-def _port_x(placed, port: str) -> int:
-    (geometry,) = (g for g in placed.geometry.ports if g.name == port)
-    return placed.at.x + geometry.at.x
+def _drawn(model) -> dict:
+    """Each drawn symbol by its owner text `<tag> function:<id>`."""
+    return {one.owner: one for one in _gap(model, "symbol subject").values()}
 
 
 def test_every_coil_stands_under_its_channel_pin() -> None:
-    model, layout = _built()
+    model = _built()
     named = _tagged(model)
-    (box,) = (p for p in layout.placed if named.get(p.function, ("", ""))[0] == "A1")
+    drawn = _drawn(model)
+    (box,) = (s for s in drawn.values() if s.key == "generic-box" and s.owner.startswith("A1 "))
     coil_of = {
-        named[p.function][0]: p
-        for p in layout.placed
-        if named.get(p.function, ("",) * 2)[1] == "coil"
+        named[f][0]: drawn[f"{named[f][0]} function:{f.value}"]
+        for f in named
+        if named[f][1] == "coil"
     }
     for i, pin in enumerate(PINS, start=1):
         coil = coil_of[f"K{i}"]
-        assert (coil.drawing_set, coil.page) == (box.drawing_set, box.page), i
-        assert _port_x(coil, "in") == _port_x(box, pin), i
-        assert coil.at.y > box.at.y, i
-    assert len({p.at.y for p in coil_of.values()}) == 1  # one row: the chained coil too
+        assert coil.page == box.page, i
+        assert coil.x == box.x + dict(box.offsets)[pin], i  # the coil's `in` pin is at its origin x
+        assert coil.y > box.y, i
+    assert len({s.y for s in coil_of.values()}) == 1  # one row: the chained coil too
 
 
 def test_no_marker_stands_at_a_channel_or_its_coil() -> None:
@@ -90,18 +95,23 @@ def test_no_marker_stands_at_a_channel_or_its_coil() -> None:
     Coil A2 returns reach the rail on another page: their markers stay, and show the markers
     are read.
     """
-    model, layout = _built()
+    model = _built()
     by_id = ports(model)
     named = _tagged(model)
-    marked = {(*named[by_id[m.port].function], by_id[m.port].name) for m in layout.markers}
+    markers = layout_of(model, LinkMarker).values()
+    marked = {(*named[by_id[m.port].function], by_id[m.port].name) for m in markers}
     coils = {(f"K{i}", "coil") for i in range(1, COUNT + 1)}
     assert len({(tag, name) for tag, name, port in marked if port == "A2"} & coils) > 0
     assert not {m for m in marked if m[0] == "A1" or m[2] == "A1"}
 
 
 def test_the_contacts_stay_with_the_loads_they_switch() -> None:
-    model, layout = _built()
+    model = _built()
     named = _tagged(model)
-    page_of = {named.get(p.function): (p.drawing_set, p.page) for p in layout.placed}
+    pages: dict = {}
+    for function, thing in ((f, named[f]) for f in named):
+        for one in _drawn(model).values():
+            if (one.owner or "").endswith(f"function:{function.value}"):
+                pages.setdefault(thing, set()).add(one.page)
     for i in range(1, COUNT + 1):
-        assert page_of[(f"K{i}", "co_1")] == page_of[(f"P{i}", "lamp")]
+        assert pages[(f"K{i}", "co_1")] == pages[(f"P{i}", "lamp")]

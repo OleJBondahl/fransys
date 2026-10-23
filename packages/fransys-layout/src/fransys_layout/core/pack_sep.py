@@ -8,13 +8,14 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, NamedTuple
 
-from .geometry import cell_anchor, cell_footprint, rotate_box, shift, stack_lane, union
+from .geometry import cell_anchor, cell_footprint, shift, stack_lane, union, view_of
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
     from .pack import PlacedColumn
-    from .values import Box, Cell, Options, Sym
+    from .sym_values import Sym
+    from .values import Box, Cell, Options
 
 
 class PlacedCell(NamedTuple):
@@ -31,7 +32,8 @@ def hard_soft(sym: Sym, cell: Cell, *, in_row: bool, tag_stagger: bool) -> tuple
     fp = cell_footprint(sym, cell, in_row=in_row)
     if not tag_stagger:
         return fp, fp
-    hard = union(rotate_box(sym.body, cell.orient), rotate_box(sym.keepout, cell.orient))
+    view = view_of(sym, cell.orient)
+    hard = union(view.body, view.keepout)
     return hard, union(fp, hard)
 
 

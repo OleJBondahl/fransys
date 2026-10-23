@@ -14,7 +14,7 @@ from ._typst import literal
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
-    from fransys_model.derive import BridgePiece, JumperLanes
+    from fransys_model.derive import BridgePieceRow, JumperLanes
 
 BRIDGE_COLUMN_WIDTH_MM = 15  # fixed column width
 
@@ -50,7 +50,7 @@ def bridge_lane_x_mm(lane_count: int, gap_mm: float) -> tuple[float, ...]:
     return tuple(centre + (index - offset) * gap_mm for index in range(lane_count))
 
 
-def piece_of(pieces: Mapping[str, BridgePiece] | None, piece: str) -> BridgePiece:
+def piece_of(pieces: Mapping[str, BridgePieceRow] | None, piece: str) -> BridgePieceRow:
     """The Bridge mark `piece` render drew; a missing one is a caller error, never a blank."""
     key = bridge_piece_key(piece)
     if pieces is None or key not in pieces:
@@ -62,7 +62,7 @@ def piece_of(pieces: Mapping[str, BridgePiece] | None, piece: str) -> BridgePiec
     return pieces[key]
 
 
-def _image(piece: BridgePiece, extent: str) -> str:
+def _image(piece: BridgePieceRow, extent: str) -> str:
     return f'image(bytes({literal(piece.svg)}), format: "svg", {extent}, fit: "stretch")'
 
 
@@ -71,7 +71,7 @@ def _place(dx_mm: float, dy: str, image: str) -> str:
 
 
 def _bridge_mark_typst(
-    mark: _BridgeMark | None, x_mm: float, line: BridgePiece, tick: BridgePiece
+    mark: _BridgeMark | None, x_mm: float, line: BridgePieceRow, tick: BridgePieceRow
 ) -> str:
     """One lane's marks for one row as placed images; line `y` and height are % of the cell."""
     if mark is None:
@@ -89,7 +89,7 @@ def _bridge_mark_typst(
 
 
 def bridge_cell_typst(
-    row_marks: tuple[_BridgeMark | None, ...], pieces: Mapping[str, BridgePiece] | None
+    row_marks: tuple[_BridgeMark | None, ...], pieces: Mapping[str, BridgePieceRow] | None
 ) -> str:
     """One row's Bridge cell (pdf-0007, 0049): `breakable: false` scopes `%` to the row."""
     if not row_marks:

@@ -1,10 +1,11 @@
 """Tests for the marker footprint in core/geometry.py (layout-0305): the symbol box, turned."""
 
 import pytest
+from options_fixtures import core_options
 
 from fransys_layout.core.geometry import marker_box, marker_box_at, overlaps
 from fransys_layout.core.outputs import Marker
-from fransys_layout.core.values import Box, Options, PinRef, RefKind
+from fransys_layout.core.values import Box, PinRef, RefKind
 
 from .conftest import MARKER_BOX
 
@@ -39,11 +40,21 @@ def test_marker_box_is_marker_box_at_its_origin_and_orient(marker_options):
 
 def test_an_unset_marker_option_is_refused_by_name():
     with pytest.raises(ValueError, match=r"Options\.marker is unset"):
-        marker_box_at(0, 0, Options())
+        marker_box_at(
+            0,
+            0,
+            core_options(
+                flip_turn="R180",
+                tag_stagger=True,
+                label_gap=8,
+                driver_first=True,
+                arrow_sides=("E", "W"),
+            ),
+        )
 
 
 def test_the_fixture_is_the_keepout_box_in_grid_units(marker_options):
-    assert marker_options.marker == MARKER_BOX == Box(0, -8, 48, 16)
+    assert marker_options.marker["R0"] == MARKER_BOX == Box(0, -8, 48, 16)
 
 
 def test_markers_one_box_apart_do_not_overlap_and_closer_ones_do(marker_options):

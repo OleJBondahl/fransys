@@ -4,7 +4,7 @@ from typing import Any
 lazy from pathlib import Path
 
 from fransys_author import Item, Location, Scope
-from fransys_author.surface import Device
+from fransys_author.surface import Design, Device
 
 from fransys_model.derive import subject_kind, subject_kind_text
 from fransys_model.kernel import Draft, Id, make_id
@@ -58,14 +58,17 @@ def _subject_ids(
         return subject.id, None, None, None
     if isinstance(subject, Item):
         return None, subject.id, None, None
-    if isinstance(subject, Scope):
+    unit = Design._added_unit(subject)  # noqa: SLF001 -- the facade is the surface's one consumer
+    if unit is None and isinstance(subject, Scope):
         unit = unit_of(
             subject, "a unit Scope document subject", "a Location, Item or unit Id instead"
         )
+    if unit is not None:
         return None, None, unit, None
     msg = (
         "a document subject must be a Location, an Item, "
-        "a unit Scope with a unit, a model Id, a unit release's name (a str), "
+        "a unit Scope with a unit, what `d.add` returned, a model Id, "
+        "a unit release's name (a str), "
         f"or None (the system preset), not {type(subject).__name__}"
     )
     raise TypeError(msg)

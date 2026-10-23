@@ -1,12 +1,12 @@
 """Smoke test: every layer imports, and so do the three dependencies on this interpreter."""
 
-from fransys_layout import engines, geometry, lint, stages
+from fransys_layout import engines, geometry, lint, routing
 
 
 def test_layers_import() -> None:
     """The four layers import cleanly."""
     assert geometry.__name__ == "fransys_layout.geometry"
-    assert stages.__name__ == "fransys_layout.stages"
+    assert routing.__name__ == "fransys_layout.routing"
     assert lint.__name__ == "fransys_layout.lint"
     assert engines.__name__ == "fransys_layout.engines"
 

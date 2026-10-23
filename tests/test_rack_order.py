@@ -11,10 +11,8 @@ from typing import Any
 import fransys as fr
 import fransys_author
 import fransys_parts
+from _drawn_pages import drawn_pages
 from _model_build_cover import layout_trigger_document
-
-from fransys_model.layout import SymbolPlacement, layout_of
-from fransys_model.vocab.tables import functions, items
 
 _PROJECT: dict[str, Any] = {
     "title": "Rack order",
@@ -40,10 +38,11 @@ def test_a_racks_modules_stand_in_their_authored_position_order() -> None:
     wire(do.fn("do_1")["1"], k1.fn("coil")["A1"])
     wire(di.fn("di_1")["1"], k2.fn("co_1")["14"])
     model = fr.build(parts, d.draft(), layout_trigger_document()).model
-    item_key = {record.id: record.key for record in items(model).values()}
     x = {}
-    for placement in layout_of(model, SymbolPlacement).values():
-        function = functions(model).get(placement.function)
-        if function is not None and item_key[function.item] in {("do",), ("di",)}:
-            x[item_key[function.item]] = placement.x
+    for drawing in drawn_pages(model).values():
+        for symbol in drawing.symbols:
+            for name, _ in symbol.slots:
+                module = name.removeprefix("marking.").split("_")[0]
+                if symbol.key == "generic-box" and module in {"do", "di"}:
+                    x[(module,)] = symbol.x
     assert x[("do",)] < x[("di",)]

@@ -9,8 +9,9 @@ from typing import TYPE_CHECKING
 from fransys_author.errors import AuthorAttributeError, AuthorError
 from fransys_author.surface._fixed import fixed_count
 from fransys_author.surface._pairing import End, Ends
-from fransys_model.derive import link_throw
-from fransys_model.vocab import FunctionKind, PoleSide, PortRole, port_order_key
+from fransys_model.derive import contact_kind_of, throws_of
+from fransys_model.vocab import THROWS as VOCAB_THROWS
+from fransys_model.vocab import PoleSide, PortRole
 lazy from fransys_author.handles import Fn as EngineFn
 
 if TYPE_CHECKING:
@@ -18,7 +19,7 @@ if TYPE_CHECKING:
     from fransys_author.surface._pairing import PartFacts
     from fransys_author.surface.design import Design
 
-THROWS = {"no": PortRole.MAKE, "nc": PortRole.BREAK}
+THROWS = {row.word: role for role, row in VOCAB_THROWS.items() if row.word}
 
 
 def whole_changeover(label: str, fn: EngineFn) -> AuthorError:
@@ -37,12 +38,8 @@ def not_a_changeover(label: str, fn: EngineFn, name: str) -> AuthorAttributeErro
 def _poles(facts: PartFacts, fn: EngineFn, role: PortRole) -> list[tuple[Port, Port]]:
     """Each common of `fn` with its throw of `role`, as (common, throw), in common order."""
     by_template = {facts.port_template(port).id: port for port in fn.ports}
-    found = []
-    for link in facts.links(fn):
-        joined = link_throw(link, facts.templates)
-        if joined is not None and joined[1] is role:
-            found.append((by_template[joined[0]], by_template[joined[2]]))
-    return sorted(found, key=lambda pole: port_order_key(facts.port_template(pole[0])))
+    found = throws_of(facts.links(fn), facts.templates)
+    return [(by_template[t.common], by_template[t.throw]) for t in found if t.role is role]
 
 
 def _is_selector(facts: PartFacts, poles: list[tuple[Port, Port]]) -> bool:
@@ -86,7 +83,7 @@ class Throw:
 
 def throw(label: str, fn: EngineFn, name: str) -> Throw:
     """The throw `name` of `fn`; a function that is not a changeover raises, naming its kind."""
-    if fn.kind is not FunctionKind.CONTACT_CO:
+    if contact_kind_of(fn.kind) != "co":
         raise not_a_changeover(label, fn, name)
     return Throw((fn,), name)
 

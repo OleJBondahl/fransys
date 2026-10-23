@@ -1,4 +1,4 @@
-"""HA-D2 probe 6: a harness fan-out leg is exempt from `WIRE_NOT_ORTHOGONAL` by kind.
+"""HA-D2 probe 6: a harness fan-out leg is exempt from the geometric lint by kind.
 
 The lint reads `Layout.routes` only. A `HarnessFanOut` is a model record, not a `Route`.
 """

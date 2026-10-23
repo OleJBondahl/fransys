@@ -3,11 +3,13 @@
 > Offline copy. Read the official docs for your version at https://olejbondahl.github.io/fransys/X.Y.Z/ (X.Y.Z is `fransys.__version__`), or https://olejbondahl.github.io/fransys/X.Y.Z/llms.txt. Use this copy only offline.
 
 This page lists every keyword of `d.layout.profile` and every number of `d.layout.sheet`: what it does, its house value, its effect on the drawing, and when to change it.
-A gap is in grid units `G`; eight `G` make one symbol module. A sheet number is in millimetres, except `module_mm`.
+A gap is in grid units `G`; eight `G` make one symbol module. A sheet number is in millimetres.
 
 ## Sheet numbers
 
 `d.layout.sheet(name, **numbers)` records a sheet format and returns its handle. Pass the handle to `d.layout.profile(sheet=handle)`. A profile with no `sheet` uses the house sheet: A3 landscape, 420 by 297 mm, content box 410 by 267 mm at (5, 5), an 8 by 6 frame, `module_mm` 2.5. A sheet takes all nine numbers and has no defaults. A missing number or an unknown one raises `AuthorError`. The title-block band is the sheet's height minus twice `content_y_mm` minus `content_height_mm`: 20 mm on the house sheet. A smaller `content_height_mm` gives a taller band. Text of 2.5 mm or more needs a band over 20 mm. A document with no schematic page takes the profile's sheet too.
+
+A sheet's paper size is also set for the whole build with `fr.settings(paper=...)` (see settings.md).
 
 | number | what it is | effect on the drawing | when to change it |
 |---|---|---|---|
@@ -15,11 +17,11 @@ A gap is in grid units `G`; eight `G` make one symbol module. A sheet number is 
 | `height_mm` | Sheet height. | The size of the printed page. | A different paper size. |
 | `content_x_mm` | Left edge of the content box, from the sheet's left edge. | Where drawings start; the margin on the left. | A different margin. |
 | `content_y_mm` | Top edge of the content box, from the sheet's top edge. | Where drawings start; the margin on top. | A different margin or title block. |
-| `content_width_mm` | Width of the content box. | Page capacity: a page holds `content_width_mm * 8 / module_mm` `G` across, rounded down. A wider box fits more columns before a block is split. | A different paper size. |
+| `content_width_mm` | Width of the content box. | Page capacity: a page holds `content_width_mm * 8 / 2.5` `G` across, rounded down. A wider box fits more columns before a block is split. | A different paper size. |
 | `content_height_mm` | Height of the content box. | Page capacity down the page, by the same rule. A taller box fits more rows. | A different paper size. |
 | `frame_columns` | Columns of the reference grid printed on the frame. | The content box is divided evenly. Cross references and findings name a position as a column and a row. | Rarely; more columns on a wide sheet. |
 | `frame_rows` | Rows of the reference grid. | The same, for rows. | Rarely. |
-| `module_mm` | Millimetres of one symbol module. Number or `Decimal`. | The grid pitch. Symbol bodies and gaps scale with it; text sizes and line widths do not, they are fixed in mm. A smaller module fits more on a page; a larger one splits sooner. | The reader's choice of size, not a fix for a crowded page. |
+| `module_mm` | Millimetres of one symbol module. Number or `Decimal`. | Must equal the library's 2.5. It goes in a later release; symbols never scale. | Not yet. |
 
 ```python
 from decimal import Decimal
@@ -37,7 +39,7 @@ a4 = d.layout.sheet(
     content_height_mm=170,
     frame_columns=6,
     frame_rows=4,
-    module_mm=Decimal("2.0"),
+    module_mm=Decimal("2.5"),
 )
 d.layout.profile(sheet=a4)
 ```
@@ -65,5 +67,5 @@ d.layout.profile(sheet=a4)
 
 ## Grid pitch and printed sizes
 
-`module_mm` sets the grid pitch, not the printed size of text or lines, which are fixed in mm. It is the reader's choice of size, never a fix for a crowded page. Split the content into function blocks (`drawing.md`). A well-formed design that still overflows is a Fransys defect: send the smallest model.
+`module_mm` sets the grid pitch and must equal the library's 2.5: symbols never scale. A crowded page is never fixed by size. Split the content into function blocks (`drawing.md`). A well-formed design that still overflows is a Fransys defect: send the smallest model.
 `text_height_mm` sets the smallest text on every page, as a capital height in mm. Never use it to make a page fit: a page that is too full needs less on the page, split into function blocks.

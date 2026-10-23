@@ -43,7 +43,10 @@ def assign_blocks(
     by_box: dict[str, list[str]] = defaultdict(list)
     for col, box in box_of.items():
         by_box[box].append(col)
-    edges = {b: card_edges(b, cols, flow, problem, options) for b, cols in sorted(by_box.items())}
+    edges = {
+        b: card_edges(b, cols, flow, problem, options)
+        for b, cols in sorted(by_box.items(), key=lambda kv: natural_key(kv[0]))
+    }
     spill = [c for e in edges.values() for c in e.spilled]
     blocks = [
         _sized(draft_block(m, edges.get(m.anchor or ""), env), env)
@@ -52,7 +55,8 @@ def assign_blocks(
     notes = _notes(edges, by_box, blocks, env)
     units = sorted({b.unit for b in blocks}, key=natural_key) or [""]
     return tuple(
-        _unit_list(u, [b for b in blocks if b.unit == u], notes.get(u, ()), env) for u in units
+        _unit_list(u, [b for b in blocks if b.unit == u], notes.get(u, ()), env, spill)
+        for u in units
     )
 
 
@@ -93,12 +97,25 @@ def _overfull_notes(
     return {u: tuple(fs) for u, fs in notes.items()}
 
 
-def _unit_list(unit: str, blocks: Sequence[Block], notes: Sequence[Finding], env: Env) -> BlockList:
-    """Group order, then natural key of the anchor or first column, then the authored hints."""
+def _unit_list(
+    unit: str, blocks: Sequence[Block], notes: Sequence[Finding], env: Env, spill: Sequence[str]
+) -> BlockList:
+    """Group order, then natural key of the anchor or first column, then the authored hints.
+
+    The spilled columns stand after the cards and the first starts a page (PAGE-CUT).
+    """
     rank = env.rank
     ordered = sorted(
         blocks,
         key=lambda b: (rank.get(b.group or "", len(rank)), natural_key(b.anchor or b.columns[0])),
     )
     out, findings = apply_hints(ordered, env.problem.hints, env)
+    out = _spilled_last(out, spill)
     return BlockList(unit, tuple(out), (*notes, *findings))
+
+
+def _spilled_last(blocks: Sequence[Block], spill: Sequence[str]) -> list[Block]:
+    """The blocks of spilled columns moved behind the rest, the first of them breaking the page."""
+    gone = [b for b in blocks if set(b.columns) & set(spill)]
+    kept = [b for b in blocks if b not in gone]
+    return [*kept, *(replace(b, forced_break_before=i == 0) for i, b in enumerate(gone))]

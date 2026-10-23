@@ -7,12 +7,14 @@ import dataclasses
 
 import pytest
 
+from electrical_symbols import MARKER_SLOT, MARKER_TURNED
 from fransys_layout.geometry import (
     Box,
     Facing,
     Orientation,
     Point,
     PortGeometry,
+    SlotSide,
     UnknownSymbolError,
     symbol_geometry,
 )
@@ -84,3 +86,19 @@ def _on_body_side(port: PortGeometry, body: Box) -> bool:
 # box, so it is the one library symbol that does not put a port on the side it faces (geometry.md
 # 5.2).
 _OFF_BODY_SIDE_CONTRACT = {"connection-point"}
+
+
+@pytest.mark.rule("PAGE-FRAME")
+def test_the_turned_marker_reads_and_its_centred_slot_is_the_centre_side() -> None:
+    """R450.1: a centred symdef slot is `SlotSide.C`; it used to raise KeyError 'C' in convert."""
+    for orientation in Orientation:
+        slots = {
+            s.slot: s.side for s in symbol_geometry(MARKER_TURNED, orientation=orientation).slots
+        }
+        assert slots == {MARKER_SLOT: SlotSide.C}
+
+
+def test_a_slot_on_a_side_keeps_its_facing_name() -> None:
+    sides = {s.side for s in symbol_geometry("coil").slots} - {SlotSide.C}
+    assert sides
+    assert {side.name for side in sides} <= {facing.name for facing in Facing}

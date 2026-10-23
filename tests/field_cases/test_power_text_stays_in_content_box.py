@@ -25,12 +25,11 @@ left edge as any first box of a page does.
 """
 
 import fransys as fr
+from _drawn_extent import body_g
+from _drawn_pages import drawn_pages
 from fransys.colours import BU
-from fransys_el import OPTIONS
 
-from fransys_layout.engines.schematic.read import read_inputs
-from fransys_layout.geometry import Box, generic_box_geometry, overlaps, translate
-from fransys_model.layout import Label, PowerSymbol, SymbolPlacement, layout_of
+from fransys_model.layout import PowerSymbol, layout_of
 
 
 def _build(tmp_path):
@@ -54,42 +53,58 @@ def _build(tmp_path):
     return fr.build(d, doc)
 
 
+def overlaps(a, b) -> bool:
+    """Whether the boxes (x0, y0, x1, y1) share area."""
+    return a[0] < b[2] and b[0] < a[2] and a[1] < b[3] and b[1] < a[3]
+
+
+def _power_texts(model):
+    """Every drawn power text, with its page's drawing."""
+    return [(d, t) for d in drawn_pages(model).values() for t in d.texts if t.kind == "POWER"]
+
+
 def test_no_power_text_touches_the_content_box_edge(tmp_path) -> None:
     model = _build(tmp_path).model
-    sheet = read_inputs(model, options=OPTIONS).sheet
-    texts = [one for one in layout_of(model, Label).values() if one.slot == "power"]
+    texts = _power_texts(model)
     assert texts
-    for one in texts:
-        assert one.x > 0
-        assert one.x + one.width < sheet.content_width
-        assert one.y > 0
-        assert one.y + one.height < sheet.content_height
+    for drawing, one in texts:
+        assert one.box.x > 0
+        assert one.box.x + one.box.w < drawing.area.w
+        assert one.box.y > 0
+        assert one.box.y + one.box.h < drawing.area.h
 
 
 def _t1(model):
-    """The PSU's page: its box, its supply text and the stem of its 0 V symbol, in page units."""
-    place = next(
-        o for o in layout_of(model, SymbolPlacement).values() if o.key[3].rpartition("/")[2] == "T1"
-    )
-    geometry = generic_box_geometry(place.ports, tuple(s.value for s in place.sides))
-    box = translate(geometry.body, dx=place.x, dy=place.y)
-    text = next(o for o in layout_of(model, Label).values() if o.key[3].rpartition("/")[2] == "T1")
+    """The PSU's page: its box, its supply text and the stem of its 0 V symbol, in G."""
     ground = next(
         o
         for o in layout_of(model, PowerSymbol).values()
-        if o.key[3].rpartition("/")[2] == "T1" and o.symbol == "ground"
+        if fr.derive.port_designation(model, o.port).startswith("-T1:") and o.symbol == "ground"
     )
-    stem = Box(x=ground.pin_x - 1, y=ground.pin_y, width=2, height=ground.y - ground.pin_y)
-    return box, Box(x=text.x, y=text.y, width=text.width, height=text.height), stem
+    drawing = drawn_pages(model)[ground.page]
+    # a drawn symbol names no subject: the PSU is the box under its printed tag
+    tag = next(t for t in drawing.texts if t.text == "-T1")
+    psu = min(
+        (s for s in drawing.symbols if s.key == "generic-box"),
+        key=lambda s: abs(s.x - tag.box.x) + abs(s.y - tag.box.y),
+    )
+    box = body_g(psu)
+    text = next(t for d, t in _power_texts(model) if d is drawing and t.text == "24V")
+    stem = (ground.pin_x - 1, ground.pin_y, ground.pin_x + 1, ground.y)
+    return (
+        box,
+        (text.box.x, text.box.y, text.box.x + text.box.w, text.box.y + text.box.h),
+        stem,
+        drawing,
+    )
 
 
 def test_a_supply_text_has_room_past_its_bar_and_stays_clear_of_the_frame(tmp_path) -> None:
     built = _build(tmp_path)
-    sheet = read_inputs(built.model, options=OPTIONS).sheet
-    box, text, stem = _t1(built.model)
-    assert [f for f in built.findings if f.code == "LABEL_UNPLACED"] == []
-    assert text.x > 0
-    assert text.x + text.width < sheet.content_width
+    box, text, stem, drawing = _t1(built.model)
+    assert [f for f in built.findings if f.code in {"LABEL_UNPLACED", "ANNEX_UNPLACED"}] == []
+    assert text[0] > 0
+    assert text[2] < drawing.area.w
     assert not overlaps(text, stem)
     assert not overlaps(text, box)
-    assert box.x >= 0  # inside the content box; flush at the frame edge, as any first box (0114)
+    assert box[0] >= 0  # inside the content box; flush at the frame edge, as any first box (0114)

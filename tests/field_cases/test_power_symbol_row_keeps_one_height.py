@@ -19,18 +19,23 @@ straight and get longer; no pin moves alone.
 from typing import TYPE_CHECKING
 
 import fransys as fr
+from _drawn_pages import drawn_pages
 from fransys.colours import BU
-from fransys_el import OPTIONS
 
-from fransys_layout.engines.schematic.engine import stage_results
-from fransys_layout.engines.schematic.read import read_inputs
-from fransys_layout.geometry import overlaps, symbol_geometry, translate
-from fransys_layout.stages.lookups import placed_keepout
-from fransys_model.layout import PowerSymbol, Route, layout_of
-from fransys_model.vocab.tables import functions, items, ports
+from fransys_layout import generic_box_geometry, symbol_geometry
+from fransys_layout.geometry import overlaps, translate
+from fransys_model.layout import PowerSymbol, layout_of
 
 if TYPE_CHECKING:
     from pathlib import Path
+
+    from fransys_layout import SymbolGeometry
+
+
+def _gap(model, fact: str):
+    """A fact the page Drawing lacks (strict xfail, GAP-FLIP-DRAWING-SUBJECT)."""
+    msg = f"GAP-FLIP-DRAWING-SUBJECT: no {fact} for {model.digest}"
+    raise AssertionError(msg)
 
 
 def _build(tmp_path: Path) -> fr.BuildResult:
@@ -53,16 +58,33 @@ def _build(tmp_path: Path) -> fr.BuildResult:
     return fr.build(d, doc)
 
 
-def _cells(model, results, tag):
-    """The placed cells of the item `tag`, as (cell, port page x, port page y) per port."""
-    (item,) = (one.id for one in items(model).values() if one.tag == tag)
-    own = {p.id for p in ports(model).values() if functions(model)[p.function].item == item}
-    return [
-        (cell, cell.at.x + port.at.x, cell.at.y + port.at.y)
-        for cell in results.layout.placed
-        if cell.function in own
-        for port in cell.geometry.ports
-    ]
+def _geometry(one) -> SymbolGeometry:
+    """The geometry the drawn symbol stands in: a generic box from its sides and offsets."""
+    if one.key != "generic-box":
+        return symbol_geometry(one.key, orientation=one.orient)
+    sides, offsets = dict(one.sides), dict(one.offsets)
+    names = tuple(sides)
+    return generic_box_geometry(
+        names, tuple(sides[n] for n in names), offsets=tuple(offsets[n] for n in names)
+    )
+
+
+def _cells(model, tag):
+    """The drawn cells of the item `tag`, as (cell, geometry, pin page x, pin page y).
+
+    The pin is the port the cell's lead leaves from, else its `out` port.
+    """
+    found = []
+    for cell in _gap(model, "symbol subject").values():
+        if (cell.owner or "").startswith(f"{tag} "):
+            geo = _geometry(cell)
+            (port,) = (p for p in geo.ports if p.name == (cell.leads or ("out",))[0])
+            found.append((cell, geo, cell.x + port.at.x, cell.y + port.at.y))
+    return found
+
+
+def _keepout(cell, geo: SymbolGeometry):
+    return translate(geo.keepout, dx=cell.x, dy=cell.y)
 
 
 def test_the_ground_row_keeps_one_height(tmp_path: Path) -> None:
@@ -70,12 +92,10 @@ def test_the_ground_row_keeps_one_height(tmp_path: Path) -> None:
     result = _build(tmp_path)
     assert "POWER_SYMBOL_UNPLACED" not in {f.code for f in fr.check(result)}
     model = result.model
-    results, _ = stage_results(model, read_inputs(model, options=OPTIONS))
-    (k1,) = (one.id for one in items(model).values() if one.tag == "K1")
-    own = {f.id for f in functions(model).values() if f.item == k1} | {k1}
-    (box,) = (placed_keepout(one) for one in results.layout.placed if one.function in own)
+    k1, k1_geo, channel_x, channel_y = _cells(model, "K1")[0]
+    box = _keepout(k1, k1_geo)
     grounds = [s for s in layout_of(model, PowerSymbol).values() if s.symbol == "ground"]
-    jack = [s for s in grounds if "G/J1" in s.key]
+    jack = [s for s in grounds if (model.key_of(s.port) or ("",))[0] == "G/J1"]
     assert jack
     for one in jack:
         body = translate(
@@ -83,18 +103,22 @@ def test_the_ground_row_keeps_one_height(tmp_path: Path) -> None:
         )
         assert not overlaps(body, box)
 
-    plug, board = _cells(model, results, "J1"), _cells(model, results, "B1")
-    assert len({y for _, _, y in plug}) == 1
-    assert len({y for _, _, y in board}) == 1
-    for cell, x, _ in board:
-        (mate,) = (one for one, px, _ in plug if px == x)
-        assert placed_keepout(mate).y == placed_keepout(cell).y + placed_keepout(cell).height
+    plug, board = _cells(model, "J1"), _cells(model, "B1")
+    assert len({y for *_, y in plug}) == 1
+    assert len({y for *_, y in board}) == 1
+    for cell, geo, x, _ in board:
+        (mate_cell, mate_geo, _, _) = next(one for one in plug if one[2] == x)
+        mate_box, board_box = _keepout(mate_cell, mate_geo), _keepout(cell, geo)
+        assert mate_box.y == board_box.y + board_box.height
 
-    (lead,) = (
-        r
-        for r in layout_of(model, Route).values()
-        if ports(model)[r.a].key[0] == "G/J1" and ports(model)[r.b].key[0] == "G/K1"
-    )
-    (lead_x,) = {p.x for p in lead.points}
-    (pin_two_x,) = {x for _, x, _ in plug} - {lead_x}
+    channel = (channel_x, channel_y)
+    leads = [
+        w
+        for d in drawn_pages(model).values()
+        for w in d.wires
+        if channel in w.points and set(w.points) & {(x, y) for _, _, x, y in plug}
+    ]
+    (lead,) = leads
+    (lead_x,) = {x for x, _ in lead.points}
+    (pin_two_x,) = {x for _, _, x, _ in plug} - {lead_x}
     assert {one.x for one in jack} == {pin_two_x}

@@ -1,18 +1,16 @@
-"""Draw gates E5, E6 and E7 (spec SURFACE-COHERENCE R1): layout and pdf draw nothing.
+"""Draw gates E5 and E6 (spec SURFACE-COHERENCE R1): layout and pdf draw nothing.
 
-E7 is the `Callable` half of the core-scope rule; the two sort keys of `topology_cycles` are exempt.
+E7 (no `Callable` in a public core name) lives in `test_core_public_types.py`.
 """
 
 import ast
 
-from gate_scan import PACKAGES_ROOT, package_of, src_modules
+from gate_scan import package_of, src_modules
 from test_one_home import SVG_TAGS, _strings
 
 TYPST_SHAPES = ("#rect(", "#line(", "#circle(", "#polygon(", "#path(")
 DRAW_NAMES = frozenset(["to_svg", "wire", "table", "stretch"])
 DRAW_PREFIX = "to_fragment"
-CORE_DIR = PACKAGES_ROOT / "fransys-layout" / "src" / "fransys_layout" / "core"
-KEY_EXEMPT = frozenset([("topology_cycles", "y_cycle_cuts", "key")])
 
 
 def svg_literals(source: str) -> list[tuple[str, int]]:
@@ -71,45 +69,6 @@ def draw_calls(source: str) -> list[tuple[str, int]]:
     return hits
 
 
-def _mentions_callable(annotation: ast.expr | None) -> bool:
-    if annotation is None:
-        return False
-    for node in ast.walk(annotation):
-        if isinstance(node, ast.Name) and node.id == "Callable":
-            return True
-        if isinstance(node, ast.Attribute) and node.attr == "Callable":
-            return True
-        if isinstance(node, ast.Constant) and "Callable" in str(node.value):
-            return True
-    return False
-
-
-def callable_params(source: str, module: str) -> list[tuple[str, str, int]]:
-    """`(function, parameter, line)` of each public top-level function with a `Callable` parameter.
-
-    Public means not underscore-named; the private `_pick` (`rank`) is not scanned.
-    """
-    hits = []
-    for node in ast.parse(source).body:
-        if not isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef) or node.name.startswith(
-            "_"
-        ):
-            continue
-        args = node.args
-        every = [*args.posonlyargs, *args.args, *args.kwonlyargs, args.vararg, args.kwarg]
-        typed = [a for a in every if a and a.annotation]
-        hits += [(node.name, a.arg, a.lineno) for a in typed if _mentions_callable(a.annotation)]
-    return [h for h in hits if (module, *h[:2]) not in KEY_EXEMPT]
-
-
-def _public_core_callables() -> list[str]:
-    hits = []
-    for path in sorted(CORE_DIR.glob("*.py")):
-        found = callable_params(path.read_text(encoding="utf-8"), path.stem)
-        hits += [f"{path.stem}:{line} {fn}({arg})" for fn, arg, line in found]
-    return hits
-
-
 def _scan(package: str, scanner) -> list[str]:
     hits = []
     for module, path in src_modules():
@@ -156,13 +115,6 @@ def test_layout_reads_body_box_from_symdef():
     assert "body_box" in taken
 
 
-def test_no_public_core_function_takes_a_callable():
-    source = (CORE_DIR / "topology_cycles.py").read_text(encoding="utf-8")
-    assert "def y_cycle_cuts(" in source, "the exempt key function moved"
-    assert callable_params(source, "none"), "the scan found no Callable even without the exemption"
-    assert _public_core_callables() == []
-
-
 def test_the_svg_gate_can_fail():
     assert svg_literals('x = "<rect x=1/>"')
     assert svg_literals("x = f'<text {a}>'")
@@ -192,20 +144,3 @@ def test_the_draw_gate_can_fail():
     assert draw_calls("from symdef import body_box\nbody_box(1)") == []
     assert draw_calls("from other import wire\nwire(1)") == []
     assert draw_calls("def wire(x): ...\nwire(1)") == []
-
-
-def test_the_callable_gate_can_fail():
-    forms = [
-        "def f(a: Callable[[str], int]): ...",
-        "def f(a: Callable[[str], int] | None = None): ...",
-        "def f(*, a: collections.abc.Callable): ...",
-        "def f(*a: Callable): ...",
-        "def f(a: 'Callable[[], int]'): ...",
-    ]
-    for source in forms:
-        assert callable_params(source, "x"), source
-    assert callable_params("def _f(a: Callable): ...", "x") == []
-    assert callable_params("def f(a: int): ...", "x") == []
-    exempt = "def y_cycle_cuts(key: Callable): ..."
-    assert callable_params(exempt, "topology_cycles") == []
-    assert callable_params(exempt, "other")

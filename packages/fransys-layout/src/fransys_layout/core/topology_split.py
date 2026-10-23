@@ -11,6 +11,7 @@ from collections import defaultdict
 from dataclasses import replace
 from typing import TYPE_CHECKING
 
+from .errors import CoreError
 from .keys import natural_key
 from .topology_cycles import cyclic_parts, y_cycle_cuts
 from .unionfind import UnionFind
@@ -25,24 +26,48 @@ if TYPE_CHECKING:
 
 type NetOf = Mapping[PinRef, str]
 type Nodes = dict[tuple[str, int, int], str]
+type Boxes = dict[str, str]
 
 
-def _nodes(columns: Sequence[Column]) -> Nodes:
-    """The y node of every cell: a symbol standing in two lanes, or joined at a head, is one."""
+def _box_end(col: Column) -> tuple[str, str] | None:
+    """The box and the node of the cell a column's first box-pin end stands on (stage 5 attach)."""
+    for li, end in enumerate(col.heads):
+        if end.kind == "boxpin" and end.pin is not None:
+            return end.pin.sym, f"{col.id}:{li}:0"
+    for li, end in enumerate(col.feet):
+        if end.kind == "boxpin" and end.pin is not None:
+            return end.pin.sym, f"{col.id}:{li}:{len(col.lanes[li % len(col.lanes)].cells) - 1}"
+    return None
+
+
+def _column_nodes(col: Column, uf: UnionFind) -> Nodes:
+    """Name the cells of one column; a symbol in two lanes and a head join are one node."""
+    first: dict[str, str] = {}
+    ids: Nodes = {}
+    for li, lane in enumerate(col.lanes):
+        for i, cell in enumerate(lane.cells):
+            ids[col.id, li, i] = node = f"{col.id}:{li}:{i}"
+            uf.find(node)
+            if cell.sym in first:
+                uf.union(first[cell.sym], node)
+            first.setdefault(cell.sym, node)
+    for li, end in enumerate(col.heads):
+        if end.is_join and end.pin is not None:
+            uf.union(first[end.pin.sym], f"{col.id}:{li}:0")
+    return ids
+
+
+def _nodes(columns: Sequence[Column]) -> tuple[Nodes, Boxes]:
+    """The y node of every cell and every box: a symbol in two lanes, a join, or a box is one."""
     uf, ids = UnionFind(), {}
     for col in columns:
-        first: dict[str, str] = {}
-        for li, lane in enumerate(col.lanes):
-            for i, cell in enumerate(lane.cells):
-                ids[col.id, li, i] = node = f"{col.id}:{li}:{i}"
-                uf.find(node)
-                if cell.sym in first:
-                    uf.union(first[cell.sym], node)
-                first.setdefault(cell.sym, node)
-        for li, end in enumerate(col.heads):
-            if end.is_join and end.pin is not None:
-                uf.union(first[end.pin.sym], f"{col.id}:{li}:0")
-    return {k: uf.find(n)[0] for k, n in ids.items()}
+        ids.update(_column_nodes(col, uf))
+    boxes: Boxes = {}
+    for col in columns:
+        if (at := _box_end(col)) is not None:
+            uf.union(f"box:{at[0]}", at[1])
+            boxes[at[0]] = f"box:{at[0]}"
+    return {k: uf.find(n)[0] for k, n in ids.items()}, {b: uf.find(n)[0] for b, n in boxes.items()}
 
 
 def net_in(fan: Fan, pin: PinRef, net_of: NetOf) -> str:
@@ -50,16 +75,49 @@ def net_in(fan: Fan, pin: PinRef, net_of: NetOf) -> str:
     return fan.nets[0] if len(fan.nets) == 1 else net_of[pin]
 
 
-def _fan_edges(fan: Fan, nodes: Nodes, net_of: NetOf | None) -> set[Edge]:
-    """Each driver above each leg; the edge is gone once the net of either is cut."""
+class BundleError(CoreError):
+    """A bundle fan cannot be split: a driver and a leg stand on one node, or a member is cut."""
+
+
+def _end_node(a: Attach, nodes: tuple[Nodes, Boxes]) -> str:
+    """The y node an attachment stands on: its cell, or its box."""
+    cells, boxes = nodes
+    if a.column is not None:
+        return cells[a.column, a.lane, a.cell]
+    return boxes.get(a.pin.sym, f"box:{a.pin.sym}")
+
+
+def bundle_conflicts(
+    columns: Sequence[Column], fans: Sequence[Fan]
+) -> list[tuple[Fan, tuple[str, ...], tuple[Attach, ...]]]:
+    """Each bundle whose driver and leg stand on one y node: the bundle, the nodes, the drivers."""
+    nodes = _nodes(columns)
+    out = []
+    for fan in (f for f in fans if f.lanes > 1):
+        legs = {_end_node(a, nodes) for a in fan.legs}
+        hit = [(a, n) for a in fan.drivers if (n := _end_node(a, nodes)) in legs]
+        if hit:
+            out.append((fan, tuple(dict.fromkeys(n for _, n in hit)), tuple(a for a, _ in hit)))
+    return out
+
+
+def check_bundles(columns: Sequence[Column], fans: Sequence[Fan]) -> None:
+    """Raise BundleError when a bundle's driver and leg stand on one node: no stack can seat it."""
+    for fan, both, _ in bundle_conflicts(columns, fans):
+        text = (
+            f"bundle {fan.id} (nets {', '.join(fan.nets)}) has a driver and a leg on one "
+            f"node ({', '.join(both)}): give the node's pins one "
+            "side, or draw the bundle's nets apart"
+        )
+        raise BundleError(text)
+
+
+def _fan_edges(fan: Fan, nodes: tuple[Nodes, Boxes], net_of: NetOf | None) -> set[Edge]:
+    """Each driver above each leg; a box pin stands on its box's node; gone once a net is cut."""
     ends = [
         [
-            (
-                nodes[a.column, a.lane, a.cell],
-                None if net_of is None else net_in(fan, a.pin, net_of),
-            )
+            (_end_node(a, nodes), None if net_of is None else net_in(fan, a.pin, net_of))
             for a in side
-            if a.column is not None
         ]
         for side in (fan.drivers, fan.legs)
     ]
@@ -73,11 +131,12 @@ def _fan_edges(fan: Fan, nodes: Nodes, net_of: NetOf | None) -> set[Edge]:
 def y_edges(columns: Sequence[Column], fans: Sequence[Fan], net_of: NetOf | None) -> list[Edge]:
     """Stack edges (fixed, head above foot) and fan edges (owned by their nets)."""
     nodes = _nodes(columns)
+    cells = nodes[0]
     out: set[Edge] = set()
     for col in columns:
         for li, lane in enumerate(col.lanes):
             out.update(
-                (nodes[col.id, li, i - 1], nodes[col.id, li, i], frozenset())
+                (cells[col.id, li, i - 1], cells[col.id, li, i], frozenset())
                 for i in range(1, len(lane.cells))
             )
     for fan in fans:
@@ -107,6 +166,7 @@ def cut_nets(
     columns: Sequence[Column], fans: Sequence[Fan], net_of: Mapping[PinRef, str]
 ) -> frozenset[str]:
     """The nets to take out of their fans: the fewest drivers lost, ties by natural key."""
+    check_bundles(columns, fans)
     edges = y_edges(columns, fans, net_of)
     cost: dict[str, int] = defaultdict(int)
     for fan in fans:
@@ -128,6 +188,12 @@ def _split_fan(
     rest = tuple(n for n in fan.nets if n not in cuts)
     if len(rest) == len(fan.nets):
         return fan, {}
+    if fan.lanes > 1:
+        text = (
+            f"stage 1 cut net {next(n for n in fan.nets if n in cuts)} out of bundle {fan.id}: "
+            "a bundle lane is its net's place, so a member cannot leave; report the circuit"
+        )
+        raise BundleError(text)
     drivers = tuple(a for a in fan.drivers if net_in(fan, a.pin, net_of) in rest)
     legs = tuple(a for a in fan.legs if net_in(fan, a.pin, net_of) in rest)
     if not drivers or not legs:
@@ -152,3 +218,31 @@ def split_fans(
             kept.append(one)
         links.extend(CrossLink(net, ends) for net, ends in moved.items())
     return tuple(kept), tuple(sorted(links, key=lambda c: natural_key(c.net)))
+
+
+def split_conflict_ends(
+    columns: Sequence[Column], fans: Sequence[Fan], cross: Sequence[CrossLink]
+) -> tuple[tuple[Fan, ...], tuple[CrossLink, ...]]:
+    """A fan's legs on a node its drivers stand on leave it, each a cross link to a driver (R418).
+
+    Only those ends conflict; the rest keeps the fan and its trunk. A fan left with no leg, or
+    a bundle, stays whole for the net cut.
+    """
+    nodes = _nodes(columns)
+    kept: list[Fan] = []
+    links = list(cross)
+    for fan in fans:
+        above = {_end_node(a, nodes) for a in fan.drivers}
+        out = [a for a in fan.legs if _end_node(a, nodes) in above]
+        legs = tuple(a for a in fan.legs if a not in out)
+        free = [a for a in fan.drivers if _end_node(a, nodes) not in _nodes_of(out, nodes)]
+        if not out or not legs or fan.lanes > 1 or not free:
+            kept.append(fan)
+            continue
+        kept.append(replace(fan, legs=legs))
+        links.extend(CrossLink(fan.nets[0], (a, free[0])) for a in out)
+    return tuple(kept), tuple(links)
+
+
+def _nodes_of(ends: Sequence[Attach], nodes: tuple[Nodes, Boxes]) -> set[str]:
+    return {_end_node(a, nodes) for a in ends}

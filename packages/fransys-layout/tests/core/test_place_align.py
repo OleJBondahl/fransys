@@ -5,7 +5,9 @@ from __future__ import annotations
 from dataclasses import replace
 from typing import TYPE_CHECKING
 
-from fransys_layout.core import Facts, Options, PinRef
+from options_fixtures import core_options
+
+from fransys_layout.core import Facts, PinRef
 from fransys_layout.core.geometry import pin_xy
 from fransys_layout.core.pack import cell_node
 from fransys_layout.core.place_align import (
@@ -18,7 +20,7 @@ from fransys_layout.core.place_align import (
 )
 
 from . import align_fixtures as fx
-from .conftest import MARKER_BOX
+from .conftest import MARKER
 from .place_fixtures import row_group_three
 from .test_place_x import env_of
 
@@ -49,7 +51,18 @@ def test_band_ranks_align_across_columns() -> None:
 
 
 def test_band_align_off_gives_no_band() -> None:
-    env = env_of(fx.two_band_columns(), Options(marker=MARKER_BOX, band_align=False))
+    env = env_of(
+        fx.two_band_columns(),
+        core_options(
+            marker=MARKER,
+            band_align=False,
+            flip_turn="R180",
+            tag_stagger=True,
+            label_gap=8,
+            driver_first=True,
+            arrow_sides=("E", "W"),
+        ),
+    )
     assert band_aligns(env) == ()
     assert page_aligns(env) == ()
 
@@ -112,7 +125,10 @@ def test_mates_off_the_page_are_left_alone_and_across_rows_are_returned() -> Non
     assert mate_aligns(boxed) == ()
     assert len(unmet_mates(boxed)) == 1
     prob = fx.mate_columns()
-    gone = replace(prob, facts=Facts(mates=((PinRef("p", "s"), PinRef("elsewhere", "n")),)))
+    gone = replace(
+        prob,
+        facts=Facts(mates=((PinRef("p", "s"), PinRef("elsewhere", "n")),)),
+    )
     env = env_of(gone)
     assert mate_aligns(env) == ()
     assert unmet_mates(env) == ()

@@ -18,12 +18,11 @@ from typing import Any, NamedTuple
 
 import fransys as fr
 import pytest
-from fransys_el import OPTIONS
+from _drawn_pages import drawn_pages
 
-from fransys_layout.engines.schematic.engine import stage_results
-from fransys_layout.engines.schematic.read import read_inputs
-from fransys_model.layout import Route, layout_of
-from fransys_model.vocab.tables import functions
+from electrical_symbols import LIBRARY
+from fransys_layout.symbols import library_symbol, symbol_shape
+lazy from fransys_layout.drawing import DrawnSymbol
 
 _UNIT: dict[str, Any] = {
     "revision": 1,
@@ -37,6 +36,12 @@ _RED = ("RD", 50)
 
 class _Strips(NamedTuple):
     X1: Any
+
+
+def _gap(model, fact: str):
+    """A fact the page Drawing lacks (strict xfail, GAP-FLIP-DRAWING-SUBJECT)."""
+    msg = f"GAP-FLIP-DRAWING-SUBJECT: no {fact} for {model.digest}"
+    raise AssertionError(msg)
 
 
 def _wire(d: Any, shape: str, parts: tuple[Any, ...], tail: Any) -> None:
@@ -96,25 +101,75 @@ def _build(shape: str, *, beside: bool = True, bottom_up: bool = False) -> fr.Bu
     return fr.build(d, cover)
 
 
-def _at(result: fr.BuildResult, tag: str) -> tuple[int, int]:
-    """The drawn position of the function whose key ends in `tag`, as (x, y)."""
-    layout = stage_results(result.model, read_inputs(result.model, options=OPTIONS))[0].layout
-    ids = {f.id for f in functions(result.model).values() if f"{tag}/fn/" in "/".join(f.key)}
-    (one,) = (p for p in layout.placed if p.function in ids)
-    return one.at.x, one.at.y
+type Point = tuple[int, int]
+
+
+def _drawn(result: fr.BuildResult, tag: str) -> DrawnSymbol:
+    """The one drawn symbol of the item `tag`, not its contact head."""
+    (one,) = (
+        r
+        for r in _gap(result.model, "symbol subject")
+        if (r.owner or "").startswith(f"U1-{tag} ") and r.symbol != "contact-head"
+    )
+    return one
+
+
+def _shape(one: DrawnSymbol):  # the symbol's pins and body at R0, from symdef's data
+    return symbol_shape(library_symbol(LIBRARY, one.key, one.poles), LIBRARY)
+
+
+def _pin(result: fr.BuildResult, tag: str, pin: str) -> Point:
+    one, turn = _drawn(result, tag), _shape(_drawn(result, tag)).pins[pin]
+    return one.x + turn.dx, one.y + turn.dy
+
+
+def _at(result: fr.BuildResult, tag: str) -> Point:
+    """The drawn position of the item `tag`, as (x, y)."""
+    one = _drawn(result, tag)
+    return one.x, one.y
 
 
 def _top(result: fr.BuildResult) -> int:
-    """The y of the page's topmost placed function."""
-    layout = stage_results(result.model, read_inputs(result.model, options=OPTIONS))[0].layout
-    return min(p.at.y for p in layout.placed)
+    """The y of the page's topmost drawn symbol."""
+    return min(s.y for drawing in drawn_pages(result.model).values() for s in drawing.symbols)
 
 
-def _join(result: fr.BuildResult) -> list[tuple[int, int]]:
-    """The one route whose key names the lamp and the fuse, as (x, y) points."""
-    routes = layout_of(result.model, Route).values()
-    (wire,) = (r for r in routes if "H1" in "/".join(r.key) and "F2" in "/".join(r.key))
-    return [(p.x, p.y) for p in wire.points]
+def _join(result: fr.BuildResult, start: Point, end: Point) -> list[Point]:
+    """The corners of the drawn wires from `start` to `end`: wires meet end to end or at a dot."""
+    wires = [
+        list(w.points) for drawing in drawn_pages(result.model).values() for w in drawing.wires
+    ]
+    dots = {p for w in wires for p in w}
+    edges: dict[Point, set[Point]] = {}
+    for wire in wires:
+        for a, b in pairwise(wire):
+            on = sorted(
+                p
+                for p in dots
+                if min(a, b) <= p <= max(a, b) and (p[0] == a[0] == b[0] or p[1] == a[1] == b[1])
+            )
+            for p, q in pairwise(on if a <= b else on[::-1]):
+                edges.setdefault(p, set()).add(q)
+                edges.setdefault(q, set()).add(p)
+    came, queue = {start: start}, [start]
+    for here in queue:
+        for n in sorted(edges.get(here, ())):
+            if n not in came:
+                came[n] = here
+                queue.append(n)
+    assert end in came, f"no drawn wires join {start} to {end}"
+    path = [end]
+    while path[-1] != start:
+        path.append(came[path[-1]])
+    path.reverse()
+    return [
+        p
+        for i, p in enumerate(path)
+        if i in (0, len(path) - 1)
+        or not (
+            path[i - 1][0] == p[0] == path[i + 1][0] or path[i - 1][1] == p[1] == path[i + 1][1]
+        )
+    ]
 
 
 _SHAPES = [
@@ -126,18 +181,12 @@ _SHAPES = [
 ]
 
 
-def _lamp(result: fr.BuildResult) -> tuple[tuple[int, int], tuple[int, int, int, int]]:
-    """H1's pin 1, and its body outline as (left, top, right, bottom), in page coordinates."""
-    layout = stage_results(result.model, read_inputs(result.model, options=OPTIONS))[0].layout
-    ids = {f.id for f in functions(result.model).values() if "H1/fn/" in "/".join(f.key)}
-    (one,) = (p for p in layout.placed if p.function in ids)
-    pin = next(q for q in one.geometry.ports if q.name == "1")
-    body = one.geometry.body
-    x, y = one.at.x + body.x, one.at.y + body.y
-    return (one.at.x + pin.at.x, one.at.y + pin.at.y), (x, y, x + body.width, y + body.height)
+def _host_pin(shape: str) -> str:
+    """F2's pin the lamp hangs from."""
+    return {"mcb": "1.out", "up": "in"}.get(shape, "out")
 
 
-def _on_outline(a: tuple[int, int], b: tuple[int, int], box: tuple[int, int, int, int]) -> bool:
+def _on_outline(a: Point, b: Point, box: tuple[int, int, int, int]) -> bool:
     """Whether the segment a-b lies along one of the box's four edges."""
     left, top, right, bottom = box
     flat = a[1] == b[1] and a[1] in (top, bottom) and min(a[0], b[0]) < right
@@ -149,19 +198,21 @@ def _on_outline(a: tuple[int, int], b: tuple[int, int], box: tuple[int, int, int
 @pytest.mark.parametrize(("shape", "bottom_up"), _SHAPES)
 def test_a_beside_chain_joins_its_host_by_one_net(shape: str, *, bottom_up: bool) -> None:
     built = _build(shape, bottom_up=bottom_up)
-    points = _join(built)  # a route at all: a marker pair draws none
-    pin, body = _lamp(built)
+    pin = _pin(built, "H1", "in")
+    points = _join(built, pin, _pin(built, "F2", _host_pin(shape)))  # a marker pair draws none
+    lamp, body = _drawn(built, "H1"), _shape(_drawn(built, "H1")).body
+    box = (lamp.x + body.x, lamp.y + body.y, lamp.x + body.x + body.w, lamp.y + body.y + body.h)
     # The lamp is a box. A join meets a box pin perpendicular to the box edge: the run stays level
     # at the host's height, the box stands a grid or more lower, and a vertical drop enters its
     # top pin. A wire never runs along a symbol outline (JOIN-VERTICAL).
-    walk = points if points[0] == pin else points[::-1]
+    walk = points
     assert walk[0] == pin, "the join ends on H1's pin 1"
     assert walk[1] == (pin[0], pin[1] - 8), "the last segment is a vertical drop of one grid"
     # a level run, then the host's pin: a 3-pole host's pin leaves by a grid, its own stub
     assert len(walk) == (4 if shape == "mcb" else 3), "a drop, a level run and the host's pin"
     assert walk[1][1] == walk[2][1], "the run is level"
     assert walk[-1][1] == walk[2][1] - (8 if shape == "mcb" else 0), "the run is at the host's pin"
-    assert not any(_on_outline(p, q, body) for p, q in pairwise(points)), "no run on the outline"
+    assert not any(_on_outline(p, q, box) for p, q in pairwise(points)), "no run on the outline"
     # The box's own pins turn to face the head once it stands lower, which can widen its column:
     # the host keeps its row below the page's top, and keeps its place along x whenever no box
     # stands left of it (a marker stood a grid out moves the whole page's top by that grid)

@@ -10,6 +10,7 @@ from collections.abc import Mapping
 from dataclasses import replace
 from typing import TYPE_CHECKING
 
+from .keys import natural_key
 from .values import Finding
 
 if TYPE_CHECKING:
@@ -118,7 +119,7 @@ def keep_together(
         at = [i for i, b in enumerate(out) if members & names[b.id]]
         if len(at) <= 1:
             continue
-        subject = ",".join(sorted(members))
+        subject = ",".join(sorted(members, key=natural_key))
         if sum(out[i].width_est + gap for i in at) > page:
             unmet.append(
                 Finding(

@@ -5,4 +5,4 @@ to `packages/fransys-layout/pyproject.toml`'s version.
 """
 
 # The package's `pyproject.toml` version: a test keeps the two equal (decision layout-0029).
-ENGINE_VERSION = "0.21.1"
+ENGINE_VERSION = "0.21.2"

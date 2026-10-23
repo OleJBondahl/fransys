@@ -22,6 +22,7 @@ from typing import TYPE_CHECKING
 
 import fransys as fr
 import pytest
+from _drawn_facts import document_facts, symbol_subjects
 from _drawn_pages import drawn_pages
 from fransys.colours import BU
 
@@ -189,7 +190,7 @@ def test_each_cut_24v_end_is_a_bar_and_each_cut_0v_end_a_ground(main) -> None:
     # one symbol per port and page, never two at a pin
     assert len({(one.port, one.page) for one in _symbols(model)}) == len(_symbols(model))
     # the fixture spans three sheets of schematic
-    assert len(_gap(model, "document fact")) == 3
+    assert len(document_facts(model)) == 3
 
 
 def test_power_ends_print_the_net_name_and_no_hash_reference(main) -> None:
@@ -241,7 +242,7 @@ def test_no_power_text_stands_on_a_symbol_body(tmp_path, loads: int) -> None:
         below = body.y + body.height <= box.y <= body.y + body.height + 4
         assert above or below
     for text in texts:
-        for one in _gap(model, "symbol subject").values():
+        for one in symbol_subjects(model):
             if one.page == text.page:
                 assert not overlaps(_text_box(text), _drawn_body(one))
 
@@ -281,7 +282,7 @@ def test_no_power_text_overlaps_a_placed_function_on_any_page(main) -> None:
     texts = _power_texts(model)
     assert texts
     bodies_by_page = {}
-    for one in _gap(model, "symbol subject").values():
+    for one in symbol_subjects(model):
         bodies_by_page.setdefault(one.page, []).append(_drawn_body(one))
     for one in _symbols(model):
         bodies_by_page.setdefault(one.page, []).append(_body(one))
@@ -305,11 +306,7 @@ def test_a_conductor_between_two_0v_pins_is_two_grounds_and_no_join(main) -> Non
 
 def test_a_power_supply_has_ac_pins_on_top_and_dc_pins_at_the_bottom(main) -> None:
     """The PSU's `L` and `N` stand on the AC supply, so they sit above its `+` and `-` (D5)."""
-    (psu,) = (
-        s
-        for s in _gap(main.model, "symbol subject").values()
-        if s.symbol == "generic-box" and (s.owner or "").startswith("T1 ")
-    )
+    (psu,) = (s for s in symbol_subjects(main.model) if s.symbol == "generic-box" and s.tag == "T1")
     assert dict(psu.sides) == {"input.L": "n", "input.N": "n", "output.+": "s", "output.-": "s"}
 
 
@@ -383,7 +380,7 @@ def test_an_ac_supply_draws_no_power_symbol(tmp_path) -> None:
 
 def _shape(model) -> dict:
     """Every power symbol's origin and orientation and every power text's box, by pin and page."""
-    pages = {p.id: p.number for p in _gap(model, "document fact").values()}
+    pages = {page: record.number for page, record in document_facts(model).items()}
     texts = {(one.port, one.page): _text_box(one) for one in _power_texts(model)}
     return {
         ((_key5(model, one.port)[0].split("/")[1], *_key5(model, one.port)[1:]), pages[one.page]): (

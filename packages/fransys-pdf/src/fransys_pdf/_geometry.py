@@ -3,9 +3,9 @@
 from typing import TYPE_CHECKING
 
 from fransys_model.derive import (
-    PRESET_HEADINGS,
     document_facts,
     document_unit,
+    preset_headings,
     subject_label,
     unit_release,
 )
@@ -40,7 +40,7 @@ def document_release(model: Model, record: DocumentRow) -> UnitReleaseId | None:
 
 def document_heading(model: Model, record: DocumentRow) -> str:
     """`<preset words> — <subject label>`, the words alone when the label is empty."""
-    words = PRESET_HEADINGS[record.preset]
+    words = preset_headings(model)[record.preset]
     subject = subject_label(model, record.id)
     if not subject:
         return words

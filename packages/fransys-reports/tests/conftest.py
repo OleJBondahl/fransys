@@ -5,7 +5,9 @@ collects records and `model()` freezes them, in the order given or in any other.
 their models from the fixtures at the bottom; this workspace resolves no test-directory imports.
 """
 
+import tomllib
 from decimal import Decimal
+from pathlib import Path
 from random import Random
 from typing import Any
 
@@ -18,7 +20,17 @@ from fransys_model.layout import (
     DrawingLibrary,
     PaperChoice,
     a2_sheet_format,
+    colour_codes,
     default_sheet_format,
+    frame_form,
+    harness_text,
+    reference_text,
+    revision_form,
+    revision_table_form,
+    stub_text,
+    title_block_form,
+    wire_label_text,
+    words,
 )
 from fransys_model.vocab import PageKind
 from fransys_model.vocab.aspects import AspectNode, Placement
@@ -62,6 +74,28 @@ def paper_records() -> tuple[Record, Record, PaperChoice]:
     )
 
 
+def house_records() -> tuple[Record, ...]:
+    """The house text records of `settings.toml`, built by the model's builders."""
+    path = Path(__file__).parents[2] / "fransys" / "src" / "fransys" / "settings.toml"
+    t = tomllib.loads(path.read_text(encoding="utf-8"))
+    return (
+        reference_text(**t["reference"]),
+        frame_form(**t["frame"]),
+        stub_text(**t["stub"]),
+        wire_label_text(**t["wire_label"]),
+        harness_text(**t["harness"]),
+        colour_codes(**t["colours"]),
+        title_block_form(**t["title_block"]),
+        revision_table_form(**t["revision_table"]),
+        revision_form(
+            date_format=t["revision"]["date_format"],
+            initials_required=t["revision"]["initials_required"],
+            printed=t["revision"]["format"],
+        ),
+        words(t["words"]),
+    )
+
+
 def freeze(draft: Draft) -> Model:
     """`draft` frozen, with the drawing library record the facade writes (GRID-HOME G6)."""
     record = DrawingLibrary(
@@ -72,9 +106,17 @@ def freeze(draft: Draft) -> Model:
         wire_pitch=8,
         wire_pitch_fine=4,
         font_family="DejaVu Sans",
-        capital_ratio=Decimal(1493) / _EM,
         ascent_ratio=Decimal(1556) / _EM,
         descent_ratio=Decimal(426) / _EM,
+        ems=frozendict(
+            {
+                h: Decimal(h) * _EM / 1493
+                for h in ("1", "1.8", "2", "2.2", "2.5", "3", "3.2", "3.5", "4", "5", "6")
+            }
+        ),
+        lines=frozendict(
+            {"normal": Decimal("0.25"), "thick": Decimal("0.5"), "rule": Decimal("0.18")}
+        ),
         heights=frozendict(
             {
                 "smallest": Decimal("1.8"),
@@ -85,7 +127,9 @@ def freeze(draft: Draft) -> Model:
         ),
     )
     origin = Origin(file="conftest.py", line=0, note="test library")
-    return evolve(kernel_freeze(draft), put=(record, *paper_records()), origin=origin)
+    return evolve(
+        kernel_freeze(draft), put=(record, *paper_records(), *house_records()), origin=origin
+    )
 
 
 _ORIGIN = Origin(file="conftest.py", line=1, note="fixture")

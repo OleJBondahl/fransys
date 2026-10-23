@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from typing import TYPE_CHECKING
 
 from .arrow_reserve import arrow_ends, reserve
 from .constraints import Graph
 from .errors import CoreError
-from .geometry import cell_footprint, pin_xy
+from .geometry import cell_footprint, pin_xy, union, view_of
 from .keys import natural_key
 from .marker_flags import pair_steps
 from .marker_room import row_rooms
@@ -18,6 +19,7 @@ from .place_align import page_aligns, unmet_mates
 from .place_foreign import clear_foreign
 from .place_join_room import join_rooms
 from .place_levels import Span, trunk_levels
+from .place_reach import card_reaches
 from .place_ring import ring_symbols
 from .place_room import Step, crossed_levels, origins, step_rooms
 from .place_trunk import (
@@ -66,7 +68,7 @@ def _gap(env: PageEnv, above: Cell, below: Cell, room: int = 0) -> int:
         pin_xy(env.syms[above.sym], above, above.bottom_pin)[1] if above.bottom_pin else fa.y + fa.h
     )
     pb = _pin_y(env, below, below.top_pin) if below.top_pin else fb.y
-    return grid_up(max(by_box, pa + pins - pb), env.options.wiring_grid)
+    return grid_up(max(by_box, pa + pins - pb) + below.hold, env.options.wiring_grid)
 
 
 def _same_symbol(g: Graph, pc: PlacedColumn, lane: int, index: int, cell: Cell) -> None:
@@ -149,13 +151,22 @@ def _attach_y(
     body, cells = env.syms[box].body, pc.lanes[0]
     if above:
         dy = _pin_y(env, cells[-1], cells[-1].bottom_pin)
-        g.equal(
-            box_y_node(box), cell_node(pc.id, 0, len(cells) - 1), body.y - env.options.wire_min - dy
-        )
+        wire = _hang(env, cells[-1], above=True, dy=dy)
+        g.equal(box_y_node(box), cell_node(pc.id, 0, len(cells) - 1), body.y - wire - dy)
     else:
         dy = _pin_y(env, cells[0], cells[0].top_pin)
-        at = box_y_node(box), cell_node(pc.id, 0, 0), body.y + body.h + env.options.wire_min - dy
+        wire = _hang(env, cells[0], above=False, dy=dy)
+        at = box_y_node(box), cell_node(pc.id, 0, 0), body.y + body.h + wire - dy
         g.after(*at) if slack else g.equal(*at)
+
+
+def _hang(env: PageEnv, cell: Cell, *, above: bool, dy: int) -> int:
+    """wire_min and the cell's marker room on the box side, or its keep-out's reach if more."""
+    room = env.flag_room.get(cell.sym, Room())
+    view = view_of(env.syms[cell.sym], cell.orient)
+    hard = union(view.body, view.keepout)
+    reach = hard.y + hard.h - dy if above else dy - hard.y
+    return max(env.options.wire_min + (room.down if above else room.up), reach)
 
 
 def _box_y(g: Graph, r: int, env: PageEnv, box: str) -> None:
@@ -296,12 +307,18 @@ def _steps(
     return {k: max(jogs.get(k, 0), flags.get(k, 0)) for k in jogs.keys() | flags.keys()}
 
 
+def _with_spans(env: PageEnv, x: Mapping[str, int]) -> tuple[PageEnv, list[Span], CrossedRooms]:
+    """The env that holds the anchored items' reach under each trunk, the spans and the levels."""
+    spans = _spans(env, x)
+    return replace(env, reaches=card_reaches(env, x, spans)), spans, crossed_levels(env, x)
+
+
 def place_y(env: PageEnv, x: Mapping[str, int]) -> tuple[dict[str, int], tuple[Finding, ...]]:
     """The y of every cell, box, row and trunk node of the page, and the alignments dropped.
 
     Raises YCycleError (a CoreError) when the stacks and trunks alone are cyclic.
     """
-    spans, crossed = _spans(env, x), crossed_levels(env, x)
+    env, spans, crossed = _with_spans(env, x)
     rooms = _steps(env, x, spans, crossed)
     tangled, refused = _settle(env, spans, rooms, crossed)
     base, _, _ = _y_graph(env, spans, (tangled, frozenset()), rooms, crossed)

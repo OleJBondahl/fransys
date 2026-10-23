@@ -1,4 +1,20 @@
 {
+  "dash": {
+    "dash_dot": [
+      4,
+      1,
+      0.25,
+      1
+    ],
+    "dashed": [
+      1.25,
+      0.625
+    ],
+    "long": [
+      4,
+      1
+    ]
+  },
   "font": {
     "advances": {
       "normal": {
@@ -417,6 +433,7 @@
   },
   "lines": {
     "normal": 0.25,
+    "rule": 0.18,
     "thick": 0.5
   },
   "schema": 1,
@@ -13270,6 +13287,16 @@
     },
     {
       "id": "marker",
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "id": "core",
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "id": "diagram_line",
       "style": "solid",
       "weight": "normal"
     },

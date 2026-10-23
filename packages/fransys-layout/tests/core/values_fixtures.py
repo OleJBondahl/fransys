@@ -47,6 +47,7 @@ from fransys_layout.core.values import (
     Cell,
     Column,
     CrossLink,
+    CutEnd,
     CutResult,
     CycleSplit,
     End,
@@ -90,6 +91,7 @@ def problem() -> PlacementProblem:
         band=1,
         item="I1",
         child_of="K0",
+        rank=3,
         boundary_of="U2",
     )
     plain = dataclasses.replace(
@@ -110,6 +112,7 @@ def problem() -> PlacementProblem:
                 Bundle("B", 1),
                 crosses_unit=True,
                 label=Size(16, 8),
+                cut=(CutEnd(PinRef("K1", "1"), "W1"),),
             ),
             Net("N2", (PinRef("K1", "2"), PinRef("K2", "2"))),
         ),
@@ -117,7 +120,10 @@ def problem() -> PlacementProblem:
             keep_whole=(frozenset({"K1", "K2"}),),
             units=(Unit("U1", "U0", (PinRef("K1", "1"),)),),
             mates=((PinRef("K1", "1"), PinRef("K2", "1")),),
-            series=(Series(("K1", Parallel(("K2", Series(("K3", "K4")))))),),
+            series=(
+                Series(("K1", Parallel(("K2", Series(("K3", "K4")))))),
+                Series(("K5",), "tail"),
+            ),
         ),
         anchors=(Anchor(PinRef("K1", "1"), (("E", Pose("R90", (8, 0), BOX, (8, 0))),)),),
         hints=Hints(
@@ -145,7 +151,7 @@ def layout() -> CoreLayout:
                     1,
                     (Placed("K1", 1, 8, 8, "R0", BOX, BOX, (PinXY("1", 16, 8),)),),
                     (Gap("g1", 1, "C1", "C2", 0, 8, 2, 0, 64),),
-                    (Trunk("F1", 1, 24, 0, 64, 2, 0),),
+                    (Trunk("F1", 1, 24, 0, 64, 2, 0, ((0, 64), (0, 64))),),
                     ((0, 64),),
                     ((0, 64),),
                     {"C1": (0, 64)},
@@ -157,7 +163,7 @@ def layout() -> CoreLayout:
             (
                 PageRoutes(
                     1,
-                    (Wire("N1", 1, ((0, 0), (8, 0)), "routed", 2),),
+                    (Wire("N1", 1, ((0, 0), (8, 0)), "routed", lane=1),),
                     (Demand("g1", 2),),
                     Counts(0, 1, 2, 8, 0),
                 ),
@@ -181,10 +187,10 @@ def layout() -> CoreLayout:
 
 def flow_values() -> tuple[object, ...]:
     """The stage 1 to 4 values that no problem or layout holds, each with optionals set."""
-    cell = Cell("K1", "R90", "1", "2")
+    cell = Cell("K1", "R90", "1", "2", hold=8)
     end = End("fan", "N1", PinRef("K1", "1"), "F1", 0)
     column = Column("C1", (Lane((cell,), 8),), (end,), (end,), 32, 16, (("n1",),))
-    attach = Attach("C1", 0, 0, PinRef("K1", "1"), 1)
+    attach = Attach("C1", 0, 0, PinRef("K1", "1"), 1, net="N1")
     fan = Fan("F1", ("N1",), (attach,), (attach,), "K1", 1, "E", (("K2", (1, 0)),), attach)
     block = Block(
         "b1",
@@ -241,7 +247,7 @@ def scene_value() -> Scene:
         Size(800, 600),
         1,
         (box,),
-        (SceneWire("N1", 1, ((0, 0), (8, 0)), 2, "trunk"),),
+        (SceneWire("N1", 1, ((0, 0), (8, 0)), "trunk"),),
         (SceneMarker("N1", RefKind.TAG, 1, 4, 4, "K1", "1", "3C", "S"),),
         frozenset({"N1"}),
         (0.5,),

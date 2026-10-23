@@ -24,6 +24,7 @@ import fransys_render
 from _pdf_lists import source
 from fransys.colours import RD
 
+from electrical_symbols import LIBRARY
 from fransys_model.derive import document_sheets_of
 from fransys_model.vocab.tables import documents
 
@@ -54,7 +55,7 @@ def _built() -> tuple[fr.BuildResult, dict[str, str], Any]:
         )
     texts = {
         str(record.preset): source(
-            built.model, doc_id, {}, fransys_render.sheets(document_sheets_of(built.model))
+            built.model, doc_id, {}, fransys_render.sheets(document_sheets_of(built.model), LIBRARY)
         )
         for doc_id, record in documents(built.model).items()
     }

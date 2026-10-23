@@ -8,6 +8,7 @@ from fransys_model.layout import DrawingSet, Page, layout_of
 lazy from fransys_model.kernel import Model
 
 from .frame_position import location_path, position_text
+from .house_settings import reference_text_of
 from .set_rank import set_rank
 
 __all__ = ["page_reference_text"]
@@ -19,4 +20,5 @@ def page_reference_text(model: Model, page: Page, *, with_location: bool = False
     if with_location:
         node = layout_of(model, DrawingSet)[page.drawing_set].location
         labels = tuple(label for _, label in location_path(model, node))
-    return position_text(page.number, None, None, labels, set_number=set_rank(model, page))
+    refs = reference_text_of(model)
+    return position_text(refs, page.number, None, labels, set_number=set_rank(model, page))

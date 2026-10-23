@@ -289,3 +289,25 @@ def test_an_order_function_with_a_callable_parameter_is_refused_by_name(params):
     assert callable_param_orders(tree, "fransys_model.derive.rows") == []
     plain = ast.parse("def first_device(devices, ranks: Mapping):\n    return devices\n")
     assert callable_param_orders(plain, "fransys_model.derive.order_kit") == []
+
+
+ORDER_SIBLING = "fransys_model.derive.order_kit"
+
+
+@pytest.mark.parametrize(
+    "key", ["lambda f: f.origin", "lambda p: (p.upper, p.lower)", "lambda f: f.a.b"]
+)
+def test_an_order_sibling_sorting_by_an_attribute_lambda_is_a_site(key):
+    source = f"def f(xs):\n    return sorted(xs, key={key})\n"
+    assert _sites(order_sites, source, ORDER_SIBLING) == {f"{ORDER_SIBLING}::f": [2]}
+
+
+@pytest.mark.parametrize("key", ["lambda f: g(f)", "lambda f: f.a()", "len"])
+def test_an_order_sibling_with_another_key_is_no_site(key):
+    source = f"def f(xs):\n    return sorted(xs, key={key})\n"
+    assert _sites(order_sites, source, ORDER_SIBLING) == {}
+
+
+def test_the_order_module_itself_may_sort_by_an_attribute_lambda():
+    source = "def f(xs):\n    return sorted(xs, key=lambda f: f.origin)\n"
+    assert _sites(order_sites, source, "fransys_model.derive.order") == {}

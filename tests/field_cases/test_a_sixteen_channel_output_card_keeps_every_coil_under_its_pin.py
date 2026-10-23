@@ -16,25 +16,15 @@ and the box prints its pins in marking order.
 import tempfile
 from functools import cache
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import fransys as fr
-from _drawn_pages import drawn_pages
+from _drawn_facts import Placed, symbol_subjects
 from fransys.colours import BU
 
 from fransys_model.layout import LinkMarker, layout_of
 from fransys_model.vocab.tables import functions, ports
 
-if TYPE_CHECKING:
-    from fransys_layout.drawing import DrawnSymbol
-
 COUNT = 16
-
-
-def _gap(model, fact: str):
-    """A fact the page Drawing lacks (strict xfail, GAP-FLIP-DRAWING-SUBJECT)."""
-    msg = f"GAP-FLIP-DRAWING-SUBJECT: no {fact} for {model.digest}"
-    raise AssertionError(msg)
 
 
 @cache
@@ -63,15 +53,10 @@ def _built() -> fr.BuildResult:
     return fr.build(d, doc)
 
 
-def _box_pins() -> tuple[object, DrawnSymbol, dict[int, int]]:
+def _box_pins() -> tuple[object, Placed, dict[int, int]]:
     """The card's drawn box and its page; each channel's pin x (box origin plus the pin offset)."""
     model = _built().model
-    page, box = next(
-        (page, r)
-        for page, drawing in drawn_pages(model).items()
-        for r in drawing.symbols
-        if r.key == "generic-box" and _gap(model, "symbol subject")
-    )
+    page, box = next((r.page, r) for r in symbol_subjects(model) if r.key == "generic-box")
     offsets = dict(box.offsets)
     return page, box, {i: box.x + offsets[f"do_{i}.{i}"] for i in range(1, COUNT + 1)}
 
@@ -80,11 +65,9 @@ def test_every_coil_hangs_under_its_own_channel_pin() -> None:
     page, _, pins = _box_pins()
     model = _built().model
     coils = {
-        int(tag[1:]) - 1: (coil_page, r)
-        for coil_page, drawing in drawn_pages(model).items()
-        for r in drawing.symbols
+        int(r.tag[1:]) - 1: (r.page, r)
+        for r in symbol_subjects(model)
         if r.key == "operating-device"
-        for tag in [_gap(model, "symbol subject")]
     }
     assert sorted(coils) == list(range(1, COUNT + 1))
     for channel, (coil_page, coil) in coils.items():

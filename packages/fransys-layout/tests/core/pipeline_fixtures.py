@@ -28,6 +28,7 @@ def flow_of(prob: PlacementProblem, options: Options | None = None) -> FlowGraph
             flip_turn="R180",
             tag_stagger=True,
             label_gap=8,
+            parallel_pitch=48,
             driver_first=True,
             arrow_sides=("E", "W"),
         ),
@@ -43,6 +44,7 @@ def blocks_of(prob: PlacementProblem, options: Options | None = None) -> tuple[B
         flip_turn="R180",
         tag_stagger=True,
         label_gap=8,
+        parallel_pitch=48,
         driver_first=True,
         arrow_sides=("E", "W"),
     )
@@ -58,6 +60,7 @@ def cut_of(prob: PlacementProblem, options: Options | None = None) -> CutResult:
         flip_turn="R180",
         tag_stagger=True,
         label_gap=8,
+        parallel_pitch=48,
         driver_first=True,
         arrow_sides=("E", "W"),
     )
@@ -80,6 +83,7 @@ def placed_of(prob: PlacementProblem, options: Options | None = None) -> Placeme
         flip_turn="R180",
         tag_stagger=True,
         label_gap=8,
+        parallel_pitch=48,
         driver_first=True,
         arrow_sides=("E", "W"),
     )
@@ -100,6 +104,7 @@ def routed_of(prob: PlacementProblem, options: Options | None = None) -> Routes:
         flip_turn="R180",
         tag_stagger=True,
         label_gap=8,
+        parallel_pitch=48,
         driver_first=True,
         arrow_sides=("E", "W"),
     )
@@ -117,6 +122,7 @@ def widened_of(
         flip_turn="R180",
         tag_stagger=True,
         label_gap=8,
+        parallel_pitch=48,
         driver_first=True,
         arrow_sides=("E", "W"),
     )
@@ -147,6 +153,7 @@ def labelled_of(
         flip_turn="R180",
         tag_stagger=True,
         label_gap=8,
+        parallel_pitch=48,
         driver_first=True,
         arrow_sides=("E", "W"),
     )
@@ -174,6 +181,7 @@ def wire_labelled_of(
         flip_turn="R180",
         tag_stagger=True,
         label_gap=8,
+        parallel_pitch=48,
         driver_first=True,
         arrow_sides=("E", "W"),
     )
@@ -196,6 +204,7 @@ def solved_of(prob: PlacementProblem, options: Options | None = None) -> CoreLay
         flip_turn="R180",
         tag_stagger=True,
         label_gap=8,
+        parallel_pitch=48,
         driver_first=True,
         arrow_sides=("E", "W"),
     )

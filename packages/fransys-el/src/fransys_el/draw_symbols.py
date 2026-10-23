@@ -11,7 +11,7 @@ from fransys_layout.core import junctions
 from fransys_layout.drawing import DrawnSymbol
 
 from .drawn_identity import outline_of
-from .drawn_ids import symbol_id
+from .drawn_ids import core_symbol_id, symbol_id
 from .placement_kit import refuse
 from .write_drawn import _leads, _offsets, _sides
 
@@ -50,7 +50,7 @@ def placed_symbols(
             yield (
                 pages[p.page].id,
                 DrawnSymbol(
-                    id=symbol_id(*_KEY, "drawn_symbol", p.sym),
+                    id=core_symbol_id(p.sym),
                     key=key,
                     x=p.x,
                     y=p.y,

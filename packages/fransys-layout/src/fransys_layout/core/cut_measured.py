@@ -29,6 +29,8 @@ class Measured:
     heights: Mapping[str, int] = field(default_factory=dict)
     columns: Mapping[str, int] = field(default_factory=dict)
     rises: Mapping[str, int] = field(default_factory=dict)
+    arrows: Mapping[str, int] = field(default_factory=dict)
+    """A card's box id to the row's planned reference-arrow width in G: the cut must see it."""
 
 
 def measured_blocks(

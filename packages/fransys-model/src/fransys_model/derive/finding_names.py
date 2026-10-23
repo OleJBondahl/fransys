@@ -15,6 +15,7 @@ from fransys_model.derive.designation import (
 )
 from fransys_model.derive.drawing_text import outline_title, release_title, tag_text, wire_text
 from fransys_model.derive.facts.subjects import subject_kind
+from fransys_model.derive.house_settings import revision_form_of
 from fransys_model.derive.instance_tag import instance_name, unit_tag
 from fransys_model.derive.kinds import item_kind
 from fransys_model.derive.plc_channel_text import plc_channel_text
@@ -48,7 +49,11 @@ def _unit(model: Model, target: Id[Any]) -> str:
 
 def _release(model: Model, target: Id[Any]) -> str:
     releases = unit_releases(model)
-    return release_title(releases[target]) if target in releases else "unit release"
+    return (
+        release_title(revision_form_of(model), releases[target])
+        if target in releases
+        else "unit release"
+    )
 
 
 def _net(model: Model, target: Id[Any]) -> str:

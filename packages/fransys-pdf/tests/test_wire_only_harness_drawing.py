@@ -11,6 +11,7 @@ from _build import source
 from fransys.colours import BU
 from fransys_pdf import check
 
+from electrical_symbols import LIBRARY
 from fransys_model.derive import document_sheets_of
 from fransys_model.derive.cable_drawing import cable_block_key
 from fransys_model.vocab import DocumentPreset, documents, items
@@ -64,7 +65,7 @@ def test_a_wire_only_harness_with_its_svg_is_clean_and_embeds_it(tmp_path):
     svgs = {cable_block_key(None, harness): "<svg>wire-only-marker</svg>"}
     assert [f for f in check(model, svgs) if f.code == _NO_DRAWINGS] == []
     assert "wire-only-marker" in source(
-        model, doc_id, svgs, fransys_render.sheets(document_sheets_of(model))
+        model, doc_id, svgs, fransys_render.sheets(document_sheets_of(model), LIBRARY)
     )
 
 

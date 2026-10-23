@@ -9,9 +9,10 @@ from itertools import pairwise
 from typing import Protocol
 lazy from collections.abc import Sequence
 
-lazy from .core.values import XY, Box
+lazy from .core.values import XY, Box, Size
 
 __all__ = (
+    "fill_percent",
     "page_texts",
     "struck_texts",
     "text_overlaps",
@@ -39,16 +40,29 @@ class DrawnWire(Protocol):
     def label(self) -> DrawnText | None: ...
 
 
-class DrawnOutline(Protocol):
-    """What a read needs of an outline: its label."""
+class DrawnSymbol(Protocol):
+    """What a read needs of a symbol: its placed body box, if the producer knew one."""
 
+    @property
+    def outline(self) -> Box | None: ...
+
+
+class DrawnOutline(Protocol):
+    """What a read needs of an outline: its points and its label."""
+
+    @property
+    def points(self) -> Sequence[XY]: ...
     @property
     def label(self) -> DrawnText | None: ...
 
 
 class Drawing(Protocol):
-    """What a read needs of a drawing: texts, wires, outlines."""
+    """What a read needs of a drawing: its area, symbols, texts, wires, outlines."""
 
+    @property
+    def area(self) -> Size: ...
+    @property
+    def symbols(self) -> Sequence[DrawnSymbol]: ...
     @property
     def texts(self) -> tuple[DrawnText, ...]: ...
     @property
@@ -142,3 +156,30 @@ def page_texts(drawing: Drawing) -> tuple[DrawnText, ...]:
     """Every text a drawing carries: its texts, then each wire label, then each outline label."""
     labels = [w.label for w in drawing.wires] + [o.label for o in drawing.outlines]
     return drawing.texts + tuple(t for t in labels if t is not None)
+
+
+def _ink(drawing: Drawing) -> list[tuple[int, int, int, int]]:
+    """The (x0, y0, x1, y1) of every placed body, text, wire and outline of a drawing."""
+    boxes = [s.outline for s in drawing.symbols if s.outline is not None]
+    boxes += [t.box for t in page_texts(drawing)]
+    found = [(b.x, b.y, b.x + b.w, b.y + b.h) for b in boxes]
+    for points in [w.points for w in drawing.wires] + [o.points for o in drawing.outlines]:
+        if points:
+            xs, ys = [p[0] for p in points], [p[1] for p in points]
+            found.append((min(xs), min(ys), max(xs), max(ys)))
+    return found
+
+
+def fill_percent(drawing: Drawing) -> int:
+    """The share of the page's content box (`area`) that its placed ink spans, 0 to 100.
+
+    The ink is one extent: the box around every symbol body, text, wire and outline, clipped to
+    the area. A page with no ink, or no area, reads 0. Whole percent, rounded down.
+    """
+    ink = _ink(drawing)
+    width, height = drawing.area.w, drawing.area.h
+    if not ink or width <= 0 or height <= 0:
+        return 0
+    x0, y0 = max(0, min(i[0] for i in ink)), max(0, min(i[1] for i in ink))
+    x1, y1 = min(width, max(i[2] for i in ink)), min(height, max(i[3] for i in ink))
+    return max(0, x1 - x0) * max(0, y1 - y0) * 100 // (width * height)

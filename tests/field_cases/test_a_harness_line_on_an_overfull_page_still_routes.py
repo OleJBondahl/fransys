@@ -264,8 +264,8 @@ def _pages(built: fr.BuildResult) -> list[tuple[int, Drawing]]:
 
 
 def _lines(drawing: Drawing) -> list[DrawnWire]:
-    """The harness lines of a page: the wires drawn as a bundle (lanes above one)."""
-    return [w for w in drawing.wires if w.lanes > 1]
+    """The harness lines of a page: the wires drawn as a bundle (style trunk)."""
+    return [w for w in drawing.wires if w.style == "trunk"]
 
 
 def _w1(wire: DrawnWire) -> bool:

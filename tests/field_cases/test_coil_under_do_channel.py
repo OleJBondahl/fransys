@@ -18,6 +18,7 @@ import tempfile
 from pathlib import Path
 
 import fransys as fr
+from _drawn_facts import symbol_subjects
 from _drawn_pages import drawn_pages
 from fransys.colours import BU
 
@@ -56,13 +57,8 @@ def _one(model, tag: str, name: str, symbol: str | None = None) -> tuple:
     wanted = {
         f.id.value for f in functions(model).values() if f.name == name and tag_of[f.item] == tag
     }
-    (found,) = (
-        (page, s)
-        for page, drawing in _gap(model, "symbol subject").items()
-        for s in drawing.symbols
-        if s.owner and s.owner.split(":")[-1] in wanted and symbol in (None, s.key)
-    )
-    return found
+    (found,) = (s for s in symbol_subjects(model) if s.owner in wanted and symbol in (None, s.key))
+    return found.page, found
 
 
 def _home(model, page) -> tuple:
@@ -105,9 +101,7 @@ def test_each_moved_coil_draws_the_rail_ground() -> None:
     port_of = {(ports(model)[p].function, ports(model)[p].name): p for p in ports(model)}
     for number in (2, 3):
         _, coil = _one(model, f"K{number}", "coil", "operating-device")
-        fid = next(
-            f.id for f in functions(model).values() if f.id.value == coil.owner.split(":")[-1]
-        )
+        fid = next(f.id for f in functions(model).values() if f.id.value == coil.owner)
         assert port_of[fid, "A2"] in grounds
 
 

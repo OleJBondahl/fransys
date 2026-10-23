@@ -130,7 +130,7 @@ Use `d.series` through the cable first: it takes the next free core. Use `core` 
 | keyword | default | effect | example |
 |---|---|---|---|
 | `target` | required | A function, a device, or a `FunctionKind` such as `FunctionKind.X`, passed as a name. A string raises. | `d.layout.symbol(P.Q, "breaker")` |
-| `symbol` | required | The library symbol to draw. | `d.layout.symbol(P.Q, "breaker")` |
+| `symbol` | required | The library symbol to draw; `"generic-box"` draws the labelled box. An actuator whose ports are not the motor terminals (U, V, W, PE) draws as that box by default. | `d.layout.symbol(P.Q, "breaker")` |
 | `port_map` | `None` | Maps a model port name to a symbol port name where they differ. A port not listed keeps its name. These names are strings, the last place a typed part's pin is still one. | `port_map={"13": "1.in"}` |
 
 ## Keywords a consumer never passes

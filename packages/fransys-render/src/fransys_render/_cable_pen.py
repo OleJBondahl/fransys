@@ -1,31 +1,35 @@
-"""The pen of a cable block: grid to mm, and the SVG elements a block is made of."""
+"""The pen of a cable block: grid to mm, and the toolkit's shapes a block is made of."""
 
 from dataclasses import dataclass
 from decimal import Decimal
-from xml.sax.saxutils import escape
+from typing import TYPE_CHECKING
 
-from fransys_model.derive.print_sizes import (
-    DASH_GAP_MM,
-    DASH_LONG_MM,
-    LINE_THIN_MM,
-)
+from symdef import Point, Weight, line_mm, outline_mm, rect_mm, text_tag, wire
 
-from ._library import ASCENT_RATIO, grid_to_mm, text_room_g
+from electrical_symbols import sheet_svg
+
+from ._library import font_family, grid_to_mm, text_room_g
 from ._numbers import format_decimal, printed_font_mm
+from ._symbols import symbol_body
+
+if TYPE_CHECKING:
+    from electrical_symbols import Library
 
 type Grid = int | Decimal
 
-_DASH = f' stroke-dasharray="{format_decimal(DASH_LONG_MM)},{format_decimal(DASH_GAP_MM)}"'
+_INK = "black"  # cable blocks print black on white
+_DASH = "long"  # the dash a by-others box and its cells are drawn with (`[dash]` of the library)
 
 
 @dataclass(frozen=True)
 class Pen:
-    """Converts a block's grid positions to mm on its sheet's module, and writes its elements.
+    """Converts a block's grid positions to mm on its sheet's module, and draws its shapes.
 
     A block's origin is its own top-left (0, 0), not the sheet's content box. A position may be
     a half grid unit (a cell's middle), so every method takes an `int` or a `Decimal`.
     """
 
+    library: Library
     module_mm: Decimal
     text_height_mm: Decimal
     pad_g: int
@@ -33,33 +37,39 @@ class Pen:
     @property
     def font_g(self) -> int:
         """The grid units one text line is given."""
-        return text_room_g(self.text_height_mm, self.module_mm)
+        return text_room_g(self.library, self.text_height_mm, self.module_mm)
 
     @property
     def font_mm(self) -> Decimal:
         """The printed font size in mm."""
-        return printed_font_mm(self.text_height_mm)
+        return printed_font_mm(self.library, self.text_height_mm)
 
     def mm(self, g: Grid) -> str:
         """`g` grid units as mm, in the shortest decimal form."""
         return format_decimal(grid_to_mm(0, g, self.module_mm))
 
+    def _at(self, g: Grid) -> float:
+        return float(grid_to_mm(0, g, self.module_mm))
+
+    def _box(self, box: tuple[Grid, Grid, Grid, Grid]) -> tuple[float, float, float, float]:
+        x, y, width, height = box
+        return self._at(x), self._at(y), self._at(width), self._at(height)
+
     def svg(self, width: Grid, height: Grid, body: str) -> str:
         """The `<svg>` of a `width` x `height` block, padded half a stroke so its outline shows."""
-        margin = LINE_THIN_MM / 2
-        w = format_decimal(Decimal(self.mm(width)) + 2 * margin)
-        h = format_decimal(Decimal(self.mm(height)) + 2 * margin)
-        return (
-            f'<svg xmlns="http://www.w3.org/2000/svg" width="{w}mm" height="{h}mm" '
-            f'viewBox="{format_decimal(-margin)} {format_decimal(-margin)} {w} {h}">{body}</svg>'
-        )
+        margin = self.library.lines[Weight.NORMAL] / 2
+        return sheet_svg(self._at(width), self._at(height), body, margin_mm=margin)
 
     def rect(self, css: str, box: tuple[Grid, Grid, Grid, Grid], *, dashed: bool) -> str:
         """One `<rect>` of class `symbol` and `css` over `box` (x, y, width, height)."""
-        x, y, width, height = box
-        return (
-            f'<rect class="symbol {css}" x="{self.mm(x)}" y="{self.mm(y)}" '
-            f'width="{self.mm(width)}" height="{self.mm(height)}"{_DASH if dashed else ""}/>'
+        return rect_mm(
+            self._box(box),
+            library=self.library,
+            weight=Weight.NORMAL,
+            stroke=_INK,
+            fill="none",
+            dash=_DASH if dashed else None,
+            classes=f"symbol {css}",
         )
 
     def outline(self, css: str, box: tuple[Grid, Grid, Grid, Grid], *, dashed: bool) -> str:
@@ -67,24 +77,33 @@ class Pen:
 
         Dashes then start at the same corner on facing edges, so they stay in phase (Fix 2).
         """
-        if not dashed:
-            return self.rect(css, box, dashed=False)
-        x, y, width, height = box
-        edges = (((x, y), (x + width, y)), ((x, y + height), (x + width, y + height)))
-        edges += (((x, y), (x, y + height)), ((x + width, y), (x + width, y + height)))
-        return "".join(self.line(css, a, b, dashed=True) for a, b in edges)
+        return outline_mm(
+            self._box(box),
+            library=self.library,
+            weight=Weight.NORMAL,
+            stroke=_INK,
+            dash=_DASH if dashed else None,
+            classes=f"symbol {css}",
+        )
 
     def line(self, css: str, a: tuple[Grid, Grid], b: tuple[Grid, Grid], *, dashed: bool) -> str:
         """One `<line>` of class `symbol` and `css` from `a` to `b`."""
-        return (
-            f'<line class="symbol {css}" x1="{self.mm(a[0])}" y1="{self.mm(a[1])}" '
-            f'x2="{self.mm(b[0])}" y2="{self.mm(b[1])}"{_DASH if dashed else ""}/>'
+        return line_mm(
+            (self._at(a[0]), self._at(a[1])),
+            (self._at(b[0]), self._at(b[1])),
+            library=self.library,
+            weight=Weight.NORMAL,
+            stroke=_INK,
+            dash=_DASH if dashed else None,
+            classes=f"symbol {css}",
         )
 
-    def polyline(self, css: str, points: tuple[tuple[Grid, Grid], ...]) -> str:
-        """One `<polyline>` of class `wire` and `css` through `points`."""
-        text = " ".join(f"{self.mm(x)},{self.mm(y)}" for x, y in points)
-        return f'<polyline class="wire {css}" points="{text}"/>'
+    def wire(self, style_id: str, points: tuple[tuple[Grid, Grid], ...]) -> str:
+        """The library wire style `style_id` drawn through `points`."""
+        module = self.library.grid.divisions_per_module
+        corners = [(float(Decimal(x) / module), float(Decimal(y) / module)) for x, y in points]
+        drawn = wire(self.library, style_id, corners)
+        return symbol_body(self.library, drawn, self.module_mm, self.font_mm)
 
     def text(
         self,
@@ -99,13 +118,15 @@ class Pen:
 
         With `end` the text ends at x, so it reads leftward from a point.
         """
-        x, top = at
-        font_mm = self.font_mm
-        baseline = grid_to_mm(0, top, self.module_mm) + font_mm * ASCENT_RATIO
-        anchor = ' text-anchor="middle"' if middle else ' text-anchor="end"' if end else ""
-        return (
-            f'<text class="label {css}" x="{self.mm(x)}" y="{format_decimal(baseline)}" '
-            f'font-size="{format_decimal(font_mm)}"{anchor}>{escape(value)}</text>'
+        return text_tag(
+            value,
+            Point(self._at(at[0]), self._at(at[1])),
+            float(self.font_mm),
+            anchor="middle" if middle else "end" if end else "start",
+            font_family=font_family(self.library),
+            at="top",
+            font=self.library.font,
+            classes=f"label {css}",
         )
 
     def upward_text(self, css: str, at: tuple[Grid, Grid], value: str) -> str:
@@ -114,10 +135,14 @@ class Pen:
         The turn is about the baseline's midpoint, as the schematic's vertical references are
         (render-0008); the em box then lies half a font either side of x.
         """
-        font_mm = self.font_mm
-        x = grid_to_mm(0, at[0], self.module_mm) - font_mm / 2 + font_mm * ASCENT_RATIO
-        sx, sy = format_decimal(x), self.mm(at[1])
-        return (
-            f'<text class="label {css}" text-anchor="middle" transform="rotate(-90 {sx} {sy})" '
-            f'x="{sx}" y="{sy}" font-size="{format_decimal(font_mm)}">{escape(value)}</text>'
+        return text_tag(
+            value,
+            Point(self._at(at[0]), self._at(at[1])),
+            float(self.font_mm),
+            anchor="middle",
+            font_family=font_family(self.library),
+            turn=True,
+            at="centre",
+            font=self.library.font,
+            classes=f"label {css}",
         )

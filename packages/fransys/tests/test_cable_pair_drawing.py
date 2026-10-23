@@ -10,6 +10,7 @@ import fransys as fr
 import pytest
 from fransys_render import cable_blocks
 
+from electrical_symbols import LIBRARY
 from fransys_layout import lay_out_cables
 from fransys_model.layout import OpenCoreWire, layout_of
 
@@ -28,7 +29,7 @@ def _model():
 
 
 def _svg() -> str:
-    (svg,) = dict(cable_blocks(_model())).values()
+    (svg,) = dict(cable_blocks(_model(), LIBRARY)).values()
     return svg
 
 
@@ -61,7 +62,7 @@ def test_a_cable_with_no_open_core_writes_no_open_core_wire():
     w1.core(1, x1[1], h1[1])
     model = lay_out_cables(fr.build(d).model)[0]
     assert not layout_of(model, OpenCoreWire)
-    assert ">spare<" not in dict(cable_blocks(model)).popitem()[1]
+    assert ">spare<" not in dict(cable_blocks(model, LIBRARY)).popitem()[1]
 
 
 def test_a_stub_stands_one_grid_unit_long_and_clear_of_the_tracks():

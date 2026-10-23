@@ -14,17 +14,12 @@ import tempfile
 from pathlib import Path
 
 import fransys as fr
+from _drawn_facts import symbol_subjects
 from _drawn_pages import drawn_pages
 from fransys.colours import BU
 
 from fransys_model.layout import PowerSymbol, layout_of
 from fransys_model.vocab.tables import functions, items, ports
-
-
-def _gap(model, fact: str):
-    """A fact the page Drawing lacks (strict xfail, GAP-FLIP-DRAWING-SUBJECT)."""
-    msg = f"GAP-FLIP-DRAWING-SUBJECT: no {fact} for {model.digest}"
-    raise AssertionError(msg)
 
 
 def _plant(d, order: tuple[str, str]) -> None:
@@ -53,12 +48,8 @@ def _built(order: tuple[str, str]):
 
 
 def _box(model, tag: str):
-    """The generic box drawn for the item tagged `tag`; its owner text starts with the tag."""
-    found = [
-        one
-        for one in _gap(model, "symbol subject")
-        if one.key == "generic-box" and one.owner and one.owner.split()[0] == tag
-    ]
+    """The generic box drawn for the item tagged `tag`."""
+    found = [one for one in symbol_subjects(model) if one.key == "generic-box" and one.tag == tag]
     assert len(found) == 1, f"{tag} is drawn as {len(found)} boxes"
     return found[0]
 

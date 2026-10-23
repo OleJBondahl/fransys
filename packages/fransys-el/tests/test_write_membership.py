@@ -115,7 +115,7 @@ def test_a_rerun_replaces_only_its_own_membership_rows(written: Written) -> None
         key=("other", "writer"),
         produced_by="other/writer",
     )
-    stale = replace(mine, id=make_id(Membership, ("stale",)), key=("stale",))
+    stale = replace(mine, id=make_id(Membership, ("stale",)), key=(*mine.key[:4], "stale"))
     base = evolve(
         written.out,
         put=(foreign, stale),

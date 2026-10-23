@@ -10,6 +10,7 @@ import fransys as fr
 import fransys_pdf
 from fransys_pdf import _lists
 
+from fransys_model.derive import pdf_texts
 from fransys_model.derive.page_nav import reference_links
 from fransys_model.layout import Page, layout_of
 
@@ -32,8 +33,15 @@ def source(model, document, svgs, sheets, bridges=None):
         links=links,
         list_share_pct=_FLOW["share_pct"],
         list_gutter_pct=_FLOW["gutter_pct"],
+        **pdf_texts(model),
     )
 
 
-terminal_list_page = partial(_lists.terminal_list_page, **_FLOW)
+def terminal_list_page(model, record, bridges=None):
+    """`terminal_list_page` with the house shares and the model's Bridge word."""
+    return _lists.terminal_list_page(
+        model, record, bridges, bridge_word=pdf_texts(model)["words"]["bridge"], **_FLOW
+    )
+
+
 connector_list_page = partial(_lists.connector_list_page, **_FLOW)

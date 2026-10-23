@@ -58,7 +58,6 @@ class Conventions:
     step: int
     pad: int
     contact_tables: bool
-    place_text: str = "/99.99"
     tag_side: Side = Side.W
 
 

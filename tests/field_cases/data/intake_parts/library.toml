@@ -1,0 +1,4 @@
+schema = 1
+name = "intake-parts"
+version = "0.1.0"
+description = "Invented parts for the 0.21.1 field-case intake."

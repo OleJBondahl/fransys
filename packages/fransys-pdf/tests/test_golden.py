@@ -84,7 +84,9 @@ def _demo_document():
 
 def _stub_sheets(doc):
     """A fixed background per page, so the golden pins pdf's own text and not render's drawing."""
-    stub = SheetBackground("<svg/>", (300.0, 282.0, 30.0, 2.5), (390.0, 267.0, 20.0, 20.0), 90.0)
+    stub = SheetBackground(
+        "<svg/>", (300.0, 282.0, 30.0, 2.5), (390.0, 267.0, 20.0, 20.0), 90.0, "…"
+    )
     return {SheetKey(doc.id, kind, 0): stub for kind in (PageKind.COVER, PageKind.NOTES)}
 
 

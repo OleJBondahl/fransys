@@ -19,9 +19,7 @@ def _pins(sid: str) -> dict[str, outputs.ScenePin]:
 
 def test_the_scene_carries_the_area_the_pages_and_the_wires():
     assert (SCENE.area.w, SCENE.area.h, SCENE.pages) == (100, 100, 2)
-    assert [(w.net, w.page, w.points, w.lanes) for w in SCENE.wires] == [
-        ("n2", 2, ((40, 14), (40, 4)), 1)
-    ]
+    assert [(w.net, w.page, w.points) for w in SCENE.wires] == [("n2", 2, ((40, 14), (40, 4)))]
     assert [(b.sym, b.page) for b in SCENE.boxes] == [("K", 1), ("F", 1), ("A", 2), ("T", 2)]
 
 

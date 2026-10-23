@@ -47,6 +47,7 @@ def test_an_unset_marker_option_is_refused_by_name():
                 flip_turn="R180",
                 tag_stagger=True,
                 label_gap=8,
+                parallel_pitch=48,
                 driver_first=True,
                 arrow_sides=("E", "W"),
             ),

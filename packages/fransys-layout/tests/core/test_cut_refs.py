@@ -22,7 +22,8 @@ from fransys_layout.core import (
 from fransys_layout.core.blocks import assign_blocks
 from fransys_layout.core.cut import cut_pages
 from fransys_layout.core.cut_refs import _column_pin, stubs
-from fransys_layout.core.values import CutResult, Ref, RefEnd, RefKind
+from fransys_layout.core.cycles import CycleSplit
+from fransys_layout.core.values import CutEnd, CutResult, FlowGraph, Net, Ref, RefEnd, RefKind
 
 from .conftest import MARKER
 from .cut_fixtures import AREA, box_sym, chain, cut_of, elem, free, net, page_of, refs_of, side
@@ -151,11 +152,13 @@ def test_a_row_wrap_through_the_trunk_of_a_free_sided_hub_is_not_priced_as_a_cop
 
 # stubs
 
+NO_FLOW = FlowGraph((), (), (), (), CycleSplit(0, 0, 0), ())
+
 
 def stubs_without_cuts(syms, nets, facts, result) -> list[Ref]:
     """`stubs` on the pages the cut gave, with no arrow or tag planned, to read its own rule."""
     where = {c[2:]: p for c, p in page_of(result).items()}
-    return stubs(PlacementProblem(AREA, tuple(syms), tuple(nets), facts), where, ())
+    return stubs(PlacementProblem(AREA, tuple(syms), tuple(nets), facts), NO_FLOW, where, ())
 
 
 def test_a_net_that_crosses_units_ends_in_a_stub_at_each_boundary_pin_and_page_alone_end() -> None:
@@ -249,6 +252,21 @@ def test_a_crossing_net_with_no_boundary_pin_stubs_only_its_page_alone_ends() ->
     assert stubs_without_cuts(syms, nets, facts, result) == want
 
 
+def test_a_cut_pin_ends_in_a_stub_on_a_net_that_does_not_cross_units() -> None:
+    """Net m continues outside the drawn set at x.e: x.e stubs, y.e does not, with no unit flag."""
+    syms = [side("x", 300, 300), side("y", 300, 300)]
+    nets = [replace(net("m", "x.e", "y.e"), cut=(CutEnd(PinRef("x", "e")),))]
+    result = cut_of(syms, nets)
+    want = [Ref("m", RefKind.STUB, (RefEnd(1, None, PinRef("x", "e")),))]
+    assert stubs_without_cuts(syms, nets, Facts(), result) == want
+
+
+def test_a_net_with_no_cut_pin_and_no_unit_flag_gets_no_stub() -> None:
+    syms = [side("x", 300, 300), side("y", 300, 300)]
+    nets = [net("m", "x.e", "y.e")]
+    assert stubs_without_cuts(syms, nets, Facts(), cut_of(syms, nets)) == []
+
+
 # tall columns
 
 
@@ -311,6 +329,7 @@ def test_the_split_keeps_every_field_of_the_fan_and_block_it_rewrites() -> None:
         flip_turn="R180",
         tag_stagger=True,
         label_gap=8,
+        parallel_pitch=48,
         driver_first=True,
         arrow_sides=("E", "W"),
     )
@@ -397,3 +416,44 @@ def test_a_spilled_column_holding_no_pin_of_the_net_raises_naming_the_net_column
         ),
     ):
         _column_pin(column, net("m", "k3.n", "k4.n"))
+
+
+def _line_nets(*lines: str) -> list[Net]:
+    """One lone-pin net per symbol x, y, ..., each cut at its pin on the given line."""
+    return [
+        replace(net(f"m{i}", f"{s}.e"), cut=(CutEnd(PinRef(s, "e"), line),))
+        for i, (s, line) in enumerate(zip("xyz", lines, strict=False))
+    ]
+
+
+def test_the_cut_pins_of_one_line_end_in_one_stub_at_the_first_of_them() -> None:
+    """R481: three conductors of one harness line leave in one stub; the lowest net carries it."""
+    syms = [side(n, 100, 100) for n in "xyz"]
+    nets = _line_nets("W3/X1", "W3/X1", "W3/X1")
+    want = [Ref("m0", RefKind.STUB, (RefEnd(1, None, PinRef("x", "e")),))]
+    assert stubs_without_cuts(syms, nets, Facts(), cut_of(syms, nets)) == want
+
+
+def test_cut_pins_of_different_lines_or_of_no_line_each_end_in_a_stub() -> None:
+    syms = [side(n, 100, 100) for n in "xyz"]
+    nets = _line_nets("W3/X1", "W4/X1", "")
+    got = stubs_without_cuts(syms, nets, Facts(), cut_of(syms, nets))
+    assert [r.net for r in got] == ["m0", "m1", "m2"]
+
+
+def test_four_cut_pins_of_one_line_that_are_unit_boundary_pins_end_in_one_stub() -> None:
+    """R481: four lone nets cut at four boundary pins of one line leave in one stub, not four."""
+    syms = [replace(elem(n), unit="U1") for n in "wxyz"]
+    pins = [PinRef(n, "n") for n in "wxyz"]
+    facts = Facts(units=(Unit("U1", None, tuple(pins)),))
+    nets = [
+        replace(net(f"m{n}", f"{n}.n", crosses_unit=True), cut=(CutEnd(PinRef(n, "n"), "H/C1"),))
+        for n in "wxyz"
+    ]
+    out = stubs(
+        PlacementProblem(AREA, tuple(syms), tuple(nets), facts),
+        NO_FLOW,
+        dict.fromkeys("wxyz", 1),
+        (),
+    )
+    assert out == [Ref("mw", RefKind.STUB, (RefEnd(1, None, PinRef("w", "n")),))]

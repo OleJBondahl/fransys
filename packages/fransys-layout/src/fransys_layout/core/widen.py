@@ -10,6 +10,7 @@ from dataclasses import replace
 from typing import TYPE_CHECKING
 
 from .anchors import anchor_pages
+from .arrow_reserve import card_arrows
 from .blocks import assign_blocks
 from .cut import cut_pages
 from .cut_costs import with_wires
@@ -48,7 +49,8 @@ def reserves_of(placement: Placement, routes: Routes) -> Mapping[tuple[str, str]
 
 def measured_of(cut: CutResult, placement: Placement, routes: Routes, options: Options) -> Measured:
     """The reserves, and the solved span of each block and of each column (layout-0374)."""
-    return _spans_of(Measured(reserves_of(placement, routes)), cut, placement, options)
+    base = Measured(reserves_of(placement, routes), arrows=card_arrows(cut, options))
+    return _spans_of(base, cut, placement, options)
 
 
 def _spans_of(
@@ -72,7 +74,7 @@ def _spans_of(
             if key in columns:
                 own[key] = with_wires(bottom - top, options)
                 rises[key] = top
-    return Measured(measured.reserves, heights, own, rises)
+    return Measured(measured.reserves, heights, own, rises, measured.arrows)
 
 
 def _grew(placement: Placement, routes: Routes) -> bool:
@@ -236,7 +238,7 @@ def widen(
         return cut, _counted(placement, reserves_of(placement, routes)), routes, ()
     measured = measured_of(cut, placement, routes, options)
     flow = build_flow(problem, options)
-    lists = order_blocks(assign_blocks(flow, problem, options), flow, options)
+    lists = order_blocks(assign_blocks(flow, problem, options, measured.arrows), flow, options)
     cut2, placement2 = _recut(lists, flow, problem, options, measured)
     over = overflows(placement2, problem, options)
     markers = marks(cut2, placement2, problem, options)[0]

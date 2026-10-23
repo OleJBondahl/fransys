@@ -8,6 +8,8 @@
 # compare) outside the role fact, in every package but the old layout engine (design 7.2).
 # [kind_reads_legacy_layout]: the same reads in `fransys_layout`, which empties as families switch.
 # [literal_homes]: "module::literal" = a string constant holding a HOMES literal outside its home.
+# [word_literals]: "module::word" = a string constant equal to a `[words]` value of settings.toml
+# (the words' one home, R503 W4). Falls to zero as SO-C and the cleanup rounds move readers.
 # [selection_branches]: "module::PageKind" = compares and dispatch keys on `DocumentPreset` or
 # `PageKind` members outside `fransys_model.derive` (root-0212).
 # [render_derive_imports]: "module::name" = a `fransys_model.derive` function imported by render
@@ -137,7 +139,6 @@
 "fransys_model.derive.facts.stated_ratings::unit" = 1
 "fransys_model.derive.facts.units::unit" = 7
 "fransys_model.derive.finding_names::kind" = 5
-"fransys_model.derive.footprints::kind" = 1
 "fransys_model.derive.group_role::net_class" = 1
 "fransys_model.derive.group_role::parent" = 1
 "fransys_model.derive.harness::core_colours" = 1
@@ -194,7 +195,7 @@
 "fransys_model.derive.passes.numbering::parent" = 2
 "fransys_model.derive.passes.numbering::unit" = 2
 "fransys_model.derive.passes.numbering_assigned::unit" = 1
-"fransys_model.derive.passes.numbering_units::parent" = 4
+"fransys_model.derive.passes.numbering_units::parent" = 3
 "fransys_model.derive.passes.numbering_units::unit" = 1
 "fransys_model.derive.passes.plc_allocation::parent" = 2
 "fransys_model.derive.passes.wire_rows::unit" = 2
@@ -301,7 +302,6 @@
 "fransys_model.derive.facts.part_poles::FunctionKind" = 1
 "fransys_model.derive.facts.part_poles::PortRole" = 1
 "fransys_model.derive.facts.part_throws::PortRole" = 2
-"fransys_model.derive.footprints::FunctionKind" = 1
 "fransys_model.derive.group_role::NetClass" = 5
 "fransys_model.derive.kinds::ItemKind" = 9
 "fransys_model.derive.line_fact::ConductorKind" = 1
@@ -337,6 +337,29 @@
 [literal_homes]
 "fransys_model.derive.overview_stubs::Field devices (" = 1
 
+[word_literals]
+"fransys_author.surface._channels::DI" = 1
+"fransys_author.surface._channels::DO" = 1
+"fransys_author.surface._unit_strip::Scope" = 1
+"fransys_model.derive.columns::Cores" = 1
+"fransys_model.derive.columns::Description" = 1
+"fransys_model.derive.columns::Designation" = 1
+"fransys_model.derive.columns::Ends" = 1
+"fransys_model.derive.columns::Gauge" = 1
+"fransys_model.derive.columns::Length mm" = 1
+"fransys_model.derive.columns::MPN" = 1
+"fransys_model.derive.columns::Mate" = 1
+"fransys_model.derive.columns::Pin" = 1
+"fransys_model.derive.columns::Side A" = 1
+"fransys_model.derive.columns::Side B" = 1
+"fransys_model.derive.columns::from" = 1
+"fransys_model.derive.columns::to" = 1
+"fransys_pdf._lists::to" = 1
+"fransys_wago.modules::Description" = 2
+"fransys_wago.signals::DI" = 1
+"fransys_wago.signals::DO" = 1
+"fransys_wago.signals::RTD" = 1
+
 [selection_branches]
 "fransys._layout_need::PageKind" = 2
 "fransys.settings::PageKind" = 1
@@ -368,10 +391,6 @@
 "fransys_render.sheet_check::title_block_overflows" = 1
 
 [render_svg_literals]
-"fransys_render._cable_pen::<line" = 1
-"fransys_render._cable_pen::<polyline" = 1
-"fransys_render._cable_pen::<rect" = 1
-"fransys_render._cable_pen::<text" = 2
 
 [model_doors]
 
@@ -439,9 +458,9 @@
 "fransys_author.surface._strip_marks::bridge_ranges" = 1
 "fransys_author.surface._unit_strip::_reach" = 1
 "fransys_author.surface._unused::_chosen" = 1
+"fransys_el.placement_chains::chain_of" = 1
 "fransys_el.placement_facts::_sorted_sets" = 2
 "fransys_el.placement_facts::units_of" = 1
-"fransys_el.placement_hints::_chain" = 1
 "fransys_el.placement_hints::hints_of" = 6
 "fransys_el.placement_ids::pin_names" = 1
 "fransys_el.placement_ids::symbol_ids" = 2
@@ -663,6 +682,10 @@
 "fransys_model.derive.numbering_seed::pin_positions" = 1
 "fransys_model.derive.open_core_ends::_open_by_cable" = 1
 "fransys_model.derive.open_core_ends::open_ends_at" = 1
+"fransys_model.derive.order_groups::function_groups_in_order" = 1
+"fransys_model.derive.order_kit::candidates_in_order" = 1
+"fransys_model.derive.order_kit::chains_in_order" = 1
+"fransys_model.derive.order_kit::pin_mates_in_order" = 1
 "fransys_model.derive.overview::_links" = 4
 "fransys_model.derive.overview::_nodes" = 1
 "fransys_model.derive.overview::_signals" = 2
@@ -771,7 +794,6 @@
 "fransys_pdf._labels::sheet_label" = 1
 "fransys_pdf.checks::check" = 1
 "fransys_render._cable_ink::body" = 1
-"fransys_render._library::role_height_mm" = 1
 "fransys_render.cables::_boxes" = 1
 "fransys_render.cables::_of_block" = 1
 "fransys_render.cables::cable_blocks" = 1
@@ -866,7 +888,7 @@
 "fransys_layout.core.topology_chains::chains" = 1
 "fransys_layout.core.topology_chains::group_columns" = 2
 "fransys_layout.core.topology_chains::member_lanes" = 1
-"fransys_layout.core.topology_chains::orient_chain" = 1
+"fransys_layout.core.topology_orient::orient_chain" = 1
 "fransys_layout.core.topology_check::cell_findings" = 1
 "fransys_layout.core.topology_cycles::_pick" = 2
 "fransys_layout.core.topology_cycles::cyclic_parts" = 3
@@ -883,7 +905,7 @@
 "fransys_layout.core.topology_split::y_edges" = 2
 
 [core_text_keys]
-"fransys_layout.core.blocks::_unit_list" = 2
+"fransys_layout.core.blocks::_unit_list" = 1
 "fransys_layout.core.blocks::assign_blocks" = 2
 "fransys_layout.core.blocks_card::pin_order" = 2
 "fransys_layout.core.blocks_check::box_findings" = 1

@@ -19,19 +19,15 @@ from pathlib import Path
 from typing import Any
 
 import fransys as fr
+import pytest
+from _drawn_facts import symbol_subjects
 from _drawn_pages import drawn_pages
 from fransys.colours import BU
 
 from fransys_model.vocab.tables import functions, items
 
 
-def _gap(model, fact: str):
-    """A fact the page Drawing lacks (strict xfail, GAP-FLIP-DRAWING-SUBJECT)."""
-    msg = f"GAP-FLIP-DRAWING-SUBJECT: no {fact} for {model.digest}"
-    raise AssertionError(msg)
-
-
-def _feed(d: fr.Design, groups: list[str], *, coils: list[int]) -> dict[int, Any]:
+def _feed(d: fr.Design, groups: list[str], *, coils: list[int], pin: str = "A1") -> dict[int, Any]:
     """Terminal X1:1 in group 0 fed by switch S1; relay K<n> in `groups[coils[n]]`.
 
     Each group is one `function` block, opened in the order its first device is made.
@@ -48,12 +44,17 @@ def _feed(d: fr.Design, groups: list[str], *, coils: list[int]) -> dict[int, Any
             for k, at in enumerate(coils, start=1):
                 if at == number:
                     relay = d.device(f"K{k}", "DEMO-RLY-2CO-24")
-                    d.detail.wire(terminal, relay.coil["A1"], wire=(BU, 0.5))
+                    d.detail.wire(terminal, relay.coil[pin], wire=(BU, 0.5))
     return opened
 
 
 def _one_relay(d: fr.Design, g: list[str]) -> None:
     d.layout.break_before(_feed(d, g, coils=[1])[1])
+
+
+def _one_relay_fed_at_a2(d: fr.Design, g: list[str]) -> None:
+    """The same relay fed at its other coil pin: the layout stands the coil unturned."""
+    d.layout.break_before(_feed(d, g, coils=[1], pin="A2")[1])
 
 
 def _two_relays_one_group(d: fr.Design, g: list[str]) -> None:
@@ -96,12 +97,7 @@ def _drawn(model, name: str, tag: str = "") -> list[tuple[object, Any]]:
         for f in functions(model).values()
         if f.key[-1] == name and (not tag or item_tag.get(f.item, "") == tag)
     }
-    return [
-        (page, s)
-        for page, drawing in _gap(model, "symbol subject").items()
-        for s in drawing.symbols
-        if (s.owner or "").rpartition(":")[2] in owned
-    ]
+    return [(s.page, s) for s in symbol_subjects(model) if s.owner in owned]
 
 
 def _assert_terminal_over_pin(terminals, page, coil) -> None:
@@ -123,11 +119,36 @@ def _assert_drawn_at_each_relays_pin(model, relays: int) -> None:
         assert len(over) == 1, f"{len(over)} terminals over a relay's pin, one is the rule"
 
 
-def test_one_relay_on_a_later_page_has_the_terminal_replica_over_its_pin() -> None:
-    """Passes today: the one-wire replica is attached to its host (R7 B8); no reference."""
-    model = _built(_one_relay)
+def _assert_replica_beyond_pin(drawing, terminals, coil) -> None:
+    """One terminal in the coil's column, outside the body, on the edge its pin lead leaves by."""
+    (terminal,) = [t for t in terminals if t.x == coil.x]
+    body, box = coil.outline, terminal.outline
+    ends = [pt for w in drawing.wires for pt in (w.points[0], w.points[-1])]
+    below, above = box.y >= body.y + body.h, box.y + box.h <= body.y
+    assert below or above, "the terminal stands inside the coil's body"
+    pin_edge = body.y + body.h if below else body.y
+    near_edge = box.y if below else box.y + box.h
+    assert (coil.x, pin_edge) in ends, "no lead leaves the coil body on the terminal's side"
+    assert (coil.x, near_edge) in ends, "the lead does not reach the terminal"
+
+
+@pytest.mark.rule("PORT-LINE")
+@pytest.mark.parametrize(
+    ("plant", "orient"),
+    [(_one_relay, "R180"), (_one_relay_fed_at_a2, "R0")],
+    ids=["turned", "unturned"],
+)
+def test_one_relay_on_a_later_page_has_the_terminal_replica_over_its_pin(plant, orient) -> None:
+    """PORT-LINE (R467 Q33): the replica stands beyond the pin, outside the body, turned or not.
+
+    Fed at A1 the coil stands turned (R180, pin below); fed at A2 it stands unturned (R0).
+    """
+    model = _built(plant)
     ((page, coil),) = _symbols(model, "operating-device")
-    _assert_terminal_over_pin(_symbols(model, "terminal"), page, coil)
+    assert coil.orient == orient
+    on_page = [t for p, t in _symbols(model, "terminal") if p == page]
+    drawing = next(d for p, d in drawn_pages(model).items() if p == page)
+    _assert_replica_beyond_pin(drawing, on_page, coil)
 
 
 def test_two_relays_of_one_group_have_the_terminal_at_each_relays_pin() -> None:

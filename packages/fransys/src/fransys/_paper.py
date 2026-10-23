@@ -3,8 +3,14 @@
 from decimal import Decimal
 from typing import TYPE_CHECKING, cast
 
-from fransys_model.kernel import Draft, Origin, SchemaError, evolve, make_id
-from fransys_model.layout import PaperChoice, SheetFormat, layout_of
+from fransys_model.kernel import Draft, Origin, SchemaError, evolve
+from fransys_model.layout import (
+    PaperChoice,
+    SheetFormat,
+    layout_of,
+    paper_choice,
+    sheet_format_record,
+)
 
 if TYPE_CHECKING:
     from fransys_model.kernel import Model
@@ -19,28 +25,10 @@ _CHOICE_KIND = "layout.paper"
 _ORIGIN = Origin(file="fransys/_paper.py", line=0, note="the build's paper formats and choice")
 
 
-def _number(table: Table, field: str) -> int:
-    return int(cast("int", table[field]))
-
-
 def _sheet(name: str, table: Table, module_mm: object) -> SheetFormat:
     """The `layout.sheet_format` record of format `name`, keyed by the name."""
-    key = (*_KEY, name)
-
-    return SheetFormat(
-        id=make_id(SheetFormat, key),
-        key=key,
-        name=str(table["name"]),
-        width_mm=_number(table, "width_mm"),
-        height_mm=_number(table, "height_mm"),
-        content_x_mm=_number(table, "content_x_mm"),
-        content_y_mm=_number(table, "content_y_mm"),
-        content_width_mm=_number(table, "content_width_mm"),
-        content_height_mm=_number(table, "content_height_mm"),
-        frame_columns=_number(table, "frame_columns"),
-        frame_rows=_number(table, "frame_rows"),
-        module_mm=Decimal(str(module_mm)),
-    )
+    numbers = {k: int(cast("int", v)) for k, v in table.items() if k != "name"}
+    return sheet_format_record((*_KEY, name), str(table["name"]), numbers, Decimal(str(module_mm)))
 
 
 def _records(settings: Settings) -> tuple[SheetFormat | PaperChoice, ...]:
@@ -51,12 +39,7 @@ def _records(settings: Settings) -> tuple[SheetFormat | PaperChoice, ...]:
     module = settings.grid["module_mm"]
     sheets = {name: _sheet(name, cast("Table", formats[name]), module) for name in used}
     by_kind = {kind.value: sheets[name].id for kind, name in settings.paper_by_kind.items()}
-    choice = PaperChoice(
-        id=make_id(PaperChoice, _KEY),
-        key=_KEY,
-        default=sheets[default].id,
-        by_kind=frozendict(by_kind),
-    )
+    choice = paper_choice(_KEY, default=sheets[default].id, by_kind=by_kind)
     return (*sheets.values(), choice)
 
 

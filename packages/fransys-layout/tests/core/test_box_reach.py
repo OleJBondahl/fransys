@@ -27,6 +27,7 @@ def _extent(prob: PlacementProblem) -> tuple[int, int]:
         flip_turn="R180",
         tag_stagger=True,
         label_gap=8,
+        parallel_pitch=48,
         driver_first=True,
         arrow_sides=("E", "W"),
     )
@@ -89,6 +90,7 @@ def test_a_card_in_the_middle_keeps_the_next_column_clear_by_its_footprint() -> 
             flip_turn="R180",
             tag_stagger=True,
             label_gap=8,
+            parallel_pitch=48,
             driver_first=True,
             arrow_sides=("E", "W"),
         ),

@@ -15,9 +15,9 @@ import tempfile
 from pathlib import Path
 
 import fransys as fr
+from _drawn_facts import item_box
 from fransys.colours import BN, BU
 
-from fransys_layout.geometry import GENERIC_BOX_KEY
 from fransys_model.layout import LinkMarker, layout_of
 from fransys_model.vocab.tables import functions, items, ports
 
@@ -48,34 +48,14 @@ def _built(mpn: str, plus: str, minus: str):
     return fr.build(d, doc).model
 
 
-def _gap(model, fact: str):
-    """A fact the page Drawing lacks (strict xfail, GAP-FLIP-DRAWING-SUBJECT)."""
-    msg = f"GAP-FLIP-DRAWING-SUBJECT: no {fact} for {model.digest}"
-    raise AssertionError(msg)
-
-
-def _box(model, tag: str) -> tuple:
-    """The page and the generic box drawn for the item tagged `tag`."""
-    (item,) = (one.id for one in items(model).values() if one.key[-1] in (f"G/{tag}", tag))
-    owned = {f.id.value for f in functions(model).values() if f.item == item}
-    boxes = [
-        (page, s)
-        for page, drawing in _gap(model, "symbol subject").items()
-        for s in drawing.symbols
-        if s.key == GENERIC_BOX_KEY and s.owner and s.owner.split(":")[-1] in owned
-    ]
-    assert len(boxes) == 1, f"{tag} draws {len(boxes)} boxes, not one"
-    return boxes[0]
-
-
 def _pin_x(box, name: str) -> int:
     return box.x + dict(box.offsets)[name]
 
 
 def _check(model, plus: str, minus: str) -> None:
     """No marker to the module, the drawn output pins over the input pins, one page."""
-    module_page, module = _box(model, "M1")
-    psus = {n: _box(model, f"G{n}") for n in (1, 2)}
+    module = item_box(model, "M1")
+    psus = {n: item_box(model, f"G{n}") for n in (1, 2)}
     boxed = {i.id for i in items(model).values() if i.key[-1].split("/")[-1] in ("M1", "G1", "G2")}
     fn_of = {pid: functions(model)[p.function] for pid, p in ports(model).items()}
     wires = [
@@ -84,10 +64,10 @@ def _check(model, plus: str, minus: str) -> None:
         if fn_of[m.port].item in boxed and fn_of[m.port].key[-1] != "out"
     ]
     assert not wires, "a wire between a supply and the module is a link marker"
-    for n, (_, psu) in psus.items():
+    for n, psu in psus.items():
         assert _pin_x(psu, f"output.{plus}") == _pin_x(module, f"in_{n}.{n}+")
         assert _pin_x(psu, f"output.{minus}") == _pin_x(module, f"in_{n}.{n}-")
-    assert {module_page, *(page for page, _ in psus.values())} == {module_page}
+    assert {module.page, *(psu.page for psu in psus.values())} == {module.page}
 
 
 def test_two_pin_output_stands_over_the_module() -> None:

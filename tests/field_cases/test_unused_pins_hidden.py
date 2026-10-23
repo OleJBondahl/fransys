@@ -16,17 +16,12 @@ from functools import cache
 from pathlib import Path
 
 import fransys as fr
+from _drawn_facts import symbol_subjects
 from fransys.colours import BU
 
 from fransys_model.derive import plc_channel_rows
 from fransys_model.vocab.enums import FunctionKind
 from fransys_model.vocab.tables import functions, items
-
-
-def _gap(model, fact: str):
-    """A fact the page Drawing lacks (strict xfail, GAP-FLIP-DRAWING-SUBJECT)."""
-    msg = f"GAP-FLIP-DRAWING-SUBJECT: no {fact} for {model.digest}"
-    raise AssertionError(msg)
 
 
 @cache
@@ -50,8 +45,8 @@ def _drawn_ports(model, tag: str) -> list[str]:
     own = {f.id.value for f in functions(model).values() if f.item == item}
     return [
         name
-        for one in _gap(model, "symbol subject")
-        if (one.owner or "").rpartition(":")[2] in own or (one.owner or "").split()[:1] == [tag]
+        for one in symbol_subjects(model)
+        if one.owner in own or one.tag == tag
         for name in one.offsets
     ]
 
@@ -97,11 +92,7 @@ def _dc_ok_kind(model) -> FunctionKind:
 
 def _box_width(model) -> int:
     """The body width of T1's item box."""
-    (box,) = (
-        one
-        for one in _gap(model, "symbol subject")
-        if one.key == "generic-box" and one.owner.startswith("T1 ")
-    )
+    (box,) = (one for one in symbol_subjects(model) if one.key == "generic-box" and one.tag == "T1")
     return max(dict(box.offsets).values())
 
 

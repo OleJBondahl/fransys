@@ -43,6 +43,9 @@ class PageEnv:
     flag_room: Mapping[str, Room] = field(
         default_factory=dict
     )  # symbol -> G its staggered flags reach above and below it
+    reaches: Mapping[tuple[str, str, int, bool], int] = field(
+        default_factory=dict
+    )  # (fan, card, pin row dy, north) -> G its anchored items reach under that trunk (R510)
     rooms: Mapping[str, Room] = field(
         default_factory=dict
     )  # symbol -> G its row holds beyond its footprint; `row_extent.extent` reads it (R409)

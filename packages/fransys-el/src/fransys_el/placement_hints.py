@@ -3,8 +3,16 @@
 from typing import TYPE_CHECKING
 
 from fransys_layout.core import Hints, natural_key
-from fransys_model.layout import BreakBefore, Chain, GroupHint, KeepTogether, OrderHint, layout_of
+from fransys_model.layout import (
+    BreakBefore,
+    Chain,
+    GroupHint,
+    KeepTogether,
+    OrderHint,
+    layout_of,
+)
 
+from .placement_chains import chain_of
 from .placement_groups import label_of
 from .placement_kit import refuse
 
@@ -28,16 +36,6 @@ def _group(env: Env, known: Collection[str], node: Id[AspectNode]) -> str:
     return label
 
 
-def _chain(env: Env, record: Chain) -> tuple[str, ...]:
-    """The chain's symbol ids in `index` order; `ProblemError` for a function with no symbol."""
-    found = []
-    for entry in sorted(record.entries, key=lambda e: e.index):
-        if entry.function not in env.owner:
-            refuse(f"chain names function {entry.function}", "add a pick for it to the SymbolKit")
-        found.append(env.owner[entry.function])
-    return tuple(found)
-
-
 def hints_of(env: Env, syms: Sequence[Sym]) -> Hints:
     """The `Hints`: `SideHint` and `Chain.beside` stay unread (el-0002)."""
     model = env.model
@@ -58,7 +56,7 @@ def hints_of(env: Env, syms: Sequence[Sym]) -> Hints:
             )
         ),
         chains=tuple(
-            _chain(env, c) for c in sorted(layout_of(model, Chain).values(), key=lambda c: c.id)
+            chain_of(env, c) for c in sorted(layout_of(model, Chain).values(), key=lambda c: c.id)
         ),
         draw_in=tuple(
             sorted(

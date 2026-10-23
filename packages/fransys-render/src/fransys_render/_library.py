@@ -1,40 +1,47 @@
-"""Render's grid and font facts, read from the symbol library (GRID-HOME SB9).
+"""Render's grid and font facts, read from the build's symbol `Library` (GRID-HOME SB9).
 
-This drawing code dies at the switch to symdef-drawn pages, so it keeps its own reading of the
-library and takes no model: the model's `DrawingLibrary` record is the facade's copy of the same
-numbers, and `derive` reads that. A test pins the two together.
+This drawing code dies at the switch to symdef-drawn pages, so it takes no model: every function
+reads the `Library` the facade built for this build (the consumer's grid and font, SO-E).
 """
 
 import math
 from decimal import Decimal
+from typing import TYPE_CHECKING
 
 from electrical_symbols import LIBRARY
-from fransys_model.derive.print_sizes import TextRole
+
+if TYPE_CHECKING:
+    from symdef import FontMetrics
+
+    from electrical_symbols import Library
 
 __all__ = [
-    "ASCENT_RATIO",
-    "CAPITAL_RATIO",
     "DIVISIONS",
-    "FONT_FAMILY",
+    "capital_ratio",
+    "font_family",
     "font_size_mm",
     "grid_to_mm",
-    "role_height_mm",
     "text_room_g",
 ]
 
-_FONT = LIBRARY.font
-assert _FONT is not None  # noqa: S101 - the bundled library always carries its font
-FONT_FAMILY = _FONT.family
-DIVISIONS = LIBRARY.grid.divisions_per_module
-_HEIGHTS = _FONT.heights
-CAPITAL_RATIO = Decimal(_FONT.cap_height) / Decimal(_FONT.units_per_em)
-ASCENT_RATIO = Decimal(_FONT.ascent) / Decimal(_FONT.units_per_em)
-_HEIGHT_NAME = {
-    TextRole.LABEL: "smallest",
-    TextRole.BODY: "body",
-    TextRole.HEADING_2: "heading_2",
-    TextRole.HEADING_1: "heading_1",
-}
+DIVISIONS = LIBRARY.grid.divisions_per_module  # fixed library data; no consumer setting changes it
+
+
+def _font(library: Library) -> FontMetrics:
+    font = library.font
+    assert font is not None  # noqa: S101 -- a drawn library carries its font
+    return font
+
+
+def font_family(library: Library) -> str:
+    """The family name the build's font is set in."""
+    return _font(library).family
+
+
+def capital_ratio(library: Library) -> Decimal:
+    """The capital height per font size of the build's font."""
+    font = _font(library)
+    return Decimal(font.cap_height) / Decimal(font.units_per_em)
 
 
 def _per_division(module_mm: Decimal) -> Decimal:
@@ -46,18 +53,11 @@ def grid_to_mm(origin_mm: int, g: int | Decimal, module_mm: Decimal) -> Decimal:
     return Decimal(origin_mm) + Decimal(g) * _per_division(module_mm)
 
 
-def font_size_mm(capital_height_mm: Decimal) -> Decimal:
+def font_size_mm(library: Library, capital_height_mm: Decimal) -> Decimal:
     """The font size, in mm, whose capitals are `capital_height_mm` high."""
-    return capital_height_mm / CAPITAL_RATIO
+    return capital_height_mm / capital_ratio(library)
 
 
-def role_height_mm(role: TextRole, profile_text_height_mm: Decimal) -> Decimal:
-    """The capital height, in mm, that text of `role` prints at (the library's heights)."""
-    if role is TextRole.LABEL:
-        return profile_text_height_mm
-    return max(Decimal(str(_HEIGHTS[_HEIGHT_NAME[role]])), profile_text_height_mm)
-
-
-def text_room_g(text_height_mm: Decimal, module_mm: Decimal) -> int:
+def text_room_g(library: Library, text_height_mm: Decimal, module_mm: Decimal) -> int:
     """The grid units a text of capital height `text_height_mm` gets: font size over one G, up."""
-    return math.ceil(font_size_mm(text_height_mm) / _per_division(module_mm))
+    return math.ceil(font_size_mm(library, text_height_mm) / _per_division(module_mm))

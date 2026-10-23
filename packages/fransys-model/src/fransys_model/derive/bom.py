@@ -15,13 +15,14 @@ from .contact_lines import contact_counts
 from .designation import is_own_unit_root, location_designation, printed_designation
 from .designation_label import designation_holder, takes_parents_designation
 from .external import external
+from .facts.revision_label import revision_label
 from .facts.subjects import subject_kind
+from .house_settings import revision_form_of
 from .indexes import Indexes, build_indexes
 from .instance_tag import instance_name, unit_tag
 from .lookups import descendants, require
 from .order import bom_sort_key, natural_key
 from .release_order import release_order
-from .revision_text import revision_text
 from .rows import BomLine
 from .structure import items_at
 from .unit_release import unit_release
@@ -116,6 +117,7 @@ def _unit_lines(model: Model, children: tuple[Unit, ...]) -> list[tuple[ReleaseO
     for child in children:
         release = unit_release(model, child.id)
         grouped.setdefault((release.name, release.version, release.revision), []).append(child)
+    form = revision_form_of(model)
     lines = []
     for (name, version, revision), instances in grouped.items():
         designations = [
@@ -129,7 +131,7 @@ def _unit_lines(model: Model, children: tuple[Unit, ...]) -> list[tuple[ReleaseO
             description=first.title,
             count=len(instances),
             designations=tuple(sorted(designations, key=natural_key)),
-            revision=revision_text(version, revision),
+            revision=revision_label(form, version, revision),
         )
         lines.append((release_order(version, revision), line))
     return lines

@@ -11,6 +11,7 @@ def test_the_router_penalties_are_the_score_weights_per_g_of_detour() -> None:
         flip_turn="R180",
         tag_stagger=True,
         label_gap=8,
+        parallel_pitch=48,
         driver_first=True,
         arrow_sides=("E", "W"),
     )

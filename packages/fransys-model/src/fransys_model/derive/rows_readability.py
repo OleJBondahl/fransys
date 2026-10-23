@@ -7,21 +7,26 @@ from typing import Any
 
 from fransys_model.kernel import Id, value
 from fransys_model.layout import Page
+from fransys_model.vocab.core import Unit
 
 
 @value
 class DrawnPageReading:
     """What `fransys_el.readability` counts on one `Drawing`.
 
-    `symbols` and `markers` are the cells and references the page carries. `wire_crossings` counts
+    `unit` is the unit of the drawing set the page belongs to, none at the top level. `symbols` and
+    `markers` are the drawn symbols the page carries and, among them, the reference markers.
+    `fill_percent` is the share of the content box the placed ink spans. `wire_crossings` counts
     wires of different ids crossing, `wire_bends` the turns of every wire and `wire_length_g` their
     length in G. `struck_labels` counts texts a wire runs through, `text_overlaps` pairs of texts
     whose boxes overlap.
     """
 
     page: Id[Page]
+    unit: Id[Unit] | None
     symbols: int
     markers: int
+    fill_percent: int
     wire_crossings: int
     wire_bends: int
     wire_length_g: int

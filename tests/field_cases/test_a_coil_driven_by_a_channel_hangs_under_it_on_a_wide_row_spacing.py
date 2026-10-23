@@ -19,17 +19,11 @@ from pathlib import Path
 from typing import Any
 
 import fransys as fr
+from _drawn_facts import symbol_subjects
 from fransys.colours import BU
 
 from fransys_model.layout import LinkMarker, layout_of
 from fransys_model.vocab.tables import functions, items, ports
-
-
-def _gap(model, fact: str):
-    """A fact the page Drawing lacks (strict xfail, GAP-FLIP-DRAWING-SUBJECT)."""
-    msg = f"GAP-FLIP-DRAWING-SUBJECT: no {fact} for {model.digest}"
-    raise AssertionError(msg)
-
 
 COUNT = 6
 PINS = tuple(f"CH{j:02d}-" for j in range(1, COUNT + 1))
@@ -67,20 +61,16 @@ def _tagged(model) -> dict:
 
 
 def _drawn(model) -> dict:
-    """Each drawn symbol by its owner text `<tag> function:<id>`."""
-    return {one.owner: one for one in _gap(model, "symbol subject").values()}
+    """Each drawn symbol by its item tag and its function's id."""
+    return {(one.tag, one.owner): one for one in symbol_subjects(model)}
 
 
 def test_every_coil_stands_under_its_channel_pin() -> None:
     model = _built()
     named = _tagged(model)
     drawn = _drawn(model)
-    (box,) = (s for s in drawn.values() if s.key == "generic-box" and s.owner.startswith("A1 "))
-    coil_of = {
-        named[f][0]: drawn[f"{named[f][0]} function:{f.value}"]
-        for f in named
-        if named[f][1] == "coil"
-    }
+    (box,) = (s for s in drawn.values() if s.key == "generic-box" and s.tag == "A1")
+    coil_of = {named[f][0]: drawn[(named[f][0], f.value)] for f in named if named[f][1] == "coil"}
     for i, pin in enumerate(PINS, start=1):
         coil = coil_of[f"K{i}"]
         assert coil.page == box.page, i
@@ -111,7 +101,7 @@ def test_the_contacts_stay_with_the_loads_they_switch() -> None:
     pages: dict = {}
     for function, thing in ((f, named[f]) for f in named):
         for one in _drawn(model).values():
-            if (one.owner or "").endswith(f"function:{function.value}"):
+            if one.owner == function.value:
                 pages.setdefault(thing, set()).add(one.page)
     for i in range(1, COUNT + 1):
         assert pages[(f"K{i}", "co_1")] == pages[(f"P{i}", "lamp")]

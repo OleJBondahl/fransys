@@ -1,0 +1,56 @@
+schema = 1
+
+[part]
+mpn = "DEMO-MONITOR-JOINS"
+manufacturer = "Demo"
+description = "Monitor: connector pins join the ports of an inner measuring function"
+category = "generic"
+class_code = "B"
+
+[[function]]
+name = "LA"
+kind = "connector"
+ports = [
+    { name = "1", role = "generic", side = "line", joins = "measure.Lp1" },
+    { name = "2", role = "generic", side = "line", joins = "measure.Lp2" },
+]
+
+[function.connector]
+style = "plug"
+pincount = 2
+
+[[function]]
+name = "LB"
+kind = "connector"
+ports = [
+    { name = "1", role = "generic", side = "line", joins = "measure.Lm1" },
+    { name = "2", role = "generic", side = "line", joins = "measure.Lm2" },
+]
+
+[function.connector]
+style = "plug"
+pincount = 2
+
+[[function]]
+name = "K"
+kind = "connector"
+ports = [
+    { name = "3", role = "generic", side = "line", joins = "measure.E" },
+    { name = "4", role = "generic", joins = "measure.KE" },
+]
+
+[function.connector]
+style = "plug"
+pincount = 2
+
+[[function]]
+name = "measure"
+kind = "sensor"
+ports = [
+    { name = "Lp1", role = "generic" },
+    { name = "Lp2", role = "generic" },
+    { name = "Lm1", role = "generic" },
+    { name = "Lm2", role = "generic" },
+    { name = "E", role = "generic" },
+    { name = "KE", role = "generic" },
+]

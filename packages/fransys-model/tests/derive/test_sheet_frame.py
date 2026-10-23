@@ -3,6 +3,7 @@
 from decimal import Decimal
 
 import pytest
+from derive_helpers import house_record
 
 from fransys_model.derive import (
     FrameStrip,
@@ -11,7 +12,7 @@ from fransys_model.derive import (
     sheet_frame,
 )
 from fransys_model.kernel import Id
-from fransys_model.layout import SheetFormat, default_sheet_format
+from fransys_model.layout import FrameForm, SheetFormat, default_sheet_format
 
 
 def _a4_test_sheet() -> SheetFormat:
@@ -33,7 +34,7 @@ def _a4_test_sheet() -> SheetFormat:
 
 
 def test_the_house_frame_is_the_old_border_band_and_strips():
-    frame = sheet_frame(default_sheet_format())
+    frame = sheet_frame(house_record(FrameForm), default_sheet_format())
     assert frame.border == (5, 5, 410, 287)
     assert (frame.band, frame.band_top, frame.title_width, frame.logo_x) == (20, 272, 390, 395)
     top, bottom, left, right = frame.strips
@@ -44,7 +45,7 @@ def test_the_house_frame_is_the_old_border_band_and_strips():
 
 
 def test_unequal_margins_give_each_strip_its_own_depth_and_a_taller_band():
-    frame = sheet_frame(_a4_test_sheet())
+    frame = sheet_frame(house_record(FrameForm), _a4_test_sheet())
     assert frame.border == (6, 4, 285, 202)
     assert (frame.band, frame.band_top, frame.title_width, frame.logo_x) == (32, 174, 253, 259)
     top, bottom, left, right = frame.strips

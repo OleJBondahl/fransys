@@ -1,8 +1,12 @@
 """The model's finding codes raised by its passes and the block diagram (BUILD-MESSAGES M1)."""
 
+from typing import Final
+
 from fransys_model.kernel import CodeInfo, Severity
 
 from . import codes_drawn, codes_structure, codes_wiring, codes_wiring_more
+
+ORDER_HINT_CYCLE: Final[str] = "ORDER_HINT_CYCLE"
 
 _OWN: tuple[CodeInfo, ...] = (
     CodeInfo(
@@ -193,6 +197,21 @@ _OWN: tuple[CodeInfo, ...] = (
         fix=(
             "Remove the hint, or hint the box that holds the pins. Write: "
             "d.layout.pins_below(plc.outputs)"
+        ),
+        page="findings-validators",
+    ),
+    CodeInfo(
+        code=ORDER_HINT_CYCLE,
+        severities=(Severity.ERROR,),
+        stage="build",
+        who="consumer",
+        cause=(
+            "Authored `d.layout.order` hints contradict each other in a cycle (a before b, b "
+            "before a), so no page order can honour them."
+        ),
+        fix=(
+            "Drop one hint of the cycle the message names. Write: d.layout.order(a, b) for one "
+            "direction only"
         ),
         page="findings-validators",
     ),

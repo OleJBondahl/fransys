@@ -76,6 +76,8 @@ class Trunk:
     lanes: int
     row: int
     """Index of the row its trunk stands in."""
+    lane_ends: tuple[tuple[int, int] | None, ...]
+    """(x0, x1) of each lane j, first tap to last; None: lane j has no tap in the row."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -104,13 +106,14 @@ class Placement:
 
 @dataclass(frozen=True, slots=True)
 class Wire:
-    """lanes > 1 is a bundle trunk."""
+    """One wire of one net; a bundle trunk is one wire per conductor, each with its `lane`."""
 
     net: str
     page: int
     points: tuple[XY, ...]
     kind: WireKind
-    lanes: int = 1
+    lane: int | None = field(default=None, kw_only=True)
+    """The conductor's lane index when the wire is one conductor of a bundle trunk."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -295,12 +298,11 @@ class SceneBox:
 
 @dataclass(frozen=True, slots=True)
 class SceneWire:
-    """A wire polyline in the scene, with its net, page, lane count and kind."""
+    """A wire polyline in the scene, with its net, page and kind."""
 
     net: str
     page: int
     points: tuple[XY, ...]
-    lanes: int
     kind: WireKind
 
 
@@ -396,9 +398,7 @@ def scene(layout: CoreLayout, problem: PlacementProblem, flow: FlowGraph) -> Sce
     facts = scene_facts(problem, flow)
     boxes = tuple(_scene_box(p, facts) for pg in layout.placement.pages for p in pg.placed)
     wires = tuple(
-        SceneWire(w.net, w.page, w.points, w.lanes, w.kind)
-        for pg in layout.routes.pages
-        for w in pg.wires
+        SceneWire(w.net, w.page, w.points, w.kind) for pg in layout.routes.pages for w in pg.wires
     )
     orient = {b.sym: b.orient for b in boxes}
     markers = tuple(_scene_marker(m, facts, orient) for m in layout.annotations.markers)

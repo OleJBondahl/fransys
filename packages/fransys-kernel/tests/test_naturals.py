@@ -52,10 +52,13 @@ def test_key_is_case_sensitive() -> None:
     assert natural_key("B1") < natural_key("a1")
 
 
-def test_non_ascii_decimal_run_compares_as_a_number() -> None:
-    """An Arabic-Indic `٣` is the number 3; a superscript digit is text, not a crash."""
-    assert natural_sorted(["A10", "A٣"]) == ["A٣", "A10"]
-    assert natural_key("A²")[0] == ((1, 0, "A²"),)
+def test_non_ascii_digits_compare_as_text() -> None:
+    """Renamed from `..._decimal_run_compares_as_a_number` (LIB-ADOPT N1): ASCII digits only.
+
+    An Arabic-Indic `٣` and a superscript `²` are text runs, which stand after every number.
+    """
+    assert natural_sorted(["A٣", "A10"]) == ["A10", "A٣"]
+    assert natural_key("A²")[0] == ((1, "A²"),)
 
 
 def test_natural_join_orders_and_joins() -> None:

@@ -6,6 +6,7 @@ field fold puts each unit's field devices in one box beside it.
 
 from typing import TYPE_CHECKING
 
+from fransys_model.derive.house_settings import stub_text_of
 from fransys_model.layout import BoxKey, OverviewRef, OverviewRefKind
 lazy from fransys_model.kernel import Model
 
@@ -112,7 +113,9 @@ def _members(model: Model, plain: Rows, fold: FieldFold) -> tuple[ViewMember, ..
             ViewMember(
                 ref=ref,
                 lines=lines,
-                text=overview_member_text(lines, ", ".join(dict.fromkeys(held))),
+                text=overview_member_text(
+                    stub_text_of(model), lines, ", ".join(dict.fromkeys(held))
+                ),
             )
         )
     return tuple(rows)

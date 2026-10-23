@@ -47,14 +47,24 @@ def test_wire_draws_one_polyline_in_the_named_style(style_id, weight, style):
     assert [(p.x, p.y) for p in line.points] == POINTS
 
 
-def test_the_library_has_exactly_the_five_wire_styles():
-    assert sorted(w.id for w in LIBRARY.wires) == ["by_others", "link", "marker", "trunk", "wire"]
+def test_the_library_has_exactly_the_seven_wire_styles():
+    assert sorted(w.id for w in LIBRARY.wires) == [
+        "by_others",
+        "core",
+        "diagram_line",
+        "link",
+        "marker",
+        "trunk",
+        "wire",
+    ]
 
 
 def test_the_bundle_carries_the_wires_and_round_trips():
     data = json.loads(BUNDLE.read_text(encoding="utf-8"))
     assert sorted(w["id"] for w in data["wires"]) == [
         "by_others",
+        "core",
+        "diagram_line",
         "link",
         "marker",
         "trunk",

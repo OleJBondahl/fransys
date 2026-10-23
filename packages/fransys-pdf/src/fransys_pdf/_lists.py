@@ -21,6 +21,7 @@ from fransys_model.derive import (
     connector_item,
     connector_rows,
     connector_rows_of,
+    continued_heading,
     cores_text,
     designation_list,
     document_bom_lines,
@@ -42,6 +43,7 @@ from ._flow import flow_columns
 from ._lists_cells import _cell_typst, _kept_columns, _widths
 from ._lists_terminal import _terminal_table
 from ._marks import LIST_HEADING
+from ._sizes import rule_of
 from ._tables import table_source
 from ._typst import description_par, literal
 
@@ -63,7 +65,13 @@ if TYPE_CHECKING:
     from fransys_model.kernel import Model
 
 
-def _table(  # noqa: PLR0913 -- the list, its wide columns, its heading, anchor and labels
+def _carried(model: Model, title: str) -> str:
+    """The heading a carried table repeats; none for a table with no title."""
+    return continued_heading(model, title) if title else ""
+
+
+def _table(  # noqa: PLR0913 -- the model, the list, its wide columns, its heading, anchor and labels
+    model: Model,
     headers: tuple[str, ...],
     rows: list[tuple[object, ...]],
     wide: tuple[str, ...],
@@ -88,7 +96,7 @@ def _table(  # noqa: PLR0913 -- the list, its wide columns, its heading, anchor 
     ]
     body = [[_cell_typst(row[i]) for i in kept] for row in rows]
     widths = _widths([headers[i] in wide for i in kept])
-    return table_source(widths, names, body, title=title, label=label)
+    return table_source(widths, names, body, rule=rule_of(model), heading=(title, label))
 
 
 def plc_channel_rows_for(model: Model, record: DocumentRow) -> tuple[PlcChannelRow, ...]:
@@ -102,11 +110,16 @@ def plc_list_page(model: Model, record: DocumentRow, *, share_pct: float, gutter
     sections = []
     for number, table in enumerate(plc_tables(model, unit=unit, context=record.location)):
         title = _list_title(model, table.item, unit, table.designation)
-        rows: list[tuple[object, ...]] = list(plc_list_rows(table.rows))
+        rows: list[tuple[object, ...]] = list(plc_list_rows(model, table.rows))
         sections.append(
             _list_heading(title)
             + _table(
-                PLC_COLUMNS, rows, ("wired_to", "signal_name"), title=title, label=f"plc{number}"
+                model,
+                PLC_COLUMNS,
+                rows,
+                ("wired_to", "signal_name"),
+                title=_carried(model, title),
+                label=f"plc{number}",
             )
         )
     return flow_columns(sections, share_pct=share_pct, gutter_pct=gutter_pct)
@@ -149,6 +162,7 @@ def wire_label_list_page(
 ) -> str:
     """The WIRE_LABEL_LIST table: every `wire`-faceted conductor, scoped to the unit."""
     table = _table(
+        model,
         WIRE_COLUMNS,
         column_rows(wire_rows_for(model, record), WIRE_COLUMNS),
         ("from_", "to", "label"),  # every free-text column: `auto` ones starve a `1fr` (pdf-0027)
@@ -161,6 +175,7 @@ def designation_list_page(
 ) -> str:
     """The DESIGNATION_LIST table: every item's designation, scoped to the unit."""
     table = _table(
+        model,
         DESIGNATION_COLUMNS,
         column_rows(
             designation_list(model, unit=document_unit(model, record.id)), DESIGNATION_COLUMNS
@@ -186,13 +201,13 @@ def cable_list_page(model: Model, record: DocumentRow) -> str:
         )
         for row in document_cable_rows(model, record)
     ]
-    return _table(columns, rows, ("description", "from_label", "to_label"))
+    return _table(model, columns, rows, ("description", "from_label", "to_label"))
 
 
 def bom_page(model: Model, record: DocumentRow) -> str:
     """The BOM table, scoped by `DocumentScope.bom_scope`."""
     rows = column_rows(document_bom_lines(model, record.id), BOM_COLUMNS)
-    return _table(BOM_COLUMNS, rows, ("description", "designations"))
+    return _table(model, BOM_COLUMNS, rows, ("description", "designations"))
 
 
 def _list_title(
@@ -212,11 +227,12 @@ def _list_heading(title: str) -> str:
     return f"{LIST_HEADING}text({literal(title)}))\n" if title else ""
 
 
-def terminal_list_page(
+def terminal_list_page(  # noqa: PLR0913 -- the page's inputs, the Bridge word and the two list-share values
     model: Model,
     record: DocumentRow,
     bridges: Mapping[str, BridgePieceRow] | None = None,
     *,
+    bridge_word: str,
     share_pct: float,
     gutter_pct: float,
 ) -> str:
@@ -234,9 +250,10 @@ def terminal_list_page(
                 model,
                 rows,
                 strip_side_headings(model, strip),
-                title=title,
+                title=_carried(model, title),
                 label=f"term{number}",
                 bridges=bridges,
+                bridge_word=bridge_word,
             )
         )
     return flow_columns(sections, share_pct=share_pct, gutter_pct=gutter_pct)
@@ -252,7 +269,7 @@ def _connector_rows_for_page(model: Model, record: DocumentRow) -> tuple[Connect
     return connector_rows_of(model, scope.connector_items, unit=scope.unit, context=record.location)
 
 
-def _connector_section(row: ConnectorRow, description: str, number: int) -> str:
+def _connector_section(model: Model, row: ConnectorRow, description: str, number: int) -> str:
     """One connector: heading and table, or with no wired pin its description and one line."""
     if not any(pin.ends or pin.net is not None for pin in row.pins):  # a wire or a net is wired
         return description_par(description) + (
@@ -262,10 +279,11 @@ def _connector_section(row: ConnectorRow, description: str, number: int) -> str:
         _list_heading(row.designation)
         + description_par(description)
         + _table(
+            model,
             PIN_COLUMNS,
             column_rows(row.pins, PIN_COLUMNS),
             ("net", "ends"),
-            title=row.designation,
+            title=_carried(model, row.designation),
             label=f"conn{number}",
             labels=CONNECTOR_LABELS,
         )
@@ -277,7 +295,9 @@ def connector_list_page(
 ) -> str:
     """The CONNECTOR_LIST section: a table per connector, headed by its designation (pdf-0030)."""
     sections = [
-        _connector_section(row, item_description(model, connector_item(model, row.connector)), n)
+        _connector_section(
+            model, row, item_description(model, connector_item(model, row.connector)), n
+        )
         for n, row in enumerate(_connector_rows_for_page(model, record))
     ]
     return flow_columns(sections, share_pct=share_pct, gutter_pct=gutter_pct)

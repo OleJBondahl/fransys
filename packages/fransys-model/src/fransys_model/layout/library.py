@@ -11,8 +11,11 @@ class DrawingLibrary:
 
     The facade fills it from the build's symbol library after `freeze()` and before any pass; an
     input never authors it. `module_mm` is one module and `divisions` its grid divisions (`G`).
-    The pitches are in divisions. The three ratios are per font size (capital, ascent, descent).
+    The pitches are in divisions. The two ratios are per font size (ascent, descent).
     `heights` are capital heights in mm by name (`smallest`, `body`, `heading_2`, `heading_1`).
+    `ems` are the font sizes in mm of every capital height the build prints at, from symdef, keyed
+    by `derive.print_sizes.height_key` of the height. `lines` are the stroke widths in mm by
+    name (`normal`, `thick`, `rule`). Dash patterns are not held here: symdef holds them.
     Every conversion between grid units, millimetres and font sizes reads this record.
     """
 
@@ -23,8 +26,9 @@ class DrawingLibrary:
     wire_pitch: int
     wire_pitch_fine: int
     font_family: str
-    capital_ratio: Decimal
     ascent_ratio: Decimal
     descent_ratio: Decimal
     heights: frozendict[str, Decimal]
+    lines: frozendict[str, Decimal]
+    ems: frozendict[str, Decimal]
     ext: frozendict[str, Value] = frozendict()

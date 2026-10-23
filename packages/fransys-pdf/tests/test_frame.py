@@ -20,6 +20,7 @@ from _build import (
 )
 from fransys_pdf._background import PAGE_COUNTER_LABEL
 
+from electrical_symbols import LIBRARY
 from fransys_model.derive import SheetKey, document_sheets_of, harness_cables_for
 from fransys_model.derive.cable_drawing import cable_block_key
 from fransys_model.kernel import make_id, render_id
@@ -72,7 +73,7 @@ def test_a_20mm_band_gets_a_title_block_and_a_19mm_band_does_not():
     for height, has_block in ((257, True), (258, False)):
         fmt = _format(f"band{height}", content_height_mm=height)  # band = 277 - height
         m, doc, _page = _cabinet(fmt)
-        back = fransys_render.sheets(document_sheets_of(m))[SheetKey(doc.id, K.COVER, 0)]
+        back = fransys_render.sheets(document_sheets_of(m), LIBRARY)[SheetKey(doc.id, K.COVER, 0)]
         assert (back.counter_box is not None) is has_block
         assert (back.logo_box is not None) is has_block
 
@@ -81,9 +82,9 @@ def test_title_block_band_too_small_still_draws_frame_and_grid_with_no_title_blo
     """A band under 20mm leaves the frame and grid drawn; only the title block is empty."""
     m, doc, page = _cabinet(_format("tight12", content_height_mm=265))
     text = source(
-        m, doc.id, {render_id(page.id): _SVG}, fransys_render.sheets(document_sheets_of(m))
+        m, doc.id, {render_id(page.id): _SVG}, fransys_render.sheets(document_sheets_of(m), LIBRARY)
     )
-    back = fransys_render.sheets(document_sheets_of(m))[SheetKey(doc.id, K.COVER, 0)]
+    back = fransys_render.sheets(document_sheets_of(m), LIBRARY)[SheetKey(doc.id, K.COVER, 0)]
     assert '<polygon points="10,10 410,10 410,287 10,287"' in back.svg  # the frame border
     assert sorted(set(_texts(back.svg))) == ["1", "2", "3", "4", "5", "6", "A", "B", "C", "D"]
     assert "Customer" not in _texts(back.svg)  # no title-block label
@@ -93,9 +94,9 @@ def test_title_block_band_too_small_still_draws_frame_and_grid_with_no_title_blo
 def test_the_title_block_prints_its_labels_and_leaves_the_page_cell_to_typst():
     m, doc, page = _cabinet()
     text = source(
-        m, doc.id, {render_id(page.id): _SVG}, fransys_render.sheets(document_sheets_of(m))
+        m, doc.id, {render_id(page.id): _SVG}, fransys_render.sheets(document_sheets_of(m), LIBRARY)
     )
-    back = fransys_render.sheets(document_sheets_of(m))[SheetKey(doc.id, K.COVER, 0)]
+    back = fransys_render.sheets(document_sheets_of(m), LIBRARY)[SheetKey(doc.id, K.COVER, 0)]
     assert {"Title", "Customer", "Page"} <= set(_texts(back.svg))
     assert PAGE_COUNTER_LABEL in text  # the counter is Typst's: render's SVG holds no number
     assert "<fransys-page-counter>" in text
@@ -111,14 +112,16 @@ def test_grid_columns_come_from_the_sheet_format_not_a_constant():
         "wide8", content_width_mm=380, content_height_mm=257, frame_columns=8, frame_rows=6
     )
     m, doc, _page = _cabinet(fmt)
-    texts = _texts(fransys_render.sheets(document_sheets_of(m))[SheetKey(doc.id, K.COVER, 0)].svg)
+    texts = _texts(
+        fransys_render.sheets(document_sheets_of(m), LIBRARY)[SheetKey(doc.id, K.COVER, 0)].svg
+    )
     for label in ("1", "2", "3", "4", "5", "6", "7", "8"):
         assert label in texts
     assert "9" not in texts
     # 8 cells over the content width 380: a tick every 47.5 mm from the content x (10).
     assert (
         'x1="57.5" y1="0" x2="57.5" y2="10"'
-        in fransys_render.sheets(document_sheets_of(m))[SheetKey(doc.id, K.COVER, 0)].svg
+        in fransys_render.sheets(document_sheets_of(m), LIBRARY)[SheetKey(doc.id, K.COVER, 0)].svg
     )
 
 
@@ -126,7 +129,9 @@ def test_grid_columns_with_six_columns_differ_from_eight():
     """The sibling of the can-fail probe: a `frame_columns=6` sheet never shows a `"7"` or `"8"`."""
     fmt = sheet_format("narrow", width_mm=420, height_mm=297, frame_columns=6)
     m, doc, _page = _cabinet(fmt)
-    texts = _texts(fransys_render.sheets(document_sheets_of(m))[SheetKey(doc.id, K.COVER, 0)].svg)
+    texts = _texts(
+        fransys_render.sheets(document_sheets_of(m), LIBRARY)[SheetKey(doc.id, K.COVER, 0)].svg
+    )
     for label in ("1", "2", "3", "4", "5", "6"):
         assert label in texts
     assert "7" not in texts
@@ -145,7 +150,7 @@ def test_no_header_or_footer_argument_on_any_page_kind():
         remove=(K.SCHEMATIC, K.PLC_LIST, K.TERMINAL_LIST, K.BOM),
     )
     m = model(c1, doc)
-    text = source(m, doc.id, {}, fransys_render.sheets(document_sheets_of(m)))
+    text = source(m, doc.id, {}, fransys_render.sheets(document_sheets_of(m), LIBRARY))
     assert "header:" not in text
     assert text.count("footer:") == text.count("footer: none") == 1  # no page number (NV4)
     # Absence alone is also true of a blank page with no frame at all: pin that the same
@@ -182,7 +187,7 @@ def test_harness_table_page_keeps_the_content_box_margin():
         m,
         doc.id,
         {cable_block_key(None, cable.id): "<svg>block</svg>"},
-        fransys_render.sheets(document_sheets_of(m)),
+        fransys_render.sheets(document_sheets_of(m), LIBRARY),
     )
     house = default_sheet_format()
     padding = 5

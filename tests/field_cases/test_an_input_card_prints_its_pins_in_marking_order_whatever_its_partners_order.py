@@ -19,21 +19,14 @@ from itertools import combinations, pairwise
 from pathlib import Path
 
 import fransys as fr
+from _drawn_facts import symbol_subjects
 from _drawn_pages import drawn_pages
 from fransys.colours import BU
 
-from fransys_model.kernel import render_id
 from fransys_model.vocab.tables import functions, items
 
 WIRE = (BU, 0.5)
 INTERLEAVED = {"A": (1, 4), "B": (2, 5), "C": (3, 6)}
-
-
-@cache
-def _gap(model, fact: str):
-    """A fact the page Drawing lacks (strict xfail, GAP-FLIP-DRAWING-SUBJECT)."""
-    msg = f"GAP-FLIP-DRAWING-SUBJECT: no {fact} for {model.digest}"
-    raise AssertionError(msg)
 
 
 @cache
@@ -65,11 +58,7 @@ def _built(shape: str):
 def _box_pins(model) -> tuple:
     """The card's symbol and each channel's (pin x, side of the box: `n` or `s`)."""
     (card,) = (i.tag for i in items(model).values() if i.tag == "K1")
-    (box,) = (
-        one
-        for one in _gap(model, "symbol subject").values()
-        if one.key == "generic-box" and one.owner and one.owner.split()[0] == card
-    )
+    (box,) = (one for one in symbol_subjects(model) if one.key == "generic-box" and one.tag == card)
     pins = {
         int(name.split("_")[1].split(".")[0]): (box.x + at, dict(box.sides)[name])
         for name, at in dict(box.offsets).items()
@@ -79,11 +68,9 @@ def _box_pins(model) -> tuple:
 
 def _contacts(model, name: str) -> dict:
     """Each wired contact's symbol, keyed by the channel its tag carries."""
-    named = {render_id(f.id): f.name for f in functions(model).values()}
+    named = {f.id: f.name for f in functions(model).values()}
     return {
-        int(one.owner.split()[0][1:]): one
-        for one in _gap(model, "symbol subject").values()
-        if one.owner and named.get(one.owner.split()[-1]) == name
+        int(one.tag[1:]): one for one in symbol_subjects(model) if named.get(one.function) == name
     }
 
 

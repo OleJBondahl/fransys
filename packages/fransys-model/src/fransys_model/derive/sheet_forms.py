@@ -5,14 +5,14 @@ reference or a destination prints after its `p`; `sheet_counter_text` is the tit
 `n / N` cell, `B1 / 2` on a block diagram sheet (owner label B1).
 """
 
-from fransys_model.layout import DiagramSheet, Page
+from fransys_model.layout import DiagramSheet, Page, ReferenceText
 
 __all__ = ["diagram_text", "set_page_text", "sheet_counter_text"]
 
 
-def set_page_text(set_number: int, page_number: int) -> str:
+def set_page_text(refs: ReferenceText, set_number: int, page_number: int) -> str:
     """`<set>.<page>`, `"2.3"`: a page named with its drawing set (a reference prints `p` first)."""
-    return f"{set_number}.{page_number}"
+    return f"{set_number}{refs.set_sep}{page_number}"
 
 
 def diagram_text(sheet: DiagramSheet) -> str:

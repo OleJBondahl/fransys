@@ -1,0 +1,22 @@
+schema = 1
+
+[part]
+mpn = "DEMO-ACT-4T"
+manufacturer = "Demo"
+description = "Actuator, four terminals"
+category = "generic"
+class_code = "Q"
+
+[[function]]
+name = "actuator"
+kind = "actuator"
+ports = [
+    { name = "1", role = "generic", side = "line" },
+    { name = "2", role = "generic", side = "line" },
+    { name = "3", role = "generic", side = "line" },
+    { name = "4", role = "generic", side = "line" },
+]
+
+[function.rating]
+voltage_ac_v = "230"
+current_ac_a = "0.24"

@@ -159,7 +159,7 @@ def _canon(layout: CoreLayout, back: Callable[[str | None], str | None]) -> tupl
     wires = tuple(
         (
             pr.page,
-            tuple(sorted(((back(w.net), w.points, w.kind, w.lanes) for w in pr.wires), key=repr)),
+            tuple(sorted(((back(w.net), w.points, w.kind, w.lane) for w in pr.wires), key=repr)),
         )
         for pr in layout.routes.pages
     )

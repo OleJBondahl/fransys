@@ -18,6 +18,8 @@ from fransys_layout.core.score_wiring import crossing_points
 
 __all__ = ["motor_feeder_case_drafts"]
 
+BUNDLE_PITCH = 8  # the wire pitch of the lanes of one bundle
+
 POWER = (BK, 1.5)
 CONTROL = (BU, 0.5)
 MOTOR_PORTS = {"U": "u", "V": "v", "W": "w", "PE": "pe"}
@@ -59,6 +61,29 @@ def motor_feeder_case_drafts(starters: int = 3, *, control: bool = True) -> tupl
     return d, doc
 
 
+def _bundles(wires) -> dict[str, str]:
+    """Each trunk line and each stem ending on one, by its stack of lines (one bundle, RL-W1)."""
+    lines = sorted((w for w in wires if w.style == "trunk"), key=lambda w: w.points[0][1])
+    group: dict[str, str] = {}
+    for w in lines:
+        near = [
+            group[o.id]
+            for o in lines
+            if o.id in group
+            and 0 < w.points[0][1] - o.points[0][1] <= BUNDLE_PITCH
+            and w.points[0][0] <= o.points[-1][0]
+            and o.points[0][0] <= w.points[-1][0]
+        ]
+        group[w.id] = near[0] if near else w.id
+    for w in wires:
+        for line in lines:
+            ends = (w.points[0], w.points[-1])
+            (x0, y), (x1, _) = line.points[0], line.points[-1]
+            if w.style != "trunk" and any(e[1] == y and x0 <= e[0] <= x1 for e in ends):
+                group.setdefault(w.id, group[line.id])
+    return group
+
+
 def feeder_counts(result) -> tuple[int, int]:
     """(references, crossings) of the pages the core path drew for `result` (SW8 row P7.2).
 
@@ -68,6 +93,8 @@ def feeder_counts(result) -> tuple[int, int]:
     refs = crossings = 0
     for drawing in page_drawings(result).values():
         refs += len(drawing.markers)
-        wires = [SimpleNamespace(net=w.id, page=0, points=w.points) for w in drawing.wires]
-        crossings += len(crossing_points(wires))
+        wires = [
+            SimpleNamespace(net=w.id, page=0, points=w.points, kind=w.style) for w in drawing.wires
+        ]
+        crossings += len(crossing_points(wires, _bundles(drawing.wires)))
     return refs, crossings

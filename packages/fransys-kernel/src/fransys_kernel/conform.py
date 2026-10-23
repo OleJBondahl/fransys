@@ -22,7 +22,7 @@ if TYPE_CHECKING:
     from collections.abc import Iterator
 
     from .ids import Id
-    from .record import Record
+    from .record_protocol import Record
 
 _EXACT = (str, int, bool, Decimal)
 

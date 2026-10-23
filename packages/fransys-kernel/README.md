@@ -1,6 +1,6 @@
 # fransys-kernel
 
-The record kernel of Fransys: records, typed ids, `Draft`, `freeze()`, canonical form, merge and diff. **Internal: Fransys is the only consumer.** It knows no engineering term and imports nothing, neither a workspace package nor a third-party package.
+The record kernel of Fransys: records, typed ids, `Draft`, `freeze()`, canonical form, merge and diff. **Internal: Fransys is the only consumer.** It knows no engineering term and imports no workspace package and no third-party package but the family libraries `elecdef` and `refdef` (owner 2026-10-23, spec LIB-ADOPT).
 
 Status: moved out of `fransys-model` (root decision 0208). `fransys_model.kernel` re-exports every name of this package's `__all__`, so existing imports keep working.
 

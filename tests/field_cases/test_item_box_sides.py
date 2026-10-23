@@ -16,13 +16,8 @@ import tempfile
 from pathlib import Path
 
 import fransys as fr
+from _drawn_facts import symbol_subjects
 from fransys.colours import BU
-
-
-def _gap(model, fact: str):
-    """A fact the page Drawing lacks (strict xfail, GAP-FLIP-DRAWING-SUBJECT)."""
-    msg = f"GAP-FLIP-DRAWING-SUBJECT: no {fact} for {model.digest}"
-    raise AssertionError(msg)
 
 
 def _layout(plant) -> tuple:
@@ -39,7 +34,7 @@ def _layout(plant) -> tuple:
 
 def _symbols(model, tag: str) -> list:
     """Every drawn symbol owned by the item or function tagged `tag`."""
-    return [s for s in _gap(model, "symbol subject").values() if s.owner.split()[0] == tag]
+    return [s for s in symbol_subjects(model) if s.tag == tag]
 
 
 def _box(model, tag: str):
@@ -109,7 +104,7 @@ def test_a_switch_stands_under_its_channel_pin_clear_of_the_box() -> None:
     """Each wired switch is placed below the module box on its page; the first under its pin."""
     model, result = _layout(_module)
     box = _box(model, "K1")
-    others = [s for s in _gap(model, "symbol subject").values() if s is not box]
+    others = [s for s in symbol_subjects(model) if s != box]
     assert len(others) == 4
     assert {one.page for one in others} == {box.page}
     assert all(one.y > box.y for one in others)

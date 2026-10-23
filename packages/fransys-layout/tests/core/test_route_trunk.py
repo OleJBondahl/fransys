@@ -27,6 +27,7 @@ STEP = core_options(
     flip_turn="R180",
     tag_stagger=True,
     label_gap=8,
+    parallel_pitch=48,
     driver_first=True,
     arrow_sides=("E", "W"),
 ).wiring_grid
@@ -92,8 +93,8 @@ def test_an_attachment_off_the_trunks_row_belongs_to_another_trunk() -> None:
 
 def test_a_riser_is_a_box_pin_that_is_not_a_leg() -> None:
     pin = PinRef("A1", "p1")
-    box = Attach(None, 0, 0, pin)
-    cell = Attach("c:x", 0, 0, PinRef("x", "n"))
+    box = Attach(None, 0, 0, pin, net="n")
+    cell = Attach("c:x", 0, 0, PinRef("x", "n"), net="n")
     fan = Fan("f", ("n",), (box,), (cell,), None, 1, "below")
     assert drop_kind(fan, box) == "riser"
     assert drop_kind(fan, cell) == "drop"
@@ -119,7 +120,7 @@ def synthetic(  # noqa: PLR0913 - a fixture builder; each knob is keyword-only
     box = Box(min(xs) - 4, pin_y - 4, max(xs) - min(xs) + 8, 8)
     placed = {"K": Placed("K", 1, min(xs), pin_y, "R0", box, box, pins)}
     at = columns or tuple(range(n))
-    atts = tuple(Attach("c:K", at[p], 0, PinRef("K", f"n{p}"), p) for p in range(n))
+    atts = tuple(Attach("c:K", at[p], 0, PinRef("K", f"n{p}"), p, net="n") for p in range(n))
     fan = Fan(
         "f:b",
         tuple(f"L{k}" for k in range(n)),
@@ -130,7 +131,7 @@ def synthetic(  # noqa: PLR0913 - a fixture builder; each knob is keyword-only
         "below",
         (("K", perm),),
     )
-    trunk = Trunk("f:b", 1, ty, min(xs), max(xs), n, 0)
+    trunk = Trunk("f:b", 1, ty, min(xs), max(xs), n, 0, ((min(xs), max(xs)),) * n)
     band = (ty - 2 * grid * n - grid, ty + 2 * grid * n + grid)
     env = RouteEnv(
         1,
@@ -150,6 +151,7 @@ def synthetic(  # noqa: PLR0913 - a fixture builder; each knob is keyword-only
                 flip_turn="R180",
                 tag_stagger=True,
                 label_gap=8,
+                parallel_pitch=48,
                 driver_first=True,
                 arrow_sides=("E", "W"),
             ),

@@ -12,9 +12,12 @@ import pytest
 
 from fransys_model.derive import sheet_frame
 from fransys_model.kernel import make_id
-from fransys_model.layout import SheetFormat
+from fransys_model.layout import SheetFormat, frame_form
 
 PRESETS = tomllib.loads(files("fransys").joinpath("settings.toml").read_text())["paper"]["formats"]
+
+
+_FORM = frame_form(row_labels="letters", column_labels="numbers", row_order="top_down")
 
 
 def _sheet(name: str, table: dict) -> SheetFormat:
@@ -26,7 +29,7 @@ def _sheet(name: str, table: dict) -> SheetFormat:
 @pytest.mark.parametrize("name", PRESETS)
 def test_the_content_box_lies_inside_the_margin_frame(name: str) -> None:
     sheet = _sheet(name, PRESETS[name])
-    x, y, w, h = sheet_frame(sheet).border
+    x, y, w, h = sheet_frame(_FORM, sheet).border
     assert x <= sheet.content_x_mm
     assert y <= sheet.content_y_mm
     assert sheet.content_x_mm + sheet.content_width_mm <= x + w
@@ -35,5 +38,5 @@ def test_the_content_box_lies_inside_the_margin_frame(name: str) -> None:
 
 def test_the_check_can_fail() -> None:
     wide = _sheet("A3", {**PRESETS["A3"], "content_width_mm": 412})
-    x, _, w, _ = sheet_frame(wide).border
+    x, _, w, _ = sheet_frame(_FORM, wide).border
     assert wide.content_x_mm + wide.content_width_mm > x + w

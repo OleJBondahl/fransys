@@ -66,10 +66,10 @@ surface_docstring_lines = 15
 
 [module_code_lines]
 "packages/fransys-author/src/fransys_author/design.py" = 722
-"packages/fransys-layout/src/fransys_layout/core/values.py" = 325
+"packages/fransys-layout/src/fransys_layout/core/values.py" = 333
 "packages/fransys-parts/src/fransys_parts/lint.py" = 445
 "packages/fransys/src/fransys/derive.py" = 321
-"packages/fransys/src/fransys/pipeline.py" = 614
+"packages/fransys/src/fransys/pipeline.py" = 643
 
 [surface_types]
 "packages/electrical-symbols/src/electrical_symbols/box_ports.py::default_order" = 1
@@ -94,7 +94,7 @@ surface_docstring_lines = 15
 "packages/fransys-kernel/src/fransys_kernel/origin.py::OriginSource.key_of" = 1
 "packages/fransys-kernel/src/fransys_kernel/origin.py::OriginSource.origin_of" = 1
 "packages/fransys-kernel/src/fransys_kernel/origin.py::describe" = 1
-"packages/fransys-kernel/src/fransys_kernel/record.py::Record.id" = 1
+"packages/fransys-kernel/src/fransys_kernel/record_protocol.py::Record.id" = 1
 "packages/fransys-kernel/src/fransys_kernel/values.py::check_value" = 1
 "packages/fransys-layout/src/fransys_layout/core/jsonform.py::from_plain" = 1
 "packages/fransys-layout/src/fransys_layout/core/jsonform.py::to_plain" = 2
@@ -111,8 +111,10 @@ surface_docstring_lines = 15
 "packages/fransys/src/fransys/pipeline.py::export_names" = 2
 "packages/fransys/src/fransys/pipeline.py::release" = 1
 "packages/fransys/src/fransys/pipeline.py::write" = 1
+"packages/fransys/src/fransys/settings.py::Settings.table" = 1
 
 [md_tokens]
+"docs/DESIGN.md" = 5199
 "packages/fransys-layout/docs/rules/step-6-texts.md" = 5090
 "packages/fransys/src/fransys/guide/build.md" = 5710
 "packages/fransys/src/fransys/guide/findings-render.md" = 5686

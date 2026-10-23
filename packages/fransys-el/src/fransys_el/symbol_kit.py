@@ -7,6 +7,7 @@ and pole-group views are not here.
 
 from typing import TYPE_CHECKING
 
+from electrical_symbols import GENERIC_BOX_KEY
 from fransys_layout.symbols import library_symbol
 from fransys_model.derive import (
     actuated_group,
@@ -19,6 +20,7 @@ from fransys_model.derive import (
     link_state,
     operated_by,
     pole_gangs,
+    port_name,
     schematic_functions,
     undrawn_functions,
 )
@@ -42,7 +44,7 @@ from .placement_kit import Pick, SymbolKit, refuse
 from .symbol_bind import Part, Shape, Target, member_of, port_of, through_ports
 from .symbol_boxes import box_picks
 from .symbol_pins import Choice, pin_picks
-from .symbol_rules import Facts, symbol_for
+from .symbol_rules import Facts, port_shape, symbol_for
 from .symbol_unknown import is_unknown
 
 if TYPE_CHECKING:
@@ -101,6 +103,7 @@ def _facts(model: Model, function: Function) -> Facts:
         None if facet is None or facet.gender is None else facet.gender.value,
         None if operator is None else operator.value,
         _actuator(model, function),
+        port_shape([port_name(model, p) for p in function_ports(model, function.id)]),
     )
 
 
@@ -260,7 +263,7 @@ def _chosen(
 ) -> dict[Id[Function], Choice]:
     """The choices, a key the library lacks as none: that function draws as a box (el-0039)."""
     return {
-        f: (None, pm) if key is not None and is_unknown(library, key) else (key, pm)
+        f: (None, pm) if key == GENERIC_BOX_KEY or (key and is_unknown(library, key)) else (key, pm)
         for f, (key, pm) in _raw_choices(model, order, table).items()
     }
 

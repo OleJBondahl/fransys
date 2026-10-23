@@ -31,18 +31,15 @@ def _piece_nets(model: Model, net: Netlist) -> dict[object, dict[str, Id[Port]]]
     return found
 
 
-def _wire_roots(net: Netlist) -> tuple[dict[tuple[Id[Page], int], object], dict[object, bool]]:
-    """The piece of each (page, wire index), and the pieces a bundle trunk runs through."""
+def _wire_roots(net: Netlist) -> dict[tuple[Id[Page], int], object]:
+    """The piece of each (page, wire index)."""
     roots: dict[tuple[Id[Page], int], object] = {}
-    trunks: dict[object, bool] = {}
     for page, part in net.pages.items():
         for edge, wires in part.graph.edges.items():
             root = net.union.find((page, next(iter(edge))))
             for i in wires:
                 roots.setdefault((page, i), root)
-                if part.drawing.wires[i].lanes > 1:
-                    trunks[root] = True
-    return roots, trunks
+    return roots
 
 
 def _tee_finding(
@@ -58,11 +55,11 @@ def _tee_finding(
 def short_findings(model: Model, net: Netlist) -> tuple[Finding, ...]:
     """DRAWING_SHORTS_NETS per piece with two nets; each dotless T is a short or a missing dot."""
     nets = _piece_nets(model, net)
-    roots, trunks = _wire_roots(net)
+    roots = _wire_roots(net)
     found = [
         drawn_finding("DRAWING_SHORTS_NETS", tuple(held.values()), f"{len(held)} nets in one piece")
-        for root, held in nets.items()
-        if len(held) > 1 and root not in trunks
+        for held in nets.values()
+        if len(held) > 1
     ]
     for page, part in net.pages.items():
         for at, ending, through in part.graph.tees:
@@ -77,12 +74,10 @@ def _ends_at(part_ports: dict[str, XY], at: XY) -> list[str]:
 
 
 def wrong_port_findings(model: Model, net: Netlist) -> tuple[Finding, ...]:
-    """ROUTE_WRONG_PORT per one-lane wire whose two ends stand on ports of different nets."""
+    """ROUTE_WRONG_PORT per wire whose two ends stand on ports of different nets."""
     found = []
     for part in net.pages.values():
         for wire in part.drawing.wires:
-            if wire.lanes > 1:
-                continue
             first = {net.net(model, p): p for p in _ends_at(part.ports, wire.points[0])}
             last = {net.net(model, p): p for p in _ends_at(part.ports, wire.points[-1])}
             if first and last and not first.keys() & last.keys():

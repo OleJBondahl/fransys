@@ -75,6 +75,7 @@ def test_every_node_pack_row_emits_is_one_of_the_names() -> None:
         flip_turn="R180",
         tag_stagger=True,
         label_gap=8,
+        parallel_pitch=48,
         driver_first=True,
         arrow_sides=("E", "W"),
     )

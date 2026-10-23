@@ -93,13 +93,16 @@ def net_ends(
         if elem is None or elem.key in seen:
             continue
         seen.add(elem.key)
-        out.append(NetEnd(net.id, elem.key, ref, _role(elem, ref, on_net, syms[ref.sym])))
+        role = _role(elem, ref, on_net, syms[ref.sym], cut=ref in {c.pin for c in net.cut})
+        out.append(NetEnd(net.id, elem.key, ref, role))
     return tuple(out)
 
 
-def _role(elem: Elem, ref: PinRef, on_net: AbstractSet[PinRef], sym: Sym) -> str:
+def _role(elem: Elem, ref: PinRef, on_net: AbstractSet[PinRef], sym: Sym, *, cut: bool) -> str:
+    """A free element is a through end; one whose net continues outside the set ends at its pin."""
     pair = (elem.n_pin, elem.s_pin)
-    if elem.form == "free" or all(p is not None and PinRef(ref.sym, p) in on_net for p in pair):
+    both = all(p is not None and PinRef(ref.sym, p) in on_net for p in pair)
+    if both or (elem.form == "free" and not cut):
         return "through"
     side = next(p.side for p in sym.pins if p.id == ref.pin)
     if side == "N":

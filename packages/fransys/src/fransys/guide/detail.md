@@ -15,7 +15,7 @@ is a `fr.Detail` handle, as `d.layout` is a `fr.Layout`.
 | `X1[3]`, `.inner`, `.outer` | a terminal whose number or side is fixed: a published pinout, or several wires on one terminal |
 | `d.pair(a, w1, b)` | a signal pair through a cable, pin for pin, with no line or load side; it is a verb, not a detail |
 | `W1.core(BN, a, b)` | a core whose colour or number a termination plan fixes |
-| `d.detail.net(name, *pins)` | a named net that no wire joins, such as a bus; its name prints in the connector list |
+| `d.detail.net(name, *pins)` | a named net over pins; wires or one board must realise it; its name prints in the connector list |
 | `d.detail.busbar(a, b)`, `d.detail.rail_bond(a, b)` | a rack's internal power jumper; terminals bonded through their mounting rail |
 
 A real circuit that no core call and no row here can write is a gap in Fransys. Report it with its
@@ -126,7 +126,8 @@ w2.core(5, pe1.pe)  # the one-ended screen, screw 2
 
 ## d.detail.net, d.detail.busbar, d.detail.rail_bond
 
-`d.detail.net(name, *pins, kind=)` names a net of pins that no wire joins. `kind` is `fr.CONTROL`
+`d.detail.net(name, *pins, kind=)` says the pins belong to one net. Wires or one board must realise it;
+otherwise NET_UNREALISED warns. `kind` is `fr.CONTROL`
 (the default), `fr.SIGNAL` or `fr.GENERIC`. It does not make a `PE` or supply net: those have
 `d.earth` and the supply calls.
 

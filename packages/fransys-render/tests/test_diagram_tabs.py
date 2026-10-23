@@ -6,6 +6,7 @@ from fransys_render._cable_pen import Pen
 from fransys_render._constants import DIAGRAM_TAB_PAD_G
 from fransys_render._diagram_boxes import _tab, tab_outer
 
+from electrical_symbols import LIBRARY
 from fransys_model.kernel import make_id
 from fransys_model.layout import (
     BoxRef,
@@ -20,7 +21,7 @@ from fransys_model.vocab import Item
 
 _CABLE = make_id(Item, ("item", "cable"))
 _OTHER = make_id(Item, ("item", "other"))
-_PEN = Pen(module_mm=Decimal("2.5"), text_height_mm=Decimal("2.5"), pad_g=2)
+_PEN = Pen(LIBRARY, module_mm=Decimal("2.5"), text_height_mm=Decimal("2.5"), pad_g=2)
 
 
 def _box(*, x=40, width=24) -> DiagramBox:

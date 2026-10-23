@@ -2,8 +2,8 @@
 
 `label_along` is general: a polyline, a size, the sides to try per run direction, an obstacle grid
 and the trunk width give a free box or None. `label_nets` runs it for every net with a label size.
-A trunk `lanes` wide is marked by `text_label_grid.lane_runs` at lane k a step to the +x or +y side,
-so a label stands one cell past `band.band_extent` on that side and one cell off on the other.
+A trunk `lanes` wide, given to `label_along`, makes a label stand one cell past `band.band_extent`
+on the +x or +y side and one cell off on the other; a trunk's lane lines are wires of their own.
 """
 
 from __future__ import annotations
@@ -133,7 +133,7 @@ def net_label(size: Size, wires: Sequence[Wire], options: Options, grid: Occupan
     """The first free box on the net's wires, the wire with the longest run first."""
     ordered = sorted(enumerate(wires), key=lambda iw: (-longest(iw[1]), iw[0]))
     for _, wire in ordered:
-        box = label_along(wire.points, size, options.wire_label_sides, grid, wire.lanes)
+        box = label_along(wire.points, size, options.wire_label_sides, grid)
         if box is not None:
             return box
     return None

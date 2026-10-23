@@ -1,8 +1,13 @@
 """PT3's short form and SI3's sheet texts: the pure parts of the page title (PAGES-TITLES)."""
 
 import pytest
+from derive_helpers import frozen_with_library, house_record
 
 from fransys_model.derive import set_page_text, short_title
+from fransys_model.kernel import Draft
+from fransys_model.layout import ReferenceText
+
+MODEL = frozen_with_library(Draft())
 
 
 @pytest.mark.parametrize(
@@ -27,8 +32,8 @@ from fransys_model.derive import set_page_text, short_title
 def test_the_short_form_prints_shared_leading_words_once(
     entries: tuple[str, ...], short: str | None
 ) -> None:
-    assert short_title(entries) == short
+    assert short_title(MODEL, entries) == short
 
 
 def test_a_set_page_text_is_set_dot_page() -> None:
-    assert set_page_text(2, 3) == "2.3"
+    assert set_page_text(house_record(ReferenceText), 2, 3) == "2.3"

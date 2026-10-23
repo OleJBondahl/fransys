@@ -10,7 +10,7 @@ from .origin import require_origin
 if TYPE_CHECKING:
     from .ids import Id
     from .origin import Origin
-    from .record import Record
+    from .record_protocol import Record
 
 
 def merge(*parts: Draft | Model) -> Draft:

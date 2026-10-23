@@ -16,13 +16,13 @@ from pathlib import Path
 
 import fransys as fr
 import pytest
+from _drawn_facts import item_box
 from _drawn_pages import drawn_pages
 from fransys.colours import BN, BU
 
 from fransys_layout.geometry import GENERIC_BOX_KEY, generic_box_geometry, overlaps, translate
 from fransys_layout.geometry.symbols import symbol_geometry
 from fransys_model.layout import Orientation
-from fransys_model.vocab.tables import functions, items
 
 _LONG = "SUPPLY-PUMP-STATION-NUMBER-ONE-FEEDER-"
 _TAGS = pytest.mark.parametrize("name", ["T", _LONG], ids=["short", "long-tags"])
@@ -46,25 +46,6 @@ def _built(name: str = "T") -> fr.BuildResult:
     cover.write_text("# Cabinet\n", encoding="utf-8")
     doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover)
     return fr.build(d, doc)
-
-
-def _gap(model, fact: str):
-    """A fact the page Drawing lacks (strict xfail, GAP-FLIP-DRAWING-SUBJECT)."""
-    msg = f"GAP-FLIP-DRAWING-SUBJECT: no {fact} for {model.digest}"
-    raise AssertionError(msg)
-
-
-def _box(model, tag: str):
-    """The generic box drawn for the item tagged `tag`."""
-    (item,) = (one.id for one in items(model).values() if one.key[-1] in (f"G/{tag}", tag))
-    owned = {f.id.value for f in functions(model).values() if f.item == item}
-    boxes = [
-        s
-        for s in _gap(model, "symbol subject").values()
-        if s.key == GENERIC_BOX_KEY and s.owner and s.owner.split(":")[-1] in owned
-    ]
-    assert len(boxes) == 1, f"{tag} draws {len(boxes)} boxes, not one"
-    return boxes[0]
 
 
 def _pin_x(box, name: str) -> int:
@@ -104,8 +85,8 @@ def test_no_two_symbols_of_a_page_overlap(name: str) -> None:
 def test_each_feeder_stands_over_its_own_group(name: str) -> None:
     """Each supply's output pins stand over its group's pins, the supplies apart."""
     model = _built(name).model
-    module = _box(model, "M1")
+    module = item_box(model, "M1")
     for n in (1, 2):
-        psu = _box(model, f"{name}{n}")
+        psu = item_box(model, f"{name}{n}")
         for out in ("+", "-"):
             assert _pin_x(psu, f"output.{out}") == _pin_x(module, f"in_{n}.{n}{out}")

@@ -4,7 +4,7 @@ The values render passes to the sheet symbols; the symbols themselves are data
 (`electrical_symbols`, `symbols/sheet-*.toml` and `title-block*.toml`).
 """
 
-lazy from fransys_model.layout import SheetFormat
+lazy from fransys_model.layout import FrameForm, SheetFormat
 
 from .frame_labels import frame_labels
 from .rows_sheet_pages import FrameStrip, SheetFrame
@@ -12,10 +12,10 @@ from .rows_sheet_pages import FrameStrip, SheetFrame
 __all__ = ["sheet_frame"]
 
 
-def _strips(sheet: SheetFormat) -> tuple[FrameStrip, ...]:
+def _strips(form: FrameForm, sheet: SheetFormat) -> tuple[FrameStrip, ...]:
     """Top and bottom strips one cell per frame column; left and right one per frame row."""
     x0, y0 = sheet.content_x_mm, sheet.content_y_mm
-    labels = frame_labels(sheet.frame_columns, sheet.frame_rows)
+    labels = frame_labels(form, sheet.frame_columns, sheet.frame_rows)
     column = sheet.content_width_mm / sheet.frame_columns
     row = sheet.content_height_mm / sheet.frame_rows
     return (
@@ -26,7 +26,7 @@ def _strips(sheet: SheetFormat) -> tuple[FrameStrip, ...]:
     )
 
 
-def sheet_frame(sheet: SheetFormat) -> SheetFrame:
+def sheet_frame(form: FrameForm, sheet: SheetFormat) -> SheetFrame:
     """The frame of `sheet`: the border keeps the content box's margin on every side.
 
     The band is the border's bottom part under the content box; the square logo cell ends it.
@@ -36,7 +36,7 @@ def sheet_frame(sheet: SheetFormat) -> SheetFrame:
     band = height - sheet.content_height_mm
     return SheetFrame(
         border=(x0, y0, width, height),
-        strips=_strips(sheet),
+        strips=_strips(form, sheet),
         band=band,
         band_top=y0 + sheet.content_height_mm,
         title_width=width - band,

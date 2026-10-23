@@ -2,7 +2,8 @@
 
 `OVERLAP`: two symbol bodies, a text and a body, two texts, a wire through a text, or a wire
 across a body meet with positive area. `OUT_OF_PAGE`: a body, a text or a wire vertex lies outside
-the content box. `WIRE_NOT_ORTHOGONAL`: a wire has a diagonal segment. A unit frame is not
+the content box. `WIRE_OVER_MARKER`: a wire or a dot meets a reference marker's box.
+`WIRE_NOT_ORTHOGONAL`: a wire has a diagonal segment. A unit frame is not
 a body and a text is not part of an outline. Pure: reads `Drawing` values only. One finding per
 code and page, naming up to `_NAMED` of its members.
 """
@@ -15,10 +16,10 @@ from fransys_layout.drawing import page_texts, struck_texts, text_overlaps
 from fransys_model.kernel import Finding
 
 from .codes import FINDING_CODES
-from .drawn_geometry import crooked, stray, through_bodies
+from .drawn_geometry import crooked, dot_on_marker, dot_on_pin, over_markers, stray, through_bodies
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator
+    from collections.abc import Iterator, Mapping
 
     from fransys_layout.drawing import Drawing
     from fransys_model.kernel import Id
@@ -29,6 +30,7 @@ if TYPE_CHECKING:
 __all__ = ["drawing_invariant_findings"]
 
 _NAMED = 3
+XY = tuple[int, int]
 _INFO = {info.code: info for info in FINDING_CODES}
 
 
@@ -44,18 +46,23 @@ def _inside(box: Box, page: Box) -> bool:
     return _span(box.x, box.w, page.x, page.w) and _span(box.y, box.h, page.y, page.h)
 
 
-def _pairs(drawing: Drawing) -> Iterator[str]:
-    """The key pair of each two symbol bodies that meet."""
-    held = [(s.key, s.outline) for s in drawing.symbols if s.outline is not None]
-    for (ka, oa), (kb, ob) in combinations(held, 2):
-        if overlaps(oa, ob):
-            yield f"{ka} / {kb}"
+def _pairs(drawing: Drawing, ports: Mapping[str, XY]) -> Iterator[str]:
+    """The key pair of each two symbol bodies that meet.
+
+    A dot on a marker is `over_markers`'s; a dot on its symbol's own pin point is a connection.
+    """
+    held = [s for s in drawing.symbols if s.outline is not None]
+    for a, b in combinations(held, 2):
+        if not (a.outline and b.outline and overlaps(a.outline, b.outline)):
+            continue
+        if not dot_on_marker(a, b) and not dot_on_pin(a, b, ports):
+            yield f"{a.key} / {b.key}"
 
 
-def page_overlaps(drawing: Drawing) -> list[str]:
+def page_overlaps(drawing: Drawing, ports: Mapping[str, XY] | None = None) -> list[str]:
     """What meets what on one page: body pairs, then the texts' counts."""
     texts = page_texts(drawing)
-    found = list(_pairs(drawing))
+    found = list(_pairs(drawing, ports or {}))
     found += [
         f"text at {_at(t.box)} / {s.key}"
         for t in texts
@@ -90,16 +97,18 @@ def _finding(code: str, page: Id[Page], members: list[str]) -> Finding:
 def _page_findings(page: Id[Page], part: PagePart) -> list[Finding]:
     drawing = part.drawing
     box = Box(0, 0, drawing.area.w, drawing.area.h)
-    over = [*page_overlaps(drawing), *through_bodies(part)]
+    over = [*page_overlaps(drawing, part.ports), *through_bodies(part)]
+    marked = over_markers(part)
     out = [*outside(drawing), *stray(part, box)]
     bent = crooked(part)
     return [
         *([_finding("OVERLAP", page, over)] if over else []),
+        *([_finding("WIRE_OVER_MARKER", page, marked)] if marked else []),
         *([_finding("OUT_OF_PAGE", page, out)] if out else []),
         *([_finding("WIRE_NOT_ORTHOGONAL", page, bent)] if bent else []),
     ]
 
 
 def drawing_invariant_findings(net: Netlist) -> tuple[Finding, ...]:
-    """OVERLAP, OUT_OF_PAGE and WIRE_NOT_ORTHOGONAL for each page of `net` that has any."""
+    """The four invariant codes for each page of `net` that has any."""
     return tuple(f for page, part in net.pages.items() for f in _page_findings(page, part))

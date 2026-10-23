@@ -20,6 +20,7 @@ import fransys_parts
 import pytest
 from _drawn_pages import drawn_pages
 from _model_build_cover import layout_trigger_document
+from _no_power_net import assert_no_power_net
 
 from fransys_model.kernel import Origin, Severity, make_id
 from fransys_model.layout import (
@@ -101,13 +102,16 @@ def test_a_chain_of_terminals_builds_with_every_conductor_drawn(n: int) -> None:
     assert _wires(result.model)
 
 
+@pytest.mark.rule("ROUTING")
+@pytest.mark.rule("BUNDLE")
 @pytest.mark.parametrize("n", [5, 12])
 def test_a_chain_of_terminals_stands_in_one_row_on_one_line(n: int) -> None:
-    """The terminals of the chain stand in one row in strip order,
-    their links are wires on one line below it, and no link is a reference (no `LinkMarker`)."""
+    """The terminals stand in one row in strip order; the net is one trunk on one line below it,
+    a drop per terminal, a dot at each inner drop, no marker (ROUTING, BUNDLE, R467)."""
     # UNDO: engines/schematic/engine.py: `all_columns = join_terminal_rows(` ... `)` is removed
     #     (the terminals stack in columns again and their links become references)
     model = _build(n).model
+    assert_no_power_net(model)
     tags = _terminal_tags(model)
     placed = sorted(tags.items(), key=lambda item: item[1][1].x)
     assert [k for k, _ in placed] == [str(k) for k in range(1, n + 1)]
@@ -116,7 +120,9 @@ def test_a_chain_of_terminals_stands_in_one_row_on_one_line(n: int) -> None:
     ]
     assert len({s.y for s in terminals}) == 1
     routes = _wires(model)
-    assert len(routes) == n - 1
+    assert len(routes) == n + 1  # one trunk and a drop per terminal
+    dots = [s for d in drawn_pages(model).values() for s in d.symbols if s.key == "junction-dot"]
+    assert len(dots) == n - 2
     runs = {a[1] for r in routes for a, b in pairwise(r.points) if a[1] == b[1]}
     assert len(runs) == 1
     assert runs != {terminals[0].y}

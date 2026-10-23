@@ -18,6 +18,7 @@ import fransys as fr
 import pytest
 from _drawn_pages import drawn_pages
 from _model_build_cover import cabinet_document
+from _tables_on import TABLES_ON
 from fransys.colours import BU
 
 if TYPE_CHECKING:
@@ -41,7 +42,7 @@ def model() -> Model:
     with d.function("G2", "Alarm circuit"):
         d.detail.wire(strip[3], b1.nc["21"], wire=wire)
         d.detail.wire(b1.nc["22"], strip[4], wire=wire)
-    return fr.build(d, cabinet_document(cabinet)).model
+    return fr.build(d, cabinet_document(cabinet), settings=TABLES_ON).model
 
 
 def _drawn(model: Model) -> tuple[Drawing, dict[str, DrawnSymbol]]:

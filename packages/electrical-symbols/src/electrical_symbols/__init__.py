@@ -22,6 +22,7 @@ from electrical_symbols.box_ports import (
 )
 from electrical_symbols.bridge_mark import BridgePiece, bridge_mark, bridge_mark_room
 from electrical_symbols.drawn_symbol import drawn_slots, drawn_symbol
+from electrical_symbols.em_heights import em_heights
 from electrical_symbols.font_files import font_dir
 from electrical_symbols.generic_box import box_pitch, generic_box
 from electrical_symbols.marker_keys import (
@@ -82,6 +83,7 @@ __all__ = [
     "draw_order",
     "drawn_slots",
     "drawn_symbol",
+    "em_heights",
     "font_dir",
     "frame_border",
     "frame_strip",

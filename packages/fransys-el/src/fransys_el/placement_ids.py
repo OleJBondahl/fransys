@@ -27,7 +27,8 @@ __all__ = ["pin_names", "symbol_ids", "symbol_key", "symbol_of"]
 def symbol_key(model: Model, key: PickKey) -> str:
     """`"<printed designation> <Id text>"`: the core breaks ties by `natural_key` of this text.
 
-    The designation orders the symbols as a reader does; the Id text keeps the key unique.
+    The designation orders the symbols as a reader does; the Id text keeps the key unique. A PLC
+    module's box takes its place from `Sym.rank` (`derive.order.plc_module_ranks`), not from this.
     """
     designation = item_designation(model, function_item(model, function_of(model, key)))
     return f"{designation} {render_id(key)}"

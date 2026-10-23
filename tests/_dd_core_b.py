@@ -7,6 +7,7 @@ told by the text it prints and a drawn item by the tag text beside it.
 from typing import TYPE_CHECKING
 
 from _dd_core import designation_of
+from _drawn_facts import symbol_subjects
 from _drawn_pages import drawn_pages
 
 if TYPE_CHECKING:
@@ -45,21 +46,10 @@ def tags_of(model: Model, name: str) -> list[tuple[Id, DrawnText]]:
 
 
 def symbols_of(model: Model, name: str) -> list[tuple[Id, DrawnSymbol]]:
-    """(page, symbol) beside each tag of the item `name`, by (page, x, y).
+    """(page, symbol) of every symbol drawn for the item `name`, by (page, x, y).
 
-    The symbol of a tag is the nearest one whose origin stands 50 to 64 right of the tag's box and
-    within 40 of its top (the offset the core gives a tag text); a tag with none gives nothing.
+    A symbol belongs to the item when its subject's item prints the designation of `name`.
     """
-    drawings = drawn_pages(model)
-    found = []
-    for page, tag in tags_of(model, name):
-        near = [
-            s
-            for s in drawings[page].symbols
-            if s.key != "junction-dot"
-            and 50 <= s.x - tag.box.x <= 64
-            and abs(s.y - tag.box.y) <= 40
-        ]
-        if near:
-            found.append((page, min(near, key=lambda s: abs(s.y - tag.box.y - 24))))
+    des = designation_of(model, name)
+    found = [(p.page, p.drawn) for p in symbol_subjects(model) if p.tag == des]
     return sorted(found, key=lambda f: (f[0].value, f[1].x, f[1].y))

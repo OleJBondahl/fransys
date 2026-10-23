@@ -4,8 +4,8 @@ The K1/K2 straps of `test_dd_chains.py::test_the_straps_of_a_function_that_is_a_
 nowhere_are_drawn`, with two contactors and no group tags, so the lanes are narrow and K2 stands
 right beside K1 (a lane that carries a coil image is wide, and the earlier test passes only
 because K2 then stands clear of K1). K1:1, K2:1 and XA:1 share a net. The strap K1:1 - K2:1 and
-the wire XA:1 - K1:1 are both between neighbouring cells (C3), so no star is made and the router
-draws the strap. XA:3 stands over K2's pole 1 but feeds its pole 2, so its wire turns on the one
+the wire XA:1 - K1:1 are one net of three ports, drawn as one trunk with a drop per port (R467), no
+strap. XA:3 stands over K2's pole 1 but feeds its pole 2, so its wire turns on the one
 cell in front of K2:1. Routed before the strap, it sealed that port: `ROUTE_FAILED` and
 `CONNECTION_NOT_DRAWN`. The router now keeps every port's first step for that port's net and lets
 a foreign wire only cross it (`stages/grid_path.py`, `reserve_exits`).
@@ -16,10 +16,20 @@ two-port net, where D9's markers never apply.
 
 from typing import Any
 
+import pytest
 from dd_chain_fixtures import MCB, TERMINAL, build, design, pin_at, placed, wires_ending_at
+
+from fransys_model.derive import port_power_kind
+from fransys_model.vocab import PowerKind
+from fransys_model.vocab.tables import ports as ports_of
 
 K1, K2 = ("-K1", "make-contact", 3), ("-K2", "make-contact", 3)
 CTR = "DEMO-CTR-3P-24"
+
+
+def _net(wire: Any) -> str:
+    """The net id of a drawn wire, without the `f:` a trunk's net id may carry."""
+    return wire.net.removeprefix("f:")
 
 
 def _errors(result: Any) -> list[str]:
@@ -27,8 +37,12 @@ def _errors(result: Any) -> list[str]:
     return [f.code for f in result.findings if f.code in {"ROUTE_FAILED", "CONNECTION_NOT_DRAWN"}]
 
 
+@pytest.mark.rule("ROUTING")
+@pytest.mark.rule("BUNDLE")
 def test_a_strap_between_neighbouring_cells_is_drawn_when_a_wire_turns_before_its_port() -> None:
-    """K1:1 - K2:1 draws, and each of its ports shows a route or a marker."""
+    """K1:1, K2:1 and XA:1 draw as one trunk with a drop to each port, a dot at the inner drop
+    and none where the trunk ends at its last drop, no marker and no strap (ROUTING, BUNDLE,
+    R467, R477; not a power net)."""
     # UNDO: stages/route.py route, start `along` empty (drop the `reserve_exits` seed)
     parts, d = design()
     c = d.location("C1", "Cabinet")
@@ -44,18 +58,28 @@ def test_a_strap_between_neighbouring_cells_is_drawn_when_a_wire_turns_before_it
     wire(k2["4"], t4.inner)
     result = build(parts, d)
     model = result.model
+    # not a power net (Q21): POWER-NET would otherwise decide this shape
+    assert {port_power_kind(model, p) for p in ports_of(model)} == {PowerKind.NONE}
     one, two = placed(model, *K1), placed(model, *K2)
     # the fault stays reproduced: K2 beside K1, nothing between them
     assert (one.page, one.y) == (two.page, two.y)
     assert one.x < two.x
     assert not [s for s in one.drawing.symbols if one.x < s.x < two.x]
     assert _errors(result) == []
-    for p in (one, two):
-        top = pin_at(p, "1.in")
-        assert wires_ending_at(p.drawing, top) or [m for m in p.drawing.markers if m.x == top[0]]
-    assert [
-        w for w in one.drawing.wires if {pin_at(one, "1.in"), pin_at(two, "1.in")} <= set(w.points)
-    ], "no strap between K1:1 and K2:1"
+    assert not one.drawing.markers
+    ports = {pin_at(one, "1.in"), pin_at(two, "1.in")}
+    drops = [w for p in ports for w in wires_ending_at(one.drawing, p)]
+    assert drops
+    (net,) = {_net(w) for w in drops}
+    net_wires = [w for w in one.drawing.wires if _net(w) == net]
+    trunks = [w for w in net_wires if w.points[0][1] == w.points[-1][1]]
+    assert len(trunks) == 1
+    assert not [w for w in net_wires if ports <= set(w.points)], "a strap joins K1:1 and K2:1"
+    dots = [
+        s for s in one.drawing.symbols if s.key == "junction-dot" and s.y == trunks[0].points[0][1]
+    ]
+    assert len(dots) == 1
+    assert dots[0].x == min(x for w in net_wires for x, _ in w.points)
 
 
 def test_a_neighbours_straight_run_no_longer_crosses_a_ports_own_first_step() -> None:

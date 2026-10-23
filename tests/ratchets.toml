@@ -11,7 +11,7 @@ stock = 0
 
 [clones_tests]
 # Exact clones (bodies of 25+ AST nodes) among tests/ and packages/*/tests helpers.
-stock = 114
+stock = 115
 
 [unread_doors]
 # E19: public names of the kernel, vocab and derive doors with no outside and no transitive reader (25 + 21 + 124).
@@ -25,7 +25,7 @@ stock = 171
 # WIRE_LABELS. The rest are author handles (Cable, Fn, Throw, ...), which fall with API-AUTHOR,
 # fransys_model.derive.TopLevelScope, and UnionFind.
 [mutable_surface]
-stock = 22
+stock = 20
 
 [own_errors_electrical_symbols]
 base = "none"
@@ -94,18 +94,18 @@ stock = 0
 # BoxKey, DiagramLine, DrawnWire (across fransys_model.derive*/layout/vocab, fransys_layout(.core),
 # fransys_author, fransys_kernel, fransys_render).
 [twin_doors]
-twins = 101
+twins = 100
 clashes = 32
 
 # RR3 (spec rules-register): register rows whose gate is still `pending = "<ORDER>"`.
 [pending_rules]
-stock = 16
+stock = 14
 
 # HOMES-GATES (root-0350): typed setting literals (numeric value bound to a name ending _mm, _pct,
 # _g, _pt, _gap, _pitch, _margin, _height, _penalty or _width), in packages/*/src. Base 47, 45 after Part B,
 # 40 after SIZES-TOML phase 3, 39 after its phase 2 (R319.5, R338).
 [settings_literals]
-stock = 38
+stock = 35
 
 # HOMES-GATES (root-0350): Callable parameters in fransys_layout/core (a fact arrives as a value).
 [core_callables]
@@ -125,9 +125,9 @@ stock = 6
 total = 177
 
 [escape_hatches_codes]
-PLR0913 = 57
+PLR0913 = 59
 PLR2004 = 18
-ty-invalid-argument-type = 15
+ty-invalid-argument-type = 13
 S101 = 15
 PLR0917 = 11
 ANN401 = 10
@@ -158,12 +158,45 @@ ty-unsupported-operator = 1
 # wires through bodies 157, 12, 102, 15. On the merge of frames b9b12623e (MARKER-KEEPS-WIRE R453
 # counts overlap, SHORTS-ROUTE R454, COPY-JOIN R457): page overlaps 23, 26, 31, 6 plus 157, 13, 102,
 # 15. DRAWING_SHORTS_NETS is 0 on every build since ROUTING (R439) and SHORTS-ROUTE, so it is an ERROR.
+# R500 (Covered by: PIN-HANGINGS, which fits each tag marker as a footprint keep by link_fit, H3): a tag record holds the wide box (TEXT-CANDIDATES), so 3 tags touch a neighbour the plain box cleared: machine_panel 0 to 1, mcc 0 to 1, panel_di16p 8 to 10; placement still reserves the plain box (TAG-FIT lane)
+# XF-UNIT-SCOPE (R497 U3, R510): a trunk now clears the pins of the card row it hangs from, which
+# moves it past unrelated sensors: machine_panel 1 -> 3, panel_di16p 10 -> 12 (marker-arrow-turned
+# pairs). Covered by: PIN-HANGINGS - layout anchors (R516).
 [drawing_overlap]
 distribution_board = 0
-machine_panel = 180
-mcc = 39
-panel_di16p = 133
-remote_io = 21
+machine_panel = 3
+mcc = 1
+panel_di16p = 12
+remote_io = 0
+skid = 1
+
+# MARKER-FREE-SIDE (spec 4.4, note 6): the wire and dot members that meet a reference marker's box,
+# split out of drawing_overlap in MF-WO1 and counted as WIRE_OVER_MARKER members. The sum exceeds
+# the old OVERLAP stock because through_bodies skipped a wire with an end inside a box (the hole of
+# spec 2). Each falls to 0 and the code becomes an ERROR in the commit that brings every stock to 0.
+# RL-W1 (R486, BUNDLE): a trunk is one line per pole, so each lane meets an arrow's box:
+# distribution_board 1 -> 6 (12 before the merge of main), mcc 41 -> 78 (63 wires, 15 dots). RL-W2 (PORT-LINE)
+# merged on RL-W1: the card stands on its pins, so the lanes fall: machine_panel 240 -> 64, mcc 78 -> 75,
+# panel_di16p 186 -> 58, remote_io 44 -> 24.
+# XF-UNIT-SCOPE (R497 U3): remote_io 24 -> 27 (a harness-line fan lane meets a marker box). Covered
+# by: PIN-HANGINGS - layout anchors (R516).
+[drawing_wire_over_marker]
+distribution_board = 6
+machine_panel = 64
+mcc = 75
+panel_di16p = 58
+remote_io = 27
+skid = 0
+
+# MARKER_UNPLACED counts findings (A9: it ends 0 or goes to the owner page); 0 on every case but
+# panel_di16p: 1, the arrow of the 24V rail's left end, off the page since RL-W2 stands the card
+# at the left margin (designer R484, lane in XF-CLOSE).
+[marker_unplaced]
+distribution_board = 0
+machine_panel = 0
+mcc = 0
+panel_di16p = 1
+remote_io = 0
 skid = 0
 
 [drawing_out_of_page]

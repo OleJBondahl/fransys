@@ -12,7 +12,7 @@ from .keys import natural_key
 from .topology_elements import Elem, NetEnd
 from .topology_fans import LaneDraft
 from .unionfind import UnionFind
-from .values import Cell, End, Options, Pin, PinRef
+from .values import Cell, End, Options, PinRef
 lazy from .sym_values import Sym
 
 if TYPE_CHECKING:
@@ -20,7 +20,6 @@ if TYPE_CHECKING:
 
     from .values import Orientation
 
-BOXPIN_WEIGHT = 6
 PAIR = 2
 Rank = tuple[bool, bool, tuple[tuple[int, int | str], ...]]
 
@@ -57,6 +56,7 @@ class Facts:
     end_bias_weight: int
     flip_turn: Orientation
     bundle_of: Mapping[str, str] = field(default_factory=dict)
+    anchor_of: Mapping[str, int] = field(default_factory=dict)
 
 
 def links_of(ends_by_net: Ends) -> dict[str, Link]:
@@ -142,81 +142,6 @@ def _complete(key: str, top: str | None, bottom: str | None, elems: Mapping[str,
     return Node(key, top, bottom)
 
 
-def _end_score(node: Node, pin_id: str | None, facts: Facts) -> int:
-    """How much this extreme wants to be head: box pins first, biased ends, then the side."""
-    if pin_id is None:
-        return 0
-    sym = facts.syms[facts.elems[node.elem].sym]
-    pin = _pin_of(sym, pin_id)
-    side = {"N": 1, "S": -1}.get(pin.side, 0)
-    if pin.end_bias:
-        return side - pin.end_bias * facts.end_bias_weight
-    return side + _boxpin_bias(PinRef(sym.id, pin_id), facts)
-
-
-def _pin_of(sym: Sym, pin_id: str) -> Pin:
-    return next(p for p in sym.pins if p.id == pin_id)
-
-
-def _boxpin_bias(ref: PinRef, facts: Facts) -> int:
-    """Plus the weight when the net meets a box pin on its S side (head below it), else minus."""
-    net = facts.net_of.get(ref)
-    box_ends = [e for e in facts.ends_by_net.get(net or "", ()) if e.site == "boxpin"]
-    if not box_ends:
-        return 0
-    box = box_ends[0].pin
-    return BOXPIN_WEIGHT if _pin_of(facts.syms[box.sym], box.pin).side == "S" else -BOXPIN_WEIGHT
-
-
-def orient_chain(
-    path: tuple[Node, ...], facts: Facts, *, turn: bool | None = None
-) -> tuple[Node, ...]:
-    """Put the head first: the extreme that scores higher, the first on a tie; turn forces it."""
-    if turn is None:
-        turn = _end_score(path[-1], path[-1].bottom, facts) > _end_score(
-            path[0], path[0].top, facts
-        )
-    if turn:
-        return tuple(Node(n.elem, n.bottom, n.top) for n in reversed(path))
-    return path
-
-
-def orient_chains(
-    paths: Sequence[tuple[Node, ...]], facts: Facts, *, together: bool
-) -> tuple[tuple[Node, ...], ...]:
-    """Orient every chain; the chains of one bundle turn together, by their summed scores (BUNDLE).
-
-    Every pin pair of a device takes the bundle's direction, never one direction per chain.
-    """
-    groups: dict[frozenset[str], list[int]] = defaultdict(list)
-    for i, path in enumerate(paths):
-        if together and (bundles := _bundles_of(path, facts)):
-            groups[bundles].append(i)
-    flip = {i for ids in groups.values() if _group_flips(ids, paths, facts) for i in ids}
-    bundled = {i for ids in groups.values() for i in ids}
-    return tuple(
-        orient_chain(p, facts, turn=i in flip if i in bundled else None)
-        for i, p in enumerate(paths)
-    )
-
-
-def _bundles_of(path: tuple[Node, ...], facts: Facts) -> frozenset[str]:
-    """The bundle ids of the nets a chain's end pins meet."""
-    pins = ((n.elem, pin) for n in path for pin in (n.top, n.bottom) if pin)
-    nets = (facts.net_of.get(PinRef(facts.elems[e].sym, pin)) for e, pin in pins)
-    return frozenset(facts.bundle_of[n] for n in nets if n is not None and n in facts.bundle_of)
-
-
-def _group_flips(ids: Sequence[int], paths: Sequence[tuple[Node, ...]], facts: Facts) -> bool:
-    gain = 0
-    for i in ids:
-        path = paths[i]
-        gain += _end_score(path[-1], path[-1].bottom, facts) - _end_score(
-            path[0], path[0].top, facts
-        )
-    return gain > 0
-
-
 def cells_of(
     path: tuple[Node, ...],
     elems: Mapping[str, Elem],
@@ -241,7 +166,7 @@ def _flipped(node: Node, e: Elem) -> bool:
 
 
 def group_columns(
-    paths: tuple[tuple[Node, ...], ...], elems: Mapping[str, Elem]
+    paths: Sequence[tuple[Node, ...]], elems: Mapping[str, Elem]
 ) -> tuple[tuple[int, ...], ...]:
     """Chains that share a symbol are lanes of one column; each group lists its chain indexes."""
     uf = UnionFind()
@@ -340,14 +265,27 @@ def _pin_refs(cell: Cell) -> tuple[PinRef, PinRef]:
     return PinRef(cell.sym, cell.top_pin or ""), PinRef(cell.sym, cell.bottom_pin or "")
 
 
+def branch_floor(column: Sequence[LaneDraft], pitch: int) -> int:
+    """The least x of the next parallel branch: `pitch` right of the branch before it."""
+    return max(lane.offset for lane in column) + pitch
+
+
 def member_offset(
-    column: Sequence[LaneDraft], cells: tuple[Cell, ...], syms: Mapping[str, Sym], gap: Options
+    column: Sequence[LaneDraft],
+    cells: tuple[Cell, ...],
+    syms: Mapping[str, Sym],
+    gap: Options,
+    floor: int,
 ) -> int:
-    """The member's x: right of the column's widest lane edge, plus the gap, on the wiring grid."""
+    """The member's x: right of the column's widest lane edge plus the gap, and not left of `floor`.
+
+    Both are snapped up to the wiring grid. `floor` is 0 where no branch stands before it.
+    """
     in_row = frozenset(s.id for s in syms.values() if s.row_group)
     left, _ = lane_extent(syms, cells, in_row)
     edge = max(lane.offset + lane_extent(syms, tuple(lane.cells), in_row)[1] for lane in column)
-    return -(-(edge + gap.column_gap_min - left) // gap.wiring_grid) * gap.wiring_grid
+    want = max(edge + gap.column_gap_min - left, floor)
+    return -(-want // gap.wiring_grid) * gap.wiring_grid
 
 
 def member_lanes(
@@ -367,7 +305,9 @@ def member_lanes(
         for key in folds[parent]:
             column = [lane for lane in (*lanes, *out) if lane.column == home.column]
             cell = _member_cell(facts.elems[key], nets, facts)
-            offset = member_offset(column, (cell,), facts.syms, options)
+            offset = member_offset(
+                column, (cell,), facts.syms, options, branch_floor(column, options.parallel_pitch)
+            )
             ends = (End("join", nets[0], top), End("join", nets[1], bottom))
             out.append(
                 MemberDraft(

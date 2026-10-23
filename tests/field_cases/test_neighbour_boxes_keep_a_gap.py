@@ -15,16 +15,11 @@ import tempfile
 from pathlib import Path
 
 import fransys as fr
+from _drawn_facts import symbol_subjects
 from fransys.colours import BU
 
 from electrical_symbols import LIBRARY
 from fransys_layout.symbols import library_symbol, symbol_shape
-
-
-def _gap(model, fact: str):
-    """A fact the page Drawing lacks (strict xfail, GAP-FLIP-DRAWING-SUBJECT)."""
-    msg = f"GAP-FLIP-DRAWING-SUBJECT: no {fact} for {model.digest}"
-    raise AssertionError(msg)
 
 
 def _built():
@@ -56,8 +51,8 @@ def _clearance(model, first: str, second: str) -> int:
     The larger of the x gap and the y gap: positive when the two boxes share no edge or area.
     """
     outline = {}
-    for one in _gap(model, "symbol subject").values():
-        tag = one.owner.split()[0]
+    for one in symbol_subjects(model):
+        tag = one.tag
         if tag in (first, second):
             body = symbol_shape(library_symbol(LIBRARY, one.key), LIBRARY).body
             outline[tag] = (one.x + body.x, one.y + body.y, body.w, body.h)

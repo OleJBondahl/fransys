@@ -2,12 +2,13 @@
 
 import fransys_render
 
+from electrical_symbols import LIBRARY
 from fransys_model.derive import BRIDGE_PIECE_KEYS
 from fransys_model.derive.print_sizes import LINE_RULE_MM
 
 
 def test_a_piece_is_drawn_per_key_at_its_symbols_size_in_the_rule_pen() -> None:
-    pieces = fransys_render.bridge_pieces()
+    pieces = fransys_render.bridge_pieces(LIBRARY)
     assert set(pieces) == set(BRIDGE_PIECE_KEYS.values())
     line, tick = pieces[BRIDGE_PIECE_KEYS["line"]], pieces[BRIDGE_PIECE_KEYS["tick"]]
     assert (line.width_mm, line.height_mm) == (3.0, 1.0)

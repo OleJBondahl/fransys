@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 from cabinet import build_cabinet
+from derive_helpers import with_house
 from harness_board import build_harness_board
 
 from fransys_model.derive import (
@@ -93,7 +94,7 @@ def test_cabinet_whole_model_row_query_matches_golden(query_name: str) -> None:
         "plc_channel_rows": plc_channel_rows,
         "wire_rows": wire_rows,
     }
-    model = freeze(build_cabinet())
+    model = with_house(freeze(build_cabinet()))
     rows = queries[query_name](model)
     golden = (_GOLDEN_DIR / f"cabinet.{query_name}.json").read_text(encoding="utf-8")
     assert repr(rows) == golden
@@ -101,7 +102,7 @@ def test_cabinet_whole_model_row_query_matches_golden(query_name: str) -> None:
 
 def test_cabinet_terminal_rows_for_x1_matches_golden() -> None:
     """`terminal_rows` for strip `X1` matches its golden dump."""
-    model = freeze(build_cabinet())
+    model = with_house(freeze(build_cabinet()))
     rows = terminal_rows(model, _item_by_designation(model, "X1"))
     golden = (_GOLDEN_DIR / "cabinet.terminal_rows.x1.json").read_text(encoding="utf-8")
     assert repr(rows) == golden

@@ -11,8 +11,8 @@ from fransys_layout.core.topology_chains import (
     chains,
     group_columns,
     links_of,
-    orient_chain,
 )
+from fransys_layout.core.topology_orient import orient_chain
 
 from .flow_builders import Power, elem, free, net
 from .topology_fixtures import Read, box, read

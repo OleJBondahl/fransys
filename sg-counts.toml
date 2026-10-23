@@ -38,7 +38,7 @@ home = "fransys_model/derive/text_width.py"
 forbid_after = "L4"
 
 [r06-svg-literal]
-stock = 8
+stock = 4
 mark = "count"
 home = "symdef / electrical_symbols data"
 forbid_after = "the symdef release"
@@ -80,7 +80,7 @@ home = "fransys_kernel, derive/indexes.py, fransys_layout/core"
 forbid_after = "L12"
 
 [r14-ascent-baseline]
-stock = 2
+stock = 0
 mark = "count"
 home = "symdef"
 forbid_after = "the flip"

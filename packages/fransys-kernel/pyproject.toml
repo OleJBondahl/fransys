@@ -4,9 +4,9 @@ build-backend = "hatchling.build"
 
 [project]
 name = "fransys-kernel"
-version = "0.21.1"
+version = "0.21.2"
 requires-python = ">=3.15"
-dependencies = []
+dependencies = ["refdef==0.2.0"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/fransys_kernel"]

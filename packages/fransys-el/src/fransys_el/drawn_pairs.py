@@ -22,8 +22,8 @@ __all__ = ["loop_findings", "unpaired_findings"]
 _MIN_PORTS = 2
 
 
-def _loops(part: PagePart) -> tuple[Union, dict[object, bool]]:
-    """The page's pieces, and those whose edges close a loop with whether a bundle runs through."""
+def _loops(part: PagePart) -> tuple[Union, set[object]]:
+    """The page's pieces, and those whose edges close a loop."""
     union, closing = Union(), []
     for edge in part.graph.edges:
         a, b = tuple(edge)
@@ -31,12 +31,7 @@ def _loops(part: PagePart) -> tuple[Union, dict[object, bool]]:
             closing.append(a)
         else:
             union.join(a, b)
-    bundled = {
-        union.find(next(iter(edge)))
-        for edge, ws in part.graph.edges.items()
-        if any(part.drawing.wires[i].lanes > 1 for i in ws)
-    }
-    return union, {union.find(a): union.find(a) in bundled for a in closing}
+    return union, {union.find(a) for a in closing}
 
 
 def loop_findings(net: Netlist) -> tuple[Finding, ...]:
@@ -44,9 +39,9 @@ def loop_findings(net: Netlist) -> tuple[Finding, ...]:
     found = []
     for page, part in net.pages.items():
         union, loops = _loops(part)
-        for root, bundled in loops.items():
+        for root in loops:
             held = [p for p, at in part.ports.items() if union.find(at) == root]
-            if len(held) >= _MIN_PORTS and not bundled:
+            if len(held) >= _MIN_PORTS:
                 ids = [net.ids[p] for p in held[:_MIN_PORTS]]
                 found.append(
                     drawn_finding("CONNECTION_DRAWN_TWICE", (page, *ids), "a loop of wires")

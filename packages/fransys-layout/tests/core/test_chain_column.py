@@ -122,6 +122,7 @@ def test_the_box_columns_option_off_leaves_every_box_to_a_card() -> None:
                 flip_turn="R180",
                 tag_stagger=True,
                 label_gap=8,
+                parallel_pitch=48,
                 driver_first=True,
                 arrow_sides=("E", "W"),
             ),

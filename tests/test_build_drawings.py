@@ -14,6 +14,7 @@ import pytest
 from _direct_case import built_with_unlaid, laid_again
 from _motor_feeder_case import motor_feeder_case_drafts
 from fransys import _layout_core, pipeline
+from fransys._settings_library import library_of
 from fransys_el import style
 from fransys_render import svg
 
@@ -81,10 +82,10 @@ def test_the_pdf_links_equal_reference_links(tmp_path, monkeypatch):
     monkeypatch.setattr(pipeline.fransys_pdf, "source", spy)
     model = result.model
     # `write` would refuse this 8-starter case on the old `render.check`; the sources come first
+    library = library_of(result.settings)
     pipeline._write_intermediates(
-        model,
-        result.drawings,
-        pipeline._svgs(model, result.drawings),
+        pipeline._Drawn(model, result.drawings, library),
+        pipeline._svgs(model, result.drawings, library),
         tmp_path,
         result.settings.pdf,
     )
@@ -118,13 +119,14 @@ def test_the_layout_solves_once_per_build(tmp_path, monkeypatch):
     assert len(calls) == 1
 
 
-def test_build_result_fields_are_unchanged_but_for_drawings():
+def test_build_result_fields_are_unchanged_but_for_drawings_and_library():
     assert [f.name for f in dataclasses.fields(fr.BuildResult)] == [
         "model",
         "findings",
         "settings",
         "times",
         "drawings",
+        "library",
     ]
 
 

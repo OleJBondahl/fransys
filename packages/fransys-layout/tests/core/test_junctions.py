@@ -30,7 +30,7 @@ def _layout(wires: list[Wire], pins: dict[str, tuple[str, int, int]]) -> CoreLay
 
 
 def _wire(net: str, *points: tuple[int, int]) -> Wire:
-    return Wire(net, 1, points, "straight", 1)
+    return Wire(net, 1, points, "straight")
 
 
 def test_two_wires_and_a_pin_at_one_point_are_a_junction() -> None:
@@ -59,3 +59,11 @@ def test_a_bend_a_pin_at_a_wire_end_and_overlapping_wires_are_none() -> None:
 def test_wires_of_two_nets_crossing_are_not_a_junction() -> None:
     wires = [_wire("a", (0, 4), (8, 4)), _wire("b", (4, 0), (4, 8))]
     assert junctions(_layout(wires, {})) == ()
+
+
+def test_a_bundle_conductor_gets_its_dot_at_a_t_like_any_wire() -> None:
+    """RL-W1: a lane line is a wire of its member net; its T has a dot, another's has none."""
+    line = Wire("L2", 1, ((0, 8), (48, 8)), "trunk", lane=1)
+    own = Wire("L2", 1, ((24, 0), (24, 8)), "drop")
+    other = Wire("L1", 1, ((36, 0), (36, 4)), "drop")
+    assert junctions(_layout([line, own, other], {})) == (Junction("L2", 1, 24, 8),)

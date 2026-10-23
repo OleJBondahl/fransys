@@ -2,6 +2,11 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
+
+import pytest
+
+from fransys_layout.core.errors import CoreError
 from fransys_layout.core.topology_elements import Elem
 from fransys_layout.core.topology_fans import (
     Att,
@@ -32,6 +37,14 @@ def test_a_two_end_net_of_a_box_pin_and_a_lane_end_is_an_attachment() -> None:
     assert attached_pin(r.ends_by_net["x"]) == PinRef("c", "s")
     assert attached_pin(r.ends_by_net["y"]) is None
     assert attached_pin(r.ends_by_net["z"]) is None
+
+
+def test_a_box_pin_and_a_through_end_is_an_attachment_but_two_throughs_are_not() -> None:
+    """RL-W2 PORT-LINE: a terminal wired to a card pin stands on that pin."""
+    r = read([box("c"), elem("h2"), elem("h3")], [net("x", "c.s", "h2.n", "h2.s")])
+    assert attached_pin(r.ends_by_net["x"]) == PinRef("c", "s")
+    r = read([box("c"), elem("h2"), elem("h3")], [net("x", "c.s", "h2.n", "h2.s", "h3.n", "h3.s")])
+    assert attached_pin(r.ends_by_net["x"]) is None
 
 
 def test_drivers_are_foot_ends_and_south_box_pins_and_legs_are_head_ends_and_north_ones() -> None:
@@ -92,7 +105,14 @@ def test_resolve_gives_final_indexes_and_pins_after_a_hub_is_dealt() -> None:
     l1 = _lane("L1", "x")
     fan = FanDraft("f", ["t"], [], [Att(l1, "head")])
     deal(fan, ["h#0"], {"h#0": _hub("h")}, "c:")
+    fan.drivers = [replace(a, net="t") for a in fan.drivers]
+    fan.legs = [replace(a, net="t") for a in fan.legs]
     assert resolve(fan.drivers[0]).cell == 0
     assert resolve(fan.drivers[0]).pin == PinRef("h", "s")
     assert resolve(fan.legs[0]).cell == 1
     assert resolve(fan.legs[0]).pin == PinRef("x", "n")
+
+
+def test_resolve_refuses_an_attachment_with_no_net() -> None:
+    with pytest.raises(CoreError, match="no net"):
+        resolve(Att(_lane("L1", "x"), "head"))

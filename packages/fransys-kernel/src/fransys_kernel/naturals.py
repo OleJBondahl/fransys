@@ -1,30 +1,23 @@
-"""The one text order: digit runs by value, so `-X2` stands before `-X10` (NUMBER-SORT K7)."""
+"""The one text order: `natural_key` is refdef's, so `-X2` stands before `-X10` (NUMBER-SORT K7)."""
 
-import re
+from typing import Any
 lazy from collections.abc import Iterable
+
+import refdef
 
 from .ids import Id, render_id
 
 __all__ = ["NaturalKey", "canonical", "natural_join", "natural_key", "natural_sorted"]
 
-_RUN = re.compile(r"\d+|\D+")
-
-type NaturalKey = tuple[tuple[tuple[int, int, str], ...], str]
-
-
-def _token(run: str) -> tuple[int, int, str]:
-    """A decimal run sorts by value, any other run as text after every number."""
-    return (0, int(run), "") if run.isdecimal() else (1, 0, run)
+type NaturalKey = tuple[Any, ...]
 
 
 def natural_key(text: str) -> NaturalKey:
-    """Sort key of a printed text: digit runs by value, so `-W2` sorts before `-W10`.
+    """Sort key of a printed text: refdef's, so `-W2` sorts before `-W10`.
 
-    Text runs compare as strings, case-sensitively, and sort after numbers. The whole text is the
-    last tie, so the key is total: two texts have equal keys only when they are equal, and `X01`
-    sorts before `X1`.
+    Digit runs compare by value, text runs as strings; the whole text is the last tie.
     """
-    return tuple(_token(run) for run in _RUN.findall(text)), text
+    return refdef.natural_key(text)
 
 
 def natural_sorted(texts: Iterable[str]) -> list[str]:

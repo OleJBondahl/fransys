@@ -36,7 +36,7 @@ _lean_surface_spec.loader.exec_module(lean_surface)
 
 # import name -> first-party packages it may import (itself is always allowed)
 ALLOWED: dict[str, frozenset[str]] = {
-    "fransys_kernel": frozenset(),
+    "fransys_kernel": frozenset({"refdef", "elecdef"}),
     "fransys_model": frozenset({"fransys_kernel"}),
     "electrical_symbols": frozenset(),
     "fransys_parts": frozenset({"fransys_model"}),
@@ -60,8 +60,8 @@ FIRST_PARTY = frozenset(ALLOWED) | {"fransys"}
 # table is never checked for a third-party import at all (decision 0015). Each entry must equal
 # root DESIGN 4's third-party column for that package.
 THIRD_PARTY: dict[str, frozenset[str]] = {
-    "fransys_kernel": frozenset(),
-    "fransys_model": frozenset(),
+    "fransys_kernel": frozenset({"refdef", "elecdef"}),
+    "fransys_model": frozenset({"refdef", "elecdef"}),
     "electrical_symbols": frozenset({"symdef"}),
     "fransys_parts": frozenset(),
     "fransys_author": frozenset(),
@@ -245,6 +245,11 @@ def test_the_third_party_check_can_fail():
         third_party_violations("fransys_model", "from _typeshed import DataclassInstance") == set()
     )
     assert third_party_violations("fransys_reports", "import symdef") == {"symdef"}
+    assert third_party_violations("fransys_layout", "import elecdef") == {"elecdef"}
+    assert third_party_violations("fransys_pdf", "import refdef") == {"refdef"}
+    assert third_party_violations("fransys_pdf", "import elecdef") == {"elecdef"}
+    assert third_party_violations("fransys_kernel", "import refdef") == set()
+    assert third_party_violations("fransys_kernel", "import elecdef") == set()
 
 
 # --- symdef is reached through its surface only (SB10, decision 0229): `import symdef`,
@@ -857,7 +862,7 @@ def test_render_calls_no_derive_function_beyond_its_allowlist():
 
 
 def test_render_holds_no_svg_element_literal_beyond_its_allowlist():
-    assert gate("render_svg_literals") == []
+    assert gate("render_svg_literals", done=True) == []
 
 
 def test_the_render_derive_gate_can_fail():

@@ -36,6 +36,7 @@ def test_a_tall_and_a_wide_column_pack_closer_than_their_full_extents() -> None:
         flip_turn="R180",
         tag_stagger=True,
         label_gap=8,
+        parallel_pitch=48,
         driver_first=True,
         arrow_sides=("E", "W"),
     )
@@ -62,6 +63,7 @@ def test_cells_whose_text_slots_overlap_pack_at_hard_plus_soft_and_not_the_footp
                 flip_turn="R180",
                 tag_stagger=True,
                 label_gap=8,
+                parallel_pitch=48,
                 driver_first=True,
                 arrow_sides=("E", "W"),
             ),
@@ -77,6 +79,7 @@ def test_cells_whose_text_slots_overlap_pack_at_hard_plus_soft_and_not_the_footp
             core_options(
                 tag_stagger=False,
                 label_gap=8,
+                parallel_pitch=48,
                 flip_turn="R180",
                 driver_first=True,
                 arrow_sides=("E", "W"),
@@ -102,6 +105,7 @@ def test_a_hard_box_never_overlaps_another_hard_box() -> None:
         flip_turn="R180",
         tag_stagger=True,
         label_gap=8,
+        parallel_pitch=48,
         driver_first=True,
         arrow_sides=("E", "W"),
     )
@@ -130,6 +134,7 @@ def test_separation_is_on_the_wiring_grid() -> None:
             flip_turn="R180",
             tag_stagger=True,
             label_gap=8,
+            parallel_pitch=48,
             driver_first=True,
             arrow_sides=("E", "W"),
         )

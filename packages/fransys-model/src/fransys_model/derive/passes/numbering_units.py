@@ -1,7 +1,7 @@
 """Number each unit instance that has no tag, from its release's `class_code`."""
 
 import dataclasses
-from collections.abc import Callable
+from collections.abc import Callable, Collection
 
 from fransys_kernel import require_origin
 from fransys_model.derive.designation_label import own_designation_or_none
@@ -9,7 +9,8 @@ from fransys_model.derive.facts.units import designating_ancestors
 from fransys_model.derive.instance_tag import unit_tag
 from fransys_model.derive.lookups import terminal_items
 from fransys_model.derive.unit_release import unit_release
-from fransys_model.kernel import Finding, Id, Model, Severity, evolve, first_free, make_id
+from fransys_model.kernel import Finding, Id, Model, Severity, evolve, make_id
+from fransys_model.refdef import lowest_free
 from fransys_model.vocab.codes import fix_text
 from fransys_model.vocab.facets.assigned_unit_tag import AssignedUnitTagFacet
 from fransys_model.vocab.finding_ref import ref
@@ -20,18 +21,33 @@ lazy from fransys_model.vocab.core import Unit
 type Reserved = Callable[..., frozenset[str]]
 
 
-@dataclasses.dataclass(frozen=True)
-class Suffixed:
-    """The numbers `n` for which `code + str(n)` is in `taken`, for `first_free`.
+def _number_of(code: str, text: str) -> int | None:
+    """The `n` for which `text` is exactly `code + str(n)`, else None (`A01` is not 1)."""
+    tail = text[len(code) :]
+    if text.startswith(code) and tail.isascii() and tail.isdigit() and tail == str(int(tail)):
+        return int(tail)
+    return None
 
-    Lets the passes allocate by number while their taken sets hold whole texts.
+
+def used_numbers(code: str, taken: Collection[str]) -> set[int]:
+    """The numbers `n` for which `code + str(n)` is in `taken`, for `lowest_free`."""
+    return {n for text in taken if (n := _number_of(code, text)) is not None}
+
+
+def next_number(taken: set[str], numbers: dict[str, set[int]], code: str) -> int:
+    """The lowest free number of `code`; the number joins `taken` and every built set it fits.
+
+    `numbers` holds the used-number set of each code, built from `taken` the first time.
     """
-
-    code: str
-    taken: set[str]
-
-    def __contains__(self, number: int) -> bool:
-        return f"{self.code}{number}" in self.taken
+    if code not in numbers:
+        numbers[code] = used_numbers(code, taken)
+    n = lowest_free(numbers[code])
+    text = f"{code}{n}"
+    taken.add(text)
+    for other, found in numbers.items():
+        if (m := _number_of(other, text)) is not None:
+            found.add(m)
+    return n
 
 
 def _item_texts(model: Model, parent: Id[Unit] | None) -> set[str]:
@@ -71,12 +87,13 @@ def _floating(model: Model) -> list[Unit]:
 
 def _facets(model: Model, reserved: Reserved) -> list[AssignedUnitTagFacet]:
     taken: dict[Id[Unit] | None, set[str]] = {}
+    numbers: dict[Id[Unit] | None, dict[str, set[int]]] = {}
     facets = []
     for unit in _floating(model):
-        used = taken.setdefault(unit.parent, _taken(model, unit.parent, reserved))
+        parent = unit.parent
+        texts = taken.setdefault(parent, _taken(model, parent, reserved))
         code = unit_release(model, unit.id).class_code
-        n = first_free(Suffixed(code, used))
-        used.add(f"{code}{n}")
+        n = next_number(texts, numbers.setdefault(parent, {}), code)
         key = (*unit.key, "assigned_unit_tag")
         facet_id = make_id(AssignedUnitTagFacet, key)
         facets.append(

@@ -6,6 +6,7 @@ import pytest
 import typst
 from fransys import pipeline
 
+from electrical_symbols import LIBRARY
 from fransys_model.kernel import Severity
 from fransys_model.vocab import documents
 
@@ -20,7 +21,7 @@ def _compile(monkeypatch: pytest.MonkeyPatch, tmp_path, source_text: str):
     model = fr.build(d, doc).model
     (document_id,) = documents(model)
     monkeypatch.setattr(fransys_pdf, "source", lambda *_args, **_kwargs: source_text)
-    return pipeline._compile_pdf(model, {}, document_id, {}, pdf=fr.settings().pdf)
+    return pipeline._compile_pdf(model, {}, document_id, {}, pdf=fr.settings().pdf, library=LIBRARY)
 
 
 def test_another_typst_error_is_re_raised_untouched(monkeypatch, tmp_path):

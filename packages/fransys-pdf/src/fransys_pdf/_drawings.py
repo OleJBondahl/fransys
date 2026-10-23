@@ -7,6 +7,7 @@ from fransys_model.derive import (
     SheetKey,
     cable_blocks,
     cable_runs,
+    continued_heading,
     schematic_page_ids,
     system_has_no_top_level_cables,
 )
@@ -129,7 +130,13 @@ def _cable_runs(  # noqa: PLR0913, PLR0917 -- the document, its paper, blocks, d
         line = run.blocks[0].line if run.blocks[0].mpn else run.heading
         key = SheetKey(record.id, PageKind.HARNESS_DRAWING, index)
         runs.append(
-            run_page(sheet, index, line, page_background(model, record, sheets, key), bodies)
+            run_page(
+                sheet,
+                index,
+                (line, continued_heading(model, line)),
+                page_background(model, record, sheets, key),
+                bodies,
+            )
         )
     return "\n#pagebreak()\n".join(runs)
 

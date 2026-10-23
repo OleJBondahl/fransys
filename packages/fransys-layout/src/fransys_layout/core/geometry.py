@@ -128,13 +128,16 @@ def pin_xy(sym: Sym, cell: Cell, pin_id: str) -> tuple[int, int]:
 def stack_lane(
     syms: Mapping[str, Sym], cells: tuple[Cell, ...], options: Options, in_row: frozenset[str]
 ) -> tuple[tuple[int, ...], int]:
-    """Origin y of each cell stacked from y 0 with wire_min gaps; and the lane height."""
+    """Origin y of each cell stacked from y 0: wire_min plus its hold above each cell but the first.
+
+    A hold on the first cell is ignored; nothing stands above it. Also returns the lane height.
+    """
     ys: list[int] = []
     bottom = 0
     for i, cell in enumerate(cells):
         sym = syms[cell.sym]
         fp = cell_footprint(sym, cell, in_row=cell.sym in in_row)
-        top = bottom + (options.wire_min if i else 0)
+        top = bottom + (options.wire_min + cell.hold if i else 0)
         origin = top - fp.y
         ys.append(origin)
         bottom = origin + fp.y + fp.h

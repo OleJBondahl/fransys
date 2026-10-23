@@ -24,13 +24,14 @@ OPTIONS = core_options(
     flip_turn="R180",
     tag_stagger=True,
     label_gap=8,
+    parallel_pitch=48,
     driver_first=True,
     arrow_sides=("E", "W"),
 )
 
 
 def att(col: str, sym: str | None = None) -> Attach:
-    return Attach(col, 0, 0, PinRef(sym or f"=S{col}", "1"))
+    return Attach(col, 0, 0, PinRef(sym or f"=S{col}", "1"), net="n")
 
 
 def fan(fid: str, legs: list[str], drivers: list[str] | None = None, lanes: int = 1) -> Fan:

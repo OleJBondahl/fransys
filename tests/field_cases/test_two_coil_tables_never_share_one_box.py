@@ -17,6 +17,7 @@ from pathlib import Path
 
 import fransys as fr
 from _contact_tables import table_body_g, table_symbols
+from _tables_on import TABLES_ON
 from fransys.colours import BU
 
 
@@ -42,7 +43,7 @@ def _built():
     cover = Path(tempfile.mkdtemp()) / "cover.md"
     cover.write_text("# Cabinet\n", encoding="utf-8")
     doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover)
-    return fr.build(d, doc).model
+    return fr.build(d, doc, settings=TABLES_ON).model
 
 
 def _overlap(a: tuple, b: tuple) -> bool:

@@ -16,6 +16,7 @@ from pathlib import Path
 
 import fransys as fr
 import fransys_parts
+from _drawn_facts import symbol_subjects
 from fransys.colours import BU
 
 from fransys_model.kernel import merge
@@ -47,12 +48,6 @@ ports = [{ name = "S21", role = "generic" }, { name = "S22", role = "generic" }]
 """
 
 
-def _gap(model, fact: str):
-    """A fact the page Drawing lacks (strict xfail, GAP-FLIP-DRAWING-SUBJECT)."""
-    msg = f"GAP-FLIP-DRAWING-SUBJECT: no {fact} for {model.digest}"
-    raise AssertionError(msg)
-
-
 def _box_marking_order() -> list[str]:
     """The markings of the relay's box, left to right (N before S at one x)."""
     root = Path(tempfile.mkdtemp())
@@ -67,11 +62,7 @@ def _box_marking_order() -> list[str]:
     (root / "cover.md").write_text("# Cabinet\n", encoding="utf-8")
     doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=root / "cover.md")
     model = fr.build(d, doc).model
-    (box,) = (
-        one
-        for one in _gap(model, "symbol subject")
-        if one.key == "generic-box" and one.owner.startswith("K1 ")
-    )
+    (box,) = (one for one in symbol_subjects(model) if one.key == "generic-box" and one.tag == "K1")
     offsets, sides = dict(box.offsets), dict(box.sides)
     drawn = sorted(offsets, key=lambda name: (offsets[name], sides[name] != "n"))
     return [name.rsplit(".", 1)[-1] for name in drawn]

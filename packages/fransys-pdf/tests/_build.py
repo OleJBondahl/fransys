@@ -8,7 +8,7 @@ pattern `packages/fransys-kicad/tests/conftest.py` uses for its own invented boa
 """
 
 from decimal import Decimal
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import fransys_pdf
 from pdf_library import freeze
@@ -657,9 +657,27 @@ def page_links(model):
     return dict.fromkeys(layout_of(model, Page), ())
 
 
+WORDS = {"notes": "Notes", "sheet": "Sheet", "title": "Title", "page": "Page", "bridge": "Bridge"}
+REVISION_HEADERS = ("Revision", "Date", "Description", "Created", "Checked", "Approved")
+
+
+def texts():
+    """The facade's house-text values for `fransys_pdf.source`, typed as today's defaults."""
+    return {
+        "words": WORDS,
+        "revision_headers": REVISION_HEADERS,
+        "description_mm": 120.0,
+    }
+
+
 def source(model, document, svgs, sheets, bridges=None, **flow):
-    """`fransys_pdf.source` with the house list shares and the links of `page_links`."""
-    flow = {"list_share_pct": LIST_SHARE, "list_gutter_pct": LIST_GUTTER, **flow}
+    """`fransys_pdf.source` with the house list shares, texts and the links of `page_links`."""
+    flow: dict[str, Any] = {
+        "list_share_pct": LIST_SHARE,
+        "list_gutter_pct": LIST_GUTTER,
+        **texts(),
+        **flow,
+    }
     return fransys_pdf.source(
         model, document, svgs, sheets, bridges, links=page_links(model), **flow
     )

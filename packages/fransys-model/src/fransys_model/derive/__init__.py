@@ -79,6 +79,7 @@ from .columns import (
 )
 from .connected_ports import connected_ports
 from .contact_entries import NO_PLACE, contact_list_key
+from .contact_places import contact_places
 from .contacts import LinkState, Throws, changeover_throws, link_state, link_throw, owned_contacts
 from .core_list import core_list_rows
 from .core_pairs import cores_text
@@ -107,6 +108,7 @@ from .document_pages import (
     page_order_key,
 )
 from .document_scope import document_bom_lines, document_scope
+from .document_sets import set_unit
 from .document_sheets import (
     document_sheet_format,
     document_sheets,
@@ -262,6 +264,7 @@ from .open_cores import open_core_rows
 from .order import bom_sort_key, natural_key, plc_channel_tie
 from .order_box_sides import side_order_key
 from .order_groups import function_groups_in_order
+from .order_hint_findings import check_order_hint_cycle
 from .overview_field import field_devices, field_fold
 from .overview_fold import fold_level
 from .overview_lanes import (
@@ -300,14 +303,7 @@ from .overview_tree import (
 from .overview_view_rows import overview_units, overview_view_rows
 from .overview_views import signal_lens, unit_matrix
 from .page_destination import page_destination, sheet_text, sheet_title_text
-from .page_headings import (
-    DIAGRAM_TITLE,
-    HARNESS_DRAWING_TITLE,
-    PAGE_HEADINGS,
-    PRESET_HEADINGS,
-    SCHEMATIC_TITLE,
-    continued_heading,
-)
+from .page_headings import continued_heading, page_headings, preset_headings
 from .page_presets import PRESET_PAGES, document_page_kinds, page_kinds, page_preset
 from .page_reference_text import page_reference_text
 from .page_references import references_off_document
@@ -372,6 +368,7 @@ from .queries import (
     list_context,
     no_conductor_at,
     overview_graph,
+    pdf_texts,
     plc_channel_rows,
     plc_rack_modules,
     reading_cables,
@@ -543,7 +540,6 @@ from .tag_text import item_tag_text, run_point_text, tag_text
 from .text_size import text_room, text_room_g, text_under_floor
 from .title_block import document_facts, project_facts
 from .title_block_text import (
-    TITLE_BLOCK_LABELS,
     cut_to_width,
     field_printed,
     fits,
@@ -578,19 +574,13 @@ __all__ = [
     "CONTENTS_LABELS",
     "CORE_LIST_COLUMNS",
     "DESIGNATION_COLUMNS",
-    "DIAGRAM_TITLE",
-    "HARNESS_DRAWING_TITLE",
     "NO_PART",
     "NO_PLACE",
-    "PAGE_HEADINGS",
     "PIN_COLUMNS",
     "PLC_COLUMNS",
-    "PRESET_HEADINGS",
     "PRESET_PAGES",
-    "SCHEMATIC_TITLE",
     "TERMINAL_COLUMNS",
     "TERMINAL_LABELS",
-    "TITLE_BLOCK_LABELS",
     "TOP_LEVEL",
     "WIRE_COLUMNS",
     "WIRE_LABELS",
@@ -812,6 +802,7 @@ __all__ = [
     "channel_pins",
     "channel_signal",
     "channel_takes",
+    "check_order_hint_cycle",
     "check_pins_below",
     "check_side_hints",
     "check_unprinted_sets",
@@ -839,6 +830,7 @@ __all__ = [
     "connector_segments",
     "contact_kind_of",
     "contact_list_key",
+    "contact_places",
     "contents_rows",
     "continued_heading",
     "core_colour",
@@ -1027,6 +1019,7 @@ __all__ = [
     "own_nodes",
     "owned_contacts",
     "page_destination",
+    "page_headings",
     "page_kinds",
     "page_order_key",
     "page_preset",
@@ -1037,6 +1030,7 @@ __all__ = [
     "part_function_rows",
     "part_rating",
     "part_records",
+    "pdf_texts",
     "physical_nets",
     "pin_lines",
     "pin_order",
@@ -1072,6 +1066,7 @@ __all__ = [
     "ports",
     "power_kind",
     "power_text",
+    "preset_headings",
     "previous_release",
     "previous_release_listing",
     "printed_designation",
@@ -1107,6 +1102,7 @@ __all__ = [
     "series_pairs",
     "series_parallel",
     "set_page_text",
+    "set_unit",
     "sheet_counter_text",
     "sheet_frame",
     "sheet_index_rows",

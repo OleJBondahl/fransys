@@ -1,0 +1,31 @@
+schema = 1
+
+[part]
+mpn = "DEMO-HUB-PWR"
+manufacturer = "Demo"
+description = "Powered hub with one connector"
+category = "generic"
+class_code = "K"
+
+[[function]]
+name = "PWR"
+kind = "load"
+ports = [
+    { name = "+", role = "generic", side = "line" },
+    { name = "-", role = "generic", side = "load" },
+]
+
+[function.operating]
+voltage_dc_v = "24"
+
+[[function]]
+name = "port_1"
+kind = "connector"
+ports = [
+    { name = "1", role = "generic" },
+    { name = "2", role = "generic" },
+]
+
+[function.connector]
+style = "RJ-45"
+pincount = 2

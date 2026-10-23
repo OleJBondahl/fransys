@@ -4,14 +4,14 @@ build-backend = "hatchling.build"
 
 [project]
 name = "electrical-symbols"
-version = "0.21.1"
+version = "0.21.2"
 description = "Electrical graphical symbols as data, drawn after the conventions of IEC 60617"
 readme = "README.md"
 requires-python = ">=3.15"
 license = "MIT"
 license-files = ["LICENSE"]
 authors = [{ name = "Ole Johan Bondahl" }]
-dependencies = ["symdef==0.24.1"]
+dependencies = ["symdef==0.27.0"]
 
 [tool.hatch.metadata]
 allow-direct-references = true

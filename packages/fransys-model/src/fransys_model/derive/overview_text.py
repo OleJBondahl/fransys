@@ -7,6 +7,7 @@ Re-exported from `fransys_model.derive`, not from the consumer `fr.derive` facad
 lazy from collections.abc import Sequence
 
 lazy from fransys_model.kernel import Id, Model
+lazy from fransys_model.layout import StubText
 lazy from fransys_model.vocab.core import Item, Unit
 
 from .designation import printed_designation
@@ -100,11 +101,11 @@ def overview_location_line_text(model: Model, line: LocationLine) -> str:
     return overview_lifted_text(OverviewLinkKind.CABLE, carriers, line.count)
 
 
-def overview_member_text(lines: Sequence[str], carrier: str) -> str:
+def overview_member_text(form: StubText, lines: Sequence[str], carrier: str) -> str:
     """A fold member's row as a stub label, carrier first: `-W11 → +EXT-M1:PE` (O14).
 
     `lines` is the member's box text (far name, then port tails), `carrier` the cable or wire
     text reaching it. It is `off_stub_line` facing south, so the row reads as the stub does.
     """
     far, *tails = lines
-    return off_stub_line(carrier, north=False, far=far, ports=tails)
+    return off_stub_line(form, carrier, north=False, far=far, ports=tails)

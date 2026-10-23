@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any
 
 from symdef import Orientation, orient
 
-from electrical_symbols import LIBRARY, WIRING_GRID
+from electrical_symbols import WIRING_GRID
 from fransys_model.derive import printed_designation
 from fransys_model.derive.cable_drawing import (
     block_brackets,
@@ -35,10 +35,10 @@ from fransys_model.layout import (
 from ._cable_ink import Ink
 from ._cable_pen import Pen
 from ._numbers import format_decimal
-from ._style import style_block
 from ._symbols import symbol_body
 
 if TYPE_CHECKING:
+    from electrical_symbols import Library
     from fransys_model.derive import HarnessCable
     from fransys_model.kernel import Id, Model
 
@@ -100,11 +100,11 @@ def _earth(ink: Ink, end: EndBox) -> None:
     """
     pen = ink.pen
     top = end.row is BlockRow.TOP
-    symbol = orient(LIBRARY.get("protective-earth"), _EARTH_TURN[end.row])
+    symbol = orient(pen.library.get("protective-earth"), _EARTH_TURN[end.row])
     port_y = end.y + end.height if top else end.y
     y = Decimal(pen.mm(port_y - _EARTH_PORT_G if top else port_y + _EARTH_PORT_G))
     for cell in (cell for cell in end.pins if cell.landed):
-        body = symbol_body(symbol, pen.module_mm, pen.font_mm)
+        body = symbol_body(pen.library, symbol, pen.module_mm, pen.font_mm)
         move = f"translate({pen.mm(cell.x)},{format_decimal(y)})"
         ink.shape(f'<g class="symbol earth" transform="{move}">{body}</g>')
 
@@ -136,7 +136,7 @@ def _wire(ink: Ink, wire: CoreWire | OpenCoreWire, text: str, *, link: bool) -> 
     """
     pen = ink.pen
     for run in (wire.run_a, wire.run_b):
-        ink.shape(pen.polyline("core", tuple((point.x, point.y) for point in run)))
+        ink.shape(pen.wire("core", tuple((point.x, point.y) for point in run)))
     if link:
         top = Decimal(wire.text_y) - Decimal(pen.font_g) / 2
         ink.text("core", (wire.text_x, top), text, middle=True)
@@ -163,15 +163,15 @@ def _brackets(
         top = boxes[bracket.cable].y
         a, b = xs[bracket.core_a], xs[bracket.core_b]
         line, tick = top + room.line, top + room.tick
-        ink.shape(pen.polyline("core", ((a, tick), (a, line), (b, line), (b, tick))))
+        ink.shape(pen.wire("core", ((a, tick), (a, line), (b, line), (b, tick))))
         ink.text("core", (Decimal(a + b) / 2, top + room.label), bracket.label, middle=True)
 
 
-def _render_block(model: Model, block: CableBlock) -> str:
+def _render_block(model: Model, library: Library, block: CableBlock) -> str:
     """One block's SVG, sized to the block in mm on its sheet's module."""
     sheet = sheet_format_of(model, block.sheet_format)
     profile = profile_of(model)
-    pen = Pen(sheet.module_mm, profile.text_height_mm, profile.marker_padding)
+    pen = Pen(library, sheet.module_mm, profile.text_height_mm, profile.marker_padding)
     cables = block_cables(model, block.subject, block.unit)
     texts = core_texts(model, block.subject, block.unit)
     links = set(row_links(model, block.subject, block.unit))
@@ -183,10 +183,10 @@ def _render_block(model: Model, block: CableBlock) -> str:
     for wire in wires:
         _wire(ink, wire, texts[_core_of(wire)], link=_core_of(wire) in links)
     _brackets(model, ink, block, wires)
-    return pen.svg(block.width, block.height, style_block() + ink.body())
+    return pen.svg(block.width, block.height, ink.body())
 
 
-def cable_blocks(model: Model) -> frozendict[str, str]:
+def cable_blocks(model: Model, library: Library) -> frozendict[str, str]:
     """Render every cable block of a laid-out model to SVG.
 
     One SVG per `layout.cable_block`, keyed by `cable_block_key(block.unit, block.subject)`. Each
@@ -197,7 +197,7 @@ def cable_blocks(model: Model) -> frozendict[str, str]:
     blocks = layout_of(model, CableBlock).values()
     return frozendict(
         {
-            cable_block_key(block.unit, block.subject): _render_block(model, block)
+            cable_block_key(block.unit, block.subject): _render_block(model, library, block)
             for block in sorted(blocks, key=lambda b: b.id)
         }
     )

@@ -59,7 +59,7 @@ def test_a_line_meets_a_fan_split_along_the_row_it_leaves_on() -> None:
     model = _model()
     turns, through = [], 0
     for drawing in drawn_pages(model).values():
-        lines = [w for w in drawing.wires if w.lanes > 1]
+        lines = [w for w in drawing.wires if w.style == "trunk"]
         # a split is a vertex that is not an end of its line and joins two of its runs
         for line in lines:
             points = list(line.points)

@@ -37,19 +37,22 @@ def cell_node(col: str, lane: int, index: int) -> str:
     return f"cell:{col}:{lane}:{index}"
 
 
+def _flipped_lane(back: tuple[Cell, ...]) -> tuple[Cell, ...]:
+    """Cells already reversed, each turned; a hold stays with the gap it opens, so it moves up."""
+    above = (0, *(c.hold for c in back[:-1]))
+    return tuple(
+        Cell(c.sym, "R180" if c.orient == "R0" else "R0", c.bottom_pin, c.top_pin, hold=h)
+        for c, h in zip(back, above, strict=True)
+    )
+
+
 def flip_column(column: Column, *, flip: bool) -> PlacedColumn:
     """An attached column on the other edge stands reversed, each cell turned where allowed."""
     offsets = tuple(ln.offset for ln in column.lanes)
     if not flip:
         lanes = tuple(ln.cells for ln in column.lanes)
         return PlacedColumn(column.id, lanes, offsets, 0, flipped=False)
-    lanes = tuple(
-        tuple(
-            Cell(c.sym, "R180" if c.orient == "R0" else "R0", c.bottom_pin, c.top_pin)
-            for c in reversed(ln.cells)
-        )
-        for ln in column.lanes
-    )
+    lanes = tuple(_flipped_lane(tuple(reversed(ln.cells))) for ln in column.lanes)
     return PlacedColumn(column.id, lanes, tuple(-o for o in offsets), 0, flipped=True)
 
 

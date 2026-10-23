@@ -39,7 +39,15 @@ _MOVED = ("wire", "net", "busbar", "rail_bond")
 # symbol: `lamp-24v.toml` symbol and port map) moves it again; the pin before it ended
 # 68a5c7009a99... SYMBOL-RULES E sets the star-delta demo motor's `end` function to kind `generic`:
 # it moves; the pin before the merge of the two ended 8fd14fdf0932...
-_DIGEST_BEFORE_THE_MOVE = "2f72879e404becda08cbe0baf33a23f4d9bafe45a2adc8acbe99baafaea93a0a"
+# SETTINGS-OPEN SO-B writes the twelve house text records into every built model, and INK-HEIGHT
+# (layout-0385) swaps `capital_ratio` for `em_heights` in the drawing library record: each moves
+# it; the pin before them ended 2f72879e404b... SO-B2 makes `[revision_table] columns` hold
+# `[words]` keys: it moves again; the pin before it ended a56b3546e1f7... R493 (c) moves it again
+# on the merge with SO-B: the pin is recomputed on the merged tree. R498 and R503 W3 delete the
+# `[conductors]` record and the phase angles, R509 drops `[rails] ac` and R513 the whole
+# `[rails]` record; SO-E (model-0365) swaps `em_heights` for `ems` and `lines` in the same record
+# (R511: no `dash`): it moves again; the pin before them ended 4312e1068d46...
+_DIGEST_BEFORE_THE_MOVE = "d0cb99189b714ba82aa51eb4fa19148fa8f35a5fefc2220f2bd97482d49130c6"
 
 
 def test_each_moved_call_builds_the_model_it_built_on_d():

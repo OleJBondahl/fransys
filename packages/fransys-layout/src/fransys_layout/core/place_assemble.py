@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 
 from .anchor_rooms import anchor_rooms
 from .arrow_reserve import arrow_ends, reserve
+from .band import lane_offset
 from .geometry import (
     box_reach,
     cell_anchor,
@@ -26,7 +27,7 @@ from .place_trunk import box_pin_x, in_row, trunk_node
 from .values import Box, Lane
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping
+    from collections.abc import Collection, Mapping, Sequence
 
     from .pack import PlacedColumn
     from .place_env import PageEnv
@@ -129,13 +130,52 @@ def _attach_x(
     return x[col_node(pc.id)] + pc.offsets[a.lane]
 
 
-def _span(
+def _taps(
     env: PageEnv, fan: Fan, r: int, placed: Mapping[str, Placed], x: Mapping[str, int]
-) -> tuple[int, int] | None:
-    ends = (*fan.drivers, *fan.legs)
-    xs = [_attach_x(env, a, placed, x) for a in ends if in_row(env, fan, a, r)]
-    here = [v for v in xs if v is not None]
-    return (min(here), max(here)) if here else None
+) -> tuple[tuple[Attach, int], ...]:
+    """Each attachment of the fan standing in row r with its x."""
+    out = []
+    for a in (*fan.drivers, *fan.legs):
+        at = _attach_x(env, a, placed, x) if in_row(env, fan, a, r) else None
+        if at is not None:
+            out.append((a, at))
+    return tuple(out)
+
+
+def _hull(xs: Sequence[int]) -> tuple[int, int] | None:
+    return (min(xs), max(xs)) if xs else None
+
+
+def _lane_ends(
+    fan: Fan,
+    taps: Sequence[tuple[Attach, int]],
+    away: Collection[int] = (),
+    arrows: tuple[int, int] = (0, 0),
+    reach: int = 0,
+) -> tuple[tuple[int, int] | None, ...]:
+    """Per lane j the hull of the taps of pole j; a plain fan's one lane takes them all.
+
+    A lane in `away` (its net continues off the page) runs `reach` past the hull where an arrow
+    stands, `arrows` being the (left, right) counts; a `crossed` fan keeps the hull on every lane.
+    """
+    hull = _hull([v for _, v in taps])
+    if fan.lanes == 1 or fan.crossed:
+        return (hull,) * fan.lanes
+    out = []
+    for j in range(fan.lanes):
+        own = _hull([v for a, v in taps if a.pole == j])
+        if own and hull and j in away:
+            own = (
+                hull[0] - reach if arrows[0] else own[0],
+                hull[1] + reach if arrows[1] else own[1],
+            )
+        out.append(own)
+    return tuple(out)
+
+
+def _continuing(fan: Fan, placed: Mapping[str, Placed]) -> frozenset[int]:
+    """The poles with an attachment off this page: their nets continue past the cut."""
+    return frozenset(a.pole for a in (*fan.drivers, *fan.legs) if a.pin.sym not in placed)
 
 
 def _trunks(
@@ -146,9 +186,19 @@ def _trunks(
     for fan in env.flow.fans:
         for r in range(len(env.plan.rows)):
             node = trunk_node(fan.id, r)
-            span = _span(env, fan, r, placed, x) if node in y else None
-            if span:
-                out.append(Trunk(fan.id, env.plan.page, y[node], span[0], span[1], fan.lanes, r))
+            taps = _taps(env, fan, r, placed, x) if node in y else ()
+            if span := _hull([v for _, v in taps]):
+                arrows = arrow_ends(env.refs, env.plan.page, r, fan.id)
+                ends = _lane_ends(
+                    fan,
+                    taps,
+                    _continuing(fan, placed),
+                    arrows,
+                    lane_offset(1, env.options.wiring_grid),
+                )
+                out.append(
+                    Trunk(fan.id, env.plan.page, y[node], span[0], span[1], fan.lanes, r, ends)
+                )
     return tuple(out)
 
 

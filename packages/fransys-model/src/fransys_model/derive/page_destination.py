@@ -8,6 +8,7 @@ no label. A block diagram sheet's label is `b<n>` (PAGES-INDEX); no label repeat
 from fransys_model.layout import DiagramSheet, Page
 lazy from fransys_model.kernel import Model
 
+from .house_settings import reference_text_of
 from .page_reference_text import page_reference_text
 from .set_rank import set_rank
 from .sheet_forms import diagram_text, set_page_text
@@ -30,7 +31,9 @@ def sheet_text(model: Model, sheet: Page | DiagramSheet) -> str:
     if isinstance(sheet, DiagramSheet):
         return diagram_text(sheet)
     rank = set_rank(model, sheet)
-    return str(sheet.number) if rank == 1 else set_page_text(rank, sheet.number)
+    if rank == 1:
+        return str(sheet.number)
+    return set_page_text(reference_text_of(model), rank, sheet.number)
 
 
 def sheet_title_text(model: Model, sheet: Page | DiagramSheet, title: str) -> str:

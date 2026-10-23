@@ -88,3 +88,14 @@ def test_a_wire_end_on_another_nets_run_is_a_touch_in_both_directions() -> None:
     grid = _grid()
     grid.mark_wire("trunk", trunk)
     assert grid.touches("drop", drop)
+
+
+def test_a_port_end_blocks_every_other_net_and_none_of_its_own() -> None:
+    """R472: a pin's end is foreign to a wire of another net, whether or not it has a wire."""
+    grid = _grid()
+    grid.mark_end("x", (16, 16))
+    assert grid.touched((2, 2), "n")
+    assert grid.blocked((2, 2), "h", "n")
+    assert not grid.touched((2, 2), "x")
+    assert grid.touches("n", ((0, 16), (40, 16)))
+    assert not grid.touches("x", ((0, 16), (40, 16)))

@@ -14,6 +14,7 @@ from fransys_model.derive import (
     unit_ids,
 )
 from fransys_model.derive.drawing_text import coil_heading
+from fransys_model.derive.order import plc_module_ranks
 
 from .kit_keys import PickKey, function_of, tag_of
 from .placement_groups import group_of
@@ -52,7 +53,6 @@ def _foot(env: Env, lead: Id[Function], shape: Shape) -> Footprints:
         text_height=c.text_height,
         step=c.step,
         pad=c.pad,
-        place_text=c.place_text,
     )
 
 
@@ -127,6 +127,7 @@ def sym_and_table(env: Env, lead: PickKey, pick: Pick) -> tuple[Sym, Box | None]
         item=item.value,
         child_of=env.parents[item].value if item in env.parents else None,
         boundary_of=_boundary(env, function),
+        rank=plc_module_ranks(env.model).get(item),
     )
     return sym, drawn.table
 

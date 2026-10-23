@@ -15,6 +15,7 @@ from fransys_model.derive import (
 from fransys_model.kernel import render_id
 
 from .kit_keys import function_of
+from .placement_chains import anchored
 from .placement_env import drawn_pins, pin_ref
 from .placement_series import bridges_of, series_of, trees
 from .placement_skips import FUNCTION_UNWIRED, FUNCTION_WITHOUT_SYMBOL, Skipped, in_order
@@ -106,5 +107,5 @@ def facts_of(env: Env, syms: Sequence[Sym]) -> tuple[Facts, tuple[Skipped, ...]]
     mates = tuple((pin_ref(env, a), pin_ref(env, b)) for a, b in pairs)
     sets, skipped = keep_whole(env)
     found = trees(env, syms)
-    facts = Facts(sets, units_of(env), mates, series=series_of(found))
+    facts = Facts(sets, units_of(env), mates, series=(*series_of(found), *anchored(env)))
     return facts, (*skipped, *bridges_of(env, found))

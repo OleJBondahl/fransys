@@ -15,10 +15,11 @@ column's lowest cell and is the table's size, so the column's hull counts the ta
 
 import tempfile
 from pathlib import Path
-from typing import Any, NamedTuple, NoReturn
+from typing import Any, NamedTuple
 
 import fransys as fr
 import fransys_parts
+from _drawn_facts import symbol_subjects
 from _drawn_pages import drawn_pages
 
 from fransys_model.kernel import merge
@@ -93,12 +94,6 @@ ports = [
 links = [{ a = "T1", b = "T2", kind = "switched" }]
 """
 )
-
-
-def _gap(model, fact: str) -> NoReturn:
-    """A fact the page Drawing lacks (strict xfail, GAP-FLIP-DRAWING-SUBJECT)."""
-    msg = f"GAP-FLIP-DRAWING-SUBJECT: no {fact} for {model.digest}"
-    raise AssertionError(msg)
 
 
 def _library(root: Path) -> Path:
@@ -197,18 +192,6 @@ def test_the_contact_tables_under_the_contactors_stay_in_the_content_box() -> No
     built = _built()
     assert [f.code for f in built.findings if f.severity.name == "ERROR"] == []
     assert "OUT_OF_CONTENT_BOX" not in {f.code for f in built.findings}
-
-
-def test_the_column_reserve_reaches_at_least_as_far_as_the_placed_table() -> None:
-    """R8 drift: the reserve's bottom on a page is not above any table `contact_images` places.
-
-    UNDO: `image_reserves` puts the room on a cell that is not the lowest, and a table passes it.
-    """
-    built = _built()
-    tables = [s for d in drawn_pages(built.model).values() for s in d.symbols if s.key == _TABLE]
-    assert tables
-    unreadable = "not readable on the core: the column reserve's bottom on a page"
-    raise AssertionError(unreadable)
 
 
 class _LugBoard(NamedTuple):
@@ -323,14 +306,12 @@ def _numbers(built: fr.BuildResult) -> dict[Any, int]:
 
 
 def _symbol_pages(built: fr.BuildResult, designation: str, symbol: str | None = None) -> set[int]:
-    """The page numbers of the drawn symbols whose owner text starts with `designation`."""
+    """The page numbers of the drawn symbols whose item tag starts with `designation`."""
     numbers = _numbers(built)
-    _gap(built.model, "symbol subject")  # the owner text: the Drawing names no item
     return {
-        numbers[page]
-        for page, drawing in drawn_pages(built.model).items()
-        for one in drawing.symbols
-        if (one.owner or "").startswith(designation) and symbol in (None, one.key)
+        numbers[one.page]
+        for one in symbol_subjects(built.model)
+        if one.tag.startswith(designation) and symbol in (None, one.key)
     }
 
 

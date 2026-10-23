@@ -13,6 +13,7 @@ layout-0112's drawn set). It states no new rule, so no decision number.
 from typing import TYPE_CHECKING
 
 import fransys as fr
+from _drawn_facts import symbol_subjects
 
 from fransys_model.vocab.tables import functions, items, ports
 
@@ -21,12 +22,6 @@ if TYPE_CHECKING:
 
 _PLUG = "DEMO-CONN-2P"
 _CABLE = "DEMO-CBL-4G1.5"
-
-
-def _gap(model, fact: str):
-    """A fact the page Drawing lacks (strict xfail, GAP-FLIP-DRAWING-SUBJECT)."""
-    msg = f"GAP-FLIP-DRAWING-SUBJECT: no {fact} for {model.digest}"
-    raise AssertionError(msg)
 
 
 def _build(tmp_path: Path) -> fr.BuildResult:
@@ -53,6 +48,6 @@ def test_hide_unused_pins_builds_a_mated_connector(tmp_path: Path) -> None:
     (k1,) = (one.id for one in items(model).values() if one.tag == "K1")
     own = {f.id for f in functions(model).values() if f.item == k1}
     pin = {p.name: p.id for p in ports(model).values() if p.function in own}
-    drawn = {one.owner for one in _gap(model, "symbol subject").values()}
-    assert any(owner and owner.endswith(f"port:{pin['1'].value}") for owner in drawn)
-    assert not any(owner and owner.endswith(f"port:{pin['2'].value}") for owner in drawn)
+    drawn = {port for one in symbol_subjects(model) for port in one.ports}
+    assert pin["1"].value in drawn
+    assert pin["2"].value not in drawn

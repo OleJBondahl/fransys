@@ -19,6 +19,7 @@ from .outputs import PageRoutes, Refused, Routes, Wire
 from .route_counts import counts, crossings_by_net, demand
 from .route_env import Drawn, failed, pin_point, route_envs
 from .route_guard import guard
+from .route_leads import lead_wires
 from .route_tree import mark_anchors, rise_wire, tree
 from .route_trunk import trunk_wires
 from .route_wires import join_wires, lane_wires, nest_jogs
@@ -63,7 +64,7 @@ def _taken(env: RouteEnv, laid: Drawn) -> tuple[Taken, ...]:
 
 def _fixed_wires(env: RouteEnv) -> Drawn:
     """Lane wires, joins, nested jogs and trunks of one page."""
-    out = Drawn()
+    out = lead_wires(env)
     for col in env.columns:
         out += lane_wires(env, col) + join_wires(env, col)
     nested = nest_jogs(env, out.jogs, _taken(env, out))
@@ -82,6 +83,20 @@ def _cells(extent: int, room: int | None, step: int, spare: int) -> int:
     if room is None:
         return extent // step + spare
     return max(room // step + 1, extent // step + 1)
+
+
+def _mark_pins(env: RouteEnv, grid: Occupancy) -> None:
+    """The blocked foreign port ends are ends no wire passes (R472): `env.blocked_ends`."""
+    for net, points in env.blocked_ends.items():
+        for point in points:
+            grid.mark_end(net, point)
+
+
+def _mark_fixed(env: RouteEnv, grid: Occupancy) -> None:
+    """Every footprint and obstacle box, then the pins of no net."""
+    for box in (*(p.footprint for p in env.placed.values()), *env.obstacles):
+        grid.mark_box(box)
+    _mark_pins(env, grid)
 
 
 def _grid(env: RouteEnv, fixed: Sequence[Wire]) -> Occupancy:
@@ -104,8 +119,7 @@ def _grid(env: RouteEnv, fixed: Sequence[Wire]) -> Occupancy:
         _cells(max(ys, default=0), None if area is None else area.h, step, env.options.spare_cells),
         step,
     )
-    for box in (*(p.footprint for p in env.placed.values()), *env.obstacles):
-        grid.mark_box(box)
+    _mark_fixed(env, grid)
     for w in fixed:
         grid.mark_wire(w.net, w.points)
     return grid

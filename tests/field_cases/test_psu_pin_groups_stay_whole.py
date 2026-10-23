@@ -16,16 +16,11 @@ side the groups stay whole, and inside a group the pins order by rank. The botto
 """
 
 import fransys as fr
+from _drawn_facts import symbol_subjects
 from fransys.colours import BU
 
 from fransys_model.vocab.enums import FunctionKind
 from fransys_model.vocab.tables import functions
-
-
-def _gap(model, fact: str):
-    """A fact the page Drawing lacks (strict xfail, GAP-FLIP-DRAWING-SUBJECT)."""
-    msg = f"GAP-FLIP-DRAWING-SUBJECT: no {fact} for {model.digest}"
-    raise AssertionError(msg)
 
 
 def _t1_sides(tmp_path) -> tuple[dict[str, list[str]], FunctionKind, int]:
@@ -46,14 +41,14 @@ def _t1_sides(tmp_path) -> tuple[dict[str, list[str]], FunctionKind, int]:
     cover.write_text("# Cabinet\n", encoding="utf-8")
     doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover)
     model = fr.build(d, doc).model
-    drawn = _gap(model, "symbol subject").values()
-    (box,) = (s for s in drawn if s.key == "generic-box" and s.owner.startswith("T1 "))
+    drawn = symbol_subjects(model)
+    (box,) = (s for s in drawn if s.key == "generic-box" and s.tag == "T1")
     sides, offsets = dict(box.sides), dict(box.offsets)
     found: dict[str, list[str]] = {}
     for port in sorted(sides, key=lambda name: offsets[name]):
         found.setdefault(sides[port], []).append(port)
     (contact,) = (f for f in functions(model).values() if f.name == "dc_ok")
-    stands = sum(s.owner.endswith(contact.id.value) for s in drawn)
+    stands = sum(s.owner == contact.id.value for s in drawn)
     return found, contact.kind, stands
 
 

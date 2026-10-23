@@ -168,6 +168,7 @@ _.CYTOSCAPE_SHA256  # TESTS fransys-overview/tests/test_vendor.py:28
 # The records stay (Page, PowerSymbol, LayoutSheet, Membership, the readability rows); their
 # fields are read generically. A cleanup round trims the fields no consumer reads.
 _.symbols  # FIELDS fransys-kernel/src/fransys_kernel/schema.py:37
+_.fill_percent  # FIELDS fransys-kernel/src/fransys_kernel/schema.py:37
 _.wire_crossings  # FIELDS fransys-kernel/src/fransys_kernel/schema.py:37
 _.wire_bends  # FIELDS fransys-kernel/src/fransys_kernel/schema.py:37
 _.wire_length_g  # FIELDS fransys-kernel/src/fransys_kernel/schema.py:37

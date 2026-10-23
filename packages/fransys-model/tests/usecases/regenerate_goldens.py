@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from cabinet import build_cabinet
+from derive_helpers import with_house
 from harness_board import build_harness_board
 
 from fransys_model.derive import (
@@ -54,16 +55,17 @@ def main() -> None:
     for stem, model in (("cabinet", cabinet), ("harness_board", harness)):
         _write(f"{stem}.json", dumps(model))
         _write(f"{stem}.digest", model.digest + "\n")
+    housed = with_house(cabinet)
     for name, query in (
         ("bom_lines", bom_lines),
         ("designation_list", designation_list),
         ("plc_channel_rows", plc_channel_rows),
         ("wire_rows", wire_rows),
     ):
-        _write(f"cabinet.{name}.json", repr(query(cabinet)))
+        _write(f"cabinet.{name}.json", repr(query(housed)))
     _write(
         "cabinet.terminal_rows.x1.json",
-        repr(terminal_rows(cabinet, _item_by_designation(cabinet, "X1"))),
+        repr(terminal_rows(housed, _item_by_designation(housed, "X1"))),
     )
     _write(
         "cabinet.cable_rows.w1.json",

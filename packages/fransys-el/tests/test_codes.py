@@ -13,6 +13,7 @@ _CORE_ONLY = [
     "ANNEX_UNPLACED",
     "ALIGN_DROPPED",
     "CARD_OVERFULL",
+    "TRUNK_THROUGH_BODY",
     "PAGE_OVERFLOW",
     "FILL_UNDER_MIN",
     "HEAD_OFF_LEGS",
@@ -29,6 +30,7 @@ _EL_ONLY = [
     "PLACEMENT_PROBLEM",  # el raises it from a ProblemError or a failed set (el-0051)
     "OVERLAP",  # DRAWING-INVARIANTS: el emits it over the finished drawings
     "OUT_OF_PAGE",
+    "WIRE_OVER_MARKER",  # MARKER-FREE-SIDE: el counts what meets a marker box
     "NOT_SERIES_PARALLEL",  # el emits it for a bridge of derive.series_parallel (0364)
     "CONNECTION_NOT_DRAWN",  # DRAWN-NETLIST (el-0052): el checks the finished drawings
     "DRAWING_SHORTS_NETS",

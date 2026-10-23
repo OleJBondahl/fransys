@@ -135,7 +135,7 @@ def _member(
         for j, box in enumerate(leaves)
     )
     top = End("join", None, PinRef(lanes[i].head or "", ""))  # level only: no box stands before
-    offset = member_offset(made, cells, drawn, options)
+    offset = member_offset(made, cells, drawn, options, 0)
     draft = MemberDraft(made[0].column, i, list(cells), offset, (top, _join(foot, after, ends)))
     return draft, {hop[0] for hop in links if hop}
 

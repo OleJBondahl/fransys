@@ -71,11 +71,18 @@ def bridges_of(env: Env, found: SeriesParallel) -> tuple[Skipped, ...]:
 
 
 def within(series: Series, keep: Collection[str]) -> Series | None:
-    """`series` with only the leaves in `keep`, or None when fewer than two are left."""
+    """`series` with only the leaves in `keep`, or None when fewer than two are left.
+
+    An anchored series keeps its anchor and a lone leaf, and goes when its anchored leaf is out.
+    """
     part = _kept(series, keep)
-    if part is None or len(leaves(part)) < _MIN_LEAVES:
+    if part is None:
         return None
-    return part if isinstance(part, Series) else Series((part,))
+    parts = part.parts if isinstance(part, Series) else (part,)
+    if series.anchor is None:
+        return Series(parts) if len(leaves(part)) >= _MIN_LEAVES else None
+    end = leaves(series)[0 if series.anchor == "head" else -1]
+    return Series(parts, series.anchor) if end in keep else None
 
 
 def _kept(part: SeriesPart, keep: Collection[str]) -> SeriesPart | None:

@@ -131,3 +131,31 @@ def test_place_y_is_deterministic() -> None:
 
 def test_grid_up_rounds_to_the_next_step() -> None:
     assert [grid_up(v, 8) for v in (-9, -8, -1, 0, 1, 8, 9)] == [-8, -8, 0, 0, 8, 8, 16]
+
+
+def test_a_cell_hangs_wire_min_and_its_marker_room_or_its_keepout_reach() -> None:
+    """RL-W2: `_hang` is wire_min plus the flag room facing the box, or the keep-out's reach."""
+    from types import SimpleNamespace
+
+    from fransys_layout.core.place_y import _hang
+    from fransys_layout.core.room import Room
+    from fransys_layout.core.values import Box
+
+    def view(keepout: Box) -> SimpleNamespace:
+        return SimpleNamespace(body=Box(0, -2, 8, 4), keepout=keepout)
+
+    def hang(keepout: Box, *, above: bool, name: str = "T") -> int:
+        env = SimpleNamespace(
+            options=SimpleNamespace(wire_min=8),
+            flag_room={"T": Room(up=5, down=7)},
+            syms={name: SimpleNamespace(views={"R0": view(keepout)})},
+        )
+        cell = SimpleNamespace(sym=name, orient="R0")
+        return _hang(env, cell, above=above, dy=0)  # ty: ignore[invalid-argument-type] -- a stand-in
+
+    small = Box(0, -2, 8, 4)
+    assert hang(small, above=True) == 15
+    assert hang(small, above=False) == 13
+    assert hang(small, above=True, name="other") == 8
+    assert hang(Box(0, -30, 8, 38), above=False) == 30
+    assert hang(Box(0, -4, 8, 40), above=True) == 36

@@ -14,7 +14,7 @@ from .library_grid import divisions
 from .marker_box import marker_box
 from .order import drawn_on_page
 from .page_destination import page_destination, sheet_text, sheet_title_text
-from .page_headings import DIAGRAM_TITLE
+from .page_headings import diagram_title
 from .page_titles import page_title
 from .rows_nav import OutlineSheet, ReferenceLink
 
@@ -56,7 +56,7 @@ def outline_sheets(
     out = []
     for given in sheets:
         if isinstance(given, DiagramSheet):
-            sheet, title, entries = given, DIAGRAM_TITLE, ()
+            sheet, title, entries = given, diagram_title(model), ()
         else:
             sheet = layout_of(model, Page)[given]
             title, entries = page_title(model, sheet), ()

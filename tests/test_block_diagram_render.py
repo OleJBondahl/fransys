@@ -7,6 +7,8 @@ from xml.etree import ElementTree as ET
 
 import pytest
 
+from electrical_symbols import LIBRARY
+
 _ROOT = Path(__file__).resolve().parent.parent
 for _dir in (_ROOT / "tests", _ROOT / "packages" / "fransys-layout" / "tests"):
     if str(_dir) not in sys.path:
@@ -48,7 +50,7 @@ def _dashed(svg: str) -> int:
 
 
 def _only(model) -> str:
-    (svg,) = fransys_render.diagram_sheets(model).values()
+    (svg,) = fransys_render.diagram_sheets(model, LIBRARY).values()
     return svg
 
 
@@ -80,7 +82,9 @@ def test_the_diagram_sits_at_the_content_box_offset():
 
 def test_the_output_is_deterministic():
     model = _station_model()
-    assert fransys_render.diagram_sheets(model) == fransys_render.diagram_sheets(model)
+    assert fransys_render.diagram_sheets(model, LIBRARY) == fransys_render.diagram_sheets(
+        model, LIBRARY
+    )
 
 
 def test_a_box_is_drawn_from_its_record():
@@ -91,7 +95,7 @@ def test_a_box_is_drawn_from_its_record():
 
 
 def test_a_cut_chain_marks_both_sheets_naming_the_other():
-    sheets = list(fransys_render.diagram_sheets(_laid(chain(20))).values())
+    sheets = list(fransys_render.diagram_sheets(_laid(chain(20)), LIBRARY).values())
     assert len(sheets) == 2
     first = [t for t in _texts(sheets[0]) if t.startswith("p")]
     second = [t for t in _texts(sheets[1]) if t.startswith("p")]

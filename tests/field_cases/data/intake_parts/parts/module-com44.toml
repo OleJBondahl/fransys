@@ -1,0 +1,30 @@
+schema = 1
+
+[part]
+mpn = "DEMO-MODULE-COM44"
+manufacturer = "Demo"
+description = "Supply module with a 4-in 4-out comms box"
+category = "generic"
+class_code = "G"
+
+[[function]]
+name = "module"
+kind = "supply"
+ports = [
+    { name = "BAT+", role = "generic", side = "load" },
+    { name = "BAT-", role = "generic", side = "line" },
+]
+
+[[function]]
+name = "comms"
+kind = "generic"
+ports = [
+    { name = "COM IN 1", role = "generic", side = "line" },
+    { name = "COM IN 2", role = "generic", side = "line" },
+    { name = "COM IN 3", role = "generic", side = "line" },
+    { name = "COM IN 4", role = "generic", side = "line" },
+    { name = "COM OUT 1", role = "generic", side = "load" },
+    { name = "COM OUT 2", role = "generic", side = "load" },
+    { name = "COM OUT 3", role = "generic", side = "load" },
+    { name = "COM OUT 4", role = "generic", side = "load" },
+]

@@ -28,6 +28,7 @@ from .drawing_text import external_note
 from .drawn_marks import DrawnBracket, PairRoom, pair_room
 from .drawn_wires import DrawnWire, block_wires, wire_cores, wire_ends, wire_harness_subjects
 from .harness import _facts_of, _pin_marking, all_cables, all_unit_cables
+from .house_settings import word
 from .indexes import build_indexes
 from .lone_cable import lone_cable_harness
 from .lookups import item_of_port, pin_order
@@ -425,9 +426,10 @@ def core_texts(
         pairs = drawn_pairs(model, cable.cable)
         for core in cable.cores:
             found[core.conductor] = core_text(core, core_mark(pairs, core.index))
+    spare = word(model, "spare")
     for one in drawn_open_cores(model, cables):
         pairs = drawn_pairs(model, one.cable)
-        found[one.core] = open_core_text(one.row, core_mark(pairs, one.index))
+        found[one.core] = open_core_text(spare, one.row, core_mark(pairs, one.index))
     for wire in block_wires(model, subject, unit):
         found[wire.conductor] = wire.text
     return frozendict(found)

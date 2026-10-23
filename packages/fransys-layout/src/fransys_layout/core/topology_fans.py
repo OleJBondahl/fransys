@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
+from .errors import CoreError
 from .keys import natural_key
 from .values import Attach, Cell, PinRef
 lazy from .sym_values import Sym
@@ -37,6 +38,7 @@ class Att:
     where: str
     pin: PinRef | None = None
     pole: int = 0
+    net: str | None = None
 
 
 @dataclass(slots=True)
@@ -50,10 +52,10 @@ class FanDraft:
 
 
 def attached_pin(ends: tuple[NetEnd, ...]) -> PinRef | None:
-    """A two-end net of one box pin and one lane end is an attachment, not a fan."""
+    """A two-end net of one box pin and one lane end or through end is an attachment, not a fan."""
     if len(ends) == PAIR:
         roles = {e.site for e in ends}
-        if roles in ({"boxpin", "top"}, {"boxpin", "bottom"}):
+        if roles in ({"boxpin", "top"}, {"boxpin", "bottom"}, {"boxpin", "through"}):
             return next(e.pin for e in ends if e.site == "boxpin")
     return None
 
@@ -162,8 +164,11 @@ def _hub_at_foot(fan: FanDraft, hub: Cell) -> bool:
 
 def resolve(att: Att) -> Attach:
     """Final cell indexes and pins, once every hub has been dealt."""
+    if att.net is None:
+        msg = f"attachment {att.where} reached resolve with no net"
+        raise CoreError(msg)
     if att.lane is None:
-        return Attach(None, 0, 0, att.pin, att.pole)  # ty: ignore[invalid-argument-type] - a box pin has its ref
+        return Attach(None, 0, 0, att.pin, att.pole, net=att.net)  # ty: ignore[invalid-argument-type] - a box pin has its ref
     cells = att.lane.cells
     last = len(cells) - 1
     index, top = {
@@ -176,4 +181,4 @@ def resolve(att: Att) -> Attach:
     }[att.where]
     pin = cells[index].top_pin if top else cells[index].bottom_pin
     where = PinRef(cells[index].sym, pin or "")
-    return Attach(att.lane.column, att.lane.index, index, where, att.pole)
+    return Attach(att.lane.column, att.lane.index, index, where, att.pole, net=att.net)

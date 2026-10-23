@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import fransys as fr
+from _drawn_facts import symbol_subjects
 from _drawn_pages import drawn_pages
 from fransys.colours import BU
 
@@ -29,12 +30,6 @@ if TYPE_CHECKING:
 WIRE = (BU, 0.5)
 PINS = ("13", "23", "43")
 FEEDS = {1: "43", 2: "23", 3: "13"}  # pole -> the card pin its make throw feeds
-
-
-def _gap(model, fact: str):
-    """A fact the page Drawing lacks (strict xfail, GAP-FLIP-DRAWING-SUBJECT)."""
-    msg = f"GAP-FLIP-DRAWING-SUBJECT: no {fact} for {model.digest}"
-    raise AssertionError(msg)
 
 
 @cache
@@ -75,13 +70,12 @@ def _crossings(wires: tuple) -> int:
 def _x_of_poles_and_pins() -> tuple[dict[int, int], dict[str, int], dict[str, str]]:
     """The x of each K1 pole's symbol, of each DO1 pin (box origin plus offset) and its side."""
     model = _built()
-    name_of = {f"function:{f.id.value}": f.name for f in functions(model).values()}
+    name_of = {f.id.value: f.name for f in functions(model).values()}
     poles, pins, sides = {}, {}, {}
-    for drawn in _gap(model, "symbol subject").values():
-        tag, _, ref = (drawn.owner or "").partition(" ")  # the owner text: "<tag> <handle>"
-        if tag == "K1":
-            poles[int(name_of[ref][-1])] = drawn.x
-        elif tag == "DO1":
+    for drawn in symbol_subjects(model):
+        if drawn.tag == "K1":
+            poles[int(name_of[drawn.owner][-1])] = drawn.x
+        elif drawn.tag == "DO1":
             pins = {pin: drawn.x + offset for pin, offset in dict(drawn.offsets).items()}
             sides = dict(drawn.sides)
     return poles, pins, sides

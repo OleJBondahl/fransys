@@ -28,6 +28,7 @@ def env_of(prob: PlacementProblem, options: Options | None = None) -> PageEnv:
         flip_turn="R180",
         tag_stagger=True,
         label_gap=8,
+        parallel_pitch=48,
         driver_first=True,
         arrow_sides=("E", "W"),
     )
@@ -102,6 +103,7 @@ def test_justify_lays_columns_out_to_the_page_margin() -> None:
                 flip_turn="R180",
                 tag_stagger=True,
                 label_gap=8,
+                parallel_pitch=48,
                 driver_first=True,
                 arrow_sides=("E", "W"),
             ),
@@ -116,6 +118,7 @@ def test_justify_lays_columns_out_to_the_page_margin() -> None:
             flip_turn="R180",
             tag_stagger=True,
             label_gap=8,
+            parallel_pitch=48,
             driver_first=True,
             arrow_sides=("E", "W"),
         ).margin.w
@@ -127,6 +130,7 @@ def test_justify_lays_columns_out_to_the_page_margin() -> None:
             flip_turn="R180",
             tag_stagger=True,
             label_gap=8,
+            parallel_pitch=48,
             driver_first=True,
             arrow_sides=("E", "W"),
         ).wiring_grid
@@ -157,6 +161,7 @@ def test_a_row_wider_than_the_page_is_left_packed_and_named() -> None:
             flip_turn="R180",
             tag_stagger=True,
             label_gap=8,
+            parallel_pitch=48,
             driver_first=True,
             arrow_sides=("E", "W"),
         ).margin.w
@@ -179,6 +184,7 @@ def test_fixed_box_pins_chain_at_the_pitch() -> None:
         flip_turn="R180",
         tag_stagger=True,
         label_gap=8,
+        parallel_pitch=48,
         driver_first=True,
         arrow_sides=("E", "W"),
     )

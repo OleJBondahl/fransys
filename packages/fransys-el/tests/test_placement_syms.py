@@ -57,12 +57,13 @@ def test_strip_terminals_share_a_row_group(planted: tuple[Env, tuple[Sym, ...]])
 
 
 def test_coil_has_a_contact_table(planted: tuple[Env, tuple[Sym, ...]]) -> None:
-    """A relay coil with contacts has a contact table; a switch has none."""
+    """A relay coil and an actuated group's lead switch have a contact table; a sensor has none."""
     env, _ = planted
     tables: dict[str, Box] = {}
     syms_of(env, tables)
     assert sid(env.model, "K1.coil") in tables
-    assert sid(env.model, "S1.sw") not in tables
+    assert sid(env.model, "S1.sw") in tables
+    assert sid(env.model, "B1.sig") not in tables
 
 
 def test_generic_box_sensor_has_a_box_spec(planted: tuple[Env, tuple[Sym, ...]]) -> None:

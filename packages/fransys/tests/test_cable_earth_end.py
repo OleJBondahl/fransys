@@ -11,6 +11,7 @@ import fransys as fr
 import pytest
 from fransys_render import cable_blocks
 
+from electrical_symbols import LIBRARY
 from fransys_layout import lay_out_cables
 
 _EARTH = 'class="symbol earth"'
@@ -44,7 +45,7 @@ def blocks(tmp_path_factory: pytest.TempPathFactory) -> list[str]:
     pages = (fr.PageKind.HARNESS_DRAWING, fr.PageKind.CABLE_LIST)
     preset = fr.DocumentPreset.CABINET_SCHEMATIC
     built = fr.build(d, fr.document(preset, "pe-end", cover=cover, add=pages))
-    svgs = dict(cable_blocks(lay_out_cables(built.model)[0])).values()
+    svgs = dict(cable_blocks(lay_out_cables(built.model)[0], LIBRARY)).values()
     return [s for s in svgs if _EARTH in s]
 
 

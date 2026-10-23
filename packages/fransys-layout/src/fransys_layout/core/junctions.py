@@ -7,7 +7,7 @@ from .score_wiring import _heading
 from .values import PinRef
 
 if TYPE_CHECKING:
-    from .outputs import CoreLayout, Wire
+    from .outputs import CoreLayout
     from .values import XY
 
 __all__ = ("Junction", "junctions")
@@ -40,28 +40,12 @@ def _leaves(point: XY, segment: _Segment) -> set[XY]:
     return {d for d in (_heading(point, segment[0]), _heading(point, segment[1])) if d != (0, 0)}
 
 
-def _first_line_net(trunk: Wire, wires: tuple[Wire, ...]) -> str:
-    """The net a bundle trunk's drawn line carries: that of the single net whose wires end on it.
-
-    A bundle trunk is named by its bundle; the line `Wire` holds is its first member's.
-    """
-    y, ends = trunk.points[0][1], (trunk.points[0][0], trunk.points[-1][0])
-    x0, x1 = min(ends), max(ends)
-    nets = {
-        w.net
-        for w in wires
-        if w.lanes == 1 and any(p[1] == y and x0 <= p[0] <= x1 for p in (w.points[0], w.points[-1]))
-    }
-    return nets.pop() if len(nets) == 1 else trunk.net
-
-
 def _segments(layout: CoreLayout) -> dict[_Key, list[_Segment]]:
-    """Every wire segment of each (page, net); a bundle trunk's line is its first member's."""
+    """Every wire segment of each (page, net)."""
     found: dict[_Key, list[_Segment]] = {}
     for page in layout.routes.pages:
         for wire in page.wires:
-            net = _first_line_net(wire, page.wires) if wire.lanes > 1 else wire.net
-            found.setdefault((page.page, net), []).extend(
+            found.setdefault((page.page, wire.net), []).extend(
                 zip(wire.points, wire.points[1:], strict=False)
             )
     return found

@@ -23,7 +23,7 @@ from fransys_model.layout import sheet_format_of
 
 from .draw_power import power_leads, power_marks
 from .draw_symbols import junction_dots, placed_symbols
-from .drawn_ids import text_id, wire_id
+from .drawn_ids import core_symbol_id, text_id, wire_id
 from .kit_keys import tag_of
 from .placement_kit import refuse
 from .placement_tables import is_table_spot
@@ -76,8 +76,7 @@ def _wires(
                 DrawnWire(
                     id=wire,
                     points=tuple(w.points),
-                    style="trunk" if w.lanes > 1 else "wire",
-                    lanes=w.lanes,
+                    style="trunk" if w.lane is not None else "wire",
                     net=w.net,
                 ),
             )
@@ -117,7 +116,13 @@ def _labels(
         height = label_height(model, sheet_format_of(model, page.sheet_format))
         text = tag_of(model, keys[label.owner], unit=unit)
         box = Box(label.box.x, label.box.y, text_width(text, height=height), height)
-        found.append((page.id, text_id("TAG", label.owner), DrawnText(text, box, "TAG", "NW")))
+        found.append(
+            (
+                page.id,
+                text_id("TAG", label.owner),
+                DrawnText(text, box, "TAG", "NW", core_symbol_id(label.owner)),
+            )
+        )
     return found
 
 

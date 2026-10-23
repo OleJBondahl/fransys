@@ -3,6 +3,7 @@ import pytest
 from _build import source
 from fransys import BuildResult, pipeline
 
+from electrical_symbols import LIBRARY
 from fransys_model.derive import document_page_kinds, document_sheets_of
 from fransys_model.kernel import Id
 from fransys_model.vocab import PageKind
@@ -20,7 +21,7 @@ def test_document_source_is_typst(demo_cabinet):
         demo_cabinet,
         _DOC,
         pipeline._result_svgs(BuildResult(model=demo_cabinet, findings=())),
-        fransys_render.sheets(document_sheets_of(demo_cabinet)),
+        fransys_render.sheets(document_sheets_of(demo_cabinet), LIBRARY),
     )
     assert isinstance(typst_source, str)
 

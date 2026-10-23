@@ -46,6 +46,7 @@ FindingCode = Literal[
     "HEAD_OFF_LEGS",
     "ALIGN_DROPPED",
     "ROUTE_FAILED",
+    "TRUNK_THROUGH_BODY",
     "PAGE_OVERFLOW",
     "TEXT_OVERLAP",
     "ANNEX_UNPLACED",
@@ -118,14 +119,23 @@ class Bundle:
 
 
 @dataclass(frozen=True, slots=True)
+class CutEnd:
+    """A pin whose net continues outside the set; pins of one `line` leave in one stub."""
+
+    pin: PinRef
+    line: str = ""
+
+
+@dataclass(frozen=True, slots=True)
 class Net:
-    """A net: its id, the pins it joins, and its bundle, unit-crossing and label facts."""
+    """A net: its id, pins, bundle, unit-crossing and label facts, and `cut` ends off the set."""
 
     id: str
     pins: tuple[PinRef, ...]
     bundle: Bundle | None = None
     crosses_unit: bool = False
     label: Size | None = None
+    cut: tuple[CutEnd, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -202,6 +212,7 @@ class Options:
     wiring_grid: int = field(kw_only=True)
     wire_min: int = field(kw_only=True)
     column_gap_min: int = field(kw_only=True)
+    parallel_pitch: int = field(kw_only=True)  # G between the axes of two parallel branches
     row_gap: int = field(kw_only=True)
     box_pin_pitch_min: int = field(kw_only=True)
     box_pins: str = field(kw_only=True)
@@ -297,6 +308,7 @@ class Cell:
     orient: Orientation
     top_pin: str | None
     bottom_pin: str | None
+    hold: int = 0  # G of extra gap above the cell
 
 
 @dataclass(frozen=True, slots=True)
@@ -349,6 +361,7 @@ class Attach:
     """Where a trunk meets a lane: pin of cell `cell` in lane `lane`; column None is a box pin.
 
     `pole` is a lane index, a value the caller passes; `lane` is the column's own index.
+    `net` is the net the attach joins, set once when the fan is drafted; always given.
     """
 
     column: str | None
@@ -356,6 +369,7 @@ class Attach:
     cell: int
     pin: PinRef
     pole: int = 0
+    net: str = field(kw_only=True)
 
 
 @dataclass(frozen=True, slots=True)

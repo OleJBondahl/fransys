@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 from cabinet import build_cabinet
+from derive_helpers import with_house
 from harness_board import build_harness_board
 
 from fransys_model.checks import ALL_VALIDATORS, check_cables
@@ -36,15 +37,19 @@ if TYPE_CHECKING:
 _GOLDEN_DIR = Path(__file__).resolve().parent.parent / "golden"
 
 
-def _design(name: str) -> Model:
-    """The frozen design called `name`: `cabinet`, `harness_board` or their `merged` union."""
+def _design(name: str, *, bare: bool = False) -> Model:
+    """The frozen design called `name`: `cabinet`, `harness_board` or their `merged` union.
+
+    With the house text records the facade writes, unless `bare` (the golden dumps hold none).
+    """
     match name:
         case "cabinet":
-            return freeze(build_cabinet())
+            model = freeze(build_cabinet())
         case "harness_board":
-            return freeze(build_harness_board())
+            model = freeze(build_harness_board())
         case _:
-            return freeze(merge(build_cabinet(), build_harness_board()))
+            model = freeze(merge(build_cabinet(), build_harness_board()))
+    return model if bare else with_house(model)
 
 
 def _item(model: Model, designation: str) -> Item:
@@ -61,7 +66,7 @@ def _port(model: Model, *key: str) -> Id[Port]:
 
 def test_a_one_record_change_shows_in_the_canonical_json_and_the_digest() -> None:
     """The golden comparison can fail: drop the `scaling` facet of `B1` and both differ."""
-    model = _design("cabinet")
+    model = _design("cabinet", bare=True)
     (scaling,) = facets_of(model, ScalingFacet).values()
     changed = evolve(model, remove=[scaling.id])
     golden = (_GOLDEN_DIR / "cabinet.json").read_text(encoding="utf-8")

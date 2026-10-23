@@ -61,7 +61,7 @@ def column(cid: str, *cells: str, pin: tuple[str, str] | None = None) -> Column:
 
 def fan(fid: str, *cols: str) -> Fan:
     """A fan whose legs are the given columns."""
-    legs = tuple(Attach(c, 0, 0, PinRef("x", "p")) for c in cols)
+    legs = tuple(Attach(c, 0, 0, PinRef("x", "p"), net="n") for c in cols)
     return Fan(fid, (f"net-{fid}",), (), legs, None, 1, "S")
 
 
@@ -89,6 +89,7 @@ def build(
             flip_turn="R180",
             tag_stagger=True,
             label_gap=8,
+            parallel_pitch=48,
             driver_first=True,
             arrow_sides=("E", "W"),
         ),

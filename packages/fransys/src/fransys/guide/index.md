@@ -51,7 +51,7 @@ and give layout the structure it draws. The detail calls in the table are for th
 | `d.detail.wire(a, b, wire=...)` | two named pins off any path, such as a signal pair; one signal daisy-chained, `d.detail.wire(a, b, c)`; a hop whose printed wire differs from its row |
 | `X1[3]`, `.inner`, `.outer` | a terminal whose number or side is fixed: a published pinout, or several wires on one terminal |
 | `W1.core(BN, a, b)` | a core whose colour or number a termination plan fixes |
-| `d.detail.net(name, *pins)` | a named net that no wire joins, such as a bus; its name prints in the connector list |
+| `d.detail.net(name, *pins)` | a named net over pins; wires or one board must realise it; its name prints in the connector list |
 | `d.detail.busbar(a, b)`, `d.detail.rail_bond(a, b)` | a rack's internal jumper; terminals bonded through their rail |
 
 `d.series` raises `has no pole pair: its part states no line side` when a part does not say which pin is the line
@@ -197,7 +197,7 @@ fr.write(result, Path("out"))
 - `detail.md`: each `d.detail` call, `W1.core`, fixed terminals and `d.layout` advice, with the cases they are for.
 - `drawing.md`: what layout reads, a checklist for a readable cabinet, printed sizes and grid pitch.
 - `layout-numbers.md`: every `d.layout.profile` keyword and every `d.layout.sheet` number.
-- `readability.md`: `fr.readability`, the per-page and per-unit numbers behind the readability findings.
+- `readability.md`: `fr.readability`, the per-page numbers behind the readability findings.
 
 ### Reading a built model
 

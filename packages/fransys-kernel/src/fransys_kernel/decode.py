@@ -25,7 +25,7 @@ from .values import MAX_EXPONENT
 lazy from .model import Model
 
 if TYPE_CHECKING:
-    from .record import Record
+    from .record_protocol import Record
 
 _KIND = "canonical"
 _PAIR = 2

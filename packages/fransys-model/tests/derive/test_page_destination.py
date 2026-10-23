@@ -3,8 +3,10 @@
 Hand-built drawing sets and pages: two sets that both hold a page 3 must get different labels.
 """
 
+from derive_helpers import frozen_with_library
+
 from fransys_model.derive import page_destination
-from fransys_model.kernel import Draft, Origin, freeze, make_id
+from fransys_model.kernel import Draft, Origin, make_id
 from fransys_model.layout import DrawingSet, Page, PageRole
 
 _ORIGIN = Origin(
@@ -40,6 +42,6 @@ def test_pages_of_two_drawing_sets_get_their_own_set_and_page_labels():
     p1, p2 = _page("p1", ds1, 3), _page("p2", ds2, 3)
     draft = Draft()
     draft.extend((ds1, ds2, p1, p2), origin=_ORIGIN)
-    m = freeze(draft)
+    m = frozen_with_library(draft)
     assert page_destination(m, p1) == "p1.3"
     assert page_destination(m, p2) == "p2.3"

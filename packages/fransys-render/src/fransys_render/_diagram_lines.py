@@ -17,7 +17,7 @@ def line_parts(pen: Pen, line: DiagramLine, designation: str) -> str:
     """One line as a polyline, its designation centred on the record's text place."""
     points = tuple((p.x, p.y) for p in line.points)
     top = line.text_y - pen.font_g // 2
-    return pen.polyline("diagram-line", points) + pen.text(
+    return pen.wire("diagram_line", points) + pen.text(
         "line", (line.text_x, top), designation, middle=True
     )
 
@@ -33,5 +33,5 @@ def marker_parts(model: Model, pen: Pen, marker: DiagramMarker, line: DiagramLin
         (back, marker.y + DIAGRAM_MARKER_HALF_G),
     )
     at = (marker.x + sign * DIAGRAM_MARKER_GAP_G, marker.y - pen.font_g // 2)
-    arrow = pen.polyline("marker", (tip, above, below, tip))
+    arrow = pen.wire("marker", (tip, above, below, tip))
     return arrow + pen.text("marker-label", at, diagram_marker_text(model, marker), end=sign < 0)

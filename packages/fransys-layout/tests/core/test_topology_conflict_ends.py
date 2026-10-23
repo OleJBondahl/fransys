@@ -13,10 +13,10 @@ from fransys_layout.core import PinRef
 from fransys_layout.core.topology import ColumnEnv, _split_cycles
 from fransys_layout.core.values import Attach, CrossLink, Fan
 
-SUPPLY = Attach(None, 0, 0, PinRef("F", "out"))
-INPUT = Attach(None, 0, 0, PinRef("CARD", "in.1"))
-CARD_POWER = Attach(None, 0, 0, PinRef("CARD", "power"))
-TERMINAL = Attach(None, 0, 0, PinRef("X", "1"))
+SUPPLY = Attach(None, 0, 0, PinRef("F", "out"), net="n")
+INPUT = Attach(None, 0, 0, PinRef("CARD", "in.1"), net="n")
+CARD_POWER = Attach(None, 0, 0, PinRef("CARD", "power"), net="n")
+TERMINAL = Attach(None, 0, 0, PinRef("X", "1"), net="n")
 
 
 def _split() -> tuple[tuple[Fan, ...], tuple[CrossLink, ...]]:

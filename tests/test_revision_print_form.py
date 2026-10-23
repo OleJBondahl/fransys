@@ -20,6 +20,7 @@ from _pdf_lists import source
 from fransys_pdf._lists import bom_page
 from fransys_reports import bom_csv
 
+from electrical_symbols import LIBRARY
 from fransys_model.derive import (
     SheetKey,
     bom_lines,
@@ -123,7 +124,9 @@ def test_the_unit_documents_title_block_revision_cell_prints_2_1():
         _unit_id(_build(), _BOARD),
         remove=(PageKind.SCHEMATIC, PageKind.CONNECTOR_LIST, PageKind.BOM),
     )
-    svg = fransys_render.sheets(document_sheets_of(model))[SheetKey(doc.id, PageKind.COVER, 0)].svg
+    svg = fransys_render.sheets(document_sheets_of(model), LIBRARY)[
+        SheetKey(doc.id, PageKind.COVER, 0)
+    ].svg
     values = re.findall(r'font-size="3\.4293"[^>]*>([^<]*)</text>', svg)  # the body-size cells
     assert "2.1" in values
     for old in ("2", "1", "01", "1.1"):
@@ -137,7 +140,7 @@ def test_the_cover_lists_both_history_rows_as_1_1_and_2_1():
         _unit_id(_build(), _BOARD),
         remove=(PageKind.SCHEMATIC, PageKind.CONNECTOR_LIST, PageKind.BOM),
     )
-    text = source(model, doc.id, {}, fransys_render.sheets(document_sheets_of(model)))
+    text = source(model, doc.id, {}, fransys_render.sheets(document_sheets_of(model), LIBRARY))
     first = 'text("1.1"), text("2025-06-01"), text("Version one release")'
     second = 'text("2.1"), text("2026-01-01"), text("Version two release")'
     assert first in text
@@ -196,7 +199,7 @@ def test_the_cabinet_cover_lists_its_own_history_not_the_nested_boards():
     model, doc = _with_document(
         model, cabinet, remove=(PageKind.SCHEMATIC, PageKind.CONNECTOR_LIST, PageKind.BOM)
     )
-    text = source(model, doc.id, {}, fransys_render.sheets(document_sheets_of(model)))
+    text = source(model, doc.id, {}, fransys_render.sheets(document_sheets_of(model), LIBRARY))
     assert 'text("1.2"), text("2026-02-01"), text("Cabinet release")' in text
     for board_entry in ("Version one release", "Version two release", "2025-06-01", '"2.1"'):
         assert board_entry not in text

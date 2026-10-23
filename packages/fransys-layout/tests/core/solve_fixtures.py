@@ -42,6 +42,7 @@ def tag_on_the_wire() -> tuple[PlacementProblem, CutResult, Placement, Options]:
         flip_turn="R180",
         tag_stagger=True,
         label_gap=8,
+        parallel_pitch=48,
         driver_first=True,
         arrow_sides=("E", "W"),
     )

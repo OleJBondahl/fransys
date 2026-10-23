@@ -40,8 +40,9 @@ class Settings:
     `paper` holds `default` (a format name) and `formats` (name to the sheet's numbers);
     `paper_by_kind` names a format for one `PageKind`. `pdf`, `look` and `layout` hold the other
     tables. `grid` holds `module_mm`; `font` is empty for our font, else `name` and the two font
-    `files` paths. A key in `pdf`, `look` or `layout` raises, naming the order that lands its
-    reader. Make one with `fr.settings()`, pass it to `fr.build`.
+    `files` paths. A key in `pdf`, `look` or `layout` raises only when it is unknown or of another
+    type than ours. `table(name)` gives any merged table of our TOML files. Make one with
+    `fr.settings()`, pass it to `fr.build`.
     """
 
     paper: frozendict[str, object]
@@ -51,6 +52,16 @@ class Settings:
     pdf: frozendict[str, object]
     look: frozendict[str, object]
     layout: frozendict[str, object]
+    _merged: frozendict[str, frozendict[str, object]] = dataclasses.field(
+        init=False, repr=False, compare=False
+    )
+
+    def table(self, name: str) -> frozendict[str, object]:
+        """The merged table `name` of our TOML files (`pdf`, `look`, `layout`, or a later one)."""
+        if name not in self._merged:
+            msg = f"[{name}] is not a settings table; known: {', '.join(self._merged)}"
+            raise SettingsError(msg)
+        return self._merged[name]
 
 
 def _package_toml(package: str, name: str) -> Table:
@@ -70,8 +81,8 @@ def settings(
     Does not build, write a file or touch the environment; it reads the TOML files only.
 
     Raises:
-        SettingsError: the file is missing, has an unknown key, a key outside the overridable
-            tables, a key whose reader has not landed, or `paper` names an unknown format. The
+        SettingsError: the file is missing, has an unknown key, a value of another type than
+            ours, a key outside the overridable tables, or `paper` names an unknown format. The
             message names the file, the key and the keys known there.
     """
     if path is None and not paper:
@@ -94,8 +105,9 @@ def _merge(path: str | Path | None, paper: Mapping[PageKind, str] | None) -> Set
     where = "our defaults" if file is None else str(file)
     tables = merged_tables(ours, consumer, where)
     grid, font = _library_tables(consumer, file, where)
+    build_library(grid, font, _build_tables(tables), where)
     kinds = paper_by_kind(tables["paper"], {**_HOUSE_BY_KIND, **dict(paper or {})})
-    return Settings(
+    built = Settings(
         paper=_frozen_table(tables["paper"]),
         paper_by_kind=frozendict(kinds),
         grid=_frozen_table(grid),
@@ -104,6 +116,9 @@ def _merge(path: str | Path | None, paper: Mapping[PageKind, str] | None) -> Set
         look=_frozen_table(tables["look"]),
         layout=_frozen_table(tables["layout"]),
     )
+    merged = frozendict({n: _frozen_table(t) for n, t in tables.items() if n != "paper"})
+    object.__setattr__(built, "_merged", merged)  # init=False: never a constructor keyword
+    return built
 
 
 def _library_tables(
@@ -113,8 +128,13 @@ def _library_tables(
     grid = merged_grid(cast("Table", consumer.get("grid", {})), where)
     given = cast("Table", consumer.get("font", {}))
     font = merged_font(given, where, None if path is None else path.parents[0])
-    build_library(grid, font, where)
     return grid, font
+
+
+def _build_tables(tables: Mapping[str, Table]) -> dict[str, Table]:
+    """The merged `lines`, `dash` and `heights` tables `build_library` hands to symdef whole."""
+    heights = tables["font"]["heights"]
+    return {"lines": tables["lines"], "dash": tables["dash"], "heights": cast("Table", heights)}
 
 
 def _read(file: Path) -> Table:

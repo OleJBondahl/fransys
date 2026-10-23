@@ -2,7 +2,7 @@
 
 import pytest
 
-from fransys_layout.core.series_tree import TreeLane, tree_lanes
+from fransys_layout.core.series_tree import TreeLane, tree_holds, tree_lanes
 from fransys_layout.core.series_values import Parallel, Series
 
 _ONE = {"S1": 4, "S2": 4, "S3": 4, "S4": 4, "H1": 4, "T1": 8, "T2": 8, "U1": 8}
@@ -22,11 +22,11 @@ def test_a_parallel_keeps_its_first_part_and_puts_the_next_beside_it() -> None:
 
 
 @pytest.mark.rule("SERIES-PARALLEL")
-def test_a_nested_series_stays_whole_in_its_lane_and_the_tallest_part_stays_home() -> None:
-    """Catches the inner series flattened into the parallel, or the shorter part kept home."""
+def test_a_nested_series_stays_whole_in_its_lane_and_the_first_part_stays_home() -> None:
+    """Catches the inner series flattened into the parallel, or a later part kept home."""
     tree = Series(("S1", Parallel(("S2", Series(("S3", "S4")))), "H1"))
     lanes = tree_lanes(tree, _ONE)
-    assert lanes == (TreeLane(("S1", "S3", "S4", "H1")), TreeLane(("S2",), 0, "S3", "S4"))
+    assert lanes == (TreeLane(("S1", "S2", "H1")), TreeLane(("S3", "S4"), 0, "S2", "S2"))
 
 
 @pytest.mark.rule("SERIES-PARALLEL")
@@ -40,3 +40,66 @@ def test_a_parallel_inside_a_joined_lane_joins_that_lane() -> None:
         TreeLane(("S2", "S3"), 0, "H1", "U1"),
         TreeLane(("S4",), 1, "S3", "S3"),
     )
+
+
+_H = {"S1": 10, "B": 10, "A": 40, "C": 80, "D": 60, "E": 20, "F": 30}
+_W = 5
+
+
+@pytest.mark.rule("SERIES-PARALLEL")
+def test_the_leaf_after_a_parallel_is_held_by_tallest_less_first() -> None:
+    """Short first part 40, tall second 80: B below the parallel is held 80 - 40 = 40."""
+    tree = Series(("S1", Parallel(("A", "C")), "B"))
+    assert tree_holds(tree, _H, _W) == {"B": 40}
+
+
+@pytest.mark.rule("SERIES-PARALLEL")
+def test_a_first_part_that_is_tallest_gives_no_hold() -> None:
+    """Catches a hold of zero or of the other part's height recorded."""
+    assert tree_holds(Series(("S1", Parallel(("C", "A")), "B")), _H, _W) == {}
+
+
+@pytest.mark.rule("SERIES-PARALLEL")
+def test_three_branches_hold_by_the_tallest_of_all() -> None:
+    """Parts 40, 80, 60: B is held 80 - 40 = 40, not by the last part."""
+    tree = Series(("S1", Parallel(("A", "C", "D")), "B"))
+    assert tree_holds(tree, _H, _W) == {"B": 40}
+
+
+@pytest.mark.rule("SERIES-PARALLEL")
+def test_a_parallel_with_nothing_after_it_in_its_lane_gives_no_hold() -> None:
+    """A Parallel last in the tree has no follower; one ending a later branch has none either."""
+    assert tree_holds(Series(("S1", Parallel(("A", "C")))), _H, _W) == {}
+    tree = Series(("S1", Parallel(("A", Series(("E", Parallel(("A", "C"))))))))
+    assert tree_holds(tree, _H, _W) == {}
+
+
+@pytest.mark.rule("SERIES-PARALLEL")
+def test_a_nested_parallel_mid_way_down_the_home_branch_holds_its_follower() -> None:
+    """Inner (E 20, F 30) between S1 and D in the home branch: D is held 30 - 20 = 10.
+
+    The home branch is 10 + 30 + 60 + 2 * 5 = 110 against C = 80, so the outer gives no hold.
+    """
+    tree = Series((Parallel((Series(("S1", Parallel(("E", "F")), "D")), "C")), "B"))
+    assert tree_holds(tree, _H, _W) == {"D": 10}
+
+
+@pytest.mark.rule("SERIES-PARALLEL")
+def test_a_nested_parallel_ending_the_home_branch_adds_to_the_outer_hold() -> None:
+    """Home branch Series(S1, Parallel(E 20, F 30)) = 10 + 5 + 30 = 45; C = 80, outer hold 35.
+
+    The inner hold 30 - 20 = 10 also falls on B, the home lane's next leaf: 35 + 10 = 45.
+    """
+    tree = Series((Parallel((Series(("S1", Parallel(("E", "F")))), "C")), "B"))
+    assert tree_holds(tree, _H, _W) == {"B": 45}
+
+
+@pytest.mark.rule("SERIES-PARALLEL")
+def test_a_series_branch_with_more_cells_is_held_with_the_wires_between_its_cells() -> None:
+    """First branch A (40) is one cell; the tallest is Series(E 20, F 30, E 20) of 3 cells.
+
+    Its height is 70 + 2 * 5 = 80 as stack_lane builds it, so B is held 80 - 40 = 40 and stands
+    wire_min (5) below the tallest branch's bottom.
+    """
+    tree = Series((Parallel(("A", Series(("E", "F", "E")))), "B"))
+    assert tree_holds(tree, _H, _W) == {"B": 40}

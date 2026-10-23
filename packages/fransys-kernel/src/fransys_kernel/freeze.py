@@ -26,7 +26,7 @@ lazy from .draft import Draft
 if TYPE_CHECKING:
     from _typeshed import DataclassInstance
 
-    from .record import Record
+    from .record_protocol import Record
     from .schema import FieldInfo
 
 

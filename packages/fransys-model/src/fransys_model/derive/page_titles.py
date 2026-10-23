@@ -24,11 +24,10 @@ lazy from fransys_model.vocab import AspectNode, Function, Item, Unit
 
 from .designation_label import terminal_of
 from .drawing_text import page_title_groups, strip_tag_text, unit_label
+from .house_settings import word
 from .lookups import black_box_unit, unit_chain
 from .tag_text import tag_text
 from .unit_nodes import own_nodes_by_unit
-
-_JOIN = ", "
 
 
 def _drawn_functions(model: Model, page: Page) -> tuple[Id[Function], ...]:
@@ -177,7 +176,7 @@ def page_title_entries(model: Model, page: Page) -> tuple[str, ...]:
     return tuple(text for text, _ in _entries(model, page))
 
 
-def short_title(entries: tuple[str, ...]) -> str | None:
+def short_title(model: Model, entries: tuple[str, ...]) -> str | None:
     """`first to last` with their shared leading words printed once; `None` for one entry.
 
     "Relay 1" and "Relay 3" give "Relay 1 to 3"; with no shared word, or none left after it,
@@ -193,13 +192,14 @@ def short_title(entries: tuple[str, ...]) -> str | None:
     while shared < min(len(head), len(tail)) and head[shared] == tail[shared]:
         shared += 1
     if 0 < shared < min(len(head), len(tail)):
-        return f"{first} to {' '.join(tail[shared:])}"
-    return f"{first} to {last}"
+        last = " ".join(tail[shared:])
+    return f"{first} {word(model, 'range_word')} {last}"
 
 
-def _more_form(entries: tuple[str, ...]) -> str:
+def _more_form(model: Model, entries: tuple[str, ...]) -> str:
     """The lead entry and how many more there are: "Pump and 4 more" (layout-0268)."""
-    return f"{entries[0]} and {len(entries) - 1} more"
+    and_word, more_word = word(model, "and_word"), word(model, "more_word")
+    return f"{entries[0]} {and_word} {len(entries) - 1} {more_word}"
 
 
 def page_title_forms(model: Model, page: Page) -> tuple[str, ...]:
@@ -214,10 +214,10 @@ def page_title_forms(model: Model, page: Page) -> tuple[str, ...]:
         unit = layout_of(model, DrawingSet)[page.drawing_set].unit
         return ("" if unit is None else unit_label(model, unit),)
     entries = tuple(text for text, _ in found)
-    forms = [_JOIN.join(entries)]
+    forms = [word(model, "list_join").join(entries)]
     candidates = [
-        short_title(entries) if len({unit for _, unit in found}) == 1 else None,
-        _more_form(entries) if len(entries) > 1 else None,
+        short_title(model, entries) if len({unit for _, unit in found}) == 1 else None,
+        _more_form(model, entries) if len(entries) > 1 else None,
     ]
     for form in candidates:
         if form is not None and len(form) < len(forms[-1]):

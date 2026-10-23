@@ -41,7 +41,8 @@ class Sym:
     """T1 to T3: row_group members at one column end in one row share y and use row_footprint.
 
     label is the size of the designation symbol; the text stage places it after the symbols and the
-    footprint holds no text (R327). Text is the builder's.
+    footprint holds no text (R327). Text is the builder's. `rank` is the builder's place for the
+    symbol among those that carry one (layout-0388): they keep to its order, whatever their ids say.
     """
 
     id: str
@@ -57,6 +58,7 @@ class Sym:
     item: str | None = None
     child_of: str | None = None
     boundary_of: str | None = None
+    rank: int | None = None
 
     @property
     def r0(self) -> Turned:

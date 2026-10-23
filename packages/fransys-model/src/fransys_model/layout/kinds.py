@@ -19,6 +19,18 @@ from .hints import (
     SideHint,
     SymbolChoice,
 )
+from .house_text import (
+    ColourCodes,
+    FrameForm,
+    HarnessText,
+    ReferenceText,
+    RevisionForm,
+    RevisionTableForm,
+    StubText,
+    TitleBlockForm,
+    WireLabelText,
+    Words,
+)
 from .library import DrawingLibrary
 from .membership import Membership
 from .overview_results import OverviewBox, OverviewLine, OverviewView
@@ -44,8 +56,20 @@ DERIVED_KINDS: tuple[type, ...] = (DrawingSet, LinkMarker, Page, PowerSymbol)
 CABLE_KINDS: tuple[type, ...] = (CableBlock, CableBox, CoreWire, EndBox, OpenCoreWire)
 DIAGRAM_KINDS: tuple[type, ...] = (DiagramSheet, DiagramBox, DiagramLine, DiagramMarker)
 OVERVIEW_KINDS: tuple[type, ...] = (OverviewView, OverviewBox, OverviewLine)
-# Written once by the facade from the build's symbol library, never authored, no pass removes it.
-LIBRARY_KINDS: tuple[type, ...] = (DrawingLibrary, PaperChoice)
+# Written once by the facade (the symbol library, the settings tables), never authored, kept.
+HOUSE_TEXT_KINDS: tuple[type, ...] = (
+    ColourCodes,
+    FrameForm,
+    HarnessText,
+    ReferenceText,
+    RevisionForm,
+    RevisionTableForm,
+    StubText,
+    TitleBlockForm,
+    WireLabelText,
+    Words,
+)
+LIBRARY_KINDS: tuple[type, ...] = (DrawingLibrary, PaperChoice, *HOUSE_TEXT_KINDS)
 # Sheets and frame membership rows: written by the facade's switches, never authored (model-0355).
 # Not in DERIVED_KINDS: the schematic pass removes that tuple wholesale (write/__init__.py:57).
 SHEET_KINDS: tuple[type, ...] = (LayoutSheet, Membership)

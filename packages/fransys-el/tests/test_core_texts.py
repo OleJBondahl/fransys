@@ -311,3 +311,20 @@ def test_every_flag_box_lies_inside_its_rows_solved_band(kind, generic, size) ->
         box = boxes[m.orient]
         assert top <= m.y + box.y
         assert m.y + box.y + box.h <= bottom, (m.end, box)
+
+
+def test_a_tag_box_is_as_wide_as_the_tag_is_drawn(fixture) -> None:
+    """A tag box is never narrower than the tag drawn, at most two divisions wider (layout-0385)."""
+    from fransys_model.derive import mm_per_division
+    from fransys_model.derive.print_sizes import font_size_mm, house_text_height_mm
+    from fransys_model.derive.text_width import UNITS_PER_EM, text_units
+    from fransys_model.layout import profile_of, sheet_format_of
+
+    model = fixture[0]
+    sheet = sheet_format_of(model, profile_of(model, None).sheet_format)
+    em_mm = font_size_mm(model, house_text_height_mm(model))
+    tags = _texts(fixture, "TAG")
+    assert tags
+    for t in tags:
+        drawn_g = text_units(t.text) * em_mm / UNITS_PER_EM / mm_per_division(model, sheet)
+        assert 0 <= t.box.w - float(drawn_g) <= 2  # em and width each round up one division

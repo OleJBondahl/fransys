@@ -65,8 +65,9 @@ def test_the_feeder_poles_form_bundles_of_one_lane_per_pole_and_one_trunk(
             members[net.bundle.id].append(net.bundle.pole)
     assert members
     assert all(sorted(poles) == [0, 1, 2] for poles in members.values()), members
-    trunks = [w for w in routed(problem) if w.lanes > 1]
-    assert [w.lanes for w in trunks] == [3]
+    lines = [w for w in routed(problem) if w.lane is not None]
+    assert sorted(w.lane for w in lines) == [0, 1, 2]
+    assert len({w.net for w in lines}) == 3
 
 
 def test_the_lanes_follow_the_box_pins_they_land_on_and_no_strand_crosses(
@@ -85,7 +86,7 @@ def test_the_lanes_follow_the_box_pins_they_land_on_and_no_strand_crosses(
             assert by_pole == sorted(by_pole), (symbol, pairs)
     crossed = [
         c
-        for c in crossing_points(routed(problem))
+        for c in crossing_points(routed(problem), bundle_of)
         if bundle_of.get(c[2]) and bundle_of.get(c[2]) == bundle_of.get(c[3])
     ]
     assert crossed == []

@@ -38,6 +38,7 @@ from .lookups import (
     no_conductor_at,
 )
 from .overview import overview_graph
+from .pdf_texts import pdf_texts
 from .plc_list import plc_channel_rows
 from .plc_rack import is_plc_module, plc_rack_modules
 from .release_order import release_order, same_version
@@ -106,6 +107,7 @@ __all__ = [
     "list_context",
     "no_conductor_at",
     "overview_graph",
+    "pdf_texts",
     "plc_channel_rows",
     "plc_rack_modules",
     "reading_cables",

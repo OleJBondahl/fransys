@@ -17,6 +17,7 @@ from typing import TYPE_CHECKING, Any
 
 import fransys as fr
 import pytest
+from _drawn_facts import Placed, PlacedText, symbol_subjects, text_subjects
 from _drawn_pages import drawn_pages
 from fransys.colours import BK
 
@@ -24,16 +25,9 @@ from fransys_model.derive.drawing_text import external_note
 from fransys_model.vocab.tables import functions
 
 if TYPE_CHECKING:
-    from fransys_layout.drawing import DrawnSymbol, DrawnText
     from fransys_model.kernel import Id, Model
 
 _NO_PART = "part must be an MPN string"
-
-
-def _gap(model, fact: str):
-    """A fact the page Drawing lacks (strict xfail, GAP-FLIP-DRAWING-SUBJECT)."""
-    msg = f"GAP-FLIP-DRAWING-SUBJECT: no {fact} for {model.digest}"
-    raise AssertionError(msg)
 
 
 def _plant(d: fr.Design) -> tuple[fr.TerminalStrip, fr.Device]:
@@ -75,11 +69,11 @@ def test_a_part_less_external_strip_and_device_build_and_write(tmp_path: Path) -
     assert "Q8" not in bom
 
 
-def _drawn(model: Model, key: tuple[str, ...]) -> tuple[DrawnSymbol, list[DrawnText]]:
+def _drawn(model: Model, key: tuple[str, ...]) -> tuple[Placed, list[PlacedText]]:
     """The symbol drawn for the function with this authoring key, and the texts it owns."""
     (fid,) = (f.id for f in functions(model).values() if tuple(model.key_of(f.id) or ()) == key)
-    (symbol,) = (s for s in _gap(model, "symbol subject").values() if s.owner.endswith(fid.value))
-    texts = [t for t in _gap(model, "text subject") if t.owner.endswith(fid.value)]
+    (symbol,) = (s for s in symbol_subjects(model) if s.owner == fid.value)
+    texts = [t for t in text_subjects(model) if t.function == fid]
     return symbol, texts
 
 

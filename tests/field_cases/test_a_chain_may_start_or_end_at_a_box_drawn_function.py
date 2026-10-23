@@ -81,16 +81,6 @@ def _near(drawing: Drawing, key: str, tag: str) -> DrawnSymbol:
     )
 
 
-def test_a_chain_may_start_at_a_plc_channel(tmp_path: Path) -> None:
-    """The channel lands on pin 14, so the contact is entered at 14: it is drawn turned."""
-    free = _contact_turn(None, box_feeds="14")
-    chained = _contact_turn(
-        lambda n: (n.di.di_1, n.k1.co_1, n.h1.lamp), box_feeds="14", out=tmp_path
-    )
-    assert free == "R0"
-    assert chained == "MR180"
-
-
 def test_the_box_of_a_chains_head_keeps_the_column_it_shares_with_its_other_channel() -> None:
     """The module's second channel feeds relay K8: the module stays in discovery's column of K8.
 
@@ -120,12 +110,38 @@ def test_the_box_of_a_chains_head_keeps_the_column_it_shares_with_its_other_chan
     assert module.y > relay.y
 
 
+def _lands_on(page: Drawing, pin_x: int, pin_y: int, symbol: DrawnSymbol) -> bool:
+    """Whether a drawn wire runs from the box pin at (pin_x, pin_y) to a point on `symbol`."""
+    body = symbol.outline
+    assert body is not None
+    return any(
+        w.points[i] == (pin_x, pin_y)
+        and body.x <= w.points[-i - 1][0] <= body.x + body.w
+        and body.y <= w.points[-i - 1][1] <= body.y + body.h
+        for w in page.wires
+        for i in (0, -1)
+    )
+
+
 def test_a_chain_may_end_at_a_supply_output(tmp_path: Path) -> None:
-    """The supply lands on pin 11 and ends the chain: the contact leaves at 11, drawn turned."""
+    """The supply lands on pin 11 and ends the chain: the contact leaves at 11, drawn turned.
+
+    The turn leaves the supply's `+` and `-` labels at their own pins: `+` feeds the contact.
+    """
     free = _contact_turn(None, box_feeds="11")
     chained = _contact_turn(lambda n: (n.k1.co_1, n.psu.output), box_feeds="11", out=tmp_path)
     assert free == "R0"
-    assert chained == "MR180"
+    assert chained == "R180"  # the core flips a cell by R180 (FLIP_TURN), not the mirror
+    model = _build(lambda n: (n.k1.co_1, n.psu.output), box_feeds="11").model
+    (page,) = drawn_pages(model).values()
+    box = _near(page, "generic-box", "G7")
+    labels, offsets = dict(box.slots), dict(box.offsets)
+    assert (labels["marking.output.+"], labels["marking.output.-"]) == ("+", "-")
+    assert box.outline is not None
+    foot = box.outline.y + box.outline.h  # both outputs leave the box foot
+    plus, minus = (box.x + offsets[f"output.{p}"] for p in "+-")
+    assert _lands_on(page, plus, foot, _near(page, "change-over-contact", "K7"))
+    assert _lands_on(page, minus, foot, _near(page, "lamp", "H7"))
 
 
 def test_a_longer_chain_may_end_at_a_supply_output(tmp_path: Path) -> None:
@@ -138,3 +154,24 @@ def test_a_longer_chain_may_end_at_a_supply_output(tmp_path: Path) -> None:
 def test_a_chain_may_not_pass_through_a_box_drawn_function() -> None:
     with pytest.raises(fr.AuthorError, match="only at its head or its tail"):
         _contact_turn(lambda n: (n.k1.co_1, n.di.di_1, n.h1.lamp), box_feeds="14")
+
+
+@pytest.mark.rule("BOX-SIDES")
+def test_a_chain_may_start_at_a_plc_output_channel() -> None:
+    """A DO channel heads a chain: its circuit stays above the box, as in the free build (R502)."""
+    d = fr.design("demo_parts", place="CAB")
+    d.project(title="Chain", number="P-1", customer="Example Co", revision=1, author="OJB")
+    d.revision(1, date="2026-10-02", text="First issue", created="XX")
+    cab = d.location("CAB", "Cabinet")
+    with d.function("G", "Group"):
+        h1 = d.device("H7", "DEMO-LAMP-24")
+        do = d.device("A7", "DEMO-PLC-DO-2")
+        psu = d.device("G7", "DEMO-PSU-24")
+    d.detail.wire(do.do_1["1"], h1.lamp[1], wire=(BU, 0.5))
+    d.detail.wire(h1.lamp[2], psu.output["-"], wire=(BU, 0.5))
+    d.layout.chain(do.do_1, h1.lamp)
+    result = fr.build(d, cabinet_document(cab))
+    assert [f for f in result.findings if f.severity.name == "ERROR"] == []
+    (page,) = drawn_pages(result.model).values()
+    channel, lamp = _near(page, "generic-box", "A7"), _near(page, "lamp", "H7")
+    assert lamp.y < channel.y  # the lamp stands above the box, no short

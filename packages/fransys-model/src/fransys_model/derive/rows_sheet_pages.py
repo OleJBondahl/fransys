@@ -59,6 +59,14 @@ class SheetFrame:
     logo_x: float
 
 
+@value
+class TitleBlockText:
+    """A title block's words: each printed cell's label in the record's order, and the cut mark."""
+
+    labels: frozendict[str, str]
+    ellipsis: str
+
+
 @dataclass(frozen=True)  # plain: it holds a record, which a value may not
 class DocumentSheets:
     """A document's paper, its sizes, its pages' title blocks in page order, each paper's frame."""
@@ -67,6 +75,7 @@ class DocumentSheets:
     sizes: Sizes
     pages: tuple[SheetPage, ...]
     frames: frozendict[Id[SheetFormat], SheetFrame]
+    title_text: TitleBlockText
 
 
 @value
@@ -84,10 +93,11 @@ class SheetBackground:
 
     `svg` is the frame, grid and title block; `counter_box` and `logo_box` are x, y, width and
     height of the Page cell's value and of the logo cell, `None` when the band holds no title
-    block; `title_room_mm` is the width a page title is cut to.
+    block; `title_room_mm` is the width a page title is cut to, `ellipsis` the mark it is cut with.
     """
 
     svg: str
     counter_box: tuple[float, float, float, float] | None
     logo_box: tuple[float, float, float, float] | None
     title_room_mm: float | None
+    ellipsis: str

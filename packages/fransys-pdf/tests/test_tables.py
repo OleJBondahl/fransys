@@ -5,8 +5,8 @@ from fransys_pdf._tables import table_source
 _ROW = ["text(1)", "text(2)"]
 
 
-def _source(rows: int, **kw: str) -> str:
-    return table_source(["auto", "1fr"], ["text(a)", "text(b)"], [_ROW] * rows, **kw)
+def _source(rows: int, **kw: tuple[str, str]) -> str:
+    return table_source(["auto", "1fr"], ["text(a)", "text(b)"], [_ROW] * rows, rule="0.18mm", **kw)
 
 
 def test_a_table_of_three_rows_is_one_unbreakable_block():
@@ -26,7 +26,7 @@ def test_five_rows_give_two_span_cells_and_one_free_row():
 
 
 def test_a_titled_table_repeats_its_heading_with_cont_and_names_its_anchor():
-    text = _source(6, title="-X1", label="term0")
+    text = _source(6, heading=("-X1 (cont.)", "term0"))
     assert "-X1 (cont.)" in text
     assert "locate(<term0>)" in text
     assert text.rstrip("\n ]").endswith("<term0>")

@@ -22,6 +22,7 @@ from fransys_model.derive.contact_image import (
     contact_marks,
 )
 from fransys_model.derive.designation import connector_designation, port_designation
+from fransys_model.derive.facts.revision_label import revision_label
 from fransys_model.derive.frame_position import (
     content_extent,
     frame_column,
@@ -33,6 +34,7 @@ from fransys_model.derive.frame_position import (
     position_text,
     row_letter,
 )
+from fransys_model.derive.house_settings import revision_form_of, wire_label_text_of
 from fransys_model.derive.location_text import (
     product_location,
     stub_far_end,
@@ -42,7 +44,6 @@ from fransys_model.derive.marker_text import REF_SLOTS, marker_text, reference_s
 from fransys_model.derive.pole_ports import pole_prefix
 from fransys_model.derive.port_marking import port_marking
 from fransys_model.derive.reference_heads import heads_group
-from fransys_model.derive.revision_text import revision_text
 from fransys_model.derive.stub_text import (
     line_stub_line,
     off_stub_line,
@@ -65,36 +66,44 @@ from fransys_model.layout import (
     DrawingSet,
     Page,
     PageGroup,
+    WireLabelText,
     layout_of,
 )
 from fransys_model.vocab.tables import conductors
+lazy from fransys_model.layout import RevisionForm
 lazy from fransys_model.vocab.connectivity import Conductor
 lazy from fransys_model.vocab.core import Unit, UnitRelease
 
 
-def wire_label_text(end_a: str, end_b: str) -> str:
-    """The text at both ends of a wire, `-B12:96 -Q11:A1`: the join's one home."""
-    return f"{end_a} {end_b}"
+def wire_label_text(form: WireLabelText, end_a: str, end_b: str) -> str:
+    """The text at both ends of a wire, `-B12:96 -Q11:A1`: the join's one home.
+
+    `form` is the `[wire_label]` record: its separator joins the ends, and `show_ends` false
+    prints the first end alone.
+    """
+    return f"{end_a}{form.separator}{end_b}" if form.show_ends else end_a
 
 
 def wire_text(model: Model, conductor: Id[Conductor], *, unit: Id[Unit] | None = None) -> str:
     """A WIRE label's text via `wire_label_text`; `unit` makes the ends unit-relative."""
     record = conductors(model)[conductor]
     ends = ordered_wire_ends(model, record.a, record.b)
-    return wire_label_text(*(port_designation(model, port, unit=unit) for port in ends))
+    return wire_label_text(
+        wire_label_text_of(model), *(port_designation(model, port, unit=unit) for port in ends)
+    )
 
 
 def _release_name(release: UnitRelease) -> str:
     return release.title or release.name
 
 
-def release_title(release: UnitRelease) -> str:
+def release_title(form: RevisionForm, release: UnitRelease) -> str:
     """A release as a title block prints it: `"Pump rev 1.1"`.
 
     The title (else the name) and the revision text: the one home of the text, called by
     `outline_title` and by a finding naming a release.
     """
-    return f"{_release_name(release)} rev {revision_text(release.version, release.revision)}"
+    return f"{_release_name(release)} rev {revision_label(form, release.version, release.revision)}"
 
 
 def unit_label(model: Model, unit: Id[Unit]) -> str:
@@ -110,7 +119,7 @@ def outline_title(model: Model, unit: Id[Unit] | None) -> str:
     if unit is None:
         msg = "an outline title needs a unit"
         raise SchemaError(msg, kind="unit")
-    return release_title(unit_release(model, unit))
+    return release_title(revision_form_of(model), unit_release(model, unit))
 
 
 def page_title_groups(model: Model, page: Page) -> tuple[PageGroup, ...]:

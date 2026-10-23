@@ -41,7 +41,7 @@ def test_counts_equal_the_scorers_wiring_on_the_same_polylines() -> None:
     """The oracle: one number, whichever side counts."""
     z = wire("C", (10, 10), (10, 30), (90, 30), (90, 80))
     wires = (H, V, z)
-    scene = tuple(SceneWire(w.net, w.page, w.points, w.lanes, w.kind) for w in wires)
+    scene = tuple(SceneWire(w.net, w.page, w.points, w.kind) for w in wires)
     got, want = counts(wires), wiring(scene)
     assert (got.crossings, got.bends, got.excess, got.length, got.detour) == (
         want["crossings"],

@@ -1,6 +1,6 @@
 """A jumper group's Bridge marks reach the written PDF as render's images (pdf-0049, render-0021).
 
-The facade hands `fransys_render.bridge_pieces()` to `fransys_pdf.source`; without it a
+The facade hands `fransys_render.bridge_pieces(LIBRARY)` to `fransys_pdf.source`; without it a
 terminal list with a jumper group would raise. A unit whose strip is bridged through the public
 API builds, writes its Typst source with the pieces placed, and compiles to a PDF.
 """

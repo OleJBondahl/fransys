@@ -1,12 +1,11 @@
 """Field case: a contact table's heading prints the same designation as its coil's tag.
 
 The engineering shape: a unit holds a few relays, each in its own function, each coil fed from a
-strip and from a pin of one external controller and each relay switching a lamp. The relays
-stand in one column, so their contact tables share a column foot and each table is headed by
-its coil.
+strip and from a pin of one external controller and each relay switching a lamp. Each coil
+owns one contact table, placed at its corner (el-0049), keyed by the coil.
 
 The bug: the coil is drawn "-K1" (shortest designation, the unit's own set), but the heading
-above its contact table read "-U1-K1", because the heading was built without the unit that the
+beside its contact table read "-U1-K1", because the heading was built without the unit that the
 coil's tag is built with.
 
 The fix, decision model-0238: `coil_heading` takes the unit and both callers (layout, which
@@ -21,6 +20,7 @@ from typing import NamedTuple
 
 import fransys as fr
 from _drawn_pages import drawn_pages
+from _tables_on import TABLES_ON
 
 
 class _Io(NamedTuple):
@@ -70,19 +70,20 @@ def _built(count: int) -> fr.BuildResult:
         d = fr.design("demo_parts")
         d.add(_bank(count), "U1")
         document = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, "demo-bank", cover=cover)
-        return fr.build(d, document)
+        return fr.build(d, document, settings=TABLES_ON)
 
 
 def test_a_headed_table_names_its_coil_as_the_coil_is_drawn() -> None:
-    """Each heading line is a coil's drawn tag (`-K3`), never the long `-U1-K3`."""
+    """Each coil owns one table head, keyed by its coil (el-0049); no long `-U1-K3` is printed.
+
+    A table stands at its coil's corner, so the head carries no heading line. Its own coil's tag
+    is drawn beside it, and no tag of the page reads the unit-long designation.
+    """
     pages = drawn_pages(_built(4).model).values()
     drawn = {t.text for d in pages for t in d.texts if t.kind == "TAG"}
-    heads = [
-        dict(s.slots)["heading"].split("\n")[0]
-        for d in pages
-        for s in d.symbols
-        if s.key == "contact-head" and "heading" in dict(s.slots)
-    ]
+    heads = [s for d in pages for s in d.symbols if s.key == "contact-head"]
     assert len(heads) == 4
-    assert all(head in drawn for head in heads)
-    assert not any("U1" in head for head in heads)
+    assert len({s.id for s in heads}) == 4
+    assert all(s.texts[0] == ("NO", "NC") and "heading" not in dict(s.slots) for s in heads)
+    assert {"-K1", "-K2", "-K3", "-K4"} <= drawn
+    assert not any("U1" in text for text in drawn)

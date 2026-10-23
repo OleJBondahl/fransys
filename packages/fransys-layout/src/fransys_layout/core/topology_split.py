@@ -70,11 +70,6 @@ def _nodes(columns: Sequence[Column]) -> tuple[Nodes, Boxes]:
     return {k: uf.find(n)[0] for k, n in ids.items()}, {b: uf.find(n)[0] for b, n in boxes.items()}
 
 
-def net_in(fan: Fan, pin: PinRef, net_of: NetOf) -> str:
-    """The net of a fan's attachment: the fan's one net, else the net of the pin (a bundle)."""
-    return fan.nets[0] if len(fan.nets) == 1 else net_of[pin]
-
-
 class BundleError(CoreError):
     """A bundle fan cannot be split: a driver and a leg stand on one node, or a member is cut."""
 
@@ -115,10 +110,7 @@ def check_bundles(columns: Sequence[Column], fans: Sequence[Fan]) -> None:
 def _fan_edges(fan: Fan, nodes: tuple[Nodes, Boxes], net_of: NetOf | None) -> set[Edge]:
     """Each driver above each leg; a box pin stands on its box's node; gone once a net is cut."""
     ends = [
-        [
-            (_end_node(a, nodes), None if net_of is None else net_in(fan, a.pin, net_of))
-            for a in side
-        ]
+        [(_end_node(a, nodes), None if net_of is None else a.net) for a in side]
         for side in (fan.drivers, fan.legs)
     ]
     return {
@@ -171,18 +163,16 @@ def cut_nets(
     cost: dict[str, int] = defaultdict(int)
     for fan in fans:
         for a in fan.drivers:
-            cost[net_in(fan, a.pin, net_of)] += 1
+            cost[a.net] += 1
     return y_cycle_cuts(edges, cost, natural_key)
 
 
-def _ends_of(fan: Fan, net: str, net_of: NetOf) -> tuple[Attach, ...]:
-    return tuple(
-        dict.fromkeys(a for a in (*fan.drivers, *fan.legs) if net_in(fan, a.pin, net_of) == net)
-    )
+def _ends_of(fan: Fan, net: str) -> tuple[Attach, ...]:
+    return tuple(dict.fromkeys(a for a in (*fan.drivers, *fan.legs) if a.net == net))
 
 
 def _split_fan(
-    fan: Fan, cuts: AbstractSet[str], net_of: Mapping[PinRef, str]
+    fan: Fan, cuts: AbstractSet[str]
 ) -> tuple[Fan | None, dict[str, tuple[Attach, ...]]]:
     """The fan without its cut nets (None when a side is empty) and the ends each net takes."""
     rest = tuple(n for n in fan.nets if n not in cuts)
@@ -194,26 +184,25 @@ def _split_fan(
             "a bundle lane is its net's place, so a member cannot leave; report the circuit"
         )
         raise BundleError(text)
-    drivers = tuple(a for a in fan.drivers if net_in(fan, a.pin, net_of) in rest)
-    legs = tuple(a for a in fan.legs if net_in(fan, a.pin, net_of) in rest)
+    drivers = tuple(a for a in fan.drivers if a.net in rest)
+    legs = tuple(a for a in fan.legs if a.net in rest)
     if not drivers or not legs:
-        return None, {n: _ends_of(fan, n, net_of) for n in fan.nets}
+        return None, {n: _ends_of(fan, n) for n in fan.nets}
     hub = fan.hub if any(a.pin.sym == fan.hub for a in (*drivers, *legs)) else None
     kept = replace(fan, nets=rest, drivers=drivers, legs=legs, hub=hub)
-    return kept, {n: _ends_of(fan, n, net_of) for n in fan.nets if n in cuts}
+    return kept, {n: _ends_of(fan, n) for n in fan.nets if n in cuts}
 
 
 def split_fans(
     fans: Sequence[Fan],
     cross: Sequence[CrossLink],
     cuts: AbstractSet[str],
-    net_of: Mapping[PinRef, str],
 ) -> tuple[tuple[Fan, ...], tuple[CrossLink, ...]]:
     """Fans without the cut nets, and the cross links with one more per cut net."""
     kept: list[Fan] = []
     links = list(cross)
     for fan in fans:
-        one, moved = _split_fan(fan, cuts, net_of)
+        one, moved = _split_fan(fan, cuts)
         if one is not None:
             kept.append(one)
         links.extend(CrossLink(net, ends) for net, ends in moved.items())

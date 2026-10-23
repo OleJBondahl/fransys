@@ -19,6 +19,7 @@ from pathlib import Path
 from typing import Any
 
 import fransys as fr
+from _drawn_facts import symbol_subjects
 from _drawn_pages import drawn_pages
 from fransys.colours import BU
 
@@ -26,12 +27,6 @@ from fransys_layout.geometry import GENERIC_BOX_KEY
 
 COUNT = 8
 PINS = tuple(f"CH{j:02d}-" for j in range(1, COUNT + 1))
-
-
-def _gap(model, fact: str):
-    """A fact the page Drawing lacks (strict xfail, GAP-FLIP-DRAWING-SUBJECT)."""
-    msg = f"GAP-FLIP-DRAWING-SUBJECT: no {fact} for {model.digest}"
-    raise AssertionError(msg)
 
 
 @cache
@@ -88,4 +83,5 @@ def test_the_coils_stand_over_the_controller_in_channel_order() -> None:
     )
     ((box_page, box),) = ((page, s) for page, s in symbols if s.key == GENERIC_BOX_KEY)
     assert all(page == box_page and s.y < box.y for page, s in coils)
-    assert _gap(model, "symbol subject") == [f"K{i + 1}" for i in range(COUNT)]
+    coil_tags = [s.tag for s in symbol_subjects(model) if s.key == "operating-device"]
+    assert coil_tags == [f"K{i + 1}" for i in range(COUNT)]

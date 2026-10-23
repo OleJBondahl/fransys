@@ -6,6 +6,11 @@ vertical run, +y for a horizontal one) belongs to the caller. Plain values in, p
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
 BAND_SIDES = ("E", "S")
 
 
@@ -43,3 +48,28 @@ def centred_span(lanes: int, step: int) -> int:
 def on_band_side(side: str) -> bool:
     """True for the sides the band grows towards (E and S: +x and +y), the caller's axis aside."""
     return side in BAND_SIDES
+
+
+def lane_rows(ends: Sequence[tuple[int, int] | None]) -> tuple[int, ...]:
+    """The band row of each lane: lane j's own, unless its leg column is lane j+1's driver column.
+
+    Then lane j+1 stands on the driver side (nearer row) of lane j, so no drop of the shared
+    column passes the other's row (layout-0389, R505). A run of such lanes takes its rows reversed.
+    """
+    rows = list(range(len(ends)))
+    j = 0
+    while j < len(ends):
+        k = j
+        while _shares(ends, k):
+            k += 1
+        rows[j : k + 1] = range(k, j - 1, -1)
+        j = k + 1
+    return tuple(rows)
+
+
+def _shares(ends: Sequence[tuple[int, int] | None], j: int) -> bool:
+    """Lane j runs rightwards and ends on the column lane j + 1 starts from."""
+    if j + 1 >= len(ends):
+        return False
+    here, after = ends[j], ends[j + 1]
+    return here is not None and after is not None and here[0] < here[1] == after[0]

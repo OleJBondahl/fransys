@@ -21,6 +21,8 @@ import fransys_parts
 import pytest
 from _model_build_cover import _COVER
 
+from electrical_symbols import LIBRARY
+
 # `--import-mode=importlib` (root pyproject.toml) never puts `tests/` on `sys.path`.
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import fransys_render
@@ -202,7 +204,9 @@ def _end_boxes(model, cable_key):
 
 def _block_svg(model, cable_key):
     """The SVG `fransys_render` draws for `cable_key`'s block in the absolute reading."""
-    return fransys_render.cable_blocks(model)[cable_block_key(None, _by_key(model, cable_key))]
+    return fransys_render.cable_blocks(model, LIBRARY)[
+        cable_block_key(None, _by_key(model, cable_key))
+    ]
 
 
 def _dashed(model, cable_key):

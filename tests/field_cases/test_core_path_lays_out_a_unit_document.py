@@ -61,8 +61,15 @@ def _set_warnings(result: fr.BuildResult) -> list[str]:
 
 
 def test_a_net_cut_by_the_unit_sets_is_a_warning_not_a_silent_drop(tmp_path: Path) -> None:
-    """The top set keeps one end of the unit's output net: it names the net, and has no page."""
-    assert _set_warnings(_build(tmp_path)) == ["NET_CUT_BY_SET", "SET_WITHOUT_PAGE"]
+    """The top set keeps its end of the unit's output net with a stub and so has a page (R468 U1).
+
+    NET_CUT_BY_SET still names the net (its raiser is XF part 6); SET_WITHOUT_PAGE is gone.
+    """
+    result = _build(tmp_path)
+    assert _set_warnings(result) == ["NET_CUT_BY_SET"]
+    sets = layout_of(result.model, DrawingSet)
+    pages = layout_of(result.model, Page)
+    assert any(sets[pages[p].drawing_set].unit is None for p in drawn_pages(result.model))
 
 
 def test_a_net_between_a_unit_and_its_container_draws_with_no_set_warning(tmp_path: Path) -> None:

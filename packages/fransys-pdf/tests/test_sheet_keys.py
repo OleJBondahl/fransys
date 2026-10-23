@@ -6,6 +6,7 @@ import fransys_render
 import pytest
 from _build import document, drawing_set, layout_page, location, model, source
 
+from electrical_symbols import LIBRARY
 from fransys_model.derive import SheetKey, document_sheets_of, sheet_key_text
 from fransys_model.kernel import render_id
 from fransys_model.vocab import DocumentPreset, PageKind
@@ -36,7 +37,7 @@ def _two_documents():
 
 
 _M, (_A, _B), _SVGS = _two_documents()
-_ALL = fransys_render.sheets(document_sheets_of(_M))
+_ALL = fransys_render.sheets(document_sheets_of(_M), LIBRARY)
 _SHEETS = {key: back for key, back in _ALL.items() if key.document == _A.id}  # A's pages only
 
 

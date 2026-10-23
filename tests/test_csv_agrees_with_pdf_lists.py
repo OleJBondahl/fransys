@@ -25,6 +25,7 @@ from fransys_pdf._lists import (
     wire_rows_for,
 )
 
+from electrical_symbols import LIBRARY
 from fransys_model.derive import cell_text, ends_without_jumpers, pin_lines
 from fransys_model.kernel import make_id
 from fransys_model.vocab import DocumentPreset, Mate
@@ -115,12 +116,12 @@ def _read(exports, prefix):
 
 def _unit_exports(built):
     m, unit_id, *_ = built
-    return _exports(m, {}, {}, unit=unit_id, pdf=fr.settings().pdf)
+    return _exports(m, {}, {}, unit=unit_id, pdf=fr.settings().pdf, library=LIBRARY)
 
 
 def _all_exports(built):
     m, *_ = built
-    return _exports(m, {}, {}, pdf=fr.settings().pdf)
+    return _exports(m, {}, {}, pdf=fr.settings().pdf, library=LIBRARY)
 
 
 def _pdf_terminal_cells(built):

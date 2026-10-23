@@ -29,3 +29,141 @@ ref_tints = ["#ffc0aa", "#85e7cd", "#e4c0ff", "#efcc83", "#80e1fe", "#ffbad4", "
 [pdf]
 list_share_pct = 40  # a list page's column, percent of the content width (pdf-0026, L1)
 list_gutter_pct = 20  # the gap between its two columns, same unit
+
+# Stroke widths in mm and dash patterns in mm: library data a consumer may replace key by key. Every
+# dash number is a float, so the merge reads a list of numbers (symdef prints them, SYMDEF-DATA).
+[lines]
+normal = 0.25
+thick = 0.5
+rule = 0.18
+
+[dash]
+dashed = [1.25, 0.625]
+dash_dot = [4.0, 1.0, 0.25, 1.0]
+long = [4.0, 1.0]
+
+# Capital heights in mm by role; `[font]` name and files are read by their own code.
+[font.heights]
+smallest = 1.8
+body = 2.5
+heading_2 = 3.5
+heading_1 = 5.0
+
+[reference]
+page_prefix = "p"  # opens a page in a reference, "p3"
+cell_sep = ":"  # between the page and the cell, "p3:A1"
+location_sign = "+"  # opens a location in a reference, "+A1"
+set_sep = "."  # between a drawing set and a page, "2.3"
+width_sample = "/99.99"  # a width stand-in for the contact-table and cross-reference column
+
+[frame]
+row_labels = "letters"  # the frame rows A, B, C
+column_labels = "numbers"  # the frame columns 1, 2, 3
+row_order = "top_down"  # rows counted from the top
+
+[stub]
+arrow_in = "←"  # a stub that points up
+arrow_out = "→"  # a stub that points elsewhere
+port_sep = ":"  # between the far end and its ports
+port_join = " "  # between port tails
+
+[wire_label]
+separator = " "  # between the two ends of a wire label
+show_ends = true  # print both ends
+
+[harness]
+branch_sep = "."  # a branch of a harness line, "-W13.n"
+
+[colours]
+pe = "GNYE"  # the protective-earth core
+shield = "SH"  # the screen of a cable
+
+[colours.defaults]  # a wiring row and its [colour, size]; an empty size is none
+AC_L1 = ["BK", ""]
+AC_L2 = ["BK", ""]
+AC_L3 = ["BK", ""]
+AC_N = ["BU", ""]
+AC_CONTROL = ["RD", ""]
+DC_SUPPLY = ["BU", ""]
+DC_CONTROL = ["BU", ""]
+DC_GROUND = ["BU", ""]
+DC_SIGNAL = ["BU", ""]
+
+[title_block]
+fields = ["title", "number", "revision", "revision_date", "customer", "author", "page_title", "scope", "sheet", "page"]
+band_mm = 20.0  # the band's height
+centre_gap_mm = 3.125  # label centre to value centre
+
+[revision_table]
+columns = ["revision", "date", "description", "created", "checked", "approved"]  # keys of [words]
+description_mm = 120.0  # the one wrapping column
+
+[revision]
+date_format = "YYYY-MM-DD"
+initials_required = true
+format = "{version}.{revision}"
+
+[words]
+side_a = "Side A"
+side_b = "Side B"
+wire_from = "from"
+pin = "Pin"
+mate = "Mate"
+designation = "Designation"
+mpn = "MPN"
+description = "Description"
+cores = "Cores"
+gauge = "Gauge"
+length_mm = "Length mm"
+ends = "Ends"
+spare = "spare"
+signal_di = "DI"
+signal_do = "DO"
+signal_ai_ma = "AI (mA)"
+signal_ai_v = "AI (V)"
+signal_ao_ma = "AO (mA)"
+signal_ao_v = "AO (V)"
+signal_rtd = "RTD"
+signal_relay_do = "DO (relay)"
+no = "NO"
+nc = "NC"
+title = "Title"
+number = "Number"
+revision = "Revision"
+revision_date = "Revision date"
+customer = "Customer"
+author = "Author"
+page_title = "Page title"
+scope = "Scope"
+sheet = "Sheet"
+page = "Page"
+block_diagram = "Block diagram"
+schematic = "Schematic"
+harness_drawing = "Harness drawing"
+cover = "Cover"
+notes = "Notes"
+sheets = "Sheets"
+contents = "Contents"
+plc_list = "PLC list"
+terminal_list = "Terminal list"
+connector_list = "Connector list"
+wire_label_list = "Wire label list"
+designation_list = "Designation list"
+cable_list = "Cable list"
+bom = "BOM"
+cabinet_schematic = "Cabinet schematic"
+pcb_schematic = "PCB schematic"
+system = "System"
+continued = "(cont.)"
+range_word = "to"
+and_word = "and"
+more_word = "more"
+list_join = ", "
+bullet = "• "
+numbered = "{i}. "
+ellipsis = "…"
+bridge = "Bridge"
+date = "Date"
+created = "Created"
+checked = "Checked"
+approved = "Approved"

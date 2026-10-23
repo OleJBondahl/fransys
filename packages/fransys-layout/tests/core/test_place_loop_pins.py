@@ -27,6 +27,7 @@ def test_a_loop_column_on_two_card_pins_never_puts_two_nets_on_one_point() -> No
             flip_turn="R180",
             tag_stagger=True,
             label_gap=8,
+            parallel_pitch=48,
             driver_first=True,
             arrow_sides=("E", "W"),
         )

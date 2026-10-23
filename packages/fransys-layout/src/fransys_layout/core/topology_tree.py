@@ -12,8 +12,15 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from .errors import CoreError
-from .series_tree import has_parallel, leaves_of, tree_lanes
-from .topology_chains import MemberDraft, Node, cells_of, member_offset, orient_chain
+from .series_tree import has_parallel, leaves_of, tree_holds, tree_lanes
+from .topology_chains import (
+    MemberDraft,
+    Node,
+    branch_floor,
+    cells_of,
+    member_offset,
+)
+from .topology_orient import orient_chain
 from .values import End, PinRef
 
 if TYPE_CHECKING:
@@ -36,17 +43,21 @@ class TreeFold:
     """One joined lane: its element keys in tree order, and the span of the lane it joins.
 
     `after` is the earlier fold beside the same span it joins instead, as `member_lanes` steps.
-    `source` is the first and the last pole of the tree's lane 0, which stands source first.
+    `source` is lane 0's first and last pole, which stands source first; `holds` the (symbol, G).
     """
 
     members: tuple[str, ...]
     span: tuple[str, ...]
     after: int | None
     source: tuple[str, str]
+    holds: tuple[tuple[str, int], ...] = ()
 
 
 def tree_folds(
-    series: Sequence[Series], ends: Ends, elems: Mapping[str, Elem], drawn: Mapping[str, Sym]
+    series: Sequence[Series],
+    ends: Ends,
+    elems: Mapping[str, Elem],
+    drawn: tuple[Mapping[str, Sym], int],
 ) -> tuple[Ends, tuple[TreeFold, ...]]:
     """The ends without the joined lanes' poles, and one fold per joined lane, tree by tree.
 
@@ -87,10 +98,13 @@ def _poles(ends: Ends, elems: Mapping[str, Elem]) -> tuple[dict[str, str], dict[
 
 
 def _folds(
-    tree: Series, poles: Mapping[str, str], drawn: Mapping[str, Sym], base: int
+    tree: Series, poles: Mapping[str, str], sized: tuple[Mapping[str, Sym], int], base: int
 ) -> list[TreeFold]:
     """One fold per joined lane of `tree`; `base` is the number of folds before it."""
-    lanes = tree_lanes(tree, {leaf: drawn[leaf].footprint.h for leaf in leaves_of(tree)})
+    drawn, wire_min = sized
+    heights = {leaf: drawn[leaf].footprint.h for leaf in leaves_of(tree)}
+    lanes = tree_lanes(tree, heights)
+    holds = tuple(tree_holds(tree, heights, wire_min).items())
     out: list[TreeFold] = []
     source = (poles[lanes[0].leaves[0]], poles[lanes[0].leaves[-1]])
     for i, lane in enumerate(lanes[1:], start=1):
@@ -99,7 +113,7 @@ def _folds(
         left = _sibling(lanes, i)
         members = tuple(poles[x] for x in lane.leaves)
         after = None if left is None else base + left - 1
-        out.append(TreeFold(members, tuple(poles[x] for x in span), after, source))
+        out.append(TreeFold(members, tuple(poles[x] for x in span), after, source, holds))
     return out
 
 
@@ -135,7 +149,9 @@ def tree_member_lanes(
         nets = (facts.net_of.get(top), facts.net_of.get(bottom))
         cells = _cells(fold.members, nets, facts)
         column = [lane for lane in (*lanes, *out) if lane.column == home.column]
-        offset = member_offset(column, cells, facts.syms, options)
+        offset = member_offset(
+            column, cells, facts.syms, options, branch_floor(column, options.parallel_pitch)
+        )
         ends = (End("join", nets[0], top), End("join", nets[1], bottom))
         index = 1 + max(lane.index for lane in column)
         out.append(MemberDraft(home.column, index, list(cells), offset, ends))

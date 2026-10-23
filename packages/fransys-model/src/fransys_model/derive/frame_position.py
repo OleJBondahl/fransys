@@ -2,6 +2,8 @@
 
 lazy from decimal import Decimal
 
+from fransys_model.derive.frame_labels import cell_labels
+from fransys_model.derive.house_settings import frame_form_of, reference_text_of
 from fransys_model.derive.library_grid import mm_per_division
 from fransys_model.derive.placement_reads import node_label
 from fransys_model.derive.set_rank import set_rank
@@ -11,6 +13,7 @@ from fransys_model.kernel import Id, Model
 from fransys_model.layout import (
     DrawingSet,
     Page,
+    ReferenceText,
     layout_of,
     sheet_format_of,
 )
@@ -38,9 +41,7 @@ def frame_column(content_width: int, frame_columns: int, x: int) -> int:
 def row_letter(index: int) -> str:
     """The letter for a 0-based frame-grid row index, A first.
 
-    `fransys_pdf`'s own printed reference grid (`_frame.py::_row_strip`) calls this too, so
-    the grid and a position text can never disagree on what a row is called (DESIGN 4, root
-    CLAUDE.md's "one rule computed in two places").
+    This is the canonical row a membership stores; `frame_labels.cell_labels` names it for print.
     """
     return chr(ord("A") + index)
 
@@ -56,9 +57,9 @@ def frame_row(content_height: int, frame_rows: int, y: int) -> str:
 
 
 def position_text(  # noqa: PLR0913 -- one form for every position; own_page is the keyword (model-0136)
+    refs: ReferenceText,
     page_number: int,
-    column: int | None,
-    row: str | None,
+    labels: tuple[str, str] | None,
     location_labels: tuple[str, ...],
     set_number: int | None = None,
     *,
@@ -66,19 +67,22 @@ def position_text(  # noqa: PLR0913 -- one form for every position; own_page is 
 ) -> str:
     """`p<page_number>:<column><row>`, prefixed by `+<label>` for each of `location_labels`.
 
-    The one form for every printed position; `row` is `frame_row`'s letter. A caller passes `()`
-    for `location_labels` in the same set. `own_page` equal to `page_number` prints the cell.
-    With no `column` and `row` it names the page alone, `p3`: a finding about a whole page.
+    The one form for every printed position; `labels` is `cell_labels`' printed (column, row), its
+    signs and its `p` are `refs`. A caller passes `()` for `location_labels` in the same set.
+    `own_page` equal to `page_number` prints the cell. With no `labels` it names the page alone,
+    `p3`: a finding about a whole page.
     """
-    cell = "" if column is None else f":{column}{row}"
+    cell = "" if labels is None else "".join(labels)
     if own_page == page_number and cell and not location_labels and set_number is None:
-        return cell[1:]
+        return cell
+    if cell:
+        cell = refs.cell_sep + cell
     if not location_labels and set_number is not None:
         # A place in another drawing set with no location
         # prefix still names its set, "p3.2:1A" (set.page, then cell), so it is never ambiguous
-        return f"p{set_page_text(set_number, page_number)}{cell}"
-    prefix = "".join(f"+{label}" for label in location_labels)
-    return f"{prefix}p{page_number}{cell}"
+        return f"{refs.page_prefix}{set_page_text(refs, set_number, page_number)}{cell}"
+    prefix = "".join(f"{refs.location_sign}{label}" for label in location_labels)
+    return f"{prefix}{refs.page_prefix}{page_number}{cell}"
 
 
 def location_prefix(own_path: LocationPath, partner_path: LocationPath) -> tuple[str, ...]:
@@ -129,19 +133,24 @@ def location_path(model: Model, node: Id[AspectNode] | None) -> LocationPath:
 
 
 def partner_position_text(
-    own: Seat, partner: Seat, column: int, row: str, *, same_set: bool | None = None
+    refs: ReferenceText,
+    own: Seat,
+    partner: Seat,
+    labels: tuple[str, str],
+    *,
+    same_set: bool | None = None,
 ) -> str:
     """A partner's position as `own` reads it, on plain values.
 
     A seat is (set number, page, location path). The same set prints the cell, `own`'s page
     kept (model-0136); another adds the prefix below the common ancestor, else its set
     number. The one place that text is built. `same_set` says it when the seats hold ranks,
-    which two sets of different units share.
+    which two sets of different units share. `labels` is the printed (column, row).
     """
     (own_set, own_page, own_path), (set_number, page, path) = own, partner
     if own_set == set_number if same_set is None else same_set:
-        return position_text(page, column, row, (), own_page=own_page)
-    return position_text(page, column, row, location_prefix(own_path, path), set_number)
+        return position_text(refs, page, labels, (), own_page=own_page)
+    return position_text(refs, page, labels, location_prefix(own_path, path), set_number)
 
 
 def _seat(model: Model, page: Page) -> Seat:
@@ -150,14 +159,16 @@ def _seat(model: Model, page: Page) -> Seat:
     return set_rank(model, page), page.number, location_path(model, drawing_set.location)
 
 
-def position_between(model: Model, own_page: Page, partner_page: Page, x: int, row: str) -> str:
-    """The position at `x`/`row` on `partner_page`, read from `own_page`: the lookups."""
-    column = cell(model, partner_page, x, 0)[0]
+def position_at(model: Model, own_page: Page, partner_page: Page, column: int, row: str) -> str:
+    """The frame cell `column`, `row` on `partner_page`, read from `own_page`: the lookups."""
+    rows = sheet_format_of(model, partner_page.sheet_format).frame_rows
+    labels = cell_labels(frame_form_of(model), rows, column, row)
     same = own_page.drawing_set == partner_page.drawing_set
     seats = _seat(model, own_page), _seat(model, partner_page)
-    return partner_position_text(*seats, column, row, same_set=same)
+    return partner_position_text(reference_text_of(model), *seats, labels, same_set=same)
 
 
 def place_text(model: Model, own_page: Page, partner_page: Page, x: int, y: int) -> str:
     """The cell at `x`, `y` on `partner_page` as `own_page` reads it: derive's one text."""
-    return position_between(model, own_page, partner_page, x, cell(model, partner_page, x, y)[1])
+    column, row = cell(model, partner_page, x, y)
+    return position_at(model, own_page, partner_page, column, row)

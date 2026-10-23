@@ -26,7 +26,7 @@ from .blocks_members import (
 from .keys import natural_key
 from .pack_row import row_width
 from .rowspec import one_row
-from .values import BlockList
+from .values import BlockList, Size
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
@@ -34,17 +34,28 @@ if TYPE_CHECKING:
     from .values import Block, Finding, FlowGraph, Options, PlacementProblem
 
 
+def _less(problem: PlacementProblem, arrows: int) -> PlacementProblem:
+    """The problem on a page narrowed by the arrows a card's row keeps free (RL-W2)."""
+    return replace(problem, area=Size(problem.area.w - arrows, problem.area.h))
+
+
 def assign_blocks(
-    flow: FlowGraph, problem: PlacementProblem, options: Options
+    flow: FlowGraph,
+    problem: PlacementProblem,
+    options: Options,
+    arrows: Mapping[str, int] | None = None,
 ) -> tuple[BlockList, ...]:
-    """One BlockList per unit (one empty list for an empty flow), blocks in group order."""
+    """One BlockList per unit (one empty list for an empty flow), blocks in group order.
+
+    `arrows` is the measured arrow width of each card's row, which its edges must leave free.
+    """
     env = make_env(flow, problem, options)
     box_of = attached_boxes(flow)
     by_box: dict[str, list[str]] = defaultdict(list)
     for col, box in box_of.items():
         by_box[box].append(col)
     edges = {
-        b: card_edges(b, cols, flow, problem, options)
+        b: card_edges(b, cols, flow, _less(problem, (arrows or {}).get(b, 0)), options)
         for b, cols in sorted(by_box.items(), key=lambda kv: natural_key(kv[0]))
     }
     spill = [c for e in edges.values() for c in e.spilled]
@@ -100,18 +111,26 @@ def _overfull_notes(
 def _unit_list(
     unit: str, blocks: Sequence[Block], notes: Sequence[Finding], env: Env, spill: Sequence[str]
 ) -> BlockList:
-    """Group order, then natural key of the anchor or first column, then the authored hints.
+    """Group order, then symbol rank, then natural key of the anchor or first column, then hints.
 
     The spilled columns stand after the cards and the first starts a page (PAGE-CUT).
     """
     rank = env.rank
-    ordered = sorted(
-        blocks,
-        key=lambda b: (rank.get(b.group or "", len(rank)), natural_key(b.anchor or b.columns[0])),
-    )
+    ranks = {s.id: s.rank for s in env.problem.symbols if s.rank is not None}
+    ordered = sorted(blocks, key=lambda b: (rank.get(b.group or "", len(rank)), *_tie(b, ranks)))
     out, findings = apply_hints(ordered, env.problem.hints, env)
     out = _spilled_last(out, spill)
     return BlockList(unit, tuple(out), (*notes, *findings))
+
+
+def _tie(
+    block: Block, ranks: Mapping[str, int]
+) -> tuple[int, int, tuple[tuple[int, int | str], ...]]:
+    """A ranked anchor stands by its rank (0388), the rest after them by natural key."""
+    anchor = block.anchor or block.columns[0]
+    if anchor in ranks:
+        return 0, ranks[anchor], natural_key("")
+    return 1, 0, natural_key(anchor)
 
 
 def _spilled_last(blocks: Sequence[Block], spill: Sequence[str]) -> list[Block]:

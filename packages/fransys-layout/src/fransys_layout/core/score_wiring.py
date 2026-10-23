@@ -27,6 +27,8 @@ class Polyline(Protocol):
     def page(self) -> int: ...
     @property
     def points(self) -> tuple[XY, ...]: ...
+    @property
+    def kind(self) -> str: ...
 
 
 def _heading(a: XY, b: XY) -> tuple[int, int]:
@@ -47,7 +49,7 @@ def shape(points: tuple[XY, ...]) -> tuple[int, int, int, int]:
 
 
 def bundles(fans: Iterable[Fan]) -> dict[str, str]:
-    """Each member net of a bundle fan to the fan's id: the id its trunk wire carries."""
+    """Each member net of a bundle fan to the fan's id: the members of one fan share a trunk."""
     return {net: fan.id for fan in fans if fan.lanes > 1 for net in fan.nets}
 
 
@@ -56,23 +58,23 @@ def crossing_points(
 ) -> set[tuple[int, int, str, str]]:
     """Distinct (x, y, horizontal net, vertical net) where a run passes straight across another.
 
-    A member's drop never crosses its own bundle's trunk: `bundle_of` names that pair.
+    A member's drop never crosses a trunk line of its own bundle: `bundle_of` names the members.
     """
     own = bundle_of or {}
     horizontal, vertical = [], []
     for wire in wires:
+        owner = own.get(wire.net) if wire.kind == "trunk" else None
         for a, b in pairwise(wire.points):
             if a[1] == b[1] and a[0] != b[0]:
-                horizontal.append((wire.net, a[1], min(a[0], b[0]), max(a[0], b[0])))
+                horizontal.append((wire.net, a[1], min(a[0], b[0]), max(a[0], b[0]), owner))
             elif a[0] == b[0] and a[1] != b[1]:
                 vertical.append((wire.net, a[0], min(a[1], b[1]), max(a[1], b[1])))
     return {
         (x, y, hn, vn)
-        for hn, y, left, right in horizontal
+        for hn, y, left, right, owner in horizontal
         for vn, x, top, bottom in vertical
         if hn != vn
-        and own.get(hn) != vn
-        and own.get(vn) != hn
+        and (owner is None or owner != own.get(vn))
         and left < x < right
         and top < y < bottom
     }

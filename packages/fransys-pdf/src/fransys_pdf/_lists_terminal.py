@@ -12,6 +12,7 @@ from fransys_model.derive import (
 
 from ._bridge import BRIDGE_COLUMN_WIDTH_MM, bridge_cell_typst, bridge_geometry
 from ._lists_cells import _cell_typst, _kept_columns, _widths
+from ._sizes import rule_of
 from ._tables import table_source
 from ._typst import literal
 
@@ -44,6 +45,7 @@ def _terminal_table(  # noqa: PLR0913 -- one table's headings and keyword-only t
     title: str = "",
     label: str = "",
     bridges: Mapping[str, BridgePieceRow] | None = None,
+    bridge_word: str,
 ) -> str:
     """The TERMINAL_LIST table: data columns, then a Bridge column of placed marks (pdf-0049)."""
     if not rows:
@@ -62,7 +64,7 @@ def _terminal_table(  # noqa: PLR0913 -- one table's headings and keyword-only t
         return ""
     headers = [
         side_label.get(_TERMINAL_DATA[i]) or column_label(_TERMINAL_DATA[i]) for i in kept
-    ] + (["Bridge"] if bridge else [])
+    ] + ([bridge_word] if bridge else [])
     body = []
     for row_values, row_marks in zip(values, geometry, strict=True):
         cells = [_cell_typst(row_values[i]) for i in kept]
@@ -73,4 +75,4 @@ def _terminal_table(  # noqa: PLR0913 -- one table's headings and keyword-only t
     if bridge:
         widths.append(f"{BRIDGE_COLUMN_WIDTH_MM}mm")
     heads = [f"strong(text({literal(h)}))" for h in headers]
-    return table_source(widths, heads, body, title=title, label=label)
+    return table_source(widths, heads, body, rule=rule_of(model), heading=(title, label))

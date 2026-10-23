@@ -9,6 +9,7 @@ import typst
 from _pdf_lists import source
 from demo_designs import cabinet_design
 
+from electrical_symbols import LIBRARY
 from fransys_model.derive import document_page_kinds, document_sheets_of
 from fransys_model.kernel import render_id
 from fransys_model.layout import DrawingSet, Page, layout_of
@@ -176,7 +177,9 @@ def test_every_page_carries_the_frame_including_a_drawing_page(tmp_path):
     assert drawing_pages  # the cabinet design places symbols at C1, so layout drew a page
     svgs = {render_id(page.id): _STUB_DRAWING_SVG for page in drawing_pages}
 
-    text = source(model, document_id, svgs, fransys_render.sheets(document_sheets_of(model)))
+    text = source(
+        model, document_id, svgs, fransys_render.sheets(document_sheets_of(model), LIBRARY)
+    )
     typst.compile(input=text.encode())  # compiles on its own: proves it's a real document
 
     number = ">DEMO-1</text>"  # the project number (project.number), drawn in the title block

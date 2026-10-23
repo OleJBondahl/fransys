@@ -83,8 +83,8 @@ def test_open_core_text_says_spare_for_a_core_and_screen_for_a_screen() -> None:
     model = plant.model()
     spare, screen = open_core_rows(model, cable)
     pairs = drawn_pairs(model, cable)
-    assert open_core_text(spare, core_mark(pairs, 3)) == "3 WH spare"
-    assert open_core_text(screen, core_mark(pairs, 5)) == "5 SH screen P1"
+    assert open_core_text("spare", spare, core_mark(pairs, 3)) == "3 WH spare"
+    assert open_core_text("spare", screen, core_mark(pairs, 5)) == "5 SH screen P1"
 
 
 def test_a_pair_mark_prints_only_off_a_bracket() -> None:

@@ -1,6 +1,5 @@
-"""The consumer's `[grid]` and `[font]`, and the build's `Library` made from them (ST3-ST5)."""
+"""The consumer's `[grid]`, `[font]`, `[lines]`, `[dash]` and the build's `Library` (ST3-ST5)."""
 
-from functools import cache
 from pathlib import Path
 from typing import TYPE_CHECKING, cast
 
@@ -10,8 +9,11 @@ from ._settings_merge import SettingsError, Table, known
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
+    from enum import Enum
 
-__all__ = ["build_library", "font_dirs", "merged_font", "merged_grid"]
+    from .settings import Settings
+
+__all__ = ["build_library", "font_dirs", "library_of", "merged_font", "merged_grid", "weight_name"]
 
 _LIBRARY_GRID = ("divisions_per_module", "wire_pitch", "wire_pitch_fine")
 _GRID_REASON = (
@@ -51,18 +53,20 @@ def _face(base: Path | None, text: object, which: str, where: str) -> Path:
 
 
 def merged_font(given: Table, where: str, base: Path | None) -> dict[str, object]:
-    """The `[font]` table: empty (the house font) or `name` and the two `files` paths."""
-    if not given:
+    """The `[font]` table: empty (the house font) or `name` and the two `files` paths.
+
+    `[font.heights]` is a table of the generic merge and plays no part here.
+    """
+    own = {key: value for key, value in given.items() if key != "heights"}
+    if not own:
         return {}
-    for key in given:
-        if key == "heights":
-            msg = f'{where} [font] "heights" are library data: the text sizes stay the library\'s'
-        elif key not in _FONT_KEYS:
-            msg = f'{where} [font] "{key}" is not a setting; known: {known(_FONT_KEYS)}'
-        else:
-            continue
-        raise SettingsError(msg)
-    files = given.get("files")
+    for key in own:
+        if key not in _FONT_KEYS:
+            msg = (
+                f'{where} [font] "{key}" is not a setting; known: {known((*_FONT_KEYS, "heights"))}'
+            )
+            raise SettingsError(msg)
+    files = own.get("files")
     if not isinstance(files, list) or len(files) != len(("regular", "bold")):
         msg = f"{where} [font] needs {_FILES_HINT}, got {files!r}"
         raise SettingsError(msg)
@@ -70,30 +74,54 @@ def merged_font(given: Table, where: str, base: Path | None) -> dict[str, object
         _face(base, text, which, where)
         for text, which in zip(files, ("regular", "bold"), strict=True)
     )
-    return {"name": str(given.get("name", "")), "files": (regular, bold)}
+    return {"name": str(own.get("name", "")), "files": (regular, bold)}
 
 
-@cache
-def _measured(module_mm: float, font: tuple[bytes, bytes] | None) -> Library:
-    """The library with the grid module and font replaced; symdef checks every value."""
-    return LIBRARY.with_settings(module_mm=module_mm, font=font)
+def weight_name(weight: Enum) -> str:
+    """The settings key of a symdef line weight: `[lines]` and the drawing record spell it so."""
+    return weight.name.lower()
 
 
-def build_library(grid: Mapping[str, object], font: Mapping[str, object], where: str) -> Library:
-    """The build's `Library`: `LIBRARY` with the merged module and the consumer font.
+def build_library(
+    grid: Mapping[str, object],
+    font: Mapping[str, object],
+    tables: Mapping[str, Mapping[str, object]],
+    where: str,
+) -> Library:
+    """The build's `Library`: `LIBRARY` with the merged module, font, heights, lines and dashes.
 
-    Raises `SettingsError` when symdef refuses a value or a symbol's text leaves its body.
+    `tables` holds the merged `lines`, `dash` and `heights` whole; symdef replaces each table
+    with them. Raises `SettingsError` when symdef refuses a value or a text leaves its body.
     """
     module = cast("float", grid["module_mm"])
-    if not font and module == LIBRARY.grid.module_mm:
-        return LIBRARY
     files = cast("tuple[Path, Path]", font.get("files"))
     pair = None if not font else (files[0].read_bytes(), files[1].read_bytes())
+    weights = {weight_name(weight): weight for weight in LIBRARY.lines}
+    heights = cast("Mapping[str, float]", tables["heights"])
+    lines = cast("Mapping[str, float]", tables["lines"])
+    dash = cast("Mapping[str, list[float]]", tables["dash"])
     try:
-        return _measured(module, pair)
+        return LIBRARY.with_settings(
+            module_mm=module,
+            font=pair,
+            heights={name: float(mm) for name, mm in heights.items()},
+            lines={weights[name]: float(mm) for name, mm in lines.items()},
+            dash={name: tuple(float(mm) for mm in run) for name, run in dash.items()},
+        )
     except SymdefError as error:
-        msg = f"{where} {'[font]' if font else '[grid] "module_mm"'}: {error}"
+        section = "[font]" if font else '[grid] "module_mm"'
+        msg = f"{where} {section}: {error}"
         raise SettingsError(msg) from error
+
+
+def library_of(settings: Settings) -> Library:
+    """The build's `Library` for `settings`, made once per build."""
+    tables = {
+        "lines": settings.table("lines"),
+        "dash": settings.table("dash"),
+        "heights": cast("Table", settings.table("font")["heights"]),
+    }
+    return build_library(settings.grid, settings.font, tables, "the settings")
 
 
 def font_dirs(font: Mapping[str, object]) -> tuple[Path, ...]:

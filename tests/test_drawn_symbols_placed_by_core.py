@@ -37,13 +37,25 @@ POWER_KEYS = {power_symbol_key(kind) for kind in ("supply", "ground", "pe")}
 # Re-measured on the merge with the text-stage tail (R448 junction dots), after the first measure on
 # the text-stage tip (59f273812) with the page-aware equality test: TS's own stocks were page-blind
 # and loose (`<=`); every case fell (skid 34 -> 15, mcc 129 -> 112, ...).
+# RL-W2 (PORT-LINE): machine_panel 231 -> 246, panel_di16p 237 -> 244, remote_io 78 -> 82. A
+# terminal on a card pin lets trunks branch there: +11, 0 and +4 junction dots, drawn from wires;
+# and +4, +7 and 0 turned arrows or reference markers of the page cut. A rise: PIN-HANGINGS (R496)
+# anchors them as footprint keeps.
+# Covered by: PIN-HANGINGS - layout place_y/hangings; base machine_panel 22/mcc 10/remote_io 1
+# (annex), 231/237/78 (unanchored): the unanchored counts are machine_panel, panel_di16p, remote_io.
+# RL-W1 (R486, BUNDLE): a trunk draws one line per pole, and each pole's drop meets its own lane at
+# a T that gets a dot: skid 18 -> 21, distribution_board 29 -> 44, mcc 131 -> 160 (dots only; the
+# reference markers moved, none added).
+# XF-UNIT-SCOPE (R514): machine_panel 246 -> 309, panel_di16p 244 -> 307, remote_io 82 -> 118, mcc
+# 160 -> 170. The rise comes from UNIT-SCOPE's stub marker-arrows, a hanging kind (H1); a stub per
+# line (R467). Covered by: PIN-HANGINGS - layout anchors (R496 bar, R514).
 r308_unplaced_symbols = {
-    "skid": 18,
-    "machine_panel": 231,
-    "panel_di16p": 237,
-    "remote_io": 78,
-    "distribution_board": 29,
-    "mcc": 131,
+    "skid": 21,
+    "machine_panel": 309,
+    "panel_di16p": 307,
+    "remote_io": 118,
+    "distribution_board": 44,
+    "mcc": 170,
 }
 
 # Per case: the drawn route points (every vertex of every drawn wire) that no core route point

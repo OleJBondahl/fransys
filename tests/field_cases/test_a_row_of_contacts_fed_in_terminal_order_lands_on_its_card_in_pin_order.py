@@ -17,17 +17,12 @@ from functools import cache
 from pathlib import Path
 
 import fransys as fr
+from _drawn_facts import symbol_subjects
 from _drawn_pages import drawn_pages
 from fransys.colours import BU
 
 WIRE = (BU, 0.5)
 LANDS = {"F5": 6, "F6": 4, "F7": 5}  # contact -> the channel it feeds, fed from terminal 1, 2, 3
-
-
-def _gap(model, fact: str):
-    """A fact the page Drawing lacks (strict xfail, GAP-FLIP-DRAWING-SUBJECT)."""
-    msg = f"GAP-FLIP-DRAWING-SUBJECT: no {fact} for {model.digest}"
-    raise AssertionError(msg)
 
 
 @cache
@@ -66,7 +61,7 @@ def _crossings(wires: tuple) -> int:
 def test_the_contacts_stand_in_the_order_of_the_channel_pins_they_feed() -> None:
     """A card stands channels on two sides: the contacts follow the pins x, not the numbers."""
     model = _built().model
-    drawn = {(r.owner or "").partition(" ")[0]: r for r in _gap(model, "symbol subject").values()}
+    drawn = {s.tag: s for s in symbol_subjects(model)}
     card = drawn["K1"]
     pin_x = {tag: card.x + dict(card.offsets)[f"di_{ch}.{ch}"] for tag, ch in LANDS.items()}
     x = {tag: drawn[tag].x for tag in LANDS}

@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING
 from .cycles import cycle_split
 from .geometry import column_extent, stack_lane
 from .keys import natural_key
+from .series_tree import anchor_signs
 from .topology_boxchain import box_chains
 from .topology_chains import (
     Ends,
@@ -18,7 +19,6 @@ from .topology_chains import (
     fold_parallel,
     links_of,
     member_lanes,
-    orient_chains,
 )
 from .topology_check import cell_findings
 from .topology_elements import (
@@ -27,8 +27,10 @@ from .topology_elements import (
     net_ends,
     wired_pins,
 )
+from .topology_hold import hold_cells
 from .topology_lanes import lanes_of
 from .topology_nets import Attached, FanEnv, cross_link, fans_split
+from .topology_orient import orient_chains
 from .topology_split import (
     bundle_conflicts,
     check_acyclic,
@@ -77,7 +79,9 @@ def build_flow(problem: PlacementProblem, options: Options) -> FlowGraph:
     wired = wired_pins(problem)
     drawn = {s.id: s for s in problem.symbols}
     elems = {e.key: e for s in drawn.values() for e in elements(s, wired)}
-    ends, folds, tree = _folded(problem, _ends_of(problem, wired, drawn, elems), elems, drawn)
+    ends, folds, tree = _folded(
+        problem, _ends_of(problem, wired, drawn, elems), elems, (drawn, options.wire_min)
+    )
     ends, chain_lanes, notes = box_chains(ends, drawn, options, problem.facts.series)
     facts = Facts(
         elems,
@@ -87,11 +91,22 @@ def build_flow(problem: PlacementProblem, options: Options) -> FlowGraph:
         options.end_bias_weight,
         options.flip_turn,
         {net: b.id for net, b in _bundles(problem).items()},
+        anchor_signs(problem.facts.series),
     )
     links = links_of(ends)
     lanes, slot = _laid(links, (ends, folds, tree), facts, (options, chain_lanes))
     fans, cross, attached = fans_split(
-        ends, links, FanEnv(slot, lanes, elems, drawn, _bundles(problem), options.bundle_direction)
+        ends,
+        links,
+        FanEnv(
+            slot,
+            lanes,
+            elems,
+            drawn,
+            _bundles(problem),
+            options.bundle_direction,
+            cut=frozenset(n.id for n in problem.nets if n.cut),
+        ),
     )
     env = ColumnEnv(drawn, options, *_nets_of(fans, cross), attached, facts.net_of)
     env, cross = _unseat_boxes(lanes, env, fans, cross, ends)
@@ -121,7 +136,9 @@ def _laid(
     lanes, slot = lanes_of(
         source_first(oriented, tree, facts), facts.elems, facts.syms, options.flip_turn
     )
-    return [*lanes, *_members((folds, tree), lanes, facts, options), *chain_lanes], slot
+    found = [*lanes, *_members((folds, tree), lanes, facts, options), *chain_lanes]
+    hold_cells(found, tree)
+    return found, slot
 
 
 def _bundles(problem: PlacementProblem) -> dict[str, Bundle]:
@@ -129,11 +146,14 @@ def _bundles(problem: PlacementProblem) -> dict[str, Bundle]:
 
 
 def _folded(
-    problem: PlacementProblem, ends: Ends, elems: Mapping[str, Elem], drawn: Mapping[str, Sym]
+    problem: PlacementProblem,
+    ends: Ends,
+    elems: Mapping[str, Elem],
+    sized: tuple[Mapping[str, Sym], int],
 ) -> tuple[Ends, dict[str, tuple[str, ...]], tuple[TreeFold, ...]]:
     """The ends without the series-parallel trees' joined poles, then without the folds' members."""
-    ends, tree = tree_folds(problem.facts.series, ends, elems, drawn)
-    ends, folds = fold_parallel(ends, elems, drawn)
+    ends, tree = tree_folds(problem.facts.series, ends, elems, sized)
+    ends, folds = fold_parallel(ends, elems, sized[0])
     return ends, folds, tree
 
 
@@ -201,7 +221,7 @@ def _split_cycles(
     columns = _columns(lanes, env)
     cuts = cut_nets(columns, fans, env.net_of)
     if cuts:
-        fans, cross = split_fans(fans, cross, cuts, env.net_of)
+        fans, cross = split_fans(fans, cross, cuts)
         fan_of_net, cross_nets = _nets_of(fans, cross)
         columns = _columns(lanes, replace(env, fan_of_net=fan_of_net, cross_nets=cross_nets))
     check_acyclic(columns, fans)

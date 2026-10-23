@@ -6,7 +6,6 @@ from pathlib import Path
 import fransys_model
 
 _SRC = Path(fransys_model.__file__).parent
-_HOME = "derive/sheet_forms.py"
 
 
 def _dotted_page_writers() -> list[str]:
@@ -29,9 +28,6 @@ def _dotted_page_writers() -> list[str]:
     return found
 
 
-def test_set_page_text_is_the_only_writer_of_the_set_page_pair() -> None:
-    """No f-string but `set_page_text`'s glues a set number to a page number with a dot."""
-    writers = _dotted_page_writers()
-    assert [w.split(":")[0] for w in writers] == [
-        _HOME
-    ]  # the scan sees the home, so a second shows
+def test_no_f_string_glues_a_set_number_to_a_page_number_with_a_typed_dot() -> None:
+    """`set_page_text` reads the `[reference]` set_sep, so no site types the dot (B2a, C2.1)."""
+    assert _dotted_page_writers() == []

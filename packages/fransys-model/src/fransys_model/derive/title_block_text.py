@@ -10,13 +10,13 @@ from fransys_model.vocab.tables import documents
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab import Document
 
+from .house_settings import title_block_form_of, word
 from .rows_sheet import FieldOverflow, Sizes, TitleBlockFields, TitleBlockStrings
-from .rows_sheet_pages import DocumentSheets, TitleBlockOverflow
+from .rows_sheet_pages import DocumentSheets, TitleBlockOverflow, TitleBlockText
 from .text_width import UNITS_PER_EM, text_units
 from .title_block import document_facts
 
 __all__ = [
-    "TITLE_BLOCK_LABELS",
     "cut_to_width",
     "field_printed",
     "fits",
@@ -29,38 +29,24 @@ __all__ = [
     "text_width_mm",
     "title_block_overflows",
     "title_block_strings",
+    "title_block_words",
 ]
-
-# the words a title-block cell prints above its value, by slot id (moved from `fransys_pdf._frame`)
-TITLE_BLOCK_LABELS = frozendict(
-    {
-        "title": "Title",
-        "number": "Number",
-        "revision": "Revision",
-        "revision_date": "Revision date",
-        "customer": "Customer",
-        "author": "Author",
-        "page_title": "Page title",
-        "scope": "Scope",
-        "sheet": "Sheet",
-        "page": "Page",
-    }
-)
 
 _NOTICE_LINE_EM = 1.2  # the notice's line pitch in em
 
-# field name in `TitleBlockFields` -> the slot id that holds it (`sheet_counter` fills `sheet`)
-_SLOTS = (
-    ("title", "title"),
-    ("number", "number"),
-    ("revision", "revision"),
-    ("revision_date", "revision_date"),
-    ("customer", "customer"),
-    ("author", "author"),
-    ("page_title", "page_title"),
-    ("scope", "scope"),
-    ("sheet_counter", "sheet"),
-)
+# the cell whose `TitleBlockFields` field has another name (`sheet_counter` fills `sheet`)
+_FIELD_OF_CELL = {"sheet": "sheet_counter"}
+# the cell pdf fills with the page counter: it holds no field of `TitleBlockFields`
+_COUNTER_CELL = "page"
+
+
+def title_block_words(model: Model) -> TitleBlockText:
+    """The labels of the `[title_block]` record's cells, in its order, and the cut mark."""
+    cells = title_block_form_of(model).fields
+    return TitleBlockText(
+        labels=frozendict({cell: word(model, cell) for cell in cells}),
+        ellipsis=word(model, "ellipsis"),
+    )
 
 
 def text_width_mm(text: str, *, size_mm: float, bold: bool = False) -> float:
@@ -74,12 +60,12 @@ def fits(text: str, *, size_mm: float, bold: bool = False, width_mm: float) -> b
 
 
 def cut_to_width(
-    text: str, *, size_mm: float, bold: bool = False, width_mm: float
+    text: str, *, ellipsis: str, size_mm: float, bold: bool = False, width_mm: float
 ) -> tuple[str, bool]:
-    """`(shown, was_cut)`: `text` if it fits, else cut by character plus `…`."""
+    """`(shown, was_cut)`: `text` if it fits, else cut by character plus `ellipsis`."""
     if fits(text, size_mm=size_mm, bold=bold, width_mm=width_mm):
         return text, False
-    ellipsis_width = text_width_mm("…", size_mm=size_mm, bold=bold)
+    ellipsis_width = text_width_mm(ellipsis, size_mm=size_mm, bold=bold)
     budget = width_mm - ellipsis_width
     kept = ""
     for ch in text:
@@ -87,7 +73,7 @@ def cut_to_width(
         if text_width_mm(candidate, size_mm=size_mm, bold=bold) > budget:
             break
         kept = candidate
-    return kept + "…", True
+    return kept + ellipsis, True
 
 
 def one_line_field(
@@ -110,9 +96,10 @@ def one_line_field(
     return candidates[-1], False
 
 
-def field_printed(
+def field_printed(  # noqa: PLR0913 -- the text, its cut mark, room, size, weight and shorter forms
     text: str,
     *,
+    ellipsis: str,
     room_mm: float,
     size_mm: float,
     bold: bool = False,
@@ -121,7 +108,7 @@ def field_printed(
     """`(base, fits, printed)` of a one-line cell: `printed` is the base, cut if it misses."""
     metrics = {"size_mm": size_mm, "bold": bold, "width_mm": room_mm}
     base, ok = one_line_field(text, shorter=shorter, **metrics)
-    return base, ok, base if ok else cut_to_width(base, **metrics)[0]
+    return base, ok, base if ok else cut_to_width(base, ellipsis=ellipsis, **metrics)[0]
 
 
 def notice_lines(text: str, *, width_mm: float, font_mm: float) -> tuple[str, ...]:
@@ -131,13 +118,13 @@ def notice_lines(text: str, *, width_mm: float, font_mm: float) -> tuple[str, ..
         return ()
     lines = []
     current = words[0]
-    for word in words[1:]:
-        candidate = f"{current} {word}"
+    for token in words[1:]:
+        candidate = f"{current} {token}"
         if text_width_mm(candidate, size_mm=font_mm) <= width_mm:
             current = candidate
         else:
             lines.append(current)
-            current = word
+            current = token
     lines.append(current)
     return tuple(lines)
 
@@ -171,16 +158,22 @@ def title_block_strings(
     rooms: Mapping[str, float],
     sizes: Sizes,
     *,
-    notice_width_mm: float,
-    notice_capacity: int,
+    text: TitleBlockText,
+    notice: tuple[float, int],
 ) -> TitleBlockStrings:
-    """What the title block prints: each field cut to its slot's room, the notice wrapped."""
+    """What the title block prints: each field cut to its slot's room, the notice wrapped.
+
+    `notice` is the notice cell's width in mm and the number of lines it holds.
+    """
+    notice_width_mm, notice_capacity = notice
     printed: dict[str, str] = {}
     unfit = []
-    for name, slot in _SLOTS:
+    for slot in (cell for cell in text.labels if cell != _COUNTER_CELL):
+        name = _FIELD_OF_CELL.get(slot, slot)
         shorter = fields.page_title_shorter if name == "page_title" else ()
         base, ok, shown = field_printed(
             getattr(fields, name),
+            ellipsis=text.ellipsis,
             room_mm=rooms[slot],
             size_mm=sizes.body,
             bold=name == "title",
@@ -204,12 +197,22 @@ _DOCUMENT_FIELDS = ("title", "number", "customer", "revision", "revision_date", 
 
 
 def _misses(
-    field: str, forms: tuple[str, ...], where: str, *, rooms: Mapping[str, float], body_mm: float
+    field: str,
+    forms: tuple[str, ...],
+    where: str,
+    *,
+    rooms: Mapping[str, float],
+    body_mm: float,
 ) -> TitleBlockOverflow | None:
-    """The overflow of one field's text (`forms`: the preferred, then shorter ones), or `None`."""
+    """The overflow of one field's text (`forms`: the preferred, then shorter ones), or `None`.
+
+    A field whose cell the `[title_block]` record leaves out prints nowhere and overflows nowhere.
+    """
     slot = "sheet" if field == "sheet_counter" else field
-    base, ok, _printed = field_printed(
-        forms[0], room_mm=rooms[slot], size_mm=body_mm, bold=field == "title", shorter=forms[1:]
+    if slot not in rooms:
+        return None
+    base, ok = one_line_field(
+        forms[0], width_mm=rooms[slot], size_mm=body_mm, bold=field == "title", shorter=forms[1:]
     )
     return None if ok else TitleBlockOverflow(field=field, where=where, shown=base)
 
@@ -219,7 +222,8 @@ def title_block_overflows(
 ) -> tuple[TitleBlockOverflow, ...]:
     """The fields that miss their cell: the six document-level ones, then each checked page's."""
     record = documents(model)[document]
-    miss = partial(_misses, rooms=rooms, body_mm=sheets.sizes.body)
+    printed = {cell: rooms[cell] for cell in sheets.title_text.labels if cell in rooms}
+    miss = partial(_misses, rooms=printed, body_mm=sheets.sizes.body)
     facts = dict(zip(_DOCUMENT_FIELDS, document_facts(model, record.id), strict=True))
     found = [miss(f, (facts[f],), "document") for f in _DOCUMENT_FIELDS]
     seen: set[str] = set()

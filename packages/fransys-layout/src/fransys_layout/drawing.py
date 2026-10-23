@@ -10,6 +10,7 @@ from typing import Literal
 
 lazy from .core.values import XY, Box, Orientation, Side, Size
 lazy from .drawing_reads import (
+    fill_percent,
     page_texts,
     struck_texts,
     text_overlaps,
@@ -31,6 +32,7 @@ __all__ = (
     "Style",
     "TextStyle",
     "WireStyle",
+    "fill_percent",
     "page_texts",
     "port_points",
     "struck_texts",
@@ -45,12 +47,16 @@ Corner = Literal["NW", "NE", "SW", "SE"]
 
 @dataclass(frozen=True, slots=True)
 class DrawnText:
-    """One text: its final string, its box in G and the corner of the box it is anchored by."""
+    """One text: its final string, its box in G and the corner of the box it is anchored by.
+
+    `owner` is the id of the drawn item the text annotates, `None` for a free text.
+    """
 
     text: str
     box: Box
     kind: str
     anchor: Corner
+    owner: str | None = None
 
 
 @dataclass(frozen=True, slots=True)

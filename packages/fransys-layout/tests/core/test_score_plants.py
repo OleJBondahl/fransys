@@ -41,7 +41,7 @@ def _box(
 
 
 def _wire(net: str, page: int, points: tuple) -> SceneWire:
-    return SceneWire(net, page, points, 1, "straight")
+    return SceneWire(net, page, points, "straight")
 
 
 def _scene(boxes, wires, markers=(), rails=frozenset(), fill=()) -> Scene:

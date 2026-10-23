@@ -13,6 +13,7 @@ lazy from fransys_model.vocab.enums import PortRole
 from .core_pairs import _product_colours, open_core_is_spare
 from .designation import printed_designation
 from .facts.roles import port_role
+from .house_settings import word
 from .indexes import build_indexes
 from .texts.core_text import join_words
 lazy from .rows_cores import OpenCoreRow
@@ -29,12 +30,12 @@ def _open_by_cable(model: Model) -> frozendict[Id[Item], tuple[OpenCoreFacet, ..
     )
 
 
-def open_core_text(row: OpenCoreRow, mark: str = "") -> str:
-    """An open core's text on the cable drawing: index, colour, its pair mark, then `spare`.
+def open_core_text(spare: str, row: OpenCoreRow, mark: str = "") -> str:
+    """An open core's text on the cable drawing: index, colour, pair mark, then the `spare` word.
 
     Example: `3 GY spare`, or `5 SH screen P1` for a screen.
     """
-    return join_words(str(row.index), row.colour, mark, "spare" if row.spare else "")
+    return join_words(str(row.index), row.colour, mark, spare if row.spare else "")
 
 
 def open_ends_at(
@@ -52,6 +53,7 @@ def open_ends_at(
         for port in idx.ports_by_function.get(function, ())
         if port_role(model, port) is role
     }
+    spare = word(model, "spare")
     found = []
     for cable, facets in sorted(_open_by_cable(model).items()):
         colours = _product_colours(model, cable)
@@ -64,7 +66,7 @@ def open_ends_at(
                 join_words(
                     designation,
                     colour,
-                    "spare" if open_core_is_spare(model, colour, facet.at) else "",
+                    spare if open_core_is_spare(model, colour, facet.at) else "",
                 )
             )
     return tuple(found)

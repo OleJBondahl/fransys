@@ -9,12 +9,14 @@ The first of them is a terminal of the net when it has one (`target_order`, mode
 from typing import TYPE_CHECKING
 lazy from collections.abc import Sequence
 
+from fransys_model.derive.frame_labels import cell_labels
 from fransys_model.derive.frame_position import position_text, row_letter
+from fransys_model.derive.house_settings import frame_form_of, reference_text_of
 from fransys_model.derive.kinds import item_role
 from fransys_model.vocab.tables import functions, ports
+lazy from fransys_model.kernel import Model
 
 if TYPE_CHECKING:
-    from fransys_model.kernel import Model
     from fransys_model.layout import LinkMarker
 
 FULL_TARGETS = 2
@@ -61,7 +63,7 @@ def target_order(model: Model, marker: LinkMarker, ends: Sequence[LinkMarker]) -
     return [*terminals[:1], *(one for one in others if one not in terminals[:1])]
 
 
-def widest_target_line(digits: int, columns: int, rows: int, digit: str) -> str:
+def widest_target_line(model: Model, digits: int, columns: int, rows: int, digit: str) -> str:
     """The longest line a marker can print: `target_lines`' `+k` form with every number `digit`s.
 
     `digits` is the digit count of a page or net number, `columns` and `rows` the highest frame
@@ -69,5 +71,7 @@ def widest_target_line(digits: int, columns: int, rows: int, digit: str) -> str:
     before the pages exist.
     """
     wide = int(digit * digits)
-    position = position_text(wide, int(digit * len(str(columns))), row_letter(rows - 1), ())
+    refs, frame = reference_text_of(model), frame_form_of(model)
+    labels = cell_labels(frame, rows, int(digit * len(str(columns))), row_letter(rows - 1))
+    position = position_text(refs, wide, labels, ())
     return target_lines(wide, [position])[0] + more_text(int(digit))

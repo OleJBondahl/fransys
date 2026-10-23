@@ -4,7 +4,7 @@ import dataclasses
 import glob
 import shutil
 import tempfile
-from functools import cache, partial
+from functools import partial
 from pathlib import Path
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, cast
@@ -43,6 +43,7 @@ from fransys_model.derive import (
     ALL_VALIDATORS,
     allocate_plc,
     baseline,
+    check_order_hint_cycle,
     check_pins_below,
     check_side_hints,
     check_unprinted_sets,
@@ -57,6 +58,7 @@ from fransys_model.derive import (
     list_context,
     number,
     numbering_pins,
+    pdf_texts,
     reference_fragment,
     refuses,
     release_identity,
@@ -92,9 +94,9 @@ from ._baseline_findings import baseline_findings
 from ._drawing_library import refuse_authored_library, with_drawing_library
 from ._export_ledger import _DATA_DIR, _ExportLedger, _placed
 from ._finding_text import described, fix_lines, headed
+from ._house import refuse_authored_house, with_house
 from ._layout_core import draw_on_core
 from ._layout_need import lay_out_if_needed, needs_schematic_layout
-from ._paper import refuse_authored_paper, with_paper
 from ._rebaseline import plan_rebaseline, write_plan
 from ._release_checks import (
     _changes_since,
@@ -111,7 +113,7 @@ from ._release_manifest import _manifest
 from ._release_reader import BASELINE_FILES, stored_listing
 from ._seed_facets import assigned_facets, reserved_facets, tag_facets
 from ._settings_findings import new_engine_only_findings
-from ._settings_library import build_library, font_dirs
+from ._settings_library import font_dirs, library_of
 from ._times import TIMES_FILE, BuildTimes, Timer
 from .documents import engine_subject
 from .settings import Settings
@@ -142,6 +144,9 @@ class BuildResult:
     times: BuildTimes = dataclasses.field(default=BuildTimes(), compare=False, repr=False)
     drawings: Mapping[Id[Page], Drawing] = dataclasses.field(
         default=MappingProxyType({}), compare=False, repr=False
+    )
+    library: electrical_symbols.Library | None = dataclasses.field(
+        default=None, compare=False, repr=False
     )
 
 
@@ -248,7 +253,7 @@ def build(
     """
     timer = Timer()
     chosen = fr_settings() if settings is None else settings
-    library = build_library(chosen.grid, chosen.font, "the settings")
+    library = library_of(chosen)
     model = timer.run("merge and freeze", _frozen, drafts, chosen, library)
     model, row_findings = timer.run("wire rows", resolve_wire_rows, model)
     model, plc_findings = timer.run("PLC allocation", allocate_plc, model)
@@ -265,6 +270,7 @@ def build(
             findings=_by_code_in_reader_order(found, model),
             settings=chosen,
             times=timer.times(),
+            library=library,
         )
     model, layout_findings, drawn, _links = timer.run(
         "schematic layout", lay_out_if_needed, model, library, chosen.layout
@@ -277,6 +283,7 @@ def build(
         settings=chosen,
         times=timer.times(),
         drawings=MappingProxyType(dict(drawn)),
+        library=library,
     )
 
 
@@ -286,8 +293,8 @@ def _frozen(
     """The drafts merged and frozen, with the build's drawing library and paper records."""
     merged = merge(*_args.drafts_of(drafts))
     refuse_authored_library(merged)
-    refuse_authored_paper(merged)
-    return with_paper(with_drawing_library(freeze(merged), library), settings)
+    refuse_authored_house(merged)
+    return with_house(with_drawing_library(freeze(merged), library), settings)
 
 
 def _numbered(model: Model, releases: Path | None) -> tuple[Model, tuple[Finding, ...]]:
@@ -305,6 +312,7 @@ def _validated(model: Model, earlier: tuple[Finding, ...]) -> tuple[Finding, ...
     """`earlier` and every validator's findings, each named."""
     found = [finding for validator in ALL_VALIDATORS for finding in validator(model)]
     found.extend(check_side_hints(model))
+    found.extend(check_order_hint_cycle(model))
     found.extend(check_pins_below(model))
     return name_findings(model, (*earlier, *found))
 
@@ -347,6 +355,7 @@ class _Drawn:
 
     model: Model
     drawings: Mapping[Id[Page], Drawing]
+    library: Library
 
     @property
     def digest(self) -> str:
@@ -362,8 +371,12 @@ def _draw_svgs(drawn: _Drawn) -> dict[str, str]:
     model = drawn.model
     pages: dict[str, str] = {}
     if needs_schematic_layout(model):
-        pages = draw_on_core(model, drawn.drawings, electrical_symbols.LIBRARY)
-    return {**pages, **fransys_render.cable_blocks(model), **fransys_render.diagram_sheets(model)}
+        pages = draw_on_core(model, drawn.drawings, drawn.library)
+    return {
+        **pages,
+        **fransys_render.cable_blocks(model, drawn.library),
+        **fransys_render.diagram_sheets(model, drawn.library),
+    }
 
 
 # The last model's drawing only (decision 0054): memory stays flat on a big system, and every
@@ -383,28 +396,32 @@ _overview = digest_cached(1)(lay_out_overview)
 # read by each document's `source` (render-0019).
 
 
-def _draw_sheets(model: Model) -> frozendict[SheetKey, SheetBackground]:
-    """`fransys_render.sheets` of the model's `document_sheets_of`."""
-    return fransys_render.sheets(document_sheets_of(model))
+def _draw_sheets(drawn: _Drawn) -> frozendict[SheetKey, SheetBackground]:
+    """`fransys_render.sheets` of the model's `document_sheets_of`, in the build's library."""
+    return fransys_render.sheets(document_sheets_of(drawn.model), drawn.library)
 
 
 _sheets = digest_cached(1)(_draw_sheets)
-_bridges = cache(fransys_render.bridge_pieces)  # the same two drawings for every model
 
 
-def _svgs(model: Model, drawings: Mapping[Id[Page], Drawing]) -> dict[str, str]:
+def _svgs(model: Model, drawings: Mapping[Id[Page], Drawing], library: Library) -> dict[str, str]:
     """`_draw_svgs(model)` memoised on `model.digest`, last model only (decision 0054); fresh dict.
 
     `check`, `write` and `release` are its only callers and treat the dict as read-only;
     the copy keeps that safe by contract.
     """
-    return dict(_svgs_cache(_Drawn(model, drawings)))
+    return dict(_svgs_cache(_Drawn(model, drawings, library)))
+
+
+def _library(result: BuildResult) -> Library:
+    """The library the build made; a hand-made `BuildResult` has none and gets its settings'."""
+    return result.library or library_of(result.settings)
 
 
 def _result_svgs(result: BuildResult) -> dict[str, str]:
     """The drawing of a laid-out `result` (no `ERROR`, a `Document`); `{}` otherwise."""
     laid_out = not refuses(result.findings) and _has_document(result.model)
-    return _svgs(result.model, result.drawings) if laid_out else {}
+    return _svgs(result.model, result.drawings, _library(result)) if laid_out else {}
 
 
 def _raw_findings(result: BuildResult, svgs: dict[str, str]) -> tuple[Finding, ...]:
@@ -455,17 +472,14 @@ def _file_safe(page_key: str) -> str:
 
 
 def _write_intermediates(
-    model: Model,
-    drawings: Mapping[Id[Page], Drawing],
-    svgs: dict[str, str],
-    intermediates: Path,
-    pdf: Mapping[str, object],
+    drawn: _Drawn, svgs: dict[str, str], intermediates: Path, pdf: Mapping[str, object]
 ) -> None:
     """Page SVGs, netlists and Typst source that never reach `out_dir`; written before the gate.
 
     A half-finished design still draws; an errored build has no pages (decision 0028, model-0077).
     Typst is not compiled here (fonts: `_exports`); pages come from the built `svgs`.
     """
+    model = drawn.model
     for page_key, svg in svgs.items():
         (intermediates / f"{_file_safe(page_key)}.svg").write_bytes(svg.encode("utf-8"))
     for board in _subjects.boards(model):
@@ -474,28 +488,26 @@ def _write_intermediates(
             text.encode("utf-8")
         )
     for document_id, stem in document_stems(model):
-        source_text = _pdf_source(model, drawings, document_id, svgs, pdf)
+        source_text = _pdf_source(drawn, document_id, svgs, pdf)
         (intermediates / f"{stem}.typ").write_bytes(source_text.encode("utf-8"))
 
 
 def _pdf_source(
-    model: Model,
-    drawings: Mapping[Id[Page], Drawing],
-    document_id: Id[Any],
-    svgs: dict[str, str],
-    pdf: Mapping[str, object],
+    drawn: _Drawn, document_id: Id[Any], svgs: dict[str, str], pdf: Mapping[str, object]
 ) -> str:
     """One document's Typst source, with the list-page shares from the `[pdf]` settings."""
-    known = frozenset(drawings)
+    model, library = drawn.model, drawn.library
+    known = frozenset(drawn.drawings)
     return fransys_pdf.source(
         model,
         document_id,
         svgs,
-        _sheets(model),
-        _bridges(),
+        _sheets(drawn),
+        fransys_render.bridge_pieces(library),
         links={page: reference_links(model, page, known) for page in known},
         list_share_pct=cast("float", pdf["list_share_pct"]),
         list_gutter_pct=cast("float", pdf["list_gutter_pct"]),
+        **pdf_texts(model),
     )
 
 
@@ -507,13 +519,14 @@ def _compile_pdf(  # noqa: PLR0913 -- the build's drawings join the model, docum
     fonts: tuple[Path, ...] = (),
     *,
     pdf: Mapping[str, object],
+    library: Library,
 ) -> bytes:
     """One document's Typst source, compiled to PDF bytes (decision pdf-0001).
 
     Touches font files, so only here, never in pure `fransys_pdf`; passes no `timestamp=`:
     the date is the source's `#set document(date: ...)`; Typst reads one only for `auto` (0030).
     """
-    source_text = _pdf_source(model, drawings, document_id, svgs, pdf)
+    source_text = _pdf_source(_Drawn(model, drawings, library), document_id, svgs, pdf)
     compiler = typst.Compiler(
         font_paths=list(fonts) or [electrical_symbols.font_dir()], ignore_system_fonts=True
     )
@@ -569,6 +582,7 @@ def _producers(  # noqa: PLR0913, PLR0917 -- one parameter per input of the expo
     changes: ListingDiff | None,
     fonts: tuple[Path, ...],
     pdf: Mapping[str, object],
+    library: Library,
 ) -> dict[str, Callable[[Id[Any]], Callable[[], str | bytes]]]:
     """The bytes' producer of each kind of `export_set`, by the row's subject."""
     context = partial(_list_context, model, unit)
@@ -585,7 +599,9 @@ def _producers(  # noqa: PLR0913, PLR0917 -- one parameter per input of the expo
         "terminals": lambda s: partial(terminal_csv_of, model, s, unit=unit, context=context(s)),
         "connectors": lambda s: partial(connectors_csv_of, model, s, unit=unit, context=context(s)),
         "wago": lambda s: partial(modules_xml_of, model, s, unit=unit),
-        "pdf": lambda s: partial(_compile_pdf, model, drawings, s, svgs, fonts, pdf=pdf),
+        "pdf": lambda s: partial(
+            _compile_pdf, model, drawings, s, svgs, fonts, pdf=pdf, library=library
+        ),
     }
 
 
@@ -601,9 +617,10 @@ def _ledger(  # noqa: PLR0913 -- one parameter per input of the exports, all key
     timer: Timer | None = None,
     fonts: tuple[Path, ...] = (),
     pdf: Mapping[str, object],
+    library: Library,
 ) -> _ExportLedger:
     ledger = _ExportLedger(model, names_only=names_only, timer=timer)
-    made = _producers(model, drawings, svgs, unit, findings, changes, fonts, pdf)
+    made = _producers(model, drawings, svgs, unit, findings, changes, fonts, pdf, library)
     for row in export_set(model, unit):
         ledger.add(
             row.export_kind,
@@ -626,6 +643,7 @@ def _exports(  # noqa: PLR0913 -- one keyword per input of the exports, as `_led
     timer: Timer | None = None,
     fonts: tuple[Path, ...] = (),
     pdf: Mapping[str, object],
+    library: Library,
 ) -> dict[str, bytes]:
     """Every export of `model` by name: `unit` restricts them to that unit; no netlist."""
     return _ledger(
@@ -638,6 +656,7 @@ def _exports(  # noqa: PLR0913 -- one keyword per input of the exports, as `_led
         timer=timer,
         fonts=fonts,
         pdf=pdf,
+        library=library,
     ).exports
 
 
@@ -655,7 +674,13 @@ def export_names(
     """
     model = result.model
     return _ledger(
-        model, {}, {}, _resolve_unit(model, unit), names_only=True, pdf=result.settings.pdf
+        model,
+        {},
+        {},
+        _resolve_unit(model, unit),
+        names_only=True,
+        pdf=result.settings.pdf,
+        library=_library(result),
     ).names
 
 
@@ -711,7 +736,12 @@ def write(
     out_dir.mkdir(parents=True, exist_ok=True)
     if intermediates is not None:
         intermediates.mkdir(parents=True, exist_ok=True)
-        _write_intermediates(model, result.drawings, svgs, intermediates, result.settings.pdf)
+        _write_intermediates(
+            _Drawn(model, result.drawings, _library(result)),
+            svgs,
+            intermediates,
+            result.settings.pdf,
+        )
     findings = _resolved(raw := _raw_findings(result, svgs), model)
     _clean_stale_exports(out_dir, model, resolved_unit)
     errors = errors_of(findings)
@@ -728,6 +758,7 @@ def write(
         timer=timer,
         fonts=font_dirs(result.settings.font),
         pdf=result.settings.pdf,
+        library=_library(result),
     )
     if intermediates is not None:
         _put(intermediates / TIMES_FILE, timer.times().as_json().encode("utf-8"))
@@ -782,6 +813,7 @@ def release(result: BuildResult, into: Path, *, unit: object = None) -> Path:
         unit=resolved_unit,
         fonts=font_dirs(result.settings.font),
         pdf=result.settings.pdf,
+        library=_library(result),
     )
     baseline_files = {
         BASELINE_FILES["listing"]: new_listing_text.encode("utf-8"),

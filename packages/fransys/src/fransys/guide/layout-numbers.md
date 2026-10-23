@@ -63,7 +63,7 @@ d.layout.profile(sheet=a4)
 | `hide_unused_pins` | `False` | Hide a box-drawn pin with no conductor, and a function with none, on drawings only. | Drawings are shorter; every list still shows every pin. A box in a chain draws only its wired pins (LONG-CHAIN D2). | An interface with many unused pins. |
 | `actuator_each_contact` | `True` | Draw the operated symbol on every contact of a manually operated device, with no reference and no contact list. | `False` draws the actuator once at the lead contact, with the contact list under it. | A design that wants one push button per device. The choice is per unit: set it in each unit's profile, or in a shared helper every unit calls, to set it once. |
 | `band_ranks` | supply 0, `terminal.first` 0, protection 1, switch and contacts 2, sensor 3, coil, load, actuator and `terminal` 4, `terminal.last` 5 | A map of function kind to the horizontal band it sits in, top first. `terminal.first` and `terminal.last` sit beside `terminal`. | Moves kinds up or down the column. The map replaces the house map whole: restate every kind you want ranked. | A circuit reads better with another top-to-bottom order. |
-| `group_ranks` | empty | A map of an aspect group's label to its page rank. | Orders the groups of pages. A group with no rank sorts last. | You want the pages in your own order. |
+| `group_ranks` | empty | A map of an aspect group's label to its page rank. | Not honoured yet: pending the GROUP-RANKS order, groups keep their natural page order. | You want the pages in your own order. |
 
 ## Grid pitch and printed sizes
 

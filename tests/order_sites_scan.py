@@ -188,8 +188,39 @@ def _sites(tree: ast.AST, module: str, *, allow: bool, sets: bool) -> list[Hit]:
     return found
 
 
+def _attribute_only(node: ast.expr | None) -> bool:
+    """True for a lambda whose body only reads attributes (`f.origin`, `(p.upper, p.lower)`)."""
+    if not isinstance(node, ast.Lambda):
+        return False
+    body = node.body
+    parts = body.elts if isinstance(body, ast.Tuple) else [body]
+    return all(_attribute_chain(p) for p in parts)
+
+
+def _attribute_chain(node: ast.expr) -> bool:
+    if isinstance(node, ast.Attribute):
+        return isinstance(node.value, ast.Name) or _attribute_chain(node.value)
+    return False
+
+
+def _attribute_lambda_sites(tree: ast.AST) -> list[Hit]:
+    """Sorts and keyed picks whose key is an attribute-only lambda (R499)."""
+    return [
+        (name, node.lineno)
+        for node, name in _walk_named(tree)
+        if isinstance(node, ast.Call)
+        and _call_is_site(node, None)
+        and _attribute_only(_key_of(node))
+    ]
+
+
 def order_sites(tree: ast.AST, module: str) -> list[Hit]:
-    """Sort sites outside the homes and outside the layout core."""
+    """Sort sites outside the homes and outside the layout core.
+
+    An `order_*` sibling is no home for an attribute-only lambda key: `order` holds the keys.
+    """
+    if module != f"{DERIVE}.order" and _is_order_module(module):
+        return _attribute_lambda_sites(tree)
     if is_home(module) or in_core(module):
         return []
     top = module.split(".", maxsplit=1)[0]

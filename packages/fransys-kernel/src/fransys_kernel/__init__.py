@@ -1,6 +1,5 @@
 """Generic layer: records, ids, freeze, canonical form, merge. Knows nothing about engineering."""
 
-from .allocate import first_free
 from .cache import DIGEST_CACHE_SIZE, ByDigest, digest_cached
 from .canonical_forms import dumps, from_data, loads, to_data
 from .codes import WHO_ACTS, CodeInfo
@@ -27,7 +26,8 @@ from .model import Model
 from .naturals import NaturalKey, canonical, natural_join, natural_key, natural_sorted
 from .origin import DescribedFinding, Origin, OriginSource, describe, describe_parts, require_origin
 from .parents import parent_chain
-from .record import FieldSpec, Record, field_specs, key_text, record, value
+from .record import FieldSpec, field_specs, record, value
+from .record_protocol import Record, key_text
 from .registry import (
     lookup_kind,
     namespace_of,
@@ -76,7 +76,6 @@ __all__ = [
     "dumps",
     "evolve",
     "field_specs",
-    "first_free",
     "freeze",
     "from_data",
     "index_ids",

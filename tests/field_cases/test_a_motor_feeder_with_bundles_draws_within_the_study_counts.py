@@ -33,12 +33,12 @@ def test_a_motor_feeder_with_bundles_draws_within_the_study_counts() -> None:
         (drawing, wire)
         for drawing in page_drawings(result).values()
         for wire in drawing.wires
-        if wire.lanes > 1
+        if wire.style == "trunk"
     ]
     assert trunks, "the feeder has bundle trunks"
     for drawing, wire in trunks:
         one = dataclasses.replace(drawing, symbols=(), wires=(wire,))
-        assert svg(one, LIBRARY, style).count("<polyline") == wire.lanes
+        assert svg(one, LIBRARY, style).count("<polyline") == 1
 
 
 def test_the_feeder_pages_render_whole() -> None:

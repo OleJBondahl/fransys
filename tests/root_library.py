@@ -7,7 +7,7 @@ needs one. `drawing_library` is this folder's own copy of the bundled library's 
 from decimal import Decimal
 
 from fransys._drawing_library import with_drawing_library
-from fransys._paper import with_paper
+from fransys._house import with_house
 from fransys.settings import settings
 
 from fransys_model.derive import print_sizes
@@ -29,9 +29,17 @@ def drawing_library(divisions: int = 8) -> DrawingLibrary:
         wire_pitch=8,
         wire_pitch_fine=4,
         font_family="DejaVu Sans",
-        capital_ratio=Decimal(1493) / _EM,
         ascent_ratio=Decimal(1556) / _EM,
         descent_ratio=Decimal(426) / _EM,
+        ems=frozendict(
+            {
+                h: Decimal(h) * _EM / 1493
+                for h in ("1", "1.8", "2", "2.2", "2.5", "3", "3.2", "3.5", "4", "5", "6")
+            }
+        ),
+        lines=frozendict(
+            {"normal": Decimal("0.25"), "thick": Decimal("0.5"), "rule": Decimal("0.18")}
+        ),
         heights=frozendict(
             {
                 "smallest": Decimal("1.8"),
@@ -45,7 +53,7 @@ def drawing_library(divisions: int = 8) -> DrawingLibrary:
 
 def with_library(model: Model) -> Model:
     """`model` with the record, the facade's own (so digests agree with a built model)."""
-    return with_paper(with_drawing_library(model), settings())
+    return with_house(with_drawing_library(model), settings())
 
 
 def freeze(draft: Draft) -> Model:
@@ -54,7 +62,7 @@ def freeze(draft: Draft) -> Model:
 
 
 _MODEL = freeze(Draft())
-CAPITAL_RATIO = drawing_library().capital_ratio
+CAPITAL_RATIO = Decimal(1493) / _EM
 ASCENT_RATIO = drawing_library().ascent_ratio
 
 

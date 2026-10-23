@@ -19,7 +19,14 @@ LAYOUT_DIR = "packages/fransys-layout/tests"
 LAYOUT_GOLDEN_TESTS = (f"{LAYOUT_DIR}/engines/test_cable_golden.py",)
 RUNS = {
     "model": (
-        ["uv", "run", "python", "packages/fransys-model/tests/usecases/regenerate_goldens.py"],
+        [
+            "env",
+            "PYTHONPATH=packages/fransys-model/tests/derive",  # derive_helpers.with_house
+            "uv",
+            "run",
+            "python",
+            "packages/fransys-model/tests/usecases/regenerate_goldens.py",
+        ],
         "packages/fransys-model/tests/golden",
     ),
     "layout": (

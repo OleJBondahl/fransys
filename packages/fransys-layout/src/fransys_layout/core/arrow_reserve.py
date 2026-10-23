@@ -14,7 +14,7 @@ from .values import RefKind
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
-    from .values import Options, Ref
+    from .values import CutResult, Options, Ref
 
 
 def reserve(arrows: int, options: Options) -> int:
@@ -36,3 +36,16 @@ def arrow_ends(refs: Iterable[Ref], page: int, row: int, fan: str | None = None)
         right += (ref.ends[0].page, ref.ends[0].row) == (page, row)
         left += (ref.ends[1].page, ref.ends[1].row) == (page, row)
     return left, right
+
+
+def card_arrows(cut: CutResult, options: Options) -> dict[str, int]:
+    """Each card's box id to the arrow width its planned row keeps free at both ends."""
+    cards = {b.id: b.anchor for lst in cut.blocks for b in lst.blocks if b.is_card and b.anchor}
+    out: dict[str, int] = {}
+    for plan in cut.spec.pages:
+        for r, row in enumerate(plan.rows):
+            left, right = arrow_ends(cut.spec.reference_plan, plan.page, r)
+            for b in row.blocks:
+                if b in cards:
+                    out[cards[b] or ""] = reserve(left, options) + reserve(right, options)
+    return out

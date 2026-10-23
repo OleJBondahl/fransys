@@ -10,8 +10,8 @@ from fransys_layout.core.topology_chains import (
     cells_of,
     chains,
     links_of,
-    orient_chain,
 )
+from fransys_layout.core.topology_orient import orient_chain
 
 from .flow_builders import OPTIONS, elem, net
 from .topology_fixtures import read

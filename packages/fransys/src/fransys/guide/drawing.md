@@ -86,7 +86,7 @@ The pump-station example in the examples repository has this shape.
 3. Declare each supply where it starts: `d.ac_supply` on the incoming terminals, `d.dc_supply` on the 24 V strip.
 4. Distribute through terminal strips with named, bridged runs, and give each consumer its own terminal.
 5. Wire each circuit as a path, source first: supply, protection, switching, load. Layout stands the bands in that order, with the first terminal on top and the last at the bottom.
-6. Set the page order once with `d.layout.profile(group_ranks=...)`. A rank map replaces the house one whole, and an unranked block sorts last.
+6. `d.layout.profile(group_ranks=...)` does not order the pages yet: `group_ranks` is not honoured until the GROUP-RANKS order lands, so blocks keep their natural order.
 7. Set `hide_unused_pins=True` to leave unwired pins of box-drawn devices off the drawings. The lists keep them.
 8. A terminal that only the parent wires is left off the unit's own pages; its table lists it.
 9. Build, then read `fr.check(result)`. The last part of this page lists the findings that point at a missing item above.
@@ -192,7 +192,7 @@ The profile sets the numbers and the page order, and the hints then act on that 
 - **`order` beats `group_ranks`.** The ranks sort the blocks first, then each `order` hint moves blocks from that order.
 - **`keep_together` beats `order`.** It runs after the order hints, pulls its groups next to the first.
 - **`break_before` on a later group of a `keep_together` set** leaves the set unkept and reports `KEEP_TOGETHER_UNMET`. On the set's first group it changes nothing.
-- **Order hints that form a cycle** make the build raise `fr.AuthorError` naming the cycle.
+- **Order hints that form a cycle** give the ERROR finding `ORDER_HINT_CYCLE`, which names the file and line of each hint in the cycle.
 - **A chain names a box-drawn function only at its head or its tail.** A PLC channel or a supply output stands there and anchors the path at its pin. In the middle the build raises `fr.AuthorError` that says where box-drawn functions may stand.
 
 ```python
@@ -257,16 +257,11 @@ except Exception as error:
 else:
     raise AssertionError("a second profile must raise")
 
-try:
-    drawn(lambda c: blocks(c, cycle))
-except Exception as error:
-    assert type(error).__name__ == "AuthorError" and "cycle" in str(error)
-else:
-    raise AssertionError("an order cycle must raise")
+assert "ORDER_HINT_CYCLE" in draw(lambda c: blocks(c, cycle))[0]
 ```
 
 ## Readability findings
 
 - **Readability.** Two findings tell you whether the printed pages can be read. `TEXT_TOO_SMALL` says the profile prints text under `min_text_height_mm`. `TEXT_OVERLAP` says text collides with text. It is INFO: a Fransys defect, report it with the smallest model.
 
-The numbers behind the readability findings are in `fr.readability`: `readability.md`.
+The numbers behind them are in `fr.readability`: `readability.md`. The text height is a setting (`[font.heights]`), not a reading.

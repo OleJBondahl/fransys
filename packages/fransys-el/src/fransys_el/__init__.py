@@ -1,6 +1,7 @@
 """Fransys electrical conventions: the values the general layout core takes as options."""
 
 from .codes import FINDING_CODES
+from .drawn_subjects import drawn_subjects
 from .lay_out_core import lay_out, lay_out_drawn
 from .placement_kit import Pick, ProblemError, SymbolKit
 from .placement_options import Conventions, house_conventions, options
@@ -30,6 +31,7 @@ __all__ = [
     "Skipped",
     "SymbolKit",
     "build",
+    "drawn_subjects",
     "house_conventions",
     "lay_out",
     "lay_out_drawn",

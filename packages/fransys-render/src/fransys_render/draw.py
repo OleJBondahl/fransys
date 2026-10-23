@@ -9,10 +9,9 @@ from typing import TYPE_CHECKING
 import symdef
 from symdef import Weight
 
-from electrical_symbols import MARKER_FACING, drawn_symbol
+from electrical_symbols import MARKER_FACING, drawn_symbol, sheet_svg
 
 from ._drawn_text import text_tag
-from ._sheet_svg import sheet_svg
 
 if TYPE_CHECKING:
     from fransys_layout.drawing import (
@@ -157,6 +156,11 @@ def _symbol(drawn: DrawnSymbol, library: symdef.Library, style: Style) -> str:
     return _placed(body, drawn.x, drawn.y, style)
 
 
+def content_group(body: str, x_mm: float, y_mm: float) -> str:
+    """`body` in a `<g>` translated to the content box at (`x_mm`, `y_mm`)."""
+    return f'<g transform="translate({x_mm} {y_mm})">{body}</g>'
+
+
 def _placed(body: str, x: int, y: int, style: Style) -> str:
     """`body` in a `<g>` translated to (x, y) G."""
     x_mm, y_mm = format_decimal(_mm(x, style)), format_decimal(_mm(y, style))
@@ -238,7 +242,7 @@ def svg(
     body = "".join(parts)
     if sheet_mm is not None:
         width, height, x, y = sheet_mm
-        return sheet_svg((width, height), (x, y), body)
+        return sheet_svg(width, height, content_group(body, x, y), margin_mm=0)
     width_mm, height_mm = (
         format_decimal(_mm(drawing.area.w, style)),
         format_decimal(_mm(drawing.area.h, style)),

@@ -40,6 +40,8 @@ HEADER = """\
 # compare) outside the role fact, in every package but the old layout engine (design 7.2).
 # [kind_reads_legacy_layout]: the same reads in `fransys_layout`, which empties as families switch.
 # [literal_homes]: "module::literal" = a string constant holding a HOMES literal outside its home.
+# [word_literals]: "module::word" = a string constant equal to a `[words]` value of settings.toml
+# (the words' one home, R503 W4). Falls to zero as SO-C and the cleanup rounds move readers.
 # [selection_branches]: "module::PageKind" = compares and dispatch keys on `DocumentPreset` or
 # `PageKind` members outside `fransys_model.derive` (root-0212).
 # [render_derive_imports]: "module::name" = a `fransys_model.derive` function imported by render
@@ -149,13 +151,15 @@ def _in_core(module: str) -> bool:
 # string constant (a docstring excepted) is a site. Left out for want of a home: " mm²" (two
 # derive sites, no home), "(severity)" (docstrings only), "ports added " (home is a G-order).
 # "Field devices (" is in two derive modules; `overview_field` is the home, the other is a site.
+SETTINGS_TOML = "packages/fransys/src/fransys/settings.toml"  # R493: the words' home is data
 HOMES = {
-    "Block diagram": "fransys_model.derive.page_headings",
-    " (cont.)": "fransys_model.derive.page_headings",
+    "Block diagram": SETTINGS_TOML,
+    "(cont.)": SETTINGS_TOML,
     "Own drawing: ": "fransys_model.derive.overview_tree",
     "Field devices (": "fransys_model.derive.overview_field",
     "electrical-symbols ": "electrical_symbols",
     "Digital input channel": "fransys_wago.signals",
+    "ORDER_HINT_CYCLE": "fransys_model.vocab.codes",
 }
 
 # A selection function is defined in exactly one module; a compare or dispatch key on these enums
@@ -190,7 +194,7 @@ PATH_RECEIVERS = frozenset(["path", "target", "folder"])
 # Gate 5 (MODEL-DOORS, EL-MODEL amendment 3): which of the model's four doors a package may use.
 # A package outside the table is unknown and raises; a `fransys_model` module outside the four
 # doors raises. Counts only fall; the five outputs may import only four `vocab` names.
-ALL_DOORS = frozenset(["kernel", "vocab", "layout", "derive"])
+ALL_DOORS = frozenset(["kernel", "vocab", "layout", "derive", "refdef", "elecdef"])
 INPUT_DOORS = ALL_DOORS
 OUTPUT_DOORS = frozenset(["kernel", "derive"])
 OUTPUT_VOCAB_NAMES = frozenset(["PageKind", "DocumentPreset", "SignalType", "Aspect"])
@@ -441,14 +445,19 @@ def _docstring_ids(tree: ast.AST) -> set[int]:
     return ids
 
 
-def _strings(tree: ast.AST) -> list[tuple[str, int]]:
-    """Every string constant outside a docstring, as `(text, line)`; an f-string's parts too."""
+def _string_nodes(tree: ast.AST) -> list[ast.Constant]:
+    """Every string constant outside a docstring; an f-string's parts too."""
     skip = _docstring_ids(tree)
     return [
-        (n.value, n.lineno)
+        n
         for n in ast.walk(tree)
         if isinstance(n, ast.Constant) and isinstance(n.value, str) and id(n) not in skip
     ]
+
+
+def _strings(tree: ast.AST) -> list[tuple[str, int]]:
+    """Every string constant outside a docstring, as `(text, line)`."""
+    return [(str(n.value), n.lineno) for n in _string_nodes(tree)]
 
 
 def literal_homes(tree: ast.AST, module: str) -> list[tuple[str, int]]:
@@ -459,6 +468,36 @@ def literal_homes(tree: ast.AST, module: str) -> list[tuple[str, int]]:
         for literal, home in HOMES.items()
         if literal in text and module != home
     ]
+
+
+def _word_values() -> frozenset[str]:
+    """The printed words of settings.toml `[words]` that carry a letter (a bare sign is no word)."""
+    table = tomllib.loads((ROOT / SETTINGS_TOML).read_text(encoding="utf-8"))["words"]
+    return frozenset(v for v in table.values() if any(c.isalpha() for c in v))
+
+
+def word_literals(tree: ast.AST, _module: str) -> list[tuple[str, int]]:
+    """String constants equal to a `[words]` value: the word is typed outside its home (R503 W4)."""
+    words = _word_values()
+    skip = _word_key_ids(tree)
+    return [
+        (str(n.value), n.lineno)
+        for n in _string_nodes(tree)
+        if n.value in words and id(n) not in skip
+    ]
+
+
+def _word_key_ids(tree: ast.AST) -> set[int]:
+    """Ids of the strings that name a word, not print it: `word(model, "key")` and `__all__`."""
+    ids: set[int] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Call) and getattr(node.func, "id", "") == "word" and node.args[1:]:
+            ids.add(id(node.args[1]))
+        if isinstance(node, ast.Assign) and any(
+            getattr(t, "id", "") == "__all__" for t in node.targets
+        ):
+            ids.update(id(c) for c in ast.walk(node.value))
+    return ids
 
 
 MAPPING_READS = frozenset(["get", "pop", "setdefault"])
@@ -885,6 +924,7 @@ SCANNERS: dict[str, Scanner] = {
     "kind_reads": kind_reads,
     "kind_reads_legacy_layout": kind_reads_legacy_layout,
     "literal_homes": literal_homes,
+    "word_literals": word_literals,
     "selection_branches": selection_branches,
     "render_derive_imports": render_derive_imports,
     "render_svg_literals": render_svg_literals,
@@ -1084,8 +1124,9 @@ def test_no_homed_literal_outside_its_home():
     assert compare(sites, load_allowlist()["literal_homes"]) == []
     files = dict(src_modules())
     for literal, home in HOMES.items():
-        assert home in files, f"HOMES home {home} does not exist: drop the row"
-        assert literal in files[home].read_text(encoding="utf-8"), f"{literal!r} not in {home}"
+        path = ROOT / home if home == SETTINGS_TOML else files.get(home)
+        assert path is not None, f"HOMES home {home} does not exist: drop the row"
+        assert literal in path.read_text(encoding="utf-8"), f"{literal!r} not in {home}"
 
 
 def test_a_selection_is_defined_in_one_module():
@@ -1103,21 +1144,38 @@ def test_the_facade_reads_no_record_field():
     assert "facade_field_reads" not in load_allowlist()
 
 
+def test_no_words_value_typed_outside_settings_toml():
+    sites = scan_tree(word_literals)
+    assert compare(sites, load_allowlist()["word_literals"]) == []
+
+
+def test_the_word_gate_can_fail():
+    module = "fransys_pdf.x"
+    sources = (
+        'a = "Block diagram"\nb = "Blockdiagram"\nc = "to"\n"""d"""\n'
+        'e = word(m, "to")\n__all__ = ["Pin"]\n'
+    )
+    sites = scan(word_literals, sources, module)
+    assert {k.split("::")[1]: v for k, v in sites.items()} == {"Block diagram": [1], "to": [3]}
+    assert compare(sites, {f"{module}::Block diagram": 1, f"{module}::to": 1}) == []
+    assert "fransys_pdf.x:1" in compare(sites, {})[0]
+
+
 def test_the_literal_gate_can_fail():
     module = "fransys_pdf.x"
-    source = 'x = "Block diagram 3"\ny = f"Own drawing: {x}"\nz = "other"\n'
+    source = 'x = "Digital input channel 3"\ny = f"Own drawing: {x}"\nz = "other"\n'
     sites = scan(literal_homes, source, module)
     assert {k.split("::")[1]: v for k, v in sites.items()} == {
-        "Block diagram": [1],
+        "Digital input channel": [1],
         "Own drawing: ": [2],
     }
     assert "fransys_pdf.x:1" in compare(sites, {})[0]
-    assert compare(sites, {f"{module}::Block diagram": 2, f"{module}::Own drawing: ": 1}) == [
-        f"{module}::Block diagram read 1 times, allowed 2: lower the allowlist"
-    ]
-    home = HOMES["Block diagram"]
+    assert compare(
+        sites, {f"{module}::Digital input channel": 2, f"{module}::Own drawing: ": 1}
+    ) == [f"{module}::Digital input channel read 1 times, allowed 2: lower the allowlist"]
+    home = HOMES["Digital input channel"]
     assert scan(literal_homes, source, home).keys() == {f"{home}::Own drawing: "}
-    docstring = '"""Block diagram."""\ndef f():\n    """Own drawing: x"""\n'
+    docstring = '"""Digital input channel."""\ndef f():\n    """Own drawing: x"""\n'
     assert scan(literal_homes, docstring, module) == {}
 
 

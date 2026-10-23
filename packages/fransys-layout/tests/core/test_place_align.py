@@ -59,6 +59,7 @@ def test_band_align_off_gives_no_band() -> None:
             flip_turn="R180",
             tag_stagger=True,
             label_gap=8,
+            parallel_pitch=48,
             driver_first=True,
             arrow_sides=("E", "W"),
         ),

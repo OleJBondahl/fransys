@@ -104,7 +104,7 @@ def _wire_between_ports(built: Built):
     for page, part in built.netlist().pages.items():
         for i, wire in enumerate(part.drawing.wires):
             ends = (_at(part, wire.points[0]), _at(part, wire.points[-1]))
-            if wire.lanes == 1 and all(ends) and ends[0] != ends[1]:
+            if all(ends) and ends[0] != ends[1]:
                 return page, i
     pytest.fail("no wire between two ports")
 

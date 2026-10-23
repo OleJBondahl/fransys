@@ -43,6 +43,7 @@ def test_a_lone_column_measures_its_extent() -> None:
             flip_turn="R180",
             tag_stagger=True,
             label_gap=8,
+            parallel_pitch=48,
             driver_first=True,
             arrow_sides=("E", "W"),
         ),
@@ -59,6 +60,7 @@ def test_two_free_columns_are_the_first_reach_plus_separation_plus_the_second_re
         flip_turn="R180",
         tag_stagger=True,
         label_gap=8,
+        parallel_pitch=48,
         driver_first=True,
         arrow_sides=("E", "W"),
     )
@@ -77,6 +79,7 @@ def test_a_card_block_measures_as_the_hand_built_row_spec() -> None:
         flip_turn="R180",
         tag_stagger=True,
         label_gap=8,
+        parallel_pitch=48,
         driver_first=True,
         arrow_sides=("E", "W"),
     )
@@ -102,6 +105,7 @@ def test_a_column_attached_on_the_far_edge_is_flipped() -> None:
             flip_turn="R180",
             tag_stagger=True,
             label_gap=8,
+            parallel_pitch=48,
             driver_first=True,
             arrow_sides=("E", "W"),
         ),

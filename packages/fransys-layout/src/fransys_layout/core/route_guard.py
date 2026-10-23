@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import replace
 from typing import TYPE_CHECKING
 
-from .route_astar import Leg, astar, simplify, tidy
+from .route_astar import Leg, anchor, astar, simplify, tidy
 from .values import Finding
 
 if TYPE_CHECKING:
@@ -30,21 +30,44 @@ def _snap(end: XY, toward: XY, step: int) -> XY:
     return end
 
 
-def _again(env: RouteEnv, grid: Occupancy, wire: Wire, net: str) -> tuple[XY, ...] | None:
-    """The wire's ends joined by A*; an off-grid end keeps a short stub along its own run."""
+def _reach(env: RouteEnv, end: XY, toward: XY) -> tuple[XY, ...] | None:
+    """From a wire's end to a wiring-grid point: along its own run, else out of its footprint."""
     step = env.options.wiring_grid
-    first, last = wire.points[0], wire.points[-1]
-    a = _snap(first, wire.points[1], step)
-    b = _snap(last, wire.points[-2], step)
-    if any(x % step or y % step for x, y in (a, b)):
+    snapped = _snap(end, toward, step)
+    if not (snapped[0] % step or snapped[1] % step):
+        return (end, snapped)
+    ex, ey = end
+    box = next(
+        (
+            f
+            for f in (p.footprint for p in env.placed.values())
+            if f.x <= ex <= f.x + f.w and f.y <= ey <= f.y + f.h
+        ),
+        None,
+    )
+    if box is None:
         return None
-    start, goal = ((x // step, y // step) for x, y in (a, b))
+    out = anchor(end, box, step)
+    blocked = {(x // step, y // step) for pts in env.blocked_ends.values() for x, y in pts}
+    return None if (out[-1][0] // step, out[-1][1] // step) in blocked else out  # R482, R472
+
+
+def _again(env: RouteEnv, grid: Occupancy, wire: Wire, net: str) -> tuple[XY, ...] | None:
+    """The ends joined by A*; an off-grid end leaves along its run or out of its footprint."""
+    step = env.options.wiring_grid
+    head = _reach(env, wire.points[0], wire.points[1])
+    tail = _reach(env, wire.points[-1], wire.points[-2])
+    if head is None or tail is None:
+        return None
+    start, goal = ((x // step, y // step) for x, y in (head[-1], tail[-1]))
     leg = Leg(net, start, goal, frozenset((start, goal)))
     path = astar(grid, leg, env.options)
     if path is None:
         return None
-    mid = tidy(simplify(path, step))
-    return tidy(tuple(p for p in (first, *mid, last)))
+    back: list[XY] = []  # the tail chain read from the grid point to the pin
+    for pt in tail[:-1]:
+        back.insert(0, pt)
+    return tidy((*head[:-1], *simplify(path, step), *back))
 
 
 def _warn(env: RouteEnv, wire: Wire, net: str) -> Finding:

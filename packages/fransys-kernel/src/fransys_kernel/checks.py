@@ -14,7 +14,7 @@ from .record import field_specs
 
 if TYPE_CHECKING:
     from .conform import Reference
-    from .record import Record
+    from .record_protocol import Record
     from .schema import FieldInfo
 
 # The pipeline position, which orders the errors in a `FreezeError`.

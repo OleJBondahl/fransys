@@ -26,8 +26,9 @@ from symdef import Line, Polyline
 from test_units_worked_example import _system_design
 
 import electrical_symbols
-from electrical_symbols import font_dir, title_block, title_logo
+from electrical_symbols import LIBRARY, font_dir, title_block, title_logo
 from fransys_model.derive import document_sheets_of, sheet_frame, unit_release
+from fransys_model.derive.house_settings import frame_form_of
 from fransys_model.derive.print_sizes import (
     LINE_RULE_MM,
     LINE_THICK_MM,
@@ -158,7 +159,7 @@ def _compile(*, module_mm: str = "2.5") -> bytes:
         model,
         document.id,
         draw_on_core(model, {}, electrical_symbols.LIBRARY),
-        fransys_render.sheets(document_sheets_of(model)),
+        fransys_render.sheets(document_sheets_of(model), LIBRARY),
     )
     compiler = typst.Compiler(font_paths=[font_dir()], ignore_system_fonts=True)
     pdf = compiler.compile(input=text.encode("utf-8"), format="pdf")
@@ -392,12 +393,12 @@ def test_a_profile_text_height_is_the_smallest_text_of_every_page_kind(profile_p
     assert any(o.turned for o in objects)  # a turned core label measured like an upright text
 
 
-def _title_block_cells(sheet):
+def _title_block_cells(model, sheet):
     """The title block's cells, `(left, bottom, right, top)` mm with y up, from its symbol.
 
     Row 1 is a three-column title then four columns, row 2 six columns, the notice and the logo
     each span both rows."""
-    frame = sheet_frame(sheet)
+    frame = sheet_frame(frame_form_of(model), sheet)
     corner = (frame.border[0], frame.band_top)
     block = title_block(corner, frame.title_width, frame.band, notice=True)  # all carry a notice
     logo = title_logo((frame.logo_x, frame.band_top), frame.band)
@@ -438,12 +439,13 @@ def test_every_title_block_text_stays_inside_its_cell_at_a_larger_profile(profil
             left, bottom, right, top = o.bounds_mm
             cx, cy = (left + right) / 2, (bottom + top) / 2
             low = sheet.content_y_mm
-            if not (low < cy < low + sheet_frame(sheet).band and sheet.content_x_mm < cx):
+            band = sheet_frame(frame_form_of(model), sheet).band
+            if not (low < cy < low + band and sheet.content_x_mm < cx):
                 continue
             if cx > sheet.width_mm - sheet.content_x_mm:
                 continue
             cell = next(
-                c for c in _title_block_cells(sheet) if c[0] < cx < c[2] and c[1] < cy < c[3]
+                c for c in _title_block_cells(model, sheet) if c[0] < cx < c[2] and c[1] < cy < c[3]
             )
             inside = (
                 left >= cell[0] - tolerance

@@ -82,8 +82,8 @@ def _drawn(*, in_unit: bool) -> _Drawn:
     wires = [w for d in pages for w in d.wires]
     coils = tuple((s.x, s.y) for d in pages for s in d.symbols if s.key == "operating-device")
     return _Drawn(
-        tuple(w.points for w in wires if w.lanes > 1),
-        tuple(w.points for w in wires if w.lanes == 1),
+        tuple(w.points for w in wires if w.style == "trunk"),
+        tuple(w.points for w in wires if w.style != "trunk"),
         coils,
     )
 

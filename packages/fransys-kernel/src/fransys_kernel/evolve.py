@@ -20,7 +20,7 @@ from .hashes import model_digest, namespace_digests, record_hash
 from .ids import Id
 from .origin import Origin, require_origin
 lazy from .model import Model
-lazy from .record import Record
+lazy from .record_protocol import Record
 
 if TYPE_CHECKING:
     from .conform import Reference

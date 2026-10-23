@@ -1,12 +1,13 @@
 """R283: no two placed symbols share a pin position on a page; the helper reports one that does."""
 
 from types import SimpleNamespace
-from typing import Any
 
 import fransys as fr
 from pin_positions import shared_pin_positions
 from tests.field_cases.test_a_two_pole_breaker_on_two_rails_stands_in_one_column import _design
-lazy import pytest
+
+from electrical_symbols import LIBRARY
+from fransys_layout.drawing import Drawing, port_points
 
 
 def _placed(sym: str, x: int, y: int) -> SimpleNamespace:
@@ -26,19 +27,21 @@ def test_symbols_apart_are_not_reported() -> None:
     assert shared_pin_positions([page]) == []
 
 
-def test_the_rail_breaker_design_shares_no_pin_position(monkeypatch: pytest.MonkeyPatch) -> None:
-    import fransys_el.lay_out_core as core
-
-    seen: list[Any] = []
-    real = core.write_layout
-
-    def spy(laid: Any, *args: Any, **kwargs: Any) -> Any:
-        seen.extend(
-            x.placement.pages for x in (laid, *args, *kwargs.values()) if hasattr(x, "placement")
+def _drawn_page(drawing: Drawing) -> SimpleNamespace:
+    """A drawn page as the placed symbols the helper reads: each symbol's pin points in G."""
+    return SimpleNamespace(
+        placed=tuple(
+            SimpleNamespace(
+                sym=s.id,
+                pin_xy=tuple(SimpleNamespace(x=x, y=y) for (x, y), _ in port_points(s, LIBRARY)),
+            )
+            for s in drawing.symbols
         )
-        return real(laid, *args, **kwargs)
+    )
 
-    monkeypatch.setattr(core, "write_layout", spy)
-    fr.build(*_design())
-    assert seen
-    assert [shared_pin_positions(pages) for pages in seen] == [[] for _ in seen]
+
+def test_the_rail_breaker_design_shares_no_pin_position() -> None:
+    drawings = fr.build(*_design()).drawings.values()
+    pages = [_drawn_page(d) for d in drawings]
+    assert any(page.placed for page in pages)
+    assert shared_pin_positions(pages) == []

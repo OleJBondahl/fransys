@@ -2,12 +2,12 @@
 
 from typing import TYPE_CHECKING
 
-from fransys_model.derive import revision_rows, revision_text
+from fransys_model.derive import revision_rows
 
 from ._cover_measure import measuring_block
 from ._geometry import document_heading, document_release
 from ._markdown import BulletList, NumberedList, Paragraph, Run, parse, to_typst
-from ._sizes import RULE
+from ._sizes import rule_of
 from ._typst import literal
 
 if TYPE_CHECKING:
@@ -15,11 +15,6 @@ if TYPE_CHECKING:
     from fransys_model.kernel import Model
 
     from ._markdown import Element
-
-_NOTES_HEADING = literal("Notes")
-
-_REVISION_COLUMNS = ("Revision", "Date", "Description", "Created", "Checked", "Approved")
-DESCRIPTION_WIDTH_MM = 120  # Amended 2026-09-24: the one capped, wrapping column
 
 
 def _flatten_lists(elements: tuple[Element, ...]) -> tuple[Element, ...]:
@@ -42,7 +37,7 @@ def _flatten_lists(elements: tuple[Element, ...]) -> tuple[Element, ...]:
 
 def _revision_row(entry: RevisionRow) -> tuple[str, str, str, str, str, str]:
     return (
-        revision_text(entry.version, entry.revision),
+        entry.label,
         entry.date,
         entry.text,
         entry.created,
@@ -51,23 +46,29 @@ def _revision_row(entry: RevisionRow) -> tuple[str, str, str, str, str, str]:
     )
 
 
-def _revision_table(entries: tuple[RevisionRow, ...]) -> str:
-    """The revision-history table, `""` if empty; description capped at 120 mm, wrapping."""
+def _revision_table(
+    entries: tuple[RevisionRow, ...],
+    headers: tuple[str, ...],
+    description_mm: float,
+    rule: str,
+) -> str:
+    """The revision-history table, `""` if empty; description capped at `description_mm`."""
     if not entries:
         return ""
-    header = (
-        "table.header("
-        + ", ".join(f"strong(text({literal(name)}))" for name in _REVISION_COLUMNS)
-        + ")"
-    )
+    header = "table.header(" + ", ".join(f"strong(text({literal(name)}))" for name in headers) + ")"
     cells = [header]
     for entry in entries:
         cells.extend(f"text({literal(value)})" for value in _revision_row(entry))
-    columns = f"(auto, auto, {DESCRIPTION_WIDTH_MM}mm, auto, auto, auto)"
-    return f"#table(columns: {columns}, stroke: {RULE}, " + ", ".join(cells) + ")"
+    columns = f"(auto, auto, {description_mm:g}mm, auto, auto, auto)"
+    return f"#table(columns: {columns}, stroke: {rule}, " + ", ".join(cells) + ")"
 
 
-def cover_page(model: Model, record: DocumentRow) -> str:
+def cover_page(
+    model: Model,
+    record: DocumentRow,
+    headers: tuple[str, ...],
+    description_mm: float,
+) -> str:
     """The cover page; Typst measures it and panics on an overlap (`COVER_OVERFLOW`, pdf-0047)."""
     heading = f"#heading(level: 1, text({literal(document_heading(model, record))}))"
     body = to_typst(_flatten_lists(parse(record.cover)))
@@ -81,7 +82,8 @@ def cover_page(model: Model, record: DocumentRow) -> str:
     # page top, and it lands about 9 mm lower (confirmed by compiling that too).
     # The table stands on the margin box's foot, 5 mm above the title block (pdf-0027).
     parts = [f"#let fr-cover = align(center, [\n{heading}\n{body}\n])", "#fr-cover"]
-    table = _revision_table(revision_rows(model, document_release(model, record)))
+    entries = revision_rows(model, document_release(model, record))
+    table = _revision_table(entries, headers, description_mm, rule_of(model))
     if table:
         parts.append(f"#let fr-table = {table[1:]}")
         parts.append("#place(bottom + center, fr-table)")
@@ -89,9 +91,9 @@ def cover_page(model: Model, record: DocumentRow) -> str:
     return "\n".join(parts)
 
 
-def notes_page(record: DocumentRow) -> str:
-    """The notes page: heading `Notes`, then the notes text."""
+def notes_page(record: DocumentRow, heading_word: str) -> str:
+    """The notes page: the `notes` word as heading, then the notes text."""
     notes = record.notes
     assert notes is not None  # noqa: S101 -- document_pages excludes NOTES when there is no notes text
-    heading = f"#heading(level: 1, text({_NOTES_HEADING}))"
+    heading = f"#heading(level: 1, text({literal(heading_word)}))"
     return "\n".join([heading, to_typst(parse(notes))])

@@ -8,6 +8,7 @@ from fransys_render.cables import _end
 from fransys_render.sheet_check import _overflow
 from render_library import freeze
 
+from electrical_symbols import LIBRARY
 from fransys_model.kernel import Draft, make_id
 from fransys_model.layout import BlockRow, CableBlock, EndBox, EndStyle
 from fransys_model.vocab import Document, Item
@@ -40,7 +41,7 @@ def test_a_blank_end_draws_no_box_label_or_cell() -> None:
         pins=(),
         produced_by="test",
     )
-    ink = Ink(Pen(module_mm=Decimal("2.5"), text_height_mm=Decimal("2.5"), pad_g=2))
+    ink = Ink(Pen(LIBRARY, module_mm=Decimal("2.5"), text_height_mm=Decimal("2.5"), pad_g=2))
     model = freeze(Draft())
     _end(model, ink, block, end)  # a blank end reads neither the model nor the block
     assert ink.body() == ""

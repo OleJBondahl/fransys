@@ -7,7 +7,7 @@ id is derived from.
 
 from fransys_model.kernel import make_id, render_id
 
-__all__ = ["lead_id", "symbol_id", "text_id", "wire_id"]
+__all__ = ["core_symbol_id", "lead_id", "symbol_id", "text_id", "wire_id"]
 
 _KEY = ("layout", "core")
 
@@ -27,6 +27,11 @@ class _TextKind:
 def symbol_id(*key: str) -> str:
     """The render id of the symbol under `key`."""
     return render_id(make_id(_SymbolKind, key))
+
+
+def core_symbol_id(sym: str) -> str:
+    """The render id of the drawn symbol of core symbol `sym`."""
+    return symbol_id(*_KEY, "drawn_symbol", sym)
 
 
 def wire_id(number: int, net: str, index: int) -> str:

@@ -59,7 +59,7 @@ def test_each_modules_names_equal_the_snapshot() -> None:
 
 def test_model_modules_never_grow() -> None:
     count = len(lean_surface._MODEL_MODULES)
-    assert count <= 17, (
+    assert count <= 19, (
         f"_MODEL_MODULES has {count} modules; the number only falls "
-        "(EL-MODEL M1 amendment 3), so the limit stays at 17"
+        "(EL-MODEL M1 amendment 3), so the limit stays at 19 (LIB-ADOPT R1: two family doors)"
     )

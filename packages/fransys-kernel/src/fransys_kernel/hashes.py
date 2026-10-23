@@ -17,7 +17,7 @@ if TYPE_CHECKING:
     from collections.abc import Mapping
 
     from .ids import Id
-    from .record import Record
+    from .record_protocol import Record
     from .schema import FieldInfo
 
 

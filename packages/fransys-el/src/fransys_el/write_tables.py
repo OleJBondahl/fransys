@@ -3,11 +3,12 @@
 The core's annex stage places the head; this is the one home of its place and its drawn symbol.
 """
 
+from dataclasses import replace
 from typing import TYPE_CHECKING
 
 from electrical_symbols import drawn_slots
-from fransys_layout.drawing import DrawnSymbol
-from fransys_model.derive import coil_table_texts
+from fransys_layout.drawing import Drawing, DrawnSymbol
+from fransys_model.derive import coil_table_texts, contact_places
 
 from .drawn_ids import symbol_id
 from .kit_keys import function_of
@@ -20,10 +21,11 @@ if TYPE_CHECKING:
     from fransys_layout.core import Box, CoreLayout
     from fransys_model.kernel import Id, Model
     from fransys_model.layout import Page
+    from fransys_model.vocab import Function
 
     from .placement_kit import SymbolKit
 
-__all__ = ["HEAD", "head_places", "table_heads", "table_texts"]
+__all__ = ["HEAD", "head_places", "place_heads", "table_heads", "table_texts"]
 
 _KEY = ("layout", "core")
 HEAD = "contact-head"
@@ -63,3 +65,33 @@ def table_heads(
                 outline=box,
             ),
         )
+
+
+def _placed(
+    model: Model, owner: Mapping[str, Id[Function]], sym: DrawnSymbol, page: Id[Page]
+) -> DrawnSymbol:
+    """`sym` with its entries given their placed places when it is a table head, else `sym`."""
+    if sym.key != HEAD or sym.id not in owner:
+        return sym
+    coil = owner[sym.id]
+    texts = coil_table_texts(model, coil, contact_places(model, coil, page))
+    return replace(sym, texts=texts, slots=tuple(drawn_slots(HEAD, texts).items()))
+
+
+def place_heads(
+    model: Model, kit: SymbolKit, drawings: Mapping[Id[Page], Drawing]
+) -> dict[Id[Page], Drawing]:
+    """`drawings` with each table head's entries given their placed places (C2.4).
+
+    Placement reserves a stand-in width; once every set is laid, the places are in `model`'s
+    `layout.membership` rows; `contact_places` gives each contact's text on the head's page.
+    """
+    owner = {
+        symbol_id(*_KEY, "drawn_table", symbol_key(model, f)): function_of(model, f) for f in kit
+    }
+    return {
+        page: replace(
+            drawing, symbols=tuple(_placed(model, owner, sym, page) for sym in drawing.symbols)
+        )
+        for page, drawing in drawings.items()
+    }

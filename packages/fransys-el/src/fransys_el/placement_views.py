@@ -16,10 +16,13 @@ if TYPE_CHECKING:
     from electrical_symbols import Library
     from fransys_layout.core import Box, Orientation
 
-__all__ = ["MARKER", "marker_boxes"]
+__all__ = ["MARKER", "MARKER_KEYS", "marker_boxes"]
 
 #: The symbol whose keep-out box is the reference marker's footprint beside a pin (layout-0305).
 MARKER = "reference-marker"
+
+#: Every library key a reference marker draws with: the flag and the turned one (es-0082).
+MARKER_KEYS = frozenset({MARKER, MARKER_TURNED})
 
 # Core orientation (R90 faces south, R270 north; M is the mirrored one) -> the turned symbol's turn.
 _TURNED = {"R90": "R0", "MR270": "R0", "R270": "R180", "MR90": "R180"}

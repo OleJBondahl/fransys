@@ -95,7 +95,7 @@ def test_the_line_reaches_the_interface_box() -> None:
         for d in _pages()
         for b in _boxes(d)
         for w in d.wires
-        if w.lanes > 1 and any(b[0] <= x <= b[2] and b[1] <= y <= b[3] for x, y in w.points)
+        if w.style == "trunk" and any(b[0] <= x <= b[2] and b[1] <= y <= b[3] for x, y in w.points)
     ]
     assert touched != []
 
@@ -109,7 +109,7 @@ def test_no_stub_end_names_a_box_of_its_own_drawing_set_without_a_page() -> None
 def _route() -> tuple[Rect, DrawnWire, Rect]:
     """`-U1-X7`'s box, `-W1`'s line on its page and `-J1`'s box beyond (the route's far end)."""
     for d in _pages():
-        line = next((w for w in d.wires if w.lanes > 1), None)
+        line = next((w for w in d.wires if w.style == "trunk"), None)
         if line is not None:
             boxes = sorted(_boxes(d), key=lambda b: b[1])
             return boxes[0], line, boxes[-1]

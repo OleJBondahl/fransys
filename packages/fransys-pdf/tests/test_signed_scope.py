@@ -24,6 +24,7 @@ from _build import (
 )
 from fransys_pdf._geometry import document_heading
 
+from electrical_symbols import LIBRARY
 from fransys_model.derive import SheetKey, document_row, document_sheets_of, subject_label
 from fransys_model.vocab import DocumentPreset, PageKind
 
@@ -51,7 +52,9 @@ def _schematic_background(*nodes):
         remove=(K.PLC_LIST, K.TERMINAL_LIST, K.BOM),
     )
     m = model(*nodes, project(), ds, page, doc)
-    return fransys_render.sheets(document_sheets_of(m))[SheetKey(doc.id, K.SCHEMATIC, 0)].svg
+    return fransys_render.sheets(document_sheets_of(m), LIBRARY)[
+        SheetKey(doc.id, K.SCHEMATIC, 0)
+    ].svg
 
 
 def test_a_location_documents_subject_label_is_the_bare_label():
@@ -93,6 +96,8 @@ def test_a_harness_drawing_pages_scope_cell_reads_the_bare_harness():
     facet = cable_facet("w1", subject=cable.id, length_mm=1500)
     doc = document("d1", preset=DocumentPreset.HARNESS_DRAWING, subject=harness, cover="# Cover")
     m = model(project(), harness, demo_part, product, cable, facet, doc)
-    svg = fransys_render.sheets(document_sheets_of(m))[SheetKey(doc.id, K.HARNESS_DRAWING, 0)].svg
+    svg = fransys_render.sheets(document_sheets_of(m), LIBRARY)[
+        SheetKey(doc.id, K.HARNESS_DRAWING, 0)
+    ].svg
     assert ">Scope</text>" in svg
     assert ">H1</text>" in svg

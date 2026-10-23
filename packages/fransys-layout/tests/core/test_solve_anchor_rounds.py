@@ -8,6 +8,7 @@ import pytest
 from options_fixtures import core_options
 
 from fransys_layout.core.anchors import anchor_misses
+from fransys_layout.core.outputs import Anchored, PagePlacement, Placement, Trunk
 from fransys_layout.core.solve import solve
 from fransys_layout.core.values import Anchor, Box, PinRef, Pose
 lazy from fransys_layout.core import CoreLayout, Options, PlacementProblem
@@ -22,6 +23,7 @@ def _options(rounds: int) -> Options:
         tag_stagger=True,
         flip_turn="R180",
         label_gap=8,
+        parallel_pitch=48,
         driver_first=True,
         arrow_sides=("E", "W"),
         solve_rounds=rounds,
@@ -52,3 +54,15 @@ def test_a_missed_outline_is_held_by_a_second_layout() -> None:
 @pytest.mark.rule("POWER-NET")
 def test_with_no_further_round_the_same_outline_overlaps() -> None:
     assert _misses(_layout(0)) != ()
+
+
+@pytest.mark.rule("POWER-NET")
+@pytest.mark.parametrize(("trunk_y", "hits"), [(100, [["trunk"]]), (108, [])])
+def test_an_anchor_port_on_a_trunk_line_misses(trunk_y: int, hits: list[list[str]]) -> None:
+    """A lead that ends on a foreign trunk tees onto it; one clear of every lane line does not."""
+    page = PagePlacement(1, (), (), (Trunk("F1", 1, trunk_y, 0, 200, 1, 0, ((0, 200),)),), (), ())
+    item = Anchored(
+        "K1", "1", 1, 50, 100, "R90", Box(42, 72, 16, 28), (50, 100), ((50, 108), (50, 100))
+    )
+    got = anchor_misses(Placement((page,)), (item,), _problem(), _options(0))
+    assert [h for _, h in got] == hits

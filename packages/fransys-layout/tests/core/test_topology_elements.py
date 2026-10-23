@@ -8,7 +8,7 @@ from turn_fixtures import refit
 
 from fransys_layout import core
 from fransys_layout.core.topology_elements import NetEnd, elements, net_ends, wired_pins
-from fransys_layout.core.values import BoxSpec, Net, Pin, PinRef
+from fransys_layout.core.values import BoxSpec, CutEnd, Net, Pin, PinRef
 lazy from fransys_layout.core.sym_values import Sym
 
 from .flow_builders import OPTIONS, elem, free, net, poles, problem
@@ -63,6 +63,14 @@ def test_net_end_roles_top_bottom_side_through_and_boxpin() -> None:
     assert [e.site for e in through] == ["through", "top"]
     assert [e.site for e in side] == ["side", "top"]
     assert [e.site for e in boxed] == ["top", "boxpin"]
+
+
+def test_a_free_end_whose_net_continues_outside_the_set_is_not_a_through_end() -> None:
+    """A lone free-form terminal is a through end; with its pin in `net.cut` it ends at the pin."""
+    whole = net("x", "t.n")
+    cut = replace(whole, cut=(CutEnd(PinRef("t", "n")),))
+    assert [e.site for e in _ends([free("t")], [whole], "x")] == ["through"]
+    assert [e.site for e in _ends([free("t")], [cut], "x")] == ["top"]
 
 
 def test_net_ends_come_back_in_natural_key_order_whatever_the_input_order() -> None:

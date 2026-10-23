@@ -47,5 +47,7 @@ def test_a_tall_upper_band_with_no_lower_band_stays_inside_the_content_box() -> 
 def test_an_upper_band_taller_than_the_page_alone_stays_inside_the_content_box() -> None:
     built = _built(2, 0, 6, looms=False)
     assert [f for f in built.findings if f.severity.name == "ERROR"] == []
-    assert len(layout_of(built.model, Page)) == 1
+    # R467 Q02: the headers' set keeps its cut ends and their stubs, on a page of its own.
+    pages = drawn_pages(built.model).values()
+    assert len([d for d in pages if any(s.key == "make-contact" for s in d.symbols)]) == 1
     assert not _OVER & {f.code for f in built.findings}

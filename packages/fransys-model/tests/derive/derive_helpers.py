@@ -1,6 +1,8 @@
 """Helpers the derive tests import by name; the name is unique across the workspace."""
 
+import tomllib
 from decimal import Decimal
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 from fransys_model.kernel import Origin, evolve, freeze, make_id
@@ -9,15 +11,28 @@ from fransys_model.layout import (
     PaperChoice,
     SheetFormat,
     a2_sheet_format,
+    colour_codes,
     default_sheet_format,
+    frame_form,
+    harness_text,
+    reference_text,
+    revision_form,
+    revision_table_form,
+    stub_text,
+    title_block_form,
+    wire_label_text,
+    words,
 )
 from fransys_model.vocab import PageKind
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping
+
     from fransys_model.kernel import Draft, Model, Record
 
 _KEY = ("test", "library")
 _EM = Decimal(2048)
+_HEIGHTS = ("1", "1.8", "2", "2.2", "2.5", "3", "3.2", "3.5", "4", "5", "6")
 
 
 def add_all(draft: Draft, *records: Record, origin: Origin) -> None:
@@ -26,7 +41,9 @@ def add_all(draft: Draft, *records: Record, origin: Origin) -> None:
         draft.add(record, origin=origin)
 
 
-def drawing_library(divisions: int = 8) -> DrawingLibrary:
+def drawing_library(
+    divisions: int = 8, extra_ems: Mapping[str, Decimal] | None = None
+) -> DrawingLibrary:
     """A drawing library record with the bundled library's numbers (a test's own copy)."""
     return DrawingLibrary(
         id=make_id(DrawingLibrary, _KEY),
@@ -36,9 +53,12 @@ def drawing_library(divisions: int = 8) -> DrawingLibrary:
         wire_pitch=8,
         wire_pitch_fine=4,
         font_family="DejaVu Sans",
-        capital_ratio=Decimal(1493) / _EM,
         ascent_ratio=Decimal(1556) / _EM,
         descent_ratio=Decimal(426) / _EM,
+        ems=frozendict({h: Decimal(h) * _EM / 1493 for h in _HEIGHTS} | dict(extra_ems or {})),
+        lines=frozendict(
+            {"normal": Decimal("0.25"), "thick": Decimal("0.5"), "rule": Decimal("0.18")}
+        ),
         heights=frozendict(
             {
                 "smallest": Decimal("1.8"),
@@ -62,12 +82,53 @@ def paper_records() -> tuple[SheetFormat, SheetFormat, PaperChoice]:
     )
 
 
-def with_library(model: Model, divisions: int = 8) -> Model:
+def with_library(
+    model: Model, divisions: int = 8, extra_ems: Mapping[str, Decimal] | None = None
+) -> Model:
     """`model` with a drawing library record, as the facade writes one."""
     origin = Origin(file="derive_helpers.py", line=0, note="test library")
-    return evolve(model, put=(drawing_library(divisions), *paper_records()), origin=origin)
+    return evolve(
+        model,
+        put=(drawing_library(divisions, extra_ems), *paper_records(), *house_records()),
+        origin=origin,
+    )
 
 
-def frozen_with_library(draft: Draft, divisions: int = 8) -> Model:
+def with_house(model: Model) -> Model:
+    """`model` with the house text records only, as the facade writes them."""
+    origin = Origin(file="derive_helpers.py", line=0, note="test house records")
+    return evolve(model, put=house_records(), origin=origin)
+
+
+def frozen_with_library(
+    draft: Draft, divisions: int = 8, extra_ems: Mapping[str, Decimal] | None = None
+) -> Model:
     """`draft` frozen, with a drawing library record."""
-    return with_library(freeze(draft), divisions)
+    return with_library(freeze(draft), divisions, extra_ems)
+
+
+def house_record[R: Record](kind: type[R]) -> R:
+    """The house text record of type `kind`, as `house_records` builds it."""
+    return next(r for r in house_records() if isinstance(r, kind))
+
+
+def house_records() -> tuple[Record, ...]:
+    """The house text records of `settings.toml`, built by the model's builders."""
+    path = Path(__file__).parents[3] / "fransys" / "src" / "fransys" / "settings.toml"
+    t = tomllib.loads(path.read_text(encoding="utf-8"))
+    return (
+        reference_text(**t["reference"]),
+        frame_form(**t["frame"]),
+        stub_text(**t["stub"]),
+        wire_label_text(**t["wire_label"]),
+        harness_text(**t["harness"]),
+        colour_codes(**t["colours"]),
+        title_block_form(**t["title_block"]),
+        revision_table_form(**t["revision_table"]),
+        revision_form(
+            date_format=t["revision"]["date_format"],
+            initials_required=t["revision"]["initials_required"],
+            printed=t["revision"]["format"],
+        ),
+        words(t["words"]),
+    )

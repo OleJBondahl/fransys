@@ -13,6 +13,8 @@ import pytest
 from demo_designs import cabinet_design
 from fransys import pipeline
 
+from electrical_symbols import LIBRARY
+
 
 def _spy(monkeypatch, module, name):
     """Wrap `module.name` in a call-counting delegate to the real function."""
@@ -111,12 +113,12 @@ def test_svgs_hands_out_a_fresh_copy_every_call(result):
     """`_svgs` returns `dict(_svgs_cache(model))`, a copy, every call: a caller that mutates
     what it got back must never affect the memo's held value or a later caller's dict.
     """
-    svgs1 = pipeline._svgs(result.model, result.drawings)
+    svgs1 = pipeline._svgs(result.model, result.drawings, LIBRARY)
     real_keys = set(svgs1)
     svgs1["bogus"] = "x"
     svgs1.clear()
 
-    svgs2 = pipeline._svgs(result.model, result.drawings)
+    svgs2 = pipeline._svgs(result.model, result.drawings, LIBRARY)
 
     assert svgs2 is not svgs1
     assert set(svgs2) == real_keys

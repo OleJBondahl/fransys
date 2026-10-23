@@ -13,6 +13,7 @@ from fransys_model.kernel import Finding, SchemaError, Severity, render_id
 from fransys_model.vocab import FINDING_CODES
 
 from .codes import FINDING_CODES as LAYOUT_CODES
+from .kit_keys import function_of
 from .placement_kit import refuse
 from .placement_skips import (
     FUNCTION_UNWIRED,
@@ -93,7 +94,7 @@ def _spare(model: Model, subjects: list[Id[object]]) -> Finding:
 
 def _spare_functions(model: Model, subjects: list[Id[object]]) -> Finding:
     """One finding for every spare function of the document: the count and the items (R364)."""
-    found = (function_item(model, cast("Id[Function]", f)) for f in subjects)
+    found = (function_item(model, function_of(model, cast("Id[Function]", f))) for f in subjects)
     items = dict.fromkeys(item_designation(model, i) for i in found)
     return Finding(
         code="SPARE_FUNCTIONS",

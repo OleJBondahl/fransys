@@ -19,16 +19,18 @@ from .document_pages import drawn_pages
 from .document_sizes import sizes_of
 from .document_subject import scope_path, subject_label
 from .harness_blocks import cable_blocks, harness_cables_for, system_has_no_top_level_cables
-from .page_headings import DIAGRAM_TITLE, HARNESS_DRAWING_TITLE, PAGE_HEADINGS, SCHEMATIC_TITLE
+from .house_settings import frame_form_of
+from .page_headings import diagram_title, harness_drawing_title, page_headings, schematic_title
 from .page_presets import document_page_kinds
 from .page_titles import page_title_forms
 from .rows_sheet import SheetKey, TitleBlockFields
-from .rows_sheet_pages import DocumentSheets, SheetPage
+from .rows_sheet_pages import DocumentSheets, SheetFrame, SheetPage
 from .schematic_subject import has_schematic_subject
 from .sheet_forms import sheet_counter_text
 from .sheet_frame import sheet_frame
 from .sheets import diagram_sheets
 from .title_block import document_facts
+from .title_block_text import title_block_words
 
 __all__ = ["document_sheet_format", "document_sheets", "document_sheets_of"]
 
@@ -105,7 +107,7 @@ def _schematic_pages(model: Model, record: Document, sheet: SheetFormat) -> list
             zip(found, _drawing_fields(model, record, found), strict=True)
         )
     ]
-    fallback = _fields(model, record, (SCHEMATIC_TITLE,))
+    fallback = _fields(model, record, (schematic_title(model),))
     key = SheetKey(record.id, kind, None)
     return [*out, SheetPage(key=key, kind=kind, sheet=sheet, fields=fallback, where="", group="")]
 
@@ -126,7 +128,7 @@ def _harness_pages(
     blocks = cable_blocks(model, record.id, cables)
     if not blocks:
         key = SheetKey(record.id, kind, None)
-        fallback = _fields(model, record, (HARNESS_DRAWING_TITLE,))
+        fallback = _fields(model, record, (harness_drawing_title(model),))
         return [SheetPage(key=key, kind=kind, sheet=sheet, fields=fallback, where="", group="")]
     scope = _harness_scope(model, record)
     return [
@@ -152,7 +154,10 @@ def _diagram_pages(model: Model, record: Document) -> list[SheetPage]:
             kind=kind,
             sheet=paper,
             fields=_fields(
-                model, record, (DIAGRAM_TITLE,), counter=sheet_counter_text(diagram, len(found))
+                model,
+                record,
+                (diagram_title(model),),
+                counter=sheet_counter_text(diagram, len(found)),
             ),
             where="",
             group="",
@@ -161,12 +166,19 @@ def _diagram_pages(model: Model, record: Document) -> list[SheetPage]:
     ]
 
 
+def _frames(model: Model, pages: list[SheetPage]) -> frozendict[Id[SheetFormat], SheetFrame]:
+    """The frame of each page's sheet format, by sheet id."""
+    form = frame_form_of(model)
+    return frozendict({p.sheet.id: sheet_frame(form, p.sheet) for p in pages})
+
+
 def document_sheets(model: Model, document: Id[Document]) -> DocumentSheets:
     """Every page background of `document`, in page order, with its paper and sizes."""
     record = documents(model)[document]
     kinds = document_page_kinds(model, document)
     sheet = document_sheet_format(model, record.id, kinds)
-    first_section = next((kind for kind in kinds if kind in PAGE_HEADINGS), PageKind.COVER)
+    headings = page_headings(model)
+    first_section = next((kind for kind in kinds if kind in headings), PageKind.COVER)
     pages: list[SheetPage] = []
     for kind in kinds:
         if kind is PageKind.SCHEMATIC:
@@ -181,14 +193,17 @@ def document_sheets(model: Model, document: Id[Document]) -> DocumentSheets:
                     key=SheetKey(document, kind, 0),
                     kind=kind,
                     sheet=sheet,
-                    fields=_fields(model, record, (PAGE_HEADINGS[kind],)),
+                    fields=_fields(model, record, (headings[kind],)),
                     where=kind.name,
                     group=first_section.name,
                 )
             )
-    frames = {p.sheet.id: sheet_frame(p.sheet) for p in pages}
     return DocumentSheets(
-        sheet=sheet, sizes=sizes_of(model, record.id), pages=tuple(pages), frames=frozendict(frames)
+        sheet=sheet,
+        sizes=sizes_of(model, record.id),
+        pages=tuple(pages),
+        frames=_frames(model, pages),
+        title_text=title_block_words(model),
     )
 
 

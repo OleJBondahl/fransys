@@ -18,6 +18,7 @@ import itertools
 from typing import TYPE_CHECKING, Any
 
 import fransys as fr
+from _drawn_facts import wire_nets
 from _drawn_pages import drawn_pages
 
 from fransys_model.layout import LinkMarker, layout_of
@@ -26,12 +27,6 @@ if TYPE_CHECKING:
     from pathlib import Path
 
 type _Point = tuple[int, int]
-
-
-def _gap(model, fact: str):
-    """A fact the page Drawing lacks (strict xfail, GAP-FLIP-DRAWING-SUBJECT)."""
-    msg = f"GAP-FLIP-DRAWING-SUBJECT: no {fact} for {model.digest}"
-    raise AssertionError(msg)
 
 
 def cross_links_case_drafts(cover: Path) -> tuple[fr.Design, Any]:
@@ -62,7 +57,7 @@ def _crosses(a: tuple[_Point, _Point], b: tuple[_Point, _Point]) -> bool:
 
 def crossings(result: fr.BuildResult) -> int:
     """The strict crossings between segments of wires of different nets on one page."""
-    nets = _gap(result.model, "wire net")
+    nets = {w.id: w.net for _, w in wire_nets(result.model)}
     return sum(
         _crosses(s, t)
         for drawing in drawn_pages(result.model).values()

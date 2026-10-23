@@ -14,7 +14,7 @@ import typst
 from _build import document, drawing_set, layout_page, location, model, source, unit
 from fransys_pdf._labels import sheet_label
 
-from electrical_symbols import font_dir
+from electrical_symbols import LIBRARY, font_dir
 from fransys_model.derive import document_sheets_of, page_destination, sheet_text
 from fransys_model.kernel import make_id, render_id
 from fransys_model.layout import DiagramSheet
@@ -71,7 +71,9 @@ def _compile(m, doc, sheets) -> bytes:
     svgs = {render_id(sheet.id): _SVG for sheet in sheets}
     compiler = typst.Compiler(font_paths=[font_dir()], ignore_system_fonts=True)
     compiled = compiler.compile(
-        input=source(m, doc.id, svgs, fransys_render.sheets(document_sheets_of(m))).encode("utf-8")
+        input=source(m, doc.id, svgs, fransys_render.sheets(document_sheets_of(m), LIBRARY)).encode(
+            "utf-8"
+        )
     )
     assert isinstance(compiled, bytes)
     return compiled

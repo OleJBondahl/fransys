@@ -16,6 +16,7 @@ from _dd_core import pages_with, set_of
 from _dd_core_b import is_stub, marker_strings, markers, symbols_of, tags_of
 from _drawn_pages import drawn_pages
 from _model_build_cover import layout_trigger_document
+from _no_power_net import assert_no_power_net
 
 from fransys_model.derive import item_designation
 from fransys_model.derive.designation import port_designation
@@ -172,89 +173,54 @@ def _star_of_relays(*wires, strip=False):
     return fr.build(parts, d.draft(), layout_trigger_document()).model
 
 
-def _star(model):
-    """The star's (reference marker, branch markers, text by marker).
-
-    The Drawing carries no star kind (R243): the reference is the first marker drawn."""
-    every = [m for _, m in markers(model)]
-    text = {id(m): "\n".join(marker_strings(m)) for m in every}
-    (ref, *branches) = every
-    return ref, branches, text
-
-
-def _named_by(model, marker) -> str:
-    """The `-<tag>` of the item whose operating symbol stands nearest to `marker`."""
-    candidates = [
-        (abs(s.x - marker.x) + abs(s.y - marker.y), tag.text)
-        for drawing in drawn_pages(model).values()
-        if marker in drawing.markers
-        for tag in drawing.texts
-        for s in drawing.symbols
-        if s.key == "operating-device" and abs(s.x - tag.box.x - 56) <= 2
-    ]
-    return min(candidates)[1]
+def _trunk_shape(model) -> tuple[int, int, int, int]:
+    """The page's (trunks, drops, junction dots, markers): a trunk runs level, a drop upright."""
+    (drawing,) = drawn_pages(model).values()
+    level = [w for w in drawing.wires if w.points[0][1] == w.points[-1][1]]
+    upright = [w for w in drawing.wires if w.points[0][0] == w.points[-1][0]]
+    dots = [s for s in drawing.symbols if s.key == "junction-dot"]
+    return len(level), len(upright), len(dots), len(drawing.markers)
 
 
 _CHAIN = (("K4.A2", "K2.A1"), ("K2.A1", "K1.A2"), ("K1.A2", "K3.A1"))
 _HUB_K3 = (("K3.A1", "K1.A2"), ("K3.A1", "K2.A2"), ("K3.A1", "K4.A2"))
 
 
-def test_a_fanout_net_gets_one_marker_per_port_and_no_wires() -> None:
-    """Four ports on one net that are not adjacent are four markers, none of them a route."""
-    # UNDO: fransys_layout/stages/references/nets.py:star_nets
-    #     returns `()` (wires drawn, no markers)
+@pytest.mark.rule("ROUTING")
+@pytest.mark.rule("BUNDLE")
+def test_a_fanout_net_is_one_trunk_with_a_drop_and_a_dot_per_port_and_no_marker() -> None:
+    """Four coil ports on one non-power net: one trunk, a drop per port, a dot at each inner drop,
+    no marker (ROUTING, BUNDLE, R467)."""
+    # UNDO: fransys_layout/core/topology_nets.py:fans_of returns `()` (the net is link wires or
+    #     markers again, not one trunk)
     model = _star_of_relays(*_CHAIN)
-    drawn = markers(model)
-    assert len(drawn) == 4
-    assert not [w for d in drawn_pages(model).values() for w in d.wires]
+    assert_no_power_net(model)
+    assert _trunk_shape(model) == (1, 4, 2, 0)
 
 
-def test_the_reference_is_the_hub_not_the_first_designation() -> None:
-    """K3 carries three conductors, so K3 (not K1, first by designation) is the reference."""
-    # UNDO: fransys_layout/stages/references/nets.py:star_nets
-    #     drop `-degree[port]` from the `ref` sort key
+@pytest.mark.rule("ROUTING")
+@pytest.mark.rule("BUNDLE")
+def test_which_port_carries_most_conductors_changes_nothing_in_the_trunk() -> None:
+    """A hub of three conductors draws the same trunk as a chain over four ports (BUNDLE, R467):
+    no port is the reference, so a tie or a hub has nothing to decide."""
+    # UNDO: as in the first fan-out test
     model = _star_of_relays(*_HUB_K3)
-    ref, _, _ = _star(model)
-    assert _named_by(model, ref) == "-K3"
+    assert_no_power_net(model)
+    assert _trunk_shape(model) == (1, 4, 2, 0)
 
 
-def test_a_tie_for_hub_falls_to_the_port_whose_designation_sorts_first() -> None:
-    """D9: K2.A1 and K1.A2 each carry two conductors; K1:A2 sorts first."""
-    # UNDO: fransys_layout/stages/references/nets.py:star_nets
-    #     reverse the designation in the `ref` sort key
-    model = _star_of_relays(*_CHAIN)
-    ref, _, _ = _star(model)
-    assert _named_by(model, ref) == "-K1"
-
-
-def test_a_single_terminal_point_is_the_reference_even_beside_a_bigger_hub() -> None:
-    """X1:1 carries one conductor, K3 three; the terminal point still is the reference."""
-    # UNDO: fransys_layout/stages/references/nets.py:star_nets
-    #     `if len(points) == 1` becomes `if False`
+@pytest.mark.rule("ROUTING")
+@pytest.mark.rule("BUNDLE")
+def test_a_single_terminal_point_is_a_drop_of_the_trunk_beside_a_bigger_hub() -> None:
+    """X1:1 carries one conductor, K3 three; the terminal stands once as one drop of the trunk
+    over the four ports, one dot at the inner drop (ROUTING, BUNDLE, R467)."""
+    # UNDO: as in the first fan-out test
     model = _star_of_relays(("K3.A1", "K1.A2"), ("K3.A1", "K2.A2"), strip=True)
-    ref, _, _ = _star(model)
+    assert_no_power_net(model)
     assert any(t.text == "-X1:1" for _, t in tags_of(model, "X1"))
-    assert _named_by(model, ref).startswith("-X1")
-
-
-def test_the_reference_lists_its_branches_and_each_branch_names_the_reference() -> None:
-    """The reference's and every branch's text is symmetric -- each of the star's
-    four markers lists one line per OTHER end, so the reference lists its three branches and
-    each branch's own text is the same shape, three lines, no duplicates. "Each branch names
-    the reference" is the persisted `partner` link (unchanged by the text symmetry, a `star.py`
-    rule), not a text-shape guess any more."""
-    # UNDO: fransys_layout/stages/references/markers.py:star_markers
-    #     builds each branch marker with itself as partner
-    model = _star_of_relays(*_CHAIN)
-    ref, branches, text = _star(model)
-    assert len(branches) == 3
-    for member in (ref, *branches):
-        lines = text[id(member)].split("\n")
-        assert len(branches) == 3
-        assert len(lines) == 1  # three other ends print the first and a count
-        assert lines[0].endswith(" +2")  # every OTHER member but the first, once each
-    # each branch names the reference: its text lists the reference's end
-    assert all(_named_by(model, ref).lstrip("-") in text[id(m)] for m in branches)
+    (drawing,) = drawn_pages(model).values()
+    assert len([s for s in drawing.symbols if s.key == "terminal"]) == 1
+    assert _trunk_shape(model) == (1, 4, 1, 0)
 
 
 def test_a_black_box_pin_carries_no_star_marker() -> None:

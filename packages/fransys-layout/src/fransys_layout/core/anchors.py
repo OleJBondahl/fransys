@@ -136,10 +136,21 @@ def anchor_pages(
     return tuple(out)
 
 
-def _hits(item: Anchored, page: PagePlacement, others: Sequence[Anchored], frame: Box) -> list[str]:
+def _on_trunk(page: PagePlacement, at: tuple[int, int], step: int) -> bool:
+    """Whether the point lies on a lane line of one of the page's trunks."""
+    x, y = at
+    return any(
+        t.x0 <= x <= t.x1 and any(y == t.y + k * step for k in range(t.lanes)) for t in page.trunks
+    )
+
+
+def _hits(
+    item: Anchored, page: PagePlacement, others: Sequence[Anchored], frame: Box, step: int
+) -> list[str]:
     box = item.outline
     hit = [p.sym for p in page.placed if overlaps(box, p.body)]
     hit += [o.sym + "/" + o.pin for o in others if o is not item and overlaps(box, o.outline)]
+    hit += ["trunk"] * _on_trunk(page, item.port, step)
     return hit if _inside(box, frame) else [*hit, "frame"]
 
 
@@ -154,5 +165,9 @@ def anchor_misses(
     out: list[tuple[Anchored, list[str]]] = []
     for pg in placement.pages:
         mine = [a for a in anchored if a.page == pg.page]
-        out += [(item, hit) for item in mine if (hit := _hits(item, pg, mine, frame))]
+        out += [
+            (item, hit)
+            for item in mine
+            if (hit := _hits(item, pg, mine, frame, options.wiring_grid))
+        ]
     return tuple(out)

@@ -121,6 +121,7 @@ def test_width_est_is_the_row_width_of_the_blocks_own_row() -> None:
             flip_turn="R180",
             tag_stagger=True,
             label_gap=8,
+            parallel_pitch=48,
             driver_first=True,
             arrow_sides=("E", "W"),
         ),
@@ -138,6 +139,7 @@ def test_estimates_short_and_keep_whole() -> None:
             flip_turn="R180",
             tag_stagger=True,
             label_gap=8,
+            parallel_pitch=48,
             driver_first=True,
             arrow_sides=("E", "W"),
         ).short_height

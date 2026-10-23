@@ -26,12 +26,13 @@ from pathlib import Path
 
 import fransys as fr
 import pytest
+from _drawn_facts import document_facts, symbol_subjects, text_subjects, wire_nets
 from _drawn_pages import drawn_pages
 from fransys.colours import BU
 
 from fransys_layout.geometry import GENERIC_BOX_KEY, WIRING_GRID, symbol_geometry
 from fransys_layout.geometry.symbols import channel_pitch
-from fransys_model.layout import PowerSymbol, layout_of
+from fransys_model.layout import Orientation, PowerSymbol, layout_of
 from fransys_model.vocab.tables import functions, items, ports
 
 
@@ -90,23 +91,21 @@ def _placed(model, tag: str, name: str, symbol: str | None = None) -> list:
     wanted = {
         f.id.value for f in functions(model).values() if f.name == name and tag_of[f.item] == tag
     }
-    return [
-        s
-        for s in _gap(model, "symbol subject").values()
-        if s.owner and s.owner.split(":")[-1] in wanted and symbol in (None, s.symbol)
-    ]
+    return [s for s in symbol_subjects(model) if s.owner in wanted and symbol in (None, s.symbol)]
 
 
 def _home(model, placed) -> tuple:
     """The drawing set and the page a drawn symbol stands on."""
-    return _gap(model, "document fact")[placed.page].drawing_set, placed.page
+    return document_facts(model)[placed.page].drawing_set, placed.page
 
 
 def _port_at(placed, port: str) -> tuple[int, int]:
     """The page position of port `port` of the drawn symbol `placed`."""
     if placed.symbol == GENERIC_BOX_KEY:
         return placed.x + placed.offsets[port], placed.y
-    geometry = symbol_geometry(placed.symbol, poles=placed.poles, orientation=placed.orient)
+    geometry = symbol_geometry(
+        placed.symbol, poles=placed.poles, orientation=Orientation[placed.orient]
+    )
     (found,) = (g for g in geometry.ports if g.name == port)
     return placed.x + found.at.x, placed.y + found.at.y
 
@@ -123,7 +122,7 @@ def _channel_box(model):
     """The PLC module's box: the one generic box with channel (`di_`) ports."""
     (box,) = (
         s
-        for s in _gap(model, "symbol subject").values()
+        for s in symbol_subjects(model)
         if s.symbol == GENERIC_BOX_KEY and any("di_" in n for n in s.offsets)
     )
     return box
@@ -131,9 +130,7 @@ def _channel_box(model):
 
 def _fid(model, placed):
     """The id of the function a drawn symbol belongs to."""
-    (found,) = (
-        f.id for f in functions(model).values() if f.id.value == placed.owner.split(":")[-1]
-    )
+    (found,) = (f.id for f in functions(model).values() if f.id.value == placed.owner)
     return found
 
 
@@ -142,7 +139,7 @@ def _cross_references(model) -> list:
 
 
 def _pages(model, partners) -> list:
-    return [(_gap(model, "document fact")[p.page].drawing_set, p.page) for p in partners]
+    return [(document_facts(model)[p.page].drawing_set, p.page) for p in partners]
 
 
 def test_each_single_wire_contact_stands_once_under_its_channel() -> None:
@@ -180,10 +177,10 @@ def test_a_box_stays_on_its_group_page_when_its_contacts_come_from_two_groups() 
     box = _channel_box(model)
     coils = [_placed(model, f"K{n}", "coil", "operating-device")[0] for n in (2, 3)]
     assert all(_home(model, box) != _home(model, c) for c in coils)
-    pages = _gap(model, "document fact")
+    pages = document_facts(model)
     same_set = [
         pages[p.page].number
-        for p in _gap(model, "symbol subject").values()
+        for p in symbol_subjects(model)
         if _home(model, p)[0] == _home(model, box)[0]
     ]
     assert pages[box.page].number == min(same_set)
@@ -217,8 +214,10 @@ def test_channel_pins_stand_one_and_a_half_pole_pitches_apart_and_their_texts_ke
     y0 = min(p.y for p in placed)
     under = [
         label
-        for label in _gap(model, "text subject").values()
-        if label.page == placed[0].page and x0 - 20 <= label.x <= x1 + 90 and label.y >= y0 - 40
+        for label in text_subjects(model)
+        if label.page == placed[0].page
+        and x0 - 20 <= label.box.x <= x1 + 90
+        and label.box.y >= y0 - 40
     ]
     assert len(under) >= 6, "the contacts' texts were not found: the check would pass over nothing"
     pins = sorted(p.x for p in placed)
@@ -226,8 +225,12 @@ def test_channel_pins_stand_one_and_a_half_pole_pitches_apart_and_their_texts_ke
     for one, other in combinations(under, 2):
         if owner(one) == owner(other):
             continue  # one contact's own texts sit by design
-        dx = max(one.x, other.x) - min(one.x + one.width, other.x + other.width)
-        dy = max(one.y, other.y) - min(one.y + one.height, other.y + other.height)
+        dx = max(one.box.x, other.box.x) - min(
+            one.box.x + one.box.width, other.box.x + other.box.width
+        )
+        dy = max(one.box.y, other.box.y) - min(
+            one.box.y + one.box.height, other.box.y + other.box.height
+        )
         assert max(dx, dy) >= WIRING_GRID, (one, other)
 
 
@@ -259,8 +262,8 @@ def test_a_contact_hangs_straight_down_and_its_column_ends_in_a_downward_supply_
     line = _pin_x(box, "di_1.1")
     assert _pin_x(contact, "out") == line, "the contact stands in its channel pin's column"
     assert _port_y(contact, "out") < _port_y(contact, "in"), "98/14 above 97/13"
-    (route,) = (r for r in _gap(model, "wire net").values() if {p.x for p in r.points} == {line})
-    assert len({p.x for p in route.points}) == 1, "no horizontal wire, no turn back"
+    (route,) = (w for _, w in wire_nets(model) if {p[0] for p in w.points} == {line})
+    assert len({p[0] for p in route.points}) == 1, "no horizontal wire, no turn back"
     port_of = {(p.function, p.name): pid for pid, p in ports(model).items()}
     (bar,) = (
         s
@@ -308,19 +311,16 @@ def test_a_sixteen_channel_module_fits_one_page_with_a_contact_under_every_chann
 
 def _drawing(model) -> str:
     """A digest of what is drawn: placements, label boxes and routes, no keep-out."""
-    pages = _gap(model, "document fact")
+    pages = document_facts(model)
     placed = sorted(
         (p.owner or "", p.symbol, pages[p.page].drawing_set.value, p.page.value, p.x, p.y)
-        for p in _gap(model, "symbol subject").values()
+        for p in symbol_subjects(model)
     )
     texts = sorted(
         (o.function and o.function.value, o.slot, o.kind.value, o.page.value, o.x, o.y)
         for o in _gap(model, "text subject").values()
     )
-    routes = sorted(
-        (r.page.value, r.style, tuple((p.x, p.y) for p in r.points))
-        for r in _gap(model, "wire net").values()
-    )
+    routes = sorted((page.value, w.style, tuple(w.points)) for page, w in wire_nets(model))
     return sha256(repr((placed, texts, routes)).encode()).hexdigest()[:16]
 
 

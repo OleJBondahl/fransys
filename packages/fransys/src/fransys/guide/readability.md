@@ -4,16 +4,20 @@
 
 `fr.readability(result)` returns a `DrawnReading`: one `DrawnPageReading` row for each page the build drew, in `.pages`. Both types are in `fr.derive`. The same model gives equal rows, so compare a page between revisions by its rows. It writes no file, `fr.write` does not emit it, and it lays nothing out again.
 
-drawings maps each page id to its Drawing; fr.readability reads it; empty when the build has errors; its shape may change before 1.0.
+An error build has no drawings and gives no rows. The shape of the rows may change before 1.0.
 
 The findings these numbers back are in `drawing.md`.
 
 - **`page`.** The page's id.
-- **`symbols` and `markers`.** The cells and the references the page carries.
+- **`unit`.** The unit of the drawing set the page belongs to (its id), or None for a top-level set. A page belongs to exactly one set.
+- **`symbols` and `markers`.** `symbols` counts every symbol drawn on the page. `markers` counts the reference markers among them, whatever their kind (every kind draws the one marker symbol, so the count is the total).
+- **`fill_percent`.** The share, 0 to 100, of the page's content box that the placed ink spans: one box around every symbol body, text, wire and outline. Rounded down. A fuller page reads higher; it is a number to compare between revisions.
 - **`wire_crossings`.** How often a wire runs across a wire of another id. A high number means a tangled page. Order the groups with `order`, or put the crossing nets on separate pages.
 - **`wire_bends` and `wire_length_g`.** The direction changes and the total length in G of every wire on the page. Many bends or a long total mean a winding page. They are numbers to compare between revisions, not a target the layout optimises.
 - **`struck_labels`.** Texts a wire runs through.
 - **`text_overlaps`.** Pairs of texts whose boxes overlap (`TEXT_OVERLAP`).
+
+**Removed.** `page_cuts` is gone: a `Drawing` does not carry which markers cut a wire, so no honest count exists. `text_height_mm` is a setting, not a reading: read it from `[font.heights]` in the settings and from the profile's `min_text_height_mm`. Counts a `Drawing` cannot give (printed numbers, lone cells, contact images, stars, loose symbols) are not in the row either.
 
 ```python
 from pathlib import Path

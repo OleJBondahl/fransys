@@ -219,6 +219,7 @@ def test_options_defaults_follow_the_design_with_e4():
         flip_turn="R180",
         tag_stagger=True,
         label_gap=8,
+        parallel_pitch=48,
         driver_first=True,
         arrow_sides=("E", "W"),
     )
@@ -262,6 +263,7 @@ def test_a_wrong_scalar_type_is_refused_and_an_int_reads_as_a_float():
             flip_turn="R180",
             tag_stagger=True,
             label_gap=8,
+            parallel_pitch=48,
             driver_first=True,
             arrow_sides=("E", "W"),
         )
@@ -295,6 +297,7 @@ def test_the_options_carry_geometry_for_the_placement_strings_and_no_colours():
         flip_turn="R180",
         tag_stagger=True,
         label_gap=8,
+        parallel_pitch=48,
         driver_first=True,
         arrow_sides=("E", "W"),
     )

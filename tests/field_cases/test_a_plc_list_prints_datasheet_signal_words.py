@@ -11,6 +11,8 @@ The rule (decision model-0206, owner H1): `signal_word` maps a signal type to `D
 `spare`. The CSV keeps the enum value.
 """
 
+lazy from pathlib import Path
+
 import fransys as fr
 import pytest
 
@@ -28,13 +30,13 @@ def built() -> fr.BuildResult:
 
 
 def test_the_list_prints_the_signal_words(built: fr.BuildResult) -> None:
-    cells = plc_list_rows(plc_channel_rows(built.model))
+    cells = plc_list_rows(built.model, plc_channel_rows(built.model))
     assert {cell[2] for cell in cells} == {"DI", "DO", "AI (mA)"}
 
 
 def test_a_channel_with_no_function_prints_spare(built: fr.BuildResult) -> None:
     rows = plc_channel_rows(built.model)
-    assert {cells[3] for cells in plc_list_rows(rows)} == {"spare"}
+    assert {cells[3] for cells in plc_list_rows(built.model, rows)} == {"spare"}
 
 
 def test_the_csv_data_keeps_the_enum_value(built: fr.BuildResult) -> None:
@@ -45,11 +47,24 @@ def test_the_csv_data_keeps_the_enum_value(built: fr.BuildResult) -> None:
     }
 
 
-def test_every_signal_type_has_a_word() -> None:
-    assert {signal_word(s) for s in SignalType} >= {
+def test_every_signal_type_has_a_word(built: fr.BuildResult) -> None:
+    assert {signal_word(built.model, s) for s in SignalType} >= {
         "AI (V)",
         "AO (V)",
         "AO (mA)",
         "RTD",
         "DO (relay)",
     }
+
+
+def test_a_consumer_word_reaches_the_plc_list(tmp_path: Path) -> None:
+    path = tmp_path / "fransys.toml"
+    path.write_text('[words]\nsignal_di = "Digital in"\nspare = "free"\n', encoding="utf-8")
+    d = fr.design("demo_parts", place="C1")
+    d.location("C1", "Cabinet")
+    d.device("A1", "DEMO-PLC-DIO-1")
+    model = fr.build(d, settings=fr.settings(path)).model
+    cells = plc_list_rows(model, plc_channel_rows(model))
+    assert {cell[2] for cell in cells} == {"Digital in", "DO"}
+    assert {cell[3] for cell in cells} == {"free"}
+    assert signal_word(model, SignalType.DI) == "Digital in"

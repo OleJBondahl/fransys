@@ -129,6 +129,7 @@ def test_a_page_the_stacks_and_trunks_contradict_alone_still_raises_ycycleerror(
                 flip_turn="R180",
                 tag_stagger=True,
                 label_gap=8,
+                parallel_pitch=48,
                 driver_first=True,
                 arrow_sides=("E", "W"),
             ),

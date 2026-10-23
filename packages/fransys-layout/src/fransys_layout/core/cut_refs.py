@@ -26,7 +26,7 @@ from .topology_elements import is_free_sided
 from .values import Finding, PinRef, Ref, RefEnd, RefKind
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping, Sequence
+    from collections.abc import Collection, Mapping, Sequence
 
     from .cut_dp import Cut, Plan
     from .values import BlockList, Column, Fan, FlowGraph, Net, PlacementProblem
@@ -166,27 +166,78 @@ def head_off_legs(flow: FlowGraph, where: Mapping[str, int]) -> tuple[Finding, .
     return tuple(out)
 
 
-def stubs(problem: PlacementProblem, where: Mapping[str, int], cuts: Sequence[Ref]) -> list[Ref]:
-    """A crossing net ends in a stub at each unit boundary pin of it and at some page-alone ends.
+def _crossing(
+    drawn: Sequence[PinRef],
+    where: Mapping[str, int],
+    boundary: Collection[PinRef],
+    unit_of: Mapping[str, str | None],
+) -> set[PinRef]:
+    """The pins of a crossing net that stub: boundary pins and page-alone ends in units without."""
+    pages = [where[p.sym] for p in drawn]
+    held = {unit_of[p.sym] for p in drawn if p in boundary}
+    alone = {p for p in drawn if pages.count(where[p.sym]) == 1 and unit_of[p.sym] not in held}
+    return set(boundary) | alone
 
-    An end alone on its page stubs when no boundary pin of the net stands in its unit; an end that
-    already carries an arrow, tag or copy of `cuts` gets no stub (layout-0338).
+
+def _first_of_lines(
+    problem: PlacementProblem, where: Mapping[str, int], skip: Collection[PinRef]
+) -> list[Ref]:
+    """One stub for each line of cut pins on a page, at the line's first pin (R481).
+
+    The first is the first in the order of `problem.nets`, then of `net.cut`; the other conductors
+    of the line run to that stub. A pin with no line is a line of its own.
     """
-    marked = {e.pin for r in cuts if r.kind is not RefKind.STUB for e in r.ends}
+    lines: dict[tuple[int, str], tuple[str, PinRef]] = {}
+    for net in problem.nets:
+        for end in (c for c in net.cut if c.pin.sym in where and c.pin not in skip):
+            line = end.line or f"{net.id}/{end.pin.sym}/{end.pin.pin}"
+            lines.setdefault((where[end.pin.sym], line), (net.id, end.pin))
+    return [
+        Ref(net, RefKind.STUB, (RefEnd(page, None, pin),))
+        for (page, _), (net, pin) in lines.items()
+    ]
+
+
+def fan_stubs(
+    problem: PlacementProblem, flow: FlowGraph, where: Mapping[str, int]
+) -> tuple[list[Ref], set[PinRef]]:
+    """One stub per page for each bundle fan of cut ends alone on their nets (R499).
+
+    It stands at the trunk end; the end names the fan's first such pin on its page.
+    """
+    lone = {n.id for n in problem.nets if n.cut and len(n.pins) == 1}
+    out: list[Ref] = []
+    laned: set[PinRef] = set()
+    for fan in (f for f in flow.fans if lone & set(f.nets)):
+        pins = [a.pin for a in (*fan.drivers, *fan.legs)]
+        laned |= set(pins)
+        for page in dict.fromkeys(where[a.column or a.pin.sym] for a in (*fan.drivers, *fan.legs)):
+            pin = _page_pin(fan, page, where)
+            out.append(Ref(fan.nets[0], RefKind.STUB, (RefEnd(page, None, pin),)))
+    return out, laned
+
+
+def stubs(
+    problem: PlacementProblem, flow: FlowGraph, where: Mapping[str, int], cuts: Sequence[Ref]
+) -> list[Ref]:
+    """A crossing net ends in a stub at each boundary pin of it and some page-alone ends.
+
+    `net.cut` pins stub once per line (`_first_of_lines`). An end with an arrow, tag, copy or
+    anchor gets none (layout-0338).
+    """
+    marked = {e.pin for r in cuts if r.kind is not RefKind.STUB for e in r.ends if e.pin}
     boundary = {p for u in problem.facts.units for p in u.boundary}
     unit_of = {s.id: s.unit for s in problem.symbols}
+    lined = {c.pin for n in problem.nets for c in n.cut if c.line}  # a line stubs once, not a pin
     out: list[Ref] = []
-    crossing = (n for n in problem.nets if n.crosses_unit)
-    for net in sorted(crossing, key=lambda n: natural_key(n.id)):
+    crossed: set[PinRef] = set()
+    for net in sorted((n for n in problem.nets if n.crosses_unit), key=lambda n: natural_key(n.id)):
         drawn = [p for p in net.pins if p.sym in where]
-        pages = [where[p.sym] for p in drawn]
-        held = {unit_of[p.sym] for p in drawn if p in boundary}
-        ends = tuple(
-            RefEnd(where[p.sym], None, p)
-            for p in drawn
-            if p not in marked
-            and (p in boundary or (pages.count(where[p.sym]) == 1 and unit_of[p.sym] not in held))
-        )
+        crossing = _crossing(drawn, where, boundary, unit_of)
+        ends = tuple(RefEnd(where[p.sym], None, p) for p in drawn if p in crossing - marked - lined)
+        crossed |= crossing - lined
         if ends:
             out.append(Ref(net.id, RefKind.STUB, ends))
-    return out
+    anchored = {a.pin for a in problem.anchors}  # a power symbol on the pin ends its net
+    fanned, laned = fan_stubs(problem, flow, where)
+    return out + fanned + _first_of_lines(problem, where, marked | crossed | anchored | laned)

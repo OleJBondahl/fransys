@@ -12,6 +12,8 @@ from .placement_ids import symbol_key
 from .placement_kit import refuse
 
 if TYPE_CHECKING:
+    from collections.abc import Collection
+
     from fransys_model.kernel import Id, Model
     from fransys_model.vocab import Function, Part
 
@@ -27,9 +29,19 @@ class Facts(NamedTuple):
     gender: str | None
     operated_by: str | None
     actuator: bool
+    port_shape: str = "other"
+
+
+def port_shape(names: Collection[str]) -> str:
+    """`three-phase` when every port name is a motor terminal's, else `other` (R479)."""
+    return "three-phase" if names and set(names) <= MOTOR_MAP.keys() else "other"
 
 
 NO_MAP: frozendict[str, str] = frozendict(dict[str, str]())
+# A motor (Ruling 68 A1); the symbol's ports are lower case.
+MOTOR_MAP: frozendict[str, str] = frozendict(
+    {**{n: n.lower()[0] for n in ("U", "V", "W", "U1", "V1", "W1")}, "PE": "pe"}
+)
 
 
 class Row(NamedTuple):
@@ -92,13 +104,8 @@ TABLE: tuple[Row, ...] = (
     # A motor (Ruling 68 A1); the symbol's ports are lower case.
     Row(
         "motor-3ph-pe",
-        (("kind", "actuator"),),
-        frozendict(
-            {
-                **{n: n.lower()[0] for n in ("U", "V", "W", "U1", "V1", "W1")},
-                "PE": "pe",
-            }
-        ),
+        (("kind", "actuator"), ("port_shape", "three-phase")),
+        MOTOR_MAP,
     ),
 )
 
@@ -111,6 +118,7 @@ def _subject(facts: Facts) -> dict[str, str | None]:
         "gender": facts.gender or "none",
         "operated_by": facts.operated_by or "none",
         "actuator": "lead" if facts.actuator else "apart",
+        "port_shape": facts.port_shape,
     }
 
 

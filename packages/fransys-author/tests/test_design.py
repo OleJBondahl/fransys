@@ -42,6 +42,8 @@ from fransys_model.vocab import (
 from fransys_model.vocab.enums import ConductorKind
 from fransys_model.vocab.tables import revisions, units
 
+from .author_library import with_house
+
 
 def _only[R: Record](draft: Draft, cls: type[R]) -> tuple[R, ...]:
     return tuple(r for r in draft.records() if isinstance(r, cls))
@@ -497,7 +499,7 @@ def test_bridge_puts_every_bridged_terminal_in_one_terminal_rows_group(parts):
     x01 = d.strip("X01")
     l1 = [x01.terminal("TEST-TB", "L1") for _ in range(3)]
     d.bridge(*l1)
-    model = freeze(merge(parts, d.draft()))
+    model = with_house(freeze(merge(parts, d.draft())))
     rows = terminal_rows(model, x01.id)
     assert {row.jumper_group for row in rows} == {1}
 
@@ -838,7 +840,7 @@ def test_three_instances_of_one_unit_release_with_no_entry_give_one_error(parts)
     d = Design(parts)
     for prefix in ("a", "b", "c"):
         d.scope(prefix).unit("relay-board", revision=1, interface="1")
-    model = freeze(merge(parts, d.draft()))
+    model = with_house(freeze(merge(parts, d.draft())))
     assert len(units(model)) == 3
     assert not revisions(model)
     (finding,) = [f for f in check_revisions(model) if f.code == REVISION_CURRENT_MISSING]

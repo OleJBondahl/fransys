@@ -3,12 +3,11 @@
 from decimal import Decimal
 
 import pytest
-from fransys_render._library import font_size_mm, role_height_mm
-from fransys_render._symbols import CAP_RATIO
+from fransys_render._library import capital_ratio
 from render_library import freeze
 
-from electrical_symbols import title_block
-from fransys_model.derive.print_sizes import TextRole
+from electrical_symbols import LIBRARY, title_block
+from fransys_model.derive.print_sizes import TextRole, font_size_mm, role_height_mm
 from fransys_model.derive.title_band import title_band_need
 from fransys_model.kernel import Draft
 
@@ -33,7 +32,7 @@ _HOUSE = {
 
 def _fonts(text_height: str) -> tuple[float, float]:
     def font(role):
-        return float(font_size_mm(role_height_mm(role, Decimal(text_height))))
+        return float(font_size_mm(_MODEL, role_height_mm(_MODEL, role, Decimal(text_height))))
 
     return font(TextRole.LABEL), font(TextRole.BODY)
 
@@ -48,7 +47,7 @@ def _centres(band: float, *, notice: bool) -> dict[str, tuple[float, float]]:
 @pytest.mark.parametrize("text_height", ["3.5", "4", "5"])
 def test_label_and_value_clear_each_other_at_the_need(text_height, notice):
     label, body = _fonts(text_height)
-    half_caps = (label + body) * CAP_RATIO / 2
+    half_caps = (label + body) * float(capital_ratio(LIBRARY)) / 2
     for field, (low, high) in _centres(title_band_need(_MODEL, label, body), notice=notice).items():
         assert high - low >= half_caps - 1e-9, field
 
@@ -65,8 +64,10 @@ def test_a_label_descender_stays_above_its_value_capitals_at_the_need(text_heigh
     label, body = _fonts(text_height)
     band = title_band_need(_MODEL, label, body)
     for field, (low, high) in _centres(band, notice=notice).items():
-        descender_line = low + label * CAP_RATIO / 2 + label * float(_DESCENDER_RATIO)
-        assert descender_line <= high - body * CAP_RATIO / 2 + 1e-9, field
+        descender_line = (
+            low + label * float(capital_ratio(LIBRARY)) / 2 + label * float(_DESCENDER_RATIO)
+        )
+        assert descender_line <= high - body * float(capital_ratio(LIBRARY)) / 2 + 1e-9, field
 
 
 @pytest.mark.parametrize("text_height", ["3.5", "4", "5"])

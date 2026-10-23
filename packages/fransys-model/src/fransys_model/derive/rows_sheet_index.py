@@ -6,7 +6,7 @@ lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab import Document, PageKind
 
 from .page_destination import page_destination, sheet_text
-from .page_headings import DIAGRAM_TITLE
+from .page_headings import diagram_title
 from .page_titles import page_title_forms
 from .sheets import sheets
 
@@ -40,7 +40,11 @@ def sheet_index_rows(
 
 
 def _row(model: Model, sheet: DiagramSheet | Page) -> SheetIndexRow:
-    forms = (DIAGRAM_TITLE,) if isinstance(sheet, DiagramSheet) else page_title_forms(model, sheet)
+    forms = (
+        (diagram_title(model),)
+        if isinstance(sheet, DiagramSheet)
+        else page_title_forms(model, sheet)
+    )
     return SheetIndexRow(
         sheet=sheet_text(model, sheet),
         title=forms[0],

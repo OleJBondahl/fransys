@@ -12,11 +12,12 @@ from .drawn_sweep import drawing_sweep
 from .placement_kit import ProblemError, refuse
 from .placement_markers import facing_views, marker_fit
 from .placement_options import options
-from .placement_sets import drawing_scopes, restrict
+from .placement_sets import bare_pins, cut_lines, drawing_scopes, restrict
 from .placement_widest import link_fit
 from .set_findings import cut_net_findings, set_failure_finding, set_without_page_findings
 from .write import write_layout
 from .write_pages import SetPlace
+from .write_tables import place_heads
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -118,11 +119,12 @@ def _lay_out(  # noqa: PLR0913 - lay_out's five and the sink, by keyword
     scopes = drawing_scopes(model, kit)
     if problem.symbols and not scopes:
         refuse("the kit", "has no function for the problem's symbols: pass the build's kit")
+    bare, lines = bare_pins(model, kit), cut_lines(model, kit)
     run = _Run(model, problem, kit, options(conventions, library), conventions, library, sink)
     laid = model
     found: list[Finding] = []
     for number, scope in enumerate(scopes, 1):
-        part = restrict(problem, scope)
+        part = restrict(problem, scope, bare, lines)
         try:
             laid, more = _one_set(run, laid, part, scope, number)
         except _SET_FAILURES as error:
@@ -167,6 +169,7 @@ def lay_out_drawn(
     sink = _Sink({}, [])
     laid, found = _lay_out(model, kit, problem, conventions, library, sink=sink)
     drawings, links = finish_drawings(laid, sink.drawn, sink.markers, ORIGIN, library)
+    drawings = place_heads(laid, kit, drawings)
     net = drawn_netlist(laid, kit, drawings, sink.markers, library)
     return (
         laid,

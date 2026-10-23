@@ -18,11 +18,11 @@ from typing import Any, NamedTuple
 
 import fransys as fr
 import pytest
+from _drawn_facts import Placed, symbol_subjects
 from _drawn_pages import drawn_pages
 
 from electrical_symbols import LIBRARY
 from fransys_layout.symbols import library_symbol, symbol_shape
-lazy from fransys_layout.drawing import DrawnSymbol
 
 _UNIT: dict[str, Any] = {
     "revision": 1,
@@ -36,12 +36,6 @@ _RED = ("RD", 50)
 
 class _Strips(NamedTuple):
     X1: Any
-
-
-def _gap(model, fact: str):
-    """A fact the page Drawing lacks (strict xfail, GAP-FLIP-DRAWING-SUBJECT)."""
-    msg = f"GAP-FLIP-DRAWING-SUBJECT: no {fact} for {model.digest}"
-    raise AssertionError(msg)
 
 
 def _wire(d: Any, shape: str, parts: tuple[Any, ...], tail: Any) -> None:
@@ -104,17 +98,17 @@ def _build(shape: str, *, beside: bool = True, bottom_up: bool = False) -> fr.Bu
 type Point = tuple[int, int]
 
 
-def _drawn(result: fr.BuildResult, tag: str) -> DrawnSymbol:
+def _drawn(result: fr.BuildResult, tag: str) -> Placed:
     """The one drawn symbol of the item `tag`, not its contact head."""
     (one,) = (
         r
-        for r in _gap(result.model, "symbol subject")
-        if (r.owner or "").startswith(f"U1-{tag} ") and r.symbol != "contact-head"
+        for r in symbol_subjects(result.model)
+        if r.tag == f"U1-{tag}" and r.symbol != "contact-head"
     )
     return one
 
 
-def _shape(one: DrawnSymbol):  # the symbol's pins and body at R0, from symdef's data
+def _shape(one: Placed):  # the symbol's pins and body at R0, from symdef's data
     return symbol_shape(library_symbol(LIBRARY, one.key, one.poles), LIBRARY)
 
 

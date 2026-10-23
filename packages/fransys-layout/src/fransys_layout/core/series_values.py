@@ -5,13 +5,19 @@ in it: the caller gives every order.
 """
 
 from dataclasses import dataclass
+from typing import Literal
 
 
 @dataclass(frozen=True, slots=True)
 class Series:
-    """Parts in signal direction, source first: one column."""
+    """Parts in signal direction, source first: one column.
+
+    `anchor` names the end a box-drawn function stands beyond (FLOW-DOWN, layout-0396): the first
+    part for "head", the last for "tail". el computes it; the core only reads it.
+    """
 
     parts: tuple[SeriesPart, ...]
+    anchor: Literal["head", "tail"] | None = None
 
 
 @dataclass(frozen=True, slots=True)

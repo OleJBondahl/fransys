@@ -19,6 +19,7 @@ import pytest
 from _model_build_cover import layout_trigger_document
 from fransys_render import cable_blocks
 
+from electrical_symbols import LIBRARY
 from fransys_model.derive import cable_list_rows
 
 
@@ -41,7 +42,7 @@ def test_the_cable_list_names_each_connector(built: fr.BuildResult) -> None:
 def test_the_cable_page_end_label_names_the_connector(built: fr.BuildResult) -> None:
     labels = [
         {t for t in re.findall(r">([^<]*)</text>", svg) if "A" in t and "W" not in t}
-        for svg in dict(cable_blocks(built.model)).values()
+        for svg in dict(cable_blocks(built.model, LIBRARY)).values()
     ]
     assert sorted(map(sorted, labels)) == [
         ["+C1-A1-X1", "+C1-A2-X1"],

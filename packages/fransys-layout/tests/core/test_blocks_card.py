@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 from options_fixtures import core_options
 
+from fransys_layout.core.blocks import _less
 from fransys_layout.core.blocks_card import CardEdges, card_edges, overfull, pin_order
 from fransys_layout.core.pack_row import RowSpec, row_width, solve_row
 from fransys_layout.core.rowspec import one_row
@@ -21,23 +22,27 @@ PAGE = (
         flip_turn="R180",
         tag_stagger=True,
         label_gap=8,
+        parallel_pitch=48,
         driver_first=True,
         arrow_sides=("E", "W"),
     ).margin.w
 )
 
 
-def edges_of(syms: list[Sym], cols: list[Column], area: Size = AREA) -> tuple[CardEdges, FlowGraph]:
+def edges_of(
+    syms: list[Sym], cols: list[Column], area: Size = AREA, arrows: int = 0
+) -> tuple[CardEdges, FlowGraph]:
     flow = FlowGraph(tuple(cols), (), (), (), CycleSplit(0, 0, 0), ())
     got = card_edges(
         "A1",
         [c.id for c in cols],
         flow,
-        problem_of(syms, area=area),
+        _less(problem_of(syms, area=area), arrows),
         core_options(
             flip_turn="R180",
             tag_stagger=True,
             label_gap=8,
+            parallel_pitch=48,
             driver_first=True,
             arrow_sides=("E", "W"),
         ),
@@ -63,6 +68,7 @@ def spec_of(
             flip_turn="R180",
             tag_stagger=True,
             label_gap=8,
+            parallel_pitch=48,
             driver_first=True,
             arrow_sides=("E", "W"),
         ),
@@ -91,6 +97,15 @@ def test_one_edge_at_sixteen_66_g_columns() -> None:
     assert {e for _, e in got.pin_edges} == {"S"}
     assert got.spilled == ()
     assert width_of(syms, flow, got) == 1266 <= PAGE
+
+
+def test_the_rows_planned_arrows_are_taken_off_the_page_before_the_card_spills() -> None:
+    """RL-W2: 16 66 G columns fit the page at 1266 G; 83 G of arrows beside them make it spill."""
+    syms, cols = box_case(16, 66)
+    free, _ = edges_of(syms, cols, arrows=PAGE - 1266)
+    assert free.spilled == ()
+    tight, _ = edges_of(syms, cols, arrows=PAGE - 1266 + 83)
+    assert tight.spilled != ()
 
 
 def test_card_overfull_spills_the_columns_beyond_an_edge() -> None:
@@ -127,6 +142,7 @@ def test_edge_capacity_is_the_row_width_stage_5_gives_the_edge() -> None:
                 flip_turn="R180",
                 tag_stagger=True,
                 label_gap=8,
+                parallel_pitch=48,
                 driver_first=True,
                 arrow_sides=("E", "W"),
             ).margin.w,

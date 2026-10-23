@@ -17,7 +17,7 @@ from fransys_author.surface._tags import floating_name
 from fransys_author.surface._unit_strip import take, take_pe
 from fransys_author.surface.colours import GNYE, SH
 from fransys_model.derive import core_on_pe_not_gnye, cores_past_product
-from fransys_model.kernel import first_free
+from fransys_model.refdef import lowest_free
 lazy from fransys_author.handles import Cable as EngineCable
 lazy from fransys_author.surface._device import Device
 
@@ -232,7 +232,7 @@ class Cable:
             )
             raise AuthorError(msg)
         for a, b in pairs:
-            index = first_free(taken)
+            index = lowest_free(taken)
             taken.add(index)
             self.core(index, a, b)
 

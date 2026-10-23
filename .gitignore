@@ -14,3 +14,9 @@ claude-tools/
 .superpowers/
 .env*
 .hypothesis/
+# .claude/ is tracked (owner 2026-10-23); its local and runtime files are not
+.claude/settings.local.json
+.claude/settings.local.json.*
+.claude/agent-memory-local/
+.claude/worktrees/
+.claude/scheduled_tasks.*

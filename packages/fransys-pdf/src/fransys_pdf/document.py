@@ -4,7 +4,6 @@ from functools import partial
 from typing import TYPE_CHECKING
 
 from fransys_model.derive import (
-    PAGE_HEADINGS,
     ListKey,
     PageForm,
     SheetKey,
@@ -13,6 +12,7 @@ from fransys_model.derive import (
     document_sheet,
     font_family,
     harness_cables_for,
+    page_headings,
     page_preset,
 )
 
@@ -66,13 +66,18 @@ def _section_prefix(
 
 
 def _list_pages(
-    bridges: Mapping[str, BridgePieceRow] | None, share_pct: float, gutter_pct: float
+    bridges: Mapping[str, BridgePieceRow] | None,
+    words: Mapping[str, str],
+    share_pct: float,
+    gutter_pct: float,
 ) -> dict[ListKey, Callable[..., str]]:
     """Each list key's builder; the terminal list also takes the Bridge mark pieces."""
     flow = {"share_pct": share_pct, "gutter_pct": gutter_pct}
     return {
         ListKey.PLC: partial(plc_list_page, **flow),
-        ListKey.TERMINAL: partial(terminal_list_page, bridges=bridges, **flow),
+        ListKey.TERMINAL: partial(
+            terminal_list_page, bridges=bridges, bridge_word=words["bridge"], **flow
+        ),
         ListKey.CONNECTOR: partial(connector_list_page, **flow),
         ListKey.WIRE_LABEL: partial(wire_label_list_page, **flow),
         ListKey.DESIGNATION: partial(designation_list_page, **flow),
@@ -87,26 +92,29 @@ def _text_page(  # noqa: PLR0913, PLR0917 -- one branch per `PageKind`, plus `sh
     pages: tuple[PageKind, ...],
     sheets: Mapping[SheetKey, SheetBackground],
     bridges: Mapping[str, BridgePieceRow] | None,
+    words: Mapping[str, str],
+    cover: Callable[[Model, DocumentRow], str],
     *,
     share_pct: float,
     gutter_pct: float,
 ) -> str:
     preset = page_preset(kind)
     if preset.form is PageForm.COVER:
-        return cover_page(model, record)
+        return cover(model, record)
     if preset.form is PageForm.NOTES:
-        return notes_page(record)
+        return notes_page(record, words["notes"])
     if preset.form is PageForm.SHEET_INDEX:
+        headers = (words["sheet"], words["title"], words["page"])
         return sheet_index_page(
-            model, record, pages, sheets, share_pct=share_pct, gutter_pct=gutter_pct
+            model, record, pages, sheets, headers, share_pct=share_pct, gutter_pct=gutter_pct
         )
     if preset.form is PageForm.CONTENTS:
         return contents_page(model, record, pages)
     if preset.form is PageForm.CABLE_LIST:
         return cable_list_page(model, record)
     assert preset.list_key is not None  # noqa: S101 -- LIST is the last form and has a key
-    body = _list_pages(bridges, share_pct, gutter_pct)[preset.list_key](model, record)
-    return list_mark(body, PAGE_HEADINGS[kind])
+    body = _list_pages(bridges, words, share_pct, gutter_pct)[preset.list_key](model, record)
+    return list_mark(body, page_headings(model)[kind])
 
 
 def _page_source(  # noqa: PLR0913, PLR0917 -- one branch per `PageKind`, plus `sheet` and `sheets` for the page background
@@ -118,6 +126,8 @@ def _page_source(  # noqa: PLR0913, PLR0917 -- one branch per `PageKind`, plus `
     sheet: SheetRow,
     sheets: Mapping[SheetKey, SheetBackground],
     bridges: Mapping[str, BridgePieceRow] | None,
+    words: Mapping[str, str],
+    cover: Callable[[Model, DocumentRow], str],
     *,
     links: Mapping[PageId, tuple[ReferenceLink, ...]],
     share_pct: float,
@@ -136,11 +146,20 @@ def _page_source(  # noqa: PLR0913, PLR0917 -- one branch per `PageKind`, plus `
     if form is PageForm.BLOCK_DIAGRAM:
         return diagram_source(model, record, svgs, sheets)
     return _text_page(
-        kind, model, record, pages, sheets, bridges, share_pct=share_pct, gutter_pct=gutter_pct
+        kind,
+        model,
+        record,
+        pages,
+        sheets,
+        bridges,
+        words,
+        cover,
+        share_pct=share_pct,
+        gutter_pct=gutter_pct,
     )
 
 
-def source(  # noqa: PLR0913 -- the document's inputs, plus the two list-share values from `[pdf]`
+def source(  # noqa: PLR0913 -- the document's inputs, the two list-share values from `[pdf]` and the facade's words
     model: Model,
     document: DocumentId,
     svgs: Mapping[str, str],
@@ -150,25 +169,29 @@ def source(  # noqa: PLR0913 -- the document's inputs, plus the two list-share v
     links: Mapping[PageId, tuple[ReferenceLink, ...]],
     list_share_pct: float,
     list_gutter_pct: float,
+    words: Mapping[str, str],
+    revision_headers: tuple[str, ...],
+    description_mm: float,
 ) -> str:
-    """The complete, self-contained Typst source of one document.
+    """The complete, self-contained Typst source of one document, pure in its inputs.
 
     Args:
         model: A laid-out model.
         document: Id of the document.
-        svgs: Page key to SVG text (drawn by the facade), inlined as an `image`.
-        sheets: Page key to its background (``fransys_render.sheets``): frame, grid, title block.
+        svgs: Page key to SVG text, inlined as an `image`.
+        sheets: Page key to its background (``fransys_render.sheets``).
         bridges: ``fransys_render.bridge_pieces()``; a jumper group without it is a `KeyError`.
-        links: Page id to its reference links, placed over the drawing; every drawn page is in it.
+        links: Page id to its reference links; every drawn page is in it.
         list_share_pct: A list page's column, % of the content width.
-        list_gutter_pct: The gutter between a list page's two columns, % of the content width.
-
-    Returns:
-        The Typst source, pure in its inputs. An empty section body is skipped.
+        list_gutter_pct: The gutter between a list page's two columns, %.
+        words: The printed words, by key (`pdf_texts`).
+        revision_headers: The revision table's header cells.
+        description_mm: The revision table's description column width.
     """
     record = document_row(model, document)
     pages = document_page_kinds(model, document)
     sheet = document_sheet(model, record.id, pages)
+    cover = partial(cover_page, headers=revision_headers, description_mm=description_mm)
     page_bodies = []
     for kind in pages:
         body = _page_source(
@@ -180,6 +203,8 @@ def source(  # noqa: PLR0913 -- the document's inputs, plus the two list-share v
             sheet,
             sheets,
             bridges,
+            words,
+            cover,
             links=links,
             share_pct=list_share_pct,
             gutter_pct=list_gutter_pct,

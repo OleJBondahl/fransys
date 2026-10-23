@@ -8,7 +8,7 @@ import fransys as fr
 import pytest
 from fransys._drawing_library import with_drawing_library
 from fransys._export_ledger import ExportNameClash
-from fransys._paper import with_paper
+from fransys._house import with_house
 from fransys.pipeline import (
     BuildErrors,
     BuildResult,
@@ -19,6 +19,7 @@ from fransys.pipeline import (
 )
 from fransys.settings import settings
 
+from electrical_symbols import LIBRARY
 from fransys_model.kernel import Draft, Finding, Id, Origin, Severity, freeze, make_id
 from fransys_model.vocab import Document, DocumentPreset, PageKind
 from fransys_model.vocab.connectivity import Conductor
@@ -207,8 +208,11 @@ def test_no_written_file_has_a_name_windows_forbids(fixture, request, tmp_path, 
     monkeypatch.undo()
     names |= {path.name for path in written}
     _svgs_cache.cache_clear()
-    svgs = _svgs(model, result.drawings)
-    names |= {Path(n).name for n in _exports(model, result.drawings, svgs, pdf=result.settings.pdf)}
+    svgs = _svgs(model, result.drawings, LIBRARY)
+    names |= {
+        Path(n).name
+        for n in _exports(model, result.drawings, svgs, pdf=result.settings.pdf, library=LIBRARY)
+    }
     assert names
     assert [name for name in sorted(names) if _windows_forbidden(name)] == []
 
@@ -228,7 +232,7 @@ def test_the_colon_bug_can_fail_the_naive_way(
     disappears -- no exception, just an empty `intermediates` directory.
     """
     _svgs_cache.cache_clear()
-    svgs = _svgs(demo_harness_with_board, demo_harness_with_board_result.drawings)
+    svgs = _svgs(demo_harness_with_board, demo_harness_with_board_result.drawings, LIBRARY)
     assert svgs
     intermediates = tmp_path / "intermediates"
     intermediates.mkdir()
@@ -374,7 +378,7 @@ def _clashing_boards_model():
         parts_and_boards.extend([part, pcb, item])
     draft = Draft()
     draft.extend(parts_and_boards, origin=_CLASH_ORIGIN)
-    return with_paper(with_drawing_library(freeze(draft)), settings())
+    return with_house(with_drawing_library(freeze(draft)), settings())
 
 
 def test_a_deliberate_export_name_clash_raises(tmp_path):
@@ -452,7 +456,7 @@ def _two_units_of_one_release_with_clashing_documents():
         records.extend([unit, item, document])
     draft = Draft()
     draft.extend(records, origin=_CLASH_ORIGIN)
-    return with_paper(with_drawing_library(freeze(draft)), settings())
+    return with_house(with_drawing_library(freeze(draft)), settings())
 
 
 def test_a_deliberate_export_name_clash_of_two_units_in_one_release_raises(tmp_path):
@@ -647,7 +651,7 @@ def _model_with_an_unlaid_out_function():
     draft.extend([item, function, port, _system_document("unlaid-out-function")], origin=origin)
     # layout-0218: a function with nothing connected is drawn on no page, so wire its port.
     _wired_to_a_partner(draft, port, origin)
-    return with_paper(with_drawing_library(freeze(draft)), settings())
+    return with_house(with_drawing_library(freeze(draft)), settings())
 
 
 def test_check_calls_fransys_render_check_for_the_model():

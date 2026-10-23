@@ -23,6 +23,7 @@ import fransys as fr
 import pytest
 from _drawn_pages import drawn_pages
 from _model_build_cover import cabinet_document
+from _tables_on import TABLES_ON
 from fransys.colours import BU
 
 _BLOCKS = {"DEMO-BLOCK-1NC": "11", "DEMO-BLOCK-1NC-21": "21", "DEMO-BLOCK-1NC-31": "31"}
@@ -46,7 +47,7 @@ def model() -> Model:
             d.layout.break_before(group)
         d.detail.wire(strip[2 * number - 1], block[first], wire=wire)
         d.detail.wire(block[str(int(first) + 1)], strip[2 * number], wire=wire)
-    return fr.build(d, cabinet_document(cabinet)).model
+    return fr.build(d, cabinet_document(cabinet), settings=TABLES_ON).model
 
 
 def _by_pin(model: Model) -> dict[str, tuple[Any, DrawnSymbol]]:

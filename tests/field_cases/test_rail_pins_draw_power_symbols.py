@@ -15,6 +15,7 @@ import csv
 import io
 
 import fransys as fr
+from _drawn_facts import symbol_subjects
 from fransys.colours import BU
 
 from fransys_model.derive import is_rail_terminal
@@ -22,12 +23,6 @@ from fransys_model.layout import PowerSymbol, layout_of
 from fransys_model.vocab.tables import functions, items
 
 _LAMPS = 3
-
-
-def _gap(model, fact: str):
-    """A fact the page Drawing lacks (strict xfail, GAP-FLIP-DRAWING-SUBJECT)."""
-    msg = f"GAP-FLIP-DRAWING-SUBJECT: no {fact} for {model.digest}"
-    raise AssertionError(msg)
 
 
 def _build(tmp_path) -> fr.BuildResult:
@@ -52,7 +47,7 @@ def test_each_load_pin_draws_a_symbol_and_no_rail_terminal_is_drawn(tmp_path) ->
     model = result.model
     rail_terminals = {i.id for i in items(model).values() if is_rail_terminal(model, i.id)}
     assert len(rail_terminals) == 2 * _LAMPS  # the fixture's rows are rail terminals
-    owners = {s.owner.rpartition(":")[2] for s in _gap(model, "symbol subject").values()}
+    owners = {s.owner for s in symbol_subjects(model)}
     drawn_items = {f.item for f in functions(model).values() if f.id.value in owners}
     assert not rail_terminals & drawn_items
     symbols = [s.symbol for s in layout_of(model, PowerSymbol).values()]

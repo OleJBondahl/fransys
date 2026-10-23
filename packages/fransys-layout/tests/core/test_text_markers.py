@@ -37,6 +37,7 @@ OPTIONS = core_options(
     flip_turn="R180",
     tag_stagger=True,
     label_gap=8,
+    parallel_pitch=48,
     driver_first=True,
     arrow_sides=("E", "W"),
     marker_vertical=frozenset({"R90", "R270", "MR90", "MR270"}),
@@ -97,6 +98,7 @@ def test_the_near_edge_of_the_marker_option_sits_at_the_pin(side, xy) -> None:
                 flip_turn="R180",
                 tag_stagger=True,
                 label_gap=8,
+                parallel_pitch=48,
                 driver_first=True,
                 arrow_sides=("E", "W"),
             ),
@@ -132,7 +134,10 @@ def test_a_stub_end_with_no_pin_raises() -> None:
 
 def _fan_env() -> MarkEnv:
     """Fan f has a trunk in row 0 (x 40 to 500, y 100) and one in row 1 (x 60 to 400, y 300)."""
-    trunks = (Trunk("f", 1, 100, 40, 500, 1, 0), Trunk("f", 1, 300, 60, 400, 1, 1))
+    trunks = (
+        Trunk("f", 1, 100, 40, 500, 1, 0, ((40, 500),)),
+        Trunk("f", 1, 300, 60, 400, 1, 1, ((60, 400),)),
+    )
     env = _env("E", "R0", trunks)
     fan = Fan("f", ("fa", "fb"), (), (), "H", 1, "S")
     return replace(env, fans={"f": fan})
@@ -448,3 +453,17 @@ def test_a_two_end_star_tied_in_page_row_and_column_is_ordered_by_the_pin_id() -
     first, second = (m for m, _ in pairs)
     assert first.cell == cell_of(second.x, second.y, Size(1312, 854), OPTIONS.cells)
     assert second.cell == cell_of(first.x, first.y, Size(1312, 854), OPTIONS.cells)
+
+
+def test_a_bundle_arrow_stands_at_the_hull_end_on_its_own_poles_lane() -> None:
+    """The arrow of a pin on net fb (lane 1) stands one lane step past the hull end, on its y."""
+    trunk = Trunk("f", 1, 100, 40, 500, 2, 0, ((40, 500), (80, 300)))
+    pins = [PinRef("a", "1"), PinRef("b", "1")]
+    fan = Fan("f", ("fa", "fb"), (), (), "H", 2, "S")
+    nets = {("a", "1"): "fa", ("b", "1"): "fb"}
+    env = replace(_env("E", "R0", (trunk,)), fans={"f": fan}, pin_net=nets)
+    ends = [RefEnd(1, "c1", p, 0) for p in pins]
+    stands = [end_stand(env, Ref("f", RefKind.ARROW, (e,)), e, 0) for e in ends]
+    boxes = [marker_box_at(s.x, s.y, OPTIONS, s.orient) for s in stands]
+    step = OPTIONS.wiring_grid
+    assert [(b.x, b.y + b.h // 2) for b in boxes] == [(500 + step, 100), (500 + step, 100 + step)]

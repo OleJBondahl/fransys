@@ -45,6 +45,7 @@ def _build(four_pin: int):
         board = d.device(None, "DEMO-PCB-IO", name="board")
         dev = {tag: d.device(tag, part, parent=board, interface=True) for tag, part in tags}
         d.detail.net("SIG", dev[tags[0][0]].x1[2], dev[tags[-1][0]].x1[1])
+        d.detail.wire(dev[tags[0][0]].x1[2], dev[tags[-1][0]].x1[1], wire=("WH", 0.75))
         return Interface(dev[tags[0][0]])
 
     design = fr.design("demo_parts")
@@ -66,3 +67,5 @@ def _build(four_pin: int):
 def test_many_headers_on_one_board_draw(four_pin):
     result = _build(four_pin)
     assert not [f for f in fr.check(result) if f.severity is fr.Severity.ERROR]
+    # R468: the wire realises the declared net, so it does not warn
+    assert [f for f in result.findings if f.code == "NET_UNREALISED"] == []

@@ -27,10 +27,11 @@ def _authored() -> DrawingLibrary:
         wire_pitch=8,
         wire_pitch_fine=4,
         font_family="Authored",
-        capital_ratio=Decimal(1),
         ascent_ratio=Decimal(1),
         descent_ratio=Decimal(1),
         heights=frozendict({"body": Decimal(1)}),
+        lines=frozendict({"normal": Decimal(1)}),
+        ems=frozendict({"1": Decimal(1)}),
     )
 
 
@@ -76,3 +77,26 @@ def test_the_refusal_comes_before_freeze(monkeypatch: pytest.MonkeyPatch) -> Non
     draft.extend([_authored()], origin=_ORIGIN)
     with pytest.raises(SchemaError, match=r"layout\.drawing_library"):
         fr.build(draft)
+
+
+def test_the_record_holds_each_height_the_build_prints_at_as_symdefs_em() -> None:
+    """The ems on the record are symdef's `em_height` of every capital height (layout-0385)."""
+    from fransys._drawing_library import _record
+    from symdef import em_height
+
+    model = freeze(Draft())
+    record, font = _record(model), LIBRARY.font
+    assert font is not None
+    assert record.ems["1.8"] == Decimal(repr(em_height(font, 1.8)))
+    assert set(record.ems) == {"1.8", "2.5", "3.5", "5"}
+
+
+def test_the_record_holds_the_library_lines_as_symdef_prints_them() -> None:
+    from fransys._drawing_library import _record
+
+    record = _record(freeze(Draft()))
+    assert dict(record.lines) == {
+        "normal": Decimal("0.25"),
+        "rule": Decimal("0.18"),
+        "thick": Decimal("0.5"),
+    }

@@ -34,7 +34,7 @@ def test_tag_stagger_false_counts_the_text_slots_as_hard() -> None:
 def test_arrow_sides_choose_the_side_each_arrow_end_stands_on() -> None:
     pin = PinRef("S", "p")
     ref = Ref("f", RefKind.ARROW, (RefEnd(1, "c1", pin, 0), RefEnd(1, "c2", pin, 0)))
-    trunks = {(1, "f"): (Trunk("f", 1, 100, 40, 500, 1, 0),)}
+    trunks = {(1, "f"): (Trunk("f", 1, 100, 40, 500, 1, 0, ((40, 500),)),)}
     fans = {"f": Fan("f", ("fa", "fb"), (), (), "H", 1, "S")}
 
     def stood(sides: tuple[Side, Side]) -> list[tuple[str, Box]]:

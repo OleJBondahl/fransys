@@ -29,7 +29,12 @@ def test_the_grid_is_the_houses() -> None:
 def test_the_loaded_library_carries_the_family_and_the_line_widths() -> None:
     assert LIBRARY.font is not None
     assert LIBRARY.font.family == "DejaVu Sans"
-    assert dict(LIBRARY.lines) == {Weight.NORMAL: 0.25, Weight.THICK: 0.5}
+    assert dict(LIBRARY.lines) == {Weight.NORMAL: 0.25, Weight.THICK: 0.5, Weight.RULE: 0.18}
+    assert dict(LIBRARY.dash) == {
+        "dashed": (1.25, 0.625),
+        "dash_dot": (4.0, 1.0, 0.25, 1.0),
+        "long": (4.0, 1.0),
+    }
 
 
 def test_the_measured_regular_table_equals_derives_frozen_copy() -> None:

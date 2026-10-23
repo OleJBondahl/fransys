@@ -32,6 +32,7 @@ OPTIONS = core_options(
     flip_turn="R180",
     tag_stagger=True,
     label_gap=8,
+    parallel_pitch=48,
     driver_first=True,
     arrow_sides=("E", "W"),
 )
@@ -107,7 +108,7 @@ def canon_routes(routes: Routes, back: Callable[[str | None], str | None]) -> tu
     pages = tuple(
         (
             p.page,
-            tuple(sorted((back(w.net), w.points, w.kind, w.lanes) for w in p.wires)),
+            tuple(sorted((back(w.net), w.points, w.kind, w.lane) for w in p.wires)),
             tuple((d.tracks) for d in p.demand),
             p.counts,
         )

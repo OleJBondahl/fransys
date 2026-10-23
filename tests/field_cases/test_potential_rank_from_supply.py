@@ -14,14 +14,8 @@ facts, never the name: an AC phase before AC 0 V, a DC rail above 0 V before the
 
 import fransys as fr
 import pytest
+from _drawn_facts import symbol_subjects
 from fransys.colours import BU
-
-
-def _gap(model, fact: str):
-    """A fact the page Drawing lacks (strict xfail, GAP-FLIP-DRAWING-SUBJECT)."""
-    msg = f"GAP-FLIP-DRAWING-SUBJECT: no {fact} for {model.digest}"
-    raise AssertionError(msg)
-
 
 # arm: (DC live rail name or None for the default, DC 0 V name or None)
 # ac_named_L dropped: ac_supply has no names= (2026-10-05)
@@ -58,11 +52,7 @@ def _pin_order(tmp_path, arm: tuple) -> list[str]:
     cover.write_text("# Cabinet\n", encoding="utf-8")
     doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover)
     model = fr.build(d, doc).model
-    (box,) = (
-        s
-        for s in _gap(model, "symbol subject").values()
-        if s.key == "generic-box" and s.owner.startswith("T1 ")
-    )
+    (box,) = (s for s in symbol_subjects(model) if s.key == "generic-box" and s.tag == "T1")
     sides, offsets = dict(box.sides), dict(box.offsets)
     return [
         f"{name}:{sides[name]}@{offsets[name]}"

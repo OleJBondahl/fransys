@@ -56,6 +56,10 @@ class Occupancy:
             elif a[0] == b[0] and a[1] != b[1]:
                 self.runs[(False, a[0])].append((min(a[1], b[1]), max(a[1], b[1]), net))
 
+    def mark_end(self, net: str, point: XY) -> None:
+        """A port end of `net` at `point`: no other net's wire may end, turn or run on it (R472)."""
+        self.ends.setdefault((point[0] // self.step, point[1] // self.step), []).append(net)
+
     def remove_net(self, net: str) -> None:
         for cell in list(self.used):
             self.used[cell] = [u for u in self.used[cell] if u[0] != net]

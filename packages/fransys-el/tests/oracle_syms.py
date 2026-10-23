@@ -59,7 +59,6 @@ def _foot(env: Env, lead: Id[Function], geometry: SymbolGeometry) -> Footprints:
         text_height=c.text_height,
         step=c.step,
         pad=c.pad,
-        place_text=c.place_text,
     )
 
 

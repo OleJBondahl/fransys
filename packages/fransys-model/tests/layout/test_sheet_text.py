@@ -2,10 +2,11 @@
 
 from dataclasses import replace
 
+from derive_helpers import frozen_with_library
 from layout_examples import drawing_set, drawn_function, group_node, page, sheet_format
 
 from fransys_model.derive import sheet_text
-from fransys_model.kernel import Draft, Id, Origin, freeze
+from fransys_model.kernel import Draft, Id, Origin
 
 
 def test_a_sheet_text_is_the_number_in_the_first_set_and_set_dot_number_after_it() -> None:
@@ -31,5 +32,5 @@ def test_a_sheet_text_is_the_number_in_the_first_set_and_set_dot_number_after_it
         (group_node(), *drawn_function(), sheet_format(), first, second, page_one, page_two),
         origin=Origin(file="test_sheet_text.py", line=1, note="fixture"),
     )
-    model = freeze(draft)
+    model = frozen_with_library(draft)
     assert (sheet_text(model, page_one), sheet_text(model, page_two)) == ("1", "2.3")

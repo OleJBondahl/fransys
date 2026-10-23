@@ -105,19 +105,28 @@ wheels = [
 
 [[package]]
 name = "demo-parts"
-version = "0.21.1"
+version = "0.21.2"
 source = { editable = "examples/demo-parts" }
 
 [[package]]
+name = "elecdef"
+version = "0.2.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/1a/96/ec412c27233584991ff9a359d9e921e98682779615d03ec0c6185208fedb/elecdef-0.2.0.tar.gz", hash = "sha256:f26e18eee807ea9698f02245bf1c930243c0443a3b92bba1c04102fbd49d6efe", size = 156796, upload-time = "2026-10-23T13:38:33.058Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/15/c0/7d9afeaf34841a99ccc21a6a85252d4d869846777876b8278a1dca966482/elecdef-0.2.0-py3-none-any.whl", hash = "sha256:dccf16401af4548a410b89840330e768a6beb42012973a4025e4cd50ae53b014", size = 47631, upload-time = "2026-10-23T13:38:31.658Z" },
+]
+
+[[package]]
 name = "electrical-symbols"
-version = "0.21.1"
+version = "0.21.2"
 source = { editable = "packages/electrical-symbols" }
 dependencies = [
     { name = "symdef" },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "symdef", specifier = "==0.24.1" }]
+requires-dist = [{ name = "symdef", specifier = "==0.27.0" }]
 
 [[package]]
 name = "execnet"
@@ -155,7 +164,7 @@ wheels = [
 
 [[package]]
 name = "fransys"
-version = "0.21.1"
+version = "0.21.2"
 source = { editable = "packages/fransys" }
 dependencies = [
     { name = "electrical-symbols" },
@@ -192,7 +201,7 @@ requires-dist = [
 
 [[package]]
 name = "fransys-author"
-version = "0.21.1"
+version = "0.21.2"
 source = { editable = "packages/fransys-author" }
 dependencies = [
     { name = "fransys-model" },
@@ -203,7 +212,7 @@ requires-dist = [{ name = "fransys-model", editable = "packages/fransys-model" }
 
 [[package]]
 name = "fransys-el"
-version = "0.21.1"
+version = "0.21.2"
 source = { editable = "packages/fransys-el" }
 dependencies = [
     { name = "electrical-symbols" },
@@ -220,12 +229,18 @@ requires-dist = [
 
 [[package]]
 name = "fransys-kernel"
-version = "0.21.1"
+version = "0.21.2"
 source = { editable = "packages/fransys-kernel" }
+dependencies = [
+    { name = "refdef" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "refdef", specifier = "==0.2.0" }]
 
 [[package]]
 name = "fransys-kicad"
-version = "0.21.1"
+version = "0.21.2"
 source = { editable = "packages/fransys-kicad" }
 dependencies = [
     { name = "fransys-model" },
@@ -236,7 +251,7 @@ requires-dist = [{ name = "fransys-model", editable = "packages/fransys-model" }
 
 [[package]]
 name = "fransys-layout"
-version = "0.21.1"
+version = "0.21.2"
 source = { editable = "packages/fransys-layout" }
 dependencies = [
     { name = "electrical-symbols" },
@@ -248,23 +263,29 @@ dependencies = [
 requires-dist = [
     { name = "electrical-symbols", editable = "packages/electrical-symbols" },
     { name = "fransys-model", editable = "packages/fransys-model" },
-    { name = "symdef", specifier = "==0.24.1" },
+    { name = "symdef", specifier = "==0.27.0" },
 ]
 
 [[package]]
 name = "fransys-model"
-version = "0.21.1"
+version = "0.21.2"
 source = { editable = "packages/fransys-model" }
 dependencies = [
+    { name = "elecdef" },
     { name = "fransys-kernel" },
+    { name = "refdef" },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "fransys-kernel", editable = "packages/fransys-kernel" }]
+requires-dist = [
+    { name = "elecdef", specifier = "==0.2.0" },
+    { name = "fransys-kernel", editable = "packages/fransys-kernel" },
+    { name = "refdef", specifier = "==0.2.0" },
+]
 
 [[package]]
 name = "fransys-overview"
-version = "0.21.1"
+version = "0.21.2"
 source = { editable = "packages/fransys-overview" }
 dependencies = [
     { name = "fransys-model" },
@@ -275,7 +296,7 @@ requires-dist = [{ name = "fransys-model", editable = "packages/fransys-model" }
 
 [[package]]
 name = "fransys-parts"
-version = "0.21.1"
+version = "0.21.2"
 source = { editable = "packages/fransys-parts" }
 dependencies = [
     { name = "fransys-model" },
@@ -286,7 +307,7 @@ requires-dist = [{ name = "fransys-model", editable = "packages/fransys-model" }
 
 [[package]]
 name = "fransys-pdf"
-version = "0.21.1"
+version = "0.21.2"
 source = { editable = "packages/fransys-pdf" }
 dependencies = [
     { name = "fransys-model" },
@@ -297,7 +318,7 @@ requires-dist = [{ name = "fransys-model", editable = "packages/fransys-model" }
 
 [[package]]
 name = "fransys-render"
-version = "0.21.1"
+version = "0.21.2"
 source = { editable = "packages/fransys-render" }
 dependencies = [
     { name = "electrical-symbols" },
@@ -311,12 +332,12 @@ requires-dist = [
     { name = "electrical-symbols", editable = "packages/electrical-symbols" },
     { name = "fransys-layout", editable = "packages/fransys-layout" },
     { name = "fransys-model", editable = "packages/fransys-model" },
-    { name = "symdef", specifier = "==0.24.1" },
+    { name = "symdef", specifier = "==0.27.0" },
 ]
 
 [[package]]
 name = "fransys-reports"
-version = "0.21.1"
+version = "0.21.2"
 source = { editable = "packages/fransys-reports" }
 dependencies = [
     { name = "fransys-model" },
@@ -327,7 +348,7 @@ requires-dist = [{ name = "fransys-model", editable = "packages/fransys-model" }
 
 [[package]]
 name = "fransys-wago"
-version = "0.21.1"
+version = "0.21.2"
 source = { editable = "packages/fransys-wago" }
 dependencies = [
     { name = "fransys-model" },
@@ -346,6 +367,7 @@ default-groups = ["dev", "site"]
 dev = [
     { name = "ast-grep-cli" },
     { name = "demo-parts" },
+    { name = "elecdef" },
     { name = "electrical-symbols" },
     { name = "fonttools" },
     { name = "fransys" },
@@ -360,6 +382,7 @@ dev = [
     { name = "pytest-testmon" },
     { name = "pytest-timeout" },
     { name = "pytest-xdist" },
+    { name = "refdef" },
     { name = "ruff" },
     { name = "rust-just" },
     { name = "symdef" },
@@ -377,6 +400,7 @@ site = [
 dev = [
     { name = "ast-grep-cli", specifier = "==0.51.0" },
     { name = "demo-parts", editable = "examples/demo-parts" },
+    { name = "elecdef", specifier = "==0.2.0" },
     { name = "electrical-symbols", editable = "packages/electrical-symbols" },
     { name = "fonttools", specifier = "==4.67.0" },
     { name = "fransys", editable = "packages/fransys" },
@@ -391,14 +415,15 @@ dev = [
     { name = "pytest-testmon", specifier = "==2.2.0" },
     { name = "pytest-timeout", specifier = "==2.4.0" },
     { name = "pytest-xdist", specifier = "==3.8.0" },
+    { name = "refdef", specifier = "==0.2.0" },
     { name = "ruff", specifier = "==0.17.2" },
     { name = "rust-just", specifier = "==1.59.0" },
-    { name = "symdef", specifier = "==0.24.1" },
+    { name = "symdef", specifier = "==0.27.0" },
     { name = "ty", specifier = "==0.0.91" },
     { name = "typst", specifier = "==0.15.0" },
     { name = "vulture", specifier = "==2.16" },
 ]
-site = [{ name = "zensical", specifier = "==0.0.71" }]
+site = [{ name = "zensical", specifier = "==0.0.72" }]
 
 [[package]]
 name = "hypothesis"
@@ -703,6 +728,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/05/8e/961c0007c59b8dd7729d542c61a4d537767a59645b82a0b521206e1e25c2/pyyaml-6.0.3.tar.gz", hash = "sha256:d76623373421df22fb4cf8817020cbb7ef15c725b9d5e45f17e189bfc384190f", size = 130960, upload-time = "2025-09-25T21:33:16.546Z" }
 
 [[package]]
+name = "refdef"
+version = "0.2.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/d3/75/a842d9988bfd47c427d837893acce8e5fbba4656d6241503d02d9501c2f6/refdef-0.2.0.tar.gz", hash = "sha256:0c574d498bd37a1bd16f7b915ebbd2cae9e110d57faa4f367b4b3c6221aa0ea3", size = 125946, upload-time = "2026-10-23T13:33:09.135Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ba/42/4f7679ae3314e31b65a017e3dbbb3564b62876320c21d6c6e4bb724bb2fc/refdef-0.2.0-py3-none-any.whl", hash = "sha256:ba74893c4662243630cf4f5689a077d472323f9dc960c5eb750853ec14183b75", size = 21809, upload-time = "2026-10-23T13:33:07.797Z" },
+]
+
+[[package]]
 name = "ruff"
 version = "0.17.2"
 source = { registry = "https://pypi.org/simple" }
@@ -762,14 +796,14 @@ wheels = [
 
 [[package]]
 name = "symdef"
-version = "0.24.1"
+version = "0.27.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "fonttools" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/9d/a0/8acd93075ce6454b004b7fac5d5418f9da11e40acdc21bba394dbb391952/symdef-0.24.1.tar.gz", hash = "sha256:49a6ea522bee9a86667be9e1c8830959573b7ad7b64ad8f24ec2fac5e6e464fd", size = 1108707, upload-time = "2026-10-22T14:49:51.958Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/65/1f/2d1c0e95fb3efc2581b8b5c304e09e516bc15d196d5f3544c33bb9172900/symdef-0.27.0.tar.gz", hash = "sha256:40ae5dac13c19999fd2fe75f2443d3149db46c29d08466a2a1b8064f2922fcfb", size = 1130699, upload-time = "2026-10-23T17:05:25.094Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/7d/12/a667187c45eb21e5b545bc38fae259393cde789561c909e0443dc8020c6d/symdef-0.24.1-py3-none-any.whl", hash = "sha256:83aa731a4d81b26b48b06cb1706810f1f4289cea786899012025e8bef7864d9e", size = 151491, upload-time = "2026-10-22T14:49:50.588Z" },
+    { url = "https://files.pythonhosted.org/packages/b1/ac/e2bd3f04e74ba48e7bb5167bb0eb56b8f65f5cf325e6beb548d6eb2ffb6e/symdef-0.27.0-py3-none-any.whl", hash = "sha256:edffe906624a58f7e3c1dc19ba11bdee1a29e9b1b891512a311d65dfcae6468b", size = 160018, upload-time = "2026-10-23T17:05:23.552Z" },
 ]
 
 [[package]]
@@ -852,7 +886,7 @@ wheels = [
 
 [[package]]
 name = "zensical"
-version = "0.0.71"
+version = "0.0.72"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "click" },
@@ -865,15 +899,15 @@ dependencies = [
     { name = "pyyaml" },
     { name = "tomli" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/1c/a0/afe0a4859c2c1dc2a0d770d6ba5f89171f642169028580156e3080d11b7d/zensical-0.0.71.tar.gz", hash = "sha256:3b206f150eb38d2885158e093113460a5e667847cf36915119c21b20776cee18", size = 4328098, upload-time = "2026-10-16T14:19:36.83Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/bf/02/e10dc98fc5e204500a2b208624696bba28afdac5a3aaa399e4252f4fa1fd/zensical-0.0.72.tar.gz", hash = "sha256:2801fcd8baec6e4d14ada113e03a6fb4c6ec2efa2518dc0ae94ee54ed71c94f1", size = 4348165, upload-time = "2026-10-23T14:52:27.771Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/20/b3/0e3f822ab105f503504a0149a9cce6da59fa9626e9c68243c66b02e51efb/zensical-0.0.71-cp311-abi3-macosx_10_12_x86_64.whl", hash = "sha256:57cad23c56a98d87a5eefa7948a98b6ecb479dc99fd7af312cd146555f55f060", size = 18136451, upload-time = "2026-10-16T14:19:12.764Z" },
-    { url = "https://files.pythonhosted.org/packages/5a/75/71dbdc5106a4153b8daed4b0161965dce9e3333b9e27bd9cf4470dac07bf/zensical-0.0.71-cp311-abi3-macosx_11_0_arm64.whl", hash = "sha256:81c069cc667946e0a505cc01b99d5ba44883c57f51b95bd5a38003007c5cb6cd", size = 17670227, upload-time = "2026-10-16T14:19:15.679Z" },
-    { url = "https://files.pythonhosted.org/packages/84/bd/86f0d0ae73ce27d72bb49575c2a91da9d686916cf06980b03b2b480ab688/zensical-0.0.71-cp311-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:bcae388415698cac874e662e667fc0683833cec747607c89037b7e9ad9828830", size = 18167627, upload-time = "2026-10-16T14:19:18.043Z" },
-    { url = "https://files.pythonhosted.org/packages/5d/31/ce1812644068b0080fa3be630a6d10411867af5557b0c7dda7d5d3ae7cc7/zensical-0.0.71-cp311-abi3-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:0b34f58a7f565d956651baf90389aafca5c37a407a72768f30293e415589b932", size = 18108972, upload-time = "2026-10-16T14:19:20.88Z" },
-    { url = "https://files.pythonhosted.org/packages/d2/f4/4f341c2dfd6fc7cf79c87287b835916570a4333e9dfef19374ba0ed8d842/zensical-0.0.71-cp311-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:fc8ed534717b61f285dc217f165f901f8b8a6142ef37cdd5544976cd99b5720c", size = 18651322, upload-time = "2026-10-16T14:19:23.773Z" },
-    { url = "https://files.pythonhosted.org/packages/2e/12/4e3c0430d5646509967e82340df51d9d83c5a5fc232302fd094d938171d5/zensical-0.0.71-cp311-abi3-musllinux_1_2_aarch64.whl", hash = "sha256:1e9e39aefdca4b3383b43014e117b27a1ca9f9ac4b25eefa9195099e5a566e2f", size = 18341323, upload-time = "2026-10-16T14:19:26.505Z" },
-    { url = "https://files.pythonhosted.org/packages/61/14/797afbdbeaadd671c44cd3d9740d1f67ecda70a931133c155542a4d6b5cf/zensical-0.0.71-cp311-abi3-musllinux_1_2_x86_64.whl", hash = "sha256:d22b8924e5145d94bf85b81bd2a8afaeb32e78c8a1ddeb7f4201fc8902547221", size = 18908964, upload-time = "2026-10-16T14:19:29.382Z" },
-    { url = "https://files.pythonhosted.org/packages/90/17/395bbcc02c35e3f132d4c083be3cb0c5eeda936c2a32d800d97d9d810183/zensical-0.0.71-cp311-abi3-win_amd64.whl", hash = "sha256:2d3c2f6360374afc12cd0cfbf087921c6ac4a069b4c1e60a4c80491801dda146", size = 18838514, upload-time = "2026-10-16T14:19:32.195Z" },
-    { url = "https://files.pythonhosted.org/packages/96/33/af4aac6d08bb63a3de2549e3582467c9277083b033ce18d92ae776514009/zensical-0.0.71-cp311-abi3-win_arm64.whl", hash = "sha256:433c5a6fecae7b6b5014b7efbc52bb5e0776d715afca60e2832a12162e7d571a", size = 18253924, upload-time = "2026-10-16T14:19:34.521Z" },
+    { url = "https://files.pythonhosted.org/packages/df/b2/30d59a91ed2828fbe6d9a297990dd6de1fd3c5d722354421d80352bba322/zensical-0.0.72-cp311-abi3-macosx_10_12_x86_64.whl", hash = "sha256:9afa0bdb357e0197f5d65cb882e2ad1652d7a3790e2fc3d243f0669092aab536", size = 18269323, upload-time = "2026-10-23T14:52:02.987Z" },
+    { url = "https://files.pythonhosted.org/packages/2b/46/33d705f40d8fb3c2291fff63fce8b0688d11e11b4729c7bd11491ead3649/zensical-0.0.72-cp311-abi3-macosx_11_0_arm64.whl", hash = "sha256:2103dabfb6fcbea16ffbf226b5405389f3ac67370293eb649f949f03314dd64c", size = 17790144, upload-time = "2026-10-23T14:52:06.092Z" },
+    { url = "https://files.pythonhosted.org/packages/45/02/9d4ed7fa43f0cc8464e4ba4e844201c83abcfce9043073c06acf3518f4ba/zensical-0.0.72-cp311-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:3631d44074d4b28448e710d7b54a506caacb6156b38bd0d91d6a033d65da6ad3", size = 18290933, upload-time = "2026-10-23T14:52:09.003Z" },
+    { url = "https://files.pythonhosted.org/packages/5b/e9/8aa7a24085811cb62987427e86bb5071dbc7c8da7a541a1128996311f070/zensical-0.0.72-cp311-abi3-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:1298ced62e0acfe52787ab59607358fbcf6643bf793a1a66813fb760aec009f9", size = 18237453, upload-time = "2026-10-23T14:52:11.589Z" },
+    { url = "https://files.pythonhosted.org/packages/98/d8/d176cc7515465c5347c20b412f7e52313f051dc4bcf585b18060044d0d61/zensical-0.0.72-cp311-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:3513bf501ff5e28b9e8b7255f225bb117d5651c5d50af39a1eb7bb3bbd7251b0", size = 18789079, upload-time = "2026-10-23T14:52:13.896Z" },
+    { url = "https://files.pythonhosted.org/packages/07/01/e378f3cb316bd0f3d1e7c2610d4eb8e6a4adf8797fdfebcaf6cb7e15f85f/zensical-0.0.72-cp311-abi3-musllinux_1_2_aarch64.whl", hash = "sha256:a0603827ea0a04f920cf2a5be555f9e81818beaac1ff5a92399f19f79e330b2e", size = 18467423, upload-time = "2026-10-23T14:52:16.554Z" },
+    { url = "https://files.pythonhosted.org/packages/95/b3/979d2344d0efcb3d43bdcf613fa9846daae174993ba79ba5bab6e02aad45/zensical-0.0.72-cp311-abi3-musllinux_1_2_x86_64.whl", hash = "sha256:042795a983823efd2478630164afa708b04b6aff7708a04177657e57292bc1b8", size = 19047304, upload-time = "2026-10-23T14:52:19.283Z" },
+    { url = "https://files.pythonhosted.org/packages/9f/aa/0bac4dc630d77048e2adb9ba7694243f0dba247c3f7400898f96c69b74c3/zensical-0.0.72-cp311-abi3-win_amd64.whl", hash = "sha256:40cd37e4525a24d0231635dafb95fc6e431fa021f26b0a1be2b049ea33698b80", size = 18996397, upload-time = "2026-10-23T14:52:21.987Z" },
+    { url = "https://files.pythonhosted.org/packages/30/a9/97efa66e614383849d0d926bdf34599a7698284e08318839035e55a56fed/zensical-0.0.72-cp311-abi3-win_arm64.whl", hash = "sha256:23514bbf0b3f297d3473b25bee513a133722d020b363d668ef15a4f713d76cde", size = 18400138, upload-time = "2026-10-23T14:52:24.968Z" },
 ]

@@ -34,6 +34,7 @@ if TYPE_CHECKING:
 __all__ = ["link_markers"]
 
 _KEY = ("layout", "core", "link_marker")
+_TAG = "tag"  # a tag prints a reference line, so its record holds the wide box
 _FACES = {turn: Side[side] for side, turn in MARKER_FACING.items()}
 
 
@@ -89,7 +90,7 @@ def _record(
 ) -> LinkMarker:
     """The record of `group[index]`: an off stub for a one-end kind, else a pair or star end."""
     marker, key = group[index], marker_key(kind, group[index], index, ctx.number)
-    views = ctx.fit.get((marker.end, kind)) or (ctx.link if kind == ARROW else ctx.boxes)
+    views = ctx.link if kind in (ARROW, _TAG) else ctx.fit.get((marker.end, kind)) or ctx.boxes
     box, page, port = views[marker.orient], ctx.pages[marker.page], ctx.ports[marker.end]
     facing = _FACES[marker.orient]
     if kind in LONE:

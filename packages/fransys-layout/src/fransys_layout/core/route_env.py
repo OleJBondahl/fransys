@@ -9,10 +9,11 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 from .outputs import Wire
-from .values import Finding
+from .sides import step_out
+from .values import Finding, PinRef
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping, Sequence
+    from collections.abc import Iterable, Mapping, Sequence
 
     from .outputs import Gap, PagePlacement, Placed, Placement, Trunk
     from .values import (
@@ -24,7 +25,6 @@ if TYPE_CHECKING:
         Fan,
         Options,
         Orientation,
-        PinRef,
         PlacementProblem,
         Side,
         Size,
@@ -104,6 +104,12 @@ class RouteEnv:
     sides: Mapping[tuple[str, str, Orientation], Side] = field(default_factory=dict)
     # layout-0334: the content box; the router searches no cell past it (None: no bound)
     area: Size | None = None
+    leads: Mapping[PinRef, str] = field(default_factory=dict)
+    # R472, layout-0390: the foreign port ends no wire passes, built once: a sentinel net per
+    # box pin of no net, to its pin point and the cell its stem steps out to
+    blocked_ends: Mapping[str, tuple[XY, ...]] = field(default_factory=dict)
+    # (net, upper pin, lower pin) of each lane a bundle fan carries between two cells (BUNDLE)
+    bundled: frozenset[tuple[str, PinRef, PinRef]] = frozenset()
 
 
 def failed(env: RouteEnv, subject: str, text: str) -> Finding:
@@ -140,6 +146,52 @@ def pin_sides(problem: PlacementProblem) -> dict[tuple[str, str, Orientation], S
     }
 
 
+def lone_cut_pins(problem: PlacementProblem) -> frozenset[PinRef]:
+    """The pins of cut nets with no other end: the ones a bundle fan may take as lanes (R499)."""
+    return frozenset(c.pin for n in problem.nets if len(n.pins) == 1 for c in n.cut)
+
+
+def lead_pins(problem: PlacementProblem, fans: Iterable[Fan]) -> dict[PinRef, str]:
+    """The cut pins alone on their net and on no fan, each with its line: no wire joins them."""
+    laned = {a.pin for f in fans for a in (*f.drivers, *f.legs)}
+    return {
+        c.pin: c.line for n in problem.nets if len(n.pins) == 1 for c in n.cut if c.pin not in laned
+    }
+
+
+def blocked_port_ends(
+    pg: PagePlacement,
+    problem: PlacementProblem,
+    net_of: Mapping[PinRef, str],
+    sides: Mapping[tuple[str, str, Orientation], Side],
+    step: int,
+) -> dict[str, tuple[XY, ...]]:
+    """A box pin of no net still ends a stem (a reference arrow): its point and step-out cell."""
+    boxes = frozenset(s.id for s in problem.symbols if s.box is not None)
+    out: dict[str, tuple[XY, ...]] = {}
+    for placed in pg.placed:
+        for q in placed.pin_xy:
+            side = sides.get((placed.sym, q.pin, placed.orient))
+            if placed.sym in boxes and PinRef(placed.sym, q.pin) not in net_of and side:
+                out[f"pin:{placed.sym}.{q.pin}"] = ((q.x, q.y), step_out(side, q.x, q.y, step))
+    return out
+
+
+def bundled_pairs(fans: Mapping[str, Fan]) -> frozenset[tuple[str, PinRef, PinRef]]:
+    """The (net, upper pin, lower pin) each bundle lane carries from a driver to a leg of one lane.
+
+    The bundle draws that connection (drop, lane line, drop), so the column draws no wire for it.
+    """
+    return frozenset(
+        (f.nets[d.pole], d.pin, g.pin)
+        for f in fans.values()
+        if f.lanes > 1
+        for d in f.drivers
+        for g in f.legs
+        if g.pole == d.pole < len(f.nets) and (g.column, g.lane) == (d.column, d.lane)
+    )
+
+
 def _page_env(
     pg: PagePlacement,
     cut: CutResult,
@@ -151,6 +203,7 @@ def _page_env(
     net_pins = {n.id: n.pins for n in problem.nets}
     fans = {f.id: f for f in cut.flow.fans}
     cut_nets = frozenset(r.net for r in cut.spec.reference_plan)
+    sides = pin_sides(problem)
     return RouteEnv(
         pg.page,
         {p.sym: p for p in pg.placed},
@@ -165,8 +218,11 @@ def _page_env(
         cut_nets,
         options,
         tuple(obstacles),
-        pin_sides(problem),
+        sides,
         problem.area,
+        lead_pins(problem, cut.flow.fans),
+        blocked_port_ends(pg, problem, net_of, sides, options.wiring_grid),
+        bundled_pairs(fans),
     )
 
 

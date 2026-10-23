@@ -70,14 +70,23 @@ def _clear(env: PageEnv, fan: Fan, a: Attach, crossed: CrossedRooms) -> int:
     return level_offset(fan.lanes, levels, env.options.wiring_grid) if levels else 0
 
 
+def _reach(env: PageEnv, fan: Fan, a: Attach, *, north: bool) -> int:
+    """The G an anchored item on the card's pin row reaches towards this trunk (R510)."""
+    if a.column is not None:
+        return 0
+    dy = pin_of(env.syms[a.pin.sym], a.pin.pin).dy
+    return env.reaches.get((fan.id, a.pin.sym, dy, north), 0)
+
+
 def _driver(g: Graph, fan: Fan, a: Attach, env: PageEnv, crossed: CrossedRooms) -> None:
     """A driver's pin lies wire_min above the trunk at least; a crossed one, its levels more."""
-    rise = max(env.options.wire_min, _clear(env, fan, a, crossed))
+    rise = max(env.options.wire_min, _clear(env, fan, a, crossed), _reach(env, fan, a, north=False))
     if a.column is None:
         at = box_at(env, a.pin.sym)
         if at is not None:
             dy = pin_of(env.syms[a.pin.sym], a.pin.pin).dy
-            g.after(at[0], trunk_node(fan.id, at[1]), dy + rise)
+            # R472: the trunk clears the step-out cell of the box's other pins
+            g.after(at[0], trunk_node(fan.id, at[1]), dy + rise + env.options.wiring_grid)
         return
     pc = env.pcs.get(a.column)
     if pc is not None:
@@ -97,7 +106,11 @@ class _Hang(NamedTuple):
 def _leg(g: Graph, h: _Hang, a: Attach, env: PageEnv) -> str | None:
     """Hang the leg `depth` under the trunk; the trunk when the stacks hold the cell elsewhere."""
     fan, tangled = h.fan, h.tangled
-    depth = max(level_offset(fan.lanes, 0, env.options.wiring_grid), _clear(env, fan, a, h.crossed))
+    depth = max(
+        level_offset(fan.lanes, 0, env.options.wiring_grid),
+        _clear(env, fan, a, h.crossed),
+        _reach(env, fan, a, north=True),
+    )
     if a.column is None:
         at = box_at(env, a.pin.sym)
         if at is not None:

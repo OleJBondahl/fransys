@@ -3,12 +3,11 @@
 from typing import TYPE_CHECKING
 
 from fransys_model.kernel import Origin, evolve
-from fransys_model.layout import Membership, layout_of
 
 from .write_findings import kernel_findings
 from .write_ids import group_ids
 from .write_markers import link_markers
-from .write_membership import memberships
+from .write_membership import memberships, set_rows
 from .write_pages import SetPlace, write_pages
 from .write_power import power_symbols
 
@@ -61,7 +60,7 @@ def write_layout(  # noqa: PLR0913 - the library and the place join the five inp
         ),
         *memberships(model, layout, problem, kit, pages, _STAMP, number),
     )
-    own = tuple(i for i, m in layout_of(model, Membership).items() if m.produced_by == _STAMP)
+    own = set_rows(model, number, _STAMP)
     return evolve(model, put=records, remove=own, origin=_ORIGIN), kernel_findings(
         model, layout.findings
     )

@@ -34,6 +34,7 @@ def test_the_marker_box_is_measured_at_all_eight_orientations() -> None:
                 flip_turn="R180",
                 tag_stagger=True,
                 label_gap=8,
+                parallel_pitch=48,
                 driver_first=True,
                 arrow_sides=("E", "W"),
             ),

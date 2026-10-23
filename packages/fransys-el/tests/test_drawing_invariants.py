@@ -3,6 +3,8 @@
 Each code has a clean drawing that raises nothing and a drawing with one planted defect.
 """
 
+from dataclasses import replace
+
 import pytest
 from conventions_fixtures import house
 from fransys_el import build, lay_out_drawn
@@ -13,7 +15,7 @@ from ring_cases import bank_model, box_kit
 
 from electrical_symbols import LIBRARY
 from fransys_layout.core import Box, Size
-from fransys_layout.drawing import Drawing, DrawnSymbol, DrawnText
+from fransys_layout.drawing import Drawing, DrawnSymbol, DrawnText, DrawnWire
 from fransys_model.kernel import Id, Severity
 
 PAGE = Id(kind="page", value="page-1")
@@ -120,3 +122,69 @@ def test_a_symbol_drawn_at_a_pin_end_over_a_body_raises_overlap_not_anchor_overl
     planted = _drawing(_symbol("a", Box(0, 0, 10, 10)), power)
     (found,) = _findings(planted)
     assert (found.code, "power-24v" in found.message) == ("OVERLAP", True)
+
+
+MARKER = DrawnSymbol(
+    "m", "reference-marker", 10, 12, "R0", outline=Box(10, 10, 6, 4), ports=("P",), net="N"
+)
+
+
+def _marker_codes(*wires: tuple, dots: tuple = (), body: bool = False) -> list[str]:
+    """The finding codes of a page with the marker above (its port at its origin) and `wires`."""
+    symbols = [
+        MARKER,
+        *(
+            DrawnSymbol("d", "junction-dot", x, y, "R0", outline=Box(x - 1, y - 1, 2, 2))
+            for x, y in dots
+        ),
+    ]
+    symbols += [_symbol("a", Box(0, 30, 10, 10))] if body else []
+    wired = tuple(DrawnWire(f"w{i}", pts, "signal") for i, pts in enumerate(wires))
+    drawing = Drawing(Size(100, 100), tuple(symbols), wired, (), (), (), "v")
+    part = replace(_part(drawing, {}, LIBRARY), ports={"P": (10, 12)})
+    net = Netlist({PAGE: part}, Union(), {}, {}, {}, {})
+    return [f.code for f in drawing_invariant_findings(net)]
+
+
+def test_a_wire_ending_inside_a_marker_box_raises_wire_over_marker_alone():
+    assert _marker_codes(((0, 11), (12, 11))) == ["WIRE_OVER_MARKER"]
+
+
+@pytest.mark.rule("MARKER-FREE-SIDE")
+def test_a_wire_ending_exactly_on_a_marker_box_edge_raises_wire_over_marker():
+    assert _marker_codes(((30, 11), (16, 11))) == ["WIRE_OVER_MARKER"]
+
+
+def test_a_wire_crossing_a_marker_box_with_both_ends_outside_raises_wire_over_marker():
+    assert _marker_codes(((12, 0), (12, 30))) == ["WIRE_OVER_MARKER"]
+
+
+def test_a_junction_dot_in_a_marker_box_raises_wire_over_marker():
+    assert _marker_codes(dots=((13, 11),)) == ["WIRE_OVER_MARKER"]
+
+
+def test_the_wire_that_ends_at_the_markers_own_port_and_a_far_wire_raise_nothing():
+    assert _marker_codes(((0, 12), (10, 12)), ((40, 0), (40, 50)), dots=((60, 60),)) == []
+
+
+def test_a_wire_through_a_body_that_is_no_marker_is_still_overlap():
+    assert _marker_codes(((5, 25), (5, 45)), body=True) == ["OVERLAP"]
+
+
+def _dot_page(dot_at: tuple[int, int], pin_at: tuple[int, int]) -> list[str]:
+    """OVERLAP members of a terminal body whose pin is at `pin_at` and a dot at `dot_at`."""
+    body = DrawnSymbol("t", "terminal", 0, 0, "R0", outline=Box(0, 0, 10, 10), ports=("P",))
+    dot = DrawnSymbol(
+        "d", "junction-dot", *dot_at, "R0", outline=Box(dot_at[0] - 1, dot_at[1] - 1, 2, 2)
+    )
+    return page_overlaps(_drawing(body, dot)[PAGE], {"P": pin_at})
+
+
+@pytest.mark.rule("DRAWN-NETLIST")
+def test_a_dot_on_its_symbols_own_pin_point_is_no_overlap():
+    assert _dot_page((5, 0), (5, 0)) == []
+
+
+def test_a_dot_off_the_pin_point_or_on_another_symbols_pin_still_overlaps():
+    assert _dot_page((5, 5), (5, 0)) == ["terminal / junction-dot"]
+    assert _dot_page((5, 5), (7, 7)) == ["terminal / junction-dot"]

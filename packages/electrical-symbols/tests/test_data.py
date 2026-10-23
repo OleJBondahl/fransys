@@ -304,10 +304,13 @@ def test_library_toml_declares_its_keys_words_and_rules():
             {"id": "wire", "weight": "normal", "style": "solid"},
             {"id": "trunk", "weight": "thick", "style": "solid"},
             {"id": "marker", "weight": "normal", "style": "solid"},
+            {"id": "core", "weight": "normal", "style": "solid"},
+            {"id": "diagram_line", "weight": "normal", "style": "solid"},
             {"id": "link", "weight": "normal", "style": "dashed"},
             {"id": "by_others", "weight": "normal", "style": "dashed"},
         ],
-        "lines": {"normal": 0.25, "thick": 0.5},
+        "lines": {"normal": 0.25, "thick": 0.5, "rule": 0.18},
+        "dash": {"dashed": [1.25, 0.625], "dash_dot": [4.0, 1.0, 0.25, 1.0], "long": [4.0, 1.0]},
     }
 
 

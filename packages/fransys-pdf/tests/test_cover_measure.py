@@ -4,6 +4,7 @@ import fransys_render
 from _build import document, location, model, project, revision_entry, source
 from fransys_pdf import cover_overflow_finding
 
+from electrical_symbols import LIBRARY
 from fransys_model.derive import document_sheets_of
 from fransys_model.kernel import Severity
 from fransys_model.vocab import DocumentPreset
@@ -24,7 +25,7 @@ def _source(*, revision: bool) -> str:
     entries = [revision_entry("r1", unit=None, revision=1, date="2026-09-22")] if revision else []
     doc = _document("# Cover\n\nText.")
     m = model(c1, p, *entries, doc)
-    return source(m, doc.id, {}, fransys_render.sheets(document_sheets_of(m)))
+    return source(m, doc.id, {}, fransys_render.sheets(document_sheets_of(m), LIBRARY))
 
 
 def test_a_panic_text_becomes_an_error_finding_with_the_heights():

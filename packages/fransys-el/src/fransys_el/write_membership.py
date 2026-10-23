@@ -12,7 +12,7 @@ from fransys_layout.core import PinRef
 from fransys_model.derive import build_indexes, frame_cell, function_item
 from fransys_model.derive.order import reading_ranks
 from fransys_model.kernel import make_id, render_id
-from fransys_model.layout import FrameCell, Membership, Shown
+from fransys_model.layout import FrameCell, Membership, Shown, layout_of
 
 from .kit_keys import function_of
 from .placement_ids import pin_names, symbol_ids
@@ -27,7 +27,7 @@ if TYPE_CHECKING:
 
     from .placement_kit import PickKey, SymbolKit
 
-__all__ = ["memberships"]
+__all__ = ["memberships", "set_rows"]
 
 _KEY = ("layout", "core", "membership")
 
@@ -161,6 +161,15 @@ def memberships(  # noqa: PLR0913, PLR0917 - the stamp and set number join the l
         by_page[spot.page][key] = (spot.at[1], spot.at[0])
     ranks = {page: reading_ranks(points) for page, points in by_page.items()}
     return tuple(_row(model, pages[s.page], s, ranks[s.page][k], stamp) for k, s in spots.items())
+
+
+def set_rows(model: Model, number: int, stamp: str) -> tuple[Id[Membership], ...]:
+    """The ids of the rows set `number` wrote before: a set replaces its own, not the others'."""
+    return tuple(
+        i
+        for i, m in layout_of(model, Membership).items()
+        if m.produced_by == stamp and m.key[len(_KEY)] == str(number)
+    )
 
 
 def _row(model: Model, page: Page, spot: _Spot, rank: int, stamp: str) -> Membership:

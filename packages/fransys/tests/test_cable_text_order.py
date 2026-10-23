@@ -16,6 +16,7 @@ import fransys_author
 from _model_build_cover import _COVER
 from fransys_render import cable_blocks
 
+from electrical_symbols import LIBRARY
 from fransys_layout import lay_out_cables
 from fransys_model.vocab import DocumentPreset
 
@@ -37,7 +38,7 @@ def _svg() -> str:
     for n, (terminal, pin) in enumerate(zip(terminals, "UVW", strict=True), 1):
         cable.core(n, terminal.outer, motor[pin])
     built = fr.build(parts, d.draft(), fr.document(DocumentPreset.SYSTEM, None, cover=_COVER))
-    (svg,) = dict(cable_blocks(lay_out_cables(built.model)[0])).values()
+    (svg,) = dict(cable_blocks(lay_out_cables(built.model)[0], LIBRARY)).values()
     return svg
 
 
@@ -54,7 +55,7 @@ def test_texts_read_row_by_row_left_to_right():
 
 def test_every_shape_is_emitted_before_the_first_text():
     """The texts follow all outlines and wires; nothing is filled, so the paint is unchanged."""
-    body = _svg().split("</style>", 1)[1]
+    body = _svg()
     last_shape = max(body.rfind(tag) for tag in ("<rect", "<line", "<polyline"))
     assert last_shape < body.index("<text")
 
@@ -101,6 +102,6 @@ def test_equal_colours_read_number_then_colour_in_core_order(tmp_path_factory, m
     for n, (terminal, pin) in enumerate(zip(terminals, "UVW", strict=True), 1):
         cable.core(n, terminal.outer, motor[pin])
     built = fr.build(parts, d.draft(), fr.document(DocumentPreset.SYSTEM, None, cover=_COVER))
-    (svg,) = dict(cable_blocks(lay_out_cables(built.model)[0])).values()
+    (svg,) = dict(cable_blocks(lay_out_cables(built.model)[0], LIBRARY)).values()
     texts = _TEXT.findall(svg)
     assert texts[texts.index("-W1, 5000 mm") + 1 : -4] == ["1 BK", "2 BK", "3 BK"]

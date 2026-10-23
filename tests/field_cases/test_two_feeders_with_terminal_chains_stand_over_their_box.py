@@ -17,16 +17,11 @@ from pathlib import Path
 from typing import Any
 
 import fransys as fr
+from _drawn_facts import symbol_subjects
 from fransys.colours import BN, BU
 
 from fransys_model.layout import LinkMarker, layout_of
 from fransys_model.vocab.tables import functions, items, ports
-
-
-def _gap(model, fact: str):
-    """A fact the page Drawing lacks (strict xfail, GAP-FLIP-DRAWING-SUBJECT)."""
-    msg = f"GAP-FLIP-DRAWING-SUBJECT: no {fact} for {model.digest}"
-    raise AssertionError(msg)
 
 
 def _built() -> Any:
@@ -56,22 +51,16 @@ def _built() -> Any:
 def _box(model, tag: str) -> tuple[object, Any]:
     """The (page, generic box) drawn for the function of item `tag`."""
     (found,) = (
-        (page, one)
-        for page, drawing in _gap(model, "symbol subject").items()
-        for one in drawing.symbols
-        if one.key == "generic-box" and one.owner.startswith(f"{tag} ")
+        (one.page, one)
+        for one in symbol_subjects(model)
+        if one.key == "generic-box" and one.tag == tag
     )
     return found
 
 
 def _held_by(model, held: set) -> list[tuple[object, Any]]:
     """The (page, drawn symbol) pairs drawn for the functions in `held`."""
-    return [
-        (page, one)
-        for page, drawing in _gap(model, "symbol subject").items()
-        for one in drawing.symbols
-        if (one.owner or "").rpartition(":")[2] in held
-    ]
+    return [(one.page, one) for one in symbol_subjects(model) if one.owner in held]
 
 
 def _pin_x(box, name: str) -> int:
@@ -85,9 +74,7 @@ def test_supplies_fed_from_terminals_stand_over_the_module_pin_over_pin() -> Non
     psus = {n: _box(model, f"G{n}") for n in (1, 2)}
     boxes = [module, *(box for _, box in psus.values())]
     box_items = {
-        f.item
-        for f in functions(model).values()
-        if f.id.value in {b.owner.rpartition(":")[2] for b in boxes}
+        f.item for f in functions(model).values() if f.id.value in {b.owner for b in boxes}
     }
     fn_of = {pid: functions(model)[p.function] for pid, p in ports(model).items()}
     wires = [

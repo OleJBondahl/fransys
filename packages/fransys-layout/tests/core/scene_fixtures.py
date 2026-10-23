@@ -65,6 +65,7 @@ OPTIONS = core_options(
     flip_turn="R180",
     tag_stagger=True,
     label_gap=8,
+    parallel_pitch=48,
     driver_first=True,
     arrow_sides=("E", "W"),
 )
@@ -96,7 +97,7 @@ def flow() -> FlowGraph:
         32,
         16,
     )
-    driver = Attach(None, 0, 0, PinRef("F", "out"))
+    driver = Attach(None, 0, 0, PinRef("F", "out"), net="n")
     fan = Fan("F1", ("n2",), (driver,), (), "F", 1, "E", head=driver)
     return FlowGraph((column,), (fan,), (), (), CycleSplit(0, 0, 0), ("K", "A", "F", "T"))
 
@@ -130,7 +131,7 @@ def layout() -> CoreLayout:
         (),
         (),
     )
-    wire = Wire("n2", 2, ((40, 14), (40, 4)), "riser", 1)
+    wire = Wire("n2", 2, ((40, 14), (40, 4)), "riser")
     return CoreLayout(
         Size(100, 100),
         plans,

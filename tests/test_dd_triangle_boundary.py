@@ -15,9 +15,11 @@ from typing import Any
 import fransys as fr
 import fransys_author
 import fransys_parts
+import pytest
 from _dd_core_c import in_own_set, stands, tags_by_set
 from _drawn_pages import drawn_pages
 from _model_build_cover import layout_trigger_document
+from _no_power_net import assert_no_power_net
 
 from fransys_model.kernel import Severity
 
@@ -92,19 +94,25 @@ def test_each_terminal_is_drawn_once_per_drawing_set() -> None:
     _assert_once_per_set(model, in_unit=True)
 
 
-def test_markers_of_the_star_net_follow_d9_in_each_set() -> None:
-    """D9: the net of three is drawn as wires where it is wired, so it has no marker anywhere.
-    In the unit's set: three conductor routes and no marker on a terminal port. In the top-level
-    set: no route and no marker (the conductors are the unit's; a black box's pin has no star
-    marker)."""
+@pytest.mark.rule("ROUTING")
+@pytest.mark.rule("BUNDLE")
+def test_the_net_of_three_is_one_trunk_in_the_units_set_and_nothing_in_the_top_set() -> None:
+    """The net of three is one trunk with a drop per terminal and a dot at the inner drop in the
+    unit's set, no marker anywhere; the top-level set draws no wire (ROUTING, BUNDLE, R467; not a
+    power net)."""
     # UNDO: as in test_triangle_of_boundary_terminals_builds
     model = _build(_TRIANGLE).model
-    wires = {True: 0, False: 0}
+    assert_no_power_net(model)
+    wires = {True: [], False: []}
+    dots = 0
     for page, drawing in drawn_pages(model).items():
-        wires[in_own_set(model, page)] += len(drawing.wires)
+        wires[in_own_set(model, page)] += drawing.wires
+        dots += len([s for s in drawing.symbols if s.key == "junction-dot"])
         assert drawing.markers == ()
-    assert wires[False] == 0
-    assert wires[True] == 3
+    assert wires[False] == []
+    level = [w for w in wires[True] if w.points[0][1] == w.points[-1][1]]
+    upright = [w for w in wires[True] if w.points[0][0] == w.points[-1][0]]
+    assert (len(level), len(upright), dots) == (1, 3, 1)
 
 
 def test_chain_of_boundary_terminals_still_builds() -> None:

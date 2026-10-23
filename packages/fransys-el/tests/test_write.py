@@ -20,6 +20,7 @@ from placement_fixtures import kit_for, planted_model
 
 from electrical_symbols import LIBRARY
 from fransys_layout.core import Finding, PinRef, Wire, solve
+from fransys_model.derive import net_of
 from fransys_model.kernel import Origin, Severity, evolve, make_id
 from fransys_model.layout import (
     DrawingSet,
@@ -233,17 +234,23 @@ def test_a_bundle_is_a_trunk_and_a_single_wire_is_a_wire(written: Written) -> No
     page = next(iter(layout_of(written.out, Page).values()))
     wires = (
         Wire("n1", page.number, ((0, 0), (8, 0)), "routed"),
-        Wire("n1", page.number, ((0, 8), (8, 8)), "trunk", 3),
+        Wire("n1", page.number, ((0, 8), (8, 8)), "trunk", lane=2),
     )
     drawn = [w for _, _, w in drawn_wires(wires, written.model, {page.number: page}, 1)]
-    assert [(w.style, w.lanes) for w in drawn] == [("wire", 1), ("trunk", 3)]
+    assert [(w.style, w.lanes) for w in drawn] == [("wire", 1), ("trunk", 1)]
     assert drawn[0].id != drawn[1].id
 
 
 def test_a_wire_takes_the_declared_net_of_the_port_its_net_is_named_for(written: Written) -> None:
-    """The Drawing's wire carries no net (GAP-FLIP-DRAWING-SUBJECT): the fact has no reader."""
-    msg = f"GAP-FLIP-DRAWING-SUBJECT: no wire net for {written.model.digest}"
-    raise AssertionError(msg)
+    """A drawn wire's `net` is the value of the first port of the net its port is on."""
+    model = written.model
+    port_of = {port.value: port for port in ports(model)}
+    wires = [w for d in written.drawn.values() for w in d.wires]
+    assert wires
+    for w in wires:
+        net = net_of(model, port_of[w.net])
+        assert net is not None
+        assert w.net == net.ports[0].value
 
 
 def test_a_port_on_two_nets_is_refused(written: Written) -> None:
@@ -267,7 +274,10 @@ def test_a_port_on_two_nets_is_refused(written: Written) -> None:
 
 def test_wire_styles_exist(written: Written) -> None:
     page = next(iter(layout_of(written.out, Page).values()))
-    wires = tuple(Wire("n", page.number, ((0, 0), (8, 0)), "routed", n) for n in (1, 3))
+    wires = (
+        Wire("n", page.number, ((0, 0), (8, 0)), "routed"),
+        Wire("n", page.number, ((0, 8), (8, 8)), "trunk", lane=0),
+    )
     styles = {w.style for _, _, w in drawn_wires(wires, written.model, {page.number: page}, 1)}
     assert styles == {"trunk", "wire"}
     assert styles <= {w.id for w in LIBRARY.wires}

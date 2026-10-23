@@ -8,7 +8,8 @@ from fransys_author.errors import AuthorError
 from fransys_author.handles import Port
 from fransys_author.surface._bar_pe import join_pe
 from fransys_author.surface._handles import Fn
-from fransys_model.kernel import first_free, make_id
+from fransys_model.kernel import make_id
+from fransys_model.refdef import lowest_free
 from fransys_model.vocab import FunctionKind, PortRole
 from fransys_model.vocab import Port as PortRecord
 
@@ -58,7 +59,7 @@ def take_screw(design: Design | None, fn: Fn) -> Port:
     """
     design = _taker(design, fn)
     taken = design._screws.setdefault(fn.id, set())
-    number = first_free(taken)
+    number = lowest_free(taken)
     if fn.pins:
         if number > len(fn.pins):
             msg = (

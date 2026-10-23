@@ -2,6 +2,7 @@
 
 from typing import Any
 
+import pytest
 from plant import Plant
 
 from fransys_model.checks.connectivity import (
@@ -10,10 +11,11 @@ from fransys_model.checks.connectivity import (
     NET_UNREALISED,
     check_connectivity,
 )
+from fransys_model.derive import net_of
 from fransys_model.kernel import Finding, Id, Severity, make_id
 from fransys_model.vocab.connectivity import Net
 from fransys_model.vocab.core import Item, Port
-from fransys_model.vocab.enums import FunctionKind, NetClass
+from fransys_model.vocab.enums import FunctionKind, LinkKind, NetClass
 from fransys_model.vocab.finding_ref import ref
 from fransys_model.vocab.tables import ports
 
@@ -50,6 +52,65 @@ def test_a_non_pe_net_in_two_physical_nets_is_unrealised() -> None:
 
 
 # ---- board realisation --------------------------------------------------------------------
+
+
+def _net_over(plant: Plant, *ports: Id[Port]) -> None:
+    plant.net("n", ports)
+
+
+@pytest.mark.rule("NET-DECLARED")
+def test_a_declared_net_joins_nothing_when_unwired() -> None:
+    """Catches a declared net that merges its ports into one physical net."""
+    plant = Plant()
+    a, b = plant.pin("a", "f", "1"), plant.pin("b", "f", "1")
+    _net_over(plant, a, b)
+    model = plant.model()
+    assert net_of(model, a) != net_of(model, b)
+    assert len(_of(plant, NET_UNREALISED)) == 1
+
+
+@pytest.mark.rule("NET-DECLARED")
+def test_a_declared_net_realised_by_a_wire_gives_no_finding() -> None:
+    """Catches a wired net that still warns."""
+    plant = Plant()
+    a, b = plant.pin("a", "f", "1"), plant.pin("b", "f", "1")
+    _net_over(plant, a, b)
+    plant.wire(a, b, key="w")
+    assert _of(plant, NET_UNREALISED) == []
+
+
+@pytest.mark.rule("NET-DECLARED")
+def test_a_declared_net_realised_by_a_link_gives_no_finding() -> None:
+    """Catches a net whose two ports a conductive link joins still warning."""
+    plant = Plant()
+    part, template, first, second = plant.relay_part()
+    plant.link(first, second, LinkKind.CONDUCTIVE)
+    function = plant.function(plant.item("g", part=part.id), "fn", template=template.id)
+    one = plant.port(function, "1", template=first.id)
+    two = plant.port(function, "2", template=second.id)
+    _net_over(plant, one, two)
+    assert _of(plant, NET_UNREALISED) == []
+
+
+@pytest.mark.rule("NET-DECLARED")
+def test_a_declared_net_realised_by_a_board_gives_no_finding() -> None:
+    """Catches a net on the items of one board still warning."""
+    plant = Plant()
+    board = plant.item("board", part=plant.board_part())
+    a = plant.port(plant.function(plant.item("a", parent=board), "f"), "1")
+    b = plant.port(plant.function(plant.item("b", parent=board), "f"), "1")
+    _net_over(plant, a, b)
+    assert _of(plant, NET_UNREALISED) == []
+
+
+@pytest.mark.rule("NET-DECLARED")
+def test_a_partly_wired_declared_net_still_warns() -> None:
+    """Catches a wire between two of three ports counted as realising the net."""
+    plant = Plant()
+    a, b, c = (plant.pin(name, "f", "1") for name in "abc")
+    _net_over(plant, a, b, c)
+    plant.wire(a, b, key="w")
+    assert len(_of(plant, NET_UNREALISED)) == 1
 
 
 # ---- NET_SHORTED and NET_POTENTIAL_CONFLICT -----------------------------------------------

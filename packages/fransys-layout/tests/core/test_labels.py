@@ -33,6 +33,7 @@ OPTIONS = core_options(
     flip_turn="R180",
     tag_stagger=True,
     label_gap=8,
+    parallel_pitch=48,
     driver_first=True,
     arrow_sides=("E", "W"),
 )
@@ -194,6 +195,7 @@ def test_corner_order_bl_only_makes_the_neighbours_test_fail() -> None:
         flip_turn="R180",
         tag_stagger=True,
         label_gap=8,
+        parallel_pitch=48,
         driver_first=True,
         arrow_sides=("E", "W"),
     )
@@ -209,6 +211,7 @@ def test_a_slot_corner_is_unknown_since_the_side_slots_left() -> None:
         flip_turn="R180",
         tag_stagger=True,
         label_gap=8,
+        parallel_pitch=48,
         driver_first=True,
         arrow_sides=("E", "W"),
     )
@@ -223,6 +226,7 @@ def test_an_unknown_corner_names_the_corner_and_the_choices() -> None:
         flip_turn="R180",
         tag_stagger=True,
         label_gap=8,
+        parallel_pitch=48,
         driver_first=True,
         arrow_sides=("E", "W"),
     )

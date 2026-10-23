@@ -17,6 +17,7 @@ from pathlib import Path
 import fransys as fr
 import pytest
 from _drawn_pages import drawn_pages
+from _tables_on import TABLES_ON
 from fransys.colours import BU
 
 _WIRE = (BU, 0.5)
@@ -42,7 +43,9 @@ def _built():
     d.detail.wire(block.nc["62"], lamp["2"], wire=_WIRE)
     cover = Path(tempfile.mkdtemp()) / "cover.md"
     cover.write_text("# Cabinet\n", encoding="utf-8")
-    return fr.build(d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover))
+    return fr.build(
+        d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover), settings=TABLES_ON
+    )
 
 
 @pytest.fixture(scope="module")

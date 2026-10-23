@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import fransys as fr
+from _drawn_facts import symbol_subjects
 from _drawn_pages import drawn_pages
 from fransys.colours import BN, BU
 
@@ -27,12 +28,6 @@ if TYPE_CHECKING:
     from fransys_model.kernel import Model
 
 BOX = "generic-box"
-
-
-def _gap(model, fact: str):
-    """A fact the page Drawing lacks (strict xfail, GAP-FLIP-DRAWING-SUBJECT)."""
-    msg = f"GAP-FLIP-DRAWING-SUBJECT: no {fact} for {model.digest}"
-    raise AssertionError(msg)
 
 
 @functools.cache
@@ -76,11 +71,7 @@ def _drawn(model, tag: str, symbol: str | None = None) -> list:
     """The drawn symbols of item `tag`'s functions, optionally of one library symbol."""
     tag_of = {i.id: i.tag for i in items(model).values()}
     wanted = {f.id.value for f in functions(model).values() if tag_of[f.item] == tag}
-    return [
-        s
-        for s in _gap(model, "symbol subject")
-        if s.owner and s.owner.split(":")[-1] in wanted and symbol in (None, s.key)
-    ]
+    return [s for s in symbol_subjects(model) if s.owner in wanted and symbol in (None, s.key)]
 
 
 def _image(model) -> list:
@@ -136,7 +127,7 @@ def test_the_box_stands_on_a_function_drawn_in_it_not_on_one_drawn_apart() -> No
     """The box's placement is no contact's: with the lowest id drawn apart, the next one stands."""
     model = _built()
     (box,) = _drawn(model, "M1", BOX)
-    assert box.owner != f"function:{_contact(model).value}"
+    assert box.owner != _contact(model).value
     msg = "not readable on the core: the item_function write key with a view apart"
     raise AssertionError(msg)
 

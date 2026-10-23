@@ -24,6 +24,7 @@ def flow_of(syms: list[Sym], nets: list[Net]) -> FlowGraph:
             flip_turn="R180",
             tag_stagger=True,
             label_gap=8,
+            parallel_pitch=48,
             driver_first=True,
             arrow_sides=("E", "W"),
         ),
@@ -90,3 +91,23 @@ def test_a_symbol_with_the_terminal_structure_is_placed_the_same_whatever_it_is(
 
 def _anon(flow: FlowGraph, hub_id: str) -> str:
     return repr(flow).replace(f"'{hub_id}'", "'H'").replace(f"c:{hub_id}", "c:H")
+
+
+def test_bundle_poles_that_skip_an_index_make_one_lane_per_pole() -> None:
+    syms = [poles("src"), poles("ld1"), poles("ld2")]
+    nets = [
+        net(f"b{k}", f"src.s{k}", f"ld1.n{k}", f"ld2.n{k}", bundle=Bundle("b", k)) for k in (1, 2)
+    ]
+    (fan,) = flow_of(syms, nets).fans
+    assert (fan.lanes, fan.nets) == (2, ("b1", "b2"))
+    assert sorted({a.pole for a in (*fan.drivers, *fan.legs)}) == [0, 1]
+
+
+def test_a_bundle_names_its_nets_in_lane_order_not_in_id_order() -> None:
+    syms = [poles("src"), poles("ld1"), poles("ld2")]
+    nets = [
+        net(f"b{k}", f"src.s{pole}", f"ld1.n{pole}", f"ld2.n{pole}", bundle=Bundle("b", pole))
+        for k, pole in ((0, 2), (1, 0), (2, 1))
+    ]
+    (fan,) = flow_of(syms, nets).fans
+    assert fan.nets == ("b1", "b2", "b0")

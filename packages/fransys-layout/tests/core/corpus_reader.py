@@ -194,7 +194,7 @@ def read_text(text: str, name: str) -> Instance:
     ctx = (net_of, _facts(by_kind))
     boxes = [_box(w[1], syms[w[1]], w, number[_key(w)], ctx) for w in today]
     wires = [
-        SceneWire(w[1], number[_key(w)], tuple((x, y) for x, y in map(_ints, w[6:])), 1, "straight")
+        SceneWire(w[1], number[_key(w)], tuple((x, y) for x, y in map(_ints, w[6:])), "straight")
         for w in by_kind.get("route", [])
     ]
     markers = []

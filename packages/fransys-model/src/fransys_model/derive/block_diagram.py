@@ -30,8 +30,10 @@ from .drawing_text import (
 )
 from .facts.roles import function_role
 from .facts.subjects import is_unit_boundary
+from .frame_labels import cell_labels
 from .harness import reading_cables
 from .harness_line_ends import mate_of, plug_of
+from .house_settings import frame_form_of, reference_text_of
 from .instance_tag import instance_name, instance_tags
 from .library_grid import mm_per_division
 from .lookups import item_of_port, terminal_strip, unit_chain
@@ -305,4 +307,6 @@ def diagram_marker_text(model: Model, marker: DiagramMarker) -> str:
     row = frame_row(
         content_extent(page.content_height_mm, per_division), page.frame_rows, partner.y
     )
-    return partner_position_text((1, own.number, ()), (1, marker.at_sheet, ()), column, row)
+    labels = cell_labels(frame_form_of(model), page.frame_rows, column, row)
+    seats = (1, own.number, ()), (1, marker.at_sheet, ())
+    return partner_position_text(reference_text_of(model), *seats, labels)

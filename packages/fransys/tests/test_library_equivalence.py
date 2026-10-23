@@ -10,7 +10,9 @@ fields, and the body and keep-out boxes must not depend on the font.
 """
 
 from pathlib import Path
+from typing import TYPE_CHECKING, cast
 
+import fransys as fr
 import pytest
 from fransys._settings_library import build_library
 from symdef import body_box, keepout_box
@@ -18,12 +20,22 @@ from symdef import body_box, keepout_box
 from electrical_symbols import G_PER_MODULE, LIBRARY, PORT_PITCH_G, WIRING_GRID
 from electrical_symbols.box_ports import PORT_PITCH
 
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+
 pytestmark = pytest.mark.wp("facade")
 
 FONTS = Path(__file__).parent / "fixtures" / "fonts"
+HOUSE = fr.settings()
+_TABLES: dict[str, Mapping[str, object]] = {
+    "lines": HOUSE.table("lines"),
+    "dash": HOUSE.table("dash"),
+    "heights": cast("Mapping[str, object]", HOUSE.table("font")["heights"]),
+}
 OTHER = build_library(
     {"module_mm": 1.7},
     {"name": "other", "files": (FONTS / "DejaVuSans.ttf", FONTS / "DejaVuSans-Bold.ttf")},
+    _TABLES,
     "the test",
 )
 KEYS = [symbol.reference.number for symbol in LIBRARY]

@@ -1,11 +1,12 @@
 """One text for every lifted line, and one merge of the stubs per far end (OVERVIEW-VIEWS R2)."""
 
+from derive_helpers import house_record
 from overview_builders import item_id, unit_plant
 
 from fransys_model.derive import OverviewLinkKind, overview_lifted_text, stub_ends
 from fransys_model.derive.overview_text import overview_member_text
 from fransys_model.derive.rows import OverviewStub
-from fransys_model.layout import OverviewRef, OverviewRefKind
+from fransys_model.layout import OverviewRef, OverviewRefKind, StubText
 
 WIRE, CABLE = OverviewLinkKind.WIRE, OverviewLinkKind.CABLE
 
@@ -57,5 +58,8 @@ def test_stubs_of_one_far_end_with_two_kinds_are_one_box_and_two_lines() -> None
 
 def test_a_member_row_is_the_stub_label_with_the_carrier_first() -> None:
     """Breaks if the row joins box text and carrier with a dash, or loses the port tails."""
-    assert overview_member_text(("+EXT-M1", ":PE"), "-W11") == "-W11 → +EXT-M1:PE"
-    assert overview_member_text(("+EXT-M1",), "") == "→ +EXT-M1"
+    assert (
+        overview_member_text(house_record(StubText), ("+EXT-M1", ":PE"), "-W11")
+        == "-W11 → +EXT-M1:PE"
+    )
+    assert overview_member_text(house_record(StubText), ("+EXT-M1",), "") == "→ +EXT-M1"

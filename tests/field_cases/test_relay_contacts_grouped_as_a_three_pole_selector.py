@@ -18,6 +18,7 @@ import fransys as fr
 import pytest
 from _contact_tables import contact_table
 from _drawn_pages import drawn_pages
+from _tables_on import TABLES_ON
 
 _SEL = "-Q1's part already states a selector: pass q1.co"
 _TOP = 4  # the three poles, as (pole, QA/QB load pin, motor pin)
@@ -47,7 +48,7 @@ def _built(folder: str) -> fr.BuildResult:
     cover.write_text("# Selector\n", encoding="utf-8")
     d, cabinet = selector_design()
     doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cabinet, cover=cover)
-    return fr.build(d, doc)
+    return fr.build(d, doc, settings=TABLES_ON)
 
 
 def _model(tmp_path_factory: pytest.TempPathFactory):

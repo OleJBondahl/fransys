@@ -80,6 +80,15 @@ def _pin(box, port):
     return box.x + dict(box.offsets)[port], y, side
 
 
+def _north_then_south(sides, expected) -> None:
+    """`sides`, the drawn sides of pins in marking order, are `expected` and run N before S.
+
+    The ruled outcome is a literal per fixture (R467 Q17), so no copy of the half split lives here.
+    """
+    assert tuple(sides) == tuple(expected)
+    assert "".join(sides) == "n" * sides.count("n") + "s" * sides.count("s")
+
+
 def _wire_ends_at(drawing, x, y):
     return any((x, y) in (w.points[0], w.points[-1]) for w in drawing.wires)
 
@@ -164,19 +173,17 @@ def test_an_item_of_generic_functions_is_one_box_showing_every_functions_ports()
     assert set(_marks(box).values()) == {"1", "2"}
 
 
+@pytest.mark.rule("BOX-SIDES")
 def test_a_wired_plc_channel_is_a_pin_on_the_south_side_of_its_modules_box() -> None:
-    """Each wired channel is a pin of the module's one box; the wire leaves side S."""
-    # UNDO: fransys_layout/engines/schematic/read/item_sides.py:item_sides
-    #     returns `{}` for a box with a PLC channel (the old landing order): pins then take the
-    #     default sides, not S
+    """BOX-SIDES: "the rest in halves"; R467 Q17: two wired channels split N then S."""
+    # UNDO: fransys_el/placement_sides.py:half_split puts every wired pin on N
     model = _plc_modules()
     drawing, box = _box(model, "do")
     assert box.key == _GENERIC_BOX
     assert set(_marks(box).values()) == {"1", "2"}
-    for channel in ("do_1.1", "do_2.2"):
-        x, y, side = _pin(box, channel)
-        assert side == "s"
-        assert _wire_ends_at(drawing, x, y)
+    pins = [_pin(box, channel) for channel in ("do_1.1", "do_2.2")]
+    _north_then_south([side for _, _, side in pins], ("n", "s"))
+    assert all(_wire_ends_at(drawing, x, y) for x, y, _ in pins)
 
 
 def test_no_plc_module_is_drawn_with_channel_symbols_wired_or_not() -> None:
@@ -215,20 +222,22 @@ def test_a_boxs_port_pitch_comes_from_its_longest_port_name_in_whole_modules() -
     assert pitch("internal", "x", "y", "z") == 4
 
 
+@pytest.mark.rule("BOX-SIDES")
 def test_the_engines_box_keeps_two_modules_between_ports_on_one_side() -> None:
-    """The star-delta motor's end ports on one side stand 2 M (16 G) apart."""
+    """BOX-SIDES: "the rest in halves"; R467 Q17: U2 is N, V2 and W2 share S, 2 M (16 G) apart."""
     # UNDO: electrical_symbols/generic_box.py:_pitch returns 1.0
     parts, d = _design()
     c1, grp = d.location("C1", "Cabinet"), d.group("A", "A")
     m1 = d.item("DEMO-MOTOR-11KW-YD", tag="M1", name="m1", at=c1, group=grp)
-    # layout-0218: a relay coil on V2 keeps the box drawn; the pins keep their places
+    # layout-0218: a relay coil on U2 keeps the box drawn; the pins keep their places
     k1 = d.item("DEMO-RLY-2CO-24", tag="K1", name="k1", at=c1, group=grp)
-    d.wiring(colour="BU", gauge="0.5")(k1.fn("coil")["A2"], m1.fn("end")["V2"])
+    d.wiring(colour="BU", gauge="0.5")(k1.fn("coil")["A2"], m1.fn("end")["U2"])
     model = fr.build(parts, d.draft(), layout_trigger_document()).model
     _, motor = _box(model, "m1")
-    (ux, uy, _), (vx, vy, _), (wx, wy, _) = (_pin(motor, port) for port in ("U2", "V2", "W2"))
-    assert uy == vy == wy
-    assert vx - ux == 16
+    pins = [_pin(motor, port) for port in ("U2", "V2", "W2")]
+    _north_then_south([side for _, _, side in pins], ("n", "s", "s"))
+    (vx, vy), (wx, wy) = pins[1][:2], pins[2][:2]
+    assert vy == wy
     assert wx - vx == 16
 
 
@@ -262,10 +271,10 @@ def test_box_ports_face_their_placed_partners(
     assert y == box.y + (-_HALF_BODY if partner_above else _HALF_BODY)
 
 
+@pytest.mark.rule("BOX-SIDES")
 def test_an_unwired_channel_of_a_half_wired_module_is_a_port_on_the_modules_box() -> None:
-    """With one channel wired and one not, both are pins of the module's one box."""
-    # UNDO: fransys_layout/engines/schematic/read/views.py:item_views
-    #     keeps a wired one-port channel as its own view (gone with layout-0099)
+    """BOX-SIDES: "the rest in halves"; R467 Q17: the wired channel is N, the unwired one S."""
+    # UNDO: fransys_el/placement_sides.py:half_split puts the wired pin on S
     parts, d = _design()
     c1, plc = d.location("C1", "Cabinet"), d.group("PLC", "PLC")
     do = d.item("DEMO-PLC-DO-2", tag="DO1", name="do", at=c1, group=plc)
@@ -275,8 +284,8 @@ def test_an_unwired_channel_of_a_half_wired_module_is_a_port_on_the_modules_box(
     drawing, box = _box(model, "do")
     assert box.key == _GENERIC_BOX
     assert set(_marks(box).values()) == {"1", "2"}
-    x, y, _ = _pin(box, "do_1.1")
-    assert y == box.y + _HALF_BODY
+    x, y, side = _pin(box, "do_1.1")
+    _north_then_south([side, _pin(box, "do_2.2")[2]], ("n", "s"))
     assert _wire_ends_at(drawing, x, y)
 
 
@@ -304,13 +313,12 @@ channel = {n}
 )
 
 
+@pytest.mark.rule("BOX-SIDES")
 def test_a_three_channel_module_with_one_wired_channel_is_one_box_holding_all_three_pins(
     tmp_path,
 ) -> None:
-    """A 3-channel module with 1 wired and 2 unwired channels is ONE box holding all
-    three channels' pins; the wired channel is not a column end of its own."""
-    # UNDO: fransys_layout/engines/schematic/read/views.py:item_views
-    #     keeps a wired one-port channel as its own view (gone with layout-0099)
+    """BOX-SIDES: "the rest in halves"; R467 Q17: the one wired channel is N, the two others S."""
+    # UNDO: fransys_el/placement_sides.py:half_split puts the wired pin on S
     root = tmp_path / "demo_parts"
     with as_file(files("demo_parts")) as demo_parts:
         shutil.copytree(demo_parts, root, ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
@@ -327,6 +335,7 @@ def test_a_three_channel_module_with_one_wired_channel_is_one_box_holding_all_th
     drawing, box = _box(model, "do")
     assert box.key == _GENERIC_BOX
     assert set(_marks(box).values()) == {"1", "2", "3"}
-    x, y, _ = _pin(box, "do_1.1")
-    assert y == box.y + _HALF_BODY
+    x, y, side = _pin(box, "do_1.1")
+    sides = [side, *(_pin(box, f"do_{n}.{n}")[2] for n in (2, 3))]
+    _north_then_south(sides, ("n", "s", "s"))
     assert _wire_ends_at(drawing, x, y)

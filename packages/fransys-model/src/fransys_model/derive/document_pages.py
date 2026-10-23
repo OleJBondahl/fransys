@@ -9,7 +9,7 @@ from collections import defaultdict
 
 from fransys_model.derive.facts.units import boundary
 from fransys_model.kernel import Id, value
-from fransys_model.layout import DrawingSet, LinkMarker, Page, layout_of
+from fransys_model.layout import DrawingSet, LinkMarker, Page, layout_of, sheet_format_of
 from fransys_model.layout.page_slices import page_members
 from fransys_model.vocab.tables import documents, functions
 lazy from fransys_model.kernel import Model
@@ -19,6 +19,8 @@ lazy from fransys_model.vocab.document import Document
 from .black_box import drawing_set_is_replica_only
 from .drawing_text import position_text
 from .export_names import document_export_name
+from .frame_labels import cell_labels
+from .house_settings import frame_form_of, reference_text_of
 from .page_destination import page_destination
 from .printed_sets import document_drawing_sets
 from .set_rank import set_rank
@@ -101,15 +103,20 @@ def item_pages(model: Model) -> dict[Id[Item], tuple[ItemPage, ...]]:
     """
     found: dict[Id[Item], dict[tuple[str, str], ItemPage]] = defaultdict(dict)
     funcs = functions(model)
+    refs, frame = reference_text_of(model), frame_form_of(model)
     for record in documents(model).values():
         name = document_export_name(model, None, record)
         for page in drawn_pages(model, record.id):
+            rows = sheet_format_of(model, page.sheet_format).frame_rows
             destination = page_destination(model, page)
             for member in page_members(model, page):
                 if member.function is None:
                     continue
                 column, row = member.cell.column, member.cell.row
-                text = position_text(page.number, column, row, (), set_number=set_rank(model, page))
+                labels = cell_labels(frame, rows, column, row)
+                text = position_text(
+                    refs, page.number, labels, (), set_number=set_rank(model, page)
+                )
                 item = funcs[member.function].item
                 found[item].setdefault(
                     (name, destination), ItemPage(file=name, destination=destination, text=text)

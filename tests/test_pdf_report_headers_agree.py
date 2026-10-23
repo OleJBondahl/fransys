@@ -129,8 +129,8 @@ def test_pdf_holds_no_second_heading_table():
     """pdf-0044: the page and preset words and the drawing titles are derive's, by identity."""
     assert not hasattr(pdf_document, "_HEADING_WORDS")
     assert not hasattr(_geometry, "_PRESET_WORDS")
-    assert pdf_document.PAGE_HEADINGS is derive.PAGE_HEADINGS
-    assert _geometry.PRESET_HEADINGS is derive.PRESET_HEADINGS
+    assert not hasattr(pdf_document, "PAGE_HEADINGS")  # read from the model's words
+    assert not hasattr(_geometry, "PRESET_HEADINGS")
     # the drawing titles reach pdf only inside render's title block (pdf-0046): pdf names none
     for module, name in (
         (_diagrams, "DIAGRAM_TITLE"),

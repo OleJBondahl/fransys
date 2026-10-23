@@ -34,6 +34,21 @@ _CORE: tuple[CodeInfo, ...] = (
         page="findings-render",
     ),
     CodeInfo(
+        code="WIRE_OVER_MARKER",
+        severities=(Severity.WARNING,),
+        stage="render",
+        who="consumer",
+        cause=(
+            "A wire or a junction dot meets the box of a reference marker on one page, or a wire "
+            "ends in it; the message names the first of them."
+        ),
+        fix=(
+            "No call clears this: send the smallest model that shows it. The message names the "
+            "page and the members."
+        ),
+        page="findings-render",
+    ),
+    CodeInfo(
         code="OUT_OF_PAGE",
         severities=(Severity.WARNING,),
         stage="render",
@@ -70,6 +85,21 @@ _CORE: tuple[CodeInfo, ...] = (
         fix=(
             "Shorten the stack, or move the members to the same end of their columns. Write: "
             "d.layout.chain(a, b) to stand them in one column, source first."
+        ),
+        page="findings-render",
+    ),
+    CodeInfo(
+        code="TRUNK_THROUGH_BODY",
+        severities=(Severity.WARNING,),
+        stage="render",
+        who="consumer",
+        cause=(
+            "A line of a bundle's trunk is drawn through the keep-out of a symbol; the message "
+            "names the trunk and the symbol."
+        ),
+        fix=(
+            "No call clears this: send the smallest model that shows it. The trunk is drawn as "
+            "placed; stage 5 does not yet stand it clear of bodies."
         ),
         page="findings-render",
     ),

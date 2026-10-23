@@ -124,7 +124,8 @@ class Detail:
     def net(self, name: str, *pins: Port | Terminal, kind: NetClass = CONTROL) -> None:
         """Declare the signal net `name` over the pins, of the `NetClass` `kind`.
 
-        For a named net that no wire joins, such as a bus shown by its label.
+        The pins belong to one net. Wires or one board must realise it; otherwise
+        NET_UNREALISED warns.
         Does not make a `PE` or `POWER` net (earth and supplies own those) or take a potential.
         """
         net_class = _kind(kind)

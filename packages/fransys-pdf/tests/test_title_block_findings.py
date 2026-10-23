@@ -10,6 +10,7 @@ from decimal import Decimal
 from _build import document, drawing_set, layout_page, location, model
 from fransys_render import sheet_check, sheets
 
+from electrical_symbols import LIBRARY
 from fransys_model.derive import document_sheets_of
 from fransys_model.kernel import Severity, make_id
 from fransys_model.layout import Profile, SheetFormat, default_profile
@@ -130,12 +131,12 @@ def test_title_block_no_room_when_the_title_width_is_under_the_authored_one():
     """The title block never shrinks: 140 mm wide leaves 100 mm of title, 135 mm only 95."""
     wide, _doc = _cabinet(_narrow(140))
     assert _only(sheet_check(wide, document_sheets_of(wide)), "TITLE_BLOCK_NO_ROOM") == []
-    assert all(s.counter_box for s in sheets(document_sheets_of(wide)).values())
+    assert all(s.counter_box for s in sheets(document_sheets_of(wide), LIBRARY).values())
     narrow, doc = _cabinet(_narrow(135))
     (finding,) = _only(sheet_check(narrow, document_sheets_of(narrow)), "TITLE_BLOCK_NO_ROOM")
     assert finding.subjects == (doc.id,)
     assert "95mm wide, under the required 97.5mm" in finding.message
-    drawn = sheets(document_sheets_of(narrow)).values()
+    drawn = sheets(document_sheets_of(narrow), LIBRARY).values()
     assert drawn
     assert all(s.counter_box is None and s.logo_box is None for s in drawn)
 

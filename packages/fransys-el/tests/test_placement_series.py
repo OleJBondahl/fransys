@@ -70,13 +70,13 @@ def _control_model() -> fr.Model:
 
 @pytest.mark.rule("SERIES-PARALLEL")
 def test_a_nested_control_circuit_stands_as_one_column_source_first() -> None:
-    """Acceptance 2: S2 in a lane beside S3 and S4, S1 above them, H1 below both."""
+    """Acceptance 2: S1, S2 and H1 in one lane, S3 and S4 in the lane beside S2, H1 below both."""
     model = _control_model()
     problem, _ = build(
         model, symbol_kit(model, LIBRARY), house_conventions(fr.settings().layout, LIBRARY), LIBRARY
     )
     laid = solve(problem, options(house_conventions(fr.settings().layout, LIBRARY), LIBRARY))
     at = {p.sym.split(" ")[0]: (p.x, p.y) for page in laid.placement.pages for p in page.placed}
-    assert at["S1"][0] == at["S3"][0] == at["S4"][0] == at["H1"][0]
-    assert at["S2"][0] > at["S3"][0]
+    assert at["S1"][0] == at["S2"][0] == at["H1"][0]
+    assert at["S3"][0] == at["S4"][0] > at["S2"][0]
     assert at["S1"][1] < at["S2"][1] == at["S3"][1] < at["S4"][1] < at["H1"][1]

@@ -30,6 +30,7 @@ from _dd_core import pages_of, set_of
 from _dd_core_b import is_stub, marker_strings, markers
 from _model_build_cover import layout_trigger_document
 
+from fransys_model.derive.house_settings import stub_text_of
 from fransys_model.derive.stub_text import off_stub_line
 
 _PROJECT: dict[str, Any] = {
@@ -117,7 +118,7 @@ def test_the_stub_text_is_the_worked_example_from_the_derive_function(model) -> 
     """The line's one stub form, "-W3 <- +EXT-K1", facing north (`<-`), no far ports."""
     # UNDO: stages/offstubs.py: as the first test (no OFF marker)
     ((_, stub),) = _x1_stubs(model)
-    expected = off_stub_line("-W3", north=True, far="+EXT-K1", ports=())
+    expected = off_stub_line(stub_text_of(model), "-W3", north=True, far="+EXT-K1", ports=())
     assert marker_strings(stub) == [expected] == ["-W3 ← +EXT-K1"]
 
 

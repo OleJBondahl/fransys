@@ -4,9 +4,6 @@ A zero-width guide column carries the `rowspan: 2` cells that keep the first two
 body rows together; a table of fewer than four rows is one unbreakable block.
 """
 
-from fransys_model.derive import continued_heading
-
-from ._sizes import RULE
 from ._typst import literal
 
 _MIN_SPLIT_ROWS = 4  # fewer body rows than twice the two-row rule: the table moves whole
@@ -24,7 +21,7 @@ def _title_cell(columns: int, title: str, label: str) -> str:
         f"let p = here().position(); let q = locate(<{label}>).position(); "
         "let first = p.page == q.page and calc.abs(p.x - q.x) < 3mm and calc.abs(p.y - q.y) < 5mm"
     )
-    text = literal(continued_heading(title))
+    text = literal(title)
     carried = (
         f"heading(level: 2, outlined: false, bookmarked: false, text({text})); block(height: 0pt)"
     )
@@ -39,17 +36,17 @@ def table_source(
     header: list[str],
     rows: list[list[str]],
     *,
-    title: str = "",
-    label: str = "",
+    rule: str,
+    heading: tuple[str, str] = ("", ""),
 ) -> str:
-    """`#table(...)` over `rows` of cell sources; `title` is the heading a carried table repeats.
+    """`#table(...)` over `rows` of cell sources; `heading` is the (title, label) of a carried one.
 
-    `label` names the table so that a repeated header can tell its first fragment (unique per
-    document); `header` and each row hold one cell source per entry of `widths`.
+    `rule` is the stroke width (`rule_of`); the title is the heading a carried table repeats, the
+    label names the table (unique per document) so a repeated header can tell its first fragment.
     """
     keep_whole = len(rows) < _MIN_SPLIT_ROWS
     last = len(rows) - 1
-    head = [_title_cell(len(widths), title, label)] if title else []
+    head = [_title_cell(len(widths), *heading)] if heading[0] else []
     cells = [f"table.header({', '.join([*head, _PLAIN, *header])})"]
     for index, row in enumerate(rows):
         if not keep_whole and index in (1, last):
@@ -59,7 +56,7 @@ def table_source(
         cells.append(_SPAN if spans else _PLAIN)
         cells.extend(row)
     columns = ", ".join(["0pt", *widths])
-    anchor = f" <{label}>" if title else ""
-    table = f"table(columns: ({columns}), stroke: {RULE}, {', '.join(cells)}){anchor}"
+    anchor = f" <{heading[1]}>" if heading[0] else ""
+    table = f"table(columns: ({columns}), stroke: {rule}, {', '.join(cells)}){anchor}"
     opener = "#block(breakable: false)[" if keep_whole else "#["
     return f"{opener}#set table.cell(breakable: false)\n#{table}\n]"

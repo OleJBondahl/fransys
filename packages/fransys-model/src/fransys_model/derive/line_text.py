@@ -5,6 +5,7 @@ lazy from fransys_model.vocab.core import Item, Unit
 
 from .designation import printed_designation
 from .harness_line_ends import harness_line_ends
+from .house_settings import harness_text_of
 from .stub_text import line_stub_line
 
 _PLAIN_LINE = 2  # a line between two ends carries no branch number
@@ -25,7 +26,9 @@ def line_designation(
     if count < _PLAIN_LINE:
         return ""
     designation = printed_designation(model, harness, unit=unit)
-    return designation if count == _PLAIN_LINE else f"{designation}.{branch}"
+    if count == _PLAIN_LINE:
+        return designation
+    return f"{designation}{harness_text_of(model).branch_sep}{branch}"
 
 
 __all__ = ["line_designation", "line_stub_line"]

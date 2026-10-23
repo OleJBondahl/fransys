@@ -18,16 +18,14 @@ import re
 import tempfile
 from itertools import pairwise
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, NamedTuple
+from typing import Any, NamedTuple
 
 import fransys as fr
+from _drawn_facts import Placed, symbol_subjects
 
 from electrical_symbols import LIBRARY
 from fransys_layout.symbols import library_symbol, symbol_shape
 from fransys_model.layout import Page, layout_of
-
-if TYPE_CHECKING:
-    from fransys_layout.drawing import DrawnSymbol
 
 _UNIT: dict[str, Any] = {
     "revision": 1,
@@ -92,19 +90,13 @@ _RESULT, _DC_PAGE = _build()
 type Point = tuple[int, int]
 
 
-def _gap(model, fact: str):
-    """A fact the page Drawing lacks (strict xfail, GAP-FLIP-DRAWING-SUBJECT)."""
-    msg = f"GAP-FLIP-DRAWING-SUBJECT: no {fact} for {model.digest}"
-    raise AssertionError(msg)
-
-
-def _drawn(tag: str) -> DrawnSymbol:
-    """The one drawn symbol of the item `tag` (the owner text starts with it)."""
-    (one,) = (r for r in _gap(_RESULT.model, "symbol subject") if (r.owner or "").startswith(tag))
+def _drawn(tag: str) -> Placed:
+    """The one drawn symbol of the item `tag`."""
+    (one,) = (r for r in symbol_subjects(_RESULT.model) if r.tag == tag)
     return one
 
 
-def _shape(one: DrawnSymbol):  # the symbol's pins and body at R0, from symdef's data
+def _shape(one: Placed):  # the symbol's pins and body at R0, from symdef's data
     return symbol_shape(library_symbol(LIBRARY, one.key, one.poles), LIBRARY)
 
 

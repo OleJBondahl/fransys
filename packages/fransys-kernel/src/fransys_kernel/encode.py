@@ -22,7 +22,7 @@ lazy from .model import Model
 
 if TYPE_CHECKING:
     from .ids import Id
-    from .record import Record
+    from .record_protocol import Record
 
 type JsonValue = (
     bool

@@ -10,6 +10,8 @@ from fransys_model.vocab.aspects import AspectNode
 from fransys_model.vocab.core import Item
 from fransys_model.vocab.tables import documents
 
+from .facts.house_settings import revision_form_of
+from .facts.revision_label import revision_label
 from .revisions import revision_history
 
 __all__ = ["DocumentRow", "RevisionRow", "document_row", "document_rows", "revision_rows"]
@@ -34,10 +36,11 @@ class DocumentRow:
 
 @value
 class RevisionRow:
-    """One revision-history entry, as the revision table prints it."""
+    """One revision-history entry as the table prints it; `label` is the printed revision."""
 
     version: int
     revision: int
+    label: str
     date: str
     text: str
     created: str
@@ -69,10 +72,12 @@ def document_row(model: Model, document: Id[Document]) -> DocumentRow:
 
 def revision_rows(model: Model, release: Id[UnitRelease] | None = None) -> tuple[RevisionRow, ...]:
     """`revision_history` as rows: date order, then version and revision order."""
+    form = revision_form_of(model)
     return tuple(
         RevisionRow(
             version=e.version,
             revision=e.revision,
+            label=revision_label(form, e.version, e.revision),
             date=e.date,
             text=e.text,
             created=e.created,

@@ -1,17 +1,23 @@
 """A lone core marker (a stub) is an off stub whose far end is a conductor's (CORE-TEXTS C).
 
-p02 (a unit strip wired to a module and on to a field strip) is built once for every check.
+p02 (a unit strip wired to a module and on to a field strip) is built once for every check. The
+lone markers are those of every drawing set's own solve: a set stubs the nets it cuts (R468 U1).
 """
+
+from dataclasses import replace
 
 import pytest
 from conventions_fixtures import house
 from fransys_el import ProblemError, build, lay_out, options, symbol_kit
+from fransys_el.placement_markers import facing_views, marker_fit
+from fransys_el.placement_sets import bare_pins, cut_lines, drawing_scopes, restrict
+from fransys_el.placement_widest import link_fit
 from fransys_el.read_markers import drawn_marker
 from fransys_el.write_stubs import far_port
 from kit_instances import INSTANCES
 
 from electrical_symbols import LIBRARY, MARKER_SLOT
-from fransys_layout.core import solve
+from fransys_layout.core import PinRef, solve
 from fransys_model.derive import build_indexes, conductor_ends
 from fransys_model.derive.drawing_text import marker_text
 from fransys_model.layout import LinkMarker, StarKind, layout_of
@@ -20,13 +26,35 @@ from fransys_model.vocab.tables import ports
 _CORE = ("layout", "core", "link_marker")
 
 
+def _solved(model, kit, scope, part, chosen):
+    """One set's own solve, with the marker boxes `lay_out` fits to its pins (a lead moves them)."""
+    pins = [PinRef(s.id, p.id) for s in part.symbols for p in s.pins]
+    fit = marker_fit(model, kit, scope.of_unit, LIBRARY, pins)
+    turned, above, below = facing_views()
+    return solve(
+        part,
+        replace(
+            chosen,
+            marker_fit=fit,
+            link_fit=link_fit(model, kit, LIBRARY, scope.of_unit),
+            marker_vertical=turned,
+            marker_above=above,
+            marker_below=below,
+        ),
+    )
+
+
 @pytest.fixture(scope="module")
 def built():
     model = INSTANCES["p02"]()
     kit = symbol_kit(model, LIBRARY)
     conventions = house()
     problem, _ = build(model, kit, conventions, LIBRARY)
-    core = solve(problem, options(conventions, LIBRARY))
+    bare = bare_pins(model, kit)
+    chosen = options(conventions, LIBRARY)
+    lines = cut_lines(model, kit)
+    parts = [(one, restrict(problem, one, bare, lines)) for one in drawing_scopes(model, kit)]
+    core = [_solved(model, kit, one, part, chosen) for one, part in parts]
     written, _ = lay_out(model, kit, problem, conventions, LIBRARY)
     stubs = [
         m
@@ -38,7 +66,7 @@ def built():
 
 def test_every_lone_core_marker_is_one_off_stub_record(built) -> None:
     _, core, _, stubs = built
-    lone = [m for m in core.annotations.markers if str(m.kind) == "stub"]
+    lone = [m for c in core for m in c.annotations.markers if str(m.kind) == "stub"]
     assert len(lone) > 0
     assert len(stubs) == len(lone)
     assert {s.star for s in stubs} == {StarKind.OFF}

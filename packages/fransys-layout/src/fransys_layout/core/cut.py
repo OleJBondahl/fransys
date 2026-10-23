@@ -71,7 +71,7 @@ def cut_pages(
         *done.refs,
         *spilled(blocks, flow, where, problem),
         *copied,
-        *stubs(problem, where, [*done.refs, *copied]),
+        *stubs(problem, flow, where, [*done.refs, *copied]),
     ]
     findings = (
         *done.findings,

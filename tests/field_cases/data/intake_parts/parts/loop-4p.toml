@@ -1,0 +1,18 @@
+schema = 1
+
+[part]
+mpn = "DEMO-LOOP-4P"
+manufacturer = "Demo"
+description = "Four-pin loop device"
+category = "generic"
+class_code = "S"
+
+[[function]]
+name = "loop"
+kind = "sensor"
+ports = [
+    { name = "1", role = "generic" },
+    { name = "2", role = "generic" },
+    { name = "3", role = "generic" },
+    { name = "4", role = "generic" },
+]

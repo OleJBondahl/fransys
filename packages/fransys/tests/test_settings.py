@@ -60,17 +60,6 @@ def test_divisions_per_module_raises_with_the_library_data_reason(tmp_path: Path
         fr.settings(_file(tmp_path, "[grid]\ndivisions_per_module = 4\n"))
 
 
-@pytest.mark.parametrize(
-    ("text", "order"),
-    [("[layout]\nrow_gap = 32\n", "SETTINGS-B"), ("[look]\nref_tints = []\n", "SETTINGS-LOOK")],
-)
-def test_a_key_with_no_reader_yet_names_the_order_that_lands_it(
-    tmp_path: Path, text: str, order: str
-) -> None:
-    with pytest.raises(fr.SettingsError, match=order):
-        fr.settings(_file(tmp_path, text))
-
-
 def test_a_per_kind_key_in_the_file_raises(tmp_path: Path) -> None:
     with pytest.raises(fr.SettingsError, match=r"fr\.settings\(paper="):
         fr.settings(_file(tmp_path, '[paper]\nblock_diagram = "A2"\n'))
@@ -102,7 +91,7 @@ def test_our_pdf_table_holds_the_list_share_and_gutter() -> None:
 
 
 def test_contact_tables_is_off_by_default_and_a_file_turns_it_on(tmp_path: Path) -> None:
-    """CONTACT-TABLE: the one `[layout]` key a consumer file may set today."""
+    """CONTACT-TABLE: a `[layout]` key, overridable like every other (SETTINGS-OPEN SO1)."""
     assert fr.settings().layout["contact_tables"] is False
     assert fr.settings(_file(tmp_path, "[layout]\ncontact_tables = true\n")).layout[
         "contact_tables"
@@ -114,8 +103,3 @@ def test_contact_tables_must_be_true_or_false(tmp_path: Path) -> None:
         fr.SettingsError, match=r'\[layout\] "contact_tables" must be true or false'
     ):
         fr.settings(_file(tmp_path, '[layout]\ncontact_tables = "yes"\n'))
-
-
-def test_another_layout_key_beside_contact_tables_still_raises(tmp_path: Path) -> None:
-    with pytest.raises(fr.SettingsError, match="SETTINGS-B"):
-        fr.settings(_file(tmp_path, "[layout]\ncontact_tables = true\nrow_gap = 32\n"))

@@ -50,6 +50,7 @@ LAYOUT_VALUES = {
     "margin": [16, 16],
     "wire_min": 8,
     "column_gap_min": 8,
+    "parallel_pitch": 48,
     "row_gap": 24,
     "box_pin_pitch_min": 16,
     "box_pins": "spread",
@@ -122,3 +123,165 @@ def test_settings_toml_matches_constants() -> None:
     }
     loaded = tomllib.loads(path.read_text(encoding="utf-8"))
     assert {"paper": loaded["paper"], "look": loaded["look"]} == expected
+
+
+def _table(name: str) -> dict[str, object]:
+    """One table of the shipped `settings.toml`."""
+    path = Path(fransys.__file__).parent / "settings.toml"
+    return tomllib.loads(path.read_text(encoding="utf-8"))[name]
+
+
+def test_reference_toml_holds_todays_values() -> None:
+    expected = {
+        "page_prefix": "p",
+        "cell_sep": ":",
+        "location_sign": "+",
+        "set_sep": ".",
+        "width_sample": "/99.99",
+    }
+    assert _table("reference") == expected
+
+
+def test_frame_toml_holds_todays_values() -> None:
+    expected = {"row_labels": "letters", "column_labels": "numbers", "row_order": "top_down"}
+    assert _table("frame") == expected
+
+
+def test_stub_toml_holds_todays_values() -> None:
+    expected = {"arrow_in": "←", "arrow_out": "→", "port_sep": ":", "port_join": " "}
+    assert _table("stub") == expected
+
+
+def test_wire_label_toml_holds_todays_values() -> None:
+    expected = {"separator": " ", "show_ends": True}
+    assert _table("wire_label") == expected
+
+
+def test_harness_toml_holds_todays_values() -> None:
+    expected = {"branch_sep": "."}
+    assert _table("harness") == expected
+
+
+def test_colours_toml_holds_todays_values() -> None:
+    expected = {
+        "pe": "GNYE",
+        "shield": "SH",
+        "defaults": {
+            "AC_L1": ["BK", ""],
+            "AC_L2": ["BK", ""],
+            "AC_L3": ["BK", ""],
+            "AC_N": ["BU", ""],
+            "AC_CONTROL": ["RD", ""],
+            "DC_SUPPLY": ["BU", ""],
+            "DC_CONTROL": ["BU", ""],
+            "DC_GROUND": ["BU", ""],
+            "DC_SIGNAL": ["BU", ""],
+        },
+    }
+    assert _table("colours") == expected
+
+
+def test_title_block_toml_holds_todays_values() -> None:
+    expected = {
+        "fields": [
+            "title",
+            "number",
+            "revision",
+            "revision_date",
+            "customer",
+            "author",
+            "page_title",
+            "scope",
+            "sheet",
+            "page",
+        ],
+        "band_mm": 20.0,
+        "centre_gap_mm": 3.125,
+    }
+    assert _table("title_block") == expected
+
+
+def test_revision_table_toml_holds_todays_values() -> None:
+    expected = {
+        "columns": ["revision", "date", "description", "created", "checked", "approved"],
+        "description_mm": 120.0,
+    }
+    assert _table("revision_table") == expected
+
+
+def test_revision_toml_holds_todays_values() -> None:
+    expected = {
+        "date_format": "YYYY-MM-DD",
+        "initials_required": True,
+        "format": "{version}.{revision}",
+    }
+    assert _table("revision") == expected
+
+
+def test_words_toml_holds_todays_values() -> None:
+    expected = {
+        "side_a": "Side A",
+        "side_b": "Side B",
+        "wire_from": "from",
+        "pin": "Pin",
+        "mate": "Mate",
+        "designation": "Designation",
+        "mpn": "MPN",
+        "description": "Description",
+        "cores": "Cores",
+        "gauge": "Gauge",
+        "length_mm": "Length mm",
+        "ends": "Ends",
+        "spare": "spare",
+        "signal_di": "DI",
+        "signal_do": "DO",
+        "signal_ai_ma": "AI (mA)",
+        "signal_ai_v": "AI (V)",
+        "signal_ao_ma": "AO (mA)",
+        "signal_ao_v": "AO (V)",
+        "signal_rtd": "RTD",
+        "signal_relay_do": "DO (relay)",
+        "no": "NO",
+        "nc": "NC",
+        "title": "Title",
+        "number": "Number",
+        "revision": "Revision",
+        "revision_date": "Revision date",
+        "customer": "Customer",
+        "author": "Author",
+        "page_title": "Page title",
+        "scope": "Scope",
+        "sheet": "Sheet",
+        "page": "Page",
+        "block_diagram": "Block diagram",
+        "schematic": "Schematic",
+        "harness_drawing": "Harness drawing",
+        "cover": "Cover",
+        "notes": "Notes",
+        "sheets": "Sheets",
+        "contents": "Contents",
+        "plc_list": "PLC list",
+        "terminal_list": "Terminal list",
+        "connector_list": "Connector list",
+        "wire_label_list": "Wire label list",
+        "designation_list": "Designation list",
+        "cable_list": "Cable list",
+        "bom": "BOM",
+        "cabinet_schematic": "Cabinet schematic",
+        "pcb_schematic": "PCB schematic",
+        "system": "System",
+        "continued": "(cont.)",
+        "range_word": "to",
+        "and_word": "and",
+        "more_word": "more",
+        "list_join": ", ",
+        "bullet": "• ",
+        "numbered": "{i}. ",
+        "ellipsis": "…",
+        "bridge": "Bridge",
+        "date": "Date",
+        "created": "Created",
+        "checked": "Checked",
+        "approved": "Approved",
+    }
+    assert _table("words") == expected

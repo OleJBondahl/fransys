@@ -89,11 +89,21 @@ def test_one_group_hint_and_no_other_layout_kind_but_chains_and_symbol_choices()
     assert len(layout_of(model, GroupHint)) == 1
     assert {kind for kind in model.tables if kind.startswith("layout.")} == {
         "layout.chain",
+        "layout.colour_codes",
         "layout.drawing_library",
+        "layout.frame_form",
         "layout.group_hint",
+        "layout.harness_text",
         "layout.paper",
+        "layout.reference_text",
+        "layout.revision_form",
+        "layout.revision_table_form",
         "layout.sheet_format",
+        "layout.stub_text",
         "layout.symbol_choice",
+        "layout.title_block_form",
+        "layout.wire_label_text",
+        "layout.words",
     }
 
 

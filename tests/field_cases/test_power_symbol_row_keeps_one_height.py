@@ -19,23 +19,18 @@ straight and get longer; no pin moves alone.
 from typing import TYPE_CHECKING
 
 import fransys as fr
+from _drawn_facts import symbol_subjects
 from _drawn_pages import drawn_pages
 from fransys.colours import BU
 
 from fransys_layout import generic_box_geometry, symbol_geometry
 from fransys_layout.geometry import overlaps, translate
-from fransys_model.layout import PowerSymbol, layout_of
+from fransys_model.layout import Orientation, PowerSymbol, layout_of
 
 if TYPE_CHECKING:
     from pathlib import Path
 
     from fransys_layout import SymbolGeometry
-
-
-def _gap(model, fact: str):
-    """A fact the page Drawing lacks (strict xfail, GAP-FLIP-DRAWING-SUBJECT)."""
-    msg = f"GAP-FLIP-DRAWING-SUBJECT: no {fact} for {model.digest}"
-    raise AssertionError(msg)
 
 
 def _build(tmp_path: Path) -> fr.BuildResult:
@@ -61,7 +56,7 @@ def _build(tmp_path: Path) -> fr.BuildResult:
 def _geometry(one) -> SymbolGeometry:
     """The geometry the drawn symbol stands in: a generic box from its sides and offsets."""
     if one.key != "generic-box":
-        return symbol_geometry(one.key, orientation=one.orient)
+        return symbol_geometry(one.key, orientation=Orientation[one.orient])
     sides, offsets = dict(one.sides), dict(one.offsets)
     names = tuple(sides)
     return generic_box_geometry(
@@ -75,8 +70,8 @@ def _cells(model, tag):
     The pin is the port the cell's lead leaves from, else its `out` port.
     """
     found = []
-    for cell in _gap(model, "symbol subject").values():
-        if (cell.owner or "").startswith(f"{tag} "):
+    for cell in symbol_subjects(model):
+        if cell.tag == tag:
             geo = _geometry(cell)
             (port,) = (p for p in geo.ports if p.name == (cell.leads or ("out",))[0])
             found.append((cell, geo, cell.x + port.at.x, cell.y + port.at.y))

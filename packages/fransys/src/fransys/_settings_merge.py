@@ -1,21 +1,24 @@
 """The key-by-key merge of a consumer's settings file over our defaults, with its refusals (ST2)."""
 
-from typing import TYPE_CHECKING, cast
+from collections.abc import Iterable, Mapping
+from typing import cast
 
 from fransys_model.vocab import PageKind
 
-if TYPE_CHECKING:
-    from collections.abc import Iterable, Mapping
+from ._settings_types import fits, type_word
 
 type Table = Mapping[str, object]
 
 __all__ = ["SettingsError", "Table", "known", "merged_tables", "paper_by_kind"]
 
-# A table whose reader has not landed: a consumer key there raises, naming the landing order.
-_NOT_READ = {"pdf": "SETTINGS-LOOK", "look": "SETTINGS-LOOK", "layout": "SETTINGS-B"}
-_READ = {"layout": ("contact_tables",)}  # a key of a not-yet-read table that a build already reads
 _PAPER_KEYS = ("default", "formats")
-_TABLES = ("paper", "pdf", "look", "layout", "grid", "font")
+# Nested tables keyed by data, not by setting names: a consumer's new key is accepted there.
+# A dotted path, as the refusal message prints it (`designation.classes`). One place to list them.
+OPEN_TABLES: tuple[str, ...] = ("designation.classes",)
+# Tables read by their own code in settings.py, not by the generic merge. `[font]` is read by it
+# for `name` and `files` only: its `heights` table is a generic one.
+_LIBRARY_TABLES = ("grid", "font")
+_GENERIC_FONT_KEYS = ("heights",)
 
 
 class SettingsError(Exception):
@@ -31,18 +34,37 @@ def _sub(table: Table, key: str) -> Table:
     return cast("Table", table.get(key, {}))
 
 
-def _refuse_unread(ours: Table, consumer: Table, where: str) -> None:
-    """Raise for a consumer key in a table nothing reads yet, or one we do not know."""
-    for table, order in _NOT_READ.items():
-        for key in _sub(consumer, table):
-            if key in _READ.get(table, ()):
-                continue
-            if key not in _sub(ours, table):
-                names = known(_sub(ours, table))
-                msg = f'{where} [{table}] "{key}" is not a setting; known: {names}'
-            else:
-                msg = f'{where} [{table}] "{key}" is not read yet: it arrives with {order}'
+def _merged_value(table: str, key: str, ours: object, value: object, where: str) -> object:
+    """The value for `key`: the consumer's, a nested table merged, or a refusal of its type."""
+    if isinstance(ours, Mapping) and isinstance(value, Mapping):
+        return _merged_flat(f"{table}.{key}", cast("Table", ours), value, where)
+    if not fits(ours, value):
+        msg = f'{where} [{table}] "{key}" must be {type_word(ours)}, got {value!r}'
+        raise SettingsError(msg)
+    return value
+
+
+def _open_value(table: str, key: str, ours: Table, value: object, where: str) -> object:
+    """A new key of an open table: its value must have the type of the table's existing entries."""
+    first = next(iter(ours.values()), None)
+    if first is not None and not fits(first, value):
+        msg = f'{where} [{table}] "{key}" must be {type_word(first)}, got {value!r}'
+        raise SettingsError(msg)
+    return value
+
+
+def _merged_flat(table: str, ours: Table, given: Table, where: str) -> dict[str, object]:
+    """`ours` with the consumer's keys on top; refuses an unknown key or a value of another type."""
+    merged = dict(ours)
+    for key, value in given.items():
+        if key in ours:
+            merged[key] = _merged_value(table, key, ours[key], value, where)
+        elif table in OPEN_TABLES:
+            merged[key] = _open_value(table, key, ours, value, where)
+        else:
+            msg = f'{where} [{table}] "{key}" is not a setting; known: {known(ours)}'
             raise SettingsError(msg)
+    return merged
 
 
 def _format_table(name: str, ours: Table, given: Table, where: str) -> dict[str, object]:
@@ -94,24 +116,29 @@ def _check_format(name: object, formats: Table, where: str, kind: str = "") -> N
         raise SettingsError(msg)
 
 
-def _merged_layout(given: Table, where: str) -> dict[str, object]:
-    """The `[layout]` keys a build reads today: `contact_tables`, a boolean."""
-    for key, value in given.items():
-        if key in _READ["layout"] and not isinstance(value, bool):
-            msg = f'{where} [layout] "{key}" must be true or false, got {value!r}'
-            raise SettingsError(msg)
-    return {key: value for key, value in given.items() if key in _READ["layout"]}
+def _generic(consumer: Table, name: str) -> Table:
+    """The consumer's table `name`; of `[font]` only the keys the generic merge reads."""
+    given = _sub(consumer, name)
+    if name != "font":
+        return given
+    return {key: value for key, value in given.items() if key in _GENERIC_FONT_KEYS}
 
 
 def merged_tables(ours: Table, consumer: Table, where: str) -> dict[str, dict[str, object]]:
-    """Our tables with the consumer's file on top, key by key; raises `SettingsError`."""
+    """Every table of ours with the consumer's file on top, key by key; raises `SettingsError`.
+
+    A table our TOML files hold merges with no code naming it; `[paper]` has its own rules.
+    """
+    names = (*ours, *_LIBRARY_TABLES)
     for table in consumer:
-        if table not in _TABLES:
-            msg = f"{where} table [{table}] is not a settings table; known: {known(_TABLES)}"
+        if table not in names:
+            msg = f"{where} table [{table}] is not a settings table; known: {known(names)}"
             raise SettingsError(msg)
-    _refuse_unread(ours, consumer, where)
-    tables = {name: dict(_sub(ours, name)) for name in ("pdf", "look", "layout")}
-    tables["layout"] |= _merged_layout(_sub(consumer, "layout"), where)
+    tables = {
+        name: _merged_flat(name, _sub(ours, name), _generic(consumer, name), where)
+        for name in ours
+        if name != "paper"
+    }
     tables["paper"] = _merged_paper(_sub(ours, "paper"), _sub(consumer, "paper"), where)
     return tables
 

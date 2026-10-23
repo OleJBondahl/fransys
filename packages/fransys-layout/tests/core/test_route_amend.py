@@ -38,6 +38,7 @@ def test_astar_ends_on_the_nearest_target_cell() -> None:
             flip_turn="R180",
             tag_stagger=True,
             label_gap=8,
+            parallel_pitch=48,
             driver_first=True,
             arrow_sides=("E", "W"),
         ),
@@ -59,6 +60,7 @@ def test_a_window_confines_the_search_and_search_retries_on_the_whole_page() -> 
                 flip_turn="R180",
                 tag_stagger=True,
                 label_gap=8,
+                parallel_pitch=48,
                 driver_first=True,
                 arrow_sides=("E", "W"),
             ),
@@ -73,6 +75,7 @@ def test_a_window_confines_the_search_and_search_retries_on_the_whole_page() -> 
             flip_turn="R180",
             tag_stagger=True,
             label_gap=8,
+            parallel_pitch=48,
             driver_first=True,
             arrow_sides=("E", "W"),
         ),
@@ -117,6 +120,7 @@ def test_route_envs_carry_the_obstacles_of_route_pages() -> None:
             flip_turn="R180",
             tag_stagger=True,
             label_gap=8,
+            parallel_pitch=48,
             driver_first=True,
             arrow_sides=("E", "W"),
         ),
@@ -132,6 +136,7 @@ def test_route_envs_carry_the_obstacles_of_route_pages() -> None:
                 flip_turn="R180",
                 tag_stagger=True,
                 label_gap=8,
+                parallel_pitch=48,
                 driver_first=True,
                 arrow_sides=("E", "W"),
             ),
@@ -146,6 +151,7 @@ def test_route_envs_carry_the_obstacles_of_route_pages() -> None:
             flip_turn="R180",
             tag_stagger=True,
             label_gap=8,
+            parallel_pitch=48,
             driver_first=True,
             arrow_sides=("E", "W"),
         ),
@@ -157,6 +163,7 @@ def test_route_envs_carry_the_obstacles_of_route_pages() -> None:
             flip_turn="R180",
             tag_stagger=True,
             label_gap=8,
+            parallel_pitch=48,
             driver_first=True,
             arrow_sides=("E", "W"),
         ),
@@ -180,8 +187,8 @@ def test_demand_is_read_from_the_footprint_only_routes() -> None:
 
 def _rise_env():
     env = link_env({"p": (40, 16, "S"), "f": (40, 40, "N")}, {})
-    fan = Fan("f1", ("n",), (Attach(None, 0, 0, PinRef("p", "p")),), (), None, 1, "S")
-    trunk = Trunk("f1", 1, 72, 24, 80, 1, 0)
+    fan = Fan("f1", ("n",), (Attach(None, 0, 0, PinRef("p", "p"), net="n"),), (), None, 1, "S")
+    trunk = Trunk("f1", 1, 72, 24, 80, 1, 0, ((24, 80),))
     return replace(env, fans={"f1": fan}, trunks=(trunk,), bands=((0, 96),)), trunk
 
 
@@ -229,5 +236,5 @@ def test_a_rise_that_finds_no_path_is_a_finding_and_draws_no_wire() -> None:
 def test_a_row_wrapped_fan_with_a_trunk_is_not_also_a_routed_link() -> None:
     env = row_wrap_env()
     assert any(w.kind == "routed" for w in route_page(env)[0].wires)
-    trunked = replace(env, trunks=(Trunk("f:x", 1, 72, 40, 104, 1, 0),))
+    trunked = replace(env, trunks=(Trunk("f:x", 1, 72, 40, 104, 1, 0, ((40, 104),)),))
     assert not any(w.kind == "routed" for w in route_page(trunked)[0].wires)

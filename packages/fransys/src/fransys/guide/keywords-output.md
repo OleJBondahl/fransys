@@ -52,7 +52,7 @@ The design calls are in `keywords-design.md`, the handle methods and layout hint
 
 | keyword | default | effect | example |
 |---|---|---|---|
-| `result` | required | The `BuildResult` to measure. The layout runs again on its model, and the call returns one row per schematic page and one per unit. | `fr.readability(result)` |
+| `result` | required | The `BuildResult` to measure. It reads the drawings the build kept and lays nothing out again; the call returns one row per drawn page, each naming its unit. | `fr.readability(result)` |
 
 ## `fr.settings`
 

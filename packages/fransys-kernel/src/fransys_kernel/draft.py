@@ -9,7 +9,7 @@ from .errors import MergeConflict, SchemaError
 from .ids import Id
 lazy from .ids import AuthoringKey
 lazy from .origin import Origin
-lazy from .record import Record
+lazy from .record_protocol import Record
 
 
 class Draft:

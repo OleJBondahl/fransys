@@ -1,5 +1,7 @@
 """The title block's text rules: width, cut, one-line fields, wrapped notice, frame labels."""
 
+from derive_helpers import house_record
+
 from fransys_model.derive import (
     Sizes,
     TitleBlockFields,
@@ -14,6 +16,22 @@ from fransys_model.derive import (
     text_width_mm,
     title_block_strings,
 )
+from fransys_model.derive.rows_sheet_pages import TitleBlockText
+from fransys_model.layout import FrameForm
+
+_CELLS = [
+    "title",
+    "number",
+    "revision",
+    "revision_date",
+    "customer",
+    "author",
+    "page_title",
+    "scope",
+    "sheet",
+    "page",
+]
+_TEXT = TitleBlockText(labels=frozendict({cell: cell.title() for cell in _CELLS}), ellipsis="…")
 
 _TEN_PT_MM = 10 * 25.4 / 72  # the size the width numbers in these tests were worked out at
 
@@ -40,8 +58,13 @@ def test_cut_to_width_bold_needs_more_cutting_than_regular():
     width_mm = (regular_width + bold_width) / 2
     assert fits(text, size_mm=size_mm, bold=False, width_mm=width_mm)
     assert not fits(text, size_mm=size_mm, bold=True, width_mm=width_mm)
-    assert cut_to_width(text, size_mm=size_mm, bold=False, width_mm=width_mm) == (text, False)
-    bold_cut, bold_was_cut = cut_to_width(text, size_mm=size_mm, bold=True, width_mm=width_mm)
+    assert cut_to_width(text, ellipsis="…", size_mm=size_mm, bold=False, width_mm=width_mm) == (
+        text,
+        False,
+    )
+    bold_cut, bold_was_cut = cut_to_width(
+        text, ellipsis="…", size_mm=size_mm, bold=True, width_mm=width_mm
+    )
     assert bold_was_cut is True
     assert bold_cut != text
     assert bold_cut.endswith("…")
@@ -56,7 +79,7 @@ def test_cut_to_width_default_bold_is_false():
     regular_width = text_width_mm(text, size_mm=size_mm, bold=False)
     bold_width = text_width_mm(text, size_mm=size_mm, bold=True)
     width_mm = (regular_width + bold_width) / 2
-    assert cut_to_width(text, size_mm=size_mm, width_mm=width_mm) == (text, False)
+    assert cut_to_width(text, ellipsis="…", size_mm=size_mm, width_mm=width_mm) == (text, False)
 
 
 def test_cut_to_width_loop_uses_bold_metrics_not_regular():
@@ -75,7 +98,7 @@ def test_cut_to_width_loop_uses_bold_metrics_not_regular():
     assert regular_10 <= budget  # the regular table would keep a tenth m: the test can tell
     width_mm = budget + ellipsis_width
     assert not fits(text, size_mm=size_mm, bold=True, width_mm=width_mm)
-    kept, was_cut = cut_to_width(text, size_mm=size_mm, bold=True, width_mm=width_mm)
+    kept, was_cut = cut_to_width(text, ellipsis="…", size_mm=size_mm, bold=True, width_mm=width_mm)
     assert was_cut is True
     assert kept == "m" * 9 + "…"
 
@@ -96,7 +119,7 @@ def test_cut_to_width_stops_strictly_before_the_width_not_at_it():
     candidate_width = text_width_mm("AB", size_mm=size_mm, bold=False)
     width_mm = ellipsis_width + candidate_width
     assert not fits(text, size_mm=size_mm, width_mm=width_mm)
-    assert cut_to_width(text, size_mm=size_mm, width_mm=width_mm) == ("AB…", True)
+    assert cut_to_width(text, ellipsis="…", size_mm=size_mm, width_mm=width_mm) == ("AB…", True)
 
 
 def test_notice_lines_of_empty_text_is_no_lines():
@@ -169,8 +192,12 @@ def _fields(**over: object) -> TitleBlockFields:
 def test_field_printed_returns_base_fits_and_printed():
     """A text that fits prints whole; one that misses prints cut, the base kept for the finding."""
     room = text_width_mm("short", size_mm=3.4) + 0.01
-    assert field_printed("short", room_mm=room, size_mm=3.4) == ("short", True, "short")
-    base, ok, shown = field_printed("short and longer", room_mm=room, size_mm=3.4)
+    assert field_printed("short", ellipsis="…", room_mm=room, size_mm=3.4) == (
+        "short",
+        True,
+        "short",
+    )
+    base, ok, shown = field_printed("short and longer", ellipsis="…", room_mm=room, size_mm=3.4)
     assert (base, ok) == ("short and longer", False)
     assert shown.endswith("…")
     assert fits(shown, size_mm=3.4, width_mm=room)
@@ -216,7 +243,7 @@ def test_notice_room_chars_is_the_sample_estimate_to_the_ten_below():
 
 def test_title_block_strings_print_the_base_when_it_fits():
     """Every field fits: printed is the text per slot (`sheet_counter` fills `sheet`)."""
-    got = title_block_strings(_fields(), _ROOMS, _SIZES, notice_width_mm=30, notice_capacity=2)
+    got = title_block_strings(_fields(), _ROOMS, _SIZES, text=_TEXT, notice=(30, 2))
     assert got.printed["sheet"] == "1.2"
     assert got.printed["title"] == "T"
     assert set(got.printed) == set(_ROOMS)
@@ -229,7 +256,7 @@ def test_title_block_strings_print_the_shorter_form_when_only_it_fits():
     """A page title too long for its room prints its shorter form and is not unfit."""
     rooms = _ROOMS | {"page_title": text_width_mm("Short", size_mm=3.4) + 0.01}
     fields = _fields(page_title="A very long page title indeed", page_title_shorter=("Short",))
-    got = title_block_strings(fields, rooms, _SIZES, notice_width_mm=30, notice_capacity=2)
+    got = title_block_strings(fields, rooms, _SIZES, text=_TEXT, notice=(30, 2))
     assert got.printed["page_title"] == "Short"
     assert got.unfit == ()
 
@@ -238,7 +265,7 @@ def test_title_block_strings_cut_with_an_ellipsis_and_report_unfit():
     """No form fits: the printed text is cut with `…` and the field is named with its base."""
     fields = _fields(scope="Scope that is far too long", page_title_shorter=("x",))
     rooms = _ROOMS | {"scope": 6.0}
-    got = title_block_strings(fields, rooms, _SIZES, notice_width_mm=30, notice_capacity=2)
+    got = title_block_strings(fields, rooms, _SIZES, text=_TEXT, notice=(30, 2))
     assert got.printed["scope"].endswith("…")
     assert [(u.field, u.shown) for u in got.unfit] == [("scope", "Scope that is far too long")]
 
@@ -247,7 +274,7 @@ def test_title_block_strings_cap_the_notice_to_the_capacity():
     """A notice of three lines in a two-line cell shows two lines and reports unfit."""
     width = text_width_mm("alpha beta", size_mm=2.5) + 0.01
     fields = _fields(notice="alpha beta gamma delta epsilon zeta")
-    got = title_block_strings(fields, _ROOMS, _SIZES, notice_width_mm=width, notice_capacity=2)
+    got = title_block_strings(fields, _ROOMS, _SIZES, text=_TEXT, notice=(width, 2))
     assert len(got.notice) == 2
     assert got.notice == notice_lines(fields.notice, width_mm=width, font_mm=2.5)[:2]
     assert got.notice_unfit is True
@@ -255,6 +282,6 @@ def test_title_block_strings_cap_the_notice_to_the_capacity():
 
 def test_frame_labels_number_the_columns_and_letter_the_rows():
     """An 8 by 6 frame reads 1..8 across and A..F down."""
-    labels = frame_labels(8, 6)
+    labels = frame_labels(house_record(FrameForm), 8, 6)
     assert labels.columns == ("1", "2", "3", "4", "5", "6", "7", "8")
     assert labels.rows == ("A", "B", "C", "D", "E", "F")

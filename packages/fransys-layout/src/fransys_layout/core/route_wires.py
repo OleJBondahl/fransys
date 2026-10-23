@@ -87,6 +87,8 @@ def _between(env: RouteEnv, col: Column, i: int, cells: tuple[Cell, Cell]) -> Dr
             "on one net"
         )
         return _refused(env, col.id, text)
+    if (net, ref_a, ref_b) in env.bundled:
+        return Drawn()  # the bundle's lane carries this connection (BUNDLE)
     return _pair(env, net, ref_a, ref_b) or Drawn()
 
 

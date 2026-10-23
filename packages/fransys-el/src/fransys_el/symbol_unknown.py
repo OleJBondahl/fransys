@@ -6,6 +6,7 @@ function and the page it stands on.
 
 from typing import TYPE_CHECKING
 
+from electrical_symbols import GENERIC_BOX_KEY
 from fransys_layout.core import CoreError
 from fransys_layout.symbols import library_symbol
 from fransys_model.derive import function_designation, page_reference_text
@@ -26,6 +27,8 @@ _INFO = next(info for info in FINDING_CODES if info.code == "UNKNOWN_SYMBOL_KEY"
 
 def is_unknown(library: Library, key: str) -> bool:
     """Whether `key` names no symbol of `library`."""
+    if key == GENERIC_BOX_KEY:  # the labelled box, chosen by its public key (R479)
+        return False
     try:
         library_symbol(library, key)
     except CoreError:

@@ -12,7 +12,7 @@ from fransys_model.vocab import PageKind
 
 from ._background import physical_page, sheet_of
 from ._flow import flow_columns
-from ._sizes import RULE, sizes_of
+from ._sizes import rule_of, sizes_of
 from ._typst import literal
 
 if TYPE_CHECKING:
@@ -21,14 +21,13 @@ if TYPE_CHECKING:
     from fransys_model.derive import DocumentRow, SheetBackground
     from fransys_model.kernel import Model
 
-_COLUMNS = ("Sheet", "Title", "Page")
-
 
 def sheet_index_page(  # noqa: PLR0913 -- the page's inputs, plus the two list-share values the facade passes
     model: Model,
     record: DocumentRow,
     kinds: tuple[PageKind, ...],
     sheets: Mapping[SheetKey, SheetBackground],
+    headers: tuple[str, str, str],
     *,
     share_pct: float,
     gutter_pct: float,
@@ -38,16 +37,23 @@ def sheet_index_page(  # noqa: PLR0913 -- the page's inputs, plus the two list-s
     if not rows:
         return ""
     sizes = sizes_of(model, record.id)
-    room = sheet_of(sheets, SheetKey(record.id, PageKind.SHEET_INDEX, 0)).title_room_mm
-    cells = ["table.header(" + ", ".join(f"strong(text({literal(c)}))" for c in _COLUMNS) + ")"]
+    background = sheet_of(sheets, SheetKey(record.id, PageKind.SHEET_INDEX, 0))
+    room = background.title_room_mm
+    cells = ["table.header(" + ", ".join(f"strong(text({literal(c)}))" for c in headers) + ")"]
     for row in rows:
         page = f"context text(str({physical_page(f'locate(<{row.destination}>)')}))"
         title = row.title
         if room is not None:
-            title = field_printed(row.title, room_mm=room, size_mm=sizes.body, shorter=row.shorter)[
-                2
-            ]
+            title = field_printed(
+                row.title,
+                ellipsis=background.ellipsis,
+                room_mm=room,
+                size_mm=sizes.body,
+                shorter=row.shorter,
+            )[2]
         shown = (f"text({literal(row.sheet)})", f"text({literal(title)})", page)
         cells.extend(f"link(<{row.destination}>, {cell})" for cell in shown)
-    table = f"#table(columns: (auto, 1fr, auto), stroke: {RULE}, " + ", ".join(cells) + ")"
+    table = (
+        f"#table(columns: (auto, 1fr, auto), stroke: {rule_of(model)}, " + ", ".join(cells) + ")"
+    )
     return flow_columns([table], share_pct=share_pct, gutter_pct=gutter_pct)

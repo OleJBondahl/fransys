@@ -27,6 +27,7 @@ OPTIONS = core_options(
     flip_turn="R180",
     tag_stagger=True,
     label_gap=8,
+    parallel_pitch=48,
     driver_first=True,
     arrow_sides=("E", "W"),
 )
@@ -38,8 +39,8 @@ def grid(wires: tuple[Wire, ...] = (), boxes: tuple[Box, ...] = (), step: int = 
     return page_grid(page, wires, boxes, AREA, replace(OPTIONS, wiring_grid=step))
 
 
-def wire(points: tuple[tuple[int, int], ...], net: str = "n1", lanes: int = 1) -> Wire:
-    return Wire(net, 1, points, "straight", lanes)
+def wire(points: tuple[tuple[int, int], ...], net: str = "n1") -> Wire:
+    return Wire(net, 1, points, "straight")
 
 
 def lone() -> Wire:
@@ -62,9 +63,9 @@ def bent() -> Wire:
     return wire(((40, 100), (60, 100), (60, 116)))
 
 
-def trunk(lanes: int = 3) -> Wire:
-    """A vertical trunk of 48 G at x 96, y 64 to 112, `lanes` wide to the +x side."""
-    return wire(((96, 64), (96, 112)), lanes=lanes)
+def trunk(lanes: int = 3) -> tuple[Wire, ...]:
+    """A vertical trunk of 48 G at x 96, y 64 to 112: one wire per lane, a grid step apart to +x."""
+    return tuple(wire(((96 + 8 * k, 64), (96 + 8 * k, 112))) for k in range(lanes))
 
 
 def case(

@@ -5,7 +5,7 @@ from typing import Any
 
 lazy from .ids import AuthoringKey, Id
 lazy from .origin import Origin
-lazy from .record import Record
+lazy from .record_protocol import Record
 
 
 @dataclasses.dataclass(frozen=True, slots=True, kw_only=True)

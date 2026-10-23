@@ -47,7 +47,7 @@ def _page(groups: tuple[int | None, ...], texts: list[str]) -> Image.Image:
         [f"text({literal(t)})" if "\n" not in t else _stack(t), c]
         for t, c in zip(texts, _cells(groups), strict=True)
     ]
-    table = table_source(["1fr", "15mm"], ['text("A")', 'text("Bridge")'], rows)
+    table = table_source(["1fr", "15mm"], ['text("A")', 'text("Bridge")'], rows, rule="0.18mm")
     head = (
         '#set text(font: "DejaVu Sans", size: 3mm)\n'
         "#set page(width: 70mm, height: auto, margin: 5mm)\n"

@@ -39,6 +39,7 @@ def test_solve_is_pure(planted: PlacementProblem) -> None:
         flip_turn="R180",
         tag_stagger=True,
         label_gap=8,
+        parallel_pitch=48,
         driver_first=True,
         arrow_sides=("E", "W"),
     )
@@ -58,6 +59,7 @@ def test_a_routed_wire_passes_no_marker_cell_on_the_planted_problems(
                 flip_turn="R180",
                 tag_stagger=True,
                 label_gap=8,
+                parallel_pitch=48,
                 driver_first=True,
                 arrow_sides=("E", "W"),
             ),
@@ -107,6 +109,7 @@ def test_the_router_trades_as_the_scorer_does_on_the_defaults() -> None:
                 flip_turn="R180",
                 tag_stagger=True,
                 label_gap=8,
+                parallel_pitch=48,
                 driver_first=True,
                 arrow_sides=("E", "W"),
             )
@@ -122,6 +125,7 @@ def test_the_trade_check_names_a_penalty_that_drifts() -> None:
             flip_turn="R180",
             tag_stagger=True,
             label_gap=8,
+            parallel_pitch=48,
             driver_first=True,
             arrow_sides=("E", "W"),
         )

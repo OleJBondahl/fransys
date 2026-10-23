@@ -8,8 +8,8 @@ from fransys_model.derive.designation_label import (
 )
 from fransys_model.derive.facts.item_predicates import item_class_code
 from fransys_model.derive.facts.units import designating_ancestors
-from fransys_model.derive.passes.numbering_units import Suffixed, instance_tags_in
-from fransys_model.kernel import Model, first_free, make_id
+from fransys_model.derive.passes.numbering_units import instance_tags_in, next_number
+from fransys_model.kernel import Model, make_id
 from fransys_model.vocab.facets.assigned_designation import AssignedDesignationFacet
 
 if TYPE_CHECKING:
@@ -43,6 +43,7 @@ def assigned_facets(
     An item with an own text is skipped and its text taken; an accessory uses up no number.
     """
     taken = _taken_texts(model, siblings, reserved)
+    numbers: dict[str, set[int]] = {}
     numbered: list[AssignedDesignationFacet] = []
     for item in sorted(siblings, key=lambda item: (item.key, item.id)):
         if own_designation_or_none(model, item) is not None or takes_parents_designation(
@@ -52,7 +53,5 @@ def assigned_facets(
         code = item_class_code(model, item.id)
         if not code:
             continue
-        candidate = f"{code}{first_free(Suffixed(code, taken))}"
-        taken.add(candidate)
-        numbered.append(_assigned_facet(item, candidate))
+        numbered.append(_assigned_facet(item, f"{code}{next_number(taken, numbers, code)}"))
     return numbered

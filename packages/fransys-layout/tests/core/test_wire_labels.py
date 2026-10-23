@@ -69,24 +69,24 @@ def test_the_sides_are_read_from_the_options() -> None:
 
 def test_a_trunk_is_marked_lanes_wide_and_its_label_stands_outside_the_band() -> None:
     trunk = fx.trunk(3)
-    occ = fx.grid((trunk,))
+    occ = fx.grid(trunk)
     assert len({i for i, _ in occ.used}) == 3
-    box = label_along(trunk.points, LABEL, SIDES, occ, 3)
+    box = label_along(trunk[0].points, LABEL, SIDES, occ, 3)
     assert box == Box(120, 80, 24, 8)
     assert occ.free(box)
 
 
 def test_a_trunk_label_on_the_other_side_stands_one_cell_off() -> None:
     trunk = fx.trunk(3)
-    occ = fx.grid((trunk,), (Box(120, 64, 40, 48),))
-    assert label_along(trunk.points, LABEL, SIDES, occ, 3) == Box(72, 80, 24, 8)
+    occ = fx.grid(trunk, (Box(120, 64, 40, 48),))
+    assert label_along(trunk[0].points, LABEL, SIDES, occ, 3) == Box(72, 80, 24, 8)
 
 
 def test_a_horizontal_trunk_stands_lanes_cells_below_or_one_cell_above() -> None:
-    trunk = fx.wire(((40, 104), (120, 104)), lanes=2)
-    occ = fx.grid((trunk,))
-    assert label_along(trunk.points, LABEL, (("horiz", "S"),), occ, 2) == Box(64, 120, 24, 8)
-    assert label_along(trunk.points, LABEL, (("horiz", "N"),), occ, 2) == Box(64, 96, 24, 8)
+    trunk = tuple(fx.wire(((40, 104 + 8 * k), (120, 104 + 8 * k))) for k in range(2))
+    occ = fx.grid(trunk)
+    assert label_along(trunk[0].points, LABEL, (("horiz", "S"),), occ, 2) == Box(64, 120, 24, 8)
+    assert label_along(trunk[0].points, LABEL, (("horiz", "N"),), occ, 2) == Box(64, 96, 24, 8)
 
 
 def test_a_one_lane_wire_gives_the_same_box_as_the_default() -> None:
@@ -166,6 +166,7 @@ def test_the_marker_box_obstacle_is_read_from_the_options() -> None:
                 flip_turn="R180",
                 tag_stagger=True,
                 label_gap=8,
+                parallel_pitch=48,
                 driver_first=True,
                 arrow_sides=("E", "W"),
             ),

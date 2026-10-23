@@ -17,7 +17,7 @@ from electrical_symbols import (
     title_block,
     title_logo,
 )
-from fransys_model.derive import TITLE_BLOCK_LABELS, notice_line_count, notice_pitch_mm
+from fransys_model.derive import notice_line_count, notice_pitch_mm
 
 from ._symbols import symbol_body
 
@@ -26,26 +26,26 @@ if TYPE_CHECKING:
 
     from symdef import Symbol
 
-    from electrical_symbols import TitleBlock
-    from fransys_model.derive import SheetFrame, Sizes, TitleBlockStrings
+    from electrical_symbols import Library, TitleBlock
+    from fransys_model.derive import DocumentSheets, SheetFrame, Sizes, TitleBlockStrings
 
 _MM = Decimal(1)  # the sheet symbols are authored in mm: one module is one mm
 
 
-def _layer(symbol: Symbol, texts: Mapping[str, str], font_mm: float) -> str:
+def _layer(library: Library, symbol: Symbol, texts: Mapping[str, str], font_mm: float) -> str:
     """One layer's fragment at one font size."""
-    return symbol_body(symbol, _MM, Decimal(repr(font_mm)), texts=texts)
+    return symbol_body(library, symbol, _MM, Decimal(repr(font_mm)), texts=texts)
 
 
-def frame_fragment(frame: SheetFrame, sizes: Sizes) -> str:
+def frame_fragment(library: Library, frame: SheetFrame, sizes: Sizes) -> str:
     """The border, the ticks and the reference labels of a sheet frame."""
     x, y, width, height = frame.border
-    parts = [_layer(frame_border((x, y), width, height), {}, sizes.label)]
+    parts = [_layer(library, frame_border((x, y), width, height), {}, sizes.label)]
     for strip in frame.strips:
         cell = (strip.cell_width, strip.cell_height)
         symbol = frame_strip(strip.side, (strip.x, strip.y), cell, len(strip.labels), strip.axis)
         texts = {f"{k}.label": text for k, text in enumerate(strip.labels, 1)}
-        parts.append(_layer(symbol, texts, sizes.label))
+        parts.append(_layer(library, symbol, texts, sizes.label))
     return "".join(parts)
 
 
@@ -72,20 +72,28 @@ def notice_room(block: TitleBlock, sizes: Sizes) -> tuple[float, int]:
 
 
 def title_fragment(
-    block: TitleBlock, logo: Symbol, strings: TitleBlockStrings, sizes: Sizes
+    library: Library,
+    block: TitleBlock,
+    logo: Symbol,
+    strings: TitleBlockStrings,
+    listing: DocumentSheets,
 ) -> str:
-    """The title block of one page: lines and values, logo cell, bold title, labels and notice."""
+    """The title block of one page: lines and values, logo cell, bold title, labels and notice.
+
+    `listing` gives the sizes and the cell labels.
+    """
+    sizes = listing.sizes
     body = {slot: text for slot, text in strings.printed.items() if slot != "title"}
-    bold = _layer(block.bold, {"title": strings.printed["title"]}, sizes.body)
-    labels = {f"label.{slot}": word for slot, word in TITLE_BLOCK_LABELS.items()}
+    bold = _layer(library, block.bold, {"title": strings.printed["title"]}, sizes.body)
+    labels = {f"label.{slot}": word for slot, word in listing.title_text.labels.items()}
     parts = [
-        _layer(block.lines, body, sizes.body),
-        _layer(logo, {}, sizes.body),
+        _layer(library, block.lines, body, sizes.body),
+        _layer(library, logo, {}, sizes.body),
         bold_layer(bold),
-        _layer(block.labels, labels, sizes.label),
+        _layer(library, block.labels, labels, sizes.label),
     ]
     if strings.notice:
         lines = notice_table(block, notice_pitch_mm(sizes.label), len(strings.notice))
         notice = {f"{k}.line": line for k, line in enumerate(strings.notice, 1)}
-        parts.append(_layer(lines, notice, sizes.label))
+        parts.append(_layer(library, lines, notice, sizes.label))
     return "".join(parts)

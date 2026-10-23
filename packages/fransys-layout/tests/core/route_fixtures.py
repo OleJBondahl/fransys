@@ -158,6 +158,7 @@ def envs_of(
         flip_turn="R180",
         tag_stagger=True,
         label_gap=8,
+        parallel_pitch=48,
         driver_first=True,
         arrow_sides=("E", "W"),
     )
@@ -189,7 +190,7 @@ def link_env(
         box = Box(x + dx, y + dy, 8, 8)
         placed[sym] = Placed(sym, 1, x, y, "R0", box, box, (PinXY("p", x, y),))
     cross = tuple(
-        CrossLink(n, tuple(Attach(None, 0, 0, PinRef(s, "p")) for s in ends))
+        CrossLink(n, tuple(Attach(None, 0, 0, PinRef(s, "p"), net="n") for s in ends))
         for n, ends in links.items()
     )
     return RouteEnv(
@@ -210,6 +211,7 @@ def link_env(
             flip_turn="R180",
             tag_stagger=True,
             label_gap=8,
+            parallel_pitch=48,
             driver_first=True,
             arrow_sides=("E", "W"),
         ),
@@ -223,7 +225,7 @@ def row_wrap_env(options: Options | None = None) -> RouteEnv:
     leaving north; the fan has one driver and one leg, one in each row.
     """
     env = link_env({"a": (40, 40, "N"), "z": (104, 120, "N")}, {}, options)
-    ends = tuple(Attach(None, 0, 0, PinRef(s, "p")) for s in ("a", "z"))
+    ends = tuple(Attach(None, 0, 0, PinRef(s, "p"), net="n") for s in ("a", "z"))
     fan = Fan("f:x", ("x",), ends[:1], ends[1:], None, 1, "S")
     return replace(
         env,
@@ -273,6 +275,7 @@ def open_end_env(
             flip_turn="R180",
             tag_stagger=True,
             label_gap=8,
+            parallel_pitch=48,
             driver_first=True,
             arrow_sides=("E", "W"),
         ),

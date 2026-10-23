@@ -6,6 +6,7 @@ The one place a level's boxes and lines meet their stubs and tabs; layout draws 
 from dataclasses import replace
 from typing import TYPE_CHECKING, Any
 
+from fransys_model.derive.house_settings import stub_text_of
 from fransys_model.kernel import Id
 from fransys_model.layout import BoxKey, OverviewRef, OverviewRefKind
 lazy from fransys_model.kernel import Model
@@ -51,7 +52,9 @@ def _member(model: Model, unit: Id[Unit], stub: OverviewStub) -> ViewMember:
     return ViewMember(
         ref=stub.end,
         lines=(lines := overview_stub_lines(stub)),
-        text=overview_member_text(lines, overview_stub_text(model, unit, stub)),
+        text=overview_member_text(
+            stub_text_of(model), lines, overview_stub_text(model, unit, stub)
+        ),
     )
 
 

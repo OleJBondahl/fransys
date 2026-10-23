@@ -15,16 +15,10 @@ import tempfile
 from itertools import pairwise
 
 import fransys as fr
-from _drawn_pages import drawn_pages
+from _drawn_facts import symbol_subjects
 from fransys.colours import BK, RD
 
 from fransys_model.vocab.tables import ports
-
-
-def _gap(model, fact: str):
-    """A fact the page Drawing lacks (strict xfail, GAP-FLIP-DRAWING-SUBJECT)."""
-    msg = f"GAP-FLIP-DRAWING-SUBJECT: no {fact} for {model.digest}"
-    raise AssertionError(msg)
 
 
 def _ports_drawn(*, hide: bool) -> dict[str, set[str]]:
@@ -45,14 +39,12 @@ def _ports_drawn(*, hide: bool) -> dict[str, set[str]]:
     model = fr.build(d, doc).model
     by_id = {p.id.value: p.id for p in ports(model).values()}
     drawn: dict[str, set[str]] = {}
-    for drawing in drawn_pages(model).values():
-        for one in drawing.symbols:
-            tag, thing = _gap(model, "symbol subject")
-            if thing.startswith("port:"):
-                names = {fr.derive.port_designation(model, by_id[thing.removeprefix("port:")])}
-            else:
-                names = {port for port, _ in one.sides}
-            drawn.setdefault(tag, set()).update(names)
+    for one in symbol_subjects(model):
+        if one.sides:
+            names = set(one.sides)
+        else:
+            names = {fr.derive.port_designation(model, by_id[port]) for port in one.ports}
+        drawn.setdefault(one.tag, set()).update(names)
     return drawn
 
 

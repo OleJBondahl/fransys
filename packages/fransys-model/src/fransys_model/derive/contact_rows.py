@@ -6,10 +6,7 @@ heading, the rule and each row from the same values. The row step is the profile
 
 from .rows_nav import TableGeometry
 
-CONTACT_COLUMNS = ("NO", "NC")  # the titles of a contact table's two columns
-
 __all__ = [
-    "CONTACT_COLUMNS",
     "column_split",
     "column_x",
     "heading_room",
@@ -30,7 +27,7 @@ def column_split(width: int) -> int:
 def table_geometry(rows: int, step: int, pad: int, *, headed: bool) -> TableGeometry:
     """The lines of a table of `rows` rows, each `step` high, with `pad` around the texts.
 
-    Heading line (when `headed`), then the "NO"/"NC" line, the rule, the rows and a last pad.
+    Heading line (when `headed`), then the column titles line, the rule, the rows and a last pad.
     """
     columns = heading_room(step, headed=headed)
     rule = columns + pad + step

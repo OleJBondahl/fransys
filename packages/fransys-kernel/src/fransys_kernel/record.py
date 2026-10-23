@@ -13,7 +13,7 @@ references, and applies the namespace rule.
 
 import dataclasses
 from annotationlib import ForwardRef
-from typing import TYPE_CHECKING, Any, Protocol, dataclass_transform, get_args, get_origin
+from typing import TYPE_CHECKING, Any, dataclass_transform, get_args, get_origin
 lazy from collections.abc import Callable
 
 from .errors import SchemaError
@@ -36,37 +36,6 @@ from .schema import (
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
-
-    from .ids import AuthoringKey, Id
-    from .values import Value
-
-
-class Record(Protocol):
-    """Structural stand-in for any `@record`-decorated instance: it has `id`, `key`, `ext`.
-
-    Members are read-only properties so a concrete `id: Id[Item]` matches covariantly;
-    plain attribute members are invariant and reject every real record.
-    """
-
-    @property
-    def id(self) -> Id[Any]:
-        """The record's primary key."""
-        ...
-
-    @property
-    def key(self) -> AuthoringKey:
-        """The authoring key the id was derived from."""
-        ...
-
-    @property
-    def ext(self) -> frozendict[str, Value]:
-        """Typed-leaf escape hatch for facts not yet modelled."""
-        ...
-
-
-def key_text(record: Record) -> str:
-    """Join a record's authoring key with `/`: the one text of a record's key in a message."""
-    return "/".join(record.key)
 
 
 @dataclass_transform(frozen_default=True, kw_only_default=True)

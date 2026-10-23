@@ -11,7 +11,7 @@ from .cut_fixtures import cut_of, elem, net, page_of
 
 
 def attach(sym: str) -> Attach:
-    return Attach(column=f"c:{sym}", lane=0, cell=0, pin=PinRef(sym, "s"))
+    return Attach(column=f"c:{sym}", lane=0, cell=0, pin=PinRef(sym, "s"), net="x")
 
 
 def fan_with(drivers: tuple[Attach, ...], head: Attach | None = None) -> Fan:
@@ -26,12 +26,12 @@ def test_fan_head_is_the_field_the_builder_filled() -> None:
 
 
 def _drafted(*syms: str) -> Fan:
-    draft = FanDraft("f:x", ["x"], [Att(None, "boxpin", PinRef(s, "s")) for s in syms])
+    draft = FanDraft("f:x", ["x"], [Att(None, "boxpin", PinRef(s, "s"), net="x") for s in syms])
     return _fan(draft)
 
 
 def test_the_builder_heads_a_fan_with_exactly_one_driver() -> None:
-    assert _drafted("d0").head == Attach(None, 0, 0, PinRef("d0", "s"))
+    assert _drafted("d0").head == Attach(None, 0, 0, PinRef("d0", "s"), net="x")
     assert _drafted().head is None
     assert _drafted("d0", "d1").head is None
 

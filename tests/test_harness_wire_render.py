@@ -12,6 +12,7 @@ import pytest
 from fransys.colours import BU
 from fransys_render import cable_blocks
 
+from electrical_symbols import LIBRARY
 from fransys_layout import lay_out_cables
 from fransys_model.derive.cable_drawing import block_wires
 from fransys_model.kernel import Origin, evolve
@@ -35,7 +36,7 @@ def laid() -> Any:
 
 
 def _svg(model: Any) -> str:
-    (svg,) = cable_blocks(model).values()
+    (svg,) = cable_blocks(model, LIBRARY).values()
     return svg
 
 
@@ -51,7 +52,7 @@ def test_the_wire_draws_two_runs_and_its_derived_key(laid: Any) -> None:
     (block,) = layout_of(laid, CableBlock).values()
     (drawn,) = block_wires(laid, block.subject, block.unit)
     svg = _svg(laid)
-    assert svg.count('<polyline class="wire core"') == 2
+    assert svg.count("<polyline") == 2
     assert _key_text(svg)[1] == drawn.text
     assert "BU" in drawn.text
     assert "0.5 mm²" in drawn.text

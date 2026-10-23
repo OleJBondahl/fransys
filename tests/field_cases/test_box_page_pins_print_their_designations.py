@@ -16,18 +16,12 @@ import tempfile
 from pathlib import Path
 
 import fransys as fr
+from _drawn_facts import symbol_subjects
 from _drawn_pages import drawn_pages
 from fransys.colours import BU
 
 from fransys_model.derive import port_designation
-from fransys_model.kernel import render_id
 from fransys_model.vocab.tables import functions, items, ports
-
-
-def _gap(model, fact: str):
-    """A fact the page Drawing lacks (strict xfail, GAP-FLIP-DRAWING-SUBJECT)."""
-    msg = f"GAP-FLIP-DRAWING-SUBJECT: no {fact} for {model.digest}"
-    raise AssertionError(msg)
 
 
 def _layout():
@@ -57,11 +51,12 @@ def test_every_drawn_pin_of_the_connector_has_its_tag():
     (k4,) = (one.id for one in items(model).values() if one.tag == "K4")
     x1 = {f.id for f in functions(model).values() if f.item == k4 and f.name == "X1"}
     pin = {p.id: p.name for p in ports(model).values() if p.function in x1}
-    owned = {render_id(p): p for p in pin}
+    owned = {p.value: p for p in pin}
     drawn = {
-        owned[one.owner.split()[-1]]: one.page
-        for one in _gap(model, "symbol subject")
-        if one.owner and one.owner.split()[-1] in owned
+        owned[port]: one.page
+        for one in symbol_subjects(model)
+        for port in one.ports
+        if port in owned
     }
     assert sorted(pin[p] for p in drawn) == [str(n) for n in range(1, 9)]
     texts = {

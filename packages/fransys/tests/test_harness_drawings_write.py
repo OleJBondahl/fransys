@@ -12,6 +12,7 @@ import pytest
 from _model_build_cover import _COVER
 from fransys_render import cable_blocks
 
+from electrical_symbols import LIBRARY
 from fransys_layout import lay_out_cables
 from fransys_model.derive import printed_designation
 from fransys_model.derive.cable_drawing import cable_block_key
@@ -93,7 +94,7 @@ def test_the_harness_label_is_its_printed_designation_in_every_reading():
     parts, d = _unit_harness()
     frozen = fr.build(parts, d.draft()).model
     model, _ = lay_out_cables(frozen)
-    svgs = cable_blocks(model)
+    svgs = cable_blocks(model, LIBRARY)
     (harness,) = [i.id for i in items(frozen).values() if i.key[-1] == "WH1"]
     (unit,) = list(units(frozen))
     absolute, inside = (printed_designation(frozen, harness, unit=u) for u in (None, unit))
@@ -134,7 +135,7 @@ def test_the_harness_label_in_a_nested_units_reading_drops_the_root_as_the_headi
     parts, d = _nested_unit_harness()
     frozen = fr.build(parts, d.draft()).model
     model, _ = lay_out_cables(frozen)
-    svgs = cable_blocks(model)
+    svgs = cable_blocks(model, LIBRARY)
     (harness,) = [i.id for i in items(frozen).values() if i.key[-1] == "WH1"]
     (unit,) = [u for u, r in units(frozen).items() if r.key == ("out", "sub", "unit")]
     inside, absolute = svgs[cable_block_key(unit, harness)], svgs[cable_block_key(None, harness)]

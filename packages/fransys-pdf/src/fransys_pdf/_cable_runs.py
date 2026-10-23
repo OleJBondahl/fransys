@@ -8,8 +8,6 @@ A block taller than the page body never reaches the flow: `check` stops it first
 
 from typing import TYPE_CHECKING
 
-from fransys_model.derive import continued_heading
-
 from ._geometry import PADDING_MM, text_margin
 from ._labels import RESTART
 from ._typst import literal
@@ -75,17 +73,25 @@ def _flow(bodies: list[str], width_mm: float, height_mm: float) -> str:
     }
 
 
-def _header(heading: str, label: str) -> str:
-    """The page header: the part number, continued on every page after the run's first."""
+def _header(headings: tuple[str, str], label: str) -> str:
+    """The page header: the part number, continued on every page after the run's first.
+
+    `headings` is the part line and the same line carrying the continued word.
+    """
+    heading, continued = headings
     return (
         f"context {{ let first = query(label({literal(label)})).first().location().page(); "
-        f"strong(text(if here().page() > first {{ {literal(continued_heading(heading))} }} "
+        f"strong(text(if here().page() > first {{ {literal(continued)} }} "
         f"else {{ {literal(heading)} }})) }}"
     )
 
 
 def run_page(
-    sheet: SheetRow, index: int, heading: str, background_source: str, bodies: list[str]
+    sheet: SheetRow,
+    index: int,
+    headings: tuple[str, str],
+    background_source: str,
+    bodies: list[str],
 ) -> str:
     """One part's run: a `#page` with the part heading as header, each cable block in turn."""
     label = f"run-{index}"
@@ -93,6 +99,6 @@ def run_page(
     margin = f"{{ let m = {text_margin(sheet)}; (..m, top: m.top + {_HEADER_MM}mm) }}"
     blocks = _flow(bodies, width, height)
     return (
-        f"#page(margin: {margin}, header-ascent: 4mm, header: {{ {_header(heading, label)} }}, "
+        f"#page(margin: {margin}, header-ascent: 4mm, header: {{ {_header(headings, label)} }}, "
         f"background: {background_source})[{RESTART}\n#metadata(none) <{label}>\n{blocks}]"
     )

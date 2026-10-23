@@ -23,14 +23,13 @@ from typing import Any, NamedTuple
 import fransys as fr
 from _drawn_pages import drawn_pages
 
-from fransys_layout.geometry import Box, overlaps, symbol_geometry, translate
+from fransys_layout.geometry import Box, Orientation, overlaps, symbol_geometry, translate
 from fransys_model.derive.tag_text import external_note
 from fransys_model.layout import (
     CableBlock,
     DiagramBox,
     EndBox,
     EndStyle,
-    Orientation,
     layout_of,
 )
 
@@ -128,7 +127,7 @@ def test_the_cable_end_box_of_the_strip_is_dashed() -> None:
 
 def _body(s: Any) -> Box:
     """The body box of a drawn symbol, on the page."""
-    geometry = symbol_geometry(s.key, poles=s.poles, orientation=Orientation(s.orient))
+    geometry = symbol_geometry(s.key, poles=s.poles, orientation=Orientation[s.orient])
     return translate(geometry.body, dx=s.x, dy=s.y)
 
 
@@ -138,6 +137,7 @@ def test_no_outline_box_holds_a_foreign_symbol() -> None:
         (page, _body(s)) for page, s in _symbols() if s.key not in {"terminal", "contact-head"}
     ]
     assert foreign
+    assert _outline_boxes(), "no outline on the core Drawing: the check would pass over nothing"
     assert [
         (p, q) for p, o in _outline_boxes() for r, q in foreign if p == r and overlaps(o, q)
     ] == []

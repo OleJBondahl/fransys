@@ -197,7 +197,7 @@ def test_a_nested_units_terminal_row_prints_an_outside_end_as_empty_and_keeps_th
 def test_a_nested_units_terminal_cell_never_prints_a_dangling_separator(nested):
     model, inner, strip = nested
     rows = terminal_rows(model, strip, unit=inner, context=list_context(model, strip))
-    table = _lists_terminal._terminal_table(model, rows)
+    table = _lists_terminal._terminal_table(model, rows, bridge_word="Bridge")
     assert 'text("-P1:1")' in table
     assert "; " not in table
     assert cell_text(rows[0].external_ends) == "-P1:1"

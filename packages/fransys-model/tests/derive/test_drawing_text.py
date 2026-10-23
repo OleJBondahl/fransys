@@ -8,7 +8,7 @@ import itertools
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 
-from derive_helpers import add_all, frozen_with_library
+from derive_helpers import add_all, frozen_with_library, house_record
 
 from fransys_model.derive.drawing_text import (
     marker_text,
@@ -21,6 +21,7 @@ from fransys_model.layout import (
     MarkerSide,
     Page,
     PageRole,
+    ReferenceText,
     SheetFormat,
     Side,
     StarKind,
@@ -237,7 +238,8 @@ _PATH_CAB: tuple[tuple[Id[Any], str], ...] = ((_NODE_IDS("aspect_node"), "C1"),)
 
 
 def test_a_position_without_a_cell_names_the_page_alone() -> None:
-    assert position_text(3, None, None, ()) == "p3"
-    assert position_text(3, None, None, ("C1",)) == "+C1p3"
-    assert position_text(3, None, None, (), 2) == "p2.3"
-    assert position_text(3, 1, "A", (), 2) == "p2.3:1A"
+    refs = house_record(ReferenceText)
+    assert position_text(refs, 3, None, ()) == "p3"
+    assert position_text(refs, 3, None, ("C1",)) == "+C1p3"
+    assert position_text(refs, 3, None, (), 2) == "p2.3"
+    assert position_text(refs, 3, ("1", "A"), (), 2) == "p2.3:1A"

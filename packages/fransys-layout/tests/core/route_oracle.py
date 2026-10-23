@@ -25,23 +25,9 @@ def _on(p: XY, a: XY, b: XY) -> bool:
     return min(a[0], b[0]) <= p[0] <= max(a[0], b[0]) and min(a[1], b[1]) <= p[1] <= max(a[1], b[1])
 
 
-LANE_PITCH = 8
-
-
 def _touches(p: XY, wire: Wire) -> bool:
-    """P lies on the wire; a bundle trunk is lanes wide, its poles' drops end on any lane."""
-    reach = (wire.lanes - 1) * LANE_PITCH
-    return (
-        any(
-            _on(
-                p,
-                (min(a[0], b[0]) - reach, min(a[1], b[1]) - reach),
-                (max(a[0], b[0]) + reach, max(a[1], b[1]) + reach),
-            )
-            for a, b in pairwise(wire.points)
-        )
-        or p in wire.points
-    )
+    """P lies on the wire: a bundle trunk is one wire per lane, a pole's drop ends on its own."""
+    return p in wire.points or any(_on(p, a, b) for a, b in pairwise(wire.points))
 
 
 def _owners(net: Net) -> set[str]:

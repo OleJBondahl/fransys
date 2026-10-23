@@ -13,12 +13,23 @@ from fransys_model.derive.designation import (
     port_designation,
 )
 from fransys_model.derive.designation_label import terminal_of
+from fransys_model.derive.facts.children import child_items
 from fransys_model.derive.facts.item_predicates import is_plc_module
 from fransys_model.derive.facts.subjects import subject_kind
 from fransys_model.derive.instance_tag import instance_name, instance_tags
 from fransys_model.derive.lookups import position_rank
-from fransys_model.kernel import Finding, Id, Model, NaturalKey, SchemaError, natural_key
-from fransys_model.layout import DrawingSet, Page, layout_of, page_slice
+from fransys_model.kernel import (
+    DIGEST_CACHE_SIZE,
+    AuthoringKey,
+    Finding,
+    Id,
+    Model,
+    NaturalKey,
+    SchemaError,
+    digest_cached,
+    natural_key,
+)
+from fransys_model.layout import DrawingSet, OrderHint, Page, layout_of, page_slice
 from fransys_model.vocab.enums import SubjectKind
 from fransys_model.vocab.tables import aspect_nodes, items
 lazy from fransys_model.derive.rows_series_parallel import SeriesRowPart
@@ -43,9 +54,11 @@ __all__ = [
     "location_key",
     "locations_in_order",
     "natural_key",
+    "order_hint_key",
     "plc_channel_key",
     "plc_channel_tie",
     "plc_module_key",
+    "plc_module_ranks",
     "plc_rack_key",
     "plc_racks",
     "port_designation_key",
@@ -150,6 +163,20 @@ def plc_module_key(module: Item) -> ModuleKey:
     block never moves it (model-0259). The authoring key only breaks a tie.
     """
     return position_rank(module), natural_key(module.tag or ""), module.key
+
+
+@digest_cached(DIGEST_CACHE_SIZE)
+def plc_module_ranks(model: Model) -> frozendict[Id[Item], int]:
+    """Each PLC module's place in the one order of modules: its rack, then `plc_module_key`.
+
+    Ranks run from 0 over every module of every rack. The layout core iterates by them (R468).
+    """
+    known = items(model)
+    modules = []
+    for rack in sorted(plc_racks(model), key=lambda r: plc_rack_key(known[r])):
+        found = [i for i in child_items(model, rack) if is_plc_module(model, known[i])]
+        modules.extend(sorted(found, key=lambda i: plc_module_key(known[i])))
+    return frozendict(zip(modules, range(len(modules)), strict=True))
 
 
 def plc_rack_key(rack: Item) -> ModuleKey:
@@ -282,3 +309,8 @@ def stub_far_key(pick: tuple[Id[Port], Id[Port], Id[Conductor]]) -> tuple[str, s
     """A stub's far-end order of a `(near, far, conductor)`: far port, near port, conductor."""
     near, far, conductor = pick
     return far.value, near.value, conductor.value
+
+
+def order_hint_key(hint: OrderHint) -> AuthoringKey:
+    """An order hint's place in a list: its authoring key (model-0366)."""
+    return hint.key

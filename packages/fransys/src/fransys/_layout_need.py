@@ -52,7 +52,10 @@ def _schematic_if_needed(
 ) -> Laid:
     if not needs_schematic_layout(model):
         return model, (), NO_DRAWINGS, NO_LINKS
-    return lay_out_on_core(model, library, layout)
+    try:
+        return lay_out_on_core(model, library, layout)
+    except HintError as error:
+        raise hint_error_to_author_error(model, error) from error
 
 
 def lay_out_if_needed(

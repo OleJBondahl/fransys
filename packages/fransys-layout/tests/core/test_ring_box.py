@@ -32,7 +32,7 @@ def _fan(fid: str, drivers: tuple[Attach, ...], legs: tuple[Attach, ...]) -> Fan
 
 
 def _at(col: str | None, cell: int, sym: str, pin: str) -> Attach:
-    return Attach(col, 0, cell, PinRef(sym, pin))
+    return Attach(col, 0, cell, PinRef(sym, pin), net="n")
 
 
 FAN_END = End("fan")

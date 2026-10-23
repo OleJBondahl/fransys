@@ -45,11 +45,11 @@ def link_fit(
     digits = len(str(count))
     columns = max(one.frame_columns for one in sheets)
     rows = max(one.frame_rows for one in sheets)
-    sample = len(widest_target_line(digits, columns, rows, _DIGITS[0]))
+    sample = len(widest_target_line(model, digits, columns, rows, _DIGITS[0]))
     widest, best = _DIGITS[0], -1
     for digit in _DIGITS:
         width = marker_boxes(library, digit * sample)["R0"].w
         if width > best:
             widest, best = digit, width
-    line = widest_target_line(digits, columns, rows, widest)
+    line = widest_target_line(model, digits, columns, rows, widest)
     return marker_boxes(library, line)

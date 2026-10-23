@@ -16,6 +16,8 @@ import fransys as fr
 import pytest
 from fransys.colours import RD
 
+from fransys_model.derive import net_of
+
 _N = 18
 _FUSE = re.compile(r"^G\d+$")
 
@@ -61,15 +63,41 @@ def series() -> fr.BuildResult:
 
 @pytest.fixture(scope="module")
 def placed(series) -> list[tuple[int, int, int, str]]:
-    """Each fuse placement as (page number, x, y, tag), read off the public tables."""
-    tables: Any = series.model.tables
+    """Each fuse placement as (page number, x, y, tag), read off the drawn pages."""
+    return _drawn_fuses(series)
+
+
+def _port_tags(model) -> dict[str, str]:
+    """Each port's value to its item's tag: a drawn symbol names its ports by value."""
+    tables: Any = model.tables
+    return {
+        pid.value: tables["item"][tables["function"][p.function].item].tag
+        for pid, p in tables["port"].items()
+    }
+
+
+def _drawn_fuses(result) -> list[tuple[int, int, int, str]]:
+    """Each fuse symbol the core drew as (page number, x, y, tag); markers are not fuses."""
+    tables: Any = result.model.tables
     number = {pid: p.number for pid, p in tables["layout.page"].items()}
-    rows = []
-    for sp in tables["layout.symbol_placement"].values():
-        tag = tables["item"][tables["function"][sp.function].item].tag
-        if _FUSE.match(tag or ""):
-            rows.append((number[sp.page], sp.x, sp.y, tag))
-    return rows
+    tags = _port_tags(result.model)
+    return [
+        (number[pid], s.x, s.y, tags[s.ports[0]])
+        for pid, drawing in result.drawings.items()
+        for s in drawing.symbols
+        if s.key == "fuse"
+    ]
+
+
+def _marks_and_routes(result) -> tuple[dict[str, list], set[str]]:
+    """The drawn markers by the port value they stand at, and the nets the wires draw."""
+    drawings = list(result.drawings.values())
+    markers: dict[str, list] = defaultdict(list)
+    for d in drawings:
+        for s in d.symbols:
+            if s.key.startswith("marker"):
+                markers[s.ports[0]].append(s)
+    return markers, {w.net for d in drawings for w in d.wires}
 
 
 def test_the_series_fits_the_sheets_without_overflow(series) -> None:
@@ -89,32 +117,28 @@ def test_the_fuses_stand_in_reading_order_and_across_two_x(placed) -> None:
 
 def test_a_wire_across_the_cut_is_a_marker_pair_and_the_rest_are_routes(series) -> None:
     tables: Any = series.model.tables
-    x_of = {sp.function: sp.x for sp in tables["layout.symbol_placement"].values()}
-    tag = {
-        pid: tables["item"][tables["function"][p.function].item].tag
-        for pid, p in tables["port"].items()
-    }
-    routed = {r.conductor for r in tables["layout.route"].values()}
-    markers = defaultdict(list)
-    for lm in tables["layout.link_marker"].values():
-        markers[lm.port].append(lm)
+    tags = _port_tags(series.model)
+    x_of = {tag: x for _, x, _, tag in _drawn_fuses(series)}
+    markers, routed = _marks_and_routes(series)
 
     across, between = 0, 0
-    for cid, c in tables["conductor"].items():
+    for c in tables["conductor"].values():
         fa, fb = tables["port"][c.a].function, tables["port"][c.b].function
-        if not (_FUSE.match(tag.get(c.a) or "") and _FUSE.match(tag.get(c.b) or "")) or fa == fb:
+        ends = [c.a.value, c.b.value]
+        if not all(_FUSE.match(tags[v] or "") for v in ends) or fa == fb:
             continue
-        ends = [c.a, c.b]
-        if x_of[fa] != x_of[fb]:
+        found = net_of(series.model, c.a)
+        assert found is not None
+        net = found.ports[0].value
+        if x_of[tags[ends[0]]] != x_of[tags[ends[1]]]:
             across += 1
-            assert cid not in routed
-            assert sorted(lm.port for lm in markers[c.a] + markers[c.b]) == sorted(ends)
-            assert all(len(markers[p]) == 1 for p in ends)
+            assert net not in routed
+            assert all(len(markers[v]) == 1 for v in ends)
         else:
             between += 1
-            assert cid in routed
-            assert not markers[c.a]
-            assert not markers[c.b]
+            assert net in routed
+            assert not markers[ends[0]]
+            assert not markers[ends[1]]
     assert across >= 1
     assert between >= 1
 
@@ -125,20 +149,19 @@ def test_a_middle_fuses_pin_wired_past_the_cut_gets_one_marker_pair() -> None:
     """
     result = _series_result(_N, tap=(3, 15))
     tables: Any = result.model.tables
-    x_of = {sp.function: sp.x for sp in tables["layout.symbol_placement"].values()}
-    tag = {
-        pid: tables["item"][tables["function"][p.function].item].tag
-        for pid, p in tables["port"].items()
-    }
-    routed = {r.conductor for r in tables["layout.route"].values()}
+    tags = _port_tags(result.model)
+    x_of = {tag: x for _, x, _, tag in _drawn_fuses(result)}
+    markers, routed = _marks_and_routes(result)
     taps = [
-        (cid, c)
-        for cid, c in tables["conductor"].items()
-        if {tag.get(c.a), tag.get(c.b)} == {"G3", "G15"}
+        c
+        for c in tables["conductor"].values()
+        if {tags[c.a.value], tags[c.b.value]} == {"G3", "G15"}
     ]
     assert len(taps) == 1
-    cid, c = taps[0]
-    assert x_of[tables["port"][c.a].function] != x_of[tables["port"][c.b].function]
-    assert cid not in routed
-    ends = [lm.port for lm in tables["layout.link_marker"].values() if lm.port in (c.a, c.b)]
-    assert sorted(ends) == sorted([c.a, c.b])
+    c = taps[0]
+    assert x_of["G3"] != x_of["G15"]
+    net = net_of(result.model, c.a)
+    assert net is not None
+    assert net.ports[0].value not in routed
+    ends = [s.ports[0] for v in (c.a.value, c.b.value) for s in markers[v]]
+    assert sorted(ends) == sorted([c.a.value, c.b.value])

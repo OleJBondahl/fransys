@@ -7,7 +7,7 @@ import pytest
 from derive_helpers import frozen_with_library
 
 from fransys_model.derive import text_room_g, text_under_floor
-from fransys_model.derive.print_sizes import TextRole, role_height_mm
+from fransys_model.derive.print_sizes import TextRole, height_key, role_height_mm
 from fransys_model.kernel import Draft
 from fransys_model.layout import default_profile, default_sheet_format
 
@@ -30,8 +30,16 @@ def test_the_house_profile_holds_the_label_role() -> None:
 
 def test_the_room_rounds_the_font_size_up_to_a_whole_g() -> None:
     """A font size of exactly one module is 8 G; a hair over it is 9 G (one G is 0.3125 mm)."""
-    assert text_room_g(_MODEL, _MODULE * CAPITAL_RATIO, _SHEET) == 8
-    assert text_room_g(_MODEL, _MODULE * CAPITAL_RATIO + Decimal("0.001"), _SHEET) == 9
+    exact, hair = _MODULE * CAPITAL_RATIO, _MODULE * CAPITAL_RATIO + Decimal("0.001")
+    model = frozen_with_library(
+        Draft(),
+        extra_ems={
+            height_key(exact): exact / CAPITAL_RATIO,
+            height_key(hair): hair / CAPITAL_RATIO,
+        },
+    )
+    assert text_room_g(model, exact, _SHEET) == 8
+    assert text_room_g(model, hair, _SHEET) == 9
 
 
 def test_a_smaller_module_gives_more_g() -> None:

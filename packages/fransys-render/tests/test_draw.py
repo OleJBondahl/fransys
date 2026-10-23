@@ -1,6 +1,7 @@
 """`svg`: a hand-built Drawing drawn against symdef called in the plain way (the oracle)."""
 
 import dataclasses
+import re
 from decimal import Decimal
 from typing import Any
 
@@ -162,6 +163,33 @@ def test_a_bundle_draws_one_line_per_lane_at_the_library_pitch():
     assert three.count("<polyline") == 3
     assert 'points="0,2.5 25,2.5"' in three
     assert 'points="0,5 25,5"' in three
+
+
+def _polylines(text: str) -> list[str]:
+    return re.findall(r"<polyline[^>]*>", text)
+
+
+def test_three_one_lane_trunk_wires_at_the_pitch_draw_as_one_three_lane_trunk():
+    """RL-W1: a bundle is now one wire per conductor, drawn exactly as the lanes were."""
+    pitch = int(LIBRARY.grid.wire_pitch)
+    lines = [DrawnWire(f"w{k}", ((0, k * pitch), (80, k * pitch)), "trunk") for k in range(3)]
+    old = DrawnWire("w", ((0, 0), (80, 0)), "trunk", lanes=3)
+    new = svg(drawing(wires=lines), LIBRARY, STYLE)
+    assert _polylines(new) == _polylines(svg(drawing(wires=[old]), LIBRARY, STYLE))
+    assert len(_polylines(new)) == 3
+    g_mm = STYLE.module_mm / STYLE.g_per_module
+    assert pitch * g_mm == 2.5
+
+
+def test_a_lane_line_off_the_pitch_draws_elsewhere():
+    """The can-fail of the test above: the third line one G off the pitch changes the output."""
+    pitch = int(LIBRARY.grid.wire_pitch)
+    ys = (0, pitch, 2 * pitch + 1)
+    lines = [DrawnWire(f"w{k}", ((0, y), (80, y)), "trunk") for k, y in enumerate(ys)]
+    old = DrawnWire("w", ((0, 0), (80, 0)), "trunk", lanes=3)
+    assert _polylines(svg(drawing(wires=lines), LIBRARY, STYLE)) != _polylines(
+        svg(drawing(wires=[old]), LIBRARY, STYLE)
+    )
 
 
 def test_a_slanted_bundle_is_refused_naming_the_wire():

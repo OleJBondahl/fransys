@@ -47,6 +47,7 @@ def test_every_pin_of_every_placed_symbol_lies_on_the_wiring_grid(name: str) -> 
         flip_turn="R180",
         tag_stagger=True,
         label_gap=8,
+        parallel_pitch=48,
         driver_first=True,
         arrow_sides=("E", "W"),
     ).wiring_grid
@@ -79,6 +80,7 @@ def _row_extent(prob: PlacementProblem) -> tuple[int, int]:
         flip_turn="R180",
         tag_stagger=True,
         label_gap=8,
+        parallel_pitch=48,
         driver_first=True,
         arrow_sides=("E", "W"),
     )

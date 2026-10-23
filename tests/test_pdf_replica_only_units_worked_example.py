@@ -17,6 +17,7 @@ from _model_build_cover import layout_trigger_document
 from fransys._layout_core import draw_on_core, lay_out_on_core
 
 import electrical_symbols
+from electrical_symbols import LIBRARY
 from fransys_model.derive import document_row, document_sheets_of
 
 # `test_declared_dependencies.py`'s own pattern for importing a sibling root test module by
@@ -77,7 +78,7 @@ def pump_cabinet(s, *, name, extra_unitless_neighbor=False):
     return c, field
 
 
-def _build(*, name1="C1", name2="C2", extra_unitless_neighbor=False):
+def _build(*, name1="C1", name2="C2", extra_unitless_neighbor=False, drafts=()):
     parts = fransys_parts.load("demo_parts")
     d = fransys_author.Design(parts)
     d.project(**_PROJECT)
@@ -87,7 +88,7 @@ def _build(*, name1="C1", name2="C2", extra_unitless_neighbor=False):
         d.scope("pump1", at=er), name=name1, extra_unitless_neighbor=extra_unitless_neighbor
     )
     c2, _field2 = pump_cabinet(d.scope("pump2", at=er), name=name2)
-    result = fr.build(parts, d.draft(), layout_trigger_document())
+    result = fr.build(parts, d.draft(), layout_trigger_document(), *drafts)
     # An `ERROR` stops `build` before layout (decision 0028): no `layout.*` record to measure.
     assert [f.code for f in result.findings if f.severity is Severity.ERROR] == []
     return result.model, c1.id, c2.id
@@ -216,7 +217,9 @@ def test_a_units_own_documents_scope_their_lists_to_that_unit_directly():
     # The real end-to-end proof: building the unit-subject PCB_SCHEMATIC document's source
     # does not raise (the actual pre-fix crash), and its CONNECTOR_LIST holds exactly the
     # io-board unit's own board, nothing recursed in from anywhere else.
-    io_text = source(model, io_doc.id, {}, fransys_render.sheets(document_sheets_of(model)))
+    io_text = source(
+        model, io_doc.id, {}, fransys_render.sheets(document_sheets_of(model), LIBRARY)
+    )
     assert io_text.count("#heading(level: 2,") == _IO_BOARD_COUNT
     assert len(_connector_rows_for_page(model, document_row(model, io_doc.id))) == _IO_BOARD_COUNT
 
@@ -224,7 +227,7 @@ def test_a_units_own_documents_scope_their_lists_to_that_unit_directly():
     # CONNECTOR_LIST is empty -- the board belongs to the nested `demo-io-board` unit, and
     # direct membership never recurses into a nested unit's own items.
     cabinet_text = source(
-        model, cabinet_doc.id, {}, fransys_render.sheets(document_sheets_of(model))
+        model, cabinet_doc.id, {}, fransys_render.sheets(document_sheets_of(model), LIBRARY)
     )
     # Two level-2 headings: TERMINAL_LIST's own X2 section and CONNECTOR_LIST's one table, for
     # the cabinet's own plug `-WH1-P1` (pdf-0030). A regression to the recursive subtree would
@@ -262,7 +265,7 @@ def test_a_units_document_title_block_shows_its_current_revision_and_date_end_to
         notes=None,
     )
     model_with_doc = evolve(model, put=[doc], origin=_ORIGIN)
-    svg = fransys_render.sheets(document_sheets_of(model_with_doc))[
+    svg = fransys_render.sheets(document_sheets_of(model_with_doc), LIBRARY)[
         SheetKey(doc.id, PageKind.COVER, 0)
     ].svg
     values = re.findall(r'font-size="3\.4293"[^>]*>([^<]*)</text>', svg)  # the body-size cells
@@ -301,7 +304,7 @@ def test_the_worked_examples_system_document_has_no_top_level_cable_and_gives_th
     (info,) = [f for f in own_findings if f.code == "DOCUMENT_NO_TOP_LEVEL_CABLES"]
     assert info.severity is Severity.INFO
 
-    text = source(model, doc.id, {}, fransys_render.sheets(document_sheets_of(model)))
+    text = source(model, doc.id, {}, fransys_render.sheets(document_sheets_of(model), LIBRARY))
     assert '#par(text("No drawings."))' not in text
 
 
@@ -354,13 +357,13 @@ def test_adding_one_top_level_cable_draws_the_section_and_clears_the_info():
     )
 
     model, _ = lay_out_cables(model)  # as the facade does after the schematic layout
-    svgs = dict(render_cable_blocks(model))
+    svgs = dict(render_cable_blocks(model, LIBRARY))
 
     findings = check(model, svgs)
     own_findings = [f for f in findings if doc.id in f.subjects]
     assert [f for f in own_findings if f.code == "DOCUMENT_NO_TOP_LEVEL_CABLES"] == []
 
-    text = source(model, doc.id, svgs, fransys_render.sheets(document_sheets_of(model)))
+    text = source(model, doc.id, svgs, fransys_render.sheets(document_sheets_of(model), LIBRARY))
     # The cable is one drawn block, its SVG from `render.cable_blocks`.
     assert text.count("#image(bytes(") == 1
     assert '#par(text("No drawings."))' not in text
@@ -400,27 +403,24 @@ def test_the_cabinet_units_own_bom_holds_the_board_line_and_no_relay():
 # ruling, model-0041) -----------------------------------------------------------------------
 
 
-def test_a_board_unit_documents_schematic_section_now_draws_its_own_content():
+def test_a_board_unit_documents_schematic_section_now_draws_its_own_content(tmp_path):
     """The board-unit ruling (model-0041): `DEMO-PCB-IO` is the sole
     root item of its own nested unit `demo-io-board`, so its unit document's SCHEMATIC
     section is no longer `NO_DRAWINGS` -- it now has a real page,
     with `K1`'s own coil function on it, and no `ERROR` finding.
     """
-    model, _c1_id, _c2_id = _build()
-    io_unit_id = _unit_by_name_and_prefix(model, name="demo-io-board", prefix="pump1")
-    io_doc = Document(
-        id=make_id(Document, ("probe-doc", "board-schematic")),
-        key=("probe-doc", "board-schematic"),
-        preset=DocumentPreset.PCB_SCHEMATIC,
-        location=None,
-        item=None,
-        unit=io_unit_id,
-        add=(),
+    cover = tmp_path / "board.md"
+    cover.write_text("# Cover\n", encoding="utf-8")
+    plain, _c1_id, _c2_id = _build()
+    io_unit_id = _unit_by_name_and_prefix(plain, name="demo-io-board", prefix="pump1")
+    io_draft = fr.document(
+        fr.DocumentPreset.PCB_SCHEMATIC,
+        io_unit_id,
+        cover=cover,
         remove=(PageKind.CONNECTOR_LIST, PageKind.BOM),
-        cover="# Cover",
-        notes=None,
     )
-    model = evolve(model, put=[io_doc], origin=_ORIGIN)
+    model, _c1_id, _c2_id = _build(drafts=(io_draft,))
+    io_doc = next(d for d in documents(model).values() if d.unit == io_unit_id)
     record = document_row(model, io_doc.id)
 
     pages_found = schematic_pages(model, record, (PageKind.SCHEMATIC,))
@@ -447,5 +447,5 @@ def test_a_board_unit_documents_schematic_section_now_draws_its_own_content():
     ]
     assert coil, "K1's coil is actually on the board's own page"
 
-    text = source(model, io_doc.id, svgs, fransys_render.sheets(document_sheets_of(model)))
+    text = source(model, io_doc.id, svgs, fransys_render.sheets(document_sheets_of(model), LIBRARY))
     assert '#par(text("No drawings."))' not in text

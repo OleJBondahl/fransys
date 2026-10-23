@@ -110,9 +110,8 @@ def _port_map(
 def _part(drawing: Drawing, by: Mapping[str, Mapping[str, str]], library: Library) -> PagePart:
     ports = _port_map(drawing, by, library)
     dots = {(s.x, s.y) for s in drawing.symbols if s.key == _DOT}
-    trunks = {i: w.lanes for i, w in enumerate(drawing.wires) if w.lanes > 1}
     pitch = round(library.grid.wire_pitch)
-    graph = page_graph([w.points for w in drawing.wires], dots, set(ports.values()), trunks, pitch)
+    graph = page_graph([w.points for w in drawing.wires], dots, set(ports.values()), {}, pitch)
     nodes = {p for edge in graph.edges for p in edge}
     nodes.update(
         (s.x, s.y) for s in drawing.symbols if is_marker(s) and (s.x, s.y) in ports.values()
@@ -136,6 +135,41 @@ def _join(union: Union, pages: Mapping[Id[Page], PagePart]) -> None:
         for edge in part.graph.edges:
             a, b = tuple(edge)
             union.join((page, a), (page, b))
+
+
+def _ends_at(part: PagePart, x: int) -> dict[str, XY]:
+    """The end point of each net's wire that ends on column x: the lanes that reach a cut end."""
+    found: dict[str, XY] = {}
+    for wire in part.drawing.wires:
+        for at in (wire.points[0], wire.points[-1]):
+            if wire.net and at[0] == x:
+                found.setdefault(wire.net, at)
+    return found
+
+
+def _lanes(
+    union: Union,
+    pages: Mapping[Id[Page], PagePart],
+    markers: Mapping[str, tuple[Id[Page], XY] | None],
+    records: Mapping[str, LinkMarker],
+) -> None:
+    """Join, across each reference (a pair or a star), the lanes of a bundle that reach its markers.
+
+    One arrow stands for the bundle; its other lanes run on to the same cut end (RAIL-LANES), each
+    to be joined with the same net's end at the reference's other markers.
+    """
+    groups: dict[str, list[tuple[Id[Page], XY]]] = defaultdict(list)
+    for key, node in markers.items():
+        record = records.get(key)
+        if node is not None and record is not None and record.star is not StarKind.OFF:
+            star = record.star
+            head = {StarKind.REF: key, StarKind.BRANCH: record.partner.value}.get(star)
+            groups[head or min(key, record.partner.value)].append(node)
+    for nodes in groups.values():
+        first: dict[str, tuple[Id[Page], XY]] = {}
+        for page, at in nodes:
+            for net, end in _ends_at(pages[page], at[0]).items():
+                union.join(first.setdefault(net, (page, end)), (page, end))
 
 
 def _pair(
@@ -191,6 +225,7 @@ def drawn_netlist(
     records = {m.id.value: m for m in links}
     markers = _marker_nodes(pages)
     _pair(union, markers, records)
+    _lanes(union, pages, markers, records)
     placed = {v: (page, at) for page, p in pages.items() for v, at in p.ports.items()}
     owner = {port: sid for sid, pins in by.items() for port in pins.values()}
     found = Netlist(pages, union, placed, ids, markers, records, owner=owner)

@@ -6,6 +6,7 @@ lazy from fransys_model.vocab.core import Item, Unit
 from .cable_cores import cable_rows
 from .core_pairs import core_pair_word, drawn_pairs
 from .harness import cable_list_rows
+from .house_settings import word
 from .open_cores import open_core_rows
 from .rows_cores import CoreListRow
 
@@ -13,6 +14,7 @@ from .rows_cores import CoreListRow
 def _cable_core_rows(model: Model, cable: Id[Item], unit: Id[Unit] | None) -> list[CoreListRow]:
     """The rows of one cable by core number; a spare parked on a pin has it as `end_a`."""
     marks = drawn_pairs(model, cable)
+    spare = word(model, "spare")
     rows = [
         CoreListRow(
             cable=row.cable_designation,
@@ -33,7 +35,7 @@ def _cable_core_rows(model: Model, cable: Id[Item], unit: Id[Unit] | None) -> li
             pair=core_pair_word(marks, row.index),
             end_a=row.at_designation,
             end_b="",
-            note="spare" if row.spare else "",
+            note=spare if row.spare else "",
         )
         for row in open_core_rows(model, cable, unit=unit)
     ]

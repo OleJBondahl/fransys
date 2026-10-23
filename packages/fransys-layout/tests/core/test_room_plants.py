@@ -29,6 +29,7 @@ OPTIONS = core_options(
     flip_turn="R180",
     tag_stagger=True,
     label_gap=8,
+    parallel_pitch=48,
     driver_first=True,
     arrow_sides=("E", "W"),
 )
@@ -96,7 +97,8 @@ def test_crossed_fan_pins_hang_lanes_plus_levels_grid_steps_below_the_trunk() ->
     moved = [j for j in range(3) if perm[j] != j]
     spans = [(min(xs[j], xs[perm[j]]), max(xs[j], xs[perm[j]])) for j in moved]
     n_levels = max(levels(spans, range(len(spans)))) + 1
-    (trunk,) = [w for pg in routes.pages for w in pg.wires if w.kind == "trunk" and w.net == "f:bL"]
+    ws = [w for pg in routes.pages for w in pg.wires if w.kind == "trunk"]
+    (trunk,) = [w for w in ws if w.lane == 0 and w.net == "L1"]
     clearance = min(pins[("K2", f"n{p}")][1] for p in perm) - trunk.points[0][1]
     assert clearance == G * (3 + n_levels)
 

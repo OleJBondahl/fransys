@@ -11,7 +11,7 @@ from fransys_model.derive import (
     harness_cables_for,
 )
 
-from ._sizes import RULE
+from ._sizes import rule_of
 from ._typst import literal
 
 if TYPE_CHECKING:
@@ -32,4 +32,8 @@ def contents_page(model: Model, record: DocumentRow, pages: tuple[PageKind, ...]
     for row in contents_rows(cables):
         values = column_values(row, CONTENTS_COLUMNS)
         cells.extend(f"text({literal(cell_text(value))})" for value in values)
-    return f"#table(columns: {len(CONTENTS_LABELS)}, stroke: {RULE}, " + ", ".join(cells) + ")"
+    return (
+        f"#table(columns: {len(CONTENTS_LABELS)}, stroke: {rule_of(model)}, "
+        + ", ".join(cells)
+        + ")"
+    )

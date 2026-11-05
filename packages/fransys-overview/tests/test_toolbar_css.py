@@ -1,7 +1,6 @@
 """The Features panel opens below the toolbar, never over it (overview-0006).
 
-The page is checked in a browser outside the gate (`internal/scripts/overview_smoke.py`); this
-test holds the CSS rule that keeps the panel clear: it hangs from the header's bottom edge.
+This test holds the CSS rule that keeps the panel clear: it hangs from the header's bottom edge.
 """
 
 import re

@@ -302,6 +302,28 @@ def test_an_unrecognised_signal_type_lists_the_valid_ones(parts):
         k1.fn("coil").plc("nonsense", "SIG")
 
 
+def test_a_float_scale_bound_is_refused(parts):
+    d = Design(parts)
+    k1 = d.item("TEST-RLY-2CO", tag="K1")
+    bad_eng: Any = (0.0, 10.0)
+    with pytest.raises(AuthorError, match="float"):
+        k1.fn("coil").scale("m", raw=(0, 100), eng=bad_eng)
+
+
+def test_str_or_decimal_scale_bounds_are_accepted(parts):
+    d = Design(parts)
+    k1 = d.item("TEST-RLY-2CO", tag="K1")
+    k1.fn("coil").scale("m", raw=(0, 100), eng=("0", Decimal(10)))
+
+
+def test_a_second_scale_on_one_channel_says_to_call_it_once(parts):
+    d = Design(parts)
+    k1 = d.item("TEST-RLY-2CO", tag="K1")
+    k1.fn("coil").scale("m", raw=(0, 100), eng=("0", "10"))
+    with pytest.raises(AuthorError, match=r"Call \.scale once per channel"):
+        k1.fn("coil").scale("m", raw=(0, 100), eng=("0", "20"))
+
+
 def test_a_known_signal_type_is_not_an_error(parts):
     d = Design(parts)
     k1 = d.item("TEST-RLY-2CO", tag="K1")

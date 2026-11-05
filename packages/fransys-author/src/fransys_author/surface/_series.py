@@ -4,6 +4,7 @@ from functools import cached_property
 from typing import TYPE_CHECKING
 lazy from collections.abc import Callable
 
+from fransys_author._draft_view import draft_view
 from fransys_author._origin import caller_origin
 from fransys_author.errors import AuthorError
 from fransys_author.handles import Port, Terminal
@@ -28,6 +29,7 @@ from fransys_author.surface._supply_rails import _Rails
 from fransys_author.surface._throws import turn_throws
 from fransys_author.surface._unit_strip import is_unit_strip
 from fransys_author.surface._wire import PoleWire, RowWire, WireArg, read_wire
+from fransys_model.derive import crosses_unit, item_of_port
 
 if TYPE_CHECKING:
     from fransys_author.surface._potential import Hop, PortId, Walked, Wire
@@ -81,6 +83,19 @@ def _width(design: Design, elements: tuple[object, ...]) -> int:
     raise AuthorError(msg)
 
 
+def _faces_other_unit(design: Design, strip: Terminal, around: tuple[object, ...]) -> bool:
+    """Whether `strip`, the end of a series, is wired to a pin or terminal of another unit than its own (R1507)."""
+    before, after = around
+    other = after if before is None else before if after is None else None
+    if isinstance(other, Terminal):
+        item = other.id
+    elif isinstance(other, Port):
+        item = item_of_port(draft_view(design._engine._design._draft), other.id)
+    else:
+        return False
+    return crosses_unit(draft_view(design._engine._design._draft), strip.id, item)
+
+
 def _entered(design: Design, found: list[Ends], element: object, around: tuple[object, ...]) -> list[Ends]:
     """A strip's hop lands on the side that faces the unit holding the other end (R1507).
 
@@ -91,6 +106,8 @@ def _entered(design: Design, found: list[Ends], element: object, around: tuple[o
         return found
     before, after = around
     flipped = [Ends(e.load, e.line, e.pe) for e in found]
+    if isinstance(element, Terminal) and _faces_other_unit(design, element, around):
+        return found if before is None else flipped
     if isinstance(element, TerminalStrip | Terminal) and is_unit_strip(element, design):
         if before is None and not isinstance(after, SeriesBridge):
             return found

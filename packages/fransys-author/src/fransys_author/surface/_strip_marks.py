@@ -62,7 +62,7 @@ def _ranges(tag: str, count: int | None, bridged: Bridged) -> tuple[tuple[int, i
 def _one_range(tag: str, count: int, pair: tuple[int, int]) -> tuple[int, int]:
     first, last = pair
     if not is_range(first, last, count):
-        msg = f"{tag}: bridged={pair} needs 1 <= first < last <= {count}"
+        msg = f"{tag}: bridged={pair} needs 1 <= first < last <= {count}: a bridge joins neighbours, so number the new terminal next to its partner"
         raise AuthorError(msg)
     return first, last
 

@@ -98,9 +98,9 @@ def test_demo_library_record_counts_and_keys():
     from fransys_model.vocab import parts
 
     model = freeze(fransys_parts.load_path(DEMO))
-    assert len(parts(model)) == 96
-    assert len(function_templates(model)) == 251
-    assert len(port_templates(model)) == 510
+    assert len(parts(model)) == 97
+    assert len(function_templates(model)) == 255
+    assert len(port_templates(model)) == 515
     assert len(internal_links(model)) == 96
     assert len(model.tables["layout.symbol_choice"]) == 67  # Ruling 91: DEMO-LAMP-24 adds one, was 64; the two twin terminals (R1266) add two, was 65
 

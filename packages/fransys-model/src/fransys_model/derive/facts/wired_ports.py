@@ -7,7 +7,7 @@ from fransys_model.derive.facts.roles import function_role
 from fransys_model.derive.indexes import build_indexes
 from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, digest_cached
 from fransys_model.vocab.facets.cable import OpenCoreFacet
-from fransys_model.vocab.tables import HasTables, conductors, facets_of, functions, ports
+from fransys_model.vocab.tables import HasTables, conductors, facets_of, functions, ports, unused_ports
 lazy from fransys_model.vocab.core import Function, Port
 
 _TWO_PORTS = 2
@@ -30,8 +30,8 @@ def wired_ports(model: HasTables) -> frozenset[Id[Port]]:
 
 @digest_cached(DIGEST_CACHE_SIZE)
 def half_connected(model: Model) -> tuple[tuple[Function, Port], ...]:
-    """Each through function of two ports used at one, with its open port, in port order."""
-    used = wired_ports(model) | mated_ports(model)
+    """Each through function of two ports used at one, with its open port, in port order; a port declared unused counts as used."""
+    used = wired_ports(model) | mated_ports(model) | {record.port for record in unused_ports(model).values()}
     found = []
     for function_id, held in build_indexes(model).ports_by_function.items():
         if len(held) != _TWO_PORTS or not function_role(model, function_id).through:

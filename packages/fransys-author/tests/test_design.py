@@ -31,6 +31,7 @@ from fransys_model.vocab import (
     PlcRequestFacet,
     PortBoundary,
     Project,
+    ScalingFacet,
     SignalType,
     WireFacet,
 )
@@ -599,17 +600,19 @@ def test_nested_scope_extends_the_prefix(parts):
     assert k.key == ("p1", "sub", "run")
 
 
-def test_plc_returns_the_function_for_chaining(parts):
+def test_plc_and_scale_return_the_function_for_chaining(parts):
     d = Design(parts)
     k1 = d.item("TEST-RLY-2CO", tag="K1")
     coil = k1.fn("coil")
-    result = coil.plc("do", "PUMP1_RUN", priority=5)
+    result = coil.plc("do", "PUMP1_RUN", priority=5).scale("m", raw=(0, 100), eng=("0", "10"))
     assert isinstance(result, Fn)
     plc = _one(d.draft(), PlcRequestFacet)
+    scaling = _one(d.draft(), ScalingFacet)
     assert plc.signal_name == "PUMP1_RUN"
     assert plc.signal is SignalType.DO
     assert plc.priority == 5
     assert plc.subject == coil.id
+    assert scaling.eng_max == Decimal(10)
 
 
 def test_draft_returns_only_the_design_s_own_records_not_the_parts(parts):

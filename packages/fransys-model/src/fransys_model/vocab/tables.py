@@ -18,7 +18,7 @@ from .project import Project
 from .revision import Revision
 from .supply_system import SupplySystem
 from .templates import FunctionTemplate, InternalLink, Part, PartLibrary, PortTemplate
-from .units import Boundary, UnusedBoundary
+from .units import Boundary, UnusedBoundary, UnusedPort
 
 
 class HasTables(Protocol):
@@ -213,6 +213,11 @@ def supply_of_potential(model: HasTables, potential: str) -> SupplySystem | None
 def unused_boundaries(model: HasTables) -> frozendict[Id[UnusedBoundary], UnusedBoundary]:
     """Return every `UnusedBoundary` in `model`, by id."""
     return table_of(model, UnusedBoundary)
+
+
+def unused_ports(model: HasTables) -> frozendict[Id[UnusedPort], UnusedPort]:
+    """Return every `UnusedPort` in `model`, by id."""
+    return table_of(model, UnusedPort)
 
 
 def aspect_nodes(model: HasTables) -> frozendict[Id[AspectNode], AspectNode]:

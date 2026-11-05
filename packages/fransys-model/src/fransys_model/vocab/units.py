@@ -2,7 +2,7 @@
 
 from fransys_model.kernel import AuthoringKey, Id, Value, record
 
-from .core import Function, Unit
+from .core import Function, Port, Unit
 
 
 @record(kind="boundary")
@@ -35,4 +35,17 @@ class UnusedBoundary:
     id: Id[UnusedBoundary]
     key: AuthoringKey
     function: Id[Function]
+    ext: frozendict[str, Value] = frozendict()
+
+
+@record(kind="unused_port")
+class UnusedPort:
+    """A declaration that one port is left open on purpose.
+
+    Example: a load's minus pin left open, declared via `d.unused(h1.minus)`.
+    """
+
+    id: Id[UnusedPort]
+    key: AuthoringKey
+    port: Id[Port]
     ext: frozendict[str, Value] = frozendict()

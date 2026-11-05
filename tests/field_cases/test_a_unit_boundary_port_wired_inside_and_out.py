@@ -64,6 +64,12 @@ def _drawing(svg: str) -> tuple[list[str], list[str]]:
     return sorted(wires), sorted(re.findall(r">([^<>]+)</text>", svg))
 
 
+def _connections(wires: list[str]) -> set[tuple[tuple[str, ...], ...]]:
+    """The connections a page draws: each wire's pin it leaves and the pin column it enters, not its geometry."""
+    ends = [re.findall(r"[-\d.]+,[-\d.]+", w) for w in wires]
+    return {((e[0],), (e[-1].split(",")[0],)) for e in ends}
+
+
 def _alone() -> fr.Design:
     d = fr.design("demo_parts")
     d.add(_supply_cab, "U1", place=None)
@@ -88,5 +94,12 @@ def test_a_boundary_port_wired_inside_and_out_draws_its_own_wires_as_alone_and_a
     wires, texts = _drawing(inside)
     (unit_page,) = (p for p in pages if "-H2" in p)
     unit_wires, unit_texts = _drawing(unit_page)
-    assert unit_wires == wires
+    assert _connections(unit_wires) == _connections(wires), "the unit page draws the same connections as the page drawn alone"
     assert sorted(unit_texts) == sorted([*texts, "→ -C1-H1:1", "→ -C1-H1:2"]), "one stub a boundary pin the container continues, at T1:+ and T1:-"
+
+
+def test_every_wire_point_on_the_unit_page_lies_on_the_wiring_grid() -> None:
+    (unit_page,) = (p for p in _svgs(_design(), "demo-container") if "-H2" in p)
+    points = [float(v) for pl in re.findall(r'<polyline points="([^"]*)"', unit_page) for v in re.split(r"[ ,]+", pl.strip())]
+    assert points, "the unit page draws wire points"
+    assert all(abs(v / 2.5 - round(v / 2.5)) < 1e-6 for v in points), points

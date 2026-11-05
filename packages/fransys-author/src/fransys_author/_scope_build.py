@@ -28,6 +28,11 @@ if TYPE_CHECKING:
 _MINIMUM_BRIDGE_TERMINALS = 2
 
 
+def _joint(terminal: Terminal) -> Port:
+    """The port a jumper sits on: the internal one, else the only port of a part-less external terminal."""
+    return terminal.inner if len(terminal.function.ports) > 1 else terminal.outer  # a part-less external terminal has the outer port only
+
+
 class BuildScope:
     """The build methods of `Scope`: items, strips, cables, harnesses and their wires."""
 
@@ -246,8 +251,8 @@ class BuildScope:
             conductor = Conductor(
                 id=make_id(Conductor, key),
                 key=key,
-                a=a.inner.id,
-                b=b.inner.id,
+                a=_joint(a).id,
+                b=_joint(b).id,
                 kind=ConductorKind.JUMPER,
                 carrier=None,
             )

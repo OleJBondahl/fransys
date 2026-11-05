@@ -26,6 +26,14 @@ A pin, or a tuple of one device's pins, is a series element anywhere. First, its
 
 `fn.pins` is the function's pins as a typed tuple in the connector list's order (`1, 2, 10, A1`): `a.pins[i]` is the i-th pin from 0, and a loop over it types as `fr.Pin`.
 
+## `Fn.scale`
+
+| keyword | default | effect | example |
+|---|---|---|---|
+| [`unit`](authoring.md#request-a-plc-channel) | required | The engineering unit of the scaled value. It prints in the Wago rack XML only, not in the PLC list. | `ai.scale("bar", raw=(0, 27648), eng=("0", "10"))` |
+| [`raw`](authoring.md#request-a-plc-channel) | required | The raw range as two integers. | `raw=(0, 27648)` |
+| [`eng`](authoring.md#request-a-plc-channel) | required | The engineering range as two strings or Decimals. Floats are refused. | `eng=("0", "10")` |
+
 ## `TerminalStrip.run`
 
 | keyword | default | effect | example |
@@ -33,7 +41,7 @@ A pin, or a tuple of one device's pins, is a series element anywhere. First, its
 | [`label`](authoring.md#bridges) | required | The run's label. It prints on each terminal of the run. A run labelled `"PE"` takes the strip's `pe=` part. | `x1.run("24V", 4)` |
 | [`count`](authoring.md#bridges) | `None` | The number of terminals in the run. With none, the run is bridged and grows as it is used. | `x1.run("24V", 4)` |
 | [`bridged`](authoring.md#bridges) | `False` | Bridges the run's terminals with jumpers: `True` bridges all, `(first, last)` bridges a range. | `x1.run("24V", 4, bridged=True)` |
-| [`rail`](authoring.md#power-rails) | `False` | Declares the bridged run a power rail: its terminals draw as the rail's power symbol, not as terminals. A run of one terminal is allowed. | `x1.run("24V", 4, bridged=True, rail=True)` |
+| [`rail`](authoring.md#power-rails) | `False` | Declares the bridged run a power rail: its terminals draw as the rail's power symbol, not as terminals. A run of one terminal is allowed. A fused terminal in the group is `RAIL_ON_FUSED`: flag the supply side of the fuse. | `x1.run("24V", 4, bridged=True, rail=True)` |
 | [`interface`](units.md#the-interface) | `False` | Marks the run's terminals as the unit's boundary: `True` marks all, a tuple of terminal numbers marks those. | `x1.run("24V", 4, interface=True)` |
 | [`unused`](units.md#the-interface) | `False` | Marks the run's terminals as unused: `True` marks all, a tuple marks those. | `x1.run("SPARE", 2, unused=True)` |
 

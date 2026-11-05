@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, cast
 
 from fransys_model.kernel import Id, make_id
 from fransys_model.layout import Profile as ModelProfile
-from fransys_model.vocab import Aspect, AspectNode, Boundary, Revision, UnusedBoundary
+from fransys_model.vocab import Aspect, AspectNode, Boundary, Revision, UnusedBoundary, UnusedPort
 from fransys_model.vocab import Unit as ModelUnit
 lazy from fransys_model.vocab import Operating
 
@@ -12,7 +12,7 @@ from ._design_support import _PROFILE_DEFAULTS, _PROFILE_REQUIRED, _as_function,
 from ._keys import scoped, spliced
 from ._origin import caller_origin
 from .errors import AuthorError
-from .handles import Fn, Group, Item, Location, Terminal
+from .handles import Fn, Group, Item, Location, Port, Terminal
 lazy from ._decimal import ProfileNumber
 
 if TYPE_CHECKING:
@@ -206,9 +206,30 @@ class UnitScope:
         `target` follows the same rule as `boundary()`.
 
         Raises:
-            AuthorError: `target` is ambiguous.
+            AuthorError: `target` is ambiguous, or this scope already declared it unused.
         """
         fn = _as_function(target)
         key = scoped(self._prefix, "unused_boundary", spliced(fn.key))
         record = UnusedBoundary(id=make_id(UnusedBoundary, key), key=key, function=fn.id)
-        self._design._add(record, caller_origin())
+        self._declare_once(record, "/".join(fn.key[:-2]))
+
+    def unused_port(self: Scope, port: Port) -> None:
+        """Declare `port` left open on purpose, so `FUNCTION_HALF_CONNECTED` stays silent for it.
+
+        Raises:
+            AuthorError: this scope already declared it unused.
+        """
+        key = scoped(self._prefix, "unused_port", spliced(port.key))
+        self._declare_once(UnusedPort(id=make_id(UnusedPort, key), key=key, port=port.id), "/".join(port.key))
+
+    def _declare_once(self: Scope, record: UnusedBoundary | UnusedPort, label: str) -> None:
+        """Add `record`; a second one for the same point raises, naming both call lines."""
+        origin = caller_origin()
+        first = self._design._draft.origin_of(record.id)
+        if first is not None:
+            msg = (
+                f"UNUSED_LISTED_TWICE: {label} is declared unused twice, first at {first.file}:{first.line}, "
+                f"again at {origin.file}:{origin.line}; list each point once in d.unused(...)"
+            )
+            raise AuthorError(msg)
+        self._design._add(record, origin)

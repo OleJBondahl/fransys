@@ -52,7 +52,6 @@ REMOVED: tuple[Removed, ...] = (
     *_rows("Layout", "draw_in", "removed-draw-in", "removed; d.series and group= place it"),
     *_rows("Layout", "pins_below", "removed-pins-below", "removed on purpose: the engine draws the box; hide_unused_pins stays"),
     *_rows("Layout", "side", "removed-side", "removed on purpose: the side hint was inert (R1486)"),
-    *_rows("Fn", "scale", "removed-fn-scale", "removed: a per-instance engineering range is not modelled in 0.22; it returns in 0.22.2 (R1753)"),
     *_rows("Fn", "limits", "removed-fn-limits", "removed on purpose: unit-boundary facts (R1490)"),
     *_rows("Terminal", "limits", "removed-fn-limits", "removed on purpose: unit-boundary facts (R1490)"),
     *_rows("Layout", "sheet", "removed-profile-numbers", "removed on purpose; A3 or A2 landscape via fr.settings(paper=...)"),

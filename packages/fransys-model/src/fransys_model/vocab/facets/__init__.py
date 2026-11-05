@@ -14,6 +14,7 @@ from .pcb import FootprintFacet, PcbFacet
 from .plc import PlcBindingFacet, PlcChannelFacet, PlcRequestFacet
 from .rating import BlockFacet, OperatingFacet, PartRatingFacet, RatingFacet
 from .reserved_designation import ReservedDesignationFacet
+from .scaling import ScalingFacet
 from .supply import SupplyFacet
 from .terminal import TerminalFacet
 from .wire import WireFacet
@@ -42,6 +43,7 @@ __all__ = [
     "RatingFacet",
     "ReservedDesignationFacet",
     "RowSpec",
+    "ScalingFacet",
     "SupplyFacet",
     "TerminalFacet",
     "WireFacet",

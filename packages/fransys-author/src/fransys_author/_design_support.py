@@ -92,4 +92,5 @@ def _name_clash_message(record: Record, first: Origin | None = None, again: Orig
     if first is not None and again is not None:
         where = f"first at {first.file}:{first.line}, again at {again.file}:{again.line}"
         return f"'{label}' was already added to this design ({where}); keep the handle from the first call"
-    return f"'{label}' already names a different {kind} record in this scope; use a different name= or tag="
+    fix = "Call .scale once per channel" if kind == "facet.scaling" else "use a different name= or tag="
+    return f"'{label}' already names a different {kind} record in this scope; {fix}"

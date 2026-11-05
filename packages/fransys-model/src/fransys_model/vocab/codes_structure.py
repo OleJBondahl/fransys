@@ -39,8 +39,9 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         who="consumer",
         cause="A unit's boundary function is not connected across the unit nor declared unused.",
         fix=(
-            "Wire each boundary function across the unit, or declare it unused on purpose. "
-            'Write: d.device("X2", "DEMO-CONN-2P", interface=True, unused=True)'
+            "Wire each boundary function across the unit, or declare it unused on purpose: "
+            'inside the unit for its own fact, d.device("X2", "DEMO-CONN-2P", interface=True, unused=True); '
+            "in the design that adds it for a point it leaves to another carrier. Write: d.unused(pc.x3[3], pc.x4_1)"
         ),
         page="findings-validators",
     ),
@@ -193,6 +194,36 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         page="findings-validators",
     ),
     CodeInfo(
+        code="SCALING_RANGE_INVALID",
+        severity=Severity.ERROR,
+        stage="validators",
+        who="consumer",
+        cause="A channel's engineering or raw range has its low value at or above its high value.",
+        fix='Write the low value first, below the high value. Write: fn.plc(fr.AI, "level").scale("%", raw=(4, 20), eng=("0", "100"))',
+        page="findings-validators",
+    ),
+    CodeInfo(
+        code="SCALING_NOT_ANALOGUE",
+        severity=Severity.ERROR,
+        stage="validators",
+        who="consumer",
+        cause="A function with an engineering range has no PLC request, or requests a DI, DO or RELAY channel.",
+        fix=(
+            "Scale only an analogue channel: request it with fr.AI, fr.AO or fr.SignalType.RTD. "
+            'Write: fn.plc(fr.AI, "level").scale("%", raw=(4, 20), eng=("0", "100"))'
+        ),
+        page="findings-validators",
+    ),
+    CodeInfo(
+        code="SCALING_UNIT_EMPTY",
+        severity=Severity.ERROR,
+        stage="validators",
+        who="consumer",
+        cause="The unit of a channel's engineering range is blank or has several lines.",
+        fix='Name the unit, e.g. "%" or "bar". Write: fn.plc(fr.AI, "level").scale("%", raw=(4, 20), eng=("0", "100"))',
+        page="findings-validators",
+    ),
+    CodeInfo(
         code="TERMINAL_MORE_THAN_TWO_PINS",
         severity=Severity.ERROR,
         stage="validators",
@@ -226,6 +257,24 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         who="consumer",
         cause="A unit's parent chain loops back on itself.",
         fix='Nest units as a tree, adding each unit once. Write: d.add(cabinet, "U1")',
+        page="findings-validators",
+    ),
+    CodeInfo(
+        code="UNUSED_NOT_BOUNDARY",
+        severity=Severity.ERROR,
+        stage="validators",
+        who="consumer",
+        cause="A point named in d.unused is no boundary point of its nested unit.",
+        fix="List in d.unused only the boundary points a nested unit offers; remove this one. Write: d.unused(pc.x3[3])",
+        page="findings-validators",
+    ),
+    CodeInfo(
+        code="UNUSED_POINT_WIRED",
+        severity=Severity.ERROR,
+        stage="validators",
+        who="consumer",
+        cause="A boundary point or a port named in d.unused is wired.",
+        fix="Remove the point or port from d.unused, or the wire on it. Write: d.unused(pc.x3[4], h1.minus) with only unwired points",
         page="findings-validators",
     ),
     CodeInfo(

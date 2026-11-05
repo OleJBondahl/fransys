@@ -154,13 +154,17 @@ def test_a_group_with_no_potential_is_an_error() -> None:
 
 
 def test_a_rail_group_on_a_fused_terminal_is_an_error() -> None:
-    """Can-fail: removing the fused branch leaves the finding out."""
+    """Can-fail: removing the fused branch leaves the finding out; its text names the strip tag, not a file line (N7)."""
     d = fr.design("demo_parts")
     with d.function("F", "Group"):
         live = d.terminal_strip("X1", "DEMO-TB-FUSE-2.5", 2).run("L", 2, bridged=True, rail=True)
         zero = d.terminal_strip("Z1", "DEMO-TB-2.5", 2).run("L", 2, bridged=True, rail=True)
         d.dc_supply("S", plus=live[1], minus=zero[1], voltage=24)
-    expect_codes(fr.build(d), "RAIL_ON_FUSED")
+    result = fr.build(d)
+    expect_codes(result, "RAIL_ON_FUSED")
+    (text,) = [f.message for f in result.findings if f.code == "RAIL_ON_FUSED"]
+    assert "strip -X1" in text
+    assert ".py:" not in text
 
 
 def test_a_group_on_two_potentials_has_none_and_is_an_error() -> None:

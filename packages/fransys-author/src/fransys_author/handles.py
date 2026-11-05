@@ -5,6 +5,7 @@ Later calls take handles, never a designation string: no code parses a designati
 
 from dataclasses import dataclass, field, replace
 from typing import TYPE_CHECKING, Any, Protocol
+lazy from decimal import Decimal
 
 from fransys_model.derive import cores_past_product
 from fransys_model.kernel import AuthoringKey, Id, make_id, natural_join
@@ -18,6 +19,7 @@ from fransys_model.vocab import (
     OpenCoreFacet,
     PlcRequestFacet,
     PortBoundary,
+    ScalingFacet,
     SignalType,
     TerminalFacet,
 )
@@ -32,6 +34,7 @@ from fransys_model.vocab import Unit as ModelUnit
 lazy from fransys_author.surface._removed import refuse
 lazy from fransys_model.elecdef import PinRole
 
+from ._decimal import as_decimal
 from ._enums import member
 from ._hint_writes import _write_placement
 from ._keys import scoped
@@ -135,6 +138,25 @@ class Fn:
             signal=signal_type,
             signal_name=signal_name,
             priority=priority,
+        )
+        self._recorder._add(facet, caller_origin())
+        return self
+
+    def scale(self, unit: str, *, raw: tuple[int, int], eng: tuple[str | Decimal, str | Decimal]) -> Fn:
+        """Engineering-unit scaling for this function; returns `self`.
+
+        `eng` holds `str` or `Decimal`, never `float` (an `AuthorError`).
+        """
+        key = scoped(self.key, "scaling")
+        facet = ScalingFacet(
+            id=make_id(ScalingFacet, key),
+            key=key,
+            subject=self.id,
+            unit=unit,
+            raw_min=raw[0],
+            raw_max=raw[1],
+            eng_min=as_decimal(eng[0], field="eng"),
+            eng_max=as_decimal(eng[1], field="eng"),
         )
         self._recorder._add(facet, caller_origin())
         return self
@@ -415,14 +437,18 @@ def _port_by_marking(ports: Sequence[Port], marking: str, *, owner: str) -> Port
 
 def _side_of(terminal: Terminal, boundary: PortBoundary) -> Port:
     """The port of `terminal` with `role`, remembering the terminal it is a side of."""
-    side = replace(_port_by_role(terminal.function.ports, boundary))
+    side = replace(_port_by_role(terminal, boundary))
     object.__setattr__(side, "_terminal", terminal)  # frozen, init=False field
     return side
 
 
-def _port_by_role(ports: Sequence[Port], boundary: PortBoundary) -> Port:
-    matches = [port for port in ports if port.boundary is boundary]
+def _port_by_role(terminal: Terminal, boundary: PortBoundary) -> Port:
+    matches = [port for port in terminal.function.ports if port.boundary is boundary]
     if not matches:
-        msg = f"this terminal has no {boundary.value} port"
+        strip, number = "/".join(terminal.key[:-2]), terminal.key[-1]
+        msg = (
+            f"strip {strip}, terminal {number}: no {boundary.value} port, as a part-less strip offers only .outer; "
+            f"write {strip}[{number}].outer, or give the strip a part for both sides"
+        )
         raise AuthorError(msg)
     return matches[0]

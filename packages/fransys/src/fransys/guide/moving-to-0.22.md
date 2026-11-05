@@ -56,12 +56,11 @@ Each row is a name that 0.22 removed. A removed attribute raises an error that n
 | <a id="removed-font-heights"></a>`[font.heights]` in the settings file | Removed on purpose: Fransys decides (R1458); delete the table |
 | <a id="removed-text-heights"></a>`text_height_mm`, `min_text_height_mm`, `TEXT_TOO_SMALL` | Removed on purpose: Fransys decides (R1458); text heights are fixed library data |
 | <a id="removed-document-add"></a>`fr.document(..., add=, remove=)`, presets `HARNESS_DRAWING`, `PCB_SCHEMATIC` | `fr.document(preset, subject, cover=, logo=, notice=)`; the preset sets the pages |
-| <a id="removed-add-unused"></a>`d.add(defn, tag, unused=(...))` | `d.device(tag, part, unused=True)`: declare open pins where the device is made |
+| <a id="removed-add-unused"></a>`d.add(defn, tag, unused=(...))` | `d.device(tag, part, unused=True)` for the unit's own open pins; `d.unused(pc.x3[3], pc.x4_1)` in the carrier for a unit's boundary points it leaves open (0.22.3) |
 | <a id="removed-port-role"></a>`Port.role` (`PortRole`) | `Port.boundary` (`fr.derive.PortBoundary`), and new `Port.pin_role` |
 | <a id="removed-cable-core-fn"></a>`Cable.core(which, a, fn)` with a PE-bar function | Use a PE terminal strip: `W1.core(GNYE, x1[1].outer)` |
 | <a id="no-change-drawn-reading-units"></a>`DrawnReading.units` | No change: the name never existed at either version; the unit is `DrawnPageReading.unit` per page |
 | <a id="removed-fn-limits"></a>`Fn.limits(rating=, operating=)`, `Terminal.limits(...)` | Removed on purpose: Fransys decides (R1490) |
-| <a id="removed-fn-scale"></a>`Fn.scale(unit, raw=, eng=)`, `fr.derive.ChannelScaling` | Removed in 0.22.0 and 0.22.1. It returns in 0.22.2 as `.plc(...).scale(unit, raw=, eng=)` (PLC-SCALING-RETURN, R1753). The part file holds only the part's own range. `Fn.plc(signal, name, priority)` stays |
 | <a id="removed-mates"></a>Mated connector, PCB board document, harness line | Refused with ERROR `MATES_DISABLED` (R1216); draw the connection as a cable or wires |
 | <a id="removed-terminal-pins"></a>Terminal part with more than two pins | Refused with ERROR `TERMINAL_MORE_THAN_TWO_PINS`; use a two-pin part: `d.terminal_strip("X1", "DEMO-TB-2.5", 2)` |
 | <a id="removed-settings-tables"></a>`[colours]`, `[grid]`, `[layout]`, `[profile]`, `[pdf]`, `[look]`, `[lines]`, `[dash]`, `[reference]`, `[frame]`, `[stub]`, `[wire_label]`, `[harness]`, `[title_block]`, `[revision_table]`, `[revision]`, `[designation]` | Removed on purpose: Fransys decides (R1458); a `SettingsError` names the table; delete it |
@@ -72,3 +71,13 @@ Each row is a name that 0.22 removed. A removed attribute raises an error that n
 
 - `python -m fransys migrate-parts DIR` rewrites a schema 1 parts library to the 0.22 format (decision 0474).
 - A removed 0.22 name raises an error that names the new spelling and the row above, from one table that is deleted at the 0.23 tag (decision 0475).
+
+## New in 0.22.3
+
+- `d.unused(pc.x3[3], pc.x4_1)` declares a nested unit's boundary points, or a port, that the design leaves open on purpose (decision 0481). The unit's own `unused=` stays the unit's fact. It reverses the `add(unused=)` part of the 0.22 removal.
+- Two ERROR codes check it: `UNUSED_NOT_BOUNDARY` and `UNUSED_POINT_WIRED`; a point listed twice raises an `AuthorError`.
+
+## New in 0.22.2
+
+- The per-channel engineering range returns as `.plc(...).scale(unit, raw=, eng=)`, written to the Wago rack XML exactly as in 0.21.2 (decision model-0425).
+- Three ERROR codes check it: `SCALING_RANGE_INVALID`, `SCALING_NOT_ANALOGUE` and `SCALING_UNIT_EMPTY`.

@@ -117,16 +117,39 @@ def _block_lines(items: list[str], kind: object) -> list[str]:
     raise PartTextError(msg)
 
 
-def _split_tail(body: str, name: str) -> tuple[str, str]:
+def _split_tail(body: str) -> tuple[str, str]:
     """The table text of a segment body and the blank and comment lines after its last key."""
     lines = body.splitlines(keepends=True)
     while lines and (not lines[-1].strip() or lines[-1].lstrip().startswith("#")):
         lines.pop()  # these belong to the next table
     content = "".join(lines)
-    if "#" in content:
-        msg = f"{name} holds a comment: move it out, then migrate"
-        raise PartTextError(msg)
     return content.rstrip("\n"), body[len(content) :]
+
+
+def _parses(text: str) -> bool:
+    try:
+        tomllib.loads(text)
+    except tomllib.TOMLDecodeError:
+        return False
+    return True
+
+
+def _comment_of(line: str, name: str) -> list[str]:
+    """The comment on one line of a table's text: a comment line, or the text from the first `#` that ends a whole key line."""
+    if line.lstrip().startswith("#"):
+        return [line.strip()]
+    for index, char in enumerate(line):
+        if char == "#" and _parses(line[:index]):
+            return [line[index:].strip()]
+    if _parses(line):  # every `#` is inside a quoted value
+        return []
+    msg = f"{name} holds a comment after a value spread over several lines: move it to a line of its own, then migrate"
+    raise PartTextError(msg)
+
+
+def _comments(content: str, name: str) -> list[str]:
+    """Every comment of a table's text, own-line comments and the ends of key lines; they stay above the rewritten keys."""
+    return [comment for line in content.splitlines() for comment in _comment_of(line, name)]
 
 
 def _rating(header: str, table: dict[str, Any], items: list[str], *, in_function: bool) -> tuple[str, list[str]]:
@@ -145,7 +168,7 @@ def _rating(header: str, table: dict[str, Any], items: list[str], *, in_function
 def _convert(header: str, body: str, items: list[str], *, in_function: bool) -> str:
     """One old-table segment as schema 2 text; `items` are the breaking figures it carries."""
     name = header.strip()
-    content, tail = _split_tail(body, name)
+    content, tail = _split_tail(body)
     table = tomllib.loads(content)
     if name == "[function.protection]":
         header, lines = "[function.block]\n", [*content.splitlines(), *_block_lines(items, table.get("type"))]
@@ -153,6 +176,8 @@ def _convert(header: str, body: str, items: list[str], *, in_function: bool) -> 
         lines = _operating_lines(table)
     else:
         header, lines = _rating(header, table, items, in_function=in_function)
+    if name != "[function.protection]":  # protection keeps its own lines, comments with them
+        lines = [*_comments(content, name), *lines]
     return header + "\n".join(lines) + "\n" + tail if lines else tail
 
 
@@ -183,6 +208,7 @@ def migrate_part_text(text: str) -> str:
     if data.get("schema") != 1:
         return text
     try:
+        _refuse_bar(text, data.get("function", []))
         result = _segment_texts(text, data.get("function", []))
     except PartTextError as error:
         msg = f"part {data.get('part', {}).get('mpn', '?')}: {error}"
@@ -190,6 +216,23 @@ def migrate_part_text(text: str) -> str:
     result = re.sub(r"^schema = 1$", "schema = 2", result, count=1, flags=re.MULTILINE)
     _refuse_leftovers(tomllib.loads(result))
     return result
+
+
+def _refuse_bar(text: str, functions: list[dict[str, Any]]) -> None:
+    """A PE bar function has no schema 2 spelling: refuse it, naming the line of its kind key or its table header."""
+    index = next((i for i, entry in enumerate(functions) if entry.get("kind") == "bar"), None)
+    if index is None:
+        return
+    rows = text.splitlines()
+    headers = [n for n, row in enumerate(rows) if re.fullmatch(r"\s*\[\[function\]\]\s*(#.*)?", row)]
+    start = headers[index] if index < len(headers) else 0
+    stop = headers[index + 1] if index + 1 < len(headers) else len(rows)
+    key = next((n for n in range(start, stop) if re.search(r"\bkind\s*=\s*[\"']bar[\"']", rows[n])), start)
+    msg = (
+        f'line {key + 1}: kind = "bar" (a PE bar part) is removed in 0.22: '
+        "replace it with a PE terminal-strip part (moving-to-0.22.md#removed-cable-core-fn)"
+    )
+    raise PartTextError(msg)
 
 
 def _refuse_leftovers(data: dict[str, Any]) -> None:

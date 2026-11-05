@@ -19,6 +19,7 @@ from .ratings import check_ratings
 from .ratings_breaking import check_breaking
 from .ratings_current import check_load_draw, check_ratings_current
 from .revisions import check_revisions
+from .scaling import check_scaling
 from .strip_without_tag import check_strip_without_tag
 from .structure import check_structure
 from .supplies import check_supplies
@@ -46,6 +47,7 @@ ALL_VALIDATORS: tuple[Callable[[Model], tuple[Finding, ...]], ...] = (
     check_strip_without_tag,
     check_plc,
     check_plc_wiring,
+    check_scaling,
     check_units,
     check_supplies,
     check_ratings,
@@ -82,6 +84,7 @@ __all__ = [
     "check_ratings",
     "check_ratings_current",
     "check_revisions",
+    "check_scaling",
     "check_strip_without_tag",
     "check_structure",
     "check_supplies",

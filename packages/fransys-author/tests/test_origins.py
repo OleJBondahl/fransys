@@ -170,8 +170,8 @@ def test_profile_origin_is_its_own_calling_line(parts):
     assert _origin_of(d.draft(), profile.id).line == profile_line
 
 
-def test_plc_facet_origin_is_its_own_calling_line(parts):
-    from fransys_model.vocab import PlcRequestFacet
+def test_plc_and_scale_facet_origins_are_their_own_calling_lines(parts):
+    from fransys_model.vocab import PlcRequestFacet, ScalingFacet
 
     d = Design(parts)
     k1 = d.item("TEST-RLY-2CO", tag="K1")
@@ -179,6 +179,11 @@ def test_plc_facet_origin_is_its_own_calling_line(parts):
     k1.fn("coil").plc("do", "SIG")
     plc = next(r for r in d.draft().records() if isinstance(r, PlcRequestFacet))
     assert _origin_of(d.draft(), plc.id).line == plc_line
+
+    scale_line = here() + 1
+    k1.fn("coil").scale("m", raw=(0, 10), eng=("0", "1"))
+    scaling = next(r for r in d.draft().records() if isinstance(r, ScalingFacet))
+    assert _origin_of(d.draft(), scaling.id).line == scale_line
 
 
 def _hidden_local(d):

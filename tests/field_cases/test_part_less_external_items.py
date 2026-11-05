@@ -12,6 +12,7 @@ from _drawn_pages import drawn_pages
 from _model_build_cover import unit_document
 from fransys.colours import BK
 
+from fransys_model.derive import strip_of, terminal_items, terminal_rows
 from fransys_model.derive.drawing_text import external_note
 from fransys_model.vocab.tables import functions
 
@@ -87,8 +88,30 @@ def test_each_external_item_draws_one_by_others_note() -> None:
 def test_a_part_less_strip_offers_only_its_outer_side() -> None:
     d = fr.design("demo_parts", place="CAB")
     x8 = d.terminal_strip("X8", None, 4, external=True)
-    with pytest.raises(fr.AuthorError, match="no internal port"):
+    with pytest.raises(fr.AuthorError, match=r"strip X8, terminal 1: no internal port.*write X8\[1\]\.outer"):
         _ = x8[1].inner
+
+
+def test_a_part_less_strip_bridges_separate_adjacent_pairs_in_the_table_only() -> None:
+    """R1767: the jumper joins the terminals' own ports; the terminal table shows the groups, and a far-off pair is refused."""
+    d = fr.design("demo_parts", place="CAB")
+    d.terminal_strip("X2", None, 4, bridged=((1, 2), (3, 4)), external=True)
+    model = fr.build(d).model
+    rows = [
+        (r.designation, r.jumper_group, r.external_ends)
+        for s in terminal_items(model)
+        if (strip := strip_of(model, s))
+        for r in terminal_rows(model, strip)
+        if r.terminal == s
+    ]
+    assert sorted(set(rows)) == [
+        ("-X2:1", 1, ("+CAB-X2:2",)),
+        ("-X2:2", 1, ("+CAB-X2:1",)),
+        ("-X2:3", 2, ("+CAB-X2:4",)),
+        ("-X2:4", 2, ("+CAB-X2:3",)),
+    ]
+    with pytest.raises(fr.AuthorError, match=r"X2: bridged=\(1, 5\).*number the new terminal next to its partner"):
+        fr.design("demo_parts", place="CAB").terminal_strip("X2", None, 4, bridged=(1, 5), external=True)
 
 
 def _raises(call, match: str = "") -> None:

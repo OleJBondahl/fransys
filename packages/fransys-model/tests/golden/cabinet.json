@@ -610,6 +610,24 @@
         "subject": "function:75ac2f6fc07d5760808e7a58a651c347"
       }
     ],
+    "facet.scaling": [
+      {
+        "eng_max": "10",
+        "eng_min": "0",
+        "ext": {},
+        "id": "facet.scaling:16e7a8b4a5215f51bc54f3aa5f30eec6",
+        "key": [
+          "b1",
+          "fn",
+          "signal",
+          "scaling"
+        ],
+        "raw_max": 20,
+        "raw_min": 4,
+        "subject": "function:75ac2f6fc07d5760808e7a58a651c347",
+        "unit": "bar"
+      }
+    ],
     "facet.terminal": [
       {
         "ext": {},

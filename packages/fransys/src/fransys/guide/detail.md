@@ -67,7 +67,7 @@ d.series(x8[1].outer, d.device("M1", "DEMO-MOTOR-4KW")["U"], wire=(BK, 1.5))
 ### Fixed terminals
 
 `X1[3]` takes terminal 3 and `.inner` or `.outer` names its side. A series enters a strip at the
-right side by itself. `.outer` and `.inner` decide which column of the terminal CSV a wire lands in. Name a side only when the plan fixes it; `d.series(x1[3].outer, f1.element)` takes it too. A series may also start at a pin: `d.series(k1.coil["A1"], a1.di_1)`.
+right side by itself: a bare `x[i]` lands on the side facing the unit that holds the other end, and `x[i].outer` writes a field end. `.outer` and `.inner` decide which column of the terminal CSV a wire lands in. Name a side only when the plan fixes it; `d.series(x1[3].outer, f1.element)` takes it too. A series may also start at a pin: `d.series(k1.coil["A1"], a1.di_1)`.
 
 ```python
 import fransys as fr

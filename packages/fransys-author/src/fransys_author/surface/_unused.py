@@ -28,7 +28,7 @@ def _terminals(handle: Terminal | TerminalStrip | FixedTerminals) -> list[Termin
     return list(handle._terminals if isinstance(handle, FixedTerminals) else handle._made.values())
 
 
-def _own(handle: object, name: str, only: str | None) -> list[Any]:
+def _own(handle: object, who: str, only: str | None) -> list[Any]:
     """The engine functions one handle names; a terminal has one function, so `only` raises."""
     if isinstance(handle, Device):
         functions = list(handle._item.functions)
@@ -36,10 +36,10 @@ def _own(handle: object, name: str, only: str | None) -> list[Any]:
         functions = [handle._fn]
     elif isinstance(handle, Terminal | TerminalStrip | FixedTerminals):
         if only is not None:
-            msg = f"unused= names {name!r}, but a terminal has one function: drop the suffix"
+            msg = f"{who} names {handle!r}, but a terminal has one function: drop the suffix"
             raise AuthorError(msg)
         return [t.function for t in _terminals(handle)]
     else:
-        msg = f"unused= names {name!r}, which is not a device, function, terminal, run or strip"
+        msg = f"{who} is {handle!r}, which is no typed handle: pass a device, function, port, terminal or strip, e.g. d.unused(pc.x3[3])"
         raise AuthorError(msg)
     return [f for f in functions if only is None or f.name == only]

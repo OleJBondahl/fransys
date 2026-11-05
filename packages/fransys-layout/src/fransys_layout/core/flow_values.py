@@ -198,4 +198,4 @@ class CutResult:
     spec: PageSpec
     flow: FlowGraph
     blocks: tuple[BlockList, ...]
-    row_tags: frozenset[str] = frozenset()  # fan ids a row cut wraps: routing draws their wire, no trunk (layout-0529)
+    row_tags: frozenset[str] = frozenset()  # fan ids a row or page cut wraps: routing draws their wire, no trunk (layout-0529)

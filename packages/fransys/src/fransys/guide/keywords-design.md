@@ -66,6 +66,12 @@ The `fr.*` functions are in `keywords-output.md`, the handle methods and layout 
 | [`place`](authoring.md#name-a-place-and-a-function-block) | `...` | Where the instance stands. | `d.add(board, "U1", place="HOLD")` |
 | `name` | `None` | The identity a released number holds to, when it must differ from the tag. | `d.add(board, "U1", name="module1")` |
 
+## `d.unused`
+
+`d.unused(*points)` takes typed boundary points of nested units, as `d.add` returned them (`pc.x3[3]`, a strip, a device or a function), or a port (`m1.minus`).
+It declares them left open on purpose by this design. It has no keywords. A wired point, a point that is no boundary and a point
+listed twice are refused; see `units.md`, which holds the worked example.
+
 ## `d.ac_supply`
 
 `d.ac_supply(name, voltage, *phases, ...)` takes the phase pins in phase order as `phases`: one or three.

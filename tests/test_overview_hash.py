@@ -1,6 +1,6 @@
 """The overview page's URL hash holds the switch states (O23).
 
-The browser behaviour is checked by internal/scripts/overview_smoke.py; this guards the script.
+The browser behaviour is not checked in any gate; this guards the hash code in APP_JS.
 """
 
 from fransys_overview._app import APP_JS

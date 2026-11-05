@@ -15,4 +15,4 @@ Output contract: pure function of a Model returning str, bytes or a tuple of pag
 
 The overview draws `derive`'s rows at `layout.overview_*`; boxes open as GROUP or STRIPS; parts tree `derive.overview_tree` (overview-0002). `check` runs that engine; schematic PDF pages are link targets (0186).
 
-Status: `html` implemented. Tests read the page as text and data. `internal/scripts/overview_smoke.py` drives it in a headless Chromium (outside the gate).
+Status: `html` implemented. Tests read the page as text and data.

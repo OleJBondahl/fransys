@@ -114,7 +114,7 @@ def test_a_voltage_window_and_both_currents_become_one_window_and_one_figure_eac
 @pytest.mark.parametrize(
     ("text", "reason"),
     [
-        (_OLD.replace('voltage_dc_v = "1000"', 'voltage_dc_v = "1000"  # volts'), "comment"),
+        (_OLD.replace('capacity_ah = "7.2"', 'capacity_ah = [\n "7.2", # why\n]'), "several lines"),
         (_INLINE, "left"),
         ("schema = 1\n[part\n", "not valid TOML"),
         (_MCB, "cannot convert"),
@@ -136,3 +136,37 @@ def test_the_refusal_names_the_part_and_the_fix():
 def test_a_library_toml_only_changes_its_schema_line():
     old = 'schema = 1\nname = "l"\nversion = "0.1.0"\ndescription = "d"\n'
     assert migrate_part_text(old) == old.replace("schema = 1", "schema = 2")
+
+
+def test_comments_in_a_converted_table_are_kept_above_its_keys():
+    old = _OLD.replace('nominal_voltage_v = "24"', '# the supply\nnominal_voltage_v = "24"  # nominal\n').replace(
+        'voltage_dc_v = "1000"', 'voltage_dc_v = "1000"  # volts'
+    )
+    new = migrate_part_text(old)
+    assert "[function.operating]\n# the supply\n# nominal\nvoltage = " in new
+    assert "# volts\nvoltage = " in new
+    assert migrate_part_text(new) == new
+
+
+def test_a_pe_bar_part_is_refused_with_its_line_and_the_fix():
+    bar = _OLD.replace('kind = "protection"', 'kind = "bar"')
+    with pytest.raises(PartTextError) as refused:
+        migrate_part_text(bar)
+    text = str(refused.value)
+    assert "part X-1: line 15:" in text
+    assert "replace it with a PE terminal-strip part (moving-to-0.22.md#removed-cable-core-fn)" in text
+
+
+def test_a_pe_bar_part_with_a_single_quoted_kind_names_that_line():
+    bar = _OLD.replace('kind = "protection"', "kind = 'bar'")
+    with pytest.raises(PartTextError) as refused:
+        migrate_part_text(bar)
+    assert "part X-1: line 15:" in str(refused.value)
+
+
+def test_a_pe_bar_part_whose_kind_is_in_a_second_function_names_that_line():
+    two = _OLD + '\n[[function]]\nname = "pe"\nports = [{ name = "1", role = "pe" }]\nkind = "bar"\n'
+    with pytest.raises(PartTextError) as refused:
+        migrate_part_text(two)
+    line = two.splitlines().index('kind = "bar"') + 1
+    assert f"line {line}:" in str(refused.value)

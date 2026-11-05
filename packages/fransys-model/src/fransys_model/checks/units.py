@@ -8,6 +8,7 @@ from fransys_model.derive.facts.mates import unmatched_port_names
 from fransys_model.derive.facts.net_crossings import crossing_functions, earth_carried_functions, net_crossings
 from fransys_model.derive.facts.roles import function_role
 from fransys_model.derive.facts.unit_crossings import (
+    carried_unit,
     crossed_units,
     crosses_out_of,
     declared_owners,
@@ -17,6 +18,7 @@ from fransys_model.derive.facts.unit_crossings import (
 )
 from fransys_model.derive.facts.unit_index import boundary_owners, boundary_unit, unit_index
 from fransys_model.derive.facts.units import declared_unit
+from fransys_model.derive.facts.wired_ports import mated_ports, wired_ports
 from fransys_model.kernel import Finding, natural_join
 from fransys_model.vocab.codes import finding
 from fransys_model.vocab.finding_ref import ref
@@ -29,6 +31,7 @@ from fransys_model.vocab.tables import (
     nets,
     ports,
     unused_boundaries,
+    unused_ports,
 )
 
 if TYPE_CHECKING:
@@ -43,6 +46,8 @@ CONNECTOR_WIRED_WITHOUT_MATE: Final[str] = "CONNECTOR_WIRED_WITHOUT_MATE"
 UNUSED_CONTRADICTED: Final[str] = "UNUSED_CONTRADICTED"
 BOUNDARY_NOT_IN_UNIT: Final[str] = "BOUNDARY_NOT_IN_UNIT"
 MATE_NOT_CONNECTOR: Final[str] = "MATE_NOT_CONNECTOR"
+UNUSED_NOT_BOUNDARY: Final[str] = "UNUSED_NOT_BOUNDARY"
+UNUSED_POINT_WIRED: Final[str] = "UNUSED_POINT_WIRED"
 
 
 def _boundary_unconnected(model: Model) -> list[Finding]:
@@ -138,7 +143,7 @@ def _unused_contradicted(model: Model) -> list[Finding]:
     owners_of = boundary_owners(model)
     wired = {function for function, *_ in ends(model)}
     found = []
-    for unused in unused_boundaries(model).values():
+    for unused in (u for u in unused_boundaries(model).values() if carried_unit(model, u) is None):  # a carrier's: `_carrier_unused`
         function = unused.function
         owners = list(owners_of.get(function, ()))
         if not owners:
@@ -152,6 +157,34 @@ def _unused_contradicted(model: Model) -> list[Finding]:
             message = f"UnusedBoundary names {ref(function)}, which is connected across {ref(unit)} it is a boundary of"
             found.append(finding(UNUSED_CONTRADICTED, (unit, function), message))
     return found
+
+
+def _carrier_unused(model: Model) -> list[Finding]:
+    """A carrier's `d.unused` point must be a boundary point of a nested unit that nothing wires across (R1761, R1762)."""
+    owners_of = boundary_owners(model)
+    found = []
+    for unused in unused_boundaries(model).values():
+        inner, function = carried_unit(model, unused), unused.function
+        if inner is None:
+            continue
+        owners = owners_of.get(function, ())
+        if not owners:
+            message = f"d.unused names {ref(function)}, which is no boundary point of {ref(inner)}"
+            found.append(finding(UNUSED_NOT_BOUNDARY, (inner, function), message))
+        elif any(crosses_out_of(model, unit, function) for unit in owners):
+            message = f"d.unused names {ref(function)}, which is wired across {ref(inner)}, so not unused"
+            found.append(finding(UNUSED_POINT_WIRED, (inner, function), message))
+    return found
+
+
+def _unused_ports_wired(model: Model) -> list[Finding]:
+    """A port named in `d.unused` that a conductor, join or mate lands on is contradicted (R1764, R1766)."""
+    used = wired_ports(model) | mated_ports(model)
+    return [
+        finding(UNUSED_POINT_WIRED, (record.port,), f"d.unused names {ref(ports(model)[record.port])}, which is wired, so not unused")
+        for record in unused_ports(model).values()
+        if record.port in used
+    ]
 
 
 def _boundary_membership(model: Model) -> list[Finding]:
@@ -170,7 +203,7 @@ def check_units(model: Model) -> tuple[Finding, ...]:
     """Check every unit's boundary and every mate's kind; `UNIT_CYCLE` is `check_structure`'s.
 
     `ERROR`: the boundary codes `BOUNDARY_UNCONNECTED`, `UNIT_BOUNDARY_BYPASSED`,
-    `BOUNDARY_NOT_IN_UNIT`, and `MATE_NOT_CONNECTOR`; the others `WARNING`. Sorted by code.
+    `BOUNDARY_NOT_IN_UNIT`, `MATE_NOT_CONNECTOR`, `UNUSED_NOT_BOUNDARY` and `UNUSED_POINT_WIRED`; the others `WARNING`. Sorted by code.
     """
     return ordered(
         [
@@ -181,6 +214,8 @@ def check_units(model: Model) -> tuple[Finding, ...]:
             *_mate_not_connector(model),
             *_connector_wired_without_mate(model),
             *_unused_contradicted(model),
+            *_carrier_unused(model),
+            *_unused_ports_wired(model),
             *_boundary_membership(model),
         ]
     )

@@ -2,6 +2,7 @@
 
 from typing import Literal, overload
 lazy from collections.abc import Sequence
+lazy from decimal import Decimal
 
 from fransys_author.errors import AuthorAttributeError, AuthorError
 from fransys_author.handles import Port
@@ -99,7 +100,7 @@ class Fn:
         """
         if name.startswith("__") or "_fn" not in vars(self):  # copy, unpickle: no recursion
             raise AuthorAttributeError(name)
-        if name in ("scale", "limits"):
+        if name == "limits":
             refuse("Fn", name)
         if name in _throws.THROWS and not any(pin.name == name for pin in self._fn.ports):
             return _throws.throw(self._label, self._fn, name)
@@ -121,4 +122,12 @@ class Fn:
         Does not pick a channel: the allocation pass binds the request later.
         """
         self._fn.plc(signal.value, name, priority)
+        return self
+
+    def scale(self, unit: str, *, raw: tuple[int, int], eng: tuple[str | Decimal, str | Decimal]) -> Fn:
+        """Core: scale the raw signal range `raw` to the engineering range `eng` in `unit`.
+
+        Does not accept a float: write the values as strings or Decimal.
+        """
+        self._fn.scale(unit, raw=raw, eng=eng)
         return self

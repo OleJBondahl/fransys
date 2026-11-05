@@ -82,6 +82,16 @@ def declared_owners(model: Model, unused: UnusedBoundary, owners: list[Id[Unit]]
     return near or owners
 
 
+def carried_unit(model: Model, unused: UnusedBoundary) -> Id[Unit] | None:
+    """The unit, nested below the declaring scope, that holds the function of `unused`; `None` for the unit's own fact."""
+    scope, all_units = unused.key[:-2], units(model)
+    inner = item_unit(model, functions(model)[unused.function].item)
+    if inner is None:
+        return None
+    key = all_units[inner].key[:-1]  # the unit's key is its tag path and "unit"
+    return inner if len(key) > len(scope) and key[: len(scope)] == scope else None
+
+
 @digest_cached(DIGEST_CACHE_SIZE)
 def open_boundaries(model: Model) -> tuple[tuple[Id[Unit], Id[Function]], ...]:
     """The (unit, boundary function) pairs joined across by nothing and not declared unused."""

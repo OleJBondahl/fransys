@@ -6,13 +6,18 @@ lazy from collections.abc import Callable, Mapping, Sequence
 lazy from types import EllipsisType
 
 from fransys_author.errors import AuthorError
+from fransys_author.handles import Port
 
 from ._added import remember_added
 from ._boundary_names import write_boundaries
 from ._unit_tags import check_add
-lazy from ._unused import UnitResult
+lazy from ._unused import UnitResult, _own
 
 if TYPE_CHECKING:
+    from fransys_author.handles import Terminal
+    from fransys_author.surface._device import Device
+    from fransys_author.surface._handles import Fn
+    from fransys_author.surface._strip import TerminalStrip
     from fransys_author.surface.design import Design
 
 
@@ -131,3 +136,17 @@ class Units:
         write_boundaries(scope, fields)
         remember_added(scope._design, result, scope._unit)
         return result
+
+    def unused(self: "Design", *points: "Device | Fn | Port | Terminal | TerminalStrip") -> None:
+        """Declare the boundary points of nested units that this design leaves open on purpose.
+
+        Each point is a field of a unit `d.add` returned (`pc.x3[3]`, `pc.x4_1`); a strip or device names all its functions.
+        Does not take a name or a string.
+        Does not declare a unit's own open pins: that is `unused=` where the device is made.
+        """
+        for index, point in enumerate(points, 1):
+            if isinstance(point, Port):
+                self._engine.unused_port(point)
+                continue
+            for fn in _own(point, f"d.unused argument {index}", None):
+                self._engine.unused(fn)

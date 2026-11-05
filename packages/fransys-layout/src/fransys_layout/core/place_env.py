@@ -41,7 +41,7 @@ class PageEnv:
     hangings: Mapping[tuple[str, str, Orientation], tuple[Hanging, ...]] = field(
         default_factory=dict
     )  # (symbol, pin, orientation) -> the boxes the page draws at that pin; the fold reads them
-    row_tags: frozenset[str] = frozenset()  # fan ids a row cut wraps: no trunk (layout-0529)
+    row_tags: frozenset[str] = frozenset()  # fan ids a row or page cut wraps: no trunk (layout-0529)
     bare: Mapping[str, Sym] = field(default_factory=dict)  # the symbols before the fold: a Placed shows their footprints, no hanging in them
     wraps: Mapping[str, tuple[tuple[int, int], ...]] = field(default_factory=dict)  # net -> (first, last) row of each row-wrap arrow on this page
 

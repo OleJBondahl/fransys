@@ -110,6 +110,7 @@ def test_the_walk_covers_every_callable_the_spec_names():
         ("Scope", "operating"),
         ("Cable", "core"),
         ("Fn", "plc"),
+        ("Fn", "scale"),
         ("Item", "fn"),
         ("Strip", "terminal"),
         ("Wiring", "__call__"),

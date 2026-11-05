@@ -77,6 +77,7 @@
 "fransys_layout.engines.overview.write.records::unit" = 2
 "fransys_model.checks.part_conformance::kind" = 2
 "fransys_model.checks.units::kind" = 1
+"fransys_model.checks.scaling::unit" = 1
 "fransys_model.derive.accessory_blocks::kind" = 2
 "fransys_model.derive.baseline_ancestry::parent" = 2
 "fransys_model.derive.baseline_codec::kind" = 1
@@ -178,6 +179,7 @@
 "fransys_model.derive.passes.plc_allocation::parent" = 2
 "fransys_model.derive.passes.wire_rows::unit" = 2
 "fransys_model.derive.plc_list::unit" = 1
+"fransys_model.derive.plc_rack::unit" = 1
 "fransys_model.derive.pole_lists::kind" = 1
 "fransys_model.derive.report_scope::kind" = 1
 "fransys_model.derive.report_scope::unit" = 4
@@ -222,6 +224,7 @@
 "fransys_render.cables::unit" = 5
 "fransys_render.diagram::unit" = 3
 "fransys_wago.modules::kind" = 2
+"fransys_wago.modules::unit" = 1
 
 # KI-063 (decision 0423): each walk becomes a keyed lookup.
 "fransys_author.handles::pin_role" = 1

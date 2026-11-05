@@ -22,7 +22,7 @@ def _field_functions(value: object, field: str) -> list[Any]:
     found = []
     for handle in _handles(value):
         try:
-            found.extend(_own(handle, field, None))
+            found.extend(_own(handle, f"unused= {field}", None))
         except AuthorError:
             continue  # a field of another kind (a Wire, a str) names no function
     return found

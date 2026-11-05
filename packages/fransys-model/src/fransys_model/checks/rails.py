@@ -5,14 +5,15 @@ from typing import TYPE_CHECKING, Final
 from fransys_model.checks._finding import ordered
 from fransys_model.derive.facts.closure import link_groups
 from fransys_model.derive.facts.potentials import rail_potential
+from fransys_model.derive.facts.strips import strip_of
 from fransys_model.derive.facts.unit_index import item_unit
 from fransys_model.vocab.codes import finding
 from fransys_model.vocab.finding_ref import ref
-from fransys_model.vocab.tables import rail_groups
+from fransys_model.vocab.tables import items, rail_groups
 
 if TYPE_CHECKING:
-    from fransys_model.kernel import Finding, Model
-    from fransys_model.vocab import RailGroup
+    from fransys_model.kernel import Finding, Id, Model
+    from fransys_model.vocab import Item, RailGroup
 
 RAIL_DUPLICATE_POTENTIAL: Final[str] = "RAIL_DUPLICATE_POTENTIAL"
 RAIL_WITHOUT_POTENTIAL: Final[str] = "RAIL_WITHOUT_POTENTIAL"
@@ -22,6 +23,11 @@ RAIL_ON_FUSED: Final[str] = "RAIL_ON_FUSED"
 def _where(model: Model, group: RailGroup) -> str:
     origin = model.origins[group.id]
     return f"rail group {ref(group)} ({origin.file}:{origin.line})"
+
+
+def _fused_text(model: Model, terminal: Id[Item]) -> str:
+    strip = ref(items(model)[strip_of(model, terminal) or terminal])
+    return f"the rail group on strip {strip} holds a fused terminal (its part has a protective link): flag the supply side of the fuse, not {strip}"
 
 
 def check_rails(model: Model) -> tuple[Finding, ...]:
@@ -34,10 +40,8 @@ def check_rails(model: Model) -> tuple[Finding, ...]:
         if potential is None:
             found.append(finding(RAIL_WITHOUT_POTENTIAL, (group.id,), f"{_where(model, group)} carries no potential: declare the potential first"))
             continue
-        if any(terminal in fused for terminal in group.terminals):
-            found.append(
-                finding(RAIL_ON_FUSED, (group.id,), f"{_where(model, group)} holds a terminal whose part has a protective link (a fuse in the path)")
-            )
+        if (hit := next((t for t in group.terminals if t in fused), None)) is not None:
+            found.append(finding(RAIL_ON_FUSED, (group.id,), _fused_text(model, hit)))
         key = (item_unit(model, group.terminals[0]), potential)
         if (other := first.setdefault(key, group)) is not group:
             msg = f"{_where(model, group)} and {_where(model, other)} are both the {potential} rail of one unit: one group per potential"

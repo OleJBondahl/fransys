@@ -164,7 +164,7 @@ def head_off_legs(flow: FlowGraph, where: Mapping[str, int]) -> tuple[Finding, .
 
 
 def row_tags(cut: Cut, plan: Plan, flow: FlowGraph) -> frozenset[str]:
-    """The fans whose only cut is a row cut that tags a two-pin net: routing wraps their wire, they get no trunk."""
+    """The fans of a two-pin net that a cut tags, a row cut or a page cut: routing wraps their wire, they get no trunk (DANGLING-0223)."""
     page_cuts, row_only = cut_sets(plan)
-    wrapped = {n for b in row_only for n in cut.bounds[b].nets} - {n for b in page_cuts for n in cut.bounds[b].nets}
+    wrapped = {n for b in row_only | page_cuts for n in cut.bounds[b].nets}
     return frozenset(f.id for f in flow.fans if is_pair(f) and ref_name(f) in wrapped)

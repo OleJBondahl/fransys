@@ -102,7 +102,7 @@ def test_migrate_parts_rewrites_a_schema_1_library_that_then_lints_clean(tmp_pat
 
 
 def test_migrate_parts_names_the_file_it_cannot_convert_and_keeps_library_toml(tmp_path, capsys) -> None:
-    root = _schema_1_library(tmp_path, _PART_1.replace('"500"', '"500" # volts'))
+    root = _schema_1_library(tmp_path, _PART_1.replace("[rating]", "[rating"))
     assert main(["migrate-parts", str(tmp_path)]) == 1
     assert "p.toml" in capsys.readouterr().err
     assert (root / "library.toml").read_text() == _LIBRARY_1
@@ -112,3 +112,23 @@ def test_the_guide_names_the_migrate_parts_command() -> None:
     page = importlib.resources.files("fransys").joinpath("guide", "parts.md").read_text(encoding="utf-8")
     assert "python -m fransys migrate-parts DIR" in page
     assert "migrate-parts DIR" in USAGE
+
+
+def test_migrate_parts_given_the_parts_folder_fails_and_names_both_folders(tmp_path, capsys) -> None:
+    root = _schema_1_library(tmp_path)
+    assert main(["migrate-parts", str(root / "parts")]) == 1
+    err = capsys.readouterr().err
+    assert str(root / "parts") in err
+    assert "library.toml" in err
+    assert "schema = 1" in (root / "parts" / "p.toml").read_text()
+
+
+def test_migrate_parts_refuses_a_pe_bar_part_and_writes_nothing(tmp_path, capsys) -> None:
+    bar = _PART_1 + '\n[[function]]\nname = "pe"\nkind = "bar"\nports = [{ name = "1", role = "pe" }]\n'
+    root = _schema_1_library(tmp_path, bar)
+    assert main(["migrate-parts", str(tmp_path)]) == 1
+    err = capsys.readouterr().err
+    assert "p.toml" in err
+    assert "moving-to-0.22.md#removed-cable-core-fn" in err
+    assert (root / "parts" / "p.toml").read_text() == bar
+    assert (root / "library.toml").read_text() == _LIBRARY_1

@@ -13,6 +13,7 @@ from fransys_model.elecdef import LinkKind, PinRole
 from fransys_model.vocab.enums import Aspect, ConductorKind, FunctionKind, NetClass, PartCategory, PortBoundary, SignalType
 from fransys_model.vocab.facets.cable import CableProductFacet
 from fransys_model.vocab.facets.plc import PlcBindingFacet, PlcChannelFacet, PlcRequestFacet
+from fransys_model.vocab.facets.scaling import ScalingFacet
 from fransys_model.vocab.facets.terminal import TerminalFacet
 
 if TYPE_CHECKING:
@@ -274,6 +275,16 @@ def _field(kit: Kit, catalogue: Catalogue, things: Things) -> None:
     for name, designation in (("w1", "W1"), ("w2", "W2")):
         things[name] = kit.stamp(catalogue["cable"], (name,), Slot(designation))
     b1, b2, s1 = things["b1"], things["b2"], things["s1"]
+    kit.facet(
+        ScalingFacet,
+        (*b1.function_keys["signal"], "scaling"),
+        subject=b1.function("signal"),
+        unit="bar",
+        raw_min=4,
+        raw_max=20,
+        eng_min=Decimal(0),
+        eng_max=Decimal(10),
+    )
     legs = (
         (
             "b1",

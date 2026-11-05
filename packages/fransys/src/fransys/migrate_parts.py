@@ -22,8 +22,15 @@ def _rewrite(path: Path) -> bool:
 
 def migrate_parts(directory: Path) -> int:
     """Convert every library under `directory`, its part files first and `library.toml` only when none failed; 1 on a failure."""
+    libraries = list(directory.rglob("library.toml"))
+    if not libraries:
+        sys.stderr.write(
+            f"{directory}: no library.toml under this folder, so no part library to convert. "
+            "Give the library's folder (the one holding library.toml and parts/) or a folder above it, never its parts/ folder.\n"
+        )
+        return 1
     ok = True
-    for library in directory.rglob("library.toml"):
+    for library in libraries:
         converted = [_rewrite(path) for path in library.with_name("parts").glob("*.toml")]  # every file, no short-circuit
         ok = all(converted) and _rewrite(library) and ok
     return 0 if ok else 1

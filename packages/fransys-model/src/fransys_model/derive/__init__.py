@@ -493,6 +493,7 @@ from .rows_page import ListKey, PageForm, PagePreset
 from .rows_pin_views import PinMate, PinView
 from .rows_plc import (
     CdpRackModule,
+    ChannelScaling,
     LensChannel,
     LensModule,
     PlcChannelRow,
@@ -585,6 +586,7 @@ __all__ = [
     "ChainCandidate",
     "ChainHop",
     "ChainPin",
+    "ChannelScaling",
     "Conductor",
     "ConductorEnd",
     "ConductorId",

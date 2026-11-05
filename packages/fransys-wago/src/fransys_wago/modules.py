@@ -11,7 +11,7 @@ from .signals import SIGNALS
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    from fransys_model.derive import CdpRackModule, ItemId, PlcRackChannel, UnitId
+    from fransys_model.derive import CdpRackModule, ChannelScaling, ItemId, PlcRackChannel, UnitId
     from fransys_model.kernel import Model
 
 # `escape` does `&`, `<` and `>`; a line break or a tab in an attribute would be read back as a
@@ -49,6 +49,31 @@ def _element(tag: str, depth: int, attributes: Sequence[tuple[str, str]], childr
     return [f"{indent}<{tag}{text}>", *children, f"{indent}</{tag}>"]
 
 
+def _point(name: str, raw: int, engineering: object) -> list[str]:
+    attributes = [
+        ("InValue", str(raw)),
+        ("OutValue", str(engineering)),
+        ("Model", "Automation.ScalingPoint<double>"),
+        ("Name", name),
+        ("Type", "double"),
+    ]
+    return _element("ScalingPoint", 4, attributes)
+
+
+def _scaling(scaling: ChannelScaling) -> list[str]:
+    points = [
+        *_point("ScalingPoint", scaling.raw_min, scaling.eng_min),
+        *_point("ScalingPoint1", scaling.raw_max, scaling.eng_max),
+    ]
+    attributes = [
+        ("Interpolation", "Linear"),
+        ("Model", "Automation.ScalingOperator<double>"),
+        ("Name", "Scale"),
+        ("Type", "double"),
+    ]
+    return _element("Operator", 3, attributes, points)
+
+
 def _channel(channel: PlcRackChannel, nr: int) -> list[str]:
     signal = SIGNALS[channel.signal]
     attributes = [
@@ -61,7 +86,11 @@ def _channel(channel: PlcRackChannel, nr: int) -> list[str]:
         ("Value", "0"),
         ("Description", signal.description),
     ]
-    return _element("Channel", 2, attributes, [])
+    children: list[str] = []
+    if channel.scaling is not None:
+        attributes.append(("Unit", channel.scaling.unit))
+        children = _scaling(channel.scaling)
+    return _element("Channel", 2, attributes, children)
 
 
 def _module_name(entry: CdpRackModule) -> str:

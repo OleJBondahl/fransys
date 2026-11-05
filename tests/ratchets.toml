@@ -81,10 +81,10 @@ UP037 = 2
 # R1193 LEDGER-INTEGRATION: mcc 0 -> 9, the marker members of drawing_marker_overlap (KI-457)
 # SUPPLY-SLOT (R1619, TEXT-BOX-MEASURED): OVERLAP now sees slot ink, a looks rise: machine_panel 0 -> 2, panel_di16p 0 -> 1
 distribution_board = 0
-machine_panel = 1  # R1730 (looks class): the cut flags the handed link it plans a tag for; was 4
+machine_panel = 3  # R1771 (looks class, KI-688): the N5c below-branch card reserve; was 1, before that 4 (R1730)
 mcc = 0  # R1730 (looks class): as machine_panel; was 3
 # R1165: R1138 looks trade (OVERLAP -1, WIRE_OVER_MARKER +1)
-panel_di16p = 1
+panel_di16p = 3  # R1771 (looks class, KI-688): the N5c below-branch card reserve; was 1
 remote_io = 0
 skid = 0
 

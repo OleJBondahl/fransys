@@ -23,6 +23,7 @@ RULED = frozenset(
         "CELL_SEPARATOR",
         "CableListRow",
         "CableRow",
+        "ChannelScaling",
         "Conductor",
         "ConductorKind",
         "ConnectorPin",

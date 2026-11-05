@@ -48,7 +48,7 @@ A library written in schema 1 (0.21) is refused with `PART_SCHEMA_OLD`. Move it 
 python -m fransys migrate-parts DIR
 ```
 
-The command rewrites every part file and `library.toml` under `DIR` and prints each file it rewrote. A file it cannot convert is named with the fix, and its `library.toml` stays unchanged.
+The command rewrites every part file and `library.toml` under `DIR` and prints each file it rewrote. `DIR` is the library's folder (the one holding `library.toml` and `parts/`) or any folder above it, never its `parts/` folder: a `DIR` with no `library.toml` under it exits 1 and names the folder. A file it cannot convert is named with the fix, and its `library.toml` stays unchanged. A part with a PE bar function (`kind = "bar"`) is one of them: replace it with a PE terminal-strip part (moving-to-0.22.md#removed-cable-core-fn).
 
 The part library generates this module and ships it, and the projects that use the library import it
 rather than generate their own. A pin whose marking is not a Python name gets an attribute by the

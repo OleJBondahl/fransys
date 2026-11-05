@@ -5,6 +5,7 @@ public WAGO catalogue numbers of module types. The builder holds
 """
 
 from dataclasses import dataclass
+from decimal import Decimal
 from typing import TYPE_CHECKING
 
 import pytest
@@ -14,6 +15,7 @@ from fransys_model.kernel import Draft, Origin, freeze, make_id
 from fransys_model.vocab.core import Function, Item
 from fransys_model.vocab.enums import FunctionKind, PartCategory, SignalType
 from fransys_model.vocab.facets.plc import PlcBindingFacet, PlcChannelFacet, PlcRequestFacet
+from fransys_model.vocab.facets.scaling import ScalingFacet
 from fransys_model.vocab.templates import FunctionTemplate, Part
 
 if TYPE_CHECKING:
@@ -115,7 +117,7 @@ class Rack:
             channels.append(function.id)
         return Module(item=item.id, channels=tuple(channels))
 
-    def device(
+    def device(  # noqa: PLR0913 -- one keyword per thing a test varies
         self,
         key: str,
         designation: str,
@@ -123,6 +125,7 @@ class Rack:
         channel: Id[Function],
         *,
         signal: SignalType = SignalType.DI,
+        scaling: tuple[str, int, int, Decimal, Decimal] | None = None,
     ) -> None:
         """A field device bound to `channel`; without a `signal_name` it has no request."""
         item = Item(
@@ -165,6 +168,20 @@ class Rack:
                     priority=1,
                 )
             )
+        if scaling is not None:
+            unit, raw_min, raw_max, eng_min, eng_max = scaling
+            self.records.append(
+                ScalingFacet(
+                    id=make_id(ScalingFacet, (key, "scaling")),
+                    key=(key, "scaling"),
+                    subject=function.id,
+                    unit=unit,
+                    raw_min=raw_min,
+                    raw_max=raw_max,
+                    eng_min=eng_min,
+                    eng_max=eng_max,
+                )
+            )
 
     def draft(self, seed: int | None = None) -> Draft:
         """The records in a `Draft`, shuffled by `seed` when there is one."""
@@ -176,26 +193,26 @@ class Rack:
 
 
 def build_demo() -> Rack:
-    """Rack `R1` of five modules: a coupler, two of one digital-in part, a digital-out, an analog.
-
-    - `A0`, position 0: the coupler `750-352`, no channels (not emitted).
-    - `A1`, position 1: `750-1405`, three DI channels, two bound (`B1_Door`, `B2_Gate`), one spare.
+    """Rack `R1` of five modules: a coupler, two digital-in parts, a digital-out and an analog one.
+    The analog `T1_Level` is scaled 4..20 to 0..100 percent; `T2_Flow` is bound without scaling.
     """
     rack = Rack()
+    di_text = "16-channel digital input"
     coupler = rack.part("coupler", "750-352", (), description="Invented fieldbus coupler")
-    di = rack.part("di", "750-1405", (SignalType.DI,) * 3, description="16-channel digital input")
+    di = rack.part("di", "750-1405", (SignalType.DI,) * 3, description=di_text)
     do = rack.part("do", "750-1504", (SignalType.DO,) * 2, description="4-channel digital output")
     ai = rack.part("ai", "750-455", (SignalType.AI_CURRENT,) * 3, description="4-channel 4-20 mA")
-    di_one = rack.part("di1", "750-1405", (SignalType.DI,), description="16-channel digital input")
-    rack.module(coupler, "a0", "A0", 0)
-    a1 = rack.module(di, "a1", "A1", 1)
-    a2 = rack.module(do, "a2", "A2", 2)
-    a3 = rack.module(ai, "a3", "A3", 3)
-    rack.module(di_one, "a4", "A4", 4)
+    di_one = rack.part("di1", "750-1405", (SignalType.DI,), description=di_text)
+    mods = [
+        rack.module(part, key, tag, n)
+        for n, (part, key, tag) in enumerate(((coupler, "a0", "A0"), (di, "a1", "A1"), (do, "a2", "A2"), (ai, "a3", "A3"), (di_one, "a4", "A4")))
+    ]
+    _, a1, a2, a3, _ = mods
     rack.device("b1", "B1", "Door", a1.channels[0])
     rack.device("b2", "B2", "Gate", a1.channels[1])
     rack.device("k1", "K1", "Fan", a2.channels[0], signal=SignalType.DO)
-    rack.device("t1", "T1", "Level", a3.channels[0], signal=SignalType.AI_CURRENT)
+    scaling = ("percent", 4, 20, Decimal(0), Decimal(100))
+    rack.device("t1", "T1", "Level", a3.channels[0], signal=SignalType.AI_CURRENT, scaling=scaling)
     rack.device("t2", "T2", "Flow", a3.channels[1], signal=SignalType.AI_CURRENT)
     return rack
 

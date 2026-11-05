@@ -1,0 +1,46 @@
+schema = 2
+
+[part]
+mpn = "DEMO-CTRL-SUPPLY-2DO-1AI"
+manufacturer = "Demo"
+description = "Compact 24 V DC controller module: a supply, two digital outputs and a 0-10 V analogue input"
+category = "generic"
+class_code = "K"
+
+[[function]]
+name = "supply_control"
+kind = "load"
+ports = [
+    { name = "S24V", role = "generic", side = "line" },
+    { name = "SGND", role = "generic", side = "load" },
+]
+
+[function.operating]
+voltage = [{ nom = "24 V", at = ["DC"] }]
+
+[[function]]
+name = "out_1"
+kind = "plc_channel"
+ports = [{ name = "OUT1-", role = "generic", side = "line" }]
+
+[function.plc_channel]
+signal = "do"
+channel = 1
+
+[[function]]
+name = "out_2"
+kind = "plc_channel"
+ports = [{ name = "OUT2-", role = "generic", side = "line" }]
+
+[function.plc_channel]
+signal = "do"
+channel = 2
+
+[[function]]
+name = "ai_6"
+kind = "plc_channel"
+ports = [{ name = "IN6", role = "generic", side = "line" }]
+
+[function.plc_channel]
+signal = "ai_voltage"
+channel = 6

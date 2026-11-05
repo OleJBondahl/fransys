@@ -25,6 +25,7 @@ from fransys_model.kernel import Id, Model, Severity, dumps, evolve, freeze, mer
 from fransys_model.vocab.enums import ConductorKind
 from fransys_model.vocab.facets.cable import CoreFacet
 from fransys_model.vocab.facets.plc import PlcBindingFacet
+from fransys_model.vocab.facets.scaling import ScalingFacet
 from fransys_model.vocab.tables import conductors, facets_of, items, ports
 
 if TYPE_CHECKING:
@@ -60,10 +61,10 @@ def _port(model: Model, *key: str) -> Id[Port]:
 
 
 def test_a_one_record_change_shows_in_the_canonical_json_and_the_digest() -> None:
-    """The golden comparison can fail: drop a `plc_binding` facet and both differ."""
+    """The golden comparison can fail: drop the `scaling` facet of `B1` and both differ."""
     model = _design("cabinet", bare=True)
-    binding = next(iter(facets_of(model, PlcBindingFacet).values()))
-    changed = evolve(model, remove=[binding.id])
+    (scaling,) = facets_of(model, ScalingFacet).values()
+    changed = evolve(model, remove=[scaling.id])
     golden = (_GOLDEN_DIR / "cabinet.json").read_text(encoding="utf-8")
     golden_digest = (_GOLDEN_DIR / "cabinet.digest").read_text(encoding="utf-8").strip()
     assert dumps(model) == golden

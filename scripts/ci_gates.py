@@ -281,7 +281,7 @@ def run_testmon(extra: list[str], root: Path = ROOT, run: Runner = run_pytest, w
     if gate_config_changed(current, saved) and not reason:
         always += GATE_READERS
     ignores = [f"--ignore={path}" for path in always]
-    flags = ["--durations=20", "--testmon", *(["--testmon-noselect"] if reason else []), *ignores]
+    flags = ["--durations=20", "--testmon", "--timeout=300", *(["--testmon-noselect"] if reason else []), *ignores]
     code, text = run(pytest_argv(workers, *flags, *extra), env)
     if code == NOTHING_COLLECTED:  # pytest: nothing collected, which is what a testmon run with no change does
         code = 0

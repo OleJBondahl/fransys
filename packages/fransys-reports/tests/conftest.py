@@ -12,6 +12,7 @@ import pytest
 from hypothesis import settings
 from library_records import freeze
 
+from fransys_model.elecdef import Gender
 from fransys_model.kernel import Draft, Id, Model, Origin, make_id
 from fransys_model.vocab.aspects import AspectNode, Placement
 from fransys_model.vocab.connectivity import Conductor, Mate, Net
@@ -20,7 +21,6 @@ from fransys_model.vocab.enums import (
     Aspect,
     ConductorKind,
     FunctionKind,
-    Gender,
     NetClass,
     PartCategory,
     PortBoundary,

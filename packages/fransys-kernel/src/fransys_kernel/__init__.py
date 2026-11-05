@@ -4,7 +4,6 @@ from .cache import DIGEST_CACHE_SIZE, ByDigest, digest_cached
 from .canonical_forms import dumps, from_data, loads, to_data
 from .codes import WHO_ACTS, CodeInfo
 from .decode import value_from
-from .diff import ModelDiff, diff
 from .draft import Draft
 from .encode import JsonValue, decimal_text, value_data, write_json
 from .errors import (
@@ -54,7 +53,6 @@ __all__ = [
     "JsonValue",
     "MergeConflictError",
     "Model",
-    "ModelDiff",
     "ModelError",
     "NaturalKey",
     "Origin",
@@ -71,7 +69,6 @@ __all__ = [
     "decimal_text",
     "describe",
     "describe_parts",
-    "diff",
     "digest_cached",
     "dumps",
     "evolve",

@@ -13,9 +13,9 @@ from fransys_model.derive.facts.unit_crossings import (
     function_gender,
 )
 from fransys_model.derive.facts.unit_index import boundary_owners, unit_index
+from fransys_model.elecdef import Gender
 from fransys_model.kernel import make_id
 from fransys_model.vocab.core import Item, Unit
-from fransys_model.vocab.enums import Gender
 from fransys_model.vocab.units import UnusedBoundary
 
 
@@ -72,7 +72,7 @@ def test_function_gender_is_male_or_female_only() -> None:
     plant.item("q")
     plant.item("r")
     male, _ = make_connector(plant, ("p", "J"), ("1",), gender=Gender.MALE)
-    neutral, _ = make_connector(plant, ("q", "J"), ("1",), gender=Gender.NEUTRAL)
+    neutral, _ = make_connector(plant, ("q", "J"), ("1",), gender=Gender.GENDERLESS)
     none, _ = make_connector(plant, ("r", "J"), ("1",), gender=None)
     model = plant.model()
     assert function_gender(model, male) is Gender.MALE

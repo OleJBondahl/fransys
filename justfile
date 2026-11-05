@@ -23,7 +23,7 @@ dead-code:
     uv run vulture packages/fransys-pdf/src whitelist.py --min-confidence 60
     uv run vulture packages/fransys-render/src whitelist.py --min-confidence 60
     uv run vulture packages/electrical-symbols/src whitelist.py --min-confidence 60
-    uv run vulture packages/fransys/src whitelist.py --min-confidence 60
+    uv run vulture packages/fransys/src whitelist.py --min-confidence 60 --ignore-names __getattr__,__dir__  # R1758: PEP 562 module hooks; the flag replaces [tool.vulture] ignore_names, which only fransys_model enums need
 
 # electrical-symbols: regenerate the tracked build/ and src/electrical_symbols/bundle.json
 build-electrical-symbols:

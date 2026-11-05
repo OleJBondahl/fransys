@@ -12,6 +12,7 @@ from ._detail import Detail
 from ._device import Device, TypedDevice, TypedFn
 from ._handles import Fn, Pin
 from ._layout import Layout
+from ._removed import refuse
 from ._rows import (
     AC_CONTROL,
     AC_L1,
@@ -69,5 +70,6 @@ __all__ = [
     "UnitDef",
     "added_unit",
     "design",
+    "refuse",
     "unit",
 ]

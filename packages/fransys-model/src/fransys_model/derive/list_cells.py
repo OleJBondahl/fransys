@@ -6,6 +6,7 @@ Which fields of each row shape a list prints stay in `derive.columns`.
 from enum import Enum
 lazy from collections.abc import Iterable
 
+lazy from fransys_model.elecdef import Gender
 lazy from fransys_model.kernel import Model
 
 lazy from .columns import list_columns, list_pdf_columns
@@ -40,6 +41,8 @@ def cell_text(cell: object) -> str:
     match cell:
         case None:
             return ""
+        case Gender():
+            return cell.name.lower()
         case Enum():
             return str(cell.value)
         case tuple():

@@ -2,14 +2,12 @@
 
 from typing import TYPE_CHECKING, NoReturn
 
-from fransys_author.errors import AuthorAttributeError
+from fransys_author.surface._removed import refuse
 from fransys_author.surface._wire import _port
 lazy from fransys_author.handles import Port, Terminal
 
 if TYPE_CHECKING:
     from fransys_author.surface.design import Design
-
-MOVED_SECTION = "the-detail-calls"  # the heading of moving-to-0.19.md the raise points to
 
 
 class Detail:
@@ -31,27 +29,19 @@ class Detail:
         design = self._design
         design._engine.link(_port(design, a), _port(design, b), kind="bus")
 
+    if not TYPE_CHECKING:
 
-class _Moved:
-    """A name that moved to `d.detail`: looking it up raises and names the new home."""
-
-    def __init__(self, core_path: str = "") -> None:
-        self._core_path = core_path
-
-    def __set_name__(self, owner: type, name: str) -> None:
-        self._name = name
-
-    def __get__(self, _instance: object, owner: type | None = None) -> NoReturn:
-        name = self._name
-        path = f"; a current path is {self._core_path}:" if self._core_path else ":"
-        msg = f"d.{name} moved to d.detail.{name} in 0.19.0{path} see moving-to-0.19#{MOVED_SECTION}"
-        raise AuthorAttributeError(msg)
+        def __getattr__(self, name: str) -> NoReturn:
+            refuse("Detail", name)
 
 
 class Details:
-    """The `detail` property of the surface `Design`, and the name that left `d`."""
+    """The `detail` property of the surface `Design`, and the lookup of a name removed from it."""
 
-    busbar = _Moved()
+    if not TYPE_CHECKING:
+
+        def __getattr__(self, name: str) -> NoReturn:
+            refuse("Design", name)
 
     @property
     def detail(self: Design) -> Detail:

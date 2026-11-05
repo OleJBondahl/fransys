@@ -1,7 +1,8 @@
 """Layout hints: `d.layout.order`, `symbol` and more, through the engine."""
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, NoReturn
 
+from fransys_author.surface._removed import refuse
 lazy from fransys_author.design import Design as EngineDesign
 lazy from fransys_author.handles import Group
 
@@ -33,6 +34,11 @@ class Layout:
         """
         given = {} if hide_unused_pins is None else {"hide_unused_pins": hide_unused_pins}
         self._engine.profile(**given)
+
+    if not TYPE_CHECKING:
+
+        def __getattr__(self, name: str) -> NoReturn:
+            refuse("Layout", name)
 
 
 class Layouts:

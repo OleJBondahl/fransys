@@ -205,19 +205,6 @@ class SignalType(Enum):
 
 
 @register_enum
-class Gender(Enum):
-    """The mating gender of a connector `FunctionTemplate` (design/facets.md, `connector` facet).
-
-    Example: a harness housing connector is `FEMALE`, mated to a `MALE` board-edge
-    connector via a `Mate`.
-    """
-
-    MALE = "male"
-    FEMALE = "female"
-    NEUTRAL = "neutral"
-
-
-@register_enum
 class DocumentPreset(Enum):
     """The kind of deliverable a `Document` defines.
 

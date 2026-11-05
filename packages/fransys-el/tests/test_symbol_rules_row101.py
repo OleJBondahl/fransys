@@ -10,9 +10,10 @@ from fransys_el.symbol_kit import _rest
 from fransys_el.symbol_rules import Facts, default_row, symbol_for
 
 from electrical_symbols import LIBRARY
+from fransys_model.elecdef import Gender
 from fransys_model.kernel import Origin, evolve, make_id
 from fransys_model.layout import SymbolChoice
-from fransys_model.vocab import Gender, functions
+from fransys_model.vocab import functions
 
 
 def test_part_file_choice_beats_kind_choice() -> None:
@@ -33,7 +34,7 @@ def test_rest_and_push_draw_push_button_break() -> None:
 
 def test_s4_every_connector_gender_has_a_live_row() -> None:
     """S4: each connector gender, and none, has a live row; the rows give the three contacts."""
-    genders = [None, *(g.value for g in Gender)]
+    genders = [None, *(g.name.lower() for g in Gender)]
     assert {"male", "female"} <= set(genders)
     symbols = set()
     for gender in genders:

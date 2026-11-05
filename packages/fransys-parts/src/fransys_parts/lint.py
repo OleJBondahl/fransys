@@ -84,8 +84,7 @@ def _lint_part_file(file_path: Path, root: Path, library_schema: int | None, see
 
 def _schema_unsupported(path: str, line: int, value: int) -> Finding:
     if value == _OLD_SCHEMA:
-        text = "schema 1 is old: run the migrate_parts_022 script from the Fransys repository (piece MIGRATE-022-DROP) on the library folder"
-        return _toml.finding("PART_SCHEMA_OLD", path, line, text)
+        return _toml.finding("PART_SCHEMA_OLD", path, line, "schema 1 is old")
     supported = ", ".join(str(v) for v in sorted(SUPPORTED_SCHEMAS))
     text = f"schema {value} is not supported (supported: {supported})"
     return _toml.finding("SCHEMA_UNSUPPORTED", path, line, text)

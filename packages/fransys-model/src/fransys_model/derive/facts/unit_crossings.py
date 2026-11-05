@@ -7,8 +7,8 @@ whose other item is outside it. That is not `units.crosses_unit` (different `Ite
 from fransys_model.derive.facts.unit_index import item_unit, unit_index
 from fransys_model.derive.facts.units import standalone
 from fransys_model.derive.facts.units import units as unit_ids
+from fransys_model.elecdef import Gender
 from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, digest_cached
-from fransys_model.vocab.enums import Gender
 from fransys_model.vocab.facets.connector import ConnectorFacet
 from fransys_model.vocab.tables import (
     conductors,

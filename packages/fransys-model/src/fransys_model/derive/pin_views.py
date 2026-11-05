@@ -35,7 +35,7 @@ __all__ = ["connector_pin_mates", "connector_pin_views", "template_gender"]
 def template_gender(model: Model, template: Id[FunctionTemplate] | None) -> str | None:
     """The connector facet's gender of a function template, `None` without one."""
     shape = None if template is None else connector_facets(model).get(template)
-    return None if shape is None or shape.gender is None else shape.gender.value
+    return None if shape is None or shape.gender is None else shape.gender.name.lower()
 
 
 def connector_pin_views(model: Model, chained: AbstractSet[Id[Item]], wired: AbstractSet[Id[Port]]) -> tuple[PinView, ...]:

@@ -6,14 +6,13 @@ model alone. All identity here is invented for this repo; none of it names a rea
 
 from decimal import Decimal
 
-from fransys_model.elecdef import LinkKind
+from fransys_model.elecdef import Gender, LinkKind
 from fransys_model.kernel import Draft, Origin, make_id
 from fransys_model.vocab import (
     CableProductFacet,
     ConnectorFacet,
     FunctionKind,
     FunctionTemplate,
-    Gender,
     InternalLink,
     Part,
     PartCategory,

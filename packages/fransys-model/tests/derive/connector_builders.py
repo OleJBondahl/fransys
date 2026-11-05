@@ -4,9 +4,10 @@ from typing import TYPE_CHECKING
 
 from query_builders import make_part
 
+from fransys_model.elecdef import Gender
 from fransys_model.kernel import Id, make_id
 from fransys_model.vocab.core import Function, Item, Port
-from fransys_model.vocab.enums import FunctionKind, Gender
+from fransys_model.vocab.enums import FunctionKind
 from fransys_model.vocab.facets.connector import ConnectorFacet
 from fransys_model.vocab.templates import FunctionTemplate
 

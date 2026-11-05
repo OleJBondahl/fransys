@@ -1,7 +1,7 @@
 """Facet: connector shape on a `FunctionTemplate` (design/facets.md)."""
 
+from fransys_model.elecdef import Gender
 from fransys_model.kernel import AuthoringKey, Id, Value, record
-from fransys_model.vocab.enums import Gender
 from fransys_model.vocab.templates import FunctionTemplate
 
 
@@ -13,7 +13,7 @@ class ConnectorFacet:
     `style="JST-XH", pincount=4, gender=Gender.FEMALE`, mated via a `Mate` to a
     board-edge connector of the opposite gender (design/examples.md 11).
 
-    `gender` absent (`None`) means the part file does not state it, which is not `Gender.NEUTRAL`
+    `gender` absent (`None`) means the part file does not state it, which is not `Gender.GENDERLESS`
     (decision model-0080); only `CONNECTOR_WIRED_WITHOUT_MATE` reads it, and only a `MALE` or
     `FEMALE` gender (decision model-0116).
 

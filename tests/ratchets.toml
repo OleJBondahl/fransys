@@ -39,7 +39,7 @@ stock = 1
 # BoxKey, DiagramLine, DrawnWire (across fransys_model.derive*/layout/vocab, fransys_layout(.core),
 # fransys_author, fransys_kernel, fransys_render).
 [twin_doors]
-twins = 99  # -check_value (DS-1), +value_data, +value_from (kernel and fransys_model.kernel), -Rating: R809, ADOPT-PARTS-3
+twins = 97  # -ModelDiff, -diff (CL-KER-1), -check_value (DS-1), +value_data, +value_from (kernel and fransys_model.kernel), -Rating: R809, ADOPT-PARTS-3
 clashes = 28
 
 # HOMES-GATES (root-0350): typed setting literals (numeric value bound to a name ending _mm, _pct,

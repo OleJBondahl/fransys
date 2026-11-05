@@ -3,6 +3,7 @@
 from .codes import FINDING_CODES
 from .lint import SUPPORTED_SCHEMAS, lint
 from .loader import PartLibraryError, library_root, load, load_path
+from .migrate import migrate_part_text
 
 __all__ = [
     "FINDING_CODES",
@@ -12,4 +13,5 @@ __all__ = [
     "lint",
     "load",
     "load_path",
+    "migrate_part_text",
 ]

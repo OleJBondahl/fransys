@@ -126,7 +126,7 @@ def _connector_wired_without_mate(model: Model) -> list[Finding]:
                 continue
             message = (
                 f"a conductor lands directly on {ref(function)}, the "
-                f"{gender.value} boundary connector of "
+                f"{gender.name.lower()} boundary connector of "
                 f"{ref(unit)}; end a cable's cores at the connector's pins, with no mate"
             )
             subjects = (unit, function, record)

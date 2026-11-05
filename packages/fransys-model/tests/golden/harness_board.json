@@ -115,7 +115,7 @@
     "facet.connector": [
       {
         "ext": {},
-        "gender": "male",
+        "gender": "MALE",
         "id": "facet.connector:2a94c4d0a0055aaf9b7efee7deab65d7",
         "key": [
           "board",
@@ -130,7 +130,7 @@
       },
       {
         "ext": {},
-        "gender": "female",
+        "gender": "FEMALE",
         "id": "facet.connector:6a9ae88c2e1b52a6adaa37c9adba42a1",
         "key": [
           "housing-4p",
@@ -145,7 +145,7 @@
       },
       {
         "ext": {},
-        "gender": "neutral",
+        "gender": "GENDERLESS",
         "id": "facet.connector:b2ca7733cd9c567eb3c850a91bd71845",
         "key": [
           "housing-4p",

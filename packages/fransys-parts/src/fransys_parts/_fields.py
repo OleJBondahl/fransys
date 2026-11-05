@@ -14,12 +14,11 @@ from dataclasses import dataclass
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 
-from fransys_model.elecdef import LinkKind, PinRole, Side, Unit
+from fransys_model.elecdef import Gender, LinkKind, PinRole, Side, Unit
 from fransys_model.vocab import (
     ConductorMark,
     Energy,
     FunctionKind,
-    Gender,
     OperatedBy,
     PartCategory,
     PortBoundary,
@@ -84,6 +83,9 @@ FUNCTION_FIELDS = {
 # The part file's `side` word (schema 2): `line` is elecdef Side.A, `load` Side.B; the model stores the Side
 SIDE_WORDS = {"line": Side.A, "load": Side.B}
 
+# The part file's connector `gender` word (model-0080): the model stores the elecdef Gender, printed as its lower-case name
+GENDER_WORDS = {"male": Gender.MALE, "female": Gender.FEMALE, "genderless": Gender.GENDERLESS}
+
 # The part file's `role` word: the boundary a pin is on and the pin role it states (schema 2)
 ROLE_WORDS = {
     "generic": (PortBoundary.GENERIC, None),
@@ -143,7 +145,7 @@ CABLE_PRODUCT_FIELDS = {
 CONNECTOR_FIELDS = {
     "style": _Field(str),
     "pincount": _Field(int),
-    "gender": _Field(str, required=False, enum=Gender),  # model-0080: absent means not stated
+    "gender": _Field(str, required=False, enum=GENDER_WORDS),  # model-0080: absent means not stated
     # parts-0003: the label printed on the part ("X1"); absent means the function's name
     "marking": _Field(str, required=False),
     # parts-0016: the MPNs this connector mates with, data only

@@ -18,7 +18,6 @@ DERIVE = "fransys_model.derive"
 HOME_MODULES = frozenset(
     [
         "fransys_kernel.canonical_forms",
-        "fransys_kernel.diff",
         "fransys_kernel.findings",
         "fransys_kernel.naturals",
     ]

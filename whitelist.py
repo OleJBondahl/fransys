@@ -45,7 +45,7 @@ _ = _Whitelist()
 # --- fransys-model --------------------------------------------------------------------
 
 # derive/rows.py, derive/indexes.py, layout/formats.py, layout/hints.py, layout/results.py,
-# kernel/diff.py, vocab/document.py, vocab/facets/supply.py, vocab/project.py, vocab/ratings.py,
+# vocab/document.py, vocab/facets/supply.py, vocab/project.py, vocab/ratings.py,
 # vocab/revision.py: fields read by literal `obj.attr` syntax from another workspace package's
 # `src/` (OTHER), through `derive.rows.column_rows`'s generic `getattr(record, name)` on a
 # `*_COLUMNS` tuple (DICT, `derive/columns.py`), or -- for a field with neither, still a real
@@ -62,8 +62,6 @@ _.mate_port_designation  # DICT fransys-model/src/fransys_model/derive/rows.py:7
 _.mate_designation  # DICT fransys-model/src/fransys_model/derive/rows.py:765
 _.from_label  # DICT fransys-model/src/fransys_model/derive/rows.py:765
 _.to_label  # DICT fransys-model/src/fransys_model/derive/rows.py:765
-_.added  # FIELDS fransys-kernel/src/fransys_kernel/schema.py:37
-_.changed  # FIELDS fransys-kernel/src/fransys_kernel/schema.py:37
 _.produced_by  # FIELDS fransys-kernel/src/fransys_kernel/schema.py:37
 _.supplier  # FIELDS fransys-kernel/src/fransys_kernel/schema.py:37
 _.supplier_part_number  # FIELDS fransys-kernel/src/fransys_kernel/schema.py:37

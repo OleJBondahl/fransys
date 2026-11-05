@@ -51,7 +51,7 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         who="consumer",
         cause=(
             "A conductor from outside a nested unit lands directly on its boundary connector, "
-            "whose part gender is male or female (neutral or unstated passes)."
+            "whose part gender is male or female (genderless or unstated passes)."
         ),
         fix=("End a cable's cores at the connector's pins. Write: d.cable(\"W1\", P.CBL).core(1, plug[1], connector[1])"),
         page="findings-validators",

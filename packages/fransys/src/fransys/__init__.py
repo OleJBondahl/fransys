@@ -4,6 +4,8 @@ Documentation: https://olejbondahl.github.io/fransys/ (the site is the official 
 not the installed files). Look a name or a finding code up with `python -m fransys help KEY`.
 """
 
+from typing import NoReturn
+
 from fransys_author import AuthorError
 from fransys_author.surface import (
     AC_CONTROL,
@@ -39,6 +41,7 @@ from fransys_author.surface import (
     TypedDevice,
     TypedFn,
     UnitDef,
+    refuse,
     unit,
 )
 from fransys_parts import PartLibraryError
@@ -63,6 +66,12 @@ from .readability import readability
 from .settings import Settings, SettingsError, settings
 
 __doc__ += f"\nThis install, {__version__}: {version_url(__version__)} (agents: {version_url(__version__)}llms.txt)."
+
+
+def __getattr__(name: str) -> NoReturn:
+    """Refuse a missing name of `fr`: a removed one names its new spelling (deleted at the 0.23 tag)."""
+    refuse("fr", name)
+
 
 __all__ = [
     "AC_CONTROL",

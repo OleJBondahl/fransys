@@ -57,24 +57,5 @@ surface_docstring_lines = 15
 [fransys_defects]
 "packages/fransys-layout/tests/layout_cabinet.py::build_cabinet" = 0
 
-[test_lines]
-"internal/tests" = 8934
-"packages/electrical-symbols/tests" = 1697
-"packages/fransys-author/tests" = 5126
-"packages/fransys-el/tests" = 5108
-"packages/fransys-kernel/tests" = 2997
-"packages/fransys-kicad/tests" = 893
-"packages/fransys-layout/tests" = 19850
-"packages/fransys-model/tests" = 14855
-"packages/fransys-overview/tests" = 714
-"packages/fransys-parts/tests" = 1382
-"packages/fransys-pdf/tests" = 2635
-"packages/fransys-render/tests" = 703
-"packages/fransys-reports/tests" = 571
-"packages/fransys-wago/tests" = 415
-"packages/fransys/tests" = 5579
-"tests" = 29600
-"tests/field_cases" = 14174
-
 [exempt]
 "packages/fransys-overview/src/fransys_overview/_vendor_cytoscape.py" = "generated (overview-0001)"

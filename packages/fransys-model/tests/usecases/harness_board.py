@@ -9,10 +9,10 @@ from typing import TYPE_CHECKING
 
 from kit import Kit, PartSpec, Slot, template_of
 
-from fransys_model.elecdef import LinkKind, PinRole
+from fransys_model.elecdef import Gender, LinkKind, PinRole
 from fransys_model.kernel import make_id
 from fransys_model.vocab.core import Function, Item, Port
-from fransys_model.vocab.enums import Aspect, FunctionKind, Gender, NetClass, PartCategory, PortBoundary
+from fransys_model.vocab.enums import Aspect, FunctionKind, NetClass, PartCategory, PortBoundary
 from fransys_model.vocab.facets.cable import CableFacet, CableProductFacet
 from fransys_model.vocab.facets.connector import ConnectorFacet
 from fransys_model.vocab.facets.pcb import FootprintFacet, PcbFacet
@@ -110,7 +110,7 @@ def build_harness_board() -> Draft:
         subject=template_of(housing, "shell"),
         style="shell",
         pincount=1,
-        gender=Gender.NEUTRAL,
+        gender=Gender.GENDERLESS,
         marking="",
     )
     kit.facet(

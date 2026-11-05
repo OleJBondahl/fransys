@@ -8,6 +8,7 @@ from fransys_author.handles import Port
 lazy from fransys_author.design import Scope
 lazy from fransys_author.handles import Fn as EngineFn
 lazy from fransys_author.surface import _fn_pole, _throws
+lazy from fransys_author.surface._removed import refuse
 lazy from fransys_model.derive import pin_order
 lazy from fransys_model.kernel import Id, natural_join
 lazy from fransys_model.vocab import Function as ModelFunction
@@ -98,6 +99,8 @@ class Fn:
         """
         if name.startswith("__") or "_fn" not in vars(self):  # copy, unpickle: no recursion
             raise AuthorAttributeError(name)
+        if name in ("scale", "limits"):
+            refuse("Fn", name)
         if name in _throws.THROWS and not any(pin.name == name for pin in self._fn.ports):
             return _throws.throw(self._label, self._fn, name)
         owner, pins = f"{self._label}.{self._fn.name}", self._pins()

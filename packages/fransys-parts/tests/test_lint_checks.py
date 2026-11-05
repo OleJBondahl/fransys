@@ -85,7 +85,7 @@ def test_schema_1_library_is_part_schema_old_with_the_migrate_command(tmp_path):
     root = _root(tmp_path, library='schema = 1\nname = "l"\nversion = "0.1.0"\ndescription = "d"\n')
     old = [f for f in fransys_parts.lint(root) if f.code == "PART_SCHEMA_OLD"]
     assert old
-    assert "migrate_parts_022 script" in old[0].message
+    assert "python -m fransys migrate-parts DIR" in old[0].fix
 
 
 def test_table_unknown(tmp_path):

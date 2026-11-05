@@ -15,7 +15,7 @@ from fransys_model import derive as model_derive
 _REPO_ROOT = next(p for p in Path(__file__).resolve().parents if (p / "examples").is_dir())
 
 # Surface names the facade uses internally and does not re-export (AUTH-2).
-_NOT_RE_EXPORTED = {"Item", "Location", "Scope"}
+_NOT_RE_EXPORTED = {"Item", "Location", "Scope", "refuse"}
 
 _EXPECTED_ALL = [
     "AC_CONTROL",

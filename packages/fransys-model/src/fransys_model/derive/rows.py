@@ -19,13 +19,13 @@ from decimal import Decimal
 from enum import Enum
 from typing import Any
 
-from fransys_model.elecdef import Rating
+from fransys_model.elecdef import Gender, Rating
 from fransys_model.kernel import Id, register_enum, value
 from fransys_model.layout import OverviewRef
 from fransys_model.vocab.aspects import AspectNode
 from fransys_model.vocab.connectivity import Conductor
 from fransys_model.vocab.core import Function, Item, Port, Unit
-from fransys_model.vocab.enums import FunctionKind, Gender, ItemKind
+from fransys_model.vocab.enums import FunctionKind, ItemKind
 from fransys_model.vocab.templates import FunctionTemplate, Part
 
 from .rows_cores import OpenCoreRow

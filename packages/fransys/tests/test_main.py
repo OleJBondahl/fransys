@@ -1,10 +1,12 @@
 """`python -m fransys parts-module LIBRARY OUT` writes the module `parts_module` returns."""
 
+import importlib.resources
 import subprocess
 import sys
 
 import fransys
-from fransys.__main__ import main
+import fransys_parts
+from fransys.__main__ import USAGE, main
 from fransys._codes import BY_CODE
 from fransys._help import help_text
 from fransys.parts_module import parts_module
@@ -66,3 +68,47 @@ def test_a_name_wins_over_a_code() -> None:
     text, code = help_text("write")
     assert code == 0
     assert text.startswith("fr.write(")
+
+
+_LIBRARY_1 = 'schema = 1\nname = "l"\nversion = "0.1.0"\ndescription = "d"\n'
+_PART_1 = """schema = 1
+
+[part]
+mpn = "X-1"
+manufacturer = "Demo"
+description = "d"
+category = "generic"
+class_code = "X"
+
+[rating]
+voltage_ac_v = "500"
+"""
+
+
+def _schema_1_library(tmp_path, part=_PART_1):
+    (tmp_path / "pkg" / "parts").mkdir(parents=True)
+    (tmp_path / "pkg" / "library.toml").write_text(_LIBRARY_1)
+    (tmp_path / "pkg" / "parts" / "p.toml").write_text(part)
+    return tmp_path / "pkg"
+
+
+def test_migrate_parts_rewrites_a_schema_1_library_that_then_lints_clean(tmp_path, capsys) -> None:
+    root = _schema_1_library(tmp_path)
+    assert "PART_SCHEMA_OLD" in {f.code for f in fransys_parts.lint(root)}
+    assert main(["migrate-parts", str(tmp_path)]) == 0
+    assert capsys.readouterr().out.count("rewrote ") == 2
+    assert 'voltage = [{ nom = "500 V", at = ["AC"] }]' in (root / "parts" / "p.toml").read_text()
+    assert not [f for f in fransys_parts.lint(root) if f.severity.name == "ERROR"]
+
+
+def test_migrate_parts_names_the_file_it_cannot_convert_and_keeps_library_toml(tmp_path, capsys) -> None:
+    root = _schema_1_library(tmp_path, _PART_1.replace('"500"', '"500" # volts'))
+    assert main(["migrate-parts", str(tmp_path)]) == 1
+    assert "p.toml" in capsys.readouterr().err
+    assert (root / "library.toml").read_text() == _LIBRARY_1
+
+
+def test_the_guide_names_the_migrate_parts_command() -> None:
+    page = importlib.resources.files("fransys").joinpath("guide", "parts.md").read_text(encoding="utf-8")
+    assert "python -m fransys migrate-parts DIR" in page
+    assert "migrate-parts DIR" in USAGE

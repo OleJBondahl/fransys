@@ -10,8 +10,9 @@ from fransys_author.instantiate import instantiate
 from fransys_parts import PartLibraryError
 
 from fransys_model.derive import connector_rows, function_templates, internal_links, port_templates
+from fransys_model.elecdef import Gender
 from fransys_model.kernel import Origin, freeze
-from fransys_model.vocab import Gender, Item, PartBundle, parts
+from fransys_model.vocab import Item, PartBundle, parts
 from fransys_model.vocab.facets.connector import ConnectorFacet
 from fransys_model.vocab.tables import facets_of
 
@@ -69,11 +70,12 @@ def test_an_absent_gender_lints_clean_loads_as_none_and_reaches_the_connector_ro
     assert row.gender is None
 
 
-def test_a_present_gender_still_loads_onto_the_facet(tmp_path):
-    root = _library(tmp_path, 'gender = "female"\n')
+@pytest.mark.parametrize(("word", "gender"), [("male", Gender.MALE), ("female", Gender.FEMALE), ("genderless", Gender.GENDERLESS)])
+def test_a_present_gender_still_loads_onto_the_facet(tmp_path, word, gender):
+    root = _library(tmp_path, f'gender = "{word}"\n')
     assert fransys_parts.lint(root) == ()
     (facet,) = facets_of(freeze(fransys_parts.load_path(root)), ConnectorFacet).values()
-    assert facet.gender is Gender.FEMALE
+    assert facet.gender is gender
 
 
 def test_a_gender_that_is_not_a_member_is_refused_by_lint_and_by_load(tmp_path):

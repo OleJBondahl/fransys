@@ -11,7 +11,6 @@ from fransys_model.vocab import (
     Energy,
     FunctionKind,
     FunctionTemplate,
-    Gender,
     InternalLink,
     Part,
     PlcChannelFacet,
@@ -22,7 +21,7 @@ from fransys_model.vocab import (
 )
 
 from . import _joins, _pole_facts, _ratings, _toml
-from ._fields import REST_WORDS, SIDE_WORDS, port_roles
+from ._fields import GENDER_WORDS, REST_WORDS, SIDE_WORDS, port_roles
 
 
 @dataclass(frozen=True, slots=True)
@@ -158,7 +157,7 @@ def _add_connector(
             subject=function_id,
             style=connector["style"],
             pincount=connector["pincount"],
-            gender=Gender(connector["gender"]) if "gender" in connector else None,
+            gender=GENDER_WORDS[connector["gender"]] if "gender" in connector else None,
             marking=connector.get("marking"),
             mates=tuple(connector.get("mates", ())),
         ),

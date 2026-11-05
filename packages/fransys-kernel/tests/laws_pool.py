@@ -12,10 +12,10 @@ lazy from collections.abc import Iterable
 from hypothesis import strategies as st
 
 from fransys_kernel import Id, make_id
-from fransys_model.elecdef import LinkKind
+from fransys_model.elecdef import Gender, LinkKind
 from fransys_model.vocab.connectivity import Conductor, Mate, Net
 from fransys_model.vocab.core import Function, Item, Port, Unit, UnitRelease
-from fransys_model.vocab.enums import ConductorKind, FunctionKind, Gender, NetClass, PartCategory, PortBoundary
+from fransys_model.vocab.enums import ConductorKind, FunctionKind, NetClass, PartCategory, PortBoundary
 from fransys_model.vocab.facets import CableProductFacet, ConnectorFacet, SupplyFacet, TerminalFacet
 from fransys_model.vocab.templates import (
     FunctionTemplate,

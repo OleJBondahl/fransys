@@ -889,16 +889,8 @@
 [library_twins]
 "name:electrical_symbols._version::LIBRARY_VERSION" = 1
 "name:fransys.pipeline::check" = 1
-"name:fransys_author.handles::Port" = 1
-"name:fransys_author.handles::Terminal" = 1
-"name:fransys_author.surface._device::Device" = 1
-"name:fransys_author.surface._handles::pick" = 1
-"name:fransys_author.surface._rows::table" = 1
 "name:fransys_el.placement_kit::Pick" = 1
 "name:fransys_el.placement_pins::nodes_of" = 1
-"name:fransys_kernel.conform::Reference" = 1
-"name:fransys_kernel.findings::Finding" = 1
-"name:fransys_kernel.findings::Severity" = 1
 "name:fransys_kicad.check::check" = 1
 "name:fransys_layout.core.keys::natural_key" = 1
 "name:fransys_layout.core.place_align::Line" = 1
@@ -908,9 +900,7 @@
 "name:fransys_layout.core.topology_fans::Slot" = 1
 "name:fransys_layout.core.values::Anchor" = 1
 "name:fransys_layout.core.values::Box" = 1
-"name:fransys_layout.core.values::Finding" = 1
 "name:fransys_layout.core.values::Orientation" = 1
-"name:fransys_layout.core.values::Unit" = 1
 "name:fransys_layout.drawing::Style" = 1
 "name:fransys_layout.drawing::WireStyle" = 1
 "name:fransys_layout.engines.overview.lanes.arrange::orient" = 1
@@ -921,8 +911,6 @@
 "name:fransys_layout.geometry.units::Point" = 1
 "name:fransys_layout.options::TextPlacement" = 1
 "name:fransys_model.layout.enums::Orientation" = 1
-"name:fransys_model.vocab.core::Port" = 1
-"name:fransys_model.vocab.core::Unit" = 1
 "name:fransys_model.vocab.enums::Aspect" = 1
 "name:fransys_parts._changeover::check" = 1
 "name:fransys_parts._function_facts::check" = 1

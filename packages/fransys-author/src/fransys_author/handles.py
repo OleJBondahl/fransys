@@ -29,6 +29,7 @@ from fransys_model.vocab import (
     Port as ModelPort,
 )
 from fransys_model.vocab import Unit as ModelUnit
+lazy from fransys_author.surface._removed import refuse
 lazy from fransys_model.elecdef import PinRole
 
 from ._enums import member
@@ -219,6 +220,12 @@ class Terminal:
     _fixed: bool = field(
         default=False, init=False, compare=False, repr=False
     )  # a series named this terminal by number; a container's whole-strip take skips it
+
+    if not TYPE_CHECKING:
+
+        def __getattr__(self, name: str) -> None:
+            """Raise the removed-name text for `limits`; any other missing name is a plain AttributeError."""
+            refuse("Terminal", name)
 
     @property
     def inner(self) -> Port:

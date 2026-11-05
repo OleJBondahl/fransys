@@ -165,7 +165,7 @@ def _kernel_model_imports(root: Path) -> list[str]:
 
 def test_the_kernel_package_imports_no_fransys_model() -> None:
     """`fransys_kernel` sits under `fransys_model`: it never imports it (decision 0208)."""
-    assert len(list(KERNEL_SRC.rglob("*.py"))) == 29
+    assert len(list(KERNEL_SRC.rglob("*.py"))) == 28
     assert _kernel_model_imports(KERNEL_SRC) == []
 
 

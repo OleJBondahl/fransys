@@ -15,7 +15,6 @@ from fransys_model.derive import (
     carried_functions,
     changeover_throws,
     connected_ports,
-    connector_facets,
     function_poles,
     function_ports,
     function_role,
@@ -31,6 +30,7 @@ from fransys_model.derive import (
     port_templates,
     ports,
     schematic_functions,
+    template_gender,
 )
 from fransys_model.derive.drawing_text import pole_prefix
 from fransys_model.elecdef import LinkKind
@@ -77,13 +77,12 @@ def _rest(model: Model, function: Function) -> str | None:
 def _facts(model: Model, function: Function) -> Facts:
     template = function.template
     protection = None if template is None else function_templates(model)[template].protection_type
-    facet = None if template is None else connector_facets(model).get(template)
     operator = operated_by(model, function.id)
     return Facts(
         function.kind.value,
         _rest(model, function),
         None if protection is None else protection.value,
-        None if facet is None or facet.gender is None else facet.gender.value,
+        template_gender(model, template),
         None if operator is None else operator.value,
         port_shape([port_name(model, p) for p in function_ports(model, function.id)]),
     )

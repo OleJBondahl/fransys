@@ -103,7 +103,6 @@ HOME_MODULES = [
     "fransys_model.derive.order",
     "fransys_model.derive.order_lists",
     "fransys_kernel.canonical_forms",
-    "fransys_kernel.diff",
     "fransys_kernel.findings",
     "fransys_kernel.naturals",
     "fransys_layout.core.keys",

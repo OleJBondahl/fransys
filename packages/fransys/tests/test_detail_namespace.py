@@ -1,13 +1,14 @@
 """`d.detail` holds the detail calls, and the old names on `d` raise (author-0042, A2)."""
 
 import re
-from importlib.resources import files
+from pathlib import Path
 
 import fransys as fr
 import pytest
 from fransys.colours import BK
+from fransys_author.errors import AuthorAttributeError
+from fransys_author.surface._removed import REMOVED
 
-_MOVED = ("busbar",)
 # The digest of this design built with d.wire, d.net and d.busbar at main 8650e4af9, without the rail_bond call (RAIL-FLAG R900 G3 deleted it).
 # The digest covers the demo part library, so it moved with the library, never with the move:
 # 54c87f08d (main f6f5720e4), 60889bbd4 (DEMO-LAMP-24 rating, parts-0022) and 7597e12be (demo
@@ -66,7 +67,8 @@ _MOVED = ("busbar",)
 # API-CLOSE (R1486) adds `marker_padding` to the `[profile]` house record and API-022 P2 deletes the hint kinds, and
 # API-WIRE (R1496) deletes the wire label= the design carried (label="W1"): it moves again; the pin before them ended b45c195b49ad...
 # STUB-PER-CONDUCTOR (layout-0533) bumps SCHEMA_VERSION 22 -> 23, which the digest holds: only that moves it; it ended e755c0bb2d24...
-_DIGEST_BEFORE_THE_MOVE = "ede710deb701bc64bf4962a1ea3d03c6a8033aa36da88aa462c5bcfb55e4a903"
+# MATES-LIB (R1740) stores the connector Gender by its elecdef name (MALE, not male): it moves again; the pin before it ended ede710deb701...
+_DIGEST_BEFORE_THE_MOVE = "dcb48ccd9ecacd54e0a235408e5950aaa7de475673a2f523527e00cdf7632522"
 
 
 def test_each_moved_call_builds_the_model_it_built_on_d():
@@ -80,43 +82,37 @@ def test_each_moved_call_builds_the_model_it_built_on_d():
     assert fr.build(d).model.digest == _DIGEST_BEFORE_THE_MOVE
 
 
-@pytest.mark.parametrize("name", _MOVED)
-def test_a_moved_name_on_d_raises_naming_its_new_home(name):
+_GUIDE = Path(__file__).parents[1] / "src" / "fransys" / "guide" / "moving-to-0.22.md"
+
+
+def _owner(name: str):
     d = fr.design("demo_parts")
-    with pytest.raises(fr.AuthorError, match=rf"d\.{name} moved to d\.detail\.{name} in 0\.19\.0"):
-        getattr(d, name)
-    assert not hasattr(d, name)
-    assert not hasattr(fr.Design, name)
-    assert callable(getattr(d.detail, name))
+    handles = {"fr": fr, "Design": d, "Detail": d.detail, "Layout": d.layout}
+    handles["Fn"] = d.device("S1", "DEMO-PB-NC").sw
+    handles["Terminal"] = d.terminal_strip("X4", "DEMO-TB-2.5", 2)[1]
+    return handles[name]
 
 
-@pytest.mark.parametrize("name", ["busbar"])
-def test_the_other_moved_errors_name_no_core_path(name):
-    with pytest.raises(fr.AuthorError) as raised:
-        getattr(fr.design("demo_parts"), name)
-    assert re.fullmatch(
-        rf"d\.{name} moved to d\.detail\.{name} in 0\.19\.0: see moving-to-0\.19#[\w-]+",
-        str(raised.value),
-    )
+@pytest.mark.parametrize("row", REMOVED, ids=lambda r: f"{r.owner}.{r.name}")
+def test_a_removed_name_raises_its_table_text(row):
+    obj = _owner(row.owner)
+    with pytest.raises(AuthorAttributeError, match=re.escape(f"{row.text}; see moving-to-0.22#{row.anchor}")):
+        getattr(obj, row.name)
+    assert getattr(obj, row.name, None) is None
 
 
-def _slug(heading: str) -> str:
-    """A markdown heading's anchor: lower case, words joined by `-`, other marks dropped."""
-    return re.sub(r"[^\w\- ]", "", heading.strip().lower()).replace(" ", "-")
+def test_the_moved_busbar_still_lives_on_detail():
+    assert callable(fr.design("demo_parts").detail.busbar)
 
 
-def anchors(page: str) -> set[str]:
-    text = files("fransys").joinpath("guide", page).read_text(encoding="utf-8")
-    return {_slug(line.lstrip("#")) for line in text.splitlines() if line.startswith("#")}
+@pytest.mark.parametrize("owner", ["fr", "Design", "Detail", "Layout", "Terminal"])
+def test_an_unknown_or_private_name_names_no_removal(owner):
+    for name in ("no_such_name", "__wrapped__"):
+        with pytest.raises(AttributeError) as raised:
+            getattr(_owner(owner), name)
+        assert "removed in 0.22" not in str(raised.value)
 
 
-def test_the_moved_name_error_points_to_a_section_of_the_moving_to_page():
-    """A10: the raise names `moving-to-0.19#<anchor>`, and the page has that heading."""
-    with pytest.raises(fr.AuthorError) as raised:
-        fr.design("demo_parts").busbar  # noqa: B018 -- the lookup itself raises
-    found = re.search(r"see (moving-to-[\d.]+)#([\w-]+)", str(raised.value))
-    assert found, raised.value
-    page, anchor = found.groups()
-    assert anchor in anchors(f"{page}.md")
-    assert "the-detail-calls" in anchors("moving-to-0.19.md")
-    assert "the-detail-calls" not in anchors("moving-to-0.15.md")
+def test_every_table_anchor_is_in_the_moving_to_page():
+    page = _GUIDE.read_text(encoding="utf-8")
+    assert [row for row in REMOVED if f'id="{row.anchor}"' not in page] == []

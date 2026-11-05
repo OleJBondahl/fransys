@@ -21,6 +21,18 @@ NOT_TWINS = {
     ),
     "fransys_model.layout.enums::Corner": "the model may not import symdef (owner 2026-10-24)",
     "fransys_el.placement_annexes::Corner": "CLEANUP-AFTER-022 (R1622)",
+    "fransys_author.handles::Port": "a handle on one port of a Fn, not symdef's symbol connection point",
+    "fransys_author.handles::Terminal": "a strip terminal handle, not refdef's designation-with-pins",
+    "fransys_author.surface._device::Device": "a handle on one device item, not elecdef's pins-and-links record",
+    "fransys_author.surface._handles::pick": "picks one pin by name, not elecdef's rating-range pick",
+    "fransys_author.surface._rows::table": "wiring-row style table, not symdef's row-of-symbols table",
+    "fransys_kernel.conform::Reference": "an Id held by a record, not symdef's standard reference",
+    "fransys_kernel.findings::Finding": "an engineering finding of the pipeline, not symdef's lint finding",
+    "fransys_kernel.findings::Severity": "INFO/WARNING/ERROR output-blocking policy, not symdef's lint severity",
+    "fransys_layout.core.values::Finding": "a placer finding, not symdef's lint finding",
+    "fransys_layout.core.values::Unit": "a unit boundary for placement, not elecdef's physical unit of measure",
+    "fransys_model.vocab.core::Port": "a port of a Function record, not symdef's symbol port",
+    "fransys_model.vocab.core::Unit": "a released-component instance, not elecdef's unit of measure",
 }
 M = "packages/fransys-model/src/fransys_model/"
 A = "packages/fransys-author/src/fransys_author/surface/"

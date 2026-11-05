@@ -40,6 +40,14 @@ python -m fransys parts-module demo_parts demo_typed.py
 
 `fr.parts_module("demo_parts")` returns the same module as text, when a script writes the file itself.
 
+A library written in schema 1 (0.21) is refused with `PART_SCHEMA_OLD`. Move it to schema 2 in place from a shell:
+
+```text
+python -m fransys migrate-parts DIR
+```
+
+The command rewrites every part file and `library.toml` under `DIR` and prints each file it rewrote. A file it cannot convert is named with the fix, and its `library.toml` stays unchanged.
+
 The part library generates this module and ships it, and the projects that use the library import it
 rather than generate their own. A pin whose marking is not a Python name gets an attribute by the
 one name rule (authoring.md): the pin `1/L1` is `k.main.P_1_L1` and `24V1` is `psu.P_24V1`, each checked by ty.

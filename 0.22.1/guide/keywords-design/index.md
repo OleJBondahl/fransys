@@ -1,0 +1,204 @@
+# Keywords of the d calls
+
+This page has one table for each `d.*` and `d.detail.*` call: each keyword, its default, its effect and an example.
+A call that takes only `*args` has no table; one sentence says what it takes.
+
+`place=` is the same on every call that takes it: see its table in `authoring.md`.
+The `fr.*` functions are in `keywords-output.md`, the handle methods and layout hints in `keywords-handles.md`.
+
+## `d.device`
+
+| keyword | default | effect | example |
+|---|---|---|---|
+| `tag` | required | The printed tag, with no lowercase letter. `None` numbers the device from its class code and needs `name=`. | `d.device("Q1", P.Q)` |
+| [`part`](../parts/index.md#the-typed-parts-module) | required | A part class or an MPN string. `None` makes an `external=True` box of `pins=`, with no BOM line. | `d.device("Q1", "DEMO-MCB-3P")` |
+| [`pins`](../authoring/index.md#name-a-place-and-a-function-block) | `None` | Names the pins of a part-less box (`part=None`); each is an attribute too, `ext.U` as `ext["U"]`. | `d.device("A1", None, pins=("1", "2"), external=True)` |
+| [`place`](../authoring/index.md#name-a-place-and-a-function-block) | `...` | Where the device stands. | `d.device("Q1", P.Q, place="HOLD")` |
+| [`parent`](../parts/index.md#an-accessory-in-its-holder) | `None` | The device, strip or cable that holds this one; an accessory prints its holder's designation. | `d.device("J1", P.HSG, parent=k1)` |
+| `name` | `None` | The key a released number holds to. Needed when `tag=None`. | `d.device(None, P.Q, name="main-breaker")` |
+| [`interface`](../units/index.md#the-interface) | `False` | Marks functions as the unit's boundary: `True` all, a tuple those. | `d.device("X1", P.CONN, interface=True)` |
+| [`unused`](../units/index.md#the-interface) | `False` | Marks functions as unused, so no unused-pin finding is raised: `True` all, a tuple those. | `d.device("X1", P.CONN, unused=("x2",))` |
+| `mounted_on` | `None` | Mounts the device on a carrier, as a contactor on a protective switch; the carrier's load pins join this device's line pins pole by pole. | `d.device("K1", P.CTR, mounted_on=q1)` |
+| [`joins`](../harnesses/index.md#fit-a-housing-on-a-parts-leads) | `None` | Maps the housing's pins to the parent's pins, joined with no wire. Needs `parent=` to be a device. | `d.device("J1", P.HSG, parent=k1, joins={1: k1.coil["A1"]})` |
+| `description` | `''` | Designation-list text in place of the part's description. | `d.device("Q1", P.Q, description="Pump breaker")` |
+| `position` | `None` | The physical order within the parent, such as a PLC module's slot. | `d.device("A2", P.DI8, parent=rack, position=2)` |
+| `installed` | `True` | `False` keeps the device in drawings but drops it from the BOM. | `d.device("Q9", P.Q, installed=False)` |
+| [`external`](../authoring/index.md#name-a-place-and-a-function-block) | `False` | `True` marks the device as supplied by others: no BOM line, and drawings mark it dashed "(by others)". | `d.device("M1", P.MOTOR, external=True)` |
+| [`contacts`](../harnesses/index.md#add-crimp-contacts) | `None` | Fits a contact part in every pin of a housing, or a pin-to-part mapping for mixed contacts. | `d.device("P1", P.HSG, parent=w1, contacts="DEMO-CRIMP-M")` |
+
+## `d.terminal_strip`
+
+| keyword | default | effect | example |
+|---|---|---|---|
+| `tag` | required | The printed tag. `None` numbers the strip and needs `name=`. | `d.terminal_strip("X1", P.TB, 10)` |
+| `part` | required | The terminal part. `None` makes part-less terminals with only `.outer`; needs `external=True`. | `d.terminal_strip("X9", None, external=True)` |
+| [`count`](../authoring/index.md#strips-and-terminals) | `None` | The number of terminals. `X1[3]` makes terminal 3 on first use. | `d.terminal_strip("X1", P.TB, count=10)` |
+| `name` | `None` | The key a released number holds to. Needed when `tag=None`. | `d.terminal_strip(None, P.TB, name="field")` |
+| `description` | `''` | Designation-list text in place of the part's. | `d.terminal_strip("X1", P.TB, description="Field strip")` |
+| [`place`](../authoring/index.md#name-a-place-and-a-function-block) | `...` | Where the strip stands. | `d.terminal_strip("X1", P.TB, place="HOLD")` |
+| [`pe`](../authoring/index.md#strips-and-terminals) | `None` | The part of the strip's protective-earth terminals. A run labelled `"PE"` takes it and raises without one. | `d.terminal_strip("X1", P.TB, pe="DEMO-TB-PE-2.5")` |
+| [`interface`](../authoring/index.md#strips-and-terminals) | `False` | Marks terminals as the unit's boundary: `True` all, a tuple those. | `d.terminal_strip("X1", P.TB, 4, interface=(1, 2))` |
+| [`unused`](../authoring/index.md#strips-and-terminals) | `False` | Marks terminals as unused: `True` all, a tuple those. | `d.terminal_strip("X1", P.TB, 4, unused=(3, 4))` |
+| [`bridged`](../authoring/index.md#bridges) | `False` | Bridges plain terminals: `True` bridges all, `(first, last)` a range, a tuple of ranges several. | `d.terminal_strip("X4", P.TB, 6, bridged=(2, 6))` |
+| [`rail`](../authoring/index.md#power-rails) | `False` | Declares the strip's one bridged group a power rail; several ranges raise. | `d.terminal_strip("X1", P.TB, 4, bridged=True, rail=True)` |
+| [`external`](../authoring/index.md#name-a-place-and-a-function-block) | `False` | `True` flags the strip and its terminals as by others. | `d.terminal_strip("X9", P.TB, 4, external=True)` |
+
+## `d.cable`
+
+| keyword | default | effect | example |
+|---|---|---|---|
+| `tag` | required | The printed tag. `None` numbers the cable and needs `name=`. | `d.cable("W1", P.CBL)` |
+| `part` | required | The cable part, which gives the cores. | `d.cable("W1", "DEMO-CBL-4G1.5")` |
+| `length_m` | `None` | The length in metres, stored as whole millimetres, printed in the cable list. | `d.cable("W1", P.CBL, length_m=5)` |
+| [`place`](../authoring/index.md#name-a-place-and-a-function-block) | `...` | Where the cable stands. | `d.cable("W1", P.CBL, place="HOLD")` |
+| [`parent`](../series/index.md#cables) | `None` | The harness that holds the cable. | `d.cable("W5", P.CBL, parent=h1)` |
+| `name` | `None` | The key a released number holds to. Needed when `tag=None`. | `d.cable(None, P.CBL, name="motor-cable")` |
+| `external` | `False` | `True` flags the cable as supplied by others; its cores carry no flag. | `d.cable("W1", P.CBL, external=True)` |
+
+## `d.add`
+
+| keyword | default | effect | example |
+|---|---|---|---|
+| `definition` | required | The unit made by `fr.unit`. The call returns the unit function's result. | `u1 = d.add(board, "U1")` |
+| `tag` | required | The instance's printed tag, with no lowercase letter. | `d.add(board, "U1")` |
+| [`place`](../authoring/index.md#name-a-place-and-a-function-block) | `...` | Where the instance stands. | `d.add(board, "U1", place="HOLD")` |
+| `name` | `None` | The identity a released number holds to, when it must differ from the tag. | `d.add(board, "U1", name="module1")` |
+
+## `d.ac_supply`
+
+`d.ac_supply(name, voltage, *phases, ...)` takes the phase pins in phase order as `phases`: one or three.
+
+| keyword | default | effect | example |
+|---|---|---|---|
+| `name` | required | The supply's name. Its rails are `ac.L1` and so on. | `d.ac_supply("230V", 230, x0[1], n=x0[2])` |
+| [`voltage`](../authoring/index.md#ac-or-dc-supply-and-rails) | required | Each phase's RMS voltage to the star point. | `d.ac_supply("400V", 400, q1["L1"], q1["L2"], q1["L3"])` |
+| [`n`](../authoring/index.md#ac-or-dc-supply-and-rails) | `None` | The neutral pin. A series joins N only where an element has a pole. | `n=q1["N"]` |
+| [`names`](../authoring/index.md#ac-or-dc-supply-and-rails) | `None` | Renames the potentials: one name per phase pin, then one for `n`. The rails keep their names. | `names=("A", "B", "C")` |
+
+## `d.dc_supply`
+
+| keyword | default | effect | example |
+|---|---|---|---|
+| `name` | required | The supply's name. Its rails are `dc.plus` and `dc.minus`. | `d.dc_supply("24VDC", psu.output)` |
+| [`source`](../authoring/index.md#ac-or-dc-supply-and-rails) | `None` | A device or function whose L+ and L- pins and voltage are the supply. Without it, `plus`, `minus` and `voltage` are required. | `d.dc_supply("24VDC", g1.output)` |
+| [`plus`](../authoring/index.md#ac-or-dc-supply-and-rails) | `None` | The plus pin, with no `source`. | `plus=x1[1]` |
+| [`minus`](../authoring/index.md#ac-or-dc-supply-and-rails) | `None` | The minus pin, with no `source`. | `minus=x1[2]` |
+| [`mid`](../authoring/index.md#ac-or-dc-supply-and-rails) | `None` | A middle conductor at 0 V; plus and minus are then plus and minus the voltage. | `mid=x1[3]` |
+| [`voltage`](../authoring/index.md#ac-or-dc-supply-and-rails) | `None` | The voltage, required when no `source` or its part states none. | `voltage=24` |
+| [`names`](../authoring/index.md#ac-or-dc-supply-and-rails) | `None` | Renames the potentials, in the order plus, minus, mid. | `names=("P24", "M24")` |
+
+## `d.earth`
+
+`d.earth(*pins)` takes the pins to join to protective earth, one `PE` net. A terminal lands on its inner side. Example: `d.earth(x1[3], q1["PE"])`.
+
+## `d.function`
+
+| keyword | default | effect | example |
+|---|---|---|---|
+| [`name`](../authoring/index.md#name-a-place-and-a-function-block) | required | The function block's name, printed `=name`. Devices made inside the `with` block belong to it, which sets their designation. | `with d.function("RUN", "Pump run"):` |
+| [`text`](../authoring/index.md#name-a-place-and-a-function-block) | required | The block's description, printed on the pages that draw it. | `with d.function("RUN", "Pump run"):` |
+
+## `d.location`
+
+| keyword | default | effect | example |
+|---|---|---|---|
+| [`name`](../authoring/index.md#name-a-place-and-a-function-block) | required | The place's tag, printed `+name`. | `d.location("HOLD", "Engine hold")` |
+| [`text`](../authoring/index.md#name-a-place-and-a-function-block) | required | The place's description. | `d.location("HOLD", "Engine hold")` |
+| [`within`](../authoring/index.md#a-place-inside-a-place) | `None` | The outer place, which must exist; the place prints `+outer+name`. `None` puts it at the root. | `d.location("BATT", "Batteries", within="HOLD")` |
+
+## `d.harness`
+
+Refused for 0.22 (`MATES_DISABLED`, an ERROR): draw the link as a cable or wires.
+
+| keyword | default | effect | example |
+|---|---|---|---|
+| [`tag`](../harnesses/index.md#add-a-harness) | `None` | The part-less harness's tag. `None` numbers it and needs `name=`. | `d.harness("H1")` |
+| `name` | `None` | The key a released number holds to. | `d.harness(None, name="main-loom")` |
+| [`place`](../authoring/index.md#name-a-place-and-a-function-block) | `...` | Where the harness stands. `None` gives it no place. | `d.harness("H1", place=None)` |
+| `external` | `False` | `True` flags the harness as by others. | `d.harness("H1", external=True)` |
+
+## `d.rack`
+
+| keyword | default | effect | example |
+|---|---|---|---|
+| `tag` | required | The part-less PLC rack's tag. Modules go under it with `parent=`. | `d.rack("U1")` |
+| `name` | `None` | The key a released number holds to. | `d.rack("U1", name="plc")` |
+| [`place`](../authoring/index.md#name-a-place-and-a-function-block) | `...` | Where the rack stands. `None` gives it no place. | `d.rack("U1", place="HOLD")` |
+| `external` | `False` | `True` flags the rack as by others. | `d.rack("U1", external=True)` |
+
+## `d.mate`
+
+Refused in 0.22 (`MATES_DISABLED`, an ERROR): draw the link as a cable or wires.
+
+| keyword | default | effect | example |
+|---|---|---|---|
+| [`a`](../authoring/index.md#plug-a-connector) | required | The connector to plug in: a one-function device, or that function. | `d.mate(j1, j2)` |
+| [`b`](../authoring/index.md#plug-a-connector) | required | The connector `a` plugs into. | `d.mate(j1, j2)` |
+
+## `d.series`
+
+`d.series(*elements, ...)` takes the elements to wire end to end, each one's load to the next one's line. A pin or a tuple of one device's pins starts or ends it.
+
+| keyword | default | effect | example |
+|---|---|---|---|
+| [`wire`](../series/index.md#colour-by-what-a-wire-carries) | `None` | The wire of every pole: a size, a table of rows that replaces only those rows, one `(colour, size)`, or a tuple of them in pole order. `None` uses the rows' defaults; a row with no size is `WIRE_ROW_UNRESOLVED`. A series through a cable whose part has a core table needs no `wire=`. | `d.series(dc.plus, k1.aux, h1.lamp, dc.minus, wire=(BU, 0.75))`; `d.series(x1[1:4], q1.element, wire=((BN, 1.5), (BK, 1.5), (GY, 1.5)))` |
+
+## `d.pair`
+
+`d.pair(a, cable, b)` joins two ends through a cable pin for pin: core `i` runs from `a`'s pin `i` to `b`'s pin `i`, with no line or load direction.
+
+| keyword | default | effect | example |
+|---|---|---|---|
+| [`a`](../detail/index.md#when-a-detail-call-is-right) | required | The first end: terminals (`x8[1:3]`; field side), a function (`b1.sig`, pins in connector order), or pins (`b1.sig[1]`), as `d.series` reads them. | `x8[1:3]` |
+| [`cable`](../detail/index.md#when-a-detail-call-is-right) | required | The cable between the ends. | `w3` |
+| [`b`](../detail/index.md#when-a-detail-call-is-right) | required | The second end, with as many pins as `a`; a strip or a device raises. | `b1.sig` |
+
+Example: `d.pair(x8[1:3], w3, b1.sig)`.
+
+## `d.parallel`
+
+`d.parallel(*members)` takes the members to group, so a series puts each between the previous load and the next line. It connects nothing alone. Example: `d.series(dc.plus, d.parallel(h1.lamp, h2.lamp), dc.minus)`.
+
+## `d.poles`
+
+`d.poles(*functions, ...)` takes one-pole contacts of one device, in pole order, as one multi-pole element. A series wires the group.
+
+| keyword | default | effect | example |
+|---|---|---|---|
+| [`selector`](../series/index.md#contacts-that-switch-together) | `False` | `True` turns a changeover group's throws to the line side: a series enters at the throws, and the group draws turned. `False` keeps the line at the commons. It raises on a part that states a selector or a group that is not changeovers. | `q = d.poles(k1.co_1, k1.co_2, k1.co_3, selector=True)` |
+
+## `d.project`
+
+| keyword | default | effect | example |
+|---|---|---|---|
+| [`title`](../authoring/index.md#title-block-revision) | required | The project title, printed in every title block. | `d.project(title="Pump", ...)` |
+| [`number`](../authoring/index.md#title-block-revision) | required | The drawing number, printed in the title block. | `number="DC-1"` |
+| [`customer`](../authoring/index.md#title-block-revision) | required | The customer, printed in the title block. | `customer="Demo Ltd"` |
+| `revision` | required | The current revision, an integer from 1; its date is the matching `d.revision` entry's. | `revision=2` |
+| [`author`](../documents/index.md#presets-cover-and-notes-text) | required | The author, printed in the Author cell. | `author="AB"` |
+| [`notice`](../documents/index.md#presets-cover-and-notes-text) | `None` | Not accepted: passing it raises `AuthorError`. Use `fr.document(notice=)`. | `fr.document(preset, None, cover=c, notice="...")` |
+| `version` | `1` | The project's release version, which `d.revision` entries take by default. Set it before any `d.revision`. | `version=2` |
+
+## `d.revision`
+
+| keyword | default | effect | example |
+|---|---|---|---|
+| [`revision`](../units/index.md#recording-revisions) | required | The revision number of this history entry. | `d.revision(1, date="2026-01-01", text="first", created="AB")` |
+| [`date`](../units/index.md#recording-revisions) | required | The entry's date, shown in the title block for the current revision. | `date="2026-01-01"` |
+| [`text`](../units/index.md#recording-revisions) | required | What the revision changed. | `text="first issue"` |
+| [`created`](../units/index.md#recording-revisions) | required | Who made the revision. | `created="AB"` |
+| `checked` | `''` | Who checked it. | `checked="CD"` |
+| `approved` | `''` | Who approved it. | `approved="EF"` |
+| [`version`](../units/index.md#recording-revisions) | `None` | The entry's version. `None` takes the project's version, or 1 before `d.project`. | `version=2` |
+
+## `d.draft`
+
+`d.draft()` takes nothing. It returns the records written so far, without freezing or merging the library: `fr.build` does both.
+
+
+## `d.detail.busbar`
+
+| keyword | default | effect | example |
+|---|---|---|---|
+| [`a`](../detail/index.md#ddetailbusbar) | required | The first pin of the busbar. | `d.detail.busbar(x1[1], x1[2])` |
+| [`b`](../detail/index.md#ddetailbusbar) | required | The second pin. The same pin twice raises. | `d.detail.busbar(x1[1], x1[2])` |

@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.0/guide/moving-to-0.22/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.1/guide/moving-to-0.22/">
       
       
       
@@ -22,7 +22,7 @@
       
       
       <link rel="icon" href="../../assets/fransys-icon.svg">
-      <meta name="generator" content="zensical-0.0.74">
+      <meta name="generator" content="zensical-0.1.0">
     
     
       
@@ -936,6 +936,28 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         A rail is declared
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#removed-in-022" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Removed in 0.22
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#new-in-0221" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        New in 0.22.1
       </span>
     </span>
   </a>
@@ -1975,6 +1997,28 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#removed-in-022" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Removed in 0.22
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#new-in-0221" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        New in 0.22.1
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1997,7 +2041,7 @@
 
 
 <h1 id="moving-to-022">Moving to 0.22</h1>
-<p>This page lists each call that 0.22 adds or changes for ratings, with the old spelling and the new one.</p>
+<p>This page lists each call that 0.22 adds, changes or removes, with the old spelling and the new one.</p>
 <h2 id="rating-is-the-elecdef-rating">Rating is the elecdef Rating</h2>
 <p><code>fr.derive.Rating</code> is removed, with <code>BreakingPoint</code> and <code>effective_rating</code>. A rating is a <code>fr.elecdef.Rating</code>: its voltage and current are tuples of <code>fr.elecdef.Range</code>, each with the current kind in <code>at</code>.
 <code>Rating(voltage_ac_v=Decimal(250))</code> becomes
@@ -2013,6 +2057,159 @@ for example <code>fault_time_constant=fr.elecdef.Unit.MS(15)</code>. In a part f
 <p>The AC/DC enum is <code>fr.elecdef.Current</code> (<code>Current.AC</code>, <code>Current.DC</code>). The old model enum is gone; the authoring string <code>current="ac"</code> is unchanged.</p>
 <h2 id="a-rail-is-declared">A rail is declared</h2>
 <p>Bridged DC or PE strips are no longer rails: add <code>rail=True</code> to the bridged <code>run</code> or <code>d.terminal_strip</code> that is the rail. An unflagged terminal draws as a terminal, and <code>d.detail.rail_bond</code> is gone with the <code>rail</code> link kind.</p>
+<h2 id="removed-in-022">Removed in 0.22</h2>
+<p>Each row is a name that 0.22 removed. A removed attribute raises an error that names its row here.</p>
+<table>
+<thead>
+<tr>
+<th>0.21 spelling</th>
+<th>0.22 spelling</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a id="removed-side"></a><code>fr.ABOVE</code>, <code>fr.BELOW</code>, <code>d.layout.side(target, fr.ABOVE)</code></td>
+<td>Removed on purpose: Fransys decides (R1486)</td>
+</tr>
+<tr>
+<td><a id="removed-earthing"></a><code>fr.IT</code>, <code>fr.EARTHED</code></td>
+<td>Removed on purpose: Fransys decides (R1494); supplies are the earthed default only</td>
+</tr>
+<tr>
+<td><a id="removed-build-errors"></a><code>fr.BuildErrors</code></td>
+<td><code>fr.BuildFailedError</code>, e.g. <code>except fr.BuildFailedError:</code></td>
+</tr>
+<tr>
+<td><a id="removed-merge-conflict"></a><code>fr.MergeConflict</code></td>
+<td><code>fr.MergeConflictError</code>, e.g. <code>except fr.MergeConflictError:</code></td>
+</tr>
+<tr>
+<td><a id="removed-busbar"></a><code>d.busbar(a, b)</code></td>
+<td><code>d.detail.busbar(a, b)</code></td>
+</tr>
+<tr>
+<td><a id="removed-rating-operating"></a><code>d.rating(part, function)</code>, <code>d.operating(part, function)</code></td>
+<td>Removed on purpose: Fransys decides (R1490); read part data through the part's elecdef <code>Rating</code></td>
+</tr>
+<tr>
+<td><a id="removed-detail-wire"></a><code>d.detail.wire(a, b, wire=w, label=, n=)</code></td>
+<td><code>d.series(a, b, wire=w)</code>; <code>label=</code> and <code>n=</code> have no replacement</td>
+</tr>
+<tr>
+<td><a id="removed-detail-star"></a><code>d.detail.star(src, targets, wire=w)</code></td>
+<td><code>d.series(src, t, wire=w)</code> for each target</td>
+</tr>
+<tr>
+<td><a id="removed-detail-net"></a><code>d.detail.net(name, *pins, kind=)</code></td>
+<td>Removed on purpose: Fransys decides (R1490); connect with <code>d.series(a, b)</code></td>
+</tr>
+<tr>
+<td><a id="removed-rail-bond"></a><code>d.detail.rail_bond(a, b)</code>, link kind <code>rail</code></td>
+<td>Declare the rail with <code>rail=True</code>; bond PE with <code>d.series(incoming_pe, pe, wire=(GNYE, 1.5))</code></td>
+</tr>
+<tr>
+<td><a id="removed-layout-chain"></a><code>d.layout.chain(*functions, beside=...)</code></td>
+<td>Removed on purpose: Fransys decides (R1490); <code>d.series</code> names the path</td>
+</tr>
+<tr>
+<td><a id="removed-page-title"></a><code>d.layout.page_title(thing, text)</code></td>
+<td>Removed on purpose: Fransys decides (R1490); the default page title stays</td>
+</tr>
+<tr>
+<td><a id="removed-layout-symbol"></a><code>d.layout.symbol(target, symbol, port_map)</code></td>
+<td><code>symbol = "..."</code> on the part file's <code>[[function]]</code> entry</td>
+</tr>
+<tr>
+<td><a id="removed-break-before"></a><code>d.layout.break_before(group)</code></td>
+<td>Removed on purpose: Fransys decides (R1490); order with <code>d.layout.order(*groups)</code></td>
+</tr>
+<tr>
+<td><a id="removed-keep-together"></a><code>d.layout.keep_together(*groups)</code></td>
+<td>Removed on purpose: Fransys decides (R1490)</td>
+</tr>
+<tr>
+<td><a id="removed-draw-in"></a><code>d.layout.draw_in(function, group)</code></td>
+<td>Removed; <code>d.series</code> and <code>group=</code> place the function</td>
+</tr>
+<tr>
+<td><a id="removed-pins-below"></a><code>d.layout.pins_below(box)</code></td>
+<td>Removed on purpose: Fransys decides (R1490); <code>hide_unused_pins=True</code> stays</td>
+</tr>
+<tr>
+<td><a id="removed-profile-numbers"></a><code>d.layout.profile(sheet=, column_gap=, row_gap=, row_spacing=, route_margin=, text_height_mm=, min_text_height_mm=, marker_padding=, route_turn_penalty=, route_crossing_penalty=, actuator_each_contact=, band_ranks=, group_ranks=)</code>, <code>d.layout.sheet(name, ...)</code></td>
+<td><code>d.layout.profile(hide_unused_pins=False)</code> is the only keyword left; order groups with <code>d.layout.order(*groups)</code>; paper with <code>fr.settings(paper=...)</code></td>
+</tr>
+<tr>
+<td><a id="removed-unit-wiring"></a><code>@fr.unit(..., wiring={...})</code></td>
+<td>Removed on purpose: Fransys decides (R1493); per-wire colour: <code>d.series(a, b, wire=(BU, 0.75))</code></td>
+</tr>
+<tr>
+<td><a id="removed-class-code"></a><code>fr.unit(..., class_code="K")</code>, <code>d.add(defn, None)</code></td>
+<td><code>d.add(board, "U1")</code>: an authored tag, a bare string; <code>None</code> is no longer allowed</td>
+</tr>
+<tr>
+<td><a id="removed-font-heights"></a><code>[font.heights]</code> in the settings file</td>
+<td>Removed on purpose: Fransys decides (R1458); delete the table</td>
+</tr>
+<tr>
+<td><a id="removed-text-heights"></a><code>text_height_mm</code>, <code>min_text_height_mm</code>, <code>TEXT_TOO_SMALL</code></td>
+<td>Removed on purpose: Fransys decides (R1458); text heights are fixed library data</td>
+</tr>
+<tr>
+<td><a id="removed-document-add"></a><code>fr.document(..., add=, remove=)</code>, presets <code>HARNESS_DRAWING</code>, <code>PCB_SCHEMATIC</code></td>
+<td><code>fr.document(preset, subject, cover=, logo=, notice=)</code>; the preset sets the pages</td>
+</tr>
+<tr>
+<td><a id="removed-add-unused"></a><code>d.add(defn, tag, unused=(...))</code></td>
+<td><code>d.device(tag, part, unused=True)</code>: declare open pins where the device is made</td>
+</tr>
+<tr>
+<td><a id="removed-port-role"></a><code>Port.role</code> (<code>PortRole</code>)</td>
+<td><code>Port.boundary</code> (<code>fr.derive.PortBoundary</code>), and new <code>Port.pin_role</code></td>
+</tr>
+<tr>
+<td><a id="removed-cable-core-fn"></a><code>Cable.core(which, a, fn)</code> with a PE-bar function</td>
+<td>Use a PE terminal strip: <code>W1.core(GNYE, x1[1].outer)</code></td>
+</tr>
+<tr>
+<td><a id="no-change-drawn-reading-units"></a><code>DrawnReading.units</code></td>
+<td>No change: the name never existed at either version; the unit is <code>DrawnPageReading.unit</code> per page</td>
+</tr>
+<tr>
+<td><a id="removed-fn-limits"></a><code>Fn.limits(rating=, operating=)</code>, <code>Terminal.limits(...)</code></td>
+<td>Removed on purpose: Fransys decides (R1490)</td>
+</tr>
+<tr>
+<td><a id="removed-fn-scale"></a><code>Fn.scale(unit, raw=, eng=)</code>, <code>fr.derive.ChannelScaling</code></td>
+<td>Removed in 0.22.0 and 0.22.1. It returns in 0.22.2 as <code>.plc(...).scale(unit, raw=, eng=)</code> (PLC-SCALING-RETURN, R1753). The part file holds only the part's own range. <code>Fn.plc(signal, name, priority)</code> stays</td>
+</tr>
+<tr>
+<td><a id="removed-mates"></a>Mated connector, PCB board document, harness line</td>
+<td>Refused with ERROR <code>MATES_DISABLED</code> (R1216); draw the connection as a cable or wires</td>
+</tr>
+<tr>
+<td><a id="removed-terminal-pins"></a>Terminal part with more than two pins</td>
+<td>Refused with ERROR <code>TERMINAL_MORE_THAN_TWO_PINS</code>; use a two-pin part: <code>d.terminal_strip("X1", "DEMO-TB-2.5", 2)</code></td>
+</tr>
+<tr>
+<td><a id="removed-settings-tables"></a><code>[colours]</code>, <code>[grid]</code>, <code>[layout]</code>, <code>[profile]</code>, <code>[pdf]</code>, <code>[look]</code>, <code>[lines]</code>, <code>[dash]</code>, <code>[reference]</code>, <code>[frame]</code>, <code>[stub]</code>, <code>[wire_label]</code>, <code>[harness]</code>, <code>[title_block]</code>, <code>[revision_table]</code>, <code>[revision]</code>, <code>[designation]</code></td>
+<td>Removed on purpose: Fransys decides (R1458); a <code>SettingsError</code> names the table; delete it</td>
+</tr>
+<tr>
+<td><a id="parts-schema-2"></a>Part schema 1 (<code>schema = 1</code>)</td>
+<td><code>schema = 2</code>; convert with <code>python -m fransys migrate-parts DIR</code></td>
+</tr>
+<tr>
+<td><a id="terminal-point-overfilled"></a><code>TERMINAL_POINT_OVERFILLED</code> (new in 0.22, no 0.21 spelling)</td>
+<td>Set <code>conductors_per_clamp = 2</code> in the terminal part's <code>[connection]</code> table, or use a twin part, or bridge a second terminal</td>
+</tr>
+</tbody>
+</table>
+<h2 id="new-in-0221">New in 0.22.1</h2>
+<ul>
+<li><code>python -m fransys migrate-parts DIR</code> rewrites a schema 1 parts library to the 0.22 format (decision 0474).</li>
+<li>A removed 0.22 name raises an error that names the new spelling and the row above, from one table that is deleted at the 0.23 tag (decision 0475).</li>
+</ul>
 
 
 
@@ -2048,7 +2245,7 @@ for example <code>fault_time_constant=fr.elecdef.Unit.MS(15)</code>. In a part f
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.22.0 documentation
+      Fransys 0.22.1 documentation
     </div>
   
   

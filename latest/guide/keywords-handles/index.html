@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.0/guide/keywords-handles/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.1/guide/keywords-handles/">
       
       
       
@@ -22,7 +22,7 @@
       
       
       <link rel="icon" href="../../assets/fransys-icon.svg">
-      <meta name="generator" content="zensical-0.0.74">
+      <meta name="generator" content="zensical-0.1.0">
     
     
       
@@ -2098,6 +2098,7 @@ A call that takes only <code>*args</code> has no table, and one sentence says wh
 </tr>
 </tbody>
 </table>
+<p>A per-instance engineering range is not modelled in 0.22. The part file holds only the part's own range. It returns in 0.22.2 (PLC-SCALING-RETURN).</p>
 <h2 id="fnpole"><code>Fn.pole</code></h2>
 <p><code>fn.pole(n)</code> takes one pole number, counted from 1 in pole order, and gives that one pole of the function as a series element: <code>d.series(s1.main.pole(2), f2.element, wire=(BK, 1.5))</code>.</p>
 <p>A pin, or a tuple of one device's pins, is a series element anywhere. First, its pins are the load ends: <code>d.series(k1.coil["A1"], a1.di_1, wire=(BK, 1.0))</code> leaves from A1, where <code>d.series(k1.coil, a1.di_1)</code> leaves from A2. Last, they are the line ends. In the middle a pin is both: it takes as many pins as its neighbours have poles.</p>
@@ -2247,7 +2248,7 @@ A call that takes only <code>*args</code> has no table, and one sentence says wh
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.22.0 documentation
+      Fransys 0.22.1 documentation
     </div>
   
   

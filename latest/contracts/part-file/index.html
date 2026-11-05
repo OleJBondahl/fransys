@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.0/contracts/part-file/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.1/contracts/part-file/">
       
       
       
@@ -22,7 +22,7 @@
       
       
       <link rel="icon" href="../../assets/fransys-icon.svg">
-      <meta name="generator" content="zensical-0.0.74">
+      <meta name="generator" content="zensical-0.1.0">
     
     
       
@@ -2921,7 +2921,7 @@ files, no Fransys code inside it.</p>
   today <code>frozenset({2})</code>; a <code>schema = 1</code> file is <code>PART_SCHEMA_OLD</code>. <code>library.toml</code> and every part file carry <code>schema</code>. A value outside
   <code>SUPPORTED_SCHEMAS</code> is the lint finding <code>SCHEMA_UNSUPPORTED</code>, naming the file and the value
   found. A part file whose <code>schema</code> differs from its <code>library.toml</code> is <code>SCHEMA_MIXED</code>.</li>
-<li><code>uv run python internal/scripts/migrate_parts_022.py DIR [--dry-run]</code> (a maintainers' script, dropped in 0.23, MIGRATE-022-DROP) rewrites every schema 1 library under <code>DIR</code> to schema 2 (model-0369). A library bumps <code>schema</code> for every part file in one commit.</li>
+<li><code>python -m fransys migrate-parts DIR [--dry-run]</code> (decision 0474, dropped in 0.23, MIGRATE-022-DROP) rewrites every schema 1 library under <code>DIR</code> to schema 2 (model-0369). A library bumps <code>schema</code> for every part file in one commit.</li>
 </ul>
 
 
@@ -2958,7 +2958,7 @@ files, no Fransys code inside it.</p>
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.22.0 documentation
+      Fransys 0.22.1 documentation
     </div>
   
   

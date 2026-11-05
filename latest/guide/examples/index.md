@@ -22,7 +22,7 @@ import fransys as fr
 from fransys.colours import BK, BU
 
 d = fr.design("demo_parts")
-x0 = d.terminal_strip("X0", "DEMO-TB-2.5")
+x0 = d.terminal_strip("X0", "DEMO-TB-2.5-TWIN")
 ac = d.ac_supply("400V", "230", x0[1], x0[2], x0[3], n=x0[4])
 g1 = d.device("G1", "DEMO-PSU-24")
 dc = d.dc_supply("24VDC", g1)
@@ -57,7 +57,7 @@ PARTS = {
 }
 
 d = fr.design("demo_parts")
-x0 = d.terminal_strip("X0", "DEMO-TB-2.5")
+x0 = d.terminal_strip("X0", "DEMO-TB-2.5-TWIN")
 ac = d.ac_supply("400V", "230", *(x0[n] for n in (1, 2, 3)), n=x0[4])
 i = {tag: d.device(tag, mpn) for tag, mpn in PARTS.items()}
 dc = d.dc_supply("24VDC", i["G1"])
@@ -72,9 +72,9 @@ d.series(dc.plus, i["S1"].nc, latch, i["F1"].aux, i["Q1"].coil, dc.minus, wire=(
 
 ## Sixteen sensors to a terminal strip
 
-Each sensor is one device, wired by its signal pin to its own terminal on a strip. The strip
+Each sensor is one device, wired by its other pin to the 24 V rail and by its signal pin to its own terminal on a strip. The strip
 takes its terminals in number order: each series that names the strip takes the next free one.
-A series from a sensor's function to the strip wires its load pin `B` to that terminal. The first
+A series from the rail through a sensor's function to the strip wires its load pin `B` to that terminal. The first
 sensor added lands on terminal 1, so the sensors are added from B16 down to B1.
 
 ```python
@@ -83,40 +83,41 @@ import fransys as fr
 from fransys.colours import BU
 
 d = fr.design("demo_parts")
+dc = d.dc_supply("24VDC", d.device("G1", "DEMO-PSU-24").output)
 with d.function("SENS", "Sensors"):
     x1 = d.terminal_strip("X1", "DEMO-TB-2.5")
     b16 = d.device("B16", "DEMO-SWITCH-2P")
-    d.series(b16.sw, x1, wire=(BU, 0.75))
+    d.series(dc.plus, b16.sw, x1, wire=(BU, 0.75))
     b15 = d.device("B15", "DEMO-SWITCH-2P")
-    d.series(b15.sw, x1, wire=(BU, 0.75))
+    d.series(dc.plus, b15.sw, x1, wire=(BU, 0.75))
     b14 = d.device("B14", "DEMO-SWITCH-2P")
-    d.series(b14.sw, x1, wire=(BU, 0.75))
+    d.series(dc.plus, b14.sw, x1, wire=(BU, 0.75))
     b13 = d.device("B13", "DEMO-SWITCH-2P")
-    d.series(b13.sw, x1, wire=(BU, 0.75))
+    d.series(dc.plus, b13.sw, x1, wire=(BU, 0.75))
     b12 = d.device("B12", "DEMO-SWITCH-2P")
-    d.series(b12.sw, x1, wire=(BU, 0.75))
+    d.series(dc.plus, b12.sw, x1, wire=(BU, 0.75))
     b11 = d.device("B11", "DEMO-SWITCH-2P")
-    d.series(b11.sw, x1, wire=(BU, 0.75))
+    d.series(dc.plus, b11.sw, x1, wire=(BU, 0.75))
     b10 = d.device("B10", "DEMO-SWITCH-2P")
-    d.series(b10.sw, x1, wire=(BU, 0.75))
+    d.series(dc.plus, b10.sw, x1, wire=(BU, 0.75))
     b9 = d.device("B9", "DEMO-SWITCH-2P")
-    d.series(b9.sw, x1, wire=(BU, 0.75))
+    d.series(dc.plus, b9.sw, x1, wire=(BU, 0.75))
     b8 = d.device("B8", "DEMO-SWITCH-2P")
-    d.series(b8.sw, x1, wire=(BU, 0.75))
+    d.series(dc.plus, b8.sw, x1, wire=(BU, 0.75))
     b7 = d.device("B7", "DEMO-SWITCH-2P")
-    d.series(b7.sw, x1, wire=(BU, 0.75))
+    d.series(dc.plus, b7.sw, x1, wire=(BU, 0.75))
     b6 = d.device("B6", "DEMO-SWITCH-2P")
-    d.series(b6.sw, x1, wire=(BU, 0.75))
+    d.series(dc.plus, b6.sw, x1, wire=(BU, 0.75))
     b5 = d.device("B5", "DEMO-SWITCH-2P")
-    d.series(b5.sw, x1, wire=(BU, 0.75))
+    d.series(dc.plus, b5.sw, x1, wire=(BU, 0.75))
     b4 = d.device("B4", "DEMO-SWITCH-2P")
-    d.series(b4.sw, x1, wire=(BU, 0.75))
+    d.series(dc.plus, b4.sw, x1, wire=(BU, 0.75))
     b3 = d.device("B3", "DEMO-SWITCH-2P")
-    d.series(b3.sw, x1, wire=(BU, 0.75))
+    d.series(dc.plus, b3.sw, x1, wire=(BU, 0.75))
     b2 = d.device("B2", "DEMO-SWITCH-2P")
-    d.series(b2.sw, x1, wire=(BU, 0.75))
+    d.series(dc.plus, b2.sw, x1, wire=(BU, 0.75))
     b1 = d.device("B1", "DEMO-SWITCH-2P")
-    d.series(b1.sw, x1, wire=(BU, 0.75))
+    d.series(dc.plus, b1.sw, x1, wire=(BU, 0.75))
 ```
 
 The efficient version is a list of sensor tags in the order the strip hands out terminals, and one
@@ -130,11 +131,12 @@ from fransys.colours import BU
 SENSORS = [f"B{n}" for n in range(16, 0, -1)]
 
 d = fr.design("demo_parts")
+dc = d.dc_supply("24VDC", d.device("G1", "DEMO-PSU-24"))
 with d.function("SENS", "Sensors"):
     x1 = d.terminal_strip("X1", "DEMO-TB-2.5")
     for tag in SENSORS:
         sensor = d.device(tag, "DEMO-SWITCH-2P")
-        d.series(sensor.sw, x1, wire=(BU, 0.75))
+        d.series(dc.plus, sensor.sw, x1, wire=(BU, 0.75))
 ```
 
 ## The whole shape of a build script

@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.20.0/guide/kicad/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.0/guide/kicad/">
       
       
       
@@ -22,7 +22,7 @@
       
       
       <link rel="icon" href="../../assets/fransys-icon.svg">
-      <meta name="generator" content="zensical-0.0.70">
+      <meta name="generator" content="zensical-0.0.74">
     
     
       
@@ -33,7 +33,7 @@
       
         
       
-      <link rel="stylesheet" href="../../assets/stylesheets/modern/main.e442bf79.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/modern/main.4ab2de0c.min.css">
       
         
           
@@ -114,9 +114,10 @@
   <img src="../../assets/fransys-wordmark-white.svg" alt="Fransys">
 
     </a>
-    <label class="md-header__button md-icon" for="__drawer" aria-label="Navigation">
+    <label class="md-header__button md-icon" for="__drawer">
       
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-menu" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
+      <span class="md-visually-hidden">Navigation</span>
     </label>
     <div class="md-header__title" data-md-component="header-title">
       <div class="md-header__ellipsis">
@@ -168,9 +169,10 @@
     
       
       
-        <label class="md-header__button md-icon" for="__search" aria-label="Search">
+        <label class="md-header__button md-icon" for="__search">
           
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+          <span class="md-visually-hidden">Search</span>
         </label>
         <div class="md-search" data-md-component="search" role="dialog" aria-label="Search">
   <button type="button" class="md-search__button">
@@ -414,6 +416,33 @@
     
   
   Wiring a design
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../drawn-ledger/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  The required-drawn ledger
 
     
   </span>
@@ -784,6 +813,60 @@
   
   
     <li class="md-nav__item">
+      <a href="../settings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Settings
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../moving-to-0.22/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Moving to 0.22
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../moving-to-0.20/" class="md-nav__link">
         
   
@@ -954,6 +1037,33 @@
     
   
   Finding codes: validators, build and release
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../findings-release/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Finding codes: build, release and verify
 
     
   </span>
@@ -1201,6 +1311,23 @@
       </span>
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Get the netlist">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pin-names-and-pads" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Pin names and pads
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1852,6 +1979,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Get the netlist">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pin-names-and-pads" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Pin names and pads
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -1940,7 +2084,9 @@ editor's File &gt; Import &gt; Netlist. The import is a manual step.</p>
 <p><code>fr.write(result, out_dir, intermediates=...)</code> writes one netlist per board into the
 intermediates folder, named <code>netlist-&lt;board&gt;.net</code>. A netlist is not an export, so it never lands in <code>out_dir</code>.</p>
 <p><code>fr.check(result)</code> reports the KiCad findings. Read them first. An <code>ERROR</code> (<code>REFERENCE_DUPLICATE</code>,
-<code>NET_NAME_DUPLICATE</code>, <code>PAD_ON_MULTIPLE_NETS</code>) means do not import yet. Each code is in findings-kicad.md.</p>
+<code>NET_NAME_DUPLICATE</code>, <code>PAD_ON_MULTIPLE_NETS</code>, <code>PIN_ID_COLLISION</code>) means do not import yet. Each code is in findings-kicad.md.</p>
+<h3 id="pin-names-and-pads">Pin names and pads</h3>
+<p>A labelled connector function may repeat a pin name: the drawing prints <code>-B1-Main:1</code> and <code>-B1-Voltage:1</code>, so the label is not the KiCad pin. KiCad keys a pin by its name, which is the footprint pad name, so it needs each pin name unique per part. When two pins of one part would write the same KiCad pin id, <code>PIN_ID_COLLISION</code> is an <code>ERROR</code>, wired or not. Rename the part's pins so each is its footprint pad name.</p>
 <h2 id="import-settings">Import settings</h2>
 <p>Open File &gt; Import &gt; Netlist in the PCB editor, pick the file, and set the dialog like this.</p>
 <table>
@@ -2042,7 +2188,7 @@ under <code>[part]</code>. Each is an empty string marked <code># TODO</code>. T
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.20.0 documentation
+      Fransys 0.22.0 documentation
     </div>
   
   
@@ -2070,10 +2216,10 @@ under <code>[part]</code>. Each is an empty string marked <code># TODO</code>. T
       
         
         
-      <script id="__config" type="application/json">{"annotate":null,"base":"../..","features":["navigation.sections","search.highlight","content.code.copy"],"redirect":null,"search":"../../assets/javascripts/workers/search.c47bb847.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","clipboard.error":"Could not copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
+      <script id="__config" type="application/json">{"annotate":null,"base":"../..","features":["navigation.sections","search.highlight","content.code.copy"],"redirect":null,"search":"../../assets/javascripts/workers/search.719e0d91.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","clipboard.error":"Could not copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d31f0ffa.min.js"></script>
       
     
   </body>

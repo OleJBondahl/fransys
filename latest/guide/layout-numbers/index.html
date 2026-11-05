@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.20.0/guide/layout-numbers/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.0/guide/layout-numbers/">
       
       
       
@@ -22,7 +22,7 @@
       
       
       <link rel="icon" href="../../assets/fransys-icon.svg">
-      <meta name="generator" content="zensical-0.0.70">
+      <meta name="generator" content="zensical-0.0.74">
     
     
       
@@ -33,7 +33,7 @@
       
         
       
-      <link rel="stylesheet" href="../../assets/stylesheets/modern/main.e442bf79.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/modern/main.4ab2de0c.min.css">
       
         
           
@@ -114,9 +114,10 @@
   <img src="../../assets/fransys-wordmark-white.svg" alt="Fransys">
 
     </a>
-    <label class="md-header__button md-icon" for="__drawer" aria-label="Navigation">
+    <label class="md-header__button md-icon" for="__drawer">
       
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-menu" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
+      <span class="md-visually-hidden">Navigation</span>
     </label>
     <div class="md-header__title" data-md-component="header-title">
       <div class="md-header__ellipsis">
@@ -168,9 +169,10 @@
     
       
       
-        <label class="md-header__button md-icon" for="__search" aria-label="Search">
+        <label class="md-header__button md-icon" for="__search">
           
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+          <span class="md-visually-hidden">Search</span>
         </label>
         <div class="md-search" data-md-component="search" role="dialog" aria-label="Search">
   <button type="button" class="md-search__button">
@@ -433,6 +435,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../drawn-ledger/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  The required-drawn ledger
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../detail/" class="md-nav__link">
         
   
@@ -654,10 +683,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#sheet-numbers" class="md-nav__link">
+  <a href="#sheet" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        Sheet numbers
+        Sheet
       </span>
     </span>
   </a>
@@ -864,6 +893,60 @@
   
   
     <li class="md-nav__item">
+      <a href="../settings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Settings
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../moving-to-0.22/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Moving to 0.22
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../moving-to-0.20/" class="md-nav__link">
         
   
@@ -1034,6 +1117,33 @@
     
   
   Finding codes: validators, build and release
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../findings-release/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Finding codes: build, release and verify
 
     
   </span>
@@ -1811,10 +1921,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#sheet-numbers" class="md-nav__link">
+  <a href="#sheet" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        Sheet numbers
+        Sheet
       </span>
     </span>
   </a>
@@ -1865,95 +1975,10 @@
 
 
 <h1 id="layout-numbers">Layout numbers</h1>
-<p>This page lists every keyword of <code>d.layout.profile</code> and every number of <code>d.layout.sheet</code>: what it does, its house value, its effect on the drawing, and when to change it.
-A gap is in grid units <code>G</code>; eight <code>G</code> make one symbol module. A sheet number is in millimetres, except <code>module_mm</code>.</p>
-<h2 id="sheet-numbers">Sheet numbers</h2>
-<p><code>d.layout.sheet(name, **numbers)</code> records a sheet format and returns its handle. Pass the handle to <code>d.layout.profile(sheet=handle)</code>. A profile with no <code>sheet</code> uses the house sheet: A3 landscape, 420 by 297 mm, content box 410 by 267 mm at (5, 5), an 8 by 6 frame, <code>module_mm</code> 2.5. A sheet takes all nine numbers and has no defaults. A missing number or an unknown one raises <code>AuthorError</code>. The title-block band is the sheet's height minus twice <code>content_y_mm</code> minus <code>content_height_mm</code>: 20 mm on the house sheet. A smaller <code>content_height_mm</code> gives a taller band. Text of 2.5 mm or more needs a band over 20 mm. A document with no schematic page takes the profile's sheet too.</p>
-<table>
-<thead>
-<tr>
-<th>number</th>
-<th>what it is</th>
-<th>effect on the drawing</th>
-<th>when to change it</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>width_mm</code></td>
-<td>Sheet width.</td>
-<td>The size of the printed page.</td>
-<td>A different paper size.</td>
-</tr>
-<tr>
-<td><code>height_mm</code></td>
-<td>Sheet height.</td>
-<td>The size of the printed page.</td>
-<td>A different paper size.</td>
-</tr>
-<tr>
-<td><code>content_x_mm</code></td>
-<td>Left edge of the content box, from the sheet's left edge.</td>
-<td>Where drawings start; the margin on the left.</td>
-<td>A different margin.</td>
-</tr>
-<tr>
-<td><code>content_y_mm</code></td>
-<td>Top edge of the content box, from the sheet's top edge.</td>
-<td>Where drawings start; the margin on top.</td>
-<td>A different margin or title block.</td>
-</tr>
-<tr>
-<td><code>content_width_mm</code></td>
-<td>Width of the content box.</td>
-<td>Page capacity: a page holds <code>content_width_mm * 8 / module_mm</code> <code>G</code> across, rounded down. A wider box fits more columns before a block is split.</td>
-<td>A different paper size.</td>
-</tr>
-<tr>
-<td><code>content_height_mm</code></td>
-<td>Height of the content box.</td>
-<td>Page capacity down the page, by the same rule. A taller box fits more rows.</td>
-<td>A different paper size.</td>
-</tr>
-<tr>
-<td><code>frame_columns</code></td>
-<td>Columns of the reference grid printed on the frame.</td>
-<td>The content box is divided evenly. Cross references and findings name a position as a column and a row.</td>
-<td>Rarely; more columns on a wide sheet.</td>
-</tr>
-<tr>
-<td><code>frame_rows</code></td>
-<td>Rows of the reference grid.</td>
-<td>The same, for rows.</td>
-<td>Rarely.</td>
-</tr>
-<tr>
-<td><code>module_mm</code></td>
-<td>Millimetres of one symbol module. Number or <code>Decimal</code>.</td>
-<td>The grid pitch. Symbol bodies and gaps scale with it; text sizes and line widths do not, they are fixed in mm. A smaller module fits more on a page; a larger one splits sooner.</td>
-<td>The reader's choice of size, not a fix for a crowded page.</td>
-</tr>
-</tbody>
-</table>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">decimal</span><span class="w"> </span><span class="kn">import</span> <span class="n">Decimal</span>
-
-<span class="kn">import</span><span class="w"> </span><span class="nn">fransys</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">fr</span>
-
-<span class="n">d</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">design</span><span class="p">(</span><span class="s2">"demo_parts"</span><span class="p">)</span>
-<span class="n">a4</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">sheet</span><span class="p">(</span>
-    <span class="s2">"A4 landscape"</span><span class="p">,</span>
-    <span class="n">width_mm</span><span class="o">=</span><span class="mi">297</span><span class="p">,</span>
-    <span class="n">height_mm</span><span class="o">=</span><span class="mi">210</span><span class="p">,</span>
-    <span class="n">content_x_mm</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
-    <span class="n">content_y_mm</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
-    <span class="n">content_width_mm</span><span class="o">=</span><span class="mi">287</span><span class="p">,</span>
-    <span class="n">content_height_mm</span><span class="o">=</span><span class="mi">170</span><span class="p">,</span>
-    <span class="n">frame_columns</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
-    <span class="n">frame_rows</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
-    <span class="n">module_mm</span><span class="o">=</span><span class="n">Decimal</span><span class="p">(</span><span class="s2">"2.0"</span><span class="p">),</span>
-<span class="p">)</span>
-<span class="n">d</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">profile</span><span class="p">(</span><span class="n">sheet</span><span class="o">=</span><span class="n">a4</span><span class="p">)</span>
-</code></pre></div>
+<p>This page lists every keyword of <code>d.layout.profile</code>: what it does, its house value, its effect on the drawing, and when to change it.
+A gap is in grid units <code>G</code>; eight <code>G</code> make one symbol module.</p>
+<h2 id="sheet">Sheet</h2>
+<p>A document's sheet is set for the whole build with <code>fr.settings(paper=...)</code> and <code>paper_by_kind</code> (see settings.md): A3 or A2, landscape. No call of a design or a unit sets or changes a sheet.</p>
 <h2 id="profile-keywords">Profile keywords</h2>
 <p><code>d.layout.profile(...)</code> sets the layout numbers of the design, or of the unit whose body calls it. At most one per unit. A keyword left out keeps its house value. A value given replaces it whole. A unit with no profile uses the house values, never its parent's. <code>d.layout.profile</code> does not draw anything: it advises the layout engine.</p>
 <table>
@@ -1968,108 +1993,17 @@ A gap is in grid units <code>G</code>; eight <code>G</code> make one symbol modu
 </thead>
 <tbody>
 <tr>
-<td><code>sheet</code></td>
-<td>the house sheet</td>
-<td>The sheet format the pages use, a handle from <code>d.layout.sheet</code>.</td>
-<td>Paper size, margins and <code>module_mm</code>.</td>
-<td>A paper size other than A3.</td>
-</tr>
-<tr>
-<td><code>column_gap</code></td>
-<td>48</td>
-<td>Clear width between two adjacent columns of blocks.</td>
-<td>Wider gaps spread columns and leave room for wires between them.</td>
-<td>Wires cramp between columns, or columns waste width.</td>
-</tr>
-<tr>
-<td><code>row_gap</code></td>
-<td>32</td>
-<td>The smallest clear height between two blocks stacked in a column.</td>
-<td>A column too tall for its page closes its spacing down to this value and no further.</td>
-<td>Rarely; lower it to fit a tall column.</td>
-</tr>
-<tr>
-<td><code>row_spacing</code></td>
-<td>88</td>
-<td>The clear height a block keeps below the one above it, when the page has room.</td>
-<td>Looser spacing reads easier; it falls back toward <code>row_gap</code> on a full page.</td>
-<td>A sparse page that wastes height, or a crowded one.</td>
-</tr>
-<tr>
-<td><code>route_margin</code></td>
-<td>64</td>
-<td>How far outside the box spanned by a wire's two ends the router may look first.</td>
-<td>A larger margin finds a detour round a block; a smaller one keeps wires short.</td>
-<td>A wire takes a long way round, or cannot find a way.</td>
-</tr>
-<tr>
-<td><code>text_height_mm</code></td>
-<td>1.8</td>
-<td>The smallest text on every page kind, a capital height in mm (ISO 3098); a larger role keeps its own size or this one, whichever is larger.</td>
-<td>Sets text size, and with it the room texts take: font size over one <code>G</code>, rounded up.</td>
-<td>A style choice only. See below.</td>
-</tr>
-<tr>
-<td><code>min_text_height_mm</code></td>
-<td>1.8</td>
-<td>The smallest capital height in mm the text may print at.</td>
-<td>Changes no drawing. A profile printing under the floor gets one <code>TEXT_TOO_SMALL</code> warning, and nothing is shrunk or grown.</td>
-<td>The recommended floor is the house 1.8. Lower it only when the small text is intended. Otherwise raise <code>text_height_mm</code>.</td>
-</tr>
-<tr>
-<td><code>marker_padding</code></td>
-<td>2</td>
-<td>Clear space between a link marker's text and its outline, on every edge.</td>
-<td>Larger padding makes markers and their boxes bigger.</td>
-<td>Markers look cramped.</td>
-</tr>
-<tr>
-<td><code>route_turn_penalty</code></td>
-<td>4</td>
-<td>The cost of one bend in a wire.</td>
-<td>A higher cost makes wires straighter and longer.</td>
-<td>Wires zigzag.</td>
-</tr>
-<tr>
-<td><code>route_crossing_penalty</code></td>
-<td>16</td>
-<td>The cost of one wire crossing another.</td>
-<td>A higher cost avoids crossings at the price of longer wires.</td>
-<td>Too many crossings.</td>
-</tr>
-<tr>
 <td><code>hide_unused_pins</code></td>
 <td><code>False</code></td>
 <td>Hide a box-drawn pin with no conductor, and a function with none, on drawings only.</td>
 <td>Drawings are shorter; every list still shows every pin. A box in a chain draws only its wired pins (LONG-CHAIN D2).</td>
 <td>An interface with many unused pins.</td>
 </tr>
-<tr>
-<td><code>actuator_each_contact</code></td>
-<td><code>True</code></td>
-<td>Draw the operated symbol on every contact of a manually operated device, with no reference and no contact list.</td>
-<td><code>False</code> draws the actuator once at the lead contact, with the contact list under it.</td>
-<td>A design that wants one push button per device. The choice is per unit: set it in each unit's profile, or in a shared helper every unit calls, to set it once.</td>
-</tr>
-<tr>
-<td><code>band_ranks</code></td>
-<td>supply 0, <code>terminal.first</code> 0, protection 1, switch and contacts 2, sensor 3, coil, load, actuator and <code>terminal</code> 4, <code>terminal.last</code> 5</td>
-<td>A map of function kind to the horizontal band it sits in, top first. <code>terminal.first</code> and <code>terminal.last</code> sit beside <code>terminal</code>.</td>
-<td>Moves kinds up or down the column. The map replaces the house map whole: restate every kind you want ranked.</td>
-<td>A circuit reads better with another top-to-bottom order.</td>
-</tr>
-<tr>
-<td><code>group_ranks</code></td>
-<td>empty</td>
-<td>A map of an aspect group's label to its page rank.</td>
-<td>Orders the groups of pages. A group with no rank sorts last.</td>
-<td>You want the pages in your own order.</td>
-</tr>
 </tbody>
 </table>
 <h2 id="grid-pitch-and-printed-sizes">Grid pitch and printed sizes</h2>
-<p><code>module_mm</code> sets the grid pitch, not the printed size of text or lines, which are fixed in mm. It is the reader's choice of size, never a fix for a crowded page. Split the content into function blocks (<code>drawing.md</code>). A well-formed design that still overflows is a Fransys defect: send the smallest model.
-<code>text_height_mm</code> sets the smallest text on every page, as a capital height in mm. Never use it to make a page fit: a page that is too full needs less on the page, split into function blocks.</p>
+<p><code>module_mm</code> sets the grid pitch and must equal the library's 2.5: symbols never scale. A crowded page is never fixed by size. Split the content into function blocks (<code>drawing.md</code>). A well-formed design that still overflows is a Fransys defect: send the smallest model.
+The text sizes are the library's fixed heights, not a profile keyword and not a setting. Never use the text size to make a page fit: a page that is too full needs less on the page, split into function blocks.</p>
 
 
 
@@ -2105,7 +2039,7 @@ A gap is in grid units <code>G</code>; eight <code>G</code> make one symbol modu
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.20.0 documentation
+      Fransys 0.22.0 documentation
     </div>
   
   
@@ -2133,10 +2067,10 @@ A gap is in grid units <code>G</code>; eight <code>G</code> make one symbol modu
       
         
         
-      <script id="__config" type="application/json">{"annotate":null,"base":"../..","features":["navigation.sections","search.highlight","content.code.copy"],"redirect":null,"search":"../../assets/javascripts/workers/search.c47bb847.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","clipboard.error":"Could not copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
+      <script id="__config" type="application/json">{"annotate":null,"base":"../..","features":["navigation.sections","search.highlight","content.code.copy"],"redirect":null,"search":"../../assets/javascripts/workers/search.719e0d91.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","clipboard.error":"Could not copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d31f0ffa.min.js"></script>
       
     
   </body>

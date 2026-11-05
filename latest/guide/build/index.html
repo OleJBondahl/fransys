@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.20.0/guide/build/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.0/guide/build/">
       
       
       
@@ -22,7 +22,7 @@
       
       
       <link rel="icon" href="../../assets/fransys-icon.svg">
-      <meta name="generator" content="zensical-0.0.70">
+      <meta name="generator" content="zensical-0.0.74">
     
     
       
@@ -33,7 +33,7 @@
       
         
       
-      <link rel="stylesheet" href="../../assets/stylesheets/modern/main.e442bf79.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/modern/main.4ab2de0c.min.css">
       
         
           
@@ -114,9 +114,10 @@
   <img src="../../assets/fransys-wordmark-white.svg" alt="Fransys">
 
     </a>
-    <label class="md-header__button md-icon" for="__drawer" aria-label="Navigation">
+    <label class="md-header__button md-icon" for="__drawer">
       
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-menu" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
+      <span class="md-visually-hidden">Navigation</span>
     </label>
     <div class="md-header__title" data-md-component="header-title">
       <div class="md-header__ellipsis">
@@ -168,9 +169,10 @@
     
       
       
-        <label class="md-header__button md-icon" for="__search" aria-label="Search">
+        <label class="md-header__button md-icon" for="__search">
           
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+          <span class="md-visually-hidden">Search</span>
         </label>
         <div class="md-search" data-md-component="search" role="dialog" aria-label="Search">
   <button type="button" class="md-search__button">
@@ -414,6 +416,33 @@
     
   
   Wiring a design
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../drawn-ledger/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  The required-drawn ledger
 
     
   </span>
@@ -985,6 +1014,60 @@
   
   
     <li class="md-nav__item">
+      <a href="../settings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Settings
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../moving-to-0.22/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Moving to 0.22
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../moving-to-0.20/" class="md-nav__link">
         
   
@@ -1155,6 +1238,33 @@
     
   
   Finding codes: validators, build and release
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../findings-release/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Finding codes: build, release and verify
 
     
   </span>
@@ -2109,29 +2219,26 @@
 <h1 id="building-a-design">Building a design</h1>
 <p><code>fr.build</code>, <code>fr.check</code> and <code>fr.write</code> are the three pipeline functions. <code>build</code> takes the design
 (and any documents), merges them into a model and runs the passes, the validators, and layout
-when there is a document.
-<code>check</code> collects every finding about a built model, including some <code>build</code> itself never sees.
-<code>write</code> writes the model's exports to a directory. It raises, and writes nothing, if any
-finding is an <code>ERROR</code>. <code>check</code> also places the system overview (<code>overview.html</code>) and returns its
-findings, so a whole-system or a unit write meets them at the same gate; <code>build</code> never does.</p>
-<p><code>fr.__version__</code> gives the installed Fransys version. It is not in <code>fr.__all__</code>.</p>
+when there is a document. <code>check</code> collects every finding about a built model, including some
+<code>build</code> never sees. <code>write</code> writes the model's exports to a directory. If any finding is an
+<code>ERROR</code> it raises <code>BuildFailedError</code>, writes no export, and removes the exports an earlier <code>write</code> left
+there. <code>check</code> also places the system overview (<code>overview.html</code>) and returns its findings.
+<code>settings=fr.settings(...)</code> sets the build's paper (settings.md).</p>
+<p><code>fr.__version__</code> gives the installed version. It is not in <code>fr.__all__</code>.</p>
 <h2 id="where-a-build-can-fail">Where a build can fail</h2>
-<p>Four stages. Each fails differently. A mistake in an authoring call itself, such as a design call
-the builder refuses, raises <code>fr.AuthorError</code> at that call, so a test catches it by name.</p>
+<p>Four stages, each failing differently. A design call the builder refuses raises <code>fr.AuthorError</code>
+at that call.</p>
 <p><strong>1. Loading a part library.</strong> <code>fr.design(...)</code> and <code>fr.parts(...)</code> lint every library they load
-and raise <code>PartLibraryError</code> if linting finds an <code>ERROR</code>. Nothing is built from a library that fails its
-own lint.</p>
+and raise <code>PartLibraryError</code> if linting finds an <code>ERROR</code>. </p>
 <p><strong>2. The build itself.</strong> <code>fr.build(d, *documents)</code> merges the design with the documents, then
-freezes the result into a <code>Model</code>. Two structural problems can raise here. <code>build</code> catches neither.</p>
+freezes the result into a <code>Model</code>. Two structural problems can raise here.</p>
 <ul>
-<li><code>MergeConflict</code>, when two records share one id with different content. This can even happen
-  before <code>build</code> runs, at the second authoring call that creates the conflicting record.</li>
+<li><code>MergeConflictError</code>, when two records share one id with different content. It can raise at the second authoring call that creates the record.</li>
 <li><code>FreezeError</code>, when freezing finds one or more structural problems inside the merged records: a
   dangling reference, a bad value, or a missing required field. It aggregates every problem it
-  found in <code>.errors</code>, not just the first, so an author fixes a batch in one pass.</li>
+  found in <code>.errors</code>, so an author fixes a batch in one pass.</li>
 </ul>
-<p>The case a consumer meets is two instances of one unit release, same name and revision, authored
-with different content.</p>
+<p>A consumer meets this with two instances of one unit release authored with different content.</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">NamedTuple</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">fransys</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">fr</span>
@@ -2156,19 +2263,17 @@ with different content.</p>
 
 <span class="k">try</span><span class="p">:</span>
     <span class="n">conflict_design</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">board_b</span><span class="p">,</span> <span class="s2">"U2"</span><span class="p">)</span>
-<span class="k">except</span> <span class="n">fr</span><span class="o">.</span><span class="n">MergeConflict</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+<span class="k">except</span> <span class="n">fr</span><span class="o">.</span><span class="n">MergeConflictError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
     <span class="k">assert</span> <span class="s2">"two different records share one id"</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
     <span class="k">assert</span> <span class="n">e</span><span class="o">.</span><span class="n">origin_a</span><span class="o">.</span><span class="n">file</span> <span class="o">==</span> <span class="n">e</span><span class="o">.</span><span class="n">origin_b</span><span class="o">.</span><span class="n">file</span>
     <span class="k">assert</span> <span class="n">e</span><span class="o">.</span><span class="n">origin_a</span><span class="o">.</span><span class="n">line</span> <span class="o">!=</span> <span class="n">e</span><span class="o">.</span><span class="n">origin_b</span><span class="o">.</span><span class="n">line</span>
 <span class="k">else</span><span class="p">:</span>
-    <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="s2">"expected MergeConflict"</span><span class="p">)</span>
+    <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="s2">"expected MergeConflictError"</span><span class="p">)</span>
 </code></pre></div>
-<p>Both functions declare the release <code>demo-io-board</code>, revision 1. The second gives a different
-<code>interface</code>, so it conflicts instead of deduplicating. <code>e.origin_a</code> and <code>e.origin_b</code> name the two
-call sites.</p>
-<p><code>fr.build(d)</code> always carries the part library the design was started from. Only the engine's own
-draft, <code>d.draft()</code>, leaves it out, and building that shows what a missing library does: every
-reference to a part is left dangling.</p>
+<p>Both declare the release <code>demo-io-board</code>, revision 1, but with a different <code>interface</code>, so they
+conflict instead of deduplicating. <code>e.origin_a</code> and <code>e.origin_b</code> name the call sites.</p>
+<p><code>fr.build(d)</code> always carries the design's part library. Only <code>d.draft()</code> leaves it out; building
+that shows what a missing library does.</p>
 <div class="highlight"><pre><span></span><code><span class="n">d</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">design</span><span class="p">(</span><span class="s2">"demo_parts"</span><span class="p">)</span>
 <span class="n">x1</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">"X1"</span><span class="p">,</span> <span class="s2">"DEMO-CONN-2P"</span><span class="p">)</span>
 
@@ -2179,63 +2284,53 @@ reference to a part is left dangling.</p>
 <span class="k">else</span><span class="p">:</span>
     <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="s2">"expected FreezeError"</span><span class="p">)</span>
 </code></pre></div>
-<p>Four references are left dangling by the missing library: one <code>RefError</code> for each.
-<code>e.errors</code> holds all four, not just the first one freezing happened to find.</p>
-<p>Any exception out of <code>build</code> other than these two is a Fransys bug, not something a normal
-script needs to guard against. Report it as a field case.</p>
+<p>The missing library leaves four references dangling, one <code>RefError</code> each. <code>e.errors</code> holds all four.</p>
+<p>Any other exception out of <code>build</code> is a Fransys bug. Report it as a field case.</p>
 <p><strong>3. The validators.</strong> Every domain validator runs inside <code>build</code>, but an <code>ERROR</code> finding from
-one of them does not raise. It comes back in <code>fr.check(result)</code>, and it also stops layout there:
-a model with a validator <code>ERROR</code> is returned numbered but unlaid, findings and all.</p>
-<p><strong>4. <code>write</code>.</strong> <code>write</code> computes <code>fr.check(result)</code> itself and raises <code>BuildErrors</code> if any
+one of them does not raise. It comes back in <code>fr.check(result)</code> and stops layout: the model is returned numbered but unlaid.</p>
+<p><strong>4. <code>write</code>.</strong> <code>write</code> computes <code>fr.check(result)</code> itself and raises <code>BuildFailedError</code> if any
 finding in it is an <code>ERROR</code>, before touching <code>out_dir</code>. See below.</p>
 <h2 id="frcheckresult-is-the-one-list-of-findings"><code>fr.check(result)</code> is the one list of findings</h2>
-<p><code>fr.check(result)</code> returns every finding about a built model. That covers the PLC and numbering
-passes, the validators, layout, and the board check. When the model holds a document it adds the
-drawing and PDF checks. A script reads findings only through it.</p>
-<p>The design above has one device and no wiring, so its document has nothing to draw. This one
-keeps only its schematic, the BOM page taken out:</p>
+<p><code>fr.check(result)</code> returns every finding about a built model: the PLC and numbering passes, the
+validators, layout and the board check, plus the drawing and PDF checks when it holds a document.</p>
+<p>A cabinet with no device in it has nothing to draw. Its document holds the preset's pages, and
+its empty lists are reported:</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 
 <span class="n">cabinet_cover</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">"cabinet.md"</span><span class="p">)</span>
 <span class="n">cabinet_cover</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="s2">"# Cabinet</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
-<span class="n">doc</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">document</span><span class="p">(</span>
-    <span class="n">fr</span><span class="o">.</span><span class="n">DocumentPreset</span><span class="o">.</span><span class="n">CABINET_SCHEMATIC</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">cover</span><span class="o">=</span><span class="n">cabinet_cover</span><span class="p">,</span> <span class="n">remove</span><span class="o">=</span><span class="p">(</span><span class="n">fr</span><span class="o">.</span><span class="n">PageKind</span><span class="o">.</span><span class="n">BOM</span><span class="p">,)</span>
-<span class="p">)</span>
+<span class="n">c1</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">location</span><span class="p">(</span><span class="s2">"C1"</span><span class="p">,</span> <span class="s2">"Cabinet"</span><span class="p">)</span>
+<span class="n">doc</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">document</span><span class="p">(</span><span class="n">fr</span><span class="o">.</span><span class="n">DocumentPreset</span><span class="o">.</span><span class="n">CABINET_SCHEMATIC</span><span class="p">,</span> <span class="n">c1</span><span class="p">,</span> <span class="n">cover</span><span class="o">=</span><span class="n">cabinet_cover</span><span class="p">)</span>
 
 <span class="n">result</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">doc</span><span class="p">)</span>
-<span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">fr</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">result</span><span class="p">))</span> <span class="o">==</span> <span class="mi">4</span>
+<span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">fr</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">result</span><span class="p">))</span> <span class="o">==</span> <span class="mi">5</span>
 </code></pre></div>
-<p><code>fr.check(result)</code> holds three <code>DOCUMENT_EMPTY_LIST</code> <code>INFO</code> findings and, most importantly, one <code>ERROR</code>, <code>DOCUMENT_NO_DRAWINGS</code>,
-that only the drawing and PDF checks find. A symbol with nothing connected is not drawn, so the
-schematic page has no drawing and the document no other page. A script that asserted the design
-clean would have shipped it.</p>
+<p><code>fr.check(result)</code> holds four <code>DOCUMENT_EMPTY_LIST</code> <code>INFO</code> findings and one <code>ERROR</code>, <code>DOCUMENT_NO_DRAWINGS</code>,
+that only the drawing and PDF checks find. The cabinet holds nothing, so the document has no drawing.</p>
 <p><code>write</code> runs the same check internally, so it raises on those errors:</p>
 <div class="highlight"><pre><span></span><code><span class="k">try</span><span class="p">:</span>
     <span class="n">fr</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">Path</span><span class="p">(</span><span class="s2">"out"</span><span class="p">))</span>
-<span class="k">except</span> <span class="n">fr</span><span class="o">.</span><span class="n">BuildErrors</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+<span class="k">except</span> <span class="n">fr</span><span class="o">.</span><span class="n">BuildFailedError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
     <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">findings</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span>
-    <span class="k">assert</span> <span class="nb">all</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">severity</span> <span class="ow">is</span> <span class="n">fr</span><span class="o">.</span><span class="n">Severity</span><span class="o">.</span><span class="n">ERROR</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">e</span><span class="o">.</span><span class="n">findings</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="nb">all</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">severity</span> <span class="ow">is</span> <span class="n">fr</span><span class="o">.</span><span class="n">Severity</span><span class="o">.</span><span class="n">ERROR</span> <span class="ow">and</span> <span class="n">f</span><span class="o">.</span><span class="n">fix</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">e</span><span class="o">.</span><span class="n">findings</span><span class="p">)</span>
 <span class="k">else</span><span class="p">:</span>
-    <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="s2">"expected BuildErrors"</span><span class="p">)</span>
+    <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="s2">"no error"</span><span class="p">)</span>
 </code></pre></div>
-<p><code>e.findings</code> holds exactly the one <code>ERROR</code>, not every finding of <code>fr.check(result)</code>. <code>out_dir</code> is
-left with nothing written for this build. No bad export, ever. There is no <code>allow_errors</code>,
-<code>force</code> or <code>draft</code> parameter on <code>write</code>, and none will be added.</p>
+<p><code>e.findings</code> holds only the <code>ERROR</code> findings. <code>out_dir</code> is left with nothing written for this build.
+<code>write</code> has no <code>allow_errors</code>, <code>force</code> or <code>draft</code> parameter.</p>
 <h2 id="frreportresult-prints-them-for-a-person-or-an-agent"><code>fr.report(result)</code> prints them for a person or an agent</h2>
 <p><code>fr.report(result)</code> returns one text of <code>fr.check(result)</code>. Its first line counts the errors,
 warnings and notes. Each <code>ERROR</code> and <code>WARNING</code> follows with its message, one <code>at:</code> line per
-subject (the authoring call's <code>file:line</code>), its fix, and its row's URL on your version's findings page. The notes come last,
+subject (the authoring call's <code>file:line</code>), its fix, and its row's URL. The notes come last,
 counted per code on one line.</p>
 <div class="highlight"><pre><span></span><code><span class="n">text</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
-<span class="k">assert</span> <span class="n">text</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"build: 1 error, 0 warnings, 3 notes</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">text</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"build: 1 error, 0 warnings, 4 notes</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
 <span class="k">assert</span> <span class="s2">"  see: https://olejbondahl.github.io/fransys/"</span> <span class="ow">in</span> <span class="n">text</span>
 <span class="k">assert</span> <span class="s2">"/guide/findings-pdf/#document_no_drawings</span><span class="se">\n</span><span class="s2">"</span> <span class="ow">in</span> <span class="n">text</span>
-<span class="k">assert</span> <span class="n">text</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">"notes: DOCUMENT_EMPTY_LIST 3</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">text</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">"notes: DOCUMENT_EMPTY_LIST 4</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
 </code></pre></div>
-<p>The fix and the URL come from the code's row in <a href="../findings/"><code>findings.md</code></a>. Print the
-report on every build: a warning nobody reads is never fixed.</p>
+<p>The fix and the URL come from the code's row in <a href="../findings/"><code>findings.md</code></a>. Print the report on every build.</p>
 <h2 id="which-route-carries-which-finding">Which route carries which finding</h2>
-<p>Each route below carries a different set of findings.</p>
 <table>
 <thead>
 <tr>
@@ -2261,16 +2356,14 @@ report on every build: a warning nobody reads is never fixed.</p>
 <td>Any time after <code>fr.build</code>.</td>
 </tr>
 <tr>
-<td><code>fr.BuildErrors.findings</code></td>
-<td>The <code>ERROR</code> findings of the <code>fr.write</code> or <code>fr.release</code> run that raised. <code>fr.release</code> adds its release checks.</td>
+<td><code>fr.BuildFailedError.findings</code></td>
+<td>The <code>ERROR</code> findings of the <code>fr.write</code> or <code>fr.release</code> run that raised. <code>fr.release</code> adds its checks.</td>
 <td>When the call raises.</td>
 </tr>
 </tbody>
 </table>
-<p><code>fr.build</code> itself raises <code>MergeConflict</code> or <code>FreezeError</code> for a structural problem and returns no findings then.</p>
 <h2 id="no-document-no-layout">No document, no layout</h2>
-<p>Layout exists only to draw documents. A build with no <code>Document</code> draft skips layout entirely.
-There is no flag, and no other function to call.</p>
+<p>Layout exists only to draw documents. A build with no <code>Document</code> draft skips layout; there is no flag.</p>
 <div class="highlight"><pre><span></span><code><span class="n">result</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>  <span class="c1"># no document this time</span>
 <span class="n">codes</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">code</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">fr</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">result</span><span class="p">))</span>
 <span class="k">assert</span> <span class="n">codes</span> <span class="o">==</span> <span class="p">[]</span>
@@ -2287,73 +2380,58 @@ There is no flag, and no other function to call.</p>
 <span class="p">]</span>
 </code></pre></div>
 <p><code>fr.export_names(result, *, unit=None)</code> gives the name <code>write</code> gives each export, by <code>(kind, subject)</code>,
-without writing or compiling anything. A kind is <code>bom</code>, <code>plc</code>, <code>wires</code>, <code>designations</code>, <code>overview</code>,
+without writing anything. A kind is <code>bom</code>, <code>plc</code>, <code>wires</code>, <code>designations</code>, <code>overview</code>,
 <code>cables</code> or <code>cores</code> (subject <code>None</code>); <code>terminals</code>, <code>connectors</code> or <code>wago</code> with the item's id; or <code>pdf</code> with
 the document's id. The key is a tuple: <code>("bom", None)</code> for a whole-set file, <code>("pdf", &lt;document id&gt;)</code>
-for a document. <code>write</code> names its files through it, so a script never builds a name itself.</p>
+for a document.</p>
 <div class="highlight"><pre><span></span><code><span class="n">names</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">export_names</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
 <span class="k">assert</span> <span class="n">names</span><span class="p">[(</span><span class="s2">"bom"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)]</span> <span class="o">==</span> <span class="s2">"data/bom.csv"</span>
 <span class="k">assert</span> <span class="p">[</span><span class="n">key</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">names</span> <span class="k">if</span> <span class="n">key</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"pdf"</span><span class="p">]</span> <span class="o">==</span> <span class="p">[]</span>  <span class="c1"># no document: no ("pdf", id) key</span>
 <span class="k">assert</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">names</span><span class="o">.</span><span class="n">values</span><span class="p">())</span> <span class="o">==</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">relative_to</span><span class="p">(</span><span class="s2">"out"</span><span class="p">)</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">written</span><span class="p">)</span>
 </code></pre></div>
-<p>With no document, <code>check</code> never runs the drawing or PDF checks: neither has a layout to read.
-<code>write</code> writes the same kind of file list as before, with no PDF, since a PDF comes only from a
-document.</p>
+<p>With no document, <code>check</code> runs no drawing or PDF checks, and <code>write</code> writes no PDF.</p>
 <h2 id="export-file-names">Export file names</h2>
-<p>Export names follow the rules below. One function builds every
-name, so a script never constructs its own. The <code>v</code> prefix is used only in file names, never in a
-title block or history table. The names are a built-in default with no option or template.</p>
+<p>One function builds every export name, so a script never constructs its own. The <code>v</code> prefix
+appears only in file names, never in a title block or history table. The names have no option or template.</p>
 <ul>
 <li><strong>The set prefix.</strong> Every file belongs to one set: the unit written (<code>unit=U</code>) or the
   system (<code>unit=None</code>). The prefix is <code>&lt;set name&gt;-v&lt;V&gt;.&lt;R&gt;</code>, the set's name plus its version and
   revision in <code>derive.revision_text</code>'s print form. A unit's name is its release name
   (<code>demo-io-board-v1.1</code>); the system's is the project's number (<code>EX-1-v1.1</code>). A system write of
-  a model with no project record has no prefix: the system's own files keep their bare names
-  (plain <code>bom.csv</code>), as the examples above wrote. A unit's document still takes its unit's prefix.</li>
+  a model with no project record has no prefix: its own files keep bare names (<code>bom.csv</code>).</li>
 <li><strong>Prefix, kind, fragment.</strong> A name is <code>&lt;prefix&gt;[-&lt;kind&gt;][-&lt;fragment&gt;].&lt;ext&gt;</code>:
   <code>demo-io-board-v1.1-bom.csv</code>, per item <code>demo-io-board-v1.1-terminals-X1.csv</code>, and for the
   unit's own root the bare kind <code>demo-io-board-v1.1-terminals.csv</code>.</li>
-<li><strong>Where each list is.</strong> A unit's cables stay in the unit's own <code>cables.csv</code>, because a parent
-  sees the unit as a black box.</li>
-<li><strong>A PDF is named by its subject, not its cover file.</strong> A document of the set itself is
-  <code>&lt;prefix&gt;.pdf</code>; a <code>harness_drawing</code> adds <code>-harness</code>; a document of an item or location inside
+<li><strong>Where each list is.</strong> A unit's cables stay in its own <code>cables.csv</code>; a parent sees the unit as a black box.</li>
+<li><strong>A PDF is named by its subject, not its cover file.</strong> The set's own document is
+  <code>&lt;prefix&gt;.pdf</code>. A document of an item or location inside
   the set adds that subject's fragment. A document whose subject is a unit takes that unit's
-  name in every write, a system write included, so <code>out/all/</code> holds <code>EX-1-v1.1.pdf</code> beside
-  <code>cabinet-v2.1.pdf</code>. Two instances of one release with a document each come to one name and
-  raise a name-clash error; keep one document per release.</li>
+  name in every write, so <code>out/all/</code> holds <code>EX-1-v1.1.pdf</code> beside <code>cabinet-v2.1.pdf</code>. A whole-model write adds each placement's instance tag
+  (<code>cabinet-v2.1-P1.pdf</code>); a unit's own write names its PDF bare. Untagged instances of one release clash.</li>
 <li><strong>The <code>data/</code> folder.</strong> Every CSV and XML export goes into <code>&lt;out_dir&gt;/data/</code>, <code>changes.csv</code> included;
-  the PDFs, <code>overview.html</code> and <code>changes.md</code> stay in <code>out_dir</code>, so the files you open are not
-  among the lists. The names are unchanged, and <code>fr.export_names</code> gives the path from <code>out_dir</code>
-  (<code>data/EX-1-v1.1-bom.csv</code>).</li>
-<li><strong>Stale exports.</strong> <code>write</code> first deletes the set's old files in <code>out_dir</code> and <code>data/</code>. Those are
-  the files whose names start with the set's name and <code>-v</code>, so a reused work folder keeps only
-  the current ones. It also removes the flat CSV and XML files a write
-  made before <code>data/</code> existed. A system write also deletes the files that start with
-  each unit release's name in the model and <code>-v</code>, for the unit documents. The old bare-name
-  patterns are still cleaned for one more release. Known limit: a unit that leaves the model
-  leaves its last PDF behind in <code>out/all/</code>.</li>
-<li><strong>Build times.</strong> <code>result.times</code> holds the CPU and wall seconds of each build step, and <code>print(result.times)</code> shows one line per step with its share of the CPU. With <code>intermediates=</code>, <code>write</code> also saves <code>build-times.json</code> there, the build steps then each output; <code>out_dir</code> never holds it.</li>
+  the PDFs, <code>overview.html</code> and <code>changes.md</code> stay in <code>out_dir</code>. <code>fr.export_names</code> gives the path from <code>out_dir</code> (<code>data/EX-1-v1.1-bom.csv</code>).</li>
+<li><strong>Stale exports.</strong> <code>write</code> first deletes the set's old files in <code>out_dir</code> and <code>data/</code>. These are files whose names start
+  with the set's name and <code>-v</code>, and the flat CSV and XML files a write made before <code>data/</code> existed.
+  A system write also deletes the files that start with each unit release's name and <code>-v</code>.
+  The old bare-name patterns are still cleaned for one more release. Known limit: a unit that leaves the model leaves its last PDF in <code>out/all/</code>.</li>
+<li><strong>Build times.</strong> <code>result.times</code> holds the CPU and wall seconds of each build step, and <code>print(result.times)</code> shows one line per step with its CPU share. With <code>intermediates=</code>, <code>write</code> also saves <code>build-times.json</code> there; <code>out_dir</code> never holds it.</li>
 <li><strong>Releases.</strong> <code>fr.release</code> writes the same paths, and its manifest lists them (<code>data/...</code>).
-  A release stored before <code>data/</code> keeps its flat paths in its own manifest and still verifies.</li>
+  A release stored before <code>data/</code> keeps its flat paths and still verifies.</li>
 <li><strong>Changes in the overview.</strong> <code>fr.write(result, out_dir, releases=into)</code> takes the folder you pass
-  to <code>fr.release</code>. When it holds a release of the system (the one at the model's revision, else
-  the previous one), <code>overview.html</code> gains a Changes switch that marks what changed since it.
+  to <code>fr.release</code>. When it holds a release of the system (at the model's revision, else the previous), <code>overview.html</code> gains a Changes switch that marks what changed since it.
   Without <code>releases</code>, or with no release there, the page has no such switch.</li>
 </ul>
 <p>Every file <code>write</code> writes is UTF-8 without a byte order mark, with <code>\n</code> line ends, on every OS.</p>
 <h2 id="no-export-ever-carries-an-error">No export ever carries an error</h2>
-<p>This is the point of the <code>write</code> example above. <code>write</code> computes <code>fr.check(result)</code> before
-writing anything. Any <code>ERROR</code> in it blocks every export into that <code>out_dir</code>, not just the one
-the error is about. A half-finished design still draws its schematic pages into
-<code>intermediates</code>, when given. <code>out_dir</code> only ever holds a design with zero <code>ERROR</code> findings.</p>
+<p>Any <code>ERROR</code> in <code>fr.check(result)</code> blocks every export into <code>out_dir</code>. A half-finished design
+still draws its schematic pages into <code>intermediates</code>, when given.</p>
 <h2 id="releasing-a-frozen-baseline">Releasing a frozen baseline</h2>
 <p><code>fr.release(result, into, *, unit=None)</code> writes one unit's (or the whole system's) frozen
-baseline: its document set, as <code>write</code> would write it for that unit, plus a canonical
+baseline. It has its document set, as <code>write</code> would for that unit, plus a canonical
 listing, a manifest of file hashes and package/tool versions, and the model itself. The target
-is <code>&lt;into&gt;/&lt;unit release name&gt;/&lt;version&gt;.&lt;revision&gt;/</code>, or <code>&lt;into&gt;/&lt;project number&gt;/&lt;version&gt;.
-&lt;revision&gt;/</code> for the system (<code>unit=None</code>). Every check runs first -- the same gate <code>write</code> uses,
-plus five checks of its own -- and any <code>ERROR</code> writes nothing, the same as <code>write</code>.</p>
-<p>A unit's change list is relative to the unit, so a place that holds all of its items, added or removed, shows no change.</p>
+is <code>&lt;into&gt;/&lt;unit release name&gt;/&lt;version&gt;.&lt;revision&gt;/</code>, or <code>&lt;into&gt;/&lt;project number&gt;/&lt;version&gt;.&lt;revision&gt;/</code>
+for the system (<code>unit=None</code>). Every check runs first -- the same gate <code>write</code> uses,
+plus five checks of its own -- and any <code>ERROR</code> writes nothing.</p>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">board</span><span class="p">(</span><span class="n">revision</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">spare</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""One unit design: the release `demo-io-board`, X1 on its boundary, X3, an optional spare."""</span>
 
@@ -2385,19 +2463,16 @@ plus five checks of its own -- and any <code>ERROR</code> writes nothing, the sa
 <span class="n">same_target</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">release</span><span class="p">(</span><span class="n">release_result</span><span class="p">,</span> <span class="n">Path</span><span class="p">(</span><span class="s2">"releases"</span><span class="p">),</span> <span class="n">unit</span><span class="o">=</span><span class="s2">"demo-io-board"</span><span class="p">)</span>
 <span class="k">assert</span> <span class="n">same_target</span> <span class="o">==</span> <span class="n">target</span>
 </code></pre></div>
-<p>An unchanged release is a no-op: nothing is rebuilt, no file's timestamp changes. A released
-revision is frozen: releasing a unit again with different content raises <code>BuildErrors</code> naming
-<code>REVISION_ALREADY_RELEASED</code> instead of overwriting it (see <code>findings-validators.md</code>). The files are the
-consumer's -- commit them in your own repo, alongside the design script that produced them.</p>
+<p>An unchanged release is a no-op. A released
+revision is frozen: releasing a unit again with different content raises <code>BuildFailedError</code> naming
+<code>REVISION_ALREADY_RELEASED</code> instead of overwriting it (see <code>findings-validators.md</code>). Commit the files in your own repo, beside the design script.</p>
 <p>A container rebuilt against an old child release uses the child's old source from git. Fransys loads no frozen child.
 A history entry that names a revision never released is <code>RELEASE_HISTORY_UNRELEASED</code>; <code>units.md</code> has the rule.</p>
 <h2 id="getting-the-change-list">Getting the change list</h2>
 <p><code>fr.diff(result, into, *, unit=None, against=None)</code> gives the Markdown change list from a
-stored release to the model as it stands now, without writing anything: use it while a
-revision is in progress. <code>release()</code> writes the same text into <code>changes.md</code> (and the same rows
+stored release to the model as it stands now, without writing anything: use it during a revision. <code>release()</code> writes the same text into <code>changes.md</code> (and the same rows
 into <code>data/changes.csv</code>) once a previous release exists; the first release of a unit gets neither
-file. The revision text you author stays yours: <code>changes.md</code> is the evidence beside it, and
-nothing overwrites the history text.</p>
+file. Nothing overwrites the history text you author. A unit's change list is relative to the unit, so a place that holds all of its items, added or removed, shows no change.</p>
 <div class="highlight"><pre><span></span><code><span class="n">second_result</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">board</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">spare</span><span class="o">=</span><span class="s2">"X2"</span><span class="p">))</span>
 <span class="n">second_errors</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">fr</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">second_result</span><span class="p">)</span> <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">severity</span> <span class="ow">is</span> <span class="n">fr</span><span class="o">.</span><span class="n">Severity</span><span class="o">.</span><span class="n">ERROR</span><span class="p">]</span>
 <span class="k">assert</span> <span class="n">second_errors</span> <span class="o">==</span> <span class="p">[],</span> <span class="n">second_errors</span>
@@ -2410,13 +2485,11 @@ nothing overwrites the history text.</p>
 <span class="k">assert</span> <span class="p">(</span><span class="n">second_target</span> <span class="o">/</span> <span class="s2">"data"</span> <span class="o">/</span> <span class="s2">"changes.csv"</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span>
 </code></pre></div>
 <p><code>against=</code> names a released revision's folder (<code>"1.1"</code>) to diff against. The default is the model's
-own current release if stored, else the previous released revision below it. <code>fr.diff</code> raises
-<code>FileNotFoundError</code> when it finds neither. A renamed item shows as one <code>Renamed</code> line; <code>moving-to-0.20.md</code> has the rule.</p>
+own release if stored, else the previous one; <code>fr.diff</code> raises <code>FileNotFoundError</code> when neither exists. A renamed item shows as one <code>Renamed</code> line; <code>moving-to-0.20.md</code> has the rule.</p>
 <h2 id="checking-a-baseline-stays-true">Checking a baseline stays true</h2>
-<p><code>fr.verify(result, baselines) -&gt; tuple[Finding, ...]</code> reruns the same comparison <code>release</code>'s own
-<code>BASELINE_DIFFERS</code> check does, for every unit instance the model has (and the system, when the
-model has a project) with a stored baseline. It writes nothing, and <code>fr.write</code> never calls it: run
-it where you want the check, most often a test that guards a released revision.</p>
+<p><code>fr.verify(result, baselines) -&gt; tuple[Finding, ...]</code> reruns <code>release</code>'s <code>BASELINE_DIFFERS</code>
+comparison for every unit instance (and the system, when the model has a project) with a stored
+baseline. It writes nothing, and <code>fr.write</code> never calls it: run it in a test that guards a released revision.</p>
 <div class="highlight"><pre><span></span><code><span class="k">assert</span> <span class="n">fr</span><span class="o">.</span><span class="n">verify</span><span class="p">(</span><span class="n">second_result</span><span class="p">,</span> <span class="n">Path</span><span class="p">(</span><span class="s2">"releases"</span><span class="p">))</span> <span class="o">==</span> <span class="p">()</span>
 
 <span class="n">third_result</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">board</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">spare</span><span class="o">=</span><span class="s2">"X9"</span><span class="p">))</span>  <span class="c1"># X2, mistagged X9</span>
@@ -2426,22 +2499,19 @@ it where you want the check, most often a test that guards a released revision.<
 <span class="n">findings</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">verify</span><span class="p">(</span><span class="n">third_result</span><span class="p">,</span> <span class="n">Path</span><span class="p">(</span><span class="s2">"releases"</span><span class="p">))</span>
 <span class="k">assert</span> <span class="p">[</span><span class="n">f</span><span class="o">.</span><span class="n">code</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">findings</span><span class="p">]</span> <span class="o">==</span> <span class="p">[</span><span class="s2">"BASELINE_DIFFERS"</span><span class="p">]</span>
 </code></pre></div>
-<p><code>second_result</code> is unchanged since its own release above, so <code>verify</code> gives nothing. <code>third_result</code>
-shares <code>demo-io-board</code>'s revision <code>2</code> release identity but was never released itself, and its
-spare connector's tag differs from what <code>1.2</code> actually released, so <code>verify</code> catches the drift
-without anyone calling <code>release</code> again. A unit or the system with no stored baseline at all is
-not reported.</p>
+<p><code>second_result</code> is unchanged since its release, so <code>verify</code> gives nothing. <code>third_result</code> shares
+revision <code>2</code> but its spare connector's tag differs from what <code>1.2</code> released, so <code>verify</code> catches
+the drift. A unit with no stored baseline is not reported.</p>
 <p>When a child moved release, <code>BASELINE_DIFFERS</code> names it right after <code>units</code>, as in
 <code>demo-cabinet 1.1 differs from its released baseline in: units (demo-io-board revision 1.1 → 1.3)</code>.
-It names direct children only. A grandchild's move shows in its parent's own finding.</p>
-<p><code>verify</code> also re-hashes every file of every release under <code>baselines</code>, with no model needed.
-<code>RELEASE_FILE_CHANGED</code> means a listed file's bytes differ, the folder holds a file the manifest does
-not list, or the manifest does not parse. <code>RELEASE_FILE_MISSING</code> means a listed file, or the manifest, is gone.
+It names direct children only; a grandchild's move shows in its parent's finding.</p>
+<p><code>verify</code> also re-hashes every release file under <code>baselines</code>, with no model needed.
+<code>RELEASE_FILE_CHANGED</code> means a listed file's bytes differ, an unlisted file is present, or the manifest does not parse. <code>RELEASE_FILE_MISSING</code> means a listed file, or the manifest, is gone.
 A text file (<code>.csv</code>, <code>.json</code>, <code>.md</code>, <code>.xml</code>, <code>.html</code>, <code>.txt</code>) whose bytes differ only by CRLF line ends passes,
-so a Windows checkout does not fail it. <code>verify</code> returns findings and blocks nothing.</p>
-<p>After an upgrade that moved a printing rule, <code>fr.verify</code> gives <code>BASELINE_RULES_MOVED</code> (INFO) for each release cut by an older Fransys and <code>fr.release</code> refuses over one. Run <code>fr.rebaseline(result, Path("releases"))</code> once and commit the rewritten <code>listing.json</code> and <code>manifest.json</code>; the exports are untouched, and <code>fr.verify</code> is clean again.</p>
+so a Windows checkout passes.</p>
+<p>After an upgrade that moved a printing rule, <code>fr.verify</code> gives <code>BASELINE_RULES_MOVED_NOTE</code> (INFO) for each release cut by an older Fransys and <code>fr.release</code> refuses over one. Run <code>fr.rebaseline(result, Path("releases"))</code> once and commit the rewritten <code>listing.json</code> and <code>manifest.json</code>; the exports are untouched.</p>
 <div class="highlight"><pre><span></span><code><span class="n">found</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">verify</span><span class="p">(</span><span class="n">second_result</span><span class="p">,</span> <span class="n">Path</span><span class="p">(</span><span class="s2">"releases"</span><span class="p">))</span>
-<span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">code</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"BASELINE_RULES_MOVED"</span><span class="p">,</span> <span class="s2">"BASELINE_ROWS_UNCHECKED"</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">found</span><span class="p">):</span>
+<span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">code</span><span class="o">.</span><span class="n">startswith</span><span class="p">((</span><span class="s2">"BASELINE_RULES_MOVED"</span><span class="p">,</span> <span class="s2">"BASELINE_ROWS_UNCHECKED"</span><span class="p">))</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">found</span><span class="p">):</span>
     <span class="n">fr</span><span class="o">.</span><span class="n">rebaseline</span><span class="p">(</span><span class="n">second_result</span><span class="p">,</span> <span class="n">Path</span><span class="p">(</span><span class="s2">"releases"</span><span class="p">))</span>  <span class="c1"># commit the rewritten baseline files</span>
 <span class="k">assert</span> <span class="n">fr</span><span class="o">.</span><span class="n">verify</span><span class="p">(</span><span class="n">second_result</span><span class="p">,</span> <span class="n">Path</span><span class="p">(</span><span class="s2">"releases"</span><span class="p">))</span> <span class="o">==</span> <span class="p">()</span>
 </code></pre></div>
@@ -2450,9 +2520,9 @@ so a Windows checkout does not fail it. <code>verify</code> returns findings and
 <code>root</code>, in name, version and revision order. Versions and revisions sort as integers. A
 <code>Release</code> has <code>name</code>, <code>version</code>, <code>revision</code>, <code>interface</code>, <code>listing_digest</code>, <code>nested</code>, <code>files</code> and <code>path</code>.
 <code>nested</code> holds one <code>ReleasePin</code> (<code>name</code>, <code>version</code>, <code>revision</code>, <code>listing_digest</code>) per release nested
-in it. <code>files</code> holds <code>(path, sha256)</code> pairs. A folder with no manifest is listed with those fields empty.
-A manifest that does not parse raises <code>ValueError</code> naming its path.</p>
-<p>Later Fransys versions may add manifest keys. They keep reading every manifest an earlier public Fransys wrote.</p>
+in it. <code>files</code> holds <code>(path, sha256)</code> pairs. A folder with no manifest is listed with empty fields.
+A manifest that does not parse raises <code>ValueError</code>.</p>
+<p>Later versions may add manifest keys and keep reading every earlier manifest.</p>
 <div class="highlight"><pre><span></span><code><span class="n">listed</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">releases</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="s2">"releases"</span><span class="p">))</span>
 <span class="k">assert</span> <span class="p">[(</span><span class="n">r</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">version</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">revision</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">listed</span><span class="p">]</span> <span class="o">==</span> <span class="p">[</span>
     <span class="p">(</span><span class="s2">"demo-io-board"</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
@@ -2470,20 +2540,18 @@ A manifest that does not parse raises <code>ValueError</code> naming its path.</
 <span class="p">]</span>
 <span class="k">assert</span> <span class="n">stale</span> <span class="o">==</span> <span class="p">[]</span>
 </code></pre></div>
-<p>The policy stays yours: tag names, who releases, which findings block and who gets a copy.
-A transmittal is a script over <code>fr.releases</code> that lists what went to whom. Fransys keeps no issue record.</p>
+<p>The policy stays yours: tag names, who releases and which findings block. Fransys keeps no issue record.</p>
 <h2 id="keeping-designations-fixed-across-revisions">Keeping designations fixed across revisions</h2>
 <p><code>fr.build(d, *documents, releases=None)</code> takes a keyword-only <code>releases</code>, the same root <code>fr.release</code>
-writes into. Left at <code>None</code> (the default), numbering is free, exactly as above. Given the
-releases root, <code>build</code> reads each unit's own previously released numbering before assigning
-new tags: an item still in the same group keeps the number it was released with, and a number
+writes into. At <code>None</code> (the default), numbering is free. Given the releases root, <code>build</code> reads each unit's
+released numbering before assigning new tags. An item still in the same group keeps the number it was released with. A number
 freed by a removed or moved item is never handed to a different item within that unit's
-version. A tag the engineer authors may still equal a pinned or reserved number by mistake;
-that is <code>DESIGNATION_DUPLICATE</code> (see <code>findings-validators.md</code>), not silently allowed. Releasing without
+version. An authored tag that equals a pinned or reserved number is <code>DESIGNATION_DUPLICATE</code>
+(see <code>findings-validators.md</code>). Releasing without
 <code>releases=</code> still catches a moved number, as <code>DESIGNATION_MOVED</code>.</p>
 <h2 id="point-a-finding-past-a-helper">Point a finding past a helper</h2>
 <p>A finding names the file and line of the call that authored the thing. Set <code>__tracebackhide__ = True</code>
-in a helper that builds a repeated circuit, and the finding names the line that called the helper.</p>
+in a helper that builds a repeated circuit, and the finding names the helper's caller.</p>
 <div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">fransys</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">fr</span>
 
 
@@ -2499,7 +2567,7 @@ in a helper that builds a repeated circuit, and the finding names the line that 
 </code></pre></div>
 <h2 id="read-a-model-id">Read a model id</h2>
 <p><code>Q1.id</code> and <code>Q1.coil.id</code> give the model id of a device and a function. Read them after the build, as
-<code>fr.derive.item_designation(result.model, Q1.id)</code> does. Ids are for reading, never to wire.</p>
+<code>fr.derive.item_designation(result.model, Q1.id)</code> does. Never wire with ids.</p>
 
 
 
@@ -2535,7 +2603,7 @@ in a helper that builds a repeated circuit, and the finding names the line that 
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.20.0 documentation
+      Fransys 0.22.0 documentation
     </div>
   
   
@@ -2563,10 +2631,10 @@ in a helper that builds a repeated circuit, and the finding names the line that 
       
         
         
-      <script id="__config" type="application/json">{"annotate":null,"base":"../..","features":["navigation.sections","search.highlight","content.code.copy"],"redirect":null,"search":"../../assets/javascripts/workers/search.c47bb847.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","clipboard.error":"Could not copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
+      <script id="__config" type="application/json">{"annotate":null,"base":"../..","features":["navigation.sections","search.highlight","content.code.copy"],"redirect":null,"search":"../../assets/javascripts/workers/search.719e0d91.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","clipboard.error":"Could not copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d31f0ffa.min.js"></script>
       
     
   </body>

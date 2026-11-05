@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.20.0/guide/reading-records/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.0/guide/reading-records/">
       
       
       
@@ -22,7 +22,7 @@
       
       
       <link rel="icon" href="../../assets/fransys-icon.svg">
-      <meta name="generator" content="zensical-0.0.70">
+      <meta name="generator" content="zensical-0.0.74">
     
     
       
@@ -33,7 +33,7 @@
       
         
       
-      <link rel="stylesheet" href="../../assets/stylesheets/modern/main.e442bf79.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/modern/main.4ab2de0c.min.css">
       
         
           
@@ -114,9 +114,10 @@
   <img src="../../assets/fransys-wordmark-white.svg" alt="Fransys">
 
     </a>
-    <label class="md-header__button md-icon" for="__drawer" aria-label="Navigation">
+    <label class="md-header__button md-icon" for="__drawer">
       
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-menu" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
+      <span class="md-visually-hidden">Navigation</span>
     </label>
     <div class="md-header__title" data-md-component="header-title">
       <div class="md-header__ellipsis">
@@ -168,9 +169,10 @@
     
       
       
-        <label class="md-header__button md-icon" for="__search" aria-label="Search">
+        <label class="md-header__button md-icon" for="__search">
           
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+          <span class="md-visually-hidden">Search</span>
         </label>
         <div class="md-search" data-md-component="search" role="dialog" aria-label="Search">
   <button type="button" class="md-search__button">
@@ -414,6 +416,33 @@
     
   
   Wiring a design
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../drawn-ledger/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  The required-drawn ledger
 
     
   </span>
@@ -875,6 +904,60 @@
   
   
     <li class="md-nav__item">
+      <a href="../settings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Settings
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../moving-to-0.22/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Moving to 0.22
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../moving-to-0.20/" class="md-nav__link">
         
   
@@ -1045,6 +1128,33 @@
     
   
   Finding codes: validators, build and release
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../findings-release/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Finding codes: build, release and verify
 
     
   </span>
@@ -1898,7 +2008,7 @@ reached as <code>fr.derive.NAME</code>.</p>
 <li><code>Placement</code> puts one item at one aspect node. Its fields are <code>id</code>, <code>key</code>, <code>item</code>, <code>node</code> and <code>ext</code>. An item has at most one placement per aspect, so one item can have a product placement and a location placement. The table is <code>placements</code>.</li>
 <li><code>Boundary</code> marks a function as part of a unit's interface. Its fields are <code>id</code>, <code>key</code>, <code>unit</code>, <code>function</code>, <code>name</code> and <code>ext</code>. <code>name</code> is the field name the unit gave the function, or <code>None</code>. One function can be the boundary of several units. The table is <code>boundaries</code>.</li>
 <li><code>Port</code> is a connection point on a function. Its fields are <code>id</code>, <code>key</code>, <code>function</code>, <code>template</code>, <code>name</code>, <code>role</code>, <code>marking</code> and <code>ext</code>. <code>template</code> is <code>None</code> for a port without a part template. The <code>marking</code> field is the pin text printed on the drawing: <code>None</code> prints the port's name, an empty string prints nothing, and any other string prints as given.</li>
-<li><code>PortRole</code> says what a port is for. Its members are <code>GENERIC</code>, <code>INTERNAL</code>, <code>EXTERNAL</code>, <code>PE</code>, <code>COMMON</code>, <code>BREAK</code> and <code>MAKE</code>. A terminal's two ports are <code>INTERNAL</code> (panel side) and <code>EXTERNAL</code> (field cable side). A contact's ports are <code>COMMON</code>, <code>BREAK</code> (closed at rest) or <code>MAKE</code> (closed when operated).</li>
+<li><code>PortBoundary</code> says which side of a unit boundary a port is on. Its members are <code>GENERIC</code>, <code>INTERNAL</code> and <code>EXTERNAL</code>. A terminal's two ports are <code>INTERNAL</code> (panel side) and <code>EXTERNAL</code> (field cable side). A port's <code>pin_role</code> is an <code>elecdef.PinRole</code> or <code>None</code>: a contact's ports are <code>COMMON</code>, <code>BREAK</code> (closed at rest) or <code>MAKE</code> (closed when operated), a protective earth pin is <code>PE</code>.</li>
 <li><code>Conductor</code> is a physical connection with exactly two ends. Its fields are <code>id</code>, <code>key</code>, <code>a</code>, <code>b</code>, <code>kind</code>, <code>carrier</code> (the item that carries it, or <code>None</code>) and <code>ext</code>. <code>a</code> and <code>b</code> are stored in id order, so they do not say a direction. The table is <code>conductors</code>.</li>
 <li><code>ConductorKind</code> says what realises a conductor. Its members are <code>WIRE</code>, <code>CORE</code>, <code>JUMPER</code>, <code>BUSBAR</code>, <code>MOUNT</code>, <code>RAIL</code> and <code>LEAD</code>. <code>MOUNT</code>, <code>BUSBAR</code>, <code>RAIL</code> and <code>LEAD</code> are links: they close a net and are never wires.</li>
 <li><code>PhysicalNet</code> is one net found from real connectivity: a maximal set of ports joined by conductors. Its only field is <code>ports</code>, sorted by id. It differs from a declared net, which is the intent the author wrote. Two closures over the same wiring compare equal.</li>
@@ -1922,7 +2032,7 @@ reached as <code>fr.derive.NAME</code>.</p>
 <p><code>fransys_model.derive</code> exports <code>UnitId</code>, <code>ItemId</code>, <code>FunctionId</code>, <code>PortId</code>, <code>DocumentId</code>, <code>NetId</code>, <code>ConductorId</code>, <code>AspectNodeId</code> and <code>UnitReleaseId</code>. Each is <code>Id[...]</code> of its record class. Annotate a value with the alias, so a module that only reads ids imports no record class. An output package reads sheets, documents and connector items through <code>DocumentRow</code>, <code>SheetRow</code>, <code>document_row</code>, <code>document_sheet</code>, <code>kind_sheet</code>, <code>schematic_page_ids</code> and <code>connector_item</code> of the same module, never through a record. <code>fr.derive</code> does not re-export them.</p>
 <h2 id="ratings-and-currents">Ratings and currents</h2>
 <ul>
-<li><code>Rating</code> says what a function or a part is rated for. Its fields are <code>voltage_ac_v</code>, <code>voltage_dc_v</code>, <code>current_ac_a</code>, <code>current_dc_a</code>, <code>min_breaking_current_a</code>, <code>power_loss_w</code>, <code>breaking_ac</code> and <code>breaking_dc</code>. A field is <code>None</code> when the datasheet gives no value. AC voltages are RMS, and DC voltages are the highest permissible potential. Currents are continuous ratings, except <code>min_breaking_current_a</code>, which is the lowest current a partial-range fuse breaks. The model checks the types only; comparing a rating with the plant is a check's job.</li>
+<li><code>fr.elecdef.Rating</code> says what a function or a part is rated for: <code>voltage</code>, <code>current</code> (each a tuple of <code>fr.elecdef.Range</code>, one per current kind in its <code>at</code>), <code>power_loss</code> and the other elecdef fields. A field is empty or <code>None</code> when the datasheet gives no value. A protective device's breaking figures are not in the <code>Rating</code>: they are the elecdef <code>Fuse</code> or <code>Breaker</code> of its <code>BlockFacet</code>. <code>fr.derive.Operating</code> holds <code>voltage</code>, <code>max_current</code> and <code>fault_current</code> as <code>Range</code> tuples and <code>fault_time_constant</code>, <code>capacity</code>, <code>resistance</code>, <code>nominal_power</code> and <code>nominal_current</code> as <code>Quantity</code>; read a figure with <code>.to(fr.elecdef.Unit.V).value</code>. The model checks the types only; comparing a rating with the plant is a check's job.</li>
 <li><code>CurrentPosition</code> is one rated current path. Its fields are <code>functions</code> (sorted), <code>bounds</code> and <code>ports</code>. <code>bounds</code> holds at most one <code>CurrentBound</code> per current kind, AC before DC. <code>ports</code> are the two end ports of the path, and they tell apart paths that pass through the same functions, one per pole.</li>
 <li><code>CurrentChain</code> is a block of the current graph. Its only field is <code>positions</code>, in the order that the chain lists them. The graph treats every switched link as closed. A position that exists only in some switch state is a chain on its own.</li>
 <li><code>LimitRole</code> says what set a bound. Its members are <code>SOURCE</code>, a source's continuous limit, and <code>PROTECTION</code>, a full-range protective device.</li>
@@ -1963,7 +2073,7 @@ reached as <code>fr.derive.NAME</code>.</p>
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.20.0 documentation
+      Fransys 0.22.0 documentation
     </div>
   
   
@@ -1991,10 +2101,10 @@ reached as <code>fr.derive.NAME</code>.</p>
       
         
         
-      <script id="__config" type="application/json">{"annotate":null,"base":"../..","features":["navigation.sections","search.highlight","content.code.copy"],"redirect":null,"search":"../../assets/javascripts/workers/search.c47bb847.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","clipboard.error":"Could not copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
+      <script id="__config" type="application/json">{"annotate":null,"base":"../..","features":["navigation.sections","search.highlight","content.code.copy"],"redirect":null,"search":"../../assets/javascripts/workers/search.719e0d91.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","clipboard.error":"Could not copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d31f0ffa.min.js"></script>
       
     
   </body>

@@ -1,0 +1,14 @@
+<Modules>
+  <Module Model="WagoIOModules.IOModule" Name="750-402_4DI_a" Description="4-channel digital input module, 24 V DC">
+    <Channel Input="0" Model="CDPSignalChannel&lt;bool&gt;" Name="U1_B12_P1_OVERLOAD" NetworkConvert="1" Nr="0" Type="bool" Value="0" Description="Digital input channel"></Channel>
+    <Channel Input="0" Model="CDPSignalChannel&lt;bool&gt;" Name="U1_Q11_P1_RUNNING" NetworkConvert="1" Nr="1" Type="bool" Value="0" Description="Digital input channel"></Channel>
+    <Channel Input="0" Model="CDPSignalChannel&lt;bool&gt;" Name="U1_B22_P2_OVERLOAD" NetworkConvert="1" Nr="2" Type="bool" Value="0" Description="Digital input channel"></Channel>
+    <Channel Input="0" Model="CDPSignalChannel&lt;bool&gt;" Name="U1_Q21_P2_RUNNING" NetworkConvert="1" Nr="3" Type="bool" Value="0" Description="Digital input channel"></Channel>
+  </Module>
+  <Module Model="WagoIOModules.IOModule" Name="750-504_4DO_a" Description="4-channel digital output module, 24 V DC; 0.5 A">
+    <Channel Input="1" Model="CDPSignalChannel&lt;bool&gt;" Name="U1_U2_K1_P1_RUN" NetworkConvert="1" Nr="0" Type="bool" Value="0" Description="Digital output channel"></Channel>
+    <Channel Input="1" Model="CDPSignalChannel&lt;bool&gt;" Name="U1_U2_K2_P2_RUN" NetworkConvert="1" Nr="1" Type="bool" Value="0" Description="Digital output channel"></Channel>
+    <Channel Input="1" Model="CDPSignalChannel&lt;bool&gt;" Name="U1_DO1_2" NetworkConvert="1" Nr="2" Type="bool" Value="0" Description="Digital output channel"></Channel>
+    <Channel Input="1" Model="CDPSignalChannel&lt;bool&gt;" Name="U1_DO1_3" NetworkConvert="1" Nr="3" Type="bool" Value="0" Description="Digital output channel"></Channel>
+  </Module>
+</Modules>

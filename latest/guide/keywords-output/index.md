@@ -29,8 +29,6 @@ The design calls are in `keywords-design.md`, the handle methods and layout hint
 | `title` | `''` | The unit's own title-block title. Empty gives a `TITLE_BLOCK_UNIT_IDENTITY_MISSING` warning on its document. | `title="Pump board"` |
 | `number` | `''` | The unit's own title-block number. Empty gives a `TITLE_BLOCK_UNIT_IDENTITY_MISSING` warning on its document. | `number="DWG-101"` |
 | [`history`](../units/index.md#recording-revisions) | `()` | Earlier revisions of the unit. Each entry is a mapping of the `d.revision` keywords `revision`, `date`, `text` and `created`. | `history=[{"revision": 1, "date": "2025-12-01", "text": "first", "created": "AB"}]` |
-| [`class_code`](../parts/index.md#class-codes) | `None` | One to three capital letters. A floating `d.add(fn, None, name=...)` numbers from this class. `None` gives no class, so a floating add raises. | `class_code="B"` |
-| [`wiring`](../series/index.md#colour-by-what-a-wire-carries) | `None` | Replaces wire colour and size rows inside this unit's body only. A unit never takes its parent's rows. | `wiring={fr.DC_SUPPLY: (BU, 1.5)}` |
 
 ## `fr.document`
 
@@ -41,8 +39,6 @@ The design calls are in `keywords-design.md`, the handle methods and layout hint
 | [`preset`](../documents/index.md#presets-cover-and-notes-text) | required | The `fr.DocumentPreset` that fixes the deliverable's default page kinds (documents.md). | `fr.document(fr.DocumentPreset.SYSTEM, None, cover=Path("cover.md"))` |
 | [`subject`](../documents/index.md#subjects) | required | What the document is about: what `d.location(...)` returns, a `Device`, a unit release name, or `None` for the system preset. Another value raises `TypeError`. | `fr.document(preset, "pump-board", cover=cover)` |
 | [`cover`](../documents/index.md#presets-cover-and-notes-text) | required | The Markdown cover file, stored verbatim. Its stem is the document's key. A missing file raises `FileNotFoundError`. A `<stem>.notes.md` beside it becomes the notes page. | `cover=Path("cover.md")` |
-| [`add`](../documents/index.md#presets-cover-and-notes-text) | `()` | `fr.PageKind` values added to the preset's default pages. | `add=(fr.PageKind.OVERVIEW,)` |
-| [`remove`](../documents/index.md#presets-cover-and-notes-text) | `()` | `fr.PageKind` values removed from the preset's pages. | `remove=(fr.PageKind.NOTES,)` |
 | [`logo`](../documents/index.md#presets-cover-and-notes-text) | `None` | An SVG file for the title block's logo cell. `None` leaves the cell empty. A missing file raises. | `logo=Path("logo.svg")` |
 | [`notice`](../documents/index.md#presets-cover-and-notes-text) | `''` | The title block's IP notice text, printed on every page of this document. Empty leaves the cell empty. | `notice="Property of Demo Ltd"` |
 
@@ -50,7 +46,16 @@ The design calls are in `keywords-design.md`, the handle methods and layout hint
 
 | keyword | default | effect | example |
 |---|---|---|---|
-| `result` | required | The `BuildResult` to measure. The layout runs again on its model, and the call returns one row per schematic page and one per unit. | `fr.readability(result)` |
+| `result` | required | The `BuildResult` to measure. It reads the drawings and the block-diagram layout (`BuildResult.diagrams`) the build kept and lays nothing out again; the call returns one row per drawn page, each naming its unit. | `fr.readability(result)` |
+
+## `fr.settings`
+
+`fr.settings(path=None, *, paper=None)` returns a `fr.Settings`: our defaults, the consumer's TOML file on top, and `paper` per drawing type (settings.md).
+
+| keyword | default | effect | example |
+|---|---|---|---|
+| [`path`](../settings/index.md#the-toml-file) | `None` | The consumer's TOML file, merged key by key over our defaults. `None` gives our defaults. | `fr.settings("fransys.toml")` |
+| [`paper`](../settings/index.md#the-paper-per-drawing-type) | `None` | A mapping of a `fr.PageKind` to a paper format's name, for that drawing type. | `fr.settings(paper={fr.PageKind.BLOCK_DIAGRAM: "A2"})` |
 
 ## `fr.build`
 
@@ -59,6 +64,7 @@ The design calls are in `keywords-design.md`, the handle methods and layout hint
 | keyword | default | effect | example |
 |---|---|---|---|
 | [`releases`](../build/index.md#keeping-designations-fixed-across-revisions) | `None` | A release root. Numbering pins are seeded from the releases stored there, so a released unit keeps its numbers. `None` numbers freely. | `fr.build(d, releases=Path("releases"))` |
+| [`settings`](../settings/index.md#frsettings) | `None` | The `fr.Settings` from `fr.settings(...)`, used for this build. `None` uses our defaults. | `fr.build(d, settings=fr.settings(paper={fr.PageKind.BLOCK_DIAGRAM: "A2"}))` |
 
 ## `fr.check`
 
@@ -76,7 +82,7 @@ The design calls are in `keywords-design.md`, the handle methods and layout hint
 
 | keyword | default | effect | example |
 |---|---|---|---|
-| `result` | required | The built model whose exports are written. Any ERROR in `fr.check(result)` raises `BuildErrors` and writes nothing. | `fr.write(result, Path("out"))` |
+| `result` | required | The built model whose exports are written. Any ERROR in `fr.check(result)` raises `BuildFailedError` and writes nothing. | `fr.write(result, Path("out"))` |
 | [`out_dir`](../build/index.md#export-file-names) | required | The folder that receives the exports: the CSV reports, WAGO XML, overview and one PDF per document. | `fr.write(result, Path("out"))` |
 | [`unit`](../units/index.md#writing-one-unit) | `None` | Writes only that unit's own set, with no `overview.html`. `None` writes the whole model. | `fr.write(result, out, unit="pump-board")` |
 | [`intermediates`](../build/index.md#export-file-names) | `None` | A folder for SVGs, netlists and `.typ` sources. `None` keeps them in memory. | `intermediates=Path(".fransys")` |
@@ -93,7 +99,7 @@ The design calls are in `keywords-design.md`, the handle methods and layout hint
 
 | keyword | default | effect | example |
 |---|---|---|---|
-| `result` | required | The built model to release. Any ERROR raises `BuildErrors` and writes nothing. | `fr.release(result, Path("releases"))` |
+| `result` | required | The built model to release. Any ERROR raises `BuildFailedError` and writes nothing. | `fr.release(result, Path("releases"))` |
 | [`into`](../build/index.md#releasing-a-frozen-baseline) | required | The release root. The call writes `<into>/<name>/<version>.<revision>/`. An identical stored listing returns the existing path. | `fr.release(result, Path("releases"))` |
 | [`unit`](../build/index.md#releasing-a-frozen-baseline) | `None` | Releases that unit instead of the system. | `fr.release(result, into, unit="pump-board")` |
 
@@ -123,7 +129,7 @@ The design calls are in `keywords-design.md`, the handle methods and layout hint
 
 | keyword | default | effect | example |
 |---|---|---|---|
-| `result` | required | The rebuilt model. Re-cuts each stored listing the current rules print differently, in `listing.json` and the manifest only, children before parents. Returns the folders rewritten, `()` when none. A real change raises `BuildErrors` with `BASELINE_DIFFERS` and writes nothing. | `fr.rebaseline(result, Path("releases"))` |
+| `result` | required | The rebuilt model. Re-cuts each stored listing the current rules print differently, in `listing.json` and the manifest only, children before parents. Returns the folders rewritten, `()` when none. A real change raises `BuildFailedError` with `BASELINE_DIFFERS` and writes nothing. | `fr.rebaseline(result, Path("releases"))` |
 | `baselines` | required | The release root with the stored baselines. | `fr.rebaseline(result, Path("releases"))` |
 | `unit` | `None` | `None` covers every unit and the system with a stored baseline. A unit covers it and the units below. | `fr.rebaseline(result, root, unit="pump-board")` |
 

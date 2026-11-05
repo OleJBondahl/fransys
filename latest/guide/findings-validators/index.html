@@ -8,21 +8,21 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.20.0/guide/findings-validators/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.0/guide/findings-validators/">
       
       
       
         <link rel="prev" href="../findings/">
       
       
-        <link rel="next" href="../findings-render/">
+        <link rel="next" href="../findings-release/">
       
       
         
       
       
       <link rel="icon" href="../../assets/fransys-icon.svg">
-      <meta name="generator" content="zensical-0.0.70">
+      <meta name="generator" content="zensical-0.0.74">
     
     
       
@@ -33,7 +33,7 @@
       
         
       
-      <link rel="stylesheet" href="../../assets/stylesheets/modern/main.e442bf79.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/modern/main.4ab2de0c.min.css">
       
         
           
@@ -114,9 +114,10 @@
   <img src="../../assets/fransys-wordmark-white.svg" alt="Fransys">
 
     </a>
-    <label class="md-header__button md-icon" for="__drawer" aria-label="Navigation">
+    <label class="md-header__button md-icon" for="__drawer">
       
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-menu" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
+      <span class="md-visually-hidden">Navigation</span>
     </label>
     <div class="md-header__title" data-md-component="header-title">
       <div class="md-header__ellipsis">
@@ -168,9 +169,10 @@
     
       
       
-        <label class="md-header__button md-icon" for="__search" aria-label="Search">
+        <label class="md-header__button md-icon" for="__search">
           
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+          <span class="md-visually-hidden">Search</span>
         </label>
         <div class="md-search" data-md-component="search" role="dialog" aria-label="Search">
   <button type="button" class="md-search__button">
@@ -414,6 +416,33 @@
     
   
   Wiring a design
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../drawn-ledger/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  The required-drawn ledger
 
     
   </span>
@@ -784,6 +813,60 @@
   
   
     <li class="md-nav__item">
+      <a href="../settings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Settings
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../moving-to-0.22/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Moving to 0.22
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../moving-to-0.20/" class="md-nav__link">
         
   
@@ -971,6 +1054,33 @@
 
       </a>
       
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../findings-release/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Finding codes: build, release and verify
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -1749,7 +1859,7 @@
 
 
 <h1 id="finding-codes-validators-build-and-release">Finding codes: validators, build and release</h1>
-<p>Codes the model checks, the build, <code>release</code> and <code>verify</code> and the library load emit. Who acts is explained in <a href="../findings/"><code>findings.md</code></a>.</p>
+<p>Codes the model checks and the library load emit. Who acts is explained in <a href="../findings/"><code>findings.md</code></a>.</p>
 <table>
 <thead>
 <tr>
@@ -1768,7 +1878,7 @@
 <td>validators</td>
 <td>consumer</td>
 <td>An aspect node's parent belongs to a different aspect (function, location or product).</td>
-<td>Move the node under a parent of the same aspect, or fix its authored parent.</td>
+<td>Give each location a parent of its own aspect, a location. Write: d.location("BATT", "Battery bay", within="HOLD")</td>
 </tr>
 <tr>
 <td><a id="aspect_cycle"></a>ASPECT_CYCLE</td>
@@ -1776,47 +1886,7 @@
 <td>validators</td>
 <td>consumer</td>
 <td>An aspect node's parent chain loops back on itself.</td>
-<td>Correct the parent authored on one of the looping nodes.</td>
-</tr>
-<tr>
-<td><a id="bar_not_pe"></a>BAR_NOT_PE</td>
-<td>ERROR</td>
-<td>validators</td>
-<td>consumer</td>
-<td>A port of a <code>bar</code> function has a role other than <code>pe</code>. A bar carries protective earth only, until the copper bar drawing (owner question) is ruled.</td>
-<td>Set <code>role = "pe"</code> on the port in the part file.</td>
-</tr>
-<tr>
-<td><a id="baseline_differs"></a>BASELINE_DIFFERS</td>
-<td>ERROR</td>
-<td>release, verify</td>
-<td>consumer</td>
-<td>A unit instance in the released subtree, or checked by <code>verify</code>, has a listing differing from its released baseline.</td>
-<td>Release the nested unit's new revision, then the containing unit again, or find why its content changed.</td>
-</tr>
-<tr>
-<td><a id="baseline_rows_unchecked"></a>BASELINE_ROWS_UNCHECKED</td>
-<td>INFO or ERROR</td>
-<td>release, verify</td>
-<td>consumer</td>
-<td>A stored baseline cut before fransys 0.18.2 holds rows for a contact block that today's numbering cannot print. Every other row is unchanged, and those rows were left out of the comparison. <code>verify</code> notes it (INFO); <code>release</code> of a unit nesting it refuses (ERROR).</td>
-<td>Run <code>fr.rebaseline(result, baselines)</code>, which records them under today's rules.</td>
-</tr>
-<tr>
-<td><a id="baseline_rules_moved"></a>BASELINE_RULES_MOVED</td>
-<td>INFO or ERROR</td>
-<td>release, verify</td>
-<td>consumer</td>
-<td>A stored baseline's content is unchanged, but a later fransys prints its listing differently. <code>verify</code> notes it (INFO); <code>release</code> of a unit nesting it refuses (ERROR).</td>
-<td>Run <code>fr.rebaseline(result, baselines)</code>, which re-cuts it under today's rules.</td>
-</tr>
-<tr>
-<td><a id="baseline_too_old"></a>BASELINE_TOO_OLD</td>
-<td>ERROR</td>
-<td>release, verify</td>
-<td>consumer</td>
-<td>A stored baseline was cut by a fransys older than the oldest release whose listing rules this build knows, or its manifest records no fransys version.</td>
-<td>verify with the fransys release that cut this baseline, or release a new revision of the unit, which stores a baseline under today's rules.</td>
+<td>Make the parents of locations form a tree, never a loop. Write: d.location("BATT", "Battery bay", within="HOLD")</td>
 </tr>
 <tr>
 <td><a id="boundary_not_in_unit"></a>BOUNDARY_NOT_IN_UNIT</td>
@@ -1824,7 +1894,7 @@
 <td>validators</td>
 <td>consumer</td>
 <td>A unit's boundary function belongs to an item outside that unit's subtree.</td>
-<td>Declare the boundary on a function whose item is in the unit, or fix the item's unit/parent.</td>
+<td>Declare as the unit's boundary only a function of an item built inside that unit. Write: d.device("X1", "DEMO-CONN-2P", interface=True)</td>
 </tr>
 <tr>
 <td><a id="boundary_unconnected"></a>BOUNDARY_UNCONNECTED</td>
@@ -1832,23 +1902,23 @@
 <td>validators</td>
 <td>consumer</td>
 <td>A unit's boundary function is not connected across the unit nor declared unused.</td>
-<td>Wire the boundary, or leave it open: <code>unused=</code> on <code>d.add</code> for one instance, on <code>d.device</code> for all. A unit alone in its design never fires it, nor an interface passed up from a nested unit.</td>
+<td>Wire each boundary function across the unit, or declare it unused on purpose. Write: d.device("X2", "DEMO-CONN-2P", interface=True, unused=True)</td>
 </tr>
 <tr>
-<td><a id="cable_core_count"></a>CABLE_CORE_COUNT</td>
-<td>WARNING or ERROR</td>
+<td><a id="cable_cores_fewer"></a>CABLE_CORES_FEWER</td>
+<td>WARNING</td>
 <td>validators</td>
 <td>consumer</td>
-<td>A cable item's core count differs from its product's core-colour count (WARNING when fewer, ERROR when more).</td>
-<td>Wire the missing cores, mark a core you leave unused with <code>w.spare(colour)</code> (or <code>w.spare()</code> for all the rest), or correct the product's <code>core_colours</code> list. A spare or one-ended screen counts as a core.</td>
+<td>A cable item carries fewer cores than its product has core colours.</td>
+<td>Use as many cores as the product has colours, each wired or marked spare. Write: W1.spare()</td>
 </tr>
 <tr>
-<td><a id="changes_by_name"></a>CHANGES_BY_NAME</td>
-<td>INFO</td>
-<td>build</td>
-<td>note</td>
-<td>The release the next change list starts from was cut before listing version 2, so it names no item key. The change list matches by printed designation, and a renamed item shows as one removed and one added row.</td>
-<td>The next release's change list follows renames; <code>fr.rebaseline</code> re-cuts the old release now.</td>
+<td><a id="cable_cores_more"></a>CABLE_CORES_MORE</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>consumer</td>
+<td>A cable item carries more cores than its product has core colours.</td>
+<td>Use as many cores as the product has colours, each wired or marked spare. Write: W1.spare()</td>
 </tr>
 <tr>
 <td><a id="conductor_on_uninstalled"></a>CONDUCTOR_ON_UNINSTALLED</td>
@@ -1856,7 +1926,7 @@
 <td>validators</td>
 <td>consumer</td>
 <td>A conductor lands on an item that is not marked installed.</td>
-<td>Mark the item installed, or remove the conductor if it is absent.</td>
+<td>Mark the item installed, or remove the conductor that lands on it. Write: d.device("Q9", "DEMO-MCB-3P")</td>
 </tr>
 <tr>
 <td><a id="connector_wired_without_mate"></a>CONNECTOR_WIRED_WITHOUT_MATE</td>
@@ -1864,7 +1934,7 @@
 <td>validators</td>
 <td>consumer</td>
 <td>A conductor from outside a nested unit lands directly on its boundary connector, whose part gender is male or female (neutral or unstated passes).</td>
-<td>Mate a plug to the boundary connector (<code>u.mate(plug, connector)</code>) and wire the plug's pin instead.</td>
+<td>End a cable's cores at the connector's pins. Write: d.cable("W1", P.CBL).core(1, plug[1], connector[1])</td>
 </tr>
 <tr>
 <td><a id="containment_cycle"></a>CONTAINMENT_CYCLE</td>
@@ -1872,7 +1942,7 @@
 <td>validators</td>
 <td>consumer</td>
 <td>An item's physical-containment parent chain loops back on itself.</td>
-<td>Correct the parent authored on one of the looping items.</td>
+<td>Make physical containment a tree: no item sits inside itself. Write: d.device("X1", "DEMO-CONN-2P", parent=k1)</td>
 </tr>
 <tr>
 <td><a id="core_index_past_product"></a>CORE_INDEX_PAST_PRODUCT</td>
@@ -1880,7 +1950,15 @@
 <td>validators</td>
 <td>consumer</td>
 <td>A cable core is numbered past the core count of the cable's product.</td>
-<td>Use a core from 1 to the product's core count, or choose a part with more cores.</td>
+<td>Number the cores from 1 to the product's core count. Write: W1.core(3, x1[1], x1[2])</td>
+</tr>
+<tr>
+<td><a id="core_on_pe_not_gnye"></a>CORE_ON_PE_NOT_GNYE</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>consumer</td>
+<td>A cable core that is not green-yellow (GNYE) lands on a port with role PE; a screen core (<code>SH</code>) is exempt.</td>
+<td>The PE core is GNYE (IEC 60204-1): land the GNYE core on the PE port, and another core elsewhere. Write: W1.core(GNYE, a, b)</td>
 </tr>
 <tr>
 <td><a id="designation_duplicate"></a>DESIGNATION_DUPLICATE</td>
@@ -1888,7 +1966,7 @@
 <td>build</td>
 <td>consumer</td>
 <td>Two items or unit instances under one parent print one designation: a tag equal to a sibling's text, or a retired or moved released one.</td>
-<td>Give the item a distinct tag, or none. A tag a released revision reserved needs a new version.</td>
+<td>Give each item or unit instance under one parent its own tag, one no released revision reserved. Write: d.device("X2", "DEMO-CONN-2P")</td>
 </tr>
 <tr>
 <td><a id="designation_moved"></a>DESIGNATION_MOVED</td>
@@ -1896,7 +1974,7 @@
 <td>release</td>
 <td>consumer</td>
 <td>An item or unit instance pinned in the previous release now prints a different designation, written or numbered.</td>
-<td>Restore the released tag; only a new version may change it.</td>
+<td>No call clears this: restore the released tag on <subject>; only a new version may change it.</td>
 </tr>
 <tr>
 <td><a id="designation_new_in_revision"></a>DESIGNATION_NEW_IN_REVISION</td>
@@ -1912,15 +1990,7 @@
 <td>validators</td>
 <td>consumer</td>
 <td>A document's <code>unit_name</code> matches no unit, or more than one.</td>
-<td>Make the unit name unique so <code>unit_name</code> resolves to one instance.</td>
-</tr>
-<tr>
-<td><a id="export_name_clash"></a>EXPORT_NAME_CLASH</td>
-<td>ERROR</td>
-<td>build</td>
-<td>consumer</td>
-<td>Two different subjects (documents, items) would write to the same file name in <code>out_dir</code>.</td>
-<td>Give the colliding units, items or documents distinct names (or locations/fragments); two instances of one release name need one document per release.</td>
+<td>Document each placement with what <code>d.add</code> returned; the unit's own PDF comes from its release write. Write: fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, placed, cover=Path("cover.md"))</td>
 </tr>
 <tr>
 <td><a id="file_unreadable"></a>FILE_UNREADABLE</td>
@@ -1928,7 +1998,7 @@
 <td>library load</td>
 <td>consumer</td>
 <td>A part-file could not be read (missing file, permission error, or bad encoding).</td>
-<td>Fix the path, permissions or encoding (UTF-8).</td>
+<td>No call clears this: fix the path, the file permissions or the UTF-8 encoding, then load again.</td>
 </tr>
 <tr>
 <td><a id="float_forbidden"></a>FLOAT_FORBIDDEN</td>
@@ -1936,23 +2006,31 @@
 <td>library load</td>
 <td>consumer</td>
 <td>A part-file has a bare TOML float, which the contract forbids (quote values as strings).</td>
-<td>Quote the numeric value as a string.</td>
+<td>A number is a quoted string in a part file, never a bare TOML float. Write: nominal_current = "24.5 A"</td>
 </tr>
 <tr>
 <td><a id="function_half_connected"></a>FUNCTION_HALF_CONNECTED</td>
-<td>WARNING</td>
+<td>ERROR</td>
 <td>validators</td>
 <td>consumer</td>
 <td>A two-port coil, load, contact, switch, protection or actuator is connected at one port and open at the other.</td>
-<td>Wire the open port, or remove the half-wired function.</td>
+<td>Wire both ports of the function. Write: d.series(a, b)</td>
 </tr>
 <tr>
-<td><a id="gnye_not_pe"></a>GNYE_NOT_PE</td>
-<td>ERROR or WARNING</td>
+<td><a id="gnye_not_pe_declared"></a>GNYE_NOT_PE_DECLARED</td>
+<td>ERROR</td>
 <td>validators</td>
 <td>consumer</td>
-<td>A green-yellow conductor is on a net that is not PE: an ERROR on a net a declared net lists, a WARNING on a net none lists (IEC 60445 keeps green-yellow for PE).</td>
-<td>Recolour it, or connect it to the PE net and declare it with <code>d.earth</code>.</td>
+<td>A green-yellow conductor is on a net that a declared net lists and that is not PE (IEC 60445 keeps green-yellow for PE).</td>
+<td>Use green-yellow only on the PE net, which <code>d.earth</code> declares. Write: d.earth(*pins)</td>
+</tr>
+<tr>
+<td><a id="gnye_not_pe_undeclared"></a>GNYE_NOT_PE_UNDECLARED</td>
+<td>WARNING</td>
+<td>validators</td>
+<td>consumer</td>
+<td>A green-yellow conductor is on a net that is not PE and that no declared net lists (IEC 60445 keeps green-yellow for PE).</td>
+<td>Use green-yellow only on the PE net, which <code>d.earth</code> declares. Write: d.earth(*pins)</td>
 </tr>
 <tr>
 <td><a id="harness_end_ambiguous"></a>HARNESS_END_AMBIGUOUS</td>
@@ -1960,7 +2038,7 @@
 <td>build</td>
 <td>consumer</td>
 <td>Two or more ends of one cable print the same text in its drawing.</td>
-<td>Place the colliding unit instances at distinct locations, or tag the strips apart.</td>
+<td>Give each cable end its own text with distinct locations or distinct tags. Write: d.device("X2", "DEMO-CONN-2P", place="A2")</td>
 </tr>
 <tr>
 <td><a id="harness_holds_plc_module"></a>HARNESS_HOLDS_PLC_MODULE</td>
@@ -1968,7 +2046,7 @@
 <td>validators</td>
 <td>consumer</td>
 <td>A PLC module sits under an item made with <code>d.harness</code>.</td>
-<td>Build the rack with <code>d.rack</code>, so its modules print flat.</td>
+<td>Put the PLC modules under a rack, not a harness, so they print flat. Write: d.rack("U1", name="plc")</td>
 </tr>
 <tr>
 <td><a id="harness_without_tag"></a>HARNESS_WITHOUT_TAG</td>
@@ -1976,15 +2054,7 @@
 <td>validators</td>
 <td>consumer</td>
 <td>A harness (marked, or with a cable child) has no tag or assigned designation, so it has no label.</td>
-<td>Give it a tag: <code>d.harness(tag=...)</code>, or <code>tag=</code> on the item.</td>
-</tr>
-<tr>
-<td><a id="interface_not_bumped"></a>INTERFACE_NOT_BUMPED</td>
-<td>ERROR</td>
-<td>release</td>
-<td>consumer</td>
-<td>The previous released revision of this unit (the highest below this one) has the same interface string but a different boundary.</td>
-<td>Bump the interface string if the boundary changed, or restore the previous boundary.</td>
+<td>Give the harness a tag so it has a label. Write: d.harness("W5")</td>
 </tr>
 <tr>
 <td><a id="item_part_mismatch"></a>ITEM_PART_MISMATCH</td>
@@ -1992,7 +2062,7 @@
 <td>validators</td>
 <td>consumer</td>
 <td>An item's functions or ports do not match its part's templates (missing, extra, duplicated, or differing in name, kind, role or marking).</td>
-<td>Fix the item's authored functions and ports (or the part's templates) so they agree.</td>
+<td>Make the item's functions and ports match its part's templates, by building it from the part as it stands. Write: d.device("Q1", "DEMO-MCB-3P")</td>
 </tr>
 <tr>
 <td><a id="item_without_part"></a>ITEM_WITHOUT_PART</td>
@@ -2008,7 +2078,7 @@
 <td>validators</td>
 <td>consumer</td>
 <td>The loads one limit bounds sum above it; none is above it alone.</td>
-<td>If they run together, raise the limit or split the loads.</td>
+<td>Lower the loads' summed draw below the limit, or split them across more limits. Write: nominal_current = "0.5 A"</td>
 </tr>
 <tr>
 <td><a id="load_above_limit"></a>LOAD_ABOVE_LIMIT</td>
@@ -2016,7 +2086,15 @@
 <td>validators</td>
 <td>consumer</td>
 <td>A load's stated draw is above the limit that bounds it.</td>
-<td>Lower the draw or raise the limit.</td>
+<td>Lower the load's stated draw below its limit, or raise the source's limit. Write: nominal_current_a = "0.5"</td>
+</tr>
+<tr>
+<td><a id="mates_disabled"></a>MATES_DISABLED</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>consumer</td>
+<td>A mate or harness line is refused in 0.22.</td>
+<td>Use a cable. Write: d.cable("W1", P.CBL)</td>
 </tr>
 <tr>
 <td><a id="mate_not_connector"></a>MATE_NOT_CONNECTOR</td>
@@ -2024,15 +2102,15 @@
 <td>validators</td>
 <td>consumer</td>
 <td>A mate end is not a connector or terminal (a relay coil, say).</td>
-<td>Mate a connector or terminal.</td>
+<td>Mate only connector or terminal functions. Write: d.mate(plug, connector)</td>
 </tr>
 <tr>
 <td><a id="mate_port_mismatch"></a>MATE_PORT_MISMATCH</td>
-<td>WARNING</td>
+<td>ERROR</td>
 <td>validators</td>
 <td>consumer</td>
 <td>A mate's two functions have different port names, so some ports have no counterpart.</td>
-<td>Example: a lettered inlet (L1, L2, L3, N, PE) mated to a numbered plug. Rename the ports to match.</td>
+<td>Mate two connectors whose port names match, so every port has a counterpart. Write: d.mate(j1, j2)</td>
 </tr>
 <tr>
 <td><a id="multiline_string"></a>MULTILINE_STRING</td>
@@ -2040,7 +2118,23 @@
 <td>library load</td>
 <td>consumer</td>
 <td>A part-file string contains a line break, which the contract forbids.</td>
-<td>Use a single-line string, or TOML's escaped <code>\n</code>.</td>
+<td>A string stays on one line; a line break is written as TOML's escaped <code>\n</code>. Write: description = "one line"</td>
+</tr>
+<tr>
+<td><a id="net_across_unit_boundary_joined"></a>NET_ACROSS_UNIT_BOUNDARY_JOINED</td>
+<td>WARNING</td>
+<td>validators</td>
+<td>consumer</td>
+<td>A declared net joins pins in different units and no wire joins it, but every boundary pin has another way across; a net does not cross a unit boundary.</td>
+<td>Join across the boundary with a wire, and keep nets inside one unit. Write: d.series(a, b, wire=...)</td>
+</tr>
+<tr>
+<td><a id="net_across_unit_boundary_open"></a>NET_ACROSS_UNIT_BOUNDARY_OPEN</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>consumer</td>
+<td>A declared net joins pins in different units, no wire joins it, and a boundary pin has no other way across; a net does not cross a unit boundary.</td>
+<td>Join across the boundary with a wire, and keep nets inside one unit. Write: d.series(a, b, wire=...)</td>
 </tr>
 <tr>
 <td><a id="net_potential_conflict"></a>NET_POTENTIAL_CONFLICT</td>
@@ -2048,7 +2142,7 @@
 <td>validators</td>
 <td>consumer</td>
 <td>One physical net joins two declared nets that are rails of different supply potentials.</td>
-<td>Fix the wiring or net declarations so no net joins two potentials.</td>
+<td>No call clears this: remove the series that joins the two nets, or correct its ends.</td>
 </tr>
 <tr>
 <td><a id="net_shorted"></a>NET_SHORTED</td>
@@ -2056,15 +2150,23 @@
 <td>validators</td>
 <td>consumer</td>
 <td>One physical net joins declared nets of different names.</td>
-<td>Fix the wiring, or give the nets one name if they are one signal (same-name nets join silently).</td>
+<td>No call clears this: remove the series that joins the two nets, or correct its ends.</td>
 </tr>
 <tr>
 <td><a id="net_unrealised"></a>NET_UNREALISED</td>
-<td>WARNING</td>
+<td>ERROR</td>
 <td>validators</td>
 <td>consumer</td>
 <td>A declared net's ports fall into more than one physical net, and no single board holds them all. Not for the PE net.</td>
-<td>Wire the missing conductors, or remove the ports that should not share the declared net.</td>
+<td>Put every port of the declared net on one board, or wire them into one net. Write: d.series(a, b)</td>
+</tr>
+<tr>
+<td><a id="order_hint_cycle"></a>ORDER_HINT_CYCLE</td>
+<td>ERROR</td>
+<td>build</td>
+<td>consumer</td>
+<td>Authored <code>d.layout.order</code> hints contradict each other in a cycle (a before b, b before a), so no page order can honour them.</td>
+<td>Drop one hint of the cycle the message names. Write: d.layout.order(a, b) for one direction only</td>
 </tr>
 <tr>
 <td><a id="part_library_version_conflict"></a>PART_LIBRARY_VERSION_CONFLICT</td>
@@ -2072,7 +2174,7 @@
 <td>library load</td>
 <td>consumer</td>
 <td>Two <code>PartLibrary</code> records share a name but declare different versions.</td>
-<td>Load only one version of each named part library.</td>
+<td>Load one version of each named part library. Write: fr.design("demo-parts")</td>
 </tr>
 <tr>
 <td><a id="pe_not_gnye"></a>PE_NOT_GNYE</td>
@@ -2080,7 +2182,7 @@
 <td>validators</td>
 <td>consumer</td>
 <td>A single wire on a PE net is not green-yellow (an empty colour is not a finding).</td>
-<td>Colour the wire GNYE.</td>
+<td>Colour a PE wire green-yellow. Write: d.series(a, b, wire=(fr.colours.GNYE, 0.75))</td>
 </tr>
 <tr>
 <td><a id="pe_port_off_pe"></a>PE_PORT_OFF_PE</td>
@@ -2088,7 +2190,7 @@
 <td>validators</td>
 <td>consumer</td>
 <td>A port with role PE is on a net that is not PE.</td>
-<td>Wire the port to the PE net.</td>
+<td>Put a port with role PE on the PE net. Write: d.earth(*pins)</td>
 </tr>
 <tr>
 <td><a id="placement_duplicate"></a>PLACEMENT_DUPLICATE</td>
@@ -2096,7 +2198,7 @@
 <td>validators</td>
 <td>consumer</td>
 <td>One item is placed more than once in the same aspect (function, location or product).</td>
-<td>Remove the duplicate placement so the item is placed once per aspect.</td>
+<td>Place each item once in each aspect. Write: d.device("X1", "DEMO-CONN-2P", place="A1")</td>
 </tr>
 <tr>
 <td><a id="plc_binding_signal_mismatch"></a>PLC_BINDING_SIGNAL_MISMATCH</td>
@@ -2104,7 +2206,7 @@
 <td>validators</td>
 <td>consumer</td>
 <td>A PLC binding's channel does not have the signal type the request asked for (or is not a declared channel at all). The message names the asked kind, the channel, its kind and both fixes.</td>
-<td>Rewire the request to a channel of the asked kind, or ask for the channel's kind.</td>
+<td>Bind the request to a channel of the signal type it asked for. Write: K1.coil.plc(fr.DO, "pump-run")</td>
 </tr>
 <tr>
 <td><a id="plc_binding_wiring_mismatch"></a>PLC_BINDING_WIRING_MISMATCH</td>
@@ -2112,7 +2214,7 @@
 <td>validators</td>
 <td>consumer</td>
 <td>A PLC binding disagrees with the wiring: the request or channel function is wired to a different channel or request than its binding.</td>
-<td>Rebind the request/channel to match the wiring, or rewire it to match the binding.</td>
+<td>Wire the request to the channel its binding names, or change the binding. Write: K1.coil.plc(fr.DO, "pump-run")</td>
 </tr>
 <tr>
 <td><a id="plc_channel_contested"></a>PLC_CHANNEL_CONTESTED</td>
@@ -2120,7 +2222,7 @@
 <td>build</td>
 <td>consumer</td>
 <td>Two or more PLC requests of the channel's signal are wired to the same channel. The finding names the channel's pins and every request; none of them binds, and none goes to the free queue.</td>
-<td>One channel reads one signal: keep one request, or wire each request to its own channel.</td>
+<td>Keep one PLC request per channel and wire each other request to a channel of its own. Write: d.series(k1.coil["A1"], a1.di_1)</td>
 </tr>
 <tr>
 <td><a id="plc_request_ambiguous"></a>PLC_REQUEST_AMBIGUOUS</td>
@@ -2128,7 +2230,7 @@
 <td>build</td>
 <td>consumer</td>
 <td>A PLC request is wired so that several free channels of its signal tie: its net reaches them all, or all by a direct conductor. It gets no binding.</td>
-<td>Wire the request to one channel directly, or free the other channels.</td>
+<td>Wire the request straight to one channel of its signal, or free the other channels. Write: d.series(k1.coil["A1"], a1.di_1)</td>
 </tr>
 <tr>
 <td><a id="plc_request_unservable"></a>PLC_REQUEST_UNSERVABLE</td>
@@ -2136,7 +2238,7 @@
 <td>build</td>
 <td>consumer</td>
 <td>No free PLC channel of the requested signal type on the request's unit chain (its unit declares none, or every one is taken).</td>
-<td>Add a channel of that signal type to the unit (or a parent unit), or move another request off one.</td>
+<td>Add a PLC module with a free channel of the requested signal type to the unit or a parent unit, or move another request off one. Write: d.device("A1", "DEMO-PLC-DI-16")</td>
 </tr>
 <tr>
 <td><a id="port_designation_duplicate"></a>PORT_DESIGNATION_DUPLICATE</td>
@@ -2144,7 +2246,7 @@
 <td>build</td>
 <td>consumer</td>
 <td>Two or more ports of one item print the same designation text, so a drawing or list cannot tell them apart.</td>
-<td>Give the part's pin markings distinct names so each port prints a unique text.</td>
+<td>Give each port of one item its own printed pin marking in the part file. Write: marking = "A2"</td>
 </tr>
 <tr>
 <td><a id="potential_in_two_supplies"></a>POTENTIAL_IN_TWO_SUPPLIES</td>
@@ -2152,7 +2254,7 @@
 <td>validators</td>
 <td>consumer</td>
 <td>One potential name is a rail of two differently named supplies.</td>
-<td>Rename one of the potentials, or merge the two supply declarations if they are the same supply.</td>
+<td>Declare each rail name in one supply only. Write: d.dc_supply("24VDC", d.device("G1", "DEMO-PSU-24"))</td>
 </tr>
 <tr>
 <td><a id="potential_without_supply"></a>POTENTIAL_WITHOUT_SUPPLY</td>
@@ -2160,7 +2262,7 @@
 <td>validators</td>
 <td>consumer</td>
 <td>A net potential no supply declares: its pins get no rank and no power symbol.</td>
-<td>Declare the supply with that rail.</td>
+<td>Declare every net potential with a supply. Write: d.dc_supply("24VDC", d.device("G1", "DEMO-PSU-24"))</td>
 </tr>
 <tr>
 <td><a id="product_designation_duplicate"></a>PRODUCT_DESIGNATION_DUPLICATE</td>
@@ -2168,7 +2270,31 @@
 <td>build</td>
 <td>consumer</td>
 <td>Two items print the same product designation (location plus own label): both at one location or, unplaced, both unnumbered alike in one unit instance.</td>
-<td>Place one item at a distinct location, or tag it.</td>
+<td>Give each item a distinct location or label: place one elsewhere, or tag it. Write: d.device("X2", "DEMO-CONN-2P", place="A2")</td>
+</tr>
+<tr>
+<td><a id="rail_duplicate_potential"></a>RAIL_DUPLICATE_POTENTIAL</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>consumer</td>
+<td>Two rail groups of one unit carry the same potential.</td>
+<td>Flag one bridged group per potential in a unit. Write: x.run("24V", 4, bridged=True, rail=True)</td>
+</tr>
+<tr>
+<td><a id="rail_on_fused"></a>RAIL_ON_FUSED</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>consumer</td>
+<td>A rail group holds a terminal whose part has a protective link (a fuse in the path).</td>
+<td>Flag the supply side of the fuse, not a fused terminal. Write: x.run("24V", 4, bridged=True, rail=True)</td>
+</tr>
+<tr>
+<td><a id="rail_without_potential"></a>RAIL_WITHOUT_POTENTIAL</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>consumer</td>
+<td>A rail group carries no power potential.</td>
+<td>Declare the potential first, then flag the group. Write: d.dc_supply("S", plus=x[1], minus=y[1], voltage=24)</td>
 </tr>
 <tr>
 <td><a id="rating_breaking_below_fault"></a>RATING_BREAKING_BELOW_FAULT</td>
@@ -2176,7 +2302,7 @@
 <td>validators</td>
 <td>consumer</td>
 <td>A protective device breaks less current than the prospective fault at its position.</td>
-<td>Fit a higher-breaking device.</td>
+<td>Use a protective device that breaks more than the prospective fault current. Write: breaking_capacity = [{ nom = "15000 A", at = ["DC", "24 V"] }]</td>
 </tr>
 <tr>
 <td><a id="rating_breaking_no_data"></a>RATING_BREAKING_NO_DATA</td>
@@ -2184,7 +2310,7 @@
 <td>validators</td>
 <td>consumer</td>
 <td>A device states breaking points, but none covers the circuit voltage or time constant.</td>
-<td>Add a point for that voltage or time constant.</td>
+<td>State a breaking point that covers the circuit voltage and time constant. Write: breaking_capacity = [{ nom = "15000 A", at = ["DC", "24 V", "10 ms"] }]</td>
 </tr>
 <tr>
 <td><a id="rating_current_below_branch"></a>RATING_CURRENT_BELOW_BRANCH</td>
@@ -2192,7 +2318,7 @@
 <td>validators</td>
 <td>consumer</td>
 <td>A function's rated current is below the current its branch can carry.</td>
-<td>Fit a part rated for the branch's current, or reduce the limit that sets the bound.</td>
+<td>Use a function rated for the current its branch can carry. Write: current = [{ nom = "16 A", at = ["DC"] }]</td>
 </tr>
 <tr>
 <td><a id="rating_current_kind_unstated"></a>RATING_CURRENT_KIND_UNSTATED</td>
@@ -2200,7 +2326,7 @@
 <td>validators</td>
 <td>consumer</td>
 <td>A function's part states a voltage rating for AC or for DC only, and the function stands on rails of the other current kind.</td>
-<td>State the missing voltage rating in the part, or use a part rated for that kind.</td>
+<td>State the part's voltage rating for the current kind of its rails. Write: voltage = [{ nom = "24 V", at = ["DC"] }]</td>
 </tr>
 <tr>
 <td><a id="rating_voltage_below_circuit"></a>RATING_VOLTAGE_BELOW_CIRCUIT</td>
@@ -2208,7 +2334,7 @@
 <td>validators</td>
 <td>consumer</td>
 <td>A function's rated voltage is below the voltage that stands across it.</td>
-<td>Fit a part rated for the circuit's voltage, or change the supply or wiring to lower it.</td>
+<td>Use a part rated for the voltage that stands across it. Write: voltage = [{ nom = "24 V", at = ["DC"] }]</td>
 </tr>
 <tr>
 <td><a id="reference_designation_duplicate"></a>REFERENCE_DESIGNATION_DUPLICATE</td>
@@ -2216,55 +2342,7 @@
 <td>build</td>
 <td>consumer</td>
 <td>Two items in the function or location aspect print the same full reference designation (e.g. two unit instances at one location).</td>
-<td>Place one of them at a distinct location so the designations differ.</td>
-</tr>
-<tr>
-<td><a id="release_file_changed"></a>RELEASE_FILE_CHANGED</td>
-<td>ERROR</td>
-<td>verify</td>
-<td>consumer</td>
-<td>A released file's hash differs, the folder holds a file its manifest omits, or the manifest does not parse. A CRLF-only change in a text file passes.</td>
-<td>Restore the file from version control; a released revision never changes.</td>
-</tr>
-<tr>
-<td><a id="release_file_missing"></a>RELEASE_FILE_MISSING</td>
-<td>ERROR</td>
-<td>verify</td>
-<td>consumer</td>
-<td>A file its manifest lists, or the manifest itself, is gone from a release folder.</td>
-<td>Restore it from version control.</td>
-</tr>
-<tr>
-<td><a id="release_history_unreleased"></a>RELEASE_HISTORY_UNRELEASED</td>
-<td>ERROR</td>
-<td>release</td>
-<td>consumer</td>
-<td>A history entry after the first released one names a revision with no folder under <code>into</code>, in its own version.</td>
-<td>Remove the entry, or release that revision first. Older entries are free text.</td>
-</tr>
-<tr>
-<td><a id="release_nested_unreleased"></a>RELEASE_NESTED_UNRELEASED</td>
-<td>ERROR</td>
-<td>release</td>
-<td>consumer</td>
-<td>A unit anywhere in the subtree being released (not only direct children) has no baseline folder yet.</td>
-<td>Release that nested unit first, then release the containing unit.</td>
-</tr>
-<tr>
-<td><a id="release_no_history"></a>RELEASE_NO_HISTORY</td>
-<td>ERROR</td>
-<td>release</td>
-<td>consumer</td>
-<td>The revision being released has no matching <code>Revision</code> history entry.</td>
-<td>Add the missing entry: <code>history=</code> on <code>@fr.unit</code>, or <code>Design.revision(...)</code> for a system release.</td>
-</tr>
-<tr>
-<td><a id="revision_already_released"></a>REVISION_ALREADY_RELEASED</td>
-<td>ERROR</td>
-<td>release</td>
-<td>consumer</td>
-<td>The unit (or system) being released already has a baseline folder whose listing differs from the one to be written.</td>
-<td>Bump the version or revision, or find why a frozen revision changed.</td>
+<td>Place the two items at different locations so their designations differ. Write: d.device("X2", "DEMO-CONN-2P", place="A2")</td>
 </tr>
 <tr>
 <td><a id="revision_current_missing"></a>REVISION_CURRENT_MISSING</td>
@@ -2272,7 +2350,7 @@
 <td>validators</td>
 <td>consumer</td>
 <td>A unit's (or the project's) current revision has no matching <code>Revision</code> history entry, so a title block prints no date.</td>
-<td>Add the missing entry: <code>history=</code> on <code>@fr.unit</code>, or <code>Design.revision(rev, date=, text=, created=)</code>.</td>
+<td>Add a history entry for the current revision. Write: d.revision(1, date="2026-01-01", text="first", created="AB")</td>
 </tr>
 <tr>
 <td><a id="revision_date_format"></a>REVISION_DATE_FORMAT</td>
@@ -2280,7 +2358,7 @@
 <td>validators</td>
 <td>consumer</td>
 <td>A revision entry's date is not in <code>YYYY-MM-DD</code> format.</td>
-<td>Rewrite the date as <code>YYYY-MM-DD</code>.</td>
+<td>Write each revision date as YYYY-MM-DD. Write: d.revision(1, date="2026-01-01", text="first", created="AB")</td>
 </tr>
 <tr>
 <td><a id="revision_initials_missing"></a>REVISION_INITIALS_MISSING</td>
@@ -2288,15 +2366,7 @@
 <td>validators</td>
 <td>consumer</td>
 <td>A revision entry has no <code>created</code> (author initials).</td>
-<td>Add the author's initials to the revision entry's <code>created</code> field.</td>
-</tr>
-<tr>
-<td><a id="side_hint_no_harness_line"></a>SIDE_HINT_NO_HARNESS_LINE</td>
-<td>WARNING</td>
-<td>build</td>
-<td>consumer</td>
-<td>A <code>d.layout.side</code> hint names an interface that has no harness line, so the hint does nothing.</td>
-<td>Remove the hint, or connect the interface through a harness line.</td>
+<td>Give each revision entry its author's initials in <code>created</code>. Write: d.revision(1, date="2026-01-01", text="first", created="AB")</td>
 </tr>
 <tr>
 <td><a id="strip_without_tag"></a>STRIP_WITHOUT_TAG</td>
@@ -2304,15 +2374,31 @@
 <td>validators</td>
 <td>consumer</td>
 <td>A part-less top-level item, usually a floating strip, has no tag and no class code (no terminals, or disagreeing ones).</td>
-<td>Give it a part, a tag, or terminals of one class code.</td>
+<td>Give the strip a tag, a part, or terminals of one class code. Write: d.terminal_strip("X1", "DEMO-TB-2.5", 4)</td>
 </tr>
 <tr>
 <td><a id="supply_differs"></a>SUPPLY_DIFFERS</td>
 <td>ERROR</td>
 <td>validators</td>
 <td>consumer</td>
-<td>Two declarations of one supply name disagree in current, earthing or rails, or two source declarations in fault current or time constant.</td>
-<td>Make them agree, or give the differing declarations distinct names.</td>
+<td>Two declarations of one supply name disagree in current or rails.</td>
+<td>Declare each supply name once, or twice with identical values. Write: d.dc_supply("24VDC", d.device("G1", "DEMO-PSU-24"))</td>
+</tr>
+<tr>
+<td><a id="terminal_more_than_two_pins"></a>TERMINAL_MORE_THAN_TWO_PINS</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>consumer</td>
+<td>A terminal has over two ports.</td>
+<td>Use a two-pin part. Write: d.terminal_strip("X1", "DEMO-TB-2.5", 2)</td>
+</tr>
+<tr>
+<td><a id="terminal_point_overfilled"></a>TERMINAL_POINT_OVERFILLED</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>consumer</td>
+<td>A terminal point has more wires and cable cores than its part takes (conductors_per_clamp, default 1).</td>
+<td>Use a part that takes more, or bridge a second terminal. Write: d.terminal_strip("X1", "DEMO-TB-2.5-TWIN", 2)</td>
 </tr>
 <tr>
 <td><a id="toml_invalid"></a>TOML_INVALID</td>
@@ -2320,7 +2406,7 @@
 <td>library load</td>
 <td>consumer</td>
 <td>A part-file is not valid TOML.</td>
-<td>Fix the TOML syntax error named.</td>
+<td>The file is valid TOML: fix the syntax error the message names. Write: name = "value"</td>
 </tr>
 <tr>
 <td><a id="unit_boundary_bypassed"></a>UNIT_BOUNDARY_BYPASSED</td>
@@ -2328,7 +2414,7 @@
 <td>validators</td>
 <td>consumer</td>
 <td>A conductor or mate crosses out of a unit at a function that is not declared that unit's boundary.</td>
-<td>Declare it the unit's boundary, or route it through an existing boundary function.</td>
+<td>Cross a unit's edge only at a function declared as its boundary. Write: d.device("X1", "DEMO-CONN-2P", interface=True)</td>
 </tr>
 <tr>
 <td><a id="unit_cycle"></a>UNIT_CYCLE</td>
@@ -2336,15 +2422,15 @@
 <td>validators</td>
 <td>consumer</td>
 <td>A unit's parent chain loops back on itself.</td>
-<td>Correct the parent authored on one of the looping units.</td>
+<td>Nest units as a tree, adding each unit once. Write: d.add(cabinet, "U1")</td>
 </tr>
 <tr>
 <td><a id="unused_contradicted"></a>UNUSED_CONTRADICTED</td>
 <td>WARNING</td>
 <td>validators</td>
 <td>consumer</td>
-<td>A boundary declared unused names a function that is no unit's boundary, or is connected across the unit the declaration is on.</td>
-<td>Remove <code>unused=</code> if the function is wired, or fix the unit/function it names.</td>
+<td>A function declared unused is wired, or is a unit boundary connected across the unit the declaration is on.</td>
+<td>Declare unused only a function that is wired nowhere, and for a boundary not across its unit. Write: d.device("X2", "DEMO-CONN-2P", interface=True, unused=True)</td>
 </tr>
 <tr>
 <td><a id="wire_colour_unknown"></a>WIRE_COLOUR_UNKNOWN</td>
@@ -2352,7 +2438,7 @@
 <td>validators</td>
 <td>consumer</td>
 <td>A wire or cable-product core colour is not a recognized IEC 60757 colour code (or combination).</td>
-<td>Use a base code, a combination of two, a base code with a core number, or shield code <code>SH</code>.</td>
+<td>Use an IEC 60757 code: a base code, two combined, a base with a core number, or SH. Write: d.series(a, b, wire=(fr.colours.BU, 0.75))</td>
 </tr>
 <tr>
 <td><a id="wire_on_two_harnesses"></a>WIRE_ON_TWO_HARNESSES</td>
@@ -2360,7 +2446,7 @@
 <td>validators</td>
 <td>consumer</td>
 <td>A wire joins plugs of two harnesses.</td>
-<td>Wire to a plug of one harness, or use a cable.</td>
+<td>Keep each wire within one harness, or join the two harnesses through a cable. Write: d.pair(a, w1, b)</td>
 </tr>
 <tr>
 <td><a id="wire_row_unresolved"></a>WIRE_ROW_UNRESOLVED</td>
@@ -2368,7 +2454,7 @@
 <td>build</td>
 <td>consumer</td>
 <td>A series or detail wire was written without a row, and at build end its net carries no rail of its unit, states no <code>source_row</code> and holds no PLC channel signal, or carries rails of two rows. The message names the net and the wire's two pins.</td>
-<td>Give <code>wire=</code> on that series: a <code>(colour, size)</code>, or a size with a row table. A rail never reaches a wire across a unit boundary from its container.</td>
+<td>Give the wire a (colour, size), or a size with a row table; a rail never crosses a unit boundary. Write: d.series(a, b, wire=(fr.colours.BU, 0.75))</td>
 </tr>
 </tbody>
 </table>
@@ -2407,7 +2493,7 @@
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.20.0 documentation
+      Fransys 0.22.0 documentation
     </div>
   
   
@@ -2435,10 +2521,10 @@
       
         
         
-      <script id="__config" type="application/json">{"annotate":null,"base":"../..","features":["navigation.sections","search.highlight","content.code.copy"],"redirect":null,"search":"../../assets/javascripts/workers/search.c47bb847.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","clipboard.error":"Could not copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
+      <script id="__config" type="application/json">{"annotate":null,"base":"../..","features":["navigation.sections","search.highlight","content.code.copy"],"redirect":null,"search":"../../assets/javascripts/workers/search.719e0d91.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","clipboard.error":"Could not copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d31f0ffa.min.js"></script>
       
     
   </body>

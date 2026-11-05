@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.20.0/guide/examples/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.0/guide/examples/">
       
       
       
@@ -22,7 +22,7 @@
       
       
       <link rel="icon" href="../../assets/fransys-icon.svg">
-      <meta name="generator" content="zensical-0.0.70">
+      <meta name="generator" content="zensical-0.0.74">
     
     
       
@@ -33,7 +33,7 @@
       
         
       
-      <link rel="stylesheet" href="../../assets/stylesheets/modern/main.e442bf79.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/modern/main.4ab2de0c.min.css">
       
         
           
@@ -114,9 +114,10 @@
   <img src="../../assets/fransys-wordmark-white.svg" alt="Fransys">
 
     </a>
-    <label class="md-header__button md-icon" for="__drawer" aria-label="Navigation">
+    <label class="md-header__button md-icon" for="__drawer">
       
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-menu" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
+      <span class="md-visually-hidden">Navigation</span>
     </label>
     <div class="md-header__title" data-md-component="header-title">
       <div class="md-header__ellipsis">
@@ -168,9 +169,10 @@
     
       
       
-        <label class="md-header__button md-icon" for="__search" aria-label="Search">
+        <label class="md-header__button md-icon" for="__search">
           
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+          <span class="md-visually-hidden">Search</span>
         </label>
         <div class="md-search" data-md-component="search" role="dialog" aria-label="Search">
   <button type="button" class="md-search__button">
@@ -414,6 +416,33 @@
     
   
   Wiring a design
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../drawn-ledger/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  The required-drawn ledger
 
     
   </span>
@@ -784,6 +813,60 @@
   
   
     <li class="md-nav__item">
+      <a href="../settings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Settings
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../moving-to-0.22/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Moving to 0.22
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../moving-to-0.20/" class="md-nav__link">
         
   
@@ -954,6 +1037,33 @@
     
   
   Finding codes: validators, build and release
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../findings-release/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Finding codes: build, release and verify
 
     
   </span>
@@ -1882,7 +1992,7 @@ branches between two neighbours. The design is a plain top design: no place and 
 <span class="kn">from</span><span class="w"> </span><span class="nn">fransys.colours</span><span class="w"> </span><span class="kn">import</span> <span class="n">BK</span><span class="p">,</span> <span class="n">BU</span>
 
 <span class="n">d</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">design</span><span class="p">(</span><span class="s2">"demo_parts"</span><span class="p">)</span>
-<span class="n">x0</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">terminal_strip</span><span class="p">(</span><span class="s2">"X0"</span><span class="p">,</span> <span class="s2">"DEMO-TB-2.5"</span><span class="p">)</span>
+<span class="n">x0</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">terminal_strip</span><span class="p">(</span><span class="s2">"X0"</span><span class="p">,</span> <span class="s2">"DEMO-TB-2.5-TWIN"</span><span class="p">)</span>
 <span class="n">ac</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">ac_supply</span><span class="p">(</span><span class="s2">"400V"</span><span class="p">,</span> <span class="s2">"230"</span><span class="p">,</span> <span class="n">x0</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">x0</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">x0</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">n</span><span class="o">=</span><span class="n">x0</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span>
 <span class="n">g1</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">"G1"</span><span class="p">,</span> <span class="s2">"DEMO-PSU-24"</span><span class="p">)</span>
 <span class="n">dc</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">dc_supply</span><span class="p">(</span><span class="s2">"24VDC"</span><span class="p">,</span> <span class="n">g1</span><span class="p">)</span>
@@ -1914,7 +2024,7 @@ number, so adding a device is one more line in the table.</p>
 <span class="p">}</span>
 
 <span class="n">d</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">design</span><span class="p">(</span><span class="s2">"demo_parts"</span><span class="p">)</span>
-<span class="n">x0</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">terminal_strip</span><span class="p">(</span><span class="s2">"X0"</span><span class="p">,</span> <span class="s2">"DEMO-TB-2.5"</span><span class="p">)</span>
+<span class="n">x0</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">terminal_strip</span><span class="p">(</span><span class="s2">"X0"</span><span class="p">,</span> <span class="s2">"DEMO-TB-2.5-TWIN"</span><span class="p">)</span>
 <span class="n">ac</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">ac_supply</span><span class="p">(</span><span class="s2">"400V"</span><span class="p">,</span> <span class="s2">"230"</span><span class="p">,</span> <span class="o">*</span><span class="p">(</span><span class="n">x0</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)),</span> <span class="n">n</span><span class="o">=</span><span class="n">x0</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span>
 <span class="n">i</span> <span class="o">=</span> <span class="p">{</span><span class="n">tag</span><span class="p">:</span> <span class="n">d</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="n">tag</span><span class="p">,</span> <span class="n">mpn</span><span class="p">)</span> <span class="k">for</span> <span class="n">tag</span><span class="p">,</span> <span class="n">mpn</span> <span class="ow">in</span> <span class="n">PARTS</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
 <span class="n">dc</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">dc_supply</span><span class="p">(</span><span class="s2">"24VDC"</span><span class="p">,</span> <span class="n">i</span><span class="p">[</span><span class="s2">"G1"</span><span class="p">])</span>
@@ -1927,49 +2037,50 @@ number, so adding a device is one more line in the table.</p>
 <span class="n">d</span><span class="o">.</span><span class="n">series</span><span class="p">(</span><span class="n">dc</span><span class="o">.</span><span class="n">plus</span><span class="p">,</span> <span class="n">i</span><span class="p">[</span><span class="s2">"S1"</span><span class="p">]</span><span class="o">.</span><span class="n">nc</span><span class="p">,</span> <span class="n">latch</span><span class="p">,</span> <span class="n">i</span><span class="p">[</span><span class="s2">"F1"</span><span class="p">]</span><span class="o">.</span><span class="n">aux</span><span class="p">,</span> <span class="n">i</span><span class="p">[</span><span class="s2">"Q1"</span><span class="p">]</span><span class="o">.</span><span class="n">coil</span><span class="p">,</span> <span class="n">dc</span><span class="o">.</span><span class="n">minus</span><span class="p">,</span> <span class="n">wire</span><span class="o">=</span><span class="p">(</span><span class="n">BU</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">))</span>
 </code></pre></div>
 <h2 id="sixteen-sensors-to-a-terminal-strip">Sixteen sensors to a terminal strip</h2>
-<p>Each sensor is one device, wired by its signal pin to its own terminal on a strip. The strip
+<p>Each sensor is one device, wired by its other pin to the 24 V rail and by its signal pin to its own terminal on a strip. The strip
 takes its terminals in number order: each series that names the strip takes the next free one.
-A series from a sensor's function to the strip wires its load pin <code>B</code> to that terminal. The first
+A series from the rail through a sensor's function to the strip wires its load pin <code>B</code> to that terminal. The first
 sensor added lands on terminal 1, so the sensors are added from B16 down to B1.</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># easy: sensors to a strip</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">fransys</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">fr</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">fransys.colours</span><span class="w"> </span><span class="kn">import</span> <span class="n">BU</span>
 
 <span class="n">d</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">design</span><span class="p">(</span><span class="s2">"demo_parts"</span><span class="p">)</span>
+<span class="n">dc</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">dc_supply</span><span class="p">(</span><span class="s2">"24VDC"</span><span class="p">,</span> <span class="n">d</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">"G1"</span><span class="p">,</span> <span class="s2">"DEMO-PSU-24"</span><span class="p">)</span><span class="o">.</span><span class="n">output</span><span class="p">)</span>
 <span class="k">with</span> <span class="n">d</span><span class="o">.</span><span class="n">function</span><span class="p">(</span><span class="s2">"SENS"</span><span class="p">,</span> <span class="s2">"Sensors"</span><span class="p">):</span>
     <span class="n">x1</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">terminal_strip</span><span class="p">(</span><span class="s2">"X1"</span><span class="p">,</span> <span class="s2">"DEMO-TB-2.5"</span><span class="p">)</span>
     <span class="n">b16</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">"B16"</span><span class="p">,</span> <span class="s2">"DEMO-SWITCH-2P"</span><span class="p">)</span>
-    <span class="n">d</span><span class="o">.</span><span class="n">series</span><span class="p">(</span><span class="n">b16</span><span class="o">.</span><span class="n">sw</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">wire</span><span class="o">=</span><span class="p">(</span><span class="n">BU</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">))</span>
+    <span class="n">d</span><span class="o">.</span><span class="n">series</span><span class="p">(</span><span class="n">dc</span><span class="o">.</span><span class="n">plus</span><span class="p">,</span> <span class="n">b16</span><span class="o">.</span><span class="n">sw</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">wire</span><span class="o">=</span><span class="p">(</span><span class="n">BU</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">))</span>
     <span class="n">b15</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">"B15"</span><span class="p">,</span> <span class="s2">"DEMO-SWITCH-2P"</span><span class="p">)</span>
-    <span class="n">d</span><span class="o">.</span><span class="n">series</span><span class="p">(</span><span class="n">b15</span><span class="o">.</span><span class="n">sw</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">wire</span><span class="o">=</span><span class="p">(</span><span class="n">BU</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">))</span>
+    <span class="n">d</span><span class="o">.</span><span class="n">series</span><span class="p">(</span><span class="n">dc</span><span class="o">.</span><span class="n">plus</span><span class="p">,</span> <span class="n">b15</span><span class="o">.</span><span class="n">sw</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">wire</span><span class="o">=</span><span class="p">(</span><span class="n">BU</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">))</span>
     <span class="n">b14</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">"B14"</span><span class="p">,</span> <span class="s2">"DEMO-SWITCH-2P"</span><span class="p">)</span>
-    <span class="n">d</span><span class="o">.</span><span class="n">series</span><span class="p">(</span><span class="n">b14</span><span class="o">.</span><span class="n">sw</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">wire</span><span class="o">=</span><span class="p">(</span><span class="n">BU</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">))</span>
+    <span class="n">d</span><span class="o">.</span><span class="n">series</span><span class="p">(</span><span class="n">dc</span><span class="o">.</span><span class="n">plus</span><span class="p">,</span> <span class="n">b14</span><span class="o">.</span><span class="n">sw</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">wire</span><span class="o">=</span><span class="p">(</span><span class="n">BU</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">))</span>
     <span class="n">b13</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">"B13"</span><span class="p">,</span> <span class="s2">"DEMO-SWITCH-2P"</span><span class="p">)</span>
-    <span class="n">d</span><span class="o">.</span><span class="n">series</span><span class="p">(</span><span class="n">b13</span><span class="o">.</span><span class="n">sw</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">wire</span><span class="o">=</span><span class="p">(</span><span class="n">BU</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">))</span>
+    <span class="n">d</span><span class="o">.</span><span class="n">series</span><span class="p">(</span><span class="n">dc</span><span class="o">.</span><span class="n">plus</span><span class="p">,</span> <span class="n">b13</span><span class="o">.</span><span class="n">sw</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">wire</span><span class="o">=</span><span class="p">(</span><span class="n">BU</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">))</span>
     <span class="n">b12</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">"B12"</span><span class="p">,</span> <span class="s2">"DEMO-SWITCH-2P"</span><span class="p">)</span>
-    <span class="n">d</span><span class="o">.</span><span class="n">series</span><span class="p">(</span><span class="n">b12</span><span class="o">.</span><span class="n">sw</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">wire</span><span class="o">=</span><span class="p">(</span><span class="n">BU</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">))</span>
+    <span class="n">d</span><span class="o">.</span><span class="n">series</span><span class="p">(</span><span class="n">dc</span><span class="o">.</span><span class="n">plus</span><span class="p">,</span> <span class="n">b12</span><span class="o">.</span><span class="n">sw</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">wire</span><span class="o">=</span><span class="p">(</span><span class="n">BU</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">))</span>
     <span class="n">b11</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">"B11"</span><span class="p">,</span> <span class="s2">"DEMO-SWITCH-2P"</span><span class="p">)</span>
-    <span class="n">d</span><span class="o">.</span><span class="n">series</span><span class="p">(</span><span class="n">b11</span><span class="o">.</span><span class="n">sw</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">wire</span><span class="o">=</span><span class="p">(</span><span class="n">BU</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">))</span>
+    <span class="n">d</span><span class="o">.</span><span class="n">series</span><span class="p">(</span><span class="n">dc</span><span class="o">.</span><span class="n">plus</span><span class="p">,</span> <span class="n">b11</span><span class="o">.</span><span class="n">sw</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">wire</span><span class="o">=</span><span class="p">(</span><span class="n">BU</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">))</span>
     <span class="n">b10</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">"B10"</span><span class="p">,</span> <span class="s2">"DEMO-SWITCH-2P"</span><span class="p">)</span>
-    <span class="n">d</span><span class="o">.</span><span class="n">series</span><span class="p">(</span><span class="n">b10</span><span class="o">.</span><span class="n">sw</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">wire</span><span class="o">=</span><span class="p">(</span><span class="n">BU</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">))</span>
+    <span class="n">d</span><span class="o">.</span><span class="n">series</span><span class="p">(</span><span class="n">dc</span><span class="o">.</span><span class="n">plus</span><span class="p">,</span> <span class="n">b10</span><span class="o">.</span><span class="n">sw</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">wire</span><span class="o">=</span><span class="p">(</span><span class="n">BU</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">))</span>
     <span class="n">b9</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">"B9"</span><span class="p">,</span> <span class="s2">"DEMO-SWITCH-2P"</span><span class="p">)</span>
-    <span class="n">d</span><span class="o">.</span><span class="n">series</span><span class="p">(</span><span class="n">b9</span><span class="o">.</span><span class="n">sw</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">wire</span><span class="o">=</span><span class="p">(</span><span class="n">BU</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">))</span>
+    <span class="n">d</span><span class="o">.</span><span class="n">series</span><span class="p">(</span><span class="n">dc</span><span class="o">.</span><span class="n">plus</span><span class="p">,</span> <span class="n">b9</span><span class="o">.</span><span class="n">sw</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">wire</span><span class="o">=</span><span class="p">(</span><span class="n">BU</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">))</span>
     <span class="n">b8</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">"B8"</span><span class="p">,</span> <span class="s2">"DEMO-SWITCH-2P"</span><span class="p">)</span>
-    <span class="n">d</span><span class="o">.</span><span class="n">series</span><span class="p">(</span><span class="n">b8</span><span class="o">.</span><span class="n">sw</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">wire</span><span class="o">=</span><span class="p">(</span><span class="n">BU</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">))</span>
+    <span class="n">d</span><span class="o">.</span><span class="n">series</span><span class="p">(</span><span class="n">dc</span><span class="o">.</span><span class="n">plus</span><span class="p">,</span> <span class="n">b8</span><span class="o">.</span><span class="n">sw</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">wire</span><span class="o">=</span><span class="p">(</span><span class="n">BU</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">))</span>
     <span class="n">b7</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">"B7"</span><span class="p">,</span> <span class="s2">"DEMO-SWITCH-2P"</span><span class="p">)</span>
-    <span class="n">d</span><span class="o">.</span><span class="n">series</span><span class="p">(</span><span class="n">b7</span><span class="o">.</span><span class="n">sw</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">wire</span><span class="o">=</span><span class="p">(</span><span class="n">BU</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">))</span>
+    <span class="n">d</span><span class="o">.</span><span class="n">series</span><span class="p">(</span><span class="n">dc</span><span class="o">.</span><span class="n">plus</span><span class="p">,</span> <span class="n">b7</span><span class="o">.</span><span class="n">sw</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">wire</span><span class="o">=</span><span class="p">(</span><span class="n">BU</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">))</span>
     <span class="n">b6</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">"B6"</span><span class="p">,</span> <span class="s2">"DEMO-SWITCH-2P"</span><span class="p">)</span>
-    <span class="n">d</span><span class="o">.</span><span class="n">series</span><span class="p">(</span><span class="n">b6</span><span class="o">.</span><span class="n">sw</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">wire</span><span class="o">=</span><span class="p">(</span><span class="n">BU</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">))</span>
+    <span class="n">d</span><span class="o">.</span><span class="n">series</span><span class="p">(</span><span class="n">dc</span><span class="o">.</span><span class="n">plus</span><span class="p">,</span> <span class="n">b6</span><span class="o">.</span><span class="n">sw</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">wire</span><span class="o">=</span><span class="p">(</span><span class="n">BU</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">))</span>
     <span class="n">b5</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">"B5"</span><span class="p">,</span> <span class="s2">"DEMO-SWITCH-2P"</span><span class="p">)</span>
-    <span class="n">d</span><span class="o">.</span><span class="n">series</span><span class="p">(</span><span class="n">b5</span><span class="o">.</span><span class="n">sw</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">wire</span><span class="o">=</span><span class="p">(</span><span class="n">BU</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">))</span>
+    <span class="n">d</span><span class="o">.</span><span class="n">series</span><span class="p">(</span><span class="n">dc</span><span class="o">.</span><span class="n">plus</span><span class="p">,</span> <span class="n">b5</span><span class="o">.</span><span class="n">sw</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">wire</span><span class="o">=</span><span class="p">(</span><span class="n">BU</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">))</span>
     <span class="n">b4</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">"B4"</span><span class="p">,</span> <span class="s2">"DEMO-SWITCH-2P"</span><span class="p">)</span>
-    <span class="n">d</span><span class="o">.</span><span class="n">series</span><span class="p">(</span><span class="n">b4</span><span class="o">.</span><span class="n">sw</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">wire</span><span class="o">=</span><span class="p">(</span><span class="n">BU</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">))</span>
+    <span class="n">d</span><span class="o">.</span><span class="n">series</span><span class="p">(</span><span class="n">dc</span><span class="o">.</span><span class="n">plus</span><span class="p">,</span> <span class="n">b4</span><span class="o">.</span><span class="n">sw</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">wire</span><span class="o">=</span><span class="p">(</span><span class="n">BU</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">))</span>
     <span class="n">b3</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">"B3"</span><span class="p">,</span> <span class="s2">"DEMO-SWITCH-2P"</span><span class="p">)</span>
-    <span class="n">d</span><span class="o">.</span><span class="n">series</span><span class="p">(</span><span class="n">b3</span><span class="o">.</span><span class="n">sw</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">wire</span><span class="o">=</span><span class="p">(</span><span class="n">BU</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">))</span>
+    <span class="n">d</span><span class="o">.</span><span class="n">series</span><span class="p">(</span><span class="n">dc</span><span class="o">.</span><span class="n">plus</span><span class="p">,</span> <span class="n">b3</span><span class="o">.</span><span class="n">sw</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">wire</span><span class="o">=</span><span class="p">(</span><span class="n">BU</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">))</span>
     <span class="n">b2</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">"B2"</span><span class="p">,</span> <span class="s2">"DEMO-SWITCH-2P"</span><span class="p">)</span>
-    <span class="n">d</span><span class="o">.</span><span class="n">series</span><span class="p">(</span><span class="n">b2</span><span class="o">.</span><span class="n">sw</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">wire</span><span class="o">=</span><span class="p">(</span><span class="n">BU</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">))</span>
+    <span class="n">d</span><span class="o">.</span><span class="n">series</span><span class="p">(</span><span class="n">dc</span><span class="o">.</span><span class="n">plus</span><span class="p">,</span> <span class="n">b2</span><span class="o">.</span><span class="n">sw</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">wire</span><span class="o">=</span><span class="p">(</span><span class="n">BU</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">))</span>
     <span class="n">b1</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">"B1"</span><span class="p">,</span> <span class="s2">"DEMO-SWITCH-2P"</span><span class="p">)</span>
-    <span class="n">d</span><span class="o">.</span><span class="n">series</span><span class="p">(</span><span class="n">b1</span><span class="o">.</span><span class="n">sw</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">wire</span><span class="o">=</span><span class="p">(</span><span class="n">BU</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">))</span>
+    <span class="n">d</span><span class="o">.</span><span class="n">series</span><span class="p">(</span><span class="n">dc</span><span class="o">.</span><span class="n">plus</span><span class="p">,</span> <span class="n">b1</span><span class="o">.</span><span class="n">sw</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">wire</span><span class="o">=</span><span class="p">(</span><span class="n">BU</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">))</span>
 </code></pre></div>
 <p>The efficient version is a list of sensor tags in the order the strip hands out terminals, and one
 loop.</p>
@@ -1980,11 +2091,12 @@ loop.</p>
 <span class="n">SENSORS</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"B</span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)]</span>
 
 <span class="n">d</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">design</span><span class="p">(</span><span class="s2">"demo_parts"</span><span class="p">)</span>
+<span class="n">dc</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">dc_supply</span><span class="p">(</span><span class="s2">"24VDC"</span><span class="p">,</span> <span class="n">d</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">"G1"</span><span class="p">,</span> <span class="s2">"DEMO-PSU-24"</span><span class="p">))</span>
 <span class="k">with</span> <span class="n">d</span><span class="o">.</span><span class="n">function</span><span class="p">(</span><span class="s2">"SENS"</span><span class="p">,</span> <span class="s2">"Sensors"</span><span class="p">):</span>
     <span class="n">x1</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">terminal_strip</span><span class="p">(</span><span class="s2">"X1"</span><span class="p">,</span> <span class="s2">"DEMO-TB-2.5"</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">tag</span> <span class="ow">in</span> <span class="n">SENSORS</span><span class="p">:</span>
         <span class="n">sensor</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="n">tag</span><span class="p">,</span> <span class="s2">"DEMO-SWITCH-2P"</span><span class="p">)</span>
-        <span class="n">d</span><span class="o">.</span><span class="n">series</span><span class="p">(</span><span class="n">sensor</span><span class="o">.</span><span class="n">sw</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">wire</span><span class="o">=</span><span class="p">(</span><span class="n">BU</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">))</span>
+        <span class="n">d</span><span class="o">.</span><span class="n">series</span><span class="p">(</span><span class="n">dc</span><span class="o">.</span><span class="n">plus</span><span class="p">,</span> <span class="n">sensor</span><span class="o">.</span><span class="n">sw</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">wire</span><span class="o">=</span><span class="p">(</span><span class="n">BU</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">))</span>
 </code></pre></div>
 <h2 id="the-whole-shape-of-a-build-script">The whole shape of a build script</h2>
 <p>The examples above build small pieces of a design. For a real build script end to end, see
@@ -2036,7 +2148,7 @@ module's docstring states the engineering shape and the decision that fixed it.<
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.20.0 documentation
+      Fransys 0.22.0 documentation
     </div>
   
   
@@ -2064,10 +2176,10 @@ module's docstring states the engineering shape and the decision that fixed it.<
       
         
         
-      <script id="__config" type="application/json">{"annotate":null,"base":"../..","features":["navigation.sections","search.highlight","content.code.copy"],"redirect":null,"search":"../../assets/javascripts/workers/search.c47bb847.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","clipboard.error":"Could not copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
+      <script id="__config" type="application/json">{"annotate":null,"base":"../..","features":["navigation.sections","search.highlight","content.code.copy"],"redirect":null,"search":"../../assets/javascripts/workers/search.719e0d91.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","clipboard.error":"Could not copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d31f0ffa.min.js"></script>
       
     
   </body>

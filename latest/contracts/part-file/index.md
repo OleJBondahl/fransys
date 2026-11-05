@@ -41,7 +41,7 @@ library is a Python data package of TOML files and no code. This document is eno
 
 ## Part file tables
 
-Every part file carries `schema = 1` at the top, then the tables below. Fields named here match
+Every part file carries `schema = 2` at the top, then the tables below. Fields named here match
 the model's records (the core kinds and the facets); a field not listed there is out of contract.
 
 Any field below typed as "a `<Name>` value" takes the string value of a member of that enum in
@@ -70,20 +70,18 @@ Zero or more per file, one array entry per function the part has. Maps to the mo
 | Field | Type | Meaning |
 |---|---|---|
 | `name` | string | Function name, stamped onto every instance, e.g. `"coil"`, `"co_1"` |
-| `kind` | string | A `FunctionKind` value: `"coil"`, `"contact_no"`, `"contact_nc"`, `"contact_co"`, `"protection"`, `"switch"`, `"terminal"`, `"connector"`, `"plc_channel"`, `"supply"`, `"load"`, `"sensor"`, `"actuator"`, `"generic"`, `"bar"` |
+| `kind` | string | A `FunctionKind` value: `"coil"`, `"contact_no"`, `"contact_nc"`, `"contact_co"`, `"protection"`, `"switch"`, `"terminal"`, `"connector"`, `"plc_channel"`, `"supply"`, `"load"`, `"sensor"`, `"actuator"`, `"generic"` |
 | `symbol` | string | Optional. Symbol key: a lowercase, hyphenated slug naming a symbol in `electrical-symbols`. A function with no `symbol` gets no authored `layout.symbol_choice`, and the layout engine's rules by kind apply |
 | `energy` | string | Optional, on a supply or load function only: `"in"` or `"out"`. Default: load in, supply out. Any other kind fails lint (`ENERGY_ON_NON_POWER`) |
-| `ports` | array of tables | See below. At least one entry, except a `bar` cut to length (below) |
+| `ports` | array of tables | See below. At least one entry |
 | `links` | array of tables | See below. Optional; omit for a function with no internal connectivity |
-
-A `bar` writes one port per screw, role `"pe"`; one cut to length writes none, and each landing makes a screw. It takes no `symbol` (`BAR_SYMBOL`): a bar is never drawn.
 
 `ports` entries:
 
 | Field | Type | Meaning |
 |---|---|---|
 | `name` | string | The part's own terminal marking, e.g. `"13"`, `"A1"`. Unique within the part, except pins of connectors that print a label. Name a terminal as the device prints it (`IN1+`, `OUT-`); where printed names repeat on the part, by its function, numbered (`L`, `N`, `PE`, `24V1`, `GND1`, `S24V`, `F24V1`) (owner 2026-09-26, parts-0005) |
-| `role` | string | A `PortRole` value: `"generic"`, `"internal"`, `"external"`, `"pe"`, or a throw role `"common"`, `"break"` (closed at rest), `"make"` (closed when operated). Every port of a `contact_co` function takes a throw role, whatever its pin name (`CHANGEOVER_ROLE`, decisions model-0091, parts-0007) |
+| `role` | string | A pin's boundary and pin role in one word: `"generic"`, `"internal"`, `"external"`, `"pe"`, or a throw role `"common"`, `"break"` (closed at rest), `"make"` (closed when operated). Every port of a `contact_co` function takes a throw role, whatever its pin name (`CHANGEOVER_ROLE`, decisions model-0091, parts-0007) |
 | `symbol_port` | string | Optional. The role-named port of `symbol` this port maps to, e.g. `"in"`, `"out"`. A port with no `symbol_port` keeps its own name. A `symbol_port` on a function with no `symbol` is a lint error (`SYMBOL_PORT_WITHOUT_SYMBOL`). A `contact_co` port takes none: the drawing binds a changeover by its throw roles (`CHANGEOVER_SYMBOL_PORT`) |
 | `marking` | string | Optional. What a drawing prints on this pin, when it differs from `name`. Omit it to print `name`; write `""` to print nothing |
 | `side` | string | Optional: `"line"` or `"load"`; else the marking fills it (parts-0010). A two-port function that a series passes through needs it when its marking gives no side |
@@ -139,7 +137,7 @@ At most one per file. Maps to the model's `cable_product` facet (subject: `Part`
 
 | Field | Type | Meaning |
 |---|---|---|
-| `core_count` | integer | The author's checksum: the lint's `CABLE_CORE_COUNT` compares it with `core_colours`. The model stores no count; it reads `len(core_colours)` (model-0082) |
+| `core_count` | integer | The author's checksum: the lint's `CABLE_PRODUCT_CORE_COUNT` compares it with `core_colours`. The model stores no count; it reads `len(core_colours)` (model-0082) |
 | `core_colours` | array of strings | One entry per core, in core index order, e.g. `["BN", "BK", "GY", "GNYE"]`. Each is an IEC 60757 colour code: a base code, two base codes joined (`GNYE`), a base code with a number (`BK1`), or `SH` for a shield (model-0070); anything else is an ERROR |
 | `gauge_mm2` | string | Cross-section in mm², read as `Decimal` |
 | `shielded` | boolean | |
@@ -147,9 +145,9 @@ At most one per file. Maps to the model's `cable_product` facet (subject: `Part`
 
 `CABLE_PAIR_INVALID` (ERROR) refuses a core out of range or in two pairs. It also refuses a pair core that is `SH`, and a screen that is not `SH` or is named twice.
 
-### `[function.protection]`
+### `[function.block]`
 
-A `protection` function names its device in `type`: `"fuse"`, `"mcb"`, `"motor_breaker"`,
+Schema 1 called this table `[function.protection]`. A `protection` function names its device in `type`: `"fuse"`, `"mcb"`, `"motor_breaker"`,
 `"overload"` or `"rcd"`. The loader writes it to `FunctionTemplate.protection_type`, null when absent.
 Lint: `PROTECTION_WITHOUT_TYPE` (`WARNING`), `PROTECTION_TYPE_ON_NON_PROTECTION`
 (`ERROR`), `PROTECTION_LINK_KIND` (`ERROR`, a `switched` link or a kind that does not fit the type)
@@ -206,9 +204,9 @@ channel = 3
 `[rating]` (top level, at most one per file) is the part's own rating, e.g. a cable's rated
 voltage or a fuse link in its holder; it maps to the `part_rating` facet (subject: `Part`).
 `[function.rating]` and `[function.operating]` are sub-tables of a `[[function]]` entry (P1); they
-map to the `rating` and `operating` facets (subject: `FunctionTemplate`). `power_loss_w` is the heat given off at the rated load. `resistance_ohm`, `nominal_power_w` and
-`nominal_current_a` are stated at `nominal_voltage_v`. No check reads the first two (model-0125, parts-0009).
-A part states `power_loss_w` once, in `[rating]` or per function: both is `POWER_LOSS_TWICE` (`ERROR`).
+map to the `rating` and `operating` facets (subject: `FunctionTemplate`). `power_loss` is the heat given off at the rated load. `resistance`, `nominal_power` and
+`nominal_current` are stated at the nominal `voltage`. No check reads the first two (model-0125, parts-0009).
+A part states `power_loss` once, in `[rating]` or per function: both is `POWER_LOSS_TWICE` (`ERROR`).
 A function takes its template's rating, else its part's, as a whole record: a template rating with only an AC value
 hides the part's DC value (decisions model-0079, parts-0004).
 
@@ -219,31 +217,47 @@ kind = "coil"
 ports = [{ name = "A1", role = "generic" }, { name = "A2", role = "generic" }]
 
 [function.rating]
-voltage_ac_v = "250"
+voltage = [{ nom = "250 V", at = ["AC"] }]
 ```
 
 | Table | Fields, all optional |
 |---|---|
-| `[rating]`, `[function.rating]` | `voltage_ac_v`, `voltage_dc_v`, `current_ac_a`, `current_dc_a`, `min_breaking_current_a`, `power_loss_w`, `breaking_ac`, `breaking_dc` |
-| `[function.operating]` | `voltage_ac_v`, `voltage_dc_v`, `nominal_voltage_v`, `max_voltage_v`, `min_voltage_v`, `capacity_ah`, `max_current_ac_a`, `max_current_dc_a`, `resistance_ohm`, `nominal_power_w`, `nominal_current_a`, `fault_current_ac_a`, `fault_current_dc_a`, `fault_time_constant_ms` |
+| `[rating]`, `[function.rating]` | `voltage`, `current` (lists of figures), `power_loss` (one figure) |
+| `[function.operating]` | `voltage`, `max_current`, `fault_current` (lists of figures); `fault_time_constant`, `capacity`, `resistance`, `nominal_power`, `nominal_current` (quantities) |
+| `[function.block]` | `type` (a protection type); `breaking_capacity` (a list of figures) for `fuse`; `icn`, `icu`, `ics` (one figure each) for `mcb` and `motor_breaker` |
 
-A breaking list is non-empty. A `breaking_dc` point may add `time_constant_ms`:
+A quantity is a string: a number, a space and a unit symbol of `elecdef.Unit` (`"24 V"`, `"7.2 Ah"`, `"15 ms"`).
+A figure is an inline table `{ role, min, nom, typ, max, at }` of quantities; the role defaults to `rated`
+and `at` lists the conditions the figure holds: `"AC"`, `"DC"` and quantities such as `"1000 V"` or `"15 ms"`.
+An operating `voltage` is one window figure `{ nom = "24 V", min = "18 V", max = "30 V", at = ["DC"] }`, with a further figure for
+each other current kind; `max_current` and `fault_current` hold one `{ max, at }` figure per current kind. Each field takes only its
+unit kind (a voltage field a volt unit); a wrong kind is `RATING_VALUE_INVALID`.
+A DC breaking figure keeps its time constant as a condition:
 
 ```toml
-breaking_dc = [{ voltage_v = "1000", current_a = "15000", time_constant_ms = "15" }]
+[function.block]
+type = "fuse"
+breaking_capacity = [{ max = "15000 A", at = ["DC", "1000 V", "15 ms"] }]
 ```
 
-`min_breaking_current_a` marks a partial-range fuse (an aBat link): the lowest current it
-breaks. It bounds no continuous current. `max_current_ac_a` and `max_current_dc_a` are a source's continuous current limit, charging included (decision model-0088).
+A breaking figure with no voltage must state `min`: the lowest current a partial-range fuse
+(an aBat link) breaks. It bounds no continuous current. `max_current` is a source's continuous current limit, charging included (decision model-0088). Breaking figures live in a function's block; a part-level `[rating]` has none.
 
-Every value is a string in plain decimal notation (digits with an optional fraction), read as
-`Decimal`. A rating value is above 0; a `[function.operating]` value
-may also be 0 (`"0"`, `"0.0"`: a source's minimum voltage), decision parts-0006. A bare TOML
-float is `FLOAT_FORBIDDEN` and an integer is `FIELD_TYPE`. The lint refuses, as `ERROR`, a table
-with no field (`RATING_TABLE_EMPTY`) and a value outside those rules, negative or not plain
-(`RATING_VALUE_INVALID`). The `RATING_VOLTAGE_BELOW_CIRCUIT` and
-`RATING_CURRENT_BELOW_BRANCH` checks read a rating. Of the operating values, only `max_current_*`, `nominal_current_a` and `fault_*` are read. A part
-with no current rating limits no branch (model-0088).
+A rating figure is above 0; a `[function.operating]` quantity may also be 0 (`"0 V"`: a source's minimum voltage),
+decision parts-0006. A bare TOML float is `FLOAT_FORBIDDEN` and an integer is `FIELD_TYPE`. The lint refuses, as
+`ERROR`, a table with no field (`RATING_TABLE_EMPTY`) and a figure or quantity written otherwise
+(`RATING_VALUE_INVALID`, naming the reason). The `RATING_VOLTAGE_BELOW_CIRCUIT` and
+`RATING_CURRENT_BELOW_BRANCH` checks read a rating. Of the operating values, only `max_current`, `nominal_current` and `fault_current` are read. A part
+with no current rating limits no branch (model-0088). The loader stores a rating as an elecdef `Rating`.
+It stores a block with a breaking figure as a `Fuse` or `Breaker` in a `block` facet (model-0381).
+
+### `[block]`
+
+At most one per file. It holds the breaking figures of a part with one function that states them, e.g. a partial-range fuse link
+(`type = "fuse"`, `breaking_capacity = [{ min = "4000 A" }]`).
+It takes the keys of `[function.block]` for the type (`fuse`, `mcb` and `motor_breaker`).
+It maps to the `block` facet of the part's one function (R853). A part with no or several functions refuses it.
+A fuse link fitted in a holder gives the holder its figures. The lint is the one of `[function.block]`.
 
 ### `[pcb]`
 
@@ -252,6 +266,21 @@ At most one per file. Maps to the model's `pcb` facet (subject: `Part`); marks a
 | Field | Type | Meaning |
 |---|---|---|
 | `revision` | string | |
+
+### `[connection]`
+
+At most one per file. A terminal part states the conductors each of its points takes. It describes the part's one function.
+
+| Field | Type | Meaning |
+|---|---|---|
+| `conductors_per_clamp` | integer | Wires and cable cores one point takes; a bridge counts none. Unset means 1 |
+
+A point with more conductors than this gets ERROR `TERMINAL_POINT_OVERFILLED`. The fix is a part that takes more, such as the twin `DEMO-TB-2.5-TWIN`, or a second terminal bridged to this one.
+
+```toml
+[connection]
+conductors_per_clamp = 2
+```
 
 ## Rules
 
@@ -263,7 +292,7 @@ At most one per file. Maps to the model's `pcb` facet (subject: `Part`); marks a
   `"change-over-contact"`), naming a key in `electrical-symbols`. `fransys_parts` checks the
   slug's shape only; the layout engine reports an unknown symbol or unbound port.
 - **`symbol_port` names a role of the symbol, not a marking of the part.** The symbol knows
-  shapes and calls its ports by role (`in`, `out`, `com`, `nc`, `no`); the part knows markings
+  shapes and calls its ports by role (`in`, `out`, `com`, `nc`, `no`). The part knows markings
   and calls the same ports by what is printed on it. `ports.marking` overrides what is printed (design section 6). A changeover binds by its throw roles.
 - **Footprint is `library:name`.** Never a bare name.
 - **No multi-line strings.** The loader finds a record's line by scanning the file text once for
@@ -294,12 +323,12 @@ files, no Fransys code inside it.
 
 ## Versioning
 
-- `schema` (an integer, `1` today) is the part-file schema version, not the library's own `version`.
+- `schema` (an integer, `2` today) is the part-file schema version, not the library's own `version`.
   A library can ship many releases against one `schema`.
 - A breaking change to this contract (a renamed field, a changed meaning, a removed table) bumps
   `schema`. It is never changed in place under the same number.
 - `fransys_parts.SUPPORTED_SCHEMAS: frozenset[int]` names the accepted `schema` values;
-  today `frozenset({1})`. `library.toml` and every part file carry `schema`; a value outside
+  today `frozenset({2})`; a `schema = 1` file is `PART_SCHEMA_OLD`. `library.toml` and every part file carry `schema`. A value outside
   `SUPPORTED_SCHEMAS` is the lint finding `SCHEMA_UNSUPPORTED`, naming the file and the value
-  found, and a part file whose `schema` differs from its `library.toml` is `SCHEMA_MIXED`.
-- There is no migration framework. A library bumps `schema` for every part file in one commit.
+  found. A part file whose `schema` differs from its `library.toml` is `SCHEMA_MIXED`.
+- `uv run python internal/scripts/migrate_parts_022.py DIR [--dry-run]` (a maintainers' script, dropped in 0.23, MIGRATE-022-DROP) rewrites every schema 1 library under `DIR` to schema 2 (model-0369). A library bumps `schema` for every part file in one commit.

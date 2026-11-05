@@ -5,16 +5,16 @@
 ### build
 
 ```python
-def build(*drafts: Draft | Design, releases: Path | None=None) -> BuildResult
+def build(*drafts: Draft | Design, releases: Path | None=None, settings: Settings | None=None) -> BuildResult
 ```
 
 Output: merge, freeze and lay out drafts or a `Design` into a `BuildResult`.
 
 Runs PLC allocation, numbering, every validator and layout, collecting each pass's findings.
 The schematic lays out only when no `ERROR` was found and a `Document` keeps a SCHEMATIC
-page; a layout `SymbolPortError` becomes one `SYMBOL_PORT_MISSING` `ERROR`. `releases` seeds
-numbering pins from that release root; `None` numbers freely. Raises `FreezeError` on a
-structural problem in the merged draft.
+page; a symbol with no port for a model port becomes one `SYMBOL_PORT_MISSING` `ERROR`. `releases` seeds
+numbering pins from that release root; `None` numbers freely. `settings` is `fr.settings(...)`;
+`None` takes our defaults. Raises `FreezeError` on a structural problem in the merged draft.
 
 Does not write files, run `check` or raise on findings; does not seed pins when `releases`
 is `None`.
@@ -69,7 +69,7 @@ Does not write files; does not guess a release by likeness.
 ### document
 
 ```python
-def document(preset: DocumentPreset, subject: object, *, cover: Path, add: tuple[PageKind, ...]=(), remove: tuple[PageKind, ...]=(), logo: Path | None=None, notice: str='') -> Draft
+def document(preset: DocumentPreset, subject: object, *, cover: Path, logo: Path | None=None, notice: str='') -> Draft
 ```
 
 Output: author a document record from a preset, a subject and a cover file.
@@ -97,7 +97,7 @@ Read: the path from out_dir that `write` gives each export of `result`, by `(kin
 A kind is `"bom"`, `"plc"`, `"wires"`, `"designations"`, `"overview"`, `"cables"` or `"cores"`
 (subject `None`), `"terminals"`, `"connectors"` or `"wago"` (the strip, board or rack id), or
 `"pdf"` (the document id). `unit=` is `write`'s. Writes nothing and compiles no PDF; raises what
-`write` raises for a bad `unit` or a name two subjects share (`ExportNameClash`).
+`write` raises for a bad `unit` or a name two subjects share (`ExportNameClashError`).
 
 Does not write a file, compile a PDF or run `check`.
 
@@ -145,18 +145,16 @@ Does not write a file: `python -m fransys parts-module` does.
 ### readability
 
 ```python
-def readability(result: BuildResult) -> ReadabilityReport
+def readability(result: BuildResult) -> DrawnReading
 ```
 
-Read: one row for each schematic page of `result`, and one for each unit.
+Read: one row of counts for each page drawn in `result.drawings`, in their order.
 
-A page row counts what a reader of the print feels: the profile's text height against
-`min_text_height_mm`, how much of the page the drawing fills, wires crossing wires, text struck
-by a wire, text overlaps, cells alone on a page, and the references the page makes. A unit row
-adds its pages up. Pure: the same model gives the same rows. The layout runs again on
-`result.model`, as `build` ran it, so the cost is about that of the layout.
+A page row names its unit and counts its symbols, markers, fill, wire crossings, bends and
+length, texts struck by a wire and text overlaps. An error build has no drawings and gives no
+rows. Pure.
 
-Does not write a file, emit anything from `write`, or raise on findings.
+Does not write a file, lay the pages out again or raise on findings.
 
 ### rebaseline
 
@@ -171,7 +169,7 @@ Rewrites `baseline/listing.json` and `baseline/manifest.json` of each release un
 children before parents, and returns those folders (`()` when nothing moved). The manifest
 keeps the old digest, listing version and `fransys` in a `rebaselined` record. `unit=None`
 covers every unit and the system with a stored baseline; a unit covers it and the units below.
-Raises `BuildErrors` and writes nothing when a real row changed (`BASELINE_DIFFERS`), a
+Raises `BuildFailedError` and writes nothing when a real row changed (`BASELINE_DIFFERS`), a
 baseline is too old, or a release file is not as released.
 
 Does not write an export, `model.json` or `numbering.json`.
@@ -187,7 +185,7 @@ Output: release a unit, or the system, as a frozen baseline under `into`.
 Writes `<into>/<name>/<version>.<revision>/`: the unit's exports as `write` makes them,
 `baseline/` (listing, model, manifest) and, after a first release, `changes.md` and
 `changes.csv`. Runs the same gate as `write` plus the release checks: any `ERROR`
-raises `BuildErrors` and writes nothing. An identical stored listing text returns the
+raises `BuildFailedError` and writes nothing. An identical stored listing text returns the
 existing path untouched. Files are built in a temporary sibling and renamed, so a failure
 leaves nothing behind.
 
@@ -222,16 +220,35 @@ Output: one text of `fr.check(result)`.
 
 It holds a summary line, each ERROR and WARNING, then the notes.
 
-Each ERROR and WARNING prints its message, then an `at:` line per subject, its fix and its
-findings-row URL from the code's registry entry. INFO notes print counted per code on one line.
+Each ERROR and WARNING prints its message, then an `at:` line per subject, its own `fix` and
+the URL of its code's findings row. INFO notes print counted per code on one line.
 The text only reads the findings and their `CodeInfo`; it adds no rule of its own.
 
 Does not write files, raise on an ERROR, or drop a finding.
 
+### settings
+
+```python
+def settings(path: str | Path | None=None, *, paper: Mapping[PageKind, str] | None=None) -> Settings
+```
+
+Core: our defaults with a consumer's TOML file on top, key by key, and `paper=` per kind.
+
+`path` is a settings file naming only what differs from our defaults; `None` gives our
+defaults. `paper` maps a `PageKind` to a paper format's name, such as
+`{fr.PageKind.BLOCK_DIAGRAM: "A2"}`; it is the one spelling of a paper per drawing type, and
+a per-kind key in the TOML file raises. The formats are `A3` and `A2`, all landscape, and no others.
+Does not build, write a file or touch the environment; it reads the TOML files only.
+
+Raises:
+    SettingsError: the file is missing, has an unknown key, a value of another type than
+        ours, a key outside the overridable tables, or `paper` names an unknown format. The
+        message names the file, the key and the keys known there.
+
 ### unit
 
 ```python
-def unit(name: str, *, revision: int, interface_version: int | str, date: str, text: str, by: str, version: int=1, title: str='', number: str='', history: Sequence[Mapping[str, str | int]]=(), class_code: str | None=None, wiring: Mapping[WiringRow, RowValue] | None=None) -> Callable[[Callable[..., R]], UnitDef[R]]
+def unit(name: str, *, revision: int, interface_version: int | str, date: str, text: str, by: str, version: int=1, title: str='', number: str='', history: Sequence[Mapping[str, str | int]]=()) -> Callable[[Callable[..., R]], UnitDef[R]]
 ```
 
 Core: make a function the unit release `name`.
@@ -241,8 +258,9 @@ It takes a child design and returns its interface.
 The interface is an instance of a `typing.NamedTuple` class, one field per boundary.
 
 Does not build anything: `d.add(fn, "U1")` does. `history` entries take `d.revision`'s keywords.
-`class_code` (1-3 uppercase letters) is the letter floating instances number from.
-`wiring` replaces IEC rows in the unit's body; a unit never takes its parent's rows.
+A `history=` entry with no `version` is numbered as this unit's own `version`; two entries of
+one version and revision must match, else `d.add` raises (`AuthorError` for the unit's own
+current revision, `MergeConflictError` for another).
 
 ### verify
 
@@ -274,9 +292,9 @@ that unit's own set (no `overview.html`). Intermediates (SVGs, netlists, `.typ`
 sources) go only to `intermediates`, if given. `releases` is a release root as `release`'s
 `into`: with a stored release of the system there, `overview.html` marks what changed since it
 (the release at the model's revision, else the previous one); `None` marks nothing. Any
-`ERROR` in `check(result)` raises `BuildErrors` and leaves `out_dir` without an export,
-whole-model, with no escape hatch.
-Also raises `ExportNameClash`, `TypeError` or `ValueError` for a bad `unit`.
+`ERROR` in `check(result)` raises `BuildFailedError`, writes no export, and removes the exports
+an earlier `write` left in `out_dir` and `out_dir/data`; no escape hatch.
+Also raises `ExportNameClashError`, `TypeError` or `ValueError` for a bad `unit`.
 
 Does not write when `check` finds an ERROR; does not touch files in `out_dir` it does not own.
 
@@ -300,17 +318,19 @@ class AuthorError
 
 A design mistake, caught at the call or, for a layout hint, at build.
 
-### BuildErrors
+### BuildFailedError
 
 ```python
-class BuildErrors
+class BuildFailedError
 ```
 
 Raised by `write` or `release` when their own findings hold an `ERROR`.
 
 No escape hatch: there is no `allow_errors`, `force` or `draft` parameter anywhere in
 this package, and none will be added. `findings` holds every `ERROR` of the run that
-raised; the exception's own message is each finding, then its fix and findings-row URL.
+raised, each with its own `fix` template: tests read `exc.findings`, not the message. The
+message is each finding, then its printed fix (`<subject>` and `<other>` filled) and its
+code's findings-row URL.
 `write`'s own findings are resolved through `describe` first (`check`'s own contract);
 `release`'s interface-bump findings are never `describe`d -- their `message` is already
 self-contained, naming the unit, revision and differing sections in plain text.
@@ -321,7 +341,7 @@ self-contained, naming the unit, revision and differing sections in plain text.
 class BuildResult
 ```
 
-A frozen, laid-out model plus every finding collected while building it.
+A frozen, laid-out model, every finding collected while building it and its `Settings`.
 
 ### Cable
 
@@ -360,7 +380,7 @@ Does not start a design: call fr.design.
 class Detail
 ```
 
-The detail calls of one design: `d.detail.wire`, `star`, `net`, `busbar` and `rail_bond`.
+The detail calls of one design: `busbar`.
 
 Each is for a case no core call writes; try `d.series` first.
 Does not pair poles or take the next free terminal, as `d.series` does.
@@ -395,7 +415,7 @@ class Draft
 The only mutable type in the repo. Collects records before `freeze()`.
 
 Accepts a duplicate `add` of identical content as a no-op; a conflicting `add` under
-the same id raises `MergeConflict` immediately, naming both origins. Nothing here
+the same id raises `MergeConflictError` immediately, naming both origins. Nothing here
 depends on the order things were added in: the accessors sort. A draft that raised is
 to be discarded, not repaired.
 
@@ -417,6 +437,8 @@ Attributes:
     severity: How much this finding should block a downstream output.
     subjects: The ids this finding is about, stored once each, in `Id` order.
     message: The human-readable text of the finding.
+    fix: The pasteable text that clears it, `<valid values>. Write: <corrected call>`,
+        from the code's `CodeInfo.filled`. Empty only on an INFO note.
 
 ### Fn
 
@@ -427,6 +449,14 @@ class Fn
 One function of a device: `K1.coil`; a pin by `[ ]` (`Q1.main[2]`) or by name (`K1.coil.A1`).
 
 Does not accept a guessed name: an unknown pin raises and lists the pins it has.
+
+### FransysError
+
+```python
+class FransysError
+```
+
+A bad argument to a facade call: a wrong type (`TypeError`) or a bad value (`ValueError`).
 
 ### FreezeError
 
@@ -448,10 +478,10 @@ The drawing hints of one design, each written through the engine.
 
 Does not draw or place anything itself: every hint only advises the layout engine.
 
-### MergeConflict
+### MergeConflictError
 
 ```python
-class MergeConflict
+class MergeConflictError
 ```
 
 Two drafts or models declare the same id with different content.
@@ -509,7 +539,8 @@ Attributes:
     id: This port's id.
     key: This port's authoring key.
     name: The marking `__getitem__` matches it by.
-    role: What this port is for (e.g. `INTERNAL`/`EXTERNAL`).
+    boundary: Which side of the unit boundary this port is on (`INTERNAL`/`EXTERNAL`).
+    pin_role: The pin role the part states, `None` if none.
 
 ### Release
 
@@ -540,6 +571,29 @@ class Run
 `count` terminals of a strip that count up inside their own label, from 1.
 
 Does not share numbering with the strip or another run; a series may name it as a strip.
+
+### Settings
+
+```python
+class Settings
+```
+
+Every setting of one build: our defaults, then the consumer's file, key by key.
+
+`paper` holds `default` (a format name) and `formats` (name to the sheet's numbers);
+`paper_by_kind` names a format for one `PageKind`. `pdf`, `look` and `layout` hold the other
+tables. `font` is empty for our font, else `name` and the two font
+`files` paths. A key in `pdf`, `look` or `layout` raises only when it is unknown or of another
+type than ours. `table(name)` gives any merged table of our TOML files. Make one with
+`fr.settings()`, pass it to `fr.build`.
+
+### SettingsError
+
+```python
+class SettingsError
+```
+
+A settings file or `paper=` is wrong; the message names the file, the key and the fix.
 
 ### Severity
 
@@ -651,12 +705,6 @@ Does not run the function; `d.add` builds the child and calls it.
 
 ## Constants
 
-### ABOVE
-
-```python
-ABOVE: Side
-```
-
 ### AC_CONTROL
 
 ```python
@@ -697,12 +745,6 @@ AI: SignalType
 
 ```python
 AO: SignalType
-```
-
-### BELOW
-
-```python
-BELOW: Side
 ```
 
 ### CONTROL
@@ -747,22 +789,10 @@ DI: SignalType
 DO: SignalType
 ```
 
-### EARTHED
-
-```python
-EARTHED: Earthing
-```
-
 ### GENERIC
 
 ```python
 GENERIC: NetClass
-```
-
-### IT
-
-```python
-IT: Earthing
 ```
 
 ### SIGNAL
@@ -775,4 +805,10 @@ SIGNAL: NetClass
 
 ```python
 derive: submodule
+```
+
+### elecdef
+
+```python
+elecdef: submodule
 ```

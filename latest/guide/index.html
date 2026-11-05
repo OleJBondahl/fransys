@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.20.0/guide/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.0/guide/">
       
       
       
@@ -22,7 +22,7 @@
       
       
       <link rel="icon" href="../assets/fransys-icon.svg">
-      <meta name="generator" content="zensical-0.0.70">
+      <meta name="generator" content="zensical-0.0.74">
     
     
       
@@ -33,7 +33,7 @@
       
         
       
-      <link rel="stylesheet" href="../assets/stylesheets/modern/main.e442bf79.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/modern/main.4ab2de0c.min.css">
       
         
           
@@ -114,9 +114,10 @@
   <img src="../assets/fransys-wordmark-white.svg" alt="Fransys">
 
     </a>
-    <label class="md-header__button md-icon" for="__drawer" aria-label="Navigation">
+    <label class="md-header__button md-icon" for="__drawer">
       
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-menu" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
+      <span class="md-visually-hidden">Navigation</span>
     </label>
     <div class="md-header__title" data-md-component="header-title">
       <div class="md-header__ellipsis">
@@ -168,9 +169,10 @@
     
       
       
-        <label class="md-header__button md-icon" for="__search" aria-label="Search">
+        <label class="md-header__button md-icon" for="__search">
           
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+          <span class="md-visually-hidden">Search</span>
         </label>
         <div class="md-search" data-md-component="search" role="dialog" aria-label="Search">
   <button type="button" class="md-search__button">
@@ -629,6 +631,33 @@
   
   
     <li class="md-nav__item">
+      <a href="./drawn-ledger/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  The required-drawn ledger
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="./detail/" class="md-nav__link">
         
   
@@ -980,6 +1009,60 @@
   
   
     <li class="md-nav__item">
+      <a href="./settings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Settings
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./moving-to-0.22/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Moving to 0.22
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="./moving-to-0.20/" class="md-nav__link">
         
   
@@ -1150,6 +1233,33 @@
     
   
   Finding codes: validators, build and release
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./findings-release/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Finding codes: build, release and verify
 
     
   </span>
@@ -2100,9 +2210,10 @@
 <p>Fransys is a Python toolkit for authoring electrical cabinet and harness designs and
 producing their schematics, parts lists and manufacturing exports from one model. This page
 lists every consumer task with its one spelling, then the install and the shape of a script.</p>
-<p>Fransys is in Beta: the API may change between minor versions until 1.0.0, and each release's guide says what changed.</p>
+<p>Fransys is in Beta: the API may change between minor versions until 1.0.0, and each release's guide says what changed.
+Paste the block in <a href="AGENTS/">AGENTS.md</a> into your project's <code>AGENTS.md</code> or <code>CLAUDE.md</code>, so a coding agent finds the docs and <code>python -m fransys help KEY</code>.</p>
 <h2 id="the-public-surface">The public surface</h2>
-<p>The public surface has four parts: <code>fr.__all__</code>, <code>fr.derive.__all__</code>, <code>fransys.colours</code>, and every keyword of every public call and every <code>d.*</code> method, with the <code>d.layout.profile</code> keywords and the <code>d.layout.sheet</code> numbers. Nothing else is public, and every part has an entry in this guide.</p>
+<p>The public surface has four parts: <code>fr.__all__</code>, <code>fr.derive.__all__</code>, <code>fransys.colours</code>, and every keyword of every public call and every <code>d.*</code> method, with the <code>d.layout.profile</code> keywords. Nothing else is public, and every part has an entry in this guide.</p>
 <h2 id="tiers">Tiers</h2>
 <p>Every <code>fr.*</code> function and handle method opens its docstring with one of four tier words.</p>
 <ul>
@@ -2142,10 +2253,6 @@ and give layout the structure it draws. The detail calls in the table are for th
 </thead>
 <tbody>
 <tr>
-<td><code>d.detail.wire(a, b, wire=...)</code></td>
-<td>two named pins off any path, such as a signal pair; one signal daisy-chained, <code>d.detail.wire(a, b, c)</code>; a hop whose printed wire differs from its row</td>
-</tr>
-<tr>
 <td><code>X1[3]</code>, <code>.inner</code>, <code>.outer</code></td>
 <td>a terminal whose number or side is fixed: a published pinout, or several wires on one terminal</td>
 </tr>
@@ -2154,17 +2261,13 @@ and give layout the structure it draws. The detail calls in the table are for th
 <td>a core whose colour or number a termination plan fixes</td>
 </tr>
 <tr>
-<td><code>d.detail.net(name, *pins)</code></td>
-<td>a named net that no wire joins, such as a bus shown by its label</td>
-</tr>
-<tr>
-<td><code>d.detail.busbar(a, b)</code>, <code>d.detail.rail_bond(a, b)</code></td>
-<td>a rack's internal jumper; terminals bonded through their rail</td>
+<td><code>d.detail.busbar(a, b)</code></td>
+<td>a rack's internal jumper</td>
 </tr>
 </tbody>
 </table>
 <p><code>d.series</code> raises <code>has no pole pair: its part states no line side</code> when a part does not say which pin is the line
-side. Fix the part file (<code>side = "line"</code>, parts.md), or wire the pins with <code>d.detail.wire</code>. A real circuit that no
+side. Fix the part file (<code>side = "line"</code>, parts.md), or name the pins one by one in <code>d.series</code>. A real circuit that no
 core call can write is a gap in Fransys: report it with its smallest shape.</p>
 <h2 id="tasks">Tasks</h2>
 <p>Each task has one spelling. <code>P</code> is a generated parts module or an MPN string; <code>BU</code> and <code>BN</code> come
@@ -2254,14 +2357,9 @@ from <code>fransys.colours</code>.</p>
 <td>authoring.md, Bridges</td>
 </tr>
 <tr>
-<td>wire one point to many</td>
-<td><code>d.detail.star(src, (a, b, c), wire=...)</code></td>
-<td>detail.md, One point to many</td>
-</tr>
-<tr>
 <td>wire two named pins off a path</td>
-<td><code>d.detail.wire(a, b, wire=(BU, 0.75))</code></td>
-<td>detail.md, d.detail.wire</td>
+<td><code>d.series(a, b, wire=(BU, 0.75))</code></td>
+<td>detail.md, bare pins</td>
 </tr>
 <tr>
 <td>add a cable</td>
@@ -2285,7 +2383,7 @@ from <code>fransys.colours</code>.</p>
 </tr>
 <tr>
 <td>colour wires by what they carry</td>
-<td><code>fr.design(..., wiring=)</code>, <code>@fr.unit(wiring=)</code> or <code>wire={row: ...}</code></td>
+<td><code>fr.design(..., wiring=)</code> or <code>wire={row: ...}</code></td>
 <td>series.md, Wire colours</td>
 </tr>
 <tr>
@@ -2299,13 +2397,8 @@ from <code>fransys.colours</code>.</p>
 <td>series.md, earth pins</td>
 </tr>
 <tr>
-<td>a named signal net</td>
-<td><code>d.detail.net(name, *pins, kind=)</code></td>
-<td>detail.md</td>
-</tr>
-<tr>
-<td>a busbar, a rail bond</td>
-<td><code>d.detail.busbar(a, b)</code>, <code>d.detail.rail_bond(a, b)</code></td>
+<td>a busbar</td>
+<td><code>d.detail.busbar(a, b)</code></td>
 <td>detail.md</td>
 </tr>
 <tr>
@@ -2330,12 +2423,12 @@ from <code>fransys.colours</code>.</p>
 </tr>
 <tr>
 <td>plug a connector</td>
-<td><code>d.mate(a, b)</code></td>
+<td>refused in 0.22 (<code>MATES_DISABLED</code>): draw a cable or wires</td>
 <td>authoring.md, plug a connector</td>
 </tr>
 <tr>
 <td>add a harness</td>
-<td><code>d.harness("W5")</code></td>
+<td>refused in 0.22 (<code>MATES_DISABLED</code>): use a cable</td>
 <td>harnesses.md, add a harness</td>
 </tr>
 <tr>
@@ -2344,8 +2437,8 @@ from <code>fransys.colours</code>.</p>
 <td>authoring.md</td>
 </tr>
 <tr>
-<td>request a PLC channel, scale it</td>
-<td><code>K1.coil.plc(fr.DO, name)</code>, <code>.scale(...)</code></td>
+<td>request a PLC channel</td>
+<td><code>K1.coil.plc(fr.DO, name)</code></td>
 <td>authoring.md, request a PLC channel</td>
 </tr>
 <tr>
@@ -2359,18 +2452,8 @@ from <code>fransys.colours</code>.</p>
 <td>authoring.md, title block, revision</td>
 </tr>
 <tr>
-<td>read a part's rating while authoring</td>
-<td><code>d.rating(part, fn)</code>, <code>d.operating(part, fn)</code></td>
-<td>parts.md, Reading a part's rating while authoring</td>
-</tr>
-<tr>
 <td>advise the drawing</td>
-<td><code>d.layout.chain</code>, <code>keep_together</code>, <code>break_before</code>, <code>order</code>, <code>symbol</code>, <code>draw_in</code>, <code>side</code>, <code>sheet</code>, <code>profile</code></td>
-<td>detail.md, Layout profile</td>
-</tr>
-<tr>
-<td>put a unit's interface above or below its outline</td>
-<td><code>d.layout.side(u1.bus_in, fr.ABOVE)</code>, <code>fr.BELOW</code></td>
+<td><code>order</code>, <code>sheet</code>, <code>profile</code></td>
 <td>detail.md, Layout profile</td>
 </tr>
 <tr>
@@ -2394,19 +2477,14 @@ from <code>fransys.colours</code>.</p>
 <td>units.md, The boundary</td>
 </tr>
 <tr>
-<td>leave one placed instance's boundary open</td>
-<td><code>d.add(fn, "U2", unused=("X1",))</code></td>
-<td>units.md, Leaving one instance open</td>
-</tr>
-<tr>
-<td>state a boundary's values</td>
-<td><code>X1.power.limits(rating=, operating=)</code></td>
-<td>units.md, The boundary</td>
-</tr>
-<tr>
 <td>build the model</td>
 <td><code>fr.build(d, *documents)</code></td>
 <td>build.md</td>
+</tr>
+<tr>
+<td>set the paper or a consumer's settings for a build</td>
+<td><code>s = fr.settings("fransys.toml", paper={fr.PageKind.BLOCK_DIAGRAM: "A2"})</code>, then <code>fr.build(d, settings=s)</code></td>
+<td>settings.md</td>
 </tr>
 <tr>
 <td>add a document</td>
@@ -2474,9 +2552,9 @@ from <code>fransys.colours</code>.</p>
 </code></pre></div>
 <p>Replace <code>vX.Y.Z</code> with the release you pin.</p>
 <h2 id="the-shape-of-a-build-script">The shape of a build script</h2>
-<p>A script starts a design from an installed part library (<code>fr.design</code>), authors it with
+<p>A script starts a design from an installed part library (<code>fr.design</code>). It authors it with
 <code>d.device</code> and wiring, adds a cabinet as a unit (<code>@fr.unit</code>, <code>d.add</code>), and passes the design to
-<code>fr.build</code>, which merges and freezes a model and lays out the schematic when a document keeps a SCHEMATIC page. <code>fr.check</code> collects every finding about the built model;
+<code>fr.build</code>. That merges and freezes a model and lays out the schematic when a document keeps a SCHEMATIC page. <code>fr.check</code> collects every finding about the built model;
 <code>fr.write</code> writes the exports to a directory, raising instead of writing anything if <code>check</code>
 found an <code>ERROR</code>. A design with no document has nothing to draw, so <code>build</code> still succeeds and
 <code>write</code> still produces the parts-list exports.</p>
@@ -2523,8 +2601,9 @@ found an <code>ERROR</code>. A design with no document has nothing to draw, so <
 <ul>
 <li><code>detail.md</code>: each <code>d.detail</code> call, <code>W1.core</code>, fixed terminals and <code>d.layout</code> advice, with the cases they are for.</li>
 <li><code>drawing.md</code>: what layout reads, a checklist for a readable cabinet, printed sizes and grid pitch.</li>
-<li><code>layout-numbers.md</code>: every <code>d.layout.profile</code> keyword and every <code>d.layout.sheet</code> number.</li>
-<li><code>readability.md</code>: <code>fr.readability</code>, the per-page and per-unit numbers behind the readability findings.</li>
+<li><code>drawn-ledger.md</code>: <code>fr.derive.required_drawn</code>, the rows a drawing must show and the reasons a row may be carried.</li>
+<li><code>layout-numbers.md</code>: every <code>d.layout.profile</code> keyword.</li>
+<li><code>readability.md</code>: <code>fr.readability</code>, the per-page numbers behind the readability findings.</li>
 </ul>
 <h3 id="reading-a-built-model">Reading a built model</h3>
 <ul>
@@ -2535,7 +2614,7 @@ found an <code>ERROR</code>. A design with no document has nothing to draw, so <
 </ul>
 <h3 id="findings">Findings</h3>
 <ul>
-<li><code>findings.md</code>: every finding code, what it means and the usual fix, on five pages by source: <code>findings-validators.md</code>, <code>findings-render.md</code>, <code>findings-pdf.md</code>, <code>findings-kicad.md</code> and <code>findings-parts.md</code>.</li>
+<li><code>findings.md</code>: every finding code, what it means and the usual fix, on six pages by source: <code>findings-validators.md</code>, <code>findings-release.md</code>, <code>findings-render.md</code>, <code>findings-pdf.md</code>, <code>findings-kicad.md</code> and <code>findings-parts.md</code>.</li>
 </ul>
 <h3 id="reference">Reference</h3>
 <ul>
@@ -2545,6 +2624,7 @@ found an <code>ERROR</code>. A design with no document has nothing to draw, so <
 </ul>
 <h3 id="moving-from-an-older-release">Moving from an older release</h3>
 <ul>
+<li><code>moving-to-0.22.md</code>: the elecdef <code>Rating</code>, the new <code>Operating</code> fields and <code>Current</code> from <code>fr.elecdef</code>.</li>
 <li><code>moving-to-0.20.md</code>: the new <code>fr.rebaseline</code> call for baselines cut by an older release.</li>
 <li><code>moving-to-0.19.md</code>: the detail calls that moved to <code>d.detail</code>, and the rewrite from <code>d.wire</code> to <code>d.series</code>.</li>
 <li><code>moving-to-0.16-and-0.17.md</code>: what may newly stop a 0.15 or 0.16 build, the changed outputs and the new names.</li>
@@ -2588,7 +2668,7 @@ found an <code>ERROR</code>. A design with no document has nothing to draw, so <
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.20.0 documentation
+      Fransys 0.22.0 documentation
     </div>
   
   
@@ -2616,10 +2696,10 @@ found an <code>ERROR</code>. A design with no document has nothing to draw, so <
       
         
         
-      <script id="__config" type="application/json">{"annotate":null,"base":"..","features":["navigation.sections","search.highlight","content.code.copy"],"redirect":null,"search":"../assets/javascripts/workers/search.c47bb847.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","clipboard.error":"Could not copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
+      <script id="__config" type="application/json">{"annotate":null,"base":"..","features":["navigation.sections","search.highlight","content.code.copy"],"redirect":null,"search":"../assets/javascripts/workers/search.719e0d91.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","clipboard.error":"Could not copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
     
     
-      <script src="../assets/javascripts/bundle.a2388154.min.js"></script>
+      <script src="../assets/javascripts/bundle.d31f0ffa.min.js"></script>
       
     
   </body>

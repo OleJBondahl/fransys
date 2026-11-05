@@ -8,21 +8,21 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.20.0/guide/series/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.0/guide/series/">
       
       
       
         <link rel="prev" href="../authoring/">
       
       
-        <link rel="next" href="../detail/">
+        <link rel="next" href="../drawn-ledger/">
       
       
         
       
       
       <link rel="icon" href="../../assets/fransys-icon.svg">
-      <meta name="generator" content="zensical-0.0.70">
+      <meta name="generator" content="zensical-0.0.74">
     
     
       
@@ -33,7 +33,7 @@
       
         
       
-      <link rel="stylesheet" href="../../assets/stylesheets/modern/main.e442bf79.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/modern/main.4ab2de0c.min.css">
       
         
           
@@ -114,9 +114,10 @@
   <img src="../../assets/fransys-wordmark-white.svg" alt="Fransys">
 
     </a>
-    <label class="md-header__button md-icon" for="__drawer" aria-label="Navigation">
+    <label class="md-header__button md-icon" for="__drawer">
       
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-menu" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
+      <span class="md-visually-hidden">Navigation</span>
     </label>
     <div class="md-header__title" data-md-component="header-title">
       <div class="md-header__ellipsis">
@@ -168,9 +169,10 @@
     
       
       
-        <label class="md-header__button md-icon" for="__search" aria-label="Search">
+        <label class="md-header__button md-icon" for="__search">
           
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+          <span class="md-visually-hidden">Search</span>
         </label>
         <div class="md-search" data-md-component="search" role="dialog" aria-label="Search">
   <button type="button" class="md-search__button">
@@ -602,6 +604,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../drawn-ledger/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  The required-drawn ledger
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../detail/" class="md-nav__link">
         
   
@@ -953,6 +982,60 @@
   
   
     <li class="md-nav__item">
+      <a href="../settings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Settings
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../moving-to-0.22/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Moving to 0.22
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../moving-to-0.20/" class="md-nav__link">
         
   
@@ -1123,6 +1206,33 @@
     
   
   Finding codes: validators, build and release
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../findings-release/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Finding codes: build, release and verify
 
     
   </span>
@@ -2174,7 +2284,7 @@ selecting supply A or B for M1:</p>
 <tbody>
 <tr>
 <td><code>&lt;fn&gt; has no line/load pole pair</code></td>
-<td>a bare function end never pairs its pins by position: pass <code>&lt;fn&gt;.pins</code> (or a slice), or <code>d.detail.wire</code></td>
+<td>a bare function end never pairs its pins by position: pass <code>&lt;fn&gt;.pins</code> (or a slice), or name the pins one by one in <code>d.series</code></td>
 </tr>
 <tr>
 <td><code>&lt;device&gt; has no function of N poles</code></td>
@@ -2201,8 +2311,8 @@ selecting supply A or B for M1:</p>
 <td>give the colour and the size as a tuple, such as <code>("BK", 1.5)</code></td>
 </tr>
 <tr>
-<td><code>a pin or a tuple of pins stands only</code></td>
-<td>put it first or last; else <code>d.detail.wire</code></td>
+<td><code>&lt;a&gt; leaves with N poles but &lt;b&gt; takes M</code></td>
+<td>a pin or a tuple of pins in the middle takes the series' width: name as many pins as the neighbours have poles</td>
 </tr>
 <tr>
 <td><code>a changeover is two throws</code></td>
@@ -2241,9 +2351,8 @@ a blue 0.75 mm2 wire.</p>
 <p>A design has nine wire rows: <code>fr.DC_SUPPLY</code>, <code>fr.DC_GROUND</code>, <code>fr.DC_CONTROL</code>, <code>fr.DC_SIGNAL</code>, <code>fr.AC_L1</code>, <code>fr.AC_L2</code>,
 <code>fr.AC_L3</code>, <code>fr.AC_N</code> and <code>fr.AC_CONTROL</code>. A row's value is a colour, or a colour and a size.
 <code>d.series</code> picks each wire's row from what it carries.</p>
-<p><code>fr.design(library, wiring={row: value})</code> sets rows for the design. <code>@fr.unit(..., wiring={row: value})</code>
-sets rows for that unit's body. A unit never inherits its parent's rows. With no <code>wiring=</code> it draws
-the IEC 60204-1 default: AC phases <code>BK</code>, <code>AC_N</code> <code>BU</code>, <code>AC_CONTROL</code> <code>RD</code>, every DC row <code>BU</code>, no sizes.</p>
+<p><code>fr.design(library, wiring={row: value})</code> sets rows for the design. A unit never inherits its parent's rows:
+it draws the IEC 60204-1 default: AC phases <code>BK</code>, <code>AC_N</code> <code>BU</code>, <code>AC_CONTROL</code> <code>RD</code>, every DC row <code>BU</code>, no sizes.</p>
 <p><code>d.series(..., wire=)</code> takes three shapes:</p>
 <ul>
 <li>a size, <code>wire=0.75</code>: every wire takes its row's colour at that size.</li>
@@ -2273,7 +2382,7 @@ starts on no rail takes the rows the earlier series gave its net.</p>
 <p><code>d.earth(*pins)</code> declares the <code>PE</code> net; a wire to the PE terminal builds it. A unit has one <code>PE</code> net: each further <code>d.earth</code> call in it adds its pins to that net.
 Call d.earth before draft(); a later call raises.
 Every pin joined by <code>d.earth</code> draws the PE symbol, wired or not. A wire to a PE terminal adds its list row. A series through a cable lands its GNYE core on the load's PE port and the strip's next free PE terminal, else open and earthed. With no PE end and more poles than non-earth cores, the series raises an error.
-It names the cable and both counts; pick a cable with that many non-earth cores. A load with no PE port leaves the far end open, the near end on the strip's PE terminal. A single wire to a PE terminal is <code>d.detail.wire</code>: see <code>detail.md</code>.</p>
+It names the cable and both counts; pick a cable with that many non-earth cores. A load with no PE port leaves the far end open, the near end on the strip's PE terminal. A single wire to a PE terminal is <code>d.series(pin, pe[1], wire=...)</code>: see <code>detail.md</code>.</p>
 <div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">fransys</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">fr</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">fransys.colours</span><span class="w"> </span><span class="kn">import</span> <span class="n">GNYE</span>
 
@@ -2284,21 +2393,6 @@ It names the cable and both counts; pick a cable with that many non-earth cores.
 <span class="n">w1</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">cable</span><span class="p">(</span><span class="s2">"W1"</span><span class="p">,</span> <span class="s2">"DEMO-CBL-4G1.5"</span><span class="p">,</span> <span class="n">length_m</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
 <span class="n">w1</span><span class="o">.</span><span class="n">core</span><span class="p">(</span><span class="n">GNYE</span><span class="p">,</span> <span class="n">m1</span><span class="o">.</span><span class="n">motor</span><span class="p">[</span><span class="s2">"PE"</span><span class="p">],</span> <span class="n">pe</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
 <span class="n">d</span><span class="o">.</span><span class="n">earth</span><span class="p">(</span><span class="n">m1</span><span class="o">.</span><span class="n">motor</span><span class="p">[</span><span class="s2">"PE"</span><span class="p">],</span> <span class="n">pe</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
-</code></pre></div>
-<p>A PE bar takes its landings. Pass the bar's function where a pin goes: it takes its next free screw
-and joins it to the PE net. A bar with every screw taken raises. A bar cut to length from stock writes
-no port, so each landing makes a screw. The bar is never drawn; each end on it draws the PE symbol.
-A cable core lands on a screw as on any pin; a single wire is <code>d.detail.wire</code>: see <code>detail.md</code>.</p>
-<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">fransys</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">fr</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">fransys.colours</span><span class="w"> </span><span class="kn">import</span> <span class="n">GNYE</span>
-
-<span class="n">d</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">design</span><span class="p">(</span><span class="s2">"demo_parts"</span><span class="p">)</span>
-<span class="n">pe1</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">"PE1"</span><span class="p">,</span> <span class="s2">"DEMO-PEBAR-20"</span><span class="p">)</span>
-<span class="n">m1</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">"M1"</span><span class="p">,</span> <span class="s2">"DEMO-MOTOR-4KW"</span><span class="p">)</span>
-<span class="n">w1</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">cable</span><span class="p">(</span><span class="s2">"W1"</span><span class="p">,</span> <span class="s2">"DEMO-CBL-4G1.5"</span><span class="p">,</span> <span class="n">length_m</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
-<span class="n">w2</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">cable</span><span class="p">(</span><span class="s2">"W2"</span><span class="p">,</span> <span class="s2">"DEMO-CBL-2X2X0.75-SP"</span><span class="p">)</span>
-<span class="n">w1</span><span class="o">.</span><span class="n">core</span><span class="p">(</span><span class="n">GNYE</span><span class="p">,</span> <span class="n">m1</span><span class="o">.</span><span class="n">motor</span><span class="p">[</span><span class="s2">"PE"</span><span class="p">],</span> <span class="n">pe1</span><span class="o">.</span><span class="n">pe</span><span class="p">)</span>  <span class="c1"># screw 1</span>
-<span class="n">w2</span><span class="o">.</span><span class="n">core</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="n">pe1</span><span class="o">.</span><span class="n">pe</span><span class="p">)</span>  <span class="c1"># the one-ended screen, screw 2</span>
 </code></pre></div>
 
 
@@ -2335,7 +2429,7 @@ A cable core lands on a screw as on any pin; a single wire is <code>d.detail.wir
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.20.0 documentation
+      Fransys 0.22.0 documentation
     </div>
   
   
@@ -2363,10 +2457,10 @@ A cable core lands on a screw as on any pin; a single wire is <code>d.detail.wir
       
         
         
-      <script id="__config" type="application/json">{"annotate":null,"base":"../..","features":["navigation.sections","search.highlight","content.code.copy"],"redirect":null,"search":"../../assets/javascripts/workers/search.c47bb847.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","clipboard.error":"Could not copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
+      <script id="__config" type="application/json">{"annotate":null,"base":"../..","features":["navigation.sections","search.highlight","content.code.copy"],"redirect":null,"search":"../../assets/javascripts/workers/search.719e0d91.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","clipboard.error":"Could not copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d31f0ffa.min.js"></script>
       
     
   </body>

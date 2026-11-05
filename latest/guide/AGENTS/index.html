@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.20.0/guide/AGENTS/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.0/guide/AGENTS/">
       
       
       
@@ -22,7 +22,7 @@
       
       
       <link rel="icon" href="../../assets/fransys-icon.svg">
-      <meta name="generator" content="zensical-0.0.70">
+      <meta name="generator" content="zensical-0.0.74">
     
     
       
@@ -33,7 +33,7 @@
       
         
       
-      <link rel="stylesheet" href="../../assets/stylesheets/modern/main.e442bf79.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/modern/main.4ab2de0c.min.css">
       
         
           
@@ -114,9 +114,10 @@
   <img src="../../assets/fransys-wordmark-white.svg" alt="Fransys">
 
     </a>
-    <label class="md-header__button md-icon" for="__drawer" aria-label="Navigation">
+    <label class="md-header__button md-icon" for="__drawer">
       
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-menu" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
+      <span class="md-visually-hidden">Navigation</span>
     </label>
     <div class="md-header__title" data-md-component="header-title">
       <div class="md-header__ellipsis">
@@ -168,9 +169,10 @@
     
       
       
-        <label class="md-header__button md-icon" for="__search" aria-label="Search">
+        <label class="md-header__button md-icon" for="__search">
           
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+          <span class="md-visually-hidden">Search</span>
         </label>
         <div class="md-search" data-md-component="search" role="dialog" aria-label="Search">
   <button type="button" class="md-search__button">
@@ -414,6 +416,33 @@
     
   
   Wiring a design
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../drawn-ledger/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  The required-drawn ledger
 
     
   </span>
@@ -784,6 +813,60 @@
   
   
     <li class="md-nav__item">
+      <a href="../settings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Settings
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../moving-to-0.22/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Moving to 0.22
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../moving-to-0.20/" class="md-nav__link">
         
   
@@ -954,6 +1037,33 @@
     
   
   Finding codes: validators, build and release
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../findings-release/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Finding codes: build, release and verify
 
     
   </span>
@@ -1821,17 +1931,13 @@
 
 
 <h1 id="for-coding-agents">For coding agents</h1>
-<p>The official Fransys documentation is the site, one version per release. Read it there, never in the
-installed package folder (<code>site-packages/fransys/</code>). Paste this block into your project's
-<code>CLAUDE.md</code> or <code>AGENTS.md</code> so every agent that works on the project finds it:</p>
+<p>The official Fransys documentation is the site, one version per release. Paste this block into
+your project's <code>CLAUDE.md</code> or <code>AGENTS.md</code> so every agent that works on the project finds it:</p>
 <div class="highlight"><pre><span></span><code><span class="gu">## Fransys documentation</span>
-
-<span class="k">-</span><span class="w"> </span>The official documentation is https://olejbondahl.github.io/fransys/ .
-<span class="k">-</span><span class="w"> </span>Take the version from the installed package: <span class="sb">`importlib.metadata.version("fransys")`</span> is <span class="sb">`X.Y.Z`</span>.
-<span class="k">-</span><span class="w"> </span>Start at https://olejbondahl.github.io/fransys/X.Y.Z/llms.txt. Its <span class="sb">`llms-full.txt`</span> is the whole guide in one file.
-<span class="k">-</span><span class="w"> </span>Read a page as Markdown at its URL plus <span class="sb">`index.md`</span>, such as https://olejbondahl.github.io/fransys/X.Y.Z/guide/index.md.
+<span class="k">-</span><span class="w"> </span>Official docs for the installed version: https://olejbondahl.github.io/fransys/X.Y.Z/llms.txt, where X.Y.Z is <span class="sb">`importlib.metadata.version("fransys")`</span>.
+<span class="k">-</span><span class="w"> </span>Look a public name or a finding code up with <span class="sb">`python -m fransys help KEY`</span>: it prints the signature, the docstring and the guide page.
 <span class="k">-</span><span class="w"> </span>Import only <span class="sb">`fransys`</span>. Write with the calls the guide index names under "Which call first".
-<span class="k">-</span><span class="w"> </span>Do not read <span class="sb">`site-packages/fransys/`</span>. Its guide is an offline fallback for when the site is unreachable.
+<span class="k">-</span><span class="w"> </span>Offline only: the installed guide is <span class="sb">`importlib.resources.files("fransys").joinpath("guide")`</span>; start at <span class="sb">`index.md`</span>.
 </code></pre></div>
 <p>The part-file format is in
 <a href="https://olejbondahl.github.io/fransys/X.Y.Z/contracts/part-file/index.md">the part-file contract</a>, at the same version path.
@@ -1879,7 +1985,7 @@ are the reference.</p>
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.20.0 documentation
+      Fransys 0.22.0 documentation
     </div>
   
   
@@ -1907,10 +2013,10 @@ are the reference.</p>
       
         
         
-      <script id="__config" type="application/json">{"annotate":null,"base":"../..","features":["navigation.sections","search.highlight","content.code.copy"],"redirect":null,"search":"../../assets/javascripts/workers/search.c47bb847.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","clipboard.error":"Could not copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
+      <script id="__config" type="application/json">{"annotate":null,"base":"../..","features":["navigation.sections","search.highlight","content.code.copy"],"redirect":null,"search":"../../assets/javascripts/workers/search.719e0d91.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","clipboard.error":"Could not copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d31f0ffa.min.js"></script>
       
     
   </body>

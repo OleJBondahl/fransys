@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.20.0/guide/authoring/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.0/guide/authoring/">
       
       
       
@@ -22,7 +22,7 @@
       
       
       <link rel="icon" href="../../assets/fransys-icon.svg">
-      <meta name="generator" content="zensical-0.0.70">
+      <meta name="generator" content="zensical-0.0.74">
     
     
       
@@ -33,7 +33,7 @@
       
         
       
-      <link rel="stylesheet" href="../../assets/stylesheets/modern/main.e442bf79.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/modern/main.4ab2de0c.min.css">
       
         
           
@@ -114,9 +114,10 @@
   <img src="../../assets/fransys-wordmark-white.svg" alt="Fransys">
 
     </a>
-    <label class="md-header__button md-icon" for="__drawer" aria-label="Navigation">
+    <label class="md-header__button md-icon" for="__drawer">
       
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-menu" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
+      <span class="md-visually-hidden">Navigation</span>
     </label>
     <div class="md-header__title" data-md-component="header-title">
       <div class="md-header__ellipsis">
@@ -168,9 +169,10 @@
     
       
       
-        <label class="md-header__button md-icon" for="__search" aria-label="Search">
+        <label class="md-header__button md-icon" for="__search">
           
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+          <span class="md-visually-hidden">Search</span>
         </label>
         <div class="md-search" data-md-component="search" role="dialog" aria-label="Search">
   <button type="button" class="md-search__button">
@@ -516,6 +518,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#power-rails" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Power rails
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#wiring-and-cables" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -616,6 +629,33 @@
     
   
   Wiring a design
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../drawn-ledger/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  The required-drawn ledger
 
     
   </span>
@@ -986,6 +1026,60 @@
   
   
     <li class="md-nav__item">
+      <a href="../settings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Settings
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../moving-to-0.22/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Moving to 0.22
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../moving-to-0.20/" class="md-nav__link">
         
   
@@ -1156,6 +1250,33 @@
     
   
   Finding codes: validators, build and release
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../findings-release/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Finding codes: build, release and verify
 
     
   </span>
@@ -2011,6 +2132,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#power-rails" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Power rails
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#wiring-and-cables" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -2149,12 +2281,14 @@ tag raises.</p>
 </tr>
 </tbody>
 </table>
-<p>A place sorts the lists by place and sets the <code>+</code> part of the printed designation. It does not move a cell on a drawing: <code>d.layout.draw_in</code> does.</p>
+<p>A place sorts the lists by place and sets the <code>+</code> part of the printed designation. It does not move a cell on a drawing: <code>d.series</code> does.</p>
 <p><code>d.device(tag, part, place=, parent=, mounted_on=, joins=, interface=, unused=, name=)</code> adds one device.
+<code>unused=</code> works on a boundary device and on an internal one.
 <code>joins={1: K1.coil["A1"]}</code> with <code>parent=K1</code> fits a housing on K1's own leads: pin 1 is that pin, no wire.
 A contact block with <code>parent=</code> an operator head prints the head's tag, as <code>-S1:11</code> (guide <code>parts.md</code>).
 <code>part</code> is a manufacturer part number such as <code>"DEMO-LAMP-24"</code>.</p>
-<p>Floating tags: every item call takes <code>None</code> for the tag and numbers the item from its class code.
+<p>A second call with a tag already used by a device or a strip raises, naming both calls: keep the handle from the first call.
+Floating tags: every item call takes <code>None</code> for the tag and numbers the item from its class code.
 Pass <code>name=</code>, the identity a released number holds to; a floating call with no <code>name=</code> raises.
 An accessory takes its holder's designation, no number of its own.</p>
 <p><code>external=True</code> marks an item supplied by others. Every call that makes an item takes it: <code>d.device</code>,
@@ -2254,6 +2388,19 @@ inner side and <code>W1.core</code> on the outer side.</p>
 <span class="k">for</span> <span class="n">tag</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"H1"</span><span class="p">,</span> <span class="s2">"H2"</span><span class="p">,</span> <span class="s2">"H3"</span><span class="p">):</span>
     <span class="n">d</span><span class="o">.</span><span class="n">series</span><span class="p">(</span><span class="n">dc</span><span class="o">.</span><span class="n">plus</span><span class="p">,</span> <span class="n">feed</span><span class="p">,</span> <span class="n">d</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="n">tag</span><span class="p">,</span> <span class="s2">"DEMO-LAMP-24"</span><span class="p">)</span><span class="o">.</span><span class="n">lamp</span><span class="p">,</span> <span class="n">dc</span><span class="o">.</span><span class="n">minus</span><span class="p">,</span> <span class="n">wire</span><span class="o">=</span><span class="p">(</span><span class="n">BU</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">))</span>
 </code></pre></div>
+<h2 id="power-rails">Power rails</h2>
+<p>A power rail is declared, never guessed. <code>rail=True</code> on a bridged run (<code>x1.run("24V", 4, bridged=True, rail=True)</code>) or on
+<code>d.terminal_strip(..., bridged=True, rail=True)</code> flags that one group. A flagged terminal draws as the rail's power symbol.
+An unflagged terminal draws as a terminal, even on a power net, and its bridges show in the terminal table only.
+A group of several terminals must be bridged; give a run its count. One group per potential in a unit.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># two flagged rails feeding one supply</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">fransys</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">fr</span>
+
+<span class="n">d</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">design</span><span class="p">(</span><span class="s2">"demo_parts"</span><span class="p">)</span>
+<span class="n">live</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">terminal_strip</span><span class="p">(</span><span class="s2">"X1"</span><span class="p">,</span> <span class="s2">"DEMO-TB-2.5"</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">"24V"</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="n">bridged</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">rail</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">zero</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">terminal_strip</span><span class="p">(</span><span class="s2">"X2"</span><span class="p">,</span> <span class="s2">"DEMO-TB-2.5"</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">"0V"</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="n">bridged</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">rail</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">dc</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">dc_supply</span><span class="p">(</span><span class="s2">"24VDC"</span><span class="p">,</span> <span class="n">plus</span><span class="o">=</span><span class="n">live</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">minus</span><span class="o">=</span><span class="n">zero</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">voltage</span><span class="o">=</span><span class="mi">24</span><span class="p">)</span>
+</code></pre></div>
 <h2 id="wiring-and-cables">Wiring and cables</h2>
 <p>The series, branches, changeovers, cables, wire colours and earth pins are on <code>series.md</code>.</p>
 <h2 id="ac-or-dc-supply-and-rails">AC or DC supply and rails</h2>
@@ -2264,10 +2411,7 @@ A source whose part states a nominal voltage takes no <code>voltage=</code>. <co
 on a plus and minus 15 V supply.</p>
 <p>Without <code>mid</code>, <code>minus</code> is 0 V and <code>plus</code> carries the voltage. With <code>mid</code>, <code>mid</code> is 0 V, <code>plus</code> is
 plus the voltage and <code>minus</code> is minus the voltage. <code>names=(plus, minus, mid)</code> renames the potentials; <code>ac_supply</code> takes one name per phase pin, then one for <code>n</code>.</p>
-<p><code>earthing=fr.IT</code> declares a floating supply; the default is <code>fr.EARTHED</code>. Two 0 V rails are two supplies.</p>
-<p><code>fault_current_a=</code> is the supply's prospective fault current in amps; <code>dc_supply</code> also takes
-<code>fault_time_constant_ms=</code>. A supply that states one is a source for the breaking-capacity check
-(<code>reading.md</code>). A <code>dc_supply</code> declared from a <code>source</code> device refuses both.</p>
+<p>Two 0 V rails are two supplies.</p>
 <p>A nested unit's declaration of a supply name its container also declares is not a source.</p>
 <p><code>d.ac_supply(name, voltage, *phases, n=None, names=None)</code> declares an AC supply on one or three phase pins in
 phase order. Its rails are <code>ac.L1</code>, plus <code>ac.L2</code> and <code>ac.L3</code> for three phases. On three phases <code>voltage</code> is each phase's RMS to the star point: 230 for a 400 V supply. A pin's side and order
@@ -2286,11 +2430,11 @@ A branch from the common feed is a second series; one looped at the line screws 
 <h2 id="plug-a-connector">Plug a connector</h2>
 <p><code>d.mate(a, b)</code> plugs connector <code>a</code> into connector <code>b</code>, each a device with one function
 (<code>units.md</code> covers a mate across a unit boundary).</p>
+<p>Refused in 0.22 (<code>MATES_DISABLED</code>, an ERROR): a mate has no correctness guarantee yet. Draw the link as a cable or wires.</p>
 <h2 id="add-a-harness">Add a harness</h2>
-<p><code>d.harness("W5")</code> adds a harness item: see <code>harnesses.md</code>.</p>
+<p><code>d.harness("W5")</code> adds a harness item: see <code>harnesses.md</code>. Refused in 0.22 (<code>MATES_DISABLED</code>): its drawing has no correctness guarantee yet; use a cable.</p>
 <h2 id="request-a-plc-channel">Request a PLC channel</h2>
-<p><code>K1.coil.plc(fr.DO, "Pump run")</code> asks for a digital output named for the signal, and
-<code>.scale("bar", raw=(0, 100), eng=("0", "10"))</code> scales an analogue one. A series that ends or starts
+<p><code>K1.coil.plc(fr.DO, "Pump run")</code> asks for a digital output named for the signal. A series that ends or starts
 at a PLC module binds the request to a channel (next section). A request no series wires keeps the
 build's own allocation.
 <code>d.rack("U1")</code> adds the part-less rack the modules sit under with <code>parent=</code>; a <code>d.harness</code> rack stops with <code>HARNESS_HOLDS_PLC_MODULE</code>.</p>
@@ -2385,7 +2529,7 @@ adds a history line. Both are optional.</p>
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.20.0 documentation
+      Fransys 0.22.0 documentation
     </div>
   
   
@@ -2413,10 +2557,10 @@ adds a history line. Both are optional.</p>
       
         
         
-      <script id="__config" type="application/json">{"annotate":null,"base":"../..","features":["navigation.sections","search.highlight","content.code.copy"],"redirect":null,"search":"../../assets/javascripts/workers/search.c47bb847.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","clipboard.error":"Could not copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
+      <script id="__config" type="application/json">{"annotate":null,"base":"../..","features":["navigation.sections","search.highlight","content.code.copy"],"redirect":null,"search":"../../assets/javascripts/workers/search.719e0d91.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","clipboard.error":"Could not copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d31f0ffa.min.js"></script>
       
     
   </body>

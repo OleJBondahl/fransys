@@ -21,7 +21,7 @@ Pass `fr.design` the generated parts module or the import-name strings that `fr.
 | `location("-C1")`, `"=M1"`, `"+X1"` | `d.location("C1", text)` | A tag is a bare key. A prefixed tag raises. |
 | `unit("-A1", ...)` | `@fr.unit("A1", ...)` | A unit name is a key, with no `-`, `+` or `=` prefix. |
 | unit release `interface=` | `interface_version=`; boundary values are `fn.limits(...)` | `interface` now means only the boundary marking, `interface=True`. |
-| `d.add(fn, "io")`, the second argument a lowercase key | `d.add(fn, "U1")`, a printed tag; or `d.add(fn, None, name="io")` with `class_code=` on the unit | The argument is the instance's tag and key, and a container prints it: `-U1-J1`. A lowercase letter raises. |
+| `d.add(fn, "io")`, the second argument a lowercase key | `d.add(fn, "U1")`, a printed tag | The argument is the instance's tag and key, and a container prints it: `-U1-J1`. A lowercase letter raises. |
 | `d.location` called twice for one tag, order mattering | one call per tag, in any order | A location is order-free, and its text is set once. |
 
 ## Devices and terminal strips

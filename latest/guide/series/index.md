@@ -151,14 +151,14 @@ A refusal starts with one of these texts. Each has one fix.
 
 | refusal starts | fix |
 |---|---|
-| `<fn> has no line/load pole pair` | a bare function end never pairs its pins by position: pass `<fn>.pins` (or a slice), or `d.detail.wire` |
+| `<fn> has no line/load pole pair` | a bare function end never pairs its pins by position: pass `<fn>.pins` (or a slice), or name the pins one by one in `d.series` |
 | `<device> has no function of N poles` | pass the function, such as `K1.main`, not the device |
 | `<device>: a and b both have poles, say which` | pass the function you mean |
 | `N poles into M: name the pins` | pass elements with equal pole counts |
 | `conductors L1, L2 into L1, L3: name the pins` | pass elements whose conductor marks agree |
 | `<element> has N poles; a path from S takes` | pass the supply's phases, or the phases and N |
 | `row <row> value <n> is a bare number, a size` | give the colour and the size as a tuple, such as `("BK", 1.5)` |
-| `a pin or a tuple of pins stands only` | put it first or last; else `d.detail.wire` |
+| `<a> leaves with N poles but <b> takes M` | a pin or a tuple of pins in the middle takes the series' width: name as many pins as the neighbours have poles |
 | `a changeover is two throws` | pass `K1.co_1.no` or `K1.co_1.nc` |
 | `a cable sits between two elements that are not cables` | put a plain element on each side of the cable |
 | `<run a> and <run b> both take poles`, `<run> takes poles` | a bridged run in a series, alone or in a parallel, shorts its poles: give each pole its own sized run and take `(x1.run("L1", n, bridged=True)[1], ...)` as a tuple, one terminal per pole |
@@ -195,9 +195,8 @@ A design has nine wire rows: `fr.DC_SUPPLY`, `fr.DC_GROUND`, `fr.DC_CONTROL`, `f
 `fr.AC_L3`, `fr.AC_N` and `fr.AC_CONTROL`. A row's value is a colour, or a colour and a size.
 `d.series` picks each wire's row from what it carries.
 
-`fr.design(library, wiring={row: value})` sets rows for the design. `@fr.unit(..., wiring={row: value})`
-sets rows for that unit's body. A unit never inherits its parent's rows. With no `wiring=` it draws
-the IEC 60204-1 default: AC phases `BK`, `AC_N` `BU`, `AC_CONTROL` `RD`, every DC row `BU`, no sizes.
+`fr.design(library, wiring={row: value})` sets rows for the design. A unit never inherits its parent's rows:
+it draws the IEC 60204-1 default: AC phases `BK`, `AC_N` `BU`, `AC_CONTROL` `RD`, every DC row `BU`, no sizes.
 
 `d.series(..., wire=)` takes three shapes:
 
@@ -234,7 +233,7 @@ d.series(dc.plus, s1.no, k1.coil, dc.minus, wire=0.75)  # RD, WH, BK, each 0.75 
 `d.earth(*pins)` declares the `PE` net; a wire to the PE terminal builds it. A unit has one `PE` net: each further `d.earth` call in it adds its pins to that net.
 Call d.earth before draft(); a later call raises.
 Every pin joined by `d.earth` draws the PE symbol, wired or not. A wire to a PE terminal adds its list row. A series through a cable lands its GNYE core on the load's PE port and the strip's next free PE terminal, else open and earthed. With no PE end and more poles than non-earth cores, the series raises an error.
-It names the cable and both counts; pick a cable with that many non-earth cores. A load with no PE port leaves the far end open, the near end on the strip's PE terminal. A single wire to a PE terminal is `d.detail.wire`: see `detail.md`.
+It names the cable and both counts; pick a cable with that many non-earth cores. A load with no PE port leaves the far end open, the near end on the strip's PE terminal. A single wire to a PE terminal is `d.series(pin, pe[1], wire=...)`: see `detail.md`.
 
 ```python
 import fransys as fr
@@ -247,23 +246,5 @@ m1 = d.device("M1", "DEMO-MOTOR-4KW")
 w1 = d.cable("W1", "DEMO-CBL-4G1.5", length_m=3)
 w1.core(GNYE, m1.motor["PE"], pe[1])
 d.earth(m1.motor["PE"], pe[1])
-```
-
-A PE bar takes its landings. Pass the bar's function where a pin goes: it takes its next free screw
-and joins it to the PE net. A bar with every screw taken raises. A bar cut to length from stock writes
-no port, so each landing makes a screw. The bar is never drawn; each end on it draws the PE symbol.
-A cable core lands on a screw as on any pin; a single wire is `d.detail.wire`: see `detail.md`.
-
-```python
-import fransys as fr
-from fransys.colours import GNYE
-
-d = fr.design("demo_parts")
-pe1 = d.device("PE1", "DEMO-PEBAR-20")
-m1 = d.device("M1", "DEMO-MOTOR-4KW")
-w1 = d.cable("W1", "DEMO-CBL-4G1.5", length_m=3)
-w2 = d.cable("W2", "DEMO-CBL-2X2X0.75-SP")
-w1.core(GNYE, m1.motor["PE"], pe1.pe)  # screw 1
-w2.core(5, pe1.pe)  # the one-ended screen, screw 2
 ```
 

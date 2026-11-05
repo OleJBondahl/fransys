@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.20.0/guide/findings-parts/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.0/guide/findings-parts/">
       
       
       
@@ -22,7 +22,7 @@
       
       
       <link rel="icon" href="../../assets/fransys-icon.svg">
-      <meta name="generator" content="zensical-0.0.70">
+      <meta name="generator" content="zensical-0.0.74">
     
     
       
@@ -33,7 +33,7 @@
       
         
       
-      <link rel="stylesheet" href="../../assets/stylesheets/modern/main.e442bf79.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/modern/main.4ab2de0c.min.css">
       
         
           
@@ -114,9 +114,10 @@
   <img src="../../assets/fransys-wordmark-white.svg" alt="Fransys">
 
     </a>
-    <label class="md-header__button md-icon" for="__drawer" aria-label="Navigation">
+    <label class="md-header__button md-icon" for="__drawer">
       
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-menu" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
+      <span class="md-visually-hidden">Navigation</span>
     </label>
     <div class="md-header__title" data-md-component="header-title">
       <div class="md-header__ellipsis">
@@ -168,9 +169,10 @@
     
       
       
-        <label class="md-header__button md-icon" for="__search" aria-label="Search">
+        <label class="md-header__button md-icon" for="__search">
           
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+          <span class="md-visually-hidden">Search</span>
         </label>
         <div class="md-search" data-md-component="search" role="dialog" aria-label="Search">
   <button type="button" class="md-search__button">
@@ -414,6 +416,33 @@
     
   
   Wiring a design
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../drawn-ledger/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  The required-drawn ledger
 
     
   </span>
@@ -784,6 +813,60 @@
   
   
     <li class="md-nav__item">
+      <a href="../settings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Settings
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../moving-to-0.22/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Moving to 0.22
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../moving-to-0.20/" class="md-nav__link">
         
   
@@ -954,6 +1037,33 @@
     
   
   Finding codes: validators, build and release
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../findings-release/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Finding codes: build, release and verify
 
     
   </span>
@@ -1763,20 +1873,12 @@
 </thead>
 <tbody>
 <tr>
-<td><a id="bar_symbol"></a>BAR_SYMBOL</td>
-<td>ERROR</td>
-<td>library load</td>
-<td>part author</td>
-<td>A <code>bar</code> function names a <code>symbol</code>; a bar is never drawn.</td>
-<td>Remove the function's <code>symbol</code> key.</td>
-</tr>
-<tr>
 <td><a id="board_without_pcb"></a>BOARD_WITHOUT_PCB</td>
 <td>WARNING</td>
 <td>library load</td>
 <td>part author</td>
 <td>A part with <code>category = "board"</code> has no <code>[pcb]</code> table.</td>
-<td>Add a <code>[pcb]</code> table with a <code>revision</code> string, or change <code>category</code> to the part's real category.</td>
+<td>A board has a <code>[pcb]</code> table with a string <code>revision</code>, or a <code>category</code> other than board. Write: revision = "A"</td>
 </tr>
 <tr>
 <td><a id="cable_pair_invalid"></a>CABLE_PAIR_INVALID</td>
@@ -1784,7 +1886,15 @@
 <td>library load</td>
 <td>part author</td>
 <td>A <code>[cable_product]</code> <code>pairs</code> entry breaks a pair rule: a core is out of range, in two pairs, or <code>SH</code>, or a <code>screen</code> is not a unique <code>SH</code> core.</td>
-<td>Give each <code>pairs</code> entry two integer <code>cores</code> in range, none <code>SH</code> and none in another pair, and a <code>screen</code> that is one unique <code>SH</code> core.</td>
+<td>Each <code>pairs</code> entry has two integer <code>cores</code> in range, neither <code>SH</code> nor in another pair, and a <code>screen</code> that is one unique <code>SH</code> core. Write: pairs = [{ cores = [1, 2], screen = 3 }]</td>
+</tr>
+<tr>
+<td><a id="cable_product_core_count"></a>CABLE_PRODUCT_CORE_COUNT</td>
+<td>ERROR</td>
+<td>library load</td>
+<td>part author</td>
+<td>A cable product's <code>core_count</code> differs from the number of its <code>core_colours</code>.</td>
+<td>Make <code>core_count</code> equal the number of <code>core_colours</code>. Write: core_colours = ["BN", "BU"]</td>
 </tr>
 <tr>
 <td><a id="cable_without_product"></a>CABLE_WITHOUT_PRODUCT</td>
@@ -1792,7 +1902,7 @@
 <td>library load</td>
 <td>part author</td>
 <td>A part with <code>category = "cable"</code> has no <code>[cable_product]</code> table, or a part with another category has one.</td>
-<td>Add a <code>[cable_product]</code> table to a cable part, or remove <code>[cable_product]</code> from a part whose <code>category</code> is not <code>cable</code>.</td>
+<td>A <code>category = "cable"</code> part has a <code>[cable_product]</code> table, and no other part does. Write: [cable_product]</td>
 </tr>
 <tr>
 <td><a id="changeover_link"></a>CHANGEOVER_LINK</td>
@@ -1800,7 +1910,7 @@
 <td>library load</td>
 <td>part author</td>
 <td>A <code>switched</code> link of a <code>contact_co</code> function joins two ports whose roles are not <code>common</code> with <code>break</code> or <code>make</code>.</td>
-<td>Make each <code>switched</code> link of the <code>contact_co</code> function join a <code>common</code> port to a <code>break</code> or <code>make</code> port.</td>
+<td>Each <code>switched</code> link of a <code>contact_co</code> joins its <code>common</code> port to a <code>break</code> or <code>make</code> port. Write: links = [{ a = "11", b = "12", kind = "switched" }]</td>
 </tr>
 <tr>
 <td><a id="changeover_role"></a>CHANGEOVER_ROLE</td>
@@ -1808,7 +1918,7 @@
 <td>library load</td>
 <td>part author</td>
 <td>A port of a <code>contact_co</code> function has a <code>role</code> other than <code>common</code>, <code>break</code> or <code>make</code>.</td>
-<td>Set that port's <code>role</code> to <code>common</code>, <code>break</code> or <code>make</code>.</td>
+<td>A <code>contact_co</code> port takes the role <code>common</code>, <code>break</code> or <code>make</code>. Write: role = "common"</td>
 </tr>
 <tr>
 <td><a id="changeover_symbol_port"></a>CHANGEOVER_SYMBOL_PORT</td>
@@ -1816,7 +1926,7 @@
 <td>library load</td>
 <td>part author</td>
 <td>A port of a <code>contact_co</code> function sets <code>symbol_port</code>.</td>
-<td>Remove <code>symbol_port</code> from the <code>contact_co</code> port; the drawing binds a changeover by its throw roles.</td>
+<td>A <code>contact_co</code> port takes no <code>symbol_port</code>, since its throw roles bind the drawing. Write: { name = "12", role = "break" }</td>
 </tr>
 <tr>
 <td><a id="class_code"></a>CLASS_CODE</td>
@@ -1824,7 +1934,7 @@
 <td>library load</td>
 <td>part author</td>
 <td><code>class_code</code> is not 1 to 3 uppercase letters, starts with A, I or O, or starts with D, L, V, Y or Z.</td>
-<td>Set <code>class_code</code> to 1 to 3 uppercase letters, first letter as in IEC 81346-2, such as <code>K</code> or <code>QA</code>.</td>
+<td>Use 1 to 3 uppercase letters, the first as in IEC 81346-2, such as <code>K</code> or <code>QA</code>. Write: class_code = "K"</td>
 </tr>
 <tr>
 <td><a id="connector_marking_reused"></a>CONNECTOR_MARKING_REUSED</td>
@@ -1832,7 +1942,7 @@
 <td>library load</td>
 <td>part author</td>
 <td>Two connector functions of one part print the same label, their <code>marking</code> or else their <code>name</code>.</td>
-<td>Give one connector function a different <code>marking</code> under <code>[function.connector]</code>, or a different <code>name</code>.</td>
+<td>Each connector prints its own label, its <code>marking</code> or else its <code>name</code>. Write: marking = "X2"</td>
 </tr>
 <tr>
 <td><a id="contact_without_switched_link"></a>CONTACT_WITHOUT_SWITCHED_LINK</td>
@@ -1840,7 +1950,7 @@
 <td>library load</td>
 <td>part author</td>
 <td>A <code>contact_no</code>, <code>contact_nc</code>, <code>contact_co</code> or <code>switch</code> function has no <code>switched</code> link in its <code>links</code>.</td>
-<td>Add a <code>links</code> entry with <code>kind = "switched"</code> joining its ports, or change the function's <code>kind</code>.</td>
+<td>A contact or switch function has a <code>switched</code> link joining two of its ports, or a different <code>kind</code>. Write: links = [{ a = "1", b = "2", kind = "switched" }]</td>
 </tr>
 <tr>
 <td><a id="energy_on_non_power"></a>ENERGY_ON_NON_POWER</td>
@@ -1848,7 +1958,7 @@
 <td>library load</td>
 <td>part author</td>
 <td>A function whose <code>kind</code> is not <code>supply</code> or <code>load</code> sets <code>energy</code>.</td>
-<td>Remove <code>energy</code> from the function, or change its <code>kind</code> to <code>supply</code> or <code>load</code>.</td>
+<td>Only a <code>supply</code> or <code>load</code> function takes <code>energy</code>. Write: kind = "load"</td>
 </tr>
 <tr>
 <td><a id="enum_value"></a>ENUM_VALUE</td>
@@ -1856,7 +1966,7 @@
 <td>library load</td>
 <td>part author</td>
 <td>A field typed as an enum holds a string that is no member of that enum.</td>
-<td>Set the field to one of the values the message lists, such as a <code>kind</code> or <code>role</code> value.</td>
+<td>The field takes one of the values the message lists, spelled as the contract gives them. Write: kind = "load"</td>
 </tr>
 <tr>
 <td><a id="facet_kind_mismatch"></a>FACET_KIND_MISMATCH</td>
@@ -1864,7 +1974,7 @@
 <td>library load</td>
 <td>part author</td>
 <td>A <code>[function.connector]</code> sits on a function whose <code>kind</code> is not <code>connector</code>, or a <code>[function.plc_channel]</code> on one whose <code>kind</code> is not <code>plc_channel</code>.</td>
-<td>Change the function's <code>kind</code> to match the sub-table, or move the sub-table to the right <code>[[function]]</code>.</td>
+<td>A <code>[function.connector]</code> needs <code>kind = "connector"</code>, and a <code>[function.plc_channel]</code> needs <code>kind = "plc_channel"</code>. Write: kind = "connector"</td>
 </tr>
 <tr>
 <td><a id="field_missing"></a>FIELD_MISSING</td>
@@ -1872,7 +1982,7 @@
 <td>library load</td>
 <td>part author</td>
 <td>A required key is absent: the file's <code>schema</code>, its <code>[part]</code> table, or a required field of a table.</td>
-<td>Add the <code>schema = 1</code> line, the <code>[part]</code> table, or the required field the message names.</td>
+<td>Each file needs <code>schema</code>, its <code>[part]</code> table and each required field, with values the contract allows. Write: schema = 2</td>
 </tr>
 <tr>
 <td><a id="field_type"></a>FIELD_TYPE</td>
@@ -1880,7 +1990,7 @@
 <td>library load</td>
 <td>part author</td>
 <td>A value has a TOML type the contract does not allow there, such as an integer for a quantity or a table where a list belongs.</td>
-<td>Write the value as the type the message names, such as a quoted string for a rating or an integer for <code>schema</code>.</td>
+<td>Write the value as the type the message names, a quoted string for a rating or an integer for <code>schema</code>. Write: schema = 2</td>
 </tr>
 <tr>
 <td><a id="field_unknown"></a>FIELD_UNKNOWN</td>
@@ -1888,7 +1998,7 @@
 <td>library load</td>
 <td>part author</td>
 <td>A table holds a key the part-file contract does not name for that table.</td>
-<td>Remove the key, or correct its spelling to a field the part-file contract names.</td>
+<td>A table takes only the keys the part-file contract names for it. Write: <contract key> = <same value></td>
 </tr>
 <tr>
 <td><a id="file_name"></a>FILE_NAME</td>
@@ -1896,7 +2006,7 @@
 <td>library load</td>
 <td>part author</td>
 <td>A part file's name has characters other than lowercase letters, digits, hyphens and underscores.</td>
-<td>Rename the file using only lowercase letters, digits, hyphens and underscores.</td>
+<td>A part file name uses only lowercase letters, digits, hyphens and underscores. Write: relay-2co-24vdc.toml</td>
 </tr>
 <tr>
 <td><a id="function_name_duplicate"></a>FUNCTION_NAME_DUPLICATE</td>
@@ -1904,15 +2014,15 @@
 <td>library load</td>
 <td>part author</td>
 <td>Two <code>[[function]]</code> entries of one part have the same <code>name</code>.</td>
-<td>Give one of the functions a different <code>name</code>.</td>
+<td>Each <code>[[function]]</code> has its own <code>name</code>. Write: name = "co_3"</td>
 </tr>
 <tr>
 <td><a id="function_without_ports"></a>FUNCTION_WITHOUT_PORTS</td>
 <td>ERROR</td>
 <td>library load</td>
 <td>part author</td>
-<td>A <code>[[function]]</code> other than a <code>bar</code> has an empty <code>ports</code> list.</td>
-<td>Add at least one entry to the function's <code>ports</code> array, or remove the function.</td>
+<td>A <code>[[function]]</code> has an empty <code>ports</code> list.</td>
+<td>A <code>[[function]]</code> lists at least one port in <code>ports</code>. Write: ports = [{ name = "1", role = "generic" }]</td>
 </tr>
 <tr>
 <td><a id="join_into_connector"></a>JOIN_INTO_CONNECTOR</td>
@@ -1920,7 +2030,7 @@
 <td>library load</td>
 <td>part author</td>
 <td>A header pin's <code>joins</code> names a port of a <code>connector</code> function.</td>
-<td>Point <code>joins</code> at a port of a non-connector function of the same part.</td>
+<td>A header pin <code>joins</code> a port of a non-connector function of the same part. Write: joins = "k1.A1"</td>
 </tr>
 <tr>
 <td><a id="join_port_twice"></a>JOIN_PORT_TWICE</td>
@@ -1928,7 +2038,7 @@
 <td>library load</td>
 <td>part author</td>
 <td>Two header pins of one part both <code>joins</code> the same function port.</td>
-<td>Remove the <code>joins</code> from one of the two header pins, or point it at a different port.</td>
+<td>Each function port is joined by at most one header pin. Write: joins = "k1.A2"</td>
 </tr>
 <tr>
 <td><a id="join_port_unknown"></a>JOIN_PORT_UNKNOWN</td>
@@ -1936,7 +2046,7 @@
 <td>library load</td>
 <td>part author</td>
 <td>A header pin's <code>joins</code> value does not name a port of a function in this part, or is not <code>&lt;function&gt;.&lt;port&gt;</code>.</td>
-<td>Set <code>joins</code> to <code>&lt;function&gt;.&lt;port&gt;</code> naming an existing port of another function of this part.</td>
+<td><code>joins</code> is <code>&lt;function&gt;.&lt;port&gt;</code>, naming a port of another function of this part. Write: joins = "k1.A1"</td>
 </tr>
 <tr>
 <td><a id="library_file_missing"></a>LIBRARY_FILE_MISSING</td>
@@ -1944,7 +2054,7 @@
 <td>library load</td>
 <td>part author</td>
 <td>The library root has no <code>library.toml</code> file.</td>
-<td>Add <code>library.toml</code> at the library package root with <code>schema</code>, <code>name</code> and <code>version</code>.</td>
+<td>The library root holds a <code>library.toml</code> with <code>schema</code>, <code>name</code> and <code>version</code>. Write: schema = 2</td>
 </tr>
 <tr>
 <td><a id="link_duplicate"></a>LINK_DUPLICATE</td>
@@ -1952,7 +2062,7 @@
 <td>library load</td>
 <td>part author</td>
 <td>Two <code>links</code> entries of one function join the same pair of ports, in either order.</td>
-<td>Remove the repeated <code>links</code> entry.</td>
+<td>Each pair of ports is linked once in a function, in either order. Write: links = [{ a = "11", b = "12", kind = "switched" }]</td>
 </tr>
 <tr>
 <td><a id="link_port_unknown"></a>LINK_PORT_UNKNOWN</td>
@@ -1960,7 +2070,7 @@
 <td>library load</td>
 <td>part author</td>
 <td>A <code>links</code> entry's <code>a</code> or <code>b</code> is not a <code>name</code> in the function's <code>ports</code>.</td>
-<td>Set <code>a</code> and <code>b</code> to names from the function's <code>ports</code>, or add the missing port.</td>
+<td>Each <code>a</code> and <code>b</code> names a port listed in <code>ports</code>. Write: a = "11"</td>
 </tr>
 <tr>
 <td><a id="link_self"></a>LINK_SELF</td>
@@ -1968,7 +2078,7 @@
 <td>library load</td>
 <td>part author</td>
 <td>A <code>links</code> entry has the same port as <code>a</code> and <code>b</code>.</td>
-<td>Set <code>b</code> to a different port from <code>a</code>.</td>
+<td><code>a</code> and <code>b</code> name two different ports. Write: b = "12"</td>
 </tr>
 <tr>
 <td><a id="part_duplicate"></a>PART_DUPLICATE</td>
@@ -1976,7 +2086,15 @@
 <td>library load</td>
 <td>part author</td>
 <td>Two part files declare the same <code>manufacturer</code> and <code>mpn</code> pair.</td>
-<td>Remove one of the files, or correct the <code>mpn</code> or <code>manufacturer</code> of the one declared in error.</td>
+<td>Each <code>manufacturer</code> and <code>mpn</code> pair is declared by one part file only. Write: mpn = "DEMO-RLY-2CO-24"</td>
+</tr>
+<tr>
+<td><a id="part_schema_old"></a>PART_SCHEMA_OLD</td>
+<td>ERROR</td>
+<td>library load</td>
+<td>part author</td>
+<td>A part file or <code>library.toml</code> is written in schema 1.</td>
+<td>Run the migrate_parts_022 script from the Fransys repository (piece MIGRATE-022-DROP) on the library folder; it rewrites the files to schema 2. Write: schema = 2</td>
 </tr>
 <tr>
 <td><a id="pincount"></a>PINCOUNT</td>
@@ -1984,7 +2102,7 @@
 <td>library load</td>
 <td>part author</td>
 <td>A <code>[function.connector]</code> has a <code>pincount</code> below 1.</td>
-<td>Set <code>pincount</code> to 1 or more.</td>
+<td>A connector <code>pincount</code> is an integer of 1 or more. Write: pincount = 2</td>
 </tr>
 <tr>
 <td><a id="plc_channel_duplicate"></a>PLC_CHANNEL_DUPLICATE</td>
@@ -1992,7 +2110,7 @@
 <td>library load</td>
 <td>part author</td>
 <td>Two <code>[function.plc_channel]</code> tables of one part have the same <code>channel</code> and <code>signal</code>.</td>
-<td>Give one of the channels a different <code>channel</code> number, or a different <code>signal</code>.</td>
+<td>Each <code>[function.plc_channel]</code> has its own <code>channel</code> and <code>signal</code>. Write: channel = 4</td>
 </tr>
 <tr>
 <td><a id="port_name_duplicate"></a>PORT_NAME_DUPLICATE</td>
@@ -2000,7 +2118,7 @@
 <td>library load</td>
 <td>part author</td>
 <td>Two ports of one function have the same <code>name</code>.</td>
-<td>Rename one of the ports so each port name in the function is unique.</td>
+<td>Each port of one function has its own <code>name</code>. Write: name = "A2"</td>
 </tr>
 <tr>
 <td><a id="port_name_shared"></a>PORT_NAME_SHARED</td>
@@ -2008,15 +2126,15 @@
 <td>library load</td>
 <td>part author</td>
 <td>Two functions of one part give a port the same name, and their printed designations would be the same.</td>
-<td>Rename the port on one of the two functions so the printed designations differ.</td>
+<td>Each port name is unique across the part, so the printed designations differ. Write: name = "A3"</td>
 </tr>
 <tr>
 <td><a id="power_loss_twice"></a>POWER_LOSS_TWICE</td>
 <td>ERROR</td>
 <td>library load</td>
 <td>part author</td>
-<td><code>power_loss_w</code> is set both in the part's <code>[rating]</code> and in a function's <code>[function.rating]</code>.</td>
-<td>Keep <code>power_loss_w</code> in one place: remove it from <code>[rating]</code> or from the <code>[function.rating]</code> it repeats.</td>
+<td><code>power_loss</code> is set both in the part's <code>[rating]</code> and in a function's <code>[function.rating]</code>.</td>
+<td><code>power_loss</code> is stated once, in <code>[rating]</code> or in one <code>[function.rating]</code>. Write: power_loss = { nom = "2.5 W" }</td>
 </tr>
 <tr>
 <td><a id="protection_link_kind"></a>PROTECTION_LINK_KIND</td>
@@ -2024,23 +2142,23 @@
 <td>library load</td>
 <td>part author</td>
 <td>A <code>switched</code> link sits on a <code>protection</code> function, or a through link's <code>kind</code> does not fit its protection <code>type</code>.</td>
-<td>Use <code>kind = "protective"</code> for fuse, mcb, motor_breaker and rcd, and <code>kind = "conductive"</code> for overload; never <code>switched</code>.</td>
+<td>A fuse, mcb, motor_breaker or rcd link is <code>protective</code>, an overload link is <code>conductive</code>, never <code>switched</code>. Write: kind = "protective"</td>
 </tr>
 <tr>
 <td><a id="protection_type_on_non_protection"></a>PROTECTION_TYPE_ON_NON_PROTECTION</td>
 <td>ERROR</td>
 <td>library load</td>
 <td>part author</td>
-<td>A function whose <code>kind</code> is not <code>protection</code> has a <code>[function.protection]</code> table with a <code>type</code>.</td>
-<td>Remove the <code>[function.protection]</code> table, or change the function's <code>kind</code> to <code>protection</code>.</td>
+<td>A function whose <code>kind</code> is not <code>protection</code> has a <code>[function.block]</code> table with a <code>type</code>.</td>
+<td>Only a <code>protection</code> function has a <code>[function.block]</code> table with a <code>type</code>. Write: kind = "protection"</td>
 </tr>
 <tr>
 <td><a id="protection_without_type"></a>PROTECTION_WITHOUT_TYPE</td>
 <td>WARNING</td>
 <td>library load</td>
 <td>part author</td>
-<td>A <code>protection</code> function has no <code>type</code> in its <code>[function.protection]</code> table.</td>
-<td>Add <code>type</code> to <code>[function.protection]</code>, one of fuse, mcb, motor_breaker, overload or rcd.</td>
+<td>A <code>protection</code> function has no <code>type</code> in its <code>[function.block]</code> table.</td>
+<td><code>[function.block]</code> needs a <code>type</code>: fuse, mcb, motor_breaker, overload or rcd. Write: type = "mcb"</td>
 </tr>
 <tr>
 <td><a id="rating_table_empty"></a>RATING_TABLE_EMPTY</td>
@@ -2048,15 +2166,15 @@
 <td>library load</td>
 <td>part author</td>
 <td>A <code>[rating]</code>, <code>[function.rating]</code> or <code>[function.operating]</code> table has no field.</td>
-<td>Add at least one value to the table, or delete the table.</td>
+<td>A rating table holds at least one value, or the table is deleted. Write: voltage = [{ nom = "24 V", at = ["DC"] }]</td>
 </tr>
 <tr>
 <td><a id="rating_value_invalid"></a>RATING_VALUE_INVALID</td>
 <td>ERROR</td>
 <td>library load</td>
 <td>part author</td>
-<td>A rating value is not a plain decimal string, is zero where a rating needs a positive value, or a breaking point list is malformed.</td>
-<td>Write each value as a quoted plain decimal such as "24", above zero in ratings, and each breaking point with <code>voltage_v</code> and <code>current_a</code>.</td>
+<td>A figure or quantity is not written as schema 2 asks: a quantity is a number, a space and a unit symbol, and a figure an inline table.</td>
+<td>Write each quantity as a string such as "24 V", above zero in a rating, and each figure as an inline table. Write: voltage = [{ nom = "24 V", at = ["DC"] }]</td>
 </tr>
 <tr>
 <td><a id="rest_disagrees_with_kind"></a>REST_DISAGREES_WITH_KIND</td>
@@ -2064,7 +2182,7 @@
 <td>library load</td>
 <td>part author</td>
 <td>A switched link's <code>rest</code> disagrees with its function's <code>kind</code>: <code>contact_no</code> is open at rest, <code>contact_nc</code> is closed.</td>
-<td>Set <code>rest</code> to match <code>kind</code>, <code>open</code> for <code>contact_no</code> and <code>closed</code> for <code>contact_nc</code>, or change <code>kind</code>.</td>
+<td><code>rest</code> is <code>open</code> for <code>contact_no</code> and <code>closed</code> for <code>contact_nc</code>, or change <code>kind</code>. Write: rest = "open"</td>
 </tr>
 <tr>
 <td><a id="rest_on_unswitched_link"></a>REST_ON_UNSWITCHED_LINK</td>
@@ -2072,7 +2190,7 @@
 <td>library load</td>
 <td>part author</td>
 <td>A link whose <code>kind</code> is not <code>switched</code> sets <code>rest</code>.</td>
-<td>Remove <code>rest</code> from the link, or change its <code>kind</code> to <code>switched</code>.</td>
+<td>Only a <code>switched</code> link takes <code>rest</code>. Write: kind = "switched"</td>
 </tr>
 <tr>
 <td><a id="schema_mixed"></a>SCHEMA_MIXED</td>
@@ -2080,15 +2198,15 @@
 <td>library load</td>
 <td>part author</td>
 <td>A part file's <code>schema</code> differs from the <code>schema</code> in its library's <code>library.toml</code>.</td>
-<td>Set the file's <code>schema</code> to the value <code>library.toml</code> names, or change <code>library.toml</code> and every file in one commit.</td>
+<td>The file's <code>schema</code> is the value <code>library.toml</code> names, or both change in one commit. Write: schema = 2</td>
 </tr>
 <tr>
 <td><a id="schema_unsupported"></a>SCHEMA_UNSUPPORTED</td>
 <td>ERROR</td>
 <td>library load</td>
 <td>part author</td>
-<td>A <code>schema</code> value is not in <code>SUPPORTED_SCHEMAS</code>, which today holds only 1.</td>
-<td>Set <code>schema = 1</code>, the only supported value today.</td>
+<td>A <code>schema</code> value is not in <code>SUPPORTED_SCHEMAS</code>, which today holds only 2.</td>
+<td>The <code>schema</code> is an integer in the supported set, only 2 today. Write: schema = 2</td>
 </tr>
 <tr>
 <td><a id="switched_link_without_rest"></a>SWITCHED_LINK_WITHOUT_REST</td>
@@ -2096,7 +2214,7 @@
 <td>library load</td>
 <td>part author</td>
 <td>A <code>switched</code> link of a <code>switch</code> or <code>generic</code> function sets no <code>rest</code>.</td>
-<td>Add <code>rest = "open"</code> or <code>rest = "closed"</code> to the link.</td>
+<td>A <code>switched</code> link of a <code>switch</code> or <code>generic</code> function states its <code>rest</code>. Write: rest = "open"</td>
 </tr>
 <tr>
 <td><a id="symbol_port_without_symbol"></a>SYMBOL_PORT_WITHOUT_SYMBOL</td>
@@ -2104,7 +2222,7 @@
 <td>library load</td>
 <td>part author</td>
 <td>A port sets <code>symbol_port</code>, but its function has no <code>symbol</code>.</td>
-<td>Add a <code>symbol</code> to the function, or remove <code>symbol_port</code> from the port.</td>
+<td>A port with <code>symbol_port</code> needs its function to have a <code>symbol</code>. Write: symbol = "operating-device"</td>
 </tr>
 <tr>
 <td><a id="symbol_rest_mismatch"></a>SYMBOL_REST_MISMATCH</td>
@@ -2112,7 +2230,7 @@
 <td>library load</td>
 <td>part author</td>
 <td>A function's <code>symbol</code> implies a rest state (<code>make-contact</code> open; <code>break-contact</code> and <code>emergency-stop</code> closed), and its switched links, stated or implied by its <code>kind</code>, are all at the other one.</td>
-<td>Change the <code>symbol</code>, or the <code>rest</code> of the switched links, so both name the same rest state.</td>
+<td>The symbol and the switched links agree on one rest state: make-contact is open, break-contact and emergency-stop are closed. Write: rest = "open"</td>
 </tr>
 <tr>
 <td><a id="symbol_slug"></a>SYMBOL_SLUG</td>
@@ -2120,7 +2238,7 @@
 <td>library load</td>
 <td>part author</td>
 <td>A function's <code>symbol</code> is not a lowercase, hyphenated slug.</td>
-<td>Rewrite <code>symbol</code> in lowercase letters and digits, joined by single hyphens, such as <code>change-over-contact</code>.</td>
+<td><code>symbol</code> is lowercase letters and digits joined by single hyphens, such as <code>change-over-contact</code>. Write: symbol = "change-over-contact"</td>
 </tr>
 <tr>
 <td><a id="symbol_type_mismatch"></a>SYMBOL_TYPE_MISMATCH</td>
@@ -2128,7 +2246,7 @@
 <td>library load</td>
 <td>part author</td>
 <td>A protection function's <code>symbol</code> is <code>fuse</code> or <code>circuit-breaker</code>, but its protection <code>type</code> is another one.</td>
-<td>Make <code>type</code> match the symbol: <code>fuse</code> for <code>fuse</code>, <code>mcb</code> for <code>circuit-breaker</code>, or change the <code>symbol</code>.</td>
+<td>A <code>fuse</code> symbol needs <code>type = "fuse"</code>, a <code>circuit-breaker</code> symbol needs <code>type = "mcb"</code>. Write: type = "fuse"</td>
 </tr>
 <tr>
 <td><a id="table_unknown"></a>TABLE_UNKNOWN</td>
@@ -2136,7 +2254,7 @@
 <td>library load</td>
 <td>part author</td>
 <td>The file has a top-level table that is neither <code>schema</code> nor a part-file table the contract names.</td>
-<td>Remove the table, or rename it to a table the part-file contract names.</td>
+<td>A top-level table is <code>schema</code> or a table the part-file contract names. Write: [part]</td>
 </tr>
 </tbody>
 </table>
@@ -2175,7 +2293,7 @@
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.20.0 documentation
+      Fransys 0.22.0 documentation
     </div>
   
   
@@ -2203,10 +2321,10 @@
       
         
         
-      <script id="__config" type="application/json">{"annotate":null,"base":"../..","features":["navigation.sections","search.highlight","content.code.copy"],"redirect":null,"search":"../../assets/javascripts/workers/search.c47bb847.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","clipboard.error":"Could not copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
+      <script id="__config" type="application/json">{"annotate":null,"base":"../..","features":["navigation.sections","search.highlight","content.code.copy"],"redirect":null,"search":"../../assets/javascripts/workers/search.719e0d91.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","clipboard.error":"Could not copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d31f0ffa.min.js"></script>
       
     
   </body>

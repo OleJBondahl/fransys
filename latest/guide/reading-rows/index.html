@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.20.0/guide/reading-rows/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.0/guide/reading-rows/">
       
       
       
@@ -22,7 +22,7 @@
       
       
       <link rel="icon" href="../../assets/fransys-icon.svg">
-      <meta name="generator" content="zensical-0.0.70">
+      <meta name="generator" content="zensical-0.0.74">
     
     
       
@@ -33,7 +33,7 @@
       
         
       
-      <link rel="stylesheet" href="../../assets/stylesheets/modern/main.e442bf79.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/modern/main.4ab2de0c.min.css">
       
         
           
@@ -114,9 +114,10 @@
   <img src="../../assets/fransys-wordmark-white.svg" alt="Fransys">
 
     </a>
-    <label class="md-header__button md-icon" for="__drawer" aria-label="Navigation">
+    <label class="md-header__button md-icon" for="__drawer">
       
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-menu" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
+      <span class="md-visually-hidden">Navigation</span>
     </label>
     <div class="md-header__title" data-md-component="header-title">
       <div class="md-header__ellipsis">
@@ -168,9 +169,10 @@
     
       
       
-        <label class="md-header__button md-icon" for="__search" aria-label="Search">
+        <label class="md-header__button md-icon" for="__search">
           
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+          <span class="md-visually-hidden">Search</span>
         </label>
         <div class="md-search" data-md-component="search" role="dialog" aria-label="Search">
   <button type="button" class="md-search__button">
@@ -414,6 +416,33 @@
     
   
   Wiring a design
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../drawn-ledger/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  The required-drawn ledger
 
     
   </span>
@@ -681,10 +710,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#column-and-label-constants" class="md-nav__link">
+  <a href="#column-accessors" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        Column and label constants
+        Column accessors
       </span>
     </span>
   </a>
@@ -875,6 +904,60 @@
   
   
     <li class="md-nav__item">
+      <a href="../settings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Settings
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../moving-to-0.22/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Moving to 0.22
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../moving-to-0.20/" class="md-nav__link">
         
   
@@ -1045,6 +1128,33 @@
     
   
   Finding codes: validators, build and release
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../findings-release/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Finding codes: build, release and verify
 
     
   </span>
@@ -1822,10 +1932,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#column-and-label-constants" class="md-nav__link">
+  <a href="#column-accessors" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        Column and label constants
+        Column accessors
       </span>
     </span>
   </a>
@@ -1887,29 +1997,21 @@
 
 
 <h1 id="reading-rows-columns-and-printed-texts">Reading: rows, columns and printed texts</h1>
-<p>This page covers <code>fr.derive</code>, the facade's read-only layer. It holds the column orders and labels of the list outputs and the row types they are built from. It also holds the row functions, and the texts and order keys every list shares. Use these to read a model yourself and get the same numbers, text and order the outputs print.</p>
-<h2 id="column-and-label-constants">Column and label constants</h2>
-<p>Each constant is a tuple or a dict of field names. The list outputs read them in order, so a column appears where its name appears here.</p>
+<p>This page covers <code>fr.derive</code>, the facade's read-only layer. It holds the column accessors of the list outputs and the row types they are built from. It also holds the row functions, and the texts and order keys every list shares. Use these to read a model yourself and get the same numbers, text and order the outputs print.</p>
+<h2 id="column-accessors">Column accessors</h2>
+<p>The columns of each list are the <code>[[lists.&lt;name&gt;.columns]]</code> tables of the settings, so a settings file can reorder or drop them. Each column has a row <code>field</code> and two <code>[words]</code> keys: <code>pdf</code>, the key of its PDF heading, and <code>csv</code>, the key of its CSV header. The lists are <code>terminal</code>, <code>plc</code>, <code>bom</code>, <code>wires</code>, <code>designations</code>, <code>connectors</code>, <code>cables</code>, <code>contents</code> and <code>cores</code>. Each function takes the model first.</p>
 <ul>
-<li><code>BOM_COLUMNS</code> is <code>('mpn', 'revision', 'manufacturer', 'description', 'count', 'designations')</code>. It orders the columns of the bill of materials list.</li>
-<li><code>CABLE_LIST_COLUMNS</code> is <code>('designation', 'mpn', 'description', 'core_count', 'gauge_mm2', 'length_mm', 'from_label', 'to_label', 'pairs')</code>. It orders the columns of the cable list. The two <code>*_label</code> columns are the far-end texts of the cable.</li>
-<li><code>CORE_LIST_COLUMNS</code> is <code>('cable', 'core', 'colour', 'pair', 'end_a', 'end_b', 'note')</code>. It orders the columns of the core list. <code>pair</code> is the core's pair word, <code>note</code> is <code>spare</code> for a spare core.</li>
-<li><code>DESIGNATION_COLUMNS</code> is <code>('designation', 'reference', 'description')</code>. It orders the columns of the designation list: the printed designation, the full reference and the description.</li>
-<li><code>CONNECTOR_COLUMNS</code> is <code>('designation', 'style', 'pincount', 'gender', 'mate_designation')</code>. It orders the connector part of the connector list. Each pin line repeats these fields.</li>
-<li><code>PIN_COLUMNS</code> is <code>('marking', 'net', 'mate_port_designation', 'ends')</code>. It orders the pin part of the connector list, after <code>CONNECTOR_COLUMNS</code>. One line per pin.</li>
-<li><code>CONNECTOR_LABELS</code> is <code>{'marking': 'Pin', 'mate_port_designation': 'Mate'}</code>. It gives the headings of those two columns in the connector table of a PDF.</li>
-<li><code>PLC_COLUMNS</code> is <code>('pin', 'channel_name', 'signal', 'signal_name', 'wired_to')</code>. It orders the PLC list, which has one row per pin. The field device is not printed in this list, although the row carries it.</li>
-<li><code>TERMINAL_COLUMNS</code> is <code>('designation', 'group', 'index', 'internal_ends', 'external_ends', 'jumper_group')</code>. It orders the terminal list of a strip.</li>
-<li><code>TERMINAL_LABELS</code> is <code>{'internal_ends': 'Side A', 'external_ends': 'Side B'}</code>. It gives the headings of the two far-end columns of a terminal list. The CSV file writes them in snake case, as <code>side_a</code> and <code>side_b</code>.</li>
-<li><code>WIRE_COLUMNS</code> is <code>('from_', 'to', 'colour', 'cross_section_mm2', 'label')</code>. It orders the wire list.</li>
-<li><code>WIRE_LABELS</code> is <code>{'from_': 'from'}</code>. It changes only the heading of the <code>from_</code> column, which the field name cannot hold, so the wire list prints <code>from</code>.</li>
+<li><code>export_form_of(model)</code> gives the <code>[export]</code> record of a build: the report kinds, the name signs, <code>data_dir</code> and the CSV delimiter, encoding, quoting and newline. <code>export_path(form, name)</code> is a file's path from <code>out_dir</code>, <code>export_bytes(form, name, text)</code> its bytes, and <code>csv_dialect(form)</code> the <code>csv</code> dialect of the CSV form.</li>
+<li><code>list_columns(model, name)</code> gives the row field names the list prints, in order. By default <code>bom</code> is <code>('mpn', 'revision', 'manufacturer', 'description', 'count', 'designations')</code>, <code>plc</code> is <code>('pin', 'channel_name', 'signal', 'signal_name', 'wired_to')</code> and <code>wires</code> is <code>('from_', 'to', 'colour', 'cross_section_mm2', 'label')</code>. <code>connectors</code> holds the connector fields, then the pin fields (<code>marking</code>, <code>net</code>, <code>mate_port_designation</code>, <code>ends</code>); a line repeats the connector fields on each pin.</li>
+<li><code>list_pdf_columns(model, name)</code> gives the columns the PDF prints, where they differ from the CSV: <code>terminal</code> leaves out <code>jumper_group</code>, <code>cables</code> leaves out <code>pairs</code>, and <code>connectors</code> prints the pin fields only. It raises for a list with no <code>pdf_columns</code>.</li>
+<li><code>list_pdf_heading(model, name, field)</code> gives the heading a PDF table prints for a column: the <code>[words]</code> text of its <code>pdf</code> key. It raises when the list has no such column.</li>
+<li><code>list_csv_header(model, name, field)</code> gives the header cell the CSV writes for a column: the <code>[words]</code> text of its <code>csv</code> key.</li>
 <li><code>CELL_SEPARATOR</code> is <code>'; '</code>. It joins the parts of one list cell that holds more than one value, such as several far ends of a terminal. Empty parts are left out.</li>
 </ul>
 <h2 id="row-types">Row types</h2>
 <p>Every row is a frozen record. A row is the one shape an output reads, so the layout and the renderers never look up the model for these facts.</p>
 <ul>
 <li><code>CableRow</code> is one core of one cable, both ends. Fields: <code>cable</code>, <code>cable_designation</code>, <code>index</code>, <code>colour</code>, <code>conductor</code>, <code>end_a</code>, <code>end_a_designation</code>, <code>end_b</code>, <code>end_b_designation</code>. The ends are ports; the designations are their printed text.</li>
-<li><code>ChannelScaling</code> is the scaling of a field device, projected so a formatter never looks it up. Fields: <code>unit</code>, <code>raw_min</code>, <code>raw_max</code> (integers), and <code>eng_min</code>, <code>eng_max</code> (decimals).</li>
 <li><code>ConnectorPin</code> is one pin of a board connector. Fields: <code>port</code>, <code>marking</code>, <code>net</code>, <code>mate_port</code>, <code>mate_port_designation</code>, <code>ends</code>. The <code>marking</code> is the port's name. The <code>net</code> is the declared net that lists the port, or <code>None</code> when none does. The mate's pin is the port of the same name on the mated function. The <code>ends</code> are the far ends of every conductor on the pin or on its mate, as a terminal row prints them; empty when there is none.</li>
 <li><code>ConnectorRow</code> is one connector of a board, as <code>connector_rows</code> lists it. Fields: <code>connector</code>, <code>designation</code>, <code>style</code>, <code>pincount</code>, <code>gender</code>, <code>mate</code>, <code>mate_designation</code>, <code>pins</code>. The <code>gender</code> is <code>None</code> when the part file states none. The <code>mate</code> is <code>None</code> when the connector is unmated. The <code>pins</code> is a tuple of <code>ConnectorPin</code>.</li>
 <li><code>DesignationRow</code> is one line of the designation list. Fields: <code>item</code>, <code>designation</code>, <code>reference</code>, <code>description</code>. The <code>designation</code> is the printed designation, and <code>reference</code> is the reference designation.</li>
@@ -1917,7 +2019,7 @@
 <li><code>HarnessEnd</code> is one item that a core lands on: a connector housing, a plain device, or a strip of terminals. Fields: <code>item</code>, <code>designation</code>, <code>connector</code>, <code>style</code>, <code>pincount</code>, <code>gender</code>, <code>mpn</code>, <code>pins</code>. The <code>designation</code> is the item's product designation for every end. The connector fields are <code>None</code> for a plain device or a strip. When a core lands on a terminal with a parent, <code>item</code> is the strip, and <code>pins</code> holds one <code>HarnessPin</code> per landed terminal.</li>
 <li><code>HarnessPin</code> is one port of a harness end that a core lands on. Fields: <code>port</code>, <code>marking</code>. The <code>marking</code> is the port's own name. For a terminal in a strip it is the bare <code>group:index</code> text, such as <code>L1:1</code>, without the strip's designation, because the end already prints the strip.</li>
 <li><code>PlcChannelRow</code> is one pin of a PLC channel. Fields: <code>channel</code>, <code>port</code>, <code>pin</code>, <code>channel_name</code>, <code>signal</code>, <code>wired_to</code>, <code>field_device</code>, <code>field_device_designation</code>, <code>signal_name</code>. The <code>pin</code> is the pin's printed designation (<code>-A2:5</code>) and <code>channel_name</code> the channel's own number. The <code>wired_to</code> joins the far ends of that pin's conductors with <code>CELL_SEPARATOR</code>, or is <code>None</code> when nothing is printed. The three field fields are <code>None</code> for a channel with no bound device.</li>
-<li><code>PlcRackChannel</code> is one channel of a rack module, bound or spare. Fields: <code>channel</code>, <code>number</code>, <code>signal</code>, <code>field_device</code>, <code>field_device_designation</code>, <code>signal_name</code>, <code>scaling</code>, <code>name_stem</code>. The field fields are <code>None</code> for a spare channel. The <code>scaling</code> is <code>None</code> when the bound device has no scaling facet. The <code>name_stem</code> is the text an output names the channel after: the field device and its signal name, else the module's designation and the channel's index in the module.</li>
+<li><code>PlcRackChannel</code> is one channel of a rack module, bound or spare. Fields: <code>channel</code>, <code>number</code>, <code>signal</code>, <code>field_device</code>, <code>field_device_designation</code>, <code>signal_name</code>, <code>name_stem</code>. The field fields are <code>None</code> for a spare channel. The <code>name_stem</code> is the text an output names the channel after: the field device and its signal name, else the module's designation and the channel's index in the module.</li>
 <li><code>PlcRackModule</code> is one PLC module of a rack, with its channels in order. Modules go by <code>position</code>, else by their own tag. Channels with one number go by the function names in the part file, in natural order. A block tag never changes the order of racks, modules or channels (model-0259). Fields: <code>module</code>, <code>designation</code>, <code>mpn</code>, <code>description</code>, <code>position</code>, <code>channels</code>. The <code>mpn</code> and <code>description</code> come from the part. The <code>position</code> is <code>None</code> when the author never gave one.</li>
 <li><code>PlcTable</code> is one table of the PLC list: the channels of one controller or module. Fields: <code>item</code>, <code>designation</code> and <code>rows</code>. <code>item</code> carries the channels, <code>designation</code> is its printed designation and the table's heading, and <code>rows</code> are its <code>PlcChannelRow</code>s in list order, never empty.</li>
 <li><code>BoardNetlist</code> is a board's parts, footprints and nets. Fields: <code>board</code>, <code>board_designation</code>, <code>parts</code>, <code>nets</code> and <code>without_footprint</code>. <code>without_footprint</code> lists the board's parts whose part carries no footprint; a netlist cannot place them, so <code>parts</code> omits them. An accessory prints its holder's designation, so it is never listed.</li>
@@ -1934,16 +2036,16 @@
 <li><code>board_netlist</code> takes a model and a board item. It returns the <code>BoardNetlist</code> of that board. Its parts are the footprinted descendants of the board. Its nets join the board's internal conductors and its declared nets, never <code>Mate</code>s. It raises a schema error when the board is not an item of the model, or when it or a listed item has no designation. Use it to check a board's connectivity yourself; the KiCad export builds the same netlist.</li>
 <li><code>plc_channel_rows</code> returns one <code>PlcChannelRow</code> per pin of each PLC channel function, in list order: channels as the PLC list orders them, the pins of a channel by name. Its <code>unit</code> keyword keeps one unit's channels. Its <code>context</code> keyword sets the location the list prints for, and it has no effect once <code>unit</code> is given.</li>
 <li><code>plc_tables</code> returns the rows of <code>plc_channel_rows</code>, grouped into one <code>PlcTable</code> per carrying item, in the same order. A controller's own channels form its table, the modules' tables follow in rack order, and items in no rack come last, one table each. An item with no channel has no table. Its <code>unit</code> and <code>context</code> keywords are those of <code>plc_channel_rows</code>. Use it when you print one table per controller or module, as the PLC list does.</li>
-<li><code>signal_word</code> returns the word a printed list uses for a <code>SignalType</code>: <code>DI</code>, <code>DO</code>, <code>AI (V)</code>, <code>AI (mA)</code>, <code>AO (V)</code>, <code>AO (mA)</code>, <code>RTD</code> or <code>DO (relay)</code>. The CSV keeps the enum value.</li>
-<li><code>plc_list_rows</code> takes <code>PlcChannelRow</code>s and returns one <code>PLC_COLUMNS</code> tuple per row for a printed list. The signal is its <code>signal_word</code>. A channel with no device and no wire prints <code>spare</code> as its signal name.</li>
+<li><code>signal_word(model, signal)</code> returns the word the model's <code>[words]</code> gives a <code>SignalType</code>; ours are <code>DI</code>, <code>DO</code>, <code>AI (V)</code>, <code>AI (mA)</code>, <code>AO (V)</code>, <code>AO (mA)</code>, <code>RTD</code> or <code>DO (relay)</code>, and <code>signal_*</code> keys of <code>[words]</code> change them. The CSV keeps the enum value.</li>
+<li><code>plc_list_rows(model, rows)</code> takes <code>PlcChannelRow</code>s and returns one tuple per row, in the <code>plc</code> columns' order, for a printed list. The signal is its <code>signal_word</code>. A channel with no device and no wire prints the <code>spare</code> word of <code>[words]</code> as its signal name.</li>
 <li>
 <p><code>terminal_rows</code> returns one <code>TerminalRow</code> per terminal of a strip. Terminals sort by the natural key of their group, then by index, then by id. A far end outside the given <code>context</code> prints with its location path in front, such as <code>+EXT-M1:U1</code>. A far end inside it prints short, such as <code>-B12:2/T1</code>.</p>
 </li>
 <li>
 <p><code>open_core_rows(model, cable, *, unit=None)</code> returns one <code>OpenCoreRow</code> per open core of <code>cable</code>, by core number. An open core is a spare or a screen earthed at one end. A row holds the core's <code>index</code>, <code>colour</code>, the port it lands on (<code>at</code>, <code>at_designation</code>; <code>None</code> and <code>""</code> for none) and <code>spare</code>, false for an <code>SH</code> screen. <code>HarnessCable.open_cores</code> holds the same rows.</p>
 </li>
-<li><code>core_list_rows(model, *, unit=None)</code> returns one <code>CoreListRow</code> per core of every cable <code>cable_list_rows</code> lists. The order is the cable list's, then core number. The wired cores and the open ones are in it, and the ends print as the cable drawing prints them. A spare parked on a pin has it as <code>end_a</code>. <code>pair</code> is <code>P1</code> or <code>screen P1</code>, <code>""</code> outside a pair, and <code>note</code> is <code>spare</code> for a spare core. <code>CORE_LIST_COLUMNS</code> names the fields, in print order. <code>cores.csv</code> is this list.</li>
-<li><code>contents_rows(cables)</code> reshapes a tuple of <code>HarnessCable</code>s into one <code>ContentsRow</code> per cable. The tuple comes from <code>harness_cables</code>, <code>top_level_cables</code> or <code>unit_cables</code>. The row keeps the cable's product facts and adds <code>ends</code>. That is every end's designation, in the cable's own order, joined by an en dash, and a blank end drops its dash. <code>CONTENTS_COLUMNS</code> names its columns, in print order.</li>
+<li><code>core_list_rows(model, *, unit=None)</code> returns one <code>CoreListRow</code> per core of every cable <code>cable_list_rows</code> lists. The order is the cable list's, then core number. The wired cores and the open ones are in it, and the ends print as the cable drawing prints them. A spare parked on a pin has it as <code>end_a</code>. <code>pair</code> is <code>P1</code> or <code>screen P1</code>, <code>""</code> outside a pair, and <code>note</code> is <code>spare</code> for a spare core. <code>list_columns(model, "cores")</code> names the fields, in print order. <code>cores.csv</code> is this list.</li>
+<li><code>contents_rows(cables)</code> reshapes a tuple of <code>HarnessCable</code>s into one <code>ContentsRow</code> per cable. The tuple comes from <code>harness_cables</code>, <code>top_level_cables</code> or <code>unit_cables</code>. The row keeps the cable's product facts and adds <code>ends</code>. That is every end's designation, in the cable's own order, joined by an en dash, and a blank end drops its dash. <code>list_columns(model, "contents")</code> names its columns, in print order.</li>
 </ul>
 <h2 id="printed-texts-and-order-keys">Printed texts and order keys</h2>
 <p>These functions give the one text and the one order that each list uses. A list that prints a label or sorts a column calls them rather than building its own.</p>
@@ -1989,7 +2091,7 @@
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.20.0 documentation
+      Fransys 0.22.0 documentation
     </div>
   
   
@@ -2017,10 +2119,10 @@
       
         
         
-      <script id="__config" type="application/json">{"annotate":null,"base":"../..","features":["navigation.sections","search.highlight","content.code.copy"],"redirect":null,"search":"../../assets/javascripts/workers/search.c47bb847.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","clipboard.error":"Could not copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
+      <script id="__config" type="application/json">{"annotate":null,"base":"../..","features":["navigation.sections","search.highlight","content.code.copy"],"redirect":null,"search":"../../assets/javascripts/workers/search.719e0d91.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","clipboard.error":"Could not copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d31f0ffa.min.js"></script>
       
     
   </body>

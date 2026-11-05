@@ -115,7 +115,7 @@ merges them into one library.
 ## Linting a library
 
 `fr.lint(*libraries)` checks one or more libraries against the part-file contract without
-building a model: every part file's fields, enum values, port and link shapes, and the
+building a model. It checks every part file's fields, enum values, port and link shapes, and the
 cross-file rules (duplicate parts, duplicate connector labels, and so on), collected as
 `Finding`s.
 
@@ -135,10 +135,10 @@ part file). Passing the project folder's name is the mistake to watch for. `fr.l
 ## When a library fails to load
 
 `fr.parts` runs the same checks `fr.lint` does before it builds anything, and refuses to load a
-library that fails them: it raises `fr.PartLibraryError`, whose `findings` attribute holds
+library that fails them. It raises `fr.PartLibraryError`, whose `findings` attribute holds
 every finding lint collected, warnings included, not only the errors that caused the raise. So
 does `fr.design`. A library with a genuine problem (a part file missing its required `[part]`
-table, in this made-up example) never reaches your model:
+table, in this made-up example) never reaches your model.
 
 ```python
 import sys
@@ -147,9 +147,9 @@ from pathlib import Path
 Path("bad_parts/parts").mkdir(parents=True)
 Path("bad_parts/__init__.py").write_text('"""A broken library, for this example only."""\n')
 Path("bad_parts/library.toml").write_text(
-    'schema = 1\nname = "bad-parts"\nversion = "0.0.1"\ndescription = "missing its [part] table"\n'
+    'schema = 2\nname = "bad-parts"\nversion = "0.0.1"\ndescription = "missing its [part] table"\n'
 )
-Path("bad_parts/parts/broken.toml").write_text("schema = 1\n")
+Path("bad_parts/parts/broken.toml").write_text("schema = 2\n")
 sys.path.insert(0, ".")
 
 try:
@@ -163,7 +163,7 @@ else:
 Catch `fr.PartLibraryError` around a load whose library you do not control yourself: one built
 by a separate team or vendor. An uncaught `PartLibraryError` already stops your script right
 there, with Python's own one-line traceback. Catching it instead gets you `e.findings`: every
-finding the failed load collected, not only the one that raised, so you can report the library's
+finding the failed load collected, not only the one that raised. You can then report the library's
 whole set of problems at once instead of fixing them one exception at a time.
 
 ## A contact a person or a machine operates
@@ -185,34 +185,36 @@ second = d.device(None, "DEMO-BLOCK-1NC-21", name="nc-2", parent=s1)
 ```
 
 Both blocks print `-S1`, and each draws the emergency-stop symbol.
-`d.layout.profile(actuator_each_contact=False)` draws one actuator per device: the first block,
-11-12, draws the symbol and the list of both contacts; the second draws its break contact with a
-reference to the first.
 
 ## Ratings from a datasheet
 
-A part's rating fields are read straight off its datasheet, but a battery or cell datasheet
+A part's rating fields are read straight off its datasheet. But a battery or cell datasheet
 often states its rating as a C-rate against the part's capacity rather than as a current: 1C
 on 310 Ah is 310 A. Do that multiplication yourself before writing the part file. A
-`[function.operating]` table's `max_current_dc_a` is a current, in amps, never a C-rate.
+`[function.operating]` table's `max_current` is a current figure in amps, never a C-rate.
 Fransys stores whatever number you give it and does not compute this conversion.
 
 A protective device's datasheet gives its breaking capacity as points: the voltage, the current it breaks there
-and, for DC, the circuit's time constant. A part states them in `[rating]` or `[function.rating]` as `breaking_ac` and
-`breaking_dc`. A source's datasheet gives its fault current and time constant in `[function.operating]`.
+and, for DC, the circuit's time constant. A part states them as the `breaking_capacity` list of a function's `[function.block]`.
+Each figure has `max` and the conditions it holds `at`, such as `["DC", "1000 V", "15 ms"]`. A figure with only `min` gives the
+lowest current a partial-range fuse breaks. A breaker (`type = "mcb"` or `"motor_breaker"`) states `icn`, `icu` and `ics`, each one
+figure, instead of the list. A source's datasheet gives its fault current and time constant in `[function.operating]`.
 
 ```toml
 # a DC fuse function
 [function.rating]
-voltage_dc_v = "1000"
-current_dc_a = "125"
-breaking_dc = [{ voltage_v = "1000", current_a = "15000", time_constant_ms = "15" }]
+voltage = [{ nom = "1000 V", at = ["DC"] }]
+current = [{ nom = "125 A", at = ["DC"] }]
+
+[function.block]
+type = "fuse"
+breaking_capacity = [{ max = "15000 A", at = ["DC", "1000 V", "15 ms"] }]
 
 # a battery function
 [function.operating]
-nominal_voltage_v = "51.2"
-fault_current_dc_a = "6000"
-fault_time_constant_ms = "2"
+voltage = [{ nom = "51.2 V", at = ["DC"] }]
+fault_current = [{ max = "6000 A", at = ["DC"] }]
+fault_time_constant = "2 ms"
 ```
 
 A replaceable part, such as a fuse link in its holder, is its own part file. It states a top-level
@@ -227,40 +229,21 @@ category = "protection"
 class_code = "F"
 
 [rating]
-voltage_dc_v = "1000"
-current_dc_a = "4"
+voltage = [{ nom = "1000 V", at = ["DC"] }]
+current = [{ nom = "4 A", at = ["DC"] }]
 ```
 
-`d.rating("DEMO-FUSE-LINK-4A-T")` reads that rating. Put the link in its holder with `parent=`, as `authoring.md`
-shows. A link with `min_breaking_current_a` is partial-range and bounds no current.
-
-```python
-import fransys as fr
-
-d = fr.design("demo_parts")
-rating = d.rating("DEMO-FUSE-LINK-4A-T")
-assert rating is not None and rating.current_dc_a == 4
-```
-
-## Reading a part's rating while authoring
-
-`d.rating(part, function)` and `d.operating(part, function)` read a rating or operating envelope
-from the catalogue. It is a lookup, not a build step. Either gives `None` where the part states nothing.
-
-```python
-import fransys as fr
-
-d = fr.design("demo_parts")
-part_rating = d.rating("DEMO-TBLK-2P-DUAL")
-terminal_rating = d.rating("DEMO-TBLK-2P-DUAL", "terminal")
-lamp_operating = d.operating("DEMO-LAMP-24", "lamp")
-```
+Put the link in its holder with `parent=`, as `authoring.md`
+shows. A link states a breaking minimum only in a part-level `[block]`: it takes none from its holder, and bounds no current.
 
 ## An accessory in its holder
 
-A part with no function, put in another device with `parent=`, is an accessory. A fuse link in its PCB
+A part with no function and no footprint, put in another device with `parent=`, is an accessory. A fuse link in its PCB
 holder is one: the link prints `F1` and has no number or row. An authored tag makes it an ordinary item.
 `parent=` also takes a terminal strip, for a jumper bar on a bridged run.
+
+An untagged device with `parent=` and `unused=True` is an accessory whatever its part holds, a function or a footprint.
+It prints its holder's designation and has no row or netlist line, and draws nothing. One BOM line counts the part's tagged and accessory uses.
 
 ```python
 import fransys as fr
@@ -274,4 +257,26 @@ bar = d.device(None, "DEMO-JUMPER-BAR-3P", name="bar", parent=x1)
 model = fr.build(d).model
 assert fr.derive.item_designation(model, link.id) == "F1"
 assert fr.derive.item_designation(model, bar.id) == "X1"
+```
+
+The BOM prints one line per part: count is its installed items, designations are the holders'. F1 is shown; with F2 alike, four bars give one line for the bar part, count 4, F1 F2; a name is unique, and the bars draw nothing.
+
+```python
+import fransys as fr
+
+d = fr.design("demo_parts")
+f1 = d.device("F1", "DEMO-FUSE-HOLDER-PCB")
+d.device(None, "DEMO-JUMPER-BAR-3P", name="f1_bar_a", parent=f1)
+d.device(None, "DEMO-JUMPER-BAR-3P", name="f1_bar_b", parent=f1)
+```
+
+## How many conductors a terminal point takes
+
+A terminal part states the conductors each point takes in a `[connection]` table, `conductors_per_clamp = 2`. An unstated count is 1.
+
+A point with more wires and cable cores than that is an ERROR, `TERMINAL_POINT_OVERFILLED`. Bridges do not count. Fix it with a part that takes more, such as `DEMO-TB-2.5-TWIN`, or bridge a second terminal to this one.
+
+```toml
+[connection]
+conductors_per_clamp = 2
 ```

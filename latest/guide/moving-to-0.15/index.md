@@ -7,11 +7,10 @@ A consumer script that used an old spelling changes as below. The version is rea
 
 | old | new | why |
 |---|---|---|
-| `text_height` in `layout.profile(...)`, an int in `G`, default 8 | `text_height_mm`, a Decimal in mm, default 1.8 | The text size is a capital height in mm (ISO 3098), not a count of grid units. |
-| `min_text_mm` in `layout.profile(...)` | `min_text_height_mm`, default 1.8 | It is the floor for `text_height_mm`, in the same unit. |
+| `text_height` in `layout.profile(...)`, an int in `G`, default 8 | `text_height_mm`, a Decimal in mm, default 1.8 | The text size is a capital height in mm (ISO 3098), not a count of grid units. Since 0.22 it is not a profile keyword and not a setting: the heights are the library's. |
+| `min_text_mm` in `layout.profile(...)` | `min_text_height_mm`, default 1.8 | It is the floor for `text_height_mm`, in the same unit. Since 0.22 it is gone: the heights are the library's and no floor is checked. |
 | `text_mm` and `min_text_mm` on a readability page row | `text_height_mm` and `min_text_height_mm` | The same two quantities under the new names. A unit row takes the smallest `text_height_mm`. |
 | `module_mm` scales symbols, gaps and text | `module_mm` sets the grid pitch only | Text and line widths are fixed in mm. Set the text size with `text_height_mm`. |
-| `TEXT_TOO_SMALL` reads `text_height` and `min_text_mm` | reads `text_height_mm` and `min_text_height_mm` | The finding compares the same two values under the new names. |
 
 ## New keyword
 

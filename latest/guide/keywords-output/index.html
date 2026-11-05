@@ -8,21 +8,21 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.20.0/guide/keywords-output/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.0/guide/keywords-output/">
       
       
       
         <link rel="prev" href="../keywords-handles/">
       
       
-        <link rel="next" href="../moving-to-0.20/">
+        <link rel="next" href="../settings/">
       
       
         
       
       
       <link rel="icon" href="../../assets/fransys-icon.svg">
-      <meta name="generator" content="zensical-0.0.70">
+      <meta name="generator" content="zensical-0.0.74">
     
     
       
@@ -33,7 +33,7 @@
       
         
       
-      <link rel="stylesheet" href="../../assets/stylesheets/modern/main.e442bf79.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/modern/main.4ab2de0c.min.css">
       
         
           
@@ -114,9 +114,10 @@
   <img src="../../assets/fransys-wordmark-white.svg" alt="Fransys">
 
     </a>
-    <label class="md-header__button md-icon" for="__drawer" aria-label="Navigation">
+    <label class="md-header__button md-icon" for="__drawer">
       
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-menu" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
+      <span class="md-visually-hidden">Navigation</span>
     </label>
     <div class="md-header__title" data-md-component="header-title">
       <div class="md-header__ellipsis">
@@ -168,9 +169,10 @@
     
       
       
-        <label class="md-header__button md-icon" for="__search" aria-label="Search">
+        <label class="md-header__button md-icon" for="__search">
           
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+          <span class="md-visually-hidden">Search</span>
         </label>
         <div class="md-search" data-md-component="search" role="dialog" aria-label="Search">
   <button type="button" class="md-search__button">
@@ -414,6 +416,33 @@
     
   
   Wiring a design
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../drawn-ledger/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  The required-drawn ledger
 
     
   </span>
@@ -860,6 +889,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#frsettings" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>fr.settings</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#frbuild" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -1006,6 +1046,60 @@
   
 </nav>
       
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../settings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Settings
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../moving-to-0.22/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Moving to 0.22
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -1188,6 +1282,33 @@
     
   
   Finding codes: validators, build and release
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../findings-release/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Finding codes: build, release and verify
 
     
   </span>
@@ -2009,6 +2130,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#frsettings" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>fr.settings</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#frbuild" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -2274,18 +2406,6 @@ The design calls are in <code>keywords-design.md</code>, the handle methods and 
 <td>Earlier revisions of the unit. Each entry is a mapping of the <code>d.revision</code> keywords <code>revision</code>, <code>date</code>, <code>text</code> and <code>created</code>.</td>
 <td><code>history=[{"revision": 1, "date": "2025-12-01", "text": "first", "created": "AB"}]</code></td>
 </tr>
-<tr>
-<td><a href="../parts/#class-codes"><code>class_code</code></a></td>
-<td><code>None</code></td>
-<td>One to three capital letters. A floating <code>d.add(fn, None, name=...)</code> numbers from this class. <code>None</code> gives no class, so a floating add raises.</td>
-<td><code>class_code="B"</code></td>
-</tr>
-<tr>
-<td><a href="../series/#colour-by-what-a-wire-carries"><code>wiring</code></a></td>
-<td><code>None</code></td>
-<td>Replaces wire colour and size rows inside this unit's body only. A unit never takes its parent's rows.</td>
-<td><code>wiring={fr.DC_SUPPLY: (BU, 1.5)}</code></td>
-</tr>
 </tbody>
 </table>
 <h2 id="frdocument"><code>fr.document</code></h2>
@@ -2319,18 +2439,6 @@ The design calls are in <code>keywords-design.md</code>, the handle methods and 
 <td><code>cover=Path("cover.md")</code></td>
 </tr>
 <tr>
-<td><a href="../documents/#presets-cover-and-notes-text"><code>add</code></a></td>
-<td><code>()</code></td>
-<td><code>fr.PageKind</code> values added to the preset's default pages.</td>
-<td><code>add=(fr.PageKind.OVERVIEW,)</code></td>
-</tr>
-<tr>
-<td><a href="../documents/#presets-cover-and-notes-text"><code>remove</code></a></td>
-<td><code>()</code></td>
-<td><code>fr.PageKind</code> values removed from the preset's pages.</td>
-<td><code>remove=(fr.PageKind.NOTES,)</code></td>
-</tr>
-<tr>
 <td><a href="../documents/#presets-cover-and-notes-text"><code>logo</code></a></td>
 <td><code>None</code></td>
 <td>An SVG file for the title block's logo cell. <code>None</code> leaves the cell empty. A missing file raises.</td>
@@ -2358,8 +2466,34 @@ The design calls are in <code>keywords-design.md</code>, the handle methods and 
 <tr>
 <td><code>result</code></td>
 <td>required</td>
-<td>The <code>BuildResult</code> to measure. The layout runs again on its model, and the call returns one row per schematic page and one per unit.</td>
+<td>The <code>BuildResult</code> to measure. It reads the drawings and the block-diagram layout (<code>BuildResult.diagrams</code>) the build kept and lays nothing out again; the call returns one row per drawn page, each naming its unit.</td>
 <td><code>fr.readability(result)</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="frsettings"><code>fr.settings</code></h2>
+<p><code>fr.settings(path=None, *, paper=None)</code> returns a <code>fr.Settings</code>: our defaults, the consumer's TOML file on top, and <code>paper</code> per drawing type (settings.md).</p>
+<table>
+<thead>
+<tr>
+<th>keyword</th>
+<th>default</th>
+<th>effect</th>
+<th>example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="../settings/#the-toml-file"><code>path</code></a></td>
+<td><code>None</code></td>
+<td>The consumer's TOML file, merged key by key over our defaults. <code>None</code> gives our defaults.</td>
+<td><code>fr.settings("fransys.toml")</code></td>
+</tr>
+<tr>
+<td><a href="../settings/#the-paper-per-drawing-type"><code>paper</code></a></td>
+<td><code>None</code></td>
+<td>A mapping of a <code>fr.PageKind</code> to a paper format's name, for that drawing type.</td>
+<td><code>fr.settings(paper={fr.PageKind.BLOCK_DIAGRAM: "A2"})</code></td>
 </tr>
 </tbody>
 </table>
@@ -2380,6 +2514,12 @@ The design calls are in <code>keywords-design.md</code>, the handle methods and 
 <td><code>None</code></td>
 <td>A release root. Numbering pins are seeded from the releases stored there, so a released unit keeps its numbers. <code>None</code> numbers freely.</td>
 <td><code>fr.build(d, releases=Path("releases"))</code></td>
+</tr>
+<tr>
+<td><a href="../settings/#frsettings"><code>settings</code></a></td>
+<td><code>None</code></td>
+<td>The <code>fr.Settings</code> from <code>fr.settings(...)</code>, used for this build. <code>None</code> uses our defaults.</td>
+<td><code>fr.build(d, settings=fr.settings(paper={fr.PageKind.BLOCK_DIAGRAM: "A2"}))</code></td>
 </tr>
 </tbody>
 </table>
@@ -2435,7 +2575,7 @@ The design calls are in <code>keywords-design.md</code>, the handle methods and 
 <tr>
 <td><code>result</code></td>
 <td>required</td>
-<td>The built model whose exports are written. Any ERROR in <code>fr.check(result)</code> raises <code>BuildErrors</code> and writes nothing.</td>
+<td>The built model whose exports are written. Any ERROR in <code>fr.check(result)</code> raises <code>BuildFailedError</code> and writes nothing.</td>
 <td><code>fr.write(result, Path("out"))</code></td>
 </tr>
 <tr>
@@ -2503,7 +2643,7 @@ The design calls are in <code>keywords-design.md</code>, the handle methods and 
 <tr>
 <td><code>result</code></td>
 <td>required</td>
-<td>The built model to release. Any ERROR raises <code>BuildErrors</code> and writes nothing.</td>
+<td>The built model to release. Any ERROR raises <code>BuildFailedError</code> and writes nothing.</td>
 <td><code>fr.release(result, Path("releases"))</code></td>
 </tr>
 <tr>
@@ -2615,7 +2755,7 @@ The design calls are in <code>keywords-design.md</code>, the handle methods and 
 <tr>
 <td><code>result</code></td>
 <td>required</td>
-<td>The rebuilt model. Re-cuts each stored listing the current rules print differently, in <code>listing.json</code> and the manifest only, children before parents. Returns the folders rewritten, <code>()</code> when none. A real change raises <code>BuildErrors</code> with <code>BASELINE_DIFFERS</code> and writes nothing.</td>
+<td>The rebuilt model. Re-cuts each stored listing the current rules print differently, in <code>listing.json</code> and the manifest only, children before parents. Returns the folders rewritten, <code>()</code> when none. A real change raises <code>BuildFailedError</code> with <code>BASELINE_DIFFERS</code> and writes nothing.</td>
 <td><code>fr.rebaseline(result, Path("releases"))</code></td>
 </tr>
 <tr>
@@ -2673,7 +2813,7 @@ The design calls are in <code>keywords-design.md</code>, the handle methods and 
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.20.0 documentation
+      Fransys 0.22.0 documentation
     </div>
   
   
@@ -2701,10 +2841,10 @@ The design calls are in <code>keywords-design.md</code>, the handle methods and 
       
         
         
-      <script id="__config" type="application/json">{"annotate":null,"base":"../..","features":["navigation.sections","search.highlight","content.code.copy"],"redirect":null,"search":"../../assets/javascripts/workers/search.c47bb847.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","clipboard.error":"Could not copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
+      <script id="__config" type="application/json">{"annotate":null,"base":"../..","features":["navigation.sections","search.highlight","content.code.copy"],"redirect":null,"search":"../../assets/javascripts/workers/search.719e0d91.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","clipboard.error":"Could not copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d31f0ffa.min.js"></script>
       
     
   </body>

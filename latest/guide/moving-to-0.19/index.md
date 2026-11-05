@@ -10,12 +10,10 @@ that names the new home. There is no alias: one task has one spelling.
 
 | old | new | why |
 |---|---|---|
-| `d.wire(a, b, wire=...)` | `d.detail.wire(a, b, wire=...)` | A path is `d.series`. A hand-wired hop is for a case no series writes (detail.md). |
-| `d.net(name, *pins, kind=)` | `d.detail.net(name, *pins, kind=)` | A named net that no wire joins is a detail case. |
+| `d.wire(a, b, wire=...)` | `d.series(a, b, wire=...)` | A path is `d.series`. A hand-wired hop is for a case no series writes (detail.md). |
 | `d.busbar(a, b)` | `d.detail.busbar(a, b)` | A busbar joins two fixed pins, a detail case. |
-| `d.rail_bond(a, b)` | `d.detail.rail_bond(a, b)` | A rail bond joins two fixed pins, a detail case. |
 
-A unit body's design moves the same way: `u.wire(...)` becomes `u.detail.wire(...)`. `d.earth`,
+A unit body's design moves the same way: `u.wire(...)` becomes `u.series(...)`. `d.earth`,
 `d.mate` and `W1.core` keep their spellings.
 
 ## Grouped contacts

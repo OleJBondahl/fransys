@@ -4,8 +4,8 @@ This page holds the `[function.connector]` table of the part-file contract. It i
 
 ### `[function.connector]`
 
-A sub-table of the `[[function]]` entry it describes (P1): the `connector` facet's subject is a
-`FunctionTemplate`, not the `Part`, so a part with more than one connector-style function names
+A sub-table of the `[[function]]` entry it describes (P1). The `connector` facet's subject is a
+`FunctionTemplate`, not the `Part`. So a part with more than one connector-style function names
 each one under its own `[[function]]` entry, never in one top-level table. Maps to the model's
 `connector` facet.
 
@@ -31,10 +31,10 @@ gender = "male"
 | `mates` | list of strings | Optional. The MPNs of the parts this connector mates with, e.g. `["DEMO-HSG-4M"]`. Data only: no check reads it yet (parts-0016) |
 
 Port names are unique within a function. Two functions of one part may share a port name unless
-they would print one designation (`PORT_NAME_SHARED`, parts-0005): a labelled connector function
+they would print one designation (`PORT_NAME_SHARED`, parts-0005). A labelled connector function
 (its `marking`, else its name; `marking = ""` is no label) prints `-<label>` behind the item's
-designation only when the part has two or more labelled connector functions, so `X1:1` and
-`X2:1` differ, and so do a clamp group's `1` and `X1:1`, while a clamp group and a lone labelled
+designation only when the part has two or more labelled connector functions. So `X1:1` and
+`X2:1` differ, and so do a clamp group's `1` and `X1:1`. A clamp group and a lone labelled
 connector sharing `1` collide. The lint and the build ask the same segment rule
 (`derive.connector_segments`). Two connectors of one part never print one label
 (`CONNECTOR_MARKING_REUSED`). A pin prints as `-<item>-<label>:<pin>`, e.g. `-A1-X1:1` (decisions parts-0003, model-0071).

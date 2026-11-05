@@ -15,7 +15,7 @@ from pathlib import Path
 # E3's PLC I/O list against the current columns. The pin carries its printed designation, with
 # the cabinet tag in `all/` (`-U1-DI1:DI1`); `wired_to` is the far end at the pin -- `all/` has no
 # list context, so it prints the located end (`-U1-...`, model DESIGN 12), while `cabinet/` prints
-# the unit-local form (`-J1:1`). The literals stay literals so the test does not check
+# the unit-local form (`-K1:A1`). The literals stay literals so the test does not check
 # `fr.derive.PLC_COLUMNS` or the row builders against themselves.
 EXPECTED_ALL_PLC_ROWS = [
     {
@@ -30,7 +30,7 @@ EXPECTED_ALL_PLC_ROWS = [
         "channel_name": "2",
         "signal": "di",
         "signal_name": "P1_RUNNING",
-        "wired_to": "-U1-Q11:14",
+        "wired_to": "-U1-Q11:84",
     },
     {
         "pin": "-U1-DI1:DI3",
@@ -44,21 +44,21 @@ EXPECTED_ALL_PLC_ROWS = [
         "channel_name": "4",
         "signal": "di",
         "signal_name": "P2_RUNNING",
-        "wired_to": "-U1-Q21:14",
+        "wired_to": "-U1-Q21:84",
     },
     {
         "pin": "-U1-DO1:DO1",
         "channel_name": "1",
         "signal": "do",
         "signal_name": "P1_RUN",
-        "wired_to": "-U1-J1:1",
+        "wired_to": "-U1-K1:A1",
     },
     {
         "pin": "-U1-DO1:DO2",
         "channel_name": "2",
         "signal": "do",
         "signal_name": "P2_RUN",
-        "wired_to": "-U1-J1:2",
+        "wired_to": "-U1-K2:A1",
     },
     {
         "pin": "-U1-DO1:DO3",
@@ -89,7 +89,7 @@ EXPECTED_CABINET_PLC_ROWS = [
         "channel_name": "2",
         "signal": "di",
         "signal_name": "P1_RUNNING",
-        "wired_to": "-Q11:14",
+        "wired_to": "-Q11:84",
     },
     {
         "pin": "-DI1:DI3",
@@ -103,21 +103,21 @@ EXPECTED_CABINET_PLC_ROWS = [
         "channel_name": "4",
         "signal": "di",
         "signal_name": "P2_RUNNING",
-        "wired_to": "-Q21:14",
+        "wired_to": "-Q21:84",
     },
     {
         "pin": "-DO1:DO1",
         "channel_name": "1",
         "signal": "do",
         "signal_name": "P1_RUN",
-        "wired_to": "-J1:1",
+        "wired_to": "-K1:A1",
     },
     {
         "pin": "-DO1:DO2",
         "channel_name": "2",
         "signal": "do",
         "signal_name": "P2_RUN",
-        "wired_to": "-J1:2",
+        "wired_to": "-K2:A1",
     },
     {
         "pin": "-DO1:DO3",
@@ -145,7 +145,7 @@ def _read_plc_rows(path: Path) -> list[dict[str, str]]:
 
 def test_all_plc_csv_matches_io_list(built: tuple) -> None:
     _result, out_dir, _intermediates = built
-    path = out_dir / "all" / "data" / "EX-1-v1.3-plc.csv"
+    path = out_dir / "all" / "data" / "EX-1-v1.6-plc.csv"
     rows = _read_plc_rows(path)
     with path.open(newline="", encoding="utf-8") as f:
         header = next(csv.reader(f))
@@ -156,7 +156,7 @@ def test_all_plc_csv_matches_io_list(built: tuple) -> None:
 
 def test_cabinet_plc_csv_matches_io_list(built: tuple) -> None:
     _result, out_dir, _intermediates = built
-    path = out_dir / "cabinet" / "data" / "pump-cabinet-v1.7-plc.csv"
+    path = out_dir / "cabinet" / "data" / "pump-cabinet-v1.10-plc.csv"
     rows = _read_plc_rows(path)
     with path.open(newline="", encoding="utf-8") as f:
         header = next(csv.reader(f))
@@ -165,21 +165,21 @@ def test_cabinet_plc_csv_matches_io_list(built: tuple) -> None:
     assert rows == EXPECTED_CABINET_PLC_ROWS
 
 
-def test_cabinet_do1_1_wired_to_reads_j1_1(built: tuple) -> None:
-    """Acceptance 5: pin `-DO1:DO1` (channel 1) reads `-J1:1` in `cabinet/`, not the relay `-U2-K1`."""
+def test_cabinet_do1_1_wired_to_reads_k1_a1(built: tuple) -> None:
+    """Acceptance 5: pin `-DO1:DO1` (channel 1) reads the relay coil `-K1:A1` in `cabinet/`."""
     _result, out_dir, _intermediates = built
-    rows = _read_plc_rows(out_dir / "cabinet" / "data" / "pump-cabinet-v1.7-plc.csv")
+    rows = _read_plc_rows(out_dir / "cabinet" / "data" / "pump-cabinet-v1.10-plc.csv")
     row = next(r for r in rows if r["pin"] == "-DO1:DO1")
     assert row["channel_name"] == "1", row
-    assert row["wired_to"] == "-J1:1", row
+    assert row["wired_to"] == "-K1:A1", row
 
 
-def test_all_do1_1_wired_to_reads_c1_j1_1(built: tuple) -> None:
+def test_all_do1_1_wired_to_reads_u1_k1_a1(built: tuple) -> None:
     """Acceptance 5: `all/` has no list context, so the located end prints its full path
-    (model DESIGN 12), `-U1-J1:1`, as `all/wires.csv` does.
+    (model DESIGN 12), `-U1-K1:A1`, as `all/wires.csv` does.
     """
     _result, out_dir, _intermediates = built
-    rows = _read_plc_rows(out_dir / "all" / "data" / "EX-1-v1.3-plc.csv")
+    rows = _read_plc_rows(out_dir / "all" / "data" / "EX-1-v1.6-plc.csv")
     row = next(r for r in rows if r["pin"] == "-U1-DO1:DO1")
     assert row["channel_name"] == "1", row
-    assert row["wired_to"] == "-U1-J1:1", row
+    assert row["wired_to"] == "-U1-K1:A1", row

@@ -1,4 +1,4 @@
-schema = 1
+schema = 2
 
 # Siemens datasheet https://apim.industry.siemens.cloud/ted/datasheet?format=pdf&mlfbs=3NW7033
 # (dated 9/11/2026): dimension drawing + circuit diagram (designator "-F") print plain numerals,
@@ -44,5 +44,5 @@ links = [{ a = "5", b = "6", kind = "conductive" }]
 
 # Ratings: 690 V AC (datasheet), 32 A.
 [rating]
-voltage_ac_v = "690"
-current_ac_a = "32"
+voltage = [{ nom = "690 V", at = ["AC"] }]
+current = [{ nom = "32 A", at = ["AC"] }]

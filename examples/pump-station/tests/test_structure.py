@@ -5,10 +5,9 @@ Three things this design decided and nothing else pins down:
 - Every item outside the cabinet is at the one location `+EXT` (owner ruling 2026-09-24). No
   location `FLD`, `DB` or `NET` exists, and an item added outside the cabinet at any other
   location fails the first test.
-- The cabinet is the unit `pump-cabinet` revision `1.7`, with its seven revisions in order; the
-  relay board is a unit nested in it, and the cabinet's parts list shows the board as one line
-  (its own relays belong to the board's list).
-- the three `fr.write` calls produce exactly the three folders `cabinet/`, `board/` and `all/`, each with
+- The cabinet is the unit `pump-cabinet` revision `1.10`, with its ten revisions in order, and the
+  only unit of the design.
+- the two `fr.write` calls produce exactly the two folders `cabinet/` and `all/`, each with
   its own set of files, and no file directly in the root of `out/`.
 """
 
@@ -26,54 +25,41 @@ placements = fr.derive.placements
 units = fr.derive.units
 
 # Items placed directly at +EXT: the upstream strip, both motors, the Ethernet switch, and
-# every cable that runs from the cabinet to something outside it: `-W1`, `-W11`, `-W21` and the
-# `-W3` harness with its two plugs and its cable, which prints as `-W3` (ruling 2026-09-24, R129).
-EXT_ITEMS = {"X0", "M1", "M2", "W1", "W11", "W21", "K1", "W3", "W3-J1", "W3-J2"}
+# every cable that runs from the cabinet to something outside it: `-W1`, `-W11`, `-W21` and `-W3`.
+EXT_ITEMS = {"X0", "M1", "M2", "W1", "W11", "W21", "K1", "W3"}
 
 CABINET_FILES = {
-    "data/pump-cabinet-v1.7-bom.csv",
-    "data/pump-cabinet-v1.7-cables.csv",
-    "data/pump-cabinet-v1.7-cores.csv",
-    "pump-cabinet-v1.7.pdf",
-    "data/pump-cabinet-v1.7-designations.csv",
-    "data/pump-cabinet-v1.7-plc.csv",
-    "data/pump-cabinet-v1.7-terminals-X01.csv",
-    "data/pump-cabinet-v1.7-terminals-X1.csv",
-    "data/pump-cabinet-v1.7-terminals-X2.csv",
-    "data/pump-cabinet-v1.7-terminals-X3.csv",
-    "data/pump-cabinet-v1.7-wago-U1.xml",
-    "data/pump-cabinet-v1.7-wires.csv",
-}
-BOARD_FILES = {
-    "data/relay-interface-board-v1.4-bom.csv",
-    "data/relay-interface-board-v1.4-cables.csv",
-    "data/relay-interface-board-v1.4-cores.csv",
-    "data/relay-interface-board-v1.4-connectors.csv",
-    "data/relay-interface-board-v1.4-designations.csv",
-    "data/relay-interface-board-v1.4-plc.csv",
-    "relay-interface-board-v1.4.pdf",
-    "data/relay-interface-board-v1.4-wires.csv",
+    "data/pump-cabinet-v1.10-bom.csv",
+    "data/pump-cabinet-v1.10-cables.csv",
+    "data/pump-cabinet-v1.10-cores.csv",
+    "pump-cabinet-v1.10.pdf",
+    "data/pump-cabinet-v1.10-designations.csv",
+    "data/pump-cabinet-v1.10-plc.csv",
+    "data/pump-cabinet-v1.10-terminals-X4.csv",
+    "data/pump-cabinet-v1.10-terminals-X1.csv",
+    "data/pump-cabinet-v1.10-terminals-X2.csv",
+    "data/pump-cabinet-v1.10-terminals-X3.csv",
+    "data/pump-cabinet-v1.10-wago-U1.xml",
+    "data/pump-cabinet-v1.10-wires.csv",
 }
 ALL_FILES = {
-    "data/EX-1-v1.3-bom.csv",
-    "pump-cabinet-v1.7.pdf",
-    "data/EX-1-v1.3-cables.csv",
-    "data/EX-1-v1.3-cores.csv",
-    "data/EX-1-v1.3-connectors-PLC-U1-U2.csv",
-    "data/EX-1-v1.3-designations.csv",
-    "EX-1-v1.3-overview.html",
-    "data/EX-1-v1.3-plc.csv",
-    "relay-interface-board-v1.4.pdf",
-    "EX-1-v1.3.pdf",
-    "data/EX-1-v1.3-terminals-U1-X01.csv",
-    "data/EX-1-v1.3-terminals-U1-X1.csv",
-    "data/EX-1-v1.3-terminals-U1-X2.csv",
-    "data/EX-1-v1.3-terminals-U1-X3.csv",
-    "data/EX-1-v1.3-terminals-EXT-X0.csv",
-    "data/EX-1-v1.3-wago-PLC-U1-U1.xml",
-    "data/EX-1-v1.3-wires.csv",
+    "data/EX-1-v1.6-bom.csv",
+    "pump-cabinet-v1.10.pdf",
+    "data/EX-1-v1.6-cables.csv",
+    "data/EX-1-v1.6-cores.csv",
+    "data/EX-1-v1.6-designations.csv",
+    "EX-1-v1.6-overview.html",
+    "data/EX-1-v1.6-plc.csv",
+    "EX-1-v1.6.pdf",
+    "data/EX-1-v1.6-terminals-U1-X4.csv",
+    "data/EX-1-v1.6-terminals-U1-X1.csv",
+    "data/EX-1-v1.6-terminals-U1-X2.csv",
+    "data/EX-1-v1.6-terminals-U1-X3.csv",
+    "data/EX-1-v1.6-terminals-EXT-X0.csv",
+    "data/EX-1-v1.6-wago-PLC-U1-U1.xml",
+    "data/EX-1-v1.6-wires.csv",
 }
-EXPECTED_FILES = {"cabinet": CABINET_FILES, "board": BOARD_FILES, "all": ALL_FILES}
+EXPECTED_FILES = {"cabinet": CABINET_FILES, "all": ALL_FILES}
 
 
 def test_every_item_outside_the_cabinet_is_at_ext(built: tuple[fr.BuildResult, Path, Path]) -> None:
@@ -119,30 +105,23 @@ def test_every_item_outside_the_cabinet_is_at_ext(built: tuple[fr.BuildResult, P
     assert not outside_ext, f"items with no unit and not at +EXT: {sorted(outside_ext)}"
 
 
-def test_cabinet_is_unit_pump_cabinet_rev_1_7_with_all_revisions(
+def test_cabinet_is_unit_pump_cabinet_rev_1_10_with_all_revisions(
     built: tuple[fr.BuildResult, Path, Path],
 ) -> None:
-    """`pump-cabinet` rev `1.7` has revisions `1` to `7`, oldest first; the board is its child.
+    """`pump-cabinet` rev `1.10` has revisions `1` to `10`, oldest first, and is the only unit.
 
-    The cabinet's `bom.csv` lists the board as one unit line (its number `SKX-RIB-2` in `mpn`,
-    its title in `description`) and none of the board's own parts.
+    The cabinet's `bom.csv` lists the two interface relays and no board part.
     """
     result, out_dir, _ = built
     model = result.model
     by_release_name = {
         fr.derive.unit_release(model, unit.id).name: unit for unit in units(model).values()
     }
-    assert set(by_release_name) == {"pump-cabinet", "relay-interface-board"}, sorted(
-        by_release_name
-    )
+    assert set(by_release_name) == {"pump-cabinet"}, sorted(by_release_name)
     cabinet = by_release_name["pump-cabinet"]
-    board = by_release_name["relay-interface-board"]
     cabinet_release = fr.derive.unit_release(model, cabinet.id)
-    board_release = fr.derive.unit_release(model, board.id)
-    assert cabinet_release.revision == 7, f"cabinet revision is {cabinet_release.revision!r}"
+    assert cabinet_release.revision == 10, f"cabinet revision is {cabinet_release.revision!r}"
     assert cabinet.parent is None, "the cabinet unit must be a top-level unit"
-    assert board_release.revision == 4, f"board revision is {board_release.revision!r}"
-    assert board.parent == cabinet.id, "the relay board must be nested in the cabinet unit"
 
     history = fr.derive.revision_history(model, cabinet.release)
     assert history, "the cabinet unit has no revision history"
@@ -163,35 +142,42 @@ def test_cabinet_is_unit_pump_cabinet_rev_1_7_with_all_revisions(
             "SK",
         ),
         (7, "2026-10-16", "Re-cut under fransys 0.19.9, drawings redrawn, no design change", "SK"),
+        (
+            8,
+            "2026-10-25",
+            "Pump contact blocks LADN22: the running feedback leaves on the block's second make contact, 83-84 (R780)",
+            "SK",
+        ),
+        (
+            9,
+            "2026-10-26",
+            "Terminal strip X01 is X4 and breaker F01 is F1: a tag takes no leading zero (R1114)",
+            "SK",
+        ),
+        (
+            10,
+            "2026-10-28",
+            "No mate, board unit or harness line: the interface relays are wired in the cabinet, and the Ethernet link is a cable (R1216, R1253)",
+            "SK",
+        ),
     ]
 
-    with (out_dir / "cabinet" / "data" / "pump-cabinet-v1.7-bom.csv").open(
+    with (out_dir / "cabinet" / "data" / "pump-cabinet-v1.10-bom.csv").open(
         newline="", encoding="utf-8"
     ) as handle:
         rows = list(csv.DictReader(handle))
     assert rows, "the cabinet's bom.csv has no line"
-    unit_lines = [row for row in rows if row["mpn"] == "SKX-RIB-2"]
-    assert unit_lines == [
-        {
-            "mpn": "SKX-RIB-2",
-            "revision": "1.4",
-            "manufacturer": "",
-            "description": "Relay interface board",
-            "count": "1",
-            "designations": "-U2",
-        }
-    ], f"the cabinet's bom.csv must list the board as one unit line, got {unit_lines}"
-    board_parts = {"40.61.9.024.1000"}  # the board's relay
-    stray = [
-        row["mpn"] for row in rows if row["mpn"] in board_parts or "U2-" in row["designations"]
-    ]
-    assert not stray, f"the cabinet's bom.csv lists the board's own parts: {stray}"
+    relays = [row for row in rows if row["mpn"] == "40.61.9.024.1000"]
+    assert [(row["count"], row["designations"]) for row in relays] == [("2", "-K1; -K2")], relays
+    assert not [row for row in rows if row["mpn"] == "SKX-RIB-2"], (
+        "the board is no longer a part of the design"
+    )
 
 
-def test_out_holds_exactly_cabinet_board_and_all(
+def test_out_holds_exactly_cabinet_and_all(
     built: tuple[fr.BuildResult, Path, Path],
 ) -> None:
-    """`out/` has the three folders and no file in its root; each folder has exactly its files."""
+    """`out/` has the two folders and no file in its root; each folder has exactly its files."""
     _, out_dir, _ = built
     entries = list(out_dir.iterdir())
     assert entries, "the out folder is empty"

@@ -1,4 +1,4 @@
-schema = 1
+schema = 2
 
 # WAGO TOPJOB S push-in terminal blocks carry no printed per-clamp marking on the terminal
 # body itself (a clip-in WMB marking strip is a separate accessory); ports are named
@@ -21,7 +21,9 @@ ports = [
 ]
 links = [{ a = "internal", b = "external", kind = "conductive" }]
 
-# Ratings from the part description (WAGO catalogue): 800 V, 24 A.
+# Ratings: WAGO data sheet 2002-1201 of 14.12.2021 (https://www.wago.com/2002-1201), p.2, row
+# "Nominal voltage (III/3)" 800 V. The data sheet gives no kind, so the figure is written for both
+# kinds (docs/decisions/0001-unlabelled-rating-both-kinds.md). Rated current: 24 A.
 [rating]
-voltage_ac_v = "800"
-current_ac_a = "24"
+voltage = [{ nom = "800 V", at = ["AC"] }, { nom = "800 V", at = ["DC"] }]
+current = [{ nom = "24 A", at = ["AC"] }]

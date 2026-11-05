@@ -1,4 +1,4 @@
-schema = 1
+schema = 2
 
 # Siemens datasheet https://apim.industry.siemens.cloud/ted/datasheet?format=pdf&mlfbs=3SU1102-6AA40-1AA0&language=en&caller=SIOS
 # (4 pages, dated 9/19/2026 in its footer). Page 1 title: "indicator light, 22 mm, round, plastic,
@@ -34,5 +34,4 @@ ports = [
 ]
 
 [function.rating]
-voltage_ac_v = "24"
-voltage_dc_v = "24"
+voltage = [{ nom = "24 V", at = ["AC"] }, { nom = "24 V", at = ["DC"] }]

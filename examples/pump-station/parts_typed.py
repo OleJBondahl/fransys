@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, ClassVar, Literal, Never, override
 from fransys import Pin, Throw, TypedDevice, TypedFn
 
 SOURCES = ("example_parts",)
-LIBRARY_DIGEST = "e05ea95aef8c24af118e2ac3ce67596204db39910ea01ee546c82cf9c0e6e2b8"
+LIBRARY_DIGEST = "fcf18720e570077d91a792c479aa526b5ccd4a8e528eaf878314fe6343569773"
 
 
 class P_1085039__port_1(TypedFn):
@@ -570,7 +570,7 @@ class P_750_8212(TypedDevice[Literal["field", "system", "x1", "x2"], "P_750_8212
         def __getitem__(self, m: Literal["+", "-", "0V", "24 V"]) -> Pin: ...
 
 
-class LADN11__nc(TypedFn):
+class LADN22__nc(TypedFn):
     P_61_NC: Pin
     P_62: Pin
     if TYPE_CHECKING:
@@ -579,7 +579,16 @@ class LADN11__nc(TypedFn):
         def __getitem__(self, m: Literal["61/NC", "62", 62]) -> Pin: ...
 
 
-class LADN11__no(TypedFn):
+class LADN22__nc_2(TypedFn):
+    P_71_NC: Pin
+    P_72: Pin
+    if TYPE_CHECKING:
+
+        @override
+        def __getitem__(self, m: Literal["71/NC", "72", 72]) -> Pin: ...
+
+
+class LADN22__no(TypedFn):
     P_53_NO: Pin
     P_54: Pin
     if TYPE_CHECKING:
@@ -588,18 +597,36 @@ class LADN11__no(TypedFn):
         def __getitem__(self, m: Literal["53/NO", "54", 54]) -> Pin: ...
 
 
-class LADN11(TypedDevice[Literal["nc", "no"], "LADN11"]):
-    mpn: ClassVar[str] = "LADN11"
-    nc: LADN11__nc
-    no: LADN11__no
-    P_61_NC: Pin
-    P_62: Pin
-    P_53_NO: Pin
-    P_54: Pin
+class LADN22__no_2(TypedFn):
+    P_83_NO: Pin
+    P_84: Pin
     if TYPE_CHECKING:
 
         @override
-        def __getitem__(self, m: Literal["61/NC", "62", 62, "53/NO", "54", 54]) -> Pin: ...
+        def __getitem__(self, m: Literal["83/NO", "84", 84]) -> Pin: ...
+
+
+class LADN22(TypedDevice[Literal["nc", "nc_2", "no", "no_2"], "LADN22"]):
+    mpn: ClassVar[str] = "LADN22"
+    nc: LADN22__nc
+    nc_2: LADN22__nc_2
+    no: LADN22__no
+    no_2: LADN22__no_2
+    P_61_NC: Pin
+    P_62: Pin
+    P_71_NC: Pin
+    P_72: Pin
+    P_53_NO: Pin
+    P_54: Pin
+    P_83_NO: Pin
+    P_84: Pin
+    if TYPE_CHECKING:
+
+        @override
+        def __getitem__(
+            self,
+            m: Literal["61/NC", "62", 62, "71/NC", "72", 72, "53/NO", "54", 54, "83/NO", "84", 84],
+        ) -> Pin: ...
 
 
 class LC1D09BD__aux(TypedFn):

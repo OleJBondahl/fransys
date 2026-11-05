@@ -1,4 +1,4 @@
-schema = 1
+schema = 2
 
 # Schneider Electric TeSys D contactor LC1D09BD. Datasheet (read in full; page 7 "Connections and
 # Schema" read as an image): https://www.se.com/ww/en/product/download-pdf/LC1D09BD
@@ -33,9 +33,8 @@ links = [
 ]
 
 [function.rating]
-voltage_ac_v = "690"
-voltage_dc_v = "300"
-current_ac_a = "9"
+voltage = [{ nom = "690 V", at = ["AC"] }, { nom = "300 V", at = ["DC"] }]
+current = [{ nom = "9 A", at = ["AC"] }]
 
 [[function]]
 name = "coil"
@@ -47,12 +46,10 @@ ports = [
 ]
 
 [function.rating]
-voltage_dc_v = "24"
+voltage = [{ nom = "24 V", at = ["DC"] }]
 
 [function.operating]
-nominal_voltage_v = "24"
-min_voltage_v = "16.8"
-max_voltage_v = "30"
+voltage = [{ nom = "24 V", min = "16.8 V", max = "30 V" }]
 
 [[function]]
 name = "aux"
@@ -65,8 +62,8 @@ ports = [
 links = [{ a = "13/NO", b = "14", kind = "switched" }]
 
 [function.rating]
-voltage_ac_v = "690"
-current_ac_a = "10"
+voltage = [{ nom = "690 V", at = ["AC"] }]
+current = [{ nom = "10 A", at = ["AC"] }]
 
 [[function]]
 name = "aux_nc"
@@ -79,5 +76,5 @@ ports = [
 links = [{ a = "21/NC", b = "22", kind = "switched" }]
 
 [function.rating]
-voltage_ac_v = "690"
-current_ac_a = "10"
+voltage = [{ nom = "690 V", at = ["AC"] }]
+current = [{ nom = "10 A", at = ["AC"] }]

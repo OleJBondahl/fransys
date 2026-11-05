@@ -68,9 +68,9 @@ def test_motor_cable_cores(
 
 
 def test_system_pdf_written(built: tuple[fr.BuildResult, Path, Path]) -> None:
-    """The system document lands in `out/all/` as `EX-1-v1.3.pdf`."""
+    """The system document lands in `out/all/` as `EX-1-v1.6.pdf`."""
     _, out_dir, _ = built
-    assert (out_dir / "all" / "EX-1-v1.3.pdf").is_file()
+    assert (out_dir / "all" / "EX-1-v1.6.pdf").is_file()
 
 
 def test_cable_list_one_row_per_top_level_cable(
@@ -78,7 +78,7 @@ def test_cable_list_one_row_per_top_level_cable(
 ) -> None:
     """`all/cables.csv`: -W1, -W11, -W21 and the harness cable (-W3), one row each, in natural order, no unit column."""
     _, out_dir, _ = built
-    with (out_dir / "all" / "data" / "EX-1-v1.3-cables.csv").open(
+    with (out_dir / "all" / "data" / "EX-1-v1.6-cables.csv").open(
         newline="", encoding="utf-8"
     ) as handle:
         rows = list(csv.DictReader(handle))

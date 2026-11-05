@@ -1,4 +1,4 @@
-schema = 1
+schema = 2
 
 # Phoenix Contact QUINT4-PS/1AC/24DC/2.5/SC, order no. 2904598 (1-phase in, 24 V DC / 2.5 A / 60 W
 # out, screw connection) -- the closest current QUINT4 order number to the brief's "~60 W/2.5 A"
@@ -25,7 +25,7 @@ ports = [
 
 # Input 100...240 V AC (-15 %...+10 %).
 [function.rating]
-voltage_ac_v = "240"
+voltage = [{ nom = "240 V", at = ["AC"] }]
 
 [[function]]
 name = "output"
@@ -37,8 +37,8 @@ ports = [
 
 # Nominal output 24 V DC, 2.5 A (static boost 3.125 A up to 40 degC is not counted as continuous).
 [function.operating]
-nominal_voltage_v = "24"
-max_current_dc_a = "2.5"
+voltage = [{ nom = "24 V" }]
+max_current = [{ max = "2.5 A", at = ["DC"] }]
 
 [[function]]
 name = "signal"

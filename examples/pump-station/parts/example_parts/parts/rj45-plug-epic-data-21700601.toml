@@ -1,4 +1,4 @@
-schema = 1
+schema = 2
 
 # Lapp EPIC DATA RJ45, Cat.6A, T568B. The briefed order number to verify, 21700616, is rated for
 # stranded 27-24 AWG / solid 26-24 AWG conductors (Lapp Tannehill catalogue p.258): too fine for

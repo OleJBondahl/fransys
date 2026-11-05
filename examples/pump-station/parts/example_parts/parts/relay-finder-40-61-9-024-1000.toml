@@ -1,4 +1,4 @@
-schema = 1
+schema = 2
 
 # Finder 40 Series PCB/Plug-in relays datasheet, https://cdn.findernet.com/app/uploads/S40EN.pdf
 # (footer-dated VIII-2026, i.e. current), p.3 (type 40.61 dimension/pinout diagram) and p.5

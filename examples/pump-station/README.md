@@ -1,8 +1,7 @@
 # Pump station: a Fransys example
 
 A complete design built with [Fransys](https://github.com/OleJBondahl/fransys) from real
-catalogue parts: a pump cabinet and a relay interface board, released as two units, and the
-station that joins them. Every export Fransys produces for it is in `out/`.
+catalogue parts: a pump cabinet, released as one unit, and the station around it. Every export Fransys produces for it is in `out/`.
 
 **Beta**, like Fransys, until 1.0.0. Every drawing and list is also on the site:
 <https://olejbondahl.github.io/fransys/examples/pump-station/>.
@@ -15,9 +14,8 @@ station that joins them. Every export Fransys produces for it is in `out/`.
 - A 24 V DC control supply and a WAGO PFC200 controller (750-82xx) with 750 digital I/O modules.
   The 0 V of the 24 V supply is GND everywhere, and the PSU's DC output lands only on the rail
   terminals.
-- A relay interface board between the PLC outputs and the contactor coils: industrial 24 V DC
-  PCB relays with no diode, since the PLC modules handle the coil. It is nested in the cabinet as
-  a unit of its own.
+- Two interface relays between the PLC outputs and the contactor coils: industrial 24 V DC
+  PCB relays with no diode, since the PLC modules handle the coil. They are wired in the cabinet.
 - Pilot lights, driven by an auxiliary contact on each contactor, and the field cables to the
   motors.
 - Every part file carries its datasheet rating.
@@ -29,10 +27,10 @@ station that joins them. Every export Fransys produces for it is in `out/`.
 | `build.py` | The design script. |
 | `parts/` | The part library: one TOML file per catalogue part. `parts/README.md` lists each with its datasheet. |
 | `parts_typed.py` | The typed parts module, made by `python -m fransys parts-module`. |
-| `out/` | Every export: `all/` for the station, `cabinet/` for the cabinet unit, `board/` for the relay board. Each folder keeps its CSV and XML files in `data/`. |
-| `releases/` | Frozen baselines of the two units. A test checks them with `fr.verify`. |
+| `out/` | Every export: `all/` for the station, `cabinet/` for the cabinet unit. Each folder keeps its CSV and XML files in `data/`. |
+| `releases/` | Frozen baseline of the cabinet unit. A test checks them with `fr.verify`. Stored releases restart at the 0.22 baseline: Fransys 0.22 reads no older listing (owner 2026-10-16: migration cost is no criterion). Release note: pump-cabinet 1.10 is the cabinet's first release; 1.9 and the relay board 1.4 stored listing version 5, which 0.22 no longer reads (listing_version 6), and 1.9 had a mate, a board unit and a harness line (R1216, R1253). |
 | `GAPS.md` | What this Fransys release cannot yet say about the station, and the workaround used. |
-| `system.md`, `cabinet.md`, `relay-board.md` | The documents' cover pages. |
+| `system.md`, `cabinet.md` | The documents' cover pages. |
 
 ## Two levels in one script
 

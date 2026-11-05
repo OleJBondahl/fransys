@@ -1,4 +1,4 @@
-schema = 1
+schema = 2
 
 # WAGO 750-8212, PFC200 controller, 2nd generation, 2x ETHERNET, RS-232/-485. Manual 2100861323 /
 # 2 / 8.6.2024 (FW 04.05.08) with data sheet v31.07.2024, mirror:
@@ -66,9 +66,7 @@ ports = [
 ]
 
 [function.operating]
-nominal_voltage_v = "24"
-min_voltage_v = "18"
-max_voltage_v = "31.2"
+voltage = [{ nom = "24 V", min = "18 V", max = "31.2 V" }]
 
 [[function]]
 name = "field"
@@ -80,9 +78,7 @@ ports = [
 ]
 
 [function.rating]
-current_dc_a = "10"
+current = [{ nom = "10 A", at = ["DC"] }]
 
 [function.operating]
-nominal_voltage_v = "24"
-min_voltage_v = "18"
-max_voltage_v = "31.2"
+voltage = [{ nom = "24 V", min = "18 V", max = "31.2 V" }]

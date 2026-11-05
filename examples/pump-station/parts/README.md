@@ -10,7 +10,7 @@ where the contract has it. A part whose datasheet could not be read for a rating
 | Designation(s) | MPN | Manufacturer | Datasheet |
 |---|---|---|---|
 | `-W1` | 1119405 | Lapp | https://www.lapp.com/en_US/us/oelflex-classic-110/p/1119405 |
-| `+EXT-X0`, `-X1`, `-X01`, `-X2`, `-X3` | 2002-1201 | WAGO | https://www.wago.com/us/rail-chassis-terminal-blocks/topjobs-feedthrough-terminal-block/p/2002-1201 |
+| `+EXT-X0`, `-X1`, `-X4`, `-X2`, `-X3` | 2002-1201 | WAGO | https://www.wago.com/us/rail-chassis-terminal-blocks/topjobs-feedthrough-terminal-block/p/2002-1201 |
 | N terminals | 2002-1204 | WAGO | https://www.wago.com/us/rail-chassis-terminal-blocks/topjobs-feedthrough-terminal-block/p/2002-1204 |
 | PE terminals | 2002-1207 | WAGO | https://www.wago.com/us/rail-chassis-terminal-blocks/topjobs-ground-terminal-block/p/2002-1207 |
 | `-Q1` | 3LD2054-0TK51 | Siemens | https://apim.industry.siemens.cloud/ted/datasheet?format=pdf&mlfbs=3LD20540TK51 |
@@ -18,7 +18,7 @@ where the contract has it. A part whose datasheet could not be read for a rating
 | `-Mn` | 1LE1003-0EB42-2AA4 | Innomotics | Innomotics catalogue D 81.1, ed. 04/2024 (base code 1LE1003-0EB4); the exact article's own datasheet could not be fetched (Siemens Mall docuservice error for this MLFB) |
 | `-Wn1` | 1119304 | Lapp | https://e.lapp.com/in/p/cables-for-standard-applications/oelflex-classic-110-4g1-5-1119304 |
 | `-P1`, `-P2` | 3SU1102-6AA40-1AA0 | Siemens | https://apim.industry.siemens.cloud/ted/datasheet?format=pdf&mlfbs=3SU1102-6AA40-1AA0 (X1/X2 from the device circuit diagram, page 4) |
-| `-F01` | 5SY6506-7 | Siemens | https://apim.industry.siemens.cloud/ted/datasheet?format=pdf&mlfbs=5SY6506-7 |
+| `-F1` | 5SY6506-7 | Siemens | https://apim.industry.siemens.cloud/ted/datasheet?format=pdf&mlfbs=5SY6506-7 |
 | `-T1` | 2904598 (QUINT4-PS/1AC/24DC/2.5/SC) | Phoenix Contact | https://mm.digikey.com/Volume0/opasdata/d220001/medias/docus/929/2904598_Ds.pdf |
 | `-U1` DI | 750-402 | WAGO | https://www.alldataresource.com/assets/Wago_Corporation/Wago-Corporation-750-402-4-Channel-Digital-Input-Module-Dc-24V-3-0Ms-Specification-Sheet.pdf |
 | `-U1` DO | 750-504 | WAGO | https://docs.rs-online.com/537f/0900766b80b765a7.pdf |
@@ -31,7 +31,7 @@ where the contract has it. A part whose datasheet could not be read for a rating
 | `-W3` plugs | 21700601 | Lapp | Lapp Tannehill EPIC/ETHERLINE connector catalogue, p.258 |
 | `-K1` | 1085039 (FL SWITCH 1005N) | Phoenix Contact | https://docs.rs-online.com/ef73/A700000010361010.pdf (by others, G3: BOM entry, see below) |
 | `-Qn1` | LC1D09BD | Schneider Electric | https://www.se.com/ww/en/product/download-pdf/LC1D09BD (page 7 "Connections and Schema") |
-| `-Qn1` front block | LADN11 | Schneider Electric | https://www.se.com/ww/en/product/download-pdf/LADN11 (markings 53/54, 61/62 from the TeSys catalogue "Schemes", 24532-EN Ver2.11) |
+| `-Qn1` front block | LADN22 | Schneider Electric | https://media.distributordatasolutions.com/schneider_synd_rework/2024q1/documents/2025a15d91e815a4e17b58beeb1855a6d8e65dbc.pdf (markings 53/54, 61/62, 71/72, 83/84 from Square D File 8502, PDF p.126) |
 | `-Bn2` | LRD08 | Schneider Electric | https://www.se.com/ww/en/product/download-pdf/LRD08 (markings: see below) |
 | links in `-Fn1` | 3NW8004-1 | Siemens | https://apim.industry.siemens.cloud/ted/datasheet?format=pdf&mlfbs=3NW8004-1&language=en&caller=SIOS |
 | `-U1` controller | 750-8212 | WAGO | manual 2100861323 / 2 / 8.6.2024 with data sheet v31.07.2024: https://assets.heizung-billiger.de/documents/wago_26f8d7572ae6c272.pdf |
@@ -42,7 +42,7 @@ where the contract has it. A part whose datasheet could not be read for a rating
 - `-W1`: order number resolved from "verify" to **1119405**.
 - `-Wn1`: order number resolved from "verify" to **1119304**.
 - N terminals: **2002-1204 confirmed correct as given**.
-- `-F01`: the given MPN **5SY6106-7 is wrong** -- it is a plain 1-pole C6 breaker, not 1P+N.
+- `-F1`: the given MPN **5SY6106-7 is wrong** -- it is a plain 1-pole C6 breaker, not 1P+N.
   5SY6606-7 (checked as a candidate replacement) turned out to be a 3+N-pole device. The correct
   current Siemens 1P+N, curve C, 6 A breaker is **5SY6506-7**, used instead.
 - `-W3` plugs: the given order number **21700616 is wrong** for this cable (rated for solid 26-24

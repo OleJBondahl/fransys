@@ -1,4 +1,4 @@
-schema = 1
+schema = 2
 
 # Fuse link for -Fn1: the type 2 value for LC1D09 + LRD08 at 400 V in Schneider's coordination
 # table (catalogue A6, page A6/5) is a 4 A aM fuse, 10x38 mm. The matching IEC 60269-2 link is
@@ -13,6 +13,5 @@ category = "protection"
 class_code = "F"
 
 [rating]
-voltage_ac_v = "500"
-voltage_dc_v = "250"
-current_ac_a = "4"
+voltage = [{ nom = "500 V", at = ["AC"] }, { nom = "250 V", at = ["DC"] }]
+current = [{ nom = "4 A", at = ["AC"] }]

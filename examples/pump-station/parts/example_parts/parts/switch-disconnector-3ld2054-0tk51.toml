@@ -1,4 +1,4 @@
-schema = 1
+schema = 2
 
 # Siemens datasheet https://apim.industry.siemens.cloud/ted/datasheet?format=pdf&mlfbs=3LD20540TK51
 # (dated 9/12/2026), device circuit diagram: input "1L1","3L2","5L3", output "2T1","4T2","6T3".
@@ -29,5 +29,5 @@ links = [
 
 # Ratings from the datasheet: rated voltage 690 V AC, AC-21 16 A at 690 V.
 [rating]
-voltage_ac_v = "690"
-current_ac_a = "16"
+voltage = [{ nom = "690 V", at = ["AC"] }]
+current = [{ nom = "16 A", at = ["AC"] }]

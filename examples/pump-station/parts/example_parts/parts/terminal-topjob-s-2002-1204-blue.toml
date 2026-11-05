@@ -1,4 +1,4 @@
-schema = 1
+schema = 2
 
 # Blue TOPJOB S feed-through, the N terminals of E4. Same body as 2002-1201, blue insulation;
 # no printed per-clamp marking (see 2002-1201's note).
@@ -22,5 +22,5 @@ links = [{ a = "internal", b = "external", kind = "conductive" }]
 
 # Ratings from the part description (WAGO catalogue): 800 V, 24 A.
 [rating]
-voltage_ac_v = "800"
-current_ac_a = "24"
+voltage = [{ nom = "800 V", at = ["AC"] }]
+current = [{ nom = "24 A", at = ["AC"] }]

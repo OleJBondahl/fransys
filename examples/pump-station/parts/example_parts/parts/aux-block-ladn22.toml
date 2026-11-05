@@ -1,0 +1,73 @@
+schema = 2
+
+# Schneider Electric TeSys D front-mount instantaneous auxiliary contact block LADN22, 2 NO + 2 NC
+# (front mounting, one block per contactor: https://www.se.com/us/en/faqs/FA131010/, "Front Mounting;
+# maximum of 1 block per contactor"). Data sheet of Jan 11, 2024
+# (https://media.distributordatasolutions.com/schneider_synd_rework/2024q1/documents/2025a15d91e815a4e17b58beeb1855a6d8e65dbc.pdf)
+# has no connections page. Markings from the Square D catalogue "TeSys IEC-Style Contactors and
+# Starters", File 8502 (2004), PDF p.126, "Front Mounting Add-on Contact Blocks", LADN22:
+# 53/NO-54, 61/NC-62, 71/NC-72, 83/NO-84.
+# Ratings from the data sheet, p.1: Ue 690 V AC, Ith 10 A; DC from the row "[Ie] rated operational
+# current", "0.55 A at 125 V DC-13" (lowest-voltage DC row; both DC values one row).
+[part]
+mpn = "LADN22"
+manufacturer = "Schneider Electric"
+description = "TeSys D front-mount auxiliary contact block, 2 NO + 2 NC"
+category = "electromechanical"
+class_code = "Q"
+
+[[function]]
+name = "no"
+kind = "contact_no"
+symbol = "make-contact"
+ports = [
+    { name = "53/NO", role = "generic", symbol_port = "in" },
+    { name = "54", role = "generic", symbol_port = "out" },
+]
+links = [{ a = "53/NO", b = "54", kind = "switched" }]
+
+[function.rating]
+voltage = [{ nom = "690 V", at = ["AC"] }, { nom = "125 V", at = ["DC"] }]
+current = [{ nom = "10 A", at = ["AC"] }, { nom = "0.55 A", at = ["DC"] }]
+
+[[function]]
+name = "nc"
+kind = "contact_nc"
+symbol = "break-contact"
+ports = [
+    { name = "61/NC", role = "generic", symbol_port = "in" },
+    { name = "62", role = "generic", symbol_port = "out" },
+]
+links = [{ a = "61/NC", b = "62", kind = "switched" }]
+
+[function.rating]
+voltage = [{ nom = "690 V", at = ["AC"] }, { nom = "125 V", at = ["DC"] }]
+current = [{ nom = "10 A", at = ["AC"] }, { nom = "0.55 A", at = ["DC"] }]
+
+[[function]]
+name = "nc_2"
+kind = "contact_nc"
+symbol = "break-contact"
+ports = [
+    { name = "71/NC", role = "generic", symbol_port = "in" },
+    { name = "72", role = "generic", symbol_port = "out" },
+]
+links = [{ a = "71/NC", b = "72", kind = "switched" }]
+
+[function.rating]
+voltage = [{ nom = "690 V", at = ["AC"] }, { nom = "125 V", at = ["DC"] }]
+current = [{ nom = "10 A", at = ["AC"] }, { nom = "0.55 A", at = ["DC"] }]
+
+[[function]]
+name = "no_2"
+kind = "contact_no"
+symbol = "make-contact"
+ports = [
+    { name = "83/NO", role = "generic", symbol_port = "in" },
+    { name = "84", role = "generic", symbol_port = "out" },
+]
+links = [{ a = "83/NO", b = "84", kind = "switched" }]
+
+[function.rating]
+voltage = [{ nom = "690 V", at = ["AC"] }, { nom = "125 V", at = ["DC"] }]
+current = [{ nom = "10 A", at = ["AC"] }, { nom = "0.55 A", at = ["DC"] }]

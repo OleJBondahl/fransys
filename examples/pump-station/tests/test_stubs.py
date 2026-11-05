@@ -1,27 +1,27 @@
-"""Stub check (gap G18): the mate of the harness plug `-W3-J2` shows on a cabinet page.
+"""Stub check (gap G18): the end of the cable `-W3` at the switch `+EXT-K1` shows on a cabinet page.
 
-The harness `-W3` ends in a plug `-W3-J2`, whose mate is the port on the switch `+EXT-K1`. Before
-Schematika v0.3.0 that mate showed in no export. Since v0.3.0 (layout deep dive D10, the stubs)
-the cabinet page that carries the wires of `-W3` writes a stub: the text
-`-W3 ← +EXT-K1:1 2 3 4 5 6 7 8`, the harness, an arrow, then the mate and its ports.
+The cable `-W3` runs from the controller's port `-U1-C1-X1` to the port on the switch `+EXT-K1`.
+The cabinet page that carries the wires of `-W3` writes a stub (layout deep dive D10): the text
+`-W3 ← +EXT-K1`, the cable, an arrow, then the far end and its ports.
 
-The check reads `cabinet.typ`, the Typst source the cabinet PDF is compiled from, in the intermediates
+The check reads `pump-cabinet-v1.10.typ`, the Typst source the cabinet PDF is compiled from, in the intermediates
 directory of the `built` fixture: the PDF compresses its page content, while the `.typ` embeds each
 layout page's SVG verbatim, so the stub text is plain text there. Pages are split at `#pagebreak()`.
-The stub's page is found by its sheet title, `WAGO PLC` (written in the title block as the
-`Page title` cell), not by a page number, so a page added or moved before it does not break the check.
-
-The board document (`relay-board.typ`) has no harness, so it must not carry the stub.
+The stub's page is found by its sheet title (the title block's `Page title` cell lists the page's
+functions, here `Incoming supply, Pump 1, Pump 2, WAGO PLC`), which must name `WAGO PLC`, not by a
+page number, so a page added or moved before it does not break the check.
 """
 
+import re
 from pathlib import Path
 
 import fransys as fr
 import pytest
 
 STUB_TEXT = "-W3 ← +EXT-K1"
-TITLE_TAIL = 'font-size=\\"3.4293\\" text-anchor=\\"middle\\" fill=\\"#000\\" stroke=\\"none\\" font-family=\\"DejaVu Sans\\">'
-STUB_TITLE = f'<text x=\\"175\\" y=\\"289.625\\" {TITLE_TAIL}WAGO PLC</text>'  # the title block's sheet title
+STUB_TITLE = re.compile(
+    r'<text x=\\"175\\" y=\\"289.625\\" font-size=\\"3.4293\\"[^>]*>([^<]*\bWAGO PLC\b[^<]*)</text>'
+)  # the title block's sheet title: the page's functions, comma separated
 PAGE_BREAK = "#pagebreak()"
 
 
@@ -35,15 +35,15 @@ def assert_stub_present(typ_text: str) -> None:
     """Assert the stub is on exactly one page, and that page's sheet title is `WAGO PLC`."""
     found = stub_pages(typ_text)
     assert len(found) == 1, f"stub {STUB_TEXT!r} is on pages {found}, not on exactly one"
-    assert STUB_TITLE in typ_text.split(PAGE_BREAK)[found[0] - 1], (
-        f"the stub's page {found[0]} is not the sheet titled 'WAGO PLC'"
+    assert STUB_TITLE.search(typ_text.split(PAGE_BREAK)[found[0] - 1]), (
+        f"the stub's page {found[0]} is not a sheet titled with 'WAGO PLC'"
     )
 
 
 def test_stub_shows_on_the_cabinet_wago_plc_page(built: tuple[fr.BuildResult, Path, Path]) -> None:
-    """G18: the stub of `-W3` towards `+EXT-K1` is on the cabinet page titled `WAGO PLC`."""
+    """G18: the stub of `-W3` from `+EXT-K1` is on the cabinet page titled `WAGO PLC`."""
     _, _, intermediates = built
-    assert_stub_present((intermediates / "cabinet.typ").read_text(encoding="utf-8"))
+    assert_stub_present((intermediates / "pump-cabinet-v1.10.typ").read_text(encoding="utf-8"))
 
 
 def test_stub_check_fails_when_the_stub_text_is_removed(
@@ -51,7 +51,7 @@ def test_stub_check_fails_when_the_stub_text_is_removed(
 ) -> None:
     """Can-fail proof: the same check raises on a copy of the real text without the stub."""
     _, _, intermediates = built
-    real_text = (intermediates / "cabinet.typ").read_text(encoding="utf-8")
+    real_text = (intermediates / "pump-cabinet-v1.10.typ").read_text(encoding="utf-8")
     assert STUB_TEXT in real_text
     with pytest.raises(AssertionError):
         assert_stub_present(real_text.replace(STUB_TEXT, "-W3"))
@@ -62,15 +62,7 @@ def test_stub_check_fails_when_the_stub_is_not_on_the_wago_plc_page(
 ) -> None:
     """Can-fail proof: the same check raises when the sheet title is not `WAGO PLC`."""
     _, _, intermediates = built
-    real_text = (intermediates / "cabinet.typ").read_text(encoding="utf-8")
-    assert STUB_TITLE in real_text
+    real_text = (intermediates / "pump-cabinet-v1.10.typ").read_text(encoding="utf-8")
+    assert STUB_TITLE.search(real_text)
     with pytest.raises(AssertionError):
-        assert_stub_present(real_text.replace(STUB_TITLE, STUB_TITLE.replace("WAGO PLC", "OTHER")))
-
-
-def test_stub_is_absent_from_the_board_document(built: tuple[fr.BuildResult, Path, Path]) -> None:
-    """The relay board document, made from the same build, has no stub for `-W3`."""
-    _, _, intermediates = built
-    board_text = (intermediates / "relay-board.typ").read_text(encoding="utf-8")
-    assert stub_pages(board_text) == []
-    assert "+EXT-K1" not in board_text
+        assert_stub_present(real_text.replace("WAGO PLC", "OTHER"))

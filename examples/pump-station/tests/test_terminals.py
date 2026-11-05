@@ -96,7 +96,7 @@ EXPECTED_X1 = [
         "designation": "-X1:N:1",
         "group": "N",
         "index": "1",
-        "side_a": "-F01:3 N",
+        "side_a": "-F1:3 N",
         "side_b": "+EXT-X0:N:1",
         "jumper_group": "",
     },
@@ -104,106 +104,106 @@ EXPECTED_X1 = [
         "designation": "-X1:PE:1",
         "group": "PE",
         "index": "1",
-        "side_a": "-X3:PE:1; -X3:PE:2",
+        "side_a": "",
         "side_b": "+EXT-X0:PE:1",
         "jumper_group": "",
     },
 ]
 
-EXPECTED_X01 = [
+EXPECTED_X4 = [
     {
-        "designation": "-X01:L1:1",
+        "designation": "-X4:L1:1",
         "group": "L1",
         "index": "1",
-        "side_a": "-Q1:2T1; -X01:L1:2",
+        "side_a": "-Q1:2T1; -X4:L1:2",
         "side_b": "",
         "jumper_group": "1",
     },
     {
-        "designation": "-X01:L1:2",
+        "designation": "-X4:L1:2",
         "group": "L1",
         "index": "2",
-        "side_a": "-F01:1; -X01:L1:1; -X01:L1:3",
+        "side_a": "-F1:1; -X4:L1:1; -X4:L1:3",
         "side_b": "",
         "jumper_group": "1",
     },
     {
-        "designation": "-X01:L1:3",
+        "designation": "-X4:L1:3",
         "group": "L1",
         "index": "3",
-        "side_a": "-F11:1; -X01:L1:2; -X01:L1:4",
+        "side_a": "-F11:1; -X4:L1:2; -X4:L1:4",
         "side_b": "",
         "jumper_group": "1",
     },
     {
-        "designation": "-X01:L1:4",
+        "designation": "-X4:L1:4",
         "group": "L1",
         "index": "4",
-        "side_a": "-F21:1; -X01:L1:3",
+        "side_a": "-F21:1; -X4:L1:3",
         "side_b": "",
         "jumper_group": "1",
     },
     {
-        "designation": "-X01:L2:1",
+        "designation": "-X4:L2:1",
         "group": "L2",
         "index": "1",
-        "side_a": "-Q1:4T2; -X01:L2:2",
+        "side_a": "-Q1:4T2; -X4:L2:2",
         "side_b": "",
         "jumper_group": "2",
     },
     {
-        "designation": "-X01:L2:2",
+        "designation": "-X4:L2:2",
         "group": "L2",
         "index": "2",
-        "side_a": "-X01:L2:1; -X01:L2:3",
+        "side_a": "-X4:L2:1; -X4:L2:3",
         "side_b": "",
         "jumper_group": "2",
     },
     {
-        "designation": "-X01:L2:3",
+        "designation": "-X4:L2:3",
         "group": "L2",
         "index": "3",
-        "side_a": "-F11:3; -X01:L2:2; -X01:L2:4",
+        "side_a": "-F11:3; -X4:L2:2; -X4:L2:4",
         "side_b": "",
         "jumper_group": "2",
     },
     {
-        "designation": "-X01:L2:4",
+        "designation": "-X4:L2:4",
         "group": "L2",
         "index": "4",
-        "side_a": "-F21:3; -X01:L2:3",
+        "side_a": "-F21:3; -X4:L2:3",
         "side_b": "",
         "jumper_group": "2",
     },
     {
-        "designation": "-X01:L3:1",
+        "designation": "-X4:L3:1",
         "group": "L3",
         "index": "1",
-        "side_a": "-Q1:6T3; -X01:L3:2",
+        "side_a": "-Q1:6T3; -X4:L3:2",
         "side_b": "",
         "jumper_group": "3",
     },
     {
-        "designation": "-X01:L3:2",
+        "designation": "-X4:L3:2",
         "group": "L3",
         "index": "2",
-        "side_a": "-X01:L3:1; -X01:L3:3",
+        "side_a": "-X4:L3:1; -X4:L3:3",
         "side_b": "",
         "jumper_group": "3",
     },
     {
-        "designation": "-X01:L3:3",
+        "designation": "-X4:L3:3",
         "group": "L3",
         "index": "3",
-        "side_a": "-F11:5; -X01:L3:2; -X01:L3:4",
+        "side_a": "-F11:5; -X4:L3:2; -X4:L3:4",
         "side_b": "",
         "jumper_group": "3",
     },
     {
-        "designation": "-X01:L3:4",
+        "designation": "-X4:L3:4",
         "group": "L3",
         "index": "4",
-        "side_a": "-F21:5; -X01:L3:3",
+        "side_a": "-F21:5; -X4:L3:3",
         "side_b": "",
         "jumper_group": "3",
     },
@@ -238,7 +238,7 @@ EXPECTED_X2 = [
         "designation": "-X2:24V:4",
         "group": "24V",
         "index": "4",
-        "side_a": "-J2:1; -X2:24V:3; -X2:24V:5",
+        "side_a": "-K1:11; -X2:24V:3; -X2:24V:5",
         "side_b": "",
         "jumper_group": "1",
     },
@@ -246,7 +246,7 @@ EXPECTED_X2 = [
         "designation": "-X2:24V:5",
         "group": "24V",
         "index": "5",
-        "side_a": "-Q11:53/NO; -X2:24V:4; -X2:24V:6",
+        "side_a": "-K2:11; -X2:24V:4; -X2:24V:6",
         "side_b": "",
         "jumper_group": "1",
     },
@@ -254,7 +254,7 @@ EXPECTED_X2 = [
         "designation": "-X2:24V:6",
         "group": "24V",
         "index": "6",
-        "side_a": "-B12:97; -X2:24V:5; -X2:24V:7",
+        "side_a": "-Q11:53/NO; -X2:24V:5; -X2:24V:7",
         "side_b": "",
         "jumper_group": "1",
     },
@@ -262,7 +262,7 @@ EXPECTED_X2 = [
         "designation": "-X2:24V:7",
         "group": "24V",
         "index": "7",
-        "side_a": "-Q11:13/NO; -X2:24V:6; -X2:24V:8",
+        "side_a": "-B12:97; -X2:24V:6; -X2:24V:8",
         "side_b": "",
         "jumper_group": "1",
     },
@@ -270,7 +270,7 @@ EXPECTED_X2 = [
         "designation": "-X2:24V:8",
         "group": "24V",
         "index": "8",
-        "side_a": "-Q21:53/NO; -X2:24V:7; -X2:24V:9",
+        "side_a": "-Q11:83/NO; -X2:24V:7; -X2:24V:9",
         "side_b": "",
         "jumper_group": "1",
     },
@@ -278,7 +278,7 @@ EXPECTED_X2 = [
         "designation": "-X2:24V:9",
         "group": "24V",
         "index": "9",
-        "side_a": "-B22:97; -X2:24V:8; -X2:24V:10",
+        "side_a": "-Q21:53/NO; -X2:24V:8; -X2:24V:10",
         "side_b": "",
         "jumper_group": "1",
     },
@@ -286,7 +286,15 @@ EXPECTED_X2 = [
         "designation": "-X2:24V:10",
         "group": "24V",
         "index": "10",
-        "side_a": "-Q21:13/NO; -X2:24V:9",
+        "side_a": "-B22:97; -X2:24V:9; -X2:24V:11",
+        "side_b": "",
+        "jumper_group": "1",
+    },
+    {
+        "designation": "-X2:24V:11",
+        "group": "24V",
+        "index": "11",
+        "side_a": "-Q21:83/NO; -X2:24V:10",
         "side_b": "",
         "jumper_group": "1",
     },
@@ -353,7 +361,7 @@ EXPECTED_X3 = [
         "designation": "-X3:PE:1",
         "group": "PE",
         "index": "1",
-        "side_a": "-X1:PE:1",
+        "side_a": "",
         "side_b": "+EXT-M1:PE",
         "jumper_group": "",
     },
@@ -361,7 +369,7 @@ EXPECTED_X3 = [
         "designation": "-X3:PE:2",
         "group": "PE",
         "index": "2",
-        "side_a": "-X1:PE:1",
+        "side_a": "",
         "side_b": "+EXT-M2:PE",
         "jumper_group": "",
     },
@@ -423,29 +431,29 @@ def _read_rows(path: Path) -> list[dict[str, str]]:
 
 def test_ext_x0_matches_terminal_plan(built: tuple) -> None:
     _result, out_dir, _intermediates = built
-    rows = _read_rows(out_dir / "all" / "data" / "EX-1-v1.3-terminals-EXT-X0.csv")
+    rows = _read_rows(out_dir / "all" / "data" / "EX-1-v1.6-terminals-EXT-X0.csv")
     assert len(rows) == 5, f"expected exactly 5 rows on +EXT-X0, got {len(rows)}: {rows}"
     assert rows == EXPECTED_EXT_X0
 
 
 def test_x1_matches_terminal_plan(built: tuple) -> None:
     _result, out_dir, _intermediates = built
-    rows = _read_rows(out_dir / "cabinet" / "data" / "pump-cabinet-v1.7-terminals-X1.csv")
+    rows = _read_rows(out_dir / "cabinet" / "data" / "pump-cabinet-v1.10-terminals-X1.csv")
     assert len(rows) == 5, f"expected exactly 5 rows on -X1, got {len(rows)}: {rows}"
     assert rows == EXPECTED_X1
 
 
 def test_x01_matches_terminal_plan(built: tuple) -> None:
     _result, out_dir, _intermediates = built
-    rows = _read_rows(out_dir / "cabinet" / "data" / "pump-cabinet-v1.7-terminals-X01.csv")
-    assert len(rows) == 12, f"expected exactly 12 rows on -X01, got {len(rows)}: {rows}"
-    assert rows == EXPECTED_X01
+    rows = _read_rows(out_dir / "cabinet" / "data" / "pump-cabinet-v1.10-terminals-X4.csv")
+    assert len(rows) == 12, f"expected exactly 12 rows on -X4, got {len(rows)}: {rows}"
+    assert rows == EXPECTED_X4
 
 
 def test_x2_matches_terminal_plan(built: tuple) -> None:
     _result, out_dir, _intermediates = built
-    rows = _read_rows(out_dir / "cabinet" / "data" / "pump-cabinet-v1.7-terminals-X2.csv")
-    assert len(rows) == 17, f"expected exactly 17 rows on -X2, got {len(rows)}: {rows}"
+    rows = _read_rows(out_dir / "cabinet" / "data" / "pump-cabinet-v1.10-terminals-X2.csv")
+    assert len(rows) == 18, f"expected exactly 18 rows on -X2, got {len(rows)}: {rows}"
     assert rows == EXPECTED_X2
 
 
@@ -465,25 +473,26 @@ def _x2_group(rows: list[dict[str, str]], group: str, count: int) -> dict[str, d
 
 
 def test_x2_24v_bridge_joins_every_24v_landing(built: tuple) -> None:
-    """The `24V` bridge is one jumper group over the ten `24V` terminals, so the supply's output,
-    the controller's two supplies, `-J2`:1 and each pump's lamp feed, overload relay and
+    """The `24V` bridge is one jumper group over the eleven `24V` terminals, so the supply's output,
+    the controller's two supplies, one terminal for each interface relay contact `-K1`:11 and `-K2`:11 and each pump's lamp feed, overload relay and
     contactor feedback contact are one 24 V net. Without the bridge each landing is isolated:
     the terminals carry no `jumper_group`.
     """
     _result, out_dir, _intermediates = built
-    rows = _read_rows(out_dir / "cabinet" / "data" / "pump-cabinet-v1.7-terminals-X2.csv")
-    rail = _x2_group(rows, "24V", 10)
+    rows = _read_rows(out_dir / "cabinet" / "data" / "pump-cabinet-v1.10-terminals-X2.csv")
+    rail = _x2_group(rows, "24V", 11)
     for designation, landing in (
         ("-X2:24V:1", "-T1:+"),
         ("-X2:24V:2", "-C1:24 V"),
         ("-X2:24V:3", "-C1:+"),
-        ("-X2:24V:4", "-J2:1"),
-        ("-X2:24V:5", "-Q11:53/NO"),
-        ("-X2:24V:6", "-B12:97"),
-        ("-X2:24V:7", "-Q11:13/NO"),
-        ("-X2:24V:8", "-Q21:53/NO"),
-        ("-X2:24V:9", "-B22:97"),
-        ("-X2:24V:10", "-Q21:13/NO"),
+        ("-X2:24V:4", "-K1:11"),
+        ("-X2:24V:5", "-K2:11"),
+        ("-X2:24V:6", "-Q11:53/NO"),
+        ("-X2:24V:7", "-B12:97"),
+        ("-X2:24V:8", "-Q11:83/NO"),
+        ("-X2:24V:9", "-Q21:53/NO"),
+        ("-X2:24V:10", "-B22:97"),
+        ("-X2:24V:11", "-Q21:83/NO"),
     ):
         ends = rail[designation]["side_a"].split(fr.derive.CELL_SEPARATOR)
         assert landing in ends, f"{designation} does not land on {landing}: {ends}"
@@ -496,9 +505,9 @@ def test_x2_gnd_bridge_joins_every_gnd_landing(built: tuple) -> None:
     terminals carry no `jumper_group`.
     """
     _result, out_dir, _intermediates = built
-    rows = _read_rows(out_dir / "cabinet" / "data" / "pump-cabinet-v1.7-terminals-X2.csv")
+    rows = _read_rows(out_dir / "cabinet" / "data" / "pump-cabinet-v1.10-terminals-X2.csv")
     ground = _x2_group(rows, "GND", 7)
-    rail = _x2_group(rows, "24V", 10)
+    rail = _x2_group(rows, "24V", 11)
     assert ground["-X2:GND:1"]["jumper_group"] != rail["-X2:24V:1"]["jumper_group"], (
         "the `24V` and `GND` terminals must be two separate bridges"
     )
@@ -517,6 +526,6 @@ def test_x2_gnd_bridge_joins_every_gnd_landing(built: tuple) -> None:
 
 def test_x3_matches_terminal_plan(built: tuple) -> None:
     _result, out_dir, _intermediates = built
-    rows = _read_rows(out_dir / "cabinet" / "data" / "pump-cabinet-v1.7-terminals-X3.csv")
+    rows = _read_rows(out_dir / "cabinet" / "data" / "pump-cabinet-v1.10-terminals-X3.csv")
     assert len(rows) == 8, f"expected exactly 8 rows on -X3, got {len(rows)}: {rows}"
     assert rows == EXPECTED_X3

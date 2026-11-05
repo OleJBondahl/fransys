@@ -1,4 +1,4 @@
-schema = 1
+schema = 2
 
 # TOPJOB S ground terminal block, green-yellow, the PE terminals of E4. Internal/external
 # ports, the same form as the other TOPJOB S terminals (not role "pe"): the terminal plan

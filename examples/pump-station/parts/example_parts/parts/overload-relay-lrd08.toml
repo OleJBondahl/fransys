@@ -1,4 +1,4 @@
-schema = 1
+schema = 2
 
 # Schneider Electric TeSys LRD08 thermal overload relay, class 10A, setting range 2.5...4 A,
 # 1 NO + 1 NC, direct mount on LC1D09: https://www.se.com/ww/en/product/download-pdf/LRD08
@@ -32,10 +32,10 @@ links = [
 ]
 
 [function.rating]
-voltage_ac_v = "690"
-current_ac_a = "4"
+voltage = [{ nom = "690 V", at = ["AC"] }]
+current = [{ nom = "4 A", at = ["AC"] }]
 
-[function.protection]
+[function.block]
 type = "overload"
 
 [[function]]
@@ -49,7 +49,7 @@ ports = [
 links = [{ a = "95", b = "96", kind = "switched" }]
 
 [function.rating]
-current_ac_a = "5"
+current = [{ nom = "5 A", at = ["AC"] }]
 
 [[function]]
 name = "no"
@@ -62,4 +62,4 @@ ports = [
 links = [{ a = "97", b = "98", kind = "switched" }]
 
 [function.rating]
-current_ac_a = "5"
+current = [{ nom = "5 A", at = ["AC"] }]

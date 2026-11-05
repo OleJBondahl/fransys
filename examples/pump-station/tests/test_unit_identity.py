@@ -1,20 +1,17 @@
-"""Unit identity checks on the real build (UNIT-ID acceptance 1, 2, 4, 5 and 8).
+"""Unit identity checks on the real build (UNIT-ID acceptance 1, 2, 5 and 8).
 
-The example authors the identity of its units and of the project: the cabinet unit is "Pump
-cabinet", `SKX-PC-2`, revision `03`; the relay board unit is "Relay interface board",
-`SKX-RIB-2`, revision `02`; the project is "Two-pump station", `EX-1`, customer "Example works".
+The example authors the identity of its unit and of the project: the cabinet unit is "Pump
+cabinet", `SKX-PC-2`; the project is "Two-pump station", `EX-1`, customer "Example works".
 This file pins where that identity shows up:
 
 - Acceptance 1: every title block of each document carries the document's Title, Number,
   Revision and Customer, read from the `.typ` source of the `built` fixture (the PDF compresses
   its page content). "Every" means all cells with one label in the file hold one value.
 - Acceptance 2: the PDF metadata title, the `#set document(title: ...)` of each `.typ`.
-- Acceptance 4: nothing of the board's own set (`out/board/`) or its document names the board
-  tag `U2`; the board's own BOM names the bare board without a designation.
 - Acceptance 5: the system BOM has one line for the cabinet unit (number in `mpn`, title in
   `description`, location in `designations`), in the derived rows and in the system document.
 - Acceptance 8: `fr.check` holds no ERROR and no WARNING, except exactly the warnings of
-  `EXPECTED_WARNINGS`: the layout ones (GAPS.md G29) and 14 `RATING_CURRENT_KIND_UNSTATED` (G30); no `LONE_CELL` is among them.
+  `EXPECTED_WARNINGS`: the layout ones (GAPS.md G29); no `LONE_CELL` is among them.
 
 Each check function has a twin that runs it on a mutated copy of the real text, files or
 findings and expects an `AssertionError`.
@@ -22,7 +19,6 @@ findings and expects an `AssertionError`.
 
 import csv
 import re
-import shutil
 from pathlib import Path
 
 import fransys as fr
@@ -31,29 +27,21 @@ import pytest
 Built = tuple[fr.BuildResult, Path, Path]
 
 DOCUMENTS = {
-    "relay-board.typ": {
-        "Title": "Relay interface board",
-        "Number": "SKX-RIB-2",
-        "Revision": "1.4",
-        "Customer": "",
-    },
-    "cabinet.typ": {
+    "pump-cabinet-v1.10.typ": {
         "Title": "Pump cabinet",
         "Number": "SKX-PC-2",
-        "Revision": "1.7",
+        "Revision": "1.10",
         "Customer": "",
     },
-    "system.typ": {
+    "EX-1-v1.6.typ": {
         "Title": "Two-pump station",
         "Number": "EX-1",
-        "Revision": "1.3",
+        "Revision": "1.6",
         "Customer": "Example works",
     },
 }
-BOARD_TAG = "-U2"
-TEXT_SUFFIXES = {".csv", ".xml", ".html"}  # not .pdf: compressed bytes can hold "-U2" by chance
 CABINET_ROW = (
-    'text("SKX-PC-2"), text("1.7"), text(""), text("Pump cabinet"), text("1"), box(text("-U1"))'
+    'text("SKX-PC-2"), text("1.10"), text(""), text("Pump cabinet"), text("1"), box(text("-U1"))'
 )
 
 
@@ -130,82 +118,12 @@ def test_pdf_metadata_title_is_the_document_title(built: Built, name: str) -> No
 
 def test_document_title_check_fails_on_another_title(built: Built) -> None:
     """Can-fail proof: the title read from a mutated copy differs from the expected one."""
-    real = read_typ(built[2], "cabinet.typ")
+    real = read_typ(built[2], "pump-cabinet-v1.10.typ")
     assert document_title(real) == "Pump cabinet"
     assert document_title(
         real.replace('#set document(title: "Pump cabinet"', '#set document(title: ""')
     ) != ("Pump cabinet")
     assert document_title("") is None
-
-
-def assert_no_board_tag(board_dir: Path, board_typ: str) -> None:
-    """Assert no file name, no text file and not the board document names `-U2`."""
-    files = [path for path in board_dir.rglob("*") if path.is_file()]
-    assert files, f"{board_dir} holds no file"
-    named = [path.name for path in files if BOARD_TAG in path.name]
-    assert not named, f"file names with {BOARD_TAG}: {named}"
-    holding = [
-        path.name
-        for path in files
-        if path.suffix in TEXT_SUFFIXES and BOARD_TAG in path.read_text(encoding="utf-8")
-    ]
-    assert not holding, f"text files with {BOARD_TAG}: {holding}"
-    assert BOARD_TAG not in board_typ, f"the board document names {BOARD_TAG}"
-
-
-def test_board_set_never_names_its_own_tag(built: Built) -> None:
-    """Acceptance 4: no `-U2` in the board's files or document; the bare board is still listed."""
-    _, out_dir, intermediates = built
-    assert_no_board_tag(out_dir / "board", read_typ(intermediates, "relay-board.typ"))
-
-    board_lines = [
-        row
-        for row in read_csv(out_dir / "board" / "data" / "relay-interface-board-v1.4-bom.csv")
-        if row["mpn"] == "SKX-RIB-2"
-    ]
-    assert len(board_lines) == 1, f"the board's bom.csv lines for SKX-RIB-2: {board_lines}"
-    assert board_lines[0]["description"].startswith("Relay interface board")
-    assert board_lines[0]["designations"] == "", "the board's own BOM must name no designation"
-    designations = {
-        row["designation"]
-        for row in read_csv(
-            out_dir / "board" / "data" / "relay-interface-board-v1.4-designations.csv"
-        )
-    }
-    assert {"-K1", "-K2", "-J1", "-J2"} <= designations, sorted(designations)
-    parent_lines = [
-        row
-        for row in read_csv(out_dir / "cabinet" / "data" / "pump-cabinet-v1.7-bom.csv")
-        if row["mpn"] == "SKX-RIB-2"
-    ]
-    assert [row["designations"] for row in parent_lines] == ["-U2"], (
-        "the parent's BOM must print -U2"
-    )
-
-
-def test_board_tag_check_fails_on_a_tag_in_a_name_a_file_or_the_document(
-    built: Built, tmp_path: Path
-) -> None:
-    """Can-fail proof: `-U2` added to a file name, a CSV or the document text makes it raise."""
-    _, out_dir, intermediates = built
-    board_typ = read_typ(intermediates, "relay-board.typ")
-    for mutation in ("name", "csv", "document"):
-        copy = tmp_path / mutation
-        shutil.copytree(out_dir / "board", copy)
-        typ = board_typ
-        if mutation == "name":
-            (copy / "data" / "relay-interface-board-v1.4-bom.csv").rename(
-                copy / "data" / "relay-interface-board-v1.4-bom-U2.csv"
-            )
-        elif mutation == "csv":
-            with (copy / "data" / "relay-interface-board-v1.4-bom.csv").open(
-                "a", encoding="utf-8"
-            ) as handle:
-                handle.write("-U2\n")
-        else:
-            typ += "-U2"
-        with pytest.raises(AssertionError):
-            assert_no_board_tag(copy, typ)
 
 
 def assert_cabinet_unit_line(lines: tuple, system_typ: str) -> None:
@@ -216,7 +134,7 @@ def assert_cabinet_unit_line(lines: tuple, system_typ: str) -> None:
         for line in lines
         if line.mpn == "SKX-PC-2"
     ]
-    assert found == [(None, "SKX-PC-2", "1.7", "", "Pump cabinet", 1, ("-U1",))], found
+    assert found == [(None, "SKX-PC-2", "1.10", "", "Pump cabinet", 1, ("-U1",))], found
     assert CABINET_ROW in system_typ, "the system document's BOM lacks the cabinet row"
 
 
@@ -224,14 +142,14 @@ def test_system_bom_has_one_line_for_the_cabinet_unit(built: Built) -> None:
     """Acceptance 5: number in `mpn`, title in `description`, in the rows and in the document."""
     result, _, intermediates = built
     lines = fr.derive.bom_lines(result.model, fr.derive.TOP_LEVEL)
-    assert_cabinet_unit_line(lines, read_typ(intermediates, "system.typ"))
+    assert_cabinet_unit_line(lines, read_typ(intermediates, "EX-1-v1.6.typ"))
 
 
 def test_cabinet_unit_line_check_fails_when_the_line_or_the_row_is_missing(built: Built) -> None:
     """Can-fail proof: the line dropped from the rows, and the row changed in the text, raise."""
     result, _, intermediates = built
     lines = fr.derive.bom_lines(result.model, fr.derive.TOP_LEVEL)
-    typ = read_typ(intermediates, "system.typ")
+    typ = read_typ(intermediates, "EX-1-v1.6.typ")
     assert CABINET_ROW in typ
     with pytest.raises(AssertionError):
         assert_cabinet_unit_line(tuple(x for x in lines if x.mpn != "SKX-PC-2"), typ)
@@ -247,10 +165,14 @@ def test_cabinet_unit_line_check_fails_when_the_line_or_the_row_is_missing(built
 # remain, counted by code. They are layout notes, not wiring faults.
 # v0.18.2 (layout-0222, intended change): a row of contacts fed from a rail places every power
 # symbol, so the three POWER_SYMBOL_UNPLACED warnings are gone.
-LAYOUT_WARNINGS = {"POWER_SYMBOL_UNPLACED": 0, "SYMBOL_OVERLAP": 0, "JOIN_UNALIGNED": 0}
-# v0.19.1 (model-0231, GAPS.md G30): parts that state an AC rating only stand on the 24 V DC rail.
-KIND_WARNINGS = {"RATING_CURRENT_KIND_UNSTATED": 14}
-EXPECTED_WARNINGS = LAYOUT_WARNINGS | KIND_WARNINGS
+# OVERLAP 1: a Fransys defect under v0.22.0, KI-658 (FIX-0.23, piece PUMP-OVERLAP; designer R1746)
+LAYOUT_WARNINGS = {
+    "POWER_SYMBOL_UNPLACED": 0,
+    "SYMBOL_OVERLAP": 0,
+    "JOIN_UNALIGNED": 0,
+    "OVERLAP": 1,
+}
+EXPECTED_WARNINGS = LAYOUT_WARNINGS
 
 
 def assert_no_error_or_warning(findings: tuple[fr.Finding, ...]) -> None:
@@ -269,7 +191,7 @@ def test_check_holds_no_error_and_no_warning(built: Built) -> None:
 def test_findings_check_fails_on_a_warning(built: Built) -> None:
     """Can-fail proof: the same check raises once a made-up WARNING is appended."""
     made_up = fr.Finding(
-        code="MADE_UP", severity=fr.Severity.WARNING, subjects=(), message="made up"
+        code="MADE_UP", severity=fr.Severity.WARNING, subjects=(), message="made up", fix="none"
     )
     with pytest.raises(AssertionError):
         assert_no_error_or_warning((*fr.check(built[0]), made_up))
@@ -282,18 +204,7 @@ def test_findings_check_fails_on_another_lone_cell(built: Built) -> None:
         severity=fr.Severity.WARNING,
         subjects=(),
         message="LONE_CELL (warning): a symbol has no drawn conductor at all\n  subject: x (CAB/Q11/fn/main)",
+        fix="draw a conductor to the symbol",
     )
     with pytest.raises(AssertionError):
         assert_no_error_or_warning((*fr.check(built[0]), other))
-
-
-def test_findings_check_fails_on_a_fifteenth_kind_warning(built: Built) -> None:
-    """Can-fail proof: one more RATING_CURRENT_KIND_UNSTATED than G30 counts is not allowed."""
-    extra = fr.Finding(
-        code="RATING_CURRENT_KIND_UNSTATED",
-        severity=fr.Severity.WARNING,
-        subjects=(),
-        message="made up",
-    )
-    with pytest.raises(AssertionError):
-        assert_no_error_or_warning((*fr.check(built[0]), extra))

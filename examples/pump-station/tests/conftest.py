@@ -35,9 +35,9 @@ def _load_build_module() -> ModuleType:
 
 
 def _rebuild(tmp_path: Path) -> tuple[fr.BuildResult, Path, Path]:
-    """Load `build.py` fresh, build and write its three folders into `tmp_path`.
+    """Load `build.py` fresh, build and write its two folders into `tmp_path`.
 
-    Returns the `BuildResult`, the fresh `out_dir` (the root holding `cabinet/`, `board/` and
+    Returns the `BuildResult`, the fresh `out_dir` (the root holding `cabinet/` and
     `all/`), and the fresh `intermediates` dir (written with the `all/` write only).
     """
     module = _load_build_module()
@@ -45,7 +45,6 @@ def _rebuild(tmp_path: Path) -> tuple[fr.BuildResult, Path, Path]:
     out_dir = tmp_path / "out"
     intermediates = tmp_path / "intermediates"
     fr.write(result, out_dir=out_dir / "cabinet", unit="pump-cabinet")
-    fr.write(result, out_dir=out_dir / "board", unit="relay-interface-board")
     fr.write(result, out_dir=out_dir / "all", intermediates=intermediates)
     return result, out_dir, intermediates
 

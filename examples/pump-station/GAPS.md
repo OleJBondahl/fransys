@@ -2,13 +2,22 @@
 
 The places where this example is not drawn or authored the way a real cabinet would be, because
 Fransys, at the pinned v0.13.5 line, cannot say it yet. Open gaps come first, then the closed ones
-with the version that closed them. Evidence is in the three `out/` folders: `out/cabinet/` (the
-cabinet unit's set), `out/board/` (the relay board's) and `out/all/` (everything, with the system
+with the version that closed them. Evidence is in the two `out/` folders: `out/cabinet/` (the
+cabinet unit's set) and `out/all/` (everything, with the system
 document). A `wires.csv` row lists its two ends in the model's id order, so its order can
 flip when an authoring key changes. `fr.check` on this build holds 0 ERROR and three WARNING, the
 layout warnings of G29.
 
 ## Open
+
+- **G30.** Mates, PCB board units and harness lines are refused in Fransys 0.22 (`MATES_DISABLED`).
+  Cabinet 1.10 draws what they drew with wires and a cable: the Ethernet cable `-W3` lands on the
+  controller's RJ45 jack `-C1:x1` and the switch port `+EXT-K1`, all eight cores landed, with no RJ45
+  plugs. Open: the jack, a female boundary connector, gives eight `CONNECTOR_WIRED_WITHOUT_MATE`
+  warnings that no test expects (`tests/test_unit_identity.py` fails on them until the check or the
+  wiring is ruled). The relay interface board `-U2` and its plugs are out of the design:
+  the two relays `-K1` and `-K2` are wired in the cabinet. Plan: restore the plugs, the board unit
+  and its document when mates return after 0.22 (piece MATES-RETURN).
 
 - **G5.** `fr.check` gives 5 `SYMBOL_DEFAULTED` (info), all `supply` functions drawn as a labelled
   box: the controller's `system` and `field`, `-DI1`'s `power`, `-DO1` and `-T1`.
@@ -59,8 +68,9 @@ layout warnings of G29.
   v0.6.0: `mounted_on=contactor.main` writes the mount links, and no wire joins them.
 - **G9.** The WAGO 750 rack's power-jumper contacts carry the field supply from module to module.
   Closed at v0.6.0: `u.busbar(controller.field["+"], module.power["24V"])` and its 0 V twin.
-- **G15.** Every PE terminal bonds to the mounting rail through its own foot. Closed at v0.6.0:
-  `u.rail_bond(incoming_pe, pe)` replaces the two PE bonding wires.
+- **G15.** Every PE terminal bonds to the mounting rail through its own foot. Closed at v0.6.0 by
+  `rail_bond`; that call went with the rail flag (0.22), and the two PE bonding wires are drawn
+  again: `u.series(incoming_pe, pe, wire=(GNYE, 1.5))` per pump. PE is not a rail.
 - **G3.** `+EXT-X0` and the switch `+EXT-K1` are parts owned by others. Closed at v0.3.1 by the
   external flag: `d.strip("X0", at=ext, external=True)` and `d.item("1085039", tag="K1", at=ext,
   external=True)`. The BOM has no line for the switch, and the `-W1` drawing marks its `+EXT-X0`
@@ -82,8 +92,8 @@ layout warnings of G29.
   alone reads `UNUSED_CONTRADICTED`.
 
 - **G18.** The mate of `-W3-J2` with the switch was shown nowhere. Closed at v0.3.0 by the stub
-  `-W3 <- +EXT-K1:1 2 3 4 5 6 7 8` on the "WAGO PLC" page (page 4); `tests/test_stubs.py` fails
-  if it goes.
+  `-W3 <- +EXT-K1` on the "WAGO PLC" page; `tests/test_stubs.py` fails if it goes. Since cabinet 1.10
+  the cable `-W3` has no plugs and no mate (G30).
 
 - **G19.** The running lamps drew with `PAGE_OVERFULL` and `ROUTE_FAILED` on pre-release builds.
   Closed at v0.3.0. The lamps now run from the contactor's aux block, not from a coupling relay.
@@ -103,8 +113,3 @@ layout warnings of G29.
   CU7 (2026-10-06) the cabinet is a unit with no place, so the instance names none.
 - **G28.** The 3LD2054 part's three links had no `rest` state; at 0.6 that read as three lint
   errors. They now carry `rest = "open"` in the part file.
-- **G30.** At v0.19.1 `check_ratings` warns `RATING_CURRENT_KIND_UNSTATED` (model-0231) fourteen times: the
-  grey 24 V terminals of `-U1-X2` (ten) and `-U1-Q11` and `-U1-Q21` (two each) have a part that states
-  `voltage_ac_v` only and stand on the 24 V DC rail. The datasheet values for `voltage_dc_v` have not been
-  read, so none is guessed (rule 3). `tests/test_unit_identity.py` counts the warning in `KIND_WARNINGS`
-  until a datasheet states the DC rating.

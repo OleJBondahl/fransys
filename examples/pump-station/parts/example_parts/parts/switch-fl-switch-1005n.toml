@@ -1,4 +1,4 @@
-schema = 1
+schema = 2
 
 # Phoenix Contact FL SWITCH 1005N, order no. 1085039 -- unmanaged 5-port DIN-rail Ethernet
 # switch, by others (G3): appears in the BOM, but E3 also mates -W3's far end to "port 1 of the

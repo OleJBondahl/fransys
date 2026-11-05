@@ -1,4 +1,4 @@
-schema = 1
+schema = 2
 
 # WAGO 750-504, 4-channel digital output, 24 V DC, 0.5 A. Datasheet (read as rendered images):
 # https://docs.rs-online.com/537f/0900766b80b765a7.pdf

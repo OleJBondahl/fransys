@@ -1,4 +1,4 @@
-schema = 1
+schema = 2
 
 # WAGO 750-402, 4-channel digital input, 24 V DC. Datasheet (read as rendered images, WAGO's PDF
 # is text-extraction-protected):

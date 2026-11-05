@@ -38,24 +38,24 @@ def _star_model(*, parent_lamps: int):
     @fr.unit("demo-star", revision=1, interface_version=1, date="2026-01-01", text="x", by="AB")
     def star(u: fr.Design) -> _Io:
         lamp, second, third = (u.device(f"P{n}", "DEMO-LAMP-24") for n in (2, 3, 4))
-        u.detail.wire(lamp["1"], second["1"], wire=("WH", 0.75))
-        u.detail.wire(lamp["1"], third["1"], wire=("WH", 0.75))
+        u.series(lamp["1"], second["1"], wire=("WH", 0.75))
+        u.series(lamp["1"], third["1"], wire=("WH", 0.75))
+        u.series(lamp["2"], second["2"], wire=("WH", 0.75))
+        u.series(lamp["2"], third["2"], wire=("WH", 0.75))
         return _Io(lamp)
 
     d = fr.design("demo_parts", place="C1")
-    d.location("C1", "Cabinet")
+    cabinet = d.location("C1", "Cabinet")
     d.add(star, "U1")
     for n in range(parent_lamps):
-        d.detail.wire(
-            d.device(f"P{10 + n}", "DEMO-LAMP-24")["1"],
-            d.device(f"P{50 + n}", "DEMO-LAMP-24")["1"],
-            wire=("WH", 0.75),
-        )
+        first, second = d.device(f"P{10 + n}", "DEMO-LAMP-24"), d.device(f"P{50 + n}", "DEMO-LAMP-24")
+        d.series(first["1"], second["1"], wire=("WH", 0.75))
+        d.series(first["2"], second["2"], wire=("WH", 0.75))
     with tempfile.TemporaryDirectory() as tmp:
         cover = Path(tmp) / "cover.md"
         cover.write_text("# Star\n", encoding="utf-8")
         preset = fr.DocumentPreset.CABINET_SCHEMATIC
-        return fr.build(d, fr.document(preset, "demo-star", cover=cover)).model
+        return fr.build(d, fr.document(preset, "demo-star", cover=cover), fr.document(preset, cabinet, cover=cover)).model
 
 
 def _unit_fit(parent_lamps: int):

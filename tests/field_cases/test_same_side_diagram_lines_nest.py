@@ -1,26 +1,14 @@
-"""Field case: lines leaving one side of a column nest, so a block diagram needs no crossing.
-
-The engineering shape (column): a hub is cabled to four boxes. Of those, the first box is cabled
-to two others in the same column, and both lines leave its east side for boxes lower down.
-The shape (ring): twelve boards in a ring, a hub cabled to four of them, and a second cable on
-one pair of ring neighbours. A drawing exists in which no two lines cross.
-
-The bug: the farther target did not take the outer end and the outer track, so the spans
-interleaved (column: one crossing). In the ring, a same-column line on the outermost track also
-stood in the way of a line that enters the same box from the next column (two crossings).
-Fixing decision: layout-0201 (same-column ends and tracks nest, and take the tracks nearest the
-column).
-"""
+"""Field case: a hub cabled to four boxes in a column, and in a ring twelve boards with a hub cabled to four of them and a second cable.
+The bug: the farther target did not take the outer end and track, so the spans interleaved (one crossing in the column, two in the ring).
+Fixed by layout-0201, same-column ends and tracks nest and take the tracks nearest the column."""
 
 import tempfile
 from functools import cache
-from itertools import combinations
 from pathlib import Path
 
 import fransys as fr
 import pytest
-
-from fransys_model.layout import DiagramLine, layout_of
+from _field_shared import crossings, diagram_lines
 
 type Edges = tuple[tuple[str, str], ...]
 
@@ -45,32 +33,8 @@ def _built(edges: Edges) -> fr.BuildResult:
         return fr.build(d, fr.document(fr.DocumentPreset.SYSTEM, None, cover=cover))
 
 
-def _crossed(
-    p: tuple[int, int], q: tuple[int, int], r: tuple[int, int], s: tuple[int, int]
-) -> bool:
-    """Whether segments pq and rs cross at a point inside both."""
-
-    def side(a: tuple[int, int], b: tuple[int, int], c: tuple[int, int]) -> int:
-        return (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0])
-
-    return side(p, q, r) * side(p, q, s) < 0 and side(r, s, p) * side(r, s, q) < 0
-
-
-def _crossings(result: fr.BuildResult) -> int:
-    runs = [
-        [((a.x, a.y), (b.x, b.y)) for a, b in zip(line.points, line.points[1:], strict=False)]
-        for line in layout_of(result.model, DiagramLine).values()
-    ]
-    return sum(
-        _crossed(*one, *other)
-        for first, second in combinations(runs, 2)
-        for one in first
-        for other in second
-    )
-
-
 @pytest.mark.parametrize("edges", [_COLUMN, _RING], ids=["column", "ring"])
 def test_same_side_lines_draw_with_no_crossing(edges: Edges) -> None:
     result = _built(edges)
-    assert len(layout_of(result.model, DiagramLine)) == len(edges)
-    assert _crossings(result) == 0
+    assert len(diagram_lines(result)) == len(edges)
+    assert crossings(result) == 0

@@ -38,9 +38,7 @@ def _is_docstring(stmt: ast.stmt) -> bool:
 
 def _locals(func: ast.FunctionDef | ast.AsyncFunctionDef) -> frozenset[str]:
     args = {a.arg for a in ast.walk(func.args) if isinstance(a, ast.arg)}
-    stored = {
-        n.id for n in ast.walk(func) if isinstance(n, ast.Name) and isinstance(n.ctx, ast.Store)
-    }
+    stored = {n.id for n in ast.walk(func) if isinstance(n, ast.Name) and isinstance(n.ctx, ast.Store)}
     return frozenset(args | stored)
 
 
@@ -68,17 +66,12 @@ def clone_groups(sources: dict[str, str]) -> list[list[str]]:
 def _test_sources() -> dict[str, str]:
     """Source of every `tests/**/*.py` and `packages/*/tests/**/*.py`, keyed by repo path."""
     paths = [*ROOT.glob("tests/**/*.py"), *PACKAGES_ROOT.glob("*/tests/**/*.py")]
-    return {
-        path.relative_to(ROOT).as_posix(): path.read_text(encoding="utf-8")
-        for path in sorted(paths)
-    }
+    return {path.relative_to(ROOT).as_posix(): path.read_text(encoding="utf-8") for path in sorted(paths)}
 
 
 @pytest.fixture(scope="module")
 def groups() -> list[list[str]]:
-    return clone_groups(
-        {module: path.read_text(encoding="utf-8") for module, path in src_modules()}
-    )
+    return clone_groups({module: path.read_text(encoding="utf-8") for module, path in src_modules()})
 
 
 @pytest.mark.private_input  # a private-gate count (R462)

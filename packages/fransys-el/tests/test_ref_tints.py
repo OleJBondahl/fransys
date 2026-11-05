@@ -16,7 +16,7 @@ def _rgb(tint: str) -> tuple[int, ...]:
 
 def _lin(c: int) -> float:
     v = c / 255
-    return v / 12.92 if v <= 0.04045 else ((v + 0.055) / 1.055) ** 2.4
+    return float(v / 12.92 if v <= 0.04045 else ((v + 0.055) / 1.055) ** 2.4)
 
 
 def _contrast_with_black(tint: str) -> float:
@@ -29,7 +29,7 @@ def _oklab_lightness(tint: str) -> float:
     l_ = (0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b) ** (1 / 3)
     m_ = (0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b) ** (1 / 3)
     s_ = (0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b) ** (1 / 3)
-    return 0.2104542553 * l_ + 0.7936177850 * m_ - 0.0040720468 * s_
+    return float(0.2104542553 * l_ + 0.7936177850 * m_ - 0.0040720468 * s_)
 
 
 def test_there_are_eight_tints():

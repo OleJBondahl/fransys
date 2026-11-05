@@ -2,8 +2,6 @@
 
 Outside `electrical-symbols` (and the symdef toolkit), no source types a font family name, a
 `.ttf` file name, a font ratio (capital, ascent or descender over the em) or a text height as a
-literal. The two sheet-profile defaults in `layout/formats.py` are named stock: their fate is
-GRID-HOME-B. The model's generated advance table is the one allowed file (MODEL-TEXT).
 """
 
 import ast
@@ -15,9 +13,6 @@ HOME = "packages/electrical-symbols/"
 FAMILY = re.compile(r"^DejaVu\b[\w ]*$")
 RATIOS = (1493 / 2048, 1556 / 2048, 426 / 2048)
 HEIGHT_NAMES = {"text_height_mm", "min_text_height_mm"}
-ALLOWED_FILES = {"packages/fransys-model/src/fransys_model/derive/_text_widths.py"}
-# Named stock: the sheet profile's own default heights, until GRID-HOME-B reads the record.
-STOCK = {"packages/fransys-model/src/fransys_model/layout/formats.py": 2}
 
 
 def _near_ratio(text: str) -> bool:
@@ -64,16 +59,11 @@ def scan(root: Path) -> list[str]:
     found: list[str] = []
     for path in sorted((root / "packages").glob("*/src/**/*.py")):
         rel = path.relative_to(root).as_posix()
-        if rel.startswith(HOME) or rel in ALLOWED_FILES:
+        if rel.startswith(HOME):
             continue
         for line, kind in font_hits(path.read_text()):
             found.append(f"{rel}:{line}: {kind}; the one home is {HOME}")
-    return [f for f in found if _not_stock(f)]
-
-
-def _not_stock(found: str) -> bool:
-    rel = found.split(":", maxsplit=1)[0]
-    return not (rel in STOCK and "a text height" in found)
+    return found
 
 
 def test_the_font_facts_have_one_home() -> None:
@@ -84,11 +74,7 @@ def test_the_scan_flags_each_typed_font_fact(tmp_path: Path) -> None:
     src = tmp_path / "packages" / "p" / "src" / "p"
     src.mkdir(parents=True)
     (src / "a.py").write_text(
-        'F = "DejaVu Sans"\n'
-        'T = "x/Face.ttf"\n'
-        "R = 0.7290\n"
-        "S = f'#set text(font: \"Other\", size: {1})'\n"
-        'text_height_mm = Decimal("1.8")\n'
+        'F = "DejaVu Sans"\nT = "x/Face.ttf"\nR = 0.7290\nS = f\'#set text(font: "Other", size: {1})\'\ntext_height_mm = Decimal("1.8")\n'
     )
     found = scan(tmp_path)
     assert [f.split(": ")[1].split(";")[0] for f in found] == [
@@ -105,9 +91,3 @@ def test_the_scan_passes_a_read_through_the_record(tmp_path: Path) -> None:
     src.mkdir(parents=True)
     (src / "a.py").write_text("def f(model):\n    return font_family(model)\n")
     assert scan(tmp_path) == []
-
-
-def test_the_named_stock_is_still_there() -> None:
-    for rel, count in STOCK.items():
-        hits = [k for _, k in font_hits((ROOT / rel).read_text()) if k == "a text height"]
-        assert len(hits) == count, f"{rel}: stock changed (GRID-HOME-B)"

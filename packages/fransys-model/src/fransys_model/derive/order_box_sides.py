@@ -7,7 +7,7 @@ functions that rank first on its north side. The N/S cut stays with the caller.
 from fransys_model.derive.facts.energy_flow import gives_energy, takes_energy
 from fransys_model.derive.placement_reads import function_ports
 from fransys_model.derive.potential import port_potential_current
-from fransys_model.vocab.enums import Current
+from fransys_model.elecdef import Current
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.core import Function
 

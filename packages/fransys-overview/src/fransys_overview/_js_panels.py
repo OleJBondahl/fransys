@@ -3,8 +3,6 @@
 Every text comes from the data with `textContent`; a panel only filters or lists what it holds.
 """
 
-# ruff: noqa: E501 -- the JavaScript source is not wrapped
-
 from typing import Final
 
 JS_PANELS: Final[str] = r"""

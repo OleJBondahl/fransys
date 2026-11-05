@@ -8,14 +8,16 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from .flow_values import Cell
 from .geometry import pin_of
-from .values import Cell
+from .values import PinRef
 
 if TYPE_CHECKING:
     from collections.abc import Iterator, Mapping
 
+    from .flow_values import Block, Column
     from .sym_values import Sym
-    from .values import Block, Column, PagePlan
+    from .values import PagePlan, RowPlan
 
 Attached = dict[str, tuple[str, str, int]]
 LanePins = dict[str, tuple[tuple[str, int], ...]]
@@ -40,20 +42,17 @@ def cell_node(col: str, lane: int, index: int) -> str:
 def _flipped_lane(back: tuple[Cell, ...]) -> tuple[Cell, ...]:
     """Cells already reversed, each turned; a hold stays with the gap it opens, so it moves up."""
     above = (0, *(c.hold for c in back[:-1]))
-    return tuple(
-        Cell(c.sym, "R180" if c.orient == "R0" else "R0", c.bottom_pin, c.top_pin, hold=h)
-        for c, h in zip(back, above, strict=True)
-    )
+    return tuple(Cell(c.sym, "R180" if c.orient == "R0" else "R0", c.bottom_pin, c.top_pin, hold=h) for c, h in zip(back, above, strict=True))
 
 
-def flip_column(column: Column, *, flip: bool) -> PlacedColumn:
+def flip_column(column: Column, *, flip: bool, row: int = 0) -> PlacedColumn:
     """An attached column on the other edge stands reversed, each cell turned where allowed."""
     offsets = tuple(ln.offset for ln in column.lanes)
     if not flip:
         lanes = tuple(ln.cells for ln in column.lanes)
-        return PlacedColumn(column.id, lanes, offsets, 0, flipped=False)
+        return PlacedColumn(column.id, lanes, offsets, row, flipped=False)
     lanes = tuple(_flipped_lane(tuple(reversed(ln.cells))) for ln in column.lanes)
-    return PlacedColumn(column.id, lanes, tuple(-o for o in offsets), 0, flipped=True)
+    return PlacedColumn(column.id, lanes, tuple(-o for o in offsets), row, flipped=True)
 
 
 def attachments(cols: tuple[Column, ...], blocks: Mapping[str, Block]) -> Attached:
@@ -100,6 +99,14 @@ def lane_pins(cols: tuple[Column, ...], blocks: Mapping[str, Block]) -> LanePins
     return out
 
 
+def box_edge(blocks: Mapping[str, Block], row: RowPlan, box: str, pin: str) -> str | None:
+    """The edge of `box` that `pin` uses in this row: the card block anchored at `box` answers, else None."""
+    for b in row.blocks:
+        if blocks[b].anchor == box:
+            return dict(blocks[b].pin_edges).get(pin)
+    return None
+
+
 def placed_columns(
     plan: PagePlan,
     columns: Mapping[str, Column],
@@ -107,16 +114,15 @@ def placed_columns(
     attach: Attached,
     syms: Mapping[str, Sym],
 ) -> dict[str, PlacedColumn]:
-    """Flip an attached column whose pin's used edge is not the pin's own side."""
+    """Flip an attached column so its box-pin end faces the box: a head end hangs below the box's used edge, a foot end above it."""
     out: dict[str, PlacedColumn] = {}
     for r, row in enumerate(plan.rows):
-        edges = {p: e for b in row.blocks for p, e in blocks[b].pin_edges}
         for col in row.columns:
             flip = False
             if col in attach:
                 box, pin, _ = attach[col]
-                side = pin_of(syms[box], pin).side
-                flip = edges.get(pin, side) != side
-            pc = flip_column(columns[col], flip=flip)
-            out[col] = PlacedColumn(pc.id, pc.lanes, pc.offsets, r, flipped=pc.flipped)
+                edge = box_edge(blocks, row, box, pin) or pin_of(syms[box], pin).side
+                at_head = any(e.pin == PinRef(box, pin) for e in columns[col].heads)
+                flip = (edge != "S") == at_head  # a head end flips on a north edge, a foot end on a south one
+            out[col] = flip_column(columns[col], flip=flip, row=r)
     return out

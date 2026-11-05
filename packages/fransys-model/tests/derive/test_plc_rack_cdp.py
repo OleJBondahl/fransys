@@ -23,9 +23,7 @@ def test_the_ordinal_restarts_in_another_rack():
 
 def test_a_module_of_one_signal_type_names_it():
     racks = build_racks()
-    assert {e.single_signal for e in rack_modules_for_cdp(racks.model, racks.rack)} == {
-        SignalType.DI
-    }
+    assert {e.single_signal for e in rack_modules_for_cdp(racks.model, racks.rack)} == {SignalType.DI}
 
 
 def test_a_spare_channel_stem_is_the_module_designation_and_its_index():

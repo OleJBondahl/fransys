@@ -6,13 +6,13 @@ import fransys_render
 import pytest
 from _build import (
     FLOW,
+    PDF,
     REVISION_HEADERS,
     WORDS,
     cable_facet,
     cable_product_facet,
     conductor,
     connector,
-    core_facet,
     document,
     drawing_set,
     item,
@@ -53,7 +53,6 @@ from fransys_model.derive.cable_drawing import cable_block_key
 from fransys_model.derive.harness_blocks import _part_line
 from fransys_model.kernel import make_id, render_id
 from fransys_model.vocab import (
-    ConductorKind,
     DocumentPreset,
     Net,
     NetClass,
@@ -73,19 +72,18 @@ def _cabinet(**overrides):
     p = project()
     doc = document(
         "d1",
-        preset=DocumentPreset.HARNESS_DRAWING,
+        preset=DocumentPreset.CABINET_SCHEMATIC,
         subject=c1,
         cover="# Cabinet cover\n\nSome cover text.",
         notes=overrides.pop("notes", "Some notes."),
-        remove=overrides.pop("remove", (K.CONTENTS, K.HARNESS_DRAWING, K.BOM)),
     )
     return model(c1, p, doc), doc
 
 
 def test_cover_and_notes_pages_are_separated_by_a_page_break():
     m, doc = _cabinet()
-    text = source(m, doc.id, {}, fransys_render.sheets(document_sheets_of(m), LIBRARY))
-    assert text.count("#pagebreak()") == 1
+    text = source(m, doc.id, {}, fransys_render.sheets(document_sheets_of(m, ()), LIBRARY), diagrams=())
+    assert text.count("#pagebreak()") == 2  # COVER|NOTES, then NOTES|SCHEMATIC (the preset's own no-drawings page)
 
 
 def _cover(m, doc):
@@ -105,22 +103,22 @@ def test_cover_has_no_facts_table_but_keeps_its_own_heading_and_text():
     assert '"Demo Co"' not in text  # absence: Project.customer, likewise
     assert '#heading(level: 1, text("Cabinet cover"))' in text  # presence: the cover's own heading
     assert '"Some cover text."' in text  # presence: the cover's own text
-    assert "Harness drawing" in text  # presence: preset words, part of the document heading
+    assert "Cabinet schematic" in text  # presence: preset words, part of the document heading
     assert "C1 Demo cabinet" in text  # presence: subject label, part of the document heading
 
 
 def test_cover_markdown_is_rendered():
     m, doc = _cabinet()
-    text = source(m, doc.id, {}, fransys_render.sheets(document_sheets_of(m), LIBRARY))
+    text = source(m, doc.id, {}, fransys_render.sheets(document_sheets_of(m, ()), LIBRARY), diagrams=())
     assert '#heading(level: 1, text("Cabinet cover"))' in text
     assert '"Some cover text."' in text
 
 
 def test_no_notes_page_when_there_is_no_notes_text():
     m, doc = _cabinet(notes=None)
-    text = source(m, doc.id, {}, fransys_render.sheets(document_sheets_of(m), LIBRARY))
+    text = source(m, doc.id, {}, fransys_render.sheets(document_sheets_of(m, ()), LIBRARY), diagrams=())
     assert '"Notes"' not in text
-    assert text.count("#pagebreak()") == 0
+    assert text.count("#pagebreak()") == 1  # COVER|SCHEMATIC only: no NOTES page, so no break around it
 
 
 def test_house_sheet_when_the_document_has_no_drawing_pages():
@@ -131,7 +129,6 @@ def test_house_sheet_when_the_document_has_no_drawing_pages():
         subject=c1,
         cover="# Cover",
         notes=None,
-        remove=(K.SCHEMATIC, K.PLC_LIST, K.TERMINAL_LIST, K.BOM),
     )
     m = model(c1, doc)
     sheet = resolve_sheet_format(m, doc.id, (K.COVER,))
@@ -149,20 +146,19 @@ def test_schematic_pages_are_inlined_in_number_order_when_every_key_is_present()
         subject=c1,
         cover="# Cover",
         notes=None,
-        remove=(K.PLC_LIST, K.TERMINAL_LIST, K.BOM, K.SHEET_INDEX),
     )
     m = model(c1, ds, p2, p1, doc)  # inserted out of number order: proves the sort, not insertion
     svgs = {
         render_id(p1.id): "<svg>one</svg>",
         render_id(p2.id): "<svg>two</svg>",
     }
-    text = source(m, doc.id, svgs, fransys_render.sheets(document_sheets_of(m), LIBRARY))
+    text = source(m, doc.id, svgs, fransys_render.sheets(document_sheets_of(m, ()), LIBRARY), diagrams=())
     assert text.count("#page(margin: 0mm, background:") == 2  # full bleed
     assert text.index("<svg>one</svg>") < text.index("<svg>two</svg>")
-    assert text.count("#pagebreak()") == 2  # COVER|SCHEMATIC, then between the two SCHEMATIC pages
+    assert text.count("#pagebreak()") == 3  # COVER|SHEET_INDEX, SHEET_INDEX|SCHEMATIC, then between the two SCHEMATIC pages
     # The sheet counter (`n / N` within the drawing set) is its own number, not the document
     # counter: page 1's cell reads "1 / 2", page 2's reads "2 / 2", each in its own block.
-    sheets = fransys_render.sheets(document_sheets_of(m), LIBRARY)
+    sheets = fransys_render.sheets(document_sheets_of(m, ()), LIBRARY)
     assert ">1 / 2</text>" in sheets[SheetKey(doc.id, K.SCHEMATIC, 0)].svg
     assert ">2 / 2</text>" in sheets[SheetKey(doc.id, K.SCHEMATIC, 1)].svg
 
@@ -178,11 +174,10 @@ def test_schematic_pages_fall_back_to_no_drawings_when_one_key_is_missing():
         subject=c1,
         cover="# Cover",
         notes=None,
-        remove=(K.PLC_LIST, K.TERMINAL_LIST, K.BOM, K.SHEET_INDEX),
     )
     m = model(c1, ds, p1, p2, doc)
     svgs = {render_id(p1.id): "<svg>one</svg>"}
-    text = source(m, doc.id, svgs, fransys_render.sheets(document_sheets_of(m), LIBRARY))
+    text = source(m, doc.id, svgs, fransys_render.sheets(document_sheets_of(m, ()), LIBRARY), diagrams=())
     assert text.count('#par(text("No drawings."))') == 1
     assert "<svg>" not in text
 
@@ -195,10 +190,9 @@ def test_schematic_pages_fall_back_to_no_drawings_when_the_location_has_no_drawi
         subject=c1,
         cover="# Cover",
         notes=None,
-        remove=(K.PLC_LIST, K.TERMINAL_LIST, K.BOM, K.SHEET_INDEX),
     )
     m = model(c1, doc)
-    text = source(m, doc.id, {}, fransys_render.sheets(document_sheets_of(m), LIBRARY))
+    text = source(m, doc.id, {}, fransys_render.sheets(document_sheets_of(m, ()), LIBRARY), diagrams=())
     assert '#par(text("No drawings."))' in text
 
 
@@ -206,14 +200,13 @@ def test_schematic_pages_fall_back_to_no_drawings_for_an_item_subject():
     board = item("a1", description="Invented board")
     doc = document(
         "d1",
-        preset=DocumentPreset.PCB_SCHEMATIC,
+        preset=DocumentPreset.CABINET_SCHEMATIC,
         subject=board,
         cover="# Cover",
         notes=None,
-        remove=(K.CONNECTOR_LIST, K.BOM),
     )
     m = model(board, doc)
-    text = source(m, doc.id, {}, fransys_render.sheets(document_sheets_of(m), LIBRARY))
+    text = source(m, doc.id, {}, fransys_render.sheets(document_sheets_of(m, ()), LIBRARY), diagrams=())
     assert '#par(text("No drawings."))' in text
 
 
@@ -222,7 +215,6 @@ def test_location_document_picks_only_the_unit_none_set_at_its_location():
     matches `unit is None` at that location, never a nested unit's own set that happens to
     share the location node. `ds_nested`'s `number` (1) sorts before `ds_top`'s (2) on
     purpose: the old `min(..., key=number)` body, filtering by location alone, would have
-    picked `ds_nested` -- the live bug this test proves fixed.
     """
     c1 = location("C1", "Demo cabinet")
     u = unit("u1", name="nested-unit")
@@ -236,7 +228,6 @@ def test_location_document_picks_only_the_unit_none_set_at_its_location():
         subject=c1,
         cover="# Cover",
         notes=None,
-        remove=(K.PLC_LIST, K.TERMINAL_LIST, K.BOM, K.SHEET_INDEX),
     )
     m = model(c1, u, ds_nested, ds_top, p_nested, p_top, doc)
     record = document_row(m, doc.id)
@@ -262,7 +253,6 @@ def test_unit_document_gets_pages_from_every_one_of_its_units_sets_in_location_o
         subject=u,
         cover="# Cover",
         notes=None,
-        remove=(K.PLC_LIST, K.TERMINAL_LIST, K.BOM, K.SHEET_INDEX),
     )
     m = model(c1, c2, u, ds1, ds2, p1, p2, doc)
     record = document_row(m, doc.id)
@@ -276,8 +266,6 @@ def test_unit_document_source_wires_title_block_scope_and_per_set_counter():
     the lower-level functions alone: `document_facts`' unit revision/date, the
     unit-name scope cell (`subject_label`), and the per-drawing-set `n / N` counter (a bug
     only reachable once a unit document can span more than one set).
-    Two drawing sets of one page each, so a document-wide `len(pages_found)` counter (the old
-    body) would wrongly print `1 / 2` on each page instead of `1 / 1`.
     """
     c1 = location("C1", "First cabinet")
     c2 = location("C2", "Second cabinet")
@@ -296,12 +284,11 @@ def test_unit_document_source_wires_title_block_scope_and_per_set_counter():
         subject=u,
         cover="# Cover",
         notes=None,
-        remove=(K.PLC_LIST, K.TERMINAL_LIST, K.BOM, K.SHEET_INDEX),
     )
     m = model(c1, c2, u, r1, r2, p, rp, ds1, ds2, page1, page2, doc)
     svgs = {render_id(page1.id): "<svg>one</svg>", render_id(page2.id): "<svg>two</svg>"}
-    sheets = fransys_render.sheets(document_sheets_of(m), LIBRARY)
-    text = source(m, doc.id, svgs, sheets)
+    sheets = fransys_render.sheets(document_sheets_of(m, ()), LIBRARY)
+    text = source(m, doc.id, svgs, sheets, diagrams=())
     first, second = (sheets[SheetKey(doc.id, K.SCHEMATIC, i)].svg for i in (0, 1))
     assert ">2026-09-01</text>" in first  # the unit's own current revision date
     assert "2020-01-01" not in first + second + text  # never Project's
@@ -322,7 +309,6 @@ def test_sheet_format_of_the_locations_drawing_set_when_schematic_pages_are_requ
         subject=c1,
         cover="# Cover",
         notes=None,
-        remove=(K.PLC_LIST, K.TERMINAL_LIST, K.BOM, K.SHEET_INDEX),
     )
     m = model(c1, fmt, ds, page, doc)
     record = document_row(m, doc.id)
@@ -340,7 +326,6 @@ def test_house_sheet_when_the_drawing_sets_first_page_names_no_sheet_format():
         subject=c1,
         cover="# Cover",
         notes=None,
-        remove=(K.PLC_LIST, K.TERMINAL_LIST, K.BOM, K.SHEET_INDEX),
     )
     m = model(c1, ds, page, doc)
     record = document_row(m, doc.id)
@@ -356,7 +341,6 @@ def test_house_sheet_when_schematic_is_requested_but_the_location_has_no_drawing
         subject=c1,
         cover="# Cover",
         notes=None,
-        remove=(K.PLC_LIST, K.TERMINAL_LIST, K.BOM, K.SHEET_INDEX),
     )
     m = model(c1, doc)
     record = document_row(m, doc.id)
@@ -387,17 +371,12 @@ def test_document_facts_for_a_unit_document_uses_the_units_own_current_revision_
     fixture sets none), customer is empty, author is the unit revision's `created` (pdf-0036 D5, not
     `Project`'s); revision and revision
     date come from the unit's release's own history entry whose `revision` matches
-    `UnitRelease.revision` -- not merely its latest entry (`UnitRelease.revision=1` here,
-    with a later revision 2 entry present and a distinct date, so a "last entry" bug would read
-    the wrong one), and not `Project`'s own revision date (set different on purpose, so a
-    "reads Project's date" bug would too)."""
+    """
     c1 = location("C1", "Demo cabinet")
     p = project(revision=9)
     rp = revision_entry("rp", unit=None, revision=9, date="2020-01-01")
     u = unit("u1", name="pump-cabinet", revision=1)
-    r1 = revision_entry(
-        "r1", unit=u, revision=1, date="2026-09-01", text="First release", created="AB"
-    )
+    r1 = revision_entry("r1", unit=u, revision=1, date="2026-09-01", text="First release", created="AB")
     r2 = revision_entry("r2", unit=u, revision=2, date="2026-09-23", text="Later", created="CD")
     doc = document("d1", preset=DocumentPreset.CABINET_SCHEMATIC, subject=u, cover="# Cover")
     m = model(c1, p, rp, u, r1, r2, doc)
@@ -436,20 +415,20 @@ def test_subject_label_for_a_unit_document_is_the_units_title_when_it_has_one():
 
 def test_the_cover_heading_of_a_unit_document_carries_the_units_title():
     u = unit("u1", name="relay-interface-board", title="Relay interface board")
-    doc = document("d1", preset=DocumentPreset.PCB_SCHEMATIC, subject=u, cover="# Cover")
+    doc = document("d1", preset=DocumentPreset.CABINET_SCHEMATIC, subject=u, cover="# Cover")
     m = model(u, doc)
     record = document_row(m, doc.id)
-    assert document_heading(m, record) == "PCB schematic \N{EM DASH} Relay interface board"
+    assert document_heading(m, record) == "Cabinet schematic \N{EM DASH} Relay interface board"
     assert "Relay interface board" in _cover(m, record)
     assert "relay-interface-board" not in _cover(m, record)
 
 
 def test_the_cover_heading_of_a_unit_document_carries_the_name_when_the_title_is_empty():
     u = unit("u1", name="relay-interface-board")
-    doc = document("d1", preset=DocumentPreset.PCB_SCHEMATIC, subject=u, cover="# Cover")
+    doc = document("d1", preset=DocumentPreset.CABINET_SCHEMATIC, subject=u, cover="# Cover")
     m = model(u, doc)
     record = document_row(m, doc.id)
-    assert document_heading(m, record) == "PCB schematic \N{EM DASH} relay-interface-board"
+    assert document_heading(m, record) == "Cabinet schematic \N{EM DASH} relay-interface-board"
 
 
 def test_the_scope_cell_of_a_unit_document_page_prints_the_title_not_the_name():
@@ -460,18 +439,18 @@ def test_the_scope_cell_of_a_unit_document_page_prints_the_title_not_the_name():
     page = layout_page("p1", drawing_set=ds, number=1)
     doc = document(
         "d1",
-        preset=DocumentPreset.PCB_SCHEMATIC,
+        preset=DocumentPreset.CABINET_SCHEMATIC,
         subject=u,
         cover="# Cover",
         notes=None,
-        remove=(K.PLC_LIST, K.TERMINAL_LIST, K.BOM, K.SHEET_INDEX),
     )
     m = model(c1, u, ds, page, doc)
     text = source(
         m,
         doc.id,
         {render_id(page.id): "<svg>one</svg>"},
-        fransys_render.sheets(document_sheets_of(m), LIBRARY),
+        fransys_render.sheets(document_sheets_of(m, ()), LIBRARY),
+        diagrams=(),
     )
     assert '"Relay interface board"' in text  # the scope cell
     assert "relay-interface-board" not in text
@@ -487,17 +466,10 @@ def test_subject_label_and_heading_for_the_system_preset_have_no_dangling_subjec
 
 def test_source_does_not_crash_with_no_project_record():
     c1 = location("C1", "Demo cabinet")
-    doc = document(
-        "d1",
-        preset=DocumentPreset.HARNESS_DRAWING,
-        subject=c1,
-        cover="# Cover",
-        notes=None,
-        remove=(K.CONTENTS, K.HARNESS_DRAWING, K.BOM),
-    )
+    doc = document("d1", preset=DocumentPreset.CABINET_SCHEMATIC, subject=c1, cover="# Cover", notes=None)
     m = model(c1, doc)
-    sheets = fransys_render.sheets(document_sheets_of(m), LIBRARY)
-    text = source(m, doc.id, {}, sheets)
+    sheets = fransys_render.sheets(document_sheets_of(m, ()), LIBRARY)
+    text = source(m, doc.id, {}, sheets, diagrams=())
     assert '#set document(title: ""' in text  # the empty title, in the metadata
     assert ">Title</text>" in sheets[SheetKey(doc.id, K.COVER, 0)].svg  # the cell still prints
 
@@ -505,218 +477,47 @@ def test_source_does_not_crash_with_no_project_record():
 def test_subject_label_for_an_item_with_a_part_and_no_authored_text_uses_the_parts_description():
     demo_part = part("relay", description="Invented relay")
     board = item("a1", description="", part=demo_part.id)
-    doc = document(
-        "d1", preset=DocumentPreset.PCB_SCHEMATIC, subject=board, cover="# Cover", notes=None
-    )
+    doc = document("d1", preset=DocumentPreset.CABINET_SCHEMATIC, subject=board, cover="# Cover", notes=None)
     m = model(demo_part, board, doc)
     record = document_row(m, doc.id)
-    assert document_heading(m, record) == "PCB schematic — A1 Invented relay"
+    assert document_heading(m, record) == "Cabinet schematic — A1 Invented relay"
 
 
 def test_subject_label_for_an_item_with_a_part_and_authored_text_shows_the_authored_text():
     """The heading asks `derive.item_description`: an authored text wins over the part's."""
     demo_part = part("relay", description="Invented relay")
     board = item("a1", description="Authored relay text", part=demo_part.id)
-    doc = document(
-        "d1", preset=DocumentPreset.PCB_SCHEMATIC, subject=board, cover="# Cover", notes=None
-    )
+    doc = document("d1", preset=DocumentPreset.CABINET_SCHEMATIC, subject=board, cover="# Cover", notes=None)
     m = model(demo_part, board, doc)
     record = document_row(m, doc.id)
     heading = document_heading(m, record)
-    assert heading == "PCB schematic — A1 Authored relay text"
+    assert heading == "Cabinet schematic — A1 Authored relay text"
     assert "Invented relay" not in heading
 
 
 def test_subject_label_for_an_item_without_a_part_falls_back_to_its_own_description():
     board = item("a1", description="Invented board, no part yet")
-    doc = document(
-        "d1", preset=DocumentPreset.PCB_SCHEMATIC, subject=board, cover="# Cover", notes=None
-    )
+    doc = document("d1", preset=DocumentPreset.CABINET_SCHEMATIC, subject=board, cover="# Cover", notes=None)
     m = model(board, doc)
     record = document_row(m, doc.id)
-    assert document_heading(m, record) == "PCB schematic — A1 Invented board, no part yet"
-
-
-def _harness_with_two_cables(*, remove=(K.BOM,)):
-    """A harness with two cables, `W1` and `W2`, each with its own part and product facts
-    (decision model-0108: a cable is `is_cable`'s own, so both need a cable part)."""
-    harness = item("wh1", description="Demo harness")
-    demo_part = part("cab1", description="Invented 4-core cable")
-    cable1 = item("w1", description="Cable one", part=demo_part.id, parent=harness.id)
-    cf1 = cable_facet("w1", subject=cable1.id, length_mm=1500)
-    cpf1 = cable_product_facet("w1", subject=demo_part.id)
-    demo_part2 = part("cab2", description="Cable two part")
-    cable2 = item("w2", description="Cable two", part=demo_part2.id, parent=harness.id)
-    cf2 = cable_facet("w2", subject=cable2.id, length_mm=None)
-    cpf2 = cable_product_facet("w2", subject=demo_part2.id, core_count=0)
-    doc = document(
-        "d1",
-        preset=DocumentPreset.HARNESS_DRAWING,
-        subject=harness,
-        cover="# Cover",
-        notes=None,
-        remove=remove,
-    )
-    m = model(harness, demo_part, cable1, cf1, cpf1, demo_part2, cable2, cf2, cpf2, doc)
-    return m, doc, cable1, cable2
-
-
-def test_contents_table_renders_every_column_for_a_two_cable_harness():
-    m, doc, _cable1, _cable2 = _harness_with_two_cables(remove=(K.HARNESS_DRAWING, K.BOM))
-    text = source(m, doc.id, {}, fransys_render.sheets(document_sheets_of(m), LIBRARY))
-    for header in ("Designation", "MPN", "Description", "Cores", "Gauge", "Length mm", "Ends"):
-        assert f'"{header}"' in text
-    assert '"-WH1-W1"' in text  # harness-prefixed (H1, decision model-0043)
-    assert '"SIM-CAB1"' in text  # the cable's part MPN
-    assert '"Invented 4-core cable"' in text
-    assert '"4"' in text  # core_count
-    assert '"0.5"' in text  # gauge_mm2
-    assert '"1500"' in text  # length_mm
-    assert '"-WH1-W2"' in text  # the second cable, harness-prefixed too
-
-
-def test_contents_table_ends_column_reads_the_lower_ranked_end_first():
-    """A `W11`-shaped cable, motor `M1` to cabinet strip `X3`, both located: the CONTENTS page's
-    "Ends" column reads `X3` before `M1` (decision model-0048, `designation.cable_end_rank`), the
-    cabinet's location `"aa-cabinet"` sorting before the motor's `"zz-motor"`.
-
-    The location keys are chosen so location order *disagrees* with alphabetical designation
-    order (`"M1" < "X3"` but `"aa-cabinet" < "zz-motor"` puts the cabinet first): a query still
-    reading the old `(designation, item)` order would print `"M1 - X3"` instead, so this is a
-    real test of `cable_end_rank`, not of alphabetising two designations that already agree with
-    it. The core is also authored strip-port-first, on purpose: only a real reorientation, not
-    authoring order or port-id luck, can make the rendered text read cabinet-first.
-    """
-    harness = item("wh1", description="Demo harness")
-    m1_item, _m1_fn, m1_port = pin("m1", "M1")
-    x3_item, _x3_fn, x3_port = pin("x3", "X3")
-    cabinet_loc = location("aa-cabinet", "Cabinet")
-    motor_loc = location("zz-motor", "Motor room")
-    m1_place = place("m1-loc", item=m1_item.id, node=motor_loc.id)
-    x3_place = place("x3-loc", item=x3_item.id, node=cabinet_loc.id)
-    cable_part = part("cab11", description="Invented 1-core cable")
-    cable = item("w11", description="Cable eleven", part=cable_part.id, parent=harness.id)
-    cf = cable_facet("w11", subject=cable.id, length_mm=None)
-    cpf = cable_product_facet("w11", subject=cable_part.id, core_count=1)
-    core = conductor(
-        "core-1", a=x3_port.id, b=m1_port.id, kind=ConductorKind.CORE, carrier=cable.id
-    )
-    cf1 = core_facet("core-1", subject=core.id, index=1)
-    doc = document(
-        "d1",
-        preset=DocumentPreset.HARNESS_DRAWING,
-        subject=harness,
-        cover="# Cover",
-        notes=None,
-        remove=(K.HARNESS_DRAWING, K.BOM),
-    )
-    m = model(
-        harness,
-        m1_item,
-        _m1_fn,
-        m1_port,
-        x3_item,
-        _x3_fn,
-        x3_port,
-        motor_loc,
-        cabinet_loc,
-        m1_place,
-        x3_place,
-        cable_part,
-        cable,
-        cf,
-        cpf,
-        core,
-        cf1,
-        doc,
-    )
-    text = source(m, doc.id, {}, fransys_render.sheets(document_sheets_of(m), LIBRARY))
-    assert '"+aa-cabinet-X3 \N{EN DASH} +zz-motor-M1"' in text
-    assert '"+zz-motor-M1 \N{EN DASH} +aa-cabinet-X3"' not in text
-
-
-def test_contents_page_is_left_out_for_a_harness_with_no_cable():
-    harness = item("wh1", description="Demo harness")
-    doc = document(
-        "d1",
-        preset=DocumentPreset.HARNESS_DRAWING,
-        subject=harness,
-        cover="# Cover",
-        notes=None,
-        remove=(K.HARNESS_DRAWING, K.BOM),
-    )
-    m = model(harness, doc)
-    text = source(m, doc.id, {}, fransys_render.sheets(document_sheets_of(m), LIBRARY))
-    assert "None." not in text
-    assert '#heading(level: 1, text("Cover"))' in text  # the cover is still there
-    assert text.count("#pagebreak()") == 0  # the cover alone: the empty list has no page (pdf-0019)
-
-
-def test_contents_page_is_left_out_when_added_to_a_location_subject_document():
-    """`add=(K.CONTENTS,)` is a legitimate authoring choice on a location subject too (decision
-    0023 puts no restriction on which subject a page kind may be added to); `record.item is
-    None` there, so the page is left out, never a crash or a leaked table."""
-    c1 = location("C1", "Demo cabinet")
-    doc = document(
-        "d1",
-        preset=DocumentPreset.CABINET_SCHEMATIC,
-        subject=c1,
-        cover="# Cover",
-        notes=None,
-        add=(K.CONTENTS,),
-        remove=(K.SCHEMATIC, K.PLC_LIST, K.TERMINAL_LIST, K.BOM),
-    )
-    m = model(c1, doc)
-    text = source(m, doc.id, {}, fransys_render.sheets(document_sheets_of(m), LIBRARY))
-    assert "None." not in text
-    assert '#heading(level: 1, text("Cover"))' in text  # the cover is still there
-    assert text.count("#pagebreak()") == 0  # the cover alone: the empty list has no page (pdf-0019)
-    assert text.count("#table") == 0  # no cable table; the cover carries no table either
-
-
-def test_harness_drawing_renders_one_block_per_harness():
-    """A harness of two cables is one block, keyed by the harness, in the "No part number"
-    run since the harness has no part of its own: not one page per cable, not the cables' parts."""
-    m, doc, cable1, _cable2 = _harness_with_two_cables(remove=(K.CONTENTS, K.BOM))
-    text = source(
-        m,
-        doc.id,
-        {cable_block_key(None, cable1.parent): "<svg>harness-block</svg>"},
-        fransys_render.sheets(document_sheets_of(m), LIBRARY),
-    )
-    assert text.count("<svg>harness-block</svg>") == 1
-    assert "#align(center)" not in text  # The caption is gone
-    assert '"No part number"' in text
-    assert '"SIM-CAB1"' not in text
-    assert '"SIM-CAB2"' not in text
-
-
-def test_harness_drawing_never_falls_back_to_no_drawings_once_a_cable_is_found():
-    """A found cable's block page is built from its svgs entry, never `No drawings.`: the block
-    is the page's one image."""
-    m, doc, cable1, _cable2 = _harness_with_two_cables(remove=(K.CONTENTS, K.BOM))
-    text = source(
-        m,
-        doc.id,
-        {cable_block_key(None, cable1.parent): "<svg>harness-block</svg>"},
-        fransys_render.sheets(document_sheets_of(m), LIBRARY),
-    )
-    assert '#par(text("No drawings."))' not in text
-    assert "<svg>harness-block</svg>" in text
+    assert document_heading(m, record) == "Cabinet schematic — A1 Invented board, no part yet"
 
 
 def test_harness_cables_for_is_empty_for_a_location_subject():
     c1 = location("C1", "Demo cabinet")
-    doc = document(
-        "d1", preset=DocumentPreset.CABINET_SCHEMATIC, subject=c1, cover="# Cover", notes=None
-    )
+    doc = document("d1", preset=DocumentPreset.CABINET_SCHEMATIC, subject=c1, cover="# Cover", notes=None)
     m = model(c1, doc)
     record = document_row(m, doc.id)
     assert harness_cables_for(m, record.id, (K.HARNESS_DRAWING,)) == ()
 
 
 def test_harness_cables_for_is_empty_when_neither_harness_page_kind_is_requested():
-    m, doc, _cable1, _cable2 = _harness_with_two_cables(remove=(K.CONTENTS, K.HARNESS_DRAWING))
+    cable_part = part("cab1", description="Invented 4-core cable")
+    cable = item("w1", description="Cable one", part=cable_part.id)
+    cf = cable_facet("w1", subject=cable.id, length_mm=1500)
+    cpf = cable_product_facet("w1", subject=cable_part.id)
+    doc = document("d1", preset=DocumentPreset.SYSTEM, cover="# Cover", notes=None)
+    m = model(cable_part, cable, cf, cpf, doc)
     record = document_row(m, doc.id)
     assert harness_cables_for(m, record.id, (K.COVER,)) == ()
 
@@ -739,11 +540,8 @@ def test_system_preset_renders_a_harness_drawing_page_per_top_level_cable():
     cpf2 = cable_product_facet("w2", subject=demo_part2.id, core_count=0)
     doc = document("d1", preset=DocumentPreset.SYSTEM, cover="# Cover", notes=None)
     m = model(demo_part, cable1, cf1, cpf1, demo_part2, cable2, cf2, cpf2, doc)
-    svgs = {
-        cable_block_key(None, cable.id): f"<svg>{cable.id.value}</svg>"
-        for cable in (cable1, cable2)
-    }
-    text = source(m, doc.id, svgs, fransys_render.sheets(document_sheets_of(m), LIBRARY))
+    svgs = {cable_block_key(None, cable.id): f"<svg>{cable.id.value}</svg>" for cable in (cable1, cable2)}
+    text = source(m, doc.id, svgs, fransys_render.sheets(document_sheets_of(m, ()), LIBRARY), diagrams=())
     assert text.count("#image(bytes(") == _SYSTEM_CABLE_PAGE_COUNT
     assert all(svg in text for svg in svgs.values())
     assert '"System"' in text  # the heading, no dangling "-- subject"
@@ -754,17 +552,12 @@ def test_system_preset_with_no_top_level_cable_contributes_no_harness_drawing_pa
     a `system` document over a model with no top-level cable at all gives its HARNESS_DRAWING
     section no page at all -- not even the NO_DRAWINGS text page a harness-with-no-cable
     document still gets (`test_harness_drawing_falls_back_to_no_drawings_for_a_cableless_
-    harness` below, unchanged). `checks.py`'s `DOCUMENT_NO_TOP_LEVEL_CABLES` covers the
-    finding side (`test_checks.py`).
     """
     doc = document("d1", preset=DocumentPreset.SYSTEM, cover="# Cover", notes=None)
     m = model(doc)
-    text = source(m, doc.id, {}, fransys_render.sheets(document_sheets_of(m), LIBRARY))
+    text = source(m, doc.id, {}, fransys_render.sheets(document_sheets_of(m, ()), LIBRARY), diagrams=())
     assert '#par(text("No drawings."))' not in text
-    assert not any(
-        key.kind is K.HARNESS_DRAWING
-        for key in fransys_render.sheets(document_sheets_of(m), LIBRARY)
-    )  # no page, no cell
+    assert not any(key.kind is K.HARNESS_DRAWING for key in fransys_render.sheets(document_sheets_of(m, ()), LIBRARY))  # no page, no cell
 
 
 def test_system_preset_with_one_top_level_cable_draws_its_page_and_no_no_drawings():
@@ -780,80 +573,11 @@ def test_system_preset_with_one_top_level_cable_draws_its_page_and_no_no_drawing
         m,
         doc.id,
         {cable_block_key(None, cable.id): "<svg>lone-cable</svg>"},
-        fransys_render.sheets(document_sheets_of(m), LIBRARY),
+        fransys_render.sheets(document_sheets_of(m, ()), LIBRARY),
+        diagrams=(),
     )
     assert text.count("<svg>lone-cable</svg>") == 1
     assert '#par(text("No drawings."))' not in text
-
-
-def test_system_preset_with_contents_lists_its_top_level_cables_not_none():
-    """`CONTENTS` added to the `SYSTEM` preset (no item, no unit) lists every top-level cable, the
-    ones its HARNESS_DRAWING draws (`harness_cables_for`), where it used to print `None.`."""
-    cable_part = part("cab1", description="Invented 1-core cable")
-    cable1 = item("w1", description="Cable one", part=cable_part.id)
-    cf1 = cable_facet("w1", subject=cable1.id, length_mm=1500)
-    cpf = cable_product_facet("w1", subject=cable_part.id, core_count=1)
-    cable_part2 = part("cab2", description="Cable two part")
-    cable2 = item("w2", description="Cable two", part=cable_part2.id)
-    cf2 = cable_facet("w2", subject=cable2.id, length_mm=None)
-    cpf2 = cable_product_facet("w2", subject=cable_part2.id, core_count=0)
-    m1_item, m1_fn, m1_port = pin("m1", "M1")
-    x3_item, x3_fn, x3_port = pin("x3", "X3")
-    core = conductor(
-        "core-1", a=m1_port.id, b=x3_port.id, kind=ConductorKind.CORE, carrier=cable1.id
-    )
-    core_marker = core_facet("core-1", subject=core.id, index=1)
-    doc = document(
-        "d1",
-        preset=DocumentPreset.SYSTEM,
-        cover="# Cover",
-        notes=None,
-        add=(K.CONTENTS,),
-        remove=(K.HARNESS_DRAWING, K.CABLE_LIST, K.BOM),  # the other pages may print `None.` too
-    )
-    m = model(
-        cable_part,
-        cable1,
-        cf1,
-        cpf,
-        cable_part2,
-        cable2,
-        cf2,
-        cpf2,
-        m1_item,
-        m1_fn,
-        m1_port,
-        x3_item,
-        x3_fn,
-        x3_port,
-        core,
-        core_marker,
-        doc,
-    )
-    found = harness_cables_for(m, doc.id, (K.CONTENTS,))
-    assert {cable.cable for cable in found} == {cable1.id, cable2.id}
-    text = source(m, doc.id, {}, fransys_render.sheets(document_sheets_of(m), LIBRARY))
-    # Written out from the fixture's tags `W1`, `W2`, `M1`, `X3`, none placed: `-` plus the tag.
-    assert 'text("-W1")' in text
-    assert 'text("-W2")' in text
-    assert 'text("-M1 \N{EN DASH} -X3")' in text
-    assert "#table(columns: 7" in text
-    assert '#par(text("None."))' not in text
-
-
-def test_harness_drawing_falls_back_to_no_drawings_for_a_cableless_harness():
-    harness = item("wh1", description="Demo harness")
-    doc = document(
-        "d1",
-        preset=DocumentPreset.HARNESS_DRAWING,
-        subject=harness,
-        cover="# Cover",
-        notes=None,
-        remove=(K.CONTENTS, K.BOM),
-    )
-    m = model(harness, doc)
-    text = source(m, doc.id, {}, fransys_render.sheets(document_sheets_of(m), LIBRARY))
-    assert '#par(text("No drawings."))' in text
 
 
 def test_schematic_no_drawings_page_sets_its_own_title_block_after_a_notes_page():
@@ -861,7 +585,6 @@ def test_schematic_no_drawings_page_sets_its_own_title_block_after_a_notes_page(
     used to be a bare paragraph with no `#set page`/`#page` of its own, so in Typst's
     page-flow model it silently inherited whichever `#set page(background: ...)` was last in
     effect -- here, the preceding NOTES page's own title "Notes", not its own. A cabinet
-    document with a NOTES page and no drawing set reproduces that shape directly.
     """
     c1 = location("C1", "Demo cabinet")
     doc = document(
@@ -870,45 +593,15 @@ def test_schematic_no_drawings_page_sets_its_own_title_block_after_a_notes_page(
         subject=c1,
         cover="# Cover",
         notes="Some notes.",
-        remove=(K.PLC_LIST, K.TERMINAL_LIST, K.BOM, K.SHEET_INDEX),
     )
     m = model(c1, doc)
-    text = source(m, doc.id, {}, fransys_render.sheets(document_sheets_of(m), LIBRARY))
+    text = source(m, doc.id, {}, fransys_render.sheets(document_sheets_of(m, ()), LIBRARY), diagrams=())
     assert text.count('#par(text("No drawings."))') == 1
     assert "#page(margin: " in text  # the body is wrapped in its own page, not bare
     # Proves the page carries its OWN title cell, not the NOTES page's: pre-fix, the bare
     # paragraph set no title block, so the page title "Schematic" was nowhere.
-    svg = fransys_render.sheets(document_sheets_of(m), LIBRARY)[
-        SheetKey(doc.id, K.SCHEMATIC, None)
-    ].svg
+    svg = fransys_render.sheets(document_sheets_of(m, ()), LIBRARY)[SheetKey(doc.id, K.SCHEMATIC, None)].svg
     assert ">Schematic</text>" in svg
-
-
-def test_harness_drawing_no_drawings_page_sets_its_own_title_block_after_a_notes_page():
-    """Same bug, `harness_drawing_source`'s own NO_DRAWINGS path. Moved from the `system`
-    document with no cable this test originally used (decision pdf-0006):
-    that case no longer falls back to NO_DRAWINGS at all (`DOCUMENT_NO_TOP_LEVEL_CABLES`
-    INFO, no page -- `test_harness_drawing_no_cable_source_variants` below), so the
-    NO_DRAWINGS-after-NOTES regression shape now needs a genuine harness document naming a
-    harness with no cable instead, which still falls back to NO_DRAWINGS unchanged.
-    """
-    harness = item("wh1", description="Demo harness")
-    doc = document(
-        "d1",
-        preset=DocumentPreset.HARNESS_DRAWING,
-        subject=harness,
-        cover="# Cover",
-        notes="Some notes.",
-        remove=(K.CONTENTS, K.BOM),
-    )
-    m = model(harness, doc)
-    text = source(m, doc.id, {}, fransys_render.sheets(document_sheets_of(m), LIBRARY))
-    assert text.count('#par(text("No drawings."))') == 1
-    assert "#page(margin: " in text  # the body is wrapped in its own page, not bare
-    svg = fransys_render.sheets(document_sheets_of(m), LIBRARY)[
-        SheetKey(doc.id, K.HARNESS_DRAWING, None)
-    ].svg
-    assert ">Harness drawing</text>" in svg
 
 
 def _list_pages_model():
@@ -921,14 +614,11 @@ def _list_pages_model():
         subject=c1,
         cover="# Cover",
         notes=None,
-        remove=(K.SCHEMATIC,),
     )
     strip = item("x1", description="Strip one")
     t1, t1_facet = terminal("t1", strip=strip.id, group="L", index=1)
     module = item("mod1", description="PLC module")
-    module_part, template, fn, facet, channel_pin = plc_channel(
-        "ch1", module=module.id, name="ch1", signal=SignalType.DI, channel=1
-    )
+    module_part, template, fn, facet, channel_pin = plc_channel("ch1", module=module.id, name="ch1", signal=SignalType.DI, channel=1)
     module = dataclasses.replace(module, part=module_part.id)
     a_item, a_fn, a_port = pin("a", "A1")
     b_item, b_fn, b_port = pin("b", "B1")
@@ -965,9 +655,11 @@ def _list_pages_model():
 
 
 def _list_page(page, m, doc, **flow):
-    """One flowing list page; the terminal list also takes the Bridge word."""
-    extra = {"bridge_word": WORDS["bridge"]} if page == "terminal_list_page" else {}
-    return getattr(_lists, page)(m, document_row(m, doc.id), **extra, **flow)
+    """One flowing list page; the terminal list takes the document's `Doc`."""
+    record = document_row(m, doc.id)
+    if page == "terminal_list_page":
+        return _lists.terminal_list_page(m, record, (WORDS["bridge"], None, 15), **flow)
+    return getattr(_lists, page)(m, record, **flow)
 
 
 _FLOWING = ("terminal_list_page", "plc_list_page", "wire_label_list_page")
@@ -995,9 +687,9 @@ def test_a_list_page_reads_its_share_and_gutter_from_the_caller(page):
 def test_source_passes_the_list_share_down_to_the_list_pages():
     """`source(list_share_pct=41)` changes the list pages against 40: the value is read."""
     m, doc = _list_pages_model()
-    sheets = fransys_render.sheets(document_sheets_of(m), LIBRARY)
-    wide = source(m, doc.id, {}, sheets, list_share_pct=41, list_gutter_pct=20)
-    assert wide != source(m, doc.id, {}, sheets)
+    sheets = fransys_render.sheets(document_sheets_of(m, ()), LIBRARY)
+    wide = source(m, doc.id, {}, sheets, pdf={**PDF, "list_share_pct": 41}, diagrams=())
+    assert wide != source(m, doc.id, {}, sheets, diagrams=())
     assert "#block(width: 102%)[" in wide
 
 
@@ -1025,9 +717,7 @@ def test_the_cable_list_and_the_bom_stay_full_width(page):
 def _boards_model(keys, *, on_net):
     """A cabinet with one board per key, each with one connector pin; `on_net` lists it on a net."""
     c1 = location("C1", "Demo cabinet")
-    doc = document(
-        "d1", preset=_PRESET, subject=c1, cover="# Cover", notes=None, remove=(K.SCHEMATIC,)
-    )
+    doc = document("d1", preset=_PRESET, subject=c1, cover="# Cover", notes=None)
     records = (c1, doc)
     for key in keys:
         board_part = part(f"{key}-part", description=f"Invented board {key}")
@@ -1061,23 +751,14 @@ def test_each_wired_board_of_the_connector_list_keeps_its_heading():
 
 def test_cable_page_part_line_counts_conductor_cores_not_the_screen():
     """A cable product of four cores and a screen prints `4 x 0.5 mm²` (pdf-0039)."""
-    harness = item("wh1", description="Demo harness")
     demo_part = part("cab1", description="Invented screened cable")
-    cable = item("w1", description="Cable one", part=demo_part.id, parent=harness.id)
+    cable = item("w1", description="Cable one", part=demo_part.id)
     product = dataclasses.replace(
         cable_product_facet("w1", subject=demo_part.id),
         core_colours=("BN", "BK", "GY", "BU", "SH"),
     )
-    doc = document(
-        "d1",
-        preset=DocumentPreset.HARNESS_DRAWING,
-        subject=harness,
-        cover="# Cover",
-        notes=None,
-    )
-    m = model(
-        harness, demo_part, cable, cable_facet("w1", subject=cable.id, length_mm=None), product, doc
-    )
+    doc = document("d1", preset=DocumentPreset.SYSTEM, cover="# Cover", notes=None)
+    m = model(demo_part, cable, cable_facet("w1", subject=cable.id, length_mm=None), product, doc)
     (found,) = harness_cables_for(m, doc.id, (K.HARNESS_DRAWING,))
     assert _part_line(found).endswith("4 x 0.5 mm²")
 

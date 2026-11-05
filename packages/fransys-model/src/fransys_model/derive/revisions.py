@@ -60,10 +60,6 @@ def current_revision(model: Model, release: Id[UnitRelease] | None = None) -> Re
         current = require(unit_releases(model).get(release), "unit_release", release)
     wanted = (current.version, current.revision)
     return next(
-        (
-            entry
-            for entry in revision_history(model, release)
-            if (entry.version, entry.revision) == wanted
-        ),
+        (entry for entry in revision_history(model, release) if (entry.version, entry.revision) == wanted),
         None,
     )

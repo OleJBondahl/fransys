@@ -6,28 +6,30 @@ lazy from collections.abc import Callable
 
 from fransys_author._origin import caller_origin
 from fransys_author.errors import AuthorError
+from fransys_author.handles import Port, Terminal
 from fransys_author.surface._bare import bare_series
 from fransys_author.surface._block_ports import series_ports
 from fransys_author.surface._cable import Cables
-from fransys_author.surface._carry import series_name
+from fransys_author.surface._carry import refuse_carried, series_name
 from fransys_author.surface._channels import take_channels
 from fransys_author.surface._detail_rows import hint_maker, row_wiring
-from fransys_author.surface._ends import Parallel, branches, is_bridge, width_of
+from fransys_author.surface._ends import Parallel, branches, width_of
 from fransys_author.surface._fixed import fixed_count
-from fransys_author.surface._pairing import Ends, PartFacts
+from fransys_author.surface._pairing import Ends, PartFacts, SeriesBridge, SeriesPart
 from fransys_author.surface._partless_end import only_last
-from fransys_author.surface._pin_tuple import refuse_inside
+from fransys_author.surface._pin_tuple import is_lone_pin
 from fransys_author.surface._poles import Poles, group
 from fransys_author.surface._potential import Given, hops, wire_rows
 from fransys_author.surface._rows import AC_N
 from fransys_author.surface._shorts import refuse_lone_tied_poles, refuse_tied_poles
+from fransys_author.surface._strip import TerminalStrip
 from fransys_author.surface._supplies import Supplies
 from fransys_author.surface._supply_rails import _Rails
 from fransys_author.surface._throws import turn_throws
+from fransys_author.surface._unit_strip import is_unit_strip
 from fransys_author.surface._wire import PoleWire, RowWire, WireArg, read_wire
 
 if TYPE_CHECKING:
-    from fransys_author.handles import Port
     from fransys_author.surface._potential import Hop, PortId, Walked, Wire
     from fransys_author.surface._rows import WiringRow
     from fransys_author.wiring import Wiring
@@ -73,24 +75,29 @@ def _width(design: Design, elements: tuple[object, ...]) -> int:
         return width
     if (first := next(filter(None, map(fixed_count, elements)), None)) is not None:
         return first
-    msg = (
-        "name a supply, a rail or a function with poles to set the width; "
-        "for two bare pins use d.detail.wire(a, b, wire=...)"
-    )
+    if all(is_lone_pin(element) or isinstance(element, TerminalStrip) for element in elements):
+        return 1  # bare pins and strips alone: one wire between each neighbouring pair
+    msg = "name a supply, a rail or a function with poles to set the width"
     raise AuthorError(msg)
 
 
-def _entered(found: list[Ends], element: object, around: tuple[object, ...]) -> list[Ends]:
-    """A strip is entered from its field side after a cable: its outer ends are the line ends.
+def _entered(design: Design, found: list[Ends], element: object, around: tuple[object, ...]) -> list[Ends]:
+    """A strip's hop lands on the side that faces the unit holding the other end (R1507).
 
-    A strip that starts a series and goes on to a plain element leaves inward (its inner ends are
-    the load ends); one that goes on to a cable keeps the outer side for the field cable.
+    A unit's strip seen from outside, at either end of a series, lands outer. Any other strip
+    that starts a series leaves inward, and one after a cable is entered from its outer side.
     """
-    if not getattr(element, "_enters_from_field", False):
+    if not (isinstance(element, Terminal) or (isinstance(element, SeriesPart) and element._enters_from_field)):
         return found
     before, after = around
-    if is_bridge(before) or (before is None and not is_bridge(after)):
-        return [Ends(e.load, e.line, e.pe) for e in found]
+    flipped = [Ends(e.load, e.line, e.pe) for e in found]
+    if isinstance(element, TerminalStrip | Terminal) and is_unit_strip(element, design):
+        if before is None and not isinstance(after, SeriesBridge):
+            return found
+        if after is None and not isinstance(before, SeriesBridge):
+            return flipped
+    if isinstance(before, SeriesBridge) or (before is None and not isinstance(after, SeriesBridge)):
+        return flipped
     return found
 
 
@@ -105,20 +112,20 @@ def _refuse_shorts(element: object, width: int, before: Ends | None) -> None:
 def _resolve(design: Design, elements: tuple[object, ...], width: int) -> list[list[Ends]]:
     """The ends of every element; a bridge has none and needs a plain element on each side."""
     only_last(design._pairing_facts, elements)
+    refuse_carried(design, tuple(e for e in elements if isinstance(e, Port)))
     last = len(elements) - 1
     found: list[list[Ends]] = []
     for i, element in enumerate(elements):
-        if is_bridge(element):
+        if isinstance(element, SeriesBridge):
             beside = [elements[j] for j in (i - 1, i + 1) if 0 <= j <= last]
-            if len(beside) < _MINIMUM or any(is_bridge(other) for other in beside):
+            if len(beside) < _MINIMUM or any(isinstance(other, SeriesBridge) for other in beside):
                 msg = "a cable sits between two elements that are not cables"
                 raise AuthorError(msg)
             found.append([])
         else:
-            refuse_inside(element, i, last)
             _refuse_shorts(element, width, found[i - 1][0] if i and found[i - 1] else None)
             around = (elements[i - 1] if i else None, elements[i + 1] if i < last else None)
-            found.append(_entered(branches(design, element, width), element, around))
+            found.append(_entered(design, branches(design, element, width), element, around))
     return found
 
 
@@ -143,7 +150,7 @@ def _commons(elements: tuple[object, ...]) -> set[PortId]:
 
 def _row_makers(design: Design, wire: RowWire, rows: dict[Wire, WiringRow]) -> _Maker:
     """The maker of each wire from its row; a wire with no row is hinted (model-0260)."""
-    makers = {row: row_wiring(design, row, wire) for row in set(rows.values())}
+    makers = {row: row_wiring(design, row, wire) for row in dict.fromkeys(rows.values())}
     hinted = hint_maker(design, wire)
     return lambda a, b, _p: makers[rows[a.id, b.id]] if (a.id, b.id) in rows else hinted
 
@@ -152,10 +159,7 @@ def _read(design: Design, wire: WireArg, width: int) -> Wiring | RowWire | PoleW
     """`wire=` read once; a per-pole tuple must give one spec for each of the `width` poles."""
     read = read_wire(design, wire)
     if isinstance(read, PoleWire) and len(read.wirings) != width:
-        msg = (
-            f"wire= has {len(read.wirings)} specs but the series has {width} poles: "
-            f"give one (colour, size) per pole, or one (colour, size) for all"
-        )
+        msg = f"wire= has {len(read.wirings)} specs but the series has {width} poles: give one (colour, size) per pole, or one (colour, size) for all"
         raise AuthorError(msg)
     return read
 
@@ -173,7 +177,7 @@ def _land_bridges(design: Design, elements: tuple[object, ...], found: list[list
     """Hand each bridge its two neighbours and their ends, and the series' name."""
     series = series_name(elements)
     for i, element in enumerate(elements):
-        if is_bridge(element):
+        if isinstance(element, SeriesBridge):
             before, after = (elements[i - 1], found[i - 1][0]), (elements[i + 1], found[i + 1][0])
             element._series_between(design, before, after, series)
 
@@ -190,7 +194,7 @@ class Series(Supplies, Cables):
         """Wire the elements end to end: each one's load to the next one's line, one wire per pole.
 
         `wire=` is a size, a table of rows, one `(colour, size)`, or one per pole in a tuple.
-        Does not create devices, cross a unit's boundary (use mate) or decide the drawing.
+        Does not create devices or decide the drawing.
         """
         if len(elements) < _MINIMUM:
             msg = f"d.series joins at least {_MINIMUM} elements, got {len(elements)}"

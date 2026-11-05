@@ -13,7 +13,7 @@ from options_fixtures import core_options
 from turn_fixtures import refit
 
 from fransys_layout.core import Box, Hints, Sym
-lazy from fransys_layout.core.values import CutResult
+lazy from fransys_layout.core.flow_values import CutResult
 
 from .conftest import MARKER
 from .cut_fixtures import box_sym, cut_of, elem, net, side
@@ -87,12 +87,6 @@ def test_the_same_page_cut_wins_when_the_pair_violation_costs_nothing() -> None:
         options=core_options(
             marker=MARKER,
             w_violation=0.0,
-            flip_turn="R180",
-            tag_stagger=True,
-            label_gap=8,
-            parallel_pitch=48,
-            driver_first=True,
-            arrow_sides=("E", "W"),
         ),
     )
     assert rows_of(result) == [[("c:a0", "c:b")], [("c:c", "c:d0")]]
@@ -137,12 +131,6 @@ def test_a_page_under_the_minimum_fill_is_refused_unless_it_is_the_last() -> Non
         options=core_options(
             marker=MARKER,
             min_fill=0.0,
-            flip_turn="R180",
-            tag_stagger=True,
-            label_gap=8,
-            parallel_pitch=48,
-            driver_first=True,
-            arrow_sides=("E", "W"),
         ),
     )
     assert relaxed.spec.findings == ()  # can fail: only min_fill differs
@@ -172,27 +160,19 @@ def card_row(left: int, right: int, width: int = 64) -> list[int]:
     return [len(row.columns) for row in page.rows]
 
 
-def test_free_columns_either_side_of_a_card_share_its_row_while_stage_5_packs_it_into_the_page() -> (  # noqa: E501 -- the order fixes this test name
-    None
-):
+def test_free_columns_either_side_of_a_card_share_its_row_while_stage_5_packs_it_into_the_page() -> None:
     """Free columns join the card's row exactly while the pack modules' width fits the page."""
-    got = (card_row(56, 64), card_row(58, 64), card_row(16, 16, width=65))
+    got = (card_row(48, 64), card_row(60, 64), card_row(16, 16, width=65))
     assert got == ([18], [17, 1], [1, 16, 1])
 
 
-def test_neighbours_whose_texts_stagger_pack_at_the_narrow_pitch_but_the_row_counts_the_full_reach() -> (  # noqa: E501 -- the order fixes this test name
-    None
-):
+def test_neighbours_whose_texts_stagger_pack_at_the_narrow_pitch_but_the_row_counts_the_full_reach() -> None:
     """Texts 100 G wide round a 56 G body stagger: soft meets soft, so the pitch is 88 G, not 112.
 
     14 columns span 13 * 88 + 100 = 1244, 15 span 1332 (the row counts the full text at its ends);
     with the stagger off the pitch is 112 and 11 columns span 10 * 112 + 100 = 1220.
     """
-    syms = [
-        refit(elem(f"{p}{i:02d}", 56), footprint=Box(-50, -16, 100, 32))
-        for i in range(20)
-        for p in "ab"
-    ]
+    syms = [refit(elem(f"{p}{i:02d}", 56), footprint=Box(-50, -16, 100, 32)) for i in range(20) for p in "ab"]
     nets = [net(f"n{i:02d}", f"a{i:02d}.s", f"b{i:02d}.n") for i in range(20)]
     staggered, plain = (
         cut_of(
@@ -201,11 +181,6 @@ def test_neighbours_whose_texts_stagger_pack_at_the_narrow_pitch_but_the_row_cou
             options=core_options(
                 marker=MARKER,
                 tag_stagger=on,
-                label_gap=8,
-                parallel_pitch=48,
-                flip_turn="R180",
-                driver_first=True,
-                arrow_sides=("E", "W"),
             ),
         ).spec.pages
         for on in (True, False)
@@ -225,14 +200,6 @@ def test_a_single_block_wider_than_the_page_is_cut_as_a_row_of_its_own() -> None
     assert {c for r in rows_of(result) for row in r for c in row} == {"c:w0", "c:s0"}
 
 
-def test_a_first_row_taller_than_the_page_gives_page_overflow_with_the_block_as_subject() -> None:
-    """One 900 G symbol on an 822 G page: a page of its own and a finding naming its block."""
-    result = cut_of([side("x", 100, 900), side("y", 100, 100)], [net("m", "x.e", "y.e")])
-    (finding,) = result.spec.findings
-    assert (finding.code, finding.page) == ("PAGE_OVERFLOW", 1)
-    assert finding.subject == result.blocks[0].blocks[0].id
-
-
 def test_a_row_after_the_first_holds_only_short_columns() -> None:
     """L7: y is 350 G tall (not short: 0.4 of the page is 329 G), so it cannot be the second row."""
     syms = [side("x", 700, 300), side("y", 700, 350)]
@@ -243,12 +210,6 @@ def test_a_row_after_the_first_holds_only_short_columns() -> None:
         options=core_options(
             marker=MARKER,
             min_fill=0.0,
-            flip_turn="R180",
-            tag_stagger=True,
-            label_gap=8,
-            parallel_pitch=48,
-            driver_first=True,
-            arrow_sides=("E", "W"),
         ),
     )
     assert rows_of(apart) == [[("c:x",)], [("c:y",)]]
@@ -259,12 +220,12 @@ def test_a_row_after_the_first_holds_only_short_columns() -> None:
             marker=MARKER,
             min_fill=0.0,
             short_height=0.5,
-            flip_turn="R180",
-            tag_stagger=True,
-            label_gap=8,
-            parallel_pitch=48,
-            driver_first=True,
-            arrow_sides=("E", "W"),
         ),
     )
     assert rows_of(short) == [[("c:x",), ("c:y",)]]  # y is short at 0.5: it takes a second row
+
+
+def test_an_exact_tie_between_two_splits_gives_the_earlier_page_more_rows() -> None:
+    """Three equal columns, two to a page: 2|1 and 1|2 cost the same; the tie is 2|1 (R1685)."""
+    syms = [elem(f"t{i}", 500, 700) for i in range(3)]
+    assert rows_of(cut_of(syms, [])) == [[("c:t0", "c:t1")], [("c:t2",)]]

@@ -1,7 +1,7 @@
 """KiCad-side ERC, reported as findings."""
 
 from collections import defaultdict
-from typing import TYPE_CHECKING, Any, Final
+from typing import TYPE_CHECKING, Final
 
 from fransys_model.derive import (
     board_netlist,
@@ -10,15 +10,13 @@ from fransys_model.derive import (
     pin_text,
     port_designation,
 )
-from fransys_model.kernel import Finding, Severity
+lazy from fransys_model.kernel import Finding
 
-from .codes import fix_text
+from .codes import finding
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
-
     from fransys_model.derive import BoardNetlist, ItemId, NetlistPin, PinNet
-    from fransys_model.kernel import Id, Model
+    from fransys_model.kernel import Model
 
 PART_WITHOUT_FOOTPRINT: Final[str] = "PART_WITHOUT_FOOTPRINT"
 NET_SINGLE_PIN: Final[str] = "NET_SINGLE_PIN"
@@ -30,21 +28,10 @@ UNCONNECTED_PIN: Final[str] = "UNCONNECTED_PIN"
 PIN_ID_COLLISION: Final[str] = "PIN_ID_COLLISION"
 
 
-def _finding(code: str, severity: Severity, subjects: Iterable[Id[Any]], message: str) -> Finding:
-    return Finding(
-        code=code,
-        severity=severity,
-        subjects=tuple(subjects),
-        message=message,
-        fix=fix_text(code),
-    )
-
-
 def _single_pin(nets: tuple[PinNet, ...]) -> list[Finding]:
     return [
-        _finding(
+        finding(
             NET_SINGLE_PIN,
-            Severity.INFO,
             (net.pins[0].port,),
             f"net {net.name} has one pin, {pin_text(net.pins[0])}",
         )
@@ -57,7 +44,7 @@ def _without_footprint(model: Model, rows: BoardNetlist) -> list[Finding]:
     found = []
     for item_id in rows.without_footprint:
         message = f"part {item_label(model, item_id)} has no footprint, so the netlist omits it"
-        found.append(_finding(PART_WITHOUT_FOOTPRINT, Severity.WARNING, (item_id,), message))
+        found.append(finding(PART_WITHOUT_FOOTPRINT, (item_id,), message))
     return found
 
 
@@ -75,11 +62,8 @@ def _without_component(rows: BoardNetlist, nets: tuple[PinNet, ...]) -> list[Fin
                 "of the bare board"
             )
         else:
-            message = (
-                f"pin {pin_text(pin)} belongs to an item with no footprint, so it has no component "
-                "in the netlist and KiCad drops it on import"
-            )
-        found.append(_finding(NODE_WITHOUT_COMPONENT, Severity.WARNING, (pin.port,), message))
+            message = f"pin {pin_text(pin)} belongs to an item with no footprint, so it has no component in the netlist and KiCad drops it on import"
+        found.append(finding(NODE_WITHOUT_COMPONENT, (pin.port,), message))
     return found
 
 
@@ -88,9 +72,8 @@ def _reference_duplicate(rows: BoardNetlist) -> list[Finding]:
     for part in rows.parts:
         by_reference[part.designation].append(part.item)
     return [
-        _finding(
+        finding(
             REFERENCE_DUPLICATE,
-            Severity.ERROR,
             parts,
             f"{len(parts)} parts share the reference {reference}",
         )
@@ -104,9 +87,8 @@ def _net_name_duplicate(nets: tuple[PinNet, ...]) -> list[Finding]:
     for net in nets:
         by_name[net.name].append(net)
     return [
-        _finding(
+        finding(
             NET_NAME_DUPLICATE,
-            Severity.ERROR,
             (pin.port for net in same for pin in net.pins),
             f"{len(same)} nets are named {name}, and KiCad merges nets that share a name",
         )
@@ -121,12 +103,10 @@ def _pad_on_multiple_nets(nets: tuple[PinNet, ...]) -> list[Finding]:
         for pin in net.pins:
             uses[pin.ref, pin.pad].append((index, pin))
     return [
-        _finding(
+        finding(
             PAD_ON_MULTIPLE_NETS,
-            Severity.ERROR,
             (pin.port for _, pin in pad_uses),
-            f"pad {pin_text(pad_uses[0][1])} is in {len({index for index, _ in pad_uses})} nets, "
-            "and KiCad puts a pad in one",
+            f"pad {pin_text(pad_uses[0][1])} is in {len({index for index, _ in pad_uses})} nets, and KiCad puts a pad in one",
         )
         for pad_uses in uses.values()
         if len({index for index, _ in pad_uses}) > 1
@@ -136,11 +116,8 @@ def _pad_on_multiple_nets(nets: tuple[PinNet, ...]) -> list[Finding]:
 def _collision(model: Model, first: NetlistPin, other: NetlistPin) -> Finding:
     names = port_designation(model, first.port), port_designation(model, other.port)
     pad = pin_text(first)
-    message = (
-        f"pins {names[0]} and {names[1]} would write the one KiCad pin id {pad}; "
-        "KiCad keys a pin by its name, which is the pad name"
-    )
-    return _finding(PIN_ID_COLLISION, Severity.ERROR, (first.port, other.port), message)
+    message = f"pins {names[0]} and {names[1]} would write the one KiCad pin id {pad}; KiCad keys a pin by its name, which is the pad name"
+    return finding(PIN_ID_COLLISION, (first.port, other.port), message)
 
 
 def _pin_id_collision(model: Model, part_pins: tuple[NetlistPin, ...]) -> list[Finding]:
@@ -151,10 +128,7 @@ def _pin_id_collision(model: Model, part_pins: tuple[NetlistPin, ...]) -> list[F
 
 
 def _unconnected_pin(unconnected: tuple[NetlistPin, ...]) -> list[Finding]:
-    return [
-        _finding(UNCONNECTED_PIN, Severity.INFO, (pin.port,), f"pin {pin_text(pin)} is in no net")
-        for pin in unconnected
-    ]
+    return [finding(UNCONNECTED_PIN, (pin.port,), f"pin {pin_text(pin)} is in no net") for pin in unconnected]
 
 
 def check(model: Model, board: ItemId) -> tuple[Finding, ...]:

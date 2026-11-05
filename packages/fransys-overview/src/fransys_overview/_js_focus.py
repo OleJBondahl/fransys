@@ -4,8 +4,6 @@ The hops count over the lines drawn on the level shown, read from the cy graph; 
 computes no engineering fact.
 """
 
-# ruff: noqa: E501 -- the JavaScript source is not wrapped
-
 from typing import Final
 
 JS_FOCUS: Final[str] = r"""

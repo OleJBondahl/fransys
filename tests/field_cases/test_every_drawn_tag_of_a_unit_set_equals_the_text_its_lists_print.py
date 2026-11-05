@@ -1,20 +1,9 @@
 """Field case: in every drawing set, a drawn tag equals the text the set's lists print for it.
-
-The engineering shape: the demo skid and the five placement-corpus circuits, each built through
-`fr`. A set of a unit draws and lists relative to that unit; the top-level set, relative to the
-project root (R309: a nested unit seen from its container keeps the container's prefix).
-
 The bug: the unit sets drew the root-relative form (`-U1-Q21`) beside lists that print `-Q21`.
-
-The rule: `DESIGNATION-SCHEME`: each TAG text of a set is a text `printed_designation` or
-`port_designation` gives with the set's own unit, and never a root-relative form that differs
-from it. The decision that fixes it: model-0359.
-"""
+Fixed by model-0359 (DESIGNATION-SCHEME), each TAG text of a set is the text printed_designation or port_designation gives."""
 
 import importlib
-import sys
 from collections import defaultdict
-from pathlib import Path
 from typing import Any
 
 import fransys as fr
@@ -25,15 +14,13 @@ from _export_signature import is_export
 from fransys_model.layout import DrawingSet, Page, layout_of
 from fransys_model.vocab.tables import items, ports
 
-sys.path.insert(0, str(Path(__file__).parents[2] / "internal"))
 run: Any = None if is_export() else importlib.import_module("placement_corpus.run")
 
 _CORPUS = {"machine_panel", "panel_di16p", "remote_io", "distribution_board", "mcc"}
 _CASES = (
     [("export",)]  # one placeholder, skipped by its marker (R462)
     if run is None
-    else [c for c in run.circuits("standard") if c[0] in _CORPUS]
-    + [("demo-skid", run.load(run.SKID, "demo_skid"), {}, {})]
+    else [c for c in run.circuits("standard") if c[0] in _CORPUS] + [("demo-skid", run.load(run.SKID, "demo_skid"), {}, {})]
 )
 
 

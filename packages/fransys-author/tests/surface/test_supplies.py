@@ -1,65 +1,25 @@
 """`ac_supply` and `dc_supply` write what the same calls by hand write, and fail by name."""
 
 from decimal import Decimal
-from typing import TYPE_CHECKING, NamedTuple
+from typing import TYPE_CHECKING, Any, NamedTuple
 
 import pytest
 from fransys_author import AuthorError
 from fransys_author.surface import Design, Device, design, unit
 from fransys_author.surface._pairing import End
+from series_parts import MINUS, PLUS
 
-from fransys_model.kernel import make_id
 from fransys_model.vocab import (
     ConductorMark,
-    Earthing,
-    FunctionKind,
     Net,
-    Operating,
-    OperatingFacet,
-    PartCategory,
     SupplySystem,
 )
 from fransys_model.vocab import Unit as ModelUnit
-
-from ..conftest import _ORIGIN, _function, _library, _part  # noqa: TID252 -- importlib mode puts tests/ on no path
-from ..equivalence.series_parts import MINUS, PLUS, _pin, series_library  # noqa: TID252 -- same
 
 if TYPE_CHECKING:
     from fransys_model.kernel import Draft
 
 M = ConductorMark.M
-
-
-def _psu(draft: Draft, mpn: str, marks: dict[str, ConductorMark | None], volts: str | None) -> None:
-    """A PSU `out` function with one pin per `marks` item and `volts` as its nominal voltage."""
-    lib = _library(draft, f"lib-{mpn}")
-    part = _part(
-        draft, lib, manufacturer="TestCo", mpn=mpn, category=PartCategory.GENERIC, letter="G"
-    )
-    out = _function(draft, part, "out", FunctionKind.SUPPLY)
-    for name, mark in marks.items():
-        _pin(draft, out, name, None, mark)
-    if volts is not None:
-        key = (*out.key, "operating")
-        facet = OperatingFacet(
-            id=make_id(OperatingFacet, key),
-            key=key,
-            subject=out.id,
-            operating=Operating(nominal_voltage_v=Decimal(volts)),
-        )
-        draft.add(facet, origin=_ORIGIN)
-
-
-@pytest.fixture(scope="module")
-def lib() -> Draft:
-    """The series library plus PSU variants: a mid pin, no voltage, no marks, a '24.0' voltage."""
-    draft = series_library()
-    _psu(draft, "PSU-MID", {"B": M, "A": MINUS, "C": PLUS}, "12")
-    _psu(draft, "PSU-NOV", {"+": PLUS, "-": MINUS}, None)
-    _psu(draft, "PSU-NOMARK", {"+": None, "-": None}, "24")
-    _psu(draft, "PSU-NOMINUS", {"+": PLUS, "-": None}, "24")
-    _psu(draft, "PSU-TWO-OUT", {"+": PLUS, "-": MINUS}, "24.0")
-    return draft
 
 
 class _Io(NamedTuple):
@@ -73,7 +33,7 @@ def _psu_board(d: Design) -> _Io:
     return _Io(g1)
 
 
-def _records(d: Design, cls: type) -> list:
+def _records(d: Design, cls: type) -> list[Any]:
     return [r for r in d.draft().records() if isinstance(r, cls)]
 
 
@@ -81,7 +41,7 @@ def test_ac_supply_equals_the_same_calls_by_hand(lib: Draft) -> None:
     d, hand = design(lib, place="C1"), design(lib, place="C1")
     pins = [d.device(f"A{i}", "TEST-PSU-24V").out["+"] for i in range(4)]
     hand_pins = [hand.device(f"A{i}", "TEST-PSU-24V").out["+"] for i in range(4)]
-    ac = d.ac_supply("mains", "400", *pins[:3], n=pins[3], earthing=Earthing.IT)
+    ac = d.ac_supply("mains", "400", *pins[:3], n=pins[3])
     hand._engine.supply(
         "mains",
         current="ac",
@@ -91,14 +51,12 @@ def test_ac_supply_equals_the_same_calls_by_hand(lib: Draft) -> None:
             "L3": ("400", 240),
             "N": ("0", None),
         },
-        earthing="it",
         pins=hand_pins,
     )
     for rail, pin in zip(("L1", "L2", "L3", "N"), hand_pins, strict=True):
         hand._engine.net(rail, pin, cls="power", potential=rail)
     for cls in (SupplySystem, Net):
         assert sorted(map(repr, _records(d, cls))) == sorted(map(repr, _records(hand, cls)))
-    assert _records(d, SupplySystem)[0].earthing is Earthing.IT
     assert [ac.L1.pin, ac.L2.pin, ac.L3.pin, ac.N.pin] == pins
     assert ac.L2.phase == 120
     assert ac.N.phase is None
@@ -134,14 +92,6 @@ def test_a_misspelt_rail_raises_and_a_private_name_is_an_attribute_error(lib: Dr
         _ = dc.mid
 
 
-def test_earthing_must_be_the_enum(lib: Draft) -> None:
-    d = design(lib, place="C1")
-    pin = d.device("A1", "TEST-PSU-24V").out["+"]
-    with pytest.raises(AuthorError, match=r"Earthing.EARTHED or Earthing.IT, not 'it'"):
-        d.ac_supply("mains", "230", pin, pin, pin, earthing="it")  # ty: ignore[invalid-argument-type] -- the case
-    assert not _records(d, SupplySystem)
-
-
 def test_ac_rails_stand_in_a_series_as_ends_in_phase_order(lib: Draft) -> None:
     d = design(lib, place="C1")
     pins = [d.device(f"A{i}", "TEST-PSU-24V").out["+"] for i in range(4)]
@@ -159,12 +109,11 @@ def test_dc_supply_equals_the_same_calls_by_hand(lib: Draft) -> None:
     d, hand = design(lib, place="C1"), design(lib, place="C1")
     g1 = d.device("G1", "TEST-PSU-24V")
     h1 = hand.device("G1", "TEST-PSU-24V")
-    d.dc_supply("psu", g1, earthing=Earthing.IT)
+    d.dc_supply("psu", g1)
     hand._engine.supply(
         "psu",
         current="dc",
         rails={"24V": (Decimal(24), None), "0V": ("0", None)},
-        earthing="it",
         pins=[h1.out["+"], h1.out["-"]],
     )
     hand._engine.net("24V", h1.out["+"], cls="power", potential="24V")
@@ -198,9 +147,7 @@ def test_a_source_function_is_enough_and_a_device_with_two_functions_is_ambiguou
     dc = d.dc_supply("psu", d.device("G1", "TEST-PSU-24V").out)
     assert dc.plus.potential == "24V"
     k = d.device("K1", "TEST-KM-3P")
-    with pytest.raises(
-        AuthorError, match=r"K1 needs exactly one function .*candidates: aux, coil, main"
-    ):
+    with pytest.raises(AuthorError, match=r"K1 needs exactly one function .*candidates: aux, coil, main"):
         d.dc_supply("bad", k)
 
 

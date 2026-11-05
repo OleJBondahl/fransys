@@ -1,20 +1,23 @@
 """The public surface (the engineer surface, no `author`), and the first-party import scan."""
 
-import ast
 import re
 from pathlib import Path
+from typing import Any
 
 import fransys
 import fransys.colours as fransys_colours
 import fransys_author.surface as surface_module
 import fransys_author.surface.colours as surface_colours
+from first_party_imports import first_party_violations
 
 from fransys_model import derive as model_derive
 
 _REPO_ROOT = next(p for p in Path(__file__).resolve().parents if (p / "examples").is_dir())
 
+# Surface names the facade uses internally and does not re-export (AUTH-2).
+_NOT_RE_EXPORTED = {"Item", "Location", "Scope"}
+
 _EXPECTED_ALL = [
-    "ABOVE",
     "AC_CONTROL",
     "AC_L1",
     "AC_L2",
@@ -26,16 +29,13 @@ _EXPECTED_ALL = [
     "DC_SUPPLY",
     "AI",
     "AO",
-    "BELOW",
     "CONTROL",
     "DI",
     "DO",
-    "EARTHED",
     "GENERIC",
-    "IT",
     "AcSupply",
     "AuthorError",
-    "BuildErrors",
+    "BuildFailedError",
     "BuildResult",
     "Cable",
     "DcSupply",
@@ -46,9 +46,10 @@ _EXPECTED_ALL = [
     "Draft",
     "Finding",
     "Fn",
+    "FransysError",
     "FreezeError",
     "Layout",
-    "MergeConflict",
+    "MergeConflictError",
     "Model",
     "PageKind",
     "PartLibraryError",
@@ -71,6 +72,7 @@ _EXPECTED_ALL = [
     "build",
     "check",
     "derive",
+    "elecdef",
     "design",
     "diff",
     "document",
@@ -89,25 +91,6 @@ _EXPECTED_ALL = [
     "write",
 ]
 
-# Every first-party import name besides `fransys` itself (a consumer script
-# imports nothing else).
-_FIRST_PARTY_NOT_FRANSYS = frozenset(
-    {
-        "fransys_model",
-        "symdef",
-        "electrical_symbols",
-        "fransys_parts",
-        "fransys_author",
-        "fransys_layout",
-        "fransys_render",
-        "fransys_reports",
-        "fransys_pdf",
-        "fransys_kicad",
-        "fransys_wago",
-        "fransys_overview",
-    }
-)
-
 _FENCE = re.compile(r"```python\n(.*?)```", re.DOTALL)
 
 
@@ -115,18 +98,7 @@ def _names_match(expected: list[str], actual: list[str]) -> bool:
     return sorted(expected) == sorted(actual)
 
 
-def first_party_violations(source: str) -> set[str]:
-    """First-party top-level packages `source` imports besides `fransys` itself."""
-    imported: set[str] = set()
-    for node in ast.walk(ast.parse(source)):
-        if isinstance(node, ast.Import):
-            imported.update(alias.name.split(".")[0] for alias in node.names)
-        elif isinstance(node, ast.ImportFrom) and node.level == 0 and node.module:
-            imported.add(node.module.split(".")[0])
-    return imported & _FIRST_PARTY_NOT_FRANSYS
-
-
-def _python_blocks(markdown: str) -> list[str]:
+def _python_blocks(markdown: str) -> list[Any]:
     """Every ```python fenced code block of `markdown`, its own text."""
     return _FENCE.findall(markdown)
 
@@ -145,15 +117,15 @@ def test_author_is_not_public():
 
 
 def test_every_surface_name_is_public():
-    """The facade's own `design` function stands for the surface's `design`."""
-    surface = set(surface_module.__all__) - {"design"}
+    """The facade's own `design` stands for the surface's; `added_unit` is its tool, not public."""
+    surface = set(surface_module.__all__) - {"design", "added_unit"} - _NOT_RE_EXPORTED
     assert surface <= set(fransys.__all__)
     assert fransys.design is not surface_module.design
 
 
 def test_surface_names_are_the_surface_objects():
     for name in surface_module.__all__:
-        if name != "design":
+        if name not in {"design", "added_unit"} and name not in _NOT_RE_EXPORTED:
             assert getattr(fransys, name) is getattr(surface_module, name)
 
 
@@ -232,11 +204,3 @@ def test_the_docs_scan_excludes_only_the_named_directories(tmp_path):
 def test_the_import_scan_can_fail():
     assert first_party_violations("import fransys_model") == {"fransys_model"}
     assert first_party_violations("import fransys\nfrom pathlib import Path") == set()
-
-
-def test_above_and_below_are_the_models_north_and_south() -> None:
-    """model-0177: `fr.ABOVE` and `fr.BELOW` name `Side.N` and `Side.S`, one enum serves."""
-    from fransys_model.layout import Side
-
-    assert fransys.ABOVE is Side.N
-    assert fransys.BELOW is Side.S

@@ -418,7 +418,10 @@
     },
     "ascent": 1556,
     "cap_height": 1493,
-    "default_advance": 1843,
+    "default_advance": {
+      "normal": 1843,
+      "thick": 2033
+    },
     "descent": 426,
     "family": "DejaVu Sans",
     "heights": {
@@ -431,11 +434,19 @@
     "text_block": "grid",
     "units_per_em": 2048
   },
+  "grid": {
+    "divisions_per_module": 8,
+    "module_mm": 2.5,
+    "outline_margin": 4,
+    "wire_pitch": 8,
+    "wire_pitch_fine": 4
+  },
   "lines": {
     "normal": 0.25,
     "rule": 0.18,
     "thick": 0.5
   },
+  "port_format": "{k}.{port}",
   "schema": 1,
   "standard": "IEC 60617",
   "symbols": {
@@ -5487,6 +5498,10 @@
       "kind": "symbol",
       "lint_allow": [
         {
+          "reason": "no tag is drawn on a power symbol; the library requires a tag slot of every symbol until TEXT-IN-LOOP T1 drops it (SUPPLY-SLOT R1605)",
+          "rule": "slot-missing"
+        },
+        {
           "reason": "0 V reference ground; none of the toolkit's node potentials (earth, protective_earth, functional_earth, frame) names a plain rail reference (see the decisions file)",
           "rule": "port-isolated"
         }
@@ -5527,17 +5542,6 @@
             1
           ],
           "side": "E"
-        },
-        "tag": {
-          "at": [
-            -2,
-            0.5
-          ],
-          "box": [
-            6,
-            1
-          ],
-          "side": "W"
         }
       },
       "status": "unverified"
@@ -6258,14 +6262,14 @@
       "slots": {
         "ref": {
           "at": [
-            0,
-            1.125
+            -0.5,
+            0.375
           ],
           "box": [
             1,
             1.75
           ],
-          "side": "C",
+          "side": "SE",
           "turn": true
         }
       },
@@ -6274,6 +6278,10 @@
         {
           "at": 1.125,
           "axis": "y"
+        },
+        {
+          "at": 0,
+          "axis": "x"
         }
       ]
     },
@@ -8367,6 +8375,10 @@
       "kind": "symbol",
       "lint_allow": [
         {
+          "reason": "no tag is drawn on a power symbol; the library requires a tag slot of every symbol until TEXT-IN-LOOP T1 drops it (SUPPLY-SLOT R1605)",
+          "rule": "slot-missing"
+        },
+        {
           "reason": "supply rail marker; none of the toolkit's node potentials (earth, protective_earth, functional_earth, frame) names a plain rail reference (see the decisions file)",
           "rule": "port-isolated"
         }
@@ -8399,25 +8411,14 @@
       "slots": {
         "marking.supply": {
           "at": [
-            0.25,
-            1.5
+            0,
+            -1.5
           ],
           "box": [
-            1.5,
+            2,
             1
           ],
-          "side": "E"
-        },
-        "tag": {
-          "at": [
-            -2,
-            0
-          ],
-          "box": [
-            6,
-            1
-          ],
-          "side": "W"
+          "side": "N"
         }
       },
       "status": "unverified"
@@ -8512,6 +8513,12 @@
         ]
       ],
       "kind": "symbol",
+      "lint_allow": [
+        {
+          "reason": "no tag is drawn on a power symbol; the library requires a tag slot of every symbol until TEXT-IN-LOOP T1 drops it (SUPPLY-SLOT R1605)",
+          "rule": "slot-missing"
+        }
+      ],
       "name": "Protective earth",
       "nodes": [
         {
@@ -8549,17 +8556,6 @@
             1
           ],
           "side": "E"
-        },
-        "tag": {
-          "at": [
-            -2,
-            0.5
-          ],
-          "box": [
-            6,
-            1
-          ],
-          "side": "W"
         }
       },
       "status": "unverified"
@@ -10277,13 +10273,13 @@
         "ref": {
           "at": [
             1.25,
-            0
+            -0.5
           ],
           "box": [
             4.5,
             1
           ],
-          "side": "E"
+          "side": "SE"
         }
       },
       "status": "unverified",
@@ -10291,6 +10287,10 @@
         {
           "at": 3.5,
           "axis": "x"
+        },
+        {
+          "at": 0,
+          "axis": "y"
         }
       ]
     },

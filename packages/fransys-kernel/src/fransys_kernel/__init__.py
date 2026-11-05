@@ -3,12 +3,13 @@
 from .cache import DIGEST_CACHE_SIZE, ByDigest, digest_cached
 from .canonical_forms import dumps, from_data, loads, to_data
 from .codes import WHO_ACTS, CodeInfo
+from .decode import value_from
 from .diff import ModelDiff, diff
 from .draft import Draft
-from .encode import JsonValue, decimal_text, write_json
+from .encode import JsonValue, decimal_text, value_data, write_json
 from .errors import (
     FreezeError,
-    MergeConflict,
+    MergeConflictError,
     ModelError,
     RefError,
     SchemaError,
@@ -19,7 +20,7 @@ from .evolve import evolve
 from .findings import Finding, Severity
 from .freeze import freeze
 from .grouping import index_ids
-from .ids import AuthoringKey, Id, make_id, render_id
+from .ids import AuthoringKey, Id, id_namespace, make_id, render_id
 from .jsonread import read_json
 from .merge import merge
 from .model import Model
@@ -36,7 +37,7 @@ from .registry import (
     register_schema_version,
 )
 from .unionfind import UnionFind
-from .values import Value, check_value, register_enum
+from .values import Value, register_enum
 
 __all__ = [
     "DIGEST_CACHE_SIZE",
@@ -51,7 +52,7 @@ __all__ = [
     "FreezeError",
     "Id",
     "JsonValue",
-    "MergeConflict",
+    "MergeConflictError",
     "Model",
     "ModelDiff",
     "ModelError",
@@ -67,7 +68,6 @@ __all__ = [
     "Value",
     "ValueTypeError",
     "canonical",
-    "check_value",
     "decimal_text",
     "describe",
     "describe_parts",
@@ -78,6 +78,7 @@ __all__ = [
     "field_specs",
     "freeze",
     "from_data",
+    "id_namespace",
     "index_ids",
     "key_text",
     "loads",
@@ -99,5 +100,7 @@ __all__ = [
     "require_origin",
     "to_data",
     "value",
+    "value_data",
+    "value_from",
     "write_json",
 ]

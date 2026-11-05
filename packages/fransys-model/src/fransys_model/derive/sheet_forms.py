@@ -5,7 +5,9 @@ reference or a destination prints after its `p`; `sheet_counter_text` is the tit
 `n / N` cell, `B1 / 2` on a block diagram sheet (owner label B1).
 """
 
-from fransys_model.layout import DiagramSheet, Page, ReferenceText
+lazy from fransys_model.layout import Page, ReferenceText
+
+from .rows_sheet import DiagramSheet
 
 __all__ = ["diagram_text", "set_page_text", "sheet_counter_text"]
 

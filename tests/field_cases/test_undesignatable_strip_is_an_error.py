@@ -1,17 +1,6 @@
-"""Field case: a floating terminal strip that cannot be designated is an ERROR, not a crash.
-
-The engineering shape: a cabinet adds a spare terminal strip with `terminal_strip(None, part,
-name=)`. The strip has no part of its own and takes its class code from its terminals' part.
-
-The bug: a strip with no terminal, or whose terminals disagree on the class code, got no
-designation and no finding (only the INFO `ITEM_WITHOUT_PART`). The build passed, and `fr.write`
-died on a bare `SchemaError` ("the item has no designation") when it first printed the strip.
-
-The rule: such a strip is an ERROR finding that names the strip key and says why (no terminals,
-or the codes that disagree); `fr.write` raises `BuildErrors` and writes nothing.
-
-The decision that fixes it: model-0134 (numbering).
-"""
+"""Field case: a spare terminal strip with no part of its own, whose terminals disagree on the class code or have none.
+The bug: such a strip got no designation and no finding, so fr.write died on a bare SchemaError printing it.
+Fixed by model-0134, such a strip is an ERROR naming its key and the cause, so fr.write raises BuildFailedError and writes nothing."""
 
 import tempfile
 from pathlib import Path
@@ -19,7 +8,8 @@ from typing import Any
 
 import fransys as fr
 import pytest
-from fransys.pipeline import BuildErrors
+from _expected_codes import expect_codes
+from fransys.pipeline import BuildFailedError
 
 from fransys_model.kernel import Severity
 from fransys_model.vocab.tables import items
@@ -50,22 +40,21 @@ def _built(fill: Any) -> fr.BuildResult:
 
 def _named_errors(result: fr.BuildResult) -> list[fr.Finding]:
     all_items = items(result.model)
-    return [
-        f
-        for f in result.findings
-        if f.severity is Severity.ERROR
-        and any(all_items[s].key == ("spare",) for s in f.subjects if s in all_items)
-    ]
+    return [f for f in result.findings if f.severity is Severity.ERROR and any(all_items[s].key == ("spare",) for s in f.subjects if s in all_items)]
 
 
 @pytest.mark.parametrize("fill", _CASES)
 def test_the_strip_gets_an_error_naming_its_kind_not_its_key(fill: Any) -> None:
-    (finding,) = _named_errors(_built(fill))
+    result = _built(fill)
+    expect_codes(result, "STRIP_WITHOUT_TAG")
+    (finding,) = _named_errors(result)
     assert finding.message.startswith(("strip ", "device "))
     assert "spare" not in finding.message
 
 
 @pytest.mark.parametrize("fill", _CASES)
 def test_write_raises_build_errors_not_a_bare_schema_error(fill: Any) -> None:
-    with pytest.raises(BuildErrors):
-        fr.write(_built(fill), Path(tempfile.mkdtemp()))
+    built = _built(fill)
+    expect_codes(built, "STRIP_WITHOUT_TAG")
+    with pytest.raises(BuildFailedError):
+        fr.write(built, Path(tempfile.mkdtemp()))

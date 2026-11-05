@@ -5,14 +5,10 @@ Staging only, no Zensical: `site_gallery.build_gallery` on a tiny invented examp
 
 import importlib
 import re
-import sys
 from pathlib import Path, PurePosixPath
 
 import pypdfium2
 import pytest
-
-ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "scripts"))
 
 site_gallery = importlib.import_module("site_gallery")
 

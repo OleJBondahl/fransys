@@ -2,22 +2,18 @@
 
 Built from `examples/demo-parts` only. The rank order is AC phases, DC above 0 V, the AC rail at
 0 V, the DC rail at 0 V, DC below 0 V, then PE last; equal facts tie by potential text, since
-declaration order is no model fact. A rail's name is never read.
-
-Can-fail probes: `_order_key` returning one constant fails the order test; `_carried` reading
-only the port's own nets fails the closure and changeover tests.
 """
 
 from typing import Any
 
 import fransys_parts
-from fransys_author import Design
+from fransys_author.design import Design
 from root_library import freeze
 
 from fransys_model.derive import port_potential_current, port_potential_rank
+from fransys_model.elecdef import Current
 from fransys_model.kernel import Id, Model, merge
-from fransys_model.vocab import Current
-from fransys_model.vocab import Port as ModelPort
+lazy from fransys_model.vocab import Port as ModelPort
 
 _AC = {"L1": ("230", 0), "L2": ("230", 120), "N": ("0", None)}
 _DC = {
@@ -51,7 +47,7 @@ def _on_nets(d: Design, nets: dict[str, str]) -> dict[str, Any]:
     return ends
 
 
-def _ranks(model: Model, ends: dict) -> dict[str, int | None]:
+def _ranks(model: Model, ends: dict[Any, Any]) -> dict[str, int | None]:
     return {name: port_potential_rank(model, end.id) for name, end in ends.items()}
 
 
@@ -111,7 +107,7 @@ def test_the_current_comes_from_the_supply_and_pe_has_none() -> None:
     assert got == {"L1": Current.AC, "N": Current.AC, "P24": Current.DC, "PE": None}
 
 
-def _changeover(first: str, second: str) -> tuple[Model, dict]:
+def _changeover(first: str, second: str) -> tuple[Model, dict[Any, Any]]:
     """A relay contact `co_1` of a two-source plant: 12 on net `first`, 14 on net `second`."""
     d = _design()
     d.supply("SOURCE-A", current="ac", rails={"A1": ("230", 0)})
@@ -136,7 +132,7 @@ def test_a_changeover_common_fed_from_two_sources_takes_the_lower_rank() -> None
 
 def test_a_port_not_in_the_model_has_no_rank() -> None:
     model = _freeze(_design())
-    ghost: Id[ModelPort] = Id(kind="port", value="0" * 32)
+    ghost: Id[ModelPort] = Id[ModelPort](kind="port", value="0" * 32)
     assert port_potential_rank(model, ghost) is None
     assert port_potential_current(model, ghost) is None
 

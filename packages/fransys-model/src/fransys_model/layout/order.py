@@ -25,9 +25,7 @@ def holder_of(record: Record) -> Id[Any] | None:
     return record.id if type(record.id) is Id else None
 
 
-def by_index[E: Indexed](
-    found: object, entry_type: type[E], *, kind: str, holder: Id[Any] | None
-) -> tuple[E, ...] | None:
+def by_index[E: Indexed](found: object, entry_type: type[E], *, kind: str, holder: Id[Any] | None) -> tuple[E, ...] | None:
     """Return `found` sorted by `index`, or `None` if it is not a tuple of `entry_type`.
 
     Raises `SchemaError` when two entries share an `index`.

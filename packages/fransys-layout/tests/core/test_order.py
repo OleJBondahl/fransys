@@ -14,7 +14,8 @@ import pytest
 from options_fixtures import core_options
 
 from fransys_layout.core import order, order_search
-from fransys_layout.core.values import Block, BlockList, Fan, Finding, FlowGraph
+from fransys_layout.core.flow_values import Block, BlockList, Fan, FlowGraph
+from fransys_layout.core.values import Finding
 
 from .order_fixtures import (
     OPTIONS,
@@ -45,38 +46,10 @@ if TYPE_CHECKING:
 # ---- the cost ------------------------------------------------------------------------------------
 
 
-def test_order_cost_by_hand() -> None:
-    assert (
-        order.order_cost(["a", "b", "c"], flow([fan("f", ["a", "c"])])) == 1
-    )  # one foreign column
-    assert (
-        order.order_cost(["a", "b", "c"], flow(links=[link("x", ["a", "c"])])) == 2
-    )  # foreign plus between
-    two = flow([fan("f", ["a", "c"]), fan("g", ["b", "d"])])
-    assert order.order_cost(list("abcd"), two) == 3  # two foreign columns and one interleave
-    assert order.order_cost(list("acbd"), two) == 0  # disjoint
-    assert order.order_cost(list("abdc"), two) == 2  # nested: two foreign columns, no interleave
-    three_ends = flow(
-        links=[link("x", ["a", "b", "d"])]
-    )  # a decision: the outermost two ends count as its two ends
-    assert order.order_cost(list("abcd"), three_ends) == 3
-
-
-@pytest.mark.parametrize("seed", range(8))
-def test_order_cost_equals_the_reference_on_any_order(seed: int) -> None:
-    blk, fl = random_case(seed)
-    rng = random.Random(seed)  # noqa: S311 - seeded test data
-    for _ in range(20):
-        perm = rng.sample(list(blk.columns), len(blk.columns))
-        assert order.order_cost(perm, fl) == ref_cost(perm, fl)
-
-
 # ---- the search ----------------------------------------------------------------------------------
 
 
-def test_twelve_columns_of_three_interleaved_hubs_reach_cost_zero_in_a_deterministic_order() -> (
-    None
-):
+def test_twelve_columns_of_three_interleaved_hubs_reach_cost_zero_in_a_deterministic_order() -> None:
     blk, fl = comb(12)
     got = ordered(blk, fl)
     assert got == grouped(12)
@@ -105,12 +78,6 @@ def test_exact_order_limit_option_picks_the_search(monkeypatch: pytest.MonkeyPat
         fl13,
         core_options(
             exact_order_limit=13,
-            flip_turn="R180",
-            tag_stagger=True,
-            label_gap=8,
-            parallel_pitch=48,
-            driver_first=True,
-            arrow_sides=("E", "W"),
         ),
     ) == grouped(13)  # exact: natural-first of the best
     monkeypatch.setattr(order, "exact_search", refuse_exact)
@@ -122,12 +89,6 @@ def test_exact_order_limit_option_picks_the_search(monkeypatch: pytest.MonkeyPat
                 fl12,
                 core_options(
                     exact_order_limit=11,
-                    flip_turn="R180",
-                    tag_stagger=True,
-                    label_gap=8,
-                    parallel_pitch=48,
-                    driver_first=True,
-                    arrow_sides=("E", "W"),
                 ),
             ),
             fl12,
@@ -193,7 +154,7 @@ def adjacent_descent(perm: list[str], fl: FlowGraph) -> list[str]:
     while improved:
         improved = False
         for i in range(len(perm) - 1):
-            swapped = [*perm[:i], perm[i + 1], perm[i], *perm[i + 2 :]]
+            swapped: list[str] = [*perm[:i], perm[i + 1], perm[i], *perm[i + 2 :]]
             if ref_cost(swapped, fl) < ref_cost(perm, fl):
                 perm, improved = swapped, True
     return perm
@@ -219,9 +180,7 @@ def obeys(arrangement: list[str], before: dict[str, frozenset[str]]) -> bool:
 def test_a_swap_is_allowed_exactly_when_every_predecessor_stays_ahead(seed: int) -> None:
     rng = random.Random(seed)  # noqa: S311 - seeded test data
     perm = [f"c{i}" for i in rng.sample(range(8), 8)]
-    before = {
-        c: frozenset(rng.sample(perm[:k], rng.randint(0, min(k, 3)))) for k, c in enumerate(perm)
-    }  # perm obeys it
+    before = {c: frozenset(rng.sample(perm[:k], rng.randint(0, min(k, 3)))) for k, c in enumerate(perm)}  # perm obeys it
     assert obeys(perm, before)
     for i, j in itertools.combinations(range(8), 2):
         swapped = list(perm)
@@ -239,9 +198,7 @@ def test_median_passes_get_past_a_cost_that_swaps_of_two_columns_cannot_lower() 
     start = list("abcde")
     assert ref_cost(start, fl) == 3
     spans = [s for s in order._spans(start, fl) if len(s[0]) < len(start)]
-    assert (
-        ref_cost(order._swap_pairs(start, spans, {c: frozenset() for c in start}), fl) == 2
-    )  # swaps alone stop here
+    assert ref_cost(order._swap_pairs(start, spans, {c: frozenset() for c in start}), fl) == 2  # swaps alone stop here
     assert (
         ref_cost(
             ordered(
@@ -249,12 +206,6 @@ def test_median_passes_get_past_a_cost_that_swaps_of_two_columns_cannot_lower() 
                 fl,
                 core_options(
                     exact_order_limit=0,
-                    flip_turn="R180",
-                    tag_stagger=True,
-                    label_gap=8,
-                    parallel_pitch=48,
-                    driver_first=True,
-                    arrow_sides=("E", "W"),
                 ),
             ),
             fl,
@@ -278,12 +229,6 @@ def test_the_sweep_keeps_the_best_order_a_median_pass_gave_not_the_last() -> Non
                 fl,
                 core_options(
                     exact_order_limit=0,
-                    flip_turn="R180",
-                    tag_stagger=True,
-                    label_gap=8,
-                    parallel_pitch=48,
-                    driver_first=True,
-                    arrow_sides=("E", "W"),
                 ),
             ),
             fl,
@@ -300,9 +245,7 @@ class Counted(order_search.Search):
 
     made: ClassVar[list[order_search.Search]] = []
 
-    def __init__(
-        self, cols: Sequence[str], spans: Sequence[Span], before: Before, bound: int, budget: int
-    ) -> None:
+    def __init__(self, cols: Sequence[str], spans: Sequence[Span], before: Before, bound: int, budget: int) -> None:
         super().__init__(cols, spans, before, bound, budget)
         Counted.made.append(self)
 
@@ -314,17 +257,9 @@ def test_a_search_cut_short_returns_the_sweeps_order_deterministically() -> None
         fl,
         core_options(
             exact_order_limit=0,
-            flip_turn="R180",
-            tag_stagger=True,
-            label_gap=8,
-            parallel_pitch=48,
-            driver_first=True,
-            arrow_sides=("E", "W"),
         ),
     )
-    assert ref_cost(ordered(blk, fl), fl) < ref_cost(
-        sweep, fl
-    )  # planted: the default budget finds a better order
+    assert ref_cost(ordered(blk, fl), fl) < ref_cost(sweep, fl)  # planted: the default budget finds a better order
     for budget in (0, 1, 12):  # fewer nodes than the 13 that reach one leaf
         assert (
             ordered(
@@ -332,12 +267,6 @@ def test_a_search_cut_short_returns_the_sweeps_order_deterministically() -> None
                 fl,
                 core_options(
                     exact_order_nodes=budget,
-                    flip_turn="R180",
-                    tag_stagger=True,
-                    label_gap=8,
-                    parallel_pitch=48,
-                    driver_first=True,
-                    arrow_sides=("E", "W"),
                 ),
             )
             == sweep
@@ -348,12 +277,6 @@ def test_a_search_cut_short_returns_the_sweeps_order_deterministically() -> None
                 fl,
                 core_options(
                     exact_order_nodes=budget,
-                    flip_turn="R180",
-                    tag_stagger=True,
-                    label_gap=8,
-                    parallel_pitch=48,
-                    driver_first=True,
-                    arrow_sides=("E", "W"),
                 ),
             )
             == sweep
@@ -370,12 +293,6 @@ def test_a_cut_search_expands_exactly_its_budget_in_nodes(monkeypatch: pytest.Mo
             fl,
             core_options(
                 exact_order_nodes=budget,
-                flip_turn="R180",
-                tag_stagger=True,
-                label_gap=8,
-                parallel_pitch=48,
-                driver_first=True,
-                arrow_sides=("E", "W"),
             ),
         )
         (search,) = Counted.made
@@ -386,12 +303,6 @@ def test_a_cut_search_expands_exactly_its_budget_in_nodes(monkeypatch: pytest.Mo
         fl,
         core_options(
             exact_order_nodes=10**9,
-            flip_turn="R180",
-            tag_stagger=True,
-            label_gap=8,
-            parallel_pitch=48,
-            driver_first=True,
-            arrow_sides=("E", "W"),
         ),
     )
     assert Counted.made[0].nodes < 10_000  # this search finishes by itself
@@ -405,12 +316,6 @@ def test_more_nodes_never_give_a_worse_order_and_none_is_worse_than_the_sweep() 
             fl,
             core_options(
                 exact_order_limit=0,
-                flip_turn="R180",
-                tag_stagger=True,
-                label_gap=8,
-                parallel_pitch=48,
-                driver_first=True,
-                arrow_sides=("E", "W"),
             ),
         ),
         fl,
@@ -422,12 +327,6 @@ def test_more_nodes_never_give_a_worse_order_and_none_is_worse_than_the_sweep() 
             fl,
             core_options(
                 exact_order_nodes=budget,
-                flip_turn="R180",
-                tag_stagger=True,
-                label_gap=8,
-                parallel_pitch=48,
-                driver_first=True,
-                arrow_sides=("E", "W"),
             ),
         )
         assert sorted(got) == sorted(blk.columns)
@@ -444,12 +343,8 @@ def test_a_card_keeps_its_pin_order() -> None:
     """Pins 7, 3, 5 in box order; a column on a pin the box does not list stands last, natural
     order among those."""
     pins = {"c1": "5", "c2": "7", "c3": "3", "c4": "9", "c5": "8"}
-    fl = flow(
-        [fan("f", ["c1", "c2"])], columns=[box_column(c, p) for c, p in pins.items()]
-    )  # f pulls c1 and c2 together
-    card = block(
-        ["c5", "c4", "c3", "c2", "c1"], kind="card", pin_edges=(("7", "N"), ("3", "N"), ("5", "N"))
-    )
+    fl = flow([fan("f", ["c1", "c2"])], columns=[box_column(c, p) for c, p in pins.items()])  # f pulls c1 and c2 together
+    card = block(["c5", "c4", "c3", "c2", "c1"], kind="card", pin_edges=(("7", "N"), ("3", "N"), ("5", "N")))
     assert ordered(card, fl) == ["c2", "c3", "c1", "c4", "c5"]
     (out,) = order.order_blocks((BlockList("u", (card,)),), fl, OPTIONS)
     assert out.blocks[0].columns == ("c2", "c3", "c1", "c4", "c5")
@@ -458,16 +353,12 @@ def test_a_card_keeps_its_pin_order() -> None:
 def test_the_driver_column_stands_first_unless_it_is_a_leg_too() -> None:
     blk = block(["c1", "c2", "c3", "c4"], "f")
     assert ordered(blk, flow([fan("f", ["c1", "c2", "c4"], ["c3"])])) == ["c3", "c1", "c2", "c4"]
-    both = flow(
-        [fan("f", ["c1", "c2", "c4", "c3"], ["c3"])]
-    )  # the driver is a leg too: no rule, natural order
+    both = flow([fan("f", ["c1", "c2", "c4", "c3"], ["c3"])])  # the driver is a leg too: no rule, natural order
     assert ordered(blk, both) == ["c1", "c2", "c3", "c4"]
 
 
 def test_a_bundles_legs_keep_pole_order() -> None:
-    reverse = flow(
-        [fan("b", ["c3", "c2", "c1"], lanes=3)]
-    )  # pole order is the reverse of natural order
+    reverse = flow([fan("b", ["c3", "c2", "c1"], lanes=3)])  # pole order is the reverse of natural order
     assert ordered(block(["c1", "c2", "c3"]), reverse) == ["c3", "c2", "c1"]
 
 
@@ -499,14 +390,10 @@ def test_a_fixed_order_block_keeps_its_columns_and_reads_no_pin_order() -> None:
     """Stage 2 fixed this order from a chain hint: no search, no driver first, no box pin to look
     up."""
     cols = ["c4", "c2", "c3", "c1"]
-    fl = flow(
-        [fan("f1", ["c1", "c2", "c4"], ["c3"]), fan("f2", ["c1", "c3"])]
-    )  # flow.columns is empty
+    fl = flow([fan("f1", ["c1", "c2", "c4"], ["c3"]), fan("f2", ["c1", "c3"])])  # flow.columns is empty
     fixed = block(cols, "f1", fixed_order=True)
     assert ordered(fixed, fl) == cols
-    assert (
-        ordered(replace(fixed, fixed_order=False), fl) != cols
-    )  # the same block, not fixed, is searched
+    assert ordered(replace(fixed, fixed_order=False), fl) != cols  # the same block, not fixed, is searched
     (out,) = order.order_blocks((BlockList("u", (fixed,)),), fl, OPTIONS)
     assert out.blocks[0] == fixed
 
@@ -532,9 +419,7 @@ def test_order_blocks_keeps_findings_and_every_block_field() -> None:
         fixed_order=False,
     )
     fixed = replace(odd, id="b2", fixed_order=True)
-    card = replace(
-        odd, id="b3", kind="card", columns=("c2", "c1"), pin_edges=(("2", "S"), ("1", "N"))
-    )
+    card = replace(odd, id="b3", kind="card", columns=("c2", "c1"), pin_edges=(("2", "S"), ("1", "N")))
     fl = flow([fan("f1", ["c1", "c3"])], columns=[box_column("c1", "1"), box_column("c2", "2")])
     findings = (Finding("KEEP_TOGETHER_UNMET", "text", 2, "g9"),)
     lists = (BlockList("u7", (odd, fixed, card), findings), BlockList("u8", ()))

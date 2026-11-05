@@ -1,22 +1,19 @@
-"""One undo test per ruling for connectors and mated pairs and for fan-out nets, built
+"""One undo test per ruling for connectors and for fan-out nets, built
 through the `fransys` facade from `examples/demo-parts` and read from
 the page Drawings only (the Drawing carries no star kind and no port: R243).
-
-Not covered: the cross-unit mate with its boundary pin as a replica cell under the parent-side
-pin (needs the units worked example's fixture, which other tests own).
 """
 
 from typing import Any
 
 import fransys as fr
-import fransys_author
 import fransys_parts
 import pytest
 from _dd_core import pages_with, set_of
 from _dd_core_b import is_stub, marker_strings, markers, symbols_of, tags_of
-from _drawn_pages import drawn_pages
-from _model_build_cover import layout_trigger_document
+from _drawn_pages import drawn_pages, markers_in
+from _model_build_cover import cabinet_document
 from _no_power_net import assert_no_power_net
+from fransys_author.design import Design
 
 from fransys_model.derive import item_designation
 from fransys_model.derive.designation import port_designation
@@ -33,7 +30,7 @@ _PROJECT: dict[str, Any] = {
 
 def _design():
     parts = fransys_parts.load("demo_parts")
-    design = fransys_author.Design(parts)
+    design = Design(parts)
     design.project(**_PROJECT)
     design.revision(1, date="2026-09-24", text="First issue", created="XX")
     return parts, design, design.location("C1", "Cabinet"), design.group("A", "A")
@@ -51,7 +48,7 @@ def _placements(model, item, _function=None):
 
 
 def test_a_connector_is_one_view_per_wired_pin_and_an_idle_one_is_not_drawn() -> None:
-    """Two wired pins are two views (mated pins too), and a connector with no wire is absent."""
+    """Two wired pins are two views, and a connector with no wire is absent."""
     # UNDO: fransys_layout/engines/schematic/read/views.py:pin_views
     #     keeps a connector as one view (no pin views)
     # UNDO: fransys_layout/engines/schematic/read/views.py:without_idle_pins
@@ -61,90 +58,14 @@ def test_a_connector_is_one_view_per_wired_pin_and_an_idle_one_is_not_drawn() ->
     k1 = d.item("DEMO-RLY-2CO-24", tag="K1", name="k1", at=c1, group=grp)
     k2 = d.item("DEMO-RLY-2CO-24", tag="K2", name="k2", at=c1, group=grp)
     plug = d.item("DEMO-CONN-2P", tag="J1", name="j1", at=c1, group=grp)
-    socket = d.item("DEMO-CONN-2P", tag="J2", name="j2", at=c1, group=grp)
     d.item("DEMO-CONN-2P", tag="J7", name="j7", at=c1, group=grp)
     wire(k1.fn("co_1")["14"], plug["1"])
     wire(k2.fn("co_1")["14"], plug["2"])
-    d.mate(plug, socket)
-    model = fr.build(parts, d.draft(), layout_trigger_document()).model
-    wired, mated = _placements(model, "j1", "x1"), _placements(model, "j2", "x1")
+    model = fr.build(parts, d.draft(), cabinet_document(c1)).model
+    wired = _placements(model, "j1", "x1")
     assert len(wired) == 2
-    assert {p.x for p in wired} == {p.x for p in mated}
     assert len({p.x for p in wired}) == 2
     assert _placements(model, "j7", "x1") == []
-
-
-def _mated_pair(*, coil=None, contact=None):
-    """J-A and J-B mated; relay K2's coil and relay K1's first contact wire the named halves."""
-    parts, d, c1, grp = _design()
-    wire = d.wiring(colour="BU", gauge="0.5")
-    k1 = d.item("DEMO-RLY-2CO-24", tag="K1", name="k1", at=c1, group=grp)
-    k2 = d.item("DEMO-RLY-2CO-24", tag="K2", name="k2", at=c1, group=grp)
-    pair = {
-        name: d.item("DEMO-CONN-2P", tag=name, name=name.lower(), at=c1, group=grp)
-        for name in ("JA", "JB")
-    }
-    if contact is not None:
-        wire(k1.fn("co_1")["11"], pair[contact]["1"])  # 11 faces N: the pair stands above K1
-    if coil is not None:
-        wire(pair[coil]["1"], k2.fn("coil")["A1"])
-    d.mate(pair["JA"], pair["JB"])
-    return fr.build(parts, d.draft(), layout_trigger_document()).model
-
-
-def _one(model, item, name="x1"):
-    """The one placement of function `name` of `item` (a connector with one wired pin)."""
-    (found,) = _placements(model, item, name)
-    return found
-
-
-@pytest.mark.parametrize("wired", ["ja", "jb"])
-def test_the_half_a_chain_enters_first_stands_on_top(wired) -> None:
-    """The pair stands face to face, the wired half nearest the relay it is wired to."""
-    # UNDO: fransys_layout/stages/chains.py:discover_chains
-    #     `upper_of[p] = poles[p].functions[1 - index]` (the OTHER function of the pair)
-    model = _mated_pair(contact=wired.upper())
-    (relay,) = _placements(model, "k1", "co_1")
-    halves = {name: _one(model, name) for name in ("ja", "jb")}
-    other = "jb" if wired == "ja" else "ja"
-    assert halves["ja"].x == halves["jb"].x == relay.x
-    assert halves[other].y < halves[wired].y < relay.y  # the entered-first (unwired) half on top
-
-
-@pytest.mark.parametrize("coil", ["JA", "JB"])
-def test_a_pair_between_two_relays_faces_each_half_to_the_item_it_is_wired_to(coil) -> None:
-    """With both halves wired, each half stands next to its own relay, none crossing."""
-    # UNDO: fransys_layout/stages/chains.py:discover_chains
-    #     `upper_of[p] = poles[p].functions[1 - index]` (the OTHER function of the pair)
-    contact = "JB" if coil == "JA" else "JA"
-    model = _mated_pair(coil=coil, contact=contact)
-    at_coil = _one(model, coil.lower())
-    at_contact = _one(model, contact.lower())
-    (relay,) = _placements(model, "k1", "co_1")
-    (drive,) = _placements(model, "k2", "coil")
-    assert drive.x == relay.x == at_coil.x == at_contact.x
-    upper, lower = sorted((at_coil, at_contact), key=lambda p: p.y)
-    ends = sorted((drive, relay), key=lambda p: p.y)
-    assert ends[0].y < upper.y < lower.y < ends[1].y
-    assert (upper is at_coil) is (ends[0] is drive)
-
-
-def test_a_pair_in_no_chain_keeps_the_plug_on_top() -> None:
-    """A harness plug over the device connector it mates, whatever the two keys say."""
-    # UNDO: fransys_layout/engines/schematic/read/views.py:_lower_rank
-    #     `not _on_cable(...)` becomes `True`
-    parts, d, c1, grp = _design()
-    far, field = d.location("FLD", "Field"), d.group("F", "Field")
-    harness = d.harness(name="w3", tag="W3", at=c1, group=field)
-    plug = d.item("DEMO-CONN-2P", tag="P9", name="p9", parent=harness, at=c1, group=field)
-    end = d.item("DEMO-CONN-2P", tag="PZ", name="pz", parent=harness, at=far, group=field)
-    d.cable("DEMO-CBL-4G1.5", name="w3c", parent=harness, at=c1).core(1, plug["2"], end["2"])
-    d.mate(plug, d.item("DEMO-CONN-2P", tag="J0", name="j0", at=c1, group=grp))
-    model = fr.build(parts, d.draft(), layout_trigger_document()).model
-    (upper,) = _placements(model, "p9", "x1")
-    (lower,) = _placements(model, "j0", "x1")
-    assert upper.x == lower.x
-    assert upper.y < lower.y
 
 
 # -- fan-out nets ----------------------------------------------------------------------
@@ -156,10 +77,7 @@ def _star_of_relays(*wires, strip=False):
     so a net of all-A1 pins is wires and no star; a star needs the pins on both sides."""
     parts, d, c1, grp = _design()
     wire = d.wiring(colour="BU", gauge="0.5")
-    relays = {
-        tag: d.item("DEMO-RLY-2CO-24", tag=tag, name=tag.lower(), at=c1, group=grp).fn("coil")
-        for tag in ("K1", "K2", "K3", "K4")
-    }
+    relays = {tag: d.item("DEMO-RLY-2CO-24", tag=tag, name=tag.lower(), at=c1, group=grp).fn("coil") for tag in ("K1", "K2", "K3", "K4")}
 
     def pin(spec):
         tag, name = spec.split(".")
@@ -170,23 +88,28 @@ def _star_of_relays(*wires, strip=False):
         wire(terminal.outer, pin("K3.A1"))
     for first, second in wires:
         wire(pin(first), pin(second))
-    return fr.build(parts, d.draft(), layout_trigger_document()).model
+    used = {spec for pair in wires for spec in pair} | ({"K3.A1"} if strip else set())
+    rest = [spec for tag in relays for spec in (f"{tag}.A1", f"{tag}.A2") if spec not in used]
+    closing = d.strip("X2", at=c1)
+    for spec in rest:
+        wire(pin(spec), closing.terminal("DEMO-TB-2.5", group=grp).inner)
+    return fr.build(parts, d.draft(), cabinet_document(c1)).model
 
 
 def _trunk_shape(model) -> tuple[int, int, int, int]:
     """The page's (trunks, drops, junction dots, markers): a trunk runs level, a drop upright."""
     (drawing,) = drawn_pages(model).values()
     level = [w for w in drawing.wires if w.points[0][1] == w.points[-1][1]]
-    upright = [w for w in drawing.wires if w.points[0][0] == w.points[-1][0]]
+    trunk_nets = {w.net for w in level}  # the closing wires of the other pins are other nets
+    upright = [w for w in drawing.wires if w.points[0][0] == w.points[-1][0] and w.net in trunk_nets]
     dots = [s for s in drawing.symbols if s.key == "junction-dot"]
-    return len(level), len(upright), len(dots), len(drawing.markers)
+    return len(level), len(upright), len(dots), len(markers_in(drawing))
 
 
 _CHAIN = (("K4.A2", "K2.A1"), ("K2.A1", "K1.A2"), ("K1.A2", "K3.A1"))
 _HUB_K3 = (("K3.A1", "K1.A2"), ("K3.A1", "K2.A2"), ("K3.A1", "K4.A2"))
 
 
-@pytest.mark.rule("ROUTING")
 @pytest.mark.rule("BUNDLE")
 def test_a_fanout_net_is_one_trunk_with_a_drop_and_a_dot_per_port_and_no_marker() -> None:
     """Four coil ports on one non-power net: one trunk, a drop per port, a dot at each inner drop,
@@ -198,7 +121,6 @@ def test_a_fanout_net_is_one_trunk_with_a_drop_and_a_dot_per_port_and_no_marker(
     assert _trunk_shape(model) == (1, 4, 2, 0)
 
 
-@pytest.mark.rule("ROUTING")
 @pytest.mark.rule("BUNDLE")
 def test_which_port_carries_most_conductors_changes_nothing_in_the_trunk() -> None:
     """A hub of three conductors draws the same trunk as a chain over four ports (BUNDLE, R467):
@@ -209,7 +131,6 @@ def test_which_port_carries_most_conductors_changes_nothing_in_the_trunk() -> No
     assert _trunk_shape(model) == (1, 4, 2, 0)
 
 
-@pytest.mark.rule("ROUTING")
 @pytest.mark.rule("BUNDLE")
 def test_a_single_terminal_point_is_a_drop_of_the_trunk_beside_a_bigger_hub() -> None:
     """X1:1 carries one conductor, K3 three; the terminal stands once as one drop of the trunk
@@ -219,7 +140,8 @@ def test_a_single_terminal_point_is_a_drop_of_the_trunk_beside_a_bigger_hub() ->
     assert_no_power_net(model)
     assert any(t.text == "-X1:1" for _, t in tags_of(model, "X1"))
     (drawing,) = drawn_pages(model).values()
-    assert len([s for s in drawing.symbols if s.key == "terminal"]) == 1
+    # X1:1 once, plus the five terminals of X2 that close the relays' other coil pins
+    assert len([s for s in drawing.symbols if s.key == "terminal"]) == 1 + 5
     assert _trunk_shape(model) == (1, 4, 1, 0)
 
 
@@ -235,15 +157,17 @@ def test_a_black_box_pin_carries_no_star_marker() -> None:
     parts, d, c1, grp = _design()
     unit = d.scope("cab", at=c1).unit("demo-pump-cabinet", revision=2, interface="1")
     unit.revision(2, date="2026-01-01", text="First release", created="XX")
-    terminal = unit.strip("X2").terminal("DEMO-TB-2.5", group=unit.group("FLD", "Field"))
+    terminal = unit.strip("X2").terminal("DEMO-TB-2.5-TWIN", group=unit.group("FLD", "Field"))
     unit.boundary(terminal)
     wire = d.wiring(colour="BU", gauge="0.5")
+    strip = d.strip("X1", at=c1)
     for tag in ("K1", "K2"):
         k = d.item("DEMO-RLY-2CO-24", tag=tag, name=tag.lower(), at=c1, group=grp)
         wire(terminal.outer, k.fn("coil")["A1"])
         wire(k.fn("co_1")["11"], k.fn("co_1")["14"])  # layout-0112: an unwired contact is not drawn
         wire(k.fn("co_2")["21"], k.fn("co_2")["24"])
-    model = fr.build(parts, d.draft(), layout_trigger_document()).model
+        wire(k.fn("coil")["A2"], strip.terminal("DEMO-TB-2.5", group=grp).outer)
+    model = fr.build(parts, d.draft(), cabinet_document(c1), cabinet_document(unit)).model
     pin = terminal.outer.id
     every = markers(model)
     assert all(is_stub(m) for _, m in every)  # no reference, no branch: no star
@@ -256,46 +180,4 @@ def test_a_black_box_pin_carries_no_star_marker() -> None:
     assert top <= shown  # the pin is drawn there
     mirrors = [(page, m) for page, m in every if set_of(model, page).unit is None]
     assert len(mirrors) == 2  # the top-level set
-    assert all(
-        text.endswith(port_designation(model, pin))
-        for _, m in mirrors
-        for text in marker_strings(m)
-    )
-
-
-def test_a_cross_unit_mate_stands_at_the_end_of_its_column_the_chain_enters_from() -> None:
-    """Layout-0069 (amended) and layout-0155: the harness plug P1 and the boundary
-    connector X1 it mates sit at a line's end, so on the parent page each draws as one box, no pin
-    symbol, and the two boxes stand face to face, X1 above: the chain enters P1 from below."""
-    # UNDO: fransys_layout/stages/box_views.py:_box
-    #     `top = edge if down else edge - height` becomes `top = edge` (every box hangs down)
-    parts, d, _, _ = _design()
-    unit = d.scope("cab").unit("demo-pump-cabinet", revision=1, interface="1")
-    unit.revision(1, date="2026-01-01", text="First release", created="XX")
-    c1, grp = unit.location("C1", "Cabinet"), unit.group("NET", "Network")
-    inner = unit.item("DEMO-CONN-2P", tag="X1", at=c1, group=grp)
-    unit.boundary(inner)
-    far, field = d.location("FLD", "Field"), d.group("NET", "Network")
-    harness = d.harness(name="w3", tag="W3", at=c1, group=field)
-    plug = d.item("DEMO-CONN-2P", tag="P1", parent=harness, at=c1, group=field)
-    end = d.item("DEMO-CONN-2P", tag="P2", parent=harness, at=far, group=field)
-    d.cable("DEMO-CBL-4G1.5", name="w3c", parent=harness, at=c1).core(2, plug["2"], end["2"])
-    relay = d.item("DEMO-RLY-2CO-24", tag="Z9", at=c1, group=field)
-    d.wiring(colour="BU", gauge="0.5")(plug["1"], relay.fn("coil")["A1"])
-    d.mate(plug, inner)
-    model = fr.build(parts, d.draft(), layout_trigger_document()).model
-    parent = {page for page in drawn_pages(model) if set_of(model, page).unit is None}
-    by_tag = {
-        symbol.texts[0][0]: (page, symbol)
-        for page, drawing in drawn_pages(model).items()
-        for symbol in drawing.symbols
-        if page in parent and symbol.texts
-    }
-    (plug_page, plug), (boundary_page, boundary) = by_tag["-W3-P1"], by_tag["-X1"]
-    assert plug_page == boundary_page
-    width, height = dict(boundary.stretch).get("x", 0), dict(boundary.stretch).get("y", 0)
-    plug_width = dict(plug.stretch).get("x", 0)
-    assert boundary.x < plug.x + plug_width
-    assert plug.x < boundary.x + width
-    # the chain runs on from P1 down to Z9, so X1 stands above and P1 below, face to face
-    assert boundary.y + height == plug.y
+    assert all(text.endswith(port_designation(model, pin)) for _, m in mirrors for text in marker_strings(m))

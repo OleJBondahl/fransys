@@ -2,7 +2,6 @@
 
 Counts every code of a `# noqa: A, B` comment and every rule of a `# ty: ignore[rule]` comment
 (as `ty-<rule>`) in `packages/*/src`; a bare `# noqa` counts as `noqa-bare`. The total and each
-code only fall (`tests/ratchets.toml` `[escape_hatches]`, `[escape_hatches_codes]`).
 """
 
 import io
@@ -41,15 +40,8 @@ def _src_hatches() -> Counter[str]:
 
 
 def test_hatches_counts_every_code_of_a_comment() -> None:
-    src = (
-        "x = 1  # noqa: PLR0913, S101\n"
-        "y = 2  # ty: ignore[invalid-argument-type]\n"
-        'z = "# noqa: A1"\n'
-        "w = 3  # noqa\n"
-    )
-    assert hatches(src) == Counter(
-        {"PLR0913": 1, "S101": 1, "ty-invalid-argument-type": 1, "noqa-bare": 1}
-    )
+    src = 'x = 1  # noqa: PLR0913, S101\ny = 2  # ty: ignore[invalid-argument-type]\nz = "# noqa: A1"\nw = 3  # noqa\n'
+    assert hatches(src) == Counter({"PLR0913": 1, "S101": 1, "ty-invalid-argument-type": 1, "noqa-bare": 1})
 
 
 @pytest.mark.private_input  # a private-gate count (R462)

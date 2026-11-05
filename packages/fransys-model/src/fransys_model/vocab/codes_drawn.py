@@ -5,7 +5,7 @@ from fransys_model.kernel import CodeInfo, Severity
 FINDING_CODES: tuple[CodeInfo, ...] = (
     CodeInfo(
         code="FUNCTION_NOT_DRAWN",
-        severities=(Severity.WARNING,),
+        severity=Severity.ERROR,
         stage="render",
         who="consumer",
         cause=(
@@ -13,57 +13,30 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
             "the layout leaves it out of the drawing. The message names the function and the "
             "reason."
         ),
-        fix=(
-            "Give the function a part whose kind has a symbol. Write: "
-            'd.device("K1", "DEMO-RLY-2CO-24")'
-        ),
+        fix=('Give the function a part whose kind has a symbol. Write: d.device("K1", "DEMO-RLY-2CO-24")'),
         page="findings-render",
     ),
     CodeInfo(
         code="FUNCTION_NOT_WIRED",
-        severities=(Severity.WARNING,),
+        severity=Severity.WARNING,
         stage="render",
         who="consumer",
-        cause=(
-            "A function's symbol is on no net, so the page leaves it off (reason "
-            "function_unwired). The message names the function."
-        ),
-        fix=(
-            "Wire a pin of <subject> to another function, or remove it. Write: d.detail.wire(a, b)."
-        ),
+        cause=("An undeclared function's symbol is on no net, so the page leaves it off (reason function_unwired). The message names the function."),
+        fix=('Wire a pin of <subject> to another function, declare it spare, or remove it. Write: d.device("K1", "DEMO-RLY-2CO-24", unused=True)'),
         page="findings-render",
     ),
     CodeInfo(
         code="NET_NOT_DRAWN",
-        severities=(Severity.WARNING,),
+        severity=Severity.ERROR,
         stage="render",
         who="consumer",
-        cause=(
-            "A net of two or more ends has under two drawn pins, so it is "
-            "left out. A lone pin gives none. The message names the port."
-        ),
+        cause=("A net of two or more ends has under two drawn pins, so it is left out. A lone pin gives none. The message names the port."),
         fix="Give the net a second drawn pin. Write: d.series(a, <subject>)",
         page="findings-render",
     ),
     CodeInfo(
-        code="NET_CUT_BY_SET",
-        severities=(Severity.WARNING,),
-        stage="render",
-        who="consumer",
-        cause=(
-            "A net has one end in a drawing set and its other end in another (a different "
-            "unit or location), so the core path draws it in neither. The message names the "
-            "net and the set."
-        ),
-        fix=(
-            "Put the functions the net joins in one unit and one location. Write: "
-            'd.device("K1", "DEMO-RLY-2CO-24", place="R") for each, with the same place.'
-        ),
-        page="findings-render",
-    ),
-    CodeInfo(
         code="SET_WITHOUT_PAGE",
-        severities=(Severity.WARNING,),
+        severity=Severity.ERROR,
         stage="render",
         who="consumer",
         cause=(
@@ -78,19 +51,19 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
     ),
     CodeInfo(
         code="SPARE_FUNCTIONS",
-        severities=(Severity.INFO,),
+        severity=Severity.INFO,
         stage="render",
         who="note",
         cause=(
-            "A function on no net, on an item that has other wired functions, is a spare: it is "
-            "left off the schematic. One finding per document names the count and the items."
+            "A function on no net, on an item that has other wired functions or declared `unused=`, is a "
+            "spare: it is left off the schematic. One finding per document names the count and the items."
         ),
         fix="Nothing is wrong; wire the function if it is not a spare.",
         page="findings-render",
     ),
     CodeInfo(
         code="SPARE_TERMINALS",
-        severities=(Severity.INFO,),
+        severity=Severity.INFO,
         stage="render",
         who="note",
         cause=(
@@ -102,29 +75,11 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         page="findings-render",
     ),
     CodeInfo(
-        code="HINT_NOT_READ",
-        severities=(Severity.WARNING,),
-        stage="render",
-        who="consumer",
-        cause=(
-            "An authored layout hint is kept in the model but the core path does not read it, "
-            "so the drawing ignores it. The message names the hint and the function."
-        ),
-        fix=(
-            "No call clears this: delete the d.layout.side line for <subject> from the design, "
-            "or keep it for the old engine, which reads it."
-        ),
-        page="findings-render",
-    ),
-    CodeInfo(
         code="UNPRINTED_SET",
-        severities=(Severity.WARNING,),
+        severity=Severity.ERROR,
         stage="render",
         who="consumer",
-        cause=(
-            "A drawing set has pages but no document prints it, so its items are not in any "
-            "export. The message names the set and its items."
-        ),
+        cause=("A drawing set has pages but no document prints it, so its items are not in any export. The message names the set and its items."),
         fix=(
             "Add a document for the set's unit or location, or nest the unit in one that has "
             'one. Write: fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, "demo-mini-mcc")'

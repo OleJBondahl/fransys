@@ -20,9 +20,7 @@ def _flat(view: DiffViewMarks, *, on_line: bool) -> list[list[Any]]:
     return [[m.at, m.status] for m in view.marks if m.on_line == on_line]
 
 
-def changes_data(
-    tables: _Tables, drawn: list[ViewRows], diff: ListingDiff | None
-) -> dict[str, Any] | None:
+def changes_data(tables: _Tables, drawn: list[ViewRows], diff: ListingDiff | None) -> dict[str, Any] | None:
     """`{"since", "views": [[boxes, lines]], "rest"}`, or `None` with no diff.
 
     `boxes` and `lines` hold `[index, "added" | "changed"]` per view of `drawn`. `rest` holds

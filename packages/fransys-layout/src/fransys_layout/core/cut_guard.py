@@ -16,7 +16,8 @@ from .values import Finding
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    from .values import Block, BlockList, Options, PagePlan
+    from .flow_values import Block, BlockList
+    from .values import Options, PagePlan
 
 
 def unplaced(
@@ -30,9 +31,7 @@ def unplaced(
     A fan wider than the page wraps at a column, so it stands in several rows (layout-0309).
     """
     rows = Counter(b for p in pages for r in p.rows for b in r.blocks)
-    found = (
-        _finding(b, rows[b.id], wide=wraps(b, page_w, options)) for bl in blocks for b in bl.blocks
-    )
+    found = (_finding(b, rows[b.id], wide=wraps(b, page_w, options)) for bl in blocks for b in bl.blocks)
     return tuple(f for f in found if f is not None)
 
 

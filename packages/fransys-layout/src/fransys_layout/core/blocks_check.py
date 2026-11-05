@@ -11,13 +11,11 @@ from .values import Finding
 if TYPE_CHECKING:
     from collections.abc import Iterable, Mapping, Sequence
 
+    from .flow_values import Block
     from .sym_values import Sym
-    from .values import Block
 
 
-def box_findings(
-    drawn: Iterable[str], syms: Mapping[str, Sym], blocks: Sequence[Block]
-) -> tuple[Finding, ...]:
+def box_findings(drawn: Iterable[str], syms: Mapping[str, Sym], blocks: Sequence[Block]) -> tuple[Finding, ...]:
     """A NO_BLOCK finding per drawn box that no block, or more than one, is anchored on."""
     held = Counter(b.anchor for b in blocks if b.anchor)
     return tuple(

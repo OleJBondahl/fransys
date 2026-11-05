@@ -27,11 +27,7 @@ class KeepWhole:
 
 def _item_boxes(model: Model) -> tuple[frozenset[Id[Item]], ...]:
     """A parent that is no harness, with its children by `Item.parent`."""
-    found = [
-        frozenset({parent, *kids})
-        for parent, kids in children_index(model).items()
-        if not is_harness(model, parent)
-    ]
+    found = [frozenset({parent, *kids}) for parent, kids in children_index(model).items() if not is_harness(model, parent)]
     return tuple(sorted(found, key=sorted))
 
 
@@ -50,7 +46,5 @@ def keep_whole_sets(model: Model) -> KeepWhole:
     An item box is today approximated by "an item with children": the generic-box test lives in
     layout (`read/views.box_drawn`, needs the symbol rules) until EL-2 gives `function_role.box`.
     """
-    groups = sorted(
-        (frozenset(g.functions) for g in layout_of(model, PoleGroup).values()), key=sorted
-    )
+    groups = sorted((frozenset(g.functions) for g in layout_of(model, PoleGroup).values()), key=sorted)
     return KeepWhole(_item_boxes(model), tuple(groups), _line_units(model))

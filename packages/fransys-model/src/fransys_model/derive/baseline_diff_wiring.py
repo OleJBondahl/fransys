@@ -82,9 +82,7 @@ def _conductor_changes(
     return changes
 
 
-def _mate_changes(
-    a_rows: tuple[BaselineMate, ...], b_rows: tuple[BaselineMate, ...], *, keyed: bool = False
-) -> list[Change]:
+def _mate_changes(a_rows: tuple[BaselineMate, ...], b_rows: tuple[BaselineMate, ...], *, keyed: bool = False) -> list[Change]:
     a_index = {_end_ident(r, keyed=keyed): r for r in a_rows}
     b_index = {_end_ident(r, keyed=keyed): r for r in b_rows}
     changes: list[Change] = []
@@ -120,9 +118,7 @@ def _mate_changes(
     return changes
 
 
-def _net_members(
-    record: BaselineNet, *, keyed: bool
-) -> tuple[str, ...] | frozenset[tuple[str, str]]:
+def _net_members(record: BaselineNet, *, keyed: bool) -> tuple[str, ...] | frozenset[tuple[str, str]]:
     """The members of a net: item key and pin when keyed, else the printed ports."""
     if keyed and record.port_keys:
         return frozenset(zip(record.port_keys, record.port_pins, strict=True))
@@ -152,10 +148,7 @@ def _net_field_changes(a_row: BaselineNet, b_row: BaselineNet, *, keyed: bool) -
     changes: list[Change] = []
     for field, attr in (("ports", "ports"), ("class", "net_class"), ("potential", "potential")):
         a_val, b_val = getattr(a_row, attr), getattr(b_row, attr)
-        if field == "ports":
-            moved = _net_members(a_row, keyed=keyed) != _net_members(b_row, keyed=keyed)
-        else:
-            moved = a_val != b_val
+        moved = _net_members(a_row, keyed=keyed) != _net_members(b_row, keyed=keyed) if field == "ports" else a_val != b_val
         if moved:
             changes.append(
                 Change(
@@ -172,9 +165,7 @@ def _net_field_changes(a_row: BaselineNet, b_row: BaselineNet, *, keyed: bool) -
     return changes
 
 
-def _net_changes(
-    a_rows: tuple[BaselineNet, ...], b_rows: tuple[BaselineNet, ...], *, keyed: bool = False
-) -> list[Change]:
+def _net_changes(a_rows: tuple[BaselineNet, ...], b_rows: tuple[BaselineNet, ...], *, keyed: bool = False) -> list[Change]:
     a_index = {_net_key(r, keyed=keyed): r for r in a_rows}
     b_index = {_net_key(r, keyed=keyed): r for r in b_rows}
     changes: list[Change] = []

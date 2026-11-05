@@ -8,8 +8,9 @@ by one grid unit and reaches left until its label ends one pad before the first 
 from itertools import pairwise
 lazy from collections.abc import Sequence
 
+from fransys_layout.core import grid_up
 from fransys_layout.engines.cable.values import BlockFacts, PlacedCable
-from fransys_layout.geometry import WIRING_GRID, Box, snap_up
+from fransys_layout.geometry import WIRING_GRID, Box
 
 G = WIRING_GRID
 BOX = 4 * G  # the cable box's least height
@@ -23,10 +24,10 @@ def box_room(facts: BlockFacts) -> tuple[int, int]:
     The box holds the heading and the longest crossing core's text, upright on its axis (a link's
     stands at its row); every box shares the height.
     """
-    head = snap_up(2 * facts.pad + facts.text_height) + facts.bracket_room
+    head = grid_up(2 * facts.pad + facts.text_height, WIRING_GRID) + facts.bracket_room
     texts = (core.text_width for core in facts.cores if not core.link)
     longest = max(texts, default=0)
-    height = max(BOX, head + snap_up(longest + 2 * facts.pad, grid=2 * G))
+    height = max(BOX, head + grid_up(longest + 2 * facts.pad, 2 * G))
     return height, head + (height - head) // (2 * G) * G
 
 
@@ -37,7 +38,7 @@ def dash_top(lone_box_y: int) -> int:
 
 def box_top(facts: BlockFacts, lone_box_y: int) -> int:
     """The cable boxes' top: the label row, then one grid unit of clearance."""
-    return snap_up(dash_top(lone_box_y) + facts.pad + facts.text_height) + G
+    return grid_up(dash_top(lone_box_y) + facts.pad + facts.text_height, WIRING_GRID) + G
 
 
 def spans(owners: tuple[int, ...], tops: tuple[int, ...], count: int) -> Spans:
@@ -50,20 +51,15 @@ def spans(owners: tuple[int, ...], tops: tuple[int, ...], count: int) -> Spans:
 
 
 def _wide(facts: BlockFacts, cable: int) -> int:
-    return snap_up(facts.cables[cable].heading_width + 2 * facts.pad)
+    return grid_up(facts.cables[cable].heading_width + 2 * facts.pad, WIRING_GRID)
 
 
 def boxes_fit(facts: BlockFacts, found: Spans, pitch: int) -> bool:
     """Whether every cored cable's box is wide enough for its heading."""
-    return all(
-        span is None or span[1] - span[0] + pitch - 2 * G >= _wide(facts, n)
-        for n, span in enumerate(found)
-    )
+    return all(span is None or span[1] - span[0] + pitch - 2 * G >= _wide(facts, n) for n, span in enumerate(found))
 
 
-def cable_boxes(
-    facts: BlockFacts, found: Spans, pitch: int, box_y: int, x0: int
-) -> tuple[PlacedCable, ...] | None:
+def cable_boxes(facts: BlockFacts, found: Spans, pitch: int, box_y: int, x0: int) -> tuple[PlacedCable, ...] | None:
     """The cable boxes by designation, or None when two cored boxes would overlap."""
     height = box_room(facts)[0]
     placed: dict[int, Box] = {
@@ -85,10 +81,7 @@ def cable_boxes(
             width = _wide(facts, n)
             placed[n] = Box(x=right + 2 * G, y=box_y, width=width, height=height)
             right += 2 * G + width
-    return tuple(
-        PlacedCable(cable=cable.cable, external=cable.external, box=placed[n])
-        for n, cable in enumerate(facts.cables)
-    )
+    return tuple(PlacedCable(cable=cable.cable, external=cable.external, box=placed[n]) for n, cable in enumerate(facts.cables))
 
 
 def dashed_box(label: int, boxes: Sequence[Box], first_x: int | None, y: int) -> Box:
@@ -97,5 +90,5 @@ def dashed_box(label: int, boxes: Sequence[Box], first_x: int | None, y: int) ->
     if first_x is not None:
         left = min(left, first_x - label)
     left -= left % G
-    right = snap_up(max(max(box.x + box.width for box in boxes) + G, left + label))
+    right = grid_up(max(max(box.x + box.width for box in boxes) + G, left + label), WIRING_GRID)
     return Box(x=left, y=y, width=right - left, height=boxes[0].y + boxes[0].height + G - y)

@@ -22,7 +22,9 @@ def _worked_example() -> fr.Design:
     block = _BLOCK.search(section.group(1))
     assert block is not None
     exec(block.group(1), scope)  # noqa: S102 -- the guide's own example
-    return scope["d"]  # ty: ignore[invalid-return-type] -- the block names its design d
+    design = scope["d"]  # the block names its design d
+    assert isinstance(design, fr.Design)
+    return design
 
 
 def _fixed_twin() -> fr.Design:

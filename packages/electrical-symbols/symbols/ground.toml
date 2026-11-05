@@ -18,9 +18,9 @@ elements = [
 ]
 
 lint_allow = [
+  { rule = "slot-missing", reason = "no tag is drawn on a power symbol; the library requires a tag slot of every symbol until TEXT-IN-LOOP T1 drops it (SUPPLY-SLOT R1605)" },
   { rule = "port-isolated", reason = "0 V reference ground; none of the toolkit's node potentials (earth, protective_earth, functional_earth, frame) names a plain rail reference (see the decisions file)" },
 ]
 
 [slots]
-tag              = { at = [-2, 0.5],    side = "W", box = [6, 1] }
 "marking.ground" = { at = [0.25, -1.5], side = "E", box = [1.5, 1] }

@@ -44,9 +44,7 @@ def rail_row(mark: ConductorMark, *, has_mid: bool = False) -> WiringRow:
     return _BY_MARK[mark]
 
 
-_AC_ROWS: Final = frozenset(
-    {WiringRow.AC_L1, WiringRow.AC_L2, WiringRow.AC_L3, WiringRow.AC_N, WiringRow.AC_CONTROL}
-)
+_AC_ROWS: Final = frozenset({WiringRow.AC_L1, WiringRow.AC_L2, WiringRow.AC_L3, WiringRow.AC_N, WiringRow.AC_CONTROL})
 
 
 def control_of(row: WiringRow) -> WiringRow:

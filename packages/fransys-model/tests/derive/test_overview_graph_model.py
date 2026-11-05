@@ -6,13 +6,13 @@ from query_builders import (
 )
 
 from fransys_model.derive import OverviewLinkKind, natural_key, overview_graph
-from fransys_model.kernel import make_id
+from fransys_model.kernel import Id, make_id
 from fransys_model.vocab.core import Item
 
 _WIRE, _CABLE, _MATE = OverviewLinkKind.WIRE, OverviewLinkKind.CABLE, OverviewLinkKind.MATE
 
 
-def _ids(*keys: str) -> list:
+def _ids(*keys: str) -> list[Id[Item]]:
     return [make_id(Item, (key,)) for key in keys]
 
 
@@ -37,8 +37,6 @@ def test_links_list_by_the_natural_designations_of_their_ends_not_item_id() -> N
         plant.wire(make_pin(plant, f"s{n}", f"X{n}"), hub, key=f"w{n}")
     graph = overview_graph(plant.model())
     label = {node.item: node.designation for node in graph.nodes}
-    keys = [
-        (natural_key(label[link.a] or ""), natural_key(label[link.b] or "")) for link in graph.links
-    ]
+    keys = [(natural_key(label[link.a] or ""), natural_key(label[link.b] or "")) for link in graph.links]
     assert keys == sorted(keys)
     assert len(keys) == 12

@@ -1,36 +1,20 @@
-"""Field case: a series between two fixed terminals enters a changeover at its throw.
-
-The engineering shape: a field terminal X6:2 feeds the make throw of a relay changeover, and the
-changeover's common goes on to terminal X7:2. No supply stands in the series to name the direction.
-
-The bug: a changeover throw in a series was always entered at its common, so the call
-`d.series(x6[2], k1.co_1.no, x7[2])` wired X6:2 to the common and the throw to X7:2, the reverse
-of the circuit; the wires had to be written with `d.detail.wire` and pin names.
-
-Decision author-0055 (API-FRICTION-2 C15): a throw between two fixed terminals is entered at the
-throw and left at the common. With a supply or a device beside it the common stays the entry, as
-S7 rules. The rewrite keeps the throw spelling; a selector is the explicit form.
-"""
+"""Field case: a field terminal X6:2 feeds the make throw of a relay changeover whose common goes on to X7:2, with no supply beside it.
+The bug: a changeover throw in a series was always entered at its common, so `d.series(x6[2], k1.co_1.no, x7[2])` ran in reverse.
+Fixed by author-0055 (API-FRICTION-2 C15), a throw between two fixed terminals is entered at the throw and left at the common."""
 
 from typing import Any
 
 import fransys as fr
+from _series_ends import ends_of, pin_name
 from fransys.colours import BK
 
 
-def _name(key: tuple[str, ...]) -> tuple[str, str]:
-    """The item and pin of a port key; a terminal's pin is its number."""
-    return key[0], key[2] if "terminal" in key else key[-1]
+def _ends(d):
+    """The design's conductor ends but the ones to its closing sink `G1`."""
+    return {e for e in ends_of(d, name=pin_name) if all(end[0] != "G1" for end in e)}
 
 
-def _ends(d: fr.Design) -> set[frozenset]:
-    """Every conductor as the two (item, pin) it joins."""
-    model = fr.build(d).model
-    conductors: list[Any] = list(model.tables["conductor"].values())
-    return {frozenset(_name(model.key_of(p) or ()) for p in (c.a, c.b)) for c in conductors}
-
-
-def _design() -> tuple[fr.Design, fr.TerminalStrip, fr.TerminalStrip, fr.Device]:
+def _design() -> tuple[fr.Design, fr.TerminalStrip, fr.TerminalStrip, Any]:
     d = fr.design("demo_parts")
     x6 = d.terminal_strip("X6", "DEMO-TB-2.5", 4)
     x7 = d.terminal_strip("X7", "DEMO-TB-2.5", 4)
@@ -58,6 +42,7 @@ def test_the_break_throw_is_entered_the_same_way() -> None:
 def test_a_device_after_the_throw_keeps_the_common_as_the_entry() -> None:
     d, x6, _, k1 = _design()
     k2 = d.device("K2", "DEMO-RLY-2CO-24")
+    d.series(k2.coil["A2"], d.device("G1", None, external=True, pins=("P",)).P, wire=(BK, 1.5))
     d.series(x6[2], k1.co_1.no, k2.coil, wire=(BK, 1.5))
     assert _ends(d) == {
         frozenset((("X6", "2"), ("K1", "11"))),

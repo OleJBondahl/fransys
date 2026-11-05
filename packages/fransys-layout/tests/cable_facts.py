@@ -2,7 +2,6 @@
 
 `block_facts(cores)` takes one `(top end, bottom end)` pair per core, core keys 1, 2, ...; each
 row runs its ends by lowest core key and each end its pins in core order, as `end_rows` and
-`drawn_pins` give them. Nothing here names a real plant.
 """
 
 from dataclasses import replace
@@ -31,9 +30,7 @@ def _pin(name: str, core: int) -> PinFacts:
     )
 
 
-def _row(
-    side: str, ends: list[int], label: int, *, blank: bool = False
-) -> tuple[tuple[EndFacts, ...], dict[tuple[int, int], str]]:
+def _row(side: str, ends: list[int], label: int, *, blank: bool = False) -> tuple[tuple[EndFacts, ...], dict[tuple[int, int], str]]:
     """The row's ends by lowest core key, and each (end, core) pin's port name."""
     order = list(dict.fromkeys(ends))
     pins: dict[tuple[int, int], str] = {}
@@ -76,9 +73,7 @@ def block_facts(
     for n, (on_top, end) in enumerate(loops):
         names = [f"{'t' if on_top else 'b'}{end}.L{n}{c}" for c in "ab"]
         k = len(cores) + n
-        rows[on_top][end] = replace(
-            rows[on_top][end], pins=(*rows[on_top][end].pins, *(_pin(name, k) for name in names))
-        )
+        rows[on_top][end] = replace(rows[on_top][end], pins=(*rows[on_top][end].pins, *(_pin(name, k) for name in names)))
         links.append(
             CoreFacts(
                 key=k + 1,
@@ -103,16 +98,11 @@ def block_facts(
     return BlockFacts(
         subject=make_id(Item, ("w",)),
         unit=None,
-        sheet_format=None,
         text_height=TEXT_HEIGHT,
         turn_penalty=4,
         crossing_penalty=16,
         pad=8,
-        cables=(
-            CableFacts(
-                cable=make_id(Item, ("w",)), external=False, heading_width=64, cores=core_facts
-            ),
-        ),
+        cables=(CableFacts(cable=make_id(Item, ("w",)), external=False, heading_width=64, cores=core_facts),),
         top=top,
         bottom=bottom,
     )

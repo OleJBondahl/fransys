@@ -2,7 +2,7 @@
 
 from derive_helpers import frozen_with_library
 
-from fransys_model.derive import widest_target_line
+from fransys_model.derive import widest_position_text, widest_target_line
 from fransys_model.kernel import Draft
 
 MODEL = frozen_with_library(Draft())
@@ -21,3 +21,9 @@ def test_the_line_is_the_plus_form_so_no_printed_line_is_longer() -> None:
 
     two = target_lines(9, ["p9:9F", "p9:8F"])
     assert all(len(line) <= len(widest_target_line(MODEL, 1, 8, 6, "9")) for line in two)
+
+
+def test_the_widest_position_text_is_the_other_sets_form() -> None:
+    """A placement in another set prints its set number too, so it is wider than the same-set position inside the marker line."""
+    assert widest_position_text(MODEL, 1, 8, 6, "9") == "p9.9:9F"
+    assert widest_position_text(MODEL, 2, 12, 8, "9") == "p99.99:99H"

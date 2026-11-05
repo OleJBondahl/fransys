@@ -4,13 +4,14 @@ The pages are the schematic drawing sets' (`drawn_pages`); the sheets are `Sheet
 projected to `SheetRow`, so pdf names no layout type (OUTPUT-DOORS).
 """
 
-from fransys_model.layout import CableBlock, layout_of, sheet_for, sheet_format_of
+lazy from collections.abc import Mapping
+
+from fransys_model.layout import sheet_for, sheet_format_of
 from fransys_model.vocab import PageKind
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.layout import Page, SheetFormat
-lazy from fransys_model.vocab import Document, Unit
+lazy from fransys_model.vocab import Document
 
-from .cable_drawing import cable_block_key
 from .document_pages import drawn_pages, is_replica_only_undrawn
 from .document_sheets import document_sheet_format
 from .library_grid import mm_per_division
@@ -45,26 +46,22 @@ def document_sheet(model: Model, document: Id[Document], pages: tuple[PageKind, 
     return _row(document_sheet_format(model, document, pages))
 
 
-def kind_sheet(model: Model, kind: PageKind, unit: Id[Unit] | None = None) -> SheetRow:
-    """The sheet a page of `kind` of `unit` is on (`layout.sheet_for`) as a `SheetRow`."""
-    return _row(sheet_for(model, kind, unit))
+def kind_sheet(model: Model, kind: PageKind) -> SheetRow:
+    """The sheet a page of `kind` is on (`layout.sheet_for`) as a `SheetRow`."""
+    return _row(sheet_for(model, kind))
 
 
-def schematic_page_ids(
-    model: Model, document: Id[Document], pages: tuple[PageKind, ...]
-) -> tuple[Id[Page], ...]:
+def schematic_page_ids(model: Model, document: Id[Document], pages: tuple[PageKind, ...]) -> tuple[Id[Page], ...]:
     """The ids of the SCHEMATIC pages of `document` in set then page order.
 
-    Empty when `pages` has no SCHEMATIC or `document` has no location or unit subject.
+    Empty when `pages` has no SCHEMATIC or `document` is an item document.
     """
     if PageKind.SCHEMATIC not in pages or not has_schematic_subject(model, document):
         return ()
     return tuple(page.id for page in drawn_pages(model, document))
 
 
-def replica_only_sets(
-    model: Model, document: Id[Document], pages: tuple[PageKind, ...]
-) -> tuple[ReplicaOnlySet, ...]:
+def replica_only_sets(model: Model, document: Id[Document], pages: tuple[PageKind, ...]) -> tuple[ReplicaOnlySet, ...]:
     """The matched drawing sets of `document` that its SCHEMATIC skips as replica-only.
 
     Empty on the same terms as `schematic_page_ids`.
@@ -78,9 +75,7 @@ def replica_only_sets(
     )
 
 
-def mixed_sheet_groups(
-    model: Model, document: Id[Document], pages: tuple[PageKind, ...]
-) -> tuple[SheetGroup, ...]:
+def mixed_sheet_groups(model: Model, document: Id[Document], pages: tuple[PageKind, ...]) -> tuple[SheetGroup, ...]:
     """Each sheet format the drawn pages name with its page numbers; empty unless more than one."""
     if PageKind.SCHEMATIC not in pages:
         return ()
@@ -89,19 +84,16 @@ def mixed_sheet_groups(
         grouped.setdefault(page.sheet_format, []).append(page.number)
     if len(grouped) <= 1:
         return ()
-    return tuple(
-        SheetGroup(name=sheet_format_of(model, key).name, numbers=tuple(numbers))
-        for key, numbers in grouped.items()
-    )
+    return tuple(SheetGroup(name=sheet_format_of(model, key).name, numbers=tuple(numbers)) for key, numbers in grouped.items())
 
 
-def cable_block_sizes(model: Model) -> dict[str, CableBlockSize]:
-    """Each laid-out cable block's size in G and sheet module, by `cable_block_key`."""
+def cable_block_sizes(model: Model, laid: Mapping[str, tuple[int, int]]) -> dict[str, CableBlockSize]:
+    """A laid-out block's size in G and sheet module, by key; `laid` is (width, height); the sheet is the build's default paper."""
     return {
-        cable_block_key(found.unit, found.subject): CableBlockSize(
-            width=found.width,
-            height=found.height,
-            mm_per_division=mm_per_division(model, sheet_format_of(model, found.sheet_format)),
+        key: CableBlockSize(
+            width=width,
+            height=height,
+            mm_per_division=mm_per_division(model, sheet_format_of(model, None)),
         )
-        for found in layout_of(model, CableBlock).values()
+        for key, (width, height) in laid.items()
     }

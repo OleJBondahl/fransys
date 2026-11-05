@@ -1,13 +1,6 @@
-"""Field case: three fan starters under one breaker, each a bundle of three poles, on the core path.
-
-The engineering shape: breaker, contactor, overload and motor in series, three phases each, with
-the contactor's coil and lamp on a 24 V supply.
-
-The bug: a bundle's poles are drawn as three separate wires that cross each other, and a source
-two pages from its loads costs references. P7.2 builds the family on the private core path
-(SWITCHES SW4, decision el-0007); the counts are SW8 row P7.2: 13 references or fewer, crossings
-under 9. The renderer draws a bundle trunk as its lanes (BUNDLE-DRAW, render-0023).
-"""
+"""Field case: three fan starters under one breaker, each a bundle of three poles, draw within the study counts.
+The bug: a bundle's three poles were drawn as crossing separate wires, and a source two pages from its loads cost references.
+Fixed by el-0007 (SW8 row P7.2: 13 references or fewer, crossings under 9), bundle trunks drawn as lanes (render-0023)."""
 
 import dataclasses
 
@@ -29,12 +22,7 @@ def test_a_motor_feeder_with_bundles_draws_within_the_study_counts() -> None:
     assert refs <= MAX_REFERENCES, (refs, crossings)
     assert crossings < CROSSINGS_BELOW, (refs, crossings)
     style = fransys_el.style(LIBRARY)
-    trunks = [
-        (drawing, wire)
-        for drawing in page_drawings(result).values()
-        for wire in drawing.wires
-        if wire.style == "trunk"
-    ]
+    trunks = [(drawing, wire) for drawing in page_drawings(result).values() for wire in drawing.wires if wire.style == "trunk"]
     assert trunks, "the feeder has bundle trunks"
     for drawing, wire in trunks:
         one = dataclasses.replace(drawing, symbols=(), wires=(wire,))

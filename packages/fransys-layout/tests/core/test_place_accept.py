@@ -13,6 +13,8 @@ from fransys_layout.core.place_accept import accept, trial
 from fransys_layout.core.place_align import Align, page_aligns
 from fransys_layout.core.place_x import place_x
 from fransys_layout.core.place_y import YCycleError, _settle, _spans, _y_graph
+lazy from fransys_layout.core.place_env import PageEnv
+lazy from fransys_layout.core.values import PlacementProblem
 
 from . import align_fixtures as fx
 from .conftest import MARKER
@@ -22,8 +24,8 @@ from .test_place_x import env_of
 from .test_place_y import solved
 
 
-def _base(prob: object) -> tuple[Graph, tuple[Align, ...]]:
-    env = env_of(prob)  # ty: ignore[invalid-argument-type] - a PlacementProblem
+def _base(prob: PlacementProblem) -> tuple[Graph, tuple[Align, ...]]:
+    env = env_of(prob)
     x, _ = place_x(env)
     spans = _spans(env, x)
     tangled, _ = _settle(env, spans, {}, {})
@@ -44,8 +46,8 @@ def test_all_aligns_that_hold_solve_in_one_pass() -> None:
     assert result.y != trial(base, ())
 
 
-def _findings(prob: object) -> list[tuple[str, str | None]]:
-    _, y, findings = solved(prob)  # ty: ignore[invalid-argument-type] - a PlacementProblem
+def _findings(prob: PlacementProblem) -> list[tuple[str, str | None]]:
+    _, y, findings = solved(prob)
     assert y
     return [(f.code, f.subject) for f in findings]
 
@@ -61,8 +63,8 @@ def test_a_band_that_contradicts_a_trunk_is_dropped_and_the_row_group_holds() ->
     assert fx.pin_y(env, free, "u1", "n") != fx.pin_y(env, free, "v1", "n")
 
 
-def _node(env: object, sym: str) -> str:
-    col, li, i = next(fx._cells_of(env, sym))  # ty: ignore[invalid-argument-type] - a PageEnv
+def _node(env: PageEnv, sym: str) -> str:
+    col, li, i = next(fx._cells_of(env, sym))
     return f"cell:{col}:{li}:{i}"
 
 
@@ -105,7 +107,7 @@ def test_classes_drop_in_priority_order() -> None:
 def test_each_class_that_contradicts_is_dropped_with_its_finding_in_keep_order() -> None:
     assert _findings(fx.all_three_contradict()) == [
         ("ALIGN_DROPPED", "gp.n/p.s"),
-        ("ALIGN_DROPPED", "R1"),
+        ("ALIGN_DROPPED", "R1, row 0"),
         ("ALIGN_DROPPED", "rank 1, row 0"),
     ]
 
@@ -126,12 +128,6 @@ def test_a_page_the_stacks_and_trunks_contradict_alone_still_raises_ycycleerror(
             prob,
             core_options(
                 marker=MARKER,
-                flip_turn="R180",
-                tag_stagger=True,
-                label_gap=8,
-                parallel_pitch=48,
-                driver_first=True,
-                arrow_sides=("E", "W"),
             ),
         )
 

@@ -46,10 +46,7 @@ def trunk_touches(routes: Routes) -> list[tuple[str, str, int]]:
         trunks = [w for w in page.wires if w.kind == "trunk"]
         for v, w in combinations(trunks, 2):
             out.extend(
-                (v.net, w.net, y)
-                for y, a0, a1 in _runs(v)
-                for z, b0, b1 in _runs(w)
-                if v.net != w.net and y == z and max(a0, b0) <= min(a1, b1)
+                (v.net, w.net, y) for y, a0, a1 in _runs(v) for z, b0, b1 in _runs(w) if v.net != w.net and y == z and max(a0, b0) <= min(a1, b1)
             )
     return out
 

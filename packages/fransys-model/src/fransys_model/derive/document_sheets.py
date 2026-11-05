@@ -18,26 +18,25 @@ from .designation import item_designation
 from .document_pages import drawn_pages
 from .document_sizes import sizes_of
 from .document_subject import scope_path, subject_label
+from .facts.house_settings import frame_form_of
 from .harness_blocks import cable_blocks, harness_cables_for, system_has_no_top_level_cables
-from .house_settings import frame_form_of
 from .page_headings import diagram_title, harness_drawing_title, page_headings, schematic_title
 from .page_presets import document_page_kinds
 from .page_titles import page_title_forms
-from .rows_sheet import SheetKey, TitleBlockFields
+from .rows_sheet import DiagramSheet, SheetKey, TitleBlockFields
+from .rows_sheet_index import sheet_index_rows
 from .rows_sheet_pages import DocumentSheets, SheetFrame, SheetPage
 from .schematic_subject import has_schematic_subject
 from .sheet_forms import sheet_counter_text
 from .sheet_frame import sheet_frame
 from .sheets import diagram_sheets
 from .title_block import document_facts
-from .title_block_text import title_block_words
+from .title_block_words import title_block_words
 
 __all__ = ["document_sheet_format", "document_sheets", "document_sheets_of"]
 
 
-def document_sheet_format(
-    model: Model, document: Id[Document], pages: tuple[PageKind, ...]
-) -> SheetFormat:
+def document_sheet_format(model: Model, document: Id[Document], pages: tuple[PageKind, ...]) -> SheetFormat:
     """The paper of every page: the first drawing-set page's format, else the top profile's sheet.
 
     A system document has none, so it takes the top profile's sheet, else the house one.
@@ -70,9 +69,7 @@ def _fields(
     )
 
 
-def _drawing_fields(
-    model: Model, record: Document, found: tuple[Page, ...]
-) -> list[TitleBlockFields]:
+def _drawing_fields(model: Model, record: Document, found: tuple[Page, ...]) -> list[TitleBlockFields]:
     """Each drawing page's title block, `n / N` counted per drawing set."""
     scope = scope_path(model, record.id)
     totals = Counter(page.drawing_set for page in found)
@@ -103,9 +100,7 @@ def _schematic_pages(model: Model, record: Document, sheet: SheetFormat) -> list
             where=f"page {page.number}",
             group=kind.name,
         )
-        for i, (page, fields) in enumerate(
-            zip(found, _drawing_fields(model, record, found), strict=True)
-        )
+        for i, (page, fields) in enumerate(zip(found, _drawing_fields(model, record, found), strict=True))
     ]
     fallback = _fields(model, record, (schematic_title(model),))
     key = SheetKey(record.id, kind, None)
@@ -118,9 +113,7 @@ def _harness_scope(model: Model, record: Document) -> str:
     return subject_label(model, record.id)
 
 
-def _harness_pages(
-    model: Model, record: Document, pages: tuple[PageKind, ...], sheet: SheetFormat
-) -> list[SheetPage]:
+def _harness_pages(model: Model, record: Document, pages: tuple[PageKind, ...], sheet: SheetFormat) -> list[SheetPage]:
     kind = PageKind.HARNESS_DRAWING
     cables = harness_cables_for(model, record.id, pages)
     if system_has_no_top_level_cables(model, record.id, cables):
@@ -144,9 +137,9 @@ def _harness_pages(
     ]
 
 
-def _diagram_pages(model: Model, record: Document) -> list[SheetPage]:
+def _diagram_pages(model: Model, record: Document, diagrams: tuple[DiagramSheet, ...]) -> list[SheetPage]:
     kind = PageKind.BLOCK_DIAGRAM
-    found = diagram_sheets(model, record.id)
+    found = diagram_sheets(model, record.id, diagrams)
     paper = sheet_for(model, kind)
     return [
         SheetPage(
@@ -172,11 +165,8 @@ def _frames(model: Model, pages: list[SheetPage]) -> frozendict[Id[SheetFormat],
     return frozendict({p.sheet.id: sheet_frame(form, p.sheet) for p in pages})
 
 
-def document_sheets(model: Model, document: Id[Document]) -> DocumentSheets:
-    """Every page background of `document`, in page order, with its paper and sizes."""
-    record = documents(model)[document]
-    kinds = document_page_kinds(model, document)
-    sheet = document_sheet_format(model, record.id, kinds)
+def _pages(model: Model, record: Document, kinds: tuple[PageKind, ...], sheet: SheetFormat, diagrams: tuple[DiagramSheet, ...]) -> list[SheetPage]:
+    """The pages of `record`, in page order, with the sheet index carrying its rows."""
     headings = page_headings(model)
     first_section = next((kind for kind in kinds if kind in headings), PageKind.COVER)
     pages: list[SheetPage] = []
@@ -186,27 +176,40 @@ def document_sheets(model: Model, document: Id[Document]) -> DocumentSheets:
         elif kind is PageKind.HARNESS_DRAWING:
             pages += _harness_pages(model, record, kinds, sheet)
         elif kind is PageKind.BLOCK_DIAGRAM:
-            pages += _diagram_pages(model, record)
+            pages += _diagram_pages(model, record, diagrams)
         else:
             pages.append(
                 SheetPage(
-                    key=SheetKey(document, kind, 0),
+                    key=SheetKey(record.id, kind, 0),
                     kind=kind,
                     sheet=sheet,
                     fields=_fields(model, record, (headings[kind],)),
                     where=kind.name,
                     group=first_section.name,
+                    index=sheet_index_rows(model, record.id, kinds, diagrams) if kind is PageKind.SHEET_INDEX else (),
                 )
             )
+    return pages
+
+
+def document_sheets(model: Model, document: Id[Document], diagrams: tuple[DiagramSheet, ...]) -> DocumentSheets:
+    """Every page background of `document`, in page order, with its paper and sizes.
+
+    `diagrams` are every sheet the diagram engine placed.
+    """
+    record = documents(model)[document]
+    kinds = document_page_kinds(model, document)
+    sheet = document_sheet_format(model, record.id, kinds)
+    pages = _pages(model, record, kinds, sheet, diagrams)
     return DocumentSheets(
         sheet=sheet,
-        sizes=sizes_of(model, record.id),
+        sizes=sizes_of(model),
         pages=tuple(pages),
         frames=_frames(model, pages),
         title_text=title_block_words(model),
     )
 
 
-def document_sheets_of(model: Model) -> frozendict[Id[Document], DocumentSheets]:
+def document_sheets_of(model: Model, diagrams: tuple[DiagramSheet, ...]) -> frozendict[Id[Document], DocumentSheets]:
     """`document_sheets` of every `Document`, by id: the values render's sheets take."""
-    return frozendict({document: document_sheets(model, document) for document in documents(model)})
+    return frozendict({document: document_sheets(model, document, diagrams) for document in documents(model)})

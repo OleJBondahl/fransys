@@ -1,16 +1,6 @@
 """Field case: a lowercase second argument of `d.add` is an old key, and raises.
-
-The engineering shape: a cabinet written for 0.5 adds its board as `d.add(board, "io1")`, where
-the second argument was a key.
-
-The bug: the argument is the printed tag, so `"io1"` would print `-io1` on
-every page and in every list, with no sign that the key had become a tag.
-
-The rule: a `d.add` tag with a lowercase letter raises `AuthorError`, and the message shows
-both forms, the uppercase tag and `None` with `name=`. No other tag-form check is added.
-
-The decision that fixes it: author-0019.
-"""
+The bug: the argument is the printed tag, so `io1` would print `-io1` on every page, with no sign the key had become a tag.
+Fixed by author-0019: a `d.add` tag with a lowercase letter raises `AuthorError`, showing the uppercase tag to write."""
 
 from typing import Any, NamedTuple
 
@@ -34,6 +24,4 @@ def test_a_tag_with_a_lowercase_letter_raises_and_shows_both_forms(tag: str) -> 
     with pytest.raises(AuthorError) as raised:
         d.add(_board, tag)
     message = str(raised.value)
-    assert tag.upper() in message
-    assert "None" in message
-    assert "name=" in message
+    assert f"d.add(defn, {tag.upper()!r})" in message

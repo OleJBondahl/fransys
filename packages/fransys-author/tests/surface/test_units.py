@@ -7,14 +7,13 @@ import pytest
 from fransys_author import AuthorError
 from fransys_author import surface as surface_module
 from fransys_author.surface import Design, Device, design, unit
+from series_parts import pair_library
 
 from fransys_model.checks.units import BOUNDARY_UNCONNECTED, check_units
 from fransys_model.derive.numbering_pins import name_findings
 from fransys_model.kernel import freeze, merge
 from fransys_model.vocab import Boundary, Mate, Revision, Unit, UnitRelease, UnusedBoundary
 from fransys_model.vocab import Item as ModelItem
-
-from ..equivalence.series_parts import pair_library  # noqa: TID252 -- importlib mode puts tests/ on no path
 
 _OLD = {"revision": 1, "date": "2026-01-01", "text": "first", "created": "AA"}
 

@@ -61,22 +61,15 @@ def _part(plant: Plant, key: str, category: PartCategory, channels: int) -> Id[P
 
 def _channels(plant: Plant, item: Id[Item], part: Id[Part]) -> None:
     """The channel functions of `item`, created highest number first."""
-    templates = [
-        one for one in plant.records if isinstance(one, FunctionTemplate) and one.part == part
-    ]
+    templates = [one for one in plant.records if isinstance(one, FunctionTemplate) and one.part == part]
     for template in reversed(templates):
-        function = plant.function(
-            item, template.name, template=template.id, kind=FunctionKind.PLC_CHANNEL
-        )
+        function = plant.function(item, template.name, template=template.id, kind=FunctionKind.PLC_CHANNEL)
         plant.port(function, template.name.removeprefix("ch"))
 
 
 def _position(plant: Plant, item: Id[Item], position: int) -> None:
     """Give the added item `item` a `position`."""
-    plant.records = [
-        dataclasses.replace(one, position=position) if one.id == item else one
-        for one in plant.records
-    ]
+    plant.records = [dataclasses.replace(one, position=position) if one.id == item else one for one in plant.records]
 
 
 def build_racks() -> Racks:
@@ -84,7 +77,6 @@ def build_racks() -> Racks:
 
     Controller `-C1` (key `a_rack`) has modules `m_b` at position 1 and `m_a` at position 2 and a
     coupler at 0 with no channel; `-C0` (key `zz_rack`) has one module: designation order puts it
-    first, key order last. `-X9` is in no rack.
     """
     plant = Plant()
     controller = _part(plant, "ctrl", PartCategory.GENERIC, 1)

@@ -33,8 +33,6 @@ if TYPE_CHECKING:
     from fransys_model.vocab.core import Port
     from fransys_model.vocab.facets.connector import ConnectorFacet
 
-    from .indexes import Indexes
-
 
 def connector_rows(
     model: Model,
@@ -73,9 +71,7 @@ def connector_items(model: Model) -> tuple[Id[Item], ...]:
     found = {
         function.item
         for function in functions(model).values()
-        if function_role(model, function.id).pin_group
-        and function.template is not None
-        and function.template in shapes
+        if function_role(model, function.id).pin_group and function.template is not None and function.template in shapes
     }
     return in_designation_order(model, found)
 
@@ -109,11 +105,7 @@ def _connectors_on(model: Model, on_board: set[Id[Item]]) -> list[tuple[Function
     found = []
     for function in functions(model).values():
         shape = None if function.template is None else shapes.get(function.template)
-        if (
-            shape is not None
-            and function_role(model, function.id).pin_group
-            and function.item in on_board
-        ):
+        if shape is not None and function_role(model, function.id).pin_group and function.item in on_board:
             found.append((function, shape))
     return found
 
@@ -130,7 +122,6 @@ def connector_rows_of(
     `connector_rows` is this over a board and its descendants; the rest is its contract.
     """
     context = unit_list_context(model, unit, context)
-    idx = build_indexes(model)
     declared = _declared_nets(model)
     partners = mate_partners(model)
     rows = []
@@ -146,19 +137,16 @@ def connector_rows_of(
                 mate=mate,
                 mate_designation=(
                     None
-                    if mate is None
-                    or end_outside_nested_unit(model, functions(model)[mate].item, unit)
+                    if mate is None or end_outside_nested_unit(model, functions(model)[mate].item, unit)
                     else _mate_text(model, mate, context, unit)
                 ),
-                pins=_pins(model, idx, function.id, mate, declared, unit=unit, context=context),
+                pins=_pins(model, function.id, declared, unit=unit, context=context),
             )
         )
     return tuple(sorted(rows, key=lambda row: (natural_key(row.designation), row.connector)))
 
 
-def _mate_text(
-    model: Model, mate: Id[Function], context: Id[AspectNode] | None, unit: Id[Unit] | None
-) -> str:
+def _mate_text(model: Model, mate: Id[Function], context: Id[AspectNode] | None, unit: Id[Unit] | None) -> str:
     """The mate's connector as the list prints it: outside `unit`, its whole path (model-0143)."""
     item = functions(model)[mate].item
     if not outside_unit(model, item, unit):
@@ -166,43 +154,36 @@ def _mate_text(
     return product_designation_in(model, item, context, unit=unit) + connector_segment(model, mate)
 
 
-def _pins(  # noqa: PLR0913 -- one connector's lookups, its unit and the list's context
+def _pins(
     model: Model,
-    idx: Indexes,
     connector: Id[Function],
-    mate: Id[Function] | None,
     declared: dict[Id[Port], list[tuple[str, Id[Net]]]],
     *,
     unit: Id[Unit] | None,
     context: Id[AspectNode] | None,
 ) -> tuple[ConnectorPin, ...]:
+    idx = build_indexes(model)
+    mate = min(mate_partners(model).get(connector, ()), default=None)
     pins = []
     for port in idx.ports_by_function.get(connector, ()):
         marking = ports(model)[port].name
         mate_port = None if mate is None else mate_port_of(model, port, mate)
-        blank = mate is not None and end_outside_nested_unit(
-            model, functions(model)[mate].item, unit
-        )
+        blank = mate is not None and end_outside_nested_unit(model, functions(model)[mate].item, unit)
         pins.append(
             ConnectorPin(
                 port=port,
                 marking=marking,
                 net=min(declared[port])[0] if port in declared else None,
                 mate_port=mate_port,
-                mate_port_designation=(
-                    None
-                    if mate_port is None or blank
-                    else port_designation_in(model, mate_port, context, unit=unit)
-                ),
-                ends=_pin_ends(model, idx, port, mate_port, unit=unit, context=context),
+                mate_port_designation=(None if mate_port is None or blank else port_designation_in(model, mate_port, context, unit=unit)),
+                ends=_pin_ends(model, port, mate_port, unit=unit, context=context),
             )
         )
     return tuple(sorted(pins, key=lambda pin: pin_order(pin.marking, pin.port)))
 
 
-def _pin_ends(  # noqa: PLR0913 -- one pin's lookups, its unit and the list's context
+def _pin_ends(
     model: Model,
-    idx: Indexes,
     port: Id[Port],
     mate_port: Id[Port] | None,
     *,
@@ -210,6 +191,7 @@ def _pin_ends(  # noqa: PLR0913 -- one pin's lookups, its unit and the list's co
     context: Id[AspectNode] | None,
 ) -> tuple[str, ...]:
     """The far ends of every conductor on `port` or its `mate_port`, as a terminal row's."""
+    idx = build_indexes(model)
     near = (port,) if mate_port is None else (port, mate_port)
     landed = tuple(c for n in near for c in idx.conductors_by_port.get(n, ()))
     return far_ends(model, near, landed, unit=unit, context=context)[1]

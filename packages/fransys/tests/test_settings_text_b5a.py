@@ -5,7 +5,7 @@ lazy from pathlib import Path
 import pytest
 
 from fransys_model.derive import coil_table_texts
-from fransys_model.derive.house_settings import word
+from fransys_model.derive.facts.house_settings import word
 from fransys_model.derive.open_core_ends import open_core_text
 from fransys_model.derive.rows_cores import OpenCoreRow
 from fransys_model.kernel import make_id

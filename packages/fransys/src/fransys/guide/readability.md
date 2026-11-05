@@ -15,9 +15,9 @@ The findings these numbers back are in `drawing.md`.
 - **`wire_crossings`.** How often a wire runs across a wire of another id. A high number means a tangled page. Order the groups with `order`, or put the crossing nets on separate pages.
 - **`wire_bends` and `wire_length_g`.** The direction changes and the total length in G of every wire on the page. Many bends or a long total mean a winding page. They are numbers to compare between revisions, not a target the layout optimises.
 - **`struck_labels`.** Texts a wire runs through.
-- **`text_overlaps`.** Pairs of texts whose boxes overlap (`TEXT_OVERLAP`).
+- **`text_overlaps`.** Pairs of texts whose boxes overlap.
 
-**Removed.** `page_cuts` is gone: a `Drawing` does not carry which markers cut a wire, so no honest count exists. `text_height_mm` is a setting, not a reading: read it from `[font.heights]` in the settings and from the profile's `min_text_height_mm`. Counts a `Drawing` cannot give (printed numbers, lone cells, contact images, stars, loose symbols) are not in the row either.
+**Removed.** `page_cuts` is gone: a `Drawing` does not carry which markers cut a wire, so no honest count exists. Text height is not a reading: the text heights are the library's fixed heights. Counts a `Drawing` cannot give (printed numbers, lone cells, contact images, stars, loose symbols) are not in the row either.
 
 ```python
 from pathlib import Path

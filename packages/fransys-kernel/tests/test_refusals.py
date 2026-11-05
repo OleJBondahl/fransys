@@ -35,9 +35,7 @@ def _model() -> Any:
         ({"remove": ("x",)}, "remove takes ids, not a str"),
     ],
 )
-def test_evolve_refuses_a_put_or_remove_that_is_not_an_iterable_of_the_right_thing(
-    kwargs: dict[str, Any], message: str
-) -> None:
+def test_evolve_refuses_a_put_or_remove_that_is_not_an_iterable_of_the_right_thing(kwargs: dict[str, Any], message: str) -> None:
     """Each wrong argument raises a `SchemaError` that says what was passed."""
     with pytest.raises(SchemaError, match=message):
         evolve(_model(), origin=_CALL, **kwargs)

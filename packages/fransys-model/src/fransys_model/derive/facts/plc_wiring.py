@@ -8,8 +8,8 @@ with a function's ports. It is answered here, over `vocab.closure.net_of`, and n
 from typing import TYPE_CHECKING
 
 from fransys_model.derive.facts.closure import net_of
-from fransys_model.derive.facts.rail_reach import ports_by_function
 from fransys_model.derive.facts.roles import plc_channel_facets
+from fransys_model.derive.indexes import build_indexes
 from fransys_model.kernel import DIGEST_CACHE_SIZE, digest_cached
 from fransys_model.vocab.facets.plc import PlcBindingFacet, PlcChannelFacet, PlcRequestFacet
 from fransys_model.vocab.tables import conductors, facets_of, functions, ports
@@ -22,16 +22,12 @@ if TYPE_CHECKING:
     from fransys_model.vocab.core import Function, Port
 
 
-def owner_of_port(
-    by_function: Mapping[Id[Function], list[Id[Port]]], owners: Collection[Id[Function]]
-) -> dict[Id[Port], Id[Function]]:
+def owner_of_port(by_function: Mapping[Id[Function], tuple[Id[Port], ...]], owners: Collection[Id[Function]]) -> dict[Id[Port], Id[Function]]:
     """Each port of a function in `owners`, mapped to that function."""
     return {port: function for function in owners for port in by_function.get(function, ())}
 
 
-def wired_functions(
-    model: Model, own_ports: Collection[Id[Port]], owner_of: Mapping[Id[Port], Id[Function]]
-) -> frozenset[Id[Function]]:
+def wired_functions(model: Model, own_ports: Collection[Id[Port]], owner_of: Mapping[Id[Port], Id[Function]]) -> frozenset[Id[Function]]:
     """The functions of `owner_of` that share a physical net with any of `own_ports`.
 
     A function that owns some of `own_ports` itself is included when a port of it (or another
@@ -80,10 +76,12 @@ def channel_functions(model: Model) -> frozenset[Id[Function]]:
 def _owners(
     model: Model,
 ) -> tuple[
-    dict[Id[Function], list[Id[Port]]], dict[Id[Port], Id[Function]], dict[Id[Port], Id[Function]]
+    Mapping[Id[Function], tuple[Id[Port], ...]],
+    dict[Id[Port], Id[Function]],
+    dict[Id[Port], Id[Function]],
 ]:
     """Ports by function, and the port owners among the requests and among the channels."""
-    by_function = ports_by_function(model)
+    by_function = build_indexes(model).ports_by_function
     return (
         by_function,
         owner_of_port(by_function, request_functions(model)),
@@ -91,9 +89,7 @@ def _owners(
     )
 
 
-def binding_wiring(
-    model: Model, binding: PlcBindingFacet
-) -> tuple[frozenset[Id[Function]], frozenset[Id[Function]]]:
+def binding_wiring(model: Model, binding: PlcBindingFacet) -> tuple[frozenset[Id[Function]], frozenset[Id[Function]]]:
     """The channels wired to the bound request, then the requests wired to the bound channel.
 
     Each side leaves out the bound function itself; the check compares it with the binding.

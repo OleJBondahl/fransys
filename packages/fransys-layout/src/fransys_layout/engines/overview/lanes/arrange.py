@@ -8,6 +8,7 @@ from collections import Counter
 from dataclasses import dataclass
 lazy from collections.abc import Callable, Mapping
 
+from fransys_layout.core import grid_up
 from fransys_layout.engines.overview.lanes.frame_values import FrameEnd
 from fransys_layout.engines.overview.sizes import (
     ROW_GAP,
@@ -16,7 +17,7 @@ from fransys_layout.engines.overview.sizes import (
     G,
     attach_pitch,
 )
-from fransys_layout.geometry import PAGE_PAD, Facing, snap_up
+from fransys_layout.geometry import PAGE_PAD, WIRING_GRID, Facing
 lazy from fransys_layout.engines.overview.sheet_values import BoxFacts, DiagramFacts, Ident
 
 
@@ -68,19 +69,19 @@ def raw_ends(joints: tuple[Joint, ...]) -> tuple[RawEnd, ...]:
 
 def box_width(box: BoxFacts) -> int:
     """The box's own width on the grid: its widest text and the padding either side."""
-    return snap_up(max(box.text_widths, default=0) + 2 * TEXT_PAD)
+    return grid_up(max(box.text_widths, default=0) + 2 * TEXT_PAD, WIRING_GRID)
 
 
 def box_height(box: BoxFacts, ends: int, text_height: int) -> int:
     """The height that fits the texts and `ends` ends (plus one pitch) on its busier side."""
     n = len(box.text_widths)
     text = n * text_height + max(n - 1, 0) * TEXT_LEAD + 2 * TEXT_PAD
-    return snap_up(max(text, (ends + 1) * attach_pitch(text_height)))
+    return grid_up(max(text, (ends + 1) * attach_pitch(text_height)), WIRING_GRID)
 
 
 def end_floor(text_height: int) -> int:
     """The least distance between two ends of a box edge: a tab text high, on the grid."""
-    return max(G, snap_up(text_height))
+    return max(G, grid_up(text_height, WIRING_GRID))
 
 
 def heights(facts: DiagramFacts, ends: tuple[RawEnd, ...]) -> dict[Ident, int]:
@@ -91,15 +92,13 @@ def heights(facts: DiagramFacts, ends: tuple[RawEnd, ...]) -> dict[Ident, int]:
     for b in facts.boxes:
         busier = max(count[b.box, Facing.E], count[b.box, Facing.W])
         if facts.row_height and b.box in facts.column:
-            out[b.box] = max(facts.row_height, snap_up((busier + 1) * floor))
+            out[b.box] = max(facts.row_height, grid_up((busier + 1) * floor, WIRING_GRID))
         else:
             out[b.box] = box_height(b, busier, facts.text_height)
     return out
 
 
-def stack(
-    columns: tuple[tuple[Ident, ...], ...], height: Mapping[Ident, int], sheet_height: int
-) -> dict[Ident, int] | None:
+def stack(columns: tuple[tuple[Ident, ...], ...], height: Mapping[Ident, int], sheet_height: int) -> dict[Ident, int] | None:
     """Each box's y, columns centred on the tallest; None when the tallest does not fit."""
     totals = [sum(height[b] for b in col) + ROW_GAP * (len(col) - 1) for col in columns]
     tallest = max(totals, default=0)
@@ -107,7 +106,7 @@ def stack(
         return None
     y: dict[Ident, int] = {}
     for col, total in zip(columns, totals, strict=True):
-        cursor = PAGE_PAD + snap_up((tallest - total) // 2)
+        cursor = PAGE_PAD + grid_up((tallest - total) // 2, WIRING_GRID)
         for box in col:
             y[box] = cursor
             cursor += height[box] + ROW_GAP

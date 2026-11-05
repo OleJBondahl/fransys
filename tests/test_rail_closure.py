@@ -2,29 +2,24 @@
 
 Built from `examples/demo-parts` only. A rail spreads from its declared nets through conductors,
 mates, `conductive`, `switched` (every contact closed) and `protective` links (a fuse closed in
-service), and never enters another declared net.
-
-Can-fail probes, each one Edit in `derive/facts/closure.py`, run and undone: a rail that skips a
-`switched` link (`passes_rail` false) fails the contactor and motor tests;
-`_blocks` returning `False` fails the reversing starter test; dropping
-`net.potential in supplied` from `_rails` fails the unsupplied potential test.
 """
 
 import dataclasses
 import random
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import fransys_parts
 import pytest
-from fransys_author import Design, Port
+from fransys_author.design import Design
 from root_library import freeze
+lazy from fransys_author.handles import Port
 
 from fransys_model.derive import PhysicalNet, net_of, physical_nets, port_rails
 from fransys_model.derive.facts import closure
+from fransys_model.elecdef import LinkKind
 from fransys_model.kernel import Id, Model, evolve, merge
-from fransys_model.vocab import LinkKind
-from fransys_model.vocab import Port as ModelPort
 from fransys_model.vocab.tables import conductors, internal_links, ports
+lazy from fransys_model.vocab import Port as ModelPort
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -52,7 +47,7 @@ def _rails(model: Model, port: Port) -> list[str]:
     return sorted(port_rails(model, port.id))
 
 
-def _line_motor(*, named: bool = False, potential: str | None = None) -> tuple[Model, dict]:
+def _line_motor(*, named: bool = False, potential: str | None = None) -> tuple[Model, dict[Any, Any]]:
     """L1, L2, L3 into contactor Q1 (1, 3, 5), then one MCB per phase (the overload stand-in),
     then the motor's U, V, W. `named` puts each MCB output and motor pole on a declared net of
     `potential` (`None`: an ordinary power net)."""
@@ -71,7 +66,7 @@ def _line_motor(*, named: bool = False, potential: str | None = None) -> tuple[M
     return _freeze(d), {"q1": q1, "f": fuses, "m1": m1}
 
 
-def _changeover() -> tuple[Model, dict]:
+def _changeover() -> tuple[Model, dict[Any, Any]]:
     """A relay contact `co_1` whose 12 is on the declared L1 net and 14 on the declared L2 net."""
     d, _ = _design()
     k1 = d.item("DEMO-RLY-2CO-24", name="k1")
@@ -81,7 +76,7 @@ def _changeover() -> tuple[Model, dict]:
     return _freeze(d), {"contact": contact}
 
 
-def _reversing_starter(*, reverse: bool = False) -> tuple[Model, dict]:
+def _reversing_starter(*, reverse: bool = False) -> tuple[Model, dict[Any, Any]]:
     """K1: L1 to U, L3 to W; K2: L1 to W, L3 to U; the motor's V on L2 through both; a lamp on
     L1 and N. `reverse` declares everything after the items in the opposite order."""
     d, wire = _design()
@@ -223,9 +218,7 @@ def test_physical_nets_join_a_conductive_link_and_never_a_switched_or_protective
     assert _all_rails(model)
     closure._closure.cache_clear()
     joined = {q1.fn("main")["2"].id, x1["internal"].id, x1["external"].id, f1["1"].id}
-    expected = {frozenset(joined)} | {
-        frozenset({port}) for port in ports(model) if port not in joined
-    }
+    expected = {frozenset(joined)} | {frozenset({port}) for port in ports(model) if port not in joined}
     assert {frozenset(net.ports) for net in physical_nets(model)} == expected
     assert len(expected) == len(ports(model)) - 3
     assert net_of(model, q1.fn("main")["1"].id) == PhysicalNet(ports=(q1.fn("main")["1"].id,))
@@ -312,7 +305,7 @@ def test_a_port_not_in_the_model_carries_nothing() -> None:
     ids=["motor", "changeover", "reversing"],
 )
 def test_the_conditional_rail_table_reaches_what_port_rails_reaches_on_the_demo_plants(
-    build: Callable[[], tuple[Model, dict]],
+    build: Callable[[], tuple[Model, dict[Any, Any]]],
 ) -> None:
     """Every contact of an item moves together, so no demo path needs one item in two
     states, and the table `rail_pairs` reads holds exactly the pairs of `port_rails`."""

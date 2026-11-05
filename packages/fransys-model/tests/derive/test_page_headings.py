@@ -1,6 +1,5 @@
 """The one home of printed headings: page kinds, presets, drawing titles, column labels."""
 
-import pytest
 from derive_helpers import frozen_with_library
 
 from fransys_model import derive
@@ -20,18 +19,6 @@ def test_every_preset_has_a_heading():
     assert set(derive.preset_headings(MODEL)) == set(DocumentPreset)
 
 
-@pytest.mark.parametrize(
-    ("field", "label"),
-    [("designation", "Designation"), ("from_", "From"), ("cross_section_mm2", "Cross section mm2")],
-)
-def test_column_label(field, label):
-    assert derive.column_label(field) == label
-
-
-def test_csv_name_is_the_label_snake_cased():
-    assert derive.csv_name("Side A") == "side_a"
-
-
 def test_the_printed_words_are_pinned():
     """Expected values: a changed heading word is a visible output change, never a silent one."""
     assert {kind.name: words for kind, words in derive.page_headings(MODEL).items()} == {
@@ -49,12 +36,11 @@ def test_the_printed_words_are_pinned():
     }
     assert {p.name: words for p, words in derive.preset_headings(MODEL).items()} == {
         "CABINET_SCHEMATIC": "Cabinet schematic",
-        "HARNESS_DRAWING": "Harness drawing",
-        "PCB_SCHEMATIC": "PCB schematic",
         "SYSTEM": "System",
     }
     assert (diagram_title(MODEL), schematic_title(MODEL)) == ("Block diagram", "Schematic")
-    assert derive.CONTENTS_LABELS == (
+    contents = derive.list_columns(MODEL, "contents")
+    assert tuple(derive.list_pdf_heading(MODEL, "contents", f) for f in contents) == (
         "Designation",
         "MPN",
         "Description",

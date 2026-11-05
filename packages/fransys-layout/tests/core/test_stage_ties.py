@@ -38,9 +38,7 @@ def _id_maps(prob: PlacementProblem, scheme: int) -> dict[str, str]:
     sym_name, net_name = SCHEMES[scheme]
     syms = _ranked({s.id for s in prob.symbols})
     others = {n.id for n in prob.nets} | {n.bundle.id for n in prob.nets if n.bundle}
-    return {i: sym_name(r) for i, r in syms.items()} | {
-        i: net_name(r) for i, r in _ranked(others).items()
-    }
+    return {i: sym_name(r) for i, r in syms.items()} | {i: net_name(r) for i, r in _ranked(others).items()}
 
 
 def _rename(prob: PlacementProblem, ids: dict[str, str]) -> PlacementProblem:
@@ -85,13 +83,12 @@ def test_a_stage_does_not_depend_on_how_ids_are_spelled(
 
 
 @pytest.mark.parametrize(("name", "make", "run"), STAGE_CASES, ids=[c[0] for c in STAGE_CASES])
-def test_a_stage_does_not_depend_on_input_order(
-    name: str, make: Callable[[], PlacementProblem], run: Callable[..., object]
-) -> None:
+def test_a_stage_does_not_depend_on_input_order(name: str, make: Callable[[], PlacementProblem], run: Callable[..., object]) -> None:
     """Reversing the symbol and net tuples changes nothing.
 
-    Input order is a tie-break a stage must not use; natural_key is the one.
+    Input order is a tie-break a stage must not use; natural_key is the one. The flow stage walks nets in
+    the order given, the model's (layout-0465), so only its symbols flip.
     """
     prob = make()
-    flipped = replace(prob, symbols=prob.symbols[::-1], nets=prob.nets[::-1])
+    flipped = replace(prob, symbols=prob.symbols[::-1], nets=prob.nets if name == "flow" else prob.nets[::-1])
     assert _text(run(flipped), {}) == _text(run(prob), {}), name

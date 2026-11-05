@@ -2,13 +2,9 @@
 
 Each expected value is one unit's own aspect nodes as node keys (`/`-joined), per unit key
 (`/`-joined; the container is `unit`). Every set was checked once against the per-unit scan that
-`own_nodes` was at commit 03783d6, before model-0067 part 2 replaced it, and is written out here.
-The rule is in `own_nodes`' docstring (I4 R2, F9).
 """
 
-import sys
-from pathlib import Path
-
+import own_nodes_models as models
 import pytest
 
 from fransys_model.derive import units
@@ -18,23 +14,11 @@ from fransys_model.vocab import Unit
 from fransys_model.vocab.tables import aspect_nodes
 from fransys_model.vocab.tables import units as units_table
 
-_TESTS_DIR = Path(__file__).resolve().parent
-if str(_TESTS_DIR) not in sys.path:
-    # `--import-mode=importlib` (root pyproject.toml) never puts this folder on `sys.path`.
-    sys.path.insert(0, str(_TESTS_DIR))
-
-import own_nodes_models as models  # noqa: E402
-
 
 def _own_by_unit(model):
     """Every unit's `own_nodes` as `{unit key: sorted node keys}`, keys joined by `/`."""
     nodes = aspect_nodes(model)
-    return {
-        "/".join(units_table(model)[unit].key): sorted(
-            "/".join(nodes[n].key) for n in own_nodes(model, unit)
-        )
-        for unit in sorted(units(model))
-    }
+    return {"/".join(units_table(model)[unit].key): sorted("/".join(nodes[n].key) for n in own_nodes(model, unit)) for unit in sorted(units(model))}
 
 
 SCALE = {
@@ -81,14 +65,9 @@ def test_a_second_placement_that_does_not_win_changes_nothing():
 def test_a_second_placement_that_wins_moves_the_strip_to_c2():
     """`pump1`'s strip `X2` and its terminals now sit at `+C2`, with `pump2`'s items.
 
-    `pump2` no longer owns `+C2`; the only items left at `+C1` are the board's, so `pump1`'s
-    board unit owns `+C1`.
+    `pump2` no longer owns `+C2`.
     """
-    expected = {
-        **SCALE,
-        "pump1/io/unit": ["pump1/io/group/BRD", "pump1/location/C1"],
-        "pump2/unit": ["pump2/group/FLD", "pump2/io/group/BRD"],
-    }
+    expected = {**SCALE, "pump2/unit": ["pump2/group/FLD", "pump2/io/group/BRD"]}
     assert _own_by_unit(models.x2_placed_twice(second_wins=True)) == expected
 
 
@@ -109,9 +88,7 @@ def test_the_items_of_cables_and_harnesses_never_unown_a_location():
 
     An ordinary item in no unit at `+C3` does un-own it.
     """
-    assert _own_by_unit(models.cable_ends_in_a_unit_location()) == {
-        "own/unit/u": ["own/node/C1", "own/node/C2"]
-    }
+    assert _own_by_unit(models.cable_ends_in_a_unit_location()) == {"own/unit/u": ["own/node/C1", "own/node/C2"]}
 
 
 def test_units_that_name_each_other_as_parent_own_the_same_nodes():

@@ -7,9 +7,7 @@ from fransys_model.layout import DrawingSet, Page, PageRole
 
 def test_a_page_with_no_membership_row_prints_no_designation() -> None:
     set_key = ("set", "1")
-    drawing_set = DrawingSet(
-        id=make_id(DrawingSet, set_key), key=set_key, location=None, number=1, produced_by="test"
-    )
+    drawing_set = DrawingSet(id=make_id(DrawingSet, set_key), key=set_key, location=None, number=1, produced_by="test")
     page_key = ("page", "p1")
     page = Page(
         id=make_id(Page, page_key),

@@ -1,12 +1,18 @@
 """What every cable block must satisfy : checks on runs and a box.
 
-A run is a sequence of points with `.x` and `.y`, from a `PlacedWire` or a `CoreWire` alike.
+A run is a sequence of points with `.x` and `.y`, from a `PlacedWire`.
 """
 
 from itertools import combinations, pairwise
 
 from fransys_layout.geometry import WIRING_GRID, Point
 from fransys_layout.routing.grid_path import axes_of, cells_of, clean_crossing
+from fransys_model.derive.cable_drawing import cable_block_key
+
+
+def block_of(layout, subject, unit=None):
+    """The placed block of `subject` in `unit`'s reading (`None`: absolute), or None."""
+    return layout.blocks.get(cable_block_key(unit, subject))
 
 
 def _points(run) -> tuple[Point, ...]:
@@ -27,12 +33,7 @@ def assert_outside_the_box(runs, box: tuple[int, int, int, int]) -> None:
     x, y, width, height = box
     for run in runs:
         for a, b in pairwise(_points(run)):
-            inside = (
-                min(a.x, b.x) < x + width
-                and max(a.x, b.x) > x
-                and min(a.y, b.y) < y + height
-                and max(a.y, b.y) > y
-            )
+            inside = min(a.x, b.x) < x + width and max(a.x, b.x) > x and min(a.y, b.y) < y + height and max(a.y, b.y) > y
             assert not inside, (a, b, box)
 
 

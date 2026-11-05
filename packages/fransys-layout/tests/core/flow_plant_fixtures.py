@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 from turn_fixtures import views_of
 
 from fransys_layout.core.sym_values import Sym
@@ -33,21 +35,20 @@ def _part(
     )
 
 
-def tree3() -> PlacementProblem:
-    """Hub H with four S pins, children C1 and C2 (one node, two S pins each), leaves G1 to G4."""
+def tree3(*, one_leaf: bool = False) -> PlacementProblem:
+    """Hub H with four S pins, children C1 and C2 (one node, two S pins each), leaves G1 to G4; one_leaf: G1 and G3 only."""
     hub_pins = tuple(Pin(f"s{i}", "S", 16 * i, 32, i - 1) for i in range(1, 5))
-    hub_spec = BoxSpec(tuple(p.id for p in hub_pins), "S", 16, 16)
+    hub_spec = BoxSpec(tuple(p.id for p in hub_pins), 16)
     hub = _part("H", Box(0, 0, 80, 32), hub_pins, box=hub_spec)
+    child_body, child_pins = Box(-16, 0, 32, 32), (Pin("n", "N", 0, 0, 0), Pin("s1", "S", -8, 32, 1), Pin("s2", "S", 8, 32, 2))
     children = [
-        _part(
-            name,
-            Box(-16, 0, 32, 32),
-            (Pin("n", "N", 0, 0, 0), Pin("s1", "S", -8, 32, 1), Pin("s2", "S", 8, 32, 2)),
-            nodes=(("n", "s1", "s2"),),
+        replace(
+            _part(name, child_body, child_pins, nodes=(("n", "s1", "s2"),)),
+            views=views_of(child_body, child_body, child_body, child_pins, ("R0", "R180")),
         )
         for name in ("C1", "C2")
     ]
-    leaves = [_part(f"G{i}", Box(-8, 0, 16, 32), (Pin("n", "N", 0, 0, 0),)) for i in range(1, 5)]
+    leaves = [_part(f"G{i}", Box(-8, 0, 16, 32), (Pin("n", "N", 0, 0, 0),)) for i in ((1, 3) if one_leaf else range(1, 5))]
     nets: list[Net] = [
         net("H.s1-C1.n", "H.s1", "C1.n"),
         net("H.s2-C2.n", "H.s2", "C2.n"),
@@ -56,16 +57,15 @@ def tree3() -> PlacementProblem:
         net("C2.s1-G3.n", "C2.s1", "G3.n"),
         net("C2.s2-G4.n", "C2.s2", "G4.n"),
     ]
+    if one_leaf:
+        nets = [n for n in nets if n.id not in ("C1.s2-G2.n", "C2.s2-G4.n")]
+    nets.sort(key=lambda n: (n.pins[0].sym, n.pins[0].pin))  # the model's order: by first pin (layout-0465)
     return problem([hub, *children, *leaves], nets)
 
 
 def _box_and_foot() -> tuple[Sym, Sym, list[Net]]:
     """A 3-pole cable box K (pole dx 0, 16, 32) and bottom end B1 (pins at dx 0, 10, 20)."""
-    cable_pins = tuple(
-        pin
-        for k in range(3)
-        for pin in (Pin(f"N{k + 1}", "N", 16 * k, 0, k), Pin(f"S{k + 1}", "S", 16 * k, 32, k))
-    )
+    cable_pins = tuple(pin for k in range(3) for pin in (Pin(f"N{k + 1}", "N", 16 * k, 0, k), Pin(f"S{k + 1}", "S", 16 * k, 32, k)))
     cable = _part(
         "K",
         Box(-8, 0, 48, 32),
@@ -87,7 +87,7 @@ def fan_in3() -> PlacementProblem:
     No end pin dx (T1 0 and 10, T2 4, B1 0, 10, 20) equals the box's pole dx 0, 16, 32.
     """
     t1 = _part("T1", Box(-8, 0, 32, 32), (Pin("1", "S", 0, 32, 0), Pin("2", "S", 10, 32, 1)))
-    t2 = _part("T2", Box(-8, 0, 16, 32), (Pin("1", "S", 4, 32, 0),))
+    t2 = _part("T2", Box(4, 0, 16, 32), (Pin("1", "S", 4, 32, 0),))  # its body starts at the pin, a gap clear of T1 (R1482)
     cable, b1, foot = _box_and_foot()
     nets = [
         net("T1.1-K.N1", "T1.1", "K.N1"),
@@ -110,11 +110,8 @@ def fan_in1() -> PlacementProblem:
 def tree2() -> PlacementProblem:
     """Hub H with two S pins, children C1 and C2, one leaf each."""
     hub_pins = tuple(Pin(f"s{i}", "S", 16 * i, 32, i - 1) for i in (1, 2))
-    hub = _part("H", Box(0, 0, 48, 32), hub_pins, box=BoxSpec(("s1", "s2"), "S", 16, 16))
-    kids = [
-        _part(n, Box(-8, 0, 16, 32), (Pin("n", "N", 0, 0, 0), Pin("s", "S", 0, 32, 1)))
-        for n in ("C1", "C2")
-    ]
+    hub = _part("H", Box(0, 0, 48, 32), hub_pins, box=BoxSpec(("s1", "s2"), 16))
+    kids = [_part(n, Box(-8, 0, 16, 32), (Pin("n", "N", 0, 0, 0), Pin("s", "S", 0, 32, 1))) for n in ("C1", "C2")]
     leaves = [_part(f"G{i}", Box(-8, 0, 16, 32), (Pin("n", "N", 0, 0, 0),)) for i in (1, 2)]
     nets = [
         net("H.s1-C1.n", "H.s1", "C1.n"),

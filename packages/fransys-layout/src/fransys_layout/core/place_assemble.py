@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from dataclasses import replace
 from itertools import pairwise
 from typing import TYPE_CHECKING
 
-from .anchor_rooms import anchor_rooms
-from .arrow_reserve import arrow_ends, reserve
-from .band import lane_offset
+from .arrow_reserve import arrow_rows, lead_reserve, leg_feet, leg_fit, leg_lines, leg_rows, row_arrows, row_legs
+from .clearance import footprint_keeps
+from .flow_values import Lane
 from .geometry import (
     box_reach,
     cell_anchor,
@@ -22,17 +23,19 @@ from .keys import natural_key
 from .node_names import HIGH, LOW, box_node, box_y_node, col_node
 from .outputs import Gap, PagePlacement, PinXY, Placed, Trunk
 from .pack import cell_node
+from .place_lanes import _hull, _marker_keeps, drawn_lane_ends, stand_of, taps_x
 from .place_span import solved_spans
-from .place_trunk import box_pin_x, in_row, trunk_node
-from .values import Box, Lane
+from .place_trunk import box_pin_x, held_room, trunk_node
+from .values import Box
 
 if TYPE_CHECKING:
-    from collections.abc import Collection, Mapping, Sequence
+    from collections.abc import Iterable, Mapping, Sequence
 
+    from .clearance import Keep
+    from .flow_values import Cell, Fan
     from .pack import PlacedColumn
     from .place_env import PageEnv
-    from .room import Room
-    from .values import Attach, Cell, Fan
+    from .place_lanes import Taps
 
 
 def _placed_cell(env: PageEnv, cell: Cell, ox: int, oy: int) -> Placed:
@@ -58,21 +61,14 @@ def _cells(env: PageEnv, x: Mapping[str, int], y: Mapping[str, int]) -> dict[str
     return out
 
 
-def _box_pins(
-    env: PageEnv, box: str, edges: Mapping[str, str], x: Mapping[str, int], oy: int
-) -> tuple[PinXY, ...]:
+def _box_pins(env: PageEnv, box: str, edges: Mapping[str, str], x: Mapping[str, int], oy: int) -> tuple[PinXY, ...]:
     """Movable pins at their solved x on the edge they are used on; others at their offset."""
     sym = env.syms[box]
     edge_y = {"N": sym.body.y, "S": sym.body.y + sym.body.h}
-    return tuple(
-        PinXY(p.id, box_pin_x(env, x, box, p.id), oy + edge_y.get(edges.get(p.id, ""), p.dy))
-        for p in sym.pins
-    )
+    return tuple(PinXY(p.id, box_pin_x(env, x, box, p.id), oy + edge_y.get(edges.get(p.id, ""), p.dy)) for p in sym.pins)
 
 
-def _placed_box(
-    env: PageEnv, box: str, edges: Mapping[str, str], x: Mapping[str, int], oy: int
-) -> Placed:
+def _placed_box(env: PageEnv, box: str, edges: Mapping[str, str], x: Mapping[str, int], oy: int) -> Placed:
     """A box spans its solved left to right edge; its footprint grows with the body."""
     sym = env.syms[box]
     left, right = x[box_node(box, LOW)], x[box_node(box, HIGH)]
@@ -112,99 +108,60 @@ def _gaps(env: PageEnv, x: Mapping[str, int], y: Mapping[str, int]) -> tuple[Gap
         for k, (a, b) in enumerate(pairwise(ordered)):
             x0 = x[col_node(a)] + _extent(env, env.pcs[a])[1]
             x1 = x[col_node(b)] + _extent(env, env.pcs[b])[0]
-            out.append(
-                Gap(f"g:{env.plan.page}:{r}:{k}", env.plan.page, a, b, x0, x1, 0, top, bottom)
-            )
+            out.append(Gap(f"g:{env.plan.page}:{r}:{k}", env.plan.page, a, b, x0, x1, 0, top, bottom))
     return tuple(out)
 
 
-def _attach_x(
-    env: PageEnv, a: Attach, placed: Mapping[str, Placed], x: Mapping[str, int]
-) -> int | None:
-    """The x of a trunk's attachment (`in_row` holds): a column's lane wire or a box pin."""
-    here = placed.get(a.pin.sym)
-    pin = next((q.x for q in here.pin_xy if q.pin == a.pin.pin), None) if here else None
-    if a.column is None or pin is not None:
-        return pin
-    pc = env.pcs[a.column]
-    return x[col_node(pc.id)] + pc.offsets[a.lane]
+_Ctx = tuple["Sequence[Keep]", "Sequence[tuple[Fan, int, int, Taps]]", "Mapping[str, Placed]", "Mapping[str, int]", "Mapping[str, int]"]
 
 
-def _taps(
-    env: PageEnv, fan: Fan, r: int, placed: Mapping[str, Placed], x: Mapping[str, int]
-) -> tuple[tuple[Attach, int], ...]:
-    """Each attachment of the fan standing in row r with its x."""
-    out = []
-    for a in (*fan.drivers, *fan.legs):
-        at = _attach_x(env, a, placed, x) if in_row(env, fan, a, r) else None
-        if at is not None:
-            out.append((a, at))
-    return tuple(out)
+def _trunk(env: PageEnv, ctx: _Ctx, at: int, drop: int) -> Trunk | None:
+    """The trunk of the `at`th fan and row of `ctx` = (feet, tapped, placed, x, y), its arrow standing at or past the leg `drop` x."""
+    feet, tapped, placed, x, y = ctx
+    fan, r, ty, ts = tapped[at]
+    if not (span := _hull([v for _, v, _ in ts])):
+        return None
+    others = [(f.id, t, c) for f, _, t, c in tapped if f is not fan]
+    lanes = drawn_lane_ends(env, x, fan, r, stand_of(env, (ty, _row_bounds(env, y, r)), feet, placed, others)._replace(drop=drop))
+    x0, x1 = lanes.ends[0] if fan.lanes == 1 and lanes.ends[0] else span
+    return Trunk(fan.id, env.plan.page, ty, x0, x1, fan.lanes, r, *lanes, room=held_room(fan, env, r))
 
 
-def _hull(xs: Sequence[int]) -> tuple[int, int] | None:
-    return (min(xs), max(xs)) if xs else None
-
-
-def _lane_ends(
-    fan: Fan,
-    taps: Sequence[tuple[Attach, int]],
-    away: Collection[int] = (),
-    arrows: tuple[int, int] = (0, 0),
-    reach: int = 0,
-) -> tuple[tuple[int, int] | None, ...]:
-    """Per lane j the hull of the taps of pole j; a plain fan's one lane takes them all.
-
-    A lane in `away` (its net continues off the page) runs `reach` past the hull where an arrow
-    stands, `arrows` being the (left, right) counts; a `crossed` fan keeps the hull on every lane.
-    """
-    hull = _hull([v for _, v in taps])
-    if fan.lanes == 1 or fan.crossed:
-        return (hull,) * fan.lanes
-    out = []
-    for j in range(fan.lanes):
-        own = _hull([v for a, v in taps if a.pole == j])
-        if own and hull and j in away:
-            own = (
-                hull[0] - reach if arrows[0] else own[0],
-                hull[1] + reach if arrows[1] else own[1],
-            )
-        out.append(own)
-    return tuple(out)
-
-
-def _continuing(fan: Fan, placed: Mapping[str, Placed]) -> frozenset[int]:
-    """The poles with an attachment off this page: their nets continue past the cut."""
-    return frozenset(a.pole for a in (*fan.drivers, *fan.legs) if a.pin.sym not in placed)
+def _drops(env: PageEnv, trunks: Sequence[Trunk], feet: Sequence[Box]) -> dict[tuple[str, int], int]:
+    """Per (fan, row) the x of its last placed leg drop: the legs placed first, as the router draws them (BUNDLE-LEGS)."""
+    page, opts = env.plan.page, env.options
+    fans = {f.id: f for f in env.flow.fans}
+    around = (feet, arrow_rows(env.refs, [env.plan], env.flow.fans), env.problem.area)
+    out: dict[tuple[str, int], int] = {}
+    for (fan, row, _), line in leg_lines(trunks, fans, leg_rows(env.refs, page), leg_fit(opts, env.refs, page), around).items():
+        out[fan, row] = max(out.get((fan, row), 0), line[1][0])
+    return out
 
 
 def _trunks(
-    env: PageEnv, placed: Mapping[str, Placed], x: Mapping[str, int], y: Mapping[str, int]
+    env: PageEnv, placed: Mapping[str, Placed], xy: tuple[Mapping[str, int], Mapping[str, int]], shown: Mapping[str, Placed], marks: Sequence[Keep]
 ) -> tuple[Trunk, ...]:
-    """One trunk per fan and row it touches, from its leftmost to its rightmost attachment."""
-    out = []
-    for fan in env.flow.fans:
-        for r in range(len(env.plan.rows)):
-            node = trunk_node(fan.id, r)
-            taps = _taps(env, fan, r, placed, x) if node in y else ()
-            if span := _hull([v for _, v in taps]):
-                arrows = arrow_ends(env.refs, env.plan.page, r, fan.id)
-                ends = _lane_ends(
-                    fan,
-                    taps,
-                    _continuing(fan, placed),
-                    arrows,
-                    lane_offset(1, env.options.wiring_grid),
-                )
-                out.append(
-                    Trunk(fan.id, env.plan.page, y[node], span[0], span[1], fan.lanes, r, ends)
-                )
-    return tuple(out)
+    """One trunk per fan and row it touches, from its leftmost to its rightmost attachment; `shown` holds the drawn footprints.
+
+    The legs are placed on a first pass, clear of the footprints and the hangings (`marks`); a trunk whose last leg drop lies past its
+    arrow's lane end is stood again at the drop.
+    """
+    x, y = xy
+    feet = (*(k for s, p in shown.items() for k in footprint_keeps((("", s),), p.footprint)), *marks)
+    rows = range(len(env.plan.rows))
+    tapped = [(f, r, y[n], taps_x(env, x, f, r, placed)) for f in env.flow.fans for r in rows if (n := trunk_node(f.id, r)) in y]
+    ctx = (feet, tapped, placed, x, y)
+    out = [_trunk(env, ctx, i, 0) for i in range(len(tapped))]
+    drops = _drops(env, [t for t in out if t], leg_feet(shown.values(), _hung(marks)))
+    return tuple(t for i, t0 in enumerate(out) if (t := _stood(env, ctx, i, t0, drops.get((tapped[i][0].id, tapped[i][1]), 0))))
 
 
-def _rows(
-    env: PageEnv, placed: Mapping[str, Placed], y: Mapping[str, int]
-) -> tuple[tuple[int, int], ...]:
+def _stood(env: PageEnv, ctx: _Ctx, at: int, trunk: Trunk | None, drop: int) -> Trunk | None:
+    """`trunk` stood again at the leg `drop` x when its arrow's lane end lies short of it."""
+    return _trunk(env, ctx, at, drop) if trunk and drop + env.options.wiring_grid > max((e[1] for e in trunk.lane_ends if e), default=0) else trunk
+
+
+def _rows(env: PageEnv, placed: Mapping[str, Placed], y: Mapping[str, int]) -> tuple[tuple[int, int], ...]:
     """(height, width) of each row: the row's span in y, its placed footprints' span in x."""
     out = []
     for r, row in enumerate(env.plan.rows):
@@ -213,16 +170,16 @@ def _rows(
         fps = [placed[s].footprint for s in syms if s in placed]
         top, bottom = _row_bounds(env, y, r)
         width = max(f.x + f.w for f in fps) - min(f.x for f in fps) if fps else 0
-        left, right = arrow_ends(env.refs, env.plan.page, r)
-        width += reserve(left, env.options) + reserve(right, env.options)
+        left, right = row_arrows(env.refs, env.plan, env.blocks, env.flow.fans, r)
+        width += lead_reserve(left, env.options) + lead_reserve(right, env.options) + row_legs(env.refs, env.plan, env.flow.fans, r, env.options)
         out.append((bottom - top, width))
     return tuple(out)
 
 
-def placed_rooms(env: PageEnv, x: Mapping[str, int]) -> Mapping[str, Room]:
-    """The anchors' rooms of the page's symbols at `x`: a room is an offset, so any y gives it."""
+def placed_at(env: PageEnv, x: Mapping[str, int]) -> dict[str, Placed]:
+    """The page's symbols placed at `x`; a flag's fold reads only x, so every y is 0."""
     zero: defaultdict[str, int] = defaultdict(int)
-    return anchor_rooms(env.problem, {**_cells(env, x, zero), **_boxes(env, x, zero)})
+    return {**_cells(env, x, zero), **_boxes(env, x, zero)}
 
 
 def assemble(
@@ -232,10 +189,19 @@ def assemble(
 ) -> PagePlacement:
     """The page's Placed symbols (by natural id order), gaps with no tracks yet, trunks, rows."""
     placed = {**_cells(env, x, y), **_boxes(env, x, y)}
-    ordered = tuple(placed[k] for k in sorted(placed, key=natural_key))
+    shown = replace(env, syms=env.bare) if env.bare else env
+    seen = {**_cells(shown, x, y), **_boxes(shown, x, y)}
+    ordered = tuple(seen[k] for k in sorted(seen, key=natural_key))
     bands = tuple(_row_bounds(env, y, r) for r in range(len(env.plan.rows)))
-    trunks = _trunks(env, placed, x, y)
-    spans = solved_spans(env, placed, trunks, [t for t, _ in bands], env.rooms)
-    return PagePlacement(
-        env.plan.page, ordered, _gaps(env, x, y), trunks, _rows(env, placed, y), bands, spans
-    )
+    marks = tuple(_marker_keeps(env, placed))
+    trunks = _trunks(env, placed, (x, y), seen, marks)
+    spans = solved_spans(env, placed, trunks, [t for t, _ in bands])
+    return PagePlacement(env.plan.page, ordered, _gaps(env, x, y), trunks, _rows(env, placed, y), bands, spans, _hung(marks))
+
+
+def _hung(marks: Iterable[Keep]) -> dict[str, tuple[Box, ...]]:
+    """The hanging boxes by owner symbol: `PagePlacement.hangings` (layout-0547)."""
+    hung: dict[str, tuple[Box, ...]] = {}
+    for k in marks:
+        hung[k.owner] = (*hung.get(k.owner, ()), k.box)
+    return hung

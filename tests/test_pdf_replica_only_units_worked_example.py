@@ -2,50 +2,38 @@
 real, facade-built geometry. The pdf package unit tests prove the predicate's logic directly
 against hand-built `layout.*` records. Since layout-0214 the worked example no longer has that
 shape: a box cell the top does not wire is not drawn, so its set draws nothing; a real
-author-level rewiring still draws a set, both on `fr.build`'s own output.
 """
+# CONNECTION_NOT_DRAWN 36 per default-salt build set (MATES-DISABLED): mated, harness or board-unit input, refused for 0.22 (R1216).
 
 import re
-import sys
 from decimal import Decimal
-from pathlib import Path
 
 import fransys as fr
-import fransys_author
 import fransys_parts
-from _model_build_cover import layout_trigger_document
-from fransys._layout_core import draw_on_core, lay_out_on_core
-
-import electrical_symbols
-from electrical_symbols import LIBRARY
-from fransys_model.derive import document_row, document_sheets_of
-
-# `test_declared_dependencies.py`'s own pattern for importing a sibling root test module by
-# name: `--import-mode=importlib` (root pyproject.toml) never puts `tests/` on `sys.path`.
-sys.path.insert(0, str(Path(__file__).resolve().parent))
 import fransys_render
 from _drawn_pages import drawn_pages
-from _pdf_lists import source
+from _model_build_cover import layout_trigger_document, unit_document
+from _pdf_lists import PDF, source
+from fransys._layout_core import lay_out_on_core
+from fransys_author.design import Design
 from fransys_pdf import check
 from fransys_pdf._drawings import replica_only_sets, schematic_pages
-from fransys_pdf._lists import _connector_rows_for_page, bom_page
+from fransys_pdf._lists import bom_page
 from fransys_render import cable_blocks as render_cable_blocks
 from test_units_worked_example import _PROJECT, io_board
 
+import electrical_symbols
+from electrical_symbols import LIBRARY
 from fransys_layout import lay_out_cables
-from fransys_model.derive import SheetKey, document_scope, unit_release, units
+from fransys_model.derive import SheetKey, document_row, document_sheets_of, documents, unit_release, units
 from fransys_model.kernel import Origin, Severity, evolve, make_id
-from fransys_model.vocab import Document, DocumentPreset, Item, PageKind, PartCategory, documents
+from fransys_model.vocab import Document, DocumentPreset, Item, PageKind, PartCategory
 from fransys_model.vocab.facets.cable import CableFacet, CableProductFacet
 from fransys_model.vocab.tables import units as units_table
 from fransys_model.vocab.templates import Part
 
-_IO_BOARD_COUNT = 1  # a `demo-io-board` unit's own single board
-_CABINET_OWN_STRIP_COUNT = 1  # a `demo-pump-cabinet` unit's own single strip, X2
 _UNWIRED_FIELD_TERMINALS = 2  # the first two field terminals; a third is wired to a neighbour
-_ORIGIN = Origin(
-    file="tests/test_pdf_replica_only_units_worked_example.py", line=1, note="replica-only probe"
-)
+_ORIGIN = Origin(file="tests/test_pdf_replica_only_units_worked_example.py", line=1, note="replica-only probe")
 
 
 def pump_cabinet(s, *, name, extra_unitless_neighbor=False):
@@ -61,12 +49,11 @@ def pump_cabinet(s, *, name, extra_unitless_neighbor=False):
     count = 3 if extra_unitless_neighbor else 2
     field = [x2.terminal("DEMO-TB-2.5", group=grp) for _ in range(count)]
     board_x1, _ = io_board(u.scope("io", at=c))
-    w1 = u.harness(name="w1", tag="WH1", at=c, group=grp)
-    p1 = u.item("DEMO-CONN-2P", tag="P1", parent=w1, at=c, group=grp)
-    cable = u.cable("DEMO-CBL-4G1.5", name="w1c", parent=w1, at=c)
+    p1 = u.item("DEMO-CONN-2P", tag="P1", at=c, group=grp)
+    cable = u.cable("DEMO-CBL-4G1.5", name="w1c", at=c)
     cable.core(1, field[0].outer, p1["1"])
     cable.core(2, field[1].outer, p1["2"])
-    u.mate(p1, board_x1)
+    u.unused(board_x1)
     for index, t in enumerate(field):
         u.boundary(t)
         if index < _UNWIRED_FIELD_TERMINALS:
@@ -75,20 +62,21 @@ def pump_cabinet(s, *, name, extra_unitless_neighbor=False):
         neighbor = s.item("DEMO-CONN-2P", tag="P9", at=c, group=grp)
         wire = s.wiring(colour="BU", gauge="0.5")
         wire(field[2].outer, neighbor["1"])
-    return c, field
+    return c, field, u
 
 
 def _build(*, name1="C1", name2="C2", extra_unitless_neighbor=False, drafts=()):
     parts = fransys_parts.load("demo_parts")
-    d = fransys_author.Design(parts)
+    d = Design(parts)
     d.project(**_PROJECT)
     d.revision(1, date="2026-09-22", text="First issue", created="XX")
     er = d.location("ER", "Engine room")
-    c1, _field1 = pump_cabinet(
-        d.scope("pump1", at=er), name=name1, extra_unitless_neighbor=extra_unitless_neighbor
+    c1, _field1, u1 = pump_cabinet(d.scope("pump1", at=er), name=name1, extra_unitless_neighbor=extra_unitless_neighbor)
+    c2, _field2, u2 = pump_cabinet(d.scope("pump2", at=er), name=name2)
+    unit_documents = tuple(  # every unit's own drawing set is printed (UNPRINTED_SET)
+        unit_document(unit) for unit in (u1, u2)
     )
-    c2, _field2 = pump_cabinet(d.scope("pump2", at=er), name=name2)
-    result = fr.build(parts, d.draft(), layout_trigger_document(), *drafts)
+    result = fr.build(parts, d.draft(), layout_trigger_document(), *unit_documents, *drafts)
     # An `ERROR` stops `build` before layout (decision 0028): no `layout.*` record to measure.
     assert [f.code for f in result.findings if f.severity is Severity.ERROR] == []
     return result.model, c1.id, c2.id
@@ -102,8 +90,6 @@ def _with_documents(model, *location_ids):
             preset=DocumentPreset.CABINET_SCHEMATIC,
             location=location_id,
             item=None,
-            add=(),
-            remove=(PageKind.PLC_LIST, PageKind.TERMINAL_LIST, PageKind.BOM),
             cover="# Cover",
             notes=None,
         )
@@ -122,7 +108,7 @@ def test_the_worked_examples_top_level_sets_draw_nothing_and_report_nothing():
         record = document_row(model, doc.id)
         assert schematic_pages(model, record, (PageKind.SCHEMATIC,)) == ()
         assert replica_only_sets(model, record, (PageKind.SCHEMATIC,)) == ()
-    codes = [f.code for f in check(model, {})]
+    codes = [f.code for f in check(model, {}, diagrams=(), laid=frozendict(), pdf=PDF)]
     assert "DRAWING_SET_REPLICA_ONLY" not in codes
     assert "DOCUMENT_NO_DRAWINGS" not in codes
 
@@ -140,7 +126,7 @@ def test_a_real_rewired_boundary_draws_its_set():
     assert replica_only_sets(model, record_c1, (PageKind.SCHEMATIC,)) == ()
     assert schematic_pages(model, record_c2, (PageKind.SCHEMATIC,)) == ()
     assert replica_only_sets(model, record_c2, (PageKind.SCHEMATIC,)) == ()
-    assert "DRAWING_SET_REPLICA_ONLY" not in [f.code for f in check(model, {})]
+    assert "DRAWING_SET_REPLICA_ONLY" not in [f.code for f in check(model, {}, diagrams=(), laid=frozendict(), pdf=PDF)]
 
 
 def _unit_by_name_and_prefix(model, *, name, prefix):
@@ -148,97 +134,9 @@ def _unit_by_name_and_prefix(model, *, name, prefix):
 
     `_build()` instantiates `demo-pump-cabinet` and, nested in it, `demo-io-board` once per
     cabinet (`pump1`, `pump2`); both units of one name are real content, so this also proves
-    the fix picks exactly the intended unit, not "the first one found".
     """
     all_units = units_table(model)
-    return next(
-        unit_id
-        for unit_id in sorted(units(model))
-        if unit_release(model, unit_id).name == name and all_units[unit_id].key[0] == prefix
-    )
-
-
-def test_a_units_own_documents_scope_their_lists_to_that_unit_directly():
-    """`fransys_pdf._lists._connector_rows_for_page`/`DocumentScope.strips` (decision
-    pdf-0006), proven on the worked example's real, facade-built geometry: a unit document's
-    TERMINAL_LIST/CONNECTOR_LIST cover only items whose own `Item.unit` is that unit,
-    directly -- never the recursive subtree.
-
-    This is also the crash the fix closes: before it, `_boards_for` (now
-    `_connector_rows_for_page`) asserted the document's `location` was not `None`, which a
-    unit-subject `pcb_schematic` document -- exactly `io_board`'s own worked-example shape --
-    violates, so `source()` raised `AssertionError`
-    for `io_doc` below. `PageKind.SCHEMATIC` is removed from both documents so the unrelated
-    missing-SVG concern of a real drawing page never masks that.
-    """
-    model, _c1_id, _c2_id = _build()
-    io_unit_id = _unit_by_name_and_prefix(model, name="demo-io-board", prefix="pump1")
-    cabinet_unit_id = _unit_by_name_and_prefix(model, name="demo-pump-cabinet", prefix="pump1")
-
-    io_doc = Document(
-        id=make_id(Document, ("probe-doc", "io")),
-        key=("probe-doc", "io"),
-        preset=DocumentPreset.PCB_SCHEMATIC,
-        location=None,
-        item=None,
-        unit=io_unit_id,
-        add=(),
-        remove=(PageKind.SCHEMATIC,),
-        cover="# Cover",
-        notes=None,
-    )
-    cabinet_doc = Document(
-        id=make_id(Document, ("probe-doc", "cabinet")),
-        key=("probe-doc", "cabinet"),
-        preset=DocumentPreset.CABINET_SCHEMATIC,
-        location=None,
-        item=None,
-        unit=cabinet_unit_id,
-        add=(PageKind.CONNECTOR_LIST,),
-        remove=(PageKind.SCHEMATIC,),
-        cover="# Cover",
-        notes=None,
-    )
-    # A second root in the io-board unit: a unit's sole root prints no heading,
-    # which is not what this test is about. It is no board, so the board count stays one.
-    io_second_root = Item(
-        id=make_id(Item, ("probe-doc", "io-second-root")),
-        key=("probe-doc", "io-second-root"),
-        part=None,
-        parent=None,
-        position=None,
-        tag="K9",
-        description="",
-        installed=True,
-        unit=io_unit_id,
-    )
-    model = evolve(model, put=[io_doc, cabinet_doc, io_second_root], origin=_ORIGIN)
-
-    # The real end-to-end proof: building the unit-subject PCB_SCHEMATIC document's source
-    # does not raise (the actual pre-fix crash), and its CONNECTOR_LIST holds exactly the
-    # io-board unit's own board, nothing recursed in from anywhere else.
-    io_text = source(
-        model, io_doc.id, {}, fransys_render.sheets(document_sheets_of(model), LIBRARY)
-    )
-    assert io_text.count("#heading(level: 2,") == _IO_BOARD_COUNT
-    assert len(_connector_rows_for_page(model, document_row(model, io_doc.id))) == _IO_BOARD_COUNT
-
-    # The cabinet unit's own document: its TERMINAL_LIST covers its own strip (X2), but its
-    # CONNECTOR_LIST is empty -- the board belongs to the nested `demo-io-board` unit, and
-    # direct membership never recurses into a nested unit's own items.
-    cabinet_text = source(
-        model, cabinet_doc.id, {}, fransys_render.sheets(document_sheets_of(model), LIBRARY)
-    )
-    # Two level-2 headings: TERMINAL_LIST's own X2 section and CONNECTOR_LIST's one table, for
-    # the cabinet's own plug `-WH1-P1` (pdf-0030). A regression to the recursive subtree would
-    # pull in the nested io-board's connectors too.
-    assert cabinet_text.count("#heading(level: 2,") == _CABINET_OWN_STRIP_COUNT + 1
-    assert '#heading(level: 2, text("-WH1-P1"))' in cabinet_text
-    assert "X2" in cabinet_text
-    cabinet_record = document_row(model, cabinet_doc.id)
-    assert len(document_scope(model, cabinet_record.id).strips) == _CABINET_OWN_STRIP_COUNT
-    (own_connector,) = _connector_rows_for_page(model, cabinet_record)
-    assert own_connector.designation == "-WH1-P1"
+    return next(unit_id for unit_id in sorted(units(model)) if unit_release(model, unit_id).name == name and all_units[unit_id].key[0] == prefix)
 
 
 def test_a_units_document_title_block_shows_its_current_revision_and_date_end_to_end():
@@ -246,9 +144,6 @@ def test_a_units_document_title_block_shows_its_current_revision_and_date_end_to
     through `source()` on the worked example's real, facade-built geometry -- not only
     `packages/fransys-pdf/tests/test_source.py`'s own hand-built-fixture proof
     (`test_unit_document_source_wires_title_block_scope_and_per_set_counter`). The worked
-    example authors the cabinet's `Revision` entry itself (`pump_cabinet`, revision `2`, a
-    missing one is an ERROR); the `Document` is hand-built here, the same way this file's own
-    `_with_documents` hand-builds `Document` records.
     """
     model, _c1_id, _c2_id = _build()
     cabinet_unit_id = _unit_by_name_and_prefix(model, name="demo-pump-cabinet", prefix="pump1")
@@ -259,15 +154,11 @@ def test_a_units_document_title_block_shows_its_current_revision_and_date_end_to
         location=None,
         item=None,
         unit=cabinet_unit_id,
-        add=(),
-        remove=(PageKind.SCHEMATIC, PageKind.PLC_LIST, PageKind.TERMINAL_LIST),
         cover="# Cover",
         notes=None,
     )
     model_with_doc = evolve(model, put=[doc], origin=_ORIGIN)
-    svg = fransys_render.sheets(document_sheets_of(model_with_doc), LIBRARY)[
-        SheetKey(doc.id, PageKind.COVER, 0)
-    ].svg
+    svg = fransys_render.sheets(document_sheets_of(model_with_doc, ()), LIBRARY)[SheetKey(doc.id, PageKind.COVER, 0)].svg
     values = re.findall(r'font-size="3\.4293"[^>]*>([^<]*)</text>', svg)  # the body-size cells
     assert {"demo-pump-cabinet", "1.2", "2026-01-01"} <= set(values)
 
@@ -279,8 +170,6 @@ def _system_document(id_suffix: str) -> Document:
         preset=DocumentPreset.SYSTEM,
         location=None,
         item=None,
-        add=(),
-        remove=(),
         cover="# Cover",
         notes=None,
     )
@@ -291,20 +180,23 @@ def test_the_worked_examples_system_document_has_no_top_level_cable_and_gives_th
     proven on the worked example's real, facade-built geometry: every cable the worked
     example authors is a unit's own (`pump_cabinet`'s `w1c`, built inside `u.unit(...)`), so
     the model has no top-level cable at all -- confirmed here by finding, not assumed
-    (`.fransys/review/step4-system-harness-drawing-no-drawings.png`'s own prior review, now
-    superseded by this ruling).
     """
     model, _c1_id, _c2_id = _build()
     doc = _system_document("system")
     model = evolve(model, put=[doc], origin=_ORIGIN)
 
-    findings = check(model, {})
+    findings = check(model, {}, diagrams=(), laid=frozendict(), pdf=PDF)
     own_findings = [f for f in findings if doc.id in f.subjects]
     assert [f for f in own_findings if f.code == "DOCUMENT_NO_DRAWINGS"] == []
     (info,) = [f for f in own_findings if f.code == "DOCUMENT_NO_TOP_LEVEL_CABLES"]
     assert info.severity is Severity.INFO
 
-    text = source(model, doc.id, {}, fransys_render.sheets(document_sheets_of(model), LIBRARY))
+    text = source(
+        model,
+        doc.id,
+        {},
+        fransys_render.sheets(document_sheets_of(model, ()), LIBRARY),
+    )
     assert '#par(text("No drawings."))' not in text
 
 
@@ -356,14 +248,19 @@ def test_adding_one_top_level_cable_draws_the_section_and_clears_the_info():
         origin=_ORIGIN,
     )
 
-    model, _ = lay_out_cables(model)  # as the facade does after the schematic layout
-    svgs = dict(render_cable_blocks(model, LIBRARY))
+    cables = lay_out_cables(model, LIBRARY)  # as the facade does after the schematic layout
+    svgs = dict(render_cable_blocks(model, cables, LIBRARY))
 
-    findings = check(model, svgs)
+    findings = check(model, svgs, diagrams=(), laid=frozendict(), pdf=PDF)
     own_findings = [f for f in findings if doc.id in f.subjects]
     assert [f for f in own_findings if f.code == "DOCUMENT_NO_TOP_LEVEL_CABLES"] == []
 
-    text = source(model, doc.id, svgs, fransys_render.sheets(document_sheets_of(model), LIBRARY))
+    text = source(
+        model,
+        doc.id,
+        svgs,
+        fransys_render.sheets(document_sheets_of(model, ()), LIBRARY),
+    )
     # The cable is one drawn block, its SVG from `render.cable_blocks`.
     assert text.count("#image(bytes(") == 1
     assert '#par(text("No drawings."))' not in text
@@ -374,9 +271,6 @@ def test_the_cabinet_units_own_bom_holds_the_board_line_and_no_relay():
     `pump-cabinet` `02` `2026-09-23`. Its BOM holds the board line and no relay" (mapped
     fixture names `demo-pump-cabinet`/`demo-io-board`). Scoped to the cabinet unit's own id
     (`_bom_scope`'s unit branch), the BOM holds the nested `demo-io-board`
-    unit as one line (`derive.bom_lines`'s own "mpn the instance's name" convention for a
-    nested unit line) and none of that board's own components -- the relay `DEMO-RLY-2CO-24`
-    is a `demo-io-board` member, not a direct `demo-pump-cabinet` one.
     """
     model, _c1_id, _c2_id = _build()
     cabinet_unit_id = _unit_by_name_and_prefix(model, name="demo-pump-cabinet", prefix="pump1")
@@ -387,8 +281,6 @@ def test_the_cabinet_units_own_bom_holds_the_board_line_and_no_relay():
         location=None,
         item=None,
         unit=cabinet_unit_id,
-        add=(),
-        remove=(),
         cover="# Cover",
         notes=None,
     )
@@ -414,10 +306,9 @@ def test_a_board_unit_documents_schematic_section_now_draws_its_own_content(tmp_
     plain, _c1_id, _c2_id = _build()
     io_unit_id = _unit_by_name_and_prefix(plain, name="demo-io-board", prefix="pump1")
     io_draft = fr.document(
-        fr.DocumentPreset.PCB_SCHEMATIC,
+        fr.DocumentPreset.CABINET_SCHEMATIC,
         io_unit_id,
         cover=cover,
-        remove=(PageKind.CONNECTOR_LIST, PageKind.BOM),
     )
     model, _c1_id, _c2_id = _build(drafts=(io_draft,))
     io_doc = next(d for d in documents(model).values() if d.unit == io_unit_id)
@@ -426,26 +317,20 @@ def test_a_board_unit_documents_schematic_section_now_draws_its_own_content(tmp_
     pages_found = schematic_pages(model, record, (PageKind.SCHEMATIC,))
     assert len(pages_found) >= 1
 
-    svgs = draw_on_core(
-        model, lay_out_on_core(model, electrical_symbols.LIBRARY)[2], electrical_symbols.LIBRARY
-    )
-    findings = check(model, svgs)
+    svgs = lay_out_on_core(model, electrical_symbols.LIBRARY)[3]
+    findings = check(model, svgs, diagrams=(), laid=frozendict(), pdf=PDF)
     own_errors = [f for f in findings if io_doc.id in f.subjects and f.severity == Severity.ERROR]
     assert own_errors == []
 
     page_ids = set(pages_found)
-    on_page = [
-        symbol
-        for page, drawing in drawn_pages(model).items()
-        if page in page_ids
-        for symbol in drawing.symbols
-    ]
-    coil = [
-        s
-        for s in on_page
-        if s.key == "operating-device" and {"A1", "A2"} <= {v for _, v in s.slots}
-    ]
+    on_page = [symbol for page, drawing in drawn_pages(model).items() if page in page_ids for symbol in drawing.symbols]
+    coil = [s for s in on_page if s.key == "operating-device" and {"A1", "A2"} <= {v for _, v in s.slots}]
     assert coil, "K1's coil is actually on the board's own page"
 
-    text = source(model, io_doc.id, svgs, fransys_render.sheets(document_sheets_of(model), LIBRARY))
+    text = source(
+        model,
+        io_doc.id,
+        svgs,
+        fransys_render.sheets(document_sheets_of(model, ()), LIBRARY),
+    )
     assert '#par(text("No drawings."))' not in text

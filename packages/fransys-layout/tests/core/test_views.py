@@ -2,17 +2,19 @@
 
 from dataclasses import replace
 from types import SimpleNamespace
+from typing import Any
 
 import pytest
 
 from fransys_layout.core.errors import CoreError
+from fransys_layout.core.flow_values import Cell
 from fransys_layout.core.geometry import cell_anchor, cell_footprint, pin_xy, view_of
 from fransys_layout.core.pack_sep import hard_soft
 from fransys_layout.core.place_assemble import _placed_cell
 from fransys_layout.core.route_env import pin_sides
 from fransys_layout.core.scene_facts import _pin_facts
 from fransys_layout.core.sym_values import PinTurn, Sym, Turned
-from fransys_layout.core.values import Box, Cell, Facts, Pin, PlacementProblem, Size
+from fransys_layout.core.values import Box, Facts, Pin, PlacementProblem, Size
 
 from .turn_fixtures import views_of
 
@@ -38,8 +40,8 @@ def _planted() -> Sym:
 
 def test_the_placed_cell_is_the_r90_view_moved_and_nothing_else() -> None:
     sym = _planted()
-    env = SimpleNamespace(syms={"U": sym}, in_row=frozenset(), plan=SimpleNamespace(page=1))
-    placed = _placed_cell(env, CELL, 100, 200)  # ty: ignore[invalid-argument-type] -- stand-in env
+    env: Any = SimpleNamespace(syms={"U": sym}, in_row=frozenset(), plan=SimpleNamespace(page=1))
+    placed = _placed_cell(env, CELL, 100, 200)
     assert placed.body == Box(103, 205, 40, 10)
     assert placed.footprint == Box(98, 203, 60, 14)
     assert [(p.pin, p.x, p.y) for p in placed.pin_xy] == [("a", 133, 207), ("b", 96, 209)]

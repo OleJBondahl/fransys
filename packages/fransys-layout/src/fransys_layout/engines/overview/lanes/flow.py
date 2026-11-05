@@ -24,9 +24,9 @@ def neighbours[K: Hashable](boxes: Iterable[K], pairs: Iterable[tuple[K, K]]) ->
     return near
 
 
-def _depths[K: Hashable](near: Mapping[K, Sequence[K]], sources: Iterable[K]) -> dict[K, int]:
+def depths[K: Hashable](sources: Iterable[K], near: Mapping[K, Sequence[K]]) -> dict[K, int]:
     """Breadth-first depth from `sources` (depth 0); a box nothing reaches is absent."""
-    depth = dict.fromkeys((s for s in sources if s in near), 0)
+    depth = dict.fromkeys(sources, 0)
     queue = deque(depth)
     while queue:
         box = queue.popleft()
@@ -63,18 +63,15 @@ def stages[K: Hashable](
     Depth is breadth-first over `flow` from `sources`; a missed box takes it over all `lines`.
     The `last` boxes, a source too, take the deepest stage; a box nothing reaches takes depth 1.
     """
-    reached = _relaxed(neighbours(boxes, lines), _depths(neighbours(boxes, flow), sources))
+    flow_near = neighbours(boxes, flow)
+    reached = _relaxed(neighbours(boxes, lines), depths((s for s in sources if s in flow_near), flow_near))
     deepest = max(reached.values(), default=0)
     raw = {**reached, **dict.fromkeys(last, deepest)}
-    rank = {
-        d: n for n, d in enumerate(sorted({*raw.values(), *(1 for b in boxes if b not in raw)}))
-    }
+    rank = {d: n for n, d in enumerate(sorted({*raw.values(), *(1 for b in boxes if b not in raw)}))}
     return {b: rank[raw.get(b, 1)] for b in boxes}
 
 
-def stack[K: Hashable](
-    order: Iterable[K], cell_of: Mapping[K, Cell], key: Mapping[K, SupportsRichComparison]
-) -> dict[Cell, list[K]]:
+def stack[K: Hashable](order: Iterable[K], cell_of: Mapping[K, Cell], key: Mapping[K, SupportsRichComparison]) -> dict[Cell, list[K]]:
     """The boxes of each cell, sorted by `key`; boxes with equal keys keep the order of `order`."""
     cells: dict[Cell, list[K]] = {}
     for box in sorted(order, key=key.__getitem__):

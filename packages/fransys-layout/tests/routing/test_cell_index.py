@@ -24,12 +24,7 @@ def _hit(box: Box, first: tuple[int, int], second: tuple[int, int]) -> bool:
     """Brute force: the closed box meets the closed axis-aligned segment."""
     low_x, high_x = sorted((first[0], second[0]))
     low_y, high_y = sorted((first[1], second[1]))
-    return (
-        box.x <= high_x
-        and low_x <= box.x + box.width
-        and box.y <= high_y
-        and low_y <= box.y + box.height
-    )
+    return box.x <= high_x and low_x <= box.x + box.width and box.y <= high_y and low_y <= box.y + box.height
 
 
 def test_every_box_that_meets_a_segment_is_among_the_candidates() -> None:
@@ -38,10 +33,7 @@ def test_every_box_that_meets_a_segment_is_among_the_candidates() -> None:
     Seeded: 300 boxes and 300 axis-aligned segments; the candidates hold every true hit.
     """
     rng = random.Random(133)  # noqa: S311 - a seeded test generator, not cryptography
-    boxes = [
-        _box(rng.randint(-100, 300), rng.randint(-100, 300), rng.randint(0, 60), rng.randint(0, 60))
-        for _ in range(300)
-    ]
+    boxes = [_box(rng.randint(-100, 300), rng.randint(-100, 300), rng.randint(0, 60), rng.randint(0, 60)) for _ in range(300)]
     index = CellIndex((box, number) for number, box in enumerate(boxes))
     for _ in range(300):
         first = (rng.randint(-120, 320), rng.randint(-120, 320))

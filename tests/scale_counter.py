@@ -1,26 +1,14 @@
 """Execution counts of `fransys_layout` code on the scale fixture.
 
 The harness of the layout count (layout-0086).
-
 `count_build(n)` runs `build_scale(n)` under stdlib `sys.monitoring` and counts, per code object of
-`fransys_layout`, calls (PY_START), generator resumes (PY_RESUME) and loop iterations (JUMP).
-The key is `file:qualname:firstlineno`, the file relative to the `fransys_layout/` folder with
-forward slashes. Counts of events that happen while a `core/solve.py:solve` call is on
-the stack are divided by the number of such calls (a "pass"); events outside a pass count whole.
-
-Stated limit: a C-level scan (`x in a_tuple`, `sorted`) is seen only through a Python callee.
-
-`build_scale`'s own default stays document-free; decision 0037
-gates layout on a document, so counting real `fransys_layout` calls needs
-`build_scale(n, with_document=True)` instead -- this module's own build, never `build_scale`'s
-default.
 """
 
 import multiprocessing
 import sys
 from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from scale_units_fixture import build_scale
 
@@ -80,9 +68,9 @@ class _Monitor:
         self.tool = tool
         self.mark = mark
         self.pass_code = pass_code  # None: no pass, every event counts whole
-        self.seen: dict = {}  # code object -> is package code
-        self.outside: tuple[dict, dict, dict] = ({}, {}, {})  # calls, resumes, jumps
-        self.passes: list[tuple[dict, dict, dict]] = []
+        self.seen: dict[Any, bool] = {}  # code object -> is package code
+        self.outside: tuple[dict[Any, Any], dict[Any, Any], dict[Any, Any]] = ({}, {}, {})  # calls, resumes, jumps
+        self.passes: list[tuple[dict[Any, Any], dict[Any, Any], dict[Any, Any]]] = []
         self.cur = self.outside
 
     def is_ours(self, code) -> bool:

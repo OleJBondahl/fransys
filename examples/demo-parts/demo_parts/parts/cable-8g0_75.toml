@@ -1,4 +1,4 @@
-schema = 1
+schema = 2
 
 [part]
 mpn = "DEMO-CBL-8G0.75"
@@ -8,7 +8,7 @@ category = "cable"
 class_code = "W"
 
 [rating]
-voltage_ac_v = "500"
+voltage = [{ nom = "500 V", at = ["AC"] }]
 
 [cable_product]
 core_count = 8

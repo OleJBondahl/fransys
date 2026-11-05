@@ -43,9 +43,7 @@ BASE_COLOURS: Final = frozendict(
 RESERVED_CODES: Final = frozendict({"shield": "SH", "protective earth": "GNYE"})
 
 _EARTH = RESERVED_CODES["protective earth"]
-if not (_EARTH[:2] in BASE_COLOURS and _EARTH[2:] in BASE_COLOURS) or any(
-    code in BASE_COLOURS for code in RESERVED_CODES.values()
-):
+if not (_EARTH[:2] in BASE_COLOURS and _EARTH[2:] in BASE_COLOURS) or any(code in BASE_COLOURS for code in RESERVED_CODES.values()):
     _msg = f"RESERVED_CODES {dict(RESERVED_CODES)!r} disagrees with BASE_COLOURS"
     raise SchemaError(_msg, kind="reserved_codes")
 

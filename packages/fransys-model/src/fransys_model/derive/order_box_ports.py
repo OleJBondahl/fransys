@@ -12,8 +12,6 @@ __all__ = ["box_port_ranks"]
 def box_port_ranks(model: Model, members: tuple[BoxCandidate, ...]) -> dict[Id[Port], int]:
     """Each port's rank: functions by first marking then id, each function's ports as given."""
     table = ports_table(model)
-    first = {
-        c.function: min((natural_key(table[p].name) for p in c.ports), default=()) for c in members
-    }
+    first = {c.function: min((natural_key(table[p].name) for p in c.ports), default=()) for c in members}
     ranked = sorted(members, key=lambda c: (first[c.function], c.function))
     return {port: rank for rank, port in enumerate(p for c in ranked for p in c.ports)}

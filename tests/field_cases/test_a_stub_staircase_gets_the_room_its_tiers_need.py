@@ -1,16 +1,6 @@
 """Field case: a cluster of stubs in a page's first row needed more room above than the page kept.
-
-The engineering shape: a cabinet unit inside an outer unit, documented as a cabinet schematic. Four
-cables of four cores leave it, each core landing on a different kind of interface pin. On the
-cabinet's own page the cables' near ends stand in the first row and their stubs face north.
-
-The bug: the stubs of one page whose boxes meet stand in a staircase, one tier each (layout-0256),
-but the page kept room above its first row for one stub only. The staircase did not fit under the
-page edge, so it was dropped and the stubs stayed printed over each other.
-
-The rule (decision layout-0257): the room above the first row, and below the last, grows by one
-tier for each further cell with a line end there, up to two, so a staircase of three fits.
-"""
+The bug: the staircase of stubs did not fit under the page edge, so it was dropped and the stubs printed over each other.
+Fixed by layout-0257: the room above the first row and below the last grows one tier per further cell, up to two."""
 
 from typing import Any, NamedTuple
 
@@ -42,22 +32,25 @@ class _Top(NamedTuple):
 
 @fr.unit("demo-inner", revision=1, interface_version=1, date="2026-01-01", text="r", by="XX")
 def _inner(d: fr.Design) -> _Cabinet:
-    d.layout.profile(hide_unused_pins=True, column_gap=4, row_spacing=400)
+    d.layout.profile(hide_unused_pins=True)
     relays = [d.device(f"K{k}", "DEMO-RLY-4CO-24", interface=("co_1",)) for k in (1, 3, 5, 7)]
+    f8 = d.device("F8", "DEMO-MCB-2P", interface=("pole_1",))
+    xf = d.terminal_strip("XF", "DEMO-TB-2.5", 7, interface=(4, 5, 6, 7), bridged=True)
+    d.series(f8.pole_1["1"], xf[1], wire=("BK", 0.75))
     return _Cabinet(
-        d.device("F8", "DEMO-MCB-2P", interface=("pole_1",)),
+        f8,
         relays[0],
         relays[1],
         relays[2],
         relays[3],
         d.device("DI", "DEMO-PLC-DI-16", interface=tuple(f"di_{9 + 2 * n}" for n in range(4))),
-        d.terminal_strip("XF", "DEMO-TB-2.5", 7, interface=(4, 5, 6, 7), bridged=True),
+        xf,
     )
 
 
 @fr.unit("demo-outer", revision=1, interface_version=1, date="2026-01-01", text="r", by="XX")
 def _outer(d: fr.Design) -> _Top:
-    d.layout.profile(hide_unused_pins=True, column_gap=16, row_spacing=400)
+    d.layout.profile(hide_unused_pins=True)
     cab = d.add(_inner, "CSC")
     for n in range(_CABLES):
         pins = (
@@ -82,7 +75,7 @@ def stubs() -> list[tuple[Any, Box]]:
     built = fr.build(d, cabinet_document("demo-outer"))
     found = []
     for m in layout_of(built.model, LinkMarker).values():
-        if m.carrier is None:
+        if m.pairs[0].carrier is None:
             continue
         y = m.y - G_PER_MODULE - m.height if m.facing is Side.N else m.y + G_PER_MODULE
         x = m.x - m.width // 2 if m.box_x is None else m.box_x
@@ -96,12 +89,7 @@ def test_a_page_has_three_or_more_stubs_in_a_cluster(stubs: list[tuple[Any, Box]
 
 
 def test_no_two_stub_boxes_of_a_page_meet(stubs: list[tuple[Any, Box]]) -> None:
-    meeting = [
-        (a, b)
-        for n, (page, a) in enumerate(stubs)
-        for other, b in stubs[n + 1 :]
-        if page == other and boxes_meet(a, b, closed=False)
-    ]
+    meeting = [(a, b) for n, (page, a) in enumerate(stubs) for other, b in stubs[n + 1 :] if page == other and boxes_meet(a, b, closed=False)]
     assert meeting == []
 
 

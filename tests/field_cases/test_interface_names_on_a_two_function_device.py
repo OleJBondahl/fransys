@@ -1,15 +1,6 @@
-"""Field case: a device with two functions marks the named ones a boundary.
-
-The engineering shape: an I/O board unit with one two-connector part: `x1` is the interface the
-cabinet plugs into, `x2` a spare connector left open on purpose.
-
-The bug: `interface=True` and `unused=True` took the device's one function, so a device with two
-functions could not take them, and a script reached for the engine's own `boundary` and `unused`.
-
-The rule: `interface=` and `unused=` take `True` (every function) or a
-tuple of the part's function names. A name the part lacks raises and names its functions. A name
-in `unused` is a boundary too.
-"""
+"""Field case: an I/O board unit with one two-connector part, whose connector `x1` is the interface and `x2` is left open on purpose.
+The bug: `interface=True` and `unused=True` took the device's one function, so a device with two functions could not take them.
+Open: no deciding record is named in the old text; the case is a plain passing test."""
 
 from typing import Any, NamedTuple
 
@@ -22,7 +13,7 @@ from fransys_model.vocab.tables import boundaries, functions, unused_boundaries
 _PART = "DEMO-IO-2X"
 
 
-def _names(model: fr.Model, ids: list) -> set[str]:
+def _names(model: fr.Model, ids: list[Any]) -> set[str]:
     return {functions(model)[i].name for i in ids}
 
 

@@ -1,4 +1,4 @@
-schema = 1
+schema = 2
 
 [part]
 mpn = "DEMO-PLC-CPU"
@@ -16,5 +16,5 @@ ports = [
 ]
 
 [function.operating]
-voltage_dc_v = "24"
-nominal_current_a = "0.5"
+voltage = [{ nom = "24 V", at = ["DC"] }]
+nominal_current = "0.5 A"

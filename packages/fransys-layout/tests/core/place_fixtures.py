@@ -6,10 +6,14 @@ Each builder returns a PlacementProblem over the cut area; placed_of runs it thr
 from __future__ import annotations
 
 from dataclasses import replace
+from typing import Any
 
-from turn_fixtures import refit
+from options_fixtures import core_options
+from turn_fixtures import marker_views, refit
 
-from fransys_layout.core import Box, Bundle, Facts, Placement, PlacementProblem
+from fransys_layout.core import Box, Bundle, Facts, PinRef, Placement, PlacementProblem
+from fransys_layout.core.place_lanes import Stand
+lazy from fransys_layout.core.clearance import Keep
 lazy from fransys_layout.core.outputs import PagePlacement
 
 from .cut_fixtures import AREA, box_sym, elem, free
@@ -23,7 +27,7 @@ def _coil_card(coils: list[str], coil_width: int, north: int = 0) -> PlacementPr
     return PlacementProblem(AREA, tuple(syms), tuple(nets), facts=Facts())
 
 
-def card_with_coils(n: int = 4, coil_width: int = 84) -> PlacementProblem:
+def card_with_coils(n: int = 4, coil_width: int = 96) -> PlacementProblem:
     """A box with n pins, each wired to its own coil, so the pins must spread to meet the coils."""
     return _coil_card([f"k{i}" for i in range(1, n + 1)], coil_width)
 
@@ -35,10 +39,7 @@ def two_edge_card(n: int = 16, coil_width: int = 94) -> PlacementProblem:
 
 def row_group_three(group: str | None) -> PlacementProblem:
     """Three hubs in row group `group` (or none); footprints rise 16, 32 and 48 G above origin."""
-    hubs = [
-        refit(free(f"h{k}"), row_group=group, footprint=Box(-8, -16 * (k + 1), 16, 16 * (k + 2)))
-        for k in range(3)
-    ]
+    hubs = [refit(free(f"h{k}"), row_group=group, footprint=Box(-8, -16 * (k + 1), 16, 16 * (k + 2))) for k in range(3)]
     syms = [*hubs, *(elem(f"e{k}") for k in range(3))]
     nets = [net(f"a{k}", f"h{k}.s", f"e{k}.n") for k in range(3)]
     return PlacementProblem(AREA, tuple(syms), tuple(nets), facts=Facts())
@@ -47,10 +48,7 @@ def row_group_three(group: str | None) -> PlacementProblem:
 def bundle_fan() -> PlacementProblem:
     """One driver M3 feeds three legs M9, M10 and M11 pole by pole, each pole net in bundle bd1."""
     syms = [poles("M3"), poles("M9"), poles("M10"), poles("M11")]
-    nets = [
-        net(f"bn{k}", f"M3.s{k}", f"M9.n{k}", f"M10.n{k}", f"M11.n{k}", bundle=Bundle("bd1", k))
-        for k in range(3)
-    ]
+    nets = [net(f"bn{k}", f"M3.s{k}", f"M9.n{k}", f"M10.n{k}", f"M11.n{k}", bundle=Bundle("bd1", k)) for k in range(3)]
     return PlacementProblem(AREA, tuple(syms), tuple(nets), facts=Facts())
 
 
@@ -66,12 +64,7 @@ def wide_row() -> PlacementProblem:
 
 def all_pins(placement: Placement) -> dict[tuple[str, str], tuple[int, int]]:
     """Every placed pin over all pages, as (symbol, pin) -> (x, y)."""
-    return {
-        (p.sym, q.pin): (q.x, q.y)
-        for page in placement.pages
-        for p in page.placed
-        for q in p.pin_xy
-    }
+    return {(p.sym, q.pin): (q.x, q.y) for page in placement.pages for p in page.placed for q in p.pin_xy}
 
 
 def footprints(page: PagePlacement) -> dict[str, Box]:
@@ -86,3 +79,15 @@ def card_with_label(grow: int, n: int = 4, coil_width: int = 40) -> PlacementPro
     b = box.body
     card = refit(box, footprint=Box(b.x, b.y, b.w + grow, b.h))
     return replace(prob, symbols=(card, *prob.symbols[1:]))
+
+
+WALK_OPTIONS = core_options(marker=marker_views(Box(0, -4, 8, 8)))  # the 8 x 8 arrow box the lane-walk tests use, centred on its lane
+WALK_KEY = (PinRef("S", "arrow"), "arrow")
+WALK_KEYS = ({0: WALK_KEY}, {0: WALK_KEY})  # the (pin, kind) of the arrow at each end of lane 0
+
+
+def walk_stand(
+    reach: int, y: int, keeps: tuple[Keep, ...] = (), poles: tuple[frozenset[int], frozenset[int]] = (frozenset(), frozenset()), **given: Any
+) -> Stand:
+    """A `Stand` of the lane-walk tests: their options, and the arrow key at each end of lane 0."""
+    return Stand(reach, y, WALK_OPTIONS, keeps, poles, keys=WALK_KEYS)._replace(**given)

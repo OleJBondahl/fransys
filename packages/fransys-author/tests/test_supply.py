@@ -1,15 +1,17 @@
 """`s.supply(...)`: one `SupplySystem` record, and the refusals authoring owns (Q2)."""
 
-import inspect
 import os
 from decimal import Decimal
 from types import MappingProxyType
 
 import pytest
-from fransys_author import AuthorError, Design
+from caller_line import here
+from fransys_author import AuthorError
+from fransys_author.design import Design
 
+from fransys_model.elecdef import Current
 from fransys_model.kernel import freeze, merge
-from fransys_model.vocab import Current, Earthing, Rail, SupplySystem
+from fransys_model.vocab import Rail, SupplySystem
 
 _THREE_PHASE = {
     "L1": ("230", 0),
@@ -32,16 +34,13 @@ def test_the_specs_three_examples_author_and_freeze(parts):
     d.supply(
         "DC link",
         current="dc",
-        earthing="it",
         rails={"DC+": ("985.5", None), "DC-": ("0", None)},
     )
     model = freeze(merge(parts, d.draft()))
-    by_name = {
-        s.name: s for s in model.tables["supply_system"].values() if isinstance(s, SupplySystem)
-    }
+    by_name = {s.name: s for s in model.tables["supply_system"].values() if isinstance(s, SupplySystem)}
     assert set(by_name) == {"400V", "24V", "DC link"}
     ac, dc, link = by_name["400V"], by_name["24V"], by_name["DC link"]
-    assert (ac.current, ac.earthing) == (Current.AC, Earthing.EARTHED)
+    assert ac.current == Current.AC
     assert ac.rails == {
         "L1": Rail(max_v=Decimal(230), phase=0),
         "L2": Rail(max_v=Decimal(230), phase=120),
@@ -50,9 +49,9 @@ def test_the_specs_three_examples_author_and_freeze(parts):
         "PE": Rail(max_v=Decimal(0), phase=None),
     }
     assert isinstance(ac.rails, frozendict)
-    assert (dc.current, dc.earthing) == (Current.DC, Earthing.EARTHED)
+    assert dc.current == Current.DC
     assert dc.rails["+24V"] == Rail(max_v=Decimal(24), phase=None)
-    assert (link.current, link.earthing) == (Current.DC, Earthing.IT)
+    assert link.current == Current.DC
     assert link.rails["DC+"].max_v == Decimal("985.5")
 
 
@@ -77,7 +76,7 @@ def test_one_scope_declaring_a_supply_name_twice_with_different_content_is_refus
     d = Design(parts)
     d.supply("24V", current="dc", rails=_DC_24)
     with pytest.raises(AuthorError, match="already names a different supply_system record"):
-        d.supply("24V", current="dc", earthing="it", rails=_DC_24)
+        d.supply("24V", current="dc", rails={"+24V": ("48", None)})
 
 
 def test_one_scope_declaring_the_same_supply_twice_is_one_record(parts):
@@ -89,16 +88,9 @@ def test_one_scope_declaring_the_same_supply_twice_is_one_record(parts):
     assert record.rails["+24V"] == Rail(max_v=Decimal(24), phase=None)
 
 
-def _here() -> int:
-    frame = inspect.currentframe()
-    assert frame is not None
-    assert frame.f_back is not None
-    return frame.f_back.f_lineno
-
-
 def test_origin_is_the_calling_line(parts):
     d = Design(parts)
-    line = _here() + 1
+    line = here() + 1
     d.supply("24V", current="dc", rails=_DC_24)
     (record,) = _supplies(d)
     origin = d.draft().origin_of(record.id)
@@ -147,14 +139,6 @@ def test_current_must_be_ac_or_dc(parts):
     with pytest.raises(AuthorError, match=r"'mixed' is not a valid current"):
         d.supply("24V", current="mixed", rails=_DC_24)
     d.supply("24V", current="dc", rails=_DC_24)
-    assert len(_supplies(d)) == 1
-
-
-def test_earthing_must_be_earthed_or_it(parts):
-    d = Design(parts)
-    with pytest.raises(AuthorError, match=r"'floating' is not a valid earthing"):
-        d.supply("24V", current="dc", earthing="floating", rails=_DC_24)
-    d.supply("24V", current="dc", earthing="it", rails=_DC_24)
     assert len(_supplies(d)) == 1
 
 
@@ -214,9 +198,7 @@ def test_an_ac_rail_cannot_have_a_negative_max_v(parts):
 @pytest.mark.parametrize("flag", [True, False])
 def test_a_bool_max_v_is_refused(parts, flag):
     d = Design(parts)
-    with pytest.raises(
-        AuthorError, match=r"rail '\+24V' max_v must be a str or Decimal, not a bool"
-    ):
+    with pytest.raises(AuthorError, match=r"rail '\+24V' max_v must be a str or Decimal, not a bool"):
         d.supply("24V", current="dc", rails={"+24V": (flag, None)})
     d.supply("24V", current="dc", rails={"+24V": (Decimal(int(flag)), None)})
     (record,) = _supplies(d)

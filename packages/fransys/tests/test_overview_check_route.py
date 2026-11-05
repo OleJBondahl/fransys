@@ -5,10 +5,10 @@ overview call stops every write, whole-system or one unit's, before any file is 
 """
 
 import fransys as fr
-import fransys_author
 import pytest
 from demo_designs import cabinet_design
-from fransys import BuildErrors, pipeline
+from fransys import BuildFailedError, pipeline
+from fransys_author.design import Design
 
 from fransys_model.kernel import Finding, Severity
 from fransys_model.vocab import units
@@ -18,15 +18,13 @@ _PLANTED = "DIAGRAM_BOX_OVERLAP"
 
 def _plant_error(monkeypatch):
     """Make the overview call report one ERROR for any model."""
-    error = Finding(
-        code=_PLANTED, severity=Severity.ERROR, subjects=(), message="planted", fix="Write: x"
-    )
+    error = Finding(code=_PLANTED, severity=Severity.ERROR, subjects=(), message="planted", fix="Write: x")
     monkeypatch.setattr(pipeline, "_overview", lambda model: (model, (error,)))
 
 
 def _unit_draft(parts):
     """One unit with a relay and a field strip, two wires, no document."""
-    design = fransys_author.Design(parts)
+    design = Design(parts)
     scope = design.scope("unit").unit("unit", revision=1, interface="1")
     scope.revision(1, date="2026-09-26", text="First issue", created="XX")
     cab = scope.location("CAB", "Cabinet")
@@ -69,7 +67,7 @@ def test_write_gates_on_an_overview_error_and_writes_nothing(tmp_path, monkeypat
     """Fails if a system write goes ahead past an overview ERROR."""
     result = _built()
     _plant_error(monkeypatch)
-    with pytest.raises(BuildErrors):
+    with pytest.raises(BuildFailedError):
         fr.write(result, tmp_path / "out")
     out = tmp_path / "out"
     assert not out.exists() or not any(out.iterdir())
@@ -81,5 +79,5 @@ def test_a_unit_write_gates_on_an_overview_error_too(tmp_path, monkeypatch):
     result = fr.build(parts, _unit_draft(parts))
     unit = next(iter(units(result.model)))
     _plant_error(monkeypatch)
-    with pytest.raises(BuildErrors):
+    with pytest.raises(BuildFailedError):
         fr.write(result, tmp_path / "out", unit=unit)

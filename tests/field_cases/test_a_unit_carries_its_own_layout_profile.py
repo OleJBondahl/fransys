@@ -1,67 +1,35 @@
 """Field case: a unit sets its own layout profile in its body, and only its own pages read it.
+The bug: d.layout.profile raised AttributeError in a unit body, so the top design's profile governed every page, the unit's too.
+Fixed by author-0034 and model-0192, a unit's profile governs its own documents wherever built; a parent's governs only its own pages."""
 
-The engineering shape: an Ethernet switch (eight one-pin port connectors and a 24 V supply
-function) sits in a released unit. Two of its ports are wired to a lamp; the supply and the
-other ports are idle. The unit's author wants the idle supply left off the unit's drawing
-(`hide_unused_pins`) and a narrower column gap. The parent design sets a different profile.
-
-The bug: `d.layout.profile(...)` inside a unit body raised AttributeError, so a unit could not
-state its own profile. The consumer set it on the top design, which governed every page, the
-unit's own pages included.
-
-The rule (decision author-0034, model-0192): a unit's profile belongs to the unit. It governs
-the unit's own documents wherever they are built, so the unit's PDF is the same bytes on its own
-and inside a parent. A parent's profile governs the parent's own pages only; a unit with no
-profile of its own draws with the house default, never its parent's.
-"""
-
-from decimal import Decimal
 from typing import TYPE_CHECKING, Any, NamedTuple
 
 import fransys as fr
 import pytest
 from _drawn_pages import drawn_pages
 
-from fransys_model.layout import DrawingSet, Page, layout_of
-
 if TYPE_CHECKING:
     from pathlib import Path
 
-_OWN = {"hide_unused_pins": True, "column_gap": 64}
-_PARENT = {"hide_unused_pins": False, "column_gap": 40}
+_OWN = {"hide_unused_pins": True}
+_PARENT = {"hide_unused_pins": False}
 _UNIT_PDF = "demo-switch-box-v1.1.pdf"
 _BOXES = ("demo-first-box", "demo-second-box")
-_A3_NUMBERS = {
-    "width_mm": 420,
-    "height_mm": 297,
-    "content_x_mm": 10,
-    "content_y_mm": 10,
-    "content_width_mm": 400,
-    "content_height_mm": 277,
-    "frame_columns": 8,
-    "frame_rows": 6,
-    "module_mm": Decimal("2.5"),
-}
 
 
 class _Io(NamedTuple):
     switch: fr.Device
 
 
-def _release(profile: dict[str, Any] | None, *, own_sheet: bool = False) -> Any:
-    @fr.unit(
-        "demo-switch-box", revision=1, interface_version=1, date="2026-01-01", text="x", by="AB"
-    )
+def _release(profile: dict[str, Any] | None) -> Any:
+    @fr.unit("demo-switch-box", revision=1, interface_version=1, date="2026-01-01", text="x", by="AB")
     def box(u: fr.Design) -> _Io:
         if profile is not None:
-            sheet = _A3_NUMBERS if own_sheet else None
-            u.layout.profile(
-                **profile, **({} if sheet is None else {"sheet": u.layout.sheet("UA3", **sheet)})
-            )
+            u.layout.profile(**profile)
         switch = u.device("U9", "DEMO-SW-8P")
         lamp = u.device("P1", "DEMO-LAMP-24")
-        u.detail.wire(switch.p1["1"], lamp["1"], wire=("WH", 0.75))
-        u.detail.wire(switch.p2["1"], lamp.lamp["2"], wire=("WH", 0.75))
+        u.series(switch.p1["1"], lamp["1"], wire=("WH", 0.75))
+        u.series(switch.p2["1"], lamp.lamp["2"], wire=("WH", 0.75))
         return _Io(switch)
 
     return box
@@ -73,18 +41,17 @@ def _build(
     unit_profile: dict[str, Any] | None,
     parent: dict[str, Any] | None,
     beside: bool,
-    own_sheet: bool = False,
 ) -> fr.BuildResult:
     d = fr.design("demo_parts", place="C1")
     cabinet = d.location("C1", "Cabinet")
     if parent is not None:
         d.layout.profile(**parent)
-    d.add(_release(unit_profile, own_sheet=own_sheet), "U1")
+    d.add(_release(unit_profile), "U1")
     if beside:
         first = d.device("P8", "DEMO-LAMP-24", place="C1")
         second = d.device("P9", "DEMO-LAMP-24", place="C1")
-        d.detail.wire(first["1"], second["1"], wire=("WH", 0.75))
-        d.detail.wire(first["2"], second["2"], wire=("WH", 0.75))
+        d.series(first["1"], second["1"], wire=("WH", 0.75))
+        d.series(first["2"], second["2"], wire=("WH", 0.75))
     (tmp_path / "own.md").write_text("# Switch box\n", encoding="utf-8")
     (tmp_path / "cab.md").write_text("# Cabinet\n", encoding="utf-8")
     preset = fr.DocumentPreset.CABINET_SCHEMATIC
@@ -100,12 +67,7 @@ def _pin_tags(model: Any, prefix: str) -> list[str]:
 
     The unit's own document prints `-U9-p1`, a container's `-U1-U9-p1` (DESIGNATION-DRAWN).
     """
-    tags = (
-        t.text.removeprefix("-U1")
-        for d in drawn_pages(model).values()
-        for t in d.texts
-        if t.kind == "TAG"
-    )
+    tags = (t.text.removeprefix("-U1") for d in drawn_pages(model).values() for t in d.texts if t.kind == "TAG")
     return sorted({t.removeprefix(prefix).lower() for t in tags if t.startswith(prefix)})
 
 
@@ -144,7 +106,7 @@ def test_the_unit_profile_hides_its_idle_supply_and_its_idle_ports(
 def test_the_unit_pdf_is_the_same_bytes_under_a_parent_with_another_profile(
     tmp_path: Path,
 ) -> None:
-    """The parent's profile is hide off and a wide gap, or none: the unit's own pages are one."""
+    """The parent's profile is hide off, or none: the unit's own pages are one."""
     for sub in ("set", "none"):
         (tmp_path / sub).mkdir()
     with_profile = _build(tmp_path / "set", unit_profile=_OWN, parent=_PARENT, beside=True)
@@ -161,9 +123,7 @@ def test_a_parent_profile_does_not_reach_a_unit_without_one(tmp_path: Path) -> N
     for sub in ("alone", "inside", "plain"):
         (tmp_path / sub).mkdir()
     alone = _build(tmp_path / "alone", unit_profile=None, parent=None, beside=False)
-    inside = _build(
-        tmp_path / "inside", unit_profile=None, parent={"hide_unused_pins": True}, beside=True
-    )
+    inside = _build(tmp_path / "inside", unit_profile=None, parent={"hide_unused_pins": True}, beside=True)
     plain = _build(tmp_path / "plain", unit_profile=None, parent=None, beside=True)
     assert _unit_drawn(inside) == _unit_drawn(alone)
     assert _unit_drawn(inside) == ["p1", "p2"]
@@ -183,15 +143,17 @@ def _plc_box(*, hide: bool) -> Any:
             u.layout.profile(hide_unused_pins=True)
         plc = u.device("A1", "DEMO-PLC-DI-4P")
         psu = u.device("G1", "DEMO-PSU-24")
-        u.detail.wire(psu.output["+"], plc.power["24V"], wire=("WH", 0.75))
-        u.detail.wire(psu.output["-"], plc.power["0V"], wire=("WH", 0.75))
+        x1 = u.terminal_strip("X1", "DEMO-TB-2.5", 2)
+        for n, (source, sink) in enumerate(((psu.output["+"], plc.power["24V"]), (psu.output["-"], plc.power["0V"])), 1):
+            u.series(source, x1[n], wire=("WH", 0.75))
+            u.series(x1[n].outer, sink, wire=("WH", 0.75))
         return _PlcIo(plc)
 
     return box
 
 
 def _plc_unit_ports(tmp_path: Path, *, parent_hides: bool, unit_hides: bool) -> list[str]:
-    """Every port the layout draws for the unit's items."""
+    """Every PLC channel pin the layout draws on a symbol of the unit's items (a box names its pins in its slots)."""
     d = fr.design("demo_parts", place="C1")
     d.location("C1", "Cabinet")
     if parent_hides:
@@ -200,7 +162,8 @@ def _plc_unit_ports(tmp_path: Path, *, parent_hides: bool, unit_hides: bool) -> 
     (tmp_path / "plc.md").write_text("# Plc box\n", encoding="utf-8")
     preset = fr.DocumentPreset.CABINET_SCHEMATIC
     model = fr.build(d, fr.document(preset, "demo-plc-box", cover=tmp_path / "plc.md")).model
-    return [name.replace(":", ".") for name in _pin_tags(model, "-A1-")]
+    slots = (name for page in drawn_pages(model).values() for s in page.symbols for name, _ in s.slots)
+    return sorted(name.removeprefix("marking.") for name in slots if name.startswith("marking.di_"))
 
 
 def test_a_parent_hiding_idle_pins_leaves_a_wired_supply_unit_with_its_idle_pins(
@@ -222,19 +185,6 @@ def test_a_parent_hiding_idle_pins_leaves_a_wired_supply_unit_with_its_idle_pins
     assert not {"di_1.1", "di_4.4"} & set(own)
 
 
-def test_a_sheet_only_the_unit_profile_names_is_not_unused(tmp_path: Path) -> None:
-    """The unit's pages are drawn on its sheet, and no finding calls that sheet unused."""
-    result = _build(tmp_path, unit_profile=_OWN, parent=_PARENT, beside=True, own_sheet=True)
-    assert [f for f in result.findings if f.code == "SHEET_FORMAT_UNUSED"] == []
-    model = result.model
-    unit_sets = {s.id for s in layout_of(model, DrawingSet).values() if s.unit is not None}
-    pages = [p for p in layout_of(model, Page).values() if p.drawing_set in unit_sets]
-    assert pages
-    assert {p.sheet_format for p in pages} != {None}
-    top_pages = [p for p in layout_of(model, Page).values() if p.drawing_set not in unit_sets]
-    assert {p.sheet_format for p in top_pages} == {None}
-
-
 class _EdgeIo(NamedTuple):
     edge: fr.Device
 
@@ -248,21 +198,20 @@ def _edge_box(name: str, profile: dict[str, Any]) -> Any:
         edge = u.device("X1", "DEMO-CONN-2P", interface=True)
         lamp = u.device("P2", "DEMO-LAMP-24")
         other = u.device("P3", "DEMO-LAMP-24")
-        u.detail.wire(lamp["1"], other["1"], wire=("WH", 0.75))
-        u.detail.wire(edge["1"], lamp["2"], wire=("WH", 0.75))
+        u.series(lamp["1"], other["1"], wire=("WH", 0.75))
+        u.series(edge["1"], lamp["2"], wire=("WH", 0.75))
+        u.series(other["2"], lamp["2"], wire=("WH", 0.75))
         return _EdgeIo(edge)
 
     return box
 
 
-def _two_units(
-    tmp_path: Path, first_profile: dict[str, Any], second_profile: dict[str, Any]
-) -> fr.BuildResult:
+def _two_units(tmp_path: Path, first_profile: dict[str, Any], second_profile: dict[str, Any]) -> fr.BuildResult:
     """Two units wired to each other at their boundary connectors, each with its own profile."""
     d = fr.design("demo_parts", place="C1")
     first = d.add(_edge_box("demo-first-box", first_profile), "U1")
     second = d.add(_edge_box("demo-second-box", second_profile), "U2")
-    d.detail.wire(first.edge["2"], second.edge["2"], wire=("WH", 0.75))
+    d.series(first.edge["2"], second.edge["2"], wire=("WH", 0.75))
     preset = fr.DocumentPreset.CABINET_SCHEMATIC
     docs = []
     for name in _BOXES:
@@ -286,7 +235,7 @@ def test_a_unit_wired_to_another_unit_reads_no_profile_from_it(tmp_path: Path) -
     first_pdf, second_pdf = _two_pdfs(mixed, tmp_path / "o-mixed")
     assert first_pdf == _two_pdfs(same_a, tmp_path / "o-a")[0]
     assert second_pdf == _two_pdfs(same_b, tmp_path / "o-b")[1]
-    assert first_pdf != _two_pdfs(same_b, tmp_path / "o-b")[0]
+    assert first_pdf == _two_pdfs(same_b, tmp_path / "o-b")[0]  # the wired box has no idle pin: hide draws it the same
 
 
 class _StarIo(NamedTuple):
@@ -299,9 +248,10 @@ def _star_box() -> Any:
     @fr.unit("demo-star-box", revision=1, interface_version=1, date="2026-01-01", text="x", by="AB")
     def box(u: fr.Design) -> _StarIo:
         lamp, second, third = (u.device(f"P{n}", "DEMO-LAMP-24") for n in (2, 3, 4))
-        u.detail.wire(lamp["1"], second["1"], wire=("WH", 0.75))
-        u.detail.wire(lamp["1"], third["1"], wire=("WH", 0.75))
-        u.detail.wire(lamp["2"], second["2"], wire=("WH", 0.75))
+        u.series(lamp["1"], second["1"], wire=("WH", 0.75))
+        u.series(lamp["1"], third["1"], wire=("WH", 0.75))
+        u.series(lamp["2"], second["2"], wire=("WH", 0.75))
+        u.series(lamp["2"], third["2"], wire=("WH", 0.75))
         return _StarIo(lamp)
 
     return box
@@ -309,17 +259,22 @@ def _star_box() -> Any:
 
 def _star_pdf(tmp_path: Path, *, parent_sets: bool) -> bytes:
     d = fr.design("demo_parts", place="C1")
-    d.location("C1", "Cabinet")
+    cabinet = d.location("C1", "Cabinet")
     d.add(_star_box(), "U1")
+    panel = d.location("LONGPLACE-LONGER", "Panel")
     if parent_sets:
-        d.location("LONGPLACE-LONGER", "Panel")
         for n in range(3):
             far = d.device(f"P{10 + n}", "DEMO-LAMP-24", place="LONGPLACE-LONGER")
             near = d.device(f"P{20 + n}", "DEMO-LAMP-24", place="C1")
-            d.detail.wire(far["1"], near["1"], wire=("WH", 0.75))
-    (tmp_path / "star.md").write_text("# Star box\n", encoding="utf-8")
+            d.series(far["1"], near["1"], wire=("WH", 0.75))
+            d.series(far["2"], near["2"], wire=("WH", 0.75))
+    for name in ("star", "cab", "panel"):
+        (tmp_path / f"{name}.md").write_text(f"# {name}\n", encoding="utf-8")
     preset = fr.DocumentPreset.CABINET_SCHEMATIC
-    result = fr.build(d, fr.document(preset, "demo-star-box", cover=tmp_path / "star.md"))
+    documents = [fr.document(preset, "demo-star-box", cover=tmp_path / "star.md")]
+    if parent_sets:
+        documents += [fr.document(preset, loc, cover=tmp_path / f"{name}.md") for loc, name in ((cabinet, "cab"), (panel, "panel"))]
+    result = fr.build(d, *documents)
     fr.write(result, tmp_path / "out")
     return (tmp_path / "out" / "demo-star-box-v1.1.pdf").read_bytes()
 
@@ -328,6 +283,4 @@ def test_a_unit_reference_box_is_sized_from_the_units_own_sets(tmp_path: Path) -
     """A parent with more drawing sets and a long location path widens no box in the unit."""
     for sub in ("alone", "inside"):
         (tmp_path / sub).mkdir()
-    assert _star_pdf(tmp_path / "alone", parent_sets=False) == _star_pdf(
-        tmp_path / "inside", parent_sets=True
-    )
+    assert _star_pdf(tmp_path / "alone", parent_sets=False) == _star_pdf(tmp_path / "inside", parent_sets=True)

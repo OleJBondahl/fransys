@@ -1,15 +1,9 @@
 """Field case: one relay changeover feeds two coil branches, each a series from one throw.
-
-The common of the changeover is on the 24 V rail. Its make throw feeds one coil and its break
-throw feeds another, each coil returning to 0 V.
-
-The bug: a changeover could not be a series element ("1 poles into 2: name the pins"), so each
-branch needed a `d.wire` with pin names, and the common's wire was written by hand.
-
-Fixing decision: author-0039 (SERIES-GAPS S7).
-"""
+The bug: a changeover could not be a series element ("1 poles into 2: name the pins"), so each branch needed a hand-written d.wire.
+Fixed by author-0039 (SERIES-GAPS S7), a changeover is a series element."""
 
 import fransys as fr
+from _field_shared import wire_ends
 
 
 def changeover_design():
@@ -24,12 +18,8 @@ def changeover_design():
     return d
 
 
-def _ends(d) -> set[frozenset]:
-    return {frozenset((r.from_, r.to)) for r in fr.derive.wire_rows(fr.build(d).model)}
-
-
 def test_each_throw_feeds_its_own_coil_and_both_return_to_zero_volts() -> None:
-    ends = _ends(changeover_design())
+    ends = wire_ends(changeover_design())
     for a, b in (
         ("-G1:+", "-K1:11"),
         ("-K1:14", "-K2:A1"),

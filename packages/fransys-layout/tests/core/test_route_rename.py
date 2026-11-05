@@ -24,17 +24,11 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
     from fransys_layout.core import Placement, PlacementProblem
+    from fransys_layout.core.flow_values import CutResult
     from fransys_layout.core.outputs import Routes
-    from fransys_layout.core.values import CutResult
 
 OPTIONS = core_options(
     marker=MARKER,
-    flip_turn="R180",
-    tag_stagger=True,
-    label_gap=8,
-    parallel_pitch=48,
-    driver_first=True,
-    arrow_sides=("E", "W"),
 )
 STEP = OPTIONS.wiring_grid
 
@@ -49,9 +43,7 @@ class Case(NamedTuple):
 
 
 def _jogs(routes: Routes) -> bool:
-    return (
-        sum(len(w.points) == 4 for p in routes.pages for w in p.wires if w.kind == "straight") >= 3
-    )
+    return sum(len(w.points) == 4 for p in routes.pages for w in p.wires if w.kind == "straight") >= 3
 
 
 def _crossed(routes: Routes) -> bool:
@@ -80,7 +72,7 @@ CASES: dict[str, Case] = {
     "two_edge_card": Case(lambda: two_edge_card(16, 96), _same, (), lambda r: len(r.pages) >= 1),
     "two_rows": Case(card_that_wraps, _same, (), lambda r: len(r.pages[0].wires) > 3),
     "jog_stair": Case(jog_stair, _same, tuple((f"v{k}", 90, 40) for k in range(3)), _jogs),
-    "crossed_bundle": Case(reversing_pair, _crossed_cut, (("K2", 0, 3 * STEP),), _crossed),
+    "crossed_bundle": Case(reversing_pair, _crossed_cut, (("K2", 0, STEP),), _crossed),
     "cross_link_ring": Case(_ring, _same, (), _links),
 }
 
@@ -147,9 +139,7 @@ def test_routes_do_not_depend_on_how_ids_are_spelled(name: str, form: str) -> No
 def test_routes_do_not_depend_on_the_order_of_the_input_tuples(name: str) -> None:
     case, prob, cut, want = _checked(name)
     flow = cut.flow
-    flipped = replace(
-        flow, columns=flow.columns[::-1], fans=flow.fans[::-1], cross_links=flow.cross_links[::-1]
-    )
+    flipped = replace(flow, columns=flow.columns[::-1], fans=flow.fans[::-1], cross_links=flow.cross_links[::-1])
     reversed_prob = replace(prob, symbols=prob.symbols[::-1], nets=prob.nets[::-1])
     got = routed(case, replace(cut, flow=flipped), reversed_prob, {})
     assert canon_routes(got, back_of({})) == want

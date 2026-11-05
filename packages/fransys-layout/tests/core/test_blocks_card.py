@@ -2,57 +2,38 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 import pytest
 from options_fixtures import core_options
 
 from fransys_layout.core.blocks import _less
 from fransys_layout.core.blocks_card import CardEdges, card_edges, overfull, pin_order
+from fransys_layout.core.flow_values import Column, FlowGraph
 from fransys_layout.core.pack_row import RowSpec, row_width, solve_row
 from fransys_layout.core.rowspec import one_row
-from fransys_layout.core.values import Column, CycleSplit, FlowGraph, Size
+from fransys_layout.core.values import Net, PinRef, Size
 lazy from fransys_layout.core.sym_values import Sym
 
 from .blocks_fixtures import AREA, box_case, problem_of, shaped_box
 from .pack_fixtures import card_block
 
-PAGE = (
-    AREA.w
-    - 2
-    * core_options(
-        flip_turn="R180",
-        tag_stagger=True,
-        label_gap=8,
-        parallel_pitch=48,
-        driver_first=True,
-        arrow_sides=("E", "W"),
-    ).margin.w
-)
+PAGE = AREA.w - 2 * core_options().margin.w
 
 
-def edges_of(
-    syms: list[Sym], cols: list[Column], area: Size = AREA, arrows: int = 0
-) -> tuple[CardEdges, FlowGraph]:
-    flow = FlowGraph(tuple(cols), (), (), (), CycleSplit(0, 0, 0), ())
+def edges_of(syms: list[Sym], cols: list[Column], area: Size = AREA, arrows: int = 0, nets: tuple[Net, ...] = ()) -> tuple[CardEdges, FlowGraph]:
+    flow = FlowGraph(tuple(cols), (), (), (), ())
     got = card_edges(
         "A1",
         [c.id for c in cols],
         flow,
-        _less(problem_of(syms, area=area), arrows),
-        core_options(
-            flip_turn="R180",
-            tag_stagger=True,
-            label_gap=8,
-            parallel_pitch=48,
-            driver_first=True,
-            arrow_sides=("E", "W"),
-        ),
+        replace(_less(problem_of(syms, area=area), arrows), nets=nets),
+        core_options(),
     )
     return got, flow
 
 
-def spec_of(
-    syms: list[Sym], flow: FlowGraph, edges: CardEdges, area: Size = AREA, extra: str = ""
-) -> RowSpec:
+def spec_of(syms: list[Sym], flow: FlowGraph, edges: CardEdges, area: Size = AREA, extra: str = "") -> RowSpec:
     """The one row of the card that keeps the non-spilled columns (plus one spilled, `extra`)."""
     keep = [c.id for c in flow.columns if c.id not in edges.spilled or c.id == extra]
     box = syms[0].box
@@ -64,14 +45,7 @@ def spec_of(
         (block,),
         flow,
         problem_of(syms, area=area),
-        core_options(
-            flip_turn="R180",
-            tag_stagger=True,
-            label_gap=8,
-            parallel_pitch=48,
-            driver_first=True,
-            arrow_sides=("E", "W"),
-        ),
+        core_options(),
     )
 
 
@@ -85,7 +59,7 @@ def test_two_edges_by_halves_at_sixteen_94_g_columns() -> None:
     got, flow = edges_of(syms, cols)
     assert dict(got.pin_edges) == {f"p{i}": "N" if i <= 8 else "S" for i in range(1, 17)}
     assert got.spilled == ()
-    assert width_of(syms, flow, got) == 822  # the draft's 816, here by row_width
+    assert width_of(syms, flow, got) == 822  # the draft's 816, here by row_width (R1693: no edge rounding)
     natural = CardEdges(tuple((f"p{i}", "S") for i in range(1, 17)), ())
     assert width_of(syms, flow, natural) > PAGE
 
@@ -100,11 +74,11 @@ def test_one_edge_at_sixteen_66_g_columns() -> None:
 
 
 def test_the_rows_planned_arrows_are_taken_off_the_page_before_the_card_spills() -> None:
-    """RL-W2: 16 66 G columns fit the page at 1266 G; 83 G of arrows beside them make it spill."""
+    """RL-W2: 16 66 G columns fit the page at 1280 G; 83 G of arrows beside them make it spill."""
     syms, cols = box_case(16, 66)
-    free, _ = edges_of(syms, cols, arrows=PAGE - 1266)
+    free, _ = edges_of(syms, cols, arrows=PAGE - 1280)
     assert free.spilled == ()
-    tight, _ = edges_of(syms, cols, arrows=PAGE - 1266 + 83)
+    tight, _ = edges_of(syms, cols, arrows=PAGE - 1280 + 83)
     assert tight.spilled != ()
 
 
@@ -116,7 +90,7 @@ def test_card_overfull_spills_the_columns_beyond_an_edge() -> None:
     assert dict(got.pin_edges)["p20"] == "N"  # every pin keeps its edge
     assert dict(got.pin_edges)["p21"] == "S"
     assert len(got.pin_edges) == 40
-    assert width_of(syms, flow, got) == 32 + 16 * 72 + 3 * 16 + 16  # the draft's 1248, unchanged
+    assert width_of(syms, flow, got) == 32 + 16 * 72 + 3 * 16 + 16 + 24  # 1248 plus a free pin past its neighbour (PORT-LINE)
     found = overfull("A1", got.spilled, 40)
     assert (found.code, found.subject) == ("CARD_OVERFULL", "A1")
 
@@ -133,19 +107,10 @@ def test_card_overfull_spills_in_pin_order_not_column_order() -> None:
 def test_edge_capacity_is_the_row_width_stage_5_gives_the_edge() -> None:
     """At the kept width the page holds the card; one page G less and one column per edge goes."""
     syms, cols = box_case(40, 64, north=20)
-    need = 1248
+    need = 1272
     for page, kept in ((need, 34), (need - 1, 32)):
         area = Size(
-            page
-            + 2
-            * core_options(
-                flip_turn="R180",
-                tag_stagger=True,
-                label_gap=8,
-                parallel_pitch=48,
-                driver_first=True,
-                arrow_sides=("E", "W"),
-            ).margin.w,
+            page + 2 * core_options().margin.w,
             AREA.h,
         )
         got, flow = edges_of(syms, cols, area)
@@ -171,3 +136,25 @@ def test_a_twenty_channel_card_at_16_g_pitch_fits() -> None:
     assert got.spilled == ()
     assert {e for _, e in got.pin_edges} == {"S"}
     assert width_of(syms, flow, got) <= PAGE
+
+
+@pytest.mark.rule("CROSS-HALF-TAGS")
+@pytest.mark.parametrize(
+    ("north", "pair", "gone", "stays"),
+    [
+        (40, ("c1", "c2"), set(), {"c1", "c2"}),
+        (20, ("c1", "c21"), {"c21"}, {"c1", "c22"}),
+        (3, ("c1", "c10"), {"c1"}, {"c2", "c10"}),
+        (20, ("c1", "c25"), {"c25"}, {"c1"}),
+    ],
+    ids=["N full S empty", "both full: S behind N", "S full: N behind S", "both full: mid S column"],
+)
+def test_a_column_behind_a_cut_edge_that_shares_a_net_with_it_spills(north: int, pair: tuple[str, str], gone: set[str], stays: set[str]) -> None:
+    """A cut edge spans the page: the other edge's column on its net has no path round the card, the rest stay."""
+    syms, cols = box_case(40, 64, north=north)
+    net = Net("n", tuple(PinRef(f"k{c[1:]}", "x") for c in pair))
+    got, _ = edges_of(syms, cols, nets=(net,))
+    assert gone <= set(got.spilled)
+    assert not stays & set(got.spilled)
+    plain, _ = edges_of(syms, cols)
+    assert set(got.spilled) - set(plain.spilled) == gone

@@ -57,13 +57,9 @@ class Membership:
 
     def __post_init__(self) -> None:
         """Require one holder and one subject."""
-        _exactly_one(
-            self, "a membership has exactly one of page and sheet", (self.page, self.sheet)
-        )
+        _exactly_one(self, "a membership has exactly one of page and sheet", (self.page, self.sheet))
         subjects = (self.function, self.port, self.conductor, self.item)
-        _exactly_one(
-            self, "a membership has exactly one of function, port, conductor and item", subjects
-        )
+        _exactly_one(self, "a membership has exactly one of function, port, conductor and item", subjects)
 
 
 def _exactly_one(rec: Membership, msg: str, fields: tuple[object, ...]) -> None:

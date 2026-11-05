@@ -1,21 +1,12 @@
 """Field case: two boxes side by side in one row never touch.
+The bug: the lamp's lane lay inside the motor box's width, so the boxes shared an edge and read as one (SYMBOL_OVERLAP).
+Fixed by place._keep_gap, a row keeps the column gap between any two neighbours after the lane offsets."""
 
-The engineering shape: a contactor with a three-pole main contact and a wired NO auxiliary
-contact. The main poles feed a motor box, the auxiliary contact feeds a lamp box. The motor
-box stands under the poles and the lamp box under the auxiliary lane, in one row.
-
-The bug: the lamp's lane lay inside the motor box's width, so the two boxes shared an edge and
-read as one rectangle with two compartments (SYMBOL_OVERLAP). The lane offset of a box that
-spans lanes ignored the box before it.
-The fix: `place._keep_gap`, a row keeps the column gap between any two neighbours
-after the lane offsets, the later box and its right-hand neighbours move right.
-"""
-
-import tempfile
-from pathlib import Path
+from typing import Any
 
 import fransys as fr
 from _drawn_facts import symbol_subjects
+from _model_build_cover import unit_document
 from fransys.colours import BU
 
 from electrical_symbols import LIBRARY
@@ -30,22 +21,19 @@ def _built():
     motor = d.device("M1", "DEMO-MOTOR-4KW")
     q = d.device("Q1", "DEMO-CTR-3P-NC")
     blue = (BU, 0.5)
-    d.detail.wire(psu.output["+"], q.coil["A1"], wire=blue)
-    d.detail.wire(psu.output["-"], q.coil["A2"], wire=blue)
-    d.detail.wire(psu.output["+"], q.aux["13"], wire=blue)
-    d.detail.wire(q.aux["14"], lamp["1"], wire=blue)
-    d.detail.wire(psu.output["-"], lamp["2"], wire=blue)
+    d.series(psu.output["+"], q.coil["A1"], wire=blue)
+    d.series(psu.output["-"], q.coil["A2"], wire=blue)
+    d.series(psu.output["+"], q.aux["13"], wire=blue)
+    d.series(q.aux["14"], lamp["1"], wire=blue)
+    d.series(psu.output["-"], lamp["2"], wire=blue)
     for pole, pin in enumerate("UVW"):
-        d.detail.wire(psu.output["+"], q.main[str(2 * pole + 1)], wire=blue)
-        d.detail.wire(q.main[str(2 * pole + 2)], motor.motor[pin], wire=blue)
-    cover = Path(tempfile.mkdtemp()) / "cover.md"
-    cover.write_text("# Cabinet\n", encoding="utf-8")
-    doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover)
-    built = fr.build(d, doc)
+        d.series(psu.output["+"], q.main[str(2 * pole + 1)], wire=blue)
+        d.series(q.main[str(2 * pole + 2)], motor.motor[pin], wire=blue)
+    built = fr.build(d, unit_document(cab))
     return built.findings, built.model
 
 
-def _clearance(model, first: str, second: str) -> int:
+def _clearance(model, first: str, second: str) -> Any:
     """The clear space between the drawn outlines of the symbols of items `first` and `second`.
 
     The larger of the x gap and the y gap: positive when the two boxes share no edge or area.

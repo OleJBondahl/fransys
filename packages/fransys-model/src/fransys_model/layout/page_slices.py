@@ -23,10 +23,7 @@ def _slices(model: Model) -> dict[type, dict[Any, tuple[Any, ...]]]:
         groups: dict[Any, list[Any]] = {}
         for record in layout_of(model, kind).values():
             groups.setdefault(record.page, []).append(record)
-        out[kind] = {
-            page: tuple(sorted(records, key=lambda record: record.id))
-            for page, records in groups.items()
-        }
+        out[kind] = {page: tuple(records) for page, records in groups.items()}
     return out
 
 

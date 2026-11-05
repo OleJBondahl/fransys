@@ -2,10 +2,6 @@
 
 The scan reads each string literal of `packages/*/src` that is not a docstring: raise sites,
 message templates and the finding registries' cause and fix texts. A name `d.<call>`,
-`d.detail.<call>`, `d.layout.<call>`, `fr.<name>` or a bare `call()` must be a public one. The
-public surface is collected by introspection, so no list here can drift from it. A moved name
-(`d.wire`) is public only as `d.detail.wire`; the text that announces the move is the one
-exception.
 """
 
 import ast
@@ -84,22 +80,20 @@ def test_every_message_names_only_public_calls():
             continue
         for line, text in _strings(path):
             found += [f"{path.relative_to(ROOT)}:{line}: {name}" for name in offences(text)]
-    assert not found, f"{len(found)} message strings name a call that is not public:\n" + "\n".join(
-        found
-    )
+    assert not found, f"{len(found)} message strings name a call that is not public:\n" + "\n".join(found)
 
 
 def test_the_scan_can_fail():
     assert offences("use d.order") == ["d.order"]
     assert offences("d.bridge needs two terminals") == ["d.bridge"]
     assert offences("call s.unit(...) first") == ["s.unit"]
-    assert offences("boundary() needs a unit") == ["boundary()"]
+    assert offences("endpoint() needs a unit") == ["endpoint()"]
     assert offences("a pin is one wire: use d.wire") == ["d.wire"]
     assert offences("use fr.nonesuch") == ["fr.nonesuch"]
     assert offences("d.layout.nonesuch") == ["d.layout.nonesuch"]
 
 
 def test_the_scan_passes_public_names():
-    assert offences("run d.series(a, b); a fixed terminal is d.detail.wire") == []
+    assert offences("run d.series(a, b); a fixed terminal is d.detail.busbar") == []
     assert offences("d.layout.order(g1, g2) and fr.unit and fr.build") == []
-    assert offences("d.wire moved to d.detail.wire in 0.19.0") == []
+    assert offences("d.wire moved to d.detail.busbar in 0.19.0") == []

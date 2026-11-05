@@ -2,7 +2,7 @@
 
 from typing import TYPE_CHECKING
 
-from fransys_model.kernel import Finding
+lazy from fransys_model.kernel import Finding
 
 from .codes import FINDING_CODES
 
@@ -18,12 +18,5 @@ _INFO = {info.code: info for info in FINDING_CODES}
 
 
 def drawn_finding(code: str, subjects: Sequence[Id[Any]], message: str) -> Finding:
-    """The finding of `code` (its first severity) naming `subjects`."""
-    info = _INFO[code]
-    return Finding(
-        code=code,
-        severity=info.severities[0],
-        subjects=tuple(subjects),
-        message=message,
-        fix=info.filled(),
-    )
+    """The finding of `code` naming `subjects`."""
+    return _INFO[code].finding(subjects, message)

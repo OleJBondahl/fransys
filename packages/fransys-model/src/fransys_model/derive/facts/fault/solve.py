@@ -2,7 +2,7 @@
 
 The fault vertex F joins D's terminal `a` to every node carrying another rail of D's supplies.
 With D removed, the blocks every F-b path crosses are in series: the largest counts. In a block
-the runs of sources add, each at its largest member; one supply vertex counts once per block.
+the runs of sources add, each at its largest member.
 """
 
 import collections
@@ -12,9 +12,9 @@ from typing import TYPE_CHECKING
 
 from fransys_model.derive.facts.current.blocks import blocks
 from fransys_model.derive.facts.fault.graph import largest_known
+from fransys_model.elecdef import Current
 from fransys_model.kernel import Id, UnionFind
 from fransys_model.vocab.core import Port
-from fransys_model.vocab.enums import Current
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Collection, Iterable, Mapping, Sequence
@@ -22,7 +22,6 @@ if TYPE_CHECKING:
     from fransys_model.derive.facts.current.graph import Edge, Wire
     from fransys_model.derive.facts.fault.graph import Feed
     from fransys_model.vocab.core import Function
-    from fransys_model.vocab.supply_system import SupplySystem
 
 _FAULT: Id[Port] = Id[Port](kind="fault", value="fault")
 _JOINT: int = 2  # a node two edges touch joins two sources into one run
@@ -35,11 +34,10 @@ class Share:
     current_a: Decimal | None
     time_constant_ms: Decimal | None
     functions: frozenset[Id[Function]] = frozenset()
-    supplies: frozenset[Id[SupplySystem]] = frozenset()
 
     def counts(self) -> bool:
         """Whether any source is counted."""
-        return bool(self.functions or self.supplies)
+        return bool(self.functions)
 
 
 NOTHING = Share(Decimal(0), None)
@@ -65,9 +63,7 @@ class Fault:
     rails: frozenset[str]
 
 
-def closed_state(
-    edges: Sequence[Edge], wires: Iterable[Wire], rails_of: Callable[[Id[Port]], frozenset[str]]
-) -> Closed:
+def closed_state(edges: Sequence[Edge], wires: Iterable[Wire], rails_of: Callable[[Id[Port]], frozenset[str]]) -> Closed:
     """The `Closed` of the edges and wires one assignment closes (`current_states.assignments`)."""
     nodes: UnionFind[Id[Port]] = UnionFind()
     for wire in wires:
@@ -88,7 +84,6 @@ def highest(shares: Sequence[Share]) -> Share:
         top.current_a,
         largest_known([share.time_constant_ms for share in tied if share.counts()]),
         frozenset().union(*(share.functions for share in tied)),
-        frozenset().union(*(share.supplies for share in tied)),
     )
 
 
@@ -104,12 +99,11 @@ def _summed(shares: Sequence[Share]) -> Share:
         sum(known, Decimal(0)) if len(known) == len(values) else None,
         largest_known([share.time_constant_ms for share in shares]),
         frozenset().union(*(share.functions for share in shares)),
-        frozenset().union(*(share.supplies for share in shares)),
     )
 
 
 def _run_share(feeds: Sequence[Feed], kind: Current) -> Share | None:
-    """One run at its largest member, if one reaches `kind`; a supply of another kind is out."""
+    """One run at its largest member, if one reaches `kind`."""
     counted = [feed for feed in feeds if kind in feed.current]
     if not counted or not any(kind in feed.kinds for feed in feeds):
         return None
@@ -117,7 +111,6 @@ def _run_share(feeds: Sequence[Feed], kind: Current) -> Share | None:
         largest_known([feed.current[kind] for feed in counted]),
         largest_known([f.time_constant_ms for f in counted]) if kind is Current.DC else None,
         frozenset(function for feed in counted for function in feed.functions),
-        frozenset(supply for feed in counted for supply in feed.supplies),
     )
 
 
@@ -162,21 +155,15 @@ def _runs(
     feeds: Sequence[Feed | None],
     fixed: Collection[Id[Port]],
 ) -> UnionFind[int]:
-    """Source edges joined end to end at a node no other edge touches, and one supply's edges."""
+    """Source edges joined end to end at a node no other edge touches."""
     runs: UnionFind[int] = UnionFind()
     for node, touching in _adjacent(ends).items():
         if len(touching) == _JOINT and node not in fixed and all(feeds[at] for at, _ in touching):
             runs.union(touching[0][0], touching[1][0])
-    by_supply: dict[str, int] = {}
-    for at, feed in enumerate(feeds):
-        if feed is not None and feed.supply is not None:
-            runs.union(by_supply.setdefault(feed.supply, at), at)
     return runs
 
 
-def _block_share(
-    block: frozenset[int], feeds: Sequence[Feed | None], runs: UnionFind[int], kind: Current
-) -> Share:
+def _block_share(block: frozenset[int], feeds: Sequence[Feed | None], runs: UnionFind[int], kind: Current) -> Share:
     """A block's runs added; a block with no source of `kind` gives nothing."""
     grouped: dict[int, list[Feed]] = {}
     for at in sorted(block):
@@ -194,10 +181,7 @@ def terminal_share(closed: Closed, feeds: Mapping[int, Feed], fault: Fault) -> S
     ends: list[tuple[Id[Port], Id[Port]]] = []
     on: list[Feed | None] = []
     for edge in closed.edges:
-        one, other = (
-            _FAULT if n in merged else n
-            for n in (closed.node(edge.first), closed.node(edge.second))
-        )
+        one, other = (_FAULT if n in merged else n for n in (closed.node(edge.first), closed.node(edge.second)))
         if edge.at != fault.at and one != other:
             ends.append((one, other))
             on.append(feeds.get(edge.at))
@@ -205,6 +189,4 @@ def terminal_share(closed: Closed, feeds: Mapping[int, Feed], fault: Fault) -> S
     if not path:
         return NOTHING
     runs = _runs(ends, on, {_FAULT, goal})
-    return highest(
-        [_block_share(block, on, runs, fault.kind) for block in blocks(ends) if block & path]
-    )
+    return highest([_block_share(block, on, runs, fault.kind) for block in blocks(ends) if block & path])

@@ -2,31 +2,22 @@
 
 The count of `end_crosses` calls stands in for time: it is exact and needs no wall clock.
 Doubling the instances doubles the ends and the units, so linear work is 2x; the old loop of
-every end over every unit was 4x.
 """
 
-import sys
-from pathlib import Path
-
 import fransys as fr
-import fransys_author
 import fransys_parts
-
-_TESTS_DIR = Path(__file__).resolve().parent
-if str(_TESTS_DIR) not in sys.path:
-    # `--import-mode=importlib` (root pyproject.toml) never puts this folder on `sys.path`.
-    sys.path.insert(0, str(_TESTS_DIR))
-
-from scale_units_fixture import (  # noqa: E402
+from _expected_codes import expect_codes
+from fransys_author.design import Design
+from scale_units_fixture import (
     PROJECT,
     build_scale,
     pump_cabinet,
 )
 
-from fransys_model.checks import units as validators  # noqa: E402
-from fransys_model.derive.facts import unit_crossings  # noqa: E402 - path set above
-from fransys_model.derive.numbering_pins import name_findings  # noqa: E402
-from fransys_model.kernel import Severity  # noqa: E402
+from fransys_model.checks import units as validators
+from fransys_model.derive.facts import unit_crossings
+from fransys_model.derive.numbering_pins import name_findings
+from fransys_model.kernel import Severity
 
 
 def _crosses_calls(monkeypatch, model):
@@ -54,7 +45,7 @@ def test_check_units_calls_grow_linearly_with_the_instances(monkeypatch):
 def test_the_findings_of_three_instances_with_one_unused_declaration_missing():
     """Pump 2's two field terminals are boundaries left unconnected and undeclared; nothing else."""
     parts = fransys_parts.load("demo_parts")
-    d = fransys_author.Design(parts)
+    d = Design(parts)
     d.project(**PROJECT)
     d.revision(1, date="2026-09-25", text="First issue", created="XX")
     er = d.location("ER", "Engine room")
@@ -65,16 +56,12 @@ def test_the_findings_of_three_instances_with_one_unused_declaration_missing():
         if i != 2:
             for terminal in field:
                 container.unused(terminal)
-    model = fr.build(parts, d.draft()).model
+    result = fr.build(parts, d.draft())
+    expect_codes(result, "BOUNDARY_UNCONNECTED")
+    model = result.model
     findings = name_findings(model, validators.check_units(model))
-    assert [(f.code, f.severity) for f in findings] == [
-        ("BOUNDARY_UNCONNECTED", Severity.ERROR),
-        ("BOUNDARY_UNCONNECTED", Severity.ERROR),
-    ]
-    tail = (
-        " of demo-pump-cabinet rev 1.2"
-        " is not connected across it and has no declared UnusedBoundary"
-    )
+    assert [f.severity for f in findings] == [Severity.ERROR, Severity.ERROR]
+    tail = " of demo-pump-cabinet rev 1.2 is not connected across it and has no declared UnusedBoundary"
     assert sorted(f.message for f in findings) == [
         f"boundary function -X2:1{tail}",
         f"boundary function -X2:2{tail}",

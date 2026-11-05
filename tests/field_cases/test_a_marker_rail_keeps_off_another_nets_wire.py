@@ -1,21 +1,10 @@
-"""A link marker's rail to a shared box is drawn across a wire of another net.
-
-Engineering shape: a motor starter's control circuit. A 24 V supply feeds a stop button, a
-start button in parallel with the contactor's holding contact, an overload relay's auxiliary
-contact and the coil. The relay's contact has a marker whose box is shared, so its stub ends on
-a rail that runs along the box edge to the box.
-
-The bug: layout placed the markers first and routed after, and the router knew each marker's box
-but not its rail. A route from the supply to the stop button crossed the rail, so the page
-showed two nets joined (DRAWING_SHORTS_NETS).
-
-Fixed by layout-0243: the router keeps off every marker's drawn stub, rail and branch.
-"""
+"""Builder of the cross-link study's "seal" row: a starter whose supply and control circuits share a page.
+Its field-case test (a link marker's rail across another net's wire, layout-0243) was deleted with R873: the build draws no marker now,
+and the shorts-around-markers property is held by the DRAWING_SHORTS_NETS check on every build (neighbour-flags xfail deleted as vacuous, R1297)."""
 
 from typing import NamedTuple
 
 import fransys as fr
-from _drawn_pages import drawn_pages
 from fransys.colours import BK, BU
 
 
@@ -43,19 +32,5 @@ def _starter(d):
     with d.function("CTRL", "Control circuit"):
         s1 = d.device("S1", "DEMO-PB-NC")
         s2 = d.device("S2", "DEMO-BLOCK-1NO")
-        d.series(
-            dc.plus, s1.sw, d.parallel(s2.no, q1.aux), f1.aux, q1.coil, dc.minus, wire=(BU, 0.75)
-        )
+        d.series(dc.plus, s1.sw, d.parallel(s2.no, q1.aux), f1.aux, q1.coil, dc.minus, wire=(BU, 0.75))
     return _Io()
-
-
-def test_no_net_is_drawn_across_a_markers_rail(tmp_path) -> None:
-    d = fr.design("demo_parts")
-    d.add(_starter, "U1")
-    cover = tmp_path / "cover.md"
-    cover.write_text("# Starter\n", encoding="utf-8")
-    result = fr.build(d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, "starter", cover=cover))
-    pages = drawn_pages(result.model).values()
-    assert [s for d in pages for s in d.symbols if s.key == "reference-marker"]
-    assert [w for d in pages for w in d.wires]
-    assert [f for f in fr.check(result) if f.code == "DRAWING_SHORTS_NETS"] == []

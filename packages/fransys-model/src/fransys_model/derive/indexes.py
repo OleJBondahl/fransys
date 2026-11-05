@@ -66,22 +66,13 @@ def build_indexes(model: HasTables) -> Indexes:
     return Indexes(
         functions_by_item=index_ids((f.item, f.id) for f in functions(model).values()),
         ports_by_function=index_ids((p.function, p.id) for p in ports(model).values()),
-        conductors_by_port=index_ids(
-            (end, c.id) for c in conductors(model).values() for end in (c.a, c.b)
-        ),
+        conductors_by_port=index_ids((end, c.id) for c in conductors(model).values() for end in (c.a, c.b)),
         nets_by_port=index_ids((port, n.id) for n in nets(model).values() for port in n.ports),
-        items_by_part=index_ids(
-            (i.part, i.id) for i in items(model).values() if i.part is not None
-        ),
+        items_by_part=index_ids((i.part, i.id) for i in items(model).values() if i.part is not None),
         children_by_item=children_index(model),
         facets_by_subject=index_ids(
-            (facet_subject(facet), facet.id)
-            for kind, table in model.tables.items()
-            if namespace_of(kind) == "facet"
-            for facet in table.values()
+            (facet_subject(facet), facet.id) for kind, table in model.tables.items() if namespace_of(kind) == "facet" for facet in table.values()
         ),
         placements_by_item=index_ids((p.item, p.id) for p in placements(model).values()),
-        nodes_by_parent=index_ids(
-            (n.parent, n.id) for n in aspect_nodes(model).values() if n.parent is not None
-        ),
+        nodes_by_parent=index_ids((n.parent, n.id) for n in aspect_nodes(model).values() if n.parent is not None),
     )

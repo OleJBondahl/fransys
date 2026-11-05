@@ -5,8 +5,6 @@ lines, scaled into the box (A4: scaling stored positions is not layout; no new p
 The extra elements are inert (`events: no`) so a double click still opens the box.
 """
 
-# ruff: noqa: E501 -- the JavaScript source is not wrapped
-
 from typing import Final
 
 JS_ZOOM: Final[str] = r"""

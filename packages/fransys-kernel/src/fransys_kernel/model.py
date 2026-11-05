@@ -32,11 +32,11 @@ class Model:
     digests: frozendict[str, str]
     digest: str
 
-    def origin_of(self, target: Id[Any]) -> Origin | None:
+    def origin_of(self, target: Id[Record]) -> Origin | None:
         """Where the record `target` was authored, or `None` (`OriginSource`, kernel-model.md)."""
         return self.origins.get(target)
 
-    def key_of(self, target: Id[Any]) -> AuthoringKey | None:
+    def key_of(self, target: Id[Record]) -> AuthoringKey | None:
         """The authoring key of the record `target`, or `None` if no record holds it."""
         table = self.tables.get(target.kind)
         found = None if table is None else table.get(target)

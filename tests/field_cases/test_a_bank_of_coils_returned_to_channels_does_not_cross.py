@@ -1,26 +1,15 @@
-"""Field case: a bank of relay coils returned to PLC channels draws no crossing return wires.
-
-The engineering shape: eight relays in one group. Each coil's A1 is fed from a terminal of a
-feed strip and its A2 is wired to its own output channel of a controller (an external pin
-device), channel i for relay i. The bank is the usual legacy cabinet bank.
-
-The bug: only a coil whose channel sits at A1 stood under its channel. With the channel at A2 the
-coils kept the order of their feeds, and the A2 returns fanned in as nested staircases that crossed
-(14 crossings among the eight returns).
-
-The rule (decision layout-0208, extending layout-0099): a coil that a PLC channel pin switches
-stands under that channel, in channel pin order, on whichever coil terminal the channel wires.
-"""
+"""Field case: eight relay coils in one bank, each A1 fed from a feed strip and each A2 wired to its own PLC output channel.
+The bug: with the channel at A2 the coils kept their feed order, so the A2 returns crossed as nested staircases (14 crossings).
+Fixed by layout-0208 (extends layout-0099), a coil that a PLC channel pin switches stands under that channel, in channel pin order."""
 
 import itertools
-import tempfile
 from functools import cache
-from pathlib import Path
 from typing import Any
 
 import fransys as fr
 from _drawn_facts import symbol_subjects
 from _drawn_pages import drawn_pages
+from _model_build_cover import unit_document
 from fransys.colours import BU
 
 from fransys_layout.geometry import GENERIC_BOX_KEY
@@ -36,28 +25,24 @@ def _built() -> Any:
     with d.function("PLC", "Controller"):
         plc = d.device("A1", None, pins=PINS, external=True)
     with d.function("G1", "Supply"):
-        live = d.terminal_strip("X1", "DEMO-TB-2.5", 4)
+        live = d.terminal_strip("X1", "DEMO-TB-2.5-TWIN", 4)
     with d.function("B", "Relay bank"):
         for i in range(COUNT):
             relay = d.device(f"K{i + 1}", "DEMO-RLY-2CO-24")
-            d.detail.wire(live[1 + i % 4], relay.coil["A1"], wire=(BU, 0.5))
-            d.detail.wire(plc[PINS[i]], relay.coil["A2"], wire=(BU, 0.5))
-    cover = Path(tempfile.mkdtemp()) / "cover.md"
-    cover.write_text("# Cabinet\n", encoding="utf-8")
-    doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover)
+            d.series(live[1 + i % 4].inner, relay.coil["A1"], wire=(BU, 0.5))
+            d.series(plc[PINS[i]], relay.coil["A2"], wire=(BU, 0.5))
+    doc = unit_document(cab)
     return fr.build(d, doc).model
 
 
-def _crosses(a, b) -> bool:
+def _crosses(a: tuple[tuple[float, float], tuple[float, float]], b: tuple[tuple[float, float], tuple[float, float]]) -> bool:
     """Whether a horizontal and a vertical segment cross strictly inside both."""
     (a0, a1), (b0, b1) = a, b
     if (a0[1] == a1[1]) == (b0[1] == b1[1]):
         return False
     h, v = (a, b) if a0[1] == a1[1] else (b, a)
     (h0, h1), (v0, v1) = h, v
-    return min(h0[0], h1[0]) < v0[0] < max(h0[0], h1[0]) and min(v0[1], v1[1]) < h0[1] < max(
-        v0[1], v1[1]
-    )
+    return min(h0[0], h1[0]) < v0[0] < max(h0[0], h1[0]) and min(v0[1], v1[1]) < h0[1] < max(v0[1], v1[1])
 
 
 def test_returns_to_channels_do_not_cross() -> None:
@@ -78,9 +63,7 @@ def test_the_coils_stand_over_the_controller_in_channel_order() -> None:
     """Every coil over the box, in channel order: none hangs below on a pin of no fixed side."""
     model = _built()
     symbols = [(page, s) for page, drawing in drawn_pages(model).items() for s in drawing.symbols]
-    coils = sorted(
-        (ps for ps in symbols if ps[1].key == "operating-device"), key=lambda ps: ps[1].x
-    )
+    coils = sorted((ps for ps in symbols if ps[1].key == "operating-device"), key=lambda ps: ps[1].x)
     ((box_page, box),) = ((page, s) for page, s in symbols if s.key == GENERIC_BOX_KEY)
     assert all(page == box_page and s.y < box.y for page, s in coils)
     coil_tags = [s.tag for s in symbol_subjects(model) if s.key == "operating-device"]

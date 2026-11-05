@@ -2,17 +2,12 @@
 
 Owner ruling: "the subject label keeps the bare location label: C1 Demo cabinet, no +". A
 follow-up asked for a signed scope (`+C1 Demo cabinet`); it was retracted as an error
-against this ruling (model-0054 section 6). These tests are the regression guard: a location's
-label, an item document's designation and a harness page's scope print with no sign in the
-Scope cell and the document heading, and each test fails if a sign is added.
 """
 
 from dataclasses import replace
 
 import fransys_render
 from _build import (
-    cable_facet,
-    cable_product_facet,
     document,
     drawing_set,
     item,
@@ -49,12 +44,9 @@ def _schematic_background(*nodes):
         subject=subject,
         cover="# Cover",
         notes=None,
-        remove=(K.PLC_LIST, K.TERMINAL_LIST, K.BOM),
     )
     m = model(*nodes, project(), ds, page, doc)
-    return fransys_render.sheets(document_sheets_of(m), LIBRARY)[
-        SheetKey(doc.id, K.SCHEMATIC, 0)
-    ].svg
+    return fransys_render.sheets(document_sheets_of(m, ()), LIBRARY)[SheetKey(doc.id, K.SCHEMATIC, 0)].svg
 
 
 def test_a_location_documents_subject_label_is_the_bare_label():
@@ -76,7 +68,7 @@ def test_a_nested_locations_subject_label_stays_as_main_printed_it():
 def test_an_item_documents_subject_label_has_no_sign():
     demo_part = part("relay", description="Invented relay")
     board = item("a1", description="", part=demo_part.id)
-    doc = document("d1", preset=DocumentPreset.PCB_SCHEMATIC, subject=board, cover="# Cover")
+    doc = document("d1", preset=DocumentPreset.CABINET_SCHEMATIC, subject=board, cover="# Cover")
     m = model(demo_part, board, doc)
     assert subject_label(m, doc.id) == "A1 Invented relay"
 
@@ -86,18 +78,3 @@ def test_a_drawing_pages_scope_cell_reads_the_signed_location_path():
     svg = _schematic_background(c1)
     assert ">Scope</text>" in svg
     assert ">+C1</text>" in svg
-
-
-def test_a_harness_drawing_pages_scope_cell_reads_the_bare_harness():
-    harness = item("h1", description="Harness one")
-    demo_part = part("cab1", description="Invented 4-core cable")
-    product = cable_product_facet("cab1", subject=demo_part.id, core_count=0)
-    cable = item("w1", description="Cable one", part=demo_part.id, parent=harness.id)
-    facet = cable_facet("w1", subject=cable.id, length_mm=1500)
-    doc = document("d1", preset=DocumentPreset.HARNESS_DRAWING, subject=harness, cover="# Cover")
-    m = model(project(), harness, demo_part, product, cable, facet, doc)
-    svg = fransys_render.sheets(document_sheets_of(m), LIBRARY)[
-        SheetKey(doc.id, K.HARNESS_DRAWING, 0)
-    ].svg
-    assert ">Scope</text>" in svg
-    assert ">H1</text>" in svg

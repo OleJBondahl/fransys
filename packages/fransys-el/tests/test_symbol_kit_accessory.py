@@ -20,8 +20,8 @@ def _kit_keys() -> tuple[set[str], set[str]]:
     d = fr.design("demo_parts")
     f1 = d.device("F1", _FUSE)
     holder = d.device("H2", "DEMO-LAMP-24")
-    d.detail.wire(f1["1"], holder.lamp["1"], wire=(BU, 0.5))
-    d.detail.wire(f1["2"], holder.lamp["2"], wire=(BU, 0.5))
+    d.series(f1["1"], holder.lamp["1"], wire=(BU, 0.5))
+    d.series(f1["2"], holder.lamp["2"], wire=(BU, 0.5))
     d.device(None, _FUSE, name="link-a", parent=holder, unused=True)
     d.device(None, _FUSE, name="link-b", parent=holder, unused=True)
     model = fr.build(d).model

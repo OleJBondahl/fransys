@@ -3,7 +3,6 @@
 Row shapes beside `rows.py` (model-0199); they import nothing from it.
 """
 
-from decimal import Decimal
 from enum import Enum
 
 from fransys_model.kernel import Id, register_enum, value
@@ -45,22 +44,10 @@ class PlcTable:
 
 
 @value
-class ChannelScaling:
-    """The `scaling` facet of a field device, projected so a formatter never looks it up."""
-
-    unit: str
-    raw_min: int
-    raw_max: int
-    eng_min: Decimal
-    eng_max: Decimal
-
-
-@value
 class PlcRackChannel:
     """One channel of a rack module, bound or spare.
 
-    The field fields are `None` for a spare channel, as in `PlcChannelRow`; `scaling` is also
-    `None` for a bound device that carries no `scaling` facet. `name_stem` is the text an output
+    The field fields are `None` for a spare channel, as in `PlcChannelRow`. `name_stem` is the text an output
     names the channel after, before its own character set: the field device and its signal name,
     else the module's designation and the channel's index in the module.
     """
@@ -71,7 +58,6 @@ class PlcRackChannel:
     field_device: Id[Function] | None
     field_device_designation: str | None
     signal_name: str | None
-    scaling: ChannelScaling | None
     name_stem: str
 
 

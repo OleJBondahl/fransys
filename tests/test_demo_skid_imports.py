@@ -37,7 +37,4 @@ def test_the_check_names_a_workspace_package_import():
         "fransys_model",
         "fransys_layout",
     }
-    assert (
-        foreign_imports("import fransys as fr\nfrom fransys.colours import BK\nimport math")
-        == set()
-    )
+    assert foreign_imports("import fransys as fr\nfrom fransys.colours import BK\nimport math") == set()

@@ -4,11 +4,21 @@ import dataclasses
 from decimal import Decimal
 from enum import Enum
 from types import NoneType
-from typing import TYPE_CHECKING, Any, ClassVar, Protocol, cast
+from typing import TYPE_CHECKING, Any, ClassVar, Protocol, cast, get_args, get_type_hints
+
+import elecdef
+import refdef
+from elecdef import pins, plc, supply, terminal, vocab
 
 from .errors import ValueTypeError
 from .ids import Id
-from .registry import is_value_class, register_value_alias
+from .registry import (
+    is_enum_by_name,
+    is_registered_enum,
+    is_value_class,
+    register_value_alias,
+    register_value_class,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -26,18 +36,7 @@ class ValueRecord(Protocol):
     __dataclass_fields__: ClassVar[Mapping[str, Any]]
 
 
-type Value = (
-    str
-    | int
-    | bool
-    | Decimal
-    | Enum
-    | Id[Any]
-    | tuple[Value, ...]
-    | frozendict[str, Value]
-    | ValueRecord
-    | None
-)
+type Value = str | int | bool | Decimal | Enum | Id[Any] | tuple[Value, ...] | frozendict[str, Value] | ValueRecord | None
 register_value_alias(Value)
 
 # Exact types only: a `str` or `int` subclass could carry mutable state of its own.
@@ -49,7 +48,10 @@ _LEAF_TYPES = frozenset({str, int, bool, NoneType})
 _MAX_INT_BITS = 2048  # 617 digits
 MAX_EXPONENT = 1000
 
-_registered_enums: set[type[Enum]] = set()
+# The family libraries' value classes (decision model-0370). Every class and enum named in a
+# door's `__all__` is registered here, once: enums are stored by member name, as `Unit` has tuple
+# values, and the tag is the door and the name, so `elecdef.Issue` and `refdef.Issue` differ.
+_FAMILY_DOORS = (elecdef, vocab, pins, terminal, plc, supply, refdef)
 
 
 def register_enum[E: Enum](cls: type[E]) -> type[E]:
@@ -58,25 +60,31 @@ def register_enum[E: Enum](cls: type[E]) -> type[E]:
     `check_value` rejects any `Enum` subclass that was never passed through this
     decorator.
     """
-    _registered_enums.add(cls)
+    register_value_class(cls)
     return cls
 
 
+def _register(found: object, tag: str | None = None) -> None:
+    """Register a library enum or dataclass and, from its fields, the ones its door omits."""
+    for arg in get_args(found):
+        _register(arg)
+    if not isinstance(found, type) or is_value_class(found) or is_registered_enum(found):
+        return
+    if (tag and issubclass(found, Enum)) or dataclasses.is_dataclass(found):
+        register_value_class(found, tag, by_name=issubclass(found, Enum))
+        for hint in get_type_hints(found).values():
+            _register(hint)
+
+
+for _door in _FAMILY_DOORS:
+    for _name in _door.__all__:
+        _register(getattr(_door, _name), f"{_door.__name__}.{_name}")
+
+
 def check_value(value: object, *, path: tuple[str, ...] = ()) -> None:
-    """Recursively reject anything outside the closed set in design/kernel-records.md 5.1.
+    """Raise `ValueTypeError` for anything outside the closed set in design/kernel-records.md 5.1.
 
-    `path` names where in the containing structure `value` was found (a field name, a
-    tuple index, a `frozendict` key), so the error can point at more than the top level.
-
-    An instance of a `@value` class is accepted when every field passes. A `@record`
-    instance is not: a table record is held by `Id`, never nested.
-
-    Raises:
-        ValueTypeError: `value`, or something nested inside it, is not an allowed leaf
-            type: `float`, `list`, `dict`, `set`, `bytes`, a callable, an unregistered
-            `Enum` subclass or a member whose value is not a `str` or `int`, a non-finite
-            `Decimal` or one with an exponent beyond 1000, an `int` of more than 2048 bits,
-            a dataclass that is not a `@value` class, or a `frozendict` with a non-`str` key.
+    `path` names where `value` sits in the containing structure; a `@record` may not be nested.
     """
     kind = type(value)
     if kind is int:
@@ -93,7 +101,7 @@ def check_value(value: object, *, path: tuple[str, ...] = ()) -> None:
 
 def _check_container(value: object, path: tuple[str, ...]) -> None:
     kind = type(value)
-    if kind is tuple:
+    if kind in (tuple, frozenset):  # a frozenset has no order: its index only names the item
         for index, item in enumerate(cast("tuple[object, ...]", value)):
             check_value(item, path=(*path, str(index)))
     elif kind is frozendict:
@@ -106,9 +114,7 @@ def _check_container(value: object, path: tuple[str, ...]) -> None:
 
 def _check_int(number: int, path: tuple[str, ...]) -> None:
     if number.bit_length() > _MAX_INT_BITS:
-        raise _reject(
-            path, f"int of {number.bit_length()} bits is over the {_MAX_INT_BITS}-bit limit"
-        )
+        raise _reject(path, f"int of {number.bit_length()} bits is over the {_MAX_INT_BITS}-bit limit")
 
 
 def _check_decimal(number: Decimal, path: tuple[str, ...]) -> None:
@@ -120,13 +126,14 @@ def _check_decimal(number: Decimal, path: tuple[str, ...]) -> None:
 
 
 def _check_enum(member: Enum, path: tuple[str, ...]) -> None:
-    if type(member) not in _registered_enums:
+    if not is_registered_enum(type(member)):
         raise _reject(path, f"enum {type(member).__name__} is not registered with register_enum")
-    # Enums serialise by value, so a float or tuple member would smuggle itself in.
-    if type(member.value) not in (str, int):
-        raise _reject(path, f"enum member {member} has a {type(member.value).__name__} value")
-    if type(member.value) is int:
-        _check_int(member.value, path)
+    if not is_enum_by_name(type(member)):  # by name, any member value will do
+        # Enums serialise by value, so a float or tuple member would smuggle itself in.
+        if type(member.value) not in (str, int):
+            raise _reject(path, f"enum member {member} has a {type(member.value).__name__} value")
+        if type(member.value) is int:
+            _check_int(member.value, path)
 
 
 def _check_frozendict(mapping: frozendict[Any, Any], path: tuple[str, ...]) -> None:

@@ -1,6 +1,6 @@
 """Every finding code of `check_connectivity`, firing and not firing."""
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import pytest
 from plant import Plant
@@ -12,12 +12,15 @@ from fransys_model.checks.connectivity import (
     check_connectivity,
 )
 from fransys_model.derive import net_of
+from fransys_model.elecdef import LinkKind
 from fransys_model.kernel import Finding, Id, Severity, make_id
 from fransys_model.vocab.connectivity import Net
-from fransys_model.vocab.core import Item, Port
-from fransys_model.vocab.enums import FunctionKind, LinkKind, NetClass
+from fransys_model.vocab.enums import FunctionKind, NetClass
 from fransys_model.vocab.finding_ref import ref
 from fransys_model.vocab.tables import ports
+
+if TYPE_CHECKING:
+    from fransys_model.vocab.core import Port
 
 
 def _of(plant: Plant, code: str) -> list[Finding]:
@@ -141,7 +144,7 @@ def test_a_coil_wired_at_one_port_names_the_open_port() -> None:
     a1, a2 = _two_port(plant, "k1", FunctionKind.COIL)
     plant.wire(a1, plant.pin("other", "f", "1"), key="w")
     (finding,) = _of(plant, FUNCTION_HALF_CONNECTED)
-    assert finding.severity is Severity.WARNING
+    assert finding.severity is Severity.ERROR
     assert finding.subjects == (a2,)
     assert finding.message.endswith(f"open at {ref(ports(plant.model())[a2])}")
 
@@ -174,18 +177,6 @@ def test_a_declared_net_counts_as_a_connection() -> None:
 
 
 # ---- the shape of the result --------------------------------------------------------------
-
-
-def _mixed() -> Plant:
-    plant = Plant()
-    a, b, c, d, e = (plant.pin(name, "f", "1") for name in "abcde")
-    plant.net("n1", (a, b), potential="24V")
-    plant.net("n2", (c,), potential="0V")
-    plant.wire(b, c, key="bridge")
-    plant.wire(a, d, key="w")
-    plant.item("pulled", installed=False)
-    plant.wire(plant.port(plant.function(make_id(Item, ("pulled",)), "f"), "1"), e, key="p")
-    return plant
 
 
 def _wired_pair(name_a: str | None, name_b: str | None) -> Plant:

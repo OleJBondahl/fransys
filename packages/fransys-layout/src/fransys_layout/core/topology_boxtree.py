@@ -14,10 +14,11 @@ from dataclasses import dataclass
 from itertools import pairwise
 from typing import TYPE_CHECKING
 
+from .flow_values import Cell, End
 from .series_tree import has_parallel, leaves_of, tree_lanes
 from .topology_chains import MemberDraft, member_offset
 from .topology_fans import LaneDraft
-from .values import Cell, End, PinRef
+from .values import PinRef
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
@@ -115,14 +116,10 @@ def _below_a_box(lanes: Sequence[TreeLane]) -> str | None:
     above = next((lane for i, lane in enumerate(lanes) if i and _around(lanes, i)[0]), None)
     if above is None:
         return None
-    return (
-        f"{above.leaves[0]}: a box in parallel below another box has no layout yet; drawn unchained"
-    )
+    return f"{above.leaves[0]}: a box in parallel below another box has no layout yet; drawn unchained"
 
 
-def _member(
-    lanes: Sequence[TreeLane], i: int, at: tuple[HopFacts, Sequence[LaneDraft]], given: Given
-) -> tuple[MemberDraft, set[str]]:
+def _member(lanes: Sequence[TreeLane], i: int, at: tuple[HopFacts, Sequence[LaneDraft]], given: Given) -> tuple[MemberDraft, set[str]]:
     """Lane i as a member lane, and the nets it draws: its head, inner and foot hop anchors."""
     hops, made = at
     ends, drawn, options = given
@@ -130,10 +127,7 @@ def _member(
     head = hops.nets[before, leaves[0]] if before else ()
     foot = hops.nets[leaves[-1], after] if after else ()
     links = [head, *(hops.nets[p] for p in pairwise(leaves)), foot]
-    cells = tuple(
-        Cell(box, "R0", _pin(links[j], box, ends), _pin(links[j + 1], box, ends))
-        for j, box in enumerate(leaves)
-    )
+    cells = tuple(Cell(box, "R0", _pin(links[j], box, ends), _pin(links[j + 1], box, ends)) for j, box in enumerate(leaves))
     top = End("join", None, PinRef(lanes[i].head or "", ""))  # level only: no box stands before
     offset = member_offset(made, cells, drawn, options, 0)
     draft = MemberDraft(made[0].column, i, list(cells), offset, (top, _join(foot, after, ends)))

@@ -3,9 +3,9 @@
 Worked example::
 
     import fransys as fr
-    import fransys_author
+    from fransys_author.design import Design
     parts = fr.parts("demo_parts")
-    d = fransys_author.Design(parts)
+    d = Design(parts)
     d.project(title="Pump station", number="P-1001", customer="Example Co",
               revision=1, author="OJB")
     d.revision(1, date="2026-09-21", text="First issue", created="OJB")
@@ -15,31 +15,10 @@ Worked example::
     draft = d.draft()
 """
 
-from fransys_model.vocab import Operating, Rating
+from fransys_model.vocab import Operating
 
 from ._origin import caller_origin
-from .design import Design, Scope
 from .errors import AuthorError
-from .handles import Cable, Fn, Group, Item, Location, Port, Strip, Terminal
 from .surface._rows import RowValue, WiringRow
-from .wiring import Wiring
 
-__all__ = [
-    "AuthorError",
-    "Cable",
-    "Design",
-    "Fn",
-    "Group",
-    "Item",
-    "Location",
-    "Operating",
-    "Port",
-    "Rating",
-    "RowValue",
-    "Scope",
-    "Strip",
-    "Terminal",
-    "Wiring",
-    "WiringRow",
-    "caller_origin",
-]
+__all__ = ["AuthorError", "Operating", "RowValue", "WiringRow", "caller_origin"]

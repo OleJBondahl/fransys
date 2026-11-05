@@ -2,15 +2,6 @@
 
 A rail reaches a port under conditions, the state each contact item on its way must be in: a
 `rest` link needs its item at rest, an `operated` link needs it operated, `both` links, conductors
-and mates need nothing. One item is at rest or operated as a whole. Every plant here is
-hand-built and invented: two rails `A` and `B` of one AC supply and a load with two ports.
-
-Can-fail probes, each one Edit in `derive/facts/closure.py`, run and undone: `_agree` returning
-`True` fails the no-pair tests (a), (b) and the missing second route (d); `_spread` never
-rejecting an inconsistent condition fails the (e) drop test; a condition on every port of a
-changeover (a fake shared item in a state per rail) fails the open-gap test; dropping the
-antichain pruning (`other <= grown` to `other == grown`, no displacement) fails the pruning
-test and (d).
 """
 
 from typing import TYPE_CHECKING, NamedTuple
@@ -22,10 +13,11 @@ from rating_plant import rail, rated, supply
 from fransys_model.checks.ratings import check_ratings
 from fransys_model.derive import rail_pairs
 from fransys_model.derive.facts import closure
+from fransys_model.elecdef import LinkKind, PinRole
 from fransys_model.kernel import make_id
 from fransys_model.vocab import PartRatingFacet
 from fransys_model.vocab.core import Function
-from fransys_model.vocab.enums import FunctionKind, LinkKind, PartCategory, PortRole
+from fransys_model.vocab.enums import FunctionKind, PartCategory, PortBoundary
 from fransys_model.vocab.tables import items
 from fransys_model.vocab.templates import FunctionTemplate, Part, PortTemplate
 
@@ -35,11 +27,11 @@ if TYPE_CHECKING:
     from fransys_model.kernel import Id, Model
     from fransys_model.vocab.core import Port
 
-_GENERIC = PortRole.GENERIC
-_PROPER_ROLES = (PortRole.COMMON, PortRole.BREAK, PortRole.MAKE)
+_GENERIC = PortBoundary.GENERIC
+_PROPER_ROLES = (PinRole.COMMON, PinRole.BREAK, PinRole.MAKE)
 _AB = frozenset({("A", "B")})
 # A pole: function name, kind, its (pin, role) pairs, its (from pin, to pin) switched links.
-type _Pole = tuple[str, FunctionKind, tuple[tuple[str, PortRole], ...], tuple[tuple[str, str], ...]]
+type _Pole = tuple[str, FunctionKind, tuple[tuple[str, PortBoundary | PinRole], ...], tuple[tuple[str, str], ...]]
 _NO: _Pole = ("no", FunctionKind.CONTACT_NO, (("13", _GENERIC), ("14", _GENERIC)), (("13", "14"),))
 _NC: _Pole = ("nc", FunctionKind.CONTACT_NC, (("21", _GENERIC), ("22", _GENERIC)), (("21", "22"),))
 
@@ -48,7 +40,7 @@ _DEFAULT_NAMES = ("11", "12", "14")
 
 
 def _co(
-    roles: tuple[PortRole, PortRole, PortRole],
+    roles: tuple[PortBoundary | PinRole, PortBoundary | PinRole, PortBoundary | PinRole],
     names: tuple[str, str, str] = _DEFAULT_NAMES,
 ) -> _Pole:
     """A changeover pole: pins `names` (11, 12, 14 by default) with `roles`, in that order; the
@@ -89,7 +81,8 @@ class _Relay:
                     key=(key, name, pin),
                     function=template.id,
                     name=pin,
-                    role=role,
+                    boundary=role if isinstance(role, PortBoundary) else PortBoundary.GENERIC,
+                    pin_role=role if isinstance(role, PinRole) else None,
                 )
                 for pin, role in pins
             }
@@ -150,7 +143,7 @@ def _no_nc(*, same_item: bool, ac: str | None = None) -> tuple[Model, _Load]:
 
 
 def _changeover(
-    roles: tuple[PortRole, PortRole, PortRole],
+    roles: tuple[PortBoundary | PinRole, PortBoundary | PinRole, PortBoundary | PinRole],
     names: tuple[str, str, str] = _DEFAULT_NAMES,
 ) -> tuple[Model, _Relay, _Load]:
     """A on the make end (third pin), B on the break end (second), the common (first) to both
@@ -370,9 +363,7 @@ def test_a_function_with_no_pair_no_rail_or_no_record_gives_the_empty_set() -> N
 @pytest.mark.parametrize(
     "build",
     [
-        pytest.param(
-            lambda: _changeover((_GENERIC, _GENERIC, _GENERIC))[0], id="generic-changeover"
-        ),
+        pytest.param(lambda: _changeover((_GENERIC, _GENERIC, _GENERIC))[0], id="generic-changeover"),
         pytest.param(lambda: _protection()[0], id="protection"),
         pytest.param(lambda: _plain()[0], id="plain"),
     ],

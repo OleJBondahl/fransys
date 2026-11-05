@@ -2,11 +2,10 @@
 
 `fr.parts`/`fr.author`/`fr.build` do not exist yet (the facade comes later):
 this test uses `fransys_parts`/`fransys_author` and the model's own passes plus
-the layout engine directly, the same pipeline `fr.build` will run.
 """
 
 import fransys_parts
-from fransys_author import Design
+from fransys_author.design import Design
 from root_library import freeze
 
 from fransys_model.checks import ALL_VALIDATORS
@@ -50,6 +49,7 @@ def test_the_worked_example_runs_freezes_numbers_allocates_and_lays_out():
     wire(t1.inner, q1["1"])
     wire(q1["2"], k1["A1"], label="W101")
     wire.run(k1["A2"], h1["2"], t2.inner)
+    wire(q1["1"], h1["1"])
 
     d.net("P24", t1.outer, cls="power", potential="+24V")
     d.net("M24", t2.outer, cls="power", potential="0V")
@@ -58,10 +58,6 @@ def test_the_worked_example_runs_freezes_numbers_allocates_and_lays_out():
     w1.core(1, l1.outer, m1["U"])
 
     k1.fn("coil").plc("do", "PUMP1_RUN")
-
-    # t1 (=SUP) is reached by its wire and drawn again in =P1 by the layout engine; it is
-    # not itself in the chain (worked example, corrected 2026-09-22).
-    d.chain(q1, k1.fn("coil"), t2)
 
     draft = d.draft()
     model = freeze(merge(parts, draft))

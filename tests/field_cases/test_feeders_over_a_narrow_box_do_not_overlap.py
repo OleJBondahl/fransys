@@ -1,23 +1,15 @@
-"""Field case: two supplies over a narrow redundancy module stand apart, each over its own group.
-
-The engineering shape: two 24 V supplies feed one redundancy module with an input group per
-supply (1+ 1- and 2+ 2-, about 22 px apart); its output is wired to strip terminals.
-
-The bug: the box widened its pin pitch for the contacts under its pins but never for its feeders,
-so the two supplies stood on top of each other (SYMBOL_OVERLAP), 32 units apart at 48 wide.
-Long supply tags widen a feeder past its slot; the long-tags case holds that.
-The rule (decision layout-0124, amending layout-0107): a feeder's keep-out under its attach pin
-counts in the box's pin pitch, so the box is as long as its pins and feeders need.
-"""
+"""Field case: two 24 V supplies feed one redundancy module with an input group per supply, about 22 px apart.
+The bug: the box widened its pitch for contacts under its pins but not its feeders, so the two supplies overlapped (SYMBOL_OVERLAP).
+Fixed by layout-0124 (amending layout-0107), a feeder's keep-out under its attach pin counts in the box's pin pitch."""
 
 import itertools
-import tempfile
-from pathlib import Path
+from typing import Any
 
 import fransys as fr
 import pytest
 from _drawn_facts import item_box
 from _drawn_pages import drawn_pages
+from _model_build_cover import unit_document
 from fransys.colours import BN, BU
 
 from fransys_layout.geometry import GENERIC_BOX_KEY, generic_box_geometry, overlaps, translate
@@ -38,17 +30,15 @@ def _built(name: str = "T") -> fr.BuildResult:
         m1 = d.device("M1", "DEMO-RED-2IN")
     for n, psu in enumerate(psus, start=1):
         group = getattr(m1, f"in_{n}")
-        d.detail.wire(psu.output["+"], group[f"{n}+"], wire=(BN, 1.5))
-        d.detail.wire(psu.output["-"], group[f"{n}-"], wire=(BU, 1.5))
-    d.detail.wire(m1.out["+"], live[1].outer, wire=(BN, 1.5))
-    d.detail.wire(m1.out["-"], zero[1].outer, wire=(BU, 1.5))
-    cover = Path(tempfile.mkdtemp()) / "cover.md"
-    cover.write_text("# Cabinet\n", encoding="utf-8")
-    doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover)
+        d.series(psu.output["+"], group[f"{n}+"], wire=(BN, 1.5))
+        d.series(psu.output["-"], group[f"{n}-"], wire=(BU, 1.5))
+    d.series(m1.out["+"], live[1].outer, wire=(BN, 1.5))
+    d.series(m1.out["-"], zero[1].outer, wire=(BU, 1.5))
+    doc = unit_document(cab)
     return fr.build(d, doc)
 
 
-def _pin_x(box, name: str) -> int:
+def _pin_x(box, name: str) -> Any:
     return box.x + dict(box.offsets)[name]
 
 

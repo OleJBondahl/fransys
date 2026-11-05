@@ -2,30 +2,21 @@
 
 The model package imports no workspace package, so `fransys_parts.load("demo_parts")` is out of
 reach; the same vocabulary (a relay-like part with a library, templates and a connector facet, a
-terminal part, units, nested items, wiring, analog scaling) is built here from invented data.
-Text fields and `ext` values also draw unicode, quotes, backslashes and negative or large ints, so
-the round trip and the digest see serialization edge cases (keys and ids stay plain ASCII).
 """
 
 import dataclasses
 import string
 from typing import Any
+lazy from collections.abc import Iterable
 
 from hypothesis import strategies as st
 
 from fransys_kernel import Id, make_id
+from fransys_model.elecdef import LinkKind
 from fransys_model.vocab.connectivity import Conductor, Mate, Net
 from fransys_model.vocab.core import Function, Item, Port, Unit, UnitRelease
-from fransys_model.vocab.enums import (
-    ConductorKind,
-    FunctionKind,
-    Gender,
-    LinkKind,
-    NetClass,
-    PartCategory,
-    PortRole,
-)
-from fransys_model.vocab.facets import ConnectorFacet, ScalingFacet, SupplyFacet, TerminalFacet
+from fransys_model.vocab.enums import ConductorKind, FunctionKind, Gender, NetClass, PartCategory, PortBoundary
+from fransys_model.vocab.facets import CableProductFacet, ConnectorFacet, SupplyFacet, TerminalFacet
 from fransys_model.vocab.templates import (
     FunctionTemplate,
     InternalLink,
@@ -79,7 +70,7 @@ class _Plant:
         self.records.append(made)
         return made
 
-    def one[T](self, options: Any) -> T:
+    def one[T](self, options: Iterable[T]) -> T:
         return self.draw(st.sampled_from(tuple(options)))
 
     def type_level(self) -> tuple[Any, Any, Any]:
@@ -118,9 +109,17 @@ class _Plant:
                 supplier_part_number=f"S-{number}",
                 note=self.draw(_TEXT),
             )
-        template = self.mk(
-            FunctionTemplate, "relay", "coil", part=relay.id, name="coil", kind=FunctionKind.COIL
-        )
+        if self.draw(st.booleans()):
+            self.mk(
+                CableProductFacet,
+                "term",
+                "cable",
+                subject=strip.id,
+                core_colours=("BN", "BU"),
+                gauge_mm2=self.draw(st.decimals(-(10**18), 10**18, places=6)),
+                shielded=self.draw(st.booleans()),
+            )
+        template = self.mk(FunctionTemplate, "relay", "coil", part=relay.id, name="coil", kind=FunctionKind.COIL)
         pins = [
             self.mk(
                 PortTemplate,
@@ -129,7 +128,7 @@ class _Plant:
                 name,
                 function=template.id,
                 name=name,
-                role=PortRole.GENERIC,
+                boundary=PortBoundary.GENERIC,
                 marking=self.draw(_MARKING),
             )
             for name in ("A1", "A2")
@@ -211,25 +210,13 @@ class _Plant:
                 function=function.id,
                 template=None,
                 name=pin,
-                role=self.one(PortRole),
+                boundary=self.one(PortBoundary),
                 marking=self.draw(_MARKING),
             )
             others["ports"].append(port)
         if part is strip and self.draw(st.booleans()):
             index = self.draw(_INTS)
             self.mk(TerminalFacet, f"i{number}", "t", subject=item.id, group="L1", index=index)
-        if self.draw(st.booleans()):
-            self.mk(
-                ScalingFacet,
-                f"i{number}",
-                "s",
-                subject=function.id,
-                unit=self.draw(_TEXT),
-                raw_min=self.draw(_INTS),
-                raw_max=self.draw(_INTS),
-                eng_min=self.draw(st.decimals(-(10**18), 10**18, places=6)),
-                eng_max=self.draw(st.decimals(-999, 999, places=2)),
-            )
 
     def wiring(self, units: list[Any], functions: list[Any], ports: list[Any]) -> None:
         """Conductors, a net, a mate, a boundary and an unused boundary, each maybe."""
@@ -248,9 +235,7 @@ class _Plant:
                 ports=tuple(port.id for port in members),
                 potential=None,
             )
-        first, second = self.draw(
-            st.lists(st.sampled_from(functions), min_size=2, max_size=2, unique=True)
-        )
+        first, second = self.draw(st.lists(st.sampled_from(functions), min_size=2, max_size=2, unique=True))
         if self.draw(st.booleans()):
             self.mk(Mate, "mate", a=first.id, b=second.id)
         if units and self.draw(st.booleans()):

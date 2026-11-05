@@ -7,8 +7,8 @@ engineer finds in the PDF he holds (render-0015 amended).
 from fransys_model.layout import DrawingSet, Page, layout_of
 lazy from fransys_model.kernel import Model
 
+from .facts.house_settings import reference_text_of
 from .frame_position import location_path, position_text
-from .house_settings import reference_text_of
 from .set_rank import set_rank
 
 __all__ = ["page_reference_text"]

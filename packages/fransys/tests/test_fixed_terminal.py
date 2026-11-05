@@ -2,21 +2,12 @@
 
 import fransys as fr
 import pytest
+from _field_shared import wire_ends
+from _wire_records import wire_records
 from fransys.colours import BK, BU
-
-from fransys_model.vocab import Conductor, WireFacet
 
 PATH = (BU, 0.75)
 POWER = (BK, 2.5)
-
-
-def _wires(d) -> list:
-    """Every wire record of the design, in the order it was written."""
-    return [r for r in d.draft().records() if isinstance(r, Conductor | WireFacet)]
-
-
-def _ends(d) -> set[frozenset[str]]:
-    return {frozenset((r.from_, r.to)) for r in fr.derive.wire_rows(fr.build(d).model)}
 
 
 def _lamp(d):
@@ -34,14 +25,14 @@ def test_a_fixed_terminal_builds_the_detail_wire_script_byte_for_byte() -> None:
     twin = fr.design("demo_parts")
     g1, _, y1 = _lamp(twin)
     h2 = twin.device("H1", "DEMO-LAMP-24")
-    wire = twin.detail.wire
+    wire = twin.series
     wire(g1.output["+"], y1[3], wire=PATH)
     wire(y1[3].outer, h2.lamp["1"], wire=PATH)
     wire(h2.lamp["2"], y1[4], wire=PATH)
     wire(y1[4].outer, g1.output["-"], wire=PATH)
-    assert _wires(d) == _wires(twin)
-    assert len(_wires(d)) == 8
-    assert {frozenset(("-G1:+", "-X1:3")), frozenset(("-H1:2", "-X1:4"))} <= _ends(d)
+    assert wire_records(d) == wire_records(twin)
+    assert len(wire_records(d)) == 8
+    assert {frozenset(("-G1:+", "-X1:3")), frozenset(("-H1:2", "-X1:4"))} <= wire_ends(d)
 
 
 def test_a_fixed_terminal_counts_as_taken_for_a_strip_passed_whole() -> None:
@@ -51,7 +42,7 @@ def test_a_fixed_terminal_counts_as_taken_for_a_strip_passed_whole() -> None:
     h1, h2 = d.device("H1", "DEMO-LAMP-24"), d.device("H2", "DEMO-LAMP-24")
     d.series(dc.plus, x1[1], h1.lamp, dc.minus, wire=PATH)
     d.series(dc.plus, x1, h2.lamp, dc.minus, wire=PATH)
-    ends = _ends(d)
+    ends = wire_ends(d)
     assert frozenset(("-G1:+", "-X1:2")) in ends
     assert frozenset(("-H2:1", "-X1:2")) in ends
     assert frozenset(("-H2:1", "-X1:1")) not in ends
@@ -70,10 +61,10 @@ def test_a_slice_is_a_multi_pole_element_in_order() -> None:
     twin.ac_supply("A", "230", xb[1], xb[2], xb[3])
     y1, m2 = twin.terminal_strip("X1", "DEMO-TB-2.5", 6), twin.device("M1", "DEMO-MOTOR-4KW")
     for number, motor in zip((1, 2, 3), "UVW", strict=True):
-        twin.detail.wire(xb[number].outer, y1[number], wire=POWER)
-        twin.detail.wire(y1[number].outer, m2.motor[motor], wire=POWER)
-    assert _ends(d) == _ends(twin)
-    assert len(_ends(d)) == 6
+        twin.series(xb[number].outer, y1[number], wire=POWER)
+        twin.series(y1[number].outer, m2.motor[motor], wire=POWER)
+    assert wire_ends(d) == wire_ends(twin)
+    assert len(wire_ends(d)) == 6
 
 
 @pytest.mark.parametrize(
@@ -94,10 +85,10 @@ def test_a_slice_that_names_no_terminals_raises_and_names_the_form(pick, text: s
         pick(x1)
 
 
-def test_a_device_pin_in_the_middle_of_a_series_raises() -> None:
+def test_a_device_pin_in_the_middle_of_a_series_must_match_the_width() -> None:
     d = fr.design("demo_parts")
     q1, k1 = d.device("Q1", "DEMO-MCB-3P"), d.device("K1", "DEMO-CTR-3P-24")
-    with pytest.raises(fr.AuthorError, match="only at the start or the end"):
+    with pytest.raises(fr.AuthorError, match=r"leaves with 3 poles .* takes 1 pole"):
         d.series(q1.element, k1.main["1"], k1.main, wire=POWER)
 
 
@@ -117,9 +108,9 @@ def test_a_tuple_of_fixed_terminals_on_three_strips_is_a_three_pole_element() ->
     mirror = [twin.terminal_strip(f"X{n}", "DEMO-TB-2.5", 4) for n in (1, 2, 3)]
     k2, _ = _selector(twin)
     for pole, strip in enumerate(mirror, start=1):
-        twin.detail.wire(getattr(k2, f"co_{pole}")[f"{pole}1"], strip[3], wire=POWER)
-    assert _wires(d) == _wires(twin)
-    assert len(_wires(d)) == 6
+        twin.series(getattr(k2, f"co_{pole}")[f"{pole}1"], strip[3], wire=POWER)
+    assert wire_records(d) == wire_records(twin)
+    assert len(wire_records(d)) == 6
 
 
 def test_a_tuple_in_order_on_one_strip_raises_and_names_the_slice() -> None:
@@ -136,7 +127,7 @@ def test_a_tuple_with_a_gap_or_two_strips_is_accepted_and_a_stranger_raises() ->
     x1 = d.terminal_strip("X1", "DEMO-TB-2.5", 6)
     _, q = _selector(d)
     d.series(q.nc, (x1[1], x1[3], x1[5]), wire=POWER)
-    assert len(_wires(d)) == 6
+    assert len(wire_records(d)) == 6
     with pytest.raises(fr.AuthorError, match=r"holds fixed terminals .*, not str"):
         d.series(q.no, (x1[2], "X"), wire=POWER)
 

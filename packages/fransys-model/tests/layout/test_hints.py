@@ -3,15 +3,7 @@
 import pytest
 
 from fransys_model.kernel import Id, SchemaError
-from fransys_model.layout import Chain, ChainEntry, OrderHint
-
-
-def _chain(*entries: ChainEntry) -> Chain:
-    return Chain(
-        id=Id(kind="layout.chain", value="1" * 32),
-        key=("examples", "layout", "pump1", "power"),
-        entries=entries,
-    )
+from fransys_model.layout import OrderHint
 
 
 def test_order_hint_between_a_group_and_itself_is_a_schema_error() -> None:

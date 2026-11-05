@@ -1,34 +1,30 @@
 """One page order, one diagram sheet order and one installed test (render-0015, model-0270)."""
 
+from typing import TYPE_CHECKING
+
+from derive_helpers import numbered_drawing_set
+from derive_helpers import numbered_page as _page
 from plant import Plant
 
 from fransys_model.derive import (
+    DiagramSheet,
     diagram_sheet_order_key,
     document_pages,
     item_installed,
     ordered_pages,
 )
-from fransys_model.kernel import Id, make_id
-from fransys_model.layout import DiagramSheet, DrawingSet, Page, PageRole
+lazy from fransys_model.vocab.core import Unit
+
+if TYPE_CHECKING:
+    from fransys_model.kernel import Id
+    from fransys_model.layout import DrawingSet
 
 _PLANT = Plant()
-_UNIT: Id = _PLANT.unit("u", name="u")
+_UNIT = _PLANT.unit("u", name="u")
 
 
 def _set(number: int) -> DrawingSet:
-    key = ("drawing_set", str(number))
-    return DrawingSet(
-        id=make_id(DrawingSet, key), key=key, location=None, unit=_UNIT, number=number,
-        produced_by="test",
-    )  # fmt: skip
-
-
-def _page(drawing_set: DrawingSet, number: int) -> Page:
-    key = ("page", f"{drawing_set.number}.{number}")
-    return Page(
-        id=make_id(Page, key), key=key, drawing_set=drawing_set.id, number=number,
-        role=PageRole.CONTROL, sheet_format=None, groups=(), produced_by="test",
-    )  # fmt: skip
+    return numbered_drawing_set(_UNIT, number)
 
 
 def _model(*records):
@@ -55,11 +51,8 @@ def test_pages_can_leave_out_a_replica_only_set(monkeypatch) -> None:
 
 
 def test_diagram_sheets_run_absolute_reading_first_then_by_number() -> None:
-    def sheet(number: int, unit: Id | None) -> DiagramSheet:
-        key = ("diagram_sheet", f"{unit}.{number}")
-        return DiagramSheet(
-            id=make_id(DiagramSheet, key), key=key, unit=unit, number=number, produced_by="test"
-        )
+    def sheet(number: int, unit: Id[Unit] | None) -> DiagramSheet:
+        return DiagramSheet(unit=unit, number=number)
 
     a, b, c = sheet(2, _UNIT), sheet(1, _UNIT), sheet(3, None)
     assert sorted((a, b, c), key=diagram_sheet_order_key) == [c, b, a]

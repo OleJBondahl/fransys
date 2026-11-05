@@ -1,15 +1,10 @@
 """An off-stub's far end reads its product designation,
 the shortest text that names the device: a location segment and the item, no `=` function
 segment, then the port suffix. `end_text` puts `stub_far_end`'s head and tail in the stub's
-`StubText` as they come.
-
-Can-fail, checked by hand on the old `full_port` (a join of `stub_far_end`'s pair, folded into
-`end_text` by A3): with its head read from `reference_designation` again the result carried the
-"=" function segment and the test failed. Not re-run since the head is `stub_far_end`'s alone.
 """
 
 from layout_cabinet import build_cabinet
-from layout_library import freeze
+from library_records import freeze
 
 from fransys_model.derive.drawing_text import stub_far_end
 from fransys_model.vocab.tables import functions, items, ports
@@ -18,11 +13,7 @@ from fransys_model.vocab.tables import functions, items, ports
 def _far_end_of(tag: str, pin: str) -> tuple[str, str]:
     model = freeze(build_cabinet())
     (item,) = (i for i in items(model).values() if i.key == ("cabinet", tag))
-    (port,) = (
-        p.id
-        for p in ports(model).values()
-        if functions(model)[p.function].item == item.id and p.name == pin
-    )
+    (port,) = (p.id for p in ports(model).values() if functions(model)[p.function].item == item.id and p.name == pin)
     return stub_far_end(model, port)
 
 

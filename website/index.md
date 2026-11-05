@@ -6,7 +6,7 @@ Fransys is a Python toolkit for electrical cabinet and harness design. You write
 
 ## An example
 
-This script builds a small motor starter from the demo parts and writes one PDF into `out/`.
+This script builds a small motor starter from the demo parts and writes its PDFs into `out/`.
 
 ```python
 --8<-- "snippets/example.py"

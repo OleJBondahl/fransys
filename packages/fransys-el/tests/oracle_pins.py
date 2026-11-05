@@ -84,7 +84,7 @@ def pins_of(env: Env, pick: Pick, geometry: SymbolGeometry) -> tuple[Pin, ...]:
     )
 
 
-def box_of(env: Env, pick: Pick, geometry: SymbolGeometry, pins: tuple[Pin, ...]) -> BoxSpec | None:
+def box_of(pick: Pick, geometry: SymbolGeometry, pins: tuple[Pin, ...]) -> BoxSpec | None:
     """Fact 16: the movable pins of a generic box in printed-marking order, else `None`."""
     if not is_generic_box(pick.key):
         return None
@@ -92,7 +92,5 @@ def box_of(env: Env, pick: Pick, geometry: SymbolGeometry, pins: tuple[Pin, ...]
     if not edge:
         return None
     order = default_order((p.id for p in edge), kernel_key)
-    sides = sorted({p.side for p in edge})
-    natural = max(sides, key=lambda side: sum(p.side == side for p in edge))
     margin = min(p.dx for p in edge) - geometry.body.x
-    return BoxSpec(order, natural, env.conventions.options.box_pin_pitch_min, margin)
+    return BoxSpec(order, margin)

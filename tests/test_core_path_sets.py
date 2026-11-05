@@ -17,18 +17,16 @@ from fransys_model.vocab import aspect_nodes
 
 def _build(tmp_path: Path) -> fr.BuildResult:
     d = fr.design("demo_parts", place="C2")
-    d.location("C2", "Second")
+    second = d.location("C2", "Second")
     first = d.location("C1", "First")
     with d.function("B", "Relays"):
-        k = [
-            d.device(f"K{n}", "DEMO-RLY-2CO-24", place=place)
-            for n, place in ((1, "C2"), (2, "C2"), (3, "C1"), (4, "C1"))
-        ]
+        k = [d.device(f"K{n}", "DEMO-RLY-2CO-24", place=place) for n, place in ((1, "C2"), (2, "C2"), (3, "C1"), (4, "C1"))]
         for a, b in ((0, 1), (2, 3), (1, 2)):  # the last wire crosses the two cabinets
-            d.detail.wire(k[a].coil["A2"], k[b].coil["A1"], wire=(BU, 0.5))
+            d.series(k[a].coil["A2"], k[b].coil["A1"], wire=(BU, 0.5))
+        d.series(k[3].coil["A2"], k[0].coil["A1"], wire=(BU, 0.5))  # closes the ring: no coil half-wired
     cover = tmp_path / "cover.md"
     cover.write_text("# Cabinet\n", encoding="utf-8")
-    return fr.build(d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, first, cover=cover))
+    return fr.build(d, *(fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, place, cover=cover) for place in (first, second)))
 
 
 def test_each_location_is_one_drawing_set_in_label_order(tmp_path) -> None:
@@ -49,18 +47,17 @@ def test_each_drawing_set_has_its_own_page(tmp_path) -> None:
 
 def test_a_net_with_two_pins_in_each_location_draws_distinct_wires(tmp_path) -> None:
     d = fr.design("demo_parts", place="C2")
-    d.location("C2", "Second")
+    second = d.location("C2", "Second")
     first = d.location("C1", "First")
     with d.function("B", "Relays"):
-        k = [
-            d.device(f"K{n}", "DEMO-RLY-2CO-24", place=place)
-            for n, place in ((1, "C2"), (2, "C2"), (3, "C1"), (4, "C1"))
-        ]
+        k = [d.device(f"K{n}", "DEMO-RLY-2CO-24", place=place) for n, place in ((1, "C2"), (2, "C2"), (3, "C1"), (4, "C1"))]
         for a, b in ((0, 1), (2, 3), (1, 2)):
-            d.detail.wire(k[a].coil["A2"], k[b].coil["A2"], wire=(BU, 0.5))
+            d.series(k[a].coil["A2"], k[b].coil["A2"], wire=(BU, 0.5))
+        for a, b in ((0, 1), (2, 3)):  # coil A1 pins stay within one cabinet each: the A2 net is the only cross-location net
+            d.series(k[a].coil["A1"], k[b].coil["A1"], wire=(BU, 0.5))
     cover = tmp_path / "cover.md"
     cover.write_text("# Cabinet\n", encoding="utf-8")
-    model = fr.build(d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, first, cover=cover)).model
+    model = fr.build(d, *(fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, place, cover=cover) for place in (first, second))).model
     drawings = drawn_pages(model)
     ids = [w.id for drawing in drawings.values() for w in drawing.wires]
     assert len(ids) == len(set(ids))

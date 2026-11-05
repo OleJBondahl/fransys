@@ -23,9 +23,7 @@ _BY_CLASS = {
 _STRENGTH = (PageRole.POWER, PageRole.CONTROL, PageRole.SIGNAL)
 
 
-def _groups_of(
-    model: Model, function: Function, hints: Mapping[Id[Function], Id[AspectNode]]
-) -> set[Id[AspectNode]]:
+def _groups_of(model: Model, function: Function, hints: Mapping[Id[Function], Id[AspectNode]]) -> set[Id[AspectNode]]:
     """The `=` nodes `function` is drawn in: its hint, else the nodes above its placement."""
     if function.id in hints:
         return {hints[function.id]}
@@ -34,9 +32,7 @@ def _groups_of(
     return set() if leaf is None else set(parent_chain(lambda node: nodes[node].parent, leaf))
 
 
-def _port_roles(
-    model: Model, port: Id[Port], by_port: Mapping[Id[Port], tuple[Id[Net], ...]]
-) -> set[PageRole]:
+def _port_roles(model: Model, port: Id[Port], by_port: Mapping[Id[Port], tuple[Id[Net], ...]]) -> set[PageRole]:
     """The roles `port` votes: its nets' classes bar PE; CONTROL when no net votes."""
     classes = {nets(model)[n].net_class for n in by_port.get(port, ())} - {NetClass.PE}
     return {_BY_CLASS[c] for c in classes} or {PageRole.CONTROL}

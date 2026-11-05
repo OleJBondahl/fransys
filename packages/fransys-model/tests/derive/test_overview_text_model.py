@@ -13,9 +13,7 @@ WIRE, CABLE = OverviewLinkKind.WIRE, OverviewLinkKind.CABLE
 
 def _stub(box: str, far: str, ports: str, *, kind=WIRE, count=1) -> OverviewStub:
     end = OverviewRef(kind=OverviewRefKind.ITEM, item=item_id(far))
-    return OverviewStub(
-        box=item_id(box), kind=kind, via=None, far=f"-{far}", ports=ports, end=end, count=count
-    )
+    return OverviewStub(box=item_id(box), kind=kind, via=None, far=f"-{far}", ports=ports, end=end, count=count)
 
 
 def test_a_lifted_line_prints_its_one_cable_several_as_a_count_or_the_count_text() -> None:
@@ -58,8 +56,5 @@ def test_stubs_of_one_far_end_with_two_kinds_are_one_box_and_two_lines() -> None
 
 def test_a_member_row_is_the_stub_label_with_the_carrier_first() -> None:
     """Breaks if the row joins box text and carrier with a dash, or loses the port tails."""
-    assert (
-        overview_member_text(house_record(StubText), ("+EXT-M1", ":PE"), "-W11")
-        == "-W11 → +EXT-M1:PE"
-    )
+    assert overview_member_text(house_record(StubText), ("+EXT-M1", ":PE"), "-W11") == "-W11 → +EXT-M1:PE"
     assert overview_member_text(house_record(StubText), ("+EXT-M1",), "") == "→ +EXT-M1"

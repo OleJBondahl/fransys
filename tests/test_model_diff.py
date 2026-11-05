@@ -2,30 +2,17 @@
 
 Root test: built through the public API (`import fransys as fr`), the same reason
 `tests/test_baseline_listing.py` and `tests/test_units_worked_example.py` are root tests. The
-worked-example pair is hand-built directly from the `derive.rows` dataclasses (no `fr.build`
-needed for it): board `demo-io-board`, revision `1.3` -> `1.4`, matching the spec's own worked
-example (interface 2->3, connector `X2` added as an item and a boundary function, and the
-`K1:A1`<->`X1:1` wire's colour changed BU->RD). The nested-unit case builds through `fr.build`,
-reusing `io_board` from `tests/test_units_worked_example.py` -- but not `pump_cabinet`, which
-calls `io_board` on its own internal scope and so gives no way to vary the nested board's
-revision without editing that file (out of scope here); a small proxy scope forces the
-revision instead, calling `io_board` unchanged.
 """
 
 import dataclasses
-import sys
-from decimal import Decimal
-from pathlib import Path
 from typing import Any
 
 import fransys as fr
-import fransys_author
 import fransys_parts
 import pytest
+from fransys_author.design import Design
 
 # `test_unit_name_worked_example.py`'s own pattern for importing a sibling root test module by
-# name: `--import-mode=importlib` (root pyproject.toml) never puts `tests/` on `sys.path`.
-sys.path.insert(0, str(Path(__file__).resolve().parent))
 from test_units_worked_example import io_board
 
 from fransys_model.derive.baseline import diff, listing
@@ -39,8 +26,9 @@ from fransys_model.derive.rows_baseline import (
     BaselineUnit,
     Listing,
 )
+from fransys_model.elecdef import At, Current, Range, Rating, Role, Unit
 from fransys_model.kernel import SchemaError
-from fransys_model.vocab.ratings import Operating, Rating
+from fransys_model.vocab.operating import Operating
 
 # `dict[str, Any]`, matching `tests/test_baseline_listing.py`'s own `_PROJECT` (ty can't check
 # a precisely-typed `dict[str, str | int]` unpacked into `Design.project`'s per-key types).
@@ -54,7 +42,7 @@ _PROJECT: dict[str, Any] = {
 
 
 def _new_design(parts):
-    d = fransys_author.Design(parts)
+    d = Design(parts)
     d.project(**_PROJECT)
     d.revision(1, date="2026-09-27", text="First issue", created="OJB")
     return d
@@ -95,9 +83,7 @@ def _board_listing(*, interface, revision, with_x2, wire_colour):
             position=None,
         ),
     ]
-    boundary = [
-        BaselineBoundary(designation="=BRD-X1:x1", ports=("1", "2"), rating=None, operating=None)
-    ]
+    boundary = [BaselineBoundary(designation="=BRD-X1:x1", ports=("1", "2"), rating=None, operating=None)]
     conductors = [
         BaselineConductor(
             kind="wire",
@@ -131,11 +117,7 @@ def _board_listing(*, interface, revision, with_x2, wire_colour):
                 position=None,
             )
         )
-        boundary.append(
-            BaselineBoundary(
-                designation="=BRD-X2:x1", ports=("1", "2"), rating=None, operating=None
-            )
-        )
+        boundary.append(BaselineBoundary(designation="=BRD-X2:x1", ports=("1", "2"), rating=None, operating=None))
     return Listing(
         unit=BaselineUnit(name="demo-io-board", version=1, revision=revision, interface=interface),
         items=tuple(items),
@@ -238,16 +220,28 @@ class _AtRevision:
         self._revision = revision
 
     def unit(self, name, **kwargs):
-        return self._scope.unit(name, **{**kwargs, "revision": self._revision})
+        return _UnitAtRevision(self._scope.unit(name, **{**kwargs, "revision": self._revision}), self._revision)
+
+
+class _UnitAtRevision:
+    """The unit `_AtRevision` returns: its `.revision(...)` call states the forced revision, so
+    the release's current revision always has its `Revision` entry."""
+
+    def __init__(self, unit, revision):
+        self._unit = unit
+        self._revision = revision
+
+    def revision(self, _authored, **kwargs):
+        return self._unit.revision(self._revision, **kwargs)
+
+    def __getattr__(self, name):
+        return getattr(self._unit, name)
 
 
 def _cabinet_around_board(scope, *, board_revision):
     u = scope.unit("demo-pump-cabinet", revision=2, interface="1")
     u.revision(2, date="2026-01-01", text="First release", created="XX")
-    grp = u.group("FLD", "Field wiring")
-    board_x1, _board_scope = io_board(_AtRevision(u.scope("io"), board_revision))
-    p1 = u.item("DEMO-CONN-2P", tag="P1", group=grp)
-    u.mate(p1, board_x1)
+    io_board(_AtRevision(u.scope("io"), board_revision))
     return u
 
 
@@ -261,8 +255,8 @@ def _cabinet_listing_with_board_revision(revision):
 
 def test_a_nested_units_revision_change_gives_exactly_one_units_row():
     """Units spec: a nested unit is a black box -- only its `(interface, version, revision)`
-    triple is compared; the diff never recurses into its content (the cabinet's own `P1`,
-    mated cross-unit to the board's `X1`, is unaffected by the board's own revision bump)."""
+    triple is compared; the diff never recurses into its content (the cabinet's own
+    content is unaffected by the board's own revision bump)."""
     before = _cabinet_listing_with_board_revision(3)
     after = _cabinet_listing_with_board_revision(4)
     assert before != after
@@ -322,18 +316,12 @@ def test_nets_added_removed_and_changed_cover_named_and_unnamed_identity():
     after = dataclasses.replace(
         _empty_listing(),
         nets=(
-            BaselineNet(
-                name="N1", net_class="0V-DC", potential="0V", ports=("=X1:1", "=X2:1", "=X5:1")
-            ),
+            BaselineNet(name="N1", net_class="0V-DC", potential="0V", ports=("=X1:1", "=X2:1", "=X5:1")),
             BaselineNet(name="N2", net_class="24V-DC", potential=None, ports=("=X6:1", "=X7:1")),
         ),
     )
     result = diff(before, after)
-    net_changes = {
-        (c.change, c.subject, c.field): (c.before, c.after)
-        for c in result.changes
-        if c.section == "nets"
-    }
+    net_changes = {(c.change, c.subject, c.field): (c.before, c.after) for c in result.changes if c.section == "nets"}
     assert net_changes[("removed", "=X3:1 =X4:1", "")] == ("", "")
     assert net_changes[("added", "N2", "")] == ("", "")
     assert net_changes[("changed", "N1", "class")] == ("24V-DC", "0V-DC")
@@ -384,19 +372,11 @@ def test_nested_units_removed_and_added_are_never_matched_by_likeness():
     `removed` row and one `added` row, never `changed` -- the same rule as a moved wire."""
     before = dataclasses.replace(
         _empty_listing(),
-        units=(
-            BaselineNestedUnit(
-                name="board-a", version=1, revision=1, interface="1", instances=("=A1",)
-            ),
-        ),
+        units=(BaselineNestedUnit(name="board-a", version=1, revision=1, interface="1", instances=("=A1",)),),
     )
     after = dataclasses.replace(
         _empty_listing(),
-        units=(
-            BaselineNestedUnit(
-                name="board-b", version=1, revision=1, interface="1", instances=("=A2",)
-            ),
-        ),
+        units=(BaselineNestedUnit(name="board-b", version=1, revision=1, interface="1", instances=("=A2",)),),
     )
     result = diff(before, after)
     unit_changes = [c for c in result.changes if c.section == "units"]
@@ -410,9 +390,7 @@ def test_nested_units_removed_and_added_are_never_matched_by_likeness():
 def test_a_removed_boundary_function_gives_a_removed_row_with_its_ports_as_detail():
     before = dataclasses.replace(
         _empty_listing(),
-        boundary=(
-            BaselineBoundary(designation="=X1:x1", ports=("2", "1"), rating=None, operating=None),
-        ),
+        boundary=(BaselineBoundary(designation="=X1:x1", ports=("2", "1"), rating=None, operating=None),),
     )
     after = _empty_listing()
     result = diff(before, after)
@@ -458,72 +436,56 @@ def test_conductors_changed_field_covers_kind_and_length_mm():
         ),
     )
     result = diff(before, after)
-    conductor_changes = {
-        c.field: (c.before, c.after) for c in result.changes if c.section == "conductors"
-    }
+    conductor_changes = {c.field: (c.before, c.after) for c in result.changes if c.section == "conductors"}
     assert conductor_changes == {
         "kind": ("wire", "cable-core"),
         "length_mm": ("", "250"),
     }
 
 
+def _dc(volts):
+    return Rating(voltage=(Range(Role.RATED, nom=Unit.V(volts), at=At(Current.DC)),))
+
+
+def _volts(volts):
+    at = '{"items":[{"$class":"elecdef.vocab.Current","value":"DC"}]}'
+    return f'[{{"at":{at},"max":null,"min":null,"nom":{{"unit":"V","value":"{volts}"}},"role":"RATED","typ":null}}]'
+
+
 def _x1_boundary(*, rating=None, operating=None):
     return dataclasses.replace(
         _empty_listing(),
-        boundary=(
-            BaselineBoundary(
-                designation="=X1:x1", ports=("1",), rating=rating, operating=operating
-            ),
-        ),
+        boundary=(BaselineBoundary(designation="=X1:x1", ports=("1",), rating=rating, operating=operating),),
     )
 
 
-def test_boundary_rating_none_to_a_value_is_one_changed_row_empty_before():
-    """Ruling 2026-09-27: `rating`/`operating` are diffed as
-    changed fields, one row per changed key, field `rating.<key>` / `operating.<key>`. A key
-    absent on one side (the whole `rating` was `None` there) reads an empty `before`/`after`."""
-    before = _x1_boundary(rating=None)
-    after = _x1_boundary(rating=Rating(voltage_dc_v=Decimal(24)))
-    result = diff(before, after)
+@pytest.mark.parametrize(
+    ("old", "new", "was", "now"),
+    [(None, 24, "", _volts(24)), (24, 48, _volts(24), _volts(48))],
+    ids=["none-to-value", "value-to-value"],
+)
+def test_boundary_rating_change_is_one_changed_row(old, new, was, now):
+    """Ruling 2026-09-27: `rating`/`operating` are diffed as changed fields, one row per changed key, field `rating.<key>`.
+    A key absent on one side (the whole `rating` was `None` there) reads an empty `before`/`after`."""
+    result = diff(_x1_boundary(rating=old and _dc(old)), _x1_boundary(rating=_dc(new)))
     boundary_changes = [c for c in result.changes if c.section == "boundary"]
     assert len(boundary_changes) == 1
     change = boundary_changes[0]
-    assert change.change == "changed"
-    assert change.subject == "=X1:x1"
-    assert change.field == "rating.voltage_dc_v"
-    assert change.before == ""
-    assert change.after == "24"
-
-
-def test_boundary_rating_value_to_another_value_is_one_changed_row():
-    before = _x1_boundary(rating=Rating(voltage_dc_v=Decimal(24)))
-    after = _x1_boundary(rating=Rating(voltage_dc_v=Decimal(48)))
-    result = diff(before, after)
-    boundary_changes = [c for c in result.changes if c.section == "boundary"]
-    assert len(boundary_changes) == 1
-    change = boundary_changes[0]
-    assert change.field == "rating.voltage_dc_v"
-    assert change.before == "24"
-    assert change.after == "48"
+    assert (change.change, change.subject, change.field) == ("changed", "=X1:x1", "rating.voltage")
+    assert (change.before, change.after) == (was, now)
 
 
 def test_boundary_operating_two_changed_keys_give_two_rows_and_no_more():
     """Two `operating` keys change at once: exactly two rows, one per key, and a field
-    untouched on both sides (here `voltage_dc_v`, both `None`) produces no row."""
-    before = _x1_boundary(
-        operating=Operating(nominal_voltage_v=Decimal(24), min_voltage_v=Decimal(18))
-    )
-    after = _x1_boundary(
-        operating=Operating(nominal_voltage_v=Decimal(28), min_voltage_v=Decimal(20))
-    )
+    untouched on both sides (here `capacity`, both `None`) produces no row."""
+    before = _x1_boundary(operating=Operating(fault_time_constant=Unit.MS(5), nominal_current=Unit.A(2)))
+    after = _x1_boundary(operating=Operating(fault_time_constant=Unit.MS(15), nominal_current=Unit.A(3)))
     result = diff(before, after)
-    boundary_changes = {
-        c.field: (c.before, c.after) for c in result.changes if c.section == "boundary"
-    }
+    boundary_changes = {c.field: (c.before, c.after) for c in result.changes if c.section == "boundary"}
     assert len(boundary_changes) == 2
     assert boundary_changes == {
-        "operating.nominal_voltage_v": ("24", "28"),
-        "operating.min_voltage_v": ("18", "20"),
+        "operating.fault_time_constant": ('{"unit":"MS","value":"5"}', '{"unit":"MS","value":"15"}'),
+        "operating.nominal_current": ('{"unit":"A","value":"2"}', '{"unit":"A","value":"3"}'),
     }
 
 
@@ -544,16 +506,14 @@ def test_a_change_on_a_blank_designation_row_names_the_unit_in_items_and_boundar
                     position=None,
                 ),
             ),
-            boundary=(
-                BaselineBoundary(designation="", ports=("1",), rating=rating, operating=None),
-            ),
+            boundary=(BaselineBoundary(designation="", ports=("1",), rating=rating, operating=None),),
         )
 
-    result = diff(_blank_row("A", None), _blank_row("B", Rating(voltage_dc_v=Decimal(24))))
+    result = diff(_blank_row("A", None), _blank_row("B", _dc(24)))
     rows = [(c.section, c.subject, c.parts, c.field) for c in result.changes]
     assert rows == [
         ("items", "u 1.2", ("u 1.2",), "mpn"),
-        ("boundary", "u 1.2", ("u 1.2",), "rating.voltage_dc_v"),
+        ("boundary", "u 1.2", ("u 1.2",), "rating.voltage"),
     ]
 
 

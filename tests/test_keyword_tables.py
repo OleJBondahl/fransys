@@ -2,8 +2,6 @@
 
 The guide pages `keywords-*.md` hold one table per call: keyword, default, effect, example.
 The keywords equal the signature's named parameters, each default cell equals the signature's
-default and no effect cell is empty. `d.layout.profile` and `d.layout.sheet` keep their tables
-in `layout-numbers.md`.
 """
 
 import enum
@@ -52,19 +50,8 @@ NO_HOME = frozenset(
         ("d.project", "version"),
         ("d.revision", "checked"),
         ("d.revision", "approved"),
-        ("d.rating", "part"),
-        ("d.rating", "function"),
-        ("d.operating", "part"),
-        ("d.operating", "function"),
         ("Fn.plc", "priority"),
-        ("Fn.scale", "unit"),
         ("Cable.spare", "at"),
-        ("d.layout.break_before", "group"),
-        ("d.layout.draw_in", "function"),
-        ("d.layout.draw_in", "group"),
-        ("d.layout.symbol", "target"),
-        ("d.layout.symbol", "symbol"),
-        ("d.layout.symbol", "port_map"),
         ("fr.unit", "name"),
         ("fr.unit", "interface_version"),
         ("fr.unit", "title"),
@@ -94,7 +81,8 @@ def calls() -> dict[str, object]:
 
 
 def named(call: object) -> list[inspect.Parameter]:
-    params = inspect.signature(call).parameters.values()  # ty: ignore[invalid-argument-type] # call is a function
+    assert callable(call)
+    params = inspect.signature(call).parameters.values()
     return [p for p in params if p.kind in NAMED and p.name not in ("self", "cls")]
 
 
@@ -105,9 +93,7 @@ def default_cell(p: inspect.Parameter) -> str:
     if v is Ellipsis:
         return "`...`"
     if isinstance(v, enum.Enum):
-        return (
-            f"`fr.{v.name}`" if getattr(fr, v.name, None) is v else f"`{type(v).__name__}.{v.name}`"
-        )
+        return f"`fr.{v.name}`" if getattr(fr, v.name, None) is v else f"`{type(v).__name__}.{v.name}`"
     return f"`{v!r}`"
 
 
@@ -142,12 +128,12 @@ def anchors(page: str) -> set[str]:
 
 def first_cells() -> list[tuple[str, str]]:
     """Each (call, raw first cell) of every table row."""
-    out = []
+    out: list[tuple[str, str]] = []
     for page in PAGES:
         current = None
         for line in (GUIDE / page).read_text().splitlines():
             head = _HEAD.match(line)
-            current = head.group(1) if head else current
+            current = str(head.group(1)) if head else current
             if current and line.startswith("| ") and not line.startswith("| keyword"):
                 out.append((current, line.strip().strip("|").split(" | ")[0].strip()))
     return out
@@ -201,7 +187,7 @@ def test_every_row_has_an_effect_and_an_example():
 
 
 def test_the_collector_sees_calls():
-    assert {"fr.build", "d.device", "d.layout.symbol", "Cable.core"} <= set(calls())
+    assert {"fr.build", "d.device", "d.layout.order", "Cable.core"} <= set(calls())
     assert "d.layout.profile" not in calls()
 
 

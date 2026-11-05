@@ -5,26 +5,24 @@ the unit, two external motors). Each test names the probe that must make it fail
 """
 
 from dataclasses import replace
-from functools import cache
+from functools import cache, partial
 from itertools import pairwise
 from types import SimpleNamespace
 from typing import Any
 
-import fransys_author
-import fransys_parts
 import pytest
 from cable_checks import assert_no_shared_stretch, assert_on_the_grid, assert_outside_the_box
 from cable_facts import block_facts
-from layout_library import freeze
+from cable_models import design
+from cable_models import lay as _laid_out
 
-from fransys_layout import lay_out_cables
+from electrical_symbols import LIBRARY
+from fransys_layout.core import grid_up
 from fransys_layout.engines.cable.place import place_block
-from fransys_layout.geometry import WIRING_GRID, LayoutError, snap_up, text_width
-from fransys_model.derive import text_room
+from fransys_layout.geometry import WIRING_GRID, LayoutError, text_width_g
+from fransys_layout.symbols import text_room_on
 from fransys_model.derive.cable_drawing import block_cables, core_text, end_label
-from fransys_model.derive.passes.numbering import number as number_pass
-from fransys_model.kernel import merge
-from fransys_model.layout import BlockRow, CableBlock, CableBox, CoreWire, EndBox, layout_of
+from fransys_model.layout import sheet_format_of
 
 _PROJECT: dict[str, Any] = {
     "title": "Cable bends",
@@ -36,18 +34,7 @@ _PROJECT: dict[str, Any] = {
 G = WIRING_GRID
 _CABLE, _MOTOR, _TB = "DEMO-CBL-4G1.5", "DEMO-MOTOR-4KW", "DEMO-TB-2.5"
 
-
-def _design():
-    parts = fransys_parts.load("demo_parts")
-    d = fransys_author.Design(parts)
-    d.project(**_PROJECT)
-    d.revision(1, date="2026-10-07", text="First issue", created="XX")
-    return parts, d
-
-
-def _laid_out(parts, d):
-    frozen, _ = number_pass(freeze(merge(parts, d.draft())))
-    return frozen, lay_out_cables(frozen)[0]
+_design = partial(design, _PROJECT)
 
 
 @cache
@@ -62,8 +49,8 @@ def _fan_out() -> SimpleNamespace:
     cable = d.cable(_CABLE, tag="W1", at=er, group=g)
     for n, (terminal, motor) in enumerate(zip(terminals, motors, strict=True), start=1):
         cable.core(n, terminal.outer, motor["U"])
-    frozen, model = _laid_out(parts, d)
-    return SimpleNamespace(frozen=frozen, model=model, cable=cable.id)
+    frozen, layout = _laid_out(parts, d)
+    return SimpleNamespace(frozen=frozen, layout=layout, cable=cable.id)
 
 
 def _swap_design(*, reverse: bool = False):
@@ -92,21 +79,17 @@ def _swap_design(*, reverse: bool = False):
 @cache
 def _swap() -> SimpleNamespace:
     parts, d, cable = _swap_design()
-    frozen, model = _laid_out(parts, d)
-    return SimpleNamespace(frozen=frozen, model=model, cable=cable.id)
+    frozen, layout = _laid_out(parts, d)
+    return SimpleNamespace(frozen=frozen, layout=layout, cable=cable.id)
 
 
-def _block(model, cable, *, in_unit: bool = False):
+def _block(layout, cable, *, in_unit: bool = False):
     """The block of `cable` (in its unit's reading when `in_unit`): head, box, ends, wires."""
-    heads = layout_of(model, CableBlock).values()
-    (head,) = (h for h in heads if h.subject == cable and (h.unit is not None) == in_unit)
-    ends = sorted(
-        (e for e in layout_of(model, EndBox).values() if e.block == head.id),
-        key=lambda e: (e.row is BlockRow.BOTTOM, e.x),
-    )
-    wires = [w for w in layout_of(model, CoreWire).values() if w.block == head.id]
-    (box,) = (b for b in layout_of(model, CableBox).values() if b.block == head.id)
-    return head, box, ends, wires
+    blocks = layout.blocks.values()
+    (head,) = (h for h in blocks if h.subject == cable and (h.unit is not None) == in_unit)
+    ends = sorted(head.ends, key=lambda e: (not e.top, e.x))
+    (placed,) = head.boxes
+    return head, placed.box, ends, list(head.wires)
 
 
 def _runs(wires):
@@ -124,53 +107,52 @@ def _check(block):
 def _label_gaps(s, head, bottom):
     """The gap of each neighbouring pair: one pitch, or more where their labels would come
     within a grid unit. One-pin boxes: the centres stand `apart` from each other."""
-    height = text_room(s.frozen)
-    widths = [text_width(end_label(s.frozen, e.item, None), height=height) for e in bottom]
+    height = text_room_on(s.frozen, sheet_format_of(s.frozen, None), LIBRARY)
+    widths = [text_width_g(end_label(s.frozen, e.item, None), height=height) for e in bottom]
     apart = [(a + b + 1) // 2 + G for a, b in pairwise(widths)]
-    return [max(head.pitch, snap_up(one) - head.pitch) for one in apart]
+    return [max(head.pitch, grid_up(one, WIRING_GRID) - head.pitch) for one in apart]
 
 
 def test_fan_out_draws_with_bends_and_its_ends_one_pitch_apart():
     """A 1:3 block bends, no shared stretch; end boxes of a row stand one pitch
     apart, or as far as their labels need. Probe: `row_xs` spacing the end boxes three pitches."""
     s = _fan_out()
-    head, _, ends, wires = _block(s.model, s.cable)
+    head, _, ends, wires = _block(s.layout, s.cable)
     top, *bottom = ends
-    assert (top.row, [e.row for e in bottom]) == (BlockRow.TOP, [BlockRow.BOTTOM] * 3)
-    assert [len(e.pins) for e in ends] == [3, 1, 1, 1]
+    assert (top.top, [e.top for e in bottom]) == (True, [False] * 3)
+    assert [len(e.cells) for e in ends] == [3, 1, 1, 1]
     assert [b.x - (a.x + a.width) for a, b in pairwise(bottom)] == _label_gaps(s, head, bottom)
     assert any(len(w.run_b) > 2 for w in wires)
     assert all(len(w.run_a) == 2 for w in wires)  # the upper band is straight
-    _check(_block(s.model, s.cable))
+    _check(_block(s.layout, s.cable))
 
 
 def test_swap_in_a_unit_core_texts_follow_the_top_row():
     """The 2:2 swap bends; each core text stands on its column, in the top
     row's order, with its core number. Probe: `_split` returning None (the cycle stays)."""
     s = _swap()
-    head, box, ends, wires = _block(s.model, s.cable, in_unit=True)
+    head, box, ends, wires = _block(s.layout, s.cable, in_unit=True)
     unit = head.unit
     assert unit is not None
     cables = block_cables(s.frozen, s.cable, unit)
     texts = {c.conductor: core_text(c) for c in cables[0].cores}
-    assert [len(e.pins) for e in ends] == [2, 2, 2, 2]
+    assert [len(e.cells) for e in ends] == [2, 2, 2, 2]
     # BO4: the motors' ends carry "(by others)" in the unit too, so the labels spread the ends
     assert sorted(len(w.run_b) for w in wires) == [2, 4, 4, 4]
     by_x = sorted(wires, key=lambda w: w.text_x)
     assert [texts[w.conductor].split()[0] for w in by_x] == ["1", "2", "3", "4"]
     assert box.x <= by_x[0].text_x
     assert by_x[-1].text_x <= box.x + box.width
-    _check(_block(s.model, s.cable, in_unit=True))
+    _check(_block(s.layout, s.cable, in_unit=True))
 
 
 def test_swap_is_the_same_whatever_order_the_cores_are_added_in():
-    """Layout invariant 5, through the model: cores added in reverse order give equal records and
-    the same digest. The listing-order probe is stages/test_channel's shuffle test."""
+    """Layout invariant 5, through the model: cores added in reverse order give an equal
+    layout. The listing-order probe is stages/test_channel's shuffle test."""
     parts, d, _ = _swap_design(reverse=True)
     _, backward = _laid_out(parts, d)
-    forward = _swap().model
-    assert dict(layout_of(backward, CoreWire)) == dict(layout_of(forward, CoreWire))
-    assert backward.digests == forward.digests
+    forward = _swap().layout
+    assert backward == forward
 
 
 def test_a_row_of_drawn_and_blank_ends_is_refused():

@@ -8,7 +8,7 @@ from options_fixtures import core_options
 
 from fransys_layout.core import Facts, Hints, PlacementProblem, order_blocks
 from fransys_layout.core.cut import cut_pages
-from fransys_layout.core.values import Block, BlockList, CycleSplit, FlowGraph
+from fransys_layout.core.flow_values import Block, BlockList, FlowGraph
 
 from .blocks_fixtures import AREA, column, sym
 from .conftest import MARKER
@@ -27,7 +27,7 @@ def test_page_plan_groups_list_the_groups_of_the_page_in_order() -> None:
     syms = [sym(f"s{i}", g) for i, g in enumerate(groups, 1)]
     cols = [column(f"c{i}", f"s{i}") for i in range(1, 5)]
     blocks = tuple(_block(f"b{i}", f"c{i}", g) for i, g in enumerate(groups, 1))
-    flow = FlowGraph(tuple(cols), (), (), (), CycleSplit(0, 0, 0), ())
+    flow = FlowGraph(tuple(cols), (), (), (), ())
     prob = PlacementProblem(AREA, tuple(syms), (), facts=Facts())
     result = cut_pages(
         (BlockList("u", blocks),),
@@ -35,12 +35,6 @@ def test_page_plan_groups_list_the_groups_of_the_page_in_order() -> None:
         prob,
         core_options(
             marker=MARKER,
-            flip_turn="R180",
-            tag_stagger=True,
-            label_gap=8,
-            parallel_pitch=48,
-            driver_first=True,
-            arrow_sides=("E", "W"),
         ),
     )
     (page,) = result.spec.pages
@@ -60,12 +54,6 @@ def test_the_cut_result_carries_the_flow_after_tall_splits() -> None:
         flow,
         core_options(
             marker=MARKER,
-            flip_turn="R180",
-            tag_stagger=True,
-            label_gap=8,
-            parallel_pitch=48,
-            driver_first=True,
-            arrow_sides=("E", "W"),
         ),
     )
     assert (
@@ -75,12 +63,6 @@ def test_the_cut_result_carries_the_flow_after_tall_splits() -> None:
             prob,
             core_options(
                 marker=MARKER,
-                flip_turn="R180",
-                tag_stagger=True,
-                label_gap=8,
-                parallel_pitch=48,
-                driver_first=True,
-                arrow_sides=("E", "W"),
             ),
         ).flow
         is flow

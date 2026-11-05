@@ -28,9 +28,7 @@ class UnitNodes:
     own: frozendict[Id[Unit], frozenset[Id[AspectNode]]]
 
 
-def chain_up(
-    nodes: frozendict[Id[AspectNode], AspectNode], node_id: Id[AspectNode] | None
-) -> Iterator[Id[AspectNode]]:
+def chain_up(nodes: frozendict[Id[AspectNode], AspectNode], node_id: Id[AspectNode] | None) -> Iterator[Id[AspectNode]]:
     """`node_id` and each ancestor above it, leaf first; a parent cycle ends the walk."""
     return parent_chain(lambda node: nodes[node].parent, node_id)
 
@@ -55,10 +53,13 @@ def outside_unit(model: Model, item: Id[Item], unit: Id[Unit] | None) -> bool:
     return unit is not None and not in_reading(model, item, unit)
 
 
-def stub_place(model: Model, near: Id[Port]) -> Id[AspectNode] | None:
-    """The place an off stub at `near` states: its item's, or `None` for an item in a unit."""
+def stub_place(model: Model, near: Id[Port], page_unit: Id[Unit] | None = None) -> Id[AspectNode] | None:
+    """The place an off stub at `near` states: its item's, or `None` for an item in a unit on a page of a unit.
+
+    A replica on a unit-less page states its place.
+    """
     owner = items(model)[functions(model)[ports(model)[near].function].item]
-    return None if owner.unit else effective_placement(model, owner.id, Aspect.LOCATION)
+    return None if owner.unit and page_unit else effective_placement(model, owner.id, Aspect.LOCATION)
 
 
 def end_context(
@@ -80,14 +81,7 @@ def end_context(
     return context if context in chain_up(aspect_nodes(model), node) else None
 
 
-def _of_a_cable(model: Model, item: Id[Item], cables: set[Id[Item]]) -> bool:
-    """Whether `item` is a cable, a harness or a member of one, by `Item.parent`."""
-    return any(node in cables or is_harness(model, node) for node in item_chain(model, item))
-
-
-def _reached(
-    model: Model, containing: frozendict[Id[Unit], frozenset[Id[Unit]]]
-) -> dict[Aspect, dict[Id[AspectNode], frozenset[Id[Unit]]]]:
+def _reached(model: Model, containing: frozendict[Id[Unit], frozenset[Id[Unit]]]) -> dict[Aspect, dict[Id[AspectNode], frozenset[Id[Unit]]]]:
     """Per aspect and node, the units every non-cable item reaching the node belongs to.
 
     An item reaches a node when the node is on the chain up from its `effective_placement`.
@@ -95,11 +89,9 @@ def _reached(
     """
     nodes = aspect_nodes(model)
     cables = set(cable_items(model))
-    reached: dict[Aspect, dict[Id[AspectNode], frozenset[Id[Unit]]]] = {
-        a: {} for a in DESIGNATION_SCHEME.reference_aspects
-    }
+    reached: dict[Aspect, dict[Id[AspectNode], frozenset[Id[Unit]]]] = {a: {} for a in DESIGNATION_SCHEME.reference_aspects}
     for item in items(model).values():
-        if _of_a_cable(model, item.id, cables):
+        if any(node in cables or is_harness(model, node) for node in item_chain(model, item.id)):
             continue
         member_of = frozenset() if item.unit is None else containing.get(item.unit, frozenset())
         for aspect, table in reached.items():

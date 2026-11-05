@@ -1,29 +1,21 @@
-"""Field case: a unit strip wired to a PLC module inside and to a field strip outside.
+"""Field case: a cabinet unit's interface strip is wired to a PLC input module inside and to a field strip outside.
+The bug (v0.18.1): a wire to the fourth channel had no path, boxed in by neighbours: three CONNECTION_NOT_DRAWN.
+Fixed by layout-0223, a wire with no path tries once more across other nets' exit cells."""
 
-The engineering shape: a cabinet unit holds an interface strip `-X` of five terminals and a PLC
-input module `-K1`. Each terminal is wired to the channel of the same number, so inside the unit
-the wires run straight from the strip to the module. The container wires every terminal's outer
-side to a field strip `-X9`. The unit's own document draws the strip's terminals in one row, 24
-apart, over the module's channel pins, 16 apart, with 32 between the rows.
-
-The bug (v0.18.1): the unit alone drew, but with the outer wires present, the router found no
-path for the wire to the fourth channel, a pin boxed in by its neighbours' first steps, a label
-and a wire corner. `fr.check` gave one `ROUTE_FAILED` and three `CONNECTION_NOT_DRAWN`, and
-`fr.write` was blocked.
-
-The rule (decision layout-0223): a wire with no path tries once more across other nets' exit cells.
-"""
-
-import tempfile
 from functools import cache
-from pathlib import Path
 from typing import Any, NamedTuple
 
 import fransys as fr
 from _drawn_pages import drawn_pages
+from _model_build_cover import unit_document
 from fransys.colours import BU
 
+from electrical_symbols import LIBRARY, is_generic_box
+from fransys_layout.drawing import port_points
+from fransys_model.derive import function_item, strip_of
 from fransys_model.kernel import Severity
+from fransys_model.layout import LinkMarker, layout_of
+from fransys_model.vocab import ports
 
 _COUNT = 5
 
@@ -37,7 +29,7 @@ def _cab(u: Any) -> _Io:
     x = u.terminal_strip("X", "DEMO-TB-2.5", _COUNT, interface=True)
     k1 = u.device("K1", "DEMO-PLC-DI-16")
     for n in range(1, _COUNT + 1):
-        u.detail.wire(x[n], getattr(k1, f"di_{n}")[str(n)], wire=(BU, 0.5))
+        u.series(x[n].inner, getattr(k1, f"di_{n}")[str(n)], wire=(BU, 0.5))
     return _Io(x)
 
 
@@ -47,12 +39,8 @@ def _built() -> fr.BuildResult:
     cab = d.add(_cab, "U1")
     field = d.terminal_strip("X9", "DEMO-TB-2.5", _COUNT, external=True)
     for n in range(1, _COUNT + 1):
-        d.detail.wire(cab.X[n], field[n], wire=(BU, 0.5))
-    cover = Path(tempfile.mkdtemp()) / "cover.md"
-    cover.write_text("# Cabinet\n", encoding="utf-8")
-    return fr.build(
-        d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, "demo-plc-cab", cover=cover)
-    )
+        d.series(cab.X[n].outer, field[n].inner, wire=(BU, 0.5))
+    return fr.build(d, unit_document("demo-plc-cab"))
 
 
 def test_no_wire_fails_to_route() -> None:
@@ -61,17 +49,18 @@ def test_no_wire_fails_to_route() -> None:
 
 
 def test_every_strip_to_module_wire_is_drawn() -> None:
+    """The module is the page's one generic box; a wire ends at each of five of its pins."""
     drawn = 0
     for drawing in drawn_pages(_built().model).values():
-        tags = [t for t in drawing.texts if t.kind == "TAG"]
-        for wire in drawing.wires:
-            for x, y in (wire.points[0], wire.points[-1]):
-                at = [s for s in drawing.symbols if abs(s.x - x) + abs(s.y - y) <= 24]
-                near = [
-                    min(tags, key=lambda t, s=s: abs(t.box.x - s.x) + abs(t.box.y - s.y))
-                    for s in at
-                ]
-                if any(t.text.endswith("-K1") for t in near):
-                    drawn += 1
-                    break
+        pins = {point for s in drawing.symbols if is_generic_box(s.key) for point, _ in port_points(s, LIBRARY)}
+        drawn += sum(1 for w in drawing.wires if {w.points[0], w.points[-1]} & pins)
     assert drawn == _COUNT
+
+
+def test_each_strip_terminal_is_copied_to_the_page_of_its_outside_wire_and_stands_no_reference() -> None:
+    model = _built().model
+    table = ports(model)
+    on_strip = [m for m in layout_of(model, LinkMarker).values() if strip_of(model, function_item(model, table[m.port].function)) is not None]
+    assert on_strip == []
+    terminals = [sum(1 for s in drawing.symbols if s.key == "terminal") for drawing in drawn_pages(model).values()]
+    assert terminals == [2 * _COUNT, 2 * _COUNT]

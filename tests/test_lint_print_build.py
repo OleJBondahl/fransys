@@ -2,21 +2,14 @@
 
 The part has a clamp strip `clamps` (no label) and three labelled plug sockets `x1`, `x2`, `x4`,
 all with a pin `1`. The part lint accepts it (`test_lint_checks`, and the library lint of
-`demo_parts`) because the pins print `-A1:1`, `-A1-X1:1`, `-A1-X2:1` and `-A1-X4:1`: one text
-each. This test builds an item of it through the facade, wires one pin `1` of each function, and
-asserts the model-side `PORT_DESIGNATION_DUPLICATE` check agrees with the lint: no finding at all.
-
-Can-fail: with `connector_segments` (`fransys_model.derive.designation`) returning `""` for
-every function, the four pins all print `-A1:1`; the lint shares that rule, so loading the library
-raises `PartLibraryError` inside `_build`: a FAILED test id, not a collection error.
 """
 
 import functools
 from typing import Any
 
 import fransys as fr
-import fransys_author
 import fransys_parts
+from fransys_author.design import Design
 
 from fransys_model.derive import item_designation, port_designation
 from fransys_model.kernel import Severity
@@ -36,7 +29,7 @@ _CODE = "PORT_DESIGNATION_DUPLICATE"
 def _build():
     """The build result; cached so the tests share one build, called inside each test."""
     parts = fransys_parts.load("demo_parts")
-    d = fransys_author.Design(parts)
+    d = Design(parts)
     d.project(**_PROJECT)
     d.revision(1, date="2026-09-26", text="First issue", created="XX")
     cabinet, field = d.location("A", "Cabinet"), d.location("B", "Field")
@@ -63,9 +56,5 @@ def test_the_four_pins_1_of_the_item_print_the_four_texts_the_lint_reasons_about
     """`clamps` prints under the item, each socket behind its label."""
     model = _build().model
     a1 = next(i for i in items(model).values() if item_designation(model, i.id) == "A1")
-    pins_1 = [
-        port_designation(model, p.id)
-        for p in ports(model).values()
-        if p.name == "1" and functions(model)[p.function].item == a1.id
-    ]
+    pins_1 = [port_designation(model, p.id) for p in ports(model).values() if p.name == "1" and functions(model)[p.function].item == a1.id]
     assert sorted(pins_1) == ["-A1-X1:1", "-A1-X2:1", "-A1-X4:1", "-A1:1"]

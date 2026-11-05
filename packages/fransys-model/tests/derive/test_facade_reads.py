@@ -2,7 +2,6 @@
 
 One invented plant, frozen once for the module: a cabinet holding a panel, the panel holding a
 rail, a sibling unit `other`, a pump and a relay part with a changeover function and pin
-templates, and three documents (cabinet, panel, other).
 """
 
 import pytest
@@ -33,7 +32,7 @@ from fransys_model.kernel import Id, Model, make_id
 from fransys_model.vocab import Document, DocumentPreset
 from fransys_model.vocab.connectivity import Net
 from fransys_model.vocab.core import Function, Item, Port, Unit
-from fransys_model.vocab.enums import FunctionKind, PortRole
+from fransys_model.vocab.enums import FunctionKind, PortBoundary
 from fransys_model.vocab.project import Project
 from fransys_model.vocab.tables import documents, parts
 from fransys_model.vocab.templates import FunctionTemplate, Part, PortTemplate
@@ -53,16 +52,13 @@ PUMP_ITEM = make_id(Item, ("pump",))
 PUMP_FN = make_id(Function, ("pump", "pump_fn"))
 BARE_FN = make_id(Function, ("bare", "bare_fn"))
 RELAY_PART = make_id(Part, ("part-K",))
-PUMP_PART = make_id(Part, ("part-P",))
 CABINET_DOC = make_id(Document, ("docs", "cabinet"))
 PANEL_DOC = make_id(Document, ("docs", "panel"))
 OTHER_DOC = make_id(Document, ("docs", "other"))
 NET = make_id(Net, ("n_24v",))
 
 
-def _template(
-    plant: Plant, name: str, kind: FunctionKind, pins: tuple[str, ...]
-) -> FunctionTemplate:
+def _template(plant: Plant, name: str, kind: FunctionKind, pins: tuple[str, ...]) -> FunctionTemplate:
     """A function template of the relay part, with one generic pin template per name in `pins`."""
     template = FunctionTemplate(
         id=make_id(FunctionTemplate, ("relay", name)),
@@ -79,7 +75,7 @@ def _template(
                 key=("relay", name, pin),
                 function=template.id,
                 name=pin,
-                role=PortRole.GENERIC,
+                boundary=PortBoundary.GENERIC,
             )
         )
     return template
@@ -93,8 +89,6 @@ def _document(key: tuple[str, str], unit: Id[Unit]) -> Document:
         preset=DocumentPreset.CABINET_SCHEMATIC,
         location=None,
         item=None,
-        add=(),
-        remove=(),
         cover="",
         notes=None,
         unit=unit,
@@ -187,9 +181,9 @@ def test_document_ids_are_the_three_planted_documents(model: Model) -> None:
 
 
 def test_document_stems_pair_each_document_with_its_name(model: Model) -> None:
-    """Each document id with its name, the second part of its key, in the id order given."""
+    """Each document id with its PDF name less `.pdf`, in the id order given."""
     stems = dict(document_stems(model))
-    assert stems == {CABINET_DOC: "cabinet", PANEL_DOC: "panel", OTHER_DOC: "other"}
+    assert stems == {CABINET_DOC: "cabinet-v1.1", PANEL_DOC: "panel-v1.1", OTHER_DOC: "other-v1.1"}
     assert [one for one, _name in document_stems(model)] == list(document_ids(model))
 
 

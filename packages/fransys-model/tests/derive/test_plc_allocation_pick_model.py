@@ -2,8 +2,6 @@
 
 Candidates are the free channels on the request's net whose own net holds only that request.
 Each test builds a request whose pin reaches channels two ways: by one conductor (direct) or
-through a plain terminal-like function (indirect). Invented data; the helpers come from the
-two sibling test modules. Rack keys order the channels: "rack-a" serves before "rack-b".
 """
 
 from typing import TYPE_CHECKING

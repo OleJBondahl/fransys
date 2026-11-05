@@ -1,8 +1,7 @@
 """`RATING_VOLTAGE_BELOW_CIRCUIT` across two supplies (decision model-0081, model review Q4).
 
 Declared phases compare only within one supply: independent sources keep no fixed phase relation.
-So AC rails of two supplies, earthed or IT, check at the sum of their voltages to earth; DC rails
-of two earthed supplies keep their difference; rails of one supply keep today's formulas.
+So AC rails of two supplies, check at the sum of their voltages to earth; DC rails
 """
 
 from typing import TYPE_CHECKING

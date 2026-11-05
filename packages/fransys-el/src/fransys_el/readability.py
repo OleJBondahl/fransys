@@ -43,9 +43,7 @@ def _reading(page: Id[Page], unit: Id[Unit] | None, drawing: Drawing) -> DrawnPa
     )
 
 
-def readability(
-    drawings: Mapping[Id[Page], Drawing], units: Mapping[Id[Page], Id[Unit] | None]
-) -> DrawnReading:
+def readability(drawings: Mapping[Id[Page], Drawing], units: Mapping[Id[Page], Id[Unit] | None]) -> DrawnReading:
     """One reading for each page of `drawings`, in their order; no drawings give no pages.
 
     `units` gives each page its unit (`derive.set_unit` of its drawing set); a page it lacks has
@@ -54,6 +52,4 @@ def readability(
     lone cells, contact images, stars, page cuts, the text height and loose symbols.
     Pure: the same drawings give the same reading.
     """
-    return DrawnReading(
-        pages=tuple(_reading(page, units.get(page), drawing) for page, drawing in drawings.items())
-    )
+    return DrawnReading(pages=tuple(_reading(page, units.get(page), drawing) for page, drawing in drawings.items()))

@@ -7,7 +7,6 @@ from fransys_layout.geometry import (
     Box,
     Facing,
     Point,
-    boxes_meet,
     contains,
     meets,
     port_exit,
@@ -112,9 +111,7 @@ def obstacle_index(obstacles: Iterable[Obstacle]) -> CellIndex[Obstacle]:
     return CellIndex((one.box, one) for one in obstacles)
 
 
-def step_admitted(
-    first: Cell, second: Cell, obstacles: CellIndex[Obstacle], ends: frozenset[Cell]
-) -> bool:
+def step_admitted(first: Cell, second: Cell, obstacles: CellIndex[Obstacle], ends: frozenset[Cell]) -> bool:
     """A route step admitted closed: no obstacle touches it, but at an end cell or on a lane."""
     for obstacle in obstacles.meeting(first[0], first[1], second[0], second[1]):
         if _touches(obstacle.box, first, second, ends) and not _in_a_lane(obstacle, first, second):
@@ -124,9 +121,7 @@ def step_admitted(
 
 def crosses(box: Box, run: Run) -> bool:
     """An interior crossing: `run` passes through the interior of `box`, both axes strict."""
-    return meets((run.x, run.to_x), (box.x, box.x + box.width), closed=False) and meets(
-        (run.y, run.to_y), (box.y, box.y + box.height), closed=False
-    )
+    return meets((run.x, run.to_x), (box.x, box.x + box.width), closed=False) and meets((run.y, run.to_y), (box.y, box.y + box.height), closed=False)
 
 
 def runs_along(box: Box, run: Run) -> bool:
@@ -137,11 +132,6 @@ def runs_along(box: Box, run: Run) -> bool:
     if run.y == run.to_y and run.y in (box.y, bottom):
         return min(run.to_x, right) > max(run.x, box.x)
     return False
-
-
-def _reaches(region: Box, box: Box) -> bool:
-    """Whether `box` is near enough to `region` to touch a step inside it."""
-    return boxes_meet(region, box, closed=True)
 
 
 def _in_a_lane(obstacle: Obstacle, first: Cell, second: Cell) -> bool:

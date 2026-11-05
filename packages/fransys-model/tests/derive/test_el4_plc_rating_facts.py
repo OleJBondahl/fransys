@@ -18,19 +18,20 @@ from fransys_model.derive.facts.plc_wiring import (
 )
 from fransys_model.derive.facts.rail_reach import function_reach
 from fransys_model.derive.facts.roles import function_channel
+from fransys_model.elecdef import Current, Unit
 from fransys_model.kernel import make_id
 from fransys_model.vocab import Operating, OperatingFacet
-from fransys_model.vocab.enums import Current, FunctionKind, SignalType
+from fransys_model.vocab.enums import FunctionKind, SignalType
 from fransys_model.vocab.facets.plc import PlcBindingFacet, PlcRequestFacet
 from fransys_model.vocab.tables import facets_of
 from fransys_model.vocab.templates import FunctionTemplate
 
 if TYPE_CHECKING:
     from fransys_model.kernel import Id, Model
-    from fransys_model.vocab.core import Function
+    from fransys_model.vocab.core import Function, Port
 
 
-def _request(plant: Plant, name: str) -> tuple:
+def _request(plant: Plant, name: str) -> tuple[Id[Function], Id[Port]]:
     function = plant.function(plant.item(name), "fn")
     key = (name, "request")
     plant.add(
@@ -48,12 +49,10 @@ def _request(plant: Plant, name: str) -> tuple:
 
 def _bind(plant: Plant, request: Id[Function], channel: Id[Function]) -> None:
     key = ("bind", request.value)
-    plant.add(
-        PlcBindingFacet(id=make_id(PlcBindingFacet, key), key=key, subject=request, channel=channel)
-    )
+    plant.add(PlcBindingFacet(id=make_id(PlcBindingFacet, key), key=key, subject=request, channel=channel))
 
 
-def _plc_plant() -> tuple:
+def _plc_plant() -> tuple[Plant, Id[Function], Id[Function], Id[Function]]:
     plant = Plant()
     (channel,) = make_channels(plant, "mod", None, (SignalType.DI,))
     request, _ = _request(plant, "sensor")
@@ -103,7 +102,7 @@ def _dc_loop() -> Model:
             id=make_id(OperatingFacet, ("Dn",)),
             key=("Dn",),
             subject=make_id(FunctionTemplate, ("D", "f")),
-            operating=Operating(nominal_current_a=Decimal("2.5")),
+            operating=Operating(nominal_current=Unit.A("2.5")),
         )
     )
     return plant.model()

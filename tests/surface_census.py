@@ -2,8 +2,6 @@
 
 `census(modules)` maps `module.name` to a `NameRow`. A reader is a file that imports the name from
 its module (AST, `gate_scan.imports_of`). An outside reader is a file in neither the module's own
-package nor a tests folder. A name is read transitively when a name with an outside reader mentions
-it in a parameter or return annotation (a row type returned by a read function).
 """
 
 import annotationlib
@@ -16,7 +14,7 @@ import re
 import types
 import typing
 from collections import defaultdict
-from typing import TYPE_CHECKING, NamedTuple
+from typing import TYPE_CHECKING, Any, NamedTuple
 
 from gate_scan import ROOT, imports_of
 
@@ -78,10 +76,10 @@ def _is_test(rel: str) -> bool:
     return "/tests" in _package_of(rel) or rel.startswith("tests/")
 
 
-def readers_of(modules: Iterable[str], scan: Sequence[Path], root: Path) -> dict[tuple, set[str]]:
+def readers_of(modules: Iterable[str], scan: Sequence[Path], root: Path) -> dict[tuple[Any, ...], set[str]]:
     """`(module, name) -> {file}` for each `from module import name` or `alias.name` in `scan`."""
     wanted = set(modules)
-    hits: dict[tuple, set[str]] = defaultdict(set)
+    hits: dict[tuple[Any, ...], set[str]] = defaultdict(set)
     for base in scan:
         for path in sorted(base.rglob("*.py")):
             rel = path.relative_to(root).as_posix()
@@ -130,9 +128,7 @@ def _transitive(objs: Mapping[str, object], read: Iterable[str]) -> set[str]:
     return found
 
 
-def census(
-    modules: Sequence[str], scan: Sequence[Path] = DEFAULT_SCAN, root: Path = ROOT
-) -> dict[str, NameRow]:
+def census(modules: Sequence[str], scan: Sequence[Path] = DEFAULT_SCAN, root: Path = ROOT) -> dict[str, NameRow]:
     """One `NameRow` per name of each module's `__all__`, with transitive reads resolved."""
     hits = readers_of(modules, scan, root)
     objs: dict[str, object] = {}
@@ -144,9 +140,7 @@ def census(
             obj = objs[f"{module}.{name}"] = getattr(mod, name)
             files = sorted(hits.get((module, name), set()))
             far = tuple(f for f in files if _package_of(f) != home and not _is_test(f))
-            rows[f"{module}.{name}"] = NameRow(
-                module, name, kind(obj), tuple(files), far, transitive=False
-            )
+            rows[f"{module}.{name}"] = NameRow(module, name, kind(obj), tuple(files), far, transitive=False)
     via = _transitive(objs, [key for key, row in rows.items() if row.outside])
     return {key: row._replace(transitive=key in via) for key, row in rows.items()}
 

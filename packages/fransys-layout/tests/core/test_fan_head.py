@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 from fransys_layout.core.fan_head import fan_head, head_short
+from fransys_layout.core.flow_values import Attach, Fan
 from fransys_layout.core.topology_fans import Att, FanDraft
 from fransys_layout.core.topology_nets import _fan
-from fransys_layout.core.values import Attach, Fan, PinRef
+from fransys_layout.core.values import PinRef
 
 from .cut_fixtures import cut_of, elem, net, page_of
 

@@ -35,8 +35,8 @@ from typing import TYPE_CHECKING, Final
 
 from fransys_model.derive.facts.current.bounds import highest
 from fransys_model.derive.facts.current.graph import Edge, Raw, Wire, group, solve
+from fransys_model.elecdef import Current
 from fransys_model.kernel import Id, UnionFind
-from fransys_model.vocab.enums import Current
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterator, Mapping, Sequence
@@ -95,11 +95,7 @@ def _named(options: Sequence[tuple[CurrentBound, _States]]) -> CurrentBound:
     `states` are the (item, state) pairs shared by every assignment giving that bound.
     """
     chosen = highest(bound for bound, _ in options)
-    same = [
-        set(states)
-        for bound, states in options
-        if (bound.value, bound.by, bound.role) == (chosen.value, chosen.by, chosen.role)
-    ]
+    same = [set(states) for bound, states in options if (bound.value, bound.by, bound.role) == (chosen.value, chosen.by, chosen.role)]
     return dataclasses.replace(chosen, states=tuple(sorted(set.intersection(*same))))
 
 
@@ -126,10 +122,12 @@ def _component(
         for at, bounds in found.items():
             for bound in bounds:
                 options.setdefault((at, bound.kind), []).append((bound, chosen))
-    return {
-        at: tuple(_named(options[at, kind]) for kind in Current if (at, kind) in options)
-        for at in seen
-    }
+    return {at: tuple(_named(options[at, kind]) for kind in Current if (at, kind) in options) for at in seen}
+
+
+def _home(allc: UnionFind[Id[Port]], comps: UnionFind[Id[Port]], port: Id[Port]) -> Id[Port]:
+    """The component of `port`: its all-closed class under the position-joined classes."""
+    return comps.find(allc.find(port))
 
 
 def _by_component(
@@ -144,20 +142,17 @@ def _by_component(
     for edge in raw.edges:
         comps.union(allc.find(edge.first), allc.find(edge.second))
 
-    def home(port: Id[Port]) -> Id[Port]:
-        return comps.find(allc.find(port))
-
     edges: dict[Id[Port], list[Edge]] = {}
     for edge in raw.edges:
-        edges.setdefault(home(edge.first), []).append(edge)
+        edges.setdefault(_home(allc, comps, edge.first), []).append(edge)
     wires: dict[Id[Port], list[Wire]] = {}
     for wire in stateful:
-        if home(wire.first) in edges:
-            wires.setdefault(home(wire.first), []).append(wire)
+        if _home(allc, comps, wire.first) in edges:
+            wires.setdefault(_home(allc, comps, wire.first), []).append(wire)
     opens: dict[Id[Port], list[Id[Port]]] = {}
     for port in sorted(raw.opens):
-        if home(port) in edges:
-            opens.setdefault(home(port), []).append(port)
+        if _home(allc, comps, port) in edges:
+            opens.setdefault(_home(allc, comps, port), []).append(port)
     return edges, wires, opens
 
 

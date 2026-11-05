@@ -2,11 +2,6 @@
 
 Ruling (a), 2026-09-24: a unit's `terminals-*.csv`, `connectors-*.csv` and
 `wires.csv` get the SAME document context as the unit document's PDF lists, so their end
-cells are equal cell for cell; `out/all/` (`unit=None`) has no document, so it prints the full
-location path of every located end. The invented model: strip `X3` (terminal `T:1`) and board
-`JB1`, both of unit `u1` and placed at `C1`; the terminal is wired inside to `B12` (at `C1`) and
-outside to `M1` (at `EXT`); connector `J1` of the board is mated to housing `H1` at `EXT`, `J2`
-to `H2` at `C1`.
 """
 
 import csv
@@ -18,7 +13,7 @@ from pathlib import Path
 
 import fransys as fr
 import pytest
-from fransys.pipeline import _exports
+from fransys._exports import _Export, _exports
 from fransys_pdf._lists import (
     connector_rows_for,
     terminal_rows_for,
@@ -26,6 +21,7 @@ from fransys_pdf._lists import (
 )
 
 from electrical_symbols import LIBRARY
+from fransys_layout import DiagramLayout
 from fransys_model.derive import cell_text, ends_without_jumpers, pin_lines
 from fransys_model.kernel import make_id
 from fransys_model.vocab import DocumentPreset, Mate
@@ -33,10 +29,7 @@ from fransys_model.vocab import DocumentPreset, Mate
 # `--import-mode=importlib` (root pyproject.toml) never puts a test directory on `sys.path`, and
 # ty cannot resolve a `sys.path` insert; `fransys_pdf`'s own hand-built model helpers are
 # reused rather than copied, loaded from their file by path.
-_BUILD_PATH = (
-    Path(__file__).resolve().parent.parent / "packages" / "fransys-pdf" / "tests" / "_build.py"
-)
-sys.path.append(str(_BUILD_PATH.parent))  # `_build` imports its sibling `pdf_library`
+_BUILD_PATH = Path(__file__).resolve().parent.parent / "packages" / "fransys-pdf" / "tests" / "_build.py"
 _build_spec = importlib.util.spec_from_file_location("_pdf_tests_build", _BUILD_PATH)
 assert _build_spec is not None
 assert _build_spec.loader is not None
@@ -88,10 +81,7 @@ def built():
     j2 = connector("j2", item=board.id, name="J2", markings=("1",))
     p1 = connector("p1", item=h1.id, name="P1", markings=("1",))
     p2 = connector("p2", item=h2.id, name="P2", markings=("1",))
-    mates = tuple(
-        Mate(id=make_id(Mate, (key,)), key=(key,), a=a[2].id, b=b[2].id)
-        for key, a, b in (("m1", j1, p1), ("m2", j2, p2))
-    )
+    mates = tuple(Mate(id=make_id(Mate, (key,)), key=(key,), a=a[2].id, b=b[2].id) for key, a, b in (("m1", j1, p1), ("m2", j2, p2)))
     connectors = [rec for group in (j1, j2, p1, p2) for rec in (*group[:4], *group[4])]
     places = (
         place("p-strip", item=strip.id, node=c1.id),
@@ -116,12 +106,12 @@ def _read(exports, prefix):
 
 def _unit_exports(built):
     m, unit_id, *_ = built
-    return _exports(m, {}, {}, unit=unit_id, pdf=fr.settings().pdf, library=LIBRARY)
+    return _exports(_Export(fr.pipeline._Drawn(m, {}, DiagramLayout(diagrams=()), LIBRARY, {}), fr.settings(), unit_id))
 
 
 def _all_exports(built):
     m, *_ = built
-    return _exports(m, {}, {}, pdf=fr.settings().pdf, library=LIBRARY)
+    return _exports(_Export(fr.pipeline._Drawn(m, {}, DiagramLayout(diagrams=()), LIBRARY, {}), fr.settings()))
 
 
 def _pdf_terminal_cells(built):
@@ -158,7 +148,7 @@ def test_a_units_wire_label_csv_equals_the_pdf_wire_label_list_row_for_row(built
     m, _unit_id, doc, _strip, _board = built
     rows = _read(_unit_exports(built), "wires")
     csv_cells = [(r["from"], r["to"], r["label"]) for r in rows]
-    pdf_cells = [(r.from_, r.to, r.label) for r in wire_rows_for(m, doc)]
+    pdf_cells = [(r.from_, r.to, r.ends) for r in wire_rows_for(m, doc)]
     assert csv_cells == pdf_cells
     assert ("+C1-X3:T:1", "+EXT-M1:U1", "-X3:T:1 -M1:U1") in csv_cells  # the fixed end order (V8)
 
@@ -168,9 +158,7 @@ def test_a_units_connector_csv_mate_pins_equal_the_pdf_connector_list_cell_for_c
     m, _unit_id, doc, _strip, board = built
     rows = _read(_unit_exports(built), "connectors-")
     csv_cells = [(r["designation"], r["marking"], r["mate_port_designation"]) for r in rows]
-    pdf_cells = [
-        (line[0], line[5], line[7]) for line in pin_lines(connector_rows_for(m, doc, board))
-    ]
+    pdf_cells = [(line[0], line[5], line[7]) for line in pin_lines(m, connector_rows_for(m, doc, board))]
     assert csv_cells == pdf_cells
     assert {cell[2] for cell in csv_cells} == {"+EXT-H1:1", "+C1-H2:1"}
 

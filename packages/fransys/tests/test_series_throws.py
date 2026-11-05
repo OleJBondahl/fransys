@@ -8,9 +8,7 @@ def test_a_changeover_passed_whole_raises_and_names_its_two_throws() -> None:
     d = fr.design("demo_parts")
     dc = d.dc_supply("24VDC", d.device("G1", "DEMO-PSU-24"))
     k1, k2 = d.device("K1", "DEMO-RLY-2CO-24"), d.device("K2", "DEMO-CTR-3P-24")
-    with pytest.raises(
-        fr.AuthorError, match=r"a changeover is two throws: use K1.co_1.no or K1.co_1.nc"
-    ):
+    with pytest.raises(fr.AuthorError, match=r"a changeover is two throws: use K1.co_1.no or K1.co_1.nc"):
         d.series(dc.plus, k1.co_1, k2.coil, dc.minus, wire=0.75)
 
 

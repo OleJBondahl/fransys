@@ -50,11 +50,7 @@ def _model(*classes: NetClass | tuple[NetClass, ...] | None) -> Any:
                 )
             )
 
-    plant.add(
-        Placement(
-            id=make_id(Placement, ("K1",)), key=("K1",), item=make_id(Item, ("K1",)), node=GROUP
-        )
-    )
+    plant.add(Placement(id=make_id(Placement, ("K1",)), key=("K1",), item=make_id(Item, ("K1",)), node=GROUP))
     return plant.model()
 
 

@@ -23,7 +23,7 @@ def text_of() -> Callable[[str], str]:
     return text
 
 
-@pytest.mark.parametrize("key", ["write", "fr.write", "d.device", "MergeConflict"])
+@pytest.mark.parametrize("key", ["write", "fr.write", "d.device", "MergeConflictError"])
 def test_a_name_prints_signature_docstring_and_guide_page(text_of, key):
     text = text_of(key)
     assert "(" in text.splitlines()[0]
@@ -31,7 +31,7 @@ def test_a_name_prints_signature_docstring_and_guide_page(text_of, key):
     assert ".md" in text
 
 
-@pytest.mark.parametrize("key", ["write", "MergeConflict"])
+@pytest.mark.parametrize("key", ["write", "MergeConflictError"])
 def test_the_docstring_first_line_is_printed(text_of, key):
     doc = inspect.getdoc(getattr(fransys, key)) or ""
     assert doc.splitlines()[0] in text_of(key)
@@ -39,11 +39,11 @@ def test_the_docstring_first_line_is_printed(text_of, key):
 
 def test_a_method_signature_leaves_out_self(text_of):
     assert "self" not in text_of("d.device").splitlines()[0]
-    assert "self" not in text_of("d.detail.wire").splitlines()[0]
+    assert "self" not in text_of("d.detail.busbar").splitlines()[0]
 
 
 def test_a_constant_and_an_unknown_name():
-    found = resolve("ABOVE")
+    found = resolve("CONTROL")
     assert found is not None
     assert "constant" in found.signature
     assert resolve("wrte") is None

@@ -4,8 +4,6 @@ The matrix and the Signals lens are lists built from the page data with `textCon
 no network. With either switch on the pane shows them and the drawing is hidden.
 """
 
-# ruff: noqa: E501 -- the JavaScript source is not wrapped
-
 from typing import Final
 
 JS_ALT: Final[str] = r"""

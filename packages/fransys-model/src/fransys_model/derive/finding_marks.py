@@ -29,9 +29,7 @@ def _marks(*, on_line: bool, held: _Held) -> list[FindingMark]:
     ]
 
 
-def finding_marks(
-    model: Model, rows: ViewRows, findings: Sequence[Finding]
-) -> tuple[FindingMark, ...]:
+def finding_marks(model: Model, rows: ViewRows, findings: Sequence[Finding]) -> tuple[FindingMark, ...]:
     """One `FindingMark` per box, then per line, of the view `rows` that `findings` name.
 
     A subject not drawn on the view counts on its nearest drawn ancestor box; one with none is

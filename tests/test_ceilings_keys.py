@@ -17,9 +17,7 @@ def test_every_ceilings_key_names_something() -> None:
 
 
 def test_a_key_naming_a_missing_function_or_file_fails(tmp_path: Path) -> None:
-    (tmp_path / "m.py").write_text(
-        "class C:\n    def f(self) -> None: ...\n\ndef g() -> None: ...\n"
-    )
+    (tmp_path / "m.py").write_text("class C:\n    def f(self) -> None: ...\n\ndef g() -> None: ...\n")
     good = {"statements": {"m.py::g": 1, "m.py::C.f": 2}, "limits": {"statements": 15}}
     assert stale_ceiling_keys(good, tmp_path) == []
     bad = {"statements": {"m.py::nothing": 1, "gone.py::g": 1}}

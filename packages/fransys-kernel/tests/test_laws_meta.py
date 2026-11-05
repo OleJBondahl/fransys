@@ -24,7 +24,7 @@ _EXPECTED_KINDS = frozenset(
         "function",
         "port",
         "facet.terminal",
-        "facet.scaling",
+        "facet.cable_product",
         "conductor",
         "net",
         "mate",
@@ -47,14 +47,12 @@ def test_pools_reach_every_kind_and_shape() -> None:
             kind = record.id.kind
             shapes["nested_item"] += kind == "item" and record.parent is not None
             shapes["nested_unit"] += kind == "unit" and record.parent is not None
-            shapes["decimal"] += kind == "facet.scaling"
+            shapes["decimal"] += kind == "facet.cable_product"
             shapes["ext_map"] += any(type(v) is frozendict for v in record.ext.values())
             shapes["ext_id"] += any(type(v) is Id for v in record.ext.values())
             shapes["negative_int"] += kind == "item" and (record.position or 0) < 0
             shapes["big_int"] += any(type(v) is int and abs(v) > 2**64 for v in record.ext.values())
-            shapes["quote_or_backslash"] += (
-                any(c in record.description for c in '"\\') if kind == "item" else False
-            )
+            shapes["quote_or_backslash"] += any(c in record.description for c in '"\\') if kind == "item" else False
         shapes["alias"] += bool(pool.aliases)
 
     probe()

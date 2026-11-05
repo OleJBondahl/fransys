@@ -2,8 +2,11 @@
 scans use `Draft.record_of`, not `Draft.records()` — ordinary authoring never re-sorts the
 whole draft to find one record it already knows the id of."""
 
+from typing import Any
+
 import pytest
-from fransys_author import AuthorError, Design
+from fransys_author import AuthorError
+from fransys_author.design import Design
 
 from fransys_model.kernel import Draft
 
@@ -17,7 +20,7 @@ def test_authoring_many_bridges_and_a_repeated_unit_calls_records_zero_times(par
     calls = 0
     original = Draft.records
 
-    def counting(self: Draft) -> tuple:
+    def counting(self: Draft) -> tuple[Any, ...]:
         nonlocal calls
         calls += 1
         return original(self)

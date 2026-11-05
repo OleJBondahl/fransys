@@ -2,17 +2,16 @@
 
 A box above a lamp, both at x = 604 (4 off the 8 grid): the box's top pin is wired to the lamp's
 bottom pin by a straight wire through both bodies and the other net's pins. The guard must send it
-round, leaving each pin along its footprint's normal and stepping to the grid, as a link does.
 """
 
 from __future__ import annotations
 
 from dataclasses import replace
 
-from fransys_layout.core import Box
+from fransys_layout.core import Box, PinRef
 from fransys_layout.core.occupancy import Occupancy
 from fransys_layout.core.outputs import PinXY, Placed, Wire
-from fransys_layout.core.route_env import Drawn
+from fransys_layout.core.route_env import Drawn, RouteEnv
 from fransys_layout.core.route_guard import _reach, guard
 
 from .route_fixtures import link_env
@@ -20,16 +19,18 @@ from .route_fixtures import link_env
 X = 604
 
 
-def _env_and_grid():
+def _env_and_grid() -> tuple[RouteEnv, Occupancy, tuple[Box, Box]]:
     env = link_env({}, {})
     box_fp, lamp_fp = Box(588, 96, 116, 32), Box(590, 134, 74, 36)
     placed = {
         "B": Placed("B", 1, X, 112, "R0", box_fp, box_fp, (PinXY("1", X, 96), PinXY("2", X, 128))),
-        "P": Placed(
-            "P", 1, X, 152, "R180", lamp_fp, lamp_fp, (PinXY("in", X, 168), PinXY("out", X, 136))
-        ),
+        "P": Placed("P", 1, X, 152, "R180", lamp_fp, lamp_fp, (PinXY("in", X, 168), PinXY("out", X, 136))),
     }
-    env = replace(env, placed=placed)
+    pins = {
+        "long": (PinRef("B", "1"), PinRef("P", "in")),
+        "short": (PinRef("B", "2"), PinRef("P", "out")),
+    }
+    env = replace(env, placed=placed, net_pins=pins)
     grid = Occupancy(100, 40, 8)
     for p in placed.values():
         grid.mark_box(p.footprint)

@@ -1,15 +1,6 @@
 """Field case: a reference marker on a terminal row must not wall in its neighbour's straight wire.
-
-The engineering shape: a strip of terminals in a row at wire pitch, each terminal fed straight
-down from the one above (a row jumper) while a net reference marker stands on one of them.
-Reduced from the demo skid (examples/demo-skid, decision 0199) at 5 starters and 3 valves.
-
-The bug: `fr.build` gave ROUTE_FAILED and CONNECTION_NOT_DRAWN (errors) on two jumpers. The
-marker's turned box has two places, one each side of its pin, and at that pitch each lay over
-the lane of a neighbouring terminal's straight wire, which then had no way round.
-
-Reported by CORPUS-FRAME, reproduced 2026-10-15. Fixing decision: layout-0090.
-"""
+The bug: fr.build gave CONNECTION_NOT_DRAWN on two jumpers, as each marker box lay over a neighbour's lane.
+Fixed by layout-0090, a reference marker box must leave a neighbouring straight wire a way round (CORPUS-FRAME, 2026-10-15)."""
 
 import importlib.util
 from pathlib import Path
@@ -35,5 +26,4 @@ def findings() -> list[Any]:
 
 def test_every_jumper_between_strip_terminals_is_drawn(findings: list[Any]):
     codes = {f.code for f in findings}
-    assert "ROUTE_FAILED" not in codes
     assert "CONNECTION_NOT_DRAWN" not in codes

@@ -12,7 +12,7 @@ Each `.txt` file is one invented demo circuit, exported from today's engine on m
 | `p02_strip_to_plc` | terminals wired to a card's pins, today drawn as a staircase | worst on the terminal counter |
 | `t01` to `t05` | five typical builds, 13 to 22 symbols, near the median of builds with 10 or more symbols | Q22 typical |
 
-The brief asked for the five worst builds by placement count; Fable's Q22 asked for the worst by references plus crossings. This folder follows Q22. Three of the placement top list are here: `w02`, `w06` and `p02`. The others are left out. Three are builds whose `loose` count comes from parts a test draws without wires (a harness assembly, a board of headers, a unit boundary check). One is a PE-bar build that reproduced only in the full suite run.
+The brief asked for the five worst builds by placement count; Fable's Q22 asked for the worst by references plus crossings. This folder follows Q22. Three of the placement top list are here: `w02`, `w06` and `p02`. The others are left out. Three are builds whose `loose` count comes from parts a test draws without wires (a harness assembly, a board of headers, a unit boundary check). One is a PE-rail build that reproduced only in the full suite run.
 
 The skid is drawn at V=16 valves and M=3 motors. TARGET-LOOK's figure of 17 references was at M=2 (17 again on this SHA, MEASURED-CPU). M=3 adds 6 star flags from the X3 terminals to their breakers, so 23.
 
@@ -30,7 +30,8 @@ Units are G. 8 G is one wiring grid, 2.5 mm. x grows right and y grows down. Lin
 - `  pin NAME SIDE dx,dy [node=k] [stand=g]`: one pin. SIDE (N, E, S or W) is the way its wire leaves. Pins with the same `node=` are one electrical point (a terminal's four sides). `stand=` means the pin carries a power symbol (24 V, 0 V, PE) and no wire.
 - `net nI [rail rank=r power=K] SYM.PIN ...`: one physical net and its drawn pins. `rail` marks a net that carries a declared supply potential. A smaller `rank` is drawn higher: AC rails by phase, DC rails high to low, 0 V, PE last. `power=SUPPLY`, `GROUND` or `PE` draws as power symbols; `NONE` draws as wires.
 - `fact item SYM ...`: symbols that are parts of one device, such as a relay coil and its contacts.
-- `fact boxpin SYM.PIN ...`: pins of a box that sit on a PLC channel and can move along their edge. `fact attached SYM ...`: symbols that head a column hung on such a pin. `fact head SYM ...`: symbols that head a fan, a protective device feeding several legs. `fact strip TAG SYM ...`: the terminals of one strip. They were added by the PLACEMENT-SCORER step.
+- `fact boxpin SYM.PIN ...`: pins of a box that sit on a PLC channel and can move along their edge. `fact attached SYM ...`: symbols that head a column hung on such a pin. `fact head SYM ...`: symbols that head a fan, a protective device feeding several legs. `fact strip TAG SYM ...`: the terminals of one strip. `fact joined SYM.PIN SYM.PIN`: two pins a part link joins. The reader never derives it from a net (R1588). They were added by the PLACEMENT-SCORER step.
+- `t01_precharge` states no `fact joined` line: its builder is gone, so its pairs wait for a re-dump (KI-612).
 - `kind SYM K`: today's kind of each symbol. It is a legend for a human reader. A general placer must not read it.
 - `today SYM page=P at=x,y orient=O set=K`: today's placement of each drawn copy. One symbol can have several copies.
 - `route NET page=P set=K a=SYM.PIN b=SYM.PIN x,y x,y ...`: one routed polyline of today's engine, on page P, from pin a to pin b. The vertices are pin-absolute points in G, in order. NET is the `nI` of the net it belongs to. One net can have many routes (a trunk and its drops).

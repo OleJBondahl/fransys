@@ -1,18 +1,29 @@
 """The typed parts module: one class per part, generated from the loaded libraries."""
 
+import hashlib
+import json
 import re
 
 from fransys_author import AuthorError
 from fransys_parts import load as parts_load
 
 from fransys_model.derive import changeover_functions, part_function_pins, part_records
-from fransys_model.kernel import Model, freeze, merge, natural_key
+from fransys_model.kernel import Model, freeze, merge, natural_key, render_id
 from fransys_model.vocab import (
     Part,
     identifier,
 )
 
+LINE, INDENT = 150, 4  # ruff line length (pyproject.toml) and indent
 _TRIPLE = '"' * 3
+
+
+def _q(text: str) -> str:
+    """A string literal in ruff's style: double quotes, but single when the text holds a double quote and no single one."""
+    literal = json.dumps(text, ensure_ascii=False)
+    if '"' in text and "'" not in text:
+        return "'" + literal[1:-1].replace('\\"', '"') + "'"
+    return literal
 
 
 def _frozen(sources: tuple[str, ...]) -> Model:
@@ -20,8 +31,18 @@ def _frozen(sources: tuple[str, ...]) -> Model:
 
 
 def library_digest(*sources: str) -> str:
-    """The model digest of the libraries `sources` name: whitespace and load order don't move it."""
-    return _frozen(sources).digest
+    """The digest of the parts data the libraries `sources` name; it ignores the schema version.
+
+    Record hashes carry no schema version, so a version bump leaves a generated module valid.
+    """
+    return _data_digest(_frozen(sources))
+
+
+def _data_digest(model: Model) -> str:
+    digest = hashlib.sha256()
+    for key, record_hash in model.hashes.items():  # a frozen model holds its records in Id order
+        digest.update(f"{render_id(key)} {record_hash}\n".encode())
+    return digest.hexdigest()
 
 
 def _ident(text: str) -> str:
@@ -30,21 +51,42 @@ def _ident(text: str) -> str:
     return f"P_{name}" if name[0].isdigit() else name
 
 
-def _literal(names: list[str]) -> str:
-    values = []
+type _Node = str | tuple[str, list[_Node], str, bool]  # head, children, tail, trailing comma when one per line
+
+
+def _flat(node: _Node) -> str:
+    if isinstance(node, str):
+        return node
+    head, children, tail, _ = node
+    return head + ", ".join(map(_flat, children)) + tail
+
+
+def _wrap(node: _Node, indent: int, comma: str = "") -> list[str]:
+    """The lines of `node` as ruff formats them: one line if it fits, else its children joined, else one per line."""
+    pad = " " * indent
+    if indent + len(_flat(node)) + len(comma) <= LINE or isinstance(node, str):
+        return [pad + _flat(node) + comma]
+    head, children, tail, trailing = node
+    joined = " " * (indent + INDENT) + ", ".join(map(_flat, children))
+    if len(joined) <= LINE:
+        return [pad + head, joined, pad + tail + comma]
+    body = [line for child in children for line in _wrap(child, indent + INDENT, "," if trailing else "")]
+    return [pad + head, *body, pad + tail + comma]
+
+
+def _literal(names: list[str]) -> tuple[str, list[_Node], str, bool]:
+    values: list[_Node] = []
     for name in names:
-        values.append(repr(name))
+        values.append(_q(name))
         if name.isdigit():
             values.append(name)  # Q1[2] as well as Q1["2"]
-    return f"Literal[{', '.join(values)}]"
+    return ("Literal[", values, "]", True)
 
 
 def _getitem(names: list[str]) -> list[str]:
-    return [
-        "    if TYPE_CHECKING:",
-        "        @override",
-        f"        def __getitem__(self, m: {_literal(names)}) -> Pin: ...",
-    ]
+    params: list[_Node] = ["self", ("m: Literal[", _literal(names)[1], "]", True)]
+    node: _Node = ("def __getitem__(", params, ") -> Pin: ...", True)
+    return ["    if TYPE_CHECKING:", "", "        @override", *_wrap(node, 8)]
 
 
 def _function_class(cls: str, fn: str, pins: list[str], *, changeover: bool) -> list[str]:
@@ -53,10 +95,8 @@ def _function_class(cls: str, fn: str, pins: list[str], *, changeover: bool) -> 
         taken = {identifier(pin) for pin in pins}
         lines += [f"    {throw}: Throw" for throw in ("no", "nc") if throw not in taken]
     lines += [f"    {identifier(pin)}: Pin" for pin in pins]
-    # a bar cut to length writes no pin (PE-BAR amendment 1): its class body is `pass`
-    if pins:
-        lines += _getitem(pins)
-    return [*lines, *(["    pass"] if len(lines) == 1 else []), ""]
+    lines += _getitem(pins)
+    return [*lines, "", ""]
 
 
 def _part_class(cls: str, part: Part, functions: list[tuple[str, list[str]]]) -> list[str]:
@@ -64,14 +104,11 @@ def _part_class(cls: str, part: Part, functions: list[tuple[str, list[str]]]) ->
     all_idents = [identifier(pin) for pin in all_pins]
     unique = [pin for pin in all_pins if all_idents.count(identifier(pin)) == 1]
     fn_names = {fn for fn, _ in functions}
-    names = (
-        f"Literal[{', '.join(map(repr, sorted(fn_names, key=natural_key)))}]"
-        if fn_names
-        else "Never"
-    )
+    names: _Node = _literal(sorted(fn_names, key=natural_key)) if fn_names else "Never"
+    device: _Node = ("TypedDevice[", [names, _q(cls)], "]", True)
     lines = [
-        f"class {cls}(TypedDevice[{names}, {cls!r}]):",
-        f"    mpn: ClassVar[str] = {part.mpn!r}",
+        *_wrap((f"class {cls}(", [device], "):", False), 0),
+        f"    mpn: ClassVar[str] = {_q(part.mpn)}",
     ]
     idents = [identifier(fn) for fn, _ in functions]
     lines += [f"    {ident}: {cls}__{ident}" for ident in idents]
@@ -114,17 +151,14 @@ def _named_parts(model: Model) -> list[tuple[str, Part]]:
 def _header(sources: tuple[str, ...], digest: str) -> list[str]:
     names = ", ".join(sources)
     return [
-        (
-            f"{_TRIPLE}Generated from {names}. Do not edit: "
-            f"regenerate with python -m fransys parts-module.{_TRIPLE}"
-        ),
+        (f"{_TRIPLE}Generated from {names}. Do not edit: regenerate with python -m fransys parts-module.{_TRIPLE}"),
         "",
         "from typing import TYPE_CHECKING, ClassVar, Literal, Never, override",
         "",
         "from fransys import Pin, Throw, TypedDevice, TypedFn",
         "",
-        f"SOURCES = ({', '.join(map(repr, sources))},)",
-        f"LIBRARY_DIGEST = {digest!r}",
+        f"SOURCES = ({', '.join(map(_q, sources))},)",
+        f"LIBRARY_DIGEST = {_q(digest)}",
         "",
         "",
     ]
@@ -146,4 +180,4 @@ def parts_module(*sources: str) -> str:
         for fn, pins in fns:
             body += _function_class(cls, fn, pins, changeover=(part.id, fn) in changeovers)
         body += [*_part_class(cls, part, fns), ""]
-    return "\n".join([*_header(sources, model.digest), *body]).rstrip("\n") + "\n"
+    return "\n".join([*_header(sources, _data_digest(model)), *body]).rstrip("\n") + "\n"

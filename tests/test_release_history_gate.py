@@ -4,13 +4,8 @@ Dates run in the order the entries are listed, so history order is the
 listed order unless a test says otherwise.
 """
 
-import sys
-from pathlib import Path
-
 import fransys as fr
 import pytest
-
-sys.path.insert(0, str(Path(__file__).parent))
 from release_folders_fixture import build_system, release_board
 
 
@@ -20,7 +15,7 @@ def _history(*pairs):
 
 
 def _refused(into, version, revision, pairs):
-    with pytest.raises(fr.BuildErrors) as exc:
+    with pytest.raises(fr.BuildFailedError) as exc:
         release_board(into, version=version, revision=revision, history=_history(*pairs))
     assert {f.code for f in exc.value.findings} == {"RELEASE_HISTORY_UNRELEASED"}
     return sorted(f.message for f in exc.value.findings)
@@ -54,9 +49,7 @@ def test_entries_dated_before_the_first_release_stay_free_in_every_version(tmp_p
     """1.1, 1.2, 2.1, 2.2 dated before the first release 1.3; then 1.4 releases."""
     old = [(1, 1, "2025-01-01"), (1, 2, "2025-01-02"), (2, 1, "2025-01-03"), (2, 2, "2025-01-04")]
     release_board(tmp_path, revision=3, history=[*old, (1, 3, "2026-02-01")])
-    folder = release_board(
-        tmp_path, revision=4, history=[*old, (1, 3, "2026-02-01"), (1, 4, "2026-02-02")]
-    )
+    folder = release_board(tmp_path, revision=4, history=[*old, (1, 3, "2026-02-01"), (1, 4, "2026-02-02")])
     assert folder.name == "1.4"
 
 
@@ -64,6 +57,6 @@ def test_a_system_release_checks_the_projects_own_history(tmp_path):
     first = build_system(history=_history((1, 1)))
     fr.release(first, tmp_path)
     second = build_system(revision=3, history=_history((1, 1), (1, 2), (1, 3)))
-    with pytest.raises(fr.BuildErrors) as exc:
+    with pytest.raises(fr.BuildFailedError) as exc:
         fr.release(second, tmp_path)
     assert {f.code for f in exc.value.findings} == {"RELEASE_HISTORY_UNRELEASED"}

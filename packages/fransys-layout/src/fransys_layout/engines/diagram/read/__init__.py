@@ -7,14 +7,15 @@ from fransys_layout.engines.diagram.read.facts import diagram_reading
 from fransys_layout.engines.diagram.read.findings import reading_findings
 from fransys_layout.engines.overview.read.readings import readings
 lazy from fransys_layout.engines.overview.sheet_values import DiagramFacts
+lazy from fransys_layout.symbols import SymbolLibrary
 lazy from fransys_model.kernel import Finding, Model
 
 __all__ = ("read_diagrams", "read_findings")
 
 
-def read_diagrams(model: Model) -> tuple[DiagramFacts, ...]:
+def read_diagrams(model: Model, library: SymbolLibrary) -> tuple[DiagramFacts, ...]:
     """One `DiagramFacts` per reading that has a line: the system first, then each unit instance."""
-    found = (diagram_reading(model, unit) for unit in readings(model))
+    found = (diagram_reading(model, unit, library) for unit in readings(model))
     return tuple(facts for facts in found if facts is not None)
 
 

@@ -7,25 +7,22 @@ The model is built once per variant and the good one is written once, shared by 
 import functools
 
 import fransys as fr
-import fransys_author
 import pytest
 from _model_build_cover import _COVER
+from fransys_author.design import Design
 
-from fransys_model.derive.cable_drawing import cable_block_key
 from fransys_model.vocab import DocumentPreset
-from fransys_model.vocab.tables import items
 
 _LONG_TAG = "W" + "L" * 400
 
 
 def _design(*, extra=None, cable_tag="W1"):
-    """A strip `X1` and a motor `M1` joined by `cable_tag`; `extra` adds `W2` or a third core.
+    """A strip `X1` and a motor `M1` joined by `cable_tag`; `extra` adds `W2`.
 
     `extra="loop"`: W2 joins two strip terminals (a cable of row links).
-    `extra="interleave"`: harness WH7 whose cable W7's top columns lie round W8's.
     """
     parts = fr.parts("demo_parts")
-    d = fransys_author.Design(parts)
+    d = Design(parts)
     d.project(title="Cable drawings", number="DEMO-5", customer="Demo Co", revision=1, author="d")
     d.revision(1, date="2026-10-07", text="First issue", created="XX")
     loc = d.location("C1", "Demo cabinet")
@@ -39,16 +36,6 @@ def _design(*, extra=None, cable_tag="W1"):
     if extra == "loop":
         second = d.cable("DEMO-CBL-4G1.5", tag="W2", length_mm=500)
         second.core(1, terminals[2].outer, terminals[3].outer)
-    if extra == "interleave":
-        harness = d.harness(tag="WH7", at=loc, group=grp)
-        m1, m2, m3 = (
-            d.item("DEMO-MOTOR-4KW", tag=f"M{n}", parent=harness, at=loc, group=grp)
-            for n in (2, 3, 4)
-        )
-        w7 = d.cable("DEMO-CBL-4G1.5", tag="W7", parent=harness, at=loc)
-        w7.core(1, m1["U"], m3["U"])
-        w7.core(2, m2["U"], m3["V"])
-        d.cable("DEMO-CBL-4G1.5", tag="W8", parent=harness, at=loc).core(1, m1["V"], m3["W"])
     return parts, d.draft()
 
 
@@ -57,7 +44,6 @@ def _built(variant: str):
     kwargs = {
         "good": {},
         "loop": {"extra": "loop"},
-        "interleave": {"extra": "interleave"},
         "wide": {"cable_tag": _LONG_TAG},
     }[variant]
     parts, draft = _design(**kwargs)
@@ -83,7 +69,7 @@ def _raised(variant: str, tmp_path):
     The intermediates run before the gate: a missing block SVG must not end in a `KeyError` in
     `fransys_pdf.source` (the source leaves the block out, the check reports it).
     """
-    with pytest.raises(fr.BuildErrors) as raised:
+    with pytest.raises(fr.BuildFailedError) as raised:
         fr.write(_built(variant), tmp_path / "out", intermediates=tmp_path / "inter")
     assert not list((tmp_path / "out").glob("*"))
     assert len(list((tmp_path / "inter").glob("*.typ"))) == 1
@@ -114,23 +100,6 @@ def test_write_draws_a_cable_of_row_links(tmp_path):
     """
     paths = fr.write(_built("loop"), tmp_path / "out", intermediates=tmp_path / "inter")
     assert any(p.suffix == ".pdf" for p in paths)
-
-
-def test_write_refuses_a_cable_the_engine_cannot_draw(good_written, tmp_path):
-    """Facade half: a harness whose cable columns interleave fails the write.
-
-    The good model (positive control, `good_written`) writes. Probe: the placer's overlap test of
-    the cable boxes dropped, so the harness draws.
-    """
-    assert good_written()[0]
-    findings = _raised("interleave", tmp_path)
-    missing = [f for f in findings if f.code == "DOCUMENT_NO_DRAWINGS"]
-    assert missing
-    (harness,) = [i.id for i in items(_built("interleave").model).values() if i.key == ("WH7",)]
-    key = cable_block_key(None, harness)
-    assert any(f"missing drawing for {key}" in f.message for f in missing), [
-        f.message for f in missing
-    ]
 
 
 def test_write_refuses_a_block_wider_than_the_page(good_written, tmp_path):

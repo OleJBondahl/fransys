@@ -18,9 +18,7 @@ def test_the_lens_lists_every_channel_with_its_kind_and_field_device() -> None:
     rows = list({row.channel: row for row in plc_channel_rows(model)}.values())
     assert len(channels) >= len(rows) > 0
     bound = [c for c in channels if c.device is not None]
-    assert sorted(str(c.signal_name) for c in bound) == sorted(
-        str(r.signal_name) for r in rows if r.field_device
-    )
+    assert sorted(str(c.signal_name) for c in bound) == sorted(str(r.signal_name) for r in rows if r.field_device)
     assert all(c.device_item is not None and c.device_designation for c in bound)
     assert {c.kind for c in channels} <= set(SignalKind)
     assert len({c.kind for c in channels}) > 1

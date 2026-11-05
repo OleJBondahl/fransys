@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from .errors import CoreError
+
 LETTERS = 26
 
 if TYPE_CHECKING:
@@ -24,8 +26,8 @@ def cell_of(x: int, y: int, area: Size, cells: tuple[int, int]) -> str:
     columns, rows = cells
     if not (0 <= x <= area.w and 0 <= y <= area.h):
         msg = f"cell_of: ({x}, {y}) lies outside the {area.w} x {area.h} area"
-        raise ValueError(msg)
+        raise CoreError(msg)
     if not 1 <= rows <= LETTERS or columns < 1:
         msg = f"cell_of: the grid {cells} cannot be named"
-        raise ValueError(msg)
+        raise CoreError(msg)
     return f"{_index(x, area.w, columns) + 1}{chr(ord('A') + _index(y, area.h, rows))}"

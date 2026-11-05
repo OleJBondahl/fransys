@@ -3,7 +3,7 @@
 from collections import defaultdict
 from typing import TYPE_CHECKING
 
-from fransys_model.derive import function_item, physical_nets, terminal_items
+from fransys_model.derive import drawn_physical_nets, function_item, terminal_items
 
 from .kit_keys import function_of
 from .placement_skips import SPARE_TERMINAL
@@ -27,11 +27,11 @@ def spare_leads(
     """Each kit key left off the page, with its reason (R356, R364).
 
     A terminal whose every net ends on it alone is a spare terminal. A function on no net is
-    unwired, or a spare function when `derive.undrawn_functions` names it (an unwired contact).
+    unwired, or a spare function when `derive.carried_functions` names it (an unwired contact).
     """
     met: dict[str, set[str]] = defaultdict(set)  # a symbol with a net that reaches past it
-    for physical in physical_nets(model):
-        ends = {pins[p].sym if p in pins else None for p in physical.ports}  # None: not drawn
+    for ports in (net.ports for net in drawn_physical_nets(model)):  # a bridge is no wire (R705)
+        ends = {pins[p].sym if p in pins else None for p in ports}  # None: not drawn
         if len(ends) > 1:
             for sym in filter(None, ends):
                 met[sym].add("")

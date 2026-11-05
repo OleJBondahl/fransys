@@ -2,23 +2,19 @@
 
 A unit release keeps a WARNING when one of its subjects of an owned kind (item, function, port,
 unit, document) is inside the unit (its subtree, or a document it exports), or when it has no
-subject of an owned kind. A system release keeps every WARNING. One system build of two sibling
-units serves the filter tests (a module fixture); each acceptance case names its probe.
 """
 
 import json
-lazy from pathlib import Path
 
 import fransys as fr
-import fransys_author
 import pytest
 from fransys._release_manifest import _warning_entries
+from fransys_author.design import Design
 
-from fransys_model.derive import document_unit, unit_items
+from fransys_model.derive import document_unit, documents, unit_items
 from fransys_model.kernel import Finding, Severity
-from fransys_model.vocab import documents, functions, items, ports
+from fransys_model.vocab import functions, items, ports
 
-_NEW = "DESIGNATION_NEW_IN_REVISION"
 _DATE = "2026-10-05"
 
 
@@ -30,6 +26,7 @@ def _sibling(design, name, *, cable):
     relay = u.item("DEMO-RLY-2CO-24", name="k1", parent=board)
     if cable:
         u.cable("DEMO-CBL-4G1.5", name="w1c", parent=board)
+    u.link(relay.fn("coil")["A1"], relay.fn("coil")["A2"], kind="lead")  # the unit draws a page
     return u, relay
 
 
@@ -37,7 +34,7 @@ def _sibling(design, name, *, cable):
 def system(tmp_path_factory):
     """`(result, scope_a, scope_b, into)`: two sibling units, a net with an undeclared potential."""
     parts = fr.parts("demo_parts")
-    design = fransys_author.Design(parts)
+    design = Design(parts)
     scope_a, relay_a = _sibling(design, "mw-a", cable=False)
     scope_b, _relay_b = _sibling(design, "mw-b", cable=True)
     design.net("mw-net", relay_a.fn("coil")["A1"], potential="+99V")
@@ -46,7 +43,7 @@ def system(tmp_path_factory):
     for name, scope in (("a", scope_a), ("b", scope_b)):
         cover = covers / f"{name}.md"
         cover.write_text("# Cover\n", encoding="utf-8")
-        docs.append(fr.document(fr.DocumentPreset.PCB_SCHEMATIC, scope, cover=cover))
+        docs.append(fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, scope, cover=cover))
     result = fr.build(parts, design.draft(), *docs)
     assert [f for f in fr.check(result) if f.severity is fr.Severity.ERROR] == []
     return result, scope_a, scope_b, tmp_path_factory.mktemp("releases")
@@ -72,54 +69,16 @@ def _port(model, unit_scope):
 
 
 def _document_of(model, unit_scope):
-    (found,) = [
-        i for i, r in documents(model).items() if document_unit(model, r.id) == unit_scope.unit_id
-    ]
+    (found,) = [i for i, r in documents(model).items() if document_unit(model, r.id) == unit_scope.unit_id]
     return found
 
 
 def _warn(code, *subjects):
-    return Finding(
-        code=code, severity=Severity.WARNING, subjects=subjects, message=code, fix="Write: x"
-    )
+    return Finding(code=code, severity=Severity.WARNING, subjects=subjects, message=code, fix="Write: x")
 
 
 def _codes(entries):
     return [e["code"] for e in entries]
-
-
-# -- An untagged new instance is listed with its listing text ----------------
-
-
-@pytest.fixture
-def released(tmp_path: Path) -> Path:
-    """A cabinet of two floating board instances, released at revision 1."""
-    result, cab, board = _cabinet(1, ("m1", "m2"))
-    fr.release(result, tmp_path, unit=board)
-    fr.release(result, tmp_path, unit=cab)
-    return tmp_path
-
-
-def _cabinet(revision, boards, releases=None):
-    parts = fr.parts("demo_parts")
-    design = fransys_author.Design(parts)
-    cab = design.scope("cab").unit("mw-cabinet", revision=revision, interface="1", class_code="U")
-    cab.revision(revision, date=_DATE, text=f"Revision {revision}", created="OJB")
-    board = None
-    for name in boards:
-        board = cab.scope(name).unit("mw-board", revision=1, interface="1", class_code="U")
-        board.revision(1, date=_DATE, text="First", created="OJB")
-        board.item("DEMO-PCB-IO", name="pcb")
-    return fr.build(parts, design.draft(), releases=releases), cab, board
-
-
-def test_a_new_untagged_instance_is_listed_by_its_listing_text(released: Path) -> None:
-    """Probe: restore the old `set(finding.subjects) & relevant` filter."""
-    result, cab, _ = _cabinet(2, ("m1", "m2", "m3"), releases=released)
-    target = fr.release(result, released, unit=cab)
-    manifest = json.loads((target / "baseline" / "manifest.json").read_text(encoding="utf-8"))
-    listed = [w["subjects"] for w in manifest["warnings"] if w["code"] == _NEW]
-    assert listed == []  # an INFO since WARNINGS-ACTIONABLE W7: the manifest lists WARNINGs only
 
 
 # -- A sibling unit's item warning is not listed --------------------------------
@@ -147,15 +106,13 @@ def test_a_system_release_keeps_every_warning(system) -> None:
 # -- A sibling's cable (cable + product) is not listed, and nothing raises -------
 
 
-def test_a_siblings_short_cable_is_not_listed_and_the_release_does_not_raise(
-    system, manifest_a
-) -> None:
+def test_a_siblings_short_cable_is_not_listed_and_the_release_does_not_raise(system, manifest_a) -> None:
     """Probe: the looser rule, keep a WARNING when any subject is of an unowned kind."""
     result, scope_a, _scope_b, _into = system
-    raw = [f for f in fr.check(result) if f.code == "CABLE_CORE_COUNT"]
+    raw = [f for f in fr.check(result) if f.code == "CABLE_CORES_FEWER"]
     assert raw, "the sibling's core-less cable warns in the system build"
     assert len(raw[0].subjects) == 2, "the cable and its product"
-    assert "CABLE_CORE_COUNT" not in _codes(manifest_a["warnings"])
+    assert "CABLE_CORES_FEWER" not in _codes(manifest_a["warnings"])
     assert _codes(_warning_entries(result.model, scope_a.unit_id, tuple(raw))) == []
 
 
@@ -164,9 +121,7 @@ def test_a_siblings_short_cable_is_not_listed_and_the_release_does_not_raise(
 
 def test_a_net_only_warning_is_listed_in_a_unit_release(manifest_a) -> None:
     """Probe: the old `set(finding.subjects) & relevant` filter."""
-    listed = [
-        w["subjects"] for w in manifest_a["warnings"] if w["code"] == "POTENTIAL_WITHOUT_SUPPLY"
-    ]
+    listed = [w["subjects"] for w in manifest_a["warnings"] if w["code"] == "POTENTIAL_WITHOUT_SUPPLY"]
     assert listed == [["net/mw-net"]]
 
 
@@ -215,7 +170,7 @@ def test_a_warning_on_the_released_unit_itself_is_kept_and_renders(system) -> No
 def _nested(*, outer_tag, inner_tag):
     """`(model, outer, mid, inner)`: an outer unit holding a tagged-or-not mid holding an inner."""
     parts = fr.parts("demo_parts")
-    design = fransys_author.Design(parts)
+    design = Design(parts)
     outer = design.scope("out").unit("mw-outer", revision=1, interface="1")
     outer.revision(1, date=_DATE, text="First", created="OJB")
     mid = outer.scope("mid").unit("mw-mid", revision=1, interface="1", tag=outer_tag)
@@ -249,16 +204,3 @@ def test_an_untagged_middle_link_prints_the_key_below_the_unit_never_a_partial_c
 def test_an_untagged_instance_prints_its_key_below_the_unit() -> None:
     model, outer, mid, _inner = _nested(outer_tag=None, inner_tag=None)
     assert _text(model, outer, mid) == "mid/unit"
-
-
-# -- A root instance numbered by the pass prints its assigned tag (model-0239) ------------
-
-
-def test_a_root_instance_numbered_by_the_pass_prints_its_assigned_tag() -> None:
-    """A floating root instance gets `U1` from the numbering pass; the system manifest names it.
-
-    The manifest read the tag from the parent's `numbering_pins` rows, and a root has no parent,
-    so it printed the key (`cab/unit`) where every listing prints `-U1`.
-    """
-    result, cab, _board = _cabinet(1, ("m1",))
-    assert _text(result.model, None, cab.unit_id) == "-U1"

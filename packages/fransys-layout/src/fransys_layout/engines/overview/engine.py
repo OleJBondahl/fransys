@@ -1,27 +1,28 @@
 """The overview engine: one pass from a model to its overview position records."""
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from fransys_layout.engines.overview.defaults import ENGINE_NAME, ENGINE_VERSION, PACK_SHAPE
 from fransys_layout.engines.overview.place import place_view, view_findings, view_scene
 from fransys_layout.engines.overview.read import read_views
 from fransys_layout.engines.overview.write import view_records, write_overview
-from fransys_layout.fix_text import fix_text
+from fransys_layout.fix_text import finding
 from fransys_layout.lint.codes import OVERVIEW_UNPLACED
-from fransys_model.kernel import Finding, Id, Model, Severity
+
+if TYPE_CHECKING:
+    from fransys_layout.symbols import SymbolLibrary
+    from fransys_model.kernel import Finding, Id, Model
 
 
 def _unplaced(first: Id[Any]) -> Finding:
-    return Finding(
-        code=OVERVIEW_UNPLACED,
-        severity=Severity.ERROR,
-        subjects=(first,),
-        message="An overview view cannot be placed, so the page has no positions for it.",
-        fix=fix_text(OVERVIEW_UNPLACED),
+    return finding(
+        OVERVIEW_UNPLACED,
+        (first,),
+        "An overview view cannot be placed, so the page has no positions for it.",
     )
 
 
-def lay_out_overview(model: Model) -> tuple[Model, tuple[Finding, ...]]:
+def lay_out_overview(model: Model, library: SymbolLibrary) -> tuple[Model, tuple[Finding, ...]]:
     """Return `model` with the records of every overview view, and the lint findings.
 
     Pure. Every level, every opened unit and every open strip is placed with no sheet cut. A view
@@ -31,7 +32,7 @@ def lay_out_overview(model: Model) -> tuple[Model, tuple[Finding, ...]]:
     stamp = f"fransys-layout/{ENGINE_NAME} {ENGINE_VERSION}"
     records: list[object] = []
     found: list[Finding] = []
-    for facts in read_views(model):
+    for facts in read_views(model, library):
         sheet = place_view(facts, PACK_SHAPE)
         if sheet is None:
             found.append(_unplaced(facts.boxes[0].box))

@@ -22,9 +22,7 @@ def _documents_of_sets(model: Model) -> dict[Id[DrawingSet], set[Id[Any]]]:
     return found
 
 
-def _off_document(
-    model: Model, own: Page, target: Page, printed: Mapping[Id[DrawingSet], set[Id[Any]]]
-) -> bool:
+def _off_document(model: Model, own: Page, target: Page, printed: Mapping[Id[DrawingSet], set[Id[Any]]]) -> bool:
     """Whether `target` is off the document that prints `own`, and the text names no location."""
     if own.drawing_set == target.drawing_set or not printed[own.drawing_set]:
         return False
@@ -46,7 +44,7 @@ def references_off_document(model: Model) -> tuple[OffDocumentReference, ...]:
     printed = _documents_of_sets(model)
     ends = [(one.id, one.page, markers[one.partner].page) for one in markers.values()]
     off: dict[Id[Any], OffDocumentReference] = {}
-    for subject, page, target in sorted(ends):
+    for subject, page, target in ends:
         if subject not in off and _off_document(model, pages[page], pages[target], printed):
             off[subject] = OffDocumentReference(subject=subject, page=page, target=target)
     return tuple(off.values())

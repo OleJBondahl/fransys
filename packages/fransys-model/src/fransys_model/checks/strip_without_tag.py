@@ -2,12 +2,13 @@
 
 from typing import TYPE_CHECKING, Final
 
-from fransys_model.checks._finding import finding, ordered
+from fransys_model.checks._finding import ordered
 from fransys_model.derive.facts.item_predicates import terminal_class_codes
 from fransys_model.derive.facts.strip_without_tag import strips_without_tag
-from fransys_model.kernel import Finding, Severity
+from fransys_model.vocab.codes import finding
 from fransys_model.vocab.finding_ref import ref
 from fransys_model.vocab.tables import items
+lazy from fransys_model.kernel import Finding
 
 if TYPE_CHECKING:
     from fransys_model.kernel import Id, Model
@@ -30,7 +31,6 @@ def check_strip_without_tag(model: Model) -> tuple[Finding, ...]:
     found = [
         finding(
             STRIP_WITHOUT_TAG,
-            Severity.ERROR,
             (strip,),
             f"{ref(items(model)[strip])} has no part, no tag and no class code to number from: "
             f"{_why(model, strip)}; give it a part, a tag, or terminals of one class code",

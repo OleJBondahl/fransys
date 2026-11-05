@@ -2,7 +2,6 @@
 
 An ERROR or WARNING fix names a public `fr.<name>` call, an author call `d.<name>(...)`, a
 settings or part-file key (`[section] key`, `key = value`), or says `No call clears this:`,
-the one known-limit marker. It never names an internal type, a private module or a library hook.
 """
 
 import re
@@ -17,12 +16,7 @@ FR_NAME = re.compile(r"\bfr\.([A-Za-z_]\w*)(?:\.([A-Za-z_]\w*))?")
 # an internal name: a package module, a CamelCase type with an attribute, a `kit` or a `Skipped`
 INTERNAL = re.compile(r"\bfransys_\w+|\b[A-Z][a-z]+(?:[A-Z][a-z]*)*\.[a-z_]\w*|\bkit\b|\bSkipped\b")
 ACTION = re.compile(r"\b\w+(?:\.\w+)*\(|\[\w[\w .-]*\]|[\w>] = |\.toml\b")
-COUNTED = [
-    pytest.param(info, id=info.code)
-    for infos in GROUPS.values()
-    for info in infos
-    if set(info.severities) & {Severity.ERROR, Severity.WARNING}
-]
+COUNTED = [pytest.param(info, id=info.code) for infos in GROUPS.values() for info in infos if info.severity in {Severity.ERROR, Severity.WARNING}]
 
 
 def _problem(fix: str) -> str | None:

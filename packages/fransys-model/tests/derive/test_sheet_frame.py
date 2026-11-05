@@ -1,4 +1,4 @@
-"""A sheet's frame values in mm (`sheet_frame`) and the notice's line pitch and count."""
+"""A sheet's frame values in mm (`sheet_frame`)."""
 
 from decimal import Decimal
 
@@ -7,8 +7,6 @@ from derive_helpers import house_record
 
 from fransys_model.derive import (
     FrameStrip,
-    notice_line_count,
-    notice_pitch_mm,
     sheet_frame,
 )
 from fransys_model.kernel import Id
@@ -53,11 +51,3 @@ def test_unequal_margins_give_each_strip_its_own_depth_and_a_taller_band():
     assert (bottom.y, left.cell_width, right.x) == (206, 6, 291)
     assert left.cell_height == pytest.approx(170 / 3)
     assert left.labels == ("A", "B", "C")
-
-
-@pytest.mark.parametrize(
-    ("height", "font", "count"), [(18, 1.8, 8), (30, 1.8, 13), (18, 2.5, 6), (2.15, 1.8, 0)]
-)
-def test_the_notice_holds_whole_lines_of_one_and_a_fifth_em(height, font, count):
-    assert notice_pitch_mm(font) == pytest.approx(font * 1.2)
-    assert notice_line_count(height, font_mm=font) == count

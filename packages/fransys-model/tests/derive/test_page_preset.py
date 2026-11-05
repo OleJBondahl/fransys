@@ -43,9 +43,7 @@ def test_preset_equals_the_inventory(kind: PageKind) -> None:
 
 def test_list_key_is_set_exactly_for_the_list_kinds() -> None:
     with_key = {kind for kind in PageKind if page_preset(kind).list_key is not None}
-    assert with_key == {
-        kind for kind in PageKind if kind.name.endswith("LIST") or kind.name == "BOM"
-    }
+    assert with_key == {kind for kind in PageKind if kind.name.endswith("LIST") or kind.name == "BOM"}
     assert len({page_preset(kind).list_key for kind in with_key}) == len(with_key)
 
 

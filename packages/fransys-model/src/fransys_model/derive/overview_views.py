@@ -37,10 +37,7 @@ def unit_matrix(model: Model) -> UnitMatrix:
         row, col = sorted((place[line.ref.a], place[line.ref.b]))
         if line.ref.via is not None:
             found.setdefault((row, col), set()).add(line.ref.via)
-    cells = tuple(
-        MatrixCell(row=row, col=col, count=len(cables), cables=tuple(sorted(cables)))
-        for (row, col), cables in sorted(found.items())
-    )
+    cells = tuple(MatrixCell(row=row, col=col, count=len(cables), cables=tuple(sorted(cables))) for (row, col), cables in sorted(found.items()))
     return UnitMatrix(axis=axis, cells=cells)
 
 
@@ -68,11 +65,7 @@ def _lens_modules(model: Model) -> tuple[LensModule, ...]:
                     kind=signal_kind(channel.signal),
                     signal_name=channel.signal_name,
                     device=channel.field_device,
-                    device_item=(
-                        None
-                        if channel.field_device is None
-                        else all_functions[channel.field_device].item
-                    ),
+                    device_item=(None if channel.field_device is None else all_functions[channel.field_device].item),
                     device_designation=channel.field_device_designation,
                 )
                 for channel in module.channels

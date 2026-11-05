@@ -16,8 +16,8 @@ from fransys_model.derive.facts.fault.readers import conductive_ports, draw
 from fransys_model.derive.facts.rail_reach import reached_kinds
 from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, UnionFind, digest_cached
 from fransys_model.vocab.tables import functions
+lazy from fransys_model.elecdef import Current
 lazy from fransys_model.vocab.core import Function, Port
-lazy from fransys_model.vocab.enums import Current
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -87,16 +87,11 @@ def _added(
     ]
 
 
-def _positioned(
-    raw: Raw, bounds: _Bounds, load: tuple[Id[Function], Decimal, list[Current]]
-) -> list[LoadLimit]:
+def _positioned(raw: Raw, bounds: _Bounds, load: tuple[Id[Function], Decimal, list[Current]]) -> list[LoadLimit]:
     """The limits of a load that is already a position, one per position and kind."""
     function, drawn, kinds = load
     return [
-        LoadLimit(function, None, kind, drawn, _pick(bounds, edge.at, kind))
-        for edge in raw.edges
-        if function in edge.tie.functions
-        for kind in kinds
+        LoadLimit(function, None, kind, drawn, _pick(bounds, edge.at, kind)) for edge in raw.edges if function in edge.tie.functions for kind in kinds
     ]
 
 

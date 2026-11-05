@@ -2,7 +2,6 @@
 
 The facade hands `fransys_render.bridge_pieces(LIBRARY)` to `fransys_pdf.source`; without it a
 terminal list with a jumper group would raise. A unit whose strip is bridged through the public
-API builds, writes its Typst source with the pieces placed, and compiles to a PDF.
 """
 
 from typing import Any, NamedTuple
@@ -28,7 +27,9 @@ class _Io(NamedTuple):
 def _feed(d: Any) -> _Io:
     x4 = d.terminal_strip("X4", "DEMO-TB-2.5", 6, bridged=(2, 6))
     with d.function("DRV", "Drives"):
-        d.detail.wire(x4[2], d.device("S1", "DEMO-PB-NC").sw["A"], wire=("RD", 0.75))
+        s1 = d.device("S1", "DEMO-PB-NC")
+        d.series(x4[2].inner, s1.sw["A"], wire=("RD", 0.75))
+        d.series(x4[1].inner, s1.sw["B"], wire=("RD", 0.75))
     return _Io(x4)
 
 

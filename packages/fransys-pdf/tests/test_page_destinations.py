@@ -4,22 +4,14 @@ The destination is read back from the compiled PDF with pypdfium2, so the check 
 the Typst source. The cover is page 0; the schematic pages follow in source order.
 """
 
-import fransys_render
 import pypdfium2 as pdfium
 import pypdfium2.raw as pdfium_raw
 import pytest
-import typst
-from _build import document, drawing_set, layout_page, location, model, source, unit
+from _build import compile_pdf as _compile
+from _build import document, drawing_set, layout_page, location, model, unit
 
-from electrical_symbols import LIBRARY, font_dir
-from fransys_model.derive import document_sheets_of, page_destination, page_nav
-from fransys_model.kernel import render_id
-from fransys_model.vocab import DocumentPreset, PageKind
-
-_SVG = (
-    '<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">'
-    '<rect width="10" height="10"/></svg>'
-)
+from fransys_model.derive import page_destination, page_nav
+from fransys_model.vocab import DocumentPreset
 
 
 def _fixture():
@@ -40,47 +32,34 @@ def _fixture():
         subject=u,
         cover="# Cover",
         notes=None,
-        remove=(PageKind.PLC_LIST, PageKind.TERMINAL_LIST, PageKind.BOM, PageKind.SHEET_INDEX),
     )
     return model(c1, c2, u, ds1, ds2, *pages, doc), doc, pages
-
-
-def _compile(m, doc, pages) -> bytes:
-    svgs = {render_id(page.id): _SVG for page in pages}
-    compiler = typst.Compiler(font_paths=[font_dir()], ignore_system_fonts=True)
-    compiled = compiler.compile(
-        input=source(m, doc.id, svgs, fransys_render.sheets(document_sheets_of(m), LIBRARY)).encode(
-            "utf-8"
-        )
-    )
-    assert isinstance(compiled, bytes)
-    return compiled
 
 
 def _page_index_of(pdf: pdfium.PdfDocument, name: str) -> int | None:
     dest = pdfium_raw.FPDF_GetNamedDestByName(pdf.raw, name.encode("utf-8"))
     if not dest:
         return None
-    return pdfium_raw.FPDFDest_GetDestPageIndex(pdf.raw, dest)
+    return int(pdfium_raw.FPDFDest_GetDestPageIndex(pdf.raw, dest))
 
 
 def _assert_destinations(compiled: bytes, expected: dict[str, int]) -> None:
     pdf = pdfium.PdfDocument(compiled)
-    assert len(pdf) == 1 + len(expected)  # the cover, then one page per schematic page
+    assert len(pdf) == 2 + len(expected)  # the cover, the sheet index, then one page per schematic page
     for name, index in expected.items():
         assert _page_index_of(pdf, name) == index, name
 
 
 def test_each_schematic_page_is_a_destination_on_its_own_page():
     m, doc, pages = _fixture()
-    expected = {page_destination(m, page): 1 + i for i, page in enumerate(pages)}
+    expected = {page_destination(m, page): 2 + i for i, page in enumerate(pages)}
     assert set(expected) == {"p1.1", "p1.2", "p2.1", "p2.2"}
     _assert_destinations(_compile(m, doc, pages), expected)
 
 
 def test_a_swapped_label_fails_the_destination_check(monkeypatch):
     m, doc, pages = _fixture()
-    expected = {page_destination(m, page): 1 + i for i, page in enumerate(pages)}
+    expected = {page_destination(m, page): 2 + i for i, page in enumerate(pages)}
     first, second = pages[0], pages[1]
     swapped = {first.id: page_destination(m, second), second.id: page_destination(m, first)}
     monkeypatch.setattr(

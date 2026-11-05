@@ -1,10 +1,6 @@
-"""Field case: two placed units each hand back a 4-pin connector, and a top design lands a
-4-core cable between them, core n on pin n at both ends.
-
-The bug (v0.7.0): the container holds the connectors only as handles from `d.add`, and no handle
-listed its pins, so it could not loop over them; the only pin lists were private. Fixing
-decision: author-0020 (`fn.pins`, in the order the connector list prints).
-"""
+"""Field case: two placed units each hand back a 4-pin connector, and a 4-core cable joins them, core n on pin n.
+The bug: the container held connector handles but no handle listed its pins, so a loop over pins was impossible (v0.7.0).
+Fixed by author-0020 (`fn.pins`, in the order the connector list prints)."""
 
 from typing import NamedTuple
 
@@ -31,6 +27,4 @@ def test_a_loop_over_pins_lands_core_n_on_pin_n_at_both_ends() -> None:
     model = fr.build(d).model
     (cable,) = (i for i, item in fr.derive.items(model).items() if item.tag == "W1")
     rows = fr.derive.cable_rows(model, cable)
-    assert [(r.index, r.end_a_designation, r.end_b_designation) for r in rows] == [
-        (n, f"-U1-X1:{n}", f"-U2-X1:{n}") for n in (1, 2, 3, 4)
-    ]
+    assert [(r.index, r.end_a_designation, r.end_b_designation) for r in rows] == [(n, f"-U1-X1:{n}", f"-U2-X1:{n}") for n in (1, 2, 3, 4)]

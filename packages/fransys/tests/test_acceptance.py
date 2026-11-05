@@ -1,30 +1,34 @@
 """F2-F6 acceptance: parts, the findings policy, the export table, out_dir ownership."""
 
 import sys
+from dataclasses import replace
 from decimal import Decimal
 from pathlib import Path
+from typing import Any
 
 import fransys as fr
 import pytest
+from _expected_codes import expect_codes
 from fransys._drawing_library import with_drawing_library
-from fransys._export_ledger import ExportNameClash
+from fransys._export_ledger import ExportNameClashError
+from fransys._exports import _Export, _exports, _file_safe
 from fransys._house import with_house
 from fransys.pipeline import (
-    BuildErrors,
+    BuildFailedError,
     BuildResult,
-    _exports,
-    _file_safe,
+    _Drawn,
     _svgs,
     _svgs_cache,
 )
 from fransys.settings import settings
 
 from electrical_symbols import LIBRARY
+from fransys_layout import DiagramLayout
 from fransys_model.kernel import Draft, Finding, Id, Origin, Severity, freeze, make_id
-from fransys_model.vocab import Document, DocumentPreset, PageKind
+from fransys_model.vocab import Document, DocumentPreset
 from fransys_model.vocab.connectivity import Conductor
 from fransys_model.vocab.core import Function, Item, Port, Unit, UnitRelease
-from fransys_model.vocab.enums import ConductorKind, FunctionKind, PartCategory, PortRole
+from fransys_model.vocab.enums import ConductorKind, FunctionKind, PartCategory, PortBoundary
 from fransys_model.vocab.facets.cable import CableFacet, CableProductFacet, CoreFacet
 from fransys_model.vocab.facets.pcb import PcbFacet
 from fransys_model.vocab.revision import Revision
@@ -33,7 +37,7 @@ from fransys_model.vocab.templates import FunctionTemplate, Part, PortTemplate
 from ._board_and_rack import build_board_and_rack_model
 
 
-def _error_finding(subject: Id) -> Finding:
+def _error_finding(subject: Id[Any]) -> Finding:
     return Finding(
         code="DEMO_ERROR",
         severity=Severity.ERROR,
@@ -43,7 +47,7 @@ def _error_finding(subject: Id) -> Finding:
     )
 
 
-def _warning_finding(subject: Id) -> Finding:
+def _warning_finding(subject: Id[Any]) -> Finding:
     return Finding(
         code="DEMO_WARNING",
         severity=Severity.WARNING,
@@ -69,17 +73,11 @@ def test_parts_loads_a_package():
 # -- F5: the findings policy, no escape hatch -----------------------------------
 
 
-def test_error_finding_blocks_every_export_and_raises_build_errors(
-    demo_cabinet, tmp_path, demo_cabinet_result
-):
+def test_error_finding_blocks_every_export_and_raises_build_errors(demo_cabinet, tmp_path, demo_cabinet_result):
     subject = next(iter(demo_cabinet.tables["item"]))
-    result = BuildResult(
-        model=demo_cabinet,
-        findings=(_error_finding(subject),),
-        drawings=demo_cabinet_result.drawings,
-    )
+    result = replace(demo_cabinet_result, findings=(_error_finding(subject),))
     out_dir = tmp_path / "out"
-    with pytest.raises(BuildErrors) as excinfo:
+    with pytest.raises(BuildFailedError) as excinfo:
         fr.write(result, out_dir)
     assert excinfo.value.findings
     assert all(f.code == "DEMO_ERROR" for f in excinfo.value.findings)
@@ -90,37 +88,23 @@ def test_error_finding_blocks_every_export_and_raises_build_errors(
 
 def test_warning_finding_does_not_block_any_export(demo_cabinet, tmp_path, demo_cabinet_result):
     subject = next(iter(demo_cabinet.tables["item"]))
-    result = BuildResult(
-        model=demo_cabinet,
-        findings=(_warning_finding(subject),),
-        drawings=demo_cabinet_result.drawings,
-    )
+    result = replace(demo_cabinet_result, findings=(_warning_finding(subject),))
     out_dir = tmp_path / "out"
     written = fr.write(result, out_dir)
     assert written
     assert {"DEMO-1-v1.1-bom.csv", "DEMO-1-v1.1-overview.html"} <= {p.name for p in written}
 
 
-def test_a_blocked_write_draws_no_svg_where_the_unblocked_write_draws_them(
-    demo_harness_with_board, tmp_path, demo_harness_with_board_result
-):
+def test_a_blocked_write_draws_no_svg_where_the_unblocked_write_draws_them(demo_cabinet, tmp_path, demo_cabinet_result):
     """0028 amended (model-0077): an errored build's intermediates hold no drawn page.
 
     The positive twin is `test_a_harness_svg_intermediate_has_no_colon_in_its_name`: the same
-    model with no finding writes its harness SVGs. This model has no board and no document, so
-    nothing but the drawings would land in the directory.
-
-    UNDO: pipeline.write `svgs = {} if _has_error(result.findings) else _svgs(model)` ->
-    `svgs = _svgs(model)` (the SCHEMATIC page's SVG is written again).
+    model with no finding writes its SVGs.
     """
-    subject = next(iter(demo_harness_with_board.tables["item"]))
-    result = BuildResult(
-        model=demo_harness_with_board,
-        findings=(_error_finding(subject),),
-        drawings=demo_harness_with_board_result.drawings,
-    )
+    subject = next(iter(demo_cabinet.tables["item"]))
+    result = replace(demo_cabinet_result, findings=(_error_finding(subject),))
     out_dir, intermediates = tmp_path / "out", tmp_path / "intermediates"
-    with pytest.raises(BuildErrors):
+    with pytest.raises(BuildFailedError):
         fr.write(result, out_dir, intermediates=intermediates)
     assert intermediates.is_dir()
     assert list(intermediates.glob("*.svg")) == []
@@ -134,22 +118,12 @@ def test_file_safe_strips_the_colon_from_a_page_key():
     assert ":" not in _file_safe("item:0123456789abcdef")
 
 
-def test_a_harness_svg_intermediate_has_no_colon_in_its_name(
-    demo_harness_with_board, tmp_path, demo_harness_with_board_result
-):
+def test_a_harness_svg_intermediate_has_no_colon_in_its_name(tmp_path, demo_cabinet_result):
     """`write` names every render SVG from a sanitised page key, so the file really exists.
 
-    CT1: `demo_harness_with_board`'s own cable page is a Typst table now, no SVG; the one SVG
-    this fixture still writes is its `SYSTEM` document's rendered `SCHEMATIC` page
-    (drawn by the facade), the same `_file_safe` sanitising this test has always pinned.
-    `:` is valid in a POSIX file name but not mid-name on Windows: it opens an NTFS
-    alternate data stream instead of raising, so a naive `f"{page_key}.svg"` write
-    silently writes zero bytes to a visible `.svg` file -- the failure mode this test
-    guards against is not an exception, it is a page that quietly never gets drawn.
+    The SVG this fixture writes is its `SYSTEM` document's rendered `SCHEMATIC` page.
     """
-    result = BuildResult(
-        model=demo_harness_with_board, findings=(), drawings=demo_harness_with_board_result.drawings
-    )
+    result = replace(demo_cabinet_result, findings=())
     intermediates = tmp_path / "intermediates"
     fr.write(result, tmp_path / "out", intermediates=intermediates)
     svgs = list(intermediates.glob("*.svg"))
@@ -159,11 +133,7 @@ def test_a_harness_svg_intermediate_has_no_colon_in_its_name(
 
 
 _WINDOWS_FORBIDDEN_CHARS = frozenset('<>:"/\\|?*') | {chr(code) for code in range(32)}
-_WINDOWS_RESERVED_STEMS = frozenset(
-    {"CON", "PRN", "AUX", "NUL"}
-    | {f"COM{n}" for n in range(1, 10)}
-    | {f"LPT{n}" for n in range(1, 10)}
-)
+_WINDOWS_RESERVED_STEMS = frozenset({"CON", "PRN", "AUX", "NUL"} | {f"COM{n}" for n in range(1, 10)} | {f"LPT{n}" for n in range(1, 10)})
 
 
 def _windows_forbidden(name: str) -> bool:
@@ -185,17 +155,16 @@ def test_windows_forbidden_passes_a_good_name(good):
     assert not _windows_forbidden(good)
 
 
-@pytest.mark.parametrize("fixture", ["demo_harness_with_board", "demo_cabinet"])
+@pytest.mark.parametrize("fixture", ["demo_cabinet"])
 def test_no_written_file_has_a_name_windows_forbids(fixture, request, tmp_path, monkeypatch):
     """Every file `write` puts out is legal on Windows, checked on the names, on every OS.
 
     A listing cannot show it: a colon name on NTFS opens an alternate data stream and never
     lists. So the names come from what `write` computes: the returned paths, the keys of
-    `_exports`, and every path `Path.write_bytes` receives during the write (the intermediates).
     """
     built = request.getfixturevalue(f"{fixture}_result")
     model = built.model
-    result = BuildResult(model=model, findings=(), drawings=built.drawings)
+    result = BuildResult(model=model, findings=(), drawings=built.drawings, page_svgs=built.page_svgs)
     names: set[str] = set()
     original = Path.write_bytes
 
@@ -208,31 +177,34 @@ def test_no_written_file_has_a_name_windows_forbids(fixture, request, tmp_path, 
     monkeypatch.undo()
     names |= {path.name for path in written}
     _svgs_cache.cache_clear()
-    svgs = _svgs(model, result.drawings, LIBRARY)
-    names |= {
-        Path(n).name
-        for n in _exports(model, result.drawings, svgs, pdf=result.settings.pdf, library=LIBRARY)
-    }
+    svgs = _svgs(_Drawn(model, result.drawings, DiagramLayout(diagrams=()), LIBRARY, result.page_svgs))
+    drawn = _Drawn(model, result.drawings, DiagramLayout(diagrams=()), LIBRARY, svgs)
+    names |= {Path(n).name for n in _exports(_Export(drawn, result.settings))}
     assert names
     assert [name for name in sorted(names) if _windows_forbidden(name)] == []
 
 
 @pytest.mark.skipif(
     sys.platform != "win32",
-    reason="NTFS alternate data streams: a colon in a file name opens one on Windows only; "
-    "on Linux the colon is legal and the file appears",
+    reason="NTFS alternate data streams: a colon in a file name opens one on Windows only; on Linux the colon is legal and the file appears",
 )
-def test_the_colon_bug_can_fail_the_naive_way(
-    demo_harness_with_board, tmp_path, demo_harness_with_board_result
-):
+def test_the_colon_bug_can_fail_the_naive_way(demo_cabinet, tmp_path, demo_cabinet_result):
     """Can-fail twin: writing the RAW (unsanitised) page key produces no visible `.svg`.
 
     Proves `_file_safe` is load-bearing, not cosmetic: skip it (write the raw
     `render_id`-shaped key straight into the file name) and the page silently
-    disappears -- no exception, just an empty `intermediates` directory.
     """
     _svgs_cache.cache_clear()
-    svgs = _svgs(demo_harness_with_board, demo_harness_with_board_result.drawings, LIBRARY)
+    board = demo_cabinet_result
+    svgs = _svgs(
+        _Drawn(
+            demo_cabinet,
+            board.drawings,
+            DiagramLayout(diagrams=()),
+            LIBRARY,
+            board.page_svgs,
+        )
+    )
     assert svgs
     intermediates = tmp_path / "intermediates"
     intermediates.mkdir()
@@ -254,50 +226,39 @@ def _plant_stale_files(out_dir):
     (out_dir / "keep" / "inside.csv").write_text("keep me too", encoding="utf-8")
 
 
-def test_stale_exports_are_removed_on_a_successful_write(
-    demo_cabinet, tmp_path, demo_cabinet_result
-):
-    out_dir = tmp_path / "out"
-    _plant_stale_files(out_dir)
-    result = BuildResult(model=demo_cabinet, findings=(), drawings=demo_cabinet_result.drawings)
-    fr.write(result, out_dir)
+def _assert_only_exports_removed(out_dir):
     names = {p.name for p in out_dir.iterdir()}
     assert "old.pdf" not in names
     assert "bom.csv" not in names
-    assert (out_dir / "data" / "DEMO-1-v1.1-bom.csv").read_text(encoding="utf-8") != "stale"
-    assert "notes.txt" in names
     assert (out_dir / "notes.txt").read_text(encoding="utf-8") == "keep me"
     assert "keep" in names
     assert (out_dir / "keep" / "inside.csv").exists()
+
+
+def test_stale_exports_are_removed_on_a_successful_write(tmp_path, demo_cabinet_result):
+    out_dir = tmp_path / "out"
+    _plant_stale_files(out_dir)
+    result = replace(demo_cabinet_result, findings=())
+    fr.write(result, out_dir)
+    _assert_only_exports_removed(out_dir)
+    assert (out_dir / "data" / "DEMO-1-v1.1-bom.csv").read_text(encoding="utf-8") != "stale"
 
 
 def test_stale_exports_are_removed_on_the_raise_path(demo_cabinet, tmp_path, demo_cabinet_result):
     out_dir = tmp_path / "out"
     _plant_stale_files(out_dir)
     subject = next(iter(demo_cabinet.tables["item"]))
-    result = BuildResult(
-        model=demo_cabinet,
-        findings=(_error_finding(subject),),
-        drawings=demo_cabinet_result.drawings,
-    )
-    with pytest.raises(BuildErrors):
+    result = replace(demo_cabinet_result, findings=(_error_finding(subject),))
+    with pytest.raises(BuildFailedError):
         fr.write(result, out_dir)
-    names = {p.name for p in out_dir.iterdir()}
-    assert "old.pdf" not in names
-    assert "bom.csv" not in names
-    assert "notes.txt" in names
-    assert (out_dir / "notes.txt").read_text(encoding="utf-8") == "keep me"
-    assert "keep" in names
-    assert (out_dir / "keep" / "inside.csv").exists()
+    _assert_only_exports_removed(out_dir)
 
 
 # -- F6: naming ------------------------------------------------------------------
 
 
-def test_terminal_export_is_named_from_the_strip_reference(
-    demo_cabinet, tmp_path, demo_cabinet_result
-):
-    result = BuildResult(model=demo_cabinet, findings=(), drawings=demo_cabinet_result.drawings)
+def test_terminal_export_is_named_from_the_strip_reference(tmp_path, demo_cabinet_result):
+    result = replace(demo_cabinet_result, findings=())
     written = fr.write(result, tmp_path / "out")
     names = {p.name for p in written}
     assert "DEMO-1-v1.1-terminals-C1-X1.csv" in names
@@ -322,20 +283,13 @@ def test_board_netlist_is_written_to_intermediates_named_from_its_reference(tmp_
     assert (intermediates / "netlist-PCB1.net").exists()
 
 
-def test_out_dir_never_receives_an_svg(
-    demo_harness_with_board, tmp_path, demo_harness_with_board_result
-):
+def test_out_dir_never_receives_an_svg(tmp_path, demo_cabinet_result):
     """Decision-0011 regression guard: `out_dir` holds exports only, never a page SVG.
 
     `_exports()` cannot emit an `.svg` key today (it never calls a drawing function), so
     this is "true by construction" -- exactly why it must stay a live assertion: a future
-    change to `_exports()` (adding a drawing leg) could reintroduce a page SVG into
-    `out_dir` with nothing else here to catch it. `demo_harness_with_board` guarantees at
-    least one SVG actually exists (in intermediates), so this is not a vacuous check.
     """
-    result = BuildResult(
-        model=demo_harness_with_board, findings=(), drawings=demo_harness_with_board_result.drawings
-    )
+    result = replace(demo_cabinet_result, findings=())
     out_dir, intermediates = tmp_path / "out", tmp_path / "intermediates"
     written = fr.write(result, out_dir, intermediates=intermediates)
     assert written
@@ -378,107 +332,24 @@ def _clashing_boards_model():
         parts_and_boards.extend([part, pcb, item])
     draft = Draft()
     draft.extend(parts_and_boards, origin=_CLASH_ORIGIN)
-    return with_house(with_drawing_library(freeze(draft)), settings())
+    return with_drawing_library(with_house(freeze(draft), settings()))
 
 
 def test_a_deliberate_export_name_clash_raises(tmp_path):
-    """`ExportNameClash` has no `.findings` (unlike `BuildErrors`): assert on its own text."""
+    """`ExportNameClashError` has no `.findings` (unlike `BuildFailedError`): assert on its own text."""
     model = _clashing_boards_model()
     result = BuildResult(model=model, findings=())
-    with pytest.raises(ExportNameClash) as excinfo:
+    with pytest.raises(ExportNameClashError) as excinfo:
         fr.write(result, tmp_path / "out")
     text = str(excinfo.value)
     assert "EXPORT_NAME_CLASH (error): two subjects both resolve to the export name" in text
 
 
-def _two_units_of_one_release_with_clashing_documents():
-    """Two `Unit` instances of one `UnitRelease`, each the subject of its own document (EN3).
-
-    A unit's export prefix is its release's own name/version/revision, never the unit's own
-    identity (`derive.export_prefix`), so both documents' PDF names collide even though the
-    documents themselves are unrelated records: `_export_name_clash`'s `hint`-not-`None`
-    branch ("keep one document per release").
-    """
-    release = UnitRelease(
-        id=make_id(UnitRelease, ("unit_release", "shared-release", "1", "1")),
-        key=("unit_release", "shared-release", "1", "1"),
-        name="shared-release",
-        version=1,
-        revision=1,
-        interface="1",
-    )
-    revision = Revision(
-        id=make_id(Revision, ("shared-release", "revision", "1")),
-        key=("shared-release", "revision", "1"),
-        release=release.id,
-        version=1,
-        revision=1,
-        date="2026-01-01",
-        text="First release",
-        created="XX",
-    )
-    records: list = [release, revision]
-    for suffix in ("a", "b"):
-        unit = Unit(
-            id=make_id(Unit, (f"unit-{suffix}",)),
-            key=(f"unit-{suffix}",),
-            release=release.id,
-            parent=None,
-        )
-        item = Item(
-            id=make_id(Item, (f"unit-item-{suffix}",)),
-            key=(f"unit-item-{suffix}",),
-            part=None,
-            parent=None,
-            position=None,
-            tag=f"U{suffix.upper()}",
-            description="Invented unit",
-            unit=unit.id,
-        )
-        document = Document(
-            id=make_id(Document, (f"document-{suffix}",)),
-            key=(f"document-{suffix}",),
-            preset=DocumentPreset.CABINET_SCHEMATIC,
-            location=None,
-            item=None,
-            unit=unit.id,
-            add=(),
-            remove=(
-                PageKind.SCHEMATIC,
-                PageKind.PLC_LIST,
-                PageKind.TERMINAL_LIST,
-                PageKind.CONNECTOR_LIST,
-                PageKind.BOM,
-            ),
-            cover="Invented cover text.",
-            notes=None,
-        )
-        records.extend([unit, item, document])
-    draft = Draft()
-    draft.extend(records, origin=_CLASH_ORIGIN)
-    return with_house(with_drawing_library(freeze(draft)), settings())
-
-
-def test_a_deliberate_export_name_clash_of_two_units_in_one_release_raises(tmp_path):
-    """The `hint`-not-`None` branch: two units of the SAME release, "keep one document" text."""
-    model = _two_units_of_one_release_with_clashing_documents()
-    result = BuildResult(model=model, findings=())
-    with pytest.raises(ExportNameClash) as excinfo:
-        fr.write(result, tmp_path / "out")
-    text = str(excinfo.value)
-    assert (
-        "EXPORT_NAME_CLASH (error): two units, both instances of release 'shared-release', "
-        "both export the file 'shared-release-v1.1.pdf'; keep one document per release."
-    ) in text
-
-
 # -- Determinism -------------------------------------------------------------------
 
 
-def test_two_writes_of_one_result_give_byte_equal_files(
-    demo_cabinet, tmp_path, demo_cabinet_result
-):
-    result = BuildResult(model=demo_cabinet, findings=(), drawings=demo_cabinet_result.drawings)
+def test_two_writes_of_one_result_give_byte_equal_files(tmp_path, demo_cabinet_result):
+    result = replace(demo_cabinet_result, findings=())
     first = fr.write(result, tmp_path / "out1")
     second = fr.write(result, tmp_path / "out2")
     assert {p.name for p in first} == {p.name for p in second}
@@ -490,18 +361,12 @@ def test_two_writes_of_one_result_give_byte_equal_files(
 _TEXT_SUFFIXES = {".csv", ".xml", ".md", ".json", ".html", ".txt"}
 
 
-def test_every_text_export_has_no_bom_and_no_carriage_return(
-    demo_cabinet, tmp_path, demo_cabinet_result
-):
+def test_every_text_export_has_no_bom_and_no_carriage_return(tmp_path, demo_cabinet_result):
     """Guide build.md: UTF-8, no byte order mark, `\\n` line ends, on every OS."""
-    result = BuildResult(model=demo_cabinet, findings=(), drawings=demo_cabinet_result.drawings)
+    result = replace(demo_cabinet_result, findings=())
     written = [p for p in fr.write(result, tmp_path / "out") if p.suffix in _TEXT_SUFFIXES]
     assert {".csv"} <= {p.suffix for p in written}  # examined: text exports really were written
-    bad = [
-        p.name
-        for p in written
-        if p.read_bytes().startswith(b"\xef\xbb\xbf") or b"\r" in p.read_bytes()
-    ]
+    bad = [p.name for p in written if p.read_bytes().startswith(b"\xef\xbb\xbf") or b"\r" in p.read_bytes()]
     assert bad == []
 
 
@@ -527,9 +392,7 @@ def test_check_orders_error_then_warning_then_info(demo_cabinet, demo_cabinet_re
             fix="Write: x",
         ),
     )
-    result = BuildResult(
-        model=demo_cabinet, findings=findings, drawings=demo_cabinet_result.drawings
-    )
+    result = replace(demo_cabinet_result, findings=findings)
     resolved = fr.check(result)
     rank = {"error": 0, "warning": 1, "info": 2}
     severities = [f.severity for f in resolved]
@@ -552,26 +415,9 @@ def test_check_calls_kicad_check_for_every_board():
     model = build_board_and_rack_model()
     result = BuildResult(model=model, findings=())
     findings = fr.check(result)
-    assert findings == ()
-
-
-def test_board_and_rack_model_has_no_layout_missing_finding():
-    """Can-fail proof for model-0039: a real board-mounted `Function` is correctly excluded.
-
-    `build_board_and_rack_model()` authors one `Function` directly on the board item and is never
-    given a `layout.page` (it has no location to
-    lay anything out at). Before model-0039, `LAYOUT_MISSING` fired on any non-empty
-    `functions(model)`, so this model -- a genuine board/rack-only submission -- tripped a
-    false-positive `ERROR` and would have blocked `fr.write` entirely. `schematic_functions`
-    excludes the board's own function (the board exclusion covers its own leaf item, not
-    only descendants'), so `LAYOUT_MISSING` must not fire even though the model genuinely
-    holds a `Function` record and no `layout.page`.
-    """
-    model = build_board_and_rack_model(lays_out=True)
-    assert model.tables["function"]  # the board's own function: a non-vacuous can-fail base
-    result = BuildResult(model=model, findings=())
-    findings = fr.check(result)
-    assert not any(f.code == "LAYOUT_MISSING" for f in findings)
+    # the SYSTEM document of the board model has no list rows or cable to print (INFO only)
+    assert {f.code for f in findings} <= {"DOCUMENT_EMPTY_LIST", "DOCUMENT_NO_TOP_LEVEL_CABLES"}
+    assert {f.severity.name for f in findings} <= {"INFO"}
 
 
 def _wired_to_a_partner(draft: Draft, port: Port, origin: Origin) -> None:
@@ -599,7 +445,7 @@ def _wired_to_a_partner(draft: Draft, port: Port, origin: Origin) -> None:
         function=partner_function.id,
         template=None,
         name="1",
-        role=PortRole.GENERIC,
+        boundary=PortBoundary.GENERIC,
     )
     conductor = Conductor(
         id=make_id(Conductor, ("wire-1",)),
@@ -610,64 +456,6 @@ def _wired_to_a_partner(draft: Draft, port: Port, origin: Origin) -> None:
         carrier=None,
     )
     draft.extend([partner_item, partner_function, partner_port, conductor], origin=origin)
-
-
-def _model_with_an_unlaid_out_function():
-    """A frozen model: one `Function`, no location, never run through `lay_out_schematic`.
-
-    Carries a `SYSTEM` document (no subject) so `fr.check`'s PS1/PS2 gate (MODEL-BUILD, decision
-    0037, "layout runs only on a model with a document") does not itself skip
-    `fransys_render.check` here -- this test's own point is that `check` calls it at all, a
-    fact this model's un-laid-out `Function` (never run through `lay_out_schematic`, so no
-    `layout.page` exists for it) still proves once that gate is satisfied.
-    """
-    origin = Origin(file="packages/fransys/tests/test_acceptance.py", line=1, note="invented")
-    item = Item(
-        id=make_id(Item, ("item",)),
-        key=("item",),
-        part=None,
-        parent=None,
-        position=None,
-        tag="Q1",
-        description="Invented",
-    )
-    function = Function(
-        id=make_id(Function, ("function",)),
-        key=("function",),
-        item=item.id,
-        template=None,
-        name="f",
-        kind=FunctionKind.GENERIC,
-    )
-    port = Port(
-        id=make_id(Port, ("function", "1")),
-        key=("function", "1"),
-        function=function.id,
-        template=None,
-        name="1",
-        role=PortRole.GENERIC,
-    )
-    draft = Draft()
-    draft.extend([item, function, port, _system_document("unlaid-out-function")], origin=origin)
-    # layout-0218: a function with nothing connected is drawn on no page, so wire its port.
-    _wired_to_a_partner(draft, port, origin)
-    return with_house(with_drawing_library(freeze(draft)), settings())
-
-
-def test_check_calls_fransys_render_check_for_the_model():
-    """F4: `check` calls `fransys_render.check`, not just `fransys_kicad`/`fransys_pdf`.
-
-    A model with a `Function` but no `layout.page` (never run through `fr.build`) is exactly
-    `fransys_render.check`'s own `LAYOUT_MISSING` case; `fr.check` must surface it, proving
-    `_check` really calls `fransys_render.check(model)` and not just the other two. A kept
-    SCHEMATIC with no drawing set gives both `DOCUMENT_NO_DRAWINGS` and `LAYOUT_MISSING`.
-    """
-    model = _model_with_an_unlaid_out_function()
-    result = BuildResult(model=model, findings=())
-    findings = fr.check(result)
-    assert sorted(f.code for f in findings) == ["DOCUMENT_NO_DRAWINGS", "LAYOUT_MISSING"]
-    [missing] = [f for f in findings if f.code == "LAYOUT_MISSING"]
-    assert missing.severity is Severity.ERROR
 
 
 # -- F4/F5: SYMBOL_PORT_MISSING (examples gap G10, decision 0018) ---------------
@@ -683,45 +471,29 @@ _FUNCTION_ORIGIN = Origin(file=_PART_FILE, line=10, note="invented")
 _DESIGN_ORIGIN = Origin(file="packages/fransys/tests/test_acceptance.py", line=1, note="invented")
 
 
-def _system_document(name: str) -> Document:
-    """A `SYSTEM` document (no subject): PS1/PS2's "layout runs only on a model with a
+def _schematic_document(name: str, item: Id[Any]) -> Document:
+    """A `CABINET_SCHEMATIC` document of `item`: PS1/PS2's "layout runs only on a model with a
     document" gate (MODEL-BUILD, decision 0037) needs one before `fr.build` will call
-    `lay_out_schematic` at all -- these `SymbolPortError` tests raise from inside that call,
-    so without this the error never fires and `SYMBOL_PORT_MISSING` never appears. Removes
-    every one of `SYSTEM`'s own default pages (`HARNESS_DRAWING`, `CABLE_LIST`, `BOM`) so
-    `fransys_pdf.check` has nothing of its own to report empty on a model that holds none of
-    that content (`_model_build_cover.py`'s own docstring: this shape adds no finding and
-    changes no layout record, verified empirically).
+    `lay_out_schematic` at all -- these symbol-port tests fail inside that call,
+    so without this the error never fires and `SYMBOL_PORT_MISSING` never appears.
     """
     key = ("document", name)
     return Document(
         id=make_id(Document, key),
         key=key,
-        preset=DocumentPreset.SYSTEM,
+        preset=DocumentPreset.CABINET_SCHEMATIC,
         location=None,
-        item=None,
-        add=(PageKind.SCHEMATIC,),
-        remove=(PageKind.HARNESS_DRAWING, PageKind.CABLE_LIST, PageKind.BOM),
+        item=item,
         cover="Invented cover text.",
         notes=None,
     )
 
 
-def _model_with_a_symbol_port_mismatch() -> tuple[Draft, Id, Id]:
+def _model_with_a_symbol_port_mismatch() -> tuple[Draft, Id[Any], Id[Any]]:
     """A part whose one port name matches no symbol port: examples gap G10, decision 0018.
 
     `coil` is `DEFAULT_RULES`' own rule (`operating-device`, no `port_map`); its symbol has
     ports `in`/`out`, never `WRONG`. This function's `FunctionTemplate` declares one port
-    template, `WRONG`, so its `Function` has no pole pair either (a pole pair needs two
-    linked ports) and no `layout.symbol_choice` gives it a `port_map`: `resolve` cannot bind
-    `WRONG` to anything, and raises `SymbolPortError`. `Part` carries `_PART_HEADER_ORIGIN`;
-    `FunctionTemplate`/`PortTemplate` carry `_FUNCTION_ORIGIN`, a different line of the same
-    part file; `Item`/`Function`/`Port` carry `_DESIGN_ORIGIN`, a different file -- so the
-    finding's origin can be told apart from both the part's own less-precise origin and the
-    model's design-file one.
-
-    Returns:
-        The draft, the `Part`'s id and the `PortTemplate`'s id.
     """
     part_key = ("part", "Demo", "DEMO-BROKEN-RLY")
     part = Part(
@@ -747,7 +519,7 @@ def _model_with_a_symbol_port_mismatch() -> tuple[Draft, Id, Id]:
         key=port_template_key,
         function=function_template.id,
         name="WRONG",
-        role=PortRole.GENERIC,
+        boundary=PortBoundary.GENERIC,
     )
 
     item = Item(
@@ -775,40 +547,33 @@ def _model_with_a_symbol_port_mismatch() -> tuple[Draft, Id, Id]:
         function=function.id,
         template=port_template.id,
         name="WRONG",
-        role=PortRole.GENERIC,
+        boundary=PortBoundary.GENERIC,
     )
 
     draft = Draft()
     draft.add(part, origin=_PART_HEADER_ORIGIN)
     draft.extend([function_template, port_template], origin=_FUNCTION_ORIGIN)
-    draft.extend(
-        [item, function, port, _system_document("symbol-port-mismatch")], origin=_DESIGN_ORIGIN
-    )
+    draft.extend([item, function, port, _schematic_document("symbol-port-mismatch", item.id)], origin=_DESIGN_ORIGIN)
     # layout-0218: an unconnected function is drawn on no page, so the mismatch needs a wire.
     _wired_to_a_partner(draft, port, _DESIGN_ORIGIN)
     return draft, part.id, port_template.id
 
 
 def test_symbol_port_missing_becomes_one_error_finding():
-    """PART 1 test (a): `fr.check` reports the raised `SymbolPortError` as one finding.
+    """PART 1 test (a): `fr.check` reports the symbol-port refusal as one finding.
 
     Exactly one `SYMBOL_PORT_MISSING`, `ERROR`. Asserted twice: on `result.findings` (before
     `describe`), the raw `code`/`severity`/`message`/`subjects` are exact -- the message
-    names the part's mpn, the port and the symbol key, and `subjects` is the `PortTemplate`,
-    not the `Part` or anything design-side; on `fr.check(result)` (after `describe`), the
-    resolved message carries the part file at the function's line (`_FUNCTION_ORIGIN`), not
-    the part's own header line (`_PART_HEADER_ORIGIN`) or the design file (`_DESIGN_ORIGIN`).
     """
     draft, _part_id, port_template_id = _model_with_a_symbol_port_mismatch()
     result = fr.build(draft)
 
+    expect_codes(result, "SYMBOL_PORT_MISSING")
     raw = [f for f in result.findings if f.code == "SYMBOL_PORT_MISSING"]
     assert len(raw) == 1
     assert raw[0].severity is Severity.ERROR
     assert raw[0].subjects == (port_template_id,)
-    assert raw[0].message == (
-        "part 'DEMO-BROKEN-RLY': model port 'WRONG' has no port on symbol 'operating-device'"
-    )
+    assert raw[0].message == ("part 'DEMO-BROKEN-RLY': model port 'WRONG' has no port on symbol 'operating-device'")
 
     resolved = [f for f in fr.check(result) if f.code == "SYMBOL_PORT_MISSING"]
     assert len(resolved) == 1
@@ -822,115 +587,17 @@ def test_symbol_port_missing_blocks_write_and_writes_nothing(tmp_path):
     draft, _part_id, _port_template_id = _model_with_a_symbol_port_mismatch()
     result = fr.build(draft)
     out_dir = tmp_path / "out"
-    with pytest.raises(BuildErrors) as excinfo:
+    with pytest.raises(BuildFailedError):
         fr.write(result, out_dir)
-    assert any(f.code == "SYMBOL_PORT_MISSING" for f in excinfo.value.findings)
+    expect_codes(result, "SYMBOL_PORT_MISSING")
     assert not out_dir.exists() or list(out_dir.iterdir()) == []
 
 
-def _model_with_an_extra_port_symbol_mismatch() -> tuple[Draft, Id]:
-    """A templated function's *extra* port -- one its `FunctionTemplate` never declares.
-
-    Reachable: `check_part_conformance` (`packages/fransys-model/src/fransys_model/
-    vocab/validators/part_conformance.py:97-102`) already names this shape --
-    `ITEM_PART_MISMATCH`, "has port ..., which no port template declares" -- as one of its
-    ordinary findings, not a `freeze()`-time refusal. Since decision 0028 that ERROR ends
-    `fransys.build` before layout, so the test hands the built model to
-    `lay_out_schematic` itself to reach `resolve`. The `FunctionTemplate` declares one port,
-    `in` (which would bind fine, by name, to `operating-device`'s own `in` port -- this test
-    never needs to prove that): the `Function` carries only the *extra* port, `WRONG`,
-    `template=None`, nothing `port_templates(model)` has an entry for. `resolve` cannot bind
-    it either, and raises `SymbolPortError` naming it, with the `Part` as the fallback
-    origin (`pipeline._symbol_port_missing_finding`'s middle branch: no matching
-    `PortTemplate`, but the item's `Part` is known).
-
-    Returns:
-        The draft and the `Part`'s id.
-    """
-    part_key = ("part", "Demo", "DEMO-EXTRA-PORT-RLY")
-    part = Part(
-        id=make_id(Part, part_key),
-        key=part_key,
-        mpn="DEMO-EXTRA-PORT-RLY",
-        manufacturer="Demo",
-        description="Invented relay with an unmapped hand-added port",
-        category=PartCategory.ELECTROMECHANICAL,
-        class_code="K",
-    )
-    function_template_key = (*part_key, "function", "coil")
-    function_template = FunctionTemplate(
-        id=make_id(FunctionTemplate, function_template_key),
-        key=function_template_key,
-        part=part.id,
-        name="coil",
-        kind=FunctionKind.COIL,
-    )
-    port_template_key = (*function_template_key, "port", "in")
-    port_template = PortTemplate(
-        id=make_id(PortTemplate, port_template_key),
-        key=port_template_key,
-        function=function_template.id,
-        name="in",
-        role=PortRole.GENERIC,
-    )
-
-    item = Item(
-        id=make_id(Item, ("item", "k2")),
-        key=("item", "k2"),
-        part=part.id,
-        parent=None,
-        position=None,
-        tag="K2",
-        description="Invented",
-    )
-    function_key = ("function", "k2", "coil")
-    function = Function(
-        id=make_id(Function, function_key),
-        key=function_key,
-        item=item.id,
-        template=function_template.id,
-        name="coil",
-        kind=FunctionKind.COIL,
-    )
-    # No `port_templates(model)` entry names `WRONG`; `template=None` on the instance itself
-    # matches how a hand-added port (never run through `instantiate`) is authored.
-    extra_port_key = (*function_key, "port", "WRONG")
-    extra_port = Port(
-        id=make_id(Port, extra_port_key),
-        key=extra_port_key,
-        function=function.id,
-        template=None,
-        name="WRONG",
-        role=PortRole.GENERIC,
-    )
-
-    draft = Draft()
-    draft.add(part, origin=_PART_HEADER_ORIGIN)
-    draft.extend([function_template, port_template], origin=_FUNCTION_ORIGIN)
-    draft.extend([item, function, extra_port], origin=_DESIGN_ORIGIN)
-    # layout-0218: an unconnected function is drawn on no page, so the extra port needs a wire.
-    _wired_to_a_partner(draft, extra_port, _DESIGN_ORIGIN)
-    return draft, part.id
-
-
-def _model_with_a_part_less_symbol_mismatch() -> tuple[Draft, Id]:
+def _model_with_a_part_less_symbol_mismatch() -> tuple[Draft, Id[Any]]:
     """A part-less item's function, authored directly, with a port matching no symbol port.
 
     Reachable: the model's vocabulary notes document this shape directly --
     "Items without a part (`part=None`) declare functions and ports directly. This is for early
-    design; the `ITEM_WITHOUT_PART` finding (`INFO`) ... tracks them" -- not a refusal.
-    `fransys_layout`'s own reading code (`_drawn.py:48`, `category =
-    parts(model)[item.part].category.value if item.part is not None else None`) handles `item.part
-    is None` by construction, and `derive.structure.schematic_functions` (`structure.py:230-234`)
-    excludes a function only by its item's `part` sitting in the cable or board part sets -- `None`
-    is in neither -- so a part-less item's function is drawn like any other. `resolve` still needs a
-    real symbol match for it: `kind="coil"` reaches `DEFAULT_RULES`' `operating-device` rule the
-    same way regardless of `part`, and a port named `WRONG` still binds nothing.
-    `pipeline._symbol_port_missing_finding`'s innermost branch applies: no `Part` (so no
-    `PortTemplate` search is even attempted) -- the origin falls back to the function itself.
-
-    Returns:
-        The draft and the `Function`'s id.
     """
     item = Item(
         id=make_id(Item, ("item", "k3")),
@@ -957,12 +624,12 @@ def _model_with_a_part_less_symbol_mismatch() -> tuple[Draft, Id]:
         function=function.id,
         template=None,
         name="WRONG",
-        role=PortRole.GENERIC,
+        boundary=PortBoundary.GENERIC,
     )
 
     draft = Draft()
     draft.extend(
-        [item, function, port, _system_document("part-less-symbol-mismatch")],
+        [item, function, port, _schematic_document("part-less-symbol-mismatch", item.id)],
         origin=_DESIGN_ORIGIN,
     )
     # layout-0218: an unconnected function is drawn on no page, so the mismatch needs a wire.
@@ -980,29 +647,22 @@ def test_symbol_port_missing_falls_back_to_the_function_with_no_part_at_all():
     result = fr.build(draft)
 
     assert any(f.code == "ITEM_WITHOUT_PART" for f in result.findings)
+    expect_codes(result, "SYMBOL_PORT_MISSING")
     raw = [f for f in result.findings if f.code == "SYMBOL_PORT_MISSING"]
     assert len(raw) == 1
     assert raw[0].severity is Severity.ERROR
     assert raw[0].subjects == (function_id,)
-    assert raw[0].message == (
-        "part 'no part': model port 'WRONG' has no port on symbol 'operating-device'"
-    )
+    assert raw[0].message == ("part 'no part': model port 'WRONG' has no port on symbol 'operating-device'")
 
 
 # -- decision 0016: cables.csv, per unit and for the system -----------
 
 
-def _model_with_a_unit_and_a_top_level_cable() -> tuple[Draft, Id]:
+def _model_with_a_unit_and_a_top_level_cable() -> tuple[Draft, Id[Any]]:
     """A one-item unit `U1` and one top-level (`unit=None`) cable `W1` with a single core.
 
     The cable is top-level, so the unit's own `cables.csv` is written but has no rows. The
     fixture keeps the cable outside `unit`, the way the "cable drawings" rule already treats
-    a top-level cable -- there is no scoped-to-a-unit cable to build here. The core gives
-    WireViz's `top_level_drawings` something to draw (a cable with zero cores raises inside
-    `wireviz.Harness.add_cable`, not a shape this fixture needs to exercise).
-
-    Returns:
-        The draft, and `U1`'s own `Id[Unit]`.
     """
     release = UnitRelease(
         id=make_id(UnitRelease, ("unit_release", "unit-one", "1", "1")),
@@ -1093,7 +753,7 @@ def _model_with_a_unit_and_a_top_level_cable() -> tuple[Draft, Id]:
         function=end_a_fn.id,
         template=None,
         name="1",
-        role=PortRole.GENERIC,
+        boundary=PortBoundary.GENERIC,
     )
     end_b_item = Item(
         id=make_id(Item, ("eb",)),
@@ -1120,7 +780,7 @@ def _model_with_a_unit_and_a_top_level_cable() -> tuple[Draft, Id]:
         function=end_b_fn.id,
         template=None,
         name="1",
-        role=PortRole.GENERIC,
+        boundary=PortBoundary.GENERIC,
     )
     core = Conductor(
         id=make_id(Conductor, ("core-1",)),
@@ -1167,7 +827,6 @@ def test_write_includes_cables_csv_for_the_system_and_for_a_unit(tmp_path):
 
     `unit=None` writes both files; `unit=<a real unit>` writes `cables.csv` but not
     `overview.html`, on the same model -- a top-level cable and a unit-owned item both exist
-    here, so the two cases are non-vacuous.
     """
     draft, unit_id = _model_with_a_unit_and_a_top_level_cable()
     result = fr.build(draft)

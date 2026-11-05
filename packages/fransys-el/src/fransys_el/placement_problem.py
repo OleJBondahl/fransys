@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 from fransys_layout.core import PlacementProblem
 from fransys_model.kernel import render_id
+from fransys_model.layout import sheet_format_of
 
 from .placement_anchors import anchors_of
 from .placement_annexes import label_annexes
@@ -12,13 +13,12 @@ from .placement_facts import facts_of
 from .placement_hints import hints_of
 from .placement_loose import without_loose
 from .placement_nets import nets_of
+from .placement_options import sheet_area
 from .placement_skips import Skipped, in_order
 from .placement_syms import syms_of
-from .placement_tables import table_annexes
 
 if TYPE_CHECKING:
     from electrical_symbols import Library
-    from fransys_layout.core import Box
     from fransys_model.kernel import Model
 
     from .placement_kit import SymbolKit
@@ -27,9 +27,7 @@ if TYPE_CHECKING:
 __all__ = ["build"]
 
 
-def build(
-    model: Model, kit: SymbolKit, conventions: Conventions, library: Library
-) -> tuple[PlacementProblem, tuple[Skipped, ...]]:
+def build(model: Model, kit: SymbolKit, conventions: Conventions, library: Library) -> tuple[PlacementProblem, tuple[Skipped, ...]]:
     """The placement problem of `model` (symbols, nets, facts, hints) and what it left out.
 
     The `Skipped` omissions are a net with fewer than two drawn pins and a function with no symbol
@@ -37,19 +35,13 @@ def build(
     kit has no pick for, a hint naming a group nothing is drawn in, or a pin the kit does not name.
     """
     env = make_env(model, kit, conventions, library)
-    tables: dict[str, Box] = {}
-    syms = syms_of(env, tables)
+    syms = syms_of(env)
     nets, net_skips = nets_of(env, syms)
-    anchors = anchors_of(model, kit)
+    anchors = anchors_of(model, kit, library, conventions.text_height)
     syms, loose_skips = without_loose(env, syms, nets, anchors)
     facts, function_skips = facts_of(env, syms)
-    half_pitch = library.grid.wire_pitch // 2
-    gaps = (half_pitch, conventions.pad, conventions.options.label_gap)
-    annexes = (
-        *label_annexes(syms, conventions.options),
-        *(table_annexes(syms, tables, gaps) if conventions.contact_tables else ()),
-    )
+    annexes = label_annexes(syms, conventions.options)
     spare = {Skipped("function", render_id(k), why) for k, why in env.spare.items()}
     hints = hints_of(env, syms)
-    problem = PlacementProblem(conventions.area, syms, nets, facts, hints, anchors, annexes)
+    problem = PlacementProblem(sheet_area(sheet_format_of(model, None)), syms, nets, facts, hints, anchors, annexes)
     return problem, in_order({*net_skips, *function_skips, *loose_skips, *spare})

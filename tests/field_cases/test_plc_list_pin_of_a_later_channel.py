@@ -1,14 +1,6 @@
 """Field case: the PLC list names the pin of a later channel, one row per pin.
-
-The engineering shape: a 4-channel analog input card whose channels 1 to 4 sit on pins 1 to 8
-(channel 1 on pins 1 and 2, channel 2 on pins 5 and 6, ...), each channel wired to its own header.
-
-The bug: the list printed one row per channel, and its designation was the module and the
-channel number (`-A2:2`), a pin the card does not have; the builder looking for channel 2's
-terminal found pin 2. A row also carried both pins' far ends in one cell.
-The fix is decision model-0209: one row per pin, the pin printed by the port designation
-(`-A2:5`), the channel's own number in its own column, and that pin's far end alone.
-"""
+The bug: one row per channel named a pin the card lacks (`-A2:2`), and a row carried both pins' far ends.
+Fixed by model-0209, one row per pin, printed by the port designation (`-A2:5`), with that pin's far end alone."""
 
 import fransys as fr
 import pytest
@@ -26,7 +18,7 @@ def built() -> fr.BuildResult:
     for number, (channel, pins) in enumerate(_PINS.items(), start=1):
         header = d.device(f"J{number}", "DEMO-CONN-2P")
         for header_pin, pin in zip(("1", "2"), pins, strict=True):
-            d.detail.wire(header[header_pin], getattr(card, channel)[pin], wire=("WH", 0.5))
+            d.series(header[header_pin], getattr(card, channel)[pin], wire=("WH", 0.5))
     return fr.build(d)
 
 

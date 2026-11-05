@@ -15,16 +15,12 @@ VERSION_MODULE = ROOT / "src" / "electrical_symbols" / "_version.py"
 
 def project_version(pyproject_text: str) -> str:
     """Return `[project].version` of a `pyproject.toml`'s text."""
-    return tomllib.loads(pyproject_text)["project"]["version"]
+    return str(tomllib.loads(pyproject_text)["project"]["version"])
 
 
 def version_module(version: str) -> str:
     """Return the text of `_version.py` for `version`."""
-    return (
-        '"""The package version, written by scripts/write_version.py. Do not edit."""\n'
-        "\n"
-        f'LIBRARY_VERSION = "{version}"\n'
-    )
+    return f'"""The package version, written by scripts/write_version.py. Do not edit."""\n\nLIBRARY_VERSION = "{version}"\n'
 
 
 def main() -> None:

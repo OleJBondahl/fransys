@@ -2,26 +2,17 @@
 
 Rule 1: a top-level unit's boundary pin wired out of the unit (to the top level or to another
 top-level unit) gets a stub label (an OFF `LinkMarker`) on the unit's own page, whatever the
-location. Rule 2: the other end gets the mirror stub, an item at the top level in the top-level
-drawing set, the far unit's pin in that unit's drawing set. Rule 5: a NESTED unit (parent is
-another unit) is unchanged: the wire is drawn in the parent's set at the black box's replica
-pin, and the nested unit's own set ends at the pin with no stub and no finding. Rule 6: a star
-net of three or more ports joining boundary pins of two nested units in their parent's set is
-drawn there: the black-box pins are ordinary members, wires where adjacent, star markers
-otherwise.
-
-Built through the `fransys` facade from `examples/demo-parts`; read from `layout.*` records.
 """
 
 from typing import Any
 
 import fransys as fr
-import fransys_author
 import fransys_parts
 import pytest
 from _dd_core import pages_of, set_of
-from _drawn_pages import drawn_pages
-from _model_build_cover import layout_trigger_document
+from _drawn_pages import drawn_pages, markers_in, ref_texts
+from _model_build_cover import cabinet_document, layout_trigger_document, unit_document
+from fransys_author.design import Design
 
 from fransys_model.derive import unit_release
 from fransys_model.kernel import Severity
@@ -41,7 +32,7 @@ def _set_name(model, page) -> str | None:
     return None if one.unit is None else unit_release(model, one.unit).name
 
 
-def _errors(result) -> list[tuple[str, tuple]]:
+def _errors(result) -> list[tuple[str, tuple[Any, ...]]]:
     """`(code, subjects)` of every ERROR finding of the build, sorted."""
     return sorted((f.code, f.subjects) for f in result.findings if f.severity is Severity.ERROR)
 
@@ -53,17 +44,14 @@ def _stubs(model) -> dict[str | None, list[str]]:
     """
     found: dict[str | None, list[str]] = {}
     for page, drawing in drawn_pages(model).items():
-        for marker in drawing.markers:
-            found.setdefault(_set_name(model, page), []).extend(v for _, v in marker.texts)
+        for marker in markers_in(drawing):
+            found.setdefault(_set_name(model, page), []).extend(ref_texts(marker))
     return {name: sorted(texts) for name, texts in found.items()}
 
 
 def _covered_in(model, unit_name: str | None, name: str) -> bool:
     """Whether a page of that unit's set prints item `name` and draws a wire or a marker."""
-    return any(
-        _set_name(model, page) == unit_name and (drawing.wires or drawing.markers)
-        for page, drawing in pages_of(model, name).items()
-    )
+    return any(_set_name(model, page) == unit_name and (drawing.wires or markers_in(drawing)) for page, drawing in pages_of(model, name).items())
 
 
 def _build_top_level_units(*, second_unit: bool, same: bool):
@@ -71,7 +59,7 @@ def _build_top_level_units(*, second_unit: bool, same: bool):
     either a top-level item `h` (X2) or, with `second_unit`, to the boundary connector `g`
     (X3) of a second top-level unit `ub`. The far end sits at C1 (`same`) or at C2."""
     parts = fransys_parts.load("demo_parts")
-    d = fransys_author.Design(parts)
+    d = Design(parts)
     d.project(**_PROJECT)
     d.revision(1, date="2026-09-25", text="First issue", created="XX")
     c1, c2 = d.location("C1", "Cabinet"), d.location("C2", "Cabinet two")
@@ -80,26 +68,31 @@ def _build_top_level_units(*, second_unit: bool, same: bool):
     ua.revision(1, date="2026-01-01", text="First release", created="XX")
     f = ua.item("DEMO-CONN-2P", name="f", tag="X1", at=c1, group=ua.group("GA", "Group A"))
     ua.boundary(f)
+    units = [ua]
     if second_unit:
         ub = d.scope("ub").unit("ub", revision=1, interface="1")
         ub.revision(1, date="2026-01-01", text="First release", created="XX")
         far = ub.item("DEMO-CONN-2P", name="g", tag="X3", at=where, group=ub.group("GB", "Group B"))
         ub.boundary(far)
+        units.append(ub)
     else:
         far = d.item("DEMO-CONN-2P", name="h", tag="X2", at=where)
     d.wiring(colour="BU", gauge="0.5")(f["1"], far["1"])
-    return fr.build(parts, d.draft(), layout_trigger_document())
+    return fr.build(
+        parts,
+        d.draft(),
+        layout_trigger_document(),
+        *(unit_document(u) for u in units),
+        cabinet_document(c1),
+        cabinet_document(where),
+    )
 
 
 @pytest.mark.parametrize(
     ("same", "expected"),
     [
-        pytest.param(
-            True, {None: ["← -X1:1"], "ua": ["← +C1-X2:1"]}, id="same-location-fails-on-base"
-        ),
-        pytest.param(
-            False, {None: ["← +C1-X1:1"], "ua": ["← +C2-X2:1"]}, id="other-location-control"
-        ),
+        pytest.param(True, {None: ["← -X1:1"], "ua": ["← +C1-X2:1"]}, id="same-location-fails-on-base"),
+        pytest.param(False, {None: ["← +C1-X1:1"], "ua": ["← +C2-X2:1"]}, id="other-location-control"),
     ],
 )
 def test_a_unit_boundary_pin_wired_to_the_top_level_gets_a_stub_pair(same, expected) -> None:
@@ -107,7 +100,6 @@ def test_a_unit_boundary_pin_wired_to_the_top_level_gets_a_stub_pair(same, expec
 
     Exactly one OFF marker stands in ua's set and one in the top-level set, whatever the
     location. Base: the other-location case passes (a control); the same-location case
-    reports `CONNECTION_NOT_DRAWN` and draws no stub.
     """
     # UNDO: stages/offstubs.py `ends_in_stubs`: return only `crosses_location(a, b)` (drop the
     #   boundary-pin clause)
@@ -135,46 +127,12 @@ def test_two_top_level_units_boundary_pins_wired_together_get_a_stub_each(same, 
     assert _stubs(result.model) == expected
 
 
-def _build_mated_units():
-    """Top-level units `ua` and `ub`, each with a boundary connector (`fa` X1, `fb` X3, both at
-    C1) mated to each other, and a wire inside the unit from the connector's pin 1 to an inside
-    item (`ia` X2, `ib` X4)."""
-    parts = fransys_parts.load("demo_parts")
-    d = fransys_author.Design(parts)
-    d.project(**_PROJECT)
-    d.revision(1, date="2026-09-25", text="First issue", created="XX")
-    c1 = d.location("C1", "Cabinet")
-    made = {}
-    for name, boundary_tag, inside_tag in (("a", "X1", "X2"), ("b", "X3", "X4")):
-        u = d.scope(f"u{name}").unit(f"u{name}", revision=1, interface="1")
-        u.revision(1, date="2026-01-01", text="First release", created="XX")
-        group = u.group("G", "Group")
-        made[name] = u.item("DEMO-CONN-2P", name=f"f{name}", tag=boundary_tag, at=c1, group=group)
-        inside = u.item("DEMO-CONN-2P", name=f"i{name}", tag=inside_tag, at=c1, group=group)
-        u.boundary(made[name])
-        u.wiring(colour="BU", gauge="0.5")(made[name]["1"], inside["1"])
-    d.mate(made["a"], made["b"])
-    return fr.build(parts, d.draft(), layout_trigger_document())
-
-
-def test_two_top_level_units_boundary_connectors_mated_get_a_stub_each_through_the_mate() -> None:
-    """Rule 1 through a mate (`mate_stub`). Both connectors at C1: no location is crossed, yet
-    each is a top-level unit's boundary pin mated outside the unit. 0 ERROR; one OFF marker in
-    each unit's set, naming the item the mated connector's inside wire ends at (`ib` X4 for
-    `ua`'s pin, `ia` X2 for `ub`'s), none in the top-level set."""
-    # UNDO: stages/offstubs.py `ends_in_stubs`: return only `crosses_location(a, b)` (drop the
-    #   boundary-pin clause)
-    result = _build_mated_units()
-    assert _errors(result) == []
-    assert _stubs(result.model) == {"ua": ["← +C1-X4:1"], "ub": ["← +C1-X2:1"]}
-
-
 def _build_pass_through():
     """Top-level unit `a` holding nested unit `n`, whose connector `x1` (X1, at C1) is the
     boundary of `n` and of `a` (the pass-through the validator asks for), wired `x1.1` to the
     top-level item `h` (X2) at the same location."""
     parts = fransys_parts.load("demo_parts")
-    d = fransys_author.Design(parts)
+    d = Design(parts)
     d.project(**_PROJECT)
     d.revision(1, date="2026-09-25", text="First issue", created="XX")
     c1 = d.location("C1", "Cabinet")
@@ -187,26 +145,14 @@ def _build_pass_through():
     a.boundary(x1)
     h = d.item("DEMO-CONN-2P", name="h", tag="X2", at=c1)
     d.wiring(colour="BU", gauge="0.5")(x1["1"], h["1"])
-    return fr.build(parts, d.draft(), layout_trigger_document())
-
-
-def test_a_pass_through_boundary_pin_wired_to_the_top_level_gets_a_stub_pair() -> None:
-    """Rules 1 and 2. `x1` of nested unit `n` is also the boundary of the top-level unit `a`:
-    it is a top-level unit's boundary pin, wired out of `a`, so it gets a stub on `a`'s set and
-    `h` the mirror stub in the top-level set, at the same location. Base: `CONNECTION_NOT_DRAWN`
-    on `x1.1`, no OFF marker at all (the pin's own unit `n` has a parent)."""
-    # UNDO: read/units.py `top_boundary_edges`: skip the functions that are also the boundary
-    #   of a nested unit (the pass-through pin is then not a top-level unit's boundary pin)
-    result = _build_pass_through()
-    assert _errors(result) == []
-    assert _stubs(result.model) == {None: ["← -X1:1"], "a": ["← +C1-X2:1"]}
+    return fr.build(parts, d.draft(), layout_trigger_document(), unit_document(a), cabinet_document(c1))
 
 
 def _build_nested_wire():
     """Unit `p` at the top level holding nested unit `ua` (boundary connector `f`, X1) and an
     item `h` (X2) in `p`, wired `f.1` to `h.1` in `p`'s scope."""
     parts = fransys_parts.load("demo_parts")
-    d = fransys_author.Design(parts)
+    d = Design(parts)
     d.project(**_PROJECT)
     d.revision(1, date="2026-09-25", text="First issue", created="XX")
     p = d.scope("p").unit("p", revision=1, interface="1")
@@ -218,7 +164,7 @@ def _build_nested_wire():
     ua.boundary(f)
     h = p.item("DEMO-CONN-2P", name="h", tag="X2", at=box, group=p.group("GP", "Group P"))
     p.wiring(colour="BU", gauge="0.5")(f["1"], h["1"])
-    return fr.build(parts, d.draft(), layout_trigger_document())
+    return fr.build(parts, d.draft(), layout_trigger_document(), unit_document(p))
 
 
 def test_a_nested_units_boundary_wire_is_drawn_in_the_parent_set_with_no_stub() -> None:
@@ -241,7 +187,7 @@ def _build_nested_chain(units_count: int):
     connector `c<i>` (X<i+1>), and an item `k` (X9) in `p`, all wired in `p`'s scope as a
     chain `c0.1-c1.1-...-k.1`: one net of N+1 ports."""
     parts = fransys_parts.load("demo_parts")
-    d = fransys_author.Design(parts)
+    d = Design(parts)
     d.project(**_PROJECT)
     d.revision(1, date="2026-09-25", text="First issue", created="XX")
     p = d.scope("p").unit("p", revision=1, interface="1")
@@ -251,9 +197,7 @@ def _build_nested_chain(units_count: int):
     for i in range(units_count):
         u = p.scope(f"u{i}", at=box).unit(f"u{i}", revision=1, interface="1")
         u.revision(1, date="2026-01-01", text="First release", created="XX")
-        c = u.item(
-            "DEMO-CONN-2P", name=f"c{i}", tag=f"X{i + 1}", at=box, group=u.group(f"G{i}", "G")
-        )
+        c = u.item("DEMO-CONN-2P", name=f"c{i}", tag=f"X{i + 1}", at=box, group=u.group(f"G{i}", "G"))
         u.boundary(c)
         pins.append(c["1"])
     k = p.item("DEMO-CONN-2P", name="k", tag="X9", at=box, group=p.group("GP", "Group P"))
@@ -261,36 +205,37 @@ def _build_nested_chain(units_count: int):
     wire = p.wiring(colour="BU", gauge="0.5")
     for i in range(len(pins) - 1):
         wire(pins[i], pins[i + 1])
-    return fr.build(parts, d.draft(), layout_trigger_document())
+    return fr.build(parts, d.draft(), layout_trigger_document(), unit_document(p))
 
 
 @pytest.mark.parametrize("units_count", [2, 4])
 def test_a_net_through_nested_units_boundary_pins_is_drawn_in_the_parent_set_only(
     units_count,
 ) -> None:
-    """Rules 5 and 6 together. A net of N+1 ports (N nested units' boundary pins and an item
-    `k`, a star from three ports) is drawn in `p`'s set: every port of it, the replica pins
-    included, is covered there by a route end or a marker. The nested units' own sets hold no
-    star marker (REF or BRANCH) for the pins: the net leaves each unit, so its set ends at the
-    pin. Base: the replicas are exempt in `p`'s set and the markers (a REF in `u1`'s set, a
-    BRANCH in each of the other units' sets and one in `p`'s) stand inside the units' own
-    sets, page references joining two units' documents."""
-    # UNDO: stages/exempt.py `boundary_exempt`, the black-box branch:
-    #   `exempt = not nested or not any(leaves(mate, unit) for mate in net[port])` -> `True`
-    #   (every black-box pin exempt in the parent's set again; the markers land in the own sets)
+    """Rules 5 and 6 together (R1702). A net of N+1 ports (N nested units' boundary pins and an item
+    `k` of `p`) is drawn as reference pairs: a wire between two sibling nested units is drawn in the
+    units' own sets, each end naming the other's pin, and `p`'s set does not replicate it. Every port
+    is covered in some set and no conductor is left undrawn.
+    """
+    # UNDO: derive/stub_text.py `off_stub_line`: `joined = f"{far}..."` -> `f"{far}X..."` (the far pin's text is wrong)
     result = _build_nested_chain(units_count)
     model = result.model
     names = [f"c{i}" for i in range(units_count)] + ["k"]
-    own_sets = {f"u{i}" for i in range(units_count)}
+    homes = [f"u{i}" for i in range(units_count)] + ["p"]
+    tags = [f"X{i + 1}" for i in range(units_count)] + ["X9"]
     assert _errors(result) == []
-    inside = [
-        _set_name(model, page)
-        for page, drawing in drawn_pages(model).items()
-        for _ in drawing.markers
-        if _set_name(model, page) in own_sets
-    ]
-    assert inside == []
-    assert all(_covered_in(model, "p", name) for name in names)
+    assert [f.code for f in result.findings if f.code == "CONNECTION_NOT_DRAWN"] == []
+    assert all(any(_covered_in(model, home, name) for home in homes) for name in names)
+    named: dict[str | None, set[str]] = {}
+    for page, drawing in drawn_pages(model).items():
+        for marker in markers_in(drawing):
+            for line in ref_texts(marker)[0].split("\n"):
+                named.setdefault(_set_name(model, page), set()).add(line.rsplit("-", 1)[1].split(":")[0])
+    expected: dict[str | None, set[str]] = {}
+    for i in range(units_count):  # the conductor c_i - c_i+1 (or k): each end names the other's pin
+        expected.setdefault(homes[i], set()).add(tags[i + 1])
+        expected.setdefault(homes[i + 1], set()).add(tags[i])
+    assert named == expected
 
 
 def test_wiring_inside_one_unit_is_untouched() -> None:
@@ -300,7 +245,7 @@ def test_wiring_inside_one_unit_is_untouched() -> None:
     #   boundary pin's wire inside the unit as leaving it (an OFF stub or a
     #   cut where both ends are in the unit)
     parts = fransys_parts.load("demo_parts")
-    d = fransys_author.Design(parts)
+    d = Design(parts)
     d.project(**_PROJECT)
     d.revision(1, date="2026-09-25", text="First issue", created="XX")
     at = d.location("C1", "Cabinet")
@@ -311,7 +256,7 @@ def test_wiring_inside_one_unit_is_untouched() -> None:
     g = ua.item("DEMO-CONN-2P", name="g", tag="X2", at=at, group=group)
     ua.boundary(f)
     ua.wiring(colour="BU", gauge="0.5")(f["1"], g["1"])
-    result = fr.build(parts, d.draft(), layout_trigger_document())
+    result = fr.build(parts, d.draft(), layout_trigger_document(), unit_document(ua))
     model = result.model
     assert _errors(result) == []
     assert _stubs(model) == {}

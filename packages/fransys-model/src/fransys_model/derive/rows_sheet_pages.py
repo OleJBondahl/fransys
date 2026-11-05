@@ -9,6 +9,7 @@ lazy from fransys_model.layout import SheetFormat
 lazy from fransys_model.vocab import PageKind
 
 lazy from .rows_sheet import SheetKey, Sizes, TitleBlockFields
+lazy from .rows_sheet_index import SheetIndexRow
 
 
 @dataclass(frozen=True)  # plain: it holds a record, which a value may not
@@ -17,6 +18,7 @@ class SheetPage:
 
     `group` and `where` name the page in a `TITLE_BLOCK_TEXT_OVERFLOW` message; `group` is `""`
     for a page whose page-level fields are not checked (a diagram sheet, a no-drawings page).
+    `index` holds the rows of a sheet index page, none on any other.
     """
 
     key: SheetKey
@@ -25,6 +27,7 @@ class SheetPage:
     fields: TitleBlockFields
     group: str
     where: str
+    index: tuple[SheetIndexRow, ...] = ()
 
 
 @dataclass(frozen=True)  # plain: the closed value set bans float
@@ -87,17 +90,26 @@ class TitleBlockOverflow:
     shown: str
 
 
+@value
+class FieldForms:
+    """The text forms of one one-line field: the preferred, then shorter ones, and where it sits."""
+
+    field: str
+    forms: tuple[str, ...]
+    where: str
+
+
 @dataclass(frozen=True)  # plain: the closed value set bans float
 class SheetBackground:
     """One page background and the two boxes pdf fills, in mm from the page corner.
 
     `svg` is the frame, grid and title block; `counter_box` and `logo_box` are x, y, width and
     height of the Page cell's value and of the logo cell, `None` when the band holds no title
-    block; `title_room_mm` is the width a page title is cut to, `ellipsis` the mark it is cut with.
+    block; `index_titles` is the printed title of each sheet index row, in row order, on the
+    sheet index page and empty on every other.
     """
 
     svg: str
     counter_box: tuple[float, float, float, float] | None
     logo_box: tuple[float, float, float, float] | None
-    title_room_mm: float | None
-    ellipsis: str
+    index_titles: tuple[str, ...]

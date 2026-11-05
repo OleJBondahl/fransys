@@ -16,22 +16,19 @@ if TYPE_CHECKING:
 __all__ = ["refuse_authored_library", "with_drawing_library"]
 
 _KEY = ("build", "drawing_library")
-_ORIGIN = Origin(
-    file="fransys/_drawing_library.py", line=0, note="the symbol library's grid and font"
-)
+_ORIGIN = Origin(file="fransys/_drawing_library.py", line=0, note="the symbol library's grid and font")
 
 
-def _record(model: Model, library: Library = LIBRARY) -> DrawingLibrary:
+def _record(library: Library = LIBRARY) -> DrawingLibrary:
     """The record for the build's `library`; ratios are exact, `Decimal(units / em)`.
 
     `ems` holds symdef's em of every capital height the build prints at, as the shortest decimal
     of symdef's float (no rounding), under `derive.print_sizes.height_key` of the height.
     """
     font = library.font
-    assert font is not None  # noqa: S101 - the bundled library always carries its font
     em = Decimal(font.units_per_em)
     heights = {name: Decimal(str(h)) for name, h in font.heights.items()}
-    wanted = capital_heights(model, heights)
+    wanted = capital_heights(heights)
     made = em_heights(library, [float(h) for h in wanted])
     return DrawingLibrary(
         id=make_id(DrawingLibrary, _KEY),
@@ -64,4 +61,4 @@ def with_drawing_library(model: Model, library: Library = LIBRARY) -> Model:
     """`model` with the build's library record; raises when a model already carries the kind."""
     if layout_of(model, DrawingLibrary):
         raise _refusal()
-    return evolve(model, put=(_record(model, library),), origin=_ORIGIN)
+    return evolve(model, put=(_record(library),), origin=_ORIGIN)

@@ -3,7 +3,7 @@
 from fransys_pdf._cable_runs import _header
 from fransys_pdf._lists import _carried
 from fransys_pdf._tables import table_source
-from pdf_library import freeze
+from library_records import freeze
 
 from fransys_model.derive import continued_heading
 from fransys_model.kernel import Draft

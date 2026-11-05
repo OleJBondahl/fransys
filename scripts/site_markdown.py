@@ -81,9 +81,7 @@ def _target(link: str, page: str, pages: set[str], files: set[str]) -> str | Non
     return copy_path(resolved) if resolved in pages else resolved
 
 
-def rewrite_links(
-    text: str, page: str, pages: set[str], files: set[str], site_url: str = ""
-) -> str:
+def rewrite_links(text: str, page: str, pages: set[str], files: set[str], site_url: str = "") -> str:
     """`text` with each local link made to resolve on the site (absolute with `site_url`)."""
     here = page_dir(page)
     out: list[str] = []
@@ -91,9 +89,7 @@ def rewrite_links(
     for line in text.splitlines():
         if line.lstrip().startswith("```"):
             fenced = not fenced
-        out.append(
-            line if fenced else INLINE_LINK.sub(_swap(page, here, pages, files, site_url), line)
-        )
+        out.append(line if fenced else INLINE_LINK.sub(_swap(page, here, pages, files, site_url), line))
     return "\n".join(out) + "\n"
 
 
@@ -145,9 +141,7 @@ def llms_full(src: Path, base: Path, pages: list[str], site_url: str, head: str)
 
 def _links_of(path: Path, site_url: str) -> list[str]:
     text = path.read_text(encoding="utf-8")
-    found = (
-        HREF.findall(text) if path.suffix == ".html" else [m[1] for m in INLINE_LINK.findall(text)]
-    )
+    found = HREF.findall(text) if path.suffix == ".html" else [m[1] for m in INLINE_LINK.findall(text)]
     return [site_url_local(link, site_url) for link in found]
 
 
@@ -186,9 +180,7 @@ def _problem(root: Path, page: Path, link: str, base_path: str) -> str | None:
     if path.startswith("/"):
         target = root / path.removeprefix(base_path).lstrip("/")
     else:
-        target = root / posixpath.normpath(
-            posixpath.join(page.parent.relative_to(root).as_posix(), path)
-        )
+        target = root / posixpath.normpath(posixpath.join(page.parent.relative_to(root).as_posix(), path))
     if not target.resolve().is_relative_to(root.resolve()):
         return "leaves the site"
     if path.endswith(".md") and not path.endswith("index.md"):

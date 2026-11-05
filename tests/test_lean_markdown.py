@@ -2,32 +2,21 @@
 
 Loaded like `test_lean_ceilings.py` loads `scripts/lean_ceilings.py` (`importlib.util.spec_from_
 file_location`), since the script is not a package module. Every case builds its own tmp_path
-tree; no real repo file is read here.
 """
 
 from __future__ import annotations
 
-import importlib.util
 import subprocess
-import sys
 from pathlib import Path
+
+import pytest
+from gate_scan import load_script
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def _load(name: str, relpath: str):
-    spec = importlib.util.spec_from_file_location(name, ROOT / relpath)
-    if spec is None or spec.loader is None:
-        msg = f"could not load {relpath}"
-        raise ImportError(msg)
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[spec.name] = module
-    spec.loader.exec_module(module)
-    return module
-
-
-lean_markdown = _load("fransys_lean_markdown", "scripts/lean_markdown.py")
-lean_ceilings = _load("fransys_lean_ceilings", "scripts/lean_ceilings.py")
+lean_markdown = load_script("fransys_lean_markdown", "lean_markdown.py")
+lean_ceilings = load_script("fransys_lean_ceilings", "lean_ceilings.py")
 
 
 def _init_git_repo(root: Path) -> None:
@@ -45,9 +34,7 @@ def test_covered_files_enumeration_matches_anchors_and_excludes_history(tmp_path
     (tmp_path / "docs").mkdir()
     (tmp_path / "docs" / "DESIGN.md").write_text("# Design\n\nBody.\n", encoding="utf-8")
     (tmp_path / "docs" / "decisions").mkdir()
-    (tmp_path / "docs" / "decisions" / "0001-x.md").write_text(
-        "# 0001\n\nBody.\n", encoding="utf-8"
-    )
+    (tmp_path / "docs" / "decisions" / "0001-x.md").write_text("# 0001\n\nBody.\n", encoding="utf-8")
     (tmp_path / "packages" / "fake").mkdir(parents=True)
     (tmp_path / "packages" / "fake" / "CLAUDE.md").write_text("# Fake\n\nBody.\n", encoding="utf-8")
     # A file a bare recursive "**/*.md" glob would catch, but none of our anchor patterns would.
@@ -85,23 +72,14 @@ def test_md_tokens_over_limit_fails_the_gate(tmp_path: Path):
 # --- check 2: opening-paragraph shape ------------------------------------------------------------
 
 
-def test_opening_paragraph_no_paragraph_before_subheading_fails(tmp_path: Path):
-    """A title followed by its blank gap then straight into a subheading, no paragraph, fails."""
+@pytest.mark.parametrize(
+    "text", ["# Design\n\n## Subheading\n", "# Design\n\nOne.\nTwo.\nThree.\nFour.\n\n## Next\n"], ids=["no-paragraph", "over-three-lines"]
+)
+def test_opening_paragraph_shape_fails(tmp_path: Path, text: str):
+    """No paragraph before a subheading, or a 4-line opening paragraph, fails the shape check."""
     covered = tmp_path / "docs" / "DESIGN.md"
     covered.parent.mkdir(parents=True)
-    covered.write_text("# Design\n\n## Subheading\n", encoding="utf-8")
-
-    violations = lean_markdown.opening_paragraph_violations([covered], tmp_path)
-
-    assert violations != ()
-    assert violations[0].path == "docs/DESIGN.md"
-
-
-def test_opening_paragraph_over_three_lines_fails(tmp_path: Path):
-    """A 4-line opening paragraph fails the shape check."""
-    covered = tmp_path / "docs" / "DESIGN.md"
-    covered.parent.mkdir(parents=True)
-    covered.write_text("# Design\n\nOne.\nTwo.\nThree.\nFour.\n\n## Next\n", encoding="utf-8")
+    covered.write_text(text, encoding="utf-8")
 
     violations = lean_markdown.opening_paragraph_violations([covered], tmp_path)
 
@@ -144,54 +122,22 @@ def test_long_sentence_over_30_words_fails_when_ceiling_is_zero(tmp_path: Path):
     assert violations[0].site == "docs/DESIGN.md"
 
 
-def test_short_sentences_produce_no_long_sentence_entry(tmp_path: Path):
-    """A control case: no sentence over 30 words, so the file is absent from `measured`."""
-    covered = tmp_path / "docs" / "DESIGN.md"
-    covered.parent.mkdir(parents=True)
-    covered.write_text("# Design\nA short sentence. Another short one.\n", encoding="utf-8")
-
-    measured = lean_markdown.measure_long_sentences([covered], tmp_path, sentence_words=30)
-
-    assert measured == {}
+_WORDS31 = " ".join(["word"] * 31)
 
 
-def test_long_sentence_inside_fenced_code_block_not_counted(tmp_path: Path):
-    text = f"# Design\nIntro.\n\n```\n{_thirty_one_words()}\n```\n\nOutro.\n"
-    covered = tmp_path / "docs" / "DESIGN.md"
-    covered.parent.mkdir(parents=True)
-    covered.write_text(text, encoding="utf-8")
-
-    measured = lean_markdown.measure_long_sentences([covered], tmp_path, sentence_words=30)
-
-    assert measured == {}
-
-
-def test_long_sentence_inside_table_cell_not_counted(tmp_path: Path):
-    text = f"# Design\n| Col |\n|---|\n| {_thirty_one_words()} |\n"
-    covered = tmp_path / "docs" / "DESIGN.md"
-    covered.parent.mkdir(parents=True)
-    covered.write_text(text, encoding="utf-8")
-
-    measured = lean_markdown.measure_long_sentences([covered], tmp_path, sentence_words=30)
-
-    assert measured == {}
-
-
-def test_long_sentence_inside_inline_code_not_counted(tmp_path: Path):
-    words = " ".join(["word"] * 31)
-    text = f"# Design\nSee `{words}.` here.\n"
-    covered = tmp_path / "docs" / "DESIGN.md"
-    covered.parent.mkdir(parents=True)
-    covered.write_text(text, encoding="utf-8")
-
-    measured = lean_markdown.measure_long_sentences([covered], tmp_path, sentence_words=30)
-
-    assert measured == {}
-
-
-def test_heading_line_never_measured_as_sentence(tmp_path: Path):
-    heading_words = " ".join(["word"] * 35)
-    text = f"# {heading_words}.\nA short body sentence.\n"
+@pytest.mark.parametrize(
+    "text",
+    [
+        "# Design\nA short sentence. Another short one.\n",
+        f"# Design\nIntro.\n\n```\n{_thirty_one_words()}\n```\n\nOutro.\n",
+        f"# Design\n| Col |\n|---|\n| {_thirty_one_words()} |\n",
+        f"# Design\nSee `{_WORDS31}.` here.\n",
+        f"# {' '.join(['word'] * 35)}.\nA short body sentence.\n",
+    ],
+    ids=["short-control", "fenced-code", "table-cell", "inline-code", "heading"],
+)
+def test_no_long_sentence_entry_for_short_or_excluded_text(tmp_path: Path, text: str):
+    """No sentence over 30 words, or the long one sits in fenced code, a table cell, inline code or a heading: absent from `measured`."""
     covered = tmp_path / "docs" / "DESIGN.md"
     covered.parent.mkdir(parents=True)
     covered.write_text(text, encoding="utf-8")

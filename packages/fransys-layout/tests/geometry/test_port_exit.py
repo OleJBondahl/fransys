@@ -15,8 +15,6 @@ from fransys_layout.geometry import WIRING_GRID, Facing, Point, port_exit
         (Facing.W, 3, Point(x=40 - 3 * WIRING_GRID, y=24)),
     ],
 )
-def test_a_port_exit_stands_the_stated_grids_out_along_its_facing(
-    facing: Facing, grids: int, expected: Point
-) -> None:
+def test_a_port_exit_stands_the_stated_grids_out_along_its_facing(facing: Facing, grids: int, expected: Point) -> None:
     """Hand-made values for all four facings, and for three grids out."""
     assert port_exit(Point(x=40, y=24), facing, grids) == expected

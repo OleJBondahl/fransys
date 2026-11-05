@@ -2,61 +2,34 @@
 
 from typing import Any
 
-from fransys_layout.engines.overview.sheet_values import BoxFacts, DiagramFacts, LineFacts
-from fransys_layout.geometry import text_width
-from fransys_model.derive import mm_per_division, text_room_g
+from fransys_layout.engines.overview.sheet_values import DiagramFacts
+from fransys_layout.engines.overview.sizes import measured_box, measured_line
+from fransys_layout.symbols import frame_extent, text_room_on
 from fransys_model.derive.block_diagram import box_dashed, box_lines, box_order, diagram_lines
-from fransys_model.derive.drawing_text import content_extent
-from fransys_model.layout.tables import profile_of, sheet_for
+from fransys_model.layout.tables import sheet_for, tuning_of
 from fransys_model.vocab.enums import PageKind
-lazy from fransys_model.derive.block_diagram import DiagramLine
+lazy from fransys_layout.symbols import SymbolLibrary
 lazy from fransys_model.kernel import Id, Model
 
 
-def _width(text: str | None, height: int) -> int | None:
-    """The text width of a tab, or `None` for no tab."""
-    return None if text is None else text_width(text, height=height)
-
-
-def _line(line: DiagramLine, height: int) -> LineFacts:
-    """A line's label width and the width of each tab it has."""
-    return LineFacts(
-        cable=line.cable,
-        a=line.a,
-        b=line.b,
-        label_width=text_width(line.designation, height=height),
-        tab_a=_width(line.tab_a, height),
-        tab_b=_width(line.tab_b, height),
-    )
-
-
-def _box(model: Model, box: Id[Any], unit: Id[Any] | None, height: int) -> BoxFacts:
-    """A box's text widths and its dash."""
-    return BoxFacts(
-        box=box,
-        text_widths=tuple(text_width(t, height=height) for t in box_lines(model, box, unit)),
-        dashed=box_dashed(model, box, unit),
-    )
-
-
-def diagram_reading(model: Model, unit: Id[Any] | None) -> DiagramFacts | None:
+def diagram_reading(model: Model, unit: Id[Any] | None, library: SymbolLibrary) -> DiagramFacts | None:
     """The facts of `unit`'s diagram, or `None` when the reading has no line (no page)."""
     lines = diagram_lines(model, unit)
     if not lines:
         return None
-    profile, sheet = profile_of(model), sheet_for(model, PageKind.BLOCK_DIAGRAM)
-    height = text_room_g(model, profile.text_height_mm, sheet)
-    per_division = mm_per_division(model, sheet)
+    tuning, sheet = tuning_of(model), sheet_for(model, PageKind.BLOCK_DIAGRAM)
+    height = text_room_on(model, sheet, library)
+    width, depth = frame_extent(library, sheet)
     reached = {box for line in lines for box in (line.a, line.b)}
     boxes = sorted(reached, key=lambda box: box_order(model, box, unit))
     return DiagramFacts(
         unit=unit,
-        boxes=tuple(_box(model, box, unit, height) for box in boxes),
-        lines=tuple(_line(line, height) for line in lines),
+        boxes=tuple(measured_box(box, box_lines(model, box, unit), height, dashed=box_dashed(model, box)) for box in boxes),
+        lines=tuple(measured_line((ln.cable, ln.a, ln.b), ln.designation, (ln.tab_a, ln.tab_b), height) for ln in lines),
         text_height=height,
-        turn_penalty=profile.route_turn_penalty,
-        crossing_penalty=profile.route_crossing_penalty,
-        width=content_extent(sheet.content_width_mm, per_division),
-        height=content_extent(sheet.content_height_mm, per_division),
+        turn_penalty=tuning.route_turn_penalty,
+        crossing_penalty=tuning.route_crossing_penalty,
+        width=width,
+        height=depth,
         nest_same=True,
     )

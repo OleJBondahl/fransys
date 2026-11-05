@@ -3,8 +3,8 @@
 See derive-text.md.
 
 The layout engine sizes a marker's box and a cross-reference label from their text; render
-must print exactly that text but may not import `fransys_layout`. Three pure formatters on
-plain values (`frame_column`, `position_text`, `location_prefix`) and a family of readers on a
+must print exactly that text but may not import `fransys_layout`. Pure formatters on
+plain values (`position_text`, `location_prefix`) and a family of readers on a
 laid-out model (`marker_text`, `cross_reference_text`) hold that
 text so both sides call the same code. `fransys_layout.stages.references` calls the
 formatters and keeps no copy; render will call the readers. `port_designation_in` applies
@@ -22,24 +22,21 @@ from fransys_model.derive.contact_image import (
     contact_marks,
 )
 from fransys_model.derive.designation import connector_designation, port_designation
+from fransys_model.derive.facts.house_settings import revision_form_of, wire_label_text_of
 from fransys_model.derive.facts.revision_label import revision_label
 from fransys_model.derive.frame_position import (
     content_extent,
-    frame_column,
-    frame_row,
     location_path,
     location_prefix,
     partner_position_text,
-    place_text,
     position_text,
     row_letter,
 )
-from fransys_model.derive.house_settings import revision_form_of, wire_label_text_of
 from fransys_model.derive.location_text import (
     product_location,
     stub_far_end,
 )
-from fransys_model.derive.marker_targets import marker_lines, more_count, more_text
+from fransys_model.derive.marker_targets import more_text
 from fransys_model.derive.marker_text import REF_SLOTS, marker_text, reference_slot
 from fransys_model.derive.pole_ports import pole_prefix
 from fransys_model.derive.port_marking import port_marking
@@ -48,15 +45,12 @@ from fransys_model.derive.stub_text import (
     line_stub_line,
     off_stub_line,
 )
-from fransys_model.derive.tag_echo import reference_digits, tag_echo_text
 from fransys_model.derive.tag_text import (
     external_note,
     is_device_terminal,
     item_tag_text,
-    point_text,
     strip_tag_text,
     tag_text,
-    unit_tag_text,
 )
 from fransys_model.derive.unit_nodes import own_nodes
 from fransys_model.derive.unit_release import unit_release
@@ -88,9 +82,7 @@ def wire_text(model: Model, conductor: Id[Conductor], *, unit: Id[Unit] | None =
     """A WIRE label's text via `wire_label_text`; `unit` makes the ends unit-relative."""
     record = conductors(model)[conductor]
     ends = ordered_wire_ends(model, record.a, record.b)
-    return wire_label_text(
-        wire_label_text_of(model), *(port_designation(model, port, unit=unit) for port in ends)
-    )
+    return wire_label_text(wire_label_text_of(model), *(port_designation(model, port, unit=unit) for port in ends))
 
 
 def _release_name(release: UnitRelease) -> str:
@@ -107,7 +99,7 @@ def release_title(form: RevisionForm, release: UnitRelease) -> str:
 
 
 def unit_label(model: Model, unit: Id[Unit]) -> str:
-    """What a drawing, a cover or a title block prints for a unit (decision model-0066).
+    """What a drawing, a cover or a title block prints for a unit.
 
     The unit's release title (`derive.unit_release`), else its name when the title is empty.
     """
@@ -144,36 +136,26 @@ __all__ = [
     "contact_marks",
     "content_extent",
     "external_note",
-    "frame_column",
-    "frame_row",
     "heads_group",
     "is_device_terminal",
     "item_tag_text",
     "line_stub_line",
     "location_path",
     "location_prefix",
-    "marker_lines",
     "marker_text",
-    "more_count",
     "more_text",
     "off_stub_line",
     "outline_title",
     "page_title_groups",
     "partner_position_text",
-    "place_text",
-    "point_text",
     "pole_prefix",
     "port_marking",
     "position_text",
     "product_location",
-    "reference_digits",
     "reference_slot",
     "release_title",
     "row_letter",
     "strip_tag_text",
     "stub_far_end",
-    "tag_echo_text",
     "tag_text",
-    "unit_label",
-    "unit_tag_text",
 ]

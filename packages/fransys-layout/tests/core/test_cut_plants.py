@@ -12,9 +12,10 @@ from options_fixtures import core_options
 from fransys_layout.core import Facts, Hints, PlacementProblem, order_blocks
 from fransys_layout.core.blocks import assign_blocks
 from fransys_layout.core.cut import cut_pages
-from fransys_layout.core.values import Cell, Column, CycleSplit, End, FlowGraph, Lane
+from fransys_layout.core.flow_values import Cell, Column, End, FlowGraph, Lane
 
 from .blocks_fixtures import AREA
+from .conftest import MARKER
 from .cut_fixtures import cut_of, elem, net
 
 
@@ -22,48 +23,24 @@ def test_a_two_lane_column_taller_than_the_page_is_cut_into_columns() -> None:
     """Two lanes of twelve 96 G cells make a column 1240 G tall on an 822 G page."""
     ids = [f"k{n}{i:02d}" for n in (0, 1) for i in range(12)]
     syms = tuple(elem(i, 40, 96) for i in ids)
-    lanes = tuple(
-        Lane(tuple(Cell(i, "R0", "n", "s") for i in ids[12 * n : 12 * n + 12]), 48 * n)
-        for n in (0, 1)
-    )
+    lanes = tuple(Lane(tuple(Cell(i, "R0", "n", "s") for i in ids[12 * n : 12 * n + 12]), 48 * n) for n in (0, 1))
     col = Column("c", lanes, (End("open"), End("open")), (End("open"), End("open")), 1240, 88)
-    flow = FlowGraph((col,), (), (), (), CycleSplit(0, 0, 0), ())
+    flow = FlowGraph((col,), (), (), (), ())
     prob = PlacementProblem(AREA, syms, (), facts=Facts())
     lists = order_blocks(
         assign_blocks(
             flow,
             prob,
-            core_options(
-                flip_turn="R180",
-                tag_stagger=True,
-                label_gap=8,
-                parallel_pitch=48,
-                driver_first=True,
-                arrow_sides=("E", "W"),
-            ),
+            core_options(marker=MARKER),
         ),
         flow,
-        core_options(
-            flip_turn="R180",
-            tag_stagger=True,
-            label_gap=8,
-            parallel_pitch=48,
-            driver_first=True,
-            arrow_sides=("E", "W"),
-        ),
+        core_options(marker=MARKER),
     )
     result = cut_pages(
         lists,
         flow,
         prob,
-        core_options(
-            flip_turn="R180",
-            tag_stagger=True,
-            label_gap=8,
-            parallel_pitch=48,
-            driver_first=True,
-            arrow_sides=("E", "W"),
-        ),
+        core_options(marker=MARKER),
     )
     assert [c.id for c in result.flow.columns] == ["c#a", "c#b"]
     assert all(c.height <= 822 for c in result.flow.columns)

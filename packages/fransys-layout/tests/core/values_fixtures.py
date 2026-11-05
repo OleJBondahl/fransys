@@ -5,6 +5,20 @@ import dataclasses
 from turn_fixtures import views_of
 
 from fransys_layout.core import Annex, AnnexBox, Spot, outputs, values
+from fransys_layout.core.flow_values import (
+    Attach,
+    BiasedEnd,
+    Block,
+    BlockList,
+    Cell,
+    Column,
+    CrossLink,
+    CutResult,
+    End,
+    Fan,
+    FlowGraph,
+    Lane,
+)
 from fransys_layout.core.outputs import (
     Anchored,
     Annotations,
@@ -12,6 +26,8 @@ from fransys_layout.core.outputs import (
     Counts,
     Demand,
     Gap,
+    Junction,
+    Outline,
     PagePlacement,
     PageRoutes,
     PinXY,
@@ -24,39 +40,23 @@ from fransys_layout.core.outputs import (
     SceneLabel,
     SceneMarker,
     ScenePin,
-    SceneTable,
     SceneWire,
     Score,
-    Table,
     Trunk,
     Wire,
-    WireLabel,
 )
 from fransys_layout.core.outputs import Marker as OutMarker
 from fransys_layout.core.series_values import Parallel, Series
 from fransys_layout.core.sym_values import Sym
 from fransys_layout.core.values import (
     Anchor,
-    Attach,
-    BiasedEnd,
-    Block,
-    BlockList,
     Box,
     BoxSpec,
     Bundle,
-    Cell,
-    Column,
-    CrossLink,
     CutEnd,
-    CutResult,
-    CycleSplit,
-    End,
     Facts,
-    Fan,
     Finding,
-    FlowGraph,
     Hints,
-    Lane,
     Net,
     PagePlan,
     PageSpec,
@@ -86,13 +86,12 @@ def problem() -> PlacementProblem:
         pins=pins,
         nodes=(("1",), ("2",)),
         views=views_of(BOX, BOX, BOX, pins, ("R0", "R180"), row_footprint=row_footprint),
-        box=BoxSpec(("1", "2"), "N", 16, 8),
+        box=BoxSpec(("1", "2"), 8),
         row_group="RG",
         band=1,
         item="I1",
         child_of="K0",
         rank=3,
-        boundary_of="U2",
     )
     plain = dataclasses.replace(
         box_sym,
@@ -109,10 +108,10 @@ def problem() -> PlacementProblem:
             Net(
                 "N1",
                 (PinRef("K1", "1"), PinRef("K2", "1")),
-                Bundle("B", 1),
+                Bundle("B", 1, "line"),
                 crosses_unit=True,
-                label=Size(16, 8),
                 cut=(CutEnd(PinRef("K1", "1"), "W1"),),
+                tagged=((PinRef("K1", "1"), PinRef("K2", "1")),),
             ),
             Net("N2", (PinRef("K1", "2"), PinRef("K2", "2"))),
         ),
@@ -120,6 +119,9 @@ def problem() -> PlacementProblem:
             keep_whole=(frozenset({"K1", "K2"}),),
             units=(Unit("U1", "U0", (PinRef("K1", "1"),)),),
             mates=((PinRef("K1", "1"), PinRef("K2", "1")),),
+            far_ends=((PinRef("K1", "2"), PinRef("K2", "2")),),
+            groups=((PinRef("K1", "2"), PinRef("K2", "2")),),
+            joined=((PinRef("K1", "1"), PinRef("K1", "2")),),
             series=(
                 Series(("K1", Parallel(("K2", Series(("K3", "K4")))))),
                 Series(("K5",), "tail"),
@@ -134,14 +136,15 @@ def problem() -> PlacementProblem:
             chains=(("K1", "K2"),),
             draw_in=(("K1", "U1"),),
             sides=((PinRef("K1", "1"), "E"),),
+            frames=(("u", frozenset({"K1"})),),
         ),
         annexes=(Annex("K1", Size(16, 8), "tags", {"R0": (Spot("TL", "TL", 0, -8, "up", 8),)}),),
     )
 
 
 def layout() -> CoreLayout:
-    plan = PagePlan(1, "U1", (RowPlan(("C1",), ("b1",), 64),), forced_end=True, groups=("G1",))
-    ends = (RefEnd(1, "C1", PinRef("K1", "1"), 0), RefEnd(2, None, None))
+    plan = PagePlan(1, "U1", (RowPlan(("C1",), ("b1",), 64),), groups=("G1",))
+    ends = (RefEnd(1, "C1", PinRef("K1", "1"), 0, values.StandClass.LEG, (PinRef("K1", "2"),), (PinRef("K2", "1"),)), RefEnd(2, None, None))
     return CoreLayout(
         area=Size(800, 600),
         pages=(plan,),
@@ -151,13 +154,15 @@ def layout() -> CoreLayout:
                     1,
                     (Placed("K1", 1, 8, 8, "R0", BOX, BOX, (PinXY("1", 16, 8),)),),
                     (Gap("g1", 1, "C1", "C2", 0, 8, 2, 0, 64),),
-                    (Trunk("F1", 1, 24, 0, 64, 2, 0, ((0, 64), (0, 64))),),
+                    (Trunk("F1", 1, 24, 0, 64, 2, 0, ((0, 64), (0, 64)), ((True, True), (True, False)), (8, 24)),),
                     ((0, 64),),
                     ((0, 64),),
                     {"C1": (0, 64)},
+                    {"K1": (BOX,)},
                 ),
             ),
             (Finding("PAGE_OVERFLOW", "too tall", 1, "K1"),),
+            (Outline("u", 1, BOX, 0),),
         ),
         routes=Routes(
             (
@@ -165,22 +170,40 @@ def layout() -> CoreLayout:
                     1,
                     (Wire("N1", 1, ((0, 0), (8, 0)), "routed", lane=1),),
                     (Demand("g1", 2),),
-                    Counts(0, 1, 2, 8, 0),
+                    Counts(0, 1, 2, 8),
+                    (Junction("N1", 1, 8, 0),),
+                    (AnnexBox("K1", 1, BOX, "TL"),),
+                    (Demand("g1", 5),),
                 ),
             ),
             (Refused("N2", (PinRef("K1", "1"), PinRef("K2", "1"))),),
-            (Finding("ROUTE_FAILED", "N2"),),
+            (Finding("WIRE_THROUGH_BODY", "N2"),),
         ),
         annotations=Annotations(
             (AnnexBox("K1", 1, BOX, "TL"),),
-            (Table("K1", 1, ("3C", "2:3C"), BOX, 1),),
-            (OutMarker("N1", RefKind.TAG, 1, "3C", 4, 4, PinRef("K1", "1"), "R90"),),
-            (WireLabel("N1", 1, BOX),),
+            (
+                OutMarker(
+                    "N1",
+                    RefKind.TAG,
+                    1,
+                    "3C",
+                    4,
+                    4,
+                    PinRef("K1", "1"),
+                    "R90",
+                    1,
+                    (PinRef("K1", "2"),),
+                    (PinRef("K2", "1"),),
+                    values.StandClass.TRUNK_END,
+                ),
+            ),
             (Anchored("K1", "1", 1, 24, 8, "R90", BOX, (24, 8), ((16, 8), (24, 8))),),
+            (Outline("u", 1, BOX, 0),),
         ),
-        references=(Ref("N1", RefKind.ARROW, ends),),
+        references=(Ref("N1", RefKind.ARROW, ends, 1),),
         score=Score((("P1", 0),), (("R1", 1),), 1, 2, 3, 1, (0.5,), 4.5),
         findings=(Finding("LANE_TURNED", "turned", 1, "K1"),),
+        drawn=frozenset({(PinRef("K1", "1"), PinRef("K2", "1"))}),
         wired=frozenset({(PinRef("K1", "1"), "N1")}),
     )
 
@@ -215,34 +238,30 @@ def flow_values() -> tuple[object, ...]:
         FlowGraph(
             (column,),
             (fan,),
-            (CrossLink("N1", (attach,)),),
+            (CrossLink("N1", (attach,), tagged=True),),
             (BiasedEnd("K1", "1", 0),),
-            CycleSplit(1, 2, 3),
             ("K1",),
             (finding,),
+            frozenset({frozenset({"K1", "K2"})}),
         ),
         BlockList("U1", (block,), (finding,)),
         PageSpec(
-            (
-                PagePlan(
-                    1, "U1", (RowPlan(("C1",), ("b1",), 64),), forced_end=False, groups=("G1",)
-                ),
-            ),
+            (PagePlan(1, "U1", (RowPlan(("C1",), ("b1",), 64),), groups=("G1",)),),
             (Ref("N1", RefKind.TAG, (RefEnd(1, "C1", None),)),),
             (finding,),
+            drawn=frozenset({(PinRef("K1", "1"), PinRef("K2", "1"))}),
+            stubbed=frozenset({PinRef("K1", "1")}),
+            leads=frozenset({PinRef("K1", "1")}),
+            unjoined=(("N1", (PinRef("K1", "1"), PinRef("K2", "1"))),),
         ),
-        CutResult(
-            PageSpec((), ()),
-            FlowGraph((), (), (), (), CycleSplit(0, 0, 0), ()),
-            (BlockList("U1", ()),),
-        ),
+        CutResult(PageSpec((), (), drawn=frozenset()), FlowGraph((), (), (), (), ()), (BlockList("U1", ()),), frozenset({"f:1"})),
     )
 
 
 def scene_value() -> Scene:
     """A scene with every optional field of the scene values set once."""
     pin = ScenePin("1", 16, 8, "N", "N1", 0, biased=True, box=True, head=True)
-    box = SceneBox("K1", 1, BOX, BOX, (pin,), attached=True, strip="X1", orient="R180")
+    box = SceneBox("K1", 1, BOX, BOX, (pin,), attached=True, group="X1", orient="R180")
     return Scene(
         Size(800, 600),
         1,
@@ -252,7 +271,6 @@ def scene_value() -> Scene:
         frozenset({"N1"}),
         (0.5,),
         (SceneLabel("K1", 1, BOX, "TL"),),
-        (SceneTable("K1", 1, BOX, ("3C", "2:3C"), 1),),
         ((1, ((0, 16),)),),
     )
 

@@ -92,7 +92,7 @@ def test_a_pin_of_the_bare_board(new_design):
     design.net("sig", (board.pin("1", "edge"), r1.pin("1")), name="SIG")
     findings = check(design.freeze(), board.item)
     finding = _only(findings, "NODE_WITHOUT_COMPONENT")
-    assert finding.severity is Severity.WARNING
+    assert finding.severity is Severity.ERROR
     assert finding.subjects == (board.pin("1", "edge"),)
     assert "child item" in finding.message
     assert "footprint" in finding.message
@@ -106,7 +106,7 @@ def test_a_pin_of_an_item_without_a_footprint(new_design):
     design.net("sig", (u1.pin("1"), r1.pin("1")), name="SIG")
     findings = check(design.freeze(), board.item)
     finding = _only(findings, "NODE_WITHOUT_COMPONENT")
-    assert finding.subjects == (u1.pin("1"),)
+    assert (finding.severity, finding.subjects) == (Severity.ERROR, (u1.pin("1"),))
     assert "no footprint" in finding.message
     assert "child item" not in finding.message
 
@@ -122,10 +122,7 @@ def test_a_pin_without_a_footprint_names_the_item_board_relative(new_design):
     design.net("sig", (u1.pin("1"), r1.pin("1")), name="SIG")
     findings = check(design.freeze(), board.item)
     finding = _only(findings, "NODE_WITHOUT_COMPONENT")
-    assert finding.message == (
-        "pin U1:1 belongs to an item with no footprint, so it has no component "
-        "in the netlist and KiCad drops it on import"
-    )
+    assert finding.message == ("pin U1:1 belongs to an item with no footprint, so it has no component in the netlist and KiCad drops it on import")
 
 
 def test_pins_that_all_have_components_raise_no_node_finding(demo_board):
@@ -133,9 +130,7 @@ def test_pins_that_all_have_components_raise_no_node_finding(demo_board):
 
 
 def test_two_parts_with_one_reference_even_under_different_parents(demo_board):
-    other = demo_board.design.item(
-        demo_board.resistor_part, "jb1-h1-r1", "R1", parent=demo_board.standoff
-    )
+    other = demo_board.design.item(demo_board.resistor_part, "jb1-h1-r1", "R1", parent=demo_board.standoff)
     findings = check(demo_board.freeze(), demo_board.board.item)
     finding = _only(findings, "REFERENCE_DUPLICATE")
     assert finding.severity is Severity.ERROR
@@ -152,12 +147,8 @@ def test_a_footprinted_link_under_a_footprinted_holder_is_no_duplicate_reference
     design = new_design()
     board = design.item(design.part("board", "SIM-BOARD-DEMO", "A", board=True), "jb1", "JB1")
     footprint = ("FuseLib", "Fuse_Holder")
-    holder = design.item(
-        design.part("h", "SIM-H", "H", footprint=footprint), "jb1-f11", "F11", parent=board
-    )
-    design.item(
-        design.part("f", "SIM-F", "F", footprint=footprint), "jb1-link", None, parent=holder
-    )
+    holder = design.item(design.part("h", "SIM-H", "H", footprint=footprint), "jb1-f11", "F11", parent=board)
+    design.item(design.part("f", "SIM-F", "F", footprint=footprint), "jb1-link", None, parent=holder)
     model, _ = number(design.freeze())
     assert "REFERENCE_DUPLICATE" not in _codes(check(model, board.item))
 
@@ -188,9 +179,7 @@ def test_one_port_in_two_nets_no_longer_reaches_this_check(demo_board):
     under the smaller net name (decision model-0042): a port in `GND` and `GND2` is one pad
     in one net row, not two, so `PAD_ON_MULTIPLE_NETS` does not fire. Proven positively, not
     by absence alone: the merged row still carries `R2:2` under the one name `GND`, and
-    `NET_SHORTED`, the model's own validator, reports the same two nets over the same model
-    (the package README: what the model's validators already report is not repeated
-    here)."""
+    """
     demo_board.design.net("gnd2", (demo_board.resistor_2.pin("2"),), name="GND2")
     model = demo_board.freeze()
     board = demo_board.board.item
@@ -210,9 +199,7 @@ def test_one_port_in_two_nets_no_longer_reaches_this_check(demo_board):
 
 
 def test_two_ports_with_one_pad_name_in_two_nets_is_a_pad_on_two_nets(new_design):
-    design, board, part = _board_with(
-        new_design, {"a": ("1",), "b": ("1",)}, footprint=("Lib", "U")
-    )
+    design, board, part = _board_with(new_design, {"a": ("1",), "b": ("1",)}, footprint=("Lib", "U"))
     u1 = design.item(part, "jb1-u1", "U1", parent=board)
     design.net("one", (u1.pin("1", "a"),), name="ONE")
     design.net("two", (u1.pin("1", "b"),), name="TWO")
@@ -223,9 +210,7 @@ def test_two_ports_with_one_pad_name_in_two_nets_is_a_pad_on_two_nets(new_design
 
 
 def test_two_ports_with_one_pad_name_in_one_net_is_one_pad(new_design):
-    design, board, part = _board_with(
-        new_design, {"a": ("1",), "b": ("1",)}, footprint=("Lib", "U")
-    )
+    design, board, part = _board_with(new_design, {"a": ("1",), "b": ("1",)}, footprint=("Lib", "U"))
     u1 = design.item(part, "jb1-u1", "U1", parent=board)
     design.net("both", (u1.pin("1", "a"), u1.pin("1", "b")), name="BOTH")
     codes = _codes(check(design.freeze(), board.item))
@@ -234,24 +219,20 @@ def test_two_ports_with_one_pad_name_in_one_net_is_one_pad(new_design):
 
 
 def test_two_pins_of_one_part_with_one_pad_name_are_a_pin_id_collision_wired_or_not(new_design):
-    design, board, part = _board_with(
-        new_design, {"a": ("1", "6"), "b": ("1", "6")}, footprint=("Lib", "U")
-    )
+    design, board, part = _board_with(new_design, {"a": ("1", "6"), "b": ("1", "6")}, footprint=("Lib", "U"))
     u1 = design.item(part, "jb1-u1", "U1", parent=board)
     found = [f for f in check(design.freeze(), board.item) if f.code == "PIN_ID_COLLISION"]
     assert len(found) == 2
     assert {f.severity for f in found} == {Severity.ERROR}
-    assert {f.subjects for f in found} == {
-        (u1.pin("1", "a"), u1.pin("1", "b")),
-        (u1.pin("6", "a"), u1.pin("6", "b")),
+    assert {frozenset(f.subjects) for f in found} == {
+        frozenset((u1.pin("1", "a"), u1.pin("1", "b"))),
+        frozenset((u1.pin("6", "a"), u1.pin("6", "b"))),
     }
     assert all("would write the one KiCad pin id U1:" in f.message for f in found)
 
 
 def test_pins_with_unique_names_are_no_pin_id_collision(new_design):
-    design, board, part = _board_with(
-        new_design, {"a": ("1", "6"), "b": ("2", "7")}, footprint=("Lib", "U")
-    )
+    design, board, part = _board_with(new_design, {"a": ("1", "6"), "b": ("2", "7")}, footprint=("Lib", "U"))
     design.item(part, "jb1-u1", "U1", parent=board)
     assert "PIN_ID_COLLISION" not in _codes(check(design.freeze(), board.item))
 
@@ -262,9 +243,7 @@ def test_a_pin_in_no_net(demo_board):
 
 
 def test_a_pad_shared_by_two_ports_is_connected_when_one_is_in_a_net(new_design):
-    design, board, part = _board_with(
-        new_design, {"a": ("1",), "b": ("1",)}, footprint=("Lib", "U")
-    )
+    design, board, part = _board_with(new_design, {"a": ("1",), "b": ("1",)}, footprint=("Lib", "U"))
     u1 = design.item(part, "jb1-u1", "U1", parent=board)
     design.net("one", (u1.pin("1", "a"),), name="ONE")
     assert "UNCONNECTED_PIN" not in _codes(check(design.freeze(), board.item))
@@ -321,9 +300,7 @@ def _holder_with_link(new_design):
     """A board with a footprinted holder `F1` and a function-less link item under it."""
     design = new_design()
     board = design.item(design.part("board", "SIM-BOARD-DEMO", "A", board=True), "jb1", "JB1")
-    holder_part = design.part(
-        "holder", "SIM-HOLDER", "F", {"main": ("1", "2")}, footprint=("L", "H")
-    )
+    holder_part = design.part("holder", "SIM-HOLDER", "F", {"main": ("1", "2")}, footprint=("L", "H"))
     link_part = design.part("link", "SIM-LINK", "F")
     holder = design.item(holder_part, "jb1-f1", "F1", parent=board)
     link = design.item(link_part, "jb1-f1-link", None, parent=holder)

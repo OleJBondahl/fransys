@@ -2,17 +2,13 @@
 
 Every cabinet is the units worked example's `pump_cabinet` (`test_units_worked_example.py`),
 itself nesting the `io_board` board unit, so a build has `1 + 2N` units. Demo parts only. Each
-instance gets its own scope prefix (`pump1`..`pumpN`) and location (`C1`..`CN`) so no reference
-designation repeats; each cabinet's two field terminals are declared unused, which clears
-`BOUNDARY_UNCONNECTED` without a per-instance top-level cable. Used by
-`test_scale_units_fixture.py` and by the profile script in `claude-tools/`.
 """
 
 from typing import Any
 
 import fransys as fr
-import fransys_author
 import fransys_parts
+from fransys_author.design import Design
 
 PROJECT: dict[str, Any] = {
     "title": "Scale",
@@ -30,13 +26,11 @@ def _io_board(s):
     u = s.unit("demo-io-board", revision=3, interface="2")
     u.revision(3, date="2026-01-01", text="First release", created="XX")
     grp = u.group("BRD", "I/O board")
-    board = u.item("DEMO-PCB-IO", name="board", group=grp)
-    x1 = u.item("DEMO-CONN-2P", tag="X1", parent=board, group=grp)
-    k1 = u.item("DEMO-RLY-2CO-24", name="k1", parent=board, group=grp)
+    x1 = u.item("DEMO-CONN-2P", tag="X1", group=grp)
+    k1 = u.item("DEMO-RLY-2CO-24", name="k1", group=grp)
     wire = u.wiring(colour="BU", gauge="0.5")
     wire(x1["1"], k1.fn("coil")["A1"])
     wire(x1["2"], k1.fn("coil")["A2"])
-    u.net("internal", k1.fn("co_1")["11"], k1.fn("co_2")["21"])
     u.boundary(x1)
     return x1
 
@@ -50,12 +44,11 @@ def pump_cabinet(s, *, name):
     x2 = u.strip("X2", at=c)
     field = [x2.terminal("DEMO-TB-2.5", group=grp) for _ in range(2)]
     board_x1 = _io_board(u.scope("io", at=c))
-    w1 = u.harness(name="w1", tag="WH1", at=c, group=grp)
-    p1 = u.item("DEMO-CONN-2P", tag="P1", parent=w1, at=c, group=grp)
-    cable = u.cable("DEMO-CBL-4G1.5", name="w1c", parent=w1, at=c)
+    p1 = u.item("DEMO-CONN-2P", tag="P1", at=c, group=grp)
+    cable = u.cable("DEMO-CBL-4G1.5", name="w1c", at=c)
     cable.core(1, field[0].outer, p1["1"])
     cable.core(2, field[1].outer, p1["2"])
-    u.mate(p1, board_x1)
+    u.unused(board_x1)
     for terminal in field:
         u.boundary(terminal)
     return field
@@ -63,7 +56,7 @@ def pump_cabinet(s, *, name):
 
 def scale_design(parts, n):
     """The `Design`: one container unit (`scale-container`) holding `n` cabinet instances."""
-    d = fransys_author.Design(parts)
+    d = Design(parts)
     d.project(**PROJECT)
     d.revision(1, date="2026-09-25", text="First issue", created="XX")
     er = d.location("ER", "Engine room")
@@ -81,16 +74,11 @@ def build_scale(n, *, with_document: bool = False) -> fr.BuildResult:
 
     `with_document=False` (the default): no document, the shape of the scale check (the
     examples' largest build with its documents left out) measures -- decision 0037 then
-    runs no layout at all, so this default must never change. `with_document=True` adds a
-    `layout_trigger_document()` draft (`_model_build_cover.py`): for a caller that
-    specifically needs this design laid out (`tests/test_scale_call_counts.py`'s own
-    layout-code-object count, which reads real `stages/place.py` calls that only happen once
-    layout runs).
     """
     parts = fransys_parts.load("demo_parts")
     drafts = (scale_design(parts, n).draft(),)
     if with_document:
-        from _model_build_cover import layout_trigger_document
+        from _model_build_cover import printed
 
-        drafts = (*drafts, layout_trigger_document())
+        drafts = printed(drafts[0])
     return fr.build(parts, *drafts)

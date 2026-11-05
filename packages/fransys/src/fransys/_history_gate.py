@@ -8,15 +8,14 @@ under the release root, or the revision being released.
 from typing import TYPE_CHECKING
 
 from fransys_model.derive import revision_history, revision_text, unit_release
-from fransys_model.kernel import Finding, Id, Severity
 
-from ._codes import fix_text
+from ._codes import finding
 from ._release_reader import released_revisions
 
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from fransys_model.kernel import Model
+    from fransys_model.kernel import Finding, Id, Model
     from fransys_model.vocab import Unit as ModelUnit
     from fransys_model.vocab import UnitRelease
 
@@ -50,15 +49,10 @@ def history_findings(
     release_id = None if unit is None else unit_release(model, unit).id
     bad = _unreleased(model, release_id, released_revisions(parent), current)
     return [
-        Finding(
-            code="RELEASE_HISTORY_UNRELEASED",
-            severity=Severity.ERROR,
-            subjects=() if unit is None else (unit,),
-            fix=fix_text("RELEASE_HISTORY_UNRELEASED"),
-            message=(
-                f"{name} {revision_text(*current)}: history entry {revision_text(*pair)} names "
-                "a revision that was never released"
-            ),
+        finding(
+            "RELEASE_HISTORY_UNRELEASED",
+            () if unit is None else (unit,),
+            f"{name} {revision_text(*current)}: history entry {revision_text(*pair)} names a revision that was never released",
         )
         for pair in bad
     ]

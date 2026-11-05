@@ -1,4 +1,6 @@
 """SPARE-TERMINALS (R356): a terminal none of whose nets has a second end is listed, not drawn."""
+# NET_POTENTIAL_CONFLICT 1 per default-salt build set (KI-461): planted_model or demo_model 24 V to 0 V short through strip and mate.
+# NET_SHORTED 1 per default-salt build set (KI-461): planted_model or demo_model 24 V to 0 V short through strip and mate.
 
 import pytest
 from conventions_fixtures import house

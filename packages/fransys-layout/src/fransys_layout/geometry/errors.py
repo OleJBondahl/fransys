@@ -29,16 +29,6 @@ class GeometryError(LayoutError):
     """A library coordinate is off the drawing grid (0.125 M), or a box has a negative size."""
 
 
-class SymbolPortError(LayoutError):
-    """A model port has no port of that name on the chosen symbol, after `port_map`."""
-
-    def __init__(self, message: str, *, function: Id[Record], port_name: str) -> None:
-        """Record the drawn `function` (an `Item`'s id for a whole-item symbol) and `port_name`."""
-        super().__init__(message)
-        self.function = function
-        self.port_name = port_name
-
-
 class HintError(LayoutError):
     """An authored layout hint contradicts the model or another hint."""
 

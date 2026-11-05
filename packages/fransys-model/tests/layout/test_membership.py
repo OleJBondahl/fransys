@@ -1,6 +1,7 @@
 """`layout.membership`: one holder, one subject, a valid frame cell, resolved ids."""
 
 from dataclasses import replace
+from typing import Any
 
 import pytest
 from layout_examples import (
@@ -56,9 +57,7 @@ def _membership(
     shown: Shown | None = None,
     **subjects: bool,
 ) -> Membership:
-    function, port, conductor, item = (
-        subjects.get(name, False) for name in ("function", "port", "conductor", "item")
-    )
+    function, port, conductor, item = (subjects.get(name, False) for name in ("function", "port", "conductor", "item"))
     return Membership(
         id=make_id(Membership, _KEY),
         key=_KEY,
@@ -85,9 +84,7 @@ def _freeze(*extra: Record):
 @pytest.mark.parametrize("holder", ["page", "sheet"])
 def test_a_membership_round_trips_with_either_holder(holder: str) -> None:
     """A page holder and a sheet holder both freeze and read back equal."""
-    rec = _membership(
-        on_page=holder == "page", on_sheet=holder == "sheet", function=True, port=False
-    )
+    rec = _membership(on_page=holder == "page", on_sheet=holder == "sheet", function=True, port=False)
     model = _freeze(rec)
     assert loads(dumps(model)) == model
     assert lookup_kind("layout.membership") is Membership
@@ -133,9 +130,7 @@ def test_a_conductor_only_subject_is_accepted() -> None:
 
 def test_a_port_and_conductor_subject_is_refused() -> None:
     """Two subjects, port and conductor, raise the exactly-one error."""
-    with pytest.raises(
-        SchemaError, match="a membership has exactly one of function, port, conductor and item"
-    ):
+    with pytest.raises(SchemaError, match="a membership has exactly one of function, port, conductor and item"):
         _membership(on_page=True, on_sheet=False, function=False, port=True, conductor=True)
 
 
@@ -149,9 +144,9 @@ def test_an_item_only_subject_is_accepted() -> None:
 @pytest.mark.parametrize("other", ["function", "port", "conductor"])
 def test_an_item_with_another_subject_is_refused(other: str) -> None:
     """An item beside any other subject is two subjects."""
-    subjects: dict[str, bool] = {"function": False, "port": False, other: True}
+    subjects: dict[str, Any] = {"function": False, "port": False, other: True}
     with pytest.raises(SchemaError, match="exactly one of function, port, conductor and item"):
-        _membership(on_page=True, on_sheet=False, item=True, **subjects)  # ty: ignore[invalid-argument-type] - ty widens **dict[str, bool] against the Shown parameter
+        _membership(on_page=True, on_sheet=False, item=True, **subjects)
 
 
 @pytest.mark.parametrize("shown", [None, Shown.DRAWN, Shown.REFERENCE])
@@ -165,9 +160,7 @@ def test_shown_and_rank_are_kept(shown: Shown | None) -> None:
 def test_a_membership_of_a_unit_outline_item_freezes_and_round_trips() -> None:
     """R196(b): the item subject (a unit outline) resolves at freeze and reads back equal."""
     item_id = drawn_function()[0].id
-    rec = replace(
-        _membership(on_page=True, on_sheet=False, function=True), function=None, item=item_id
-    )
+    rec = replace(_membership(on_page=True, on_sheet=False, function=True), function=None, item=item_id)
     model = _freeze(rec)
     assert loads(dumps(model)) == model
     assert layout_of(model, Membership)[rec.id].item == item_id

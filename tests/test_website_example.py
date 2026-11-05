@@ -2,7 +2,6 @@
 
 One full build, and the only one in this module, so it takes the few seconds a layout and a PDF
 cost: the test would prove nothing with a stubbed build, since a name the surface lost only
-fails when the script really calls it.
 """
 
 import csv
@@ -40,9 +39,7 @@ def test_example_builds_with_no_error_and_no_warning(tmp_path, monkeypatch):
     """The cabinet unit has its title and number, so the build holds no ERROR or WARNING."""
     monkeypatch.chdir(tmp_path)
     result = runpy.run_path(str(EXAMPLE))["result"]
-    severe = [
-        f.code for f in fr.check(result) if f.severity in (fr.Severity.ERROR, fr.Severity.WARNING)
-    ]
+    severe = [f.code for f in fr.check(result) if f.severity in (fr.Severity.ERROR, fr.Severity.WARNING)]
     assert severe == []
 
 

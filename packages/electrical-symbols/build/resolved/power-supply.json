@@ -53,6 +53,10 @@
   "kind": "symbol",
   "lint_allow": [
     {
+      "reason": "no tag is drawn on a power symbol; the library requires a tag slot of every symbol until TEXT-IN-LOOP T1 drops it (SUPPLY-SLOT R1605)",
+      "rule": "slot-missing"
+    },
+    {
       "reason": "supply rail marker; none of the toolkit's node potentials (earth, protective_earth, functional_earth, frame) names a plain rail reference (see the decisions file)",
       "rule": "port-isolated"
     }
@@ -85,25 +89,14 @@
   "slots": {
     "marking.supply": {
       "at": [
-        0.25,
-        1.5
+        0,
+        -1.5
       ],
       "box": [
-        1.5,
+        2,
         1
       ],
-      "side": "E"
-    },
-    "tag": {
-      "at": [
-        -2,
-        0
-      ],
-      "box": [
-        6,
-        1
-      ],
-      "side": "W"
+      "side": "N"
     }
   },
   "status": "unverified"

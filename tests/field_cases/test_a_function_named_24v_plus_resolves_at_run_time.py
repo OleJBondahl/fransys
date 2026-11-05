@@ -1,16 +1,6 @@
-"""Field case: a part function named with `+` or `-` is reachable by its generated attribute.
-
-The engineering shape: a power module whose two supply functions are named `24V+` and `24V-`,
-as the data sheet prints them. The typed parts module gives them attributes; the author writes
-`dev.P_24V_plus` and `dev.P_24V_minus`, or `getattr(dev, "24V+")` for the raw name.
-
-The bug: the generator wrote `P_24V_` for both (a silent clash), and at run time the device
-matched raw names only, so the generated attribute raised.
-
-The rule (decision author-0035): one function maps a raw function name to its identifier, `+` to
-`_plus` and `-` to `_minus` before other characters become `_`. The generator and the device both
-call it, and a clash that is left fails generation.
-"""
+"""Field case: a power module whose supply functions are named with + and - is reachable by its generated attribute.
+The bug: the generator wrote P_24V_ for both (a silent clash), and at run time the device matched raw names only, so the attribute raised.
+Fixed by author-0035, one function maps + to _plus and - to _minus, and a clash that is left fails generation."""
 
 from typing import TYPE_CHECKING
 
@@ -25,12 +15,9 @@ if TYPE_CHECKING:
 _FUNCTION = (
     '\n[[function]]\nname = "{name}"\nkind = "protection"\n'
     'ports = [\n    {{ name = "{pin}", role = "generic" }},\n]\n'
-    '\n[function.protection]\ntype = "mcb"\n'
+    '\n[function.block]\ntype = "mcb"\n'
 )
-_PART = (
-    'schema = 1\n\n[part]\nmpn = "PLANT-24V"\nmanufacturer = "Plant"\n'
-    'description = "Planted part"\ncategory = "protection"\nclass_code = "F"\n'
-)
+_PART = 'schema = 2\n\n[part]\nmpn = "PLANT-24V"\nmanufacturer = "Plant"\ndescription = "Planted part"\ncategory = "protection"\nclass_code = "F"\n'
 
 
 # Names no other test imports: sys.modules caches by name, a shared one reads another tree.
@@ -44,7 +31,7 @@ def _library(
     (package / "parts").mkdir(parents=True)
     (package / "__init__.py").write_text("", encoding="utf-8")
     (package / "library.toml").write_text(
-        f'schema = 1\nname = "{name}"\nversion = "0.1.0"\ndescription = "Planted"\n',
+        f'schema = 2\nname = "{name}"\nversion = "0.1.0"\ndescription = "Planted"\n',
         encoding="utf-8",
     )
     functions = "".join(_FUNCTION.format(name=n, pin=str(i + 1)) for i, n in enumerate(names))
@@ -53,9 +40,7 @@ def _library(
     return name
 
 
-def test_a_plus_and_a_minus_function_resolve_by_attribute_and_by_raw_name(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_a_plus_and_a_minus_function_resolve_by_attribute_and_by_raw_name(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     library = _library(tmp_path, monkeypatch, ("24V+", "24V-"))
     text = parts_module(library)
     assert "    P_24V_plus: " in text
@@ -67,9 +52,7 @@ def test_a_plus_and_a_minus_function_resolve_by_attribute_and_by_raw_name(
     assert getattr(dev, "24V-")[2].name == "2"
 
 
-def test_two_names_that_map_to_one_identifier_fail_generation(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_two_names_that_map_to_one_identifier_fail_generation(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     library = _library(tmp_path, monkeypatch, ("24V+", "24V_plus"), "fieldcase_clash_parts")
     with pytest.raises(fr.AuthorError, match=r"'24V\+' and '24V_plus'.*P_24V_plus"):
         parts_module(library)

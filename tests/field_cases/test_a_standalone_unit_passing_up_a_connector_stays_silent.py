@@ -1,22 +1,13 @@
-"""Field case: a unit built alone that passes up a nested connector stays silent (model-0184).
-
-The engineering shape: a board unit has two interface connectors, `X1` and `X2`. An assembly
-unit holds the board, mates a harness plug onto `X2` inside itself, and offers `X1` as its own
-interface (author-0032). The guide promises that a unit built alone leaves its interface open and
-`BOUNDARY_UNCONNECTED` stays silent.
-
-The bug: the assembly's own plug is not in the board's subtree, so the board was not standalone and
-its passed-up `X1` fired `BOUNDARY_UNCONNECTED`; the build was an error and wrote nothing. The rule
-(model-0184): the check skips a nested unit's boundary function that a standalone enclosing unit
-offers as its own. Inside a larger design that neither connects `X1` nor declares it unused, the
-error stays.
-"""
+"""Field case: a unit built alone, whose passed-up connector an enclosing standalone unit offers as its own, stays silent.
+The bug: the assembly's plug is outside the board's subtree, so the passed-up X1 fired BOUNDARY_UNCONNECTED and the build wrote nothing.
+Fixed by model-0184, the check skips a nested unit's boundary function that a standalone enclosing unit offers as its own."""
 
 import tempfile
 from pathlib import Path
 from typing import Any, NamedTuple
 
 import fransys as fr
+from _expected_codes import expect_codes
 from fransys.colours import BK
 
 
@@ -39,19 +30,18 @@ def _board(u: Any) -> _Board:
     x1 = u.device("X1", "DEMO-HSG-4F", parent=pcb, interface=True, contacts="DEMO-CRIMP-F")
     x2 = u.device("X2", "DEMO-HSG-4F", parent=pcb, interface=True, contacts="DEMO-CRIMP-F")
     k1 = u.device("K1", "DEMO-LAMP-24", parent=pcb)
-    u.detail.wire(x1[1], k1["1"], wire=(BK, 0.5))
-    u.detail.wire(x2[1], k1["2"], wire=(BK, 0.5))
+    u.series(x1[1], k1["1"], wire=(BK, 0.5))
+    u.series(x2[1], k1["2"], wire=(BK, 0.5))
     return _Board(x1, x2)
 
 
 @fr.unit("demo-asm", revision=1, interface_version=1, date="2026-01-01", text="first", by="AB")
 def _asm(u: Any) -> _Up:
     board = u.add(_board, "U1")
-    w1 = u.harness("W1")
-    p1 = u.device("P1", "DEMO-HSG-4M", parent=w1, contacts="DEMO-CRIMP-M")
-    p2 = u.device("P2", "DEMO-HSG-4M", parent=w1, contacts="DEMO-CRIMP-M")
-    u.mate(p1, board.X2)
-    u.detail.wire(p1[1], p2[1], wire=(BK, 0.5))
+    lamp = u.device("P1", "DEMO-LAMP-24")
+    w1 = u.cable("W1", "DEMO-CBL-4G1.5")
+    w1.core(1, board.X2[1], lamp["1"])
+    w1.core(2, board.X2[2], lamp["2"])
     return _Up(board.X1)
 
 
@@ -79,8 +69,6 @@ def test_the_assembly_built_alone_has_no_boundary_unconnected() -> None:
 def test_the_same_assembly_inside_a_parent_that_leaves_x1_open_still_errors() -> None:
     d = fr.design("demo_parts")
     d.add(_ship, "S1", place=None)
-    errors = _errors(fr.build(d))
-    assert any(
-        code == "BOUNDARY_UNCONNECTED" and "of " in msg and "S1/A1" not in msg
-        for code, msg in errors
-    )
+    result = fr.build(d)
+    expect_codes(result, "BOUNDARY_UNCONNECTED")
+    assert any("of " in msg and "S1/A1" not in msg for code, msg in _errors(result) if code == "BOUNDARY_UNCONNECTED")

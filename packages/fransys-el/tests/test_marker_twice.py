@@ -1,13 +1,14 @@
 """One reference end in two drawing sets is two link markers, never one id twice (TEXT-CANDIDATES).
 
 A net whose ends stand on page 1 of two sets gave the same `layout.link_marker` key from both
-sets' write, with a different page: `MergeConflict` out of build. The set's number is in the key.
+sets' write, with a different page: `MergeConflictError` out of build. The set's number is in the key.
 """
 
 import pytest
 from conventions_fixtures import house
 from fransys_el import build, options, symbol_kit
 from fransys_el.write_markers import link_markers
+from fransys_el.write_pages import SetPlace, Written, drawing_set
 from kit_instances import INSTANCES
 
 from electrical_symbols import LIBRARY
@@ -25,10 +26,13 @@ def _page(number: int, n: int) -> Page:
     )  # fmt: skip
 
 
-@pytest.fixture(scope="module")
-def sets():
-    """The markers of one layout written as set 1 and as set 2, whose pages have other ids."""
-    model = INSTANCES["p02"]()
+@pytest.fixture(scope="module", params=["w07"])
+def sets(request):
+    """The markers of one layout written as set 1 and as set 2, whose pages have other ids.
+
+    w06 draws no marker pair now; w07 does (its build draws every connection, R1532).
+    """
+    model = INSTANCES[request.param]()
     kit = symbol_kit(model, LIBRARY)
     conventions = house()
     problem, _ = build(model, kit, conventions, LIBRARY)
@@ -37,11 +41,8 @@ def sets():
     found = []
     for number in (1, 2):
         pages = {n: _page(number, n) for n in nos}
-        found.append(
-            link_markers(
-                layout, model, kit, pages, stamp="t", library=LIBRARY, number=number, unit=None
-            )
-        )
+        owner = drawing_set(None, SetPlace(number=number))
+        found.append(link_markers(Written(model, layout, problem, kit, LIBRARY, pages, owner, None)))
     return model, found
 
 

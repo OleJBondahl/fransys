@@ -1,4 +1,4 @@
-schema = 1
+schema = 2
 
 [part]
 mpn = "DEMO-PSU-24-OK"
@@ -16,7 +16,7 @@ ports = [
 ]
 
 [function.rating]
-voltage_ac_v = "264"
+voltage = [{ nom = "264 V", at = ["AC"] }]
 
 [[function]]
 name = "output"
@@ -27,7 +27,7 @@ ports = [
 ]
 
 [function.operating]
-nominal_voltage_v = "24"
+voltage = [{ nom = "24 V" }]
 
 [[function]]
 name = "dc_ok"

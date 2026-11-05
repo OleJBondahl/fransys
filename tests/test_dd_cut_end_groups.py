@@ -1,29 +1,19 @@
 """A probe: a declared net over a boundary function's replica page.
 
-A unit `ua` holds a boundary connector `f` and a peer `g` (both group GA); a top-level connector
-`h` (group GT) stands beside them. A declared net `n` joins `f.1`, `g.1` and `h.1`, so its ports'
-pages include `f`'s black-box replica page in the top-level set, on a page of its own (a page
-break before GA) apart from `h`'s. Pin 2 of `f` is wired to `g.2` inside the unit and to `h.2`
-outside it: `f` crosses out of the unit, so it is a valid boundary, and its own-set pin is covered.
-
-Measured on the base: the build has no ERROR finding, and the top-level set carries one marker
-pair for the net between `h` and `f`'s replica page. The net group's cuts take the lowest port
-on each page and no ruling about a conductor's end pages applies to them: this passes unchanged.
-
-Built through the `fransys` facade from `examples/demo-parts`; read from the page Drawings.
+A unit `ua` holds a boundary connector `f` and a peer `g` (group GA); top-level `h` (GT) is on page 1, `f`'s replica on page 2
+(`f` is wired to `k`, group GU after a break). A declared net `n` joins `f.1`, `g.1` and `h.1`, so its ports'
 """
 
 from typing import Any
 
 import fransys as fr
-import fransys_author
 import fransys_parts
 from _dd_core import pages_of, set_of
 from _dd_core_b import markers
-from _model_build_cover import layout_trigger_document
+from _model_build_cover import cabinet_document, layout_trigger_document, unit_document
+from fransys_author.design import Design
 
 from fransys_model.kernel import Severity
-from fransys_model.layout import Page, layout_of
 
 _PROJECT: dict[str, Any] = {
     "title": "Cut end net group",
@@ -37,7 +27,7 @@ _PROJECT: dict[str, Any] = {
 def _build():
     """The design of the module docstring; returns the build result."""
     parts = fransys_parts.load("demo_parts")
-    d = fransys_author.Design(parts)
+    d = Design(parts)
     d.project(**_PROJECT)
     d.revision(1, date="2026-09-25", text="First issue", created="XX")
     at = d.location("C1", "Cabinet")
@@ -50,10 +40,13 @@ def _build():
     h = d.item("DEMO-CONN-2P", name="h", tag="X3", at=at, group=group_t)
     wire = d.wiring(colour="BU", gauge="0.5")
     wire(f["2"], g["2"])
-    wire(f["2"], h["2"])
+    m = d.item("DEMO-CONN-2P", name="m", tag="X5", at=at, group=group_t)
+    wire(h["2"], m["2"])
     d.net("n", f["1"], g["1"], h["1"])
-    d.break_before(group_a)
-    return fr.build(parts, d.draft(), layout_trigger_document())
+    group_u = d.group("GU", "Group U")
+    k = d.item("DEMO-CONN-2P", name="k", tag="X4", at=at, group=group_u)
+    wire(f["2"], k["2"])
+    return fr.build(parts, d.draft(), layout_trigger_document(), unit_document(ua), cabinet_document(at))
 
 
 def _top_level_page_of(model, name: str):
@@ -73,8 +66,9 @@ def test_a_net_over_a_boundary_functions_replica_page_builds_and_is_cut_there() 
     model = result.model
     assert [f.code for f in result.findings if f.severity is Severity.ERROR] == []
     f_page, h_page = _top_level_page_of(model, "f"), _top_level_page_of(model, "h")
-    pages = layout_of(model, Page)
-    assert pages[f_page].number != pages[h_page].number  # the shape needs the cut: two pages
+    assert f_page == h_page  # R1702: the top-level set is one page, both ends stand on it
+    assert [f.code for f in result.findings if f.code == "CONNECTION_NOT_DRAWN"] == []
+    assert all(pages_of(model, name) for name in ("f", "g", "h"))  # every port is covered in some set
     on_page = {page: [m for p, m in markers(model) if p == page] for page in (f_page, h_page)}
     assert on_page[h_page]  # the net's owner marker on `h`'s page
     assert on_page[f_page]  # and its user marker on `f`'s replica page

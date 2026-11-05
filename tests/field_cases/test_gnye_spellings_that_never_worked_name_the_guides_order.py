@@ -1,14 +1,8 @@
 """Field case: two GNYE spellings that failed before 0.19.9 name the guide's order as the fix.
+The bug: a GNYE core written after its series, or PE passed as a fourth pole, failed on 0.19.8 without saying how to write it.
+Fixed by GNYE-SERIES (patch 0.19.10), each spelling refuses and names the guide's order: core(GNYE, a, b) before the series."""
 
-Engineering shape: a 4-core cable (3 non-earth cores and one GNYE core) joins a terminal strip to
-an external load with L1, L2, L3 and PE. The guide's series page ("Earth pins") wires the GNYE core
-first with `core(GNYE, a, b)` and then writes the 3-pole series.
-
-Not regressions (both failed on 0.19.8 as well): the series first and the GNYE core after it, and
-the PE pin passed as a fourth pole of the series. Each must refuse and say how to write it.
-
-Fixing work order: GNYE-SERIES (patch 0.19.10).
-"""
+from typing import Any
 
 import fransys as fr
 import pytest
@@ -18,7 +12,7 @@ from fransys_author import AuthorError
 _GUIDE = "core(GNYE, a, b) before the series"
 
 
-def _parts() -> tuple:
+def _parts() -> tuple[Any, ...]:
     d = fr.design("demo_parts")
     x = d.terminal_strip("X", "DEMO-TB-2.5", 4)
     ext = d.device("EXT", None, external=True, pins=("L1", "L2", "L3", "PE"))

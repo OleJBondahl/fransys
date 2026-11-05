@@ -6,8 +6,8 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 from .errors import CoreError
-from .keys import natural_key
-from .values import Attach, Cell, PinRef
+from .flow_values import Attach, Cell
+from .values import PinRef
 lazy from .sym_values import Sym
 
 if TYPE_CHECKING:
@@ -60,9 +60,7 @@ def attached_pin(ends: tuple[NetEnd, ...]) -> PinRef | None:
     return None
 
 
-def classify(
-    ends: tuple[NetEnd, ...], slot: Slot, syms: Mapping[str, Sym]
-) -> tuple[list[Att], list[Att], list[str], bool]:
+def classify(ends: tuple[NetEnd, ...], slot: Slot, syms: Mapping[str, Sym]) -> tuple[list[Att], list[Att], list[str], bool]:
     """Drivers drop to the trunk from above, legs hang below; an off-lane end is a cross-link."""
     drivers: list[Att] = []
     legs: list[Att] = []
@@ -101,19 +99,13 @@ def deal(
     A hub with no lane to stand in (the first attachment is a box pin) is dealt like the rest.
     Returns the lanes it made for the cells left over, and for the `apart` symbols (R283).
     """
-    cells = [
-        Cell(elems[t].sym, "R0", elems[t].n_pin, elems[t].s_pin)
-        for t in sorted(throughs, key=natural_key)
-    ]
+    cells = [Cell(elems[t].sym, "R0", elems[t].n_pin, elems[t].s_pin) for t in throughs]
     apart = _own_symbols(fan, throughs, elems, apart)
     own = [c for c in cells if c.sym in apart]
     cells = [c for c in cells if c.sym not in apart]
     if not cells and not own:
         return ()
-    if cells and (
-        (not fan.drivers and fan.legs and _hub_at_head(fan, cells[0]))
-        or (fan.drivers and not fan.legs and _hub_at_foot(fan, cells[0]))
-    ):
+    if cells and ((not fan.drivers and fan.legs and _hub_at_head(fan, cells[0])) or (fan.drivers and not fan.legs and _hub_at_foot(fan, cells[0]))):
         cells.pop(0)
     rest = [*_deal_to_legs(fan, cells), *own]
     made = tuple(LaneDraft(f"{col_prefix}{cell.sym}", 0, [cell]) for cell in rest)
@@ -121,9 +113,15 @@ def deal(
     return made
 
 
-def _own_symbols(
-    fan: FanDraft, throughs: Sequence[str], elems: Mapping[str, Elem], apart: frozenset[str]
-) -> frozenset[str]:
+def turn_foot_hub(fan: FanDraft, facing: Mapping[str, str]) -> None:
+    """Turn a free-sided hub at a lane's foot, or dealt to a leg's head, to meet the fan on its `facing` pin (by symbol; R924)."""
+    for lane, i in ((a.lane, -(a.where == "hub-foot")) for a in fan.legs if a.lane and a.where in ("hub-foot", "head")):  # -1 foot hub, 0 leg head
+        c = lane.cells[i]
+        if facing.get(c.sym, "") == c.bottom_pin:
+            lane.cells[i] = Cell(c.sym, "R180", c.bottom_pin, c.top_pin, hold=c.hold)
+
+
+def _own_symbols(fan: FanDraft, throughs: Sequence[str], elems: Mapping[str, Elem], apart: frozenset[str]) -> frozenset[str]:
     """Symbols that take their own column: the trial's, and a hub with more elements elsewhere."""
     if bool(fan.drivers) == bool(fan.legs):
         return apart
@@ -168,7 +166,10 @@ def resolve(att: Att) -> Attach:
         msg = f"attachment {att.where} reached resolve with no net"
         raise CoreError(msg)
     if att.lane is None:
-        return Attach(None, 0, 0, att.pin, att.pole, net=att.net)  # ty: ignore[invalid-argument-type] - a box pin has its ref
+        if att.pin is None:
+            msg = f"attachment {att.where} reached resolve with no pin"
+            raise CoreError(msg)
+        return Attach(None, 0, 0, att.pin, att.pole, net=att.net)
     cells = att.lane.cells
     last = len(cells) - 1
     index, top = {
@@ -180,5 +181,5 @@ def resolve(att: Att) -> Attach:
         "hub-foot": (last, True),
     }[att.where]
     pin = cells[index].top_pin if top else cells[index].bottom_pin
-    where = PinRef(cells[index].sym, pin or "")
+    where = att.pin or PinRef(cells[index].sym, pin or "")
     return Attach(att.lane.column, att.lane.index, index, where, att.pole, net=att.net)

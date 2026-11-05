@@ -12,8 +12,9 @@ lazy from fransys_layout.core.outputs import Routes
 
 if TYPE_CHECKING:
     from fransys_layout.core import AnnexBox
-    from fransys_layout.core.outputs import CoreLayout, WireLabel
-    from fransys_layout.core.values import BlockList, CutResult, Finding, FlowGraph
+    from fransys_layout.core.flow_values import BlockList, CutResult, FlowGraph
+    from fransys_layout.core.outputs import CoreLayout
+    from fransys_layout.core.values import Finding
 
 from .conftest import MARKER
 
@@ -25,12 +26,6 @@ def flow_of(prob: PlacementProblem, options: Options | None = None) -> FlowGraph
         options
         or core_options(
             marker=MARKER,
-            flip_turn="R180",
-            tag_stagger=True,
-            label_gap=8,
-            parallel_pitch=48,
-            driver_first=True,
-            arrow_sides=("E", "W"),
         ),
     )
 
@@ -41,12 +36,6 @@ def blocks_of(prob: PlacementProblem, options: Options | None = None) -> tuple[B
 
     opts = options or core_options(
         marker=MARKER,
-        flip_turn="R180",
-        tag_stagger=True,
-        label_gap=8,
-        parallel_pitch=48,
-        driver_first=True,
-        arrow_sides=("E", "W"),
     )
     return assign_blocks(flow_of(prob, opts), prob, opts)
 
@@ -57,12 +46,6 @@ def cut_of(prob: PlacementProblem, options: Options | None = None) -> CutResult:
 
     opts = options or core_options(
         marker=MARKER,
-        flip_turn="R180",
-        tag_stagger=True,
-        label_gap=8,
-        parallel_pitch=48,
-        driver_first=True,
-        arrow_sides=("E", "W"),
     )
     flow = flow_of(prob, opts)
     lists = order_blocks(blocks_of(prob, opts), flow, opts)
@@ -80,12 +63,6 @@ def placed_of(prob: PlacementProblem, options: Options | None = None) -> Placeme
     """Stages 1 to 5 on a problem."""
     opts = options or core_options(
         marker=MARKER,
-        flip_turn="R180",
-        tag_stagger=True,
-        label_gap=8,
-        parallel_pitch=48,
-        driver_first=True,
-        arrow_sides=("E", "W"),
     )
     return placed_from(cut_of(prob, opts), prob, opts)
 
@@ -101,36 +78,21 @@ def routed_of(prob: PlacementProblem, options: Options | None = None) -> Routes:
     """Stages 1 to 6 on a problem; route_pages is imported late (it lands with stage 6)."""
     opts = options or core_options(
         marker=MARKER,
-        flip_turn="R180",
-        tag_stagger=True,
-        label_gap=8,
-        parallel_pitch=48,
-        driver_first=True,
-        arrow_sides=("E", "W"),
     )
     return routed_from(cut_of(prob, opts), prob, opts)
 
 
-def widened_of(
-    prob: PlacementProblem, options: Options | None = None
-) -> tuple[Placement, Routes, tuple[Finding, ...]]:
+def widened_of(prob: PlacementProblem, options: Options | None = None) -> tuple[Placement, Routes, tuple[Finding, ...]]:
     """Stages 1 to 7 on a problem; widen is imported late (it lands with stage 7)."""
     from fransys_layout.core.route import route_pages
-    from fransys_layout.core.widen import widen
+    from fransys_layout.core.widen import Round, widen
 
-    opts = options or core_options(
-        flip_turn="R180",
-        tag_stagger=True,
-        label_gap=8,
-        parallel_pitch=48,
-        driver_first=True,
-        arrow_sides=("E", "W"),
-    )
+    opts = options or core_options()
     cut = cut_of(prob, opts)
     placement = placed_from(cut, prob, opts)
     routes = route_pages(placement, cut, prob, opts)
-    _, placement, routes, findings = widen(cut, placement, routes, prob, opts)
-    return placement, routes, findings
+    _, placement, rnd, _, findings = widen(cut, placement, Round((), (), routes, ()), prob, opts)
+    return placement, rnd.routes, findings
 
 
 def with_annexes(prob: PlacementProblem, options: Options) -> PlacementProblem:
@@ -140,59 +102,14 @@ def with_annexes(prob: PlacementProblem, options: Options) -> PlacementProblem:
     return replace(prob, annexes=label_annexes(prob.symbols, options))
 
 
-def labelled_of(
-    prob: PlacementProblem, options: Options | None = None
-) -> tuple[tuple[AnnexBox, ...], tuple[Finding, ...]]:
-    """Stages 1 to 6 and 8a on a problem, then place_annexes on its designation annexes."""
-    from fransys_layout.core import place_annexes
-    from fransys_layout.core.outputs import Annotations
-    from fransys_layout.core.route import route_pages
-    from fransys_layout.core.text_markers import mark_pages
+def labelled_of(prob: PlacementProblem, options: Options | None = None) -> tuple[tuple[AnnexBox, ...], tuple[Finding, ...]]:
+    """Stages 1 to 6 on a problem, the routing loop given its designation annexes: the labels it stood and its ANNEX_UNPLACED."""
+    from fransys_layout.core.widen import route_round
 
-    opts = options or core_options(
-        flip_turn="R180",
-        tag_stagger=True,
-        label_gap=8,
-        parallel_pitch=48,
-        driver_first=True,
-        arrow_sides=("E", "W"),
-    )
+    opts = options or core_options()
     cut = cut_of(prob, opts)
-    placement = placed_from(cut, prob, opts)
-    routes = route_pages(placement, cut, prob, opts)
-    markers = mark_pages(cut, placement, prob, opts)
-    return place_annexes(
-        placement, routes, Annotations(markers=markers), with_annexes(prob, opts), opts
-    )
-
-
-def wire_labelled_of(
-    prob: PlacementProblem, options: Options | None = None
-) -> tuple[tuple[WireLabel, ...], tuple[Finding, ...]]:
-    """Stages 1 to 6, 8a and 8b, then label_nets; the stage modules are imported late."""
-    from fransys_layout.core import place_annexes
-    from fransys_layout.core.outputs import Annotations
-    from fransys_layout.core.route import route_pages
-    from fransys_layout.core.text_markers import mark_pages
-    from fransys_layout.core.text_wires import label_nets
-
-    opts = options or core_options(
-        marker=MARKER,
-        flip_turn="R180",
-        tag_stagger=True,
-        label_gap=8,
-        parallel_pitch=48,
-        driver_first=True,
-        arrow_sides=("E", "W"),
-    )
-    cut = cut_of(prob, opts)
-    placement = placed_from(cut, prob, opts)
-    routes = route_pages(placement, cut, prob, opts)
-    markers = mark_pages(cut, placement, prob, opts)
-    labelled = with_annexes(prob, opts)
-    annexes, _ = place_annexes(placement, routes, Annotations(markers=markers), labelled, opts)
-    notes = Annotations(markers=markers, annexes=annexes)
-    return label_nets(placement, routes, notes, prob, opts)
+    rnd = route_round(cut, placed_from(cut, prob, opts), with_annexes(prob, opts), opts)
+    return rnd.routes.labels, tuple(f for f in rnd.routes.findings if f.code == "ANNEX_UNPLACED")
 
 
 def solved_of(prob: PlacementProblem, options: Options | None = None) -> CoreLayout:
@@ -201,11 +118,5 @@ def solved_of(prob: PlacementProblem, options: Options | None = None) -> CoreLay
 
     opts = options or core_options(
         marker=MARKER,
-        flip_turn="R180",
-        tag_stagger=True,
-        label_gap=8,
-        parallel_pitch=48,
-        driver_first=True,
-        arrow_sides=("E", "W"),
     )
     return solve(with_annexes(prob, opts), opts)

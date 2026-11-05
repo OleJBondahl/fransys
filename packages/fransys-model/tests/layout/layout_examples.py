@@ -25,7 +25,7 @@ PAGE_KEY = (*DRAWING_SET_KEY, "examples", "function", "pump1", "power", "0")
 
 def function_id(value: str) -> Id[Function]:
     """A function id made of one repeated hex digit."""
-    return Id(kind="function", value=value * 32)
+    return Id[Function](kind="function", value=value * 32)
 
 
 def group_node() -> AspectNode:

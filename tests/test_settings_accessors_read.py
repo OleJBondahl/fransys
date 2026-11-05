@@ -2,7 +2,6 @@
 
 The house text records are read only through the accessors of `derive.facts.house_settings`. An
 accessor nobody calls is a record nothing reads, so its settings table has no effect. The list
-of such accessors only shrinks and is empty at the 0.22 tag.
 """
 
 import ast
@@ -11,9 +10,9 @@ lazy from collections.abc import Mapping
 
 from gate_scan import src_modules
 
-HOMES = ("fransys_model.derive.facts.house_settings", "fransys_model.derive.house_settings")
+HOMES = ("fransys_model.derive.facts.house_settings",)
 # Rises are refused; a name leaves when a reader calls it. Empty at the 0.22 tag.
-UNREAD: frozenset[str] = frozenset({"colour_codes_of"})
+UNREAD: frozenset[str] = frozenset[str]()
 
 
 def accessors() -> frozenset[str]:
@@ -58,12 +57,7 @@ FIELD_HOMES = ("fransys_model.layout.house_text", "fransys_model.layout.house_bu
 # Fields the accessors' readers leave alone: a record's identity and its extension slot.
 NOT_SETTINGS = frozenset({"id", "key", "ext"})
 # Rises are refused; a field leaves when a reader reads it. Empty at the 0.22 tag.
-UNREAD_FIELDS: frozenset[str] = frozenset(
-    {
-        "ColourCodes.defaults",
-        "ColourCodes.shield",
-    }
-)
+UNREAD_FIELDS = frozenset[str]()
 
 
 def record_fields() -> frozenset[str]:
@@ -73,10 +67,7 @@ def record_fields() -> frozenset[str]:
     from fransys_model.layout import HOUSE_TEXT_KINDS
 
     return frozenset(
-        f"{cls.__name__}.{f.name}"
-        for cls in HOUSE_TEXT_KINDS
-        for f in dataclasses.fields(cast("Any", cls))
-        if f.name not in NOT_SETTINGS
+        f"{cls.__name__}.{f.name}" for cls in HOUSE_TEXT_KINDS for f in dataclasses.fields(cast("Any", cls)) if f.name not in NOT_SETTINGS
     )
 
 
@@ -105,6 +96,4 @@ def test_the_field_gate_can_fail():
     fields = sorted(record_fields())
     reads = "\n".join(f"x.{f.split('.')[1]}" for f in fields[1:])
     assert unread_fields({"fransys_pdf.x": reads}) == {fields[0]}
-    assert unread_fields({FIELD_HOMES[0]: "\n".join(f"x.{f.split('.')[1]}" for f in fields)}) == (
-        frozenset(fields)
-    )
+    assert unread_fields({FIELD_HOMES[0]: "\n".join(f"x.{f.split('.')[1]}" for f in fields)}) == (frozenset(fields))

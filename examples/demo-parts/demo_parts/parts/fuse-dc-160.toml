@@ -1,4 +1,4 @@
-schema = 1
+schema = 2
 
 [part]
 mpn = "DEMO-FUSE-DC-160"
@@ -17,9 +17,9 @@ ports = [
 ]
 links = [{ a = "1", b = "2", kind = "protective" }]
 
-[function.protection]
+[function.block]
 type = "fuse"
 
 [function.rating]
-voltage_dc_v = "1500"
-current_dc_a = "160"
+voltage = [{ nom = "1500 V", at = ["DC"] }]
+current = [{ nom = "160 A", at = ["DC"] }]

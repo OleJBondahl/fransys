@@ -4,6 +4,7 @@ import ast
 import importlib.util
 import sys
 from pathlib import Path
+from typing import cast
 
 import pytest
 import symdef
@@ -24,9 +25,7 @@ PACKAGES_ROOT = ROOT / "packages"
 
 # `lean_surface` is the one home of "the surface": loaded like `test_lean_
 # surface.py` loads it (`importlib.util.spec_from_file_location`, not a package module).
-_lean_surface_spec = importlib.util.spec_from_file_location(
-    "fransys_lean_surface", ROOT / "scripts" / "lean_surface.py"
-)
+_lean_surface_spec = importlib.util.spec_from_file_location("fransys_lean_surface", ROOT / "scripts" / "lean_surface.py")
 if _lean_surface_spec is None or _lean_surface_spec.loader is None:
     msg = "could not load scripts/lean_surface.py"
     raise ImportError(msg)
@@ -106,10 +105,6 @@ def _source_packages() -> list[Path]:
 
     A directory left holding only a stale `__pycache__` (git deletes a package's tracked
     files but not the interpreter's cache) is not a package: its `.pyc` files never match
-    `*.py`, so a directory holding nothing else has no `*.py` under it. Unlike requiring
-    `__init__.py`, this still counts a namespace-style package (real `.py` files, no
-    `__init__.py`): that directory is a real source package too, and every source package
-    must be checked.
     """
     return sorted(p for p in PACKAGES_ROOT.glob("*/src/*") if p.is_dir() and any(p.rglob("*.py")))
 
@@ -133,9 +128,7 @@ def test_package_imports_only_what_the_table_allows(package_dir: Path):
     assert found == set()
 
 
-@pytest.mark.parametrize(
-    "package_dir", [p for p in _source_packages() if p.name in THIRD_PARTY], ids=lambda p: p.name
-)
+@pytest.mark.parametrize("package_dir", [p for p in _source_packages() if p.name in THIRD_PARTY], ids=lambda p: p.name)
 def test_package_imports_no_third_party_beyond_its_exceptions(package_dir: Path):
     found = {
         f"{path.relative_to(PACKAGES_ROOT)}: {name}"
@@ -147,9 +140,7 @@ def test_package_imports_no_third_party_beyond_its_exceptions(package_dir: Path)
 
 def test_the_check_can_fail():
     assert violations("fransys_reports", "import fransys_render") == {"fransys_render"}
-    assert violations("fransys_author", "from fransys_parts.loader import load") == {
-        "fransys_parts"
-    }
+    assert violations("fransys_author", "from fransys_parts.loader import load") == {"fransys_parts"}
     assert violations("fransys_render", "from fransys_model.kernel import Model") == set()
     assert violations("fransys_pdf", "from . import presets\nimport tomllib") == set()
 
@@ -164,40 +155,26 @@ def extra_layout_names(source: str) -> list[tuple[int, str]]:
             elif node.module == "fransys_model":
                 found.extend((node.lineno, a.name) for a in node.names if a.name == "layout")
         elif isinstance(node, ast.Import):
-            found.extend(
-                (node.lineno, a.name)
-                for a in node.names
-                if a.name.startswith("fransys_model.layout")
-            )
+            found.extend((node.lineno, a.name) for a in node.names if a.name.startswith("fransys_model.layout"))
     return [(line, name) for line, name in found if name not in LAYOUT_FOR_INPUTS]
 
 
 def test_inputs_import_no_layout_name_beyond_the_frozen_list():
-    files = [
-        path
-        for package in sorted(INPUTS)
-        for path in sorted((PACKAGES_ROOT / package.replace("_", "-") / "src").rglob("*.py"))
-    ]
+    files = [path for package in sorted(INPUTS) for path in sorted((PACKAGES_ROOT / package.replace("_", "-") / "src").rglob("*.py"))]
     assert files, "the input source walk found no file"
-    extra = [
-        f"{path.relative_to(ROOT)}:{line} {name}"
-        for path in files
-        for line, name in extra_layout_names(path.read_text(encoding="utf-8"))
-    ]
-    assert extra == [], "an input imports no `layout` name beyond the 14 frozen ones (M10)"
+    extra = [f"{path.relative_to(ROOT)}:{line} {name}" for path in files for line, name in extra_layout_names(path.read_text(encoding="utf-8"))]
+    assert extra == [], "an input imports no `layout` name beyond the 8 frozen ones (M10)"
 
 
 def test_the_frozen_layout_list_check_can_fail():
-    assert len(LAYOUT_FOR_INPUTS) == 14
-    ok = "from fransys_model.layout import Side, Chain\n"
+    assert len(LAYOUT_FOR_INPUTS) == 7
+    ok = "from fransys_model.layout import Side, GroupHint\n"
     assert extra_layout_names(ok) == []
     bad = "x = 1\nfrom fransys_model.layout import Side, Page\n"
     assert extra_layout_names(bad) == [(2, "Page")]
     assert extra_layout_names("from fransys_model.layout import *\n") == [(1, "*")]
     assert extra_layout_names("from fransys_model import layout\n") == [(1, "layout")]
-    assert extra_layout_names("import fransys_model.layout as lay\n") == [
-        (1, "fransys_model.layout")
-    ]
+    assert extra_layout_names("import fransys_model.layout as lay\n") == [(1, "fransys_model.layout")]
     assert extra_layout_names("from fransys_model.vocab import Page\n") == []
 
 
@@ -221,11 +198,7 @@ def test_the_placement_core_imports_nothing_outside_the_standard_library():
     """layout-0269, E2: the core and `drawing.py` (layout-0315) import only the standard library."""
     files = [*sorted(CORE_DIR.glob("*.py")), CORE_DIR.parent / "drawing.py"]
     assert len(files) > 2
-    found = {
-        f"{path.name}: {name}"
-        for path in files
-        for name in core_violations(path.read_text(encoding="utf-8"))
-    }
+    found = {f"{path.name}: {name}" for path in files for name in core_violations(path.read_text(encoding="utf-8"))}
     assert found == set()
 
 
@@ -241,9 +214,7 @@ def test_the_third_party_check_can_fail():
     assert third_party_violations("fransys_model", "import deal") == {"deal"}
     assert third_party_violations("electrical_symbols", "import symdef") == set()
     assert third_party_violations("electrical_symbols", "from . import x\nimport typing") == set()
-    assert (
-        third_party_violations("fransys_model", "from _typeshed import DataclassInstance") == set()
-    )
+    assert third_party_violations("fransys_model", "from _typeshed import DataclassInstance") == set()
     assert third_party_violations("fransys_reports", "import symdef") == {"symdef"}
     assert third_party_violations("fransys_layout", "import elecdef") == {"elecdef"}
     assert third_party_violations("fransys_pdf", "import refdef") == {"refdef"}
@@ -304,9 +275,7 @@ def test_symdef_is_reached_through_its_surface_only():
 def test_the_symdef_surface_check_can_fail():
     assert symdef_path_violations("import symdef\nfrom symdef import Symbol, nodes_of\n") == []
     assert symdef_path_violations("from symdef.authoring import check\n") == []
-    assert symdef_path_violations("from symdef.model import Symbol\n") == [
-        (1, "`from symdef.model import Symbol`: use `from symdef import Symbol`")
-    ]
+    assert symdef_path_violations("from symdef.model import Symbol\n") == [(1, "`from symdef.model import Symbol`: use `from symdef import Symbol`")]
     assert len(symdef_path_violations("from symdef.geometry import Line\n")) == 1
     assert len(symdef_path_violations("import symdef.model\n")) == 1
     assert len(symdef_path_violations("from symdef import _private\n")) == 1
@@ -319,8 +288,8 @@ def test_the_symdef_surface_check_can_fail():
 # of "the surface"; this test keeps no module list of its own. `symdef` is outside:
 # it is third-party, never a workspace package, so it never reaches `FIRST_PARTY` at all.
 
-SURFACE_MODULES: frozenset[str] = frozenset(lean_surface.surface_modules())
-SURFACE_NAMES: dict[str, tuple[str, ...]] = lean_surface.surface_names()
+SURFACE_MODULES = frozenset[str](lean_surface.surface_modules())
+SURFACE_NAMES = cast("dict[str, tuple[str, ...]]", lean_surface.surface_names())
 
 # Layout's own imports of `fransys_model` are still its pre-redesign deep paths (step 5 is
 # mid-rewrite); this ONE dated line exempts that one pair until its follow-up rewrites them to
@@ -328,9 +297,7 @@ SURFACE_NAMES: dict[str, tuple[str, ...]] = lean_surface.surface_names()
 SURFACE_EXEMPT: frozenset[tuple[str, str]] = frozenset({("fransys_layout", "fransys_model")})
 
 
-def _surface_import_targets(
-    node: ast.Import | ast.ImportFrom, package: str
-) -> list[tuple[str, str]]:
+def _surface_import_targets(node: ast.Import | ast.ImportFrom, package: str) -> list[tuple[str, str]]:
     """`(bound_name, full_dotted_target)` for every name `node` pulls from another first-party
     workspace package (never `package`'s own, never third-party or stdlib).
     """
@@ -354,12 +321,6 @@ def surface_violations(package: str, source: str) -> set[str]:
 
     A name whose full dotted path is itself a surface module (`lean_surface.surface_modules()`)
     binds that module: the import itself passes, and every attribute the file later reads
-    off its bound name must be in THAT module's own `__all__`, checked in a second pass over the
-    whole file (an attribute read may be anywhere, not only beside the import). Any other
-    crossing name must already be in its own module's `__all__`, that module must itself be a
-    surface module, and a `_`-prefixed name always fails either way -- which also covers a
-    submodule bound directly (`from fransys_model.vocab import tables`): a submodule's own
-    name is never listed in its parent's `__all__`, so it fails the same ordinary check.
     """
     tree = ast.parse(source)
     module_aliases: dict[str, str] = {}
@@ -374,18 +335,10 @@ def surface_violations(package: str, source: str) -> set[str]:
                 module_aliases[bound] = target
                 continue
             module_path, _, name = target.rpartition(".")
-            if (
-                module_path not in SURFACE_MODULES
-                or name.startswith("_")
-                or name not in SURFACE_NAMES.get(module_path, ())
-            ):
+            if module_path not in SURFACE_MODULES or name.startswith("_") or name not in SURFACE_NAMES.get(module_path, ()):
                 found.add(target)
     for node in ast.walk(tree):
-        if (
-            isinstance(node, ast.Attribute)
-            and isinstance(node.value, ast.Name)
-            and node.value.id in module_aliases
-        ):
+        if isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name) and node.value.id in module_aliases:
             target = module_aliases[node.value.id]
             if node.attr.startswith("_") or node.attr not in SURFACE_NAMES.get(target, ()):
                 found.add(f"{target}.{node.attr}")
@@ -405,29 +358,16 @@ def test_package_crosses_into_another_package_only_through_its_surface(package_d
 def test_the_surface_check_can_fail():
     # A deep path, even of a name in its entry point's own `__all__`, fails; the
     # same name from the surface module itself passes.
-    assert surface_violations("fransys_render", "from fransys_model.vocab.tables import items") == {
-        "fransys_model.vocab.tables.items"
-    }
+    assert surface_violations("fransys_render", "from fransys_model.vocab.tables import items") == {"fransys_model.vocab.tables.items"}
     assert surface_violations("fransys_render", "from fransys_model.vocab import items") == set()
     # A name not in the module's `__all__` fails, and so does a `_` name.
-    assert surface_violations(
-        "fransys_render", "from fransys_model.vocab import not_a_real_name"
-    ) == {"fransys_model.vocab.not_a_real_name"}
-    assert surface_violations("fransys_render", "from fransys_model.vocab import _hidden") == {
-        "fransys_model.vocab._hidden"
-    }
+    assert surface_violations("fransys_render", "from fransys_model.vocab import not_a_real_name") == {"fransys_model.vocab.not_a_real_name"}
+    assert surface_violations("fransys_render", "from fransys_model.vocab import _hidden") == {"fransys_model.vocab._hidden"}
     # A name in `derive.drawing_text`'s own `__all__` passes.
-    assert (
-        surface_violations(
-            "fransys_render", "from fransys_model.derive.drawing_text import outline_title"
-        )
-        == set()
-    )
+    assert surface_violations("fransys_render", "from fransys_model.derive.drawing_text import outline_title") == set()
     # A facade import from layout's internals fails; the same name from
     # layout's own top level passes.
-    assert surface_violations("fransys", "from fransys_layout.engines import lay_out_cables") == {
-        "fransys_layout.engines.lay_out_cables"
-    }
+    assert surface_violations("fransys", "from fransys_layout.engines import lay_out_cables") == {"fransys_layout.engines.lay_out_cables"}
     assert surface_violations("fransys", "from fransys_layout import lay_out_cables") == set()
     # Module binding: `baseline.listing` passes; `baseline._common_location`
     # and a submodule bound directly (`designation`, not one of the named modules) both fail.
@@ -442,29 +382,19 @@ def test_the_surface_check_can_fail():
         "fransys",
         "from fransys_model.derive import baseline\nbaseline._common_location(model, unit)\n",
     ) == {"fransys_model.derive.baseline._common_location"}
-    assert surface_violations("fransys", "from fransys_model.derive import designation") == {
-        "fransys_model.derive.designation"
-    }
+    assert surface_violations("fransys", "from fransys_model.derive import designation") == {"fransys_model.derive.designation"}
     # `derive.cable_drawing` (model-0159): a name in its `__all__` passes, a private name and a
     # private attribute off the bound module both fail.
-    assert (
-        surface_violations(
-            "fransys_render", "from fransys_model.derive.cable_drawing import cable_heading"
-        )
-        == set()
-    )
-    assert surface_violations(
-        "fransys_render", "from fransys_model.derive.cable_drawing import _not_in_all"
-    ) == {"fransys_model.derive.cable_drawing._not_in_all"}
+    assert surface_violations("fransys_render", "from fransys_model.derive.cable_drawing import cable_heading") == set()
+    assert surface_violations("fransys_render", "from fransys_model.derive.cable_drawing import _not_in_all") == {
+        "fransys_model.derive.cable_drawing._not_in_all"
+    }
     assert surface_violations(
         "fransys",
         "from fransys_model.derive import cable_drawing\ncable_drawing._hidden()\n",
     ) == {"fransys_model.derive.cable_drawing._hidden"}
     # Layout's own deep model imports are exempt, until its follow-up.
-    assert (
-        surface_violations("fransys_layout", "from fransys_model.derive.order import bom_sort_key")
-        == set()
-    )
+    assert surface_violations("fransys_layout", "from fransys_model.derive.order import bom_sort_key") == set()
 
 
 def test_a_leading_underscore_fails_even_when_the_surface_itself_lists_it(monkeypatch):
@@ -478,9 +408,7 @@ def test_a_leading_underscore_fails_even_when_the_surface_itself_lists_it(monkey
         "fransys_model.vocab",
         (*SURFACE_NAMES["fransys_model.vocab"], "_hidden"),
     )
-    assert surface_violations("fransys_render", "from fransys_model.vocab import _hidden") == {
-        "fransys_model.vocab._hidden"
-    }
+    assert surface_violations("fransys_render", "from fransys_model.vocab import _hidden") == {"fransys_model.vocab._hidden"}
 
 
 def test_a_leading_underscore_attribute_fails_even_when_listed(monkeypatch):
@@ -500,18 +428,12 @@ def test_a_deep_import_under_type_checking_still_fails():
     # The order's own wording ("including TYPE_CHECKING blocks"): `ast.walk` already reaches
     # this body (the same way `_imported`/`violations` do), so no `_runtime_imports`-style
     # skip is needed -- this guards against someone later switching to that style by mistake.
-    source = (
-        "from typing import TYPE_CHECKING\n"
-        "if TYPE_CHECKING:\n"
-        "    from fransys_model.vocab.tables import items\n"
-    )
+    source = "from typing import TYPE_CHECKING\nif TYPE_CHECKING:\n    from fransys_model.vocab.tables import items\n"
     assert surface_violations("fransys_render", source) == {"fransys_model.vocab.tables.items"}
 
 
 def test_a_plain_import_of_a_deep_path_fails():
-    assert surface_violations("fransys_render", "import fransys_model.vocab.tables as t") == {
-        "fransys_model.vocab.tables"
-    }
+    assert surface_violations("fransys_render", "import fransys_model.vocab.tables as t") == {"fransys_model.vocab.tables"}
 
 
 def test_a_plain_top_level_import_still_checks_its_attribute_reads():
@@ -583,9 +505,7 @@ FORBIDDEN_CALLS: frozenset[str] = frozenset(
 
 # Forbidden `sys.<attr>` access, qualified to the Name `sys` (unlike the rest of this file's
 # crude by-name matching): the process environment, not stack introspection.
-FORBIDDEN_SYS_ATTRS: frozenset[str] = frozenset(
-    {"argv", "stdin", "stdout", "stderr", "exit", "path", "modules"}
-)
+FORBIDDEN_SYS_ATTRS: frozenset[str] = frozenset({"argv", "stdin", "stdout", "stderr", "exit", "path", "modules"})
 
 # Recorded exceptions, module by module, never package-wide, and ONLY while the gate would
 # otherwise fail on the module: the can-fail tests prove the gate fires, this table lists what it
@@ -615,12 +535,7 @@ def purity_violations(source: str) -> set[str]:
                 found.add(func.attr)
         elif isinstance(node, ast.Attribute) and node.attr == "environ":
             found.add("environ")
-        elif (
-            isinstance(node, ast.Attribute)
-            and isinstance(node.value, ast.Name)
-            and node.value.id == "sys"
-            and node.attr in FORBIDDEN_SYS_ATTRS
-        ):
+        elif isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name) and node.value.id == "sys" and node.attr in FORBIDDEN_SYS_ATTRS:
             found.add(f"sys.{node.attr}")
     return found
 
@@ -708,9 +623,7 @@ def _runtime_imports(node: ast.AST) -> list[ast.Import | ast.ImportFrom]:
     return found
 
 
-def _import_targets(
-    node: ast.Import | ast.ImportFrom, package: str, modules: dict[str, Path]
-) -> set[str]:
+def _import_targets(node: ast.Import | ast.ImportFrom, package: str, modules: dict[str, Path]) -> set[str]:
     """Workspace modules that one import statement in a module of `package` depends on.
 
     `import a.b.c` depends on `a.b.c` only (the parents' implicit import is not an edge).
@@ -868,7 +781,7 @@ def test_render_holds_no_svg_element_literal_beyond_its_allowlist():
 def test_the_render_derive_gate_can_fail():
     module = "fransys_render.x"
     source = (
-        "from fransys_model.derive import title_block_strings, grid_to_mm, SheetBackground\n"
+        "from fransys_model.derive import title_block_forms, grid_to_mm, SheetBackground\n"
         "from fransys_model.derive.print_sizes import CAPITAL_RATIO, font_size_mm\n"
         "if TYPE_CHECKING:\n    from fransys_model.derive import notice_unfit\n"
     )
@@ -883,9 +796,7 @@ def test_the_render_derive_gate_can_fail():
     ]
     assert scan(render_derive_imports, source, "fransys_pdf.x") == {}
     assert render_model_imports("from fransys_model.layout import Placement\n") == set()
-    assert render_model_imports("from fransys_model.records import Item\n") == {
-        "fransys_model.records"
-    }
+    assert render_model_imports("from fransys_model.records import Item\n") == {"fransys_model.records"}
     assert render_model_imports("import fransys_model.vocab\n") == set()
     assert render_model_imports("import fransys_model\n") == {"fransys_model"}
 
@@ -926,8 +837,6 @@ ROW_EXEMPT: frozenset[tuple[str, str]] = frozenset(
         ("fransys-wago/src/fransys_wago/signals.py", "SignalFormat"),
         # A pen: a stroke value, not a row about a model thing.
         ("fransys-render/src/fransys_render/_cable_pen.py", "Pen"),
-        # A search result local to the block diagram drawing.
-        ("fransys-render/src/fransys_render/diagram.py", "_Found"),
     }
 )
 ROW_BASES = frozenset({"NamedTuple", "TypedDict"})

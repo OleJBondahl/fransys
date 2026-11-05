@@ -6,8 +6,10 @@ from typing import TYPE_CHECKING, cast
 from fransys_author.errors import AuthorError
 from fransys_author.surface._handles import Fn
 from fransys_author.surface._supply_rails import SupplyRail
+from fransys_model.derive import figure, rail_row
+from fransys_model.elecdef import Current, Unit
 from fransys_model.kernel import natural_join
-from fransys_model.vocab import RAIL_DEFAULTS, ConductorMark, rail_row
+from fransys_model.vocab import RAIL_DEFAULTS, ConductorMark
 lazy from fransys_author.handles import Port
 lazy from fransys_author.surface._device import Device
 
@@ -33,18 +35,12 @@ def _marked(design: Design, fn: EngineFn, mark: ConductorMark, given: Port | Non
     return found[0] if found else None
 
 
-def _source(
-    design: Design, source: Device | Fn, given: dict[ConductorMark, Port | None]
-) -> tuple[str, EngineFn]:
+def _source(design: Design, source: Device | Fn, given: dict[ConductorMark, Port | None]) -> tuple[str, EngineFn]:
     """The label and engine function a `dc_supply` source stands for."""
     if isinstance(source, Fn):
         return source._label, source._fn
     functions = source._item.functions
-    fits = [
-        fn
-        for fn in functions
-        if all(_marked(design, fn, mark, pin) is not None for mark, pin in given.items())
-    ]
+    fits = [fn for fn in functions if all(_marked(design, fn, mark, pin) is not None for mark, pin in given.items())]
     pool = fits or (list(functions) if len(functions) == 1 else [])
     if len(pool) != 1:
         found = natural_join(fn.name for fn in pool or functions) or "none"
@@ -57,12 +53,13 @@ def _nominal(design: Design, fn: EngineFn) -> Decimal | None:
     template = design._pairing_facts.function_template(fn)
     part = cast("Part", design.library.record_of(template.part))
     operating = design._engine.operating((part.manufacturer, part.mpn), template.name)
-    return None if operating is None else operating.nominal_voltage_v
+    if operating is None:
+        return None
+    dc = figure(operating.voltage, Current.DC, Unit.V)
+    return figure(operating.voltage, None, Unit.V) if dc is None else dc
 
 
-def _forbid_voltage(
-    design: Design, label: str, fn: EngineFn, voltage: str | int | Decimal | None
-) -> None:
+def _forbid_voltage(design: Design, label: str, fn: EngineFn, voltage: str | int | Decimal | None) -> None:
     """A source whose part states its nominal voltage takes no `voltage=`."""
     nominal = _nominal(design, fn)
     if nominal is not None and voltage is not None:
@@ -90,9 +87,7 @@ def _dc_facts(
     return plus, minus, mid, volts
 
 
-def _bare_facts(
-    name: str, given: dict[ConductorMark, Port | None], voltage: str | int | Decimal | None
-) -> tuple[Port, Port, Port | None, Decimal]:
+def _bare_facts(name: str, given: dict[ConductorMark, Port | None], voltage: str | int | Decimal | None) -> tuple[Port, Port, Port | None, Decimal]:
     """The facts of a `dc_supply` with no source: `plus=`, `minus=` and `voltage=` all given."""
     plus, minus = given[PLUS], given[MINUS]
     facts = (("plus=", plus), ("minus=", minus), ("voltage=", voltage))
@@ -103,9 +98,7 @@ def _bare_facts(
     return plus, minus, given.get(MID), Decimal(str(voltage))
 
 
-def _dc_rails(
-    volts: Decimal, pins: tuple[Port, Port, Port | None], names: tuple[str, ...] | None
-) -> list[tuple[SupplyRail, str | Decimal]]:
+def _dc_rails(volts: Decimal, pins: tuple[Port, Port, Port | None], names: tuple[str, ...] | None) -> list[tuple[SupplyRail, str | Decimal]]:
     """Without a mid, minus is 0 V; with one, mid is 0 V and minus is -volts."""
     if names is not None and len(names) not in _TWO_OR_THREE:
         msg = f"names= is (plus, minus) or (plus, minus, mid), not {names!r}"

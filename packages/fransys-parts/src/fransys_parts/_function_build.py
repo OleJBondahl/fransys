@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 
+from fransys_model.elecdef import LinkKind
 from fransys_model.kernel import Draft, Id, Origin, make_id
 from fransys_model.layout import SymbolChoice
 from fransys_model.vocab import (
@@ -12,12 +13,8 @@ from fransys_model.vocab import (
     FunctionTemplate,
     Gender,
     InternalLink,
-    LinkKind,
-    LinkRest,
     Part,
     PlcChannelFacet,
-    PoleSide,
-    PortRole,
     PortTemplate,
     ProtectionType,
     SignalType,
@@ -25,6 +22,7 @@ from fransys_model.vocab import (
 )
 
 from . import _joins, _pole_facts, _ratings, _toml
+from ._fields import REST_WORDS, SIDE_WORDS, port_roles
 
 
 @dataclass(frozen=True, slots=True)
@@ -36,7 +34,7 @@ class _PartContext:
 
 
 def _protection_type(entry: _toml.Table) -> ProtectionType | None:
-    table = entry.get("protection")
+    table = entry.get("block")
     return ProtectionType(table["type"]) if type(table) is dict and "type" in table else None
 
 
@@ -74,15 +72,17 @@ def _add_ports(
         port_key = (*function_key, "port", port["name"])
         port_id = make_id(PortTemplate, port_key)
         port_ids[port["name"]] = port_id
+        boundary, pin_role = port_roles(port["role"], entry["kind"])
         template = PortTemplate(
             id=port_id,
             key=port_key,
             function=function_id,
             name=port["name"],
-            role=PortRole(port["role"]),
+            boundary=boundary,
             # model-0053: the part's own pin marking, when it differs from the name
             marking=port.get("marking"),
-            pole_side=PoleSide(port["side"]) if "side" in port else None,
+            pin_role=pin_role,
+            side=SIDE_WORDS[port["side"]] if "side" in port else None,
             conductor_mark=ConductorMark(port["conductor"]) if "conductor" in port else None,
             source_row=WiringRow(port["source_row"]) if "source_row" in port else None,
             joins=_joins.target_id(function_key[:-2], port["joins"]) if "joins" in port else None,
@@ -106,8 +106,8 @@ def _add_links(
                 key=link_key,
                 a=port_ids[link["a"]],
                 b=port_ids[link["b"]],
-                kind=LinkKind(link["kind"]),
-                rest=LinkRest(link["rest"]) if "rest" in link else None,
+                kind=LinkKind[link["kind"].upper()],
+                closed_at_rest=REST_WORDS[link["rest"]] if "rest" in link else None,
             ),
             origin=origin,
         )
@@ -123,11 +123,7 @@ def _add_symbol_choice(
     symbol = entry.get("symbol")
     if symbol is None:
         return
-    port_map = {
-        port["name"]: port["symbol_port"]
-        for port in entry["ports"]
-        if "symbol_port" in port and port["symbol_port"] != port["name"]
-    }
+    port_map = {port["name"]: port["symbol_port"] for port in entry["ports"] if "symbol_port" in port and port["symbol_port"] != port["name"]}
     choice_key = (*function_key, "symbol_choice")
     draft.add(
         SymbolChoice(
@@ -199,9 +195,7 @@ def _origin(parsed: _toml.ParsedFile, index: int, *path: object) -> Origin:
     return Origin(file=parsed.path, line=line, note="")
 
 
-def _build_function(
-    draft: Draft, entry: _toml.Table, index: int, part: _PartContext, parsed: _toml.ParsedFile
-) -> None:
+def _build_function(draft: Draft, entry: _toml.Table, index: int, part: _PartContext, parsed: _toml.ParsedFile) -> None:
     origin = _origin(parsed, index)
     function_key = (*part.key, "function", entry["name"])
     function_id = make_id(FunctionTemplate, function_key)
@@ -211,5 +205,5 @@ def _build_function(
     _add_symbol_choice(draft, entry, function_key, function_id, origin)
     _add_connector(draft, entry, function_key, function_id, _origin(parsed, index, "connector"))
     _add_plc_channel(draft, entry, function_key, function_id, _origin(parsed, index, "plc_channel"))
-    table_origins = {table: _origin(parsed, index, table) for table in ("rating", "operating")}
+    table_origins = {table: _origin(parsed, index, table) for table in ("rating", "operating", "block")}
     _ratings.add_function_tables(draft, entry, function_id, function_key, table_origins)

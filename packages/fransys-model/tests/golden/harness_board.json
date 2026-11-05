@@ -1,13 +1,13 @@
 {
   "aliases": [],
-  "schema_version": 20,
+  "schema_version": 23,
   "tables": {
     "aspect_node": [
       {
         "aspect": "product",
         "description": "board",
         "ext": {},
-        "id": "aspect_node:08444822791f5e5bb18c78afe37ebc69",
+        "id": "aspect_node:94924b63cc6b509a922e979a4d42fdbc",
         "key": [
           "jb1-product"
         ],
@@ -18,7 +18,7 @@
         "aspect": "location",
         "description": "remote panel",
         "ext": {},
-        "id": "aspect_node:fa996cd16a3b52ecbfbc64f6247e4fe3",
+        "id": "aspect_node:a2ada24110fb50bda76eadfe295fb28e",
         "key": [
           "c2"
         ],
@@ -28,11 +28,11 @@
     ],
     "conductor": [
       {
-        "a": "port:2b938f27d84a5210a18ae001fbdb92d0",
-        "b": "port:2c701dd0161c566f8fd3db34a4c8e657",
-        "carrier": "item:8c58e10f565f5cbab47e2357e52476c7",
+        "a": "port:524312338ff65931ba2587d8bb8321c9",
+        "b": "port:7ddd556d737357ee9f594da0ed20d3ad",
+        "carrier": "item:2bbec2ebd0cc5a49bf68d6133a098df2",
         "ext": {},
-        "id": "conductor:5d005aff2cf4508fa4cb860163eaca22",
+        "id": "conductor:0fa528416eb551f49fa14079390f9355",
         "key": [
           "w-fanout",
           "core",
@@ -41,24 +41,11 @@
         "kind": "core"
       },
       {
-        "a": "port:3d8e557cf32950cb9ca4cbb87fc53fe5",
-        "b": "port:f0683eb3bdbe56d19402c0a8de90835c",
-        "carrier": "item:8c58e10f565f5cbab47e2357e52476c7",
+        "a": "port:6a81ad68d179589cb762353d9ba4af0e",
+        "b": "port:b9ab243998455f48a0d7ce54debf61ec",
+        "carrier": "item:2bbec2ebd0cc5a49bf68d6133a098df2",
         "ext": {},
-        "id": "conductor:728ba0de5d9a5ab1a0714441eb8c2ca3",
-        "key": [
-          "w-fanout",
-          "core",
-          "1"
-        ],
-        "kind": "core"
-      },
-      {
-        "a": "port:0ce991f5f1ce581da772f4e156e84744",
-        "b": "port:876d77232db453158c47fbfb4a55dbba",
-        "carrier": "item:8c58e10f565f5cbab47e2357e52476c7",
-        "ext": {},
-        "id": "conductor:81e92f8c80b55b5cbe75c3c75a555b83",
+        "id": "conductor:1f7edc28c42b528293df34fc4e7f7772",
         "key": [
           "w-fanout",
           "core",
@@ -67,11 +54,24 @@
         "kind": "core"
       },
       {
-        "a": "port:72a6340c9eff594c9c68668900b3e294",
-        "b": "port:ecb853bae3eb54628b10c285d69732d3",
-        "carrier": "item:8c58e10f565f5cbab47e2357e52476c7",
+        "a": "port:4f059b81ea3159a9a8d155e99d2dba64",
+        "b": "port:e24ec3d77dc752c098e11fbda8f97de9",
+        "carrier": "item:2bbec2ebd0cc5a49bf68d6133a098df2",
         "ext": {},
-        "id": "conductor:9bb1ab720bf15282ba7e660b2f4d7c2b",
+        "id": "conductor:24ea9f23ae5a595b945d1384b40fa357",
+        "key": [
+          "w-fanout",
+          "core",
+          "1"
+        ],
+        "kind": "core"
+      },
+      {
+        "a": "port:53c06f9b5b4255d0bd88abad4e57cb66",
+        "b": "port:e23f456182f8522f97379a15ab8680cb",
+        "carrier": "item:2bbec2ebd0cc5a49bf68d6133a098df2",
+        "ext": {},
+        "id": "conductor:c865aa5ca3145c63a889e8c0d3c63f23",
         "key": [
           "w-fanout",
           "core",
@@ -83,13 +83,13 @@
     "facet.cable": [
       {
         "ext": {},
-        "id": "facet.cable:b46c371611ec5538b5045a6de84e5d1e",
+        "id": "facet.cable:43293b94703f5fcf978e0501aadacbf9",
         "key": [
           "w-fanout",
           "cable"
         ],
         "length_mm": 1500,
-        "subject": "item:8c58e10f565f5cbab47e2357e52476c7"
+        "subject": "item:2bbec2ebd0cc5a49bf68d6133a098df2"
       }
     ],
     "facet.cable_product": [
@@ -102,21 +102,21 @@
         ],
         "ext": {},
         "gauge_mm2": "0.5",
-        "id": "facet.cable_product:d50082defad65594b53ffbdc0dda2397",
+        "id": "facet.cable_product:6fff14f43c78555fb14570a36bd4a76f",
         "key": [
           "cable-4x05",
           "cable_product"
         ],
         "pairs": [],
         "shielded": true,
-        "subject": "part:925cc60b07255b0985f664a2001a6266"
+        "subject": "part:698857bb62fb56b592e144984961876f"
       }
     ],
     "facet.connector": [
       {
         "ext": {},
         "gender": "male",
-        "id": "facet.connector:1e0f3920db8e5f5ebd0131b1bb12bfd3",
+        "id": "facet.connector:2a94c4d0a0055aaf9b7efee7deab65d7",
         "key": [
           "board",
           "J1",
@@ -126,12 +126,12 @@
         "mates": [],
         "pincount": 4,
         "style": "header-4p",
-        "subject": "function_template:b3339bbb83e0559083fe3ba8ad273f9d"
+        "subject": "function_template:347914ab0f2853458ee0a81e604e9488"
       },
       {
         "ext": {},
         "gender": "female",
-        "id": "facet.connector:3272d694d78e53c79c2327460266a276",
+        "id": "facet.connector:6a9ae88c2e1b52a6adaa37c9adba42a1",
         "key": [
           "housing-4p",
           "P1",
@@ -141,12 +141,12 @@
         "mates": [],
         "pincount": 4,
         "style": "header-4p",
-        "subject": "function_template:d8d7490134e25efd9430cb89882dec7b"
+        "subject": "function_template:d5f2b27610c65d05991610ddd809b051"
       },
       {
         "ext": {},
         "gender": "neutral",
-        "id": "facet.connector:ef8de577ee755340ac6b30aa15ea9610",
+        "id": "facet.connector:b2ca7733cd9c567eb3c850a91bd71845",
         "key": [
           "housing-4p",
           "shell",
@@ -156,37 +156,13 @@
         "mates": [],
         "pincount": 1,
         "style": "shell",
-        "subject": "function_template:6f400c5a219852a2a23e199ae25c5637"
+        "subject": "function_template:9930cb359cbf573d9e79984e8e80d30f"
       }
     ],
     "facet.core": [
       {
         "ext": {},
-        "id": "facet.core:4000a52bf40655c8a3e6ab58fffa36bc",
-        "index": 1,
-        "key": [
-          "w-fanout",
-          "core",
-          "1",
-          "facet"
-        ],
-        "subject": "conductor:728ba0de5d9a5ab1a0714441eb8c2ca3"
-      },
-      {
-        "ext": {},
-        "id": "facet.core:b156d242829850a6b36367a514116400",
-        "index": 4,
-        "key": [
-          "w-fanout",
-          "core",
-          "4",
-          "facet"
-        ],
-        "subject": "conductor:5d005aff2cf4508fa4cb860163eaca22"
-      },
-      {
-        "ext": {},
-        "id": "facet.core:e624f09f50795349a3f25f702e0f3402",
+        "id": "facet.core:3e18dba43ae25dd3b73c92e7bd544431",
         "index": 2,
         "key": [
           "w-fanout",
@@ -194,11 +170,35 @@
           "2",
           "facet"
         ],
-        "subject": "conductor:81e92f8c80b55b5cbe75c3c75a555b83"
+        "subject": "conductor:1f7edc28c42b528293df34fc4e7f7772"
       },
       {
         "ext": {},
-        "id": "facet.core:f592f91be07351718ad15dcf1cf2e5ab",
+        "id": "facet.core:96b23ba2dfb75bdca7a9da1352f2de84",
+        "index": 1,
+        "key": [
+          "w-fanout",
+          "core",
+          "1",
+          "facet"
+        ],
+        "subject": "conductor:24ea9f23ae5a595b945d1384b40fa357"
+      },
+      {
+        "ext": {},
+        "id": "facet.core:b9fc785c5c445deebc76186dc78c377c",
+        "index": 4,
+        "key": [
+          "w-fanout",
+          "core",
+          "4",
+          "facet"
+        ],
+        "subject": "conductor:0fa528416eb551f49fa14079390f9355"
+      },
+      {
+        "ext": {},
+        "id": "facet.core:cc9f8bfdac5b5a1ab6909b74e5272109",
         "index": 3,
         "key": [
           "w-fanout",
@@ -206,76 +206,63 @@
           "3",
           "facet"
         ],
-        "subject": "conductor:9bb1ab720bf15282ba7e660b2f4d7c2b"
+        "subject": "conductor:c865aa5ca3145c63a889e8c0d3c63f23"
       }
     ],
     "facet.footprint": [
       {
         "ext": {},
-        "id": "facet.footprint:213433b3e34950baa586663a4104bb66",
-        "key": [
-          "relay-smd",
-          "footprint"
-        ],
-        "library": "ExampleLib",
-        "name": "K_SMD_5V",
-        "subject": "part:f5db82e2949c5cf8979e974d7459afc1"
-      },
-      {
-        "ext": {},
-        "id": "facet.footprint:f3a57ab4fd7e55f3908531a777b0621e",
+        "id": "facet.footprint:1b48ab5861b1553bbebeba394ecf19a7",
         "key": [
           "fuse-1a",
           "footprint"
         ],
         "library": "ExampleLib",
         "name": "F_1206",
-        "subject": "part:9c7f20ac96325b16a16c3c8d2c7797c2"
+        "subject": "part:a2e3a651f18c547abe52e25bc316deba"
+      },
+      {
+        "ext": {},
+        "id": "facet.footprint:ec65e9b9f33b5a5eaea8aba4f58b6fa2",
+        "key": [
+          "relay-smd",
+          "footprint"
+        ],
+        "library": "ExampleLib",
+        "name": "K_SMD_5V",
+        "subject": "part:c1f7e875158e5fe597f1d3c8045771c5"
       }
     ],
     "facet.pcb": [
       {
         "ext": {},
-        "id": "facet.pcb:8500231cf9bb508eb4f8d465156a533e",
+        "id": "facet.pcb:fe7f2a0612b2535790b57dda7970666d",
         "key": [
           "board",
           "pcb"
         ],
         "revision": "A",
-        "subject": "part:ab9152c7a7155663961d4e968d578ccf"
+        "subject": "part:9f2ba5b4cf015d17b6b574bf56e27dbd"
       }
     ],
     "function": [
       {
         "ext": {},
-        "id": "function:292bad176ac154fa917a59d3cd99b440",
-        "item": "item:6cf88dd60880574c9094d7a2dc767680",
+        "id": "function:01c2a7ca81385ff3a50dc1814b76d90f",
+        "item": "item:5e3b7f81729a566e8b91d9839136319d",
         "key": [
-          "b12",
-          "signal"
-        ],
-        "kind": "sensor",
-        "name": "signal",
-        "template": null
-      },
-      {
-        "ext": {},
-        "id": "function:4852d9162eb9588da59b2652a527c543",
-        "item": "item:9271238b7a9452d793835fbf6ce48324",
-        "key": [
-          "jb1",
-          "f1",
+          "h1",
           "fn",
-          "element"
+          "P1"
         ],
-        "kind": "protection",
-        "name": "element",
-        "template": "function_template:3f0a6ddcb8635e3cb70dabb167bec5d1"
+        "kind": "connector",
+        "name": "P1",
+        "template": "function_template:d5f2b27610c65d05991610ddd809b051"
       },
       {
         "ext": {},
-        "id": "function:4b2b4215e06d59cea80988dbbbdb2069",
-        "item": "item:062c720fbb9d5cc69f8e608c92120dbc",
+        "id": "function:1f344ff401f55adaa82247d48f3baffe",
+        "item": "item:cc4324876d665acfbc973199279ae3a3",
         "key": [
           "jb1",
           "k10",
@@ -284,38 +271,26 @@
         ],
         "kind": "contact_no",
         "name": "no_1",
-        "template": "function_template:08d35dceb572580b9c8279cf6e576d2b"
+        "template": "function_template:3e905337121856f4bb4dda2ee23f3cff"
       },
       {
         "ext": {},
-        "id": "function:7185b42064645bdd9451700451a2391b",
-        "item": "item:9047b7a57afd55a9b7f10e790e3ae927",
+        "id": "function:37aeb46f4b0e5b6a9f83b9e6a8ceb288",
+        "item": "item:e3e553bf47f35a7fae8b017e9bb9d813",
         "key": [
           "jb1",
+          "f1",
           "fn",
-          "J1"
+          "element"
         ],
-        "kind": "connector",
-        "name": "J1",
-        "template": "function_template:b3339bbb83e0559083fe3ba8ad273f9d"
+        "kind": "protection",
+        "name": "element",
+        "template": "function_template:7f13ca117870531585200b8b708056be"
       },
       {
         "ext": {},
-        "id": "function:988981bfced552aa81f58cca6a70e15d",
-        "item": "item:b95e756addad5c94bfe630b9a3e34bec",
-        "key": [
-          "h1",
-          "fn",
-          "shell"
-        ],
-        "kind": "connector",
-        "name": "shell",
-        "template": "function_template:6f400c5a219852a2a23e199ae25c5637"
-      },
-      {
-        "ext": {},
-        "id": "function:bce2443a764559719b8d5827409dcb25",
-        "item": "item:1d9412dd8d735a77a0ceb985b7daafe5",
+        "id": "function:59eebdad5b12585cac0b1a1ee45c581f",
+        "item": "item:e066458d72965a1bbebec6d4c1d3f86a",
         "key": [
           "b10",
           "signal"
@@ -326,8 +301,35 @@
       },
       {
         "ext": {},
-        "id": "function:caf41e5aafe755828527bafc815e68bd",
-        "item": "item:33eb94002d615b4996c1ade43430be04",
+        "id": "function:7754c10d2a6d55efb6bf2e8409d8ea3b",
+        "item": "item:ac603be7b7b55cd49200818bbd0ed96d",
+        "key": [
+          "jb1",
+          "fn",
+          "J1"
+        ],
+        "kind": "connector",
+        "name": "J1",
+        "template": "function_template:347914ab0f2853458ee0a81e604e9488"
+      },
+      {
+        "ext": {},
+        "id": "function:7f6a069a7cd85bd2a7edf2157389247e",
+        "item": "item:cc4324876d665acfbc973199279ae3a3",
+        "key": [
+          "jb1",
+          "k10",
+          "fn",
+          "coil"
+        ],
+        "kind": "coil",
+        "name": "coil",
+        "template": "function_template:a1e03495e8225ed68b428363408868f6"
+      },
+      {
+        "ext": {},
+        "id": "function:9dc4e08d84d65c4ebc388794353674a6",
+        "item": "item:fc0f78e344eb5eeb85b80d0a2fff4c69",
         "key": [
           "b11",
           "signal"
@@ -338,253 +340,144 @@
       },
       {
         "ext": {},
-        "id": "function:d1a5c1f0b15c5c129ed049677f8e27ba",
-        "item": "item:062c720fbb9d5cc69f8e608c92120dbc",
-        "key": [
-          "jb1",
-          "k10",
-          "fn",
-          "coil"
-        ],
-        "kind": "coil",
-        "name": "coil",
-        "template": "function_template:80f0991b6432503f9ef0782dc153ceea"
-      },
-      {
-        "ext": {},
-        "id": "function:dbe15a88e47f5579998be0e40eb15161",
-        "item": "item:b95e756addad5c94bfe630b9a3e34bec",
+        "id": "function:ab652c96b4525445bc3973efbbd8ffe9",
+        "item": "item:5e3b7f81729a566e8b91d9839136319d",
         "key": [
           "h1",
           "fn",
-          "P1"
+          "shell"
         ],
         "kind": "connector",
-        "name": "P1",
-        "template": "function_template:d8d7490134e25efd9430cb89882dec7b"
+        "name": "shell",
+        "template": "function_template:9930cb359cbf573d9e79984e8e80d30f"
+      },
+      {
+        "ext": {},
+        "id": "function:e0c381287b8c5df3806d54f16b59fdaf",
+        "item": "item:5a2e389c34795543a40792299cde926f",
+        "key": [
+          "b12",
+          "signal"
+        ],
+        "kind": "sensor",
+        "name": "signal",
+        "template": null
       }
     ],
     "function_template": [
       {
         "energy": null,
         "ext": {},
-        "id": "function_template:08d35dceb572580b9c8279cf6e576d2b",
-        "key": [
-          "relay-smd",
-          "no_1"
-        ],
-        "kind": "contact_no",
-        "name": "no_1",
-        "part": "part:f5db82e2949c5cf8979e974d7459afc1",
-        "protection_type": null
-      },
-      {
-        "energy": null,
-        "ext": {},
-        "id": "function_template:3f0a6ddcb8635e3cb70dabb167bec5d1",
-        "key": [
-          "fuse-1a",
-          "element"
-        ],
-        "kind": "protection",
-        "name": "element",
-        "part": "part:9c7f20ac96325b16a16c3c8d2c7797c2",
-        "protection_type": null
-      },
-      {
-        "energy": null,
-        "ext": {},
-        "id": "function_template:6f400c5a219852a2a23e199ae25c5637",
-        "key": [
-          "housing-4p",
-          "shell"
-        ],
-        "kind": "connector",
-        "name": "shell",
-        "part": "part:829814ed78825f72b9977dc429d520aa",
-        "protection_type": null
-      },
-      {
-        "energy": null,
-        "ext": {},
-        "id": "function_template:80f0991b6432503f9ef0782dc153ceea",
-        "key": [
-          "relay-smd",
-          "coil"
-        ],
-        "kind": "coil",
-        "name": "coil",
-        "part": "part:f5db82e2949c5cf8979e974d7459afc1",
-        "protection_type": null
-      },
-      {
-        "energy": null,
-        "ext": {},
-        "id": "function_template:b3339bbb83e0559083fe3ba8ad273f9d",
+        "id": "function_template:347914ab0f2853458ee0a81e604e9488",
         "key": [
           "board",
           "J1"
         ],
         "kind": "connector",
         "name": "J1",
-        "part": "part:ab9152c7a7155663961d4e968d578ccf",
+        "part": "part:9f2ba5b4cf015d17b6b574bf56e27dbd",
         "protection_type": null
       },
       {
         "energy": null,
         "ext": {},
-        "id": "function_template:d8d7490134e25efd9430cb89882dec7b",
+        "id": "function_template:3e905337121856f4bb4dda2ee23f3cff",
+        "key": [
+          "relay-smd",
+          "no_1"
+        ],
+        "kind": "contact_no",
+        "name": "no_1",
+        "part": "part:c1f7e875158e5fe597f1d3c8045771c5",
+        "protection_type": null
+      },
+      {
+        "energy": null,
+        "ext": {},
+        "id": "function_template:7f13ca117870531585200b8b708056be",
+        "key": [
+          "fuse-1a",
+          "element"
+        ],
+        "kind": "protection",
+        "name": "element",
+        "part": "part:a2e3a651f18c547abe52e25bc316deba",
+        "protection_type": null
+      },
+      {
+        "energy": null,
+        "ext": {},
+        "id": "function_template:9930cb359cbf573d9e79984e8e80d30f",
+        "key": [
+          "housing-4p",
+          "shell"
+        ],
+        "kind": "connector",
+        "name": "shell",
+        "part": "part:0ce51594d0795501860200e2803e17c5",
+        "protection_type": null
+      },
+      {
+        "energy": null,
+        "ext": {},
+        "id": "function_template:a1e03495e8225ed68b428363408868f6",
+        "key": [
+          "relay-smd",
+          "coil"
+        ],
+        "kind": "coil",
+        "name": "coil",
+        "part": "part:c1f7e875158e5fe597f1d3c8045771c5",
+        "protection_type": null
+      },
+      {
+        "energy": null,
+        "ext": {},
+        "id": "function_template:d5f2b27610c65d05991610ddd809b051",
         "key": [
           "housing-4p",
           "P1"
         ],
         "kind": "connector",
         "name": "P1",
-        "part": "part:829814ed78825f72b9977dc429d520aa",
+        "part": "part:0ce51594d0795501860200e2803e17c5",
         "protection_type": null
       }
     ],
     "internal_link": [
       {
-        "a": "port_template:c46e90988475582a9d0b820b1a70c976",
-        "b": "port_template:d9e9b904d20c50d19c44425aeca18a08",
+        "a": "port_template:01cd9469cbbc5dd4b5e181d62af2942d",
+        "b": "port_template:5cebd1647a9e5c77b53652fe5555adcc",
+        "closed_at_rest": null,
         "ext": {},
-        "id": "internal_link:c27bb0f58ab35854a83b0f3dc77cbce1",
+        "id": "internal_link:06b6e67bd5225247b78efbde14f2fd81",
         "key": [
           "relay-smd",
           "link",
           "1"
         ],
-        "kind": "switched",
-        "rest": null
+        "kind": "SWITCHED"
       },
       {
-        "a": "port_template:0331521d16bf56bab5b219bf6477b313",
-        "b": "port_template:a322fdf5be65527a860583a6b9792cdd",
+        "a": "port_template:d89733e355525e7ca660e66b9e9f0570",
+        "b": "port_template:fccfdea4485c5403a7e82780aa6f7d7e",
+        "closed_at_rest": null,
         "ext": {},
-        "id": "internal_link:def14f5783c75e118fe00005ec1955eb",
+        "id": "internal_link:915f087a658d596aa3e47e7df9fec375",
         "key": [
           "fuse-1a",
           "link",
           "1"
         ],
-        "kind": "conductive",
-        "rest": null
+        "kind": "CONDUCTIVE"
       }
     ],
     "item": [
       {
-        "description": "Invented SIM-RELAY-SMD-5V",
-        "ext": {},
-        "external": false,
-        "id": "item:062c720fbb9d5cc69f8e608c92120dbc",
-        "installed": true,
-        "key": [
-          "jb1",
-          "k10"
-        ],
-        "parent": "item:9047b7a57afd55a9b7f10e790e3ae927",
-        "part": "part:f5db82e2949c5cf8979e974d7459afc1",
-        "position": null,
-        "tag": "K10",
-        "unit": null
-      },
-      {
-        "description": "Invented remote sensor",
-        "ext": {},
-        "external": false,
-        "id": "item:1d9412dd8d735a77a0ceb985b7daafe5",
-        "installed": true,
-        "key": [
-          "b10"
-        ],
-        "parent": null,
-        "part": null,
-        "position": null,
-        "tag": "B10",
-        "unit": null
-      },
-      {
-        "description": "Invented remote sensor",
-        "ext": {},
-        "external": false,
-        "id": "item:33eb94002d615b4996c1ade43430be04",
-        "installed": true,
-        "key": [
-          "b11"
-        ],
-        "parent": null,
-        "part": null,
-        "position": null,
-        "tag": "B11",
-        "unit": null
-      },
-      {
-        "description": "Invented remote sensor",
-        "ext": {},
-        "external": false,
-        "id": "item:6cf88dd60880574c9094d7a2dc767680",
-        "installed": true,
-        "key": [
-          "b12"
-        ],
-        "parent": null,
-        "part": null,
-        "position": null,
-        "tag": "B12",
-        "unit": null
-      },
-      {
-        "description": "Invented SIM-CABLE-4X0.5",
-        "ext": {},
-        "external": false,
-        "id": "item:8c58e10f565f5cbab47e2357e52476c7",
-        "installed": true,
-        "key": [
-          "w-fanout"
-        ],
-        "parent": "item:b14d4c5e0a8c5d9192f2156b5b1736e8",
-        "part": "part:925cc60b07255b0985f664a2001a6266",
-        "position": null,
-        "tag": null,
-        "unit": null
-      },
-      {
-        "description": "Invented SIM-BOARD-IOEXP",
-        "ext": {},
-        "external": false,
-        "id": "item:9047b7a57afd55a9b7f10e790e3ae927",
-        "installed": true,
-        "key": [
-          "jb1"
-        ],
-        "parent": null,
-        "part": "part:ab9152c7a7155663961d4e968d578ccf",
-        "position": null,
-        "tag": "JB1",
-        "unit": null
-      },
-      {
-        "description": "Invented SIM-FUSE-1A-SMD",
-        "ext": {},
-        "external": false,
-        "id": "item:9271238b7a9452d793835fbf6ce48324",
-        "installed": true,
-        "key": [
-          "jb1",
-          "f1"
-        ],
-        "parent": "item:9047b7a57afd55a9b7f10e790e3ae927",
-        "part": "part:9c7f20ac96325b16a16c3c8d2c7797c2",
-        "position": null,
-        "tag": "F1",
-        "unit": null
-      },
-      {
         "description": "Invented container",
         "ext": {},
         "external": false,
-        "id": "item:b14d4c5e0a8c5d9192f2156b5b1736e8",
+        "id": "item:10f5f00634785b748bdb82daccbf9ae4",
         "installed": true,
         "key": [
           "w-harness"
@@ -596,27 +489,134 @@
         "unit": null
       },
       {
+        "description": "Invented SIM-CABLE-4X0.5",
+        "ext": {},
+        "external": false,
+        "id": "item:2bbec2ebd0cc5a49bf68d6133a098df2",
+        "installed": true,
+        "key": [
+          "w-fanout"
+        ],
+        "parent": "item:10f5f00634785b748bdb82daccbf9ae4",
+        "part": "part:698857bb62fb56b592e144984961876f",
+        "position": null,
+        "tag": null,
+        "unit": null
+      },
+      {
+        "description": "Invented remote sensor",
+        "ext": {},
+        "external": false,
+        "id": "item:5a2e389c34795543a40792299cde926f",
+        "installed": true,
+        "key": [
+          "b12"
+        ],
+        "parent": null,
+        "part": null,
+        "position": null,
+        "tag": "B12",
+        "unit": null
+      },
+      {
         "description": "Invented SIM-CONN-HOUSING-4P",
         "ext": {},
         "external": false,
-        "id": "item:b95e756addad5c94bfe630b9a3e34bec",
+        "id": "item:5e3b7f81729a566e8b91d9839136319d",
         "installed": true,
         "key": [
           "h1"
         ],
-        "parent": "item:b14d4c5e0a8c5d9192f2156b5b1736e8",
-        "part": "part:829814ed78825f72b9977dc429d520aa",
+        "parent": "item:10f5f00634785b748bdb82daccbf9ae4",
+        "part": "part:0ce51594d0795501860200e2803e17c5",
         "position": null,
         "tag": "H1",
+        "unit": null
+      },
+      {
+        "description": "Invented SIM-BOARD-IOEXP",
+        "ext": {},
+        "external": false,
+        "id": "item:ac603be7b7b55cd49200818bbd0ed96d",
+        "installed": true,
+        "key": [
+          "jb1"
+        ],
+        "parent": null,
+        "part": "part:9f2ba5b4cf015d17b6b574bf56e27dbd",
+        "position": null,
+        "tag": "JB1",
+        "unit": null
+      },
+      {
+        "description": "Invented SIM-RELAY-SMD-5V",
+        "ext": {},
+        "external": false,
+        "id": "item:cc4324876d665acfbc973199279ae3a3",
+        "installed": true,
+        "key": [
+          "jb1",
+          "k10"
+        ],
+        "parent": "item:ac603be7b7b55cd49200818bbd0ed96d",
+        "part": "part:c1f7e875158e5fe597f1d3c8045771c5",
+        "position": null,
+        "tag": "K10",
+        "unit": null
+      },
+      {
+        "description": "Invented remote sensor",
+        "ext": {},
+        "external": false,
+        "id": "item:e066458d72965a1bbebec6d4c1d3f86a",
+        "installed": true,
+        "key": [
+          "b10"
+        ],
+        "parent": null,
+        "part": null,
+        "position": null,
+        "tag": "B10",
+        "unit": null
+      },
+      {
+        "description": "Invented SIM-FUSE-1A-SMD",
+        "ext": {},
+        "external": false,
+        "id": "item:e3e553bf47f35a7fae8b017e9bb9d813",
+        "installed": true,
+        "key": [
+          "jb1",
+          "f1"
+        ],
+        "parent": "item:ac603be7b7b55cd49200818bbd0ed96d",
+        "part": "part:a2e3a651f18c547abe52e25bc316deba",
+        "position": null,
+        "tag": "F1",
+        "unit": null
+      },
+      {
+        "description": "Invented remote sensor",
+        "ext": {},
+        "external": false,
+        "id": "item:fc0f78e344eb5eeb85b80d0a2fff4c69",
+        "installed": true,
+        "key": [
+          "b11"
+        ],
+        "parent": null,
+        "part": null,
+        "position": null,
+        "tag": "B11",
         "unit": null
       }
     ],
     "mate": [
       {
-        "a": "function:7185b42064645bdd9451700451a2391b",
-        "b": "function:dbe15a88e47f5579998be0e40eb15161",
+        "a": "function:01c2a7ca81385ff3a50dc1814b76d90f",
+        "b": "function:7754c10d2a6d55efb6bf2e8409d8ea3b",
         "ext": {},
-        "id": "mate:38479bae46b054b29f2319d564b6accf",
+        "id": "mate:ff5bc09eab4a5733822aa5222fed24ba",
         "key": [
           "j1-p1"
         ]
@@ -625,46 +625,46 @@
     "net": [
       {
         "ext": {},
-        "id": "net:46825c55e832511da5f977f085ec1cce",
-        "key": [
-          "V5_RET"
-        ],
-        "name": "V5_RET",
-        "net_class": "power",
-        "ports": [
-          "port:0822901cac5c59a383e964862991648f",
-          "port:64a8e862b2b05efcb1c3aaf5ff700c22"
-        ],
-        "potential": "0V"
-      },
-      {
-        "ext": {},
-        "id": "net:670edf7019ac5a37828a1c9496465537",
+        "id": "net:118f008dcc155f049d8365c127e66045",
         "key": [
           "V5"
         ],
         "name": "V5",
         "net_class": "power",
         "ports": [
-          "port:4699a494e4855c1e9ea3b0f9365cef85",
-          "port:488f4c5bd2f652ea9bd2ef2ac9760e03",
-          "port:5ca124dce020557da34a151d01a7ee05",
-          "port:e2942ca6a7c0567d9dc231e9a9bfdf6d",
-          "port:e74d3f5dd8f858508fcdfcc15f237c3a"
+          "port:61b76f3cc538558a9793a36cb48867b1",
+          "port:6ad19e9dd25456b3a87cff0ba55b40dd",
+          "port:728f8096b54f5fcfb5ae2cf96e207bf4",
+          "port:a9c369c19d2a5a99b917458268cf6649",
+          "port:e74159daf4fd5599ae2a5be6da524560"
         ],
         "potential": "+5V"
       },
       {
         "ext": {},
-        "id": "net:d171600bf25f53d2b7dec457097d166a",
+        "id": "net:70deb7ae0b3452f5bb1ceecae470cff1",
+        "key": [
+          "V5_RET"
+        ],
+        "name": "V5_RET",
+        "net_class": "power",
+        "ports": [
+          "port:6dd61f031c3551d782150e56d24a1bb8",
+          "port:a2b56eabd10557e487d1c57346861c34"
+        ],
+        "potential": "0V"
+      },
+      {
+        "ext": {},
+        "id": "net:d8a2ebd52a8557a69f3b322e16cce4da",
         "key": [
           "OUT"
         ],
         "name": "OUT",
         "net_class": "signal",
         "ports": [
-          "port:8f0dfc6b5fe85fc0baf54a11fb41ba5c",
-          "port:b6ded1f9756959baae00b56d608fc06d"
+          "port:c0e4b051522f5a4f969ad05bb36df0c7",
+          "port:c715c364114f5a908e4b57f5c59cf5b5"
         ],
         "potential": null
       }
@@ -675,11 +675,11 @@
         "class_code": "H",
         "description": "Invented SIM-CONN-HOUSING-4P",
         "ext": {},
-        "id": "part:829814ed78825f72b9977dc429d520aa",
+        "id": "part:0ce51594d0795501860200e2803e17c5",
         "key": [
           "housing-4p"
         ],
-        "library": "part_library:76eaa59f907353a18b7d8ab57a7fea17",
+        "library": "part_library:e459878194ff5d2ea5439f65deaad4c8",
         "manufacturer": "Example Co",
         "mpn": "SIM-CONN-HOUSING-4P",
         "operated_by": null
@@ -689,27 +689,13 @@
         "class_code": "W",
         "description": "Invented SIM-CABLE-4X0.5",
         "ext": {},
-        "id": "part:925cc60b07255b0985f664a2001a6266",
+        "id": "part:698857bb62fb56b592e144984961876f",
         "key": [
           "cable-4x05"
         ],
-        "library": "part_library:76eaa59f907353a18b7d8ab57a7fea17",
+        "library": "part_library:e459878194ff5d2ea5439f65deaad4c8",
         "manufacturer": "Example Co",
         "mpn": "SIM-CABLE-4X0.5",
-        "operated_by": null
-      },
-      {
-        "category": "protection",
-        "class_code": "F",
-        "description": "Invented SIM-FUSE-1A-SMD",
-        "ext": {},
-        "id": "part:9c7f20ac96325b16a16c3c8d2c7797c2",
-        "key": [
-          "fuse-1a"
-        ],
-        "library": "part_library:76eaa59f907353a18b7d8ab57a7fea17",
-        "manufacturer": "Example Co",
-        "mpn": "SIM-FUSE-1A-SMD",
         "operated_by": null
       },
       {
@@ -717,13 +703,27 @@
         "class_code": "A",
         "description": "Invented SIM-BOARD-IOEXP",
         "ext": {},
-        "id": "part:ab9152c7a7155663961d4e968d578ccf",
+        "id": "part:9f2ba5b4cf015d17b6b574bf56e27dbd",
         "key": [
           "board"
         ],
-        "library": "part_library:76eaa59f907353a18b7d8ab57a7fea17",
+        "library": "part_library:e459878194ff5d2ea5439f65deaad4c8",
         "manufacturer": "Example Co",
         "mpn": "SIM-BOARD-IOEXP",
+        "operated_by": null
+      },
+      {
+        "category": "protection",
+        "class_code": "F",
+        "description": "Invented SIM-FUSE-1A-SMD",
+        "ext": {},
+        "id": "part:a2e3a651f18c547abe52e25bc316deba",
+        "key": [
+          "fuse-1a"
+        ],
+        "library": "part_library:e459878194ff5d2ea5439f65deaad4c8",
+        "manufacturer": "Example Co",
+        "mpn": "SIM-FUSE-1A-SMD",
         "operated_by": null
       },
       {
@@ -731,11 +731,11 @@
         "class_code": "K",
         "description": "Invented SIM-RELAY-SMD-5V",
         "ext": {},
-        "id": "part:f5db82e2949c5cf8979e974d7459afc1",
+        "id": "part:c1f7e875158e5fe597f1d3c8045771c5",
         "key": [
           "relay-smd"
         ],
-        "library": "part_library:76eaa59f907353a18b7d8ab57a7fea17",
+        "library": "part_library:e459878194ff5d2ea5439f65deaad4c8",
         "manufacturer": "Example Co",
         "mpn": "SIM-RELAY-SMD-5V",
         "operated_by": null
@@ -744,7 +744,7 @@
     "part_library": [
       {
         "ext": {},
-        "id": "part_library:76eaa59f907353a18b7d8ab57a7fea17",
+        "id": "part_library:e459878194ff5d2ea5439f65deaad4c8",
         "key": [
           "part_library",
           "invented-parts"
@@ -756,145 +756,81 @@
     "placement": [
       {
         "ext": {},
-        "id": "placement:040a71efea6a5044acde7569b1a21e79",
-        "item": "item:9047b7a57afd55a9b7f10e790e3ae927",
-        "key": [
-          "jb1",
-          "at",
-          "c2"
-        ],
-        "node": "aspect_node:fa996cd16a3b52ecbfbc64f6247e4fe3"
-      },
-      {
-        "ext": {},
-        "id": "placement:429440427dac5daa90dcbcafac49d8c9",
-        "item": "item:9047b7a57afd55a9b7f10e790e3ae927",
-        "key": [
-          "jb1",
-          "at",
-          "jb1-product"
-        ],
-        "node": "aspect_node:08444822791f5e5bb18c78afe37ebc69"
-      },
-      {
-        "ext": {},
-        "id": "placement:adbf3708e43d52bb821d03fe278a6321",
-        "item": "item:9271238b7a9452d793835fbf6ce48324",
-        "key": [
-          "jb1",
-          "f1",
-          "at",
-          "jb1-product"
-        ],
-        "node": "aspect_node:08444822791f5e5bb18c78afe37ebc69"
-      },
-      {
-        "ext": {},
-        "id": "placement:c65060a91d225d77a6d2f58fbe5c2ebb",
-        "item": "item:062c720fbb9d5cc69f8e608c92120dbc",
+        "id": "placement:17e998fcdb9d5cbc877b917596ac113c",
+        "item": "item:cc4324876d665acfbc973199279ae3a3",
         "key": [
           "jb1",
           "k10",
           "at",
           "c2"
         ],
-        "node": "aspect_node:fa996cd16a3b52ecbfbc64f6247e4fe3"
+        "node": "aspect_node:a2ada24110fb50bda76eadfe295fb28e"
       },
       {
         "ext": {},
-        "id": "placement:e073a85c531751bcbb64549ce853e208",
-        "item": "item:062c720fbb9d5cc69f8e608c92120dbc",
+        "id": "placement:28d188e0a39251c692ed493c6f1df47e",
+        "item": "item:ac603be7b7b55cd49200818bbd0ed96d",
+        "key": [
+          "jb1",
+          "at",
+          "c2"
+        ],
+        "node": "aspect_node:a2ada24110fb50bda76eadfe295fb28e"
+      },
+      {
+        "ext": {},
+        "id": "placement:2b7e0658e8445291a3dca6566cf88eb3",
+        "item": "item:ac603be7b7b55cd49200818bbd0ed96d",
+        "key": [
+          "jb1",
+          "at",
+          "jb1-product"
+        ],
+        "node": "aspect_node:94924b63cc6b509a922e979a4d42fdbc"
+      },
+      {
+        "ext": {},
+        "id": "placement:65725cf9d9f555f3b9dfef6ab687ad22",
+        "item": "item:cc4324876d665acfbc973199279ae3a3",
         "key": [
           "jb1",
           "k10",
           "at",
           "jb1-product"
         ],
-        "node": "aspect_node:08444822791f5e5bb18c78afe37ebc69"
+        "node": "aspect_node:94924b63cc6b509a922e979a4d42fdbc"
       },
       {
         "ext": {},
-        "id": "placement:ee9f6c6b173159979e0c58ce38cc8aeb",
-        "item": "item:9271238b7a9452d793835fbf6ce48324",
+        "id": "placement:7c14b0ee78da57dab14257372c4f3878",
+        "item": "item:e3e553bf47f35a7fae8b017e9bb9d813",
+        "key": [
+          "jb1",
+          "f1",
+          "at",
+          "jb1-product"
+        ],
+        "node": "aspect_node:94924b63cc6b509a922e979a4d42fdbc"
+      },
+      {
+        "ext": {},
+        "id": "placement:a45966ec5c455ba987d8d336d86b5133",
+        "item": "item:e3e553bf47f35a7fae8b017e9bb9d813",
         "key": [
           "jb1",
           "f1",
           "at",
           "c2"
         ],
-        "node": "aspect_node:fa996cd16a3b52ecbfbc64f6247e4fe3"
+        "node": "aspect_node:a2ada24110fb50bda76eadfe295fb28e"
       }
     ],
     "port": [
       {
+        "boundary": "generic",
         "ext": {},
-        "function": "function:d1a5c1f0b15c5c129ed049677f8e27ba",
-        "id": "port:0822901cac5c59a383e964862991648f",
-        "key": [
-          "jb1",
-          "k10",
-          "fn",
-          "coil",
-          "port",
-          "A2"
-        ],
-        "marking": null,
-        "name": "A2",
-        "role": "generic",
-        "template": "port_template:a044500fd5965b5c9b335b7be65eee88"
-      },
-      {
-        "ext": {},
-        "function": "function:dbe15a88e47f5579998be0e40eb15161",
-        "id": "port:0ce991f5f1ce581da772f4e156e84744",
-        "key": [
-          "h1",
-          "fn",
-          "P1",
-          "port",
-          "2"
-        ],
-        "marking": null,
-        "name": "2",
-        "role": "generic",
-        "template": "port_template:e0608f3caa4d524d8634d920edd4260e"
-      },
-      {
-        "ext": {},
-        "function": "function:dbe15a88e47f5579998be0e40eb15161",
-        "id": "port:2b938f27d84a5210a18ae001fbdb92d0",
-        "key": [
-          "h1",
-          "fn",
-          "P1",
-          "port",
-          "4"
-        ],
-        "marking": null,
-        "name": "4",
-        "role": "generic",
-        "template": "port_template:7f966302ee9b521abb7c72e3c2bf3335"
-      },
-      {
-        "ext": {},
-        "function": "function:988981bfced552aa81f58cca6a70e15d",
-        "id": "port:2c701dd0161c566f8fd3db34a4c8e657",
-        "key": [
-          "h1",
-          "fn",
-          "shell",
-          "port",
-          "PE"
-        ],
-        "marking": null,
-        "name": "PE",
-        "role": "pe",
-        "template": "port_template:a395110a97b5564c9af64cf423334415"
-      },
-      {
-        "ext": {},
-        "function": "function:dbe15a88e47f5579998be0e40eb15161",
-        "id": "port:3d8e557cf32950cb9ca4cbb87fc53fe5",
+        "function": "function:01c2a7ca81385ff3a50dc1814b76d90f",
+        "id": "port:4f059b81ea3159a9a8d155e99d2dba64",
         "key": [
           "h1",
           "fn",
@@ -904,13 +840,48 @@
         ],
         "marking": null,
         "name": "1",
-        "role": "generic",
-        "template": "port_template:e4038551ecbb57178d7bd12123f8b841"
+        "pin_role": null,
+        "template": "port_template:b1578ce20f9053c1b9f6ff97863ffb33"
       },
       {
+        "boundary": "generic",
         "ext": {},
-        "function": "function:d1a5c1f0b15c5c129ed049677f8e27ba",
-        "id": "port:4699a494e4855c1e9ea3b0f9365cef85",
+        "function": "function:ab652c96b4525445bc3973efbbd8ffe9",
+        "id": "port:524312338ff65931ba2587d8bb8321c9",
+        "key": [
+          "h1",
+          "fn",
+          "shell",
+          "port",
+          "PE"
+        ],
+        "marking": null,
+        "name": "PE",
+        "pin_role": "PE",
+        "template": "port_template:2244dca59b085c3d9e8dc634d55af4a4"
+      },
+      {
+        "boundary": "generic",
+        "ext": {},
+        "function": "function:01c2a7ca81385ff3a50dc1814b76d90f",
+        "id": "port:53c06f9b5b4255d0bd88abad4e57cb66",
+        "key": [
+          "h1",
+          "fn",
+          "P1",
+          "port",
+          "3"
+        ],
+        "marking": null,
+        "name": "3",
+        "pin_role": null,
+        "template": "port_template:91c40786b3db51daac25049668af1135"
+      },
+      {
+        "boundary": "generic",
+        "ext": {},
+        "function": "function:7f6a069a7cd85bd2a7edf2157389247e",
+        "id": "port:61b76f3cc538558a9793a36cb48867b1",
         "key": [
           "jb1",
           "k10",
@@ -921,78 +892,14 @@
         ],
         "marking": null,
         "name": "A1",
-        "role": "generic",
-        "template": "port_template:98441a7338a85789803cbcab5881d328"
+        "pin_role": null,
+        "template": "port_template:e78955861141585cbb7173ce07bfbb7c"
       },
       {
+        "boundary": "generic",
         "ext": {},
-        "function": "function:4b2b4215e06d59cea80988dbbbdb2069",
-        "id": "port:488f4c5bd2f652ea9bd2ef2ac9760e03",
-        "key": [
-          "jb1",
-          "k10",
-          "fn",
-          "no_1",
-          "port",
-          "13"
-        ],
-        "marking": null,
-        "name": "13",
-        "role": "generic",
-        "template": "port_template:d9e9b904d20c50d19c44425aeca18a08"
-      },
-      {
-        "ext": {},
-        "function": "function:7185b42064645bdd9451700451a2391b",
-        "id": "port:5ca124dce020557da34a151d01a7ee05",
-        "key": [
-          "jb1",
-          "fn",
-          "J1",
-          "port",
-          "1"
-        ],
-        "marking": null,
-        "name": "1",
-        "role": "generic",
-        "template": "port_template:adb7ac926e605b5a9ddb99a55523102e"
-      },
-      {
-        "ext": {},
-        "function": "function:7185b42064645bdd9451700451a2391b",
-        "id": "port:64a8e862b2b05efcb1c3aaf5ff700c22",
-        "key": [
-          "jb1",
-          "fn",
-          "J1",
-          "port",
-          "2"
-        ],
-        "marking": null,
-        "name": "2",
-        "role": "generic",
-        "template": "port_template:78b5aa99ddbe588383f5db516df58df0"
-      },
-      {
-        "ext": {},
-        "function": "function:dbe15a88e47f5579998be0e40eb15161",
-        "id": "port:72a6340c9eff594c9c68668900b3e294",
-        "key": [
-          "h1",
-          "fn",
-          "P1",
-          "port",
-          "3"
-        ],
-        "marking": null,
-        "name": "3",
-        "role": "generic",
-        "template": "port_template:a9fdf4deec3950e48fff74327e249441"
-      },
-      {
-        "ext": {},
-        "function": "function:caf41e5aafe755828527bafc815e68bd",
-        "id": "port:876d77232db453158c47fbfb4a55dbba",
+        "function": "function:9dc4e08d84d65c4ebc388794353674a6",
+        "id": "port:6a81ad68d179589cb762353d9ba4af0e",
         "key": [
           "b11",
           "signal",
@@ -1000,13 +907,153 @@
         ],
         "marking": null,
         "name": "signal",
-        "role": "generic",
+        "pin_role": null,
         "template": null
       },
       {
+        "boundary": "generic",
         "ext": {},
-        "function": "function:7185b42064645bdd9451700451a2391b",
-        "id": "port:8f0dfc6b5fe85fc0baf54a11fb41ba5c",
+        "function": "function:7754c10d2a6d55efb6bf2e8409d8ea3b",
+        "id": "port:6ad19e9dd25456b3a87cff0ba55b40dd",
+        "key": [
+          "jb1",
+          "fn",
+          "J1",
+          "port",
+          "1"
+        ],
+        "marking": null,
+        "name": "1",
+        "pin_role": null,
+        "template": "port_template:dea50ecb18415f4daec73366d9f043dd"
+      },
+      {
+        "boundary": "generic",
+        "ext": {},
+        "function": "function:7754c10d2a6d55efb6bf2e8409d8ea3b",
+        "id": "port:6dd61f031c3551d782150e56d24a1bb8",
+        "key": [
+          "jb1",
+          "fn",
+          "J1",
+          "port",
+          "2"
+        ],
+        "marking": null,
+        "name": "2",
+        "pin_role": null,
+        "template": "port_template:ab51b55467c0521893398a0b00b557c5"
+      },
+      {
+        "boundary": "generic",
+        "ext": {},
+        "function": "function:37aeb46f4b0e5b6a9f83b9e6a8ceb288",
+        "id": "port:728f8096b54f5fcfb5ae2cf96e207bf4",
+        "key": [
+          "jb1",
+          "f1",
+          "fn",
+          "element",
+          "port",
+          "1"
+        ],
+        "marking": null,
+        "name": "1",
+        "pin_role": null,
+        "template": "port_template:fccfdea4485c5403a7e82780aa6f7d7e"
+      },
+      {
+        "boundary": "generic",
+        "ext": {},
+        "function": "function:01c2a7ca81385ff3a50dc1814b76d90f",
+        "id": "port:7ddd556d737357ee9f594da0ed20d3ad",
+        "key": [
+          "h1",
+          "fn",
+          "P1",
+          "port",
+          "4"
+        ],
+        "marking": null,
+        "name": "4",
+        "pin_role": null,
+        "template": "port_template:26a9e6856d2553ed8b8414cfca3d433d"
+      },
+      {
+        "boundary": "generic",
+        "ext": {},
+        "function": "function:7754c10d2a6d55efb6bf2e8409d8ea3b",
+        "id": "port:9b8b18aef5975f3e867cbc7e741d1cbd",
+        "key": [
+          "jb1",
+          "fn",
+          "J1",
+          "port",
+          "4"
+        ],
+        "marking": null,
+        "name": "4",
+        "pin_role": null,
+        "template": "port_template:52438f45c0315adfaccbec4aa210f8dc"
+      },
+      {
+        "boundary": "generic",
+        "ext": {},
+        "function": "function:7f6a069a7cd85bd2a7edf2157389247e",
+        "id": "port:a2b56eabd10557e487d1c57346861c34",
+        "key": [
+          "jb1",
+          "k10",
+          "fn",
+          "coil",
+          "port",
+          "A2"
+        ],
+        "marking": null,
+        "name": "A2",
+        "pin_role": null,
+        "template": "port_template:68e535e74e0056bd8717516e9926aab5"
+      },
+      {
+        "boundary": "generic",
+        "ext": {},
+        "function": "function:37aeb46f4b0e5b6a9f83b9e6a8ceb288",
+        "id": "port:a9c369c19d2a5a99b917458268cf6649",
+        "key": [
+          "jb1",
+          "f1",
+          "fn",
+          "element",
+          "port",
+          "2"
+        ],
+        "marking": null,
+        "name": "2",
+        "pin_role": null,
+        "template": "port_template:d89733e355525e7ca660e66b9e9f0570"
+      },
+      {
+        "boundary": "generic",
+        "ext": {},
+        "function": "function:01c2a7ca81385ff3a50dc1814b76d90f",
+        "id": "port:b9ab243998455f48a0d7ce54debf61ec",
+        "key": [
+          "h1",
+          "fn",
+          "P1",
+          "port",
+          "2"
+        ],
+        "marking": null,
+        "name": "2",
+        "pin_role": null,
+        "template": "port_template:2a692e78c20b524f99dc584f025ca4e9"
+      },
+      {
+        "boundary": "generic",
+        "ext": {},
+        "function": "function:7754c10d2a6d55efb6bf2e8409d8ea3b",
+        "id": "port:c0e4b051522f5a4f969ad05bb36df0c7",
         "key": [
           "jb1",
           "fn",
@@ -1016,13 +1063,14 @@
         ],
         "marking": null,
         "name": "3",
-        "role": "generic",
-        "template": "port_template:7bbbcee707a95ed3a2124b0367b7d358"
+        "pin_role": null,
+        "template": "port_template:d130fa823b7659fea851d8283e56d9a4"
       },
       {
+        "boundary": "generic",
         "ext": {},
-        "function": "function:4b2b4215e06d59cea80988dbbbdb2069",
-        "id": "port:b6ded1f9756959baae00b56d608fc06d",
+        "function": "function:1f344ff401f55adaa82247d48f3baffe",
+        "id": "port:c715c364114f5a908e4b57f5c59cf5b5",
         "key": [
           "jb1",
           "k10",
@@ -1033,47 +1081,14 @@
         ],
         "marking": null,
         "name": "14",
-        "role": "generic",
-        "template": "port_template:c46e90988475582a9d0b820b1a70c976"
+        "pin_role": null,
+        "template": "port_template:01cd9469cbbc5dd4b5e181d62af2942d"
       },
       {
+        "boundary": "generic",
         "ext": {},
-        "function": "function:4852d9162eb9588da59b2652a527c543",
-        "id": "port:e2942ca6a7c0567d9dc231e9a9bfdf6d",
-        "key": [
-          "jb1",
-          "f1",
-          "fn",
-          "element",
-          "port",
-          "1"
-        ],
-        "marking": null,
-        "name": "1",
-        "role": "generic",
-        "template": "port_template:a322fdf5be65527a860583a6b9792cdd"
-      },
-      {
-        "ext": {},
-        "function": "function:4852d9162eb9588da59b2652a527c543",
-        "id": "port:e74d3f5dd8f858508fcdfcc15f237c3a",
-        "key": [
-          "jb1",
-          "f1",
-          "fn",
-          "element",
-          "port",
-          "2"
-        ],
-        "marking": null,
-        "name": "2",
-        "role": "generic",
-        "template": "port_template:0331521d16bf56bab5b219bf6477b313"
-      },
-      {
-        "ext": {},
-        "function": "function:292bad176ac154fa917a59d3cd99b440",
-        "id": "port:ecb853bae3eb54628b10c285d69732d3",
+        "function": "function:e0c381287b8c5df3806d54f16b59fdaf",
+        "id": "port:e23f456182f8522f97379a15ab8680cb",
         "key": [
           "b12",
           "signal",
@@ -1081,29 +1096,14 @@
         ],
         "marking": null,
         "name": "signal",
-        "role": "generic",
+        "pin_role": null,
         "template": null
       },
       {
+        "boundary": "generic",
         "ext": {},
-        "function": "function:7185b42064645bdd9451700451a2391b",
-        "id": "port:ef6ec76438505c48acc94bad238d7176",
-        "key": [
-          "jb1",
-          "fn",
-          "J1",
-          "port",
-          "4"
-        ],
-        "marking": null,
-        "name": "4",
-        "role": "generic",
-        "template": "port_template:96bbcd3c6f6954788a96874a75930ea1"
-      },
-      {
-        "ext": {},
-        "function": "function:bce2443a764559719b8d5827409dcb25",
-        "id": "port:f0683eb3bdbe56d19402c0a8de90835c",
+        "function": "function:59eebdad5b12585cac0b1a1ee45c581f",
+        "id": "port:e24ec3d77dc752c098e11fbda8f97de9",
         "key": [
           "b10",
           "signal",
@@ -1111,192 +1111,35 @@
         ],
         "marking": null,
         "name": "signal",
-        "role": "generic",
+        "pin_role": null,
         "template": null
+      },
+      {
+        "boundary": "generic",
+        "ext": {},
+        "function": "function:1f344ff401f55adaa82247d48f3baffe",
+        "id": "port:e74159daf4fd5599ae2a5be6da524560",
+        "key": [
+          "jb1",
+          "k10",
+          "fn",
+          "no_1",
+          "port",
+          "13"
+        ],
+        "marking": null,
+        "name": "13",
+        "pin_role": null,
+        "template": "port_template:5cebd1647a9e5c77b53652fe5555adcc"
       }
     ],
     "port_template": [
       {
+        "boundary": "generic",
         "conductor_mark": null,
         "ext": {},
-        "function": "function_template:3f0a6ddcb8635e3cb70dabb167bec5d1",
-        "id": "port_template:0331521d16bf56bab5b219bf6477b313",
-        "joins": null,
-        "key": [
-          "fuse-1a",
-          "element",
-          "2"
-        ],
-        "marking": null,
-        "name": "2",
-        "pole_side": null,
-        "role": "generic"
-      },
-      {
-        "conductor_mark": null,
-        "ext": {},
-        "function": "function_template:b3339bbb83e0559083fe3ba8ad273f9d",
-        "id": "port_template:78b5aa99ddbe588383f5db516df58df0",
-        "joins": null,
-        "key": [
-          "board",
-          "J1",
-          "2"
-        ],
-        "marking": null,
-        "name": "2",
-        "pole_side": null,
-        "role": "generic"
-      },
-      {
-        "conductor_mark": null,
-        "ext": {},
-        "function": "function_template:b3339bbb83e0559083fe3ba8ad273f9d",
-        "id": "port_template:7bbbcee707a95ed3a2124b0367b7d358",
-        "joins": null,
-        "key": [
-          "board",
-          "J1",
-          "3"
-        ],
-        "marking": null,
-        "name": "3",
-        "pole_side": null,
-        "role": "generic"
-      },
-      {
-        "conductor_mark": null,
-        "ext": {},
-        "function": "function_template:d8d7490134e25efd9430cb89882dec7b",
-        "id": "port_template:7f966302ee9b521abb7c72e3c2bf3335",
-        "joins": null,
-        "key": [
-          "housing-4p",
-          "P1",
-          "4"
-        ],
-        "marking": null,
-        "name": "4",
-        "pole_side": null,
-        "role": "generic"
-      },
-      {
-        "conductor_mark": null,
-        "ext": {},
-        "function": "function_template:b3339bbb83e0559083fe3ba8ad273f9d",
-        "id": "port_template:96bbcd3c6f6954788a96874a75930ea1",
-        "joins": null,
-        "key": [
-          "board",
-          "J1",
-          "4"
-        ],
-        "marking": null,
-        "name": "4",
-        "pole_side": null,
-        "role": "generic"
-      },
-      {
-        "conductor_mark": null,
-        "ext": {},
-        "function": "function_template:80f0991b6432503f9ef0782dc153ceea",
-        "id": "port_template:98441a7338a85789803cbcab5881d328",
-        "joins": null,
-        "key": [
-          "relay-smd",
-          "coil",
-          "A1"
-        ],
-        "marking": null,
-        "name": "A1",
-        "pole_side": null,
-        "role": "generic"
-      },
-      {
-        "conductor_mark": null,
-        "ext": {},
-        "function": "function_template:80f0991b6432503f9ef0782dc153ceea",
-        "id": "port_template:a044500fd5965b5c9b335b7be65eee88",
-        "joins": null,
-        "key": [
-          "relay-smd",
-          "coil",
-          "A2"
-        ],
-        "marking": null,
-        "name": "A2",
-        "pole_side": null,
-        "role": "generic"
-      },
-      {
-        "conductor_mark": null,
-        "ext": {},
-        "function": "function_template:3f0a6ddcb8635e3cb70dabb167bec5d1",
-        "id": "port_template:a322fdf5be65527a860583a6b9792cdd",
-        "joins": null,
-        "key": [
-          "fuse-1a",
-          "element",
-          "1"
-        ],
-        "marking": null,
-        "name": "1",
-        "pole_side": null,
-        "role": "generic"
-      },
-      {
-        "conductor_mark": null,
-        "ext": {},
-        "function": "function_template:6f400c5a219852a2a23e199ae25c5637",
-        "id": "port_template:a395110a97b5564c9af64cf423334415",
-        "joins": null,
-        "key": [
-          "housing-4p",
-          "shell",
-          "PE"
-        ],
-        "marking": null,
-        "name": "PE",
-        "pole_side": null,
-        "role": "pe"
-      },
-      {
-        "conductor_mark": null,
-        "ext": {},
-        "function": "function_template:d8d7490134e25efd9430cb89882dec7b",
-        "id": "port_template:a9fdf4deec3950e48fff74327e249441",
-        "joins": null,
-        "key": [
-          "housing-4p",
-          "P1",
-          "3"
-        ],
-        "marking": null,
-        "name": "3",
-        "pole_side": null,
-        "role": "generic"
-      },
-      {
-        "conductor_mark": null,
-        "ext": {},
-        "function": "function_template:b3339bbb83e0559083fe3ba8ad273f9d",
-        "id": "port_template:adb7ac926e605b5a9ddb99a55523102e",
-        "joins": null,
-        "key": [
-          "board",
-          "J1",
-          "1"
-        ],
-        "marking": null,
-        "name": "1",
-        "pole_side": null,
-        "role": "generic"
-      },
-      {
-        "conductor_mark": null,
-        "ext": {},
-        "function": "function_template:08d35dceb572580b9c8279cf6e576d2b",
-        "id": "port_template:c46e90988475582a9d0b820b1a70c976",
+        "function": "function_template:3e905337121856f4bb4dda2ee23f3cff",
+        "id": "port_template:01cd9469cbbc5dd4b5e181d62af2942d",
         "joins": null,
         "key": [
           "relay-smd",
@@ -1305,30 +1148,49 @@
         ],
         "marking": null,
         "name": "14",
-        "pole_side": null,
-        "role": "generic"
+        "pin_role": null,
+        "side": null
       },
       {
+        "boundary": "generic",
         "conductor_mark": null,
         "ext": {},
-        "function": "function_template:08d35dceb572580b9c8279cf6e576d2b",
-        "id": "port_template:d9e9b904d20c50d19c44425aeca18a08",
+        "function": "function_template:9930cb359cbf573d9e79984e8e80d30f",
+        "id": "port_template:2244dca59b085c3d9e8dc634d55af4a4",
         "joins": null,
         "key": [
-          "relay-smd",
-          "no_1",
-          "13"
+          "housing-4p",
+          "shell",
+          "PE"
         ],
         "marking": null,
-        "name": "13",
-        "pole_side": null,
-        "role": "generic"
+        "name": "PE",
+        "pin_role": "PE",
+        "side": null
       },
       {
+        "boundary": "generic",
         "conductor_mark": null,
         "ext": {},
-        "function": "function_template:d8d7490134e25efd9430cb89882dec7b",
-        "id": "port_template:e0608f3caa4d524d8634d920edd4260e",
+        "function": "function_template:d5f2b27610c65d05991610ddd809b051",
+        "id": "port_template:26a9e6856d2553ed8b8414cfca3d433d",
+        "joins": null,
+        "key": [
+          "housing-4p",
+          "P1",
+          "4"
+        ],
+        "marking": null,
+        "name": "4",
+        "pin_role": null,
+        "side": null
+      },
+      {
+        "boundary": "generic",
+        "conductor_mark": null,
+        "ext": {},
+        "function": "function_template:d5f2b27610c65d05991610ddd809b051",
+        "id": "port_template:2a692e78c20b524f99dc584f025ca4e9",
         "joins": null,
         "key": [
           "housing-4p",
@@ -1337,14 +1199,100 @@
         ],
         "marking": null,
         "name": "2",
-        "pole_side": null,
-        "role": "generic"
+        "pin_role": null,
+        "side": null
       },
       {
+        "boundary": "generic",
         "conductor_mark": null,
         "ext": {},
-        "function": "function_template:d8d7490134e25efd9430cb89882dec7b",
-        "id": "port_template:e4038551ecbb57178d7bd12123f8b841",
+        "function": "function_template:347914ab0f2853458ee0a81e604e9488",
+        "id": "port_template:52438f45c0315adfaccbec4aa210f8dc",
+        "joins": null,
+        "key": [
+          "board",
+          "J1",
+          "4"
+        ],
+        "marking": null,
+        "name": "4",
+        "pin_role": null,
+        "side": null
+      },
+      {
+        "boundary": "generic",
+        "conductor_mark": null,
+        "ext": {},
+        "function": "function_template:3e905337121856f4bb4dda2ee23f3cff",
+        "id": "port_template:5cebd1647a9e5c77b53652fe5555adcc",
+        "joins": null,
+        "key": [
+          "relay-smd",
+          "no_1",
+          "13"
+        ],
+        "marking": null,
+        "name": "13",
+        "pin_role": null,
+        "side": null
+      },
+      {
+        "boundary": "generic",
+        "conductor_mark": null,
+        "ext": {},
+        "function": "function_template:a1e03495e8225ed68b428363408868f6",
+        "id": "port_template:68e535e74e0056bd8717516e9926aab5",
+        "joins": null,
+        "key": [
+          "relay-smd",
+          "coil",
+          "A2"
+        ],
+        "marking": null,
+        "name": "A2",
+        "pin_role": null,
+        "side": null
+      },
+      {
+        "boundary": "generic",
+        "conductor_mark": null,
+        "ext": {},
+        "function": "function_template:d5f2b27610c65d05991610ddd809b051",
+        "id": "port_template:91c40786b3db51daac25049668af1135",
+        "joins": null,
+        "key": [
+          "housing-4p",
+          "P1",
+          "3"
+        ],
+        "marking": null,
+        "name": "3",
+        "pin_role": null,
+        "side": null
+      },
+      {
+        "boundary": "generic",
+        "conductor_mark": null,
+        "ext": {},
+        "function": "function_template:347914ab0f2853458ee0a81e604e9488",
+        "id": "port_template:ab51b55467c0521893398a0b00b557c5",
+        "joins": null,
+        "key": [
+          "board",
+          "J1",
+          "2"
+        ],
+        "marking": null,
+        "name": "2",
+        "pin_role": null,
+        "side": null
+      },
+      {
+        "boundary": "generic",
+        "conductor_mark": null,
+        "ext": {},
+        "function": "function_template:d5f2b27610c65d05991610ddd809b051",
+        "id": "port_template:b1578ce20f9053c1b9f6ff97863ffb33",
         "joins": null,
         "key": [
           "housing-4p",
@@ -1353,18 +1301,100 @@
         ],
         "marking": null,
         "name": "1",
-        "pole_side": null,
-        "role": "generic"
+        "pin_role": null,
+        "side": null
+      },
+      {
+        "boundary": "generic",
+        "conductor_mark": null,
+        "ext": {},
+        "function": "function_template:347914ab0f2853458ee0a81e604e9488",
+        "id": "port_template:d130fa823b7659fea851d8283e56d9a4",
+        "joins": null,
+        "key": [
+          "board",
+          "J1",
+          "3"
+        ],
+        "marking": null,
+        "name": "3",
+        "pin_role": null,
+        "side": null
+      },
+      {
+        "boundary": "generic",
+        "conductor_mark": null,
+        "ext": {},
+        "function": "function_template:7f13ca117870531585200b8b708056be",
+        "id": "port_template:d89733e355525e7ca660e66b9e9f0570",
+        "joins": null,
+        "key": [
+          "fuse-1a",
+          "element",
+          "2"
+        ],
+        "marking": null,
+        "name": "2",
+        "pin_role": null,
+        "side": null
+      },
+      {
+        "boundary": "generic",
+        "conductor_mark": null,
+        "ext": {},
+        "function": "function_template:347914ab0f2853458ee0a81e604e9488",
+        "id": "port_template:dea50ecb18415f4daec73366d9f043dd",
+        "joins": null,
+        "key": [
+          "board",
+          "J1",
+          "1"
+        ],
+        "marking": null,
+        "name": "1",
+        "pin_role": null,
+        "side": null
+      },
+      {
+        "boundary": "generic",
+        "conductor_mark": null,
+        "ext": {},
+        "function": "function_template:a1e03495e8225ed68b428363408868f6",
+        "id": "port_template:e78955861141585cbb7173ce07bfbb7c",
+        "joins": null,
+        "key": [
+          "relay-smd",
+          "coil",
+          "A1"
+        ],
+        "marking": null,
+        "name": "A1",
+        "pin_role": null,
+        "side": null
+      },
+      {
+        "boundary": "generic",
+        "conductor_mark": null,
+        "ext": {},
+        "function": "function_template:7f13ca117870531585200b8b708056be",
+        "id": "port_template:fccfdea4485c5403a7e82780aa6f7d7e",
+        "joins": null,
+        "key": [
+          "fuse-1a",
+          "element",
+          "1"
+        ],
+        "marking": null,
+        "name": "1",
+        "pin_role": null,
+        "side": null
       }
     ],
     "supply_system": [
       {
-        "current": "ac",
-        "earthing": "earthed",
+        "current": "AC",
         "ext": {},
-        "fault_current_a": null,
-        "fault_time_constant_ms": null,
-        "id": "supply_system:2409e77f9e7450828229854bd34aba1e",
+        "id": "supply_system:3e96ecbf6fca52c8b48f64dfaecc633c",
         "key": [
           "400V"
         ],
@@ -1387,12 +1417,9 @@
         "unit": null
       },
       {
-        "current": "dc",
-        "earthing": "earthed",
+        "current": "DC",
         "ext": {},
-        "fault_current_a": null,
-        "fault_time_constant_ms": null,
-        "id": "supply_system:82cf3f4b59a7591a8fdddf4ce522a058",
+        "id": "supply_system:c9e3dffe584c551dbc923bbce3d3e890",
         "key": [
           "24V"
         ],

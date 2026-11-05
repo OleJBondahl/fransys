@@ -2,15 +2,13 @@
 
 Each model comes from the builder of the field-case test the dump's first line names, loaded by
 path, and goes through `fransys_el.build` and `solve`. `w09` is the second build of its test (the
-fan, `__2`); the first (interleaved) is an extra.
 """
 
 import importlib.util
-import sys
 from dataclasses import replace
 from functools import cache
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 import fransys as fr
 from conventions_fixtures import house
@@ -25,7 +23,7 @@ if TYPE_CHECKING:
     from fransys_layout.core import CoreLayout, Options, PlacementProblem
     from fransys_model.kernel import Model
 
-__all__ = ["DESIGNS", "built", "counts", "solve_problem", "solved"]
+__all__ = ["DESIGNS", "built", "counts", "field_case", "solve_problem", "solved"]
 
 ROOT = Path(__file__).resolve().parents[3]
 W01 = "test_a_series_to_a_plc_module_takes_its_lowest_free_channel"
@@ -34,12 +32,9 @@ W03 = "test_plc_list_pin_of_a_later_channel"
 P02 = "test_a_strip_wired_outside_routes_every_wire_to_a_plc_module_under_it"
 
 
-def _case(name: str) -> Any:
+def field_case(name: str) -> Any:
     """A field-case module, loaded by path (it imports its helpers from `tests/`)."""
-    sys.path.insert(0, str(ROOT / "tests"))
-    spec = importlib.util.spec_from_file_location(
-        name, ROOT / "tests" / "field_cases" / f"{name}.py"
-    )
+    spec = importlib.util.spec_from_file_location(name, ROOT / "tests" / "field_cases" / f"{name}.py")
     assert spec is not None
     assert spec.loader is not None
     module = importlib.util.module_from_spec(spec)
@@ -48,9 +43,9 @@ def _case(name: str) -> Any:
 
 
 def w01() -> Model:
-    """Sixteen series buttons to one module: the test's `_design` and `_button`."""
-    case = _case(W01)
-    d, dc, module = case._design()
+    """Sixteen series buttons to one module: the test's `plc_di_design` and `_button`."""
+    case = field_case(W01)
+    d, dc, module = case.plc_di_design()
     for number in range(1, case.COUNT + 1):
         case._button(d, dc, module, number)
     return fr.build(d).model
@@ -58,22 +53,22 @@ def w01() -> Model:
 
 def w09() -> Model:
     """The fan: six contacts, each fed from its own connector pin and wired to a channel."""
-    return _case(W09)._built("fan")
+    return cast("Model", field_case(W09)._built("fan"))
 
 
 def w09_interleaved() -> Model:
     """Extra: three groups of two contactors whose channels interleave (the test's first build)."""
-    return _case(W09)._built("interleaved")
+    return cast("Model", field_case(W09)._built("interleaved"))
 
 
 def w03() -> Model:
     """A 4-channel analog card, each channel wired to a connector header: the fixture's body."""
-    return _case(W03).built.__wrapped__().model
+    return cast("Model", field_case(W03).built.__wrapped__().model)
 
 
 def p02() -> Model:
     """A unit strip wired to a module inside the unit and on to a field strip."""
-    return _case(P02)._built().model
+    return cast("Model", field_case(P02)._built().model)
 
 
 DESIGNS: dict[str, Callable[[], Model]] = {

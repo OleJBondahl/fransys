@@ -4,13 +4,12 @@ Staging only, no Zensical: `site_markdown` on a tiny invented page tree.
 """
 
 import importlib
-import sys
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 
-ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "scripts"))
+if TYPE_CHECKING:
+    from pathlib import Path
 
 site_markdown = importlib.import_module("site_markdown")
 
@@ -23,10 +22,7 @@ def src(tmp_path: Path) -> Path:
     (src / "assets" / "a.png").write_bytes(b"png")
     (src / "index.md").write_text("# Home\n\n[guide](guide/index.md) ![a](assets/a.png)\n")
     (src / "guide" / "index.md").write_text("# Guide\n\n[the end](end.md#top)\n")
-    (src / "guide" / "end.md").write_text(
-        "# End\n\n[back](index.md) [home](../index.md) [web](https://x.test/y.md)\n"
-        "```\n[code](nope.md)\n```\n"
-    )
+    (src / "guide" / "end.md").write_text("# End\n\n[back](index.md) [home](../index.md) [web](https://x.test/y.md)\n```\n[code](nope.md)\n```\n")
     return src
 
 
@@ -74,8 +70,6 @@ def test_the_built_link_check_fails_on_a_source_md_path_and_a_dead_link(tmp_path
 def test_a_findings_row_gets_its_anchor_and_the_markdown_copy_drops_it(src: Path) -> None:
     build_site = importlib.import_module("build_site")
     row = "| NET_UNREALISED | ERROR | x |\n"
-    assert (
-        build_site.anchor_rows(row) == '| <a id="net_unrealised"></a>NET_UNREALISED | ERROR | x |\n'
-    )
+    assert build_site.anchor_rows(row) == '| <a id="net_unrealised"></a>NET_UNREALISED | ERROR | x |\n'
     (src / "rows.md").write_text("# Rows\n\n" + build_site.anchor_rows(row))
     assert "<a id" not in site_markdown.markdown_copy(src, src, "rows.md")

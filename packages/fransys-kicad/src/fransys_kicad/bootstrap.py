@@ -3,6 +3,7 @@
 from typing import cast
 
 from ._sexpr import Sexpr, parse_sexpr
+from .errors import KicadError
 
 # The fields a human must fill in, in the order they are written under [part].
 _HUMAN_FIELDS = ("mpn", "manufacturer", "description", "category", "class_code")
@@ -46,25 +47,20 @@ def _parse_library(kicad_sym: str) -> Sexpr:
         tree = parse_sexpr(kicad_sym)
     except ValueError as error:
         msg = f"not a parsable KiCad symbol library: {error}"
-        raise ValueError(msg) from error
+        raise KicadError(msg) from error
     if not tree or tree[0] != "kicad_symbol_lib":
         msg = "not a parsable KiCad symbol library: expected a kicad_symbol_lib root"
-        raise ValueError(msg)
+        raise KicadError(msg)
     return tree
 
 
 def _find_symbol(library: Sexpr, name: str) -> Sexpr:
     """The top-level `(symbol "<name>" ...)` node of `library`."""
     for node in library[1:]:
-        if (
-            isinstance(node, list)
-            and len(node) >= _TAGGED_LEN
-            and node[0] == "symbol"
-            and node[1] == name
-        ):
+        if isinstance(node, list) and len(node) >= _TAGGED_LEN and node[0] == "symbol" and node[1] == name:
             return node
     msg = f"no symbol {name!r} in this KiCad symbol library"
-    raise ValueError(msg)
+    raise KicadError(msg)
 
 
 def _unit_style(sub_name: str, top_name: str) -> tuple[str, str] | None:
@@ -117,13 +113,11 @@ def _toml_string(text: str) -> str:
 
 
 def _render(pins: list[tuple[str, str | None]]) -> str:
-    lines = ["schema = 1", "", "[part]"]
+    lines = ["schema = 2", "", "[part]"]
     lines.extend(f'{field} = ""  # TODO: fill in' for field in _HUMAN_FIELDS)
     lines.extend(["", "[[function]]", 'name = "main"', 'kind = "generic"', "ports = ["])
     lines.extend(
-        f'    {{ name = {_toml_string(number)}, role = "generic"'
-        + ("" if marking is None else f", marking = {_toml_string(marking)}")
-        + " },"
+        f'    {{ name = {_toml_string(number)}, role = "generic"' + ("" if marking is None else f", marking = {_toml_string(marking)}") + " },"
         for number, marking in pins
     )
     lines.append("]")

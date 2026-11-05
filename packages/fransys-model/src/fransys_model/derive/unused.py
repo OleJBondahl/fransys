@@ -3,13 +3,10 @@
 Layout and the contact table both call these, so a drawn contact is never listed as a spare.
 """
 
-from fransys_model.derive.facts.children import unit_parent
 from fransys_model.derive.facts.conductor_facts import is_bridge
 from fransys_model.derive.facts.joins import joined_ports
-from fransys_model.derive.facts.unit_index import item_unit
-from fransys_model.derive.facts.units import in_unit_subtree
+from fransys_model.derive.facts.roles import function_role
 from fransys_model.derive.indexes import build_indexes
-from fransys_model.vocab.tables import conductors, functions, ports
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.core import Function, Port
 
@@ -21,11 +18,7 @@ def port_is_unused(model: Model, port: Id[Port]) -> bool:
     its ports are (`function_is_unused`).
     """
     indexes = build_indexes(model)
-    return (
-        not indexes.conductors_by_port.get(port)
-        and not indexes.nets_by_port.get(port)
-        and port not in joined_ports(model)
-    )
+    return not indexes.conductors_by_port.get(port) and not indexes.nets_by_port.get(port) and port not in joined_ports(model)
 
 
 def function_is_unused(model: Model, function: Id[Function]) -> bool:
@@ -39,19 +32,26 @@ def function_is_unused(model: Model, function: Id[Function]) -> bool:
 
 
 def function_is_reached(model: Model, function: Id[Function]) -> bool:
-    """Whether a wire inside `function`'s drawing, or a net, reaches one of its ports.
+    """Whether a wire of any set, or a net, reaches one of its ports.
 
-    The drawing is its item's unit: a wire counts when its far end lies in that unit's subtree,
-    and at once for a top-level unit, whose leaving wire draws a stub. A bridge is no wire. A
-    function whose item is in no unit counts any wire. Layout draws a terminal only where this
-    holds, or a parent's black box needs it.
+    A wire from another set reaches it through that set's cut, so the terminal is drawn with the
+    cut's reference (WHERE-WIRED, R937). A bridge is no wire.
     """
     ports_of = build_indexes(model).ports_by_function.get(function, ())
     return any(port_is_reached(model, port) for port in ports_of)
 
 
+def function_is_idle_terminal(model: Model, function: Id[Function]) -> bool:
+    """Whether `function` is a terminal no wire of any set reaches (`function_is_reached`): a spare.
+
+    Layout draws such a terminal only through its table, never as a symbol, so a bridged terminal
+    with no wire of its own is idle.
+    """
+    return function_role(model, function).terminal and not function_is_reached(model, function)
+
+
 def port_is_reached(model: Model, port: Id[Port]) -> bool:
-    """Whether a wire inside the drawing of `port`'s unit, or a net, reaches `port` itself.
+    """Whether a wire of any set, or a net, reaches `port` itself.
 
     The same rule as `function_is_reached`, for one port: layout draws a connector pin only where
     this holds for it or its mated pin, or a parent's black box needs it.
@@ -59,14 +59,4 @@ def port_is_reached(model: Model, port: Id[Port]) -> bool:
     indexes = build_indexes(model)
     if indexes.nets_by_port.get(port):
         return True
-    unit = item_unit(model, functions(model)[ports(model)[port].function].item)
-    scope = None if unit is None or unit_parent(model, unit) is None else unit  # None: any wire
-    for conductor in indexes.conductors_by_port.get(port, ()):
-        record = conductors(model)[conductor]
-        if is_bridge(model, conductor):
-            continue
-        far = record.b if record.a == port else record.a
-        far_item = functions(model)[ports(model)[far].function].item
-        if scope is None or in_unit_subtree(model, far_item, scope):
-            return True
-    return False
+    return any(not is_bridge(model, c) for c in indexes.conductors_by_port.get(port, ()))

@@ -1,39 +1,41 @@
 """Smoke test of the scale fixture: its unit, location and item counts are exact in N."""
-
-import sys
-from pathlib import Path
+# CONNECTION_NOT_DRAWN 10 per default-salt build set (MATES-DISABLED): mated, harness or board-unit input, refused for 0.22 (R1216).
 
 import fransys as fr
-import fransys_author
 import fransys_parts
 import pytest
-
-from fransys_model.derive import unit_release
-from fransys_model.derive.passes.numbering import REFERENCE_DESIGNATION_DUPLICATE
-from fransys_model.kernel import Severity
-from fransys_model.vocab.tables import items, units
-
-_TESTS_DIR = Path(__file__).resolve().parent
-if str(_TESTS_DIR) not in sys.path:
-    # `--import-mode=importlib` (root pyproject.toml) never puts this folder on `sys.path`.
-    sys.path.insert(0, str(_TESTS_DIR))
-
-from scale_units_fixture import (  # noqa: E402
+from _expected_codes import expect_codes
+from _model_build_cover import _COVER, layout_trigger_document
+from fransys_author.design import Design
+from scale_units_fixture import (
     PROJECT,
     UNITS_PER_INSTANCE,
     build_scale,
     pump_cabinet,
+    scale_design,
 )
 
-ITEMS_PER_INSTANCE = 9  # X2 strip, 2 terminals, board, X1, K1, harness, P1, cable
+from fransys_model.derive import unit_release
+from fransys_model.derive.passes.numbering import PRODUCT_DESIGNATION_DUPLICATE, REFERENCE_DESIGNATION_DUPLICATE
+from fransys_model.kernel import Severity
+from fransys_model.vocab.tables import items, units
+
+ITEMS_PER_INSTANCE = 7  # X2 strip, 2 terminals, X1, K1, P1, cable
 
 
 @pytest.mark.parametrize("n", [2, 3])
 def test_the_units_and_items_are_exact_in_n(n):
-    # with_document=True: this test's own ERROR-absence check below would otherwise miss any
-    # layout-only ERROR (e.g. SYMBOL_PORT_MISSING) since decision 0037 never runs layout
-    # without one; build_scale's own default stays document-free.
-    result = build_scale(n, with_document=True)
+    # Built with a layout-triggering document (decision 0037 never runs layout without one), so
+    # this test's own ERROR-absence check below sees any layout-only ERROR (e.g.
+    # SYMBOL_PORT_MISSING); the container's document prints every nested cabinet's set
+    # (UNPRINTED_SET). `build_scale`'s own default stays document-free.
+    parts = fransys_parts.load("demo_parts")
+    result = fr.build(
+        parts,
+        scale_design(parts, n).draft(),
+        layout_trigger_document(),
+        fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, "scale-container", cover=_COVER),
+    )
     model = result.model
     assert len(units(model)) == 1 + UNITS_PER_INSTANCE * n
     assert len(items(model)) == ITEMS_PER_INSTANCE * n
@@ -56,15 +58,13 @@ def test_the_units_nest_container_then_cabinet_then_board(n):
     assert container.parent is None
     assert len(cabinets) == len(boards) == n
     assert {u.parent for u in cabinets} == {container.id}
-    assert sorted(u.parent for u in boards if u.parent is not None) == sorted(
-        u.id for u in cabinets
-    )
+    assert sorted(u.parent for u in boards if u.parent is not None) == sorted(u.id for u in cabinets)
 
 
 def test_two_instances_sharing_one_location_name_are_a_duplicate_designation():
     """Can-fail of the no-duplicate check above: the same cabinets under one name do collide."""
     parts = fransys_parts.load("demo_parts")
-    d = fransys_author.Design(parts)
+    d = Design(parts)
     d.project(**PROJECT)
     d.revision(1, date="2026-09-25", text="First issue", created="XX")
     er = d.location("ER", "Engine room")
@@ -73,8 +73,7 @@ def test_two_instances_sharing_one_location_name_are_a_duplicate_designation():
     for i in (1, 2):
         for terminal in pump_cabinet(container.scope(f"pump{i}", at=er), name="C1"):
             container.unused(terminal)
-    codes = [f.code for f in fr.build(parts, d.draft()).findings]
-    assert REFERENCE_DESIGNATION_DUPLICATE in codes
+    expect_codes(fr.build(parts, d.draft()), REFERENCE_DESIGNATION_DUPLICATE, PRODUCT_DESIGNATION_DUPLICATE)
 
 
 def test_one_more_instance_adds_exactly_one_instance():

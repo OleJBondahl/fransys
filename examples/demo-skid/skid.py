@@ -7,7 +7,7 @@ the design and its cabinet document, scaled by `VALVES` and `STARTERS` so groups
 import math
 import tempfile
 from pathlib import Path
-from typing import Any
+from typing import Any, NamedTuple
 
 import fransys as fr
 from fransys.colours import BK, BU
@@ -21,11 +21,11 @@ CONTROL = (BU, 0.5)
 Handle = Any  # fransys exports no name for the run and device handles `d.*` returns
 
 
-def supply(d: fr.Design, n: int) -> tuple[Handle, Handle]:
-    """Group G0: a 24 V supply on two bridged strips, `n` terminals each."""
+def supply(d: fr.Design, terminals: int) -> tuple[Handle, Handle]:
+    """Group G0: a 24 V supply on two bridged strips, sized to the terminals the skid wires."""
     with d.function("G0", "Supply 24 V"):
-        live = d.terminal_strip("X10", "DEMO-TB-2.5", n).run("P", n, bridged=True)
-        rail = d.terminal_strip("X11", "DEMO-TB-2.5", n).run("M", n, bridged=True)
+        live = d.terminal_strip("X10", "DEMO-TB-2.5", terminals).run("P", terminals, bridged=True, rail=True)
+        rail = d.terminal_strip("X11", "DEMO-TB-2.5", terminals).run("M", terminals, bridged=True, rail=True)
         d.dc_supply("S", plus=live[1], minus=rail[1], voltage=24)
     return live, rail
 
@@ -34,7 +34,7 @@ def starters(d: fr.Design, live: Handle, rail: Handle) -> list[tuple[Handle, Han
     """Groups G1 and G2: the mains breaker, its strip, and one fan starter per strip row."""
     with d.function("G1", "Mains"):
         q0 = d.device("Q0", "DEMO-MCB-3P")
-        x3 = d.terminal_strip("X3", "DEMO-TB-2.5", 3 * STARTERS)
+        x3 = d.terminal_strip("X3", "DEMO-TB-2.5-TWIN", 3 * STARTERS)
     made = []
     breakers = [n for n in range(3, 4 + STARTERS) if n != VALVE_BREAKER][:STARTERS]
     first_overload = max(13, breakers[-1] + 1)  # the overloads follow the breakers at any size
@@ -50,9 +50,9 @@ def starters(d: fr.Design, live: Handle, rail: Handle) -> list[tuple[Handle, Han
             else:
                 d.series(f.element, q.main, ol.main, mo.motor, wire=POWER)
                 for pole in (1, 2, 3):  # the row jumpers: each terminal feeds the next row's
-                    d.detail.wire(x3[3 * s + pole - 3].inner, x3[3 * s + pole].inner, wire=POWER)
+                    d.series(x3[3 * s + pole - 3].inner, x3[3 * s + pole].inner, wire=POWER)
                     # a series from a strip leaves inner; the fuse is fed from the outer side
-                    d.detail.wire(x3[3 * s + pole].outer, f.element[str(2 * pole - 1)], wire=POWER)
+                    d.series(x3[3 * s + pole].outer, f.element[str(2 * pole - 1)], wire=POWER)
             d.series(live, q.aux, h.lamp, rail, wire=CONTROL)
             d.series(q.coil, rail, wire=CONTROL)
             made.append((q, ol))
@@ -73,19 +73,29 @@ def valves(d: fr.Design, live: Handle, rail: Handle, chans: list[Handle]) -> lis
     return relays
 
 
-def design() -> tuple[fr.Design, fr.Draft]:
-    """The skid's `(design, document)` pair."""
-    d = fr.design("demo_parts", place="CAB")
-    d.project(title="Skid", number="P-1", customer="Example Co", revision=1, author="OJB")
-    d.revision(1, date="2026-10-15", text="First issue", created="XX")
-    cab = d.location("CAB", "Cabinet")
+class Skid(NamedTuple):
+    """The skid unit's interface: nothing is reached from outside, the cabinet stands alone."""
+
+
+@fr.unit(
+    "demo-skid",
+    revision=1,
+    interface_version=1,
+    date="2026-10-15",
+    text="First issue",
+    by="OJB",
+    title="Skid",
+    number="P-1",
+)
+def skid(d: fr.Design) -> Skid:
+    """The skid cabinet as one unit: its parts, groups and wires."""
     live, rail = supply(d, 4 + 2 * STARTERS + 2 * VALVES)
     fans = starters(d, live, rail)
     channels = STARTERS + VALVES
     with d.function("G3", "PLC"):
         di = d.device("DI1", "DEMO-PLC-DI-16")
-        d.device("AI1", "DEMO-PLC-AI-4")  # no wire reaches the analogue cards: they stand loose
-        d.device("AI2", "DEMO-PLC-AI-4")
+        d.device("AI1", "DEMO-PLC-AI-4", unused=True)  # no wire reaches the analogue cards: spare
+        d.device("AI2", "DEMO-PLC-AI-4", unused=True)
         dos = [d.device(f"DO{i + 1}", "DEMO-PLC-DO-2") for i in range(math.ceil(channels / 2))]
     chans = [getattr(dos[c // 2], f"do_{c % 2 + 1}") for c in range(channels)]
     relays = valves(d, live, rail, chans)
@@ -94,6 +104,16 @@ def design() -> tuple[fr.Design, fr.Draft]:
     reads = [c for q, ol in fans for c in (q.aux_nc, ol.aux)] + [k.co_2.no for k in relays]
     for i, contact in enumerate(reads[:16]):
         d.series(live, contact, getattr(di, f"di_{i + 1}"), wire=CONTROL)
+    return Skid()
+
+
+def design() -> tuple[fr.Design, fr.Draft]:
+    """The skid's `(design, document)` pair: the skid unit added as U1 to a cabinet design."""
+    d = fr.design("demo_parts", place="CAB")
+    d.project(title="Skid", number="P-1", customer="Example Co", revision=1, author="OJB")
+    d.revision(1, date="2026-10-15", text="First issue", created="XX")
+    d.location("CAB", "Cabinet")
+    d.add(skid, "U1", place="CAB")
     cover = Path(tempfile.mkdtemp()) / "cover.md"
     cover.write_text("# Skid\n", encoding="utf-8")
-    return d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover)
+    return d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, "demo-skid", cover=cover)

@@ -8,9 +8,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from .values import Box
+
 if TYPE_CHECKING:
-    from .room import Room
-    from .values import Box, Options
+    from .values import Options
 
 
 def grid_up(value: int, step: int) -> int:
@@ -18,12 +19,18 @@ def grid_up(value: int, step: int) -> int:
     return -(-value // step) * step
 
 
+def grid_out(box: Box, step: int) -> Box:
+    """`box` grown outward to whole `step` cells on every side: the one home for rounding a Box to the grid (R1693, R1706)."""
+    x0, y0 = -grid_up(-box.x, step), -grid_up(-box.y, step)
+    x1, y1 = grid_up(box.x + box.w, step), grid_up(box.y + box.h, step)
+    return Box(x0, y0, x1 - x0, y1 - y0)
+
+
 def row_top(reach: int, options: Options) -> int:
     """How far a row's top lies above the origin of a symbol whose footprint reaches `reach` up."""
     return grid_up(reach, options.wiring_grid)
 
 
-def extent(footprint: Box, room: Room, options: Options) -> tuple[int, int]:
+def held(footprint: Box, options: Options) -> tuple[int, int]:
     """The G a symbol's row holds above and below its origin; `footprint` is relative to it."""
-    up = row_top(-footprint.y + room.up, options)
-    return up, grid_up(footprint.y + footprint.h + room.down, options.wiring_grid)
+    return row_top(-footprint.y, options), grid_up(footprint.y + footprint.h, options.wiring_grid)

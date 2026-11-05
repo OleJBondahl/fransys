@@ -6,11 +6,11 @@ Layout draws the structure you author and invents none. This page says what layo
 
 ## How layout reads the model
 
-- **Function blocks.** `with d.function("P1", "Pump 1"):` groups the devices made inside it. Layout packs whole blocks onto pages, left to right, in order, and never reorders them to fill a gap. A block wider than a page is split between columns. `d.layout.order`, `keep_together`, `break_before` and the profile's `group_ranks` set the order.
-- **Page ends.** A page holds the blocks whose widths sum to the content width, 1312 grid units on the house A3 sheet. A column's width is the room it took when placed: symbols, pin labels, link markers and the column gap. Read how many pages a build took from `fr.readability(result)` (`fill_percent` of each page), not from positions. A page ends at the first block that does not fit, at a `break_before`, at a `keep_together` set that does not fit, or at the end of a drawing set.
+- **Function blocks.** `with d.function("P1", "Pump 1"):` groups the devices made inside it. Layout packs whole blocks onto pages, left to right, in order, and never reorders them to fill a gap. A block wider than a page is split between columns. `d.layout.order` sets the order.
+- **Page ends.** A page holds the blocks whose widths sum to the content width, 1312 grid units on the house A3 sheet. A column's width is the room it took when placed: symbols, pin labels, link markers and the column gap. Read how many pages a build took from `fr.readability(result)` (`fill_percent` of each page), not from positions. A page ends at the first block that does not fit, or at the end of a drawing set.
 - **Current paths.** Layout finds a current path where each net between two devices holds exactly two poles. A pole is the pair of pins a symbol passes current through, such as a coil or one contact. The path stands as one column, top to bottom, with straight wires. A net of three or more poles ends a path.
-- **How to author a path.** Author each path with `d.series`. Hand-wired `d.detail.wire` hops form a path only while each net keeps to two poles. `d.series(a, b, c, wire=...)` wires every hop pole to pole, so its elements form a path. `d.layout.chain(...)` names a path outright, and a named path wins over discovery.
-- **Block edges end a path.** A path never crosses from one function block into the next. When the two blocks land on different pages, the wire between them is cut into a marker pair. Keep each circuit inside one block. A device with two or more functions can split across blocks, a coil here and a contact there. A function of such a device, written in another block's `d.series`, draws in that block, and its coil's contact table names that page. `d.layout.draw_in` overrides this.
+- **How to author a path.** Author each path with `d.series`. `d.series(a, b, c, wire=...)` wires every hop pole to pole, so its elements form a path.
+- **Block edges end a path.** A path never crosses from one function block into the next. When the two blocks land on different pages, the wire between them is cut into a marker pair. Keep each circuit inside one block. A device with two or more functions can split across blocks, a coil here and a contact there. A function of such a device, written in another block's `d.series`, draws in that block, and its coil's contact table names that page.
 - **Tall paths.** A path taller than the page continues at the top of the next column, on the same sheet while there is room, then on the next sheet. The wire across each cut becomes a marker pair. The path keeps its order, and nothing runs off the page.
 - **Coils on PLC channels.** A coil that a PLC channel drives stands under that channel's pin, always, whatever the row spacing. A column too tall for the page continues as tall paths do.
 - **Box pins in marking order.** A box prints its pins in marking order, whatever order its wired partners stand in, and the columns hung under it follow those pins.
@@ -18,14 +18,13 @@ Layout draws the structure you author and invents none. This page says what layo
 - **Supplies.** A declared DC supply (`d.dc_supply`) draws a power symbol at each pin on its rails, with no wire or marker. `d.ac_supply` keeps AC rails as terminals, drawn at each pin they feed. An undeclared rail is a plain net: wires and link markers.
 - **Markers.** A marker pair stands where one wire's two ends land on different pages. A net of three or more ports that is not drawn as wires gets one marker per port. A terminal is drawn at each of its wires instead. A net reference is filled with one of eight colours; every reference of the same net in the PDF has the same colour, and the text is the reference.
 - **Nothing connected, nothing drawn.** A symbol with nothing connected is not drawn; its list holds it.
-- **One actuator per device.** With `actuator_each_contact=False`, a manually operated device draws its actuator once, at its lead contact: the first contact its contact list prints. Its other contacts draw plain, with the device's designation and a reference to the actuator, and a contact list sits under the actuator.
-- **Flat designs.** A design of devices joined by point-to-point `d.detail.wire` calls is drawn from its nets alone. Circuits that share no net fill pages one after the other. One large connected circuit with no declared supply piles onto a single page and overflows it. Declare the supply and write each path as a series (see `detail.md`).
+- **An actuator on every contact.** Every contact of a manually operated device draws its own actuator symbol.
+- **Flat designs.** A design of devices joined by point-to-point `d.series` calls is drawn from its nets alone. Circuits that share no net fill pages one after the other. One large connected circuit with no declared supply piles onto a single page and overflows it. Declare the supply and write each path as a series (see `detail.md`).
 
 The `draw` helper below builds a cabinet and reads its findings. The block after it builds twelve relays on
 one declared 24 V supply.
 
 ```python
-from decimal import Decimal
 from pathlib import Path
 from typing import NamedTuple
 
@@ -49,8 +48,14 @@ def draw(body, top=None):
     """Build one cabinet with a schematic; return its finding codes and its page count."""
 
     @fr.unit(
-        "cab", revision=1, interface_version=1, date="2026-01-01", text="First", by="XX",
-        title="Cabinet", number="C-1",
+        "cab",
+        revision=1,
+        interface_version=1,
+        date="2026-01-01",
+        text="First",
+        by="XX",
+        title="Cabinet",
+        number="C-1",
     )
     def cabinet(c):
         body(c)
@@ -86,40 +91,30 @@ The pump-station example in the examples repository has this shape.
 3. Declare each supply where it starts: `d.ac_supply` on the incoming terminals, `d.dc_supply` on the 24 V strip.
 4. Distribute through terminal strips with named, bridged runs, and give each consumer its own terminal.
 5. Wire each circuit as a path, source first: supply, protection, switching, load. Layout stands the bands in that order, with the first terminal on top and the last at the bottom.
-6. `d.layout.profile(group_ranks=...)` does not order the pages yet: `group_ranks` is not honoured until the GROUP-RANKS order lands, so blocks keep their natural order.
-7. Set `hide_unused_pins=True` to leave unwired pins of box-drawn devices off the drawings. The lists keep them.
-8. A terminal that only the parent wires is left off the unit's own pages; its table lists it.
+6. Set `hide_unused_pins=True` to leave unwired pins of box-drawn devices off the drawings. The lists keep them.
+7. A terminal that only the parent wires is left off the unit's own pages; its table lists it.
 9. Build, then read `fr.check(result)`. The last part of this page lists the findings that point at a missing item above.
 
 Take each consumer's terminal inside the consumer's own block, since a terminal joins the block it is first taken in. A terminal shared by blocks adds no marker.
 
 ## Printed sizes and grid pitch
 
-Authored numbers live on the sheet and the profile. A unit sets its own in its body, and a unit with none uses the house values. `layout-numbers.md` lists every sheet number and profile keyword with its house value and effect.
+Authored numbers live on the profile. A unit sets its own in its body, and a unit with none uses the house values. `layout-numbers.md` lists every profile keyword with its house value and effect.
 
-- **`text_height_mm`, on the profile** (see `layout-numbers.md`). A style choice: the capital height in mm (ISO 3098) of the smallest text on every page kind, 1.8 in the house profile, which takes 8 `G`. A larger role prints at its ISO size (2.5, 3.5 or 5 mm) or this height, whichever is larger. Nothing shrinks text to fit. A value past what the symbols leave room for leaves tags without a place.
-- **`min_text_height_mm`, on the profile.** This is the floor under the text, a capital height in millimetres: `Decimal("1.8")` in the house profile, the height the house `text_height_mm` prints. The floor changes no drawing. A profile that prints text under it gets one `TEXT_TOO_SMALL`.
-- **`column_gap`, on the profile** (see `layout-numbers.md`). This is spacing: grid units between columns, 48 in the house profile. Change it to give wires and tags room, not to fit a page.
 
 ```python
-def circuits(c, width_mm, text_height_mm=Decimal("1.8")):
+def circuits(c, hide):
     psu = c.device("G1", "DEMO-PSU-24")
     dc = c.dc_supply("24VDC", psu.output)
     for i in range(1, 34):
         with c.function(f"F{i}", f"Relay {i}"):
             k = c.device(f"K{i}", "DEMO-RLY-2CO-24")
             c.series(dc.plus, k.coil, dc.minus, wire=(BU, 0.75))
-    sheet = c.layout.sheet(
-        "A3 compact", width_mm=420, height_mm=297, content_x_mm=5, content_y_mm=5,
-        content_width_mm=width_mm, content_height_mm=267, frame_columns=8, frame_rows=6,
-        module_mm=Decimal("2.5"),
-    )
-    c.layout.profile(sheet=sheet, text_height_mm=text_height_mm)
+    c.layout.profile(hide_unused_pins=hide)
 
 
-for width in (410, 300):
-    codes, _ = draw(lambda c: circuits(c, width))
-    assert "TEXT_TOO_SMALL" not in codes  # fr.readability(result).pages shows what each width does to fill_percent
+for hide in (False, True):
+    draw(lambda c: circuits(c, hide))
 ```
 
 ## Which hint to use
@@ -128,11 +123,7 @@ Each hint advises the layout and invents nothing. Every name below is a method o
 
 | You want | Tool | What it does to the drawing |
 | --- | --- | --- |
-| These items in one column | `d.layout.chain(a, b, c)` | Stands them in one column, top to bottom, source first. |
-| These groups on one sheet | `d.layout.keep_together(g1, g2)` | Moves the later groups beside the first, so they share a page when their widths fit. |
 | This order | `d.layout.order(g1, g2)` | Moves `g2` after `g1`. The other groups keep their places. |
-| This group starts a new sheet | `d.layout.break_before(g)` | Starts a new page at `g`. |
-| This page title | `d.layout.page_title(thing, text)` | Prints `text` as the title of the pages that draw the block, function, device or nested unit. |
 
 `d.series` is a wiring call, not a layout hint, so it has no row.
 
@@ -144,8 +135,14 @@ def drawn(body):
     handles = {}
 
     @fr.unit(
-        "cab", revision=1, interface_version=1, date="2026-01-01", text="First", by="XX",
-        title="Cabinet", number="C-1",
+        "cab",
+        revision=1,
+        interface_version=1,
+        date="2026-01-01",
+        text="First",
+        by="XX",
+        title="Cabinet",
+        number="C-1",
     )
     def cabinet(c):
         handles.update(body(c))
@@ -174,36 +171,20 @@ def blocks(c, hint=None, count=3):
 
 
 assert drawn(blocks)[0] == [["F1", "F2", "F3"]]
-together, _ = drawn(lambda c: blocks(c, lambda hints, g: hints.keep_together(g["F1"], g["F3"])))
-assert together == [["F1", "F3", "F2"]]
 ordered, _ = drawn(lambda c: blocks(c, lambda hints, g: hints.order(g["F3"], g["F1"])))
 assert ordered == [["F2", "F3", "F1"]]
-broken, _ = drawn(lambda c: blocks(c, lambda hints, g: hints.break_before(g["F2"])))
-assert broken == [["F1"], ["F2", "F3"]]
 ```
 
 ## What overrides what
 
-The profile sets the numbers and the page order, and the hints then act on that order.
+The profile sets the numbers, and the hints set the page order.
 
-- **A sheet needs a profile.** `d.layout.sheet(...)` changes nothing until `d.layout.profile(sheet=...)` names it. A profile that leaves `sheet` out draws on the house A3 sheet.
 - **A profile reaches only its own unit.** The top design's profile does not reach a unit, and a unit with no profile of its own uses the house numbers. A unit or the top design has at most one profile, and a second one with other numbers raises `AuthorError`.
-- **A keyword left out keeps its house value.** A rank map you give replaces the house one whole.
-- **`order` beats `group_ranks`.** The ranks sort the blocks first, then each `order` hint moves blocks from that order.
-- **`keep_together` beats `order`.** It runs after the order hints, pulls its groups next to the first.
-- **`break_before` on a later group of a `keep_together` set** leaves the set unkept and reports `KEEP_TOGETHER_UNMET`. On the set's first group it changes nothing.
+- **A keyword left out** keeps its house value.
 - **Order hints that form a cycle** give the ERROR finding `ORDER_HINT_CYCLE`, which names the file and line of each hint in the cycle.
 - **A chain names a box-drawn function only at its head or its tail.** A PLC channel or a supply output stands there and anchors the path at its pin. In the middle the build raises `fr.AuthorError` that says where box-drawn functions may stand.
 
 ```python
-def compact_sheet(scope):
-    return scope.layout.sheet(
-        "A3 compact", width_mm=420, height_mm=297, content_x_mm=5, content_y_mm=5,
-        content_width_mm=300, content_height_mm=267, frame_columns=8, frame_rows=6,
-        module_mm=Decimal("2.5"),
-    )
-
-
 def numbers(c):
     dc = c.dc_supply("24VDC", c.device("G1", "DEMO-PSU-24").output)
     for i in range(1, 34):
@@ -211,36 +192,11 @@ def numbers(c):
             k = c.device(f"K{i}", "DEMO-RLY-2CO-24")
             c.series(dc.plus, k.coil, dc.minus, wire=(BU, 0.75))
 
-assert "TEXT_TOO_SMALL" not in draw(lambda c: (numbers(c), c.layout.profile(sheet=compact_sheet(c))))[0]
 
-ranked = lambda hints, g: hints.profile(group_ranks={"F3": 1, "F2": 2, "F1": 3})
+draw(lambda c: (numbers(c), c.layout.profile(hide_unused_pins=True)))
+
+ranked = lambda hints, g: hints.order(g["F3"], g["F2"], g["F1"])
 assert drawn(lambda c: blocks(c, ranked))[0] == [["F3", "F2", "F1"]]
-
-
-def ranked_then_ordered(hints, g):
-    ranked(hints, g)
-    hints.order(g["F1"], g["F3"])
-
-
-assert drawn(lambda c: blocks(c, ranked_then_ordered))[0] == [["F2", "F1", "F3"]]
-
-
-def kept_and_ordered(hints, g):
-    hints.keep_together(g["F1"], g["F3"])
-    hints.order(g["F2"], g["F3"])
-
-
-assert drawn(lambda c: blocks(c, kept_and_ordered))[0] == [["F1", "F3", "F2"]]
-
-
-def kept_and_broken(hints, g):
-    hints.keep_together(g["F1"], g["F2"])
-    hints.break_before(g["F2"])
-
-
-unkept = lambda c: blocks(c, kept_and_broken)
-assert "KEEP_TOGETHER_UNMET" in draw(lambda c: unkept(c))[0]
-assert drawn(unkept)[0] == [["F1"], ["F2", "F3"]]
 
 
 def cycle(hints, g):
@@ -248,10 +204,10 @@ def cycle(hints, g):
     hints.order(g["F2"], g["F1"])
 
 
-draw(lambda c: numbers(c), top=lambda d: d.layout.profile(sheet=compact_sheet(d)))  # the top design's profile reaches no unit
+draw(lambda c: numbers(c), top=lambda d: d.layout.profile(hide_unused_pins=True))  # the top design's profile reaches no unit
 
 try:
-    draw(lambda c: (c.layout.profile(text_height_mm=Decimal("1.8")), c.layout.profile(text_height_mm=Decimal("2.0"))))
+    draw(lambda c: (c.layout.profile(), c.layout.profile()))
 except Exception as error:
     assert type(error).__name__ == "AuthorError"
 else:
@@ -262,6 +218,4 @@ assert "ORDER_HINT_CYCLE" in draw(lambda c: blocks(c, cycle))[0]
 
 ## Readability findings
 
-- **Readability.** Two findings tell you whether the printed pages can be read. `TEXT_TOO_SMALL` says the profile prints text under `min_text_height_mm`. `TEXT_OVERLAP` says text collides with text. It is INFO: a Fransys defect, report it with the smallest model.
-
-The numbers behind them are in `fr.readability`: `readability.md`. The text height is a setting (`[font.heights]`), not a reading.
+The numbers that tell whether the printed pages can be read are in `fr.readability`: `readability.md`. The text heights are the library's fixed heights.

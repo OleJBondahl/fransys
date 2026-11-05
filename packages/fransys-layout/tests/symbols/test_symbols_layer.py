@@ -1,22 +1,32 @@
 """The symdef layer's entry points on library symbols (layout-0316 D)."""
 
+from dataclasses import replace
+from decimal import Decimal
+
 import pytest
+from diagram_models import station
 from options_fixtures import core_options
+from symdef import ReferenceCellError
 
 from electrical_symbols import LIBRARY
 from fransys_layout.core import CoreError
-from fransys_layout.core.values import Box
+from fransys_layout.core.values import Box, Size
 from fransys_layout.symbols import (
     Ask,
     LibrarySymbol,
     Shape,
     TableAsk,
+    frame_cell,
+    frame_extent,
     library_symbol,
     marker_views,
+    outline_room,
     symbol_shape,
     symbol_views,
+    text_room_on,
     with_marker,
 )
+from fransys_model.layout import default_sheet_format
 
 
 def views(symbol, orients, **kw):
@@ -30,14 +40,7 @@ def test_the_marker_box_is_measured_at_all_eight_orientations() -> None:
     assert views["R90"] != views["R0"]
     assert (
         with_marker(
-            core_options(
-                flip_turn="R180",
-                tag_stagger=True,
-                label_gap=8,
-                parallel_pitch=48,
-                driver_first=True,
-                arrow_sides=("E", "W"),
-            ),
+            core_options(),
             library_symbol(LIBRARY, "reference-marker"),
             LIBRARY,
         ).marker
@@ -74,9 +77,7 @@ def test_the_text_widens_the_slot_and_the_label_is_that_slot() -> None:
     symbol, shape = _coil()
     order = list(shape.pins)
     plain = views(symbol, ("R0",), order=order, text_slot="tag", text="K1", text_height=8)
-    long = views(
-        symbol, ("R0",), order=order, text_slot="tag", text="K1234567.12345", text_height=8
-    )
+    long = views(symbol, ("R0",), order=order, text_slot="tag", text="K1234567.12345", text_height=8)
     assert plain.label.w == shape.slots["tag"].w
     assert long.label.w > plain.label.w
     assert long.views["R0"].footprint == plain.views["R0"].footprint  # text is no footprint (R327)
@@ -114,9 +115,7 @@ def test_a_strip_row_footprint_leaves_the_text_slot_out() -> None:
 
 
 def _table(*texts: dict[str, str], at=(-56, 16)) -> TableAsk:
-    return TableAsk(
-        library_symbol(LIBRARY, "contact-row"), library_symbol(LIBRARY, "contact-head"), texts, at
-    )
+    return TableAsk(library_symbol(LIBRARY, "contact-row"), library_symbol(LIBRARY, "contact-head"), texts, at)
 
 
 def _coil_with(table: TableAsk | None, orients=("R0", "R180")):
@@ -181,3 +180,31 @@ def test_a_heading_makes_the_table_one_module_higher_and_wider_when_it_is_the_wi
 def test_a_table_without_a_heading_is_the_unheaded_table() -> None:
     cells = {"no": "13 /1.1", "nc": "21 /1.1"}
     assert _coil_with(_headed(cells, heading=None)).table == _coil_with(_table(cells)).table
+
+
+def test_the_text_room_is_the_label_height_over_one_g_rounded_up() -> None:
+    """The house label is 8 G on the house sheet; a module of 1.2 mm gives 16.46 G, which rounds up to 17 (SIZES, R857)."""
+    model, sheet = station(), default_sheet_format()
+    assert text_room_on(model, sheet, LIBRARY) == 8
+    assert text_room_on(model, replace(sheet, module_mm=Decimal("1.25")), LIBRARY) == 16
+    assert text_room_on(model, replace(sheet, module_mm=Decimal("1.2")), LIBRARY) == 17
+
+
+def test_the_frame_cell_reads_the_house_sheet_through_symdef() -> None:
+    sheet = default_sheet_format()  # 410 x 267 mm at 2.5 mm a module: 1312 x 854 G, 8 x 6 cells
+    assert frame_extent(LIBRARY, sheet) == (1312, 854)
+    assert frame_cell(LIBRARY, sheet, 0, 0) == (1, "A")
+    assert frame_cell(LIBRARY, sheet, 656, 427) == (5, "D")  # the shared edge goes to the max-side cell
+    assert frame_cell(LIBRARY, sheet, 1312, 854) == (8, "F")  # the far edge is the last cell
+
+
+def test_a_point_outside_the_content_box_has_no_frame_cell() -> None:
+    with pytest.raises(ReferenceCellError):
+        frame_cell(LIBRARY, default_sheet_format(), 1313, 0)
+
+
+def test_the_outline_room_is_the_margin_and_the_label_slot_of_the_unit_outline_symbol() -> None:
+    room = outline_room(LIBRARY)
+    assert room.margin == LIBRARY.grid.outline_margin == 4
+    assert room.label == symbol_shape(library_symbol(LIBRARY, "unit-outline"), LIBRARY).slots["label"] == Box(2, 2, 48, 8)
+    assert room.least == Size(64, 48)

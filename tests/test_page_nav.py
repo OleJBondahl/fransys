@@ -2,25 +2,26 @@
 
 The canary design (several drawing sets, cross references between pages) is built once. Every
 link is a rectangle of a page's drawing that jumps to the partner's page; nothing parses a printed
-text.
 """
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import fransys as fr
 import pypdfium2
 import pytest
 from _drawn_pages import drawn_pages
+from fransys._link_boxes import link_boxes
+from fransys._settings_library import library_of
 from pypdfium2 import raw
-from test_reader_order import _design
+from test_reader_order import _design_and_rest, _other_documents
 
-from fransys_model.derive import mm_per_division, page_destination
+from fransys_model.derive import documents, mm_per_division, page_destination
 from fransys_model.derive.grid_mm import grid_to_mm
 from fransys_model.derive.page_destination import sheet_text
 from fransys_model.derive.page_nav import reference_links
 from fransys_model.derive.sheets import sheets
 from fransys_model.layout import Page, layout_of, sheet_format_of
-from fransys_model.vocab import PageKind, documents
+from fransys_model.vocab import PageKind, aspect_nodes
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -32,33 +33,38 @@ if TYPE_CHECKING:
 @pytest.fixture(scope="module")
 def built(tmp_path_factory: pytest.TempPathFactory) -> tuple[fr.BuildResult, object]:
     root = tmp_path_factory.mktemp("nav")
-    d, cabinet = _design("a-")
+    d, cabinet, rest = _design_and_rest("a-")
     (root / "c.md").write_text("# c\n", encoding="utf-8")
     doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cabinet, cover=root / "c.md")
-    result = fr.build(d, doc)
+    result = fr.build(d, doc, *_other_documents(rest, root / "c.md"))
     return result, doc
 
 
-def links_of(model) -> dict:
+def _cabinet_document(model):
+    """The cabinet's document: the others print the lamp locations and the boards."""
+    nodes = aspect_nodes(model)
+    (record,) = (r for r in documents(model).values() if r.location and nodes[r.location].key[-1] == "C1")
+    return record
+
+
+def links_of(result) -> dict[Any, Any]:
     """Each drawn page's reference links, as the build gives the PDF."""
+    model = result.model
     known = frozenset(drawn_pages(model))
-    return {page: reference_links(model, page, known) for page in known}
+    boxes = link_boxes(model, result.drawings, library_of(result.settings))
+    return {page: reference_links(model, page, known, boxes) for page in known}
 
 
-def _all_links(model) -> list[tuple[Id[Page], ReferenceLink]]:
+def _all_links(result) -> list[tuple[Id[Page], ReferenceLink]]:
     """Each link the build kept, with the page it lies on."""
-    return [(page, link) for page, found in links_of(model).items() for link in found]
+    return [(page, link) for page, found in links_of(result).items() for link in found]
 
 
 def test_a_single_partner_label_links_its_whole_text_to_the_partners_page(built) -> None:
     model = built[0].model
     pages = layout_of(model, Page)
     drawn = drawn_pages(model)
-    page, link = next(
-        (page, link)
-        for page, link in _all_links(model)
-        if link.target != page_destination(model, pages[page])
-    )
+    page, link = next((page, link) for page, link in _all_links(built[0]) if link.target != page_destination(model, pages[page]))
     assert link.target in {page_destination(model, other) for other in pages.values()}
     (text,) = [t for t in drawn[page].texts if (t.box.x, t.box.y) == (link.x, link.y)]
     assert link.height == text.box.h
@@ -68,7 +74,7 @@ def test_a_single_partner_label_links_its_whole_text_to_the_partners_page(built)
 def test_a_partner_outside_the_pdf_or_on_the_same_page_gets_no_link(built) -> None:
     model = built[0].model
     pages = layout_of(model, Page)
-    found = _all_links(model)
+    found = _all_links(built[0])
     assert found
     here = {page: page_destination(model, pages[page]) for page in pages}
     assert not [page for page, link in found if link.target == here[page]]
@@ -82,20 +88,21 @@ def _toc(pdf: pypdfium2.PdfDocument) -> list[tuple[int, str, int]]:
 
 def _landing(pdf: pypdfium2.PdfDocument, name: str) -> int:
     dest = raw.FPDF_GetNamedDestByName(pdf.raw, name.encode("utf-8"))
-    return raw.FPDFDest_GetDestPageIndex(pdf.raw, dest)
+    index: int = int(raw.FPDFDest_GetDestPageIndex(pdf.raw, dest))
+    return index
 
 
 def _written(root: Path, cover_pages: int) -> tuple[fr.BuildResult, pypdfium2.PdfDocument]:
-    d, cabinet = _design("a-")
+    d, cabinet, rest = _design_and_rest("a-")
     # A cover taller than its page is COVER_OVERFLOW (pdf-0047): the extra pages are notes pages.
     (root / "c.md").write_text("# c\n", encoding="utf-8")
     if cover_pages:
         notes = "\n\n".join("Notes line. " * 120 for _ in range(cover_pages))
         (root / "c.notes.md").write_text(notes, encoding="utf-8")
     doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cabinet, cover=root / "c.md")
-    result = fr.build(d, doc)
+    result = fr.build(d, doc, *_other_documents(rest, root / "c.md"))
     fr.write(result, out_dir=root / "out", intermediates=root / "inter")
-    (pdf_path,) = (root / "out").glob("*.pdf")
+    (pdf_path,) = (root / "out").glob("*C1.pdf")  # the cabinet's; the other documents write theirs
     return result, pypdfium2.PdfDocument(pdf_path)
 
 
@@ -118,16 +125,11 @@ def test_the_outline_has_a_sheet_entry_per_sheet_and_no_terminals_or_pins(tmp_pa
     result, pdf = _written(tmp_path, 0)
     try:
         model = result.model
-        (record,) = documents(model).values()
-        found = sheets(model, record.id, (PageKind.SCHEMATIC,))
+        record = _cabinet_document(model)
+        found = sheets(model, record.id, (PageKind.SCHEMATIC,), ())
         entries = _sheet_entries(_toc(pdf))
-        assert [page for page, _, _ in entries] == [
-            _landing(pdf, page_destination(model, s)) for s in found
-        ]
-        assert all(
-            title.startswith(f"Sheet {sheet_text(model, s)}")
-            for (_, title, _), s in zip(entries, found, strict=True)
-        )
+        assert [page for page, _, _ in entries] == [_landing(pdf, page_destination(model, s)) for s in found]
+        assert all(title.startswith(f"Sheet {sheet_text(model, s)}") for (_, title, _), s in zip(entries, found, strict=True))
         everything = [name for _, _, names in entries for name in names]
         assert everything
         assert not [name for name in everything if ":" in name]
@@ -148,14 +150,12 @@ def test_an_item_on_two_sheets_has_an_entry_under_each_in_designation_order(tmp_
 
 
 @pytest.mark.parametrize("cover_pages", [0, 16])
-def test_the_pdf_outline_nests_designations_under_each_sheet_and_lands_on_its_page(
-    tmp_path: Path, cover_pages: int
-) -> None:
+def test_the_pdf_outline_nests_designations_under_each_sheet_and_lands_on_its_page(tmp_path: Path, cover_pages: int) -> None:
     result, pdf = _written(tmp_path, cover_pages)
     try:
         model = result.model
-        (record,) = documents(model).values()
-        found = sheets(model, record.id, (PageKind.SCHEMATIC,))
+        record = _cabinet_document(model)
+        found = sheets(model, record.id, (PageKind.SCHEMATIC,), ())
         toc = _toc(pdf)
         at = [i for i, (_, title, _) in enumerate(toc) if title.startswith("Sheet ")]
         assert len(at) == len(found)
@@ -170,7 +170,7 @@ def test_the_pdf_outline_nests_designations_under_each_sheet_and_lands_on_its_pa
         pdf.close()
 
 
-def _link_annotations(pdf: pypdfium2.PdfDocument, index: int) -> list[tuple[tuple, int]]:
+def _link_annotations(pdf: pypdfium2.PdfDocument, index: int) -> list[tuple[tuple[Any, ...], int]]:
     """Each /Link annotation of page `index` as ((left, top, right, bottom) in mm, target page)."""
     page = pdf.get_page(index)
     found = []
@@ -201,26 +201,20 @@ def test_each_reference_label_is_a_link_over_its_box_to_the_partners_sheet(tmp_p
     result, pdf = _written(tmp_path, 0)
     try:
         model = result.model
-        (record,) = documents(model).values()
-        printed = [
-            p for p in sheets(model, record.id, (PageKind.SCHEMATIC,)) if isinstance(p, Page)
-        ]
+        record = _cabinet_document(model)
+        printed = [p for p in sheets(model, record.id, (PageKind.SCHEMATIC,), ()) if isinstance(p, Page)]
         total = 0
         for page in printed:
             sheet = sheet_format_of(model, page.sheet_format)
-            expected = links_of(model)[page.id]
+            expected = links_of(result)[page.id]
             actual = _link_annotations(pdf, _landing(pdf, page_destination(model, page)))
             total += len(expected)
             got = sorted(actual)
             want = sorted(
                 (
                     (
-                        float(
-                            grid_to_mm(sheet.content_x_mm, link.x, mm_per_division(model, sheet))
-                        ),
-                        float(
-                            grid_to_mm(sheet.content_y_mm, link.y, mm_per_division(model, sheet))
-                        ),
+                        float(grid_to_mm(sheet.content_x_mm, link.x, mm_per_division(model, sheet))),
+                        float(grid_to_mm(sheet.content_y_mm, link.y, mm_per_division(model, sheet))),
                         round(
                             float(
                                 grid_to_mm(
@@ -294,6 +288,4 @@ def test_a_list_pages_designations_sit_under_that_pages_title_never_under_a_shee
     finally:
         pdf.close()
     assert _parent(toc, "-X1") == "Terminal list"
-    # the canary's only connectors at C1 are a harness's plugs, which no location document draws
-    # (pdf-0043), so it has no connector list
-    assert "Connector list" not in {title for level, title, _ in toc if level == 0}
+    assert _parent(toc, "-S1") == "Connector list"

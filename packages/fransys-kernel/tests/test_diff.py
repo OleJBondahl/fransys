@@ -27,9 +27,7 @@ def test_diff_of_a_model_with_itself_is_three_empty_tuples(thing_cls: type, orig
 
 
 @pytest.mark.parametrize("bad", [None, "model", 3])
-def test_diff_refuses_something_that_is_not_a_model(
-    bad: Any, thing_cls: type, origin: Origin
-) -> None:
+def test_diff_refuses_something_that_is_not_a_model(bad: Any, thing_cls: type, origin: Origin) -> None:
     """Either side: a `SchemaError`, not an `AttributeError`."""
     model = _model(thing_cls, origin, t1="pump")
     with pytest.raises(SchemaError, match="two Models") as excinfo:

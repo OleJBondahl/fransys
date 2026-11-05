@@ -2,15 +2,15 @@
 
 The shape of the skid's G2 block from `examples/demo-skid`: a mains breaker feeds a strip, and
 each starter runs breaker, contactor, overload and motor. Every function is wired, so today's
-engine and the core draw the same functions. The motor is given its library symbol by a
-`d.layout.symbol` hint, since `symbol_kit` has no pick for a motor on this base (KIT-FACTS).
 """
 
 import tempfile
 from pathlib import Path
 from types import SimpleNamespace
+from typing import Any
 
 import fransys as fr
+from _drawn_pages import markers_in
 from _page_drawings import page_drawings
 from fransys.colours import BK, BU
 
@@ -22,19 +22,20 @@ BUNDLE_PITCH = 8  # the wire pitch of the lanes of one bundle
 
 POWER = (BK, 1.5)
 CONTROL = (BU, 0.5)
-MOTOR_PORTS = {"U": "u", "V": "v", "W": "w", "PE": "pe"}
 
 
-def motor_feeder_case_drafts(starters: int = 3, *, control: bool = True) -> tuple:
+def motor_feeder_case_drafts(starters: int = 3, *, control: bool = True) -> tuple[Any, ...]:
     """The design and cabinet document of `starters` fan starters under one mains breaker."""
     d = fr.design("demo_parts", place="CAB")
     cab = d.location("CAB", "Cabinet")
     with d.function("G0", "Supply 24 V"):
-        x10 = d.terminal_strip("X10", "DEMO-TB-2.5", 2)
-        dc = d.dc_supply("24VDC", plus=x10[1], minus=x10[2], voltage=24)
+        n = 2 * starters + 1  # a terminal point takes one conductor (R1266): a bridged run of terminals, one per wire
+        live = d.terminal_strip("X10", "DEMO-TB-2.5", n).run("P", n, bridged=True, rail=True)
+        rail = d.terminal_strip("X11", "DEMO-TB-2.5", n).run("M", n, bridged=True, rail=True)
+        d.dc_supply("24VDC", plus=live[1], minus=rail[1], voltage=24)
     with d.function("G1", "Mains"):
         q0 = d.device("Q0", "DEMO-MCB-3P")
-        x3 = d.terminal_strip("X3", "DEMO-TB-2.5", 3 * starters)
+        x3 = d.terminal_strip("X3", "DEMO-TB-2.5-TWIN", 3 * starters)
     with d.function("G2", "Fan starters"):
         for s in range(starters):
             f = d.device(f"F{3 + s}", "DEMO-MCB-3P")
@@ -42,19 +43,17 @@ def motor_feeder_case_drafts(starters: int = 3, *, control: bool = True) -> tupl
             ol = d.device(f"F{13 + s}", "DEMO-OVERLOAD-3P")
             m = d.device(f"M{1 + s}", "DEMO-MOTOR-4KW")
             h = d.device(f"H{3 + s}", "DEMO-LAMP-24")
-            d.layout.symbol(m, "motor-3ph-pe", MOTOR_PORTS)
-            d.layout.symbol(h, "lamp", {"1": "in", "2": "out"})
             for i, (a, b) in enumerate((("1", "2"), ("3", "4"), ("5", "6"))):
                 t = x3[3 * s + i + 1]
                 src = q0.element[b] if s == 0 else x3[3 * (s - 1) + i + 1].inner
-                d.detail.wire(src, t.inner, wire=POWER)
-                d.detail.wire(t.outer, f.element[a], wire=POWER)
-                d.detail.wire(f.element[b], q.main[a], wire=POWER)
-                d.detail.wire(q.main[b], ol.main[a], wire=POWER)
-                d.detail.wire(ol.main[b], m.motor["UVW"[i]], wire=POWER)
+                d.series(src, t.inner, wire=POWER)
+                d.series(t.outer, f.element[a], wire=POWER)
+                d.series(f.element[b], q.main[a], wire=POWER)
+                d.series(q.main[b], ol.main[a], wire=POWER)
+                d.series(ol.main[b], m.motor["UVW"[i]], wire=POWER)
             if control:
-                d.series(dc.plus, ol.aux, q.aux_nc, q.coil, dc.minus, wire=CONTROL)
-                d.series(dc.plus, q.aux, h.lamp, dc.minus, wire=CONTROL)
+                d.series(live, ol.aux, q.aux_nc, q.coil, rail, wire=CONTROL)
+                d.series(live, q.aux, h.lamp, rail, wire=CONTROL)
     cover = Path(tempfile.mkdtemp()) / "cover.md"
     cover.write_text("# Cabinet\n", encoding="utf-8")
     doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover)
@@ -92,9 +91,7 @@ def feeder_counts(result) -> tuple[int, int]:
     """
     refs = crossings = 0
     for drawing in page_drawings(result).values():
-        refs += len(drawing.markers)
-        wires = [
-            SimpleNamespace(net=w.id, page=0, points=w.points, kind=w.style) for w in drawing.wires
-        ]
+        refs += len(markers_in(drawing))
+        wires = [SimpleNamespace(net=w.id, page=0, points=w.points, kind=w.style) for w in drawing.wires]
         crossings += len(crossing_points(wires, _bundles(drawing.wires)))
     return refs, crossings

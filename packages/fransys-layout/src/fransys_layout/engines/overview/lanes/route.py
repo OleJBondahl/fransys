@@ -9,9 +9,9 @@ from fransys_layout.engines.overview.lanes.corridor import LONG
 from fransys_layout.engines.overview.lanes.diagram_route import tidy
 from fransys_layout.engines.overview.lanes.labels import label_lines
 from fransys_layout.engines.overview.sheet_values import (
-    PlacedBox,
+    DiagramBox,
+    DiagramTab,
     PlacedSheet,
-    PlacedTab,
     PlacedText,
 )
 from fransys_layout.engines.overview.sizes import TRACK_PITCH, tab_reach
@@ -35,14 +35,9 @@ class Room:
     size: dict[Ident, tuple[int, int]]
 
 
-def column_xs(
-    plan: Plan, width: Mapping[Ident, int], chans: Sequence[Channel]
-) -> tuple[list[int], list[int]]:
+def column_xs(plan: Plan, width: Mapping[Ident, int], chans: Sequence[Channel]) -> tuple[list[int], list[int]]:
     """The left x of each stage column and the width of each."""
-    wide = [
-        max((width[b] for b in plan.stage if plan.stage[b] == s), default=0)
-        for s in range(plan.stages)
-    ]
+    wide = [max((width[b] for b in plan.stage if plan.stage[b] == s), default=0) for s in range(plan.stages)]
     starts = accumulate((w + c.width for w, c in zip(wide, chans, strict=True)), initial=PAGE_PAD)
     return list(starts)[:-1], wide
 
@@ -58,17 +53,13 @@ def _middle(room: Room, s: int, line: int) -> list[Point]:
     """The points of a line's runs in channel `s`, a jogged core's halves in order."""
     out: list[Point] = []
     chan = room.chans[s]
-    for _, _, top, bottom, track in sorted(
-        (r for r in chan.runs if r[0] == line), key=lambda r: r[1]
-    ):
+    for _, _, top, bottom, track in sorted((r for r in chan.runs if r[0] == line), key=lambda r: r[1]):
         x = room.xs[s] + room.wide[s] + chan.lead + track * TRACK_PITCH
         out += [Point(x=x, y=top), Point(x=x, y=bottom)]
     return out
 
 
-def line_points(
-    i: int, plan: Plan, ends: tuple[Ident, Ident], touches: tuple[Point, Point], room: Room
-) -> tuple[Point, ...]:
+def line_points(i: int, plan: Plan, ends: tuple[Ident, Ident], touches: tuple[Point, Point], room: Room) -> tuple[Point, ...]:
     """The points of line `i` from its lower-stage end `ends[0]` to the other."""
     (su, sv), (tu, tv) = (plan.stage[ends[0]], plan.stage[ends[1]]), touches
     if su == sv:
@@ -100,16 +91,12 @@ def sheet(
         )
         for b in facts.diagram.boxes
     }
-    tabs: dict[Ident, list[PlacedTab]] = {b: [] for b in rect}
+    tabs: dict[Ident, list[DiagramTab]] = {b: [] for b in rect}
     for (line, box), e in sorted(by.items(), key=lambda kv: (kv[1].y, kv[0][0])):
         if e.tab is not None:
-            tabs[box].append(
-                PlacedTab(
-                    cable=facts.diagram.lines[line].cable, side=e.side, y=e.y, text_width=e.tab
-                )
-            )
+            tabs[box].append(DiagramTab(cable=facts.diagram.lines[line].cable, side=e.side, y=e.y, text_width=e.tab))
     boxes = tuple(
-        PlacedBox(
+        DiagramBox(
             box=b.box,
             dashed=b.dashed,
             x=r.x,
@@ -135,9 +122,6 @@ def sheet(
         routed.append((ln, pts))
     lines = label_lines(routed, boxes, facts.diagram.text_height)
     heads = tuple(
-        PlacedText(
-            owner=h.owner, x=PAGE_PAD, y=head_y[n], width=h.width, height=facts.diagram.text_height
-        )
-        for n, h in enumerate(facts.heads)
+        PlacedText(owner=h.owner, x=PAGE_PAD, y=head_y[n], width=h.width, height=facts.diagram.text_height) for n, h in enumerate(facts.heads)
     )
     return PlacedSheet(number=1, boxes=boxes, lines=tuple(lines), markers=(), texts=heads)

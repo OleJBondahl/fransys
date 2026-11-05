@@ -3,20 +3,19 @@
 from typing import TYPE_CHECKING
 
 from fransys_layout.engines.cable.place import place_block
-from fransys_layout.engines.cable.read import read_blocks
-from fransys_layout.engines.cable.write import write_cables
+from fransys_layout.engines.cable.read import block_key, read_blocks
+from fransys_layout.engines.cable.values import CableLayout
 
 if TYPE_CHECKING:
-    from fransys_model.kernel import Finding, Model
+    from fransys_layout.symbols import SymbolLibrary
+    from fransys_model.kernel import Model
 
 
-def lay_out_cables(model: Model) -> tuple[Model, tuple[Finding, ...]]:
-    """Return `model` with the records of every cable block it can draw whole, and no findings.
+def lay_out_cables(model: Model, library: SymbolLibrary) -> CableLayout:
+    """Return every cable block of `model` that `drawable` admits and whose lower band routes.
 
-    Pure. One block per reading and subject that `drawable` admits and whose lower band routes;
-    any other gets none, and the pdf check stops an export that asks for one. The records are
-    page-less, in G from the block's corner, and the pass replaces only `CABLE_KINDS`.
+    Pure. Blocks stand in the reader's order; any other block is absent, and the pdf check stops
+    an export that asks for it. Each block is page-less, in G from its top-left corner.
     """
-    placed = (place_block(facts) for facts in read_blocks(model))
-    blocks = tuple(block for block in placed if block is not None)
-    return write_cables(model, blocks), ()
+    placed = (place_block(facts) for facts in read_blocks(model, library))
+    return CableLayout(blocks=frozendict({block_key(b): b for b in placed if b is not None}))

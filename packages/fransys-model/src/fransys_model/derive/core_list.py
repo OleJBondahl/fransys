@@ -5,8 +5,8 @@ lazy from fransys_model.vocab.core import Item, Unit
 
 from .cable_cores import cable_rows
 from .core_pairs import core_pair_word, drawn_pairs
+from .facts.house_settings import word
 from .harness import cable_list_rows
-from .house_settings import word
 from .open_cores import open_core_rows
 from .rows_cores import CoreListRow
 
@@ -54,8 +54,4 @@ def core_list_rows(model: Model, *, unit: Id[Unit] | None = None) -> tuple[CoreL
     Raises:
         SchemaError: `unit` is no unit, or an item has no designation.
     """
-    return tuple(
-        row
-        for listed in cable_list_rows(model, unit=unit)
-        for row in _cable_core_rows(model, listed.cable, unit)
-    )
+    return tuple(row for listed in cable_list_rows(model, unit=unit) for row in _cable_core_rows(model, listed.cable, unit))

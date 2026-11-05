@@ -16,11 +16,6 @@ def is_bridge(model: Model, conductor: Id[Conductor]) -> bool:
     return conductor_role(model, conductor).bridge
 
 
-def is_bonded(model: Model, conductor: Id[Conductor]) -> bool:
-    """Whether `conductor` bonds two terminals of a strip: a `JUMPER` or a `RAIL` (G-TERM-10)."""
-    return conductor_role(model, conductor).rail_link
-
-
 def conductor_ends(model: Model, conductor: Id[Conductor]) -> tuple[Id[Port], Id[Port]]:
     """The two ports `conductor` joins, as authored: `(a, b)`.
 

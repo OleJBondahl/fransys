@@ -28,7 +28,5 @@ def document_drawing_sets(model: Model, document: Id[Document]) -> tuple[Drawing
 
 def printed_drawing_sets(model: Model) -> tuple[DrawingSet, ...]:
     """The sets some document of `model` prints, by `number`; none that no document prints."""
-    printed = {
-        s.id: s for doc in documents(model).values() for s in document_drawing_sets(model, doc.id)
-    }
+    printed = {s.id: s for doc in documents(model).values() for s in document_drawing_sets(model, doc.id)}
     return tuple(sorted(printed.values(), key=lambda found: found.number))

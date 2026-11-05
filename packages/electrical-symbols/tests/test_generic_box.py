@@ -143,3 +143,10 @@ def test_the_kth_north_and_south_pin_of_a_half_split_box_share_one_x(count: int)
     over, under = names[:north], names[north:]
     assert [x[a] for a in over[: len(under)]] == [x[b] for b in under]
     assert x[names[1]] - x[names[0]] == box_pitch(_widths(names))
+
+
+def test_box_marking_widths_are_symdefs_widths_rounded_up_to_the_grid():
+    """Pinned to symdef's answer in the library font (CC1): ceil of the 1 M wide marking in G."""
+    from electrical_symbols import LIBRARY, box_marking_widths
+
+    assert box_marking_widths(LIBRARY, ["1", "A1", "PE", "LONGNAME", "13"]) == (5, 10, 9, 42, 10)

@@ -56,9 +56,7 @@ def box_chains(
         made = _column(comp, hops, (ends, drawn, options), series)
         if isinstance(made, str):
             names = ", ".join(sorted(comp, key=natural_key))
-            notes.append(
-                Finding("CHAIN_REFUSED", f"{names}: {made}", None, min(comp, key=natural_key))
-            )
+            notes.append(Finding("CHAIN_REFUSED", f"{names}: {made}", None, min(comp, key=natural_key)))
         else:
             lanes += made[0]
             boxes |= set(comp)
@@ -71,9 +69,7 @@ def _column(comp: Sequence[str], hops: Hops, given: Given, series: Sequence[Seri
     ends, drawn, _ = given
     tree = tree_of(comp, series)
     if tree is not None:
-        return _other_reason(comp, hops, ends) or tree_column(
-            tree, _hop_facts(comp, hops, ends, drawn), given
-        )
+        return _other_reason(comp, hops, ends) or tree_column(tree, _hop_facts(comp, hops, ends, drawn), given)
     runs = series_runs(series)
     reason = _refusal(comp, hops, (ends, runs), drawn)
     if reason is not None:
@@ -90,7 +86,7 @@ def _pair(a: str, b: str) -> Pair:
 def _hops(ends: Ends) -> Hops:
     """Box pair to the nets that join exactly those two boxes by one pin each."""
     out: Hops = defaultdict(list)
-    for net in sorted(ends, key=natural_key):
+    for net in ends:
         es = ends[net]
         syms = [e.pin.sym for e in es]
         if len(es) == PAIR and syms[0] != syms[1] and all(e.site == "boxpin" for e in es):
@@ -153,9 +149,7 @@ def _path(comp: Sequence[str], hops: Hops, runs: Runs) -> list[str]:
     return out
 
 
-def _refusal(
-    comp: Sequence[str], hops: Hops, given: tuple[Ends, Runs], drawn: Mapping[str, Sym]
-) -> str | None:
+def _refusal(comp: Sequence[str], hops: Hops, given: tuple[Ends, Runs], drawn: Mapping[str, Sym]) -> str | None:
     """Why the component is no chain of boxes, or None when it is one."""
     ends, runs = given
     near = _neighbours(comp, hops)
@@ -207,7 +201,7 @@ def _chain(path: Sequence[str], hops: Hops, ends: Ends, drawn: Mapping[str, Sym]
     out = []
     for a, b in pairwise(path):
         nets = hops[_pair(a, b)]
-        out.append(tuple(sorted(nets, key=lambda n: (_dx(n, a, ends, drawn), natural_key(n)))))
+        out.append(tuple(sorted(nets, key=lambda n: (next(p.dx for p in drawn[a].pins if p.id == pin_on(n, a, ends)), natural_key(n)))))
     return BoxChain(tuple(path), tuple(out))
 
 
@@ -221,15 +215,6 @@ def _hop_facts(comp: Sequence[str], hops: Hops, ends: Ends, drawn: Mapping[str, 
     return HopFacts(nets, faces)
 
 
-def _dx(net: str, box: str, ends: Ends, drawn: Mapping[str, Sym]) -> int:
-    pin = pin_on(net, box, ends)
-    return next(p.dx for p in drawn[box].pins if p.id == pin)
-
-
 def _without_hops(ends: Ends, boxes: AbstractSet[str], gone: AbstractSet[str]) -> Ends:
     """The nets a column draws leave the ends; a column box's other end is marked "chain"."""
-    return {
-        net: tuple(NetEnd(e.net, e.elem, e.pin, "chain") if e.pin.sym in boxes else e for e in es)
-        for net, es in ends.items()
-        if net not in gone
-    }
+    return {net: tuple(NetEnd(e.net, e.elem, e.pin, "chain") if e.pin.sym in boxes else e for e in es) for net, es in ends.items() if net not in gone}

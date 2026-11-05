@@ -1,14 +1,6 @@
-"""Field case: no two cables' block-diagram lines share a stretch of one track.
-
-The engineering shape: five connector devices, P1 to P5, joined by six cables of one core each
-(P4-P1, P2-P3, P2-P1, P5-P4, P2-P4, P1-P4); P4 and P1 are joined by two cables. The system block
-diagram draws a line per cable through the channels between its columns.
-
-The bug: two lines of different cables ran along the same coordinate over a stretch, so the
-drawing showed one line where there were two. Fixed by decision layout-0199 (LEGACY-B3 L12):
-the lines take separate tracks, and `lint/diagram.py` reports DIAGRAM_LINES_SHARE_TRACK should
-two still share one.
-"""
+"""Field case: five connector devices joined by six one-core cables, with P4 and P1 joined by two of them.
+The bug: lines of two different cables ran along the same coordinate over a stretch, so the drawing showed one line where there were two.
+Fixed by layout-0199 (LEGACY-B3 L12), the lines take separate tracks; lint/diagram.py reports DIAGRAM_LINES_SHARE_TRACK otherwise."""
 
 import tempfile
 from functools import cache
@@ -17,7 +9,8 @@ from pathlib import Path
 
 import fransys as fr
 
-from fransys_model.layout import DiagramLine, layout_of
+from electrical_symbols import LIBRARY
+from fransys_layout import DiagramLine, lay_out_diagrams
 
 _EDGES = ((4, 1), (2, 3), (2, 1), (5, 4), (2, 4), (1, 4))
 
@@ -32,15 +25,13 @@ def _lines() -> tuple[DiagramLine, ...]:
         for k, (a, b) in enumerate(_EDGES, start=1):
             d.cable(f"W{k}", "DEMO-CBL-4G1.5", length_m=2).core(1, devices[a][1], devices[b][1])
         result = fr.build(d, fr.document(fr.DocumentPreset.SYSTEM, None, cover=cover))
-    return tuple(layout_of(result.model, DiagramLine).values())
+    diagrams, _ = lay_out_diagrams(result.model, LIBRARY)
+    return tuple(line for d in diagrams.diagrams for sheet in d.sheets for line in sheet.lines)
 
 
 def _runs(line: DiagramLine) -> list[tuple[int, int, int, int]]:
     """Each run as `(x, y, to_x, to_y)` with its ends ordered."""
-    return [
-        (min(a.x, b.x), min(a.y, b.y), max(a.x, b.x), max(a.y, b.y))
-        for a, b in zip(line.points, line.points[1:], strict=False)
-    ]
+    return [(min(a.x, b.x), min(a.y, b.y), max(a.x, b.x), max(a.y, b.y)) for a, b in zip(line.points, line.points[1:], strict=False)]
 
 
 def _shared(one: tuple[int, int, int, int], other: tuple[int, int, int, int]) -> bool:

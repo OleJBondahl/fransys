@@ -7,12 +7,11 @@ from fransys_author import AuthorError
 from fransys_author.surface import design
 from fransys_author.surface._cable import Cable
 from fransys_author.surface.colours import BK, BN, BU, GNYE
+from series_parts import core_ends, open_core_at, series_library
+from test_does_not_lines import has_does_not
 
-from fransys_model.vocab import CableFacet, Conductor, ConductorKind, CoreFacet, OpenCoreFacet
+from fransys_model.vocab import CableFacet, Conductor, ConductorKind, CoreFacet
 from fransys_model.vocab import Item as ModelItem
-
-from ..equivalence.series_parts import series_library  # noqa: TID252 -- importlib mode puts tests/ on no path
-from .test_does_not_lines import has_does_not
 
 if TYPE_CHECKING:
     from fransys_author.surface import Design
@@ -28,17 +27,6 @@ def lib() -> Draft:
     return series_library()
 
 
-def _cores(d: Design) -> dict[int, frozenset[Any]]:
-    """Core number -> the two port ids its conductor joins, in no order."""
-    records = d.draft().records()
-    facets = {r.subject: r.index for r in records if isinstance(r, CoreFacet)}
-    return {
-        facets[r.id]: frozenset((r.a, r.b))
-        for r in records
-        if isinstance(r, Conductor) and r.kind is ConductorKind.CORE
-    }
-
-
 def _field(d: Design) -> tuple[Any, Any, Any]:
     """Breaker, strip and motor of the field series; the cable between strip and motor."""
     q1, m1 = d.device("Q1", "TEST-MCB-3P"), d.device("M1", "TEST-MOTOR-3P")
@@ -51,12 +39,10 @@ def test_cores_map_in_order_and_the_gnye_core_goes_to_the_pe_port(lib: Draft) ->
     q1, x1, m1 = _field(d)
     w1 = d.cable("W1", FOUR, length_m=5)
     d.series(q1.main, x1, w1, m1, wire=WIRE)
-    cores = _cores(d)
+    cores = core_ends(d)
     load = m1.load
     outer = [x1[n].outer.id for n in (1, 2, 3)]
-    assert [cores[i] for i in (1, 2, 3)] == [
-        frozenset((o, load[p].id)) for o, p in zip(outer, "UVW", strict=True)
-    ]
+    assert [cores[i] for i in (1, 2, 3)] == [frozenset((o, load[p].id)) for o, p in zip(outer, "UVW", strict=True)]
     assert cores[4] == {x1[4].outer.id, load["PE"].id}
 
 
@@ -64,7 +50,7 @@ def test_gnye_core_goes_to_the_pe_port(lib: Draft) -> None:
     d = design(lib, place="C1")
     q1, x1, m1 = _field(d)
     d.series(q1.main, x1, d.cable("W1", FOUR), m1, wire=WIRE)
-    cores = _cores(d)
+    cores = core_ends(d)
     pe = m1.load["PE"].id
     assert [i for i, ids in cores.items() if pe in ids] == [4]
     assert all(pe not in ids for i, ids in cores.items() if i != 4)
@@ -96,7 +82,7 @@ def test_a_terminal_means_its_outer_port(lib: Draft) -> None:
     d = design(lib)
     m1, x1 = d.device("M1", "TEST-MOTOR-3P"), d.terminal_strip("X1", "TEST-TERM")
     d.cable("W1", THREE).core(BU, x1[1], m1.load["V"])
-    assert _cores(d)[2] == {x1[1].outer.id, m1.load["V"].id}
+    assert core_ends(d)[2] == {x1[1].outer.id, m1.load["V"].id}
 
 
 def test_a_colour_twice_lists_the_numbers_and_a_missing_one_lists_the_colours(lib: Draft) -> None:
@@ -137,18 +123,13 @@ def test_a_prefixed_tag_and_a_part_without_a_cable_product_raise(lib: Draft) -> 
         design(lib).cable("W1", "TEST-MOTOR-3P")
 
 
-def _open_at(d: Design) -> dict[int, Any]:
-    """Open core number -> the port it lands on."""
-    return {r.index: r.at for r in d.draft().records() if isinstance(r, OpenCoreFacet)}
-
-
 def test_no_pe_part_on_the_strip_earths_the_cores_near_end(lib: Draft) -> None:
     d = design(lib)
     q1, m1 = d.device("Q1", "TEST-MCB-3P"), d.device("M1", "TEST-MOTOR-3P")
     x1 = d.terminal_strip("X1", "TEST-TERM")
     d.series(q1.main, x1, d.cable("W1", FOUR), m1, wire=WIRE)
-    assert sorted(_cores(d)) == [1, 2, 3]
-    assert list(_open_at(d)) == [4]
+    assert sorted(core_ends(d)) == [1, 2, 3]
+    assert list(open_core_at(d)) == [4]
     assert len(d._carried) == 1
 
 
@@ -158,14 +139,14 @@ def test_a_gnye_core_with_a_neighbour_that_has_no_pe_earths_the_cores_near_end(
     d = design(lib)
     m1, k1 = d.device("M1", "TEST-MOTOR-3P"), d.device("K1", "TEST-KM-3P")
     d.series(k1.main, d.cable("W1", FOUR), m1, wire=WIRE)
-    assert list(_open_at(d)) == [4]
+    assert list(open_core_at(d)) == [4]
 
 
 def test_no_pe_port_leaves_the_gnye_core_spare(lib: Draft) -> None:
     d = design(lib)
     q1, k1 = d.device("Q1", "TEST-MCB-3P"), d.device("K1", "TEST-KM-3P")
     d.series(q1.main, d.cable("W1", FOUR), k1.main, wire=WIRE)
-    assert sorted(_cores(d)) == [1, 2, 3]
+    assert sorted(core_ends(d)) == [1, 2, 3]
 
 
 def test_fewer_cores_than_poles_raises(lib: Draft) -> None:
@@ -218,11 +199,9 @@ def test_a_strip_after_a_cable_is_entered_from_its_field_side(lib: Draft) -> Non
     q1 = d.device("Q1", "TEST-MCB-3P")
     x1, x2 = d.terminal_strip("X1", "TEST-TERM"), d.terminal_strip("X2", "TEST-TERM")
     d.series(q1.main, x1, d.cable("W1", FOUR), x2, wire=WIRE)
-    cores = _cores(d)
+    cores = core_ends(d)
     assert cores[1] == {x1[1].outer.id, x2[1].outer.id}
-    wires = [
-        r for r in d.draft().records() if isinstance(r, Conductor) and r.kind is ConductorKind.WIRE
-    ]
+    wires = [r for r in d.draft().records() if isinstance(r, Conductor) and r.kind is ConductorKind.WIRE]
     assert {frozenset((r.a, r.b)) for r in wires} >= {frozenset((q1.main[2].id, x1[1].inner.id))}
 
 

@@ -2,12 +2,6 @@
 
 Every device is an item `key` with one function `f` (builders in `current_plant`). A chain is
 read back as a set of positions, each a name (the item keys of its functions, "plug+sock" for a
-mate) with its bounds, so neither the order of the positions nor the end a chain is read from
-matters. The expected values are written by hand from the spec's law (a limit bounds a device
-when every loop through it that holds a source passes the limit, the outside being one node that
-holds a source), never copied from the output. A chain is a block: positions any two of which
-lie on a common loop. A string ends at external items, so that the outside closes its loop; a
-real dead end has no loop and no bound.
 """
 
 import dataclasses
@@ -28,9 +22,9 @@ from rating_plant import rail, supply
 from fransys_model.derive import current_chains
 from fransys_model.derive.facts.current import states as current_states
 from fransys_model.derive.facts.current.graph import Wire
+from fransys_model.elecdef import Current
 from fransys_model.kernel import Id, make_id
 from fransys_model.vocab.core import Function, Item, Port
-from fransys_model.vocab.enums import Current
 from fransys_model.vocab.tables import functions
 
 if TYPE_CHECKING:
@@ -43,23 +37,6 @@ _Chain = frozenset[_Position]
 
 def _name(model: Model, function: Id[Function], prefix: str = "") -> str:
     return functions(model)[function].key[0].removeprefix(prefix)
-
-
-def _read(model: Model, prefix: str = "") -> set[_Chain]:
-    """Every chain of `model` as a set of (position name, its bounds); `prefix` is dropped."""
-    return {
-        frozenset(
-            (
-                "+".join(sorted(_name(model, f, prefix) for f in position.functions)),
-                tuple(
-                    (b.kind.value, str(b.value), _name(model, b.by, prefix), b.role.value)
-                    for b in position.bounds
-                ),
-            )
-            for position in chain.positions
-        )
-        for chain in current_chains(model)
-    }
 
 
 _POLES = ("K1", "F1", "S", "F2", "K2")
@@ -137,9 +114,7 @@ def _tag(plant: Plant, key: str, tag: str) -> None:
 
 
 @pytest.mark.parametrize("low_on_left", [True, False])
-def test_a_chain_with_no_ranked_end_starts_at_the_lower_designation_text(
-    *, low_on_left: bool
-) -> None:
+def test_a_chain_with_no_ranked_end_starts_at_the_lower_designation_text(*, low_on_left: bool) -> None:
     """No end carries a ranked potential: the end device printed `-A1` comes before `-A2`."""
     plant = Plant()
     _line(plant, _named_end(plant, "TA", "-X1"), _named_end(plant, "TB", "-X2"))

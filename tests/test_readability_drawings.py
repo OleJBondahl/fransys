@@ -1,6 +1,7 @@
 """`fr.readability` counts the build's `BuildResult.drawings`, laying nothing out (R218, R255)."""
 
 import dataclasses
+from typing import Any
 
 import fransys as fr
 from _motor_feeder_case import motor_feeder_case_drafts
@@ -10,7 +11,7 @@ from fransys_model.layout import DrawingSet, Page, layout_of
 from fransys_model.vocab.tables import units
 
 
-def _unit_of_each_page(result: fr.BuildResult) -> dict:
+def _unit_of_each_page(result: fr.BuildResult) -> dict[Any, Any]:
     sets = layout_of(result.model, DrawingSet)
     return {p.id: set_unit(sets[p.drawing_set]) for p in layout_of(result.model, Page).values()}
 
@@ -44,7 +45,5 @@ def test_a_page_of_a_unit_reads_that_unit_not_none() -> None:
     result = _build(in_unit=True, nested=True)
     rows = fr.readability(result).pages
     assert rows
-    (u1,) = (
-        u.id for u in units(result.model).values() if unit_release(result.model, u.id).name == "u1"
-    )
+    (u1,) = (u.id for u in units(result.model).values() if unit_release(result.model, u.id).name == "u1")
     assert {row.unit for row in rows} == {u1}

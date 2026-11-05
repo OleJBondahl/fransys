@@ -17,10 +17,7 @@ def test_child_items_are_the_items_whose_parent_is_the_coil_in_id_order() -> Non
     plant.item("lamp", part=plant.part("L"))
     model = plant.model()
     assert sum(1 for item in items(model).values() if item.parent == coil) == 2
-    assert child_items(model, coil) == (
-        make_id(Item, ("contact-block-a",)),
-        make_id(Item, ("contact-block-b",)),
-    )
+    assert child_items(model, coil) == tuple(sorted((make_id(Item, ("contact-block-a",)), make_id(Item, ("contact-block-b",)))))
     assert block_a == make_id(Item, ("contact-block-a",))
     assert block_b == make_id(Item, ("contact-block-b",))
 

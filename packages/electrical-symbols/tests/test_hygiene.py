@@ -50,12 +50,7 @@ def phrases(words):
 
 def scan(files, pattern, exempt=()):
     """`path:line: match` for every match of the pattern in the files that are not exempt."""
-    return [
-        f"{path}:{text.count('\n', 0, m.start()) + 1}: {m.group()}"
-        for path, text in files
-        if path not in exempt
-        for m in pattern.finditer(text)
-    ]
+    return [f"{path}:{text.count('\n', 0, m.start()) + 1}: {m.group()}" for path, text in files if path not in exempt for m in pattern.finditer(text)]
 
 
 def id_problems(files):
@@ -137,9 +132,7 @@ def test_id_check_fires_on_an_old_style_id(tmp_path):
     scratch.write_text(f'reference = {{ number = "{OLD_ID}" }}\n', encoding="utf-8")
     files = [("scratch.toml", scratch.read_text(encoding="utf-8"))]
     assert id_problems(files) == [f"scratch.toml:1: {OLD_ID}"]
-    assert id_problems([("symbols/fuse.toml", f"a\nb {OLD_ID}0\n")]) == [
-        f"symbols/fuse.toml:2: {OLD_ID}"
-    ]
+    assert id_problems([("symbols/fuse.toml", f"a\nb {OLD_ID}0\n")]) == [f"symbols/fuse.toml:2: {OLD_ID}"]
     assert id_problems([("symbols/fuse.toml", "number = 'S1234'\nid = 's12345'\n")]) == []
 
 
@@ -193,9 +186,7 @@ def test_sourcing_check_fires_on_each_marker(marker):
 
 
 def test_sourcing_check_allows_the_svg_namespace_and_the_exempt_files():
-    assert (
-        sourcing_problems([("build/svg/x.svg", '<svg xmlns="http://www.w3.org/2000/svg">')]) == []
-    )
+    assert sourcing_problems([("build/svg/x.svg", '<svg xmlns="http://www.w3.org/2000/svg">')]) == []
     assert sourcing_problems([("pyproject.toml", "https://github.com/other/repo.git")]) != []
     for path in SOURCING_EXEMPT:
         assert sourcing_problems([(path, "a subscription")]) == []

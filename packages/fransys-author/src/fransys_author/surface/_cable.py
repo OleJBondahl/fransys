@@ -1,16 +1,14 @@
 """Surface mixin for cables: `cable` and the `Cable` handle with its cores ."""
 
 from decimal import Decimal, InvalidOperation
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 lazy from types import EllipsisType
 
 from fransys_author.errors import AuthorError
 from fransys_author.handles import Port, Terminal
-from fransys_author.surface._bar import take_screw
 from fransys_author.surface._carry import earth_pin, element_name, refuse_carried
 from fransys_author.surface._device import part_mpn
-from fransys_author.surface._handles import Fn
-from fransys_author.surface._pairing import Ends, label_of, pair
+from fransys_author.surface._pairing import Ends, SeriesBridge, label_of, pair
 from fransys_author.surface._parent import cable_parent_item
 from fransys_author.surface._strip import TerminalStrip
 from fransys_author.surface._tags import floating_name
@@ -46,19 +44,17 @@ def _length_mm(length_m: float | str | Decimal | None) -> int | None:
     return int(mm)
 
 
-def _outer(end: Port | Terminal | TerminalStrip | Fn, design: Design | None = None) -> Port:
+def _outer(end: Port | Terminal | TerminalStrip, design: Design | None = None) -> Port:
     """A terminal stands for its field side, `.outer`: a cable core goes to the field.
 
     A strip or run stands for its next free terminal, the step `d.series` takes.
     """
-    if isinstance(end, Fn):
-        return take_screw(design, end)
     if isinstance(end, TerminalStrip):
         end = take(end, design, 1)[0]
     return end.outer if isinstance(end, Terminal) else end
 
 
-class Cable:
+class Cable(SeriesBridge):
     """One cable: `W1.core(BN, a, b)` wires a core by colour or number; a series lands it.
 
     Does not guess a core: a doubled or missing colour raises and lists the candidates.
@@ -91,7 +87,7 @@ class Cable:
     def _refuse_pe(self, index: int, ends: tuple[Port, Port]) -> None:
         """Only the GNYE core may land on a PE-role port."""
         known = not cores_past_product(len(self._colours), index)
-        if known and core_on_pe_not_gnye(self._colours[index - 1], [p.role for p in ends]):
+        if known and core_on_pe_not_gnye(self._colours[index - 1], [p.pin_role for p in ends]):
             msg = f"core {index} is {self._colours[index - 1]}: the PE core is GNYE (IEC 60204-1)"
             raise AuthorError(msg)
 
@@ -113,8 +109,8 @@ class Cable:
     def core(
         self,
         which: str | int,
-        a: Port | Terminal | TerminalStrip | Fn,
-        b: Port | Terminal | TerminalStrip | Fn | None = None,
+        a: Port | Terminal | TerminalStrip,
+        b: Port | Terminal | TerminalStrip | None = None,
     ) -> None:
         """Detail: wire core `which` (a colour or a 1-based number) between `a` and `b`.
 
@@ -131,16 +127,14 @@ class Cable:
         self._claim(index)
         self._cable.core(index, *ends)
 
-    def _screen_end(self, index: int, a: Port | Terminal | TerminalStrip | Fn) -> None:
+    def _screen_end(self, index: int, a: Port | Terminal | TerminalStrip) -> None:
         if self._colours[index - 1] != SH:
             msg = f"{self._label} core {index} is not SH: park a spare with spare(..., at=)"
             raise AuthorError(msg)
         self._claim(index)
         self._cable.open_core(index, _outer(a, self._design))
 
-    def spare(
-        self, *cores: str | int, at: Port | Terminal | TerminalStrip | Fn | None = None
-    ) -> None:
+    def spare(self, *cores: str | int, at: Port | Terminal | TerminalStrip | None = None) -> None:
         """Core: mark cores spare: `spare(GY)`, `spare(BK, at=x1[7])`, or `spare()`.
 
         `spare()` marks every core not wired or marked so far, so wire first. `at=` parks one
@@ -150,18 +144,13 @@ class Cable:
         if at is not None and len(cores) != 1:
             msg = f"{self._label} spare(at=) takes exactly one core, got {len(cores)}"
             raise AuthorError(msg)
-        indexes = [self._index(c) for c in cores] or [
-            i for i in range(1, len(self._colours) + 1) if i not in self._used
-        ]
+        indexes = [self._index(c) for c in cores] or [i for i in range(1, len(self._colours) + 1) if i not in self._used]
         if at is not None and self._colours[indexes[0] - 1] == SH:
             msg = f"{self._label} core {indexes[0]} is SH: earth it with core(which, a)"
             raise AuthorError(msg)
         for index in indexes:
             self._claim(index)
             self._cable.open_core(index, None if at is None else _outer(at, self._design))
-
-    def _series_width(self) -> None:
-        """A cable sets no width: its neighbours do."""
 
     def _pe_end(self, design: Design, element: object, ends: Ends) -> Port | None:
         """The PE port `element` offers a protective core, `None` when it offers none."""
@@ -174,10 +163,7 @@ class Cable:
     @staticmethod
     def _offers_pe(*sides: _Side) -> bool:
         """Whether a neighbour has a PE port or a PE terminal for a protective core."""
-        return any(
-            ends.pe is not None or (isinstance(element, TerminalStrip) and element._pe_mpn)
-            for element, ends in sides
-        )
+        return any(ends.pe is not None or (isinstance(element, TerminalStrip) and element._pe_mpn) for element, ends in sides)
 
     def _land_pe(self, design: Design, pe_core: int | None, sides: tuple[_Side, _Side]) -> None:
         """Land the GNYE core on a neighbour's PE port; else mark it spare (CC4, author-0044).
@@ -202,9 +188,7 @@ class Cable:
         self._carry(design, sides, found, series)
 
     @staticmethod
-    def _carry(
-        design: Design, sides: tuple[_Side, _Side], found: list[Port | None], series: str
-    ) -> None:
+    def _carry(design: Design, sides: tuple[_Side, _Side], found: list[Port | None], series: str) -> None:
         """Remember each load PE port the core landed on, so a later wire there is refused."""
         for (element, ends), port in zip(sides, found, strict=True):
             if ends.pe is not None and port is not None:
@@ -226,19 +210,15 @@ class Cable:
         """Wire each pair on the next free core outside `taken`, or refuse when too few remain."""
         free = len(self._colours) - len(taken)
         if free < len(pairs):
-            msg = (
-                f"{self._label} has {free} free cores for {len(pairs)} poles: "
-                "use a cable with more cores"
-            )
+            msg = f"{self._label} has {free} free cores for {len(pairs)} poles: use a cable with more cores"
             raise AuthorError(msg)
         for a, b in pairs:
             index = lowest_free(taken)
             taken.add(index)
             self.core(index, a, b)
 
-    def _series_between(
-        self, design: Design, before: _Side, after: _Side, series: str = "a series"
-    ) -> None:
+    @override
+    def _series_between(self, design: Design, before: _Side, after: _Side, series: str = "a series") -> None:
         """Core i joins `before`'s load i to `after`'s line i, in core order without GNYE.
 
         Each pass of a cable takes its next free cores, so a return leg takes the next core.
@@ -258,7 +238,7 @@ class Cable:
 class Cables:
     """The `cable` call of `Design`."""
 
-    def cable(  # noqa: PLR0913 -- the call's own spec signature, keyword-only facts
+    def cable(  # noqa: PLR0913 -- the call's own spec signature, keyword-only facts [public keyword API kept, decision 0444]
         self: "Design",
         tag: str | None,
         part: str | type[Device],

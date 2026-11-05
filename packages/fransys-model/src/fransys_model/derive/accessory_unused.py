@@ -12,9 +12,7 @@ def _items_declared_unused(model: Model) -> frozenset[Id[Item]]:
     """Every item with a function whose every function carries an `UnusedBoundary`."""
     declared = {unused.function for unused in unused_boundaries(model).values()}
     by_item = build_indexes(model).functions_by_item
-    return frozenset(
-        item for item, owned in by_item.items() if owned and all(f in declared for f in owned)
-    )
+    return frozenset(item for item, owned in by_item.items() if owned and all(f in declared for f in owned))
 
 
 def declares_all_unused(model: Model, item: Id[Item]) -> bool:

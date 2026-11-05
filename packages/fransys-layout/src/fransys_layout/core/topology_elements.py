@@ -4,14 +4,14 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
-lazy from collections.abc import Set as AbstractSet
 
 from .keys import natural_key
 from .values import Net, Pin, PinRef, PlacementProblem
 lazy from .sym_values import Sym
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping, Sequence
+    from collections.abc import Collection, Mapping, Sequence
+    from collections.abc import Set as AbstractSet
 
 
 @dataclass(frozen=True, slots=True)
@@ -40,7 +40,7 @@ def is_free_sided(sym: Sym) -> bool:
     return len(sym.nodes) == 1 and len(sym.pins) > 1
 
 
-def wired_pins(problem: PlacementProblem) -> dict[PinRef, str]:
+def netted_pins(problem: PlacementProblem) -> dict[PinRef, str]:
     """Pin to net, for every net it is given: a net end alone on its symbol set is a net end too."""
     return {ref: net.id for net in problem.nets for ref in net.pins}
 
@@ -78,10 +78,11 @@ def _poles_and_singles(sym: Sym, pins: Sequence[Pin]) -> tuple[Elem, ...]:
     return tuple(out)
 
 
-def net_ends(
-    net: Net, elem_of_pin: Mapping[PinRef, Elem], syms: Mapping[str, Sym]
-) -> tuple[NetEnd, ...]:
-    """The ends of one wiring net; an element with both pins on it is one through end."""
+def net_ends(net: Net, elem_of_pin: Mapping[PinRef, Elem], syms: Mapping[str, Sym], joined: Collection[frozenset[PinRef]]) -> tuple[NetEnd, ...]:
+    """The ends of one wiring net; a free element, or a pole whose pins a link joins, with both pins on it is one through end.
+
+    An unlinked pole with both pins on the net is a short: each pin is its own end (R1580).
+    """
     seen: set[str] = set()
     out: list[NetEnd] = []
     on_net = {r for r in net.pins if r.sym in syms}
@@ -90,19 +91,26 @@ def net_ends(
             out.append(NetEnd(net.id, None, ref, "boxpin"))
             continue
         elem = elem_of_pin.get(ref)
-        if elem is None or elem.key in seen:
+        folds = elem is not None and _folds(elem, on_net, joined)
+        if elem is None or (elem.key in seen and (folds or elem.form == "free")):
             continue
         seen.add(elem.key)
-        role = _role(elem, ref, on_net, syms[ref.sym], cut=ref in {c.pin for c in net.cut})
+        role = _role(elem, ref, syms[ref.sym], folds=folds, cut=ref in {c.pin for c in net.cut})
         out.append(NetEnd(net.id, elem.key, ref, role))
     return tuple(out)
 
 
-def _role(elem: Elem, ref: PinRef, on_net: AbstractSet[PinRef], sym: Sym, *, cut: bool) -> str:
-    """A free element is a through end; one whose net continues outside the set ends at its pin."""
-    pair = (elem.n_pin, elem.s_pin)
-    both = all(p is not None and PinRef(ref.sym, p) in on_net for p in pair)
-    if both or (elem.form == "free" and not cut):
+def _folds(elem: Elem, on_net: AbstractSet[PinRef], joined: Collection[frozenset[PinRef]]) -> bool:
+    """Both pins of the element are on the net and the element is free or a link joins them."""
+    if elem.n_pin is None or elem.s_pin is None:
+        return False
+    pair = frozenset((PinRef(elem.sym, elem.n_pin), PinRef(elem.sym, elem.s_pin)))
+    return pair <= on_net and (elem.form == "free" or pair in joined)
+
+
+def _role(elem: Elem, ref: PinRef, sym: Sym, *, folds: bool, cut: bool) -> str:
+    """A folded element is a through end, so is a free one whose net stays in the set; the rest end at their pin."""
+    if folds or (elem.form == "free" and not cut):
         return "through"
     side = next(p.side for p in sym.pins if p.id == ref.pin)
     if side == "N":

@@ -2,20 +2,14 @@
 
 The consumer imports only `fransys`. Every name below is one `fr.derive` exports at its top
 level: the table accessors (`items`, `functions`, `ports`, `nets`, `conductors`, `placements`,
-`aspect_nodes`, `units`, `boundaries`), the enums and the query `boundary`. No
-`fr.derive.<submodule>` attribute is reached (a type checker cannot see a submodule that nothing
-imported), no ignore comment is needed, and an id is only ever a key the tables returned.
-
-Built through the facade from `examples/demo-parts`: two nested units `outer` and `inner`, two
-locations, two groups, a strip terminal, two relays, two wires, one declared net, and
-`inner.boundary(terminal)`, so that every table holds records.
 """
+# NET_UNREALISED was invalid test input: a wire now realises N24 (FIXTURE-VALID).
 
 from typing import Any
 
 import fransys as fr
-import fransys_author
 import pytest
+from fransys_author.design import Design
 
 _PROJECT: dict[str, Any] = {
     "title": "Read surface",
@@ -30,14 +24,12 @@ _PROJECT: dict[str, Any] = {
 def result() -> fr.BuildResult:
     """The design of the module docstring, built through the facade."""
     parts = fr.parts("demo_parts")
-    d = fransys_author.Design(parts)
+    d = Design(parts)
     d.project(**_PROJECT)
     d.revision(1, date="2026-09-25", text="First issue", created="XX")
     outer = d.scope("outer").unit("outer", revision=1, interface="1")
     outer.revision(1, date="2026-01-01", text="First release", created="XX")
-    inner = outer.scope("in", at=outer.location("BOX", "Box")).unit(
-        "inner", revision=1, interface="1"
-    )
+    inner = outer.scope("in", at=outer.location("BOX", "Box")).unit("inner", revision=1, interface="1")
     inner.revision(1, date="2026-01-01", text="First release", created="XX")
     field = inner.location("FIELD", "Field side")
     group_a, group_b = inner.group("GA", "Group A"), inner.group("GB", "Group B")
@@ -47,8 +39,8 @@ def result() -> fr.BuildResult:
     wire = inner.wiring(colour="BU", gauge="0.5")
     wire(ka.fn("coil")["A1"], terminal.function["external"])
     wire(k1.fn("coil")["A1"], terminal.inner)
+    wire(ka.fn("coil")["A2"], k1.fn("coil")["A2"])
     inner.net("N24", ka.fn("coil")["A2"], k1.fn("coil")["A2"], cls="power", potential="24V")
-    inner.break_before(group_b)
     inner.boundary(terminal)
     return fr.build(parts, d.draft())
 
@@ -72,7 +64,7 @@ def test_every_table_is_non_empty(result: fr.BuildResult) -> None:
         "functions": 7,
         "ports": 18,
         "nets": 1,
-        "conductors": 2,
+        "conductors": 3,
         "placements": 6,
         "aspect_nodes": 4,
         "units": 2,
@@ -103,13 +95,11 @@ def test_ports_of_a_function(result: fr.BuildResult) -> None:
     model = result.model
     functions = fr.derive.functions(model)
     ports = fr.derive.ports(model)
-    (terminal_id,) = (
-        fn_id for fn_id, fn in functions.items() if fn.kind is fr.derive.FunctionKind.TERMINAL
-    )
-    roles = {port.name: port.role for port in ports.values() if port.function == terminal_id}
+    (terminal_id,) = (fn_id for fn_id, fn in functions.items() if fn.kind is fr.derive.FunctionKind.TERMINAL)
+    roles = {port.name: port.boundary for port in ports.values() if port.function == terminal_id}
     assert roles == {
-        "external": fr.derive.PortRole.EXTERNAL,
-        "internal": fr.derive.PortRole.INTERNAL,
+        "external": fr.derive.PortBoundary.EXTERNAL,
+        "internal": fr.derive.PortBoundary.INTERNAL,
     }
     assert all(port.function in functions for port in ports.values())
 
@@ -129,7 +119,7 @@ def test_nets_resolve_in_ports(result: fr.BuildResult) -> None:
 
 
 def test_conductors_join_ports(result: fr.BuildResult) -> None:
-    """Both wires are `WIRE` conductors whose ends are ids in the ports table."""
+    """All wires are `WIRE` conductors whose ends are ids in the ports table."""
     model = result.model
     ports = fr.derive.ports(model)
     conductors = fr.derive.conductors(model).values()
@@ -137,6 +127,7 @@ def test_conductors_join_ports(result: fr.BuildResult) -> None:
     assert sorted(sorted((ports[c.a].name, ports[c.b].name)) for c in conductors) == [
         ["A1", "external"],
         ["A1", "internal"],
+        ["A2", "A2"],
     ]
 
 

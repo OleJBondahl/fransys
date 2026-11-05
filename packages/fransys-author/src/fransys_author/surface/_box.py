@@ -12,9 +12,7 @@ if TYPE_CHECKING:
     from fransys_author.handles import Item
 
 
-def check_box(
-    part: object, *, tag: str | None, external: bool, pins: tuple[str, ...] | None
-) -> None:
+def check_box(part: object, *, tag: str | None, external: bool, pins: tuple[str, ...] | None) -> None:
     """Raise `AuthorError` unless `part` and `pins` agree: `None` needs pins, a part has its own."""
     if part is not None:
         if pins is not None:

@@ -1,14 +1,8 @@
 """The unit matrix on the units worked example (OVERVIEW O7, model-0197)."""
 
-import sys
-from pathlib import Path
-
 import fransys as fr
 import fransys_parts
 from _model_build_cover import system_document
-
-# `--import-mode=importlib` (root pyproject.toml) never puts `tests/` on `sys.path`.
-sys.path.insert(0, str(Path(__file__).resolve().parent))
 from test_units_worked_example import _system_design
 
 from fransys_model.derive import field_devices, printed_designation, unit_matrix

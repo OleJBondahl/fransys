@@ -91,18 +91,14 @@ _ACCESSORS: list[tuple[Callable[[Model], Any], str]] = [
 
 
 @pytest.mark.parametrize(("accessor", "kind"), _ACCESSORS, ids=[kind for _, kind in _ACCESSORS])
-def test_an_accessor_returns_the_models_own_table_of_its_kind(
-    accessor: Callable[[Model], Any], kind: str
-) -> None:
+def test_an_accessor_returns_the_models_own_table_of_its_kind(accessor: Callable[[Model], Any], kind: str) -> None:
     """Nothing is copied, and each accessor reads the kind it is named for."""
     model = core_model()
     assert accessor(model) is model.tables[kind]
 
 
 @pytest.mark.parametrize(("accessor", "kind"), _ACCESSORS, ids=[kind for _, kind in _ACCESSORS])
-def test_an_accessor_keys_every_record_by_its_own_id(
-    accessor: Callable[[Model], Any], kind: str
-) -> None:
+def test_an_accessor_keys_every_record_by_its_own_id(accessor: Callable[[Model], Any], kind: str) -> None:
     """The key is the record's `id`, and the record is of the accessor's kind."""
     table = accessor(core_model())
     assert table
@@ -112,9 +108,7 @@ def test_an_accessor_keys_every_record_by_its_own_id(
 
 
 @pytest.mark.parametrize(("accessor", "kind"), _ACCESSORS, ids=[kind for _, kind in _ACCESSORS])
-def test_an_accessor_returns_an_empty_table_for_a_model_without_that_kind(
-    accessor: Callable[[Model], Any], kind: str
-) -> None:
+def test_an_accessor_returns_an_empty_table_for_a_model_without_that_kind(accessor: Callable[[Model], Any], kind: str) -> None:
     """No `KeyError` for a kind that has no records yet."""
     empty = freeze(Draft())
     assert accessor(empty) == {}
@@ -124,9 +118,7 @@ def test_an_accessor_returns_an_empty_table_for_a_model_without_that_kind(
 def test_facets_of_returns_the_facets_keyed_by_their_own_id() -> None:
     """Keyed by the facet's id, so two facets of one subject would not overwrite each other."""
     model = core_model()
-    (relay,) = (
-        item for item in items(model).values() if own_designation_or_none(model, item) == "-K1"
-    )
+    (relay,) = (item for item in items(model).values() if own_designation_or_none(model, item) == "-K1")
     facet = TerminalFacet(
         id=make_id(TerminalFacet, ("plant", "k1", "terminal")),
         key=("plant", "k1", "terminal"),
@@ -134,9 +126,7 @@ def test_facets_of_returns_the_facets_keyed_by_their_own_id() -> None:
         group="L1",
         index=0,
     )
-    with_facet = evolve(
-        model, put=(facet,), origin=Origin(file="test_tables.py", line=1, note="facet")
-    )
+    with_facet = evolve(model, put=(facet,), origin=Origin(file="test_tables.py", line=1, note="facet"))
     assert facets_of(with_facet, TerminalFacet) == {facet.id: facet}
     assert facets_of(model, TerminalFacet) == {}
 
@@ -187,9 +177,7 @@ def test_kind_of_refuses_something_that_is_not_a_class(not_a_class: Any) -> None
 def test_facet_subject_reads_the_field_the_kind_declared() -> None:
     """The id a facet describes, whatever the kind calls that field."""
     subject = make_id(Item, ("plant", "x"))
-    terminal = TerminalFacet(
-        id=make_id(TerminalFacet, ("t",)), key=("t",), subject=subject, group="L1", index=1
-    )
+    terminal = TerminalFacet(id=make_id(TerminalFacet, ("t",)), key=("t",), subject=subject, group="L1", index=1)
     assert facet_subject(terminal) is subject
     part = relay_part_bundle().part.id
     supply = SupplyFacet(

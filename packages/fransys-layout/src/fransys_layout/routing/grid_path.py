@@ -81,9 +81,7 @@ class _Search:
         """`step_admitted`, asked once per step in this call (the obstacles do not change)."""
         key = (here, cell)
         if key not in self.admitted:
-            self.admitted[key] = step_admitted(
-                here, cell, self.obstacles, self.ends
-            ) and not self._along(here, cell)
+            self.admitted[key] = step_admitted(here, cell, self.obstacles, self.ends) and not self._along(here, cell)
         return self.admitted[key]
 
     def _along(self, here: Cell, cell: Cell) -> bool:
@@ -151,9 +149,7 @@ def _optimal_cost(search: _Search) -> int | None:
         for after, price in search.moves(state, cost):
             if price < best.get(after, price + 1):
                 best[after] = price
-                heapq.heappush(
-                    heap, (price + _manhattan(after[0], goal), price, *after[0], _RANK[after[1]])
-                )
+                heapq.heappush(heap, (price + _manhattan(after[0], goal), price, *after[0], _RANK[after[1]]))
     return None
 
 

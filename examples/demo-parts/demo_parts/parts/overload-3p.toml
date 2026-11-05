@@ -1,4 +1,4 @@
-schema = 1
+schema = 2
 
 [part]
 mpn = "DEMO-OVERLOAD-3P"
@@ -24,7 +24,7 @@ links = [
     { a = "5", b = "6", kind = "conductive" },
 ]
 
-[function.protection]
+[function.block]
 type = "overload"
 
 [[function]]

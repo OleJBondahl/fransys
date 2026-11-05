@@ -79,9 +79,7 @@ def _check_unswitched(entry: _toml.Table, path: str, line: int) -> list[Finding]
     ]
 
 
-def _check_switched(
-    kind: object, links: list[dict[str, object]], path: str, line: int
-) -> list[Finding]:
+def _check_switched(kind: object, links: list[dict[str, object]], path: str, line: int) -> list[Finding]:
     findings = []
     implied = _IMPLIED.get(str(kind))
     for link in links:
@@ -95,9 +93,7 @@ def _check_switched(
     return findings
 
 
-def _check_symbol(
-    entry: _toml.Table, kind: object, links: list[dict[str, object]], path: str, line: int
-) -> list[Finding]:
+def _check_symbol(entry: _toml.Table, kind: object, links: list[dict[str, object]], path: str, line: int) -> list[Finding]:
     """`SYMBOL_REST_MISMATCH`: a named symbol of a single rest state must be that state's."""
     symbol = entry.get("symbol")
     rests = {link.get("rest") or _IMPLIED.get(str(kind)) for link in links}

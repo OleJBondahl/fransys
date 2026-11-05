@@ -16,16 +16,13 @@ USE = """
 def use(d: fr.Design) -> None:
     io = d.add(box, "U1")
     io.X1.x1
-    supply = d.add(supply_box, "U2")
-    supply.X1.x1
-    supply.rated
 """
 
 
 def _recipe() -> str:
     text = files("fransys").joinpath("guide", "units.md").read_text(encoding="utf-8")
     blocks = re.findall(r"```python\n(.*?)```", text, re.DOTALL)
-    return "\n".join(b for b in blocks if "demo-supply-box" in b)
+    return str("\n".join(b for b in blocks if "demo-supply-box" in b))
 
 
 def _ty(tmp_path: Path, source: str) -> subprocess.CompletedProcess[str]:

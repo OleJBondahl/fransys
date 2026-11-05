@@ -5,12 +5,12 @@ index caches on the model digest.
 """
 
 import dataclasses
-import sys
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
+from own_nodes_models import _release
 from root_library import freeze
+from scale_units_fixture import build_scale
 
 from fransys_model.derive.facts import units as membership
 from fransys_model.derive.facts.unit_index import unit_index
@@ -23,26 +23,11 @@ from fransys_model.vocab import (
     PartCategory,
     PcbFacet,
     Unit,
-    UnitRelease,
 )
 from fransys_model.vocab.tables import functions, items
 from fransys_model.vocab.tables import units as units_table
 
-_TESTS_DIR = Path(__file__).resolve().parent
-if str(_TESTS_DIR) not in sys.path:
-    # `--import-mode=importlib` (root pyproject.toml) never puts this folder on `sys.path`.
-    sys.path.insert(0, str(_TESTS_DIR))
-
-from scale_units_fixture import build_scale  # noqa: E402
-
 _SCOPE = "uidx"
-
-
-def _release(name):
-    key = ("unit_release", name, "1", "1")
-    return UnitRelease(
-        id=make_id(UnitRelease, key), key=key, name=name, version=1, revision=1, interface="1"
-    )
 
 
 def _unit(name, parent=None):
@@ -189,29 +174,17 @@ def _facts(model):
         return {name: query(model, id_) for name, id_ in item_id.items()}
 
     return {
-        "subtree": {
-            name: sorted(unit_name[u] for u in ids)
-            for name, ids in by_unit(membership.unit_subtree).items()
-        },
+        "subtree": {name: sorted(unit_name[u] for u in ids) for name, ids in by_unit(membership.unit_subtree).items()},
         "item_count": {name: len(ids) for name, ids in by_unit(membership.unit_items).items()},
         "items": {name: named(ids) for name, ids in by_unit(membership.unit_items).items()},
         "standalone": {name for name, yes in by_unit(membership.standalone).items() if yes},
-        # in the items table's order, not sorted
-        "roots": {
-            name: [item_name[i] for i in ids]
-            for name, ids in by_unit(membership.unit_own_roots).items()
-        },
+        # sorted: the items table's order is id order (R1070)
+        "roots": {name: sorted(item_name[i] for i in ids) for name, ids in by_unit(membership.unit_own_roots).items()},
         "sole_root": {n for n, yes in by_item(membership.is_sole_unit_root).items() if yes},
         "external": {n for n, yes in by_item(membership.external).items() if yes},
-        "cable_children": {
-            name: named(ids) for name, ids in by_item(membership.cable_children).items() if ids
-        },
+        "cable_children": {name: named(ids) for name, ids in by_item(membership.cable_children).items() if ids},
         "harness": {n for n, yes in by_item(membership.is_harness).items() if yes},
-        "boards": {
-            name: [item_name[i] for i in ids]
-            for name, ids in by_item(membership.enclosing_boards).items()
-            if ids
-        },
+        "boards": {name: sorted(item_name[i] for i in ids) for name, ids in by_item(membership.enclosing_boards).items() if ids},
     }
 
 
@@ -254,7 +227,7 @@ def test_the_hand_built_model_answers_the_old_scan_per_unit():
     assert facts["roots"] == {
         "uidx/top": ["uidx/item/top-item"],
         # `cross-root`'s parent belongs to `top`; `ext-root` and its descendants are external
-        "uidx/mid": ["uidx/item/harness", "uidx/item/cross-root"],
+        "uidx/mid": ["uidx/item/cross-root", "uidx/item/harness"],
         "uidx/deep": ["uidx/item/board"],
         "uidx/lone": ["uidx/item/lone-item"],
         # `loop-p` and `loop-q` are each other's parent in one unit: no root
@@ -298,28 +271,26 @@ def test_the_scale_model_answers_the_old_scan():
     assert facts["subtree"]["pump1/unit"] == ["pump1/io/unit", "pump1/unit"]
     assert facts["subtree"]["pump2/io/unit"] == ["pump2/io/unit"]
     assert facts["item_count"] == {
-        "unit": 18,
-        "pump1/unit": 9,
-        "pump1/io/unit": 3,
-        "pump2/unit": 9,
-        "pump2/io/unit": 3,
+        "unit": 14,
+        "pump1/unit": 7,
+        "pump1/io/unit": 2,
+        "pump2/unit": 7,
+        "pump2/io/unit": 2,
     }
     # only the container holds every item
     assert facts["standalone"] == {"unit"}
     assert facts["roots"] == {
         "unit": [],
-        "pump1/unit": ["pump1/X2", "pump1/w1"],
-        "pump1/io/unit": ["pump1/io/board"],
-        "pump2/unit": ["pump2/X2", "pump2/w1"],
-        "pump2/io/unit": ["pump2/io/board"],
+        "pump1/unit": ["pump1/P1", "pump1/X2", "pump1/w1c"],
+        "pump1/io/unit": ["pump1/io/X1", "pump1/io/k1"],
+        "pump2/unit": ["pump2/P1", "pump2/X2", "pump2/w1c"],
+        "pump2/io/unit": ["pump2/io/X1", "pump2/io/k1"],
     }
-    assert facts["sole_root"] == {"pump1/io/board", "pump2/io/board"}
+    assert facts["sole_root"] == set()
     assert facts["external"] == set()
-    assert facts["cable_children"] == {"pump1/w1": ["pump1/w1c"], "pump2/w1": ["pump2/w1c"]}
-    assert facts["harness"] == {"pump1/w1", "pump2/w1"}
-    assert facts["boards"]["pump1/io/k1"] == ["pump1/io/board"]
-    assert facts["boards"]["pump2/io/X1"] == ["pump2/io/board"]
-    assert len(facts["boards"]) == 6  # each board, its `X1` and its `k1`
+    assert facts["cable_children"] == {}
+    assert facts["harness"] == set()
+    assert facts["boards"] == {}
 
 
 def test_the_refusals_are_kept():
@@ -344,9 +315,7 @@ def test_containing_lists_every_unit_whose_subtree_holds_a_unit():
     model = _hand_built_model()
     unit_id, unit_name = _names(units_table(model))
     containing = unit_index(model).containing
-    assert {
-        name: sorted(unit_name[u] for u in containing[id_]) for name, id_ in unit_id.items()
-    } == {
+    assert {name: sorted(unit_name[u] for u in containing[id_]) for name, id_ in unit_id.items()} == {
         "uidx/top": ["uidx/top"],
         "uidx/mid": ["uidx/mid", "uidx/top"],
         "uidx/deep": ["uidx/deep", "uidx/mid", "uidx/top"],
@@ -359,14 +328,12 @@ def test_containing_lists_every_unit_whose_subtree_holds_a_unit():
     assert make_id(Unit, (_SCOPE, "nowhere")) not in containing
 
 
-def test_boundary_of_lists_each_units_boundary_functions_once_in_id_order():
+def test_boundary_of_lists_each_units_boundary_functions_once_in_authoring_key_order():
     model = build_scale(2).model
     unit_id, _unit_name = _names(units_table(model))
     function_names = {id_: "/".join(f.key) for id_, f in functions(model).items()}
     boundary_of = unit_index(model).boundary_of
-    assert {
-        name: sorted(function_names[f] for f in boundary_of[id_]) for name, id_ in unit_id.items()
-    } == {
+    assert {name: sorted(function_names[f] for f in boundary_of[id_]) for name, id_ in unit_id.items()} == {
         "unit": [],
         "pump1/unit": ["pump1/X2/terminal/1/fn/terminal", "pump1/X2/terminal/2/fn/terminal"],
         "pump1/io/unit": ["pump1/io/X1/fn/x1"],
@@ -374,6 +341,6 @@ def test_boundary_of_lists_each_units_boundary_functions_once_in_id_order():
         "pump2/io/unit": ["pump2/io/X1/fn/x1"],
     }
     for id_ in unit_id.values():
-        assert list(boundary_of[id_]) == sorted(boundary_of[id_])
+        assert list(boundary_of[id_]) == sorted(boundary_of[id_], key=lambda f: functions(model)[f].key)
         assert membership.boundary(model, id_) == boundary_of[id_]
     assert len(boundary_of) == len(unit_id)

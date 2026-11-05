@@ -1,4 +1,4 @@
-schema = 1
+schema = 2
 
 [part]
 mpn = "DEMO-RED-2IN"
@@ -17,10 +17,10 @@ ports = [
 ]
 
 [function.rating]
-current_dc_a = "10"
+current = [{ nom = "10 A", at = ["DC"] }]
 
 [function.operating]
-voltage_dc_v = "24"
+voltage = [{ nom = "24 V", at = ["DC"] }]
 
 [[function]]
 name = "in_2"
@@ -32,10 +32,10 @@ ports = [
 ]
 
 [function.rating]
-current_dc_a = "10"
+current = [{ nom = "10 A", at = ["DC"] }]
 
 [function.operating]
-voltage_dc_v = "24"
+voltage = [{ nom = "24 V", at = ["DC"] }]
 
 [[function]]
 name = "out"
@@ -46,7 +46,7 @@ ports = [
 ]
 
 [function.operating]
-nominal_voltage_v = "24"
+voltage = [{ nom = "24 V" }]
 
 [[function]]
 name = "dc_ok"

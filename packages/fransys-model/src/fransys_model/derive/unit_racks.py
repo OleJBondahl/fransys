@@ -12,6 +12,5 @@ __all__ = ["unit_racks"]
 def unit_racks(model: Model, unit: Id[Unit] | None) -> tuple[Id[Item], ...]:
     """The racks (`plc_racks`) of `unit`, id-sorted; every rack for `unit=None`."""
     all_items = items(model)
-    return tuple(
-        rack for rack in sorted(plc_racks(model)) if unit is None or all_items[rack].unit == unit
-    )
+    racks = plc_racks(model)
+    return tuple(rack for rack in all_items if rack in racks and (unit is None or all_items[rack].unit == unit))

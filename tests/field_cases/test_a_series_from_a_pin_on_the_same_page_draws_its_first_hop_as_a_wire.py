@@ -1,24 +1,12 @@
-"""Field case: a series that starts at a pin of an element drawn on the same page is a wire.
+"""Field case: a relay changeover K1 whose break throw starts a series ending at coil K3, which stands at the top of its own column.
+The bug: the hop K1:12 to K3:A1 would turn back round K1, so it was drawn as a same-page cross-reference pair (#1-1B, #1-2A), not as a wire.
+Fixed by layout-0224 (SAME-PAGE-BRANCH), the hop is a wire that never climbs back; only a hop that leaves the page is a marker pair."""
 
-The engineering shape: a relay changeover K1 on the 24 V rail. Its make throw feeds coil K2
-through the chain K1:14 to K2:A1. Its break throw (K1:12) starts a second series, which ends at
-coil K3, so the hop K1:12 to K3:A1 leaves a bottom pin and enters a top pin of another column.
-
-The bug: K3 stood at the top of its own column, above K1:12, so the hop would turn back round K1
-and was drawn as a cross-reference pair (`#1-1B`, `#1-2A`) on the same page, not as a wire.
-The rule (SAME-PAGE-BRANCH, owner "vertical circuits, refs only at ends", 2026-09-23):
-the hop is a wire that never climbs back; only a hop that leaves the page is a marker pair.
-D2 (2026-10-05) is kept: a marker that is still drawn prints the cell alone.
-
-Fixing decision: layout-0224.
-"""
-
-import tempfile
-from pathlib import Path
 from typing import NamedTuple
 
 import fransys as fr
 from _drawn_pages import drawn_pages
+from _model_build_cover import unit_document
 
 
 class _Io(NamedTuple):
@@ -54,9 +42,7 @@ def _design() -> fr.Design:
 
 
 def _built():
-    cover = Path(tempfile.mkdtemp()) / "cover.md"
-    cover.write_text("# Shape\n", encoding="utf-8")
-    document = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, "shape", cover=cover)
+    document = unit_document("shape")
     return fr.build(_design(), document).model
 
 

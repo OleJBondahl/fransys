@@ -1,13 +1,6 @@
-"""Field case: a GNYE core wired before a series is not counted again as a pole core.
-
-The engineering shape: a four-core cable with three non-earth cores and one GNYE core. The earth
-core is wired first, from a strip's PE terminal to the load's PE, with `cable.core`. A three-pole
-series then uses the three other cores, as the guide's series page "Earth pins" shows.
-
-The bug (0.19.9): the already-wired GNYE core was counted twice, so the series was refused with
-"W1 has 2 non-earth cores for 3 poles and no PE end...". Fixing work order GNYE-SERIES (patch
-0.19.10). Demo parts: DEMO-TB-2.5, DEMO-CBL-4G1.5.
-"""
+"""Field case: a GNYE core wired before a three-pole series on the other cores of a four-core cable.
+The bug (0.19.9): the wired GNYE core was counted twice, so the series was refused for 2 non-earth cores for 3 poles.
+Fixed by work order GNYE-SERIES (patch 0.19.10), a wired GNYE core is counted once."""
 
 import fransys as fr
 from fransys.colours import GNYE

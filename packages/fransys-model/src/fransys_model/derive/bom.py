@@ -3,6 +3,7 @@
 from typing import TYPE_CHECKING, Final, cast
 lazy from collections.abc import Collection
 
+from fransys_model.derive.facts.unit_index import unit_index
 from fransys_model.derive.facts.units import unit_own_roots
 from fransys_model.kernel import Id, Model, SchemaError
 from fransys_model.vocab.enums import SubjectKind
@@ -15,9 +16,9 @@ from .contact_lines import contact_counts
 from .designation import is_own_unit_root, location_designation, printed_designation
 from .designation_label import designation_holder, takes_parents_designation
 from .external import external
+from .facts.house_settings import revision_form_of
 from .facts.revision_label import revision_label
 from .facts.subjects import subject_kind
-from .house_settings import revision_form_of
 from .indexes import Indexes, build_indexes
 from .instance_tag import instance_name, unit_tag
 from .lookups import descendants, require
@@ -59,9 +60,7 @@ def _in_scope(
     return (frozenset(items(model)) if covered is None else covered) - without
 
 
-def _scope_items(
-    model: Model, idx: Indexes, scope: Id[Item] | Id[AspectNode] | None
-) -> frozenset[Id[Item]] | None:
+def _scope_items(model: Model, idx: Indexes, scope: Id[Item] | Id[AspectNode] | None) -> frozenset[Id[Item]] | None:
     """The items a BOM scope covers, or `None` for the whole model."""
     if scope is None:
         return None
@@ -76,15 +75,14 @@ def _scope_items(
     raise SchemaError(msg, kind=scope.kind, record_id=scope)
 
 
-def _unit_scope(
-    model: Model, unit: Id[Unit] | None
-) -> tuple[frozenset[Id[Item]], tuple[Unit, ...]]:
+def _unit_scope(model: Model, unit: Id[Unit] | None) -> tuple[frozenset[Id[Item]], tuple[Unit, ...]]:
     """Items whose `unit` is exactly `unit`, and the `Unit`s whose `parent` is `unit`.
 
     `unit=None` is the top level: items with no unit, and top-level units.
     """
-    covered = frozenset(item.id for item in items(model).values() if item.unit == unit)
-    children = tuple(u for u in units_table(model).values() if u.parent == unit)
+    index = unit_index(model)
+    covered = frozenset(index.own_items.get(unit, ()))
+    children = tuple(units_table(model)[u] for u in index.child_units.get(unit, ()))
     return covered, children
 
 
@@ -102,9 +100,7 @@ def _instance_designations(model: Model, unit: Id[Unit]) -> list[str]:
     locations = {loc for r in roots if (loc := location_designation(model, r)) is not None}
     if locations:
         return sorted(locations, key=natural_key)
-    return [
-        printed_designation(model, r) for r in sorted(roots, key=lambda i: bom_sort_key(model, i))
-    ]
+    return [printed_designation(model, r) for r in sorted(roots, key=lambda i: bom_sort_key(model, i))]
 
 
 def _unit_lines(model: Model, children: tuple[Unit, ...]) -> list[tuple[ReleaseOrder, BomLine]]:
@@ -120,9 +116,7 @@ def _unit_lines(model: Model, children: tuple[Unit, ...]) -> list[tuple[ReleaseO
     form = revision_form_of(model)
     lines = []
     for (name, version, revision), instances in grouped.items():
-        designations = [
-            text for instance in instances for text in _instance_designations(model, instance.id)
-        ]
+        designations = [text for instance in instances for text in _instance_designations(model, instance.id)]
         first = unit_release(model, instances[0].id)
         line = BomLine(
             part=None,
@@ -137,9 +131,7 @@ def _unit_lines(model: Model, children: tuple[Unit, ...]) -> list[tuple[ReleaseO
     return lines
 
 
-def _bom_line_key(
-    line: BomLine, order: ReleaseOrder
-) -> tuple[str, ReleaseOrder, bool, Id[Part] | None]:
+def _bom_line_key(line: BomLine, order: ReleaseOrder) -> tuple[str, ReleaseOrder, bool, Id[Part] | None]:
     """`(mpn, release order, part is None, part)`: total, and `None` is never compared to an `Id`.
 
     A part line has no release: its order is `(0, 0)`, below any release; revision is not sorted on.
@@ -148,9 +140,7 @@ def _bom_line_key(
     return (line.mpn, order, line.part is None, line.part)
 
 
-def _part_designations(
-    model: Model, ordered: list[Id[Item]], unit: Id[Unit] | None
-) -> tuple[str, ...]:
+def _part_designations(model: Model, ordered: list[Id[Item]], unit: Id[Unit] | None) -> tuple[str, ...]:
     """`ordered`'s printed designations; a holder and its accessories give one text, in any order.
 
     The key is `designation_holder` (itself when no accessory); a key already printed is skipped.
@@ -174,22 +164,14 @@ def _part_designations(
     return tuple(texts)
 
 
-def _contact_lines(
-    model: Model, covered: frozenset[Id[Item]] | None, unit: Id[Unit] | None
-) -> list[tuple[ReleaseOrder, BomLine]]:
+def _contact_lines(model: Model, covered: frozenset[Id[Item]] | None, unit: Id[Unit] | None) -> list[tuple[ReleaseOrder, BomLine]]:
     """One `BomLine` per crimp contact part: `count` is its used pins, `designations` its housings.
 
     A housing counts when it is installed, not external and in scope, as a part line's items do.
     """
     lines: list[tuple[ReleaseOrder, BomLine]] = []
     for part_id, per_item in contact_counts(model).items():
-        housings = [
-            i
-            for i in per_item
-            if items(model)[i].installed
-            and not external(model, i)
-            and (covered is None or i in covered)
-        ]
+        housings = [i for i in per_item if items(model)[i].installed and not external(model, i) and (covered is None or i in covered)]
         if housings:
             part = parts(model)[part_id]
             ordered = sorted(housings, key=lambda i: bom_sort_key(model, i))
@@ -203,6 +185,46 @@ def _contact_lines(
                 revision="",
             )
             lines.append(((0, 0), line))
+    return lines
+
+
+def _scope_of(
+    model: Model, idx: Indexes, scope: Id[Item] | Id[AspectNode] | Id[Unit] | TopLevelScope | None, without: Collection[Id[Item]]
+) -> tuple[frozenset[Id[Item]] | None, tuple[Unit, ...], Id[Unit] | None]:
+    """The covered items, the nested units that get a line, and the unit whose own BOM it is."""
+    if isinstance(scope, TopLevelScope):
+        covered, unit_children = _unit_scope(model, None)
+        return covered, unit_children, None
+    if scope is not None and subject_kind(scope) is SubjectKind.UNIT:
+        target = cast("Id[Unit]", scope)
+        require(units_table(model).get(target), "unit", target)  # A unit's own BOM names its items as its own drawing does
+        covered, unit_children = _unit_scope(model, target)
+        return covered, unit_children, target
+    return _in_scope(model, idx, cast("Id[Item] | Id[AspectNode] | None", scope), frozenset(without)), (), None
+
+
+def _part_lines(model: Model, idx: Indexes, covered: frozenset[Id[Item]] | None, own_unit: Id[Unit] | None) -> list[tuple[ReleaseOrder, BomLine]]:
+    """One `BomLine` per part with an installed, not external, in-scope item."""
+    all_parts = parts(model)
+    lines: list[tuple[ReleaseOrder, BomLine]] = []
+    for part_id in idx.items_by_part:
+        installed = [
+            i for i in idx.items_by_part[part_id] if items(model)[i].installed and not external(model, i) and (covered is None or i in covered)
+        ]
+        if not installed:
+            continue
+        part = all_parts[part_id]
+        ordered = sorted(installed, key=lambda i: bom_sort_key(model, i))
+        part_line = BomLine(
+            part=part_id,
+            mpn=part.mpn,
+            manufacturer=part.manufacturer,
+            description=part.description,
+            count=len(installed),
+            designations=_part_designations(model, ordered, own_unit),
+            revision="",
+        )
+        lines.append(((0, 0), part_line))
     return lines
 
 
@@ -228,46 +250,8 @@ def bom_lines(
             or a counted item has no designation.
     """
     idx = build_indexes(model)
-    all_parts = parts(model)
-    unit_children: tuple[Unit, ...] = ()
-    own_unit = None  # A unit's own BOM names its items as its own drawing does
-    if isinstance(scope, TopLevelScope):
-        covered, unit_children = _unit_scope(model, None)
-    elif scope is not None and subject_kind(scope) is SubjectKind.UNIT:
-        target = cast("Id[Unit]", scope)
-        require(units_table(model).get(target), "unit", target)
-        covered, unit_children = _unit_scope(model, target)
-        own_unit = target
-    else:
-        covered = _in_scope(
-            model, idx, cast("Id[Item] | Id[AspectNode] | None", scope), frozenset(without)
-        )
-
-    lines: list[tuple[ReleaseOrder, BomLine]] = []
-    for part_id in idx.items_by_part:
-        installed = [
-            i
-            for i in idx.items_by_part[part_id]
-            if items(model)[i].installed
-            and not external(model, i)
-            and (covered is None or i in covered)
-        ]
-        if not installed:
-            continue
-        part = all_parts[part_id]
-        ordered = sorted(installed, key=lambda i: bom_sort_key(model, i))
-        part_line = BomLine(
-            part=part_id,
-            mpn=part.mpn,
-            manufacturer=part.manufacturer,
-            description=part.description,
-            count=len(installed),
-            designations=_part_designations(model, ordered, own_unit),
-            revision="",
-        )
-        lines.append(((0, 0), part_line))
+    covered, unit_children, own_unit = _scope_of(model, idx, scope, without)
+    lines = _part_lines(model, idx, covered, own_unit)
     lines.extend([*_contact_lines(model, covered, own_unit), *_unit_lines(model, unit_children)])
-    keyed = sorted(
-        ((_bom_line_key(line, order), line) for order, line in lines), key=lambda p: p[0]
-    )
+    keyed = sorted(((_bom_line_key(line, order), line) for order, line in lines), key=lambda p: p[0])
     return tuple(line for _, line in keyed)

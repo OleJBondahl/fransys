@@ -65,9 +65,7 @@ STARTING_LIMITS: dict[str, int] = {
 
 #: Hand-authored, ruled reasons verbatim; do not improvise different text.
 STARTING_EXEMPT: dict[str, str] = {
-    "packages/fransys-overview/src/fransys_overview/_vendor_cytoscape.py": (
-        "generated (overview-0001)"
-    ),
+    "packages/fransys-overview/src/fransys_overview/_vendor_cytoscape.py": ("generated (overview-0001)"),
 }
 
 
@@ -172,17 +170,13 @@ def measure_all(root: Path, limits: dict[str, int]) -> Measurement:
     _assert_limits_match_checkers(limits)
 
     nested_defs = lean_code_shape.measure_nested_defs(root)
-    module_code_lines = lean_code_shape.measure_module_code_lines(
-        root, limit=limits["module_code_lines"]
-    )
+    module_code_lines = lean_code_shape.measure_module_code_lines(root, limit=limits["module_code_lines"])
 
     ruff_sections = lean_code_gates.measure_ruff_sections(root)
 
     entries = lean_surface.resolve_surface_names()
     surface_keys = lean_docstrings.surface_site_keys(entries=entries, root=root)
-    surface_lengths = lean_docstrings.measure_surface_docstring_lines(
-        limit=limits["surface_docstring_lines"], entries=entries, root=root
-    )
+    surface_lengths = lean_docstrings.measure_surface_docstring_lines(limit=limits["surface_docstring_lines"], entries=entries, root=root)
     docstring_lines = lean_docstrings.measure_docstring_lines(root, surface_keys)
 
     surface_types = lean_surface_types.measure_surface_types(entries=entries)
@@ -192,9 +186,7 @@ def measure_all(root: Path, limits: dict[str, int]) -> Measurement:
     md_tokens_all = lean_markdown.measure_md_tokens(md_files, root)
     md_tokens = {path: n for path, n in md_tokens_all.items() if n > limits["md_tokens"]}
     opening_paragraph = lean_markdown.opening_paragraph_violations(md_files, root)
-    md_long_sentences = lean_markdown.measure_long_sentences(
-        md_files, root, limits["sentence_words"]
-    )
+    md_long_sentences = lean_markdown.measure_long_sentences(md_files, root, limits["sentence_words"])
 
     sections = {
         "statements": ruff_sections["statements"],
@@ -211,11 +203,7 @@ def measure_all(root: Path, limits: dict[str, int]) -> Measurement:
 
     docstrings_measured = len(surface_keys) + len(docstring_lines)
     files_walked = len(ci_gates.source_files(root)) + len(md_files)
-    functions_measured = (
-        sum(len(ruff_sections[name]) for name in ("statements", "complexity", "branches"))
-        + len(nested_defs)
-        + len(entries)
-    )
+    functions_measured = sum(len(ruff_sections[name]) for name in ("statements", "complexity", "branches")) + len(nested_defs) + len(entries)
 
     return Measurement(
         sections=sections,
@@ -227,9 +215,7 @@ def measure_all(root: Path, limits: dict[str, int]) -> Measurement:
     )
 
 
-def build_ceilings(
-    existing: lean_ceilings.CeilingsFile | None, measured: dict[str, dict[str, int]]
-) -> lean_ceilings.CeilingsFile:
+def build_ceilings(existing: lean_ceilings.CeilingsFile | None, measured: dict[str, dict[str, int]]) -> lean_ceilings.CeilingsFile:
     """Merge fresh `measured` sections onto `existing`, never a from-scratch rewrite.
 
     A fresh limits/exempt-only file when `existing` is `None`; either way, `limits` and `exempt`
@@ -251,9 +237,7 @@ def _write_ceilings(path: Path, file: lean_ceilings.CeilingsFile) -> None:
     path.write_text(_HEADER + lean_ceilings.render_ceilings(file), encoding="utf-8", newline="\n")
 
 
-def numeric_violations(
-    sections: dict[str, dict[str, int]], ceilings: lean_ceilings.CeilingsFile
-) -> list[tuple[str, lean_ceilings.Violation]]:
+def numeric_violations(sections: dict[str, dict[str, int]], ceilings: lean_ceilings.CeilingsFile) -> list[tuple[str, lean_ceilings.Violation]]:
     """Every ceilings-bound violation as `(section, violation)`, in `SECTION_ORDER`."""
     found: list[tuple[str, lean_ceilings.Violation]] = []
     for name in lean_ceilings.SECTION_ORDER:
@@ -278,18 +262,10 @@ def _report_lines(measurement: Measurement, ceilings: lean_ceilings.CeilingsFile
         if name != current:
             lines.append(f"[{name}]")
             current = name
-        lines.append(
-            f"  {v.site}: {v.measured} > {v.limit} ({'listed' if v.listed else 'unlisted'})"
-        )
-    lines.append(
-        "[opening_paragraph] not ceiling-bound, informational: "
-        f"{len(measurement.opening_paragraph)} file(s) fail the shape check"
-    )
+        lines.append(f"  {v.site}: {v.measured} > {v.limit} ({'listed' if v.listed else 'unlisted'})")
+    lines.append(f"[opening_paragraph] not ceiling-bound, informational: {len(measurement.opening_paragraph)} file(s) fail the shape check")
     lines.extend(f"  {v.path}: {v.reason}" for v in measurement.opening_paragraph)
-    lines.append(
-        "[record_field_types] not ceiling-bound, informational: "
-        f"{measurement.record_field_count} offending @value/@record class(es)"
-    )
+    lines.append(f"[record_field_types] not ceiling-bound, informational: {measurement.record_field_count} offending @value/@record class(es)")
     return lines
 
 
@@ -312,8 +288,7 @@ def cmd_report(root: Path, ceilings_path: Path) -> int:
     )
     print(f"cpu time (process_time, this process only): {cpu_elapsed:.2f}s")  # noqa: T201 -- this script's whole job is CLI output
     print(  # noqa: T201 -- this script's whole job is CLI output
-        "wall time (includes the ruff subprocess), not the acceptance evidence: "
-        f"{wall_elapsed:.2f}s"
+        f"wall time (includes the ruff subprocess), not the acceptance evidence: {wall_elapsed:.2f}s"
     )
     return 0
 
@@ -321,16 +296,10 @@ def cmd_report(root: Path, ceilings_path: Path) -> int:
 def cmd_hard(root: Path, ceilings_path: Path) -> int:
     """`hard`: the two zero-baseline checks. Non-zero exit on any finding."""
     ceilings = lean_ceilings.load_ceilings(ceilings_path)
-    unreasoned = lean_code_gates.unreasoned_sites(
-        [*root.glob("packages/*/src"), *root.glob("packages/*/tests")], root
-    )
+    unreasoned = lean_code_gates.unreasoned_sites([*root.glob("packages/*/src"), *root.glob("packages/*/tests")], root)
     unreasoned = lean_code_gates.report_unreasoned(unreasoned, ceilings.exempt)
-    surface_violations = lean_docstrings.check_surface_docstrings(
-        limit=ceilings.limits["surface_docstring_lines"], root=root
-    )
-    surface_hard = tuple(
-        v for v in surface_violations if v.reason in ("missing", "no def node found")
-    )
+    surface_violations = lean_docstrings.check_surface_docstrings(limit=ceilings.limits["surface_docstring_lines"], root=root)
+    surface_hard = tuple(v for v in surface_violations if v.reason in ("missing", "no def node found"))
     surface_keys = lean_docstrings.surface_site_keys(root=root)
     banned = lean_docstrings.banned_section_sites(root, surface_keys)
 
@@ -394,10 +363,7 @@ def deleted_site_note(root: Path, site: str, measured_section: dict[str, int]) -
     qualname = site.partition("::")[2]
     if not qualname:
         return "(gone)"
-    paths = sorted(
-        {other.partition("::")[0] for other in measured_section if other.endswith(f"::{qualname}")}
-        - {site.partition("::")[0]}
-    )
+    paths = sorted({other.partition("::")[0] for other in measured_section if other.endswith(f"::{qualname}")} - {site.partition("::")[0]})
     if not paths:
         return "(gone)"
     return f"(gone) -- same name now over its limit at {', '.join(paths)}"
@@ -415,9 +381,7 @@ def cmd_lower(root: Path, ceilings_path: Path) -> int:
     changed = False
     new_sections = dict(ceilings.sections)
     for name in _NUMERIC_SECTIONS:
-        lowered = lean_ceilings.lower(
-            measurement.sections.get(name, {}), ceilings.sections.get(name, {}), ceilings.exempt
-        )
+        lowered = lean_ceilings.lower(measurement.sections.get(name, {}), ceilings.sections.get(name, {}), ceilings.exempt)
         if lowered != ceilings.sections.get(name, {}):
             changed = True
         new_sections[name] = lowered

@@ -3,7 +3,7 @@
 from fransys_author._keys import scoped
 from fransys_author.errors import AuthorError
 from fransys_model.kernel import AuthoringKey, Id, Record, make_id
-from fransys_model.vocab import Function, FunctionKind, Item, Port, PortRole
+from fransys_model.vocab import Function, FunctionKind, Item, Port, PortBoundary
 
 # The port name of the demo terminal part; layout's terminal port map holds the name too.
 TERMINAL_OUTER = "external"
@@ -21,16 +21,12 @@ def check_partless(tag: str | None, *, external: bool, call: str) -> None:
 
 def _function(item: Id[Item], key: AuthoringKey, name: str, kind: FunctionKind) -> Function:
     fkey = scoped(key, "fn", name)
-    return Function(
-        id=make_id(Function, fkey), key=fkey, item=item, template=None, name=name, kind=kind
-    )
+    return Function(id=make_id(Function, fkey), key=fkey, item=item, template=None, name=name, kind=kind)
 
 
-def _port(function: Function, name: str, role: PortRole) -> Port:
+def _port(function: Function, name: str, boundary: PortBoundary) -> Port:
     pkey = scoped(function.key, "port", name)
-    return Port(
-        id=make_id(Port, pkey), key=pkey, function=function.id, template=None, name=name, role=role
-    )
+    return Port(id=make_id(Port, pkey), key=pkey, function=function.id, template=None, name=name, boundary=boundary)
 
 
 def terminal_records(key: AuthoringKey, parent: Id[Item]) -> tuple[Record, ...]:
@@ -45,7 +41,7 @@ def terminal_records(key: AuthoringKey, parent: Id[Item]) -> tuple[Record, ...]:
         description="",
     )
     function = _function(item.id, key, "terminal", FunctionKind.TERMINAL)
-    return (item, function, _port(function, TERMINAL_OUTER, PortRole.EXTERNAL))
+    return (item, function, _port(function, TERMINAL_OUTER, PortBoundary.EXTERNAL))
 
 
 def box_records(item: Id[Item], key: AuthoringKey, pins: tuple[str, ...]) -> tuple[Record, ...]:
@@ -54,4 +50,4 @@ def box_records(item: Id[Item], key: AuthoringKey, pins: tuple[str, ...]) -> tup
         msg = f"pins= names each pin once, and at least one: {pins!r}"
         raise AuthorError(msg)
     function = _function(item, key, "box", FunctionKind.GENERIC)
-    return (function, *(_port(function, pin, PortRole.GENERIC) for pin in pins))
+    return (function, *(_port(function, pin, PortBoundary.GENERIC) for pin in pins))

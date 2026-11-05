@@ -4,33 +4,12 @@ Every part, MPN and designation here is invented (CLAUDE.md invariant 6). The bu
 records, not a frozen model, so a test can reorder them before they reach a `Draft`.
 """
 
-import random
-import tomllib
-from decimal import Decimal
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pytest
+from library_records import freeze, shuffled_draft
 
-from fransys_model.kernel import Draft, Model, Origin, evolve, make_id
-from fransys_model.kernel import freeze as kernel_freeze
-from fransys_model.layout import (
-    DrawingLibrary,
-    PaperChoice,
-    a2_sheet_format,
-    colour_codes,
-    default_sheet_format,
-    frame_form,
-    harness_text,
-    reference_text,
-    revision_form,
-    revision_table_form,
-    stub_text,
-    title_block_form,
-    wire_label_text,
-    words,
-)
-from fransys_model.vocab import PageKind
+from fransys_model.kernel import Draft, Model, Origin, make_id
 from fransys_model.vocab.aspects import AspectNode, Placement
 from fransys_model.vocab.connectivity import Conductor, Mate
 from fransys_model.vocab.core import Function, Item, Port
@@ -39,86 +18,12 @@ from fransys_model.vocab.enums import (
     ConductorKind,
     FunctionKind,
     PartCategory,
-    PortRole,
+    PortBoundary,
 )
 from fransys_model.vocab.templates import Part
 
 if TYPE_CHECKING:
     from fransys_model.kernel import Id, Record
-
-
-_LIBRARY_KEY = ("test", "library")
-_EM = Decimal(2048)
-
-
-def paper_records() -> tuple[Record, Record, PaperChoice]:
-    """The paper records the facade writes: A3 by default, the block diagram on A2 (stock)."""
-    a3, a2 = default_sheet_format(), a2_sheet_format()
-    key = ("test", "paper")
-    by_kind = frozendict({PageKind.BLOCK_DIAGRAM.value: a2.id})
-    return (
-        a3,
-        a2,
-        PaperChoice(id=make_id(PaperChoice, key), key=key, default=a3.id, by_kind=by_kind),
-    )
-
-
-def house_records() -> tuple[Record, ...]:
-    """The house text records of `settings.toml`, built by the model's builders."""
-    path = Path(__file__).parents[2] / "fransys" / "src" / "fransys" / "settings.toml"
-    t = tomllib.loads(path.read_text(encoding="utf-8"))
-    return (
-        reference_text(**t["reference"]),
-        frame_form(**t["frame"]),
-        stub_text(**t["stub"]),
-        wire_label_text(**t["wire_label"]),
-        harness_text(**t["harness"]),
-        colour_codes(**t["colours"]),
-        title_block_form(**t["title_block"]),
-        revision_table_form(**t["revision_table"]),
-        revision_form(
-            date_format=t["revision"]["date_format"],
-            initials_required=t["revision"]["initials_required"],
-            printed=t["revision"]["format"],
-        ),
-        words(t["words"]),
-    )
-
-
-def freeze(draft: Draft) -> Model:
-    """`draft` frozen, with the drawing library record the facade writes (GRID-HOME G6)."""
-    record = DrawingLibrary(
-        id=make_id(DrawingLibrary, _LIBRARY_KEY),
-        key=_LIBRARY_KEY,
-        module_mm=Decimal("2.5"),
-        divisions=8,
-        wire_pitch=8,
-        wire_pitch_fine=4,
-        font_family="DejaVu Sans",
-        ascent_ratio=Decimal(1556) / _EM,
-        descent_ratio=Decimal(426) / _EM,
-        ems=frozendict(
-            {
-                h: Decimal(h) * _EM / 1493
-                for h in ("1", "1.8", "2", "2.2", "2.5", "3", "3.2", "3.5", "4", "5", "6")
-            }
-        ),
-        lines=frozendict(
-            {"normal": Decimal("0.25"), "thick": Decimal("0.5"), "rule": Decimal("0.18")}
-        ),
-        heights=frozendict(
-            {
-                "smallest": Decimal("1.8"),
-                "body": Decimal("2.5"),
-                "heading_2": Decimal("3.5"),
-                "heading_1": Decimal(5),
-            }
-        ),
-    )
-    origin = Origin(file="conftest.py", line=0, note="test library")
-    return evolve(
-        kernel_freeze(draft), put=(record, *paper_records(), *house_records()), origin=origin
-    )
 
 
 _ORIGIN = Origin(file="packages/fransys-overview/tests/conftest.py", line=1, note="invented")
@@ -201,7 +106,7 @@ class Plant:
                 function=function,
                 template=None,
                 name=name,
-                role=PortRole.GENERIC,
+                boundary=PortBoundary.GENERIC,
             )
             self.records.append(port)
             self._ports[item, name] = port.id
@@ -211,9 +116,7 @@ class Plant:
         """A wire between two ports, each given as `(item, port name)`."""
         self._conductor(a, b, key, ConductorKind.WIRE, None)
 
-    def core(
-        self, cable: Id[Item], a: tuple[Id[Item], str], b: tuple[Id[Item], str], key: str
-    ) -> None:
+    def core(self, cable: Id[Item], a: tuple[Id[Item], str], b: tuple[Id[Item], str], key: str) -> None:
         """One core of `cable` between two ports."""
         self._conductor(a, b, key, ConductorKind.CORE, cable)
 
@@ -238,9 +141,7 @@ class Plant:
 
     def mate(self, a: Id[Item], b: Id[Item], key: str) -> None:
         """Plug the `main` functions of two items together."""
-        self.records.append(
-            Mate(id=make_id(Mate, (key,)), key=(key,), a=self.function(a), b=self.function(b))
-        )
+        self.records.append(Mate(id=make_id(Mate, (key,)), key=(key,), a=self.function(a), b=self.function(b)))
 
     def place(self, item: Id[Item], label: str) -> None:
         """Place `item` at the location node `label`, made on first use."""
@@ -264,12 +165,7 @@ class Plant:
 
     def draft(self, seed: int | None = None) -> Draft:
         """The records in a `Draft`, shuffled by `seed` when there is one."""
-        records = list(self.records)
-        if seed is not None:
-            random.Random(seed).shuffle(records)  # noqa: S311 -- a test shuffle, not security
-        draft = Draft()
-        draft.extend(records, origin=_ORIGIN)
-        return draft
+        return shuffled_draft(self.records, _ORIGIN, seed)
 
     def freeze(self, seed: int | None = None) -> Model:
         """The frozen model of every record so far."""
@@ -281,21 +177,13 @@ def build_demo() -> Plant:
 
     - Cabinet `A1` holds a supply `G1`, two breakers, four relays (`K4` not installed), a terminal
       strip `X1` with four terminals, and a PLC `A2` with two modules.
-    - The field site has a pump `M10`, a valve `Y10`, three sensors and a harness `H1` mated to a
-      board `JB1` (at the field site too) through the board's edge connector `J1`, a child item;
-      the board carries three resistors and a chip.
-    - Cable `W1` joins the terminal strip to the valve and one sensor; cable `W2` joins the harness
-      to two sensors. One relay is left without a designation.
     """
     plant = Plant()
     cab = plant.item("a1", "A1", description="Control cabinet")
     plant.place(cab, "+C1")
     psu = plant.item("g1", "G1", mpn="SIM-PSU-24V", parent=cab)
     breakers = [plant.item(f"f{n}", f"F{n}", mpn="SIM-MCB-2A", parent=cab) for n in (1, 2)]
-    relays = [
-        plant.item(f"k{n}", f"K{n}", mpn="SIM-RELAY-24V", parent=cab, installed=n != 4)
-        for n in (1, 2, 3, 4)
-    ]
+    relays = [plant.item(f"k{n}", f"K{n}", mpn="SIM-RELAY-24V", parent=cab, installed=n != 4) for n in (1, 2, 3, 4)]
     spare = plant.item("k-spare", None, mpn="SIM-RELAY-24V", parent=cab, description="Spare relay")
     strip = plant.item("x1", "X1", parent=cab, description="Terminal strip")
     terminals = [plant.item(f"x1-{n}", f"X1:{n}", parent=strip) for n in (1, 2, 3, 4)]

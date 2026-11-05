@@ -2,18 +2,14 @@
 
 A unit's earth hub is wired beside two terminals in the unit's own set (one column of one
 group). The same four terminals stand in the top-level set as boundary pins in a row of
-their group: left, hub, an unwired pin, right. There the hub is beside `left` only, so the net
-is a star (two clusters in that set) though every wire is beside somewhere and none is dropped
-from routing. `star_markers` took `min(star.conductors)` of the empty set and raised. Built
-through the `fransys` facade from `examples/demo-parts`.
 """
 
 from typing import Any
 
 import fransys as fr
-import fransys_author
 import fransys_parts
-from _model_build_cover import layout_trigger_document
+from _model_build_cover import layout_trigger_document, unit_document
+from fransys_author.design import Design
 
 from fransys_model.kernel import Severity
 
@@ -32,7 +28,7 @@ def test_a_star_that_drops_no_conductor_builds_without_error() -> None:
     #     `min(star.conductors or star.wires)` to `min(star.conductors)`:
     #     `fr.build` raises ValueError (min() of an empty set)
     parts = fransys_parts.load("demo_parts")
-    d = fransys_author.Design(parts)
+    d = Design(parts)
     d.project(**_PROJECT)
     d.revision(1, date="2026-09-24", text="First issue", created="XX")
     cab = d.scope("cab").unit("demo-pump-cabinet", revision=1, interface="1")
@@ -40,7 +36,7 @@ def test_a_star_that_drops_no_conductor_builds_without_error() -> None:
     c1 = cab.location("C1", "Cabinet")
     g1 = cab.group("G1", "Group 1")
     x1, x2, x3 = (cab.strip(name, at=c1) for name in ("X1", "X2", "X3"))
-    left, hub = (x1.terminal("DEMO-TB-2.5", group=g1) for _ in range(2))
+    left, hub = (x1.terminal("DEMO-TB-2.5-TWIN", group=g1) for _ in range(2))
     filler = x2.terminal("DEMO-TB-2.5", group=g1)  # in the top row between the hub and `right`
     right = x3.terminal("DEMO-TB-2.5", group=g1)
     earth = cab.wiring(colour="GNYE", gauge="2.5")
@@ -48,5 +44,6 @@ def test_a_star_that_drops_no_conductor_builds_without_error() -> None:
     earth(hub.inner, right.inner)
     for terminal in (left, hub, filler, right):
         cab.boundary(terminal)
-    result = fr.build(parts, d.draft(), layout_trigger_document())
+    cabinet_doc = unit_document(cab)
+    result = fr.build(parts, d.draft(), layout_trigger_document(), cabinet_doc)
     assert not [f for f in result.findings if f.severity is Severity.ERROR]

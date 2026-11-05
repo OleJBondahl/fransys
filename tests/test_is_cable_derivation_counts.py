@@ -2,41 +2,18 @@
 
 `is_cable(model, item)` reads `cable_items(model)` for every item it is asked about; the whole
 point is that the underlying `digest_cached` builder runs once per model digest, not once per
-`is_cable` call. This test counts the DECORATED builder's own call, by code object, under
-`sys.monitoring` (`PY_START`), the same mechanism `test_cable_index_derivation_counts.py` and
-`test_freeze_field_derivation_counts.py` use. `DigestCached` (`kernel/cache.py`) wraps `build`
-in a `functools.lru_cache` and has no `__code__` of its own; `functools.update_wrapper` sets
-`self.__wrapped__ = build`, so `target.__wrapped__.__code__` is the code object that actually
-ran on a cache miss -- a cache hit never re-enters it.
-
-Uses `tests/scale_units_fixture.py::build_scale` at n=8 and n=16. The sweep calls
-`is_cable(model, item)` for every item in the model, not just the existing cables: the point is
-to prove `cable_items` runs once per digest no matter how many times `is_cable` is called
-against it, and sweeping every item also gives the "never ran" self-check for free, since a
-model always has at least one item.
-
-This is the only test in its module and takes over 1s (two full `build_scale` runs, at n=8 and
-n=16, each merged and frozen, plus an `is_cable` sweep over every item under `sys.monitoring`):
-it cannot share a module fixture's build with another test, since the size it needs to build is
-itself the thing under test.
 """
 
 import sys
-from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
-_TESTS_DIR = Path(__file__).resolve().parent
-if str(_TESTS_DIR) not in sys.path:
-    # `--import-mode=importlib` (root pyproject.toml) never puts this folder on `sys.path`.
-    sys.path.insert(0, str(_TESTS_DIR))
+from scale_units_fixture import build_scale
 
-from scale_units_fixture import build_scale  # noqa: E402
-
-from fransys_model.derive.facts.item_predicates import cable_items, is_cable  # noqa: E402
-from fransys_model.vocab.tables import items  # noqa: E402
+from fransys_model.derive.facts.item_predicates import cable_items, is_cable
+from fransys_model.vocab.tables import items
 
 if TYPE_CHECKING:
-    from types import CodeType
+    from types import CodeType, FunctionType
 
     from fransys_model.kernel import Model
 
@@ -48,7 +25,7 @@ def _sweep_count(model: Model) -> int:
     _TARGET.cache_clear()
     # `DigestCached` has no `__code__` of its own; `functools.update_wrapper` sets `__wrapped__`
     # to the undecorated `build` (`kernel/cache.py`), whose code object this reads.
-    code = _TARGET.__wrapped__.__code__  # ty: ignore[unresolved-attribute]
+    code = cast("FunctionType", vars(_TARGET)["__wrapped__"]).__code__
     count = 0
     tool = 3
     try:
@@ -79,9 +56,5 @@ def test_cable_items_builds_once_per_digest_not_once_per_item() -> None:
     count8 = _sweep_count(model8)
     count16 = _sweep_count(model16)
     assert count8 > 0, "cable_items never ran: the counter saw nothing"
-    assert count8 == 1, (
-        f"cable_items ran {count8} times at n=8: built once per digest, not once per item"
-    )
-    assert count16 == 1, (
-        f"cable_items ran {count16} times at n=16: built once per digest, not once per item"
-    )
+    assert count8 == 1, f"cable_items ran {count8} times at n=8: built once per digest, not once per item"
+    assert count16 == 1, f"cable_items ran {count16} times at n=16: built once per digest, not once per item"

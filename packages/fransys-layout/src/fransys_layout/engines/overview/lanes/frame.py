@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 lazy from collections.abc import Mapping, Sequence
 
+from fransys_layout.core import grid_up
 from fransys_layout.engines.overview.lanes.arrange import RawEnd, box_height, box_width
 from fransys_layout.engines.overview.lanes.corridor import (
     corridor_height,
@@ -12,7 +13,7 @@ from fransys_layout.engines.overview.lanes.corridor import (
     plan_corridors,
 )
 from fransys_layout.engines.overview.sizes import ROW_GAP, TRACK_PITCH
-from fransys_layout.geometry import PAGE_PAD, Facing, snap_up
+from fransys_layout.geometry import PAGE_PAD, WIRING_GRID, Facing
 
 if TYPE_CHECKING:
     from fransys_layout.engines.overview.lanes.corridor import CorridorPlan
@@ -20,13 +21,9 @@ if TYPE_CHECKING:
     from fransys_layout.engines.overview.read.values import Ident, ViewFacts
 
 
-def side_of(
-    stage: Mapping[Ident, int], me: Ident, far: Ident, *, west_same: bool = False
-) -> Facing:
+def side_of(stage: Mapping[Ident, int], me: Ident, far: Ident, *, west_same: bool = False) -> Facing:
     """West towards an earlier stage, east towards a later one; the same stage east, or west."""
-    return (
-        Facing.W if stage[far] < stage[me] or (stage[far] == stage[me] and west_same) else Facing.E
-    )
+    return Facing.W if stage[far] < stage[me] or (stage[far] == stage[me] and west_same) else Facing.E
 
 
 def raw_ends(facts: ViewFacts, plan: Plan) -> tuple[RawEnd, ...]:
@@ -45,9 +42,7 @@ def box_sizes(facts: ViewFacts, raw: tuple[RawEnd, ...]) -> dict[Ident, tuple[in
     return {
         b.box: (
             box_width(b),
-            box_height(
-                b, max(count[b.box, Facing.E], count[b.box, Facing.W]), facts.diagram.text_height
-            ),
+            box_height(b, max(count[b.box, Facing.E], count[b.box, Facing.W]), facts.diagram.text_height),
         )
         for b in facts.diagram.boxes
     }
@@ -55,10 +50,7 @@ def box_sizes(facts: ViewFacts, raw: tuple[RawEnd, ...]) -> dict[Ident, tuple[in
 
 def corridors(facts: ViewFacts, plan: Plan) -> CorridorPlan:
     """The corridor of each line across two or more stages (a line index is its key)."""
-    lines = [
-        (i, plan.lane[ln.a], plan.lane[ln.b], plan.stage[ln.a], plan.stage[ln.b])
-        for i, ln in enumerate(facts.diagram.lines)
-    ]
+    lines = [(i, plan.lane[ln.a], plan.lane[ln.b], plan.stage[ln.a], plan.stage[ln.b]) for i, ln in enumerate(facts.diagram.lines)]
     return plan_corridors(lines, plan.lanes)
 
 
@@ -77,14 +69,9 @@ def head_rise(facts: ViewFacts, plan: Plan) -> list[int]:
     return [rise if n < len(facts.heads) else 0 for n in range(plan.lanes)]
 
 
-def _bands(
-    plan: Plan, stack: Mapping[tuple[int, int], int], found: CorridorPlan, rise: Sequence[int]
-) -> tuple[list[int], ...]:
+def _bands(plan: Plan, stack: Mapping[tuple[int, int], int], found: CorridorPlan, rise: Sequence[int]) -> tuple[list[int], ...]:
     """Band heights and the tops of the corridors and bands, from the top: a corridor, a band."""
-    band = [
-        rise[n] + max((v for (lane, _), v in stack.items() if lane == n), default=0)
-        for n in range(plan.lanes)
-    ]
+    band = [rise[n] + max((v for (lane, _), v in stack.items() if lane == n), default=0) for n in range(plan.lanes)]
     floor = [ROW_GAP if 0 < c < plan.lanes else 0 for c in range(plan.lanes + 1)]
     chigh = [corridor_height(found.load[c], TRACK_PITCH, floor[c]) for c in range(plan.lanes + 1)]
     ctop: list[int] = []
@@ -109,12 +96,9 @@ def rows(plan: Plan, high: Mapping[Ident, int], found: CorridorPlan, rise: Seque
     box_y = {}
     for (lane, stage), members in plan.cells.items():
         free = band[lane] - rise[lane] - stack[lane, stage]
-        cursor = btop[lane] + rise[lane] + snap_up(free // 2)
+        cursor = btop[lane] + rise[lane] + grid_up(free // 2, WIRING_GRID)
         for b in members:
             box_y[b] = cursor
             cursor += high[b] + ROW_GAP
-    track_y = {
-        i: corridor_y(ctop[c], chigh[c], found.load[c], found.rank[i], TRACK_PITCH)
-        for i, c in found.corridor.items()
-    }
+    track_y = {i: corridor_y(ctop[c], chigh[c], found.load[c], found.rank[i], TRACK_PITCH) for i, c in found.corridor.items()}
     return Rows(box_y=box_y, track_y=track_y, head_y=dict(enumerate(btop)))

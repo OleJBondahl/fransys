@@ -1,13 +1,6 @@
 """Field case: one cable passed out to a field lamp and back lands its return on core 2.
-
-The engineering shape: a 24 V supply feeds a field lamp H1 through a terminal strip X1 and the
-4-core cable W1, and the return runs back through the same cable and strip:
-`d.series(dc.plus, x1, w1, h1.lamp, w1, x1, dc.minus)`.
-
 The bug: both passes took core 1, so the build raised "W1 core 1 is already wired or marked spare".
-
-Rule (author-0041): each pass of a cable takes its next free core, so the return leg takes core 2.
-"""
+Fixed by author-0041, each pass of a cable takes its next free core, so the return leg takes core 2."""
 
 import fransys as fr
 from fransys.colours import BU

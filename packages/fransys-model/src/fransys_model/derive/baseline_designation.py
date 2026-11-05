@@ -18,7 +18,6 @@ from .baseline_unchecked import UNPRINTABLE
 from .designation import printed_designation
 from .designation_label import own_label, terminal_of
 from .instance_tag import instance_name, instance_tags
-from .lookups import printed_port_name
 from .rows_baseline import BaselineEnd
 from .texts.context import PrintContext, Scope
 from .texts.designation_render import aspect_text
@@ -30,9 +29,7 @@ if TYPE_CHECKING:
 # -- unit_designation -------------------------------------------------------------------
 
 
-def unit_designation(
-    model: Model, unit: Id[Unit] | None, item: Id[Item], rules: ListingRules = CURRENT
-) -> str:
+def unit_designation(model: Model, unit: Id[Unit] | None, item: Id[Item], rules: ListingRules = CURRENT) -> str:
     """`item`'s designation relative to `unit`.
 
     `reference_designation`'s rule, except the `+` (location) segment drops `unit`'s own common
@@ -70,9 +67,7 @@ def _printed(model: Model, item: Id[Item], unit: Id[Unit] | None, rules: Listing
 # -- cross-unit rendering (a mate or conductor end on a nested unit's boundary) --------------
 
 
-def _instance_prefix(
-    model: Model, unit: Id[Unit] | None, owner_unit: Id[Unit], rules: ListingRules
-) -> str:
+def _instance_prefix(model: Model, unit: Id[Unit] | None, owner_unit: Id[Unit], rules: ListingRules) -> str:
     """`"<instance name>/"` for the unit `owner_unit`, an instance nested somewhere in `unit`.
 
     The instance name is the smallest, in sort order, of its own root items' `unit_designation`
@@ -85,16 +80,12 @@ def _instance_prefix(
     return f"{name}/"
 
 
-def function_text(
-    model: Model, unit: Id[Unit] | None, function: Function, rules: ListingRules = CURRENT
-) -> str:
+def function_text(model: Model, unit: Id[Unit] | None, function: Function, rules: ListingRules = CURRENT) -> str:
     """A function's baseline text in `unit`'s listing: its item's designation, `:`, its name."""
     return f"{unit_designation(model, unit, function.item, rules)}:{function.name}"
 
 
-def _plain_port_end(
-    model: Model, render_unit: Id[Unit] | None, port_id: Id[Port], rules: ListingRules
-) -> BaselineEnd:
+def _plain_port_end(model: Model, render_unit: Id[Unit] | None, port_id: Id[Port], rules: ListingRules) -> BaselineEnd:
     """`port_id` rendered relative to `render_unit`: a plain port, or a terminal's bare text."""
     record = ports(model)[port_id]
     fn = functions(model)[record.function]
@@ -104,22 +95,18 @@ def _plain_port_end(
         strip_text = unit_designation(model, render_unit, owner.parent, rules)
         return BaselineEnd(text=f"{strip_text}:{own_label(model, owner.id)}", key=key, pin="")
     text = unit_designation(model, render_unit, owner.id, rules)
-    name = printed_port_name(model, port_id, bar_screw=not rules.bar_end_without_screw)
+    name = record.name
     return BaselineEnd(text=f"{text}:{name}" if name else text, key=key, pin=name)
 
 
-def _nested_end(
-    model: Model, unit: Id[Unit] | None, owner_unit: Id[Unit], end: BaselineEnd, rules: ListingRules
-) -> BaselineEnd:
+def _nested_end(model: Model, unit: Id[Unit] | None, owner_unit: Id[Unit], end: BaselineEnd, rules: ListingRules) -> BaselineEnd:
     """`end`, read in `owner_unit`, as `unit`'s listing names it: instance prefix and key."""
     prefix = _instance_prefix(model, unit, owner_unit, rules)
     key = f"{instance_key(model, unit, owner_unit)}/{end.key}"
     return BaselineEnd(text=f"{prefix}{end.text}", key=key, pin=end.pin)
 
 
-def cross_port_end(
-    model: Model, unit: Id[Unit] | None, port_id: Id[Port], rules: ListingRules
-) -> BaselineEnd:
+def cross_port_end(model: Model, unit: Id[Unit] | None, port_id: Id[Port], rules: ListingRules) -> BaselineEnd:
     """`port_id`'s baseline end for `unit`'s own listing (conductor ends).
 
     Plain against `unit` when its owner item is `unit`'s own; else against the owner's unit,
@@ -137,24 +124,18 @@ def cross_port_end(
     return _nested_end(model, unit, owner_unit, end, rules)
 
 
-def _cross_port_text(
-    model: Model, unit: Id[Unit] | None, port_id: Id[Port], rules: ListingRules
-) -> str:
+def _cross_port_text(model: Model, unit: Id[Unit] | None, port_id: Id[Port], rules: ListingRules) -> str:
     """`port_id`'s baseline text for `unit`'s own listing (conductor ends)."""
     return cross_port_end(model, unit, port_id, rules).text
 
 
-def function_end(
-    model: Model, unit: Id[Unit] | None, function: Function, rules: ListingRules
-) -> BaselineEnd:
+def function_end(model: Model, unit: Id[Unit] | None, function: Function, rules: ListingRules) -> BaselineEnd:
     """A function's baseline end in `unit`'s listing: its text, its item's key, its name."""
     text = function_text(model, unit, function, rules)
     return BaselineEnd(text=text, key=listing_key(model, function.item), pin=function.name)
 
 
-def cross_function_end(
-    model: Model, unit: Id[Unit] | None, function_id: Id[Function], rules: ListingRules
-) -> BaselineEnd:
+def cross_function_end(model: Model, unit: Id[Unit] | None, function_id: Id[Function], rules: ListingRules) -> BaselineEnd:
     """`function_id`'s baseline end for `unit`'s own listing (mate ends)."""
     fn = functions(model)[function_id]
     owner = items(model)[fn.item]

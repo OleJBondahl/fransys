@@ -5,22 +5,24 @@ from dataclasses import dataclass
 from fransys_kernel import render_id
 from fransys_model.kernel import value
 lazy from fransys_model.kernel import Id
-lazy from fransys_model.vocab import Document, PageKind
+lazy from fransys_model.vocab import Document, PageKind, Unit
 
 __all__ = [
+    "DiagramSheet",
     "FieldOverflow",
     "FrameLabels",
     "SheetKey",
     "Sizes",
     "TitleBlockFields",
     "TitleBlockStrings",
+    "diagram_sheet_key",
     "sheet_key_text",
 ]
 
 
 @dataclass(frozen=True)  # plain: the closed value set bans float
 class Sizes:
-    """The four roles' font sizes in mm, for one document's profile `text_height_mm`.
+    """The four roles' font sizes in mm, from the build's library heights.
 
     `title_band_mm` is the title-block band at which a label and its value clear each other.
     """
@@ -99,3 +101,20 @@ def sheet_key_text(key: SheetKey) -> str:
     match key:  # SheetKey is a value type; its `kind` is a PageKind, not a record kind
         case SheetKey(document, kind, ordinal):
             return f"{render_id(document)}#{kind.name}#{'none' if ordinal is None else ordinal}"
+
+
+@value
+class DiagramSheet:
+    """One block diagram sheet: its reading (`None` is the absolute one) and its number 1..n.
+
+    The facade builds one per sheet the diagram engine placed; `diagram_sheet_key` names it.
+    """
+
+    unit: Id[Unit] | None
+    number: int
+
+
+def diagram_sheet_key(sheet: DiagramSheet) -> str:
+    """The key of a diagram sheet's SVG: render writes it, pdf looks it up."""
+    reading = "" if sheet.unit is None else render_id(sheet.unit)
+    return f"diagram:{reading}:{sheet.number}"

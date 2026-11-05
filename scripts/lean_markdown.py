@@ -101,11 +101,7 @@ _LIST_ITEM_RE = re.compile(r"^\s*([-*+]|\d+[.)])\s")
 def _is_structural_line(line: str) -> bool:
     """A heading, list item, table row, image or code-fence line -- never paragraph text."""
     stripped = line.lstrip()
-    return (
-        stripped.startswith(("#", "```", "!["))
-        or _is_table_row(line)
-        or _LIST_ITEM_RE.match(line) is not None
-    )
+    return stripped.startswith(("#", "```", "![")) or _is_table_row(line) or _LIST_ITEM_RE.match(line) is not None
 
 
 def _opening_paragraph_reason(lines: list[str]) -> str | None:
@@ -123,11 +119,7 @@ def _opening_paragraph_reason(lines: list[str]) -> str | None:
     if index >= len(lines) or _is_structural_line(lines[index]):
         return "no plain paragraph as the first block after the title"
     end_index = index
-    while (
-        end_index < len(lines)
-        and lines[end_index].strip() != ""
-        and not _is_structural_line(lines[end_index])
-    ):
+    while end_index < len(lines) and lines[end_index].strip() != "" and not _is_structural_line(lines[end_index]):
         end_index += 1
     paragraph_lines = end_index - index
     if not _OPENING_PARAGRAPH_MIN_LINES <= paragraph_lines <= _OPENING_PARAGRAPH_MAX_LINES:
@@ -197,17 +189,12 @@ def _long_sentence_count(text: str, sentence_words: int) -> int:
     return sum(1 for sentence in sentences if sentence and len(sentence.split()) > sentence_words)
 
 
-def measure_long_sentences(
-    files: Iterable[Path], root: Path, sentence_words: int
-) -> dict[str, int]:
+def measure_long_sentences(files: Iterable[Path], root: Path, sentence_words: int) -> dict[str, int]:
     """Per-file count of sentences over `sentence_words` words (LC4's splitter, verbatim).
 
     A file with zero over-length sentences is absent from the result -- the same implicit-zero
     convention as `nested_defs`, so the `limit` passed to `lean_ceilings.check`/`lower` for this
     section is `0`.
     """
-    counts = {
-        _rel(file, root): _long_sentence_count(file.read_text(encoding="utf-8"), sentence_words)
-        for file in files
-    }
+    counts = {_rel(file, root): _long_sentence_count(file.read_text(encoding="utf-8"), sentence_words) for file in files}
     return {path: count for path, count in counts.items() if count > 0}

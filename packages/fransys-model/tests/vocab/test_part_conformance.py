@@ -5,6 +5,7 @@ from typing import Any
 
 import pytest
 from examples import bundle_records, relay_part_bundle
+from fransys_author.instantiate import instantiate
 
 from fransys_model.checks.part_conformance import (
     ITEM_PART_MISMATCH,
@@ -23,7 +24,7 @@ from fransys_model.kernel import (
     make_id,
 )
 from fransys_model.vocab.core import Item, Port
-from fransys_model.vocab.instantiate import PartBundle, instantiate
+lazy from fransys_model.vocab.instantiate import PartBundle
 
 _KEY = ("examples", "relay-1")
 
@@ -40,14 +41,8 @@ def _relay(**kwargs: Any) -> tuple[Record, ...]:
 
 def _the[R](records: tuple[Record, ...], record_type: type[R], name: str) -> R:
     """The one `record_type` record called `name`."""
-    (found,) = [
-        r for r in records if isinstance(r, record_type) and getattr(r, "name", None) == name
-    ]
+    (found,) = [r for r in records if isinstance(r, record_type) and getattr(r, "name", None) == name]
     return found
-
-
-def _without(records: tuple[Record, ...], *dropped: Record) -> tuple[Record, ...]:
-    return tuple(r for r in records if r not in dropped)
 
 
 def _with(records: tuple[Record, ...], old: Record, new: Record) -> tuple[Record, ...]:
@@ -97,9 +92,7 @@ def _marked_bundle() -> PartBundle:
     """The relay part whose `A1` pin prints `"1"` (decision model-0053)."""
     bundle = relay_part_bundle()
     a1 = next(t for t in bundle.port_templates if t.name == "A1")
-    marked = tuple(
-        dataclasses.replace(t, marking="1") if t is a1 else t for t in bundle.port_templates
-    )
+    marked = tuple(dataclasses.replace(t, marking="1") if t is a1 else t for t in bundle.port_templates)
     return dataclasses.replace(bundle, port_templates=marked)
 
 

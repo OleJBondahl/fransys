@@ -15,8 +15,8 @@ from fransys_model.derive.facts.plc_wiring import (
     owner_of_port,
     wired_functions,
 )
-from fransys_model.derive.facts.rail_reach import ports_by_function
 from fransys_model.derive.facts.units import boundary, standalone
+from fransys_model.derive.indexes import build_indexes
 from fransys_model.derive.lookups import unit_chain
 from fransys_model.vocab.tables import items
 
@@ -71,15 +71,13 @@ class _Wiring:
     """The lookups one run reads: the net walk, the serving order and the direct conductors."""
 
     model: Model
-    by_function: Mapping[Id[Function], list[Id[Port]]]
+    by_function: Mapping[Id[Function], tuple[Id[Port], ...]]
     channel_owner: Mapping[Id[Port], Id[Function]]
     request_owner: Mapping[Id[Port], Id[Function]]
     ranked: Mapping[Id[Function], tuple[int, PlcChannelFacet]]
     neighbours: Mapping[Id[Function], frozenset[Id[Function]]]
 
-    def eligible(
-        self, request: PlcRequestFacet, claimed: Collection[Id[Function]]
-    ) -> list[Id[Function]]:
+    def eligible(self, request: PlcRequestFacet, claimed: Collection[Id[Function]]) -> list[Id[Function]]:
         """W1 (model-0211, amended): W1a keeps channels whose net holds no other request.
 
         With none, W1b keeps the channels whose net holds the subject, whatever else it carries.
@@ -89,18 +87,11 @@ class _Wiring:
         reached = wired_functions(self.model, own, self.channel_owner) - {subject}
         free = [channel for channel in reached if channel not in claimed]
         alone = [
-            channel
-            for channel in free
-            if not wired_functions(
-                self.model, self.by_function.get(channel, ()), self.request_owner
-            )
-            - {channel, subject}
+            channel for channel in free if not wired_functions(self.model, self.by_function.get(channel, ()), self.request_owner) - {channel, subject}
         ]
         return alone or free
 
-    def left(
-        self, request: PlcRequestFacet, claimed: Collection[Id[Function]]
-    ) -> list[Id[Function]]:
+    def left(self, request: PlcRequestFacet, claimed: Collection[Id[Function]]) -> list[Id[Function]]:
         """The channels left for `request` after W1 to W3, in serving order."""
         facts_of = {channel: facts for channel, (_, facts) in self.ranked.items()}
         adjacent = self.neighbours.get(request.subject, ())
@@ -143,7 +134,7 @@ def wired_requests(
     `ranked` maps each channel to its place and facts; one candidate binds, several bind none.
     W5: two kind-matched picks of one channel bind neither (contested); wrong-kind picks yield.
     """
-    by_function = ports_by_function(model)
+    by_function = build_indexes(model).ports_by_function
     owners = {request.subject for request in requests}
     wiring = _Wiring(
         model,
@@ -176,11 +167,10 @@ def reaches_open_boundary(model: Model, function: Function) -> bool:
     home = unit_of(model, function)
     if home is None:
         return False
-    by_function = ports_by_function(model)
+    by_function = build_indexes(model).ports_by_function
     own_ports = by_function.get(function.id, ())
     return any(
-        wired_functions(model, own_ports, owner_of_port(by_function, boundary(model, unit)))
-        - {function.id}
+        wired_functions(model, own_ports, owner_of_port(by_function, boundary(model, unit))) - {function.id}
         for unit in unit_chain(model, home)
         if standalone(model, unit)
     )

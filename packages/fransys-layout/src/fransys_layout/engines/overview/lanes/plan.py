@@ -43,12 +43,7 @@ def _reader_order(facts: ViewFacts) -> list[BoxSpec]:
 
 def _hosts(facts: ViewFacts, stubs: Collection[Ident], inner: Collection[Ident]) -> set[Ident]:
     """The inner boxes a line leaves from to a box of `stubs`."""
-    return {
-        end
-        for ln in facts.lines
-        for stub, end in ((ln.a, ln.b), (ln.b, ln.a))
-        if stub in stubs and end in inner
-    }
+    return {end for ln in facts.lines for stub, end in ((ln.a, ln.b), (ln.b, ln.a)) if stub in stubs and end in inner}
 
 
 def _sources(
@@ -64,25 +59,16 @@ def _sources(
     return joined or ([max(free, key=lambda b: len(set(near[b])))] if free else [])
 
 
-def _stages(
-    facts: ViewFacts, inner: Sequence[Ident], west_stubs: AbstractSet[Ident]
-) -> dict[Ident, int]:
+def _stages(facts: ViewFacts, inner: Sequence[Ident], west_stubs: AbstractSet[Ident]) -> dict[Ident, int]:
     """The stage of every box: inner boxes by LO3, west stubs at 0, east stubs after the last."""
     inside = set(inner)
     stubs = {b.box for b in facts.boxes} - inside
     pairs = [(ln.a, ln.b) for ln in facts.lines if ln.a in inside and ln.b in inside]
-    flow = [
-        p
-        for p, power in zip(((ln.a, ln.b) for ln in facts.lines), facts.power, strict=True)
-        if power
-    ]
+    flow = [p for p, power in zip(((ln.a, ln.b) for ln in facts.lines), facts.power, strict=True) if power]
     west = _hosts(facts, west_stubs, inside)
     east = _hosts(facts, stubs - west_stubs, inside)
     shift = 1 if west_stubs else 0
-    found = {
-        b: s + shift
-        for b, s in stages(inner, flow, pairs, _sources(inner, pairs, west, east), east).items()
-    }
+    found = {b: s + shift for b, s in stages(inner, flow, pairs, _sources(inner, pairs, west, east), east).items()}
     last = max(found.values(), default=0) + 1
     return {**found, **{s: 0 if s in west_stubs else last for s in stubs}}
 

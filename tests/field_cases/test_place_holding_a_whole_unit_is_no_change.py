@@ -1,12 +1,6 @@
-"""Kept by design: a place that holds every item of a unit is no change to its release.
-
-The engineering shape: a unit whose devices all sit in one place `C1` inside it, so each reference
-designation prints `+C1-<tag>`. A new issue drops the place and the references print `-<tag>`.
-
-The rule (decision model-0146): a change list is relative to the unit. The listing
-drops the location that holds every item of the unit, so both issues list the same designations, the
-change list reads "No changes." and `fr.verify` of the stored first issue stays clean.
-"""
+"""Field case: a place that holds every item of a unit is no change to its release.
+The bug: none, kept by design; the place holding a whole unit printed in each designation and would look changed.
+Fixed by model-0146: the change list is relative to the unit, so it drops the location that holds all its items."""
 
 from typing import TYPE_CHECKING, NamedTuple
 

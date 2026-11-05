@@ -2,19 +2,21 @@
 
 Every id comes from `make_id` over a key the design chooses, and instance keys are the ones
 `instantiate` builds, so no design hand-writes a hex id or a second key rule. All data is
-invented (CLAUDE.md invariant, red flag "Real project data in fixtures").
 """
 
 from dataclasses import dataclass, field
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 
+from fransys_author.instantiate import instantiate
+
+from fransys_model.elecdef import Current, PinRole
 from fransys_model.kernel import Draft, Id, Origin, make_id
-from fransys_model.vocab import PartBundle, instantiate
+from fransys_model.vocab import PartBundle
 from fransys_model.vocab.aspects import AspectNode, Placement
 from fransys_model.vocab.connectivity import Conductor, Mate, Net
 from fransys_model.vocab.core import Function, Item, Port
-from fransys_model.vocab.enums import Aspect, ConductorKind, Current, NetClass
+from fransys_model.vocab.enums import Aspect, ConductorKind, NetClass, PortBoundary
 from fransys_model.vocab.facets.cable import CoreFacet
 from fransys_model.vocab.facets.wire import WireFacet
 from fransys_model.vocab.supply_system import Rail, SupplySystem
@@ -27,10 +29,11 @@ from fransys_model.vocab.templates import (
 )
 
 if TYPE_CHECKING:
+    from fransys_model.elecdef import LinkKind
     from fransys_model.kernel import Record
-    from fransys_model.vocab.enums import FunctionKind, LinkKind, PartCategory, PortRole
+    from fransys_model.vocab.enums import FunctionKind, PartCategory
 
-type Pins = tuple[tuple[str, PortRole], ...]
+type Pins = tuple[tuple[str, PortBoundary | PinRole], ...]
 type Functions = dict[str, tuple[FunctionKind, Pins]]
 type Links = tuple[tuple[tuple[str, str], tuple[str, str], LinkKind], ...]
 
@@ -86,10 +89,7 @@ class Ref:
 
 def _supplies() -> tuple[SupplySystem, ...]:
     """The two invented supplies every design's net potentials name (POTENTIAL_WITHOUT_SUPPLY)."""
-    dc = {
-        name: Rail(max_v=Decimal(volts), phase=None)
-        for name, volts in (("+24V", 24), ("+5V", 5), ("0V", 0))
-    }
+    dc = {name: Rail(max_v=Decimal(volts), phase=None) for name, volts in (("+24V", 24), ("+5V", 5), ("0V", 0))}
     ac = {f"L{n}": Rail(max_v=Decimal(230), phase=(n - 1) * 120) for n in (1, 2, 3)}
     return tuple(
         SupplySystem(
@@ -155,7 +155,8 @@ class Kit:
                     key=(spec.key, name, pin),
                     function=template.id,
                     name=pin,
-                    role=role,
+                    boundary=role if isinstance(role, PortBoundary) else PortBoundary.GENERIC,
+                    pin_role=role if isinstance(role, PinRole) else None,
                 )
                 for pin, role in pins
             )
@@ -257,9 +258,7 @@ class Kit:
         carrier: Id[Item] | None,
     ) -> Id[Conductor]:
         a, b = ends
-        conductor = Conductor(
-            id=make_id(Conductor, key), key=key, a=a, b=b, kind=kind, carrier=carrier
-        )
+        conductor = Conductor(id=make_id(Conductor, key), key=key, a=a, b=b, kind=kind, carrier=carrier)
         self.add(conductor)
         return conductor.id
 

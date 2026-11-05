@@ -3,14 +3,19 @@
 import dataclasses
 import itertools
 from functools import cache
+from typing import Any
 
-from diagram_models import station
+from diagram_models import diagram_facts, station
 
+from electrical_symbols import LIBRARY
+from fransys_layout.core import grid_up
 from fransys_layout.engines.diagram.read import read_diagrams
+from fransys_layout.engines.overview.compose import place_diagram
 from fransys_layout.engines.overview.lanes.diagram_channels import _apart
 from fransys_layout.engines.overview.lanes.diagram_frame import build_frame
 from fransys_layout.engines.overview.lanes.frame_values import FrameTrack
 from fransys_layout.engines.overview.lanes.plan_channel import plan_channel
+from fransys_layout.engines.overview.scene import scene_of
 from fransys_layout.engines.overview.sheet_values import BoxFacts, DiagramFacts, LineFacts
 from fransys_layout.engines.overview.sizes import (
     MARKER_W,
@@ -19,14 +24,15 @@ from fransys_layout.engines.overview.sizes import (
     label_room,
     tab_reach,
 )
-from fransys_layout.geometry import PAGE_PAD, WIRING_GRID, Facing, snap_up
+from fransys_layout.geometry import PAGE_PAD, WIRING_GRID, Facing
+from fransys_layout.lint import lint_diagram
 from fransys_model.kernel import Id
 lazy from fransys_layout.engines.overview.lanes.frame_values import Frame
 
 TH = 8
 
 
-def _id(name: str) -> Id:
+def _id(name: str) -> Id[Any]:
     return Id(kind="item", value=name)
 
 
@@ -37,19 +43,6 @@ def _box(name: str, *texts: int) -> BoxFacts:
 def _line(a: str, b: str, label: int = 20, tab_a: int | None = None, tab_b: int | None = None):
     cable = Id(kind="item", value=f"w-{a}{b}")
     return LineFacts(cable=cable, a=_id(a), b=_id(b), label_width=label, tab_a=tab_a, tab_b=tab_b)
-
-
-def _facts(boxes, lines, width: int = 1868, height: int = 1248) -> DiagramFacts:
-    return DiagramFacts(
-        unit=None,
-        boxes=tuple(boxes),
-        lines=tuple(lines),
-        text_height=TH,
-        turn_penalty=1,
-        crossing_penalty=1,
-        width=width,
-        height=height,
-    )
 
 
 def _build(facts: DiagramFacts) -> Frame:
@@ -65,26 +58,24 @@ def _boxes(frame):
 def _star(leaves: int, **kw):
     names = [f"l{i}" for i in range(leaves)]
     boxes = [_box("hub"), *(_box(n) for n in names)]
-    return _facts(boxes, [_line("hub", n) for n in names], **kw)
+    return diagram_facts(boxes, [_line("hub", n) for n in names], **kw)
 
 
 def test_box_width_fits_the_widest_text_and_the_column_is_uniform():
     """Widths 40 and 100: column 1 holds both, both get the widest; kills: first text."""
-    facts = _facts(
-        [_box("hub"), _box("a", 40), _box("b", 30, 100)], [_line("hub", "a"), _line("hub", "b")]
-    )
+    facts = diagram_facts([_box("hub"), _box("a", 40), _box("b", 30, 100)], [_line("hub", "a"), _line("hub", "b")])
     frame = _build(facts)
     boxes = _boxes(frame)
-    assert boxes[_id("a")].width == boxes[_id("b")].width == snap_up(100 + 16)
-    assert boxes[_id("hub")].width == snap_up(40 + 16)  # kills: one width for all columns
+    assert boxes[_id("a")].width == boxes[_id("b")].width == grid_up(100 + 16, WIRING_GRID)
+    assert boxes[_id("hub")].width == grid_up(40 + 16, WIRING_GRID)  # kills: one width for all columns
 
 
 def test_height_fits_the_ends_and_the_texts():
     """Four ends on one side need (4+1) pitches; a three-text box needs its text; kills: no +1."""
     frame = _build(_star(4))
-    assert _boxes(frame)[_id("hub")].height == snap_up(5 * attach_pitch(TH))
-    tall = _facts([_box("a", 40, 40, 40), _box("b")], [_line("a", "b")])
-    assert _boxes(_build(tall))[_id("a")].height == snap_up(3 * TH + 2 * (WIRING_GRID // 2) + 16)
+    assert _boxes(frame)[_id("hub")].height == grid_up(5 * attach_pitch(TH), WIRING_GRID)
+    tall = diagram_facts([_box("a", 40, 40, 40), _box("b")], [_line("a", "b")])
+    assert _boxes(_build(tall))[_id("a")].height == grid_up(3 * TH + 2 * (WIRING_GRID // 2) + 16, WIRING_GRID)
 
 
 def test_columns_are_centred_on_the_tallest():
@@ -95,13 +86,13 @@ def test_columns_are_centred_on_the_tallest():
     hub = boxes[_id("hub")]
     low, high = leaves[0].y, leaves[-1].y + leaves[-1].height
     assert low == PAGE_PAD
-    assert hub.y == PAGE_PAD + snap_up(((high - low) - hub.height) // 2)
+    assert hub.y == PAGE_PAD + grid_up(((high - low) - hub.height) // 2, WIRING_GRID)
 
 
 def test_ends_are_ordered_by_the_far_boxs_top_then_line():
     """Lines hub-c, hub-a, hub-b: the hub's ends run a, b, c (lines 1, 2, 0); kills: line order."""
     boxes = [_box("hub"), _box("a"), _box("b"), _box("c")]
-    facts = _facts(boxes, [_line("hub", "c"), _line("hub", "a"), _line("hub", "b")])
+    facts = diagram_facts(boxes, [_line("hub", "c"), _line("hub", "a"), _line("hub", "b")])
     frame = _build(facts)
     hub = _boxes(frame)[_id("hub")]
     assert [e.line for e in hub.ends] == [1, 2, 0]
@@ -110,7 +101,7 @@ def test_ends_are_ordered_by_the_far_boxs_top_then_line():
 
 def test_the_box_in_the_lower_column_is_left_whatever_the_line_says():
     """Line (leaf, hub) still leaves the hub's east edge and enters the leaf's west edge."""
-    facts = _facts([_box("hub"), _box("a"), _box("b")], [_line("a", "hub"), _line("b", "hub")])
+    facts = diagram_facts([_box("hub"), _box("a"), _box("b")], [_line("a", "hub"), _line("b", "hub")])
     boxes = _boxes(_build(facts))
     assert {e.side for e in boxes[_id("hub")].ends} == {Facing.E}  # kills: left is a
     assert {e.side for e in boxes[_id("a")].ends} == {Facing.W}
@@ -118,8 +109,8 @@ def test_the_box_in_the_lower_column_is_left_whatever_the_line_says():
 
 def test_a_tab_touches_its_outer_edge_and_widens_the_channel():
     """A 20 wide tab at the hub end: touch x is edge + reach; kills: no tab."""
-    plain = _build(_facts([_box("hub"), _box("a")], [_line("hub", "a")]))
-    tabbed = _build(_facts([_box("hub"), _box("a")], [_line("hub", "a", tab_a=20)]))
+    plain = _build(diagram_facts([_box("hub"), _box("a")], [_line("hub", "a")]))
+    tabbed = _build(diagram_facts([_box("hub"), _box("a")], [_line("hub", "a", tab_a=20)]))
     hub = _boxes(tabbed)[_id("hub")]
     (end,) = hub.ends
     assert hub.touch_x(end) == hub.x + hub.width + tab_reach(20)
@@ -127,7 +118,7 @@ def test_a_tab_touches_its_outer_edge_and_widens_the_channel():
     assert after.tab_l == tab_reach(20)
     assert before.tab_l == 0
     assert after.width - before.width == tab_reach(20)
-    west = _facts([_box("hub"), _box("a")], [_line("hub", "a", tab_b=20)])
+    west = diagram_facts([_box("hub"), _box("a")], [_line("hub", "a", tab_b=20)])
     leaf = _boxes(_build(west))[_id("a")]
     assert leaf.touch_x(leaf.ends[0]) == leaf.x - tab_reach(20)  # kills: tab on wrong side
 
@@ -156,8 +147,8 @@ def test_the_channel_widens_by_a_track_pitch_per_track():
 def test_a_same_column_line_adds_a_track_pitch_after_the_last_column():
     """Lines hub-a, hub-b, a-b: a-b lies in column 1, gains a pitch; kills: S ignored."""
     boxes = [_box("hub"), _box("a"), _box("b")]
-    both = _build(_facts(boxes, [_line("hub", "a"), _line("hub", "b"), _line("a", "b")]))
-    none = _build(_facts(boxes, [_line("hub", "a"), _line("hub", "b")]))
+    both = _build(diagram_facts(boxes, [_line("hub", "a"), _line("hub", "b"), _line("a", "b")]))
+    none = _build(diagram_facts(boxes, [_line("hub", "a"), _line("hub", "b")]))
     trailing = both.sheets[0].channels[-1]
     assert trailing.same == (2,)
     assert trailing.right is None
@@ -173,12 +164,12 @@ def test_the_diagram_is_none_when_a_column_is_taller_than_the_sheet():
 
 
 def test_the_diagram_is_none_when_a_column_is_wider_than_a_sheet():
-    assert build_frame(_facts([_box("a", 900), _box("b")], [_line("a", "b")], width=700)) is None
+    assert build_frame(diagram_facts([_box("a", 900), _box("b")], [_line("a", "b")], width=700)) is None
 
 
 def _path(n: int, width: int):
     boxes = [_box(f"b{i}") for i in range(n)]
-    return _facts(boxes, [_line(f"b{i}", f"b{i + 1}") for i in range(n - 1)], width=width)
+    return diagram_facts(boxes, [_line(f"b{i}", f"b{i + 1}") for i in range(n - 1)], width=width)
 
 
 @cache
@@ -216,7 +207,7 @@ def test_a_cut_keeps_every_line_end_on_its_own_sheet():
 
 
 def test_the_station_frame_is_five_boxes_in_two_columns_all_on_the_grid():
-    (facts,) = read_diagrams(station())
+    (facts,) = read_diagrams(station(), LIBRARY)
     frame = _build(facts)
     (sheet,) = frame.sheets
     first, second = sheet.columns
@@ -235,7 +226,7 @@ def test_the_station_frame_is_five_boxes_in_two_columns_all_on_the_grid():
 
 
 def test_the_same_facts_give_the_same_frame():
-    (facts,) = read_diagrams(station())
+    (facts,) = read_diagrams(station(), LIBRARY)
     assert _build(facts) == _build(facts)
 
 
@@ -244,15 +235,15 @@ def test_a_flat_column_box_grows_to_hold_its_ends_a_text_apart() -> None:
     boxes = [_box("a")] + [_box(f"b{k}") for k in range(5)]
     lines = [_line("a", f"b{k}") for k in range(5)]
     facts = dataclasses.replace(
-        _facts(boxes, lines),
+        diagram_facts(boxes, lines),
         text_height=11,
         column=tuple(_id(n) for n in ("a", *(f"b{k}" for k in range(5)))),
-        row_height=snap_up(11 + 2 * WIRING_GRID),
+        row_height=grid_up(11 + 2 * WIRING_GRID, WIRING_GRID),
     )
     frame = _build(facts)
     box = _boxes(frame)[_id("a")]
     ys = sorted(e.y for e in box.ends if e.side == Facing.E)
-    assert box.height >= (5 + 1) * 16  # snap_up(11) is 16 on the 8 G grid
+    assert box.height >= (5 + 1) * 16  # grid_up(11, WIRING_GRID) is 16 on the 8 G grid
     assert {b - a for a, b in itertools.pairwise(ys)} == {16}
 
 
@@ -276,3 +267,20 @@ def test_a_run_ending_at_a_same_column_stub_y_moves_beyond_the_stubs() -> None:
 def test_runs_that_meet_only_where_they_cross_stay_on_their_tracks() -> None:
     runs = (_run(0, 160, 136, 1), _run(1, 232, 104, 2))
     assert _apart(runs, frozenset(), 5) == runs
+
+
+def test_a_column_one_box_taller_than_the_sheet_continues_on_the_next_sheet() -> None:
+    """BLOCK-DIAGRAM-CUT: the moved box starts sheet 2; its hub line is a jump with a marker on each sheet and passes through no box."""
+    boxes = [_box("h"), *(_box(f"l{k}") for k in range(5))]
+    lines = [_line("h", f"l{k}") for k in range(5)]
+    column = max(_build(diagram_facts(boxes, lines)).sheets[0].columns, key=lambda c: len(c.boxes))
+    total = column.boxes[-1].y + column.boxes[-1].height - column.boxes[0].y
+    facts = diagram_facts(boxes, lines, height=total + 2 * PAGE_PAD - 1)
+    frame = _build(facts)
+    assert [len(s.columns) for s in frame.sheets] == [2, 1]
+    assert len(frame.jumps) == 1
+    placed = place_diagram(facts)
+    assert placed is not None
+    assert [[m.at_sheet for m in s.markers] for s in placed.sheets] == [[2], [1]]
+    codes = {f.code for s in placed.sheets for f in lint_diagram(scene_of(facts, s))}
+    assert "DIAGRAM_LINE_THROUGH_BOX" not in codes

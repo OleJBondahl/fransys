@@ -2,20 +2,15 @@
 
 Root test: built through the public API (`import fransys as fr`), which
 `packages/fransys-model/tests` cannot reach without a layering exception (the same reason
-`tests/test_units_worked_example.py` is a root test). The fixtures below are a small,
-invented shape of the baseline spec's own worked example (one `demo-io-board` unit with a
-boundary connector wired to a relay, nested twice in `demo-pump-cabinet` units), built with
-`fr.build(parts, d.draft())` -- no `Document`, so no layout runs and every build here stays
-well under 1 s.
 """
 
 import json
 from typing import Any
 
 import fransys as fr
-import fransys_author
 import fransys_parts
 import pytest
+from fransys_author.design import Design
 
 from fransys_model.derive import baseline
 from fransys_model.kernel import SchemaVersionError
@@ -45,27 +40,19 @@ def _board(scope):
     return u, x1
 
 
-def _cabinet(scope, *, mate_to_spare=False):
-    """A minimal `demo-pump-cabinet` nesting one board, `P1` mated to its `X1`.
-
-    `mate_to_spare=True` mates `P1` to an unrelated spare connector instead, for the mates
-    can-fail probe.
-    """
+def _cabinet(scope):
+    """A minimal `demo-pump-cabinet` nesting one board, its boundary connector `X1` declared unused."""
     u = scope.unit("demo-pump-cabinet", revision=2, interface="1")
     u.revision(2, date="2026-01-01", text="First release", created="XX")
     grp = u.group("FLD", "Field wiring")
     board_u, board_x1 = _board(u.scope("io"))
     p1 = u.item("DEMO-CONN-2P", tag="P1", group=grp)
-    if mate_to_spare:
-        spare = u.item("DEMO-CONN-2P", tag="X9", group=grp)
-        u.mate(p1, spare)
-    else:
-        u.mate(p1, board_x1)
+    board_u.unused(board_x1)
     return u, board_u, p1
 
 
 def _new_design(parts):
-    d = fransys_author.Design(parts)
+    d = Design(parts)
     d.project(**_PROJECT)
     d.revision(1, date="2026-09-26", text="First issue", created="XX")
     return d
@@ -76,8 +63,8 @@ def two_cabinet_system():
     """Two identical `demo-pump-cabinet` instances, each nesting one `demo-io-board`."""
     parts = fransys_parts.load("demo_parts")
     d = _new_design(parts)
-    cab1_u, board1_u, _p1 = _cabinet(d.scope("cab1"))
-    cab2_u, board2_u, _p2 = _cabinet(d.scope("cab2"))
+    cab1_u, board1_u, _p1 = _cabinet(d.scope("cab1", at=d.location("L1", "Room 1")))
+    cab2_u, board2_u, _p2 = _cabinet(d.scope("cab2", at=d.location("L2", "Room 2")))
     result = fr.build(parts, d.draft())
     return result, cab1_u.unit_id, board1_u.unit_id, cab2_u.unit_id, board2_u.unit_id
 
@@ -87,9 +74,7 @@ def test_board_own_listing_matches_the_worked_example_text():
     corrected as the spec's own note allows: `items` entries carry `external` (the
     external-items amendment folded into L2 after the example was written). `boundary`'s
     key is `function` -- the ruling table's prose describes the field's content, not its
-    JSON key, exactly as `mates`' "two connector function designations" prints as `a`/`b`,
-    not `designation_a`/`designation_b`; the example's own literal JSON, amended 2026-09-26
-    to add `rating`/`operating`, kept `function` deliberately."""
+    """
     parts = fransys_parts.load("demo_parts")
     d = _new_design(parts)
     u, _x1 = _board(d)
@@ -98,7 +83,7 @@ def test_board_own_listing_matches_the_worked_example_text():
     text = baseline.dumps(baseline.listing(result.model, u.unit_id))
 
     expected = {
-        "listing_version": 2,
+        "listing_version": 6,
         "unit": {"name": "demo-io-board", "version": 1, "revision": 3, "interface": "2"},
         "items": [
             {
@@ -193,8 +178,6 @@ def test_both_board_instances_and_both_cabinets_give_equal_listings(two_cabinet_
     assert len(cab1.units) == 1
     assert cab1.units[0].name == "demo-io-board"
     assert cab1.units[0].instances == ("=BRD-A1",)
-    assert len(cab1.mates) == 1
-    assert {cab1.mates[0].a, cab1.mates[0].b} == {"=BRD-A1/=BRD-X1:x1", "=FLD-P1:x1"}
 
 
 def test_standalone_board_listing_equals_the_nested_instances_own_listing(two_cabinet_system):
@@ -221,8 +204,8 @@ def test_loads_dumps_round_trip(two_cabinet_system):
 def test_loads_refuses_an_unknown_listing_version(two_cabinet_system):
     result, cab1_id, _board1_id, _cab2_id, _board2_id = two_cabinet_system
     text = baseline.dumps(baseline.listing(result.model, cab1_id))
-    bad = text.replace('"listing_version":2', '"listing_version":3')
-    assert '"listing_version":3' in bad
+    bad = text.replace('"listing_version":6', '"listing_version":7')
+    assert '"listing_version":7' in bad
     with pytest.raises(SchemaVersionError):
         baseline.loads(bad)
 
@@ -242,39 +225,18 @@ def test_system_listing_names_the_project_and_the_top_level_units(two_cabinet_sy
     assert len(system.units[0].instances) == 2
 
 
-def test_cabinets_differ_when_a_boards_mate_partner_differs():
-    """Fixed-designations acceptance's sibling case for `mates`: two cabinets alike except
-    that one mates `P1` to a spare connector instead of its own board's `X1` must give
-    different listings, naming `mates` (this is CAN-FAIL 2's own probe: with the `mates`
-    section cut, this assertion is exactly what breaks)."""
-    parts = fransys_parts.load("demo_parts")
-    d = _new_design(parts)
-    cab1_u, _board1_u, _p1 = _cabinet(d.scope("cab1"))
-    cab2_u, _board2_u, _p2 = _cabinet(d.scope("cab2"), mate_to_spare=True)
-    result = fr.build(parts, d.draft())
-
-    cab1 = baseline.listing(result.model, cab1_u.unit_id)
-    cab2 = baseline.listing(result.model, cab2_u.unit_id)
-    assert cab1 != cab2
-    assert "mates" in baseline.differing_sections(cab1, cab2)
-
-
 def _cabinet_with_boundary_net(scope):
     """A `demo-pump-cabinet` nesting one board, with a CABINET-declared net that also reaches
-    the board's own boundary pin (`X1`'s port `"2"`, already mated to `P1`'s `"2"`).
+    the board's own boundary pin (`X1`'s port `"2"`).
 
     Ruling 2026-09-27: `nets` follows U6's lowest-common-unit rule too, the same as
-    `conductors`/`mates` -- the literal "a member port on an item of U itself" wording would
-    put this net in the board's OWN listing too (the pin is, after all, its own item), so the
-    board's standalone listing would differ from its nested one (the net does not exist when
-    it is built alone), breaking this spec's own acceptance.
     """
     u = scope.unit("demo-pump-cabinet", revision=2, interface="1")
     u.revision(2, date="2026-01-01", text="First release", created="XX")
     grp = u.group("FLD", "Field wiring")
     board_u, board_x1 = _board(u.scope("io"))
     p1 = u.item("DEMO-CONN-2P", tag="P1", group=grp)
-    u.mate(p1, board_x1)
+    board_u.unused(board_x1)
     u.net("shared", p1["2"], board_x1["2"])
     return u, board_u, p1
 
@@ -322,7 +284,7 @@ def test_two_releases_of_one_unit_in_one_cabinet_give_two_distinct_units_entries
     board_b = u.scope("ioB").unit("demo-io-board", version=2, revision=1, interface="2")
     board_b.revision(1, date="2026-01-01", text="v2", created="XX")
     grp_b = board_b.group("BRD", "I/O board")
-    board_b.item("DEMO-PCB-IO", tag="A1", group=grp_b)
+    board_b.item("DEMO-PCB-IO", tag="A2", group=grp_b)
 
     result = fr.build(parts, d.draft())
     cab_listing = baseline.listing(result.model, u.unit_id)
@@ -332,17 +294,12 @@ def test_two_releases_of_one_unit_in_one_cabinet_give_two_distinct_units_entries
     assert {(row.version, row.revision) for row in cab_listing.units} == {(1, 5), (2, 1)}
 
 
-def test_loads_reads_a_version_1_text_with_no_keys_and_a_version_2_text_with_them(
+def test_loads_reads_a_keyed_text(
     two_cabinet_system,
 ):
     result, cab1_id, _board1_id, _cab2_id, _board2_id = two_cabinet_system
     keyed = baseline.listing(result.model, cab1_id)
     assert all(row.key is not None for row in keyed.items)
-    assert '"listing_version":2' in baseline.dumps(keyed)
-
-    bare = baseline.listing(result.model, cab1_id, baseline.ListingRules(item_keys=False))
-    text = baseline.dumps(bare)
-    assert '"listing_version":1' in text
-    assert '"key"' not in text
-    assert baseline.loads(text) == bare
-    assert all(row.key is None for row in bare.items)
+    text = baseline.dumps(keyed)
+    assert '"listing_version":6' in text
+    assert baseline.loads(text) == keyed

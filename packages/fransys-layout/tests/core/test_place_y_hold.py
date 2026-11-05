@@ -8,9 +8,9 @@ import pytest
 
 from fransys_layout.core import Facts, PlacementProblem
 from fransys_layout.core.constraints import Graph
+from fransys_layout.core.flow_values import Cell
 from fransys_layout.core.pack import PlacedColumn, cell_node
 from fransys_layout.core.place_y import _gap, stack_constraints
-from fransys_layout.core.values import Cell
 
 from .cut_fixtures import AREA, elem
 from .test_place_x import env_of

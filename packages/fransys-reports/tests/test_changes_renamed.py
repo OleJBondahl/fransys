@@ -6,8 +6,31 @@ from fransys_reports import changes_csv, changes_markdown
 
 from fransys_model.derive.baseline import diff
 from fransys_model.derive.rows_baseline import BaselineItem, BaselineUnit, Listing
+from fransys_model.kernel import Draft, Origin, freeze, make_id
+from fransys_model.layout import ExportForm
 
 ARROW = "→"
+FORM = ExportForm(
+    id=make_id(ExportForm, ("build", "export")),
+    key=("build", "export"),
+    reports=(),
+    name_join="-",
+    version_sign="-v",
+    ref_sign="-",
+    data_dir="data",
+    data_suffixes=(),
+    csv_delimiter=",",
+    csv_encoding="utf-8",
+    csv_quoting="minimal",
+    csv_newline="\n",
+)
+
+
+def _model(form):
+    """A model that holds only the `[export]` record `form`."""
+    draft = Draft()
+    draft.extend([form], origin=Origin(file="test_changes_renamed.py", line=1, note="form"))
+    return freeze(draft)
 
 
 def _item(designation, key, mpn="P1"):
@@ -49,17 +72,22 @@ def test_the_note_prints_the_rename_with_both_designations_before_the_real_chang
 
 
 def test_the_csv_writes_renamed_in_the_change_column_first():
-    rows = changes_csv(_renamed_diff()).splitlines()
+    rows = changes_csv(_renamed_diff(), model=_model(FORM)).splitlines()
     assert rows[1] == "items,renamed,=CSN-A3,,-A3,=CSN-A3"
+
+
+def test_the_csv_follows_the_export_form() -> None:
+    form = dataclasses.replace(FORM, csv_delimiter=";", csv_newline="\r\n")
+    text = changes_csv(_renamed_diff(), model=_model(form))
+    assert text.splitlines()[1] == "items;renamed;=CSN-A3;;-A3;=CSN-A3"
+    assert "\r\n" in text
 
 
 def test_a_rename_with_no_other_change_is_one_bullet_and_nothing_else():
     before = _listing(_item("-A3", "a3"))
     after = dataclasses.replace(before, items=(_item("=CSN-A3", "a3"),))
     md = changes_markdown(diff(before, after))
-    assert [line for line in md.splitlines() if line.startswith("- ")] == [
-        f"- Renamed `-A3` {ARROW} `=CSN-A3`."
-    ]
+    assert [line for line in md.splitlines() if line.startswith("- ")] == [f"- Renamed `-A3` {ARROW} `=CSN-A3`."]
 
 
 def test_the_renamed_line_and_the_interface_line_both_carry_the_arrow():

@@ -12,7 +12,7 @@ from fransys_model.derive.facts.children import parent_item
 from fransys_model.derive.facts.item_predicates import is_cable
 from fransys_model.derive.facts.units import is_harness, item_chain, unit_own_roots
 from fransys_model.kernel import Id, Model, value
-from fransys_model.layout import DiagramMarker, DiagramSheet, layout_of, sheet_for
+from fransys_model.layout import sheet_for
 from fransys_model.vocab.enums import PageKind
 from fransys_model.vocab.tables import conductors, functions, items, ports
 lazy from fransys_model.vocab.core import Function, Item, Port, Unit
@@ -21,21 +21,17 @@ from .cable_drawing import end_by_others, end_label
 from .cable_end_rank import cable_end_owner
 from .designation import printed_designation, unit_list_context
 from .drawing_text import (
-    content_extent,
-    frame_column,
-    frame_row,
     outline_title,
     partner_position_text,
     product_location,
 )
+from .facts.house_settings import frame_form_of, reference_text_of
 from .facts.roles import function_role
 from .facts.subjects import is_unit_boundary
 from .frame_labels import cell_labels
 from .harness import reading_cables
 from .harness_line_ends import mate_of, plug_of
-from .house_settings import frame_form_of, reference_text_of
 from .instance_tag import instance_name, instance_tags
-from .library_grid import mm_per_division
 from .lookups import item_of_port, terminal_strip, unit_chain
 from .order import NaturalKey, natural_key
 lazy from .rows import HarnessCable
@@ -157,16 +153,12 @@ def end_box(model: Model, port: Id[Port], unit: Id[Unit] | None) -> BoxEnd | Non
     return None if box is None else BoxEnd(box=box, landed=landed, anchored=anchored)
 
 
-def box_order(
-    model: Model, box: BoxKey, unit: Id[Unit] | None
-) -> tuple[tuple[NaturalKey, ...], str]:
+def box_order(model: Model, box: BoxKey, unit: Id[Unit] | None) -> tuple[tuple[NaturalKey, ...], str]:
     """Boxes in text order: by the lines a box prints, then by id."""
     return (tuple(natural_key(line) for line in box_lines(model, box, unit)), render_id(box))
 
 
-def _cable_ends(
-    model: Model, cable: HarnessCable, unit: Id[Unit] | None
-) -> dict[Id[Any], list[BoxEnd]]:
+def _cable_ends(model: Model, cable: HarnessCable, unit: Id[Unit] | None) -> dict[Id[Any], list[BoxEnd]]:
     """The ends the cores of `cable` reach, by box, the boxes in text order."""
     found: dict[Id[Any], list[BoxEnd]] = {}
     for core in cable.cores:
@@ -247,7 +239,7 @@ def box_lines(model: Model, box: BoxKey, unit: Id[Unit] | None) -> tuple[str, ..
     return (*((head,) if head else ()), outline_title(model, instance))
 
 
-def box_dashed(model: Model, box: BoxKey, unit: Id[Unit] | None) -> bool:  # noqa: ARG001 - the reading no longer decides; callers keep one signature
+def box_dashed(model: Model, box: BoxKey) -> bool:
     """Whether the box is drawn dashed: an item whose end is by others."""
     return not is_unit_boundary(box) and end_by_others(model, cast("Id[Item]", box))
 
@@ -286,27 +278,12 @@ def diagram_facts(model: Model, unit: Id[Unit] | None) -> tuple[DiagramFact, ...
     return tuple(sorted(found, key=lambda fact: (fact.code, render_id(fact.subject))))
 
 
-def diagram_marker_text(model: Model, marker: DiagramMarker) -> str:
-    """The text a cut marker prints: its partner's place on the other sheet, as `p2:3B`.
+def diagram_marker_text(model: Model, sheet: int, at_sheet: int, column: int, row: str) -> str:
+    """The text a cut marker on sheet `sheet` prints: its partner's cell `column`, `row` on `at_sheet`, `p2:3B`.
 
-    The partner is the marker of the same line on the sheet `marker.at_sheet` of the same reading.
+    The cell is the partner marker's, read by the caller from the layout layer's `frame_cell`.
     """
-    sheets, markers = layout_of(model, DiagramSheet), layout_of(model, DiagramMarker)
-    own = sheets[marker.sheet]
-    partner = next(
-        m
-        for m in markers.values()
-        if sheets[m.sheet].unit == own.unit
-        and sheets[m.sheet].number == marker.at_sheet
-        and m.key[-3:] == marker.key[-3:]
-    )
     page = sheet_for(model, PageKind.BLOCK_DIAGRAM)
-    per_division = mm_per_division(model, page)
-    width = content_extent(page.content_width_mm, per_division)
-    column = frame_column(width, page.frame_columns, partner.x)
-    row = frame_row(
-        content_extent(page.content_height_mm, per_division), page.frame_rows, partner.y
-    )
     labels = cell_labels(frame_form_of(model), page.frame_rows, column, row)
-    seats = (1, own.number, ()), (1, marker.at_sheet, ())
+    seats = (1, sheet, ()), (1, at_sheet, ())
     return partner_position_text(reference_text_of(model), *seats, labels)

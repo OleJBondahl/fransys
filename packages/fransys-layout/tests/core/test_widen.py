@@ -4,16 +4,20 @@ from __future__ import annotations
 
 from dataclasses import replace
 
+import pytest
 from options_fixtures import core_options
 
-from fransys_layout.core import Facts, PinRef, PlacementProblem, Room, Size, order_blocks
+from fransys_layout.core import Annex, Box, Facts, PinRef, PlacementProblem, Size, Spot, order_blocks
 from fransys_layout.core.cut import cut_pages
+from fransys_layout.core.cut_costs import with_wires
 from fransys_layout.core.cut_measured import Measured
 from fransys_layout.core.outputs import Demand, PagePlacement
 from fransys_layout.core.place import place_pages
-from fransys_layout.core.row_extent import extent
-from fransys_layout.core.values import CutResult, Ref, RefEnd, RefKind
+from fransys_layout.core.row_extent import held
+from fransys_layout.core.solve import solve
+from fransys_layout.core.values import Ref, RefEnd, RefKind, StandClass
 from fransys_layout.core.widen import measured_of, reserves_of
+lazy from fransys_layout.core.flow_values import CutResult
 
 from .conftest import MARKER
 from .cut_fixtures import AREA, chain, elem, free, net, page_of
@@ -24,12 +28,6 @@ from .widen_fixtures import gap_width
 PLAIN = core_options(
     justify=False,
     marker=MARKER,
-    flip_turn="R180",
-    tag_stagger=True,
-    label_gap=8,
-    parallel_pitch=48,
-    driver_first=True,
-    arrow_sides=("E", "W"),
 )
 
 
@@ -55,9 +53,7 @@ def test_no_reserves_is_the_landed_placement_on_three_planted_problems() -> None
         landed = place_pages(cut, prob, PLAIN)
         assert place_pages(cut, prob, PLAIN, None) == landed
         assert place_pages(cut, prob, PLAIN, {}) == landed
-        pair = (
-            next((g.left, g.right) for g in landed.pages[0].gaps) if landed.pages[0].gaps else None
-        )
+        pair = next((g.left, g.right) for g in landed.pages[0].gaps) if landed.pages[0].gaps else None
         if pair:
             assert place_pages(cut, prob, PLAIN, {pair: 1}) == landed
 
@@ -101,9 +97,7 @@ def all_heights(prob: PlacementProblem, height: int) -> Measured:
     flow = flow_of(prob, PLAIN)
     lists = order_blocks(blocks_of(prob, PLAIN), flow, PLAIN)
     blocks = [b for lst in lists for b in lst.blocks]
-    return Measured(
-        {}, {b.id: height for b in blocks}, {c: height for b in blocks for c in b.columns}
-    )
+    return Measured({}, {b.id: height for b in blocks}, {c: height for b in blocks for c in b.columns})
 
 
 def rows_of(result: CutResult) -> list[list[tuple[str, ...]]]:
@@ -137,13 +131,11 @@ def test_a_measured_height_over_the_page_moves_the_block_down_and_its_reference_
     prob = replace(three_columns(), area=Size(70, 854))
     assert [len(p.rows) for p in recut(prob, None).spec.pages] == [3]
     assert [len(p.rows) for p in recut(prob, all_heights(prob, 300)).spec.pages] == [2, 1]
-    legs = replace(fan_legs(), area=Size(124, 854))  # layout-0308: a row end holds a 48 G arrow
+    legs = replace(fan_legs(), area=Size(124, 854))  # layout-0308: a row end holds a 48 G arrow; the 2|1 vs 1|2 split ties exactly (R1685)
     assert page_of(recut(legs, None)) == {"c:k1": 1, "c:k2": 1, "c:k3": 1}
     moved = recut(legs, all_heights(legs, 300))
     assert page_of(moved) == {"c:k1": 1, "c:k2": 1, "c:k3": 2}
-    assert moved.spec.reference_plan[-1] == Ref(
-        "feed", RefKind.COPY, (RefEnd(2, "c:k1", PinRef("k3", "n")),)
-    )
+    assert moved.spec.reference_plan[-1] == Ref("feed", RefKind.COPY, (RefEnd(2, "c:k1", PinRef("k3", "n"), stand=StandClass.TRUNK_END),))
 
 
 def two_heights() -> PlacementProblem:
@@ -157,16 +149,11 @@ def test_measured_height_is_the_blocks_own_extent_never_its_rows() -> None:
     prob = two_heights()
     cut = cut_of(prob, PLAIN)
     placement = placed_from(cut, prob, PLAIN)
-    measured = measured_of(cut, placement, routed_from(cut, prob, PLAIN), PLAIN)
+    measured = measured_of(cut, placement, routed_from(cut, prob, PLAIN), prob, PLAIN)
     feet = {
-        p.sym: (p.y - up, p.y + down)
-        for p in placement.pages[0].placed
-        for up, down in [extent(replace(p.footprint, y=p.footprint.y - p.y), Room(), PLAIN)]
+        p.sym: (p.y - up, p.y + down) for p in placement.pages[0].placed for up, down in [held(replace(p.footprint, y=p.footprint.y - p.y), PLAIN)]
     }
-    own = {
-        k: max(feet[s][1] for s in v) - min(feet[s][0] for s in v)
-        for k, v in {"column:c:a0": ("a0", "a1"), "column:c:b0": ("b0", "b1")}.items()
-    }
+    own = {k: max(feet[s][1] for s in v) - min(feet[s][0] for s in v) for k, v in {"column:c:a0": ("a0", "a1"), "column:c:b0": ("b0", "b1")}.items()}
     row_height = placement.pages[0].rows[0][0]
     assert measured.heights["column:c:b0"] == own["column:c:b0"] < row_height
     assert measured.heights["column:c:a0"] == own["column:c:a0"]
@@ -184,15 +171,130 @@ def test_a_columns_measured_height_is_its_own_never_its_blocks_so_its_rows_stay_
     prob = fan_rows()
     cut = cut_of(prob, PLAIN)
     placement = placed_from(cut, prob, PLAIN)
-    measured = measured_of(cut, placement, routed_from(cut, prob, PLAIN), PLAIN)
+    measured = measured_of(cut, placement, routed_from(cut, prob, PLAIN), prob, PLAIN)
     block = measured.heights["fan:c:k1"]
     assert block > 300 > 2 * max(measured.columns.values())
     page = placement.pages[0]
     foot = {p.sym: p.footprint for p in page.placed}
     # a leg's own trunk counts (layout-0374): its line stands above the leg's footprint
     rise = [foot[f"k{i}"].y - next(t.y for t in page.trunks if t.row == i - 1) for i in range(2, 6)]
-    assert rise == [8] * 4
+    assert rise == [16] * 4  # N2: a row-end arrow keeps its half box and a grid under the lane
     assert [measured.columns[f"c:k{i}"] for i in range(2, 6)] == [
-        32 + 8 + PLAIN.wiring_grid + PLAIN.column_wire_lanes * PLAIN.wiring_grid
-    ] * 4  # the leg, its rise, the step held above the trunk line (trunk_room), the lanes
+        32 + 16 + PLAIN.wiring_grid + PLAIN.column_wire_lanes * PLAIN.wiring_grid
+    ] * 4  # the leg, its rise (with the arrow room), the step held above the trunk line (trunk_room), the lanes
     assert set(page_of(recut(prob, measured)).values()) == {1}
+
+
+def test_a_row_cut_taller_than_the_page_from_a_stale_height_is_cut_again() -> None:
+    """The measure came off the round before: a row now standing within the room is stale."""
+    from types import SimpleNamespace
+    from typing import Any
+
+    from fransys_layout.core.widen import _stale
+
+    def case(est: int, top: int, bottom: int) -> Any:
+        row = SimpleNamespace(height_est=est)
+        cut = SimpleNamespace(spec=SimpleNamespace(pages=[SimpleNamespace(rows=[row])]))
+        return cut, SimpleNamespace(pages=[SimpleNamespace(bands=[(top, bottom)])])
+
+    assert _stale(*case(832, 24, 816), 806)  # cut from 832, now 792 high: stale
+    assert not _stale(*case(832, 24, 856), 806)  # still 832 high: the page is over
+    assert not _stale(*case(700, 24, 716), 806)  # fits within the room
+
+
+def test_an_annex_owner_s_block_grows_by_the_annex_height_in_its_measure_and_its_reserve() -> None:
+    """R1129: block_reserves and the solved span read one number, annex_room, so the recut leaves the annex room."""
+    prob = card_with_coils()
+    cut = cut_of(prob, PLAIN)
+    card = next(b for lst in cut.blocks for b in lst.blocks if b.is_card)
+    assert card.anchor is not None
+    annexed = replace(prob, annexes=(Annex(card.anchor, Size(40, 16), None, {"R0": (Spot("TL", "TL", 0, -16, "up"),)}),))
+    bare = measured_of(cut, placed_from(cut, prob, PLAIN), routed_from(cut, prob, PLAIN), prob, PLAIN)
+    held_ = measured_of(cut, placed_from(cut, annexed, PLAIN), routed_from(cut, annexed, PLAIN), annexed, PLAIN)
+    assert held_.arrows[card.anchor].y == 16
+    assert bare.heights[card.id] < held_.heights[card.id] <= bare.heights[card.id] + 32
+
+
+def test_a_fold_piece_is_placed_within_the_page_room_with_the_tags_it_places() -> None:
+    """KI-542 (R1427, R1430): the fold counts the tag at each piece end, so no placed piece is taller than the page room."""
+    syms = [elem(f"e{i}", height=250) for i in range(8)]
+    prob = PlacementProblem(AREA, tuple(syms), tuple(chain([s.id for s in syms])), facts=Facts())
+    cut = cut_of(prob, PLAIN)
+    placement = placed_from(cut, prob, PLAIN)
+    sized = {c.id for c in cut.flow.columns if "#" in c.id}
+    room = AREA.h - PLAIN.page_headroom - with_wires(0, PLAIN) - 2 * PLAIN.open_stub
+    placed = {k: bottom - top for page in placement.pages for k, (top, bottom) in page.spans.items() if k in sized}
+    assert len(sized) > 1
+    assert all(h <= room for h in placed.values())
+
+
+def wide_annex_columns(width: int) -> PlacementProblem:
+    """three_columns() with one annex a symbol, beside its body at the top right, `width` wide: it fits only once the gap is that wide."""
+    prob = three_columns()
+    return replace(prob, annexes=tuple(Annex(s.id, Size(width, 8), None, {"R0": (Spot("TR", "TR", 0, 0, "down"),)}) for s in prob.symbols))
+
+
+@pytest.mark.rule("TEXT-CANDIDATES")
+def test_a_label_blocked_at_every_candidate_widens_its_gap_before_it_is_a_finding() -> None:
+    """A6: a box 100 wide beside a body stands in a gap of 8 nowhere; its need goes to the recut, the gaps grow, and every label stands."""
+    layout = solve(wide_annex_columns(100), PLAIN)
+    assert [f for f in layout.findings if f.code == "ANNEX_UNPLACED"] == []
+    assert len(layout.annotations.annexes) == 6
+    assert min(g.x1 - g.x0 for g in layout.placement.pages[0].gaps) >= 100
+
+
+@pytest.mark.rule("TEXT-CANDIDATES")
+def test_a_label_still_blocked_after_the_widen_is_a_finding_naming_it_and_stands_at_its_first_spot() -> None:
+    """T6: a box wider than the page fits no gap; the finding names its owner and the label is neither dropped nor moved."""
+    layout = solve(wide_annex_columns(AREA.w + 8), PLAIN)
+    named = {f.subject for f in layout.findings if f.code == "ANNEX_UNPLACED"}
+    assert named == {s.id for s in three_columns().symbols}
+    assert len(layout.annotations.annexes) == 6
+
+
+def test_block_reserves_hold_only_the_stub_box_below_the_row_content_on_a_card_and_on_each_column() -> None:
+    """R1636: `RowReserve.y` is the part of the tallest trunk-end stub box below the row's own content; a stub that fits reserves 0."""
+    from fransys_layout.core.arrow_reserve import block_reserves
+    from fransys_layout.core.cut_costs import item_height
+
+    pin, far = PinRef("a", "out"), PinRef("x", "1")
+    refs = (Ref("n", RefKind.STUB, (RefEnd(1, "c", pin, 0, StandClass.LEG, far=(far,)),)),)
+    for box_h in (472, 8):
+        options = replace(PLAIN, stub_lines={(pin, far): (2,)}, stub_table={(2, 1): {"R0": Box(0, -8, 71, box_h)}})
+        for prob in (card_with_coils(), three_columns()):
+            cut = cut_of(prob, options)
+            cut = replace(cut, spec=replace(cut.spec, reference_plan=refs))
+            reserves = block_reserves(cut, (), options)
+            columns = {c.id: c for c in cut.flow.columns}
+            blocks = [b for lst in cut.blocks for b in lst.blocks]
+            held = [reserves[b.anchor or b.id].y if b.is_card else reserves[b.anchor or b.id, c].y for b in blocks for c in b.columns[:1]]
+            want = [max(0, box_h - (b.height_est if b.is_card else item_height(columns[c], options))) for b in blocks for c in b.columns[:1]]
+            assert held
+            assert held == want
+            assert any(held) == (box_h == 472)
+
+
+def test_block_reserves_hold_the_arrow_room_under_the_lane_where_it_exceeds_the_row_content() -> None:
+    """R1692: a lane-end arrow reserves `arrow_room` less one grid, whatever the row content, as the solve deepens the legs by it; none reserves 0."""
+    from fransys_layout.core.arrow_reserve import block_reserves
+    from fransys_layout.core.cut_end_rooms import arrow_room
+    from fransys_layout.core.flow_values import Attach, Fan
+
+    options = replace(PLAIN, wiring_grid=400)
+    for prob in (card_with_coils(),):
+        cut = cut_of(prob, PLAIN)
+        pin = PinRef("a", "p")
+        fan = Fan("f", ("n",), (), (Attach(None, 0, 0, pin, 0, net="n"),), None, 1, "below")
+        cut = replace(cut, flow=replace(cut.flow, fans=(fan,)))
+        page = cut.spec.pages[0]
+        arrow = Ref(fan.id, RefKind.ARROW, (RefEnd(page.page, None, pin, 0), RefEnd(page.page, None, pin, 1)))
+        refs = (arrow,)
+        room = arrow_room(refs, page, cut.flow.fans, 0, options)
+        cut = replace(cut, spec=replace(cut.spec, reference_plan=refs))
+        reserves = block_reserves(cut, (), options)
+        blocks = [b for b in (x for lst in cut.blocks for x in lst.blocks) if b.id in page.rows[0].blocks]
+        held = [reserves[b.anchor or b.id].y if b.is_card else reserves[b.anchor or b.id, c].y for b in blocks for c in b.columns[:1]]
+        want = [max(0, room - options.wiring_grid) for b in blocks for c in b.columns[:1]]
+        assert held == want
+        assert any(held)
+        assert not any(r.y for r in block_reserves(replace(cut, spec=replace(cut.spec, reference_plan=())), (), options).values())

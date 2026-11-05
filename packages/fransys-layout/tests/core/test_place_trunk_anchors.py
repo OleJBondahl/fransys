@@ -7,6 +7,7 @@ from dataclasses import replace
 import pytest
 
 from fransys_layout.core import Facts, PlacementProblem
+from fransys_layout.core.hangings import Hanging
 from fransys_layout.core.node_names import box_y_node
 from fransys_layout.core.place_trunk import box_at, trunk_node
 from fransys_layout.core.place_x import place_x
@@ -29,9 +30,12 @@ def _card_leg(*, anchored: bool, held: tuple[str, ...] = ("A1.p1", "A1.p3")) -> 
     return replace(PlacementProblem(AREA, syms, tuple(nets), Facts()), anchors=anchors)
 
 
-def _gap(prob: PlacementProblem) -> int:
-    """The y from the trunk to the card's pin row."""
+def _gap(prob: PlacementProblem, hung: str | None = None) -> int:
+    """The y from the trunk to the card's pin row, with a `hung`-kind hanging of REACH over pin p2 when given."""
     env = env_of(prob)
+    if hung:
+        box = Box(-6, -REACH, 12, REACH)
+        env = replace(env, hangings={("A1", "p2", "R0"): (Hanging(PinRef("A1", "p2"), "N", box, hung),)})
     x, _ = place_x(env)
     y, findings = place_y(env, x)
     assert findings == ()
@@ -55,3 +59,23 @@ def test_a_card_row_with_no_anchored_item_keeps_its_gap() -> None:
 def test_a_trunk_that_ends_before_the_anchored_item_keeps_its_gap() -> None:
     """The trunk stops at p1, so the item on p2 stands beyond its end and asks no room."""
     assert _gap(_card_leg(anchored=True, held=("A1.p1",))) < REACH
+
+
+@pytest.mark.rule("PAGE-CUT")
+def test_a_trunk_clears_a_lead_hanging_but_not_a_tag_hanging() -> None:
+    """The lead hanging spans a cut pin's lead and its tag (CND-D-FIX); the other kinds wait (KI-333)."""
+    prob = _card_leg(anchored=False)
+    assert _gap(prob, "lead") >= REACH
+    assert _gap(prob, "tag") < REACH
+
+
+def test_a_column_driver_clears_a_step_out_cell_only_when_its_cell_has_no_pin_beside_it() -> None:
+    """R1313: a two-pin element (pins on one line) steps out along the trunk's way; a free-sided cell steps out sideways."""
+    from fransys_layout.core.flow_values import Cell
+    from fransys_layout.core.place_trunk import _steps_out
+
+    from .cut_fixtures import free
+
+    two, four = elem("k1"), free("t1")
+    assert _steps_out(two, Cell("k1", "R0", "n", "s"), "s")
+    assert not _steps_out(four, Cell("t1", "R0", "n", "s"), "s")

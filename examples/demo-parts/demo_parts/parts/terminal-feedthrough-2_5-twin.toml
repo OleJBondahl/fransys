@@ -1,0 +1,21 @@
+schema = 2
+
+[part]
+mpn = "DEMO-TB-2.5-TWIN"
+manufacturer = "Demo"
+description = "Feed-through terminal block, 2.5 mm2, two conductors per connection point"
+category = "terminal"
+class_code = "X"
+
+[[function]]
+name = "terminal"
+kind = "terminal"
+symbol = "terminal"
+ports = [
+    { name = "internal", role = "internal", symbol_port = "n" },
+    { name = "external", role = "external", symbol_port = "s" },
+]
+links = [{ a = "internal", b = "external", kind = "conductive" }]
+
+[connection]
+conductors_per_clamp = 2

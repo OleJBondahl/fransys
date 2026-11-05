@@ -4,12 +4,7 @@ from typing import Any
 
 import fransys as fr
 from fransys.colours import BU, WH
-
-
-def _cols(d) -> frozenset[tuple[str, str, str, str]]:
-    """The wires of a design as (from, to, colour, size): what a rewrite must keep."""
-    rows = fr.derive.wire_rows(fr.build(d).model)
-    return frozenset((r.from_, r.to, r.colour, str(r.cross_section_mm2)) for r in rows)
+from test_guide_high_level_first import _cols
 
 
 def _strip_sides(d) -> dict[str, str]:
@@ -17,7 +12,7 @@ def _strip_sides(d) -> dict[str, str]:
     tables = fr.build(d).model.tables
     ports: dict[Any, Any] = {p.id: p for p in tables["port"].values()}
     conductors: list[Any] = list(tables["conductor"].values())
-    sides = {}
+    sides: dict[str, str] = {}
     for c in conductors:
         for p in (ports[c.a], ports[c.b]):
             if p.key[0] == "X1":
@@ -34,8 +29,8 @@ def _strips(*, series: bool, colour=BU):
         if series:
             d.series(x1, h1.lamp, x1, wire=(colour, 0.75))
         else:
-            d.detail.wire(x1[1], h1[1], wire=(BU, 0.75))
-            d.detail.wire(x1[2].outer, h1[2], wire=(BU, 0.75))
+            d.series(x1[1].inner, h1[1], wire=(BU, 0.75))
+            d.series(x1[2].outer, h1[2], wire=(BU, 0.75))
     return d
 
 

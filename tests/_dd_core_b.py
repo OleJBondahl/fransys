@@ -4,14 +4,14 @@ The Drawing carries no kind of marker (pair or stub), no port and no owner (R243
 told by the text it prints and a drawn item by the tag text beside it.
 """
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from _dd_core import designation_of
 from _drawn_facts import symbol_subjects
-from _drawn_pages import drawn_pages
+from _drawn_pages import drawn_pages, markers_in, ref_texts
 
 if TYPE_CHECKING:
-    from fransys_layout.drawing import DrawnMarker, DrawnSymbol, DrawnText
+    from fransys_layout.drawing import DrawnSymbol, DrawnText
     from fransys_model.kernel import Id, Model
 
 __all__ = ["is_stub", "marker_strings", "markers", "tags_of"]
@@ -19,22 +19,22 @@ __all__ = ["is_stub", "marker_strings", "markers", "tags_of"]
 _ARROWS = ("\N{LEFTWARDS ARROW}", "\N{RIGHTWARDS ARROW}")
 
 
-def markers(model: Model) -> list[tuple[Id, DrawnMarker]]:
+def markers(model: Model) -> list[tuple[Id[Any], DrawnSymbol]]:
     """Every (page, marker) of every page, in drawn order."""
-    return [(page, m) for page, drawing in drawn_pages(model).items() for m in drawing.markers]
+    return [(page, m) for page, drawing in drawn_pages(model).items() for m in markers_in(drawing)]
 
 
-def marker_strings(marker: DrawnMarker) -> list[str]:
+def marker_strings(marker: DrawnSymbol) -> list[str]:
     """The texts of `marker`, in slot order."""
-    return [value for _, value in marker.texts]
+    return ref_texts(marker)
 
 
-def is_stub(marker: DrawnMarker) -> bool:
+def is_stub(marker: DrawnSymbol) -> bool:
     """Whether the marker prints an off stub's arrow text (`-W3 <- +EXT-K1`)."""
     return any(arrow in text for text in marker_strings(marker) for arrow in _ARROWS)
 
 
-def tags_of(model: Model, name: str) -> list[tuple[Id, DrawnText]]:
+def tags_of(model: Model, name: str) -> list[tuple[Id[Any], DrawnText]]:
     """(page, tag text) of every tag text printed for the item whose key ends in `name`."""
     des = designation_of(model, name)
     return [
@@ -45,7 +45,7 @@ def tags_of(model: Model, name: str) -> list[tuple[Id, DrawnText]]:
     ]
 
 
-def symbols_of(model: Model, name: str) -> list[tuple[Id, DrawnSymbol]]:
+def symbols_of(model: Model, name: str) -> list[tuple[Id[Any], DrawnSymbol]]:
     """(page, symbol) of every symbol drawn for the item `name`, by (page, x, y).
 
     A symbol belongs to the item when its subject's item prints the designation of `name`.

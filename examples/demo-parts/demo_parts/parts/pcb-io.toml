@@ -1,4 +1,4 @@
-schema = 1
+schema = 2
 
 # category = "board" with a [pcb] facet, closed (decision model-0040, author-0002's known
 # deviation): the board black-box layout draws a CONNECTOR on or under a board

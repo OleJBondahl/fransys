@@ -1,17 +1,7 @@
 """REVIEW-M M2: the algebraic laws of the kernel as Hypothesis property tests.
 
 Laws, each with a fixed `max_examples` (derandomized by the profile in `tests/conftest.py`):
-
 1. Round trip: `from_data(to_data(m)) == m`, and the same through `dumps`/`loads`.
-2. `merge` is commutative, associative and idempotent; a conflict raises `MergeConflict`.
-3. `evolve(freeze(base), put, remove)` gives what `freeze` of the final records gives.
-4. The digest does not depend on the order records were added in.
-
-Each law is a checker in `laws_checks.py` that takes the implementation under test. The real laws
-pass the real one; the `*_check_fails_*` tests pass a deliberately broken one and demand an
-`AssertionError` (Hypothesis re-raises the failing example's own exception), so a check that could
-never fail is caught. The strategies are in `laws_pool.py`, what the pools reach in
-`test_laws_meta.py`.
 """
 
 import dataclasses
@@ -122,9 +112,7 @@ def _merge_that_drops_the_middle_operand(*parts: Draft | Model) -> Draft:
     return merge(*parts[:1], *parts[2:]) if len(parts) > 2 else merge(*parts)
 
 
-def _evolve_that_ignores_removals_of_unreplaced_records(
-    model: Model, *, put: Any = (), remove: Any = (), origin: Any = None
-) -> Model:
+def _evolve_that_ignores_removals_of_unreplaced_records(model: Model, *, put: Any = (), remove: Any = (), origin: Any = None) -> Model:
     replaced = {record.id for record in put}
     return evolve(model, put=put, remove=[i for i in remove if i in replaced], origin=origin)
 

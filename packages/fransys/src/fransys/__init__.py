@@ -6,7 +6,6 @@ not the installed files). Look a name or a finding code up with `python -m frans
 
 from fransys_author import AuthorError
 from fransys_author.surface import (
-    ABOVE,
     AC_CONTROL,
     AC_L1,
     AC_L2,
@@ -14,7 +13,6 @@ from fransys_author.surface import (
     AC_N,
     AI,
     AO,
-    BELOW,
     CONTROL,
     DC_CONTROL,
     DC_GROUND,
@@ -22,9 +20,7 @@ from fransys_author.surface import (
     DC_SUPPLY,
     DI,
     DO,
-    EARTHED,
     GENERIC,
-    IT,
     SIGNAL,
     AcSupply,
     Cable,
@@ -48,40 +44,27 @@ from fransys_author.surface import (
 from fransys_parts import PartLibraryError
 
 from fransys import derive
+from fransys_model import elecdef
 from fransys_model.derive.docs_site import version_url
-from fransys_model.kernel import Draft, Finding, FreezeError, MergeConflict, Model, Severity
+from fransys_model.kernel import Draft, Finding, FreezeError, MergeConflictError, Model, Severity
 from fransys_model.vocab import DocumentPreset, PageKind, SignalType
 
+from ._exports import export_names, write
+from ._release_cmds import diff, rebaseline, release, verify
 from ._release_reader import Release, ReleasePin, releases
 from ._report import report
 from ._version import __version__
 from .design import design
 from .documents import document
+from .errors import FransysError
 from .parts_module import parts_module
-from .pipeline import (
-    BuildErrors,
-    BuildResult,
-    build,
-    check,
-    diff,
-    export_names,
-    lint,
-    parts,
-    rebaseline,
-    release,
-    verify,
-    write,
-)
+from .pipeline import BuildFailedError, BuildResult, build, check, lint, parts
 from .readability import readability
 from .settings import Settings, SettingsError, settings
 
-__doc__ += (
-    f"\nThis install, {__version__}: {version_url(__version__)}"
-    f" (agents: {version_url(__version__)}llms.txt)."
-)
+__doc__ += f"\nThis install, {__version__}: {version_url(__version__)} (agents: {version_url(__version__)}llms.txt)."
 
 __all__ = [
-    "ABOVE",
     "AC_CONTROL",
     "AC_L1",
     "AC_L2",
@@ -89,7 +72,6 @@ __all__ = [
     "AC_N",
     "AI",
     "AO",
-    "BELOW",
     "CONTROL",
     "DC_CONTROL",
     "DC_GROUND",
@@ -97,13 +79,11 @@ __all__ = [
     "DC_SUPPLY",
     "DI",
     "DO",
-    "EARTHED",
     "GENERIC",
-    "IT",
     "SIGNAL",
     "AcSupply",
     "AuthorError",
-    "BuildErrors",
+    "BuildFailedError",
     "BuildResult",
     "Cable",
     "DcSupply",
@@ -114,9 +94,10 @@ __all__ = [
     "Draft",
     "Finding",
     "Fn",
+    "FransysError",
     "FreezeError",
     "Layout",
-    "MergeConflict",
+    "MergeConflictError",
     "Model",
     "PageKind",
     "PartLibraryError",
@@ -141,6 +122,7 @@ __all__ = [
     "design",
     "diff",
     "document",
+    "elecdef",
     "export_names",
     "lint",
     "parts",

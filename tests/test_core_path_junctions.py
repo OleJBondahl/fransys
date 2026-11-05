@@ -25,8 +25,8 @@ def _seal_in(cover: Path) -> tuple[fr.Design, Any]:
     k1 = d.device("K1", "DEMO-RLY-2CO-24", place="C1")
     with d.function("SEAL", "Seal-in"):
         d.series(supply[1], s2.sw, s1.sw, k1.coil, supply[2], wire=("BU", 0.75))
-        d.detail.wire(s2.sw["B"], k1.co_1["11"], wire=("BU", 0.75))
-        d.detail.wire(k1.co_1["14"], k1.coil["A1"], wire=("BU", 0.75))
+        d.series(s2.sw["B"], k1.co_1["11"], wire=("BU", 0.75))
+        d.series(k1.co_1["14"], k1.coil["A1"], wire=("BU", 0.75))
     cover.write_text("# Cabinet\n", encoding="utf-8")
     return d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, room, cover=cover)
 

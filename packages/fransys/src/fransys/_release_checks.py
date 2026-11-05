@@ -20,19 +20,18 @@ from fransys_model.derive import (
     revision_text,
     unit_release,
 )
-from fransys_model.kernel import Finding, Id, Severity
 lazy from fransys_model.derive.numbering_pins import NumberingPins
 
 from . import _revision_pins
 from ._baseline_findings import baseline_findings
-from ._codes import fix_text
+from ._codes import finding
 from ._history_gate import history_findings
 from ._release_files import folder_findings
 from ._release_reader import manifest_readable, read_stored, stored_listing
 
 if TYPE_CHECKING:
     from fransys_model.derive.baseline import Listing, ListingDiff, ReleaseIdentity
-    from fransys_model.kernel import Model
+    from fransys_model.kernel import Finding, Id, Model
     from fransys_model.vocab import Unit as ModelUnit
 
 
@@ -69,9 +68,7 @@ def _release_target(model: Model, unit: Id[ModelUnit] | None, into: Path) -> _Re
     return _ReleaseTarget(identity=identity, path=path)
 
 
-def _revision_already_released_finding(
-    model: Model, unit: Id[ModelUnit] | None, release: _ReleaseTarget
-) -> Finding | None:
+def _revision_already_released_finding(model: Model, unit: Id[ModelUnit] | None, release: _ReleaseTarget) -> Finding | None:
     """`REVISION_ALREADY_RELEASED`: `release.path` already holds a differing listing.
 
     Applies to a unit and the system (`unit=None`, `subjects=()`): a released folder never changes.
@@ -82,15 +79,10 @@ def _revision_already_released_finding(
         return None
     stored = baseline.loads(stored_text)
     sections = ", ".join(baseline.differing_sections(stored, new_listing))
-    return Finding(
-        code="REVISION_ALREADY_RELEASED",
-        severity=Severity.ERROR,
-        subjects=(unit,) if unit is not None else (),
-        fix=fix_text("REVISION_ALREADY_RELEASED"),
-        message=(
-            f"{release.name} {revision_text(release.version, release.revision)} is already "
-            f"released and differs in: {sections}"
-        ),
+    return finding(
+        "REVISION_ALREADY_RELEASED",
+        (unit,) if unit is not None else (),
+        f"{release.name} {revision_text(release.version, release.revision)} is already released and differs in: {sections}",
     )
 
 
@@ -103,24 +95,17 @@ def _nested_release_findings(model: Model, unit: Id[ModelUnit] | None, into: Pat
         if nested_stored_text is None:
             nested_revision_text = revision_text(nested_release.version, nested_release.revision)
             findings.append(
-                Finding(
-                    code="RELEASE_NESTED_UNRELEASED",
-                    severity=Severity.ERROR,
-                    subjects=(nested,),
-                    fix=fix_text("RELEASE_NESTED_UNRELEASED"),
-                    message=(
-                        f"{nested_release.name} {nested_revision_text}, nested in this "
-                        "release, has not been released"
-                    ),
+                finding(
+                    "RELEASE_NESTED_UNRELEASED",
+                    (nested,),
+                    f"{nested_release.name} {nested_revision_text}, nested in this release, has not been released",
                 )
             )
             continue
         if not manifest_readable(nested_release.path):
             findings.extend(folder_findings(nested_release.path))
             continue
-        findings.extend(
-            baseline_findings(model, nested, nested_release, nested_stored_text, nested=True)
-        )
+        findings.extend(baseline_findings(model, nested, nested_release, nested_stored_text, nested=True))
     return findings
 
 
@@ -148,36 +133,10 @@ def _system_since(model: Model, releases: Path | None) -> Listing | None:
     return _since_listing(_release_target(model, None, releases))
 
 
-def _changes_since(
-    model: Model, releases: Path | None, unit: Id[ModelUnit] | None
-) -> ListingDiff | None:
+def _changes_since(model: Model, releases: Path | None, unit: Id[ModelUnit] | None) -> ListingDiff | None:
     """The system's `ListingDiff` from the release `_system_since` finds, or `None`."""
     since = None if unit is not None else _system_since(model, releases)
     return None if since is None else baseline.diff(since, baseline.listing(model, None))
-
-
-def changes_by_name_findings(model: Model, releases: Path | None) -> list[Finding]:
-    """`CHANGES_BY_NAME`: the release the next change list starts from has no item keys (CR3).
-
-    The system only, as `_changes_since`; the diff then matches by printed text, so a rename shows
-    as a removed and an added row. A release cut at listing version 2 or later gives none.
-    """
-    since = _system_since(model, releases)
-    label = None if since is None else baseline.keyless_release(since)
-    if label is None:
-        return []
-    return [
-        Finding(
-            code="CHANGES_BY_NAME",
-            severity=Severity.INFO,
-            subjects=(),
-            fix=fix_text("CHANGES_BY_NAME"),
-            message=(
-                f"renames are not followed: the listing of {label} has no "
-                "item keys; fr.rebaseline re-cuts it with them"
-            ),
-        )
-    ]
 
 
 def _pin_source(release: _ReleaseTarget, into: Path) -> tuple[Path, NumberingPins] | None:
@@ -186,9 +145,7 @@ def _pin_source(release: _ReleaseTarget, into: Path) -> tuple[Path, NumberingPin
     return None if source is None else (into / release.name / source[0], source[1])
 
 
-def _interface_not_bumped_findings(
-    unit: Id[ModelUnit], release: _ReleaseTarget, new_listing: Listing
-) -> list[Finding]:
+def _interface_not_bumped_findings(unit: Id[ModelUnit], release: _ReleaseTarget, new_listing: Listing) -> list[Finding]:
     """`INTERFACE_NOT_BUMPED`: the previous release, same interface, different boundary.
 
     Real units only: `_l4_findings` skips the system (interface `""`, boundary empty, so vacuous).
@@ -197,47 +154,31 @@ def _interface_not_bumped_findings(
     previous = _previous_release_listing(release)
     if previous is None:
         return []
-    if listing_interface(previous) != listing_interface(new_listing) or not (
-        baseline.boundary_changed(previous, new_listing)
-    ):
+    if listing_interface(previous) != listing_interface(new_listing) or not (baseline.boundary_changed(previous, new_listing)):
         return []
     previous_revision = listing_revision_text(previous)
     return [
-        Finding(
-            code="INTERFACE_NOT_BUMPED",
-            severity=Severity.ERROR,
-            subjects=(unit,),
-            fix=fix_text("INTERFACE_NOT_BUMPED"),
-            message=(
-                f"{release.name} {previous_revision} already has interface "
-                f"{listing_interface(previous)!r} with a different boundary"
-            ),
+        finding(
+            "INTERFACE_NOT_BUMPED",
+            (unit,),
+            f"{release.name} {previous_revision} already has interface {listing_interface(previous)!r} with a different boundary",
         )
     ]
 
 
-def _release_no_history_finding(
-    model: Model, unit: Id[ModelUnit] | None, release: _ReleaseTarget
-) -> Finding | None:
+def _release_no_history_finding(model: Model, unit: Id[ModelUnit] | None, release: _ReleaseTarget) -> Finding | None:
     """`RELEASE_NO_HISTORY`: the revision being released has no `Revision` entry."""
     release_id = unit_release(model, unit).id if unit is not None else None
     if current_revision(model, release=release_id) is not None:
         return None
-    return Finding(
-        code="RELEASE_NO_HISTORY",
-        severity=Severity.ERROR,
-        subjects=(unit,) if unit is not None else (),
-        fix=fix_text("RELEASE_NO_HISTORY"),
-        message=(
-            f"{release.name} {revision_text(release.version, release.revision)} has no "
-            "Revision history entry"
-        ),
+    return finding(
+        "RELEASE_NO_HISTORY",
+        (unit,) if unit is not None else (),
+        f"{release.name} {revision_text(release.version, release.revision)} has no Revision history entry",
     )
 
 
-def _unit_l4_findings(
-    model: Model, unit: Id[ModelUnit], release: _ReleaseTarget, into: Path
-) -> list[Finding]:
+def _unit_l4_findings(model: Model, unit: Id[ModelUnit], release: _ReleaseTarget, into: Path) -> list[Finding]:
     """The checks only a real unit has: `INTERFACE_NOT_BUMPED` and the pin findings."""
     new_listing = baseline.listing(model, unit)
     return [
@@ -264,9 +205,5 @@ def _l4_findings(model: Model, unit: Id[ModelUnit] | None, into: Path) -> tuple[
     if no_history is not None:
         findings.append(no_history)
     current = (release.version, release.revision)
-    findings.extend(
-        history_findings(
-            model, unit, name=release.name, current=current, parent=release.path.parent
-        )
-    )
+    findings.extend(history_findings(model, unit, name=release.name, current=current, parent=release.path.parent))
     return tuple(findings)

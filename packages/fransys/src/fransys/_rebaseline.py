@@ -73,9 +73,7 @@ def _pins(folder: Path, moved: dict[_Key, str]) -> tuple[_Pin, ...]:
     return tuple(_Pin(key, moved[key]) for key, digest in keyed if moved.get(key, digest) != digest)
 
 
-def _plan_one(
-    model: Model, unit: Id[ModelUnit] | None, baselines: Path, moved: dict[_Key, str]
-) -> tuple[_Rewrite | None, tuple[Finding, ...]]:
+def _plan_one(model: Model, unit: Id[ModelUnit] | None, baselines: Path, moved: dict[_Key, str]) -> tuple[_Rewrite | None, tuple[Finding, ...]]:
     target = _release_target(model, unit, baselines)
     stored = stored_listing(target.path)
     if stored is None:
@@ -134,10 +132,7 @@ def _records(rewrite: _Rewrite) -> list[JsonValue]:
                 "cut_by": importlib.metadata.version("fransys"),
             }
         )
-    rows.extend(
-        {**old, "reason": "nested", "unit": pin.key[0], "unchecked_rows": 0, "cut_by": None}
-        for pin in rewrite.pins
-    )
+    rows.extend({**old, "reason": "nested", "unit": pin.key[0], "unchecked_rows": 0, "cut_by": None} for pin in rewrite.pins)
     return rows
 
 

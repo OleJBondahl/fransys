@@ -14,7 +14,7 @@ from fransys_layout.core.order import order_columns
 from .order_fixtures import OPTIONS, block, box_column, comb, flow
 
 if TYPE_CHECKING:
-    from fransys_layout.core.values import Attach, Block, End, FlowGraph
+    from fransys_layout.core.flow_values import Attach, Block, End, FlowGraph
 
 # (column id format, symbol id format): both keep the natural order of the ids, each spells it anew
 SPELLINGS = (("C{}", "=Y{}"), ("Q{:04d}", "=Z{:04d}"))
@@ -36,9 +36,7 @@ def attaches(fl: FlowGraph) -> list[Attach]:
     return found + [a for x in fl.cross_links for a in x.ends]
 
 
-def spell_maps(
-    fl: FlowGraph, blk: Block, fmt: tuple[str, str]
-) -> tuple[dict[str, str], dict[str, str]]:
+def spell_maps(fl: FlowGraph, blk: Block, fmt: tuple[str, str]) -> tuple[dict[str, str], dict[str, str]]:
     """Column and symbol id maps: rank by `natural_key`, spell the rank anew."""
     cols = {*blk.columns, *(c.id for c in fl.columns)}
     syms = {a.pin.sym for a in attaches(fl)}
@@ -51,26 +49,16 @@ def spell_maps(
     return spell(cols, fmt[0]), spell(syms, fmt[1])
 
 
-def respell(
-    fl: FlowGraph, blk: Block, cm: dict[str, str], sm: dict[str, str]
-) -> tuple[Block, FlowGraph]:
+def respell(fl: FlowGraph, blk: Block, cm: dict[str, str], sm: dict[str, str]) -> tuple[Block, FlowGraph]:
     def attach(a: Attach) -> Attach:
-        return replace(
-            a, column=cm[a.column] if a.column else None, pin=replace(a.pin, sym=sm[a.pin.sym])
-        )
+        return replace(a, column=cm[a.column] if a.column else None, pin=replace(a.pin, sym=sm[a.pin.sym]))
 
     def end(e: End) -> End:
         return replace(e, pin=replace(e.pin, sym=sm[e.pin.sym])) if e.pin else e
 
-    fans = tuple(
-        replace(f, drivers=tuple(map(attach, f.drivers)), legs=tuple(map(attach, f.legs)))
-        for f in fl.fans
-    )
+    fans = tuple(replace(f, drivers=tuple(map(attach, f.drivers)), legs=tuple(map(attach, f.legs))) for f in fl.fans)
     links = tuple(replace(x, ends=tuple(map(attach, x.ends))) for x in fl.cross_links)
-    cols = tuple(
-        replace(c, id=cm[c.id], heads=tuple(map(end, c.heads)), feet=tuple(map(end, c.feet)))
-        for c in fl.columns
-    )
+    cols = tuple(replace(c, id=cm[c.id], heads=tuple(map(end, c.heads)), feet=tuple(map(end, c.feet))) for c in fl.columns)
     return (
         replace(blk, columns=tuple(cm[c] for c in blk.columns)),
         replace(fl, fans=fans, cross_links=links, columns=cols),

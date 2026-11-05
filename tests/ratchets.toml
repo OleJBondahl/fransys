@@ -2,16 +2,13 @@
 # a test fails above its stock and fails below it ("lower tests/ratchets.toml"). A raised value or a
 # new key above 0 needs a `Root-line:` trailer (internal/scripts/count_rise.py).
 
-# E9 exact clones (bodies of 25+ AST nodes), 3 groups measured. Three die at the layout flips:
-#   fransys_layout.engines.cable.write.records:65 _points == ...schematic.write.harness:101 _route
-#   fransys_layout.engines.overview.lanes.diagram_route:31 _straight == fransys_layout.stages._sides:150 _collinear
-#   fransys_layout.geometry.boxes:72 translate == fransys_layout.stages.middle_fold:84 _by
+# E9 exact clones (bodies of 25+ AST nodes) among the function bodies of packages/*/src: no group stands.
 [clones]
 stock = 0
 
 [clones_tests]
-# Exact clones (bodies of 25+ AST nodes) among tests/ and packages/*/tests helpers.
-stock = 115
+# Exact clones (bodies of 25+ AST nodes) among tests/ and packages/*/tests helpers. 5 -> 21 when the internal gates moved into tests/ (INTERNAL-TESTPATHS, R916); 16 are theirs (the unit_instances/unit_sets twins are 10); the cleanup round lowers it.
+stock = 19
 
 [unread_doors]
 # E19: public names of the kernel, vocab and derive doors with no outside and no transitive reader (25 + 21 + 124).
@@ -25,63 +22,11 @@ stock = 171
 # WIRE_LABELS. The rest are author handles (Cable, Fn, Throw, ...), which fall with API-AUTHOR,
 # fransys_model.derive.TopLevelScope, and UnionFind.
 [mutable_surface]
-stock = 20
+stock = 15
 
-[own_errors_electrical_symbols]
-base = "none"
-stock = 3
-
-[own_errors_fransys]
-base = "none"
-stock = 7
-
-[own_errors_fransys_author]
-base = "AuthorError"
-stock = 6
-
-[own_errors_fransys_el]
-base = "none"
-stock = 0
-
-[own_errors_fransys_kernel]
-base = "ModelError"
-stock = 0
-
-[own_errors_fransys_kicad]
-base = "none"
-stock = 8
-
-[own_errors_fransys_layout]
-base = "LayoutError"
-stock = 30
-
-[own_errors_fransys_model]
-base = "ModelError"
-stock = 3
-
-[own_errors_fransys_overview]
-base = "none"
-stock = 1
-
+# KI-058 (decision 0423): fransys_parts keeps the importlib ModuleNotFoundError of a missing library (KI-058); every other package holds 0 and has no table.
 [own_errors_fransys_parts]
-base = "PartLibraryError"
 stock = 1
-
-[own_errors_fransys_pdf]
-base = "none"
-stock = 2
-
-[own_errors_fransys_render]
-base = "none"
-stock = 0
-
-[own_errors_fransys_reports]
-base = "none"
-stock = 0
-
-[own_errors_fransys_wago]
-base = "none"
-stock = 0
 
 # E21 (spec S6/R8): objects (by identity, scalars skipped) in two or more surface `__all__`s, and
 # names bound to two different objects across surface modules. Measured 2026-10-16. The facade
@@ -94,64 +39,28 @@ stock = 0
 # BoxKey, DiagramLine, DrawnWire (across fransys_model.derive*/layout/vocab, fransys_layout(.core),
 # fransys_author, fransys_kernel, fransys_render).
 [twin_doors]
-twins = 100
-clashes = 32
-
-# RR3 (spec rules-register): register rows whose gate is still `pending = "<ORDER>"`.
-[pending_rules]
-stock = 14
+twins = 99  # -check_value (DS-1), +value_data, +value_from (kernel and fransys_model.kernel), -Rating: R809, ADOPT-PARTS-3
+clashes = 28
 
 # HOMES-GATES (root-0350): typed setting literals (numeric value bound to a name ending _mm, _pct,
 # _g, _pt, _gap, _pitch, _margin, _height, _penalty or _width), in packages/*/src. Base 47, 45 after Part B,
 # 40 after SIZES-TOML phase 3, 39 after its phase 2 (R319.5, R338).
 [settings_literals]
-stock = 35
-
-# HOMES-GATES (root-0350): Callable parameters in fransys_layout/core (a fact arrives as a value).
-[core_callables]
-stock = 3
-
-# HOMES-GATES (root-0350): terminal/strip branches in fransys_layout/core code (docstrings excluded).
-[core_terminal_kind]
-stock = 2
-
-# HOMES-GATES (root-0350): "fransys" in the public electrical-symbols library's docs and sources.
-[public_lib_names]
-stock = 6
+stock = 16
 
 # C3 (spec CONSOLIDATE; root-0356): `# noqa` codes and `# ty: ignore` rules in packages/*/src. The total is
-# the sum of the per-code table. Old-engine hatches die at FLIP-NOW and lower these.
+# the sum of the per-code table. What is left is kept with a reason on its line (decisions 0111, 0414, 0444, KI-125; KI-044).
 [escape_hatches]
-total = 177
+total = 34
 
 [escape_hatches_codes]
-PLR0913 = 59
-PLR2004 = 18
-ty-invalid-argument-type = 13
-S101 = 15
-PLR0917 = 11
-ANN401 = 10
-ARG002 = 8
-TC001 = 7
+PLR0913 = 26
+ANN401 = 1
 ty-invalid-method-override = 5
-PLW0603 = 4
-TC003 = 3
-F401 = 3
-N818 = 3
-ty-redundant-condition-strict = 3
-ty-unresolved-attribute = 3
-ARG001 = 2
 UP037 = 2
-BLE001 = 1
-E731 = 1
-PLR0911 = 1
-PLW2901 = 1
-SLF001 = 2
-ty-unsound-assignment = 1
-ty-unsupported-operator = 1
 
 # DRAWN-NETLIST (el-0052, R388, R412) with DRAWING-INVARIANTS (el-0048, R360): what the finished-drawing
-# sweep finds on the six corpus cases (internal/tests/test_corpus_drawing_invariants.py). OVERLAP and
+# sweep finds on the six corpus cases (tests/test_corpus_drawing_invariants.py). OVERLAP and
 # OUT_OF_PAGE count members; the other codes count findings. A stock only falls; a code is an ERROR
 # in the commit that brings its stock to 0. OVERLAP is DI's members plus el-0052's wire-through-body
 # class (R387, R388), measured on the merge of DI dfe952a66: page overlaps 22, 26, 31, 6 plus
@@ -160,15 +69,24 @@ ty-unsupported-operator = 1
 # 15. DRAWING_SHORTS_NETS is 0 on every build since ROUTING (R439) and SHORTS-ROUTE, so it is an ERROR.
 # R500 (Covered by: PIN-HANGINGS, which fits each tag marker as a footprint keep by link_fit, H3): a tag record holds the wide box (TEXT-CANDIDATES), so 3 tags touch a neighbour the plain box cleared: machine_panel 0 to 1, mcc 0 to 1, panel_di16p 8 to 10; placement still reserves the plain box (TAG-FIT lane)
 # XF-UNIT-SCOPE (R497 U3, R510): a trunk now clears the pins of the card row it hangs from, which
-# moves it past unrelated sensors: machine_panel 1 -> 3, panel_di16p 10 -> 12 (marker-arrow-turned
-# pairs). Covered by: PIN-HANGINGS - layout anchors (R516).
+# moves it past unrelated sensors: machine_panel 1 -> 3, panel_di16p 10 -> 12. The R516 sites are
+# place_trunk._reach, place_reach.card_reaches and text_ends._trunk_end_stand. Covered by: PIN-HANGINGS P4c.
+# R546: text reaching a turned arrow (R516 class); Covered by: PIN-HANGINGS P4c, bar machine_panel 3, mcc 1
+# PIN-HANGINGS P4a (the fold, layout-0395): machine_panel 4 -> 2, panel_di16p 6 -> 4, measured by the corpus test (the byte run reads 4 -> 3 on another build) from
+# the byte run of 6239caf08 (.fransys/m2) against origin/main d25e1e4d4 (.fransys/o2, 3 -> 2 and 4 -> 3).
+# P4C 2b (R690): the stagger steps by the longest drawn box of its group, so a tag no longer overlaps its pin's stub: machine_panel 2 -> 1, panel_di16p 4 -> 2.
+# P4D (R876, layout-0455): an attached column above a box clears the box footprint, so a marker no longer overlaps (mcc control supply page): mcc 2 -> 1.
+# RAIL-FLAG stack (R949): machine_panel back to 1; panel_di16p 2 (STACK-FIX-2 P2: a trunk-end marker walks clear of the markers hung at the pins, KI-297)
 [drawing_overlap]
+# R1193 LEDGER-INTEGRATION: mcc 0 -> 9, the marker members of drawing_marker_overlap (KI-457)
+# SUPPLY-SLOT (R1619, TEXT-BOX-MEASURED): OVERLAP now sees slot ink, a looks rise: machine_panel 0 -> 2, panel_di16p 0 -> 1
 distribution_board = 0
-machine_panel = 3
-mcc = 1
-panel_di16p = 12
+machine_panel = 1  # R1730 (looks class): the cut flags the handed link it plans a tag for; was 4
+mcc = 0  # R1730 (looks class): as machine_panel; was 3
+# R1165: R1138 looks trade (OVERLAP -1, WIRE_OVER_MARKER +1)
+panel_di16p = 1
 remote_io = 0
-skid = 1
+skid = 0
 
 # MARKER-FREE-SIDE (spec 4.4, note 6): the wire and dot members that meet a reference marker's box,
 # split out of drawing_overlap in MF-WO1 and counted as WIRE_OVER_MARKER members. The sum exceeds
@@ -180,22 +98,43 @@ skid = 1
 # panel_di16p 186 -> 58, remote_io 44 -> 24.
 # XF-UNIT-SCOPE (R497 U3): remote_io 24 -> 27 (a harness-line fan lane meets a marker box). Covered
 # by: PIN-HANGINGS - layout anchors (R516).
+# KI-195 (R734, R746): labels of terminal copies stack at the frame top (mcc -U1-X5:1..3, pump -U1-X3) and -M6 stands over -U1-X5:PE:1. Piece MF-WO4-TEXT lowers it
+# KI-196 (R735 B): short groups do not stack in free rows, so a page carrying terminal copies grows. Piece STACK-SHORT-ROWS
+# R849 (KI-231, MARKER-KEEP): machine_panel 12 -> 20, panel_di16p 1 -> 9: the own-side stubs of R804 stand over wires
+# RAIL-FLAG stack (R949): T1 (bridges give no far end) put wire/dot over marker members up to 57/51/24; d50d2f4d3 and batch M bring them below main: distribution_board 0, machine_panel 12, mcc 0, panel_di16p 0, remote_io 3 (KI-294, KI-295)
+# R895 (KI-231, batch M lowers): machine_panel 20 -> 22, panel_di16p 9 -> 11: a replica's stub (a cross-document end) stands on a wire and a dot
 [drawing_wire_over_marker]
-distribution_board = 6
-machine_panel = 64
-mcc = 75
-panel_di16p = 58
-remote_io = 27
+# R1193 LEDGER-INTEGRATION: the ledger's leg and PE copy stubs stand where a wire or dot meets their box: distribution_board 0 -> 2, mcc 0 -> 2 (KI-457)
+distribution_board = 6  # R1715 falls, KI-636: was 7
+machine_panel = 0
+mcc = 10  # R1730 (looks class): the cut flags the handed link it plans a tag for; was 16
+# R1165: R1138 looks trade (OVERLAP -1, WIRE_OVER_MARKER +1)
+panel_di16p = 0  # R1693 and R1715 (looks falls, KI-636): was 1
+remote_io = 0
+skid = 0
+
+# KI-017 (R867, R873): the OVERLAP members that name a marker (marker over marker, symbol or text), counted once per pair.
+# Each is also in drawing_overlap. P4d and MARKER-KEEP re-measure it; it only falls.
+# RAIL-FLAG stack (R949): machine_panel back to 1, the same member as drawing_overlap
+[drawing_marker_overlap]
+# R1193 LEDGER-INTEGRATION: mcc 0 -> 9, the PE copy stubs stack over one another (KI-457)
+distribution_board = 0
+# SUPPLY-SLOT (R1619): slot ink seen by OVERLAP, machine_panel 0 -> 1
+machine_panel = 0  # R1730 (looks class): the cut flags the handed link it plans a tag for; was 3
+mcc = 0  # R1730 (looks class): as machine_panel; was 3
+# R1165: R1138 looks trade (OVERLAP -1, WIRE_OVER_MARKER +1)
+panel_di16p = 0
+remote_io = 0
 skid = 0
 
 # MARKER_UNPLACED counts findings (A9: it ends 0 or goes to the owner page); 0 on every case but
 # panel_di16p: 1, the arrow of the 24V rail's left end, off the page since RL-W2 stands the card
-# at the left margin (designer R484, lane in XF-CLOSE).
+# at the left margin (designer R484, lane in XF-CLOSE). P4C part 4 (R690): row_arrows keeps that arrow; 1 -> 0.
 [marker_unplaced]
 distribution_board = 0
 machine_panel = 0
 mcc = 0
-panel_di16p = 1
+panel_di16p = 0
 remote_io = 0
 skid = 0
 
@@ -209,10 +148,10 @@ skid = 0
 
 [drawing_connection_not_drawn]
 distribution_board = 0
-machine_panel = 2
-mcc = 0
-panel_di16p = 2
-remote_io = 3
+machine_panel = 0  # was 1 (CND-D-FIX R963: a spilled column end draws its lead to its tag)
+mcc = 0  # was 1 (CND-D-FIX R963)
+panel_di16p = 0  # was 3 (CND-D-FIX R963)
+remote_io = 0  # KI-132 C1 9 plus C3 3, was 36 (WITNESS-W1 R916); STUB-SLOT (R954 R960): a fan-wired pin stands its stub on the free pin or a leg: 12 -> 0
 skid = 0
 
 [drawing_shorts_nets]
@@ -262,3 +201,29 @@ mcc = 0
 panel_di16p = 0
 remote_io = 0
 skid = 0
+
+[drawing_dangling_wire_end]
+# DANGLING_WIRE_END (el-0086, R892/R896): a drawn wire end that meets no symbol point, wire or joined lane end. The four
+# field-case builds hold drops to a one-tap bundle lane (KI-266, R909); mcc_small_four_feeders measured 0 on the RAIL-FLAG stack (R949; was three trunk lanes, KI-267).
+distribution_board = 0  # R1668: lane ends stop short of the cut end; 4 before R1676, 1 before R1681 (a leg starts at its lane end, BUNDLE-LEGS)
+machine_panel = 0
+mcc = 0
+panel_di16p = 0
+remote_io = 0
+skid = 0
+mcc_small_four_feeders = 0
+
+# MARKER-FREE-SIDE spec 4.1: drawn pins that also carry a conductor not drawn. The stub of the
+# undrawn conductor goes with the drawn one; MF-WO3 rules on the number (R507, covered by MF-WO3).
+# model-0374 (NF-2): ports.function, items.unit and units.parent filtered out of a table walk where an
+# index holds them (Indexes.ports_by_function, UnitIndex.own_items, UnitIndex.child_units). Was 13.
+[corpus_seed_defects]
+# KI-386 (R1105, S2-TRACE-B-5): the small standard mcc at the default id seed. unplaced = its drawn symbols with no placed core symbol
+# (CLOSED at 0 by CORPUS-METRIC, R1132: dots and markers count as placed); bare conductors: see [drawing_connection_not_drawn];
+# lane_end_faults = trunk lane ends past their last tap. Correctness class, target 0 on every seed (piece CORPUS-SEED-DEFECTS).
+mcc_unplaced_symbols = 0
+mcc_lane_end_faults = 5  # R1715 falls, KI-636: was 17; R1684 (looks class, KI-636): 2-point legs whose lane overruns the leg start by one pitch; was 12
+distribution_board_lane_end_faults = 2  # R1715 falls, KI-636: was 6; R1684: as mcc; was 4
+
+[table_scans]
+stock = 0

@@ -1,27 +1,14 @@
 """Field case: a pin wired to a non-rail terminal shows that terminal at the pin (V4, 2026-10-02).
+The bug: the terminal stood once per page, so a second pin there was a star branch naming it, and a replica served two pins at neither.
+Fixed by layout-0108 and model-0220, every pin wired to a non-rail terminal shows the terminal at the pin, in every group."""
 
-The engineering shape: a feed-through terminal X1:1 whose outer side is wired to a switch and
-whose inner side feeds the coil pin A1 of one, two or more relays. Four layouts of it: the relays
-on a page after the terminal's (one relay; two relays in one group; two relays in two groups
-sharing the page) and the relays in the terminal's own group (a star of three ports).
-
-The bug (v0.5.2 look): the terminal stood once per page, as the home or one replica. A second
-pin on the page was a branch of a star marker naming the terminal as the reference, and a replica
-serving two pins stood at neither. The one-relay layout already drew the replica over the pin.
-
-The rule (decision layout-0108): every pin wired to a non-rail terminal shows
-the terminal at the pin, in every group and for any wire count; terminal references go.
-Model-0220 changed the count: the terminal stands at each relay's pin, not once over the first.
-"""
-
-import tempfile
-from pathlib import Path
 from typing import Any
 
 import fransys as fr
 import pytest
 from _drawn_facts import symbol_subjects
 from _drawn_pages import drawn_pages
+from _model_build_cover import unit_document
 from fransys.colours import BU
 
 from fransys_model.vocab.tables import functions, items
@@ -32,37 +19,49 @@ def _feed(d: fr.Design, groups: list[str], *, coils: list[int], pin: str = "A1")
 
     Each group is one `function` block, opened in the order its first device is made.
     """
-    strip = d.terminal_strip("X1", "DEMO-TB-2.5")
+    strip = d.terminal_strip("X1", "DEMO-TB-2.5-TWIN")
     opened: dict[int, Any] = {}
     terminal: Any = None
+    psu: Any = None
     for number in sorted({0, *coils}):
         with d.function(groups[number], f"Group {number}") as opened[number]:
             if number == 0:
                 switch = d.device("S1", "DEMO-SWITCH-2P")
                 terminal = strip[1]
-                d.detail.wire(switch.sw["B"], terminal.outer, wire=(BU, 0.5))
+                d.series(switch.sw["B"], terminal.outer, wire=(BU, 0.5))
+                psu = d.device("T1", "DEMO-PSU-24")
+                d.ac_supply("MAINS", 230, psu.input["L"], n=psu.input["N"])
+                d.dc_supply("S", psu)
+                d.series(psu.output["+"], switch.sw["A"], wire=(BU, 0.5))
             for k, at in enumerate(coils, start=1):
                 if at == number:
                     relay = d.device(f"K{k}", "DEMO-RLY-2CO-24")
-                    d.detail.wire(terminal, relay.coil[pin], wire=(BU, 0.5))
+                    d.series(terminal.inner, relay.coil[pin], wire=(BU, 0.5))
+                    other = relay.coil["A1" if pin == "A2" else "A2"]
+                    if number == 0:  # the coil's open pin returns to the 0 V rail, below it
+                        d.series(other, psu.output["-"], wire=(BU, 0.5))
+                    else:  # on a later page the open pin is fed from above, through a lamp, so the coil stands as before
+                        lamp = d.device(f"H{k}", "DEMO-LAMP-24")
+                        d.series(psu.output["+"], lamp.lamp[1], wire=(BU, 0.5))
+                        d.series(lamp.lamp[2], other, wire=(BU, 0.5))
     return opened
 
 
 def _one_relay(d: fr.Design, g: list[str]) -> None:
-    d.layout.break_before(_feed(d, g, coils=[1])[1])
+    _feed(d, g, coils=[1])
 
 
 def _one_relay_fed_at_a2(d: fr.Design, g: list[str]) -> None:
     """The same relay fed at its other coil pin: the layout stands the coil unturned."""
-    d.layout.break_before(_feed(d, g, coils=[1], pin="A2")[1])
+    _feed(d, g, coils=[1], pin="A2")
 
 
 def _two_relays_one_group(d: fr.Design, g: list[str]) -> None:
-    d.layout.break_before(_feed(d, g, coils=[1, 1])[1])
+    _feed(d, g, coils=[1, 1])
 
 
 def _two_relays_two_groups(d: fr.Design, g: list[str]) -> None:
-    d.layout.break_before(_feed(d, g, coils=[1, 2])[1])
+    _feed(d, g, coils=[1, 2])
 
 
 def _own_group(d: fr.Design, g: list[str]) -> None:
@@ -73,30 +72,19 @@ def _built(plant) -> Any:
     d = fr.design("demo_parts", place="CAB")
     cab = d.location("CAB", "Cabinet")
     plant(d, [f"G{i}" for i in range(3)])
-    cover = Path(tempfile.mkdtemp()) / "cover.md"
-    cover.write_text("# Cabinet\n", encoding="utf-8")
-    doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover)
+    doc = unit_document(cab)
     return fr.build(d, doc).model
 
 
 def _symbols(model, key: str) -> list[tuple[object, Any]]:
     """The (page, drawn symbol) pairs of library symbol `key`, on every page."""
-    return [
-        (page, s)
-        for page, drawing in drawn_pages(model).items()
-        for s in drawing.symbols
-        if s.key == key
-    ]
+    return [(page, s) for page, drawing in drawn_pages(model).items() for s in drawing.symbols if s.key == key]
 
 
 def _drawn(model, name: str, tag: str = "") -> list[tuple[object, Any]]:
     """The (page, drawn symbol) pairs of function `name` of item `tag`, or of every terminal."""
     item_tag = {i.id: i.tag for i in items(model).values()}
-    owned = {
-        f.id.value
-        for f in functions(model).values()
-        if f.key[-1] == name and (not tag or item_tag.get(f.item, "") == tag)
-    }
+    owned = {f.id.value for f in functions(model).values() if f.key[-1] == name and (not tag or item_tag.get(f.item, "") == tag)}
     return [(s.page, s) for s in symbol_subjects(model) if s.owner in owned]
 
 

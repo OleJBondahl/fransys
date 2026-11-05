@@ -9,15 +9,18 @@ from typing import TYPE_CHECKING
 
 from fransys_model.derive.facts.closure import link_groups
 from fransys_model.derive.facts.contacts import link_state
-from fransys_model.derive.facts.roles import port_role
+from fransys_model.derive.facts.roles import port_boundary
 from fransys_model.derive.facts.units import boundary, external, standalone, units
-from fransys_model.vocab.enums import FunctionKind, PortRole
+from fransys_model.vocab.enums import FunctionKind, PortBoundary
 from fransys_model.vocab.tables import functions, internal_links, mates, ports
 
 if TYPE_CHECKING:
     from fransys_model.derive.facts.contacts import LinkState
     from fransys_model.kernel import Id, Model
     from fransys_model.vocab.core import Function, Item, Port
+
+
+_TWO_PORTS = 2  # the "two" in `two_ports`, this function's own definition
 
 
 @dataclasses.dataclass(frozen=True, slots=True)
@@ -59,11 +62,7 @@ def pairs(model: Model) -> tuple[list[Joint], list[Joint]]:
         named: dict[str, list[Id[Port]]] = {}
         for port in by_function.get(mate.b, ()):
             named.setdefault(port.name, []).append(port.id)
-        mated.extend(
-            Joint(port.id, other, mate.a, mate.b)
-            for port in by_function.get(mate.a, ())
-            for other in named.get(port.name, ())
-        )
+        mated.extend(Joint(port.id, other, mate.a, mate.b) for port in by_function.get(mate.a, ()) for other in named.get(port.name, ()))
     return links, mated
 
 
@@ -81,7 +80,7 @@ def two_ports(model: Model) -> list[tuple[Id[Port], Id[Port], Id[Function]]]:
         (own[0].id, own[1].id, function.id)
         for function in functions(model).values()
         if function.kind not in {FunctionKind.CONNECTOR, FunctionKind.COIL}
-        and len(own := by_function.get(function.id, ())) == 2  # noqa: PLR2004 -- the "two" in `two_ports`, this function's own definition
+        and len(own := by_function.get(function.id, ())) == _TWO_PORTS
         and frozenset((own[0].template, own[1].template)) not in joined
     ]
 
@@ -92,16 +91,11 @@ def open_ends(model: Model) -> frozenset[Id[Port]]:
     Every port of an external item, and of a standalone unit's boundary function but not `INTERNAL`.
     A unit that is not standalone has its outside in the build, so its boundary ports are not open.
     """
-    facing = {
-        function
-        for unit in units(model)
-        if standalone(model, unit)
-        for function in boundary(model, unit)
-    }
+    facing = {function for unit in units(model) if standalone(model, unit) for function in boundary(model, unit)}
     all_functions = functions(model)
     return frozenset(
         port.id
         for port in ports(model).values()
         if external(model, all_functions[port.function].item)
-        or (port.function in facing and port_role(model, port.id) is not PortRole.INTERNAL)
+        or (port.function in facing and port_boundary(model, port.id) is not PortBoundary.INTERNAL)
     )

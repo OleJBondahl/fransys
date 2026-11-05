@@ -1,6 +1,30 @@
-"""Door to the family library `elecdef` (spec LIB-ADOPT R1): the names a reader needs."""
+"""Door to the family library `elecdef` (spec LIB-ADOPT R1): the names a reader needs.
 
-from elecdef.pins import Link, PinRole
-from elecdef.vocab import ContactForm
+`At`, `Quantity`, `Range`, `Rating`, `Role` and `Unit` carry the figures of a part file (a
+rating, a coil window, a breaking capacity); `Current` is the AC/DC condition of a figure.
+"""
 
-__all__ = ["ContactForm", "Link", "PinRole"]
+from elecdef import At, Block, Breaker, Connection, Fuse, Quantity, Range, Rating, Role, Unit
+from elecdef.pins import Link, LinkKind, Pin, PinRole, Side, throws
+from elecdef.vocab import ContactForm, Current
+
+__all__ = [
+    "At",
+    "Block",
+    "Breaker",
+    "Connection",
+    "ContactForm",
+    "Current",
+    "Fuse",
+    "Link",
+    "LinkKind",
+    "Pin",
+    "PinRole",
+    "Quantity",
+    "Range",
+    "Rating",
+    "Role",
+    "Side",
+    "Unit",
+    "throws",
+]

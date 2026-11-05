@@ -128,9 +128,7 @@ def test_an_id_under_ext_is_a_reference_with_no_declared_kind() -> None:
     ids=["decimal", "enum", "value-class"],
 )
 @pytest.mark.parametrize("nested", [False, True], ids=["direct", "in-tuple"])
-def test_a_type_that_cannot_be_read_back_is_refused_where_no_type_is_declared(
-    unreadable: Any, *, nested: bool
-) -> None:
+def test_a_type_that_cannot_be_read_back_is_refused_where_no_type_is_declared(unreadable: Any, *, nested: bool) -> None:
     """Under `ext` a `Decimal` is a string, an enum a string or number, a value class a mapping.
 
     The reader cannot tell them from plain values, so freeze refuses them there: declare a

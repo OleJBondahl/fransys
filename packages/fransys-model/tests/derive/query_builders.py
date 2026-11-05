@@ -13,7 +13,7 @@ from fransys_model.vocab.enums import (
     ConductorKind,
     FunctionKind,
     PartCategory,
-    PortRole,
+    PortBoundary,
     SignalType,
 )
 from fransys_model.vocab.facets.plc import PlcChannelFacet
@@ -64,9 +64,9 @@ def make_terminal(plant: Plant, strip_key: str, label: str, *, group: str, index
             function=function.id,
             template=None,
             name=role.value,
-            role=role,
+            boundary=role,
         )
-        for role in (PortRole.INTERNAL, PortRole.EXTERNAL)
+        for role in (PortBoundary.INTERNAL, PortBoundary.EXTERNAL)
     ]
     facet = TerminalFacet(
         id=make_id(TerminalFacet, (*key, "facet")),
@@ -79,9 +79,7 @@ def make_terminal(plant: Plant, strip_key: str, label: str, *, group: str, index
     return Terminal(item.id, ports[0].id, ports[1].id)
 
 
-def make_pin(
-    plant: Plant, key: str, designation: str | None, *, parent: Id[Item] | None = None
-) -> Id[Port]:
+def make_pin(plant: Plant, key: str, designation: str | None, *, parent: Id[Item] | None = None) -> Id[Port]:
     """A numbered item with one function and one port `1`."""
     item = plant.item(key, designation=designation, parent=parent)
     return plant.port(plant.function(item, "f"), "1")
@@ -89,8 +87,8 @@ def make_pin(
 
 def item_of(plant: Plant, port: Id[Port]) -> Id[Item]:
     """The item that owns `port`."""
-    function = next(r for r in plant.records if r.id == port).function
-    return next(r for r in plant.records if r.id == function).item
+    function = next(r for r in plant.records if isinstance(r, Port) and r.id == port).function
+    return next(r for r in plant.records if isinstance(r, Function) and r.id == function).item
 
 
 def make_strip(plant: Plant) -> tuple[Id[Item], tuple[Terminal, ...]]:
@@ -105,9 +103,7 @@ def make_strip(plant: Plant) -> tuple[Id[Item], tuple[Terminal, ...]]:
     return strip, (l2, l1, n1)
 
 
-def make_channels(
-    plant: Plant, key: str, designation: str | None, signals: tuple[SignalType, ...]
-) -> list[Id[Function]]:
+def make_channels(plant: Plant, key: str, designation: str | None, signals: tuple[SignalType, ...]) -> list[Id[Function]]:
     """A numbered module item with one channel function per signal, numbered from 1."""
     part = Part(
         id=make_id(Part, (key, "part")),
@@ -150,20 +146,13 @@ def reversed_tables(model: Model) -> Model:
     backwards = dataclasses.replace(
         model,
         digest=f"reversed-{model.digest}",
-        tables=type(model.tables)(
-            {
-                kind: type(table)(reversed(table.items()))
-                for kind, table in reversed(model.tables.items())
-            }
-        ),
+        tables=type(model.tables)({kind: type(table)(reversed(table.items())) for kind, table in reversed(model.tables.items())}),
     )
     assert list(backwards.tables) != list(model.tables)
     return backwards
 
 
-def make_part(
-    plant: Plant, key: str, mpn: str, *, category: PartCategory = PartCategory.GENERIC
-) -> Id[Part]:
+def make_part(plant: Plant, key: str, mpn: str, *, category: PartCategory = PartCategory.GENERIC) -> Id[Part]:
     """A part with this `mpn`, generic unless `category` says otherwise."""
     part = Part(
         id=make_id(Part, (key,)),

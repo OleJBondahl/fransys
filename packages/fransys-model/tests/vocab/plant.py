@@ -11,18 +11,12 @@ from derive_helpers import with_library
 from fransys_model.kernel import Draft, Id, Model, Origin, freeze, make_id
 from fransys_model.vocab.connectivity import Conductor, Mate, Net
 from fransys_model.vocab.core import Function, Item, Port, Unit, UnitRelease
-from fransys_model.vocab.enums import (
-    ConductorKind,
-    FunctionKind,
-    LinkKind,
-    NetClass,
-    PartCategory,
-    PortRole,
-)
+from fransys_model.vocab.enums import ConductorKind, FunctionKind, NetClass, PartCategory, PortBoundary
 from fransys_model.vocab.facets.pcb import PcbFacet
 from fransys_model.vocab.revision import Revision
 from fransys_model.vocab.templates import FunctionTemplate, InternalLink, Part, PortTemplate
 from fransys_model.vocab.units import Boundary, UnusedBoundary
+lazy from fransys_model.elecdef import LinkKind
 
 _ORIGIN = Origin(file="plant.py", line=1, note="fixture")
 
@@ -73,7 +67,6 @@ class Plant:
         revision: int = 1,
         interface: str = "1",
         version: int = 1,
-        class_code: str = "",
     ) -> Id[UnitRelease]:
         """Add (once) the release `(name, version, revision)` and return its id."""
         release_key = ("unit_release", name, str(version), str(revision))
@@ -84,7 +77,6 @@ class Plant:
             version=version,
             revision=revision,
             interface=interface,
-            class_code=class_code,
         )
         if not self.has(release.id):
             self.add(release)
@@ -100,10 +92,9 @@ class Plant:
         parent: Id[Unit] | None = None,
         version: int = 1,
         tag: str | None = None,
-        class_code: str = "",
     ) -> Id[Unit]:
         """Add a unit keyed `(key,)`, an instance of the release `(name, version, revision)`."""
-        release = self.release(name, revision, interface, version, class_code)
+        release = self.release(name, revision, interface, version)
         unit = Unit(id=make_id(Unit, (key,)), key=(key,), release=release, parent=parent, tag=tag)
         self.add(unit)
         return unit.id
@@ -179,7 +170,7 @@ class Plant:
             function=function,
             template=template,
             name=name,
-            role=PortRole.GENERIC,
+            boundary=PortBoundary.GENERIC,
         )
         self.add(port)
         return port.id
@@ -242,13 +233,14 @@ class Plant:
         *,
         potential: str | None = None,
         name: str | None = None,
+        net_class: NetClass = NetClass.GENERIC,
     ) -> Id[Net]:
         """Add a declared net."""
         net = Net(
             id=make_id(Net, (key,)),
             key=(key,),
             name=name,
-            net_class=NetClass.GENERIC,
+            net_class=net_class,
             ports=ports,
             potential=potential,
         )
@@ -261,9 +253,7 @@ class Plant:
         self.add(mate)
         return mate.id
 
-    def boundary(
-        self, unit: Id[Unit], function: Id[Function], *, key: str = "boundary"
-    ) -> Id[Boundary]:
+    def boundary(self, unit: Id[Unit], function: Id[Function], *, key: str = "boundary") -> Id[Boundary]:
         """Add a `Boundary`: `function` is part of `unit`'s interface."""
         boundary = Boundary(id=make_id(Boundary, (key,)), key=(key,), unit=unit, function=function)
         self.add(boundary)
@@ -299,16 +289,14 @@ class Plant:
                 key=("relay", "fn", name),
                 function=template.id,
                 name=name,
-                role=PortRole.GENERIC,
+                boundary=PortBoundary.GENERIC,
             )
             for name in ("1", "2")
         )
         self.add(part, template, *pins)
         return part, template, pins[0], pins[1]
 
-    def link(
-        self, a: PortTemplate, b: PortTemplate, kind: LinkKind, *, key: str = "link"
-    ) -> InternalLink:
+    def link(self, a: PortTemplate, b: PortTemplate, kind: LinkKind, *, key: str = "link") -> InternalLink:
         """Add an internal link between two port templates."""
         link = InternalLink(id=make_id(InternalLink, (key,)), key=(key,), a=a.id, b=b.id, kind=kind)
         self.add(link)
@@ -341,4 +329,4 @@ class Plant:
         return with_library(freeze(draft))
 
     def _key_of(self, record_id: Id[Any]) -> tuple[str, ...]:
-        return next(record.key for record in self.records if record.id == record_id)
+        return tuple(str(part) for part in next(record.key for record in self.records if record.id == record_id))

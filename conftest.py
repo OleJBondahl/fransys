@@ -5,14 +5,15 @@ PLC and lays out through `fr.build(...)`: the facade's acceptance, the
 proof that `build` is the real pipeline. Root tests may import every workspace package.
 """
 
+import importlib
 import sys
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import fransys as fr
-import fransys_author
 import fransys_parts
 import pytest
+from fransys_author.design import Design
 
 _ROOT = Path(__file__).resolve().parent
 if str(_ROOT) not in sys.path:
@@ -26,15 +27,54 @@ _TESTS = str(_ROOT / "tests")  # the tests import their sibling test modules by 
 if _TESTS not in sys.path:
     sys.path.insert(0, _TESTS)
 
+# The full repo's own helper folders (the maintainers' tools); the export has no such file and adds nothing (R1348).
+_INTERNAL_LIST = _ROOT / "internal" / "search-paths.txt"
+for _line in _INTERNAL_LIST.read_text("utf-8").split() if _INTERNAL_LIST.is_file() else ():
+    if str(_ROOT / _line) not in sys.path:
+        sys.path.insert(0, str(_ROOT / _line))
+
+from _expected_codes import REFUSED  # noqa: E402
 from _export_signature import SKIP_REASON, is_export  # noqa: E402
 from _model_build_cover import cabinet_document  # noqa: E402
-from demo_designs import cabinet_design, harness_with_board_design  # noqa: E402
+from demo_designs import cabinet_design  # noqa: E402
 
 if TYPE_CHECKING:
+    from collections.abc import Generator
+
     from fransys.pipeline import BuildResult
-    from fransys_author import Design
 
     from fransys_model.kernel import Draft, Model
+
+_refuse: Any = importlib.import_module("fransys_model.checks.mates_disabled")
+_refuse_one = _refuse._refuse
+
+
+def _recording_refuse(subject: object, what: str) -> object:
+    found = _refuse_one(subject, what)
+    REFUSED.append(found)
+    return found
+
+
+_refuse._refuse = _recording_refuse  # the guard below sees every MATES_DISABLED the check raises
+
+
+@pytest.hookimpl(tryfirst=True, wrapper=True)
+def pytest_runtest_setup() -> Generator[None, object, object]:
+    """Start each test with no refused build; module fixtures build inside this phase."""
+    REFUSED.clear()
+    return (yield)
+
+
+@pytest.hookimpl(wrapper=True)
+def pytest_runtest_call() -> Generator[None, object, object]:
+    """A test that built a mate, a harness or a board must assert the refusal with `expect_codes` (model-0405)."""
+    result = yield
+    if REFUSED:
+        pytest.fail(
+            "this test built a mate, a harness or a board and ignored MATES_DISABLED: assert it with expect_codes or build without it", pytrace=False
+        )
+    return result
+
 
 DEMO_PARTS = _ROOT / "examples" / "demo-parts"
 
@@ -52,7 +92,7 @@ def _built(parts: Draft, design: Design) -> BuildResult:
     contract -- "the two root fixtures build a laid-out model", `tests/test_fixtures.py` --
     true again, unchanged from before PS1.
     """
-    document = cabinet_document(fransys_author.Design(parts).location("C1", "Demo cabinet"))
+    document = cabinet_document(Design(parts).location("C1", "Demo cabinet"))
     return fr.build(parts, design.draft(), document)
 
 
@@ -67,19 +107,6 @@ def demo_cabinet_result() -> BuildResult:
 def demo_cabinet(demo_cabinet_result: BuildResult) -> Model:
     """`demo_cabinet_result`'s model."""
     return demo_cabinet_result.model
-
-
-@pytest.fixture
-def demo_harness_with_board_result() -> BuildResult:
-    """A harness mated to a board that carries a relay and two connectors."""
-    parts = fransys_parts.load("demo_parts")
-    return _built(parts, harness_with_board_design(parts))
-
-
-@pytest.fixture
-def demo_harness_with_board(demo_harness_with_board_result: BuildResult) -> Model:
-    """`demo_harness_with_board_result`'s model."""
-    return demo_harness_with_board_result.model
 
 
 @pytest.fixture
@@ -98,19 +125,15 @@ def demo_cabinet_document(tmp_path: Path) -> BuildResult:
     # `Design(parts).location("C1", ...)` mints the same id `cabinet_design` already put in
     # its own draft (a location's id is a deterministic hash of its key); this scratch
     # `Design`'s own draft is discarded -- only the returned handle's id is used.
-    c1 = fransys_author.Design(parts).location("C1", "Demo cabinet")
+    c1 = Design(parts).location("C1", "Demo cabinet")
     cover = tmp_path / "cabinet.md"
     cover.write_text("# Demo cabinet\n", encoding="utf-8")
-    (tmp_path / "cabinet.notes.md").write_text(
-        "Invented demo notes for the cabinet.\n", encoding="utf-8"
-    )
+    (tmp_path / "cabinet.notes.md").write_text("Invented demo notes for the cabinet.\n", encoding="utf-8")
     document_draft = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, c1, cover=cover)
     return fr.build(parts, design.draft(), document_draft)
 
 
-pytest_plugins = (
-    "_gap_flip_hook",
-)  # the strict xfails of the tests still red on the core (FLIP-NOW F4)
+pytest_plugins = ("_gap_flip_hook",)  # the strict xfails of the tests still red on the core (FLIP-NOW F4)
 
 HEAVY_MODULES = ("test_scale_call_counts.py", "test_render_scale_counts.py")
 
@@ -135,3 +158,15 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
         for item in items:
             if item.get_closest_marker("private_input"):
                 item.add_marker(skip)
+
+
+@pytest.fixture(autouse=True)
+def _id_namespace_is_left_as_found(request: pytest.FixtureRequest) -> Generator[None]:
+    """R1560: a test that leaves the id namespace changed salts every later test of its worker (KI-566)."""
+    from fransys_model.kernel import make_id  # noqa: PLC0415 - only the guard reads ids
+    from fransys_model.vocab.templates import PartLibrary  # noqa: PLC0415 - a registered record class to make a probe id from
+
+    before = make_id(PartLibrary, ("namespace-probe",))
+    yield
+    if make_id(PartLibrary, ("namespace-probe",)) != before:
+        pytest.fail(f"{request.node.nodeid} left the id namespace changed for every later test: use `with id_namespace(...)`")

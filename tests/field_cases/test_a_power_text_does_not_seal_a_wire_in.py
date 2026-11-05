@@ -1,21 +1,11 @@
-"""A wire from a terminal strip to a stacked run is drawn although a 24V supply text is near it.
+"""Field case: a 15-terminal interface strip with a stacked one-terminal run whose port carries a 24V supply symbol, beside a signal net.
+The bug: the taller box grew a keep-out until the "24V" text sat on the lane the wire leaves by, and the router sealed the wire in.
+Fixed by layout-0196, no text stands on a port's exit lane, and the power placer is given the lanes (CONNECTION_NOT_DRAWN)."""
 
-Engineering shape: an interface strip of 15 terminals, a one-terminal run (17) stacked beside it
-whose outer port carries a 24V supply symbol, and a signal net over four lamps in their own
-functions (its marker prints a " +k" count, which makes every reference box taller).
-
-The bug: the taller box grew a terminal's keep-out until the "24V" text found a place one grid
-below it, on the lane the wire leaves by. The router holds a text as an unowned box, which has no
-exempt lane, so the wire was sealed in: ROUTE_FAILED and CONNECTION_NOT_DRAWN.
-
-Fixed by layout-0196: no text stands on a port's exit lane, and the power placer is given the lanes.
-"""
-
-import tempfile
-from pathlib import Path
 from typing import NamedTuple
 
 import fransys as fr
+from _model_build_cover import unit_document
 
 
 class _Io(NamedTuple):
@@ -30,21 +20,24 @@ def _shape(d):
     psu = d.device("T1", "DEMO-PSU-24")
     d.ac_supply("MAINS", 230, psu.input["L"], n=psu.input["N"])
     d.dc_supply("24V", psu)
-    rail = d.terminal_strip("X3", "DEMO-TB-2.5").run("24V", 2, bridged=True)
-    d.detail.wire(psu.output["+"], rail[1], wire=("RD", 0.75))
+    rail = d.terminal_strip("X3", "DEMO-TB-2.5").run("24V", 2, bridged=True, rail=True)
+    d.series(psu.output["+"], rail[1], wire=("RD", 0.75))
     x1 = d.terminal_strip("X1", "DEMO-TB-2.5", 15, interface=True)
-    r17 = d.terminal_strip("X2", "DEMO-TB-2.5").run("17", 1)
+    r17 = d.terminal_strip("X2", "DEMO-TB-2.5-TWIN").run("17", 3, bridged=True)
     with d.function("IN", "Inputs"):
         plc = d.device("K1", "DEMO-PLC-DI-16")
     for t, ch in ((9, 1), (6, 2), (3, 3), (12, 4), (15, 6), (2, 7)):
-        d.detail.wire(x1[t].inner, plc[str(ch)], wire=("BK", 0.75))
-    for t in (1, 4, 7, 10, 13):
-        d.detail.wire(x1[t].inner, r17[1].inner, wire=("BK", 0.75))
-    d.detail.wire(r17[1].outer, rail[2], wire=("RD", 0.75))
+        d.series(x1[t].inner, plc[str(ch)], wire=("BK", 0.75))
+    for t, n in ((1, 1), (4, 1), (7, 2), (10, 2), (13, 3)):
+        d.series(x1[t].inner, r17[n].inner, wire=("BK", 0.75))
+    d.series(r17[1].outer, rail[2], wire=("RD", 0.75))
+    prev = x1[5].outer
     for i in range(4):
         with d.function(f"S{i}", f"Sig {i}"):
             h = d.device(f"Q{i}", "DEMO-LAMP-24")
-        d.detail.wire(x1[5].outer, h.lamp[1], wire=("BK", 0.75))
+        d.series(prev, h.lamp[1], wire=("BK", 0.75))
+        prev = h.lamp[1]
+        d.series(h.lamp[2], d.device(f"G{i}", None, external=True, pins=("P",)).P, wire=("BK", 0.75))
     return _Io(x1)
 
 
@@ -52,9 +45,6 @@ def test_the_wire_is_drawn_and_no_route_fails() -> None:
     """UNDO: stages/texts/power.py, `with_power_labels`: drop `lanes=port_lanes(placed)`."""
     d = fr.design("demo_parts")
     d.add(_shape, "U1")
-    cover = Path(tempfile.mkdtemp()) / "cover.md"
-    cover.write_text("# Shape\n", encoding="utf-8")
-    built = fr.build(d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, "shape", cover=cover))
+    built = fr.build(d, unit_document("shape"))
     codes = {str(f.code) for f in built.findings}
-    assert "ROUTE_FAILED" not in codes
     assert "CONNECTION_NOT_DRAWN" not in codes

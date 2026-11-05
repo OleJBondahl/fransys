@@ -28,7 +28,6 @@ class Facts(NamedTuple):
     protection_type: str | None
     gender: str | None
     operated_by: str | None
-    actuator: bool
     port_shape: str = "other"
 
 
@@ -39,9 +38,7 @@ def port_shape(names: Collection[str]) -> str:
 
 NO_MAP: frozendict[str, str] = frozendict(dict[str, str]())
 # A motor (Ruling 68 A1); the symbol's ports are lower case.
-MOTOR_MAP: frozendict[str, str] = frozendict(
-    {**{n: n.lower()[0] for n in ("U", "V", "W", "U1", "V1", "W1")}, "PE": "pe"}
-)
+MOTOR_MAP: frozendict[str, str] = frozendict({**{n: n.lower()[0] for n in ("U", "V", "W", "U1", "V1", "W1")}, "PE": "pe"})
 
 
 class Row(NamedTuple):
@@ -64,14 +61,10 @@ def _by_type(symbol: str, value: str) -> Row:
     return _kind(symbol, "protection", ("protection_type", value))
 
 
-_APART = ("actuator", "apart")
 _REST = ("rest", "rest")
 _OPERATED = ("rest", "operated")
 
 TABLE: tuple[Row, ...] = (
-    _kind("break-contact-positive-opening", "switch", _APART, ("operated_by", "mushroom"), _REST),
-    _kind("make-contact", "switch", _APART, _OPERATED),
-    _kind("break-contact", "switch", _APART, _REST),
     _operated("push-button", "push", "operated"),
     _operated("push-button-break", "push", "rest"),
     _operated("emergency-stop", "mushroom", "rest"),
@@ -117,7 +110,6 @@ def _subject(facts: Facts) -> dict[str, str | None]:
         "protection_type": facts.protection_type or "none",
         "gender": facts.gender or "none",
         "operated_by": facts.operated_by or "none",
-        "actuator": "lead" if facts.actuator else "apart",
         "port_shape": facts.port_shape,
     }
 
@@ -128,15 +120,11 @@ def default_row(facts: Facts) -> Row | None:
     return next((r for r in TABLE if all(subject[k] == v for k, v in r.when)), None)
 
 
-def _choices_at(
-    model: Model, function: Function, part: Id[Part] | None
-) -> tuple[list[SymbolChoice], ...]:
+def _choices_at(model: Model, function: Function, part: Id[Part] | None) -> tuple[list[SymbolChoice], ...]:
     """The authored choices for `function` by specificity: function (or template), part, kind."""
     found = list(layout_of(model, SymbolChoice).values())
     own = [c for c in found if c.function == function.id]
-    from_template = [
-        c for c in found if function.template is not None and c.template == function.template
-    ]
+    from_template = [c for c in found if function.template is not None and c.template == function.template]
     return (
         own or from_template,
         [c for c in found if part is not None and c.part == part],
@@ -144,9 +132,7 @@ def _choices_at(
     )
 
 
-def symbol_for(
-    model: Model, function: Function, part: Id[Part] | None, facts: Facts
-) -> tuple[str | None, frozendict[str, str]]:
+def symbol_for(model: Model, function: Function, part: Id[Part] | None, facts: Facts) -> tuple[str | None, frozendict[str, str]]:
     """The symbol key (`None`: a box) and the port map of `function`: choice, then the table."""
     for level in _choices_at(model, function, part):
         if len(level) > 1:

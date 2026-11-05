@@ -8,13 +8,14 @@ from collections import defaultdict
 from typing import TYPE_CHECKING, cast
 
 from electrical_symbols import MARKER_FACING
-from fransys_model.derive import stub_far, stub_text_at
+from fransys_model.derive import far_pins, stub_far, stub_text_at
 
 from .placement_ids import pin_names, symbol_ids
 from .placement_views import marker_boxes
+from .write_stubs import stub_ends
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable, Mapping
+    from collections.abc import Iterable, Mapping, Sequence
 
     from electrical_symbols import Library
     from fransys_layout.core import Box, Orientation, PinRef
@@ -23,7 +24,7 @@ if TYPE_CHECKING:
 
     from .placement_kit import SymbolKit
 
-__all__ = ["ARROW", "KINDS", "LONE", "facing_views", "marker_fit", "pin_ports"]
+__all__ = ["ARROW", "KINDS", "LONE", "facing_views", "pin_ports", "stub_fit"]
 
 #: The reference kind whose box is fitted to the widest line it can print (R350).
 ARROW = "arrow"
@@ -35,6 +36,8 @@ LONE = ("stub", "copy")
 KINDS = ("tag", "arrow", "star", *LONE)
 
 type Fit = Mapping[tuple[PinRef, str], Mapping[Orientation, Box]]
+type StubLines = Mapping[tuple[PinRef, PinRef], tuple[int, ...]]
+type StubTable = Mapping[tuple[int, int], Mapping[Orientation, Box]]
 
 
 def facing_views() -> tuple[frozenset[Orientation], Orientation, Orientation]:
@@ -52,29 +55,73 @@ def pin_ports(model: Model, kit: SymbolKit) -> dict[PinRef, list[Id[Port]]]:
     return found
 
 
-def marker_fit(
+def _texts(model: Model, unit: Id[Unit] | None, ports: Sequence[Id[Port]]) -> list[str]:
+    """The one text a stub at `ports` prints: a line for each conductor that leaves."""
+    reach = far_pins(model, ports)
+    fars = list(dict.fromkeys(far for _, far in reach))
+    ends = [end for far in fars for end in stub_far(model, ports, [far])] if reach else stub_far(model, ports)[:1]
+    lines = [stub_text_at(model, unit, end, north=False) for end in ends]
+    return ["\n".join(lines)] if lines else []
+
+
+def _lines(
+    model: Model, unit: Id[Unit] | None, ports: Mapping[PinRef, list[Id[Port]]], pins: Iterable[PinRef]
+) -> dict[tuple[PinRef, PinRef], list[str]]:
+    """The line each conductor from a pin of `pins` to a far pin prints, by (near pin, far pin): placement does not change it (R1597)."""
+    pin_of = {port: pin for pin, names in ports.items() for port in names}
+    found: dict[tuple[PinRef, PinRef], list[str]] = {}
+    for near in set(pins):
+        for far in dict.fromkeys(pin_of[f] for _, f in far_pins(model, ports.get(near, ())) if f in pin_of):
+            found[near, far] = [stub_text_at(model, unit, end, north=False) for end in stub_ends(model, ports[near], ports[far])]
+    return found
+
+
+def _sharing(texts: Mapping[tuple[PinRef, PinRef], list[str]]) -> list[set[PinRef]]:
+    """The groups of near pins that share a far symbol, joined where they share another: the pins a merged stub can stand for (a bundle, R1319)."""
+    groups: list[set[PinRef]] = []
+    for far in {f.sym for _, f in texts}:
+        joined = {n for n, f in texts if f.sym == far}
+        for g in [g for g in groups if g & joined]:
+            groups.remove(g)
+            joined |= g
+        groups.append(joined)
+    return groups
+
+
+def _sized(
+    library: Library, texts: Mapping[tuple[PinRef, PinRef], list[str]], pins: list[PinRef], stands: Iterable[Sequence[PinRef]]
+) -> tuple[dict[str, Mapping[Orientation, Box]], StubLines, StubTable]:
+    """Each line text's box, each conductor's line width, and the box by (widest width, line count) up to the count a stub can reach."""
+    fits = {text: marker_boxes(library, text) for lines in texts.values() for text in lines}
+    widths = {text: box["R90"].h for text, box in fits.items()}
+    lines = frozendict({k: tuple(widths[t] for t in v) for k, v in texts.items() if v})
+    sample = {w: t for t, w in widths.items()}
+    own = {p: [t for (n, _), v in texts.items() if n == p for t in v] for p in set(pins)}
+    reach = max((sum(len(own.get(p, ())) for p in g) for g in (*_sharing(texts), *stands)), default=0)
+    table = frozendict({(w, n): marker_boxes(library, "\n".join([t] * n)) for w, t in sample.items() for n in range(1, reach + 1)})
+    return fits, lines, table
+
+
+def stub_fit(
     model: Model,
     kit: SymbolKit,
-    unit: Id[Unit] | None,
-    library: Library,
+    unit_library: tuple[Id[Unit] | None, Library],
     pins: Iterable[PinRef],
-) -> Fit:
-    """The box of each marker kind at `pins`, by (pin, kind): stub and copy fit their text.
+    stands: Iterable[Sequence[PinRef]] = (),
+) -> tuple[Fit, StubLines, StubTable]:
+    """The core's marker sizes (R1597): each kind's box at a pin, each conductor's line width, and the box by (widest width, line count).
 
-    A tag or star takes the plain marker's box; the arrow's box is `link_fit`'s. A pin no
-    conductor leaves has none.
+    `Fit` is the pin's own text, the bound before the ledger exists; a line's width is its one-line turned box along the wire.
     """
-    plain = marker_boxes(library)
+    unit, library = unit_library
     ports = pin_ports(model, kit)
-    boxes: dict[str, Mapping[Orientation, Box]] = {}
+    plain = marker_boxes(library)
+    pins = list(pins)
+    fits, lines, table = _sized(library, _lines(model, unit, ports, pins), pins, stands)
     found = {}
     for pin in set(pins):
-        ends = stub_far(model, ports[pin]) if pin in ports else None
-        if ends is None:
-            continue
-        text = stub_text_at(model, unit, ends, north=False)
-        if text not in boxes:
-            boxes[text] = marker_boxes(library, text)
-        own = dict.fromkeys(LONE, boxes[text])
-        found.update({(pin, kind): own.get(kind, plain) for kind in KINDS if kind != ARROW})
-    return frozendict(found)
+        pin_text = _texts(model, unit, ports[pin]) if pin in ports else []
+        if pin_text:
+            fits[pin_text[0]] = fits.get(pin_text[0]) or marker_boxes(library, pin_text[0])
+            found.update({(pin, kind): fits[pin_text[0]] if kind in LONE else plain for kind in KINDS if kind != ARROW})
+    return frozendict(found), lines, table

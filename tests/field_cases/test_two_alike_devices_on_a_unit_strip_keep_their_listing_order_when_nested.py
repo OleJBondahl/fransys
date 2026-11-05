@@ -1,17 +1,6 @@
 """Field case: a container released after its nested unit, over two alike devices on a strip.
-
-The engineering shape: a unit holds one terminal strip and two devices of one part, both mounted
-on the strip and differing only by name. The unit is released, then a container that nests it is
-released into the same releases folder.
-
-The bug: the container's release raised BASELINE_DIFFERS ("differs from its released baseline in:
-items") though the item sets were equal. The listing sorts items on designation, part, installed,
-external and position; the two devices tie on all of them, so their order followed the model's
-insertion order, which differs between the unit built alone and the unit built nested.
-
-The rule (decision model-0309): a unit's listing order is the same alone and nested; ties break
-on the unit-local item key.
-"""
+The bug: its release raised BASELINE_DIFFERS though the item sets were equal, as the two devices tied and their order followed insertion.
+Fixed by model-0309, a unit's listing order is the same alone and nested, and ties break on the unit-local item key."""
 
 from typing import Any, NamedTuple
 lazy from pathlib import Path

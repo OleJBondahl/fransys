@@ -5,7 +5,7 @@ does for stage 4)."""
 from __future__ import annotations
 
 from dataclasses import replace
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import pytest
 from options_fixtures import core_options
@@ -32,12 +32,6 @@ if TYPE_CHECKING:
 
 OPTIONS = core_options(
     marker=MARKER,
-    flip_turn="R180",
-    tag_stagger=True,
-    label_gap=8,
-    parallel_pitch=48,
-    driver_first=True,
-    arrow_sides=("E", "W"),
 )
 
 
@@ -69,7 +63,7 @@ CASES: dict[str, tuple[Callable[[], PlacementProblem], Callable[[Placement], boo
 }
 
 
-def _checked(case: str) -> tuple[PlacementProblem, tuple]:
+def _checked(case: str) -> tuple[PlacementProblem, tuple[Any, ...]]:
     build, feature = CASES[case]
     prob = build()
     cut = cut_of(prob, OPTIONS)
@@ -92,9 +86,7 @@ def test_placement_does_not_depend_on_how_ids_are_spelled(case: str, form: str) 
 def test_placement_does_not_depend_on_the_order_of_the_input_tuples(case: str) -> None:
     prob, (cut, want) = _checked(case)
     flow = cut.flow
-    flipped = replace(
-        flow, columns=flow.columns[::-1], fans=flow.fans[::-1], cross_links=flow.cross_links[::-1]
-    )
+    flipped = replace(flow, columns=flow.columns[::-1], fans=flow.fans[::-1], cross_links=flow.cross_links[::-1])
     reversed_prob = replace(prob, symbols=prob.symbols[::-1], nets=prob.nets[::-1])
     got = place_pages(replace(cut, flow=flipped), reversed_prob, OPTIONS)
     assert canon_placement(got, back_of({})) == want

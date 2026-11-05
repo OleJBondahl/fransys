@@ -24,11 +24,7 @@ def _plc_channel_calls() -> list[tuple[Path, int]]:
     hits = []
     for path in sorted(SRC.rglob("*.py")):
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-        hits.extend(
-            (path.relative_to(SRC), node.lineno)
-            for node in ast.walk(tree)
-            if isinstance(node, ast.Call) and _is_plc_channel_call(node)
-        )
+        hits.extend((path.relative_to(SRC), node.lineno) for node in ast.walk(tree) if isinstance(node, ast.Call) and _is_plc_channel_call(node))
     return hits
 
 

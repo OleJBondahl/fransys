@@ -7,13 +7,15 @@ from typing import get_args
 from fransys_el import FINDING_CODES
 
 import fransys_layout.core as core_pkg
+from fransys_model.kernel import Severity
 
 _CORE_ONLY = [
     "MARKER_UNPLACED",
     "ANNEX_UNPLACED",
+    "OUTLINE_NO_ROOM",
     "ALIGN_DROPPED",
     "CARD_OVERFULL",
-    "TRUNK_THROUGH_BODY",
+    "WIRE_THROUGH_BODY",
     "PAGE_OVERFLOW",
     "FILL_UNDER_MIN",
     "HEAD_OFF_LEGS",
@@ -24,15 +26,18 @@ _CORE_ONLY = [
     "CHAIN_REFUSED",
     "WIDER_THAN_PAGE",
     "WIRE_MEETS_NET",
+    "TAG_ACROSS_BODY",  # CROSS-HALF-TAGS (el-0081, R812): the core says it, el registers the row
 ]
 _EL_ONLY = [
     "UNKNOWN_SYMBOL_KEY",  # el emits it where it picks the key (el-0039)
     "PLACEMENT_PROBLEM",  # el raises it from a ProblemError or a failed set (el-0051)
+    "SYMBOL_PORT_MISSING",  # el raises it from a PortMissingError (decision 0018)
     "OVERLAP",  # DRAWING-INVARIANTS: el emits it over the finished drawings
     "OUT_OF_PAGE",
     "WIRE_OVER_MARKER",  # MARKER-FREE-SIDE: el counts what meets a marker box
     "NOT_SERIES_PARALLEL",  # el emits it for a bridge of derive.series_parallel (0364)
     "CONNECTION_NOT_DRAWN",  # DRAWN-NETLIST (el-0052): el checks the finished drawings
+    "DANGLING_WIRE_END",  # DRAWN-NETLIST (el-0086): a wire end that meets nothing
     "DRAWING_SHORTS_NETS",
     "ROUTE_WRONG_PORT",
     "MARKER_UNPAIRED",
@@ -62,18 +67,24 @@ def test_every_code_the_core_can_emit_is_registered_for_the_mapper():
     assert sorted(set(get_args(FindingCode)) - held - {"LANE_TURNED"}) == []
 
 
-def test_a_drawn_short_and_a_wrong_port_are_errors():
-    """Both stocks are 0 on all seven builds, so each code is an ERROR (el-0052, R452)."""
-    from fransys_model.kernel import Severity
-
-    for code in ("DRAWING_SHORTS_NETS", "ROUTE_WRONG_PORT"):
+def test_a_drawn_short_a_wrong_port_a_trunk_through_a_body_and_a_page_overflow_are_errors():
+    """Stocks are 0 on all seven builds, so each is an ERROR (el-0052, R452; layout-0394, R492; CUT-TALL step 1)."""
+    for code in ("DRAWING_SHORTS_NETS", "ROUTE_WRONG_PORT", "WIRE_THROUGH_BODY", "PAGE_OVERFLOW"):
         info = next(i for i in FINDING_CODES if i.code == code)
-        assert info.severities == (Severity.ERROR,), code
+        assert info.severity is Severity.ERROR, code
 
 
-def test_page_overflow_is_an_error():
-    """A column or row over the page is a refusal, never a warning (CUT-TALL step 1)."""
-    from fransys_model.kernel import Severity
+def test_a_net_function_lane_wire_set_page_or_print_left_out_is_an_error():
+    """The five codes of a dropped drawing item and eight defect codes are all 0 on the seven builds and field cases: ERROR (L1, R582; L1b, R700)."""
+    from fransys_model.vocab import FINDING_CODES as MODEL_CODES
 
-    info = next(i for i in FINDING_CODES if i.code == "PAGE_OVERFLOW")
-    assert info.severities == (Severity.ERROR,)
+    wanted = {"NET_NOT_DRAWN", "FUNCTION_NOT_DRAWN", "LANE_WIRE_DROPPED", "SET_WITHOUT_PAGE", "UNPRINTED_SET", "NO_BLOCK"}
+    wanted |= {"MARKER_UNPAIRED", "CONNECTION_DRAWN_TWICE", "WIRE_NOT_ORTHOGONAL", "MISSING_JUNCTION_DOT", "WIDER_THAN_PAGE"}
+    held = {info.code: info.severity for info in (*MODEL_CODES, *FINDING_CODES)}
+    assert {code: held[code] for code in wanted} == dict.fromkeys(wanted, Severity.ERROR)
+
+
+def test_a_card_spill_is_an_info_because_tag_pairs_join_it() -> None:
+    """CARD_OVERFULL states a spill joined by tag pairs and loses no fact (R1154)."""
+    info = next(i for i in FINDING_CODES if i.code == "CARD_OVERFULL")
+    assert info.severity is Severity.INFO

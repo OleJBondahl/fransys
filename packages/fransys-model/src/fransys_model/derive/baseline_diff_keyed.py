@@ -41,9 +41,7 @@ def _renames(
     return found
 
 
-def rename_to_b(
-    a: Listing, b: Listing, a_subject: str, b_subject: str
-) -> tuple[Listing, list[Change]]:
+def rename_to_b(a: Listing, b: Listing, a_subject: str, b_subject: str) -> tuple[Listing, list[Change]]:
     """`a` with each renamed item and boundary designation set to `b`'s, and the `renamed` rows."""
     items = _renames(a.items, b.items, a_subject, b_subject)
     boundary = _renames(a.boundary, b.boundary, a_subject, b_subject)
@@ -56,10 +54,7 @@ def rename_to_b(
         )
         for r in a.items
     )
-    kept = tuple(
-        replace(r, designation=boundary.get(r.designation or a_subject, r.designation))
-        for r in a.boundary
-    )
+    kept = tuple(replace(r, designation=boundary.get(r.designation or a_subject, r.designation)) for r in a.boundary)
     return replace(a, items=moved, boundary=kept), rows
 
 

@@ -6,6 +6,7 @@ from plant import Plant
 
 from fransys_model.checks.connectivity import check_connectivity
 from fransys_model.checks.units import check_units
+from fransys_model.vocab.enums import NetClass
 lazy from fransys_model.vocab.connectivity import Net
 lazy from fransys_model.vocab.core import Port
 
@@ -13,7 +14,7 @@ if TYPE_CHECKING:
     from fransys_model.kernel import Finding, Id
 
 
-def _plant(*, net_inside: bool = False) -> tuple[Plant, Id[Net], Id[Port]]:
+def _plant(*, net_inside: bool = False, net_class: NetClass = NetClass.GENERIC) -> tuple[Plant, Id[Net], Id[Port]]:
     """Unit `inner` in `outer`; a boundary pin `j` and a pin `x`, joined by the net EXT_A."""
     plant = Plant()
     outer = plant.unit("outer", name="outer")
@@ -23,7 +24,7 @@ def _plant(*, net_inside: bool = False) -> tuple[Plant, Id[Net], Id[Port]]:
     plant.item("x", unit=inner if net_inside else outer)
     j, x = plant.pin("j", "f", "1"), plant.pin("x", "f", "1")
     plant.boundary(inner, plant.function_id("j", "f"))
-    return plant, plant.net("n", (j, x), name="EXT_A"), j
+    return plant, plant.net("n", (j, x), name="EXT_A", net_class=net_class), j
 
 
 def _found(plant: Plant) -> list[Finding]:
@@ -37,10 +38,10 @@ def _codes(plant: Plant) -> list[str]:
 
 def test_a_net_across_a_boundary_gives_one_error_naming_net_and_pin() -> None:
     plant, net, j = _plant()
-    (found,) = [f for f in _found(plant) if f.code == "NET_ACROSS_UNIT_BOUNDARY"]
+    (found,) = [f for f in _found(plant) if f.code == "NET_ACROSS_UNIT_BOUNDARY_OPEN"]
     assert found.subjects == (net, j)
     assert "EXT_A" in found.message
-    assert "d.detail.wire" in found.fix
+    assert "d.series" in found.fix
 
 
 def test_the_cascade_is_not_reported_for_that_net() -> None:
@@ -50,7 +51,7 @@ def test_the_cascade_is_not_reported_for_that_net() -> None:
 
 
 def test_a_net_inside_one_unit_gives_no_crossing_finding() -> None:
-    assert "NET_ACROSS_UNIT_BOUNDARY" not in _codes(_plant(net_inside=True)[0])
+    assert not {c for c in _codes(_plant(net_inside=True)[0]) if c.startswith("NET_ACROSS_UNIT_BOUNDARY")}
 
 
 def test_a_net_inside_one_unit_in_two_pieces_is_still_unrealised() -> None:
@@ -102,6 +103,26 @@ def test_a_joined_boundary_pin_makes_the_crossing_a_warning() -> None:
     plant.boundary(inner, plant.function_id("j", "f"))
     plant.net("n", (j, x), name="EXT_A")
     plant.wire(j, w, key="wire")
-    (found,) = [f for f in _found(plant) if f.code == "NET_ACROSS_UNIT_BOUNDARY"]
+    (found,) = [f for f in _found(plant) if f.code == "NET_ACROSS_UNIT_BOUNDARY_JOINED"]
     assert found.severity.value == "warning"
     assert "BOUNDARY_UNCONNECTED" not in _codes(plant)
+
+
+def test_an_earth_boundary_pin_on_a_pe_net_across_units_is_connected_by_declaration() -> None:
+    """G08-POWER: earth is by declaration; the PE net across the boundary is no BOUNDARY_UNCONNECTED."""
+    codes = _codes(_plant(net_class=NetClass.PE)[0])
+    assert "BOUNDARY_UNCONNECTED" not in codes
+    assert "NET_ACROSS_UNIT_BOUNDARY_OPEN" not in codes
+
+
+def test_an_earth_net_inside_one_unit_does_not_connect_the_boundary() -> None:
+    """Can-fail partner: a PE net that never leaves the unit declares nothing across it."""
+    assert "BOUNDARY_UNCONNECTED" in _codes(_plant(net_inside=True, net_class=NetClass.PE)[0])
+
+
+def test_a_boundary_function_with_an_open_signal_pin_and_a_carried_earth_pin_is_still_unconnected() -> None:
+    """model-0403: earth carries its own PE port only, never the whole function."""
+    plant, _, _ = _plant(net_class=NetClass.PE)
+    plant.pin("j", "f", "2")
+    (found,) = [f for f in _found(plant) if f.code == "BOUNDARY_UNCONNECTED"]
+    assert plant.function_id("j", "f") in found.subjects

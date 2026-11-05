@@ -81,15 +81,13 @@ def test_cuts_are_the_stretch_lines_in_grid_units(key):
 def test_a_table_is_n_steps_long(key, axis):
     found = natural(key)
     assert found.axis == axis
-    built = body_box(table(LIBRARY.get(key), 4, axis))
+    built = body_box(table(LIBRARY.get(key), 4, axis, port_format=LIBRARY.port_format))
     extent = built.max.x - built.min.x if axis == "x" else built.max.y - built.min.y
     assert g(extent) == 4 * found.step > 0
 
 
 def test_a_symbol_that_is_not_a_row_has_no_step_and_no_cut():
-    assert natural("make-contact") == Natural(
-        natural("make-contact").body, natural("make-contact").keepout, 0, None, None, None
-    )
+    assert natural("make-contact") == Natural(natural("make-contact").body, natural("make-contact").keepout, 0, None, None, None)
 
 
 def test_unknown_key_raises():

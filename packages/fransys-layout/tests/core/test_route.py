@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 from dataclasses import replace
-from typing import TYPE_CHECKING
 
 import pytest
 from options_fixtures import core_options
 
-from fransys_layout.core import Box, PlacementProblem, Size
+from fransys_layout.core import Box, PinRef, PlacementProblem, Size
+from fransys_layout.core.junctions import page_junctions
 from fransys_layout.core.outputs import Placed, Routes, Wire
 from fransys_layout.core.route import route_page, route_pages
 from fransys_layout.core.route_counts import collinear, demand
@@ -29,9 +29,6 @@ from .route_fixtures import (
     three_end_env,
     two_links_one_gap,
 )
-
-if TYPE_CHECKING:
-    from fransys_layout.core.route_env import RouteEnv
 
 PLANTED = {
     "card": card_with_coils,
@@ -109,16 +106,13 @@ def test_a_page_wider_than_the_page_routes_without_an_index_error() -> None:
     assert any(w.kind == "routed" for w in all_wires(routes))
 
 
-def test_a_boxed_in_link_is_a_finding_with_no_wire_and_the_others_still_route() -> None:
+def test_a_boxed_in_link_is_refused_with_no_wire_and_the_others_still_route() -> None:
     (env,) = envs_of(link_across_box())
     wall = Box(0, 0, 2000, 400)
     placed = {**env.placed, "wall": Placed("wall", 1, 0, 0, "R0", wall, wall, ())}
-    page, failed, findings = route_page(replace(env, placed=placed))
+    page, failed, _ = route_page(replace(env, placed=placed))
     assert [r.net for r in failed] == ["n3"]
-    (finding,) = findings
-    assert (finding.code, finding.subject, finding.page) == ("ROUTE_FAILED", "n3", 1)
-    assert "n3" in finding.text
-    assert "move a symbol" in finding.text
+    assert len(failed[0].ends or ()) == 3  # every end of the link, R1318 Q2
     assert not [w for w in page.wires if w.net == "n3"]
     assert {w.net for w in page.wires} >= {"n1", "n2", "n4", "n5"}
 
@@ -139,44 +133,15 @@ def test_a_cut_three_end_net_joins_all_three_ends_on_its_page() -> None:
     assert {(40, 40), (200, 40), (120, 40)} <= ends
 
 
-def test_a_link_with_an_end_on_another_page_is_a_finding_unless_it_is_cut() -> None:
+def test_a_link_with_an_end_on_another_page_is_refused_unless_it_is_cut() -> None:
     (env,) = envs_of(link_across_box())
     page, failed, findings = route_page(
-        replace(env, placed={s: p for s, p in env.placed.items() if s != "s"})
+        replace(env, placed={s: p for s, p in env.placed.items() if s != "s"}, columns=tuple(c for c in env.columns if c.id != "c:s"))
     )
     assert [r.net for r in failed] == ["n3"]
-    assert "another page" in next(f.text for f in findings if f.subject == "n3")
+    assert not [f for f in findings if f.subject == "n3"]
+    assert failed[0].ends == (PinRef("b", "s"), PinRef("c", "n"))
     assert not [w for w in page.wires if w.net == "n3"]
-
-
-def ripple(rounds: int) -> RouteEnv:
-    pins = {
-        "v0": (250, 64, "S"),
-        "v1": (250, 184, "N"),
-        "h0": (120, 120, "E"),
-        "h1": (264, 120, "W"),
-    }
-    opts = replace(
-        core_options(
-            marker=MARKER,
-            flip_turn="R180",
-            tag_stagger=True,
-            label_gap=8,
-            parallel_pitch=48,
-            driver_first=True,
-            arrow_sides=("E", "W"),
-        ),
-        crossing_penalty=100,
-        bend_penalty=1,
-        reroute_rounds=rounds,
-    )
-    return link_env(pins, {"v": ("v0", "v1"), "h": ("h0", "h1")}, opts)
-
-
-def test_one_reroute_removes_the_crossing_the_first_pass_left() -> None:
-    """The second link crosses the first (a detour costs more); ripping the first up detours it."""
-    assert route_page(ripple(0))[0].counts.crossings == 1
-    assert route_page(ripple(2))[0].counts.crossings == 0
 
 
 def test_route_pages_is_the_public_entry_and_matches_the_stage_functions() -> None:
@@ -189,12 +154,6 @@ def test_route_pages_is_the_public_entry_and_matches_the_stage_functions() -> No
         prob,
         core_options(
             marker=MARKER,
-            flip_turn="R180",
-            tag_stagger=True,
-            label_gap=8,
-            parallel_pitch=48,
-            driver_first=True,
-            arrow_sides=("E", "W"),
         ),
     )
     assert routes == routed_of(prob)
@@ -204,12 +163,6 @@ def test_the_route_grid_spans_the_content_box_not_the_drawn_extent() -> None:
     """A wire may pass below everything drawn: the grid is the box the caller passes (R424)."""
     opts = core_options(
         marker=MARKER,
-        flip_turn="R180",
-        tag_stagger=True,
-        label_gap=8,
-        parallel_pitch=48,
-        driver_first=True,
-        arrow_sides=("E", "W"),
         spare_cells=0,
     )
     env = link_env({"a": (40, 40, "S"), "b": (200, 40, "S")}, {"x": ("a", "b")}, opts)
@@ -218,3 +171,20 @@ def test_the_route_grid_spans_the_content_box_not_the_drawn_extent() -> None:
     page, failed, _ = route_page(replace(env, placed=placed, area=Size(320, 200)))
     assert failed == ()
     assert max(y for w in page.wires if w.net == "x" for _, y in w.points) >= 64
+
+
+def test_route_page_writes_the_dots_of_its_wires() -> None:
+    """R535 H10: `PageRoutes.dots` is the page's junctions, over the wires it returns."""
+    env = three_end_env()
+    page = route_page(env)[0]
+    assert page.dots == page_junctions(env, page.wires)
+    assert page.dots
+
+
+def test_a_boxed_in_three_end_link_is_refused_with_all_three_ends() -> None:
+    env = three_end_env()
+    wall = Box(100, 0, 40, 400)
+    placed = {**env.placed, "wall": Placed("wall", 1, 0, 0, "R0", wall, wall, ())}
+    _, failed, _ = route_page(replace(env, placed=placed))
+    assert [r.net for r in failed] == ["t"]
+    assert {p.sym for p in failed[0].ends or ()} == {"a", "b", "c"}

@@ -26,7 +26,7 @@ class Memo[**A, T]:
     def __call__(self, model: Model, *args: A.args, **kwargs: A.kwargs) -> T:
         """The result for `model` and `args`: held, or built now (an error is not held)."""
         table = self._tables(model)
-        key = (args, tuple(sorted(kwargs.items())))
+        key = (args, frozenset(kwargs.items()))
         if key not in table:
             table[key] = self._build(model, *args, **kwargs)
         return table[key]

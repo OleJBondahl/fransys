@@ -108,8 +108,5 @@ def current_chains(model: Model) -> tuple[CurrentChain, ...]:
     functions, so the result is the same for any record order. Cached
     on `model.digest`, the last few results of `chain_blocks`.
     """
-    ordered = [
-        CurrentChain(tuple(chain.positions[i] for i in _walk(model, ends)))
-        for chain, ends in chain_blocks(model)
-    ]
+    ordered = [CurrentChain(tuple(chain.positions[i] for i in _walk(model, ends))) for chain, ends in chain_blocks(model)]
     return tuple(sorted(ordered, key=lambda chain: [p.functions for p in chain.positions]))

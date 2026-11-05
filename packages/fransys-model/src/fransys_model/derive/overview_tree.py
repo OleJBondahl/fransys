@@ -85,9 +85,7 @@ class _Tree:
     def _row(self, parent: int | None, child: _Key) -> TreeRow:
         kind, ident = child
         if kind == "unit":
-            return TreeRow(
-                parent=parent, unit=ident, item=None, label=_unit_label(self.model, ident)
-            )
+            return TreeRow(parent=parent, unit=ident, item=None, label=_unit_label(self.model, ident))
         label = _item_label(self.model, self.nodes[ident])
         return TreeRow(parent=parent, unit=None, item=ident, label=label)
 

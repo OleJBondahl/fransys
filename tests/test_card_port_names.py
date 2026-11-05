@@ -26,25 +26,16 @@ def _name_boxes(record: DrawnSymbol, *, sides: bool):
         sides=dict(record.sides) if sides else None,
     )
     slots = dict(record.slots)
-    return {
-        slot.id: slot_box(slot, slots[slot.id], _TEXT_HEIGHT, LIBRARY.font, LIBRARY.grid)
-        for slot in made.slots
-        if slot.id in slots
-    }
+    return {slot.id: slot_box(slot, slots[slot.id], _TEXT_HEIGHT, LIBRARY.font, LIBRARY.grid) for slot in made.slots if slot.id in slots}
 
 
 def _apart(a, b) -> bool:
-    return a.max.x <= b.min.x or b.max.x <= a.min.x or a.max.y <= b.min.y or b.max.y <= a.min.y
+    return bool(a.max.x <= b.min.x or b.max.x <= a.min.x or a.max.y <= b.min.y or b.max.y <= a.min.y)
 
 
 def _card() -> DrawnSymbol:
     model = fr.build(*card_case_drafts(16)).model
-    return next(
-        s
-        for drawing in drawn_pages(model).values()
-        for s in drawing.symbols
-        if s.key == "generic-box"
-    )
+    return next(s for drawing in drawn_pages(model).values() for s in drawing.symbols if s.key == "generic-box")
 
 
 def test_no_two_port_names_of_the_card_overlap() -> None:

@@ -2,7 +2,6 @@
 
 Every public function defined in a `derive/texts` module has a parameter annotated
 `PrintContext`, except the value formatters named below. The flat text modules that still live in
-`derive/` are listed so the list can only shrink: EL-9 and later orders empty it.
 """
 
 import ast

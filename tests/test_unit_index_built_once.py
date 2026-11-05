@@ -2,12 +2,10 @@
 
 However many lookups a build, a document or a list makes, the vocab layer's `UnitIndex` and
 derive's `UnitNodes` are each built once for the one model digest. The guard counts builder
-calls (never wall-clock) on the scale fixture, after clearing the caches so an earlier test's
-result cannot hide a rebuild.
 """
+# CONNECTION_NOT_DRAWN 26 per default-salt build set (MATES-DISABLED): mated, harness or board-unit input, refused for 0.22 (R1216).
 
-import sys
-from pathlib import Path
+from scale_units_fixture import build_scale
 
 from fransys_model.derive import item_designation, page_title, reference_designation
 from fransys_model.derive import unit_nodes as unit_nodes_module
@@ -17,13 +15,6 @@ from fransys_model.derive.unit_nodes import own_nodes
 from fransys_model.layout import Page
 from fransys_model.layout import layout_of as layout_of_model
 from fransys_model.vocab.tables import items, units
-
-_TESTS_DIR = Path(__file__).resolve().parent
-if str(_TESTS_DIR) not in sys.path:
-    # `--import-mode=importlib` (root pyproject.toml) never puts this folder on `sys.path`.
-    sys.path.insert(0, str(_TESTS_DIR))
-
-from scale_units_fixture import build_scale  # noqa: E402
 
 _N = 4
 

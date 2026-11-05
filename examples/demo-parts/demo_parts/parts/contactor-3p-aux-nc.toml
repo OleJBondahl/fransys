@@ -1,4 +1,4 @@
-schema = 1
+schema = 2
 
 [part]
 mpn = "DEMO-CTR-3P-NC"
@@ -32,8 +32,8 @@ links = [
 ]
 
 [function.rating]
-voltage_ac_v = "690"
-current_ac_a = "25"
+voltage = [{ nom = "690 V", at = ["AC"] }]
+current = [{ nom = "25 A", at = ["AC"] }]
 
 [[function]]
 name = "aux"

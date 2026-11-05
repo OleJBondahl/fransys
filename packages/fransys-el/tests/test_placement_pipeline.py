@@ -3,12 +3,14 @@
 Two models run: the demo design and a wide terminal strip. Each builds once for the module. The
 distribution board of the corpus runs in `internal/tests/test_placement_pipeline_board.py`.
 """
+# WIRE_ROW_UNRESOLVED 12 per default-salt build set (KI-461): planted_model or demo_model 24 V to 0 V short through strip and mate.
 
 from dataclasses import replace
 from typing import TYPE_CHECKING
 
 import fransys as fr
 import pytest
+from _expected_codes import expect_codes
 from conventions_fixtures import house
 from fransys.colours import BU
 from fransys_el import Conventions, build, options
@@ -23,8 +25,9 @@ if TYPE_CHECKING:
 WIDER = "WIDER_THAN_PAGE"
 
 
-def strip_model(terminals: int) -> Model:
+def strip_design(terminals: int) -> fr.Design:
     """A supply and one strip of `terminals` terminals, each wired across the supply."""
+    # The short is kept on purpose: only a terminal between two supply nets places as the one-row fan (layout-0309, WIDER_THAN_PAGE).
     d = fr.design("demo_parts")
     g1 = d.device("G1", "DEMO-PSU-24")
     dc = d.dc_supply("24VDC", g1.output)
@@ -32,7 +35,25 @@ def strip_model(terminals: int) -> Model:
     with d.function("FEED", "Strip feed"):
         for n in range(1, terminals + 1):
             d.series(dc.plus, x1[n], dc.minus, wire=(BU, 0.75))
-    return fr.build(d).model
+    return d
+
+
+def strip_model(terminals: int) -> Model:
+    """The strip model; its deliberate short is asserted here, so the sweep sees it asserted (R1712)."""
+    built = fr.build(strip_design(terminals))
+    expect_codes(built, "NET_SHORTED", "NET_POTENTIAL_CONFLICT")  # the short forms the one-row fan (R1745, KI-657)
+    codes = [f.code for f in built.findings]
+    assert (codes.count("NET_SHORTED"), codes.count("NET_POTENTIAL_CONFLICT")) == (1, 1)
+    return built.model
+
+
+def test_the_strip_model_gives_exactly_one_short_and_one_potential_conflict() -> None:
+    """R1736.2: the deliberate short of the strip fixture is asserted, not left anchored."""
+    built = fr.build(strip_design(40))
+    expect_codes(built, "NET_SHORTED", "NET_POTENTIAL_CONFLICT")
+    codes = [f.code for f in built.findings]
+    assert codes.count("NET_SHORTED") == 1
+    assert codes.count("NET_POTENTIAL_CONFLICT") == 1
 
 
 @pytest.fixture(scope="module")
@@ -65,14 +86,13 @@ def strip_group(model: Model, conventions: Conventions) -> str:
     return groups.pop()
 
 
-def test_a_wide_strip_wraps_and_drops_only_its_row_group_alignment(wide: Placement) -> None:
+def test_a_wide_strip_wraps_and_levels_its_row_group_per_page_row(wide: Placement) -> None:
     """layout-0309: the 40-member strip wraps into rows, so no WIDER_THAN_PAGE.
 
-    Its row group asks one y for all members at a column end (spec P6, row_group_aligns),
-    which rows at different heights cannot give: the one finding is ALIGN_DROPPED for that group.
+    Its row group levels per page row (row_group_aligns), so the wrap drops nothing.
     """
-    group = strip_group(strip_model(40), house())
-    assert [(f.code, f.subject) for f in wide.findings] == [("ALIGN_DROPPED", group)]
+    strip_group(strip_model(40), house())
+    assert wide.findings == ()
     assert len(wide.pages[0].rows) > 1
 
 

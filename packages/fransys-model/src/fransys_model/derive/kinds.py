@@ -7,7 +7,6 @@ already have one home and decide nothing a second time.
 from dataclasses import replace
 lazy from collections.abc import Callable
 
-from fransys_model.derive.facts.bars import bar_items
 from fransys_model.derive.facts.item_predicates import is_cable, terminal_items
 from fransys_model.derive.facts.unit_index import unit_index
 from fransys_model.derive.facts.units import external, is_harness, require
@@ -19,7 +18,6 @@ lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.core import Item
 lazy from fransys_model.vocab.roles_types import ItemRole
 
-from .designation_label import takes_parents_designation
 from .facts.children import child_items
 from .facts.roles import function_role
 from .indexes import build_indexes
@@ -30,10 +28,7 @@ from .rows_plc import SignalKind
 __all__ = ["item_kind", "item_role", "signal_kind"]
 
 _SIGNAL_KINDS = {
-    signal: SignalKind(
-        f"{'analogue' if row.analogue else 'digital'}_{'out' if row.output else 'in'}"
-    )
-    for signal, row in SIGNAL_TYPES.items()
+    signal: SignalKind(f"{'analogue' if row.analogue else 'digital'}_{'out' if row.output else 'in'}") for signal, row in SIGNAL_TYPES.items()
 }
 
 
@@ -60,17 +55,16 @@ _TESTS: tuple[tuple[ItemKind, Callable[[Model, Item], bool]], ...] = (
     (ItemKind.STRIP, lambda model, item: item.id in strip_set(model)),
     (ItemKind.PLC_MODULE, is_plc_module),
     (ItemKind.BOARD, lambda model, item: item.part in unit_index(model).pcb_parts),
-    (ItemKind.BAR, lambda model, item: item.id in bar_items(model)),
     (ItemKind.CONNECTOR, lambda model, item: _only_connectors(model, item.id)),
 )
 
 
 def item_kind(model: Model, item: Id[Item]) -> ItemKind:
-    """What `item` is: harness, cable, terminal, strip, PLC module, board, bar, connector or device.
+    """What `item` is: harness, cable, terminal, strip, PLC module, board, connector or device.
 
     The first that holds, in that order. Each test is the one predicate that already decides it:
     `is_harness`, `is_cable`, `terminal_items`, `strip_set`, `is_plc_module`, a part with a `pcb`
-    facet, `bar_items`, and an item whose functions are all connectors. `DEVICE` is the rest.
+    facet, and an item whose functions are all connectors. `DEVICE` is the rest.
 
     Raises:
         SchemaError: `item` is not an item of `model`.
@@ -80,11 +74,10 @@ def item_kind(model: Model, item: Id[Item]) -> ItemKind:
 
 
 def item_role(model: Model, item: Id[Item]) -> ItemRole:
-    """The role of `item`: its `item_kind` row plus the rack, external, accessory, root flags.
+    """The role of `item`: its `item_kind` row plus the rack, external, root flags.
 
     Lives beside `item_kind` so `facts/roles` never imports it back.
     """
-    record = items(model)[item]
     role = ITEM_ROLES[item_kind(model, item)]
     rack = any(is_plc_module(model, items(model)[c]) for c in child_items(model, item))
     root = any(item in roots for roots in unit_index(model).own_roots.values())
@@ -92,6 +85,5 @@ def item_role(model: Model, item: Id[Item]) -> ItemRole:
         role,
         rack=rack,
         external=external(model, item),
-        accessory=takes_parents_designation(model, record.id),
         unit_root=root,
     )

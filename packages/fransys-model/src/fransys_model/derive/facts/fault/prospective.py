@@ -27,10 +27,9 @@ from fransys_model.derive.facts.rail_reach import (
     reached_supplies,
 )
 from fransys_model.derive.facts.roles import function_role
+from fransys_model.elecdef import Current
 from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, UnionFind, digest_cached
-from fransys_model.vocab.enums import Current
 lazy from fransys_model.vocab.core import Function, Port
-lazy from fransys_model.vocab.supply_system import SupplySystem
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator, Mapping, Sequence
@@ -50,8 +49,8 @@ class ProspectiveFault:
     the item states: `None` when a source counted states none, `0` when no source is counted.
     Cable resistance is ignored and parallel runs add, so it errs high; an undeclared feed counts
     as no source. `time_constant_ms` is the largest DC time constant of the sources counted, over
-    the states: `None` for AC, or when a counted source states none. `functions` and `supplies`
-    are the source functions and the declared supplies counted, sorted.
+    the states: `None` for AC, or when a counted source states none. `functions` are the
+    source functions counted, sorted.
     """
 
     position: CurrentPosition
@@ -59,18 +58,13 @@ class ProspectiveFault:
     current_a: Decimal | None
     time_constant_ms: Decimal | None
     functions: tuple[Id[Function], ...]
-    supplies: tuple[Id[SupplySystem], ...]
 
 
-def _rails(
-    lookup: Mapping[str, RailV], systems: Iterable[set[str]], kind: Current
-) -> frozenset[str]:
+def _rails(lookup: Mapping[str, RailV], systems: Iterable[set[str]], kind: Current) -> frozenset[str]:
     """The rails of `kind` of the supply systems `systems` (one set per function held)."""
     reached = frozenset[str]().union(*systems)
     ac = kind is Current.AC
-    return frozenset(
-        name for name, rail in lookup.items() if rail.supply in reached and rail.ac is ac
-    )
+    return frozenset(name for name, rail in lookup.items() if rail.supply in reached and rail.ac is ac)
 
 
 def _faults(model: Model, graph: FaultGraph) -> dict[int, list[tuple[Current, frozenset[str]]]]:
@@ -102,18 +96,14 @@ def _components(graph: FaultGraph) -> list[tuple[list[Edge], list[Wire]]]:
     return [(members, wires.get(key, [])) for key, members in edges.items()]
 
 
-def _state_shares(
-    state: Closed, graph: FaultGraph, faults: _Faults, mine: Sequence[int]
-) -> Iterator[tuple[tuple[int, Current], Share]]:
+def _state_shares(state: Closed, graph: FaultGraph, faults: _Faults, mine: Sequence[int]) -> Iterator[tuple[tuple[int, Current], Share]]:
     """Each protective position closed in `state`, per kind: the larger of its two terminals."""
     present = {edge.at for edge in state.edges}
     for at in (at for at in mine if at in present):
         first, second = graph.edges[at].first, graph.edges[at].second
         for kind, rails in faults[at]:
             ends = ((first, second), (second, first))
-            shares = [
-                terminal_share(state, graph.feeds, Fault(at, a, b, kind, rails)) for a, b in ends
-            ]
+            shares = [terminal_share(state, graph.feeds, Fault(at, a, b, kind, rails)) for a, b in ends]
             yield (at, kind), highest(shares)
 
 
@@ -148,7 +138,7 @@ def prospective_fault(model: Model) -> tuple[ProspectiveFault, ...]:
 
     One entry per position whose function is a `protection` one and per kind its rails carry.
     A bolted fault at either terminal joins it to every other rail of its supplies; the loads are
-    left out, every source and every declared supply that states a fault current counts. A
+    left out, every source counts. A
     position no source reaches reads `0`.
     """
     raw = raw_of(model)
@@ -172,9 +162,6 @@ def prospective_fault(model: Model) -> tuple[ProspectiveFault, ...]:
                     share.current_a,
                     share.time_constant_ms,
                     tuple(sorted(share.functions)),
-                    tuple(sorted(share.supplies)),
                 )
             )
-    return tuple(
-        sorted(found, key=lambda f: (f.position.functions, f.position.ports, f.kind.value))
-    )
+    return tuple(sorted(found, key=lambda f: (f.position.functions, f.position.ports, f.kind.value)))

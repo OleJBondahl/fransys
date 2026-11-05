@@ -16,7 +16,8 @@ from .pipeline_fixtures import blocks_of, flow_of
 from .test_hub_cells import TERMINALS, hub_shape
 
 if TYPE_CHECKING:
-    from fransys_layout.core.values import Block, PlacementProblem
+    from fransys_layout.core.flow_values import Block
+    from fransys_layout.core.values import PlacementProblem
 
 
 def chain_shape() -> PlacementProblem:
@@ -32,12 +33,7 @@ def _blocks(prob: PlacementProblem) -> list[Block]:
 def _held_by(prob: PlacementProblem, sym: str) -> int:
     flow = flow_of(prob)
     cols = {c.id: c for c in flow.columns}
-    return sum(
-        1
-        for b in _blocks(prob)
-        if b.anchor == sym
-        or any(c.sym == sym for col in b.columns for ln in cols[col].lanes for c in ln.cells)
-    )
+    return sum(1 for b in _blocks(prob) if b.anchor == sym or any(c.sym == sym for col in b.columns for ln in cols[col].lanes for c in ln.cells))
 
 
 def test_trunk_wired_box_is_in_one_block_and_each_terminal_in_one() -> None:

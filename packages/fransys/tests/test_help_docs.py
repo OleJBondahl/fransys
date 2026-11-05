@@ -1,7 +1,7 @@
 """The words that say what `write` removes and where `help KEY` is named (AGENT-HELP H3, H4).
 
 The behaviour itself is `test_acceptance.py::test_stale_exports_are_removed_on_the_raise_path`:
-an ERROR raises `BuildErrors` and the stale exports of `out_dir` are gone.
+an ERROR raises `BuildFailedError` and the stale exports of `out_dir` are gone.
 """
 
 import importlib.resources

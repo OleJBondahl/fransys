@@ -5,11 +5,12 @@ Structural problems, raised at the boundary and never silenced (design/kernel-mo
 (`kernel.findings`) instead of raising.
 """
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .ids import Id
     from .origin import Origin
+    from .record_protocol import Record
 
 
 class ModelError(Exception):
@@ -27,7 +28,7 @@ class SchemaError(ModelError):
     `kind` holds the class name when the class has no kind at all.
     """
 
-    def __init__(self, message: str, *, kind: str, record_id: Id[Any] | None = None) -> None:
+    def __init__(self, message: str, *, kind: str, record_id: Id[Record] | None = None) -> None:
         """Record which `kind` the violation was found on, and the record that has it.
 
         `record_id` is `None` when the problem is a class's, not a record's: its
@@ -41,9 +42,7 @@ class SchemaError(ModelError):
 class ValueTypeError(ModelError):
     """A value, or something nested in it, is outside the closed set in kernel-records.md 5.1."""
 
-    def __init__(
-        self, message: str, *, path: tuple[str, ...], record_id: Id[Any] | None = None
-    ) -> None:
+    def __init__(self, message: str, *, path: tuple[str, ...], record_id: Id[Record] | None = None) -> None:
         """Record `path` to the offending value, and the record that holds it if known.
 
         `check_value` does not know the record, so `freeze()` adds it.
@@ -59,7 +58,7 @@ class RefError(ModelError):
     Or that exists under the wrong kind.
     """
 
-    def __init__(self, message: str, *, record_id: Id[Any], field: str, target: Id[Any]) -> None:
+    def __init__(self, message: str, *, record_id: Id[Record], field: str, target: Id[Record]) -> None:
         """Record the `record_id` that holds the bad reference, its `field`, and its `target`.
 
         `field` is a dotted path inside a nested `@value` (`"profile.owner"`).
@@ -71,15 +70,13 @@ class RefError(ModelError):
         self.target = target
 
 
-class MergeConflict(ModelError):  # noqa: N818 -- design/kernel-model.md 5.8, GLOSSARY.md name it
+class MergeConflictError(ModelError):
     """Two drafts or models declare the same id with different content.
 
     Nothing wins silently: both origins are named.
     """
 
-    def __init__(
-        self, message: str, *, record_id: Id[Any], origin_a: Origin, origin_b: Origin
-    ) -> None:
+    def __init__(self, message: str, *, record_id: Id[Record], origin_a: Origin, origin_b: Origin) -> None:
         """Record the conflicting `record_id` and both authoring origins.
 
         `record_id` is the id both sides declared with different content; `origin_a` is where

@@ -24,7 +24,8 @@ def report(result: BuildResult) -> str:
     entries = _described(result)
     findings = [finding for finding, _ in entries]
     counts = Counter(f.severity for f in findings)
-    lines = [_summary(counts)]
+    counted = [f"{counts[severity]} {name}" if counts[severity] == 1 else f"{counts[severity]} {name}s" for severity, name in _NAMES.items()]
+    lines = ["build: " + ", ".join(counted)]
     for finding, parts in entries:
         if finding.severity is not Severity.INFO:
             lines.extend(_entry(finding, parts, result.model))
@@ -33,15 +34,6 @@ def report(result: BuildResult) -> str:
         ranked = sorted(notes.items(), key=lambda pair: (-pair[1], pair[0]))
         lines.append("notes: " + ", ".join(f"{code} {n}" for code, n in ranked))
     return "\n".join(lines) + "\n"
-
-
-def _summary(counts: Counter[Severity]) -> str:
-    parts = (_plural(counts[severity], name) for severity, name in _NAMES.items())
-    return "build: " + ", ".join(parts)
-
-
-def _plural(count: int, name: str) -> str:
-    return f"{count} {name}" if count == 1 else f"{count} {name}s"
 
 
 def _described(result: BuildResult) -> list[tuple[Finding, DescribedFinding]]:

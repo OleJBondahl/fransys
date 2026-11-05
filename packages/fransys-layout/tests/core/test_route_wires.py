@@ -7,47 +7,48 @@ from itertools import pairwise
 
 import pytest
 
-from fransys_layout.core import PinRef
+from fransys_layout.core import Box, PinRef
+from fransys_layout.core.errors import CoreError
+from fransys_layout.core.flow_values import Attach, Column, End, Fan
+from fransys_layout.core.outputs import Marker, PinXY, Refused
 from fransys_layout.core.route_counts import collinear, counts
-from fransys_layout.core.route_env import Jog, RouteEnv, z_wire
+from fransys_layout.core.route_env import Jog, RouteEnv, dealt_pairs, z_wire
+from fransys_layout.core.route_leads import lead_wires
 from fransys_layout.core.route_wires import join_wires, lane_wires, nest_jogs
-from fransys_layout.core.values import Column, End
+from fransys_layout.core.text_ends import abut
+from fransys_layout.core.values import RefKind, StandClass
 
 from .chain_fixtures import facing_chain
 from .place_fixtures import card_with_coils
-from .route_fixtures import envs_of, link_across_box, open_end_env, stub_of
+from .route_fixtures import envs_of, link_across_box, link_env, open_end_env, stub_of
 
 
 def card_env() -> RouteEnv:
     return envs_of(card_with_coils(3))[0]
 
 
+def free_env() -> RouteEnv:
+    """The card env with no body standing: synthetic jog coordinates need none in their way (R1290 ii)."""
+    return replace(card_env(), placed={})
+
+
 def stair(shift: int) -> list[Jog]:
     """Three jogs from y 100 to y 200, each shifted by `shift` in x, sources 100 G apart-ish."""
-    return [
-        Jog(name, (x, 100), (x + shift, 200)) for name, x in (("c", 180), ("a", 100), ("b", 140))
-    ]
+    return [Jog(name, (x, 100), (x + shift, 200)) for name, x in (("c", 180), ("a", 100), ("b", 140))]
 
 
 def turns(env: RouteEnv, jogs: list[Jog]) -> dict[str, int]:
     return {w.net: w.points[1][1] for w in nest_jogs(env, jogs).wires}
 
 
-def test_a_left_shifting_stair_nests_by_source_x_with_no_crossing() -> None:
-    env = card_env()
-    drawn = nest_jogs(env, stair(-90))
-    turn = turns(env, stair(-90))
-    assert turn["a"] < turn["b"] < turn["c"]
+@pytest.mark.parametrize(("shift", "order"), [(-90, "abc"), (90, "cba")])
+def test_a_shifting_stair_nests_by_source_x_with_no_crossing(shift: int, order: str) -> None:
+    env = free_env()
+    drawn = nest_jogs(env, stair(shift))
+    turn = turns(env, stair(shift))
+    assert turn[order[0]] < turn[order[1]] < turn[order[2]]
     assert counts(drawn.wires).crossings == 0
     assert drawn.findings == ()
-
-
-def test_a_right_shifting_stair_nests_the_other_way_with_no_crossing() -> None:
-    env = card_env()
-    drawn = nest_jogs(env, stair(90))
-    turn = turns(env, stair(90))
-    assert turn["c"] < turn["b"] < turn["a"]
-    assert counts(drawn.wires).crossings == 0
 
 
 def test_the_stair_with_e6_reversed_crosses_six_times() -> None:
@@ -67,16 +68,14 @@ def test_jogs_with_disjoint_spans_share_one_level_and_overlapping_spans_take_thr
     assert len(set(turns(env, overlapping).values())) == 3
 
 
-def test_more_jogs_than_levels_is_a_finding_that_names_the_nets_and_the_fix() -> None:
+def test_more_jogs_than_levels_loses_the_jogs_with_no_row_and_names_their_pins() -> None:
     env = card_env()
-    jogs = [Jog(f"j{k}", (100 + 40 * k, 100), (20 + 40 * k, 116)) for k in range(3)]
+    jogs = [Jog(f"j{k}", (100 + 40 * k, 100), (20 + 40 * k, 116), ends=(PinRef(f"a{k}", "1"), PinRef(f"b{k}", "2"))) for k in range(3)]
     drawn = nest_jogs(env, jogs)
-    (finding,) = drawn.findings
-    assert finding.code == "ROUTE_FAILED"
-    assert all(f"j{k}" in finding.text for k in range(3))
-    assert "wire_min" in finding.text
-    assert str(env.options.wiring_grid * 4) in finding.text
-    assert len(drawn.wires) == 3
+    assert drawn.findings == ()
+    assert len(drawn.wires) + len(drawn.lost) == 3
+    assert drawn.lost
+    assert all(r == Refused(j.net, j.ends) for r in drawn.lost for j in jogs if j.net == r.net)
 
 
 def test_a_lane_wire_between_cells_and_a_box_wire_are_drawn() -> None:
@@ -84,38 +83,45 @@ def test_a_lane_wire_between_cells_and_a_box_wire_are_drawn() -> None:
     drawn = lane_wires(env, env.columns[0])
     (box_wire,) = drawn.wires
     assert box_wire.net == "c1"
-    assert box_wire.points == ((58, 144), (58, 152))
+    assert box_wire.points == ((304, 144), (304, 152))
     assert drawn.findings == ()
 
 
-def test_a_lane_with_an_unplaced_cell_is_a_finding_naming_lane_and_column() -> None:
+def test_a_connection_a_one_lane_fan_deals_is_the_trunks_and_draws_no_lane_wire() -> None:
+    env, col = ring_env()
+    up, low = col.lanes[0].cells[:2]
+    top, bottom = PinRef(up.sym, up.bottom_pin or ""), PinRef(low.sym, low.top_pin or "")
+    net = env.net_of[top]
+    drive, leg = (Attach(col.id, 0, i, p, net=net) for i, p in enumerate((top, bottom)))
+    fan = Fan("f:" + net, (net,), (drive,), (leg,), None, 1, "S")
+    pairs = dealt_pairs({fan.id: fan})
+    assert pairs == {(net, top, bottom)}
+    whole = lane_wires(env, col)
+    dealt = lane_wires(replace(env, dealt=pairs), col)
+    assert len(dealt.wires) + len(dealt.jogs) == len(whole.wires) + len(whole.jogs) - 1
+
+
+def test_a_lane_with_an_unplaced_cell_raises_naming_lane_and_cell() -> None:
     env = card_env()
     col = env.columns[0]
     cut_down = replace(env, placed={s: p for s, p in env.placed.items() if s != "k1"})
-    drawn = lane_wires(cut_down, col)
-    (finding,) = drawn.findings
-    assert (finding.code, finding.subject) == ("ROUTE_FAILED", col.id)
-    assert "lane 0" in finding.text
-    assert "k1" in finding.text
+    with pytest.raises(CoreError, match=r"lane 0 of column .*k1"):
+        lane_wires(cut_down, col)
 
 
-def test_a_box_pin_with_no_matching_cell_pin_is_a_finding_naming_box_and_pin() -> None:
+def test_a_box_pin_with_no_matching_cell_pin_raises_naming_box_and_pin() -> None:
     env = card_env()
     col = env.columns[0]
     wrong = replace(col.heads[0], pin=PinRef("A1", "p2"), net="c2")
-    drawn = lane_wires(env, replace(col, heads=(wrong,)))
-    (finding,) = drawn.findings
-    assert (finding.code, finding.subject) == ("ROUTE_FAILED", "A1")
-    assert "p2" in finding.text
-    assert "wire it" in finding.text
+    with pytest.raises(CoreError, match=r"box A1 pin p2 shares no net.*wire it"):
+        lane_wires(env, replace(col, heads=(wrong,)))
 
 
-def test_an_end_that_names_a_lane_the_column_lacks_is_a_finding_not_a_wrap() -> None:
+def test_an_end_that_names_a_lane_the_column_lacks_raises_not_a_wrap() -> None:
     env = card_env()
     col = env.columns[0]
-    drawn = lane_wires(env, replace(col, heads=(replace(col.heads[0], lane=5),)))
-    assert len(drawn.findings) == 1
-    assert drawn.wires == ()
+    with pytest.raises(CoreError, match="has a box end for no lane"):
+        lane_wires(env, replace(col, heads=(replace(col.heads[0], lane=5),)))
 
 
 def test_a_chain_draws_every_net_of_a_hop() -> None:
@@ -132,11 +138,7 @@ def join_column(env: RouteEnv, home_pin: str, member_pin: str, *, foot: bool):
     """Two single-cell lanes (k1 home, k2 member) where k2's lane joins to k1's pin."""
     c1, c2 = env.columns[0], env.columns[1]
     cell = c2.lanes[0].cells[0]
-    cell = (
-        replace(cell, top_pin=None, bottom_pin=member_pin)
-        if foot
-        else replace(cell, top_pin=member_pin)
-    )
+    cell = replace(cell, top_pin=None, bottom_pin=member_pin) if foot else replace(cell, top_pin=member_pin)
     join = End("join", "c1", PinRef("k1", home_pin))
     open_ = End("open")
     heads = (open_, open_) if foot else (open_, join)
@@ -158,10 +160,10 @@ def test_a_join_is_a_z_wire_nested_with_the_jogs_and_its_source_is_the_joined_la
     drawn = join_wires(env, col)
     (jog,) = drawn.jogs
     assert (drawn.wires, jog.drawn_as, jog.source_top) == ((), "join", source_top)
-    assert jog.source_x == 650
-    (wire,) = nest_jogs(env, drawn.jogs).wires
-    a = (58, 184) if home_pin == "s" else (58, 152)
-    m = (650, 152) if member_pin == "n" else (650, 184)
+    assert jog.source_x == 648
+    (wire,) = nest_jogs(free_env(), drawn.jogs).wires
+    a = (304, 184) if home_pin == "s" else (304, 152)
+    m = (648, 152) if member_pin == "n" else (648, 184)
     assert wire.kind == "join"
     assert {wire.points[0], wire.points[-1]} == {a, m}
     assert 152 < wire.points[1][1] < 184
@@ -173,7 +175,7 @@ def lanes_joining_lane_zero(order: tuple[int, ...] = (0, 1, 2)) -> list[Jog]:
 
 
 def test_three_parallel_lanes_joining_lane_zero_nest_with_no_crossing_and_no_collinear() -> None:
-    env = card_env()
+    env = free_env()
     drawn = nest_jogs(env, lanes_joining_lane_zero())
     turn = {w.net: w.points[1][1] for w in drawn.wires}
     assert turn["j0"] < turn["j1"] < turn["j2"]
@@ -202,7 +204,7 @@ def test_level_join_pins_are_one_run() -> None:
     env = card_env()
     col = join_column(env, "n", "n", foot=False)
     (wire,) = join_wires(env, col).wires
-    assert wire.points == ((58, 152), (650, 152))
+    assert wire.points == ((304, 152), (648, 152))
 
 
 def ring_env() -> tuple[RouteEnv, Column]:
@@ -210,16 +212,12 @@ def ring_env() -> tuple[RouteEnv, Column]:
     return env, next(c for c in env.columns if len(c.lanes[0].cells) > 1)
 
 
-def test_two_cells_of_a_lane_on_different_nets_are_a_finding() -> None:
+def test_two_cells_of_a_lane_on_different_nets_raise() -> None:
     env, col = ring_env()
     a, b = col.lanes[0].cells[:2]
     bent = {**env.net_of, PinRef(b.sym, b.top_pin or ""): "other"}
-    drawn = lane_wires(replace(env, net_of=bent), col)
-    (finding,) = drawn.findings
-    assert (finding.code, finding.subject) == ("ROUTE_FAILED", col.id)
-    assert a.sym in finding.text
-    assert b.sym in finding.text
-    assert "different nets" in finding.text
+    with pytest.raises(CoreError, match=rf"cells {a.sym} and {b.sym} .*different nets"):
+        lane_wires(replace(env, net_of=bent), col)
 
 
 def test_a_cell_pin_with_no_net_draws_no_lane_wire_and_is_a_finding() -> None:
@@ -238,11 +236,11 @@ def stub_points(orient: str = "R0", open_stub: int = 8) -> list[tuple[tuple[int,
 
 
 def test_an_open_end_draws_a_stub_of_open_stub_out_along_its_side() -> None:
-    assert stub_points() == [((650, 184), (650, 192))]
+    assert stub_points() == [((648, 184), (648, 192))]
 
 
 def test_a_turned_symbol_draws_its_stub_along_the_turned_side() -> None:
-    assert stub_points("R180") == [((650, 184), (650, 176))]
+    assert stub_points("R180") == [((648, 184), (648, 176))]
 
 
 def test_open_stub_zero_draws_no_stub() -> None:
@@ -255,29 +253,27 @@ def test_an_open_end_with_no_pin_draws_nothing() -> None:
 
 
 @pytest.mark.parametrize(("sym", "pin"), [("k2", "nope"), ("ghost", "s")])
-def test_an_open_end_naming_a_pin_not_on_the_page_is_a_finding_not_an_empty_stub(
-    sym: str, pin: str
-) -> None:
+def test_an_open_end_naming_a_pin_not_on_the_page_raises_not_an_empty_stub(sym: str, pin: str) -> None:
     env, col = open_end_env()
     col = replace(col, feet=(End("open", "dangling", PinRef(sym, pin)),))
-    drawn = lane_wires(env, col)
-    assert stub_of(drawn) == ()
-    assert [f for f in drawn.findings if f"{sym}.{pin}" in f.text]
+    with pytest.raises(CoreError, match=f"open end {sym}.{pin} of net dangling"):
+        lane_wires(env, col)
 
 
-def far_box_env(*, foot: bool = False) -> RouteEnv:
+def far_box_env(*, foot: bool = False, box_y: int = 40) -> RouteEnv:
     """The card's box pin moved right of its lane and well above it; `foot`: it ends the lane."""
     env = card_env()
     box = env.placed["A1"]
-    pins = tuple(replace(q, x=100, y=40) if q.pin == "p1" else q for q in box.pin_xy)
-    env = replace(env, placed={**env.placed, "A1": replace(box, pin_xy=pins)})
+    pins = tuple(replace(q, x=100, y=box_y) if q.pin == "p1" else q for q in box.pin_xy)
+    moved = replace(box, pin_xy=pins, body=Box(92, 32, 16, 8), footprint=Box(92, 32, 16, 8))  # the box stands where its pin does (R1290 ii)
+    env = replace(env, placed={**env.placed, "A1": moved})
     if not foot:
         return env
     col = env.columns[0]
     gone = End("open", None, None, None, None)
     ends = {"heads": (gone,), "feet": col.heads}
     nets = {**env.net_of, PinRef("k1", "s"): "c1"}
-    lane = replace(col.lanes[0], cells=(replace(col.lanes[0].cells[0], bottom_pin="s"),))
+    lane = replace(col.lanes[0], cells=(replace(col.lanes[0].cells[0], top_pin=None, bottom_pin="s"),))
     col = replace(col, lanes=(lane, *col.lanes[1:]), **ends)
     return replace(env, net_of=nets, columns=(col, *env.columns[1:]))
 
@@ -291,24 +287,65 @@ def box_wire(env: RouteEnv) -> tuple[tuple[int, int], ...]:
 
 def test_a_box_wire_to_a_head_pin_runs_long_on_the_box_column_and_turns_above_the_cell() -> None:
     """SHORTS-ROUTE: the long vertical on the lane's pin column ran through the lane's cells."""
-    assert box_wire(far_box_env()) == ((100, 40), (100, 144), (58, 144), (58, 152))
+    assert box_wire(far_box_env()) == ((100, 40), (100, 144), (304, 144), (304, 152))
+
+
+def test_a_box_wire_never_runs_its_long_vertical_on_a_body_outline() -> None:
+    """R1146: a body whose edge lies on the box column moves the vertical one grid past it, the jog one grid below the box pin."""
+    env = far_box_env()
+    wall = replace(env.placed["A1"], sym="Z", body=Box(80, 80, 20, 40), footprint=Box(80, 80, 20, 40), pin_xy=())
+    env = replace(env, placed={**env.placed, "Z": wall})
+    g = env.options.wiring_grid
+    assert box_wire(env) == ((100, 40), (100, 40 + g), (100 + g, 40 + g), (100 + g, 144), (304, 144), (304, 152))
 
 
 def test_a_box_wire_to_a_foot_pin_comes_in_from_below_the_cell() -> None:
     """The foot pin faces south: the wire passes the cell on the box column, never over its body."""
-    assert box_wire(far_box_env(foot=True)) == ((100, 40), (100, 192), (58, 192), (58, 184))
+    assert box_wire(far_box_env(foot=True)) == ((100, 40), (100, 192), (304, 192), (304, 184))
 
 
-def test_a_stair_with_no_turn_row_draws_nothing_and_says_so() -> None:
+def test_a_box_pin_within_one_grid_above_the_head_pin_is_a_jog_not_a_wire_that_doubles_back() -> None:
+    env = far_box_env(box_y=146)
+    drawn = lane_wires(env, env.columns[0])
+    assert [(j.net, j.top, j.bottom) for j in drawn.jogs] == [("c1", (100, 146), (304, 152))]
+    assert not [w for w in drawn.wires if w.net == "c1"]
+
+
+def test_two_stair_groups_of_one_page_take_distinct_grid_rows_and_the_second_loses_its_jogs() -> None:
+    """KI-416: pin levels 128 and 134 over 158 offer rows 136/144 and 142/150: the same two grid rows."""
+    env = free_env()
+    grid = env.options.wiring_grid
+    ends = (PinRef("a", "1"), PinRef("b", "2"))
+    first = [Jog("p", (676, 128), (580, 158), ends=ends), Jog("q", (708, 128), (516, 158), ends=ends)]
+    second = [Jog("r", (500, 134), (596, 158), ends=ends), Jog("s", (468, 134), (660, 158), ends=ends)]
+    drawn = nest_jogs(env, [*first, *second])
+    rows = [w.points[1][1] // grid for w in drawn.wires]
+    assert sorted(w.net for w in drawn.wires) == ["p", "q"], "the first group is laid"
+    assert len(set(rows)) == len(rows), "no two stair rows share a grid row"
+    assert sorted(r.net for r in drawn.lost) == ["r", "s"], "the second group has no free row and is lost"
+
+
+@pytest.mark.rule("JOG-NEST")
+def test_a_bend_row_never_runs_through_another_jogs_pin() -> None:
+    """R1520, KI-581: the row 96 of the group from 88 crossed the pin (632, 96) of the group from 96."""
+    env = free_env()
+    ends = (PinRef("a", "1"), PinRef("b", "2"))
+    far = Jog("p", (714, 88), (614, 112), ends=ends)
+    near = Jog("q", (632, 96), (582, 112), ends=ends)
+    drawn = nest_jogs(env, [far, near])
+    (wire,) = (w for w in drawn.wires if w.net == "p")
+    assert wire.points[1][1] != 96, "the row through q's pin is not taken"
+    assert [r.net for r in drawn.lost] == ["q"], "q's one row is p's now: a reference pair, not a short"
+
+
+def test_a_stair_with_no_turn_row_draws_nothing_and_loses_the_jog() -> None:
     """SHORTS-ROUTE: pin levels one grid apart left no row; the clamp bent on a pin row."""
     env = card_env()
     grid = env.options.wiring_grid
-    drawn = nest_jogs(env, [Jog("j", (100, 100), (40, 100 + grid))])
-    (finding,) = drawn.findings
-    assert finding.code == "ROUTE_FAILED"
-    assert "j" in finding.text
-    assert "wire_min" in finding.text
-    assert drawn.wires == ()
+    ends = (PinRef("a", "1"), PinRef("b", "2"))
+    drawn = nest_jogs(env, [Jog("j", (100, 100), (40, 100 + grid), ends=ends)])
+    assert drawn.lost == (Refused("j", ends),)
+    assert (drawn.findings, drawn.wires) == ((), ())
 
 
 def _cells(points: tuple[tuple[int, int], ...]) -> set[tuple[int, int]]:
@@ -332,3 +369,116 @@ def test_two_box_wires_beside_neighbouring_cells_share_no_point() -> None:
     wires = [w for col in env.columns[:2] for w in lane_wires(env, col).wires]
     first, second = wires
     assert not _cells(first.points) & _cells(second.points)
+
+
+def _marker_env(kind: RefKind, out: int, stand: StandClass = StandClass.PIN) -> RouteEnv:
+    """One pin at (32, 64) facing east; a marker of `kind` stands with its box `out` G from the pin."""
+    env = link_env({"a": (32, 64, "E")}, {})
+    pin = PinRef("a", "p")
+    st = abut(env.options, "E", 32 + out, 64, (pin, str(kind)))
+    mark = Marker("n", kind, 1, "c", st.x, st.y, pin, st.orient, stand=stand)
+    return replace(env, net_of={pin: "n"}, sides={("a", "p", "R0"): "E"}, markers=(mark,))
+
+
+def test_a_tag_standing_at_its_pin_gets_no_lead() -> None:
+    assert lead_wires(_marker_env(RefKind.TAG, 0)).wires == ()
+
+
+@pytest.mark.parametrize("kind", [RefKind.TAG, RefKind.COPY, RefKind.STUB])
+def test_a_marker_standing_off_its_pin_gets_a_straight_lead_to_its_box(kind: RefKind) -> None:
+    (wire,) = lead_wires(_marker_env(kind, 24)).wires
+    assert wire.points == ((32, 64), (56, 64))
+
+
+@pytest.mark.parametrize("stand", [StandClass.TRUNK_END, StandClass.LEG])
+def test_a_marker_standing_at_a_trunk_end_or_leg_gets_no_pin_lead_though_its_origin_is_on_the_pins_line(stand: StandClass) -> None:
+    assert lead_wires(_marker_env(RefKind.STUB, 24, stand)).wires == ()
+
+
+def test_an_arrow_stands_at_its_trunk_end_and_gets_no_pin_lead() -> None:
+    assert lead_wires(_marker_env(RefKind.ARROW, 24)).wires == ()
+
+
+@pytest.mark.rule("JOG-NEST")
+def test_a_bend_row_never_runs_through_the_pin_of_a_jog_box_pair_returned() -> None:
+    """R1526: _box_pair gives a jog when the box pin is within a grid above the head pin; its ends are taken rows too."""
+    env = far_box_env(box_y=146)
+    (box_jog,) = lane_wires(env, env.columns[0]).jogs
+    ends = (PinRef("a", "1"), PinRef("b", "2"))
+    other = Jog("o", (160, box_jog.top[1] - env.options.wiring_grid), (40, 300), ends=ends)
+    drawn = nest_jogs(env, [box_jog, other])
+    (wire,) = (w for w in drawn.wires if w.net == "o")
+    assert wire.points[1][1] != box_jog.top[1], "the row through the box pin is not taken"
+
+
+def test_a_jog_whose_z_passes_a_body_is_lost_to_the_loop_not_drawn_through_it() -> None:
+    """R1290 (ii), KI-394: the Z from (700,100) to (600,150) meets a body on its bend run; the pair is a Refused, never a short."""
+    env = free_env()
+    ends = (PinRef("a", "1"), PinRef("b", "2"))
+    jog = Jog("p", (700, 100), (600, 150), ends=ends)
+    assert [w.net for w in nest_jogs(env, [jog]).wires] == ["p"], "control: with no body the Z is drawn"
+    wall = replace(card_env().placed["A1"], sym="Z", body=Box(640, 100, 20, 50), footprint=Box(640, 100, 20, 50), pin_xy=())
+    drawn = nest_jogs(replace(env, placed={"Z": wall}), [jog])
+    assert (drawn.wires, drawn.lost) == ((), (Refused("p", ends),))
+
+
+def test_a_jog_whose_z_passes_the_body_of_its_own_pin_is_lost_to_the_loop_too() -> None:
+    """R1632, KI-626, layout-0541: the Z of net p meets the body of Z, a symbol of net p itself; the pair is a Refused, no wire into its body."""
+    ends = (PinRef("a", "1"), PinRef("b", "2"))
+    jog = Jog("p", (700, 100), (600, 150), ends=ends)
+    wall = replace(card_env().placed["A1"], sym="Z", body=Box(640, 100, 20, 50), footprint=Box(640, 100, 20, 50), pin_xy=())
+    env = replace(free_env(), placed={"Z": wall}, net_pins={"p": (PinRef("Z", "1"),)})
+    drawn = nest_jogs(env, [jog])
+    assert (drawn.wires, drawn.lost) == ((), (Refused("p", ends),))
+
+
+def _facing_env(sides: tuple[str, str]) -> RouteEnv:
+    """Two one-pin symbols, Z1 pin o at (700,100) and Z2 pin o at (600,150), their pins facing `sides`, with net p between them."""
+    base = card_env().placed["A1"]
+    placed = {
+        sym: replace(
+            base,
+            sym=sym,
+            body=Box(x - 8, y - 32 if face == "S" else y, 16, 32),
+            footprint=Box(x - 8, y - 32 if face == "S" else y, 16, 32),
+            pin_xy=(PinXY("o", x, y),),
+        )
+        for sym, (x, y), face in (("Z1", (700, 100), sides[0]), ("Z2", (600, 150), sides[1]))
+    }
+    facing = {(sym, "o", placed[sym].orient): face for sym, face in zip(placed, sides, strict=True)}
+    return replace(free_env(), placed=placed, sides=facing, net_pins={"p": (PinRef("Z1", "o"), PinRef("Z2", "o"))})
+
+
+def test_two_south_pins_bend_below_the_lower_one_and_two_north_pins_above_the_upper_one() -> None:
+    """R1632, KI-626, layout-0541: a join between pins facing the same way leaves each along its facing; facing away from each other it is lost."""
+    ends = (PinRef("Z1", "o"), PinRef("Z2", "o"))
+    jog = Jog("p", (700, 100), (600, 150), ends=ends)
+    grid = free_env().options.wiring_grid
+    (south,) = nest_jogs(_facing_env(("S", "S")), [jog]).wires
+    assert south.points == ((700, 100), (700, 150 + grid), (600, 150 + grid), (600, 150))
+    (north,) = nest_jogs(_facing_env(("N", "N")), [jog]).wires
+    assert north.points == ((700, 100), (700, 100 - grid), (600, 100 - grid), (600, 150))
+    away = nest_jogs(_facing_env(("N", "S")), [jog])
+    assert (away.wires, away.lost) == ((), (Refused("p", ends),))
+    (between,) = nest_jogs(_facing_env(("S", "N")), [jog]).wires
+    assert between.points[1][1] == 100 + grid
+
+
+def test_a_jog_end_pin_missing_from_the_facings_raises_naming_it() -> None:
+    """R1632: a placed pin with no facing is a defect, never side 0."""
+    env = replace(_facing_env(("S", "S")), sides={})
+    jog = Jog("p", (700, 100), (600, 150), ends=(PinRef("Z1", "o"), PinRef("Z2", "o")))
+    with pytest.raises(KeyError, match="Z1"):
+        nest_jogs(env, [jog])
+
+
+def test_a_box_wire_whose_run_passes_a_body_is_lost_to_the_loop_with_both_pins() -> None:
+    """R1290 (ii), KI-394: a body on the turn run (y 144) of the box wire is a Refused naming the box pin and the cell pin, not a wire through it."""
+    env = far_box_env()
+    assert [w.net for w in lane_wires(env, env.columns[0]).wires if len(w.points) > 2] == ["c1"], "control"
+    wall = replace(env.placed["A1"], sym="Z", body=Box(150, 140, 20, 10), footprint=Box(150, 140, 20, 10), pin_xy=())
+    drawn = lane_wires(replace(env, placed={**env.placed, "Z": wall}), env.columns[0])
+    assert not [w for w in drawn.wires if w.net == "c1"]
+    (lost,) = (r for r in drawn.lost if r.net == "c1")
+    assert lost.ends is not None
+    assert len(lost.ends) == 2

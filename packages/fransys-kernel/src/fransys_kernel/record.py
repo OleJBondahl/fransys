@@ -12,6 +12,7 @@ references, and applies the namespace rule.
 """
 
 import dataclasses
+import functools
 from annotationlib import ForwardRef
 from typing import TYPE_CHECKING, Any, dataclass_transform, get_args, get_origin
 lazy from collections.abc import Callable
@@ -52,9 +53,7 @@ def value[V](cls: type[V]) -> type[V]:
 
 
 @dataclass_transform(frozen_default=True, kw_only_default=True)
-def record[R](
-    *, kind: str, subject: str | None = None, unique: bool = False, singleton: bool = False
-) -> Callable[[type[R]], type[R]]:
+def record[R](*, kind: str, subject: str | None = None, unique: bool = False, singleton: bool = False) -> Callable[[type[R]], type[R]]:
     """Decorate a table record type: frozen, slotted, keyword-only, registered under `kind`.
 
     `subject` names the field holding the id a facet describes, and `unique=True` means at
@@ -68,20 +67,20 @@ def record[R](
             `id`, `key` or `ext` is missing or mis-declared, or `subject`/`unique` do not
             fit the fields.
     """
+    return functools.partial(_register_record, kind=kind, subject=subject, unique=unique, singleton=singleton)
 
-    def decorator(cls: type[R]) -> type[R]:
-        built = dataclasses.dataclass(frozen=True, slots=True, kw_only=True)(cls)
-        built.__kind__ = kind
-        built.__subject__ = subject
-        built.__unique__ = unique
-        built.__singleton__ = singleton
-        validate_annotations(built)
-        _check_required_fields(built)
-        _check_cardinality(built, subject=subject, unique=unique)
-        register_kind(kind, built)
-        return built
 
-    return decorator
+def _register_record[R](cls: type[R], *, kind: str, subject: str | None, unique: bool, singleton: bool) -> type[R]:
+    built = dataclasses.dataclass(frozen=True, slots=True, kw_only=True)(cls)
+    built.__kind__ = kind
+    built.__subject__ = subject
+    built.__unique__ = unique
+    built.__singleton__ = singleton
+    validate_annotations(built)
+    _check_required_fields(built)
+    _check_cardinality(built, subject=subject, unique=unique)
+    register_kind(kind, built)
+    return built
 
 
 @dataclasses.dataclass(frozen=True, slots=True, kw_only=True)
@@ -119,9 +118,7 @@ def field_specs(cls: type) -> tuple[FieldSpec, ...]:
     specs = tuple(
         FieldSpec(
             name=field.name,
-            ref_kind=None
-            if is_record and field.name == "id"
-            else next(_targets(annotations[field.name], cls, field.name, None), None),
+            ref_kind=None if is_record and field.name == "id" else next(_targets(annotations[field.name], cls, field.name, None), None),
         )
         for field in fields_of(cls)
     )
@@ -136,24 +133,26 @@ def _check_required_fields(cls: type) -> None:
     for required in ("id", "key", "ext"):
         if required not in fields:
             raise schema_error(cls, required, "a @record needs `id`, `key` and `ext`")
+    _check_id_annotation(cls, annotations["id"])
     authoring_key, value_alias = key_and_value_aliases()
-    id_annotation = annotations["id"]
+    # These two are checked against the real aliases, so import them at runtime, not under
+    # TYPE_CHECKING.
+    if annotations["key"] is not authoring_key:
+        raise schema_error(cls, "key", "must be annotated AuthoringKey, imported at runtime")
+    _check_ext(cls, annotations["ext"], fields["ext"], value_alias)
+
+
+def _check_id_annotation(cls: type, id_annotation: object) -> None:
     id_target = get_args(id_annotation)[0] if get_origin(id_annotation) is id_type() else None
     # Matched by name: `slots=True` rebuilds the class, so the annotation cannot name the final one.
     id_target_name = id_target.__forward_arg__ if isinstance(id_target, ForwardRef) else None
     if cls.__name__ not in (id_target_name, getattr(id_target, "__name__", None)):
         raise schema_error(cls, "id", f"must be annotated Id[{cls.__name__}]")
-    # These two are checked against the real aliases, so import them at runtime, not under
-    # TYPE_CHECKING.
-    if annotations["key"] is not authoring_key:
-        raise schema_error(cls, "key", "must be annotated AuthoringKey, imported at runtime")
-    if get_origin(annotations["ext"]) is not frozendict or get_args(annotations["ext"]) != (
-        str,
-        value_alias,
-    ):
-        why = "must be annotated frozendict[str, Value], imported at runtime"
-        raise schema_error(cls, "ext", why)
-    ext = fields["ext"]
+
+
+def _check_ext(cls: type, annotation: object, ext: dataclasses.Field[Any], value_alias: object) -> None:
+    if get_origin(annotation) is not frozendict or get_args(annotation) != (str, value_alias):
+        raise schema_error(cls, "ext", "must be annotated frozendict[str, Value], imported at runtime")
     if ext.default is dataclasses.MISSING and ext.default_factory is dataclasses.MISSING:
         raise schema_error(cls, "ext", "needs a default, frozendict()")
 
@@ -181,12 +180,7 @@ def _targets(annotation: object, owner: type, label: str, seen: set[type] | None
     elif origin is not None:
         for arg in get_args(annotation):
             yield from _targets(arg, owner, label, seen)
-    elif (
-        seen is not None
-        and isinstance(annotation, type)
-        and is_value_class(annotation)
-        and annotation not in seen
-    ):
+    elif seen is not None and isinstance(annotation, type) and is_value_class(annotation) and annotation not in seen:
         seen.add(annotation)
         for name, nested in annotations_of(annotation).items():
             yield from _targets(nested, owner, f"{label}.{name}", seen)

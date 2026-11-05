@@ -9,14 +9,12 @@ from itertools import pairwise
 lazy from collections.abc import Iterable, Sequence
 
 from fransys_layout.geometry import Point
-lazy from fransys_layout.engines.overview.sheet_values import PlacedBox
+lazy from fransys_layout.engines.overview.sheet_values import DiagramBox
 
 type Segment = tuple[Point, Point]
 
 
-def fold_points(
-    first: Point, last: Point, *, right: int, left: int, track: int
-) -> tuple[Point, ...]:
+def fold_points(first: Point, last: Point, *, right: int, left: int, track: int) -> tuple[Point, ...]:
     """`first` out to `right`, down to `track`, back to `left`, down to `last`'s row and in."""
     return (
         first,
@@ -33,15 +31,10 @@ def segments(points: Sequence[Point]) -> list[Segment]:
     return list(pairwise(points))
 
 
-def _hits(seg: Segment, box: PlacedBox) -> bool:
+def _hits(seg: Segment, box: DiagramBox) -> bool:
     """Whether the run enters the box's inside (touching its edge is no hit)."""
     (x0, y0), (x1, y1) = ((p.x, p.y) for p in seg)
-    return (
-        min(x0, x1) < box.x + box.width
-        and max(x0, x1) > box.x
-        and min(y0, y1) < box.y + box.height
-        and max(y0, y1) > box.y
-    )
+    return min(x0, x1) < box.x + box.width and max(x0, x1) > box.x and min(y0, y1) < box.y + box.height and max(y0, y1) > box.y
 
 
 def _crosses(one: Segment, other: Segment) -> bool:
@@ -54,9 +47,7 @@ def _crosses(one: Segment, other: Segment) -> bool:
     return False
 
 
-def clear(
-    routes: Iterable[Sequence[Point]], boxes: Sequence[PlacedBox], lines: Iterable[Sequence[Point]]
-) -> bool:
+def clear(routes: Iterable[Sequence[Point]], boxes: Sequence[DiagramBox], lines: Iterable[Sequence[Point]]) -> bool:
     """Whether no route touches a box's inside or crosses a run of `lines` (the routes included)."""
     runs = [segments(p) for p in lines]
     for route in routes:

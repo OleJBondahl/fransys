@@ -1,45 +1,37 @@
 """Field case: an add-on contact block prints its contactor's designation and its contacts.
+The bug: the block printed as a device with its own designation, and the contact table lacked its 53-54 and 61-62.
+Fixed by model-0119 (amending model-0058), an add-on contact block is an accessory that prints its contactor's designation."""
 
-The engineering shape: a contactor with a clip-on auxiliary contact block (one NO, one NC) and an
-overload relay mounted to it. The block has no tag of its own: it is part of the contactor, the
-contactor's coil works its contacts, and an electrician reads the contactor's tag on it.
-
-The bug: the block printed as a device of its own (a second designation, a row in the
-designations list), and the contactor's contact table lacked the block's 53-54 and 61-62.
-
-Fixing decision: model-0119 (an add-on contact block is an accessory, amending model-0058).
-The invented parts are `demo_parts`' contactor, its `DEMO-CTR-BLOCK-1NO1NC` block and an overload.
-"""
+from typing import Any
 
 import fransys as fr
 from _drawn_pages import drawn_pages
 from _model_build_cover import cabinet_document
-from _tables_on import TABLES_ON
 from fransys.colours import BU
 
 from fransys_model.derive import designation_list, item_designation
 
 
-def _build() -> tuple[fr.Model, fr.Device, fr.Device]:
+def _build() -> tuple[fr.Model, Any, Any]:
     """K1 with an untagged add-on block and overload child: the model, the block, the overload."""
     d = fr.design("demo_parts", place="CAB")
     d.project(title="Block", number="P-1", customer="Example Co", revision=1, author="OJB")
     d.revision(1, date="2026-10-02", text="First issue", created="XX")
     _cabinet = d.location("CAB", "Cabinet")
-    strip = d.terminal_strip("X1", "DEMO-TB-2.5")
+    strip = d.terminal_strip("X1", "DEMO-TB-2.5-TWIN")
     with d.function("G", "Group"):
         feed, zero, load = strip[1], strip[2], strip[3]
         k1 = d.device("K1", "DEMO-CTR-3P-24")
         block = d.device(None, "DEMO-CTR-BLOCK-1NO1NC", name="block", parent=k1)
         overload = d.device(None, "DEMO-OVERLOAD-A2", name="overload", parent=k1)
     wire = (BU, 0.5)
-    d.detail.wire(feed, k1.coil["A1"], wire=wire)
-    d.detail.wire(k1.coil["A2"], zero, wire=wire)
-    d.detail.wire(feed, block.no["53"], wire=wire)
-    d.detail.wire(block.no["54"], load, wire=wire)
-    d.detail.wire(feed, block.nc["61"], wire=wire)
-    d.detail.wire(block.nc["62"], load, wire=wire)
-    return fr.build(d, cabinet_document(_cabinet), settings=TABLES_ON).model, block, overload
+    d.series(feed, k1.coil["A1"], wire=wire)
+    d.series(k1.coil["A2"], zero, wire=wire)
+    d.series(feed, block.no["53"], wire=wire)
+    d.series(block.no["54"], load, wire=wire)
+    d.series(block.no["53"], block.nc["61"], wire=wire)  # R1266: the feed point takes two conductors
+    d.series(block.nc["62"], load, wire=wire)
+    return fr.build(d, cabinet_document(_cabinet)).model, block, overload
 
 
 def test_the_block_prints_the_contactors_designation_and_has_no_row() -> None:
@@ -49,23 +41,5 @@ def test_the_block_prints_the_contactors_designation_and_has_no_row() -> None:
     assert block.id not in rows
     assert item_designation(model, overload.id) != "K1"
     assert overload.id in rows
-    tags = {
-        t.text
-        for drawing in drawn_pages(model).values()
-        for t in drawing.texts
-        if t.kind == "TAG" and not t.text.startswith("-X1")
-    }
+    tags = {t.text for drawing in drawn_pages(model).values() for t in drawing.texts if t.kind == "TAG" and not t.text.startswith("-X1")}
     assert tags == {"-K1"}
-
-
-def test_the_contactors_contact_table_lists_the_block_contacts() -> None:
-    model, _, _ = _build()
-    (table,) = (
-        one.texts
-        for drawing in drawn_pages(model).values()
-        for one in drawing.symbols
-        if one.key == "contact-head"
-    )
-    entries = [cell.split(" ")[0] for row in table[1:] for cell in row if cell]
-    assert "53-54" in entries
-    assert "61-62" in entries

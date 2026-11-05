@@ -25,31 +25,32 @@ if TYPE_CHECKING:
 
     from .placement_kit import SymbolKit
 
-__all__ = ["link_fit"]
+__all__ = ["link_fit", "widest_digit"]
 
-_DIGITS = (
-    "123456789"  # 0 is no candidate: `widest_target_line` reads its numbers as ints, so 0 drops out
-)
+_DIGITS = "123456789"  # 0 is no candidate: `widest_target_line` reads its numbers as ints, so 0 drops out
 
 
-def link_fit(
-    model: Model, kit: SymbolKit, library: Library, unit: Id[Unit] | None
-) -> Mapping[Orientation, Box]:
+def widest_digit(library: Library, length: int) -> str:
+    """The digit whose `length`-long run symdef measures widest as a marker line."""
+    widest, best = _DIGITS[0], -1
+    for digit in _DIGITS:
+        width = marker_boxes(library, digit * length)["R0"].w
+        if width > best:
+            widest, best = digit, width
+    return widest
+
+
+def link_fit(model: Model, kit: SymbolKit, library: Library, unit: Id[Unit] | None) -> Mapping[Orientation, Box]:
     """The arrow's box at each orientation, for the widest line the set of `unit` can print.
 
-    Only the symbols and the sheets of `unit` count (as `marker_fit`'s `unit`): a unit drawn
+    Only the symbols of `unit` count (as `marker_fit`'s `unit`): a unit drawn
     alone reads nothing of its parent, so it is the same alone as inside its parent.
     """
-    sheets = [sheet_for(model, kind, unit) for kind in PageKind]
+    sheets = [sheet_for(model, kind) for kind in PageKind]
     count = sum(len(one.symbols) for one in drawing_scopes(model, kit) if one.of_unit == unit)
     digits = len(str(count))
     columns = max(one.frame_columns for one in sheets)
     rows = max(one.frame_rows for one in sheets)
     sample = len(widest_target_line(model, digits, columns, rows, _DIGITS[0]))
-    widest, best = _DIGITS[0], -1
-    for digit in _DIGITS:
-        width = marker_boxes(library, digit * sample)["R0"].w
-        if width > best:
-            widest, best = digit, width
-    line = widest_target_line(model, digits, columns, rows, widest)
+    line = widest_target_line(model, digits, columns, rows, widest_digit(library, sample))
     return marker_boxes(library, line)

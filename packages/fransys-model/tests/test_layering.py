@@ -2,7 +2,6 @@
 
 Replaces `import-linter`, which does not run on this Python (root decision 0010; the root
 `tests/test_boundaries.py` does the same for the workspace). Enforces the layer rule: the
-layers are `derive` → `layout` → `vocab` → `kernel`, and a layer imports only layers to its right.
 """
 
 import ast
@@ -93,12 +92,7 @@ def _module_name(path: Path) -> tuple[str, bool]:
 
 def _violates(imported: set[str], forbidden: tuple[str, ...]) -> set[str]:
     """The subset of `imported` that names a forbidden module or one of its submodules."""
-    return {
-        module
-        for module in imported
-        for banned in forbidden
-        if module == banned or module.startswith(banned + ".")
-    }
+    return {module for module in imported for banned in forbidden if module == banned or module.startswith(banned + ".")}
 
 
 def _layer_violations(root: Path, forbidden: dict[str, tuple[str, ...]]) -> list[str]:
@@ -165,9 +159,7 @@ def _kernel_model_imports(root: Path) -> list[str]:
         module_name = ".".join(parts[:-1] if is_init else parts)
         source = path.read_text(encoding="utf-8")
         imported = _imported_modules(module_name, source, is_init=is_init)
-        problems.extend(
-            f"{path}: imports {bad}" for bad in sorted(_violates(imported, ("fransys_model",)))
-        )
+        problems.extend(f"{path}: imports {bad}" for bad in sorted(_violates(imported, ("fransys_model",))))
     return problems
 
 
@@ -192,11 +184,11 @@ def _role_import_problems(module_name: str, source: str) -> list[str]:
     """The `fransys_model` imports of a role module that are outside `vocab` and the kernel."""
     imported = _imported_modules(module_name, source, is_init=False)
     bad = _violates(imported, ("fransys_model",)) - {"fransys_model"}
-    return sorted(bad - _violates(bad, ("fransys_model.vocab", "fransys_model.kernel")))
+    return sorted(bad - _violates(bad, ("fransys_model.vocab", "fransys_model.kernel", "fransys_model.elecdef")))
 
 
 def test_vocab_roles_imports_only_vocab_and_kernel() -> None:
-    """The role tables are data: `vocab/roles*.py` imports `vocab` and the kernel only (EL-2a)."""
+    """The role tables are data: `vocab/roles*.py` imports `vocab`, the kernel and the elecdef door only (EL-2a)."""
     paths = sorted((SRC_ROOT / "vocab").glob("roles*.py"))
     assert len(paths) >= 2
     for path in paths:
@@ -218,15 +210,11 @@ def _derive_imports_outside_facts(root: Path) -> list[str]:
     problems = []
     for path in sorted((root / "checks").rglob("*.py")):
         parts = path.relative_to(root.parent).with_suffix("").parts
-        imported = _imported_modules(
-            ".".join(parts), path.read_text(encoding="utf-8"), is_init=parts[-1] == "__init__"
-        )
+        imported = _imported_modules(".".join(parts), path.read_text(encoding="utf-8"), is_init=parts[-1] == "__init__")
         problems.extend(
             f"{path}: imports {bad}"
             for bad in sorted(imported)
-            if bad.startswith("fransys_model.derive")
-            and bad != "fransys_model.derive"
-            and not bad.startswith("fransys_model.derive.facts")
+            if bad.startswith("fransys_model.derive") and bad != "fransys_model.derive" and not bad.startswith("fransys_model.derive.facts")
         )
     return problems
 

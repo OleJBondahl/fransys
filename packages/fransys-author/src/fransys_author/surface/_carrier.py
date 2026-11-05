@@ -21,7 +21,7 @@ def _device_error(label: str, k: int | None, counts: list[tuple[Fn, int]]) -> st
     return (
         f"{label} has no function of {k} poles; it has: {', '.join(have)}. "
         f"Name the function you mean ({label}.{have[0].split()[0]}), or wire its pins with "
-        "d.detail.wire(pin, pin, wire=...)"
+        "d.series(pin, pin, wire=...)"
     )
 
 
@@ -30,23 +30,14 @@ def _mount_error(label: str, k: int | None, counts: list[tuple[Fn, int]], where:
     if fit:
         return f"{where} has {k} poles; {label} has {fit} with {k} poles: say which"
     has = natural_join(f"{fn.name} ({count})" for fn, count in counts) or "none"
-    return (
-        f"{where} has {k} poles; {label} has no function of {k} poles; it has: {has}. "
-        "Mount it on a carrier function of that pole count"
-    )
+    return f"{where} has {k} poles; {label} has no function of {k} poles; it has: {has}. Mount it on a carrier function of that pole count"
 
 
-def carrier_function(
-    fns: list[Fn], count: Callable[[Fn], int], k: int | None, label: str, mounted: str | None = None
-) -> Fn:
+def carrier_function(fns: list[Fn], count: Callable[[Fn], int], k: int | None, label: str, mounted: str | None = None) -> Fn:
     """The one of `fns` with `k` poles by `count`, else raise; `mounted` None: a series."""
     counts = [(fn, count(fn)) for fn in fns]
     found = [fn for fn, n in counts if n == k]
     if len(found) == 1:
         return found[0]
-    msg = (
-        _device_error(label, k, counts)
-        if mounted is None
-        else _mount_error(label, k, counts, mounted)
-    )
+    msg = _device_error(label, k, counts) if mounted is None else _mount_error(label, k, counts, mounted)
     raise AuthorError(msg)

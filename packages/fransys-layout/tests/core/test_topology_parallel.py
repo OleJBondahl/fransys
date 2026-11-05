@@ -8,31 +8,11 @@ import pytest
 from options_fixtures import core_options
 
 from fransys_layout.core.topology import build_flow
-from fransys_layout.core.values import (
-    Bundle,
-    FlowGraph,
-    Net,
-    Pin,
-    PinRef,
-    PlacementProblem,
-)
-lazy from fransys_layout.core.sym_values import Sym
+from fransys_layout.core.values import Bundle, Net, Pin, PinRef, PlacementProblem
+lazy from fransys_layout.core.flow_values import FlowGraph
 
-from .flow_builders import elem, free, net, poles, problem
-
-
-def flow_of(syms: list[Sym], nets: list[Net]) -> FlowGraph:
-    return build_flow(
-        problem(syms, nets),
-        core_options(
-            flip_turn="R180",
-            tag_stagger=True,
-            label_gap=8,
-            parallel_pitch=48,
-            driver_first=True,
-            arrow_sides=("E", "W"),
-        ),
-    )
+from .flow_builders import elem, flow_of, free, net, poles, problem
+from .pipeline_fixtures import solved_of
 
 
 def lanes_of(flow: FlowGraph) -> list[list[list[str]]]:
@@ -42,9 +22,7 @@ def lanes_of(flow: FlowGraph) -> list[list[list[str]]]:
 
 def seal_in() -> PlacementProblem:
     """S1 parallel to K's own contact between the same two nets."""
-    return problem(
-        [elem("s1"), elem("k1c")], [net("x", "s1.n", "k1c.n"), net("y", "s1.s", "k1c.s")]
-    )
+    return problem([elem("s1"), elem("k1c")], [net("x", "s1.n", "k1c.n"), net("y", "s1.s", "k1c.s")])
 
 
 def mid_chain() -> PlacementProblem:
@@ -57,14 +35,7 @@ def mid_chain() -> PlacementProblem:
 def test_seal_in_is_one_column_of_two_lanes() -> None:
     (column,) = build_flow(
         seal_in(),
-        core_options(
-            flip_turn="R180",
-            tag_stagger=True,
-            label_gap=8,
-            parallel_pitch=48,
-            driver_first=True,
-            arrow_sides=("E", "W"),
-        ),
+        core_options(),
     ).columns
     assert len(column.lanes) == 2
 
@@ -77,14 +48,7 @@ def test_three_parallel_members_make_three_lanes() -> None:
     assert lanes_of(
         build_flow(
             prob,
-            core_options(
-                flip_turn="R180",
-                tag_stagger=True,
-                label_gap=8,
-                parallel_pitch=48,
-                driver_first=True,
-                arrow_sides=("E", "W"),
-            ),
+            core_options(),
         )
     ) == [[["a"], ["b"], ["c"]]]
 
@@ -93,14 +57,7 @@ def test_pair_inside_a_chain_keeps_the_chain_in_lane_zero() -> None:
     assert lanes_of(
         build_flow(
             mid_chain(),
-            core_options(
-                flip_turn="R180",
-                tag_stagger=True,
-                label_gap=8,
-                parallel_pitch=48,
-                driver_first=True,
-                arrow_sides=("E", "W"),
-            ),
+            core_options(),
         )
     ) == [[["src", "a", "coil"], ["b"]]]
 
@@ -109,18 +66,9 @@ def test_a_member_with_its_pins_the_other_way_up_is_turned() -> None:
     prob = problem([elem("a"), elem("b")], [net("x", "a.n", "b.s"), net("y", "a.s", "b.n")])
     (column,) = build_flow(
         prob,
-        core_options(
-            flip_turn="R180",
-            tag_stagger=True,
-            label_gap=8,
-            parallel_pitch=48,
-            driver_first=True,
-            arrow_sides=("E", "W"),
-        ),
+        core_options(),
     ).columns
-    turned = [
-        (lane.cells[0].sym, lane.cells[0].orient, lane.cells[0].top_pin) for lane in column.lanes
-    ]
+    turned = [(lane.cells[0].sym, lane.cells[0].orient, lane.cells[0].top_pin) for lane in column.lanes]
     assert turned == [("a", "R0", "n"), ("b", "R180", "s")]
 
 
@@ -155,8 +103,7 @@ def test_ids_named_like_a_terminal_or_a_contact_give_the_same_lanes() -> None:
         flow = flow_of(syms, nets)
         shapes.append(
             [
-                [(back[c.sym], c.orient, c.top_pin, c.bottom_pin) for c in lane.cells]
-                + [lane.offset]
+                [(back[c.sym], c.orient, c.top_pin, c.bottom_pin) for c in lane.cells] + [lane.offset]
                 for column in flow.columns
                 for lane in column.lanes
             ]
@@ -191,19 +138,14 @@ def test_a_group_on_a_net_with_a_hub_stays_a_fan() -> None:
     [
         ([("b0", 2, 2), ("b1", 1, 1), ("b2", 0, 0)], [0, 1, 2]),
         ([("b0", 1, 1), ("b1", 2, 2), ("b2", 0, 0)], [0, 1, 2]),
-        ([("b10", 0, 0), ("b9", 0, 1), ("b2", 1, 2)], [1, 0, 2]),
+        ([("b10", 0, 0), ("b9", 0, 1), ("b2", 1, 2)], [0, 1, 2]),
     ],
-    ids=["ids-against-poles", "ids-scrambled", "equal-poles-by-natural-id"],
+    ids=["ids-against-poles", "ids-scrambled", "equal-poles-in-the-order-given"],
 )
-def test_a_bundles_fan_lists_drivers_and_legs_in_pole_order(
-    members: list[tuple[str, int, int]], driver_pins: list[int]
-) -> None:
+def test_a_bundles_fan_lists_drivers_and_legs_in_pole_order(members: list[tuple[str, int, int]], driver_pins: list[int]) -> None:
     """Members are (net id, pole, pin index); net ids against the poles do not set the order."""
     syms = [poles("src"), *(elem(f"{c}{k}") for c in "xy" for k in range(3))]
-    nets = [
-        net(nid, f"src.s{k}", f"x{k}.n", f"y{k}.n", bundle=Bundle("b", pole))
-        for nid, pole, k in members
-    ]
+    nets = [net(nid, f"src.s{k}", f"x{k}.n", f"y{k}.n", bundle=Bundle("b", pole)) for nid, pole, k in members]
     (fan,) = flow_of(syms, nets).fans
     assert [int(a.pin.pin[1:]) for a in fan.drivers] == driver_pins
     assert [a.pin.sym for a in fan.legs] == [f"{c}{k}" for k in driver_pins for c in "xy"]
@@ -222,17 +164,34 @@ def lamp_beside_coil() -> PlacementProblem:
     return problem(syms, [net("n1", "src.s", "coil.n", "lamp.a"), net("n2", "lamp.b", "kc.n")])
 
 
-def test_no_symbol_is_dealt_into_two_lanes_of_one_column() -> None:
-    for column in build_flow(
-        lamp_beside_coil(),
-        core_options(
-            flip_turn="R180",
-            tag_stagger=True,
-            label_gap=8,
-            parallel_pitch=48,
-            driver_first=True,
-            arrow_sides=("E", "W"),
-        ),
-    ).columns:
-        seen = [c.sym for lane in column.lanes for c in lane.cells]
-        assert len(seen) == len(set(seen))
+def _cells_per_column(problem: PlacementProblem) -> list[list[tuple[str, str, str | None, str | None]]]:
+    opts = core_options(flip_turn="R180", tag_stagger=True, label_gap=8, parallel_pitch=48, driver_first=True, arrow_sides=("E", "W"))
+    flow = build_flow(problem, opts)
+    return [[(c.sym, c.orient, c.top_pin, c.bottom_pin) for lane in column.lanes for c in lane.cells] for column in flow.columns]
+
+
+def _one_cell_per_element_one_orientation(cells: list[tuple[str, str, str | None, str | None]]) -> bool:
+    return len({(s, frozenset((t, b))) for s, _, t, b in cells}) == len(cells) and all(
+        len({o for s2, o, _, _ in cells if s2 == s}) == 1 for s, _, _, _ in cells
+    )
+
+
+def test_one_cell_per_element_one_orientation() -> None:
+    """A symbol of one-sided pins is a leaf: its pins are lane ends, never a turned copy beside a neighbour (KI-168)."""
+    for cells in _cells_per_column(lamp_beside_coil()):
+        assert _one_cell_per_element_one_orientation(cells)
+    assert sum(c[0] == "lamp" for cells in _cells_per_column(lamp_beside_coil()) for c in cells) == 2
+
+
+def test_a_three_pole_device_stands_in_three_lanes_of_one_column() -> None:
+    """The old check (no symbol twice in a column) would flag every motor; a leaf has one cell per pin."""
+    motor = poles("m")  # only its three n pins are wired: three singles on one side
+    nets = [net(f"n{k}", f"src.s{k}", f"m.n{k}") for k in range(3)]
+    (cells,) = [c for c in _cells_per_column(problem([poles("src"), motor], nets)) if any(x[0] == "m" for x in c)]
+    assert sum(c[0] == "m" for c in cells) == 3
+    assert _one_cell_per_element_one_orientation(cells)
+
+
+def test_solve_of_the_lamp_beside_its_coil_raises_nothing() -> None:
+    """KI-215 RT-LIFT: the router lifts a wire it never marked (KeyError in occupancy.unmark_wire)."""
+    assert solved_of(lamp_beside_coil()).placement.pages

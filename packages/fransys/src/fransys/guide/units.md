@@ -11,14 +11,12 @@ units and wires, and it is never split into places.
 The function builds the unit's devices on the design it receives and returns an instance of a
 `typing.NamedTuple` class, one field per interface device. `d.add(fn, "U1")` builds the unit into
 your design as instance `U1` and returns it, typed. Any other return raises. Every device the function creates belongs to that unit.
-`@fr.unit(..., wiring={row: value})` sets the unit's wire rows (series.md, Wire colours). With no `wiring=` the unit draws the IEC default, never its parent's rows.
+A unit draws the IEC default wire colours, never its parent's rows (series.md, Wire colours).
 
 The second argument is the instance's printed tag, bare and with no lowercase letter: `"U3"`,
 never `"u3"` or `"-U3"`. It is also the instance's key. A container prints the tag before the
 unit's own designation, so a connector `J1` of instance `U3` prints `-U3-J1`. The unit's own document is unchanged.
-`None` floats the number: `d.add(fn, None, name="module1")` takes the next free number of the
-unit's class code, set with `class_code="U"` on `@fr.unit` (or by the part file's). `name=` is the
-identity a released number holds to. A floating add with no `name=` or no class code raises.
+`name=` (optional) is the identity a released number holds to, when it must differ from the tag.
 
 `name` is a key, not a designation: write `demo-io-board`, never `-demo-io-board`. A prefix
 raises an error. `version=` (default 1), `title=` and `number=` are the unit's own title-block
@@ -39,7 +37,7 @@ names some, and the others stay inside the unit.
 
 On a terminal strip `interface=(1, 2)` names terminals by number and `unused=` works the same;
 `True` marks every terminal. A run takes `interface=True` or `unused=True` for the whole run. A
-container reaches only the boundary terminals, and `d.add(..., unused=("X1",))` covers only those.
+container reaches only the boundary terminals.
 
 `d.device(tag, part, unused=True)` declares an interface device left unconnected on purpose,
 so the build does not ask for it to be wired. `unused=` works on a boundary device and on an
@@ -48,17 +46,12 @@ finding is raised, and the device is no interface field. A device the unit retur
 too. A function declared unused but wired gives `UNUSED_CONTRADICTED`. The tuple the function returns names the devices a
 container can reach: `io.X1` is the field `X1`. A misspelt field is a type-checker error. A field may hold a nested unit's interface field. That connector, strip, run or terminal becomes this unit's interface too, one level at a time, and prints its full path. The black box a page draws for a nested unit is the unit directly in the page's unit that holds it. A field that holds a strip, a run or a terminal is
 typed `fr.TerminalStrip`, `fr.Run` or `fr.Terminal`.
-`d.series` and `d.detail.wire` from a container reach the unit strip's free boundary terminals, the PE core the unit's PE run, and never add one.
+`d.series` from a container reach the unit strip's free boundary terminals, the PE core the unit's PE run, and never add one.
 Carry a strip or a run in the interface when a container wires several terminals in one series, as `io.x5[1:5]`. Separate `fr.Terminal` fields cannot be sliced.
 
 A device with several functions takes the names of the boundary ones: `interface=("x1",),
 unused=("x2",)`. `True` takes every function. A name the part lacks raises and lists its
 functions; a part class from `fr.parts` rejects it when the type checker runs.
-
-`X1.x1.limits(rating=, operating=)` states the values the unit promises on one boundary
-function. Read them from a part with `d.rating(part, fn)` and `d.operating(part, fn)`. It does not
-mark the boundary: `interface=True` on the device does. Calling it with no value raises.
-`X1[1].limits(rating=, operating=)` does the same for a terminal's boundary, with the same refusals.
 
 ```python
 from typing import NamedTuple
@@ -73,7 +66,6 @@ class Feed(NamedTuple):
 @fr.unit("demo-supply-strip", revision=1, interface_version=1, date="2026-01-01", text="first", by="AB")
 def supply_strip(d):
     x1 = d.terminal_strip("X1", "DEMO-TB-2.5", 2, interface=True)
-    x1[1].limits(rating=d.rating("DEMO-PSU-24", "input"))
     return Feed(x1)
 ```
 
@@ -98,28 +90,11 @@ class Io(NamedTuple):
 @fr.unit("demo-supply-box", revision=1, interface_version=1, date="2026-01-01", text="first", by="AB")
 def box(d: fr.Design) -> Io:
     x1 = d.device("X1", P.DEMO_CONN_2P, interface=True)
-    x1.x1.limits(rating=d.rating("DEMO-PSU-24", "input"))
     return Io(x1)
 ```
 
 Annotate each device field with the generated part class it was built from, as `P.DEMO_CONN_2P`
-above. A bare `fr.Device` hides the part's functions from the type checker. A unit may also hand
-back a value beside its devices. Annotate that field with its `fr.derive` type, for example
-`fr.derive.Operating`, with `| None` where a read may find nothing.
-
-```python
-class Supply(NamedTuple):
-    X1: P.DEMO_CONN_2P
-    rated: fr.derive.Operating | None
-
-
-@fr.unit("demo-supply-box", revision=1, interface_version=1, date="2026-01-01", text="first", by="AB")
-def supply_box(d: fr.Design) -> Supply:
-    x1 = d.device("X1", P.DEMO_CONN_2P, interface=True)
-    operating = d.operating("DEMO-STRING-864V", "string")
-    x1.x1.limits(operating=operating)
-    return Supply(x1, operating)
-```
+above. A bare `fr.Device` hides the part's functions from the type checker.
 
 ```python
 from typing import NamedTuple
@@ -143,70 +118,9 @@ def assembly(d):
 
 d = fr.design("demo_parts")
 unit = d.add(assembly, "U1")
-d.mate(d.device("P1", "DEMO-CONN-2P"), unit.X7)
+d.cable("W1", "DEMO-CBL-4G1.5").core(1, d.device("P1", "DEMO-CONN-2P")[1], unit.X7[1])
 assert not [f for f in fr.build(d).findings if f.code == "UNIT_BOUNDARY_BYPASSED"]
 ```
-
-## Leaving one instance open
-
-`unused=True` on `d.device` sits inside the unit, so it marks every instance. A switch's spare ports
-are declared once there: `d.device("X2", "DEMO-CONN-2P", interface=True, unused=True)`. To leave the boundary
-of one placed instance open, the container names it on `d.add`. `unused=("X1",)` takes every boundary
-function of the device in the unit's field `X1`. `unused=("X1.x1",)` takes that one function. A field that holds a tuple of devices takes an index, `"X[0]"` or `"X[0].x1"`. The bare `"X"` takes every element. A
-misspelt field raises and lists the fields. A name that is no boundary raises and lists the boundary
-functions. A boundary both mated and declared unused still gives `UNUSED_CONTRADICTED`. The check
-runs at the unit the `unused=` is on: a function that unit hands up from a nested unit, and wires
-across the nested one, is not contradicted.
-
-A field typed `fr.Terminal` names that terminal's one function: `unused=("X1",)`. A field typed
-`fr.Run` or `fr.TerminalStrip`, bare as `"X3"`, takes every boundary terminal it holds.
-`"X3[3]"` takes terminal 3 and `"X3[3:5]"` takes terminals 3 and 4, counted from 1; a number past the
-strip's count raises. For example, `unused=("X3[3:5]",)` marks terminals 3 and 4 of strip X3. A slice on
-a tuple field raises. `"X1[1].f"` on a terminal raises, as does `".f"` on a strip terminal. A run or strip
-with no boundary terminal raises, as a device that is no boundary does.
-
-```python
-from typing import NamedTuple
-
-import fransys as fr
-
-
-class Io(NamedTuple):
-    X1: fr.Device
-
-
-@fr.unit("demo-io-board", revision=1, interface_version=1, date="2026-01-01", text="first", by="AB")
-def board(d):
-    return Io(d.device("X1", "DEMO-CONN-2P", interface=True))
-
-
-class Cabinet(NamedTuple):
-    pass
-
-
-@fr.unit(
-    "demo-cabinet",
-    revision=1,
-    interface_version=1,
-    date="2026-01-01",
-    text="first release",
-    by="AB",
-    title="Demo cabinet",
-    number="DC-1",
-)
-def cabinet(c):
-    io1 = c.add(board, "U1")
-    io2 = c.add(board, "U2", unused=("X1",))
-    c.mate(c.device("B1", "DEMO-CONN-2P"), io1.X1)
-    return Cabinet()
-
-
-d = fr.design("demo_parts")
-d.add(cabinet, "U1")
-```
-
-The build holds no `BOUNDARY_UNCONNECTED` and no `UNUSED_CONTRADICTED`. U1's `X1` is mated, and U2's
-prints `N/A` in its table only.
 
 ## Variants and revised copies
 
@@ -220,14 +134,14 @@ from typing import NamedTuple
 import fransys as fr
 
 
-class Io(NamedTuple):
+class BoardIo(NamedTuple):
     X1: fr.Device
 
 
-def board_unit(name: str, revision: int, *, pins: str = "DEMO-CONN-2P") -> fr.UnitDef[Io]:
+def board_unit(name: str, revision: int, *, pins: str = "DEMO-CONN-2P") -> fr.UnitDef[BoardIo]:
     @fr.unit(name, revision=revision, interface_version=1, date="2026-01-01", text="issue", by="AB")
-    def board(d: fr.Design) -> Io:
-        return Io(d.device("X1", pins, interface=True))
+    def board(d: fr.Design) -> BoardIo:
+        return BoardIo(d.device("X1", pins, interface=True))
 
     return board
 
@@ -235,27 +149,26 @@ def board_unit(name: str, revision: int, *, pins: str = "DEMO-CONN-2P") -> fr.Un
 first = board_unit("demo-io-board", 1)
 revised = board_unit("demo-io-board-r2", 2, pins="DEMO-CONN-4P")
 d = fr.design("demo_parts")
-d.add(first, "U1")
-d.add(revised, "U2")
+u1 = d.add(first, "U1")
+u2 = d.add(revised, "U2")
+d.cable("W1", "DEMO-CBL-4G1.5").core(1, d.device("P1", "DEMO-CONN-2P")[1], u1.X1[1])
+d.cable("W2", "DEMO-CBL-4G1.5").core(1, d.device("P2", "DEMO-CONN-2P")[1], u2.X1[1])
 assert len(fr.derive.units(fr.build(d).model)) == 2
 ```
 
 ## Reaching a unit from outside
 
-A container reaches a unit's connector through a plug and `d.mate(plug, io.X1)`. Do not wire
-onto the connector's own pins. A direct wire onto a male or female connector of a nested unit
-gives the warning `CONNECTOR_WIRED_WITHOUT_MATE`. A screw terminal has no gender and takes the
-wire silently. The core lands on the plug's pin (`P1[1]`), because the plug is what the
-container's own wiring reaches, and the mate makes plug and connector conduct as one.
+A container reaches a unit's connector with a cable core onto its pin, `d.cable("W1", P.CBL).core(1, plug[1], io.X1[1])`.
+Mates are refused in 0.22 (`MATES_DISABLED`). A `d.series` wire onto a male or female connector of a nested
+unit gives the warning `CONNECTOR_WIRED_WITHOUT_MATE`; a cable core onto it and a screw terminal give none.
 
 A unit built alone, with nothing outside it, leaves its interface unconnected, and
 `BOUNDARY_UNCONNECTED` stays silent: an open interface is what the next integrator connects.
 The finding fires once the unit sits inside something larger and an interface device is neither
-mated nor `unused`.
+wired nor `unused`.
 
-Nets do not cross a unit boundary. Join across it with `d.detail.wire(a, b, wire=...)`, and keep
-`d.detail.net` for pins inside one unit. A net with pins in two units that no wire joins gives
-`NET_ACROSS_UNIT_BOUNDARY`, which names the net and the boundary pin.
+Nets do not cross a unit boundary. Join across it with `d.series(a, b, wire=...)`. A net with pins in two units that no wire joins gives
+`NET_ACROSS_UNIT_BOUNDARY_OPEN` or `NET_ACROSS_UNIT_BOUNDARY_JOINED`, which names the net and the boundary pin.
 
 A nested unit with a harness line at one of its interfaces draws on its parent's page as one
 outline, with its columns above and below it. A unit with none keeps its usual frame. Inside stand
@@ -263,8 +176,7 @@ only its interfaces, title and revision. Each line-end interface is a connector 
 and the harness plug touches it from outside. The columns feeding top-edge interfaces stand above,
 and those leaving bottom-edge interfaces stand below. Layout picks each interface's edge. A
 single-wire interface keeps its column's flow. Harness interfaces split evenly, with supply-heavy
-ones on top. `d.layout.side(u1.bus_in, fr.ABOVE)`, or `fr.BELOW`, fixes one interface's edge when
-the default reads wrong. The group stands at the left of its page and stays whole on one page.
+ones on top. The group stands at the left of its page and stays whole on one page.
 
 ## Tags and places
 
@@ -280,7 +192,7 @@ child of the board: `parent=board`. The enclosure receptacles are not part of th
 stay in the enclosure. For the board's parts and nets to draw, the board must be the only top-level
 device of its own unit. So make the board assembly its own unit: the board plus its mounted parts.
 Nest that unit in the enclosure unit, which holds the receptacles. Join the board's interface
-connector to the receptacles with `d.detail.wire(..., wire=...)`; the wire crosses the unit
+connector to the receptacles with `d.series(..., wire=...)`; the wire crosses the unit
 boundary and draws as a boundary connection. The board's parts draw on the board unit's pages, not
 the enclosure's. A board that shares its unit with another top-level device draws as a black box,
 and `BOARD_NETS_NOT_DRAWN` names its dropped nets.
@@ -329,8 +241,8 @@ def cabinet(c):
     io2 = c.add(board, "U2")
     p1 = c.device("P1", "DEMO-CONN-2P")
     p2 = c.device("P2", "DEMO-CONN-2P")
-    c.mate(p1, io1.X1)
-    c.mate(p2, io2.X1)
+    c.cable("W1", "DEMO-CBL-4G1.5").core(1, p1[1], io1.X1[1])
+    c.cable("W2", "DEMO-CBL-4G1.5").core(1, p2[1], io2.X1[1])
     return Cabinet()
 
 
@@ -375,7 +287,7 @@ class Cabinet(NamedTuple):
 def cabinet(c):
     for n in (1, 2):
         io = c.add(board, f"U{n}")
-        c.mate(c.device(f"P{n}", "DEMO-CONN-2P"), io.X1)
+        c.cable(f"W{n}", "DEMO-CBL-4G1.5").core(1, c.device(f"P{n}", "DEMO-CONN-2P")[1], io.X1[1])
     return Cabinet()
 
 
@@ -383,8 +295,7 @@ d = fr.design("demo_parts")
 d.add(cabinet, "U1")
 ```
 
-A loop of boards can leave the numbers to the build. Give the release a `class_code` and each
-instance a `name=`, the identity its number holds to in later releases.
+A loop of boards takes a tag for each instance, and a `name=` is the identity its number holds to in later releases.
 
 ```python
 @fr.unit(
@@ -394,7 +305,6 @@ instance a `name=`, the identity its number holds to in later releases.
     date="2026-01-01",
     text="first release",
     by="AB",
-    class_code="U",
 )
 def numbered_board(d):
     return Io(d.device("X1", "DEMO-CONN-2P", interface=True))
@@ -412,7 +322,7 @@ def numbered_board(d):
 )
 def numbered_cabinet(c):
     for n in (1, 2):
-        c.add(numbered_board, None, name=f"module{n}")
+        c.add(numbered_board, f"U{n}", name=f"module{n}")
     return Cabinet()
 
 

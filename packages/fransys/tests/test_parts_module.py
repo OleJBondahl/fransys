@@ -1,20 +1,22 @@
 """The typed parts module generator: names, collisions, determinism, digest."""
 
 import ast
+import subprocess
 import sys
+from pathlib import Path
 
 import pytest
-from fransys.parts_module import library_digest, parts_module
+from fransys.parts_module import _q, library_digest, parts_module
 from fransys_author import AuthorError
 
 
 def _part(mpn: str, pin: str = "1") -> str:
     return (
-        f'schema = 1\n\n[part]\nmpn = "{mpn}"\nmanufacturer = "Plant"\n'
+        f'schema = 2\n\n[part]\nmpn = "{mpn}"\nmanufacturer = "Plant"\n'
         'description = "Planted part"\ncategory = "protection"\nclass_code = "F"\n\n'
         '[[function]]\nname = "main"\nkind = "protection"\n'
         f'ports = [\n    {{ name = "{pin}", role = "generic" }},\n]\n'
-        '\n[function.protection]\ntype = "mcb"\n'
+        '\n[function.block]\ntype = "mcb"\n'
     )
 
 
@@ -23,7 +25,7 @@ def _plant(tmp_path, monkeypatch, name: str, parts: dict[str, str]) -> str:
     (package / "parts").mkdir(parents=True)
     (package / "__init__.py").write_text("", encoding="utf-8")
     (package / "library.toml").write_text(
-        f'schema = 1\nname = "{name}"\nversion = "0.1.0"\ndescription = "Planted"\n',
+        f'schema = 2\nname = "{name}"\nversion = "0.1.0"\ndescription = "Planted"\n',
         encoding="utf-8",
     )
     for file, text in parts.items():
@@ -47,15 +49,15 @@ def test_demo_parts_class_names_and_literals() -> None:
     text = parts_module("demo_parts")
     ast.parse(text)
     for cls, mpn, fns in [
-        ("DEMO_MCB_3P", "DEMO-MCB-3P", "'element'"),
-        ("DEMO_OVERLOAD_3P", "DEMO-OVERLOAD-3P", "'aux', 'main'"),
-        ("DEMO_PB_NC", "DEMO-PB-NC", "'sw'"),
-        ("DEMO_CTR_3P_24", "DEMO-CTR-3P-24", "'aux', 'coil', 'main'"),
+        ("DEMO_MCB_3P", "DEMO-MCB-3P", '"element"'),
+        ("DEMO_OVERLOAD_3P", "DEMO-OVERLOAD-3P", '"aux", "main"'),
+        ("DEMO_PB_NC", "DEMO-PB-NC", '"sw"'),
+        ("DEMO_CTR_3P_24", "DEMO-CTR-3P-24", '"aux", "coil", "main"'),
     ]:
-        head = f"class {cls}(TypedDevice[Literal[{fns}], {cls!r}]):"
-        assert f"{head}\n    mpn: ClassVar[str] = {mpn!r}\n" in text
+        head = f'class {cls}(TypedDevice[Literal[{fns}], "{cls}"]):'
+        assert f'{head}\n    mpn: ClassVar[str] = "{mpn}"\n' in text
     assert "    aux: DEMO_OVERLOAD_3P__aux\n    main: DEMO_OVERLOAD_3P__main\n" in text
-    assert "m: Literal['95', 95, '96', 96]) -> Pin: ..." in text
+    assert 'm: Literal["95", 95, "96", 96]) -> Pin: ...' in text
 
 
 def test_colliding_class_names_stop_before_emitting(tmp_path, monkeypatch) -> None:
@@ -68,10 +70,7 @@ def test_leading_digit_gets_a_prefix(tmp_path, monkeypatch) -> None:
     name = _plant(tmp_path, monkeypatch, "digit_parts", {"a": _part("1ABC")})
     text = parts_module(name)
     ast.parse(text)
-    assert (
-        "class P_1ABC(TypedDevice[Literal['main'], 'P_1ABC']):\n    mpn: ClassVar[str] = '1ABC'"
-        in text
-    )
+    assert 'class P_1ABC(TypedDevice[Literal["main"], "P_1ABC"]):\n    mpn: ClassVar[str] = "1ABC"' in text
 
 
 def test_text_is_deterministic_and_sorted_by_mpn(tmp_path, monkeypatch) -> None:
@@ -105,11 +104,17 @@ def test_digest_ignores_whitespace_and_sees_facts(tmp_path, monkeypatch) -> None
     assert library_digest(name) not in {base, described}
 
 
+def test_digest_ignores_the_schema_version(monkeypatch) -> None:
+    base = library_digest("demo_parts")
+    monkeypatch.setattr("fransys_kernel.registry._Reg.schema_version", 99)
+    assert library_digest("demo_parts") == base
+
+
 def test_header_names_sources_and_digest() -> None:
     text = parts_module("demo_parts")
     assert "Generated from demo_parts." in text
-    assert "SOURCES = ('demo_parts',)" in text
-    assert f"LIBRARY_DIGEST = {library_digest('demo_parts')!r}" in text
+    assert 'SOURCES = ("demo_parts",)' in text
+    assert f'LIBRARY_DIGEST = "{library_digest("demo_parts")}"' in text
 
 
 def test_every_pin_gets_an_attribute_named_by_the_one_identifier_rule() -> None:
@@ -120,12 +125,10 @@ def test_every_pin_gets_an_attribute_named_by_the_one_identifier_rule() -> None:
     assert "    P_1_L1: Pin\n    P_2_T1: Pin\n" in device  # a unique pin is on the device too
 
 
-def test_two_pins_of_one_function_that_map_to_one_name_stop_the_generator(
-    tmp_path, monkeypatch
-) -> None:
+def test_two_pins_of_one_function_that_map_to_one_name_stop_the_generator(tmp_path, monkeypatch) -> None:
     text = _part("PIN-CLASH", "1/L1").replace(
-        "]\n\n[function.protection]",
-        '    { name = "1_L1", role = "generic" },\n]\n\n[function.protection]',
+        "]\n\n[function.block]",
+        '    { name = "1_L1", role = "generic" },\n]\n\n[function.block]',
     )
     name = _plant(tmp_path, monkeypatch, "pin_clash_parts", {"a": text})
     with pytest.raises(AuthorError, match=r"'1/L1' and '1_L1' map to one name P_1_L1"):
@@ -160,3 +163,21 @@ def test_a_changeover_function_declares_both_throws_and_a_contact_does_not() -> 
     assert "from fransys import Pin, Throw, TypedDevice, TypedFn" in text
     coil = text.split("class DEMO_RLY_2CO_24__coil(")[1].split("\n\n")[0]
     assert "Throw" not in coil
+
+
+def _ruff_format_clean(tmp_path: Path, source: str) -> None:
+    path = tmp_path / "module.py"
+    path.write_text(source, encoding="utf-8")
+    cmd = ["uv", "run", "ruff", "format", "--check", "--config", str(Path(__file__).parents[3] / "pyproject.toml"), str(path)]
+    done = subprocess.run(cmd, capture_output=True, text=True, check=False)  # noqa: S603 -- fixed arguments
+    assert done.returncode == 0, done.stdout + done.stderr
+
+
+def test_demo_parts_module_is_ruff_formatted(tmp_path: Path) -> None:
+    _ruff_format_clean(tmp_path, parts_module("demo_parts"))
+
+
+@pytest.mark.parametrize("text", ["plain", 'say "hi"', "it's", "both \" and '", 'back\\"slash', "tab\t"])
+def test_a_quoted_string_is_what_ruff_format_keeps(tmp_path: Path, text: str) -> None:
+    assert ast.literal_eval(_q(text)) == text
+    _ruff_format_clean(tmp_path, f"X = {_q(text)}\n")

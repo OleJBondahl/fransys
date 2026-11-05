@@ -6,13 +6,11 @@ from fransys_author.surface import design
 
 from fransys_model.vocab import RAIL_DEFAULTS
 
-from .test_supplies import lib  # noqa: F401 -- the module fixture of the supply tests
-
 if TYPE_CHECKING:
     from fransys_model.kernel import Draft
 
 
-def test_ac_supply_rails_follow_the_table(lib: Draft) -> None:  # noqa: F811 -- fixture
+def test_ac_supply_rails_follow_the_table(lib: Draft) -> None:
     d = design(lib, place="C1")
     pins = [d.device(f"A{i}", "TEST-PSU-24V").out["+"] for i in range(4)]
     ac = d.ac_supply("mains", "400", *pins[:3], n=pins[3])
@@ -22,7 +20,7 @@ def test_ac_supply_rails_follow_the_table(lib: Draft) -> None:  # noqa: F811 -- 
     assert (ac.N.mark, ac.N.potential) == (RAIL_DEFAULTS["ac_neutral"], "N")
 
 
-def test_dc_supply_rails_follow_the_table(lib: Draft) -> None:  # noqa: F811 -- fixture
+def test_dc_supply_rails_follow_the_table(lib: Draft) -> None:
     d = design(lib, place="C1")
     dc = d.dc_supply("psu", d.device("G1", "PSU-MID"))
     assert (dc.plus.mark, dc.minus.mark, dc.mid.mark) == tuple(RAIL_DEFAULTS["dc"])

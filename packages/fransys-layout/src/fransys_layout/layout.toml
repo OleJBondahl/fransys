@@ -1,9 +1,6 @@
 [layout]
-area = [1312, 854]
-text_height = 8
 step = 8
 pad = 2
-contact_tables = false
 margin = [16, 16]
 wire_min = 8
 column_gap_min = 8
@@ -34,10 +31,16 @@ column_wire_lanes = 3
 jog_lanes = 2
 spare_cells = 3
 reroute_rounds = 3
+share_penalty = 64
+history_step = 16
+ripup_worst = 3
 recut_rounds = 3
+# standing labels a blocked label may move to their next free candidates before the recut (R1479)
+label_moves = 2
+route_fallback_rounds = 10
 solve_rounds = 3
 corner_order = ["TL", "BL", "BR", "TR"]
-slack = [0, 8, 16]
+slack = [0, 8, 16, 24, 32]
 cells = [8, 6]
 label_gap = 8
 open_stub = 0
@@ -46,3 +49,11 @@ wrap_wide_fans = true
 top_headroom_lanes = 3
 bottom_headroom_lanes = 1
 end_bias_weight = 3
+anchor_weight = 1000000
+boxpin_weight = 6
+
+# The house numbers of the layout rules (HouseProfile): no unit's profile sets them.
+[profile]
+marker_padding = 2
+route_turn_penalty = 4
+route_crossing_penalty = 16

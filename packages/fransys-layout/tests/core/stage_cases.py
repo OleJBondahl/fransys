@@ -47,10 +47,7 @@ def _mixed_flow() -> PlacementProblem:
         net("p10", "A3.s", "A10.s"),
         net("bus12", "H2.s", "T1.n", "T2.n", "T10.n"),
     ]
-    nets += [
-        net(f"bn{9 + k}", f"M3.s{k}", f"M9.n{k}", f"M10.n{k}", bundle=Bundle("bd1", k))
-        for k in range(3)
-    ]
+    nets += [net(f"bn{9 + k}", f"M3.s{k}", f"M9.n{k}", f"M10.n{k}", bundle=Bundle("bd1", k)) for k in range(3)]
     for k in range(3):
         nets += [net(f"jn{k}", f"J3.s{k}", f"J9.n{k}"), net(f"jm{k}", f"J9.s{k}", f"J10.n{k}")]
     return problem(chain + seal + fan + bundle + series, nets)
@@ -61,12 +58,6 @@ def _run_flow(prob: PlacementProblem) -> object:
         prob,
         core_options(
             marker=MARKER,
-            flip_turn="R180",
-            tag_stagger=True,
-            label_gap=8,
-            parallel_pitch=48,
-            driver_first=True,
-            arrow_sides=("E", "W"),
         ),
     )
 

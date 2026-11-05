@@ -8,21 +8,23 @@ A block taller than the page body never reaches the flow: `check` stops it first
 
 from typing import TYPE_CHECKING
 
-from ._geometry import PADDING_MM, text_margin
+from ._geometry import text_margin
 from ._labels import RESTART
 from ._typst import literal
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping
+
     from fransys_model.derive import SheetRow
 
-_HEADER_MM = 11  # extra top margin: the part line and a 4 mm gap below it (pdf-0021)
+    from ._doc import Doc
 
 
-def body_size_mm(sheet: SheetRow) -> tuple[int, int]:
-    """The width and height in mm that a run's blocks may fill on `sheet`'s page body."""
+def body_size_mm(sheet: SheetRow, pdf: Mapping[str, float]) -> tuple[float, float]:
+    """The width and height in mm that a run's blocks may fill on `sheet`'s page body, by the `[pdf]` margin and header."""
     return (
-        sheet.content_width_mm - 2 * PADDING_MM,
-        sheet.content_height_mm - 2 * PADDING_MM - _HEADER_MM,
+        sheet.content_width_mm - 2 * pdf["page_margin_mm"],
+        sheet.content_height_mm - 2 * pdf["page_margin_mm"] - pdf["cable_run_header_mm"],
     )
 
 
@@ -59,7 +61,7 @@ _FLOW = """
 """
 
 
-def _flow(bodies: list[str], width_mm: float, height_mm: float) -> str:
+def _flow(bodies: list[str], width_mm: float, height_mm: float, gap_mm: float) -> str:
     """The run's cable blocks laid in columns: down a column, then right, then a new page.
 
     A column is as wide as its widest block. A block never splits across pages.
@@ -68,7 +70,7 @@ def _flow(bodies: list[str], width_mm: float, height_mm: float) -> str:
     return _FLOW % {
         "w": f"{width_mm:g}mm",
         "h": f"{height_mm:g}mm",
-        "gap": f"{PADDING_MM}mm",
+        "gap": f"{gap_mm:g}mm",
         "items": items,
     }
 
@@ -86,18 +88,13 @@ def _header(headings: tuple[str, str], label: str) -> str:
     )
 
 
-def run_page(
-    sheet: SheetRow,
-    index: int,
-    headings: tuple[str, str],
-    background_source: str,
-    bodies: list[str],
-) -> str:
+def run_page(doc: Doc, index: int, headings: tuple[str, str], background_source: str, bodies: list[str]) -> str:
     """One part's run: a `#page` with the part heading as header, each cable block in turn."""
+    sheet, pdf = doc[3], doc[6]
     label = f"run-{index}"
-    width, height = body_size_mm(sheet)
-    margin = f"{{ let m = {text_margin(sheet)}; (..m, top: m.top + {_HEADER_MM}mm) }}"
-    blocks = _flow(bodies, width, height)
+    width, height = body_size_mm(sheet, pdf)
+    margin = f"{{ let m = {text_margin(sheet, pdf['page_margin_mm'])}; (..m, top: m.top + {pdf['cable_run_header_mm']}mm) }}"
+    blocks = _flow(bodies, width, height, pdf["page_margin_mm"])
     return (
         f"#page(margin: {margin}, header-ascent: 4mm, header: {{ {_header(headings, label)} }}, "
         f"background: {background_source})[{RESTART}\n#metadata(none) <{label}>\n{blocks}]"

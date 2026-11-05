@@ -5,7 +5,7 @@ Reached as `fransys_model.derive.order.<name>`; `derive/__init__.py` re-exports 
 above `vocab`; the text key itself is the kernel's `natural_key` (NUMBER-SORT K7).
 """
 
-from typing import TYPE_CHECKING, Any, Protocol
+from typing import TYPE_CHECKING, Any, Protocol, cast
 
 from fransys_model.derive.designation import (
     function_designation,
@@ -15,9 +15,12 @@ from fransys_model.derive.designation import (
 from fransys_model.derive.designation_label import terminal_of
 from fransys_model.derive.facts.children import child_items
 from fransys_model.derive.facts.item_predicates import is_plc_module
+from fransys_model.derive.facts.roles import function_role, is_internal_port
 from fransys_model.derive.facts.subjects import subject_kind
 from fransys_model.derive.instance_tag import instance_name, instance_tags
 from fransys_model.derive.lookups import position_rank
+from fransys_model.derive.order_authoring import functions_by_authoring_key
+from fransys_model.derive.placement_reads import has_function, port_function, port_name
 from fransys_model.kernel import (
     DIGEST_CACHE_SIZE,
     AuthoringKey,
@@ -29,9 +32,11 @@ from fransys_model.kernel import (
     digest_cached,
     natural_key,
 )
-from fransys_model.layout import DrawingSet, OrderHint, Page, layout_of, page_slice
+from fransys_model.layout import DrawingSet, FrameCell, OrderHint, Page, layout_of, page_slice
 from fransys_model.vocab.enums import SubjectKind
-from fransys_model.vocab.tables import aspect_nodes, items
+from fransys_model.vocab.tables import aspect_nodes, conductors, functions, items, ports
+from fransys_model.vocab.tables import units as units_table
+lazy from fransys_model.derive.rows_drawn import ConductorEnd
 lazy from fransys_model.derive.rows_series_parallel import SeriesRowPart
 lazy from fransys_model.vocab.aspects import AspectNode
 lazy from fransys_model.vocab.connectivity import Conductor
@@ -44,17 +49,21 @@ if TYPE_CHECKING:
 __all__ = [
     "NaturalKey",
     "bom_sort_key",
-    "by_place",
+    "cores_in_lane_order",
     "designation_key",
     "drawn_on_page",
-    "echo_entry_key",
     "finding_order_key",
     "findings_in_order",
+    "function_order_text",
+    "functions_by_authoring_key",
+    "functions_in_order",
     "in_designation_order",
+    "in_place_order",
     "location_key",
     "locations_in_order",
     "natural_key",
     "order_hint_key",
+    "placement_key",
     "plc_channel_key",
     "plc_channel_tie",
     "plc_module_key",
@@ -63,9 +72,8 @@ __all__ = [
     "plc_racks",
     "port_designation_key",
     "reading_ranks",
-    "record_id_order",
     "series_part_key",
-    "stub_far_key",
+    "stub_far_order",
     "unit_designation_key",
     "units_in_order",
 ]
@@ -81,14 +89,44 @@ class _Placed(Protocol):
     def y(self) -> int: ...
 
 
-def echo_entry_key(entry: tuple[int, int, int, str]) -> tuple[int, int, int, str]:
-    """A tag echo's partner order: set rank, page, frame column, then text (layout-0089)."""
-    return entry
-
-
 def designation_key(model: Model, item: Id[Item]) -> NaturalKey:
     """`natural_key` of `item`'s printed designation: the one spelling of "by designation"."""
     return natural_key(item_designation(model, item))
+
+
+def function_order_text(model: Model, function: Id[Function]) -> str:
+    """A function's order as text: its item's printed designation, contacts after the rest, its name, its authoring key; never an Id."""
+    record = functions(model)[function]
+    contact = int(function_role(model, function).contact)
+    return f"{item_designation(model, record.item)} {contact} {record.name} {'/'.join(record.key)}"
+
+
+def _function_rank(model: Model, key: Id[Function] | Id[Port]) -> tuple[NaturalKey, NaturalKey, Id[Any]]:
+    as_function = cast("Id[Function]", key)
+    if has_function(model, as_function):
+        return natural_key(function_order_text(model, as_function)), (), key
+    port = cast("Id[Port]", key)
+    return natural_key(function_order_text(model, cast("Id[Function]", port_function(model, port)))), natural_key(port_name(model, port)), key
+
+
+def functions_in_order(model: Model, keys: Iterable[Id[Function] | Id[Port]]) -> tuple[Id[Function] | Id[Port], ...]:
+    """Function keys (or a pin view's port) in `function_order_text` order, a port by its name; the Id ends a full tie."""
+    return tuple(sorted(keys, key=lambda key: _function_rank(model, key)))
+
+
+type _Block = tuple[Id[Unit] | None, Id[Item]]
+
+
+def _block_key(model: Model, pair: _Block, *, cabled: bool) -> tuple[object, ...]:
+    unit, subject = pair
+    name = () if cabled else designation_key(model, subject)
+    reading = (unit_designation_key(model, unit), units_table(model)[unit].key) if unit else ((), ())
+    return (unit is not None, *reading, not cabled, name, items(model)[subject].key)
+
+
+def blocks_in_print_order(model: Model, pairs: Iterable[_Block], *, cabled: set[_Block]) -> tuple[_Block, ...]:
+    """Harness blocks in print order: absolute then units'; cable blocks by authoring key, then wire-only ones by designation."""
+    return tuple(sorted(pairs, key=lambda pair: _block_key(model, pair, cabled=pair in cabled)))
 
 
 def location_key(model: Model, node: Id[AspectNode]) -> tuple[NaturalKey, str]:
@@ -98,8 +136,8 @@ def location_key(model: Model, node: Id[AspectNode]) -> tuple[NaturalKey, str]:
 
 
 def locations_in_order(model: Model, nodes: Iterable[Id[AspectNode]]) -> tuple[Id[AspectNode], ...]:
-    """`nodes` in the order the drawing sets of a unit follow: by `location_key`, then by id."""
-    return tuple(sorted(sorted(nodes), key=lambda node: location_key(model, node)))
+    """`nodes` in the order the drawing sets of a unit follow: by `location_key`, then the authoring key."""
+    return tuple(sorted(nodes, key=lambda node: (location_key(model, node), aspect_nodes(model)[node].key)))
 
 
 def unit_designation_key(model: Model, unit: Id[Unit]) -> NaturalKey:
@@ -108,20 +146,23 @@ def unit_designation_key(model: Model, unit: Id[Unit]) -> NaturalKey:
 
 
 def units_in_order(model: Model, units: Iterable[Id[Unit]]) -> tuple[Id[Unit], ...]:
-    """`units` as their drawing sets follow the top level: by `unit_designation_key`, then id."""
-    return tuple(sorted(sorted(units), key=lambda unit: unit_designation_key(model, unit)))
+    """`units` as their drawing sets follow the top level: by `unit_designation_key`, then the authoring key."""
+    return tuple(sorted(units, key=lambda unit: (unit_designation_key(model, unit), units_table(model)[unit].key)))
 
 
-def port_designation_key(
-    model: Model, port: Id[Port], *, unit: Id[Unit] | None = None
-) -> NaturalKey:
+def port_designation_key(model: Model, port: Id[Port], *, unit: Id[Unit] | None = None) -> NaturalKey:
     """`natural_key` of `port`'s printed designation: the one spelling of "ports by designation"."""
     return natural_key(port_designation(model, port, unit=unit))
 
 
+def first_terminal_port(model: Model, terminal_ports: Iterable[Id[Port]]) -> Id[Port]:
+    """The port a terminal function's tag names: the internal side first, then the port name."""
+    return min(terminal_ports, key=lambda port: (not is_internal_port(model, port), ports(model)[port].name))
+
+
 def in_designation_order(model: Model, listed: Iterable[Id[Item]]) -> tuple[Id[Item], ...]:
-    """`listed` sorted by `natural_key` of its designation (`-X2` before `-X10`), then id."""
-    return tuple(sorted(listed, key=lambda item: (designation_key(model, item), item)))
+    """`listed` sorted by `natural_key` of its designation (`-X2` before `-X10`), then the authoring key."""
+    return tuple(sorted(listed, key=lambda item: (designation_key(model, item), items(model)[item].key)))
 
 
 def bom_sort_key(model: Model, item: Id[Item]) -> tuple[int, NaturalKey, str, int]:
@@ -145,14 +186,10 @@ def bom_sort_key(model: Model, item: Id[Item]) -> tuple[int, NaturalKey, str, in
 
 def plc_racks(model: Model) -> frozenset[Id[Item]]:
     """The racks: every item with a `PLC_MODULE` child (`is_plc_module`)."""
-    return frozenset(
-        one.parent
-        for one in items(model).values()
-        if one.parent is not None and is_plc_module(model, one)
-    )
+    return frozenset(one.parent for one in items(model).values() if one.parent is not None and is_plc_module(model, one))
 
 
-type ChannelTie = tuple[int, NaturalKey, Id[Function]]
+type ChannelTie = tuple[int, NaturalKey, AuthoringKey]
 type ModuleKey = tuple[tuple[int, int], NaturalKey, tuple[str, ...]]
 
 
@@ -191,9 +228,9 @@ def plc_channel_tie(number: int, function: Function) -> ChannelTie:
     """Sort key of a channel within a module: its number, then the part's own function name.
 
     DI 1 and DO 1 share number 1; the template name (`di_1`, `do_1`) is the part's, so no id,
-    which hashes the block tag, decides the tie. The id only breaks a repeat.
+    which hashes the block tag, decides the tie. The function's authoring key only breaks a repeat.
     """
-    return number, natural_key(function.name), function.id
+    return number, natural_key(function.name), function.key
 
 
 def plc_channel_key(
@@ -214,28 +251,19 @@ def plc_channel_key(
     return (1, designation_key(model, item), 0, ((0, 0), natural_key(""), ()), tail)
 
 
-def by_place[T: _Placed](drawn: Iterable[T]) -> tuple[T, ...]:
-    """`drawn` top-down, left to right; a tie keeps the order it came in.
-
-    A page draws its symbols, labels and markers in this order, so no id (which follows the
-    instance path) decides which is drawn first.
-    """
-    return tuple(sorted(drawn, key=lambda one: (one.y, one.x)))
-
-
 def reading_ranks[K](points: Mapping[K, tuple[int, int]]) -> dict[K, int]:
-    """Each key's reading order from 0 over its `(y, x)`: `by_place`'s order, a tie by arrival."""
+    """Each key's reading rank from 0 over its `(y, x)`; a tie goes by arrival."""
     keys = sorted(points, key=lambda one: points[one])
     return {key: rank for rank, key in enumerate(keys)}
 
 
-def record_id_order(ids: Iterable[str]) -> tuple[str, ...]:
-    """Rendered record ids in the order the model's tables hold their records (`Id` order).
+def in_place_order[T](found: Iterable[tuple[int, int, T]]) -> tuple[T, ...]:
+    """The `(y, x, thing)` triples' things top-down, left to right; a tie keeps arrival order.
 
-    The order of the record path, kept so the bytes of a drawing stay identical. The ids are of
-    one kind, so the rendered `kind:value` text orders like the `Id`.
+    The draw order of a page's elements: no id, which follows the instance path, decides it
+    (NUMBER-SORT), so a rename leaves the bytes of a drawing unchanged.
     """
-    return tuple(sorted(ids))
+    return tuple(thing for _, _, thing in sorted(found, key=lambda one: one[:2]))
 
 
 def series_part_key(part: SeriesRowPart) -> NaturalKey:
@@ -305,10 +333,20 @@ def findings_in_order(model: Model, findings: Iterable[Finding]) -> list[Finding
     return sorted(findings, key=lambda f: (finding_order_key(model, f), f.message))
 
 
-def stub_far_key(pick: tuple[Id[Port], Id[Port], Id[Conductor]]) -> tuple[str, str, str]:
-    """A stub's far-end order of a `(near, far, conductor)`: far port, near port, conductor."""
-    near, far, conductor = pick
-    return far.value, near.value, conductor.value
+def placement_key(model: Model, page: Id[Page], cell: FrameCell) -> tuple[int, int, int, str]:
+    """A placement's place in a list: its drawing set, its page number, then its frame cell (column, row) (R1571)."""
+    placed = layout_of(model, Page)[page]
+    return layout_of(model, DrawingSet)[placed.drawing_set].number, placed.number, cell.column, cell.row
+
+
+def stub_far_order(model: Model, ends: Iterable[ConductorEnd]) -> list[ConductorEnd]:
+    """A stub's conductor ends in print order: the far port's printed designation, the near port's, then the conductor's key (R1581)."""
+    return sorted(ends, key=lambda e: (port_designation_key(model, e.far), port_designation_key(model, e.port), conductors(model)[e.conductor].key))
+
+
+def cores_in_lane_order(index: Mapping[Id[Conductor], int], conductors: Iterable[Id[Conductor]]) -> list[Id[Conductor]]:
+    """A line's conductors by core index (a wire past the cores has none and goes first), then id."""
+    return sorted(conductors, key=lambda c: (index.get(c, 0), c.value))
 
 
 def order_hint_key(hint: OrderHint) -> AuthoringKey:

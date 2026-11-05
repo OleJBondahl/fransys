@@ -1,4 +1,6 @@
 """Symbol ids are Id text (S1); pin names come from the Pick's ports."""
+# NET_POTENTIAL_CONFLICT 4 per default-salt build set (KI-461): planted_model or demo_model 24 V to 0 V short through strip and mate.
+# NET_SHORTED 4 per default-salt build set (KI-461): planted_model or demo_model 24 V to 0 V short through strip and mate.
 
 import dataclasses
 import re
@@ -9,7 +11,7 @@ from fransys_el.placement_kit import ProblemError
 from placement_fixtures import kit_for, leads, planted_model
 
 from fransys_layout.core import PinRef
-from fransys_model.derive import item_designation
+from fransys_model.derive.order import function_order_text
 from fransys_model.kernel import render_id
 from fransys_model.vocab import functions, ports
 
@@ -20,14 +22,13 @@ def _function_named(model, name):
 
 
 def test_symbol_ids_are_the_designation_then_the_id_text_and_unique() -> None:
-    """Each symbol id is the item's designation, a space, the function Id's text (el-0006)."""
+    """Each symbol id is the function order text, a space, the function Id text: the Id only keeps it unique (el-0006, model-0396)."""
     model = planted_model()
     kit = kit_for(model)
     ids = symbol_ids(model, kit)
     assert len(set(ids.values())) == len(kit)
     for function, text in leads(ids).items():
-        record = functions(model)[function]
-        assert text == f"{item_designation(model, record.item)} {render_id(function)}"
+        assert text == f"{function_order_text(model, function)} {render_id(function)}"
 
 
 def test_missing_port_is_refused_by_name() -> None:
@@ -37,9 +38,7 @@ def test_missing_port_is_refused_by_name() -> None:
     coil = _function_named(model, "coil")
     pick = kit[coil]
     omitted = min(pick.ports)
-    trimmed = dataclasses.replace(
-        pick, ports=frozendict({p: n for p, n in pick.ports.items() if p != omitted})
-    )
+    trimmed = dataclasses.replace(pick, ports=frozendict({p: n for p, n in pick.ports.items() if p != omitted}))
     bad = frozendict({**kit, coil: trimmed})
     with pytest.raises(ProblemError, match=re.escape(ports(model)[omitted].name)):
         pin_names(model, bad, symbol_ids(model, bad))
@@ -67,7 +66,5 @@ def test_pin_names_map_each_port_to_its_symbol_and_port_name() -> None:
     coil = _function_named(model, "coil")
     a1 = next(p for p, r in ports(model).items() if r.function == coil and r.name == "A1")
     assert pins[a1] == PinRef(ids[coil], "in")
-    expected = {
-        p: PinRef(ids[lead], n) for lead, pick in kit.items() for p, n in pick.ports.items()
-    }
+    expected = {p: PinRef(ids[lead], n) for lead, pick in kit.items() for p, n in pick.ports.items()}
     assert dict(pins) == expected

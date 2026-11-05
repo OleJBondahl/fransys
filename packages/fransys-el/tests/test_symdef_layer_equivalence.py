@@ -1,4 +1,7 @@
 """layout-0316 D: the symdef layer gives the old builder's values (bytes do not move)."""
+# NET_POTENTIAL_CONFLICT 1 per default-salt build set (KI-461): planted_model or demo_model 24 V to 0 V short through strip and mate.
+# NET_SHORTED 1 per default-salt build set (KI-461): planted_model or demo_model 24 V to 0 V short through strip and mate.
+# WIRE_ROW_UNRESOLVED 12 per default-salt build set (KI-461): planted_model or demo_model 24 V to 0 V short through strip and mate.
 
 import pytest
 from placement_fixtures import demo_model, kit_for, planted_model

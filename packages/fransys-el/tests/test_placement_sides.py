@@ -1,17 +1,12 @@
 """The sides of a generic box's pins (BOX-SIDES B): the first half north."""
 
-import sys
-from pathlib import Path
-
 import fransys as fr
+from _card_case import card_case_drafts
 from conventions_fixtures import house
 from fransys_el import build, symbol_kit
 from fransys_el.placement_sides import half_split
 
 from electrical_symbols import LIBRARY
-
-sys.path.append(str(Path(__file__).parents[3] / "tests"))
-from _card_case import card_case_drafts
 
 
 def test_the_first_half_of_the_wired_pins_stands_north() -> None:

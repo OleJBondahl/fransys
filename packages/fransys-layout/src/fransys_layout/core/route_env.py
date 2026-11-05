@@ -5,31 +5,25 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
+from itertools import pairwise
 from typing import TYPE_CHECKING
 
-from .outputs import Wire
+from .arrow_reserve import arrow_rows, leg_feet, leg_fit, leg_lines, leg_rows
+from .clearance import Keep, fan_own, pin_points, through
+from .net_keys import net_of_key, port_key
+from .outputs import Marker, Refused, Wire
 from .sides import step_out
-from .values import Finding, PinRef
+from .values import Box, Finding, PinRef
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable, Mapping, Sequence
+    from collections.abc import Mapping, Sequence
 
+    from .annex_values import Annex, AnnexBox
+    from .arrow_reserve import ArrowEnds
+    from .flow_values import Column, CrossLink, CutResult, Fan
     from .outputs import Gap, PagePlacement, Placed, Placement, Trunk
-    from .values import (
-        XY,
-        Box,
-        Column,
-        CrossLink,
-        CutResult,
-        Fan,
-        Options,
-        Orientation,
-        PlacementProblem,
-        Side,
-        Size,
-        WireKind,
-    )
+    from .values import XY, Options, Orientation, PlacementProblem, Side, Size, WireKind
 
 
 @dataclass(frozen=True, slots=True)
@@ -45,6 +39,7 @@ class Jog:
     bottom: XY
     drawn_as: WireKind = "straight"
     source_top: bool = True
+    ends: tuple[PinRef, ...] = ()
 
     @property
     def source_x(self) -> int:
@@ -60,7 +55,7 @@ class Rise:
     """A drop or riser whose straight vertical passes a foreign body: A* routes it to `target`."""
 
     net: str
-    sym: str
+    pin: PinRef
     start: XY
     target: XY
     drawn_as: WireKind
@@ -74,6 +69,7 @@ class Drawn:
     jogs: tuple[Jog, ...] = ()
     findings: tuple[Finding, ...] = ()
     rises: tuple[Rise, ...] = ()
+    lost: tuple[Refused, ...] = ()
 
     def __add__(self, other: Drawn) -> Drawn:
         return Drawn(
@@ -81,6 +77,7 @@ class Drawn:
             self.jogs + other.jogs,
             self.findings + other.findings,
             self.rises + other.rises,
+            self.lost + other.lost,
         )
 
 
@@ -100,26 +97,39 @@ class RouteEnv:
     cross_links: tuple[CrossLink, ...]
     cut_nets: frozenset[str]
     options: Options
-    obstacles: tuple[Box, ...] = ()
+    obstacles: tuple[Keep, ...] = ()
     sides: Mapping[tuple[str, str, Orientation], Side] = field(default_factory=dict)
     # layout-0334: the content box; the router searches no cell past it (None: no bound)
     area: Size | None = None
-    leads: Mapping[PinRef, str] = field(default_factory=dict)
+    leads: frozenset[PinRef] = frozenset()
     # R472, layout-0390: the foreign port ends no wire passes, built once: a sentinel net per
     # box pin of no net, to its pin point and the cell its stem steps out to
     blocked_ends: Mapping[str, tuple[XY, ...]] = field(default_factory=dict)
-    # (net, upper pin, lower pin) of each lane a bundle fan carries between two cells (BUNDLE)
-    bundled: frozenset[tuple[str, PinRef, PinRef]] = frozenset()
+    # (net, upper pin, lower pin) of each connection a fan deals between two cells of a lane: the trunk draws it (R1519)
+    dealt: frozenset[tuple[str, PinRef, PinRef]] = frozenset()
+    # the one-sided pins that stand a leg, each with the row of the trunk end the leg hangs from (ONE-SIDED-PIN)
+    legs: Mapping[PinRef, int] = field(default_factory=dict)
+    # the page, fan and row of each trunk that stands an arrow at its right end (R875)
+    arrowed: ArrowEnds = field(default_factory=dict)
+    # each leg's line from the cut x to its marker's foot, by (fan, row, pole): the one line the marker stage stands at too
+    leg_lines: Mapping[tuple[str, int, PinRef], tuple[XY, XY, XY]] = field(default_factory=dict)
+    # the symbol pairs of lane cells joined by a cross-link, not a lane wire (layout-0482)
+    joined: frozenset[frozenset[str]] = frozenset()
+    # the conductors the loop withholds: each lost link, jog or rise by `lost_key` (ROUTE-FALLBACK-REFERENCE)
+    lost: frozenset[LostKey] = frozenset()
+    # the page's reference markers once they stand: a lead runs to the near edge of each one that stands out on its pin's line (MARKER-FREE-SIDE)
+    markers: tuple[Marker, ...] = ()
+    # the annexes of the symbols on this page, in the problem's order, and the labels the round before stood (TEXT-CANDIDATES)
+    annexes: tuple[Annex, ...] = ()
+    labels: tuple[AnnexBox, ...] = ()
 
 
-def failed(env: RouteEnv, subject: str, text: str) -> Finding:
-    """A ROUTE_FAILED finding on this page; the text names the thing and the fix."""
-    return Finding("ROUTE_FAILED", text, env.page, subject)
+type LostKey = tuple[str, frozenset[PinRef]]
 
 
-def row_band(env: RouteEnv, trunk: Trunk) -> tuple[int, int]:
-    """(top, bottom) of the row a trunk stands in: the band its drops are limited to."""
-    return env.bands[trunk.row]
+def lost_key(net: str, ends: Sequence[PinRef]) -> LostKey:
+    """The one key of a lost conductor: its net and all its pins, in no order."""
+    return net, frozenset(ends)
 
 
 def pin_point(env: RouteEnv, sym: str, pin: str) -> XY | None:
@@ -130,6 +140,26 @@ def pin_point(env: RouteEnv, sym: str, pin: str) -> XY | None:
     return next(((q.x, q.y) for q in placed.pin_xy if q.pin == pin), None)
 
 
+def hard_keeps(env: RouteEnv) -> tuple[Keep, ...]:
+    """The one keep set a wire must not run through: each placed body (never its soft tag room) and the page obstacles (layout-0495)."""
+    return tuple(Keep("", p.body, "body", p.sym) for p in env.placed.values()) + tuple(env.obstacles)
+
+
+def body_hit(env: RouteEnv, net: str, points: Sequence[XY]) -> Keep | None:
+    """The first body a run of the wire `points` of `net` passes, through or along its outline, its own pins' bodies too (R1164, layout-0541)."""
+    keeps, pins = tuple(k for k in hard_keeps(env) if k.kind == "body"), pin_points(env.placed)
+    own, ends = own_syms(env, net_of_key(net), net), (points[0], points[-1])
+    runs = (Box(min(ax, bx), min(ay, by), abs(bx - ax), abs(by - ay)) for (ax, ay), (bx, by) in pairwise(points))
+    return next((k for run in runs for k in through(run, keeps, ends, own, pins)), None)
+
+
+def own_syms(env: RouteEnv, net: str, fan: str | None = None) -> frozenset[str]:
+    """The symbols a wire belongs to: the net's pins and those of its fan (R515, R-A)."""
+    own = frozenset(r.sym for r in env.net_pins.get(net, ()))
+    home = env.fans.get(fan) or next((f for f in env.fans.values() if f.lanes > 1 and fan in f.nets), None)
+    return own | fan_own(home) if home is not None else own
+
+
 def _page_columns(cut: CutResult, page: int) -> tuple[Column, ...]:
     plan = next(p for p in cut.spec.pages if p.page == page)
     named = {c for row in plan.rows for c in row.columns}
@@ -138,25 +168,7 @@ def _page_columns(cut: CutResult, page: int) -> tuple[Column, ...]:
 
 def pin_sides(problem: PlacementProblem) -> dict[tuple[str, str, Orientation], Side]:
     """The side every pin faces at each orientation its symbol has a view for."""
-    return {
-        (s.id, p.id, o): turn.side
-        for s in problem.symbols
-        for o, view in s.views.items()
-        for p, turn in zip(s.pins, view.pins, strict=True)
-    }
-
-
-def lone_cut_pins(problem: PlacementProblem) -> frozenset[PinRef]:
-    """The pins of cut nets with no other end: the ones a bundle fan may take as lanes (R499)."""
-    return frozenset(c.pin for n in problem.nets if len(n.pins) == 1 for c in n.cut)
-
-
-def lead_pins(problem: PlacementProblem, fans: Iterable[Fan]) -> dict[PinRef, str]:
-    """The cut pins alone on their net and on no fan, each with its line: no wire joins them."""
-    laned = {a.pin for f in fans for a in (*f.drivers, *f.legs)}
-    return {
-        c.pin: c.line for n in problem.nets if len(n.pins) == 1 for c in n.cut if c.pin not in laned
-    }
+    return {(s.id, p.id, o): turn.side for s in problem.symbols for o, view in s.views.items() for p, turn in zip(s.pins, view.pins, strict=True)}
 
 
 def blocked_port_ends(
@@ -173,19 +185,21 @@ def blocked_port_ends(
         for q in placed.pin_xy:
             side = sides.get((placed.sym, q.pin, placed.orient))
             if placed.sym in boxes and PinRef(placed.sym, q.pin) not in net_of and side:
-                out[f"pin:{placed.sym}.{q.pin}"] = ((q.x, q.y), step_out(side, q.x, q.y, step))
+                out[port_key(net_of, PinRef(placed.sym, q.pin))] = (
+                    (q.x, q.y),
+                    step_out(side, q.x, q.y, step),
+                )
     return out
 
 
-def bundled_pairs(fans: Mapping[str, Fan]) -> frozenset[tuple[str, PinRef, PinRef]]:
-    """The (net, upper pin, lower pin) each bundle lane carries from a driver to a leg of one lane.
+def dealt_pairs(fans: Mapping[str, Fan]) -> frozenset[tuple[str, PinRef, PinRef]]:
+    """The (net, upper pin, lower pin) each fan deals from a driver to a leg of one lane.
 
-    The bundle draws that connection (drop, lane line, drop), so the column draws no wire for it.
+    The trunk draws that connection (drop, trunk line, drop), so the column draws no wire for it (R1519).
     """
     return frozenset(
         (f.nets[d.pole], d.pin, g.pin)
         for f in fans.values()
-        if f.lanes > 1
         for d in f.drivers
         for g in f.legs
         if g.pole == d.pole < len(f.nets) and (g.column, g.lane) == (d.column, d.lane)
@@ -197,13 +211,21 @@ def _page_env(
     cut: CutResult,
     problem: PlacementProblem,
     options: Options,
-    obstacles: Sequence[Box],
+    obstacles: Sequence[Keep],
 ) -> RouteEnv:
     net_of = {ref: n.id for n in problem.nets for ref in n.pins}
     net_pins = {n.id: n.pins for n in problem.nets}
     fans = {f.id: f for f in cut.flow.fans}
     cut_nets = frozenset(r.net for r in cut.spec.reference_plan)
     sides = pin_sides(problem)
+    arrowed = arrow_rows(cut.spec.reference_plan, cut.spec.pages, cut.flow.fans)
+    lines = leg_lines(
+        pg.trunks,
+        fans,
+        leg_rows(cut.spec.reference_plan, pg.page),
+        leg_fit(options, cut.spec.reference_plan, pg.page),
+        (leg_feet(pg.placed, pg.hangings), arrowed, problem.area),
+    )
     return RouteEnv(
         pg.page,
         {p.sym: p for p in pg.placed},
@@ -220,9 +242,13 @@ def _page_env(
         tuple(obstacles),
         sides,
         problem.area,
-        lead_pins(problem, cut.flow.fans),
+        cut.spec.leads,
         blocked_port_ends(pg, problem, net_of, sides, options.wiring_grid),
-        bundled_pairs(fans),
+        dealt_pairs(fans),
+        {pin: row for _, row, pin in lines},
+        arrowed,
+        lines,
+        cut.flow.joined,
     )
 
 
@@ -231,7 +257,7 @@ def route_envs(
     cut: CutResult,
     problem: PlacementProblem,
     options: Options,
-    obstacles: Sequence[Box] = (),
+    obstacles: Sequence[Keep] = (),
 ) -> tuple[RouteEnv, ...]:
     """One env per placed page, in the placement's order; `obstacles` block cells on every page."""
     return tuple(_page_env(pg, cut, problem, options, obstacles) for pg in placement.pages)
@@ -243,8 +269,11 @@ def z_points(a: XY, b: XY, level: int) -> tuple[XY, ...]:
     return tuple(p for i, p in enumerate(pts) if i == 0 or p != pts[i - 1])
 
 
-def z_wire(
-    net: str, page: int, ends: tuple[XY, XY], level: int, kind: WireKind = "straight"
-) -> Wire:
+def z_wire(net: str, page: int, ends: tuple[XY, XY], level: int, kind: WireKind = "straight") -> Wire:
     """A jog, a join, a drop of a crossed bundle: pin to `level` in y, across, on to the pin."""
     return Wire(net, page, z_points(ends[0], ends[1], level), kind)
+
+
+def withheld(envs: Sequence[RouteEnv], lost: frozenset[LostKey]) -> tuple[RouteEnv, ...]:
+    """The page envs with the lost conductors the loop withholds."""
+    return tuple(replace(e, lost=lost) for e in envs)

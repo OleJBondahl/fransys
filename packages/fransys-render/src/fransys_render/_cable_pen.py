@@ -4,12 +4,10 @@ from dataclasses import dataclass
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
-from symdef import Point, Weight, line_mm, outline_mm, rect_mm, text_tag, wire
+from symdef import Point, Weight, line_mm, outline_mm, rect_mm, sheet_svg, text_tag, wire
 
-from electrical_symbols import sheet_svg
-
-from ._library import font_family, grid_to_mm, text_room_g
-from ._numbers import format_decimal, printed_font_mm
+from ._library import font_family, grid_to_mm
+from ._numbers import printed_font_mm
 from ._symbols import symbol_body
 
 if TYPE_CHECKING:
@@ -33,20 +31,12 @@ class Pen:
     module_mm: Decimal
     text_height_mm: Decimal
     pad_g: int
-
-    @property
-    def font_g(self) -> int:
-        """The grid units one text line is given."""
-        return text_room_g(self.library, self.text_height_mm, self.module_mm)
+    font_g: int
 
     @property
     def font_mm(self) -> Decimal:
         """The printed font size in mm."""
         return printed_font_mm(self.library, self.text_height_mm)
-
-    def mm(self, g: Grid) -> str:
-        """`g` grid units as mm, in the shortest decimal form."""
-        return format_decimal(grid_to_mm(0, g, self.module_mm))
 
     def _at(self, g: Grid) -> float:
         return float(grid_to_mm(0, g, self.module_mm))

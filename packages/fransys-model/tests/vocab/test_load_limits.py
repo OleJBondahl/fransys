@@ -2,21 +2,22 @@
 
 Every device is an item `key` with one function `f` (builders in `current_plant`); a supply puts
 its rails on the source's two ports and wires carry them to the load. Expected values are written
-by hand from the spec.
 """
 
 from decimal import Decimal
 
-from current_plant import device, fuse, hub, wire
+from current_plant import Ports, device, fuse, hub, wire
 from plant import Plant
 from rating_plant import AC_400, rail, supply
 
 from fransys_model.derive import load_limits
 from fransys_model.derive.facts.current.chains import chains_unordered
-from fransys_model.kernel import Model, make_id
+from fransys_model.elecdef import Current, Unit
+from fransys_model.kernel import Id, Model, make_id
 from fransys_model.vocab import Operating, OperatingFacet
-from fransys_model.vocab.enums import Current, FunctionKind
+from fransys_model.vocab.enums import FunctionKind
 from fransys_model.vocab.templates import FunctionTemplate
+lazy from fransys_model.vocab.core import Port
 
 _LOAD = Plant.function_id("D", "f")
 
@@ -27,7 +28,7 @@ def _dc_plant() -> Plant:
     return plant
 
 
-def _source(plant: Plant, key: str = "S", limit: str = "186") -> tuple:
+def _source(plant: Plant, key: str = "S", limit: str = "186") -> Ports:
     return device(plant, key, limit=limit, kind=FunctionKind.SUPPLY, rails=[["DC+"], ["DC-"]])
 
 
@@ -37,7 +38,7 @@ def _load(
     *,
     nominal: str | None = "2.5",
     key: str = "D",
-) -> tuple:
+) -> tuple[Id[Port], ...]:
     """Item `key`: a load function `f` with the ports `names`, drawing `nominal` A."""
     part = plant.part(key)
     template = FunctionTemplate(
@@ -49,14 +50,10 @@ def _load(
     )
     plant.add(template)
     if nominal is not None:
-        operating = Operating(nominal_current_a=Decimal(nominal))
-        facet = OperatingFacet(
-            id=make_id(OperatingFacet, (key,)), key=(key,), subject=template.id, operating=operating
-        )
+        operating = Operating(nominal_current=Unit.A(nominal))
+        facet = OperatingFacet(id=make_id(OperatingFacet, (key,)), key=(key,), subject=template.id, operating=operating)
         plant.add(facet)
-    function = plant.function(
-        plant.item(key, part=part), "f", template=template.id, kind=FunctionKind.LOAD
-    )
+    function = plant.function(plant.item(key, part=part), "f", template=template.id, kind=FunctionKind.LOAD)
     return tuple(plant.port(function, name) for name in names)
 
 
@@ -66,9 +63,7 @@ def test_a_three_port_load_has_one_limit_per_phase_with_its_own_fuse() -> None:
     neutral = hub(plant, "N")
     ports = _load(plant, ("1", "2", "3"))
     for number, phase in enumerate(("L1", "L2", "L3")):
-        source = device(
-            plant, f"S{number}", limit_ac="100", kind=FunctionKind.SUPPLY, rails=[[phase], ["N"]]
-        )
+        source = device(plant, f"S{number}", limit_ac="100", kind=FunctionKind.SUPPLY, rails=[[phase], ["N"]])
         protection = fuse(plant, f"F{number}", None, amps_ac=str(4 + 2 * number))
         wire(plant, source[0], protection[0])
         wire(plant, protection[1], ports[number])
@@ -78,9 +73,7 @@ def test_a_three_port_load_has_one_limit_per_phase_with_its_own_fuse() -> None:
     assert {limit.port: limit.bound.by for limit in limits if limit.bound} == {
         ports[number]: Plant.function_id(f"F{number}", "f") for number in range(3)
     }
-    assert {limit.port: limit.bound.value for limit in limits if limit.bound} == {
-        ports[number]: Decimal(4 + 2 * number) for number in range(3)
-    }
+    assert {limit.port: limit.bound.value for limit in limits if limit.bound} == {ports[number]: Decimal(4 + 2 * number) for number in range(3)}
     assert {limit.kind for limit in limits} == {Current.AC}
 
 
@@ -96,14 +89,12 @@ def test_a_load_that_states_a_rating_is_a_position_with_its_chain_bound() -> Non
             id=make_id(OperatingFacet, ("Dn",)),
             key=("Dn",),
             subject=make_id(FunctionTemplate, ("D", "f")),
-            operating=Operating(nominal_current_a=Decimal("2.5")),
+            operating=Operating(nominal_current=Unit.A("2.5")),
         )
     )
     model = plant.model()
     (limit,) = load_limits(model)
-    (position,) = (
-        p for chain in chains_unordered(model) for p in chain.positions if p.functions == (_LOAD,)
-    )
+    (position,) = (p for chain in chains_unordered(model) for p in chain.positions if p.functions == (_LOAD,))
     assert limit.port is None
     assert limit.draw_a == Decimal("2.5")
     assert limit.bound is not None

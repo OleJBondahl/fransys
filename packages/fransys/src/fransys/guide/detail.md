@@ -10,35 +10,25 @@ is a `fr.Detail` handle, as `d.layout` is a `fr.Layout`.
 
 | call | only for |
 |---|---|
-| `d.detail.wire(a, b, wire=...)` | two named pins off any path, such as a signal pair; one signal daisy-chained, `d.detail.wire(a, b, c)`; a hop whose printed wire differs from its row |
-| `d.detail.star(src, targets, wire=...)` | one point wired to many, one wire each; `d.detail.wire(src, *targets)` chains them instead |
 | `X1[3]`, `.inner`, `.outer` | a terminal whose number or side is fixed: a published pinout, or several wires on one terminal |
 | `d.pair(a, w1, b)` | a signal pair through a cable, pin for pin, with no line or load side; it is a verb, not a detail |
 | `W1.core(BN, a, b)` | a core whose colour or number a termination plan fixes |
-| `d.detail.net(name, *pins)` | a named net over pins; wires or one board must realise it; its name prints in the connector list |
-| `d.detail.busbar(a, b)`, `d.detail.rail_bond(a, b)` | a rack's internal power jumper; terminals bonded through their mounting rail |
+| `d.detail.busbar(a, b)` | a rack's internal power jumper |
 
 A real circuit that no core call and no row here can write is a gap in Fransys. Report it with its
 smallest shape.
 
-## d.detail.wire
+## Bare pins in a series
 
-`d.detail.wire(a, b, wire=(BU, 0.75), label=, n=)` draws one wire. `wire=` takes the shapes `d.series` takes: a size, a table of rows or a
-`(colour, size)`, but not a tuple per pole. A size or a table takes the row of the net. More than two
-pins draw a daisy chain, one wire per neighbouring pair. `label="L1"` prints a label on the wire.
-`n=2` draws a second wire in parallel between the same two pins. A strip or a run as a pin stands
-for its next free terminal, on the inner side.
-
-### One point to many
-
-`d.detail.star(src, targets, wire=...)` draws one wire from `src` to each target in the tuple or list
-`targets`, and none between targets. A strip as `src` stands for one terminal, shared by all
-targets. `wire=` reads as it does for `d.detail.wire`.
+`d.series(a, b, wire=(BU, 0.75))` draws one wire between two named pins. `wire=` takes a size, a table of rows,
+a `(colour, size)`, or one `(colour, size)` per pole in a tuple. A size or a table takes the row of the net.
+More than two pins draw a chain, one wire per neighbouring pair, and a pin stands anywhere in a series. A strip
+or a run as a pin stands for its next free terminal.
 
 ### A wire with no row
 
 A bare number is always a size. A row's value in a table is a colour or a `(colour, size)`, never a
-bare number. When `d.series` or `d.detail.wire` cannot give a wire its row as written, the row is
+bare number. When `d.series` cannot give a wire its row as written, the row is
 read at build end from the rails its net carries. Only rails of the wire's own unit and the units
 below it count. A rail never crosses a unit boundary from its container.
 
@@ -55,9 +45,8 @@ d = fr.design("demo_parts")
 x1 = d.terminal_strip("X1", "DEMO-TB-2.5", 4)
 h1 = d.device("H1", "DEMO-LAMP-24")
 h2 = d.device("H2", "DEMO-LAMP-24")
-d.detail.wire(x1[1], h1[1], wire=(BU, 0.75), label="S1")
-d.detail.wire(x1[1], h1[1], wire=(BU, 0.75), n=2)
-d.detail.wire(x1[2], h1[2], h2[2], wire=(BU, 0.75))
+d.series(x1[1], h1[1], wire=(BU, 0.75))
+d.series(x1[2], h1[2], h2[2], wire=(BU, 0.75))
 ```
 
 ### Equipment others supply
@@ -72,7 +61,7 @@ d = fr.design("demo_parts")
 x8 = d.terminal_strip("X8", None, 4, external=True)
 q8 = d.device("Q8", None, external=True, pins=("L1", "L2", "L3", "N", "PE"))
 d.ac_supply("S", 400, q8["L1"], q8["L2"], q8["L3"], n=q8["N"])
-d.detail.wire(x8[1].outer, d.device("M1", "DEMO-MOTOR-4KW")["U"], wire=(BK, 1.5))
+d.series(x8[1].outer, d.device("M1", "DEMO-MOTOR-4KW")["U"], wire=(BK, 1.5))
 ```
 
 ### Fixed terminals
@@ -88,8 +77,8 @@ d = fr.design("demo_parts")
 x1 = d.terminal_strip("X1", "DEMO-TB-2.5", 3)
 h1 = d.device("H1", "DEMO-LAMP-24")
 with d.function("FEED", "Lamp feed"):
-    d.detail.wire(x1[1], h1[1], wire=(BU, 0.75))
-d.detail.wire(x1[2].outer, h1[2], wire=(BU, 0.75))
+    d.series(x1[1], h1[1], wire=(BU, 0.75))
+d.series(x1[2].outer, h1[2], wire=(BU, 0.75))
 ```
 
 ### One wire to a PE terminal
@@ -104,48 +93,21 @@ d = fr.design("demo_parts")
 x1 = d.terminal_strip("X1", "DEMO-TB-2.5", pe="DEMO-TB-PE-2.5")
 pe = x1.run("PE", 2, bridged=True)
 m1 = d.device("M1", "DEMO-MOTOR-4KW")
-d.detail.wire(m1.motor["PE"], pe[1], wire=(GNYE, 2.5))
+d.series(m1.motor["PE"], pe[1], wire=(GNYE, 2.5))
 d.earth(m1.motor["PE"], pe[1])
 ```
 
-### A PE bar's screws
+## d.detail.busbar
 
-A bar's function takes its next free screw (`series.md`, Earth pins). One wire to a screw is a detail.
-
-```python
-import fransys as fr
-from fransys.colours import GNYE
-
-d = fr.design("demo_parts")
-pe1 = d.device("PE1", "DEMO-PEBAR-20")
-m1 = d.device("M1", "DEMO-MOTOR-4KW")
-w2 = d.cable("W2", "DEMO-CBL-2X2X0.75-SP")
-d.detail.wire(m1.motor["PE"], pe1.pe, wire=(GNYE, 2.5))  # screw 1
-w2.core(5, pe1.pe)  # the one-ended screen, screw 2
-```
-
-## d.detail.net, d.detail.busbar, d.detail.rail_bond
-
-`d.detail.net(name, *pins, kind=)` says the pins belong to one net. Wires or one board must realise it;
-otherwise NET_UNREALISED warns. `kind` is `fr.CONTROL`
-(the default), `fr.SIGNAL` or `fr.GENERIC`. It does not make a `PE` or supply net: those have
-`d.earth` and the supply calls.
-
-The name prints in the connector list, and on drawings from the new engine. A net stays inside one
-unit. To join across a unit boundary use `d.detail.wire(a, b, wire=...)`.
-
-`d.detail.busbar(a, b)` joins two pins by a rack's internal power jumper. `d.detail.rail_bond(a, b)`
-joins two terminals bonded through their mounting rail. Neither has a wire-list row, colour or
-gauge, and both close the net like a conductor.
+`d.detail.busbar(a, b)` joins two pins by a rack's internal power jumper. It has no wire-list row, colour or
+gauge, and it closes the net like a conductor.
 
 ```python
 import fransys as fr
 
 d = fr.design("demo_parts")
 x1 = d.terminal_strip("X1", "DEMO-TB-2.5", 4)
-d.detail.net("BUS", x1[1], x1[2], kind=fr.SIGNAL)
 d.detail.busbar(x1[3], x1[4])
-d.detail.rail_bond(x1[1], x1[3])
 ```
 
 ## W1.core
@@ -210,19 +172,19 @@ xm = d.terminal_strip("X2", "DEMO-TB-2.5", 6)
 d.series(ac, k1.main, xm, wire=WIRE)
 for pole, delta_load in enumerate((6, 4, 5)):  # K3 pole 1 joins U1-W2, 2 V1-U2, 3 W1-V2
     line, load = str(2 * pole + 1), str(2 * pole + 2)
-    d.detail.wire(xm[pole + 1], k3.main[line], wire=WIRE)
-    d.detail.wire(k3.main[load], xm[delta_load], wire=WIRE)
-    d.detail.wire(xm[pole + 4], k2.main[line], wire=WIRE)
-d.detail.wire(k2.main["2"], k2.main["4"], k2.main["6"], wire=WIRE)
+    d.series(xm[pole + 1], k3.main[line], wire=WIRE)
+    d.series(k3.main[load], xm[delta_load], wire=WIRE)
+    d.series(xm[pole + 4], k2.main[line], wire=WIRE)
+d.series(k2.main["2"], k2.main["4"], k2.main["6"], wire=WIRE)
 ```
 
-The winding ends stay detail for two reasons. Each end is a fixed terminal, since the motor
+The winding ends are written as pin series for two reasons. Each end is a fixed terminal, since the motor
 plate fixes which end is U2. The star bridge joins three load-side pins that no path pairs.
 
 ## Reversing starter
 
 `d.parallel` of two contactors shares the poles in order, so it makes no phase swap. Until an option
-for a swap lands, write the reverse contactor's crossing with `d.detail.wire`: K2's line poles 2
+for a swap lands, write the reverse contactor's crossing with a pin series: K2's line poles 2
 and 3 take L3 and L2.
 
 ```python
@@ -237,18 +199,20 @@ k1, k2 = (d.device(tag, "DEMO-CTR-3P-24") for tag in ("K1", "K2"))
 xm = d.terminal_strip("X2", "DEMO-TB-2.5", 3)
 d.series(ac, k1.main, xm, wire=WIRE)
 for line, crossed in (("1", "1"), ("3", "5"), ("5", "3")):
-    d.detail.wire(k1.main[line], k2.main[crossed], wire=WIRE)
+    d.series(k1.main[line], k2.main[crossed], wire=WIRE)
 for pole, terminal in enumerate((1, 2, 3)):
-    d.detail.wire(k2.main[str(2 * pole + 2)], xm[terminal], wire=WIRE)
+    d.series(k2.main[str(2 * pole + 2)], xm[terminal], wire=WIRE)
 ```
 
 ## Flat wiring and fixed terminals on a page
 
 Two drawing effects need a detail call to show, and `drawing.md` states the rules. Point-to-point
-`d.detail.wire` hops with no declared supply give layout nets only, and one large connected circuit
+`d.series` hops of bare pins with no declared supply give layout nets only, and one large connected circuit
 crowds a page. Declare the supply and write each path as a series. Check the result through
-`fr.readability` and the listings, not by position. A lamp wired from one fixed
-terminal of a shared run adds no marker, and neither does a terminal taken in each block.
+`fr.readability` and the listings, not by position. A terminal point takes only the conductors its part
+states, so two lamps share one terminal of a two-conductor part (`DEMO-TB-2.5-TWIN`). Both layouts, two lamps to a terminal or one each, draw 4 markers, all on the 0 V return.
+The 24 V conductors are drawn whole.
+The drawing leaves out a bridge: each terminal draws its own wires, and the terminal table shows the bridge.
 
 ```python
 from pathlib import Path
@@ -281,39 +245,33 @@ def built(body):
 
 
 def markers(own):
-    """Count the link markers of 30 lamp blocks fed from one 24 V run."""
+    """Count the link markers of 30 lamp blocks fed from one 24 V run, two lamps to a terminal or one each."""
 
     def body(c):
         psu = c.device("G1", "DEMO-PSU-24")
-        run = c.terminal_strip("X1", "DEMO-TB-2.5").run("24V", 40, bridged=True)
-        c.detail.wire(psu.output["+"], run[1], wire=(BU, 0.75))
+        run = c.terminal_strip("X1", "DEMO-TB-2.5-TWIN").run("24V", 40, bridged=True)
+        c.series(psu.output["+"], run[1], wire=(BU, 0.75))
         for i in range(1, 31):
             with c.function(f"F{i}", f"Lamp {i}"):
                 lamp = c.device(f"H{i}", "DEMO-LAMP-24")
-                c.detail.wire(run[i + 1] if own else run[1], lamp.lamp["1"], wire=(BU, 0.75))
-            c.detail.wire(lamp.lamp["2"], psu.output["-"], wire=(BU, 0.75))
+                c.series(run[i + 1] if own else run[2 + (i - 1) // 2], lamp.lamp["1"], wire=(BU, 0.75))
+            c.series(lamp.lamp["2"], psu.output["-"], wire=(BU, 0.75))
 
     return len(built(body).model.tables["layout.link_marker"])
 
 
-assert markers(own=True) == markers(own=False)
+assert markers(own=False) == 4
+assert markers(own=True) == 4
 ```
 
 ## Layout profile
 
-`d.layout` advises the drawing and connects nothing: `chain`, `keep_together`, `break_before`, `order`,
-`symbol`, `draw_in`, `side`, `pins_below`, `sheet`, `page_title` and `profile`. Add it last, only where the structure
-leaves the drawing a choice. `d.layout.side(u1.bus_in, fr.ABOVE)` puts a unit's interface above its
-outline, and `fr.BELOW` below it. An interface with no harness line ignores it.
-`d.layout.pins_below(a1)` draws every pin of the generic box `a1` on its south side, below the body; a
-device with fewer than two ports gets a `PINS_BELOW_NOT_A_BOX` warning.
-`d.layout.page_title(x1, "Field terminals")` names the pages drawing a block, function, device or nested unit.
+`d.layout` advises the drawing and connects nothing: `chain`, `order`,
+`sheet` and `profile`. Add it last, only where the structure
+leaves the drawing a choice.
+A net from a pin on one half of a box to a column hung on the other half draws as a tag pair, not a wire round the box. It gives one `TAG_ACROSS_BODY` warning per box. Wire the parts to the box pins in one path with `d.series`.
 
 The profile keywords, and the rule that a unit sets its own, are in [`layout-numbers.md`](layout-numbers.md#profile-keywords).
-
-`d.layout.chain(r1.lamp, k3.main, f3.element, beside=k1.main)` draws the chain beside the element
-`k1.main`, joined by short unmarked horizontals. Wire first: the chain joins the element by each end
-net they share, one or two, else `AuthorError` names them.
 
 ```python
 import fransys as fr
@@ -325,15 +283,4 @@ with d.function("LAMPS", "Lamps") as lamps:
     d.device("H1", "DEMO-LAMP-24")
 d.layout.order(run, lamps)
 d.layout.profile(hide_unused_pins=True)
-```
-
-A 16-channel output card draws all its channels below its body:
-
-```python
-import fransys as fr
-
-d = fr.design("demo_parts")
-with d.function("OUTPUTS", "PLC outputs"):
-    card = d.device("A1", "DEMO-PLC-DO-16")
-d.layout.pins_below(card)
 ```

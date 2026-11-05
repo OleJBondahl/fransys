@@ -2,7 +2,6 @@
 
 Loaded by file path (`importlib.util.spec_from_file_
 location`), since the script is not a package module. There is no real `ceilings.toml` read
-anywhere in this file; every case builds its own small TOML text or in-memory mapping by hand.
 """
 
 from __future__ import annotations
@@ -13,9 +12,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-_spec = importlib.util.spec_from_file_location(
-    "fransys_lean_ceilings", ROOT / "scripts" / "lean_ceilings.py"
-)
+_spec = importlib.util.spec_from_file_location("fransys_lean_ceilings", ROOT / "scripts" / "lean_ceilings.py")
 if _spec is None or _spec.loader is None:
     msg = "could not load scripts/lean_ceilings.py"
     raise ImportError(msg)
@@ -30,17 +27,13 @@ _spec.loader.exec_module(lean_ceilings)
 def test_check_unlisted_site_over_limit_fails():
     """A site over its limit, unlisted, fails (`check`, `listed=False`)."""
     violations = lean_ceilings.check({"pkg/a.py::f": 20}, ceilings={}, limit=15)
-    assert violations == (
-        lean_ceilings.Violation(site="pkg/a.py::f", measured=20, limit=15, listed=False),
-    )
+    assert violations == (lean_ceilings.Violation(site="pkg/a.py::f", measured=20, limit=15, listed=False),)
 
 
 def test_check_listed_site_grown_over_ceiling_fails():
     """A listed site grown by one over its own ceiling fails (`check`, `listed=True`)."""
     violations = lean_ceilings.check({"pkg/a.py::f": 21}, ceilings={"pkg/a.py::f": 20}, limit=15)
-    assert violations == (
-        lean_ceilings.Violation(site="pkg/a.py::f", measured=21, limit=20, listed=True),
-    )
+    assert violations == (lean_ceilings.Violation(site="pkg/a.py::f", measured=21, limit=20, listed=True),)
 
 
 def test_lower_never_raises_and_check_still_fails():
@@ -51,9 +44,7 @@ def test_lower_never_raises_and_check_still_fails():
     ceilings = {"pkg/a.py::f": 20}
     lowered = lean_ceilings.lower(measured, ceilings)
     assert lowered == {"pkg/a.py::f": 20}
-    assert lean_ceilings.check(measured, lowered, limit=15) == (
-        lean_ceilings.Violation(site="pkg/a.py::f", measured=25, limit=20, listed=True),
-    )
+    assert lean_ceilings.check(measured, lowered, limit=15) == (lean_ceilings.Violation(site="pkg/a.py::f", measured=25, limit=20, listed=True),)
 
 
 def test_lower_deletes_within_limit_and_shrinks_still_over():
@@ -158,18 +149,14 @@ statements = 15
 
     renamed_statements = dict(original.sections["statements"])
     renamed_statements["pkg/a.py::f2"] = renamed_statements.pop("pkg/a.py::f")
-    renamed = dataclasses.replace(
-        original, sections={**original.sections, "statements": renamed_statements}
-    )
+    renamed = dataclasses.replace(original, sections={**original.sections, "statements": renamed_statements})
     after_rename = lean_ceilings.render_ceilings(renamed)
     assert _table_block(after_rename, "[nested_defs]") == before_nested_defs
     assert _table_block(after_rename, "[limits]") == before_limits
 
     deleted_statements = dict(original.sections["statements"])
     del deleted_statements["pkg/c.py::h"]
-    deleted = dataclasses.replace(
-        original, sections={**original.sections, "statements": deleted_statements}
-    )
+    deleted = dataclasses.replace(original, sections={**original.sections, "statements": deleted_statements})
     after_delete = lean_ceilings.render_ceilings(deleted)
     assert _table_block(after_delete, "[nested_defs]") == before_nested_defs
     assert _table_block(after_delete, "[limits]") == before_limits
@@ -177,9 +164,7 @@ statements = 15
 
 def test_render_ceilings_omits_empty_section():
     """An empty section's header is left out entirely, never `[section]` with nothing under it."""
-    file = lean_ceilings.CeilingsFile(
-        limits={"statements": 15}, sections={"surface_docstring_lines": {}}, exempt={}
-    )
+    file = lean_ceilings.CeilingsFile(limits={"statements": 15}, sections={"surface_docstring_lines": {}}, exempt={})
     rendered = lean_ceilings.render_ceilings(file)
     assert "[surface_docstring_lines]" not in rendered
     assert "[exempt]" not in rendered
@@ -200,11 +185,7 @@ def test_is_exempt_under_matches_subtree_not_siblings():
     """A directory-scoped exempt entry covers every file under it (src and tests alike), not a
     sibling package, and `check`'s exact matching stays untouched by the same exempt dict.
     """
-    exempt = {
-        "packages/fransys-layout": (
-            "layout noqa/ty:ignore backfill waits for layout redesign step 5 (LG1, 2026-09-27)"
-        )
-    }
+    exempt = {"packages/fransys-layout": ("layout noqa/ty:ignore backfill waits for layout redesign step 5 (LG1, 2026-09-27)")}
 
     assert lean_ceilings.is_exempt_under("packages/fransys-layout/src/x.py::f", exempt)
     assert lean_ceilings.is_exempt_under("packages/fransys-layout/tests/test_x.py::f", exempt)

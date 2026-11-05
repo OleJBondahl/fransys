@@ -7,20 +7,22 @@ need the intersection of the two. This test keeps that from happening unseen.
 import tomllib
 from decimal import Decimal
 from importlib.resources import files
+from typing import Any
 
 import pytest
 
 from fransys_model.derive import sheet_frame
 from fransys_model.kernel import make_id
-from fransys_model.layout import SheetFormat, frame_form
+from fransys_model.layout import FrameForm, SheetFormat
 
 PRESETS = tomllib.loads(files("fransys").joinpath("settings.toml").read_text())["paper"]["formats"]
 
 
-_FORM = frame_form(row_labels="letters", column_labels="numbers", row_order="top_down")
+_KEY = ("build", "frame")
+_FORM = FrameForm(id=make_id(FrameForm, _KEY), key=_KEY, row_labels="letters", column_labels="numbers", row_order="top_down")
 
 
-def _sheet(name: str, table: dict) -> SheetFormat:
+def _sheet(name: str, table: dict[Any, Any]) -> SheetFormat:
     fields = {k: table[k] for k in SheetFormat.__dataclass_fields__ if k in table}
     key = ("test", "paper", name)
     return SheetFormat(id=make_id(SheetFormat, key), key=key, module_mm=Decimal("2.5"), **fields)

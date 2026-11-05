@@ -1,17 +1,6 @@
-"""Field case: a series that passes a unit's strip takes a terminal wired inside, not a spare.
-
-The engineering shape: an io-board unit has a 4-terminal strip X1. Terminals 1 and 2 are the
-interface; the board wires them through a lamp (`series(x1, h1.lamp, x1)`, which lands terminal
-1 on its outer port and terminal 2 on its inner). Terminals 3 and 4 are declared unused. The
-container feeds the strip with `d.series(dc.plus, io.x1)` and `d.series(io.x1, dc.minus)`.
-
-The bug: the container skipped terminal 1, because its outer port already held the board's own
-wire, and took terminal 3, a declared spare: `BOUNDARY_UNCONNECTED` on terminal 1 (ERROR) and
-`UNUSED_CONTRADICTED` on terminal 3 (WARNING).
-
-Rule (author-0040): a strip passed across a unit boundary takes, in order, a terminal whose inside
-is wired and whose outside is free, and never one declared unused.
-"""
+"""Field case: an io-board unit with a 4-terminal strip whose terminals 1 and 2 are wired through a lamp, and 3 and 4 declared unused.
+The bug: the container skipped terminal 1 and took spare terminal 3, giving BOUNDARY_UNCONNECTED (ERROR) on 1 and UNUSED_CONTRADICTED on 3.
+Fixed by author-0040, a strip passed across a unit boundary takes the first terminal wired inside and free outside, never a spare."""
 
 from functools import cache
 from typing import NamedTuple
@@ -28,7 +17,7 @@ class _Io(NamedTuple):
 
 @fr.unit("io-board", revision=1, interface_version=1, date="2026-01-01", text="First", by="XX")
 def _io_board(c: fr.Design) -> _Io:
-    x1 = c.terminal_strip("X1", "DEMO-TB-2.5", 4, interface=(1, 2), unused=(3, 4))
+    x1 = c.terminal_strip("X1", "DEMO-TB-2.5-TWIN", 4, interface=(1, 2), unused=(3, 4))
     h1 = c.device("H1", "DEMO-LAMP-24")
     c.series(x1, h1.lamp, x1, wire=CTRL)
     return _Io(x1)

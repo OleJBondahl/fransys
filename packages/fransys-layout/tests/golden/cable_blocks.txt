@@ -1,153 +1,146 @@
 == demo_cabinet
 W1 [absolute]
-  CableBlock subject=W1 unit=None width=64 height=96 pitch=16 sheet_format=None
-  CableBox item=W1 kind=BoxKind.CABLE external=False x=0 y=64 width=64 height=32
-  EndBox item=X1 row=BlockRow.TOP style=EndStyle.SOLID x=0 y=16 width=32 height=16 pins=[(0,X1/terminal/1/fn/terminal/port/external,8,16,True) (1,X1/terminal/2/fn/terminal/port/external,24,16,True)]
-  CoreWire conductor=W1/core/1 run_a=[(0,24,32) (1,24,40) (2,8,40)] run_b=[(0,8,32) (1,8,40)] text_x=16 text_y=48 stub_a=False stub_b=False
-== demo_harness
-W1 [absolute]
-  CableBlock subject=W1 unit=None width=48 height=144 pitch=16 sheet_format=None
-  CableBox item=W1 kind=BoxKind.CABLE external=False x=8 y=48 width=32 height=48
-  EndBox item=X2 row=BlockRow.BOTTOM style=EndStyle.SOLID x=8 y=112 width=32 height=16 pins=[(0,X2/fn/x1/port/2,16,16,True) (1,X2/fn/x1/port/1,32,16,False)]
-  EndBox item=X3 row=BlockRow.TOP style=EndStyle.SOLID x=8 y=16 width=32 height=16 pins=[(0,X3/fn/x1/port/2,16,16,True) (1,X3/fn/x1/port/1,32,16,False)]
-  CoreWire conductor=W1/core/1 run_a=[(0,16,32) (1,16,48)] run_b=[(0,16,112) (1,16,96)] text_x=16 text_y=80 stub_a=False stub_b=False
+  PlacedBlock subject=W1 unit=None width=64 height=96 pitch=16 harness=None
+    boxes: PlacedCable(cable=W1,external=False,box=Box(x=0,y=64,width=64,height=32))
+    ends: PlacedEnd(item=X1,top=True,dashed=False,blank=False,x=0,y=16,width=32,height=16,cells=[PlacedCell(port=X1/terminal/1/fn/terminal/port/external,x=8,width=16,landed=True,landings=[CorePlace(core=W1/core/1,x=8)]) PlacedCell(port=X1/terminal/2/fn/terminal/port/external,x=24,width=16,landed=True,landings=[CorePlace(core=W1/core/1,x=24)])])
+    wires: PlacedWire(conductor=W1/core/1,run_a=[Point(x=8,y=32) Point(x=8,y=40) Point(x=24,y=40)],run_b=[Point(x=24,y=32) Point(x=24,y=40)],text_x=16,text_y=48,open=False)
 == flat
-W3 [absolute]
-  CableBlock subject=W3 unit=None width=48 height=144 pitch=16 sheet_format=None
-  CableBox item=W3 kind=BoxKind.CABLE external=False x=0 y=48 width=48 height=48
-  EndBox item=X2 row=BlockRow.TOP style=EndStyle.SOLID x=0 y=16 width=48 height=16 pins=[(0,X2/terminal/3/fn/terminal/port/external,8,16,True) (1,X2/terminal/1/fn/terminal/port/external,24,16,True) (2,X2/terminal/2/fn/terminal/port/external,40,16,True)]
-  EndBox item=M2 row=BlockRow.BOTTOM style=EndStyle.SOLID x=0 y=112 width=48 height=16 pins=[(0,M2/fn/motor/port/U,8,16,True) (1,M2/fn/motor/port/V,24,16,True) (2,M2/fn/motor/port/W,40,16,True)]
-  CoreWire conductor=W3/core/2 run_a=[(0,24,32) (1,24,48)] run_b=[(0,24,112) (1,24,96)] text_x=24 text_y=80 stub_a=False stub_b=False
-  CoreWire conductor=W3/core/1 run_a=[(0,8,32) (1,8,48)] run_b=[(0,8,112) (1,8,96)] text_x=8 text_y=80 stub_a=False stub_b=False
-  CoreWire conductor=W3/core/3 run_a=[(0,40,32) (1,40,48)] run_b=[(0,40,112) (1,40,96)] text_x=40 text_y=80 stub_a=False stub_b=False
 W1 [absolute]
-  CableBlock subject=W1 unit=None width=128 height=144 pitch=32 sheet_format=None
-  CableBox item=W1 kind=BoxKind.CABLE external=False x=0 y=48 width=128 height=48
-  EndBox item=M1 row=BlockRow.BOTTOM style=EndStyle.SOLID x=0 y=112 width=128 height=16 pins=[(0,M1/fn/motor/port/U,16,32,True) (1,M1/fn/motor/port/V,48,32,True) (2,M1/fn/motor/port/W,80,32,True) (3,M1/fn/motor/port/PE,112,32,True)]
-  EndBox item=X1 row=BlockRow.TOP style=EndStyle.SOLID x=0 y=16 width=128 height=16 pins=[(0,X1/terminal/1/fn/terminal/port/external,16,32,True) (1,X1/terminal/2/fn/terminal/port/external,48,32,True) (2,X1/terminal/3/fn/terminal/port/external,80,32,True) (3,X1/terminal/4/fn/terminal/port/external,112,32,True)]
-  CoreWire conductor=W1/core/3 run_a=[(0,80,32) (1,80,48)] run_b=[(0,80,112) (1,80,96)] text_x=80 text_y=80 stub_a=False stub_b=False
-  CoreWire conductor=W1/core/1 run_a=[(0,16,32) (1,16,48)] run_b=[(0,16,112) (1,16,96)] text_x=16 text_y=80 stub_a=False stub_b=False
-  CoreWire conductor=W1/core/4 run_a=[(0,112,32) (1,112,48)] run_b=[(0,112,112) (1,112,96)] text_x=112 text_y=80 stub_a=False stub_b=False
-  CoreWire conductor=W1/core/2 run_a=[(0,48,32) (1,48,48)] run_b=[(0,48,112) (1,48,96)] text_x=48 text_y=80 stub_a=False stub_b=False
+  PlacedBlock subject=W1 unit=None width=128 height=144 pitch=32 harness=None
+    boxes: PlacedCable(cable=W1,external=False,box=Box(x=0,y=48,width=128,height=48))
+    ends: PlacedEnd(item=X1,top=True,dashed=False,blank=False,x=0,y=16,width=128,height=16,cells=[PlacedCell(port=X1/terminal/1/fn/terminal/port/external,x=16,width=32,landed=True,landings=[CorePlace(core=W1/core/1,x=16)]) PlacedCell(port=X1/terminal/2/fn/terminal/port/external,x=48,width=32,landed=True,landings=[CorePlace(core=W1/core/2,x=48)]) PlacedCell(port=X1/terminal/3/fn/terminal/port/external,x=80,width=32,landed=True,landings=[CorePlace(core=W1/core/3,x=80)]) PlacedCell(port=X1/terminal/4/fn/terminal/port/external,x=112,width=32,landed=True,landings=[CorePlace(core=W1/core/4,x=112)])])
+    ends: PlacedEnd(item=M1,top=False,dashed=False,blank=False,x=0,y=112,width=128,height=16,cells=[PlacedCell(port=M1/fn/motor/port/U,x=16,width=32,landed=True,landings=[CorePlace(core=W1/core/1,x=16)]) PlacedCell(port=M1/fn/motor/port/V,x=48,width=32,landed=True,landings=[CorePlace(core=W1/core/2,x=48)]) PlacedCell(port=M1/fn/motor/port/W,x=80,width=32,landed=True,landings=[CorePlace(core=W1/core/3,x=80)]) PlacedCell(port=M1/fn/motor/port/PE,x=112,width=32,landed=True,landings=[CorePlace(core=W1/core/4,x=112)])])
+    wires: PlacedWire(conductor=W1/core/1,run_a=[Point(x=16,y=32) Point(x=16,y=48)],run_b=[Point(x=16,y=112) Point(x=16,y=96)],text_x=16,text_y=80,open=False)
+    wires: PlacedWire(conductor=W1/core/2,run_a=[Point(x=48,y=32) Point(x=48,y=48)],run_b=[Point(x=48,y=112) Point(x=48,y=96)],text_x=48,text_y=80,open=False)
+    wires: PlacedWire(conductor=W1/core/3,run_a=[Point(x=80,y=32) Point(x=80,y=48)],run_b=[Point(x=80,y=112) Point(x=80,y=96)],text_x=80,text_y=80,open=False)
+    wires: PlacedWire(conductor=W1/core/4,run_a=[Point(x=112,y=32) Point(x=112,y=48)],run_b=[Point(x=112,y=112) Point(x=112,y=96)],text_x=112,text_y=80,open=False)
 W2 [absolute]
-  CableBlock subject=W2 unit=None width=32 height=96 pitch=16 sheet_format=None
-  CableBox item=W2 kind=BoxKind.CABLE external=False x=0 y=64 width=32 height=32
-  EndBox item=X1 row=BlockRow.TOP style=EndStyle.SOLID x=0 y=16 width=32 height=16 pins=[(0,X1/terminal/5/fn/terminal/port/external,8,16,True) (1,X1/terminal/6/fn/terminal/port/external,24,16,True)]
-  CoreWire conductor=W2/core/1 run_a=[(0,8,32) (1,8,40) (2,24,40)] run_b=[(0,24,32) (1,24,40)] text_x=16 text_y=48 stub_a=False stub_b=False
+  PlacedBlock subject=W2 unit=None width=32 height=96 pitch=16 harness=None
+    boxes: PlacedCable(cable=W2,external=False,box=Box(x=0,y=64,width=32,height=32))
+    ends: PlacedEnd(item=X1,top=True,dashed=False,blank=False,x=0,y=16,width=32,height=16,cells=[PlacedCell(port=X1/terminal/5/fn/terminal/port/external,x=8,width=16,landed=True,landings=[CorePlace(core=W2/core/1,x=8)]) PlacedCell(port=X1/terminal/6/fn/terminal/port/external,x=24,width=16,landed=True,landings=[CorePlace(core=W2/core/1,x=24)])])
+    wires: PlacedWire(conductor=W2/core/1,run_a=[Point(x=8,y=32) Point(x=8,y=40) Point(x=24,y=40)],run_b=[Point(x=24,y=32) Point(x=24,y=40)],text_x=16,text_y=48,open=False)
+W3 [absolute]
+  PlacedBlock subject=W3 unit=None width=48 height=144 pitch=16 harness=None
+    boxes: PlacedCable(cable=W3,external=False,box=Box(x=0,y=48,width=48,height=48))
+    ends: PlacedEnd(item=X2,top=True,dashed=False,blank=False,x=0,y=16,width=48,height=16,cells=[PlacedCell(port=X2/terminal/3/fn/terminal/port/external,x=8,width=16,landed=True,landings=[CorePlace(core=W3/core/1,x=8)]) PlacedCell(port=X2/terminal/1/fn/terminal/port/external,x=24,width=16,landed=True,landings=[CorePlace(core=W3/core/2,x=24)]) PlacedCell(port=X2/terminal/2/fn/terminal/port/external,x=40,width=16,landed=True,landings=[CorePlace(core=W3/core/3,x=40)])])
+    ends: PlacedEnd(item=M2,top=False,dashed=False,blank=False,x=0,y=112,width=48,height=16,cells=[PlacedCell(port=M2/fn/motor/port/U,x=8,width=16,landed=True,landings=[CorePlace(core=W3/core/1,x=8)]) PlacedCell(port=M2/fn/motor/port/V,x=24,width=16,landed=True,landings=[CorePlace(core=W3/core/2,x=24)]) PlacedCell(port=M2/fn/motor/port/W,x=40,width=16,landed=True,landings=[CorePlace(core=W3/core/3,x=40)])])
+    wires: PlacedWire(conductor=W3/core/1,run_a=[Point(x=8,y=32) Point(x=8,y=48)],run_b=[Point(x=8,y=112) Point(x=8,y=96)],text_x=8,text_y=80,open=False)
+    wires: PlacedWire(conductor=W3/core/2,run_a=[Point(x=24,y=32) Point(x=24,y=48)],run_b=[Point(x=24,y=112) Point(x=24,y=96)],text_x=24,text_y=80,open=False)
+    wires: PlacedWire(conductor=W3/core/3,run_a=[Point(x=40,y=32) Point(x=40,y=48)],run_b=[Point(x=40,y=112) Point(x=40,y=96)],text_x=40,text_y=80,open=False)
 == unit
 cab/w [absolute]
-  CableBlock subject=cab/w unit=None width=80 height=144 pitch=16 sheet_format=None
-  CableBox item=cab/w kind=BoxKind.CABLE external=False x=32 y=48 width=24 height=48
-  EndBox item=cab/X5 row=BlockRow.TOP style=EndStyle.SOLID x=32 y=16 width=16 height=16 pins=[(0,cab/X5/terminal/1/fn/terminal/port/external,40,16,True)]
-  EndBox item=M9 row=BlockRow.BOTTOM style=EndStyle.DASHED x=32 y=112 width=16 height=16 pins=[(0,M9/fn/motor/port/U,40,16,True)]
-  CoreWire conductor=cab/w/core/1 run_a=[(0,40,32) (1,40,48)] run_b=[(0,40,112) (1,40,96)] text_x=40 text_y=80 stub_a=False stub_b=False
+  PlacedBlock subject=cab/w unit=None width=80 height=144 pitch=16 harness=None
+    boxes: PlacedCable(cable=cab/w,external=False,box=Box(x=32,y=48,width=24,height=48))
+    ends: PlacedEnd(item=cab/X5,top=True,dashed=False,blank=False,x=32,y=16,width=16,height=16,cells=[PlacedCell(port=cab/X5/terminal/1/fn/terminal/port/external,x=40,width=16,landed=True,landings=[CorePlace(core=cab/w/core/1,x=40)])])
+    ends: PlacedEnd(item=M9,top=False,dashed=True,blank=False,x=32,y=112,width=16,height=16,cells=[PlacedCell(port=M9/fn/motor/port/U,x=40,width=16,landed=True,landings=[CorePlace(core=cab/w/core/1,x=40)])])
+    wires: PlacedWire(conductor=cab/w/core/1,run_a=[Point(x=40,y=32) Point(x=40,y=48)],run_b=[Point(x=40,y=112) Point(x=40,y=96)],text_x=40,text_y=80,open=False)
 cab/w [unit cab/unit]
-  CableBlock subject=cab/w unit=cab/unit width=80 height=144 pitch=16 sheet_format=None
-  CableBox item=cab/w kind=BoxKind.CABLE external=False x=32 y=48 width=24 height=48
-  EndBox item=cab/X5 row=BlockRow.TOP style=EndStyle.SOLID x=32 y=16 width=16 height=16 pins=[(0,cab/X5/terminal/1/fn/terminal/port/external,40,16,True)]
-  EndBox item=M9 row=BlockRow.BOTTOM style=EndStyle.DASHED x=32 y=112 width=16 height=16 pins=[(0,M9/fn/motor/port/U,40,16,True)]
-  CoreWire conductor=cab/w/core/1 run_a=[(0,40,32) (1,40,48)] run_b=[(0,40,112) (1,40,96)] text_x=40 text_y=80 stub_a=False stub_b=False
+  PlacedBlock subject=cab/w unit=cab/unit width=80 height=144 pitch=16 harness=None
+    boxes: PlacedCable(cable=cab/w,external=False,box=Box(x=32,y=48,width=24,height=48))
+    ends: PlacedEnd(item=cab/X5,top=True,dashed=False,blank=False,x=32,y=16,width=16,height=16,cells=[PlacedCell(port=cab/X5/terminal/1/fn/terminal/port/external,x=40,width=16,landed=True,landings=[CorePlace(core=cab/w/core/1,x=40)])])
+    ends: PlacedEnd(item=M9,top=False,dashed=True,blank=False,x=32,y=112,width=16,height=16,cells=[PlacedCell(port=M9/fn/motor/port/U,x=40,width=16,landed=True,landings=[CorePlace(core=cab/w/core/1,x=40)])])
+    wires: PlacedWire(conductor=cab/w/core/1,run_a=[Point(x=40,y=32) Point(x=40,y=48)],run_b=[Point(x=40,y=112) Point(x=40,y=96)],text_x=40,text_y=80,open=False)
 == nested
 pump1/io/w [absolute]
-  CableBlock subject=pump1/io/w unit=None width=56 height=144 pitch=16 sheet_format=None
-  CableBox item=pump1/io/w kind=BoxKind.CABLE external=False x=16 y=48 width=32 height=48
-  EndBox item=pump1/P9 row=BlockRow.TOP style=EndStyle.SOLID x=16 y=16 width=32 height=16 pins=[(0,pump1/P9/fn/x1/port/2,24,16,True) (1,pump1/P9/fn/x1/port/1,40,16,False)]
-  EndBox item=pump1/io/X5 row=BlockRow.BOTTOM style=EndStyle.SOLID x=16 y=112 width=16 height=16 pins=[(0,pump1/io/X5/terminal/2/fn/terminal/port/internal,24,16,True)]
-  CoreWire conductor=pump1/io/w/core/1 run_a=[(0,24,32) (1,24,48)] run_b=[(0,24,112) (1,24,96)] text_x=24 text_y=80 stub_a=False stub_b=False
+  PlacedBlock subject=pump1/io/w unit=None width=56 height=144 pitch=16 harness=None
+    boxes: PlacedCable(cable=pump1/io/w,external=False,box=Box(x=16,y=48,width=32,height=48))
+    ends: PlacedEnd(item=pump1/P9,top=True,dashed=False,blank=False,x=16,y=16,width=32,height=16,cells=[PlacedCell(port=pump1/P9/fn/x1/port/2,x=24,width=16,landed=True,landings=[CorePlace(core=pump1/io/w/core/1,x=24)]) PlacedCell(port=pump1/P9/fn/x1/port/1,x=40,width=16,landed=False,landings=[])])
+    ends: PlacedEnd(item=pump1/io/X5,top=False,dashed=False,blank=False,x=16,y=112,width=16,height=16,cells=[PlacedCell(port=pump1/io/X5/terminal/2/fn/terminal/port/internal,x=24,width=16,landed=True,landings=[CorePlace(core=pump1/io/w/core/1,x=24)])])
+    wires: PlacedWire(conductor=pump1/io/w/core/1,run_a=[Point(x=24,y=32) Point(x=24,y=48)],run_b=[Point(x=24,y=112) Point(x=24,y=96)],text_x=24,text_y=80,open=False)
 pump1/io/w [unit pump1/io/unit]
-  CableBlock subject=pump1/io/w unit=pump1/io/unit width=24 height=104 pitch=16 sheet_format=None
-  CableBox item=pump1/io/w kind=BoxKind.CABLE external=False x=0 y=48 width=24 height=48
-  EndBox item=pump1/P9 row=BlockRow.BOTTOM style=EndStyle.BLANK x=0 y=104 width=16 height=0 pins=[(0,pump1/P9/fn/x1/port/2,8,16,True)]
-  EndBox item=pump1/io/X5 row=BlockRow.TOP style=EndStyle.SOLID x=0 y=16 width=16 height=16 pins=[(0,pump1/io/X5/terminal/2/fn/terminal/port/internal,8,16,True)]
-  CoreWire conductor=pump1/io/w/core/1 run_a=[(0,8,96) (1,8,104)] run_b=[(0,8,48) (1,8,32)] text_x=8 text_y=80 stub_a=True stub_b=False
+  PlacedBlock subject=pump1/io/w unit=pump1/io/unit width=24 height=104 pitch=16 harness=None
+    boxes: PlacedCable(cable=pump1/io/w,external=False,box=Box(x=0,y=48,width=24,height=48))
+    ends: PlacedEnd(item=pump1/io/X5,top=True,dashed=False,blank=False,x=0,y=16,width=16,height=16,cells=[PlacedCell(port=pump1/io/X5/terminal/2/fn/terminal/port/internal,x=8,width=16,landed=True,landings=[CorePlace(core=pump1/io/w/core/1,x=8)])])
+    ends: PlacedEnd(item=pump1/P9,top=False,dashed=False,blank=True,x=0,y=104,width=16,height=0,cells=[PlacedCell(port=pump1/P9/fn/x1/port/2,x=8,width=16,landed=True,landings=[CorePlace(core=pump1/io/w/core/1,x=8)])])
+    wires: PlacedWire(conductor=pump1/io/w/core/1,run_a=[Point(x=8,y=96) Point(x=8,y=104)],run_b=[Point(x=8,y=48) Point(x=8,y=32)],text_x=8,text_y=80,open=False)
 == fan_out
 W1 [absolute]
-  CableBlock subject=W1 unit=None width=144 height=152 pitch=16 sheet_format=None
-  CableBox item=W1 kind=BoxKind.CABLE external=False x=16 y=48 width=48 height=48
-  EndBox item=M1 row=BlockRow.BOTTOM style=EndStyle.SOLID x=16 y=120 width=16 height=16 pins=[(0,M1/fn/motor/port/U,24,16,True)]
-  EndBox item=M3 row=BlockRow.BOTTOM style=EndStyle.SOLID x=112 y=120 width=16 height=16 pins=[(0,M3/fn/motor/port/U,120,16,True)]
-  EndBox item=X1 row=BlockRow.TOP style=EndStyle.SOLID x=16 y=16 width=48 height=16 pins=[(0,X1/terminal/1/fn/terminal/port/external,24,16,True) (1,X1/terminal/2/fn/terminal/port/external,40,16,True) (2,X1/terminal/3/fn/terminal/port/external,56,16,True)]
-  EndBox item=M2 row=BlockRow.BOTTOM style=EndStyle.SOLID x=64 y=120 width=16 height=16 pins=[(0,M2/fn/motor/port/U,72,16,True)]
-  CoreWire conductor=W1/core/3 run_a=[(0,56,32) (1,56,48)] run_b=[(0,120,120) (1,120,112) (2,56,112) (3,56,96)] text_x=56 text_y=80 stub_a=False stub_b=False
-  CoreWire conductor=W1/core/1 run_a=[(0,24,32) (1,24,48)] run_b=[(0,24,120) (1,24,96)] text_x=24 text_y=80 stub_a=False stub_b=False
-  CoreWire conductor=W1/core/2 run_a=[(0,40,32) (1,40,48)] run_b=[(0,72,120) (1,72,104) (2,40,104) (3,40,96)] text_x=40 text_y=80 stub_a=False stub_b=False
+  PlacedBlock subject=W1 unit=None width=144 height=152 pitch=16 harness=None
+    boxes: PlacedCable(cable=W1,external=False,box=Box(x=16,y=48,width=48,height=48))
+    ends: PlacedEnd(item=X1,top=True,dashed=False,blank=False,x=16,y=16,width=48,height=16,cells=[PlacedCell(port=X1/terminal/1/fn/terminal/port/external,x=24,width=16,landed=True,landings=[CorePlace(core=W1/core/1,x=24)]) PlacedCell(port=X1/terminal/2/fn/terminal/port/external,x=40,width=16,landed=True,landings=[CorePlace(core=W1/core/2,x=40)]) PlacedCell(port=X1/terminal/3/fn/terminal/port/external,x=56,width=16,landed=True,landings=[CorePlace(core=W1/core/3,x=56)])])
+    ends: PlacedEnd(item=M1,top=False,dashed=False,blank=False,x=16,y=120,width=16,height=16,cells=[PlacedCell(port=M1/fn/motor/port/U,x=24,width=16,landed=True,landings=[CorePlace(core=W1/core/1,x=24)])])
+    ends: PlacedEnd(item=M2,top=False,dashed=False,blank=False,x=64,y=120,width=16,height=16,cells=[PlacedCell(port=M2/fn/motor/port/U,x=72,width=16,landed=True,landings=[CorePlace(core=W1/core/2,x=72)])])
+    ends: PlacedEnd(item=M3,top=False,dashed=False,blank=False,x=112,y=120,width=16,height=16,cells=[PlacedCell(port=M3/fn/motor/port/U,x=120,width=16,landed=True,landings=[CorePlace(core=W1/core/3,x=120)])])
+    wires: PlacedWire(conductor=W1/core/1,run_a=[Point(x=24,y=32) Point(x=24,y=48)],run_b=[Point(x=24,y=120) Point(x=24,y=96)],text_x=24,text_y=80,open=False)
+    wires: PlacedWire(conductor=W1/core/2,run_a=[Point(x=40,y=32) Point(x=40,y=48)],run_b=[Point(x=72,y=120) Point(x=72,y=104) Point(x=40,y=104) Point(x=40,y=96)],text_x=40,text_y=80,open=False)
+    wires: PlacedWire(conductor=W1/core/3,run_a=[Point(x=56,y=32) Point(x=56,y=48)],run_b=[Point(x=120,y=120) Point(x=120,y=112) Point(x=56,y=112) Point(x=56,y=96)],text_x=56,text_y=80,open=False)
 == swap
 cab/w [absolute]
-  CableBlock subject=cab/w unit=None width=168 height=152 pitch=16 sheet_format=None
-  CableBox item=cab/w kind=BoxKind.CABLE external=False x=24 y=48 width=80 height=48
-  EndBox item=M1 row=BlockRow.BOTTOM style=EndStyle.DASHED x=24 y=120 width=32 height=16 pins=[(0,M1/fn/motor/port/U,32,16,True) (1,M1/fn/motor/port/V,48,16,True)]
-  EndBox item=cab/X5 row=BlockRow.TOP style=EndStyle.SOLID x=24 y=16 width=32 height=16 pins=[(0,cab/X5/terminal/1/fn/terminal/port/external,32,16,True) (1,cab/X5/terminal/2/fn/terminal/port/external,48,16,True)]
-  EndBox item=cab/X6 row=BlockRow.TOP style=EndStyle.SOLID x=72 y=16 width=32 height=16 pins=[(0,cab/X6/terminal/1/fn/terminal/port/external,80,16,True) (1,cab/X6/terminal/2/fn/terminal/port/external,96,16,True)]
-  EndBox item=M2 row=BlockRow.BOTTOM style=EndStyle.DASHED x=112 y=120 width=32 height=16 pins=[(0,M2/fn/motor/port/U,120,16,True) (1,M2/fn/motor/port/V,136,16,True)]
-  CoreWire conductor=cab/w/core/2 run_a=[(0,48,32) (1,48,48)] run_b=[(0,120,120) (1,120,104) (2,48,104) (3,48,96)] text_x=48 text_y=80 stub_a=False stub_b=False
-  CoreWire conductor=cab/w/core/1 run_a=[(0,32,32) (1,32,48)] run_b=[(0,32,120) (1,32,96)] text_x=32 text_y=80 stub_a=False stub_b=False
-  CoreWire conductor=cab/w/core/3 run_a=[(0,80,32) (1,80,48)] run_b=[(0,48,120) (1,48,112) (2,80,112) (3,80,96)] text_x=80 text_y=80 stub_a=False stub_b=False
-  CoreWire conductor=cab/w/core/4 run_a=[(0,96,32) (1,96,48)] run_b=[(0,136,120) (1,136,112) (2,96,112) (3,96,96)] text_x=96 text_y=80 stub_a=False stub_b=False
+  PlacedBlock subject=cab/w unit=None width=168 height=152 pitch=16 harness=None
+    boxes: PlacedCable(cable=cab/w,external=False,box=Box(x=24,y=48,width=80,height=48))
+    ends: PlacedEnd(item=cab/X5,top=True,dashed=False,blank=False,x=24,y=16,width=32,height=16,cells=[PlacedCell(port=cab/X5/terminal/1/fn/terminal/port/external,x=32,width=16,landed=True,landings=[CorePlace(core=cab/w/core/1,x=32)]) PlacedCell(port=cab/X5/terminal/2/fn/terminal/port/external,x=48,width=16,landed=True,landings=[CorePlace(core=cab/w/core/2,x=48)])])
+    ends: PlacedEnd(item=cab/X6,top=True,dashed=False,blank=False,x=72,y=16,width=32,height=16,cells=[PlacedCell(port=cab/X6/terminal/1/fn/terminal/port/external,x=80,width=16,landed=True,landings=[CorePlace(core=cab/w/core/3,x=80)]) PlacedCell(port=cab/X6/terminal/2/fn/terminal/port/external,x=96,width=16,landed=True,landings=[CorePlace(core=cab/w/core/4,x=96)])])
+    ends: PlacedEnd(item=M1,top=False,dashed=True,blank=False,x=24,y=120,width=32,height=16,cells=[PlacedCell(port=M1/fn/motor/port/U,x=32,width=16,landed=True,landings=[CorePlace(core=cab/w/core/1,x=32)]) PlacedCell(port=M1/fn/motor/port/V,x=48,width=16,landed=True,landings=[CorePlace(core=cab/w/core/3,x=48)])])
+    ends: PlacedEnd(item=M2,top=False,dashed=True,blank=False,x=112,y=120,width=32,height=16,cells=[PlacedCell(port=M2/fn/motor/port/U,x=120,width=16,landed=True,landings=[CorePlace(core=cab/w/core/2,x=120)]) PlacedCell(port=M2/fn/motor/port/V,x=136,width=16,landed=True,landings=[CorePlace(core=cab/w/core/4,x=136)])])
+    wires: PlacedWire(conductor=cab/w/core/1,run_a=[Point(x=32,y=32) Point(x=32,y=48)],run_b=[Point(x=32,y=120) Point(x=32,y=96)],text_x=32,text_y=80,open=False)
+    wires: PlacedWire(conductor=cab/w/core/2,run_a=[Point(x=48,y=32) Point(x=48,y=48)],run_b=[Point(x=120,y=120) Point(x=120,y=104) Point(x=48,y=104) Point(x=48,y=96)],text_x=48,text_y=80,open=False)
+    wires: PlacedWire(conductor=cab/w/core/3,run_a=[Point(x=80,y=32) Point(x=80,y=48)],run_b=[Point(x=48,y=120) Point(x=48,y=112) Point(x=80,y=112) Point(x=80,y=96)],text_x=80,text_y=80,open=False)
+    wires: PlacedWire(conductor=cab/w/core/4,run_a=[Point(x=96,y=32) Point(x=96,y=48)],run_b=[Point(x=136,y=120) Point(x=136,y=112) Point(x=96,y=112) Point(x=96,y=96)],text_x=96,text_y=80,open=False)
 cab/w [unit cab/unit]
-  CableBlock subject=cab/w unit=cab/unit width=168 height=152 pitch=16 sheet_format=None
-  CableBox item=cab/w kind=BoxKind.CABLE external=False x=24 y=48 width=80 height=48
-  EndBox item=M1 row=BlockRow.BOTTOM style=EndStyle.DASHED x=24 y=120 width=32 height=16 pins=[(0,M1/fn/motor/port/U,32,16,True) (1,M1/fn/motor/port/V,48,16,True)]
-  EndBox item=cab/X5 row=BlockRow.TOP style=EndStyle.SOLID x=24 y=16 width=32 height=16 pins=[(0,cab/X5/terminal/1/fn/terminal/port/external,32,16,True) (1,cab/X5/terminal/2/fn/terminal/port/external,48,16,True)]
-  EndBox item=cab/X6 row=BlockRow.TOP style=EndStyle.SOLID x=72 y=16 width=32 height=16 pins=[(0,cab/X6/terminal/1/fn/terminal/port/external,80,16,True) (1,cab/X6/terminal/2/fn/terminal/port/external,96,16,True)]
-  EndBox item=M2 row=BlockRow.BOTTOM style=EndStyle.DASHED x=112 y=120 width=32 height=16 pins=[(0,M2/fn/motor/port/U,120,16,True) (1,M2/fn/motor/port/V,136,16,True)]
-  CoreWire conductor=cab/w/core/2 run_a=[(0,48,32) (1,48,48)] run_b=[(0,120,120) (1,120,104) (2,48,104) (3,48,96)] text_x=48 text_y=80 stub_a=False stub_b=False
-  CoreWire conductor=cab/w/core/1 run_a=[(0,32,32) (1,32,48)] run_b=[(0,32,120) (1,32,96)] text_x=32 text_y=80 stub_a=False stub_b=False
-  CoreWire conductor=cab/w/core/3 run_a=[(0,80,32) (1,80,48)] run_b=[(0,48,120) (1,48,112) (2,80,112) (3,80,96)] text_x=80 text_y=80 stub_a=False stub_b=False
-  CoreWire conductor=cab/w/core/4 run_a=[(0,96,32) (1,96,48)] run_b=[(0,136,120) (1,136,112) (2,96,112) (3,96,96)] text_x=96 text_y=80 stub_a=False stub_b=False
+  PlacedBlock subject=cab/w unit=cab/unit width=168 height=152 pitch=16 harness=None
+    boxes: PlacedCable(cable=cab/w,external=False,box=Box(x=24,y=48,width=80,height=48))
+    ends: PlacedEnd(item=cab/X5,top=True,dashed=False,blank=False,x=24,y=16,width=32,height=16,cells=[PlacedCell(port=cab/X5/terminal/1/fn/terminal/port/external,x=32,width=16,landed=True,landings=[CorePlace(core=cab/w/core/1,x=32)]) PlacedCell(port=cab/X5/terminal/2/fn/terminal/port/external,x=48,width=16,landed=True,landings=[CorePlace(core=cab/w/core/2,x=48)])])
+    ends: PlacedEnd(item=cab/X6,top=True,dashed=False,blank=False,x=72,y=16,width=32,height=16,cells=[PlacedCell(port=cab/X6/terminal/1/fn/terminal/port/external,x=80,width=16,landed=True,landings=[CorePlace(core=cab/w/core/3,x=80)]) PlacedCell(port=cab/X6/terminal/2/fn/terminal/port/external,x=96,width=16,landed=True,landings=[CorePlace(core=cab/w/core/4,x=96)])])
+    ends: PlacedEnd(item=M1,top=False,dashed=True,blank=False,x=24,y=120,width=32,height=16,cells=[PlacedCell(port=M1/fn/motor/port/U,x=32,width=16,landed=True,landings=[CorePlace(core=cab/w/core/1,x=32)]) PlacedCell(port=M1/fn/motor/port/V,x=48,width=16,landed=True,landings=[CorePlace(core=cab/w/core/3,x=48)])])
+    ends: PlacedEnd(item=M2,top=False,dashed=True,blank=False,x=112,y=120,width=32,height=16,cells=[PlacedCell(port=M2/fn/motor/port/U,x=120,width=16,landed=True,landings=[CorePlace(core=cab/w/core/2,x=120)]) PlacedCell(port=M2/fn/motor/port/V,x=136,width=16,landed=True,landings=[CorePlace(core=cab/w/core/4,x=136)])])
+    wires: PlacedWire(conductor=cab/w/core/1,run_a=[Point(x=32,y=32) Point(x=32,y=48)],run_b=[Point(x=32,y=120) Point(x=32,y=96)],text_x=32,text_y=80,open=False)
+    wires: PlacedWire(conductor=cab/w/core/2,run_a=[Point(x=48,y=32) Point(x=48,y=48)],run_b=[Point(x=120,y=120) Point(x=120,y=104) Point(x=48,y=104) Point(x=48,y=96)],text_x=48,text_y=80,open=False)
+    wires: PlacedWire(conductor=cab/w/core/3,run_a=[Point(x=80,y=32) Point(x=80,y=48)],run_b=[Point(x=48,y=120) Point(x=48,y=112) Point(x=80,y=112) Point(x=80,y=96)],text_x=80,text_y=80,open=False)
+    wires: PlacedWire(conductor=cab/w/core/4,run_a=[Point(x=96,y=32) Point(x=96,y=48)],run_b=[Point(x=136,y=120) Point(x=136,y=112) Point(x=96,y=112) Point(x=96,y=96)],text_x=96,text_y=80,open=False)
 == harness_fan
 WH1 [absolute]
-  CableBlock subject=WH1 unit=None width=256 height=168 pitch=64 sheet_format=None
-  CableBox item=WH1 kind=BoxKind.HARNESS external=False x=0 y=40 width=192 height=80
-  CableBox item=W1 kind=BoxKind.CABLE external=False x=8 y=64 width=112 height=48
-  CableBox item=W2 kind=BoxKind.CABLE external=False x=136 y=64 width=48 height=48
-  EndBox item=M1 row=BlockRow.TOP style=EndStyle.SOLID x=0 y=16 width=192 height=16 pins=[(0,M1/fn/motor/port/U,32,64,True) (1,M1/fn/motor/port/V,96,64,True) (2,M1/fn/motor/port/W,160,64,True)]
-  EndBox item=M3 row=BlockRow.BOTTOM style=EndStyle.SOLID x=192 y=136 width=64 height=16 pins=[(0,M3/fn/motor/port/U,224,64,True)]
-  EndBox item=M2 row=BlockRow.BOTTOM style=EndStyle.SOLID x=0 y=136 width=128 height=16 pins=[(0,M2/fn/motor/port/U,32,64,True) (1,M2/fn/motor/port/V,96,64,True)]
-  CoreWire conductor=W2/core/1 run_a=[(0,160,32) (1,160,64)] run_b=[(0,224,136) (1,224,128) (2,160,128) (3,160,112)] text_x=160 text_y=96 stub_a=False stub_b=False
-  CoreWire conductor=W1/core/1 run_a=[(0,32,32) (1,32,64)] run_b=[(0,32,136) (1,32,112)] text_x=32 text_y=96 stub_a=False stub_b=False
-  CoreWire conductor=W1/core/2 run_a=[(0,96,32) (1,96,64)] run_b=[(0,96,136) (1,96,112)] text_x=96 text_y=96 stub_a=False stub_b=False
+  PlacedBlock subject=WH1 unit=None width=256 height=168 pitch=64
+    boxes: PlacedCable(cable=W1,external=False,box=Box(x=8,y=64,width=112,height=48))
+    boxes: PlacedCable(cable=W2,external=False,box=Box(x=136,y=64,width=48,height=48))
+    harness: Box(x=0,y=40,width=192,height=80)
+    ends: PlacedEnd(item=M1,top=True,dashed=False,blank=False,x=0,y=16,width=192,height=16,cells=[PlacedCell(port=M1/fn/motor/port/U,x=32,width=64,landed=True,landings=[CorePlace(core=W1/core/1,x=32)]) PlacedCell(port=M1/fn/motor/port/V,x=96,width=64,landed=True,landings=[CorePlace(core=W1/core/2,x=96)]) PlacedCell(port=M1/fn/motor/port/W,x=160,width=64,landed=True,landings=[CorePlace(core=W2/core/1,x=160)])])
+    ends: PlacedEnd(item=M2,top=False,dashed=False,blank=False,x=0,y=136,width=128,height=16,cells=[PlacedCell(port=M2/fn/motor/port/U,x=32,width=64,landed=True,landings=[CorePlace(core=W1/core/1,x=32)]) PlacedCell(port=M2/fn/motor/port/V,x=96,width=64,landed=True,landings=[CorePlace(core=W1/core/2,x=96)])])
+    ends: PlacedEnd(item=M3,top=False,dashed=False,blank=False,x=192,y=136,width=64,height=16,cells=[PlacedCell(port=M3/fn/motor/port/U,x=224,width=64,landed=True,landings=[CorePlace(core=W2/core/1,x=224)])])
+    wires: PlacedWire(conductor=W1/core/1,run_a=[Point(x=32,y=32) Point(x=32,y=64)],run_b=[Point(x=32,y=136) Point(x=32,y=112)],text_x=32,text_y=96,open=False)
+    wires: PlacedWire(conductor=W1/core/2,run_a=[Point(x=96,y=32) Point(x=96,y=64)],run_b=[Point(x=96,y=136) Point(x=96,y=112)],text_x=96,text_y=96,open=False)
+    wires: PlacedWire(conductor=W2/core/1,run_a=[Point(x=160,y=32) Point(x=160,y=64)],run_b=[Point(x=224,y=136) Point(x=224,y=128) Point(x=160,y=128) Point(x=160,y=112)],text_x=160,text_y=96,open=False)
 == chain
 WH2 [absolute]
-  CableBlock subject=WH2 unit=None width=192 height=168 pitch=64 sheet_format=None
-  CableBox item=WH2 kind=BoxKind.HARNESS external=False x=0 y=40 width=192 height=80
-  CableBox item=W1 kind=BoxKind.CABLE external=False x=8 y=64 width=48 height=48
-  CableBox item=W2 kind=BoxKind.CABLE external=False x=136 y=64 width=48 height=48
-  EndBox item=X2 row=BlockRow.BOTTOM style=EndStyle.SOLID x=0 y=136 width=128 height=16 pins=[(0,X2/fn/motor/port/U,32,64,True) (1,X2/fn/motor/port/V,96,64,True)]
-  EndBox item=X3 row=BlockRow.TOP style=EndStyle.SOLID x=128 y=16 width=64 height=16 pins=[(0,X3/fn/motor/port/U,160,64,True)]
-  EndBox item=X1 row=BlockRow.TOP style=EndStyle.SOLID x=0 y=16 width=64 height=16 pins=[(0,X1/fn/motor/port/U,32,64,True)]
-  CoreWire conductor=W2/core/1 run_a=[(0,160,112) (1,160,128) (2,96,128) (3,96,136)] run_b=[(0,160,64) (1,160,32)] text_x=160 text_y=96 stub_a=False stub_b=False
-  CoreWire conductor=W1/core/1 run_a=[(0,32,32) (1,32,64)] run_b=[(0,32,136) (1,32,112)] text_x=32 text_y=96 stub_a=False stub_b=False
+  PlacedBlock subject=WH2 unit=None width=192 height=168 pitch=64
+    boxes: PlacedCable(cable=W1,external=False,box=Box(x=8,y=64,width=48,height=48))
+    boxes: PlacedCable(cable=W2,external=False,box=Box(x=136,y=64,width=48,height=48))
+    harness: Box(x=0,y=40,width=192,height=80)
+    ends: PlacedEnd(item=X1,top=True,dashed=False,blank=False,x=0,y=16,width=64,height=16,cells=[PlacedCell(port=X1/fn/motor/port/U,x=32,width=64,landed=True,landings=[CorePlace(core=W1/core/1,x=32)])])
+    ends: PlacedEnd(item=X3,top=True,dashed=False,blank=False,x=128,y=16,width=64,height=16,cells=[PlacedCell(port=X3/fn/motor/port/U,x=160,width=64,landed=True,landings=[CorePlace(core=W2/core/1,x=160)])])
+    ends: PlacedEnd(item=X2,top=False,dashed=False,blank=False,x=0,y=136,width=128,height=16,cells=[PlacedCell(port=X2/fn/motor/port/U,x=32,width=64,landed=True,landings=[CorePlace(core=W1/core/1,x=32)]) PlacedCell(port=X2/fn/motor/port/V,x=96,width=64,landed=True,landings=[CorePlace(core=W2/core/1,x=96)])])
+    wires: PlacedWire(conductor=W1/core/1,run_a=[Point(x=32,y=32) Point(x=32,y=64)],run_b=[Point(x=32,y=136) Point(x=32,y=112)],text_x=32,text_y=96,open=False)
+    wires: PlacedWire(conductor=W2/core/1,run_a=[Point(x=160,y=112) Point(x=160,y=128) Point(x=96,y=128) Point(x=96,y=136)],run_b=[Point(x=160,y=64) Point(x=160,y=32)],text_x=160,text_y=96,open=False)
 == pair
 WH3 [absolute]
-  CableBlock subject=WH3 unit=None width=192 height=168 pitch=64 sheet_format=None
-  CableBox item=W1 kind=BoxKind.CABLE external=False x=8 y=64 width=48 height=48
-  CableBox item=W2 kind=BoxKind.CABLE external=False x=136 y=64 width=48 height=48
-  CableBox item=WH3 kind=BoxKind.HARNESS external=False x=0 y=40 width=192 height=80
-  EndBox item=B2 row=BlockRow.BOTTOM style=EndStyle.SOLID x=128 y=136 width=64 height=16 pins=[(0,B2/fn/motor/port/U,160,64,True)]
-  EndBox item=B1 row=BlockRow.BOTTOM style=EndStyle.SOLID x=0 y=136 width=64 height=16 pins=[(0,B1/fn/motor/port/U,32,64,True)]
-  EndBox item=A2 row=BlockRow.TOP style=EndStyle.SOLID x=128 y=16 width=64 height=16 pins=[(0,A2/fn/motor/port/U,160,64,True)]
-  EndBox item=A1 row=BlockRow.TOP style=EndStyle.SOLID x=0 y=16 width=64 height=16 pins=[(0,A1/fn/motor/port/U,32,64,True)]
-  CoreWire conductor=W2/core/1 run_a=[(0,160,32) (1,160,64)] run_b=[(0,160,136) (1,160,112)] text_x=160 text_y=96 stub_a=False stub_b=False
-  CoreWire conductor=W1/core/1 run_a=[(0,32,32) (1,32,64)] run_b=[(0,32,136) (1,32,112)] text_x=32 text_y=96 stub_a=False stub_b=False
+  PlacedBlock subject=WH3 unit=None width=192 height=168 pitch=64
+    boxes: PlacedCable(cable=W1,external=False,box=Box(x=8,y=64,width=48,height=48))
+    boxes: PlacedCable(cable=W2,external=False,box=Box(x=136,y=64,width=48,height=48))
+    harness: Box(x=0,y=40,width=192,height=80)
+    ends: PlacedEnd(item=A1,top=True,dashed=False,blank=False,x=0,y=16,width=64,height=16,cells=[PlacedCell(port=A1/fn/motor/port/U,x=32,width=64,landed=True,landings=[CorePlace(core=W1/core/1,x=32)])])
+    ends: PlacedEnd(item=A2,top=True,dashed=False,blank=False,x=128,y=16,width=64,height=16,cells=[PlacedCell(port=A2/fn/motor/port/U,x=160,width=64,landed=True,landings=[CorePlace(core=W2/core/1,x=160)])])
+    ends: PlacedEnd(item=B1,top=False,dashed=False,blank=False,x=0,y=136,width=64,height=16,cells=[PlacedCell(port=B1/fn/motor/port/U,x=32,width=64,landed=True,landings=[CorePlace(core=W1/core/1,x=32)])])
+    ends: PlacedEnd(item=B2,top=False,dashed=False,blank=False,x=128,y=136,width=64,height=16,cells=[PlacedCell(port=B2/fn/motor/port/U,x=160,width=64,landed=True,landings=[CorePlace(core=W2/core/1,x=160)])])
+    wires: PlacedWire(conductor=W1/core/1,run_a=[Point(x=32,y=32) Point(x=32,y=64)],run_b=[Point(x=32,y=136) Point(x=32,y=112)],text_x=32,text_y=96,open=False)
+    wires: PlacedWire(conductor=W2/core/1,run_a=[Point(x=160,y=32) Point(x=160,y=64)],run_b=[Point(x=160,y=136) Point(x=160,y=112)],text_x=160,text_y=96,open=False)
 == ring
 WH7 [absolute]
-  CableBlock subject=WH7 unit=None width=320 height=184 pitch=64 sheet_format=None
-  CableBox item=WH7 kind=BoxKind.HARNESS external=False x=0 y=56 width=312 height=80
-  CableBox item=W3 kind=BoxKind.CABLE external=False x=264 y=80 width=40 height=48
-  CableBox item=W1 kind=BoxKind.CABLE external=False x=8 y=80 width=48 height=48
-  CableBox item=W2 kind=BoxKind.CABLE external=False x=200 y=80 width=48 height=48
-  EndBox item=B row=BlockRow.BOTTOM style=EndStyle.SOLID x=0 y=152 width=128 height=16 pins=[(0,B/fn/motor/port/U,32,64,True) (1,B/fn/motor/port/V,96,64,True)]
-  EndBox item=C row=BlockRow.TOP style=EndStyle.SOLID x=192 y=16 width=128 height=16 pins=[(0,C/fn/motor/port/V,224,64,True) (1,C/fn/motor/port/W,288,64,True)]
-  EndBox item=A row=BlockRow.TOP style=EndStyle.SOLID x=0 y=16 width=128 height=16 pins=[(0,A/fn/motor/port/U,32,64,True) (1,A/fn/motor/port/W,96,64,True)]
-  CoreWire conductor=W2/core/1 run_a=[(0,224,128) (1,224,144) (2,96,144) (3,96,152)] run_b=[(0,224,80) (1,224,32)] text_x=224 text_y=112 stub_a=False stub_b=False
-  CoreWire conductor=W1/core/1 run_a=[(0,32,32) (1,32,80)] run_b=[(0,32,152) (1,32,128)] text_x=32 text_y=112 stub_a=False stub_b=False
-  CoreWire conductor=W3/core/1 run_a=[(0,96,32) (1,96,40) (2,288,40)] run_b=[(0,288,32) (1,288,40)] text_x=192 text_y=48 stub_a=False stub_b=False
+  PlacedBlock subject=WH7 unit=None width=320 height=184 pitch=64
+    boxes: PlacedCable(cable=W1,external=False,box=Box(x=8,y=80,width=48,height=48))
+    boxes: PlacedCable(cable=W2,external=False,box=Box(x=200,y=80,width=48,height=48))
+    boxes: PlacedCable(cable=W3,external=False,box=Box(x=264,y=80,width=40,height=48))
+    harness: Box(x=0,y=56,width=312,height=80)
+    ends: PlacedEnd(item=A,top=True,dashed=False,blank=False,x=0,y=16,width=128,height=16,cells=[PlacedCell(port=A/fn/motor/port/U,x=32,width=64,landed=True,landings=[CorePlace(core=W1/core/1,x=32)]) PlacedCell(port=A/fn/motor/port/W,x=96,width=64,landed=True,landings=[CorePlace(core=W3/core/1,x=96)])])
+    ends: PlacedEnd(item=C,top=True,dashed=False,blank=False,x=192,y=16,width=128,height=16,cells=[PlacedCell(port=C/fn/motor/port/V,x=224,width=64,landed=True,landings=[CorePlace(core=W2/core/1,x=224)]) PlacedCell(port=C/fn/motor/port/W,x=288,width=64,landed=True,landings=[CorePlace(core=W3/core/1,x=288)])])
+    ends: PlacedEnd(item=B,top=False,dashed=False,blank=False,x=0,y=152,width=128,height=16,cells=[PlacedCell(port=B/fn/motor/port/U,x=32,width=64,landed=True,landings=[CorePlace(core=W1/core/1,x=32)]) PlacedCell(port=B/fn/motor/port/V,x=96,width=64,landed=True,landings=[CorePlace(core=W2/core/1,x=96)])])
+    wires: PlacedWire(conductor=W1/core/1,run_a=[Point(x=32,y=32) Point(x=32,y=80)],run_b=[Point(x=32,y=152) Point(x=32,y=128)],text_x=32,text_y=112,open=False)
+    wires: PlacedWire(conductor=W2/core/1,run_a=[Point(x=224,y=128) Point(x=224,y=144) Point(x=96,y=144) Point(x=96,y=152)],run_b=[Point(x=224,y=80) Point(x=224,y=32)],text_x=224,text_y=112,open=False)
+    wires: PlacedWire(conductor=W3/core/1,run_a=[Point(x=96,y=32) Point(x=96,y=40) Point(x=288,y=40)],run_b=[Point(x=288,y=32) Point(x=288,y=40)],text_x=192,text_y=48,open=False)
 == l1_picture
 W1 [absolute]
-  CableBlock subject=W1 unit=None width=128 height=152 pitch=32 sheet_format=None
-  CableBox item=W1 kind=BoxKind.CABLE external=False x=0 y=48 width=128 height=48
-  EndBox item=X1 row=BlockRow.TOP style=EndStyle.SOLID x=0 y=16 width=64 height=16 pins=[(0,X1/terminal/1/fn/terminal/port/external,16,32,True) (1,X1/terminal/2/fn/terminal/port/external,48,32,True)]
-  EndBox item=H2 row=BlockRow.BOTTOM style=EndStyle.SOLID x=0 y=120 width=128 height=16 pins=[(0,H2/fn/motor/port/U,16,32,True) (1,H2/fn/motor/port/V,48,32,True) (2,H2/fn/motor/port/PE,80,32,True) (3,H2/fn/motor/port/W,112,32,True)]
-  CoreWire conductor=W1/core/3 run_a=[(0,80,120) (1,80,112) (2,112,112)] run_b=[(0,112,120) (1,112,112)] text_x=95 text_y=104 stub_a=False stub_b=False
-  CoreWire conductor=W1/core/1 run_a=[(0,16,32) (1,16,48)] run_b=[(0,16,120) (1,16,96)] text_x=16 text_y=80 stub_a=False stub_b=False
-  CoreWire conductor=W1/core/2 run_a=[(0,48,32) (1,48,48)] run_b=[(0,48,120) (1,48,96)] text_x=48 text_y=80 stub_a=False stub_b=False
+  PlacedBlock subject=W1 unit=None width=128 height=152 pitch=32 harness=None
+    boxes: PlacedCable(cable=W1,external=False,box=Box(x=0,y=48,width=128,height=48))
+    ends: PlacedEnd(item=X1,top=True,dashed=False,blank=False,x=0,y=16,width=64,height=16,cells=[PlacedCell(port=X1/terminal/1/fn/terminal/port/external,x=16,width=32,landed=True,landings=[CorePlace(core=W1/core/1,x=16)]) PlacedCell(port=X1/terminal/2/fn/terminal/port/external,x=48,width=32,landed=True,landings=[CorePlace(core=W1/core/2,x=48)])])
+    ends: PlacedEnd(item=H2,top=False,dashed=False,blank=False,x=0,y=120,width=128,height=16,cells=[PlacedCell(port=H2/fn/motor/port/U,x=16,width=32,landed=True,landings=[CorePlace(core=W1/core/1,x=16)]) PlacedCell(port=H2/fn/motor/port/V,x=48,width=32,landed=True,landings=[CorePlace(core=W1/core/2,x=48)]) PlacedCell(port=H2/fn/motor/port/PE,x=80,width=32,landed=True,landings=[CorePlace(core=W1/core/3,x=80)]) PlacedCell(port=H2/fn/motor/port/W,x=112,width=32,landed=True,landings=[CorePlace(core=W1/core/3,x=112)])])
+    wires: PlacedWire(conductor=W1/core/1,run_a=[Point(x=16,y=32) Point(x=16,y=48)],run_b=[Point(x=16,y=120) Point(x=16,y=96)],text_x=16,text_y=80,open=False)
+    wires: PlacedWire(conductor=W1/core/2,run_a=[Point(x=48,y=32) Point(x=48,y=48)],run_b=[Point(x=48,y=120) Point(x=48,y=96)],text_x=48,text_y=80,open=False)
+    wires: PlacedWire(conductor=W1/core/3,run_a=[Point(x=80,y=120) Point(x=80,y=112) Point(x=112,y=112)],run_b=[Point(x=112,y=120) Point(x=112,y=112)],text_x=95,text_y=104,open=False)

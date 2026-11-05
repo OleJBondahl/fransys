@@ -1,10 +1,8 @@
 """Page script, part 4: the Features panel (O16).
 
-Every switch lives in `state.feat`. Focus is live (O17), zoom needs a box with a level inside (O6). Changes only is a choice inside the changes switch,
-shown while it is on (O19). The unit view's four values are the unit level's modes.
+Every switch lives in `state.feat`. Focus is live (O17), zoom needs a box with a level inside (O6). Changes only is a choice inside the
+changes switch, shown while it is on (O19). The unit view's four values are the unit level's modes.
 """
-
-# ruff: noqa: E501 -- the JavaScript source is not wrapped
 
 from typing import Final
 

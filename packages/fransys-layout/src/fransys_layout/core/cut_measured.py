@@ -10,11 +10,14 @@ from __future__ import annotations
 from dataclasses import dataclass, field, replace
 from typing import TYPE_CHECKING
 
+from .arrow_reserve import legs_x
+
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
+    from .arrow_reserve import RowReserve
     from .cut_costs import Item
-    from .values import Block
+    from .flow_values import Block, BlockList
 
 
 @dataclass(frozen=True, slots=True)
@@ -29,13 +32,11 @@ class Measured:
     heights: Mapping[str, int] = field(default_factory=dict)
     columns: Mapping[str, int] = field(default_factory=dict)
     rises: Mapping[str, int] = field(default_factory=dict)
-    arrows: Mapping[str, int] = field(default_factory=dict)
-    """A card's box id to the row's planned reference-arrow width in G: the cut must see it."""
+    arrows: Mapping[str | tuple[str, str], RowReserve] = field(default_factory=dict)
+    """A card's box id to what its row keeps free in G (`block_reserves`): the cut must see it."""
 
 
-def measured_blocks(
-    seq: Sequence[Item], by_id: Mapping[str, Block], measured: Measured, limit: float
-) -> tuple[tuple[Item, ...], dict[str, Block]]:
+def measured_blocks(seq: Sequence[Item], by_id: Mapping[str, Block], measured: Measured, limit: float) -> tuple[tuple[Item, ...], dict[str, Block]]:
     """The items and blocks with a measured block's height in place of the estimate.
 
     A column that is not part of a whole block takes its own measured height, never its block's,
@@ -43,16 +44,16 @@ def measured_blocks(
     """
     own, rises = measured.columns, measured.rises
     items = tuple(
-        replace(
-            it, height=own[it.column], short=own[it.column] < limit, rise=rises.get(it.column, 0)
-        )
-        if not it.whole and it.column in own
-        else it
+        replace(it, height=own[it.column], short=own[it.column] < limit, rise=rises.get(it.column, 0)) if not it.whole and it.column in own else it
         for it in seq
     )
     heights = measured.heights
-    blocks = {
-        k: replace(b, height_est=heights[k], rise=rises.get(k, 0)) if k in heights else b
-        for k, b in by_id.items()
-    }
+    blocks = {k: replace(b, height_est=heights[k], rise=rises.get(k, 0)) if k in heights else b for k, b in by_id.items()}
     return items, blocks
+
+
+def with_legs(lists: Sequence[BlockList], arrows: Mapping[str | tuple[str, str], RowReserve]) -> tuple[BlockList, ...]:
+    """The blocks with the x of their legs in `width_est`: the cut's wrap test reads the width the row will have (R1618)."""
+    return tuple(
+        replace(ls, blocks=tuple(replace(b, width_est=b.width_est + legs_x(arrows, b.anchor or b.id, b.columns)) for b in ls.blocks)) for ls in lists
+    )

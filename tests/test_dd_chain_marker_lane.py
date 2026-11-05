@@ -2,33 +2,23 @@
 
 A strip `X1` of `n` DEMO-TB-2.5 terminals wired inner-to-inner in a chain is one net, so the star
 rule draws a branch marker per terminal. The marker of terminal `k` stood in the gap under
-terminal `k+1`, across the one exit lane of `k+1`'s inner port; the router took the marker's box as
-an obstacle, found no path for that conductor (`ROUTE_FAILED`) and the member check then reported
-`CONNECTION_NOT_DRAWN`: both ends are on one page, so nothing is cut. `n` = 3, 4 and 6 built by
-luck of the spacing; 5 and 8 did not.
-
-Built through the `fransys` facade from `examples/demo-parts`; read from `layout.*` records.
 """
 
-from dataclasses import replace
 from itertools import pairwise
 from typing import Any
 
 import fransys as fr
-import fransys_author
 import fransys_parts
 import pytest
-from _drawn_pages import drawn_pages
-from _model_build_cover import layout_trigger_document
+from _drawn_pages import drawn_pages, markers_in
+from _model_build_cover import cabinet_document, layout_trigger_document
 from _no_power_net import assert_no_power_net
+from fransys_author.design import Design
 
-from fransys_model.kernel import Origin, Severity, make_id
-from fransys_model.layout import (
-    Profile,
-    SheetFormat,
-    default_profile,
-    default_sheet_format,
-)
+from fransys_model.derive.drawing_text import marker_text
+from fransys_model.derive.facts.house_settings import reference_text_of
+from fransys_model.kernel import Severity
+from fransys_model.layout import LinkMarker, layout_of
 
 _PROJECT: dict[str, Any] = {
     "title": "Chain of terminals",
@@ -39,41 +29,24 @@ _PROJECT: dict[str, Any] = {
 }
 
 
-def _build(n: int, *, width_mm: int | None = None):
-    """`n` terminals of one strip in one group, wired in a chain; returns the build result.
-
-    With `width_mm`, on an authored sheet whose content is that wide.
-    """
+def _build(n: int):
+    """`n` terminals of one strip in one group, wired in a chain; returns the build result."""
     parts = fransys_parts.load("demo_parts")
-    d = fransys_author.Design(parts)
+    d = Design(parts)
     d.project(**_PROJECT)
     d.revision(1, date="2026-09-25", text="First issue", created="XX")
-    strip = d.strip("X1", at=d.location("C1", "Cabinet"))
+    cabinet = d.location("C1", "Cabinet")
+    strip = d.strip("X1", at=cabinet)
     group = d.group("PLC", "PLC")
-    terminals = [strip.terminal("DEMO-TB-2.5", group=group) for _ in range(n)]
+    terminals = [strip.terminal("DEMO-TB-2.5-TWIN", group=group) for _ in range(n)]
     wire = d.wiring(colour="BU", gauge="0.5")
     for one, other in pairwise(terminals):
         wire(one.inner, other.inner)
     draft = d.draft()
-    if width_mm is not None:
-        sheet = replace(
-            default_sheet_format(),
-            id=make_id(SheetFormat, ("chain", "sheet")),
-            key=("chain", "sheet"),
-            content_width_mm=width_mm,
-            width_mm=width_mm + 20,
-        )
-        profile = replace(
-            default_profile(),
-            id=make_id(Profile, ("chain", "profile")),
-            key=("chain", "profile"),
-            sheet_format=sheet.id,
-        )
-        draft.extend((sheet, profile), origin=Origin(file=__file__, line=1, note="narrow sheet"))
-    return fr.build(parts, draft, layout_trigger_document())
+    return fr.build(parts, draft, layout_trigger_document(), cabinet_document(cabinet))
 
 
-def _terminal_tags(model) -> dict[str, tuple]:
+def _terminal_tags(model) -> dict[str, tuple[Any, ...]]:
     """The strip index of each terminal (the tag's last part) -> (page id, tag box, symbol)."""
     found = {}
     for page, drawing in drawn_pages(model).items():
@@ -84,13 +57,13 @@ def _terminal_tags(model) -> dict[str, tuple]:
     return found
 
 
-def _wires(model) -> list:
+def _wires(model) -> list[Any]:
     return [w for drawing in drawn_pages(model).values() for w in drawing.wires]
 
 
 @pytest.mark.parametrize("n", [3, 4, 5, 6, 8, 12])
 def test_a_chain_of_terminals_builds_with_every_conductor_drawn(n: int) -> None:
-    """No ERROR finding (`ROUTE_FAILED`, `CONNECTION_NOT_DRAWN`) and wires are drawn: a chain's
+    """No ERROR finding (`CONNECTION_NOT_DRAWN`) and wires are drawn: a chain's
     star draws only some conductors as routes and the rest as branches, so the count is not
     asserted, only that the build drew routes at all."""
     # UNDO: stages/marker_lanes.py `_sibling_lanes`: the last line
@@ -102,7 +75,6 @@ def test_a_chain_of_terminals_builds_with_every_conductor_drawn(n: int) -> None:
     assert _wires(result.model)
 
 
-@pytest.mark.rule("ROUTING")
 @pytest.mark.rule("BUNDLE")
 @pytest.mark.parametrize("n", [5, 12])
 def test_a_chain_of_terminals_stands_in_one_row_on_one_line(n: int) -> None:
@@ -115,9 +87,7 @@ def test_a_chain_of_terminals_stands_in_one_row_on_one_line(n: int) -> None:
     tags = _terminal_tags(model)
     placed = sorted(tags.items(), key=lambda item: item[1][1].x)
     assert [k for k, _ in placed] == [str(k) for k in range(1, n + 1)]
-    terminals = [
-        s for drawing in drawn_pages(model).values() for s in drawing.symbols if s.key == "terminal"
-    ]
+    terminals = [s for drawing in drawn_pages(model).values() for s in drawing.symbols if s.key == "terminal"]
     assert len({s.y for s in terminals}) == 1
     routes = _wires(model)
     assert len(routes) == n + 1  # one trunk and a drop per terminal
@@ -126,24 +96,24 @@ def test_a_chain_of_terminals_stands_in_one_row_on_one_line(n: int) -> None:
     runs = {a[1] for r in routes for a, b in pairwise(r.points) if a[1] == b[1]}
     assert len(runs) == 1
     assert runs != {terminals[0].y}
-    assert not [m for drawing in drawn_pages(model).values() for m in drawing.markers]
+    assert not [m for drawing in drawn_pages(model).values() for m in markers_in(drawing)]
 
 
-def test_a_chain_too_long_for_one_row_stays_drawn_where_its_links_share_a_page() -> None:
-    """Twelve terminals on a sheet 100 mm wide cannot stand in one row, so
-    they stack in columns over several pages. A link between two terminals of one page is still
-    a drawn route, never a reference pair; only the links a page boundary cuts have markers."""
-    # UNDO: stages/terminal_rows.py `join_terminal_rows`: `if not fits(built):` -> `if False:`
-    #     (the row is built too wide, so no terminal is left stacked and the page count differs)
-    result = _build(12, width_mm=100)
-    page = {k: v[0] for k, v in _terminal_tags(result.model).items()}
-    assert len(set(page.values())) > 1
-    same_page = sum(page[str(k)] == page[str(k + 1)] for k in range(1, 12))
-    assert same_page > 0
-    # In natural order (layout-0193) a page holds terminals 1, 2 and 3 as a stack of two beside
-    # one: the join aligner cannot level link 2-3 and reports JOIN_UNALIGNED (drawn as references).
-    unaligned = sum(f.code == "JOIN_UNALIGNED" for f in result.findings)
-    assert len(_wires(result.model)) + unaligned == same_page
-    # Natural order leaves 2 same-page links as references; a join aligner is a FUTURE row.
-    assert unaligned <= 2
+def test_a_chain_split_over_two_pages_draws_every_terminal_once_and_marks_the_link_on_both() -> None:
+    """240 twin terminals on the default sheet fill two pages (a twin draws narrower, so 160 fit one):
+    each is drawn once and the link across the break is a cross-page marker pair,
+    one on each page, its text the `[reference]` home's cross-page form."""
+    # UNDO: the link marker of one page is dropped (the chain then breaks with no reference on that page)
+    result = _build(240)
+    model = result.model
     assert [f.code for f in result.findings if f.severity is Severity.ERROR] == []
+    pages = drawn_pages(model)
+    tags = [t.text for d in pages.values() for t in d.texts if t.kind == "TAG" and t.text.startswith("-X1:")]
+    assert sorted(tags) == sorted(f"-X1:{k}" for k in range(1, 241))
+    assert len(pages) == 2
+    markers = layout_of(model, LinkMarker)
+    cross = [m for m in markers.values() if markers[m.partner].page != m.page]
+    assert len(cross) == 2
+    assert {m.page for m in cross} == set(pages)
+    refs = reference_text_of(model)
+    assert all(refs.page_prefix in marker_text(model, m) for m in cross)

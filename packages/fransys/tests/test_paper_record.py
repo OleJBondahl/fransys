@@ -5,6 +5,7 @@ lazy from pathlib import Path
 
 import fransys as fr
 import pytest
+from _expected_codes import expect_codes
 from fransys._paper import with_paper
 
 from fransys_model.kernel import Draft, Origin, Record, SchemaError, make_id
@@ -91,3 +92,35 @@ def test_an_authored_sheet_keyed_by_a_format_name_is_refused() -> None:
     )
     with pytest.raises(SchemaError, match=r"layout\.sheet_format"):
         fr.build(_planted(record))
+
+
+def _sheet_of(width: int, height: int) -> SheetFormat:
+    key = ("planted", f"{width}x{height}")
+    return SheetFormat(
+        id=make_id(SheetFormat, key),
+        key=key,
+        name=f"{width}x{height}",
+        width_mm=width,
+        height_mm=height,
+        content_x_mm=5,
+        content_y_mm=5,
+        content_width_mm=width - 10,
+        content_height_mm=height - 30,
+        frame_columns=6,
+        frame_rows=4,
+        module_mm=Decimal("2.5"),
+    )
+
+
+@pytest.mark.rule("PAPER-FORMATS")
+@pytest.mark.parametrize("size", [(420, 300), (210, 297)], ids=["other-size", "portrait"])
+def test_a_sheet_outside_the_closed_set_is_an_error_naming_the_supported_formats(size: tuple[int, int]) -> None:
+    result = fr.build(_planted(_sheet_of(*size)))
+    expect_codes(result, "SHEET_FORMAT_NOT_SUPPORTED")
+    refused = [f for f in result.findings if f.code == "SHEET_FORMAT_NOT_SUPPORTED"]
+    assert len(refused) == 1
+    assert "A3 or A2 landscape" in refused[0].fix
+
+
+def test_the_three_stock_sheets_are_not_refused() -> None:
+    assert [f for f in fr.build(fr.design("demo_parts")).findings if f.code == "SHEET_FORMAT_NOT_SUPPORTED"] == []

@@ -154,9 +154,7 @@ def test_a_stub_names_its_far_end_as_a_reference_and_folds_per_kind() -> None:
     assert single.end == single.members[0].end
     assert (single.via, folded.via) == (None, None)
     in_ctl = fold_level(model, unit, CTL_BOX)
-    (to_sup,) = [
-        s for s in in_ctl.stubs if s.place is StubPlace.GROUP and s.box.item == item_id("k1")
-    ]
+    (to_sup,) = [s for s in in_ctl.stubs if s.place is StubPlace.GROUP and s.box.item == item_id("k1")]
     assert to_sup.end == OverviewRef(kind=OverviewRefKind.GROUP, node=SUP)
 
 

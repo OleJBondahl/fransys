@@ -31,10 +31,7 @@ def _rect(block):
 
 
 def _bands_below(block):
-    return (
-        next(e for e in block.ends if not e.top).y
-        - (block.boxes[0].box.y + block.boxes[0].box.height)
-    ) // 8 - 1
+    return (next(e for e in block.ends if not e.top).y - (block.boxes[0].box.y + block.boxes[0].box.height)) // 8 - 1
 
 
 def test_swap_draws_one_jog_at_three_tracks():

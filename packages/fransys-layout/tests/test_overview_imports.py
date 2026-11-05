@@ -25,11 +25,7 @@ def _old_imports(source: str) -> set[tuple[str, str]]:
 
 def test_overview_imports_nothing_of_the_old_engine() -> None:
     """A new import of `engines/schematic` or `stages` from the overview fails here."""
-    seen = sorted(
-        (str(p.relative_to(_OVERVIEW)), imp)
-        for p in sorted(_OVERVIEW.rglob("*.py"))
-        for imp in _old_imports(p.read_text())
-    )
+    seen = sorted((str(p.relative_to(_OVERVIEW)), imp) for p in sorted(_OVERVIEW.rglob("*.py")) for imp in _old_imports(p.read_text()))
     assert not seen, f"overview imports of the old engine: {seen}"
 
 

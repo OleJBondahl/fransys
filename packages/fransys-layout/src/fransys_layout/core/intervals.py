@@ -34,13 +34,15 @@ def stem_levels(spans: Sequence[tuple[int, int]], order: Sequence[int]) -> tuple
         mid = (lo + hi) // 2
         near = [j for j in order[:pos] if spans[j][0] <= hi and lo <= spans[j][1]]
         floor = max(
-            (
-                level[j] + 1
-                for j in near
-                if spans[j][0] <= mid <= spans[j][1] or lo <= (spans[j][0] + spans[j][1]) // 2 <= hi
-            ),
+            (level[j] + 1 for j in near if spans[j][0] <= mid <= spans[j][1] or lo <= (spans[j][0] + spans[j][1]) // 2 <= hi),
             default=0,
         )
         taken = {level[j] for j in near}
         level[i] = next(n for n in range(floor, floor + len(near) + 1) if n not in taken)
     return tuple(level)
+
+
+def ranked_levels(spans: Sequence[tuple[int, int]], keys: Sequence[int]) -> tuple[int, ...]:
+    """`stem_levels` taken along `keys`, ties by index: the one stagger order (R362, R576)."""
+    order = sorted(range(len(spans)), key=lambda i: (keys[i], i))
+    return stem_levels(spans, order)

@@ -12,11 +12,7 @@ lazy from fransys_model.vocab.core import Port
 @digest_cached(DIGEST_CACHE_SIZE)
 def _joins(model: HasTables) -> tuple[tuple[Id[Port], Id[Port]], ...]:
     item_of = {function.id: function.item for function in functions(model).values()}
-    by_item_template = {
-        (item_of[port.function], port.template): port.id
-        for port in ports(model).values()
-        if port.template is not None
-    }
+    by_item_template = {(item_of[port.function], port.template): port.id for port in ports(model).values() if port.template is not None}
     templates = port_templates(model)
     pairs = []
     for port in ports(model).values():
@@ -26,7 +22,7 @@ def _joins(model: HasTables) -> tuple[tuple[Id[Port], Id[Port]], ...]:
         target = by_item_template.get((item_of[port.function], template.joins))
         if target is not None:
             pairs.append((port.id, target))
-    return tuple(sorted(pairs))
+    return tuple(pairs)
 
 
 def port_joins(model: HasTables) -> tuple[tuple[Id[Port], Id[Port]], ...]:

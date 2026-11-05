@@ -2,7 +2,7 @@
 
 from typing import TYPE_CHECKING
 
-from fransys_layout.core import Parallel, Series
+from fransys_layout.core import Parallel, Series, leaves_of
 from fransys_model.derive import SeriesRow, series_parallel
 from fransys_model.kernel import render_id
 from fransys_model.layout import Side
@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 
     from .placement_env import Env
 
-__all__ = ["bridges_of", "leaves", "series_of", "trees", "within"]
+__all__ = ["bridges_of", "series_of", "trees", "within"]
 
 _MIN_LEAVES = 2  # a series of one symbol orders nothing
 
@@ -29,11 +29,7 @@ def _ends(env: Env, syms: Sequence[Sym]) -> dict[Id[Port], tuple[str, Side]]:
     """Each drawn port of `syms`: its symbol id and the side its pin leaves by at R0."""
     side = {(s.id, p.id): p.side for s in syms for p in s.pins}
     drawn = {s.id for s in syms}
-    return {
-        port: (ref.sym, Side(side[ref.sym, ref.pin].lower()))
-        for port, ref in env.pins.items()
-        if port not in env.undrawn and ref.sym in drawn
-    }
+    return {port: (ref.sym, Side(side[ref.sym, ref.pin].lower())) for port, ref in env.pins.items() if port not in env.undrawn and ref.sym in drawn}
 
 
 def trees(env: Env, syms: Sequence[Sym]) -> SeriesParallel:
@@ -51,13 +47,6 @@ def _part(part: SeriesRowPart) -> SeriesPart:
 def series_of(found: SeriesParallel) -> tuple[Series, ...]:
     """The regions of `found` as core `Series`, in its order."""
     return tuple(Series(tuple(_part(p) for p in row.parts)) for row in found.regions)
-
-
-def leaves(part: SeriesPart) -> tuple[str, ...]:
-    """The symbol ids of `part`, in its order."""
-    if isinstance(part, str):
-        return (part,)
-    return tuple(leaf for p in part.parts for leaf in leaves(p))
 
 
 def bridges_of(env: Env, found: SeriesParallel) -> tuple[Skipped, ...]:
@@ -80,8 +69,8 @@ def within(series: Series, keep: Collection[str]) -> Series | None:
         return None
     parts = part.parts if isinstance(part, Series) else (part,)
     if series.anchor is None:
-        return Series(parts) if len(leaves(part)) >= _MIN_LEAVES else None
-    end = leaves(series)[0 if series.anchor == "head" else -1]
+        return Series(parts) if len(leaves_of(part)) >= _MIN_LEAVES else None
+    end = leaves_of(series)[0 if series.anchor == "head" else -1]
     return Series(parts, series.anchor) if end in keep else None
 
 

@@ -4,8 +4,6 @@ A place box opens nothing. The details panel lists the units and loose items it 
 data. The Features handler calls `pickLocFold()` after it sets `state.feat.locfold`.
 """
 
-# ruff: noqa: E501 -- the JavaScript source is not wrapped
-
 from typing import Final
 
 JS_PLACES: Final[str] = r"""

@@ -18,7 +18,10 @@ Pred = dict[str, list[tuple[str, int]]]
 
 
 class Graph:
-    """Nodes are strings; equal() merges two into one class, after() adds a minimum distance."""
+    """Nodes are strings; equal() merges two into one class, after() adds a minimum distance.
+
+    No distance is rounded here: the reaches that feed a graph are whole wiring cells where the symbol layer reads them (R1693).
+    """
 
     def __init__(self) -> None:
         self.nodes: set[str] = {ORIGIN}

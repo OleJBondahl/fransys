@@ -1,15 +1,6 @@
-"""Field case: a run labelled "PE" takes the strip's PE part.
-
-The engineering shape: a strip with feed-through terminals and a PE run beside them, the
-protective conductors landing on PE terminal blocks (IEC 60947-7-2, label "PE" per IEC 60445).
-
-The bug: a run took the strip's one feed-through part, so the PE terminals counted and printed
-as feed-through ones; there was no part-per-run keyword (owner: "all terminals except PE are of
-the same part").
-
-The rule: a run labelled exactly "PE" takes the strip's `pe=` part; on a strip
-without `pe=` it raises `_take_pe`'s message. An explicit `X1[n]` is unchecked.
-"""
+"""Field case: a terminal strip with feed-through terminals and a PE run whose protective conductors land on PE terminal blocks.
+The bug: a run took the strip's one feed-through part, so the PE terminals printed as feed-through ones; there was no per-run part keyword.
+Open: no deciding record is named; a run labelled exactly "PE" takes the strip's `pe=` part, and a strip without `pe=` raises."""
 
 import fransys as fr
 import pytest
@@ -37,7 +28,5 @@ def test_pe_run_takes_the_pe_part() -> None:
 
 def test_pe_run_without_pe_part_raises() -> None:
     """No `pe=`: the same message `_take_pe` gives, naming the strip and the fix."""
-    with pytest.raises(
-        AuthorError, match=r"X1 has no PE terminal part: terminal_strip\(\.\.\., pe="
-    ):
+    with pytest.raises(AuthorError, match=r"X1 has no PE terminal part: terminal_strip\(\.\.\., pe="):
         _strip()

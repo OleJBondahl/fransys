@@ -1,30 +1,42 @@
 """WHERE-WIRED (R404, R407): one page one wire, a cut a reference pair, out a stub in each unit.
 
-A conductor that crosses a unit boundary draws a stub in each unit it touches.
-
-Each unit's side shows its own stub, so no cable has only one half of its pair drawn. Checked on
-the core layout of the machine panel (32 channels), the panel with a DI card and the MCC.
+A conductor that crosses a unit boundary draws a stub in each unit it touches, unless the net is
+drawn to its far end on the page (MARKER-FREE-SIDE, M1): the wire is the reference there.
 """
 
 import importlib
-import sys
 from collections import defaultdict
-from pathlib import Path
 
-import fransys as fr
 import pytest
 from _direct_case import built_with_unlaid, laid_again
 from fransys_el import lay_out_core
 
-ROOT = Path(__file__).resolve().parent.parent
-CASES = {"machine_panel": {"channels": 32}, "panel_di16p": {}, "mcc": {}}
+WRAPS = {  # census 2026-10-25: the 7 builds of R847
+    "machine_panel": 0,  # BRIDGE-NOT-DRAWN (R1145): a bridged rail draws no cut, was 1 (RAIL-FLAG R921: was 0)
+    "panel_di16p": 1,  # SUPPLY-SLOT (R1605): was 2 (BRIDGE-NOT-DRAWN R1145: was 3)
+    "mcc": 0,
+    "distribution_board": 2,  # R1730: ARROW row wraps of net f:U1-F1, at cuts 4 and 16; was 0
+    "distribution_board_large": 0,  # R1105 (S2-TRACE-B-5): 3 at the old default id seed, 0 at the new; a looks count (KI-386)
+    "skid_v48_m6": 3,  # TEXT-IN-LOOP 1 (R1450): a blocked label widens its gap in the recut; was 2
+    "demo-skid": 1,
+}
+SIZES = {"machine_panel": {"channels": 32}}
+
+
+def _circuit(name: str):
+    """The corpus runner's circuit of a build: a standard module, a large size, or the demo skid."""
+    run = importlib.import_module("placement_corpus.run")
+    if name == "demo-skid":
+        return (run.SKID.name, run.load(run.SKID, "demo_skid_census"), {}, {})
+    found = {c[0]: c for s in ("standard", "large") for c in run.circuits(s)}
+    base = found[name]
+    return (*base[:2], SIZES.get(name, base[2]), base[3])
 
 
 def _solved(name: str) -> list[tuple[object, object]]:
     """(problem, CoreLayout) of every core solve the case's layout step makes."""
-    sys.path.insert(0, str(ROOT / "internal"))
-    module = importlib.import_module(f"placement_corpus.standard.{name}")
-    _, unlaid = built_with_unlaid(lambda: fr.build(*module.design(**CASES[name])))
+    run = importlib.import_module("placement_corpus.run")
+    _, unlaid = built_with_unlaid(lambda: run.build(name, _circuit(name)))
     solved = []
     real = lay_out_core.solve
 
@@ -40,7 +52,7 @@ def _solved(name: str) -> list[tuple[object, object]]:
 
 @pytest.fixture(
     scope="module",
-    params=[pytest.param(n, marks=pytest.mark.private_input) for n in CASES],  # R462
+    params=[pytest.param(n, marks=pytest.mark.private_input) for n in WRAPS],  # R462
 )
 def solved(request: pytest.FixtureRequest):
     return request.param, _solved(request.param)
@@ -57,20 +69,25 @@ def test_a_crossing_net_has_a_stub_in_every_unit_it_touches(solved) -> None:
             if ref.kind.value == "stub":
                 stubbed[ref.net].update(unit_of[e.pin.sym] for e in ref.ends if e.pin)
         for net in problem.nets:
-            units = {unit_of[p.sym] for p in net.pins}
+            units = {unit_of[p.sym] for p in net.pins if p not in layout.drawn}
             if net.crosses_unit and len(units) > 1:
                 missing += [(net.id[:8], u) for u in units - stubbed[net.id]]
     assert missing == [], name
 
 
-@pytest.mark.rule("WHERE-WIRED")
-def test_a_tag_pair_joins_two_pages_never_one(solved) -> None:
-    """One page one wire: a net on one page is a wire, so a row cut plans no tag (R404)."""
+@pytest.mark.rule("ROW-WRAP")
+def test_a_same_page_reference_is_a_row_wrap_or_a_card_halves_tag(solved) -> None:
+    """Only ROW-WRAP (an arrow pair between two bands) and CROSS-HALF-TAGS (one box's halves) join one page (R847)."""
     name, runs = solved
-    same_page = [
-        (ref.net[:8], ref.ends[0].page)
-        for _, layout in runs
-        for ref in layout.references
-        if ref.kind.value == "tag" and len({e.page for e in ref.ends}) == 1
-    ]
-    assert same_page == [], name
+    odd, wraps = [], 0
+    for _, layout in runs:
+        for ref in layout.references:
+            if ref.kind.value == "stub" or len({e.page for e in ref.ends}) != 1:
+                continue
+            wrap = ref.kind.value == "arrow" and len({e.row for e in ref.ends}) == len(ref.ends)
+            halves = ref.kind.value == "tag" and len({e.pin.sym for e in ref.ends if e.pin}) == 1
+            wraps += wrap
+            if not (wrap or halves):
+                odd.append((ref.net[:8], ref.kind.value, ref.cut))
+    assert odd == [], name
+    assert wraps == WRAPS[name], name

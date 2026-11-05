@@ -8,12 +8,12 @@ from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, digest_cached
 from fransys_model.vocab.facets.cable import OpenCoreFacet
 from fransys_model.vocab.tables import facets_of
 lazy from fransys_model.vocab.core import Item, Unit
-lazy from fransys_model.vocab.enums import PortRole
+lazy from fransys_model.vocab.enums import PortBoundary
 
 from .core_pairs import _product_colours, open_core_is_spare
 from .designation import printed_designation
-from .facts.roles import port_role
-from .house_settings import word
+from .facts.house_settings import word
+from .facts.roles import port_boundary
 from .indexes import build_indexes
 from .texts.core_text import join_words
 lazy from .rows_cores import OpenCoreRow
@@ -25,9 +25,7 @@ def _open_by_cable(model: Model) -> frozendict[Id[Item], tuple[OpenCoreFacet, ..
     grouped: dict[Id[Item], list[OpenCoreFacet]] = {}
     for facet in facets_of(model, OpenCoreFacet).values():
         grouped.setdefault(facet.subject, []).append(facet)
-    return frozendict(
-        {cable: tuple(sorted(found, key=lambda f: f.index)) for cable, found in grouped.items()}
-    )
+    return frozendict({cable: tuple(sorted(found, key=lambda f: f.index)) for cable, found in grouped.items()})
 
 
 def open_core_text(spare: str, row: OpenCoreRow, mark: str = "") -> str:
@@ -38,10 +36,8 @@ def open_core_text(spare: str, row: OpenCoreRow, mark: str = "") -> str:
     return join_words(str(row.index), row.colour, mark, spare if row.spare else "")
 
 
-def open_ends_at(
-    model: Model, terminal: Id[Item], role: PortRole, *, unit: Id[Unit] | None
-) -> tuple[str, ...]:
-    """The end text of each open core landing on `terminal`'s ports of `role`: `-W1 GY spare`.
+def open_ends_at(model: Model, terminal: Id[Item], role: PortBoundary, *, unit: Id[Unit] | None) -> tuple[str, ...]:
+    """The end text of each open core landing on `terminal`'s ports on `role`: `-W1 GY spare`.
 
     The terminal list appends these after the far ends of its conductors (CC6); they have no
     conductor, so no `TerminalRow.internal` or `external` entry stands beside them.
@@ -51,7 +47,7 @@ def open_ends_at(
         port
         for function in idx.functions_by_item.get(terminal, ())
         for port in idx.ports_by_function.get(function, ())
-        if port_role(model, port) is role
+        if port_boundary(model, port) is role
     }
     spare = word(model, "spare")
     found = []

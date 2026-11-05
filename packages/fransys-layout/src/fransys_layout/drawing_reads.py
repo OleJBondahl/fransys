@@ -5,6 +5,7 @@ a diagonal one is ignored. Imports the standard library and the core's plain val
 parameters are structural protocols that `fransys_layout.drawing`'s values satisfy.
 """
 
+from dataclasses import dataclass
 from itertools import pairwise
 from typing import Protocol
 lazy from collections.abc import Sequence
@@ -12,6 +13,7 @@ lazy from collections.abc import Sequence
 lazy from .core.values import XY, Box, Size
 
 __all__ = (
+    "SlotText",
     "fill_percent",
     "page_texts",
     "struck_texts",
@@ -30,21 +32,23 @@ class DrawnText(Protocol):
 
 
 class DrawnWire(Protocol):
-    """What a read needs of a wire: id, points, label."""
+    """What a read needs of a wire: id, points."""
 
     @property
     def id(self) -> str: ...
     @property
     def points(self) -> Sequence[XY]: ...
-    @property
-    def label(self) -> DrawnText | None: ...
 
 
 class DrawnSymbol(Protocol):
-    """What a read needs of a symbol: its placed body box, if the producer knew one."""
+    """What a read needs of a symbol: its id, its placed body box, if the producer knew one, and its slot ink."""
 
     @property
+    def id(self) -> str: ...
+    @property
     def outline(self) -> Box | None: ...
+    @property
+    def slot_ink(self) -> Sequence[tuple[str, Box]]: ...
 
 
 class DrawnOutline(Protocol):
@@ -141,21 +145,23 @@ def _passes(seg: tuple[XY, XY], text: DrawnText) -> bool:
 
 
 def struck_texts(wires: Sequence[DrawnWire], texts: Sequence[DrawnText]) -> int:
-    """Texts that an orthogonal wire segment passes through the interior of.
+    """Texts that an orthogonal wire segment passes through the interior of."""
+    return sum(any(_passes(seg, text) for w in wires for seg in _segments(w.points)) for text in texts)
 
-    A wire whose `label is` the text never strikes it; any other wire does.
-    """
-    found = 0
-    for text in texts:
-        others = [w for w in wires if w.label is not text]
-        found += any(_passes(seg, text) for w in others for seg in _segments(w.points))
-    return found
+
+@dataclass(frozen=True, slots=True)
+class SlotText:
+    """A string drawn in a symbol's slot: the box symdef measured from it, and the id of its symbol."""
+
+    box: Box
+    owner: str
+    kind: str = "SLOT"
 
 
 def page_texts(drawing: Drawing) -> tuple[DrawnText, ...]:
-    """Every text a drawing carries: its texts, then each wire label, then each outline label."""
-    labels = [w.label for w in drawing.wires] + [o.label for o in drawing.outlines]
-    return drawing.texts + tuple(t for t in labels if t is not None)
+    """Every text a drawing carries: its texts, then each outline label, then each string in a symbol's slot (TEXT-BOX-MEASURED)."""
+    slots = tuple(SlotText(box, s.id) for s in drawing.symbols for _, box in s.slot_ink)
+    return drawing.texts + tuple(o.label for o in drawing.outlines if o.label is not None) + slots
 
 
 def _ink(drawing: Drawing) -> list[tuple[int, int, int, int]]:

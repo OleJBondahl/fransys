@@ -4,7 +4,7 @@
 `inspect.signature` and `get_type_hints` working on `Record` without an import cycle.
 """
 
-from typing import Any, Protocol
+from typing import Protocol
 
 lazy from .ids import AuthoringKey, Id
 lazy from .values import Value
@@ -18,7 +18,7 @@ class Record(Protocol):
     """
 
     @property
-    def id(self) -> Id[Any]:
+    def id(self) -> Id[Record]:
         """The record's primary key."""
         ...
 

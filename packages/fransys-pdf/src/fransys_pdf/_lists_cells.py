@@ -17,9 +17,7 @@ def _cell_typst(value: object) -> str:
             parts = cell_parts(value)
             if not parts:
                 return f"text({literal('')})"
-            return f" + text({literal(CELL_SEPARATOR)}) + ".join(
-                f"box(text({literal(part)}))" for part in parts
-            )
+            return f" + text({literal(CELL_SEPARATOR)}) + ".join(f"box(text({literal(part)}))" for part in parts)
         case _:
             return f"text({literal(cell_text(value))})"
 

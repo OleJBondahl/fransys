@@ -2,9 +2,6 @@
 
 Hand-built facts: each core takes a random top end and bottom end, ends fill by lowest core key
 and pins by core key, as `end_rows` and `drawn_pins` give them. The profile is derandomized so
-the gate is reproducible. A case that does not route is a design question, not a skip. Every end
-of a drawn case also carries one row link: two extra pins and a core
-between them.
 """
 
 from itertools import pairwise
@@ -20,7 +17,7 @@ _SHAPES = ((1, 3), (2, 2))
 
 
 @st.composite
-def _assignment(draw, ends: int, cores: int) -> list[int]:
+def _assignment(draw: st.DrawFn, ends: int, cores: int) -> list[int]:
     """One end index per core, every end used at least once."""
     extra = draw(st.lists(st.integers(0, ends - 1), min_size=cores - ends, max_size=cores - ends))
     return draw(st.permutations([*range(ends), *extra]))
@@ -30,9 +27,7 @@ def _assignment(draw, ends: int, cores: int) -> list[int]:
 def _cable(draw):
     top_ends, bottom_ends = draw(st.sampled_from(_SHAPES))
     cores = draw(st.integers(max(top_ends, bottom_ends), 8))
-    pairs = list(
-        zip(draw(_assignment(top_ends, cores)), draw(_assignment(bottom_ends, cores)), strict=True)
-    )
+    pairs = list(zip(draw(_assignment(top_ends, cores)), draw(_assignment(bottom_ends, cores)), strict=True))
     loops = [(True, n) for n in range(top_ends)] + [(False, n) for n in range(bottom_ends)]
     return pairs, draw(st.sampled_from((16, 48, 120))), draw(st.sampled_from((16, 40, 64))), loops
 
@@ -40,26 +35,16 @@ def _cable(draw):
 def _touches(run, box) -> bool:
     """Whether any segment of `run` has a point on or inside the closed cable box."""
     x, y, width, height = box
-    return any(
-        min(a.x, b.x) <= x + width
-        and max(a.x, b.x) >= x
-        and min(a.y, b.y) <= y + height
-        and max(a.y, b.y) >= y
-        for a, b in pairwise(run)
-    )
+    return any(min(a.x, b.x) <= x + width and max(a.x, b.x) >= x and min(a.y, b.y) <= y + height and max(a.y, b.y) >= y for a, b in pairwise(run))
 
 
 @settings(derandomize=True, deadline=None, max_examples=300, database=None)
-@example(
-    ([(0, 0), (0, 1), (0, 0), (0, 0)], 48, 40, [(False, 0)])
-)  # top pin 3 is the link's first pin
+@example(([(0, 0), (0, 1), (0, 0), (0, 0)], 48, 40, [(False, 0)]))  # top pin 3 is the link's first pin
 @given(_cable())
 def test_every_random_cable_routes_cleanly(case):
     """It routes with a link on every end, no two wires share a stretch, none
     enters the box, all on grid, no link touches the box. The example stands a crossing core's
     top column on a link pin, so the link must join the channel's constraints.
-
-    Probe: `place._plan` passing no `links` to `plan_channel`.
     """
     pairs, label, text, loops = case
     facts = block_facts(pairs, label=label, text=text, loops=loops)

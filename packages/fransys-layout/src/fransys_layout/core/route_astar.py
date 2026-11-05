@@ -1,7 +1,8 @@
 """Stage 6 cross-links: A* on the wiring grid with bend and crossing penalties.
 
 Cells are grid units; `step` is `Options.wiring_grid`. A cell is blocked by a footprint, refused
-along the axis another net already uses it on, and costs `crossing_penalty` across it.
+along the axis another net already uses it on, and costs `crossing_penalty` across it. In a soft
+round (`Occupancy.share_cost`) the wire rules of R391 are priced, not refused.
 """
 
 import heapq
@@ -18,14 +19,15 @@ if TYPE_CHECKING:
 INF = 1 << 60
 MOVES = ((1, 0, "h"), (-1, 0, "h"), (0, 1, "v"), (0, -1, "v"))
 State = tuple[XY, str]
+Entry = tuple[int, int, int, XY, str, tuple[XY, ...]]
 
 
 @dataclass(frozen=True, slots=True)
 class Leg:
     """One search: net, start and goal cells; `free` cells are enterable though blocked.
 
-    `targets` are further goal cells (the cells the net's tree holds); `window` is the inclusive
-    cell box (x0, y0, x1, y1) the search stays in, None for the whole page.
+    `targets` are further goal cells (the net's tree); `own` are the symbols whose port cell it
+    may enter.
     """
 
     net: str
@@ -33,7 +35,7 @@ class Leg:
     goal: XY
     free: AbstractSet[XY] = frozenset()
     targets: AbstractSet[XY] = frozenset()
-    window: tuple[int, int, int, int] | None = None
+    own: frozenset[str] = frozenset()
 
 
 def tidy(points: Sequence[XY]) -> tuple[XY, ...]:
@@ -42,14 +44,10 @@ def tidy(points: Sequence[XY]) -> tuple[XY, ...]:
     for p in points:
         if out and p == out[-1]:
             continue
-        if len(out) > 1 and _same_line(out[-2], out[-1], p):
+        if len(out) > 1 and (out[-2][0] == out[-1][0] == p[0] or out[-2][1] == out[-1][1] == p[1]):
             out.pop()
         out.append(p)
     return tuple(out)
-
-
-def _same_line(a: XY, b: XY, c: XY) -> bool:
-    return (a[0] == b[0] == c[0]) or (a[1] == b[1] == c[1])
 
 
 def anchor(pin: XY, fp: Box, step: int) -> tuple[XY, ...]:
@@ -76,22 +74,22 @@ def anchor(pin: XY, fp: Box, step: int) -> tuple[XY, ...]:
 
 def _step_cost(grid: Occupancy, leg: Leg, cell: XY, axis: str, options: Options) -> int | None:
     """None when the cell is blocked, or an end or the goal would lie on another net's wire."""
-    net = leg.net
+    net, soft = leg.net, grid.share_cost
+    price = grid.step + grid.history.get((cell, axis), 0)
     if cell in leg.free or cell == leg.goal or cell in leg.targets:
         if grid.foreign(cell, net):
-            return None
+            if not soft:
+                return None
+            price += soft
         if cell in leg.free:
-            return grid.step
-    if grid.blocked(cell, axis, net):
+            return price
+    if grid.blocked(cell, axis, net, leg.own):
         return None
-    return grid.step + options.crossing_penalty * grid.crossing(cell, axis, net)
+    return price + options.crossing_penalty * grid.crossing(cell, axis, net) + soft * grid.contested(cell, axis, net)
 
 
-def _inside(grid: Occupancy, leg: Leg, cell: XY) -> bool:
-    x0, y0, x1, y1 = leg.window or (0, 0, grid.cols - 1, grid.rows - 1)
-    return max(0, x0) <= cell[0] <= min(grid.cols - 1, x1) and max(0, y0) <= cell[1] <= min(
-        grid.rows - 1, y1
-    )
+def _inside(grid: Occupancy, cell: XY) -> bool:
+    return 0 <= cell[0] < grid.cols and 0 <= cell[1] < grid.rows
 
 
 def _moves(grid: Occupancy, leg: Leg, state: State, options: Options) -> list[tuple[XY, str, int]]:
@@ -101,35 +99,45 @@ def _moves(grid: Occupancy, leg: Leg, state: State, options: Options) -> list[tu
     out = []
     for dx, dy, axis in MOVES:
         nxt = (cell[0] + dx, cell[1] + dy)
-        if not _inside(grid, leg, nxt) or (on_foreign and axis != arrived):
+        turn = on_foreign and axis != arrived
+        if not _inside(grid, nxt) or (turn and not grid.share_cost):
             continue
         cost = _step_cost(grid, leg, nxt, axis, options)
         if cost is not None:
-            out.append((nxt, axis, cost))
+            out.append((nxt, axis, cost + (grid.share_cost if turn else 0)))
     return out
 
 
 def astar(grid: Occupancy, leg: Leg, options: Options) -> tuple[XY, ...] | None:
-    """Grid cells from start to goal, or None when no path exists."""
-    if grid.foreign(leg.start, leg.net):
+    """Grid cells from start to goal, or None when no path exists; at equal cost, fewer crossings win (R643)."""
+    if grid.foreign(leg.start, leg.net) and not grid.share_cost:
         return None
-    best: dict[State, int] = {}
+    best: dict[State, tuple[int, int]] = {}
     goals = {leg.goal, *leg.targets}
-    heap: list[tuple[int, int, XY, str, tuple[XY, ...]]] = [(0, 0, leg.start, "", (leg.start,))]
+    heap: list[Entry] = [(0, 0, 0, leg.start, "", (leg.start,))]
     while heap:
-        _, g, cell, axis, path = heapq.heappop(heap)
-        if cell in goals:
-            return path
-        if best.get((cell, axis), INF) < g:
+        node = heapq.heappop(heap)
+        if node[3] in goals:
+            return node[5]
+        if best.get((node[3], node[4]), (INF, 0)) < (node[2], node[1]):
             continue
-        for nxt, nxt_axis, cost in _moves(grid, leg, (cell, axis), options):
-            bend = options.bend_penalty if axis and axis != nxt_axis else 0
-            if g + cost + bend < best.get((nxt, nxt_axis), INF):
-                ng = g + cost + bend
-                best[(nxt, nxt_axis)] = ng
-                h = min(abs(c[0] - nxt[0]) + abs(c[1] - nxt[1]) for c in goals) * grid.step
-                heapq.heappush(heap, (ng + h, ng, nxt, nxt_axis, (*path, nxt)))
+        _expand(grid, leg, options, (goals, best, heap), node)
     return None
+
+
+def _expand(
+    grid: Occupancy, leg: Leg, options: Options, search: tuple[AbstractSet[XY], dict[State, tuple[int, int]], list[Entry]], node: Entry
+) -> None:
+    """Queue every better move from one popped node, with its A* estimate to the nearest goal."""
+    goals, best, heap = search
+    _, crossed, g, cell, axis, path = node
+    for nxt, nxt_axis, cost in _moves(grid, leg, (cell, axis), options):
+        bend = options.bend_penalty if axis and axis != nxt_axis else 0
+        ng, nc = g + cost + bend, crossed + grid.crossing(nxt, nxt_axis, leg.net)
+        if (ng, nc) < best.get((nxt, nxt_axis), (INF, 0)):
+            best[(nxt, nxt_axis)] = (ng, nc)
+            h = min(abs(c[0] - nxt[0]) + abs(c[1] - nxt[1]) for c in goals) * grid.step
+            heapq.heappush(heap, (ng + h, nc, ng, nxt, nxt_axis, (*path, nxt)))
 
 
 def simplify(path: Sequence[XY], step: int) -> tuple[XY, ...]:

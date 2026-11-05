@@ -10,9 +10,8 @@ from fransys_model.derive.accessory_blocks import operating_item
 from fransys_model.derive.contact_entries import contact_list_key
 from fransys_model.derive.unused import function_is_unused
 from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, digest_cached
-from fransys_model.layout import profile_of
 from fransys_model.vocab.tables import functions
-lazy from fransys_model.vocab.core import Function, Item, Unit
+lazy from fransys_model.vocab.core import Function, Item
 
 
 @digest_cached(DIGEST_CACHE_SIZE)
@@ -22,10 +21,7 @@ def _groups(model: Model) -> dict[Id[Item], tuple[Id[Function], ...]]:
     for function in functions(model):
         if item := operating_item(model, function):  # None unless a switch
             found[item].append(function)
-    return {
-        item: tuple(sorted(group, key=lambda f: (contact_list_key(model, f), f)))
-        for item, group in found.items()
-    }
+    return {item: tuple(sorted(group, key=lambda f: (contact_list_key(model, f), f))) for item, group in found.items()}
 
 
 def actuated_group(model: Model, function: Id[Function]) -> tuple[Id[Function], ...]:
@@ -38,8 +34,3 @@ def lead_switch(model: Model, function: Id[Function]) -> Id[Function] | None:
     """The first switch of `function`'s group that is wired, else the group's first; else None."""
     group = actuated_group(model, function)
     return next((f for f in group if not function_is_unused(model, f)), group[0] if group else None)
-
-
-def actuator_each_contact(model: Model, unit: Id[Unit] | None) -> bool:
-    """Whether `unit`'s profile draws the actuator on every contact (the default)."""
-    return profile_of(model, unit).actuator_each_contact

@@ -11,9 +11,7 @@ from .plc_list import plc_channel_pairs
 from .rows_plc import PlcTable
 
 
-def plc_tables(
-    model: Model, *, unit: Id[Unit] | None = None, context: Id[AspectNode] | None = None
-) -> tuple[PlcTable, ...]:
+def plc_tables(model: Model, *, unit: Id[Unit] | None = None, context: Id[AspectNode] | None = None) -> tuple[PlcTable, ...]:
     """The rows of `plc_channel_rows`, one `PlcTable` per carrying item, in the same order.
 
     A controller's own channels form its table, then each module's follow in rack order; the
@@ -29,7 +27,5 @@ def plc_tables(
             designation=printed_designation(model, item, unit=unit),
             rows=tuple(row for _, row in group),
         )
-        for item, group in groupby(
-            plc_channel_pairs(model, unit=unit, context=context), key=lambda pair: pair[0]
-        )
+        for item, group in groupby(plc_channel_pairs(model, unit=unit, context=context), key=lambda pair: pair[0])
     )

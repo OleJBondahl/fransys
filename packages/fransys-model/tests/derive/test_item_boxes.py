@@ -15,10 +15,7 @@ class _Item:
         plant = Plant()
         self.item = plant.item("k1")
         self.functions = {n: plant.function(self.item, n) for n in "abc"}
-        self.ports = {
-            n: plant.port(f, p)
-            for (n, f), p in zip(self.functions.items(), ("10", "2", "1"), strict=True)
-        }
+        self.ports = {n: plant.port(f, p) for (n, f), p in zip(self.functions.items(), ("10", "2", "1"), strict=True)}
         self.model = plant.model()
 
     def candidate(self, name: str, **flags: Any) -> BoxCandidate:
@@ -80,10 +77,7 @@ def test_the_kind_is_shared_by_the_wired_members_only() -> None:
 def test_functions_naming_one_symbol_with_distinct_ports_are_a_named_box() -> None:
     """Authored choices all naming one symbol draw the item by it, unless a port repeats."""
     one = _Item()
-    named = [
-        one.candidate(n, boxed=False, symbol="s", symbol_ports=(p,))
-        for n, p in (("a", "1"), ("b", "2"))
-    ]
+    named = [one.candidate(n, boxed=False, symbol="s", symbol_ports=(p,)) for n, p in (("a", "1"), ("b", "2"))]
     (view,) = item_box_views(one.model, named, frozenset())
     assert view.named
     clash = [one.candidate(n, boxed=False, symbol="s", symbol_ports=("1",)) for n in "ab"]

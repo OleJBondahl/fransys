@@ -5,24 +5,24 @@ from __future__ import annotations
 from dataclasses import replace
 from typing import TYPE_CHECKING
 
-from .arrow_reserve import arrow_ends, reserve
+from .arrow_reserve import reserve
+from .clearance import Keep, reach
 from .constraints import Graph
+from .cut_end_rooms import arrow_ends
 from .errors import CoreError
 from .geometry import cell_footprint, pin_xy, union, view_of
 from .keys import natural_key
 from .marker_flags import pair_steps
-from .marker_room import row_rooms
 from .node_names import box_y_node, col_node
-from .pack import cell_node
+from .pack import box_edge, cell_node
 from .place_accept import accept
 from .place_align import page_aligns, unmet_mates
 from .place_foreign import clear_foreign
-from .place_join_room import join_rooms
 from .place_levels import Span, trunk_levels
-from .place_reach import card_reaches
 from .place_ring import ring_symbols
-from .place_room import Step, crossed_levels, origins, step_rooms
+from .place_room import Step, crossed_levels, step_rooms
 from .place_trunk import (
+    anchors_under,
     box_at,
     box_pin_x,
     fan_roles,
@@ -32,23 +32,23 @@ from .place_trunk import (
     tangled_trunks,
     trunk_constraints,
 )
-from .room import Room
-from .row_extent import extent, grid_up
+from .row_extent import grid_up, held
 from .values import Finding
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
     from collections.abc import Set as AbstractSet
 
+    from .flow_values import Attach, Cell, Fan
     from .pack import PlacedColumn
     from .place_align import Align
     from .place_env import PageEnv
     from .place_room import CrossedRooms
-    from .values import Attach, Box, Cell, Fan, RowPlan
+    from .values import Box
 
 
 class YCycleError(CoreError):
-    """The stacks and trunks of a page are cyclic: stage 1 left a ring in a column."""
+    """The y constraints of a page are cyclic: a ring left in stage 1, or a stage 5 foreign clearance against the hard order."""
 
 
 def _footprint(env: PageEnv, cell: Cell) -> Box:
@@ -64,9 +64,7 @@ def _gap(env: PageEnv, above: Cell, below: Cell, room: int = 0) -> int:
     wire = env.options.wire_min
     pins = max(wire, room)
     by_box = fa.y + fa.h + wire - fb.y
-    pa = (
-        pin_xy(env.syms[above.sym], above, above.bottom_pin)[1] if above.bottom_pin else fa.y + fa.h
-    )
+    pa = pin_xy(env.syms[above.sym], above, above.bottom_pin)[1] if above.bottom_pin else fa.y + fa.h
     pb = _pin_y(env, below, below.top_pin) if below.top_pin else fb.y
     return grid_up(max(by_box, pa + pins - pb) + below.hold, env.options.wiring_grid)
 
@@ -80,9 +78,7 @@ def _same_symbol(g: Graph, pc: PlacedColumn, lane: int, index: int, cell: Cell) 
                 return
 
 
-def stack_constraints(
-    g: Graph, pc: PlacedColumn, env: PageEnv, rooms: Mapping[Step, int], *, rigid: bool
-) -> None:
+def stack_constraints(g: Graph, pc: PlacedColumn, env: PageEnv, rooms: Mapping[Step, int], *, rigid: bool) -> None:
     """Consecutive cells keep wire_min between footprints, `rooms` (else wire_min) between pins."""
     for li, cells in enumerate(pc.lanes):
         for i in range(1, len(cells)):
@@ -97,7 +93,10 @@ def stack_constraints(
 
 
 def join_constraints(g: Graph, env: PageEnv) -> None:
-    """A folded parallel member stands level with the cell its head join names."""
+    """A folded parallel member stands with its head pin level with the pin its head join names.
+
+    A join with no net or no head pin only stands the member level with the cell (cell tops equal).
+    """
     for column in env.flow.columns:
         pc = env.pcs.get(column.id)
         if pc is None:
@@ -106,7 +105,10 @@ def join_constraints(g: Graph, env: PageEnv) -> None:
         for li, end in enumerate(column.heads):
             if end.is_join and end.pin is not None:
                 lane, index = where[end.pin.sym]
-                g.equal(cell_node(pc.id, lane, index), cell_node(pc.id, li, 0), 0)
+                member, target = pc.lanes[li][0], pc.lanes[lane][index]
+                level = end.net is not None and member.top_pin is not None
+                shift = _pin_y(env, target, end.pin.pin) - _pin_y(env, member, member.top_pin) if level else 0
+                g.equal(cell_node(pc.id, lane, index), cell_node(pc.id, li, 0), shift)
 
 
 def _held(g: Graph, r: int, env: PageEnv, node: str, extent_: tuple[int, int]) -> None:
@@ -116,33 +118,17 @@ def _held(g: Graph, r: int, env: PageEnv, node: str, extent_: tuple[int, int]) -
 
 
 def _row_constraints(g: Graph, r: int, env: PageEnv) -> None:
-    """Every cell's extent with its room stays inside the row; the top keeps the row's headroom."""
-    step = env.options.wiring_grid
+    """Every cell's extent, hangings included, stays inside the row; the top keeps the headroom."""
     for col in env.plan.rows[r].columns:
         pc = env.pcs[col]
         for li, cells in enumerate(pc.lanes):
             for i, cell in enumerate(cells):
-                room = env.rooms.get(cell.sym, Room())
-                held = extent(_footprint(env, cell), room, env.options)
-                _held(g, r, env, cell_node(pc.id, li, i), held)
-    g.at_least(
-        f"row:{r}",
-        max(env.options.top_headroom, grid_up(row_rooms(env).get(r, Room()).up + step, step)),
-    )
+                extent = held(_footprint(env, cell), env.options)
+                _held(g, r, env, cell_node(pc.id, li, i), extent)
+    g.at_least(f"row:{r}", env.options.top_headroom)
 
 
-def _edge(env: PageEnv, col: str, row: RowPlan) -> str:
-    """The edge of the box the attached column's pin uses in this row."""
-    box, pin, _ = env.attach[col]
-    for b in row.blocks:
-        if env.blocks[b].anchor == box:
-            return dict(env.blocks[b].pin_edges).get(pin, "S")
-    return "S"
-
-
-def _attach_y(
-    g: Graph, pc: PlacedColumn, env: PageEnv, *, above: bool, slack: bool = False
-) -> None:
+def _attach_y(g: Graph, pc: PlacedColumn, env: PageEnv, *, above: bool, slack: bool = False) -> None:
     """An attached column hangs wire_min under the box's S edge, or stands over its N edge.
 
     A `slack` column hangs at least that far: a trunk of a foreign fan runs between it and the box.
@@ -151,43 +137,37 @@ def _attach_y(
     body, cells = env.syms[box].body, pc.lanes[0]
     if above:
         dy = _pin_y(env, cells[-1], cells[-1].bottom_pin)
-        wire = _hang(env, cells[-1], above=True, dy=dy)
+        wire = max(_box_gap(env, cells[-1], above=True, dy=dy), body.y - env.syms[box].footprint.y + env.options.wire_min)
         g.equal(box_y_node(box), cell_node(pc.id, 0, len(cells) - 1), body.y - wire - dy)
     else:
         dy = _pin_y(env, cells[0], cells[0].top_pin)
-        wire = _hang(env, cells[0], above=False, dy=dy)
+        wire = _box_gap(env, cells[0], above=False, dy=dy)
         at = box_y_node(box), cell_node(pc.id, 0, 0), body.y + body.h + wire - dy
         g.after(*at) if slack else g.equal(*at)
 
 
-def _hang(env: PageEnv, cell: Cell, *, above: bool, dy: int) -> int:
-    """wire_min and the cell's marker room on the box side, or its keep-out's reach if more."""
-    room = env.flag_room.get(cell.sym, Room())
+def _box_gap(env: PageEnv, cell: Cell, *, above: bool, dy: int) -> int:
+    """wire_min, or the reach of the cell's keep-out or its footprint, hangings included."""
     view = view_of(env.syms[cell.sym], cell.orient)
-    hard = union(view.body, view.keepout)
-    reach = hard.y + hard.h - dy if above else dy - hard.y
-    return max(env.options.wire_min + (room.down if above else room.up), reach)
+    side = "below" if above else "above"
+    hard = reach(dy, [Keep("", union(view.body, view.keepout), "keepout", cell.sym)], side, 0)
+    foot = reach(dy, [Keep("", _footprint(env, cell), "footprint", cell.sym)], side, 0)
+    return max(env.options.wire_min, hard, foot)
 
 
-def _box_y(g: Graph, r: int, env: PageEnv, box: str) -> None:
-    held = extent(env.syms[box].footprint, env.rooms.get(box, Room()), env.options)
-    _held(g, r, env, box_y_node(box), held)
-
-
-def _row_graph(
-    g: Graph, r: int, env: PageEnv, rooms: Mapping[Step, int], free: tuple[AbstractSet[str], ...]
-) -> None:
+def _row_graph(g: Graph, r: int, env: PageEnv, rooms: Mapping[Step, int], free: tuple[AbstractSet[str], ...]) -> None:
     """`free` holds the loose columns, then the attached columns that hang at least wire_min."""
     (loose, slack), row = free, env.plan.rows[r]
     _row_constraints(g, r, env)
     for col in row.columns:
-        above = col in env.attach and _edge(env, col, row) == "N"
+        above = col in env.attach and box_edge(env.blocks, row, *env.attach[col][:2]) == "N"
         stack_constraints(g, env.pcs[col], env, rooms, rigid=above and col not in loose)
         if col in env.attach:
             _attach_y(g, env.pcs[col], env, above=above, slack=col in slack)
     for b in row.blocks:
         if env.blocks[b].is_card:
-            _box_y(g, r, env, env.blocks[b].anchor or "")
+            box = env.blocks[b].anchor or ""
+            _held(g, r, env, box_y_node(box), held(env.syms[box].footprint, env.options))
 
 
 def _y_graph(
@@ -206,15 +186,11 @@ def _y_graph(
     for r in range(len(env.plan.rows)):
         _row_graph(g, r, env, rooms, free)
     join_constraints(g, env)
-    refused = frozenset[str]().union(
-        *(trunk_constraints(g, f, env, tangled, crossed) for f in env.flow.fans)
-    )
+    refused = frozenset[str]().union(*(trunk_constraints(g, f, env, tangled, crossed) for f in _trunked(env)))
     return g, refused, trunk_levels(g, spans, env.options)
 
 
-def _xs(
-    env: PageEnv, x: Mapping[str, int], ends: tuple[Fan, Sequence[Attach]], r: int
-) -> tuple[int, ...]:
+def _xs(env: PageEnv, x: Mapping[str, int], ends: tuple[Fan, Sequence[Attach]], r: int) -> tuple[int, ...]:
     """The x of each attachment of a fan on its row-r trunk (`in_row`): a lane or a card's pin.
 
     A box pin with no card has no x node yet; it is skipped, as before.
@@ -233,21 +209,19 @@ def _xs(
 def _spans(env: PageEnv, x: Mapping[str, int]) -> list[Span]:
     """Each fan's x span per row, from its column attachments and its box pins."""
     out = []
-    for fan in env.flow.fans:
+    for fan in _trunked(env):
         roles, side = fan_roles(env, fan), fan_side(env, fan)
         for r in range(len(env.plan.rows)):
             drivers, legs = _xs(env, x, (fan, roles[0]), r), _xs(env, x, (fan, roles[1]), r)
             if drivers or legs:
                 xs = (*drivers, *legs)
-                left, right = arrow_ends(env.refs, env.plan.page, r, fan.id)
+                left, right = arrow_ends(env.refs, env.plan, (fan,), r)
                 lo, hi = min(xs) - reserve(left, env.options), max(xs) + reserve(right, env.options)
                 out.append(Span(fan.id, r, lo, hi, fan.lanes, side, drivers, legs))
     return out
 
 
-def _settle(
-    env: PageEnv, spans: Sequence[Span], rooms: Mapping[Step, int], crossed: CrossedRooms
-) -> tuple[frozenset[str], frozenset[str]]:
+def _settle(env: PageEnv, spans: Sequence[Span], rooms: Mapping[Step, int], crossed: CrossedRooms) -> tuple[frozenset[str], frozenset[str]]:
     """Rebuild with each newly found tangled trunk until none is new; (tangled, refused)."""
     tangled: frozenset[str] = frozenset[str]()
     refused: frozenset[str] = frozenset[str]()
@@ -265,20 +239,14 @@ def _dropped(env: PageEnv, align: Align) -> Finding:
 
 
 def _unmet(env: PageEnv) -> list[Finding]:
-    text = (
-        "mate {}: its halves are not cells of one row of this page; dropped, put both "
-        "symbols in cells of one row (a box pin cannot be mated)"
-    )
+    text = "mate {}: its halves are not cells of one row of this page; dropped, put both symbols in cells of one row (a box pin cannot be mated)"
     pairs = [f"{a.sym}.{a.pin}/{b.sym}.{b.pin}" for a, b in unmet_mates(env)]
     return [Finding("ALIGN_DROPPED", text.format(p), env.plan.page, p) for p in pairs]
 
 
 def _loosened(env: PageEnv, trunks: AbstractSet[str]) -> list[Finding]:
     text = "{}: leg alignment contradicts the stacks; dropped, the legs hang loose under the trunk"
-    return [
-        Finding("ALIGN_DROPPED", text.format(t), env.plan.page, t)
-        for t in sorted(trunks, key=natural_key)
-    ]
+    return [Finding("ALIGN_DROPPED", text.format(t), env.plan.page, t) for t in sorted(trunks, key=natural_key)]
 
 
 def _cycle_text(env: PageEnv, base: Graph) -> str:
@@ -286,37 +254,35 @@ def _cycle_text(env: PageEnv, base: Graph) -> str:
     keys = ", ".join(sorted(ring_symbols(env, base), key=natural_key)) or "none found"
     return (
         f"page {env.plan.page}: cyclic y constraints through symbols {keys}: a column feeds its "
-        "own head through a fan, or a card box ties fans into a ring; split the ring in stage 1 "
-        "(cycle split) so no column loops back"
+        "own head through a fan, or a card box ties fans into a ring (split it in stage 1), "
+        "or a stage 5 foreign clearance contradicts the hard order (a place_foreign defect: report it)"
     )
 
 
-def _steps(
-    env: PageEnv, x: Mapping[str, int], spans: Sequence[Span], crossed: CrossedRooms
-) -> dict[Step, int]:
-    """Each pair of cells keeps the larger y step of its jogs and of the flags between its pins.
-
-    A foot join with no row of its own adds its step (R456): the page is solved once without it.
-    """
-    jogs, flags = step_rooms(env, x), pair_steps(env)
-    first = {k: max(jogs.get(k, 0), flags.get(k, 0)) for k in jogs.keys() | flags.keys()}
-    g, _, _ = _y_graph(env, spans, (frozenset(), frozenset()), first, crossed)
-    solved = accept(g, page_aligns(env))
-    joins = join_rooms(env, origins(env, x), solved.y) if solved else {}
-    jogs |= {k: max(jogs.get(k, 0), v) for k, v in joins.items()}
+def _larger(jogs: Mapping[Step, int], flags: Mapping[Step, int]) -> dict[Step, int]:
+    """Each pair of cells keeps the larger y step of its jogs and of the flags between its pins."""
     return {k: max(jogs.get(k, 0), flags.get(k, 0)) for k in jogs.keys() | flags.keys()}
 
 
+def _steps(env: PageEnv, x: Mapping[str, int], spans: Sequence[Span], crossed: CrossedRooms) -> dict[Step, int]:
+    """The y steps: a foot join with no row of its own is levelled with the jogs of its step (R456), the page solved once without it."""
+    flags = pair_steps(env)
+    first = _larger(step_rooms(env, x), flags)
+    g, _, _ = _y_graph(env, spans, (frozenset(), frozenset()), first, crossed)
+    solved = accept(g, page_aligns(env))
+    return _larger(step_rooms(env, x, solved.y), flags) if solved else first
+
+
 def _with_spans(env: PageEnv, x: Mapping[str, int]) -> tuple[PageEnv, list[Span], CrossedRooms]:
-    """The env that holds the anchored items' reach under each trunk, the spans and the levels."""
+    """The env that knows which anchored pins each trunk runs over, the spans and the levels."""
     spans = _spans(env, x)
-    return replace(env, reaches=card_reaches(env, x, spans)), spans, crossed_levels(env, x)
+    return replace(env, under=anchors_under(env, x, spans)), spans, crossed_levels(env, x)
 
 
 def place_y(env: PageEnv, x: Mapping[str, int]) -> tuple[dict[str, int], tuple[Finding, ...]]:
     """The y of every cell, box, row and trunk node of the page, and the alignments dropped.
 
-    Raises YCycleError (a CoreError) when the stacks and trunks alone are cyclic.
+    Raises YCycleError (a CoreError) when the stacks, trunks and foreign clearances are cyclic.
     """
     env, spans, crossed = _with_spans(env, x)
     rooms = _steps(env, x, spans, crossed)
@@ -333,3 +299,8 @@ def place_y(env: PageEnv, x: Mapping[str, int]) -> tuple[dict[str, int], tuple[F
         raise YCycleError(_cycle_text(env, base))
     findings = (*_loosened(env, refused), *_unmet(env), *(_dropped(env, a) for a in result.dropped))
     return result.y, findings
+
+
+def _trunked(env: PageEnv) -> list[Fan]:
+    """The fans that get a trunk: a row-cut TAG fan is wrapped by routing instead (layout-0529)."""
+    return [f for f in env.flow.fans if f.id not in env.row_tags]

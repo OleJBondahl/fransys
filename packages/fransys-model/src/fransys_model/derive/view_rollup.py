@@ -96,9 +96,7 @@ def _ends(model: Model, subject: Id[Any]) -> list[Id[Any]]:
     return []
 
 
-def _boxes_of(
-    model: Model, rows: ViewRows, lookup: dict[RefKey, int], subject: Id[Any]
-) -> list[int]:
+def _boxes_of(model: Model, rows: ViewRows, lookup: dict[RefKey, int], subject: Id[Any]) -> list[int]:
     """The drawn boxes a subject counts on, in the order of its ends."""
     if subject_kind(subject) is SubjectKind.UNIT:
         keys = [_unit_keys(model, subject)]
@@ -118,9 +116,7 @@ def _wires_of(rows: ViewRows, subject: Id[Any], ends: list[int]) -> list[int]:
     return [i for i, line in enumerate(rows.lines) if {line.a, line.b} == pair]
 
 
-def subject_marks(
-    model: Model, rows: ViewRows, lookup: dict[RefKey, int], subject: Subject
-) -> tuple[tuple[int, ...], tuple[int, ...]]:
+def subject_marks(model: Model, rows: ViewRows, lookup: dict[RefKey, int], subject: Subject) -> tuple[tuple[int, ...], tuple[int, ...]]:
     """`(boxes, lines)` indexes of `rows` the subject counts on; the lines when it has any.
 
     `lookup` is `view_lookup(model, rows)`. A cable item counts on its own lines, a conductor on

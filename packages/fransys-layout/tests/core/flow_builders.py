@@ -7,6 +7,7 @@ from typing import Any, Literal
 from options_fixtures import core_options
 from turn_fixtures import refit, views_of
 
+from fransys_layout.core import build_flow
 from fransys_layout.core.sym_values import Sym
 from fransys_layout.core.values import (
     Box,
@@ -19,17 +20,11 @@ from fransys_layout.core.values import (
     Side,
     Size,
 )
+lazy from fransys_layout.core.flow_values import FlowGraph
 
 AREA = Size(1312, 854)
 LABEL = Size(16, 8)
-OPTIONS = core_options(
-    flip_turn="R180",
-    tag_stagger=True,
-    label_gap=8,
-    parallel_pitch=48,
-    driver_first=True,
-    arrow_sides=("E", "W"),
-)
+OPTIONS = core_options()
 _POLE_PINS: tuple[tuple[str, Side, int], ...] = (("n", "N", -16), ("s", "S", 16))
 
 
@@ -89,11 +84,7 @@ def free(sym_id: str, **kw: Any) -> Sym:
 def poles(sym_id: str, count: int = 3) -> Sym:
     """A multi-pole device: pole k has pin n<k> above and s<k> below, 24 G apart."""
     box = Box(-8, -16, 24 * count, 32)
-    pins = tuple(
-        Pin(f"{c}{k}", side, 24 * k, dy, 2 * k + i)
-        for k in range(count)
-        for i, (c, side, dy) in enumerate(_POLE_PINS)
-    )
+    pins = tuple(Pin(f"{c}{k}", side, 24 * k, dy, 2 * k + i) for k in range(count) for i, (c, side, dy) in enumerate(_POLE_PINS))
     nodes = tuple((p.id,) for p in pins)
     return Sym(
         sym_id,
@@ -112,8 +103,12 @@ def net(net_id: str, *pins: str, **kw: Any) -> Net:
 
 
 def problem(
-    syms: list[Sym], nets: list[Net], hints: Hints | None = None, area: Size = AREA
+    syms: list[Sym], nets: list[Net], hints: Hints | None = None, area: Size = AREA, joined: tuple[tuple[PinRef, PinRef], ...] = ()
 ) -> PlacementProblem:
-    """A placement problem over the given symbols and nets, default hints and the test area."""
-    facts = Facts()
+    """A placement problem over the given symbols and nets, default hints and the test area; `joined` are link-joined pin pairs."""
+    facts = Facts(joined=joined)
     return PlacementProblem(area, tuple(syms), tuple(nets), facts, hints or Hints())
+
+
+def flow_of(syms: list[Sym], nets: list[Net]) -> FlowGraph:
+    return build_flow(problem(syms, nets), OPTIONS)

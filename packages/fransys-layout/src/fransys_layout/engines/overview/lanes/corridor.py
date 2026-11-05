@@ -7,7 +7,8 @@ Widest lines choose first, each the least loaded corridor it may use.
 from dataclasses import dataclass
 lazy from collections.abc import Sequence
 
-from fransys_layout.geometry import snap_up
+from fransys_layout.core import grid_up
+from fransys_layout.geometry import WIRING_GRID
 
 LONG = 2  # columns a line spans before it needs a corridor
 Line = tuple[int, int, int, int, int]  # key, band_a, band_b, col_a, col_b
@@ -47,7 +48,7 @@ def plan_corridors(lines: Sequence[Line], bands: int) -> CorridorPlan:
         load[c] += 1
     seen = [0] * (bands + 1)
     rank: dict[int, int] = {}
-    for line in sorted(long, key=_track_order):
+    for line in sorted(long, key=lambda ln: (min(ln[3], ln[4]), -max(ln[3], ln[4]), ln[0])):
         c = corridor[line[0]]
         rank[line[0]], seen[c] = seen[c], seen[c] + 1
     return CorridorPlan(corridor=corridor, rank=rank, load=tuple(load))
@@ -57,10 +58,6 @@ def _order(line: Line) -> tuple[int, int]:
     return -abs(line[3] - line[4]), line[0]
 
 
-def _track_order(line: Line) -> tuple[int, int, int]:
-    return min(line[3], line[4]), -max(line[3], line[4]), line[0]
-
-
 def corridor_height(load: int, pitch: int, floor: int = 0) -> int:
     """The height of a corridor of `load` tracks: one pitch more than the tracks, 0 when empty."""
     return max((load + 1) * pitch if load else 0, floor)
@@ -68,4 +65,4 @@ def corridor_height(load: int, pitch: int, floor: int = 0) -> int:
 
 def corridor_y(top: int, height: int, load: int, rank: int, pitch: int) -> int:
     """The y of track `rank`, the `load` tracks centred in the corridor, the first on the grid."""
-    return top + snap_up((height - (load - 1) * pitch) // 2) + rank * pitch
+    return top + grid_up((height - (load - 1) * pitch) // 2, WIRING_GRID) + rank * pitch

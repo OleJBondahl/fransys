@@ -1,29 +1,15 @@
 """Field case: a cable's cores between two coils draw as open runs, not as a loop round each coil.
+The bug: a core's route ran round its coil and back into the coil's column, so the page read as a closed loop with A1 and A2 joined.
+Fixed by layout-0172, no bundle runs past its last core entry and no core re-enters its own coil's column."""
 
-The engineering shape: two relays on one page and one 4-core cable W1 whose cores run from coil A1
-to coil A1 and from coil A2 to coil A2. A coil's A1 pin faces up and its A2 pin faces down. The
-cable stands at the top level, or inside a unit: the layout is the same.
-
-The bug: the line's end at each coil has two pin rows (up and down), and the line runs on from the
-first row's split to the second's (`line_draw._through_rows`). The search goes round the coil. The
-A2 core then leaves downward, turns right, runs up past the coil and turns back left into the
-coil's own column above A1, to join the bundle. The page reads as a closed loop with A1 and A2
-joined, and the bold bundle runs on below A2's entry with no core there.
-
-Rule: no bundle segment runs past its last core entry; no core's route re-enters its own coil's
-column on the coil's far side; the routes of A1 and A2 share no run along the coil's column.
-The repro asserts the correct drawing; its fix is decision layout-0172.
-"""
-
-import tempfile
 from functools import cache
 from itertools import pairwise
-from pathlib import Path
 from typing import Any, NamedTuple
 
 import fransys as fr
 import pytest
 from _drawn_pages import drawn_pages
+from _model_build_cover import unit_document
 
 _STEP = 8  # the wiring grid: every drawn vertex is a multiple of it
 Pt = tuple[int, int]
@@ -49,15 +35,14 @@ def _cores(d: Any, k1: Any, k2: Any) -> None:
 @cache
 def _built(*, in_unit: bool) -> fr.BuildResult:
     """Built in the tests' bodies, so a build error is a test FAILURE, not a fixture error."""
-    cover = Path(tempfile.mkdtemp()) / "cover.md"
-    cover.write_text("# Cabinet\n", encoding="utf-8")
     d = fr.design("demo_parts", place="CAB")
     cab = d.location("CAB", "Cabinet")
+    extra = ()
     if in_unit:
-        d.add(_cab, "U1")
+        extra = (unit_document(d.add(_cab, "U1")),)
     else:
         _cores(d, d.device("K1", "DEMO-RLY-2CO-24"), d.device("K2", "DEMO-RLY-2CO-24"))
-    return fr.build(d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover))
+    return fr.build(d, unit_document(cab), *extra)
 
 
 def _grid(points: tuple[Pt, ...]) -> list[Pt]:
@@ -101,13 +86,7 @@ def _column_run(route: tuple[Pt, ...], col: int) -> set[Pt]:
 
 def _pin_ends(drawn: _Drawn) -> list[tuple[tuple[Pt, ...], Pt, tuple[int, int]]]:
     """Each route end that stands on a coil's column: (route, pin, coil)."""
-    return [
-        (route, pin, coil)
-        for route in drawn.routes
-        for pin in (route[0], route[-1])
-        for coil in drawn.coils
-        if coil[0] == pin[0]
-    ]
+    return [(route, pin, coil) for route in drawn.routes for pin in (route[0], route[-1]) for coil in drawn.coils if coil[0] == pin[0]]
 
 
 @_WHERE
@@ -140,12 +119,6 @@ def test_a1_and_a2_share_no_run_along_the_coils_column(where: str) -> None:
     """
     drawn = _drawn(in_unit=where == "unit")
     for col, _ in drawn.coils:
-        in_column = [
-            _column_run(route, col)
-            for route in drawn.routes
-            if any(pin[0] == col for pin in (route[0], route[-1]))
-        ]
+        in_column = [_column_run(route, col) for route in drawn.routes if any(pin[0] == col for pin in (route[0], route[-1]))]
         assert len(in_column) == 2, "both cores of the coil end on its column"
-        assert not set.intersection(*in_column), (
-            f"both cores of a coil run along its column at {in_column}"
-        )
+        assert not set.intersection(*in_column), f"both cores of a coil run along its column at {in_column}"

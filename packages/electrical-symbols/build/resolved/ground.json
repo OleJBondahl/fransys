@@ -59,6 +59,10 @@
   "kind": "symbol",
   "lint_allow": [
     {
+      "reason": "no tag is drawn on a power symbol; the library requires a tag slot of every symbol until TEXT-IN-LOOP T1 drops it (SUPPLY-SLOT R1605)",
+      "rule": "slot-missing"
+    },
+    {
       "reason": "0 V reference ground; none of the toolkit's node potentials (earth, protective_earth, functional_earth, frame) names a plain rail reference (see the decisions file)",
       "rule": "port-isolated"
     }
@@ -99,17 +103,6 @@
         1
       ],
       "side": "E"
-    },
-    "tag": {
-      "at": [
-        -2,
-        0.5
-      ],
-      "box": [
-        6,
-        1
-      ],
-      "side": "W"
     }
   },
   "status": "unverified"

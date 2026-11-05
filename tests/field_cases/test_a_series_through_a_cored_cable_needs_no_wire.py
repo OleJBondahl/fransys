@@ -1,15 +1,6 @@
 """Field case: a series through a cable whose part has a core table needs no `wire=`.
-
-The engineering shape: a field motor on a four-core cable, wired from a terminal strip. The cores
-are the cable part's own: colour, number and PE core are stated by its core table.
-
-The ask (legacy batch A12, C11): `d.series(x4[1:4], w2, m1.motor)` once raised "this series reaches
-no supply: give wire=(colour, size)", though every wire of the series is a core with its colour.
-
-Decision author-0055 (API-FRICTION-2 C11): the cores take their colours from the core table, and
-`wire=` is not asked for. This base already did it: the wire-row resolver of author-0052 reports
-`WIRE_ROW_UNRESOLVED` for a plain hop only, and a core is no plain hop. The case holds that.
-"""
+The bug: d.series raised "this series reaches no supply: give wire=(colour, size)" though every wire of it is a core with its colour.
+Fixed by author-0055 (API-FRICTION-2 C11), the cores take their colours from the core table and wire= is not asked for."""
 
 import fransys as fr
 from fransys.colours import BU

@@ -9,18 +9,12 @@ import itertools
 import fransys_parts
 import pytest
 
+from fransys_model.derive import function_templates, internal_links
 from fransys_model.kernel import Severity, freeze
-from fransys_model.vocab import (
-    Energy,
-    LinkRest,
-    ProtectionType,
-    function_templates,
-    internal_links,
-    parts,
-)
+from fransys_model.vocab import Energy, ProtectionType, parts
 
-_LIBRARY = 'schema = 1\nname = "l"\nversion = "0.1.0"\ndescription = "d"\n'
-_HEAD = """schema = 1
+_LIBRARY = 'schema = 2\nname = "l"\nversion = "0.1.0"\ndescription = "d"\n'
+_HEAD = """schema = 2
 
 [part]
 mpn = "X-1"
@@ -49,9 +43,7 @@ def _codes(tmp_path, function):
 def _switch(kind="switch", rest=None, symbol=None, links=None):
     rest_text = "" if rest is None else f', rest = "{rest}"'
     symbol_text = "" if symbol is None else f'symbol = "{symbol}"\n'
-    link_text = (
-        links if links is not None else f'{{ a = "1", b = "2", kind = "switched"{rest_text} }}'
-    )
+    link_text = links if links is not None else f'{{ a = "1", b = "2", kind = "switched"{rest_text} }}'
     body = "" if link_text == "" else f"links = [{link_text}]\n"
     return f'[[function]]\nname = "k"\nkind = "{kind}"\n{symbol_text}{_PORTS}\n{body}'
 
@@ -60,7 +52,7 @@ def _protection(type_=None, symbol=None, link_kind=None):
     if link_kind is None:
         link_kind = "conductive" if type_ == "overload" else "protective"
     symbol_text = "" if symbol is None else f'symbol = "{symbol}"\n'
-    table = "" if type_ is None else f'\n[function.protection]\ntype = "{type_}"\n'
+    table = "" if type_ is None else f'\n[function.block]\ntype = "{type_}"\n'
     links = f'links = [{{ a = "1", b = "2", kind = "{link_kind}" }}]\n'
     return f'[[function]]\nname = "e"\nkind = "protection"\n{symbol_text}{_PORTS}\n{links}{table}'
 
@@ -92,9 +84,7 @@ def test_an_invalid_rest_value_is_an_enum_finding(tmp_path):
     ],
 )
 def test_rest_disagrees_with_kind(tmp_path, kind, rest, fires):
-    found = [
-        f for f in _lint(tmp_path, _switch(kind, rest=rest)) if f.code == "REST_DISAGREES_WITH_KIND"
-    ]
+    found = [f for f in _lint(tmp_path, _switch(kind, rest=rest)) if f.code == "REST_DISAGREES_WITH_KIND"]
     assert [f.severity for f in found] == ([Severity.ERROR] if fires else [])
 
 
@@ -131,9 +121,7 @@ def test_symbol_rest_mismatch(tmp_path, kind, rest, symbol, fires):
     assert ("SYMBOL_REST_MISMATCH" in codes) is fires
 
 
-@pytest.mark.parametrize(
-    ("type_", "fires"), [(None, True), ("fuse", False), ("rcd", False), ("overload", False)]
-)
+@pytest.mark.parametrize(("type_", "fires"), [(None, True), ("fuse", False), ("rcd", False), ("overload", False)])
 def test_protection_without_type_is_a_warning(tmp_path, type_, fires):
     found = [f for f in _lint(tmp_path, _protection(type_)) if f.code == "PROTECTION_WITHOUT_TYPE"]
     assert [f.severity for f in found] == ([Severity.WARNING] if fires else [])
@@ -165,8 +153,8 @@ def test_symbol_type_mismatch(tmp_path, type_, symbol, fires):
 
 def test_rest_loads_into_the_model_and_an_undeclared_link_has_none(tmp_path):
     for kind, rest, expected in (
-        ("switch", "closed", LinkRest.CLOSED),
-        ("switch", "open", LinkRest.OPEN),
+        ("switch", "closed", True),
+        ("switch", "open", False),
         ("contact_no", None, None),
     ):
         root = tmp_path / f"load-{next(_roots)}"
@@ -175,7 +163,7 @@ def test_rest_loads_into_the_model_and_an_undeclared_link_has_none(tmp_path):
         (root / "parts" / "p.toml").write_text(_HEAD + _switch(kind, rest=rest))
         model = freeze(fransys_parts.load_path(root))
         (link,) = internal_links(model).values()
-        assert link.rest is expected
+        assert link.closed_at_rest is expected
 
 
 @pytest.mark.parametrize("type_", [None, "fuse", "motor_breaker"])
@@ -186,7 +174,7 @@ def test_a_protection_type_loads_into_the_model_and_an_undeclared_one_is_none(tm
 
 
 def test_a_protection_type_on_another_kind_is_refused(tmp_path):
-    table = '\n[function.protection]\ntype = "fuse"\n'
+    table = '\n[function.block]\ntype = "fuse"\n'
     planted = _switch(rest="open") + table
     assert "PROTECTION_TYPE_ON_NON_PROTECTION" in _codes(tmp_path, planted)
     assert "PROTECTION_TYPE_ON_NON_PROTECTION" not in _codes(tmp_path, _switch(rest="open"))
@@ -224,7 +212,7 @@ def test_demo_protection_parts_carry_their_type(part, expected):
 
 
 def test_the_protection_types_are_the_part_files_spelling():
-    """Each member's value is the string a part file writes under `[function.protection]`."""
+    """Each member's value is the string a part file writes under `[function.block]`."""
     members = (
         ProtectionType.MOTOR_BREAKER,
         ProtectionType.OVERLOAD,
@@ -238,9 +226,7 @@ def _supply(energy=None, kind="supply"):
     return f'[[function]]\nname = "s"\nkind = "{kind}"\n{text}{_PORTS}\n'
 
 
-@pytest.mark.parametrize(
-    ("energy", "expected"), [(None, None), ("in", Energy.IN), ("out", Energy.OUT)]
-)
+@pytest.mark.parametrize(("energy", "expected"), [(None, None), ("in", Energy.IN), ("out", Energy.OUT)])
 def test_an_energy_loads_into_the_model_and_an_undeclared_one_is_none(tmp_path, energy, expected):
     model = freeze(fransys_parts.load_path(_one(tmp_path, _supply(energy))))
     (function,) = function_templates(model).values()

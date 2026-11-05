@@ -1,12 +1,14 @@
 """The one text of a list cell and the field extraction every list output reads (derive-queries.md).
 
-Which fields of each row shape a list prints (`*_COLUMNS`) stay in `derive.columns`.
+Which fields of each row shape a list prints stay in `derive.columns`.
 """
 
 from enum import Enum
 lazy from collections.abc import Iterable
 
-from .columns import CONNECTOR_COLUMNS, PIN_COLUMNS
+lazy from fransys_model.kernel import Model
+
+lazy from .columns import list_columns, list_pdf_columns
 lazy from .rows import ConnectorRow
 
 CELL_SEPARATOR = "; "
@@ -72,17 +74,12 @@ def column_rows(records: Iterable[object], columns: tuple[str, ...]) -> list[tup
     return [column_values(record, columns) for record in records]
 
 
-def pin_lines(rows: Iterable[ConnectorRow]) -> list[tuple[object, ...]]:
-    """One line per pin of each connector row: the connector's fields, then the pin's.
+def pin_lines(model: Model, rows: Iterable[ConnectorRow]) -> list[tuple[object, ...]]:
+    """One line per pin of each connector row, in the `connectors` column order.
 
-    Args:
-        rows: The connector rows to print, in the order to print them.
-
-    Returns:
-        One tuple per pin: `CONNECTOR_COLUMNS` of its row, then `PIN_COLUMNS` of the pin.
+    A column that is one of the connector list's `pdf_columns` is read from the pin, the rest
+    from the connector row.
     """
-    lines: list[tuple[object, ...]] = []
-    for row in rows:
-        head = column_values(row, CONNECTOR_COLUMNS)
-        lines.extend((*head, *column_values(pin, PIN_COLUMNS)) for pin in row.pins)
-    return lines
+    columns = list_columns(model, "connectors")
+    pin_fields = list_pdf_columns(model, "connectors")
+    return [tuple(column_values(pin if name in pin_fields else row, (name,))[0] for name in columns) for row in rows for pin in row.pins]

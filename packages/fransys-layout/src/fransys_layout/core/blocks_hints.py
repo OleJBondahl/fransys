@@ -17,7 +17,8 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
 
     from .blocks_members import Env
-    from .values import Block, Hints
+    from .flow_values import Block
+    from .values import Hints
 
 Names = Mapping[str, frozenset[str]]
 Pair = tuple[str, str]
@@ -29,9 +30,7 @@ def block_names(block: Block, env: Env) -> frozenset[str]:
     return frozenset(n for n in (block.group, block.anchor, *cells) if n)
 
 
-def apply_hints(
-    blocks: Sequence[Block], hints: Hints, env: Env
-) -> tuple[list[Block], list[Finding]]:
+def apply_hints(blocks: Sequence[Block], hints: Hints, env: Env) -> tuple[list[Block], list[Finding]]:
     """order_pairs, chains, keep_together, break_before; the findings of the first and third."""
     names = {b.id: block_names(b, env) for b in blocks}
     out, unordered = order_pairs(blocks, hints.order_pairs, names)
@@ -41,9 +40,7 @@ def apply_hints(
     return break_before(out, hints.break_before), [*unordered, *split]
 
 
-def order_pairs(
-    blocks: Sequence[Block], pairs: Sequence[Pair], names: Names
-) -> tuple[list[Block], list[Finding]]:
+def order_pairs(blocks: Sequence[Block], pairs: Sequence[Pair], names: Names) -> tuple[list[Block], list[Finding]]:
     """While a pair (a before b) is violated, move b's blocks right after a's last block.
 
     The passes are bounded: a cycle across hints cannot settle and ends in ORDER_HINT_UNMET.
@@ -59,16 +56,10 @@ def order_pairs(
         if not moved:
             break
     text = "{} before {} cannot hold with the other order hints"
-    return out, [
-        Finding("ORDER_HINT_UNMET", text.format(a, b), None, f"{a},{b}")
-        for a, b in pairs
-        if _bad_sides(out, (a, b), names)
-    ]
+    return out, [Finding("ORDER_HINT_UNMET", text.format(a, b), None, f"{a},{b}") for a, b in pairs if _bad_sides(out, (a, b), names)]
 
 
-def _bad_sides(
-    blocks: Sequence[Block], pair: Pair, names: Names
-) -> tuple[list[int], list[int]] | None:
+def _bad_sides(blocks: Sequence[Block], pair: Pair, names: Names) -> tuple[list[int], list[int]] | None:
     """The positions of a's and b's blocks when some b block stands before the last a block."""
     a = [i for i, x in enumerate(blocks) if pair[0] in names[x.id]]
     b = [i for i, x in enumerate(blocks) if pair[1] in names[x.id]]
@@ -92,9 +83,7 @@ def chain(block: Block, chains: Sequence[Sequence[str]], env: Env) -> Block:
     """
     if block.kind == "card":
         return block
-    col_of = {
-        c.sym: col for col in block.columns for ln in env.columns[col].lanes for c in ln.cells
-    }
+    col_of = {c.sym: col for col in block.columns for ln in env.columns[col].lanes for c in ln.cells}
     cols = list(block.columns)
     fixed = False
     for names in chains:
@@ -106,9 +95,7 @@ def chain(block: Block, chains: Sequence[Sequence[str]], env: Env) -> Block:
     return replace(block, columns=tuple(cols), fixed_order=True) if fixed else block
 
 
-def keep_together(
-    blocks: Sequence[Block], sets: Sequence[frozenset[str]], names: Names, page: int, gap: int
-) -> tuple[list[Block], list[Finding]]:
+def keep_together(blocks: Sequence[Block], sets: Sequence[frozenset[str]], names: Names, page: int, gap: int) -> tuple[list[Block], list[Finding]]:
     """A set whose blocks fit one page width becomes consecutive at its first block; else a finding.
 
     The width is the cut's row measure: each block's width_est plus one column gap.
@@ -121,11 +108,7 @@ def keep_together(
             continue
         subject = ",".join(sorted(members, key=natural_key))
         if sum(out[i].width_est + gap for i in at) > page:
-            unmet.append(
-                Finding(
-                    "KEEP_TOGETHER_UNMET", f"{subject} do not fit one page width", None, subject
-                )
-            )
+            unmet.append(Finding("KEEP_TOGETHER_UNMET", f"{subject} do not fit one page width", None, subject))
             continue
         pulled = set(at)
         rest = [b for i, b in enumerate(out) if i not in pulled]
@@ -140,6 +123,4 @@ def break_before(blocks: Sequence[Block], groups: frozenset[str]) -> list[Block]
         if b.group in groups:
             first.setdefault(b.group, i)
     flagged = set(first.values())
-    return [
-        replace(b, forced_break_before=True) if i in flagged else b for i, b in enumerate(blocks)
-    ]
+    return [replace(b, forced_break_before=True) if i in flagged else b for i, b in enumerate(blocks)]

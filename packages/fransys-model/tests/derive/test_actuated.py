@@ -12,13 +12,14 @@ from fransys_model.derive import (
     operating_item,
 )
 from fransys_model.derive.contact_entries import contact_entries
+from fransys_model.elecdef import LinkKind
 from fransys_model.kernel import make_id
 from fransys_model.vocab import FunctionKind, OperatedBy, PartCategory
-from fransys_model.vocab.enums import LinkKind, LinkRest, PortRole
+from fransys_model.vocab.enums import PortBoundary
 from fransys_model.vocab.tables import functions
 from fransys_model.vocab.templates import FunctionTemplate, InternalLink, Part, PortTemplate
 
-CLOSED, OPEN = LinkRest.CLOSED, LinkRest.OPEN
+CLOSED, OPEN = True, False
 
 
 def _part(plant: Plant, key: str, operated: OperatedBy | None, kind: FunctionKind, poles) -> Part:
@@ -47,7 +48,7 @@ def _part(plant: Plant, key: str, operated: OperatedBy | None, kind: FunctionKin
             key=(key, "fn", n),
             function=template.id,
             name=n,
-            role=PortRole.GENERIC,
+            boundary=PortBoundary.GENERIC,
         )
         for n in names
     }
@@ -59,7 +60,7 @@ def _part(plant: Plant, key: str, operated: OperatedBy | None, kind: FunctionKin
             a=pins[a].id,
             b=pins[b].id,
             kind=LinkKind.SWITCHED,
-            rest=rest,
+            closed_at_rest=rest,
         )
         plant.add(link)
     return part
@@ -73,16 +74,12 @@ def _switch(plant, key, part, parent=None, *, wired=True):
     for pin in (p for p in plant.records if isinstance(p, PortTemplate) and p.function == template):
         port = plant.port(function, pin.name, template=pin.id)
         if wired:
-            plant.wire(
-                port, plant.pin("bus", "bus", f"{key}-{pin.name}"), key=f"w-{key}-{pin.name}"
-            )
+            plant.wire(port, plant.pin("bus", "bus", f"{key}-{pin.name}"), key=f"w-{key}-{pin.name}")
     return function
 
 
 def _head(plant: Plant):
-    return plant.item(
-        "head", part=_part(plant, "head", OperatedBy.MUSHROOM, FunctionKind.GENERIC, []).id
-    )
+    return plant.item("head", part=_part(plant, "head", OperatedBy.MUSHROOM, FunctionKind.GENERIC, []).id)
 
 
 def _three_blocks(plant: Plant, wired=(True, True, True)):
@@ -131,9 +128,7 @@ def test_a_two_pole_switch_lists_each_pole_by_its_rest_and_is_a_group_of_one() -
 
 def test_a_switch_with_no_operator_and_a_contact_have_no_group() -> None:
     plant = Plant()
-    sw = _switch(
-        plant, "plain", _part(plant, "plain", None, FunctionKind.SWITCH, [("1", "2", CLOSED)])
-    )
+    sw = _switch(plant, "plain", _part(plant, "plain", None, FunctionKind.SWITCH, [("1", "2", CLOSED)]))
     contact = plant.function(plant.item("k"), "no", kind=FunctionKind.CONTACT_NO)
     model = plant.model()
     assert operating_item(model, sw) is None

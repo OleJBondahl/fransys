@@ -5,7 +5,7 @@ module units to integer grid units once. Nothing above this module sees a `float
 """
 
 from enum import Enum
-from functools import cache
+from functools import cache, partial
 from typing import TYPE_CHECKING
 
 import symdef
@@ -20,7 +20,7 @@ from electrical_symbols import (
     NORTH,
     PORT_PITCH_G,
     SOUTH,
-    box_port_marking,
+    box_marking_widths,
     box_port_name,
     default_order,
     default_sides,
@@ -33,8 +33,8 @@ from electrical_symbols import (
 from electrical_symbols import library_version as _electrical_symbols_library_version
 from fransys_layout.core.sides import opposite
 from fransys_layout.symbols import fitted_marker
+from fransys_layout.symbols import text_width_g as _grid_text_width
 from fransys_model.derive.drawing_text import pole_prefix
-from fransys_model.derive.text_width import marking_widths, text_width
 from fransys_model.kernel import register_enum, value
 from fransys_model.layout import Orientation
 
@@ -42,6 +42,9 @@ from .box_reach import Reach, spread
 from .boxes import Box
 from .errors import GeometryError, UnknownSymbolError
 from .units import G_PER_MODULE, Point, to_grid
+
+# a text's width on the grid in the library font: the layer's one measure with the font bound
+text_width_g = partial(_grid_text_width, LIBRARY.font)
 
 __all__ = (  # re-exported by `geometry`: the generic box's home is `electrical_symbols.box_ports`
     "GENERIC_BOX_KEY",
@@ -56,7 +59,7 @@ __all__ = (  # re-exported by `geometry`: the generic box's home is `electrical_
     "draw_order",
     "port_points",
     "power_symbol_key",
-    "text_width",
+    "text_width_g",
 )
 
 if TYPE_CHECKING:
@@ -81,10 +84,10 @@ class Facing(Enum):
 
 @register_enum
 class SlotSide(Enum):
-    """The side of a label space: a `Facing` side, or `C` for one centred on its anchor.
+    """The side of a label space: a `Facing` side, `C` for one centred on its anchor, or a corner its anchor is.
 
-    Mirrors symdef's `Direction | Centre`, which a record cannot hold as a union. The turned
-    reference marker's label space is a `C` one. Match it exhaustively.
+    Mirrors symdef's `Direction | Centre | Corner`, which a record cannot hold as a union. The turned
+    reference marker's label space is a corner one (R1592). Match it exhaustively.
     """
 
     N = "n"
@@ -92,6 +95,10 @@ class SlotSide(Enum):
     S = "s"
     W = "w"
     C = "c"
+    NE = "ne"
+    SE = "se"
+    SW = "sw"
+    NW = "nw"
 
 
 OPPOSITE: Mapping[Facing, Facing] = frozendict({f: Facing[opposite(f.name)] for f in Facing})
@@ -104,11 +111,6 @@ class PortGeometry:
     name: str
     at: Point
     facing: Facing
-
-
-def port_page_at(origin: Point, port: PortGeometry) -> Point:
-    """A port's position on the page: the placed function's origin plus the port's own offset."""
-    return Point(x=origin.x + port.at.x, y=origin.y + port.at.y)
 
 
 @value
@@ -149,9 +151,7 @@ class SymbolGeometry:
         return is_generic_box(self.key)
 
 
-def symbol_geometry(
-    key: str, *, poles: int = 1, orientation: Orientation = Orientation.R0
-) -> SymbolGeometry:
+def symbol_geometry(key: str, *, poles: int = 1, orientation: Orientation = Orientation.R0) -> SymbolGeometry:
     """Look up `key`, repeat it `poles` times, orient it and convert to grid units."""
     return _cached_geometry(key, poles, orientation)
 
@@ -171,10 +171,8 @@ def _cached_geometry(key: str, poles: int, orientation: Orientation) -> SymbolGe
         if not any(path.through for path in base.paths):
             msg = f"symbol {key!r} has no through path, so it cannot be repeated {poles} times"
             raise GeometryError(msg)
-        base = repeat(base, poles)
-    return convert(
-        orient(base, LibraryOrientation[orientation.name]), poles=poles, orientation=orientation
-    )
+        base = repeat(base, poles, port_format=LIBRARY.port_format)
+    return convert(orient(base, LibraryOrientation[orientation.name]), poles=poles, orientation=orientation)
 
 
 def generic_box_geometry(
@@ -216,7 +214,7 @@ def _generic(
     stand: int = 0,
 ) -> SymbolGeometry:
     """One generic box converted to grid units."""
-    widths = marking_widths((box_port_marking(name) for name in port_names), height=G_PER_MODULE)
+    widths = box_marking_widths(LIBRARY, port_names)
     return convert(
         orient(
             generic_box(port_names, sides, offsets, stand, marking_widths=widths),
@@ -242,10 +240,7 @@ def convert(symbol: Symbol, *, poles: int, orientation: Orientation) -> SymbolGe
         ),
         None,
     )
-    ports = tuple(
-        PortGeometry(name=port.id, at=_point(port.position), facing=Facing[port.direction.name])
-        for port in symbol.ports
-    )
+    ports = tuple(PortGeometry(name=port.id, at=_point(port.position), facing=Facing[port.direction.name]) for port in symbol.ports)
     slots = tuple(
         SlotGeometry(
             slot=slot.id,
@@ -303,7 +298,7 @@ def _turned(symbol: DrawnSymbol, library: symdef.Library) -> symdef.Symbol:
         offsets=dict(symbol.offsets),
         sides=dict(symbol.sides),
     )
-    built = symdef.repeat(made, symbol.poles) if symbol.poles > 1 else made
+    built = symdef.repeat(made, symbol.poles, port_format=library.port_format) if symbol.poles > 1 else made
     for slot, text in symbol.slots if symbol.stretch else ():
         built = fitted_marker(built, slot, text, library)
     return symdef.orient(symdef.leads(built, symbol.leads), symdef.Orientation[symbol.orient])

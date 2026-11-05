@@ -2,7 +2,6 @@
 
 An accessory is a part-bearing, untagged, function-less, non-terminal child of a designated
 part-bearing holder. After numbering it has no `designation`, and everything that prints it
-prints the holder's.
 """
 
 from typing import TYPE_CHECKING
@@ -19,9 +18,11 @@ from fransys_model.derive import (
 )
 from fransys_model.derive.designation_label import own_designation_or_none
 from fransys_model.derive.passes.numbering import number
+from fransys_model.derive.tag_text import run_point_text, strip_tag_text
 from fransys_model.derive.texts.context import PrintContext
 from fransys_model.derive.texts.terminal_text import terminal_text
 from fransys_model.kernel import make_id
+from fransys_model.vocab.enums import FunctionKind
 from fransys_model.vocab.facets.pcb import FootprintFacet
 from fransys_model.vocab.facets.terminal import TerminalFacet
 from fransys_model.vocab.tables import items, parts
@@ -45,9 +46,7 @@ def _holders(plant: Plant, *, parent: Id[Item] | None = None) -> list[Id[Item]]:
     links = []
     for tag in ("F11", "F21"):
         holder = plant.item(f"holder-{tag}", part=holder_part, designation=tag, parent=parent)
-        links.extend(
-            plant.item(f"link-{tag}-{n}", part=link_part, parent=holder) for n in (1, 2, 3)
-        )
+        links.extend(plant.item(f"link-{tag}-{n}", part=link_part, parent=holder) for n in (1, 2, 3))
     return links
 
 
@@ -229,7 +228,6 @@ def test_an_item_whose_part_has_a_footprint_is_no_accessory_and_is_numbered() ->
     False and numbering gives it a designation of its own.
 
     Fails on the base: the footprint is not looked at, so the link is an accessory (True) and
-    stays without a designation.
     """
     plant = Plant()
     _, _, link = _board_with_a_footprinted_holder_and_link(plant)
@@ -257,8 +255,6 @@ def test_an_item_with_a_function_in_its_subtree_is_no_accessory() -> None:
     """A part-bearing strip with no tag and no function of its own, holding a terminal that
     carries a function, is no accessory of `U1`: it numbers `X1` and its terminal prints
     `-X1:L1:1`, not `-U1:L1:1`.
-
-    Fails on the base: only the strip's own functions count, so it is an accessory of `U1`.
     """
     plant = Plant()
     holder = plant.item("holder", part=plant.part("U"), designation="U1")
@@ -285,7 +281,6 @@ def test_an_item_with_a_function_two_levels_below_it_is_no_accessory() -> None:
     item that carries no function of its own -- still makes it no accessory: `holder` sits
     above `intermediate` (no function), which sits above the terminal that carries the
     function. Proves the has-a-function-below set is transitive across two or more levels,
-    not just a direct-children shortcut (model-0103).
     """
     plant = Plant()
     top = plant.item("top", part=plant.part("U"), designation="U1")
@@ -308,15 +303,10 @@ def test_an_item_with_a_function_two_levels_below_it_is_no_accessory() -> None:
 
 @pytest.mark.parametrize("link_key", ["a-link", "z-link"])
 @pytest.mark.parametrize("links", [1, 2])
-def test_a_holder_and_its_accessories_of_one_part_list_the_holder_once(
-    link_key: str, links: int
-) -> None:
+def test_a_holder_and_its_accessories_of_one_part_list_the_holder_once(link_key: str, links: int) -> None:
     """One part `F` for the holder `F11` and its `links` accessories: `count == 1 + links`,
     the designations are `("-F11",)`, whichever of the authoring keys sorts first (the link's
     key `a-link` before the holder's `m-holder`, or `z-link` after it).
-
-    Fails on the base: the holder is no accessory, so its own `-F11` is listed besides the one
-    the accessories' holder gets.
     """
     plant = Plant()
     part = plant.part("F")
@@ -325,3 +315,21 @@ def test_a_holder_and_its_accessories_of_one_part_list_the_holder_once(
         plant.item(f"{link_key}-{n}", part=part, parent=holder)
     model, _ = number(plant.model())
     assert _fuse_line_designations(model) == (1 + links, ("-F11",))
+
+
+@pytest.mark.rule("STRIP-TAG-ONCE")
+def test_a_strips_terminals_share_one_strip_tag_and_print_only_their_own_point() -> None:
+    """Three terminals of `-X1`: the strip tag is `-X1` for each, the run point is the own label only."""
+    plant = Plant()
+    strip = plant.item("strip", part=plant.part("X"), designation="X1")
+    functions_ = []
+    for group in ("L1", "L2", "L3"):
+        terminal = plant.item(group, part=plant.part("Z"), parent=strip)
+        key = ("t", group)
+        plant.add(TerminalFacet(id=make_id(TerminalFacet, key), key=key, subject=terminal, group=group, index=1))
+        functions_.append((plant.function(terminal, "p", kind=FunctionKind.TERMINAL), terminal, group))
+    model, _ = number(plant.model())
+    for function, terminal, group in functions_:
+        assert strip_tag_text(model, function) == "-X1"
+        assert run_point_text(model, function) == f"{group}:1"
+        assert terminal_text(model, terminal, PrintContext()) == f"-X1:{group}:1"

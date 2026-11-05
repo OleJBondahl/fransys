@@ -9,9 +9,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-_spec = importlib.util.spec_from_file_location(
-    "fransys_regen_goldens", ROOT / "scripts" / "regen_goldens.py"
-)
+_spec = importlib.util.spec_from_file_location("fransys_regen_goldens", ROOT / "scripts" / "regen_goldens.py")
 if _spec is None or _spec.loader is None:
     msg = "could not load scripts/regen_goldens.py"
     raise ImportError(msg)

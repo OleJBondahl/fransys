@@ -2,7 +2,7 @@
 
 from fransys_model.derive import sideless_pins
 from fransys_model.kernel import make_id
-from fransys_model.vocab import FunctionTemplate, PortRole, PortTemplate
+from fransys_model.vocab import FunctionTemplate, PortBoundary, PortTemplate
 
 
 def _pin(name: str, marking: str | None = None) -> PortTemplate:
@@ -12,7 +12,7 @@ def _pin(name: str, marking: str | None = None) -> PortTemplate:
         key=key,
         function=make_id(FunctionTemplate, ("part", "fn")),
         name=name,
-        role=PortRole.GENERIC,
+        boundary=PortBoundary.GENERIC,
         marking=marking,
     )
 
@@ -22,9 +22,7 @@ def _names(pins: tuple[PortTemplate, ...]) -> list[str]:
 
 
 def test_pins_come_in_marking_order_by_value() -> None:
-    out = sideless_pins(
-        "X1.a", (_pin("p", "10"), _pin("q", "9")), "X2.a", (_pin("r", "2"), _pin("s", "1"))
-    )
+    out = sideless_pins("X1.a", (_pin("p", "10"), _pin("q", "9")), "X2.a", (_pin("r", "2"), _pin("s", "1")))
     assert _names(out.first) == ["q", "p"]
     assert _names(out.second) == ["s", "r"]
     assert out.problem is None
@@ -43,9 +41,7 @@ def test_another_pin_count_is_a_problem_naming_both_ends() -> None:
 
 
 def test_the_same_names_in_another_order_is_a_problem() -> None:
-    out = sideless_pins(
-        "X1.a", (_pin("A", "2"), _pin("B", "1")), "X2.a", (_pin("A", "1"), _pin("B", "2"))
-    )
+    out = sideless_pins("X1.a", (_pin("A", "2"), _pin("B", "1")), "X2.a", (_pin("A", "1"), _pin("B", "2")))
     assert out.problem is not None
     assert "name the same pins in different orders (B, A against A, B)" in out.problem
 

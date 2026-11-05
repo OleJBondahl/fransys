@@ -2,7 +2,7 @@
 
 Each is a singleton the facade writes after `freeze()` and before any pass; an input never
 authors one and no pass removes it. Derive reads a record through its one accessor in
-`derive.house_settings`. A field has no default: a model with no record raises there.
+`derive.facts.house_settings`. A field has no default: a model with no record raises there.
 """
 
 from decimal import Decimal
@@ -10,9 +10,9 @@ from decimal import Decimal
 from fransys_model.kernel import AuthoringKey, Id, Value, record
 
 __all__ = [
-    "ColourCodes",
     "FrameForm",
     "HarnessText",
+    "HouseProfile",
     "ReferenceText",
     "RevisionForm",
     "RevisionTableForm",
@@ -83,30 +83,17 @@ class HarnessText:
     ext: frozendict[str, Value] = frozendict()
 
 
-@record(kind="layout.colour_codes", singleton=True)
-class ColourCodes:
-    """The `[colours]` table: the two reserved codes and the colour of each wiring row.
-
-    `defaults` maps a wiring row name to its colour and size text; an empty size is none.
-    """
-
-    id: Id[ColourCodes]
-    key: AuthoringKey
-    pe: str
-    shield: str
-    defaults: frozendict[str, tuple[str, ...]]
-    ext: frozendict[str, Value] = frozendict()
-
-
 @record(kind="layout.title_block_form", singleton=True)
 class TitleBlockForm:
-    """The `[title_block]` table: the cells of the block and the band's height in mm."""
+    """The `[title_block]` table: the cells of the block, the band's height in mm and the capital heights its stack is authored for."""
 
     id: Id[TitleBlockForm]
     key: AuthoringKey
     fields: tuple[str, ...]
     band_mm: Decimal
     centre_gap_mm: Decimal
+    label_height_mm: Decimal
+    value_height_mm: Decimal
     ext: frozendict[str, Value] = frozendict()
 
 
@@ -140,4 +127,20 @@ class Words:
     id: Id[Words]
     key: AuthoringKey
     words: frozendict[str, str]
+    ext: frozendict[str, Value] = frozendict()
+
+
+@record(kind="layout.house_profile", singleton=True)
+class HouseProfile:
+    """The `[profile]` table: the house numbers of the layout rules, which an authored `Profile` replaces.
+
+    Penalties are unitless; `marker_padding` is the clearance, in `G`, between a cable
+    drawing's text and its outline, on every edge (R1032: cables only).
+    """
+
+    id: Id[HouseProfile]
+    key: AuthoringKey
+    marker_padding: int
+    route_turn_penalty: int
+    route_crossing_penalty: int
     ext: frozendict[str, Value] = frozendict()

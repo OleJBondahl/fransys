@@ -7,16 +7,15 @@ from decimal import Decimal
 from typing import TYPE_CHECKING
 
 import symdef
-from symdef import Weight
+from symdef import Weight, group_mm, sheet_svg
 
-from electrical_symbols import MARKER_FACING, drawn_symbol, sheet_svg
+from electrical_symbols import drawn_symbol
 
 from ._drawn_text import text_tag
 
 if TYPE_CHECKING:
     from fransys_layout.drawing import (
         Drawing,
-        DrawnMarker,
         DrawnOutline,
         DrawnSymbol,
         DrawnWire,
@@ -58,7 +57,6 @@ def _label_font(library: symdef.Library, style: Style) -> tuple[str, Decimal, fl
     """The label's family, its font size in mm (to 0.0001) and the capital ratio."""
     label = dict(style.texts)["label"]
     font = library.font
-    assert font is not None  # noqa: S101 -- a drawn library carries its font
     ratio = Decimal(font.cap_height) / Decimal(font.units_per_em)
     size = (Decimal(str(label.height_mm)) / ratio).quantize(Decimal("0.0001"))
     return label.family, size, float(ratio)
@@ -68,9 +66,9 @@ def _fragment(
     symbol: symdef.Symbol,
     library: symdef.Library,
     style: Style,
-    **kwargs: object,
+    placed: DrawnSymbol | None = None,
 ) -> str:
-    """The toolkit's SVG body of `symbol` with the style's pens, dash and font."""
+    """The toolkit's SVG body of `symbol` with the style's pens, dash and font; `placed` adds its tint, mute and slot texts."""
     family, size, ratio = _label_font(library, style)
     return symdef.to_fragment_mm(
         symbol,
@@ -82,7 +80,9 @@ def _fragment(
         font_mm=float(size),
         cap_ratio=ratio,
         required_slots=library.required_slots,
-        **kwargs,  # ty: ignore[invalid-argument-type] -- tint, muted, texts as symdef types them
+        tint=placed.tint if placed else None,
+        muted=style.muted_colour if placed and placed.muted else None,
+        texts=(dict(placed.slots) or None) if placed else None,
     )
 
 
@@ -130,15 +130,12 @@ def _built(drawn: DrawnSymbol, library: symdef.Library, style: Style) -> symdef.
         offsets=dict(drawn.offsets),
         sides=dict(drawn.sides),
     )
-    repeated = symdef.repeat(made, drawn.poles) if drawn.poles > 1 else made
+    repeated = symdef.repeat(made, drawn.poles, port_format=library.port_format) if drawn.poles > 1 else made
     symbol = _stretched(repeated, drawn, style)
     try:
         symbol = symdef.leads(symbol, drawn.leads)
     except symdef.UnknownNameError as error:
-        msg = (
-            f"symbol {drawn.id!r} ({drawn.key!r}, {drawn.poles} poles): {error};"
-            " fix the record's `leads` or `poles`"
-        )
+        msg = f"symbol {drawn.id!r} ({drawn.key!r}, {drawn.poles} poles): {error}; fix the record's `leads` or `poles`"
         raise DrawError(msg) from error
     return symdef.orient(symbol, symdef.Orientation[drawn.orient])
 
@@ -149,22 +146,14 @@ def _symbol(drawn: DrawnSymbol, library: symdef.Library, style: Style) -> str:
         _built(drawn, library, style),
         library,
         style,
-        tint=drawn.tint,
-        muted=style.muted_colour if drawn.muted else None,
-        texts=dict(drawn.slots) or None,
+        drawn,
     )
     return _placed(body, drawn.x, drawn.y, style)
 
 
-def content_group(body: str, x_mm: float, y_mm: float) -> str:
-    """`body` in a `<g>` translated to the content box at (`x_mm`, `y_mm`)."""
-    return f'<g transform="translate({x_mm} {y_mm})">{body}</g>'
-
-
 def _placed(body: str, x: int, y: int, style: Style) -> str:
     """`body` in a `<g>` translated to (x, y) G."""
-    x_mm, y_mm = format_decimal(_mm(x, style)), format_decimal(_mm(y, style))
-    return f'<g transform="translate({x_mm},{y_mm})">{body}</g>'
+    return group_mm(body, (float(_mm(x, style)), float(_mm(y, style))))
 
 
 def _library_symbol(key: str, what: str, id_: str, library: symdef.Library) -> symdef.Symbol:
@@ -198,27 +187,15 @@ def _outline(outline: DrawnOutline, library: symdef.Library, style: Style) -> st
     return placed + (text_tag(outline.label, library, style) if outline.label else "")
 
 
-def _marker(marker: DrawnMarker, library: symdef.Library, style: Style) -> str:
-    """The marker symbol `marker.key` turned to face `marker.side`, its texts in its slots."""
-    symbol = _library_symbol(marker.key, "marker", marker.id, library)
-    if marker.side not in MARKER_FACING:
-        msg = f"marker {marker.id!r} faces {marker.side!r}: use one of {tuple(MARKER_FACING)}"
-        raise DrawError(msg)
-    turned = symdef.orient(symbol, symdef.Orientation[MARKER_FACING[marker.side]])
-    body = _fragment(turned, library, style, tint=marker.tint, texts=dict(marker.texts) or None)
-    return _placed(body, marker.x, marker.y, style)
-
-
 def _wire(wire: DrawnWire, library: symdef.Library, style: Style) -> str:
-    """The library wire style through the wire's points, in absolute mm, then its label."""
+    """The library wire style through the wire's points, in absolute mm."""
     points = [(x / style.g_per_module, y / style.g_per_module) for x, y in wire.points]
     try:
         drawn = symdef.wire(library, wire.style, points, lanes=wire.lanes)
     except symdef.InvalidValueError as error:
         msg = f"wire {wire.id!r} ({wire.lanes} lanes) cannot be drawn: {error}"
         raise DrawError(msg) from error
-    line = _fragment(drawn, library, style)
-    return line + (text_tag(wire.label, library, style) if wire.label else "")
+    return _fragment(drawn, library, style)
 
 
 def svg(
@@ -228,7 +205,7 @@ def svg(
     *,
     sheet_mm: tuple[int, int, int, int] | None = None,
 ) -> str:
-    """The `<svg>` text of `drawing`: every symbol, every wire with its label, then every text.
+    """The `<svg>` text of `drawing`: every symbol, every wire, then every text.
 
     `sheet_mm` is (width, height, content_x, content_y) of the paper: the SVG is then the whole
     sheet with the drawing at the content box, as `diagram_sheets` draws it (render-0027).
@@ -237,17 +214,13 @@ def svg(
     parts = [_outline(outline, library, style) for outline in drawing.outlines]
     parts += [_symbol(sym, library, style) for sym in drawing.symbols]
     parts += [_wire(wire, library, style) for wire in drawing.wires]
-    parts += [_marker(marker, library, style) for marker in drawing.markers]
     parts += [text_tag(text, library, style) for text in drawing.texts]
     body = "".join(parts)
     if sheet_mm is not None:
         width, height, x, y = sheet_mm
-        return sheet_svg(width, height, content_group(body, x, y), margin_mm=0)
+        return sheet_svg(width, height, group_mm(body, (x, y)), margin_mm=0)
     width_mm, height_mm = (
         format_decimal(_mm(drawing.area.w, style)),
         format_decimal(_mm(drawing.area.h, style)),
     )
-    return (
-        f'<svg xmlns="http://www.w3.org/2000/svg" width="{width_mm}mm" height="{height_mm}mm"'
-        f' viewBox="0 0 {width_mm} {height_mm}">{body}</svg>'
-    )
+    return f'<svg xmlns="http://www.w3.org/2000/svg" width="{width_mm}mm" height="{height_mm}mm" viewBox="0 0 {width_mm} {height_mm}">{body}</svg>'

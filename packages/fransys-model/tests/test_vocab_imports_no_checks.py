@@ -5,10 +5,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-_CODE = (
-    "import sys, fransys_model.vocab\n"
-    "print(sorted(m for m in sys.modules if m.startswith('fransys_model.checks')))"
-)
+_CODE = "import sys, fransys_model.vocab\nprint(sorted(m for m in sys.modules if m.startswith('fransys_model.checks')))"
 
 
 def test_vocab_imports_no_checks() -> None:

@@ -21,10 +21,8 @@ def _data(model, findings):
         lines=("A1",),
         dashed=False,
     )
-    rows = ViewRows(
-        unit=None, level=None, mode=OverviewMode.PLAIN, open=None, boxes=(box,), lines=()
-    )
-    return findings_data(_Tables(model), [rows], findings)
+    rows = ViewRows(unit=None, level=None, mode=OverviewMode.PLAIN, open=None, boxes=(box,), lines=())
+    return findings_data(_Tables(model, 8), [rows], findings)
 
 
 def _mixed():
@@ -68,12 +66,7 @@ def test_the_panel_list_holds_each_code_once_with_its_count_worst_first(demo_cab
 
 def test_two_findings_of_one_code_list_once_with_a_count_of_two(demo_cabinet):
     twin = tuple(f for f in _mixed() if f.code in {"INFO_ONE", "INFO_TWO"})
-    twin = tuple(
-        Finding(
-            code="SAME", severity=f.severity, subjects=f.subjects, message=f.message, fix="Write: x"
-        )
-        for f in twin
-    )
+    twin = tuple(Finding(code="SAME", severity=f.severity, subjects=f.subjects, message=f.message, fix="Write: x") for f in twin)
     assert _data(demo_cabinet, twin)[0][0][0][3] == [["info", "SAME", 2, ["info two", "info one"]]]
 
 
@@ -89,9 +82,7 @@ def test_the_page_script_lists_the_findings_in_the_panel():
 def test_the_messages_of_a_code_follow_the_finding_order(demo_cabinet):
     """Breaks if a message is left off its code row or lists in Id order (FT4, A10)."""
     twin = tuple(
-        Finding(
-            code="SAME", severity=f.severity, subjects=f.subjects, message=f.message, fix="Write: x"
-        )
+        Finding(code="SAME", severity=f.severity, subjects=f.subjects, message=f.message, fix="Write: x")
         for f in _mixed()
         if f.code in {"INFO_ONE", "INFO_TWO"}
     )

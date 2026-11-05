@@ -58,7 +58,7 @@ def test_an_untagged_unit_is_named_by_the_name_and_revision_its_title_block_prin
 def test_no_rendered_message_for_a_unit_holds_unit_unit() -> None:
     plant = Plant()
     untagged = plant.unit("a-key", name="relay-board")
-    tagged = plant.unit("b-key", name="io-board", tag="U1", class_code="U")
+    tagged = plant.unit("b-key", name="io-board", tag="U1")
     unheld = Id(kind="unit", value="0" * 32)
     model = plant.model()
     for target, expected in (

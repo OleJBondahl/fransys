@@ -4,24 +4,42 @@ from .geometry import (
     Facing,
     HintError,
     SymbolGeometry,
-    SymbolPortError,
     generic_box_geometry,
     symbol_geometry,
 )
 from .options import LayoutOptions, Side, TextKind, TextPlacement
-lazy from .engines.cable import lay_out_cables
-lazy from .engines.diagram import lay_out_diagrams
+lazy from .engines.cable import CableLayout, PlacedBlock, PlacedEnd, PlacedWire, lay_out_cables
+lazy from .engines.diagram import (
+    DiagramBox,
+    DiagramLayout,
+    DiagramLine,
+    DiagramTab,
+    PlacedDiagram,
+    PlacedMarker,
+    PlacedSheet,
+    lay_out_diagrams,
+)
 lazy from .engines.overview import lay_out_overview
 lazy from .lint.codes import FINDING_CODES
 
 __all__ = (
     "FINDING_CODES",
+    "CableLayout",
+    "DiagramBox",
+    "DiagramLayout",
+    "DiagramLine",
+    "DiagramTab",
     "Facing",
     "HintError",
     "LayoutOptions",
+    "PlacedBlock",
+    "PlacedDiagram",
+    "PlacedEnd",
+    "PlacedMarker",
+    "PlacedSheet",
+    "PlacedWire",
     "Side",
     "SymbolGeometry",
-    "SymbolPortError",
     "TextKind",
     "TextPlacement",
     "generic_box_geometry",

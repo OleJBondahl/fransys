@@ -15,8 +15,8 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from collections.abc import Generator
 
-from fransys_model.derive import error_count, refuses
-from fransys_model.kernel import Draft, Finding, Id, ModelError, Origin, make_id
+from fransys_model.derive import refuses
+from fransys_model.kernel import Draft, Id, Origin, make_id
 from fransys_model.vocab import (
     CableProductFacet,
     CorePair,
@@ -29,25 +29,12 @@ from fransys_model.vocab import (
     SupplyFacet,
 )
 
-from . import _ratings, _toml
+from . import _connection, _ratings, _toml
+from ._errors import PartLibraryError
 from ._function_build import _build_function, _PartContext
 from .lint import SUPPORTED_SCHEMAS, lint
 
 __all__ = ["SUPPORTED_SCHEMAS", "PartLibraryError", "library_root", "load", "load_path"]
-
-
-class PartLibraryError(ModelError):
-    """A part library failed `lint`; `findings` holds every finding of that run.
-
-    Warnings included, not only the `ERROR`s that triggered the raise: a caller
-    fixing the library wants the whole report, not a partial one.
-    """
-
-    def __init__(self, findings: tuple[Finding, ...]) -> None:
-        """Store every finding `lint` returned, in its own order."""
-        errors = error_count(findings)
-        super().__init__(f"{errors} error(s) in the part library")
-        self.findings = findings
 
 
 def _loaded_libraries() -> list[str]:
@@ -70,12 +57,8 @@ def library_root(package: str) -> Generator[Path]:
         cm = as_file(files(package))
     except ModuleNotFoundError as error:
         loaded = ", ".join(_loaded_libraries()) or "none"
-        msg = (
-            f"no part library {package!r} is installed "
-            f"(import name, as in fr.design({package!r})); "
-            f"part libraries loaded in this process: {loaded}"
-        )
-        raise ModuleNotFoundError(msg, name=package) from error
+        msg = f"no part library {package!r} is installed (import name, as in fr.design({package!r})); part libraries loaded in this process: {loaded}"
+        raise ModuleNotFoundError(msg, name=package) from error  # the importlib error of a missing library, kept on purpose (KI-058)
     with cm as root:
         yield root
 
@@ -133,16 +116,18 @@ def load_path(root: Path) -> Draft:
     return draft
 
 
+def _origin(parsed: _toml.ParsedFile, key: _toml.TablePath) -> Origin:
+    return Origin(file=parsed.path, line=parsed.origins.get(key, 1), note="")
+
+
 def _build_part_file(draft: Draft, parsed: _toml.ParsedFile, library_id: Id[PartLibrary]) -> None:
     # `load_path` only reaches here after `lint` found no ERROR, so `.data` parsed clean.
     data = parsed.data
     if data is None:
         return
-    origins = parsed.origins
     part_data = data["part"]
     part_key = ("part", part_data["manufacturer"], part_data["mpn"])
     part = _PartContext(key=part_key, id=make_id(Part, part_key))
-    part_origin = Origin(file=parsed.path, line=origins.get(("part",), 1), note="")
     draft.add(
         Part(
             id=part.id,
@@ -153,19 +138,23 @@ def _build_part_file(draft: Draft, parsed: _toml.ParsedFile, library_id: Id[Part
             category=PartCategory(part_data["category"]),
             class_code=part_data["class_code"],
             library=library_id,
-            operated_by=OperatedBy(part_data["operated_by"])
-            if "operated_by" in part_data
-            else None,
+            operated_by=OperatedBy(part_data["operated_by"]) if "operated_by" in part_data else None,
         ),
-        origin=part_origin,
+        origin=_origin(parsed, ("part",)),
     )
-
     for index, entry in enumerate(data.get("function", ())):
         _build_function(draft, entry, index, part, parsed)
+    _build_supplies(draft, data, part, parsed)
+    _build_facets(draft, data, part, parsed)
+    if "rating" in data:
+        _ratings.add_part_rating(draft, data["rating"], part.id, part_key, _origin(parsed, ("rating",)))
+    _ratings.add_part_block(draft, data, part_key, parsed.path, parsed.origins)
+    _connection.add_part_connection(draft, data, part_key, parsed.path, parsed.origins)
 
+
+def _build_supplies(draft: Draft, data: _toml.Table, part: _PartContext, parsed: _toml.ParsedFile) -> None:
     for index, supply in enumerate(data.get("supply", ())):
-        origin = Origin(file=parsed.path, line=origins.get(("supply", index), 1), note="")
-        key = (*part_key, "supply", supply["supplier"], supply["supplier_part_number"])
+        key = (*part.key, "supply", supply["supplier"], supply["supplier_part_number"])
         draft.add(
             SupplyFacet(
                 id=make_id(SupplyFacet, key),
@@ -175,54 +164,39 @@ def _build_part_file(draft: Draft, parsed: _toml.ParsedFile, library_id: Id[Part
                 supplier_part_number=supply["supplier_part_number"],
                 note=supply.get("note", ""),
             ),
-            origin=origin,
+            origin=_origin(parsed, ("supply", index)),
         )
 
+
+def _build_facets(draft: Draft, data: _toml.Table, part: _PartContext, parsed: _toml.ParsedFile) -> None:
     if "footprint" in data:
-        origin = Origin(file=parsed.path, line=origins.get(("footprint",), 1), note="")
         footprint = data["footprint"]
-        key = (*part_key, "footprint")
+        key = (*part.key, "footprint")
         draft.add(
-            FootprintFacet(
-                id=make_id(FootprintFacet, key),
-                key=key,
-                subject=part.id,
-                library=footprint["library"],
-                name=footprint["name"],
-            ),
-            origin=origin,
+            FootprintFacet(id=make_id(FootprintFacet, key), key=key, subject=part.id, library=footprint["library"], name=footprint["name"]),
+            origin=_origin(parsed, ("footprint",)),
         )
-
     if "cable_product" in data:
-        origin = Origin(file=parsed.path, line=origins.get(("cable_product",), 1), note="")
-        cable_product = data["cable_product"]
-        key = (*part_key, "cable_product")
-        draft.add(
-            CableProductFacet(
-                id=make_id(CableProductFacet, key),
-                key=key,
-                subject=part.id,
-                core_colours=tuple(cable_product["core_colours"]),
-                gauge_mm2=Decimal(cable_product["gauge_mm2"]),
-                shielded=cable_product["shielded"],
-                pairs=tuple(
-                    CorePair(cores=tuple(pair["cores"]), screen=pair.get("screen"))
-                    for pair in cable_product.get("pairs", ())
-                ),
-            ),
-            origin=origin,
-        )
-
+        _build_cable_product(draft, data["cable_product"], part, _origin(parsed, ("cable_product",)))
     if "pcb" in data:
-        origin = Origin(file=parsed.path, line=origins.get(("pcb",), 1), note="")
-        pcb = data["pcb"]
-        key = (*part_key, "pcb")
+        key = (*part.key, "pcb")
         draft.add(
-            PcbFacet(id=make_id(PcbFacet, key), key=key, subject=part.id, revision=pcb["revision"]),
-            origin=origin,
+            PcbFacet(id=make_id(PcbFacet, key), key=key, subject=part.id, revision=data["pcb"]["revision"]),
+            origin=_origin(parsed, ("pcb",)),
         )
 
-    if "rating" in data:
-        rating_line = origins.get(("rating",), 1)
-        rating_origin = Origin(file=parsed.path, line=rating_line, note="")
-        _ratings.add_part_rating(draft, data["rating"], part.id, part_key, rating_origin)
+
+def _build_cable_product(draft: Draft, cable_product: _toml.Table, part: _PartContext, origin: Origin) -> None:
+    key = (*part.key, "cable_product")
+    draft.add(
+        CableProductFacet(
+            id=make_id(CableProductFacet, key),
+            key=key,
+            subject=part.id,
+            core_colours=tuple(cable_product["core_colours"]),
+            gauge_mm2=Decimal(cable_product["gauge_mm2"]),
+            shielded=cable_product["shielded"],
+            pairs=tuple(CorePair(cores=tuple(pair["cores"]), screen=pair.get("screen")) for pair in cable_product.get("pairs", ())),
+        ),
+        origin=origin,
+    )

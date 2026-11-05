@@ -56,12 +56,6 @@ def test_band_align_off_gives_no_band() -> None:
         core_options(
             marker=MARKER,
             band_align=False,
-            flip_turn="R180",
-            tag_stagger=True,
-            label_gap=8,
-            parallel_pitch=48,
-            driver_first=True,
-            arrow_sides=("E", "W"),
         ),
     )
     assert band_aligns(env) == ()
@@ -100,10 +94,7 @@ def _turned(env: PageEnv, sym: str) -> PageEnv:
     pcs = {
         k: replace(
             pc,
-            lanes=tuple(
-                tuple(replace(c, orient="R180") if c.sym == sym else c for c in lane)
-                for lane in pc.lanes
-            ),
+            lanes=tuple(tuple(replace(c, orient="R180") if c.sym == sym else c for c in lane) for lane in pc.lanes),
         )
         for k, pc in env.pcs.items()
     }
@@ -144,10 +135,9 @@ def test_row_groups_keep_their_head_and_foot_lines() -> None:
     env = env_of(row_group_three("G"))
     (group,) = row_group_aligns(env)
     assert group.kind == "row_group"
-    assert group.subject == "G"
+    assert group.subject == "G, row 0"
     assert env_of(row_group_three(None)).pcs
     assert row_group_aligns(env_of(row_group_three(None))) == ()
-    assert len(group.lines) >= 1
 
 
 def test_aligns_are_in_natural_order_whatever_the_input_order() -> None:

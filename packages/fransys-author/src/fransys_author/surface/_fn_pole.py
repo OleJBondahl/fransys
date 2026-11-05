@@ -1,9 +1,9 @@
 """`fn.pole(n)`: one pole of a multi-pole function as a series element (API-FRICTION-2 C5)."""
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from fransys_author.errors import AuthorError
-from fransys_author.surface._pairing import NO_SIDE_FIX, Ends, ends_of
+from fransys_author.surface._pairing import NO_SIDE_FIX, Ends, SeriesElement, ends_of
 from fransys_author.surface._throws import whole_changeover
 from fransys_model.derive import contact_kind_of
 
@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from fransys_author.surface.design import Design
 
 
-class FnPole:
+class FnPole(SeriesElement):
     """The `n`th pole of a function, counted from 1 in the model's pole order: `s1.main.pole(2)`.
 
     Does not wire anything: a series wires it as one pole between its neighbours.
@@ -22,10 +22,12 @@ class FnPole:
         """Hold `fn` and `n`; `Fn.pole` makes these and has checked `n`."""
         self._fn, self._n = fn, n
 
+    @override
     def _series_width(self) -> int:
         return 1
 
-    def _series_ends(self, design: Design, width: int | None) -> Ends:  # noqa: ARG002 -- the SeriesElement protocol
+    @override
+    def _series_ends(self, design: Design, width: int | None) -> Ends:
         fn, label = self._fn, f"{self._fn._label}.{self._fn._fn.name}"
         if contact_kind_of(fn._fn.kind) == "co":
             raise whole_changeover(fn._label, fn._fn)
@@ -36,10 +38,7 @@ class FnPole:
         if self._n > len(ends.line):
             count = len(ends.line)
             plural = "" if count == 1 else "s"
-            msg = (
-                f"{label} has {count} pole{plural}; pole({self._n}) is past the last; "
-                f"use a pole from 1 to {count}"
-            )
+            msg = f"{label} has {count} pole{plural}; pole({self._n}) is past the last; use a pole from 1 to {count}"
             raise AuthorError(msg)
         i = self._n - 1
         return Ends((ends.line[i],), (ends.load[i],), ends.pe)

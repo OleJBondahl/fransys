@@ -2,16 +2,16 @@
 
 Each row loads the case builder of the field-case test the study names (by path, as the tests
 cannot import a `test_` module) and returns its model. Where the test builds inline in its body
-or a fixture, the same few lines are repeated here around the module's own unit.
 """
 
 import importlib.util
 import tempfile
 from functools import cache
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 import fransys as fr
+from _model_build_cover import unit_document
 
 if TYPE_CHECKING:
     from types import ModuleType
@@ -42,12 +42,6 @@ def field_case(name: str) -> ModuleType:
     return module
 
 
-def _document(folder: str, target: str) -> fr.Draft:
-    cover = Path(folder) / "own.md"
-    cover.write_text("# Study\n", encoding="utf-8")
-    return fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, target, cover=cover)
-
-
 def _seal(case: ModuleType) -> Model:
     d = fr.design("demo_parts")
     d.add(case._starter, "U1")
@@ -57,14 +51,13 @@ def _seal(case: ModuleType) -> Model:
 def _units(case: ModuleType) -> Model:
     with tempfile.TemporaryDirectory() as folder:
         # The study's instance w02 is the second build of its test: the unit body's profile.
-        return case._build(Path(folder), design=None, in_body=case._UNIT_GAP).model
+        return cast("Model", case._build(Path(folder)).model)
 
 
 def _drawn(case: ModuleType) -> Model:
     d = fr.design("demo_parts")
     d.add(case._cab, "U1")
-    with tempfile.TemporaryDirectory() as folder:
-        return fr.build(d, _document(folder, "demo-cab")).model
+    return fr.build(d, unit_document("demo-cab")).model
 
 
 def study_model(row: str) -> Model:
@@ -77,4 +70,4 @@ def study_model(row: str) -> Model:
         "units": _units,
         "drawn": _drawn,
     }
-    return builders[row](case)
+    return cast("Model", builders[row](case))

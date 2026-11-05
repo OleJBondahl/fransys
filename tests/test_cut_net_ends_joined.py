@@ -2,8 +2,6 @@
 
 The card's own supply pin hung from the trunk its inputs drive, one y node above and below the
 trunk. The whole net left its fan, was cut as one tag pair, and F21, K1, S1, S5, S6 and DI1 got
-no wire. Now only the supply pin leaves, and a cut net keeps its wires among one page's ends.
-One build of the panel, about 20 s: the case needs the whole corpus circuit.
 """
 
 from __future__ import annotations
@@ -47,20 +45,8 @@ def _layouts(monkeypatch: pytest.MonkeyPatch) -> list[tuple[Any, Any]]:
 
 
 def _reached(layout: Any, net_id: str) -> set[tuple[str, str]]:
-    points = {
-        (pr.page, p)
-        for pr in layout.routes.pages
-        for w in pr.wires
-        if w.net == net_id
-        for p in w.points
-    }
-    return {
-        (pl.sym.split()[0], q.pin)
-        for pp in layout.placement.pages
-        for pl in pp.placed
-        for q in pl.pin_xy
-        if (pl.page, (q.x, q.y)) in points
-    }
+    points = {(pr.page, p) for pr in layout.routes.pages for w in pr.wires if w.net == net_id for p in w.points}
+    return {(pl.sym.split()[0], q.pin) for pp in layout.placement.pages for pl in pp.placed for q in pl.pin_xy if (pl.page, (q.x, q.y)) in points}
 
 
 @pytest.mark.private_input  # reads internal/ (R462)

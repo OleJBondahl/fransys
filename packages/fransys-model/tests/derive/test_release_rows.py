@@ -56,9 +56,7 @@ def test_pin_source_pins_is_the_folder_and_numbering_or_none():
 
 
 def test_pin_source_is_same_version_at_or_below_with_numbering():
-    stored = StoredReleases(
-        releases=(_stored(1, 1), _stored(1, 2, numbering=False), _stored(1, 3), _stored(2, 1))
-    )
+    stored = StoredReleases(releases=(_stored(1, 1), _stored(1, 2, numbering=False), _stored(1, 3), _stored(2, 1)))
     assert _folder(pin_source(stored, _identity(1, 3))) == "1.3"
     assert _folder(pin_source(stored, _identity(1, 2))) == "1.1"
     assert _folder(pin_source(stored, _identity(2, 1))) == "2.1"
@@ -71,9 +69,6 @@ def test_libraries_skip_a_part_authored_in_python():
     `Part.library`'s own docstring: `None` for one "authored in Python", never sourced from a
     loaded part-file library, a shape `fransys_author` itself never produces today but the
     model schema allows and this reader must still handle -- contributes no entry, while a
-    real, library-sourced part's does. Hand-built model (no `fr.build`/`fransys_author`, the same
-    pattern `tests/test_units_worked_example.py`'s cross-unit probe uses): this is the only
-    way to construct a `Part` with `library=None` at all.
     """
     from fransys_model.kernel import Draft, Origin, freeze, make_id
     from fransys_model.vocab.core import Item
@@ -81,9 +76,7 @@ def test_libraries_skip_a_part_authored_in_python():
     from fransys_model.vocab.templates import Part, PartLibrary
 
     library_key = ("part_library", "demo-parts")
-    library = PartLibrary(
-        id=make_id(PartLibrary, library_key), key=library_key, name="demo-parts", version="0.1.0"
-    )
+    library = PartLibrary(id=make_id(PartLibrary, library_key), key=library_key, name="demo-parts", version="0.1.0")
     with_lib_key = ("part", "Demo", "WITH-LIB")
     with_lib = Part(
         id=make_id(Part, with_lib_key),

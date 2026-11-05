@@ -1,13 +1,6 @@
 """One undo test per ruling for rack order and page packing, item views and generic boxes, and
 PLC channels, built through the `fransys` facade from
 `examples/demo-parts` and read from the core path's page Drawings only.
-
-Not covered: "the rack's supply is drawn as rails in their own band" and "an item
-whose functions all choose one named symbol is one view" (the PSU). Both need a multi-function
-part whose functions are not PLC channels and whose ports fit one symbol; the only such demo parts
-are the relay (8 ports) and the contactor (10), and no library symbol has more than 5.
-
-A Drawing carries no model id, so an item's box is the generic box nearest, in x, its TAG text.
 """
 
 import shutil
@@ -15,12 +8,12 @@ from importlib.resources import as_file, files
 from typing import Any
 
 import fransys as fr
-import fransys_author
 import fransys_parts
 import pytest
 from _dd_core import designation_of
 from _drawn_pages import drawn_pages
-from _model_build_cover import layout_trigger_document
+from _model_build_cover import cabinet_document
+from fransys_author.design import Design
 
 from fransys_layout.geometry import generic_box_geometry
 from fransys_model.layout import Page, layout_of
@@ -39,21 +32,24 @@ _HALF_BODY = 16  # G, half the box body height: a port stands this far above or 
 
 def _design():
     parts = fransys_parts.load("demo_parts")
-    design = fransys_author.Design(parts)
+    design = Design(parts)
     design.project(**_PROJECT)
     design.revision(1, date="2026-09-24", text="First issue", created="XX")
     return parts, design
 
 
+def _close(d, at, group, *ports) -> None:
+    """Wire each open port to a terminal of its own, so no function stands half connected."""
+    strip = d.strip("X9", at=at)
+    wire = d.wiring(colour="BU", gauge="0.5")
+    for port in ports:
+        wire(port, strip.terminal("DEMO-TB-2.5-TWIN", group=group).inner)
+
+
 def _tag_at(model, name):
     """(Drawing, TAG text) of the one TAG text printing item `name`'s designation."""
     text = f"-{designation_of(model, name)}"
-    (found,) = [
-        (d, t)
-        for d in drawn_pages(model).values()
-        for t in d.texts
-        if t.kind == "TAG" and t.text == text
-    ]
+    (found,) = [(d, t) for d in drawn_pages(model).values() for t in d.texts if t.kind == "TAG" and t.text == text]
     return found
 
 
@@ -99,18 +95,18 @@ def _rack_of_three_modules():
     parts, d = _design()
     c1, plc = d.location("C1", "Cabinet"), d.group("PLC", "PLC")
     rack = d.item(None, tag="U1", at=c1, group=plc)
+    strip = d.strip("X1", at=c1)
     wire = d.wiring(colour="BU", gauge="0.5")
     for name, tag, position, relay in (
         ("z", "DO9", 1, "k3"),
         ("a", "DO2", 2, "k2"),
         ("m", "DO5", 3, "k1"),
     ):
-        module = d.item(
-            "DEMO-PLC-DO-2", tag=tag, name=name, parent=rack, position=position, at=c1, group=plc
-        )
+        module = d.item("DEMO-PLC-DO-2", tag=tag, name=name, parent=rack, position=position, at=c1, group=plc)
         k = d.item("DEMO-RLY-2CO-24", tag=relay.upper(), name=relay, at=c1, group=plc)
         wire(module.fn("do_1")["1"], k.fn("coil")["A1"])
-    return fr.build(parts, d.draft(), layout_trigger_document()).model
+        wire(k.fn("coil")["A2"], strip.terminal("DEMO-TB-2.5", group=plc).inner)
+    return fr.build(parts, d.draft(), cabinet_document(c1)).model
 
 
 def test_a_racks_modules_and_their_attached_columns_stand_in_authored_position_order() -> None:
@@ -134,16 +130,17 @@ def test_several_groups_share_one_page() -> None:
     #     `used + run.width > content_width` becomes `True`
     parts, d = _design()
     c1, wire = d.location("C1", "Cabinet"), d.wiring(colour="BU", gauge="0.5")
-    lamps = [
-        d.item(
-            "DEMO-LAMP-24", tag=f"P{name[-1]}", name=name.lower(), at=c1, group=d.group(name, name)
-        )
-        for name in ("G1", "G2", "G3")
-    ]
+    groups = [d.group(name, name) for name in ("G1", "G2", "G3")]
+    lamps = [d.item("DEMO-LAMP-24", tag=f"P{i + 1}", name=f"g{i + 1}", at=c1, group=g) for i, g in enumerate(groups)]
     # layout-0218: a loose lamp draws no page, so the three lamps are wired in a chain
     wire(lamps[0].fn("lamp")["2"], lamps[1].fn("lamp")["1"])
     wire(lamps[1].fn("lamp")["2"], lamps[2].fn("lamp")["1"])
-    pages = layout_of(fr.build(parts, d.draft(), layout_trigger_document()).model, Page).values()
+    strip = d.strip("X9", at=c1)
+    for group, port in ((groups[0], lamps[0].fn("lamp")["1"]), (groups[2], lamps[2].fn("lamp")["2"])):
+        wire(port, strip.terminal("DEMO-TB-2.5-TWIN", group=group).inner)
+    result = fr.build(parts, d.draft(), cabinet_document(c1))
+    assert not [f for f in result.findings if f.severity is fr.Severity.ERROR]
+    pages = layout_of(result.model, Page).values()
     assert len(pages) < 3
     assert max(len(page.groups) for page in pages) >= 2
 
@@ -155,12 +152,14 @@ def _plc_modules():
     do = d.item("DEMO-PLC-DO-2", tag="DO1", name="do", at=c1, group=plc)
     di = d.item("DEMO-PLC-DI-2", tag="DI1", name="di", at=c1, group=plc)
     wire = d.wiring(colour="BU", gauge="0.5")
+    strip = d.strip("X1", at=c1)
     for name, channel in (("k1", "do_1"), ("k2", "do_2")):
         k = d.item("DEMO-RLY-2CO-24", tag=name.upper(), name=name, at=c1, group=plc)
         wire(do.fn(channel)[channel[-1]], k.fn("coil")["A1"])
+        wire(k.fn("coil")["A2"], strip.terminal("DEMO-TB-2.5", group=plc).inner)
     # layout-0218: DI1 keeps di_2 unwired; one wired channel draws the module as a box
     wire(di.fn("di_1")["1"], k.fn("co_1")["14"])
-    return fr.build(parts, d.draft(), layout_trigger_document()).model
+    return fr.build(parts, d.draft(), cabinet_document(c1)).model
 
 
 def test_an_item_of_generic_functions_is_one_box_showing_every_functions_ports() -> None:
@@ -224,7 +223,8 @@ def test_a_boxs_port_pitch_comes_from_its_longest_port_name_in_whole_modules() -
 
 @pytest.mark.rule("BOX-SIDES")
 def test_the_engines_box_keeps_two_modules_between_ports_on_one_side() -> None:
-    """BOX-SIDES: "the rest in halves"; R467 Q17: U2 is N, V2 and W2 share S, 2 M (16 G) apart."""
+    """BOX-SIDES: "the rest in halves"; R467 Q17 with every pin wired (V2 to W2): U2 and V2 share N, W2 is S;
+    U2 and V2 stand 3 M (24 G) apart: V2 is free and K1's column reaches 16 G past U2, so V2 clears it by a grid (PORT-LINE)."""
     # UNDO: electrical_symbols/generic_box.py:_pitch returns 1.0
     parts, d = _design()
     c1, grp = d.location("C1", "Cabinet"), d.group("A", "A")
@@ -232,13 +232,15 @@ def test_the_engines_box_keeps_two_modules_between_ports_on_one_side() -> None:
     # layout-0218: a relay coil on U2 keeps the box drawn; the pins keep their places
     k1 = d.item("DEMO-RLY-2CO-24", tag="K1", name="k1", at=c1, group=grp)
     d.wiring(colour="BU", gauge="0.5")(k1.fn("coil")["A2"], m1.fn("end")["U2"])
-    model = fr.build(parts, d.draft(), layout_trigger_document()).model
+    d.wiring(colour="BU", gauge="0.5")(m1.fn("end")["V2"], m1.fn("end")["W2"])
+    _close(d, c1, grp, k1.fn("coil")["A1"])
+    model = fr.build(parts, d.draft(), cabinet_document(c1)).model
     _, motor = _box(model, "m1")
     pins = [_pin(motor, port) for port in ("U2", "V2", "W2")]
-    _north_then_south([side for _, _, side in pins], ("n", "s", "s"))
-    (vx, vy), (wx, wy) = pins[1][:2], pins[2][:2]
-    assert vy == wy
-    assert wx - vx == 16
+    _north_then_south([side for _, _, side in pins], ("n", "n", "s"))
+    (ux, uy), (vx, vy) = pins[0][:2], pins[1][:2]
+    assert uy == vy
+    assert vx - ux == 24  # the free V2 stands clear of K1's column reach (16) plus a grid (PORT-LINE, 2026-10-26)
 
 
 def _motor_with_partner(relay_function, relay_port, motor_port):
@@ -247,7 +249,13 @@ def _motor_with_partner(relay_function, relay_port, motor_port):
     k1 = d.item("DEMO-RLY-2CO-24", tag="K1", name="k1", at=c1, group=grp)
     m1 = d.item("DEMO-MOTOR-11KW-YD", tag="M1", name="m1", at=c1, group=grp)
     d.wiring(colour="BU", gauge="0.5")(k1.fn(relay_function)[relay_port], m1[motor_port])
-    return fr.build(parts, d.draft(), layout_trigger_document()).model
+    relay_ports = {"coil": ("A1", "A2"), "co_1": ("11", "12", "14")}[relay_function]
+    open_ports = (
+        *(k1.fn(relay_function)[p] for p in relay_ports if p != relay_port),
+        *(m1.fn("end")[p] for p in ("U2", "V2", "W2") if p != motor_port),
+    )
+    _close(d, c1, grp, *open_ports)  # one call: a second would make a second strip X9 and merge its terminals into the first (R1266)
+    return fr.build(parts, d.draft(), cabinet_document(c1)).model
 
 
 @pytest.mark.parametrize(
@@ -255,16 +263,14 @@ def _motor_with_partner(relay_function, relay_port, motor_port):
     [("coil", "A2", "U2", True), ("co_1", "11", "V2", False)],
     ids=["partner above turns U2 north", "partner below turns V2 south"],
 )
-def test_box_ports_face_their_placed_partners(
-    relay_function, relay_port, motor_port, partner_above
-) -> None:
+def test_box_ports_face_their_placed_partners(relay_function, relay_port, motor_port, partner_above) -> None:
     """A wired box port stands on the side that faces its partner."""
     # UNDO: fransys_layout/stages/pagerun.py:place_pages
     #     skips `stages.boxes.box_sides` (`turned = drawn`)
     model = _motor_with_partner(relay_function, relay_port, motor_port)
     drawing, box = _box(model, "m1")
     x, y, _ = _pin(box, motor_port)
-    (wire,) = drawing.wires
+    (wire,) = [w for w in drawing.wires if (x, y) in (w.points[0], w.points[-1])]
     end = wire.points[0] if (x, y) == wire.points[0] else wire.points[-1]
     assert (end[1] < box.y) is partner_above
     assert end == (x, y)
@@ -280,7 +286,8 @@ def test_an_unwired_channel_of_a_half_wired_module_is_a_port_on_the_modules_box(
     do = d.item("DEMO-PLC-DO-2", tag="DO1", name="do", at=c1, group=plc)
     k1 = d.item("DEMO-RLY-2CO-24", tag="K1", name="k1", at=c1, group=plc)
     d.wiring(colour="BU", gauge="0.5")(do.fn("do_1")["1"], k1.fn("coil")["A1"])
-    model = fr.build(parts, d.draft(), layout_trigger_document()).model
+    _close(d, c1, plc, k1.fn("coil")["A2"])
+    model = fr.build(parts, d.draft(), cabinet_document(c1)).model
     drawing, box = _box(model, "do")
     assert box.key == _GENERIC_BOX
     assert set(_marks(box).values()) == {"1", "2"}
@@ -290,7 +297,7 @@ def test_an_unwired_channel_of_a_half_wired_module_is_a_port_on_the_modules_box(
 
 
 _THREE_CHANNEL_PART = """\
-schema = 1
+schema = 2
 
 [part]
 mpn = "DEMO-PLC-DO-3"
@@ -324,14 +331,15 @@ def test_a_three_channel_module_with_one_wired_channel_is_one_box_holding_all_th
         shutil.copytree(demo_parts, root, ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
     (root / "parts" / "plc-do-3ch.toml").write_text(_THREE_CHANNEL_PART, encoding="utf-8")
     parts = fransys_parts.load_path(root)
-    d = fransys_author.Design(parts)
+    d = Design(parts)
     d.project(**_PROJECT)
     d.revision(1, date="2026-09-24", text="First issue", created="XX")
     c1, plc = d.location("C1", "Cabinet"), d.group("PLC", "PLC")
     do = d.item("DEMO-PLC-DO-3", tag="DO1", name="do", at=c1, group=plc)
     k1 = d.item("DEMO-RLY-2CO-24", tag="K1", name="k1", at=c1, group=plc)
     d.wiring(colour="BU", gauge="0.5")(do.fn("do_1")["1"], k1.fn("coil")["A1"])
-    model = fr.build(parts, d.draft(), layout_trigger_document()).model
+    _close(d, c1, plc, k1.fn("coil")["A2"])
+    model = fr.build(parts, d.draft(), cabinet_document(c1)).model
     drawing, box = _box(model, "do")
     assert box.key == _GENERIC_BOX
     assert set(_marks(box).values()) == {"1", "2", "3"}

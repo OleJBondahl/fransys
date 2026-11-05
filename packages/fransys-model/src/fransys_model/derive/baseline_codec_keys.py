@@ -5,7 +5,6 @@ lazy from collections.abc import Mapping
 
 lazy from fransys_kernel import JsonValue
 
-from .revision_text import revision_text
 lazy from .rows_baseline import Listing
 
 ITEM_KEYS = ("key",)
@@ -27,11 +26,7 @@ def key_fields(row: object, names: tuple[str, ...]) -> dict[str, JsonValue]:
 
 def key_kwargs(data: Mapping[str, object], names: tuple[str, ...]) -> dict[str, Any]:
     """The key fields among `names` that `data` holds, as constructor keywords; none in a v1 row."""
-    return {
-        name: tuple(value) if isinstance(value, list | tuple) else value
-        for name in names
-        if (value := data.get(name)) is not None
-    }
+    return {name: tuple(value) if isinstance(value, list | tuple) else value for name in names if (value := data.get(name)) is not None}
 
 
 def has_item_keys(listing: Listing) -> bool:
@@ -40,24 +35,5 @@ def has_item_keys(listing: Listing) -> bool:
 
 
 def boundary_changed(previous: Listing, new: Listing) -> bool:
-    """Whether `new`'s boundary differs from `previous`'s, on the fields `previous` carries.
-
-    A version-1 `previous` has no `key` or `pin`, so only designation, ports, rating and operating
-    are compared, in order (model-0307). A version-2 one compares every field.
-    """
-    if has_item_keys(previous):
-        return previous.boundary != new.boundary
-    return _v1_boundary(previous) != _v1_boundary(new)
-
-
-def _v1_boundary(listing: Listing) -> tuple[tuple[object, ...], ...]:
-    """The boundary entries' fields a version-1 listing stores, in order."""
-    return tuple((b.designation, b.ports, b.rating, b.operating) for b in listing.boundary)
-
-
-def keyless_release(listing: Listing) -> str | None:
-    """The `name V.R` of a keyless `listing`'s release, else `None` (CHANGES_BY_NAME)."""
-    if has_item_keys(listing):
-        return None
-    unit = listing.unit
-    return f"{unit.name} {revision_text(unit.version, unit.revision)}"
+    """Whether `new`'s boundary differs from `previous`'s, field for field (a stored listing is version 3)."""
+    return previous.boundary != new.boundary

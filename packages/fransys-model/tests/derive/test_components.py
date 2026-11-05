@@ -26,10 +26,7 @@ def test_agrees_with_union_find_on_random_joins() -> None:
     rng = random.Random(20261016)  # noqa: S311 seeded test data, not security
     for _ in range(200):
         members = list(range(rng.randint(0, 25)))
-        joins = [
-            tuple(rng.choice(members) for _ in range(rng.randint(0, 4)))
-            for _ in range(rng.randint(0, 15) if members else 0)
-        ]
+        joins = [tuple(rng.choice(members) for _ in range(rng.randint(0, 4))) for _ in range(rng.randint(0, 15) if members else 0)]
         reference = UnionFind(members)
         for group in joins:
             reference.union_all(group)

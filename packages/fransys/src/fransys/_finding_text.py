@@ -49,10 +49,7 @@ def filled_fix(finding: Finding, model: Model) -> str:
         if placeholder not in fix:
             continue
         if index >= len(shown):
-            msg = (
-                f"{finding.code}: the fix holds {placeholder} but the finding has no subject "
-                f"there; name the thing and the fix: {finding.fix!r}"
-            )
+            msg = f"{finding.code}: the fix holds {placeholder} but the finding has no subject there; name the thing and the fix: {finding.fix!r}"
             raise SchemaError(msg, kind="Finding")
         fix = fix.replace(placeholder, shown[index])
     return fix

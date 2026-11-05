@@ -59,28 +59,19 @@ def test_components_match_the_rows(demo_board, sexpr):
     model = demo_board.freeze()
     rows = board_netlist(model, demo_board.board.item)
     comps = _comps(sexpr(netlist(model, demo_board.board.item)))
-    assert [
-        (_one(comp, "ref")[1], _one(comp, "value")[1], _one(comp, "footprint")[1]) for comp in comps
-    ] == [
-        (part.designation, part.mpn, f"{part.footprint_library}:{part.footprint_name}")
-        for part in rows.parts
+    assert [(_one(comp, "ref")[1], _one(comp, "value")[1], _one(comp, "footprint")[1]) for comp in comps] == [
+        (part.designation, part.mpn, f"{part.footprint_library}:{part.footprint_name}") for part in rows.parts
     ]
     assert [_one(comp, "ref")[1] for comp in comps] == ["J1", "R1", "R2"]
-    assert all(
-        _one(comp, "sheetpath") == ["sheetpath", ["names", "/"], ["tstamps", "/"]] for comp in comps
-    )
+    assert all(_one(comp, "sheetpath") == ["sheetpath", ["names", "/"], ["tstamps", "/"]] for comp in comps)
 
 
 def test_nets_match_the_rows(demo_board, sexpr):
     model = demo_board.freeze()
     rows = board_netlist(model, demo_board.board.item)
     nets = _nets(sexpr(netlist(model, demo_board.board.item)))
-    assert [(_one(net, "code")[1], _one(net, "name")[1]) for net in nets] == [
-        (str(code), net.name) for code, net in enumerate(rows.nets, start=1)
-    ]
-    assert [_nodes(net) for net in nets] == [
-        [_pin_of(model, pin) for pin in net.pins] for net in rows.nets
-    ]
+    assert [(_one(net, "code")[1], _one(net, "name")[1]) for net in nets] == [(str(code), net.name) for code, net in enumerate(rows.nets, start=1)]
+    assert [_nodes(net) for net in nets] == [[_pin_of(model, pin) for pin in net.pins] for net in rows.nets]
     assert [_one(net, "name")[1] for net in nets] == ["GND", "SIG", "VCC"]
 
 
@@ -160,9 +151,7 @@ def test_escaping_round_trips(new_design, sexpr):
     awkward_net = 'N"1\\2 é'
     design = new_design()
     board_part = design.part("board", "SIM-BOARD-DEMO", "A", board=True)
-    part = design.part(
-        "odd", awkward_mpn, "X", {"main": (awkward_pin, "2")}, footprint=("Lib \\ é", 'Name "x"')
-    )
+    part = design.part("odd", awkward_mpn, "X", {"main": (awkward_pin, "2")}, footprint=("Lib \\ é", 'Name "x"'))
     board = design.item(board_part, "jb1", "JB1")
     odd = design.item(part, "jb1-x1", 'X "1" \\ é', parent=board)
     design.net("odd", (odd.pin(awkward_pin), odd.pin("2")), name=awkward_net)

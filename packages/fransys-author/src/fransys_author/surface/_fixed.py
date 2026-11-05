@@ -1,16 +1,17 @@
 """Fixed terminals in a series: `x1[3]`, `x1[1:4]` and `(x1[3], x2[3])` (API-CLARITY C6.11)."""
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from fransys_author.errors import AuthorError
 from fransys_author.handles import Port, Terminal
-from fransys_author.surface._pairing import End, Ends
+from fransys_author.surface._pairing import End, Ends, SeriesElement
 
 if TYPE_CHECKING:
     from fransys_author.surface._strip import TerminalStrip
     from fransys_author.surface.design import Design
 
 _MARK = "terminal"
+_MARK_AND_NUMBER = 2  # a mark and a number
 
 
 def take(design: Design, terminal: Terminal) -> None:
@@ -31,7 +32,7 @@ def side_ends(design: Design, port: Port) -> Ends | None:
     return Ends(line=end, load=end)
 
 
-class FixedTerminals:
+class FixedTerminals(SeriesElement):
     """Terminals named by number as one series element, one terminal per pole, in order.
 
     Behaves as a strip passed whole does (inner side in, outer side out), with these numbers.
@@ -59,11 +60,13 @@ class FixedTerminals:
         """
         return tuple(t.inner for t in self._terminals)
 
+    @override
     def _series_width(self) -> int | None:
         """One terminal takes the series' width; several set it."""
         return len(self._terminals) if len(self._terminals) > 1 else None
 
-    def _series_ends(self, design: Design, width: int | None) -> Ends:  # noqa: ARG002 -- the protocol
+    @override
+    def _series_ends(self, design: Design, width: int | None) -> Ends:
         for t in self._terminals:
             take(design, t)
         return Ends(
@@ -114,7 +117,7 @@ def span(strip: TerminalStrip, picked: slice) -> FixedTerminals:
 def _where(terminal: Terminal) -> tuple[tuple[str, ...], int] | None:
     """The strip key and number of a terminal made without a run label, else `None`."""
     key = terminal.key
-    if len(key) < 2 or key[-2] != _MARK or not key[-1].isdigit():  # noqa: PLR2004 -- a mark and a number
+    if len(key) < _MARK_AND_NUMBER or key[-2] != _MARK or not key[-1].isdigit():
         return None
     return key[:-2], int(key[-1])
 
@@ -146,10 +149,7 @@ def fixed(element: Terminal | tuple[object, ...]) -> FixedTerminals:
     if len(held) != len(items):
         other = next(t for t in items if not isinstance(t, Terminal))
         kind = "a mix of pins and terminals" if isinstance(other, Port) else type(other).__name__
-        msg = (
-            "a tuple in a series holds fixed terminals (x1[3], x2[3]) or the pins of one device "
-            f"(k1.coil.A1, k1.coil.A2), not {kind}"
-        )
+        msg = f"a tuple in a series holds fixed terminals (x1[3], x2[3]) or the pins of one device (k1.coil.A1, k1.coil.A2), not {kind}"
         raise AuthorError(msg)
     _refuse_repeat(held)
     if len(held) > 1 and (written := _in_order(held)) is not None:

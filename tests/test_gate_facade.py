@@ -1,9 +1,7 @@
 """Facade gates E3 and E4 (spec SURFACE-COHERENCE R1): the findings policy and stored releases.
 
-E3: outside `fransys`, no `BuildErrors` import and no compare or branch on `Severity.ERROR`,
+E3: outside `fransys`, no `BuildFailedError` import and no compare or branch on `Severity.ERROR`,
 bar `finding_errors`, the one home of the rule. A dict key is out of scope (designer 2026-10-16).
-E4: the facade reads no `StoredRelease` field except through derive (the four-field rule is in
-`test_one_home.py`).
 """
 
 import ast
@@ -21,7 +19,7 @@ STORED_RECEIVERS = frozenset(["release", "stored", "stored_release", "previous",
 
 def _severity_names(tree: ast.AST) -> frozenset[str]:
     """`Severity` plus every alias it is imported under."""
-    names = {"Severity"}
+    names: set[str] = {"Severity"}
     for node in ast.walk(tree):
         if isinstance(node, ast.ImportFrom):
             names |= {a.asname for a in node.names if a.name == "Severity" and a.asname}
@@ -29,14 +27,7 @@ def _severity_names(tree: ast.AST) -> frozenset[str]:
 
 
 def _error_refs(node: ast.AST, names: frozenset[str]) -> list[ast.Attribute]:
-    return [
-        n
-        for n in ast.walk(node)
-        if isinstance(n, ast.Attribute)
-        and n.attr == "ERROR"
-        and isinstance(n.value, ast.Name)
-        and n.value.id in names
-    ]
+    return [n for n in ast.walk(node) if isinstance(n, ast.Attribute) and n.attr == "ERROR" and isinstance(n.value, ast.Name) and n.value.id in names]
 
 
 def error_branches(source: str) -> list[int]:
@@ -64,8 +55,8 @@ def error_constructions(source: str) -> int:
 
 
 def buildable_imports(source: str, module: str) -> list[int]:
-    """E3: lines that import `BuildErrors` from anywhere, in `module`."""
-    return [r.line for r in imports_of(source, module) if r.name == "BuildErrors"]
+    """E3: lines that import `BuildFailedError` from anywhere, in `module`."""
+    return [r.line for r in imports_of(source, module) if r.name == "BuildFailedError"]
 
 
 def stored_field_reads(source: str) -> list[tuple[str, int]]:
@@ -83,11 +74,9 @@ def stored_field_reads(source: str) -> list[tuple[str, int]]:
 
 def test_nothing_outside_the_facade_imports_build_errors():
     rows = src_imports()
-    defined = [m for m, path in src_modules() if "class BuildErrors(" in path.read_text("utf-8")]
-    assert defined == ["fransys.pipeline"], "the walk did not see BuildErrors"
-    assert [
-        (r.module, r.line) for r in rows if r.package != FACADE and r.name == "BuildErrors"
-    ] == []
+    defined = [m for m, path in src_modules() if "class BuildFailedError(" in path.read_text("utf-8")]
+    assert defined == ["fransys.pipeline"], "the walk did not see BuildFailedError"
+    assert [(r.module, r.line) for r in rows if r.package != FACADE and r.name == "BuildFailedError"] == []
 
 
 def test_nothing_outside_the_facade_branches_on_error_severity():
@@ -108,18 +97,15 @@ def test_the_facade_reads_no_stored_release_field():
     hits = []
     for module, path in src_modules():
         if module.split(".", maxsplit=1)[0] == FACADE:
-            hits += [
-                f"{module}:{line} .{field}"
-                for field, line in stored_field_reads(path.read_text(encoding="utf-8"))
-            ]
+            hits += [f"{module}:{line} .{field}" for field, line in stored_field_reads(path.read_text(encoding="utf-8"))]
     assert hits == []
 
 
 def test_the_build_errors_gate_can_fail():
     forms = [
-        "from fransys.pipeline import BuildErrors",
-        "from fransys import BuildErrors as B",
-        "import fransys.pipeline as p\np.BuildErrors",
+        "from fransys.pipeline import BuildFailedError",
+        "from fransys import BuildFailedError as B",
+        "import fransys.pipeline as p\np.BuildFailedError",
     ]
     for source in forms:
         assert buildable_imports(source, "fransys_reports"), source
@@ -140,7 +126,7 @@ def test_the_error_branch_gate_can_fail():
         assert error_branches(source), source
     constructions = [
         "f = Finding(code=c, severity=Severity.ERROR)",
-        "t = dict(severities=(Severity.ERROR,))",
+        "t = dict(severity=Severity.ERROR)",
         "d = {Severity.ERROR: 1}",
     ]
     for source in constructions:

@@ -1,3 +1,5 @@
+# fransys-kicad
+
 Fransys output: KiCad netlist. Dev tool: KiCad symbol to part-file skeleton.
 
 Output contract: pure function of a Model returning str, bytes or a tuple of pages. No file I/O, no clock, no randomness. Same model digest, same bytes.
@@ -6,19 +8,19 @@ Output contract: pure function of a Model returning str, bytes or a tuple of pag
 - `check(model, board) -> tuple[Finding, ...]`: what the importer would otherwise leave to chance, as findings. The rules read the rows `netlist` writes and repeat nothing the model's validators report (`NET_SHORTED`, `FUNCTION_HALF_CONNECTED`, `DESIGNATION_DUPLICATE`). The codes:
   - `PART_WITHOUT_FOOTPRINT` (warning): a part of the board with no footprint, an accessory excepted (kicad-0003); the netlist omits it.
   - `NET_SINGLE_PIN` (warning): a net of one pin.
-  - `NODE_WITHOUT_COMPONENT` (warning): a net pin of an item with no footprint, or of the board itself; KiCad drops the node.
+  - `NODE_WITHOUT_COMPONENT` (error): a net pin of an item with no footprint, or of the board itself; KiCad drops the node.
   - `REFERENCE_DUPLICATE` (error): two parts of the board with one designation.
   - `NET_NAME_DUPLICATE` (error): two nets with one name; KiCad merges them.
   - `PAD_ON_MULTIPLE_NETS` (error): one component and pad name in more than one net.
   - `PIN_ID_COLLISION` (error): two pins of one part that would write one KiCad pin id, wired or not (kicad-0006).
   - `UNCONNECTED_PIN` (info): a pin of a part of the board that is in no net.
 
-  Not checked: output conflicts from `PortRole` and explicit no-connects, since the model has neither an input or output role nor a no-connect record.
+  Not checked: output conflicts from the pin role and explicit no-connects, since the model has neither an input or output role nor a no-connect record.
 - How an engineer imports the netlist into a board, with the standard import settings: the guide's KiCad page, `fransys/guide/kicad.md`.
 - `part_file_skeleton(kicad_sym, symbol) -> str`: reads one symbol's pins out of a `.kicad_sym`
   library's text and writes a part-file skeleton (decision kicad-0002): one `[[function]]` of kind
-  `generic`, one port per pin, and the fields a human must fill in (`mpn`, `manufacturer`,
-  `description`, `category`, `class_code`) as empty strings marked `# TODO`. Pure: text in,
+  `generic`, one port per pin. The fields a human must fill in (`mpn`, `manufacturer`,
+  `description`, `category`, `class_code`) are written as empty strings marked `# TODO`. Pure: text in,
   TOML text out, no file I/O. The KiCad subset parsed, pin ordering and what did not make it
   in: decision kicad-0002.
 

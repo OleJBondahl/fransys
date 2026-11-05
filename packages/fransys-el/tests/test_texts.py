@@ -1,4 +1,6 @@
-"""`fransys_el.TEXTS`: the text placement table, one row per kind (T1.1 to T1.8, layout-0090)."""
+"""`fransys_el.TEXTS`: the text placement table, one row per kind (T1.1 to T1.6 and T1.8, layout-0090)."""
+
+from typing import Any
 
 import pytest
 from fransys_el import OPTIONS, TEXT_ROW_IDS, TEXTS
@@ -21,15 +23,12 @@ _ROWS = (
     ("T1.4", TextKind.MARKING, 1, ((None, _ALONG, False), (None, _ALONG, True))),
     ("T1.5", TextKind.CONTACT_IMAGE, 2, ((Facing.S, (0,), False),)),
     ("T1.6", TextKind.CROSS_REFERENCE, 3, ((None, _BELOW, False), (None, _BELOW, True))),
-    ("T1.7", TextKind.POWER, 0, ((None, (0,), False),)),
     ("T1.8", TextKind.HARNESS_LINE, 1, ((None, _ALONG, False), (None, _ALONG, True))),
 )
 
 
 @pytest.mark.parametrize(("row_id", "kind", "priority", "sides"), _ROWS, ids=[r[0] for r in _ROWS])
-def test_each_row_gives_its_sides_in_order_and_its_priority(
-    row_id: str, kind: TextKind, priority: int, sides: tuple
-) -> None:
+def test_each_row_gives_its_sides_in_order_and_its_priority(row_id: str, kind: TextKind, priority: int, sides: tuple[Any, ...]) -> None:
     """T1.n: the row of one kind has its sides, steps, mirrors and priority."""
     assert TEXT_ROW_IDS[[r[0] for r in _ROWS].index(row_id)] == row_id
     row = TEXTS[kind.value]

@@ -49,10 +49,10 @@ def _check_marker_stub(rec: LinkMarker) -> None:
     is_off = rec.star is StarKind.OFF
     if rec.facing is None:
         _refuse(rec, kind, "a link marker always stores its facing")
-    if (rec.far is not None) != is_off:
-        _refuse(rec, kind, "a link marker's far is set exactly when it is an off stub")
-    if rec.carrier is not None and rec.far is None:
-        _refuse(rec, kind, "a link marker's carrier needs a far")
+    if bool(rec.pairs) != is_off:
+        _refuse(rec, kind, "a link marker's pairs are set exactly when it is an off stub")
+    if rec.pairs and rec.pairs[0].port != rec.port:
+        _refuse(rec, kind, "a link marker's first pair starts at its port")
 
 
 @record(kind="layout.drawing_set")
@@ -116,6 +116,15 @@ class RoutePoint:
     y: int
 
 
+@value
+class MarkerPair:
+    """One conductor an off stub ends: `port` is its side, `far` the port at the other end, `carrier` the item that carries it (`None` for a wire)."""
+
+    port: Id[Port]
+    far: Id[Port]
+    carrier: Id[Item] | None = None
+
+
 @record(kind="layout.link_marker")
 class LinkMarker:
     """One end of a signal severed by a page boundary; a plain marker (`star` is `None`) has a pair.
@@ -126,12 +135,11 @@ class LinkMarker:
     severed net is the physical net of `port`; neither is stored. `width`/`height` are the
     reserved box's size in G, never re-measured. `box_x` is the left edge of a shared box,
     `lead` marks the box's lead marker, `stub_extra` is extra stub length in G, `via_x`/`via_y`
-    are the stub's bend (both or neither), `star` is the star point drawn, or `None`. `far`
-    and `carrier` are set only on an off stub. `facing`, the side the box sits out from the port,
-    is set on every marker and never re-derived. `vertical` is
-    layout's decision that the text reads along its wire, bottom to top; `width`/`height`
-    are then the turned box's. `wrap_at` is the words on the first line of a text layout
-    broke in two, `None` for one line.
+    are the stub's bend (both or neither), `star` is the star point drawn, or `None`.
+    `pairs` (each conductor, a `MarkerPair` with its own carrier, its own first) are set only on an off stub; `far` is the first
+    pair's. `facing`, the side the box sits out from the port, is set on every marker and never re-derived. `vertical` is
+    layout's decision that the text reads along its wire, bottom to top; `width`/`height` are then the turned box's.
+    `wrap_at` is the words on the first line of a text layout broke in two, `None` for one line.
     """
 
     id: Id[LinkMarker]
@@ -151,8 +159,7 @@ class LinkMarker:
     via_x: int | None = None
     via_y: int | None = None
     star: StarKind | None = None
-    far: Id[Port] | None = None
-    carrier: Id[Item] | None = None
+    pairs: tuple[MarkerPair, ...] = ()
     facing: Side | None = None
     vertical: bool = False
     wrap_at: int | None = None
@@ -161,12 +168,17 @@ class LinkMarker:
     def __post_init__(self) -> None:
         """Refuse a bad size, lone `via_x`/`via_y`, a negative `stub_extra`, a boxless non-lead.
 
-        Also a marker without `facing`, `far` on any but an off stub (or an off stub without
-        it), and a `carrier` without `far`.
+        Also a marker without `facing`, `pairs` on any but an off stub (or an off stub without
+        them) and a first pair not at `port`.
         """
         _check_size(self, "a link marker's", "layout.link_marker")
         _check_marker_numbers(self)
         _check_marker_stub(self)
+
+    @property
+    def far(self) -> Id[Port] | None:
+        """The far port of the stub's own conductor (its first pair), `None` off a stub."""
+        return self.pairs[0].far if self.pairs else None
 
 
 @record(kind="layout.power_symbol")
@@ -174,8 +186,7 @@ class PowerSymbol:
     """One power symbol drawn at a port on one page: the bar, ground or protective earth.
 
     `symbol` is the electrical-symbols key (`power-supply`, `ground`, `protective-earth`) and
-    `x`, `y` its origin, in G. `pin_x`, `pin_y` is the lead's start, the pin's point; the lead
-    runs from there to the symbol's port. The record stores no printed text: a label, where it
+    `x`, `y` its origin, in G. The record stores no printed text: a label, where it
     has one, is an ordinary `layout.label` with the port as its subject (decision model-0117).
     """
 
@@ -186,8 +197,6 @@ class PowerSymbol:
     symbol: str
     x: int
     y: int
-    pin_x: int
-    pin_y: int
     orientation: Orientation
     produced_by: str
     ext: frozendict[str, Value] = frozendict()

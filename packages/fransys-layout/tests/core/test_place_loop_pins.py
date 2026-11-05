@@ -24,12 +24,6 @@ def test_a_loop_column_on_two_card_pins_never_puts_two_nets_on_one_point() -> No
         options = core_options(
             justify=justify,
             box_pin_pitch_min=16,
-            flip_turn="R180",
-            tag_stagger=True,
-            label_gap=8,
-            parallel_pitch=48,
-            driver_first=True,
-            arrow_sides=("E", "W"),
         )
         nets = (net("go", "A1.p2", "k.n"), net("back", "k.s", "A1.p3"))
         prob = PlacementProblem(AREA, (box_sym(4), elem("k")), nets, facts=Facts())
@@ -53,9 +47,7 @@ def _on(p: tuple[int, int], a: tuple[int, int], b: tuple[int, int]) -> bool:
 
 def _touch(u: tuple[tuple[int, int], ...], v: tuple[tuple[int, int], ...]) -> bool:
     """An end or corner of one polyline lies on the other (a crossing alone never does)."""
-    return any(_on(p, a, b) for p in u for a, b in pairwise(v)) or any(
-        _on(p, a, b) for p in v for a, b in pairwise(u)
-    )
+    return any(_on(p, a, b) for p in u for a, b in pairwise(v)) or any(_on(p, a, b) for p in v for a, b in pairwise(u))
 
 
 def test_a_loop_column_on_two_card_pins_routes_with_no_two_nets_touching() -> None:
@@ -64,8 +56,4 @@ def test_a_loop_column_on_two_card_pins_routes_with_no_two_nets_touching() -> No
     prob = PlacementProblem(AREA, (box_sym(4), elem("k")), nets, facts=Facts())
     wires = [w for page in routed_of(prob).pages for w in page.wires]
     assert {w.net for w in wires} == {"go", "back"}
-    assert not [
-        (u.points, v.points)
-        for u, v in combinations(wires, 2)
-        if u.net != v.net and _touch(u.points, v.points)
-    ]
+    assert not [(u.points, v.points) for u, v in combinations(wires, 2) if u.net != v.net and _touch(u.points, v.points)]

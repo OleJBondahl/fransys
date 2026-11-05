@@ -2,8 +2,6 @@
 
 `roles_plant()` builds it with `Plant`, plus the item shapes the kind and role readers branch on:
 a strip with two terminals, a bar, a connector, a cable, a PLC channel and a breaking-rated
-protection. The ids it returns name each record by a key the tests use. Nothing here names a
-real project.
 """
 
 from decimal import Decimal
@@ -11,25 +9,17 @@ from enum import Enum
 from typing import Any
 
 from plant import Plant
+from rating_plant import point
 
+from fransys_model.elecdef import Current, Fuse, LinkKind, PinRole
 from fransys_model.kernel import Id, Model, make_id
 from fransys_model.vocab.connectivity import Net
 from fransys_model.vocab.core import Function, Item, Port
-from fransys_model.vocab.enums import (
-    ConductorKind,
-    FunctionKind,
-    LinkKind,
-    NetClass,
-    PartCategory,
-    PortRole,
-    ProtectionType,
-    SignalType,
-)
+from fransys_model.vocab.enums import ConductorKind, FunctionKind, NetClass, PartCategory, PortBoundary, ProtectionType, SignalType
 from fransys_model.vocab.facets.cable import CableProductFacet
 from fransys_model.vocab.facets.plc import PlcChannelFacet
-from fransys_model.vocab.facets.rating import RatingFacet
+from fransys_model.vocab.facets.rating import BlockFacet
 from fransys_model.vocab.facets.terminal import TerminalFacet
-from fransys_model.vocab.ratings import BreakingPoint, Rating
 from fransys_model.vocab.tables import functions
 from fransys_model.vocab.templates import FunctionTemplate, Part
 
@@ -48,7 +38,7 @@ def function_of(model: Model, name: str) -> Function:
     return found[0]
 
 
-def _port(plant: Plant, function: Id[Function], name: str, role: PortRole) -> Id[Port]:
+def _port(plant: Plant, function: Id[Function], name: str, role: PortBoundary | PinRole) -> Id[Port]:
     """A port of `function` with `role`; `Plant.port` only makes generic ones."""
     function_key = next(r.key for r in plant.records if r.id == function)
     key = (*function_key, name)
@@ -58,7 +48,8 @@ def _port(plant: Plant, function: Id[Function], name: str, role: PortRole) -> Id
         function=function,
         template=None,
         name=name,
-        role=role,
+        boundary=role if isinstance(role, PortBoundary) else PortBoundary.GENERIC,
+        pin_role=role if isinstance(role, PinRole) else None,
     )
     plant.add(port)
     return port.id
@@ -99,8 +90,8 @@ def _strip(plant: Plant, ids: dict[str, Id[Any]]) -> Id[Item]:
             )
         )
         function = plant.function(item, key, kind=FunctionKind.TERMINAL)
-        _port(plant, function, "internal", PortRole.INTERNAL)
-        _port(plant, function, "external", PortRole.EXTERNAL)
+        _port(plant, function, "internal", PortBoundary.INTERNAL)
+        _port(plant, function, "external", PortBoundary.EXTERNAL)
         ids[key] = function
         ids[f"item:{key}"] = item
     return strip
@@ -110,9 +101,9 @@ def _contact_co(plant: Plant, ids: dict[str, Id[Any]]) -> None:
     """A changeover contact whose ports carry `COMMON`, `BREAK` and `MAKE`."""
     function = _device(plant, ids, "co", FunctionKind.CONTACT_CO, ports=())
     for name, role in (
-        ("common", PortRole.COMMON),
-        ("break", PortRole.BREAK),
-        ("make", PortRole.MAKE),
+        ("common", PinRole.COMMON),
+        ("break", PinRole.BREAK),
+        ("make", PinRole.MAKE),
     ):
         ids[f"port:co:{name}"] = _port(plant, function, name, role)
 
@@ -146,19 +137,15 @@ def _protection(plant: Plant, ids: dict[str, Id[Any]]) -> None:
         kind=FunctionKind.PROTECTION,
         protection_type=ProtectionType.MCB,
     )
-    rating = RatingFacet(
-        id=make_id(RatingFacet, ("fuse", "rating")),
-        key=("fuse", "rating"),
+    block = BlockFacet(
+        id=make_id(BlockFacet, ("fuse", "block")),
+        key=("fuse", "block"),
         subject=template.id,
-        rating=Rating(
-            breaking_ac=(BreakingPoint(voltage_v=Decimal(250), current_a=Decimal(10000)),),
-        ),
+        block=Fuse(breaking_capacity=(point("250", "10000", kind=Current.AC),)),
     )
-    plant.add(part, template, rating)
+    plant.add(part, template, block)
     item = plant.item("protection", part=part.id)
-    ids["protection"] = plant.function(
-        item, "protection", template=template.id, kind=FunctionKind.PROTECTION
-    )
+    ids["protection"] = plant.function(item, "protection", template=template.id, kind=FunctionKind.PROTECTION)
     ids["item:protection"] = item
 
 
@@ -239,9 +226,6 @@ def roles_plant() -> tuple[Model, dict[str, Id[Any]]]:
 
     Function keys are the function names: `coil`, `no`, `nc`, `co`, `terminal_1`, `terminal_2`,
     `connector`, `plc_channel`, `channel_by_facet`, `bar`, `protection`, `switch`, `wiring`, and
-    one per other `FunctionKind` (`supply`, `load`, `sensor`, `actuator`, `generic`). Item keys
-    are `item:<name>` (`item:strip`, `item:cable`, `item:terminal_1`, ...). Ports are
-    `port:co:<name>`, conductors `conductor_<kind>`, nets `net_<class>`.
     """
     plant = Plant()
     ids: dict[str, Id[Any]] = {}
@@ -253,7 +237,6 @@ def roles_plant() -> tuple[Model, dict[str, Id[Any]]]:
     _device(plant, ids, "connector", FunctionKind.CONNECTOR, ports=("1",))
     _plc_function(plant, ids, "plc_channel", FunctionKind.PLC_CHANNEL)
     _plc_function(plant, ids, "channel_by_facet", FunctionKind.GENERIC)
-    _device(plant, ids, "bar", FunctionKind.BAR, ports=())
     _protection(plant, ids)
     _switch_links(plant, ids)
     cable = _cable(plant, ids)

@@ -1,14 +1,6 @@
 """Field case: a cable's spare core can be marked, and a marked core clears the core-count warning.
-
-The engineering shape: a 4-core cable W1 runs from a terminal strip to a lamp. Two cores are
-wired, one is parked on a spare terminal, and the last (the PE core) is left unused.
-
-The bug: `CABLE_CORE_COUNT` warned for the two cores nobody wires, and nothing in the authoring
-surface cleared it, because a spare core had no record.
-
-Rule: `W1.spare(...)` marks a core spare, and `CABLE_CORE_COUNT` counts wired and spare cores
-together (decision model-0204).
-"""
+The bug: CABLE_CORES_FEWER warned for the two cores nobody wires, because nothing in the authoring surface cleared it.
+Fixed by model-0204, W1.spare(...) marks a core spare and CABLE_CORES_FEWER counts wired and spare cores together."""
 
 import fransys as fr
 from fransys.colours import BK, BN, GY
@@ -25,7 +17,7 @@ def _count_findings(*, marked: bool = True) -> list[fr.Finding]:
         w1.spare(GY, at=x1[7])
         w1.spare()
     result = fr.build(d)
-    return [f for f in fr.check(result) if f.code == "CABLE_CORE_COUNT"]
+    return [f for f in fr.check(result) if f.code == "CABLE_CORES_FEWER"]
 
 
 def test_a_spare_core_clears_the_core_count_warning() -> None:

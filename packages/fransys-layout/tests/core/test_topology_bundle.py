@@ -5,8 +5,8 @@ from __future__ import annotations
 import pytest
 
 from fransys_layout.core import CoreError, PinRef
+from fransys_layout.core.flow_values import Attach, Fan
 from fransys_layout.core.topology_split import BundleError, check_bundles, split_fans
-from fransys_layout.core.values import Attach, Fan
 
 NET_OF = {PinRef("M", "U"): "n1", PinRef("M", "V"): "n2", PinRef("M", "W"): "n3"}
 
@@ -43,9 +43,7 @@ def test_cutting_a_net_out_of_a_bundle_names_the_bundle_and_the_net() -> None:
 
 
 def test_cutting_a_net_out_of_a_plain_fan_still_splits_it() -> None:
-    fan = Fan(
-        "f:p", ("n1", "n2"), (_box("M", "U"),), (_box("P", "1"), _box("M", "V")), None, 1, "above"
-    )
+    fan = Fan("f:p", ("n1", "n2"), (_box("M", "U"),), (_box("P", "1"), _box("M", "V")), None, 1, "above")
     kept, links = split_fans([fan], [], {"n2"})
     assert [c.net for c in links] == ["n2"]
     assert kept[0].nets == ("n1",)

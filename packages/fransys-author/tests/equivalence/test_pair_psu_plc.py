@@ -2,12 +2,11 @@
 
 from typing import TYPE_CHECKING
 
-from fransys_author import Design
+from equivalence_helpers import assert_same_model
+from fransys_author.design import Design
 from fransys_author.surface import DO, design
 from fransys_author.surface.colours import BU
-
-from .conftest import assert_same_model
-from .series_parts import series_library
+from series_parts import series_library
 
 if TYPE_CHECKING:
     from fransys_model.kernel import Draft

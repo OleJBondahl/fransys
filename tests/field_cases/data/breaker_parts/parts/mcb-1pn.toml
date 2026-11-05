@@ -1,4 +1,4 @@
-schema = 1
+schema = 2
 
 [part]
 mpn = "DEMO-MCB-1PN"
@@ -23,5 +23,5 @@ links = [
 ]
 
 [rating]
-voltage_ac_v = "250"
-current_ac_a = "6"
+voltage = [{ nom = "250 V", at = ["AC"] }]
+current = [{ nom = "6 A", at = ["AC"] }]

@@ -9,13 +9,15 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, NamedTuple
 
 from .geometry import cell_anchor, cell_footprint, shift, stack_lane, union, view_of
+from .row_extent import grid_up
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
+    from .flow_values import Cell
     from .pack import PlacedColumn
     from .sym_values import Sym
-    from .values import Box, Cell, Options
+    from .values import Box, Options
 
 
 class PlacedCell(NamedTuple):
@@ -37,9 +39,7 @@ def hard_soft(sym: Sym, cell: Cell, *, in_row: bool, tag_stagger: bool) -> tuple
     return hard, union(fp, hard)
 
 
-def placed_cells(
-    pc: PlacedColumn, syms: Mapping[str, Sym], in_row: frozenset[str], options: Options
-) -> list[PlacedCell]:
+def placed_cells(pc: PlacedColumn, syms: Mapping[str, Sym], in_row: frozenset[str], options: Options) -> list[PlacedCell]:
     """Every cell of the column with its boxes against lane 0's wire x and its stacked y."""
     out: list[PlacedCell] = []
     for cells, offset in zip(pc.lanes, pc.offsets, strict=True):
@@ -49,9 +49,7 @@ def placed_cells(
             row = cell.sym in in_row
             hard, soft = hard_soft(sym, cell, in_row=row, tag_stagger=options.tag_stagger)
             dx = offset - cell_anchor(sym, cell)[0]
-            out.append(
-                PlacedCell(y + soft.y, y + soft.y + soft.h, shift(hard, dx, y), shift(soft, dx, y))
-            )
+            out.append(PlacedCell(y + soft.y, y + soft.y + soft.h, shift(hard, dx, y), shift(soft, dx, y)))
     return out
 
 
@@ -80,4 +78,4 @@ def separation(
         for cb in cells_b:
             if ca.top - slack < cb.bottom and cb.top - slack < ca.bottom:
                 sep = max(sep, _reach(ca, cb) + gap)
-    return -(-sep // options.wiring_grid) * options.wiring_grid
+    return grid_up(sep, options.wiring_grid)

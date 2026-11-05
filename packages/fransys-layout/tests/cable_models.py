@@ -1,19 +1,19 @@
 """Invented models for the cable engine's golden and link tests, built from demo-parts.
 
-Each builder returns a `SimpleNamespace` with `model` (the frozen model after `lay_out_cables`),
-`frozen` (before it) and the ids a test names. `MODELS` lists them by name for the golden. Nothing
-here names a real plant.
+Each builder returns a `SimpleNamespace` with `layout` (the `CableLayout` of `lay_out_cables`),
+`frozen` (the numbered model) and the ids a test names. `MODELS` lists them by name for the
 """
 
 from functools import cache
 from types import SimpleNamespace
 from typing import Any
 
-import fransys_author
 import fransys_parts
-from demo_designs import cabinet_design, harness_with_board_design
-from layout_library import freeze
+from demo_designs import cabinet_design
+from fransys_author.design import Design
+from library_records import freeze
 
+from electrical_symbols import LIBRARY
 from fransys_layout import lay_out_cables
 from fransys_model.derive.passes.numbering import number as number_pass
 from fransys_model.kernel import merge
@@ -28,24 +28,24 @@ _PROJECT: dict[str, Any] = {
 _CABLE, _MOTOR, _TB = "DEMO-CBL-4G1.5", "DEMO-MOTOR-4KW", "DEMO-TB-2.5"
 
 
-def design():
-    """The parts and a fresh `Design` with a project and one revision."""
+def design(project: dict[str, Any] = _PROJECT):
+    """The parts and a fresh `Design` with a project (default the cable blocks') and one revision."""
     parts = fransys_parts.load("demo_parts")
-    d = fransys_author.Design(parts)
-    d.project(**_PROJECT)
+    d = Design(parts)
+    d.project(**project)
     d.revision(1, date="2026-10-07", text="First issue", created="XX")
     return parts, d
 
 
 def lay(parts, draft_of) -> tuple[Any, Any]:
-    """`(frozen, laid out)` of `draft_of`'s design, numbered, with the cable pass run."""
+    """`(frozen, cable layout)` of `draft_of`'s design, numbered."""
     frozen, _ = number_pass(freeze(merge(parts, draft_of.draft())))
-    return frozen, lay_out_cables(frozen)[0]
+    return frozen, lay_out_cables(frozen, LIBRARY)
 
 
 def _built(parts, d, **ids: Any) -> SimpleNamespace:
-    frozen, model = lay(parts, d)
-    return SimpleNamespace(frozen=frozen, model=model, **ids)
+    frozen, layout = lay(parts, d)
+    return SimpleNamespace(frozen=frozen, layout=layout, **ids)
 
 
 @cache
@@ -53,13 +53,6 @@ def demo_cabinet() -> SimpleNamespace:
     """The root demo cabinet: its -W1 joins the two -X1 terminals (a jumper)."""
     parts = fransys_parts.load("demo_parts")
     return _built(parts, cabinet_design(parts))
-
-
-@cache
-def demo_harness() -> SimpleNamespace:
-    """The root demo harness and board: harness WH1 with one cable."""
-    parts = fransys_parts.load("demo_parts")
-    return _built(parts, harness_with_board_design(parts))
 
 
 @cache
@@ -101,9 +94,7 @@ def unit() -> SimpleNamespace:
 def nested() -> SimpleNamespace:
     """Unit `outer` holds plug -P9 and unit `inner`; `inner`'s cable runs -X5:2 to -P9:2."""
     parts, d = design()
-    outer = d.scope("pump1", at=d.location("ER", "Engine room")).unit(
-        "outer", revision=1, interface="1"
-    )
+    outer = d.scope("pump1", at=d.location("ER", "Engine room")).unit("outer", revision=1, interface="1")
     outer.revision(1, date="2026-01-01", text="First release", created="XX")
     cab = outer.location("C1", "Cabinet")
     p9 = outer.item("DEMO-CONN-2P", tag="P9", at=cab, group=outer.group("OUT", "Outer"))
@@ -139,9 +130,7 @@ def swap() -> SimpleNamespace:
     cab.revision(1, date="2026-01-01", text="First release", created="XX")
     c1, grp = cab.location("C1", "Cabinet"), cab.group("G1", "Group")
     x5, x6 = cab.strip("X5", at=c1), cab.strip("X6", at=c1)
-    t = [x5.terminal(_TB, group=grp) for _ in range(2)] + [
-        x6.terminal(_TB, group=grp) for _ in range(2)
-    ]
+    t = [x5.terminal(_TB, group=grp) for _ in range(2)] + [x6.terminal(_TB, group=grp) for _ in range(2)]
     m1 = d.item(_MOTOR, tag="M1", at=fld, group=gf, external=True)
     m2 = d.item(_MOTOR, tag="M2", at=fld, group=gf, external=True)
     cable = cab.cable(_CABLE, name="w", at=c1)
@@ -183,9 +172,7 @@ def pair() -> SimpleNamespace:
     parts, d = design()
     c1, g = d.location("C1", "Cabinet"), d.group("G", "Group")
     harness = d.harness(tag="WH3", at=c1, group=g)
-    ends = {
-        t: d.item(_MOTOR, tag=t, parent=harness, at=c1, group=g) for t in ("A1", "B1", "A2", "B2")
-    }
+    ends = {t: d.item(_MOTOR, tag=t, parent=harness, at=c1, group=g) for t in ("A1", "B1", "A2", "B2")}
     d.cable(_CABLE, tag="W1", parent=harness, at=c1).core(1, ends["A1"]["U"], ends["B1"]["U"])
     d.cable(_CABLE, tag="W2", parent=harness, at=c1).core(1, ends["A2"]["U"], ends["B2"]["U"])
     return _built(parts, d, harness=harness.id)
@@ -223,7 +210,6 @@ def l1_picture() -> SimpleNamespace:
 
 MODELS = {
     "demo_cabinet": demo_cabinet,
-    "demo_harness": demo_harness,
     "flat": flat,
     "unit": unit,
     "nested": nested,

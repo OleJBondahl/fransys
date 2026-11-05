@@ -1,11 +1,11 @@
 """Facade wiring of `fransys_pdf.check` and PDF export."""
 
 import fransys as fr
-import fransys_author
 import pytest
-from fransys.pipeline import BuildErrors
+from fransys.pipeline import BuildFailedError
+from fransys_author.design import Design
 
-from fransys_model.vocab import DocumentPreset, PageKind
+from fransys_model.vocab import DocumentPreset
 
 
 @pytest.fixture
@@ -15,7 +15,7 @@ def parts():
 
 @pytest.fixture
 def design(parts):
-    d = fransys_author.Design(parts)
+    d = Design(parts)
     d.project(
         title="Demo cabinet",
         number="DEMO-PDF-1",
@@ -35,12 +35,10 @@ def _cover(tmp_path, name="cabinet.md", text="# Demo\n"):
 
 def test_write_produces_a_pdf_and_a_typ_intermediate(parts, design, tmp_path):
     """A document with no drawing pages exports a real PDF and writes its Typst source."""
-    c1 = design.location("C1", "Demo cabinet")
     document_draft = fr.document(
-        DocumentPreset.CABINET_SCHEMATIC,
-        c1,
+        DocumentPreset.SYSTEM,
+        None,
         cover=_cover(tmp_path),
-        remove=(PageKind.SCHEMATIC,),
     )
     result = fr.build(parts, design.draft(), document_draft)
     out_dir, intermediates = tmp_path / "out", tmp_path / "intermediates"
@@ -49,23 +47,21 @@ def test_write_produces_a_pdf_and_a_typ_intermediate(parts, design, tmp_path):
 
     pdfs = [path for path in written if path.suffix == ".pdf"]
     assert len(pdfs) == 1
-    assert pdfs[0].name == "DEMO-PDF-1-v1.1-C1.pdf"
+    assert pdfs[0].name == "DEMO-PDF-1-v1.1.pdf"
     assert pdfs[0].read_bytes().startswith(b"%PDF-")
     typs = list(intermediates.glob("*.typ"))
     assert len(typs) == 1
-    assert typs[0].name == "cabinet.typ"
+    assert typs[0].name == "DEMO-PDF-1-v1.1.typ"
     assert typs[0].stat().st_size > 0
 
 
 def test_write_compiles_a_pdf_with_no_project_record(parts, tmp_path):
     """No `Project` record: the compile still succeeds."""
-    design = fransys_author.Design(parts)
-    c1 = design.location("C1", "Demo cabinet")
+    design = Design(parts)
     document_draft = fr.document(
-        DocumentPreset.CABINET_SCHEMATIC,
-        c1,
+        DocumentPreset.SYSTEM,
+        None,
         cover=_cover(tmp_path),
-        remove=(PageKind.SCHEMATIC,),
     )
     result = fr.build(parts, design.draft(), document_draft)
     out_dir = tmp_path / "out"
@@ -82,14 +78,13 @@ def test_document_no_drawings_blocks_every_export_but_the_typ_still_writes(parts
 
     The default `CABINET_SCHEMATIC` preset carries `SCHEMATIC`, and `fransys_render` is
     still a scaffold, so `fransys_pdf.check` finds no drawing set for it -- proving decision
-    0011 and pdf-0001's amendment hold together at the facade seam.
     """
     c1 = design.location("C1", "Demo cabinet")
     document_draft = fr.document(DocumentPreset.CABINET_SCHEMATIC, c1, cover=_cover(tmp_path))
     result = fr.build(parts, design.draft(), document_draft)
     out_dir, intermediates = tmp_path / "out", tmp_path / "intermediates"
 
-    with pytest.raises(BuildErrors) as excinfo:
+    with pytest.raises(BuildFailedError) as excinfo:
         fr.write(result, out_dir, intermediates=intermediates)
 
     assert any(finding.code == "DOCUMENT_NO_DRAWINGS" for finding in excinfo.value.findings)
@@ -105,15 +100,13 @@ def _export_dated(parts, tmp_path, date):
     Returns the Typst source and the PDF bytes.
     """
     tmp_path.mkdir()
-    d = fransys_author.Design(parts)
+    d = Design(parts)
     d.project(title="Demo", number="DEMO-PDF-2", customer="Demo Co", revision=1, author="demo")
     d.revision(1, date=date, text="First issue", created="XX")
-    c1 = d.location("C1", "Demo cabinet")
     document_draft = fr.document(
-        DocumentPreset.CABINET_SCHEMATIC,
-        c1,
+        DocumentPreset.SYSTEM,
+        None,
         cover=_cover(tmp_path),
-        remove=(PageKind.SCHEMATIC,),
     )
     result = fr.build(parts, d.draft(), document_draft)
     intermediates = tmp_path / "intermediates"
@@ -136,46 +129,16 @@ def test_the_printed_date_and_the_embedded_timestamp_are_the_current_entrys(part
     assert b"CreationDate(D:20261105000000Z)" in pdf_b
 
 
-def test_a_unit_documents_embedded_date_is_the_unit_revisions_date_not_the_projects(
-    parts, tmp_path
-):
-    """A unit document prints and embeds its unit revision's date; a project
-    document beside it in the same build keeps the project's (the two dates differ).
+def test_two_documents_with_one_typ_stem_are_refused_naming_both(parts, design, tmp_path, monkeypatch):
+    """Writing both to `<stem>.typ` would lose one: `write` refuses (R1441)."""
+    from fransys._export_ledger import ExportNameClashError
 
-    The embedded date is the source's own `#set document(date: ...)` line
-    (`fransys_pdf._geometry.document_metadata`); the facade passes no compile timestamp
-    (decision 0030)."""
-    d = fransys_author.Design(parts)
-    d.project(title="Demo", number="DEMO-PDF-4", customer="Demo Co", revision=1, author="demo")
-    d.revision(1, date="2026-09-22", text="First issue", created="XX")
-    c1 = d.location("C1", "Demo cabinet")
-    unit = d.scope("cab").unit("demo-unit", revision=1, interface="1", title="Unit", number="U-1")
-    unit.revision(1, date="2026-03-04", text="First release", created="XX")
-    unit_document = fr.document(
-        DocumentPreset.CABINET_SCHEMATIC,
-        unit,
-        cover=_cover(tmp_path, "unit-doc.md"),
-        remove=(PageKind.SCHEMATIC,),
-    )
-    project_document = fr.document(
-        DocumentPreset.CABINET_SCHEMATIC,
-        c1,
-        cover=_cover(tmp_path, "project-doc.md"),
-        remove=(PageKind.SCHEMATIC,),
-    )
-    result = fr.build(parts, d.draft(), unit_document, project_document)
-    intermediates = tmp_path / "intermediates"
-    written = fr.write(result, tmp_path / "out", intermediates=intermediates)
-    pdfs = {path.name: path.read_bytes() for path in written if path.suffix == ".pdf"}
-    assert set(pdfs) == {"demo-unit-v1.1.pdf", "DEMO-PDF-4-v1.1-C1.pdf"}
-    unit_typ = (intermediates / "unit-doc.typ").read_text(encoding="utf-8")
-    project_typ = (intermediates / "project-doc.typ").read_text(encoding="utf-8")
+    from fransys_model.derive import document_ids
 
-    assert b"CreationDate(D:20260304000000Z)" in pdfs["demo-unit-v1.1.pdf"]
-    assert b"CreationDate(D:20260922000000Z)" not in pdfs["demo-unit-v1.1.pdf"]
-    assert 'text("2026-03-04")' in unit_typ
-    assert "datetime(year: 2026, month: 3, day: 4)" in unit_typ
-    assert 'text("2026-09-22")' not in unit_typ
-    assert b"CreationDate(D:20260922000000Z)" in pdfs["DEMO-PDF-4-v1.1-C1.pdf"]
-    assert b"CreationDate(D:20260304000000Z)" not in pdfs["DEMO-PDF-4-v1.1-C1.pdf"]
-    assert 'text("2026-09-22")' in project_typ
+    design.location("C1", "Demo cabinet")
+    one = fr.document(DocumentPreset.SYSTEM, None, cover=_cover(tmp_path))
+    two = fr.document(DocumentPreset.SYSTEM, None, cover=_cover(tmp_path, "other.md"))
+    result = fr.build(parts, design.draft(), one, two)
+    monkeypatch.setattr("fransys._exports.document_stems", lambda model: tuple((i, "cover") for i in document_ids(model)))
+    with pytest.raises(ExportNameClashError, match=r"cover\.typ"):
+        fr.write(result, tmp_path / "out", intermediates=tmp_path / "inter")

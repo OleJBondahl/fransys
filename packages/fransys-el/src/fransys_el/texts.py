@@ -47,8 +47,6 @@ _ROWS: tuple[tuple[str, TextKind, TextPlacement], ...] = (
             ),
         ),
     ),
-    # layout-0114: a supply bar's text has one place, past the bar, away from its pin
-    ("T1.7", TextKind.POWER, TextPlacement(priority=0, sides=(Side(facing=None, steps=(0,)),))),
     # layout-0154: a harness line's designation, beside its longest run, then across it
     ("T1.8", TextKind.HARNESS_LINE, TextPlacement(priority=1, sides=_OWN_THEN_MIRROR)),
 )

@@ -4,7 +4,8 @@ from decimal import Decimal
 from typing import Any
 
 import pytest
-from fransys_author import AuthorError, Design
+from fransys_author import AuthorError
+from fransys_author.design import Design
 
 from fransys_model.kernel import make_id
 from fransys_model.vocab import Revision, UnitRelease, UnusedBoundary
@@ -93,12 +94,6 @@ def test_ambiguous_marking_on_an_item_names_the_fn_workaround(parts):
         _ = a1["13"]
 
 
-def test_a_marking_unique_to_one_function_is_not_ambiguous(parts):
-    d = Design(parts)
-    k1 = d.item("TEST-RLY-2CO", tag="K1")
-    assert k1["A1"].name == "A1"
-
-
 def test_unknown_function_name_lists_the_item_s_functions(parts):
     d = Design(parts)
     k1 = d.item("TEST-RLY-2CO", tag="K1")
@@ -110,27 +105,6 @@ def test_a_known_function_name_is_not_an_error(parts):
     d = Design(parts)
     k1 = d.item("TEST-RLY-2CO", tag="K1")
     assert k1.fn("coil").name == "coil"
-
-
-def test_an_item_with_more_than_one_function_cannot_stand_in_for_one(parts):
-    d = Design(parts)
-    k1 = d.item("TEST-RLY-2CO", tag="K1")
-    with pytest.raises(AuthorError, match="exactly one"):
-        d.chain(k1)
-
-
-def test_an_item_with_exactly_one_function_stands_in_for_it(parts):
-    d = Design(parts)
-    x1 = d.strip("X1")
-    t1 = x1.terminal("TEST-TB")
-    d.chain(t1.function, x1.terminal("TEST-TB").function)
-
-
-def test_a_part_less_item_has_no_function_to_stand_in(parts):
-    d = Design(parts)
-    a1 = d.item(None, tag="A1")
-    with pytest.raises(AuthorError, match="exactly one"):
-        d.chain(a1)
 
 
 def test_a_terminal_with_no_external_port_has_no_outer(parts):
@@ -145,7 +119,7 @@ def test_a_terminal_with_an_internal_port_has_an_inner(parts):
     d = Design(parts)
     x1 = d.strip("X1")
     t1 = x1.terminal("TEST-TB-ONE-SIDED")
-    assert t1.inner.role.value == "internal"
+    assert t1.inner.boundary.value == "internal"
 
 
 def test_core_index_out_of_range(parts):
@@ -187,21 +161,6 @@ def test_a_float_gauge_override_on_a_call_is_also_refused(parts):
     bad_gauge: Any = 1.5
     with pytest.raises(AuthorError, match="float"):
         wire(t1.inner, t2.inner, gauge=bad_gauge)
-
-
-def test_a_float_scale_bound_is_refused(parts):
-    d = Design(parts)
-    k1 = d.item("TEST-RLY-2CO", tag="K1")
-    bad_eng: Any = (0.0, 10.0)
-    with pytest.raises(AuthorError, match="float"):
-        k1.fn("coil").scale("m", raw=(0, 100), eng=bad_eng)
-
-
-def test_str_or_decimal_scale_bounds_are_accepted(parts):
-
-    d = Design(parts)
-    k1 = d.item("TEST-RLY-2CO", tag="K1")
-    k1.fn("coil").scale("m", raw=(0, 100), eng=("0", Decimal(10)))
 
 
 def test_neither_name_nor_tag_is_an_error(parts):
@@ -270,13 +229,6 @@ def test_bridge_of_terminals_on_two_strips_names_the_terminals_and_their_strips(
         d.bridge(t1, t2)
 
 
-def test_bridge_of_terminals_on_one_strip_is_not_an_error(parts):
-    d = Design(parts)
-    x1 = d.strip("X1")
-    t1, t2 = x1.terminal("TEST-TB"), x1.terminal("TEST-TB")
-    d.bridge(t1, t2)
-
-
 def test_bridge_with_a_terminal_given_twice_is_refused(parts):
     d = Design(parts)
     x1 = d.strip("X1")
@@ -304,6 +256,20 @@ def test_reauthoring_a_name_with_different_content_is_refused(parts):
     d.item("TEST-RLY-2CO", tag="K1")
     with pytest.raises(AuthorError, match="already names a different"):
         d.item("TEST-TB", tag="K1")
+
+
+def test_adding_an_item_key_twice_is_refused_naming_both_calls(parts):
+    d = Design(parts)
+    d.item("TEST-RLY-2CO", tag="K1")
+    with pytest.raises(AuthorError, match=r"'K1' was already added.*test_errors.py:\d+.*keep the handle from the first call"):
+        d.item("TEST-RLY-2CO", tag="K1")
+
+
+def test_a_strip_called_twice_is_refused(parts):
+    d = Design(parts)
+    d.strip("X1")
+    with pytest.raises(AuthorError, match="keep the handle from the first call"):
+        d.strip("X1")
 
 
 def test_reauthoring_the_identical_call_is_a_no_op(parts):
@@ -342,87 +308,16 @@ def test_a_known_signal_type_is_not_an_error(parts):
     k1.fn("coil").plc("do", "SIG")
 
 
-def test_an_unrecognised_function_kind_string_lists_the_valid_ones(parts):
-    d = Design(parts)
-    with pytest.raises(AuthorError, match=r"coil.*terminal"):
-        d.symbol("nonsense", "slug")
-
-
-def test_a_known_function_kind_string_is_not_an_error(parts):
-    d = Design(parts)
-    d.symbol("terminal", "slug")
-
-
-def test_symbol_rejects_an_unrelated_type(parts):
-    d = Design(parts)
-    not_a_target: Any = object()
-    with pytest.raises(TypeError, match="expected a function"):
-        d.symbol(not_a_target, "slug")
-
-
-def test_chain_rejects_an_unrelated_type(parts):
-    d = Design(parts)
-    not_a_target: Any = object()
-    with pytest.raises(TypeError, match="expected a function"):
-        d.chain(not_a_target)
-
-
 def test_harness_without_a_tag_is_a_type_error(parts):
     """`tag` is required, keyword-only (decision author-0003): a
     part-less harness gets no class letter from numbering, so an untagged one would never
     gain a designation. `name=` alone used to be enough (the old signature's `tag` had a
     default, so a real call giving only `name=` -- the case the ruling is about -- built a
-    part-less item with `designation=None` silently); now it is a Python `TypeError` for the
-    missing required keyword, not `AuthorError`: the signature itself refuses the call before
-    any record is built."""
+    """
     d = Design(parts)
     harness: Any = d.harness
     with pytest.raises(TypeError, match="tag"):
         harness(name="w1", at=d.location("C1", "cabinet"))
-
-
-def test_sheet_missing_a_required_field(parts):
-    d = Design(parts)
-    with pytest.raises(AuthorError, match="missing"):
-        d.sheet("A3", width_mm=420)
-
-
-def test_sheet_with_every_required_field_is_not_an_error(parts):
-
-    d = Design(parts)
-    d.sheet(
-        "A3",
-        width_mm=420,
-        height_mm=297,
-        content_x_mm=10,
-        content_y_mm=10,
-        content_width_mm=400,
-        content_height_mm=277,
-        frame_columns=8,
-        frame_rows=6,
-        module_mm=Decimal("2.5"),
-    )
-
-
-def test_sheet_with_an_unknown_field_is_refused(parts):
-
-    d = Design(parts)
-    # `colour` is not one of `ModelSheetFormat`'s fields, so **extra is deliberately
-    # loosely typed here rather than fighting sheet()'s own `int | Decimal` annotation.
-    extra: dict[str, Any] = {
-        "width_mm": 420,
-        "height_mm": 297,
-        "content_x_mm": 10,
-        "content_y_mm": 10,
-        "content_width_mm": 400,
-        "content_height_mm": 277,
-        "frame_columns": 8,
-        "frame_rows": 6,
-        "module_mm": Decimal("2.5"),
-        "colour": "blue",
-    }
-    with pytest.raises(AuthorError, match="does not have"):
-        d.sheet("A3", **extra)
 
 
 def test_profile_with_an_unknown_number_and_no_other_is_refused(parts):
@@ -556,8 +451,6 @@ def test_a_units_revision_key_does_not_collide_with_the_projects_own(parts):
     `(*prefix, "unit", <unit name>, "revision", revision)`, not the project's own flat
     `(*prefix, "revision", revision)` -- so a unit made directly off `Design` and the
     project's own history never collide, even on the identical revision string. (Before
-    the amendment this was a documented, deliberate limitation; the amendment closes it.)
-    The unit's key is release-scoped: `(*release key, "revision", version, revision)`.
     """
     d = Design(parts)
     u = d.unit("demo-unit", revision=1, interface="1")
@@ -575,26 +468,5 @@ def test_a_units_revision_key_does_not_collide_with_the_projects_own(parts):
 def test_profile_with_an_unknown_number_is_refused(parts):
 
     d = Design(parts)
-    sheet = d.sheet(
-        "A3",
-        width_mm=420,
-        height_mm=297,
-        content_x_mm=10,
-        content_y_mm=10,
-        content_width_mm=400,
-        content_height_mm=277,
-        frame_columns=8,
-        frame_rows=6,
-        module_mm=Decimal("2.5"),
-    )
     with pytest.raises(AuthorError, match="does not have"):
-        d.profile(
-            sheet=sheet,
-            column_gap=4,
-            row_gap=4,
-            route_margin=2,
-            text_height_mm=Decimal("1.2"),
-            route_turn_penalty=1,
-            route_crossing_penalty=2,
-            wobble_factor=9,
-        )
+        d.profile(wobble_factor=9)

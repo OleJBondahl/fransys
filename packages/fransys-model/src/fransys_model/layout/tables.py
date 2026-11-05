@@ -3,8 +3,8 @@
 from typing import Any
 
 from fransys_model.kernel import Id, Model, SchemaError, namespace_of
-from fransys_model.vocab.core import Unit  # noqa: TC001 -- signature hints resolve at runtime
 from fransys_model.vocab.tables import kind_of, table_of
+lazy from fransys_model.vocab.core import Unit
 lazy from fransys_model.vocab.enums import PageKind
 
 from .formats import (
@@ -12,6 +12,7 @@ from .formats import (
     SheetFormat,
     default_profile,
 )
+from .house_text import HouseProfile
 from .kinds import DERIVED_KINDS
 from .paper import PaperChoice
 from .results import DrawingSet, Page
@@ -43,6 +44,23 @@ def profile_of(model: Model, unit: Id[Unit] | None = None) -> Profile:
     return next(found, default_profile())
 
 
+def house_profile_of(model: Model) -> HouseProfile:
+    """The `[profile]` record of `model`; raises when the facade wrote none."""
+    found = layout_of(model, HouseProfile)
+    if not found:
+        msg = (
+            "this model carries no layout.house_profile record, so it has no house layout numbers: "
+            "build it through `fransys.build`, which writes the records from `fr.settings`"
+        )
+        raise SchemaError(msg, kind="layout.house_profile")
+    return next(iter(found.values()))
+
+
+def tuning_of(model: Model) -> HouseProfile:
+    """The layout numbers the drawings use: the `[profile]` record. No unit's profile sets them."""
+    return house_profile_of(model)
+
+
 def profile_of_page(model: Model, page: Page) -> Profile:
     """The profile of the unit `page`'s drawing set belongs to: how that page is drawn."""
     return profile_of(model, layout_of(model, DrawingSet)[page.drawing_set].unit)
@@ -67,27 +85,21 @@ def sheet_format_of(model: Model, sheet_format: Id[SheetFormat] | None) -> Sheet
     return layout_of(model, SheetFormat)[sheet_format]
 
 
-def sheet_for(model: Model, kind: PageKind, unit: Id[Unit] | None = None) -> SheetFormat:
-    """The sheet of a page of `kind` of `unit`: the one function that gives a page kind's sheet.
+def sheet_for(model: Model, kind: PageKind) -> SheetFormat:
+    """The sheet of a page of `kind`: the one function that gives a page kind's sheet.
 
-    In order: the sheet the unit's profile names (until SETTINGS-C), the build's paper for
-    `kind`, then the build's default paper (ST4).
+    The build's paper for `kind`, else the build's default paper (ST4).
     """
-    authored = profile_of(model, unit).sheet_format
-    if authored is not None:
-        return sheet_format_of(model, authored)
     paper = paper_of(model)
     return sheet_format_of(model, paper.by_kind.get(kind.value, paper.default))
 
 
-def derived_layout_ids(
-    model: Model, kinds: tuple[type, ...] = DERIVED_KINDS
-) -> tuple[Id[Any], ...]:
+def derived_layout_ids(model: Model, kinds: tuple[type, ...] = DERIVED_KINDS) -> tuple[Id[Any], ...]:
     """Return the id of every `layout.*` result of `kinds` in `model`, sorted.
 
     What a layout pass hands to `evolve(remove=...)` before writing a fresh result:
-    results are replaced wholesale, never patched. The schematic pass takes the default,
-    the cable pass `CABLE_KINDS` (Q3); each leaves the other's records and every authored
+    results are replaced wholesale, never patched. The schematic pass takes the default and
+    leaves every authored
     kind alone.
     """
     return tuple(sorted(record_id for kind in kinds for record_id in table_of(model, kind)))

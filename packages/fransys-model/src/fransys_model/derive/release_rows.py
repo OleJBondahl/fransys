@@ -17,10 +17,11 @@ __all__ = ["manifest_rows", "nested_units", "rebaseline_subjects"]
 
 
 def nested_units(model: Model, unit: Id[Unit] | None) -> tuple[Id[Unit], ...]:
-    """Every unit nested in `unit`'s subtree, sorted; `None` is every unit of the model."""
+    """Every unit nested in `unit`'s subtree, in table order; `None` is every unit of the model."""
     if unit is None:
-        return tuple(sorted(units(model)))
-    return tuple(sorted(unit_subtree(model, unit) - {unit}))
+        return tuple(units(model))
+    nested = unit_subtree(model, unit) - {unit}
+    return tuple(one for one in units(model) if one in nested)
 
 
 def rebaseline_subjects(model: Model, unit: Id[Unit] | None) -> tuple[Id[Unit] | None, ...]:

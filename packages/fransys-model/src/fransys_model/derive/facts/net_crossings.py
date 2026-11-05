@@ -7,6 +7,7 @@ physical net is realised and no crossing; the PE net is never one.
 
 from fransys_model.derive.facts.closure import net_of
 from fransys_model.derive.facts.net_facts import is_earth_net
+from fransys_model.derive.facts.roles import is_pe_port
 from fransys_model.derive.facts.unit_index import unit_index
 from fransys_model.derive.facts.units import declared_unit
 from fransys_model.kernel import DIGEST_CACHE_SIZE, digest_cached
@@ -14,6 +15,12 @@ from fransys_model.vocab.tables import functions, items, nets, ports
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.connectivity import Net
 lazy from fransys_model.vocab.core import Function, Port
+
+
+def _spans_units(model: Model, net: Net) -> bool:
+    """Whether the net's ports fall in items declared in two or more units."""
+    all_ports, all_functions, all_items = ports(model), functions(model), items(model)
+    return len({declared_unit(all_items[all_functions[all_ports[p].function].item]) for p in net.ports}) > 1
 
 
 def _unrealised(model: Model, net: Net) -> bool:
@@ -28,14 +35,11 @@ def net_crossings(model: Model) -> frozendict[Id[Net], tuple[Id[Port], ...]]:
     Those are its ports on a unit's boundary function, else all its ports; a net inside one unit
     or joined by conductors into one physical net is no key.
     """
-    all_ports, all_functions, all_items = ports(model), functions(model), items(model)
+    all_ports = ports(model)
     boundary = {f for found in unit_index(model).boundary_of.values() for f in found}
     found: dict[Id[Net], tuple[Id[Port], ...]] = {}
     for net in nets(model).values():
-        units = {
-            declared_unit(all_items[all_functions[all_ports[p].function].item]) for p in net.ports
-        }
-        if len(units) > 1 and _unrealised(model, net):
+        if _spans_units(model, net) and _unrealised(model, net):
             on_boundary = tuple(p for p in net.ports if all_ports[p].function in boundary)
             found[net.id] = on_boundary or net.ports
     return frozendict(found)
@@ -45,3 +49,10 @@ def crossing_functions(model: Model) -> frozenset[Id[Function]]:
     """The functions that carry a port of a net that crosses a unit boundary."""
     all_ports = ports(model)
     return frozenset(all_ports[p].function for held in net_crossings(model).values() for p in held)
+
+
+def earth_carried_functions(model: Model) -> frozenset[Id[Function]]:
+    """The functions on a PE net spanning units, with no other port but PE pins: earth is declared (G08-POWER, model-0403)."""
+    carried = {p for net in nets(model).values() if is_earth_net(model, net.id) and _spans_units(model, net) for p in net.ports}
+    uncarried = {record.function for port, record in ports(model).items() if port not in carried and not is_pe_port(model, port)}
+    return frozenset({ports(model)[p].function for p in carried} - uncarried)

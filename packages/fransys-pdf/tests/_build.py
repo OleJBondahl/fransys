@@ -2,22 +2,21 @@
 
 `fransys_pdf` may only import `fransys_model` (`tests/test_boundaries.py`), but that
 rule applies to `src/`, not to a package's own `tests/`, so building here with
-`fransys_author` would be allowed too -- this stays on `fransys_model.kernel` directly
-because a document record needs no authoring syntax, only a few records by hand, matching the
-pattern `packages/fransys-kicad/tests/conftest.py` uses for its own invented board.
 """
 
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 
 import fransys_pdf
-from pdf_library import freeze
+import fransys_render
+import typst
+from library_records import freeze
 
-from fransys_model.kernel import Draft, Origin, make_id
+from electrical_symbols import LIBRARY, font_dir
+from fransys_model.derive import document_sheets_of
+from fransys_model.kernel import Draft, Origin, make_id, render_id
 from fransys_model.layout import (
     DrawingSet,
-    LinkMarker,
-    MarkerSide,
     Page,
     PageGroup,
     PageRole,
@@ -37,14 +36,13 @@ from fransys_model.vocab import (
     FunctionTemplate,
     Gender,
     Item,
-    PageKind,
     Part,
     PartCategory,
     PcbFacet,
     Placement,
     PlcChannelFacet,
     Port,
-    PortRole,
+    PortBoundary,
     Project,
     Revision,
     SignalType,
@@ -304,11 +302,6 @@ def layout_page(
     )
 
 
-def page_group(*, node: AspectNode, index: int) -> PageGroup:
-    """One `=` group drawn on a page, `node`'s own aspect node."""
-    return PageGroup(group=node.id, index=index)
-
-
 def document(  # noqa: PLR0913 -- one keyword per thing a test varies, as the kicad conftest does
     key_part: str,
     *,
@@ -316,8 +309,6 @@ def document(  # noqa: PLR0913 -- one keyword per thing a test varies, as the ki
     subject: AspectNode | Item | Unit | None = None,
     cover: str,
     notes: str | None = None,
-    add: tuple[PageKind, ...] = (),
-    remove: tuple[PageKind, ...] = (),
     logo: str | None = None,
     notice: str = "",
 ) -> Document:
@@ -325,8 +316,6 @@ def document(  # noqa: PLR0913 -- one keyword per thing a test varies, as the ki
 
     `subject=None` is the `SYSTEM` preset's own case: none of the three.
     `logo` (decision model-0051) defaults to `None`, `Document`'s own
-    default -- an empty title-block logo cell, the same "invented default" every other field
-    here already follows.
     """
     key = ("document", key_part)
     return Document(
@@ -336,53 +325,11 @@ def document(  # noqa: PLR0913 -- one keyword per thing a test varies, as the ki
         location=subject.id if isinstance(subject, AspectNode) else None,
         item=subject.id if isinstance(subject, Item) else None,
         unit=subject.id if isinstance(subject, Unit) else None,
-        add=add,
-        remove=remove,
         cover=cover,
         notes=notes,
         logo=logo,
         notice=notice,
     )
-
-
-def link_marker_pair(
-    key_part: str, *, page_a: Id[Page], port_a: Id[Port], page_b: Id[Page], port_b: Id[Port]
-) -> tuple[LinkMarker, LinkMarker]:
-    """A paired `layout.link_marker` (one signal severed by a page boundary).
-
-    Real pairing matters: `freeze()` resolves `partner` as an ordinary reference.
-    """
-    key_a = ("link_marker", key_part, "a")
-    key_b = ("link_marker", key_part, "b")
-    id_a = make_id(LinkMarker, key_a)
-    id_b = make_id(LinkMarker, key_b)
-    marker_a = LinkMarker(
-        id=id_a,
-        key=key_a,
-        page=page_a,
-        port=port_a,
-        side=MarkerSide.OWNER,
-        partner=id_b,
-        x=0,
-        y=0,
-        width=10,
-        height=8,
-        produced_by="test",
-    )
-    marker_b = LinkMarker(
-        id=id_b,
-        key=key_b,
-        page=page_b,
-        port=port_b,
-        side=MarkerSide.USER,
-        partner=id_a,
-        x=0,
-        y=0,
-        width=10,
-        height=8,
-        produced_by="test",
-    )
-    return marker_a, marker_b
 
 
 def place(key_part: str, *, item: Id[Item], node: Id[AspectNode]) -> Placement:
@@ -391,9 +338,7 @@ def place(key_part: str, *, item: Id[Item], node: Id[AspectNode]) -> Placement:
     return Placement(id=make_id(Placement, key), key=key, item=item, node=node)
 
 
-def terminal(
-    key_part: str, *, strip: Id[Item], group: str, index: int
-) -> tuple[Item, TerminalFacet]:
+def terminal(key_part: str, *, strip: Id[Item], group: str, index: int) -> tuple[Item, TerminalFacet]:
     """An unused terminal `group:index`, child of `strip` (TERMINAL_LIST)."""
     key = ("item", key_part)
     child = Item(
@@ -416,14 +361,11 @@ def terminal(
     return child, facet
 
 
-def bridged_terminal(
-    key_part: str, *, strip: Id[Item], group: str, index: int
-) -> tuple[Item, TerminalFacet, Function, Port]:
+def bridged_terminal(key_part: str, *, strip: Id[Item], group: str, index: int) -> tuple[Item, TerminalFacet, Function, Port]:
     """A terminal `group:index` with one real `internal` port, child of `strip`.
 
     `terminal()` above builds an unused terminal with no function at all; a `jumper`
     conductor needs a real port to land on (`conductor()` below, `kind=ConductorKind.JUMPER`),
-    so this is a second, additive helper only the Bridge-column tests use.
     """
     child, facet = terminal(key_part, strip=strip, group=group, index=index)
     function_key = ("function", key_part)
@@ -442,7 +384,7 @@ def bridged_terminal(
         function=fn.id,
         template=None,
         name="internal",
-        role=PortRole.INTERNAL,
+        boundary=PortBoundary.INTERNAL,
     )
     return child, facet, fn, internal
 
@@ -460,7 +402,7 @@ def external_port(key_part: str) -> Port:
         function=make_id(Function, function_key),
         template=None,
         name="external",
-        role=PortRole.EXTERNAL,
+        boundary=PortBoundary.EXTERNAL,
     )
 
 
@@ -501,7 +443,7 @@ def plc_channel(
         function=fn.id,
         template=None,
         name="1",
-        role=PortRole.GENERIC,
+        boundary=PortBoundary.GENERIC,
     )
     return module_part, template, fn, facet, pin
 
@@ -556,7 +498,7 @@ def connector(  # noqa: PLR0913 -- one keyword per invented fact, as `document()
             function=fn.id,
             template=None,
             name=marking,
-            role=PortRole.GENERIC,
+            boundary=PortBoundary.GENERIC,
         )
         for marking in markings
     )
@@ -597,9 +539,7 @@ def wire_facet(key_part: str, *, subject: Id[Conductor], label: str | None) -> W
     )
 
 
-def pin(
-    key_part: str, designation: str, *, unit: Id[Unit] | None = None
-) -> tuple[Item, Function, Port]:
+def pin(key_part: str, designation: str, *, unit: Id[Unit] | None = None) -> tuple[Item, Function, Port]:
     """A numbered item with one function `f` and one port `1` (WIRE_LABEL_LIST ends)."""
     item_key = ("item", key_part)
     subject = Item(
@@ -628,7 +568,7 @@ def pin(
         function=fn.id,
         template=None,
         name="1",
-        role=PortRole.GENERIC,
+        boundary=PortBoundary.GENERIC,
     )
     return subject, fn, a_port
 
@@ -650,6 +590,7 @@ def model(*records):
 LIST_SHARE = 40  # the facade's `[pdf]` values, typed here for tests that call `source` directly
 LIST_GUTTER = 20
 FLOW = {"share_pct": LIST_SHARE, "gutter_pct": LIST_GUTTER}
+PDF = {"list_share_pct": LIST_SHARE, "list_gutter_pct": LIST_GUTTER, "page_margin_mm": 5, "cable_run_header_mm": 11, "bridge_column_mm": 15}
 
 
 def page_links(model):
@@ -673,11 +614,21 @@ def texts():
 def source(model, document, svgs, sheets, bridges=None, **flow):
     """`fransys_pdf.source` with the house list shares, texts and the links of `page_links`."""
     flow: dict[str, Any] = {
-        "list_share_pct": LIST_SHARE,
-        "list_gutter_pct": LIST_GUTTER,
+        "pdf": PDF,
+        "diagrams": (),
         **texts(),
         **flow,
     }
-    return fransys_pdf.source(
-        model, document, svgs, sheets, bridges, links=page_links(model), **flow
-    )
+    return fransys_pdf.source(model, document, svgs, sheets, bridges, links=page_links(model), **flow)
+
+
+SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><rect width="10" height="10"/></svg>'
+
+
+def compile_pdf(m, doc, pages) -> bytes:
+    """The PDF of document `doc` with `SVG` standing for every page's drawing."""
+    svgs = {render_id(page.id): SVG for page in pages}
+    compiler = typst.Compiler(font_paths=[font_dir()], ignore_system_fonts=True)
+    compiled = compiler.compile(input=source(m, doc.id, svgs, fransys_render.sheets(document_sheets_of(m, ()), LIBRARY), diagrams=()).encode("utf-8"))
+    assert isinstance(compiled, bytes)
+    return compiled

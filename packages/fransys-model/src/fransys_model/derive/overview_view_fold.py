@@ -6,7 +6,7 @@ field fold puts each unit's field devices in one box beside it.
 
 from typing import TYPE_CHECKING
 
-from fransys_model.derive.house_settings import stub_text_of
+from fransys_model.derive.facts.house_settings import stub_text_of
 from fransys_model.layout import BoxKey, OverviewRef, OverviewRefKind
 lazy from fransys_model.kernel import Model
 
@@ -43,27 +43,21 @@ def _line(line: FoldLine) -> ViewLine:
 
 def fold_rows(model: Model, level: FoldLevel) -> Rows:
     """The folded level's boxes then its stub boxes, its lines then its stub lines."""
-    boxes = tuple(
-        ViewBox(key=BoxKey(ref=b.key), lines=b.lines, dashed=b.dashed) for b in level.boxes
-    )
+    boxes = tuple(ViewBox(key=BoxKey(ref=b.key), lines=b.lines, dashed=b.dashed) for b in level.boxes)
     lines = tuple(_line(line) for line in level.lines)
     shared = {(w.stub.box, w.stub.end) for w in level.wires}
     own = [s for s in level.stubs if (s.box, s.end) not in shared]
     placed = [(stub.box, stub) for stub in own]
     stub_boxes, stub_lines = stub_rows(model, level.unit, placed)
     hung = [(w.stub.box, w.stub) for w in level.wires]
-    more_boxes, more_lines = shared_rows(
-        model, level.unit, hung, [(w.part.box, w.part) for w in level.wires]
-    )
+    more_boxes, more_lines = shared_rows(model, level.unit, hung, [(w.part.box, w.part) for w in level.wires])
     return (*boxes, *stub_boxes, *more_boxes), (*lines, *stub_lines, *more_lines)
 
 
 def location_rows(model: Model, fold: LocationFold) -> Rows:
     """One box per top place, one line per pair of places that share cables."""
     refs = {b.place: OverviewRef(kind=OverviewRefKind.PLACE, node=b.place) for b in fold.boxes}
-    boxes = tuple(
-        ViewBox(key=BoxKey(ref=refs[b.place]), lines=b.lines, dashed=False) for b in fold.boxes
-    )
+    boxes = tuple(ViewBox(key=BoxKey(ref=refs[b.place]), lines=b.lines, dashed=False) for b in fold.boxes)
     lines = tuple(
         ViewLine(
             a=BoxKey(ref=refs[line.a]),
@@ -113,9 +107,7 @@ def _members(model: Model, plain: Rows, fold: FieldFold) -> tuple[ViewMember, ..
             ViewMember(
                 ref=ref,
                 lines=lines,
-                text=overview_member_text(
-                    stub_text_of(model), lines, ", ".join(dict.fromkeys(held))
-                ),
+                text=overview_member_text(stub_text_of(model), lines, ", ".join(dict.fromkeys(held))),
             )
         )
     return tuple(rows)
@@ -124,9 +116,7 @@ def _members(model: Model, plain: Rows, fold: FieldFold) -> tuple[ViewMember, ..
 def field_rows(model: Model, plain: Rows, folds: tuple[FieldFold, ...]) -> Rows:
     """The system `plain` rows with each unit's field devices in one box with its member rows."""
     boxes, lines = plain
-    onto = {
-        BoxKey(ref=OverviewRef(kind=OverviewRefKind.ITEM, item=d)) for f in folds for d in f.devices
-    }
+    onto = {BoxKey(ref=OverviewRef(kind=OverviewRefKind.ITEM, item=d)) for f in folds for d in f.devices}
     made = tuple(
         ViewBox(
             key=BoxKey(ref=_field_ref(f)),

@@ -4,6 +4,7 @@ import inspect
 lazy from collections.abc import Iterator
 
 import fransys
+from does_not_lines import has_does_not
 
 _NAMES = {
     "build",
@@ -31,11 +32,6 @@ def _public_functions() -> Iterator[tuple[str, object]]:
         obj = getattr(fransys, name)
         if inspect.isfunction(obj) and obj.__module__.startswith("fransys."):
             yield name, obj
-
-
-def has_does_not(doc: str | None) -> bool:
-    """True when one line of `doc` starts with "Does not"."""
-    return any(line.strip().startswith("Does not") for line in (doc or "").splitlines())
 
 
 def test_every_public_function_has_a_does_not_line() -> None:

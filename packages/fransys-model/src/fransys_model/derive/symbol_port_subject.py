@@ -9,9 +9,7 @@ lazy from fransys_model.vocab import Function, Item, Part, PortTemplate
 __all__ = ["symbol_port_subject"]
 
 
-def symbol_port_subject(
-    model: Model, function: Id[Function] | Id[Item], port_name: str
-) -> Id[PortTemplate] | Id[Part] | Id[Function] | Id[Item]:
+def symbol_port_subject(model: Model, function: Id[Function] | Id[Item], port_name: str) -> Id[PortTemplate] | Id[Part] | Id[Function] | Id[Item]:
     """The `PortTemplate` of `function`'s template named `port_name`, else its `Part`, else itself.
 
     `function` is a Function of the model, or the whole Item of a one-view draw (no template).

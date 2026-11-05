@@ -1,7 +1,8 @@
 """The one order of block diagram sheets: the reading (the absolute one first), then number."""
 
 from fransys_model.kernel import render_id
-lazy from fransys_model.layout import DiagramSheet
+
+lazy from .rows_sheet import DiagramSheet
 
 __all__ = ["diagram_sheet_order_key"]
 

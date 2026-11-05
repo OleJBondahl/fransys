@@ -23,9 +23,7 @@ def test_a_multi_pole_function_with_only_pole_one_wired_stands_in_its_wired_pole
     assert above.x == main.x == below.x
     assert above.y < main.y < below.y
     in_column = [s for s in main.drawing.symbols if s.x == main.x]
-    assert sorted((s.key, s.y) for s in in_column) == sorted(
-        (p.symbol.key, p.y) for p in (above, main, below)
-    )
+    assert sorted((s.key, s.y) for s in in_column) == sorted((p.symbol.key, p.y) for p in (above, main, below))
 
 
 def test_a_contactor_beside_two_relays_has_no_overlap_and_no_unplaced_label() -> None:
@@ -36,7 +34,7 @@ def test_a_contactor_beside_two_relays_has_no_overlap_and_no_unplaced_label() ->
     result = contactor_with_pole_one_wired(relays=True)
     codes = [f.code for f in result.findings]
     assert "SYMBOL_OVERLAP" not in codes
-    assert not {"LABEL_UNPLACED", "ANNEX_UNPLACED"} & set(codes)
+    assert "ANNEX_UNPLACED" not in codes
     bodies = {
         tag: placed(result.model, tag, key, poles)
         for tag, key, poles in (

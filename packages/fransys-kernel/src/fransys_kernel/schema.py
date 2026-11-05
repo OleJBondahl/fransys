@@ -23,6 +23,7 @@ from .registry import (
 )
 
 _LEAVES = (str, int, bool, Decimal, NoneType)
+_TWO = 2  # a union of two members, or a generic of two arguments
 
 
 def fields_of(cls: type) -> tuple[dataclasses.Field[Any], ...]:
@@ -109,9 +110,7 @@ def key_and_value_aliases() -> tuple[TypeAliasType, TypeAliasType]:
     """
     authoring_key = registered_authoring_key()
     if authoring_key is None:
-        msg = (
-            "AuthoringKey is not registered: `ids` registers it at import and has not been imported"
-        )
+        msg = "AuthoringKey is not registered: `ids` registers it at import and has not been imported"
         raise SchemaError(msg, kind="id")
     value_alias = registered_value_alias()
     if value_alias is None:
@@ -138,11 +137,7 @@ def resolve_target(target: object, owner: type, label: str) -> str | None:
         named = target.__forward_arg__
         matches = records_named(named)
         if len(matches) != 1:
-            why = (
-                "is ambiguous"
-                if matches
-                else "is not a registered record (is its module imported?)"
-            )
+            why = "is ambiguous" if matches else "is not a registered record (is its module imported?)"
             raise schema_error(owner, label, f"Id[{named}] {why}")
         target = matches[0]
     if not isinstance(target, type) or "__kind__" not in vars(target):
@@ -193,22 +188,34 @@ def _check_class(annotation: type, cls: type, name: str) -> None:
 def _check_generic(annotation: object, origin: object, cls: type, name: str) -> None:
     args = get_args(annotation)
     if origin is types.UnionType:
-        members = [arg for arg in args if arg is not NoneType]
-        if len(args) != 2 or len(members) != 1:  # noqa: PLR2004 -- `V | None` is two members
-            raise schema_error(cls, name, "a union must be `V | None`")
-        _check_annotation(members[0], cls, name)
+        _check_union(args, cls, name)
     elif origin is tuple:
-        if len(args) != 2 or args[1] is not Ellipsis:  # noqa: PLR2004 -- `tuple[V, ...]`
-            raise schema_error(cls, name, "a tuple must be `tuple[V, ...]`")
-        _check_annotation(args[0], cls, name)
+        _check_tuple(args, cls, name)
     elif origin is frozendict:
-        if len(args) != 2 or args[0] is not str:  # noqa: PLR2004 -- `frozendict[str, V]`
-            raise schema_error(cls, name, "a frozendict must be `frozendict[str, V]`")
-        _check_annotation(args[1], cls, name)
+        _check_mapping(args, cls, name)
     elif origin is id_type():
         _check_id_target(args[0], cls, name)
     else:
         raise schema_error(cls, name, f"{annotation!r} is not an allowed annotation")
+
+
+def _check_union(args: tuple[object, ...], cls: type, name: str) -> None:
+    members = [arg for arg in args if arg is not NoneType]
+    if len(args) != _TWO or len(members) != 1:
+        raise schema_error(cls, name, "a union must be `V | None`")
+    _check_annotation(members[0], cls, name)
+
+
+def _check_tuple(args: tuple[object, ...], cls: type, name: str) -> None:
+    if len(args) != _TWO or args[1] is not Ellipsis:
+        raise schema_error(cls, name, "a tuple must be `tuple[V, ...]`")
+    _check_annotation(args[0], cls, name)
+
+
+def _check_mapping(args: tuple[object, ...], cls: type, name: str) -> None:
+    if len(args) != _TWO or args[0] is not str:
+        raise schema_error(cls, name, "a frozendict must be `frozendict[str, V]`")
+    _check_annotation(args[1], cls, name)
 
 
 def _check_id_target(target: object, cls: type, name: str) -> None:

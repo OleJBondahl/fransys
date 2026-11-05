@@ -6,6 +6,7 @@ import pytest
 
 from fransys_model.derive import signal_kind
 from fransys_model.derive.rows_plc import SignalKind
+from fransys_model.kernel import ModelError
 from fransys_model.vocab.enums import SignalType
 from fransys_model.vocab.roles_types import complete
 from fransys_model.vocab.signal_types import SIGNAL_TYPES
@@ -36,7 +37,7 @@ def test_signal_kind_reproduces_the_old_mapping() -> None:
 def test_a_missing_row_names_the_member() -> None:
     """`complete` on a table without `RTD` raises and names it."""
     short = {s: r for s, r in SIGNAL_TYPES.items() if s is not SignalType.RTD}
-    with pytest.raises(RuntimeError, match="RTD"):
+    with pytest.raises(ModelError, match="RTD"):
         complete(short, SignalType)
 
 

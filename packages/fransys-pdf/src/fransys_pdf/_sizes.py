@@ -3,15 +3,12 @@
 from typing import TYPE_CHECKING
 
 from fransys_model.derive import Sizes, sizes_of
-from fransys_model.derive.print_sizes import LINE_THICK_MM, LINE_THIN_MM, rule_mm
+from fransys_model.derive.print_sizes import rule_mm
 
 if TYPE_CHECKING:
     from fransys_model.kernel import Model
 
-__all__ = ["THICK_STROKE", "THIN_STROKE", "Sizes", "font_mm", "rule_of", "sizes_of"]
-
-THIN_STROKE = f"{LINE_THIN_MM}mm"
-THICK_STROKE = f"{LINE_THICK_MM}mm"
+__all__ = ["Sizes", "font_mm", "rule_of", "sizes_of"]
 
 
 def rule_of(model: Model) -> str:

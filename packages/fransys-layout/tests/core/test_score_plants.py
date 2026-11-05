@@ -1,7 +1,7 @@
 """One planted case per P rule: moving one symbol flips its count from 0 to 1. Plus Q's terms."""
 
 from dataclasses import replace
-from typing import TypedDict, Unpack
+from typing import Any, TypedDict, Unpack
 
 import pytest
 from scene_fixtures import flow, layout, problem
@@ -28,19 +28,17 @@ def _pin(name: str, x: int, y: int, net: str | None, **kw) -> ScenePin:
 
 class _Flags(TypedDict, total=False):
     attached: bool
-    strip: str | None
+    group: str | None
     orient: Orientation
 
 
-def _box(
-    bid: str, page: int, x: int, y: int, pins: tuple[ScenePin, ...], **kw: Unpack[_Flags]
-) -> SceneBox:
+def _box(bid: str, page: int, x: int, y: int, pins: tuple[ScenePin, ...], **kw: Unpack[_Flags]) -> SceneBox:
     body = Box(x - 8, y - 16, 16, 32)
-    flags: _Flags = {"attached": False, "strip": None, "orient": "R0", **kw}
+    flags: _Flags = {"attached": False, "group": None, "orient": "R0", **kw}
     return SceneBox(bid, page, body, body, pins, **flags)
 
 
-def _wire(net: str, page: int, points: tuple) -> SceneWire:
+def _wire(net: str, page: int, points: tuple[Any, ...]) -> SceneWire:
     return SceneWire(net, page, points, "straight")
 
 
@@ -54,7 +52,6 @@ def _scene(boxes, wires, markers=(), rails=frozenset(), fill=()) -> Scene:
         tuple(markers),
         rails,
         fill,
-        (),
         (),
         (),
     )
@@ -136,7 +133,7 @@ def _strip(*, low_y: int, bands=()) -> Scene:
     for i, y in enumerate((100, low_y)):
         x = 40 * i
         pin = _pin("s", x, y + 8, f"n{i}", side="S")
-        boxes.append(_box(f"T{i}", 0, x, y, (pin,), strip="X"))
+        boxes.append(_box(f"T{i}", 0, x, y, (pin,), group="X"))
         wires.append(_wire(f"n{i}", 0, ((x, y + 8), (x, y + 40))))
     return replace(_scene(boxes, wires), bands=bands)
 

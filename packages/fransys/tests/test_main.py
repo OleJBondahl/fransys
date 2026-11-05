@@ -48,9 +48,9 @@ def test_help_of_a_name_exits_0() -> None:
 
 
 def test_help_of_a_code_prints_its_severity() -> None:
-    run = _run("help", "SHEET_FORMAT_UNUSED")
+    run = _run("help", "PAGE_OVERFLOW")
     assert run.returncode == 0
-    assert BY_CODE["SHEET_FORMAT_UNUSED"].severities[0].name in run.stdout
+    assert BY_CODE["PAGE_OVERFLOW"].severity.name in run.stdout
 
 
 def test_help_with_no_key_or_two_keys_prints_usage_and_exits_2() -> None:

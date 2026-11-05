@@ -1,49 +1,61 @@
 """How symbols and pins are spelled (el-0002 S1, amended by el-0006): a symbol is `symbol_key`.
 
-A core id is the item's printed designation, then the function's Id text. A pin is a
+A core id is the function's order text, then its Id text. A pin is a
 `PinRef(symbol, symbol port name)`.
 """
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from fransys_layout.core import PinRef
 from fransys_model.derive import (
-    function_item,
-    item_designation,
     port_name,
 )
+from fransys_model.derive.order import function_order_text, functions_in_order
 from fransys_model.kernel import render_id
 
 from .kit_keys import PickKey, function_of, held_ports, is_known
 from .placement_kit import Pick, SymbolKit, refuse
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable
+
     from fransys_model.kernel import Id, Model
     from fransys_model.vocab import Port
 
-__all__ = ["pin_names", "symbol_ids", "symbol_key", "symbol_of"]
+__all__ = ["net_key", "net_lead", "pin_names", "symbol_ids", "symbol_key", "symbol_of"]
 
 
 def symbol_key(model: Model, key: PickKey) -> str:
-    """`"<printed designation> <Id text>"`: the core breaks ties by `natural_key` of this text.
+    """`"<function order text> [<port name>] <Id text>"`: the core breaks ties by `natural_key` of this text.
 
-    The designation orders the symbols as a reader does; the Id text keeps the key unique. A PLC
-    module's box takes its place from `Sym.rank` (`derive.order.plc_module_ranks`), not from this.
+    The order text (`derive.order.function_order_text`) orders the symbols; the Id text only keeps the key unique.
+    A PLC module's box takes its place from `Sym.rank` (`derive.order.plc_module_ranks`), not from this.
     """
-    designation = item_designation(model, function_item(model, function_of(model, key)))
-    return f"{designation} {render_id(key)}"
+    function = function_of(model, key)
+    port = "" if function == key else f" {port_name(model, cast('Id[Port]', key))}"
+    return f"{function_order_text(model, function)}{port} {render_id(key)}"
+
+
+def net_lead(model: Model, ports: Iterable[Id[Port]]) -> Id[Port]:
+    """The port that names a net: the least by function order text, then port name, never by Id (R1615)."""
+    return cast("Id[Port]", functions_in_order(model, ports)[0])
+
+
+def net_key(model: Model, ports: Iterable[Id[Port]]) -> str:
+    """A net's core id, spelled as its lead port's `symbol_key`: the one spelling of a net, a bundle and a drawn wire's net."""
+    return symbol_key(model, net_lead(model, ports))
 
 
 def symbol_ids(model: Model, kit: SymbolKit) -> frozendict[PickKey, str]:
     """Each picked function's symbol id: the record Id's text, unique by construction (S1)."""
-    for function in sorted(kit):
+    for function in kit:
         if not is_known(model, function):
             refuse(
                 f"kit key {function}",
                 "the kit names a function or port not in the model",
                 render_id(function),
             )
-    return frozendict({function: symbol_key(model, function) for function in sorted(kit)})
+    return frozendict({function: symbol_key(model, function) for function in functions_in_order(model, kit)})
 
 
 def symbol_of(kit: SymbolKit, ids: frozendict[PickKey, str]) -> frozendict[PickKey, str]:
@@ -74,12 +86,11 @@ def _check(model: Model, lead: PickKey, pick: Pick, text: str) -> None:
         )
 
 
-def pin_names(
-    model: Model, kit: SymbolKit, ids: frozendict[PickKey, str]
-) -> frozendict[Id[Port], PinRef]:
+def pin_names(model: Model, kit: SymbolKit, ids: frozendict[PickKey, str]) -> frozendict[Id[Port], PinRef]:
     """Each port of a drawn function as the `PinRef` of its symbol and symbol port."""
     found = {}
-    for lead, pick in sorted(kit.items()):
+    for lead in functions_in_order(model, kit):
+        pick = kit[lead]
         _check(model, lead, pick, ids[lead])
         found.update({port: PinRef(ids[lead], name) for port, name in pick.ports.items()})
     return frozendict(found)

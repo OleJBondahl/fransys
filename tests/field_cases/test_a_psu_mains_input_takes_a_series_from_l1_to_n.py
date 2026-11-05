@@ -1,13 +1,6 @@
-"""Field case: a power supply's mains input is fed by `d.series(ac.L1, g1.input, ac.N)`.
-
-The engineering shape: a 230 V supply with a neutral feeds the demo 24 V power supply G1 between
-L1 and N, as a motor starter's control supply is.
-
-The bug: the build raised "G1.input has no poles": the demo part stated no sides on its two input
-pins.
-
-Rule: the demo part states `L` as the line side and `N` as the load side, as the lamp does.
-"""
+"""Field case: a power supply's mains input is fed by a series from L1 through the supply to N.
+The bug: the build raised "G1.input has no poles", because the demo part stated no sides on its two input pins.
+Fixed by no decision record named; the rule: the demo part states `L` as the line side and `N` as the load side."""
 
 import fransys as fr
 from fransys.colours import BK

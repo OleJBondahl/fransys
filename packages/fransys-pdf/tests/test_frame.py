@@ -6,6 +6,7 @@ from typing import Any
 
 import fransys_render
 from _build import (
+    PDF,
     cable_facet,
     cable_product_facet,
     document,
@@ -31,7 +32,7 @@ K = PageKind
 _SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="100mm" height="100mm"></svg>'
 
 
-def _texts(svg: str) -> list[str]:
+def _texts(svg: str) -> list[Any]:
     return re.findall(r">([^<]+)</text>", svg)
 
 
@@ -46,7 +47,6 @@ def _cabinet(fmt: SheetFormat | None = None):
         subject=c1,
         cover="# Cover",
         notes=None,
-        remove=(K.PLC_LIST, K.TERMINAL_LIST, K.BOM),
     )
     parts = (c1, ds, page, doc) if fmt is None else (c1, fmt, ds, page, doc)
     return model(*parts), doc, page
@@ -73,7 +73,7 @@ def test_a_20mm_band_gets_a_title_block_and_a_19mm_band_does_not():
     for height, has_block in ((257, True), (258, False)):
         fmt = _format(f"band{height}", content_height_mm=height)  # band = 277 - height
         m, doc, _page = _cabinet(fmt)
-        back = fransys_render.sheets(document_sheets_of(m), LIBRARY)[SheetKey(doc.id, K.COVER, 0)]
+        back = fransys_render.sheets(document_sheets_of(m, ()), LIBRARY)[SheetKey(doc.id, K.COVER, 0)]
         assert (back.counter_box is not None) is has_block
         assert (back.logo_box is not None) is has_block
 
@@ -82,9 +82,13 @@ def test_title_block_band_too_small_still_draws_frame_and_grid_with_no_title_blo
     """A band under 20mm leaves the frame and grid drawn; only the title block is empty."""
     m, doc, page = _cabinet(_format("tight12", content_height_mm=265))
     text = source(
-        m, doc.id, {render_id(page.id): _SVG}, fransys_render.sheets(document_sheets_of(m), LIBRARY)
+        m,
+        doc.id,
+        {render_id(page.id): _SVG},
+        fransys_render.sheets(document_sheets_of(m, ()), LIBRARY),
+        diagrams=(),
     )
-    back = fransys_render.sheets(document_sheets_of(m), LIBRARY)[SheetKey(doc.id, K.COVER, 0)]
+    back = fransys_render.sheets(document_sheets_of(m, ()), LIBRARY)[SheetKey(doc.id, K.COVER, 0)]
     assert '<polygon points="10,10 410,10 410,287 10,287"' in back.svg  # the frame border
     assert sorted(set(_texts(back.svg))) == ["1", "2", "3", "4", "5", "6", "A", "B", "C", "D"]
     assert "Customer" not in _texts(back.svg)  # no title-block label
@@ -94,9 +98,13 @@ def test_title_block_band_too_small_still_draws_frame_and_grid_with_no_title_blo
 def test_the_title_block_prints_its_labels_and_leaves_the_page_cell_to_typst():
     m, doc, page = _cabinet()
     text = source(
-        m, doc.id, {render_id(page.id): _SVG}, fransys_render.sheets(document_sheets_of(m), LIBRARY)
+        m,
+        doc.id,
+        {render_id(page.id): _SVG},
+        fransys_render.sheets(document_sheets_of(m, ()), LIBRARY),
+        diagrams=(),
     )
-    back = fransys_render.sheets(document_sheets_of(m), LIBRARY)[SheetKey(doc.id, K.COVER, 0)]
+    back = fransys_render.sheets(document_sheets_of(m, ()), LIBRARY)[SheetKey(doc.id, K.COVER, 0)]
     assert {"Title", "Customer", "Page"} <= set(_texts(back.svg))
     assert PAGE_COUNTER_LABEL in text  # the counter is Typst's: render's SVG holds no number
     assert "<fransys-page-counter>" in text
@@ -108,30 +116,21 @@ def test_grid_columns_come_from_the_sheet_format_not_a_constant():
     `content_width_mm=380` on a 420 mm sheet with `content_x_mm=10` is deliberately *not*
     `width_mm - 2*content_x_mm` (400): the two must differ for the check to pin the field.
     """
-    fmt = _format(
-        "wide8", content_width_mm=380, content_height_mm=257, frame_columns=8, frame_rows=6
-    )
+    fmt = _format("wide8", content_width_mm=380, content_height_mm=257, frame_columns=8, frame_rows=6)
     m, doc, _page = _cabinet(fmt)
-    texts = _texts(
-        fransys_render.sheets(document_sheets_of(m), LIBRARY)[SheetKey(doc.id, K.COVER, 0)].svg
-    )
+    texts = _texts(fransys_render.sheets(document_sheets_of(m, ()), LIBRARY)[SheetKey(doc.id, K.COVER, 0)].svg)
     for label in ("1", "2", "3", "4", "5", "6", "7", "8"):
         assert label in texts
     assert "9" not in texts
     # 8 cells over the content width 380: a tick every 47.5 mm from the content x (10).
-    assert (
-        'x1="57.5" y1="0" x2="57.5" y2="10"'
-        in fransys_render.sheets(document_sheets_of(m), LIBRARY)[SheetKey(doc.id, K.COVER, 0)].svg
-    )
+    assert 'x1="57.5" y1="0" x2="57.5" y2="10"' in fransys_render.sheets(document_sheets_of(m, ()), LIBRARY)[SheetKey(doc.id, K.COVER, 0)].svg
 
 
 def test_grid_columns_with_six_columns_differ_from_eight():
     """The sibling of the can-fail probe: a `frame_columns=6` sheet never shows a `"7"` or `"8"`."""
     fmt = sheet_format("narrow", width_mm=420, height_mm=297, frame_columns=6)
     m, doc, _page = _cabinet(fmt)
-    texts = _texts(
-        fransys_render.sheets(document_sheets_of(m), LIBRARY)[SheetKey(doc.id, K.COVER, 0)].svg
-    )
+    texts = _texts(fransys_render.sheets(document_sheets_of(m, ()), LIBRARY)[SheetKey(doc.id, K.COVER, 0)].svg)
     for label in ("1", "2", "3", "4", "5", "6"):
         assert label in texts
     assert "7" not in texts
@@ -147,10 +146,9 @@ def test_no_header_or_footer_argument_on_any_page_kind():
         subject=c1,
         cover="# Cover",
         notes="Some notes.",
-        remove=(K.SCHEMATIC, K.PLC_LIST, K.TERMINAL_LIST, K.BOM),
     )
     m = model(c1, doc)
-    text = source(m, doc.id, {}, fransys_render.sheets(document_sheets_of(m), LIBRARY))
+    text = source(m, doc.id, {}, fransys_render.sheets(document_sheets_of(m, ()), LIBRARY), diagrams=())
     assert "header:" not in text
     assert text.count("footer:") == text.count("footer: none") == 1  # no page number (NV4)
     # Absence alone is also true of a blank page with no frame at all: pin that the same
@@ -166,11 +164,9 @@ def _harness_with_one_cable():
     cf = cable_facet("w1", subject=cable.id, length_mm=1500)
     doc = document(
         "d1",
-        preset=DocumentPreset.HARNESS_DRAWING,
-        subject=harness,
+        preset=DocumentPreset.SYSTEM,
         cover="# Cover",
         notes=None,
-        remove=(K.CONTENTS, K.BOM),
     )
     m = model(harness, demo_part, demo_product, cable, cf, doc)
     return m, doc, cable
@@ -187,7 +183,8 @@ def test_harness_table_page_keeps_the_content_box_margin():
         m,
         doc.id,
         {cable_block_key(None, cable.id): "<svg>block</svg>"},
-        fransys_render.sheets(document_sheets_of(m), LIBRARY),
+        fransys_render.sheets(document_sheets_of(m, ()), LIBRARY),
+        diagrams=(),
     )
     house = default_sheet_format()
     padding = 5
@@ -195,10 +192,7 @@ def test_harness_table_page_keeps_the_content_box_margin():
     content_top = house.content_y_mm + padding
     content_right = house.width_mm - house.content_x_mm - house.content_width_mm + padding
     content_bottom = house.height_mm - house.content_y_mm - house.content_height_mm + padding
-    margin = (
-        f"(left: {content_left}mm, top: {content_top}mm, "
-        f"right: {content_right}mm, bottom: {content_bottom}mm)"
-    )
+    margin = f"(left: {content_left}mm, top: {content_top}mm, right: {content_right}mm, bottom: {content_bottom}mm)"
     assert f"#page(margin: {{ let m = {margin};" in text
     assert 'fit: "contain"' not in text  # no image anywhere on this page any more
     # The page body is the cable's block image; the per-cable heading line is gone (pdf-0022).
@@ -206,3 +200,14 @@ def test_harness_table_page_keeps_the_content_box_margin():
     assert found.cable == cable.id
     assert "<svg>block</svg>" in text
     assert "#strong(text(" not in text
+
+
+def test_a_cable_run_page_reads_its_margin_and_header_from_the_pdf_table():
+    """`[pdf] page_margin_mm` and `cable_run_header_mm` reach the run page: 7 and 13 move the margin and the top."""
+    m, doc, cable = _harness_with_one_cable()
+    sheets = fransys_render.sheets(document_sheets_of(m, ()), LIBRARY)
+    svgs = {cable_block_key(None, cable.id): "<svg>block</svg>"}
+    text = source(m, doc.id, svgs, sheets, diagrams=(), pdf={**PDF, "page_margin_mm": 7, "cable_run_header_mm": 13})
+    house = default_sheet_format()
+    assert f"left: {house.content_x_mm + 7}mm, top: {house.content_y_mm + 7}mm" in text
+    assert "top: m.top + 13mm" in text

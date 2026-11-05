@@ -1,16 +1,6 @@
 """Field case: a series to a module with two input kinds and no request raises, naming both.
-
-The engineering shape: a mixed module with two digital inputs and two analogue current inputs
-(invented here, as the demo parts hold none), and a push button in series to it with no
-`.plc(...)` request on the button.
-
-The bug: with no rule, the engineer could not tell which kind the module would take, and a guess
-would have wired a button to an analogue loop.
-
-The rule (decision author-0047, spec API-CLARITY C6.5, P3): the kind comes from the request on the
-path's function, else from the module's only kind for that direction. Two kinds and no request
-raises, naming both kinds and the request that settles it.
-"""
+The bug: with no rule the engineer could not tell the kind, and a guess would wire a button to an analogue loop.
+Fixed by author-0047 (API-CLARITY C6.5, P3), the kind comes from the request, else the module's only kind; two kinds with none raise."""
 
 lazy from pathlib import Path
 
@@ -21,7 +11,7 @@ from fransys.colours import BU
 
 from fransys_model.kernel import merge
 
-_MIXED = """schema = 1
+_MIXED = """schema = 2
 [part]
 mpn = "T-PLC-MIX"
 manufacturer = "Demo"
@@ -34,15 +24,12 @@ class_code = "K"
 def _function(name: str, signal: str, channel: int, pins: tuple[str, ...]) -> str:
     ports = ", ".join(f'{{ name = "{p}", role = "generic" }}' for p in pins)
     return (
-        f'[[function]]\nname = "{name}"\nkind = "plc_channel"\nports = [{ports}]\n'
-        f'[function.plc_channel]\nsignal = "{signal}"\nchannel = {channel}\n'
+        f'[[function]]\nname = "{name}"\nkind = "plc_channel"\nports = [{ports}]\n[function.plc_channel]\nsignal = "{signal}"\nchannel = {channel}\n'
     )
 
 
 def _design(tmp_path: Path) -> fr.Design:
-    (tmp_path / "library.toml").write_text(
-        'schema = 1\nname = "t"\nversion = "0.0.0"\ndescription = "d"\n', encoding="utf-8"
-    )
+    (tmp_path / "library.toml").write_text('schema = 2\nname = "t"\nversion = "0.0.0"\ndescription = "d"\n', encoding="utf-8")
     (tmp_path / "parts").mkdir()
     text = _MIXED + _function("di_1", "di", 1, ("1",)) + _function("di_2", "di", 2, ("2",))
     text += _function("ai_1", "ai_current", 1, ("3", "4"))

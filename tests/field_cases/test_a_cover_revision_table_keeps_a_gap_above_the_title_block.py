@@ -1,14 +1,8 @@
 """Field case: the cover's revision table keeps a gap above the title block.
+The bug (v0.15): the table's last bottom rule lay 0.7 mm inside the title block's top rule, so the two read as one thick line.
+Fixed by pdf-0027, the revision table's bottom rule lies at least 2 mm above the title block's top rule."""
 
-The engineering shape: a project on its fourth revision, so the cover carries a revision table of
-four rows, and a cover with a short text.
-
-The bug (v0.15): the table sits at the foot of the cover and its last row's bottom rule lies on
-the title block's top rule, at 0.7 mm inside it. The two rules read as one thick line and the
-oldest revision looks like a title block cell. The rule (decision pdf-0027): the revision table's
-bottom rule lies at least 2 mm above the title block's top rule.
-"""
-
+from typing import Any
 lazy from pathlib import Path
 
 import fransys as fr
@@ -25,24 +19,20 @@ Box = tuple[float, float, float, float]
 def _pdf(root: Path) -> Path:
     """The cabinet's PDF with four revisions: the cover only."""
     d = fr.design("demo_parts")
-    d.project(
-        title="Cabinet", number="CAB-1", customer="Demo Co", revision=_LAST_REVISION, author="d"
-    )
+    d.project(title="Cabinet", number="CAB-1", customer="Demo Co", revision=_LAST_REVISION, author="d")
     for number in range(1, _LAST_REVISION + 1):
         d.revision(number, date=f"2026-10-{10 + number}", text=f"Change {number}", created="XX")
     cabinet = d.location("C1", "Cabinet")
     d.terminal_strip("X1", "DEMO-TB-2.5", 3, place="C1")
     cover = root / "cover.md"
     cover.write_text("# Cabinet\n", encoding="utf-8")
-    document = fr.document(
-        fr.DocumentPreset.CABINET_SCHEMATIC, cabinet, cover=cover, remove=(fr.PageKind.SCHEMATIC,)
-    )
+    document = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cabinet, cover=cover)
     fr.write(fr.build(d, document), out_dir=root / "out", intermediates=root / "inter")
     (pdf,) = (root / "out").glob("*.pdf")
     return pdf
 
 
-def _horizontal_rules(pdf: Path) -> tuple[float, list[Box], float]:
+def _horizontal_rules(pdf: Path) -> tuple[Any, list[Box], Any]:
     """The cover's page width, its horizontal rule boxes, and the "Revision Date" header's left."""
     document = pypdfium2.PdfDocument(pdf)
     try:
@@ -50,7 +40,7 @@ def _horizontal_rules(pdf: Path) -> tuple[float, list[Box], float]:
         width, _ = page.get_size()
         text = page.get_textpage()
         header_left = text.get_charbox(text.get_text_range().index("Revision Date"))[0]
-        rules = [
+        rules: list[Box] = [
             bounds
             for obj in page.get_objects()
             if obj.type == raw.FPDF_PAGEOBJ_PATH
@@ -70,13 +60,7 @@ def test_the_revision_table_ends_two_millimetres_above_the_title_block(tmp_path:
     spanning = [rule for rule in rules if rule[2] - rule[0] > 0.9 * width and rule[3] < width / 4]
     title_top = max(rule[3] for rule in spanning)
     # the table's rules cross its header column and lie at or above the title block's top rule
-    table = [
-        rule
-        for rule in rules
-        if rule[0] <= header_left <= rule[2]
-        and rule[2] - rule[0] < 0.9 * width
-        and rule[1] > title_top
-    ]
+    table = [rule for rule in rules if rule[0] <= header_left <= rule[2] and rule[2] - rule[0] < 0.9 * width and rule[1] > title_top]
     assert table
     gap_mm = (min(rule[1] for rule in table) - title_top) / _POINTS_PER_MM
     assert gap_mm >= _GAP_MM, f"the gap is {gap_mm:.2f} mm"

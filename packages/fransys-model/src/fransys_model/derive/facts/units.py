@@ -43,7 +43,7 @@ def require[R](found: R | None, kind: str, target: Id[Any]) -> R:
 
 def units(model: Model) -> tuple[Id[Unit], ...]:
     """Every `Unit` id in `model`, in `Id` order."""
-    return tuple(sorted(units_table(model)))
+    return tuple(units_table(model))
 
 
 def unit_subtree(model: Model, unit: Id[Unit]) -> frozenset[Id[Unit]]:
@@ -85,7 +85,7 @@ def standalone(model: Model, unit: Id[Unit]) -> bool:
 
 
 def boundary(model: HasTables, unit: Id[Unit]) -> tuple[Id[Function], ...]:
-    """The functions that are part of `unit`'s interface, in `Id` order.
+    """The functions that are part of `unit`'s interface, by authoring key (`order.functions_by_authoring_key`).
 
     One function may be `unit`'s boundary through more than one `Boundary` record; it is
     listed once.
@@ -97,7 +97,7 @@ def boundary(model: HasTables, unit: Id[Unit]) -> tuple[Id[Function], ...]:
     return unit_index(model).boundary_of[unit]
 
 
-def item_chain(model: Model, item: Id[Item]) -> Iterator[Id[Item]]:
+def item_chain(model: HasTables, item: Id[Item]) -> Iterator[Id[Item]]:
     """`item` and each ancestor above it by `Item.parent`, leaf first; a `parent` cycle ends it.
 
     A lazy `kernel.parent_chain` walk: an unknown `item` raises `KeyError` once advanced past.
@@ -106,7 +106,7 @@ def item_chain(model: Model, item: Id[Item]) -> Iterator[Id[Item]]:
     return parent_chain(lambda node: parent_item(model, node), item)
 
 
-def enclosing_boards(model: Model, item: Id[Item]) -> tuple[Id[Item], ...]:
+def enclosing_boards(model: HasTables, item: Id[Item]) -> tuple[Id[Item], ...]:
     """`item` and its ancestors by `Item.parent` that carry a `pcb` facet, outermost first.
 
     `item` itself is included when it is one. Cycle-safe: a `parent` cycle ends the walk.
@@ -141,7 +141,7 @@ def external(model: Model, item: Id[Item]) -> bool:
     return item in unit_index(model).external
 
 
-def unit_own_roots(model: Model, unit: Id[Unit]) -> tuple[Id[Item], ...]:
+def unit_own_roots(model: HasTables, unit: Id[Unit]) -> tuple[Id[Item], ...]:
     """`unit`'s own root items, in the items table's order: the one definition.
 
     An own item (`Item.unit == unit`) whose `parent` is `None` or in another unit; not external.
@@ -150,7 +150,7 @@ def unit_own_roots(model: Model, unit: Id[Unit]) -> tuple[Id[Item], ...]:
     return unit_index(model).own_roots.get(unit, ())
 
 
-def is_sole_unit_root(model: Model, item: Id[Item]) -> bool:
+def is_sole_unit_root(model: HasTables, item: Id[Item]) -> bool:
     """Whether `item` is the only own-root item of its own unit.
 
     `False` when `item.unit` is `None`. Otherwise `True` only when `unit_own_roots` of that

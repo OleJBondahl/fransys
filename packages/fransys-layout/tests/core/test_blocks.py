@@ -7,9 +7,10 @@ from dataclasses import replace
 from options_fixtures import core_options
 
 from fransys_layout.core.blocks_members import column_group
+from fransys_layout.core.flow_values import BlockList, Cell, FlowGraph, Lane
 from fransys_layout.core.pack_row import row_width
 from fransys_layout.core.rowspec import one_row
-from fransys_layout.core.values import BlockList, Cell, CycleSplit, FlowGraph, Hints, Lane
+from fransys_layout.core.values import Hints
 
 from .blocks_fixtures import (
     AREA,
@@ -29,11 +30,11 @@ from .blocks_fixtures import (
 
 def test_column_group_majority_with_the_tie_to_the_foot() -> None:
     syms = {s.id: s for s in (sym("a", "G1"), sym("b", "G2"), sym("n", None))}
-    assert column_group(column("c1", "a", "b"), syms) == "G2"  # one vote each: the foot's group
-    assert column_group(column("c2", "b", "a"), syms) == "G1"
-    assert column_group(column("c3", "a", "a", "b"), syms) == "G1"  # a majority beats the foot
-    assert column_group(column("c4", "n", "n", "a"), syms) == "G1"  # None votes not
-    assert column_group(column("c5", "n"), syms) is None
+    assert column_group(column("c1", "a", "b"), syms, {}) == "G2"  # one vote each: the foot's group
+    assert column_group(column("c2", "b", "a"), syms, {}) == "G1"
+    assert column_group(column("c3", "a", "a", "b"), syms, {}) == "G1"  # a majority beats the foot
+    assert column_group(column("c4", "n", "n", "a"), syms, {}) == "G1"  # None votes not
+    assert column_group(column("c5", "n"), syms, {}) is None
     block = flat(build([sym("a", "G1"), sym("b", "G2")], [column("c1", "a", "b")]))[0]
     assert block.group == "G2"
 
@@ -97,7 +98,7 @@ def test_card_overfull_spilled_columns_become_free_blocks_with_a_finding() -> No
     blocks = by_anchor(lists)
     spilled = {"c18", "c19", "c20", "c38", "c39", "c40"}
     assert set(blocks["A1"].columns) == {f"c{i}" for i in range(1, 41)} - spilled
-    assert blocks["A1"].width_est == 1248
+    assert blocks["A1"].width_est == 1272  # 1248 + 24 where a free pin stands past its neighbour column (PORT-LINE)
     assert len(blocks) == 1 + len(spilled)
     for c in spilled:
         free = blocks[c]
@@ -111,20 +112,13 @@ def test_width_est_is_the_row_width_of_the_blocks_own_row() -> None:
     block = flat(lists)[0]
     flow_cols = tuple(cols)
 
-    flow = FlowGraph(flow_cols, (), (), (), CycleSplit(0, 0, 0), ())
+    flow = FlowGraph(flow_cols, (), (), (), ())
     row = one_row(
         block.columns,
         (block,),
         flow,
         problem_of(syms),
-        core_options(
-            flip_turn="R180",
-            tag_stagger=True,
-            label_gap=8,
-            parallel_pitch=48,
-            driver_first=True,
-            arrow_sides=("E", "W"),
-        ),
+        core_options(),
     )
     assert block.width_est == row_width(row) > 0
 
@@ -133,18 +127,7 @@ def test_estimates_short_and_keep_whole() -> None:
     syms, cols = box_case(4, 64)
     card = flat(build(syms, cols))[0]
     assert card.height_est == 32 + 32 + 8  # box body, the tallest column on the one edge, a wire
-    assert card.short is (
-        card.height_est
-        < core_options(
-            flip_turn="R180",
-            tag_stagger=True,
-            label_gap=8,
-            parallel_pitch=48,
-            driver_first=True,
-            arrow_sides=("E", "W"),
-        ).short_height
-        * AREA.h
-    )
+    assert card.short is (card.height_est < core_options().short_height * AREA.h)
     assert card.keep_whole
     syms, cols = loose("A", "A")
     fanned = flat(build(syms, cols, [fan("f1", "c1", "c2")]))[0]

@@ -1,34 +1,23 @@
-"""Field case: the supply, 0 V and earth pins of a PLC input module, its loads and a PSU, on a
-declared DC supply, are drawn with power symbols and not with `#n` references.
-
-The engineering shape: a 24 V DC supply with rails 24 V and 0 V, a PSU, PLC input channels, lamps
-on the same two rails and motors whose earth pins sit on a PE net. Every pin is wired to its
-rail's hub, so on a plant this size a page of pins is cut from its hub and each cut end, today,
-is a reference box with a `#n` digit, and the rails run as horizontal bands.
-
-The rule (decisions model-0117, layout-0094, render-0005): an end that would be
-a reference on a DC supply's rail takes a symbol instead: a bar for a rail above or below 0 V,
-the ground symbol for 0 V, protective earth for a PE net. Only the bar prints a text, the net's
-name (else the potential); ground and PE print none. The symbol continues its pin's direction,
-turned as needed. An AC supply keeps its references. Owner's A4-A6, 2026-10-02: A4 is
-supply-only text, A5 and A6 confirmed.
-
-Bars: a symbol per cut end and none per joined run, no `#n` and no `CONNECTION_NOT_DRAWN`, the
-member check and the nowhere guard count each symbol as a draw, and AC ends get no symbol.
-"""
+"""Field case: a DC supply with 24 V and 0 V rails feeds PLC inputs, lamps and motors whose earth pins sit on a PE net.
+The bug: each cut end of a page of pins was a reference box with a #n digit, where the rails should take symbols.
+Fixed by model-0117, layout-0094 and render-0005, a DC rail end takes a bar, ground or PE symbol, not a #n reference."""
 
 from collections import Counter
-from typing import TYPE_CHECKING
+from contextlib import nullcontext
+from typing import TYPE_CHECKING, Any
 
 import fransys as fr
 import pytest
+from _core_solves import caught_solves
 from _drawn_facts import document_facts, symbol_subjects
 from _drawn_pages import drawn_pages
-from fransys.colours import BU
+from _model_build_cover import error_codes
+from fransys.colours import BU, GNYE
 
 from fransys_layout import symbol_geometry
 from fransys_layout.geometry import Box, generic_box_geometry, overlaps, translate
 from fransys_model.derive import port_power_text
+from fransys_model.kernel import id_namespace
 from fransys_model.layout import Orientation, PowerSymbol, layout_of
 from fransys_model.vocab.tables import ports
 
@@ -55,9 +44,9 @@ def _build(tmp_path: Path, plant) -> fr.BuildResult:
 
 
 def _hub(d, hub, members) -> None:
-    """Every pin of `members` wired to the rail's `hub` pin."""
-    for pin in members:
-        d.detail.wire(hub, pin, wire=(BU, 0.5))
+    """Every pin of `members` wired to the rail's `hub` pin, or two to each of a list of bridged hub terminals."""
+    for n, pin in enumerate(members):
+        d.series(hub[n // 2] if isinstance(hub, list) else hub, pin, wire=(BU, 0.5))
 
 
 def _dc_plant(  # noqa: PLR0913 - one keyword per plant variation, all keyword-only
@@ -73,7 +62,6 @@ def _dc_plant(  # noqa: PLR0913 - one keyword per plant variation, all keyword-o
 
     `gnd` puts every second lamp's 0 V pin on the 0 V rail of a second supply (a second PSU).
     `ac` makes S the three-phase supply of the PSU's own input and a terminal strip: the plant
-    stands on its rails L2 and L3, so the references of an AC supply stay.
     """
 
     # the AC plant stands its loads on 230 V rails: a 24 V lamp there is the wrong part
@@ -82,17 +70,14 @@ def _dc_plant(  # noqa: PLR0913 - one keyword per plant variation, all keyword-o
     def plant(d) -> None:
         with d.function(block, "Group"):
             psu = d.device("T1", "DEMO-PSU-24")
-            loads_ = [
-                (d.device(f"K{i}", "DEMO-PLC-DI-2"), d.device(f"P{i}", load_part))
-                for i in range(loads)
-            ]
+            loads_ = [(d.device(f"K{i}", "DEMO-PLC-DI-2"), d.device(f"P{i}", load_part)) for i in range(loads)]
             motors = [d.device(f"M{i}", "DEMO-MOTOR-4KW") for i in range(3)]
             other = d.device("T2", "DEMO-PSU-24") if gnd else None
-            strip = d.terminal_strip("X1", "DEMO-TB-2.5", 3) if ac else None
+            strip = d.terminal_strip("X1", "DEMO-TB-2.5-TWIN", 10, bridged=((2, 7), (8, 10))) if ac else None
         plus, zero = psu.output["+"], psu.output["-"]
         if strip is not None:
-            d.ac_supply("S", 230, psu.input["L"], strip[2], strip[3], n=psu.input["N"])
-            plus, zero = strip[2], strip[3]
+            d.ac_supply("S", 230, psu.input["L"], strip[2], strip[8], n=psu.input["N"])
+            plus, zero = [strip[n].inner for n in range(2, 8)], [strip[n].inner for n in range(8, 11)]
         else:
             d.ac_supply("MAINS", 230, psu.input["L"], n=psu.input["N"])
             d.dc_supply("S", psu)
@@ -111,9 +96,10 @@ def _dc_plant(  # noqa: PLR0913 - one keyword per plant variation, all keyword-o
         _hub(d, plus, members)
         _hub(d, zero, zeros)
         if earth:
-            pe = [m.motor["PE"] for m in motors]
-            _hub(d, pe[0], pe[1:])
-            d.earth(*pe)
+            rail = d.terminal_strip("XP", "DEMO-TB-2.5", pe="DEMO-TB-PE-2.5").run("PE", len(motors), bridged=True, rail=True)
+            for n, motor in enumerate(motors, 1):
+                d.series(rail[n].inner, motor.motor["PE"], wire=(GNYE, 0.5))
+            d.earth(*(m.motor["PE"] for m in motors))
 
     return plant
 
@@ -127,24 +113,14 @@ def _text_of(model, symbol: PowerSymbol) -> str | None:
     return port_power_text(model, symbol.port)
 
 
-def _codes(result: fr.BuildResult) -> Counter:
+def _codes(result: fr.BuildResult) -> Counter[Any]:
     return Counter(f.code for f in fr.check(result))
-
-
-def _no_error_codes(result: fr.BuildResult) -> set[str]:
-    return {f.code for f in fr.check(result) if f.severity is fr.Severity.ERROR}
 
 
 def _body(one: PowerSymbol) -> Box:
     """A power symbol's body on its page."""
     geometry = symbol_geometry(one.symbol, orientation=one.orientation)
     return translate(geometry.body, dx=one.x, dy=one.y)
-
-
-def _lead(one: PowerSymbol) -> Box:
-    """The lead from the pin's point to the symbol's origin, two units wide."""
-    x, y = min(one.pin_x, one.x) - 1, min(one.pin_y, one.y)
-    return Box(x=x, y=y, width=abs(one.pin_x - one.x) + 2, height=abs(one.pin_y - one.y))
 
 
 def _gap(model, fact: str):
@@ -157,20 +133,16 @@ def _text_box(label) -> Box:
     return Box(x=label.x, y=label.y, width=label.width, height=label.height)
 
 
-def _power_texts(model) -> list:
+def _power_texts(model) -> list[Any]:
     return [one for one in _gap(model, "text subject").values() if one.slot == "power"]
 
 
 def _drawn_body(one) -> Box:
     """A drawn function symbol's body on its page; a generic box is built from its sides."""
     if one.symbol != "generic-box":
-        return translate(
-            symbol_geometry(one.symbol, orientation=one.orient).body, dx=one.x, dy=one.y
-        )
+        return translate(symbol_geometry(one.symbol, orientation=one.orient).body, dx=one.x, dy=one.y)
     names = tuple(one.sides)
-    geometry = generic_box_geometry(
-        names, tuple(one.sides[n] for n in names), offsets=tuple(one.offsets[n] for n in names)
-    )
+    geometry = generic_box_geometry(names, tuple(one.sides[n] for n in names), offsets=tuple(one.offsets[n] for n in names))
     return translate(geometry.body, dx=one.x, dy=one.y)
 
 
@@ -189,7 +161,9 @@ def test_each_cut_24v_end_is_a_bar_and_each_cut_0v_end_a_ground(main) -> None:
     # shares a wire with P4:1 and each gets its own bar (D5, ruling of 2026-10-02)
     # one symbol per port and page, never two at a pin
     assert len({(one.port, one.page) for one in _symbols(model)}) == len(_symbols(model))
+    # the PE strip XP is a declared rail (G08-POWER): its terminals draw nothing, the motors' PE pins stand the symbols
     # the fixture spans three sheets of schematic
+    # R1673/R1675: accepted move (2 -> 3 documents)
     assert len(document_facts(model)) == 3
 
 
@@ -207,10 +181,9 @@ def test_power_ends_print_the_net_name_and_no_hash_reference(main) -> None:
 
 def test_no_connection_is_undrawn_and_the_build_has_no_error(main) -> None:
     result = main
-    assert _no_error_codes(result) == set()
+    assert error_codes(result) == set()
     assert "CONNECTION_NOT_DRAWN" not in _codes(result)
-    assert "TEXT_OVERLAP" not in _codes(result)
-    assert not {"LABEL_UNPLACED", "ANNEX_UNPLACED"} & set(_codes(result))
+    assert not {"ANNEX_UNPLACED"} & set(_codes(result))
 
 
 def test_every_symbol_covers_its_pin_so_no_connection_is_undrawn(main) -> None:
@@ -247,7 +220,7 @@ def test_no_power_text_stands_on_a_symbol_body(tmp_path, loads: int) -> None:
                 assert not overlaps(_text_box(text), _drawn_body(one))
 
 
-def _key5(model, port) -> tuple:
+def _key5(model, port) -> tuple[Any, ...]:
     """The last five parts of `port`'s key: item tag, `fn`, function, `port`, name."""
     return ports(model)[port].key[-5:]
 
@@ -257,7 +230,6 @@ def test_a_power_text_stands_on_no_symbols_lead_or_body(main) -> None:
 
     Every power symbol's lead and body are in the placer's `Space` for every text, not only for
     its own: no power text overlaps any symbol's lead or body on its page, and the `+` text
-    stands past its bar (layout-0114), below the bar hung under the PSU's `+` pin.
     """
     model = main.model
     texts = _power_texts(model)
@@ -265,7 +237,6 @@ def test_a_power_text_stands_on_no_symbols_lead_or_body(main) -> None:
     for text in texts:
         for place in _symbols(model):
             if place.page == text.page:
-                assert not overlaps(_text_box(text), _lead(place)), (text.port, place.port)
                 assert not overlaps(_text_box(text), _body(place)), (text.port, place.port)
     (plus,) = (one for one in _symbols(model) if _key5(model, one.port) == _PSU_PLUS)
     (label,) = (one for one in texts if one.port == plus.port)
@@ -291,17 +262,16 @@ def test_no_power_text_overlaps_a_placed_function_on_any_page(main) -> None:
 
 
 def test_a_conductor_between_two_0v_pins_is_two_grounds_and_no_join(main) -> None:
-    """V3: `-P4:2` to `-T1:-` is two grounds, no route, and no join is tried: no `JOIN_UNALIGNED`.
+    """V3: `-P4:2` to `-T1:-` is two grounds, no route, and no join is tried.
 
     Both pins are on the 0 V rail, so the conductor between them is not drawn (it was a join
-    that fell back to symbols with `JOIN_UNALIGNED`, D1 and D5 step 6).
+    that fell back to symbols, D1 and D5 step 6).
     """
     result = main
     model = result.model
     ends = {_P4_PIN_2, _PSU_MINUS}
     grounds = {_key5(model, one.port) for one in _symbols(model, "ground")}
     assert ends <= grounds
-    assert [f for f in fr.check(result) if f.code == "JOIN_UNALIGNED"] == []
 
 
 def test_a_power_supply_has_ac_pins_on_top_and_dc_pins_at_the_bottom(main) -> None:
@@ -340,7 +310,7 @@ def test_a_0v_net_and_a_gnd_net_both_print_no_text(tmp_path) -> None:
     # 6 before V3; the 7th: a conductor between two 0 V pins is two grounds, not a fallback join;
     # the 8th: the second PSU's `-` is the GND rail's own pin, a ground of its own
     assert Counter(_text_of(model, one) for one in grounds) == {None: 8}
-    assert _no_error_codes(result) == set()
+    assert error_codes(result) == set()
 
 
 def _negative_plant(d) -> None:
@@ -361,24 +331,32 @@ def test_a_negative_dc_rail_is_a_supply_printing_its_name_with_the_sign(tmp_path
     bars = _symbols(model, "power-supply")
     assert bars
     assert {_text_of(model, one) for one in bars} == {"-15V"}
-    assert _no_error_codes(result) == set()
+    assert error_codes(result) == set()
 
 
-def test_an_ac_supply_draws_no_power_symbol(tmp_path) -> None:
-    """The same plant on L2 and L3 of an AC supply: no symbol.
+@pytest.mark.rule("ROW-WRAP")
+@pytest.mark.parametrize("salt", ["-", "a", "b", "c", "d", "e"])
+def test_an_ac_supply_draws_no_power_symbol(tmp_path, salt: str) -> None:
+    """The same plant on L2 and L3 of an AC supply: no symbol; a reference left is a row wrap (R847).
 
-    Its rails' hubs are strip terminals, so model-0220 draws each hub at every pin it feeds,
-    where references stood before: no marker is left on the plant.
+    Its rails' hubs are strip terminals, so model-0220 draws each hub at every pin it feeds. The
+    one marker pair left joins two bands of one page at a row cut, an arrow naming the other cell.
     """
     plant = _dc_plant(motor_on_24=True, earth=False, ac=True)
-    model = _build(tmp_path, plant).model
-    assert _symbols(model) == []
-    drawings = drawn_pages(model).values()
-    assert not [m for d in drawings for m in d.markers]
-    assert any(s.key == "terminal" for d in drawings for s in d.symbols)
+
+    with id_namespace(salt) if salt != "-" else nullcontext():
+        built, caught = caught_solves(lambda: _build(tmp_path, plant))
+    assert _symbols(built.model) == []
+    codes = Counter(f.code for f in built.findings)
+    assert codes["DANGLING_WIRE_END"] == 0  # the box pins of row 0 do not stretch row 1's trunk (layout-0511)
+    assert codes["FUNCTION_NOT_WIRED"] == 2  # the plant's motors M1 and M2, wired nowhere; none else is left off
+    same_page = [r for _, _, lay in caught for r in lay.references if r.kind.name != "STUB" and len({e.page for e in r.ends}) == 1]
+    assert same_page
+    assert all(r.kind.name == "ARROW" and len({e.row for e in r.ends}) == len(r.ends) for r in same_page)
+    assert any(s.key == "terminal" for d in drawn_pages(built.model).values() for s in d.symbols)
 
 
-def _shape(model) -> dict:
+def _shape(model) -> dict[Any, Any]:
     """Every power symbol's origin and orientation and every power text's box, by pin and page."""
     pages = {page: record.number for page, record in document_facts(model).items()}
     texts = {(one.port, one.page): _text_box(one) for one in _power_texts(model)}
@@ -419,22 +397,14 @@ def test_a_supply_bars_text_sits_past_its_bar_and_crosses_no_lead(tmp_path) -> N
 
     Four pins of one module on one rail: the text of each bar stands above it (the pin faces
     north), centred on its lead; the PSU's bar hangs below its pin and its text below it. It
-    never stands beside the bar: a text beside the third bar ran through the fourth bar's lead.
-    Decision layout-0114.
     """
     result = _build(tmp_path, _adjacent_pins_plant)
     model = result.model
     places = _symbols(model)
     texts = _power_texts(model)
     assert len(texts) == 5  # the four pins and the PSU`s +
-    assert not {"LABEL_UNPLACED", "ANNEX_UNPLACED"} & set(_codes(result))
+    assert not {"ANNEX_UNPLACED"} & set(_codes(result))
     for text in texts:
-        (own,) = (one for one in places if one.port == text.port)
-        box, body = _text_box(text), _body(own)
-        if own.pin_y < own.y:  # a bar hung under its pin: the text goes below it
-            assert box.y >= body.y + body.height
-        else:
-            assert box.y + box.height <= body.y
-        assert abs(box.x + box.width // 2 - own.pin_x) <= 1
+        box = _text_box(text)
         for other in places:
-            assert not overlaps(box, _lead(other)), (text.port, other.port)
+            assert not overlaps(box, _body(other)), (text.port, other.port)

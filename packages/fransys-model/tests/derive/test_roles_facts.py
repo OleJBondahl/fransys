@@ -1,10 +1,9 @@
 """Tests: the role readers refine a kind's table row by the facets the one site may read."""
 
-from decimal import Decimal
-
 import pytest
 from current_plant import device, rate
 from plant import Plant
+from rating_plant import point, states_block
 from roles_plants import every_kind_member, function_of, roles_plant
 from test_breaking_check import _battery, _fn
 
@@ -16,21 +15,14 @@ from fransys_model.derive import (
     item_role,
     link_role,
     net_class_role,
-    port_role,
+    port_boundary,
 )
 from fransys_model.derive.facts.current.bounds import LimitRole, _limits_of
-from fransys_model.derive.facts.stated_ratings import fitted_link_rating
+from fransys_model.derive.facts.function_ratings import fitted_link_rating
+from fransys_model.elecdef import Fuse, LinkKind
 from fransys_model.kernel import Id, make_id
-from fransys_model.vocab import BreakingPoint, Rating, RatingFacet
 from fransys_model.vocab.core import Function, Item
-from fransys_model.vocab.enums import (
-    ConductorKind,
-    FunctionKind,
-    LinkKind,
-    LinkRest,
-    NetClass,
-    PortRole,
-)
+from fransys_model.vocab.enums import ConductorKind, FunctionKind, NetClass, PortBoundary
 from fransys_model.vocab.roles import CONDUCTOR_ROLES
 from fransys_model.vocab.tables import conductors, internal_links, nets, ports
 from fransys_model.vocab.templates import FunctionTemplate
@@ -67,15 +59,14 @@ def test_a_connector_is_a_pin_group() -> None:
 def test_item_roles_of_the_strip_the_bar_and_the_cable() -> None:
     """The strip, bar and cable items read their kind's flags."""
     assert item_role(MODEL, IDS["item:strip"]).strip
-    assert item_role(MODEL, IDS["item:bar"]).bar_holder
     assert item_role(MODEL, IDS["item:cable"]).cable
     assert not item_role(MODEL, IDS["item:generic"]).strip
 
 
 def test_a_terminals_two_ports_are_internal_and_external() -> None:
-    """The one reader of `Port.role` gives the stored role."""
+    """The one reader of `Port.boundary` gives the stored boundary."""
     held = [p.id for p in ports(MODEL).values() if p.function == IDS["terminal_1"]]
-    assert {port_role(MODEL, p) for p in held} == {PortRole.INTERNAL, PortRole.EXTERNAL}
+    assert {port_boundary(MODEL, p) for p in held} == {PortBoundary.INTERNAL, PortBoundary.EXTERNAL}
 
 
 def test_every_function_kind_gets_a_role_without_a_raise() -> None:
@@ -103,9 +94,9 @@ def test_a_link_rest_is_the_declared_one_else_the_functions() -> None:
     for link in internal_links(MODEL).values():
         role = link_role(MODEL, link.id)
         assert role.switched is (link.kind is LinkKind.SWITCHED)
-        if link.rest is not None:
-            assert role.rest is link.rest
-        assert role.rest in (None, *LinkRest)
+        if link.closed_at_rest is not None:
+            assert role.closed_at_rest is link.closed_at_rest
+        assert role.closed_at_rest in (None, False, True)
 
 
 def test_the_wire_flag_is_the_wire_kind_alone() -> None:
@@ -119,15 +110,7 @@ def _rated(key: str, kind: FunctionKind, *, breaking: bool) -> tuple[Plant, Id[F
     plant = Plant()
     device(plant, key, amps="400", kind=kind, link=LinkKind.CONDUCTIVE)
     if breaking:
-        point = BreakingPoint(voltage_v=Decimal(250), current_a=Decimal(10000))
-        template = make_id(FunctionTemplate, (key, "f"))
-        facet = RatingFacet(
-            id=make_id(RatingFacet, (key,)),
-            key=(key,),
-            subject=template,
-            rating=Rating(breaking_ac=(point,)),
-        )
-        plant.add(facet)
+        states_block(plant, make_id(FunctionTemplate, (key, "f")), Fuse(breaking_capacity=(point("250", "10000"),)))
     return plant, Plant.function_id(key, "f")
 
 

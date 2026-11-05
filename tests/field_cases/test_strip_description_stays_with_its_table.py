@@ -1,13 +1,8 @@
-"""Field case: a terminal strip's description never stands alone at a column foot.
+"""Field case: a long terminal strip, then a second strip with a multi-line description and a short table, near the foot of the left column.
+The bug: the description paragraph sat between heading and table, so it could end the left column while its table began the right one.
+Fixed by pdf-0026 (L7), a table's heading, description, header row and first data row never split across a column foot."""
 
-The engineering shape: a long strip, then a second strip with a multi-line description and a
-short table, so the second strip's heading falls at or near the foot of the left column.
-
-The bug: the description paragraph sat between the heading and the table, so it could end the
-left column while its table began the right one. The rule (L7, decision pdf-0026): a table's
-heading, its description, its header row and its first data row never split across a column foot.
-"""
-
+from typing import Any
 lazy from pathlib import Path
 
 import fransys as fr
@@ -31,15 +26,13 @@ def _pdf(root: Path, filler: int) -> Path:
         fr.DocumentPreset.CABINET_SCHEMATIC,
         cabinet,
         cover=cover,
-        add=(fr.PageKind.TERMINAL_LIST,),
-        remove=(fr.PageKind.SCHEMATIC,),
     )
     fr.write(fr.build(d, document), out_dir=root / "out", intermediates=root / "inter")
     (pdf,) = (root / "out").glob("*.pdf")
     return pdf
 
 
-def _place(pdf: Path, key: str) -> tuple[int, bool]:
+def _place(pdf: Path, key: str) -> tuple[int, Any]:
     """`(page, in the right column)` of the first `key` on a terminal list page."""
     document = pypdfium2.PdfDocument(pdf)
     try:

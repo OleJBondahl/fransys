@@ -7,6 +7,8 @@ Size(16, 8) everywhere (cut_fixtures).
 from __future__ import annotations
 
 from dataclasses import replace
+from types import SimpleNamespace
+from typing import Any
 
 import pytest
 from options_fixtures import core_options
@@ -21,9 +23,12 @@ from fransys_layout.core import (
 )
 from fransys_layout.core.blocks import assign_blocks
 from fransys_layout.core.cut import cut_pages
-from fransys_layout.core.cut_refs import _column_pin, stubs
-from fransys_layout.core.cycles import CycleSplit
-from fransys_layout.core.values import CutEnd, CutResult, FlowGraph, Net, Ref, RefEnd, RefKind
+from fransys_layout.core.cut_bundle import leg_stubs
+from fransys_layout.core.cut_ledger import account
+from fransys_layout.core.cut_refs import _column_pin, across
+from fransys_layout.core.errors import CoreError
+from fransys_layout.core.flow_values import Attach, CrossLink, CutResult, Fan, FlowGraph
+from fransys_layout.core.values import CutEnd, PagePlan, Ref, RefEnd, RefKind, RowPlan, StandClass
 
 from .conftest import MARKER
 from .cut_fixtures import AREA, box_sym, chain, cut_of, elem, free, net, page_of, refs_of, side
@@ -40,9 +45,7 @@ def test_a_free_sided_hub_is_copied_onto_the_other_page_of_its_fan() -> None:
         (1, [("c:k1",)]),
         (2, [("c:k2", "c:k3")]),
     ]
-    assert result.spec.reference_plan == (
-        Ref("feed", RefKind.COPY, (RefEnd(2, "c:k1", PinRef("k2", "n")),)),
-    )
+    assert result.spec.reference_plan == (Ref("feed", RefKind.COPY, (RefEnd(2, "c:k1", PinRef("k2", "n")),)),)
     (finding,) = result.spec.findings
     assert (finding.code, finding.page, finding.subject) == (
         "HEAD_OFF_LEGS",
@@ -61,7 +64,7 @@ def test_a_copy_has_one_end_for_each_page_beyond_the_hubs_own() -> None:
         Ref(
             "feed",
             RefKind.COPY,
-            (RefEnd(2, "c:k1", PinRef("k2", "n")), RefEnd(3, "c:k1", PinRef("k3", "n"))),
+            (RefEnd(2, "c:k1", PinRef("k2", "n"), stand=StandClass.TRUNK_END), RefEnd(3, "c:k1", PinRef("k3", "n"), stand=StandClass.TRUNK_END)),
         ),
     )
     assert result.spec.findings == ()  # every page holds one leg: the head's page holds no fewer
@@ -85,17 +88,33 @@ def test_a_fan_headed_by_a_driver_keeps_its_arrow_and_gets_the_finding() -> None
             "f:feed",
             RefKind.ARROW,
             (RefEnd(1, "c:k1", PinRef("k1", "n"), 0), RefEnd(2, "c:k2", PinRef("k2", "n"), 0)),
+            1,
         ),
     )
-    assert [(f.code, f.page, f.subject) for f in result.spec.findings] == [
-        ("HEAD_OFF_LEGS", 1, "f:feed")
-    ]
+    assert [(f.code, f.page, f.subject) for f in result.spec.findings] == [("HEAD_OFF_LEGS", 1, "f:feed")]
+
+
+@pytest.mark.rule("PAGE-CUT")
+@pytest.mark.parametrize("head", ["driver", "hub"])
+@pytest.mark.parametrize("legs", [2, 3, 4])
+@pytest.mark.parametrize("width", [700, 800])
+def test_every_trunk_that_crosses_a_page_cut_has_an_end_of_a_reference_on_each_page_it_has_pins(head: str, legs: int, width: int) -> None:
+    """Class: a trunk's pins on pages p and p+1 are joined by an arrow or copy with an end on each page."""
+    first = [elem("d0", 500, 400)] if head == "driver" else [free("t0")]
+    pin = "d0.s" if head == "driver" else "t0.e"
+    syms = [*first, *(elem(f"k{i}", width, 400) for i in range(legs))]
+    result = cut_of(syms, [net("feed", pin, *(f"k{i}.n" for i in range(legs)))])
+    pages = sorted(set(page_of(result).values()))
+    assert len(pages) > 1
+    ended = {e.page for r in result.spec.reference_plan if r.kind in (RefKind.ARROW, RefKind.COPY) for e in r.ends}
+    assert set(pages[1:]) <= ended
+    assert head == "hub" or pages[0] in ended
 
 
 def test_a_through_jumper_hub_is_not_copied() -> None:
     """A jumper j0 has two nodes, so it is no free-sided symbol: the arrow stays."""
     syms = [elem("j0"), elem("k1", 700, 400), elem("k2", 600, 400), elem("k3", 600, 400)]
-    result = cut_of(syms, [net("feed", "j0.n", "j0.s", "k1.n", "k2.n", "k3.n")])
+    result = cut_of(syms, [net("feed", "j0.n", "j0.s", "k1.n", "k2.n", "k3.n")], Facts(joined=((PinRef("j0", "n"), PinRef("j0", "s")),)))
     assert result.flow.fans[0].hub == "j0"
     assert [r.kind for r in result.spec.reference_plan] == ["arrow"]
     assert [f.code for f in result.spec.findings] == ["HEAD_OFF_LEGS"]
@@ -114,17 +133,13 @@ def test_a_row_wrap_inside_one_page_plans_no_copy_and_no_finding() -> None:
     assert result.spec.findings == ()
 
 
-def hub_case(
-    widths: tuple[int, int, int], heights: tuple[int, int, int], *, free_hub: bool
-) -> CutResult:
+def hub_case(widths: tuple[int, int, int], heights: tuple[int, int, int], *, free_hub: bool) -> CutResult:
     """Trunk u (jumper j) joins k1, k2; trunk v (hub t) joins k2, k3; t is free-sided or not."""
     hub = free("t") if free_hub else elem("t")
     pins = ("t.e",) if free_hub else ("t.n", "t.s")
     cols = [elem(f"k{i}", w, h) for i, (w, h) in enumerate(zip(widths, heights, strict=True), 1)]
-    return cut_of(
-        [*cols, elem("j"), hub],
-        [net("u", "k1.s", "k2.s", "j.n", "j.s"), net("v", *pins, "k2.n", "k3.n")],
-    )
+    joined = tuple((PinRef(s, "n"), PinRef(s, "s")) for s in ("j", "t") if s == "j" or not free_hub)
+    return cut_of([*cols, elem("j"), hub], [net("u", "k1.s", "k2.s", "j.n", "j.s"), net("v", *pins, "k2.n", "k3.n")], Facts(joined=joined))
 
 
 def test_the_cut_prefers_the_break_where_the_arrow_is_a_copy() -> None:
@@ -138,9 +153,7 @@ def test_the_cut_prefers_the_break_where_the_arrow_is_a_copy() -> None:
     assert [(r.net, r.kind) for r in jumper.spec.reference_plan] == [("f:u", "arrow")]
     free_sided = hub_case((600, 600, 200), (600, 600, 600), free_hub=True)
     assert page_of(free_sided) == {"c:k1": 1, "c:k2": 1, "c:k3": 2}
-    assert free_sided.spec.reference_plan == (
-        Ref("v", RefKind.COPY, (RefEnd(2, "c:k2", PinRef("k3", "n")),)),
-    )
+    assert free_sided.spec.reference_plan == (Ref("v", RefKind.COPY, (RefEnd(2, "c:k2", PinRef("k3", "n"), stand=StandClass.TRUNK_END),)),)
 
 
 def test_a_row_wrap_through_the_trunk_of_a_free_sided_hub_is_not_priced_as_a_copy() -> None:
@@ -152,38 +165,12 @@ def test_a_row_wrap_through_the_trunk_of_a_free_sided_hub_is_not_priced_as_a_cop
 
 # stubs
 
-NO_FLOW = FlowGraph((), (), (), (), CycleSplit(0, 0, 0), ())
-
-
-def stubs_without_cuts(syms, nets, facts, result) -> list[Ref]:
-    """`stubs` on the pages the cut gave, with no arrow or tag planned, to read its own rule."""
-    where = {c[2:]: p for c, p in page_of(result).items()}
-    return stubs(PlacementProblem(AREA, tuple(syms), tuple(nets), facts), NO_FLOW, where, ())
-
-
-def test_a_net_that_crosses_units_ends_in_a_stub_at_each_boundary_pin_and_page_alone_end() -> None:
-    """Net m joins x, y, z, one page each; every end is alone on its page, so all three stub."""
-    syms = [
-        replace(side(n, 700, 500), unit=u) for n, u in zip("xyz", ("U1", "U3", "U2"), strict=True)
-    ]
-    facts = Facts(
-        units=(Unit("U1", None, (PinRef("x", "e"),)), Unit("U2", None, (PinRef("z", "e"),))),
-    )
-    nets = [net("m", "x.e", "y.e", "z.e", crosses_unit=True)]
-    crossing = cut_of(syms, nets, facts)
-    assert page_of(crossing) == {"c:x": 1, "c:y": 2, "c:z": 3}
-    ends = tuple(RefEnd(n, None, PinRef(c, "e")) for n, c in enumerate("xyz", 1))
-    assert stubs_without_cuts(syms, nets, facts, crossing) == [Ref("m", RefKind.STUB, ends)]
-    plain = cut_of(syms, [net("m", "x.e", "y.e", "z.e")], facts)
-    assert refs_of(plain, "stub") == []  # the flag is what asks for stubs
-    assert plain.spec.pages == crossing.spec.pages  # stubs cost nothing and move nothing
+NO_FLOW = FlowGraph((), (), (), (), ())
 
 
 def test_an_end_that_carries_an_arrow_gets_no_stub() -> None:
     """The same net, cut by the DP: every end already stands under an arrow, so none stubs too."""
-    syms = [
-        replace(side(n, 700, 500), unit=u) for n, u in zip("xyz", ("U1", "U3", "U2"), strict=True)
-    ]
+    syms = [replace(side(n, 700, 500), unit=u) for n, u in zip("xyz", ("U1", "U3", "U2"), strict=True)]
     facts = Facts(
         units=(Unit("U1", None, (PinRef("x", "e"),)), Unit("U2", None, (PinRef("z", "e"),))),
     )
@@ -196,7 +183,8 @@ def test_an_end_that_carries_an_arrow_gets_no_stub() -> None:
 def test_a_copied_hub_end_on_a_page_cut_gets_no_stub_at_the_copied_end() -> None:
     """The copy of t0 on page 2 names k2.n, a boundary pin too: it carries the copy, no stub."""
     syms = [free("t0"), elem("k1", 700, 400), elem("k2", 600, 400), elem("k3", 600, 400)]
-    facts = Facts(units=(Unit("U1", None, (PinRef("k2", "n"), PinRef("k3", "n"))),))
+    out = tuple((PinRef(k, "n"), PinRef("out", k)) for k in ("k2", "k3"))
+    facts = _wired(*out, units=(Unit("U1", None, tuple(a for a, _ in out)),))
     syms = [replace(s, unit="U1") if s.id in ("k2", "k3") else s for s in syms]
     result = cut_of(syms, [net("feed", "t0.e", "k1.n", "k2.n", "k3.n", crosses_unit=True)], facts)
     (copy,) = refs_of(result, "copy")
@@ -213,58 +201,6 @@ def test_a_hub_with_boundary_pins_on_both_sides_is_cut_by_an_arrow_pair_not_copi
     assert page_of(result) == {"c:k1": 1, "c:k2": 2, "c:k3": 2}
     assert refs_of(result, "copy") == []
     assert {r.net for r in refs_of(result, "arrow")} == {"f:feed"}
-
-
-def test_an_end_on_a_page_with_another_end_of_its_net_stubs_only_at_a_boundary_pin() -> None:
-    """x and y share page 1 and z stands alone on page 2: z stubs (alone), y does not."""
-    syms = [
-        replace(side(n, w, h), unit=u)
-        for n, w, h, u in (("x", 300, 300, "U1"), ("y", 300, 300, "U1"), ("z", 1200, 700, "U2"))
-    ]
-    facts = Facts(units=(Unit("U1", None, (PinRef("x", "e"),)),))
-    nets = [net("m", "x.e", "y.e", "z.e", crosses_unit=True)]
-    result = cut_of(syms, nets, facts)
-    assert page_of(result) == {"c:x": 1, "c:y": 1, "c:z": 2}
-    ends = (RefEnd(1, None, PinRef("x", "e")), RefEnd(2, None, PinRef("z", "e")))
-    assert stubs_without_cuts(syms, nets, facts, result) == [Ref("m", RefKind.STUB, ends)]
-
-
-def test_an_end_alone_on_its_page_does_not_stub_when_a_boundary_pin_stands_in_its_unit() -> None:
-    """z is alone on page 2 but x, a boundary pin of z's own unit U1, already carries the stub."""
-    syms = [
-        replace(side(n, w, h), unit="U1")
-        for n, w, h in (("x", 300, 300), ("y", 300, 300), ("z", 1200, 700))
-    ]
-    facts = Facts(units=(Unit("U1", None, (PinRef("x", "e"),)),))
-    nets = [net("m", "x.e", "y.e", "z.e", crosses_unit=True)]
-    result = cut_of(syms, nets, facts)
-    assert page_of(result) == {"c:x": 1, "c:y": 1, "c:z": 2}
-    ends = (RefEnd(1, None, PinRef("x", "e")),)
-    assert stubs_without_cuts(syms, nets, facts, result) == [Ref("m", RefKind.STUB, ends)]
-
-
-def test_a_crossing_net_with_no_boundary_pin_stubs_only_its_page_alone_ends() -> None:
-    syms = [side("x", 300, 300), side("y", 300, 300), side("z", 1200, 700)]
-    nets = [net("m", "x.e", "y.e", "z.e", crosses_unit=True)]
-    facts = Facts(units=(Unit("U1", None, ()),))
-    result = cut_of(syms, nets, facts)
-    want = [Ref("m", RefKind.STUB, (RefEnd(2, None, PinRef("z", "e")),))]
-    assert stubs_without_cuts(syms, nets, facts, result) == want
-
-
-def test_a_cut_pin_ends_in_a_stub_on_a_net_that_does_not_cross_units() -> None:
-    """Net m continues outside the drawn set at x.e: x.e stubs, y.e does not, with no unit flag."""
-    syms = [side("x", 300, 300), side("y", 300, 300)]
-    nets = [replace(net("m", "x.e", "y.e"), cut=(CutEnd(PinRef("x", "e")),))]
-    result = cut_of(syms, nets)
-    want = [Ref("m", RefKind.STUB, (RefEnd(1, None, PinRef("x", "e")),))]
-    assert stubs_without_cuts(syms, nets, Facts(), result) == want
-
-
-def test_a_net_with_no_cut_pin_and_no_unit_flag_gets_no_stub() -> None:
-    syms = [side("x", 300, 300), side("y", 300, 300)]
-    nets = [net("m", "x.e", "y.e")]
-    assert stubs_without_cuts(syms, nets, Facts(), cut_of(syms, nets)) == []
 
 
 # tall columns
@@ -298,18 +234,18 @@ def test_a_tall_column_is_cut_into_two_columns_with_one_planned_tag() -> None:
 
 
 def test_thirty_cells_of_96_g_cut_without_error_into_two_columns() -> None:
-    """Thirty cells 96 G wide and 32 G high stack to 1192 G: twenty fill the page, ten remain."""
+    """Thirty cells 96 G wide and 32 G high stack to 1192 G: the tag at the cut holds 48 G, so eighteen fill the page and twelve remain."""
     ids = [f"k{i:02d}" for i in range(30)]
     result = cut_of([elem(i, 96) for i in ids], chain(ids))
     top, bottom = result.flow.columns
-    assert [len(c.lanes[0].cells) for c in (top, bottom)] == [20, 10]
-    assert (top.height, bottom.height) == (20 * 32 + 19 * 8, 10 * 32 + 9 * 8)
+    assert [len(c.lanes[0].cells) for c in (top, bottom)] == [18, 12]
+    assert (top.height, bottom.height) == (18 * 32 + 17 * 8, 12 * 32 + 11 * 8)
     assert (top.width, bottom.width) == (96, 96)
     assert result.spec.reference_plan == (
         Ref(
-            "x19",
+            "x17",
             RefKind.TAG,
-            (RefEnd(1, "c:k00#a", PinRef("k19", "s")), RefEnd(1, "c:k00#b", PinRef("k20", "n"))),
+            (RefEnd(1, "c:k00#a", PinRef("k17", "s")), RefEnd(1, "c:k00#b", PinRef("k18", "n"))),
         ),
     )
 
@@ -326,20 +262,12 @@ def test_the_split_keeps_every_field_of_the_fan_and_block_it_rewrites() -> None:
     )
     options = core_options(
         marker=MARKER,
-        flip_turn="R180",
-        tag_stagger=True,
-        label_gap=8,
-        parallel_pitch=48,
-        driver_first=True,
-        arrow_sides=("E", "W"),
     )
     flow = build_flow(prob, options)
     (tail,) = flow.fans
     flow = replace(flow, fans=(replace(tail, crossed=(("w1", (1, 0)),)),))
     lists = order_blocks(assign_blocks(flow, prob, options), flow, options)
-    lists = tuple(
-        replace(bl, blocks=tuple(replace(b, fixed_order=True) for b in bl.blocks)) for bl in lists
-    )
+    lists = tuple(replace(bl, blocks=tuple(replace(b, fixed_order=True) for b in bl.blocks)) for bl in lists)
     result = cut_pages(lists, flow, prob, options)
     (moved,) = result.flow.fans
     assert (moved.drivers[0].column, moved.drivers[0].cell) == ("c:k00#b", 11 - 7)
@@ -405,11 +333,9 @@ def test_a_spilled_column_holding_no_pin_of_the_net_raises_naming_the_net_column
     """Column k1-k2 holds no pin of net m (on k3 and k4): the spilled tag is refused."""
     syms = [elem("k1"), elem("k2"), elem("k3"), elem("k4")]
     result = cut_of(syms, [*chain(["k1", "k2"]), net("m", "k3.n", "k4.n")])
-    (column,) = [
-        c for c in result.flow.columns if any(x.sym == "k1" for ln in c.lanes for x in ln.cells)
-    ]
+    (column,) = [c for c in result.flow.columns if any(x.sym == "k1" for ln in c.lanes for x in ln.cells)]
     with pytest.raises(
-        ValueError,
+        CoreError,
         match=(
             r"cut: net m: spilled column c:k1 holds none of its pins; "
             r"a spilled tag is planned only for a column that holds a pin of the net"
@@ -418,42 +344,280 @@ def test_a_spilled_column_holding_no_pin_of_the_net_raises_naming_the_net_column
         _column_pin(column, net("m", "k3.n", "k4.n"))
 
 
-def _line_nets(*lines: str) -> list[Net]:
-    """One lone-pin net per symbol x, y, ..., each cut at its pin on the given line."""
-    return [
-        replace(net(f"m{i}", f"{s}.e"), cut=(CutEnd(PinRef(s, "e"), line),))
-        for i, (s, line) in enumerate(zip("xyz", lines, strict=False))
-    ]
+# the ledger: one carrier per required conductor (CUT-LEDGER CL1)
 
 
-def test_the_cut_pins_of_one_line_end_in_one_stub_at_the_first_of_them() -> None:
-    """R481: three conductors of one harness line leave in one stub; the lowest net carries it."""
-    syms = [side(n, 100, 100) for n in "xyz"]
-    nets = _line_nets("W3/X1", "W3/X1", "W3/X1")
-    want = [Ref("m0", RefKind.STUB, (RefEnd(1, None, PinRef("x", "e")),))]
-    assert stubs_without_cuts(syms, nets, Facts(), cut_of(syms, nets)) == want
+def _wired(*pairs: tuple[PinRef, PinRef], units: tuple[Unit, ...] = ()) -> Facts:
+    """Facts whose required conductors are `pairs`, each known from both ends."""
+    return Facts(units=units, far_ends=(*pairs, *((b, a) for a, b in pairs)), groups=tuple(pairs))
 
 
-def test_cut_pins_of_different_lines_or_of_no_line_each_end_in_a_stub() -> None:
-    syms = [side(n, 100, 100) for n in "xyz"]
-    nets = _line_nets("W3/X1", "W4/X1", "")
-    got = stubs_without_cuts(syms, nets, Facts(), cut_of(syms, nets))
-    assert [r.net for r in got] == ["m0", "m1", "m2"]
+def _account(syms, nets, facts, planned=()):
+    """`account` on the pages the cut gave, with `planned` as the arrows, tags and copies already made."""
+    result = cut_of(syms, nets, facts)
+    where = {c[2:]: p for c, p in page_of(result).items()}
+    return account(PlacementProblem(AREA, tuple(syms), tuple(nets), facts), NO_FLOW, where, planned, result.spec.pages)
 
 
-def test_four_cut_pins_of_one_line_that_are_unit_boundary_pins_end_in_one_stub() -> None:
-    """R481: four lone nets cut at four boundary pins of one line leave in one stub, not four."""
-    syms = [replace(elem(n), unit="U1") for n in "wxyz"]
-    pins = [PinRef(n, "n") for n in "wxyz"]
-    facts = Facts(units=(Unit("U1", None, tuple(pins)),))
-    nets = [
-        replace(net(f"m{n}", f"{n}.n", crosses_unit=True), cut=(CutEnd(PinRef(n, "n"), "H/C1"),))
-        for n in "wxyz"
-    ]
-    out = stubs(
-        PlacementProblem(AREA, tuple(syms), tuple(nets), facts),
-        NO_FLOW,
-        dict.fromkeys("wxyz", 1),
-        (),
+def _pair(size: int):
+    """Units' boundary pins x.e and y.e, one conductor between them: one page when small, two when big."""
+    syms = [replace(side(n, size, size), unit=u) for n, u in (("x", "U1"), ("y", "U2"))]
+    x, y = PinRef("x", "e"), PinRef("y", "e")
+    return syms, [net("m", "x.e", "y.e", crosses_unit=True)], _wired((x, y)), (x, y)
+
+
+def test_a_conductor_wired_on_its_page_is_ink_and_gets_no_stub() -> None:
+    syms, nets, facts, (x, y) = _pair(200)
+    got = _account(syms, nets, facts)
+    assert got.refs == ()
+    assert got.ink == {(x, y), (y, x)}
+
+
+def test_a_conductor_across_pages_has_a_stub_at_each_end() -> None:
+    syms, nets, facts, (x, y) = _pair(700)
+    got = _account(syms, nets, facts)
+    assert got.ink == frozenset()
+    assert {e.pin for r in got.refs for e in r.ends} == {x, y}
+
+
+def test_a_conductor_to_a_pin_outside_the_problem_has_a_stub_at_its_near_pin() -> None:
+    syms = [side("x", 300, 300), side("y", 300, 300)]
+    x = PinRef("x", "e")
+    got = _account(syms, [net("m", "x.e", "y.e")], _wired((x, PinRef("out", "e"))))
+    assert got.refs == (Ref("m", RefKind.STUB, (RefEnd(1, None, x, far=(PinRef("out", "e"),)),)),)
+    assert got.stubbed == {x}
+
+
+def test_a_crossing_end_stands_at_a_trunk_end_by_its_fans_attachments_on_the_page_not_by_the_nets_pins() -> None:
+    """KI-616: x and y attach one fan; z is a net pin of no fan, so its end stands at its pin."""
+    syms = [side(n, 200, 200) for n in "xyz"]
+    x, y, z = (PinRef(n, "e") for n in "xyz")
+    outs = [PinRef(f"out{n}", "e") for n in "xyz"]
+    fan = Fan("f", ("m",), (Attach(None, 0, 0, x, net="m"),), (Attach(None, 0, 0, y, net="m"),), None, 1, "S")
+    problem = PlacementProblem(AREA, tuple(syms), (net("m", "x.e", "y.e", "z.e", crosses_unit=True),), _wired(*zip((x, y, z), outs, strict=True)))
+    got = account(problem, replace(NO_FLOW, fans=(fan,)), dict.fromkeys("xyz", 1), (), ())
+    assert {e.pin: e.stand for r in got.refs for e in r.ends} == {x: StandClass.TRUNK_END, y: StandClass.TRUNK_END, z: StandClass.PIN}
+
+
+def test_a_pin_with_a_drawn_wire_and_a_conductor_out_of_the_problem_has_a_stub_for_the_outer_one() -> None:
+    """KI-615: x is ink with y, and wired out of the set: a net crossing a unit still owes x one stub end naming the far pin."""
+    syms = [side("x", 300, 300), side("y", 300, 300)]
+    x, y, out = PinRef("x", "e"), PinRef("y", "e"), PinRef("out", "e")
+    facts = replace(_wired((x, y)), far_ends=(*_wired((x, y)).far_ends, (x, out)))  # the set's groups hold the in-set pair only
+    got = _account(syms, [net("m", "x.e", "y.e", crosses_unit=True)], facts)
+    assert got.ink == {(x, y), (y, x)}
+    assert [(e.pin, e.far) for r in got.refs for e in r.ends] == [(x, (out,))]
+
+
+def test_a_stub_end_names_the_far_pin_of_every_undrawn_conductor_at_its_pin() -> None:
+    """R1581: one stub end per pin, its `far` every far pin of the pin's undrawn conductors, in the order given."""
+    syms = [side("x", 300, 300), side("y", 300, 300)]
+    x = PinRef("x", "e")
+    outs = (PinRef("out", "e"), PinRef("out", "f"))
+    got = _account(syms, [net("m", "x.e", "y.e")], _wired((x, outs[0]), (x, outs[1])))
+    (ref,) = got.refs
+    (end,) = ref.ends
+    assert (end.pin, end.far) == (x, outs)
+
+
+def test_an_arrow_end_carries_its_pin_and_the_other_end_stubs() -> None:
+    """An arrow on x.e cuts the wire there: x is carried, y on the same page is not drawn to it and stubs."""
+    syms, nets, facts, (x, y) = _pair(200)
+    arrow = Ref("m", RefKind.ARROW, (RefEnd(1, None, x),))
+    got = _account(syms, nets, facts, (arrow,))
+    assert got.ink == frozenset()
+    assert [e.pin for r in got.refs for e in r.ends] == [y]
+
+
+def test_an_arrow_with_both_ends_on_one_pin_cuts_it_like_a_lone_end() -> None:
+    """CUT-COPY-ENDS: two arrow ends on x.e are one pin, so x.e is cut from y as a lone arrow end cuts it."""
+    syms, nets, facts, (x, _y) = _pair(200)
+    got = _account(syms, nets, facts, (Ref("m", RefKind.ARROW, (RefEnd(1, None, x), RefEnd(1, None, x))),))
+    assert got.ink == frozenset()
+
+
+def test_a_copy_end_keeps_its_same_page_neighbour_wire() -> None:
+    """CUT-COPY-ENDS: a copy stands at x.e and its wire to y on that page is drawn, where an arrow there cuts it."""
+    syms, nets, facts, (x, y) = _pair(200)
+    got = _account(syms, nets, facts, (Ref("m", RefKind.COPY, (RefEnd(1, None, x),)),))
+    assert got.ink == {(x, y), (y, x)}
+
+
+def test_a_cut_end_pin_keeps_its_same_page_neighbour_wire() -> None:
+    """R1008: x is tagged to z on another page, so (x, z) is severed; (x, y) on one page stays ink."""
+    syms = [side("x", 200, 200), side("y", 200, 200), side("z", 1200, 700)]
+    x, y, z = (PinRef(n, "e") for n in "xyz")
+    nets = [net("m", "x.e", "y.e", "z.e")]
+    tag = Ref("m", RefKind.TAG, (RefEnd(1, None, x), RefEnd(2, None, z)))
+    got = _account(syms, nets, _wired((x, y), (x, z)), (tag,))
+    assert got.ink == {(x, y), (y, x)}
+    assert got.refs == ()
+
+
+def _line_case(*lines: str):
+    """One conductor to outside per symbol x, y, ..., each lone net cut at its pin on the given harness line."""
+    syms = [side(n, 100, 100) for n in "xyz"[: len(lines)]]
+    nets = [replace(net(f"m{i}", f"{s.id}.e"), cut=(CutEnd(PinRef(s.id, "e"), line),)) for i, (s, line) in enumerate(zip(syms, lines, strict=True))]
+    return _account(syms, nets, _wired(*((PinRef(s.id, "e"), PinRef("out", s.id)) for s in syms)))
+
+
+def test_cut_pins_of_one_line_or_of_no_line_each_end_in_their_own_stub() -> None:
+    """R1151: a line pin whose lead stops short is not covered; no pin rides on a neighbour's stub."""
+    assert [r.net for r in _line_case("W3/X1", "W3/X1", "W3/X1").refs] == ["m0", "m1", "m2"]
+    assert [r.net for r in _line_case("W3/X1", "W4/X1", "").refs] == ["m0", "m1", "m2"]
+
+
+def test_a_required_pin_that_is_on_no_net_raises_naming_it() -> None:
+    syms = [side("x", 100, 100), side("y", 100, 100)]
+    with pytest.raises(CoreError, match=r"a pin of a required group has no ink and no reference: x q"):
+        _account(syms, [net("m", "y.e")], _wired((PinRef("x", "q"), PinRef("out", "q"))))
+
+
+def test_every_row_piece_of_a_net_on_one_page_gets_a_stub_naming_a_pin_outside_it() -> None:
+    """R676: twelve 150 G legs wrap to two rows; each row is a drawn piece and carries a stub at a pin wired to the other row."""
+    legs = [f"l{i:02d}" for i in range(12)]
+    syms = [free("t0"), *(elem(leg, 150) for leg in legs)]
+    names = ["t0.e", *(f"{leg}.n" for leg in legs)]
+    pins = [PinRef(*n.split(".")) for n in names]
+    facts = Facts(far_ends=tuple(pr for p in pins[1:] for pr in ((pins[0], p), (p, pins[0]))), groups=(tuple(pins),))
+    nets = [net("bus", *names)]
+    (page,) = cut_of(syms, nets, facts).spec.pages
+    row_of = {c[2:]: r for r, row in enumerate(page.rows) for c in row.columns}
+    flow = cut_of(syms, nets, facts).flow
+    got = account(PlacementProblem(AREA, tuple(syms), tuple(nets), facts), flow, dict.fromkeys(row_of, page.page), (), (page,))
+    assert {row_of[p.sym] for p in got.stubbed} == {0, 1}
+
+
+def _legs_of(far: tuple[tuple[PinRef, PinRef], ...], ink: set[tuple[PinRef, PinRef]], *, fanned: bool = True) -> tuple[list[Ref], list[Ref]]:
+    """`_legs` on a fan pin x.e (in no fan when not `fanned`) with a lead stub: `far` its conductors, `ink` the ones drawn."""
+    from fransys_layout.core.cut_ledger import _legs
+    from fransys_layout.core.flow_values import Attach, Fan
+    from fransys_layout.core.values import PagePlan, RowPlan
+
+    x = PinRef("x", "e")
+    fan = Fan("f", ("m",), (Attach("c:x", 0, 0, x, net="m"),), (), None, 1, "H")
+    page = PagePlan(1, "", (RowPlan(("c:x",), (), 0),), ())
+    problem = PlacementProblem(AREA, (side("x", 40, 40),), (net("m", "x.e", "y.e"),), Facts(far_ends=far))
+    made = [Ref("m", RefKind.STUB, (RefEnd(1, None, x),))]
+    flow: Any = SimpleNamespace(fans=[fan] if fanned else [])
+    return _legs(problem, flow, {"x": 1, "y": 1, "z": 2, "c:x": 1}, [page], (ink, made))
+
+
+def test_a_fan_pin_drawn_to_every_far_end_keeps_no_stub_and_no_leg() -> None:
+    """MARKER-FREE-SIDE (R1301): a one-sided pin carries no marker; its undrawn conductors get a leg each, a pin with none gets none."""
+    x, y, z = PinRef("x", "e"), PinRef("y", "e"), PinRef("z", "e")
+    assert _legs_of(((x, y),), {(x, y)}) == ([], [])
+    kept, legs = _legs_of(((x, y), (x, z)), {(x, y)})
+    assert kept == []
+    assert [r.ends[0].pin for r in legs] == [x]
+    kept, legs = _legs_of(((x, z),), set())
+    assert kept == []
+    assert [r.ends[0].pin for r in legs] == [x]
+    assert _legs_of((), set()) == ([], [])  # a pin with no conductor gets no leg (R1308, R1541)
+    kept, legs = _legs_of(((x, y), (x, z)), {(x, y)}, fanned=False)  # el-0108: in no fan it has no leg, so its stub stays
+    assert [e.pin for r in kept for e in r.ends] == [x]
+    assert legs == []
+
+
+def _leg(pin: str) -> RefEnd:
+    return RefEnd(1, "C1", PinRef("K1", pin), 0, StandClass.LEG)
+
+
+def test_a_bundle_of_legs_on_one_page_is_one_stub_that_lists_every_pin_it_ends() -> None:
+    """BUNDLE (R1319): one end stands for the bundle and names the other pins' conductors."""
+    pins = [PinRef("K1", n) for n in "123"]
+    ends = [_leg(p.pin) for p in pins]
+    far = {p: {(2, "B1")} for p in pins}
+    (stub,) = leg_stubs(ends, far, {p: f"n{p.pin}" for p in pins})
+    assert (stub.ends[0].pin, stub.ends[0].also) == (pins[0], (pins[1], pins[2]))
+
+
+def test_legs_that_leave_to_one_far_device_outside_the_set_are_one_bundle() -> None:
+    """KI-615: a far end in no page of the set is page 0, so pins wired to one outside device bundle like those of one far page."""
+    from fransys_layout.core.cut_ledger import _far_pages
+
+    pins = [PinRef("K1", n) for n in "12"]
+    out = PinRef("far", "e")
+    far = _far_pages(tuple((p, out) for p in pins), set(), {"K1": 1})
+    assert far == {p: {(0, "far")} for p in pins}
+    (stub,) = leg_stubs([_leg(p.pin) for p in pins], far, {p: f"n{p.pin}" for p in pins})
+    assert stub.ends[0].also == (pins[1],)
+
+
+def test_legs_that_leave_to_different_far_devices_are_a_stub_each() -> None:
+    pins = [PinRef("K1", n) for n in "12"]
+    ends = [_leg(p.pin) for p in pins]
+    far = {pins[0]: {(2, "B1")}, pins[1]: {(2, "B2")}}
+    stubs = leg_stubs(ends, far, {p: f"n{p.pin}" for p in pins})
+    assert [r.ends[0].also for r in stubs] == [(), ()]
+
+
+def test_a_tagged_link_gets_its_tag_unless_every_pin_is_already_a_planned_end() -> None:
+    """layout-0508: a lost link with a pin no planned reference ends still needs its tag; one fully referenced does not."""
+    a, b = PinRef("a", "p"), PinRef("b", "p")
+    flow: Any = SimpleNamespace(cross_links=[CrossLink("n", tuple(Attach(None, 0, 0, p, net="n") for p in (a, b)), tagged=True)])
+    where = {"a": 1, "b": 1}
+    whole = [Ref("n", RefKind.TAG, (RefEnd(1, None, a), RefEnd(1, None, b)))]
+    part = [Ref("n", RefKind.STUB, (RefEnd(1, None, a),))]
+    assert across(flow, where, whole) == []
+    assert [(r.net, r.kind, [e.pin for e in r.ends]) for r in across(flow, where, part)] == [("n", RefKind.TAG, [a, b])]
+
+
+def test_a_boundary_pin_with_a_drawn_and_an_undrawn_conductor_is_stubbed() -> None:
+    """el-0108: x.e is wired to y on its page and leaves the unit to a pin outside the problem; the drawn wire does not carry the one that leaves."""
+    syms, nets, _, (x, y) = _pair(200)
+    facts = Facts(units=(Unit("U1", None, (x,)),), far_ends=((x, y), (y, x), (x, PinRef("out", "e"))), groups=((x, y),))
+    got = _account(syms, nets, facts)
+    assert got.ink == {(x, y), (y, x)}
+    assert x in got.stubbed
+
+
+def test_a_piece_whose_references_pair_among_themselves_is_joined_to_the_rest_by_one_pair_not_a_stub() -> None:
+    """BANK-PIECES-JOINED (R1711, layout-0508 A21): a 4-pin link over three pages, tagged a-b and c-d, with b and c on page 2 in
+    different rows and no wire between them: the pieces {a, b} and {c, d} are both touched by a tag and neither is ended, so the ledger
+    hands the loop one join pair with an end in each piece and plans no stub. Red when `_made` asks "a reference stands at this pin"."""
+    syms = [side(n, 100, 100) for n in "abcd"]
+    a, b, c, d = (PinRef(n, "e") for n in "abcd")
+    facts = Facts(units=(), far_ends=((a, b), (b, a), (c, d), (d, c)), groups=((a, b, c, d),))
+    planned = (Ref("m", RefKind.TAG, (RefEnd(1, None, a), RefEnd(2, None, b))), Ref("m", RefKind.TAG, (RefEnd(2, None, c), RefEnd(3, None, d))))
+    pages = (
+        PagePlan(1, "U1", (RowPlan(("a",), ("a",), 100),), ()),
+        PagePlan(2, "U1", (RowPlan(("b",), ("b",), 100), RowPlan(("c",), ("c",), 100)), ()),
+        PagePlan(3, "U1", (RowPlan(("d",), ("d",), 100),), ()),
     )
-    assert out == [Ref("mw", RefKind.STUB, (RefEnd(1, None, PinRef("w", "n")),))]
+    got = account(
+        PlacementProblem(AREA, tuple(syms), (net("m", "a.e", "b.e", "c.e", "d.e"),), facts), NO_FLOW, {"a": 1, "b": 2, "c": 2, "d": 3}, planned, pages
+    )
+    assert got.refs == ()
+    ((net_id, (near, far)),) = got.unjoined
+    assert net_id == "m"
+    assert {near, far} & {a, b}
+    assert {near, far} & {c, d}
+
+
+def test_a_pieces_marked_pin_is_the_same_in_every_order_of_its_pins() -> None:
+    """BANK-PIECES-JOINED (R1717): the pin a piece is marked at follows the far-end order the model gives, not the order of the group's pins."""
+    from itertools import permutations
+
+    from fransys_layout.core.cut_pieces import hole_pin
+
+    a, b, c, out = (PinRef(n, "e") for n in ("a", "b", "c", "out"))
+    far_ends = ((b, out), (a, out), (c, out))
+    net_of = {a: "m", b: "m", c: "m"}
+    assert {hole_pin(list(order), far_ends, net_of) for order in permutations((a, b, c))} == {b}
+
+
+def test_a_lane_passes_its_net_through_a_cell_and_between_cells_so_the_ledger_sees_the_pins_joined() -> None:
+    """layout-0508 A21: a terminal cell's two pins on one net and the lane wire to the cell below are drawn together: no join, no stub."""
+    from fransys_layout.core.cut_pieces import trunked
+    from fransys_layout.core.flow_values import Cell
+
+    terminal, relay = PinRef("x1", "n"), PinRef("k1", "in")
+    lane: Any = SimpleNamespace(cells=(Cell("x1", "R0", "n", "s"), Cell("k1", "R0", "in", "out")))
+    flow: Any = SimpleNamespace(fans=(), cross_links=(), columns=(SimpleNamespace(id="c", lanes=(lane,)),))
+    net_of = {terminal: "n", PinRef("x1", "s"): "n", relay: "n", PinRef("k1", "out"): "m"}
+    pairs = trunked(flow, {"c": 1}, net_of)
+    assert (terminal, PinRef("x1", "s")) in pairs
+    assert (PinRef("x1", "s"), relay) in pairs
+    assert not any(relay in pair and PinRef("k1", "out") in pair for pair in pairs)  # two nets through one cell join nothing
+    assert trunked(flow, {}, net_of) == set()  # a column on no page of this cut draws no lane

@@ -14,39 +14,26 @@ from options_fixtures import core_options
 from fransys_layout.core import (
     CoreError,
     annex_values,
+    flow_values,
     jsonform,
     outputs,
     series_values,
     sym_values,
     values,
 )
+from fransys_layout.core.flow_values import Block, Cell, End
 from fransys_layout.core.keys import natural_key
 from fransys_layout.core.outputs import CoreLayout
-from fransys_layout.core.values import Block, Cell, End, Options, PlacementProblem
+from fransys_layout.core.values import Options, PlacementProblem
 
 from . import values_fixtures
 from .values_fixtures import all_values, layout, problem
 
 CLASSES = [
     c
-    for m in (values, sym_values, series_values, outputs, annex_values)
+    for m in (values, flow_values, sym_values, series_values, outputs, annex_values)
     for c in vars(m).values()
     if isinstance(c, type) and dataclasses.is_dataclass(c) and c.__module__ == m.__name__
-]
-DROPPED_OPTIONS = [
-    "flow_axis",
-    "two_edge_split",
-    "tie_key",
-    "widen_passes",
-    "seed",
-    "move_budget",
-    "stand_height",
-    "w_stub",
-    "w_copy",
-    "w_star",
-    "w_x",
-    "w_b",
-    "w_d",
 ]
 
 
@@ -80,16 +67,14 @@ def _fields_with_defaults():
 
 def _set_once(*roots: object) -> set[tuple[str, str]]:
     """The (class, field) pairs with a default that some instance in roots sets to another value."""
-    out = set()
+    out: set[tuple[str, str]] = set()
     for root in roots:
         for obj in _walk(root):
             for f in dataclasses.fields(obj):
                 default = (
                     f.default
                     if f.default is not dataclasses.MISSING
-                    else (
-                        f.default_factory() if f.default_factory is not dataclasses.MISSING else f
-                    )
+                    else (f.default_factory() if f.default_factory is not dataclasses.MISSING else f)
                 )
                 if default is not f and getattr(obj, f.name) != default:
                     out.add((type(obj).__name__, f.name))
@@ -119,13 +104,6 @@ def test_the_optional_field_check_can_fail():
     assert ("Pin", "end_bias") in _fields_with_defaults() - _set_once(bare)
 
 
-@pytest.mark.parametrize("make", [problem, layout], ids=["problem", "layout"])
-def test_to_plain_then_from_plain_is_identity(make):
-    value = make()
-    plain = plain_of(value)
-    assert jsonform.from_plain(type(value), plain) == value
-
-
 @pytest.mark.parametrize("value", all_values(), ids=lambda v: type(v).__name__)
 def test_every_value_has_a_json_form_that_reads_back(value):
     plain = plain_of(value)
@@ -146,18 +124,18 @@ def test_nested_values_carry_no_format():
 @pytest.mark.parametrize("bad", [2, "1", None])
 def test_from_plain_refuses_another_format_and_names_it(make, bad):
     plain = plain_of(make()) | {"format": bad}
-    with pytest.raises(ValueError, match=re.escape(f"format {bad!r}")):
+    with pytest.raises(CoreError, match=re.escape(f"format {bad!r}")):
         jsonform.from_plain(type(make()), plain)
 
 
 def test_from_plain_refuses_a_missing_format():
     plain = plain_of(problem())
     del plain["format"]
-    with pytest.raises(ValueError, match="format None"):
+    with pytest.raises(CoreError, match="format None"):
         jsonform.from_plain(PlacementProblem, plain)
 
 
-def _put(data: Any, path: list, value: object) -> None:
+def _put(data: Any, path: list[Any], value: object) -> None:
     for step in path[:-1]:
         data = data[step]
     data[path[-1]] = value
@@ -178,7 +156,7 @@ VOCAB = [
 def test_a_vocabulary_rejects_an_unknown_string_naming_the_field(make, path, field):
     plain = plain_of(make())
     _put(plain, path, "NOPE")
-    with pytest.raises(ValueError, match=rf"{field}: 'NOPE' is not one of"):
+    with pytest.raises(CoreError, match=rf"{field}: 'NOPE' is not one of"):
         jsonform.from_plain(type(make()), plain)
 
 
@@ -186,12 +164,12 @@ def test_a_views_key_outside_the_orientations_is_refused_naming_the_field():
     plain = plain_of(problem())
     views = plain["symbols"][0]["views"]
     views["NOPE"] = views.pop("R0")
-    with pytest.raises(ValueError, match=r"Sym.views: 'NOPE' is not one of"):
+    with pytest.raises(CoreError, match=r"Sym.views: 'NOPE' is not one of"):
         jsonform.from_plain(PlacementProblem, plain)
 
 
 def test_the_stage_values_reject_an_unknown_string_naming_the_field():
-    block = typing.cast("values.BlockList", all_values()[3]).blocks[0]
+    block = typing.cast("flow_values.BlockList", all_values()[3]).blocks[0]
     cases = [
         (Cell, Cell("K1", "R0", None, None), "orient", "Cell.orient"),
         (End, End("open"), "kind", "End.kind"),
@@ -200,7 +178,7 @@ def test_the_stage_values_reject_an_unknown_string_naming_the_field():
     for cls, value, key, field in cases:
         plain = plain_of(value)
         plain[key] = "NOPE"
-        with pytest.raises(ValueError, match=rf"{field}: 'NOPE' is not one of"):
+        with pytest.raises(CoreError, match=rf"{field}: 'NOPE' is not one of"):
             jsonform.from_plain(cls, plain)
 
 
@@ -215,21 +193,9 @@ def test_natural_key_orders_digits_as_numbers():
 
 
 def test_options_defaults_follow_the_design_with_e4():
-    o = core_options(
-        flip_turn="R180",
-        tag_stagger=True,
-        label_gap=8,
-        parallel_pitch=48,
-        driver_first=True,
-        arrow_sides=("E", "W"),
-    )
+    o = core_options()
     assert o.box_pins == "spread"
     assert o.justify is True
-
-
-@pytest.mark.parametrize("name", DROPPED_OPTIONS)
-def test_the_unread_options_are_gone(name):
-    assert name not in {f.name for f in dataclasses.fields(Options)}
 
 
 def test_c3_contract_shape():
@@ -253,25 +219,16 @@ def test_c3_contract_shape():
 
 
 def test_a_value_with_no_json_form_is_refused():
-    with pytest.raises(TypeError, match="no JSON form for set"):
+    with pytest.raises(CoreError, match="no JSON form for set"):
         jsonform.to_plain({1})
 
 
 def test_a_wrong_scalar_type_is_refused_and_an_int_reads_as_a_float():
-    plain = plain_of(
-        core_options(
-            flip_turn="R180",
-            tag_stagger=True,
-            label_gap=8,
-            parallel_pitch=48,
-            driver_first=True,
-            arrow_sides=("E", "W"),
-        )
-    )
+    plain = plain_of(core_options())
     plain["min_fill"] = 1
     assert jsonform.from_plain(Options, plain).min_fill == 1.0
     plain["wire_min"] = "8"
-    with pytest.raises(TypeError, match="expected"):
+    with pytest.raises(CoreError, match="expected"):
         jsonform.from_plain(Options, plain)
 
 
@@ -284,7 +241,7 @@ def test_the_scene_values_reject_an_unknown_string_naming_the_field():
     ]:
         plain = plain_of(scene_value())
         _put(plain, path, "NOPE")
-        with pytest.raises(ValueError, match=rf"{field}: 'NOPE' is not one of"):
+        with pytest.raises(CoreError, match=rf"{field}: 'NOPE' is not one of"):
             jsonform.from_plain(outputs.Scene, plain)
 
 
@@ -293,48 +250,32 @@ def test_the_marker_names_the_pin_it_stands_at():
 
 
 def test_the_options_carry_geometry_for_the_placement_strings_and_no_colours():
-    o = core_options(
-        flip_turn="R180",
-        tag_stagger=True,
-        label_gap=8,
-        parallel_pitch=48,
-        driver_first=True,
-        arrow_sides=("E", "W"),
-    )
+    o = core_options()
     assert o.open_stub == 0
     assert o.box_columns is True
     assert o.wrap_wide_fans is True
     assert o.cells == (8, 6)
-    assert o.wire_label_sides == (("horiz", "N", "S"), ("vert", "E", "W"))
     assert o.marker is None  # layout-0305: symdef data, passed in, never typed in the core
     assert "colours" not in {f.name for f in dataclasses.fields(Options)}
 
 
 def test_the_new_size_fields_default_to_none_or_empty():
-    assert values.Net("N", ()).label is None
     names = {c.__name__: {f.name for f in dataclasses.fields(c)} for c in CLASSES}
     assert "page_titles" not in names["Hints"]
     assert "groups" in names["PagePlan"]
     assert "title" not in names["PagePlan"]
 
 
-def test_a_label_has_no_text_and_a_table_has_cells_not_rows():
+def test_a_label_has_no_text():
     names = {c.__name__: {f.name for f in dataclasses.fields(c)} for c in CLASSES}
     assert "text" not in names["AnnexBox"]
     assert "Label" not in names
-    assert "cells" in names["Table"]
-    assert "rows" not in names["Table"]
 
 
 def test_a_marker_has_no_text_and_no_colour():
     names = {c.__name__: {f.name for f in dataclasses.fields(c)} for c in CLASSES}
     assert not {"text", "colour"} & names["Marker"]
     assert "cell" in names["Marker"]
-
-
-def test_annotations_hold_wire_labels():
-    assert outputs.Annotations().wire_labels == ()
-    assert layout().annotations.wire_labels[0].net == "N1"
 
 
 def test_no_core_value_carries_a_string_to_print():
@@ -366,12 +307,13 @@ def test_options_without_conventions_raises():
         Options()  # ty: ignore[missing-argument]  # the missing value must fail loudly
 
 
-@pytest.mark.parametrize("name", ["tag_stagger", "driver_first", "arrow_sides"])
+@pytest.mark.parametrize("name", ["tag_stagger", "driver_first", "arrow_sides", "marker_facing"])
 def test_options_without_a_convention_raises(name):
     given: dict[str, Any] = {
         "tag_stagger": True,
         "driver_first": True,
         "arrow_sides": ("E", "W"),
+        "marker_facing": {"E": "R0"},
     }
     del given[name]
     with pytest.raises(TypeError, match=name):

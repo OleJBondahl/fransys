@@ -21,10 +21,10 @@ from fransys_layout.core import (
     Placement,
     PlacementProblem,
 )
+from fransys_layout.core.flow_values import Attach, Column, CrossLink, CutResult, End, Fan
 from fransys_layout.core.outputs import PagePlacement, PageRoutes, PinXY, Placed, Routes, Wire
 from fransys_layout.core.route import route_page
 from fransys_layout.core.route_env import Drawn, RouteEnv, route_envs
-from fransys_layout.core.values import Attach, Column, CrossLink, CutResult, End, Fan
 
 from .conftest import MARKER
 from .cut_fixtures import AREA, elem
@@ -47,20 +47,12 @@ def jog_stair(*, mirror: bool = False) -> PlacementProblem:
 def reversing_pair(perm: Sequence[int] = (2, 1, 0)) -> PlacementProblem:
     """Q1 feeds K1 pole for pole and K2 with net k on pole perm[k]; K1 and K2 feed M1."""
     syms = [poles(name) for name in ("Q1", "K1", "K2", "M1")]
-    nets = [
-        net(f"L{k + 1}", f"Q1.s{k}", f"K1.n{k}", f"K2.n{perm[k]}", bundle=Bundle("bL", k))
-        for k in range(3)
-    ]
-    nets += [
-        net(f"T{k + 1}", f"K1.s{k}", f"K2.s{k}", f"M1.n{k}", bundle=Bundle("bT", k))
-        for k in range(3)
-    ]
+    nets = [net(f"L{k + 1}", f"Q1.s{k}", f"K1.n{k}", f"K2.n{perm[k]}", bundle=Bundle("bL", k)) for k in range(3)]
+    nets += [net(f"T{k + 1}", f"K1.s{k}", f"K2.s{k}", f"M1.n{k}", bundle=Bundle("bT", k)) for k in range(3)]
     return PlacementProblem(AREA, tuple(syms), tuple(nets), facts=Facts())
 
 
-def with_crossed(
-    cut: CutResult, fan_id: str, crossed: tuple[tuple[str, tuple[int, ...]], ...]
-) -> CutResult:
+def with_crossed(cut: CutResult, fan_id: str, crossed: tuple[tuple[str, tuple[int, ...]], ...]) -> CutResult:
     """The cut with Fan.crossed set on one fan; stage 1 never fills it (layout-0275)."""
     fans = tuple(replace(f, crossed=crossed) if f.id == fan_id else f for f in cut.flow.fans)
     return replace(cut, flow=replace(cut.flow, fans=fans))
@@ -75,11 +67,7 @@ def two_links_one_gap() -> PlacementProblem:
     """Two t01 rings on one page (ids prefixed a and b): two cross-links that may share a gap."""
     rings = (("a", ring_problem()), ("b", ring_problem()))
     syms = tuple(replace(s, id=f"{k}{s.id}") for k, p in rings for s in p.symbols)
-    nets = tuple(
-        replace(n, id=f"{k}{n.id}", pins=tuple(replace(r, sym=f"{k}{r.sym}") for r in n.pins))
-        for k, p in rings
-        for n in p.nets
-    )
+    nets = tuple(replace(n, id=f"{k}{n.id}", pins=tuple(replace(r, sym=f"{k}{r.sym}") for r in n.pins)) for k, p in rings for n in p.nets)
     return PlacementProblem(AREA, syms, nets, facts=Facts())
 
 
@@ -97,9 +85,7 @@ def net_points(routes: Routes, net_id: str) -> tuple[tuple[XY, ...], ...]:
     return tuple(w.points for w in _wires(routes) if w.net == net_id)
 
 
-def pin_reached(
-    routes: Routes, placement: Placement, problem: PlacementProblem
-) -> set[tuple[str, str]]:
+def pin_reached(routes: Routes, placement: Placement, problem: PlacementProblem) -> set[tuple[str, str]]:
     """Each (sym, pin) whose placed point is an end point of some wire of its own net.
 
     A bundle's wires carry the fan id `f:<bundle>`; a net of the bundle owns them too.
@@ -143,24 +129,13 @@ def overlaps(routes: Routes) -> list[tuple[tuple[XY, XY], tuple[XY, XY]]]:
 
 def inherent(xs: Sequence[int], perm: Sequence[int]) -> int:
     """Pairs of lanes whose order in x differs between where they leave and where they land."""
-    return sum(
-        (xs[a] - xs[b]) * (xs[perm[a]] - xs[perm[b]]) < 0
-        for a, b in combinations(range(len(perm)), 2)
-    )
+    return sum((xs[a] - xs[b]) * (xs[perm[a]] - xs[perm[b]]) < 0 for a, b in combinations(range(len(perm)), 2))
 
 
-def envs_of(
-    prob: PlacementProblem, options: Options | None = None, cut: CutResult | None = None
-) -> tuple[RouteEnv, ...]:
+def envs_of(prob: PlacementProblem, options: Options | None = None, cut: CutResult | None = None) -> tuple[RouteEnv, ...]:
     """The stage 6 environments of a problem; a test may pass an edited cut (Fan.crossed)."""
     opts = options or core_options(
         marker=MARKER,
-        flip_turn="R180",
-        tag_stagger=True,
-        label_gap=8,
-        parallel_pitch=48,
-        driver_first=True,
-        arrow_sides=("E", "W"),
     )
     cut = cut or cut_of(prob, opts)
     return route_envs(placed_from(cut, prob, opts), cut, prob, opts)
@@ -189,10 +164,7 @@ def link_env(
         dx, dy = BODY[side]
         box = Box(x + dx, y + dy, 8, 8)
         placed[sym] = Placed(sym, 1, x, y, "R0", box, box, (PinXY("p", x, y),))
-    cross = tuple(
-        CrossLink(n, tuple(Attach(None, 0, 0, PinRef(s, "p"), net="n") for s in ends))
-        for n, ends in links.items()
-    )
+    cross = tuple(CrossLink(n, tuple(Attach(None, 0, 0, PinRef(s, "p"), net="n") for s in ends)) for n, ends in links.items())
     return RouteEnv(
         1,
         placed,
@@ -208,12 +180,6 @@ def link_env(
         options
         or core_options(
             marker=MARKER,
-            flip_turn="R180",
-            tag_stagger=True,
-            label_gap=8,
-            parallel_pitch=48,
-            driver_first=True,
-            arrow_sides=("E", "W"),
         ),
     )
 
@@ -246,9 +212,7 @@ def three_end_env(options: Options | None = None) -> RouteEnv:
 def env_view(env: RouteEnv, page: PageRoutes, net_id: str) -> tuple[Routes, Placement, Net]:
     """A hand-built env's routes and placement as the oracle reads them, and net `net_id` on it."""
     pins = tuple(PinRef(sym, "p") for sym in env.placed)
-    placed = PagePlacement(
-        env.page, tuple(env.placed.values()), env.gaps, env.trunks, (), env.bands
-    )
+    placed = PagePlacement(env.page, tuple(env.placed.values()), env.gaps, env.trunks, (), env.bands)
     return Routes((page,)), Placement((placed,)), Net(net_id, pins)
 
 
@@ -261,9 +225,7 @@ def oracle_on(env: RouteEnv, net_id: str) -> bool:
     return connected_or_referenced(routes, placement, (), net, env.page)
 
 
-def open_end_env(
-    orient: str = "R0", open_stub: int = 8, *, has_pin: bool = True
-) -> tuple[RouteEnv, Column]:
+def open_end_env(orient: str = "R0", open_stub: int = 8, *, has_pin: bool = True) -> tuple[RouteEnv, Column]:
     """Coil k2 of a card page with its foot an open end on `pin`; k2 is turned to `orient`."""
     from .place_fixtures import card_with_coils
 
@@ -272,20 +234,12 @@ def open_end_env(
         core_options(
             marker=MARKER,
             open_stub=open_stub,
-            flip_turn="R180",
-            tag_stagger=True,
-            label_gap=8,
-            parallel_pitch=48,
-            driver_first=True,
-            arrow_sides=("E", "W"),
         ),
     )[0]
     col = env.columns[1]
     placed = replace(env.placed["k2"], orient=orient)
     env = replace(env, placed={**env.placed, "k2": placed})
-    return env, replace(
-        col, feet=(End("open", "dangling", PinRef("k2", "s")) if has_pin else End("open"),)
-    )
+    return env, replace(col, feet=(End("open", "dangling", PinRef("k2", "s")) if has_pin else End("open"),))
 
 
 def stub_of(drawn: Drawn) -> tuple[Wire, ...]:
@@ -300,8 +254,5 @@ def by_bundle(routes: Routes, problem: PlacementProblem) -> Routes:
     pole's drop lands on another member's line: the plants check connection per bundle.
     """
     fan_of = {n.id: f"f:{n.bundle.id}" for n in problem.nets if n.bundle}
-    pages = tuple(
-        replace(pg, wires=tuple(replace(w, net=fan_of.get(w.net, w.net)) for w in pg.wires))
-        for pg in routes.pages
-    )
+    pages = tuple(replace(pg, wires=tuple(replace(w, net=fan_of.get(w.net, w.net)) for w in pg.wires)) for pg in routes.pages)
     return replace(routes, pages=pages)

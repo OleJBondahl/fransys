@@ -3,8 +3,7 @@
 import pytest
 from fransys_author import AuthorError
 from fransys_author.surface import design
-
-from ..equivalence.series_parts import series_library  # noqa: TID252 -- importlib mode puts tests/ on no path
+from series_parts import series_library
 
 
 def test_a_function_without_poles_is_named() -> None:

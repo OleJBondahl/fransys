@@ -125,11 +125,7 @@ def numbers(node, path=""):
 
 
 def check_drawing_grid(doc):
-    return [
-        f"{path} = {value} is not a multiple of 0.125"
-        for path, value in numbers(doc)
-        if not (value * 8).is_integer()
-    ]
+    return [f"{path} = {value} is not a multiple of 0.125" for path, value in numbers(doc) if not (value * 8).is_integer()]
 
 
 def duplicate_numbers(docs):
@@ -142,10 +138,7 @@ def guide_blocks():
     and the guide's ids read from them.
     """
     page = GUIDE.read_bytes().decode("utf-8")
-    raws = [
-        html.unescape(raw)
-        for raw in re.findall(r'<pre data-lang="toml"><code>(.*?)</code></pre>', page, re.DOTALL)
-    ]
+    raws = [html.unescape(raw) for raw in re.findall(r'<pre data-lang="toml"><code>(.*?)</code></pre>', page, re.DOTALL)]
     slugs = {}
     for raw in raws:
         doc = tomllib.loads(raw)
@@ -155,8 +148,9 @@ def guide_blocks():
     blocks = {}
     for raw in raws:
         block = re.sub(r'\b(number|use) = "([^"]+)"', lambda m: f'{m[1]} = "{slugs[m[2]]}"', raw)
+        block = block.replace('standard = "Example set"', 'standard = "IEC 60617"')
         blocks[re.findall(r'number = "([^"]+)"', block)[0]] = block
-    return blocks, set(slugs)
+    return blocks, {guide_id for guide_id, slug in slugs.items() if guide_id != slug}
 
 
 def check_verbatim(number, text, block):
@@ -210,37 +204,19 @@ def added(base, variant, key):
 
 def check_variant(base, variant):
     """The variant is its base plus a pe port, its lead, a protective-earth node and marking.pe."""
-    lost = [
-        (key, e)
-        for key in ("ports", "paths", "elements", "slots", "nodes")
-        for e in added(variant, base, key)
-    ]
-    others = sorted(
-        key
-        for key in set(base) | set(variant)
-        if key not in VARIANT_OWN_KEYS and base.get(key) != variant.get(key)
-    )
+    lost = [(key, e) for key in ("ports", "paths", "elements", "slots", "nodes") for e in added(variant, base, key)]
+    others = sorted(key for key in set(base) | set(variant) if key not in VARIANT_OWN_KEYS and base.get(key) != variant.get(key))
     ports, elements = added(base, variant, "ports"), added(base, variant, "elements")
     lead = elements[0].get("polyline", []) if len(elements) == 1 else []
     expected = {
         f"top-level keys differ from the base: {others}": not others,
-        "number is not the base's number plus -pe": (
-            variant["reference"]["number"] == base["reference"]["number"] + "-pe"
-        ),
+        "number is not the base's number plus -pe": (variant["reference"]["number"] == base["reference"]["number"] + "-pe"),
         f"base entries are missing or changed: {lost}": not lost,
-        f"extra ports {ports} are not one port `pe` facing N": (
-            [p["id"] for p in ports] == ["pe"] and ports[0]["dir"] == "N"
-        ),
-        f"extra elements {elements} are not one polyline lead at pe": (
-            bool(ports) and bool(lead) and ports[0]["at"] in (lead[0], lead[-1])
-        ),
+        f"extra ports {ports} are not one port `pe` facing N": ([p["id"] for p in ports] == ["pe"] and ports[0]["dir"] == "N"),
+        f"extra elements {elements} are not one polyline lead at pe": (bool(ports) and bool(lead) and ports[0]["at"] in (lead[0], lead[-1])),
         "the variant adds a path: pe has none": not added(base, variant, "paths"),
-        "the only extra node is not pe with protective_earth": (
-            added(base, variant, "nodes") == [PE_NODE]
-        ),
-        "the only extra slot is not marking.pe": (
-            [name for name, _ in added(base, variant, "slots")] == ["marking.pe"]
-        ),
+        "the only extra node is not pe with protective_earth": (added(base, variant, "nodes") == [PE_NODE]),
+        "the only extra slot is not marking.pe": ([name for name, _ in added(base, variant, "slots")] == ["marking.pe"]),
     }
     return [problem for problem, ok in expected.items() if not ok]
 
@@ -287,6 +263,7 @@ def test_library_toml_declares_its_keys_words_and_rules():
         "title": "Electrical graphical symbols",
         "number_pattern": r"^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
         "package": "electrical_symbols",
+        "port_format": "{k}.{port}",
         "vocabulary": {
             "path_kinds": [
                 "conductor",
@@ -372,8 +349,6 @@ def guide_is_the_toolkits_own_copy(resolved: Path) -> bool:
 
     A resource resolved from the pinned distribution lands under the environment's installed
     packages (`.venv/...`), never under `packages/`; a stray sibling checkout or a local path
-    override left in `[tool.uv.sources]` would resolve under `packages/` instead, silently
-    satisfying this gate against our own tree again instead of the toolkit's real distribution.
     """
     workspace_packages = ROOT.parent
     return workspace_packages not in resolved.parents and resolved != workspace_packages
@@ -471,17 +446,13 @@ def test_number_pattern_accepts_slugs_and_rejects_malformed_ones():
 
 
 def test_variant_pairs_cover_every_pe_file():
-    assert sorted(v for _, v in VARIANT_PAIRS) == [
-        p.stem for p in SYMBOL_FILES if p.stem.endswith("-pe")
-    ]
+    assert sorted(v for _, v in VARIANT_PAIRS) == [p.stem for p in SYMBOL_FILES if p.stem.endswith("-pe")]
 
 
 @pytest.mark.parametrize(("base", "variant"), VARIANT_PAIRS, ids=[v for _, v in VARIANT_PAIRS])
 def test_variant_is_its_base_plus_the_pe_lead(base, variant):
     files = ROOT / "symbols"
-    assert (
-        check_variant(load_toml(files / f"{base}.toml"), load_toml(files / f"{variant}.toml")) == []
-    )
+    assert check_variant(load_toml(files / f"{base}.toml"), load_toml(files / f"{variant}.toml")) == []
 
 
 def test_variant_check_flags_drift_and_extras():

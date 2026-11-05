@@ -1,18 +1,21 @@
-"""An authored `Chain` as symbol ids, and the box-drawn end that anchors it (layout-0181, 0396)."""
+"""The box-drawn end that a series is anchored at, from the drawn wires (layout-0181, 0396)."""
 
 from typing import TYPE_CHECKING
 
 from electrical_symbols import is_generic_box
-from fransys_layout import HintError
 from fransys_layout.core import Series
-from fransys_model.layout import Chain, layout_of
-
-from .placement_kit import refuse
+from fransys_model.derive import physical_nets
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable, Sequence
+
+    from fransys_layout.core import PinRef, Sym
+
     from .placement_env import Env
 
-__all__ = ["anchored", "chain_of"]
+_NORTH, _SOUTH = "N", "S"  # the sides a box pin faces, its circuit above or below the box (BOX-SIDES)
+
+__all__ = ["anchored"]
 
 
 def _boxes(env: Env) -> set[str]:
@@ -20,39 +23,15 @@ def _boxes(env: Env) -> set[str]:
     return {env.ids[k] for k, p in env.kit.items() if is_generic_box(p.key) and k in env.ids}
 
 
-def chain_of(env: Env, record: Chain) -> tuple[str, ...]:
-    """The chain's symbol ids in `index` order; `ProblemError` for a function with no symbol.
+def anchored(env: Env, syms: Sequence[Sym], far_ends: Iterable[tuple[PinRef, PinRef]]) -> tuple[Series, ...]:
+    """A "tail" `Series` per symbol wired to a box's N pins (layout-0181, R927).
 
-    A box-drawn function stands only at the head or tail (layout-0181): else `HintError` (0184).
+    Candidates are by direct wire, vetoed by net: a symbol whose nets reach a box's S pin has a box at both ends
+    and a through pole spreads no candidacy (R932, R941).
     """
-    found = []
-    for entry in sorted(record.entries, key=lambda e: e.index):
-        if entry.function not in env.owner:
-            refuse(f"chain names function {entry.function}", "add a pick for it to the SymbolKit")
-        found.append(env.owner[entry.function])
-    if _boxes(env).intersection(found[1:-1]):
-        text = (
-            "a chain names a box-drawn function (a PLC channel or an item box) only at its head "
-            "or its tail; put the box first or last in d.layout.chain"
-        )
-        raise HintError(text, subjects=(record.id,))
-    return tuple(found)
-
-
-def _anchor(ids: tuple[str, ...], boxes: set[str]) -> Series | None:
-    """The lone step before a box-drawn tail, anchored at the tail; else none.
-
-    A head box anchors nothing (R502): its channel pin has its circuit above the box
-    (BOX-SIDES), so the free build is the flow. A longer chain closed by a box keeps its flow.
-    """
-    *lone, last = ids
-    if len(lone) != 1 or last not in boxes or lone[0] in boxes:
-        return None
-    return Series((lone[0],), "tail")
-
-
-def anchored(env: Env) -> tuple[Series, ...]:
-    """One `Series` per authored chain that has a box-drawn end; the core reads them by symbol."""
     boxes = _boxes(env)
-    found = (_anchor(chain_of(env, c), boxes) for c in layout_of(env.model, Chain).values())
-    return tuple(s for s in found if s is not None)
+    side = {(s.id, p.id): p.side for s in syms if s.id in boxes for p in s.pins}
+    nets = [[env.pins[p] for p in n.ports if p in env.pins and p not in env.undrawn] for n in physical_nets(env.model)]
+    south = {p.sym for pins in nets if any(side.get((p.sym, p.pin)) == _SOUTH for p in pins) for p in pins}
+    derived = (a.sym for a, b in (*far_ends, *((b, a) for a, b in far_ends)) if side.get((b.sym, b.pin)) == _NORTH and a.sym not in boxes | south)
+    return tuple(Series((sym,), "tail") for sym in dict.fromkeys(derived))

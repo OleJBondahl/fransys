@@ -51,7 +51,7 @@ fmt:
 test *ARGS:
     uv run python internal/scripts/aws_run.py run -- pytest -n auto --dist worksteal "$@"
 
-# rewrite the tracked model and layout goldens on a work branch, then their diff stat; refused on main
+# rewrite the tracked model, layout, render and listing goldens on a work branch, then their diff stat; refused on main
 regen-goldens *PKG:
     uv run python scripts/regen_goldens.py {{PKG}}
 

@@ -76,26 +76,20 @@ def _mention_page(shown: str, pages: list[tuple[str, list[str]]]) -> tuple[str, 
     return None
 
 
-def _guide_page(shown: str) -> tuple[str, str] | None:
-    pages = _guide_pages()
-    return _heading_page(shown, pages) or _mention_page(shown, pages)
-
-
 def resolve(key: str) -> Resolved | None:
-    """The public name `key` (`write`, `fr.write`, `d.device`, `d.detail.wire`), or None."""
+    """The public name `key` (`write`, `fr.write`, `d.device`, `d.detail.busbar`), or None."""
     shown, obj = _target(key)
     if obj is None:
         return None
-    page = _guide_page(shown)
+    pages = _guide_pages()
+    page = _heading_page(shown, pages) or _mention_page(shown, pages)
     return Resolved(shown, _signature(obj), inspect.getdoc(obj) or "", *(page or (None, None)))
 
 
 def names_text(found: Resolved) -> str:
     """The printed form of one found name: signature, docstring and where the guide covers it."""
     lines = [
-        f"{found.key}{found.signature}"
-        if found.signature.startswith("(")
-        else f"{found.key}: {found.signature}",
+        f"{found.key}{found.signature}" if found.signature.startswith("(") else f"{found.key}: {found.signature}",
         "",
     ]
     lines += [found.doc, ""] if found.doc else []

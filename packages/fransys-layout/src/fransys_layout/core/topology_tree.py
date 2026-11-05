@@ -12,7 +12,8 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from .errors import CoreError
-from .series_tree import has_parallel, leaves_of, tree_holds, tree_lanes
+from .flow_values import End
+from .series_tree import has_parallel, leaves_of, parallel_leaves, tree_holds, tree_lanes
 from .topology_chains import (
     MemberDraft,
     Node,
@@ -21,19 +22,20 @@ from .topology_chains import (
     member_offset,
 )
 from .topology_orient import orient_chain
-from .values import End, PinRef
+from .values import PinRef
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
     from collections.abc import Set as AbstractSet
 
+    from .flow_values import Cell
     from .series_tree import TreeLane
     from .series_values import Series
     from .sym_values import Sym
     from .topology_chains import Ends, Facts
     from .topology_elements import Elem
     from .topology_fans import LaneDraft
-    from .values import Cell, Options
+    from .values import Options
 
 _FORMS = ("pole", "single")  # a single is a pole with one pin wired: it may end lane 0
 
@@ -62,15 +64,13 @@ def tree_folds(
     """The ends without the joined lanes' poles, and one fold per joined lane, tree by tree.
 
     A tree stands so when it holds a Parallel, every leaf is a drawn single pole on no net with a
-    through end, and every pole of a joined lane is wired at both pins.
+    through end, and every leaf under a Parallel is wired at both pins (a one-pin leaf leaves its partner's far net unrouted).
     """
     poles, wired = _poles(ends, elems)
     folds: list[TreeFold] = []
     for tree in series:
-        if has_parallel(tree) and all(x in poles for x in leaves_of(tree)):
-            found = _folds(tree, poles, drawn, len(folds))
-            if all(wired[m] for f in found for m in f.members):
-                folds.extend(found)
+        if has_parallel(tree) and all(x in poles for x in leaves_of(tree)) and all(wired[poles[x]] for x in parallel_leaves(tree)):
+            folds.extend(_folds(tree, poles, drawn, len(folds)))
     members = {m for f in folds for m in f.members}
     out: Ends = {}
     for net, es in ends.items():
@@ -89,17 +89,11 @@ def _poles(ends: Ends, elems: Mapping[str, Elem]) -> tuple[dict[str, str], dict[
         for e in es:
             if e.elem and e.site in ("top", "bottom"):
                 roles.setdefault(e.elem, set()).add("through" if through else e.site)
-    poles = {
-        e.sym: e.key
-        for e in elems.values()
-        if e.form in _FORMS and per_sym[e.sym] == 1 and "through" not in roles.get(e.key, set())
-    }
+    poles = {e.sym: e.key for e in elems.values() if e.form in _FORMS and per_sym[e.sym] == 1 and "through" not in roles.get(e.key, set())}
     return poles, {k: roles.get(k) == {"top", "bottom"} for k in poles.values()}
 
 
-def _folds(
-    tree: Series, poles: Mapping[str, str], sized: tuple[Mapping[str, Sym], int], base: int
-) -> list[TreeFold]:
+def _folds(tree: Series, poles: Mapping[str, str], sized: tuple[Mapping[str, Sym], int], base: int) -> list[TreeFold]:
     """One fold per joined lane of `tree`; `base` is the number of folds before it."""
     drawn, wire_min = sized
     heights = {leaf: drawn[leaf].footprint.h for leaf in leaves_of(tree)}
@@ -124,9 +118,7 @@ def _sibling(lanes: Sequence[TreeLane], i: int) -> int | None:
     return found[-1] if found else None
 
 
-def source_first(
-    paths: Sequence[tuple[Node, ...]], folds: Sequence[TreeFold], facts: Facts
-) -> tuple[tuple[Node, ...], ...]:
+def source_first(paths: Sequence[tuple[Node, ...]], folds: Sequence[TreeFold], facts: Facts) -> tuple[tuple[Node, ...], ...]:
     """The chains with each tree's lane 0 turned to stand source first, the rest as given."""
     ends = {f.source for f in folds}
     return tuple(orient_chain(p, facts, turn=True) if _upside_down(p, ends) else p for p in paths)
@@ -137,9 +129,7 @@ def _upside_down(path: Sequence[Node], ends: AbstractSet[tuple[str, str]]) -> bo
     return any(a in at and b in at and at[a] > at[b] for a, b in ends)
 
 
-def tree_member_lanes(
-    folds: Sequence[TreeFold], lanes: Sequence[LaneDraft], facts: Facts, options: Options
-) -> list[MemberDraft]:
+def tree_member_lanes(folds: Sequence[TreeFold], lanes: Sequence[LaneDraft], facts: Facts, options: Options) -> list[MemberDraft]:
     """One member lane per fold, right of its column, joined to its span or its left sibling."""
     out: list[MemberDraft] = []
     for fold in folds:
@@ -149,18 +139,14 @@ def tree_member_lanes(
         nets = (facts.net_of.get(top), facts.net_of.get(bottom))
         cells = _cells(fold.members, nets, facts)
         column = [lane for lane in (*lanes, *out) if lane.column == home.column]
-        offset = member_offset(
-            column, cells, facts.syms, options, branch_floor(column, options.parallel_pitch)
-        )
+        offset = member_offset(column, cells, facts.syms, options, branch_floor(column, options.parallel_pitch))
         ends = (End("join", nets[0], top), End("join", nets[1], bottom))
         index = 1 + max(lane.index for lane in column)
         out.append(MemberDraft(home.column, index, list(cells), offset, ends))
     return out
 
 
-def _joined(
-    fold: TreeFold, lanes: Sequence[LaneDraft], made: Sequence[MemberDraft], facts: Facts
-) -> tuple[LaneDraft, Cell, Cell]:
+def _joined(fold: TreeFold, lanes: Sequence[LaneDraft], made: Sequence[MemberDraft], facts: Facts) -> tuple[LaneDraft, Cell, Cell]:
     """The lane a fold joins and its top and bottom cell: the left sibling's, else the span's."""
     if fold.after is not None:
         left = made[fold.after]
@@ -174,9 +160,7 @@ def _joined(
     return home, home.cells[min(at)], home.cells[max(at)]
 
 
-def _cells(
-    members: Sequence[str], nets: tuple[str | None, str | None], facts: Facts
-) -> tuple[Cell, ...]:
+def _cells(members: Sequence[str], nets: tuple[str | None, str | None], facts: Facts) -> tuple[Cell, ...]:
     """The member poles head to foot, from the one on the joined top net, each pin to the next."""
     es = [facts.elems[k] for k in members]
     first = es[0]

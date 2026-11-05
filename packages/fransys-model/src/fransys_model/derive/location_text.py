@@ -17,9 +17,7 @@ lazy from fransys_model.vocab.aspects import AspectNode
 lazy from fransys_model.vocab.core import Item, Port, Unit
 
 
-def port_designation_in(
-    model: Model, port: Id[Port], context: Id[AspectNode] | None, *, unit: Id[Unit] | None = None
-) -> str:
+def port_designation_in(model: Model, port: Id[Port], context: Id[AspectNode] | None, *, unit: Id[Unit] | None = None) -> str:
     """`port_designation`, with `+<label>` per location label of `port`'s end below `context`.
 
     An end outside `context`'s location prints its path below the common ancestor.
@@ -28,22 +26,16 @@ def port_designation_in(
     return "".join(far_end(model, port, context, unit=unit))
 
 
-def product_designation_in(
-    model: Model, item: Id[Item], context: Id[AspectNode] | None, *, unit: Id[Unit] | None = None
-) -> str:
+def product_designation_in(model: Model, item: Id[Item], context: Id[AspectNode] | None, *, unit: Id[Unit] | None = None) -> str:
     """`item` as a list prints it, with `+<label>` per location label of it below `context`.
 
     The prefix is `port_designation_in`'s rule; `unit=None` reads OWN placement, else effective.
     A `terminal` with a parent is not a cable end, so it is not read. Raises as `item_designation`.
     """
-    return product_location(model, item, context, unit=unit) + printed_designation(
-        model, item, unit=unit
-    )
+    return product_location(model, item, context, unit=unit) + printed_designation(model, item, unit=unit)
 
 
-def product_location(
-    model: Model, item: Id[Item], context: Id[AspectNode] | None, *, unit: Id[Unit] | None = None
-) -> str:
+def product_location(model: Model, item: Id[Item], context: Id[AspectNode] | None, *, unit: Id[Unit] | None = None) -> str:
     """The `+<label>` prefix `product_designation_in` prints before `item`'s designation, or "".
 
     Block-diagram line 1 reads it too, so a box's place is the one `item` prints.
@@ -54,9 +46,7 @@ def product_location(
     return _located(model, node, end_context(model, item, node, context, unit), "")
 
 
-def _located(
-    model: Model, node: Id[AspectNode] | None, context: Id[AspectNode] | None, text: str
-) -> str:
+def _located(model: Model, node: Id[AspectNode] | None, context: Id[AspectNode] | None, text: str) -> str:
     """`text` behind one `+label` per location label of `node` below `context`.
 
     The one prefix step of `port_designation_in` and `product_designation_in`.
@@ -81,18 +71,16 @@ def far_end(
     rec = ports(model)[port]
     owner = items(model)[functions(model)[rec.function].item]
     tail = ":" + (own_label(model, owner.id) if terminal_of(model, owner.id) else rec.name)
-    head = text.removesuffix(tail)  # a bar's end prints no screw (model-0221): no tail
+    head = text.removesuffix(tail)
     node = effective_placement(model, owner.id, Aspect.LOCATION)
     place = end_context(model, owner.id, node, context, unit)
     return _located(model, node, place, head), text[len(head) :]
 
 
-def stub_far_end(
-    model: Model, port: Id[Port], near: Id[Port] | None = None, *, unit: Id[Unit] | None = None
-) -> tuple[str, str]:
+def stub_far_end(model: Model, port: Id[Port], near: Id[Port] | None = None, *, unit: Id[Unit] | None = None) -> tuple[str, str]:
     """`port`'s far end as the off stub at `near` names it, below `near`'s place (layout-0121).
 
     A near end in a unit stands on the unit's page, which states no place: whole path, as for None.
     `unit` is the page's unit: the end names its items unit-locally (model-0181).
     """
-    return far_end(model, port, None if near is None else stub_place(model, near), unit=unit)
+    return far_end(model, port, None if near is None else stub_place(model, near, unit), unit=unit)

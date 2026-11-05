@@ -7,81 +7,50 @@ A lone marker has no partner on another page. It is an off stub: its own partner
 from typing import TYPE_CHECKING
 
 from fransys_model.derive import mate_ports, stub_far
-from fransys_model.kernel import make_id
-from fransys_model.layout import LinkMarker, MarkerSide, StarKind
-
-from .placement_kit import refuse
+from fransys_model.kernel import ModelError
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Collection, Mapping, Sequence
 
-    from fransys_model.kernel import AuthoringKey, Id, Model
-    from fransys_model.layout import Page, Side
+    from fransys_layout.core import PinRef
+    from fransys_model.kernel import Id, Model
     from fransys_model.vocab import Item, Port
 
-__all__ = ["far_port", "off_stub", "stub_ends"]
+__all__ = ["drawn_ports", "far_port", "stub_ends"]
+
+type PortPairs = Collection[tuple[Id[Port], Id[Port]]]
 
 
-def stub_ends(
-    model: Model, ports: Sequence[Id[Port]]
-) -> tuple[Id[Port], Id[Port], Id[Item] | None] | None:
+def drawn_ports(pins: Mapping[PinRef, Sequence[Id[Port]]], drawn: Collection[tuple[PinRef, PinRef]]) -> frozenset[tuple[Id[Port], Id[Port]]]:
+    """The `(port, far port)` pairs the layout's drawn `(pin, far pin)` pairs stand for (R777)."""
+    return frozenset((a, b) for p, q in drawn for a in pins.get(p, ()) for b in pins.get(q, ()))
+
+
+def stub_ends(model: Model, ports: Sequence[Id[Port]], far: Collection[Id[Port]] = ()) -> tuple[tuple[Id[Port], Id[Port], Id[Item] | None], ...]:
     """`derive.stub_far` of the pin, else of the pin its mate joins: the line through the mate.
 
-    A mated half no conductor leaves names the far end of its partner's conductor, and the half
-    that end is mated to when it is (R467 Q02).
+    A mated half no conductor leaves names its partner's far end, or that end's mate (R467 Q02).
     """
-    found = stub_far(model, ports)
-    if found is not None:
+    found = stub_far(model, ports, far)
+    if found:
         return found
     pairs = mate_ports(model)
     for here, there in (*pairs, *((b, a) for a, b in pairs)):
-        via = stub_far(model, [there]) if here in ports else None
-        if via is not None:
-            beyond = next((b for a, b in pairs if a == via[1]), None)
-            beyond = beyond or next((a for a, b in pairs if b == via[1]), via[1])
-            return here, beyond, via[2]
-    return None
+        via = stub_far(model, [there], far) if here in ports else ()
+        if via:
+            beyond = next((b for a, b in pairs if a == via[0][1]), None)
+            beyond = beyond or next((a for a, b in pairs if b == via[0][1]), via[0][1])
+            return ((here, beyond, via[0][2]),)
+    return ()
 
 
 def far_port(model: Model, ports: Sequence[Id[Port]]) -> tuple[Id[Port], Id[Port], Id[Item] | None]:
     """`(near, far, carrier)` of the stub the `ports` one pin draws (`stub_ends`).
 
-    No conductor at the pin, its function or its mate is refused.
+    `ModelError` when no undrawn conductor leaves the pin, its function or its mate (R1539).
     """
     found = stub_ends(model, ports)
-    if found is None:
-        refuse(
-            f"stub at ports {list(ports)}",
-            "no conductor leaves its pin, its function or its mate, so its far end is unknown",
-        )
-    return found
-
-
-def off_stub(  # noqa: PLR0913 - the record joins its key, page, ends, place, facing and stamp
-    key: AuthoringKey,
-    page: Page,
-    ends: tuple[Id[Port], Id[Port], Id[Item] | None],
-    at: tuple[int, int, int, int],
-    facing: Side,
-    *,
-    stamp: str,
-) -> LinkMarker:
-    """One off stub at `ends[0]` naming `ends[1]` over `ends[2]`; `at` is x, y, width, height."""
-    ident = make_id(LinkMarker, key)
-    return LinkMarker(
-        id=ident,
-        key=key,
-        page=page.id,
-        port=ends[0],
-        side=MarkerSide.OWNER,
-        partner=ident,
-        x=at[0],
-        y=at[1],
-        width=at[2],
-        height=at[3],
-        produced_by=stamp,
-        star=StarKind.OFF,
-        far=ends[1],
-        carrier=ends[2],
-        facing=facing,
-    )
+    if not found:
+        msg = f"stub at ports {list(ports)}: no conductor leaves its pin, its function or its mate that is not drawn, so its far end is unknown"
+        raise ModelError(msg)
+    return found[0]

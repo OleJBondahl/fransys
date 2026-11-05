@@ -36,11 +36,7 @@ type Dealt = tuple[tuple[str, ...], tuple[TreeLane, ...]]
 
 def anchor_signs(series: Iterable[Series]) -> dict[str, int]:
     """Each anchored series' end leaf and its side: plus at a head, minus at a tail (FLOW-DOWN)."""
-    return {
-        leaves_of(s)[0 if s.anchor == "head" else -1]: 1 if s.anchor == "head" else -1
-        for s in series
-        if s.anchor
-    }
+    return {leaves_of(s)[0 if s.anchor == "head" else -1]: 1 if s.anchor == "head" else -1 for s in series if s.anchor}
 
 
 def tree_lanes(tree: Series, height: Mapping[str, int]) -> tuple[TreeLane, ...]:
@@ -50,10 +46,19 @@ def tree_lanes(tree: Series, height: Mapping[str, int]) -> tuple[TreeLane, ...]:
 
 
 def leaves_of(part: SeriesPart) -> tuple[str, ...]:
-    """Every leaf of `part`, in tree order."""
+    """Every leaf (symbol id) of `part`, in tree order: a lone id is its own leaf, a Series or Parallel gives its parts' leaves in turn."""
     if isinstance(part, str):
         return (part,)
     return tuple(leaf for p in part.parts for leaf in leaves_of(p))
+
+
+def parallel_leaves(part: SeriesPart) -> tuple[str, ...]:
+    """The leaves under a Parallel: each stands between the Parallel's two nets, so has a pin on each."""
+    if isinstance(part, str):
+        return ()
+    if isinstance(part, Parallel):
+        return leaves_of(part)
+    return tuple(leaf for p in part.parts for leaf in parallel_leaves(p))
 
 
 def has_parallel(part: SeriesPart) -> bool:
@@ -82,9 +87,7 @@ def tree_holds(tree: Series, height: Mapping[str, int], wire_min: int) -> dict[s
     return dict(_holds(tree, (height, wire_min), None))
 
 
-def _holds(
-    part: SeriesPart, sizes: tuple[Mapping[str, int], int], after: str | None
-) -> Counter[str]:
+def _holds(part: SeriesPart, sizes: tuple[Mapping[str, int], int], after: str | None) -> Counter[str]:
     """The holds `part` puts on leaves; `after` is the leaf that follows it, if any."""
     if isinstance(part, str):
         return Counter[str]()

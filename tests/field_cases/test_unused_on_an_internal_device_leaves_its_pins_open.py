@@ -1,18 +1,13 @@
-"""Field case UNUSED-ACCESSORY (A): `unused=` on a device inside a unit that is no boundary.
+"""Field case UNUSED-ACCESSORY (A): a unit holds a board with a fuse-holder part whose pins the unit leaves open on purpose.
+The bug: `unused=` found nothing to declare in a unit that is no boundary, so the build raised an INFO UNCONNECTED_PIN per pin.
+Fixed by author-0066 (designer ruling 18), `unused=` on any device declares those pins open on purpose."""
 
-The engineering shape: a unit holds a board, and on the board a part with a footprint whose
-pins the unit leaves open on purpose. The part is no field of the unit's interface, so
-`unused=` once found nothing to declare: the build raised an INFO UNCONNECTED_PIN per pin.
-
-The rule (author-0066, designer ruling 18): `unused=True` or `unused=(names,)` on any device
-declares those functions open on purpose. The pins raise no UNCONNECTED_PIN and the device does
-not become a boundary field. A function declared unused that is wired anyway gives
-UNUSED_CONTRADICTED, which no longer reads "the boundary of no unit".
-"""
-
-from typing import Any, NamedTuple
+from typing import TYPE_CHECKING, Any, NamedTuple
 
 import fransys as fr
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 class _Io(NamedTuple):
@@ -26,7 +21,8 @@ def _sense(*, unused: bool, wired: bool) -> Any:
         holder = u.device("F1", "DEMO-FUSE-HOLDER-PCB", parent=board, unused=unused)
         if wired:
             lamp = u.device("H1", "DEMO-LAMP-24")
-            u.detail.wire(holder["1"], lamp["1"], wire=("RD", 50))
+            u.series(holder["1"], lamp["1"], wire=("RD", 50))
+            u.series(holder["2"], lamp["2"], wire=("BU", 50))
         return _Io()
 
     d = fr.design("demo_parts")
@@ -51,3 +47,24 @@ def test_a_function_declared_unused_but_wired_is_contradicted() -> None:
     result = _sense(unused=True, wired=True)
     assert _codes(result).count("UNUSED_CONTRADICTED") == 1
     assert "UNUSED_CONTRADICTED" not in _codes(_sense(unused=False, wired=True))
+
+
+def _lone_lamp(cover: Path, *, unused: bool) -> Any:
+    @fr.unit("demo-lone", revision=1, interface_version=1, date="2026-01-01", text="x", by="AB")
+    def unit(u: Any) -> _Io:
+        u.device("H1", "DEMO-LAMP-24", unused=unused)
+        h2, h3 = u.device("H2", "DEMO-LAMP-24"), u.device("H3", "DEMO-LAMP-24")
+        u.series(h2["1"], h3["1"], wire=("RD", 50))  # a drawn page
+        u.series(h2["2"], h3["2"], wire=("BU", 50))
+        return _Io()
+
+    d = fr.design("demo_parts", place="C1")
+    d.location("C1", "Cabinet")
+    d.add(unit, "U1", place="C1")
+    cover.write_text("# Cabinet\n", encoding="utf-8")
+    return fr.build(d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, "demo-lone", cover=cover))
+
+
+def test_an_unused_device_left_unwired_is_no_function_not_wired(tmp_path: Path) -> None:
+    assert "FUNCTION_NOT_WIRED" in _codes(_lone_lamp(tmp_path / "a.md", unused=False))  # the control: undeclared, it warns
+    assert "FUNCTION_NOT_WIRED" not in _codes(_lone_lamp(tmp_path / "b.md", unused=True))

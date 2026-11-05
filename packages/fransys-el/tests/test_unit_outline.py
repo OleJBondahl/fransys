@@ -2,7 +2,6 @@
 
 The generic builder carries the family: `Facts.units` holds the unit, `Net.crosses_unit` is set,
 so every crossing net ends in a stub at the unit's boundary pins and the unit's terminals stand
-on their column. The case builds once for the module.
 """
 
 from dataclasses import replace
@@ -11,7 +10,7 @@ from typing import TYPE_CHECKING
 import fransys as fr
 import pytest
 from _unit_outline_case import TERMINALS, unit_outline_case_drafts
-from conventions_fixtures import house
+from conventions_fixtures import house, unwired
 from fransys_el import build, options, symbol_kit
 
 from electrical_symbols import LIBRARY
@@ -48,8 +47,20 @@ def test_every_net_crosses_the_one_unit(problem: PlacementProblem) -> None:
     assert all(n.crosses_unit for n in problem.nets)
 
 
-def test_each_crossing_net_ends_in_two_stubs(layout: CoreLayout) -> None:
-    assert dict(_terms(layout, "R")) == {"stub": 2 * TERMINALS}
+def test_each_crossing_net_with_no_wire_drawn_ends_in_two_stubs(problem: PlacementProblem) -> None:
+    """R407 where no wire is drawn: with no far end given, every net stubs at both pins."""
+    bare = unwired(problem)
+    layout = _layout(bare)
+    unplaced = sum(f.code == "MARKER_UNPLACED" for f in layout.findings)
+    assert dict(_terms(layout, "R"))["stub"] > 0, "R920: a stub on a fixed lead steps straight out, so it stands"
+    assert dict(_terms(layout, "R"))["stub"] + unplaced == 2 * TERMINALS
+
+
+def test_a_crossing_net_drawn_to_its_far_end_on_the_page_ends_in_no_stub(problem: PlacementProblem, layout: CoreLayout) -> None:
+    """MARKER-FREE-SIDE: the wire is the reference; the case has far ends, and no stub stands."""
+    assert problem.facts.far_ends
+    assert "stub" not in dict(_terms(layout, "R"))
+    assert layout.drawn
 
 
 def test_the_unit_terminals_stand_on_their_column(layout: CoreLayout) -> None:
@@ -63,9 +74,7 @@ def test_without_crosses_unit_the_stubs_are_gone(problem: PlacementProblem) -> N
     assert "stub" not in dict(_terms(_layout(plain), "R"))
 
 
-def test_terminals_off_their_column_are_counted(
-    problem: PlacementProblem, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_terminals_off_their_column_are_counted(problem: PlacementProblem, monkeypatch: pytest.MonkeyPatch) -> None:
     """Planted: with no straight vertical wire anywhere, the terminals fall off, so 0 can fail."""
     monkeypatch.setattr("fransys_layout.core.score_placement._straight", lambda _scene: set())
     assert _terms(_layout(problem), "P")["junction_off_line"] > 0

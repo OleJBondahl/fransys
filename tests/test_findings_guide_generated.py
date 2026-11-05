@@ -33,11 +33,7 @@ guide_examples = _load("fransys_guide_examples_list", ROOT / "tests" / "test_gui
 
 def test_every_findings_page_is_the_generated_table() -> None:
     """Every findings page equals its generated text; a failure names the stale pages."""
-    stale = [
-        path.name
-        for path, text in findings_guide.expected_pages(GUIDE_DIR).items()
-        if path.read_text(encoding="utf-8") != text
-    ]
+    stale = [path.name for path, text in findings_guide.expected_pages(GUIDE_DIR).items() if path.read_text(encoding="utf-8") != text]
     assert stale == []
 
 

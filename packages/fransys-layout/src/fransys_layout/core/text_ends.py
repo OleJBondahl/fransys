@@ -7,39 +7,35 @@ page. A tag end that names a column stands at the net's pin nearest that column 
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
+from itertools import pairwise
 from typing import TYPE_CHECKING
 
-from .band import lane_offset, lane_rows
-from .geometry import inside, marker_box_at
+from .arrow_reserve import arrow_rows, leg_feet, leg_fit, leg_lines, leg_rows
+from .band import abut as band_abut
+from .band import lane_line
+from .clearance import Keep, footprint_keeps
+from .cut_drawn import cut_stands
+from .cut_end_rooms import laned_stub, pole_of
+from .errors import CoreError
+from .geometry import sized
 from .keys import natural_key
 from .ref_kind import kind_of
-from .route_env import lead_pins, lone_cut_pins, pin_sides
+from .route_env import pin_sides
 from .sides import step_out
-from .values import RefKind
+from .values import Box, PinRef, RefKind, StandClass
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping
+    from collections.abc import Mapping, Sequence
 
+    from .arrow_reserve import ArrowEnds
+    from .flow_values import CutResult, Fan
     from .outputs import Placement, Trunk
-    from .values import (
-        CutResult,
-        Fan,
-        Options,
-        Orientation,
-        PinRef,
-        PlacementProblem,
-        Ref,
-        RefEnd,
-        Side,
-        Size,
-    )
+    from .route_fixed import Fixed
+    from .values import XY, Options, Orientation, PlacementProblem, Ref, RefEnd, Side, Size
 
 Key = tuple[tuple[int, int | str], ...]
 PinAt = tuple[int, int, int, "Orientation"]
-# the symbol at R0 points east; this turn points its box along the pin's turned side
-_FACING: Mapping[Side, Orientation] = frozendict({"E": "R0", "S": "R90", "W": "R180", "N": "R270"})
-_FACED: Mapping[Orientation, Side] = frozendict(zip(_FACING.values(), _FACING, strict=True))
 
 
 @dataclass(frozen=True, slots=True)
@@ -52,9 +48,21 @@ class MarkEnv:
     sides: Mapping[tuple[str, str, Orientation], Side]
     trunks: Mapping[tuple[int, str], tuple[Trunk, ...]]
     fans: Mapping[str, Fan]
-    leads: Mapping[PinRef, str] = field(default_factory=dict)
-    lone: frozenset[PinRef] = frozenset()
+    leads: frozenset[PinRef] = frozenset()
     pin_net: Mapping[tuple[str, str], str] = field(default_factory=dict)
+    stands: Mapping[PinRef, Mapping[Orientation, PinRef | None]] = field(
+        default_factory=dict
+    )  # a mixed pin -> by orientation, the pin its marker stands at
+    legs: Mapping[int, Mapping[PinRef, int]] = field(default_factory=dict)  # a page -> its one-sided pins, each with the row of its leg's trunk end
+    footprints: Mapping[int, tuple[tuple[str, Box], ...]] = field(default_factory=dict)  # by page, each placed symbol and its footprint
+    arrowed: ArrowEnds = field(default_factory=dict)  # the page, fan and row of each trunk that stands an arrow at its right end
+    keeps: Mapping[int, Sequence[Keep]] = field(default_factory=dict)  # by page, what a marker box keeps clear of
+    leg_lines: Mapping[int, Mapping[tuple[str, int, PinRef], tuple[XY, XY, XY]]] = field(
+        default_factory=dict
+    )  # by page, each leg's line, by (fan, row, pin)
+    bands: Mapping[int, tuple[tuple[int, int], ...]] = field(default_factory=dict)  # by page, the solved row bands
+    ranks: Mapping[str, int] = field(default_factory=dict)  # a symbol -> its rank; no id text decides an order (SYMBOL-TIE)
+    columns: Mapping[str, tuple[int, ...]] = field(default_factory=dict)  # a column or hub id -> the ranks of its symbols, in cell order
 
 
 @dataclass(frozen=True, slots=True)
@@ -62,17 +70,14 @@ class Stand:
     x: int
     y: int
     end: PinRef
-    orient: Orientation = "R0"
+    orient: Orientation
+    side: Side  # the side the marker's box lies on: the turn `Options.marker_facing` gives it
+    band: tuple[int, int] | None = None  # the row band a pin's marker box stays in (R1333)
+    walked: bool = False  # the end of a lane placement walked clear of every keep: the one fit test (R1331, R1338)
+    stood: bool = True  # False: the arrow's lane end found no stand at placement (Trunk.stood); the marker is MARKER_UNPLACED (layout-0507)
 
-    @property
-    def side(self) -> Side:
-        """The side the marker's box lies on, from its turn: the one table, `_FACING`."""
-        return _FACED[self.orient]
 
-
-def mark_env(
-    cut: CutResult, placement: Placement, problem: PlacementProblem, options: Options
-) -> MarkEnv:
+def mark_env(cut: CutResult, placement: Placement, problem: PlacementProblem, options: Options) -> MarkEnv:
     """The lookups of one run; a pin, trunk or column is found by its id."""
     pins, trunks = {}, {}
     for pg in placement.pages:
@@ -81,17 +86,73 @@ def mark_env(
                 pins[(p.sym, q.pin)] = (pg.page, q.x, q.y, p.orient)
         for t in sorted(pg.trunks, key=lambda t: t.row):
             trunks[(pg.page, t.fan)] = (*trunks.get((pg.page, t.fan), ()), t)
+    ranks = {s.id: s.rank if s.rank is not None else len(problem.symbols) + i for i, s in enumerate(problem.symbols)}
+    columns = {c.id: tuple(ranks[cell.sym] for lane in c.lanes for cell in lane.cells) for c in cut.flow.columns} | {
+        k: (v,) for k, v in ranks.items()
+    }
+    fans, arrowed = {f.id: f for f in cut.flow.fans}, arrow_rows(cut.spec.reference_plan, cut.spec.pages, cut.flow.fans)
+    legs_by_page = {
+        pg.page: leg_lines(
+            pg.trunks,
+            fans,
+            leg_rows(cut.spec.reference_plan, pg.page),
+            leg_fit(options, cut.spec.reference_plan, pg.page),
+            (leg_feet(pg.placed, pg.hangings), arrowed, problem.area),
+        )
+        for pg in placement.pages
+    }
+    rows = {page: {pin: row for _, row, pin in lines} for page, lines in legs_by_page.items()}
     return MarkEnv(
         options,
         problem.area,
         pins,
         pin_sides(problem),
         trunks,
-        {f.id: f for f in cut.flow.fans},
-        lead_pins(problem, cut.flow.fans),
-        lone_cut_pins(problem),
+        fans,
+        cut.spec.leads,
         {(r.sym, r.pin): n.id for n in problem.nets for r in n.pins},
+        cut_stands(problem, cut),
+        rows,
+        {pg.page: tuple((p.sym, p.footprint) for p in pg.placed) for pg in placement.pages},
+        arrowed,
+        leg_lines=legs_by_page,
+        bands={pg.page: pg.bands for pg in placement.pages},
+        ranks=ranks,
+        columns=columns,
     )
+
+
+def pin_keeps(env: MarkEnv) -> dict[int, list[Keep]]:
+    """By page, a point Keep per pin and a segment Keep per lead, owned by its net, and each footprint, owned by its symbol (R845, R920)."""
+    out: dict[int, list[Keep]] = {page: [Keep("", box, "footprint", sym) for sym, box in feet] for page, feet in env.footprints.items()}
+    for (sym, pin), (page, x, y, orient) in env.pins.items():
+        if (net := env.pin_net.get((sym, pin))) is None:
+            continue
+        if PinRef(sym, pin) in env.leads:
+            (x1, y1) = step_out(env.sides[(sym, pin, orient)], x, y, env.options.wiring_grid)
+            out.setdefault(page, []).append(
+                Keep("", Box(min(x, x1), min(y, y1), abs(x1 - x), abs(y1 - y)), "wire", net, None, None, ((x, y), (x1, y1)))
+            )
+        else:
+            out.setdefault(page, []).extend(footprint_keeps([("", net)], Box(x, y, 0, 0)))
+    return out
+
+
+def wire_keeps(fixed: Mapping[int, Fixed]) -> dict[int, list[Keep]]:
+    """By page, a Keep for each segment of a fixed wire, owned by its net (R872, R1007)."""
+    out: dict[int, list[Keep]] = {}
+    for page, pair in fixed.items():
+        for w in pair.trunks.wires:
+            for (x0, y0), (x1, y1) in pairwise(w.points):
+                box = Box(min(x0, x1), min(y0, y1), abs(x1 - x0), abs(y1 - y0))
+                out.setdefault(page, []).append(Keep("", box, "wire", w.net, None, None, (w.points[0], w.points[-1])))
+    return out
+
+
+def bundle_nets(env: MarkEnv, net: str) -> frozenset[str]:
+    """The nets a marker of `net` may stand beside: itself, its fan's lanes and those of every fan that meets a symbol its fan meets (R1007)."""
+    syms = {a.pin.sym for f in env.fans.values() if net == f.id or net in f.nets for a in (*f.drivers, *f.legs)}
+    return frozenset({net, *(n for f in env.fans.values() if syms & {a.pin.sym for a in (*f.drivers, *f.legs)} for n in f.nets)})
 
 
 def who(ref: Ref) -> str:
@@ -99,32 +160,43 @@ def who(ref: Ref) -> str:
     return f"net {ref.net} ({kind_of(ref)})"
 
 
-def _abut(options: Options, side: Side, x: int, y: int, key: tuple[PinRef, str]) -> Stand:
+def abut(options: Options, side: Side, x: int, y: int, key: tuple[PinRef, str]) -> Stand:
     """The stand whose box has its near edge at (x, y) on `side`; the box turns to face it."""
-    turned = _FACING[side]
-    box = marker_box_at(0, 0, options, turned, key)  # the box about an origin of (0, 0)
-    depth = {"E": -box.x, "W": box.x + box.w, "S": -box.y, "N": box.y + box.h}[side]
-    return Stand(*step_out(side, x, y, depth), key[0], turned)
+    ox, oy, turned = band_abut(options, side, x, y, key)
+    return Stand(ox, oy, key[0], turned, side)
 
 
-def pin_stand(env: MarkEnv, pin: PinRef, page: int, ref: Ref, lead: int = 0) -> Stand:
-    """One marker box out from the pin along its turned side, past a `lead` wire if it has one."""
-    if (pin.sym, pin.pin) not in env.pins:
-        msg = f"marks: {who(ref)} has no placed pin {pin.sym}.{pin.pin}"
-        raise ValueError(msg)
-    at, x, y, orient = env.pins[(pin.sym, pin.pin)]
+def stood_at(env: MarkEnv, pin: PinRef) -> PinRef:
+    """The pin `pin`'s marker stands at in its placed orientation: itself, or the sibling `env.stands` names."""
+    placed = env.pins.get((pin.sym, pin.pin))
+    return (env.stands[pin][placed[3]] if placed is not None and pin in env.stands else None) or pin
+
+
+def pin_stand(env: MarkEnv, pin: PinRef, page: int, ref: Ref) -> Stand:
+    """One marker box out from the pin along its turned side, past its lead wire if it has one.
+
+    A mixed pin on a free-sided symbol stands at the pin `env.stands` names for its orientation: the end stays `pin`.
+    """
+    xy = stood_at(env, pin)
+    if (xy.sym, xy.pin) not in env.pins:
+        msg = f"marks: {who(ref)} has no placed pin {xy.sym}.{xy.pin}"
+        raise CoreError(msg)
+    at, x, y, orient = env.pins[(xy.sym, xy.pin)]
     if at != page:
-        msg = f"marks: {who(ref)} names {pin.sym}.{pin.pin} on page {page}, not {at}"
-        raise ValueError(msg)
-    side = env.sides[(pin.sym, pin.pin, orient)]
-    x, y = step_out(side, x, y, lead)
-    return _abut(env.options, side, x, y, (pin, str(kind_of(ref))))
+        msg = f"marks: {who(ref)} names {xy.sym}.{xy.pin} on page {page}, not {at}"
+        raise CoreError(msg)
+    side = env.sides[(xy.sym, xy.pin, orient)]
+    x, y = step_out(side, x, y, env.options.wiring_grid if xy in env.leads else 0)
+    stand = abut(env.options, side, x, y, (pin, str(kind_of(ref))))
+    feet = next((box for sym, box in env.footprints.get(page, ()) if sym == xy.sym), None)
+    band = None if feet is None else next((b for b in env.bands.get(page, ()) if b[0] <= feet.y < b[1]), None)
+    return replace(stand, band=band)
 
 
 def _trunk_of(env: MarkEnv, fan: str, end: RefEnd, ref: Ref) -> tuple[Trunk, ...]:
     if not (found := env.trunks.get((end.page, fan), ())):
         msg = f"marks: {who(ref)} page {end.page}: fan {fan} has no trunk"
-        raise ValueError(msg)
+        raise CoreError(msg)
     return found
 
 
@@ -132,7 +204,7 @@ def _named(ref: Ref, end: RefEnd) -> PinRef:
     """The pin an arrow or copy end names; stage 4 fills it, so none is a plan it cannot make."""
     if end.pin is None:
         msg = f"marks: {who(ref)} page {end.page}: the end names no pin; stage 4 fills it"
-        raise ValueError(msg)
+        raise CoreError(msg)
     return end.pin
 
 
@@ -140,109 +212,89 @@ def arrow_stand(env: MarkEnv, ref: Ref, end: RefEnd, index: int) -> Stand:
     """The right end of the fan's trunk in the end's row for the first end, else its left end."""
     if end.row is None:
         msg = f"marks: {who(ref)} page {end.page}: the end names no row; stage 4 fills it"
-        raise ValueError(msg)
+        raise CoreError(msg)
     trunks = [t for t in _trunk_of(env, ref.net, end, ref) if t.row == end.row]
     if not trunks:
         msg = f"marks: {who(ref)} page {end.page}: no trunk in row {end.row}"
-        raise ValueError(msg)
-    t, pin = trunks[0], _named(ref, end)
+        raise CoreError(msg)
+    return _lane_stand(env, trunks[0], (_named(ref, end), str(kind_of(ref))), int(index != 0))
+
+
+def _lane_stand(env: MarkEnv, t: Trunk, key: tuple[PinRef, str], index: int) -> Stand:
+    """The stand at the end of the lane of the pin's pole: an arrow's, or a bundle's cross-document stub (R1338)."""
     side = env.options.arrow_sides[int(index != 0)]
-    x0, x1, y = _lane_line(env, t, pin)
-    return _abut(env.options, side, x1 if side == "E" else x0, y, (pin, str(kind_of(ref))))
-
-
-def _lane_line(env: MarkEnv, t: Trunk, pin: PinRef) -> tuple[int, int, int]:
-    """(x0, x1, y) of the arrow's line: the trunk's ends and the y of the pin's pole lane.
-
-    A bundle's continuing lanes run one lane step past the hull (place_assemble._lane_ends), so
-    its one arrow stands at that end.
-    """
     fan = env.fans.get(t.fan)
-    net = env.pin_net.get((pin.sym, pin.pin))
-    pole = fan.nets.index(net) if fan is not None and net in fan.nets else 0
-    if fan is None or fan.lanes == 1:
-        return t.x0, t.x1, t.y
-    reach = lane_offset(1, env.options.wiring_grid)
-    row = lane_rows(t.lane_ends)[pole]
-    return t.x0 - reach, t.x1 + reach, t.y + lane_offset(row, env.options.wiring_grid)
-
-
-def copy_stand(env: MarkEnv, ref: Ref, end: RefEnd) -> Stand:
-    """A copy end follows the pin rule, like a tag: it stands at the pin stage 4 named for it."""
-    return pin_stand(env, _named(ref, end), end.page, ref)
-
-
-def _pin_key(k: tuple[str, str]) -> tuple[Key, Key]:
-    return natural_key(k[0]), natural_key(k[1])
-
-
-def tag_stand(env: MarkEnv, ref: Ref, end: RefEnd) -> Stand:
-    """A tag end stands at the pin stage 4 named for it."""
-    return pin_stand(env, _named(ref, end), end.page, ref)
-
-
-def _fan_trunk(env: MarkEnv, pin: PinRef, page: int) -> Trunk | None:
-    """The trunk, on `page`, of the fan that holds `pin`: where its stub stands (R499)."""
-    for fan in env.fans.values():
-        if pin in env.lone and any(a.pin == pin for a in (*fan.drivers, *fan.legs)):
-            return next(iter(env.trunks.get((page, fan.id), ())), None)
-    return None
+    x0, x1, y, stood = lane_line(t, pole_of(fan, key[0]) if fan is not None else 0, fan.lanes if fan is not None else 1, env.options.wiring_grid)
+    return replace(abut(env.options, side, x1 if side == "E" else x0, y, key), walked=True, stood=stood[side == "E"])
 
 
 def _trunk_end_stand(env: MarkEnv, trunk: Trunk, key: tuple[PinRef, str]) -> Stand:
-    """The stand at the first `arrow_sides` end of the trunk whose box lies inside the page."""
-    stands = [
-        _abut(env.options, side, trunk.x1 if side == "E" else trunk.x0, trunk.y, key)
-        for side in env.options.arrow_sides
-    ]
-    fits = (
-        s for s in stands if inside(marker_box_at(s.x, s.y, env.options, s.orient, key), env.area)
-    )
-    return next(fits, stands[0])
+    """The stand at the first `arrow_sides` end of the trunk: its lane end was walked clear at placement (R1331)."""
+    side = env.options.arrow_sides[0]
+    return abut(env.options, side, trunk.x1 if side == "E" else trunk.x0, trunk.y, key)
+
+
+def leg_stand(env: MarkEnv, ref: Ref, end: RefEnd, row: int) -> Stand:
+    """A one-sided pin's marker stands at the end of its leg, below the bundle (ONE-SIDED-PIN)."""
+    fan = next(f.id for f in env.fans.values() if ref.net in f.nets)
+    trunks = [t for t in _trunk_of(env, fan, end, ref) if t.row == row]
+    if not trunks:
+        msg = f"marks: {who(ref)} page {end.page}: no trunk in row {row}"
+        raise CoreError(msg)
+    pin = _named(ref, end)
+    x, y = env.leg_lines[end.page][fan, row, pin][-1]
+    return abut(env.options, "S", x, y, (pin, str(kind_of(ref))))
 
 
 def pinned_stand(env: MarkEnv, ref: Ref, end: RefEnd) -> Stand:
-    """A stub stands at the trunk end of its bundle, else at its boundary pin."""
+    """A stub stands below its lane (LEG), else at the trunk end of its fan (LEG with no leg, TRUNK_END), else at its boundary pin (ONE-SIDED-PIN)."""
     if end.pin is None:
         msg = f"marks: {who(ref)} page {end.page}: the end names no pin"
-        raise ValueError(msg)
-    if (trunk := _fan_trunk(env, end.pin, end.page)) is not None and end.pin not in env.leads:
-        return _trunk_end_stand(env, trunk, (end.pin, str(kind_of(ref))))
-    grid = env.options.wiring_grid
-    return pin_stand(env, end.pin, end.page, ref, grid if end.pin in env.leads else 0)
+        raise CoreError(msg)
+    fan = next((f.id for f in env.fans.values() if ref.net in f.nets), None)
+    bundled = kind_of(ref) is RefKind.STUB and fan is not None and laned_stub(env.fans[fan])
+    match end.stand:
+        case StandClass.LEG if end.row is not None and end.pin in env.legs.get(end.page, {}):
+            return leg_stand(env, ref, end, end.row)
+        case StandClass.TRUNK_END if (
+            bundled and (trunk := next(iter(env.trunks.get((end.page, fan), ())), None)) is not None and end.pin not in env.leads
+        ):
+            return _lane_stand(env, trunk, (end.pin, str(kind_of(ref))), 0)
+        case StandClass.LEG | StandClass.TRUNK_END if (
+            trunk := next(iter(env.trunks.get((end.page, fan), ())), None)
+        ) is not None and end.pin not in env.leads:
+            return _trunk_end_stand(env, trunk, (end.pin, str(kind_of(ref))))
+    return pin_stand(env, end.pin, end.page, ref)
 
 
 def end_stand(env: MarkEnv, ref: Ref, end: RefEnd, index: int) -> Stand:
-    """Where one end of a reference stands; the rule is the reference kind's."""
+    """Where one end of a reference stands; the rule is the reference kind's. Its box is the one for the lines its ledger end holds (R1598)."""
+    if end.pin is not None:
+        env = replace(env, options=sized(env.options, (end.pin, str(kind_of(ref))), end.also, end.far))
     match kind_of(ref):
         case RefKind.ARROW:
             return arrow_stand(env, ref, end, index)
-        case RefKind.COPY:
-            return copy_stand(env, ref, end)
-        case RefKind.TAG:
-            return tag_stand(env, ref, end)
-        case RefKind.STUB | RefKind.STAR:
+        case RefKind.TAG:  # a tag end stands at the pin stage 4 named for it
+            return pin_stand(env, _named(ref, end), end.page, ref)
+        case RefKind.COPY | RefKind.STUB | RefKind.STAR:
             return pinned_stand(env, ref, end)
 
 
 def hub_xy(env: MarkEnv, ref: Ref, end: RefEnd) -> tuple[int, int]:
-    """Where a copy's hub stands: its first placed pin, in the order of the pin's id.
+    """Where a copy's hub stands: its first placed pin, by the pin's name (all of one symbol, so no id text orders it).
 
     The hub is on a page other than the copy's; on the copy's own page there is nothing to copy.
     """
     fan = next((f for f in env.fans.values() if ref.net in f.nets), None)
-    pins = sorted((k for k in env.pins if fan is not None and k[0] == fan.hub), key=_pin_key)
+    pins = sorted((k for k in env.pins if fan is not None and k[0] == fan.hub), key=lambda k: natural_key(k[1]))
     if not pins:
-        msg = (
-            f"marks: {who(ref)}: the hub has no placed pin; "
-            "the placement must place a pin of the fan's hub"
-        )
-        raise ValueError(msg)
+        msg = f"marks: {who(ref)}: the hub has no placed pin; the placement must place a pin of the fan's hub"
+        raise CoreError(msg)
     page, x, y, _ = env.pins[pins[0]]
     if page == end.page:
         msg = (
             f"marks: {who(ref)} page {end.page}: the hub {pins[0][0]} stands on the copy's own "
             "page; stage 4 copies() plans a copy end only on a page other than the hub's"
         )
-        raise ValueError(msg)
+        raise CoreError(msg)
     return x, y

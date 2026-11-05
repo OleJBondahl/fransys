@@ -1,16 +1,6 @@
-"""Field case: equipment another party supplies is wired by pin letter, with no part file behind it.
-
-The engineering shape: an external unit E1 (a meter or a remote panel) arrives with its own
-terminals U, V and W. The design names it with no part number, and the wiring is drawn to
-those pin letters.
-
-The bug: a part's device exposes each pin as an attribute, so tab completion and type checkers
-see `d.device(...).U`. A part-less device returned a Port for `ext.U` at runtime, but `dir(ext)`
-listed no pin, so completion and type checkers saw only Any.
-
-Decision (author-0061, item 1): a part-less device lists each of its pins in `dir()`, as a
-part's device does. `ext["U"]` keeps working.
-"""
+"""Field case: equipment another party supplies, an external unit E1 with pins U, V and W, wired by pin letter with no part file.
+The bug: `ext.U` worked at runtime, but dir(ext) of a part-less device listed no pin, so type checkers saw only Any.
+Fixed by author-0061 (item 1), a part-less device lists each of its pins in `dir()` as a part's device does; `ext["U"]` keeps working."""
 
 import fransys as fr
 

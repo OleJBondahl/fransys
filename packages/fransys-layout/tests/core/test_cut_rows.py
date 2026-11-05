@@ -7,6 +7,7 @@ is the width the pack modules give the same columns as one row.
 from __future__ import annotations
 
 from dataclasses import replace
+from typing import Any
 
 import pytest
 from options_fixtures import core_options
@@ -20,14 +21,7 @@ from .cut_fixtures import AREA, box_sym, chain, elem, net
 from .cut_oracle import window_misses
 from .pipeline_fixtures import blocks_of, flow_of
 
-OPTIONS = core_options(
-    flip_turn="R180",
-    tag_stagger=True,
-    label_gap=8,
-    parallel_pitch=48,
-    driver_first=True,
-    arrow_sides=("E", "W"),
-)
+OPTIONS = core_options()
 PAGE_H = AREA.h - 2 * OPTIONS.margin.h
 
 
@@ -36,7 +30,7 @@ def staggered(sym_id: str, body: int, text: int, group: str) -> object:
     return refit(elem(sym_id, body, 32, group), footprint=Box(-text // 2, -16, text, 32))
 
 
-def free_mixed() -> tuple[list, list, Hints | None]:
+def free_mixed() -> tuple[list[Any], list[Any], Hints | None]:
     """Columns of one to four cells and mixed widths, whose neighbours interleave by y."""
     syms, nets = [], []
     for k, (w, cells) in enumerate([(40, 1), (24, 4), (64, 2), (16, 3), (80, 1), (32, 4)]):
@@ -46,7 +40,7 @@ def free_mixed() -> tuple[list, list, Hints | None]:
     return syms, nets, Hints(group_order=tuple(f"G{k}" for k in range(6)))
 
 
-def card_between() -> tuple[list, list, Hints | None]:
+def card_between() -> tuple[list[Any], list[Any], Hints | None]:
     syms = [box_sym(5), *(elem(f"k{i}", 40, 32, "CH") for i in range(1, 6))]
     syms += [
         elem("f0", 24, 32, "FR"),
@@ -59,7 +53,7 @@ def card_between() -> tuple[list, list, Hints | None]:
     return syms, nets, Hints(group_order=("FR", "PLC", "CH", "GR"))
 
 
-def two_cards() -> tuple[list, list, Hints | None]:
+def two_cards() -> tuple[list[Any], list[Any], Hints | None]:
     second = replace(box_sym(4), id="A2", group="PLC2")
     syms = [box_sym(3), second]
     syms += [elem(f"k{i}", 32, 32, "CH") for i in range(1, 4)]
@@ -69,7 +63,7 @@ def two_cards() -> tuple[list, list, Hints | None]:
     return syms, nets, Hints(group_order=("PLC", "CH", "PLC2", "CM"))
 
 
-def staggered_pair() -> tuple[list, list, Hints | None]:
+def staggered_pair() -> tuple[list[Any], list[Any], Hints | None]:
     syms = [staggered(f"{p}{i}", 24, 80, f"G{i}") for i in range(5) for p in "ab"]
     nets = [net(f"n{i}", f"a{i}.s", f"b{i}.n") for i in range(5)]
     return syms, nets, Hints(group_order=tuple(f"G{i}" for i in range(5)))

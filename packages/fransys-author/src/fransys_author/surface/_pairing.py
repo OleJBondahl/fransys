@@ -1,9 +1,11 @@
 """The pole rule and the pairing of series ends, pure functions over the part's facts."""
 
-from typing import TYPE_CHECKING, NamedTuple, Protocol, cast, runtime_checkable
+from abc import ABC, abstractmethod
+from typing import TYPE_CHECKING, NamedTuple, cast
 
 from fransys_author.errors import AuthorError
 from fransys_model.derive import poles_of_template
+from fransys_model.elecdef import PinRole
 from fransys_model.vocab import (
     ConductorMark,
     FunctionTemplate,
@@ -11,7 +13,6 @@ from fransys_model.vocab import (
     PlcChannelFacet,
     PlcRequestFacet,
     Pole,
-    PortRole,
     PortTemplate,
 )
 from fransys_model.vocab import Port as ModelPort
@@ -28,24 +29,20 @@ if TYPE_CHECKING:
 _PHASE = tuple(ConductorMark)
 NO_SIDE_FIX = (
     "its part states no line side. The part's author adds the port key `side` in the part file; "
-    "otherwise wire its pins with d.detail.wire(pin, pin, wire=...)"
+    "otherwise wire its pins with d.series(pin, pin, wire=...)"
 )
 PARTLESS_FIX = (
     "{what} belongs to a device with no part, so this call cannot read its poles. A series takes "
     "such a device only as its last element: make it the last element, or wire it per core "
-    "with d.detail.wire(pin, pin, wire=...)"
+    "with d.series(pin, pin, wire=...)"
 )
-_BY_HAND = "wire the poles one by one with d.detail.wire(pin, pin, wire=...)"
+_BY_HAND = "wire the poles one by one with d.series(pin, pin, wire=...)"
 
 
 def label_of(element: object) -> str:
     """The printed name of a series element, for a message: `Q1`, `K1.coil`, `X1`, `230V`."""
     fn = getattr(element, "_fn", None)
-    label = (
-        getattr(element, "_label", None)
-        or getattr(element, "_tag", None)
-        or getattr(element, "_name", None)
-    )
+    label = getattr(element, "_label", None) or getattr(element, "_tag", None) or getattr(element, "_name", None)
     if fn is not None and label:
         return f"{label}.{fn.name}"
     return str(label or type(element).__name__)
@@ -72,16 +69,33 @@ class Ends(NamedTuple):
     pe: Port | None = None
 
 
-@runtime_checkable
-class SeriesElement(Protocol):
-    """What a handle needs to stand in a series; `Device`, `Fn` and `Pin` are dispatched apart.
+class SeriesPart:
+    """What every handle in a series shares: no width of its own, and a plain entry side.
 
     Does not take a `Design` it does not need: `design` is the one the series is written in.
     """
 
+    _enters_from_field = False
+
+    def _series_width(self) -> int | None:
+        return None
+
+
+class SeriesElement(SeriesPart, ABC):
+    """A handle that stands in a series; `Device`, `Fn` and `Pin` are dispatched apart."""
+
+    @abstractmethod
     def _series_ends(self, design: Design, width: int | None) -> Ends: ...
 
-    def _series_width(self) -> int | None: ...
+
+class SeriesBridge(SeriesPart, ABC):
+    """A cable-like element that lands between its two neighbours instead of being wired to them.
+
+    Does not get wired by the series: it is handed each neighbour and its ends.
+    """
+
+    @abstractmethod
+    def _series_between(self, design: Design, before: tuple[object, Ends], after: tuple[object, Ends], series: str) -> None: ...
 
 
 class PartFacts:
@@ -194,9 +208,7 @@ def template_poles(facts: PartFacts, fn: Fn) -> tuple[Pole, ...]:
     """The part's poles of `fn`: `poles_of_template`, sideless: no stated side, no poles."""
     ports = {facts.port_template(port).id for port in fn.ports}
     templates = (facts.templates[i] for i in ports)
-    return poles_of_template(
-        facts.function_template(fn).kind, templates, facts.links(fn), sideless=True
-    )
+    return poles_of_template(facts.function_template(fn).kind, templates, facts.links(fn), sideless=True)
 
 
 def poles(facts: PartFacts, fn: Fn, *, partless_ok: bool = False) -> list[tuple[Port, Port]]:
@@ -205,7 +217,7 @@ def poles(facts: PartFacts, fn: Fn, *, partless_ok: bool = False) -> list[tuple[
     Does not read a name or guess a side: `poles_of_template` does. `partless_ok`: pins are poles.
     """
     if partless_ok and facts.partless(fn):
-        return [(port, port) for port in fn.ports if port.role is not PortRole.PE]
+        return [(port, port) for port in fn.ports if port.pin_role is not PinRole.PE]
     found = template_poles(facts, fn)
     _need_sides(fn, found)
     by_template = {facts.port_template(port).id: port for port in fn.ports}
@@ -218,22 +230,17 @@ def ends_of(facts: PartFacts, fn: Fn, *, partless_ok: bool = False) -> Ends:
     Does not pair them with another element's ends: `pair` does.
     """
     pairs = poles(facts, fn, partless_ok=partless_ok)
-    pe = next((port for port in fn.ports if port.role is PortRole.PE), None)
+    pe = next((port for port in fn.ports if port.pin_role is PinRole.PE), None)
     line = tuple(End(a, facts.mark(a)) for a, _ in pairs)
     load = tuple(End(b, facts.mark(b)) for _, b in pairs)
     return Ends(line, load, pe)
 
 
-def _by_mark(
-    source: Sequence[End], load: Sequence[End], names: tuple[str, str]
-) -> list[tuple[Port, Port]]:
+def _by_mark(source: Sequence[End], load: Sequence[End], names: tuple[str, str]) -> list[tuple[Port, Port]]:
     first, second = sorted(source, key=_phase), sorted(load, key=_phase)
-    a, b = [e.mark.value for e in first], [e.mark.value for e in second]  # ty: ignore[unresolved-attribute] -- marks checked by `pair`
+    a, b = [_PHASE[_phase(e)].value for e in first], [_PHASE[_phase(e)].value for e in second]
     if a != b:
-        msg = (
-            f"{names[0]} carries {', '.join(a)} where {names[1]} takes {', '.join(b)}: "
-            f"conductors pair by name, so {_BY_HAND}"
-        )
+        msg = f"{names[0]} carries {', '.join(a)} where {names[1]} takes {', '.join(b)}: conductors pair by name, so {_BY_HAND}"
         raise AuthorError(msg)
     return [(x.port, y.port) for x, y in zip(first, second, strict=True)]
 
@@ -244,9 +251,7 @@ def _ends_text(ends: Sequence[End]) -> str:
     return f"{len(ends)} pole{'' if len(ends) == 1 else 's'} ({named})"
 
 
-def pair(
-    source: Sequence[End], load: Sequence[End], names: tuple[str, str] = ("the source", "the load")
-) -> list[tuple[Port, Port]]:
+def pair(source: Sequence[End], load: Sequence[End], names: tuple[str, str] = ("the source", "the load")) -> list[tuple[Port, Port]]:
     """Pair `source` ends with `load` ends: by conductor mark when all have one, else by position.
 
     Does not pair unequal counts: the message names both elements, their poles and the call.
@@ -256,6 +261,9 @@ def pair(
             f"{names[0]} leaves with {_ends_text(source)} but {names[1]} takes "
             f"{_ends_text(load)}: use a function of {len(source)} poles there, or {_BY_HAND}"
         )
+        raise AuthorError(msg)
+    if same := next((a.port for a, b in zip(source, load, strict=True) if a.port.id == b.port.id), None):
+        msg = f"{names[0]} and {names[1]} are joined at the same pin {same.name}: a wire joins two different pins, so name another pin"
         raise AuthorError(msg)
     ends = (*source, *load)
     if ends and all(end.mark is not None for end in ends):

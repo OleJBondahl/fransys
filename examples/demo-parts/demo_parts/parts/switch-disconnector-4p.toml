@@ -1,4 +1,4 @@
-schema = 1
+schema = 2
 
 [part]
 mpn = "DEMO-ISO-4P"
@@ -29,5 +29,5 @@ links = [
 ]
 
 [function.rating]
-voltage_ac_v = "690"
-current_ac_a = "125"
+voltage = [{ nom = "690 V", at = ["AC"] }]
+current = [{ nom = "125 A", at = ["AC"] }]

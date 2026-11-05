@@ -1,5 +1,6 @@
-"""The cable engine: cable drawing blocks as page-less derived `layout.*` records."""
+"""The cable engine: cable drawing blocks as values."""
 
 from .engine import lay_out_cables
+from .values import CableLayout, PlacedBlock, PlacedEnd, PlacedWire
 
-__all__ = ("lay_out_cables",)
+__all__ = ("CableLayout", "PlacedBlock", "PlacedEnd", "PlacedWire", "lay_out_cables")

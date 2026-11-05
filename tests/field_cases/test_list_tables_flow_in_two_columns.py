@@ -1,12 +1,6 @@
-"""Field case: terminal list tables stand in two columns of 40 % and fill them before a new page.
-
-The engineering shape: a cabinet with a few terminal strips, so the terminal list has one short
-table per strip, and a cabinet with enough long strips for the list to need more than one page.
-
-The bug (v0.13 look): every table took the full content width, one strip to a page, so a list of
-short tables was mostly white paper. The rule (decision pdf-0026): tables stack down the left
-column, then down the right column, and a new page opens only when both columns are full.
-"""
+"""Field case: a cabinet with a few short terminal strips, and enough long strips for the terminal list to need more than one page.
+The bug (v0.13 look): every table took the full content width, one strip to a page, so a list of short tables was mostly white paper.
+Fixed by pdf-0026, tables stack down the left column, then the right, and a new page opens only when both columns are full."""
 
 import re
 lazy from pathlib import Path
@@ -34,8 +28,6 @@ def _pdf(root: Path, strips: int, terminals: int) -> Path:
         fr.DocumentPreset.CABINET_SCHEMATIC,
         cabinet,
         cover=cover,
-        add=(fr.PageKind.TERMINAL_LIST,),
-        remove=(fr.PageKind.SCHEMATIC,),
     )
     fr.write(fr.build(d, document), out_dir=root / "out", intermediates=root / "inter")
     (pdf,) = (root / "out").glob("*.pdf")
@@ -46,7 +38,7 @@ def _list_pages(pdf: Path) -> list[tuple[float, list[tuple[float, float, str]], 
     """Per terminal list page: its width, its body glyphs `(x, y, char)` and its text."""
     document = pypdfium2.PdfDocument(pdf)
     try:
-        found = []
+        found: list[tuple[float, list[tuple[float, float, str]], str]] = []
         for page in document:
             width, height = page.get_size()
             text = page.get_textpage()
@@ -67,12 +59,8 @@ def _heading_places(pdf: Path) -> list[tuple[int, float, float]]:
     """Each strip heading as `(list page, x, y)`, in reading order."""
     document = pypdfium2.PdfDocument(pdf)
     try:
-        places = []
-        pages = [
-            p
-            for p in document
-            if has_page_title(p.get_textpage().get_text_range(), "Terminal list")
-        ]
+        places: list[tuple[int, float, float]] = []
+        pages = [p for p in document if has_page_title(p.get_textpage().get_text_range(), "Terminal list")]
         for number, page in enumerate(pages):
             text = page.get_textpage()
             for found in _HEADING.finditer(text.get_text_range()):

@@ -9,9 +9,7 @@ lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.core import Function, Port
 
 
-def _model(
-    *, selector: bool = False
-) -> tuple[Model, tuple[Id[Function], ...], tuple[Id[Port], ...]]:
+def _model(*, selector: bool = False) -> tuple[Model, tuple[Id[Function], ...], tuple[Id[Port], ...]]:
     plant = Plant()
     item = plant.item("q1", part=plant.part("Q"))
     poles = tuple(plant.function(item, name) for name in ("p1", "p2", "p3"))

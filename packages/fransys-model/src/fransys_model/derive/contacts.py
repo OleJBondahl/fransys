@@ -13,7 +13,6 @@ from fransys_model.derive.facts.contacts import (
     Throws,
     changeover_throws,
     link_state,
-    link_throw,
 )
 from fransys_model.derive.indexes import build_indexes
 from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, digest_cached
@@ -49,6 +48,5 @@ __all__ = [
     "Throws",
     "changeover_throws",
     "link_state",
-    "link_throw",
     "owned_contacts",
 ]

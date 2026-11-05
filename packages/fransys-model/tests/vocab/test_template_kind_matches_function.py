@@ -17,10 +17,7 @@ _PART_FILES = Path(__file__).parents[4] / "examples" / "demo-parts" / "demo_part
 
 def _demo_mpns() -> list[str]:
     """The MPN of every demo part file, in file-name order."""
-    return [
-        tomllib.loads(path.read_text(encoding="utf-8"))["part"]["mpn"]
-        for path in sorted(_PART_FILES.glob("*.toml"))
-    ]
+    return [tomllib.loads(path.read_text(encoding="utf-8"))["part"]["mpn"] for path in sorted(_PART_FILES.glob("*.toml"))]
 
 
 @pytest.fixture(scope="module")

@@ -13,23 +13,18 @@ from fransys_model.derive import (
     overview_stub_west,
     overview_view_rows,
 )
-from fransys_model.kernel import make_id
+from fransys_model.elecdef import Current
+from fransys_model.kernel import Id, make_id
 from fransys_model.layout import BoxKey, OverviewMode, OverviewRef, OverviewRefKind
-from fransys_model.vocab.core import Item
-from fransys_model.vocab.enums import Current
+from fransys_model.vocab.core import Item, Unit
 
 
 def _ref(key: str) -> OverviewRef:
     return OverviewRef(kind=OverviewRefKind.ITEM, item=make_id(Item, (key,)))
 
 
-def _homed(plant: Plant, homes: dict) -> None:
-    plant.records = [
-        dataclasses.replace(r, unit=homes[r.key[0]])
-        if isinstance(r, Item) and r.key[0] in homes
-        else r
-        for r in plant.records
-    ]
+def _homed(plant: Plant, homes: dict[str, Id[Unit]]) -> None:
+    plant.records = [dataclasses.replace(r, unit=homes[r.key[0]]) if isinstance(r, Item) and r.key[0] in homes else r for r in plant.records]
 
 
 def _sides_plant():
@@ -52,16 +47,8 @@ def _sides_plant():
 def test_a_stub_is_west_for_an_enclosing_unit_or_a_strip_and_east_for_any_other() -> None:
     """LO1: breaks if a side comes from anything but the far end's strip kind and unit chain."""
     model, nested = _sides_plant()
-    view = next(
-        v
-        for v in overview_view_rows(model, nested)
-        if v.mode is OverviewMode.LANES and v.open is None
-    )
-    side = {
-        b.key.ref.item: overview_stub_west(model, nested, b.key.ref)
-        for b in view.boxes
-        if b.key.at is not None
-    }
+    view = next(v for v in overview_view_rows(model, nested) if v.mode is OverviewMode.LANES and v.open is None)
+    side = {b.key.ref.item: overview_stub_west(model, nested, b.key.ref) for b in view.boxes if b.key.at is not None}
     assert side == {
         make_id(Item, ("k1",)): True,
         make_id(Item, ("x9",)): True,

@@ -12,10 +12,10 @@ from typing import TYPE_CHECKING
 import pytest
 
 from fransys_layout.core import Size
-from fransys_layout.core.widen import widen
+from fransys_layout.core.widen import Round, widen
 
 from .cut_respell import (
-    back_of,
+    back_by_parts,
     canon_placement,
     id_sets,
     make_maps,
@@ -54,16 +54,6 @@ CASES: dict[str, tuple[Callable[[], PlacementProblem], Callable[[Placement, Plac
 }
 
 
-def _back(maps: dict[str, str]) -> Callable[[str | None], str | None]:
-    """`back_of`, and the ids stage 3 spells from a symbol id ("c:S0001") by their parts."""
-    inv = back_of(maps)
-
-    def back(i: str | None) -> str | None:
-        return None if i is None else ":".join(inv(part) or part for part in i.split(":"))
-
-    return back
-
-
 @pytest.mark.parametrize("case", CASES)
 @pytest.mark.parametrize("form", SPELLINGS)
 def test_widen_does_not_depend_on_how_ids_are_spelled(case: str, form: str) -> None:
@@ -74,7 +64,7 @@ def test_widen_does_not_depend_on_how_ids_are_spelled(case: str, form: str) -> N
     maps = make_maps(id_sets(prob, cut.flow, cut.blocks), form)
     respelled = respell_problem(prob, maps)
     _, (_, got, _, _) = run(respelled, demand=2)
-    assert canon_placement(got, _back(maps)) == canon_placement(want, _back({}))
+    assert canon_placement(got, back_by_parts(maps)) == canon_placement(want, back_by_parts({}))
 
 
 @pytest.mark.parametrize("case", CASES)
@@ -85,5 +75,5 @@ def test_the_case_is_not_vacuous_without_the_demand(case: str) -> None:
     cut = cut_of(prob, PLAIN)
     placement = placed_from(cut, prob, PLAIN)
     routes = routed_from(cut, prob, PLAIN)
-    _, after, _, _ = widen(cut, placement, routes, prob, PLAIN)
+    _, after, _, _, _ = widen(cut, placement, Round((), (), routes, ()), prob, PLAIN)
     assert [g.tracks for g in after.pages[0].gaps] != [1, 2]

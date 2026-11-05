@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from fransys_author.handles import Fn as EngineFn
     from fransys_author.surface._pairing import Ends
 
-_FIX = "make it the last element, or wire it per core with d.detail.wire(pin, pin, wire=...)"
+_FIX = "make it the last element, or wire it per core with d.series(pin, pin, wire=...)"
 _EARTH = "declare the earth pin apart and wire it with d.earth"
 
 
@@ -51,9 +51,6 @@ def box_ends(facts: PartFacts, label: str, fns: list[EngineFn], width: int | Non
         raise AuthorError(msg)
     count = len(poles(facts, fns[0], partless_ok=True))
     if width is not None and count != width:
-        msg = (
-            f"{label} has {count} non-earth pin{'' if count == 1 else 's'} where the path "
-            f"carries {width} pole{'' if width == 1 else 's'}: {_EARTH}"
-        )
+        msg = f"{label} has {count} non-earth pin{'' if count == 1 else 's'} where the path carries {width} pole{'' if width == 1 else 's'}: {_EARTH}"
         raise AuthorError(msg)
     return ends_of(facts, fns[0], partless_ok=True)

@@ -1,41 +1,26 @@
 """The render check's finding codes (BUILD-MESSAGES M1)."""
 
-from fransys_model.kernel import CodeInfo, Severity
+from typing import Any
+lazy from collections.abc import Iterable
+
+from fransys_model.kernel import CodeInfo, Finding, Id, Severity
 
 FINDING_CODES: tuple[CodeInfo, ...] = (
     CodeInfo(
         code="DRAW_PROBLEM",
-        severities=(Severity.ERROR,),
+        severity=Severity.ERROR,
         stage="render",
         who="Fransys",
         cause=(
             "A drawing set holds a record the renderer cannot draw, such as an unknown symbol "
             "key or an outline that is not a rectangle; the set draws no page."
         ),
-        fix=(
-            "No call clears this: send the smallest model that shows it. The message names the "
-            "record and what the renderer expected."
-        ),
-        page="findings-render",
-    ),
-    CodeInfo(
-        code="LAYOUT_MISSING",
-        severities=(Severity.ERROR,),
-        stage="render",
-        who="consumer",
-        cause=(
-            "The model has connected functions to draw, but layout made no page for them. A "
-            "function with nothing connected is drawn on no page and does not count."
-        ),
-        fix=(
-            "Wire the functions you want drawn into current paths inside function blocks. "
-            "Write: d.series(a, b, c)"
-        ),
+        fix=("No call clears this: send the smallest model that shows it. The message names the record and what the renderer expected."),
         page="findings-render",
     ),
     CodeInfo(
         code="REFERENCE_OFF_DOCUMENT",
-        severities=(Severity.WARNING,),
+        severity=Severity.WARNING,
         stage="render",
         who="consumer",
         cause=(
@@ -52,28 +37,19 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
     ),
     CodeInfo(
         code="TITLE_BLOCK_NOTICE_OVERFLOW",
-        severities=(Severity.WARNING,),
+        severity=Severity.WARNING,
         stage="render",
         who="consumer",
-        cause=(
-            "The `notice` text passed to `fr.document(notice=)` does not fit the notice cell "
-            "and would be cut."
-        ),
-        fix=(
-            "Shorten the notice of <subject> to fit its cell. Write: fr.document(<preset>, "
-            "<subject>, cover=<cover>, notice=<shorter notice>)"
-        ),
+        cause=("The `notice` text passed to `fr.document(notice=)` does not fit the notice cell and would be cut."),
+        fix=("Shorten the notice of <subject> to fit its cell. Write: fr.document(<preset>, <subject>, cover=<cover>, notice=<shorter notice>)"),
         page="findings-render",
     ),
     CodeInfo(
         code="TITLE_BLOCK_NO_ROOM",
-        severities=(Severity.WARNING,),
+        severity=Severity.WARNING,
         stage="render",
         who="consumer",
-        cause=(
-            "The sheet format's title-block band is under the required 20mm, "
-            "or its title block is under the required 97.5mm wide."
-        ),
+        cause=("The sheet format's title-block band is under the required 20mm, or its title block is under the required 97.5mm wide."),
         fix=(
             "Use a sheet format with a taller title-block band or a wider title block. "
             'Write: [paper] default = "A2" in the settings file, '
@@ -83,13 +59,10 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
     ),
     CodeInfo(
         code="TITLE_BLOCK_STACK_OVERLAP",
-        severities=(Severity.ERROR,),
+        severity=Severity.ERROR,
         stage="render",
         who="consumer",
-        cause=(
-            "The profile's text height needs a taller title-block band than the sheet format "
-            "has, so a title-block label overlaps its value."
-        ),
+        cause=("The profile's text height needs a taller title-block band than the sheet format has, so a title-block label overlaps its value."),
         fix=(
             "Use a sheet format whose title-block band is at least the named height, or the "
             'house text height. Write: [paper] default = "A2" in the settings file, '
@@ -99,7 +72,7 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
     ),
     CodeInfo(
         code="TITLE_BLOCK_TEXT_OVERFLOW",
-        severities=(Severity.WARNING,),
+        severity=Severity.WARNING,
         stage="render",
         who="consumer",
         cause=(
@@ -110,7 +83,7 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
             "Shorten the field the message names. Write: d.project(title=<shorter text>, "
             "number=<number>, customer=<shorter text>, revision=<n>, author=<shorter text>) "
             "for the title, number, customer, revision or author, or "
-            "d.layout.page_title(<thing>, <shorter text>) for a page title."
+            "d.function(<name>, <shorter text>) for a page title: the text of a block the page draws."
         ),
         page="findings-render",
     ),
@@ -119,6 +92,6 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
 _BY_CODE: dict[str, CodeInfo] = {info.code: info for info in FINDING_CODES}
 
 
-def fix_text(code: str, **values: str) -> str:
-    """The `fix` of one finding of `code`: the code's template filled with `values`."""
-    return _BY_CODE[code].filled(**values)
+def finding(code: str, subjects: Iterable[Id[Any]], message: str, **fix_values: str) -> Finding:
+    """The `Finding` of `code`: its one severity, its fix filled from `fix_values`."""
+    return _BY_CODE[code].finding(subjects, message, **fix_values)

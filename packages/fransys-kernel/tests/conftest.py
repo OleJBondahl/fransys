@@ -2,26 +2,21 @@
 
 The kernel must not know any engineering term (CLAUDE.md); `Thing` and `Link` are the
 fixtures' vocabulary, standing in for whatever `vocab` will later declare with the same
-`@record`/`@value` decorators. Exposed as fixtures, pytest's usual sharing mechanism,
-rather than imported directly, so test modules need no cross-file import of their own.
 """
 
-import sys
-from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import pytest
 from hypothesis import settings
 from hypothesis.internal.conjecture import providers
 from hypothesis.internal.constants_ast import Constants
+from kind_registry import restored_kind_registry
 
-from fransys_kernel import AuthoringKey, Id, Model, Origin, Record, Value, record, registry, value
+from fransys_kernel import AuthoringKey, Id, Model, Origin, Record, Value, record, value
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterator
 
-# --import-mode=importlib leaves this directory off sys.path; tests import helpers by name.
-sys.path.append(str(Path(__file__).parent))
 
 # Decision 0020: derandomized, no deadline, bounded examples (the same profile as fransys-model).
 settings.register_profile("fransys", deadline=None, derandomize=True, max_examples=25)
@@ -97,21 +92,8 @@ def model_of() -> Callable[..., Model]:
 
 @pytest.fixture(autouse=True)
 def _restore_kind_registry() -> Iterator[None]:
-    """Give each test the kind registry it found, so the suite can run twice in one process.
-
-    Tests register throwaway kinds and assert on the exact name; restored in place, so a module
-    that bound `registry._kinds` by name still sees the live dict.
-    """
-    kinds = dict(registry._kinds)
-    by_name = {name: list(classes) for name, classes in registry._records_by_name.items()}
-    values = set(registry._value_classes)
-    yield
-    registry._kinds.clear()
-    registry._kinds.update(kinds)
-    registry._records_by_name.clear()
-    registry._records_by_name.update(by_name)
-    registry._value_classes.clear()
-    registry._value_classes.update(values)
+    """Give each test the kind registry it found, so the suite can run twice in one process."""
+    yield from restored_kind_registry()
 
 
 @pytest.fixture(autouse=True)
@@ -120,7 +102,6 @@ def _draws_ignore_loaded_modules(monkeypatch: pytest.MonkeyPatch) -> Iterator[No
 
     Hypothesis offers the literals of every imported local module as draw values, so which
     workspace packages share the process moved the draw (`test_laws_meta` saw 7 aliases alone,
-    0 in the gate). No public setting turns it off, hence the private hook.
     """
     monkeypatch.setattr(providers, "_get_local_constants", Constants)
     providers.CONSTANTS_CACHE.cache.clear()

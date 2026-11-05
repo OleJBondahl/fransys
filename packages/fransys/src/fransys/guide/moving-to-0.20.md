@@ -7,7 +7,7 @@ This page lists each call that 0.20 adds or changes, with the old spelling and t
 ## A baseline cut by an older fransys
 
 `fr.verify` compares a stored listing under the rules of the `fransys` that cut it. When a later
-release printed a rule differently, it gives `BASELINE_RULES_MOVED` (INFO) for that release, and
+release printed a rule differently, it gives `BASELINE_RULES_MOVED_NOTE` (INFO) for that release, and
 `fr.release` refuses over it. `fr.rebaseline` is the new call that clears it: it re-cuts the stored
 `listing.json` and the manifest under today's rules and leaves every export as it was.
 
@@ -16,14 +16,13 @@ is in `build.md`, after "Checking a baseline stays true".
 
 ## A finding carries its fix
 
-`fr.Finding` has a new field `fix`: the text that clears it, `<valid values>. Write: <corrected call>`. `fr.report` prints the finding's own `fix`, and `BuildErrors.findings` holds the same rows, so a test reads `exc.findings[0].fix`. `LABEL_UNPLACED` is now INFO (a Fransys defect, send the smallest model). A `fr.Finding(...)` you build yourself with severity ERROR or WARNING must pass `fix=`.
+`fr.Finding` has a new field `fix`: the text that clears it, `<valid values>. Write: <corrected call>`. `fr.report` prints the finding's own `fix`, and `BuildFailedError.findings` holds the same rows, so a test reads `exc.findings[0].fix`. `LABEL_UNPLACED` is now INFO (a Fransys defect, send the smallest model). A `fr.Finding(...)` you build yourself with severity ERROR or WARNING must pass `fix=`.
 
 ## Renames in the change list
 
 A listing now carries item keys (version 2), so the change list follows a rename: "Renamed -A1 → -A2"
 replaces a removal and an addition, and `changes.csv` writes `renamed` in the `change`
-column. A release cut before 0.20 has no keys: its diff pairs by name and `CHANGES_BY_NAME` says
-so. `fr.rebaseline` writes version 2.
+column. A release cut before 0.20 has no keys; 0.22 refuses it (`BASELINE_TOO_OLD`); `fr.rebaseline` cannot re-cut it, so `fr.release` a new revision and the old one stays as released.
 
 ## A derive row type renamed
 

@@ -22,13 +22,8 @@ def _title_cell(columns: int, title: str, label: str) -> str:
         "let first = p.page == q.page and calc.abs(p.x - q.x) < 3mm and calc.abs(p.y - q.y) < 5mm"
     )
     text = literal(title)
-    carried = (
-        f"heading(level: 2, outlined: false, bookmarked: false, text({text})); block(height: 0pt)"
-    )
-    return (
-        f"table.cell(colspan: {columns + 1}, stroke: none, inset: 0pt)"
-        f"[#context {{ {first}; if first [] else {{ {carried} }} }}]"
-    )
+    carried = f"heading(level: 2, outlined: false, bookmarked: false, text({text})); block(height: 0pt)"
+    return f"table.cell(colspan: {columns + 1}, stroke: none, inset: 0pt)[#context {{ {first}; if first [] else {{ {carried} }} }}]"
 
 
 def table_source(

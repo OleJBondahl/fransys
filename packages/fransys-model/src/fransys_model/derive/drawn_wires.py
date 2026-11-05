@@ -14,6 +14,7 @@ from .harness import _ends, _facts_of
 from .harness_wires import harness_wires
 from .texts.core_text import cross_section_text, join_words
 from .wire_ends import ordered_wire_ends
+from .wire_list import wire_labels
 lazy from .rows import HarnessCore, HarnessEnd
 
 
@@ -47,19 +48,18 @@ def block_wires(model: Model, subject: Id[Item], unit: Id[Unit] | None) -> tuple
         record = conductors(model)[row.conductor]
         end_a, end_b = ordered_wire_ends(model, record.a, record.b)
         key = join_words(
-            wire_text(model, row.conductor, unit=unit),
+            wire_labels(model).get(row.conductor) or wire_text(model, row.conductor, unit=unit),
             row.colour,
             cross_section_text(row.cross_section_mm2),
         )
-        found.append(
-            DrawnWire(conductor=row.conductor, index=index, end_a=end_a, end_b=end_b, text=key)
-        )
+        found.append(DrawnWire(conductor=row.conductor, index=index, end_a=end_a, end_b=end_b, text=key))
     return tuple(found)
 
 
 def wire_harness_subjects(model: Model) -> tuple[Id[Item], ...]:
     """The harnesses that have single wires, sorted: the extra blocks layout lists."""
-    return tuple(sorted(harnesses_with_wires(model)))
+    harnesses = harnesses_with_wires(model)
+    return tuple(item for item in items(model) if item in harnesses)
 
 
 def wire_cores(model: Model, subject: Id[Item], unit: Id[Unit] | None) -> tuple[HarnessCore, ...]:

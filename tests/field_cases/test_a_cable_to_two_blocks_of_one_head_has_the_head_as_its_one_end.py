@@ -1,16 +1,6 @@
-"""Field case: a cable whose cores land on two contact blocks of one e-stop head.
-
-The engineering shape: an e-stop head `S1` with two break-contact blocks clipped on with
-`parent=`, each in its own circuit. One 4-core cable joins both blocks to a terminal strip. An
-electrician reads one device, `S1`, at that end of the cable.
-
-The bug: each block was its own cable end, both printing `S1`, so the build raised
-HARNESS_END_AMBIGUOUS and its text pointed at units and strips.
-
-Rule: the cable's end is the device that prints the label (`designation_holder`), so the two
-blocks are one end with both pins landed on it. Decision: API-FRICTION-1 F9. Invented parts from
-`demo_parts`: `DEMO-HEAD-ESTOP`, `DEMO-BLOCK-1NC`, `DEMO-BLOCK-1NC-21`, `DEMO-CBL-4G1.5`.
-"""
+"""Field case: a cable whose cores land on two contact blocks of one e-stop head, each block in its own circuit.
+The bug: each block was its own cable end, both printing S1, so the build raised HARNESS_END_AMBIGUOUS, pointing at units and strips.
+Fixed by API-FRICTION-1 F9, the cable's end is the device that prints the label (designation_holder), so the two blocks are one end."""
 
 import fransys as fr
 from _model_build_cover import cabinet_document

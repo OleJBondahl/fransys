@@ -1,4 +1,4 @@
-schema = 1
+schema = 2
 
 [part]
 mpn = "DEMO-CONN-2P"
@@ -6,6 +6,10 @@ manufacturer = "Demo"
 description = "Header, 2-pin"
 category = "connector"
 class_code = "J"
+
+[footprint]
+library = "Demo_Conn"
+name = "Header_2P"
 
 [[function]]
 name = "x1"

@@ -1,17 +1,6 @@
 """Field case: a unit with two outside lamps, one on a cable and one on loose wires.
-
-Engineering shape: a unit instance has an interface strip. Two devices outside every unit hang
-on it, so each is that unit's field device (O9): one lamp reaches it by a cable, the other by
-loose wires only. The cable puts the first lamp's box on the system level, so the level is
-not empty and the field-device fold runs.
-
-The bug: the fold read each member's box text from the system level's boxes, which hold the
-ends of cables only. The loose-wire lamp had no box there, and `fr.check` raised `KeyError`
-in `derive.overview_view_rows`.
-
-Fix: a fold member's box text is `level_box_lines`, not a lookup in the system level's boxes (no
-new decision: the O9 fact is unchanged).
-"""
+The bug: the field-device fold read member boxes from the system level, which holds only cable ends, so fr.check raised KeyError.
+Fixed by the O9 fact (no new decision), a fold member's box text is level_box_lines, not a system-level box lookup."""
 
 import re
 from typing import NamedTuple
@@ -25,16 +14,19 @@ from fransys.colours import BU
 class _Io(NamedTuple):
     cabled: fr.Run
     loose: fr.Run
+    neutral: fr.Run
 
 
 @fr.unit("demo-cab", revision=1, interface_version=1, date="2026-10-14", text="first", by="AB")
 def _cab(u: fr.Design) -> _Io:
     with u.function("SUP", "Supply"):
         x1 = u.terminal_strip("X1", "DEMO-TB-2.5", pe="DEMO-TB-PE-2.5", interface=True)
-        cabled, loose = x1.run("L1", 1), x1.run("L2", 1)
+        cabled, loose, neutral = x1.run("L1", 1), x1.run("L2", 1), x1.run("N", 2)
         lamp = u.device("H1", "DEMO-LAMP-24")
-        u.detail.wire(cabled[1], lamp["1"], wire=(BU, 0.5))
-    return _Io(cabled, loose)
+        u.series(cabled[1].inner, lamp["1"], wire=(BU, 0.5))
+        back = u.terminal_strip("X2", "DEMO-TB-2.5").run("N", 1)
+        u.series(back[1].inner, lamp["2"], wire=(BU, 0.5))
+    return _Io(cabled, loose, neutral)
 
 
 @pytest.fixture(scope="module")
@@ -48,8 +40,10 @@ def built() -> fr.BuildResult:
         on_cable = d.device("H8", "DEMO-LAMP-24")
         cable = d.cable("W1", "DEMO-CBL-4G1.5", length_m=10)
         cable.core(1, on_cable["1"], unit.cabled[1])
+        cable.core(2, on_cable["2"], unit.neutral[1])
         on_wire = d.device("H9", "DEMO-LAMP-24")
-        d.detail.wire(unit.loose[1], on_wire["1"], wire=(BU, 0.5))
+        d.series(unit.loose[1].outer, on_wire["1"], wire=(BU, 0.5))
+        d.series(unit.neutral[2].outer, on_wire["2"], wire=(BU, 0.5))
     return fr.build(d, system_document())
 
 

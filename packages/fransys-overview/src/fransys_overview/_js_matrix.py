@@ -1,7 +1,5 @@
 """Page script, part 5a: the matrix index (O7): a table of cable counts per pair of boxes, no layout."""
 
-# ruff: noqa: E501 -- the JavaScript source is not wrapped
-
 from typing import Final
 
 JS_MATRIX: Final[str] = r"""

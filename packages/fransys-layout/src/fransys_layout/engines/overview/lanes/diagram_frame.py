@@ -3,7 +3,7 @@
 `build_frame` is pure and deterministic; None means the diagram cannot be placed on its sheet.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 lazy from collections.abc import Callable, Mapping, Sequence
 
 from fransys_layout.engines.overview.columns import assign_columns, column_columns
@@ -38,55 +38,63 @@ class Stacked:
     """The columns of a diagram with their joints, box heights and y, and each side's ends."""
 
     columns: tuple[tuple[Ident, ...], ...]
+    breaks: frozenset[int]
     joints: tuple[Joint, ...]
     height: Mapping[Ident, int]
     y: Mapping[Ident, int]
     ends: Mapping[tuple[Ident, Facing], tuple[FrameEnd, ...]]
 
 
-def _columns_heights(
-    facts: DiagramFacts,
-) -> tuple[tuple[tuple[Ident, ...], ...], tuple[Joint, ...], tuple[RawEnd, ...], dict[Ident, int]]:
-    """The columns, joints, raw ends and box heights of a diagram (rules 1 to 4)."""
-    ids = tuple(b.box for b in facts.boxes)
-    joined = [(line.a, line.b) for line in facts.lines]
-    if facts.column:
-        stand = column_columns(ids, joined, facts.column, facts.left)
-    else:
-        stand = assign_columns(ids, joined)
-    columns = order_columns(stand, joined, {b: i for i, b in enumerate(ids)}, facts.column)
+def _oriented(facts: DiagramFacts, columns: tuple[tuple[Ident, ...], ...]) -> tuple[tuple[Joint, ...], tuple[RawEnd, ...], dict[Ident, int]]:
     joints = orient(facts, {b: c for c, col in enumerate(columns) for b in col})
     raw = raw_ends(joints)
-    return columns, joints, raw, heights(facts, raw)
+    return joints, raw, heights(facts, raw)
+
+
+def _fit(columns: tuple[tuple[Ident, ...], ...], height: Mapping[Ident, int], room: int) -> tuple[tuple[tuple[Ident, ...], ...], frozenset[int]]:
+    """A column taller than `room` is cut between boxes; each rest starts a sheet. Returns the columns and those starts."""
+    out: list[tuple[Ident, ...]] = []
+    breaks: set[int] = set()
+    for col in columns:
+        piece: list[Ident] = []
+        used = 0
+        for box in col:
+            if piece and used + ROW_GAP + height[box] > room:
+                out.append(tuple(piece))
+                breaks.add(len(out))
+                piece, used = [], -ROW_GAP
+            piece.append(box)
+            used += ROW_GAP + height[box]
+        out.append(tuple(piece))
+    return tuple(out), frozenset(breaks)
+
+
+def _columns_heights(
+    facts: DiagramFacts,
+) -> tuple[tuple[tuple[Ident, ...], ...], frozenset[int], tuple[Joint, ...], tuple[RawEnd, ...], dict[Ident, int]]:
+    """The columns, the sheet-starting ones, joints, raw ends and box heights of a diagram (rules 1 to 4)."""
+    ids = tuple(b.box for b in facts.boxes)
+    joined = [(line.a, line.b) for line in facts.lines]
+    stand = column_columns(ids, joined, facts.column, facts.left) if facts.column else assign_columns(ids, joined)
+    columns = order_columns(stand, joined, {b: i for i, b in enumerate(ids)}, facts.column)
+    cut, breaks = _fit(columns, _oriented(facts, columns)[2], facts.height - 2 * PAGE_PAD)
+    return cut, breaks, *_oriented(facts, cut)
+
+
+def _jumps(joints: Sequence[Joint], columns: Sequence[Sequence[Ident]], breaks: frozenset[int]) -> tuple[int, ...]:
+    """The lines that skip a column across a sheet start: each ends in a reference marker on both sheets."""
+    where = {b: c for c, col in enumerate(columns) for b in col}
+    return tuple(j.line for j in joints if where[j.right] - where[j.left] > 1 and any(where[j.left] < f <= where[j.right] for f in breaks))
 
 
 def _stacked(facts: DiagramFacts) -> Stacked | None:
     """Columns, orientation, sizes, stacking and ends (rules 1 to 5), or None if too tall."""
-    columns, joints, raw, height = _columns_heights(facts)
+    columns, breaks, joints, raw, height = _columns_heights(facts)
     y = stack(columns, height, facts.height)
     if y is None:
         return None
     ends = place_ends(raw, y, height, facts.text_height, nest=facts.nest_same)
-    return Stacked(columns=columns, joints=joints, height=height, y=y, ends=ends)
-
-
-def tall_column(facts: DiagramFacts) -> tuple[int, int, int] | None:
-    """The tallest column that overfills the sheet as (column number from 1, boxes, boxes that fit).
-
-    None when the stack fits. The fit counts the column's boxes, top down, that stay in the sheet.
-    """
-    columns, _, _, height = _columns_heights(facts)
-    if stack(columns, height, facts.height) is not None:
-        return None
-    totals = [sum(height[b] for b in col) + ROW_GAP * (len(col) - 1) for col in columns]
-    tallest = totals.index(max(totals))
-    room, used, fit = facts.height - 2 * PAGE_PAD, 0, 0
-    for box in columns[tallest]:
-        used += height[box] + (ROW_GAP if fit else 0)
-        if used > room:
-            break
-        fit += 1
-    return tallest + 1, len(columns[tallest]), fit
+    return Stacked(columns=columns, breaks=breaks, joints=joints, height=height, y=y, ends=ends)
 
 
 def _column(c: int, x: int, width: int, facts: DiagramFacts, stacked: Stacked) -> FrameColumn:
@@ -132,10 +140,11 @@ def build_frame(facts: DiagramFacts) -> Frame | None:
     stacked = _stacked(facts)
     if stacked is None:
         return None
-    pairs = build_pairs(facts, stacked.columns, stacked.joints, stacked.ends)
+    jumps = _jumps(stacked.joints, stacked.columns, stacked.breaks)
+    pairs = build_pairs(facts, stacked.columns, stacked.joints, stacked.ends, jumps)
     by_box = {b.box: b for b in facts.boxes}
     widths = [max(box_width(by_box[b]) for b in col) for col in stacked.columns]
-    split = None if pairs is None else split_sheets(widths, pairs, facts.width)
+    split = None if pairs is None else split_sheets(widths, pairs, facts.width, stacked.breaks)
     if pairs is None or split is None:
         return None
-    return _sheets(split, pairs, lambda c, x: _column(c, x, widths[c], facts, stacked))
+    return replace(_sheets(split, pairs, lambda c, x: _column(c, x, widths[c], facts, stacked)), jumps=jumps)

@@ -1,18 +1,11 @@
-"""Field case: one unit whose boundary strip holds a bridged `24V` rail terminal and a plain
-terminal, both wired from the container to a lamp.
-
-The rule (owner ruling 2026-10-06): the container's page draws a rail boundary
-terminal, and its connection, exactly as it draws a non-rail boundary terminal of the same strip
-wired the same way. The comparison covers the kind of drawing (symbol, stub or routed wire)
-and the shape of the connection.
-
-The decision that pins it: layout-0120.
-"""
+"""Field case: a unit's boundary strip holds a bridged `24V` rail terminal and a plain terminal, both wired to a lamp.
+The bug: the container's page drew a bridged rail boundary terminal differently from a plain one wired the same way.
+Fixed by layout-0120 (owner ruling 2026-10-06), a rail boundary terminal is drawn and connected as a non-rail one of its strip."""
 
 from typing import TYPE_CHECKING, Any, NamedTuple
 
 import fransys as fr
-from _drawn_pages import drawn_pages
+from _drawn_pages import drawn_pages, markers_in, ref_texts
 
 from fransys_model.layout import DrawingSet, Page, layout_of
 
@@ -26,26 +19,25 @@ class _Io(NamedTuple):
     plain: fr.Terminal
 
 
-@fr.unit(
-    "demo-mixed-box", revision=1, interface_version=1, date="2026-01-01", text="first", by="AB"
-)
+@fr.unit("demo-mixed-box", revision=1, interface_version=1, date="2026-01-01", text="first", by="AB")
 def _box(u: fr.Design) -> _Io:
     u.location("C1", "Cabinet")
     psu = u.device("T1", "DEMO-PSU-24")
     lamp = u.device("P1", "DEMO-LAMP-24")
     sig = u.device("P2", "DEMO-LAMP-24")
     tap = u.device("P3", "DEMO-LAMP-24")
-    x1 = u.terminal_strip("X1", "DEMO-TB-2.5", interface=True)
-    plus, minus = x1.run("24V", 2, bridged=True), x1.run("GND", 2, bridged=True)
+    x1 = u.terminal_strip("X1", "DEMO-TB-2.5-TWIN", interface=True)
+    plus, minus = x1.run("24V", 2, bridged=True, rail=True), x1.run("GND", 2, bridged=True, rail=True)
     plain = x1.run("SIG", 1)
     dc = u.dc_supply("24V", plus=psu.output["+"], minus=psu.output["-"], voltage=24)
-    u.detail.wire(dc.plus.pin, plus[1], wire=("RD", 0.75))
-    u.detail.wire(dc.minus.pin, minus[1], wire=("BK", 0.75))
-    u.detail.wire(plus[1], lamp.lamp["1"], wire=("RD", 0.75))
-    u.detail.wire(minus[1], lamp.lamp["2"], wire=("BK", 0.75))
-    u.detail.wire(plain[1], sig.lamp["1"], wire=("WH", 0.75))
-    u.detail.wire(minus[2], sig.lamp["2"], wire=("BK", 0.75))
-    u.detail.wire(plus[2], tap.lamp["1"], wire=("RD", 0.75))
+    u.series(dc.plus.pin, plus[1].inner, wire=("RD", 0.75))
+    u.series(dc.minus.pin, minus[1].inner, wire=("BK", 0.75))
+    u.series(plus[1].inner, lamp.lamp["1"], wire=("RD", 0.75))
+    u.series(minus[1].inner, lamp.lamp["2"], wire=("BK", 0.75))
+    u.series(plain[1].inner, sig.lamp["1"], wire=("WH", 0.75))
+    u.series(minus[2].inner, sig.lamp["2"], wire=("BK", 0.75))
+    u.series(plus[2].inner, tap.lamp["1"], wire=("RD", 0.75))
+    u.series(minus[2].inner, tap.lamp["2"], wire=("BK", 0.75))
     return _Io((plus[1], plus[2]), (minus[1], minus[2]), plain[1])
 
 
@@ -54,11 +46,12 @@ def _build(tmp_path: Path) -> fr.BuildResult:
     cabinet = d.location("C1", "Cabinet")
     io = d.add(_box, "U1")
     h1, h2, h3 = (d.device(tag, "DEMO-LAMP-24") for tag in ("H1", "H2", "H3"))
-    d.detail.wire(io.rail[0], h1.lamp["1"], wire=("RD", 0.75))
-    d.detail.wire(io.gnd[0], h1.lamp["2"], wire=("BK", 0.75))
-    d.detail.wire(io.plain, h2.lamp["1"], wire=("WH", 0.75))
-    d.detail.wire(io.gnd[1], h2.lamp["2"], wire=("BK", 0.75))
-    d.detail.wire(io.rail[1], h3.lamp["1"], wire=("RD", 0.75))
+    d.series(io.rail[0].outer, h1.lamp["1"], wire=("RD", 0.75))
+    d.series(io.gnd[0].outer, h1.lamp["2"], wire=("BK", 0.75))
+    d.series(io.plain.outer, h2.lamp["1"], wire=("WH", 0.75))
+    d.series(io.gnd[1].outer, h2.lamp["2"], wire=("BK", 0.75))
+    d.series(io.rail[1].outer, h3.lamp["1"], wire=("RD", 0.75))
+    d.series(io.gnd[1].outer, h3.lamp["2"], wire=("BK", 0.75))
     (tmp_path / "own.md").write_text("# Mixed box\n", encoding="utf-8")
     (tmp_path / "box.md").write_text("# Container\n", encoding="utf-8")
     preset = fr.DocumentPreset.CABINET_SCHEMATIC
@@ -84,27 +77,20 @@ def _drawn(model: Any, designation: str) -> list[tuple[Any, ...]]:
                 key=lambda s, tag=tag: abs(s.x - tag.box.x) + abs(s.y - tag.box.y),
             )
             out.append(("symbol", mine.key, mine.poles, mine.orient, mine.offsets, mine.sides))
-            out.extend(
-                ("route", len(w.points))
-                for w in drawing.wires
-                if (mine.x, mine.y) in {w.points[0], w.points[-1]}
-            )
-        out.extend(
-            ("marker", m.key, m.side)
-            for m in drawing.markers
-            if any(designation in text for _, text in m.texts)
-        )
+            out.extend(("route", len(w.points)) for w in drawing.wires if (mine.x, mine.y) in {w.points[0], w.points[-1]})
+        out.extend(("marker", m.key, m.orient) for m in markers_in(drawing) if any(designation in text for text in ref_texts(m)))
     return out
 
 
 def test_the_container_draws_a_rail_boundary_terminal_as_it_draws_a_plain_one(
     tmp_path: Path,
 ) -> None:
-    """Both are a black-box terminal symbol on the container's page and an OFF stub on the lamp pin
-    that names them: the same kinds of drawing, in the same shape, none a routed wire."""
+    """Both are a black-box terminal wired to the lamp pin and both stand a stub naming their far end inside the unit (R895).
+    The bridge no longer joins the rail's two terminals (R1128 A4), so the rail's far end lies outside the container's joined sets,
+    as the plain one's does."""
     result = _build(tmp_path)
     assert [f for f in fr.check(result) if f.severity is fr.Severity.ERROR] == []
     rail = _drawn(result.model, "-U1-X1:24V:2")
     plain = _drawn(result.model, "-U1-X1:SIG:1")
-    assert {entry[0] for entry in plain} == {"symbol", "marker"}  # the plain one is the reference
-    assert rail == plain
+    assert rail == [("symbol", "marker-arrow-turned", 1, "R180", (), ())]  # the stub of its far end -U1-P3:1, inside the unit
+    assert plain == [("symbol", "marker-arrow-turned", 1, "R180", (), ())]  # the stub stands at the terminal's other pin

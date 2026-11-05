@@ -20,10 +20,11 @@ def remember_added(design: Design, result: object, unit: Id[Unit] | None) -> Non
     _DESIGNS.add(design)
 
 
-def added_unit(subject: object) -> Id[Unit] | None:
+def added_unit[S](subject: S) -> Id[Unit] | None:
     """The unit instance that `d.add` built and returned as `subject`, else `None`.
 
     A unit's result is the only way to name one instance of a release that stands more than once.
+    Does not accept a name or a model id; a result `d.add` did not return gives `None`.
     """
     for design in _DESIGNS:
         held = design._added_units.get(id(subject))

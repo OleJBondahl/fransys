@@ -1,4 +1,4 @@
-schema = 1
+schema = 2
 
 [part]
 mpn = "DEMO-MOTOR-4KW"
@@ -18,7 +18,6 @@ ports = [
 ]
 
 [function.operating]
-voltage_ac_v = "400"
-nominal_voltage_v = "400"
-nominal_power_w = "4000"
-nominal_current_a = "8"
+voltage = [{ nom = "400 V", at = ["AC"] }]
+nominal_power = "4000 W"
+nominal_current = "8 A"

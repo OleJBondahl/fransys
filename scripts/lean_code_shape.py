@@ -14,9 +14,7 @@ import sys
 from pathlib import Path
 from typing import override
 
-_ci_gates_spec = importlib.util.spec_from_file_location(
-    "fransys_ci_gates", Path(__file__).resolve().parent / "ci_gates.py"
-)
+_ci_gates_spec = importlib.util.spec_from_file_location("fransys_ci_gates", Path(__file__).resolve().parent / "ci_gates.py")
 if _ci_gates_spec is None or _ci_gates_spec.loader is None:
     msg = "could not load scripts/ci_gates.py"
     raise ImportError(msg)
@@ -92,11 +90,7 @@ def _docstring_line_numbers(tree: ast.Module) -> set[int]:
         if not isinstance(node, (ast.Module, ast.ClassDef, *_DEF_TYPES)):
             continue
         first = node.body[0] if node.body else None
-        if (
-            isinstance(first, ast.Expr)
-            and isinstance(first.value, ast.Constant)
-            and isinstance(first.value.value, str)
-        ):
+        if isinstance(first, ast.Expr) and isinstance(first.value, ast.Constant) and isinstance(first.value.value, str):
             covered.update(range(first.lineno, (first.end_lineno or first.lineno) + 1))
     return covered
 
@@ -142,9 +136,7 @@ def is_pure_reexport(source: str) -> bool:
     return True
 
 
-def measure_module_code_lines(
-    root: Path, limit: int = DEFAULT_MODULE_CODE_LINES_LIMIT
-) -> dict[str, int]:
+def measure_module_code_lines(root: Path, limit: int = DEFAULT_MODULE_CODE_LINES_LIMIT) -> dict[str, int]:
     """Every `packages/*/src` module over `limit` code lines, keyed by its root-relative path.
 
     A code line is non-blank, not comment-only and not part of a module, class or function

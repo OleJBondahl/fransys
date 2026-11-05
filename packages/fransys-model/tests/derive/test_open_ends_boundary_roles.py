@@ -5,7 +5,7 @@ from dataclasses import replace
 from plant import Plant
 
 from fransys_model.derive.facts.current.ties import open_ends
-from fransys_model.vocab.enums import PortRole
+from fransys_model.vocab.enums import PortBoundary
 
 
 def test_a_boundary_port_is_open_unless_internal() -> None:
@@ -16,8 +16,5 @@ def test_a_boundary_port_is_open_unless_internal() -> None:
     plant.boundary(unit, function)
     outer = plant.port(function, "out")
     inner = plant.port(function, "in")
-    plant.records = [
-        replace(r, role=PortRole.INTERNAL) if getattr(r, "id", None) == inner else r
-        for r in plant.records
-    ]
+    plant.records = [replace(r, boundary=PortBoundary.INTERNAL) if getattr(r, "id", None) == inner else r for r in plant.records]
     assert open_ends(plant.model()) == frozenset({outer})

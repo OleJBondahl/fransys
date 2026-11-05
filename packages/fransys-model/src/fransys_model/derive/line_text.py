@@ -4,16 +4,14 @@ from fransys_model.kernel import Id, Model, SchemaError
 lazy from fransys_model.vocab.core import Item, Unit
 
 from .designation import printed_designation
+from .facts.house_settings import harness_text_of
 from .harness_line_ends import harness_line_ends
-from .house_settings import harness_text_of
 from .stub_text import line_stub_line
 
 _PLAIN_LINE = 2  # a line between two ends carries no branch number
 
 
-def line_designation(
-    model: Model, harness: Id[Item], branch: int, *, unit: Id[Unit] | None = None
-) -> str:
+def line_designation(model: Model, harness: Id[Item], branch: int, *, unit: Id[Unit] | None = None) -> str:
     """`-W13` for a line between two ends, `-W13.n` on each branch of three or more, else `""`.
 
     `branch` is the `HarnessLineEnd.branch` of the end; this never numbers on its own.

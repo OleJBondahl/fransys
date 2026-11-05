@@ -18,7 +18,7 @@ import sys
 import tomllib
 from decimal import Decimal
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, cast
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
@@ -32,7 +32,7 @@ def workspace_packages(root: Path) -> dict[str, str]:
     for its `[project] name`, normalized (hyphens to underscores) to an import name.
     """
     data = tomllib.loads((root / "pyproject.toml").read_text(encoding="utf-8"))
-    members: list[str] = data["tool"]["uv"]["workspace"]["members"]
+    members = cast("list[str]", data["tool"]["uv"]["workspace"]["members"])
     expected: dict[str, str] = {}
     for member in members:
         posix_member = member.replace("\\", "/")
@@ -44,7 +44,7 @@ def workspace_packages(root: Path) -> dict[str, str]:
     return expected
 
 
-def _statement_totals(report: dict, expected: Mapping[str, str]) -> dict[str, tuple[int, int]]:
+def _statement_totals(report: dict[str, Any], expected: Mapping[str, str]) -> dict[str, tuple[int, int]]:
     """Sum `(num_statements, missing_lines)` per package, grouping by path segment.
 
     A file belongs to a package iff its normalized (backslashes to forward slashes) path starts
@@ -74,7 +74,7 @@ def _percent(statements: int, missing: int) -> Decimal | None:
     return Decimal(statements - missing) / Decimal(statements) * 100
 
 
-def measure_packages(report: dict, expected: Mapping[str, str]) -> dict[str, Decimal | None]:
+def measure_packages(report: dict[str, Any], expected: Mapping[str, str]) -> dict[str, Decimal | None]:
     """Each expected package's measured percent, or `None` when it has no measured statements."""
     totals = _statement_totals(report, expected)
     return {pkg: _percent(*totals[pkg]) for pkg in expected}
@@ -97,9 +97,7 @@ def check(
             continue
         floor = floors[pkg]
         if percent < floor:
-            failures.append(
-                f"FAIL {pkg}: {percent:.1f} measured, floor {floor:.1f} (coverage-floors.toml)"
-            )
+            failures.append(f"FAIL {pkg}: {percent:.1f} measured, floor {floor:.1f} (coverage-floors.toml)")
     return tuple(failures)
 
 

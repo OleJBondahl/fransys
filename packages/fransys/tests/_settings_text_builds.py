@@ -3,6 +3,7 @@
 import importlib.util
 from functools import cache
 from pathlib import Path
+from typing import Any
 
 import fransys as fr
 
@@ -19,7 +20,7 @@ def consumer_file(tmp_path: Path, text: str) -> Path:
 
 
 @cache
-def _skid_design() -> tuple:
+def _skid_design() -> tuple[Any, ...]:
     spec = importlib.util.spec_from_file_location("skid_for_settings_text", _SKID)
     assert spec is not None
     assert spec.loader is not None
@@ -32,3 +33,8 @@ def _skid_design() -> tuple:
 def skid_model(path: Path | None = None) -> Model:
     """The demo skid built with `fr.settings(path)`; `None` is the house settings."""
     return fr.build(*_skid_design(), settings=fr.settings(path)).model
+
+
+def skid_result(path: Path | None = None) -> fr.BuildResult:
+    """The demo skid built and numbered with `fr.settings(path)`."""
+    return fr.build(*_skid_design(), settings=fr.settings(path))

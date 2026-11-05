@@ -1,16 +1,6 @@
 """The "one place" ruling (decision model-0108):
 every reader switches to `is_cable`/`cable_items` (`fransys_model.derive.facts.item_predicates`),
 and none keeps its own copy of the old test, checked with stdlib `ast` the way
-`tests/test_boundaries.py` checks import layering.
-
-The old test was a full scan, `facets_of(model, CableFacet)`, used to decide "is this item a
-cable." The one place that scan is still legitimate is `derive/harness.py`'s `_facts_of`: it
-reads a cable's own installed length (`facet.length_mm`), a fact about an item already known to
-be a cable, never a type test. Every other occurrence of that exact call shape, anywhere in
-`packages/*/src`, is a second copy of the rule root `CLAUDE.md`'s own red flag names ("one rule
-computed in two places... drifts from the first") -- this test fails on any of them, including
-one that creeps back into `harness.py` itself (a reader re-added there would make its own count
-more than the one line this test allows).
 """
 
 import ast

@@ -24,23 +24,17 @@ from .order_search import exact_search
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
+    from .flow_values import Block, BlockList, Column, FlowGraph
     from .order_search import Before, Span
-    from .values import Block, BlockList, Column, FlowGraph, Options
+    from .values import Options
 
 SWEEP_PASSES = 24
 MIN_SPAN = 2  # a span of one column costs nothing
 
 
-def order_blocks(
-    blocks: tuple[BlockList, ...], flow: FlowGraph, options: Options
-) -> tuple[BlockList, ...]:
+def order_blocks(blocks: tuple[BlockList, ...], flow: FlowGraph, options: Options) -> tuple[BlockList, ...]:
     """Every block with its columns ordered, then each column-less card seated (layout-0288)."""
-    return tuple(
-        seat_bare_cards(
-            replace(bl, blocks=tuple(order_columns(b, flow, options) for b in bl.blocks)), flow
-        )
-        for bl in blocks
-    )
+    return tuple(seat_bare_cards(replace(bl, blocks=tuple(order_columns(b, flow, options) for b in bl.blocks)), flow) for bl in blocks)
 
 
 def order_columns(block: Block, flow: FlowGraph, options: Options) -> Block:
@@ -52,11 +46,6 @@ def order_columns(block: Block, flow: FlowGraph, options: Options) -> Block:
     else:
         cols = _search(block, flow, options)
     return replace(block, columns=tuple(cols))
-
-
-def order_cost(order: Sequence[str], flow: FlowGraph) -> int:
-    """The design's cost of one order of a block's columns, counting every span."""
-    return _cost(order, _spans(order, flow))
 
 
 def _search(block: Block, flow: FlowGraph, options: Options) -> list[str]:
@@ -78,9 +67,7 @@ def _spans(cols: Sequence[str], flow: FlowGraph) -> list[Span]:
     here = set(cols)
     ends = [(f.drivers + f.legs) for f in flow.fans]
     found = [(frozenset(a.column for a in e if a.column in here), False) for e in ends]
-    found += [
-        (frozenset(a.column for a in x.ends if a.column in here), True) for x in flow.cross_links
-    ]
+    found += [(frozenset(a.column for a in x.ends if a.column in here), True) for x in flow.cross_links]
     return [s for s in found if len(s[0]) >= MIN_SPAN]
 
 
@@ -157,9 +144,7 @@ def _swap_pairs(order: Sequence[str], spans: Sequence[Span], before: Before) -> 
 def _swappable(order: Sequence[str], i: int, j: int, before: Before) -> bool:
     """Columns i < j may trade places: j is not held by i or by one between, nor i by those."""
     a, b = order[i], order[j]
-    return a not in before[b] and all(
-        a not in before[c] and c not in before[b] for c in order[i + 1 : j]
-    )
+    return a not in before[b] and all(a not in before[c] and c not in before[b] for c in order[i + 1 : j])
 
 
 def _extend(order: Sequence[str], before: Before) -> list[str]:
@@ -180,9 +165,7 @@ def _precedence(cols: Sequence[str], block: Block, flow: FlowGraph, options: Opt
     return {c: frozenset(a for a, b in pairs if b == c) for c in cols}
 
 
-def _driver_pairs(
-    cols: Sequence[str], block: Block, flow: FlowGraph, options: Options
-) -> list[tuple[str, str]]:
+def _driver_pairs(cols: Sequence[str], block: Block, flow: FlowGraph, options: Options) -> list[tuple[str, str]]:
     """With `driver_first`, a fan block's driver column stands first, unless it is also a leg."""
     if not options.driver_first:
         return []

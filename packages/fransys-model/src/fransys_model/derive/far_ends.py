@@ -36,10 +36,7 @@ def far_ends(
     """
     ctx = PrintContext(reading=unit, location=context)
     all_conductors = conductors(model)
-    far = {
-        c: all_conductors[c].b if all_conductors[c].a in near else all_conductors[c].a
-        for c in landed
-    }
+    far = {c: all_conductors[c].b if all_conductors[c].a in near else all_conductors[c].a for c in landed}
     pairs = sorted(
         ((end_text(model, far[conductor], FAR_END, ctx), conductor) for conductor in landed),
         key=lambda pair: (natural_key(pair[0]), pair[1]),

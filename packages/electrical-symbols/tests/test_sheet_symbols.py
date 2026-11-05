@@ -2,8 +2,6 @@
 
 EXPECTED holds the numbers of the old `fransys_pdf._frame` for four sheets, with and without a
 notice, frozen as literals (a band of 20 mm on the first three, 32 mm on the last). The symbols
-are data (`symbols/sheet-*.toml`, `title-block*.toml`); each test passes the values derive's
-`sheet_frame` computes and reads what symdef's stretch, table and translate made of them.
 """
 
 from itertools import accumulate
@@ -272,9 +270,7 @@ def _strips(name):
     col, row = box.content_width / box.columns, box.content_height / box.rows
     return {
         "top": frame_strip("top", (box.x0, 0), (col, box.y0), box.columns, "x"),
-        "bottom": frame_strip(
-            "bottom", (box.x0, box.height - box.y0), (col, box.y0), box.columns, "x"
-        ),
+        "bottom": frame_strip("bottom", (box.x0, box.height - box.y0), (col, box.y0), box.columns, "x"),
         "left": frame_strip("left", (0, box.y0), (box.x0, row), box.rows, "y"),
         "right": frame_strip("right", (box.width - box.x0, box.y0), (box.x0, row), box.rows, "y"),
     }
@@ -306,8 +302,8 @@ def test_the_border_is_the_old_rectangle_and_thick(name):
     x, y, w, h = EXPECTED[(name, False)]["border"]
     (border,) = _border(name).elements
     assert isinstance(border, Polyline)
-    corners = [(p.x, p.y) for p in border.points]
-    assert corners == pytest.approx([(x, y), (x + w, y), (x + w, y + h), (x, y + h)], abs=1e-9)
+    corners = [c for p in border.points for c in (p.x, p.y)]
+    assert corners == pytest.approx([x, y, x + w, y, x + w, y + h, x, y + h], abs=1e-9)
     assert border.closed
     assert border.weight is Weight.THICK
 
@@ -315,11 +311,7 @@ def test_the_border_is_the_old_rectangle_and_thick(name):
 @pytest.mark.parametrize("name", SHEETS)
 def test_the_ticks_run_across_each_strip_between_the_cells(name):
     box = SHEETS[name]
-    ticks = {
-        (e.start.x, e.start.y, e.end.x, e.end.y)
-        for strip in _strips(name).values()
-        for e in _segments(strip, Weight.NORMAL)
-    }
+    ticks = {(e.start.x, e.start.y, e.end.x, e.end.y) for strip in _strips(name).values() for e in _segments(strip, Weight.NORMAL)}
     cw, rh = box.content_width / box.columns, box.content_height / box.rows
     expected = set()
     for i in range(1, box.columns):
@@ -359,9 +351,7 @@ def test_every_strip_cell_has_a_label_centred_in_it(name):
     first = next(s for s in strips["top"].slots if s.id == "1.label")
     assert first.position.y == pytest.approx(box.y0 / 2)
     last = next(s for s in strips["right"].slots if s.id == f"{box.rows}.label")
-    assert (last.position.x, last.position.y) == pytest.approx(
-        (box.width - box.x0 / 2, box.y0 + (box.rows - 0.5) * rh)
-    )
+    assert (last.position.x, last.position.y) == pytest.approx((box.width - box.x0 / 2, box.y0 + (box.rows - 0.5) * rh))
     assert slot_room(strips["right"], f"{box.rows}.label")[0] == pytest.approx(box.x0)
 
 
@@ -374,11 +364,7 @@ def test_every_column_boundary_row_boundary_and_the_band_are_the_old_ones(name, 
     top, bottom = want["band_top"], want["band_top"] + want["band"]
     mid = top + want["band"] / 2
     full = sorted(e.start.x for e in lines if e.start.y == top and e.end.y == pytest.approx(bottom))
-    lower = sorted(
-        e.start.x
-        for e in lines
-        if e.start.y == pytest.approx(mid) and e.end.y == pytest.approx(bottom)
-    )
+    lower = sorted(e.start.x for e in lines if e.start.y == pytest.approx(mid) and e.end.y == pytest.approx(bottom))
     across = [(e.start.x, e.end.x) for e in lines if e.start.y == e.end.y]
     assert full == pytest.approx(xs[3:7], abs=1e-9)
     assert lower == pytest.approx(xs[1:3], abs=1e-9)
@@ -416,9 +402,7 @@ def test_the_notice_cell_is_the_old_one(name, notice):
     block, _ = _band(name, notice=notice)
     xs = _xs(name, notice=notice)
     inner_w, inner_h = want["notice_inner"]
-    assert slot_box_mm(block.lines, "notice") == pytest.approx(
-        (xs[6] + 1, want["band_top"] + 1, inner_w, inner_h), abs=1e-9
-    )
+    assert slot_box_mm(block.lines, "notice") == pytest.approx((xs[6] + 1, want["band_top"] + 1, inner_w, inner_h), abs=1e-9)
 
 
 @pytest.mark.parametrize("name", ["a3", "a4t"])
@@ -431,9 +415,7 @@ def test_notice_lines_stack_from_the_cell_s_corner_at_the_pitch(name):
     assert [s.id for s in lines.slots] == ["1.line", "2.line", "3.line"]
     third = lines.slots[2]
     # the line's capitals are centred in its pitch; the text starts 1 mm inside the cell
-    assert (third.position.x, third.position.y) == pytest.approx(
-        (xs[6] + 1, want["band_top"] + 1 + 2.5 * pitch), abs=1e-9
-    )
+    assert (third.position.x, third.position.y) == pytest.approx((xs[6] + 1, want["band_top"] + 1 + 2.5 * pitch), abs=1e-9)
     assert third.box[1] == pytest.approx(pitch)
     edges = _segments(lines, Weight.THICK)
     assert len(edges) == 3
@@ -471,9 +453,7 @@ def test_the_title_block_has_every_value_label_and_the_page_and_logo_boxes():
     assert block.labels.elements == ()
     assert {s.id for s in block.labels.slots} == {f"label.{f}" for f in ["title", *fields, "page"]}
     page_top = 282 + 5 + VALUE_FROM_MIDDLE - BODY_CAP / 2
-    assert slot_box_mm(block.lines, "page") == pytest.approx(
-        (316.0, page_top, 33.0, BODY_CAP), abs=1e-9
-    )
+    assert slot_box_mm(block.lines, "page") == pytest.approx((316.0, page_top, 33.0, BODY_CAP), abs=1e-9)
     assert slot_box_mm(logo, "logo") == pytest.approx((395.0, 272.0, 20.0, 20.0), abs=1e-9)
 
 

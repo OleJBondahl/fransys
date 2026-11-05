@@ -1,16 +1,6 @@
-"""Field case: a supply output inside a unit feeds the unit's own load and also leaves through
-the unit's interface to a field device in the container (model-0188).
-
-The engineering shape: a cabinet unit holds a supply and a lamp wired to the supply's output;
-the unit marks the supply an interface; its container wires a second lamp to the same output.
-The output port is then the unit's boundary and has two drawn views: the supply on the unit's
-page and a pin cell in the container's black box.
-
-The bug: layout named one function per port. The lint refused a port named by two functions, and
-chain discovery gave the port to the pin cell, which sorts last, so the unit's own wires read the
-wrong spec and facing. The fix keys the port per connection end: the unit page draws as it does
-alone. Decision model-0188.
-"""
+"""Field case: a supply in a unit feeds its own load and also leaves through the unit's interface to a field device outside.
+The bug: layout named one function per port, so the lint refused a port named by two functions (model-0188, one port per connection end).
+The unit page draws its own wires as alone and a stub for the conductor that leaves (model-0422)."""
 
 import re
 import tempfile
@@ -40,8 +30,8 @@ class _Supply(NamedTuple):
 def _supply_cab(u: Any) -> _Supply:
     t1 = u.device("T1", "DEMO-PSU-24", interface=("output",))
     lamp = u.device("H2", "DEMO-LAMP-24")
-    u.detail.wire(lamp["1"], t1.output["+"], wire=("WH", 0.5))
-    u.detail.wire(lamp["2"], t1.output["-"], wire=("WH", 0.5))
+    u.series(lamp["1"], t1.output["+"], wire=("WH", 0.5))
+    u.series(lamp["2"], t1.output["-"], wire=("WH", 0.5))
     return _Supply(t1)
 
 
@@ -50,8 +40,8 @@ def _design() -> fr.Design:
     def container(c: Any) -> _Open:
         io = c.add(_supply_cab, "U1")
         lamp = c.device("H1", "DEMO-LAMP-24")
-        c.detail.wire(lamp["1"], io.T1.output["+"], wire=("WH", 0.5))
-        c.detail.wire(lamp["2"], io.T1.output["-"], wire=("WH", 0.5))
+        c.series(lamp["1"], io.T1.output["+"], wire=("WH", 0.5))
+        c.series(lamp["2"], io.T1.output["-"], wire=("WH", 0.5))
         return _Open()
 
     d = fr.design("demo_parts")
@@ -69,7 +59,8 @@ def _svgs(design: fr.Design, unit: str) -> list[str]:
 
 def _drawing(svg: str) -> tuple[list[str], list[str]]:
     """A page's wire polylines and texts, the page's own look without its id."""
-    wires = re.findall(r'<polyline class="wire" points="[^"]*"', svg)
+    wires = re.findall(r'<polyline points="[^"]*"', svg)
+    assert wires, "the page draws no wire polyline: the comparison would read texts only"
     return sorted(wires), sorted(re.findall(r">([^<>]+)</text>", svg))
 
 
@@ -79,12 +70,23 @@ def _alone() -> fr.Design:
     return d
 
 
-def test_a_boundary_port_wired_inside_and_out_draws_the_unit_page_as_if_alone() -> None:
-    errors = [f.code for f in fr.build(_design()).findings if f.severity.name == "ERROR"]
-    assert errors == []
+def test_a_boundary_port_wired_inside_and_out_draws_its_own_wires_as_alone_and_a_stub_for_the_conductor_that_leaves() -> None:
+    codes = [f.code for f in fr.build(_design()).findings]
+    assert "CONNECTION_NOT_DRAWN" not in codes
+    assert codes.count("OVERLAP") <= 1  # looks class: KI-596
+    assert codes.count("WIRE_OVER_MARKER") <= 1  # looks class: KI-597
+    assert not [f for f in fr.build(_design()).findings if f.severity.name == "ERROR"]
     pages = _svgs(_design(), "demo-container")
     (container,) = (p for p in pages if "-U1-T1:+" in p)
     assert "-U1-T1:-" in container
     assert "-H1" in container
+    texts_c = _drawing(container)[1]
+    assert "← -U1-T1:+" in texts_c, "the container pin H1:1 names its conductor to T1:+ in a stub"
+    assert "→ -U1-T1:-" in texts_c, "the container pin H1:2 names its conductor to T1:- in a stub"
     (inside,) = _svgs(_alone(), "demo-supply-cab")
-    assert _drawing(inside) in [_drawing(p) for p in pages]
+    assert len(_drawing(inside)[0]) == 2, "the unit's own two wires (H2 to T1 + and -) are drawn, counted apart from the comparison"
+    wires, texts = _drawing(inside)
+    (unit_page,) = (p for p in pages if "-H2" in p)
+    unit_wires, unit_texts = _drawing(unit_page)
+    assert unit_wires == wires
+    assert sorted(unit_texts) == sorted([*texts, "→ -C1-H1:1", "→ -C1-H1:2"]), "one stub a boundary pin the container continues, at T1:+ and T1:-"

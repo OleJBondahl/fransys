@@ -1,4 +1,4 @@
-"""Ratchet E core_terminal_kind: terminal and strip special cases in the layout core.
+"""Gate core_terminal_kind: no terminal or strip special case in the layout core (stock 0).
 
 A general technique takes its rules as options, so a core branch on the "terminal" or "strip" kind
 is a convention to lower. Only code counts: docstrings and comments never do.
@@ -7,7 +7,7 @@ is a convention to lower. Only code counts: docstrings and comments never do.
 import ast
 
 import pytest
-from gate_scan import ROOT, check_stock, stock
+from gate_scan import ROOT
 
 CORE = ROOT / "packages" / "fransys-layout" / "src" / "fransys_layout" / "core"
 WORDS = {"terminal", "strip"}
@@ -56,11 +56,9 @@ def terminal_cases(source: str) -> list[int]:
 
 
 @pytest.mark.private_input  # a private-gate count (R462)
-def test_core_terminal_kind_stock():
-    found = sum(
-        len(terminal_cases(path.read_text(encoding="utf-8"))) for path in CORE.rglob("*.py")
-    )
-    check_stock("core_terminal_kind", found, stock("core_terminal_kind"))
+def test_core_terminal_kind_is_zero():
+    found = sum(len(terminal_cases(path.read_text(encoding="utf-8"))) for path in CORE.rglob("*.py"))
+    assert found == 0
 
 
 def test_synthetic_equality_on_terminal_string_counts_one():
@@ -72,9 +70,7 @@ def test_synthetic_identity_with_terminal_attribute_counts_one():
 
 
 def test_synthetic_docstring_mentioning_terminal_counts_zero():
-    assert (
-        terminal_cases('def f(kind):\n    """A terminal, or a strip."""\n    return kind\n') == []
-    )
+    assert terminal_cases('def f(kind):\n    """A terminal, or a strip."""\n    return kind\n') == []
 
 
 def test_synthetic_other_kind_string_counts_zero():

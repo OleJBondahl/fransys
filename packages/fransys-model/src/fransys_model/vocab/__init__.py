@@ -4,9 +4,9 @@ from fransys_model.kernel import register_namespaces, register_schema_version
 
 from .aspects import AspectNode, Placement
 from .codes import FINDING_CODES
-from .colours import BASE_COLOURS, COLOUR_GRAMMAR, RESERVED_CODES, split_colour
+from .colours import BASE_COLOURS, COLOUR_GRAMMAR, RESERVED_CODES
 from .conductor_marks import CONDUCTOR_MARKS
-from .connectivity import Conductor, Mate, Net
+from .connectivity import Conductor, Mate, Net, RailGroup
 from .core import Function, Item, Port, Unit, UnitRelease
 from .designation_scheme import DESIGNATION_SCHEME
 from .document import Document
@@ -14,20 +14,15 @@ from .enums import (
     Aspect,
     ConductorKind,
     ConductorMark,
-    Current,
     DocumentPreset,
-    Earthing,
     Energy,
     FunctionKind,
     Gender,
-    LinkKind,
-    LinkRest,
     NetClass,
     OperatedBy,
     PageKind,
     PartCategory,
-    PoleSide,
-    PortRole,
+    PortBoundary,
     PowerKind,
     ProtectionType,
     SignalType,
@@ -36,7 +31,7 @@ from .enums import (
 from .facets import (
     AssignedDesignationFacet,
     AssignedUnitTagFacet,
-    BoundaryValuesFacet,
+    BlockFacet,
     CableFacet,
     CableProductFacet,
     ConnectorFacet,
@@ -56,44 +51,37 @@ from .facets import (
     RatingFacet,
     ReservedDesignationFacet,
     RowSpec,
-    ScalingFacet,
     SupplyFacet,
     TerminalFacet,
     WireFacet,
     WireRowHint,
 )
 from .finding_ref import ref
-from .instantiate import PartBundle, instantiate
+from .instantiate import PartBundle
 from .markings import (
     Pole,
-    function_poles,
     identifier,
-    pole_order,
 )
+from .operating import Operating
 from .project import Project
 from .rail_defaults import RAIL_DEFAULTS
-from .ratings import BreakingPoint, Operating, Rating, effective_rating
 from .revision import Revision
 from .schema_version import SCHEMA_VERSION
-from .supply_system import Rail, SupplySystem, rail_phase_problem, supply_rail_row
+from .supply_system import Rail, SupplySystem, supply_rail_row
 from .tables import (
     Boundary,
     UnusedBoundary,
     aspect_nodes,
     boundaries,
     conductors,
-    documents,
     facet_subject,
     facets_of,
-    function_templates,
     functions,
-    internal_links,
     items,
     nets,
     part_libraries,
     parts,
     placements,
-    port_templates,
     ports,
     projects,
     revisions,
@@ -102,8 +90,7 @@ from .tables import (
     units,
 )
 from .templates import FunctionTemplate, InternalLink, Part, PartLibrary, PortTemplate
-from .throws import THROWS
-from .wiring_rows import WiringRow, control_of, is_control, rail_row
+from .wiring_rows import WiringRow
 
 # The kernel knows only `core`; the layers above name the rest, once, in this order. A
 # reference may point at the same namespace or an earlier one (decision 0009).
@@ -121,14 +108,12 @@ __all__ = [
     "RAIL_DEFAULTS",
     "RESERVED_CODES",
     "SCHEMA_VERSION",
-    "THROWS",
     "Aspect",
     "AspectNode",
     "AssignedDesignationFacet",
     "AssignedUnitTagFacet",
+    "BlockFacet",
     "Boundary",
-    "BoundaryValuesFacet",
-    "BreakingPoint",
     "CableFacet",
     "CableProductFacet",
     "Conductor",
@@ -139,10 +124,8 @@ __all__ = [
     "ContactsFacet",
     "CoreFacet",
     "CorePair",
-    "Current",
     "Document",
     "DocumentPreset",
-    "Earthing",
     "Energy",
     "FootprintFacet",
     "Function",
@@ -152,8 +135,6 @@ __all__ = [
     "HarnessFacet",
     "InternalLink",
     "Item",
-    "LinkKind",
-    "LinkRest",
     "Mate",
     "Net",
     "NetClass",
@@ -173,20 +154,18 @@ __all__ = [
     "PlcChannelFacet",
     "PlcRequestFacet",
     "Pole",
-    "PoleSide",
     "Port",
-    "PortRole",
+    "PortBoundary",
     "PortTemplate",
     "PowerKind",
     "Project",
     "ProtectionType",
     "Rail",
-    "Rating",
+    "RailGroup",
     "RatingFacet",
     "ReservedDesignationFacet",
     "Revision",
     "RowSpec",
-    "ScalingFacet",
     "SignalType",
     "SubjectKind",
     "SupplyFacet",
@@ -201,32 +180,19 @@ __all__ = [
     "aspect_nodes",
     "boundaries",
     "conductors",
-    "control_of",
-    "documents",
-    "effective_rating",
     "facet_subject",
     "facets_of",
-    "function_poles",
-    "function_templates",
     "functions",
     "identifier",
-    "instantiate",
-    "internal_links",
-    "is_control",
     "items",
     "nets",
     "part_libraries",
     "parts",
     "placements",
-    "pole_order",
-    "port_templates",
     "ports",
     "projects",
-    "rail_phase_problem",
-    "rail_row",
     "ref",
     "revisions",
-    "split_colour",
     "supply_rail_row",
     "supply_systems",
     "unit_releases",

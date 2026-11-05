@@ -2,22 +2,16 @@
 
 On the export side, the facade's `plc.csv` (the whole
 model's and a unit's own) has the header `pin,channel_name,signal,signal_name,wired_to`, names
-no field device, and holds the far end of the wire on a channel's pin, printed in the list's
-context (a unit's own list reads it short, the whole model's by its location path).
 """
 
 import csv
-import sys
-from pathlib import Path
 
 import fransys as fr
-import fransys_author
 import fransys_parts
 import pytest
+from fransys_author.design import Design
 
 # `test_declared_dependencies.py`'s own pattern for importing a sibling root test module by
-# name: `--import-mode=importlib` (root pyproject.toml) never puts `tests/` on `sys.path`.
-sys.path.insert(0, str(Path(__file__).resolve().parent))
 from test_units_worked_example import _PROJECT
 
 from fransys_model.derive import unit_release
@@ -34,7 +28,7 @@ def exports(tmp_path_factory):
     and the relay `-K1` requests that channel as `PUMP_RUN`; channel 2 is unwired.
     """
     parts = fransys_parts.load("demo_parts")
-    d = fransys_author.Design(parts)
+    d = Design(parts)
     d.project(**_PROJECT)
     d.revision(1, date="2026-09-22", text="First issue", created="XX")
     cab = d.scope("s", at=d.location("ER", "Engine room")).unit("cab", revision=1, interface="1")

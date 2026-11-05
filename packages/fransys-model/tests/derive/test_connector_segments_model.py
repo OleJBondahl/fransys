@@ -22,8 +22,6 @@ from fransys_model.derive import connector_segments
         (("X1", None, "X2"), ("-X1", "", "-X2")),
     ],
 )
-def test_segments_print_only_with_two_or_more_labels(
-    labels: tuple[str | None, ...], expected: tuple[str, ...]
-) -> None:
+def test_segments_print_only_with_two_or_more_labels(labels: tuple[str | None, ...], expected: tuple[str, ...]) -> None:
     # MUTATION: connector_segments `<= 1` -> `<= 0` (a lone label prints `-J1`)
     assert connector_segments(labels) == expected

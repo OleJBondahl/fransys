@@ -31,7 +31,7 @@ _SIDES = {
 
 
 def _wire(d: fr.Design, a: Any, b: Any) -> None:
-    d.detail.wire(a, b, wire=(BU, 0.5))
+    d.series(a, b, wire=(BU, 0.5))
 
 
 def _ends(model: fr.Model, tags: set[str]) -> dict[Id[Port], tuple[str, Side]]:
@@ -86,6 +86,9 @@ def _control(d: fr.Design) -> None:
         _wire(d, a, b)
     for a, b in ((s2["B"], h1["1"]), (s4["B"], h1["1"])):
         _wire(d, a, b)
+    dc = d.dc_supply("24VDC", d.device("G1", "DEMO-PSU-24", place="L0").output)
+    _wire(d, dc.plus, s1["A"])
+    _wire(d, h1["2"], dc.minus)
 
 
 def _hub(d: fr.Design) -> None:
@@ -94,6 +97,7 @@ def _hub(d: fr.Design) -> None:
     h1, h2 = (d.device(t, "DEMO-LAMP-24", place="L0").lamp for t in ("H1", "H2"))
     _wire(d, module.out["+"], h1["1"])
     _wire(d, h1["2"], h2["1"])
+    _wire(d, h2["2"], module.out["-"])
 
 
 def _pair(d: fr.Design) -> None:
@@ -124,6 +128,7 @@ def _bridge(d: fr.Design) -> None:
         _wire(d, s[a]["B"], s[b]["A"])
     for a in ("5", "6"):
         _wire(d, s[a]["B"], h1["1"])
+    _wire(d, s["1"]["A"], h1["2"])
 
 
 @pytest.mark.rule("SERIES-PARALLEL")

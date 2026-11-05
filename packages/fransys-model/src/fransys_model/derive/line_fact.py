@@ -26,7 +26,7 @@ def line_conductors(model: Model) -> frozendict[Id[Item], tuple[Id[Conductor], .
     The owner is a harness, or a cable on no harness. Cores count for their cable's owner and a
     single wire for its harness (`harness_of_wire`). Conductors are sorted by id.
     """
-    found: dict[Id[Item], set[Id[Conductor]]] = {}
+    found: dict[Id[Item], list[Id[Conductor]]] = {}
     for conductor in conductors(model).values():
         if conductor.carrier is not None:
             owner: Id[Item] | None = _owner(model, conductor.carrier)
@@ -35,10 +35,8 @@ def line_conductors(model: Model) -> frozendict[Id[Item], tuple[Id[Conductor], .
         else:
             owner = None
         if owner is not None:
-            found.setdefault(owner, set()).add(conductor.id)
-    return frozendict(
-        {owner: tuple(sorted(ids)) for owner, ids in sorted(found.items()) if len(ids) > 1}
-    )
+            found.setdefault(owner, []).append(conductor.id)
+    return frozendict({owner: tuple(ids) for owner, ids in sorted(found.items()) if len(ids) > 1})
 
 
 def draws_as_line(model: Model, item: Id[Item]) -> bool:

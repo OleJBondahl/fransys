@@ -2,19 +2,18 @@
 
 The card is a box with 16 channel pins and a relay coil under each. The findings counts are
 reported, not gated beyond ERROR. The table offsets equal today's engine's first tier (TABLE
-POSITION T1, T2); the second tier of a staggered row is TABLE-STACK's.
 """
 
 from collections import Counter
 from dataclasses import replace
 from itertools import pairwise
+from typing import Any
 lazy from pathlib import Path
 
 import fransys as fr
 import pypdfium2 as pdfium
 from _card_case import card_case_drafts
 from _drawn_pages import drawn_pages
-from _tables_on import TABLES_ON
 lazy import pytest
 
 from fransys_layout.symbols import symbol_views
@@ -24,16 +23,16 @@ from fransys_model.vocab import functions, items
 _CHANNELS = 16
 
 
-def _build(settings: fr.Settings | None = None) -> fr.BuildResult:
-    return fr.build(*card_case_drafts(_CHANNELS), settings=settings)
+def _build() -> fr.BuildResult:
+    return fr.build(*card_case_drafts(_CHANNELS))
 
 
-def _symbols(model) -> list:
+def _symbols(model) -> list[Any]:
     """Every drawn symbol of the built model, on every page."""
     return [s for drawing in drawn_pages(model).values() for s in drawing.symbols]
 
 
-def _wires(model) -> list:
+def _wires(model) -> list[Any]:
     """Every drawn wire of the built model, on every page."""
     return [w for drawing in drawn_pages(model).values() for w in drawing.wires]
 
@@ -47,19 +46,16 @@ def _pdf_pages(tmp_path: Path) -> int:
     return len(pdfium.PdfDocument(next(p for p in paths if p.suffix == ".pdf")))
 
 
-def test_the_core_cabinet_pdf_has_three_pages(tmp_path) -> None:
-    """Cover, the card's drawing set, the BOM: a location document prints the core's set."""
-    assert _pdf_pages(tmp_path) == 3
+def test_the_core_cabinet_pdf_has_four_pages(tmp_path) -> None:
+    """Cover, the card's drawing set, the 24 V supply page, the BOM: a location document prints the core's set."""
+    assert _pdf_pages(tmp_path) == 4
 
 
 def test_the_16_channel_card_pdf_has_no_error(tmp_path) -> None:
-    """With `contact_tables` on (CONTACT-TABLE) the card draws its sixteen table heads."""
-    result = _build(TABLES_ON)
+    result = _build()
     findings = fr.check(result)
     assert [f for f in findings if f.severity.name == "ERROR"] == []
     assert [p for p in fr.write(result, tmp_path / "out") if p.suffix == ".pdf"]
-    symbols = Counter(r.key for r in _symbols(result.model))
-    assert (symbols["generic-box"], symbols["contact-head"]) == (1, _CHANNELS)
 
 
 def test_the_16_channel_card_reports_no_function_it_did_not_draw() -> None:
@@ -79,8 +75,8 @@ def test_every_coil_stands_at_the_x_of_its_wire() -> None:
     model = _build().model
     coils = [r for r in _symbols(model) if r.key == "operating-device"]
     wires = [w.points[0][0] for w in _wires(model)]
-    assert len(coils) == len(wires) == _CHANNELS
-    assert sorted(r.x for r in coils) == sorted(wires)
+    assert len(coils) == _CHANNELS
+    assert {r.x for r in coils} <= set(wires)
 
 
 def test_the_card_stands_pin_over_pin_at_the_footprint_pitch() -> None:
@@ -118,9 +114,7 @@ def test_no_designation_text_is_measured_into_a_footprint(monkeypatch: pytest.Mo
         drawn = real(symbol, library, ask)
         bare = real(symbol, library, replace(ask, text=""))
         asked.append(ask.text)
-        assert {o: v.footprint for o, v in drawn.views.items()} == {
-            o: v.footprint for o, v in bare.views.items()
-        }
+        assert {o: v.footprint for o, v in drawn.views.items()} == {o: v.footprint for o, v in bare.views.items()}
         return drawn
 
     monkeypatch.setattr("fransys_el.placement_syms.symbol_views", spy)

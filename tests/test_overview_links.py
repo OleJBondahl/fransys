@@ -3,30 +3,28 @@
 Each link is a relative `name.pdf#nameddest=<label>` whose file name is one `export_names` gives
 for the same write.
 """
+# CONNECTION_NOT_DRAWN 4 per default-salt build set (MATES-DISABLED): mated, harness or board-unit input, refused for 0.22 (R1216).
 
 import json
 import re
-import sys
 from dataclasses import replace
 from functools import cache
-from pathlib import Path
 from typing import Any
 from urllib.parse import unquote
 
 import fransys as fr
 import fransys_parts
+from _model_build_cover import printed
 from fransys_overview import html
 from fransys_overview._app import APP_JS
-
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-from _model_build_cover import layout_trigger_document
 from test_units_worked_example import _system_design
 
+from electrical_symbols import LIBRARY
 from fransys_layout.engines.overview import lay_out_overview
-from fransys_model.derive import unit_release
+from fransys_model.derive import documents, unit_release
 from fransys_model.kernel import Origin, evolve, make_id
 from fransys_model.layout import DrawingSet, layout_of
-from fransys_model.vocab import Document, DocumentPreset, PageKind, documents
+from fransys_model.vocab import Document, DocumentPreset
 
 _RELATIVE = re.compile(r"^[^:/?#\\]+#nameddest=[^#:/]+$")
 
@@ -46,14 +44,10 @@ def _with_cabinet_documents(result: Any) -> Any:
             location=place,
             unit=owner,
             item=None,
-            add=(),
-            remove=(PageKind.PLC_LIST, PageKind.TERMINAL_LIST, PageKind.BOM),
             cover="# Cover",
             notes=None,
         )
-        for n, (place, owner) in enumerate(
-            [*((p, None) for p in places), *((None, u) for u in owners)]
-        )
+        for n, (place, owner) in enumerate([*((p, None) for p in places), *((None, u) for u in owners)])
     ]
     origin = Origin(file="tests/test_overview_links.py", line=1, note="invented documents")
     kept = evolve(model, remove=tuple(documents(model)), put=docs, origin=origin)
@@ -64,8 +58,8 @@ def _with_cabinet_documents(result: Any) -> Any:
 def _built() -> tuple[Any, str]:
     parts = fransys_parts.load("demo_parts")
     design, _field1, _field2 = _system_design(parts)
-    result = _with_cabinet_documents(fr.build(parts, design.draft(), layout_trigger_document()))
-    return result, html(lay_out_overview(result.model)[0])
+    result = _with_cabinet_documents(fr.build(parts, *printed(design.draft())))
+    return result, html(lay_out_overview(result.model, LIBRARY)[0], text_height=8)
 
 
 def _items() -> list[dict[str, Any]]:
@@ -97,7 +91,7 @@ def test_a_model_with_no_document_has_no_links() -> None:
     """O21: no document, no PDF, no link."""
     parts = fransys_parts.load("demo_parts")
     design, _field1, _field2 = _system_design(parts)
-    page = html(lay_out_overview(fr.build(parts, design.draft()).model)[0])
+    page = html(lay_out_overview(fr.build(parts, design.draft()).model, LIBRARY)[0], text_height=8)
     assert "nameddest" not in page
 
 

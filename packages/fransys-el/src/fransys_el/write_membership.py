@@ -9,23 +9,27 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 from fransys_layout.core import PinRef
-from fransys_model.derive import build_indexes, frame_cell, function_item
+from fransys_layout.symbols import frame_cell
+from fransys_model.derive import build_indexes, function_item
 from fransys_model.derive.order import reading_ranks
 from fransys_model.kernel import make_id, render_id
-from fransys_model.layout import FrameCell, Membership, Shown, layout_of
+from fransys_model.layout import FrameCell, Membership, Shown, layout_of, sheet_format_of
 
 from .kit_keys import function_of
 from .placement_ids import pin_names, symbol_ids
+from .write_markers import marker_ids
+from .write_pages import STAMP
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Mapping
 
-    from fransys_layout.core import CoreLayout, Placed, PlacementProblem, Sym
+    from fransys_layout.core import CoreLayout, Placed, Sym
     from fransys_model.kernel import Id, Model
     from fransys_model.layout import Page
     from fransys_model.vocab import Conductor, Port
 
     from .placement_kit import PickKey, SymbolKit
+    from .write_pages import Written
 
 __all__ = ["memberships", "set_rows"]
 
@@ -72,9 +76,8 @@ class _Ctx:
     number: int
 
 
-def _context(
-    model: Model, layout: CoreLayout, problem: PlacementProblem, kit: SymbolKit, number: int
-) -> _Ctx:
+def _context(w: Written) -> _Ctx:
+    model, kit = w.model, w.kit
     ids = symbol_ids(model, kit)
     leads: dict[str, list[PickKey]] = defaultdict(list)
     for lead in kit:
@@ -83,8 +86,8 @@ def _context(
     for port, ref in pin_names(model, kit, ids).items():
         pins[ref.sym].append((port, ref.pin))
     ends = build_indexes(model).conductors_by_port
-    syms = {s.id: s for s in problem.symbols}
-    return _Ctx(model, kit, syms, leads, pins, ends, layout, number)
+    syms = {s.id: s for s in w.problem.symbols}
+    return _Ctx(model, kit, syms, leads, pins, ends, w.layout, w.owner.number)
 
 
 def _functions(ctx: _Ctx, p: Placed) -> Iterable[_Spot]:
@@ -101,8 +104,6 @@ def _items(ctx: _Ctx, p: Placed) -> Iterable[_Spot]:
         item = function_item(ctx.model, function_of(ctx.model, lead))
         if sym.box is not None:
             yield _spot(ctx, "item", item, (p.page, (p.x, p.y)), None, "box")
-        if sym.boundary_of is not None:
-            yield _spot(ctx, "item", item, (p.page, (p.x, p.y)), None, "outline")
 
 
 def _pins(ctx: _Ctx, p: Placed) -> Iterable[_Spot]:
@@ -124,10 +125,10 @@ def _pins(ctx: _Ctx, p: Placed) -> Iterable[_Spot]:
 def _markers(ctx: _Ctx) -> Iterable[_Spot]:
     """A reference port row for each port a marker's pin draws, at the marker's place."""
     named = {PinRef(sym, pin): port for sym, pins in ctx.pins.items() for port, pin in pins}
-    for index, m in enumerate(ctx.layout.annotations.markers):
+    markers = ctx.layout.annotations.markers
+    for m, marker_id in zip(markers, marker_ids(markers, ctx.number), strict=True):
         if m.end in named:
-            at = (m.x, m.y)
-            yield _spot(ctx, "port", named[m.end], (m.page, at), Shown.REFERENCE, "ref", str(index))
+            yield _spot(ctx, "port", named[m.end], (m.page, (m.x, m.y)), Shown.REFERENCE, "ref", render_id(marker_id))
 
 
 def _spots(ctx: _Ctx) -> dict[tuple[str, ...], _Spot]:
@@ -142,38 +143,26 @@ def _spots(ctx: _Ctx) -> dict[tuple[str, ...], _Spot]:
     return found
 
 
-def memberships(  # noqa: PLR0913, PLR0917 - the stamp and set number join the layout, problem, kit and pages
-    model: Model,
-    layout: CoreLayout,
-    problem: PlacementProblem,
-    kit: SymbolKit,
-    pages: Mapping[int, Page],
-    stamp: str,
-    number: int = 1,
-) -> tuple[Membership, ...]:
+def memberships(w: Written) -> tuple[Membership, ...]:
     """One `Membership` per function, port, conductor end and item on each page of `layout`.
 
-    The cell is `derive.frame_position.cell` of the place, the rank `reading_ranks` of the page.
+    The cell is the layout layer's `frame_cell` of the place, the rank `reading_ranks` of the page.
     """
-    spots = _spots(_context(model, layout, problem, kit, number))
+    spots = _spots(_context(w))
     by_page: dict[int, dict[tuple[str, ...], tuple[int, int]]] = defaultdict(dict)
     for key, spot in spots.items():
         by_page[spot.page][key] = (spot.at[1], spot.at[0])
     ranks = {page: reading_ranks(points) for page, points in by_page.items()}
-    return tuple(_row(model, pages[s.page], s, ranks[s.page][k], stamp) for k, s in spots.items())
+    return tuple(_row(w, w.pages[s.page], s, ranks[s.page][k], STAMP) for k, s in spots.items())
 
 
 def set_rows(model: Model, number: int, stamp: str) -> tuple[Id[Membership], ...]:
     """The ids of the rows set `number` wrote before: a set replaces its own, not the others'."""
-    return tuple(
-        i
-        for i, m in layout_of(model, Membership).items()
-        if m.produced_by == stamp and m.key[len(_KEY)] == str(number)
-    )
+    return tuple(i for i, m in layout_of(model, Membership).items() if m.produced_by == stamp and m.key[len(_KEY)] == str(number))
 
 
-def _row(model: Model, page: Page, spot: _Spot, rank: int, stamp: str) -> Membership:
-    column, row = frame_cell(model, page, *spot.at)
+def _row(w: Written, page: Page, spot: _Spot, rank: int, stamp: str) -> Membership:
+    column, row = frame_cell(w.library, sheet_format_of(w.model, page.sheet_format), *spot.at)
     subject: dict[str, Any] = {"function": None, "port": None, "conductor": None, "item": None}
     subject[spot.field] = spot.subject
     return Membership(

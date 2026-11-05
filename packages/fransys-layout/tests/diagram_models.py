@@ -2,17 +2,16 @@
 
 Every builder returns a frozen, numbered `Model` (no facade, no layout engine run). `station` is
 the block-diagram worked example 1; `chain(n)` is a path of boxes; `one_box`, `fanout`
-and `loose` are the three hand models of the diagram findings.
 """
 
-from functools import cache
+from functools import cache, partial
 from itertools import pairwise
 from typing import Any
 
-import fransys_author
-import fransys_parts
-from layout_library import freeze
+from cable_models import design
+from library_records import freeze
 
+from fransys_layout.engines.overview.sheet_values import DiagramFacts
 from fransys_model.derive.passes.numbering import number as number_pass
 from fransys_model.kernel import Model, merge
 
@@ -23,17 +22,9 @@ _PROJECT: dict[str, Any] = {
     "revision": 1,
     "author": "OJB",
 }
+_design = partial(design, _PROJECT)
 _CABLE, _MOTOR, _SWITCH = "DEMO-CBL-4G1.5", "DEMO-MOTOR-4KW", "DEMO-SWITCH-2P"
 _TB, _CONN = "DEMO-TB-2.5", "DEMO-CONN-2P"
-
-
-def _design():
-    """The demo parts and an empty design with its project and first revision."""
-    parts = fransys_parts.load("demo_parts")
-    d = fransys_author.Design(parts)
-    d.project(**_PROJECT)
-    d.revision(1, date="2026-10-07", text="First issue", created="XX")
-    return parts, d
 
 
 def _numbered(parts, d) -> Model:
@@ -114,3 +105,17 @@ def loose() -> Model:
     m1, m2 = (d.item(_MOTOR, tag=f"M{i}", group=group) for i in (1, 2))
     d.wiring(colour="BU", gauge="0.75")(m1["U"], m2["U"])
     return _numbered(parts, d)
+
+
+def diagram_facts(boxes, lines, width: int = 1868, height: int = 1248) -> DiagramFacts:
+    """Hand-built facts for the placer: the boxes and lines on a page of this size."""
+    return DiagramFacts(
+        unit=None,
+        boxes=tuple(boxes),
+        lines=tuple(lines),
+        text_height=8,
+        turn_penalty=1,
+        crossing_penalty=1,
+        width=width,
+        height=height,
+    )

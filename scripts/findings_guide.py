@@ -26,10 +26,7 @@ class _Fields(dict[str, str]):
         return f"<{key}>"
 
 
-HEADER = (
-    "| Code | Severity | Stage | Who acts | Meaning | Fix |\n"
-    "| --- | --- | --- | --- | --- | --- |\n"
-)
+HEADER = "| Code | Severity | Stage | Who acts | Meaning | Fix |\n| --- | --- | --- | --- | --- | --- |\n"
 
 
 def page_names() -> tuple[str, ...]:
@@ -38,8 +35,14 @@ def page_names() -> tuple[str, ...]:
 
 
 def _row(info: CodeInfo) -> str:
-    severity = " or ".join(s.name for s in info.severities)
-    cells = (info.code, severity, info.stage, info.who, info.cause, info.fix.format_map(_Fields()))
+    cells = (
+        info.code,
+        info.severity.name,
+        info.stage,
+        info.who,
+        info.cause,
+        info.fix.format_map(_Fields()),
+    )
     return "| " + " | ".join(cells) + " |\n"
 
 

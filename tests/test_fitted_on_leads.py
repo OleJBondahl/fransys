@@ -4,11 +4,11 @@ It is a link like a mount: it closes its net, is never a wire, and the connector
 its parent device (`K1-J1`) while no other child of a device changes.
 """
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import fransys as fr
-import fransys_author
 import pytest
+from fransys_author.design import Design
 
 from fransys_model.derive import cable_rows, item_designation, net_of, wire_rows
 from fransys_model.vocab import ConductorKind, WireFacet
@@ -33,7 +33,7 @@ def _build() -> fr.BuildResult:
     A strip X1 and a plain wire K1 to the strip sit beside them.
     """
     parts = fr.parts("demo_parts")
-    d = fransys_author.Design(parts)
+    d = Design(parts)
     cab = d.location("CAB", "Cabinet")
     g = d.group("G", "Group")
     relays = [d.item(_RELAY, name=f"k{i}", tag=f"K{i}", at=cab, group=g) for i in (1, 2)]
@@ -53,7 +53,7 @@ def built() -> fr.BuildResult:
     return _build()
 
 
-def _lead_ends(result: fr.BuildResult) -> list[tuple[Id, Id]]:
+def _lead_ends(result: fr.BuildResult) -> list[tuple[Id[Any], Id[Any]]]:
     return [(c.a, c.b) for c in conductors(result.model).values() if c.kind is ConductorKind.LEAD]
 
 

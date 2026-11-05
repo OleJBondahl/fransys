@@ -10,10 +10,11 @@ from typing import Any, cast
 lazy from collections.abc import Callable
 
 from fransys_model.derive.facts.item_predicates import terminal_items
+from fransys_model.derive.facts.unit_index import unit_index
 from fransys_model.derive.facts.units import boundary, item_chain, unit_items
 from fransys_model.layout import OverviewRef, OverviewRefKind
 from fransys_model.vocab.enums import Aspect, FunctionKind
-from fransys_model.vocab.tables import conductors, functions, units
+from fransys_model.vocab.tables import conductors, functions
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.core import Function, Item, Unit
 
@@ -61,9 +62,7 @@ def level_box(model: Model, item: Id[Item], unit: Id[Unit] | None) -> BoxKey | N
     return next((one for one in item_chain(model, item) if one in strip_set(model)), found)
 
 
-def _box(
-    model: Model, box: BoxKey, unit: Id[Unit] | None, tabs: set[str], strips: dict[Id[Item], int]
-) -> OverviewBox:
+def _box(model: Model, box: BoxKey, unit: Id[Unit] | None, tabs: set[str], strips: dict[Id[Item], int]) -> OverviewBox:
     """One box with its text, tabs and, for an item, its kind and effective nodes."""
     if box.kind == "unit":
         return OverviewBox(
@@ -82,7 +81,7 @@ def _box(
         kind=item_kind(model, item),
         lines=level_box_lines(model, box, unit),
         tabs=tuple(sorted(tabs, key=natural_key)),
-        dashed=box_dashed(model, box, unit),
+        dashed=box_dashed(model, box),
         group=effective_placement(model, item, Aspect.FUNCTION),
         location=effective_placement(model, item, Aspect.LOCATION),
         terminals=strips.get(item, 0),
@@ -99,9 +98,7 @@ def _terminal_counts(model: Model) -> dict[Id[Item], int]:
     return found
 
 
-def _boxes(
-    model: Model, unit: Id[Unit] | None, tabs: dict[Id[Any], set[str]], order: _Order
-) -> tuple[OverviewBox, ...]:
+def _boxes(model: Model, unit: Id[Unit] | None, tabs: dict[Id[Any], set[str]], order: _Order) -> tuple[OverviewBox, ...]:
     """The boxes of `tabs`' keys, in box text order."""
     strips = _terminal_counts(model)
     ordered = sorted(tabs, key=order)
@@ -118,9 +115,7 @@ def _tab_text(model: Model, function: Id[Function], unit: Id[Unit]) -> str:
 def _unit_tabs(model: Model, unit: Id[Unit]) -> dict[Id[Any], set[str]]:
     """Every visible box of `unit`'s level, with the tabs standing on its border."""
     found: dict[Id[Any], set[str]] = {
-        one.id: {_tab_text(model, f, unit) for f in boundary(model, one.id)}
-        for one in units(model).values()
-        if one.parent == unit
+        one: {_tab_text(model, f, unit) for f in boundary(model, one)} for one in unit_index(model).child_units.get(unit, ())
     }
     for item in sorted(unit_items(model, unit)):
         box = level_box(model, item, unit)
@@ -171,9 +166,7 @@ def stub_far_root(model: Model, item: Id[Item]) -> OverviewRef:
     return OverviewRef(kind=OverviewRefKind.ITEM, item=tuple(item_chain(model, item))[-1])
 
 
-def stubs_of(
-    model: Model, unit: Id[Unit], link: OverviewLink, inside: BoxKey, outside: Id[Item]
-) -> list[OverviewStub]:
+def stubs_of(model: Model, unit: Id[Unit], link: OverviewLink, inside: BoxKey, outside: Id[Item]) -> list[OverviewStub]:
     """The stubs for the connections of `link` that leave the level at `inside`."""
     if not link.conductors:
         far = printed_designation(model, outside, unit=display_unit(model, outside, unit))
@@ -191,11 +184,7 @@ def stubs_of(
     found = []
     for conductor in link.conductors:
         record = conductors(model)[conductor]
-        near, far_port = (
-            (record.a, record.b)
-            if item_of_port(model, record.b) == outside
-            else (record.b, record.a)
-        )
+        near, far_port = (record.a, record.b) if item_of_port(model, record.b) == outside else (record.b, record.a)
         far, tails = stub_far_end(model, far_port, near, unit=display_unit(model, outside, unit))
         found.append(
             OverviewStub(
@@ -211,9 +200,7 @@ def stubs_of(
     return found
 
 
-def merge_stubs(
-    model: Model, unit: Id[Unit], stubs: list[OverviewStub]
-) -> tuple[OverviewStub, ...]:
+def merge_stubs(model: Model, unit: Id[Unit], stubs: list[OverviewStub]) -> tuple[OverviewStub, ...]:
     """`stubs` joined as `_merge_stubs` does, in the box order of `unit`'s level."""
     return _merge_stubs(stubs, cache(lambda box: level_box_order(model, box, unit)))
 
@@ -283,23 +270,17 @@ def _system_level(model: Model) -> OverviewLevel:
             tabs.setdefault(box, set())
             if tab is not None:
                 tabs[box].add(tab)
-        cores = tuple(
-            sorted(c.id for c in conductors(model).values() if c.carrier == diagram.cable)
-        )
+        cores = tuple(c.id for c in conductors(model).values() if c.carrier == diagram.cable)
         lines.append(
             OverviewLine(
-                ref=LineRef(
-                    a=diagram.a, b=diagram.b, kind=OverviewLinkKind.CABLE, via=diagram.cable
-                ),
+                ref=LineRef(a=diagram.a, b=diagram.b, kind=OverviewLinkKind.CABLE, via=diagram.cable),
                 label=diagram.designation,
                 count=len(cores),
                 conductors=cores,
             )
         )
     order = cache(lambda box: level_box_order(model, box, None))
-    return OverviewLevel(
-        unit=None, boxes=_boxes(model, None, tabs, order), lines=tuple(lines), stubs=()
-    )
+    return OverviewLevel(unit=None, boxes=_boxes(model, None, tabs, order), lines=tuple(lines), stubs=())
 
 
 @Memo
@@ -323,9 +304,7 @@ def open_strips(level: OverviewLevel) -> tuple[Id[Item], ...]:
     return cast("tuple[Id[Item], ...]", tuple(strips))  # a STRIP box is an item
 
 
-def _terminal_lines(
-    model: Model, unit: Id[Unit], terminal: Id[Item], strip: BoxKey
-) -> tuple[OverviewLine, ...]:
+def _terminal_lines(model: Model, unit: Id[Unit], terminal: Id[Item], strip: BoxKey) -> tuple[OverviewLine, ...]:
     """The lines of one terminal to the other boxes of the level."""
     found = []
     for link in links_of(model, terminal):

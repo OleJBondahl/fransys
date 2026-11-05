@@ -5,7 +5,6 @@ lazy from collections.abc import Mapping
 lazy from types import EllipsisType
 
 from fransys_author.errors import AuthorAttributeError, AuthorError
-from fransys_author.surface._bar_pe import join_pe
 from fransys_author.surface._box import check_box, with_box
 from fransys_author.surface._handles import Fn, Pin, attribute_pin, pick
 from fransys_author.surface._tags import bare
@@ -16,8 +15,8 @@ lazy from fransys_author.surface._joins import fit_leads
 lazy from fransys_author.surface._mount import mount
 lazy from fransys_author.surface._parent import parent_item
 lazy from fransys_model.kernel import Id, natural_join
-lazy from fransys_model.vocab import FunctionKind, identifier
 lazy from fransys_model.vocab import Item as ModelItem
+lazy from fransys_model.vocab import identifier
 
 if TYPE_CHECKING:
     from fransys_author.surface._box_device import BoxDevice
@@ -31,9 +30,7 @@ class Device:
     Does not guess: an unknown function or pin raises and lists the candidates.
     """
 
-    def __init__(
-        self, label: str, item: Item, scope: Scope | None = None, tag: str | None = None
-    ) -> None:
+    def __init__(self, label: str, item: Item, scope: Scope | None = None, tag: str | None = None) -> None:
         """Wrap the engine `item` as `label`, made in `scope`, with its authored `tag`."""
         self._label, self._item, self._scope, self._tag = label, item, scope, tag
 
@@ -63,19 +60,12 @@ class Device:
         pins = {identifier(pin.name) for _, pin in self._pins()} if boxed else set()
         return sorted({*super().__dir__(), *pins})
 
-    def _screw(self, pin: Pin) -> Pin:
-        """`pin`, joined to the PE net when its function is a bar: a named screw is PE too."""
-        for function in self._item.functions:
-            if function.kind is FunctionKind.BAR and pin in function.ports:
-                join_pe(function, pin)
-        return pin
-
     def __getitem__(self, marking: str | int) -> Pin:
         """The pin marked `marking` on any function; an integer needs no quotes.
 
         Does not guess: an unknown or doubled marking raises and names the candidates.
         """
-        return self._screw(pick(self._label, str(marking), self._pins()))
+        return pick(self._label, str(marking), self._pins())
 
     if TYPE_CHECKING:  # a name is a function; an untyped part's pin is `Q1["A1"]`
 
@@ -93,14 +83,14 @@ class Device:
             Does not guess: an unknown name raises an `AttributeError` that lists the functions.
             """
             if name.startswith("__") or "_item" not in vars(self):  # copy, unpickle: no recursion
-                raise AttributeError(name)
+                raise AuthorAttributeError(name)
             for function in self._item.functions:
                 if name in (function.name, identifier(function.name)):
                     return Fn(self._label, function, self._scope)
             pins = self._pins()
             pin_name = attribute_pin(name, pins)
             if any(pin.name == pin_name for _, pin in pins):
-                return self._screw(pick(self._label, pin_name, pins))
+                return pick(self._label, pin_name, pins)
             names = natural_join(f.name for f in self._item.functions)
             msg = f"{self._label} has no function or pin {name!r}; functions: {names}"
             raise AuthorAttributeError(msg)
@@ -157,10 +147,7 @@ def _one_maker(design: Design, mpn: str) -> None:
     parts = design._engine._design._catalogue.by_mpn.get(mpn, ())
     if len(parts) > 1:
         makers = ", ".join(sorted(part.manufacturer for part in parts))
-        msg = (
-            f"MPN {mpn!r} is ambiguous across manufacturers ({makers}); "
-            "the engineer API takes one part per MPN"
-        )
+        msg = f"MPN {mpn!r} is ambiguous across manufacturers ({makers}); the engineer API takes one part per MPN"
         raise AuthorError(msg)
 
 
@@ -183,18 +170,14 @@ def part_mpn(part: str | type[Device]) -> str:
     return mpn
 
 
-def _checked_mpn(  # noqa: PLR0913 -- the call's own checked facts, split out of `device`
+def _checked_mpn(
     design: "Design",
     part: str | type[Device] | None,
     tag: str | None,
     name: str | None,
-    *,
-    external: bool,
-    pins: tuple[str, ...] | None,
     contacts: str | Mapping[str, str] | None,
 ) -> str | None:
-    """The MPN of `part` after the tag, pins and one-maker checks; `None` for a part-less box."""
-    check_box(part, tag=tag, external=external, pins=pins)
+    """The MPN of `part` after the tag and one-maker checks; `None` for a part-less box."""
     mpn = None if part is None else part_mpn(part)
     _check_tag(tag, name)
     if mpn is not None:
@@ -241,9 +224,7 @@ def _mark_boundary(
         design._engine.unused(fn)
 
 
-def _parent_handle(
-    design: "Design", parent: "Device | TerminalStrip | None"
-) -> Item | Strip | None:
+def _parent_handle(design: "Design", parent: "Device | TerminalStrip | None") -> Item | Strip | None:
     """The handle `parent=` nests under: a device's item, a strip, or a refusal."""
     if parent is None:
         return None
@@ -323,8 +304,8 @@ class Devices:
         installed: bool = True,
         external: bool = False,
         contacts: str | Mapping[str, str] | None = None,
-    ) -> Any: ...  # noqa: ANN401 -- the string-MPN path is untyped by design
-    def device(  # noqa: PLR0913 -- the call's own spec signature
+    ) -> Any: ...  # noqa: ANN401 -- the string-MPN path is untyped by design; a Device return breaks the tuple[Device, ...] flows of the tests
+    def device(  # noqa: PLR0913 -- the call's own spec signature [public keyword API kept, decision 0444]
         self: "Design",
         tag: str | None,
         part: str | type[Device] | None,
@@ -348,7 +329,8 @@ class Devices:
         Does not take a prefixed tag or mount by name. `interface`, `unused`: `True` or names.
         `part=None` makes an `external=True` box of `pins=`, with a tag and no BOM line.
         """
-        mpn = _checked_mpn(self, part, tag, name, external=external, pins=pins, contacts=contacts)
+        check_box(part, tag=tag, external=external, pins=pins)
+        mpn = _checked_mpn(self, part, tag, name, contacts)
         holder = _parent_handle(self, parent)
         key = self._claim(name or tag or "", per_function=True)
         item = self._engine.item(

@@ -3,11 +3,12 @@
 from dataclasses import replace
 
 from fransys_layout.core import PinRef, Size
+from fransys_layout.core.flow_values import Fan
 from fransys_layout.core.geometry import marker_box_at
 from fransys_layout.core.outputs import Trunk
 from fransys_layout.core.pack_sep import separation
 from fransys_layout.core.text_ends import MarkEnv, end_stand
-from fransys_layout.core.values import Box, Fan, Ref, RefEnd, RefKind, Side
+from fransys_layout.core.values import Box, Ref, RefEnd, RefKind, Side
 
 from .conftest import MARKER
 from .flow_builders import OPTIONS

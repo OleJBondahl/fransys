@@ -7,23 +7,19 @@ Labels and frame text are read back from the compiled PDF with pypdfium2. The fr
 import ctypes
 import re
 
-import fransys_render
 import pypdfium2 as pdfium
 import pypdfium2.raw as pdfium_raw
 import typst
-from _build import document, drawing_set, layout_page, location, model, source, unit
+from _build import compile_pdf as _compile
+from _build import document, drawing_set, layout_page, location, model, unit
 from fransys_pdf._labels import sheet_label
 
-from electrical_symbols import LIBRARY, font_dir
-from fransys_model.derive import document_sheets_of, page_destination, sheet_text
-from fransys_model.kernel import make_id, render_id
-from fransys_model.layout import DiagramSheet
-from fransys_model.vocab import DocumentPreset, PageKind
-
-_SVG = (
-    '<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">'
-    '<rect width="10" height="10"/></svg>'
+from fransys_model.derive import (
+    page_destination,
+    sheet_text,
 )
+from fransys_model.vocab import DocumentPreset
+
 _NOTES = "\n\n".join(f"Paragraph {i}. " + "A long note sentence. " * 60 for i in range(12))
 _ROMAN = ((10, "x"), (9, "ix"), (5, "v"), (4, "iv"), (1, "i"))
 
@@ -36,15 +32,8 @@ def _roman(number: int) -> str:
     return out
 
 
-def _diagram(u, number: int) -> DiagramSheet:
-    key = ("diagram_sheet", f"u1.{number}")
-    return DiagramSheet(
-        id=make_id(DiagramSheet, key), key=key, unit=u.id, number=number, produced_by="test"
-    )
-
-
 def _fixture():
-    """Cover, flowing notes, index, B1, sheets 1, 2, 2.1, 2.2, then pages after the sheets."""
+    """Cover, flowing notes, index, then sheets 1, 2, 2.1, 2.2."""
     c1 = location("C1", "First cabinet")
     u = unit("u1", name="pump-cabinet")
     ds1 = drawing_set("ds1", location=c1, unit=u, number=1)
@@ -55,28 +44,15 @@ def _fixture():
         layout_page("b1", drawing_set=ds2, number=1),
         layout_page("b2", drawing_set=ds2, number=2),
     )
-    sheets = (_diagram(u, 1), *pages)
+    sheets = pages
     doc = document(
         "d1",
         preset=DocumentPreset.CABINET_SCHEMATIC,
         subject=u,
         cover="# Cover",
         notes=_NOTES,
-        add=(PageKind.BLOCK_DIAGRAM, PageKind.HARNESS_DRAWING),
     )
-    return model(c1, u, ds1, ds2, *sheets, doc), doc, sheets
-
-
-def _compile(m, doc, sheets) -> bytes:
-    svgs = {render_id(sheet.id): _SVG for sheet in sheets}
-    compiler = typst.Compiler(font_paths=[font_dir()], ignore_system_fonts=True)
-    compiled = compiler.compile(
-        input=source(m, doc.id, svgs, fransys_render.sheets(document_sheets_of(m), LIBRARY)).encode(
-            "utf-8"
-        )
-    )
-    assert isinstance(compiled, bytes)
-    return compiled
+    return model(c1, u, ds1, ds2, *pages, doc), doc, sheets
 
 
 def _label(pdf: pdfium.PdfDocument, index: int) -> str:
@@ -100,18 +76,17 @@ def test_sheets_show_their_sheet_text_and_other_pages_their_roman_number():
     pdf = pdfium.PdfDocument(_compile(m, doc, sheets))
     labels = [_label(pdf, index) for index in range(len(pdf))]
     assert labels == _expected(pdf, m, sheets)
-    assert {"B1", "1", "2", "2.1", "2.2"} <= set(labels)
-    assert labels[-1] == _roman(len(pdf))  # the harness page after the sheets restarts roman
+    assert {"1", "2", "2.1", "2.2"} <= set(labels)
     assert len(set(labels)) == len(labels)
 
 
 def test_every_frame_reads_its_physical_page_and_the_page_count():
     m, doc, sheets = _fixture()
     pdf = pdfium.PdfDocument(_compile(m, doc, sheets))
-    assert len(pdf) == 10  # the notes flow onto pages 2 and 3, a counter step after a restart
+    assert len(pdf) == 8  # the notes flow onto pages 2 and 3, a counter step after a restart
     for index in range(len(pdf)):
         text = pdf[index].get_textpage().get_text_bounded()
-        assert re.findall(r"(?<!\d)(\d+) of (\d+)", text) == [(str(index + 1), "10")], index
+        assert re.findall(r"(?<!\d)(\d+) of (\d+)", text) == [(str(index + 1), "8")], index
 
 
 def test_the_same_model_gives_the_same_bytes_twice():
@@ -152,8 +127,6 @@ def test_a_suffix_pattern_is_written_whole_by_typst():
         pattern, start = sheet_label(text)
         assert pattern == ', numbering: "1.' + text.split(".")[1] + '"'
         assert start == f"#counter(page).update({text.split('.')[0]})"
-        source_text = (
-            f"#set page(width: 50mm, height: 30mm)\n#page(margin: 0mm{pattern})[{start} x]"
-        )
+        source_text = f"#set page(width: 50mm, height: 30mm)\n#page(margin: 0mm{pattern})[{start} x]"
         pdf = pdfium.PdfDocument(typst.compile(source_text.encode()))
         assert _label(pdf, 0) == label

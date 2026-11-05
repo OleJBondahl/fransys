@@ -39,19 +39,14 @@ def _spec(row: object, value: object) -> Spec:
         msg = f"a wiring row is fr.DC_SUPPLY, fr.AC_L1 or another row name, not {row!r}"
         raise AuthorError(msg)
     if isinstance(value, int | float | Decimal) and not isinstance(value, bool):
-        msg = (
-            f"row {row} value {value} is a bare number, a size; "
-            f'give (colour, size) such as ("BK", {value})'
-        )
+        msg = f'row {row} value {value} is a bare number, a size; give (colour, size) such as ("BK", {value})'
         raise AuthorError(msg)
     if isinstance(value, tuple) and len(value) == _TUPLE_LEN:
         return _colour(value[0]), _gauge(value[1])
     return _colour(value), None
 
 
-def table(
-    rows: Mapping[WiringRow, RowValue] | None, under: Mapping[WiringRow, Spec]
-) -> dict[WiringRow, Spec]:
+def table(rows: Mapping[WiringRow, RowValue] | None, under: Mapping[WiringRow, Spec]) -> dict[WiringRow, Spec]:
     """`rows` read and laid over `under`: a row's value is a colour, or a colour and a size."""
     found = dict(under)
     found.update({row: _spec(row, value) for row, value in (rows or {}).items()})

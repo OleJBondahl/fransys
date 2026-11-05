@@ -88,3 +88,25 @@ class Mate:
     def __post_init__(self) -> None:
         """Store the ends in id order; the same function at both ends is refused."""
         _order_ends(self, "mate", "a mate joins two different functions")
+
+
+@record(kind="rail_group")
+class RailGroup:
+    """One bridged group of terminals the engineer declared a power rail (model-0394).
+
+    Example: the 24 V strip `X2`, terminals 1 to 4 bridged, flagged with `rail=True`. A flagged
+    terminal draws as its power symbol; an unflagged one draws as a terminal. `terminals` are
+    stored in id order. Guarded by `RAIL_DUPLICATE_POTENTIAL`, `RAIL_WITHOUT_POTENTIAL` and
+    `RAIL_ON_FUSED`. Read by `derive.is_rail_terminal`.
+    """
+
+    id: Id[RailGroup]
+    key: AuthoringKey
+    terminals: tuple[Id[Item], ...]
+    ext: frozendict[str, Value] = frozendict()
+
+    def __post_init__(self) -> None:
+        """Refuse an empty group."""
+        if not self.terminals:
+            msg = "a rail group holds at least one terminal"
+            raise SchemaError(msg, kind="rail_group", record_id=_holder(self))

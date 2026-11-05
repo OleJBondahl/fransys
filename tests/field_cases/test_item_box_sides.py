@@ -1,38 +1,25 @@
-"""Field case: an item whose every function is box-drawn is one box, a pin group per side.
+"""Field case: an item whose every function is box-drawn is one box, with a pin group per side.
+The bug: the supply's pins alternated top and bottom, and the module drew each wired channel as a column end apart from its box.
+Fixed by layout-0099, one box per item with side order AC above DC, power above signal, and load above supply."""
 
-The engineering shape: a power supply with an AC input and a DC output, on no declared supply,
-and a PLC input module with a 24 V power function and four input channels, each channel wired to
-a field switch. Both items have only functions with no IEC symbol of their own.
-
-The bug (v0.5.0 look): the supply's pins alternated top and bottom, its input split over both
-sides, and the module drew each wired channel as a column end of its own, apart from its box (the
-drawn-ends work, decision layout-0099, made each channel a pin of the box).
-The rule (decision layout-0099): one box per item, the side order AC
-above DC, then power above signal, then load above supply; the first-ranked functions take the
-top side and every other function the bottom.
-"""
-
-import tempfile
-from pathlib import Path
+from typing import Any
 
 import fransys as fr
 from _drawn_facts import symbol_subjects
+from _model_build_cover import unit_document
 from fransys.colours import BU
 
 
-def _layout(plant) -> tuple:
+def _layout(plant) -> tuple[Any, ...]:
     """The built model and its result of `plant(d)` in one cabinet document."""
     d = fr.design("demo_parts", place="CAB")
     cab = d.location("CAB", "Cabinet")
     plant(d)
-    cover = Path(tempfile.mkdtemp()) / "cover.md"
-    cover.write_text("# Cabinet\n", encoding="utf-8")
-    doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover)
-    result = fr.build(d, doc)
+    result = fr.build(d, unit_document(cab))
     return result.model, result
 
 
-def _symbols(model, tag: str) -> list:
+def _symbols(model, tag: str) -> list[Any]:
     """Every drawn symbol owned by the item or function tagged `tag`."""
     return [s for s in symbol_subjects(model) if s.tag == tag]
 
@@ -52,15 +39,16 @@ def _box_sides(model, tag: str) -> dict[str, str]:
 def _psu(d) -> None:
     psu = d.device("T1", "DEMO-PSU-24")
     lamp = d.device("P1", "DEMO-LAMP-24")
-    d.detail.wire(psu.output["+"], lamp[1], wire=(BU, 0.5))
-    d.detail.wire(psu.output["-"], lamp[2], wire=(BU, 0.5))
+    d.series(psu.output["+"], lamp[1], wire=(BU, 0.5))
+    d.series(psu.output["-"], lamp[2], wire=(BU, 0.5))
 
 
 def _module(d) -> None:
     module = d.device("K1", "DEMO-PLC-DI-4P")
     for i in range(1, 5):
         switch = d.device(f"S{i}", "DEMO-SWITCH-2P")
-        d.detail.wire(switch.sw["B"], getattr(module, f"di_{i}")[i], wire=(BU, 0.5))
+        d.series(switch.sw["B"], getattr(module, f"di_{i}")[i], wire=(BU, 0.5))
+        d.series(switch.sw["A"], module.power["24V" if i % 2 else "0V"], wire=(BU, 0.5))
 
 
 def test_a_power_supply_draws_its_ac_input_on_top_and_its_dc_output_below() -> None:
@@ -87,8 +75,8 @@ def test_a_plc_module_draws_one_box_with_power_on_top_and_its_channels_below() -
 def _module_unwired(d) -> None:
     module = d.device("K1", "DEMO-PLC-DI-4P")
     psu = d.device("T1", "DEMO-PSU-24")
-    d.detail.wire(psu.output["+"], module.power["24V"], wire=(BU, 0.5))
-    d.detail.wire(psu.output["-"], module.power["0V"], wire=(BU, 0.5))
+    d.series(psu.output["+"], module.power["24V"], wire=(BU, 0.5))
+    d.series(psu.output["-"], module.power["0V"], wire=(BU, 0.5))
 
 
 def test_a_plc_module_box_takes_v1_sides_for_its_power_and_its_channels() -> None:
@@ -110,3 +98,9 @@ def test_a_switch_stands_under_its_channel_pin_clear_of_the_box() -> None:
     assert all(one.y > box.y for one in others)
     assert any(one.x == box.x + box.offsets["di_1.1"] for one in others)
     assert "SYMBOL_OVERLAP" not in {f.code for f in result.findings}
+
+
+def test_a_chain_hop_between_the_power_pins_of_two_boxes_has_a_row_to_turn_on() -> None:
+    """layout-0484: the supply's minus pin and the module's 0V pin differ in x; placement leaves the hop a turn row."""
+    _, result = _layout(_module_unwired)
+    assert [f.code for f in result.findings if f.code == "CONNECTION_NOT_DRAWN"] == []

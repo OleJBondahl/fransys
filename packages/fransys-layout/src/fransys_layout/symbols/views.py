@@ -1,6 +1,6 @@
 """One symbol turned to each allowed orientation and measured, as the core's `Turned` views."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 from symdef import GridBox, from_divisions, measure
@@ -9,7 +9,7 @@ from fransys_layout.core.errors import CoreError
 from fransys_layout.core.sym_values import PinTurn, Turned
 from fransys_layout.core.values import Box, Size
 
-from ._grid import symdef_orientation, to_box
+from ._grid import symdef_orientation, to_box, to_reach
 from .table import TableAsk, placed_table
 
 if TYPE_CHECKING:
@@ -34,7 +34,8 @@ class Ask:
 
     `order` lists the pin ids as the caller's `Sym.pins` run. `table` is a table made once,
     measured at each view and joined to its footprint; `strip` also gives each view its row
-    footprint (the hull without the text slot). The text is measured at `text_height` G.
+    footprint (the hull without the text slot). `marks` are the other slot strings, each slot measured
+    around its string (TEXT-BOX-MEASURED). The text is measured at `text_height` G.
     """
 
     orientations: Sequence[Orientation]
@@ -44,6 +45,7 @@ class Ask:
     text_height: int
     table: TableAsk | None = None
     strip: bool = False
+    marks: Mapping[str, str] = field(default_factory=dict)
 
 
 @dataclass(frozen=True, slots=True)
@@ -65,17 +67,18 @@ def _view(
     """The view at `orient`, its measured text slot's box and its table's keep-out box."""
     height, table = drawn
     turn = symdef_orientation(orient)
-    bare = measure(symbol, turn, library)
+    bare = measure(symbol, turn, library, dict(ask.marks) or None, height)
     text = {ask.text_slot: ask.text} if ask.text_slot in {s.id for s in symbol.slots} else {}
     held = measure(symbol, turn, library, text or None, height)
     kept = None if table is None or orient != "R0" else measure(table, turn, library).keepout
-    footprint = to_box(bare.keepout)
+    pitch = int(library.grid.wire_pitch)
+    footprint = to_reach(bare.keepout, pitch)
     others = [box for name, box in bare.slots.items() if name != ask.text_slot]
-    row = to_box(GridBox.union(bare.body, *others)) if ask.strip else None
+    row = to_reach(GridBox.union(bare.body, *others), pitch) if ask.strip else None
     ports = [bare.ports[p] for p in ask.order]
     pins = tuple(PinTurn(p.x, p.y, p.direction.name) for p in ports)
     slot = held.slots.get(next(iter(text), ""))
-    view = Turned(to_box(bare.body), to_box(bare.keepout), footprint, pins, row)
+    view = Turned(to_box(bare.body), footprint, footprint, pins, row)
     return view, None if slot is None else to_box(slot), None if kept is None else to_box(kept)
 
 

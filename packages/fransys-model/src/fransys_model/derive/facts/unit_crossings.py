@@ -31,10 +31,7 @@ def ends(model: Model) -> tuple[tuple[Id[Function], Id[Item], Id[Item], Id[objec
     all_functions, all_ports = functions(model), ports(model)
     found: list[tuple[Id[Function], Id[Item], Id[Item], Id[object]]] = []
     for record, fn_a, fn_b in (
-        *(
-            (c.id, all_ports[c.a].function, all_ports[c.b].function)
-            for c in conductors(model).values()
-        ),
+        *((c.id, all_ports[c.a].function, all_ports[c.b].function) for c in conductors(model).values()),
         *((m.id, m.a, m.b) for m in mates(model).values()),
     ):
         item_a, item_b = all_functions[fn_a].item, all_functions[fn_b].item
@@ -50,9 +47,7 @@ def _item_pairs(model: Model) -> dict[Id[Function], tuple[tuple[Id[Item], Id[Ite
     return {function: tuple(pairs) for function, pairs in grouped.items()}
 
 
-def end_crosses(
-    model: Model, subtree: frozenset[Id[Unit]], item: Id[Item], other: Id[Item]
-) -> bool:
+def end_crosses(model: Model, subtree: frozenset[Id[Unit]], item: Id[Item], other: Id[Item]) -> bool:
     """Whether an end on `item` leaves the unit whose subtree is `subtree` for `other`."""
     return item_unit(model, item) in subtree and item_unit(model, other) not in subtree
 
@@ -68,19 +63,13 @@ def crossed_units(model: Model, item: Id[Item], other: Id[Item]) -> tuple[Id[Uni
 def crosses_out_of(model: Model, unit: Id[Unit], function: Id[Function]) -> bool:
     """Whether a conductor or mate end on `function` leaves `unit`; declared `Net`s do not count."""
     subtree = unit_index(model).subtree_of[unit]
-    return any(
-        end_crosses(model, subtree, item, other)
-        for item, other in _item_pairs(model).get(function, ())
-    )
+    return any(end_crosses(model, subtree, item, other) for item, other in _item_pairs(model).get(function, ()))
 
 
 def offered_up(model: Model, unit: Id[Unit], function: Id[Function]) -> bool:
     """Whether a standalone unit enclosing `unit` holds `function` as its boundary (model-0184)."""
     index = unit_index(model)
-    return any(
-        function in index.boundary_of[outer] and standalone(model, outer)
-        for outer in index.containing[unit] - {unit}
-    )
+    return any(function in index.boundary_of[outer] and standalone(model, outer) for outer in index.containing[unit] - {unit})
 
 
 def declared_owners(model: Model, unused: UnusedBoundary, owners: list[Id[Unit]]) -> list[Id[Unit]]:
@@ -89,12 +78,7 @@ def declared_owners(model: Model, unused: UnusedBoundary, owners: list[Id[Unit]]
     An owner counts when its key is the declaring scope or a direct child of it; none: all.
     """
     scope, all_units = unused.key[:-2], units(model)
-    near = [
-        unit
-        for unit in owners
-        if all_units[unit].key[: len(scope)] == scope
-        and len(all_units[unit].key) - 1 <= len(scope) + 1
-    ]
+    near = [unit for unit in owners if all_units[unit].key[: len(scope)] == scope and len(all_units[unit].key) - 1 <= len(scope) + 1]
     return near or owners
 
 
@@ -115,14 +99,11 @@ def open_boundaries(model: Model) -> tuple[tuple[Id[Unit], Id[Function]], ...]:
 
 @digest_cached(DIGEST_CACHE_SIZE)
 def _genders(model: Model) -> dict[Id[Function], Gender]:
-    by_template = {
-        facet.subject: facet.gender for facet in facets_of(model, ConnectorFacet).values()
-    }
+    by_template = {facet.subject: facet.gender for facet in facets_of(model, ConnectorFacet).values()}
     return {
         function.id: gender
         for function in functions(model).values()
-        if function.template is not None
-        and (gender := by_template.get(function.template)) in _GENDERED
+        if function.template is not None and (gender := by_template.get(function.template)) in _GENDERED
     }
 
 

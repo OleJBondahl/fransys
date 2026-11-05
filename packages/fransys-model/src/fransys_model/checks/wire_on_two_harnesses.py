@@ -2,11 +2,12 @@
 
 from typing import TYPE_CHECKING, Final
 
-from fransys_model.checks._finding import finding, ordered
+from fransys_model.checks._finding import ordered
 from fransys_model.derive.facts.harness_wires import wire_harnesses
-from fransys_model.kernel import Finding, Severity
+from fransys_model.vocab.codes import finding
 from fransys_model.vocab.finding_ref import ref
 from fransys_model.vocab.tables import conductors
+lazy from fransys_model.kernel import Finding
 
 if TYPE_CHECKING:
     from fransys_model.kernel import Model
@@ -22,5 +23,5 @@ def check_wire_on_two_harnesses(model: Model) -> tuple[Finding, ...]:
         if len(pair) > 1:
             names = " and ".join(ref(harness) for harness in pair)
             message = f"a wire joins plugs of two harnesses, {names}: a wire has one harness"
-            found.append(finding(WIRE_ON_TWO_HARNESSES, Severity.ERROR, (conductor,), message))
+            found.append(finding(WIRE_ON_TWO_HARNESSES, (conductor,), message))
     return ordered(found)

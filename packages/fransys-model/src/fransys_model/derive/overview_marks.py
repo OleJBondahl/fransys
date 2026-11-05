@@ -39,11 +39,9 @@ def _candidates(model: Model, diff: ListingDiff) -> list[tuple[int, list[Id[Any]
     subjects = change_subjects(model, None)
     changes = diff.changes
     found: list[tuple[int, list[Id[Any]]]] = [
-        (at, [s])
-        for at, c in enumerate(changes)
-        if not _is_gone(c) and (s := subjects.get((c.section, c.subject))) is not None
+        (at, [s]) for at, c in enumerate(changes) if not _is_gone(c) and (s := subjects.get((c.section, c.subject))) is not None
     ]
-    for ancestry in sorted(diff.ancestry, key=lambda a: a.change):
+    for ancestry in diff.ancestry:
         if _is_gone(changes[ancestry.change]):
             ancestors = [s for t in ancestry.ancestors if (s := subjects.get(("items", t)))]
             found.append((ancestry.change, ancestors))
@@ -81,13 +79,6 @@ def diff_marks(model: Model, rows: ViewRows, diff: ListingDiff) -> DiffViewMarks
 def diff_rest(diff: ListingDiff, views: Sequence[DiffViewMarks]) -> tuple[DiffRest, ...]:
     """The rows no view marked, once per kind and subject: removed, then added, then changed."""
     marked = {at for view in views for at in view.shown}
-    rows = [
-        (_REMOVED if _is_gone(c) else _kind(c), c.subject)
-        for at, c in enumerate(diff.changes)
-        if at not in marked
-    ]
+    rows = [(_REMOVED if _is_gone(c) else _kind(c), c.subject) for at, c in enumerate(diff.changes) if at not in marked]
     order = {_REMOVED: 0, _ADDED: 1, _CHANGED: 2}
-    return tuple(
-        DiffRest(status=k, text=t)
-        for k, t in sorted(dict.fromkeys(rows), key=lambda r: order[r[0]])
-    )
+    return tuple(DiffRest(status=k, text=t) for k, t in sorted(dict.fromkeys(rows), key=lambda r: order[r[0]]))

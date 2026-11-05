@@ -39,7 +39,4 @@ def marker_boxes(library: Library, text: str | None = None) -> Mapping[Orientati
     else:
         across = fitted_marker_views(flag, MARKER_SLOT, text, library)
         along = fitted_marker_views(turned, MARKER_SLOT, text, library)
-    return {
-        o: along[cast("Orientation", _TURNED[o])] if o in _TURNED else box
-        for o, box in across.items()
-    }
+    return {o: along[cast("Orientation", _TURNED[o])] if o in _TURNED else box for o, box in across.items()}

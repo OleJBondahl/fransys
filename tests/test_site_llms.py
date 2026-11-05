@@ -2,13 +2,12 @@
 
 import importlib
 import re
-import sys
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 
-ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "scripts"))
+if TYPE_CHECKING:
+    from pathlib import Path
 
 build_site = importlib.import_module("build_site")
 
@@ -28,9 +27,7 @@ def test_llms_txt_names_every_guide_page_once_in_nav_order(
     text = build_site.llms_txt([("Guide", staged)], SITE_URL, "9.9.9")
     links = re.findall(r"^- \[[^\]]+\]\(([^)]+)\)", text, re.MULTILINE)
     names = [n if n != "index" else "" for n in (*build_site.guide_pages(), "AGENTS")]
-    expected = [
-        f"{SITE_URL}guide/{n}/index.md" if n else f"{SITE_URL}guide/index.md" for n in names
-    ]
+    expected = [f"{SITE_URL}guide/{n}/index.md" if n else f"{SITE_URL}guide/index.md" for n in names]
     assert links == expected
     assert text.startswith("# Fransys 9.9.9\n\n> ")
 

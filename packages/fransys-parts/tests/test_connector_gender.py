@@ -6,27 +6,19 @@ An absent gender lints clean, loads as `ConnectorFacet.gender is None` and reach
 
 import fransys_parts
 import pytest
+from fransys_author.instantiate import instantiate
 from fransys_parts import PartLibraryError
 
-from fransys_model.derive import connector_rows
+from fransys_model.derive import connector_rows, function_templates, internal_links, port_templates
 from fransys_model.kernel import Origin, freeze
-from fransys_model.vocab import (
-    Gender,
-    Item,
-    PartBundle,
-    function_templates,
-    instantiate,
-    internal_links,
-    parts,
-    port_templates,
-)
+from fransys_model.vocab import Gender, Item, PartBundle, parts
 from fransys_model.vocab.facets.connector import ConnectorFacet
 from fransys_model.vocab.tables import facets_of
 
 pytestmark = pytest.mark.wp("parts")
 
-_LIBRARY = 'schema = 1\nname = "t"\nversion = "0.0.0"\ndescription = "d"\n'
-_PART = """schema = 1
+_LIBRARY = 'schema = 2\nname = "t"\nversion = "0.0.0"\ndescription = "d"\n'
+_PART = """schema = 2
 
 [part]
 mpn = "X-1"

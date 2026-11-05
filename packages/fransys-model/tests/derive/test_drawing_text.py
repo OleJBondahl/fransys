@@ -4,32 +4,49 @@ Hand-built records only, on the model's synthetic plant: every formatter case an
 branch of every reader (`marker_text`, `page_title`).
 """
 
-import itertools
-from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 
-from derive_helpers import add_all, frozen_with_library, house_record
+import pytest
+from derive_helpers import (
+    add_all,
+    frozen_with_library,
+    house_record,
+    reference_row,
+)
+from derive_helpers import (
+    control_page as _page,
+)
+from derive_helpers import (
+    house_sheet as _sheet,
+)
+from derive_helpers import (
+    ids as _ids,
+)
+from derive_helpers import (
+    numbered_set as _drawing_set,
+)
+from derive_helpers import (
+    record_key as _key,
+)
+from derive_helpers import (
+    tagged_item as _item,
+)
 
 from fransys_model.derive.drawing_text import (
     marker_text,
     position_text,
 )
-from fransys_model.kernel import Draft, Id, Origin
+from fransys_model.kernel import Draft, Id, Origin, SchemaError
 from fransys_model.layout import (
-    DrawingSet,
     LinkMarker,
     MarkerSide,
-    Page,
-    PageRole,
     ReferenceText,
-    SheetFormat,
     Side,
     StarKind,
 )
 from fransys_model.vocab.connectivity import Conductor
 from fransys_model.vocab.core import Function, Item, Port
-from fransys_model.vocab.enums import ConductorKind, FunctionKind, PortRole
-lazy from fransys_model.vocab.aspects import AspectNode
+from fransys_model.vocab.enums import ConductorKind, FunctionKind, PortBoundary
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -46,83 +63,7 @@ CONTENT_HEIGHT_GRID = 822
 FRAME_ROWS = 6
 
 
-def _ids() -> Callable[[str], Id[Any]]:
-    """A fresh id maker: distinct `kind`s may safely reuse the same numeric value."""
-    counter = itertools.count(1)
-
-    def make(kind: str) -> Id[Any]:
-        return Id(kind=kind, value=f"{next(counter):032x}")
-
-    return make
-
-
-def _key(id_: Id[Any], *tail: str) -> tuple[str, ...]:
-    return (str(id_.value)[:8], *tail)
-
-
-def _sheet(new_id: Callable[[str], Id[Any]]) -> SheetFormat:
-    id_ = new_id("layout.sheet_format")
-    return SheetFormat(
-        id=id_,
-        key=_key(id_),
-        name="test sheet",
-        width_mm=420,
-        height_mm=297,
-        content_x_mm=10,
-        content_y_mm=10,
-        content_width_mm=400,
-        content_height_mm=257,
-        frame_columns=FRAME_COLUMNS,
-        frame_rows=FRAME_ROWS,
-        module_mm=Decimal("2.5"),
-    )
-
-
-def _drawing_set(
-    new_id: Callable[[str], Id[Any]], *, number: int, location: Id[AspectNode] | None = None
-) -> DrawingSet:
-    id_ = new_id("layout.drawing_set")
-    return DrawingSet(
-        id=id_, key=_key(id_), location=location, number=number, produced_by=PRODUCED_BY
-    )
-
-
-def _page(
-    new_id: Callable[[str], Id[Any]],
-    *,
-    drawing_set: Id[DrawingSet],
-    number: int,
-    sheet_format: Id[SheetFormat] | None,
-) -> Page:
-    id_ = new_id("layout.page")
-    return Page(
-        id=id_,
-        key=_key(id_),
-        drawing_set=drawing_set,
-        number=number,
-        role=PageRole.CONTROL,
-        sheet_format=sheet_format,
-        groups=(),
-        produced_by=PRODUCED_BY,
-    )
-
-
-def _item(new_id: Callable[[str], Id[Any]], *, designation: str) -> Item:
-    id_ = new_id("item")
-    return Item(
-        id=id_,
-        key=_key(id_),
-        part=None,
-        parent=None,
-        position=None,
-        tag=designation,
-        description="an invented item",
-    )
-
-
-def _function(
-    new_id: Callable[[str], Id[Any]], *, item: Id[Item], kind: FunctionKind = FunctionKind.COIL
-) -> Function:
+def _function(new_id: Callable[[str], Id[Any]], *, item: Id[Item], kind: FunctionKind = FunctionKind.COIL) -> Function:
     id_ = new_id("function")
     return Function(id=id_, key=_key(id_), item=item, template=None, name="fn", kind=kind)
 
@@ -141,7 +82,7 @@ def _port(
         function=function,
         template=None,
         name=name,
-        role=PortRole.GENERIC,
+        boundary=PortBoundary.GENERIC,
         marking=marking,
     )
 
@@ -152,7 +93,7 @@ def _conductor(new_id: Callable[[str], Id[Any]], *, a: Id[Port], b: Id[Port]) ->
 
 
 # --------------------------------------------------------------------------------------
-# frame_column, position_text: pure formatters
+# position_text: pure formatter
 # --------------------------------------------------------------------------------------
 
 
@@ -171,15 +112,13 @@ def _conductor(new_id: Callable[[str], Id[Any]], *, a: Id[Port], b: Id[Port]) ->
 # --------------------------------------------------------------------------------------
 
 
-def _star_text(origin: Origin, branch_xs: tuple[int, ...]) -> str:
+def _star_text(origin: Origin, branch_xs: tuple[int, ...], *, with_rows: bool = True) -> str:
     """The reference marker's text for a star whose branches stand at `branch_xs` on one page."""
     new_id = _ids()
     draft = Draft()
     sheet = _sheet(new_id)
     ds = _drawing_set(new_id, number=1)
-    page_a, page_b = (
-        _page(new_id, drawing_set=ds.id, number=n, sheet_format=sheet.id) for n in (1, 2)
-    )
+    page_a, page_b = (_page(new_id, drawing_set=ds.id, number=n, sheet_format=sheet.id) for n in (1, 2))
     item = _item(new_id, designation="K1")
     fn = _function(new_id, item=item.id)
     ref_id = new_id("layout.link_marker")
@@ -221,7 +160,8 @@ def _star_text(origin: Origin, branch_xs: tuple[int, ...]) -> str:
                 facing=Side.E,
             )
         )
-    add_all(draft, sheet, ds, page_a, page_b, item, fn, ref_port, *ports, *markers, origin=origin)
+    rows = [reference_row(m, 1 if m.x < 100 else 8, "A") for m in markers] if with_rows else []
+    add_all(draft, sheet, ds, page_a, page_b, item, fn, ref_port, *ports, *markers, *rows, origin=origin)
     return marker_text(frozen_with_library(draft), markers[0])
 
 
@@ -243,3 +183,9 @@ def test_a_position_without_a_cell_names_the_page_alone() -> None:
     assert position_text(refs, 3, None, ("C1",)) == "+C1p3"
     assert position_text(refs, 3, None, (), 2) == "p2.3"
     assert position_text(refs, 3, ("1", "A"), (), 2) == "p2.3:1A"
+
+
+def test_a_marker_with_no_reference_row_raises(origin: Origin) -> None:
+    """The cell is read from the marker's REFERENCE membership row; a missing row is no silent default (R897)."""
+    with pytest.raises(SchemaError):
+        _star_text(origin, (10,), with_rows=False)

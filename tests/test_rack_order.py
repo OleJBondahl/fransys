@@ -1,18 +1,15 @@
 """A rack's child order is authored, so layout
 follows it. The modules stand in `position` order, each with its own columns, whatever
 their keys or designations say.
-
-Can-fail, checked by hand: without `rack_order` the DI module (key "di" before "do") stands
-left of the DO module and the test fails.
 """
 
 from typing import Any
 
 import fransys as fr
-import fransys_author
 import fransys_parts
 from _drawn_pages import drawn_pages
-from _model_build_cover import layout_trigger_document
+from _model_build_cover import cabinet_document
+from fransys_author.design import Design
 
 _PROJECT: dict[str, Any] = {
     "title": "Rack order",
@@ -25,7 +22,7 @@ _PROJECT: dict[str, Any] = {
 
 def test_a_racks_modules_stand_in_their_authored_position_order() -> None:
     parts = fransys_parts.load("demo_parts")
-    d = fransys_author.Design(parts)
+    d = Design(parts)
     d.project(**_PROJECT)
     d.revision(1, date="2026-09-24", text="First issue", created="XX")
     c1, plc = d.location("C1", "Cabinet"), d.group("PLC", "PLC")
@@ -37,7 +34,10 @@ def test_a_racks_modules_stand_in_their_authored_position_order() -> None:
     wire = d.wiring(colour="BU", gauge="0.5")
     wire(do.fn("do_1")["1"], k1.fn("coil")["A1"])
     wire(di.fn("di_1")["1"], k2.fn("co_1")["14"])
-    model = fr.build(parts, d.draft(), layout_trigger_document()).model
+    strip = d.strip("X1", at=c1)
+    for port in (k1.fn("coil")["A2"], k2.fn("co_1")["11"], k2.fn("co_1")["12"]):
+        wire(port, strip.terminal("DEMO-TB-2.5", group=plc).inner)
+    model = fr.build(parts, d.draft(), cabinet_document(c1)).model
     x = {}
     for drawing in drawn_pages(model).values():
         for symbol in drawing.symbols:

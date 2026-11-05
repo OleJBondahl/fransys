@@ -20,14 +20,10 @@ if TYPE_CHECKING:
 
 def new_findings(model: Model, sources: Mapping[Id[Unit], NumberingPins]) -> list[Finding]:
     """`new_in_revision` for every unit that has a pin source (`build(releases=)`)."""
-    return [
-        f for unit in sorted(sources) for f in new_in_revision_findings(model, unit, sources[unit])
-    ]
+    return [f for unit in sorted(sources) for f in new_in_revision_findings(model, unit, sources[unit])]
 
 
-def pin_findings(
-    model: Model, unit: Id[Unit], source: tuple[Path, NumberingPins] | None
-) -> list[Finding]:
+def pin_findings(model: Model, unit: Id[Unit], source: tuple[Path, NumberingPins] | None) -> list[Finding]:
     """The release's own pin findings, none without a pin source."""
     if source is None:
         return []

@@ -13,11 +13,10 @@ def test_every_member_of_the_three_enums_has_a_row() -> None:
     assert set(NET_CLASS_ROLES) == set(NetClass)
 
 
-def test_a_jumper_rail_busbar_and_mount_is_a_link_never_a_wire() -> None:
+def test_a_jumper_busbar_and_mount_is_a_link_never_a_wire() -> None:
     """G-POT-20: these join nets and carry no wire; a wire and a core carry and join nothing."""
     for kind in (
         ConductorKind.JUMPER,
-        ConductorKind.RAIL,
         ConductorKind.BUSBAR,
         ConductorKind.MOUNT,
     ):
@@ -37,11 +36,9 @@ def test_a_lead_is_a_link_that_lands_a_line_by_its_docstring() -> None:
     assert not lead.carries
 
 
-def test_only_the_jumper_bridges_and_only_a_jumper_or_rail_is_a_rail_link() -> None:
-    """The two sets `wiring.py:74` and `power.py:126` read."""
+def test_only_the_jumper_bridges() -> None:
+    """The set `wiring.py:74` reads."""
     assert {k for k, r in CONDUCTOR_ROLES.items() if r.bridge} == {ConductorKind.JUMPER}
-    rails = {ConductorKind.JUMPER, ConductorKind.RAIL}
-    assert {k for k, r in CONDUCTOR_ROLES.items() if r.rail_link} == rails
 
 
 def test_earth_is_the_pe_class_alone() -> None:
@@ -52,11 +49,13 @@ def test_earth_is_the_pe_class_alone() -> None:
 def test_item_kind_is_one_enum_in_vocab_and_derive() -> None:
     """The move kept one definition and the value."""
     assert derive.ItemKind is enums.ItemKind
-    assert ItemKind.BAR.value == "bar"
-    assert ITEM_ROLES[ItemKind.BAR].bar_holder
 
 
 def test_pe_is_earth_and_not_power() -> None:
     """PE is protective, not a supply conductor (designer ruling 2026-10-16)."""
     assert NET_CLASS_ROLES[NetClass.PE].earth
-    assert not NET_CLASS_ROLES[NetClass.PE].power
+
+
+def test_no_conductor_kind_is_a_rail() -> None:
+    """R885, RAIL-FLAG D1: a rail is a flagged `RailGroup`, never a conductor kind the author writes."""
+    assert {k.value for k in ConductorKind} == {"wire", "core", "jumper", "busbar", "mount", "lead"}

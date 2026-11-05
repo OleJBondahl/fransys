@@ -37,9 +37,7 @@ def test_every_guide_page_opens_with_the_offline_banner_naming_the_site() -> Non
 
 
 def test_the_package_metadata_has_a_documentation_url() -> None:
-    project = tomllib.loads((ROOT / "packages/fransys/pyproject.toml").read_text("utf-8"))[
-        "project"
-    ]
+    project = tomllib.loads((ROOT / "packages/fransys/pyproject.toml").read_text("utf-8"))["project"]
     assert project["urls"]["Documentation"] == SITE_URL
     assert importlib.metadata.metadata("fransys").get_all("Project-URL") is not None
 

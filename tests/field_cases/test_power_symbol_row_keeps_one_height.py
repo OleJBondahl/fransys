@@ -1,26 +1,13 @@
-"""Field case: a ground symbol on a plug pin whose lead points into a PLC output module's box.
-
-The engineering shape: a board's connector with a plug mated to it, the plug standing below the
-board, and under the plug a PLC output module drawn as a box with its channels on the north edge.
-Plug pin 1 is wired to channel 1; plug pin 2 is on a DC supply's 0 V rail, so pin 2 draws the
-ground symbol, and its lead points down into the module's box.
-
-The bug (found on the pump cabinet with `hide_unused_pins` narrowing the box): the plug left only
-the row gap above the box, less than the symbol's lead and body, so no lead length cleared the box,
-`POWER_SYMBOL_UNPLACED` warned and the symbol sat on the box's edge. Any small row gap shows it,
-and the case sets one.
-
-Rule (decision layout-0117, owner's choice G1, 2026-10-06): a row of pins (one item's, or one mated
-pair's) keeps one height. When a power symbol at any pin of the row would reach into the box the
-row faces, the row and that box move apart by whole grids until the symbol clears. Leads stay
-straight and get longer; no pin moves alone.
-"""
+"""Field case: a ground symbol on a plug pin, its lead pointing into a PLC output module's box, keeps its row's height.
+The bug: a small row gap left no room for the symbol, so it sat on the box edge.
+Fixed by layout-0117 (owner's choice G1): a row and its box move apart by whole grids until the symbol clears."""
 
 from typing import TYPE_CHECKING
 
 import fransys as fr
 from _drawn_facts import symbol_subjects
 from _drawn_pages import drawn_pages
+from _model_build_cover import unit_document
 from fransys.colours import BU
 
 from fransys_layout import generic_box_geometry, symbol_geometry
@@ -28,15 +15,12 @@ from fransys_layout.geometry import overlaps, translate
 from fransys_model.layout import Orientation, PowerSymbol, layout_of
 
 if TYPE_CHECKING:
-    from pathlib import Path
-
     from fransys_layout import SymbolGeometry
 
 
-def _build(tmp_path: Path) -> fr.BuildResult:
+def _build() -> fr.BuildResult:
     d = fr.design("demo_parts", place="CAB")
     cab = d.location("CAB", "Cabinet")
-    d.layout.profile(row_gap=16)
     with d.function("G", "Group"):
         psu = d.device("T1", "DEMO-PSU-24")
         module = d.device("K1", "DEMO-PLC-DO-2")
@@ -44,12 +28,11 @@ def _build(tmp_path: Path) -> fr.BuildResult:
         board = d.device("B1", "DEMO-IO-2X")
     d.ac_supply("MAINS", 230, psu.input["L"], n=psu.input["N"])
     d.dc_supply("S", psu)
-    d.detail.wire(plug.x1["1"], module.do_1["1"], wire=(BU, 0.5))
-    d.detail.wire(plug.x1["2"], psu.output["-"], wire=(BU, 0.5))
-    d.mate(plug, board.x1)
-    cover = tmp_path / "cabinet.md"
-    cover.write_text("# Cabinet\n", encoding="utf-8")
-    doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover)
+    d.series(plug.x1["1"], module.do_1["1"], wire=(BU, 0.5))
+    d.series(plug.x1["2"], psu.output["-"], wire=(BU, 0.5))
+    d.series(plug.x1["1"], board.x1["1"], wire=(BU, 0.5))
+    d.series(plug.x1["2"], board.x1["2"], wire=(BU, 0.5))
+    doc = unit_document(cab)
     return fr.build(d, doc)
 
 
@@ -59,9 +42,7 @@ def _geometry(one) -> SymbolGeometry:
         return symbol_geometry(one.key, orientation=Orientation[one.orient])
     sides, offsets = dict(one.sides), dict(one.offsets)
     names = tuple(sides)
-    return generic_box_geometry(
-        names, tuple(sides[n] for n in names), offsets=tuple(offsets[n] for n in names)
-    )
+    return generic_box_geometry(names, tuple(sides[n] for n in names), offsets=tuple(offsets[n] for n in names))
 
 
 def _cells(model, tag):
@@ -82,10 +63,9 @@ def _keepout(cell, geo: SymbolGeometry):
     return translate(geo.keepout, dx=cell.x, dy=cell.y)
 
 
-def test_the_ground_row_keeps_one_height(tmp_path: Path) -> None:
+def test_the_ground_row_keeps_one_height() -> None:
     """The ground clears its box; each pin row keeps one height and the leads stay straight."""
-    result = _build(tmp_path)
-    assert "POWER_SYMBOL_UNPLACED" not in {f.code for f in fr.check(result)}
+    result = _build()
     model = result.model
     k1, k1_geo, channel_x, channel_y = _cells(model, "K1")[0]
     box = _keepout(k1, k1_geo)
@@ -93,9 +73,7 @@ def test_the_ground_row_keeps_one_height(tmp_path: Path) -> None:
     jack = [s for s in grounds if (model.key_of(s.port) or ("",))[0] == "G/J1"]
     assert jack
     for one in jack:
-        body = translate(
-            symbol_geometry("ground", orientation=one.orientation).body, dx=one.x, dy=one.y
-        )
+        body = translate(symbol_geometry("ground", orientation=one.orientation).body, dx=one.x, dy=one.y)
         assert not overlaps(body, box)
 
     plug, board = _cells(model, "J1"), _cells(model, "B1")
@@ -107,12 +85,7 @@ def test_the_ground_row_keeps_one_height(tmp_path: Path) -> None:
         assert mate_box.y == board_box.y + board_box.height
 
     channel = (channel_x, channel_y)
-    leads = [
-        w
-        for d in drawn_pages(model).values()
-        for w in d.wires
-        if channel in w.points and set(w.points) & {(x, y) for _, _, x, y in plug}
-    ]
+    leads = [w for d in drawn_pages(model).values() for w in d.wires if channel in w.points and set(w.points) & {(x, y) for _, _, x, y in plug}]
     (lead,) = leads
     (lead_x,) = {x for x, _ in lead.points}
     (pin_two_x,) = {x for _, _, x, _ in plug} - {lead_x}

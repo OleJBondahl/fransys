@@ -11,10 +11,6 @@ def em_heights(library: Library, capital_heights_mm: Iterable[float]) -> Mapping
     """The em in mm of each capital height, by `symdef.em_height` of `library`'s font.
 
     A text is drawn and measured at its em, and the cap-to-em conversion is symdef's font measure.
-    The facade asks for every height the build prints at, from the build's own library. An empty
-    mapping when the library has no font.
+    The facade asks for every height the build prints at, from the build's own library.
     """
-    font = library.font
-    if font is None:
-        return dict[float, float]()
-    return {cap: em_height(font, cap) for cap in capital_heights_mm}
+    return {cap: em_height(library.font, cap) for cap in capital_heights_mm}

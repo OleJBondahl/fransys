@@ -14,8 +14,8 @@ from typing import TYPE_CHECKING
 from fransys_model.derive.facts.current.blocks import blocks
 from fransys_model.derive.facts.current.bounds import CurrentBound, Tie, block_bounds, tie_of
 from fransys_model.derive.facts.current.ties import Joint, open_ends, pairs, two_ports
+from fransys_model.derive.facts.function_ratings import states_current
 from fransys_model.derive.facts.joins import port_joins
-from fransys_model.derive.facts.stated_ratings import states_current
 from fransys_model.kernel import Id, UnionFind
 from fransys_model.vocab.core import Port
 from fransys_model.vocab.tables import conductors, functions
@@ -69,19 +69,9 @@ def _joint_wire(joint: Joint) -> Wire:
     return Wire(joint.first, joint.second, joint.item, joint.state)
 
 
-def raw_of(model: Model) -> Raw:
-    """Read `model` into wires, positions and open ends.
-
-    A link or mate is a position when its function states a current and lies inside one function.
-    Else it is a wire; a two-port function no link joins that states a current is a position too.
-    """
-    stated = {function: states_current(model, function) for function in functions(model)}
+def _split_joints(model: Model, stated: dict[Id[Function], bool], wires: list[Wire]) -> list[tuple[tuple[Id[Function], ...], Joint]]:
+    """The links and mates that are positions; the rest are appended to `wires`."""
     links, mated = pairs(model)
-    # a header join ties its two ports with no conductor between: a plain wire
-    wires = [
-        Wire(*ends)
-        for ends in (*((c.a, c.b) for c in conductors(model).values()), *port_joins(model))
-    ]
     found: list[tuple[tuple[Id[Function], ...], Joint]] = []
     for joint in links:
         if joint.one == joint.other and stated[joint.one]:
@@ -93,11 +83,19 @@ def raw_of(model: Model) -> Raw:
             found.append((tuple(sorted({joint.one, joint.other})), joint))
         else:
             wires.append(_joint_wire(joint))
-    found += [
-        ((function,), Joint(first, second, function, function))
-        for first, second, function in two_ports(model)
-        if stated[function]
-    ]
+    return found
+
+
+def raw_of(model: Model) -> Raw:
+    """Read `model` into wires, positions and open ends.
+
+    A link or mate is a position when its function states a current and lies inside one function.
+    Else it is a wire; a two-port function no link joins that states a current is a position too.
+    """
+    stated = {function: states_current(model, function) for function in functions(model)}
+    wires = [Wire(*ends) for ends in (*((c.a, c.b) for c in conductors(model).values()), *port_joins(model))]  # a header join: a plain wire
+    found = _split_joints(model, stated, wires)
+    found += [((function,), Joint(first, second, function, function)) for first, second, function in two_ports(model) if stated[function]]
     found.sort(key=lambda entry: (entry[0], entry[1].first, entry[1].second))
     edges = tuple(
         Edge(

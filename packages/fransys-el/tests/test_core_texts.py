@@ -3,23 +3,18 @@
 Both fixtures are built once; each check reads the same written model.
 """
 
-import sys
 from dataclasses import replace
-from pathlib import Path
 
 import fransys as fr
 import pytest
+from _card_case import card_case_drafts
+from _model_build_cover import cabinet_document
 from conventions_fixtures import house
 from fransys import colours
-from fransys_el import (
-    build,
-    lay_out_drawn,
-    options,
-    symbol_kit,
-)
+from fransys_el import build, lay_out_drawn, options, symbol_kit
 from fransys_el.kit_keys import tag_of
 from fransys_el.placement_ids import symbol_key
-from fransys_el.placement_markers import ARROW, KINDS, LONE, facing_views, marker_fit
+from fransys_el.placement_markers import ARROW, KINDS, LONE, facing_views, stub_fit
 from fransys_el.placement_widest import link_fit
 from ring_cases import bank_model, box_kit, channels_model
 from symdef import repeat
@@ -30,29 +25,27 @@ from fransys_model.derive import function_item
 from fransys_model.derive.drawing_text import port_marking
 from fransys_model.vocab.tables import items
 
-sys.path.append(str(Path(__file__).parents[3] / "tests"))
-from _card_case import card_case_drafts
-from _model_build_cover import cabinet_document
-
 
 def _built(model, *, generic: bool):
     conventions = house()
     kit = box_kit(model) if generic else symbol_kit(model, LIBRARY)
     problem, _ = build(model, kit, conventions, LIBRARY)
     pins = [PinRef(s.id, p.id) for s in problem.symbols for p in s.pins]
-    fit = marker_fit(model, kit, None, LIBRARY, pins)  # the fitted boxes, as `lay_out` passes them
+    fit, lines, table = stub_fit(model, kit, (None, LIBRARY), pins)  # the fitted boxes, as `lay_out` passes them
     wide = link_fit(model, kit, LIBRARY, None)
     turned, above, below = facing_views()
     chosen = replace(
         options(conventions, LIBRARY),
         marker_fit=fit,
+        stub_lines=lines,
+        stub_table=table,
         link_fit=wide,
         marker_vertical=turned,
         marker_above=above,
         marker_below=below,
     )
     core = solve(problem, chosen)
-    written, _, drawn, _ = lay_out_drawn(model, kit, problem, conventions, LIBRARY)
+    written, _, drawn = lay_out_drawn(model, kit, problem, conventions, LIBRARY)
     return model, kit, core, written, drawn, chosen
 
 
@@ -101,7 +94,7 @@ def _crosses(a, b, box) -> bool:
     (x1, y1), (x2, y2) = a, b
     lo_x, hi_x = sorted((x1, x2))
     lo_y, hi_y = sorted((y1, y2))
-    return lo_x < box.x + box.w and hi_x > box.x and lo_y < box.y + box.h and hi_y > box.y
+    return bool(lo_x < box.x + box.w and hi_x > box.x and lo_y < box.y + box.h and hi_y > box.y)
 
 
 def test_no_wire_crosses_a_designation_text(fixture) -> None:
@@ -135,13 +128,9 @@ def _symdef_marking_slots(model, kit, placed):
             continue
         by_slot = {f"marking.{name}": port for port, name in pick.ports.items()}
         base = LIBRARY.get(pick.key)
-        symbol = base if pick.poles == 1 else repeat(base, pick.poles)
+        symbol = base if pick.poles == 1 else repeat(base, pick.poles, port_format=str(LIBRARY.port_format))
         declared = [s.id for s in symbol.slots]
-        want += [
-            (pick.key, slot, port_marking(model, by_slot[slot]))
-            for slot in declared
-            if slot in by_slot and port_marking(model, by_slot[slot])
-        ]
+        want += [(pick.key, slot, port_marking(model, by_slot[slot])) for slot in declared if slot in by_slot and port_marking(model, by_slot[slot])]
     return sorted(want)
 
 
@@ -168,13 +157,8 @@ def _changeovers():
 def test_a_pole_gang_has_the_markings_of_every_pole_of_its_repeated_symbol() -> None:
     """Three change-overs drawn as one gang: symdef repeats the symbol."""
     gang = _built(_changeovers(), generic=False)
-    want = _symdef_marking_slots(
-        gang[0], gang[1], {p.sym for pg in gang[2].placement.pages for p in pg.placed}
-    )
-    assert {slot for key, slot, _ in want if key == "change-over-contact"} >= {
-        "marking.3.com",
-        "marking.2.no",
-    }
+    want = _symdef_marking_slots(gang[0], gang[1], {p.sym for pg in gang[2].placement.pages for p in pg.placed})
+    assert {slot for key, slot, _ in want if key == "change-over-contact"} >= {"marking.3.com", "marking.2.no"}
     assert _marking_slots(gang) == want
 
 
@@ -195,12 +179,7 @@ def test_a_core_page_title_carries_its_group_blocks_text(fixture) -> None:
 
 
 def _drawn_markers(fixture):
-    return [
-        s
-        for d in fixture[4].values()
-        for s in d.symbols
-        if s.key in ("reference-marker", "marker-arrow-turned")
-    ]
+    return [s for d in fixture[4].values() for s in d.symbols if s.key in ("reference-marker", "marker-arrow-turned")]
 
 
 def test_every_core_marker_is_drawn_with_its_far_cell_in_its_text(fixture) -> None:
@@ -215,14 +194,14 @@ def test_every_core_marker_is_drawn_with_its_far_cell_in_its_text(fixture) -> No
         assert text.endswith(f"-{m.cell}"), (text, m)
 
 
-def test_the_channels_23_page_draws_its_four_marker_boxes() -> None:
-    """Measured: bank8 draws none since BOX-SIDES A; channels 23 is the smallest with 2+ markers.
-
-    Eight when every pair kind took the widest box; four on frames 1c46c629 (R350, R362). On the
-    text-stage core (annex footprints) 21 and 22 fit one page and cut nothing; 23 cuts first."""
+def test_the_channels_23_page_draws_its_forty_three_marker_boxes() -> None:
+    """Measured: channels 23 is the smallest with 2+ markers: 40 since its cut card sends the S columns that share a net
+    with the kept N ones to later pages, each joined by a tag pair (CROSS-HALF-TAGS): 17 numbered nets,
+    no arrow (the R1266 cap on a twin point re-cuts the card), and 3 more since three planned stubs that no leg carries stay at their pins
+    (layout-0527: K12, K13, K15). R1581: a pin with several undrawn conductors draws one box with a line each, so the count stays."""
     page = _built(channels_model(23), generic=True)
-    assert len(page[2].annotations.markers) == 4
-    assert len(_drawn_markers(page)) == 4
+    assert len(page[2].annotations.markers) == 34  # 35 before R1693 grew the keep-outs to whole cells; 43 before GRID-WHOLE-GAPS
+    assert len(_drawn_markers(page)) == 34
 
 
 def test_a_marker_carries_the_tint_of_its_reference_number(fixture) -> None:
@@ -236,8 +215,14 @@ def test_a_marker_carries_the_tint_of_its_reference_number(fixture) -> None:
 
 
 def test_the_nets_of_the_channels_23_page_that_draw_markers_have_one_tint_each() -> None:
-    """Two nets draw markers since the fitted stub boxes (R350) moved the cut; three before."""
-    assert len({s.tint for s in _drawn_markers(_built(channels_model(23), generic=True))}) == 2
+    """Each of the 17 nets that draw numbered markers (16 before R1693) carries one tint on both; two arrows are the stubs layout-0527 keeps."""
+    tints: dict[str, set[str | None]] = {}
+    for s in _drawn_markers(_built(channels_model(23), generic=True)):
+        tints.setdefault(dict(s.slots)["ref"].partition("-")[0], set()).add(s.tint)
+    nets = {n: t for n, t in tints.items() if n.startswith("#")}
+    assert sorted(nets, key=lambda n: int(n[1:])) == [f"#{i}" for i in range(1, 18)]
+    assert all(len(t) == 1 and None not in t for t in nets.values())
+    assert [t for n, t in tints.items() if n not in nets] == []  # the two untinted arrows of layout-0527 now carry #17 (R1693)
 
 
 def test_a_stub_text_wider_than_the_plain_flag_gets_a_fitted_box_for_the_core_to_reserve() -> None:
@@ -247,7 +232,7 @@ def test_a_stub_text_wider_than_the_plain_flag_gets_a_fitted_box_for_the_core_to
     problem, _ = build(model, kit, house(), LIBRARY)
     pins = [PinRef(s.id, p.id) for s in problem.symbols for p in s.pins]
     plain = options(house(), LIBRARY).marker
-    fit = marker_fit(model, kit, None, LIBRARY, pins)
+    fit, _, _ = stub_fit(model, kit, (None, LIBRARY), pins)
     assert fit
     assert any(boxes != plain for (_, kind), boxes in fit.items() if kind in LONE)
 
@@ -283,9 +268,12 @@ def _fan_out():
     d.revision(1, date="2026-10-02", text="First issue", created="XX")
     cabinet = d.location("CAB", "Cabinet")
     with d.function("G", "Group"):
-        coils = [d.device(f"K{n}", "DEMO-RLY-2CO-24").coil["A2"] for n in range(1, 40)]
+        relays = [d.device(f"K{n}", "DEMO-RLY-2CO-24") for n in range(1, 40)]
+    coils = [relay.coil["A2"] for relay in relays]
+    for relay in relays:
+        d.earth(relay.coil["A1"])
     for end in coils[1:]:
-        d.detail.wire(coils[0], end, wire=(colours.BU, 0.5))
+        d.series(coils[0], end, wire=(colours.BU, 0.5))
     return fr.build(d, cabinet_document(cabinet))
 
 
@@ -295,9 +283,7 @@ def _row_band(page, sym):
     return next(b for b in page.bands if b[0] <= at < b[1])
 
 
-@pytest.mark.parametrize(
-    ("kind", "generic", "size"), [("arrow", False, 0), ("tag", True, 23), ("tag", True, 32)]
-)
+@pytest.mark.parametrize(("kind", "generic", "size"), [("arrow", False, 0), ("tag", True, 23), ("tag", True, 32)])
 def test_every_flag_box_lies_inside_its_rows_solved_band(kind, generic, size) -> None:
     """R377: the stagger and the clearing step a flag only inside the room its row was given."""
     model = _fan_out().model if kind == "arrow" else channels_model(size)
@@ -315,16 +301,17 @@ def test_every_flag_box_lies_inside_its_rows_solved_band(kind, generic, size) ->
 
 def test_a_tag_box_is_as_wide_as_the_tag_is_drawn(fixture) -> None:
     """A tag box is never narrower than the tag drawn, at most two divisions wider (layout-0385)."""
+    from symdef import text_width
+
     from fransys_model.derive import mm_per_division
-    from fransys_model.derive.print_sizes import font_size_mm, house_text_height_mm
-    from fransys_model.derive.text_width import UNITS_PER_EM, text_units
-    from fransys_model.layout import profile_of, sheet_format_of
+    from fransys_model.derive.print_sizes import TextRole, font_size_mm, role_height_mm
+    from fransys_model.layout import Page, layout_of, sheet_format_of
 
     model = fixture[0]
-    sheet = sheet_format_of(model, profile_of(model, None).sheet_format)
-    em_mm = font_size_mm(model, house_text_height_mm(model))
+    sheet = sheet_format_of(fixture[3], next(iter(layout_of(fixture[3], Page).values())).sheet_format)
+    em_mm = font_size_mm(model, role_height_mm(model, TextRole.LABEL))
     tags = _texts(fixture, "TAG")
     assert tags
     for t in tags:
-        drawn_g = text_units(t.text) * em_mm / UNITS_PER_EM / mm_per_division(model, sheet)
+        drawn_g = text_width(LIBRARY.font, t.text, float(em_mm)) / float(mm_per_division(model, sheet))
         assert 0 <= t.box.w - float(drawn_g) <= 2  # em and width each round up one division

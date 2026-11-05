@@ -126,8 +126,7 @@ def takes_parents_designation(model: Model, item: Id[Item], *, held_switches: bo
     ):
         return False
     bars = footprint_facet(model, record.part) is not None or (
-        item in _items_with_a_function_at_or_below(model)
-        and not is_contact_block(model, item, held_switches=held_switches)
+        item in _items_with_a_function_at_or_below(model) and not is_contact_block(model, item, held_switches=held_switches)
     )
     if bars and not declares_all_unused(model, item):  # `unused=True` lifts both bars
         return False
@@ -140,9 +139,7 @@ def takes_parents_designation(model: Model, item: Id[Item], *, held_switches: bo
         or is_harness(model, parent.id)
     ):
         return False
-    return own_designation_or_none(model, parent) is not None or bool(
-        parent.part and parts(model)[parent.part].class_code
-    )
+    return own_designation_or_none(model, parent) is not None or bool(parent.part and parts(model)[parent.part].class_code)
 
 
 def designation_holder(model: Model, item: Id[Item], *, held_switches: bool = True) -> Id[Item]:

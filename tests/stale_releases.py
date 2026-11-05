@@ -1,8 +1,7 @@
 """Release trees cut as an older fransys wrote them, for the rules-moved tests (LS3, LS4).
 
 `cut_old` re-cuts one released unit's `listing.json` and manifest the way a release before a rule
-moved wrote them. The demo cabinet (`listing_golden_cases`) holds a contact block, a PE bar and a
-nested board; `lg-plant` nests the cabinet, so one tree carries both rules and three levels.
+moved wrote them. The demo cabinet (`listing_golden_cases`) holds a contact block and a PE strip.
 """
 
 import hashlib
@@ -16,7 +15,7 @@ from listing_golden_cases import _cabinet
 from fransys_model.derive import baseline, unit_release
 from fransys_model.vocab.tables import units
 
-OLD_BAR = baseline.ListingRules(bar_end_without_screw=False, item_keys=False)
+OLD_HOLDER = baseline.ListingRules(holder_designation=False)
 NAMES = ("lg-board", "lg-cabinet", "lg-plant")
 
 
@@ -47,13 +46,11 @@ def unit_id(result: fr.BuildResult, name: str) -> Any:
 
 
 def old_listing(result: fr.BuildResult, name: str) -> Any:
-    """`name`'s listing cut as a release before 0.18.4 wrote it (the holder rule is today's)."""
-    return baseline.listing(result.model, unit_id(result, name), OLD_BAR)
+    """`name`'s listing cut under the pre-0.18.2 holder rule."""
+    return baseline.listing(result.model, unit_id(result, name), OLD_HOLDER)
 
 
-def cut_old(
-    folder: Path, result: fr.BuildResult, name: str, version: str | None, listing: Any = None
-) -> str:
+def cut_old(folder: Path, result: fr.BuildResult, name: str, version: str | None, listing: Any = None) -> str:
     """Rewrite `folder`'s listing (default `old_listing`) and say `version`; the new digest."""
     text = baseline.dumps(listing or old_listing(result, name))
     (folder / "baseline" / "listing.json").write_text(text, encoding="utf-8")
@@ -81,7 +78,7 @@ def age_pin(folder: Path, child: str, digest: str) -> None:
     path.write_text(json.dumps(manifest), encoding="utf-8")
 
 
-def stale_tree(into: Path, version: str = "0.18.3") -> tuple[fr.BuildResult, dict[str, Path]]:
+def stale_tree(into: Path, version: str = "0.18.1") -> tuple[fr.BuildResult, dict[str, Path]]:
     """Release all three; the cabinet and the plant cut as `version` wrote them, pins to match."""
     result = build_plant()
     folders = release_all(result, into)
@@ -93,8 +90,4 @@ def stale_tree(into: Path, version: str = "0.18.3") -> tuple[fr.BuildResult, dic
 
 def tree_hashes(root: Path) -> dict[str, str]:
     """Every file below `root` with its sha256."""
-    return {
-        p.relative_to(root).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
-        for p in sorted(root.rglob("*"))
-        if p.is_file()
-    }
+    return {p.relative_to(root).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(root.rglob("*")) if p.is_file()}

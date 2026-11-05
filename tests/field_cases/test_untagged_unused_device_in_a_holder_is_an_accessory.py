@@ -1,22 +1,15 @@
 """Field case ACCESSORY-UNUSED: one part is a tagged boundary terminal and an untagged accessory.
+The bug: each footprinted accessory became an item of its own, with a designation, a netlist line and a drawn function.
+Fixed by model-0333 (author-0066, designer ruling 25), an untagged parent= device with unused=True is an accessory."""
 
-The engineering shape: a unit holds a board. One fuse-holder part is used once as a tagged,
-footprinted interface field of the unit, and twice as an untagged accessory plugged into a lamp
-holder on the board, its pins left open on purpose (`unused=True`). The author wants one part id
-and one BOM line of count 3.
-
-The bug: the footprint bar of `takes_parents_designation` made each footprinted accessory an
-item of its own: a designation, a row, a netlist line, and its function drawn.
-The rule (designer ruling 25, author-0066, model-0333): an untagged device with `parent=` and
-`unused=True` is an accessory whatever its part holds. It prints its holder's designation, has no
-designation row and no netlist line, draws nothing; the BOM counts every installed use on one line.
-A footprinted untagged `parent=` device without `unused=` stays an ordinary item.
-"""
-
+from itertools import pairwise
 from typing import Any, NamedTuple
 
 import fransys as fr
+from _model_build_cover import unit_document
 from fransys.colours import BU
+from fransys_el import lay_out_core
+from fransys_el.drawn_netlist import is_marker
 
 from fransys_model import derive
 from fransys_model.vocab.tables import items
@@ -35,8 +28,8 @@ def _unit(*, unused: bool) -> Any:
         board = u.device("A1", "DEMO-PCB-IO")
         f1 = u.device("F1", _FUSE, parent=board, interface=True)
         holder = u.device("H2", "DEMO-LAMP-24", parent=board)
-        u.detail.wire(f1["1"], holder.lamp["1"], wire=(BU, 0.5))
-        u.detail.wire(f1["2"], holder.lamp["2"], wire=(BU, 0.5))
+        u.series(f1["1"], holder.lamp["1"], wire=(BU, 0.5))
+        u.series(f1["2"], holder.lamp["2"], wire=(BU, 0.5))
         u.device(None, _FUSE, name="link-a", parent=holder, unused=unused)
         u.device(None, _FUSE, name="link-b", parent=holder, unused=unused)
         return _Io(F1=f1)
@@ -49,11 +42,11 @@ def _build(tmp_path: Any, *, unused: bool) -> Any:
     cab = d.location("CAB", "Cabinet")
     u1 = d.add(_unit(unused=unused), "U1")
     h9 = d.device("H9", "DEMO-LAMP-24")  # outside the unit: the unit is not standalone
-    d.detail.wire(h9["1"], u1.F1["1"], wire=(BU, 0.5))
-    d.detail.wire(h9["2"], u1.F1["2"], wire=(BU, 0.5))
+    d.series(h9["1"], u1.F1["1"], wire=(BU, 0.5))
+    d.series(h9["2"], u1.F1["2"], wire=(BU, 0.5))
     (tmp_path / "c.md").write_text("# c\n", encoding="utf-8")
     doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=tmp_path / "c.md")
-    return fr.build(d, doc)
+    return fr.build(d, doc, unit_document("demo-accessory"))
 
 
 def _links(model: Any) -> list[Any]:
@@ -73,7 +66,7 @@ def test_two_untagged_unused_devices_in_a_holder_are_accessories(tmp_path: Any) 
     assert not {link.id for link in links} & {row.item for row in rows}
     board = next(i for i in items(model).values() if i.tag == "A1")
     netlist = derive.board_netlist(model, board.id)
-    assert [part.mpn for part in netlist.parts] == [_FUSE]  # F1 only
+    assert sorted(part.mpn for part in netlist.parts) == sorted([_FUSE, "DEMO-LAMP-24"])  # F1 and the holder H2, no link
     (line,) = [b for b in derive.bom_lines(model) if b.mpn == _FUSE]
     assert line.count == 3
     assert "UNCONNECTED_PIN" not in [f.code for f in fr.check(result)]
@@ -83,3 +76,25 @@ def test_a_footprinted_untagged_parent_device_without_unused_stays_an_item(tmp_p
     model = _build(tmp_path, unused=False).model
     for link in _links(model):
         assert not derive.takes_parents_designation(model, link.id)
+
+
+def test_no_wire_runs_across_the_box_of_a_reference_marker(tmp_path: Any, monkeypatch: Any) -> None:
+    """KI-632 MARKER-OBSTACLE (R1661): the F1:2-H2:2 leg crosses the +CAB-H9:2 marker box; a marker is a wire keep (owner 2026-10-29)."""
+    caught: list[Any] = []
+    original = lay_out_core.drawn_netlist
+    monkeypatch.setattr(lay_out_core, "drawn_netlist", lambda *a: caught.append(original(*a)) or caught[-1])
+    _build(tmp_path, unused=False)
+    inside = [
+        (m.key, w.points)
+        for net in caught
+        for part in net.pages.values()
+        for m in part.drawing.symbols
+        if m.outline is not None and is_marker(m)
+        for w in part.drawing.wires
+        for a, b in pairwise(w.points)
+        if min(a[0], b[0]) < m.outline.x + m.outline.w
+        and max(a[0], b[0]) > m.outline.x
+        and min(a[1], b[1]) < m.outline.y + m.outline.h
+        and max(a[1], b[1]) > m.outline.y
+    ]
+    assert inside == []

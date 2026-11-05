@@ -1,53 +1,28 @@
-"""Field case: the overview panel for a place box and for a unit inside a unit.
-
-Engineering shape: two places, ER ("Engine room") and FLD ("Field"), each holding a lamp. Two rack
-units R1 and R2 each hold a board unit A2 (release `demo-board`); a cable runs from each rack to a
-lamp.
-
-The bugs (legacy findings D1, D2):
-- the panel for a place box read "+ER" alone, and the box's class under "Colour by location" was
-  the printed designation "+ER", while the items in the place carry the label "ER";
-- the panel for a unit named no drawing set, and the search found items only, so "-A2" found none.
-
-Fix: overview-0007. A place box holds a `title` (its designation, then its text, both from
-`derive`); the page data holds `own_drawings`, one line per unit; the place box's class is the
-place's label, the one function (`place_label`) the unit boxes use too.
-"""
+"""Field case: two places, ER and FLD, each holding a lamp, and two rack units each holding a board unit, with a cable to a lamp.
+The bugs (legacy findings D1, D2): the place box's panel read +ER alone, and a unit's panel named no drawing set, so search found no -A2.
+Fixed by overview-0007, a place box holds its title and page data holds own_drawings, one line per unit, with the place's label."""
 
 import json
 import re
-from typing import NamedTuple
+from typing import Any
 
 import fransys as fr
 import pytest
 from _model_build_cover import system_document
 from fransys.colours import BU
 from fransys_overview._js_panels import JS_PANELS
+from test_a_unit_box_takes_its_place_colour_on_the_overview import _cab, _Io
 
 _LOCATION = 3  # the index of the location split in a box's `cls`; `_js_core.SPLIT_AT`
 
 
-class _Io(NamedTuple):
-    out: fr.Run
-
-
-@fr.unit("demo-board", revision=1, interface_version=1, date="2026-10-14", text="first", by="AB")
-def _board(u: fr.Design) -> _Io:
-    with u.function("SUP", "Supply"):
-        x1 = u.terminal_strip("X1", "DEMO-TB-2.5", pe="DEMO-TB-PE-2.5", interface=True)
-        out = x1.run("L1", 1)
-        lamp = u.device("H1", "DEMO-LAMP-24")
-        u.detail.wire(out[1], lamp["1"], wire=(BU, 0.5))
-    return _Io(out)
-
-
 @fr.unit("demo-rack", revision=1, interface_version=1, date="2026-10-14", text="first", by="AB")
 def _rack(u: fr.Design) -> _Io:
-    return _Io(u.add(_board, "A2").out)
+    return _Io(u.add(_cab, "A2").out)
 
 
 @pytest.fixture(scope="module")
-def data(tmp_path_factory) -> dict:
+def data(tmp_path_factory) -> dict[str, Any]:
     d = fr.design("demo_parts")
     d.project(title="FC", number="P-1", customer="Example Co", revision=1, author="OJB")
     d.revision(1, date="2026-10-14", text="First issue", created="XX")
@@ -57,6 +32,9 @@ def data(tmp_path_factory) -> dict:
     with d.function("OUT", "Outside"):
         near = d.device("H7", "DEMO-LAMP-24", place="ER")
         far = d.device("H8", "DEMO-LAMP-24", place="FLD")
+        for lamp, place in ((far, "FLD"), (near, "ER")):
+            neutral = d.terminal_strip(f"X{place}", "DEMO-TB-2.5", place=place)
+            d.series(neutral[1].inner, lamp["2"], wire=(BU, 0.5))
         d.cable("W1", "DEMO-CBL-4G1.5", length_m=10).core(1, far["1"], first.out[1])
         d.cable("W2", "DEMO-CBL-4G1.5", length_m=10).core(1, near["1"], second.out[1])
     written = fr.write(fr.build(d, system_document()), tmp_path_factory.mktemp("out"))
@@ -66,11 +44,11 @@ def data(tmp_path_factory) -> dict:
     return json.loads(block.group(1))
 
 
-def _boxes(data: dict) -> list[dict]:
+def _boxes(data: dict[str, Any]) -> list[dict[str, Any]]:
     return [box for view in data["views"] for box in view["boxes"]]
 
 
-def _place(data: dict, first_line: str) -> dict:
+def _place(data: dict[str, Any], first_line: str) -> dict[str, Any]:
     return next(b for b in _boxes(data) if b["ref"][0] == "place" and b["lines"][0] == first_line)
 
 
@@ -88,10 +66,8 @@ def test_the_place_box_takes_the_class_its_items_have(data) -> None:
 
 
 def test_the_nested_units_panel_names_its_own_drawing(data) -> None:
-    assert "Own drawing: -A2 in demo-board rev 1.1" in data["own_drawings"]
-    assert (
-        data["own_drawings"][data["units"].index("-A2")] == "Own drawing: -A2 in demo-board rev 1.1"
-    )
+    assert "Own drawing: -A2 in demo-cab rev 1.1" in data["own_drawings"]
+    assert data["own_drawings"][data["units"].index("-A2")] == "Own drawing: -A2 in demo-cab rev 1.1"
 
 
 def test_the_legend_prints_a_place_as_the_boxes_do(data) -> None:

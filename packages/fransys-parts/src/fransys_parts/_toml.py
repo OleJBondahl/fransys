@@ -17,9 +17,9 @@ from decimal import Decimal
 from functools import lru_cache
 from typing import TYPE_CHECKING, Any
 
-from fransys_model.kernel import Finding, Severity
+lazy from fransys_model.kernel import Finding
 
-from .codes import fix_text
+from . import codes
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -53,17 +53,9 @@ def location(path: str, line: int, text: str) -> str:
     return f"{path}:{line}: {text}"
 
 
-def finding(
-    code: str, path: str, line: int, text: str, *, severity: Severity = Severity.ERROR
-) -> Finding:
+def finding(code: str, path: str, line: int, text: str) -> Finding:
     """One `Finding` with no subjects; the message carries `path` and `line`."""
-    return Finding(
-        code=code,
-        severity=severity,
-        subjects=(),
-        message=location(path, line, text),
-        fix=fix_text(code),
-    )
+    return codes.finding(code, (), location(path, line, text))
 
 
 def parse(file_path: Path, *, relative_to: Path) -> ParsedFile:
@@ -84,15 +76,13 @@ def _parse_text(text: str, rel: str) -> ParsedFile:
     try:
         data = tomllib.loads(text, parse_float=Decimal)
     except tomllib.TOMLDecodeError as exc:
-        return ParsedFile(
-            path=rel, data=None, origins={}, findings=(finding("TOML_INVALID", rel, 1, str(exc)),)
-        )
+        return ParsedFile(path=rel, data=None, origins={}, findings=(finding("TOML_INVALID", rel, 1, str(exc)),))
     origins = _scan_origins(text)
     findings = value_findings(data, rel, origins)
     return ParsedFile(path=rel, data=data, origins=origins, findings=tuple(findings))
 
 
-def _copy(value: Any) -> Any:  # noqa: ANN401 - a TOML value is a dict, list, str, int, bool or Decimal
+def _copy(value: object) -> object:
     if type(value) is dict:
         return {key: _copy(item) for key, item in value.items()}
     if type(value) is list:
@@ -112,9 +102,7 @@ def value_findings(data: dict[str, Any], rel: str, origins: dict[TablePath, int]
     return findings
 
 
-def _walk_value(
-    value: object, rel: str, origins: dict[TablePath, int], path: TablePath, findings: list[Finding]
-) -> None:
+def _walk_value(value: object, rel: str, origins: dict[TablePath, int], path: TablePath, findings: list[Finding]) -> None:
     if type(value) is str:
         if "\n" in value:
             text = "a string value may not contain a line break"
@@ -145,24 +133,28 @@ def _scan_origins(text: str) -> dict[TablePath, int]:
         if not line.startswith("["):
             continue
         array_match = _ARRAY_HEADER.match(line)
-        if array_match is not None:
-            name = array_match.group(1)
-            index = counters.get(name, 0)
-            counters[name] = index + 1
-            origins[(name, index)] = line_no
-            if name == "function":
-                current_function = index
-            continue
-        table_match = _TABLE_HEADER.match(line)
-        if table_match is None:
-            continue
-        segments = tuple(table_match.group(1).split("."))
-        if (
-            len(segments) == _NESTED_HEADER_SEGMENTS
-            and segments[0] == "function"
-            and current_function >= 0
-        ):
-            origins[("function", current_function, segments[1])] = line_no
-        elif len(segments) == 1:
-            origins[segments] = line_no
+        if array_match is None:
+            _note_table(origins, line, line_no, current_function)
+        elif (index := _note_array(origins, counters, array_match.group(1), line_no)) is not None:
+            current_function = index
     return origins
+
+
+def _note_array(origins: dict[TablePath, int], counters: dict[str, int], name: str, line_no: int) -> int | None:
+    """Record a `[[name]]` header; the index of a `function` entry, else `None`."""
+    index = counters.get(name, 0)
+    counters[name] = index + 1
+    origins[(name, index)] = line_no
+    return index if name == "function" else None
+
+
+def _note_table(origins: dict[TablePath, int], line: str, line_no: int, current_function: int) -> None:
+    """Record a `[table]` or `[function.sub]` header; any other line is skipped."""
+    table_match = _TABLE_HEADER.match(line)
+    if table_match is None:
+        return
+    segments = tuple(table_match.group(1).split("."))
+    if len(segments) == _NESTED_HEADER_SEGMENTS and segments[0] == "function" and current_function >= 0:
+        origins[("function", current_function, segments[1])] = line_no
+    elif len(segments) == 1:
+        origins[segments] = line_no

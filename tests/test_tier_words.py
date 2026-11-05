@@ -35,10 +35,7 @@ TIERS = {
     "fr.export_names": "Read",
     **dict.fromkeys(OUTPUT, "Output"),
     "Fn.plc": "Core",
-    "Fn.scale": "Core",
     "Fn.pole": "Core",
-    "Fn.limits": "Core",
-    "Terminal.limits": "Core",
     "TerminalStrip.run": "Core",
     "Cable.spare": "Core",
     "Cable.core": "Detail",
@@ -58,9 +55,7 @@ def _cable_class() -> type:
 
 def tiered() -> dict[str, object]:
     """Every callable that must carry a tier word, by its spelling."""
-    found: dict[str, object] = {
-        f"fr.{n}": getattr(fr, n) for n in fr.__all__ if inspect.isfunction(getattr(fr, n))
-    }
+    found: dict[str, object] = {f"fr.{n}": getattr(fr, n) for n in fr.__all__ if inspect.isfunction(getattr(fr, n))}
     handles = {
         "Fn": fr.Fn,
         "Device": fr.Device,
@@ -86,7 +81,8 @@ def namespaced() -> dict[str, object]:
 
 def word_of(call: object) -> str | None:
     match = _WORD.match(inspect.getdoc(call) or "")
-    return match.group(1) if match else None
+    word: str | None = str(match.group(1)) if match else None
+    return word
 
 
 def test_every_function_and_handle_method_has_its_tier_word():
@@ -96,11 +92,7 @@ def test_every_function_and_handle_method_has_its_tier_word():
 
 
 def test_a_docstring_holds_one_tier_word():
-    twice = [
-        k
-        for k, v in tiered().items()
-        if len(re.findall(rf"\b({'|'.join(WORDS)}): ", inspect.getdoc(v) or "")) > 1
-    ]
+    twice = [k for k, v in tiered().items() if len(re.findall(rf"\b({'|'.join(WORDS)}): ", inspect.getdoc(v) or "")) > 1]
     assert not twice, f"more than one tier word: {twice}"
 
 
@@ -111,5 +103,5 @@ def test_a_namespaced_call_carries_no_tier_word():
 
 def test_the_collectors_see_calls():
     assert {"fr.build", "Fn.plc", "Cable.core"} <= set(tiered())
-    assert {"d.device", "d.detail.wire", "d.layout.chain"} <= set(namespaced())
+    assert {"d.device", "d.detail.busbar", "d.layout.order"} <= set(namespaced())
     assert any(k.startswith("fr.derive.") for k in namespaced())

@@ -2,7 +2,6 @@
 
 A designation label is `Size(16, 8)` everywhere here. A column symbol is 16 wide; a reach
 (left, right) makes the whole symbol that wide and hard, so no tag stagger lets like columns
-stand closer (layout-0271): the draft's "narrow equals width". Every box has real pins.
 """
 
 from __future__ import annotations
@@ -14,18 +13,7 @@ from options_fixtures import core_options
 from turn_fixtures import views_of
 
 from fransys_layout.core import Box, Facts, Hints, PinRef, PlacementProblem, Size, Sym
-from fransys_layout.core.values import (
-    Attach,
-    Block,
-    BlockList,
-    Cell,
-    Column,
-    CycleSplit,
-    End,
-    Fan,
-    FlowGraph,
-    Lane,
-)
+from fransys_layout.core.flow_values import Attach, Block, BlockList, Cell, Column, End, Fan, FlowGraph, Lane
 
 from .pack_fixtures import card as card_sym
 
@@ -65,9 +53,7 @@ def fan(fid: str, *cols: str) -> Fan:
     return Fan(fid, (f"net-{fid}",), (), legs, None, 1, "S")
 
 
-def problem_of(
-    syms: Sequence[Sym], hints: Hints | None = None, area: Size = AREA
-) -> PlacementProblem:
+def problem_of(syms: Sequence[Sym], hints: Hints | None = None, area: Size = AREA) -> PlacementProblem:
     return PlacementProblem(area, tuple(syms), (), hints=hints or Hints(), facts=Facts())
 
 
@@ -81,18 +67,11 @@ def build(
     """Stage 2 on a hand-built flow."""
     from fransys_layout.core.blocks import assign_blocks
 
-    flow = FlowGraph(tuple(cols), tuple(fans), (), (), CycleSplit(0, 0, 0), ())
+    flow = FlowGraph(tuple(cols), tuple(fans), (), (), ())
     return assign_blocks(
         flow,
         problem_of(syms, hints, area),
-        core_options(
-            flip_turn="R180",
-            tag_stagger=True,
-            label_gap=8,
-            parallel_pitch=48,
-            driver_first=True,
-            arrow_sides=("E", "W"),
-        ),
+        core_options(),
     )
 
 
@@ -116,9 +95,7 @@ def loose(*groups: str, reach: tuple[int, int] | None = None) -> tuple[list[Sym]
     return syms, [column(f"c{i}", f"s{i}") for i in range(1, len(groups) + 1)]
 
 
-def shaped_box(
-    reaches: Sequence[tuple[int, int]], *, reverse: bool = False, north: int = 0
-) -> tuple[list[Sym], list[Column]]:
+def shaped_box(reaches: Sequence[tuple[int, int]], *, reverse: bool = False, north: int = 0) -> tuple[list[Sym], list[Column]]:
     """Box A1 (group PLC), column ci with symbol ki of reach (left, right) on pin pi.
 
     reverse puts column ci on pin p(n+1-i).
@@ -126,15 +103,10 @@ def shaped_box(
     n = len(reaches)
     syms = [box_sym("A1", "PLC", n, north=north)]
     syms += [sym(f"k{i}", "CH", reach=r) for i, r in enumerate(reaches, 1)]
-    cols = [
-        column(f"c{i}", f"k{i}", pin=("A1", f"p{n + 1 - i if reverse else i}"))
-        for i in range(1, n + 1)
-    ]
+    cols = [column(f"c{i}", f"k{i}", pin=("A1", f"p{n + 1 - i if reverse else i}")) for i in range(1, n + 1)]
     return syms, cols
 
 
-def box_case(
-    n: int, width: int, *, reverse: bool = False, north: int = 0
-) -> tuple[list[Sym], list[Column]]:
+def box_case(n: int, width: int, *, reverse: bool = False, north: int = 0) -> tuple[list[Sym], list[Column]]:
     """Box A1 with n columns, each symbol's footprint width wide and centred on its wire."""
     return shaped_box([(width // 2, width // 2)] * n, reverse=reverse, north=north)

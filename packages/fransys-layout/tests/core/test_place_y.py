@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 from itertools import combinations, pairwise
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from fransys_layout.core import Box, Facts, Options, PlacementProblem
 from fransys_layout.core.geometry import (
@@ -25,13 +25,13 @@ from .place_fixtures import bundle_fan, card_with_coils, row_group_three
 from .test_place_x import env_of
 
 if TYPE_CHECKING:
+    import pytest
+
     from fransys_layout.core.place_env import PageEnv
     from fransys_layout.core.values import Finding
 
 
-def solved(
-    prob: PlacementProblem, options: Options | None = None
-) -> tuple[PageEnv, dict[str, int], tuple[Finding, ...]]:
+def solved(prob: PlacementProblem, options: Options | None = None) -> tuple[PageEnv, dict[str, int], tuple[Finding, ...]]:
     """The env, y and findings of the first page of a problem."""
     env = env_of(prob, options)
     x, _ = place_x(env)
@@ -106,9 +106,7 @@ def _two_heights() -> PlacementProblem:
 def test_a_row_group_that_contradicts_a_stack_is_dropped_with_the_finding() -> None:
     """Both coils hang wire_min under the box, so their origins differ; level would break that."""
     env, y, findings = solved(_two_heights())
-    assert [(f.code, f.subject, f.page) for f in findings] == [
-        ("ALIGN_DROPPED", "G", env.plan.page)
-    ]
+    assert [(f.code, f.subject, f.page) for f in findings] == [("ALIGN_DROPPED", "G, row 0", env.plan.page)]
     assert "row group G" in findings[0].text
     box = env.syms["A1"].body
     for col in ("c:k1", "c:k2"):
@@ -133,29 +131,25 @@ def test_grid_up_rounds_to_the_next_step() -> None:
     assert [grid_up(v, 8) for v in (-9, -8, -1, 0, 1, 8, 9)] == [-8, -8, 0, 0, 8, 8, 16]
 
 
-def test_a_cell_hangs_wire_min_and_its_marker_room_or_its_keepout_reach() -> None:
-    """RL-W2: `_hang` is wire_min plus the flag room facing the box, or the keep-out's reach."""
+def test_a_cell_gap_is_wire_min_or_its_footprint_or_keepout_reach_on_the_box_side(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """RL-W2: `_box_gap` is wire_min, or the reach of the folded footprint or keep-out if more."""
     from types import SimpleNamespace
 
-    from fransys_layout.core.place_y import _hang
-    from fransys_layout.core.room import Room
+    from fransys_layout.core import place_y
     from fransys_layout.core.values import Box
 
-    def view(keepout: Box) -> SimpleNamespace:
-        return SimpleNamespace(body=Box(0, -2, 8, 4), keepout=keepout)
+    def gap(foot: Box, keep: Box | None = None, *, above: bool, dy: int = 0) -> int:
+        monkeypatch.setattr(place_y, "_footprint", lambda *_: foot)
+        view = SimpleNamespace(body=Box(0, 0, 0, 0), keepout=keep or Box(0, 0, 0, 0))
+        monkeypatch.setattr(place_y, "view_of", lambda *_: view)
+        env: Any = SimpleNamespace(options=SimpleNamespace(wire_min=8), syms={"T": None})
+        cell: Any = SimpleNamespace(sym="T", orient="R0")
+        return place_y._box_gap(env, cell, above=above, dy=dy)
 
-    def hang(keepout: Box, *, above: bool, name: str = "T") -> int:
-        env = SimpleNamespace(
-            options=SimpleNamespace(wire_min=8),
-            flag_room={"T": Room(up=5, down=7)},
-            syms={name: SimpleNamespace(views={"R0": view(keepout)})},
-        )
-        cell = SimpleNamespace(sym=name, orient="R0")
-        return _hang(env, cell, above=above, dy=0)  # ty: ignore[invalid-argument-type] -- a stand-in
-
-    small = Box(0, -2, 8, 4)
-    assert hang(small, above=True) == 15
-    assert hang(small, above=False) == 13
-    assert hang(small, above=True, name="other") == 8
-    assert hang(Box(0, -30, 8, 38), above=False) == 30
-    assert hang(Box(0, -4, 8, 40), above=True) == 36
+    assert gap(Box(0, -2, 8, 4), above=True) == 8
+    assert gap(Box(0, -30, 8, 38), above=False) == 30
+    assert gap(Box(0, -4, 8, 40), above=True) == 36
+    assert gap(Box(0, -4, 8, 40 + 18), above=True) == 54
+    assert gap(Box(0, -2, 8, 4), Box(0, -22, 8, 22), above=False) == 22

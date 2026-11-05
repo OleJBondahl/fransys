@@ -62,7 +62,7 @@ def _groups(spans: Sequence[Span]) -> list[list[Span]]:
     """The trunks of one row and side that overlap in a chain, each group leftmost first."""
     groups: list[list[Span]] = []
     right = 0
-    for s in sorted(spans, key=lambda s: (s.row, s.side, s.x0, natural_key(s.fan))):
+    for s in sorted(spans, key=lambda s: (s.row, s.side, s.x0)):
         if groups and (groups[-1][0].row, groups[-1][0].side) == (s.row, s.side) and s.x0 <= right:
             groups[-1].append(s)
             right = max(right, s.x1)
@@ -78,9 +78,7 @@ def _drop_cost(upper: Span, lower: Span) -> int:
     return legs + sum(upper.x0 < x < upper.x1 for x in lower.drivers)
 
 
-def _level_order(
-    g: Graph, below: Mapping[str, AbstractSet[str]], group: Sequence[Span]
-) -> Sequence[Span]:
+def _level_order(g: Graph, below: Mapping[str, AbstractSet[str]], group: Sequence[Span]) -> Sequence[Span]:
     """The group's trunks from the top level down: fewest crossings, ties leftmost highest."""
     n = len(group)
     if n == 1:
@@ -88,9 +86,7 @@ def _level_order(
     cost = [[_drop_cost(a, b) for b in group] for a in group]
     classes = [g.uf.find(trunk_node(s.fan, s.row))[0] for s in group]
     reach = [_reachable(below, c) for c in classes]
-    held = [
-        [classes[i] != classes[j] and classes[j] in reach[i] for j in range(n)] for i in range(n)
-    ]
+    held = [[classes[i] != classes[j] and classes[j] in reach[i] for j in range(n)] for i in range(n)]
     ranked = _exact_order(cost, held) if n <= EXACT_LIMIT else _greedy_order(cost, held, group)
     return [group[i] for i in ranked]
 
@@ -108,25 +104,17 @@ def _exact_order(cost: Sequence[Sequence[int]], held: Sequence[Sequence[bool]]) 
     return best
 
 
-def _greedy_order(
-    cost: Sequence[Sequence[int]], held: Sequence[Sequence[bool]], group: Sequence[Span]
-) -> list[int]:
+def _greedy_order(cost: Sequence[Sequence[int]], held: Sequence[Sequence[bool]], group: Sequence[Span]) -> list[int]:
     """Insert the trunks in natural fan order, each where it adds the fewest crossings."""
     order: list[int] = []
     for n in sorted(range(len(cost)), key=lambda i: natural_key(group[i].fan)):
-        slots: list[int] = [
-            p
-            for p in range(len(order) + 1)
-            if not any(held[n][m] for m in order[:p]) and not any(held[m][n] for m in order[p:])
-        ]
+        slots: list[int] = [p for p in range(len(order) + 1) if not any(held[n][m] for m in order[:p]) and not any(held[m][n] for m in order[p:])]
         use: list[int] = slots or [len(order)]
         order.insert(min(_insertion(cost, order, n, p) for p in use)[2], n)
     return order
 
 
-def _insertion(
-    cost: Sequence[Sequence[int]], order: Sequence[int], n: int, p: int
-) -> tuple[int, int, int]:
+def _insertion(cost: Sequence[Sequence[int]], order: Sequence[int], n: int, p: int) -> tuple[int, int, int]:
     """What trunk n adds at slot p of `order`: crossings, then inversions, then p."""
     above, under = order[:p], order[p:]
     crossings = sum(cost[m][n] for m in above) + sum(cost[n][m] for m in under)

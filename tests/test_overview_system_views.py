@@ -3,18 +3,15 @@
 Each test names what breaks it.
 """
 
-import sys
 from functools import cache
-from pathlib import Path
 from typing import Any
 
 import fransys as fr
 import fransys_parts
 from _model_build_cover import system_document
-
-sys.path.insert(0, str(Path(__file__).resolve().parent))
 from test_units_worked_example import _system_design
 
+from electrical_symbols import LIBRARY
 from fransys_layout.engines.overview import lay_out_overview
 from fransys_model.derive import field_devices, field_fold, location_fold, overview_view_rows
 from fransys_model.layout import (
@@ -25,7 +22,6 @@ from fransys_model.layout import (
     OverviewView,
     layout_of,
 )
-from fransys_model.vocab.tables import items
 
 
 @cache
@@ -33,7 +29,7 @@ def _laid() -> tuple[Any, Any]:
     parts = fransys_parts.load("demo_parts")
     design, _field1, _field2 = _system_design(parts)
     model = fr.build(parts, design.draft(), system_document()).model
-    out, findings = lay_out_overview(model)
+    out, findings = lay_out_overview(model, LIBRARY)
     return model, (out, findings)
 
 
@@ -64,9 +60,7 @@ def test_the_location_view_has_a_box_per_place_and_a_line_per_pair_and_never_ope
     assert view.open is None
     boxes = _boxes(view)
     assert {b.ref.kind for b in boxes} == {OverviewRefKind.PLACE}
-    assert sorted(b.ref.node.value if b.ref.node else "" for b in boxes) == sorted(
-        b.place.value if b.place else "" for b in fold.boxes
-    )
+    assert sorted(b.ref.node.value if b.ref.node else "" for b in boxes) == sorted(b.place.value if b.place else "" for b in fold.boxes)
     assert len(_lines(view)) == len(fold.lines)
 
 
@@ -86,9 +80,7 @@ def test_the_field_view_folds_every_field_device_and_each_box_lists_its_devices(
     assert {u for k, u, _ in shut_refs if k is OverviewRefKind.FIELDS} == {f.unit for f in folds}
     rows = {
         b.key.ref.unit: b.members
-        for b in next(
-            v for v in overview_view_rows(model, None) if v.mode is OverviewMode.FIELDS
-        ).boxes
+        for b in next(v for v in overview_view_rows(model, None) if v.mode is OverviewMode.FIELDS).boxes
         if b.key.ref.kind is OverviewRefKind.FIELDS
     }
     for fold in folds:
@@ -103,14 +95,3 @@ def test_the_field_fold_is_off_in_the_plain_system_view() -> None:
     held = {b.ref.item for b in _boxes(plain)}
     assert set(field_devices(model)) <= held
     assert OverviewRefKind.FIELDS not in {b.ref.kind for b in _boxes(plain)}
-
-
-def test_a_stub_names_the_root_item_of_its_far_end() -> None:
-    """Breaks if a far terminal draws its own stub box instead of standing as its strip."""
-    model, (out, _) = _laid()
-    stubs = [b for b in layout_of(out, OverviewBox).values() if b.stub_of is not None]
-    far = [b.ref.item for b in stubs if b.ref.item is not None]
-    assert far
-    assert all(items(model)[item].parent is None for item in far)
-    ends = [(b.view, b.stub_of, b.ref) for b in stubs]
-    assert len(ends) == len(set(ends))

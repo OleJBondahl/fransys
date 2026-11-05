@@ -1,14 +1,6 @@
 """Field case: a star marker that names many other ends puts a terminal of the net first.
-
-The engineering shape: the three line-side poles of a contactor, the coils of two relays, a lamp
-and one terminal of a strip on one net, so the net is a star with seven ends. The poles stand in
-cell 1A, the terminal in a later column, which reads after them.
-
-The bug: a marker past two targets prints its first target in reading order and `+k`. That
-end was a pole or a sibling branch, so the terminal the net is fed from was named nowhere.
-The rule (model-0139, amended by model-0235): the first target is a terminal of the net when it
-has one, else the first other end in reading order; one derive function chooses it.
-"""
+The bug: the marker named its first target in reading order, a pole, so the net's feeding terminal was named nowhere.
+Fixed by model-0139 (amended by model-0235), the first target is a terminal of the net when it has one, else the first other end."""
 
 from typing import TYPE_CHECKING
 
@@ -17,7 +9,9 @@ from _model_build_cover import cabinet_document
 from fransys.colours import BU
 
 from fransys_model.derive.designation import port_designation
-from fransys_model.derive.drawing_text import marker_text, place_text
+from fransys_model.derive.drawing_text import marker_text
+from fransys_model.derive.frame_position import position_at
+from fransys_model.derive.marker_text import marker_cell
 from fransys_model.layout import LinkMarker, Page, layout_of
 
 if TYPE_CHECKING:
@@ -35,21 +29,25 @@ def _built() -> Model:
         k2, k3 = (d.device(tag, "DEMO-RLY-2CO-24") for tag in ("K2", "K3"))
     with d.function("T", "Feed"):
         lamp = d.device("H1", "DEMO-LAMP-24")
-    ends = [lamp.lamp[1], *(k1.main[pin] for pin in "135"), k2.coil["A2"], k3.coil["A2"], x1[1]]
+    ends = [lamp.lamp[1], *(k1.main[pin] for pin in "135"), k2.coil["A2"], k3.coil["A2"], x1[1].inner]
     for end in ends[1:]:
-        d.detail.wire(ends[0], end, wire=(BU, 0.5))
+        d.series(ends[0], end, wire=(BU, 0.5))
+    d.series(lamp.lamp[2], x1[2].inner, wire=(BU, 0.5))
+    d.series(k2.coil["A1"], k3.coil["A1"], wire=(BU, 0.5))
     return fr.build(d, cabinet_document(cabinet)).model
 
 
-def _by_port(model: Model) -> dict[str, LinkMarker]:
-    return {port_designation(model, m.port): m for m in layout_of(model, LinkMarker).values()}
+def _marker(model: Model, name: str) -> LinkMarker:
+    markers = {port_designation(model, m.port): m for m in layout_of(model, LinkMarker).values()}
+    assert name in markers, f"no layout.link_marker record for {name}: the net is drawn whole, so no reference end is placed (have {sorted(markers)})"
+    return markers[name]
 
 
 def _terminal_cell(model: Model) -> str:
     """The frame cell of the strip terminal's own marker, as its page reads it."""
-    marker = _by_port(model)["-X1:1"]
+    marker = _marker(model, "-X1:1")
     page = layout_of(model, Page)[marker.page]
-    return place_text(model, page, page, marker.x, marker.y)
+    return position_at(model, page, page, *marker_cell(model, marker))
 
 
 def test_a_relays_marker_names_the_terminal_first() -> None:
@@ -57,11 +55,11 @@ def test_a_relays_marker_names_the_terminal_first() -> None:
     cell = _terminal_cell(model)
     assert cell == "4A"  # the poles stand in 1A and the terminal reads after them
     for name in ("-K2:A2", "-K3:A2"):
-        text = marker_text(model, _by_port(model)[name])
+        text = marker_text(model, _marker(model, name))
         assert text.startswith(f"#1-{cell} +")
 
 
 def test_the_terminals_own_marker_names_the_first_end_in_reading_order() -> None:
     """The terminal names no other terminal: its first target is first in reading order."""
     model = _built()
-    assert marker_text(model, _by_port(model)["-X1:1"]).startswith("#1-1A +")
+    assert marker_text(model, _marker(model, "-X1:1")).startswith("#1-1A +")

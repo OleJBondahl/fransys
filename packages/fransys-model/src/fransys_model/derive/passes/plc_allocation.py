@@ -18,12 +18,13 @@ from fransys_model.derive.order import (
 from fransys_model.derive.passes._plc_ambiguous import ambiguous_findings
 from fransys_model.derive.passes._plc_contested import contested_findings
 from fransys_model.derive.passes._plc_wired import (
+    WiredPick,
     reaches_open_boundary,
     unit_of,
     wired_requests,
 )
-from fransys_model.kernel import Finding, Model, Severity, evolve, make_id
-from fransys_model.vocab.codes import fix_text
+from fransys_model.kernel import Finding, Model, evolve, make_id
+from fransys_model.vocab.codes import finding
 from fransys_model.vocab.facets.plc import PlcBindingFacet, PlcRequestFacet
 from fransys_model.vocab.finding_ref import ref
 from fransys_model.vocab.tables import facets_of, functions, items
@@ -61,9 +62,7 @@ def _ranked(model: Model) -> list[tuple[Function, PlcChannelFacet]]:
     return [(function, facet) for _, function, facet in sorted(ranked, key=lambda r: r[0])]
 
 
-def _channels(
-    model: Model, ranked: list[tuple[Function, PlcChannelFacet]]
-) -> dict[tuple[Id[Unit] | None, SignalType], list[Function]]:
+def _channels(model: Model, ranked: list[tuple[Function, PlcChannelFacet]]) -> dict[tuple[Id[Unit] | None, SignalType], list[Function]]:
     """`ranked` cut into channel functions by (unit, signal), each list in serving order.
 
     A channel's unit is its module item's `Item.unit`; a unit declares a signal when a key with
@@ -96,15 +95,78 @@ def _unservable(function: Function, request: PlcRequestFacet, *, declared: bool)
         if not declared
         else f"but every {request.signal.value} channel of its unit is taken"
     )
-    return Finding(
-        code=PLC_REQUEST_UNSERVABLE,
-        severity=Severity.ERROR,
-        subjects=(request.id, function.id),
-        message=(
-            f"{ref(function)} asks for {request.signal.value} as {request.signal_name!r}, {cause}"
-        ),
-        fix=fix_text(PLC_REQUEST_UNSERVABLE),
+    return finding(
+        PLC_REQUEST_UNSERVABLE,
+        (request.id, function.id),
+        f"{ref(function)} asks for {request.signal.value} as {request.signal_name!r}, {cause}",
     )
+
+
+def _requests(model: Model) -> list[PlcRequestFacet]:
+    """Every request in serving order: `(priority, requesting Function.key, Function.id)`."""
+    all_functions = functions(model)
+    return sorted(
+        facets_of(model, PlcRequestFacet).values(),
+        key=lambda request: (request.priority, all_functions[request.subject].key, request.subject),
+    )
+
+
+def _bound_subjects(model: Model) -> set[Id[Function]]:
+    """The functions that already carry a `plc_binding`."""
+    return {binding.subject for binding in facets_of(model, PlcBindingFacet).values()}
+
+
+def _serve_one(
+    model: Model,
+    request: PlcRequestFacet,
+    pick: WiredPick,
+    channels: dict[tuple[Id[Unit] | None, SignalType], list[Function]],
+    free: dict[tuple[Id[Unit] | None, SignalType], deque[Function]],
+) -> tuple[PlcBindingFacet | None, Finding | None]:
+    """The binding of `request` (wired, else the first free channel of its serving unit) or its finding."""
+    function = functions(model)[request.subject]
+    channel = pick.bound.get(request.subject)
+    if channel is None:
+        queue = _serving(model, unit_of(model, function), request.signal, channels)
+        available = free.get(queue)
+        if not available:
+            declared = queue in channels
+            unservable = declared or not reaches_open_boundary(model, function)
+            return None, _unservable(function, request, declared=declared) if unservable else None
+        channel = available.popleft().id
+    key = (*function.key, "plc_binding")
+    return PlcBindingFacet(id=make_id(PlcBindingFacet, key), key=key, subject=function.id, channel=channel), None
+
+
+def _serve(
+    model: Model,
+    requests: list[PlcRequestFacet],
+    pick: WiredPick,
+    channels: dict[tuple[Id[Unit] | None, SignalType], list[Function]],
+    taken: set[Id[Function]],
+) -> tuple[list[PlcBindingFacet], list[Finding], dict[Id[PlcBindingFacet], Origin]]:
+    """The bindings, the unservable findings and the bindings' origins, in request order."""
+    free = {key: deque(function for function in queue if function.id not in taken) for key, queue in channels.items()}
+    skip = _bound_subjects(model) | set(pick.unbound)
+    served: list[PlcBindingFacet] = []
+    findings: list[Finding] = []
+    origins: dict[Id[PlcBindingFacet], Origin] = {}
+    for request in requests:
+        if request.subject in skip:
+            continue
+        binding, unservable = _serve_one(model, request, pick, channels, free)
+        if unservable is not None:
+            findings.append(unservable)
+        if binding is not None:
+            served.append(binding)
+            origins[binding.id] = require_origin(model.origins, request.id)
+    return served, findings, origins
+
+
+def _bound(model: Model, served: list[PlcBindingFacet], origins: dict[Id[PlcBindingFacet], Origin]) -> Model:
+    """`model` with `served` put, each carrying its request's origin."""
+    evolved = evolve(model, put=served, origin=origins[served[0].id])
+    return dataclasses.replace(evolved, origins=frozendict({**evolved.origins, **origins}))
 
 
 def allocate_plc(model: Model) -> tuple[Model, tuple[Finding, ...]]:
@@ -124,55 +186,21 @@ def allocate_plc(model: Model) -> tuple[Model, tuple[Finding, ...]]:
     back as the same object.
     """
     bindings = facets_of(model, PlcBindingFacet)
-    bound_subjects = {binding.subject for binding in bindings.values()}
-    all_functions = functions(model)
-    requests = sorted(
-        facets_of(model, PlcRequestFacet).values(),
-        key=lambda request: (request.priority, all_functions[request.subject].key, request.subject),
-    )
+    requests = _requests(model)
     ranked = _ranked(model)
     existing = {binding.channel for binding in bindings.values()}
     pick = wired_requests(
         model,
         requests,
-        skip=bound_subjects,
+        skip=_bound_subjects(model),
         taken=existing,
         ranked={function.id: (place, facts) for place, (function, facts) in enumerate(ranked)},
     )
-    taken = existing | set(pick.bound.values()) | set(pick.contested)
     channels = _channels(model, ranked)
-    free = {
-        key: deque(function for function in queue if function.id not in taken)
-        for key, queue in channels.items()
-    }
-    served: list[PlcBindingFacet] = []
-    findings = [
-        *ambiguous_findings(model, requests, pick.ambiguous),
-        *contested_findings(model, pick.contested),
-    ]
-    origins: dict[Id[PlcBindingFacet], Origin] = {}
-    for request in requests:
-        if request.subject in bound_subjects or request.subject in pick.unbound:
-            continue
-        function = all_functions[request.subject]
-        channel = pick.bound.get(request.subject)
-        if channel is None:
-            queue = _serving(model, unit_of(model, function), request.signal, channels)
-            available = free.get(queue)
-            if not available:
-                declared = queue in channels
-                if declared or not reaches_open_boundary(model, function):
-                    findings.append(_unservable(function, request, declared=declared))
-                continue
-            channel = available.popleft().id
-        key = (*function.key, "plc_binding")
-        binding = PlcBindingFacet(
-            id=make_id(PlcBindingFacet, key), key=key, subject=function.id, channel=channel
-        )
-        served.append(binding)
-        origins[binding.id] = require_origin(model.origins, request.id)
+    taken = existing | set(pick.bound.values()) | set(pick.contested)
+    served, unservable, origins = _serve(model, requests, pick, channels, taken)
+    findings = [*ambiguous_findings(model, requests, pick.ambiguous), *contested_findings(model, pick.contested), *unservable]
     ordered = tuple(sorted(findings, key=lambda f: (f.code, f.subjects, f.message)))
     if not served:
         return model, ordered
-    evolved = evolve(model, put=served, origin=origins[served[0].id])
-    return dataclasses.replace(evolved, origins=frozendict({**evolved.origins, **origins})), ordered
+    return _bound(model, served, origins), ordered

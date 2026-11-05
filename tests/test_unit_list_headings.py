@@ -2,10 +2,6 @@
 
 A unit's own document heads each strip's table with the strip's designation read
 unit-relative (`-X2`), as the rows below it already are; a location document keeps the full
-text (`-JB1-X2`, a strip inside a board). See model-0054 section 3. The two ends columns of a
-strip's terminal list are headed by the terminal part's port markings when the part names both
-its internal and its external port, else "Side A" / "Side B". No demo part carries a marking,
-so 4b builds a throwaway part library in `tmp_path` (never `examples/demo-parts`).
 """
 
 import importlib.util
@@ -14,25 +10,21 @@ from dataclasses import replace
 from pathlib import Path
 
 import fransys as fr
-import fransys_author
 import fransys_parts
 import pytest
 from _pdf_lists import connector_list_page, terminal_list_page
+from fransys_author.design import Design
 
 from fransys_model.derive import document_rows
 from fransys_model.vocab import DocumentPreset
 from fransys_model.vocab.tables import aspect_nodes, documents
 
-# `--import-mode=importlib` (root pyproject.toml) never puts a test directory on `sys.path`;
 # `fransys_pdf`'s own hand-built model helpers are loaded from their file by path, as
 # `test_csv_agrees_with_pdf_lists.py` does (the same module object, one registered name).
-_BUILD_PATH = (
-    Path(__file__).resolve().parent.parent / "packages" / "fransys-pdf" / "tests" / "_build.py"
-)
+_BUILD_PATH = Path(__file__).resolve().parent.parent / "packages" / "fransys-pdf" / "tests" / "_build.py"
 if "_pdf_tests_build" in sys.modules:
     _build = sys.modules["_pdf_tests_build"]
 else:
-    sys.path.append(str(_BUILD_PATH.parent))  # `_build` imports its sibling `pdf_library`
     _build_spec = importlib.util.spec_from_file_location("_pdf_tests_build", _BUILD_PATH)
     assert _build_spec is not None
     assert _build_spec.loader is not None
@@ -52,12 +44,8 @@ def board_strip():
     """
     c1 = _build.location("C1", "Demo cabinet")
     u = _build.unit("u1", name="io-board")
-    unit_doc = _build.document(
-        "d-unit", preset=DocumentPreset.CABINET_SCHEMATIC, subject=u, cover="# Cover"
-    )
-    location_doc = _build.document(
-        "d-loc", preset=DocumentPreset.CABINET_SCHEMATIC, subject=c1, cover="# Cover"
-    )
+    unit_doc = _build.document("d-unit", preset=DocumentPreset.CABINET_SCHEMATIC, subject=u, cover="# Cover")
+    location_doc = _build.document("d-loc", preset=DocumentPreset.CABINET_SCHEMATIC, subject=c1, cover="# Cover")
     board_part = _build.part("board1", description="Invented board")
     board = _build.item("jb1", description="Board one", part=board_part.id, unit=u.id)
     strip = _build.item("x2", description="Strip two", parent=board.id, unit=u.id)
@@ -69,10 +57,7 @@ def board_strip():
     records = (c1, u, unit_doc, location_doc, board_part, board, strip, child, facet, fn, internal)
     records += (b12, b12_fn, b12_port, wire)
     records += (_build.pcb_facet("board1", subject=board_part.id),)
-    records += tuple(
-        _build.place(key, item=item.id, node=c1.id)
-        for key, item in (("p-strip", strip), ("p-b12", b12), ("p-jb1", board))
-    )
+    records += tuple(_build.place(key, item=item.id, node=c1.id) for key, item in (("p-strip", strip), ("p-b12", b12), ("p-jb1", board)))
     model = _build.model(*records)
     return model, documents(model)[unit_doc.id], documents(model)[location_doc.id]
 
@@ -130,36 +115,38 @@ def _library(root: Path, parts: dict[str, tuple[str | None, str | None]]) -> Pat
 def _terminal_page(tmp_path: Path, markings: dict[str, tuple[str | None, str | None]]) -> str:
     """The terminal list page of one strip `X1` with a terminal of each `markings` part.
 
-    Every terminal is wired on both sides (to relay `K1`), so neither ends column is dropped
+    Every terminal is wired on both sides (to relays `K1` and `K2`), so neither ends column is dropped
     (pdf-0011): a missing heading is then never an empty-column effect.
     """
     parts = fransys_parts.load_path(_library(tmp_path, markings))
     cover = tmp_path / "cover.md"
     cover.write_text("# Cover\n", encoding="utf-8")
-    d = fransys_author.Design(parts)
+    d = Design(parts)
     d.project(title="T", number="1", customer="C", revision=1, author="A")
     d.revision(1, date="2026-09-24", text="First issue", created="XX")
     c1 = d.location("C1", "Cabinet")
     grp = d.group("G", "Group")
     k1 = d.item("DEMO-RLY-2CO-24", tag="K1", at=c1, group=grp)
+    k2 = d.item("DEMO-RLY-2CO-24", tag="K2", at=c1, group=grp)
     strip = d.strip("X1", at=c1)
     wire = d.wiring(colour="BU", gauge="0.5")
-    coil, co1 = k1.fn("coil"), k1.fn("co_1")
     for number, mpn in enumerate(markings, start=1):
         terminal = strip.terminal(mpn, "T", index=number, group=grp)
-        wire(terminal.inner, coil["A1"] if number == 1 else co1["11"], n=number)
-        wire(terminal.outer, coil["A2"] if number == 1 else co1["12"], n=number)
+        wire(terminal.inner, k1.fn(f"co_{number}")[f"{number}1"], n=number)
+        wire(terminal.outer, k2.fn(f"co_{number}")[f"{number}1"], n=number)
     document = fr.document(DocumentPreset.CABINET_SCHEMATIC, c1, cover=cover)
     model = fr.build(parts, d.draft(), document).model
     location = next(node.id for node in aspect_nodes(model).values() if node.label == "C1")
     (record,) = (r for r in document_rows(model) if r.location == location)
-    return terminal_list_page(model, record)
+    page: str = str(terminal_list_page(model, record))
+    return page
 
 
 def _headers(page: str) -> list[str]:
     import re
 
-    return re.findall(r'strong\(text\("([^"]*)"\)\)', page)
+    headers: list[str] = [str(h) for h in re.findall(r'strong\(text\("([^"]*)"\)\)', page)]
+    return headers
 
 
 def test_a_part_naming_both_ports_heads_the_sides_by_its_markings(tmp_path):
@@ -222,18 +209,12 @@ def board_in_board():
     """
     c1 = _build.location("C1", "Demo cabinet")
     u = _build.unit("u1", name="io-board")
-    unit_doc = _build.document(
-        "d-unit", preset=DocumentPreset.PCB_SCHEMATIC, subject=u, cover="# Cover"
-    )
-    location_doc = _build.document(
-        "d-loc", preset=DocumentPreset.CABINET_SCHEMATIC, subject=c1, cover="# Cover"
-    )
+    unit_doc = _build.document("d-unit", preset=DocumentPreset.CABINET_SCHEMATIC, subject=u, cover="# Cover")
+    location_doc = _build.document("d-loc", preset=DocumentPreset.CABINET_SCHEMATIC, subject=c1, cover="# Cover")
     outer_part = _build.part("outer", description="Outer board")
     inner_part = _build.part("inner", description="Inner board")
     outer = _build.item("jb1", description="Board one", part=outer_part.id, unit=u.id)
-    inner = _build.item(
-        "jb2", description="Board two", part=inner_part.id, parent=outer.id, unit=u.id
-    )
+    inner = _build.item("jb2", description="Board two", part=inner_part.id, parent=outer.id, unit=u.id)
     conn = _build.connector("j1", item=inner.id, name="J1", markings=("1",))
     records = (c1, u, unit_doc, location_doc, outer_part, inner_part, outer, inner)
     records += (
@@ -244,10 +225,7 @@ def board_in_board():
     )
     far_item, far_fn, far_port = _build.pin("far", "X1")
     records += (far_item, far_fn, far_port, _build.conductor("w1", a=conn[4][0].id, b=far_port.id))
-    records += tuple(
-        _build.place(key, item=item.id, node=c1.id)
-        for key, item in (("p-jb1", outer), ("p-jb2", inner))
-    )
+    records += tuple(_build.place(key, item=item.id, node=c1.id) for key, item in (("p-jb1", outer), ("p-jb2", inner)))
     model = _build.model(*records)
     return model, documents(model)[unit_doc.id], documents(model)[location_doc.id]
 

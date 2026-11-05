@@ -561,6 +561,27 @@ fact attached =G2+CAB-Q4.coil =G4+CAB-K7.coil =G4+CAB-K13.coil =G2+CAB-Q5.coil =
 fact boxpin =G3+CAB-DO5.item.do_1.1 =G3+CAB-DO5.item.do_2.2 =G3+CAB-DO1.item.do_1.1 =G3+CAB-DO1.item.do_2.2 =G3+CAB-DO2.item.do_2.2 =G3+CAB-DO2.item.do_1.1 =G3+CAB-DO3.item.do_2.2 =G3+CAB-DO3.item.do_1.1 =G3+CAB-DO7.item.do_2.2 =G3+CAB-DO7.item.do_1.1 =G3+CAB-DI1.item.di_8.8 =G3+CAB-DI1.item.di_7.7 =G3+CAB-DI1.item.di_16.16 =G3+CAB-DI1.item.di_4.4 =G3+CAB-DI1.item.di_14.14 =G3+CAB-DI1.item.di_11.11 =G3+CAB-DI1.item.di_9.9 =G3+CAB-DI1.item.di_10.10 =G3+CAB-DI1.item.di_1.1 =G3+CAB-DI1.item.di_13.13 =G3+CAB-DI1.item.di_6.6 =G3+CAB-DI1.item.di_3.3 =G3+CAB-DI1.item.di_5.5 =G3+CAB-DI1.item.di_15.15 =G3+CAB-DI1.item.di_2.2 =G3+CAB-DI1.item.di_12.12 =G3+CAB-DO4.item.do_2.2 =G3+CAB-DO4.item.do_1.1 =G3+CAB-DO9.item.do_1.1 =G3+CAB-DO9.item.do_2.2 =G3+CAB-DO6.item.do_1.1 =G3+CAB-DO6.item.do_2.2 =G3+CAB-DO8.item.do_2.2 =G3+CAB-DO8.item.do_1.1 =G3+CAB-DO10.item.do_2.2 =G3+CAB-DO10.item.do_1.1
 fact head =G1+CAB-Q0.element =G2+CAB-F4.element =G2+CAB-F13.main =G4+CAB-F8.element =G2+CAB-F3.element =G2+CAB-F5.element =G2+CAB-F14.main =G2+CAB-F15.main
 fact strip -X3 =G2+CAB-X3:8.terminal =G2+CAB-X3:7.terminal =G2+CAB-X3:3.terminal =G2+CAB-X3:2.terminal =G2+CAB-X3:4.terminal =G2+CAB-X3:9.terminal =G2+CAB-X3:6.terminal =G2+CAB-X3:5.terminal =G2+CAB-X3:1.terminal =G2+CAB-X3:3.terminal@1 =G2+CAB-X3:2.terminal@1 =G2+CAB-X3:1.terminal@1
+fact joined =G2+CAB-F14.main.2.in =G2+CAB-F14.main.2.out
+fact joined =G2+CAB-X3:2.terminal.n =G2+CAB-X3:2.terminal.s
+fact joined =G2+CAB-X3:2.terminal@1.n =G2+CAB-X3:2.terminal@1.s
+fact joined =G2+CAB-X3:5.terminal.n =G2+CAB-X3:5.terminal.s
+fact joined =G2+CAB-X3:8.terminal.n =G2+CAB-X3:8.terminal.s
+fact joined =G2+CAB-F14.main.1.in =G2+CAB-F14.main.1.out
+fact joined =G2+CAB-F13.main.3.in =G2+CAB-F13.main.3.out
+fact joined =G2+CAB-F15.main.1.in =G2+CAB-F15.main.1.out
+fact joined =G2+CAB-F14.main.3.in =G2+CAB-F14.main.3.out
+fact joined =G2+CAB-X3:1.terminal.n =G2+CAB-X3:1.terminal.s
+fact joined =G2+CAB-X3:1.terminal@1.n =G2+CAB-X3:1.terminal@1.s
+fact joined =G2+CAB-X3:4.terminal.n =G2+CAB-X3:4.terminal.s
+fact joined =G2+CAB-X3:7.terminal.n =G2+CAB-X3:7.terminal.s
+fact joined =G2+CAB-X3:3.terminal.n =G2+CAB-X3:3.terminal.s
+fact joined =G2+CAB-X3:3.terminal@1.n =G2+CAB-X3:3.terminal@1.s
+fact joined =G2+CAB-X3:6.terminal.n =G2+CAB-X3:6.terminal.s
+fact joined =G2+CAB-X3:9.terminal.n =G2+CAB-X3:9.terminal.s
+fact joined =G2+CAB-F13.main.1.in =G2+CAB-F13.main.1.out
+fact joined =G2+CAB-F15.main.2.in =G2+CAB-F15.main.2.out
+fact joined =G2+CAB-F15.main.3.in =G2+CAB-F15.main.3.out
+fact joined =G2+CAB-F13.main.2.in =G2+CAB-F13.main.2.out
 # legend only: a general placer must not read a symbol's kind.
 kind =G2+CAB-Q4.coil coil
 kind =G2+CAB-X3:8.terminal terminal

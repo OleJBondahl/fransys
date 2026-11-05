@@ -5,8 +5,9 @@ symbol nearest that text in x; a marker by the texts it prints, its star kind by
 """
 
 from itertools import pairwise
+from typing import Any
 
-from _drawn_pages import drawn_pages
+from _drawn_pages import drawn_pages, markers_in, ref_texts
 
 from fransys_model.layout import DrawingSet, Page, layout_of
 
@@ -19,12 +20,12 @@ def in_own_set(model, page) -> bool:
     return sets[layout_of(model, Page)[page].drawing_set].unit is not None
 
 
-def stands(model, tag: str, key: str = "terminal") -> dict:
+def stands(model, tag: str, key: str = "terminal") -> dict[Any, Any]:
     """The (page id, symbol) of the `key` symbol nearest the TAG text `tag`, by set.
 
     The unit's own set is `True`, the top-level one `False`; a set without the tag is absent.
     """
-    found: dict = {}
+    found: dict[Any, Any] = {}
     for page, drawing in drawn_pages(model).items():
         texts = [t for t in drawing.texts if t.kind == "TAG" and t.text == tag]
         for text in texts:
@@ -36,9 +37,9 @@ def stands(model, tag: str, key: str = "terminal") -> dict:
     return found
 
 
-def tags_by_set(model, tag: str) -> dict:
+def tags_by_set(model, tag: str) -> dict[Any, Any]:
     """How many times each set (True: a unit's own) prints the TAG text `tag`."""
-    counts: dict = {}
+    counts: dict[Any, Any] = {}
     for page, drawing in drawn_pages(model).items():
         n = sum(t.kind == "TAG" and t.text == tag for t in drawing.texts)
         if n:
@@ -46,7 +47,7 @@ def tags_by_set(model, tag: str) -> dict:
     return counts
 
 
-def beside(model, a: tuple, b: tuple, key: str = "terminal") -> bool:
+def beside(model, a: tuple[Any, ...], b: tuple[Any, ...], key: str = "terminal") -> bool:
     """Whether two (page, symbol) stand on one page at one y with no `key` symbol between."""
     (pa, sa), (pb, sb) = a, b
     if (pa, sa.y) != (pb, sb.y):
@@ -56,32 +57,29 @@ def beside(model, a: tuple, b: tuple, key: str = "terminal") -> bool:
     return not between
 
 
-def markers_of(model, tag: str, kind: str | None = None, page=None) -> list:
+def markers_of(model, tag: str, kind: str | None = None, page=None) -> list[Any]:
     """The (page id, marker) that print `tag` (and whose library key names `kind`), on `page`."""
     return [
         (p, m)
         for p, drawing in drawn_pages(model).items()
-        for m in drawing.markers
-        if (page is None or p == page)
-        and (kind is None or kind in m.key)
-        and any(tag in value for _, value in m.texts)
+        for m in markers_in(drawing)
+        if (page is None or p == page) and (kind is None or kind in m.key) and any(tag in value for value in ref_texts(m))
     ]
 
 
-def _on(point, a, b) -> bool:
+def on_segment(point: tuple[float, float], a: tuple[float, float], b: tuple[float, float]) -> bool:
+    """Whether `point` lies on the straight segment a-b."""
     (x, y), (x0, y0), (x1, y1) = point, a, b
     return min(x0, x1) <= x <= max(x0, x1) and min(y0, y1) <= y <= max(y0, y1)
 
 
-def _segments(points) -> list:
+def _segments(points) -> list[Any]:
     return list(pairwise(points))
 
 
 def _touch(one, other) -> bool:
     """Whether two polylines (point tuples) meet."""
-    return any(_on(p, *seg) for p in one for seg in _segments(other)) or any(
-        _on(p, *seg) for p in other for seg in _segments(one)
-    )
+    return any(on_segment(p, *seg) for p in one for seg in _segments(other)) or any(on_segment(p, *seg) for p in other for seg in _segments(one))
 
 
 def joined(model, page, *pins: tuple[int, int]) -> bool:
@@ -91,7 +89,4 @@ def joined(model, page, *pins: tuple[int, int]) -> bool:
     for i, points in enumerate(wires):
         touching = [run for run in runs if any(_touch(points, wires[j]) for j in run)]
         runs = [*(run for run in runs if run not in touching), {i}.union(*touching)]
-    return any(
-        all(any(_on(pin, *seg) for j in run for seg in _segments(wires[j])) for pin in pins)
-        for run in runs
-    )
+    return any(all(any(on_segment(pin, *seg) for j in run for seg in _segments(wires[j])) for pin in pins) for run in runs)

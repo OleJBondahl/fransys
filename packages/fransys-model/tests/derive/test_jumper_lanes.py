@@ -1,5 +1,7 @@
 """Jumper groups take lanes by first fit over their row spans (pdf-0007)."""
 
+import pytest
+
 from fransys_model.derive import first_fit_lanes, jumper_lane_count, jumper_lanes
 
 
@@ -13,30 +15,19 @@ def test_no_group_uses_no_lane():
     assert result.lanes == ()
 
 
-def test_non_overlapping_groups_share_lane_zero():
-    result = jumper_lanes((1, 1, None, 2, 2))
-    assert _lanes(result) == [(1, 0, 1, 0), (2, 3, 4, 0)]
-    assert jumper_lane_count(result) == 1
-
-
-def test_overlapping_groups_get_two_lanes():
-    result = jumper_lanes((1, 2, 1, 2))
-    assert _lanes(result) == [(1, 0, 2, 0), (2, 1, 3, 1)]
-    assert jumper_lane_count(result) == 2
-
-
-def test_third_group_after_first_ends_reuses_lane_zero():
-    # group 1 spans rows 0-2, group 2 rows 1-1 (lane 1), group 3 rows 3-4 (lane 0: 2 < 3)
-    result = jumper_lanes((1, 2, 1, 3, 3))
-    assert _lanes(result) == [(1, 0, 2, 0), (2, 1, 1, 1), (3, 3, 4, 0)]
-    assert jumper_lane_count(result) == 2
-
-
-def test_groups_place_by_group_number_not_row_order():
-    # group 2 starts first in the rows, but group 1 is placed first and takes lane 0
-    result = jumper_lanes((2, 1, 2, 1))
-    assert _lanes(result) == [(1, 1, 3, 0), (2, 0, 2, 1)]
-    assert jumper_lane_count(result) == 2
+@pytest.mark.parametrize(
+    ("groups", "lanes", "count"),
+    [
+        ((1, 1, None, 2, 2), [(1, 0, 1, 0), (2, 3, 4, 0)], 1),  # non-overlapping groups share lane zero
+        ((1, 2, 1, 2), [(1, 0, 2, 0), (2, 1, 3, 1)], 2),  # overlapping groups get two lanes
+        ((1, 2, 1, 3, 3), [(1, 0, 2, 0), (2, 1, 1, 1), (3, 3, 4, 0)], 2),  # group 3 starts after group 1 ends and reuses lane zero
+        ((2, 1, 2, 1), [(1, 1, 3, 0), (2, 0, 2, 1)], 2),  # groups place by group number, not row order
+    ],
+)
+def test_groups_take_lanes_by_first_fit_in_group_number_order(groups, lanes, count):
+    result = jumper_lanes(groups)
+    assert _lanes(result) == lanes
+    assert jumper_lane_count(result) == count
 
 
 def test_first_fit_lanes_follows_the_free_before_first_rule():

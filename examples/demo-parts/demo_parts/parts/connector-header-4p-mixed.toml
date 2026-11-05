@@ -1,4 +1,4 @@
-schema = 1
+schema = 2
 
 [part]
 mpn = "DEMO-CONN-4P-MIXED"
@@ -6,6 +6,10 @@ manufacturer = "Demo"
 description = "Connector housing, 4-pin header, pins listed out of marking order"
 category = "connector"
 class_code = "J"
+
+[footprint]
+library = "Demo_Conn"
+name = "Header_4P_Mixed"
 
 [[function]]
 name = "x1"

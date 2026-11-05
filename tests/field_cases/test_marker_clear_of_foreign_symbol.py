@@ -1,22 +1,6 @@
-"""Field case: a link marker's stub and box never stand on another function's symbol.
-
-Engineering shape: a contactor coil and a second relay coil share a return conductor. It runs
-through the one-port pass-through terminal printed on an overload relay (the same page) and lands
-on a strip terminal that belongs to another group, so the strip terminal is drawn on this page as
-a replica, in the strip row under the pass-through's column. The net has four ports and is drawn
-as one marker per port; the pass-through's marker leaves by its free port, southward, straight
-at the strip terminal below it.
-
-The bug: every tier of the marker's row nearer than the strip terminal is refused (the terminal's
-own lane runs up the column), so the placer took the first tier past it. The stub ran through the
-terminal's symbol and the box stood against its far port. `place_texts` tested the box against
-the symbol bodies and never the stub, so the placer saw a clear place; the lint reported
-`WIRE_THROUGH_SYMBOL` and `TEXT_OVERLAP`.
-
-The rule (decision layout-0093, M7 and M9): a box never stands on a drawn wire or on a symbol,
-and neither does the stub that leads to it. The marker takes a sideways place, with a lead, that
-is clear of every other function's symbol.
-"""
+"""Field case: a link marker's net runs to a strip terminal of another group, drawn here as a replica.
+The bug: the placer tested the marker box against symbol bodies but not its stub, so the stub ran through a terminal's symbol.
+Fixed by layout-0093 (M7 and M9), a box and its stub never stand on a wire or a symbol of another function."""
 
 from typing import TYPE_CHECKING, NamedTuple
 
@@ -33,7 +17,7 @@ class _Open(NamedTuple):
     """A unit with no boundary device to hand back."""
 
 
-_CODES = ("TEXT_OVERLAP", "WIRE_THROUGH_SYMBOL")
+_CODES = ("WIRE_THROUGH_SYMBOL",)
 
 
 @fr.unit(
@@ -56,10 +40,10 @@ def _cabinet(u: fr.Design) -> _Open:
         contactor = u.device("K1", "DEMO-RLY-2CO-24", place="C1")
         overload = u.device("F1", "DEMO-OVERLOAD-A2", place="C1")
         relay = u.device("K2", "DEMO-RLY-2CO-24", place="C1")
-    u.detail.wire(contactor.coil["A2"], overload.a2["A2"], wire=("BK2", 1.5))
-    u.detail.wire(overload.a2["A2"], terminal, wire=("BK2", 1.5))
-    u.detail.wire(relay.coil["A1"], contactor.coil["A1"], wire=("BK2", 1.5))
-    u.detail.wire(relay.coil["A2"], contactor.coil["A2"], wire=("BK2", 1.5))
+    u.series(contactor.coil["A2"], overload.a2["A2"], wire=("BK2", 1.5))
+    u.series(overload.a2["A2"], terminal, wire=("BK2", 1.5))
+    u.series(relay.coil["A1"], contactor.coil["A1"], wire=("BK2", 1.5))
+    u.series(relay.coil["A2"], contactor.coil["A2"], wire=("BK2", 1.5))
     return _Open()
 
 

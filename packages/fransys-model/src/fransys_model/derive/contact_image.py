@@ -58,9 +58,7 @@ def contact_marks(model: Model, function: Id[Function]) -> tuple[list[str], list
     return _in_image_order(no), _in_image_order(nc)
 
 
-def coil_image_cells(
-    model: Model, coil: Id[Function], places: Mapping[Id[Function], str] | None = None
-) -> tuple[list[str], list[str]]:
+def coil_image_cells(model: Model, coil: Id[Function], places: Mapping[Id[Function], str] | None = None) -> tuple[list[str], list[str]]:
     """The NO and NC cells of `coil`'s contact table in image order.
 
     A contact no conductor reaches prints `<mark> NO_PLACE`. A reached contact prints its mark,

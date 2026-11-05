@@ -1,17 +1,12 @@
 """The 16-channel output card on `solve`: every coil at its pin, one page (P7.1 B, SW8)."""
 
-import sys
-from pathlib import Path
-
 import fransys as fr
+from _card_case import card_case_drafts
 from conventions_fixtures import house
 from fransys_el import build, options, symbol_kit
 
 from electrical_symbols import LIBRARY
 from fransys_layout.core import solve
-
-sys.path.append(str(Path(__file__).parents[3] / "tests"))
-from _card_case import card_case_drafts
 
 
 def _score(channels: int):

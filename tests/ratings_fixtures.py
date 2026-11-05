@@ -2,26 +2,25 @@
 
 A design over the demo parts with the 400 V supply declared, the record helpers that give a demo
 part's function template another rating for one test, and the three plants of the spec: a line
-motor behind a contactor, a changeover's common, and a reversing starter.
 """
 
-import dataclasses
-from decimal import Decimal
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
+lazy from decimal import Decimal
 
 import fransys_parts
-from fransys_author import Design, Item
+from fransys_author.design import Design
 from root_library import freeze
+lazy from fransys_author.handles import Item
 
+from fransys_model.elecdef import At, Current, Range, Rating, Role, Unit
 from fransys_model.kernel import Id, Model, Origin, evolve, make_id, merge
 from fransys_model.vocab.facets.rating import RatingFacet
-from fransys_model.vocab.ratings import Rating
 from fransys_model.vocab.tables import facets_of, function_templates, parts
 
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from fransys_author import Port
+    from fransys_author.handles import Port
 
     from fransys_model.vocab.templates import FunctionTemplate
 
@@ -29,10 +28,10 @@ RAILS = {"L1": ("230", 0), "L2": ("230", 120), "L3": ("230", 240), "N": ("0", No
 _ORIGIN = Origin(file="tests/ratings_fixtures.py", line=1, note="")
 
 
-def design(earthing: str = "earthed") -> tuple[Design, Callable[[Port, Port], None]]:
+def design() -> tuple[Design, Callable[[Port, Port], None]]:
     """A design over the demo parts with the 400 V supply declared, and a wire maker."""
     d = Design(fransys_parts.load("demo_parts"))
-    d.supply("400V", current="ac", rails=RAILS, earthing=earthing)
+    d.supply("400V", current="ac", rails=RAILS)
     return d, d.wiring(colour="BK", gauge="1.5")
 
 
@@ -43,19 +42,31 @@ def freeze_design(d: Design) -> Model:
 def template_of(model: Model, mpn: str, function: str) -> FunctionTemplate:
     """The function template `function` of the part `mpn`."""
     part = next(p for p in parts(model).values() if p.mpn == mpn)
-    return next(
-        t for t in function_templates(model).values() if t.part == part.id and t.name == function
-    )
+    return next(t for t in function_templates(model).values() if t.part == part.id and t.name == function)
 
 
-def rating_facet(template: FunctionTemplate, **fields: str) -> RatingFacet:
-    """A `RatingFacet` of `template` whose `Rating` fields are the given decimals."""
+def rng(unit: Unit, *, current: Current | None = None, **ends: str | int | Decimal) -> Range:
+    """A rated `Range` of `ends` (`nom=24`, `max=30`) in `unit`, at `current` when given."""
+    return Range(Role.RATED, at=At(current) if current else At(), **{end: unit(value) for end, value in ends.items()})
+
+
+def rating_of(**fields: str | int) -> Rating:
+    """A `Rating` from `<voltage|current>_<ac|dc>_<v|a>="250"` keywords: the nominal figure at that current."""
+    figures: dict[str, list[Range]] = {"voltage": [], "current": []}
+    for name, text in fields.items():
+        figure, kind, unit = name.split("_")
+        figures[figure].append(rng(Unit[unit.upper()], current=Current[kind.upper()], nom=text))
+    return Rating(voltage=tuple(figures["voltage"]), current=tuple(figures["current"]))
+
+
+def rating_facet(template: FunctionTemplate, **fields: str | int) -> RatingFacet:
+    """A `RatingFacet` of `template` rated `fields` (see `rating_of`)."""
     key = ("test", "rating", *template.key)
-    rating = dataclasses.replace(Rating(), **{name: Decimal(text) for name, text in fields.items()})
+    rating = rating_of(**fields)
     return RatingFacet(id=make_id(RatingFacet, key), key=key, subject=template.id, rating=rating)
 
 
-def rated(model: Model, mpn: str, function: str, **fields: str) -> Model:
+def rated(model: Model, mpn: str, function: str, **fields: str | int) -> Model:
     """`model` with the function template of `mpn` rated `fields`, replacing any rating it had."""
     template = template_of(model, mpn, function)
     old = [f.id for f in facets_of(model, RatingFacet).values() if f.subject == template.id]
@@ -70,11 +81,11 @@ def lamp_on(d: Design, *potentials: str) -> Item:
     return lamp
 
 
-def fn_id(item: Item, name: str) -> Id:
+def fn_id(item: Item, name: str) -> Id[Any]:
     return item.fn(name).id
 
 
-def line_motor() -> tuple[Model, dict]:
+def line_motor() -> tuple[Model, dict[Any, Any]]:
     """L1, L2, L3 into contactor Q1 (1, 3, 5), then one MCB per phase, then the motor's U, V, W."""
     d, wire = design()
     q1 = d.item("DEMO-CTR-3P-24", name="q1")
@@ -89,7 +100,7 @@ def line_motor() -> tuple[Model, dict]:
     return freeze_design(d), {"q1": q1, "m1": m1}
 
 
-def changeover_lamp() -> tuple[Model, dict]:
+def changeover_lamp() -> tuple[Model, dict[Any, Any]]:
     """Contact `co_1` of a relay with 12 on L1 and 14 on L2, its common 11 wired to a lamp on N."""
     d, wire = design()
     contact = d.item("DEMO-RLY-2CO-24", name="k1").fn("co_1")
@@ -101,7 +112,7 @@ def changeover_lamp() -> tuple[Model, dict]:
     return freeze_design(d), {"lamp": lamp}
 
 
-def reversing_starter(*, reverse: bool = False) -> tuple[Model, dict]:
+def reversing_starter(*, reverse: bool = False) -> tuple[Model, dict[Any, Any]]:
     """K1: L1 to U, L3 to W; K2: L1 to W, L3 to U; the motor's V on L2 through both; a lamp on
     L1 and N; a second lamp `h2` bridges K1's and K2's port 1, so both ends are on L1 (no pair
     stands across it) unless L3 leaks through the starter into the L1 net. `reverse` declares

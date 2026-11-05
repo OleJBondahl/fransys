@@ -36,7 +36,7 @@ fuse; with a load across the string's two poles the load has no bound and the co
 keeps its 100 A.
 
 The outside: current can leave the model at an open end, a port of an external item or a
-boundary port of a standalone unit that is not `PortRole.INTERNAL` (`ties.open_ends`).
+boundary port of a standalone unit that is not `PortBoundary.INTERNAL` (`ties.open_ends`).
 All of them join ONE extra vertex, the outside, which holds a source and states no limit.
 Nothing else opens a node, since an outside edge adds a source-holding loop and can make a
 bound larger, which is a false ERROR. So a string open at two ports is a loop through the
@@ -109,9 +109,7 @@ class PositionEnds:
     second_node: Id[Port]
 
 
-def position_at(
-    raw: Raw, bounds: Mapping[int, tuple[CurrentBound, ...]], at: int
-) -> CurrentPosition:
+def position_at(raw: Raw, bounds: Mapping[int, tuple[CurrentBound, ...]], at: int) -> CurrentPosition:
     """The position of `raw.edges[at]` with its bounds from `evaluate`: the one way one is built."""
     edge = raw.edges[at]
     return CurrentPosition(edge.tie.functions, bounds.get(at, ()), (edge.first, edge.second))

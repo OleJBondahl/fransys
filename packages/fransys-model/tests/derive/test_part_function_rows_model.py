@@ -1,27 +1,24 @@
 """`part_function_rows`: a row per template, one per function-less part, the rating by fallback."""
 
-from decimal import Decimal
-
 from current_plant import rate
 from plant import Plant
+from rating_plant import rated
 
 from fransys_model.derive import part_function_rows
 from fransys_model.kernel import make_id
 from fransys_model.vocab.enums import FunctionKind
 from fransys_model.vocab.facets.rating import PartRatingFacet, RatingFacet
-from fransys_model.vocab.ratings import Rating
+lazy from fransys_model.elecdef import Rating
 
-_PART = Rating(current_dc_a=Decimal(10))
-_OWN = Rating(current_dc_a=Decimal(2))
+_PART = rated(amps_dc="10")
+_OWN = rated(amps_dc="2")
 
 
 def _relay(plant: Plant, *, own: Rating | None = None):
     part, template, _, _ = plant.relay_part()
     if own is not None:
         key = ("relay", "part-rating")
-        plant.add(
-            PartRatingFacet(id=make_id(PartRatingFacet, key), key=key, subject=part.id, rating=own)
-        )
+        plant.add(PartRatingFacet(id=make_id(PartRatingFacet, key), key=key, subject=part.id, rating=own))
     return part, template
 
 
@@ -55,4 +52,4 @@ def test_a_function_less_part_has_one_row_with_its_own_rating() -> None:
     part = rate(plant, "L", "4")
     (row,) = part_function_rows(plant.model())
     assert (row.part, row.template, row.name, row.kind) == (part, None, "", None)
-    assert row.rating == Rating(current_dc_a=Decimal(4))
+    assert row.rating == rated(amps_dc="4")

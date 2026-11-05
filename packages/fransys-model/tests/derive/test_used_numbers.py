@@ -60,10 +60,18 @@ def test_fifty_allocations_equal_the_old_ones(name: str, codes: tuple[str, ...])
         code = codes[step % len(codes)]
         expected = _old(code, old_taken)
         old_taken.add(f"{code}{expected}")
-        assert next_number(new_taken, numbers, code) == expected
+        assert next_number(new_taken, numbers, code, first=1) == expected
     assert new_taken == old_taken
 
 
 @pytest.mark.parametrize(("taken", "expected"), [(set(), 1), ({1, 2, 4}, 3), ({1, 2, 3}, 4)])
 def test_lowest_free_fills_the_lowest_gap(taken: set[int], expected: int) -> None:
     assert lowest_free(taken) == expected
+
+
+def test_next_number_starts_at_first_for_every_code() -> None:
+    taken = {"A10", "B12"}
+    numbers: dict[str, set[int]] = {}
+    assert next_number(taken, numbers, "A", first=10) == 11
+    assert next_number(taken, numbers, "B", first=10) == 10
+    assert next_number(taken, numbers, "C", first=10) == 10

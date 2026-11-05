@@ -4,7 +4,7 @@ from fransys_model.kernel import make_id
 from fransys_model.vocab import UnitRelease
 
 
-def unit_release(  # noqa: PLR0913 -- the release's own fields
+def unit_release(  # noqa: PLR0913 -- the release's own fields [internal builder of a public call, kept by decision 0414, KI-044]
     name: str,
     version: int,
     revision: int,
@@ -12,7 +12,6 @@ def unit_release(  # noqa: PLR0913 -- the release's own fields
     *,
     title: str,
     number: str,
-    class_code: str,
 ) -> UnitRelease:
     """The release record for these facts; every instance of one release writes an equal one."""
     key = ("unit_release", name, str(version), str(revision))
@@ -25,5 +24,4 @@ def unit_release(  # noqa: PLR0913 -- the release's own fields
         interface=interface,
         title=title,
         number=number,
-        class_code=class_code,
     )

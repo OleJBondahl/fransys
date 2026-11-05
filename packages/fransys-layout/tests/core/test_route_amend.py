@@ -8,15 +8,16 @@ from itertools import pairwise
 from options_fixtures import core_options
 
 from fransys_layout.core import Box, PinRef
+from fransys_layout.core.clearance import Keep
+from fransys_layout.core.flow_values import Attach, Fan
 from fransys_layout.core.occupancy import Occupancy, cells_between
-from fransys_layout.core.outputs import Gap, Trunk, Wire
+from fransys_layout.core.outputs import Gap, Refused, Trunk, Wire
 from fransys_layout.core.route import _grid, route_page, route_pages
 from fransys_layout.core.route_astar import Leg, astar
-from fransys_layout.core.route_counts import collinear, crossings_by_net, demand
+from fransys_layout.core.route_counts import collinear, demand
 from fransys_layout.core.route_env import route_envs
-from fransys_layout.core.route_tree import rise_wire, search
+from fransys_layout.core.route_tree import rise_wire
 from fransys_layout.core.route_trunk import trunk_wires
-from fransys_layout.core.values import Attach, Fan
 
 from .pipeline_fixtures import cut_of, placed_from
 from .route_fixtures import jog_stair, link_env, row_wrap_env
@@ -34,63 +35,10 @@ def test_astar_ends_on_the_nearest_target_cell() -> None:
     path = astar(
         grid,
         leg,
-        core_options(
-            flip_turn="R180",
-            tag_stagger=True,
-            label_gap=8,
-            parallel_pitch=48,
-            driver_first=True,
-            arrow_sides=("E", "W"),
-        ),
+        core_options(),
     )
     assert path is not None
     assert path[-1] in {(5, 0), (5, 6)}
-
-
-def test_a_window_confines_the_search_and_search_retries_on_the_whole_page() -> None:
-    grid = Occupancy(12, 7, STEP)
-    grid.hard.add((5, 3))
-    leg = Leg("n", (0, 3), (11, 3))
-    row = (0, 3, 11, 3)
-    assert (
-        astar(
-            grid,
-            replace(leg, window=row),
-            core_options(
-                flip_turn="R180",
-                tag_stagger=True,
-                label_gap=8,
-                parallel_pitch=48,
-                driver_first=True,
-                arrow_sides=("E", "W"),
-            ),
-        )
-        is None
-    )
-    path = search(
-        grid,
-        leg,
-        row,
-        core_options(
-            flip_turn="R180",
-            tag_stagger=True,
-            label_gap=8,
-            parallel_pitch=48,
-            driver_first=True,
-            arrow_sides=("E", "W"),
-        ),
-    )
-    assert path is not None
-    assert (5, 3) not in path
-
-
-def test_crossings_by_net_counts_a_crossing_for_both_its_nets() -> None:
-    wires = (
-        Wire("a", 1, ((0, 8), (16, 8)), "routed"),
-        Wire("b", 1, ((8, 0), (8, 16)), "routed"),
-        Wire("c", 1, ((4, 0), (4, 16)), "routed"),
-    )
-    assert dict(crossings_by_net(wires)) == {"a": 2, "b": 1, "c": 1}
 
 
 def test_a_three_end_tree_is_one_connected_set_of_routed_wires() -> None:
@@ -104,7 +52,10 @@ def test_a_three_end_tree_is_one_connected_set_of_routed_wires() -> None:
 def test_route_pages_obstacles_keep_every_wire_cell_out_of_the_boxes() -> None:
     env = link_env({"a": (40, 40, "E"), "b": (120, 40, "W")}, {"x": ("a", "b")})
     box = Box(64, 24, 16, 32)
-    free, held = route_page(env)[0].wires, route_page(replace(env, obstacles=(box,)))[0].wires
+    free, held = (
+        route_page(env)[0].wires,
+        route_page(replace(env, obstacles=(Keep("", box, "marker", "M"),)))[0].wires,
+    )
     inside = {(i, j) for i in range(8, 10) for j in range(3, 7)}
     assert _cells(free) & inside
     assert not _cells(held) & inside
@@ -116,58 +67,29 @@ def test_route_envs_carry_the_obstacles_of_route_pages() -> None:
     placement = placed_from(
         cut,
         prob,
-        core_options(
-            flip_turn="R180",
-            tag_stagger=True,
-            label_gap=8,
-            parallel_pitch=48,
-            driver_first=True,
-            arrow_sides=("E", "W"),
-        ),
+        core_options(),
     )
-    box = Box(0, 0, 8, 8)
+    keep = Keep("", Box(0, 0, 8, 8), "marker", "M")
     assert all(
-        e.obstacles == (box,)
+        e.obstacles == (keep,)
         for e in route_envs(
             placement,
             cut,
             prob,
-            core_options(
-                flip_turn="R180",
-                tag_stagger=True,
-                label_gap=8,
-                parallel_pitch=48,
-                driver_first=True,
-                arrow_sides=("E", "W"),
-            ),
-            (box,),
+            core_options(),
+            (keep,),
         )
     )
     assert route_pages(
         placement,
         cut,
         prob,
-        core_options(
-            flip_turn="R180",
-            tag_stagger=True,
-            label_gap=8,
-            parallel_pitch=48,
-            driver_first=True,
-            arrow_sides=("E", "W"),
-        ),
+        core_options(),
     ) == route_pages(
         placement,
         cut,
         prob,
-        core_options(
-            flip_turn="R180",
-            tag_stagger=True,
-            label_gap=8,
-            parallel_pitch=48,
-            driver_first=True,
-            arrow_sides=("E", "W"),
-        ),
-        (),
+        core_options(),
     )
 
 
@@ -177,10 +99,9 @@ def test_demand_is_read_from_the_footprint_only_routes() -> None:
     env = link_env(pins, {"n1": ("a1", "b1"), "n2": ("a2", "b2")})
     gap = Gap("g", 1, "L", "R", 36, 64, 1)
     env = replace(env, gaps=(gap,), bands=((0, 120),))
-    page, _, findings = route_page(env)
+    page, _, _ = route_page(env)
     assert page.demand[0].tracks == 2
     assert demand(page.wires, env.gaps)[0].tracks == 1  # kills: demand read from final routes
-    assert [f for f in findings if f.code == "ROUTE_FAILED"] == []
     widened = replace(env, gaps=(replace(gap, tracks=page.demand[0].tracks),))
     assert collinear(route_page(widened)[0].wires) == 0
 
@@ -204,32 +125,27 @@ def test_a_drop_through_a_foreign_body_becomes_a_rise_routed_around_it() -> None
 
 
 def _cells_of_box(box: Box) -> set[tuple[int, int]]:
-    return {
-        (i, j)
-        for i in range(box.x // STEP, -(-(box.x + box.w) // STEP))
-        for j in range(box.y // STEP, -(-(box.y + box.h) // STEP))
-    }
+    return {(i, j) for i in range(box.x // STEP, -(-(box.x + box.w) // STEP)) for j in range(box.y // STEP, -(-(box.y + box.h) // STEP))}
 
 
 def test_wanted_demand_is_what_the_links_want_alone_not_what_the_second_route_left() -> None:
-    """Both links want column 48 alone; the second keeps off the first's ends and detours to 64."""
+    """Both links want column 48 alone, so two nets want one column: 2 tracks (R391); the second then detours to 72."""
     pins = {"a1": (40, 24, "E"), "a2": (40, 16, "E"), "b1": (56, 56, "W"), "b2": (56, 72, "W")}
     env = link_env(pins, {"n1": ("a1", "b1"), "n2": ("a2", "b2")})
-    env = replace(env, gaps=(Gap("g", 1, "L", "R", 36, 68, 1),), bands=((0, 120),))
+    env = replace(env, gaps=(Gap("g", 1, "L", "R", 36, 76, 1),), bands=((0, 120),))
     page = route_page(env)[0]
-    assert page.demand[0].tracks == 1
-    assert demand(page.wires, env.gaps)[0].tracks == 2
+    assert page.demand[0].tracks == 2
+    assert demand(page.wires, env.gaps)[0].tracks == 2  # the detour to 72 keeps two columns
 
 
-def test_a_rise_that_finds_no_path_is_a_finding_and_draws_no_wire() -> None:
+def test_a_rise_that_finds_no_path_is_lost_and_draws_no_wire() -> None:
     env, trunk = _rise_env()
-    env = replace(env, obstacles=(Box(24, 56, 32, 32),))
+    env = replace(env, obstacles=(Keep("", Box(24, 56, 32, 32), "marker", "M"),))
     drawn = trunk_wires(env, trunk)
     assert rise_wire(env, _grid(env, drawn.wires), drawn.rises[0]) is None
     page, nets, findings = route_page(env)
-    lost = [f for f in findings if f.code == "ROUTE_FAILED" and "p" in f.text]
-    assert len(lost) == 1
-    assert [r.net for r in nets].count("n") == 1
+    assert findings == ()
+    assert nets == (Refused("n", (PinRef("p", "p"),)),)
     assert not any(w.net == "n" and w.kind == drawn.rises[0].drawn_as for w in page.wires)
 
 
@@ -238,3 +154,38 @@ def test_a_row_wrapped_fan_with_a_trunk_is_not_also_a_routed_link() -> None:
     assert any(w.kind == "routed" for w in route_page(env)[0].wires)
     trunked = replace(env, trunks=(Trunk("f:x", 1, 72, 40, 104, 1, 0, ((40, 104),)),))
     assert not any(w.kind == "routed" for w in route_page(trunked)[0].wires)
+
+
+def _own_coil(box: Box):
+    """The rise env with f out of the way and p's own body and footprint set to `box`."""
+    env, trunk = _rise_env()
+    p = env.placed["p"]
+    placed = {"p": replace(p, body=box, footprint=box), "f": replace(env.placed["f"])}
+    far = Box(200, 200, 8, 8)
+    placed["f"] = replace(placed["f"], body=far, footprint=far)
+    return replace(env, placed=placed), trunk
+
+
+def test_a_drop_crossing_its_own_coil_to_a_far_pin_is_a_rise() -> None:
+    """R534: the own exemption is the pin point; a drop through the coil it leaves is a hit."""
+    env, trunk = _own_coil(Box(32, 8, 16, 40))
+    assert len(trunk_wires(env, trunk).rises) == 1
+
+
+def test_a_drop_ending_on_its_own_pin_at_the_body_edge_is_straight() -> None:
+    """R534: a drop leaving its pin on the body edge touches the body in that point only."""
+    env, trunk = _own_coil(Box(32, 8, 16, 8))
+    drawn = trunk_wires(env, trunk)
+    assert drawn.rises == ()
+    assert [w.points for w in drawn.wires if w.kind != "trunk"] == [((40, 16), (40, 72))]
+
+
+def test_a_standing_label_closes_its_interior_to_the_router_and_its_sides_stay_open() -> None:
+    """T2: the router's grid holds each label as a keep; touching a label's side is clear, as it is for the label."""
+    env, _ = _rise_env()
+    box = Box(64, 40, 24, 16)
+    inner = Box(box.x + STEP, box.y + STEP, STEP, STEP)
+    assert _grid(env, ()).free(inner)
+    grid = _grid(env, (), (Keep("", box, "text", "S1:text"),))
+    assert not grid.free(inner)
+    assert grid.free(Box(box.x - STEP, box.y, STEP, STEP))

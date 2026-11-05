@@ -16,11 +16,10 @@ class _Feed(NamedTuple):
 
 @fr.unit("label-feed", revision=1, interface_version=1, date="2026-01-01", text="first", by="AB")
 def _feed(d: fr.Design) -> _Feed:
-    g1 = d.device("G1", "DEMO-PSU-24")
-    dc = d.dc_supply("24VDC", g1.output)
     x1 = d.terminal_strip("X1", "DEMO-TB-2.5", 2, interface=True)
+    h1 = d.device("H1", "DEMO-LAMP-24")
     with d.function("FEED", "Unit's own feed"):
-        d.series(dc.plus, x1[1], dc.minus, wire=(BU, 0.75))
+        d.series(x1[1], h1, x1[2], wire=(BU, 0.75))
     return _Feed(x1)
 
 
@@ -30,7 +29,8 @@ def _model():
     g2 = d.device("G2", "DEMO-PSU-24")
     dc = d.dc_supply("24VDC2", g2.output)
     with d.function("FEED", "The design's feed"):
-        d.series(dc.plus, io.X1[2], dc.minus, wire=(BU, 0.75))
+        d.series(dc.plus, io.X1[1], wire=(BU, 0.75))
+        d.series(io.X1[2], dc.minus, wire=(BU, 0.75))
     return fr.build(d).model
 
 

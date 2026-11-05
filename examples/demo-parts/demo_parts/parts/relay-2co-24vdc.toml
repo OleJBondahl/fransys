@@ -1,4 +1,4 @@
-schema = 1
+schema = 2
 
 [part]
 mpn = "DEMO-RLY-2CO-24"
@@ -7,6 +7,10 @@ description = "Relay, 2 changeover contacts, 24 V DC coil"
 category = "electromechanical"
 class_code = "K"
 
+[footprint]
+library = "Demo_Relay"
+name = "Relay_2CO_PCB"
+
 [[function]]
 name = "coil"
 kind = "coil"
@@ -14,9 +18,9 @@ symbol = "operating-device"
 ports = [{ name = "A1", role = "generic", symbol_port = "in" }, { name = "A2", role = "generic", symbol_port = "out" }]
 
 [function.operating]
-nominal_voltage_v = "24"
-resistance_ohm = "1600"
-nominal_current_a = "0.015"
+voltage = [{ nom = "24 V" }]
+resistance = "1600 ohm"
+nominal_current = "0.015 A"
 
 [[function]]
 name = "co_1"

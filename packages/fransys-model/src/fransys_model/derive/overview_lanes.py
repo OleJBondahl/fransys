@@ -6,8 +6,9 @@ with no group have no group lane. Stub boxes are not here: they take their host'
 
 from typing import Any
 
+from fransys_model.elecdef import Current
 from fransys_model.layout import BoxKey
-from fransys_model.vocab.enums import Current, ItemKind
+from fransys_model.vocab.enums import ItemKind
 from fransys_model.vocab.tables import conductors
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.aspects import AspectNode
@@ -33,19 +34,12 @@ def overview_lane_nodes(model: Model, unit: Id[Unit]) -> dict[BoxKey, Id[AspectN
     """Each box of `unit`'s level: its function group node, `None` for a strip or no group."""
     level = overview_level(model, unit)
     group: dict[Id[Any], Id[AspectNode] | None] = box_groups(model, unit, level.boxes)
-    return {
-        BoxKey(ref=ref_of(b.box)): None if b.kind is ItemKind.STRIP else group[b.box]
-        for b in level.boxes
-    }
+    return {BoxKey(ref=ref_of(b.box)): None if b.kind is ItemKind.STRIP else group[b.box] for b in level.boxes}
 
 
 def overview_lane_strips(model: Model, unit: Id[Unit]) -> frozenset[BoxKey]:
     """The boxes of `unit`'s level that are terminal strips, which stand in the shared lane."""
-    return frozenset(
-        BoxKey(ref=ref_of(b.box))
-        for b in overview_level(model, unit).boxes
-        if b.kind is ItemKind.STRIP
-    )
+    return frozenset(BoxKey(ref=ref_of(b.box)) for b in overview_level(model, unit).boxes if b.kind is ItemKind.STRIP)
 
 
 def overview_power_lines(model: Model, unit: Id[Unit]) -> frozenset[tuple[BoxKey, BoxKey]]:
@@ -54,11 +48,7 @@ def overview_power_lines(model: Model, unit: Id[Unit]) -> frozenset[tuple[BoxKey
     return frozenset(
         (BoxKey(ref=ref_of(ln.ref.a)), BoxKey(ref=ref_of(ln.ref.b)))
         for ln in overview_level(model, unit).lines
-        if any(
-            port_potential_current(model, port) is Current.AC
-            for c in ln.conductors
-            for port in (records[c].a, records[c].b)
-        )
+        if any(port_potential_current(model, port) is Current.AC for c in ln.conductors for port in (records[c].a, records[c].b))
     )
 
 

@@ -6,7 +6,7 @@ The one place a level's boxes and lines meet their stubs and tabs; layout draws 
 from dataclasses import replace
 from typing import TYPE_CHECKING, Any
 
-from fransys_model.derive.house_settings import stub_text_of
+from fransys_model.derive.facts.house_settings import stub_text_of
 from fransys_model.kernel import Id
 from fransys_model.layout import BoxKey, OverviewRef, OverviewRefKind
 lazy from fransys_model.kernel import Model
@@ -52,15 +52,11 @@ def _member(model: Model, unit: Id[Unit], stub: OverviewStub) -> ViewMember:
     return ViewMember(
         ref=stub.end,
         lines=(lines := overview_stub_lines(stub)),
-        text=overview_member_text(
-            stub_text_of(model), lines, overview_stub_text(model, unit, stub)
-        ),
+        text=overview_member_text(stub_text_of(model), lines, overview_stub_text(model, unit, stub)),
     )
 
 
-def stub_rows(
-    model: Model, unit: Id[Unit], placed: Sequence[tuple[OverviewRef, OverviewStub | FoldStub]]
-) -> Rows:
+def stub_rows(model: Model, unit: Id[Unit], placed: Sequence[tuple[OverviewRef, OverviewStub | FoldStub]]) -> Rows:
     """The stub boxes and lines of `placed`: one box per far end, from `stub_ends`."""
     merged_boxes, merged_lines = stub_ends(model, unit, placed)
     boxes = tuple(
@@ -100,9 +96,7 @@ def shared_rows(
     on = {(part_at, part.end): at for (at, _), (part_at, part) in zip(hung, wired, strict=True)}
     boxes, _ = stub_rows(model, unit, hung)
     _, lines = stub_rows(model, unit, wired)
-    return boxes, tuple(
-        replace(ln, b=BoxKey(ref=ln.b.ref, at=on[ln.a.ref, ln.b.ref])) for ln in lines
-    )
+    return boxes, tuple(replace(ln, b=BoxKey(ref=ln.b.ref, at=on[ln.a.ref, ln.b.ref])) for ln in lines)
 
 
 def _line(line: OverviewLine) -> ViewLine:
@@ -119,9 +113,7 @@ def _line(line: OverviewLine) -> ViewLine:
 
 def level_rows(model: Model, level: OverviewLevel) -> Rows:
     """The level's boxes then its stub boxes, its lines then its stub lines, in rows order."""
-    boxes = tuple(
-        ViewBox(key=BoxKey(ref=ref_of(b.box)), lines=b.lines, dashed=b.dashed) for b in level.boxes
-    )
+    boxes = tuple(ViewBox(key=BoxKey(ref=ref_of(b.box)), lines=b.lines, dashed=b.dashed) for b in level.boxes)
     lines = tuple(_line(line) for line in level.lines)
     if level.unit is None:
         return boxes, lines
@@ -139,9 +131,7 @@ def _hung(
     return [(owner[stub.end], stub) for _, stub in placed]
 
 
-def strip_rows(
-    model: Model, unit: Id[Unit], plain: Rows, view: StripView, stubs: tuple[TerminalStubs, ...]
-) -> Rows:
+def strip_rows(model: Model, unit: Id[Unit], plain: Rows, view: StripView, stubs: tuple[TerminalStubs, ...]) -> Rows:
     """The level's `plain` rows with `view.strip` opened: its terminals stand in its place.
 
     The strip's box, its stub boxes and every line to them give way to the terminals' own lines.
@@ -150,10 +140,7 @@ def strip_rows(
     boxes, lines = plain
     gone = {BoxKey(ref=OverviewRef(kind=OverviewRefKind.ITEM, item=view.strip))}
     gone |= {b.key for b in boxes if b.key.at is not None and BoxKey(ref=b.key.at) in gone}
-    terminals = tuple(
-        ViewBox(key=BoxKey(ref=ref_of(t.item)), lines=(t.label,), dashed=False)
-        for t in view.terminals
-    )
+    terminals = tuple(ViewBox(key=BoxKey(ref=ref_of(t.item)), lines=(t.label,), dashed=False) for t in view.terminals)
     kept = tuple(ln for ln in lines if not {ln.a, ln.b} & gone)
     extra = tuple(_line(line) for t in view.terminals for line in t.lines)
     placed = [(ref_of(t.terminal), s) for t in stubs for s in t.stubs]

@@ -3,29 +3,19 @@
 import dataclasses
 from typing import TYPE_CHECKING, Any
 
+from fransys_model.elecdef import LinkKind, PinRole, Side
 from fransys_model.kernel import AuthoringKey, Id, SchemaError, Value, record
 
-from .enums import (
-    ConductorMark,
-    Energy,
-    FunctionKind,
-    LinkKind,
-    LinkRest,
-    OperatedBy,
-    PartCategory,
-    PoleSide,
-    PortRole,
-    ProtectionType,
-)
+from .enums import ConductorMark, Energy, FunctionKind, OperatedBy, PartCategory, PortBoundary, ProtectionType
 from .wiring_rows import WiringRow
 
 if TYPE_CHECKING:
-    from .connectivity import Conductor, Mate, Net
+    from .connectivity import Conductor, Mate, Net, RailGroup
 
 _POWER_KINDS = frozenset({FunctionKind.SUPPLY, FunctionKind.LOAD})
 
 
-def _holder(found: Net | Conductor | Mate | InternalLink | FunctionTemplate) -> Id[Any] | None:
+def _holder(found: Net | Conductor | Mate | RailGroup | InternalLink | FunctionTemplate) -> Id[Any] | None:
     """The id of the record that refuses, for its error; `None` if it is not even an `Id`."""
     return found.id if type(found.id) is Id else None
 
@@ -125,11 +115,11 @@ class PortTemplate:
     (design/examples.md 11). Guarded by `part_conformance`. `marking` is the part's
     own pin marking
     (decision model-0053; F2): `None` means "print the port's name", `""` means "print
-    nothing", any other string is printed as given. `pole_side` and `conductor_mark` are the
+    nothing", any other string is printed as given. `side` (elecdef `Side.A`: line, `Side.B`: load) and `conductor_mark` are the
     pin's facts (decision model-0126; F9): which side of a switching device it is on, and its
     IEC 60445 conductor designation. `source_row` (model-0260) is the wiring row a pin sources,
     for a drive's output or a PSU's secondary; its `Port` carries a copy. `None` means not
-    stated. PE stays `role = PE`.
+    stated. `pin_role` is the pin's elecdef role (PE, COMMON, BREAK, MAKE ...), `None` if not stated.
     `joins` (decision parts-0017; HA4) is a header pin's function port, on the same part: the two
     are one pin with no conductor between, and net closure joins them.
     """
@@ -138,9 +128,10 @@ class PortTemplate:
     key: AuthoringKey
     function: Id[FunctionTemplate]
     name: str
-    role: PortRole
+    boundary: PortBoundary
     marking: str | None = None
-    pole_side: PoleSide | None = None
+    pin_role: PinRole | None = None
+    side: Side | None = None
     conductor_mark: ConductorMark | None = None
     source_row: WiringRow | None = dataclasses.field(default=None, metadata={"omit_none": True})
     joins: Id[PortTemplate] | None = None
@@ -161,12 +152,12 @@ class InternalLink:
     a: Id[PortTemplate]
     b: Id[PortTemplate]
     kind: LinkKind
-    rest: LinkRest | None = None
+    closed_at_rest: bool | None = None
     ext: frozendict[str, Value] = frozendict()
 
     def __post_init__(self) -> None:
         """Store the ends in id order; refuse one end twice or a `rest` on a link not switched."""
         _order_ends(self, "internal_link", "an internal link joins two different port templates")
-        if self.rest is not None and self.kind is not LinkKind.SWITCHED:
+        if self.closed_at_rest is not None and self.kind is not LinkKind.SWITCHED:
             msg = "only a switched internal link has a rest state"
             raise SchemaError(msg, kind="internal_link", record_id=_holder(self))

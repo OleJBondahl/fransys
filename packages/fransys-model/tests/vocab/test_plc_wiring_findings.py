@@ -6,8 +6,9 @@ from plant import Plant
 from query_builders import make_channels
 
 from fransys_model.checks.plc import check_plc_wiring
+from fransys_model.elecdef import LinkKind
 from fransys_model.kernel import Id, make_id, natural_join
-from fransys_model.vocab.enums import LinkKind, SignalType
+from fransys_model.vocab.enums import SignalType
 from fransys_model.vocab.facets.plc import PlcBindingFacet, PlcRequestFacet
 from fransys_model.vocab.finding_ref import ref
 
@@ -76,8 +77,5 @@ def test_several_wired_devices_are_sorted_and_joined_with_a_comma() -> None:
     plant.wire(bound_pin, pin_z, key="w-z")
     plant.wire(bound_pin, pin_y, key="w-y")
     (finding,) = check_plc_wiring(plant.model())
-    assert finding.message == (
-        f"channel {ref(bound)} is wired to {natural_join([ref(fn_y), ref(fn_z)])} "
-        f"but bound to request {ref(request)}"
-    )
+    assert finding.message == (f"channel {ref(bound)} is wired to {natural_join([ref(fn_y), ref(fn_z)])} but bound to request {ref(request)}")
     assert "/" not in finding.message

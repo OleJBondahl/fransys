@@ -511,6 +511,53 @@ fact boxpin =PLC-U1-A1.box.CH06- =PLC-U1-A1.box.CH13- =PLC-U1-A1.box.CH02- =PLC-
 fact attached =R4-U1-K4.coil =R5-U1-K5.coil =R7-U1-K7.coil =R3-U1-K3.coil =R6-U1-K6.coil =R9-U1-K9.coil =R13-U1-K13.coil =R16-U1-K16.coil =R12-U1-K12.coil =R2-U1-K2.coil =R14-U1-K14.coil =R1-U1-K1.coil =R15-U1-K15.coil =R8-U1-K8.coil =R11-U1-K11.coil =R10-U1-K10.coil
 fact strip -U1-X1 =R1-U1-X1:1.terminal =R3-U1-X1:3.terminal -U1-X1:5.terminal =R4-U1-X1:4.terminal =R2-U1-X1:2.terminal -U1-X1:7.terminal -U1-X1:6.terminal -U1-X1:8.terminal
 fact strip -U1-X2 =R1-U1-X2:7.terminal =R4-U1-X2:4.terminal =R3-U1-X2:3.terminal =R1-U1-X2:1.terminal =R6-U1-X2:6.terminal =R5-U1-X2:5.terminal =R2-U1-X2:2.terminal =R2-U1-X2:2.terminal@1 =R2-U1-X2:2.terminal@2 =R1-U1-X2:1.terminal@1 =R1-U1-X2:7.terminal@1 =R1-U1-X2:7.terminal@2 =R1-U1-X2:7.terminal@3 =R4-U1-X2:4.terminal@1 =R1-U1-X2:1.terminal@2 =R2-U1-X2:2.terminal@3 =R1-U1-X2:7.terminal@4 =R4-U1-X2:4.terminal@2 =R1-U1-X2:7.terminal@5 =R1-U1-X2:7.terminal@6 =R1-U1-X2:1.terminal@3 =R6-U1-X2:6.terminal@1 =R1-U1-X2:7.terminal@7 =R1-U1-X2:7.terminal@8 =R1-U1-X2:7.terminal@9 =R1-U1-X2:7.terminal@10 =R1-U1-X2:7.terminal@11 =R1-U1-X2:7.terminal@12 =R6-U1-X2:6.terminal@2 =R1-U1-X2:7.terminal@13 =R5-U1-X2:5.terminal@1 =R1-U1-X2:7.terminal@14 =R1-U1-X2:7.terminal@15 =R3-U1-X2:3.terminal@1 =R3-U1-X2:3.terminal@2 =R4-U1-X2:4.terminal@3 =R5-U1-X2:5.terminal@2 =R1-U1-X2:7.terminal@16 =R3-U1-X2:3.terminal@3
+fact joined =R5-U1-X2:5.terminal.n =R5-U1-X2:5.terminal.s
+fact joined =R5-U1-X2:5.terminal@1.n =R5-U1-X2:5.terminal@1.s
+fact joined =R5-U1-X2:5.terminal@2.n =R5-U1-X2:5.terminal@2.s
+fact joined =R1-U1-X2:7.terminal.n =R1-U1-X2:7.terminal.s
+fact joined =R1-U1-X2:7.terminal@1.n =R1-U1-X2:7.terminal@1.s
+fact joined =R1-U1-X2:7.terminal@10.n =R1-U1-X2:7.terminal@10.s
+fact joined =R1-U1-X2:7.terminal@11.n =R1-U1-X2:7.terminal@11.s
+fact joined =R1-U1-X2:7.terminal@12.n =R1-U1-X2:7.terminal@12.s
+fact joined =R1-U1-X2:7.terminal@13.n =R1-U1-X2:7.terminal@13.s
+fact joined =R1-U1-X2:7.terminal@14.n =R1-U1-X2:7.terminal@14.s
+fact joined =R1-U1-X2:7.terminal@15.n =R1-U1-X2:7.terminal@15.s
+fact joined =R1-U1-X2:7.terminal@16.n =R1-U1-X2:7.terminal@16.s
+fact joined =R1-U1-X2:7.terminal@2.n =R1-U1-X2:7.terminal@2.s
+fact joined =R1-U1-X2:7.terminal@3.n =R1-U1-X2:7.terminal@3.s
+fact joined =R1-U1-X2:7.terminal@4.n =R1-U1-X2:7.terminal@4.s
+fact joined =R1-U1-X2:7.terminal@5.n =R1-U1-X2:7.terminal@5.s
+fact joined =R1-U1-X2:7.terminal@6.n =R1-U1-X2:7.terminal@6.s
+fact joined =R1-U1-X2:7.terminal@7.n =R1-U1-X2:7.terminal@7.s
+fact joined =R1-U1-X2:7.terminal@8.n =R1-U1-X2:7.terminal@8.s
+fact joined =R1-U1-X2:7.terminal@9.n =R1-U1-X2:7.terminal@9.s
+fact joined =R2-U1-X1:2.terminal.n =R2-U1-X1:2.terminal.s
+fact joined =R3-U1-X2:3.terminal.n =R3-U1-X2:3.terminal.s
+fact joined =R3-U1-X2:3.terminal@1.n =R3-U1-X2:3.terminal@1.s
+fact joined =R3-U1-X2:3.terminal@2.n =R3-U1-X2:3.terminal@2.s
+fact joined =R3-U1-X2:3.terminal@3.n =R3-U1-X2:3.terminal@3.s
+fact joined =R1-U1-X2:1.terminal.n =R1-U1-X2:1.terminal.s
+fact joined =R1-U1-X2:1.terminal@1.n =R1-U1-X2:1.terminal@1.s
+fact joined =R1-U1-X2:1.terminal@2.n =R1-U1-X2:1.terminal@2.s
+fact joined =R1-U1-X2:1.terminal@3.n =R1-U1-X2:1.terminal@3.s
+fact joined =R4-U1-X2:4.terminal.n =R4-U1-X2:4.terminal.s
+fact joined =R4-U1-X2:4.terminal@1.n =R4-U1-X2:4.terminal@1.s
+fact joined =R4-U1-X2:4.terminal@2.n =R4-U1-X2:4.terminal@2.s
+fact joined =R4-U1-X2:4.terminal@3.n =R4-U1-X2:4.terminal@3.s
+fact joined =R2-U1-X2:2.terminal.n =R2-U1-X2:2.terminal.s
+fact joined =R2-U1-X2:2.terminal@1.n =R2-U1-X2:2.terminal@1.s
+fact joined =R2-U1-X2:2.terminal@2.n =R2-U1-X2:2.terminal@2.s
+fact joined =R2-U1-X2:2.terminal@3.n =R2-U1-X2:2.terminal@3.s
+fact joined -U1-X1:5.terminal.n -U1-X1:5.terminal.s
+fact joined =R3-U1-X1:3.terminal.n =R3-U1-X1:3.terminal.s
+fact joined =R4-U1-X1:4.terminal.n =R4-U1-X1:4.terminal.s
+fact joined =R6-U1-X2:6.terminal.n =R6-U1-X2:6.terminal.s
+fact joined =R6-U1-X2:6.terminal@1.n =R6-U1-X2:6.terminal@1.s
+fact joined =R6-U1-X2:6.terminal@2.n =R6-U1-X2:6.terminal@2.s
+fact joined =R1-U1-X1:1.terminal.n =R1-U1-X1:1.terminal.s
+fact joined -U1-X1:7.terminal.n -U1-X1:7.terminal.s
+fact joined -U1-X1:6.terminal.n -U1-X1:6.terminal.s
+fact joined -U1-X1:8.terminal.n -U1-X1:8.terminal.s
 # legend only: a general placer must not read a symbol's kind.
 kind =R16-U1-K16.co_1 contact_co
 kind =R1-U1-X1:1.terminal terminal

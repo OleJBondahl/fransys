@@ -2,7 +2,6 @@
 
 One invented plant, frozen once for the module: a cabinet with a panel, the panel with a rail,
 a pump under the cabinet with no unit, and a bare item with nothing under it. The cabinet
-function has two ports, the rail function one, the pump function none. One location node.
 """
 
 import pytest

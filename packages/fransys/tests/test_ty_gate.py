@@ -2,7 +2,6 @@
 
 One ty run for the whole module (a module fixture). The guide pages are cut into one file per
 page, as `tests/test_guide_examples.py` runs them, and the generated `demo_typed` stub sits beside
-them. No network is needed.
 """
 
 import re
@@ -41,8 +40,8 @@ def cab_unit(revision: int) -> fr.UnitDef[Cab]:
 def wire(
     d: fr.Design, k: fr.Device, cab: fr.Device, ac: fr.AcSupply, dc: fr.DcSupply, w: fr.Cable
 ) -> str | None:
-    d.detail.wire(k.coil["A2"], cab.main["2"], wire=("BK", 2.5))
-    d.detail.wire(k.coil.A1, k["0V"], wire=("BK", 2.5))
+    d.series(k.coil["A2"], cab.main["2"], wire=("BK", 2.5))
+    d.series(k.coil.A1, k["0V"], wire=("BK", 2.5))
     d.series(ac.L1, k.co.no, k.co.nc, dc.plus, wire=("BK", 2.5))
     rail: fr.SupplyRail = dc.minus
     pin: fr.Pin = k.coil["A2"]
@@ -65,9 +64,7 @@ def wire(d: fr.Design, ac: fr.AcSupply, dc: fr.DcSupply) -> None:
 
 def _guide_pages(folder: Path) -> None:
     for page in files("fransys").joinpath("guide").iterdir():
-        blocks = (
-            FENCE.findall(page.read_text(encoding="utf-8")) if page.name.endswith(".md") else []
-        )
+        blocks = FENCE.findall(page.read_text(encoding="utf-8")) if page.name.endswith(".md") else []
         if blocks:
             stem = page.name[:-3].replace("-", "_").replace(".", "_")
             (folder / f"guide_{stem}.py").write_text("\n".join(blocks), encoding="utf-8")
@@ -155,3 +152,20 @@ def test_the_gate_sees_a_finding_when_there_is_one(tmp_path) -> None:
         check=False,
     )
     assert run.returncode == 1, run.stdout + run.stderr
+
+
+def test_the_ty_gate_adds_the_internal_search_paths_only_when_the_full_repo_lists_them(tmp_path: Path) -> None:
+    """R1348: the export has no `internal/search-paths.txt` and passes no extra path; the full repo passes each line."""
+    import ty_check
+
+    assert "--extra-search-path" not in ty_check.command(tmp_path)
+    (tmp_path / "internal").mkdir()
+    (tmp_path / "internal" / "search-paths.txt").write_text("one\ntwo/three\n", encoding="utf-8")
+    argv = ty_check.command(tmp_path)
+    assert argv[argv.index("--extra-search-path") :] == ["--extra-search-path", "one", "--extra-search-path", "two/three"]
+
+
+def test_the_full_repo_lists_its_search_paths_wherever_it_has_its_recipes() -> None:
+    """R1348: a checkout with the internal recipe file has the search-paths list; the export has neither."""
+    internal = ROOT / "internal"
+    assert (internal / "internal.just").is_file() <= (internal / "search-paths.txt").is_file()

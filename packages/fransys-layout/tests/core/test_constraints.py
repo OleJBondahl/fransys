@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import Any
+
+import pytest
 
 from fransys_layout.core import constraints
 from fransys_layout.core.constraints import Graph
-
-if TYPE_CHECKING:
-    import pytest
 
 
 def test_longest_path() -> None:
@@ -38,19 +37,12 @@ def test_no_edges_puts_every_node_at_zero() -> None:
     assert g.solve() == {"@origin": 0, "p": 0, "q": 0}
 
 
-def test_a_zero_weight_cycle_has_no_solution() -> None:
-    """after(a, b, 0) and after(b, a, 0) form a cycle, and a zero-weight cycle is refused too."""
+@pytest.mark.parametrize("weight", [0, 8])
+def test_a_cycle_has_no_solution_even_at_zero_weight(weight: int) -> None:
+    """after(a, b, w) and after(b, a, w) form a cycle, and a zero-weight cycle is refused too."""
     g = Graph()
-    g.after("a", "b", 0)
-    g.after("b", "a", 0)
-    assert g.solve() is None
-
-
-def test_a_cycle_has_no_solution() -> None:
-    """A positive cycle a -> b -> a has no answer."""
-    g = Graph()
-    g.after("a", "b", 8)
-    g.after("b", "a", 8)
+    g.after("a", "b", weight)
+    g.after("b", "a", weight)
     assert g.solve() is None
 
 
@@ -61,7 +53,7 @@ def test_a_solve_of_3000_chained_nodes_pops_the_heap_once_per_node(
     pops = 0
     real_pop = constraints.heapq.heappop
 
-    def counting_pop(heap: list[tuple[tuple, str]]) -> tuple[tuple, str]:
+    def counting_pop(heap: list[tuple[tuple[Any, ...], str]]) -> tuple[tuple[Any, ...], str]:
         nonlocal pops
         pops += 1
         return real_pop(heap)
@@ -93,3 +85,14 @@ def test_solve_accepts_an_after_edge_inside_a_class_that_the_offsets_satisfy() -
     y = g.solve()
     assert y is not None
     assert y["b"] - y["a"] == 10
+
+
+@pytest.mark.rule("ROW-ON-GRID")
+def test_after_keeps_its_distance_as_given_for_the_layer_to_have_made_it_whole() -> None:
+    """R1693: the graph rounds nothing; after 13 and -3 solve to 0, 13, 10."""
+    g = Graph()
+    g.after("a", "b", 13)
+    g.after("b", "c", -3)
+    y = g.solve()
+    assert y is not None
+    assert (y["a"], y["b"], y["c"]) == (0, 13, 10)

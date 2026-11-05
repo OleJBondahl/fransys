@@ -1,5 +1,7 @@
 """Model diff report: a `ListingDiff` as CSV or Markdown."""
 
+from typing import TYPE_CHECKING
+
 from fransys_model.derive import natural_key, revision_text
 from fransys_model.derive.baseline import (
     CHANGE_COLUMNS,
@@ -14,8 +16,11 @@ from fransys_model.derive.baseline import (
 
 from .csv import _csv
 
+if TYPE_CHECKING:
+    from fransys_model.kernel import Model
 
-def changes_csv(diff: ListingDiff) -> str:
+
+def changes_csv(diff: ListingDiff, *, model: Model) -> str:
     """Write a listing diff's change list as CSV.
 
     Formats ``fransys_model.derive.baseline.diff``'s own `changes`, one row per `Change`,
@@ -24,11 +29,12 @@ def changes_csv(diff: ListingDiff) -> str:
 
     Args:
         diff: A `ListingDiff` from `fransys_model.derive.baseline.diff`.
+        model: The built model; its `[export]` record gives the delimiter, quoting and newline.
 
     Returns:
-        The CSV text. Same `diff`, same bytes.
+        The CSV text. Same `diff` and `model`, same bytes.
     """
-    return _csv(diff.changes, CHANGE_COLUMNS)
+    return _csv(model, diff.changes, CHANGE_COLUMNS)
 
 
 def _bullets(section: str, rows: tuple[Change, ...]) -> list[str]:

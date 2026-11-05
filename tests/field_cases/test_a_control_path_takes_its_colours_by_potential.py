@@ -1,14 +1,8 @@
-"""Field case: a control path from the 24 V rail to 0 V, colours by what each wire carries.
+"""Field case: a control path from a 24 V rail to 0 V takes its wire colours by the potential each wire carries.
+The bug: one wire= colours every hop of a d.series, so the colour cannot change by hop and the author wrote about 40 single d.wire calls.
+Fixed by author-0039 (SERIES-GAPS S1, S2), a series takes its wire colour per hop."""
 
-A rail feeds a bridged feed-rail run, two contacts in series, a coil and a return terminal
-strip to 0 V. The house rule is red at the supply potential, black at 0 V, white otherwise.
-A second path runs rail, fuse, contact, coil, 0 V: the fuse ends the supply potential.
-
-The bug: one `wire=` colours every hop of a `d.series`, so the colour cannot change by hop and
-the author wrote about 40 single `d.wire` calls instead.
-
-Fixing decision: author-0039 (SERIES-GAPS S1, S2).
-"""
+from typing import Any
 
 import fransys as fr
 from fransys.colours import BK, RD, WH
@@ -25,11 +19,11 @@ def _house_design():
     )
 
 
-def _rows(d) -> list:
+def _rows(d) -> list[Any]:
     return list(fr.derive.wire_rows(fr.build(d).model))
 
 
-def _check(rows: list, a: str, b: str, colour) -> None:
+def _check(rows: list[Any], a: str, b: str, colour) -> None:
     found = [r for r in rows if {r.from_, r.to} == {a, b}]
     assert len(found) == 1, f"{a} to {b}: {[(r.from_, r.to) for r in rows]}"
     assert (found[0].colour, found[0].cross_section_mm2) == (colour, 0.75), f"{a} to {b}"
@@ -38,7 +32,7 @@ def _check(rows: list, a: str, b: str, colour) -> None:
 def test_a_path_through_a_run_two_contacts_and_a_coil_changes_colour_by_potential() -> None:
     d = _house_design()
     dc = d.dc_supply("24VDC", d.device("G1", "DEMO-PSU-24"))
-    run = d.terminal_strip("X1", "DEMO-TB-2.5").run("24V", 2, bridged=True)
+    run = d.terminal_strip("X1", "DEMO-TB-2.5").run("24V", 2, bridged=True, rail=True)
     x2 = d.terminal_strip("X2", "DEMO-TB-2.5")
     s1, s2 = d.device("S1", "DEMO-CTR-BLOCK-1NO1NC"), d.device("S2", "DEMO-CTR-BLOCK-1NO1NC")
     k1 = d.device("K1", "DEMO-RLY-2CO-24")

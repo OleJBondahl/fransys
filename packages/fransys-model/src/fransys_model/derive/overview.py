@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 
 from fransys_model.derive.facts.units import unit_items
 from fransys_model.kernel import DIGEST_CACHE_SIZE, Model, digest_cached
-from fransys_model.vocab.tables import conductors, functions, items, mates, parts
+from fransys_model.vocab.tables import conductors, functions, items, mates, parts, ports
 
 from .designation import printed_designation
 from .designation_label import designation_holder, own_designation_or_none
@@ -17,7 +17,6 @@ from .lookups import (
     item_of_port,
     location_label,
     pin_order,
-    printed_port_name,
     terminal_items,
 )
 from .memo import Memo
@@ -37,6 +36,9 @@ if TYPE_CHECKING:
     from fransys_model.vocab.core import Item, Unit
 
     type _Group = tuple[Id[Item], Id[Item], OverviewLinkKind, Id[Item] | None]
+
+
+_SIGNAL_ITEMS = 2  # a signal spans two items
 
 
 def _designation(model: Model, item: Item, terminals: frozenset[Id[Item]]) -> str | None:
@@ -121,15 +123,10 @@ def _links(model: Model) -> tuple[OverviewLink, ...]:
             via=via,
             via_designation=None if via is None else _designation(model, all_items[via], terminals),
             count=len(found),
-            conductors=tuple(sorted(conductor.id for conductor in found)),
+            conductors=tuple(conductor.id for conductor in found),
         )
         for (a, b, kind, via), found in wires.items()
-    ] + [
-        OverviewLink(
-            a=a, b=b, kind=kind, via=None, via_designation=None, count=count, conductors=()
-        )
-        for (a, b, kind, _), count in joined.items()
-    ]
+    ] + [OverviewLink(a=a, b=b, kind=kind, via=None, via_designation=None, count=count, conductors=()) for (a, b, kind, _), count in joined.items()]
     return tuple(
         sorted(
             links,
@@ -153,13 +150,13 @@ def _signals(model: Model) -> tuple[OverviewSignal, ...]:
                 OverviewPort(
                     item=item_of_port(model, port),
                     port=port,
-                    marking=printed_port_name(model, port),
+                    marking=ports(model)[port].name,
                 )
                 for port in net.ports
             ),
             key=lambda one: (ends[one.item], pin_order(one.marking, one.port)),
         )
-        if len({one.item for one in found}) >= 2:  # noqa: PLR2004 -- a signal spans two items
+        if len({one.item for one in found}) >= _SIGNAL_ITEMS:
             signals.append(OverviewSignal(ports=tuple(found)))
     return tuple(
         sorted(

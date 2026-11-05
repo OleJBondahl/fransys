@@ -1,12 +1,11 @@
 """The text of an off stub and of a leaving line's stub (decision model-0032)."""
 
-from typing import cast
 lazy from collections.abc import Iterable, Sequence
 
 from fransys_model.derive.designation import (
     printed_designation,
 )
-from fransys_model.derive.house_settings import stub_text_of
+from fransys_model.derive.facts.house_settings import stub_text_of
 from fransys_model.derive.line_fact import draws_as_line
 from fransys_model.derive.location_text import stub_far_end
 from fransys_model.layout import (
@@ -18,13 +17,11 @@ from fransys_model.layout import (
     StubText,
     layout_of,
 )
-lazy from fransys_model.kernel import Id, Model
+lazy from fransys_model.kernel import Id, Model, ModelError
 lazy from fransys_model.vocab.core import Item, Port, Unit
 
 
-def off_stub_line(
-    form: StubText, cable: str, *, north: bool, far: str, ports: Iterable[str]
-) -> str:
+def off_stub_line(form: StubText, cable: str, *, north: bool, far: str, ports: Iterable[str]) -> str:
     """One off stub's text, `-W3 → +EXT-M1:U1 U2`: what layout measures and derive prints.
 
     `cable` is the carrier's `-designation` (empty for none), `far` the far device's product
@@ -38,9 +35,7 @@ def off_stub_line(
     return " ".join(part for part in (cable, arrow, joined) if part)
 
 
-def line_stub_line(
-    form: StubText, line: str, *, north: bool, far: Sequence[tuple[str, str]]
-) -> str:
+def line_stub_line(form: StubText, line: str, *, north: bool, far: Sequence[tuple[str, str]]) -> str:
     """A leaving line's single stub, `-W3 → +EXT-M1 p2:4A, +EXT-M2 p2:5C`: line, arrow, far devices.
 
     `far` is each far device with where it is drawn in the stub's drawing set, `position_text`'s
@@ -52,14 +47,7 @@ def line_stub_line(
     return off_stub_line(form, line, north=north, far=devices, ports=())
 
 
-def _stub_end_of(model: Model, marker: LinkMarker, unit: Id[Unit] | None) -> tuple[str, str]:
-    """`stub_far_end` of an off stub `marker`'s far port, printed in `unit`'s document."""
-    return stub_far_end(model, cast("Id[Port]", marker.far), marker.port, unit=unit)
-
-
-def _cable_and_head(
-    model: Model, unit: Id[Unit] | None, carrier: Id[Item] | None, far: Id[Port], port: Id[Port]
-) -> tuple[str, str, str]:
+def _cable_and_head(model: Model, unit: Id[Unit] | None, carrier: Id[Item] | None, far: Id[Port], port: Id[Port]) -> tuple[str, str, str]:
     """The printed carrier (`""` for none), the far device and the far port's tail in `unit`."""
     cable = "" if carrier is None else printed_designation(model, carrier, unit=unit)
     head, tail = stub_far_end(model, far, port, unit=unit)
@@ -87,33 +75,14 @@ def stub_text_at(
 
 
 def off_stub_text(model: Model, marker: LinkMarker) -> str:
-    """What an off stub says: `-W3 → +EXT-M1:U1 U2`, cable, arrow, far device and its ports.
+    """What an off stub says: one line for each conductor it ends, `-W3 → +EXT-M1:U1 U2`: cable, arrow, far device and its ports.
 
     A carrier that `draws_as_line` prints `-W14 → -M1`, no ports. Layout sizes the box from it,
-    render prints it; `←` faces `Side.N`, else `→`. Raises `ValueError` without `far`.
+    render prints it; `←` faces `Side.N`, else `→`. Raises `ModelError` without `far`.
     """
-    if marker.star is not StarKind.OFF or marker.far is None:
+    if marker.star is not StarKind.OFF or not marker.pairs:
         msg = "off_stub_text needs an off stub (star OFF) with a far port"
-        raise ValueError(msg)
+        raise ModelError(msg)
     unit = layout_of(model, DrawingSet)[layout_of(model, Page)[marker.page].drawing_set].unit
-    cable, head, _ = _cable_and_head(model, unit, marker.carrier, marker.far, marker.port)
-    form = stub_text_of(model)
-    if marker.carrier is not None and draws_as_line(model, marker.carrier):
-        return line_stub_line(form, cable, north=marker.facing is Side.N, far=[(head, "")])
-    run = [marker]
-    if marker.box_x is not None:
-        run = sorted(
-            (
-                other
-                for other in layout_of(model, LinkMarker).values()
-                if other.star is StarKind.OFF
-                and other.page == marker.page
-                and other.box_x == marker.box_x
-                and other.y == marker.y
-                and other.carrier == marker.carrier
-                and _stub_end_of(model, other, unit)[0] == head
-            ),
-            key=lambda other: (other.x, other.id),
-        )
-    tails = (_stub_end_of(model, other, unit)[1] for other in run)
-    return off_stub_line(form, cable, north=marker.facing is Side.N, far=head, ports=tails)
+    north = marker.facing is Side.N
+    return "\n".join(stub_text_at(model, unit, (pair.port, pair.far, pair.carrier), north=north) for pair in marker.pairs)

@@ -1,6 +1,6 @@
 """A function with nothing connected is drawn on no page (layout-0218, model-0226).
 
-Layout leaves it off and render's `LAYOUT_MISSING` does not count it: one fact for both.
+Layout leaves it off the page.
 """
 
 from collections import Counter
@@ -31,9 +31,7 @@ def _loose(model: Model) -> frozenset[Id[Function]]:
     on |= {f for mate in mates(model).values() if {mate.a, mate.b} & on for f in (mate.a, mate.b)}
     table = functions(model)
     live = {(table[f].item, table[f].kind) for f in on if f in table}
-    return frozenset(
-        f for f, record in table.items() if f not in on and (record.item, record.kind) not in live
-    )
+    return frozenset(f for f, record in table.items() if f not in on and (record.item, record.kind) not in live)
 
 
 def _connected_ports(model: Model) -> frozenset[Id[Any]]:
@@ -43,10 +41,6 @@ def _connected_ports(model: Model) -> frozenset[Id[Any]]:
     return frozenset(
         {
             *(port for port, found in indexes.conductors_by_port.items() if found),
-            *(
-                port
-                for port, nets in indexes.nets_by_port.items()
-                if any(size[net] > 1 for net in nets)
-            ),
+            *(port for port, nets in indexes.nets_by_port.items() if any(size[net] > 1 for net in nets)),
         }
     )

@@ -101,6 +101,18 @@ fact strip -X1 -X1:3.terminal -X1:2.terminal -X1:1.terminal
 fact strip -X9 -X9:3.terminal -X9:1.terminal -X9:2.terminal
 fact strip -X0 -X0:3.terminal -X0:1.terminal -X0:2.terminal
 fact strip -X8 -X8:1.terminal -X8:3.terminal -X8:2.terminal
+fact joined -X8:3.terminal.n -X8:3.terminal.s
+fact joined -X1:3.terminal.n -X1:3.terminal.s
+fact joined -X0:1.terminal.n -X0:1.terminal.s
+fact joined -X1:1.terminal.n -X1:1.terminal.s
+fact joined -X9:2.terminal.n -X9:2.terminal.s
+fact joined -X9:1.terminal.n -X9:1.terminal.s
+fact joined -X0:3.terminal.n -X0:3.terminal.s
+fact joined -X0:2.terminal.n -X0:2.terminal.s
+fact joined -X1:2.terminal.n -X1:2.terminal.s
+fact joined -X8:2.terminal.n -X8:2.terminal.s
+fact joined -X9:3.terminal.n -X9:3.terminal.s
+fact joined -X8:1.terminal.n -X8:1.terminal.s
 # legend only: a general placer must not read a symbol's kind.
 kind -Q2.main contact_no
 kind -X1:3.terminal terminal

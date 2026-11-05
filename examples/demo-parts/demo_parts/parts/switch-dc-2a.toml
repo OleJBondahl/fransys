@@ -1,4 +1,4 @@
-schema = 1
+schema = 2
 
 [part]
 mpn = "DEMO-SWITCH-DC-2A"
@@ -18,5 +18,5 @@ ports = [
 links = [{ a = "1", b = "2", kind = "switched" }]
 
 [function.rating]
-voltage_dc_v = "1000"
-current_dc_a = "2"
+voltage = [{ nom = "1000 V", at = ["DC"] }]
+current = [{ nom = "2 A", at = ["DC"] }]

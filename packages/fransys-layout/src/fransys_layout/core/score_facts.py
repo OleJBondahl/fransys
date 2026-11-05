@@ -1,6 +1,6 @@
 """The placement rules that read facts a scene carries: P1, P3 and P6 (design section 3.1).
 
-A fact is a flag on a box or pin (`ScenePin.box` and `.head`, `SceneBox.attached` and `.strip`).
+A fact is a flag on a box or pin (`ScenePin.box` and `.head`, `SceneBox.attached` and `.group`).
 The rules read the flags and never ask what a symbol is.
 """
 
@@ -36,9 +36,7 @@ def attached_off_pin(scene: Scene) -> list[str]:
 
 
 def _legs(scene: Scene, net: str, skip: tuple[str, str]) -> Counter[int]:
-    return Counter(
-        b.page for b in scene.boxes for p in b.pins if p.net == net and (b.sym, p.pin) != skip
-    )
+    return Counter(b.page for b in scene.boxes for p in b.pins if p.net == net and (b.sym, p.pin) != skip)
 
 
 def _fan_heads(scene: Scene) -> dict[tuple[str, str], tuple[str, set[int]]]:
@@ -85,9 +83,9 @@ def row_broken(scene: Scene) -> list[str]:
     tops = {page: [top for top, _ in bands] for page, bands in scene.bands}
     groups: dict[tuple[str, int, int, str], list[SceneBox]] = defaultdict(list)
     for b in scene.boxes:
-        end = _end(b, vertices) if b.strip is not None and _touching(b, vertices) else None
-        if end is not None and b.strip is not None:
-            groups[b.strip, b.page, _row(tops, b), end].append(b)
+        end = _end(b, vertices) if b.group is not None and _touching(b, vertices) else None
+        if end is not None and b.group is not None:
+            groups[b.group, b.page, _row(tops, b), end].append(b)
     out = []
     for members in groups.values():
         rows = Counter(b.body.y + b.body.h // 2 for b in members)

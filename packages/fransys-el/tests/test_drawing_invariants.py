@@ -3,7 +3,10 @@
 Each code has a clean drawing that raises nothing and a drawing with one planted defect.
 """
 
+from contextlib import nullcontext
 from dataclasses import replace
+from typing import Any
+from unittest.mock import patch
 
 import pytest
 from conventions_fixtures import house
@@ -16,23 +19,28 @@ from ring_cases import bank_model, box_kit
 from electrical_symbols import LIBRARY
 from fransys_layout.core import Box, Size
 from fransys_layout.drawing import Drawing, DrawnSymbol, DrawnText, DrawnWire
-from fransys_model.kernel import Id, Severity
+from fransys_model.kernel import Id, Severity, id_namespace
 
 PAGE = Id(kind="page", value="page-1")
+
+
+def _portless_part(drawing: Drawing):
+    """A page part of planted symbols ("k-a" is no library key): they have no ports. A real build never runs under this."""
+    with patch("fransys_el.drawn_netlist.port_points", return_value=()):
+        return _part(drawing, {}, LIBRARY)
 
 
 def _symbol(sid: str, box: Box) -> DrawnSymbol:
     return DrawnSymbol(sid, "k-" + sid, box.x, box.y, "R0", outline=box)
 
 
-def _drawing(*symbols: DrawnSymbol, texts: tuple[DrawnText, ...] = ()) -> dict:
-    return {PAGE: Drawing(Size(100, 100), symbols, (), (), texts, (), "v")}
+def _drawing(*symbols: DrawnSymbol, texts: tuple[DrawnText, ...] = ()) -> dict[Id[Any], Drawing]:
+    return {PAGE: Drawing(Size(100, 100), symbols, (), texts, (), "v")}
 
 
-def _findings(drawings) -> tuple:
+def _findings(drawings) -> tuple[Any, ...]:
     """The page invariants over drawings with no ports: a Netlist built from their geometry."""
-    pages = {page: _part(drawing, {}, LIBRARY) for page, drawing in drawings.items()}
-    return drawing_invariant_findings(Netlist(pages, Union(), {}, {}, {}, {}))
+    return drawing_invariant_findings(Netlist({page: _portless_part(drawing) for page, drawing in drawings.items()}, Union(), {}, {}, {}, {}))
 
 
 def _codes(drawings) -> list[str]:
@@ -40,12 +48,12 @@ def _codes(drawings) -> list[str]:
 
 
 def test_a_clean_page_raises_nothing():
-    clean = _drawing(_symbol("a", Box(0, 0, 10, 10)), _symbol("b", Box(10, 0, 10, 10)))
+    clean = _drawing(_symbol("a", Box(1, 1, 10, 10)), _symbol("b", Box(11, 1, 10, 10)))
     assert _codes(clean) == []
 
 
 def test_two_bodies_with_shared_area_raise_overlap_naming_both_keys():
-    planted = _drawing(_symbol("a", Box(0, 0, 10, 10)), _symbol("b", Box(5, 5, 10, 10)))
+    planted = _drawing(_symbol("a", Box(1, 1, 10, 10)), _symbol("b", Box(5, 5, 10, 10)))
     (found,) = _findings(planted)
     assert found.code == "OVERLAP"
     assert found.severity is Severity.WARNING
@@ -54,8 +62,19 @@ def test_two_bodies_with_shared_area_raise_overlap_naming_both_keys():
 
 def test_a_text_on_a_body_raises_overlap():
     text = DrawnText("T1", Box(2, 2, 4, 2), "designation", "NW")
-    planted = _drawing(_symbol("a", Box(0, 0, 10, 10)), texts=(text,))
+    planted = _drawing(_symbol("a", Box(1, 1, 10, 10)), texts=(text,))
     assert _codes(planted) == ["OVERLAP"]
+
+
+def test_a_slot_text_on_a_neighbours_body_or_beyond_the_page_is_seen():
+    """TEXT-BOX-MEASURED: the box symdef measured around a slot string is ink the page checks read."""
+    owner = replace(_symbol("a", Box(1, 1, 10, 10)), slot_ink=(("marking.x", Box(20, 20, 6, 2)),))
+    clear = _drawing(owner, _symbol("b", Box(40, 40, 10, 10)))
+    assert _codes(clear) == []
+    over = _drawing(owner, _symbol("b", Box(22, 19, 10, 10)))
+    assert _codes(over) == ["OVERLAP"]
+    out = _drawing(replace(_symbol("a", Box(1, 1, 10, 10)), slot_ink=(("marking.x", Box(97, 20, 6, 2)),)))
+    assert _codes(out) == ["OUT_OF_PAGE"]
 
 
 def test_a_body_beyond_the_content_box_raises_out_of_page():
@@ -65,9 +84,10 @@ def test_a_body_beyond_the_content_box_raises_out_of_page():
     assert "k-a" in found.message
 
 
-def test_a_text_beyond_the_content_box_raises_out_of_page():
-    text = DrawnText("T1", Box(-3, 0, 4, 2), "designation", "NW")
-    assert _codes(_drawing(texts=(text,))) == ["OUT_OF_PAGE"]
+@pytest.mark.parametrize("box", [Box(-3, 0, 4, 2), Box(10, 0, 4, 2), Box(10, 98, 4, 2), Box(0, 10, 4, 2), Box(96, 10, 4, 2)])
+def test_a_text_beyond_or_touching_the_content_box_edge_raises_out_of_page(box):
+    """KI-195 (R746): a box that touches the edge, not only one that crosses it, is out."""
+    assert _codes(_drawing(texts=(DrawnText("T1", box, "designation", "NW"),))) == ["OUT_OF_PAGE"]
 
 
 @pytest.fixture(scope="module")
@@ -75,7 +95,7 @@ def laid():
     model = bank_model(8)
     conventions, kit = house(), box_kit(model)
     problem, _ = build(model, kit, conventions, LIBRARY)
-    _, found, drawn, _ = lay_out_drawn(model, kit, problem, conventions, LIBRARY)
+    _, found, drawn = lay_out_drawn(model, kit, problem, conventions, LIBRARY)
     return found, drawn
 
 
@@ -94,7 +114,7 @@ def test_page_frame_bank8_has_nothing_outside_the_content_box(laid):
 
 def test_an_annex_tag_on_a_body_raises_overlap_and_beyond_the_page_out_of_page():
     """Annex boxes reach the Drawing as TAG texts (R345), so the text checks read them."""
-    body = _symbol("a", Box(0, 0, 10, 10))
+    body = _symbol("a", Box(1, 1, 10, 10))
     on_body = DrawnText("-K1", Box(2, 2, 4, 2), "TAG", "NW")
     off_page = DrawnText("-K1", Box(98, 0, 6, 2), "TAG", "NW")
     assert _codes(_drawing(body, texts=(on_body,))) == ["OVERLAP"]
@@ -107,41 +127,42 @@ def test_a_laid_out_model_draws_its_annexes_as_tag_texts_the_checks_read(laid):
     assert any(t.kind == "TAG" for d in drawn.values() for t in d.texts)
 
 
-def test_a_real_build_passes_its_cut_ends_so_a_page_cut_net_is_not_lost():
-    """R358 in the real build: a bank cut over pages joins its nets by markers at el's cut ends."""
-    model = bank_model(40)
-    conventions, kit = house(), box_kit(model)
-    problem, _ = build(model, kit, conventions, LIBRARY)
-    _, found, drawn, _ = lay_out_drawn(model, kit, problem, conventions, LIBRARY)
+@pytest.mark.parametrize("salt", ["-", "a", "e"])
+def test_a_real_build_passes_its_cut_ends_so_a_page_cut_net_is_not_lost(salt):
+    """R358 in the real build: a bank cut over pages joins its nets by markers at el's cut ends, at every salt (R1407: lead keeps)."""
+
+    def drawn_findings():
+        model = bank_model(40)
+        conventions, kit = house(), box_kit(model)
+        problem, _ = build(model, kit, conventions, LIBRARY)
+        return lay_out_drawn(model, kit, problem, conventions, LIBRARY)
+
+    with id_namespace(salt) if salt != "-" else nullcontext():
+        _, found, drawn = drawn_findings()
     assert len(drawn) > 1
-    assert [f for f in found if f.code == "CONNECTION_NOT_DRAWN"] == []
+    assert [f for f in found if f.code in {"CONNECTION_NOT_DRAWN", "MARKER_UNPLACED"}] == []  # R1506: widen hands every pass's losses to the cut
 
 
 def test_a_symbol_drawn_at_a_pin_end_over_a_body_raises_overlap_not_anchor_overlap():
     power = DrawnSymbol("pw", "power-24v", 4, 4, "R0", outline=Box(4, 4, 6, 6))
-    planted = _drawing(_symbol("a", Box(0, 0, 10, 10)), power)
+    planted = _drawing(_symbol("a", Box(1, 1, 10, 10)), power)
     (found,) = _findings(planted)
     assert (found.code, "power-24v" in found.message) == ("OVERLAP", True)
 
 
-MARKER = DrawnSymbol(
-    "m", "reference-marker", 10, 12, "R0", outline=Box(10, 10, 6, 4), ports=("P",), net="N"
-)
+MARKER = DrawnSymbol("m", "reference-marker", 10, 12, "R0", outline=Box(10, 10, 6, 4), ports=("P",), net="N")
 
 
-def _marker_codes(*wires: tuple, dots: tuple = (), body: bool = False) -> list[str]:
+def _marker_codes(*wires: tuple[Any, ...], dots: tuple[Any, ...] = (), body: bool = False) -> list[str]:
     """The finding codes of a page with the marker above (its port at its origin) and `wires`."""
     symbols = [
         MARKER,
-        *(
-            DrawnSymbol("d", "junction-dot", x, y, "R0", outline=Box(x - 1, y - 1, 2, 2))
-            for x, y in dots
-        ),
+        *(DrawnSymbol("d", "junction-dot", x, y, "R0", outline=Box(x - 1, y - 1, 2, 2)) for x, y in dots),
     ]
-    symbols += [_symbol("a", Box(0, 30, 10, 10))] if body else []
+    symbols += [_symbol("a", Box(1, 30, 10, 10))] if body else []
     wired = tuple(DrawnWire(f"w{i}", pts, "signal") for i, pts in enumerate(wires))
-    drawing = Drawing(Size(100, 100), tuple(symbols), wired, (), (), (), "v")
-    part = replace(_part(drawing, {}, LIBRARY), ports={"P": (10, 12)})
+    drawing = Drawing(Size(100, 100), tuple(symbols), wired, (), (), "v")
+    part = replace(_portless_part(drawing), ports={"P": (10, 12)})
     net = Netlist({PAGE: part}, Union(), {}, {}, {}, {})
     return [f.code for f in drawing_invariant_findings(net)]
 
@@ -155,11 +176,8 @@ def test_a_wire_ending_exactly_on_a_marker_box_edge_raises_wire_over_marker():
     assert _marker_codes(((30, 11), (16, 11))) == ["WIRE_OVER_MARKER"]
 
 
-def test_a_wire_crossing_a_marker_box_with_both_ends_outside_raises_wire_over_marker():
+def test_a_wire_crossing_a_marker_box_or_a_dot_in_it_raises_wire_over_marker():
     assert _marker_codes(((12, 0), (12, 30))) == ["WIRE_OVER_MARKER"]
-
-
-def test_a_junction_dot_in_a_marker_box_raises_wire_over_marker():
     assert _marker_codes(dots=((13, 11),)) == ["WIRE_OVER_MARKER"]
 
 
@@ -171,12 +189,33 @@ def test_a_wire_through_a_body_that_is_no_marker_is_still_overlap():
     assert _marker_codes(((5, 25), (5, 45)), body=True) == ["OVERLAP"]
 
 
+def _head_codes(*wires: tuple[Any, ...], key: str = "contact-head") -> list[str]:
+    """The finding codes of a page with a box at (20, 20, 20, 10) of `key` and `wires`."""
+    box = Box(20, 20, 20, 10)
+    wired = tuple(DrawnWire(f"w{i}", pts, "signal") for i, pts in enumerate(wires))
+    drawing = Drawing(Size(100, 100), (DrawnSymbol("h", key, 20, 20, "R0", outline=box),), wired, (), (), "v")
+    return _codes({PAGE: drawing})
+
+
+@pytest.mark.rule("TEXT-CANDIDATES")
+def test_a_wire_sharing_interior_with_a_table_head_raises_overlap_ending_inside_or_across():
+    assert _head_codes(((0, 25), (30, 25))) == ["OVERLAP"]
+    assert _head_codes(((0, 25), (60, 25))) == ["OVERLAP"]
+
+
+@pytest.mark.rule("TEXT-CANDIDATES")
+def test_a_wire_on_a_table_heads_edge_or_corner_is_clear():
+    assert _head_codes(((0, 20), (60, 20)), ((40, 0), (40, 60)), ((0, 30), (20, 30))) == []
+
+
+def test_a_wire_ending_inside_an_ordinary_body_not_at_its_pin_raises_overlap():
+    assert _head_codes(((0, 25), (30, 25)), key="k-a") == ["OVERLAP"]
+
+
 def _dot_page(dot_at: tuple[int, int], pin_at: tuple[int, int]) -> list[str]:
     """OVERLAP members of a terminal body whose pin is at `pin_at` and a dot at `dot_at`."""
     body = DrawnSymbol("t", "terminal", 0, 0, "R0", outline=Box(0, 0, 10, 10), ports=("P",))
-    dot = DrawnSymbol(
-        "d", "junction-dot", *dot_at, "R0", outline=Box(dot_at[0] - 1, dot_at[1] - 1, 2, 2)
-    )
+    dot = DrawnSymbol("d", "junction-dot", *dot_at, "R0", outline=Box(dot_at[0] - 1, dot_at[1] - 1, 2, 2))
     return page_overlaps(_drawing(body, dot)[PAGE], {"P": pin_at})
 
 

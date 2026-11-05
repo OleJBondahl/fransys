@@ -140,11 +140,6 @@ def _cells_of(env: PageEnv, sym: str) -> Iterator[tuple[str, int, int]]:
                     yield pc.id, li, i
 
 
-def cell_ys(env: PageEnv, y: Mapping[str, int], col: str) -> tuple[int, ...]:
-    """The y of each cell of column col, lane 0, in order."""
-    return tuple(y[cell_node(col, 0, i)] for i in range(len(env.pcs[col].lanes[0])))
-
-
 def pin_y(env: PageEnv, y: Mapping[str, int], sym: str, pin: str) -> int:
     """The absolute y of pin `pin` of symbol `sym`: its cell's y plus the pin's offset there."""
     col, li, i = next(_cells_of(env, sym))

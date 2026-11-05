@@ -44,9 +44,7 @@ def overview_line_text(line: OverviewLine) -> str:
     return overview_lifted_text(line.ref.kind, (line.label,) if line.label else (), line.count)
 
 
-def overview_end_text(
-    model: Model, unit: Id[Unit], kind: OverviewLinkKind, via: Id[Item] | None, count: int
-) -> str:
+def overview_end_text(model: Model, unit: Id[Unit], kind: OverviewLinkKind, via: Id[Item] | None, count: int) -> str:
     """The text of a line to a stub: its carrier relative to `unit`, else the count text."""
     shown = None if via is None else display_unit(model, via, unit)
     carriers = () if via is None else (printed_designation(model, via, unit=shown),)

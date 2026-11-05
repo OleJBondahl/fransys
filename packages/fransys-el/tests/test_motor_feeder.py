@@ -4,26 +4,18 @@ The generic builder carries the family (bundles, pole lanes), so there is no fam
 (el-0007). The case builds once for the module (BUILD-ONCE).
 """
 
-import sys
 from collections import defaultdict
-from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import fransys as fr
 import pytest
+from _motor_feeder_case import motor_feeder_case_drafts
 from conventions_fixtures import house
 from fransys_el import build, options, symbol_kit
 
 from electrical_symbols import LIBRARY
 from fransys_layout.core import solve
 from fransys_layout.core.score_wiring import crossing_points
-
-_ROOT = Path(__file__).resolve().parents[3]
-if str(_ROOT / "tests") not in sys.path:
-    # `--import-mode=importlib` never puts a folder on `sys.path`.
-    sys.path.insert(0, str(_ROOT / "tests"))
-
-from _motor_feeder_case import motor_feeder_case_drafts  # noqa: E402 -- after the path insert
 
 if TYPE_CHECKING:
     from fransys_layout.core import PlacementProblem
@@ -51,7 +43,7 @@ def test_the_case_meets_the_study_counts_at_solve_level(problem: PlacementProble
     assert crossings < CROSSINGS_BELOW, (refs, crossings)
 
 
-def routed(problem: PlacementProblem) -> list:
+def routed(problem: PlacementProblem) -> list[Any]:
     layout = solve(problem, options(house(), LIBRARY))
     return [w for page in layout.routes.pages for w in page.wires]
 
@@ -84,9 +76,5 @@ def test_the_lanes_follow_the_box_pins_they_land_on_and_no_strand_crosses(
         for symbol, pairs in at.items():
             by_pole = [d for _, d in sorted(pairs)]
             assert by_pole == sorted(by_pole), (symbol, pairs)
-    crossed = [
-        c
-        for c in crossing_points(routed(problem), bundle_of)
-        if bundle_of.get(c[2]) and bundle_of.get(c[2]) == bundle_of.get(c[3])
-    ]
+    crossed = [c for c in crossing_points(routed(problem), bundle_of) if bundle_of.get(c[2]) and bundle_of.get(c[2]) == bundle_of.get(c[3])]
     assert crossed == []

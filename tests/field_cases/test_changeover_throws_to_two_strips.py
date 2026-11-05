@@ -1,23 +1,11 @@
-"""Field case: two adjacent poles of a 4-pole changeover relay, inside a `Unit`, each pole's
-make throw and break throw wired to its own terminal on a field strip (a different location
-than the relay's own).
-
-The bug: with the relay inside a `Unit`, the higher-numbered of the two poles' make-throw wire
-cannot be routed (`ROUTE_FAILED`, `CONNECTION_NOT_DRAWN`); the lower-numbered pole's make throw,
-and both poles' break throws, route clean. The same wiring with no `Unit` around it routes
-clean. Reordering the wiring calls does not move the failure to the other pole: it is the
-relay's third and fourth poles specifically, whichever one is authored first.
-
-Found by a consumer, reproduced 2026-09-26. Fixing decision: layout-0088 -- a route end's first
-outward cell is reserved for its own net; no other net runs, turns or crosses there. The layout
-redesign's step 5 (D1, "terminal under its throw") is expected to remove the detour these two
-poles need at all, drawing the higher-numbered pole's make throw on a straight second row
-instead, which would make this reservation moot for this case (still the general router rule).
-"""
+"""Field case: two adjacent poles of a 4-pole changeover relay inside a `Unit`, each wired to a field strip.
+The bug: a make throw had no path, though the same wiring outside a Unit routed clean.
+Fixed by layout-0088, a route end's first outward cell is reserved for its own net; no other net runs, turns or crosses there."""
 
 from typing import NamedTuple
 
 import fransys as fr
+from _model_build_cover import cabinet_document, unit_document
 from fransys.colours import BK
 
 
@@ -27,7 +15,12 @@ class _Open(NamedTuple):
 
 _TERMINAL = "DEMO-TB-2.5"
 _CHANGEOVER = "DEMO-RLY-4CO-24"
-_BAD_CODES = {"ROUTE_FAILED", "CONNECTION_NOT_DRAWN", "DOCUMENT_NO_DRAWINGS"}
+_BAD_CODES = {"CONNECTION_NOT_DRAWN", "DOCUMENT_NO_DRAWINGS"}
+
+
+def bad_codes(result: fr.BuildResult, bad: set[str]) -> set[str]:
+    """The codes of `bad` that `fr.check` finds on `result`."""
+    return {f.code for f in fr.check(result) if f.code in bad}
 
 
 def _circuit(d: fr.Design) -> _Open:
@@ -44,53 +37,39 @@ def _circuit(d: fr.Design) -> _Open:
         make = field_a.run(f"RUN{pole}", 1)[1]
         brk = field_b.run(f"RUN{pole}", 1)[1]
         fn = getattr(relay, f"co_{pole}")
-        d.detail.wire(brk, fn[f"{pole}2"], wire=(BK, 1.5))  # break throw
-        d.detail.wire(make, fn[f"{pole}4"], wire=(BK, 1.5))  # make throw
+        d.series(brk.inner, fn[f"{pole}2"], wire=(BK, 1.5))  # break throw
+        d.series(make.inner, fn[f"{pole}4"], wire=(BK, 1.5))  # make throw
     # layout-0218: an unwired coil is drawn nowhere; its feed from a cabinet strip keeps K1's
     # coil, and so its contact table and the contacts' cross-references, on the page
     feed = d.terminal_strip("X03", _TERMINAL, place="CAB")
-    d.detail.wire(feed[1], relay.coil["A1"], wire=(BK, 0.75))
-    d.detail.wire(feed[2], relay.coil["A2"], wire=(BK, 0.75))
+    d.series(feed[1].inner, relay.coil["A1"], wire=(BK, 0.75))
+    d.series(feed[2].inner, relay.coil["A2"], wire=(BK, 0.75))
     return _Open()
 
 
-_circuit_unit = fr.unit(
-    "unit", revision=1, interface_version=1, date="2026-09-26", text="First issue", by="XX"
-)(_circuit)
+_circuit_unit = fr.unit("unit", revision=1, interface_version=1, date="2026-09-26", text="First issue", by="XX")(_circuit)
 
 
-def _build(tmp_path, *, in_unit: bool) -> fr.BuildResult:
+def _build(*, in_unit: bool) -> fr.BuildResult:
     """The circuit inside a unit or bare, in one `CABINET_SCHEMATIC` document.
 
     A `CABINET_SCHEMATIC` document is a third draft (decision 0037): with no
     document, decision 0037's own gate skips layout entirely, and this field case's
-    `ROUTE_FAILED`/`CONNECTION_NOT_DRAWN` codes -- both layout findings -- would never fire
-    either way, passing vacuously with no proof layout-0088's fix still holds. A unit is one
-    drawing set: a unit's drawings take the unit as subject, not a location inside it (a
-    location inside a unit has no drawing of its own -- `DOCUMENT_NO_DRAWINGS` otherwise, the
-    pattern `tests/field_cases/test_boundary_only_harness_assembly.py` uses); the no-unit path
-    has no unit to be the subject, so it keeps `cab`.
     """
     d = fr.design("demo_parts")
     if in_unit:
         d.add(_circuit_unit, "UNIT")
     else:
         _circuit(d)
-    cover = tmp_path / "cabinet.md"
-    cover.write_text("# Cabinet\n", encoding="utf-8")
     subject = "unit" if in_unit else d.location("CAB", "Cabinet")
-    document_draft = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, subject, cover=cover)
-    return fr.build(d, document_draft)
+    document_draft = unit_document(subject)
+    return fr.build(d, document_draft, *(() if in_unit else (cabinet_document(d.location("FIELD", "Field strips")),)))
 
 
-def _bad_codes(result: fr.BuildResult) -> set[str]:
-    return {f.code for f in fr.check(result) if f.code in _BAD_CODES}
+def test_changeover_make_throws_route_inside_a_unit() -> None:
+    assert bad_codes(_build(in_unit=True), _BAD_CODES) == set()
 
 
-def test_changeover_make_throws_route_inside_a_unit(tmp_path) -> None:
-    assert _bad_codes(_build(tmp_path, in_unit=True)) == set()
-
-
-def test_changeover_make_throws_route_with_no_unit(tmp_path) -> None:
+def test_changeover_make_throws_route_with_no_unit() -> None:
     """The passing neighbour: the same wiring with no `Unit` around it routes clean."""
-    assert _bad_codes(_build(tmp_path, in_unit=False)) == set()
+    assert bad_codes(_build(in_unit=False), _BAD_CODES) == set()

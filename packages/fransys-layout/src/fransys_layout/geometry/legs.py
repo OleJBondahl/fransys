@@ -36,20 +36,11 @@ def legs[P](
     for first, second in pairwise(points):
         if at(first) == at(second):
             continue
-        if (
-            merge != "none"
-            and found
-            and _joins(_pair(found[-1], at), (at(first), at(second)), merge)
-        ):
+        if merge != "none" and found and _joins(_pair(found[-1], at), (at(first), at(second)), merge):
             found[-1] = (found[-1][0], second)
             continue
         found.append((first, second))
-    if (
-        ring
-        and merge != "none"
-        and len(found) > 1
-        and _joins(_pair(found[-1], at), _pair(found[0], at), merge)
-    ):
+    if ring and merge != "none" and len(found) > 1 and _joins(_pair(found[-1], at), _pair(found[0], at), merge):
         found[0] = (found[-1][0], found[0][1])
         found.pop()
     return tuple(found)

@@ -4,18 +4,21 @@ import fransys as fr
 from conventions_fixtures import house
 from fransys.colours import BU
 from fransys_el import build, symbol_kit
-from fransys_el.placement_sets import DrawingScope, _carriers, restrict
+from fransys_el.placement_sets import DrawingScope, _carried, _carriers, restrict
 
 from electrical_symbols import LIBRARY
-from fransys_layout.core import PinRef
+from fransys_layout.core import Facts, PinRef, Unit
 
 
 def _problem():
     d = fr.design("demo_parts", place="CAB")
     first, second = d.device("K1", "DEMO-RLY-2CO-24"), d.device("K2", "DEMO-RLY-2CO-24")
     third = d.device("K3", "DEMO-RLY-2CO-24")
-    d.detail.wire(first.coil["A2"], second.coil["A1"], wire=(BU, 0.5))
-    d.detail.wire(first.coil["A2"], third.coil["A1"], wire=(BU, 0.5))
+    d.series(first.coil["A2"], second.coil["A1"], wire=(BU, 0.5))
+    d.series(first.coil["A2"], third.coil["A1"], wire=(BU, 0.5))
+    d.earth(first.coil["A1"])
+    d.earth(second.coil["A2"])
+    d.earth(third.coil["A2"])
     model = fr.build(d).model
     return build(model, symbol_kit(model, LIBRARY), house(), LIBRARY)[0]
 
@@ -71,3 +74,19 @@ def test_a_pin_no_conductor_leaves_is_never_the_carrier() -> None:
     pins = tuple(PinRef(sym, "1") for sym in ("K1", "K2"))
     assert _carriers(pins, (), [PinRef("K1", "1")]) == (PinRef("K2", "1"),)
     assert _carriers(pins, (), pins) == ()
+
+
+def test_a_scopes_frames_reach_the_restricted_problems_hints_whole_or_cut() -> None:
+    problem = _problem()
+    cut = sorted({p.sym for p in _shared(problem).pins})[:2]
+    frames = (("unit:u", frozenset(cut[:1])),)
+    for ids in ([s.id for s in problem.symbols], cut):
+        assert restrict(problem, DrawingScope(None, None, frozenset(ids), frames=frames)).hints.frames == frames
+
+
+def test_an_own_edge_boundary_pin_with_an_in_unit_wire_keeps_its_far_end_in_another_unit() -> None:
+    """el-0108: the wire inside the unit does not carry the conductor that leaves it, so the cut still sees the far end and stubs the pin."""
+    x, k, h = PinRef("X", "in"), PinRef("K", "in"), PinRef("H", "in")
+    facts = Facts(units=(Unit("u", None, (x,)),), far_ends=((x, k), (x, h)))
+    kept = _carried(facts, DrawingScope(None, None, frozenset({"X", "K"})), frozenset({"H"}), {"X": "u", "K": "u", "H": "v"}).far_ends
+    assert kept == ((x, k), (x, h))

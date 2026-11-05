@@ -2,25 +2,17 @@
 
 A strip terminal `T` in group GA at location FIELD, a connector `k` in group GB at location CAB,
 wired `k.1` to `T.inner`, and `T` wired elsewhere too (a cable core from a device at a third
-location to `T.external`). FIELD and CAB are under one top location BOX. `replicate_terminals` used
-to ask for a replica of `T` beside `k` (another drawing set), so the wire was drawn there, `links`
-cut nothing, and `T`'s home in its own set kept an inner port that nothing covered:
-`CONNECTION_NOT_DRAWN`. Now nothing is asked across locations and `links` draws the wire with a
-marker pair. With FIELD and CAB at the top level (layout-0090) it is a pair of off stubs.
-
-Built through the `fransys` facade from `examples/demo-parts`;
-read from the drawn pages, a marker found by the texts it prints.
 """
 
 from typing import Any
 
 import fransys as fr
-import fransys_author
 import fransys_parts
 from _dd_core import designation_of
-from _dd_core_c import markers_of
+from _dd_core_c import markers_of, ref_texts
 from _drawn_pages import drawn_pages
-from _model_build_cover import layout_trigger_document
+from _model_build_cover import cabinet_document, layout_trigger_document
+from fransys_author.design import Design
 
 from fransys_model.kernel import Severity
 
@@ -37,7 +29,7 @@ def _build(*, under_box: bool):
     """The design of the module docstring; FIELD and CAB under location BOX when `under_box`,
     else two top-level locations."""
     parts = fransys_parts.load("demo_parts")
-    d = fransys_author.Design(parts)
+    d = Design(parts)
     d.project(**_PROJECT)
     d.revision(1, date="2026-09-25", text="First issue", created="XX")
     scope = d.scope("in", at=d.location("BOX", "Box")) if under_box else d.scope("in")
@@ -48,15 +40,15 @@ def _build(*, under_box: bool):
     wire(k.fn("x1")["1"], terminal.inner)
     frame = d.location("FRAME", "Frame")
     dev = d.item("DEMO-CONN-2P", name="dev", at=frame).fn("x1")
-    d.cable("DEMO-CBL-4G1.5", tag="W1", length_mm=5000, at=frame).core(
-        1, dev["1"], terminal.function["external"]
-    )
-    return fr.build(parts, d.draft(), layout_trigger_document())
+    d.cable("DEMO-CBL-4G1.5", tag="W1", length_mm=5000, at=frame).core(1, dev["1"], terminal.function["external"])
+    return fr.build(parts, d.draft(), layout_trigger_document(), cabinet_document(field), cabinet_document(cab), cabinet_document(frame))
 
 
-def _ends_of_the_wire(model) -> list:
-    """The (page, marker) pairs of the wire between `k` pin 1 and `T.inner`: markers naming both."""
-    return markers_of(model, designation_of(model, "k"))
+def _ends_of_the_wire(model) -> list[Any]:
+    """The (page, marker) pairs of the wire between `k` pin 1 and `T.inner`: the marker naming `k` and the one naming `X1:1`, not the cable's."""
+    near_k = markers_of(model, designation_of(model, "k"))
+    near_terminal = [(p, m) for p, m in markers_of(model, "X1:1") if not any("-W1" in value for value in ref_texts(m))]
+    return near_terminal + near_k
 
 
 def test_a_terminal_wired_across_two_leaf_locations_gets_a_marker_pair_and_no_replica() -> None:
@@ -68,12 +60,7 @@ def test_a_terminal_wired_across_two_leaf_locations_gets_a_marker_pair_and_no_re
     result = _build(under_box=True)
     assert [f.code for f in result.findings if f.severity is Severity.ERROR] == []
     model = result.model
-    terminals = [
-        symbol
-        for drawing in drawn_pages(model).values()
-        for symbol in drawing.symbols
-        if symbol.key == "terminal"
-    ]
+    terminals = [symbol for drawing in drawn_pages(model).values() for symbol in drawing.symbols if symbol.key == "terminal"]
     assert len(terminals) == 1
     (first_page, first), (second_page, second) = _ends_of_the_wire(model)
     assert first.key == second.key  # a pair, neither a star kind
@@ -86,6 +73,8 @@ def test_the_same_wire_across_top_level_locations_is_a_pair_of_off_stubs() -> No
     # No UNDO: a control that passes on the base.
     result = _build(under_box=False)
     assert [f.code for f in result.findings if f.severity is Severity.ERROR] == []
+    assert [f.code for f in result.findings if f.code == "CONNECTION_NOT_DRAWN"] == []  # R1702
     ends = _ends_of_the_wire(result.model)
     assert len(ends) == 2
-    assert all("off" in marker.key for _, marker in ends)
+    assert ends[0][0] != ends[1][0]  # one stub in each set
+    assert {marker.key for _, marker in ends} == {"marker-arrow-turned"}  # the stub kind, each naming the far pin

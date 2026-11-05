@@ -1,7 +1,7 @@
 """Cable blocks grouped into part runs: one run per part number, the blocks in their given order."""
 
 from collections import defaultdict
-from collections.abc import Iterable  # noqa: TC003 -- signature tests resolve hints at runtime
+lazy from collections.abc import Iterable
 
 from .rows_cable_run import CableBlockRef, CableRun
 

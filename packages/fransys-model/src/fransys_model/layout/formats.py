@@ -68,76 +68,27 @@ def default_sheet_format() -> SheetFormat:
 class Profile:
     """The tunable numbers of the layout rules; at most one per unit and one for the top.
 
-    Gaps, `row_spacing`, `route_margin` and `marker_padding` are in `G`;
-    penalties are unitless. `row_spacing` is the gap a column's next block keeps below the
-    keep-out of the block before it. `marker_padding` is the clearance between a link
-    marker's text and its outline, on every edge. `band_ranks` maps a `FunctionKind` value
-    to the rank of its horizontal band, top first; `"terminal.first"` and `"terminal.last"`
-    sit beside `"terminal"`. `group_ranks` maps the label of a `=` aspect node to its rank;
-    an unranked group sorts last. `hide_unused_pins` hides, on drawings only, a box-drawn
-    pin with no conductor. `text_height_mm` is the capital height of drawn text in mm (ISO 3098's
-    h); `min_text_height_mm` is the least it may be before `TEXT_TOO_SMALL` fires. A set field
-    replaces its house value whole, a rank map is never merged. `unit` is the unit whose own
-    drawings the profile governs, `None` for the top design's; `profile_of(model, unit)` returns
-    that unit's authored profile, else `default_profile()`, never a containing unit's.
+    `hide_unused_pins` hides, on drawings only, a box-drawn pin with no conductor. Text heights
+    are the library's fixed heights, never a profile's. The layout numbers the drawings use are
+    the `[profile]` table (`HouseProfile`, `tuning_of`). `unit` is the unit whose own drawings the
+    profile governs, `None` for the top design's; `profile_of(model, unit)` returns that unit's
+    authored profile, else `default_profile()`, never a containing unit's.
     """
 
     id: Id[Profile]
     key: AuthoringKey
     unit: Id[Unit] | None = None
-    # `None` is the build's default paper (`PaperChoice`).
-    sheet_format: Id[SheetFormat] | None = None
-    # Gaps in grid units G (1 M = 8 G): column gap 48, row gap 32. Pole pitch is the
-    # symbol library's, not a tunable.
-    column_gap: int = 48
-    row_gap: int = 32
-    row_spacing: int = 88
-    route_margin: int = 64
-    # Capital heights in mm; the layout's text room in G follows from text_height_mm (E5, E6).
-    text_height_mm: Decimal = Decimal("1.8")
-    min_text_height_mm: Decimal = Decimal("1.8")
-    marker_padding: int = 2
-    route_turn_penalty: int = 4
-    route_crossing_penalty: int = 16
     # On, a box-drawn pin with no conductor and a function with none are
     # not drawn; the lists keep every pin.
     hide_unused_pins: bool = False
-    # On (the house value), every contact of a manually operated device draws its own actuator;
-    # off, one per device (layout-0254).
-    actuator_each_contact: bool = True
-    # Bands run top to bottom: supply and first terminal, protection, switching, overload
-    # and measurement, load, last terminal. A terminal takes its band from its place in
-    # the column (DESIGN 6.4).
-    band_ranks: frozendict[str, int] = frozendict(
-        {
-            "supply": 0,
-            "terminal.first": 0,
-            "protection": 1,
-            "switch": 2,
-            "contact_no": 2,
-            "contact_nc": 2,
-            "contact_co": 2,
-            "sensor": 3,
-            "coil": 4,
-            "load": 4,
-            "actuator": 4,
-            "terminal": 4,
-            "terminal.last": 5,
-        }
-    )
-    # No group ranks: a project states its own page order.
-    group_ranks: frozendict[str, int] = frozendict()
     ext: frozendict[str, Value] = frozendict()
 
 
 def default_profile() -> Profile:
-    """The house profile: every field at its class default, used when a model authors none.
+    """The profile of a unit that authors none: every field at its class default, so none overrides the house.
 
-    A constant of the model, not a record of any model: a laid-out model with no
-    authored `layout.profile` uses this (design/foundations.md 2.9 and design/vocabulary.md 7). Its
-    id is fixed and is never put into a model. It takes no field arguments, so the house numbers
-    have one home, the class's field defaults (decision model-0060). Its `sheet_format` is `None`,
-    the house sheet.
+    A constant of the model, not a record of any model; its id is fixed and is never put into a
+    model. The house numbers are the `[profile]` table (`HouseProfile`), not this.
     """
     key = ("house", "profile")
     return Profile(id=make_id(Profile, key), key=key)

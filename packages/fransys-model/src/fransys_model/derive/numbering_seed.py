@@ -4,6 +4,7 @@
 to them. No facet, id or origin is built here: the facade turns the rows into records.
 """
 
+from fransys_model.derive.facts.unit_index import unit_index
 from fransys_model.vocab.tables import items
 from fransys_model.vocab.tables import units as units_table
 lazy from fransys_model.kernel import AuthoringKey, Id, Model
@@ -23,11 +24,7 @@ def _at(triple: tuple[AuthoringKey, AuthoringKey | None, str | None]) -> PinPosi
 
 def instances(model: Model, unit: Id[Unit]) -> dict[AuthoringKey, Id[Unit]]:
     """The instances directly inside `unit`, by their key relative to it."""
-    return {
-        unit_position(model, child.id)[0]: child.id
-        for child in units_table(model).values()
-        if child.parent == unit
-    }
+    return {unit_position(model, child)[0]: child for child in unit_index(model).child_units.get(unit, ())}
 
 
 def _item_rows(model: Model, unit: Id[Unit]) -> dict[AuthoringKey, tuple[Item, PinPosition]]:

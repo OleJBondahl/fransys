@@ -10,12 +10,12 @@ lazy from collections.abc import Mapping
 
 from fransys_model.vocab import PageKind
 
-from ._settings_library import build_library, merged_font, merged_grid
+from ._settings_library import build_library, merged_font
 from ._settings_merge import SettingsError, Table, merged_tables, paper_by_kind
 
 __all__ = ["Settings", "SettingsError", "settings"]
 
-# Stock until SETTINGS-C (ST7): the block diagram is on A2 unless Python names another paper.
+# Stock until SETTINGS-C (ST7, KI-057): the block diagram is on A2 unless Python names a paper.
 _HOUSE_BY_KIND: Mapping[PageKind, str] = {PageKind.BLOCK_DIAGRAM: "A2"}
 
 
@@ -39,7 +39,7 @@ class Settings:
 
     `paper` holds `default` (a format name) and `formats` (name to the sheet's numbers);
     `paper_by_kind` names a format for one `PageKind`. `pdf`, `look` and `layout` hold the other
-    tables. `grid` holds `module_mm`; `font` is empty for our font, else `name` and the two font
+    tables. `font` is empty for our font, else `name` and the two font
     `files` paths. A key in `pdf`, `look` or `layout` raises only when it is unknown or of another
     type than ours. `table(name)` gives any merged table of our TOML files. Make one with
     `fr.settings()`, pass it to `fr.build`.
@@ -47,14 +47,11 @@ class Settings:
 
     paper: frozendict[str, object]
     paper_by_kind: frozendict[PageKind, str]
-    grid: frozendict[str, object]
     font: frozendict[str, object]
     pdf: frozendict[str, object]
     look: frozendict[str, object]
     layout: frozendict[str, object]
-    _merged: frozendict[str, frozendict[str, object]] = dataclasses.field(
-        init=False, repr=False, compare=False
-    )
+    _merged: frozendict[str, frozendict[str, object]] = dataclasses.field(init=False, repr=False, compare=False)
 
     def table(self, name: str) -> frozendict[str, object]:
         """The merged table `name` of our TOML files (`pdf`, `look`, `layout`, or a later one)."""
@@ -69,15 +66,13 @@ def _package_toml(package: str, name: str) -> Table:
     return tomllib.loads((resources.files(package) / name).read_text(encoding="utf-8"))
 
 
-def settings(
-    path: str | Path | None = None, *, paper: Mapping[PageKind, str] | None = None
-) -> Settings:
+def settings(path: str | Path | None = None, *, paper: Mapping[PageKind, str] | None = None) -> Settings:
     """Core: our defaults with a consumer's TOML file on top, key by key, and `paper=` per kind.
 
     `path` is a settings file naming only what differs from our defaults; `None` gives our
     defaults. `paper` maps a `PageKind` to a paper format's name, such as
     `{fr.PageKind.BLOCK_DIAGRAM: "A2"}`; it is the one spelling of a paper per drawing type, and
-    a per-kind key in the TOML file raises. Only the formats `A3` and `A2` exist today.
+    a per-kind key in the TOML file raises. The formats are `A3` and `A2`, all landscape, and no others.
     Does not build, write a file or touch the environment; it reads the TOML files only.
 
     Raises:
@@ -104,13 +99,12 @@ def _merge(path: str | Path | None, paper: Mapping[PageKind, str] | None) -> Set
     consumer = {} if file is None else _read(file)
     where = "our defaults" if file is None else str(file)
     tables = merged_tables(ours, consumer, where)
-    grid, font = _library_tables(consumer, file, where)
-    build_library(grid, font, _build_tables(tables), where)
+    font = _font_table(consumer, file, where)
+    build_library(font, _build_tables(tables), where)
     kinds = paper_by_kind(tables["paper"], {**_HOUSE_BY_KIND, **dict(paper or {})})
     built = Settings(
         paper=_frozen_table(tables["paper"]),
         paper_by_kind=frozendict(kinds),
-        grid=_frozen_table(grid),
         font=_frozen_table(font),
         pdf=_frozen_table(tables["pdf"]),
         look=_frozen_table(tables["look"]),
@@ -121,20 +115,15 @@ def _merge(path: str | Path | None, paper: Mapping[PageKind, str] | None) -> Set
     return built
 
 
-def _library_tables(
-    consumer: Table, path: Path | None, where: str
-) -> tuple[dict[str, object], dict[str, object]]:
-    """The merged `[grid]` and `[font]`; symdef's checks run here, so an error names the file."""
-    grid = merged_grid(cast("Table", consumer.get("grid", {})), where)
+def _font_table(consumer: Table, path: Path | None, where: str) -> dict[str, object]:
+    """The merged `[font]`; symdef's checks run here, so an error names the file."""
     given = cast("Table", consumer.get("font", {}))
-    font = merged_font(given, where, None if path is None else path.parents[0])
-    return grid, font
+    return merged_font(given, where, None if path is None else path.parents[0])
 
 
 def _build_tables(tables: Mapping[str, Table]) -> dict[str, Table]:
-    """The merged `lines`, `dash` and `heights` tables `build_library` hands to symdef whole."""
-    heights = tables["font"]["heights"]
-    return {"lines": tables["lines"], "dash": tables["dash"], "heights": cast("Table", heights)}
+    """The merged `lines` and `dash` tables `build_library` hands to symdef whole."""
+    return {"lines": tables["lines"], "dash": tables["dash"]}
 
 
 def _read(file: Path) -> Table:

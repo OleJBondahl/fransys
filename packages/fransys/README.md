@@ -1,3 +1,5 @@
+# fransys
+
 Fransys facade: pipeline, findings policy, file writing.
 
 Facade contract: the only package that merges drafts, freezes, runs passes, applies the findings policy and writes files.
@@ -12,7 +14,7 @@ The consumer guide in `src/fransys/guide/` documents this surface with tested ex
 ships as package data. Each public name's docstring is the reference.
 
 Findings policy (decision 0011): any `ERROR` in `check(result)` makes `write` put
-nothing into `out_dir` and raise `BuildErrors`. There is no escape hatch. A half-finished design
+nothing into `out_dir` and raise `BuildFailedError`. There is no escape hatch. A half-finished design
 still draws into `intermediates`.
 
 `write`'s export table and `out_dir` ownership rule, and `document`'s cover/notes handling, are

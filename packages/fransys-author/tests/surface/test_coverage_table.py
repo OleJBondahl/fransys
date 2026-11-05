@@ -2,9 +2,6 @@
 
 The engine's public names are found by walking the union of the MROs of Scope, Design,
 LinkScope, Fn, Item, Strip, Terminal, Cable and Wiring. A class counts when its module is in
-`fransys_author`. Its names come from its own `vars`: a public function or property, plus
-`__call__` and `__getitem__`. A name is keyed "Class.name" by the class that defines it. Data
-fields (ids, keys, colour, gauge) are not rows.
 """
 
 import importlib
@@ -12,11 +9,10 @@ import inspect
 import re
 
 import pytest
+from coverage_table import ROWS
 from fransys_author import design as engine_design
 from fransys_author import handles, wiring
 from fransys_author.surface import Design, Device, Fn, TerminalStrip
-
-from .coverage_table import ROWS
 
 _ENGINE = (
     engine_design.Scope,
@@ -80,10 +76,7 @@ def resolves(spelling: str) -> bool:
     if keyword is None:
         return True
     code = getattr(inspect.unwrap(getattr(cls, attr)), "__code__", None)
-    return (
-        code is not None
-        and keyword in code.co_varnames[: code.co_argcount + code.co_kwonlyargcount]
-    )
+    return code is not None and keyword in code.co_varnames[: code.co_argcount + code.co_kwonlyargcount]
 
 
 def _entries(kind: str) -> list[tuple[str, tuple[str, ...]]]:
@@ -95,8 +88,8 @@ def test_every_engine_public_name_has_a_row() -> None:
 
 
 def test_a_missing_row_is_reported() -> None:
-    mutated = {k: v for k, v in ROWS.items() if k != "Scope.item"}
-    assert "Scope.item" in name_differences(engine_names(), set(mutated))
+    mutated = {k: v for k, v in ROWS.items() if k != "BuildScope.item"}
+    assert "BuildScope.item" in name_differences(engine_names(), set(mutated))
     assert "Scope.zzz" in name_differences(engine_names() | {"Scope.zzz"}, set(ROWS))
 
 

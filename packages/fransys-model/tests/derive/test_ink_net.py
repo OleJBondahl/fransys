@@ -3,6 +3,8 @@
 from plant import Plant
 
 from fransys_model.derive import ink_net as _ink_net
+lazy from fransys_model.kernel import Id
+lazy from fransys_model.vocab.core import Port
 
 
 def ink_net(model, port):
@@ -12,7 +14,7 @@ def ink_net(model, port):
     return found
 
 
-def _pins(plant: Plant, *names: str) -> list:
+def _pins(plant: Plant, *names: str) -> list[Id[Port]]:
     return [plant.port(plant.function(plant.item(n), "fn"), "1") for n in names]
 
 

@@ -11,9 +11,7 @@ lazy from fransys_model.vocab.core import Function
 __all__ = ["contact_places"]
 
 
-def contact_places(
-    model: Model, coil: Id[Function], own_page: Id[Page]
-) -> Mapping[Id[Function], str]:
+def contact_places(model: Model, coil: Id[Function], own_page: Id[Page]) -> Mapping[Id[Function], str]:
     """The printed place of each contact of `coil`'s item that a page shows, read from `own_page`.
 
     It reads the `layout.membership` rows a laid model holds; the text is `position_at`'s, so a
@@ -26,7 +24,5 @@ def contact_places(
     for row in layout_of(model, Membership).values():
         if row.function in wanted and row.page is not None and row.function not in places:
             cell = row.cell
-            places[row.function] = position_at(
-                model, pages[own_page], pages[row.page], cell.column, cell.row
-            )
+            places[row.function] = position_at(model, pages[own_page], pages[row.page], cell.column, cell.row)
     return places

@@ -1,15 +1,6 @@
-"""Field case: a contained unit's schematic routes with cores landed on its interface terminals.
-
-The engineering shape: a unit holds a seven-terminal interface strip and a 16-channel input module,
-one series from each of the first seven channels to the strip's terminal of the same number. The
-container adds the unit beside an external device and lands one cable core on each terminal.
-
-The bug: the unit's CABINET_SCHEMATIC built when the unit was the only design, but with the
-cores landed it gave ROUTE_FAILED and CONNECTION_NOT_DRAWN at the last channel and terminal.
-Removing any one series or core, or using six terminals, made it build.
-
-Decision: layout-0272.
-"""
+"""Field case: a unit holds a seven-terminal interface strip and a 16-channel input module, inside a container that lands cores on the strip.
+The bug: with the cores landed the unit's CABINET_SCHEMATIC gave CONNECTION_NOT_DRAWN at the last channel and terminal.
+Fixed by layout-0272, a contained unit's schematic routes when the container lands cores on its interface terminals."""
 
 from typing import NamedTuple
 lazy from pathlib import Path
@@ -43,26 +34,35 @@ def _u1(d: fr.Design) -> _Out:
     return _Out(t)
 
 
-def _findings(d: fr.Design, root: Path) -> list[fr.Finding]:
+def _findings(d: fr.Design, root: Path, *rooms: object) -> list[fr.Finding]:
     (root / "c.md").write_text("# c\n", encoding="utf-8")
-    doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, _u1.name, cover=root / "c.md")
-    return list(fr.build(d, doc).findings)
+    preset = fr.DocumentPreset.CABINET_SCHEMATIC
+    docs = [fr.document(preset, _u1.name, cover=root / "c.md")]
+    docs += [fr.document(preset, room, cover=root / "c.md") for room in rooms]
+    return list(fr.build(d, *docs).findings)
 
 
-def _errors(d: fr.Design, root: Path) -> list[str]:
-    found = _findings(d, root)
+def _errors(d: fr.Design, root: Path, *rooms: object) -> list[str]:
+    found = _findings(d, root, *rooms)
     return [f"{f.code}: {f.message}" for f in found if f.severity == fr.Severity.ERROR]
 
 
-def _container() -> fr.Design:
-    d = fr.design("demo_parts")
+def _container() -> tuple[fr.Design, object]:
+    """The container and its room, whose document prints the external device and the cables."""
+    d = fr.design("demo_parts", place="ROOM")
+    room = d.location("ROOM", "Room")
     u = d.add(_u1, "U1")
     ext = d.device("EXT", None, external=True, pins=tuple(str(n) for n in range(1, N + 1)))
     for k in range(0, N, 4):  # the demo cable has 4 cores
         w = d.cable(f"W{k // 4 + 1}", "DEMO-CBL-4G1.5", external=True)
         for core, n in enumerate(range(k + 1, min(k + 4, N) + 1), start=1):
             w.core(core, ext[str(n)], u.T[n])
-    return d
+    return d, room
+
+
+def _container_args(root: Path) -> tuple[fr.Design, Path, object]:
+    d, room = _container()
+    return d, root, room
 
 
 def test_the_unit_alone_builds(tmp_path: Path) -> None:
@@ -72,13 +72,13 @@ def test_the_unit_alone_builds(tmp_path: Path) -> None:
 
 
 def test_the_unit_in_a_container_builds(tmp_path: Path) -> None:
-    assert _errors(_container(), tmp_path) == []
+    assert _errors(*_container_args(tmp_path)) == []
 
 
 def test_the_wire_crossing_a_held_label_is_reported(tmp_path: Path) -> None:
     """layout-0272: the wire from DI 7 to terminal 7 has no clean room, so it crosses the held
     label of terminal 5 as the last resort, and WIRE_OVER_LABEL names the wire and the label."""
-    crossed = [f.message for f in _findings(_container(), tmp_path) if f.code == "WIRE_OVER_LABEL"]
+    crossed = [f.message for f in _findings(*_container_args(tmp_path)) if f.code == "WIRE_OVER_LABEL"]
     assert crossed
     assert all("-U1-DI:7, -U1-T:7" in message for message in crossed)
     assert any("U1-5:terminal" in message for message in crossed)

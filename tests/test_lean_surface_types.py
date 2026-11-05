@@ -2,14 +2,11 @@
 
 Loaded by file path (`importlib.util.spec_from_file_
 location`), since the script is not a package module. Every test mocks a small surface by
-monkeypatching `lean_surface.resolve_surface_names` (the module attribute the loaded
-`lean_surface_types` module itself calls) to return a hand-built `SurfaceName` pointing at a
-`tmp_path` file, and `lean_surface.ROOT` to `tmp_path` so the real workspace root's own
-signatures never leak into a fixture's expected count.
 """
 
 from __future__ import annotations
 
+from typing import Any
 lazy from pathlib import Path
 
 import pytest
@@ -26,16 +23,14 @@ def _write(tmp_path: Path, name: str, body: str) -> Path:
     return path
 
 
-def _mock_surface(monkeypatch, tmp_path: Path, entries: tuple) -> None:
+def _mock_surface(monkeypatch, tmp_path: Path, entries: tuple[Any, ...]) -> None:
     """Patch `lean_surface` so `resolve_surface_names()` returns `entries` under `tmp_path`."""
     monkeypatch.setattr(lean_surface, "ROOT", tmp_path)
     monkeypatch.setattr(lean_surface, "resolve_surface_names", lambda _modules=None: entries)
 
 
 def _entry(path: Path, name: str, qualname: str | None = None) -> object:
-    return lean_surface.SurfaceName(
-        module="fake", name=name, defining_file=path, qualname=qualname or name
-    )
+    return lean_surface.SurfaceName(module="fake", name=name, defining_file=path, qualname=qualname or name)
 
 
 # --- ON the surface is measured, OFF the surface never is --------------------
@@ -43,9 +38,7 @@ def _entry(path: Path, name: str, qualname: str | None = None) -> object:
 
 def test_any_param_on_the_surface_is_measured(monkeypatch, tmp_path):
     """A surface function with an `Any` parameter is flagged (>=1)."""
-    path = _write(
-        tmp_path, "mod.py", "from typing import Any\n\n\ndef f(x: Any) -> int:\n    return 0\n"
-    )
+    path = _write(tmp_path, "mod.py", "from typing import Any\n\n\ndef f(x: Any) -> int:\n    return 0\n")
     _mock_surface(monkeypatch, tmp_path, (_entry(path, "f"),))
     measured = lean_surface_types.measure_surface_types()
     assert measured == {"mod.py::f": 1}
@@ -60,9 +53,7 @@ def test_identical_function_off_the_surface_is_never_measured(monkeypatch, tmp_p
     path = _write(
         tmp_path,
         "mod.py",
-        "from typing import Any\n\n\n"
-        "def f(x: Any) -> int:\n    return 0\n\n\n"
-        "def g(x: Any) -> int:\n    return 0\n",
+        "from typing import Any\n\n\ndef f(x: Any) -> int:\n    return 0\n\n\ndef g(x: Any) -> int:\n    return 0\n",
     )
     _mock_surface(monkeypatch, tmp_path, (_entry(path, "f"),))
     measured = lean_surface_types.measure_surface_types()
@@ -192,8 +183,7 @@ def test_record_field_any_is_flagged(monkeypatch, tmp_path):
     path = _write(
         tmp_path,
         "mod.py",
-        "from typing import Any\n\nfrom fransys_model.kernel import record\n\n\n"
-        '@record(kind="x")\nclass C:\n    a: Any\n',
+        'from typing import Any\n\nfrom fransys_model.kernel import record\n\n\n@record(kind="x")\nclass C:\n    a: Any\n',
     )
     _mock_surface(monkeypatch, tmp_path, (_entry(path, "C"),))
     assert lean_surface_types.measure_record_field_types() == {"mod.py::C": 1}
@@ -221,9 +211,7 @@ def test_record_field_fully_typed_does_not_flag(monkeypatch, tmp_path):
     assert lean_surface_types.measure_record_field_types() == {}
 
 
-def test_plain_class_without_value_or_record_decorator_is_not_measured_as_a_record(
-    monkeypatch, tmp_path
-):
+def test_plain_class_without_value_or_record_decorator_is_not_measured_as_a_record(monkeypatch, tmp_path):
     """A surface class with no `@value`/`@record` decorator is never in `measure_record_field_
     types`'s output, even with an `Any`-typed field -- it is not a record.
     """
@@ -244,8 +232,8 @@ def test_real_workspace_surface_types_are_report_only_today():
 
 
 def test_the_two_known_violators_are_closed_and_the_check_holds_them():
-    """The two known violators (`write_json(data: object)`, `SymbolPortError.__init__`'s
-    `function: Id[Any]`) are typed now, and the check reads both signatures: `__init__` is
+    """The known violator (`write_json(data: object)`) is typed now, and the check reads its
+    signature: `__init__` is
     measured (`test_init_is_the_one_dunder_read_and_others_are_not`), so one typed back to `Any`
     or `object` shows up here again.
     """
@@ -253,12 +241,22 @@ def test_the_two_known_violators_are_closed_and_the_check_holds_them():
     # module's `write_json` really is measured, so an empty answer is not an unread file.
     resolved = {entry.name for entry in lean_surface.resolve_surface_names(("fransys_layout",))}
     assert resolved == {
+        "CableLayout",
+        "DiagramLayout",
         "Facing",
         "HintError",
         "LayoutOptions",
+        "PlacedBlock",
+        "DiagramBox",
+        "PlacedDiagram",
+        "PlacedEnd",
+        "DiagramLine",
+        "PlacedMarker",
+        "PlacedSheet",
+        "DiagramTab",
+        "PlacedWire",
         "Side",
         "SymbolGeometry",
-        "SymbolPortError",
         "TextKind",
         "TextPlacement",
         "lay_out_cables",
@@ -267,9 +265,7 @@ def test_the_two_known_violators_are_closed_and_the_check_holds_them():
         "generic_box_geometry",
         "symbol_geometry",
     }
-    assert "write_json" in {
-        entry.name for entry in lean_surface.resolve_surface_names(("fransys_model.kernel",))
-    }
+    assert "write_json" in {entry.name for entry in lean_surface.resolve_surface_names(("fransys_model.kernel",))}
     measured = lean_surface_types.measure_surface_types()
     # `core/jsonform.py` (to_plain, from_plain) is on the surface since P1-6 and takes `object`
     # by design; ceilings.toml [surface_types] holds exactly these two keys.
@@ -279,9 +275,7 @@ def test_the_two_known_violators_are_closed_and_the_check_holds_them():
     assert not any(site.endswith("kernel/encode.py::write_json") for site in measured)
 
 
-@pytest.mark.parametrize(
-    "fn", [lean_surface_types.measure_surface_types, lean_surface_types.measure_record_field_types]
-)
+@pytest.mark.parametrize("fn", [lean_surface_types.measure_surface_types, lean_surface_types.measure_record_field_types])
 def test_never_raises_on_the_real_workspace(fn):
     """Both measure functions run clean over the real workspace with no `modules` override."""
     fn()

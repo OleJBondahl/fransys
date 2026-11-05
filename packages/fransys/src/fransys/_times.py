@@ -34,9 +34,7 @@ class BuildTimes:
         total = sum(s.cpu for s in self.steps)
         width = max((len(s.step) for s in self.steps), default=0)
         return "\n".join(
-            f"{s.step:<{width}}  {s.cpu:8.3f} cpu s  {s.wall:8.3f} wall s  "
-            f"{(100 * s.cpu / total if total else 0.0):5.1f}% of cpu"
-            for s in self.steps
+            f"{s.step:<{width}}  {s.cpu:8.3f} cpu s  {s.wall:8.3f} wall s  {(100 * s.cpu / total if total else 0.0):5.1f}% of cpu" for s in self.steps
         )
 
     def as_json(self) -> str:

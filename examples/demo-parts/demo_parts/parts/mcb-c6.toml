@@ -1,4 +1,4 @@
-schema = 1
+schema = 2
 
 [part]
 mpn = "DEMO-MCB-C6"
@@ -17,5 +17,5 @@ ports = [
 ]
 links = [{ a = "1", b = "2", kind = "protective" }]
 
-[function.protection]
+[function.block]
 type = "mcb"

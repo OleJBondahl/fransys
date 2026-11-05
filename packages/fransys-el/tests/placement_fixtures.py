@@ -1,6 +1,6 @@
 """Models and symbol kits the problem-builder tests share: a demo design and planted features."""
 
-from typing import TYPE_CHECKING, NamedTuple
+from typing import TYPE_CHECKING, NamedTuple, cast
 
 import fransys as fr
 from fransys.colours import BU
@@ -26,7 +26,7 @@ if TYPE_CHECKING:
 
 __all__ = ["demo_model", "kit_for", "placed", "planted_model", "sid"]
 
-_FEATURES = ("strip", "relay", "three_pole", "generic", "unit", "mate")
+_FEATURES = ("strip", "relay", "three_pole", "generic", "unit")
 
 
 class _Feed(NamedTuple):
@@ -55,14 +55,14 @@ def demo_model() -> Model:
         d.series(dc.plus, s1.sw, k1.coil, dc.minus, wire=(BU, 0.75))
         d.series(dc.plus, k1.co_1.no, a1, wire=(BU, 0.75))
     with d.function("POWER", "Motor feed"):
-        d.series(x1, q1.element, m1.motor, wire=2.5)
+        d.series(x1, q1.element, m1.motor, wire=(BU, 2.5))
     return fr.build(d).model
 
 
 def planted_model(*, crossed: bool = False, **features: bool) -> Model:
     """A design with each planted feature on or off, all on by default.
 
-    The features are strip, relay, three_pole, generic, unit and mate. `crossed=True` swaps
+    The features are strip, relay, three_pole, generic and unit. `crossed=True` swaps
     phases 1 and 2 between the two 3-pole breakers of `three_pole`.
     """
     unknown = set(features) - set(_FEATURES)
@@ -88,28 +88,22 @@ def planted_model(*, crossed: bool = False, **features: bool) -> Model:
         q2 = d.device("Q2", "DEMO-MCB-3P")
         with d.function("BREAKERS", "Breaker pair"):
             if crossed:
-                d.detail.wire(q1.element["2"], q2.element["3"], wire=(BU, 2.5))
-                d.detail.wire(q1.element["4"], q2.element["1"], wire=(BU, 2.5))
-                d.detail.wire(q1.element["6"], q2.element["5"], wire=(BU, 2.5))
+                d.series(q1.element["2"], q2.element["3"], wire=(BU, 2.5))
+                d.series(q1.element["4"], q2.element["1"], wire=(BU, 2.5))
+                d.series(q1.element["6"], q2.element["5"], wire=(BU, 2.5))
             else:
-                d.series(q1.element, q2.element, wire=2.5)
+                d.series(q1.element, q2.element, wire=(BU, 2.5))
     if on["generic"]:
         b1 = d.device("B1", "DEMO-SENSOR-2W")
         a2 = d.device("A2", "DEMO-PLC-DI-2")
         with d.function("SENSE", "Two-wire sensor"):
-            d.detail.wire(g1.output["+"], b1.sig["1"], wire=(BU, 0.75))
-            d.detail.wire(b1.sig["2"], a2.di_1["1"], wire=(BU, 0.75))
+            d.series(g1.output["+"], b1.sig["1"], wire=(BU, 0.75))
+            d.series(b1.sig["2"], a2.di_1["1"], wire=(BU, 0.75))
     if on["unit"]:
         io = d.add(_feed, "U1")
         with d.function("FIELD", "Unit feed"):
-            d.series(dc.plus, io.X1[1], dc.minus, wire=(BU, 0.75))
-    if on["mate"]:
-        j1 = d.device("J1", "DEMO-CONN-2P")
-        j2 = d.device("J2", "DEMO-CONN-2P")
-        d.mate(j1.x1, j2.x1)
-        with d.function("MATED", "Mated feed"):
-            d.detail.wire(g1.output["+"], j1.x1["1"], wire=(BU, 0.75))
-            d.detail.wire(g1.output["-"], j2.x1["1"], wire=(BU, 0.75))
+            d.series(dc.plus, io.X1[1], wire=(BU, 0.75))
+            d.series(dc.minus, io.X1[2], wire=(BU, 0.75))
     return fr.build(d).model
 
 
@@ -137,7 +131,7 @@ _SYMBOLS: dict[str, tuple[str, int, dict[str, str]]] = {
 
 def leads[V](kit: Mapping[PickKey, V]) -> dict[Id[Function], V]:
     """The entries of `kit` (or any map by pick key) keyed by a function: no pin pick."""
-    return {k: v for k, v in kit.items() if k.kind == "function"}  # ty: ignore[invalid-return-type] -- the kind test narrows a union ty cannot follow
+    return {cast("Id[Function]", k): v for k, v in kit.items() if k.kind == "function"}
 
 
 def kit_for(model: Model) -> SymbolKit:
@@ -153,11 +147,7 @@ def kit_for(model: Model) -> SymbolKit:
 
 def sid(model: Model, text: str) -> str:
     """The symbol id (`symbol_key`) of the one function printed `<designation>.<name>`."""
-    found = [
-        symbol_key(model, f)
-        for f, record in functions(model).items()
-        if f"{item_designation(model, record.item)}.{record.name}" == text
-    ]
+    found = [symbol_key(model, f) for f, record in functions(model).items() if f"{item_designation(model, record.item)}.{record.name}" == text]
     assert len(found) == 1, (text, len(found))
     return found[0]
 

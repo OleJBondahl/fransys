@@ -39,9 +39,7 @@ def test_symdef_check_fails_on_a_stale_build(tmp_path):
     path = tmp_path / "symbols" / "make-contact.toml"
     text = path.read_text(encoding="utf-8")
     assert "Make contact, general symbol" in text
-    path.write_text(
-        text.replace("Make contact, general symbol", "Make contact", 1), encoding="utf-8"
-    )
+    path.write_text(text.replace("Make contact, general symbol", "Make contact", 1), encoding="utf-8")
     assert "stale-build" in {finding.rule for finding in check(tmp_path)}
 
 
@@ -51,11 +49,7 @@ def test_symdef_check_fails_on_a_stale_build(tmp_path):
 
 def test_terminal_leads_are_bound_to_their_ports():
     terminal = SOURCE.get("terminal")
-    bound = {
-        e.port: (e.start, e.end)
-        for e in terminal.elements
-        if isinstance(e, Line) and e.port is not None
-    }
+    bound = {e.port: (e.start, e.end) for e in terminal.elements if isinstance(e, Line) and e.port is not None}
     assert set(bound) == {"n", "e", "s", "w"}
     positions = {port.id: port.position for port in terminal.ports}
     for port_id, (start, end) in bound.items():
@@ -120,17 +114,11 @@ def test_emergency_stop_is_the_full_symbol():
     The head is the one Arc, the positive-opening mark the one Circle, the latching wedge
     the one Polyline that leaves the link line (y = 0).
     """
-    symbol = SOURCE.get(
-        "emergency-stop"
-    )  # the source, which the probe patches; the bundle gate ties them
+    symbol = SOURCE.get("emergency-stop")  # the source, which the probe patches; the bundle gate ties them
     port_x = {p.position.x for p in symbol.ports}
     arcs = [e for e in symbol.elements if isinstance(e, Arc)]
     circles = [e for e in symbol.elements if isinstance(e, Circle)]
-    vees = [
-        e
-        for e in symbol.elements
-        if isinstance(e, Polyline) and any(pt.y != 0 for pt in e.points) and e.points[0].y == 0
-    ]
+    vees = [e for e in symbol.elements if isinstance(e, Polyline) and any(pt.y != 0 for pt in e.points) and e.points[0].y == 0]
     assert len(arcs) == 1
     assert len(circles) == 1
     assert len(vees) == 1
@@ -139,11 +127,7 @@ def test_emergency_stop_is_the_full_symbol():
     assert circles[0].center.y == 0
     assert circles[0].center.x - circles[0].radius > 1.25
     # the wedge is on the link, between the head and the link's midpoint
-    link = [
-        e
-        for e in symbol.elements
-        if isinstance(e, Line) and e.start.y == e.end.y == 0 and max(e.start.x, e.end.x) <= 0.5
-    ]
+    link = [e for e in symbol.elements if isinstance(e, Line) and e.start.y == e.end.y == 0 and max(e.start.x, e.end.x) <= 0.5]
     link_xs = [pt.x for e in link for pt in (e.start, e.end)]
     midpoint = (min(link_xs) + max(link_xs)) / 2
     wedge_xs = [pt.x for pt in vees[0].points]

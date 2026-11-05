@@ -7,11 +7,11 @@ from fransys_model.derive import coil_table_texts, owned_contacts
 from fransys_model.derive.contact_image import coil_image_cells, table_contacts
 from fransys_model.kernel import make_id
 from fransys_model.vocab import FunctionKind
-from fransys_model.vocab.enums import PortRole
+from fransys_model.vocab.enums import PortBoundary
 from fransys_model.vocab.tables import functions
 from fransys_model.vocab.templates import FunctionTemplate, PortTemplate
 
-G = PortRole.GENERIC
+G = PortBoundary.GENERIC
 
 
 def _contact(plant: Plant, item, name: str, part, kind):

@@ -2,18 +2,16 @@
 
 Most builders return a frozen `Model` of two cabinet instances under one container unit (the
 scale fixture's shape, `n=2`), with one change that makes a part of the `own_nodes` rule matter.
-The last three are hand-built small models for the corners the authoring API cannot make.
 """
 
 import dataclasses
-import sys
 from decimal import Decimal
-from pathlib import Path
 
 import fransys as fr
-import fransys_author
 import fransys_parts
+from fransys_author.design import Design
 from root_library import freeze
+from scale_units_fixture import PROJECT, build_scale, pump_cabinet
 
 from fransys_model.derive.designation_label import own_designation_or_none
 from fransys_model.kernel import Draft, Origin, evolve, make_id
@@ -31,13 +29,6 @@ from fransys_model.vocab import (
 )
 from fransys_model.vocab.tables import aspect_nodes, items, placements
 
-_TESTS_DIR = Path(__file__).resolve().parent
-if str(_TESTS_DIR) not in sys.path:
-    # `--import-mode=importlib` (root pyproject.toml) never puts this folder on `sys.path`.
-    sys.path.insert(0, str(_TESTS_DIR))
-
-from scale_units_fixture import PROJECT, build_scale, pump_cabinet  # noqa: E402
-
 N = 2
 
 
@@ -49,7 +40,7 @@ def scale_model():
 def _build_with(extra):
     """The scale design (the fixture's steps), then `extra(d, container, er)` before the build."""
     parts = fransys_parts.load("demo_parts")
-    d = fransys_author.Design(parts)
+    d = Design(parts)
     d.project(**PROJECT)
     d.revision(1, date="2026-09-25", text="First issue", created="XX")
     er = d.location("ER", "Engine room")
@@ -96,11 +87,7 @@ def item_of_another_unit_in_fld():
 
 
 def _location_node(model, label):
-    (found,) = (
-        n.id
-        for n in aspect_nodes(model).values()
-        if n.aspect is Aspect.LOCATION and n.label == label
-    )
+    (found,) = (n.id for n in aspect_nodes(model).values() if n.aspect is Aspect.LOCATION and n.label == label)
     return found
 
 
@@ -109,20 +96,11 @@ def x2_placed_twice(*, second_wins):
 
     A second placement in one aspect counts only when its id sorts first
     (`effective_placement` takes the smallest); `second_wins` picks a key whose id sorts before
-    (True) or after (False) the strip's own location placement.
     """
     model = scale_model()
     nodes = aspect_nodes(model)
-    (strip,) = (
-        i
-        for i in items(model).values()
-        if i.key[0] == "pump1" and own_designation_or_none(model, i) == "X2"
-    )
-    own = min(
-        p.id
-        for p in placements(model).values()
-        if p.item == strip.id and nodes[p.node].aspect is Aspect.LOCATION
-    )
+    (strip,) = (i for i in items(model).values() if i.key[0] == "pump1" and own_designation_or_none(model, i) == "X2")
+    own = min(p.id for p in placements(model).values() if p.item == strip.id and nodes[p.node].aspect is Aspect.LOCATION)
     c2 = _location_node(model, "C2")
     for attempt in range(1000):
         key = (*strip.key, "again", str(attempt))
@@ -141,9 +119,7 @@ _SCOPE = "own"
 
 def _release(name):
     key = ("unit_release", name, "1", "1")
-    return UnitRelease(
-        id=make_id(UnitRelease, key), key=key, name=name, version=1, revision=1, interface="1"
-    )
+    return UnitRelease(id=make_id(UnitRelease, key), key=key, name=name, version=1, revision=1, interface="1")
 
 
 def _unit(name, parent=None):

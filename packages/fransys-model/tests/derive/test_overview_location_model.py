@@ -62,11 +62,7 @@ def _cabled_plant(*, across: bool) -> tuple[Model, dict[str, Id[Item]]]:
     runs = [("c1", "a1", "a2", "w1")] + ([("c2", "a1", "b1", "w2")] if across else [])
     for key, near, far, cable_key in runs:
         core = plant.core(ports[near], ports[far], key=key, carrier=cables[cable_key])
-        plant.add(
-            CoreFacet(
-                id=make_id(CoreFacet, (key, "facet")), key=(key, "facet"), subject=core, index=1
-            )
-        )
+        plant.add(CoreFacet(id=make_id(CoreFacet, (key, "facet")), key=(key, "facet"), subject=core, index=1))
     nodes = {}
     for at in (0, 1):
         node = AspectNode(
@@ -81,9 +77,7 @@ def _cabled_plant(*, across: bool) -> tuple[Model, dict[str, Id[Item]]]:
         plant.add(node)
     for key, at in (("a1", 0), ("a2", 0), ("b1", 1)):
         item = make_id(Item, (key,))
-        plant.add(
-            Placement(id=make_id(Placement, (key,)), key=(key,), item=item, node=nodes[at].id)
-        )
+        plant.add(Placement(id=make_id(Placement, (key,)), key=(key,), item=item, node=nodes[at].id))
     return plant.model(), cables
 
 

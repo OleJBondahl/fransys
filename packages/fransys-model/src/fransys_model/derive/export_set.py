@@ -12,23 +12,26 @@ lazy from fransys_model.vocab.core import Item, Unit
 
 from .document_unit import document_unit
 from .export_names import document_export_name, export_name, export_ref, export_set_name
+from .facts.house_settings import export_form_of
 from .report_scope import unit_boards, unit_strips
 from .rows_export_set import ExportRow
 from .structure import boards
 from .unit_racks import unit_racks
 from .wiring import terminal_strips
 
-__all__ = ["export_set", "stale_patterns"]
+__all__ = ["REPORT_KINDS", "export_set", "stale_patterns"]
 
-# (kind, extension, stale pattern) of the whole-model reports; `wires` also matches older names.
-_REPORTS = (
-    ("bom", "csv", "bom.csv"),
-    ("plc", "csv", "plc.csv"),
-    ("wires", "csv", "wire*.csv"),
-    ("designations", "csv", "designations.csv"),
-    ("cables", "csv", "cables.csv"),
-    ("cores", "csv", "cores.csv"),
-)
+# Per kind of the whole-model reports, its (extension, stale pattern); `wires` also matches older
+# names. `[export] reports` names the kinds a write makes; the sweep owns all of them.
+_REPORTS = {
+    "bom": ("csv", "bom.csv"),
+    "plc": ("csv", "plc.csv"),
+    "wires": ("csv", "wire*.csv"),
+    "designations": ("csv", "designations.csv"),
+    "cables": ("csv", "cables.csv"),
+    "cores": ("csv", "cores.csv"),
+}
+REPORT_KINDS: tuple[str, ...] = tuple(_REPORTS)
 _OVERVIEW = ("overview", "html", "overview.html")
 # (kind, extension) of the per-item exports: `<kind>-<ref>.<ext>`, bare `<kind>.<ext>` for a root.
 _ITEMS = (("terminals", "csv"), ("connectors", "csv"), ("wago", "xml"))
@@ -40,11 +43,11 @@ def stale_patterns() -> tuple[str, ...]:
     Per-item kinds give `<kind>-*.<ext>` and the bare `<kind>.<ext>`; PDFs are `*.pdf`.
     """
     items = tuple(p for kind, ext in _ITEMS for p in (f"{kind}-*.{ext}", f"{kind}.{ext}"))
-    return ("*.pdf", *(pattern for _kind, _ext, pattern in _REPORTS), *items, _OVERVIEW[2])
+    return ("*.pdf", *(pattern for _ext, pattern in _REPORTS.values()), *items, _OVERVIEW[2])
 
 
 def _report_rows(model: Model, unit: Id[Unit] | None) -> list[ExportRow]:
-    rows = [(kind, ext) for kind, ext, _pattern in _REPORTS]
+    rows = [(kind, _REPORTS[kind][0]) for kind in export_form_of(model).reports]
     if unit is None:
         rows.append(_OVERVIEW[:2])
     return [
@@ -59,9 +62,7 @@ def _report_rows(model: Model, unit: Id[Unit] | None) -> list[ExportRow]:
     ]
 
 
-def _item_subjects(
-    model: Model, unit: Id[Unit] | None
-) -> tuple[tuple[Id[Item], ...], tuple[Id[Item], ...], tuple[Id[Item], ...]]:
+def _item_subjects(model: Model, unit: Id[Unit] | None) -> tuple[tuple[Id[Item], ...], tuple[Id[Item], ...], tuple[Id[Item], ...]]:
     """The strips, boards and racks of `unit` (all of them with `unit=None`)."""
     racks = unit_racks(model, unit)
     if unit is None:
@@ -84,9 +85,7 @@ def _item_rows(model: Model, unit: Id[Unit] | None) -> list[ExportRow]:
     ]
 
 
-def _clash_hint(
-    model: Model, own_unit: Id[Unit] | None, name: str, release_by_name: dict[str, Id[Any]]
-) -> str | None:
+def _clash_hint(model: Model, own_unit: Id[Unit] | None, name: str, release_by_name: dict[str, Id[Any]]) -> str | None:
     """The unit-set name when `name` is already taken by a document of the same release, else None.
 
     Records `name`'s release in `release_by_name`.
@@ -114,9 +113,7 @@ def _document_rows(model: Model, unit: Id[Unit] | None) -> list[ExportRow]:
         name = document_export_name(model, unit, record)
         own_unit = document_unit(model, record.id)
         hint = _clash_hint(model, own_unit, name, release_by_name)
-        rows.append(
-            ExportRow(export_kind="pdf", extension="pdf", subject=document_id, name=name, hint=hint)
-        )
+        rows.append(ExportRow(export_kind="pdf", extension="pdf", subject=document_id, name=name, hint=hint))
     return rows
 
 

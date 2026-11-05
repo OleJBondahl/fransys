@@ -5,8 +5,8 @@ the stored pins to it by hand, so the rows are seen before the facade turns them
 """
 
 import fransys as fr
-import fransys_author
 import pytest
+from fransys_author.design import Design
 
 from fransys_model.derive import (
     PinPosition,
@@ -30,7 +30,7 @@ _DATE = "2026-10-16"
 def _relay_board(revision, *, names, tags=None):
     """A unit of free-numbered relays; `tags` maps a name to a written tag."""
     parts = fr.parts("demo_parts")
-    design = fransys_author.Design(parts)
+    design = Design(parts)
     u = design.scope("rb").unit("relay-board", revision=revision, interface="1")
     u.revision(revision, date=_DATE, text=f"Revision {revision}", created="OJB")
     for name in names:
@@ -52,9 +52,7 @@ def source(tmp_path_factory) -> numbering_pins.NumberingPins:
     """Revision 1's pins: coil-a K1, coil-b K2, coil-c K3 with coil-c written by hand as `Z1`."""
     result, u = _relay_board(1, names=("coil-a", "coil-b", "coil-c"), tags={"coil-c": "Z1"})
     target = fr.release(result, tmp_path_factory.mktemp("seed"), unit=u)
-    return numbering_pins.loads(
-        (target / "baseline" / "numbering.json").read_text(encoding="utf-8")
-    )
+    return numbering_pins.loads((target / "baseline" / "numbering.json").read_text(encoding="utf-8"))
 
 
 def test_a_gone_item_reserves_its_text_and_a_new_item_is_not_seeded(source):
@@ -75,7 +73,7 @@ def test_a_written_tag_now_or_at_release_keeps_the_pin_from_seeding(source):
 
 def test_a_pinned_item_whose_class_code_changed_is_reserved_not_seeded(source):
     parts = fr.parts("demo_parts")
-    design = fransys_author.Design(parts)
+    design = Design(parts)
     u = design.scope("rb").unit("relay-board", revision=2, interface="1")
     u.revision(2, date=_DATE, text="Revision 2", created="OJB")
     u.item("DEMO-RLY-2CO-24", name="coil-a")
@@ -102,16 +100,16 @@ def test_positions_list_every_non_terminal_item_by_key_with_no_text():
 
 def test_an_instance_is_a_position_ending_in_unit():
     parts = fr.parts("demo_parts")
-    design = fransys_author.Design(parts)
-    cab = design.scope("cab").unit("seed-cabinet", revision=1, interface="1", class_code="U")
+    design = Design(parts)
+    cab = design.scope("cab").unit("seed-cabinet", revision=1, interface="1")
     cab.revision(1, date=_DATE, text="First", created="OJB")
-    board = cab.scope("m1").unit("seed-board", revision=1, interface="1", class_code="U")
+    board = cab.scope("m1").unit("seed-board", revision=1, interface="1")
     board.revision(1, date=_DATE, text="First", created="OJB")
     board.item("DEMO-PCB-IO", name="pcb")
     result = fr.build(parts, design.draft())
     (position,) = pin_positions(result.model, _uid(cab))
     assert position.key[-1] == "unit"
-    assert (position.scope, position.code) == (None, "U")
+    assert (position.scope, position.code) == (None, None)
     assert _uid(board) in units(result.model)
 
 

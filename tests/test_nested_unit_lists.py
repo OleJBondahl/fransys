@@ -2,36 +2,29 @@
 
 Owner rule: "every drawing of a specific unit/part only knows whats going on below them in the
 system ... the pcb drawing does not know what cabinet it will get placed into." For a NESTED
-unit (`Unit.parent is not None`) the connector list's mate and pin-mate columns, the terminal
-list's two ends columns and the wire-label list's two end columns print an end whose item is
-outside the unit's subtree (`unit=None` included) as `""`. A top-level unit and `unit=None`
-are unchanged. Decision model-0056.
 """
+# CONNECTION_NOT_DRAWN 4 per default-salt build set (MATES-DISABLED): mated, harness or board-unit input, refused for 0.22 (R1216).
 
-import sys
 import tempfile
 from pathlib import Path
 
 import fransys as fr
-import fransys_author
 import fransys_parts
 import pytest
-from _pdf_lists import connector_list_page
+from _pdf_lists import bridge_inputs
+from fransys_author.design import Design
 from fransys_pdf import _lists_terminal
 
 # `test_declared_dependencies.py`'s own pattern for importing a sibling root test module by
-# name: `--import-mode=importlib` (root pyproject.toml) never puts `tests/` on `sys.path`.
-sys.path.insert(0, str(Path(__file__).resolve().parent))
 from root_library import freeze
 from test_units_worked_example import _PROJECT, _system_design
 
 from fransys_model.derive import (
     allocate_plc,
-    boards,
     cell_text,
-    connector_rows,
     list_context,
     plc_channel_rows,
+    strip_side_headings,
     terminal_rows,
     terminal_strips,
     unit_release,
@@ -41,101 +34,36 @@ from fransys_model.derive.passes.numbering import number as number_pass
 from fransys_model.kernel import Id, SchemaError, merge
 from fransys_model.vocab.tables import (
     aspect_nodes,
-    documents,
     items,
 )
 from fransys_model.vocab.tables import units as units_table
 
 
 def _unit_id(model, *, name, prefix):
-    return next(
-        unit_id
-        for unit_id, unit in units_table(model).items()
-        if unit_release(model, unit_id).name == name and unit.key[0] == prefix
-    )
+    return next(unit_id for unit_id, unit in units_table(model).items() if unit_release(model, unit_id).name == name and unit.key[0] == prefix)
 
 
 @pytest.fixture(scope="module")
 def worked():
-    """The units worked example with a document per unit: `(result, pump1 cabinet, pump1 board)`."""
+    """The units worked example with a document per cabinet.
+
+    Returns `(result, pump1 cabinet, pump1 board)`."""
     covers = Path(tempfile.mkdtemp())
-    for name in ("cabinet", "board"):
-        (covers / f"{name}.md").write_text(f"# {name}\n", encoding="utf-8")
+    (covers / "cabinet.md").write_text("# cabinet\n", encoding="utf-8")
     parts = fransys_parts.load("demo_parts")
     d, _field1, _field2 = _system_design(parts)
     draft = d.draft()
     probe = fr.build(parts, draft).model
     cabinet = _unit_id(probe, name="demo-pump-cabinet", prefix="pump1")
     board = _unit_id(probe, name="demo-io-board", prefix="pump1")
+    pump2 = _unit_id(probe, name="demo-pump-cabinet", prefix="pump2")
     result = fr.build(
         parts,
         draft,
         fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cabinet, cover=covers / "cabinet.md"),
-        fr.document(fr.DocumentPreset.PCB_SCHEMATIC, board, cover=covers / "board.md"),
+        fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, pump2, cover=covers / "cabinet.md"),
     )
     return result, cabinet, board
-
-
-def _document_of(model, unit):
-    return next(record for record in documents(model).values() if record.unit == unit)
-
-
-def _board_item(model, unit):
-    (board_item,) = (item for item in boards(model) if items(model)[item].unit == unit)
-    return board_item
-
-
-# -- 1. derive: the connector row ------------------------------------------------------------
-
-
-def test_a_nested_units_connector_row_prints_no_mate_but_keeps_the_mate_ids(worked):
-    result, _cabinet, board = worked
-    model = result.model
-    (row,) = connector_rows(model, _board_item(model, board), unit=board)
-    assert row.designation == "-X1"
-    assert row.mate is not None
-    assert row.mate_designation is None
-    assert [pin.marking for pin in row.pins] == ["1", "2"]
-    assert all(pin.mate_port is not None for pin in row.pins)
-    assert all(pin.mate_port_designation is None for pin in row.pins)
-
-
-def test_the_same_connector_row_without_a_unit_still_prints_its_mate(worked):
-    result, _cabinet, board = worked
-    model = result.model
-    (row,) = connector_rows(model, _board_item(model, board))
-    assert row.mate_designation is not None
-    assert row.mate_designation.endswith("-WH1-P1")
-    assert all(pin.mate_port_designation is not None for pin in row.pins)
-
-
-# -- 2. PDF: the connector list page -----------------------------------------------------------
-
-
-def test_a_nested_units_connector_list_page_draws_no_mate_column(worked):
-    result, _cabinet, board = worked
-    page = connector_list_page(result.model, _document_of(result.model, board))
-    assert "-X1" in page
-    assert 'text("1")' in page
-    assert 'text("2")' in page
-    assert "WH1-P1" not in page
-    assert "Mate designation" not in page
-    assert "Mate port designation" not in page
-
-
-# -- 3. CSV: the connector list ----------------------------------------------------------------
-
-
-def test_a_nested_units_connector_csv_keeps_its_columns_with_the_mate_cells_empty(worked, tmp_path):
-    result, _cabinet, board = worked
-    written = fr.write(result, tmp_path, unit=board)
-    # the board is its own unit's root, so its list is the bare kind name
-    (csv_path,) = (path for path in written if path.name.endswith("connectors.csv"))
-    lines = csv_path.read_text(encoding="utf-8").splitlines()
-    assert lines[0].startswith("designation,style,pincount,gender,mate_designation,")
-    assert "-X1,header-2p,2,male,,1,,,-K1:A1" in lines
-    assert "-X1,header-2p,2,male,,2,,,-K1:A2" in lines
-    assert "WH1-P1" not in "\n".join(lines)
 
 
 # -- 4. terminal outside ends and the wire list --------------------------------------------------
@@ -146,11 +74,9 @@ def _nested_strip_model():
 
     `-X5:1` internal side: one wire to `outer`'s plug `-P9` (outside `inner`). `-X5:1` external
     side: a wire to `inner`'s own `-P1` (inside) and a wire to a top-level motor `-M1` (in no
-    unit). One core of `inner`'s own cable runs from `-X5:2` to `-P9`; `outer`'s own cable has
-    one core, `-P9:2` to the motor `-M1`.
     """
     parts = fransys_parts.load("demo_parts")
-    d = fransys_author.Design(parts)
+    d = Design(parts)
     d.project(**_PROJECT)
     d.revision(1, date="2026-09-22", text="First issue", created="XX")
     er = d.location("ER", "Engine room")
@@ -197,7 +123,7 @@ def test_a_nested_units_terminal_row_prints_an_outside_end_as_empty_and_keeps_th
 def test_a_nested_units_terminal_cell_never_prints_a_dangling_separator(nested):
     model, inner, strip = nested
     rows = terminal_rows(model, strip, unit=inner, context=list_context(model, strip))
-    table = _lists_terminal._terminal_table(model, rows, bridge_word="Bridge")
+    table = _lists_terminal._terminal_table(model, rows, strip_side_headings(model, strip), ("", ""), bridge_inputs(model))
     assert 'text("-P1:1")' in table
     assert "; " not in table
     assert cell_text(rows[0].external_ends) == "-P1:1"
@@ -217,7 +143,7 @@ def test_a_nested_units_wire_list_holds_only_its_own_wire_with_both_ends_printed
     model, inner, _strip = nested
     (row,) = wire_rows(model, unit=inner)
     assert (row.from_, row.to) == ("-X5:1", "-P1:1")
-    assert row.label == "-X5:1 -P1:1"
+    assert row.ends == "-X5:1 -P1:1"
 
 
 def test_the_same_wire_list_read_without_a_unit_prints_every_wire_in_full(nested):
@@ -276,14 +202,10 @@ def _flat_ends(rows):
     return sorted(end for row in rows for end in (row.from_, row.to))
 
 
-def test_a_nested_units_wire_labels_read_short_against_its_placement_location(worked, tmp_path):
+def test_a_nested_units_wire_labels_read_short_against_its_placement_location(worked):
     result, _cabinet, board = worked
     short = ["-K1:A1", "-K1:A2", "-X1:1", "-X1:2"]
     assert _flat_ends(wire_rows(result.model, unit=board)) == short
-    written = fr.write(result, tmp_path, unit=board)
-    (csv_path,) = (path for path in written if path.name.endswith("wires.csv"))
-    cells = [line.split(",") for line in csv_path.read_text(encoding="utf-8").splitlines()[1:]]
-    assert sorted(end for cell in cells for end in cell[:2]) == short
 
 
 def test_a_top_level_units_wire_list_reads_short_inside_and_leaves_out_a_wire_to_no_unit(nested):
@@ -297,9 +219,7 @@ def test_a_units_list_ignores_the_callers_context(nested):
     model, _inner, _strip = nested
     outer = _unit_id(model, name="outer", prefix="pump1")
     field = next(node for node, record in aspect_nodes(model).items() if record.label == "FLD")
-    assert _flat_ends(wire_rows(model, unit=outer, context=field)) == _flat_ends(
-        wire_rows(model, unit=outer)
-    )
+    assert _flat_ends(wire_rows(model, unit=outer, context=field)) == _flat_ends(wire_rows(model, unit=outer))
     assert "-P9:1" in _flat_ends(wire_rows(model, unit=outer, context=field))
 
 
@@ -317,14 +237,9 @@ def _plc_model(*, nested_host):
 
     `nested_host`: the module, its relay `kin` and their strip sit in the nested unit `plcu` of
     the top-level unit `cab` (placement location `C1`); else in `cab` itself. `kout` and its own
-    strip belong to no unit, at the location `FLD`. Channel 1 of `-A1` is wired to the host's
-    strip terminal, channel 2 to `kout`'s strip terminal (`wired_to` reads the wiring, not the
-    binding; which relay a channel serves is the allocator's, so the tests key rows by channel).
-    `kout` is in no unit, yet allocation binds it to channel 2 because it is wired there
-    (model-0083); the fixture no longer binds it by hand.
     """
     parts = fransys_parts.load("demo_parts")
-    d = fransys_author.Design(parts)
+    d = Design(parts)
     d.project(**_PROJECT)
     d.revision(1, date="2026-09-22", text="First issue", created="XX")
     er = d.location("ER", "Engine room")
@@ -389,16 +304,13 @@ def test_a_plc_list_without_a_unit_prints_the_full_path():
     assert rows["-A1:2"].wired_to == "+FLD-X9:1"
 
 
-def test_a_list_for_an_unknown_unit_raises_a_schema_error(worked, nested):
+def test_a_list_for_an_unknown_unit_raises_a_schema_error(nested):
     from fransys_model.derive.designation import end_outside_nested_unit
 
-    result, _cabinet, board = worked
     model, _inner, strip = nested
     unknown = Id(kind="unit", value="no-such-unit")
     with pytest.raises(SchemaError):
         terminal_rows(model, strip, unit=unknown)
-    with pytest.raises(SchemaError):
-        connector_rows(result.model, _board_item(result.model, board), unit=unknown)
     # the helper itself, reached first by an end no other lookup has refused yet
     with pytest.raises(SchemaError):
         end_outside_nested_unit(model, strip, unknown)

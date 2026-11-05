@@ -6,12 +6,8 @@ flat files, and `verify` reads each release's own manifest, so a release stored 
 
 import json
 import shutil
-import sys
-from pathlib import Path
 
 import fransys as fr
-
-sys.path.insert(0, str(Path(__file__).parent))
 from release_folders_fixture import build_board, release_board
 
 _DATA_SUFFIXES = {".csv", ".xml"}
@@ -32,9 +28,7 @@ def test_write_puts_every_csv_in_data_and_none_at_the_top(tmp_path):
 
 def test_release_puts_every_csv_including_changes_in_data(tmp_path):
     release_board(tmp_path)
-    second = release_board(
-        tmp_path, revision=2, colour="RD", history=[(1, 1, "2026-09-26"), (1, 2, "2026-09-27")]
-    )
+    second = release_board(tmp_path, revision=2, colour="RD", history=[(1, 1, "2026-09-26"), (1, 2, "2026-09-27")])
     assert _flat_data_files(second) == []
     assert (second / "data" / "changes.csv").is_file()
     assert (second / "changes.md").is_file()
@@ -43,6 +37,25 @@ def test_release_puts_every_csv_including_changes_in_data(tmp_path):
     paths = {entry["path"] for entry in manifest["files"]}
     assert "data/changes.csv" in paths
     assert not [p for p in paths if "/" not in p and p.endswith(tuple(_DATA_SUFFIXES))]
+
+
+def test_release_changes_csv_follows_the_export_form(tmp_path):
+    path = tmp_path / "fransys.toml"
+    path.write_text(
+        '[export]\ndata_dir = "tables"\ncsv_delimiter = ";"\ncsv_encoding = "utf-8-sig"\n',
+        encoding="utf-8",
+    )
+    settings = fr.settings(path)
+    into = tmp_path / "releases"
+    release_board(into, settings=settings)
+    history = [(1, 1, "2026-09-26"), (1, 2, "2026-09-27")]
+    second = release_board(into, revision=2, colour="RD", history=history, settings=settings)
+    data = (second / "tables" / "changes.csv").read_bytes()
+    assert data.startswith(b"\xef\xbb\xbf")
+    assert data.decode("utf-8-sig").splitlines()[0] == "section;change;subject;field;before;after"
+    manifest = json.loads((second / "baseline" / "manifest.json").read_text(encoding="utf-8"))
+    assert "tables/changes.csv" in {entry["path"] for entry in manifest["files"]}
+    assert not (second / "data").exists()
 
 
 def test_a_rewrite_over_a_flat_out_folder_leaves_no_flat_csv(tmp_path):

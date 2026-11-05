@@ -8,26 +8,9 @@ import random
 from options_fixtures import core_options
 
 from fransys_layout.core import Options, PinRef, natural_key, order
-from fransys_layout.core.values import (
-    Attach,
-    Block,
-    BlockKind,
-    Column,
-    CrossLink,
-    CycleSplit,
-    End,
-    Fan,
-    FlowGraph,
-)
+from fransys_layout.core.flow_values import Attach, Block, BlockKind, Column, CrossLink, End, Fan, FlowGraph
 
-OPTIONS = core_options(
-    flip_turn="R180",
-    tag_stagger=True,
-    label_gap=8,
-    parallel_pitch=48,
-    driver_first=True,
-    arrow_sides=("E", "W"),
-)
+OPTIONS = core_options()
 
 
 def att(col: str, sym: str | None = None) -> Attach:
@@ -55,9 +38,7 @@ def flow(
     links: list[CrossLink] | None = None,
     columns: list[Column] | None = None,
 ) -> FlowGraph:
-    return FlowGraph(
-        tuple(columns or ()), tuple(fans or ()), tuple(links or ()), (), CycleSplit(0, 0, 0), ()
-    )
+    return FlowGraph(tuple(columns or ()), tuple(fans or ()), tuple(links or ()), (), ())
 
 
 def block(
@@ -147,11 +128,7 @@ def keeps_rules(perm: tuple[str, ...], blk: Block, fl: FlowGraph) -> bool:
             return False
     for f in fl.fans:
         legs = [a.column for a in f.legs if a.column in pos]
-        if (
-            f.lanes > 1
-            and len(set(legs)) == len(legs)
-            and [pos[c] for c in legs] != sorted(pos[c] for c in legs)
-        ):
+        if f.lanes > 1 and len(set(legs)) == len(legs) and [pos[c] for c in legs] != sorted(pos[c] for c in legs):
             return False
     return True
 
@@ -168,9 +145,7 @@ def oracle(blk: Block, fl: FlowGraph) -> list[str]:
     return best
 
 
-def random_case(
-    seed: int, sizes: tuple[int, ...] = (5, 6, 6, 7), more_fans: tuple[int, int] = (2, 4)
-) -> tuple[Block, FlowGraph]:
+def random_case(seed: int, sizes: tuple[int, ...] = (5, 6, 6, 7), more_fans: tuple[int, int] = (2, 4)) -> tuple[Block, FlowGraph]:
     """A block fan with an optional driver, other fans (one may be a bundle) and cross-links over n
     columns."""
     rng = random.Random(seed)  # noqa: S311 - seeded test data

@@ -48,11 +48,7 @@ def through_ports(drawn: LibrarySymbol, poles: int) -> tuple[str, str] | None:
     """The base-symbol port names of the symbol's through path; pole 1's ports carry a prefix."""
     first = pole_prefix(0, poles)
     return next(
-        (
-            (path.from_port.removeprefix(first), path.to_port.removeprefix(first))
-            for path in drawn.paths
-            if path.through
-        ),
+        ((path.from_port.removeprefix(first), path.to_port.removeprefix(first)) for path in drawn.paths if path.through),
         None,
     )
 

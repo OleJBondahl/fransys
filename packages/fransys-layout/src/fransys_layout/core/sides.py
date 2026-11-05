@@ -11,10 +11,9 @@ if TYPE_CHECKING:
     from .values import Side
 
 # Insertion order is clockwise from north; y grows down, so N steps towards smaller y.
-SIDE_STEP: frozendict[Side, tuple[int, int]] = frozendict(
-    {"N": (0, -1), "E": (1, 0), "S": (0, 1), "W": (-1, 0)}
-)
+SIDE_STEP: frozendict[Side, tuple[int, int]] = frozendict({"N": (0, -1), "E": (1, 0), "S": (0, 1), "W": (-1, 0)})
 CLOCKWISE: tuple[Side, ...] = tuple(SIDE_STEP)
+VERTICAL: frozenset[Side] = frozenset(side for side, (dx, _) in SIDE_STEP.items() if dx == 0)  # N and S: a marker box above or below
 
 
 def opposite(side: Side) -> Side:

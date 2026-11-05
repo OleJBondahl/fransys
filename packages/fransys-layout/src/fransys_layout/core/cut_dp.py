@@ -10,20 +10,28 @@ page's first row however tall (layout-0280); a fan wider alone than the page wra
 
 from __future__ import annotations
 
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
+from fractions import Fraction
 from typing import TYPE_CHECKING
 
-from .arrow_reserve import reserve
+from .arrow_reserve import lead_reserve, legs_x, reserve, reserve_x, reserve_y
 from .cut_costs import cut_cost
 from .values import Finding
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
+    from .arrow_reserve import RowReserve
     from .cut_costs import Boundary, Item
-    from .values import Block, Options
+    from .flow_values import Block
+    from .values import Options
 
 INF = float("inf")
+
+
+def _q(weight: float) -> Fraction:
+    """A weight as the exact fraction it is, so costs sum exactly: equal splits tie with no tolerance (R1685)."""
+    return Fraction(weight)
 
 
 @dataclass(frozen=True, slots=True)
@@ -36,13 +44,15 @@ class Cut:
     page_w: int
     page_h: int
     options: Options
+    arrows: Mapping[str | tuple[str, str], RowReserve] = field(default_factory=dict)
+    """Measured.arrows: a card's anchor to the arrow width its row kept free in the round before."""
 
 
 @dataclass(frozen=True, slots=True)
 class RowState:
     """Rows covering a prefix of a page: cost so far, height used, area filled, last row start."""
 
-    cost: float
+    cost: Fraction
     height: int
     area: int
     start: int
@@ -52,9 +62,14 @@ class RowState:
 Plan = list[tuple[int, int, RowState]]
 
 
+def wide_room(page_w: int, options: Options) -> int:
+    """The width a keep-whole fan or column may have: the page less the arrow reserve at each row end (layout-0464)."""
+    return page_w - (2 * reserve(1, options) if options.marker else 0)  # no marker symbol, no arrow to reserve for
+
+
 def wraps(block: Block, page_w: int, options: Options) -> bool:
-    """True for a keep-whole fan wider alone than the page: it wraps at a column (layout-0309)."""
-    return options.wrap_wide_fans and block.fan is not None and block.width_est > page_w
+    """True for a keep-whole fan or column block wider alone than `wide_room`: it wraps at a column (layout-0309, layout-0464)."""
+    return options.wrap_wide_fans and (block.fan is not None or block.kind == "column") and block.width_est > wide_room(page_w, options)
 
 
 def wide_fan(cut: Cut, block: str) -> bool:
@@ -77,15 +92,29 @@ def row_size(cut: Cut, i: int, j: int) -> tuple[int, int]:
     seen: set[str] = set()
     for item in seq[i : j + 1]:
         if not item.whole:
-            spans.append((item.rise, item.rise + item.height))
+            spans.append((item.rise, item.rise + item.height + reserve_y(cut.arrows, cut.by_id[item.block].anchor or item.block, item.column)))
         elif item.block not in seen:
             seen.add(item.block)
             b = cut.by_id[item.block]
-            spans.append((b.rise, b.rise + b.height_est))
+            spans.append((b.rise, b.rise + b.height_est + (cut.arrows[b.anchor].y if b.anchor is not None and b.anchor in cut.arrows else 0)))
     height = max(b for _, b in spans) - min(a for a, _ in spans) if spans else 0
-    lead = reserve(cut.bounds[i - 1].arrows if i > 0 else 0, cut.options)
-    tail = reserve(cut.bounds[j].arrows if j < len(cut.bounds) else 0, cut.options)
-    return seq[j].at - seq[i].at + seq[i].lead + seq[j].tail + lead + tail, height
+    lead = lead_reserve(cut.bounds[i - 1].arrows if i > 0 else 0, cut.options)
+    tail = lead_reserve(cut.bounds[j].arrows if j < len(cut.bounds) else 0, cut.options)
+    taps = max(0, _cards_x(cut, i, j) - lead - tail, _legs_x(cut, i, j))  # card taps the cut ends do not count; legs do
+    return seq[j].at - seq[i].at + seq[i].lead + seq[j].tail + lead + tail + taps, height
+
+
+def _cards_x(cut: Cut, i: int, j: int) -> int:
+    """The x the card rows of whole items i..j kept free in the round before."""
+    return max((reserve_x(cut.arrows, cut.by_id[it.block].anchor or it.block, it.column) for it in cut.seq[i : j + 1] if it.whole), default=0)
+
+
+def _legs_x(cut: Cut, i: int, j: int) -> int:
+    """The x the legs of items i..j take in one row: the widest block's `legs_x` (R1618)."""
+    cols: dict[str, list[str]] = {}
+    for it in cut.seq[i : j + 1]:
+        cols.setdefault(cut.by_id[it.block].anchor or it.block, []).append(it.column)
+    return max((legs_x(cut.arrows, b, cs) for b, cs in cols.items()), default=0)
 
 
 def _unbreakable(cut: Cut, i: int, j: int) -> bool:
@@ -95,16 +124,27 @@ def _unbreakable(cut: Cut, i: int, j: int) -> bool:
     return i == j or (same and not wide_fan(cut, first.block))
 
 
-def rows(cut: Cut, i: int) -> list[dict[int, RowState]]:
-    """For page start i: the best row states for every end j, keyed by height used."""
-    states: list[dict[int, RowState]] = [{} for _ in cut.seq]
-    base = RowState(0.0, 0, 0, i, None)
-    for j in range(i, len(cut.seq)):
-        found: list[RowState] = []
-        for s in range(j, i - 1, -1):
+def row_sizes(cut: Cut) -> list[list[tuple[int, int]]]:
+    """Per end j, `row_size` of the rows s..j for s = j down, once each, up to the first one too wide to break (BS1)."""
+    out: list[list[tuple[int, int]]] = []
+    for j in range(len(cut.seq)):
+        fits: list[tuple[int, int]] = []
+        for s in range(j, -1, -1):
             fit = row_size(cut, s, j)
             if fit[0] > cut.page_w and not _unbreakable(cut, s, j):
                 break
+            fits.append(fit)
+        out.append(fits)
+    return out
+
+
+def rows(cut: Cut, i: int, sizes: Sequence[Sequence[tuple[int, int]]]) -> list[dict[int, RowState]]:
+    """For page start i: the best row states for every end j, keyed by height used; `sizes` is `row_sizes`."""
+    states: list[dict[int, RowState]] = [{} for _ in cut.seq]
+    base = RowState(Fraction(0), 0, 0, i, None)
+    for j in range(i, len(cut.seq)):
+        found: list[RowState] = []
+        for s, fit in zip(range(j, i - 1, -1), sizes[j], strict=False):
             if _refused(cut, i, s, j):
                 continue
             for prev in [base] if s == i else states[s - 1].values():
@@ -139,9 +179,9 @@ def _extend(cut: Cut, row: tuple[RowState, int], fit: tuple[int, int]) -> RowSta
     total = prev.height + height + (options.row_gap if prev.height else 0)
     if total > cut.page_h and prev.height:
         return None
-    cost = prev.cost + options.w_row
+    cost = prev.cost + _q(options.w_row)
     if prev.height:
-        cost += cut_cost(cut.bounds[s - 1], options, page=False)
+        cost += _q(cut_cost(cut.bounds[s - 1], options, page=False))
     return RowState(cost, total, prev.area + width * height, s, prev if prev.height else None)
 
 
@@ -152,32 +192,32 @@ def fill(state: RowState, cut: Cut) -> float:
 
 def _best_state(states: Mapping[int, RowState], cut: Cut, *, last: bool) -> RowState | None:
     chosen: RowState | None = None
-    chosen_cost = INF
+    chosen_cost: Fraction | float = INF
     for st in states.values():
         share = fill(st, cut)
         if share < cut.options.min_fill and not last:
             continue
-        cost = st.cost + cut.options.w_f * (1 - share) ** 2
+        cost = st.cost + _q(cut.options.w_f) * (1 - Fraction(st.area, cut.page_w * cut.page_h)) ** 2
         if cost < chosen_cost:
             chosen, chosen_cost = replace(st, cost=cost), cost
     return chosen
 
 
-Best = list[tuple[float, int, RowState | None]]
+Best = list[tuple[Fraction | float, int, RowState | None]]
 
 
 def _relax(best: Best, i: int, states: Sequence[Mapping[int, RowState]], cut: Cut) -> None:
     n = len(cut.seq)
     forced = {b for b in range(n - 1) if cut.seq[b + 1].forced_break_before}
-    cost_in = cut_cost(cut.bounds[i - 1], cut.options, page=True) if i > 0 else 0.0
+    cost_in = _q(cut_cost(cut.bounds[i - 1], cut.options, page=True)) if i > 0 else Fraction(0)
     for k in range(i, n):
         if k - 1 in forced and k > i:
             break
         state = _best_state(states[k], cut, last=k == n - 1 or k in forced)
         if state is None:
             continue
-        total = best[i][0] + state.cost + cut.options.w_p + cost_in
-        if total < best[k + 1][0]:
+        total = best[i][0] + state.cost + _q(cut.options.w_p) + cost_in
+        if total <= best[k + 1][0]:  # a tie goes to the later start, so the earlier page takes more rows: 2|1 over 1|2 (R1685)
             best[k + 1] = (total, i, state)
 
 
@@ -188,10 +228,11 @@ def pages(cut: Cut) -> Plan | None:
     """
     n = len(cut.seq)
     best: Best = [(INF, -1, None)] * (n + 1)
-    best[0] = (0.0, -1, None)
+    best[0] = (Fraction(0), -1, None)
+    sizes = row_sizes(cut)
     for i in range(n):
         if best[i][0] < INF:
-            _relax(best, i, rows(cut, i), cut)
+            _relax(best, i, rows(cut, i, sizes), cut)
     return _unwind(best, n)
 
 
@@ -216,13 +257,6 @@ def cut_unit(cut: Cut) -> tuple[Plan, bool]:
     return pages(relaxed) or [], True
 
 
-def first_row(state: RowState) -> RowState:
-    """The state of a page's first row."""
-    while state.prev is not None:
-        state = state.prev
-    return state
-
-
 def _thin_page(cut: Cut, unit: str, i: int, share: float, page: int) -> Finding:
     block = cut.seq[i].block
     floor = cut.options.min_fill
@@ -233,19 +267,10 @@ def _thin_page(cut: Cut, unit: str, i: int, share: float, page: int) -> Finding:
     return Finding("FILL_UNDER_MIN", text, page, block)
 
 
-def page_findings(
-    cut: Cut, plan: Plan, first: int, unit: str, *, relaxed: bool
-) -> tuple[Finding, ...]:
-    """PAGE_OVERFLOW for a first row taller than the page, FILL_UNDER_MIN for a thin page kept."""
+def page_findings(cut: Cut, plan: Plan, first: int, unit: str, *, relaxed: bool) -> tuple[Finding, ...]:
+    """FILL_UNDER_MIN for a thin page kept; PAGE_OVERFLOW is the placement verdict's (widen.overflows)."""
     out: list[Finding] = []
     for p, (i, k, state) in enumerate(plan):
-        block = cut.seq[first_row(state).start].block
-        if first_row(state).height > cut.page_h:
-            text = (
-                f"{block}: a row {first_row(state).height} G high on a page {cut.page_h} G high:"
-                " enlarge the page or shorten the row"
-            )
-            out.append(Finding("PAGE_OVERFLOW", text, first + p, block))
         last = k == len(cut.seq) - 1 or cut.seq[k + 1].forced_break_before
         if relaxed and not last and fill(state, cut) < cut.options.min_fill:
             out.append(_thin_page(cut, unit, i, fill(state, cut), first + p))

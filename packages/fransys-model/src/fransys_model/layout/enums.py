@@ -86,32 +86,6 @@ class PageRole(Enum):
 
 
 @register_enum
-class BlockRow(Enum):
-    """Which row of a cable drawing block an `EndBox` stands in."""
-
-    TOP = "top"
-    BOTTOM = "bottom"
-
-
-@register_enum
-class BoxKind(Enum):
-    """What a `CableBox` is: one cable's box, or the dashed box of the harness around them."""
-
-    CABLE = "cable"
-    HARNESS = "harness"
-
-
-@register_enum
-class EndStyle(Enum):
-    """How an `EndBox` is drawn: solid, dashed (an end by others), blank, or earth (a bar)."""
-
-    SOLID = "solid"
-    DASHED = "dashed"
-    BLANK = "blank"
-    EARTH = "earth"
-
-
-@register_enum
 class Corner(Enum):
     """The corner of a drawn text's box that its position is: a free label is anchored by it."""
 

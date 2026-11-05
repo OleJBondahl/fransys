@@ -15,9 +15,7 @@ from .lookups import descendants
 __all__ = ["undrawn_items"]
 
 
-def undrawn_items(
-    model: Model, document: Document, unit: Id[Unit] | None, drawn: tuple[Id[Item], ...]
-) -> tuple[Id[Item], ...]:
+def undrawn_items(model: Model, document: Document, unit: Id[Unit] | None, drawn: tuple[Id[Item], ...]) -> tuple[Id[Item], ...]:
     """The harness items a location document does not draw, with all they own, sorted.
 
     Only a location document has any: a unit or item document draws its own harnesses.
@@ -29,4 +27,4 @@ def undrawn_items(
     for item in items_table(model):
         if item not in drawn and is_harness(model, item):
             found.update((item, *descendants(children, item)))
-    return tuple(sorted(found))
+    return tuple(item for item in items_table(model) if item in found)

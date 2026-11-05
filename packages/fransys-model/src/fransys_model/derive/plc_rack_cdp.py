@@ -10,9 +10,7 @@ from .plc_rack import plc_rack_modules
 from .rows_plc import CdpRackModule
 
 
-def rack_modules_for_cdp(
-    model: Model, rack: Id[Item], *, unit: Id[Unit] | None = None
-) -> tuple[CdpRackModule, ...]:
+def rack_modules_for_cdp(model: Model, rack: Id[Item], *, unit: Id[Unit] | None = None) -> tuple[CdpRackModule, ...]:
     """The modules of `rack` that have channels, each with its `ordinal` and `single_signal`.
 
     A module with no channel (a coupler, an end module) is left out. `ordinal` counts the kept

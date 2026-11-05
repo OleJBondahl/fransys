@@ -7,14 +7,15 @@ import pytest
 from plant import Plant
 
 from fransys_model.derive.contact_entries import contact_entries
+from fransys_model.elecdef import PinRole
 from fransys_model.kernel import make_id
 from fransys_model.vocab import FunctionKind, PartCategory
-from fransys_model.vocab.enums import PortRole
+from fransys_model.vocab.enums import PortBoundary
 from fransys_model.vocab.tables import functions
 from fransys_model.vocab.templates import FunctionTemplate, Part, PortTemplate
 
 
-def _entries(pins: dict[str, PortRole]) -> list[str]:
+def _entries(pins: dict[str, PortBoundary | PinRole]) -> list[str]:
     """The NO entries' marks of one `contact_no` function with `pins` and no link."""
     plant = Plant()
     part = Part(
@@ -42,7 +43,8 @@ def _entries(pins: dict[str, PortRole]) -> list[str]:
             key=("blk", "fn", name),
             function=template.id,
             name=name,
-            role=role,
+            boundary=role if isinstance(role, PortBoundary) else PortBoundary.GENERIC,
+            pin_role=role if isinstance(role, PinRole) else None,
         )
         plant.add(pin)
         plant.port(function, name, template=pin.id)
@@ -55,9 +57,9 @@ def _entries(pins: dict[str, PortRole]) -> list[str]:
 @pytest.mark.parametrize(
     ("pins", "marks"),
     [
-        ({"1": PortRole.GENERIC, "2": PortRole.GENERIC, "3": PortRole.GENERIC}, ["1-2", "3"]),
-        ({"A": PortRole.GENERIC, "B": PortRole.GENERIC, "C": PortRole.GENERIC}, ["A-B", "C"]),
-        ({"1": PortRole.GENERIC, "2": PortRole.GENERIC, "PE": PortRole.PE}, ["1-2"]),
+        ({"1": PortBoundary.GENERIC, "2": PortBoundary.GENERIC, "3": PortBoundary.GENERIC}, ["1-2", "3"]),
+        ({"A": PortBoundary.GENERIC, "B": PortBoundary.GENERIC, "C": PortBoundary.GENERIC}, ["A-B", "C"]),
+        ({"1": PortBoundary.GENERIC, "2": PortBoundary.GENERIC, "PE": PinRole.PE}, ["1-2"]),
     ],
     ids=["odd digit pin", "odd named pin", "earth pin left out"],
 )

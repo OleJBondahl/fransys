@@ -1,4 +1,4 @@
-schema = 1
+schema = 2
 
 [part]
 mpn = "DEMO-CONN-4P"
@@ -6,6 +6,10 @@ manufacturer = "Demo"
 description = "Connector housing, 4-pin header"
 category = "connector"
 class_code = "J"
+
+[footprint]
+library = "Demo_Conn"
+name = "Header_4P"
 
 [[function]]
 name = "x1"

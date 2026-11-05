@@ -4,13 +4,10 @@ from types import SimpleNamespace
 
 import fransys as fr
 import pytest
+from _field_shared import wire_ends
 
 from fransys_model.layout import PoleGroup, layout_of
 from fransys_model.vocab.tables import functions
-
-
-def _ends(d) -> set[frozenset[str]]:
-    return {frozenset((r.from_, r.to)) for r in fr.derive.wire_rows(fr.build(d).model)}
 
 
 def _three_phase(d):
@@ -24,7 +21,7 @@ def test_a_changeover_group_with_no_selector_takes_the_line_at_its_commons() -> 
     a, qa, m1 = _three_phase(d)
     k1 = d.device("K1", "DEMO-RLY-4CO-24")
     d.series(a, qa.element, d.poles(k1.co_1, k1.co_2, k1.co_3).no, m1, wire=2.5)
-    ends = _ends(d)
+    ends = wire_ends(d)
     for pole, line, motor in ((1, "2", "U"), (2, "4", "V"), (3, "6", "W")):
         assert frozenset((f"-QA:{line}", f"-K1:{pole}1")) in ends
         assert frozenset((f"-K1:{pole}4", f"-M1:{motor}")) in ends
@@ -36,7 +33,7 @@ def test_a_make_group_stands_in_a_series_as_its_members_do() -> None:
         dc = d.dc_supply("24VDC", d.device("G1", "DEMO-PSU-24"))
         k1, k2 = d.device("K1", "DEMO-CTR-3P-24"), d.device("K2", "DEMO-CTR-3P-24")
         d.series(dc.plus, d.poles(k1.aux) if grouped else k1.aux, k2.coil, dc.minus, wire=0.75)
-        return _ends(d)
+        return wire_ends(d)
 
     assert build(grouped=True) == build(grouped=False)
 

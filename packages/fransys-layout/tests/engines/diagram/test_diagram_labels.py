@@ -1,6 +1,7 @@
 """Diagram line labels: a label stands clear of other lines' runs and of taken boxes."""
 
 from fransys_layout.engines.overview.lanes.labels import label_at, label_box, label_clear
+from fransys_layout.engines.overview.sizes import MARKER_W, TEXT_LEAD, stub_reach
 from fransys_layout.geometry import Box, Point
 from fransys_layout.routing.space import run_of
 
@@ -27,13 +28,14 @@ def test_a_label_over_a_taken_box_moves_off_it() -> None:
     taken = [label_box(x, y, _W, _TH)]
     nx, ny = label_clear(_LINE, _TH, _W, [], taken)
     box = label_box(nx, ny, _W, _TH)
-    assert not (
-        box.x < taken[0].x + taken[0].width
-        and taken[0].x < box.x + box.width
-        and box.y == taken[0].y
-    )
+    assert not (box.x < taken[0].x + taken[0].width and taken[0].x < box.x + box.width and box.y == taken[0].y)
 
 
 def test_a_label_boxed_in_everywhere_keeps_its_default_place() -> None:
     wall = [Box(x=-40, y=0, width=200, height=80)]
     assert label_clear(_LINE, _TH, _W, [], wall) == label_at(_LINE, _TH)
+
+
+def test_a_jump_stub_holds_its_label_with_a_lead_either_side() -> None:
+    assert stub_reach(_W) == MARKER_W
+    assert stub_reach(19) >= 19 + 2 * TEXT_LEAD

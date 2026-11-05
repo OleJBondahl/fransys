@@ -5,10 +5,10 @@ from typing import TYPE_CHECKING
 from fransys_model.kernel import Origin, evolve
 
 from .write_findings import kernel_findings
-from .write_ids import group_ids
+from .write_ids import group_ids, symbol_subjects
 from .write_markers import link_markers
 from .write_membership import memberships, set_rows
-from .write_pages import SetPlace, write_pages
+from .write_pages import STAMP, SetPlace, Written, write_pages
 from .write_power import power_symbols
 
 if TYPE_CHECKING:
@@ -21,11 +21,10 @@ if TYPE_CHECKING:
 
 __all__ = ["write_layout"]
 
-_STAMP = "fransys-el/write_layout"
 _ORIGIN = Origin(file="fransys_el/write.py", line=0, note="the placement core layout")
 
 
-def write_layout(  # noqa: PLR0913 - the library and the place join the five inputs
+def write_layout(  # noqa: PLR0913 - the library and the place join the five inputs [public keyword API kept, decision 0444]
     model: Model,
     unit: Id[Unit] | None,
     layout: CoreLayout,
@@ -42,25 +41,14 @@ def write_layout(  # noqa: PLR0913 - the library and the place join the five inp
     `where` its location and number.
     `library` gives the markers their size.
     """
-    sets, pages = write_pages(model, layout.pages, unit, group_ids(model), _STAMP, where)
-    number = (where or SetPlace()).number
+    sets, pages = write_pages(model, layout.pages, unit, group_ids(model), where)
+    written = Written(model, layout, problem, kit, library, pages, sets[0], unit)
     records = (
         *sets,
         *pages.values(),
-        *power_symbols(model, layout, pages, kit, _STAMP),
-        *link_markers(
-            layout,
-            model,
-            kit,
-            pages,
-            stamp=_STAMP,
-            library=library,
-            number=number,
-            unit=unit,
-        ),
-        *memberships(model, layout, problem, kit, pages, _STAMP, number),
+        *power_symbols(model, layout, pages, kit, (STAMP, sets[0].number)),
+        *link_markers(written),
+        *memberships(written),
     )
-    own = set_rows(model, number, _STAMP)
-    return evolve(model, put=records, remove=own, origin=_ORIGIN), kernel_findings(
-        model, layout.findings
-    )
+    own = set_rows(model, sets[0].number, STAMP)
+    return evolve(model, put=records, remove=own, origin=_ORIGIN), kernel_findings(model, layout.findings, symbol_subjects(model, kit))

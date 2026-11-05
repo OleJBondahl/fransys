@@ -10,18 +10,18 @@ forms under `ext`, arrays to tuples. A value of the wrong JSON type is left alon
 import types
 from decimal import Decimal, InvalidOperation
 from enum import Enum
-from types import NoneType
 from typing import TYPE_CHECKING, Any, cast, get_args, get_origin
 
+from . import registry
 from .draft import Draft
-from .encode import ID_TAG, MAP_TAG, decimal_text
+from .encode import CLASS_TAG, CLASS_VALUE, ID_TAG, MAP_TAG, decimal_text
 from .errors import FreezeError, ModelError, SchemaError, SchemaVersionError
 from .freeze import freeze
 from .ids import parse_id
 from .origin import Origin
-from .registry import is_value_class, lookup_kind, registered_schema_version
 from .schema import annotations_of, fields_of, id_type, key_and_value_aliases
 from .values import MAX_EXPONENT
+lazy from .encode import JsonValue
 lazy from .model import Model
 
 if TYPE_CHECKING:
@@ -33,7 +33,7 @@ _SCHEMA_VERSION_KEY = "schema_version"
 _ORIGIN = Origin(file="<canonical>", line=0, note="")
 
 
-def from_data(data: object) -> Model:
+def from_data(data: JsonValue) -> Model:
     """Rebuild a `Model` from `data`, running full `freeze()` validation.
 
     Origins are not in the data, so every record is attributed to `<canonical>:0`. Hashes and
@@ -48,9 +48,7 @@ def from_data(data: object) -> Model:
     envelope = _mapping(data, "the data")
     _check_version(envelope.get(_SCHEMA_VERSION_KEY))
     if set(envelope) != {"aliases", _SCHEMA_VERSION_KEY, "tables"}:
-        msg = (
-            f"the data must have exactly aliases, schema_version and tables, not {sorted(envelope)}"
-        )
+        msg = f"the data must have exactly aliases, schema_version and tables, not {sorted(envelope)}"
         raise SchemaError(msg, kind=_KIND)
     tables = _tables(envelope["tables"])
     aliases = _pairs(envelope["aliases"])
@@ -66,15 +64,13 @@ def _check_version(version: object) -> None:
     if type(version) is not int:
         msg = f"`{_SCHEMA_VERSION_KEY}` is missing or not an int"
         raise SchemaError(msg, kind=_KIND)
-    expected = registered_schema_version()
+    expected = registry.registered_schema_version()
     if version != expected:
         msg = f"this build reads schema version {expected}, not {version}"
         raise SchemaVersionError(msg, expected=expected, actual=version)
 
 
-def _build(
-    tables: dict[str, tuple[frozendict[str, Any], ...]], aliases: tuple[tuple[str, str], ...]
-) -> Model:
+def _build(tables: dict[str, tuple[frozendict[str, Any], ...]], aliases: tuple[tuple[str, str], ...]) -> Model:
     draft = Draft()
     errors = _fill(draft, tables) + _alias(draft, aliases)
     if errors:
@@ -113,16 +109,11 @@ def _tables(value: object) -> dict[str, tuple[frozendict[str, Any], ...]]:
     """Check the shape of `tables` before any record is built: kind to array of mappings."""
     tables = {}
     for kind, rows in _mapping(value, "`tables`").items():
-        tables[kind] = tuple(
-            _mapping(row, f"tables.{kind}[{index}]")
-            for index, row in enumerate(_array(rows, f"table `{kind}`"))
-        )
+        tables[kind] = tuple(_mapping(row, f"tables.{kind}[{index}]") for index, row in enumerate(_array(rows, f"table `{kind}`")))
     return tables
 
 
-def _fill(
-    draft: Draft, tables: dict[str, tuple[frozendict[str, Any], ...]]
-) -> tuple[ModelError, ...]:
+def _fill(draft: Draft, tables: dict[str, tuple[frozendict[str, Any], ...]]) -> tuple[ModelError, ...]:
     """Build every record and add it to `draft`; return what went wrong, in data order."""
     errors = []
     for kind in sorted(tables):
@@ -147,7 +138,7 @@ def _alias(draft: Draft, aliases: tuple[tuple[str, str], ...]) -> tuple[ModelErr
 
 
 def _record(kind: str, item: frozendict[str, Any]) -> Record:
-    cls = lookup_kind(kind)
+    cls = registry.lookup_kind(kind)
     kwargs = _fields(cls, item, kind)
     return cls(**kwargs)
 
@@ -163,11 +154,7 @@ def _fields(cls: type, item: frozendict[str, Any], what: str) -> dict[str, Any]:
         msg = f"{what}: unknown fields {unknown}, missing fields {missing}"
         raise SchemaError(msg, kind=what)
     # A field the record derives itself (`init=False`) is written, but not read back.
-    return {
-        field.name: _field(field.name, item.get(field.name), annotations[field.name])
-        for field in fields
-        if field.init
-    }
+    return {field.name: _field(field.name, item.get(field.name), annotations[field.name]) for field in fields if field.init}
 
 
 def _field(name: str, value: object, annotation: object) -> object:
@@ -178,16 +165,24 @@ def _field(name: str, value: object, annotation: object) -> object:
         raise SchemaError(msg, kind=exc.kind) from exc
 
 
+def value_from[T](data: JsonValue, cls: type[T]) -> T:
+    """The value of class `cls` that `value_data` wrote as `data`.
+
+    Example: `value_from(value_data(rating), Rating) == rating`. A shape that does not fit `cls` is
+    a `SchemaError`.
+    """
+    return cast("T", _decode_value(data, cls))
+
+
 def _decode_value(value: object, annotation: object) -> object:
     """Turn `value` back into what `annotation` declares, converting only what JSON cannot say."""
     if annotation is key_and_value_aliases()[0]:  # AuthoringKey is `tuple[str, ...]`
         annotation = annotation.__value__
     origin = get_origin(annotation)
     if origin is types.UnionType:
-        member = next(arg for arg in get_args(annotation) if arg is not NoneType)
-        return None if value is None else _decode_value(value, member)
-    if origin is tuple:
-        return _decode_tuple(value, get_args(annotation)[0])
+        return None if value is None else _decode_value(value, registry.optional_arm(annotation))
+    if origin in (tuple, frozenset):
+        return _decode_seq(value, origin, get_args(annotation)[0])
     if origin is frozendict:
         return _decode_mapping(value, get_args(annotation)[1])
     if origin is id_type():
@@ -195,10 +190,10 @@ def _decode_value(value: object, annotation: object) -> object:
     return _decode_plain(value, annotation)
 
 
-def _decode_tuple(value: object, item_annotation: object) -> object:
+def _decode_seq(value: object, origin: type, item_annotation: object) -> object:
     if not isinstance(value, (tuple, list)):
         return value
-    return tuple(_decode_value(item, item_annotation) for item in value)
+    return origin(_decode_value(item, item_annotation) for item in value)
 
 
 def _decode_mapping(value: object, item_annotation: object) -> object:
@@ -208,17 +203,31 @@ def _decode_mapping(value: object, item_annotation: object) -> object:
 
 
 def _decode_plain(value: object, annotation: object) -> object:
-    if isinstance(annotation, type) and is_value_class(annotation):
-        if isinstance(value, (frozendict, dict)):
-            return annotation(**_fields(annotation, frozendict(value), annotation.__name__))
-        return value
+    if isinstance(value, (frozendict, dict)) and CLASS_TAG in value:  # a slot of several classes
+        annotation = registry.class_for_tag(value[CLASS_TAG])
+        if annotation is None or set(value) != {CLASS_TAG, CLASS_VALUE}:
+            msg = f"`{CLASS_TAG}` names no registered class, or `{CLASS_VALUE}` is missing"
+            raise SchemaError(msg, kind=_KIND)
+        value = value[CLASS_VALUE]
+    if isinstance(annotation, type) and registry.is_value_class(annotation):
+        return _decode_class(value, annotation)
     if annotation is Decimal:
-        return _decimal(value)
+        return decimal_value(value)
     if isinstance(annotation, type) and issubclass(annotation, Enum):
-        return _enum(value, annotation)
+        return enum_value(value, annotation)
     if annotation in (str, int, bool) or annotation is None:
         return value
     return _decode_undeclared(value)
+
+
+def _decode_class(value: object, cls: type) -> object:
+    """Rebuild `cls` from its object; anything else is left for `freeze()` to refuse."""
+    if not isinstance(value, (frozendict, dict)):
+        return value
+    fields = _fields(cls, frozendict(value), cls.__name__)
+    # init=False: the constructor takes `*items`
+    init = cast("Any", cls).__dataclass_params__.init
+    return cls(**fields) if init else cls(*next(iter(fields.values())))
 
 
 def _decode_undeclared(value: object) -> object:
@@ -227,19 +236,16 @@ def _decode_undeclared(value: object) -> object:
         return tuple(_decode_undeclared(item) for item in value)
     if isinstance(value, (frozendict, dict)):
         if set(value) == {MAP_TAG} and isinstance(value[MAP_TAG], (frozendict, dict)):
-            return frozendict(
-                {key: _decode_undeclared(item) for key, item in value[MAP_TAG].items()}
-            )
+            return frozendict({key: _decode_undeclared(item) for key, item in value[MAP_TAG].items()})
         if set(value) == {ID_TAG} and isinstance(value[ID_TAG], str):
             return parse_id(value[ID_TAG])
-        msg = (
-            f"an object here must be exactly one of `{MAP_TAG}` or `{ID_TAG}`, not {sorted(value)}"
-        )
+        msg = f"an object here must be exactly one of `{MAP_TAG}` or `{ID_TAG}`, not {sorted(value)}"
         raise SchemaError(msg, kind=_KIND)
     return value
 
 
-def _decimal(value: object) -> object:
+def decimal_value(value: object) -> object:
+    """Read a canonical decimal string; anything else is left for `freeze()` to refuse."""
     if not isinstance(value, str):
         return value
     try:
@@ -256,12 +262,14 @@ def _decimal(value: object) -> object:
     return number
 
 
-def _enum(value: object, enum_class: type[Enum]) -> object:
-    msg = f"{value!r} is not a member of {enum_class.__name__}"
+def enum_value(value: object, enum_class: type[Enum]) -> object:
+    """Read a member by its name when `enum_class` is stored by name, else by its value."""
+    by_name = registry.is_enum_by_name(enum_class)
     try:
-        member = enum_class(value)
-    except (ValueError, TypeError) as exc:
-        raise SchemaError(msg, kind=_KIND) from exc
-    if type(value) is not type(member.value):  # `True` equals 1, but is not what was written
-        raise SchemaError(msg, kind=_KIND)
-    return member
+        member = enum_class[cast("str", value)] if by_name else enum_class(value)
+        if by_name or type(value) is type(member.value):  # `True` equals 1, not what was written
+            return member
+    except ValueError, TypeError, KeyError:
+        pass
+    msg = f"{value!r} is not a member of {enum_class.__name__}"
+    raise SchemaError(msg, kind=_KIND)

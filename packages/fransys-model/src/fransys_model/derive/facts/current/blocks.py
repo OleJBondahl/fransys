@@ -57,9 +57,7 @@ def _component[V: Hashable](
             yield from _retreat(frames, order, low, stack)
 
 
-def _back_edge[V: Hashable](
-    stack: list[int], low: dict[V, int], vertex: V, at: int, reached: int
-) -> None:
+def _back_edge[V: Hashable](stack: list[int], low: dict[V, int], vertex: V, at: int, reached: int) -> None:
     stack.append(at)
     low[vertex] = min(low[vertex], reached)
 

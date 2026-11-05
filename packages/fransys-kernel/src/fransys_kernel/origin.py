@@ -5,7 +5,7 @@ lazy from collections.abc import Mapping
 
 from .errors import (
     FreezeError,
-    MergeConflict,
+    MergeConflictError,
     RefError,
     SchemaError,
     SchemaVersionError,
@@ -16,6 +16,7 @@ from .ids import render_id
 from .record import value
 lazy from .errors import ModelError
 lazy from .ids import AuthoringKey, Id
+lazy from .record_protocol import Record
 
 
 @value
@@ -31,7 +32,7 @@ class Origin:
     note: str
 
 
-def require_origin[K](origins: Mapping[Id[K], Origin], target: Id[K]) -> Origin:
+def require_origin(origins: Mapping[Id[Record], Origin], target: Id[Record]) -> Origin:
     """Return where `target` was authored.
 
     Raises:
@@ -48,11 +49,11 @@ def require_origin[K](origins: Mapping[Id[K], Origin], target: Id[K]) -> Origin:
 class OriginSource(Protocol):
     """Anything `describe` can ask where an id was authored: a `Model`, or a `Draft`."""
 
-    def origin_of(self, target: Id[Any]) -> Origin | None:
+    def origin_of(self, target: Id[Record]) -> Origin | None:
         """Where the record `target` was authored, or `None` if nothing is known."""
         ...
 
-    def key_of(self, target: Id[Any]) -> AuthoringKey | None:
+    def key_of(self, target: Id[Record]) -> AuthoringKey | None:
         """The authoring key of the record `target`, or `None` if no record holds it."""
         ...
 
@@ -69,9 +70,7 @@ class DescribedFinding:
     subjects: tuple[str, ...]
 
 
-def describe_parts[K](
-    finding: Finding, source: OriginSource, names: Mapping[Id[K], str] | None = None
-) -> DescribedFinding:
+def describe_parts[K](finding: Finding, source: OriginSource, names: Mapping[Id[K], str] | None = None) -> DescribedFinding:
     """`finding` with every subject shown as its origin, kept as head and subjects.
 
     `names` gives a subject its printed name, `name  (file:line)`, and drops the key.
@@ -83,9 +82,7 @@ def describe_parts[K](
     )
 
 
-def describe(
-    problem: ModelError | Finding, source: OriginSource, names: dict[Id[Any], str] | None = None
-) -> str:
+def describe(problem: ModelError | Finding, source: OriginSource, names: dict[Id[Record], str] | None = None) -> str:
     """Render `problem` as text with every id it carries shown as its origin (kernel-model.md 5.8).
 
     The only place ids are turned into text for humans. The message is printed verbatim,
@@ -98,9 +95,7 @@ def describe(
     return "\n".join(_lines(problem, source, names or {}))
 
 
-def _lines(
-    problem: ModelError | Finding, source: OriginSource, names: Mapping[Id[Any], str]
-) -> tuple[str, ...]:
+def _lines(problem: ModelError | Finding, source: OriginSource, names: Mapping[Id[Any], str]) -> tuple[str, ...]:
     if isinstance(problem, Finding):
         parts = describe_parts(problem, source, names)
         return (parts.head, *(f"  subject: {text}" for text in parts.subjects))
@@ -130,7 +125,7 @@ def _extra_lines(problem: ModelError, source: OriginSource) -> list[str]:
                 f"  field: {problem.field}",
                 f"  target: {_render(problem.target, source)}",
             ]
-        case MergeConflict():
+        case MergeConflictError():
             extra = [
                 f"  record: {_render(problem.record_id, source)}",
                 f"  first: {problem.origin_a.file}:{problem.origin_a.line}",

@@ -1,4 +1,4 @@
-schema = 1
+schema = 2
 
 [part]
 mpn = "DEMO-FUSE-LINK-500MA-T"
@@ -8,5 +8,5 @@ category = "protection"
 class_code = "F"
 
 [rating]
-voltage_dc_v = "1000"
-current_dc_a = "0.5"
+voltage = [{ nom = "1000 V", at = ["DC"] }]
+current = [{ nom = "0.5 A", at = ["DC"] }]

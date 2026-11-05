@@ -7,8 +7,9 @@ function's own `FUNCTION_NOT_DRAWN` says why; this one names the wire that lost 
 from typing import TYPE_CHECKING
 
 from fransys_layout import FINDING_CODES
-from fransys_model.kernel import Finding, Severity
-from fransys_model.vocab import ConductorKind, conductors, ports
+from fransys_model.derive import conductors, ports
+from fransys_model.vocab import ConductorKind
+lazy from fransys_model.kernel import Finding
 
 from .placement_skips import FUNCTION_WITHOUT_SYMBOL
 from .write_ids import id_texts
@@ -28,9 +29,7 @@ _INFO = {info.code: info for info in FINDING_CODES}
 def undrawn_connection_findings(model: Model, skipped: Iterable[Skipped]) -> tuple[Finding, ...]:
     """One `CONNECTION_TO_UNDRAWN` per conductor with an end on a function the builder skipped."""
     texts = id_texts(model)
-    undrawn = {
-        texts[s.id] for s in skipped if s.reason == FUNCTION_WITHOUT_SYMBOL and s.id in texts
-    }
+    undrawn = {texts[s.id] for s in skipped if s.reason == FUNCTION_WITHOUT_SYMBOL and s.id in texts}
     if not undrawn:
         return ()
     table = ports(model)
@@ -40,13 +39,5 @@ def undrawn_connection_findings(model: Model, skipped: Iterable[Skipped]) -> tup
             continue
         lost = [end for end in (conductor.a, conductor.b) if table[end].function in undrawn]
         if lost:
-            found.append(
-                Finding(
-                    code="CONNECTION_TO_UNDRAWN",
-                    severity=Severity.WARNING,
-                    subjects=tuple(lost),
-                    message="a connection has an end that is not drawn",
-                    fix=_INFO["CONNECTION_TO_UNDRAWN"].filled(),
-                )
-            )
+            found.append(_INFO["CONNECTION_TO_UNDRAWN"].finding(tuple(lost), "a connection has an end that is not drawn"))
     return tuple(found)

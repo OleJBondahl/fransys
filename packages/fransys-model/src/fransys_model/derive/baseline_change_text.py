@@ -1,6 +1,6 @@
 """The identity and the change words of one `Change` row (reports-0004, model-0279), one home."""
 
-from .rows_baseline import Change  # noqa: TC001 -- signature tests resolve hints at runtime
+lazy from .rows_baseline import Change
 
 
 def change_identity(section: str, parts: tuple[str, ...]) -> str:

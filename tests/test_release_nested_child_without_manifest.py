@@ -2,18 +2,17 @@
 
 `fr.release` of the parent must not pass silently: it reads the child's `baseline/` and finds
 the manifest gone, so it raises `RELEASE_FILE_MISSING` and names the child folder. The fix
-routes a child whose manifest is unreadable to `folder_findings`, which reports the missing file.
 """
 
 import shutil
-import sys
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 import fransys as fr
 import pytest
-
-sys.path.insert(0, str(Path(__file__).parent))
 from release_folders_fixture import build_cabinet
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 @pytest.fixture(scope="module")
@@ -36,7 +35,7 @@ def _copy_without_board_manifest(released: Path, tmp_path: Path) -> Path:
 def test_a_nested_child_without_its_manifest_is_named_by_release(released, tmp_path):
     copy = _copy_without_board_manifest(released, tmp_path)
     result, _scope = build_cabinet()
-    with pytest.raises(fr.BuildErrors) as exc:
+    with pytest.raises(fr.BuildFailedError) as exc:
         fr.release(result, copy, unit="wb-cabinet")
     missing = [f for f in exc.value.findings if f.code == "RELEASE_FILE_MISSING"]
     assert missing, "the missing child manifest must raise RELEASE_FILE_MISSING"

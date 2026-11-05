@@ -1,4 +1,4 @@
-"""A unit's interface strip seen from a container: `d.series` and `d.detail.wire` reach it.
+"""A unit's interface strip seen from a container: `d.series` reaches it.
 
 The one place that decides it (decision author-0023); the series and the wire both call it.
 """
@@ -44,19 +44,13 @@ def _reach(strip: TerminalStrip, design: Design, count: int) -> tuple[Terminal, 
     open_ = [
         (n, terminal)
         for n, terminal in sorted(strip._made.items())
-        if n not in strip._outside
-        and terminal.outer.id not in outside
-        and not terminal._fixed
-        and terminal.function.id not in unused
+        if n not in strip._outside and terminal.outer.id not in outside and not terminal._fixed and terminal.function.id not in unused
     ]
     wired = [n for n, t in open_ if t.inner.id in inside or t.outer.id in inside]
     free = wired + [n for n, _ in open_ if n not in wired]
     if len(free) < count:
         unit = _unit_name(strip)
-        msg = (
-            f"{strip._tag} of unit {unit} has {len(free)} free boundary terminals, "
-            f"{count} needed: a container never adds a terminal to a unit"
-        )
+        msg = f"{strip._tag} of unit {unit} has {len(free)} free boundary terminals, {count} needed: a container never adds a terminal to a unit"
         raise AuthorError(msg)
     numbers = free[:count]
     strip._outside.update(numbers)

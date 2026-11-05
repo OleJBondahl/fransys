@@ -14,9 +14,7 @@ from .texts.end_text import FAR_END, end_text
 lazy from .report_scope import _require_unit
 
 
-def open_core_rows(
-    model: Model, cable: Id[Item], *, unit: Id[Unit] | None = None
-) -> tuple[OpenCoreRow, ...]:
+def open_core_rows(model: Model, cable: Id[Item], *, unit: Id[Unit] | None = None) -> tuple[OpenCoreRow, ...]:
     """One `OpenCoreRow` per open core of `cable`, by core number.
 
     Args:

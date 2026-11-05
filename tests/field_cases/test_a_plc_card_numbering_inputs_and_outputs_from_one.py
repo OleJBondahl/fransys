@@ -1,16 +1,6 @@
-"""Field case: a PLC card that numbers its inputs and outputs from 1 lists two rows, one name.
-
-The engineering shape: one module with a digital input numbered 1 and a digital output numbered
-1, as cards that count each direction on its own do.
-
-The bug: a row's channel designation was the module's designation and the channel number only
-(`-A1:1`), so the input and the output printed the same designation and the list held two rows
-that read alike. The cause: `channel_designation` in `derive/reports.py` never read the signal
-of the channel, so the number alone had to be unique per module.
-
-The fix is decision model-0209: a row is one pin, printed by its port designation, and the two
-channels sit on different pins. The Ch column still reads 1 for both; the pins tell them apart.
-"""
+"""Field case: a PLC card that numbers its inputs and outputs from 1 lists two rows of one designation.
+The bug: a row's channel designation was the module's designation plus the channel number, so input and output printed alike.
+Fixed by model-0209, a row is one pin, printed by its port designation, and the two channels sit on different pins."""
 
 import fransys as fr
 import pytest

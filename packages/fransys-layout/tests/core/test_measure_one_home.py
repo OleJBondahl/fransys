@@ -17,7 +17,7 @@ from .cut_fixtures import elem
 from .test_widen_pass import OPTS
 
 widen_module = importlib.import_module("fransys_layout.core.widen")
-KINDS = {"Trunk", "Marker", "lowered", "reaches"}
+KINDS = {"Trunk", "Marker", "lowered"}
 WATCHED = {"measured_of", "cut_measured", "_recut"}
 
 

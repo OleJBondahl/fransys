@@ -7,18 +7,7 @@ to it starts a new component: its first box follows the same rule, at the last c
 from collections import defaultdict, deque
 lazy from collections.abc import Collection, Hashable, Iterable, Mapping, Sequence
 
-
-def _distances[B: Hashable](first: B, joined: Mapping[B, Sequence[B]]) -> dict[B, int]:
-    """Breadth-first line distance from `first` to every box it reaches."""
-    dist = {first: 0}
-    queue = deque([first])
-    while queue:
-        box = queue.popleft()
-        for other in joined[box]:
-            if other not in dist:
-                dist[other] = dist[box] + 1
-                queue.append(other)
-    return dist
+from fransys_layout.engines.overview.lanes.flow import depths
 
 
 def _reaches[B: Hashable](boxes: tuple[B, ...], lines: Iterable[tuple[B, B]]) -> list[dict[B, int]]:
@@ -32,23 +21,17 @@ def _reaches[B: Hashable](boxes: tuple[B, ...], lines: Iterable[tuple[B, B]]) ->
     reaches = []
     for i in by_rule:
         if boxes[i] not in seen:
-            reaches.append(_distances(boxes[i], joined))
+            reaches.append(depths([boxes[i]], joined))
             seen.update(reaches[-1])
     return reaches
 
 
-def pieces[B: Hashable](
-    boxes: tuple[B, ...], lines: Iterable[tuple[B, B]]
-) -> tuple[tuple[B, ...], ...]:
+def pieces[B: Hashable](boxes: tuple[B, ...], lines: Iterable[tuple[B, B]]) -> tuple[tuple[B, ...], ...]:
     """The separate pieces of a diagram, each its boxes in text order, in column order."""
-    return tuple(
-        tuple(b for b in boxes if b in reached) for reached in _reaches(boxes, tuple(lines))
-    )
+    return tuple(tuple(b for b in boxes if b in reached) for reached in _reaches(boxes, tuple(lines)))
 
 
-def assign_columns[B: Hashable](
-    boxes: tuple[B, ...], lines: Iterable[tuple[B, B]]
-) -> tuple[tuple[B, ...], ...]:
+def assign_columns[B: Hashable](boxes: tuple[B, ...], lines: Iterable[tuple[B, B]]) -> tuple[tuple[B, ...], ...]:
     """Columns left to right, each a tuple of boxes in text order; `boxes` arrive in text order."""
     column: dict[B, int] = {}
     used = 0
@@ -58,34 +41,19 @@ def assign_columns[B: Hashable](
     return tuple(tuple(b for b in boxes if column[b] == c) for c in range(used))
 
 
-def _depths[B: Hashable](column: Sequence[B], joined: Mapping[B, Sequence[B]]) -> dict[B, int]:
-    """Each box's line distance from the nearest box of `column`."""
-    depth = dict.fromkeys(column, 0)
-    queue = deque(column)
-    while queue:
-        box = queue.popleft()
-        for other in joined[box]:
-            if other not in depth:
-                depth[other] = depth[box] + 1
-                queue.append(other)
-    return depth
-
-
 def _side[B: Hashable](part: Sequence[B], depth: Mapping[B, int], left: Collection[B]) -> int:
     """-1 when most of `part`'s boxes beside the column are in `left`, else 1."""
     near = [b for b in part if depth[b] == 1]
     return -1 if 2 * sum(b in left for b in near) > len(near) else 1
 
 
-def _stand[B: Hashable](
-    boxes: tuple[B, ...], joined: Mapping[B, Sequence[B]], column: Sequence[B], left: Collection[B]
-) -> dict[B, int]:
+def _stand[B: Hashable](boxes: tuple[B, ...], joined: Mapping[B, Sequence[B]], column: Sequence[B], left: Collection[B]) -> dict[B, int]:
     """Each box's place beside `column`: 0 in it, else its distance from it, signed by its side.
 
     The boxes left once `column` is taken out fall into parts; a part stands on one side, so no
     line runs across the column.
     """
-    depth = _depths(column, joined)
+    depth = depths(column, joined)
     at = dict.fromkeys(column, 0)
     for first in boxes:
         if first in at or first not in depth:
@@ -116,8 +84,6 @@ def column_columns[B: Hashable](
         joined[b].append(a)
     at = _stand(boxes, joined, column, left)
     low = min(at.values())
-    placed = [
-        tuple(b for b in boxes if at.get(b) == i + low) for i in range(max(at.values()) - low + 1)
-    ]
+    placed = [tuple(b for b in boxes if at.get(b) == i + low) for i in range(max(at.values()) - low + 1)]
     rest = tuple(b for b in boxes if b not in at)
     return (*placed, *assign_columns(rest, lines)) if rest else tuple(placed)

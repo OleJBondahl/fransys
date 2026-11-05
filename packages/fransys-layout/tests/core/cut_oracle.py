@@ -14,7 +14,8 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
 
     from fransys_layout.core.cut_costs import Item
-    from fransys_layout.core.values import BlockList, FlowGraph, Options, PlacementProblem
+    from fransys_layout.core.flow_values import BlockList, FlowGraph
+    from fransys_layout.core.values import Options, PlacementProblem
 
 
 def splits(seq: Sequence[Item], i: int, j: int) -> bool:
@@ -32,7 +33,8 @@ def window_misses(
 ) -> tuple[int, list[tuple[int, int, int, int]]]:
     """(windows checked, [(i, j, item width, row_width)] that disagree); starts every `step`."""
     flow, problem, options = env
-    checked, bad = 0, []
+    checked = 0
+    bad: list[tuple[int, int, int, int]] = []
     for i in range(0, len(seq), step):
         for j in range(i, len(seq)):
             if splits(seq, i, j):

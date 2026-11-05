@@ -1,5 +1,7 @@
 """A stub of a by-others end is dashed and says so, in every mode (O10); other stubs are not."""
 
+from typing import Any
+
 import pytest
 from fold_builders import fold_plant
 
@@ -10,7 +12,7 @@ from fransys_model.layout import OverviewMode
 _MODES = [OverviewMode.PLAIN, OverviewMode.GROUPS, OverviewMode.SEE_THROUGH]
 
 
-def _stubs(rows) -> list:
+def _stubs(rows) -> list[Any]:
     return [b for v in rows for b in v.boxes if b.key.at is not None]
 
 

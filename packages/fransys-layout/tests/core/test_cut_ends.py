@@ -64,6 +64,4 @@ def test_two_arrows_meeting_in_a_row_without_a_trunk_become_one() -> None:
 def test_an_arrow_left_with_an_end_in_a_row_without_a_trunk_is_dropped() -> None:
     rows = {"f:x": frozenset({(1, 0)})}
     assert link_over_empty_rows([_arrow(0, 1)], rows) == []
-    assert link_over_empty_rows([_arrow(0, 1)], {"f:x": frozenset({(1, 0), (1, 1)})}) == [
-        _arrow(0, 1)
-    ]
+    assert link_over_empty_rows([_arrow(0, 1)], {"f:x": frozenset({(1, 0), (1, 1)})}) == [_arrow(0, 1)]

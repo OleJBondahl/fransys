@@ -8,13 +8,14 @@ from __future__ import annotations
 
 from collections import Counter
 from dataclasses import replace
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from options_fixtures import core_options
 
 from fransys_layout.core import Facts, Hints, Net, Options, PinRef, PlacementProblem, Unit
 from fransys_layout.core.place import place_pages
-from fransys_layout.core.values import CutResult, Ref, RefEnd, RefKind
+from fransys_layout.core.values import Ref, RefEnd, RefKind
+lazy from fransys_layout.core.flow_values import CutResult
 lazy from fransys_layout.core.outputs import Marker
 
 from . import pipeline_fixtures
@@ -32,21 +33,15 @@ def plan_of(prob: PlacementProblem, options: Options | None = None) -> CutResult
 
 
 def marked_of(prob: PlacementProblem, options: Options | None = None) -> tuple[Marker, ...]:
-    """The markers of a problem: stages 1 to 4, then place_pages, then mark_pages."""
-    # mark_pages lands with the text markers; imported late so the other plants still load.
-    from fransys_layout.core.text_markers import mark_pages
+    """The markers of a problem: stages 1 to 4, then place_pages, then placed_marks."""
+    # placed_marks lands with the text markers; imported late so the other plants still load.
+    from fransys_layout.core.text_markers import placed_marks
 
     opts = options or core_options(
         marker=MARKER,
-        flip_turn="R180",
-        tag_stagger=True,
-        label_gap=8,
-        parallel_pitch=48,
-        driver_first=True,
-        arrow_sides=("E", "W"),
     )
     cut = pipeline_fixtures.cut_of(prob, opts)
-    return mark_pages(cut, place_pages(cut, prob, opts), prob, opts)
+    return placed_marks(cut, place_pages(cut, prob, opts), prob, opts, {})[0]
 
 
 def tag_chain() -> PlacementProblem:
@@ -79,7 +74,7 @@ def page_wrapped_fan() -> PlacementProblem:
 
     The driver is no hub (not free-sided), so nothing is copied: the page cut stays an arrow.
     """
-    syms = [elem("d0", 500, 400), elem("k1", 700, 400), elem("k2", 600, 400), elem("k3", 600, 400)]
+    syms = [elem("d0", 500, 400), elem("k1", 700, 384), elem("k2", 600, 400), elem("k3", 600, 400)]
     return PlacementProblem(
         AREA,
         tuple(syms),
@@ -88,17 +83,22 @@ def page_wrapped_fan() -> PlacementProblem:
     )
 
 
+def leaving(*pins: PinRef) -> dict[str, Any]:
+    """Facts keywords: each of `pins` has one required conductor to a pin outside the problem (a unit boundary), so it is a hole the cut stubs."""
+    out = [(p, PinRef("out", "x")) for p in pins]
+    return {"far_ends": tuple(out), "groups": tuple(out)}
+
+
 def unit_boundary_stubs() -> PlacementProblem:
     """Net m joins x, y and z on one page, crossing units with boundary pins x.e and z.e.
 
     The crossing flag with two boundary pins plans a stub, with one end at each pin. One page,
     so no arrow stands on a pin: an end that carries an arrow gets no stub.
     """
-    syms = [
-        replace(side(n, 200, 200), unit=u) for n, u in zip("xyz", ("U1", "U3", "U2"), strict=True)
-    ]
+    syms = [replace(side(n, 200, 200), unit=u) for n, u in zip("xyz", ("U1", "U3", "U2"), strict=True)]
     facts = Facts(
         units=(Unit("U1", None, (PinRef("x", "e"),)), Unit("U2", None, (PinRef("z", "e"),))),
+        **leaving(PinRef("x", "e"), PinRef("z", "e")),
     )
     nets = (net("m", "x.e", "y.e", "z.e", crosses_unit=True),)
     return PlacementProblem(AREA, tuple(syms), nets, facts)
@@ -127,7 +127,7 @@ def stubs_in_a_row() -> PlacementProblem:
     """
     ids = [f"e{i}" for i in range(12)]
     pins = tuple(PinRef(i, "n") for i in ids)
-    facts = Facts(units=(Unit("U1", None, pins),))
+    facts = Facts(units=(Unit("U1", None, pins),), **leaving(*pins))
     nets = (Net("m", pins, crosses_unit=True),)
     return PlacementProblem(AREA, tuple(elem(i, 40, 32) for i in ids), nets, facts)
 
@@ -158,7 +158,7 @@ def star_three() -> PlacementProblem:
     """
     ids = ("x", "y", "z")
     pins = tuple(PinRef(i, "n") for i in ids)
-    facts = Facts(units=(Unit("U1", None, pins),))
+    facts = Facts(units=(Unit("U1", None, pins),), **leaving(*pins))
     nets = (Net("m", pins, crosses_unit=True),)
     return PlacementProblem(AREA, tuple(elem(i, 40, 32) for i in ids), nets, facts)
 

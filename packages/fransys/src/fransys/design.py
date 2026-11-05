@@ -14,10 +14,7 @@ from fransys.parts_module import library_digest
 def _check_fresh(module: ModuleType) -> None:
     if library_digest(*module.SOURCES) != module.LIBRARY_DIGEST:
         name = getattr(module, "__name__", repr(module))
-        message = (
-            f"parts module {name} is stale for its sources {list(module.SOURCES)}: "
-            "regenerate with python -m fransys parts-module"
-        )
+        message = f"parts module {name} is stale for its sources {list(module.SOURCES)}: regenerate with python -m fransys parts-module"
         raise AuthorError(message)
 
 

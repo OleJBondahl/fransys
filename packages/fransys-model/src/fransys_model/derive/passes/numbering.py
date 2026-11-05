@@ -4,6 +4,7 @@ Treats a `facet.reserved_designation` text as taken too (fixed-designations spec
 """
 
 import dataclasses
+from collections import Counter
 from typing import TYPE_CHECKING, Final
 
 from fransys_kernel import require_origin
@@ -19,21 +20,17 @@ from fransys_model.derive.designation_label import (
     reference_leaves,
     takes_parents_designation,
 )
-from fransys_model.derive.facts.bars import bar_items
 from fransys_model.derive.facts.units import designating_ancestors
 from fransys_model.derive.harness import all_cables, all_unit_cables
 from fransys_model.derive.indexes import build_indexes
 from fransys_model.derive.lone_cable import lone_cable_harness
 from fransys_model.derive.lookups import terminal_items
 from fransys_model.derive.passes.numbering_assigned import assigned_facets
-from fransys_model.derive.passes.numbering_units import (
-    number_unit_tags,
-    unit_tag_duplicates,
-)
+from fransys_model.derive.passes.numbering_units import unit_tag_duplicates
 from fransys_model.derive.unit_relative_key import unit_relative_key
 from fransys_model.derive.unit_release import unit_release
-from fransys_model.kernel import Finding, Model, Severity, evolve
-from fransys_model.vocab.codes import fix_text
+from fransys_model.kernel import Finding, Model, evolve
+from fransys_model.vocab.codes import finding
 from fransys_model.vocab.enums import Aspect
 from fransys_model.vocab.facets.reserved_designation import ReservedDesignationFacet
 from fransys_model.vocab.finding_ref import ref
@@ -75,10 +72,7 @@ def _renders_a_location(model: Model, idx: Indexes, item: Id[Item]) -> bool:
     """
     nodes = aspect_nodes(model)
     all_placements = placements(model)
-    return any(
-        nodes[all_placements[placement].node].aspect is Aspect.LOCATION
-        for placement in idx.placements_by_item.get(item, ())
-    )
+    return any(nodes[all_placements[placement].node].aspect is Aspect.LOCATION for placement in idx.placements_by_item.get(item, ()))
 
 
 def _terminal_prints(model: Model, terminal: Item) -> bool:
@@ -99,10 +93,7 @@ def _reference_duplicates(model: Model, terminals: frozenset[Id[Item]]) -> list[
     by_text: dict[str, list[Item]] = {}
     for item in items(model).values():
         if (
-            (
-                own_designation_or_none(model, item) is not None
-                or (item.id in terminals and _terminal_prints(model, item))
-            )
+            (own_designation_or_none(model, item) is not None or (item.id in terminals and _terminal_prints(model, item)))
             # guards the shared text; cannot fail on the base, an accessory has no designation
             and not takes_parents_designation(model, item.id)
             and lone_cable_harness(model, item.id) is None  # model-0148: it prints as its harness
@@ -113,12 +104,10 @@ def _reference_duplicates(model: Model, terminals: frozenset[Id[Item]]) -> list[
         ):
             by_text.setdefault(reference_designation(model, item.id), []).append(item)
     return [
-        Finding(
-            code=REFERENCE_DESIGNATION_DUPLICATE,
-            severity=Severity.ERROR,
-            subjects=tuple(sorted(item.id for item in group)),
-            message=(f"reference designation {text!r} is shared by {len(group)} items"),
-            fix=fix_text(REFERENCE_DESIGNATION_DUPLICATE),
+        finding(
+            REFERENCE_DESIGNATION_DUPLICATE,
+            tuple(item.id for item in group),
+            f"reference designation {text!r} is shared by {len(group)} items",
         )
         for text, group in by_text.items()
         if len(group) > 1
@@ -131,9 +120,7 @@ def _connector_prints(model: Model, idx: Indexes, item: Id[Item], product: str) 
     A connector label equal to a child item's designation is one printed text, so it is compared.
     `connector_segment` is the one place the segment is decided.
     """
-    segments = (
-        connector_segment(model, function) for function in idx.functions_by_item.get(item, ())
-    )
+    segments = (connector_segment(model, function) for function in idx.functions_by_item.get(item, ()))
     return [product + segment for segment in segments if segment]
 
 
@@ -164,23 +151,19 @@ def _product_duplicates(model: Model, terminals: frozenset[Id[Item]]) -> list[Fi
             else:
                 by_unit_text.setdefault((item.unit, printed), []).append(item)
     findings = [
-        Finding(
-            code=PRODUCT_DESIGNATION_DUPLICATE,
-            severity=Severity.ERROR,
-            subjects=tuple(sorted(item.id for item in group)),
-            message=(f"product designation {text!r} is shared by {len(group)} items"),
-            fix=fix_text(PRODUCT_DESIGNATION_DUPLICATE),
+        finding(
+            PRODUCT_DESIGNATION_DUPLICATE,
+            tuple(item.id for item in group),
+            f"product designation {text!r} is shared by {len(group)} items",
         )
         for text, group in by_text.items()
         if len(group) > 1
     ]
     findings.extend(
-        Finding(
-            code=PRODUCT_DESIGNATION_DUPLICATE,
-            severity=Severity.ERROR,
-            subjects=tuple(sorted(item.id for item in group)),
-            message=(f"product designation {text!r} is shared by {len(group)} items"),
-            fix=fix_text(PRODUCT_DESIGNATION_DUPLICATE),
+        finding(
+            PRODUCT_DESIGNATION_DUPLICATE,
+            tuple(item.id for item in group),
+            f"product designation {text!r} is shared by {len(group)} items",
         )
         for (_unit, text), group in by_unit_text.items()
         if len(group) > 1
@@ -210,15 +193,10 @@ def _harness_end_ambiguities(model: Model) -> list[Finding]:
                 if len(ends) > 1 and (text, subjects) not in reported:
                     reported.add((text, subjects))
                     findings.append(
-                        Finding(
-                            code=HARNESS_END_AMBIGUOUS,
-                            severity=Severity.ERROR,
-                            subjects=subjects,
-                            message=(
-                                f"two ends of {cable.designation} print {text!r}{where}; "
-                                "place the unit instances at locations or tag the strips apart"
-                            ),
-                            fix=fix_text(HARNESS_END_AMBIGUOUS),
+                        finding(
+                            HARNESS_END_AMBIGUOUS,
+                            subjects,
+                            f"two ends of {cable.designation} print {text!r}{where}; place the unit instances at locations or tag the strips apart",
                         )
                     )
     return findings
@@ -227,34 +205,26 @@ def _harness_end_ambiguities(model: Model) -> list[Finding]:
 def _port_duplicates(model: Model, terminals: frozenset[Id[Item]]) -> list[Finding]:
     """One finding per (item, printed port text) shared by more than one port of that item.
 
-    The text is `port_designation`. A terminal (two ports, one point), a bar (each screw prints the
-    bar) and an item that cannot print one are left out.
+    The text is `port_designation`. A terminal (two ports, one point) and an item that cannot print one are left out.
     """
     idx = build_indexes(model)
     all_functions = functions(model)
-    bars = bar_items(model)
     findings: list[Finding] = []
     for item in items(model).values():
-        if item.id in terminals or item.id in bars or not can_print_designation(model, item.id):
+        if item.id in terminals or not can_print_designation(model, item.id):
             continue
         by_text: dict[str, list[tuple[Id[Port], str]]] = {}
         for function in idx.functions_by_item.get(item.id, ()):
             for port in idx.ports_by_function.get(function, ()):
-                by_text.setdefault(port_designation(model, port), []).append(
-                    (port, all_functions[function].name)
-                )
+                by_text.setdefault(port_designation(model, port), []).append((port, all_functions[function].name))
         findings.extend(
-            Finding(
-                code=PORT_DESIGNATION_DUPLICATE,
-                severity=Severity.ERROR,
-                subjects=tuple(sorted(port for port, _ in group)),
-                message=(
-                    f"item {ref(item)} prints {text!r} for the ports of functions "
-                    f"{', '.join(sorted({name for _, name in group}))}; the same text names "
-                    "two pins in every list and drawing, so the part's pin markings must "
-                    "tell them apart"
-                ),
-                fix=fix_text(PORT_DESIGNATION_DUPLICATE),
+            finding(
+                PORT_DESIGNATION_DUPLICATE,
+                tuple(port for port, _ in group),
+                f"item {ref(item)} prints {text!r} for the ports of functions "
+                f"{', '.join(sorted({name for _, name in group}))}; the same text names "
+                "two pins in every list and drawing, so the part's pin markings must "
+                "tell them apart",
             )
             for text, group in by_text.items()
             if len(group) > 1
@@ -273,10 +243,17 @@ def _reserved_texts(model: Model, unit: Id[Unit] | None, scope: Id[Item] | None)
     release_id = unit_release(model, unit).id
     group_scope = unit_relative_key(model, scope) if scope is not None else None
     return frozenset[str](
-        facet.text
-        for facet in facets_of(model, ReservedDesignationFacet).values()
-        if facet.subject == release_id and facet.scope == group_scope
+        facet.text for facet in facets_of(model, ReservedDesignationFacet).values() if facet.subject == release_id and facet.scope == group_scope
     )
+
+
+def _collision(text: str, counts: Counter[str], reserved: frozenset[str]) -> str | None:
+    """Why `text` collides: a sibling prints it too, or a released revision held it; else `None`."""
+    if counts[text] > 1:
+        return "another item with the same unit and parent has too"
+    if text in reserved:
+        return "a released revision of this unit's own version has already retired or moved"
+    return None
 
 
 def _duplicates(model: Model, siblings: list[Item], reserved: frozenset[str]) -> list[Finding]:
@@ -285,39 +262,27 @@ def _duplicates(model: Model, siblings: list[Item], reserved: frozenset[str]) ->
     Counts every own text, not tags alone, so a tag equal to another item's own text is caught.
     An assigned text never collides with another assigned one (`_assigned`'s `taken` set).
     """
-    counts: dict[str, int] = {}
-    texts: dict[Id[Item], str | None] = {}
-    for item in siblings:
-        text = own_designation_or_none(model, item)
-        texts[item.id] = text
-        if text is not None:
-            counts[text] = counts.get(text, 0) + 1
+    texts = {item.id: own_designation_or_none(model, item) for item in siblings}
+    counts = Counter(text for text in texts.values() if text is not None)
     findings = []
     for item in siblings:
         text = texts[item.id]
         if text is None:
             continue
-        if counts[text] > 1:
-            reason = "another item with the same unit and parent has too"
-        elif text in reserved:
-            reason = "a released revision of this unit's own version has already retired or moved"
-        else:
+        reason = _collision(text, counts, reserved)
+        if reason is None:
             continue
         findings.append(
-            Finding(
-                code=DESIGNATION_DUPLICATE,
-                severity=Severity.ERROR,
-                subjects=(item.id,),
-                message=f"item {ref(item)} has the designation {text!r}, which {reason}",
-                fix=fix_text(DESIGNATION_DUPLICATE),
+            finding(
+                DESIGNATION_DUPLICATE,
+                (item.id,),
+                f"item {ref(item)} has the designation {text!r}, which {reason}",
             )
         )
     return findings
 
 
-def _sibling_groups(
-    model: Model, terminals: frozenset[Id[Item]]
-) -> dict[tuple[Id[Unit] | None, Id[Item] | None], list[Item]]:
+def _sibling_groups(model: Model, terminals: frozenset[Id[Item]]) -> dict[tuple[Id[Unit] | None, Id[Item] | None], list[Item]]:
     # The group's second element is the item's nearest read-through ancestor (a board or
     # harness), not its structural `parent`: still an item id or `None`.
     by_group: dict[tuple[Id[Unit] | None, Id[Item] | None], list[Item]] = {}
@@ -372,7 +337,7 @@ def number(model: Model) -> tuple[Model, tuple[Finding, ...]]:
         reserved = _reserved_texts(model, unit, scope)
         findings.extend(_duplicates(model, siblings, reserved))
         numbered.extend(assigned_facets(model, siblings, reserved))
-    result = number_unit_tags(_with_facets(model, numbered), _reserved_texts)
+    result = _with_facets(model, numbered)
     findings.extend(unit_tag_duplicates(result, DESIGNATION_DUPLICATE))
     findings.extend(_item_findings(result, terminals))
     ordered = tuple(sorted(findings, key=lambda f: (f.code, f.subjects, f.message)))

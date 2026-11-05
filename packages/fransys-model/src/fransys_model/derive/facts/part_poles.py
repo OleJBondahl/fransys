@@ -7,8 +7,9 @@ so every fact takes templates and links; `part.py` has the `PartBundle` entry.
 
 lazy from collections.abc import Collection, Iterable
 
+from fransys_model.elecdef import PinRole, Side
 from fransys_model.vocab.conductor_marks import CONDUCTOR_MARKS
-from fransys_model.vocab.enums import ConductorMark, FunctionKind, LinkKind, PoleSide, PortRole
+from fransys_model.vocab.enums import ConductorMark, FunctionKind
 from fransys_model.vocab.markings import (
     Pole,
     is_pole_by_role,
@@ -17,11 +18,12 @@ from fransys_model.vocab.markings import (
     port_order_key,
 )
 from fransys_model.vocab.roles import function_role_of
+lazy from fransys_model.elecdef import LinkKind
 lazy from fransys_model.kernel import Id
 lazy from fransys_model.vocab.templates import InternalLink, PortTemplate
 
 # IEC 60947: the coil's A1 is the line side, A2 the load side
-_COIL_SIDES = {"A1": PoleSide.LINE, "A2": PoleSide.LOAD}
+_COIL_SIDES = {"A1": Side.A, "A2": Side.B}
 
 
 def unlinked_poles(templates: Iterable[PortTemplate]) -> tuple[Pole, ...]:
@@ -43,20 +45,17 @@ def _single(pin: PortTemplate) -> Pole:
 def _loads_terminals(kind: FunctionKind, pins: list[PortTemplate]) -> bool:
     """Pins that all name a conductor and none has a side are a load's terminals (a motor)."""
     names = {pin.name for pin in pins}
-    return bool(pins) and all(
-        conductor_of(pin) is not None and pole_side(pin, kind, names) is None for pin in pins
-    )
+    return bool(pins) and all(conductor_of(pin) is not None and pin_side(pin, kind, names) is None for pin in pins)
 
 
 def _fallback(pins: list[PortTemplate], *, sideless: bool) -> tuple[Pole, ...]:
     """The model pairs the pins; a sideless function keeps a lone pin, a line/load pair or marks."""
     if not sideless:
         return unlinked_poles(pins)
-    if len(pins) == 1:
-        return (_single(pins[0]),)
-    if len(pins) == 2:  # noqa: PLR2004 -- a pole has two ends
-        pair = pole_between(*pins)
-        if pair.line is not None:
+    match pins:
+        case [one]:
+            return (_single(one),)
+        case [first, second] if (pair := pole_between(first, second)).line is not None:
             return (pair,)
     if pins and all(conductor_of(pin) is not None for pin in pins):
         return tuple(_single(pin) for pin in pins)
@@ -82,26 +81,24 @@ def poles_of_template(
     own = {t.id: t for t in templates}
     mine = [link for link in links if link.a in own and link.b in own]
     found = poles_by_role(function_role_of(kind), mine, own)
-    pins = sorted((t for t in own.values() if t.role is not PortRole.PE), key=port_order_key)
+    pins = sorted((t for t in own.values() if t.pin_role is not PinRole.PE), key=port_order_key)
     return found or _fallback(pins, sideless=sideless or _loads_terminals(kind, pins))
 
 
-def pole_side(
-    template: PortTemplate, kind: FunctionKind, pole_pins: Collection[str]
-) -> PoleSide | None:
+def pin_side(template: PortTemplate, kind: FunctionKind, pole_pins: Collection[str]) -> Side | None:
     """The side of a pin: the stated one, else the one its marking gives (IEC 60947).
 
     A coil's `A1` is the line side, `A2` the load side. A pin on a pole link (`pole_pins`, by
     name) with a numeric marking is `line` when odd, `load` when even. Any other pin has none.
     The marking is the pin's printed one, else its name.
     """
-    if template.pole_side is not None:
-        return template.pole_side
+    if template.side is not None:
+        return template.side
     marking = template.marking or template.name
     if kind is FunctionKind.COIL:
         return _COIL_SIDES.get(marking)
     if marking.isdigit() and template.name in pole_pins:
-        return PoleSide.LINE if int(marking) % 2 else PoleSide.LOAD
+        return Side.A if int(marking) % 2 else Side.B
     return None
 
 
@@ -130,12 +127,10 @@ def pole_count(poles: Iterable[Pole]) -> int:
     return len(groups)
 
 
-def pole_pin_names(
-    kind: FunctionKind, links: Iterable[tuple[str, str, LinkKind]]
-) -> frozenset[str]:
+def pole_pin_names(kind: FunctionKind, links: Iterable[tuple[str, str, LinkKind]]) -> frozenset[str]:
     """The names of the pins on a pole link of a function of `kind`; `links` are `(a, b, kind)`.
 
-    A pole link is a switched or protective one (`is_pole_by_role`); `pole_side` reads these names.
+    A pole link is a switched or protective one (`is_pole_by_role`); `pin_side` reads these names.
     """
     role = function_role_of(kind)
     return frozenset(name for a, b, link in links if is_pole_by_role(role, link) for name in (a, b))

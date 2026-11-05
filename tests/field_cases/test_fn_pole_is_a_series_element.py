@@ -1,16 +1,10 @@
 """Field case: one pole of a multi-pole function stands in a series as a one-pole element.
-
-A two-pole switch is one function (pins 1/2 and 3/4). Its second pole alone feeds a one-pole
-breaker, and a changeover relay's make throw takes its common from the first pole alone.
-
-The bug: a multi-pole function in a series sets its whole pole count ("S1.main leaves with 2 poles
-(2, 4) but F2.element takes 1 pole"), so a single pole needed a `d.wire` with pin names.
-
-Fixing decision: author-0056 (API-FRICTION-2 C5): `fn.pole(n)` counts from 1 in pole order.
-"""
+The bug: a multi-pole function in a series set its whole pole count, so a single pole needed a `d.wire` with pin names.
+Fixed by author-0056 (API-FRICTION-2 C5): `fn.pole(n)` counts from 1 in pole order."""
 
 import fransys as fr
 import pytest
+from _field_shared import wire_ends
 from fransys.colours import BK
 
 
@@ -21,13 +15,10 @@ def _design(build):
     return d
 
 
-def _ends(d) -> set[frozenset]:
-    return {frozenset((r.from_, r.to)) for r in fr.derive.wire_rows(fr.build(d).model)}
-
-
 def _pole_to_breaker(d, s1) -> None:
     f2 = d.device("F2", "DEMO-MCB-C6")
     d.series(s1.main.pole(2), f2.element, wire=(BK, 0.75))
+    d.earth(f2["2"])
 
 
 def _pole_to_relay(d, s1) -> None:
@@ -36,13 +27,13 @@ def _pole_to_relay(d, s1) -> None:
 
 
 def test_pole_two_load_feeds_the_one_pole_breaker_and_pole_one_is_untouched() -> None:
-    ends = _ends(_design(_pole_to_breaker))
+    ends = wire_ends(_design(_pole_to_breaker))
     assert frozenset(("-S1:4", "-F2:1")) in ends
     assert not any(pin in end for end in ends for pin in ("-S1:1", "-S1:2", "-S1:3"))
 
 
 def test_pole_one_load_feeds_a_relay_common_and_pole_two_is_untouched() -> None:
-    ends = _ends(_design(_pole_to_relay))
+    ends = wire_ends(_design(_pole_to_relay))
     assert frozenset(("-S1:2", "-K1:11")) in ends
     assert not any(pin in end for end in ends for pin in ("-S1:3", "-S1:4"))
 
@@ -78,5 +69,6 @@ def test_pole_one_of_a_one_pole_function_is_the_function() -> None:
     def build(d, s1) -> None:
         f2 = d.device("F2", "DEMO-MCB-C6")
         d.series(s1.main.pole(1), f2.element.pole(1), wire=(BK, 0.75))
+        d.earth(f2["2"])
 
-    assert frozenset(("-S1:2", "-F2:1")) in _ends(_design(build))
+    assert frozenset(("-S1:2", "-F2:1")) in wire_ends(_design(build))

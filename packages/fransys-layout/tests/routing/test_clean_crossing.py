@@ -42,9 +42,7 @@ def _field(axes) -> Field:
     )
 
 
-@pytest.mark.parametrize(
-    ("other", "clean"), [(H, True), (V, False), (BOTH, False)], ids=["across", "along", "corner"]
-)
+@pytest.mark.parametrize(("other", "clean"), [(H, True), (V, False), (BOTH, False)], ids=["across", "along", "corner"])
 def test_the_router_enters_a_foreign_cell_north_only_across_its_straight_wire(other, clean) -> None:
     """Heading north into a cell whose foreign wire runs `h` is a crossing; `v` or both is not."""
     field = _field({(40, 32): other})

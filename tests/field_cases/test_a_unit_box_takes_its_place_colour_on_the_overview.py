@@ -1,19 +1,10 @@
 """Field case: a unit instance added at a place, seen on the overview under 'Colour by location'.
-
-Engineering shape: two places, ER and FLD. A unit instance PC is added with `place="ER"`; one
-lamp stands in FLD and hangs on a cable from the unit. The page colours every box by its class
-in the chosen split, and the location split's class is the place's label.
-
-The bug: the unit's own box (+ER-PC) had no location class, so it drew grey, while the items
-inside it (-H1, -X1) drew in ER's colour.
-
-Fix: overview-0006. The box takes the class of `derive.unit_location`, the one fact the unit
-documents print their ends against.
-"""
+The bug: the unit's own box had no location class and drew grey, while the items inside it drew in the place's colour.
+Fixed by overview-0006, the box takes the class of `derive.unit_location`, the fact the unit documents print their ends against."""
 
 import json
 import re
-from typing import NamedTuple
+from typing import Any, NamedTuple
 
 import fransys as fr
 import pytest
@@ -33,12 +24,14 @@ def _cab(u: fr.Design) -> _Io:
         x1 = u.terminal_strip("X1", "DEMO-TB-2.5", pe="DEMO-TB-PE-2.5", interface=True)
         out = x1.run("L1", 1)
         lamp = u.device("H1", "DEMO-LAMP-24")
-        u.detail.wire(out[1], lamp["1"], wire=(BU, 0.5))
+        u.series(out[1].inner, lamp["1"], wire=(BU, 0.5))
+        neutral = u.terminal_strip("X2", "DEMO-TB-2.5")
+        u.series(neutral[1].inner, lamp["2"], wire=(BU, 0.5))
     return _Io(out)
 
 
 @pytest.fixture(scope="module")
-def boxes(tmp_path_factory) -> list[dict]:
+def boxes(tmp_path_factory) -> list[dict[str, Any]]:
     d = fr.design("demo_parts", place="ER")
     d.project(title="FC", number="P-1", customer="Example Co", revision=1, author="OJB")
     d.revision(1, date="2026-10-14", text="First issue", created="XX")
@@ -47,6 +40,8 @@ def boxes(tmp_path_factory) -> list[dict]:
     unit = d.add(_cab, "PC", place="ER")
     with d.function("OUT", "Outside"):
         lamp = d.device("H8", "DEMO-LAMP-24", place="FLD")
+        neutral = d.terminal_strip("X9", "DEMO-TB-2.5", place="FLD")
+        d.series(neutral[1].inner, lamp["2"], wire=(BU, 0.5))
         d.cable("W1", "DEMO-CBL-4G1.5", length_m=10).core(1, lamp["1"], unit.out[1])
     written = fr.write(fr.build(d, system_document()), tmp_path_factory.mktemp("out"))
     page = next(p for p in written if p.name.endswith("overview.html")).read_text()
@@ -55,7 +50,7 @@ def boxes(tmp_path_factory) -> list[dict]:
     return [box for view in json.loads(block.group(1))["views"] for box in view["boxes"]]
 
 
-def _location_class(boxes: list[dict], first_line: str) -> str | None:
+def _location_class(boxes: list[dict[str, Any]], first_line: str) -> Any:
     return next(b for b in boxes if b["lines"][0] == first_line)["cls"][_LOCATION]
 
 

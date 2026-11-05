@@ -9,30 +9,26 @@ from options_fixtures import core_options
 from fransys_layout.core import Facts, PinRef, PlacementProblem
 from fransys_layout.core.geometry import marker_box
 from fransys_layout.core.route import route_pages
-from fransys_layout.core.text_markers import mark_pages
+from fransys_layout.core.text_markers import placed_marks
 from fransys_layout.core.values import CutEnd
 
 from .conftest import MARKER
 from .cut_fixtures import AREA, elem, net
 from .pipeline_fixtures import cut_of, placed_from
+from .text_fixtures import leaving
 
 
 def _drawn(*, cut: bool):
     lone = replace(net("m", "x.s"), cut=(CutEnd(PinRef("x", "s")),) if cut else ())
-    prob = PlacementProblem(AREA, (elem("x"),), (lone,), facts=Facts())
+    prob = PlacementProblem(AREA, (elem("x"),), (lone,), facts=Facts(**leaving(PinRef("x", "s"))) if cut else Facts())
     opts = core_options(
         marker=MARKER,
-        flip_turn="R180",
-        tag_stagger=True,
-        label_gap=8,
-        driver_first=True,
-        arrow_sides=("E", "W"),
     )
     result = cut_of(prob, opts)
     placement = placed_from(result, prob, opts)
     routes = route_pages(placement, result, prob, opts)
     wires = [w for p in routes.pages for w in p.wires if w.net == "m"]
-    return opts, wires, mark_pages(result, placement, prob, opts)
+    return opts, wires, placed_marks(result, placement, prob, opts, {})[0]
 
 
 def test_a_lone_cut_pin_has_a_lead_one_wiring_step_long() -> None:

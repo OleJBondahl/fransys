@@ -2,7 +2,7 @@
 
 `OVERLAP`: two symbol bodies, a text and a body, two texts, a wire through a text, or a wire
 across a body meet with positive area. `OUT_OF_PAGE`: a body, a text or a wire vertex lies outside
-the content box. `WIRE_OVER_MARKER`: a wire or a dot meets a reference marker's box.
+the content box or touches its edge (R746). `WIRE_OVER_MARKER`: a wire or a dot meets a reference marker's box.
 `WIRE_NOT_ORTHOGONAL`: a wire has a diagonal segment. A unit frame is not
 a body and a text is not part of an outline. Pure: reads `Drawing` values only. One finding per
 code and page, naming up to `_NAMED` of its members.
@@ -11,9 +11,9 @@ code and page, naming up to `_NAMED` of its members.
 from itertools import combinations
 from typing import TYPE_CHECKING
 
-from fransys_layout.core import Box, overlaps
+from fransys_layout.core import Box, inside, overlaps
 from fransys_layout.drawing import page_texts, struck_texts, text_overlaps
-from fransys_model.kernel import Finding
+lazy from fransys_model.kernel import Finding
 
 from .codes import FINDING_CODES
 from .drawn_geometry import crooked, dot_on_marker, dot_on_pin, over_markers, stray, through_bodies
@@ -38,14 +38,6 @@ def _at(box: Box) -> str:
     return f"({box.x}, {box.y})"
 
 
-def _span(lo: int, size: int, outer_lo: int, outer_size: int) -> bool:
-    return outer_lo <= lo and lo + size <= outer_lo + outer_size
-
-
-def _inside(box: Box, page: Box) -> bool:
-    return _span(box.x, box.w, page.x, page.w) and _span(box.y, box.h, page.y, page.h)
-
-
 def _pairs(drawing: Drawing, ports: Mapping[str, XY]) -> Iterator[str]:
     """The key pair of each two symbol bodies that meet.
 
@@ -67,7 +59,7 @@ def page_overlaps(drawing: Drawing, ports: Mapping[str, XY] | None = None) -> li
         f"text at {_at(t.box)} / {s.key}"
         for t in texts
         for s in drawing.symbols
-        if s.outline is not None and overlaps(t.box, s.outline)
+        if s.outline is not None and overlaps(t.box, s.outline) and not (getattr(t, "kind", "") == "SLOT" and getattr(t, "owner", "") == s.id)
     ]
     found += ["text / text"] * text_overlaps(texts)
     found += ["wire / text"] * struck_texts(drawing.wires, texts)
@@ -76,22 +68,15 @@ def page_overlaps(drawing: Drawing, ports: Mapping[str, XY] | None = None) -> li
 
 def outside(drawing: Drawing) -> list[str]:
     """What lies outside the content box of one page: bodies, then texts."""
-    page = Box(0, 0, drawing.area.w, drawing.area.h)
-    found = [s.key for s in drawing.symbols if s.outline and not _inside(s.outline, page)]
-    texts = [f"text at {_at(t.box)}" for t in page_texts(drawing) if not _inside(t.box, page)]
+    found = [s.key for s in drawing.symbols if s.outline and not inside(s.outline, drawing.area)]
+    texts = [f"text at {_at(t.box)}" for t in page_texts(drawing) if not inside(t.box, drawing.area)]
     return found + texts
 
 
 def _finding(code: str, page: Id[Page], members: list[str]) -> Finding:
     named = ", ".join(members[:_NAMED])
     more = f" and {len(members) - _NAMED} more" if len(members) > _NAMED else ""
-    return Finding(
-        code=code,
-        severity=_INFO[code].severities[0],
-        subjects=(page,),
-        message=f"{len(members)} on one page: {named}{more}",
-        fix=_INFO[code].filled(),
-    )
+    return _INFO[code].finding((page,), f"{len(members)} on one page: {named}{more}")
 
 
 def _page_findings(page: Id[Page], part: PagePart) -> list[Finding]:

@@ -6,7 +6,7 @@ from collections import defaultdict
 from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING
 
-from .cycles import cycle_split
+from .flow_values import BiasedEnd, Column, CrossLink, End, Fan, FlowGraph, Lane
 from .geometry import column_extent, stack_lane
 from .keys import natural_key
 from .series_tree import anchor_signs
@@ -15,6 +15,7 @@ from .topology_chains import (
     Ends,
     Facts,
     MemberDraft,
+    break_cycles,
     chains,
     fold_parallel,
     links_of,
@@ -23,9 +24,10 @@ from .topology_chains import (
 from .topology_check import cell_findings
 from .topology_elements import (
     Elem,
+    NetEnd,
     elements,
     net_ends,
-    wired_pins,
+    netted_pins,
 )
 from .topology_hold import hold_cells
 from .topology_lanes import lanes_of
@@ -39,25 +41,13 @@ from .topology_split import (
     split_fans,
 )
 from .topology_tree import TreeFold, source_first, tree_folds, tree_member_lanes
-from .values import (
-    BiasedEnd,
-    Column,
-    CrossLink,
-    End,
-    Fan,
-    FlowGraph,
-    Lane,
-    Options,
-    PinRef,
-    PlacementProblem,
-)
+from .values import Options, PinRef, PlacementProblem
 lazy from .sym_values import Sym
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
     from .topology_chains import Link
-    from .topology_elements import NetEnd
     from .topology_fans import LaneDraft, Slot
     from .values import Bundle
 
@@ -76,12 +66,10 @@ class ColumnEnv:
 
 def build_flow(problem: PlacementProblem, options: Options) -> FlowGraph:
     """Pins, nodes and nets in; columns of lanes, fans, cross-links and biased ends out."""
-    wired = wired_pins(problem)
+    wired = netted_pins(problem)
     drawn = {s.id: s for s in problem.symbols}
     elems = {e.key: e for s in drawn.values() for e in elements(s, wired)}
-    ends, folds, tree = _folded(
-        problem, _ends_of(problem, wired, drawn, elems), elems, (drawn, options.wire_min)
-    )
+    ends, folds, tree = _folded(problem, _ends_of(problem, wired, drawn, elems), elems, (drawn, options.wire_min))
     ends, chain_lanes, notes = box_chains(ends, drawn, options, problem.facts.series)
     facts = Facts(
         elems,
@@ -89,13 +77,15 @@ def build_flow(problem: PlacementProblem, options: Options) -> FlowGraph:
         ends,
         dict(wired),
         options.end_bias_weight,
+        options.anchor_weight,
+        options.boxpin_weight,
         options.flip_turn,
         {net: b.id for net, b in _bundles(problem).items()},
         anchor_signs(problem.facts.series),
     )
-    links = links_of(ends)
-    lanes, slot = _laid(links, (ends, folds, tree), facts, (options, chain_lanes))
-    fans, cross, attached = fans_split(
+    links = break_cycles(links_of(ends, elems, drawn, frozenset(n for n, b in _bundles(problem).items() if b.form in options.trunk_forms)))
+    lanes, slot, joins = _laid(links, (ends, folds, tree), facts, (options, chain_lanes))
+    fans, cross, attached, tagged = fans_split(
         ends,
         links,
         FanEnv(
@@ -106,8 +96,10 @@ def build_flow(problem: PlacementProblem, options: Options) -> FlowGraph:
             _bundles(problem),
             options.bundle_direction,
             cut=frozenset(n.id for n in problem.nets if n.cut),
+            tag_across=options.tag_across_body,
         ),
     )
+    cross = (*cross, *_join_links(joins, facts.net_of, lanes))
     env = ColumnEnv(drawn, options, *_nets_of(fans, cross), attached, facts.net_of)
     env, cross = _unseat_boxes(lanes, env, fans, cross, ends)
     columns, fans, cross = _split_cycles(lanes, env, fans, cross)
@@ -115,12 +107,33 @@ def build_flow(problem: PlacementProblem, options: Options) -> FlowGraph:
     return FlowGraph(
         columns,
         fans,
-        cross,
-        _biased(drawn, order),
-        cycle_split(problem),
+        _tagged(cross, problem),
+        tuple(BiasedEnd(s.id, p.id, p.end_rank) for s in (drawn[i] for i in order) for p in s.pins if p.end_bias),
         order,
-        (*cell_findings(drawn, elems, columns), *notes),
+        (*cell_findings(drawn, elems, columns), *notes, *tagged),
+        frozenset(frozenset((a.sym, b.sym)) for a, b in joins),
     )
+
+
+def _tagged(cross: tuple[CrossLink, ...], problem: PlacementProblem) -> tuple[CrossLink, ...]:
+    """A link the router lost (`Net.tagged`, layout-0508) splits: its lost ends stay one link, the rest another (a lone one keeps a lost end).
+
+    The lost link is not `tagged`: the cut plans its page-crossing pairs from `Net.tagged`, and its ends on one page are routed like a cut
+    net's (R417) and counted joined by the ledger; only an across-body link is a tag pair never routed (layout-0440).
+    """
+    lost = [(n.id, frozenset(t)) for n in problem.nets for t in n.tagged]
+    out: list[CrossLink] = []
+    for c in cross:
+        mine = [t for n, t in lost if n == c.net and t <= {a.pin for a in c.ends}]
+        gone = frozenset().union(*mine)
+        if not mine:
+            out.append(c)
+            continue
+        lost_ends = tuple(a for a in c.ends if a.pin in gone)
+        out.append(replace(c, ends=lost_ends))
+        if rest := tuple(a for a in c.ends if a.pin not in gone):
+            out.append(replace(c, ends=(*rest, lost_ends[0]) if len(rest) == 1 else rest))
+    return tuple(out)
 
 
 def _laid(
@@ -128,17 +141,21 @@ def _laid(
     parts: tuple[Ends, Mapping[str, tuple[str, ...]], tuple[TreeFold, ...]],
     facts: Facts,
     more: tuple[Options, Sequence[LaneDraft]],
-) -> tuple[list[LaneDraft], Slot]:
+) -> tuple[list[LaneDraft], Slot, list[tuple[PinRef, PinRef]]]:
     """The chains oriented source first as lanes, then the members of folds and trees, boxes."""
     (ends, folds, tree), (options, chain_lanes) = parts, more
     paths = chains(links, facts.elems, _dealt(ends, folds, tree))
     oriented = orient_chains(paths, facts, together=options.bundle_direction)
-    lanes, slot = lanes_of(
-        source_first(oriented, tree, facts), facts.elems, facts.syms, options.flip_turn
-    )
+    lanes, slot, joins = lanes_of(source_first(oriented, tree, facts), facts.elems, facts.syms, options, _hubs_of(ends))
+    joins = [(a, b) for a, b in joins if facts.net_of.get(a) in links]
     found = [*lanes, *_members((folds, tree), lanes, facts, options), *chain_lanes]
     hold_cells(found, tree)
-    return found, slot
+    return found, slot, joins
+
+
+def _join_links(joins: Sequence[tuple[PinRef, PinRef]], net_of: Mapping[PinRef, str], lanes: Sequence[LaneDraft]) -> tuple[CrossLink, ...]:
+    """A join whose cells have no pin facing each other leaves the lane: its two pins are a cross-link for the router (layout-0482)."""
+    return tuple(cross_link(n, [NetEnd(n, None, a, "bottom"), NetEnd(n, None, b, "top")], lanes) for a, b in joins if (n := net_of.get(a)))
 
 
 def _bundles(problem: PlacementProblem) -> dict[str, Bundle]:
@@ -174,14 +191,20 @@ def _dealt(
     tree: Sequence[TreeFold],
 ) -> set[str]:
     """Elements that start no chain: through ends of fan nets and the members of a fold."""
-    dealt = {
-        e.elem or ""
-        for es in ends.values()
-        if len(es) > 1
-        for e in es
-        if e.site == "through" and e.elem
-    }
+    dealt = {e.elem or "" for es in ends.values() if len(es) > 1 for e in es if e.site == "through" and e.elem}
     return dealt | {m for ms in folds.values() for m in ms} | {m for f in tree for m in f.members}
+
+
+def _hubs_of(ends: Mapping[str, tuple[NetEnd, ...]]) -> dict[PinRef, set[str]]:
+    """Per pin of a fan net that is not a through end, the through ends the fan deals beside it."""
+    hubs: dict[PinRef, set[str]] = {}
+    for es in ends.values():
+        through = {e.elem for e in es if e.site == "through" and e.elem}
+        if len(es) > 1 and through:
+            for e in es:
+                if e.site != "through" and e.elem:
+                    hubs.setdefault(e.pin, set()).update(through)
+    return hubs
 
 
 def _unseat_boxes(
@@ -195,15 +218,11 @@ def _unseat_boxes(
 
     Its box-pin net is drawn as a cross-link wire, so the driver is not pinned to the box's node.
     """
-    stand = {
-        a.column for _, _, drivers in bundle_conflicts(_columns(lanes, env), fans) for a in drivers
-    }
+    stand = {a.column for _, _, drivers in bundle_conflicts(_columns(lanes, env), fans) for a in drivers}
     drop = {k: pin for k, pin in env.attached.items() if k[0] in stand}
     if not drop:
         return env, cross
-    nets = tuple(
-        dict.fromkeys(env.net_of[pin] for pin in drop.values())
-    )  # fans_of walks nets sorted
+    nets = tuple(dict.fromkeys(env.net_of[pin] for pin in drop.values()))  # fans_of walks nets in the order given
     links = tuple(cross_link(n, [e for e in ends[n] if e.site != "through"], lanes) for n in nets)
     attached = {k: v for k, v in env.attached.items() if k not in drop}
     return replace(env, attached=attached, cross_nets=env.cross_nets | set(nets)), cross + links
@@ -234,29 +253,14 @@ def _ends_of(
     drawn: Mapping[str, Sym],
     elems: Mapping[str, Elem],
 ) -> Ends:
-    elem_of_pin = {
-        PinRef(e.sym, p.id): e
-        for e in elems.values()
-        for p in drawn[e.sym].pins
-        if e.form == "free" or p.id in (e.n_pin, e.s_pin)
-    }
+    elem_of_pin = {PinRef(e.sym, p.id): e for e in elems.values() for p in drawn[e.sym].pins if e.form == "free" or p.id in (e.n_pin, e.s_pin)}
     live = set(wired.values())
-    return {n.id: net_ends(n, elem_of_pin, drawn) for n in problem.nets if n.id in live}
+    joined = {frozenset(pair) for pair in problem.facts.joined}
+    return {n.id: net_ends(n, elem_of_pin, drawn, joined) for n in problem.nets if n.id in live}
 
 
-def _nets_of(
-    fans: tuple[Fan, ...], cross: tuple[CrossLink, ...]
-) -> tuple[dict[str, str], set[str]]:
+def _nets_of(fans: tuple[Fan, ...], cross: tuple[CrossLink, ...]) -> tuple[dict[str, str], set[str]]:
     return {net: f.id for f in fans for net in f.nets}, {c.net for c in cross}
-
-
-def _biased(drawn: Mapping[str, Sym], order: Sequence[str]) -> tuple[BiasedEnd, ...]:
-    return tuple(
-        BiasedEnd(s.id, p.id, p.end_rank)
-        for s in (drawn[i] for i in order)
-        for p in s.pins
-        if p.end_bias
-    )
 
 
 def _columns(lanes: Sequence[LaneDraft], env: ColumnEnv) -> tuple[Column, ...]:
@@ -267,8 +271,8 @@ def _columns(lanes: Sequence[LaneDraft], env: ColumnEnv) -> tuple[Column, ...]:
     out = []
     for col, drafts in by_col.items():
         drafts.sort(key=lambda d: d.index)
-        heads = tuple(_end(d, 0, env, env.attached.get((col, d.index, "head"))) for d in drafts)
-        feet = tuple(_end(d, -1, env, env.attached.get((col, d.index, "foot"))) for d in drafts)
+        heads = tuple(_end(d, 0, env, env.attached.get((col, d.index, "head")), i) for i, d in enumerate(drafts))
+        feet = tuple(_end(d, -1, env, env.attached.get((col, d.index, "foot")), i) for i, d in enumerate(drafts))
         lanes_v = tuple(Lane(tuple(d.cells), d.offset) for d in drafts)
         column = build_column(col, lanes_v, (heads, feet), syms, env.options)
         out.append(replace(column, hops=drafts[0].hops))
@@ -289,7 +293,7 @@ def build_column(
     return Column(col_id, lanes, ends[0], ends[1], height, right - left)
 
 
-def _end(d: LaneDraft, which: int, env: ColumnEnv, box_pin: PinRef | None) -> End:
+def _end(d: LaneDraft, which: int, env: ColumnEnv, box_pin: PinRef | None, lane: int) -> End:
     if isinstance(d, MemberDraft):
         return d.ends[which]
     cell = d.cells[which]
@@ -302,7 +306,7 @@ def _end(d: LaneDraft, which: int, env: ColumnEnv, box_pin: PinRef | None) -> En
     if pin.end_bias:
         return End("biased", None, ref)
     if box_pin is not None:
-        return End("boxpin", net, box_pin)
+        return End("boxpin", net, box_pin, lane=lane)
     if net in env.fan_of_net:
         return End("fan", net, ref, fan=env.fan_of_net[net])
     return End("crosslink", net, ref) if net in env.cross_nets else End("open", net, ref)

@@ -2,10 +2,11 @@
 
 from typing import TYPE_CHECKING, Final
 
-from fransys_model.checks._finding import finding, ordered
+from fransys_model.checks._finding import ordered
 from fransys_model.derive.facts.unit_names import unit_name_unresolved, units_named
-from fransys_model.kernel import Finding, Severity
+from fransys_model.vocab.codes import finding
 from fransys_model.vocab.tables import documents
+lazy from fransys_model.kernel import Finding
 
 if TYPE_CHECKING:
     from fransys_model.kernel import Model
@@ -27,5 +28,5 @@ def check_documents(model: Model) -> tuple[Finding, ...]:
         if len(matches) == 1:
             continue
         message = unit_name_unresolved(model, document.unit_name)
-        found.append(finding(DOCUMENT_UNIT_UNRESOLVED, Severity.ERROR, (document.id,), message))
+        found.append(finding(DOCUMENT_UNIT_UNRESOLVED, (document.id,), message))
     return ordered(found)

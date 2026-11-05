@@ -2,8 +2,6 @@
 
 The public surface is `fr.__all__`, `fr.derive.__all__`, `fransys.colours`, and every keyword
 of every public call and `d.*` method, with the `d.layout.profile` and `d.layout.sheet` numbers.
-It is collected by introspection; the guide is read, not copied. The test checks presence only:
-a review judges the quality of an entry.
 """
 
 import annotationlib
@@ -17,7 +15,7 @@ lazy from collections.abc import Callable
 import fransys as fr
 import fransys.colours
 
-from fransys_model.layout import Profile, SheetFormat
+from fransys_model.layout import Profile
 
 _NOT_NUMBERS = {"id", "key", "name", "unit", "ext"}
 _SKIPPED = {"self", "cls"}
@@ -48,10 +46,8 @@ def _calls_of(obj: object) -> list[Callable[..., object]]:
 
 
 def _number_names() -> set[str]:
-    """The `d.layout.profile` and `d.layout.sheet` numbers: the model records' own fields."""
-    profile = {f.name for f in dataclasses.fields(Profile)} - _NOT_NUMBERS - {"sheet_format"}
-    sheet = {f.name for f in dataclasses.fields(SheetFormat)} - _NOT_NUMBERS
-    return profile | sheet | {"sheet"}
+    """The `d.layout.profile` numbers: the model record's own fields."""
+    return {f.name for f in dataclasses.fields(Profile)} - _NOT_NUMBERS - {"sheet_format"}
 
 
 def public_names() -> set[str]:
@@ -86,7 +82,7 @@ def test_the_guide_names_every_detail_call_by_its_full_spelling():
 
 def test_the_collector_sees_keywords_and_numbers():
     names = public_names()
-    assert {"module_mm", "column_gap", "text_height_mm", "build"} <= names
-    assert "d.detail.rail_bond" in detail_calls()
+    assert {"hide_unused_pins", "build"} <= names
+    assert "d.detail.busbar" in detail_calls()
     assert mentioned("a_name", "see `a_name` here")
     assert not mentioned("a_name", "see a_name")

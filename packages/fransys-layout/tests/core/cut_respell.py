@@ -15,8 +15,8 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
     from fransys_layout.core import PinRef, Placement, PlacementProblem
+    from fransys_layout.core.flow_values import Attach, Block, BlockList, CutResult, End, FlowGraph
     from fransys_layout.core.outputs import PagePlacement
-    from fransys_layout.core.values import Attach, Block, BlockList, CutResult, End, FlowGraph
 
 Maps = dict[str, str]
 Canon = tuple[tuple[Any, ...], tuple[Any, ...], tuple[Any, ...]]
@@ -27,15 +27,12 @@ def spelling(ids: set[str], form: str) -> Maps:
     return {i: form.format(n) for n, i in enumerate(sorted(ids, key=natural_key), 1)}
 
 
-def id_sets(
-    prob: PlacementProblem, flow: FlowGraph, lists: tuple[BlockList, ...]
-) -> dict[str, set[str]]:
+def id_sets(prob: PlacementProblem, flow: FlowGraph, lists: tuple[BlockList, ...]) -> dict[str, set[str]]:
     """The ids of the input, by kind."""
     return {
         "sym": {s.id for s in prob.symbols},
         "net": {n.id for n in prob.nets},
-        "group": {s.group for s in prob.symbols if s.group}
-        | {g for h in (prob.hints.group_order,) for g in h},
+        "group": {s.group for s in prob.symbols if s.group} | {g for h in (prob.hints.group_order,) for g in h},
         "col": {c.id for c in flow.columns},
         "fan": {f.id for f in flow.fans},
         "block": {b.id for bl in lists for b in bl.blocks},
@@ -64,13 +61,11 @@ def _end(e: End, m: Maps) -> End:
 
 
 def _attach(a: Attach, m: Maps) -> Attach:
-    return replace(a, column=m[a.column] if a.column else None, pin=_pin(a.pin, m))
+    return replace(a, column=m[a.column] if a.column else None, pin=_pin(a.pin, m), net=m[a.net])
 
 
 def respell_problem(prob: PlacementProblem, m: Maps) -> PlacementProblem:
-    syms = tuple(
-        replace(s, id=m[s.id], group=m[s.group] if s.group else None) for s in prob.symbols
-    )
+    syms = tuple(replace(s, id=m[s.id], group=m[s.group] if s.group else None) for s in prob.symbols)
     nets = tuple(replace(n, id=m[n.id], pins=tuple(_pin(p, m) for p in n.pins)) for n in prob.nets)
     hints = replace(
         prob.hints,
@@ -85,10 +80,7 @@ def respell_flow(flow: FlowGraph, m: Maps) -> FlowGraph:
         replace(
             c,
             id=m[c.id],
-            lanes=tuple(
-                replace(ln, cells=tuple(replace(x, sym=m[x.sym]) for x in ln.cells))
-                for ln in c.lanes
-            ),
+            lanes=tuple(replace(ln, cells=tuple(replace(x, sym=m[x.sym]) for x in ln.cells)) for ln in c.lanes),
             heads=tuple(_end(e, m) for e in c.heads),
             feet=tuple(_end(e, m) for e in c.feet),
         )
@@ -106,10 +98,7 @@ def respell_flow(flow: FlowGraph, m: Maps) -> FlowGraph:
         )
         for f in flow.fans
     )
-    links = tuple(
-        replace(x, net=m[x.net], ends=tuple(_attach(a, m) for a in x.ends))
-        for x in flow.cross_links
-    )
+    links = tuple(replace(x, net=m[x.net], ends=tuple(_attach(a, m) for a in x.ends)) for x in flow.cross_links)
     stands = tuple(replace(s, sym=m[s.sym]) for s in flow.biased)
     return replace(
         flow,
@@ -147,16 +136,22 @@ def back_of(m: Maps) -> Callable[[str | None], str | None]:
     return back
 
 
+def back_by_parts(maps: Maps) -> Callable[[str | None], str | None]:
+    """`back_of`, and the ids stage 3 spells from a symbol id ("c:S0001") by their parts."""
+    inv = back_of(maps)
+
+    def back(i: str | None) -> str | None:
+        return None if i is None else ":".join(inv(part) or part for part in i.split(":"))
+
+    return back
+
+
 def canon(result: CutResult, back: Callable[[str | None], str | None]) -> Canon:
     """The result as plain tuples with every id mapped back; findings without their text."""
     pages = tuple(
         (
             p.page,
-            tuple(
-                (tuple(map(back, r.columns)), tuple(map(back, r.blocks)), r.height_est)
-                for r in p.rows
-            ),
-            p.forced_end,
+            tuple((tuple(map(back, r.columns)), tuple(map(back, r.blocks)), r.height_est) for r in p.rows),
             tuple(map(back, p.groups)),
         )
         for p in result.spec.pages
@@ -201,28 +196,21 @@ def respell_cut(cut: CutResult, m: Maps) -> CutResult:
         replace(
             r,
             net=_any(r.net, m),
-            ends=tuple(
-                replace(e, column=_any(e.column, m), pin=_pin(e.pin, m) if e.pin else None)
-                for e in r.ends
-            ),
+            ends=tuple(replace(e, column=_any(e.column, m), pin=_pin(e.pin, m) if e.pin else None) for e in r.ends),
         )
         for r in cut.spec.reference_plan
     )
     finds = tuple(replace(f, subject=_any(f.subject, m)) for f in cut.spec.findings)
-    spec = replace(cut.spec, pages=pages, reference_plan=refs, findings=finds)
+    leads = frozenset(_pin(p, m) for p in cut.spec.leads)
+    spec = replace(cut.spec, pages=pages, reference_plan=refs, findings=finds, leads=leads)
     flow, blocks = respell_flow(cut.flow, m), respell_blocks(cut.blocks, m)
     return replace(cut, spec=spec, flow=flow, blocks=blocks)
 
 
 def _page(p: PagePlacement, back: Callable[[str | None], str | None]) -> tuple[Any, ...]:
     placed = sorted(p.placed, key=lambda q: natural_key(back(q.sym) or ""))
-    syms = tuple(
-        (back(q.sym), q.orient, q.body, q.footprint, tuple((x.pin, x.x, x.y) for x in q.pin_xy))
-        for q in placed
-    )
-    gaps = sorted(
-        ((back(g.left), back(g.right), g.x0, g.x1, g.tracks, g.y0, g.y1) for g in p.gaps), key=repr
-    )
+    syms = tuple((back(q.sym), q.orient, q.body, q.footprint, tuple((x.pin, x.x, x.y) for x in q.pin_xy)) for q in placed)
+    gaps = sorted(((back(g.left), back(g.right), g.x0, g.x1, g.tracks, g.y0, g.y1) for g in p.gaps), key=repr)
     trunks = sorted(((back(t.fan), t.y, t.x0, t.x1, t.lanes) for t in p.trunks), key=repr)
     return p.page, syms, tuple(gaps), tuple(trunks), p.rows
 

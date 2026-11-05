@@ -11,6 +11,7 @@ import sys
 import tomllib
 from collections import defaultdict
 from pathlib import Path
+from typing import Any
 
 import pytest
 from gate_scan import ROOT
@@ -36,32 +37,21 @@ def scan(root: Path) -> dict[str, list[str]]:
         check=False,
     )
     # exit 1 means an error-severity rule matched: the sites are in the JSON, not a failure to run
-    assert done.returncode in (0, 1), (
-        f"ast-grep scan failed in {root}: {done.stderr}; fix rules/ or sgconfig.yml"
-    )
+    assert done.returncode in (0, 1), f"ast-grep scan failed in {root}: {done.stderr}; fix rules/ or sgconfig.yml"
     found: dict[str, list[str]] = defaultdict(list)
     for hit in json.loads(done.stdout or "[]"):
         found[hit["ruleId"]].append(f"{hit['file']}:{hit['range']['start']['line'] + 1}")
     return found
 
 
-def check(counts: dict, ids: set[str], found: dict[str, list[str]]) -> list[str]:
+def check(counts: dict[Any, Any], ids: set[str], found: dict[str, list[str]]) -> list[str]:
     """One message per rule whose sites disagree with its table, or that has no table or file."""
-    problems = [
-        f"rules/ has no rule file for sg-counts.toml [{n}]; delete the table"
-        for n in sorted(counts.keys() - ids)
-    ]
-    problems += [
-        f"rule {n} has no sg-counts.toml table; add [{n}] with its stock"
-        for n in sorted(ids - counts.keys())
-    ]
+    problems = [f"rules/ has no rule file for sg-counts.toml [{n}]; delete the table" for n in sorted(counts.keys() - ids)]
+    problems += [f"rule {n} has no sg-counts.toml table; add [{n}] with its stock" for n in sorted(ids - counts.keys())]
     for name in sorted(counts.keys() & ids):
         table, sites = counts[name], found.get(name, [])
         if len(sites) > table["stock"] or (table["mark"] == "forbid" and sites):
-            problems.append(
-                f"rule {name} found {len(sites)} sites outside {table['home']}: "
-                f"{', '.join(sites)}; move them to {table['home']}"
-            )
+            problems.append(f"rule {name} found {len(sites)} sites outside {table['home']}: {', '.join(sites)}; move them to {table['home']}")
         elif len(sites) < table["stock"]:
             problems.append(f"lower sg-counts.toml [{name}] to {len(sites)}")
     return problems

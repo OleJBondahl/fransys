@@ -1,26 +1,38 @@
 """The title-block band a text size needs (TS2): 20 mm at the house sizes, more for larger text."""
 
+import dataclasses
 from decimal import Decimal
 
 import pytest
-from derive_helpers import frozen_with_library
+from derive_helpers import drawing_library, frozen_with_library
 
 from fransys_model.derive.print_sizes import TextRole, font_size_mm, role_height_mm
 from fransys_model.derive.title_band import title_band_need
-from fransys_model.kernel import Draft
+from fransys_model.kernel import Draft, Origin, evolve
 
 MODEL = frozen_with_library(Draft())
+_ORIGIN = Origin(file="test_title_band.py", line=1, note="test library")
+
+
+def _model_at(text_height: str):
+    """`MODEL` with a library whose label capitals are `text_height` and body the larger of it and the body height."""
+    library = drawing_library()
+    label = Decimal(text_height)
+    heights = frozendict({**library.heights, "smallest": label, "body": max(label, library.heights["body"])})
+    return evolve(evolve(MODEL, remove=(library.id,)), put=(dataclasses.replace(library, heights=heights),), origin=_ORIGIN)
+
+
+def _fonts_of(model) -> tuple[float, float]:
+    label, body = (float(font_size_mm(model, role_height_mm(model, role))) for role in (TextRole.LABEL, TextRole.BODY))
+    return label, body
 
 
 def _fonts(text_height: str) -> tuple[float, float]:
-    def font(role):
-        return float(font_size_mm(MODEL, role_height_mm(MODEL, role, Decimal(text_height))))
-
-    return font(TextRole.LABEL), font(TextRole.BODY)
+    return _fonts_of(_model_at(text_height))
 
 
 def _need(text_height: str) -> float:
-    return title_band_need(MODEL, *_fonts(text_height))
+    return title_band_need(_model_at(text_height))
 
 
 def test_title_band_at_the_house_sizes_is_20():

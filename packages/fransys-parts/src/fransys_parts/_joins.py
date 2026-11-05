@@ -33,16 +33,10 @@ def _joins_of(entry: _toml.Table) -> list[tuple[object, str]]:
     ports = entry.get("ports")
     if type(ports) is not list:
         return []
-    return [
-        (p.get("name"), p["joins"])
-        for p in ports
-        if type(p) is dict and type(p.get("joins")) is str
-    ]
+    return [(p.get("name"), p["joins"]) for p in ports if type(p) is dict and type(p.get("joins")) is str]
 
 
-def _refusal(
-    who: str, joins: str, ports_of: dict[str, set[str]], kind_of: dict[str, object]
-) -> tuple[str, str] | None:
+def _refusal(who: str, joins: str, ports_of: dict[str, set[str]], kind_of: dict[str, object]) -> tuple[str, str] | None:
     function, _, target = joins.rpartition(".")
     if target not in ports_of.get(function, ()):
         return "JOIN_PORT_UNKNOWN", f"{who}, which is no port of this part"

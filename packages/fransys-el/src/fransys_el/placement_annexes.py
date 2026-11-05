@@ -48,11 +48,7 @@ def label_annexes(syms: Sequence[Sym], options: Options) -> tuple[Annex, ...]:
     """One `Annex` per symbol, sized by its measured tag slot, in the order of `syms`."""
     found = []
     for sym in syms:
-        spots = tuple(
-            corner_spot(c, s, sym.label, options.label_gap + s)
-            for c in options.corner_order
-            for s in options.slack
-        )
+        spots = tuple(corner_spot(c, s, sym.label, options.label_gap + s) for c in options.corner_order for s in options.slack)
         turns: dict[Orientation, tuple[Spot, ...]] = dict.fromkeys(sym.views, spots)
         found.append(Annex(sym.id, sym.label, None, turns))
     return tuple(found)

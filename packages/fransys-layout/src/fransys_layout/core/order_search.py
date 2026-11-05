@@ -12,9 +12,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-Span = tuple[
-    frozenset[str], bool
-]  # columns a fan or cross-link touches here; True for a cross-link
+Span = tuple[frozenset[str], bool]  # columns a fan or cross-link touches here; True for a cross-link
 Before = dict[str, frozenset[str]]  # a column -> the columns that must stand before it
 
 
@@ -25,9 +23,7 @@ class Search:
     repeating an earlier prefix at no lower cost is dropped. After `budget` nodes the best stands.
     """
 
-    def __init__(
-        self, cols: Sequence[str], spans: Sequence[Span], before: Before, bound: int, budget: int
-    ) -> None:
+    def __init__(self, cols: Sequence[str], spans: Sequence[Span], before: Before, bound: int, budget: int) -> None:
         index = {c: i for i, c in enumerate(cols)}
         self.cols = list(cols)
         self.n = len(cols)
@@ -91,7 +87,7 @@ class Search:
                 self.lo[s] = k
             self.cnt[s] += 1
         closed = (s for s in mine if self.cnt[s] == self.size[s])
-        return added + sum(self._interleaves(s) for s in closed)
+        return added + sum(sum(1 for t in range(self.m) if self.lo[t] > self.lo[s] and self.cnt[t] < self.size[t]) for s in closed)
 
     def _open_cost(self, mine: tuple[int, ...]) -> int:
         """Foreign columns, and a cross-link's between-end columns, that stand inside open spans."""
@@ -103,12 +99,6 @@ class Search:
                 elif self.cnt[s] + 1 < self.size[s]:
                     added += self.link[s]
         return added
-
-    def _interleaves(self, s: int) -> int:
-        """Spans begun after span s that are still open when s closes interleave with it."""
-        return sum(
-            1 for t in range(self.m) if self.lo[t] > self.lo[s] and self.cnt[t] < self.size[t]
-        )
 
     def undo(self, c: int) -> None:
         for s in self.of[c]:

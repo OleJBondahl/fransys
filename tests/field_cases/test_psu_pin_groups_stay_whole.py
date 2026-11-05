@@ -1,29 +1,17 @@
-"""Field case: a supply box keeps its pin groups whole, whatever ranks the pins share.
-
-The engineering shape: a 24 V power supply with an AC input (`L`, `N`), a DC output (`+`, `-`)
-and a DC-OK contact (`13`, `14`) whose two pins are joined by a switched link. The contact's
-pin `13` is wired to the 24 V output net, so both contact pins carry 24 V in service (the
-rail closure passes the switched link). Three lamps hang on the output.
-
-The bug: after pin ranks came from the supply, the contact's pins shared the rank of `+`
-and sorted among the output pins: the bottom read `13`, `+`, `-`.
-Since the demo part's `dc_ok` became `contact_no` (cleanup round 2, rider R) the contact
-stands in its own circuit and the box keeps its two groups only.
-
-The rule (decision layout-0099, model-0121): a pin group is a function; on a box
-side the groups stay whole, and inside a group the pins order by rank. The bottom reads `+`,
-`-` and nothing else. The AC input stays on top, L left of N.
-"""
+"""Field case: a 24 V supply box with an AC input, a DC output and a contact pair 13 and 14 keeps its groups whole.
+The bug: the contact's pins shared the rank of + and sorted among the output pins, so the bottom read 13, +, -.
+Fixed by layout-0099 and model-0121, a pin group is a function that stays whole on a box side."""
 
 import fransys as fr
 from _drawn_facts import symbol_subjects
+from _model_build_cover import unit_document
 from fransys.colours import BU
 
 from fransys_model.vocab.enums import FunctionKind
 from fransys_model.vocab.tables import functions
 
 
-def _t1_sides(tmp_path) -> tuple[dict[str, list[str]], FunctionKind, int]:
+def _t1_sides() -> tuple[dict[str, list[str]], FunctionKind, int]:
     """T1's pins by side as `function.pin`, the dc_ok kind and how many placements dc_ok has."""
     d = fr.design("demo_parts", place="CAB")
     cab = d.location("CAB", "Cabinet")
@@ -33,13 +21,11 @@ def _t1_sides(tmp_path) -> tuple[dict[str, list[str]], FunctionKind, int]:
     d.ac_supply("MAINS", 230, psu.input["L"], n=psu.input["N"])
     d.dc_supply("CONTROL", psu.output)
     plus = [psu.dc_ok["13"], *(lamp["1"] for lamp in lamps)]
-    minus = [lamp["2"] for lamp in lamps]
+    minus = [*(lamp["2"] for lamp in lamps), psu.dc_ok["14"]]
     for rail, members in ((psu.output["+"], plus), (psu.output["-"], minus)):
         for pin in members:
-            d.detail.wire(rail, pin, wire=(BU, 0.5))
-    cover = tmp_path / "cabinet.md"
-    cover.write_text("# Cabinet\n", encoding="utf-8")
-    doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover)
+            d.series(rail, pin, wire=(BU, 0.5))
+    doc = unit_document(cab)
     model = fr.build(d, doc).model
     drawn = symbol_subjects(model)
     (box,) = (s for s in drawn if s.key == "generic-box" and s.tag == "T1")
@@ -52,10 +38,8 @@ def _t1_sides(tmp_path) -> tuple[dict[str, list[str]], FunctionKind, int]:
     return found, contact.kind, stands
 
 
-def test_the_dc_output_pins_stand_before_the_dc_ok_pins_and_the_ac_input_is_on_top(
-    tmp_path,
-) -> None:
-    sides, kind, stands = _t1_sides(tmp_path)
+def test_the_dc_output_pins_stand_before_the_dc_ok_pins_and_the_ac_input_is_on_top() -> None:
+    sides, kind, stands = _t1_sides()
     assert sides["n"] == ["input.L", "input.N"]
     assert sides["s"] == ["output.+", "output.-"]
     assert kind is FunctionKind.CONTACT_NO

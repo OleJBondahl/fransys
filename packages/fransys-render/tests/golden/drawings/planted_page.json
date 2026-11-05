@@ -4,7 +4,6 @@
   "w": 800
  },
  "library_version": "planted",
- "markers": [],
  "outlines": [],
  "symbols": [
   {
@@ -20,6 +19,7 @@
    "poles": 1,
    "ports": [],
    "sides": [],
+   "slot_ink": [],
    "slots": [
     [
      "tag",
@@ -57,6 +57,7 @@
    "poles": 1,
    "ports": [],
    "sides": [],
+   "slot_ink": [],
    "slots": [],
    "stretch": [
     [
@@ -74,7 +75,6 @@
  "wires": [
   {
    "id": "w1",
-   "label": null,
    "lanes": 1,
    "net": "",
    "points": [

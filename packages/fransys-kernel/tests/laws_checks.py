@@ -2,12 +2,6 @@
 
 `What == on a Model compares`: `schema_version`, `tables`, `aliases`, `hashes`, `digests` and
 `digest`, but NOT `origins` (`compare=False`). So every check that
-involves an origin (merge keeps the smaller one, evolve attributes its puts) also compares `origins`
-by hand. `merge` returns a `Draft`, which has no `==`: drafts are compared as `state`, the triple
-`(records(), origins(), alias_map())`.
-
-A checker takes the drawn inputs and the implementation under test (default: the real one), so
-the real law and its broken-implementation twin in `test_laws.py` share the same assertions.
 """
 
 import dataclasses
@@ -21,7 +15,7 @@ from laws_pool import Pool, pools
 from fransys_kernel import (
     Draft,
     Id,
-    MergeConflict,
+    MergeConflictError,
     Model,
     Origin,
     dumps,
@@ -114,9 +108,7 @@ class MergeCase:
     def expected(self) -> tuple[Any, Any, Any]:
         """What any merge of all three is: the pool, each record under its smallest origin."""
         ids = [{record.id for record in records} for records in self.operands]
-        origins = {
-            r.id: next(OPERANDS[j] for j in range(3) if r.id in ids[j]) for r in self.pool.records
-        }
+        origins = {r.id: next(OPERANDS[j] for j in range(3) if r.id in ids[j]) for r in self.pool.records}
         ordered = tuple(sorted(self.pool.records, key=lambda record: record.id))
         return ordered, frozendict(origins), frozendict(self.pool.aliases)
 
@@ -124,19 +116,10 @@ class MergeCase:
 @st.composite
 def merge_cases(draw: st.DrawFn) -> MergeCase:
     pool = draw(pools())
-    masks = draw(
-        st.lists(st.integers(1, 7), min_size=len(pool.records), max_size=len(pool.records))
-    )
-    alias_masks = draw(
-        st.lists(st.integers(1, 7), min_size=len(pool.aliases), max_size=len(pool.aliases))
-    )
-    operands = tuple(
-        tuple(r for r, m in zip(pool.records, masks, strict=True) if m >> j & 1) for j in range(3)
-    )
-    alias_sets = tuple(
-        tuple(a for a, m in zip(pool.aliases, alias_masks, strict=True) if m >> j & 1)
-        for j in range(3)
-    )
+    masks = draw(st.lists(st.integers(1, 7), min_size=len(pool.records), max_size=len(pool.records)))
+    alias_masks = draw(st.lists(st.integers(1, 7), min_size=len(pool.aliases), max_size=len(pool.aliases)))
+    operands = tuple(tuple(r for r, m in zip(pool.records, masks, strict=True) if m >> j & 1) for j in range(3))
+    alias_sets = tuple(tuple(a for a, m in zip(pool.aliases, alias_masks, strict=True) if m >> j & 1) for j in range(3))
     return MergeCase(pool, operands, alias_sets)
 
 
@@ -149,9 +132,7 @@ class EvolveCase:
     aliases: tuple[tuple[Id[Any], Id[Any]], ...]
 
 
-def evolve_plan(
-    base: tuple[Any, ...], final: tuple[Any, ...]
-) -> tuple[list[Any], list[Any], set[Any]]:
+def evolve_plan(base: tuple[Any, ...], final: tuple[Any, ...]) -> tuple[list[Any], list[Any], set[Any]]:
     """`put` and `remove` that turn `base` into `final`; a changed record is in both."""
     was = {record.id: record for record in base}
     now = {record.id: record for record in final}
@@ -169,9 +150,7 @@ def evolve_cases(draw: st.DrawFn) -> EvolveCase:
     in_base = draw(st.lists(st.integers(0, 9), min_size=len(records), max_size=len(records)))
     in_final = draw(st.lists(st.integers(0, 9), min_size=len(records), max_size=len(records)))
     base = closed(r for r, k in zip(records, in_base, strict=True) if k < 8)
-    final = closed(
-        touched(r) if k >= 8 else r for r, k in zip(records, in_final, strict=True) if k >= 2
-    )
+    final = closed(touched(r) if k >= 8 else r for r, k in zip(records, in_final, strict=True) if k >= 2)
     kept = {r.id for r in base} & {r.id for r in final}
     aliases = tuple(pair for pair in pool.aliases if pair[1] in kept)
     return EvolveCase(base, final, aliases)
@@ -228,17 +207,17 @@ def check_conflict(
     merge_impl: Callable[..., Draft] = merge,
     evolve_impl: Callable[..., Model] = evolve,
 ) -> None:
-    """The same id with other content is a `MergeConflict` naming the id and both origins."""
+    """The same id with other content is a `MergeConflictError` naming the id and both origins."""
     other = touched(record)
     whole = draft_of(pool.records, lambda _: OPERANDS[0])
     single = draft_of((other,), lambda _: OPERANDS[1])
     for order in ((whole, single), (single, whole)):
-        with pytest.raises(MergeConflict) as caught:
+        with pytest.raises(MergeConflictError) as caught:
             merge_impl(*order)
         assert caught.value.record_id == record.id
         assert {caught.value.origin_a, caught.value.origin_b} == set(OPERANDS[:2])
     model = freeze_records(pool.records, aliases=pool.aliases)
-    with pytest.raises(MergeConflict) as caught:
+    with pytest.raises(MergeConflictError) as caught:
         evolve_impl(model, put=(other,), origin=PUT)
     assert caught.value.record_id == record.id
     assert {caught.value.origin_a, caught.value.origin_b} == {BASE, PUT}
@@ -267,9 +246,7 @@ def check_insertion_order(
     """Records added in any order, with any origins, freeze to one model; a change moves it."""
     lines = {record.id: line for line, record in enumerate(shuffled)}
     first = build(pool.records, aliases=pool.aliases)
-    second = build(
-        shuffled, lambda r: Origin(file="z.py", line=lines[r.id], note=""), reversed(pool.aliases)
-    )
+    second = build(shuffled, lambda r: Origin(file="z.py", line=lines[r.id], note=""), reversed(pool.aliases))
     assert first == second
     assert (first.digest, first.digests, first.hashes) == (
         second.digest,

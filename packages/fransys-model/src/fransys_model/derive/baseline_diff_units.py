@@ -2,13 +2,15 @@
 
 from typing import TYPE_CHECKING, cast
 
-from .baseline_codec import _decimal_dict
+from fransys_model.kernel import JsonValue, value_data, write_json
+
 from .order import natural_key
 from .revision_text import revision_text
 from .rows_baseline import BaselineBoundary, BaselineItem, BaselineNestedUnit, BaselineUnit, Change
 
 if TYPE_CHECKING:
-    from fransys_model.vocab.ratings import Operating, Rating
+    from fransys_model.elecdef import Rating
+    from fransys_model.vocab.operating import Operating
 
 
 def _release_field_changes(
@@ -83,9 +85,7 @@ def unit_subject_text(unit: BaselineUnit) -> str:
     return f"{unit.name} {revision_text(unit.version, unit.revision)}"
 
 
-def _by_subject[R: BaselineItem | BaselineBoundary](
-    rows: tuple[R, ...], unit_subject: str
-) -> dict[str, R]:
+def _by_subject[R: BaselineItem | BaselineBoundary](rows: tuple[R, ...], unit_subject: str) -> dict[str, R]:
     return {r.designation or unit_subject: r for r in rows}
 
 
@@ -103,9 +103,7 @@ def _item_detail(row: BaselineItem) -> str:
     return ", ".join(text for text in (row.mpn, row.manufacturer) if text)
 
 
-def _item_changes(
-    a_rows: tuple[BaselineItem, ...], b_rows: tuple[BaselineItem, ...], unit_subject: str
-) -> list[Change]:
+def _item_changes(a_rows: tuple[BaselineItem, ...], b_rows: tuple[BaselineItem, ...], unit_subject: str) -> list[Change]:
     a_index = _by_subject(a_rows, unit_subject)
     b_index = _by_subject(b_rows, unit_subject)
     changes: list[Change] = []
@@ -168,9 +166,7 @@ def _nested_unit_index(
     return index
 
 
-def _nested_unit_changes(
-    a_rows: tuple[BaselineNestedUnit, ...], b_rows: tuple[BaselineNestedUnit, ...]
-) -> list[Change]:
+def _nested_unit_changes(a_rows: tuple[BaselineNestedUnit, ...], b_rows: tuple[BaselineNestedUnit, ...]) -> list[Change]:
     a_index = _nested_unit_index(a_rows)
     b_index = _nested_unit_index(b_rows)
     changes: list[Change] = []
@@ -218,9 +214,7 @@ def _nested_unit_changes(
     return changes
 
 
-def _boundary_changes(
-    a_rows: tuple[BaselineBoundary, ...], b_rows: tuple[BaselineBoundary, ...], unit_subject: str
-) -> list[Change]:
+def _boundary_changes(a_rows: tuple[BaselineBoundary, ...], b_rows: tuple[BaselineBoundary, ...], unit_subject: str) -> list[Change]:
     a_index = _by_subject(a_rows, unit_subject)
     b_index = _by_subject(b_rows, unit_subject)
     changes: list[Change] = []
@@ -288,19 +282,25 @@ def _boundary_changes(
     return changes
 
 
-def _rating_changes(
-    designation: str, prefix: str, a: Rating | Operating | None, b: Rating | Operating | None
-) -> list[Change]:
+def _field_texts(value: Rating | Operating | None) -> dict[str, str]:
+    """`value`'s set fields as canonical JSON text, by field name; `{}` for `None`. A field unset or empty is absent."""
+    if value is None:
+        return {}
+    data = cast("dict[str, JsonValue]", value_data(value))
+    return {name: write_json(field, compact=True) for name, field in data.items() if field not in (None, ())}
+
+
+def _rating_changes(designation: str, prefix: str, a: Rating | Operating | None, b: Rating | Operating | None) -> list[Change]:
     """One `changed` row per key of `a`/`b` that differs, field `<prefix>.<key>`."""
-    a_dict, b_dict = _decimal_dict(a) or {}, _decimal_dict(b) or {}
+    a_dict, b_dict = _field_texts(a), _field_texts(b)
     return [
         Change(
             section="boundary",
             change="changed",
             subject=designation,
             field=f"{prefix}.{key}",
-            before=cast("str", a_dict.get(key) or ""),
-            after=cast("str", b_dict.get(key) or ""),
+            before=a_dict.get(key, ""),
+            after=b_dict.get(key, ""),
             parts=(designation,),
             detail="",
         )

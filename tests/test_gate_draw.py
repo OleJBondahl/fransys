@@ -15,22 +15,12 @@ DRAW_PREFIX = "to_fragment"
 
 def svg_literals(source: str) -> list[tuple[str, int]]:
     """String constants outside docstrings that open an SVG element."""
-    return [
-        (tag, line)
-        for text, line in _strings(ast.parse(source))
-        for tag in SVG_TAGS
-        if text.lstrip().startswith(tag)
-    ]
+    return [(tag, line) for text, line in _strings(ast.parse(source)) for tag in SVG_TAGS if text.lstrip().startswith(tag)]
 
 
 def typst_shapes(source: str) -> list[tuple[str, int]]:
     """String constants outside docstrings that hold a Typst drawing call."""
-    return [
-        (shape, line)
-        for text, line in _strings(ast.parse(source))
-        for shape in TYPST_SHAPES
-        if shape in text
-    ]
+    return [(shape, line) for text, line in _strings(ast.parse(source)) for shape in TYPST_SHAPES if shape in text]
 
 
 def _is_draw(name: str) -> bool:
@@ -50,9 +40,7 @@ def draw_calls(source: str) -> list[tuple[str, int]]:
         if isinstance(node, ast.ImportFrom) and node.level == 0 and _in_symdef(node.module or ""):
             names.update({a.asname or a.name: a.name for a in node.names})
         elif isinstance(node, ast.Import):
-            modules.update(
-                a.asname or a.name.split(".")[0] for a in node.names if _in_symdef(a.name)
-            )
+            modules.update(a.asname or a.name.split(".")[0] for a in node.names if _in_symdef(a.name))
     hits = []
     for node in ast.walk(tree):
         if not isinstance(node, ast.Call):
@@ -70,7 +58,7 @@ def draw_calls(source: str) -> list[tuple[str, int]]:
 
 
 def _scan(package: str, scanner) -> list[str]:
-    hits = []
+    hits: list[str] = []
     for module, path in src_modules():
         if package_of(module) == package:
             found = scanner(path.read_text(encoding="utf-8"))
@@ -85,33 +73,20 @@ def test_layout_and_pdf_write_no_svg_element():
 
 
 def test_pdf_draws_no_typst_shape_but_places_and_tables():
-    placed = sum(
-        path.read_text(encoding="utf-8").count("#place(")
-        for module, path in src_modules()
-        if package_of(module) == "fransys_pdf"
-    )
+    placed = sum(path.read_text(encoding="utf-8").count("#place(") for module, path in src_modules() if package_of(module) == "fransys_pdf")
     assert placed > 0, "the scan reads no Typst string"
     assert _scan("fransys_pdf", typst_shapes) == []
 
 
 def test_layout_calls_no_symdef_draw_function():
-    assert any(
-        "body_box" in path.read_text(encoding="utf-8")
-        and module == "fransys_layout.geometry.symbols"
-        for module, path in src_modules()
-    )
+    assert any("body_box" in path.read_text(encoding="utf-8") and module == "fransys_layout.geometry.symbols" for module, path in src_modules())
     assert _scan("fransys_layout", draw_calls) == []
 
 
 def test_layout_reads_body_box_from_symdef():
     path = dict(src_modules())["fransys_layout.geometry.symbols"]
     tree = ast.parse(path.read_text(encoding="utf-8"))
-    taken = {
-        a.name
-        for n in ast.walk(tree)
-        if isinstance(n, ast.ImportFrom) and _in_symdef(n.module or "")
-        for a in n.names
-    }
+    taken = {a.name for n in ast.walk(tree) if isinstance(n, ast.ImportFrom) and _in_symdef(n.module or "") for a in n.names}
     assert "body_box" in taken
 
 

@@ -3,8 +3,8 @@
 import re
 
 import fransys as fr
-import fransys_author
 import pytest
+from fransys_author.design import Design
 
 from fransys_model.kernel import Id, merge
 from fransys_model.vocab import Document as ModelDocument
@@ -18,7 +18,7 @@ def parts():
 
 @pytest.fixture
 def design(parts):
-    return fransys_author.Design(parts)
+    return Design(parts)
 
 
 def _cover(tmp_path, name="cabinet.md", text="# Demo\n"):
@@ -43,7 +43,7 @@ def test_location_handle_fills_location(design, tmp_path):
 
 def test_item_handle_fills_item(design, tmp_path):
     item = design.item(None, tag="WH1")
-    draft = fr.document(DocumentPreset.HARNESS_DRAWING, item, cover=_cover(tmp_path))
+    draft = fr.document(DocumentPreset.CABINET_SCHEMATIC, item, cover=_cover(tmp_path))
     record = _only_record(draft)
     assert record.item == item.id
     assert record.location is None
@@ -59,7 +59,7 @@ def test_aspect_node_id_subject_fills_location(tmp_path):
 
 def test_item_id_subject_fills_item(tmp_path):
     subject = Id(kind="item", value="demo")
-    draft = fr.document(DocumentPreset.HARNESS_DRAWING, subject, cover=_cover(tmp_path))
+    draft = fr.document(DocumentPreset.CABINET_SCHEMATIC, subject, cover=_cover(tmp_path))
     record = _only_record(draft)
     assert record.item == subject
     assert record.location is None
@@ -81,32 +81,22 @@ def test_name_subject_fills_unit_name(tmp_path):
 
 
 def test_two_names_get_distinct_keys(tmp_path):
-    first = fr.document(
-        DocumentPreset.CABINET_SCHEMATIC, "relay-board", cover=_cover(tmp_path, name="a.md")
-    )
-    second = fr.document(
-        DocumentPreset.CABINET_SCHEMATIC, "power-board", cover=_cover(tmp_path, name="b.md")
-    )
+    first = fr.document(DocumentPreset.CABINET_SCHEMATIC, "relay-board", cover=_cover(tmp_path, name="a.md"))
+    second = fr.document(DocumentPreset.CABINET_SCHEMATIC, "power-board", cover=_cover(tmp_path, name="b.md"))
     assert _only_record(first).key != _only_record(second).key
 
 
 def test_a_name_and_a_scope_get_distinct_keys(design, tmp_path):
     c1 = design.location("C1", "Demo cabinet")
-    name_doc = fr.document(
-        DocumentPreset.CABINET_SCHEMATIC, "relay-board", cover=_cover(tmp_path, name="a.md")
-    )
-    scope_doc = fr.document(
-        DocumentPreset.CABINET_SCHEMATIC, c1, cover=_cover(tmp_path, name="b.md")
-    )
+    name_doc = fr.document(DocumentPreset.CABINET_SCHEMATIC, "relay-board", cover=_cover(tmp_path, name="a.md"))
+    scope_doc = fr.document(DocumentPreset.CABINET_SCHEMATIC, c1, cover=_cover(tmp_path, name="b.md"))
     assert _only_record(name_doc).key != _only_record(scope_doc).key
 
 
 def test_a_name_and_a_unit_id_with_one_stem_merge(tmp_path):
     cover = _cover(tmp_path)
     name_doc = fr.document(DocumentPreset.CABINET_SCHEMATIC, "relay-board", cover=cover)
-    unit_doc = fr.document(
-        DocumentPreset.CABINET_SCHEMATIC, Id(kind="unit", value="demo"), cover=cover
-    )
+    unit_doc = fr.document(DocumentPreset.CABINET_SCHEMATIC, Id(kind="unit", value="demo"), cover=cover)
     assert _only_record(name_doc).key != _only_record(unit_doc).key
     merge(name_doc, unit_doc)
 
@@ -133,19 +123,12 @@ def test_notes_file_present_is_read(tmp_path):
     assert record.notes == "notes text"
 
 
-def test_notes_file_absent_is_none(tmp_path):
+def test_notes_file_and_logo_absent_are_none(tmp_path):
     cover = _cover(tmp_path)
     subject = Id(kind="item", value="demo")
     draft = fr.document(DocumentPreset.CABINET_SCHEMATIC, subject, cover=cover)
     record = _only_record(draft)
     assert record.notes is None
-
-
-def test_logo_absent_is_none(tmp_path):
-    cover = _cover(tmp_path)
-    subject = Id(kind="item", value="demo")
-    draft = fr.document(DocumentPreset.CABINET_SCHEMATIC, subject, cover=cover)
-    record = _only_record(draft)
     assert record.logo is None
 
 
@@ -195,7 +178,5 @@ def test_notice_defaults_to_empty_and_is_stored(tmp_path):
     cover = _cover(tmp_path)
     subject = Id(kind="item", value="demo")
     plain = _only_record(fr.document(DocumentPreset.CABINET_SCHEMATIC, subject, cover=cover))
-    noted = _only_record(
-        fr.document(DocumentPreset.CABINET_SCHEMATIC, subject, cover=cover, notice="(c) Demo AS")
-    )
+    noted = _only_record(fr.document(DocumentPreset.CABINET_SCHEMATIC, subject, cover=cover, notice="(c) Demo AS"))
     assert (plain.notice, noted.notice) == ("", "(c) Demo AS")

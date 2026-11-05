@@ -1,11 +1,12 @@
 """The marker symbol's keep-out box at each orientation, set once on the core's options."""
 
 from dataclasses import replace
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 from symdef import fitted_symbol, measure
 
 from ._grid import ORIENTATIONS, symdef_orientation, to_box
+from .shape import stretched_body
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -19,6 +20,7 @@ if TYPE_CHECKING:
 __all__ = (
     "fitted_marker",
     "fitted_marker_views",
+    "marker_rule",
     "marker_views",
     "with_marker",
 )
@@ -26,9 +28,7 @@ __all__ = (
 
 def marker_views(symbol: LibrarySymbol, library: Library) -> Mapping[Orientation, Box]:
     """`symbol`'s keep-out box at each of the eight orientations (SB4, layout-0305)."""
-    return {
-        o: to_box(measure(symbol, symdef_orientation(o), library).keepout) for o in ORIENTATIONS
-    }
+    return {o: to_box(measure(symbol, symdef_orientation(o), library).keepout) for o in ORIENTATIONS}
 
 
 def with_marker(options: Options, symbol: LibrarySymbol, library: Library) -> Options:
@@ -36,9 +36,7 @@ def with_marker(options: Options, symbol: LibrarySymbol, library: Library) -> Op
     return replace(options, marker=marker_views(symbol, library))
 
 
-def fitted_marker_views(
-    symbol: LibrarySymbol, slot: str, text: str, library: Library
-) -> Mapping[Orientation, Box]:
+def fitted_marker_views(symbol: LibrarySymbol, slot: str, text: str, library: Library) -> Mapping[Orientation, Box]:
     """`symbol`'s keep-out box at each orientation once its `slot` is stretched to hold `text`.
 
     A text that fits asks for nothing, so the boxes equal `marker_views` (D95).
@@ -52,3 +50,21 @@ def fitted_marker(symbol: LibrarySymbol, slot: str, text: str, library: Library)
     A drawn marker's ports are read from it (R430.1); a text that fits asks for nothing.
     """
     return fitted_symbol(symbol, {slot: text}, library, 1.0)
+
+
+def marker_rule(
+    symbol: LibrarySymbol,
+    orient: Orientation,
+    size: tuple[int, int],
+    library: Library,
+    *,
+    along: bool,
+) -> tuple[tuple[tuple[Literal["x", "y"], int], ...], Box]:
+    """The marker rule: (stretch, body box about the origin) of a drawn marker (R543, R450.3, R1582).
+
+    A marker along the wire (`along`) stretches to the height of `size` on y, then its width on x; one across it
+    to its width on x, then its height on y: a text of several lines gives a box that many lines tall.
+    """
+    width, height = size
+    stretch: tuple[tuple[Literal["x", "y"], int], ...] = (("y", height), ("x", width)) if along else (("x", width), ("y", height))
+    return stretch, stretched_body(symbol, orient, dict(stretch), library)

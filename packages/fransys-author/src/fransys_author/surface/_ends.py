@@ -1,6 +1,6 @@
 """What each kind of series element offers: its ends, its width, and the `Parallel` handle."""
 
-from typing import TYPE_CHECKING, Any, Protocol, TypeGuard, cast
+from typing import TYPE_CHECKING, Any, cast, override
 
 from fransys_author.errors import AuthorError
 from fransys_author.handles import Port, Terminal
@@ -8,7 +8,7 @@ from fransys_author.surface._carrier import carrier_function
 from fransys_author.surface._device import Device
 from fransys_author.surface._fixed import fixed, side_ends
 from fransys_author.surface._handles import Fn
-from fransys_author.surface._pairing import End, Ends, SeriesElement, ends_of, poles
+from fransys_author.surface._pairing import End, Ends, SeriesElement, SeriesPart, ends_of, poles
 from fransys_author.surface._partless_end import box_ends
 from fransys_author.surface._pin_tuple import is_mixed_tuple, is_pin_tuple, pin_tuple
 from fransys_author.surface._throws import whole_changeover
@@ -18,25 +18,11 @@ if TYPE_CHECKING:
     from .design import Design
 
 _ALLOWED = (
-    "a device, a function, a pin or a tuple of pins, a supply or rail, a terminal strip, "
-    "fixed terminals (x1[3], x1[1:4]), a cable or a parallel"
+    "a device, a function, a pin or a tuple of pins, a supply or rail, a terminal strip, fixed terminals (x1[3], x1[1:4]), a cable or a parallel"
 )
 
 
-class SeriesBridge(Protocol):
-    """A cable-like element that lands between its two neighbours instead of being wired to them.
-
-    Does not get wired by the series: it is handed each neighbour and its ends.
-    """
-
-    def _series_between(
-        self, design: Design, before: tuple[object, Ends], after: tuple[object, Ends], series: str
-    ) -> None: ...
-
-    def _series_width(self) -> None: ...
-
-
-class Parallel:
+class Parallel(SeriesElement):
     """Members sharing one place in a series, each from the previous load to the next line.
 
     Does not connect anything by itself: the series wires its members.
@@ -46,12 +32,10 @@ class Parallel:
         """Hold `members`; `d.parallel` makes these."""
         self._members = members
 
-    def _series_width(self) -> None:
-        return None
-
     def _branches(self, design: Design, width: int | None) -> list[Ends]:
         return [end for member in self._members for end in branches(design, member, width)]
 
+    @override
     def _series_ends(self, design: Design, width: int | None) -> Ends:
         """The first member's ends; the series reads every member through `branches`."""
         return self._branches(design, width)[0]
@@ -66,7 +50,7 @@ def _fn_ends(design: Design, fn: Fn) -> Ends:
         msg = (
             f"{where} has no line/load pole pair, so a bare function end cannot pair its pins by "
             f"position: name them with `{where.lower()}.pins` (connector order, or a slice of "
-            f"it), or wire them with d.detail.wire(pin, pin, wire=...)"
+            f"it), or wire them with d.series(pin, pin, wire=...)"
         )
         raise AuthorError(msg)
     return ends
@@ -100,9 +84,7 @@ def _device_ends(design: Design, device: Device, width: int | None) -> Ends:
     facts = design._pairing_facts
     if all(facts.partless(f) for f in device._item.functions):
         return box_ends(facts, device._label, list(device._item.functions), width)
-    fn = carrier_function(
-        list(device._item.functions), lambda f: len(poles(facts, f)), width, device._label
-    )
+    fn = carrier_function(list(device._item.functions), lambda f: len(poles(facts, f)), width, device._label)
     return ends_of(facts, fn)
 
 
@@ -147,10 +129,4 @@ def width_of(design: Design, element: object) -> int | None:
         return len(cast("tuple[object, ...]", element))
     if isinstance(element, Terminal | tuple):
         return fixed(element)._series_width()
-    probe: Any = getattr(element, "_series_width", None)
-    return None if probe is None else cast("int | None", probe())
-
-
-def is_bridge(element: object) -> TypeGuard[SeriesBridge]:
-    """True for an element that lands between its neighbours (`SeriesBridge`)."""
-    return hasattr(element, "_series_between")
+    return element._series_width() if isinstance(element, SeriesPart) else None

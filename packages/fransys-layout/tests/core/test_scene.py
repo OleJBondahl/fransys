@@ -6,8 +6,10 @@ import pytest
 from scene_fixtures import flow, layout, problem
 
 from fransys_layout.core import outputs
+from fransys_layout.core.errors import CoreError
+from fransys_layout.core.flow_values import Cell, Column, End, FlowGraph, Lane
 from fransys_layout.core.outputs import PinXY, Placed
-from fransys_layout.core.values import Box, Cell, Column, End, FlowGraph, Lane, PinRef
+from fransys_layout.core.values import Box, PinRef
 
 SCENE = outputs.scene(layout(), problem(), flow())
 BOXES = {b.sym: b for b in SCENE.boxes}
@@ -37,8 +39,8 @@ def test_a_turned_symbol_flips_the_side_a_wire_leaves():
 
 
 def test_a_row_group_symbol_carries_its_strip():
-    assert BOXES["T"].strip == "X1"
-    assert BOXES["K"].strip is None
+    assert BOXES["T"].group == "X1"
+    assert BOXES["K"].group is None
 
 
 def test_a_column_hung_on_a_box_pin_marks_its_head_cell_attached():
@@ -77,9 +79,8 @@ def test_a_wire_carries_its_kind():
     assert [w.kind for w in SCENE.wires] == ["riser"]
 
 
-def test_labels_and_tables_are_flattened_from_the_annotations():
+def test_labels_are_flattened_from_the_annotations():
     assert SCENE.labels == (outputs.SceneLabel("K", 1, Box(1, 2, 3, 4), "BR"),)
-    assert SCENE.tables == (outputs.SceneTable("K", 1, Box(5, 6, 7, 8), ("3C", "2:3C"), 2),)
 
 
 def test_a_placed_pin_the_problem_does_not_know_is_refused():
@@ -87,10 +88,8 @@ def test_a_placed_pin_the_problem_does_not_know_is_refused():
     page = lay.placement.pages[0]
     placed = dataclasses.replace(page.placed[0], pin_xy=(PinXY("zz", 0, 0),))
     page = dataclasses.replace(page, placed=(placed, *page.placed[1:]))
-    bad = dataclasses.replace(
-        lay, placement=dataclasses.replace(lay.placement, pages=(page, *lay.placement.pages[1:]))
-    )
-    with pytest.raises(ValueError, match=r"K\.zz is not a pin"):
+    bad = dataclasses.replace(lay, placement=dataclasses.replace(lay.placement, pages=(page, *lay.placement.pages[1:])))
+    with pytest.raises(CoreError, match=r"K\.zz is not a pin"):
         outputs.scene(bad, problem(), flow())
 
 
@@ -101,9 +100,7 @@ def test_a_quarter_turn_is_scened_with_its_turned_side(orient):
     page = lay.placement.pages[0]
     turned: Placed = dataclasses.replace(page.placed[0], orient=orient)
     page = dataclasses.replace(page, placed=(turned, *page.placed[1:]))
-    bad = dataclasses.replace(
-        lay, placement=dataclasses.replace(lay.placement, pages=(page, *lay.placement.pages[1:]))
-    )
+    bad = dataclasses.replace(lay, placement=dataclasses.replace(lay.placement, pages=(page, *lay.placement.pages[1:])))
     scened = outputs.scene(bad, problem(), flow())
     assert {b.sym: b.orient for b in scened.boxes}[turned.sym] == orient
 
@@ -116,11 +113,7 @@ def _three_lane_flow(head: End) -> FlowGraph:
 
 
 def _attached_syms(head: End) -> set[str]:
-    return {
-        b.sym
-        for b in outputs.scene(layout(), problem(), _three_lane_flow(head)).boxes
-        if b.attached
-    }
+    return {b.sym for b in outputs.scene(layout(), problem(), _three_lane_flow(head)).boxes if b.attached}
 
 
 def test_a_head_end_with_a_lane_marks_only_that_lanes_cell_attached():
@@ -128,8 +121,8 @@ def test_a_head_end_with_a_lane_marks_only_that_lanes_cell_attached():
 
 
 def test_a_multi_lane_head_end_marks_only_the_lane_on_the_pin():
-    """Stage 1 writes no lane today, so every lane's cell is marked; only lane 0 hangs on K.c1."""
-    assert _attached_syms(End("boxpin", "n1", PinRef("K", "c1"))) == {"A"}
+    """The head end names lane 0, so only lane 0 hangs on K.c1."""
+    assert _attached_syms(End("boxpin", "n1", PinRef("K", "c1"), lane=0)) == {"A"}
 
 
 @pytest.mark.parametrize(
@@ -138,7 +131,7 @@ def test_a_multi_lane_head_end_marks_only_the_lane_on_the_pin():
         (outputs.SceneBox, "orient"),
         (outputs.SceneWire, "kind"),
         (outputs.SceneMarker, "side"),
-        (outputs.Scene, "tables"),
+        (outputs.Scene, "bands"),
     ],
 )
 def test_a_new_scene_field_has_no_default(cls, field):

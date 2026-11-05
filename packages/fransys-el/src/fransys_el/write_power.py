@@ -32,18 +32,17 @@ def power_symbols(
     layout: CoreLayout,
     pages: Mapping[int, Page],
     kit: SymbolKit,
-    stamp: str,
+    made: tuple[str, int],
 ) -> tuple[PowerSymbol, ...]:
-    """One `PowerSymbol` per drawn stand pin, in kit order: the page of its symbol."""
+    """One `PowerSymbol` per drawn stand pin, in kit order: the page of its symbol, keyed by set number; `made` is (stamp, number)."""
     anchored = {(a.sym, a.pin): a for a in layout.annotations.anchored}
-    placed = {p.sym: p for page in layout.placement.pages for p in page.placed}
+    stamp, number = made
     found = []
     for sym_id, name, port, kind in stood(model, kit):
         item = anchored.get((sym_id, name))
         if item is None:
             continue
-        pin = next(xy for xy in placed[sym_id].pin_xy if xy.pin == name)
-        record_key = (*_KEY, "power_symbol", sym_id, name)
+        record_key = (*_KEY, "power_symbol", str(number), sym_id, name)
         found.append(
             PowerSymbol(
                 id=make_id(PowerSymbol, record_key),
@@ -53,8 +52,6 @@ def power_symbols(
                 symbol=power_symbol_key(kind),
                 x=item.x,
                 y=item.y,
-                pin_x=pin.x,
-                pin_y=pin.y,
                 orientation=Orientation[item.orient],
                 produced_by=stamp,
             )

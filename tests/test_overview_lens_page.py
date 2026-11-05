@@ -2,29 +2,23 @@
 
 Breaks if a module's designation, a channel's number, kind or field device differs from
 `signal_lens`, if their order changes, or if a spare channel gains a device. The plant is the
-model package's cabinet use case, which has PLC modules with several signal kinds.
 """
 
 import json
 import re
-import sys
-from pathlib import Path
 from typing import Any
 
+from cabinet import build_cabinet
 from fransys_overview import html
-
-sys.path.insert(
-    0, str(Path(__file__).resolve().parents[1] / "packages/fransys-model/tests/usecases")
-)
-from cabinet import build_cabinet  # ty: ignore[unresolved-import] -- the use case folder is put on sys.path above
 from root_library import freeze
 
+from electrical_symbols import LIBRARY
 from fransys_layout.engines.overview import lay_out_overview
 from fransys_model.derive import signal_lens
 
 
 def _page_lens(model: Any) -> list[dict[str, Any]]:
-    text = html(lay_out_overview(model)[0])
+    text = html(lay_out_overview(model, LIBRARY)[0], text_height=8)
     found = re.search(r'id="overview-data">(.*?)</script>', text, re.DOTALL)
     assert found is not None
     return json.loads(found.group(1))["lens"]
@@ -41,9 +35,7 @@ def test_the_page_lens_is_the_derived_lens() -> None:
         assert [c["number"] for c in got["channels"]] == [c.number for c in module.channels]
         assert [c["kind"] for c in got["channels"]] == [c.kind.value for c in module.channels]
         assert [c["signal"] for c in got["channels"]] == [c.signal_name for c in module.channels]
-        assert [c["device"] for c in got["channels"]] == [
-            c.device_designation for c in module.channels
-        ]
+        assert [c["device"] for c in got["channels"]] == [c.device_designation for c in module.channels]
 
 
 def test_the_lens_covers_digital_and_analogue_and_holds_no_id() -> None:

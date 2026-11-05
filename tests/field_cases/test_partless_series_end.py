@@ -1,20 +1,12 @@
 """Field case: a three-phase series ends on external equipment that has no part.
-
-A feeder runs from a terminal strip through a three-pole breaker to a drive supplied by others.
-The drive has no part, only the pins U, V and W its box draws.
-
-The bug (0.19.6): `d.series(supply, breaker, drive)` raised `KeyError: None` from the pairing
-code, because the part-less drive has no function template to count poles from.
-
-Fixing decision: author-0054. A part-less device is accepted only as the last element of a
-series, one pole per non-earth pin in declared order; anywhere else, or with another pin count,
-it raises `AuthorError` naming the fix.
-"""
+The bug: d.series(supply, breaker, drive) raised KeyError: None from the pairing code, since a part-less drive has no function template.
+Fixed by author-0054, a part-less device is accepted only as the last element of a series, else AuthorError names the fix."""
 
 from typing import Any
 
 import fransys as fr
 import pytest
+from _field_shared import wire_ends
 
 
 def _design() -> tuple[fr.Design, Any, Any]:
@@ -24,15 +16,11 @@ def _design() -> tuple[fr.Design, Any, Any]:
     return d, supply, d.device("QA", "DEMO-MCB-3P")
 
 
-def _ends(d) -> set[frozenset]:
-    return {frozenset((r.from_, r.to)) for r in fr.derive.wire_rows(fr.build(d).model)}
-
-
 def test_a_part_less_last_element_meets_the_load_poles_in_declared_order() -> None:
     d, supply, qa = _design()
     ext = d.device("E1", None, external=True, pins=("U", "V", "W"))
     d.series(supply, qa.element, ext, wire=2.5)
-    ends = _ends(d)
+    ends = wire_ends(d)
     for pin, load in (("U", "2"), ("V", "4"), ("W", "6")):
         assert frozenset((f"-E1:{pin}", f"-QA:{load}")) in ends, pin
 

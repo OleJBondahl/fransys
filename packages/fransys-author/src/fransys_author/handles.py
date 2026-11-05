@@ -5,7 +5,6 @@ Later calls take handles, never a designation string: no code parses a designati
 
 from dataclasses import dataclass, field, replace
 from typing import TYPE_CHECKING, Any, Protocol
-lazy from decimal import Decimal
 
 from fransys_model.derive import cores_past_product
 from fransys_model.kernel import AuthoringKey, Id, make_id, natural_join
@@ -18,8 +17,7 @@ from fransys_model.vocab import (
     FunctionKind,
     OpenCoreFacet,
     PlcRequestFacet,
-    PortRole,
-    ScalingFacet,
+    PortBoundary,
     SignalType,
     TerminalFacet,
 )
@@ -31,17 +29,15 @@ from fransys_model.vocab import (
     Port as ModelPort,
 )
 from fransys_model.vocab import Unit as ModelUnit
-from fransys_model.vocab import instantiate as instantiate_
-lazy from fransys_model.vocab import Operating, Rating
+lazy from fransys_model.elecdef import PinRole
 
-from ._decimal import as_decimal
 from ._enums import member
 from ._hint_writes import _write_placement
 from ._keys import scoped
-from ._limits import state_limits
 from ._origin import caller_origin
 from ._partless import terminal_records
 from .errors import AuthorError
+from .instantiate import instantiate as instantiate_
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
@@ -77,12 +73,7 @@ class Location:
 
 @dataclass(frozen=True, slots=True)
 class Group:
-    """A `=` aspect node: a functional group, what the layout engine calls a group.
-
-    Attributes:
-        id: This node's id.
-        key: This node's authoring key.
-    """
+    """A `=` aspect node: a functional group."""
 
     id: Id[AspectNode]
     key: AuthoringKey
@@ -96,13 +87,15 @@ class Port:
         id: This port's id.
         key: This port's authoring key.
         name: The marking `__getitem__` matches it by.
-        role: What this port is for (e.g. `INTERNAL`/`EXTERNAL`).
+        boundary: Which side of the unit boundary this port is on (`INTERNAL`/`EXTERNAL`).
+        pin_role: The pin role the part states, `None` if none.
     """
 
     id: Id[ModelPort]
     key: AuthoringKey
     name: str
-    role: PortRole
+    boundary: PortBoundary
+    pin_role: PinRole | None = None
     _terminal: Any = field(
         default=None, init=False, compare=False, repr=False
     )  # the terminal whose `inner` or `outer` this is; a series reads the side from it
@@ -110,16 +103,7 @@ class Port:
 
 @dataclass(frozen=True, slots=True)
 class Fn:
-    """One function of one item: what `d.chain(...)` and `d.symbol(...)` name.
-
-    Attributes:
-        id: This function's id.
-        key: This function's authoring key.
-        item: The id of the item this function belongs to.
-        name: This function's name, matched by `Item.fn`.
-        kind: What kind of function this is.
-        ports: This function's ports.
-    """
+    """One function of one item."""
 
     id: Id[ModelFunction]
     key: AuthoringKey
@@ -139,16 +123,7 @@ class Fn:
     def plc(self, signal: str, signal_name: str, priority: int = 0) -> Fn:
         """Request a PLC channel of `signal` for this function; returns `self`.
 
-        Args:
-            signal: A `SignalType` member's value (e.g. `"do"`, `"ai_current"`).
-            signal_name: This channel's label, printed in the PLC report rows.
-            priority: Lower goes first when `derive.allocate_plc` serves requests.
-
-        Returns:
-            This function, so calls chain.
-
-        Raises:
-            AuthorError: `signal` is not one of the model's `SignalType` values.
+        `priority`: lower goes first when `derive.allocate_plc` serves requests.
         """
         signal_type = member(SignalType, signal, field="PLC signal type")
         key = scoped(self.key, "plc_request")
@@ -159,34 +134,6 @@ class Fn:
             signal=signal_type,
             signal_name=signal_name,
             priority=priority,
-        )
-        self._recorder._add(facet, caller_origin())
-        return self
-
-    def scale(
-        self, unit: str, *, raw: tuple[int, int], eng: tuple[str | Decimal, str | Decimal]
-    ) -> Fn:
-        """Engineering-unit scaling for this function; returns `self`.
-
-        Args:
-            unit: The engineering unit's name (e.g. `"bar"`).
-            raw: The raw signal's `(low, high)` pair.
-            eng: The engineering value's `(low, high)` pair, matching `raw` (`str` or
-                `Decimal`, never `float`).
-
-        Raises:
-            AuthorError: `eng` holds a `float`.
-        """
-        key = scoped(self.key, "scaling")
-        facet = ScalingFacet(
-            id=make_id(ScalingFacet, key),
-            key=key,
-            subject=self.id,
-            unit=unit,
-            raw_min=raw[0],
-            raw_max=raw[1],
-            eng_min=as_decimal(eng[0], field="eng"),
-            eng_max=as_decimal(eng[1], field="eng"),
         )
         self._recorder._add(facet, caller_origin())
         return self
@@ -252,9 +199,7 @@ class Item:
         """This item's function handles as the API spells them: `k1.coil`, the tag in lower case."""
         tag = self.key[-1].rsplit("/", 1)[-1].lower() if self.key else ""
         owner = tag if tag.isidentifier() else "<device>"
-        return ", ".join(
-            f"{owner}.{function.name}" for function in sorted(self.functions, key=lambda f: f.name)
-        )
+        return ", ".join(f"{owner}.{function.name}" for function in sorted(self.functions, key=lambda f: f.name))
 
 
 @dataclass(frozen=True, slots=True)
@@ -270,9 +215,7 @@ class Terminal:
     id: Id[ModelItem]
     key: AuthoringKey
     function: Fn
-    _scope: Any = field(
-        default=None, init=False, compare=False, repr=False
-    )  # the unit scope `limits` writes to; the surface sets it after making the terminal
+    _scope: Any = field(default=None, init=False, compare=False, repr=False)  # the unit scope; the surface sets it after making the terminal
     _fixed: bool = field(
         default=False, init=False, compare=False, repr=False
     )  # a series named this terminal by number; a container's whole-strip take skips it
@@ -287,7 +230,7 @@ class Terminal:
         Raises:
             AuthorError: this terminal's function has no `internal` port.
         """
-        return _side_of(self, PortRole.INTERNAL)
+        return _side_of(self, PortBoundary.INTERNAL)
 
     @property
     def outer(self) -> Port:
@@ -299,43 +242,20 @@ class Terminal:
         Raises:
             AuthorError: this terminal's function has no `external` port.
         """
-        return _side_of(self, PortRole.EXTERNAL)
-
-    def limits(
-        self, *, rating: Rating | None = None, operating: Operating | None = None
-    ) -> Terminal:
-        """Core: state the values a unit says about this terminal's boundary.
-
-        Example: `X1[1].limits(rating=...)`.
-
-        Does not mark the boundary: `interface=True` on the strip does.
-
-        Raises:
-            AuthorError: no value is given, or the terminal is not in a unit.
-        """
-        state_limits("/".join(self.key), self.function, self._scope, rating, operating)
-        return self
+        return _side_of(self, PortBoundary.EXTERNAL)
 
 
 def as_port(value: Port | Terminal) -> Port:
     """`value` as a port; a `Terminal` has two, so it is refused with the choice named."""
     if isinstance(value, Terminal):
-        msg = (
-            f"terminal '{'/'.join(value.key)}' is not a port: use `.inner` "
-            "(a wire inside the cabinet) or `.outer` (a cable core to the field)"
-        )
+        msg = f"terminal '{'/'.join(value.key)}' is not a port: use `.inner` (a wire inside the cabinet) or `.outer` (a cable core to the field)"
         raise AuthorError(msg)
     return value
 
 
 @dataclass(slots=True)
 class Strip:
-    """A part-less item that only holds terminals: `d.strip(tag)`.
-
-    Attributes:
-        id: This strip's id.
-        key: This strip's authoring key.
-    """
+    """A part-less item that only holds terminals: `d.strip(tag)`."""
 
     _recorder: _Recorder
     id: Id[ModelItem]
@@ -351,20 +271,9 @@ class Strip:
         index: int | None = None,
         group: Group | None = None,
     ) -> Terminal:
-        """One terminal on this strip.
+        """One terminal on this strip; returns the new terminal.
 
-        Args:
-            mpn: The part's MPN, `(manufacturer, mpn)` if ambiguous, or `None` for no part.
-            group_text: This terminal's group text; terminals that share one count up together.
-            index: 1-based position within `group_text` (in the key); counts up unless given.
-            group: A `=` node this terminal is placed at.
-
-        Returns:
-            The new terminal.
-
-        Raises:
-            AuthorError: `mpn` is unknown or ambiguous across manufacturers (`Catalogue.find`),
-                or its part has zero or more than one function (`Item.as_function`).
+        `mpn` is the part's MPN or `None`; terminals sharing `group_text` count up together.
         """
         if index is None:
             index = self._counters.get(group_text, 0) + 1
@@ -375,11 +284,6 @@ class Strip:
         key = scoped(self.key, "terminal", *middle, str(index))
         origin = caller_origin()
         stamped = self._stamp(mpn, key)
-        if self._unit is not None:
-            stamped = tuple(
-                replace(record, unit=self._unit) if isinstance(record, ModelItem) else record
-                for record in stamped
-            )
         self._recorder._extend(stamped, origin)
         item = _item_from_stamped(key, stamped, self._recorder)
         facet_key = scoped(key, "facet")
@@ -396,21 +300,20 @@ class Strip:
         return Terminal(id=item.id, key=item.key, function=item.as_function())
 
     def _stamp(self, mpn: str | tuple[str, str] | None, key: AuthoringKey) -> tuple[Record, ...]:
-        """The records of one terminal: the part's, or the part-less terminal's."""
+        """The records of one terminal: the part's, or the part-less terminal's, in this strip's unit."""
         if mpn is None:
-            return terminal_records(key, self.id)
-        bundle = self._recorder._catalogue.bundle(self._recorder._catalogue.find(mpn))
-        return instantiate_(bundle, key, parent=self.id)
+            stamped = terminal_records(key, self.id)
+        else:
+            bundle = self._recorder._catalogue.bundle(self._recorder._catalogue.find(mpn))
+            stamped = instantiate_(bundle, key, parent=self.id)
+        if self._unit is None:
+            return stamped
+        return tuple(replace(record, unit=self._unit) if isinstance(record, ModelItem) else record for record in stamped)
 
 
 @dataclass(slots=True)
 class Cable:
-    """A cable item: `d.cable(mpn, ...)`, then `cable.core(index, a, b)`.
-
-    Attributes:
-        id: This cable's id.
-        key: This cable's authoring key.
-    """
+    """A cable item: `d.cable(mpn, ...)`, then `cable.core(index, a, b)`."""
 
     _recorder: _Recorder
     id: Id[ModelItem]
@@ -420,13 +323,7 @@ class Cable:
     def core(self, index: int, a: Port, b: Port) -> None:
         """Core `index` of this cable, between `a` and `b`; its colour is the part's.
 
-        Args:
-            index: The 1-based core number.
-            a: The port at one end.
-            b: The port at the other end.
-
-        Raises:
-            AuthorError: `index` is not one of this cable's cores.
+        Raises `AuthorError` when `index` is not one of this cable's cores.
         """
         if cores_past_product(len(self._core_colours), index):
             msg = f"core {index} is out of range: this cable has {len(self._core_colours)} core(s)"
@@ -455,12 +352,7 @@ class Cable:
     def open_core(self, index: int, at: Port | None = None) -> None:
         """Core `index` of this cable with one end or none: a spare, or a screen earthed at `at`.
 
-        Args:
-            index: The 1-based core number.
-            at: The port the one end lands on, or `None` for a core that lands nowhere.
-
-        Raises:
-            AuthorError: `index` is not one of this cable's cores.
+        Raises `AuthorError` when `index` is not one of this cable's cores.
         """
         if cores_past_product(len(self._core_colours), index):
             msg = f"core {index} is out of range: this cable has {len(self._core_colours)} core(s)"
@@ -485,7 +377,7 @@ def _item_from_stamped(key: AuthoringKey, stamped: tuple[Record, ...], recorder:
             functions_by_id[record.id] = record
         elif isinstance(record, ModelPort):
             ports_by_function.setdefault(record.function, []).append(
-                Port(id=record.id, key=record.key, name=record.name, role=record.role)
+                Port(id=record.id, key=record.key, name=record.name, boundary=record.boundary, pin_role=record.pin_role)
             )
     functions = tuple(
         Fn(
@@ -497,7 +389,7 @@ def _item_from_stamped(key: AuthoringKey, stamped: tuple[Record, ...], recorder:
             ports=tuple(ports_by_function.get(function.id, ())),
             _recorder=recorder,
         )
-        for function in sorted(functions_by_id.values(), key=lambda f: f.id)
+        for function in sorted(functions_by_id.values(), key=lambda f: (f.name, f.id))
     )
     return Item(id=make_id(ModelItem, key), key=key, functions=functions)
 
@@ -509,24 +401,21 @@ def _port_by_marking(ports: Sequence[Port], marking: str, *, owner: str) -> Port
         msg = f"this {owner} has no port marked {marking!r}; it has: {markings}"
         raise AuthorError(msg)
     if len(matches) > 1:
-        msg = (
-            f"port {marking!r} is ambiguous on this {owner}: two functions carry it; "
-            f'write item.fn("<function name>")[{marking!r}] instead'
-        )
+        msg = f'port {marking!r} is ambiguous on this {owner}: two functions carry it; write item.fn("<function name>")[{marking!r}] instead'
         raise AuthorError(msg)
     return matches[0]
 
 
-def _side_of(terminal: Terminal, role: PortRole) -> Port:
+def _side_of(terminal: Terminal, boundary: PortBoundary) -> Port:
     """The port of `terminal` with `role`, remembering the terminal it is a side of."""
-    side = replace(_port_by_role(terminal.function.ports, role))
+    side = replace(_port_by_role(terminal.function.ports, boundary))
     object.__setattr__(side, "_terminal", terminal)  # frozen, init=False field
     return side
 
 
-def _port_by_role(ports: Sequence[Port], role: PortRole) -> Port:
-    matches = [port for port in ports if port.role is role]
+def _port_by_role(ports: Sequence[Port], boundary: PortBoundary) -> Port:
+    matches = [port for port in ports if port.boundary is boundary]
     if not matches:
-        msg = f"this terminal has no {role.value} port"
+        msg = f"this terminal has no {boundary.value} port"
         raise AuthorError(msg)
     return matches[0]

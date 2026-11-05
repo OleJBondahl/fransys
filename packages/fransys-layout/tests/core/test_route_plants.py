@@ -18,12 +18,6 @@ from .route_fixtures import jog_stair, reversing_pair, with_crossed
 
 OPTIONS = core_options(
     marker=MARKER,
-    flip_turn="R180",
-    tag_stagger=True,
-    label_gap=8,
-    parallel_pitch=48,
-    driver_first=True,
-    arrow_sides=("E", "W"),
 )
 
 
@@ -63,6 +57,6 @@ def test_a_jog_stair_shifted_after_stage_five_has_no_row_so_each_jog_is_refused(
             for pg in placement.pages
         ),
     )
-    findings = route_pages(wide, cut, prob, OPTIONS).findings
-    assert {f.code for f in findings} == {"ROUTE_FAILED"}
-    assert all("no row to turn on" in f.text for f in findings)
+    routes = route_pages(wide, cut, prob, OPTIONS)
+    assert routes.failed
+    assert all(r.ends is not None and len(r.ends) == 2 for r in routes.failed)

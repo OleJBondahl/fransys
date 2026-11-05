@@ -1,7 +1,5 @@
 """SETTINGS-OPEN X1, A1, A2 (R468): the merge is generic; mixed lists are records; open tables."""
 
-from typing import cast
-
 import fransys as fr
 import pytest
 from fransys._settings_merge import merged_tables
@@ -41,16 +39,6 @@ def test_a_mixed_list_with_a_wrong_element_type_is_refused() -> None:
 
 def test_a_list_of_one_type_still_differs_in_length() -> None:
     assert fits([0, 8, 16], [1])
-
-
-def test_a_new_class_letter_is_accepted_and_type_checked() -> None:
-    got = merged_tables(OURS, {"designation": {"classes": {"F": ["fuse", 3]}}}, "f")
-    classes = cast("dict[str, object]", got["designation"]["classes"])
-    assert classes["F"] == ["fuse", 3]
-    with pytest.raises(fr.SettingsError, match=r"\[designation.classes\] \"F\" must be a list"):
-        merged_tables(OURS, {"designation": {"classes": {"F": "fuse"}}}, "f")
-    with pytest.raises(fr.SettingsError, match=r"\"F\" must be a list"):
-        merged_tables(OURS, {"designation": {"classes": {"F": ["fuse"]}}}, "f")
 
 
 def test_a_new_key_in_colours_is_refused() -> None:

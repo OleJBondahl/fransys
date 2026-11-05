@@ -2,10 +2,6 @@
 
 The demo skid and the six corpus designs are built as in `test_drawn_symbols_placed_by_core`; an
 anchored item is a drawn symbol the core anchored (its place is in the layouts' anchored list) or a
-power symbol. The OVERLAP finding of the drawing invariants (a WARNING with a stock per case) must
-never name one. The pump-station case joins when its example is buildable here. The planted case
-that proves the check can fail is in the field case
-`test_a_power_symbol_beside_a_neighbour_stands_clear_of_it`.
 """
 
 from functools import cache
@@ -21,12 +17,9 @@ from fransys_layout.core import overlaps
 def _anchored_overlaps(name: str) -> tuple[int, list[str]]:
     """(how many anchored items there are, each pair of bodies that meet with one anchored)."""
     drawn, _, sets = _drawn_and_layouts(name)
-    anchored = {
-        (pages[a.page].id, a.x, a.y, a.orient)
-        for layout, pages in sets
-        for a in layout.annotations.anchored
-    }
-    count, found = 0, []
+    anchored = {(pages[a.page].id, a.x, a.y, a.orient) for layout, pages in sets for a in layout.annotations.anchored}
+    found: list[str] = []
+    count = 0
     for page, drawing in drawn.items():
         held = [s for s in drawing.symbols if s.outline is not None]
         count += sum((page, s.x, s.y, s.orient) in anchored or s.key in POWER_KEYS for s in held)

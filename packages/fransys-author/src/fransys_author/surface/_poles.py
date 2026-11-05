@@ -1,10 +1,10 @@
 """`d.poles`: one-pole contacts of one device as one multi-pole element (API-CLARITY C6.4)."""
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
-from fransys_author.errors import AuthorError
+from fransys_author.errors import AuthorAttributeError, AuthorError
 from fransys_author.surface._handles import Fn
-from fransys_author.surface._pairing import Ends, ends_of, template_poles
+from fransys_author.surface._pairing import Ends, SeriesElement, ends_of, template_poles
 from fransys_author.surface._throws import THROWS, Throw, states_selector
 from fransys_model.derive import contact_kind_of, is_contact_kind, pole_count
 
@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 _KIND_WORDS = "contact_no, contact_nc, contact_co or switch"
 
 
-class Poles:
+class Poles(SeriesElement):
     """Contacts of one device grouped in pole order: `q.no` and `q.nc` for changeovers, else `q`.
 
     Does not wire anything: a series wires it, one pole per member.
@@ -42,24 +42,20 @@ class Poles:
         Does not exist on a group of make, break or switch contacts: pass that group itself.
         """
         if name not in THROWS:
-            raise AttributeError(name)
+            raise AuthorAttributeError(name)
         return self._throw(name)
 
+    @override
     def _series_width(self) -> int:
         return len(self._members)
 
-    def _series_ends(self, design: Design, width: int | None) -> Ends:  # noqa: ARG002 -- the SeriesElement protocol
+    @override
+    def _series_ends(self, design: Design, width: int | None) -> Ends:
         if self._changeover():
             msg = "a changeover group is two throws: use its .no or .nc"
             raise AuthorError(msg)
         found = [ends_of(design._pairing_facts, m._fn) for m in self._members]
-        return Ends(
-            tuple(e for one in found for e in one.line), tuple(e for one in found for e in one.load)
-        )
-
-
-def _pole_count(facts: PartFacts, member: Fn) -> int:
-    return pole_count(template_poles(facts, member._fn))
+        return Ends(tuple(e for one in found for e in one.line), tuple(e for one in found for e in one.load))
 
 
 def _selector_refusal(facts: PartFacts, member: Fn) -> str | None:
@@ -83,7 +79,7 @@ def _refusal(facts: PartFacts, first: Fn, member: Fn) -> str | None:
     if fn.kind is not first._fn.kind:
         kinds = f"{fn.kind.value} function, not {first._fn.kind.value}"
         return f"{where} is a {kinds}: one kind per group"
-    if (count := _pole_count(facts, member)) != 1:
+    if (count := pole_count(template_poles(facts, member._fn))) != 1:
         return f"{where} has {count} poles: d.poles groups one-pole functions"
     return None
 

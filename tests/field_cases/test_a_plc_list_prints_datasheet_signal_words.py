@@ -1,15 +1,6 @@
 """Field case: the printed PLC list names a channel's signal in datasheet words.
-
-The engineering shape: a module with a digital input and a digital output (`DEMO-PLC-DIO-1`), a
-4-channel analogue input module and a spare output channel no device uses.
-
-The bug: the list printed the enum value (`ai_current`, `di`), which is data, not what a reader
-of a datasheet expects.
-
-The rule (decision model-0206, owner H1): `signal_word` maps a signal type to `DI`, `DO`,
-`AI (V)`, `AI (mA)`, `AO (V)`, `AO (mA)`, `RTD` or `DO (relay)`; a channel with no function prints
-`spare`. The CSV keeps the enum value.
-"""
+The bug: the list printed the enum value (`ai_current`, `di`), which is data, not what a datasheet reader expects.
+Fixed by model-0206 (owner H1): `signal_word` gives DI, DO, AI (V), AI (mA), RTD and so on; an unused channel prints `spare`."""
 
 lazy from pathlib import Path
 

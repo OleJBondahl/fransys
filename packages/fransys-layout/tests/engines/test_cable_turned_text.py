@@ -8,7 +8,7 @@ from dataclasses import replace
 from cable_facts import block_facts
 
 from fransys_layout.engines.cable.place import block_pitch, place_block
-from fransys_layout.geometry import text_width
+from fransys_layout.geometry import text_width_g
 
 _H = 8
 _A3_BODY = (1280, 787)  # G, layout-0141's house sheet
@@ -17,23 +17,14 @@ _CORE = "12 WHOG"
 
 def _facts(cores: int, pins: int, core_text: str = _CORE):
     """`cores` straight cores to a bottom end of `pins` pins (the extra ones free), real widths."""
-    facts = block_facts([(0, 0)] * cores, label=60, text=text_width(core_text, height=_H))
+    facts = block_facts([(0, 0)] * cores, label=60, text=text_width_g(core_text, height=_H))
     bottom = facts.bottom[0]
-    free = tuple(
-        replace(bottom.pins[0], landed=False, marking_width=text_width(str(n), height=_H))
-        for n in range(cores + 1, pins + 1)
-    )
-    marked = tuple(
-        replace(pin, marking_width=text_width(str(n), height=_H))
-        for n, pin in enumerate(bottom.pins, 1)
-    )
+    free = tuple(replace(bottom.pins[0], landed=False, marking_width=text_width_g(str(n), height=_H)) for n in range(cores + 1, pins + 1))
+    marked = tuple(replace(pin, marking_width=text_width_g(str(n), height=_H)) for n, pin in enumerate(bottom.pins, 1))
     top = tuple(
         replace(
             end,
-            pins=tuple(
-                replace(p, marking_width=text_width(str(n), height=_H))
-                for n, p in enumerate(end.pins, 1)
-            ),
+            pins=tuple(replace(p, marking_width=text_width_g(str(n), height=_H)) for n, p in enumerate(end.pins, 1)),
         )
         for end in facts.top
     )
@@ -55,7 +46,7 @@ def test_34_cores_to_a_37_pin_end_fit_the_a3_body():
     assert block is not None
     assert block.width <= _A3_BODY[0]
     assert block.height <= _A3_BODY[1]
-    assert block.pitch == block_pitch(text_width("37", height=_H))
+    assert block.pitch == block_pitch(text_width_g("37", height=_H))
 
 
 def test_the_box_holds_the_core_text_turned_under_the_heading():
@@ -66,7 +57,7 @@ def test_the_box_holds_the_core_text_turned_under_the_heading():
     block = place_block(_facts(3, 3, core_text="3 A VERY LONG CORE TEXT"))
     assert block is not None
     box = block.boxes[0].box
-    length = text_width("3 A VERY LONG CORE TEXT", height=_H)
+    length = text_width_g("3 A VERY LONG CORE TEXT", height=_H)
     assert box.height >= length + 2 * 2
     for wire in block.wires:
         assert wire.text_y - length / 2 >= box.y + 2 * 2 + _H  # clear of the heading

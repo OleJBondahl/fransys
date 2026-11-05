@@ -22,7 +22,7 @@ import sys
 import tomllib
 import types
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -30,14 +30,14 @@ if TYPE_CHECKING:
 ROOT = Path(__file__).resolve().parents[1]
 SNAPSHOT = ROOT / "surface.toml"
 
-#: `fransys_model`'s own nineteen surface modules (amended 2026-09-27 to add
+#: `fransys_model`'s own eighteen surface modules (amended 2026-09-27 to add
 #: `derive.numbering_pins`, and by model-0159 to add
-#: `derive.cable_drawing`, model-0167 to add `derive.block_diagram`, model-0190 to add
-#: `derive.text_width`, EXACT-SIZES E10 to add `derive.print_sizes`, model-0261 to add
+#: `derive.cable_drawing`, model-0167 to add `derive.block_diagram`,
+#: EXACT-SIZES E10 to add `derive.print_sizes`, model-0261 to add
 #: `derive.docs_site`, LIB-ADOPT R1 to add the `refdef` and `elecdef` doors): not its top-level
 #: package, which is
 #: excluded from the surface entirely --
-#: only these nineteen dotted paths are read by other packages.
+#: only these eighteen dotted paths are read by other packages.
 _MODEL_MODULES: tuple[str, ...] = (
     "fransys_model.kernel",
     "fransys_model.vocab",
@@ -45,7 +45,6 @@ _MODEL_MODULES: tuple[str, ...] = (
     "fransys_model.derive",
     "fransys_model.derive.drawing_text",
     "fransys_model.derive.grid_mm",
-    "fransys_model.derive.marker_box",
     "fransys_model.derive.page_nav",
     "fransys_model.derive.baseline",
     "fransys_model.derive.numbering_pins",
@@ -55,7 +54,6 @@ _MODEL_MODULES: tuple[str, ...] = (
     "fransys_model.derive.order",
     "fransys_model.derive.print_sizes",
     "fransys_model.derive.docs_site",
-    "fransys_model.derive.text_width",
     "fransys_model.refdef",
     "fransys_model.elecdef",
 )
@@ -84,7 +82,7 @@ def _workspace_top_level_modules(root: Path) -> tuple[str, ...]:
     name) written fresh here since `fransys_model` is excluded and the return shape differs.
     """
     data = tomllib.loads((root / "pyproject.toml").read_text(encoding="utf-8"))
-    members: list[str] = data["tool"]["uv"]["workspace"]["members"]
+    members = cast("list[str]", data["tool"]["uv"]["workspace"]["members"])
     names: list[str] = []
     for member in members:
         posix_member = member.replace("\\", "/")
@@ -102,7 +100,7 @@ def surface_modules() -> tuple[str, ...]:
     """Every dotted module path that defines part of the workspace's API surface.
 
     MS1, MS2, MS6, MS8 combined: each `packages/*` workspace member's own top-level module
-    (`fransys_model` excepted), `fransys_model`'s own nineteen named modules (MS1),
+    (`fransys_model` excepted), `fransys_model`'s own eighteen named modules (MS1),
     `fransys.colours` and the author package's surface modules (MS8). Sorted, so stable.
     """
     top_level = _workspace_top_level_modules(ROOT)
@@ -187,9 +185,7 @@ def _parse_source(text: str) -> ast.Module:
     return ast.parse(text)
 
 
-def find_def(
-    tree: ast.Module, name: str
-) -> ast.ClassDef | ast.FunctionDef | ast.AsyncFunctionDef | None:
+def find_def(tree: ast.Module, name: str) -> ast.ClassDef | ast.FunctionDef | ast.AsyncFunctionDef | None:
     """The `ClassDef`/`FunctionDef`/`AsyncFunctionDef` named `name` in `tree`.
 
     Top-level first (`resolve_surface_names` only ever points at a module-level definition, so
@@ -218,11 +214,7 @@ def literal_docstring(
     if not node.body:
         return None
     first = node.body[0]
-    if (
-        isinstance(first, ast.Expr)
-        and isinstance(first.value, ast.Constant)
-        and isinstance(first.value.value, str)
-    ):
+    if isinstance(first, ast.Expr) and isinstance(first.value, ast.Constant) and isinstance(first.value.value, str):
         return first.value
     return None
 

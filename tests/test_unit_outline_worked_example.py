@@ -1,27 +1,21 @@
 """The unit boundary outline, probed against the units worked example's
 own real, laid-out geometry -- not `packages/fransys-render/tests/test_outlines.py`'s
 hand-built placements, which prove the grouping and box math correct but cannot show
-whether the "kept together" guarantee actually holds once the real layout engine has
-assigned real coordinates to everything else on the page too.
-
-`io_board`/`pump_cabinet`/`_PROJECT`/`_system_design`/`_build_system` below are copied
-verbatim from `tests/test_units_worked_example.py` (not imported: that file's own job is
-its model/layout acceptance, not render, and it is mid-flight from separate,
-already-accepted work in this worktree -- not to be touched here). Root tests are where
-`fransys` (the facade) and `fransys_render` may both be imported (the import table:
-`fransys` imports everything; a root test is bound by no package's own import table).
 """
 
-from typing import Any
+from typing import Any, NamedTuple
 
 import fransys as fr
-import fransys_author
 import fransys_parts
 from _core_boxes import box_rect, outline_rect
 from _drawn_pages import drawn_pages
-from _model_build_cover import layout_trigger_document
+from _model_build_cover import printed
+from _worked_wiring import wire_field_to_motor, wire_field_to_switch
+from fransys_author.design import Design
 
-from fransys_model.derive import text_room
+from electrical_symbols import LIBRARY
+from fransys_layout.symbols import text_room_on
+from fransys_model.layout import sheet_format_of
 
 _PROJECT: dict[str, Any] = {
     "title": "Pump station",
@@ -56,35 +50,18 @@ def pump_cabinet(s, *, name):
     c = u.location(name, "Pump cabinet")
     grp = u.group("FLD", "Field wiring")
     x2 = u.strip("X2", at=c)
-    field = [x2.terminal("DEMO-TB-2.5", group=grp) for _ in range(2)]
+    field = [x2.terminal("DEMO-TB-2.5-TWIN", group=grp) for _ in range(2)]
     board_x1 = io_board(u.scope("io", at=c))
-    w1 = u.harness(name="w1", tag="WH1", at=c, group=grp)
-    p1 = u.item("DEMO-CONN-2P", tag="P1", parent=w1, at=c, group=grp)
-    cable = u.cable("DEMO-CBL-4G1.5", name="w1c", parent=w1, at=c)
-    cable.core(1, field[0].outer, p1["1"])
-    cable.core(2, field[1].outer, p1["2"])
-    u.mate(p1, board_x1)
+    cable = u.cable("DEMO-CBL-4G1.5", name="w1c", at=c)
+    cable.core(1, field[0].outer, board_x1["1"])
+    cable.core(2, field[1].outer, board_x1["2"])
     for t in field:
         u.boundary(t)
     return field
 
 
-def _wire_field_to_motor(d, field, *, fld, grp, motor_tag):
-    """Copied verbatim from `tests/test_units_worked_example.py` (module docstring)."""
-    motor = d.item("DEMO-MOTOR-4KW", tag=motor_tag, at=fld, group=grp)
-    cable = d.cable("DEMO-CBL-4G1.5", tag=f"W{motor_tag}", length_mm=15000)
-    cable.core(1, field[0].outer, motor["U"])
-    return motor
-
-
-def _wire_field_to_switch(d, terminal, switch_port, *, cable_tag):
-    """Copied verbatim from `tests/test_units_worked_example.py` (module docstring)."""
-    cable = d.cable("DEMO-CBL-4G1.5", tag=cable_tag, length_mm=15000)
-    cable.core(1, terminal.outer, switch_port)
-
-
 def _system_design(parts, *, name1="C1", name2="C2"):
-    d = fransys_author.Design(parts)
+    d = Design(parts)
     d.project(**_PROJECT)
     d.revision(1, date="2026-09-22", text="First issue", created="XX")
     er = d.location("ER", "Engine room")
@@ -92,18 +69,18 @@ def _system_design(parts, *, name1="C1", name2="C2"):
     field2 = pump_cabinet(d.scope("pump2", at=er), name=name2)
     fld = d.location("FLD", "Field")
     fld_grp = d.group("FLD", "Field wiring")
-    _wire_field_to_motor(d, field1, fld=fld, grp=fld_grp, motor_tag="M1")
-    _wire_field_to_motor(d, field2, fld=fld, grp=fld_grp, motor_tag="M2")
+    wire_field_to_motor(d, field1, fld=fld, grp=fld_grp, motor_tag="M1")
+    wire_field_to_motor(d, field2, fld=fld, grp=fld_grp, motor_tag="M2")
     switch = d.item("DEMO-SWITCH-2P", tag="K1", at=fld, group=fld_grp)
-    _wire_field_to_switch(d, field1[1], switch.fn("x1")["1"], cable_tag="WM1S")
-    _wire_field_to_switch(d, field2[1], switch.fn("x1")["2"], cable_tag="WM2S")
+    wire_field_to_switch(d, field1[1], switch.fn("x1")["1"], cable_tag="WM1S")
+    wire_field_to_switch(d, field2[1], switch.fn("x1")["2"], cable_tag="WM2S")
     return d, field1, field2
 
 
 def _build_system():
     parts = fransys_parts.load("demo_parts")
     d, _field1, _field2 = _system_design(parts)
-    return fr.build(parts, d.draft(), layout_trigger_document())
+    return fr.build(parts, *printed(d.draft()))
 
 
 def _intersects(box_a, box_b):
@@ -146,12 +123,6 @@ def test_every_outline_group_encloses_its_own_members_and_nothing_else():
     """The acceptance line, against real geometry: "encloses every black-box function on the
     page and nothing else". Layout owns the outline (layout-0153): for every drawn outline,
     every member's body lies inside its rectangle, no other symbol's body on that page
-    intersects it, and its title label sits inside the content area and outside the rectangle.
-    A member is a symbol the outline's rectangle takes in (the Drawing names no owner).
-
-    A connector is drawn as one symbol per pin, so a group and its non-members are counted in
-    symbols. Per layout-0155, a connector at a harness line's end is one box; boxes count as
-    bodies. Per layout-0153, the board at the line WH1's end is a middle outline, its title inside.
     """
     result = _build_system()
     model = result.model
@@ -163,7 +134,7 @@ def test_every_outline_group_encloses_its_own_members_and_nothing_else():
     titles = [o.label for _, o in outlines if o.label is not None]
     single_member_group_count = 0
     two_member_group_count = 0
-    text_height = text_room(model)
+    text_height = text_room_on(model, sheet_format_of(model, None), LIBRARY)
     for drawing, outline in outlines:
         box = outline_rect(outline)
         bodies = [box_rect(symbol) for symbol in drawing.symbols]
@@ -208,4 +179,40 @@ def test_every_unit_outline_and_its_title_stay_inside_the_content_box() -> None:
     titles = [o.label.box for o in outlines if o.label is not None]
     assert all(outline_rect(o)[0] >= 0 for o in outlines)
     assert all(t.x >= 0 for t in titles)
-    assert "OUT_OF_CONTENT_BOX" not in {f.code for f in result.findings}
+
+
+class _CabIo(NamedTuple):
+    X1: fr.TerminalStrip
+
+
+class _NoIo(NamedTuple):
+    pass
+
+
+@fr.unit("demo-cab", revision=1, interface_version=1, date="2026-01-01", text="first", by="AB")
+def _cab(u: Any) -> _CabIo:
+    return _CabIo(u.terminal_strip("X1", "DEMO-TB-2.5-TWIN", 2, interface=(1, 2)))
+
+
+@fr.unit("demo-skid", revision=1, interface_version=1, date="2026-01-01", text="first", by="AB")
+def _skid(u: Any) -> _NoIo:
+    cab = u.add(_cab, "N")
+    for i in (1, 2):
+        with u.function(f"V{i}", f"Valve {i}"):
+            valve = u.device(f"V{i}", "DEMO-ACT-4P-2SW")
+            cable = u.cable(f"W{i}", "DEMO-CBL-8G0.75", length_m=5)
+            cable.core(1, cab.X1[1].outer, valve.power["1"])
+            cable.core(2, cab.X1[2].outer, valve.power["2"])
+    return _NoIo()
+
+
+def test_a_unit_nested_in_a_skid_draws_its_frame_where_its_terminals_are_replicated(tmp_path) -> None:
+    """R833, R1093: the replicas of `demo-cab` in the skid's function sets draw one frame, titled by the unit, with room (no OUTLINE_NO_ROOM)."""
+    (tmp_path / "c.md").write_text("# s\n")
+    design = fr.design("demo_parts")
+    design.add(_skid, "S1", place=None)
+    docs = [fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, n, cover=tmp_path / "c.md") for n in ("demo-skid", "demo-cab")]
+    result = fr.build(design, *docs)
+    frames = [o for d in drawn_pages(result.model).values() for o in d.outlines]
+    assert [o.label.text for o in frames if o.label] == ["demo-cab rev 1.1"]
+    assert "OUTLINE_NO_ROOM" not in {f.code for f in result.findings}

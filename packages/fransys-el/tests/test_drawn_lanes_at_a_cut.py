@@ -14,13 +14,11 @@ from fransys_model.layout import StarKind
 
 def _run(union: Union, pages: Any, markers: Any, records: Any) -> None:
     """The fakes stand in for pages and markers; the typed door is not under test."""
-    _lanes(union, pages, markers, records)
+    _lanes(union, pages, markers, records, 8)
 
 
-def _page(*wires: tuple[str, tuple[int, int], tuple[int, int]]) -> SimpleNamespace:
-    return SimpleNamespace(
-        drawing=SimpleNamespace(wires=[SimpleNamespace(net=n, points=(a, b)) for n, a, b in wires])
-    )
+def _page(*wires: tuple[str, tuple[int, int], tuple[int, int]], style: str = "wire") -> SimpleNamespace:
+    return SimpleNamespace(drawing=SimpleNamespace(wires=[SimpleNamespace(net=n, points=(a, b), style=style) for n, a, b in wires]))
 
 
 def _record(star: StarKind | None, partner: str) -> SimpleNamespace:
@@ -59,3 +57,28 @@ def test_a_plain_pair_joins_the_lanes_of_its_two_ends() -> None:
     union = Union()
     _run(union, pages, markers, records)
     assert union.find(("A", (10, 16))) == union.find(("B", (20, 16)))
+
+
+def test_the_lanes_of_the_arrows_trunk_join_though_the_arrow_lane_runs_past_their_cut_end() -> None:
+    """R903: the arrow lane steps out past the legs; the other lanes end at the cut, one pitch apart; a far trunk is not joined."""
+    here = _page(("L1", (0, 8), (100, 8)), ("L2", (0, 16), (60, 16)), ("L3", (0, 24), (60, 24)), ("L9", (0, 80), (60, 80)), style="trunk")
+    there = _page(("L1", (0, 8), (50, 8)), ("L2", (0, 16), (50, 16)), ("L3", (0, 24), (50, 24)), ("L9", (0, 80), (50, 80)), style="trunk")
+    markers = {"a": ("A", (100, 8)), "b": ("B", (50, 8))}
+    records = {"a": _record(None, "b"), "b": _record(None, "a")}
+    union = Union()
+    _run(union, {"A": here, "B": there}, markers, records)
+    assert union.find(("A", (60, 16))) == union.find(("B", (50, 16)))
+    assert union.find(("A", (60, 24))) == union.find(("B", (50, 24)))
+    assert union.find(("A", (60, 80))) != union.find(("B", (50, 80)))
+
+
+def test_a_far_row_of_the_same_nets_ending_on_the_arrows_x_joins_nothing_of_the_arrows_trunk() -> None:
+    """R903: lanes of the same nets on another row, one of them ending on the arrow's x, do not stand in for the arrow's own lanes."""
+    here = _page(("L1", (0, 8), (100, 8)), ("L2", (0, 16), (60, 16)), ("L9", (0, 80), (100, 80)), ("L2", (0, 88), (100, 88)), style="trunk")
+    there = _page(("L1", (0, 8), (50, 8)), ("L2", (0, 16), (50, 16)), style="trunk")
+    markers = {"a": ("A", (100, 8)), "b": ("B", (50, 8))}
+    records = {"a": _record(None, "b"), "b": _record(None, "a")}
+    union = Union()
+    _run(union, {"A": here, "B": there}, markers, records)
+    assert union.find(("A", (60, 16))) == union.find(("B", (50, 16)))
+    assert union.find(("A", (100, 88))) != union.find(("B", (50, 16)))

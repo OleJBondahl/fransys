@@ -15,9 +15,7 @@ from fransys_model.vocab import conductors
 
 
 def _finding(severity, *subjects):
-    return Finding(
-        code="DEMO", severity=severity, subjects=subjects, message="demo", fix="Write: x"
-    )
+    return Finding(code="DEMO", severity=severity, subjects=subjects, message="demo", fix="Write: x")
 
 
 def _unit_view():
@@ -74,11 +72,7 @@ def test_a_subject_drawn_and_inside_a_drawn_unit_counts_on_its_own_box_only():
     model, nested, _rows = _unit_view()
     own = OverviewRef(kind=OverviewRefKind.ITEM, item=item_id("z1"))
     unit = OverviewRef(kind=OverviewRefKind.UNIT, unit=nested)
-    boxes = tuple(
-        ViewBox(key=BoxKey(ref=r), lines=(n,), dashed=False) for r, n in ((unit, "U"), (own, "Z"))
-    )
-    rows = ViewRows(
-        unit=None, level=None, mode=OverviewMode.PLAIN, open=None, boxes=boxes, lines=()
-    )
+    boxes = tuple(ViewBox(key=BoxKey(ref=r), lines=(n,), dashed=False) for r, n in ((unit, "U"), (own, "Z")))
+    rows = ViewRows(unit=None, level=None, mode=OverviewMode.PLAIN, open=None, boxes=boxes, lines=())
     marks = finding_marks(model, rows, (_finding(Severity.INFO, item_id("z1")),))
     assert _boxes(rows, marks) == {"Z": [0]}

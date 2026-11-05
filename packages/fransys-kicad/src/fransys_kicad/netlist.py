@@ -11,9 +11,7 @@ if TYPE_CHECKING:
 
 # Every component timestamp is a `uuid5` of this namespace and the item's id, so one item always
 # gets one timestamp and KiCad keeps its footprint matched when the netlist is regenerated.
-_NAMESPACE = uuid.uuid5(
-    uuid.NAMESPACE_DNS, "schematika_kicad"
-)  # predates the rename: seed, never changed
+_NAMESPACE = uuid.uuid5(uuid.NAMESPACE_DNS, "fransys_kicad")
 
 _ESCAPES = str.maketrans({"\\": "\\\\", '"': '\\"', "\n": "\\n", "\r": "\\r"})
 
@@ -24,12 +22,7 @@ def _quote(text: str) -> str:
 
 
 def _header(source: str) -> str:
-    return (
-        '(export (version "E")\n'
-        "  (design\n"
-        f"    (source {_quote(source)})\n"
-        '    (tool "fransys_kicad"))'
-    )
+    return f'(export (version "E")\n  (design\n    (source {_quote(source)})\n    (tool "fransys_kicad"))'
 
 
 def _comp(part: NetlistPart) -> str:
@@ -46,9 +39,7 @@ def _comp(part: NetlistPart) -> str:
 
 
 def _net(code: int, net: PinNet) -> str:
-    nodes = "\n".join(
-        f"      (node (ref {_quote(pin.ref)}) (pin {_quote(pin.pad)}))" for pin in net.pins
-    )
+    nodes = "\n".join(f"      (node (ref {_quote(pin.ref)}) (pin {_quote(pin.pad)}))" for pin in net.pins)
     return f'    (net (code "{code}") (name {_quote(net.name)})\n{nodes})'
 
 

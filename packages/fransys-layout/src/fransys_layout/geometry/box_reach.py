@@ -2,9 +2,10 @@
 
 from typing import TYPE_CHECKING
 
+from fransys_layout.core import grid_up
 from fransys_model.kernel import value
 
-from .units import TEXT_GAP, snap_up
+from .units import TEXT_GAP, WIRING_GRID
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -38,9 +39,7 @@ def _need(left: Reach, right: Reach) -> int:
     return need
 
 
-def spread(
-    base: Mapping[str, tuple[str, int]], reach: tuple[Reach, ...], pitch: int
-) -> dict[str, int]:
+def spread(base: Mapping[str, tuple[str, int]], reach: tuple[Reach, ...], pitch: int) -> dict[str, int]:
     """Each side's pins left to right: `pitch` apart, and clear of every earlier pin's text rows."""
     room = {one.name: one for one in reach}
     placed = {name: x for name, (_, x) in base.items()}
@@ -50,12 +49,8 @@ def spread(
             continue
         for at, name in enumerate(names[1:], 1):
             wanted = [placed[names[at - 1]] + pitch]
-            wanted += [
-                placed[o] + _need(room[o], room[name])
-                for o in names[:at]
-                if o in room and name in room
-            ]
-            placed[name] = int(snap_up(max(wanted)))
+            wanted += [placed[o] + _need(room[o], room[name]) for o in names[:at] if o in room and name in room]
+            placed[name] = int(grid_up(max(wanted), WIRING_GRID))
     return placed
 
 

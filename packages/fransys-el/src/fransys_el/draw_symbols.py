@@ -7,7 +7,6 @@ the ones the retired symbol records had (`drawn_ids`), so the order of a page is
 from typing import TYPE_CHECKING
 
 from electrical_symbols import drawn_slots
-from fransys_layout.core import junctions
 from fransys_layout.drawing import DrawnSymbol
 
 from .drawn_identity import outline_of
@@ -67,14 +66,12 @@ def placed_symbols(
             )
 
 
-def junction_dots(
-    layout: CoreLayout, pages: Mapping[int, Page]
-) -> Iterator[tuple[Id[Page], DrawnSymbol]]:
-    """One `junction-dot` per junction point the core reports (layout-0335).
+def junction_dots(layout: CoreLayout, pages: Mapping[int, Page]) -> Iterator[tuple[Id[Page], DrawnSymbol]]:
+    """One `junction-dot` per junction point `PageRoutes.dots` holds (layout-0335, 0395).
 
     Its id names no document number, so a unit's page draws in one order alone and in a parent.
     """
-    for j in junctions(layout):
+    for j in (d for page in layout.routes.pages for d in page.dots):
         key = (*_KEY, "drawn_junction", j.net, str(j.page), str(j.x), str(j.y))
         yield (
             pages[j.page].id,

@@ -2,21 +2,22 @@
 
 One shared facade build: a cabinet unit (version 1, revision 2) with a nested `demo-io-board` unit
 at version 2, revision 1, whose history holds two entries (`1.1` and `2.1`). One test per place;
-each asserts the literal text first and then that the old bare or padded forms are not printed.
 """
 
 import csv
 import functools
 import io
 import re
+import tempfile
+from pathlib import Path
 
 import fransys as fr
-import fransys_author
 import fransys_parts
 import fransys_render
 from _drawn_pages import drawn_pages
 from _model_build_cover import layout_trigger_document
 from _pdf_lists import source
+from fransys_author.design import Design
 from fransys_pdf._lists import bom_page
 from fransys_reports import bom_csv
 
@@ -32,9 +33,7 @@ from fransys_model.derive import (
 from fransys_model.kernel import Origin, Severity, evolve, make_id
 from fransys_model.vocab import Document, DocumentPreset, PageKind
 
-_ORIGIN = Origin(
-    file="tests/test_revision_print_form.py", line=1, note="a revision print-form test origin"
-)
+_ORIGIN = Origin(file="tests/test_revision_print_form.py", line=1, note="a revision print-form test origin")
 _BOARD = "demo-io-board"
 _CABINET = "demo-pump-cabinet"
 
@@ -45,13 +44,11 @@ def _io_board(s):
     u.revision(1, date="2025-06-01", text="Version one release", created="XX", version=1)
     u.revision(1, date="2026-01-01", text="Version two release", created="XX")
     grp = u.group("BRD", "I/O board")
-    board = u.item("DEMO-PCB-IO", name="board", group=grp)
-    x1 = u.item("DEMO-CONN-2P", tag="X1", parent=board, group=grp)
-    k1 = u.item("DEMO-RLY-2CO-24", name="k1", parent=board, group=grp)
+    x1 = u.item("DEMO-CONN-2P", tag="X1", group=grp)
+    k1 = u.item("DEMO-RLY-2CO-24", name="k1", group=grp)
     wire = u.wiring(colour="BU", gauge="0.5")
     wire(x1["1"], k1.fn("coil")["A1"])
     wire(x1["2"], k1.fn("coil")["A2"])
-    u.net("internal", k1.fn("co_1")["11"], k1.fn("co_2")["21"])
     u.boundary(x1)
     return x1
 
@@ -65,12 +62,7 @@ def _pump_cabinet(s):
     x2 = u.strip("X2", at=c)
     field = [x2.terminal("DEMO-TB-2.5", group=grp) for _ in range(2)]
     board_x1 = _io_board(u.scope("io", at=c))
-    w1 = u.harness(name="w1", tag="WH1", at=c, group=grp)
-    p1 = u.item("DEMO-CONN-2P", tag="P1", parent=w1, at=c, group=grp)
-    cable = u.cable("DEMO-CBL-4G1.5", name="w1c", parent=w1, at=c)
-    cable.core(1, field[0].outer, p1["1"])
-    cable.core(2, field[1].outer, p1["2"])
-    u.mate(p1, board_x1)
+    u.unused(board_x1)
     for t in field:
         u.boundary(t)
         u.unused(t)  # nothing crosses it: declared, so no BOUNDARY_UNCONNECTED
@@ -79,13 +71,16 @@ def _pump_cabinet(s):
 @functools.cache
 def _build():
     parts = fransys_parts.load("demo_parts")
-    d = fransys_author.Design(parts)
-    d.project(
-        title="Pump station", number="P-1001", customer="Example Co", revision=1, author="OJB"
-    )
+    d = Design(parts)
+    d.project(title="Pump station", number="P-1001", customer="Example Co", revision=1, author="OJB")
     d.revision(1, date="2026-01-01", text="First issue", created="XX")
     _pump_cabinet(d.scope("pump", at=d.location("ER", "Engine room")))
-    result = fr.build(parts, d.draft(), layout_trigger_document())
+    cover = Path(tempfile.mkdtemp()) / "cover.md"
+    cover.write_text("# Cover\n", encoding="utf-8")
+    prints = (  # each unit's set is printed by a document (UNPRINTED_SET)
+        fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, name, cover=cover) for name in (_CABINET, _BOARD)
+    )
+    result = fr.build(parts, d.draft(), layout_trigger_document(), *prints)
     assert [f.code for f in result.findings if f.severity is Severity.ERROR] == []
     return result.model
 
@@ -95,7 +90,7 @@ def _unit_id(model, name):
     return found
 
 
-def _with_document(model, unit_id, *, remove):
+def _with_document(model, unit_id):
     doc = Document(
         id=make_id(Document, ("probe-doc", str(unit_id))),
         key=("probe-doc", str(unit_id)),
@@ -103,8 +98,6 @@ def _with_document(model, unit_id, *, remove):
         location=None,
         item=None,
         unit=unit_id,
-        add=(),
-        remove=remove,
         cover="# Cover",
         notes=None,
     )
@@ -122,11 +115,8 @@ def test_the_unit_documents_title_block_revision_cell_prints_2_1():
     model, doc = _with_document(
         _build(),
         _unit_id(_build(), _BOARD),
-        remove=(PageKind.SCHEMATIC, PageKind.CONNECTOR_LIST, PageKind.BOM),
     )
-    svg = fransys_render.sheets(document_sheets_of(model), LIBRARY)[
-        SheetKey(doc.id, PageKind.COVER, 0)
-    ].svg
+    svg = fransys_render.sheets(document_sheets_of(model, ()), LIBRARY)[SheetKey(doc.id, PageKind.COVER, 0)].svg
     values = re.findall(r'font-size="3\.4293"[^>]*>([^<]*)</text>', svg)  # the body-size cells
     assert "2.1" in values
     for old in ("2", "1", "01", "1.1"):
@@ -138,9 +128,13 @@ def test_the_cover_lists_both_history_rows_as_1_1_and_2_1():
     model, doc = _with_document(
         _build(),
         _unit_id(_build(), _BOARD),
-        remove=(PageKind.SCHEMATIC, PageKind.CONNECTOR_LIST, PageKind.BOM),
     )
-    text = source(model, doc.id, {}, fransys_render.sheets(document_sheets_of(model), LIBRARY))
+    text = source(
+        model,
+        doc.id,
+        {},
+        fransys_render.sheets(document_sheets_of(model, ()), LIBRARY),
+    )
     first = 'text("1.1"), text("2025-06-01"), text("Version one release")'
     second = 'text("2.1"), text("2026-01-01"), text("Version two release")'
     assert first in text
@@ -160,7 +154,7 @@ def test_the_parents_bom_unit_line_prints_2_1():
     assert line.revision == "2.1"
     assert line.revision not in {"2", "1", "01"}
 
-    model, doc = _with_document(model, cabinet, remove=(PageKind.SCHEMATIC,))
+    model, doc = _with_document(model, cabinet)
     text = bom_page(model, document_row(model, doc.id))
     assert '"Revision"' in text
     assert 'text("2.1")' in text
@@ -196,10 +190,14 @@ def test_the_cabinet_cover_lists_its_own_history_not_the_nested_boards():
     """
     model = _build()
     cabinet = _unit_id(model, _CABINET)
-    model, doc = _with_document(
-        model, cabinet, remove=(PageKind.SCHEMATIC, PageKind.CONNECTOR_LIST, PageKind.BOM)
+    model, doc = _with_document(model, cabinet)
+    text = source(
+        model,
+        doc.id,
+        {},
+        fransys_render.sheets(document_sheets_of(model, ()), LIBRARY),
     )
-    text = source(model, doc.id, {}, fransys_render.sheets(document_sheets_of(model), LIBRARY))
-    assert 'text("1.2"), text("2026-02-01"), text("Cabinet release")' in text
+    cover = text.split("\n#pagebreak()\n")[0]  # the later pages (the BOM) do name the nested board's revision
+    assert 'text("1.2"), text("2026-02-01"), text("Cabinet release")' in cover
     for board_entry in ("Version one release", "Version two release", "2025-06-01", '"2.1"'):
-        assert board_entry not in text
+        assert board_entry not in cover

@@ -10,37 +10,36 @@ from typing import TYPE_CHECKING
 from electrical_symbols import GENERIC_BOX_KEY
 from fransys_layout.symbols import library_symbol
 from fransys_model.derive import (
-    actuated_group,
-    actuator_each_contact,
+    CarriedReason,
+    accessory_functions,
+    carried_functions,
     changeover_throws,
     connected_ports,
     connector_facets,
-    function_ports,
-    lead_switch,
-    link_state,
-    operated_by,
-    pole_gangs,
-    port_name,
-    schematic_functions,
-    undrawn_functions,
-)
-from fransys_model.derive.drawing_text import pole_prefix
-from fransys_model.kernel import UnionFind
-from fransys_model.vocab import (
-    FunctionKind,
-    LinkKind,
     function_poles,
+    function_ports,
+    function_role,
+    function_scopes,
     function_templates,
     functions,
     internal_links,
     items,
-    pole_order,
+    link_state,
+    operated_by,
+    pole_gangs,
+    port_name,
     port_templates,
     ports,
+    schematic_functions,
 )
+from fransys_model.derive.drawing_text import pole_prefix
+from fransys_model.elecdef import LinkKind
+from fransys_model.kernel import UnionFind
+from fransys_model.layout import profile_of
+from fransys_model.vocab import FunctionKind
 
 from .placement_ids import symbol_key
-from .placement_kit import Pick, SymbolKit, refuse
+from .placement_kit import Pick, PortMissingError, SymbolKit
 from .symbol_bind import Part, Shape, Target, member_of, port_of, through_ports
 from .symbol_boxes import box_picks
 from .symbol_pins import Choice, pin_picks
@@ -56,39 +55,23 @@ if TYPE_CHECKING:
     from fransys_model.kernel import Id, Model
     from fransys_model.vocab import Function, Pole, Port
 
-__all__ = ["symbol_kit", "unknown_symbols"]
+__all__ = ["drawn_functions", "symbol_kit", "unknown_symbols"]
+
+_PAIR_NAMES = 2  # a pair is two names
 
 # Drawn as a pin view or a channel of a module box, never alone: the view facts are KIT-FACTS.
 PIN, CHANNEL = "pin", "channel"
 _VIEWED = {FunctionKind.CONNECTOR: PIN, FunctionKind.PLC_CHANNEL: CHANNEL}
 
 
-def _function_poles(model: Model, function: Function) -> tuple[Pole, ...]:
-    own = {t.id: t for t in port_templates(model).values() if t.function == function.template}
-    links = [k for k in internal_links(model).values() if k.a in own and k.b in own]
-    return function_poles(function.kind, links, own) or pole_order(links, own)
-
-
 def _rest(model: Model, function: Function) -> str | None:
-    own = {t.id: t for t in port_templates(model).values() if t.function == function.template}
-    switched = [
-        k
-        for k in internal_links(model).values()
-        if k.kind is LinkKind.SWITCHED and k.a in own and k.b in own
-    ]
+    own = {t.id for t in port_templates(model).values() if t.function == function.template}
+    switched = [k for k in internal_links(model).values() if k.kind is LinkKind.SWITCHED and k.a in own and k.b in own]
     if not switched:
         return None
-    ends = {end.id for end in pole_order(switched, own)[0].ends}
-    first = next(k for k in switched if {k.a, k.b} == ends)
-    return link_state(model, function.id, first.id)
-
-
-def _actuator(model: Model, function: Function) -> bool:
-    """Whether the switch draws its device's actuator (ACTUATOR-ONCE, layout-0237)."""
-    unit = items(model)[function.item].unit
-    if actuator_each_contact(model, unit) or len(actuated_group(model, function.id)) < 2:  # noqa: PLR2004 -- a group of one draws as a single
-        return True
-    return lead_switch(model, function.id) == function.id
+    pairs = [{k.a, k.b} for k in switched]
+    ends = next(e for pole in function_poles(model, function) if (e := {x.id for x in pole.ends}) in pairs)
+    return link_state(model, function.id, switched[pairs.index(ends)].id)
 
 
 def _facts(model: Model, function: Function) -> Facts:
@@ -102,7 +85,6 @@ def _facts(model: Model, function: Function) -> Facts:
         None if protection is None else protection.value,
         None if facet is None or facet.gender is None else facet.gender.value,
         None if operator is None else operator.value,
-        _actuator(model, function),
         port_shape([port_name(model, p) for p in function_ports(model, function.id)]),
     )
 
@@ -116,17 +98,11 @@ def _shape(model: Model, function: Function, found: tuple[Pole, ...]) -> Shape:
     groups: dict[str, list[tuple[str, str]]] = {linked.find(a): [] for a, _ in names}
     for line, load in names:
         groups[linked.find(line)].append((line, load))
-    pairs = tuple(
-        (i, g[0][0], g[0][1])
-        for i, g in enumerate(groups.values())
-        if len({n for pole in g for n in pole}) == 2  # noqa: PLR2004 -- a pair is two names
-    )
+    pairs = tuple((i, g[0][0], g[0][1]) for i, g in enumerate(groups.values()) if len({n for pole in g for n in pole}) == _PAIR_NAMES)
     return Shape(len(groups) or 1, pairs, _throws(model, function, found))
 
 
-def _throws(
-    model: Model, function: Function, found: tuple[Pole, ...]
-) -> dict[str, tuple[str, int]]:
+def _throws(model: Model, function: Function, found: tuple[Pole, ...]) -> dict[str, tuple[str, int]]:
     """Each changeover port name to its throw and the pole of its common."""
     if function.kind is not FunctionKind.CONTACT_CO:
         return {}
@@ -144,9 +120,7 @@ def _throws(
     return thrown
 
 
-def _bind_part(
-    part: Part, symbol: str, at: tuple[Model, set[str], LibrarySymbol], taken: set[str]
-) -> dict[Id[Port], str]:
+def _bind_part(part: Part, symbol: str, at: tuple[Model, set[str], LibrarySymbol], taken: set[str]) -> dict[Id[Port], str]:
     """The symbol port of each model port of `part`, none already in `taken`."""
     model, symbol_ports, drawn = at
     names = {pid: ports(model)[pid].name for pid in function_ports(model, part.function)}
@@ -162,18 +136,12 @@ def _bind_part(
         at_part = Target(symbol_ports, through, len(names))
         chosen = port_of(name, part.shape, part.port_map, at_part)
         if chosen not in symbol_ports or chosen in taken or chosen in bound.values():
-            refuse(
-                f"function {part.function} port {name}",
-                f"no free port on symbol {symbol}",
-                symbol_key(model, part.function),
-            )
+            raise PortMissingError(part.function, name, symbol, symbol_key(model, part.function))
         bound[pid] = chosen
     return bound
 
 
-def bind(
-    symbol: str, parts: tuple[Part, ...], model_and_library: tuple[Model, Library]
-) -> tuple[str, int, frozendict[Id[Port], str]]:
+def bind(symbol: str, parts: tuple[Part, ...], model_and_library: tuple[Model, Library]) -> tuple[str, int, frozendict[Id[Port], str]]:
     """The symbol, its pole count and the port binding of every part (one function, or a gang)."""
     model, library = model_and_library
     poles = parts[0].shape.poles
@@ -194,11 +162,11 @@ def _parts(
 ) -> tuple[Part, ...]:
     """The function's binding part; a gang binds every member as one pole of the lead's symbol."""
     if gang is None:
-        shape = _shape(model, function, _function_poles(model, function))
+        shape = _shape(model, function, function_poles(model, function))
         return (Part(function.id, shape, port_map),)
     parts = []
     for pole, member in enumerate(table[f] for f in gang.members):
-        shape = _shape(model, member, _function_poles(model, member))
+        shape = _shape(model, member, function_poles(model, member))
         parts.append(
             Part(
                 member.id,
@@ -214,45 +182,41 @@ def _pick(bound: tuple[str, int, frozendict[Id[Port], str]], gang: PoleGang | No
     return Pick(*bound, () if gang is None else gang.members[1:])
 
 
-def _gangs(
-    model: Model,
-    order: list[Id[Function]],
-    chosen: Mapping[Id[Function], tuple[str | None, object]],
-) -> dict[Id[Function], PoleGang]:
-    """Each gang whose lead draws as a library symbol, by its lead (`derive.pole_gangs`)."""
-    return {
-        g.lead: g for g in pole_gangs(model, frozenset(order)) if chosen.get(g.lead, (None,))[0]
-    }
+def _hidden(model: Model) -> frozenset[Id[Function]]:
+    """The spare functions of a hiding unit, but connectors and terminals (their own views decide), are left off (model-0120)."""
+    spare = (
+        c.symbol.function
+        for c in carried_functions(model, hide_unused_pins=True, wired=connected_ports(model))
+        if c.reason is CarriedReason.SPARE and c.symbol
+    )
+    return frozenset(
+        f
+        for f in spare
+        if not (function_role(model, f).terminal or function_role(model, f).pin_group)
+        and profile_of(model, function_scopes(model, f)[0][0]).hide_unused_pins
+    )
 
 
-def _order(model: Model) -> list[Id[Function]]:
-    """The drawn functions in schematic order: the accessory's own are not drawn."""
-    accessory = undrawn_functions(model, hide_unused_pins=False, wired=frozenset()).accessory
-    return [f for f in schematic_functions(model) if f not in accessory]
+def drawn_functions(model: Model) -> list[Id[Function]]:
+    """The drawn functions in schematic order: an accessory's own and a hiding unit's spare ones are not drawn."""
+    left_off = {*accessory_functions(model), *_hidden(model)}
+    return [f for f in schematic_functions(model) if f not in left_off]
 
 
 def _scope(model: Model) -> tuple[list[Id[Function]], Mapping[Id[Function], Function]]:
     """The drawn functions in order, and every function by id."""
-    return _order(model), functions(model)
+    return drawn_functions(model), functions(model)
 
 
-def _views(
-    order: list[Id[Function]], table: Mapping[Id[Function], Function]
-) -> dict[Id[Function], str | None]:
+def _views(order: list[Id[Function]], table: Mapping[Id[Function], Function]) -> dict[Id[Function], str | None]:
     """How each function is viewed: `PIN`, `CHANNEL` or `None` (drawn alone)."""
     return {f: _VIEWED.get(table[f].kind) for f in order}
 
 
-def _raw_choices(
-    model: Model, order: list[Id[Function]], table: Mapping[Id[Function], Function]
-) -> dict[Id[Function], Choice]:
+def _raw_choices(model: Model, order: list[Id[Function]], table: Mapping[Id[Function], Function]) -> dict[Id[Function], Choice]:
     """The symbol key and port map the choice or the table gives each function a symbol may draw."""
     viewed = _views(order, table)
-    return {
-        f: symbol_for(model, table[f], items(model)[table[f].item].part, _facts(model, table[f]))
-        for f in order
-        if viewed[f] != CHANNEL
-    }
+    return {f: symbol_for(model, table[f], items(model)[table[f].item].part, _facts(model, table[f])) for f in order if viewed[f] != CHANNEL}
 
 
 def _chosen(
@@ -270,11 +234,7 @@ def _chosen(
 
 def unknown_symbols(model: Model, library: Library) -> dict[Id[Function], str]:
     """Each function whose chosen symbol key `library` lacks, with that key."""
-    return {
-        f: key
-        for f, (key, _) in _raw_choices(model, *_scope(model)).items()
-        if key is not None and is_unknown(library, key)
-    }
+    return {f: key for f, (key, _) in _raw_choices(model, *_scope(model)).items() if key is not None and is_unknown(library, key)}
 
 
 def _alone(
@@ -286,7 +246,7 @@ def _alone(
     """The picks of the functions a symbol draws alone, those no symbol draws, and the channels."""
     viewed = _views(order, table)
     chosen = _chosen(model, library, order, table)
-    gangs = _gangs(model, order, chosen)
+    gangs = {g.lead: g for g in pole_gangs(model, frozenset(order)) if chosen.get(g.lead, (None,))[0]}
     later = {m for gang in gangs.values() for m in gang.members[1:]}
     kit: dict[Id[Function], Pick] = {}
     boxed: list[Function] = []

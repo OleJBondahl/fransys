@@ -5,14 +5,16 @@ Codes: `RATING_CURRENT_BELOW_BRANCH`, `LOAD_ABOVE_LIMIT`, `LOADS_ABOVE_LIMIT`.
 
 from typing import TYPE_CHECKING, Final
 
-from fransys_model.checks._finding import finding, ordered
+from fransys_model.checks._finding import ordered
 from fransys_model.derive.facts.current.bounds import CurrentBound, LimitRole
 from fransys_model.derive.facts.current.load_limits import LoadLimit, bounded_loads
 from fransys_model.derive.facts.current.worst import worst_bounds
+from fransys_model.derive.facts.figures import figure
+from fransys_model.derive.facts.function_ratings import RATING_SOURCE_LABEL, function_ratings
 from fransys_model.derive.facts.rail_reach import rails_by_potential, reached_kinds
-from fransys_model.derive.facts.stated_ratings import function_ratings, rating_source_label
-from fransys_model.kernel import Finding, Severity, natural_join
-from fransys_model.vocab.enums import Current
+from fransys_model.elecdef import Current, Unit
+from fransys_model.kernel import Finding, natural_join
+from fransys_model.vocab.codes import finding
 from fransys_model.vocab.finding_ref import ref
 
 if TYPE_CHECKING:
@@ -34,10 +36,7 @@ def _setter(bound: CurrentBound) -> str:
 
 def _states(bound: CurrentBound) -> str:
     """`, with item K at rest`: the item states that give `bound`; nothing when none is involved."""
-    named = [
-        f"item {ref(item)} {'at rest' if state == 'rest' else 'operated'}"
-        for item, state in bound.states
-    ]
+    named = [f"item {ref(item)} {'at rest' if state == 'rest' else 'operated'}" for item, state in bound.states]
     return f", with {' and '.join(named)}" if named else ""
 
 
@@ -56,16 +55,16 @@ def check_ratings_current(model: Model) -> tuple[Finding, ...]:
         if kind not in reached.get(function, ()):
             continue
         for source in function_ratings(model, function):
-            rated = source.rating.current_ac_a if kind is Current.AC else source.rating.current_dc_a
+            rated = figure(source.rating.current, kind, Unit.A)
             if rated is None or rated >= bound.value:
                 continue
-            label = rating_source_label(model, source)
+            label = RATING_SOURCE_LABEL
             message = (
                 f"function {ref(function)} is rated {rated:f} A {kind.name} ({label}), "
                 f"below its branch's {bound.value:f} A {kind.name} "
                 f"set by {_setter(bound)}{_states(bound)}"
             )
-            found.append(finding(RATING_CURRENT_BELOW_BRANCH, Severity.ERROR, (function,), message))
+            found.append(finding(RATING_CURRENT_BELOW_BRANCH, (function,), message))
     return ordered(found)
 
 
@@ -81,7 +80,7 @@ def _above_alone(entries: list[tuple[LoadLimit, CurrentBound]]) -> list[Finding]
             )
             seen.setdefault(
                 (load.function, load.kind, bound.by),
-                finding(LOAD_ABOVE_LIMIT, Severity.ERROR, (load.function,), message),
+                finding(LOAD_ABOVE_LIMIT, (load.function,), message),
             )
     return list(seen.values())
 
@@ -105,7 +104,7 @@ def _together(entries: list[tuple[LoadLimit, CurrentBound]]) -> list[Finding]:
             f"{bound.value:f} A {bound.kind.name} set by {_setter(bound)}"
             f"{_states(bound)}"
         )
-        found.append(finding(LOADS_ABOVE_LIMIT, Severity.WARNING, sorted(members), message))
+        found.append(finding(LOADS_ABOVE_LIMIT, sorted(members), message))
     return found
 
 

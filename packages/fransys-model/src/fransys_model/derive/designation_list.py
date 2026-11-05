@@ -42,6 +42,4 @@ def designation_list(model: Model, *, unit: Id[Unit] | None = None) -> tuple[Des
         and not is_own_unit_root(model, item.id, unit)
     ]
     # a harness and its cable print one designation: the printed text breaks the tie, the id last
-    return tuple(
-        sorted(rows, key=lambda row: (natural_key(row.designation), row.description, row.item))
-    )
+    return tuple(sorted(rows, key=lambda row: (natural_key(row.designation), row.description, row.item)))

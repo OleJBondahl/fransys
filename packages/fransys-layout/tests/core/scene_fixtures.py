@@ -1,9 +1,12 @@
 """A planted two-page layout with its problem and flow, built through the contract dataclasses."""
 
+from typing import Any
+
 from options_fixtures import core_options
 from turn_fixtures import ALL_EIGHT, views_of
 
-from fransys_layout.core import AnnexBox
+from fransys_layout.core import AnnexBox, Orientation
+from fransys_layout.core.flow_values import Attach, Cell, Column, End, Fan, FlowGraph, Lane
 from fransys_layout.core.outputs import (
     Annotations,
     CoreLayout,
@@ -14,37 +17,16 @@ from fransys_layout.core.outputs import (
     Placed,
     Placement,
     Routes,
-    Table,
     Wire,
 )
 from fransys_layout.core.outputs import Marker as OutMarker
 from fransys_layout.core.sym_values import Sym
-from fransys_layout.core.values import (
-    Attach,
-    Box,
-    BoxSpec,
-    Cell,
-    Column,
-    CycleSplit,
-    End,
-    Facts,
-    Fan,
-    FlowGraph,
-    Lane,
-    Net,
-    PagePlan,
-    Pin,
-    PinRef,
-    PlacementProblem,
-    RefKind,
-    Side,
-    Size,
-)
+from fransys_layout.core.values import Box, BoxSpec, Facts, Net, PagePlan, Pin, PinRef, PlacementProblem, RefKind, Side, Size
 
 BODY = Box(-8, -16, 16, 32)
 
 
-def sym(sid: str, pins: tuple[Pin, ...], **kw: object) -> Sym:
+def sym(sid: str, pins: tuple[Pin, ...], **kw: Any) -> Sym:
     return Sym(
         sid,
         None,
@@ -53,7 +35,7 @@ def sym(sid: str, pins: tuple[Pin, ...], **kw: object) -> Sym:
         pins,
         tuple((p.id,) for p in pins),
         views=views_of(BODY, BODY, BODY, pins, ALL_EIGHT),
-        **kw,  # ty: ignore[invalid-argument-type] -- optional Sym fields by name
+        **kw,
     )
 
 
@@ -61,19 +43,12 @@ def pin(pid: str, side: Side, dy: int, node: int, end_bias: int = 0) -> Pin:
     return Pin(pid, side, 0, dy, node, end_bias)
 
 
-OPTIONS = core_options(
-    flip_turn="R180",
-    tag_stagger=True,
-    label_gap=8,
-    parallel_pitch=48,
-    driver_first=True,
-    arrow_sides=("E", "W"),
-)
+OPTIONS = core_options()
 
 
 def problem() -> PlacementProblem:
     """K a box pin, A hung under it, F a fan head with a supply stand, T a strip terminal."""
-    k = sym("K", (pin("c1", "S", 16, 0),), box=BoxSpec(("c1",), "N", 16, 8))
+    k = sym("K", (pin("c1", "S", 16, 0),), box=BoxSpec(("c1",), 8))
     a = sym("A", (pin("in", "N", -16, 0), pin("out", "S", 16, 1)))
     f = sym("F", (pin("out", "S", 16, 0), pin("p", "N", -16, 1, -1)), row_group=None)
     t = sym("T", (pin("s", "S", 16, 0),), row_group="X1")
@@ -92,23 +67,23 @@ def flow() -> FlowGraph:
     column = Column(
         "C1",
         (Lane((Cell("A", "R180", "in", "out"),), 0),),
-        (End("boxpin", "n1", PinRef("K", "c1")),),
+        (End("boxpin", "n1", PinRef("K", "c1"), lane=0),),
         (End("open"),),
         32,
         16,
     )
     driver = Attach(None, 0, 0, PinRef("F", "out"), net="n")
     fan = Fan("F1", ("n2",), (driver,), (), "F", 1, "E", head=driver)
-    return FlowGraph((column,), (fan,), (), (), CycleSplit(0, 0, 0), ("K", "A", "F", "T"))
+    return FlowGraph((column,), (fan,), (), (), ("K", "A", "F", "T"))
 
 
-def _placed(sid: str, page: int, x: int, y: int, orient: str, *pins: PinXY) -> Placed:
+def _placed(sid: str, page: int, x: int, y: int, orient: Orientation, *pins: PinXY) -> Placed:
     body = Box(x - 8, y - 16, 16, 32)
-    return Placed(sid, page, x, y, orient, body, body, pins)  # ty: ignore[invalid-argument-type] -- orient literal
+    return Placed(sid, page, x, y, orient, body, body, pins)
 
 
 def layout() -> CoreLayout:
-    plans = tuple(PagePlan(i, "U1", (), forced_end=False, groups=()) for i in (1, 2))
+    plans = tuple(PagePlan(i, "U1", (), groups=()) for i in (1, 2))
     page1 = PagePlacement(
         1,
         (
@@ -136,10 +111,9 @@ def layout() -> CoreLayout:
         Size(100, 100),
         plans,
         Placement((page1, page2)),
-        Routes((PageRoutes(2, (wire,), (), Counts(0, 0, 0, 10, 0)),)),
+        Routes((PageRoutes(2, (wire,), (), Counts(0, 0, 0, 10), (), (), ()),)),
         Annotations(
             annexes=(AnnexBox("K", 1, Box(1, 2, 3, 4), "BR"),),
-            tables=(Table("K", 1, ("3C", "2:3C"), Box(5, 6, 7, 8), 2),),
             markers=(OutMarker("n1", RefKind.TAG, 2, "C3", 40, 46, PinRef("A", "in")),),
         ),
         (),

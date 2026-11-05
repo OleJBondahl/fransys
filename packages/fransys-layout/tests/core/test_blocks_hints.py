@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 from fransys_layout.core.values import Hints
 
 from .blocks_fixtures import box_case, build, fan, flat, ids, loose
@@ -25,9 +27,7 @@ def test_order_pairs_moves_a_block_right_after_the_one_it_follows() -> None:
 def test_a_hint_name_is_never_a_block_id() -> None:
     syms, cols = loose("A", "B", "C")
     block_id = flat(build(syms, cols))[0].id
-    hints = Hints(
-        group_order=("A", "B", "C"), order_pairs=((flat(build(syms, cols))[2].id, block_id),)
-    )
+    hints = Hints(group_order=("A", "B", "C"), order_pairs=((flat(build(syms, cols))[2].id, block_id),))
     assert ids(build(syms, cols, hints=hints)) == ["c1", "c2", "c3"]
 
 
@@ -59,20 +59,17 @@ def test_chain_leaves_a_card_in_pin_order() -> None:
     assert not card.fixed_order
 
 
-def test_keep_together_makes_blocks_consecutive_when_they_fit_one_page_width() -> None:
-    syms, cols = loose("A", "C", "B", reach=(150, 150))
+@pytest.mark.parametrize(
+    ("reach", "order", "findings"),
+    [(150, ["c1", "c3", "c2"], []), (350, ["c1", "c2", "c3"], [("KEEP_TOGETHER_UNMET", "A,B")])],  # 2 * (700 + 8) is over the 1280 page
+    ids=["fits-one-page-width", "unmet"],
+)
+def test_keep_together_makes_blocks_consecutive_when_they_fit_one_page_width_else_gives_the_finding(reach, order, findings) -> None:
+    syms, cols = loose("A", "C", "B", reach=(reach, reach))
     hints = Hints(group_order=("A", "C", "B"), keep_together=(frozenset({"A", "B"}),))
     lists = build(syms, cols, hints=hints)
-    assert ids(lists) == ["c1", "c3", "c2"]
-    assert lists[0].findings == ()
-
-
-def test_keep_together_unmet_gives_the_finding_and_leaves_the_order() -> None:
-    syms, cols = loose("A", "C", "B", reach=(350, 350))  # 2 * (700 + 8) is over the 1280 page
-    hints = Hints(group_order=("A", "C", "B"), keep_together=(frozenset({"A", "B"}),))
-    lists = build(syms, cols, hints=hints)
-    assert ids(lists) == ["c1", "c2", "c3"]
-    assert [(f.code, f.subject) for f in lists[0].findings] == [("KEEP_TOGETHER_UNMET", "A,B")]
+    assert ids(lists) == order
+    assert [(f.code, f.subject) for f in lists[0].findings] == findings
 
 
 def test_break_before_marks_the_first_block_of_the_group() -> None:

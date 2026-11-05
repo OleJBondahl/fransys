@@ -4,13 +4,13 @@ unordered input tuples, changes no marker but its spelling."""
 from __future__ import annotations
 
 from dataclasses import replace
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import pytest
 from options_fixtures import core_options
 
 from fransys_layout.core.place import place_pages
-from fransys_layout.core.text_markers import mark_pages
+from fransys_layout.core.text_markers import placed_marks
 
 from . import pipeline_fixtures
 from .conftest import MARKER
@@ -22,48 +22,44 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
     from fransys_layout.core.outputs import Marker
+    from fransys_layout.core.values import PlacementProblem
 
 OPTIONS = core_options(
     marker=MARKER,
-    flip_turn="R180",
-    tag_stagger=True,
-    label_gap=8,
-    parallel_pitch=48,
-    driver_first=True,
-    arrow_sides=("E", "W"),
 )
 
 
-def _canon(markers: tuple[Marker, ...], back: Callable[[str | None], str | None]) -> list:
-    return [
-        (back(m.net), m.kind, m.page, m.cell, m.x, m.y, m.end and (back(m.end.sym), m.end.pin))
-        for m in markers
-    ]
+def _ranked(name: str) -> PlacementProblem:
+    """The plant with every symbol ranked, as el hands it (SYMBOL-TIE): the rank, never the id text, orders ends."""
+    prob = PLANTS[name]()
+    return replace(prob, symbols=tuple(replace(sym, rank=i) for i, sym in enumerate(prob.symbols)))
+
+
+def _canon(markers: tuple[Marker, ...], back: Callable[[str | None], str | None]) -> list[Any]:
+    return [(back(m.net), m.kind, m.page, m.cell, m.x, m.y, m.end and (back(m.end.sym), m.end.pin)) for m in markers]
 
 
 @pytest.mark.parametrize("name", PLANTS)
 @pytest.mark.parametrize("form", SPELLINGS)
 def test_markers_do_not_depend_on_how_ids_are_spelled(name: str, form: str) -> None:
-    prob = PLANTS[name]()
+    prob = _ranked(name)
     cut = pipeline_fixtures.cut_of(prob, OPTIONS)
-    want = _canon(mark_pages(cut, place_pages(cut, prob, OPTIONS), prob, OPTIONS), back_of({}))
+    want = _canon(placed_marks(cut, place_pages(cut, prob, OPTIONS), prob, OPTIONS, {})[0], back_of({}))
     assert want
     maps = make_maps(id_sets(prob, cut.flow, cut.blocks), form)
     cut2, prob2 = respell_cut(cut, maps), respell_problem(prob, maps)
-    got = mark_pages(cut2, place_pages(cut2, prob2, OPTIONS), prob2, OPTIONS)
+    got = placed_marks(cut2, place_pages(cut2, prob2, OPTIONS), prob2, OPTIONS, {})[0]
     assert _canon(got, back_of(maps)) == want
 
 
 @pytest.mark.parametrize("name", PLANTS)
 def test_markers_do_not_depend_on_the_order_of_the_input_tuples(name: str) -> None:
-    prob = PLANTS[name]()
+    prob = _ranked(name)
     cut = pipeline_fixtures.cut_of(prob, OPTIONS)
-    want = _canon(mark_pages(cut, place_pages(cut, prob, OPTIONS), prob, OPTIONS), back_of({}))
+    want = _canon(placed_marks(cut, place_pages(cut, prob, OPTIONS), prob, OPTIONS, {})[0], back_of({}))
     flow = cut.flow
-    flipped = replace(
-        flow, columns=flow.columns[::-1], fans=flow.fans[::-1], cross_links=flow.cross_links[::-1]
-    )
+    flipped = replace(flow, columns=flow.columns[::-1], fans=flow.fans[::-1], cross_links=flow.cross_links[::-1])
     prob2 = replace(prob, symbols=prob.symbols[::-1], nets=prob.nets[::-1])
     cut2 = replace(cut, flow=flipped)
-    got = mark_pages(cut2, place_pages(cut2, prob2, OPTIONS), prob2, OPTIONS)
+    got = placed_marks(cut2, place_pages(cut2, prob2, OPTIONS), prob2, OPTIONS, {})[0]
     assert _canon(got, back_of({})) == want

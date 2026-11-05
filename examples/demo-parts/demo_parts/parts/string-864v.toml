@@ -1,4 +1,4 @@
-schema = 1
+schema = 2
 
 [part]
 mpn = "DEMO-STRING-864V"
@@ -16,6 +16,5 @@ ports = [
 ]
 
 [function.operating]
-nominal_voltage_v = "864"
-max_voltage_v = "985.5"
-max_current_dc_a = "186"
+voltage = [{ nom = "864 V", max = "985.5 V" }]
+max_current = [{ max = "186 A", at = ["DC"] }]

@@ -10,12 +10,10 @@ lazy from collections.abc import Set as AbstractSet
 from fransys_model.derive.facts.children import parent_item
 from fransys_model.derive.facts.item_predicates import cable_items
 from fransys_model.derive.facts.roles import function_role
-from fransys_model.derive.facts.unit_index import item_unit, unit_index
 from fransys_model.derive.facts.units import (
     boundary,
     enclosing_boards,
     item_chain,
-    unit_subtree,
     units,
 )
 from fransys_model.derive.indexes import build_indexes
@@ -26,12 +24,10 @@ from fransys_model.derive.order_kit import (
     pin_mates_in_order,
 )
 from fransys_model.derive.rows_pin_views import PinMate, PinView
-from fransys_model.derive.unused import port_is_reached
 from fransys_model.vocab.tables import functions, mates, ports, unused_boundaries
 lazy from fransys_model.kernel import AuthoringKey, Id, Model, canonical
 lazy from fransys_model.vocab.core import Function, Item, Port
 lazy from fransys_model.vocab.templates import FunctionTemplate
-lazy from fransys_model.vocab.units import Unit
 
 __all__ = ["connector_pin_mates", "connector_pin_views", "template_gender"]
 
@@ -42,9 +38,7 @@ def template_gender(model: Model, template: Id[FunctionTemplate] | None) -> str 
     return None if shape is None or shape.gender is None else shape.gender.value
 
 
-def connector_pin_views(
-    model: Model, chained: AbstractSet[Id[Item]], wired: AbstractSet[Id[Port]]
-) -> tuple[PinView, ...]:
+def connector_pin_views(model: Model, chained: AbstractSet[Id[Item]], wired: AbstractSet[Id[Port]]) -> tuple[PinView, ...]:
     """One row per pin of each connector function, in port id order.
 
     A connector of an item in `chained` (a device chain's member) stays whole and has no row.
@@ -54,7 +48,6 @@ def connector_pin_views(
     pins = _pins(model, chained)
     pairs = connector_pin_mates(model, frozenset(pins))
     mate_of = _mates(pairs)
-    own = _mates(p for p in pairs if _own(model, pins, p))
     edges = _edges(model)
     kept = _kept(pins, mate_of, wired, edges)
     table = functions(model)
@@ -67,7 +60,6 @@ def connector_pin_views(
             gender=template_gender(model, table[function].template) or "",
             mate=mate_of.get(port),
             drawn=port in kept,
-            elsewhere=port in kept and function in edges and not _reached(model, port, own),
         )
         for port, function in pin_items_in_order(pins)
     )
@@ -110,29 +102,6 @@ def _kept(
     return frozenset(kept | {port for port, f in pins.items() if f in edges and f not in live})
 
 
-def _reached(model: Model, port: Id[Port], own: Mapping[Id[Port], Id[Port]]) -> bool:
-    """Whether a wire inside the drawing reaches `port`, or its mate whose document knows it."""
-    mate = own.get(port)
-    return port_is_reached(model, port) or (mate is not None and port_is_reached(model, mate))
-
-
-def _knows(model: Model, document: Id[Unit] | None, other: Id[Unit] | None) -> bool:
-    """Whether the document of unit `document` knows a thing in unit `other`.
-
-    A nested unit's document knows only its own subtree; a top-level unit's and the system's know
-    every unit, since their leaving wires draw as stubs.
-    """
-    nested = document is not None and len(unit_index(model).containing.get(document, ())) > 1
-    return document is None or not nested or other in unit_subtree(model, document)
-
-
-def _own(model: Model, pins: Mapping[Id[Port], Id[Function]], pair: PinMate) -> bool:
-    """Whether both pins' documents know the mate: a nested unit's knows none from outside it."""
-    table = functions(model)
-    one, other = (item_unit(model, table[pins[p]].item) for p in (pair.upper, pair.lower))
-    return _knows(model, one, other) and _knows(model, other, one)
-
-
 def connector_pin_mates(model: Model, pins: AbstractSet[Id[Port]]) -> tuple[PinMate, ...]:
     """Each mate's equal-named pins of `pins`, upper (plug) side first, in id order."""
     table = ports(model)
@@ -152,15 +121,11 @@ def connector_pin_mates(model: Model, pins: AbstractSet[Id[Port]]) -> tuple[PinM
         )
         upper = mate.b if lower == mate.a else mate.a
         names = by_function[upper].keys() & by_function[lower].keys()
-        found.extend(
-            PinMate(upper=by_function[upper][n], lower=by_function[lower][n]) for n in names
-        )
+        found.extend(PinMate(upper=by_function[upper][n], lower=by_function[lower][n]) for n in names)
     return pin_mates_in_order(found)
 
 
-def _lower_rank(
-    model: Model, cable_like: frozenset[Id[Item]], function: Id[Function]
-) -> tuple[bool, bool, AuthoringKey]:
+def _lower_rank(model: Model, cable_like: frozenset[Id[Item]], function: Id[Function]) -> tuple[bool, bool, AuthoringKey]:
     """On or under a board first, then not on a cable or harness, then the later key."""
     record = functions(model)[function]
     return (

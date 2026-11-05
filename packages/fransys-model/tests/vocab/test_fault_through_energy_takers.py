@@ -2,7 +2,6 @@
 
 `actuator` and `coil` take energy by default (model-0232), so the fault graph treats them as
 loads: the fuse behind one reads no source, while the same fuse behind a plain conductor reads
-the module's 6000 A.
 """
 
 from decimal import Decimal
@@ -15,7 +14,8 @@ from plant import Plant
 from rating_plant import rail, supply
 
 from fransys_model.derive import prospective_fault
-from fransys_model.vocab.enums import Current, FunctionKind, LinkKind
+from fransys_model.elecdef import Current, LinkKind
+from fransys_model.vocab.enums import FunctionKind
 
 if TYPE_CHECKING:
     from fransys_model.kernel import Model
@@ -27,9 +27,7 @@ def _behind(kind: FunctionKind) -> Model:
     plus, minus = hub(plant, "P"), hub(plant, "M")
     plant.net("bus+", (plus,), potential="B+")
     plant.net("bus-", (minus,), potential="B-")
-    supply(
-        plant, "bat", {"B+": rail("48"), "B-": rail("0")}, current=Current.DC, pins=(plus, minus)
-    )
+    supply(plant, "bat", {"B+": rail("48"), "B-": rail("0")}, current=Current.DC, pins=(plus, minus))
     run(plant, minus, [module(plant, "m", "6000", "2")], plus)
     node = hub(plant, "N")
     motor = device(plant, "MOT", amps="20", link=LinkKind.CONDUCTIVE, kind=kind)

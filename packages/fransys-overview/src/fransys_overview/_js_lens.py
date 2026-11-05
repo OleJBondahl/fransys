@@ -1,7 +1,5 @@
 """Page script, part 5b: the Signals lens (O8): PLC module, channel, field device, no layout."""
 
-# ruff: noqa: E501 -- the JavaScript source is not wrapped
-
 from typing import Final
 
 JS_LENS: Final[str] = r"""

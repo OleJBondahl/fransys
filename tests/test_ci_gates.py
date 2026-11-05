@@ -53,3 +53,11 @@ def test_a_lint_error_fails_the_gate_with_ruffs_block_printed(tmp_path, capfd):
     out = capfd.readouterr().out
     assert "F401" in out
     assert out.index("F401") < out.index("later block")
+
+
+def test_the_internal_gate_joins_only_where_the_full_repo_has_its_recipes(tmp_path: Path) -> None:
+    """R1348: the export has no internal/internal.just and runs the public groups alone."""
+    assert ci_gates.all_groups(tmp_path) == ci_gates._GROUPS
+    (tmp_path / "internal").mkdir()
+    (tmp_path / "internal" / "internal.just").write_text("", encoding="utf-8")
+    assert ci_gates.all_groups(tmp_path) == (*ci_gates._GROUPS, (("just", "internal-gate"),))

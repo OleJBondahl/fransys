@@ -2,10 +2,6 @@
 
 The fixture is `test_dd_boundary_draw._build_pass_through`: connector `x1` is the boundary pin of
 nested unit `n` and of its parent `a`, wired out to a top-level item. Its pin 1 carries a vertical
-off-stub box (M1) above the black box. Before this fix the outline's top edge stood 1 grid above the
-black box's own labels, so the stub's box stood on the edge and above it; the owner: "increase the
-heigh of the outline to encapsulate the refrence". Now the outline's top edge passes the box, and
-the title, which stays on the outline, stands above that edge, clear of the stub.
 """
 
 import importlib.util
@@ -13,7 +9,9 @@ from pathlib import Path
 
 import pytest
 from _core_boxes import outline_rect
-from _drawn_pages import drawn_pages
+from _drawn_pages import drawn_pages, markers_in
+
+from electrical_symbols import MARKER_FACING, MARKER_TURN_FACING, MARKER_TURNED
 
 _SOURCE = Path(__file__).resolve().parent / "test_dd_boundary_draw.py"
 _spec = importlib.util.spec_from_file_location("_boundary_draw_for_outlines", _SOURCE)
@@ -36,11 +34,12 @@ def test_an_outline_holds_the_reference_box_and_its_title_stands_above_it(model)
     for drawing in drawn_pages(model).values():
         for outline in drawing.outlines:
             left, top, right, bottom = outline_rect(outline)
-            for marker in drawing.markers:
+            for marker in markers_in(drawing):
                 if not left <= marker.x < right:
                     continue
                 held += 1
-                assert marker.side in {"n", "s"}  # a vertical box
+                vertical = MARKER_TURN_FACING.values() if marker.key == MARKER_TURNED else (MARKER_FACING["S"], MARKER_FACING["N"])
+                assert marker.orient in vertical  # a vertical box, as the deleted `side in {"n", "s"}`
                 assert top <= marker.y <= bottom
                 assert outline.label is not None
                 title = outline.label.box

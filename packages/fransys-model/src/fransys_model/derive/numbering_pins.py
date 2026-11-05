@@ -28,14 +28,11 @@ from .instance_tag import instance_name, unit_tag
 from .lookups import terminal_items
 from .rows_baseline import NumberingItem, NumberingPins, NumberingRetired
 from .unit_relative_key import unit_relative_key
-from .unit_release import unit_release
 
 _NUMBERING_VERSION = 1
 
 
-def item_position(
-    model: Model, item: Id[Item]
-) -> tuple[AuthoringKey, AuthoringKey | None, str | None]:
+def item_position(model: Model, item: Id[Item]) -> tuple[AuthoringKey, AuthoringKey | None, str | None]:
     """`item`'s own `(key, scope, code)`, for ANY item, printed or not.
 
     `key` is `unit_relative_key`. `scope` is `unit_relative_key` of `item`'s nearest
@@ -52,17 +49,16 @@ def item_position(
     return unit_relative_key(model, item), scope, code
 
 
-def unit_position(model: Model, unit: Id[Unit]) -> tuple[AuthoringKey, None, str | None]:
+def unit_position(model: Model, unit: Id[Unit]) -> tuple[AuthoringKey, None, None]:
     """A unit instance's own `(key, scope, code)`, the instance twin of `item_position`.
 
     `key` is the instance's key without its parent's prefix, so it ends in `"unit"`; `scope`
-    is `None` (an instance sits in its parent's top group); `code` is its release's
-    `class_code`, `None` when empty.
+    and `code` are `None` (an instance sits in its parent's top group and has no class code).
     """
     record = units_table(model)[unit]
     parent = None if record.parent is None else units_table(model)[record.parent]
     key = record.key if parent is None else record.key[len(parent.key) - 1 :]
-    return key, None, unit_release(model, unit).class_code or None
+    return key, None, None
 
 
 def _unit_rows(model: Model, unit: Id[Unit]) -> list[NumberingItem]:
@@ -72,11 +68,7 @@ def _unit_rows(model: Model, unit: Id[Unit]) -> list[NumberingItem]:
         if child.parent != unit or (text := unit_tag(model, child.id)) is None:
             continue
         key, scope, code = unit_position(model, child.id)
-        rows.append(
-            NumberingItem(
-                key=key, scope=scope, code=code, text=text, authored=child.tag is not None
-            )
-        )
+        rows.append(NumberingItem(key=key, scope=scope, code=code, text=text, authored=child.tag is not None))
     return rows
 
 
@@ -99,9 +91,7 @@ def pins(model: Model, unit: Id[Unit]) -> NumberingPins:
         if text is None:
             continue
         key, scope, code = item_position(model, item.id)
-        rows.append(
-            NumberingItem(key=key, scope=scope, code=code, text=text, authored=item.tag is not None)
-        )
+        rows.append(NumberingItem(key=key, scope=scope, code=code, text=text, authored=item.tag is not None))
     rows.extend(_unit_rows(model, unit))
     rows.sort(key=lambda row: row.key)
     return NumberingPins(items=tuple(rows), retired=())
@@ -201,9 +191,7 @@ def loads(text: str) -> NumberingPins:
         msg = "`numbering_version` is missing or not an int"
         raise SchemaError(msg, kind="numbering_pins")
     if version != _NUMBERING_VERSION:
-        msg = (
-            f"numbering_version {version} is not known; this build reads only {_NUMBERING_VERSION}"
-        )
+        msg = f"numbering_version {version} is not known; this build reads only {_NUMBERING_VERSION}"
         raise SchemaVersionError(msg, expected=_NUMBERING_VERSION, actual=version)
     return NumberingPins(
         items=tuple(_item_from(d) for d in _array(data["items"])),

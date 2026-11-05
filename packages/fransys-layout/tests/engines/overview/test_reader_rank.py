@@ -18,10 +18,7 @@ def _key(token: str, at: str | None = None) -> BoxKey:
 
 
 def _boxes(*lines: str, stub: tuple[int, ...] = ()) -> list[ViewBox]:
-    return [
-        ViewBox(key=_key(f"b{n}", "x" if n in stub else None), lines=(text,), dashed=False)
-        for n, text in enumerate(lines)
-    ]
+    return [ViewBox(key=_key(f"b{n}", "x" if n in stub else None), lines=(text,), dashed=False) for n, text in enumerate(lines)]
 
 
 def test_the_rank_is_the_natural_order_of_each_boxs_first_line() -> None:
@@ -43,10 +40,7 @@ def test_the_inner_keys_leave_out_stubs_and_follow_the_rank() -> None:
 
 def test_a_cell_stacks_its_boxes_in_the_rank_the_reader_gave() -> None:
     """Breaks if make_plan picks its source or orders a cell by anything but `facts.rank`."""
-    specs = tuple(
-        BoxSpec(box=box_ident(b.key), key=b.key, lines=b.lines, dashed=False)
-        for b in _boxes("A10", "A2", "A1")
-    )
+    specs = tuple(BoxSpec(box=box_ident(b.key), key=b.key, lines=b.lines, dashed=False) for b in _boxes("A10", "A2", "A1"))
     facts = ViewFacts(
         unit=None,
         level=None,

@@ -1,16 +1,23 @@
 """`build`: the problem round-trips, is repeatable, and names only symbols it draws."""
+# NET_POTENTIAL_CONFLICT 2 per default-salt build set (KI-461): planted_model or demo_model 24 V to 0 V short through strip and mate.
+# NET_SHORTED 2 per default-salt build set (KI-461): planted_model or demo_model 24 V to 0 V short through strip and mate.
+# WIRE_ROW_UNRESOLVED 6 per default-salt build set (KI-461): planted_model or demo_model 24 V to 0 V short through strip and mate.
 
 import fransys as fr
 import pytest
 from conventions_fixtures import house
 from fransys.colours import BU
 from fransys_el import ProblemError, build
+from fransys_el import placement_widest as widest
+from fransys_el.kit_keys import function_of
 from fransys_el.placement_env import make_env
+from fransys_el.placement_where import where_room
 from placement_fixtures import _feed, demo_model, kit_for, planted_model, sid
 
 from electrical_symbols import LIBRARY
 from fransys_layout.core import PlacementProblem, from_plain, to_plain
 from fransys_model.derive import port_designation
+from fransys_model.derive.order import functions_in_order
 from fransys_model.vocab import ports
 lazy from fransys_model.kernel import Model
 
@@ -35,24 +42,19 @@ def _reversed_model() -> Model:
     g1 = d.device("G1", "DEMO-PSU-24")
     dc = d.dc_supply("24VDC", g1.output)
     x1 = d.terminal_strip("X1", "DEMO-TB-2.5", 3)
-    j2 = d.device("J2", "DEMO-CONN-2P")
-    j1 = d.device("J1", "DEMO-CONN-2P")
-    d.mate(j1.x1, j2.x1)
-    with d.function("MATED", "Mated feed"):
-        d.detail.wire(g1.output["+"], j1.x1["1"], wire=(BU, 0.75))
-        d.detail.wire(g1.output["-"], j2.x1["1"], wire=(BU, 0.75))
     io = d.add(_feed, "U1")
     with d.function("FIELD", "Unit feed"):
-        d.series(dc.plus, io.X1[1], dc.minus, wire=(BU, 0.75))
+        d.series(dc.plus, io.X1[1], wire=(BU, 0.75))
+        d.series(dc.minus, io.X1[2], wire=(BU, 0.75))
     a2 = d.device("A2", "DEMO-PLC-DI-2")
     b1 = d.device("B1", "DEMO-SENSOR-2W")
     with d.function("SENSE", "Two-wire sensor"):
-        d.detail.wire(g1.output["+"], b1.sig["1"], wire=(BU, 0.75))
-        d.detail.wire(b1.sig["2"], a2.di_1["1"], wire=(BU, 0.75))
+        d.series(g1.output["+"], b1.sig["1"], wire=(BU, 0.75))
+        d.series(b1.sig["2"], a2.di_1["1"], wire=(BU, 0.75))
     q2 = d.device("Q2", "DEMO-MCB-3P")
     q1 = d.device("Q1", "DEMO-MCB-3P")
     with d.function("BREAKERS", "Breaker pair"):
-        d.series(q1.element, q2.element, wire=2.5)
+        d.series(q1.element, q2.element, wire=(BU, 2.5))
     s1 = d.device("S1", "DEMO-PB-NO")
     k1 = d.device("K1", "DEMO-RLY-2CO-24")
     with d.function("RELAY", "Relay"):
@@ -99,18 +101,16 @@ def test_every_net_pin_names_a_pin_of_a_symbol(planted: tuple[Model, PlacementPr
 
 
 def test_symbols_keep_the_kit_order(planted: tuple[Model, PlacementProblem]) -> None:
-    """The symbols come in the kit's order; `syms_of` sorts nowhere (R349); loose ones drop."""
+    """The symbols come in function order (model-0396); `syms_of` sorts nowhere (R349); loose ones drop."""
     model, problem = planted
     env = make_env(model, kit_for(model), house(), LIBRARY)
     ids = [s.id for s in problem.symbols]
     assert len(ids) > 1
     kept = set(ids)
-    assert ids == [i for i in (env.ids[lead] for lead in env.kit) if i in kept]
+    assert ids == [i for i in (env.ids[lead] for lead in functions_in_order(model, env.kit)) if i in kept]
 
 
-def test_strip_terminals_carry_row_fields_and_two_pin_sensor_does_not(
-    planted: tuple[Model, PlacementProblem],
-) -> None:
+def test_strip_terminals_carry_row_fields_and_two_pin_sensor_does_not(planted: tuple[Model, PlacementProblem]) -> None:
     """Closest honest T4 check: row fields follow the strip, not the symbol kind.
 
     No fixture swaps a terminal's kind for a two-pin device with the same geometry, so this
@@ -138,3 +138,17 @@ def test_missing_pick_raises_problem_with_fix(planted: tuple[Model, PlacementPro
     assert info.value.fix
     own = [p for p, r in ports(model).items() if r.function == lead]
     assert any(info.value.subject == f"port {port_designation(model, p)}" for p in own)
+
+
+def test_the_where_line_is_measured_once_per_build(planted: tuple[Model, PlacementProblem], monkeypatch: pytest.MonkeyPatch) -> None:
+    """`where_room` reads `Env.where`, measured once in `make_env`; terminals add no marker measure (BS2)."""
+    model, _ = planted
+    env = make_env(model, kit_for(model), house(), LIBRARY)
+    calls: list[str | None] = []
+    real = widest.marker_boxes
+    monkeypatch.setattr(widest, "marker_boxes", lambda library, text=None: calls.append(text) or real(library, text))
+    rooms = [where_room(env, function_of(model, k)) for k in env.owner]
+    assert env.where in "".join(rooms)
+    assert not calls
+    make_env(model, kit_for(model), house(), LIBRARY)
+    assert len(calls) == 9  # one run of nine digits, not nine per terminal

@@ -15,7 +15,7 @@ from fransys_model.derive import (
     nets,
     port_rails,
 )
-from fransys_model.kernel import Finding, Severity, natural_join
+from fransys_model.kernel import Finding, natural_join
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -23,7 +23,7 @@ if TYPE_CHECKING:
     from fransys_model.kernel import Id, Model
     from fransys_model.vocab import Item, Port
 
-__all__ = ["board_nets_findings"]
+__all__ = ["board_nets_findings", "undrawn_board_nets"]
 
 _INFO = {info.code: info for info in FINDING_CODES}
 
@@ -42,13 +42,11 @@ def _innermost_opaque_board(model: Model, ends: Iterable[Id[Port]]) -> Id[Item] 
     return [b for b in outer_first if b in (common or ())][-1] if common else None
 
 
-def _dropped(model: Model) -> dict[Id[Item], set[str]]:
+def undrawn_board_nets(model: Model) -> dict[Id[Item], set[str]]:
     """Each opaque board with the names of the nets wholly on it."""
     found: dict[Id[Item], set[str]] = {}
     for net in nets(model).values():
-        if not port_rails(model, net.ports[0]) and (
-            board := _innermost_opaque_board(model, net.ports)
-        ):
+        if not port_rails(model, net.ports[0]) and (board := _innermost_opaque_board(model, net.ports)):
             found.setdefault(board, set()).add(net.name or "net")
     return found
 
@@ -56,15 +54,10 @@ def _dropped(model: Model) -> dict[Id[Item], set[str]]:
 def board_nets_findings(model: Model) -> tuple[Finding, ...]:
     """One `BOARD_NETS_NOT_DRAWN` (`WARNING`) per opaque board, naming its undrawn nets."""
     return tuple(
-        Finding(
-            code="BOARD_NETS_NOT_DRAWN",
-            severity=Severity.WARNING,
-            subjects=(board,),
-            message=(
-                f"board {item_designation(model, board)} has nets that are not drawn: "
-                f"{natural_join(names)}; the board is not the only top-level device of its unit"
-            ),
-            fix=_INFO["BOARD_NETS_NOT_DRAWN"].filled(),
+        _INFO["BOARD_NETS_NOT_DRAWN"].finding(
+            (board,),
+            f"board {item_designation(model, board)} has nets that are not drawn: "
+            f"{natural_join(names)}; the board is not the only top-level device of its unit",
         )
-        for board, names in _dropped(model).items()
+        for board, names in undrawn_board_nets(model).items()
     )

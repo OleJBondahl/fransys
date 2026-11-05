@@ -2,9 +2,10 @@
 
 Today's engine draws one table per coil, `table_geometry(rows).height` high (titles, rule, rows,
 closing pad). The layer's `symdef.fitted_table` must give that height and the old width, at R0
-and the half turn. The accepted differences (an NC column starting after the widest NO text, an
-empty NC column 2 G wide) move a column inside the table, never its height.
 """
+# NET_POTENTIAL_CONFLICT 2 per default-salt build set (KI-461): planted_model or demo_model 24 V to 0 V short through strip and mate.
+# NET_SHORTED 2 per default-salt build set (KI-461): planted_model or demo_model 24 V to 0 V short through strip and mate.
+# WIRE_ROW_UNRESOLVED 6 per default-salt build set (KI-461): planted_model or demo_model 24 V to 0 V short through strip and mate.
 
 import pytest
 from conventions_fixtures import house

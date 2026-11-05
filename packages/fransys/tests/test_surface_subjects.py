@@ -4,7 +4,8 @@ from typing import Any, NamedTuple
 
 import fransys as fr
 import pytest
-from fransys.pipeline import _resolve_unit
+from fransys._exports import _resolve_unit
+from fransys.colours import BK
 
 from fransys_model.vocab import DocumentPreset
 
@@ -23,7 +24,8 @@ def _cabinet() -> tuple[fr.Design, Any, _Board]:
     d.location("C1", "Cabinet")
     io = d.add(_board, "IO")
     p1 = d.device("P1", "DEMO-CONN-2P")
-    d.mate(p1, io.X1)
+    d.series(p1["1"], io.X1["1"], wire=(BK, 0.75))
+    d.series(p1["2"], io.X1["2"], wire=(BK, 0.75))
     return d, p1, io
 
 
@@ -31,6 +33,11 @@ def _cover(tmp_path):
     path = tmp_path / "cabinet.md"
     path.write_text("# Demo\n", encoding="utf-8")
     return path
+
+
+def _records(document) -> list[Any]:
+    """The document's records, typed loosely: the subject kinds differ."""
+    return list(document.records())
 
 
 def test_device_and_function_ids_are_read_by_derive_after_a_build() -> None:
@@ -42,10 +49,10 @@ def test_device_and_function_ids_are_read_by_derive_after_a_build() -> None:
 
 def test_a_document_takes_a_device_and_a_release_name(tmp_path) -> None:
     _, p1, _ = _cabinet()
-    by_device = fr.document(DocumentPreset.HARNESS_DRAWING, p1, cover=_cover(tmp_path))
+    by_device = fr.document(DocumentPreset.CABINET_SCHEMATIC, p1, cover=_cover(tmp_path))
     (record,) = _records(by_device)
     assert record.item == p1.id
-    by_unit = fr.document(DocumentPreset.PCB_SCHEMATIC, "demo-io-board", cover=_cover(tmp_path))
+    by_unit = fr.document(DocumentPreset.CABINET_SCHEMATIC, "demo-io-board", cover=_cover(tmp_path))
     (record,) = _records(by_unit)
     assert record.unit_name == "demo-io-board"
 
@@ -65,8 +72,3 @@ def test_the_public_names_of_ea15() -> None:
     assert {"CONTROL", "SIGNAL", "GENERIC", "parts_module"} <= set(fr.__all__)
     assert "Wire" not in fr.__all__
     assert "unit_ids" not in fr.derive.__all__
-
-
-def _records(document) -> list[Any]:
-    """The document's records, typed loosely: the subject kinds differ."""
-    return list(document.records())

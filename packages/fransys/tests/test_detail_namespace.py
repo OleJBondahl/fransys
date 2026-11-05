@@ -1,4 +1,4 @@
-"""`d.detail` holds the four detail calls, and their old names on `d` raise (author-0042, A2)."""
+"""`d.detail` holds the detail calls, and the old names on `d` raise (author-0042, A2)."""
 
 import re
 from importlib.resources import files
@@ -7,8 +7,8 @@ import fransys as fr
 import pytest
 from fransys.colours import BK
 
-_MOVED = ("wire", "net", "busbar", "rail_bond")
-# The digest of this design built with d.wire, d.net, d.busbar and d.rail_bond at main 8650e4af9.
+_MOVED = ("busbar",)
+# The digest of this design built with d.wire, d.net and d.busbar at main 8650e4af9, without the rail_bond call (RAIL-FLAG R900 G3 deleted it).
 # The digest covers the demo part library, so it moved with the library, never with the move:
 # 54c87f08d (main f6f5720e4), 60889bbd4 (DEMO-LAMP-24 rating, parts-0022) and 7597e12be (demo
 # motor and relay coil draw, model-0232). At the batch merge of each of the last two, the merged
@@ -46,8 +46,27 @@ _MOVED = ("wire", "net", "busbar", "rail_bond")
 # on the merge with SO-B: the pin is recomputed on the merged tree. R498 and R503 W3 delete the
 # `[conductors]` record and the phase angles, R509 drops `[rails] ac` and R513 the whole
 # `[rails]` record; SO-E (model-0365) swaps `em_heights` for `ems` and `lines` in the same record
-# (R511: no `dash`): it moves again; the pin before them ended 4312e1068d46...
-_DIGEST_BEFORE_THE_MOVE = "d0cb99189b714ba82aa51eb4fa19148fa8f35a5fefc2220f2bd97482d49130c6"
+# (R511: no `dash`): it moves again; the pin before them ended 4312e1068d46... SO-C L1 adds the
+# `[lists]` house record to every built model (R519): it moves again; the pin before it ended
+# 89d0ce6b4983... SO-C B and C add the `[export]` and `[designation]` house records: it moves again;
+# the pin before it ended d0cb99189b71... model-0378 deletes ColourCodes: it moves again; model-0370
+# bumps SCHEMA_VERSION to 21, which the digest carries: it moves again; the pin before them ended ba1adcb7cbb8... (main, schema 20)
+# ADOPT-PARTS-3 (model-0381, R783) stores rating and operating as elecdef values and the fuse in a
+# `facet.block` row, "ac" becomes "AC" (R848, R783 Q1/Q3, accepted by class): it moves again; the pin before it ended 4100bf40afed...
+# R860 adds the two reference heights to the `[title_block]` house record: it moves again; the pin before it ended 51e3fda1c185...
+# parts-0024 adds a `[footprint]` to four demo parts (the part library is in the digest): it moves again; the pin before it ended 6bf1c857aaec...
+# DETAIL-WIRE-LABEL renames the `wires` list column field `label` to `ends` in settings (digest carries them): it moves again;
+# the pin before it ended f4e89ec83ec7...
+# RAIL-FLAG (R921) drops the design's rail_bond call and DETAIL-WIRE-LABEL renames a settings field:
+# merged, they move it once more; the pin before it ended 1507d9ac4899...
+# the id seed rename (S2-TRACE-B-5, R1070) moves it again; the pin before it ended 37afb35c9889...
+# PE-AS-RAIL (R1289) deletes the four demo pe-bar parts (the part library is in the digest): it moves again; the pin before it ended 1699b9d755e7...
+# LAV-B (R1266) adds the two twin terminal demo parts (the part library is in the digest): it moves again; the pin before it ended 6ae6eaa66db4d
+# API-FACTS (R1499 4) deletes d.detail.net, so the design drops its net call: it moves again; the pin before it ended 1d18c486efda...
+# API-CLOSE (R1486) adds `marker_padding` to the `[profile]` house record and API-022 P2 deletes the hint kinds, and
+# API-WIRE (R1496) deletes the wire label= the design carried (label="W1"): it moves again; the pin before them ended b45c195b49ad...
+# STUB-PER-CONDUCTOR (layout-0533) bumps SCHEMA_VERSION 22 -> 23, which the digest holds: only that moves it; it ended e755c0bb2d24...
+_DIGEST_BEFORE_THE_MOVE = "ede710deb701bc64bf4962a1ea3d03c6a8033aa36da88aa462c5bcfb55e4a903"
 
 
 def test_each_moved_call_builds_the_model_it_built_on_d():
@@ -57,9 +76,7 @@ def test_each_moved_call_builds_the_model_it_built_on_d():
     k1 = d.device("K1", "DEMO-CTR-3P-24")
     t = [strip[i] for i in range(1, 7)]
     d.detail.busbar(t[0], t[1])
-    d.detail.rail_bond(t[2], t[3])
-    d.detail.net("BUS", t[4], t[5])
-    d.detail.wire(k1.main["1"], t[0].outer, wire=(BK, 1.5), label="W1")
+    d.series(k1.main["1"], t[0].outer, wire=(BK, 1.5))
     assert fr.build(d).model.digest == _DIGEST_BEFORE_THE_MOVE
 
 
@@ -73,19 +90,7 @@ def test_a_moved_name_on_d_raises_naming_its_new_home(name):
     assert callable(getattr(d.detail, name))
 
 
-def test_the_moved_wire_error_names_its_core_path():
-    with pytest.raises(
-        fr.AuthorError,
-        match=(
-            r"d\.wire moved to d\.detail\.wire in 0\.19\.0; "
-            r"a current path is d\.series\(\.\.\.\): see moving-to"
-        ),
-    ):
-        fr.design("demo_parts").wire  # noqa: B018 -- the lookup itself raises
-    assert isinstance(fr.design("demo_parts").detail, fr.Detail)
-
-
-@pytest.mark.parametrize("name", ["net", "busbar", "rail_bond"])
+@pytest.mark.parametrize("name", ["busbar"])
 def test_the_other_moved_errors_name_no_core_path(name):
     with pytest.raises(fr.AuthorError) as raised:
         getattr(fr.design("demo_parts"), name)

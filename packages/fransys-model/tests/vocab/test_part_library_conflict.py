@@ -2,7 +2,7 @@
 
 from fransys_model.checks.part_library import PART_LIBRARY_VERSION_CONFLICT, check_part_library
 from fransys_model.kernel import Draft, Origin, Severity, freeze, make_id
-from fransys_model.vocab.codes import fix_text
+from fransys_model.vocab.codes import finding as coded
 from fransys_model.vocab.templates import PartLibrary
 
 
@@ -17,5 +17,5 @@ def test_a_version_conflict_carries_its_fix() -> None:
     (finding,) = check_part_library(freeze(draft))
     assert finding.code == PART_LIBRARY_VERSION_CONFLICT
     assert finding.severity is Severity.ERROR
-    assert finding.fix == fix_text(PART_LIBRARY_VERSION_CONFLICT)
+    assert finding.fix == coded(PART_LIBRARY_VERSION_CONFLICT, (), "m").fix
     assert "Write:" in finding.fix

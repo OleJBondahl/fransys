@@ -1,4 +1,4 @@
-"""Ratchet D core_callables: parameters typed `Callable` in the layout core, which only falls.
+"""Gate core_callables: no parameter in the layout core is typed `Callable` (stock 0, no table).
 
 A core function takes a fact as a value, never as a callback (Fable section 3 row 10).
 Each parameter whose annotation names `Callable`, bare, dotted or quoted, counts once.
@@ -7,7 +7,7 @@ Each parameter whose annotation names `Callable`, bare, dotted or quoted, counts
 import ast
 
 import pytest
-from gate_scan import ROOT, check_stock, stock
+from gate_scan import ROOT
 
 CORE = ROOT / "packages" / "fransys-layout" / "src" / "fransys_layout" / "core"
 FUNCTIONS = (ast.FunctionDef, ast.AsyncFunctionDef)
@@ -19,9 +19,7 @@ def _is_callable_mention(node: ast.AST) -> bool:
         return node.id == "Callable"
     if isinstance(node, ast.Attribute):
         return node.attr == "Callable"
-    return (
-        isinstance(node, ast.Constant) and isinstance(node.value, str) and "Callable" in node.value
-    )
+    return isinstance(node, ast.Constant) and isinstance(node.value, str) and "Callable" in node.value
 
 
 def _names_callable(annotation: ast.expr) -> bool:
@@ -54,8 +52,8 @@ def core_callable_count() -> int:
 
 
 @pytest.mark.private_input  # a private-gate count (R462)
-def test_core_callable_stock():
-    check_stock("core_callables", core_callable_count(), stock("core_callables"))
+def test_core_callables_are_zero():
+    assert core_callable_count() == 0
 
 
 def test_synthetic_bare_callable_annotation_counts_one():

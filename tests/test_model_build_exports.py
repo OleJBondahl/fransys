@@ -2,7 +2,6 @@
 
 A consumer needs `Draft`, `Model` (from the kernel) and `PartLibraryError` (from
 `fransys_parts`) reachable one layer up through `fransys`; this pins that they are both
-listed and actually resolvable, not just named in `__all__` with a stale or missing import.
 """
 
 import fransys as fr

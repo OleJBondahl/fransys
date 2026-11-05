@@ -8,7 +8,6 @@ from .rows_nav import TableGeometry
 
 __all__ = [
     "column_split",
-    "column_x",
     "heading_room",
     "table_geometry",
 ]
@@ -40,8 +39,3 @@ def table_geometry(rows: int, step: int, pad: int, *, headed: bool) -> TableGeom
         first_row=first_row,
         height=first_row + rows * step + pad,
     )
-
-
-def column_x(width: int, pad: int) -> tuple[int, int]:
-    """The x of the NO and the NC column's texts from the table's left edge."""
-    return pad, column_split(width) + pad

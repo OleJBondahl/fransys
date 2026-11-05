@@ -38,9 +38,7 @@ def _nets_of(plan: Plan, core: int) -> list[tuple[Net, int]]:
     )
 
 
-def _planned(
-    pair: Pair, found: Sequence[tuple[Net, int]], band: Band, plan: Plan
-) -> tuple[Point, ...]:
+def _planned(pair: Pair, found: Sequence[tuple[Net, int]], band: Band, plan: Plan) -> tuple[Point, ...]:
     """The corners of one core: down its column, along each track, down to its pin."""
     start, goal = pair
     if not found:
@@ -62,9 +60,7 @@ def _foreign(core: int, planned: Sequence[tuple[Point, ...]]) -> dict[Cell, froz
     return axes
 
 
-def _along(
-    start: Point, goal: Point, band: Band, axes: Mapping[Cell, frozenset[str]]
-) -> tuple[Point, ...] | None:
+def _along(start: Point, goal: Point, band: Band, axes: Mapping[Cell, frozenset[str]]) -> tuple[Point, ...] | None:
     """One track piece from `start` to `goal`, drawn by `grid_path` among the foreign wires."""
     east = goal.x > start.x
     field = Field(
@@ -83,17 +79,12 @@ def _along(
     )
 
 
-def route_lower(
-    pairs: Sequence[Pair], keys: Sequence[int], plan: Plan, band: Band
-) -> tuple[tuple[Point, ...], ...] | None:
+def route_lower(pairs: Sequence[Pair], keys: Sequence[int], plan: Plan, band: Band) -> tuple[tuple[Point, ...], ...] | None:
     """The lower run of each core (`keys` one per pair), or None if one is stuck.
 
     Straight cores drop; the others follow `plan`, each track piece drawn by `grid_path`.
     """
-    planned = [
-        _planned(pair, _nets_of(plan, key), band, plan)
-        for key, pair in zip(keys, pairs, strict=True)
-    ]
+    planned = [_planned(pair, _nets_of(plan, key), band, plan) for key, pair in zip(keys, pairs, strict=True)]
     for i, points in enumerate(planned):
         axes = _foreign(i, planned)
         for first, second in pairwise(points):

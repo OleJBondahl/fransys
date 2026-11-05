@@ -1,43 +1,31 @@
-"""Field case: a box device that also carries a connector draws, the connector as its own pin views.
-
-The engineering shape: a redundancy module fed by two supplies (a box: two input groups, one
-output) with a service connector, wired on pin 1 to a strip terminal.
-
-The bug (layout-0123): the module's box-drawn functions form the box and the rest
-draw apart, but the sides of the box's pins were still ranked over every drawn function of the
-item. The connector's pin views, named by their port, reached the rank as a function that is
-no function (KeyError), so the drawing could not be built.
-The fix: the sides rank only the functions the box is made of (no decision, the rule is unchanged).
-"""
-
-import tempfile
-from pathlib import Path
+"""Field case: a redundancy module box, fed by two supplies, also carries a service connector wired to a strip terminal.
+The bug: the box's sides ranked the connector's pin views, which are not functions, so a KeyError stopped the drawing.
+Fixed by layout-0123, the sides rank only the functions the box is made of; the rule is unchanged."""
 
 import fransys as fr
 import pytest
 from _drawn_pages import drawn_pages
+from _model_build_cover import unit_document
 from fransys.colours import BN, BU
 
 
 def _built() -> fr.BuildResult:
     d = fr.design("demo_parts", place="CAB")
     cab = d.location("CAB", "Cabinet")
-    live = d.terminal_strip("X1", "DEMO-TB-2.5", 2).run("L", 2, bridged=True)
-    zero = d.terminal_strip("X2", "DEMO-TB-2.5", 2).run("L", 2, bridged=True)
+    live = d.terminal_strip("X1", "DEMO-TB-2.5", 2).run("L", 2, bridged=True, rail=True)
+    zero = d.terminal_strip("X2", "DEMO-TB-2.5", 2).run("L", 2, bridged=True, rail=True)
     with d.function("G", "Group"):
         psus = [d.device(f"T{n}", "DEMO-PSU-24") for n in (1, 2)]
         m1 = d.device("M1", "DEMO-RED-2IN-NET")
     for n, psu in enumerate(psus, start=1):
         group = getattr(m1, f"in_{n}")
-        d.detail.wire(psu.output["+"], group[f"{n}+"], wire=(BN, 1.5))
-        d.detail.wire(psu.output["-"], group[f"{n}-"], wire=(BU, 1.5))
+        d.series(psu.output["+"], group[f"{n}+"], wire=(BN, 1.5))
+        d.series(psu.output["-"], group[f"{n}-"], wire=(BU, 1.5))
     d.dc_supply("S", plus=live[1], minus=zero[1], voltage=24)
-    d.detail.wire(m1.out["+"], live[1].outer, wire=(BN, 1.5))
-    d.detail.wire(m1.out["-"], zero[1].outer, wire=(BU, 1.5))
-    d.detail.wire(m1.svc["1"], live[2].outer, wire=(BN, 0.5))
-    cover = Path(tempfile.mkdtemp()) / "cover.md"
-    cover.write_text("# Cabinet\n", encoding="utf-8")
-    return fr.build(d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover))
+    d.series(m1.out["+"], live[1].outer, wire=(BN, 1.5))
+    d.series(m1.out["-"], zero[1].outer, wire=(BU, 1.5))
+    d.series(m1.svc["1"], live[2].outer, wire=(BN, 0.5))
+    return fr.build(d, unit_document(cab))
 
 
 def test_a_box_device_with_a_connector_is_drawn():

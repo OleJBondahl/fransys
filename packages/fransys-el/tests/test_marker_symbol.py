@@ -19,9 +19,7 @@ def test_the_options_marker_is_the_layers_measure_of_the_library_symbol() -> Non
     assert got is not None
     flag = marker_views(library_symbol(LIBRARY, MARKER), LIBRARY)
     assert got == marker_boxes(LIBRARY)
-    assert {o: got[o] for o in ("R0", "R180", "MR0", "MR180")} == {
-        o: flag[o] for o in got if o in ("R0", "R180", "MR0", "MR180")
-    }
+    assert {o: got[o] for o in ("R0", "R180", "MR0", "MR180")} == {o: flag[o] for o in got if o in ("R0", "R180", "MR0", "MR180")}
 
 
 def test_no_marker_or_keepout_literal_in_fransys_el_source() -> None:

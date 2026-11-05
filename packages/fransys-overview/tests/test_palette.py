@@ -10,7 +10,7 @@ _ALL = (*HUES, ALERT, NEUTRAL)
 def _luminance(colour: str) -> float:
     rgb = [int(colour[i : i + 2], 16) / 255 for i in (1, 3, 5)]
     lin = [c / 12.92 if c <= 0.03928 else ((c + 0.055) / 1.055) ** 2.4 for c in rgb]
-    return 0.2126 * lin[0] + 0.7152 * lin[1] + 0.0722 * lin[2]
+    return float(0.2126 * lin[0] + 0.7152 * lin[1] + 0.0722 * lin[2])
 
 
 def _contrast(a: str, b: str) -> float:

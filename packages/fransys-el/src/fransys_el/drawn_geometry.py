@@ -9,7 +9,7 @@ Pure: reads a `PagePart`.
 from itertools import pairwise
 from typing import TYPE_CHECKING
 
-from fransys_layout.core import overlaps
+from fransys_layout.core import overlaps, own_end
 
 from .drawn_netlist import is_marker
 
@@ -28,11 +28,7 @@ XY = tuple[int, int]
 
 def crooked(part: PagePart) -> list[str]:
     """One member per wire with a diagonal segment, named by its first point."""
-    return [
-        f"wire at {w.points[0]}"
-        for w in part.drawing.wires
-        if any(a[0] != b[0] and a[1] != b[1] for a, b in pairwise(w.points))
-    ]
+    return [f"wire at {w.points[0]}" for w in part.drawing.wires if any(a[0] != b[0] and a[1] != b[1] for a, b in pairwise(w.points))]
 
 
 def stray(part: PagePart, page: Box) -> list[str]:
@@ -58,23 +54,20 @@ def _in(p: XY, box: Box) -> bool:
 
 
 def through_bodies(part: PagePart) -> list[str]:
-    """One member per (wire, body) where the wire crosses a body and ends in none of its box.
+    """One member per (wire, box) sharing interior where the wire ends at none of the box's own ports.
 
-    A reference marker is no body here: `over_markers` counts what meets it.
+    A wire may end inside a box only at its own pin; a table head counts too (R1055, R1058). A marker is `over_markers`'s.
     """
     found: list[str] = []
     for symbol in part.drawing.symbols:
         if symbol.outline is None or symbol.key == "junction-dot" or is_marker(symbol):
             continue
-        own = {(symbol.x, symbol.y), *(part.ports[p] for p in symbol.ports if p in part.ports)}
+        box = symbol.outline
+        ports = [(symbol.x, symbol.y), *(part.ports[p] for p in symbol.ports if p in part.ports)]
         found += [
             f"wire / {symbol.key}"
             for w in part.drawing.wires
-            if w.points[0] not in own
-            and w.points[-1] not in own
-            and not _in(w.points[0], symbol.outline)
-            and not _in(w.points[-1], symbol.outline)
-            and any(_crosses(a, b, symbol.outline) for a, b in pairwise(w.points))
+            if not any(own_end(q, e) for q in ports for e in (w.points[0], w.points[-1])) and any(_crosses(a, b, box) for a, b in pairwise(w.points))
         ]
     return found
 
@@ -96,10 +89,6 @@ def dot_on_pin(a: DrawnSymbol, b: DrawnSymbol, ports: Mapping[str, XY]) -> bool:
     return (dot.x, dot.y) in {ports[p] for p in body.ports if p in ports}
 
 
-def _crossing(points: tuple[XY, ...], box: Box) -> bool:
-    return any(_crosses(a, b, box) for a, b in pairwise(points))
-
-
 def over_markers(part: PagePart) -> list[str]:
     """One member per (wire or dot, marker): `wire / <key>` or `dot / <key>`, in drawing order.
 
@@ -111,17 +100,12 @@ def over_markers(part: PagePart) -> list[str]:
         box = marker.outline
         if box is None or not is_marker(marker):
             continue
-        own = {(marker.x, marker.y), *(part.ports[p] for p in marker.ports if p in part.ports)}
+        ports = [(marker.x, marker.y), *(part.ports[p] for p in marker.ports if p in part.ports)]
         found += [
             f"wire / {marker.key}"
             for w in part.drawing.wires
-            if w.points[0] not in own
-            and w.points[-1] not in own
-            and (any(_in(p, box) for p in w.points) or _crossing(w.points, box))
+            if not any(own_end(q, e) for q in ports for e in (w.points[0], w.points[-1]))
+            and (any(_in(p, box) for p in w.points) or any(_crosses(a, b, box) for a, b in pairwise(w.points)))
         ]
-        found += [
-            f"dot / {marker.key}"
-            for d in part.drawing.symbols
-            if dot_on_marker(d, marker) and (d.x, d.y) not in own
-        ]
+        found += [f"dot / {marker.key}" for d in part.drawing.symbols if dot_on_marker(d, marker) and not any(own_end(q, (d.x, d.y)) for q in ports)]
     return found

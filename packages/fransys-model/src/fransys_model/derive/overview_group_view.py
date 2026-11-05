@@ -67,9 +67,7 @@ def _line(model: Model, unit: Id[Unit], key: tuple[Any, ...], group: list[Lifted
     )
 
 
-def merged_lines(
-    model: Model, unit: Id[Unit], lifted: list[Lifted], rank: dict[OverviewRef, int]
-) -> tuple[FoldLine, ...]:
+def merged_lines(model: Model, unit: Id[Unit], lifted: list[Lifted], rank: dict[OverviewRef, int]) -> tuple[FoldLine, ...]:
     """One line per pair of boxes, kind and strip, the connections added; in box rank order."""
     held: dict[tuple[Any, ...], list[Lifted]] = {}
     for one in lifted:
@@ -90,9 +88,7 @@ def merged_lines(
     )
 
 
-def strip_notes(
-    boxes: tuple[OverviewBox, ...], held: set[Id[Any]], passed: dict[Id[Any], int]
-) -> tuple[StripNote, ...]:
+def strip_notes(boxes: tuple[OverviewBox, ...], held: set[Id[Any]], passed: dict[Id[Any], int]) -> tuple[StripNote, ...]:
     """Each strip the level holds as a box, or passes wires through, in box text order."""
     notes = []
     for box in boxes:
@@ -149,9 +145,7 @@ class _Walk:
         """The box of this level holding `item`: the terminal itself when its strip is open."""
         return item if item in self.terminals else level_box(self.model, item, self.unit)
 
-    def _far_stub(
-        self, key: OverviewRef, far: Id[Any] | None, conn: Conn, *, inside_a: bool
-    ) -> None:
+    def _far_stub(self, key: OverviewRef, far: Id[Any] | None, conn: Conn, *, inside_a: bool) -> None:
         """The stub at `key` for a connection to `far`, a box of the unit, or `None` outside it."""
         if far is None:
             self.raws.append(outside_stub(self.model, self.unit, key, conn, inside_a=inside_a))
@@ -165,9 +159,7 @@ class _Walk:
             box = self.by_id[far]
             self.raws.append(inner_stub(key, StubPlace.BOX, box.lines[0], fold_key(box), conn))
 
-    def _stub(
-        self, at: int, key: OverviewRef, ends: tuple[Id[Any] | None, ...], conn: Conn
-    ) -> None:
+    def _stub(self, at: int, key: OverviewRef, ends: tuple[Id[Any] | None, ...], conn: Conn) -> None:
         """The stub at `key` for the end `at` of `conn` inside the level.
 
         A pass-through terminal wires to the stub its closed strip has, or has none when the level
@@ -192,11 +184,7 @@ class _Walk:
         ends = (self._box_of(conn.a), self._box_of(conn.b))
         keys = [self.mine.get(end) for end in ends]
         if strip is None:
-            self.touched |= {
-                e
-                for e in ends
-                if e in self.by_id and e in self.mine and self.by_id[e].kind is ItemKind.STRIP
-            }
+            self.touched |= {e for e in ends if e in self.by_id and e in self.mine and self.by_id[e].kind is ItemKind.STRIP}
         if keys[0] is not None and keys[1] is not None:
             if keys[0] != keys[1]:
                 self.lifted.append(Lifted(keys[0], keys[1], conn, strip))
@@ -226,9 +214,7 @@ def _drawn(box: OverviewBox, held: set[Id[Any]], strip: Id[Item] | None) -> bool
     return box.box != strip and (box.kind is not ItemKind.STRIP or box.box in held)
 
 
-def _held_split(
-    model: Model, unit: Id[Unit], conns: tuple[Conn, ...], inside: set[Id[Any]]
-) -> tuple[tuple[Conn, ...], tuple[Through, ...]]:
+def _held_split(model: Model, unit: Id[Unit], conns: tuple[Conn, ...], inside: set[Id[Any]]) -> tuple[tuple[Conn, ...], tuple[Through, ...]]:
     """`split_through`, but a held strip's terminal passes only with an inside end (O3a, A19).
 
     Else its strip stays a box and the terminal's wires are plain, ending at the strip's stubs.
@@ -237,8 +223,7 @@ def _held_split(
     outside = {
         one.terminal
         for one in passing
-        if level_box(model, one.strip, unit) in inside
-        and not {level_box(model, one.conn.a, unit), level_box(model, one.conn.b, unit)} & inside
+        if level_box(model, one.strip, unit) in inside and not {level_box(model, one.conn.a, unit), level_box(model, one.conn.b, unit)} & inside
     }
     more = tuple(c for c in conns if {c.a, c.b} & outside)
     return (*plain, *more), tuple(one for one in passing if one.terminal not in outside)
@@ -287,9 +272,7 @@ def _walked(
     return walk, members, terminals
 
 
-def _terminals_drawn(
-    walk: _Walk, terminals: tuple[FoldBox, ...], *, own: bool
-) -> tuple[FoldBox, ...]:
+def _terminals_drawn(walk: _Walk, terminals: tuple[FoldBox, ...], *, own: bool) -> tuple[FoldBox, ...]:
     """The open strip's terminals: all of an own strip's, else those the level wires to."""
     used = {*(one.a for one in walk.lifted), *(one.b for one in walk.lifted)}
     used |= {raw.box for raw in walk.raws}

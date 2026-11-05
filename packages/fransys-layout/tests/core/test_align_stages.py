@@ -19,12 +19,6 @@ if TYPE_CHECKING:
 
 GRID = core_options(
     marker=MARKER,
-    flip_turn="R180",
-    tag_stagger=True,
-    label_gap=8,
-    parallel_pitch=48,
-    driver_first=True,
-    arrow_sides=("E", "W"),
 ).wiring_grid
 
 
@@ -42,12 +36,6 @@ def test_bands_align_through_the_stages() -> None:
             core_options(
                 marker=MARKER,
                 band_align=False,
-                flip_turn="R180",
-                tag_stagger=True,
-                label_gap=8,
-                parallel_pitch=48,
-                driver_first=True,
-                arrow_sides=("E", "W"),
             ),
         ),
     )

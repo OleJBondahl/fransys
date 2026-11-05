@@ -83,6 +83,16 @@ net n11 +C1-U1-K1.item.di_2.2 +C1-U1-X:2.terminal.n +C1-U1-X:2.terminal.s +C1-X9
 fact boxpin +C1-U1-K1.item.di_6.6 +C1-U1-K1.item.di_5.5 +C1-U1-K1.item.di_12.12 +C1-U1-K1.item.di_7.7 +C1-U1-K1.item.di_1.1 +C1-U1-K1.item.di_10.10 +C1-U1-K1.item.di_3.3 +C1-U1-K1.item.di_16.16 +C1-U1-K1.item.di_13.13 +C1-U1-K1.item.di_11.11 +C1-U1-K1.item.di_4.4 +C1-U1-K1.item.di_15.15 +C1-U1-K1.item.di_2.2 +C1-U1-K1.item.di_14.14 +C1-U1-K1.item.di_9.9 +C1-U1-K1.item.di_8.8
 fact strip -X9 +C1-X9:4.terminal +C1-X9:5.terminal +C1-X9:3.terminal +C1-X9:1.terminal +C1-X9:2.terminal
 fact strip -U1-X +C1-U1-X:3.terminal +C1-U1-X:2.terminal +C1-U1-X:4.terminal +C1-U1-X:5.terminal +C1-U1-X:1.terminal
+fact joined +C1-U1-X:3.terminal.n +C1-U1-X:3.terminal.s
+fact joined +C1-X9:3.terminal.n +C1-X9:3.terminal.s
+fact joined +C1-U1-X:5.terminal.n +C1-U1-X:5.terminal.s
+fact joined +C1-X9:5.terminal.n +C1-X9:5.terminal.s
+fact joined +C1-U1-X:4.terminal.n +C1-U1-X:4.terminal.s
+fact joined +C1-X9:4.terminal.n +C1-X9:4.terminal.s
+fact joined +C1-U1-X:1.terminal.n +C1-U1-X:1.terminal.s
+fact joined +C1-X9:1.terminal.n +C1-X9:1.terminal.s
+fact joined +C1-U1-X:2.terminal.n +C1-U1-X:2.terminal.s
+fact joined +C1-X9:2.terminal.n +C1-X9:2.terminal.s
 # legend only: a general placer must not read a symbol's kind.
 kind +C1-X9:4.terminal terminal
 kind +C1-X9:5.terminal terminal

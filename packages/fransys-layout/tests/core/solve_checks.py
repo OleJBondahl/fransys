@@ -8,9 +8,9 @@ from __future__ import annotations
 
 from collections import Counter
 from dataclasses import replace
-from typing import TYPE_CHECKING, get_args
+from typing import TYPE_CHECKING, Any, get_args
 
-from cut_respell import back_of, canon_placement, id_sets, make_maps, respell_problem
+from cut_respell import back_by_parts, canon_placement, id_sets, make_maps, respell_problem
 from route_oracle import connected_or_referenced
 from test_invariants import check_label_conflicts
 
@@ -24,8 +24,8 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
     from fransys_layout.core import Options, PinRef, PlacementProblem
+    from fransys_layout.core.flow_values import BlockList
     from fransys_layout.core.outputs import CoreLayout
-    from fransys_layout.core.values import BlockList
 
 
 def _blocks(prob: PlacementProblem, options: Options) -> tuple[BlockList, ...]:
@@ -34,15 +34,10 @@ def _blocks(prob: PlacementProblem, options: Options) -> tuple[BlockList, ...]:
 
 
 def check_pure(prob: PlacementProblem, options: Options) -> list[str]:
-    """IS.1: two runs give one plain form, and reversing the symbols and nets changes nothing."""
-    first = solve(prob, options)
-    msgs = []
-    if to_plain(first) != to_plain(solve(prob, options)):
-        msgs.append("IS.1 solve twice gives two layouts")
-    reversed_prob = replace(prob, symbols=prob.symbols[::-1], nets=prob.nets[::-1])
-    if to_plain(solve(reversed_prob, options)) != to_plain(first):
-        msgs.append("IS.1 reversing the symbols and nets changes the layout")
-    return msgs
+    """IS.1: two runs give one plain form (the input order is the model's: layout-0465)."""
+    if to_plain(solve(prob, options)) != to_plain(solve(prob, options)):
+        return ["IS.1 solve twice gives two layouts"]
+    return []
 
 
 def check_placed_once(layout: CoreLayout, prob: PlacementProblem, options: Options) -> list[str]:
@@ -54,23 +49,20 @@ def check_placed_once(layout: CoreLayout, prob: PlacementProblem, options: Optio
     return msgs
 
 
-def check_every_net(layout: CoreLayout, prob: PlacementProblem) -> list[str]:
-    """IS.3: I6.2 on every page with the fallback tags counted, and a marker at every ref end.
+def check_every_net(layout: CoreLayout, prob: PlacementProblem, options: Options) -> list[str]:
+    """IS.3: I6.2 on every page, and a marker at every ref end.
 
     An end that fits nowhere inside the page is a MARKER_UNPLACED on its symbol (R436), not a gap.
     """
     nodes = {s.id: s.nodes for s in prob.symbols}
+    fans = build_flow(prob, options).fans
     msgs = [
         f"IS.3 {n.id} on page {pg.page}: open and not referenced"
         for n in prob.nets
         for pg in layout.routes.pages
-        if not connected_or_referenced(
-            layout.routes, layout.placement, layout.references, n, pg.page, nodes
-        )
+        if not connected_or_referenced(layout.routes, layout.placement, layout.references, n, pg.page, nodes, fans)
     ]
-    ends = Counter(
-        (r.net, e.page, e.pin) for r in layout.references for e in r.ends if e.pin is not None
-    )
+    ends = Counter((r.net, e.page, e.pin) for r in layout.references for e in r.ends if e.pin is not None)
     marks = Counter((m.net, m.page, m.end) for m in layout.annotations.markers)
     unplaced = _unplaced_ends(layout)
     msgs += [
@@ -92,12 +84,11 @@ def _unplaced_ends(layout: CoreLayout) -> set[tuple[int | None, str, str]]:
 
 
 def check_no_overlap(layout: CoreLayout, prob: PlacementProblem, options: Options) -> list[str]:
-    """IS.4: I5.2 (no two bodies, no body and table overlap on a page) and I8.2 on every page."""
-    msgs = []
+    """IS.4: I5.2 (no two bodies, no two bodies overlap on a page) and I8.2 on every page."""
+    msgs: list[str] = []
     notes = layout.annotations
     for pg in layout.placement.pages:
         boxes = [(p.sym, p.body) for p in pg.placed]
-        boxes += [(f"table of {t.coil}", t.box) for t in notes.tables if t.page == pg.page]
         msgs += [
             f"IS.4 {a} and {b} on page {pg.page}: hard boxes overlap"
             for i, (a, ba) in enumerate(boxes)
@@ -108,7 +99,6 @@ def check_no_overlap(layout: CoreLayout, prob: PlacementProblem, options: Option
         layout.placement,
         layout.routes,
         notes.markers,
-        notes.tables,
         notes.annexes,
         layout.findings,
         prob.area,
@@ -142,12 +132,7 @@ def check_plan_drawn(layout: CoreLayout) -> list[str]:
     planned = Counter(r.kind for r in layout.references for _ in r.ends)
     drawn = Counter(m.kind for m in layout.annotations.markers)
     unplaced = _unplaced_ends(layout)
-    drawn += Counter(
-        r.kind
-        for r in layout.references
-        for e in r.ends
-        if e.pin is not None and (e.page, e.pin.sym, r.net) in unplaced
-    )
+    drawn += Counter(r.kind for r in layout.references for e in r.ends if e.pin is not None and (e.page, e.pin.sym, r.net) in unplaced)
     return [
         f"IS.6 {kind}: {drawn[kind]} marker(s), {planned[kind]} planned end(s)"
         for kind in sorted(planned.keys() | drawn.keys(), key=str)
@@ -155,7 +140,7 @@ def check_plan_drawn(layout: CoreLayout) -> list[str]:
     ]
 
 
-def _canon(layout: CoreLayout, back: Callable[[str | None], str | None]) -> tuple:
+def _canon(layout: CoreLayout, back: Callable[[str | None], str | None]) -> tuple[Any, ...]:
     wires = tuple(
         (
             pr.page,
@@ -165,10 +150,7 @@ def _canon(layout: CoreLayout, back: Callable[[str | None], str | None]) -> tupl
     )
     marks = tuple(
         sorted(
-            (
-                (back(m.net), m.kind, m.page, m.x, m.y, back(m.end.sym), m.end.pin)
-                for m in layout.annotations.markers
-            ),
+            ((back(m.net), m.kind, m.page, m.x, m.y, back(m.end.sym), m.end.pin) for m in layout.annotations.markers),
             key=repr,
         )
     )
@@ -179,16 +161,6 @@ def _canon(layout: CoreLayout, back: Callable[[str | None], str | None]) -> tupl
 def _back_ids(subject: str | None, back: Callable[[str | None], str | None]) -> str | None:
     """`back` of each id in a finding's subject, which may name several ("sym,net")."""
     return None if subject is None else ",".join(back(t) or t for t in subject.split(","))
-
-
-def _parts(maps: dict[str, str]) -> Callable[[str | None], str | None]:
-    """`back_of`, and the ids stage 3 spells from a symbol id ("c:S0001") by their parts."""
-    inv = back_of(maps)
-
-    def back(i: str | None) -> str | None:
-        return None if i is None else ":".join(inv(part) or part for part in i.split(":"))
-
-    return back
 
 
 def _respelled(prob: PlacementProblem, maps: dict[str, str]) -> PlacementProblem:
@@ -207,6 +179,9 @@ def _respelled(prob: PlacementProblem, maps: dict[str, str]) -> PlacementProblem
         keep_whole=tuple(frozenset(map(name, k)) for k in facts.keep_whole),
         units=tuple(replace(u, boundary=tuple(map(pin, u.boundary))) for u in facts.units),
         mates=tuple((pin(a), pin(b)) for a, b in facts.mates),
+        far_ends=tuple((pin(a), pin(b)) for a, b in facts.far_ends),
+        groups=tuple(tuple(map(pin, g)) for g in facts.groups),
+        joined=tuple((pin(a), pin(b)) for a, b in facts.joined),
     )
     hints = replace(
         hints,
@@ -226,6 +201,6 @@ def check_kind_blind(prob: PlacementProblem, options: Options, form: str = "{}")
     flow = build_flow(prob, options)
     maps = make_maps(id_sets(prob, flow, _blocks(prob, options)), form)
     got = solve(_respelled(prob, maps), options)
-    if _canon(got, _parts(maps)) != _canon(want, _parts({})):
+    if _canon(got, back_by_parts(maps)) != _canon(want, back_by_parts({})):
         return [f"IS.7 respelling the ids ({form}) changes the layout"]
     return []

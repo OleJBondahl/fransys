@@ -12,17 +12,18 @@ from dataclasses import replace
 from typing import TYPE_CHECKING
 
 from .errors import CoreError
+from .flow_values import Attach, CrossLink, Fan
 from .keys import natural_key
 from .topology_cycles import cyclic_parts, y_cycle_cuts
 from .unionfind import UnionFind
-from .values import Attach, CrossLink, Fan
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
     from collections.abc import Set as AbstractSet
 
+    from .flow_values import Column
     from .topology_cycles import Edge
-    from .values import Column, PinRef
+    from .values import PinRef
 
 type NetOf = Mapping[PinRef, str]
 type Nodes = dict[tuple[str, int, int], str]
@@ -82,9 +83,7 @@ def _end_node(a: Attach, nodes: tuple[Nodes, Boxes]) -> str:
     return boxes.get(a.pin.sym, f"box:{a.pin.sym}")
 
 
-def bundle_conflicts(
-    columns: Sequence[Column], fans: Sequence[Fan]
-) -> list[tuple[Fan, tuple[str, ...], tuple[Attach, ...]]]:
+def bundle_conflicts(columns: Sequence[Column], fans: Sequence[Fan]) -> list[tuple[Fan, tuple[str, ...], tuple[Attach, ...]]]:
     """Each bundle whose driver and leg stand on one y node: the bundle, the nodes, the drivers."""
     nodes = _nodes(columns)
     out = []
@@ -109,15 +108,8 @@ def check_bundles(columns: Sequence[Column], fans: Sequence[Fan]) -> None:
 
 def _fan_edges(fan: Fan, nodes: tuple[Nodes, Boxes], net_of: NetOf | None) -> set[Edge]:
     """Each driver above each leg; a box pin stands on its box's node; gone once a net is cut."""
-    ends = [
-        [(_end_node(a, nodes), None if net_of is None else a.net) for a in side]
-        for side in (fan.drivers, fan.legs)
-    ]
-    return {
-        (a, b, frozenset(o for o in (oa, ob) if o is not None))
-        for a, oa in ends[0]
-        for b, ob in ends[1]
-    }
+    ends = [[(_end_node(a, nodes), None if net_of is None else a.net) for a in side] for side in (fan.drivers, fan.legs)]
+    return {(a, b, frozenset(o for o in (oa, ob) if o is not None)) for a, oa in ends[0] for b, ob in ends[1]}
 
 
 def y_edges(columns: Sequence[Column], fans: Sequence[Fan], net_of: NetOf | None) -> list[Edge]:
@@ -127,10 +119,7 @@ def y_edges(columns: Sequence[Column], fans: Sequence[Fan], net_of: NetOf | None
     out: set[Edge] = set()
     for col in columns:
         for li, lane in enumerate(col.lanes):
-            out.update(
-                (cells[col.id, li, i - 1], cells[col.id, li, i], frozenset())
-                for i in range(1, len(lane.cells))
-            )
+            out.update((cells[col.id, li, i - 1], cells[col.id, li, i], frozenset()) for i in range(1, len(lane.cells)))
     for fan in fans:
         out |= _fan_edges(fan, nodes, net_of)
     return sorted(out, key=lambda e: (e[0], e[1], sorted(e[2])))
@@ -147,16 +136,11 @@ def check_acyclic(columns: Sequence[Column], fans: Sequence[Fan]) -> None:
     rings = y_cycles(columns, fans)
     if rings:
         where = sorted({n.split(":")[0] for ring in rings for n in ring}, key=natural_key)
-        text = (
-            f"stage 1 left a y cycle through columns {', '.join(where)}: "
-            "the cycle finder missed a ring, report it"
-        )
-        raise ValueError(text)
+        text = f"stage 1 left a y cycle through columns {', '.join(where)}: the cycle finder missed a ring, report it"
+        raise CoreError(text)
 
 
-def cut_nets(
-    columns: Sequence[Column], fans: Sequence[Fan], net_of: Mapping[PinRef, str]
-) -> frozenset[str]:
+def cut_nets(columns: Sequence[Column], fans: Sequence[Fan], net_of: Mapping[PinRef, str]) -> frozenset[str]:
     """The nets to take out of their fans: the fewest drivers lost, ties by natural key."""
     check_bundles(columns, fans)
     edges = y_edges(columns, fans, net_of)
@@ -164,16 +148,15 @@ def cut_nets(
     for fan in fans:
         for a in fan.drivers:
             cost[a.net] += 1
-    return y_cycle_cuts(edges, cost, natural_key)
+    keys = {n: natural_key(n) for a, b, owners in edges for n in (a, b, *owners)}
+    return y_cycle_cuts(edges, cost, keys)
 
 
 def _ends_of(fan: Fan, net: str) -> tuple[Attach, ...]:
     return tuple(dict.fromkeys(a for a in (*fan.drivers, *fan.legs) if a.net == net))
 
 
-def _split_fan(
-    fan: Fan, cuts: AbstractSet[str]
-) -> tuple[Fan | None, dict[str, tuple[Attach, ...]]]:
+def _split_fan(fan: Fan, cuts: AbstractSet[str]) -> tuple[Fan | None, dict[str, tuple[Attach, ...]]]:
     """The fan without its cut nets (None when a side is empty) and the ends each net takes."""
     rest = tuple(n for n in fan.nets if n not in cuts)
     if len(rest) == len(fan.nets):
@@ -209,9 +192,7 @@ def split_fans(
     return tuple(kept), tuple(sorted(links, key=lambda c: natural_key(c.net)))
 
 
-def split_conflict_ends(
-    columns: Sequence[Column], fans: Sequence[Fan], cross: Sequence[CrossLink]
-) -> tuple[tuple[Fan, ...], tuple[CrossLink, ...]]:
+def split_conflict_ends(columns: Sequence[Column], fans: Sequence[Fan], cross: Sequence[CrossLink]) -> tuple[tuple[Fan, ...], tuple[CrossLink, ...]]:
     """A fan's legs on a node its drivers stand on leave it, each a cross link to a driver (R418).
 
     Only those ends conflict; the rest keeps the fan and its trunk. A fan left with no leg, or
@@ -224,14 +205,10 @@ def split_conflict_ends(
         above = {_end_node(a, nodes) for a in fan.drivers}
         out = [a for a in fan.legs if _end_node(a, nodes) in above]
         legs = tuple(a for a in fan.legs if a not in out)
-        free = [a for a in fan.drivers if _end_node(a, nodes) not in _nodes_of(out, nodes)]
+        free = [a for a in fan.drivers if _end_node(a, nodes) not in {_end_node(o, nodes) for o in out}]
         if not out or not legs or fan.lanes > 1 or not free:
             kept.append(fan)
             continue
         kept.append(replace(fan, legs=legs))
         links.extend(CrossLink(fan.nets[0], (a, free[0])) for a in out)
     return tuple(kept), tuple(links)
-
-
-def _nodes_of(ends: Sequence[Attach], nodes: tuple[Nodes, Boxes]) -> set[str]:
-    return {_end_node(a, nodes) for a in ends}

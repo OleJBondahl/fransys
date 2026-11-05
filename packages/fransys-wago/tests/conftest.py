@@ -2,21 +2,18 @@
 
 Every part, MPN and designation here is invented (CLAUDE.md invariant 6); the module MPNs are
 public WAGO catalogue numbers of module types. The builder holds
-records, not a frozen model, so a test can reorder them before they reach a `Draft`.
 """
 
-import random
 from dataclasses import dataclass
-from decimal import Decimal
 from typing import TYPE_CHECKING
 
 import pytest
+from library_records import shuffled_draft
 
 from fransys_model.kernel import Draft, Origin, freeze, make_id
 from fransys_model.vocab.core import Function, Item
 from fransys_model.vocab.enums import FunctionKind, PartCategory, SignalType
 from fransys_model.vocab.facets.plc import PlcBindingFacet, PlcChannelFacet, PlcRequestFacet
-from fransys_model.vocab.facets.scaling import ScalingFacet
 from fransys_model.vocab.templates import FunctionTemplate, Part
 
 if TYPE_CHECKING:
@@ -118,7 +115,7 @@ class Rack:
             channels.append(function.id)
         return Module(item=item.id, channels=tuple(channels))
 
-    def device(  # noqa: PLR0913 -- one keyword per thing a test varies
+    def device(
         self,
         key: str,
         designation: str,
@@ -126,7 +123,6 @@ class Rack:
         channel: Id[Function],
         *,
         signal: SignalType = SignalType.DI,
-        scaling: tuple[str, int, int, Decimal, Decimal] | None = None,
     ) -> None:
         """A field device bound to `channel`; without a `signal_name` it has no request."""
         item = Item(
@@ -169,29 +165,10 @@ class Rack:
                     priority=1,
                 )
             )
-        if scaling is not None:
-            unit, raw_min, raw_max, eng_min, eng_max = scaling
-            self.records.append(
-                ScalingFacet(
-                    id=make_id(ScalingFacet, (key, "scaling")),
-                    key=(key, "scaling"),
-                    subject=function.id,
-                    unit=unit,
-                    raw_min=raw_min,
-                    raw_max=raw_max,
-                    eng_min=eng_min,
-                    eng_max=eng_max,
-                )
-            )
 
     def draft(self, seed: int | None = None) -> Draft:
         """The records in a `Draft`, shuffled by `seed` when there is one."""
-        records = list(self.records)
-        if seed is not None:
-            random.Random(seed).shuffle(records)  # noqa: S311 -- a test shuffle, not security
-        draft = Draft()
-        draft.extend(records, origin=_ORIGIN)
-        return draft
+        return shuffled_draft(self.records, _ORIGIN, seed)
 
     def freeze(self, seed: int | None = None) -> Model:
         """The frozen model of every record so far."""
@@ -203,10 +180,6 @@ def build_demo() -> Rack:
 
     - `A0`, position 0: the coupler `750-352`, no channels (not emitted).
     - `A1`, position 1: `750-1405`, three DI channels, two bound (`B1_Door`, `B2_Gate`), one spare.
-    - `A2`, position 2: `750-1504`, two DO channels, one bound (`K1_Fan`), one spare.
-    - `A3`, position 3: `750-455`, three AI_CURRENT channels: `T1_Level` scaled 4..20 to 0..100
-      percent, `T2_Flow` bound without scaling, and one spare.
-    - `A4`, position 4: a second `750-1405` (letter `b`), one DI channel, spare.
     """
     rack = Rack()
     coupler = rack.part("coupler", "750-352", (), description="Invented fieldbus coupler")
@@ -222,14 +195,7 @@ def build_demo() -> Rack:
     rack.device("b1", "B1", "Door", a1.channels[0])
     rack.device("b2", "B2", "Gate", a1.channels[1])
     rack.device("k1", "K1", "Fan", a2.channels[0], signal=SignalType.DO)
-    rack.device(
-        "t1",
-        "T1",
-        "Level",
-        a3.channels[0],
-        signal=SignalType.AI_CURRENT,
-        scaling=("percent", 4, 20, Decimal(0), Decimal(100)),
-    )
+    rack.device("t1", "T1", "Level", a3.channels[0], signal=SignalType.AI_CURRENT)
     rack.device("t2", "T2", "Flow", a3.channels[1], signal=SignalType.AI_CURRENT)
     return rack
 

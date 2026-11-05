@@ -61,13 +61,10 @@ def preamble(sizes: Sizes, sheet: SheetRow, family: str) -> str:
     )
 
 
-PADDING_MM = 5  # non-drawing pages' inner padding inside the content box
-
-
-def text_margin(sheet: SheetRow) -> str:
-    """A `#set page(margin: ...)`: content box plus 5 mm padding; harness too (pdf-0009)."""
-    left = sheet.content_x_mm + PADDING_MM
-    top = sheet.content_y_mm + PADDING_MM
-    right = (sheet.width_mm - sheet.content_x_mm - sheet.content_width_mm) + PADDING_MM
-    bottom = (sheet.height_mm - sheet.content_y_mm - sheet.content_height_mm) + PADDING_MM
+def text_margin(sheet: SheetRow, padding_mm: float) -> str:
+    """A `#set page(margin: ...)`: content box plus `padding_mm` (`[pdf] page_margin_mm`); harness too (pdf-0009)."""
+    left = sheet.content_x_mm + padding_mm
+    top = sheet.content_y_mm + padding_mm
+    right = (sheet.width_mm - sheet.content_x_mm - sheet.content_width_mm) + padding_mm
+    bottom = (sheet.height_mm - sheet.content_y_mm - sheet.content_height_mm) + padding_mm
     return f"(left: {left}mm, top: {top}mm, right: {right}mm, bottom: {bottom}mm)"

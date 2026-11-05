@@ -28,9 +28,7 @@ def requests_harness_pages(pages: tuple[PageKind, ...]) -> bool:
     return PageKind.CONTENTS in pages or PageKind.HARNESS_DRAWING in pages
 
 
-def harness_cables_for(
-    model: Model, document: Id[Document], pages: tuple[PageKind, ...]
-) -> tuple[HarnessCable, ...]:
+def harness_cables_for(model: Model, document: Id[Document], pages: tuple[PageKind, ...]) -> tuple[HarnessCable, ...]:
     """The subject's cables: SYSTEM all top-level, a unit its own only.
 
     `document` is the document's id.
@@ -40,9 +38,7 @@ def harness_cables_for(
     return document_scope(model, document).cables
 
 
-def system_has_no_top_level_cables(
-    model: Model, document: Id[Document], cables_found: tuple[HarnessCable, ...]
-) -> bool:
+def system_has_no_top_level_cables(model: Model, document: Id[Document], cables_found: tuple[HarnessCable, ...]) -> bool:
     """A SYSTEM document whose model has no top-level cable at all.
 
     `document` is the document's id.
@@ -72,9 +68,7 @@ def _harness_block(model: Model, subject: Id[Item], key: str) -> CableBlockRef:
     return CableBlockRef(key=key, mpn=part.mpn, line=_join_part_line(part.mpn, part.description))
 
 
-def cable_blocks(
-    model: Model, document: Id[Document], cables: tuple[HarnessCable, ...]
-) -> tuple[CableBlockRef, ...]:
+def cable_blocks(model: Model, document: Id[Document], cables: tuple[HarnessCable, ...]) -> tuple[CableBlockRef, ...]:
     """The document's blocks, one per `cable_subject`, each at its first cable's place.
 
     A document reads absolutely unless it is a unit document, whose reading is its unit. A
@@ -91,9 +85,7 @@ def cable_blocks(
         if key in blocks:
             continue
         blocks[key] = (
-            CableBlockRef(key=key, mpn=cable.mpn or "", line=_part_line(cable))
-            if subject == cable.cable
-            else _harness_block(model, subject, key)
+            CableBlockRef(key=key, mpn=cable.mpn or "", line=_part_line(cable)) if subject == cable.cable else _harness_block(model, subject, key)
         )
     for wired in scope.harnesses:
         key = cable_block_key(unit, wired)

@@ -45,16 +45,14 @@ ID_RE = re.compile("|".join(_ID_SHAPES))
 def _hits() -> list[str]:
     """`name: line` for each surface docstring line holding an id."""
     surface = lean_api.lean_surface
-    found = []
+    found: list[str] = []
     for module in ("fransys", "fransys_model.derive"):
         for entry in surface.resolve_surface_names((module,)):
             node = surface.find_def(surface.module_tree(entry.defining_file), entry.qualname)
             doc = surface.literal_docstring(node)
             if doc is None:
                 continue
-            found += [
-                f"{entry.name}: {x.strip()}" for x in doc.value.splitlines() if ID_RE.search(x)
-            ]
+            found += [f"{entry.name}: {x.strip()}" for x in doc.value.splitlines() if ID_RE.search(x)]
     return found
 
 

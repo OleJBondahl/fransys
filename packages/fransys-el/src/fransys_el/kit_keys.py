@@ -45,9 +45,7 @@ def held_ports(model: Model, key: PickKey) -> tuple[Id[Port], ...]:
 
 def is_known(model: Model, key: PickKey) -> bool:
     """Whether `model` has the function or the port the key names."""
-    return (
-        _function(model, key) is not None or port_function(model, cast("Id[Port]", key)) is not None
-    )
+    return _function(model, key) is not None or port_function(model, cast("Id[Port]", key)) is not None
 
 
 def tag_of(model: Model, key: PickKey, *, unit: Id[Unit] | None = None) -> str:
@@ -56,8 +54,4 @@ def tag_of(model: Model, key: PickKey, *, unit: Id[Unit] | None = None) -> str:
     `unit` is the drawing set's unit: the text its own lists print (`None`: whole model).
     """
     function = _function(model, key)
-    return (
-        port_designation(model, cast("Id[Port]", key), unit=unit)
-        if function is None
-        else tag_text(model, function, unit=unit)
-    )
+    return port_designation(model, cast("Id[Port]", key), unit=unit) if function is None else tag_text(model, function, unit=unit)

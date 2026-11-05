@@ -3,9 +3,9 @@
 from collections import defaultdict
 from typing import TYPE_CHECKING, Final
 
-from fransys_model.kernel import Finding, Severity
-from fransys_model.vocab.codes import fix_text
+from fransys_model.vocab.codes import finding
 from fransys_model.vocab.tables import part_libraries
+lazy from fransys_model.kernel import Finding
 
 if TYPE_CHECKING:
     from fransys_model.kernel import Model
@@ -24,15 +24,10 @@ def check_part_library(model: Model) -> tuple[Finding, ...]:
     for library in part_libraries(model).values():
         by_name[library.name].append(library)
     found = [
-        Finding(
-            code=PART_LIBRARY_VERSION_CONFLICT,
-            severity=Severity.ERROR,
-            subjects=tuple(library.id for library in libraries),
-            message=(
-                f"part library {name} is recorded with versions "
-                + ", ".join(sorted({library.version for library in libraries}))
-            ),
-            fix=fix_text(PART_LIBRARY_VERSION_CONFLICT),
+        finding(
+            PART_LIBRARY_VERSION_CONFLICT,
+            tuple(library.id for library in libraries),
+            f"part library {name} is recorded with versions " + ", ".join(sorted({library.version for library in libraries})),
         )
         for name, libraries in by_name.items()
         if len({library.version for library in libraries}) > 1

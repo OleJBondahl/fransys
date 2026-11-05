@@ -4,15 +4,9 @@
 fails at import (`complete`). Each row's comment names the branch it reproduces.
 """
 
-from .enums import (
-    ConductorKind,
-    Energy,
-    FunctionKind,
-    ItemKind,
-    LinkKind,
-    LinkRest,
-    NetClass,
-)
+from fransys_model.elecdef import LinkKind
+
+from .enums import ConductorKind, Energy, FunctionKind, ItemKind, NetClass
 from .roles_types import (
     ConductorRole,
     FunctionRole,
@@ -31,7 +25,7 @@ _FUNCTION_ROWS: frozendict[FunctionKind, FunctionRole] = frozendict(
         _F.CONTACT_NO: FunctionRole(
             contact=True,
             plain_contact=True,
-            rest=LinkRest.OPEN,
+            closed_at_rest=False,
             through=True,
             band="contact_no",
         ),
@@ -39,14 +33,12 @@ _FUNCTION_ROWS: frozendict[FunctionKind, FunctionRole] = frozendict(
         _F.CONTACT_NC: FunctionRole(
             contact=True,
             plain_contact=True,
-            rest=LinkRest.CLOSED,
+            closed_at_rest=True,
             through=True,
             band="contact_nc",
         ),
         # contacts.py:156 a changeover has its rest per throw (by port roles); not in _THROUGH_KINDS
-        _F.CONTACT_CO: FunctionRole(
-            contact=True, plain_contact=True, changeover=True, band="contact_co"
-        ),
+        _F.CONTACT_CO: FunctionRole(contact=True, plain_contact=True, changeover=True, band="contact_co"),
         # connectivity.py:148 through; markings.py:90 a protection's conductive link is a pole
         _F.PROTECTION: FunctionRole(protects=True, through=True, band="protection"),
         # _rest.py:20 and _poles.py:15 count SWITCH a contact; accessory_blocks.py:18 does not
@@ -63,8 +55,6 @@ _FUNCTION_ROWS: frozendict[FunctionKind, FunctionRole] = frozendict(
         _F.SENSOR: FunctionRole(band="sensor"),
         _F.ACTUATOR: FunctionRole(through=True, energy=Energy.IN, band="actuator"),
         _F.GENERIC: FunctionRole(),
-        # facts/bars.py a bar is a function of its own kind
-        _F.BAR: FunctionRole(bar=True),
     }
 )
 _FUNCTION_ROLES = complete(_FUNCTION_ROWS, FunctionKind)
@@ -73,7 +63,7 @@ _FUNCTION_ROLES = complete(_FUNCTION_ROWS, FunctionKind)
 def function_role_of(kind: FunctionKind) -> FunctionRole:
     """The role row of a function kind: the one protection and contact fact per kind (model-0303).
 
-    Example: `function_role_of(FunctionKind.CONTACT_NO)` has `contact` and `rest=LinkRest.OPEN`.
+    Example: `function_role_of(FunctionKind.CONTACT_NO)` has `contact` and `closed_at_rest=False`.
     """
     return _FUNCTION_ROLES[kind]
 
@@ -99,17 +89,15 @@ _ITEM_ROWS: frozendict[ItemKind, ItemRole] = frozendict(
         # kinds.py:60 strip_set
         _I.STRIP: ItemRole(strip=True),
         # kinds.py:63 an item whose functions are all connectors
-        _I.CONNECTOR: ItemRole(connector_housing=True),
+        _I.CONNECTOR: ItemRole(),
         # kinds.py:60 is_plc_module
-        _I.PLC_MODULE: ItemRole(plc_module=True),
+        _I.PLC_MODULE: ItemRole(),
         # kinds.py:57 is_cable
         _I.CABLE: ItemRole(cable=True),
         # kinds.py:56 is_harness
         _I.HARNESS: ItemRole(harness=True),
         # kinds.py:61 a part with a pcb facet
         _I.BOARD: ItemRole(board=True),
-        # kinds.py:62 bar_items
-        _I.BAR: ItemRole(bar_holder=True),
         # kinds.py:78 the rest
         _I.DEVICE: ItemRole(),
     }
@@ -122,13 +110,11 @@ _CONDUCTOR_ROWS: frozendict[ConductorKind, ConductorRole] = frozendict(
         # overview_conns.py:25 _PLAIN, contact_lines.py:12 _LANDING; harness_wires.py a single wire
         _C.WIRE: ConductorRole(wire=True, carries=True, lands=True),
         _C.CORE: ConductorRole(carries=True, lands=True),
-        # wiring.py:74 and unused.py:65 bridge; power.py:126 rail link; G-POT-20 link, never a wire
-        _C.JUMPER: ConductorRole(joins_net=True, bridge=True, rail_link=True),
+        # wiring.py:74 and unused.py:65 bridge; G-POT-20 link, never a wire
+        _C.JUMPER: ConductorRole(joins_net=True, bridge=True),
         _C.BUSBAR: ConductorRole(joins_net=True),
         # enums.py:157 plug-on contacts
         _C.MOUNT: ConductorRole(joins_net=True, mount=True),
-        # power.py:126 rail link
-        _C.RAIL: ConductorRole(joins_net=True, rail_link=True),
         # leads.py:28 a device's own lead; contact_lines.py:12 _LANDING lands it
         _C.LEAD: ConductorRole(lands=True, joins_net=True, lead=True),
     }
@@ -140,12 +126,12 @@ _NET_ROWS: frozendict[NetClass, NetClassRole] = frozendict(
     {
         # layout read/roles.py:24 NET_CLASS_TO_ROLE: POWER and PE are the power role
         # (the table now holds PE as earth only, designer 2026-10-16)
-        _N.POWER: NetClassRole(power=True),
+        _N.POWER: NetClassRole(),
         # potentials.py:51, potential.py:36, connectivity.py:95 earth is the PE class alone
         _N.PE: NetClassRole(earth=True),
-        _N.CONTROL: NetClassRole(control=True),
+        _N.CONTROL: NetClassRole(),
         # NET_CLASS_TO_ROLE: GENERIC reads as control
-        _N.GENERIC: NetClassRole(control=True),
+        _N.GENERIC: NetClassRole(),
         _N.SIGNAL: NetClassRole(signal=True),
     }
 )

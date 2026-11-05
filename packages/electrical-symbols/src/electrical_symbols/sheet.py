@@ -10,6 +10,7 @@ from typing import Literal
 from symdef import Symbol, slot_box, stretch, table, translate
 
 from electrical_symbols._library import LIBRARY
+from electrical_symbols.errors import SymbolsError
 
 type Corner = tuple[float, float]  # where a part's top-left corner goes on the sheet, in mm
 
@@ -24,15 +25,13 @@ def frame_border(corner: Corner, width: float, height: float) -> Symbol:
     return translate(sized("sheet-frame", width, height), *corner)
 
 
-def frame_strip(
-    side: str, corner: Corner, cell: tuple[float, float], count: int, axis: Literal["x", "y"]
-) -> Symbol:
+def frame_strip(side: str, corner: Corner, cell: tuple[float, float], count: int, axis: Literal["x", "y"]) -> Symbol:
     """One reference strip: `count` cells of `side`'s cell, each `cell` mm, along `axis`.
 
     Cell k's label slot is `<k>.label`; a tick stands between two cells, none at the strip's ends.
     """
     row = sized(f"sheet-strip-{side}", *cell)
-    return translate(table(row, count, axis), *corner)
+    return translate(table(row, count, axis, port_format=LIBRARY.port_format), *corner)
 
 
 def slot_box_mm(symbol: Symbol, slot: str) -> tuple[float, float, float, float]:
@@ -42,7 +41,7 @@ def slot_box_mm(symbol: Symbol, slot: str) -> tuple[float, float, float, float]:
             box = slot_box(one)
             return box.min.x, box.min.y, box.max.x - box.min.x, box.max.y - box.min.y
     msg = f"symbol {symbol.name!r} has no slot {slot!r}"
-    raise KeyError(msg)
+    raise SymbolsError(msg)
 
 
 def slot_room(symbol: Symbol, slot: str) -> tuple[float, float]:

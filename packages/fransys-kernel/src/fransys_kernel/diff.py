@@ -38,9 +38,5 @@ def diff(a: Model, b: Model) -> ModelDiff:
     return ModelDiff(
         added=tuple(sorted(after.keys() - before.keys())),
         removed=tuple(sorted(before.keys() - after.keys())),
-        changed=tuple(
-            sorted(
-                target for target in before.keys() & after.keys() if before[target] != after[target]
-            )
-        ),
+        changed=tuple(sorted(target for target in before.keys() & after.keys() if before[target] != after[target])),
     )

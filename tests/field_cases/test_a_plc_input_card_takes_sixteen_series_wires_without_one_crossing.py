@@ -1,17 +1,6 @@
-"""Field case: sixteen push buttons in series to a 16-channel input card cross no wire.
-
-The engineering shape: a 24 V supply feeds sixteen normally closed buttons, each in series to the
-next free channel of one digital input module.
-
-The bug: today's engine put the buttons in one row in the order the tags gave them while the
-module's channels printed in their own order, so the wires from the buttons to the card crossed
-each other (84 crossings in the study's build).
-
-The rule (decision el-0011, spec SWITCHES SW8 row P7.6): on the core path the card's pins spread
-to the pitch of the columns hung under them, so no wire crosses. (A supply's own box does not
-hold its pins yet: that rule is parked as BOX-PIN-ATTACH.) The solve-level counts are in
-`packages/fransys-el/tests/test_input_cards.py`.
-"""
+"""Field case: sixteen normally closed buttons in series, each to the next free channel of one input module, fed from 24 V.
+The bug: the buttons sat in one row in tag order while the channels printed in their own order, so 84 wires crossed.
+Fixed by el-0011 (spec SWITCHES SW8 row P7.6), the card's pins spread to the pitch of the columns hung under them, so no wire crosses."""
 
 from collections import Counter
 from itertools import combinations, pairwise
@@ -43,11 +32,11 @@ def input_card_case_drafts(cover: Path) -> tuple[fr.Design, Any]:
     return d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cabinet, cover=cover)
 
 
-def _segments(points: tuple) -> list[tuple[tuple[int, int], tuple[int, int]]]:
+def _segments(points: tuple[Any, ...]) -> list[tuple[tuple[int, int], tuple[int, int]]]:
     return list(pairwise(points))
 
 
-def _cross(a: tuple, b: tuple) -> bool:
+def _cross(a: tuple[tuple[float, float], tuple[float, float]], b: tuple[tuple[float, float], tuple[float, float]]) -> bool:
     """Whether a horizontal and a vertical segment meet strictly inside both."""
     (ax0, ay0), (ax1, ay1) = a
     (bx0, by0), (bx1, by1) = b

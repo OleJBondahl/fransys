@@ -124,6 +124,7 @@ class Frame:
 
     sheets: tuple[FrameSheet, ...]
     cuts: tuple[FrameCut, ...]
+    jumps: tuple[int, ...] = ()  # lines that skip a column across a sheet start: a marker on each sheet
 
     def ends_of(self, line: int) -> tuple[tuple[int, FrameBox, FrameEnd], ...]:
         """Each end of line `line` as (sheet number, its box, the end), in sheet order."""

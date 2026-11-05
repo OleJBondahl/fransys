@@ -2,7 +2,6 @@
 
 Characterisation over one planted model: each public function of `accessory_blocks`,
 `actuated`, `contact_entries`, `contact_lines` and `contacts` is called on every function or
-item of it and the output is pinned. The file passes before the sites read roles, and after.
 """
 
 from typing import Any
@@ -13,18 +12,19 @@ from fransys_model.derive import actuated_group, lead_switch, operated_by, owned
 from fransys_model.derive.accessory_blocks import is_contact_block, operating_item
 from fransys_model.derive.contact_entries import contact_entries, contact_list_key
 from fransys_model.derive.contact_lines import used_pins
+from fransys_model.elecdef import LinkKind, PinRole
 from fransys_model.kernel import Id, make_id
 from fransys_model.vocab import FunctionKind, OperatedBy, PartCategory
-from fransys_model.vocab.enums import ConductorKind, LinkKind, LinkRest, PortRole
+from fransys_model.vocab.enums import ConductorKind, PortBoundary
 from fransys_model.vocab.tables import functions, items, ports
 from fransys_model.vocab.templates import FunctionTemplate, InternalLink, Part, PortTemplate
 
-CLOSED, OPEN = LinkRest.CLOSED, LinkRest.OPEN
-G, C, B, M = PortRole.GENERIC, PortRole.COMMON, PortRole.BREAK, PortRole.MAKE
+CLOSED, OPEN = True, False
+G, C, B, M = PortBoundary.GENERIC, PinRole.COMMON, PinRole.BREAK, PinRole.MAKE
 
 
 def _part(  # noqa: PLR0913 -- one param per part field the tests vary
-    plant: Plant, key: str, kind: FunctionKind, roles: dict[str, PortRole], links, *, op=None
+    plant: Plant, key: str, kind: FunctionKind, roles: dict[str, PortBoundary | PinRole], links, *, op=None
 ):
     """A part with one template of `kind`, pins `roles` and SWITCHED `links` (a, b, rest)."""
     part = Part(
@@ -50,7 +50,8 @@ def _part(  # noqa: PLR0913 -- one param per part field the tests vary
             key=(key, "fn", n),
             function=tpl.id,
             name=n,
-            role=r,
+            boundary=r if isinstance(r, PortBoundary) else PortBoundary.GENERIC,
+            pin_role=r if isinstance(r, PinRole) else None,
         )
         for n, r in roles.items()
     }
@@ -63,7 +64,7 @@ def _part(  # noqa: PLR0913 -- one param per part field the tests vary
                 a=pins[a].id,
                 b=pins[b].id,
                 kind=LinkKind.SWITCHED,
-                rest=rest,
+                closed_at_rest=rest,
             )
         )
     return part
@@ -93,9 +94,7 @@ def _planted() -> tuple[Any, dict[str, Id[Any]]]:
         {"11": C, "12": B, "14": M},
         [("11", "12", None), ("11", "14", None)],
     )
-    head = plant.item(
-        "head", part=_part(plant, "head", k.GENERIC, {}, [], op=OperatedBy.MUSHROOM).id
-    )
+    head = plant.item("head", part=_part(plant, "head", k.GENERIC, {}, [], op=OperatedBy.MUSHROOM).id)
     sw_nc = _part(plant, "sw_nc", k.SWITCH, {"31": G, "32": G}, [("31", "32", CLOSED)])
     sw_no = _part(plant, "sw_no", k.SWITCH, {"43": G, "44": G}, [("43", "44", OPEN)])
     ids["no"] = _device(plant, "no", no, kind=k.CONTACT_NO)
@@ -125,11 +124,7 @@ OWNER = {i: ITEM[f.item] for i, f in functions(MODEL).items()}
 
 
 def test_which_items_are_contact_blocks_with_and_without_held_switches() -> None:
-    got = {
-        ITEM[i]: (is_contact_block(MODEL, i), is_contact_block(MODEL, i, held_switches=False))
-        for i in items(MODEL)
-        if is_contact_block(MODEL, i)
-    }
+    got = {ITEM[i]: (is_contact_block(MODEL, i), is_contact_block(MODEL, i, held_switches=False)) for i in items(MODEL) if is_contact_block(MODEL, i)}
     assert got == {
         "no": (True, True),
         "nc": (True, True),

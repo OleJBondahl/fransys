@@ -3,15 +3,14 @@
 from typing import TYPE_CHECKING, Any
 
 import pytest
+from author_catalogue import _ORIGIN, _function, _library, _part
 from fransys_author import AuthorError
 from fransys_author.surface import design
 from fransys_author.surface._pairing import End, PartFacts, ends_of, pair, poles
+from series_parts import L1, L2, L3, breaker, series_library
 
 from fransys_model.kernel import make_id
-from fransys_model.vocab import ConductorMark, FunctionKind, PartCategory, PortRole, PortTemplate
-
-from ..conftest import _ORIGIN, _function, _library, _part  # noqa: TID252 -- importlib mode puts tests/ on no path
-from ..equivalence.series_parts import L1, L2, L3, breaker, series_library  # noqa: TID252 -- same
+from fransys_model.vocab import ConductorMark, FunctionKind, PartCategory, PortBoundary, PortTemplate
 
 if TYPE_CHECKING:
     from fransys_author.surface import Design
@@ -98,24 +97,18 @@ def test_ac_marks_pair_in_phase_order_whatever_the_order_given(lib: Draft) -> No
     d = design(lib, place="C1")
     facts, motor = _fn(d, "M1", "TEST-MOTOR-3P", "load")
     _, q1 = _fn(d, "Q1", "TEST-MCB-3P", "main")
-    l1, l2, l3 = (
-        End(e.port, m) for e, m in zip(ends_of(facts, q1).load, ConductorMark, strict=False)
-    )
+    l1, l2, l3 = (End(e.port, m) for e, m in zip(ends_of(facts, q1).load, ConductorMark, strict=False))
     got = pair([l3, l1, l2], ends_of(facts, motor).line)
     assert _names(got) == [("2", "U"), ("4", "V"), ("6", "W")]
     n = End(l3.port, ConductorMark.N)
-    with pytest.raises(
-        AuthorError, match=r"carries L1, L2, N where the load takes L1, L2, L3: .*d\.detail\.wire"
-    ):
+    with pytest.raises(AuthorError, match=r"carries L1, L2, N where the load takes L1, L2, L3: .*d\.series"):
         pair([l1, l2, n], ends_of(facts, motor).line)
 
 
 def test_a_pole_with_a_link_and_no_side_fact_names_the_part_key_and_the_call(lib: Draft) -> None:
     d = design(lib, place="C1")
     facts, q1 = _fn(d, "Q1", "TEST-MCB-NOSIDE", "main")
-    with pytest.raises(
-        AuthorError, match=r"'main' pole 1/2 has no line side: .*`side`.*d\.detail\.wire"
-    ):
+    with pytest.raises(AuthorError, match=r"'main' pole 1/2 has no line side: .*`side`.*d\.series"):
         poles(facts, q1)
 
 
@@ -125,7 +118,7 @@ def test_a_count_mismatch_names_both_counts(lib: Draft) -> None:
     _, coil = _fn(d, "K1", "TEST-KM-3P", "coil")
     with pytest.raises(
         AuthorError,
-        match=r"3 poles \(2, 4, 6\) but the load takes 1 pole \(.*\): .*d\.detail\.wire",
+        match=r"3 poles \(2, 4, 6\) but the load takes 1 pole \(.*\): .*d\.series",
     ):
         pair(ends_of(facts, q1).load, ends_of(facts, coil).line)
     assert len(pair(ends_of(facts, coil).load, ends_of(facts, coil).line)) == 1
@@ -142,7 +135,7 @@ def test_link_less_marked_pins_come_in_marking_order_not_mark_order(lib: Draft) 
         key = (*load.key, "port", name)
         port = PortTemplate(
             id=make_id(PortTemplate, key), key=key, function=load.id, name=name,
-            role=PortRole.GENERIC, marking=marking, conductor_mark=mark,
+            boundary=PortBoundary.GENERIC, marking=marking, conductor_mark=mark,
         )  # fmt: skip
         lib.add(port, origin=_ORIGIN)
     d = design(lib, place="C1")

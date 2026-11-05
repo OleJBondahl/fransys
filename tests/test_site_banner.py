@@ -1,13 +1,11 @@
 """The built site: banner on every page, a Markdown copy of each, the llms files, search."""
 
 import importlib
-import sys
 from pathlib import Path
 
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "scripts"))
 
 build_site = importlib.import_module("build_site")
 
@@ -24,9 +22,7 @@ def test_config_and_override_carry_the_banner():
 @pytest.fixture(scope="module")
 def built_root(tmp_path_factory):
     """One real Zensical build of the site from a one-clone example folder (a few seconds)."""
-    importlib.import_module(
-        "zensical"
-    )  # a missing `site` dependency group fails here, naming zensical
+    importlib.import_module("zensical")  # a missing `site` dependency group fails here, naming zensical
     work = tmp_path_factory.mktemp("site")
     examples = work / "examples"
     (examples / "out" / "all").mkdir(parents=True)

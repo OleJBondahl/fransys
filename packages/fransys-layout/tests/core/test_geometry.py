@@ -3,18 +3,18 @@
 from options_fixtures import core_options
 from turn_fixtures import views_of
 
+from fransys_layout.core.flow_values import Cell, Lane
 from fransys_layout.core.geometry import (
     cell_anchor,
     cell_footprint,
     column_extent,
     lane_extent,
     pin_xy,
-    shape_key,
     stack_lane,
     stair_room,
 )
 from fransys_layout.core.sym_values import Sym
-from fransys_layout.core.values import Box, Cell, Lane, Orientation, Pin, Size
+from fransys_layout.core.values import Box, Orientation, Pin, Size
 
 R0_TO_R270 = ("R0", "R90", "R180", "R270")
 EIGHT = (*R0_TO_R270, "MR0", "MR90", "MR180", "MR270")
@@ -63,12 +63,6 @@ def test_stack_lane_puts_cells_a_wire_min_apart() -> None:
         cells,
         core_options(
             wire_min=8,
-            flip_turn="R180",
-            tag_stagger=True,
-            label_gap=8,
-            parallel_pitch=48,
-            driver_first=True,
-            arrow_sides=("E", "W"),
         ),
         frozenset(),
     )
@@ -115,16 +109,6 @@ def test_cell_anchor_uses_top_pin_else_bottom_pin() -> None:
     assert cell_anchor(sym, make_cell(top="A", bottom="B")) == (4, -8)
     assert cell_anchor(sym, make_cell(bottom="B")) == (-4, 8)
     assert cell_anchor(sym, make_cell()) == (0, 0)
-
-
-def test_shape_key_is_equal_for_equal_shapes_and_differs_on_orientation() -> None:
-    """Two lanes of equal body, keepout and orientation share a key; a turned cell does not."""
-    syms = {"U1": make_sym("U1"), "U2": make_sym("U2")}
-    plain = (Lane((make_cell("U1"),), 0),)
-    twin = (Lane((make_cell("U2"),), 8),)
-    turned = (Lane((make_cell("U1", "R90"),), 0),)
-    assert shape_key(syms, plain) == shape_key(syms, twin)
-    assert shape_key(syms, plain) != shape_key(syms, turned)
 
 
 def test_stair_room_is_whole_grids_apart_minus_one() -> None:

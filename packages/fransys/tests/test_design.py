@@ -22,17 +22,13 @@ def _digest(draft) -> str:
 
 
 def _module(*sources: str, digest: str | None = None):
-    return SimpleNamespace(
-        SOURCES=sources, LIBRARY_DIGEST=digest or library_digest(*sources), __name__="gen_parts"
-    )
+    return SimpleNamespace(SOURCES=sources, LIBRARY_DIGEST=digest or library_digest(*sources), __name__="gen_parts")
 
 
 # A name no other test imports: sys.modules caches by name, a shared one reads another tree.
-def _plant(tmp_path, monkeypatch) -> Path:
+def _plant(tmp_path: Path, monkeypatch) -> Path:
     root = tmp_path / "design_plant_parts"
-    shutil.copytree(
-        Path(demo_parts.__file__).parent, root, ignore=shutil.ignore_patterns("__pycache__")
-    )
+    shutil.copytree(Path(demo_parts.__file__).parent, root, ignore=shutil.ignore_patterns("__pycache__"))
     monkeypatch.syspath_prepend(str(tmp_path))
     return root / PART
 
@@ -65,7 +61,7 @@ def test_changed_fact_makes_the_module_stale_and_whitespace_does_not(tmp_path, m
     part.write_text(part.read_text(encoding="utf-8") + "\n\n", encoding="utf-8")
     design(module)
 
-    part.write_text(part.read_text(encoding="utf-8").replace('"2.4"', '"3.0"'), encoding="utf-8")
+    part.write_text(part.read_text(encoding="utf-8").replace('"2.4 W"', '"3.0 W"'), encoding="utf-8")
     with pytest.raises(AuthorError, match="design_plant_parts"):
         design(module)
 

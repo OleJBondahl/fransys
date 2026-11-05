@@ -8,10 +8,9 @@ from fransys_render._cable_pen import Pen
 
 from electrical_symbols import LIBRARY
 
-_PEN = Pen(LIBRARY, module_mm=Decimal("2.5"), text_height_mm=Decimal("2.5"), pad_g=2)
+_PEN = Pen(LIBRARY, module_mm=Decimal("2.5"), text_height_mm=Decimal("2.5"), pad_g=2, font_g=11)
 _MM = 2.5 / 8  # one grid unit
 _FONT = float(_PEN.font_mm)
-assert LIBRARY.font is not None
 _ASCENT = LIBRARY.font.ascent / LIBRARY.font.units_per_em
 
 

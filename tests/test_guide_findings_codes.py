@@ -2,17 +2,6 @@
 
 `Finding(code=...)` is constructed three ways, all resolved here with `ast` (no import, no
 execution): a literal kwarg (`Finding(code="COVER_OVERFLOW", ...)`); a module-level string
-constant used as the kwarg's value, defined either in the same file or imported from another
-one (e.g. `fransys_layout.lint.codes`); and a per-module helper (`_finding`, `_error`,
-`_warn`, `fransys_parts._toml.finding`) that takes `code` as its own parameter and passes it
-through, the literal then living at the helper's own call sites, positional or keyword.
-A helper is also called as a module attribute (`_toml.finding(...)`), and `_joins.py`
-passes a `(CODE, text)` pair's head on (`refused[0]`).
-
-This builds once in spirit: the scan walks every `.py` file under `packages/*/src` once per
-test module, in `scanned_finding_codes()`, called from the module-scoped `scanned_codes` fixture
-rather than at collection (the speed rule: computed once, not per test, and no
-longer paid at collection time by every one of the gate's workers).
 """
 
 from __future__ import annotations
@@ -159,17 +148,32 @@ def _resolve_name(
     return None
 
 
+def _finding_code_node(call: ast.Call) -> ast.expr | None:
+    """The code expression of a call that builds a finding, else None.
+
+    The shapes: `Finding(code=...)`; `X[code].finding(...)` (a registry lookup); and
+    `_INFO.finding(...)` (a module's one `CodeInfo`, returned as the `_INFO` `Name` itself).
+    """
+    func = call.func
+    if isinstance(func, ast.Name) and func.id == "Finding":
+        for kw in call.keywords:
+            if kw.arg == "code":
+                return kw.value
+        return call.args[0] if call.args else None
+    if isinstance(func, ast.Attribute) and func.attr == "finding":
+        if isinstance(func.value, ast.Subscript):
+            return func.value.slice
+        if isinstance(func.value, ast.Name) and func.value.id == "_INFO":
+            return func.value
+    return None
+
+
 def _is_finding_call(node: ast.AST) -> bool:
-    return (
-        isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "Finding"
-    )
+    return isinstance(node, ast.Call) and _finding_code_node(node) is not None
 
 
 def _code_arg(call: ast.Call) -> ast.expr | None:
-    for kw in call.keywords:
-        if kw.arg == "code":
-            return kw.value
-    return call.args[0] if call.args else None
+    return _finding_code_node(call)
 
 
 def _enclosing_function(node: ast.AST, parent: dict[ast.AST, ast.AST]) -> ast.FunctionDef | None:
@@ -190,37 +194,71 @@ class _Helper:
     param_name: str
 
 
+def _passed_param(arg: ast.expr | None, func: ast.FunctionDef) -> _Helper | None:
+    """`arg` as a `_Helper` when it is one of `func`'s own parameters, else None."""
+    names = [a.arg for a in func.args.args]
+    if isinstance(arg, ast.Name) and arg.id in names:
+        return _Helper(param_index=names.index(arg.id), param_name=arg.id)
+    return None
+
+
 def _find_helpers(infos: list[_FileInfo]) -> dict[tuple[str, str], _Helper]:
+    """Functions that pass their `code` parameter to a finding call or to another helper."""
     helpers: dict[tuple[str, str], _Helper] = {}
-    for info in infos:
-        for func_name, func in info.functions.items():
-            param_names = [a.arg for a in func.args.args]
-            for node in ast.walk(func):
-                if not isinstance(node, ast.Call) or not _is_finding_call(node):
-                    continue
-                arg = _code_arg(node)
-                if isinstance(arg, ast.Name) and arg.id in param_names:
-                    helpers[(info.module, func_name)] = _Helper(
-                        param_index=param_names.index(arg.id), param_name=arg.id
-                    )
+    grew = True
+    while grew:
+        grew = False
+        for info in infos:
+            for func_name, func in info.functions.items():
+                for node in ast.walk(func):
+                    if not isinstance(node, ast.Call):
+                        continue
+                    target = _helper_target(node, info, helpers)
+                    if target is not None:
+                        arg = _helper_call_arg(node, helpers[target])
+                    elif _is_finding_call(node):
+                        arg = _code_arg(node)
+                    else:
+                        continue
+                    found = _passed_param(arg, func)
+                    if found is not None and helpers.get((info.module, func_name)) != found:
+                        helpers[(info.module, func_name)] = found
+                        grew = True
     return helpers
 
 
-def _resolve_or_raise(
-    value: ast.expr | None, info: _FileInfo, files_by_module: dict[str, _FileInfo], where: str
-) -> str:
-    """The literal `value` names -- itself, or (if a `Name`) a constant it resolves to.
+def _local_values(name: str, scope: ast.FunctionDef | None) -> list[ast.expr]:
+    """Every value assigned to the local `name` in `scope`."""
+    if scope is None:
+        return []
+    return [n.value for n in ast.walk(scope) if isinstance(n, ast.Assign) and any(isinstance(t, ast.Name) and t.id == name for t in n.targets)]
 
-    Raises `AssertionError` naming `where` instead of guessing, if it resolves to neither: a
+
+def _resolve_or_raise(
+    value: ast.expr | None,
+    info: _FileInfo,
+    files_by_module: dict[str, _FileInfo],
+    where: str,
+    scope: ast.FunctionDef | None = None,
+) -> set[str]:
+    """The literals `value` names: itself, a constant, an assigned local, or both arms of an `if`.
+
+    Raises `AssertionError` naming `where` instead of guessing, if it resolves to none: a
     fourth code shape this scanner does not yet know, not something to skip quietly.
     """
+    if isinstance(value, ast.IfExp):
+        arms = (value.body, value.orelse)
+        return set[str]().union(*(_resolve_or_raise(a, info, files_by_module, where, scope) for a in arms))
     literal = _literal_str(value)
     if literal is not None:
-        return literal
+        return {literal}
     if isinstance(value, ast.Name):
         resolved = _resolve_name(value.id, info, files_by_module)
         if resolved is not None:
-            return resolved
+            return {resolved}
+        local = _local_values(value.id, scope)
+        if local:
+            return set[str]().union(*(_resolve_or_raise(v, info, files_by_module, where, scope) for v in local))
     dumped = ast.dump(value) if value is not None else "no code argument"
     message = f"unresolved code argument at {where}: {dumped}"
     raise AssertionError(message)
@@ -242,14 +280,29 @@ def _direct_codes(
             enclosing = _enclosing_function(node, info.parent)
             if enclosing is not None and (info.module, enclosing.name) in helpers:
                 continue
+            arg = _code_arg(node)
+            if isinstance(arg, ast.Attribute):
+                continue  # `CodeInfo.finding` builds from its own `self.code`
+            if isinstance(arg, ast.Name) and arg.id == "_INFO":
+                codes |= _single_info_codes(info)
+                continue
             where = f"{info.path}:{node.lineno}"
-            codes.add(_resolve_or_raise(_code_arg(node), info, files_by_module, where))
+            codes |= _resolve_or_raise(arg, info, files_by_module, where, enclosing)
     return codes
 
 
-def _helper_target(
-    node: ast.Call, info: _FileInfo, helpers: dict[tuple[str, str], _Helper]
-) -> tuple[str, str] | None:
+def _single_info_codes(info: _FileInfo) -> set[str]:
+    """The code literals in a module's `_INFO = next(i for i in ... if i.code == "X")`."""
+    return {
+        node.value
+        for stmt in info.tree.body
+        if isinstance(stmt, ast.Assign) and any(isinstance(t, ast.Name) and t.id == "_INFO" for t in stmt.targets)
+        for node in ast.walk(stmt.value)
+        if isinstance(node, ast.Constant) and isinstance(node.value, str)
+    }
+
+
+def _helper_target(node: ast.Call, info: _FileInfo, helpers: dict[tuple[str, str], _Helper]) -> tuple[str, str] | None:
     """Which known helper (if any) `node` calls: by name in `info`'s own module, by an
     import `info` resolved that name to, or as an attribute of an imported module
     (`_toml.finding(...)` after `from . import _toml`)."""
@@ -297,10 +350,13 @@ def _helper_call_codes(
             helper = helpers[target_key]
             where = f"{info.path}:{node.lineno}"
             arg = _helper_call_arg(node, helper)
+            enclosing = _enclosing_function(node, info.parent)
+            if enclosing is not None and (info.module, enclosing.name) in helpers and _passed_param(arg, enclosing) is not None:
+                continue  # a helper handing its own `code` on: resolved at its call sites
             if isinstance(arg, ast.Subscript):
                 codes.update(_tuple_head_codes(info))
                 continue
-            codes.add(_resolve_or_raise(arg, info, files_by_module, where))
+            codes |= _resolve_or_raise(arg, info, files_by_module, where, enclosing)
     return codes
 
 
@@ -309,10 +365,7 @@ def _tuple_head_codes(info: _FileInfo) -> set[str]:
     return {
         head
         for node in ast.walk(info.tree)
-        if isinstance(node, ast.Tuple)
-        and node.elts
-        and (head := _literal_str(node.elts[0])) is not None
-        and _CODE_SHAPE.match(head)
+        if isinstance(node, ast.Tuple) and node.elts and (head := _literal_str(node.elts[0])) is not None and _CODE_SHAPE.match(head)
     }
 
 
@@ -322,9 +375,7 @@ def scanned_finding_codes() -> frozenset[str]:
     infos = [_build_file_info(path) for path in _iter_package_files()]
     files_by_module = {info.module: info for info in infos}
     helpers = _find_helpers(infos)
-    codes = _direct_codes(infos, files_by_module, helpers) | _helper_call_codes(
-        infos, files_by_module, helpers
-    )
+    codes = _direct_codes(infos, files_by_module, helpers) | _helper_call_codes(infos, files_by_module, helpers)
     return frozenset(code for code in codes if _CODE_SHAPE.match(code))
 
 
@@ -338,7 +389,6 @@ def _findings_table_rows(markdown: str) -> list[list[str]]:
 
     The page is a header row, a `---` separator row, then data rows: this skips the first two
     `|`-led lines (header, separator) and returns the rest. Reusable by a later test in this
-    module that checks the table's other columns, not just the code column.
     """
     table_lines = [line.strip() for line in markdown.splitlines() if line.strip().startswith("|")]
     if len(table_lines) < 2:
@@ -359,11 +409,7 @@ FINDINGS_PAGES = (
 def _all_rows() -> list[list[str]]:
     """The data rows of every findings page."""
     return [
-        row
-        for page in FINDINGS_PAGES
-        for row in _findings_table_rows(
-            files("fransys").joinpath("guide", f"{page}.md").read_text(encoding="utf-8")
-        )
+        row for page in FINDINGS_PAGES for row in _findings_table_rows(files("fransys").joinpath("guide", f"{page}.md").read_text(encoding="utf-8"))
     ]
 
 
@@ -410,9 +456,7 @@ def test_a1_fails_on_a_deleted_entry(scanned_codes: frozenset[str]) -> None:
     """Probe P1 in-process: the registry without one entry leaves that code unlisted."""
     registry = _registry()
     assert a1_violations(scanned_codes, registry[1:])["unlisted"] == [registry[0].code]
-    assert a1_violations(scanned_codes, (*registry, registry[0]))["listed twice"] == [
-        registry[0].code
-    ]
+    assert a1_violations(scanned_codes, (*registry, registry[0]))["listed twice"] == [registry[0].code]
 
 
 def test_findings_codes_match_the_registry() -> None:
@@ -436,9 +480,5 @@ def test_no_generated_findings_page_shows_doubled_braces() -> None:
     generator = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(generator)
     guide_dir = Path(str(files("fransys").joinpath("guide")))
-    doubled = [
-        p.name
-        for p, text in generator.expected_pages(guide_dir).items()
-        if "{{" in text or "}}" in text
-    ]
+    doubled = [p.name for p, text in generator.expected_pages(guide_dir).items() if "{{" in text or "}}" in text]
     assert doubled == []

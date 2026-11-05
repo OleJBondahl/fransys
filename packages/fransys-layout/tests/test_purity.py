@@ -2,7 +2,6 @@
 
 Fails on (a) a parameter whose annotation is a mutable type at its top level, (b) `nonlocal`,
 (c) a module-level binding of a mutable value. The core takes a tree so the can-fail tests
-feed it tmp_path source; the real check runs on the package.
 """
 
 import ast
@@ -58,14 +57,10 @@ def _all_args(args: ast.arguments) -> list[ast.arg]:
 
 def mutable_parameters(tree: ast.Module) -> list[tuple[int, str]]:
     """(line, parameter name) of each parameter with a mutable top-level annotation."""
-    found = []
+    found: list[tuple[int, str]] = []
     for node in ast.walk(tree):
         if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
-            found += [
-                (arg.lineno, arg.arg)
-                for arg in _all_args(node.args)
-                if arg.annotation is not None and _top_level_mutable(arg.annotation)
-            ]
+            found += [(arg.lineno, arg.arg) for arg in _all_args(node.args) if arg.annotation is not None and _top_level_mutable(arg.annotation)]
     return found
 
 
@@ -77,16 +72,12 @@ def nonlocals(tree: ast.Module) -> list[tuple[int, str]]:
 def _is_mutable_value(value: ast.expr | None) -> bool:
     if isinstance(value, MUTABLE_LITERALS):
         return True
-    return (
-        isinstance(value, ast.Call)
-        and isinstance(value.func, ast.Name)
-        and value.func.id in MUTABLE_CALLS
-    )
+    return isinstance(value, ast.Call) and isinstance(value.func, ast.Name) and value.func.id in MUTABLE_CALLS
 
 
 def mutable_module_bindings(tree: ast.Module) -> list[tuple[int, str]]:
     """(line, name) of each module-level binding of a list, dict or set value."""
-    found = []
+    found: list[tuple[int, str]] = []
     for node in tree.body:
         if isinstance(node, ast.Assign) and _is_mutable_value(node.value):
             found += [(node.lineno, ast.unparse(t)) for t in node.targets]
@@ -96,12 +87,12 @@ def mutable_module_bindings(tree: ast.Module) -> list[tuple[int, str]]:
 
 
 # The recorded module-level mutables: none since the fact registry went with the old engine (R338).
-ALLOWED_STATE: frozenset[str] = frozenset()
+ALLOWED_STATE: frozenset[str] = frozenset[str]()
 
 
 def scan(src_root: Path, allowed: frozenset[str] = frozenset()) -> list[str]:
     """One `path:line: what` per violation of checks (a) to (c) under `src_root`, less `allowed`."""
-    out = []
+    out: list[str] = []
     for path in sorted(src_root.rglob("*.py")):
         tree = ast.parse(path.read_text(encoding="utf-8"))
         rel = path.relative_to(src_root).as_posix()
@@ -110,12 +101,7 @@ def scan(src_root: Path, allowed: frozenset[str] = frozenset()) -> list[str]:
             ("nonlocal", nonlocals),
             ("mutable module binding", mutable_module_bindings),
         )
-        out += [
-            f"{rel}:{line}: {label} {name}"
-            for label, check in checks
-            for line, name in check(tree)
-            if f"{rel}:{name}" not in allowed
-        ]
+        out += [f"{rel}:{line}: {label} {name}" for label, check in checks for line, name in check(tree) if f"{rel}:{name}" not in allowed]
     return out
 
 
@@ -147,19 +133,13 @@ def test_nonlocal_flagged(tmp_path):
 
 
 def test_mutable_module_bindings_flagged(tmp_path):
-    source = (
-        "A = [1]\nB = {}\nC = {1}\nD = [x for x in A]\nE: dict[str, int] = {'a': 1}\n"
-        "F = defaultdict(list)\nG = set()\nH = {k: 1 for k in A}\n"
-    )
+    source = "A = [1]\nB = {}\nC = {1}\nD = [x for x in A]\nE: dict[str, int] = {'a': 1}\nF = defaultdict(list)\nG = set()\nH = {k: 1 for k in A}\n"
     names = [h.rsplit(" ", 1)[1] for h in _write(tmp_path, source)]
     assert names == list("ABCDEFGH")
 
 
 def test_immutable_and_local_bindings_pass(tmp_path):
-    source = (
-        "A = (1,)\nB = frozenset({1})\nC = frozendict({1: 2})\nD = 'x'\n"
-        "def f():\n    local = [1]\n    return local\n"
-    )
+    source = "A = (1,)\nB = frozenset({1})\nC = frozendict({1: 2})\nD = 'x'\ndef f():\n    local = [1]\n    return local\n"
     assert _write(tmp_path, source) == []
 
 

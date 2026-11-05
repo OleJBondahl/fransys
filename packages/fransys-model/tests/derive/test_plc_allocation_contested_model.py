@@ -25,8 +25,7 @@ def test_two_requests_wired_to_one_channel_give_one_finding_and_no_binding() -> 
     assert _bound(model) == {}
     (found,) = findings
     assert found.code == PLC_CHANNEL_CONTESTED
-    assert found.subjects[0] == ch1
-    assert set(found.subjects[1:]) == {first, second}
+    assert set(found.subjects) == {ch1, first, second}
     (named,) = name_findings(model, findings)
     assert "-U1:1" in named.message
     assert "B-dev-1" in named.message

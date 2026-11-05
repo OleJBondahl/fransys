@@ -3,10 +3,12 @@
 from fransys_model.derive.facts.closure import PhysicalNet, net_of
 from fransys_model.derive.facts.net_facts import is_earth_net, net_potential
 from fransys_model.derive.facts.roles import is_pe_port
+from fransys_model.derive.indexes import build_indexes
 from fransys_model.kernel import DIGEST_CACHE_SIZE, digest_cached
+from fransys_model.vocab.enums import PowerKind
 from fransys_model.vocab.tables import nets, ports
 lazy from fransys_model.kernel import Id, Model
-lazy from fransys_model.vocab.connectivity import Net
+lazy from fransys_model.vocab.connectivity import Net, RailGroup
 lazy from fransys_model.vocab.core import Port
 
 
@@ -23,29 +25,17 @@ def _carried(model: Model) -> frozendict[Id[Port], frozendict[str, tuple[Id[Net]
             if physical is not None:
                 by_name = found.setdefault(physical.ports[0], {})
                 by_name.setdefault(potential, set()).add(net.id)
-    return frozendict(
-        {
-            first: frozendict({name: tuple(sorted(ids)) for name, ids in by_name.items()})
-            for first, by_name in found.items()
-        }
-    )
+    return frozendict({first: frozendict({name: tuple(sorted(ids)) for name, ids in by_name.items()}) for first, by_name in found.items()})
 
 
-def physical_potentials(
-    model: Model, physical: PhysicalNet
-) -> frozendict[str, tuple[Id[Net], ...]]:
+def physical_potentials(model: Model, physical: PhysicalNet) -> frozendict[str, tuple[Id[Net], ...]]:
     """The potentials the declared nets on `physical` carry, each with its net ids; cached."""
     return frozendict(_carried(model).get(physical.ports[0], {}))
 
 
 def pe_firsts(model: Model) -> frozenset[Id[Port]]:
     """The first port of each physical net holding a port of an earth net."""
-    physical = (
-        net_of(model, port)
-        for net in nets(model).values()
-        if is_earth_net(model, net.id)
-        for port in net.ports
-    )
+    physical = (net_of(model, port) for net in nets(model).values() if is_earth_net(model, net.id) for port in net.ports)
     return frozenset(net.ports[0] for net in physical if net is not None)
 
 
@@ -77,8 +67,23 @@ def is_wired(model: Model, port: Id[Port]) -> bool:
 @digest_cached(DIGEST_CACHE_SIZE)
 def pe_ports_off_pe(model: Model) -> tuple[Id[Port], ...]:
     """The wired PE-role ports whose physical net holds no earth net."""
-    return tuple(
-        port
-        for port in ports(model)
-        if is_pe_port(model, port) and is_wired(model, port) and not on_pe_net(model, port)
-    )
+    return tuple(port for port in ports(model) if is_pe_port(model, port) and is_wired(model, port) and not on_pe_net(model, port))
+
+
+def rail_potential(model: Model, group: RailGroup) -> str | None:
+    """The potential `group` carries: `"PE"` on an earth net, the one declared potential, else `None`.
+
+    Several potentials are NET_SHORTED's case. The one home of a rail's potential string.
+    """
+    idx = build_indexes(model)
+    earth = pe_firsts(model)
+    found: set[str] = set()
+    for terminal in group.terminals:
+        for function in idx.functions_by_item.get(terminal, ()):
+            for port in idx.ports_by_function.get(function, ()):
+                if (physical := net_of(model, port)) is None:
+                    continue
+                if physical.ports[0] in earth:
+                    return PowerKind.PE.name
+                found |= set(physical_potentials(model, physical))
+    return next(iter(found)) if len(found) == 1 else None

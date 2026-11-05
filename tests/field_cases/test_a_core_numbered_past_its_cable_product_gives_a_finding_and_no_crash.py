@@ -1,15 +1,6 @@
 """Field case: a core numbered past its cable product's cores is a finding, not a crash.
-
-The engineering shape: a 4-core cable W1 runs from a terminal strip to a lamp, two cores wired.
-The author refuses core 5 at `d.core`, so the draft is edited after the build, as a loaded draft
-could be: the second core's index becomes 5.
-
-The bug: `core_colour` raised `SchemaError` for the index outside the product, so `cable_rows`
-and every list built on it crashed, and no finding told the engineer which core was wrong.
-
-Rule: the validator gives the ERROR `CORE_INDEX_PAST_PRODUCT`, and `core_colour` returns ""
-past the product, so no list builder raises (G1, decision model-0266).
-"""
+The bug: `core_colour` raised `SchemaError` for the index outside the product, so every list built on it crashed.
+Fixed by model-0266 (G1): the validator gives ERROR `CORE_INDEX_PAST_PRODUCT`; `core_colour` returns an empty string past the product."""
 
 import dataclasses
 
@@ -35,9 +26,7 @@ def _loaded() -> fr.BuildResult:
     result = fr.build(d)
     facet = max(facets_of(result.model, CoreFacet).values(), key=lambda f: f.index)
     origin = Origin(file="<field case>", line=1, note="core 5")
-    model = evolve(
-        result.model, remove=[facet.id], put=[dataclasses.replace(facet, index=5)], origin=origin
-    )
+    model = evolve(result.model, remove=[facet.id], put=[dataclasses.replace(facet, index=5)], origin=origin)
     return dataclasses.replace(result, model=model)
 
 

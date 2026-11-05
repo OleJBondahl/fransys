@@ -25,6 +25,4 @@ def release_identity(model: Model, unit: Id[Unit] | None) -> ReleaseIdentity:
             interface=release.interface,
         )
     project = next(iter(projects(model).values()))
-    return ReleaseIdentity(
-        name=project.number, version=project.version, revision=project.revision, interface=""
-    )
+    return ReleaseIdentity(name=project.number, version=project.version, revision=project.revision, interface="")

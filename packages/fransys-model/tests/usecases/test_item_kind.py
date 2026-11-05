@@ -14,28 +14,32 @@ def _model() -> Model:
     return freeze(merge(build_cabinet(), build_harness_board()))
 
 
-def _kinds() -> dict[str, ItemKind]:
+def _kinds() -> dict[str, set[ItemKind]]:
+    """The kinds of the items that print each designation: a harness and its own cable both print `-WH1`."""
     model = _model()
-    return {printed_designation(model, item): item_kind(model, item) for item in items(model)}
+    found: dict[str, set[ItemKind]] = {}
+    for item in items(model):
+        found.setdefault(printed_designation(model, item), set()).add(item_kind(model, item))
+    return found
 
 
 def test_each_designation_reads_its_own_kind() -> None:
     """A strip, a cable, a harness, its plug, a board, a PLC module and a plain device."""
     kinds = _kinds()
-    assert kinds["-X1"] is ItemKind.STRIP
-    assert kinds["-W1"] is ItemKind.CABLE
-    assert kinds["-WH1"] is ItemKind.HARNESS
-    assert kinds["-WH1-H1"] is ItemKind.CONNECTOR
-    assert kinds["-JB1"] is ItemKind.BOARD
-    assert kinds["-A1-1"] is ItemKind.PLC_MODULE
-    assert kinds["-K1"] is ItemKind.DEVICE
+    assert kinds["-X1"] == {ItemKind.STRIP}
+    assert kinds["-W1"] == {ItemKind.CABLE}
+    assert kinds["-WH1"] == {ItemKind.HARNESS, ItemKind.CABLE}
+    assert kinds["-WH1-H1"] == {ItemKind.CONNECTOR}
+    assert kinds["-JB1"] == {ItemKind.BOARD}
+    assert kinds["-A1-1"] == {ItemKind.PLC_MODULE}
+    assert kinds["-K1"] == {ItemKind.DEVICE}
 
 
 def test_every_kind_is_reached_and_a_terminal_is_a_terminal() -> None:
-    """Every kind but BAR (neither design has a bar); a strip's children are terminals."""
+    """Every kind; a strip's children are terminals."""
     kinds = _kinds()
-    assert set(kinds.values()) == set(ItemKind) - {ItemKind.BAR}
-    assert {k for name, k in kinds.items() if ":" in name} == {ItemKind.TERMINAL}
+    assert set().union(*kinds.values()) == set(ItemKind)
+    assert {k for name, ks in kinds.items() if ":" in name for k in ks} == {ItemKind.TERMINAL}
 
 
 def test_signal_kind_maps_every_signal_type() -> None:

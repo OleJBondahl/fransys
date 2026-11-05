@@ -1,8 +1,7 @@
 """The MARKING strings of a drawn symbol: `marking.<symbol port>` where the symbol declares it.
 
 layout-0027: a MARKING text exists only where the drawn symbol defines the slot. The text is
-`derive.port_marking`. The power slot (`marking_text`) is declared by no library symbol. A box's
-own markings stay with `electrical_symbols.drawn_slots`.
+`derive.port_marking`. A box's own markings stay with `electrical_symbols.drawn_slots`.
 """
 
 from typing import TYPE_CHECKING

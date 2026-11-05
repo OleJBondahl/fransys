@@ -6,9 +6,7 @@ _GUIDE = files("fransys") / "guide"
 
 
 def _pages() -> dict[str, str]:
-    return {
-        p.name: p.read_text(encoding="utf-8") for p in _GUIDE.iterdir() if p.name.endswith(".md")
-    }
+    return {p.name: p.read_text(encoding="utf-8") for p in _GUIDE.iterdir() if p.name.endswith(".md")}
 
 
 def test_no_page_teaches_the_derive_baseline_diff() -> None:

@@ -12,7 +12,6 @@ from fransys_model.kernel import render_id
 from fransys_model.vocab import DocumentPreset, PageKind
 
 K = PageKind
-_REMOVE = (K.PLC_LIST, K.TERMINAL_LIST, K.BOM, K.SHEET_INDEX)
 
 
 def _two_documents():
@@ -25,7 +24,7 @@ def _two_documents():
     docs = [
         document(
             key, preset=DocumentPreset.CABINET_SCHEMATIC, subject=where, cover="# Cover",
-            notes=None, remove=_REMOVE,
+            notes=None,
         )
         for key, where in (("a", c1), ("b", c2))
     ]  # fmt: skip
@@ -37,26 +36,23 @@ def _two_documents():
 
 
 _M, (_A, _B), _SVGS = _two_documents()
-_ALL = fransys_render.sheets(document_sheets_of(_M), LIBRARY)
+_ALL = fransys_render.sheets(document_sheets_of(_M, ()), LIBRARY)
 _SHEETS = {key: back for key, back in _ALL.items() if key.document == _A.id}  # A's pages only
 
 
 def test_the_right_keys_give_the_documents_source() -> None:
     assert {key.document for key in _ALL} == {_A.id, _B.id}
-    text = source(_M, _A.id, _SVGS, _SHEETS)
+    text = source(_M, _A.id, _SVGS, _SHEETS, diagrams=())
     assert "<svg>one</svg>" in text
     assert text.count("#page(margin: 0mm, background:") == 1
 
 
 def test_a_key_of_another_document_is_a_missing_sheet() -> None:
     # A's schematic page is filed under document B's id, every other page stays A's
-    moved = {
-        key: dataclasses.replace(key, document=_B.id) if key.kind is K.SCHEMATIC else key
-        for key in _SHEETS
-    }
+    moved = {key: dataclasses.replace(key, document=_B.id) if key.kind is K.SCHEMATIC else key for key in _SHEETS}
     of_b = {moved[key]: back for key, back in _SHEETS.items()}
     missing = SheetKey(_A.id, K.SCHEMATIC, 0)
     assert missing not in of_b
     with pytest.raises(KeyError) as raised:
-        source(_M, _A.id, _SVGS, of_b)
+        source(_M, _A.id, _SVGS, of_b, diagrams=())
     assert sheet_key_text(missing) in str(raised.value)

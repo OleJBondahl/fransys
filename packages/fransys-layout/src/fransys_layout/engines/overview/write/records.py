@@ -19,7 +19,7 @@ lazy from fransys_layout.lint._diagram_scene import Scene
 
 if TYPE_CHECKING:
     from fransys_layout.engines.overview.read.values import BoxSpec, LineSpec, ViewFacts
-    from fransys_layout.engines.overview.sheet_values import PlacedBox, PlacedSheet
+    from fransys_layout.engines.overview.sheet_values import DiagramBox, PlacedSheet
 
 
 @dataclass(frozen=True)
@@ -35,7 +35,7 @@ class _Ctx:
         return box_key(self.key, self.keys[box])
 
 
-def _tabs(placed: PlacedBox, scene: Scene) -> tuple[OverviewTab, ...]:
+def _tabs(placed: DiagramBox, scene: Scene) -> tuple[OverviewTab, ...]:
     """The tabs outside the box edge, in the order placed, as the lint scene measured them."""
     rects = next(b.tabs for b in scene.boxes if b.box == placed.box)
     return tuple(
@@ -44,16 +44,13 @@ def _tabs(placed: PlacedBox, scene: Scene) -> tuple[OverviewTab, ...]:
     )
 
 
-def _box(spec: BoxSpec, placed: PlacedBox, scene: Scene, ctx: _Ctx) -> OverviewBox:
+def _box(spec: BoxSpec, placed: DiagramBox, scene: Scene, ctx: _Ctx) -> OverviewBox:
     key = ctx.box_key(spec.box)
     return OverviewBox(
         id=make_id(OverviewBox, key),
         key=key,
         view=ctx.view,
         ref=spec.key.ref,
-        stub_of=None
-        if spec.key.at is None
-        else make_id(OverviewBox, box_key(ctx.key, BoxKey(ref=spec.key.at))),
         dashed=placed.dashed,
         x=placed.x,
         y=placed.y,
@@ -101,9 +98,7 @@ def view_records(facts: ViewFacts, sheet: PlacedSheet, scene: Scene, stamp: str)
         open=facts.open,
         open_at=None,
         produced_by=stamp,
-        ext=frozendict({"lane_heads": tuple((t.owner, t.x, t.y) for t in sheet.texts)})
-        if sheet.texts
-        else frozendict(),
+        ext=frozendict({"lane_heads": tuple((t.owner, t.x, t.y) for t in sheet.texts)}) if sheet.texts else frozendict(),
     )
     placed = {p.box: p for p in sheet.boxes}
     return (

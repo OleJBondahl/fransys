@@ -31,7 +31,7 @@ def _series(d: fr.Design) -> None:
     with d.function("SER", "Series breaker"):
         cb = d.device("CB", _MCB3, place="L0")
         for pin, far in ((1, "K1"), (2, "K2"), (3, "K3"), (4, "K4")):
-            d.detail.wire(cb[pin], d.device(far, _CONN2, place="L0")[1], wire=(BU, 0.5))
+            d.series(cb[pin], d.device(far, _CONN2, place="L0")[1], wire=(BU, 0.5))
 
 
 def _half(d: fr.Design) -> None:
@@ -39,18 +39,18 @@ def _half(d: fr.Design) -> None:
     with d.function("HALF", "Half-open breaker"):
         hb = d.device("HB", _MCB3, place="L0")
         for pin, far in ((1, "H1"), (2, "H2"), (3, "H3"), (5, "H5"), (6, "H6")):
-            d.detail.wire(hb[pin], d.device(far, _CONN2, place="L0")[1], wire=(BU, 0.5))
+            d.series(hb[pin], d.device(far, _CONN2, place="L0")[1], wire=(BU, 0.5))
 
 
 def _junction(d: fr.Design) -> None:
     """JN: a 4-pin connector with pins 1-2 and 3-4 wired. CN: a 2-pin connector wired 1 to 2."""
     with d.function("JN", "Junction"):
         jn = d.device("JN", _CONN4, place="L0")
-        d.detail.wire(jn[1], jn[2], wire=(BU, 0.5))
-        d.detail.wire(jn[3], jn[4], wire=(BU, 0.5))
+        d.series(jn[1], jn[2], wire=(BU, 0.5))
+        d.series(jn[3], jn[4], wire=(BU, 0.5))
     with d.function("CN", "Two-pin connector"):
         cn = d.device("CN", _CONN2, place="L0")
-        d.detail.wire(cn[1], cn[2], wire=(BU, 0.5))
+        d.series(cn[1], cn[2], wire=(BU, 0.5))
 
 
 @pytest.fixture(scope="module")
@@ -76,9 +76,7 @@ def _pins(model: fr.Model, function: Id[Function]) -> dict[str, Id[Port]]:
     return {p.name: p.id for p in ports(model).values() if p.function == function}
 
 
-def _sides(
-    model: fr.Model, function: Id[Function], by_name: Mapping[str, Side]
-) -> dict[Id[Port], Side]:
+def _sides(model: fr.Model, function: Id[Function], by_name: Mapping[str, Side]) -> dict[Id[Port], Side]:
     """A `sides` map from each port of `function` named in `by_name`."""
     pins = _pins(model, function)
     return {pins[name]: side for name, side in by_name.items()}
@@ -119,9 +117,7 @@ def test_a_junction_with_pins_on_one_side_or_east_west_gives_no_pair(model: fr.M
     north_south = _sides(model, function, {"1": Side.N, "2": Side.S})
     assert series_pairs(model, function, one_side) == ()
     assert series_pairs(model, function, east_west) == ()
-    assert series_pairs(model, function, north_south) == (
-        SeriesPair(pole=0, north=pins["1"], south=pins["2"]),
-    )
+    assert series_pairs(model, function, north_south) == (SeriesPair(pole=0, north=pins["1"], south=pins["2"]),)
 
 
 def test_a_single_pole_connector_pairs_only_when_it_faces_north_and_south(model: fr.Model) -> None:
@@ -134,6 +130,4 @@ def test_a_single_pole_connector_pairs_only_when_it_faces_north_and_south(model:
     east_west = _sides(model, function, {"1": Side.E, "2": Side.W})
     north_south = _sides(model, function, {"1": Side.N, "2": Side.S})
     assert series_pairs(model, function, east_west) == ()
-    assert series_pairs(model, function, north_south) == (
-        SeriesPair(pole=0, north=pins["1"], south=pins["2"]),
-    )
+    assert series_pairs(model, function, north_south) == (SeriesPair(pole=0, north=pins["1"], south=pins["2"]),)

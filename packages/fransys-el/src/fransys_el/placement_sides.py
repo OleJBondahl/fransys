@@ -1,8 +1,8 @@
 """The side of each pin of a generic box (BOX-SIDES): one pin over the other.
 
-Rules in order: a `pins_below` hint puts every pin on S; item functions of different V1 rank split
-(the first rank on N); a power pin keeps the side `derive.pinned_box_sides` gives; the rest take
-the first half in marking order on N, the other half on S. A bundle stays together.
+Rules in order: item functions of different V1 rank split (the first rank on N); a power pin keeps
+the side `derive.pinned_box_sides` gives; the rest take the first half in marking order on N, the
+other half on S. A bundle stays together.
 """
 
 from typing import TYPE_CHECKING, cast
@@ -12,10 +12,11 @@ from fransys_model.derive import (
     bundle_of,
     connected_ports,
     pinned_box_sides,
-    pins_below,
     port_function,
     side_order_key,
 )
+
+from .placement_forms import DRAWN_FORMS
 
 if TYPE_CHECKING:
     from collections.abc import Hashable, Sequence
@@ -65,7 +66,7 @@ def half_split(wired: Sequence[bool], bundles: Sequence[Hashable | None]) -> tup
 def _halves(model: Model, ports: Sequence[Id[Port]]) -> dict[Id[Port], str]:
     """`ports` in marking order on the sides `half_split` gives, read off the model."""
     wired = connected_ports(model)
-    bundles = [(b[0] if (b := bundle_of(model, p)) else None) for p in ports]
+    bundles = [(b[0] if (b := bundle_of(model, p, DRAWN_FORMS)) else None) for p in ports]
     return dict(zip(ports, half_split([p in wired for p in ports], bundles), strict=True))
 
 
@@ -73,8 +74,6 @@ def box_sides(model: Model, pick: Pick, names: Sequence[str]) -> tuple[str, ...]
     """The side of each box port in `names` (marking order): hint, rank split, power, halves."""
     port_of = {name: port for port, name in pick.ports.items()}
     ports = [port_of[name] for name in names]
-    if any(pins_below(model, port_function(model, p)) for p in ports):
-        return (SOUTH,) * len(ports)
     split = _by_rank(model, ports)
     if split:
         return tuple(split[p] for p in ports)

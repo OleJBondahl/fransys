@@ -1,15 +1,6 @@
-"""Field case: a cover too tall for its page stops the write, found by Typst measuring the page.
-
-The engineering shape: a cabinet document whose cover text is long (a scope description of many
-paragraphs) and whose revision history stands on the page foot under it.
-
-The bug (pdf-0010): `COVER_OVERFLOW` was a character-count estimate in `check`, a WARNING, with a
-line pitch and a table inset kept in step with Typst by hand (the pitch drifted once, pdf-0038).
-A write went on and printed a cover whose text ran into the revision table. The rule (decision
-pdf-0047, 0211): the cover source measures its own text block and table at write; Typst panics
-when they would overlap, the write raises `BuildErrors` naming the document and both heights,
-and no file is written. `fr.check` no longer reports it.
-"""
+"""Field case: a cabinet cover with many paragraphs of scope text, its revision history standing on the page foot.
+The bug: COVER_OVERFLOW was a character-count check, so a write went on and printed a cover running into the table.
+Fixed by pdf-0047 and pdf-0211, the cover measures its text at write and raises BuildFailedError, writing no file."""
 
 lazy from pathlib import Path
 
@@ -33,7 +24,6 @@ def _build(root: Path, paragraphs: int):
         fr.DocumentPreset.CABINET_SCHEMATIC,
         cabinet,
         cover=cover,
-        remove=(fr.PageKind.SCHEMATIC,),
     )
     return fr.build(d, document)
 
@@ -41,7 +31,7 @@ def _build(root: Path, paragraphs: int):
 def test_a_cover_taller_than_the_page_stops_the_write_and_names_the_heights(tmp_path):
     result = _build(tmp_path, paragraphs=60)
     out = tmp_path / "out"
-    with pytest.raises(fr.BuildErrors) as raised:
+    with pytest.raises(fr.BuildFailedError) as raised:
         fr.write(result, out_dir=out)
     text = str(raised.value)
     assert "COVER_OVERFLOW" in text
@@ -65,5 +55,5 @@ def test_the_limit_is_the_boundary_between_33_and_34_paragraphs(tmp_path):
     fits = _build(tmp_path / "fits", paragraphs=33)
     assert fr.write(fits, out_dir=tmp_path / "fits-out")
     over = _build(tmp_path / "over", paragraphs=34)
-    with pytest.raises(fr.BuildErrors, match="COVER_OVERFLOW"):
+    with pytest.raises(fr.BuildFailedError, match="COVER_OVERFLOW"):
         fr.write(over, out_dir=tmp_path / "over-out")

@@ -1,14 +1,19 @@
 """The house text records: each builder, the kinds, and the one accessor of each (SO3)."""
 
+import tomllib
 from decimal import Decimal
+from pathlib import Path
+from typing import Any
 
 import pytest
 from derive_helpers import house_records
 
-from fransys_model.derive.house_settings import (
-    colour_codes_of,
+from fransys_model.derive.facts.house_settings import (
+    designation_form_of,
+    export_form_of,
     frame_form_of,
     harness_text_of,
+    lists_of,
     reference_text_of,
     revision_form_of,
     revision_table_form_of,
@@ -22,8 +27,12 @@ from fransys_model.layout import (
     HOUSE_TEXT_KINDS,
     LIBRARY_KINDS,
     SheetFormat,
+    TitleBlockForm,
     paper_choice,
     sheet_format_record,
+)
+from fransys_model.layout import (
+    house_records as build_records,
 )
 
 _ORIGIN = Origin(file="test_house_records.py", line=1, note="fixture")
@@ -33,21 +42,23 @@ ACCESSORS = (
     stub_text_of,
     wire_label_text_of,
     harness_text_of,
-    colour_codes_of,
     title_block_form_of,
     revision_table_form_of,
     revision_form_of,
+    lists_of,
+    designation_form_of,
+    export_form_of,
 )
 
 
-def _model(records: tuple = ()):
+def _model(records: tuple[Any, ...] = ()):
     draft = Draft()
     draft.extend(records, origin=_ORIGIN)
     return freeze(draft)
 
 
-def test_eleven_kinds_are_facade_written_library_kinds() -> None:
-    assert len(HOUSE_TEXT_KINDS) == 10
+def test_thirteen_kinds_are_facade_written_library_kinds() -> None:
+    assert len(HOUSE_TEXT_KINDS) == 13
     assert set(HOUSE_TEXT_KINDS) <= set(LIBRARY_KINDS)
 
 
@@ -61,14 +72,29 @@ def test_each_builder_keys_its_record_by_its_table() -> None:
             "stub",
             "wire_label",
             "harness",
-            "colours",
+            "profile",
             "title_block",
             "revision_table",
             "revision",
             "words",
+            "lists",
+            "export",
+            "designation",
         )
     }
     assert {type(r) for r in records} == set(HOUSE_TEXT_KINDS)
+
+
+def test_a_mm_key_is_an_exact_decimal_of_the_float_and_a_list_is_a_tuple() -> None:
+    """`band_mm = 20` (an int in the file) is `Decimal("20.0")`: the old builders went through `float`."""
+    path = Path(__file__).parents[3] / "fransys" / "src" / "fransys" / "settings.toml"
+    tables = tomllib.loads(path.read_text(encoding="utf-8"))
+    tables["profile"] = tomllib.loads(path.parents[3].joinpath("fransys-layout/src/fransys_layout/layout.toml").read_text(encoding="utf-8"))[
+        "profile"
+    ]
+    tables["title_block"].update(band_mm=20, centre_gap_mm=0.1, fields=["a", "b"], label_height_mm=2, value_height_mm=3)
+    block = next(r for r in build_records(tables) if isinstance(r, TitleBlockForm))
+    assert (str(block.band_mm), str(block.centre_gap_mm), block.fields, str(block.label_height_mm)) == ("20.0", "0.1", ("a", "b"), "2.0")
 
 
 def test_the_accessors_read_what_the_builders_wrote() -> None:
@@ -78,11 +104,22 @@ def test_the_accessors_read_what_the_builders_wrote() -> None:
     assert stub_text_of(model).arrow_in == "←"
     assert wire_label_text_of(model).show_ends is True
     assert harness_text_of(model).branch_sep == "."
-    assert colour_codes_of(model).defaults["AC_N"] == ("BU", "")
     assert title_block_form_of(model).band_mm == Decimal("20.0")
     assert revision_table_form_of(model).columns[0] == "revision"
     assert revision_form_of(model).format == "{version}.{revision}"
     assert word(model, "side_a") == "Side A"
+    assert lists_of(model).columns["bom"][0] == "mpn"
+    assert lists_of(model).pdf_words["bom"][0] == "head_mpn"
+    assert lists_of(model).csv_words["wires"][0] == "wire_from"
+    assert lists_of(model).pdf_columns["terminal"][-1] == "external_ends"
+    assert "bom" not in lists_of(model).pdf_columns
+    assert designation_form_of(model).number_start == 1
+    form = export_form_of(model)
+    assert form.reports == ("bom", "plc", "wires", "designations", "cables", "cores")
+    assert (form.name_join, form.version_sign, form.ref_sign) == ("-", "-v", "-")
+    assert (form.data_dir, form.data_suffixes) == ("data", (".csv", ".xml"))
+    assert (form.csv_delimiter, form.csv_encoding) == (",", "utf-8")
+    assert (form.csv_quoting, form.csv_newline) == ("minimal", "\n")
 
 
 @pytest.mark.parametrize("accessor", ACCESSORS)

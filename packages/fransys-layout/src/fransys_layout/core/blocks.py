@@ -11,6 +11,7 @@ from collections import defaultdict
 from dataclasses import replace
 from typing import TYPE_CHECKING
 
+from .arrow_reserve import reserve_x
 from .blocks_card import CardEdges, card_edges, overfull
 from .blocks_check import box_findings
 from .blocks_hints import apply_hints
@@ -23,15 +24,18 @@ from .blocks_members import (
     make_env,
     members,
 )
+from .flow_values import BlockList
 from .keys import natural_key
 from .pack_row import row_width
 from .rowspec import one_row
-from .values import BlockList, Size
+from .values import Size
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
-    from .values import Block, Finding, FlowGraph, Options, PlacementProblem
+    from .arrow_reserve import RowReserve
+    from .flow_values import Block, FlowGraph
+    from .values import Finding, Options, PlacementProblem
 
 
 def _less(problem: PlacementProblem, arrows: int) -> PlacementProblem:
@@ -43,7 +47,7 @@ def assign_blocks(
     flow: FlowGraph,
     problem: PlacementProblem,
     options: Options,
-    arrows: Mapping[str, int] | None = None,
+    arrows: Mapping[str | tuple[str, str], RowReserve] | None = None,
 ) -> tuple[BlockList, ...]:
     """One BlockList per unit (one empty list for an empty flow), blocks in group order.
 
@@ -55,20 +59,14 @@ def assign_blocks(
     for col, box in box_of.items():
         by_box[box].append(col)
     edges = {
-        b: card_edges(b, cols, flow, _less(problem, (arrows or {}).get(b, 0)), options)
+        b: card_edges(b, cols, flow, _less(problem, reserve_x(arrows or {}, b)), options)
         for b, cols in sorted(by_box.items(), key=lambda kv: natural_key(kv[0]))
     }
     spill = [c for e in edges.values() for c in e.spilled]
-    blocks = [
-        _sized(draft_block(m, edges.get(m.anchor or ""), env), env)
-        for m in members(env, box_of, spill)
-    ]
+    blocks = [_sized(draft_block(m, edges.get(m.anchor or ""), env), env) for m in members(env, box_of, spill)]
     notes = _notes(edges, by_box, blocks, env)
     units = sorted({b.unit for b in blocks}, key=natural_key) or [""]
-    return tuple(
-        _unit_list(u, [b for b in blocks if b.unit == u], notes.get(u, ()), env, spill)
-        for u in units
-    )
+    return tuple(_unit_list(u, [b for b in blocks if b.unit == u], notes.get(u, ()), env, spill) for u in units)
 
 
 def _sized(block: Block, env: Env) -> Block:
@@ -98,9 +96,7 @@ def _unit_of(sym: str, env: Env) -> str:
     return env.syms[sym].unit
 
 
-def _overfull_notes(
-    edges: Mapping[str, CardEdges], by_box: Mapping[str, Sequence[str]], env: Env
-) -> dict[str, tuple[Finding, ...]]:
+def _overfull_notes(edges: Mapping[str, CardEdges], by_box: Mapping[str, Sequence[str]], env: Env) -> dict[str, tuple[Finding, ...]]:
     notes: dict[str, list[Finding]] = defaultdict(list)
     for box, e in edges.items():
         if e.spilled:
@@ -108,9 +104,7 @@ def _overfull_notes(
     return {u: tuple(fs) for u, fs in notes.items()}
 
 
-def _unit_list(
-    unit: str, blocks: Sequence[Block], notes: Sequence[Finding], env: Env, spill: Sequence[str]
-) -> BlockList:
+def _unit_list(unit: str, blocks: Sequence[Block], notes: Sequence[Finding], env: Env, spill: Sequence[str]) -> BlockList:
     """Group order, then symbol rank, then natural key of the anchor or first column, then hints.
 
     The spilled columns stand after the cards and the first starts a page (PAGE-CUT).
@@ -123,9 +117,7 @@ def _unit_list(
     return BlockList(unit, tuple(out), (*notes, *findings))
 
 
-def _tie(
-    block: Block, ranks: Mapping[str, int]
-) -> tuple[int, int, tuple[tuple[int, int | str], ...]]:
+def _tie(block: Block, ranks: Mapping[str, int]) -> tuple[int, int, tuple[tuple[int, int | str], ...]]:
     """A ranked anchor stands by its rank (0388), the rest after them by natural key."""
     anchor = block.anchor or block.columns[0]
     if anchor in ranks:

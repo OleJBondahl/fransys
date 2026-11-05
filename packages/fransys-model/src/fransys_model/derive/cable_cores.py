@@ -11,6 +11,7 @@ from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, SchemaError, dige
 from fransys_model.vocab.enums import ConductorKind
 from fransys_model.vocab.facets.cable import CoreFacet
 from fransys_model.vocab.tables import conductors, facets_of, items
+lazy from fransys_model.vocab.aspects import AspectNode
 lazy from fransys_model.vocab.connectivity import Conductor
 lazy from fransys_model.vocab.core import Item, Unit
 lazy from fransys_model.vocab.facets.cable import CableProductFacet
@@ -19,6 +20,7 @@ from .cable_end_rank import cable_end_owner, cable_end_rank
 from .core_pairs import cable_product
 from .designation import port_designation, printed_designation, unit_list_context
 from .lookups import item_of_port, require
+from .order import port_designation_key
 from .report_scope import _require_unit
 from .rows import CableRow
 from .texts.context import PrintContext
@@ -52,7 +54,7 @@ def _oriented_ends(model: Model, a: Id[Port], b: Id[Port]) -> tuple[Id[Port], Id
     """
     rank_a = cable_end_rank(model, cable_end_owner(model, item_of_port(model, a)))
     rank_b = cable_end_rank(model, cable_end_owner(model, item_of_port(model, b)))
-    return (a, b) if rank_a <= rank_b else (b, a)
+    return (a, b) if (rank_a, port_designation_key(model, a)) <= (rank_b, port_designation_key(model, b)) else (b, a)
 
 
 def _colour_of(product: CableProductFacet | None, index: int) -> str:
@@ -87,9 +89,14 @@ def core_colour(model: Model, conductor: Id[Conductor]) -> str:
     raise SchemaError(msg, kind="conductor", record_id=conductor)
 
 
-def cable_rows(
-    model: Model, cable: Id[Item], *, unit: Id[Unit] | None = None
-) -> tuple[CableRow, ...]:
+def _cable_end(model: Model, unit: Id[Unit] | None, context: Id[AspectNode] | None, port: Id[Port]) -> str:
+    """The printed end of a core at `port`: its designation, or its far-end text in `unit`'s document."""
+    if unit is None:
+        return port_designation(model, port)
+    return end_text(model, port, FAR_END, PrintContext(reading=unit, location=context))
+
+
+def cable_rows(model: Model, cable: Id[Item], *, unit: Id[Unit] | None = None) -> tuple[CableRow, ...]:
     """One `CableRow` per core of `cable`, sorted by `(core.index, conductor id)`.
 
     Cores are the `core`-kind conductors naming `cable` as `carrier`; the colour is `core_colour`'s.
@@ -109,11 +116,6 @@ def cable_rows(
     _require_unit(model, unit)
     context = unit_list_context(model, unit, None)
 
-    def cable_end(port: Id[Port]) -> str:
-        if unit is None:
-            return port_designation(model, port)
-        return end_text(model, port, FAR_END, PrintContext(reading=unit, location=context))
-
     product = cable_product(model, cable)
     rows = []
     for conductor, facet in _cores_by_cable(model).get(cable, ()):
@@ -126,9 +128,9 @@ def cable_rows(
                 colour=_colour_of(product, facet.index),
                 conductor=conductor.id,
                 end_a=end_a,
-                end_a_designation=cable_end(end_a),
+                end_a_designation=_cable_end(model, unit, context, end_a),
                 end_b=end_b,
-                end_b_designation=cable_end(end_b),
+                end_b_designation=_cable_end(model, unit, context, end_b),
             )
         )
     return tuple(sorted(rows, key=lambda row: (row.index, row.conductor)))

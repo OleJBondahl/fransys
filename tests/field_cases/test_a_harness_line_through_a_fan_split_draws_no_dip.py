@@ -1,17 +1,6 @@
 """Field case: a harness line that runs on through a fan-out's split draws no dip.
-
-The engineering shape: a cabinet unit holds two relays `K1` and `K2`, a part-less strip `X90`
-supplied by others, and a 4-core cable `W1` whose two cores leave `X90:2` and `X90:3` for the two
-coils. The cable's end at `X90` holds pins in two rows, so its line runs through the first row's
-split on to the second row's.
-
-The bug: the line was routed to the first row's split arriving along that row's facing, then run
-on sideways, so it dipped one grid below the split row and came back up to it: down, across, up,
-on. Nothing in the path turned back, so the unspike pass left it.
-
-Rule (layout-0154, 0158): a line through a fan's split meets it along the row it runs on.
-Fixed by W13-DIP: a joint end whose line runs on is met from behind that run, not from its facing.
-"""
+The bug: the line met the first row's split along that row's facing, then ran sideways, dipping one grid below and back.
+Fixed by layout-0154, 0158 and W13-DIP: a joint end whose line runs on is met from behind that run, not from its facing."""
 
 import tempfile
 from itertools import pairwise
@@ -20,6 +9,7 @@ from typing import Any, NamedTuple
 
 import fransys as fr
 from _drawn_pages import drawn_pages
+from fransys.colours import BU
 
 
 class _Open(NamedTuple):
@@ -34,6 +24,7 @@ def _ext(u: Any) -> _Open:
     cable = u.cable("W1", "DEMO-CBL-4G1.5", length_m=2)
     cable.core(1, x90[2].outer, k1.coil["A2"])
     cable.core(2, x90[3].outer, k2.coil["A1"])
+    u.series(k1.coil["A1"], k2.coil["A2"], wire=(BU, 0.5))
     return _Open()
 
 
@@ -43,9 +34,7 @@ def _model() -> Any:
     d = fr.design("demo_parts")
     d.location("CAB", "Cabinet")
     d.add(_ext, "U1", place="CAB")
-    schematic = fr.document(
-        fr.DocumentPreset.CABINET_SCHEMATIC, "demo-ext", cover=root / "cover.md"
-    )
+    schematic = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, "demo-ext", cover=root / "cover.md")
     return fr.build(d, schematic).model
 
 

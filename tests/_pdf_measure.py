@@ -2,14 +2,6 @@
 
 Test-only (pypdfium2 is a dev dependency). Reads a PDF's bytes; touches no file.
 - `capital_boxes`: each H, E or K that pdfium finds, with its capital height in mm measured
-  twice: the char box pdfium composes through every matrix, and the dark pixels of a crop of
-  the page around the char. The box runs about 1.5 % tall (pdfium pads the glyph box), so the
-  tests read the ink; the box stays in the report as the A1 "character box".
-- `text_objects`: every text object of every page, its capital height in mm from its font size
-  times `CAPITAL_RATIO`, scaled by every matrix down to it (A1, E-amended).
-- `stroke_widths`: every stroked path's width in mm, composed through every matrix of its
-  form-XObject chain.
-- `font_names`: the font each character is set in.
 """
 
 from __future__ import annotations
@@ -56,7 +48,8 @@ def _font_name(textpage: pdfium.PdfTextPage, index: int) -> str:
     buffer = (ctypes.c_char * 256)()
     flags = ctypes.c_int()
     raw.FPDFText_GetFontInfo(textpage, index, buffer, 256, flags)
-    return buffer.value.decode("latin-1")
+    name: str = str(buffer.value.decode("latin-1"))
+    return name
 
 
 def _ink_height_mm(page: pdfium.PdfPage, box: tuple[float, float, float, float]) -> float:
@@ -69,11 +62,7 @@ def _ink_height_mm(page: pdfium.PdfPage, box: tuple[float, float, float, float])
         max(0.0, height - top - _PAD_PT),
     )
     bitmap = page.render(scale=_SCALE, crop=crop, grayscale=True)
-    rows = [
-        y
-        for y in range(bitmap.height)
-        if any(bitmap.buffer[y * bitmap.stride + x] < 128 for x in range(bitmap.width))
-    ]
+    rows = [y for y in range(bitmap.height) if any(bitmap.buffer[y * bitmap.stride + x] < 128 for x in range(bitmap.width))]
     assert rows, "no ink inside a char box"
     assert rows[0] > 0, "ink touches the crop top"
     assert rows[-1] < bitmap.height - 1, "ink touches the crop bottom"
@@ -169,7 +158,7 @@ def _text_scale(obj: PdfObject) -> tuple[float, bool]:
     while isinstance(node, PdfObject):
         matrix = node.get_matrix()
         scale *= math.hypot(matrix.c, matrix.d)
-        turned = turned or abs(matrix.b) > 1e-6 or abs(matrix.c) > 1e-6
+        turned = bool(turned or abs(matrix.b) > 1e-6 or abs(matrix.c) > 1e-6)
         node = node.parent
     return scale, turned
 

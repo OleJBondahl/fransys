@@ -23,9 +23,7 @@ def _held(end: object) -> FixedTerminals | None:
     """`end` as fixed terminals (`x8[1:3]`, one terminal, a tuple of terminals), else `None`."""
     if isinstance(end, FixedTerminals):
         return end
-    if isinstance(end, Terminal) or (
-        isinstance(end, tuple) and end and all(isinstance(t, Terminal) for t in end)
-    ):
+    if isinstance(end, Terminal) or (isinstance(end, tuple) and end and all(isinstance(t, Terminal) for t in end)):
         return fixed(end)
     return None
 
@@ -39,16 +37,14 @@ def _pins(design: Design, end: object) -> tuple[Port, ...]:
         return tuple(e.port for e in pin_tuple(pins)._series_ends(design, None).load)
     if (held := _held(end)) is not None:
         return tuple(e.port for e in held._series_ends(design, None).load)
-    msg = (
-        f"d.pair takes terminals, a function or pins at each end, not {type(end).__name__}: {_HOW}"
-    )
+    msg = f"d.pair takes terminals, a function or pins at each end, not {type(end).__name__}: {_HOW}"
     raise AuthorError(msg)
 
 
 class Pairs:
     """The `pair` call of `Design`."""
 
-    def pair(self: "Design", a: object, cable: Cable, b: object) -> None:  # noqa: UP037 -- Design imports this module: unquoted, inspect.signature raises NameError
+    def pair(self: "Design", a: object, cable: Cable, b: object) -> None:  # noqa: UP037 -- Design imports this module: unquoted, inspect.signature raises NameError [decisions 0111, 0414]
         """Join `a` to `b` through `cable`, pin for pin: core i joins `a`'s pin i to `b`'s pin i.
 
         An end is terminals (`x8[1:3]`), a function (`b1.sig`) or pins (`b1.sig.pins[:2]`).

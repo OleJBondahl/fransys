@@ -1,13 +1,6 @@
-"""Field case: no block-diagram line runs through another line's label.
-
-The engineering shape: six connector devices, P1 to P6, joined by eight cables of one core each
-(P6-P2, P1-P2, P2-P3, P3-P6, P2-P4, P3-P5, P5-P1, P1-P5). The system block diagram draws a line
-per cable with its designation printed above the line's longest horizontal run.
-
-The bug: a label was placed with no clearance test, so a perpendicular run of another cable's
-line passed through it. Fixed by decision layout-0199 (LEGACY-B3 L12): the label moves clear of
-every line, and `lint/diagram.py` reports DIAGRAM_LABEL_STRUCK should one remain.
-"""
+"""Field case: eight one-core cables between six connector devices, each drawn as a labelled block-diagram line.
+The bug: a label was placed with no clearance test, so a perpendicular run of another cable's line passed through it.
+Fixed by layout-0199 (LEGACY-B3 L12), the label moves clear of every line; lint/diagram.py reports DIAGRAM_LABEL_STRUCK if one remains."""
 
 import tempfile
 from functools import cache
@@ -15,7 +8,8 @@ from pathlib import Path
 
 import fransys as fr
 
-from fransys_model.layout import DiagramLine, layout_of
+from electrical_symbols import LIBRARY
+from fransys_layout import DiagramLine, lay_out_diagrams
 
 _EDGES = ((6, 2), (1, 2), (2, 3), (3, 6), (2, 4), (3, 5), (5, 1), (1, 5))
 _HALF_WIDTH = 8  # a label "-W1" is 15 units wide at the house text: this is a little over half
@@ -32,7 +26,8 @@ def _lines() -> tuple[DiagramLine, ...]:
         for k, (a, b) in enumerate(_EDGES, start=1):
             d.cable(f"W{k}", "DEMO-CBL-4G1.5", length_m=2).core(1, devices[a][1], devices[b][1])
         result = fr.build(d, fr.document(fr.DocumentPreset.SYSTEM, None, cover=cover))
-    return tuple(layout_of(result.model, DiagramLine).values())
+    diagrams, _ = lay_out_diagrams(result.model, LIBRARY)
+    return tuple(line for d in diagrams.diagrams for sheet in d.sheets for line in sheet.lines)
 
 
 def _strikes(label: DiagramLine, line: DiagramLine) -> bool:
@@ -49,6 +44,4 @@ def _strikes(label: DiagramLine, line: DiagramLine) -> bool:
 def test_no_line_runs_through_a_label() -> None:
     lines = _lines()
     assert len(lines) == len(_EDGES)
-    assert [
-        (one.cable, other.cable) for one in lines for other in lines if _strikes(one, other)
-    ] == []
+    assert [(one.cable, other.cable) for one in lines for other in lines if _strikes(one, other)] == []

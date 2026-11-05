@@ -4,15 +4,14 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 
 import pytest
+from author_catalogue import _ORIGIN, _library, _part
 from fransys_author import AuthorError
 from fransys_author.surface import design
+from series_parts import core_ends, pair_library
+from test_does_not_lines import has_does_not
 
 from fransys_model.kernel import make_id
-from fransys_model.vocab import CableProductFacet, Conductor, ConductorKind, CoreFacet, PartCategory
-
-from ..conftest import _ORIGIN, _library, _part  # noqa: TID252 -- importlib mode puts tests/ on no path
-from ..equivalence.series_parts import pair_library  # noqa: TID252 -- importlib mode puts tests/ on no path
-from .test_does_not_lines import has_does_not
+from fransys_model.vocab import CableProductFacet, PartCategory
 
 if TYPE_CHECKING:
     from fransys_author.surface import Design
@@ -20,16 +19,6 @@ if TYPE_CHECKING:
     from fransys_model.kernel import Draft
 
 STRIP, CABLE, CABLE_PE, SENSOR = "DEMO-TB-2.5", "DEMO-CBL-3X0.34", "TEST-CBL-4", "DEMO-SENSOR-2W"
-
-
-def _cores(d: Design) -> dict[int, frozenset[Any]]:
-    records = d.draft().records()
-    facets = {r.subject: r.index for r in records if isinstance(r, CoreFacet)}
-    return {
-        facets[r.id]: frozenset((r.a, r.b))
-        for r in records
-        if isinstance(r, Conductor) and r.kind is ConductorKind.CORE
-    }
 
 
 def _parts() -> tuple[Design, Any, Any, Any]:
@@ -41,7 +30,7 @@ def test_core_i_joins_pin_i_to_pin_i() -> None:
     d, x8, w3, b1 = _parts()
     d.pair(x8[1:3], w3, b1.sig)
     pins = b1.sig.pins
-    assert _cores(d) == {
+    assert core_ends(d) == {
         1: frozenset((x8[1].outer.id, pins[0].id)),
         2: frozenset((x8[2].outer.id, pins[1].id)),
     }
@@ -50,14 +39,14 @@ def test_core_i_joins_pin_i_to_pin_i() -> None:
 def test_a_tuple_of_terminals_is_an_end() -> None:
     d, x8, w3, b1 = _parts()
     d.pair((x8[1], x8[3]), w3, b1.sig)
-    assert len(_cores(d)) == 2
+    assert len(core_ends(d)) == 2
 
 
 def test_the_gnye_core_is_left_spare_with_no_pe_end() -> None:
     d = design(pair_library(), place="C1")
     x8, b1 = d.terminal_strip("X8", STRIP), d.device("B1", SENSOR)
     d.pair(x8[1:3], d.cable("W3", CABLE_PE), b1.sig)
-    assert sorted(_cores(d)) == [1, 2]
+    assert sorted(core_ends(d)) == [1, 2]
 
 
 def test_a_middle_that_is_not_a_cable_raises() -> None:

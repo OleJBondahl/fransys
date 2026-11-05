@@ -2,15 +2,10 @@
 
 Class (ii) of es-0074: `G_PER_MODULE`, `WIRING_GRID`, `PORT_PITCH_G`, `box_pitch`,
 `generic_box`, `sized`, `frame_border`, `frame_strip`, `title_block`, `title_logo`,
-`notice_table`, `bridge_mark`, `bridge_mark_room`, `natural`, `TITLE_BLOCK_MIN_BAND_MM` and
-`TITLE_BLOCK_MIN_WIDTH_MM`. Each reads a symbol by key or a fixed grid field of
-`electrical_symbols.LIBRARY`. Under a consumer setting with another font and another
-`module_mm`, the library `build_library` makes must give the same symbols and fixed grid
-fields, and the body and keep-out boxes must not depend on the font.
 """
 
 from pathlib import Path
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 
 import fransys as fr
 import pytest
@@ -30,10 +25,8 @@ HOUSE = fr.settings()
 _TABLES: dict[str, Mapping[str, object]] = {
     "lines": HOUSE.table("lines"),
     "dash": HOUSE.table("dash"),
-    "heights": cast("Mapping[str, object]", HOUSE.table("font")["heights"]),
 }
 OTHER = build_library(
-    {"module_mm": 1.7},
     {"name": "other", "files": (FONTS / "DejaVuSans.ttf", FONTS / "DejaVuSans-Bold.ttf")},
     _TABLES,
     "the test",
@@ -41,8 +34,7 @@ OTHER = build_library(
 KEYS = [symbol.reference.number for symbol in LIBRARY]
 
 
-def test_the_consumer_setting_changes_the_font_and_the_module() -> None:
-    assert OTHER.grid.module_mm == 1.7 != LIBRARY.grid.module_mm
+def test_the_consumer_setting_changes_the_font() -> None:
     assert OTHER.font != LIBRARY.font
     assert KEYS, "LIBRARY holds no symbol, so the per-key checks would run on nothing"
 

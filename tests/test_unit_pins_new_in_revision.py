@@ -1,10 +1,6 @@
-"""Floating tags hold after release; a new floating one warns.
+"""Tags hold after release; a new floating relay warns.
 
-A cabinet unit holds floating relays and board instances (floating tags need a release
-`class_code`, which `_cabinet` gives each release). Revision 1 is released; revision 2 builds
-against it (`releases=`) or releases directly.
-One cabinet and one board release serve every test: released once, copied per test.
-The cabinet is built per call, never shared.
+A cabinet unit holds floating relays and tagged board instances. Revision 1 is released; revision 2 builds
 """
 
 import json
@@ -12,27 +8,25 @@ import shutil
 lazy from pathlib import Path
 
 import fransys as fr
-import fransys_author
 import pytest
+from fransys_author.design import Design
 
 _CODE = "DESIGNATION_NEW_IN_REVISION"
 _DATE = "2026-10-05"
 
 
 def _cabinet(revision, *, relays=("k_a", "k_b"), boards=("m1", "m2"), written=None, releases=None):
-    """The cabinet at `revision`: floating relays and boards, but those named in `written`."""
+    """The cabinet at `revision`: floating relays, boards tagged U1, U2, ..., and those named in `written` retagged."""
     tags = written or {}
     parts = fr.parts("demo_parts")
-    design = fransys_author.Design(parts)
-    cab = design.scope("cab").unit("pins-cabinet", revision=revision, interface="1", class_code="U")
+    design = Design(parts)
+    cab = design.scope("cab").unit("pins-cabinet", revision=revision, interface="1", tag="U1")
     cab.revision(revision, date=_DATE, text=f"Revision {revision}", created="OJB")
     for name in relays:
         cab.item("DEMO-RLY-2CO-24", name=name, tag=tags.get(name))
     board = None
-    for name in boards:
-        board = cab.scope(name).unit(
-            "pins-board", revision=1, interface="1", tag=tags.get(name), class_code="U"
-        )
+    for n, name in enumerate(boards, 1):
+        board = cab.scope(name).unit("pins-board", revision=1, interface="1", tag=tags.get(name, f"U{n}"))
         board.revision(1, date=_DATE, text="First", created="OJB")
         board.item("DEMO-PCB-IO", name="pcb")
     return fr.build(parts, design.draft(), releases=releases), cab, board
@@ -91,21 +85,6 @@ def test_a_new_floating_relay_warns_and_takes_the_next_number_after_a_retired_on
     }
 
 
-def test_a_new_floating_instance_warns_and_takes_the_next_number_after_a_retired_one(
-    released: Path,
-) -> None:
-    result, cab, _ = _cabinet(2, boards=("m0", "m2"), releases=released)
-    (warning,) = _warnings(result)
-    assert "unit -U3" in warning.message
-    assert "U3" in warning.message
-    assert _texts(fr.release(result, released, unit=cab)) == {
-        "k_a": "K1",
-        "k_b": "K2",
-        "m0": "U3",
-        "m2": "U2",
-    }
-
-
 def test_a_new_item_with_a_written_tag_gives_no_warning(released: Path) -> None:
     written = {"k_n": "K7", "m3": "U8"}
     result, _, _ = _cabinet(
@@ -140,28 +119,16 @@ def test_the_release_after_a_pinned_build_lists_no_manifest_warning(released: Pa
     assert [w["code"] for w in manifest["warnings"]].count(_CODE) == 0
 
 
-def test_a_floating_number_that_moved_without_the_pins_is_designation_moved(
-    released: Path,
-) -> None:
-    """Built free, dropping `m1`, `m2` becomes U1: the released U2 moved."""
-    result, cab, _ = _cabinet(2, boards=("m2",))
-    with pytest.raises(fr.BuildErrors) as raised:
-        fr.release(result, released, unit=cab)
-    (moved,) = [f for f in raised.value.findings if f.code == "DESIGNATION_MOVED"]
-    assert "m2" not in moved.message
-    assert moved.message.startswith("unit -U")
-
-
 def test_retagging_a_released_item_is_designation_moved(released: Path) -> None:
     result, cab, _ = _cabinet(2, written={"k_a": "K9"}, releases=released)
-    with pytest.raises(fr.BuildErrors) as raised:
+    with pytest.raises(fr.BuildFailedError) as raised:
         fr.release(result, released, unit=cab)
     assert "DESIGNATION_MOVED" in {f.code for f in raised.value.findings}
 
 
 def test_retagging_a_released_instance_is_designation_moved(released: Path) -> None:
     result, cab, _ = _cabinet(2, written={"m1": "U9"}, releases=released)
-    with pytest.raises(fr.BuildErrors) as raised:
+    with pytest.raises(fr.BuildFailedError) as raised:
         fr.release(result, released, unit=cab)
     (moved,) = [f for f in raised.value.findings if f.code == "DESIGNATION_MOVED"]
     assert "m1" not in moved.message

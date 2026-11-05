@@ -4,17 +4,12 @@ The system level is the block diagram's rows, and no designation inside an opene
 that unit's own tag.
 """
 
-import sys
-from pathlib import Path
 from typing import Any
 
 import fransys as fr
 import fransys_parts
 import pytest
 from _model_build_cover import system_document
-
-# `--import-mode=importlib` (root pyproject.toml) never puts `tests/` on `sys.path`.
-sys.path.insert(0, str(Path(__file__).resolve().parent))
 from test_units_worked_example import _system_design
 
 from fransys_model.derive import (
@@ -66,9 +61,7 @@ def test_no_designation_inside_an_opened_unit_starts_with_that_units_tag(model) 
 def test_each_cable_line_ends_on_the_tab_the_block_diagram_draws(model) -> None:
     """A12-style tab check: every system line has its `LineTab`, and each tab is on its box."""
     level = overview_level(model, None)
-    rows: dict[tuple[Any, ...], Any] = {
-        (row.a, row.b, row.cable): row for row in diagram_lines(model, None)
-    }
+    rows: dict[tuple[Any, ...], Any] = {(row.a, row.b, row.cable): row for row in diagram_lines(model, None)}
     tabs = line_tabs(model, None)
     boxes = {b.box: b for b in level.boxes}
     assert {line.ref for line in level.lines} == {t.ref for t in tabs}

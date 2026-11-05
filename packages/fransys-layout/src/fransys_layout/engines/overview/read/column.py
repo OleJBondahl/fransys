@@ -32,9 +32,6 @@ def open_column(
         return (), ()
     boxes, lines = specs
     drawn = {b.box for b in boxes}
-    terminals = (
-        box_ident(BoxKey(ref=OverviewRef(kind=OverviewRefKind.ITEM, item=t.item)))
-        for t in strip_view(model, open_.item, unit).terminals
-    )
+    terminals = (box_ident(BoxKey(ref=OverviewRef(kind=OverviewRefKind.ITEM, item=t.item))) for t in strip_view(model, open_.item, unit).terminals)
     column = tuple(b for b in terminals if b in drawn)
     return column, _left(lines, frozenset(column))

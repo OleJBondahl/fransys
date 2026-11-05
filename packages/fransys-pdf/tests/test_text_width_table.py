@@ -1,4 +1,4 @@
-"""The derive width table equals the TTFs' `hmtx` advances, every code point, both weights."""
+"""The library font table equals the TTFs' `hmtx` advances, every code point, both weights."""
 
 from decimal import Decimal
 from pathlib import Path
@@ -6,15 +6,14 @@ from typing import Any, cast
 
 import pytest
 from fontTools.ttLib import TTFont
+from symdef import Weight, text_width
 
 import electrical_symbols
 from electrical_symbols import LIBRARY
-from fransys_model.derive import _text_widths as table
-from fransys_model.derive.text_width import text_units
 
 FONTS = Path(electrical_symbols.__file__).parent / "fonts"
 FILES = {"Regular": "DejaVuSansCondensed.ttf", "Bold": "DejaVuSansCondensed-Bold.ttf"}
-WEIGHTS = {"Regular": table.REGULAR_PAIRS, "Bold": table.BOLD_PAIRS}
+WEIGHTS = {"Regular": Weight.NORMAL, "Bold": Weight.THICK}
 
 
 @pytest.mark.parametrize("weight", WEIGHTS)
@@ -22,11 +21,13 @@ def test_table_matches_font(weight):
     font = TTFont(FONTS / FILES[weight])
     cmap: Any = font.getBestCmap()
     hmtx: Any = font["hmtx"]
-    assert cast("Any", font["head"]).unitsPerEm == table.UNITS_PER_EM
-    pairs = [pair.split("=") for pair in WEIGHTS[weight].split()]
-    assert len(pairs) > 190
-    for code, advance in pairs:
-        assert hmtx[cmap[int(code, 16)]][0] == int(advance), (weight, code)
+    spec = LIBRARY.font
+    assert spec is not None
+    assert cast("Any", font["head"]).unitsPerEm == spec.units_per_em
+    table = spec.advances[WEIGHTS[weight]]
+    assert len(table) > 190
+    for char, advance in table.items():
+        assert hmtx[cmap[ord(char)]][0] == advance, (weight, char)
 
 
 @pytest.mark.parametrize("weight", WEIGHTS)
@@ -34,10 +35,12 @@ def test_norwegian_letters_are_measured_with_the_ttf_width(weight):
     font = TTFont(FONTS / FILES[weight])
     cmap: Any = font.getBestCmap()
     hmtx: Any = font["hmtx"]
-    in_table = {int(pair.split("=")[0], 16) for pair in WEIGHTS[weight].split()}
+    spec = LIBRARY.font
+    assert spec is not None
     for letter in "ÆØÅæøå":
-        assert ord(letter) in in_table, (weight, letter)  # a table entry, not the widest fallback
-        assert text_units(letter, bold=weight == "Bold") == hmtx[cmap[ord(letter)]][0], letter
+        assert letter in spec.advances[WEIGHTS[weight]], (weight, letter)  # not the fallback
+        units = text_width(spec, letter, spec.units_per_em, WEIGHTS[weight])
+        assert units == hmtx[cmap[ord(letter)]][0], letter
 
 
 def test_capital_ratio_and_ascent_equal_the_regular_ttf():
@@ -51,12 +54,8 @@ def test_capital_ratio_and_ascent_equal_the_regular_ttf():
     cmap: Any = font.getBestCmap()
     glyf: Any = font["glyf"]
     units = cast("Any", font["head"]).unitsPerEm
-    assert Decimal(glyf[cmap[ord("H")]].yMax) / units == Decimal(spec.cap_height) / Decimal(
-        spec.units_per_em
-    )
-    assert Decimal(cast("Any", font["OS/2"]).sTypoAscender) / units == Decimal(
-        spec.ascent
-    ) / Decimal(spec.units_per_em)
+    assert Decimal(glyf[cmap[ord("H")]].yMax) / units == Decimal(spec.cap_height) / Decimal(spec.units_per_em)
+    assert Decimal(cast("Any", font["OS/2"]).sTypoAscender) / units == Decimal(spec.ascent) / Decimal(spec.units_per_em)
 
 
 def test_descent_ratio_equals_the_regular_ttf():
@@ -67,6 +66,4 @@ def test_descent_ratio_equals_the_regular_ttf():
     cmap: Any = font.getBestCmap()
     glyf: Any = font["glyf"]
     units = cast("Any", font["head"]).unitsPerEm
-    assert Decimal(-glyf[cmap[ord("p")]].yMin) / units == Decimal(spec.descent) / Decimal(
-        spec.units_per_em
-    )
+    assert Decimal(-glyf[cmap[ord("p")]].yMin) / units == Decimal(spec.descent) / Decimal(spec.units_per_em)

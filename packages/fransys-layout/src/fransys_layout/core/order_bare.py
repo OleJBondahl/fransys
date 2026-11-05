@@ -18,7 +18,7 @@ from .keys import natural_key
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    from .values import Block, BlockList, FlowGraph
+    from .flow_values import Block, BlockList, FlowGraph
 
 
 def is_bare(block: Block) -> bool:

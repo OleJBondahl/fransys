@@ -1,41 +1,33 @@
 """EL-5 template facts: one function per rule of `derive/facts/part.py`, each planted.
 
 Every part is invented. Can-fail probe: swap two pins in `poles_of_template` and the pairing,
-changeover and breaker tests fail; drop the parity branch of `pole_side` and the side tests fail.
+changeover and breaker tests fail; drop the parity branch of `pin_side` and the side tests fail.
 """
 
 import itertools
-from decimal import Decimal
 
 import pytest
 from examples import relay_part_bundle
 
 from fransys_model.derive import (
+    THROW_WORDS,
     channel_signal,
     conductor_of,
     contact_kind_of,
     implied_rest,
     is_contact_kind,
+    pin_side,
     pole_count,
     pole_pin_names,
-    pole_side,
     poles_of_template,
-    throws_of,
+    template_throws,
 )
 from fransys_model.derive.facts.part_poles import unlinked_poles
-from fransys_model.kernel import Id
-from fransys_model.vocab import CONDUCTOR_MARKS, THROWS, effective_rating
-from fransys_model.vocab.enums import (
-    ConductorMark,
-    FunctionKind,
-    LinkKind,
-    PoleSide,
-    PortRole,
-    SignalType,
-)
+from fransys_model.elecdef import LinkKind, PinRole, Side
+from fransys_model.kernel import Id, ModelError
+from fransys_model.vocab import CONDUCTOR_MARKS
+from fransys_model.vocab.enums import ConductorMark, FunctionKind, PortBoundary, SignalType
 from fransys_model.vocab.facets import PlcChannelFacet
-from fransys_model.vocab.ratings import Rating
-from fransys_model.vocab.roles_types import complete
 from fransys_model.vocab.templates import InternalLink, PortTemplate
 lazy from fransys_model.vocab.markings import Pole
 
@@ -46,8 +38,8 @@ _FUNCTION = Id(kind="function_template", value="1" * 32)
 def _pin(
     name: str,
     *,
-    role: PortRole = PortRole.GENERIC,
-    side: PoleSide | None = None,
+    role: PortBoundary | PinRole = PortBoundary.GENERIC,
+    side: Side | None = None,
     mark: ConductorMark | None = None,
 ) -> PortTemplate:
     return PortTemplate(
@@ -55,9 +47,10 @@ def _pin(
         key=("t", "fn", "port", name),
         function=_FUNCTION,
         name=name,
-        role=role,
+        boundary=role if isinstance(role, PortBoundary) else PortBoundary.GENERIC,
+        pin_role=role if isinstance(role, PinRole) else None,
         marking=name,
-        pole_side=side,
+        side=side,
         conductor_mark=mark,
     )
 
@@ -91,15 +84,13 @@ def test_three_pins_and_no_pole_link_pair_the_first_two_and_keep_the_third() -> 
 
 def test_the_fallback_leaves_an_earth_pin_out() -> None:
     """A PE pin is no pole pin: pins 1, 2 and a PE pin give one pole."""
-    pins = [_pin("1"), _pin("2"), _pin("PE", role=PortRole.PE)]
+    pins = [_pin("1"), _pin("2"), _pin("PE", role=PinRole.PE)]
     assert _names(poles_of_template(FunctionKind.GENERIC, pins, [])) == [("1", "2")]
 
 
 def test_a_two_pole_breaker_gives_its_links_in_marking_order() -> None:
     """Links 3-4 then 1-2 give poles 1/2 and 3/4, line side first by the stated sides."""
-    p1, p2, p3, p4 = (
-        _pin(n, side=s) for n, s in zip("1234", [PoleSide.LINE, PoleSide.LOAD] * 2, strict=True)
-    )
+    p1, p2, p3, p4 = (_pin(n, side=s) for n, s in zip("1234", [Side.A, Side.B] * 2, strict=True))
     links = [_link(p3, p4), _link(p1, p2)]
     poles = poles_of_template(FunctionKind.PROTECTION, [p4, p3, p2, p1], links)
     assert _names(poles) == [("1", "2"), ("3", "4")]
@@ -109,21 +100,53 @@ def test_a_two_pole_breaker_gives_its_links_in_marking_order() -> None:
 
 def test_a_changeover_is_one_pole_by_count_and_two_links_by_poles() -> None:
     """`11-12` and `11-14` share `11`: two switched links, one connected pole."""
-    c, b, m = (
-        _pin(n, role=r)
-        for n, r in [("11", PortRole.COMMON), ("12", PortRole.BREAK), ("14", PortRole.MAKE)]
-    )
+    c, b, m = (_pin(n, role=r) for n, r in [("11", PinRole.COMMON), ("12", PinRole.BREAK), ("14", PinRole.MAKE)])
     links = [_link(c, b), _link(c, m)]
     poles = poles_of_template(FunctionKind.CONTACT_CO, [c, b, m], links)
     assert len(poles) == 2
     assert pole_count(poles) == 1
-    pins = {t.id: t for t in (c, b, m)}
-    throws = throws_of(links, pins)
-    assert [(pins[t.common].name, t.role, pins[t.throw].name) for t in throws] == [
-        ("11", PortRole.BREAK, "12"),
-        ("11", PortRole.MAKE, "14"),
-    ]
-    assert [t.closed_at_rest for t in throws] == [True, False]
+
+
+def _throw_names(*ends: tuple[str, PinRole], linked: list[tuple[int, int]]) -> list[tuple[str, str, bool]]:
+    """The throws of pins named by `ends` joined by the switched `linked` index pairs, as (common, throw, rest)."""
+    made = [_pin(name, role=role) for name, role in ends]
+    names = {t.id: t.name for t in made}
+    found = template_throws({t.id: t for t in made}, [_link(made[i], made[j]) for i, j in linked])
+    return [(names[common], names[throw], rest) for common, throw, rest in found]
+
+
+# R1077: a changeover's COMMON closes to its BREAK at rest and to its MAKE when operated.
+CHANGEOVER = (("11", PinRole.COMMON), ("12", PinRole.BREAK), ("14", PinRole.MAKE))
+THROW_CASES = {
+    "three pins": (CHANGEOVER, [(0, 1), (0, 2)], [("11", "12", True), ("11", "14", False)]),
+    "link ends reversed": (CHANGEOVER, [(2, 0), (1, 0)], [("11", "12", True), ("11", "14", False)]),
+    "marking order, not link order": (
+        (*CHANGEOVER, ("21", PinRole.COMMON), ("22", PinRole.BREAK)),
+        [(3, 4), (0, 2), (0, 1)],
+        [("11", "12", True), ("11", "14", False), ("21", "22", True)],
+    ),
+    "no common": (CHANGEOVER, [(1, 2)], []),
+}
+
+
+@pytest.mark.parametrize(("ends", "linked", "expected"), THROW_CASES.values(), ids=THROW_CASES)
+def test_throws_follow_r1077(ends, linked, expected) -> None:
+    """Each case is data: the throws, in marking order, with the state at rest of each."""
+    assert _throw_names(*ends, linked=linked) == expected
+
+
+def test_a_protective_link_makes_no_throw() -> None:
+    """Only a switched link makes a throw."""
+    made = [_pin(n, role=r) for n, r in CHANGEOVER]
+    link = _link(made[0], made[1], LinkKind.PROTECTIVE)
+    assert template_throws({t.id: t for t in made}, [link]) == ()
+
+
+def test_two_pins_of_a_switched_link_with_one_marking_are_refused() -> None:
+    """A silent drop would hide a pin: the function and the marking are named."""
+    made = [_pin("11", role=PinRole.COMMON), _pin("12", role=PinRole.BREAK), _pin("12", role=PinRole.MAKE)]
+    with pytest.raises(ModelError, match="'12'"):
+        template_throws({t.id: t for t in made}, [_link(made[0], made[1]), _link(made[0], made[2])])
 
 
 def test_sideless_gives_no_pairs_from_the_fallback() -> None:
@@ -137,7 +160,7 @@ def test_sideless_keeps_a_lone_pin_and_a_line_load_pair() -> None:
     """The old author rule: one pin is a pole; two pins with a line side are that pole."""
     lone = [_pin("x")]
     assert _names(poles_of_template(FunctionKind.GENERIC, lone, [], sideless=True)) == [("x", "x")]
-    pair = [_pin("b"), _pin("a", side=PoleSide.LINE)]
+    pair = [_pin("b"), _pin("a", side=Side.A)]
     (pole,) = poles_of_template(FunctionKind.GENERIC, pair, [], sideless=True)
     assert (pole.ends[0].name, pole.ends[1].name) == ("a", "b")
     assert pole.line is pole.ends[0]
@@ -162,18 +185,16 @@ def test_marked_pins_of_a_load_are_one_pin_poles() -> None:
     assert _names(poles) == [("U", "U"), ("V", "V"), ("W", "W")]
 
 
-def test_pole_side_stated_wins_then_parity_then_coil() -> None:
+def test_pin_side_stated_wins_then_parity_then_coil() -> None:
     """A stated side wins; a numeric marking on a pole pin is line when odd, load when even."""
     on_pole = {"1", "2", "x"}
-    assert pole_side(_pin("1"), FunctionKind.CONTACT_NO, on_pole) is PoleSide.LINE
-    assert pole_side(_pin("2"), FunctionKind.CONTACT_NO, on_pole) is PoleSide.LOAD
-    assert (
-        pole_side(_pin("2", side=PoleSide.LINE), FunctionKind.CONTACT_NO, on_pole) is PoleSide.LINE
-    )
-    assert pole_side(_pin("3"), FunctionKind.CONTACT_NO, on_pole) is None
-    assert pole_side(_pin("x"), FunctionKind.CONTACT_NO, on_pole) is None
-    assert pole_side(_pin("A1"), FunctionKind.COIL, set()) is PoleSide.LINE
-    assert pole_side(_pin("A2"), FunctionKind.COIL, set()) is PoleSide.LOAD
+    assert pin_side(_pin("1"), FunctionKind.CONTACT_NO, on_pole) is Side.A
+    assert pin_side(_pin("2"), FunctionKind.CONTACT_NO, on_pole) is Side.B
+    assert pin_side(_pin("2", side=Side.A), FunctionKind.CONTACT_NO, on_pole) is Side.A
+    assert pin_side(_pin("3"), FunctionKind.CONTACT_NO, on_pole) is None
+    assert pin_side(_pin("x"), FunctionKind.CONTACT_NO, on_pole) is None
+    assert pin_side(_pin("A1"), FunctionKind.COIL, set()) is Side.A
+    assert pin_side(_pin("A2"), FunctionKind.COIL, set()) is Side.B
 
 
 def test_contact_kind_of_names_the_plain_contacts() -> None:
@@ -185,16 +206,9 @@ def test_contact_kind_of_names_the_plain_contacts() -> None:
     assert contact_kind_of(FunctionKind.COIL) is None
 
 
-def test_the_throw_table_is_complete_and_names_the_throws() -> None:
-    """Every role has a row; BREAK is `nc` closed at rest, MAKE is `no`, COMMON neither."""
-    assert set(THROWS) == set(PortRole)
-    assert (THROWS[PortRole.BREAK].word, THROWS[PortRole.BREAK].closed_at_rest) == ("nc", True)
-    assert (THROWS[PortRole.MAKE].word, THROWS[PortRole.MAKE].closed_at_rest) == ("no", False)
-    assert THROWS[PortRole.COMMON].common
-    assert [r for r in PortRole if THROWS[r].throw] == [PortRole.BREAK, PortRole.MAKE]
-    short = {role: row for role, row in THROWS.items() if role is not PortRole.MAKE}
-    with pytest.raises(RuntimeError, match="MAKE"):
-        complete(short, PortRole)
+def test_the_throw_words_name_the_throws_and_the_changeover() -> None:
+    """BREAK is `nc`, MAKE is `no`, COMMON stands for the changeover's `co`."""
+    assert THROW_WORDS == {PinRole.BREAK: "nc", PinRole.MAKE: "no", PinRole.COMMON: "co"}
 
 
 def test_the_conductor_table_copies_the_parts_markings() -> None:
@@ -203,14 +217,6 @@ def test_the_conductor_table_copies_the_parts_markings() -> None:
     assert CONDUCTOR_MARKS["W1"] is ConductorMark.L3
     assert set(CONDUCTOR_MARKS.values()) == set(ConductorMark)
     assert len(CONDUCTOR_MARKS) == len(ConductorMark) + 8
-
-
-def test_effective_rating_is_the_templates_whole_else_the_parts() -> None:
-    """A template rating replaces the part's whole; none falls back on the part's."""
-    own, part = Rating(voltage_ac_v=Decimal(1)), Rating(voltage_dc_v=Decimal(2))
-    assert effective_rating(own, part) is own
-    assert effective_rating(None, part) is part
-    assert effective_rating(None, None) is None
 
 
 def test_channel_signal_reads_the_facet_or_none() -> None:

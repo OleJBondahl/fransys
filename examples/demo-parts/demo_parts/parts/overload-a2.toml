@@ -1,4 +1,4 @@
-schema = 1
+schema = 2
 
 [part]
 mpn = "DEMO-OVERLOAD-A2"
@@ -12,3 +12,6 @@ name = "a2"
 kind = "terminal"
 symbol = "terminal"
 ports = [{ name = "A2", role = "generic", symbol_port = "n" }]
+
+[connection]
+conductors_per_clamp = 2

@@ -35,9 +35,7 @@ class Channel:
     width: int
 
 
-def _stagger(
-    by: Mapping[tuple[int, Ident], FrameEnd], stage: Mapping[Ident, int]
-) -> dict[tuple[int, Ident], FrameEnd]:
+def _stagger(by: Mapping[tuple[int, Ident], FrameEnd], stage: Mapping[Ident, int]) -> dict[tuple[int, Ident], FrameEnd]:
     """Move a west end down by grid steps off the y of an east end of the stage before it."""
     east = {(stage[box], e.y) for (_, box), e in by.items() if e.side is Facing.E}
     taken: dict[Ident, set[int]] = {}

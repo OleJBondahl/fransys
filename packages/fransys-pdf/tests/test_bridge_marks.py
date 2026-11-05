@@ -2,7 +2,6 @@
 
 pdf draws no line (pdf-0049): each cell holds `image` pieces render drew, with `%` of the row's
 own height for the lane's line and for the tick's centre. This compiles two rows of different
-heights and finds each tick on the page, and checks the cell source holds no `line(`.
 """
 
 import io
@@ -37,21 +36,13 @@ PIECES = {
 
 
 def _cells(groups: tuple[int | None, ...]) -> list[str]:
-    return [
-        bridge_cell_typst(marks, PIECES) for marks in bridge_geometry(groups, jumper_lanes(groups))
-    ]
+    return [bridge_cell_typst(marks, PIECES, 15) for marks in bridge_geometry(groups, jumper_lanes(groups))]
 
 
 def _page(groups: tuple[int | None, ...], texts: list[str]) -> Image.Image:
-    rows = [
-        [f"text({literal(t)})" if "\n" not in t else _stack(t), c]
-        for t, c in zip(texts, _cells(groups), strict=True)
-    ]
+    rows = [[f"text({literal(t)})" if "\n" not in t else _stack(t), c] for t, c in zip(texts, _cells(groups), strict=True)]
     table = table_source(["1fr", "15mm"], ['text("A")', 'text("Bridge")'], rows, rule="0.18mm")
-    head = (
-        '#set text(font: "DejaVu Sans", size: 3mm)\n'
-        "#set page(width: 70mm, height: auto, margin: 5mm)\n"
-    )
+    head = '#set text(font: "DejaVu Sans", size: 3mm)\n#set page(width: 70mm, height: auto, margin: 5mm)\n'
     source = f"{head}{table}\n"
     compiler = typst.Compiler(font_paths=[electrical_symbols.font_dir()], ignore_system_fonts=True)
     png = compiler.compile(input=source.encode(), format="png", ppi=PPI)
@@ -85,9 +76,7 @@ def test_a_tick_is_centred_in_auto_height_rows_of_different_heights() -> None:
         width - int(20 * _MM),
         width - int(5.5 * _MM),
     )  # the Bridge column, inside its borders
-    ticks = [
-        y for y, run in _dark_runs(image, *column) if run >= int(1.5 * _MM) and y not in borders
-    ]
+    ticks = [y for y, run in _dark_runs(image, *column) if run >= int(1.5 * _MM) and y not in borders]
     body = list(pairwise(edges[1:]))
     heights = [bottom - top for top, bottom in body]
     assert heights[1] > heights[0] + 5 * _MM, heights
@@ -107,4 +96,9 @@ def test_the_cell_holds_images_and_no_line_of_its_own() -> None:
 def test_a_jumper_group_without_the_pieces_is_a_named_error() -> None:
     (marks, *_) = bridge_geometry((1, 1), jumper_lanes((1, 1)))
     with pytest.raises(KeyError, match="bridge_pieces"):
-        bridge_cell_typst(marks, None)
+        bridge_cell_typst(marks, None, 15)
+
+
+def test_the_lanes_centre_in_the_bridge_column_the_caller_names() -> None:
+    (marks, *_) = bridge_geometry((1, 1), jumper_lanes((1, 1)))
+    assert bridge_cell_typst(marks, PIECES, 15) != bridge_cell_typst(marks, PIECES, 20)

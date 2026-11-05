@@ -2,7 +2,6 @@
 
 The oracle is the old test, `item_kind(..) is ItemKind.TERMINAL`, read at the three sites:
 `kinds.py` (`terminal_items`), `marker_targets.py` (a terminal first) and `page_nav.py`
-(the outline entry rule, gone with the outline entries).
 """
 
 import fransys as fr
@@ -24,8 +23,8 @@ def model() -> fr.Model:
         strip = d.terminal_strip("X1", "DEMO-TB-2.5", 3)
         cb = d.device("CB", "DEMO-MCB-3P", place="L0")
         cn = d.device("CN", "DEMO-CONN-2P", place="L0")
-        d.detail.wire(cb[1], cn[1], wire=(BU, 0.5))
-        d.detail.wire(cb[2], strip[1], wire=(BU, 0.5))
+        d.series(cb[1], cn[1], wire=(BU, 0.5))
+        d.series(cb[2], strip[1], wire=(BU, 0.5))
     return fr.build(d).model
 
 

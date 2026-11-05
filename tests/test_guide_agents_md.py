@@ -2,7 +2,6 @@
 find the guide. This proves that mechanism actually works: it extracts the exact
 expression `AGENTS.md` gives (a plain, non-`python`-labeled fence) and executes it, rather
 than checking a hand-copied duplicate string against it. A test that only string-matched
-would still pass if the named call could never actually load anything.
 """
 
 import importlib.resources
@@ -16,18 +15,14 @@ _FENCE = re.compile(r"```(\w*)\n(.*?)\n```", re.DOTALL)
 
 
 def _agents_md_text() -> str:
-    return (
-        importlib.resources.files("fransys")
-        .joinpath("guide", "AGENTS.md")
-        .read_text(encoding="utf-8")
-    )
+    return importlib.resources.files("fransys").joinpath("guide", "AGENTS.md").read_text(encoding="utf-8")
 
 
 def _mechanism_expression(text: str) -> str:
     """The one fenced snippet of `text` that is not language-tagged `python` (`AGENTS.md`'s
     mechanism fence is deliberately plain prose, not a runnable python
     block, so it stays out of `test_guide_examples.py`'s block scan)."""
-    fences = [body for lang, body in _FENCE.findall(text) if lang == ""]
+    fences: list[str] = [str(body) for lang, body in _FENCE.findall(text) if lang == ""]
     assert len(fences) == 1, f"expected exactly one plain fence, found {len(fences)}"
     return fences[0].strip()
 
@@ -54,7 +49,8 @@ def test_agents_md_points_at_index_and_part_file_contract():
 
 
 def _route_block(text: str) -> str:
-    (block,) = [body for lang, body in _FENCE.findall(text) if lang == "markdown"]
+    blocks: list[str] = [str(body) for lang, body in _FENCE.findall(text) if lang == "markdown"]
+    (block,) = blocks
     return block
 
 

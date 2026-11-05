@@ -9,8 +9,7 @@ class PinView:
     """One pin of a connector function, drawn as a view of its own.
 
     `gender`: the connector facet's, `""` without one. `mate`: the equal-named pin of the mated
-    connector, `None` without. `drawn`: the pin is kept. `elsewhere`: a kept unit-boundary pin no
-    wire inside the drawing reaches, shown only in the parent's black box.
+    connector, `None` without. `drawn`: the pin is kept.
     """
 
     port: Id[Port]
@@ -20,7 +19,6 @@ class PinView:
     gender: str
     mate: Id[Port] | None
     drawn: bool
-    elsewhere: bool
 
 
 @value

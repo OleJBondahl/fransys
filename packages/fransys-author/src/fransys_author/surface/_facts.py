@@ -1,12 +1,9 @@
-"""Facts: `project`, `revision`, `rating` and `operating`."""
+"""Facts: `project` and `revision`."""
 
 from typing import TYPE_CHECKING
 
 from fransys_author.design import Design as EngineDesign
 from fransys_author.errors import AuthorError
-from fransys_author.surface._device import _one_maker, part_mpn
-lazy from fransys_author.surface._device import Device
-lazy from fransys_model.vocab import Operating, Rating
 
 if TYPE_CHECKING:
     from fransys_author.surface.design import Design
@@ -15,7 +12,7 @@ if TYPE_CHECKING:
 class Facts:
     """The fact calls of the surface `Design`."""
 
-    def project(  # noqa: PLR0913 -- the engine's own title-block keywords, passed through
+    def project(  # noqa: PLR0913 -- the engine's own title-block keywords, passed through [public keyword API kept, decision 0444]
         self: "Design",
         *,
         title: str,
@@ -43,7 +40,7 @@ class Facts:
             version=version,
         )
 
-    def revision(  # noqa: PLR0913 -- the engine's own history keywords, passed through
+    def revision(  # noqa: PLR0913 -- the engine's own history keywords, passed through [public keyword API kept, decision 0444]
         self: "Design",
         revision: int,
         *,
@@ -70,25 +67,3 @@ class Facts:
             approved=approved,
             version=version,
         )
-
-    def rating(
-        self: "Design", part: str | type[Device], function: str | None = None
-    ) -> Rating | None:
-        """Read the rating of a part, or of one of its function templates.
-
-        Use this before a build to size a part; on a built model use fr.derive.function_rating.
-        Does not take a `(manufacturer, mpn)` pair: an MPN made by two makers raises.
-        """
-        mpn = part_mpn(part)
-        _one_maker(self, mpn)
-        return self._engine.rating(mpn, function)
-
-    def operating(self: "Design", part: str | type[Device], function: str) -> Operating | None:
-        """Read the operating envelope of one function template of a part.
-
-        Use this before a build to size a part; on a built model use fr.derive.function_rating.
-        Does not take a `(manufacturer, mpn)` pair: an MPN made by two makers raises.
-        """
-        mpn = part_mpn(part)
-        _one_maker(self, mpn)
-        return self._engine.operating(mpn, function)

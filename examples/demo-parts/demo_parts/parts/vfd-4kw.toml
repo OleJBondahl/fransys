@@ -1,4 +1,4 @@
-schema = 1
+schema = 2
 
 [part]
 mpn = "DEMO-VFD-4KW"
@@ -8,7 +8,7 @@ category = "generic"
 class_code = "T"
 
 [rating]
-power_loss_w = "120"
+power_loss = { nom = "120 W" }
 
 [[function]]
 name = "input"
@@ -20,8 +20,8 @@ ports = [
 ]
 
 [function.rating]
-voltage_ac_v = "480"
-current_ac_a = "10"
+voltage = [{ nom = "480 V", at = ["AC"] }]
+current = [{ nom = "10 A", at = ["AC"] }]
 
 [[function]]
 name = "output"
@@ -33,8 +33,8 @@ ports = [
 ]
 
 [function.operating]
-nominal_voltage_v = "400"
-nominal_power_w = "4000"
+voltage = [{ nom = "400 V" }]
+nominal_power = "4000 W"
 
 [[function]]
 name = "run"
@@ -45,7 +45,7 @@ ports = [
 ]
 
 [function.rating]
-voltage_dc_v = "30"
+voltage = [{ nom = "30 V", at = ["DC"] }]
 
 [[function]]
 name = "fault"

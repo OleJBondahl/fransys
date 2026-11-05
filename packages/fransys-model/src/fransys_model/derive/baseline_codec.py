@@ -1,20 +1,18 @@
 """The listing's JSON codec and section check: `dumps`, `loads`, ..."""
 
 import dataclasses
-from decimal import Decimal
 from typing import cast
 lazy from collections.abc import Mapping
 
-from fransys_kernel import JsonValue, decimal_text, read_json, write_json
-from fransys_model.kernel import SchemaError, SchemaVersionError
-from fransys_model.vocab.ratings import BreakingPoint, Operating, Rating
+from fransys_model.elecdef import Rating
+from fransys_model.kernel import JsonValue, SchemaError, SchemaVersionError, read_json, value_data, value_from, write_json
+from fransys_model.vocab.operating import Operating
 
 from .baseline_codec_keys import (
     BOUNDARY_KEYS,
     END_KEYS,
     ITEM_KEYS,
     NET_KEYS,
-    has_item_keys,
     key_fields,
     key_kwargs,
 )
@@ -32,63 +30,6 @@ from .rows_baseline import (
 )
 
 # -- dumps / loads (canonical JSON) ----------------------------------------
-
-
-_POINT_FIELDS = frozenset({"breaking_ac", "breaking_dc"})
-# The fields RATINGS-3 added: written only off their default, so an older listing keeps its bytes.
-_NEW_FIELDS = _POINT_FIELDS | {"fault_current_ac_a", "fault_current_dc_a", "fault_time_constant_ms"}
-
-
-def _decimal_text_or_none(v: Decimal | None) -> str | None:
-    return None if v is None else decimal_text(v)
-
-
-def _point_dict(point: BreakingPoint) -> dict[str, JsonValue]:
-    return {
-        "voltage_v": decimal_text(point.voltage_v),
-        "current_a": decimal_text(point.current_a),
-        "time_constant_ms": _decimal_text_or_none(point.time_constant_ms),
-    }
-
-
-def _field_json(v: object) -> JsonValue:
-    if isinstance(v, tuple):
-        return [_point_dict(point) for point in v]
-    return _decimal_text_or_none(cast("Decimal | None", v))
-
-
-def _decimal_dict(value: Rating | Operating | None) -> dict[str, JsonValue] | None:
-    """A `Rating`/`Operating`'s own fields, `Decimal` as text; a new field only when set."""
-    if value is None:
-        return None
-    named = {field.name: getattr(value, field.name) for field in dataclasses.fields(value)}
-    return {
-        name: _field_json(v)
-        for name, v in named.items()
-        if name not in _NEW_FIELDS or v not in (None, ())
-    }
-
-
-def _point_from(value: object) -> BreakingPoint:
-    d = _mapping(value)
-    tc = cast("str | None", d["time_constant_ms"])
-    return BreakingPoint(
-        voltage_v=Decimal(cast("str", d["voltage_v"])),
-        current_a=Decimal(cast("str", d["current_a"])),
-        time_constant_ms=None if tc is None else Decimal(tc),
-    )
-
-
-def _field_from(key: str, v: object) -> object:
-    if key in _POINT_FIELDS:
-        return tuple(_point_from(point) for point in _array(v))
-    return None if v is None else Decimal(cast("str", v))
-
-
-def _decimal_value[T](cls: type[T], value: object) -> T | None:
-    if value is None:
-        return None
-    return cls(**{key: _field_from(key, v) for key, v in _mapping(value).items()})
 
 
 def _unit_dict(u: BaselineUnit) -> dict[str, JsonValue]:
@@ -123,8 +64,8 @@ def _boundary_dict(b: BaselineBoundary) -> dict[str, JsonValue]:
     return {
         "function": b.designation,
         "ports": list(b.ports),
-        "rating": _decimal_dict(b.rating),
-        "operating": _decimal_dict(b.operating),
+        "rating": None if b.rating is None else value_data(b.rating),
+        "operating": None if b.operating is None else value_data(b.operating),
     } | key_fields(b, BOUNDARY_KEYS)
 
 
@@ -165,7 +106,7 @@ def dumps(listing: Listing) -> str:
         The JSON text, which `loads` reads back.
     """
     data: dict[str, JsonValue] = {
-        "listing_version": KEYED_LISTING_VERSION if has_item_keys(listing) else 1,
+        "listing_version": KEYED_LISTING_VERSION,
         "unit": _unit_dict(listing.unit),
         "items": [_item_dict(row) for row in listing.items],
         "units": [_nested_unit_dict(row) for row in listing.units],
@@ -239,8 +180,8 @@ def _boundary_from(value: object) -> BaselineBoundary:
     return BaselineBoundary(
         designation=cast("str", d["function"]),
         ports=cast("tuple[str, ...]", _array(d["ports"])),
-        rating=_decimal_value(Rating, d["rating"]),
-        operating=_decimal_value(Operating, d["operating"]),
+        rating=None if d["rating"] is None else value_from(cast("JsonValue", d["rating"]), Rating),
+        operating=None if d["operating"] is None else value_from(cast("JsonValue", d["operating"]), Operating),
         **key_kwargs(d, BOUNDARY_KEYS),
     )
 
@@ -287,11 +228,15 @@ def loads(text: str) -> Listing:
 
     Raises:
         SchemaError: the text is not valid canonical JSON, or its envelope is malformed.
-        SchemaVersionError: `text`'s `listing_version` is not `1` or `2`, the shapes this build
-            knows; version 2 carries the item keys, which a version-1 listing has not.
+        SchemaVersionError: `text`'s `listing_version` is not `3`, the one shape this build reads:
+            keyed rows with `rating` and `operating` in the kernel's canonical form.
     """
     data = _mapping(read_json(text))
-    _version_of(data)
+    if (version := _version_of(data)) != KEYED_LISTING_VERSION:
+        msg = (
+            f"listing_version {version} is not known; this build reads {KEYED_LISTING_VERSION}: rebuild the release and re-cut it with fr.rebaseline"
+        )
+        raise SchemaVersionError(msg, expected=KEYED_LISTING_VERSION, actual=version)
     return Listing(
         unit=_unit_from(data["unit"]),
         items=tuple(_item_from(d) for d in _array(data["items"])),
@@ -308,14 +253,11 @@ def _version_of(data: Mapping[str, object]) -> int:
     if type(version) is not int:
         msg = "`listing_version` is missing or not an int"
         raise SchemaError(msg, kind="listing")
-    if version not in (1, KEYED_LISTING_VERSION):
-        msg = f"listing_version {version} is not known; this build reads 1 and 2"
-        raise SchemaVersionError(msg, expected=KEYED_LISTING_VERSION, actual=version)
     return version
 
 
 def stored_version(text: str) -> int:
-    """The `listing_version` of stored listing `text`: 1, or 2 when it carries item keys."""
+    """The `listing_version` of stored listing `text`, whatever it is; `loads` refuses all but 3."""
     return _version_of(_mapping(read_json(text)))
 
 
@@ -343,8 +285,4 @@ def differing_sections(a: Listing, b: Listing) -> tuple[str, ...]:
     a, b = without_parent(a), without_parent(b)
     a = dataclasses.replace(a, items=key_ordered(a.items))
     b = dataclasses.replace(b, items=key_ordered(b.items))
-    return tuple(
-        field.name
-        for field in dataclasses.fields(Listing)
-        if getattr(a, field.name) != getattr(b, field.name)
-    )
+    return tuple(field.name for field in dataclasses.fields(Listing) if getattr(a, field.name) != getattr(b, field.name))

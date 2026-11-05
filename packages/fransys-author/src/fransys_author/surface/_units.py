@@ -1,17 +1,16 @@
 """Surface mixin for `@unit` and `d.add`."""
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 lazy from collections.abc import Callable, Mapping, Sequence
 lazy from types import EllipsisType
 
 from fransys_author.errors import AuthorError
 
-from ._added import added_unit, remember_added
+from ._added import remember_added
 from ._boundary_names import write_boundaries
-from ._unit_tags import check_add, class_code_of
-from ._unused import mark_unused
-lazy from ._rows import RowValue, WiringRow
+from ._unit_tags import check_add
+lazy from ._unused import UnitResult
 
 if TYPE_CHECKING:
     from fransys_author.surface.design import Design
@@ -33,11 +32,9 @@ class UnitDef[R: tuple[Any, ...]]:
     title: str
     number: str
     history: tuple[Mapping[str, Any], ...]
-    class_code: str
-    wiring: Mapping[WiringRow, RowValue] | None
 
 
-def unit[R: tuple[Any, ...]](  # noqa: PLR0913 -- the release's own fields
+def unit[R: tuple[Any, ...]](  # noqa: PLR0913 -- the release's own fields [public keyword API kept, decision 0444]
     name: str,
     *,
     revision: int,
@@ -49,8 +46,6 @@ def unit[R: tuple[Any, ...]](  # noqa: PLR0913 -- the release's own fields
     title: str = "",
     number: str = "",
     history: Sequence[Mapping[str, str | int]] = (),
-    class_code: str | None = None,
-    wiring: Mapping[WiringRow, RowValue] | None = None,
 ) -> Callable[[Callable[..., R]], UnitDef[R]]:
     """Core: make a function the unit release `name`.
 
@@ -61,11 +56,8 @@ def unit[R: tuple[Any, ...]](  # noqa: PLR0913 -- the release's own fields
     Does not build anything: `d.add(fn, "U1")` does. `history` entries take `d.revision`'s keywords.
     A `history=` entry with no `version` is numbered as this unit's own `version`; two entries of
     one version and revision must match, else `d.add` raises (`AuthorError` for the unit's own
-    current revision, `MergeConflict` for another).
-    `class_code` (1-3 uppercase letters) is the letter floating instances number from.
-    `wiring` replaces IEC rows in the unit's body; a unit never takes its parent's rows.
+    current revision, `MergeConflictError` for another).
     """
-    code = class_code_of(class_code)
     entry = {"revision": revision, "date": date, "text": text, "created": by}
     return lambda build: UnitDef(
         build,
@@ -77,8 +69,6 @@ def unit[R: tuple[Any, ...]](  # noqa: PLR0913 -- the release's own fields
         title,
         number,
         tuple(history),
-        code,
-        wiring,
     )
 
 
@@ -102,28 +92,20 @@ def check_history(definition: UnitDef[Any]) -> None:
 class Units:
     """The `add` call of `Design`."""
 
-    _added_unit = staticmethod(
-        added_unit
-    )  # the facade names a document's unit by what `add` returned
-
     def add[R: tuple[Any, ...]](
         self: "Design",
         definition: UnitDef[R],
-        tag: str | None,
+        tag: str,
         *,
         place: str | EllipsisType | None = ...,
         name: str | None = None,
-        unused: tuple[str, ...] = (),
     ) -> R:
-        """Build the unit `definition` as instance `tag` (printed `-tag`), `None` to be numbered.
+        """Build the unit `definition` as instance `tag` (printed `-tag`).
 
         Does not take a lowercase tag. Returns the unit function's result; `name=` as in `device`.
-        `unused=` names fields (`"X1"`) or functions (`"X1.x1"`); a strip: `"X3[3:5]"`.
         """
         check_history(definition)
-        key = self._claim(
-            check_add(definition.name, definition.class_code, tag, name), per_function=True
-        )
+        key = self._claim(check_add(tag, name), per_function=True)
         where = self._place if place is ... else place
         scope = self._engine.scope(key, at=self._place_node(where), group=self._group).unit(
             definition.name,
@@ -133,12 +115,11 @@ class Units:
             title=definition.title,
             number=definition.number,
             tag=tag,
-            class_code=definition.class_code,
         )
         for entry in (*definition.history, definition.entry):
             scope.revision(**entry)
         scope._held = []
-        result = definition.build(type(self)(self.library, scope=scope, wiring=definition.wiring))
+        result = definition.build(type(self)(self.library, scope=scope))
         if not (isinstance(result, tuple) and hasattr(result, "_fields")):
             msg = (
                 f"unit {definition.name!r} must return an instance of a typing.NamedTuple class, "
@@ -146,7 +127,7 @@ class Units:
                 "then return Io(X1=d.device(...))"
             )
             raise AuthorError(msg)
-        write_boundaries(scope, result)
+        fields = cast("UnitResult", result)  # the check above: a NamedTuple instance
+        write_boundaries(scope, fields)
         remember_added(scope._design, result, scope._unit)
-        mark_unused(self, scope, result, unused)
         return result

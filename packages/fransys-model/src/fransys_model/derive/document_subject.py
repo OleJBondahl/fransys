@@ -1,6 +1,6 @@
 """The words that name a document's subject in a title block (model-0066)."""
 
-from fransys_model.vocab import DocumentPreset, aspect_nodes
+from fransys_model.vocab import aspect_nodes
 from fransys_model.vocab.tables import documents
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab import Document
@@ -25,10 +25,9 @@ def subject_label(model: Model, document: Id[Document]) -> str:
     unit = document_unit(model, document)
     if unit is not None:
         return unit_label(model, unit)
-    if record.preset is DocumentPreset.SYSTEM:
-        return ""
     item_id = record.item
-    assert item_id is not None  # noqa: S101 -- Document.__post_init__ requires one of the three, or SYSTEM
+    if item_id is None:
+        return ""
     return f"{item_designation(model, item_id)} {item_description(model, item_id)}"
 
 

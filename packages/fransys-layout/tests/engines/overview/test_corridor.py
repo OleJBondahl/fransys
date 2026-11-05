@@ -63,9 +63,6 @@ def test_corridor_stays_in_range_and_tracks_are_distinct(raw):
             lo, hi = min(a, b), max(a, b)
             allowed = {lo, lo + 1} if lo == hi else set(range(lo + 1, hi + 1))
             assert plan.corridor[key] in allowed
-    ys = {
-        (c, corridor_y(0, corridor_height(plan.load[c], 16), plan.load[c], plan.rank[k], 16))
-        for k, c in plan.corridor.items()
-    }
+    ys = {(c, corridor_y(0, corridor_height(plan.load[c], 16), plan.load[c], plan.rank[k], 16)) for k, c in plan.corridor.items()}
     assert len(ys) == len(plan.corridor)
     assert all(plan.rank[k] < plan.load[c] for k, c in plan.corridor.items())

@@ -27,36 +27,26 @@ def _models(plant):
         revision=1,
         author="A",
     )
-    plant.records = [
-        dataclasses.replace(r, tag=r.tag or "S1") if isinstance(r, Item) else r
-        for r in [*plant.records, project]
-    ]
+    plant.records = [dataclasses.replace(r, tag=r.tag or "S1") if isinstance(r, Item) else r for r in [*plant.records, project]]
     kept = list(plant.records)
     plant.item("zz9", "ZZ9", mpn="SIM-RELAY-24V")
     old = plant.freeze()
     off = {("k1",), ("jb1-r1",)}
-    plant.records = [
-        dataclasses.replace(r, installed=False) if isinstance(r, Item) and r.key in off else r
-        for r in kept
-    ]
+    plant.records = [dataclasses.replace(r, installed=False) if isinstance(r, Item) and r.key in off else r for r in kept]
     return old, plant.freeze()
 
 
 def _changes(plant, *, drawn=True):
     old, new = _models(plant)
-    tables = _Tables(new)
+    tables = _Tables(new, 8)
     cab = make_id(Item, ("a1",))
     box = ViewBox(
         key=BoxKey(ref=OverviewRef(kind=OverviewRefKind.ITEM, item=cab)),
         lines=("A1",),
         dashed=False,
     )
-    rows = ViewRows(
-        unit=None, level=None, mode=OverviewMode.PLAIN, open=None, boxes=(box,), lines=()
-    )
-    return changes_data(
-        tables, [rows] if drawn else [], diff(listing(old, None), listing(new, None))
-    )
+    rows = ViewRows(unit=None, level=None, mode=OverviewMode.PLAIN, open=None, boxes=(box,), lines=())
+    return changes_data(tables, [rows] if drawn else [], diff(listing(old, None), listing(new, None)))
 
 
 def test_a_change_inside_a_folded_box_marks_the_box(demo_plant):
@@ -98,16 +88,11 @@ def test_an_added_cable_marks_its_line_and_is_not_listed(demo_plant):
     subjects = change_subjects(new, None)
     text = next(t for (section, t), one in subjects.items() if section == "items" and one == cable)
     prev = dataclasses.replace(now, items=tuple(r for r in now.items if r.designation != text))
-    keys = [
-        BoxKey(ref=OverviewRef(kind=OverviewRefKind.ITEM, item=make_id(Item, (k,))))
-        for k in ("a1", "y10")
-    ]
+    keys = [BoxKey(ref=OverviewRef(kind=OverviewRefKind.ITEM, item=make_id(Item, (k,)))) for k in ("a1", "y10")]
     boxes = tuple(ViewBox(key=k, lines=("B",), dashed=False) for k in keys)
     line = ViewLine(a=keys[0], b=keys[1], kind="cable", via=cable, strip=None, text="W1")
-    rows = ViewRows(
-        unit=None, level=None, mode=OverviewMode.PLAIN, open=None, boxes=boxes, lines=(line,)
-    )
-    data = changes_data(_Tables(new), [rows], diff(prev, now))
+    rows = ViewRows(unit=None, level=None, mode=OverviewMode.PLAIN, open=None, boxes=boxes, lines=(line,))
+    data = changes_data(_Tables(new, 8), [rows], diff(prev, now))
     assert data is not None
     assert data["views"] == [[[], [[0, "added"]]]]
     assert [text] not in [[t] for _, t in data["rest"]]

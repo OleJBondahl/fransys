@@ -11,10 +11,7 @@ import contextlib
 from typing import TYPE_CHECKING
 
 from fransys_model.derive.designation_connector import (
-    connector_label,  # noqa: F401 - re-exported: callers import it from here
     connector_segment,
-    connector_segments,  # noqa: F401 - re-exported: callers import it from here
-    prints_connector_label,  # noqa: F401 - re-exported: callers import it from here
 )
 from fransys_model.derive.designation_label import own_label, terminal_of
 from fransys_model.derive.facts.strips import strip_of
@@ -25,7 +22,7 @@ from fransys_model.derive.facts.units import (
 )
 from fransys_model.derive.indexes import build_indexes
 from fransys_model.derive.instance_tag import dashed
-from fransys_model.derive.lookups import effective_placement, printed_port_name
+from fransys_model.derive.lookups import effective_placement
 from fransys_model.derive.unit_nodes import chain_up, common_node
 from fransys_model.kernel import DIGEST_CACHE_SIZE, SchemaError, digest_cached
 from fransys_model.vocab.enums import Aspect
@@ -141,9 +138,7 @@ def terminal_of_item(model: Model, item: Id[Item], unit: Id[Unit] | None) -> str
     return dashed(item_designation(model, item, unit=unit))
 
 
-def connector_designation(
-    model: Model, function: Id[Function], *, unit: Id[Unit] | None = None
-) -> str:
+def connector_designation(model: Model, function: Id[Function], *, unit: Id[Unit] | None = None) -> str:
     """Render the connector `function` as a list names it: `-J1`, or `-U2-X1` behind a device's tag.
 
     Decision model-0071. `printed_designation` of its item plus `connector_segment`. On the
@@ -165,7 +160,7 @@ def port_designation(model: Model, port: Id[Port], *, unit: Id[Unit] | None = No
     """Render `port` as its item's designation and its name (`-K1:13`), always dash-prefixed.
 
     A terminal's port drops its name (`terminal_text`); a connector pin reads `-U2-X1:1`;
-    a bar's port drops it too (`-PE1`): the screw is no part of the wiring (PE-BAR B4).
+    a port with no name drops it.
 
     Args:
         model: The frozen model to read.
@@ -180,16 +175,14 @@ def port_designation(model: Model, port: Id[Port], *, unit: Id[Unit] | None = No
         msg = "the id is not a port of the model"
         raise SchemaError(msg, kind="port", record_id=port)
     owner = items(model)[functions(model)[record.function].item]
-    if not printed_port_name(model, port):
+    if not record.name:
         return printed_designation(model, owner.id, unit=unit)
     if terminal_of(model, owner.id) is None:
         return f"{connector_designation(model, record.function, unit=unit)}:{record.name}"
     return terminal_of_item(model, owner.id, unit)
 
 
-def function_designation(
-    model: Model, function: Id[Function], *, unit: Id[Unit] | None = None
-) -> str:
+def function_designation(model: Model, function: Id[Function], *, unit: Id[Unit] | None = None) -> str:
     """Render `function` as its item's designation and its name (`JB1:J1`).
 
     Args:
@@ -249,9 +242,7 @@ def reference_designation(model: Model, item: Id[Item], *, unit: Id[Unit] | None
     return aspect_text(model, item, PrintContext(reading=unit, scope=Scope.UNIT_OWN)) + product
 
 
-def printed_designation(
-    model: Model, item: Id[Item], *, unit: Id[Unit] | None = None, held_switches: bool = True
-) -> str:
+def printed_designation(model: Model, item: Id[Item], *, unit: Id[Unit] | None = None, held_switches: bool = True) -> str:
     """Render `item` as a list prints it: behind its product-aspect sign (`-K1`, `-X1:L1:1`).
 
     Args:
@@ -306,9 +297,7 @@ def unit_location(model: Model, unit: Id[Unit]) -> Id[AspectNode] | None:
     return common_node(paths)
 
 
-def unit_list_context(
-    model: Model, unit: Id[Unit] | None, context: Id[AspectNode] | None
-) -> Id[AspectNode] | None:
+def unit_list_context(model: Model, unit: Id[Unit] | None, context: Id[AspectNode] | None) -> Id[AspectNode] | None:
     """The location a list printed for `unit` prints its ends against.
 
     A unit's lists print against its own placement location (`unit_location`), not `context`;

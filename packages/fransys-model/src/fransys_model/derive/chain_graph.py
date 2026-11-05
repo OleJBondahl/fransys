@@ -16,9 +16,7 @@ type Links = tuple[Mapping[Id[Port], Id[Port]], Mapping[Id[Port], Id[Item]]]
 _TWO = 2  # a member has one device above and one below
 
 
-def partners(
-    wires: Sequence[tuple[Id[Port], Id[Port]]], netted: frozenset[Id[Port]]
-) -> dict[Id[Port], Id[Port]]:
+def partners(wires: Sequence[tuple[Id[Port], Id[Port]]], netted: frozenset[Id[Port]]) -> dict[Id[Port], Id[Port]]:
     """Each port whose one conductor ends at a port with one, no net group, to that port."""
     count: dict[Id[Port], int] = defaultdict(int)
     for a, b in wires:
@@ -37,9 +35,7 @@ def block(group: Sequence[ChainCandidate]) -> object | None:
     return next(iter(places)) if all(c.plain for c in group) and len(places) == 1 else None
 
 
-def _neighbours(
-    group: Sequence[ChainCandidate], links: Links, wired: frozenset[Id[Port]]
-) -> frozenset[Id[Item]] | None:
+def _neighbours(group: Sequence[ChainCandidate], links: Links, wired: frozenset[Id[Port]]) -> frozenset[Id[Item]] | None:
     """The devices `group`'s wired ports reach, each wire alone; `None` when one is not alone."""
     partner, owner = links
     found: set[Id[Item]] = set()
@@ -65,11 +61,7 @@ def closed(graph: Graph, items: Items) -> Graph:
     """`graph` less each device wired to one outside it or in another block (LC5), until none is."""
     kept: Graph = dict(graph)
     while True:
-        out = {
-            item
-            for item, near in kept.items()
-            if any(n not in kept or block(items[n]) != block(items[item]) for n in near)
-        }
+        out = {item for item, near in kept.items() if any(n not in kept or block(items[n]) != block(items[item]) for n in near)}
         if not out:
             return kept
         kept = {item: near for item, near in kept.items() if item not in out}
@@ -117,7 +109,7 @@ def _hop(upper: Id[Item], lower: Id[Item], items: Items, links: Links) -> ChainH
         for p in c.ports
         if p in partner and owner.get(partner[p]) == lower
     ]
-    return ChainHop(fed=lower, feeder=upper, pins=tuple(pins))
+    return ChainHop(pins=tuple(pins))
 
 
 def chain_row(order: tuple[Id[Item], ...], graph: Graph, items: Items, links: Links) -> ChainRow:

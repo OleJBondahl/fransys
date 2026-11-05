@@ -39,7 +39,7 @@ def field_devices(model: Model) -> dict[Id[Item], Id[Unit]]:
             and only.kind == "unit"
             and items(model)[item].unit is None
             and box_of(model, item, None) == item
-            and not box_dashed(model, item, None)
+            and not box_dashed(model, item)
         ):
             found[item] = cast("Id[Unit]", only)
     return found
@@ -55,6 +55,11 @@ def _joins(links: list[Any]) -> tuple[FieldJoin, ...]:
         cables = tuple(sorted({link.via for link in held if link.via is not None}))
         out.append(FieldJoin(kind=kind, count=len(cables) or len(held), cables=cables))
     return tuple(sorted(out, key=lambda one: one.kind.value))
+
+
+def folded_name(count: int) -> str:
+    """The name of a box or stub that folds `count` field devices."""
+    return f"Field devices ({count})"
 
 
 def field_fold(model: Model) -> tuple[FieldFold, ...]:
@@ -74,7 +79,7 @@ def field_fold(model: Model) -> tuple[FieldFold, ...]:
     return tuple(
         FieldFold(
             unit=unit,
-            lines=(f"Field devices ({len(held)})",),
+            lines=(folded_name(len(held)),),
             devices=tuple(sorted(held, key=lambda one: box_order(model, one, None))),
             cables=tuple(sorted({c for j in joins[unit] for c in j.cables})),
             joins=joins[unit],

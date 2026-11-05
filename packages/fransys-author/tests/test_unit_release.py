@@ -1,13 +1,16 @@
 """`Scope.unit` writes a `UnitRelease` and a `Unit` of it; revision keys are per release."""
 
-import pytest
-from fransys_author import AuthorError, Design
+from typing import Any
 
-from fransys_model.kernel import MergeConflict, make_id
+import pytest
+from fransys_author import AuthorError
+from fransys_author.design import Design
+
+from fransys_model.kernel import MergeConflictError, make_id
 from fransys_model.vocab import Placement, Project, Revision, Unit, UnitRelease
 
 
-def _of(design: Design, kind: type) -> list:
+def _of(design: Design, kind: type) -> list[Any]:
     return [r for r in design.draft().records() if isinstance(r, kind)]
 
 
@@ -58,7 +61,7 @@ def test_a_release_of_the_same_name_version_revision_with_other_content_is_a_mer
 ):
     d = Design(parts)
     d.scope("u1").unit("cab", revision=1, interface="1", title="T")
-    with pytest.raises(MergeConflict) as caught:
+    with pytest.raises(MergeConflictError) as caught:
         d.scope("u2").unit("cab", revision=1, interface="1", title="Other")
     assert caught.value.origin_a != caught.value.origin_b
     assert caught.value.origin_a.file == __file__
@@ -100,11 +103,9 @@ def test_three_instances_writing_the_same_entries_keep_one_entry_per_revision(pa
 
 def test_an_instance_writing_a_different_entry_text_is_a_merge_conflict(parts):
     d = Design(parts)
-    d.scope("u1").unit("cab", revision=1, interface="1").revision(
-        1, date="2026-09-23", text="First", created="OJB"
-    )
+    d.scope("u1").unit("cab", revision=1, interface="1").revision(1, date="2026-09-23", text="First", created="OJB")
     u2 = d.scope("u2").unit("cab", revision=1, interface="1")
-    with pytest.raises(MergeConflict) as raised:
+    with pytest.raises(MergeConflictError) as raised:
         u2.revision(1, date="2026-09-23", text="Changed", created="OJB")
     assert raised.value.origin_a != raised.value.origin_b
 

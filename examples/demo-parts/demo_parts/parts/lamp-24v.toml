@@ -1,4 +1,4 @@
-schema = 1
+schema = 2
 
 [part]
 mpn = "DEMO-LAMP-24"
@@ -6,6 +6,10 @@ manufacturer = "Demo"
 description = "Indicator lamp, 24 V DC"
 category = "generic"
 class_code = "P"
+
+[footprint]
+library = "Demo_Lamp"
+name = "Lamp_24V_PCB"
 
 [[function]]
 name = "lamp"
@@ -17,9 +21,8 @@ ports = [
 ]
 
 [function.operating]
-voltage_dc_v = "24"
-nominal_power_w = "2.4"
+voltage = [{ nom = "24 V", at = ["DC"] }]
+nominal_power = "2.4 W"
 
 [function.rating]
-voltage_ac_v = "24"
-voltage_dc_v = "24"
+voltage = [{ nom = "24 V", at = ["AC"] }, { nom = "24 V", at = ["DC"] }]

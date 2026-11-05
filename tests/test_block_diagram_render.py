@@ -1,36 +1,26 @@
 """`diagram_sheets` on the block-diagram worked examples and a cut chain (BD-3 R1, render-0009)."""
+# CONNECTION_NOT_DRAWN 4 per default-salt build set (MATES-DISABLED): mated, harness or board-unit input, refused for 0.22 (R1216).
 
-import sys
 from dataclasses import replace
-from pathlib import Path
 from xml.etree import ElementTree as ET
 
+import fransys_render
 import pytest
+from diagram_models import chain
+from fransys_render import _constants
+from test_block_diagram_worked_examples import _station
+from test_units_worked_example import _build_cabinet_own
 
 from electrical_symbols import LIBRARY
+from fransys_layout import DiagramLayout, lay_out_diagrams
+from fransys_layout.engines.overview import sizes
 
-_ROOT = Path(__file__).resolve().parent.parent
-for _dir in (_ROOT / "tests", _ROOT / "packages" / "fransys-layout" / "tests"):
-    if str(_dir) not in sys.path:
-        sys.path.append(str(_dir))
-
-import fransys_render  # noqa: E402 -- ditto
-from diagram_models import chain  # noqa: E402 -- after the sys.path setup
-from fransys_render import _constants  # noqa: E402 -- ditto
-from test_block_diagram_worked_examples import _station  # noqa: E402 -- ditto
-from test_units_worked_example import _build_cabinet_own  # noqa: E402 -- ditto
-
-from fransys_layout import lay_out_diagrams  # noqa: E402 -- ditto
-from fransys_layout.engines.overview import sizes  # noqa: E402 -- pins render's own constants
-from fransys_model.kernel import Origin, evolve  # noqa: E402 -- ditto
-from fransys_model.layout import DiagramBox, layout_of  # noqa: E402 -- ditto
-
-_ORIGIN = Origin(file="test_block_diagram_render.py", line=1, note="fixture")
 SVG = "{http://www.w3.org/2000/svg}"
 
 
 def _laid(model):
-    return lay_out_diagrams(model)[0]
+    """The model and the diagrams `lay_out_diagrams` places for it."""
+    return model, lay_out_diagrams(model, LIBRARY)[0]
 
 
 def _station_model():
@@ -49,8 +39,9 @@ def _dashed(svg: str) -> int:
     return sum(1 for e in ET.fromstring(svg).iter(SVG + "line") if e.get("stroke-dasharray"))  # noqa: S314 -- own output
 
 
-def _only(model) -> str:
-    (svg,) = fransys_render.diagram_sheets(model, LIBRARY).values()
+def _only(laid) -> str:
+    model, diagrams = laid
+    (svg,) = fransys_render.diagram_sheets(model, LIBRARY, diagrams).values()
     return svg
 
 
@@ -60,7 +51,7 @@ def test_the_station_sheet_is_a2_with_its_box_line_and_tab_texts():
     assert (root.get("width"), root.get("height")) == ("594mm", "420mm")
     assert root.get("viewBox") == "0 0 594 420"
     texts = _texts(svg)
-    for want in ("-U1", "-M1", "-W1", "-W3", "-W11", "-W21", "-X1", "-X3", "-C1"):
+    for want in ("-U1", "+EXT-M1", "-W1", "-W3", "-W11", "-W21", "-X1", "-X3", "-C1"):
         assert want in texts
     assert texts.count("-X3") == 2
 
@@ -72,7 +63,7 @@ def test_by_others_boxes_are_dashed_and_the_others_are_not():
 
 def test_the_cabinet_sheet_prints_its_boxes_and_tab():
     texts = _texts(_only(_cabinet_model()))
-    for want in ("-X2", "demo-io-board rev 1.3", "-WH1", "-U1-X1"):
+    for want in ("-X2", "demo-io-board rev 1.3", "-W1", "-U1-X1"):
         assert want in texts
 
 
@@ -81,21 +72,23 @@ def test_the_diagram_sits_at_the_content_box_offset():
 
 
 def test_the_output_is_deterministic():
-    model = _station_model()
-    assert fransys_render.diagram_sheets(model, LIBRARY) == fransys_render.diagram_sheets(
-        model, LIBRARY
-    )
+    model, diagrams = _station_model()
+    assert fransys_render.diagram_sheets(model, LIBRARY, diagrams) == fransys_render.diagram_sheets(model, LIBRARY, diagrams)
 
 
-def test_a_box_is_drawn_from_its_record():
-    model = _station_model()
-    box = next(b for b in layout_of(model, DiagramBox).values() if not b.dashed)
-    edited = evolve(model, remove=[box.id], put=[replace(box, dashed=True)], origin=_ORIGIN)
-    assert _dashed(_only(edited)) == _dashed(_only(model)) + 4
+def test_a_box_is_drawn_from_its_placed_value():
+    model, diagrams = _station_model()
+    (diagram,) = diagrams.diagrams
+    (sheet,) = diagram.sheets
+    k = next(i for i, b in enumerate(sheet.boxes) if not b.dashed)
+    boxes = (*sheet.boxes[:k], replace(sheet.boxes[k], dashed=True), *sheet.boxes[k + 1 :])
+    edited = DiagramLayout(diagrams=(replace(diagram, sheets=(replace(sheet, boxes=boxes),)),))
+    assert _dashed(_only((model, edited))) == _dashed(_only((model, diagrams))) + 4
 
 
 def test_a_cut_chain_marks_both_sheets_naming_the_other():
-    sheets = list(fransys_render.diagram_sheets(_laid(chain(20)), LIBRARY).values())
+    model, diagrams = _laid(chain(20))
+    sheets = list(fransys_render.diagram_sheets(model, LIBRARY, diagrams).values())
     assert len(sheets) == 2
     first = [t for t in _texts(sheets[0]) if t.startswith("p")]
     second = [t for t in _texts(sheets[1]) if t.startswith("p")]

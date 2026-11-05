@@ -1,14 +1,6 @@
-"""Field case: a container wires a nested unit's boundary terminal with `d.wire`.
-
-The shape: a unit hands back an interface strip X1 of three terminals; the top design wires
-`s.x1[1]` to a motor, then runs `d.series` over the same strip.
-
-The bug (v0.9.1): `d.wire` took a Terminal's inner side wherever it was called, so the container
-wired the unit's inside, X1:1 still looked free on its outside and the series reused it; the
-unit's own documents in a system build differed from its release. Fixing decision: the
-amendment of author-0023 (an explicit boundary terminal of a nested unit, seen from a
-container, is its outer side; inside the unit's own body it stays inner).
-"""
+"""Field case: a container wires a nested unit's boundary terminal with d.wire, on the terminal's outer side.
+The bug: d.wire took a terminal's inner side wherever it was called, so the series reused a boundary terminal that looked free.
+Fixed by the amendment of author-0023: an explicit boundary terminal of a nested unit, seen from a container, is its outer side."""
 
 from typing import Any, NamedTuple
 
@@ -20,16 +12,19 @@ _TB, _PE = "DEMO-TB-2.5", "DEMO-TB-PE-2.5"
 
 class _Io(NamedTuple):
     x1: fr.TerminalStrip
+    pe: fr.Run
 
 
-def _make_unit(*, wire_inside: bool = False, count: int = 3):
+def _make_unit(*, wire_inside: bool = False, count: int = 3, unused: tuple[int, ...] = (), pe_unused: bool = False):
+    """`unused` numbers and the PE run (`pe_unused`) are declared unused on the strip itself."""
+
     @fr.unit("demo-strip", revision=1, interface_version=1, date="2026-10-06", text="1", by="AB")
     def unit(d: fr.Design) -> _Io:
-        x1 = d.terminal_strip("X1", _TB, count, pe=_PE, interface=True)
-        x1.run("PE", 1)
+        x1 = d.terminal_strip("X1", _TB, count, pe=_PE, interface=tuple(range(1, count + 1)), unused=unused)
+        pe = x1.run("PE", 1, interface=not pe_unused, unused=pe_unused)
         if wire_inside:
-            d.detail.wire(x1[1], d.device("M9", "DEMO-MOTOR-4KW")["U"], wire=(BK, 2.5))
-        return _Io(x1)
+            d.series(x1[1].inner, d.device("M9", "DEMO-MOTOR-4KW")["U"], wire=(BK, 2.5))
+        return _Io(x1, pe)
 
     return unit
 
@@ -50,8 +45,8 @@ def _unit_alone() -> fr.BuildResult:
 
 def test_wire_from_a_container_lands_on_the_outer_side() -> None:
     d = fr.design("demo_parts", place="C1")
-    s = d.add(_make_unit(), "U1")
-    d.detail.wire(s.x1[1], d.device("M1", "DEMO-MOTOR-4KW")["U"], wire=(BK, 2.5))
+    s = d.add(_make_unit(unused=(2, 3), pe_unused=True), "U1")
+    d.series(s.x1[1].outer, d.device("M1", "DEMO-MOTOR-4KW")["U"], wire=(BK, 2.5))
     result = fr.build(d)
     assert _sides(result, "1") == ["external"]
     assert _sides(_unit_alone(), "1") == []
@@ -60,7 +55,7 @@ def test_wire_from_a_container_lands_on_the_outer_side() -> None:
 def test_a_later_series_skips_the_terminal_wired_from_the_container() -> None:
     d = fr.design("demo_parts", place="C1")
     s = d.add(_make_unit(count=4), "U1")
-    d.detail.wire(s.x1[1], d.device("M1", "DEMO-MOTOR-4KW")["U"], wire=(BK, 2.5))
+    d.series(s.x1[1].outer, d.device("M1", "DEMO-MOTOR-4KW")["U"], wire=(BK, 2.5))
     d.series(
         s.x1,
         d.cable("W1", "DEMO-CBL-4G1.5"),
@@ -87,13 +82,6 @@ def _net_sides(result: fr.BuildResult, name: str) -> list[str]:
     nets = [n for n in every if n.name == name]
     keys: list[tuple[str, ...]] = [model.key_of(p) or () for n in nets for p in n.ports]
     return sorted(k[7] for k in keys if k[:3] == ("U1", "X1", "terminal"))
-
-
-def test_net_from_a_container_lands_on_the_outer_side() -> None:
-    d = fr.design("demo_parts", place="C1")
-    s = d.add(_make_unit(), "U1")
-    d.detail.net("N1", s.x1[1], d.device("M1", "DEMO-MOTOR-4KW")["U"])
-    assert _net_sides(fr.build(d), "N1") == ["external"]
 
 
 def test_supply_from_a_container_lands_on_the_outer_side() -> None:

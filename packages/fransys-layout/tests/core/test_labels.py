@@ -1,23 +1,28 @@
-"""Self-tests of the label invariant checkers on hand-built labels, then place_annexes itself."""
+"""Self-tests of the label invariant checkers on hand-built labels, then place_labels itself."""
 
 from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 import pytest
 from options_fixtures import core_options
 
-from fransys_layout.core import AnnexBox, Box, natural_key, text_labels
-from fransys_layout.core.annex import spot_box
-from fransys_layout.core.geometry import overlaps
-from fransys_layout.core.occupancy import Occupancy
-from fransys_layout.core.text_labels import Cover, descend, first_pass
+from fransys_layout.core import AnnexBox, Box, Size, natural_key
+from fransys_layout.core.annex import free, place_labels, spot_box
+from fransys_layout.core.annex_values import Annex, Spot
+from fransys_layout.core.geometry import inside, overlaps
 from fransys_layout.core.values import Finding
+from fransys_layout.core.widen import route_round
 
+from . import pipeline_fixtures
 from .conftest import MARKER
 from .label_fixtures import (
     colliding_neighbours,
     dense,
+    house_options,
     lone,
     marker_over_candidate,
+    on_page,
     under_wire,
 )
 from .pipeline_fixtures import with_annexes
@@ -27,15 +32,13 @@ from .test_invariants import (
     check_label_order,
     check_one_label,
 )
+from .text_fixtures import PLANTS
+
+if TYPE_CHECKING:
+    from fransys_layout.core.outputs import Placed
 
 OPTIONS = core_options(
     marker=MARKER,
-    flip_turn="R180",
-    tag_stagger=True,
-    label_gap=8,
-    parallel_pitch=48,
-    driver_first=True,
-    arrow_sides=("E", "W"),
 )
 OVER_WIRE = AnnexBox("S1", 1, Box(80, 112, 16, 8), "BL")
 ANNEX_UNPLACED = Finding("ANNEX_UNPLACED", "no free corner", page=1, subject="S1")
@@ -47,7 +50,6 @@ def _conflicts(case, labels, findings=()):
         case.placement,
         case.routes,
         case.markers,
-        case.tables,
         labels,
         findings,
         case.problem.area,
@@ -61,7 +63,6 @@ def _first_free(case, labels, findings=()):
         case.placement,
         case.routes,
         case.markers,
-        case.tables,
         labels,
         findings,
         with_annexes(case.problem, OPTIONS),
@@ -192,91 +193,93 @@ def test_corner_order_bl_only_makes_the_neighbours_test_fail() -> None:
         corner_order=("BL",),
         slack=(0,),
         marker=MARKER,
-        flip_turn="R180",
-        tag_stagger=True,
-        label_gap=8,
-        parallel_pitch=48,
-        driver_first=True,
-        arrow_sides=("E", "W"),
     )
     _, findings = case.run(only)
     assert findings
 
 
-def test_a_slot_corner_is_unknown_since_the_side_slots_left() -> None:
+@pytest.mark.parametrize(("corners", "name"), [(("KL", "KR"), "KL"), (("XX",), "XX")])
+def test_an_unknown_corner_names_the_corner_and_the_choices(corners, name) -> None:
     """KL and KR left with text_label_cands (R345): el names them as unknown corners."""
     only = core_options(
-        corner_order=("KL", "KR"),
+        corner_order=corners,
         marker=MARKER,
-        flip_turn="R180",
-        tag_stagger=True,
-        label_gap=8,
-        parallel_pitch=48,
-        driver_first=True,
-        arrow_sides=("E", "W"),
     )
-    with pytest.raises(ValueError, match=r"unknown label corner 'KL'.*BL"):
+    with pytest.raises(ValueError, match=rf"unknown label corner '{name}'.*BL"):
         lone().run(only)
 
 
-def test_an_unknown_corner_names_the_corner_and_the_choices() -> None:
-    bad = core_options(
-        corner_order=("XX",),
-        marker=MARKER,
-        flip_turn="R180",
-        tag_stagger=True,
-        label_gap=8,
-        parallel_pitch=48,
-        driver_first=True,
-        arrow_sides=("E", "W"),
-    )
-    with pytest.raises(ValueError, match=r"unknown label corner 'XX'.*BL"):
-        lone().run(bad)
+@pytest.mark.rule("TEXT-CANDIDATES")
+@pytest.mark.parametrize("name", PLANTS)
+def test_no_routed_wire_runs_through_a_label_the_router_stood(name: str) -> None:
+    """T2: labels stand before the A* round as keeps, so the wires it draws go round them."""
+    prob = PLANTS[name]()
+    cut = pipeline_fixtures.cut_of(prob, OPTIONS)
+    rnd = route_round(cut, pipeline_fixtures.placed_from(cut, prob, OPTIONS), pipeline_fixtures.with_annexes(prob, OPTIONS), OPTIONS)
+    routed = [w for page in rnd.routes.pages for w in page.wires if w.kind == "routed"]
+    flagged = {f.subject for f in rnd.routes.findings if f.code == "ANNEX_UNPLACED"}
+    assert rnd.routes.labels
+    assert [lab.owner for lab in rnd.routes.labels if lab.owner not in flagged and not free(lab.box, [], routed, None)] == []
 
 
-def _crowd() -> tuple[Cover, list[list[tuple[str, Box]]]]:
-    """A's first candidate is free but is B's only one; A's second is free for A alone."""
-    cover = Cover(Occupancy(20, 20, 8))
-    a1, a2, b1 = Box(0, 0, 16, 8), Box(0, 64, 16, 8), Box(8, 0, 16, 8)
-    return cover, [[("BL", a1), ("TL", a2)], [("BL", b1)]]
+@pytest.mark.rule("TEXT-CANDIDATES")
+def test_a_label_stays_at_the_spot_it_stood_at_the_round_before_while_that_spot_is_free() -> None:
+    """T2: a label does not move between rounds; without the spot of the round before it takes its first free candidate."""
+    case = on_page((("S1", 88, 96),))
+    opts = house_options(label_gap=0)
+    (annex,) = with_annexes(case.problem, opts).annexes
+    placed = {p.sym: p for p in case.placement.pages[0].placed}
+    second = annex.spots[placed["S1"].orient][1]
+    before = AnnexBox("S1", 1, spot_box(placed["S1"], annex.size, second, 0), second.name)
+    ink, on = ((), []), (1, case.problem.area, 0, 2)
+    (fresh,), _, _ = place_labels([annex], placed, ink, on)
+    (stays,), _, _ = place_labels([annex], placed, ink, on, [before])
+    assert fresh.box != before.box
+    assert stays == before
 
 
-def test_descent_moves_the_blocking_label_and_clears_the_count() -> None:
-    cover, cands = _crowd()
-    first_pass(cover, cands)
-    assert cover.choice == [0, 0]
-    assert cover.blocked(cands[1][0][1]) > 0
-    assert descend(cover, cands) == 1
-    assert cover.choice == [1, 0]
-    assert max(cover.held.values()) == 1
+@pytest.mark.rule("TEXT-CANDIDATES")
+def test_a_label_blocked_at_every_candidate_stands_inside_the_content_box_never_off_the_page() -> None:
+    """T6 (AMENDED 1): ANNEX_UNPLACED names it and it stands at its first candidate inside the box, never at one off the page."""
+    case = on_page((("S1", 88, 96),))
+    placed = {p.sym: p for p in case.placement.pages[0].placed}
+    off, near, far = Spot("off", "TL", 1000, 0, "down"), Spot("near", "BL", 0, 0, "down"), Spot("far", "BL", 0, 40, "down")
+    annex = Annex("S1", Size(16, 8), None, {"R0": (off, near, far)})
+    wall = Box(0, 112, 400, 8)  # a solid across the near candidate
+    wall2 = Box(0, 152, 400, 8)  # and across the far one
+    area = Size(400, 300)
+    (label,), found, blocked = place_labels([annex], placed, ((), [wall, wall2]), (1, area, 0, 2))
+    assert [f.code for f in found] == ["ANNEX_UNPLACED"]
+    assert blocked == [0]
+    assert label.spot == "near"
+    assert label.box.x + label.box.w <= area.w
 
 
-def test_no_rounds_leave_the_crowded_first_pass(monkeypatch) -> None:
-    monkeypatch.setattr(text_labels, "ROUNDS", 0)
-    cover, cands = _crowd()
-    first_pass(cover, cands)
-    assert descend(cover, cands) == 0
-    assert cover.choice == [0, 0]
+@pytest.mark.rule("TEXT-CANDIDATES")
+@pytest.mark.parametrize("name", PLANTS)
+def test_no_label_of_a_plant_stands_outside_the_content_box(name: str) -> None:
+    """T6 (AMENDED 1): no annex box leaves the content box, blocked or not."""
+    prob = PLANTS[name]()
+    cut = pipeline_fixtures.cut_of(prob, OPTIONS)
+    rnd = route_round(cut, pipeline_fixtures.placed_from(cut, prob, OPTIONS), pipeline_fixtures.with_annexes(prob, OPTIONS), OPTIONS)
+    assert rnd.routes.labels
+    assert [lab.owner for lab in rnd.routes.labels if not inside(lab.box, prob.area)] == []
 
 
-def test_a_candidate_shared_by_two_symbols_keeps_each_ones_own_body_exempt() -> None:
-    """A's first box touches only A's body; B lists the same box and does not take A's exemption."""
-    body_a, body_b = Box(0, 16, 32, 32), Box(0, 120, 32, 32)
-    shared = Box(0, 8, 32, 8)  # flush on A's top edge
-    cover = Cover(Occupancy(20, 20, 8), 0, None, [body_a, body_b])
-    assert cover.blocked(shared, body_a) == 0
-    first_pass(cover, [[("TL", shared), ("BL", Box(64, 8, 32, 8))], [("TL", shared)]])
-    assert cover.choice == [0, 0]
+def _two_labels() -> tuple[list[Annex], dict[str, Placed]]:
+    """S1's first candidate is the only one of S2; S1 has a second above its body."""
+    case = on_page((("S1", 88, 96), ("S2", 96, 96)))
+    placed = {p.sym: p for p in case.placement.pages[0].placed}
+    below, above = Spot("below", "BL", 0, 0, "down"), Spot("above", "TL", 0, -8, "down")
+    annexes = [Annex("S1", Size(16, 8), None, {"R0": (below, above)}), Annex("S2", Size(16, 8), None, {"R0": (below,)})]
+    return annexes, placed
 
 
-def test_a_free_label_moves_to_an_earlier_free_candidate_once_it_frees_up() -> None:
-    """B stands on its second box; A's move frees B's first, so B takes it (I8.3, promote)."""
-    cover = Cover(Occupancy(20, 20, 8))
-    a1, a2 = Box(0, 0, 16, 8), Box(0, 64, 16, 8)
-    z = Box(8, 0, 16, 8)
-    b1, b2 = Box(0, 0, 8, 8), Box(0, 128, 16, 8)
-    cands = [[("BL", a1), ("TL", a2)], [("BL", z)], [("BL", b1), ("TL", b2)]]
-    first_pass(cover, cands)
-    assert cover.choice == [0, 0, 1]
-    assert descend(cover, cands) == 2
-    assert cover.choice == [1, 0, 0]
+@pytest.mark.rule("TEXT-CANDIDATES")
+def test_a_label_with_no_free_candidate_makes_room_by_moving_the_one_in_its_way() -> None:
+    """T3: the first label took the only spot of the second; it gives way to its next, and nothing is flagged."""
+    annexes, placed = _two_labels()
+    labels, found, blocked = place_labels(annexes, placed, ((), []), (1, Size(400, 300), 0, 2))
+    assert (found, blocked) == ([], [])
+    assert [(a.owner, a.spot) for a in labels] == [("S1", "above"), ("S2", "below")]
+    assert not overlaps(labels[0].box, labels[1].box)

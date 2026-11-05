@@ -19,10 +19,7 @@ def set_ranks(units: Mapping[int, Hashable]) -> dict[int, int]:
     `units` maps a set number to its `set_group` (`None` for the top level). Layout, which has no
     model, reads this with its plans' sets and units.
     """
-    return {
-        number: sorted(n for n, unit in units.items() if unit == units[number]).index(number) + 1
-        for number in units
-    }
+    return {number: 1 + sum(1 for n, unit in units.items() if unit == units[number] and n < number) for number in units}
 
 
 def set_rank(model: Model, page: Page) -> int:

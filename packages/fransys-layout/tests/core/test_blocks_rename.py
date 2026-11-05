@@ -9,13 +9,15 @@ from typing import TYPE_CHECKING, NamedTuple
 import pytest
 
 from fransys_layout.core import natural_key
-from fransys_layout.core.values import Attach, Block, Column, End, Fan, Hints, Lane, PinRef
+from fransys_layout.core.values import Hints, PinRef
 lazy from fransys_layout.core.sym_values import Sym
 
 from .blocks_fixtures import box_case, build, fan, loose
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterable
+
+    from fransys_layout.core.flow_values import Attach, Block, Column, End, Fan, Lane
 
 # (column, symbol, fan, group) formats: each keeps the natural order of the ids and spells it anew
 SPELLINGS = (("C{}", "=Y{}", "F{}", "G{}"), ("Q{:04d}", "=Z{:04d}", "R{:04d}", "H{:04d}"))
@@ -45,9 +47,7 @@ def fan_case() -> World:
 def groups_case() -> World:
     """Twelve free columns in two groups, a pair hint and a break: c2 sorts before c10."""
     syms, cols = loose(*["A"] * 10, "B", "B")
-    hints = Hints(
-        group_order=("A", "B"), order_pairs=(("s12", "s1"),), break_before=frozenset({"B"})
-    )
+    hints = Hints(group_order=("A", "B"), order_pairs=(("s12", "s1"),), break_before=frozenset({"B"}))
     return World(tuple(syms), tuple(cols), (), hints)
 
 
@@ -96,12 +96,7 @@ def respell(w: World, m: dict[str, str]) -> World:
         )
         for c in w.cols
     )
-    fans = tuple(
-        replace(
-            f, id=m[f.id], drivers=tuple(map(attach, f.drivers)), legs=tuple(map(attach, f.legs))
-        )
-        for f in w.fans
-    )
+    fans = tuple(replace(f, id=m[f.id], drivers=tuple(map(attach, f.drivers)), legs=tuple(map(attach, f.legs))) for f in w.fans)
     h = w.hints
     hints = Hints(
         group_order=tuple(m[g] for g in h.group_order),
@@ -142,21 +137,15 @@ class Row(NamedTuple):
 
 def summary(b: Block) -> Row:
     sizes = (b.width_est, b.height_est, b.short, b.keep_whole, b.forced_break_before)
-    return Row(
-        b.kind, b.unit, b.group, b.anchor, b.columns, b.fan, sizes, b.pin_edges, b.fixed_order
-    )
+    return Row(b.kind, b.unit, b.group, b.anchor, b.columns, b.fan, sizes, b.pin_edges, b.fixed_order)
 
 
 def result(w: World) -> list[tuple[str, list[Row], list[str]]]:
     lists = build(w.syms, w.cols, w.fans, w.hints)
-    return [
-        (bl.unit, [summary(b) for b in bl.blocks], [f.code for f in bl.findings]) for bl in lists
-    ]
+    return [(bl.unit, [summary(b) for b in bl.blocks], [f.code for f in bl.findings]) for bl in lists]
 
 
-def through(
-    want: list[tuple[str, list[Row], list[str]]], m: dict[str, str]
-) -> list[tuple[str, list[Row], list[str]]]:
+def through(want: list[tuple[str, list[Row], list[str]]], m: dict[str, str]) -> list[tuple[str, list[Row], list[str]]]:
     """The original's listing with its group, anchor, column and fan ids sent through the map."""
 
     def one(x: str | None) -> str | None:

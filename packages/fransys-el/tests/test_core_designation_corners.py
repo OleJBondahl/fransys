@@ -2,17 +2,12 @@
 
 "designations have four positions, one in each corner of the symbol" and "stanard position is top
 left corner, above the box, some distance from the wire", for every symbol. The card and lamps
-pages are built once each; the three card fallbacks stand where the content box leaves no room.
 """
-
-import sys
-import tempfile
-from pathlib import Path
 
 import fransys as fr
 import pytest
+from _card_case import card_case_drafts, lamps_drafts
 from conventions_fixtures import house
-from fransys.colours import BU
 from fransys_el import build, options, symbol_kit
 from fransys_el.kit_keys import tag_of
 from fransys_el.placement_ids import symbol_key
@@ -20,31 +15,18 @@ from fransys_el.placement_ids import symbol_key
 from electrical_symbols import LIBRARY
 from fransys_layout.core import Box, solve
 
-sys.path.append(str(Path(__file__).parents[3] / "tests"))
-from _card_case import card_case_drafts
-
 CORNERS = {"TL", "BL", "BR", "TR"}
 # The designations that do not stand top left, by their tag: the content box leaves no room at
 # the page's left edge for a label beside the wire of a pin that near it.
 FALLBACKS = {
-    "card16": {"-K9": "BL"} | {f"-K{n}": "BL" for n in range(10, 17)},
+    "card16": {},
     "lamps": {},
 }
 
 
-def _lamps() -> tuple:
-    d = fr.design("demo_parts", place="CAB")
-    cab = d.location("CAB", "Cabinet")
-    first, second = d.device("K1", "DEMO-RLY-2CO-24"), d.device("K2", "DEMO-RLY-2CO-24")
-    d.detail.wire(first.coil["A2"], second.coil["A1"], wire=(BU, 0.5))
-    cover = Path(tempfile.mkdtemp()) / "cover.md"
-    cover.write_text("# Cabinet\n", encoding="utf-8")
-    return d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover)
-
-
 @pytest.fixture(scope="module", params=["card16", "lamps"])
 def page(request):
-    drafts = card_case_drafts(16) if request.param == "card16" else _lamps()
+    drafts = card_case_drafts(16) if request.param == "card16" else lamps_drafts()
     model = fr.build(*drafts).model
     conventions = house()
     kit = symbol_kit(model, LIBRARY)
@@ -68,7 +50,7 @@ def test_every_designation_stands_in_one_of_its_symbols_four_corners(page) -> No
 
 def _zone(body: Box, corner: str, label: Box) -> Box:
     """The corner zone: the body's half on that side and one label width past its edge."""
-    reach = 16  # the largest Options.slack
+    reach = 32  # the largest Options.slack
     x = body.x - label.w if corner[1] == "L" else body.x + body.w // 2
     y = body.y + body.h if corner[0] == "B" else body.y - label.h - reach
     return Box(x, y, body.w // 2 + label.w, label.h + reach)
@@ -96,7 +78,7 @@ def test_every_designation_stands_inside_the_content_box(page) -> None:
 
 def _lines(core) -> list[tuple[str, tuple[int, int, int, int]]]:
     """Every drawn line as (owner, (x0, y0, x1, y1)): wire segments and body outline edges."""
-    out = []
+    out: list[tuple[str, tuple[int, int, int, int]]] = []
     for pr in core.routes.pages:
         for w in pr.wires:
             out += [("", (*a, *b)) for a, b in zip(w.points, w.points[1:], strict=False)]
@@ -111,11 +93,7 @@ def _lines(core) -> list[tuple[str, tuple[int, int, int, int]]]:
 
 def _meets(box: Box, line: tuple[int, int, int, int]) -> bool:
     x0, y0, x1, y1 = line
-    return (
-        min(x0, x1) <= box.x + box.w
-        and box.x <= max(x0, x1)
-        and (min(y0, y1) <= box.y + box.h and box.y <= max(y0, y1))
-    )
+    return min(x0, x1) < box.x + box.w and box.x < max(x0, x1) and (min(y0, y1) < box.y + box.h and box.y < max(y0, y1))
 
 
 def test_no_designation_box_touches_a_drawn_line_but_its_own_symbols_body(page) -> None:

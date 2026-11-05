@@ -2,6 +2,7 @@ standard = "IEC 60617"
 title = "Electrical graphical symbols"
 number_pattern = '^[a-z][a-z0-9]*(-[a-z0-9]+)*$'
 package = "electrical_symbols"
+port_format = "{k}.{port}"
 
 [vocabulary]
 path_kinds = ["conductor", "switch_open", "switch_closed", "impedance", "source", "diode"]
@@ -68,6 +69,7 @@ module_mm = 2.5
 divisions_per_module = 8
 wire_pitch = 8
 wire_pitch_fine = 4
+outline_margin = 4
 
 [font]
 name = "DejaVu Sans Condensed"

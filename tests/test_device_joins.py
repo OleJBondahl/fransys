@@ -24,12 +24,8 @@ def _design() -> fr.Design:
     return d
 
 
-def _leads(result: fr.BuildResult) -> list[frozenset]:
-    return [
-        frozenset((c.a, c.b))
-        for c in conductors(result.model).values()
-        if c.kind is ConductorKind.LEAD
-    ]
+def _leads(result: fr.BuildResult) -> list[frozenset[Any]]:
+    return [frozenset((c.a, c.b)) for c in conductors(result.model).values() if c.kind is ConductorKind.LEAD]
 
 
 def test_the_worked_example_fits_a_housing_on_four_leads() -> None:
@@ -104,9 +100,7 @@ def test_a_key_that_is_no_pin_of_the_new_item_raises() -> None:
 
 def test_one_parent_port_twice_raises() -> None:
     """Can-fail: a missing uniqueness check on the parent's ports writes two leads on one pin."""
-    error = _refused(
-        parent="k1", joins=lambda s: {"1": s["k1"].coil["A1"], "2": s["k1"].coil["A1"]}
-    )
+    error = _refused(parent="k1", joins=lambda s: {"1": s["k1"].coil["A1"], "2": s["k1"].coil["A1"]})
     assert "pin 'A1' of K1 twice" in str(error)
 
 

@@ -12,7 +12,7 @@ from fransys_model.vocab.enums import SignalType
 lazy from fransys_model.kernel import Model
 
 from .facts.house_settings import word
-lazy from .columns import PLC_COLUMNS
+lazy from .columns import list_columns
 lazy from .rows_plc import PlcChannelRow
 
 __all__ = ["plc_list_rows", "signal_word"]
@@ -41,10 +41,10 @@ def plc_list_rows(
     model: Model,
     rows: Iterable[PlcChannelRow],
 ) -> tuple[tuple[str | None, ...], ...]:
-    """One `PLC_COLUMNS` line per row for a printed list: the signal as its word.
+    """One `plc` column line per row for a printed list: the signal as its word.
 
     A channel bound to no field device and wired to nothing prints the `spare` word for its
-    signal name. The cells follow `PLC_COLUMNS`' order, so a column change edits that tuple alone.
+    signal name. The cells follow the `plc` columns' order.
     """
     return tuple(_plc_cells(model, row) for row in rows)
 
@@ -58,4 +58,4 @@ def _plc_cells(model: Model, row: PlcChannelRow) -> tuple[str | None, ...]:
         "wired_to": row.wired_to,
         "signal_name": word(model, "spare") if spare else row.signal_name,
     }
-    return tuple(cells[column] for column in PLC_COLUMNS)
+    return tuple(cells[column] for column in list_columns(model, "plc"))

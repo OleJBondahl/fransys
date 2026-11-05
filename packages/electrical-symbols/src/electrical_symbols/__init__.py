@@ -21,8 +21,9 @@ from electrical_symbols.box_ports import (
     is_generic_box,
 )
 from electrical_symbols.bridge_mark import BridgePiece, bridge_mark, bridge_mark_room
-from electrical_symbols.drawn_symbol import drawn_slots, drawn_symbol
+from electrical_symbols.drawn_symbol import box_marking_widths, drawn_slots, drawn_symbol
 from electrical_symbols.em_heights import em_heights
+from electrical_symbols.errors import SymbolsError
 from electrical_symbols.font_files import font_dir
 from electrical_symbols.generic_box import box_pitch, generic_box
 from electrical_symbols.marker_keys import (
@@ -41,7 +42,6 @@ from electrical_symbols.sheet import (
     slot_room,
     slot_widths,
 )
-from electrical_symbols.sheet_svg import bold_layer, sheet_svg
 from electrical_symbols.sheet_title import (
     TITLE_BLOCK_MIN_BAND_MM,
     TITLE_BLOCK_MIN_WIDTH_MM,
@@ -70,9 +70,10 @@ __all__ = [
     "BridgePiece",
     "Library",
     "Natural",
+    "SymbolsError",
     "SymdefError",
     "TitleBlock",
-    "bold_layer",
+    "box_marking_widths",
     "box_pitch",
     "box_port_marking",
     "box_port_name",
@@ -94,7 +95,6 @@ __all__ = [
     "natural",
     "notice_table",
     "power_symbol_key",
-    "sheet_svg",
     "slot_box_mm",
     "slot_room",
     "slot_widths",

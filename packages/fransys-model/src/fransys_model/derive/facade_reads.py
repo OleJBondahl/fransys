@@ -6,6 +6,7 @@ Each returns what the table walk it replaced gave, in the same order (decision 0
 from typing import cast
 
 from fransys_model.derive.document_unit import document_unit
+from fransys_model.derive.export_names import document_export_name
 from fransys_model.derive.facts.subjects import subject_kind
 from fransys_model.derive.facts.units import unit_items, unit_subtree
 from fransys_model.derive.lookups import unit_chain
@@ -54,8 +55,8 @@ def document_ids(model: Model) -> tuple[Id[Document], ...]:
 
 
 def document_stems(model: Model) -> tuple[tuple[Id[Document], str], ...]:
-    """Each document id with its name (the second part of its key), in table order."""
-    return tuple((one, record.key[1]) for one, record in documents(model).items())
+    """Each document id with its whole-model PDF name less `.pdf`, in table order: the one name a document has, never its cover."""
+    return tuple((one, document_export_name(model, None, record).removesuffix(".pdf")) for one, record in documents(model).items())
 
 
 def has_documents(model: Model) -> bool:
@@ -69,8 +70,8 @@ def has_project(model: Model) -> bool:
 
 
 def unit_ids(model: Model) -> tuple[Id[Unit], ...]:
-    """Every unit id, sorted."""
-    return tuple(sorted(units(model)))
+    """Every unit id in table order."""
+    return tuple(units(model))
 
 
 def unit_key(model: Model, unit: Id[Unit]) -> tuple[str, ...]:
@@ -94,9 +95,7 @@ def unit_owned_ids(model: Model, unit: Id[Unit]) -> frozenset[Id[Record]]:
     function_ids = {fid for fid, fn in functions(model).items() if fn.item in item_ids}
     port_ids = {pid for pid, port in ports(model).items() if port.function in function_ids}
     owned_documents = {i for i, r in documents(model).items() if document_unit(model, r.id) == unit}
-    return (
-        frozenset(item_ids) | function_ids | port_ids | unit_subtree(model, unit) | owned_documents
-    )
+    return frozenset(item_ids) | function_ids | port_ids | unit_subtree(model, unit) | owned_documents
 
 
 def release_names(model: Model) -> tuple[str, ...]:

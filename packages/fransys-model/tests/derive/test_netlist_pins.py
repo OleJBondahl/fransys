@@ -12,11 +12,7 @@ def _plant_board():
     plant = Plant()
     part = plant.part("U")
     key = ("footprint", *plant._key_of(part))
-    plant.add(
-        FootprintFacet(
-            id=make_id(FootprintFacet, key), key=key, subject=part, library="Lib", name="U"
-        )
-    )
+    plant.add(FootprintFacet(id=make_id(FootprintFacet, key), key=key, subject=part, library="Lib", name="U"))
     board = plant.item("board", part=plant.board_part(), designation="A1")
     u1 = plant.item("u1", part=part, designation="U1", parent=board)
     u2 = plant.item("u2", part=part, designation="U2", parent=board)
@@ -32,9 +28,7 @@ def test_the_nets_are_the_netlist_nets_with_every_pin_resolved() -> None:
     model = plant.model()
     rows = board_netlist(model, board)
     pins = board_pins(model, board)
-    assert [(n.name, tuple(p.port for p in n.pins)) for n in pins.nets] == [
-        (n.name, n.pins) for n in rows.nets
-    ]
+    assert [(n.name, tuple(p.port for p in n.pins)) for n in pins.nets] == [(n.name, n.pins) for n in rows.nets]
     for pin in (p for n in pins.nets for p in n.pins):
         assert pin.pad == ports(model)[pin.port].name
         assert pin.ref == item_designation(model, pin.item, relative_to=board)

@@ -1,4 +1,7 @@
-"""`python -m fransys`: `parts-module` writes the typed parts module, `help KEY` looks a key up."""
+"""`python -m fransys`: the developer verbs.
+
+`parts-module` writes the typed parts module, `help KEY` looks a key up.
+"""
 
 import sys
 from pathlib import Path

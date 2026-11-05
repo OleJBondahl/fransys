@@ -28,11 +28,7 @@ _MIN_PLACES = 2
 
 def _roots(model: Model) -> list[Id[AspectNode]]:
     """The location nodes with no parent."""
-    return [
-        n.id
-        for n in aspect_nodes(model).values()
-        if n.aspect is Aspect.LOCATION and n.parent is None
-    ]
+    return [n.id for n in aspect_nodes(model).values() if n.aspect is Aspect.LOCATION and n.parent is None]
 
 
 def _top(model: Model, node: Id[AspectNode] | None) -> Id[AspectNode] | None:
@@ -72,9 +68,7 @@ def _place_box(model: Model, place: Id[AspectNode] | None, members: list[Id[Any]
     return LocationBox(place=place, lines=node_lines(model, place), boxes=tuple(members))
 
 
-def _lines(
-    level: OverviewLevel, where: dict[Id[Any], Id[AspectNode] | None], rank: dict[Any, int]
-) -> tuple[LocationLine, ...]:
+def _lines(level: OverviewLevel, where: dict[Id[Any], Id[AspectNode] | None], rank: dict[Any, int]) -> tuple[LocationLine, ...]:
     """One line per pair of places that share cables, with those cables."""
     pairs: dict[tuple[Any, Any], set[Id[Item]]] = {}
     for line in level.lines:

@@ -20,12 +20,21 @@ from .turn_fixtures import views_of
 
 def _facts(r, **changes) -> Facts:
     opts = replace(OPTIONS, **changes)
-    return Facts(r.elems, r.syms, r.ends_by_net, r.net_of, opts.end_bias_weight, opts.flip_turn)
+    return Facts(
+        r.elems,
+        r.syms,
+        r.ends_by_net,
+        r.net_of,
+        opts.end_bias_weight,
+        opts.anchor_weight,
+        opts.boxpin_weight,
+        opts.flip_turn,
+    )
 
 
 def test_end_bias_weight_decides_how_far_a_biased_pin_pulls_the_chain_end() -> None:
     r = read([elem("a", stand_n="GROUND"), elem("b")], [net("x", "a.s", "b.n")])
-    (path,) = chains(links_of(r.ends_by_net), r.elems, set())
+    (path,) = chains(links_of(r.ends_by_net, r.elems, r.syms), r.elems, set())
     house = orient_chain(path, _facts(r))
     other = orient_chain(path, _facts(r, end_bias_weight=0))
     assert [n.elem for n in house] == ["b@n", "a#0"]

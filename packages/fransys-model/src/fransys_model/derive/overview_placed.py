@@ -44,12 +44,7 @@ def _ref(ref: OverviewRef | None) -> RefRow | None:
 
 
 def _box(row: ViewBox, record: OverviewBox) -> PlacedBox:
-    tabs = tuple(
-        PlacedTab(
-            index=t.index, x=t.x, y=t.y, text_width=t.text_width, width=t.width, height=t.height
-        )
-        for t in record.tabs
-    )
+    tabs = tuple(PlacedTab(index=t.index, x=t.x, y=t.y, text_width=t.text_width, width=t.width, height=t.height) for t in record.tabs)
     return PlacedBox(
         ref=_row(row.key.ref),
         at=_ref(row.key.at),
@@ -79,9 +74,7 @@ def _placed(rows: ViewRows, tables: tuple[Any, Any, Any]) -> PlacedView | None:
     if view is None:
         return None
     index = {b.key: i for i, b in enumerate(rows.boxes)}
-    placed_boxes = tuple(
-        _box(b, boxes[make_id(OverviewBox, box_key(key, b.key))]) for b in rows.boxes
-    )
+    placed_boxes = tuple(_box(b, boxes[make_id(OverviewBox, box_key(key, b.key))]) for b in rows.boxes)
     placed_lines = tuple(
         _line(
             index,
@@ -101,18 +94,12 @@ def _placed(rows: ViewRows, tables: tuple[Any, Any, Any]) -> PlacedView | None:
     )
 
 
-def overview_placed_views(
-    model: Model, found: Iterable[ViewRows] | None = None
-) -> tuple[PlacedView, ...]:
+def overview_placed_views(model: Model, found: Iterable[ViewRows] | None = None) -> tuple[PlacedView, ...]:
     """The views the engine placed, in the order of `overview_view_rows`; one it did not is absent.
 
     `found` are the rows to join, when the caller already holds them; else every unit's views.
     """
-    rows = (
-        [r for unit in overview_units(model) for r in overview_view_rows(model, unit)]
-        if found is None
-        else list(found)
-    )
+    rows = [r for unit in overview_units(model) for r in overview_view_rows(model, unit)] if found is None else list(found)
     tables = (
         layout_of(model, OverviewView),
         layout_of(model, OverviewBox),

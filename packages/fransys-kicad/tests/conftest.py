@@ -7,15 +7,17 @@ records, not a frozen model, so a test can reorder them before they reach a `Dra
 import random
 import re
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import pytest
+from fransys_author.instantiate import instantiate
 
 from fransys_model.kernel import Draft, Origin, evolve, freeze, make_id
-from fransys_model.vocab import PartBundle, instantiate
+from fransys_model.layout import DesignationForm
+from fransys_model.vocab import PartBundle
 from fransys_model.vocab.connectivity import Net
 from fransys_model.vocab.core import Function, Item, Port
-from fransys_model.vocab.enums import FunctionKind, NetClass, PartCategory, PortRole
+from fransys_model.vocab.enums import FunctionKind, NetClass, PartCategory, PortBoundary
 from fransys_model.vocab.facets.pcb import FootprintFacet, PcbFacet
 from fransys_model.vocab.templates import FunctionTemplate, Part, PortTemplate
 
@@ -80,7 +82,7 @@ class Design:
                     key=(key, name, pin),
                     function=template.id,
                     name=pin,
-                    role=PortRole.GENERIC,
+                    boundary=PortBoundary.GENERIC,
                 )
                 for pin in pins
             )
@@ -134,9 +136,7 @@ class Design:
         function_names = {r.id: r.name for r in stamped if isinstance(r, Function)}
         return Placed(
             item=next(r.id for r in stamped if isinstance(r, Item)),
-            ports={
-                (function_names[r.function], r.name): r.id for r in stamped if isinstance(r, Port)
-            },
+            ports={(function_names[r.function], r.name): r.id for r in stamped if isinstance(r, Port)},
         )
 
     def net(self, key: str, ports: tuple[Id[Port], ...], *, name: str | None = None) -> None:
@@ -153,7 +153,10 @@ class Design:
 
     def draft(self, seed: int | None = None) -> Draft:
         """The records in a `Draft`, shuffled by `seed` when there is one."""
-        records = list(self.records)
+        records = [
+            DesignationForm(id=make_id(DesignationForm, ("build", "designation")), key=("build", "designation"), number_start=1),
+            *self.records,
+        ]
         if seed is not None:
             random.Random(seed).shuffle(records)  # noqa: S311 -- a test shuffle, not security
         draft = Draft()
@@ -245,9 +248,7 @@ def new_design() -> type[Design]:
     return Design
 
 
-_TOKEN = re.compile(
-    r'\s*(?:(?P<open>\()|(?P<close>\))|"(?P<string>(?:[^"\\]|\\.)*)"|(?P<atom>[^\s()"]+))'
-)
+_TOKEN = re.compile(r'\s*(?:(?P<open>\()|(?P<close>\))|"(?P<string>(?:[^"\\]|\\.)*)"|(?P<atom>[^\s()"]+))')
 _ESCAPES = {"n": "\n", "r": "\r"}
 
 
@@ -257,7 +258,7 @@ def _unescape(text: str) -> str:
 
 def _tokens(text: str) -> list[tuple[str, str]]:
     """`(kind, text)` for every token: `open`, `close`, `string` (still escaped) or `atom`."""
-    found = []
+    found: list[tuple[str, str]] = []
     position = 0
     text = text.rstrip()
     while position < len(text):
@@ -270,12 +271,12 @@ def _tokens(text: str) -> list[tuple[str, str]]:
     return found
 
 
-def _read(tokens: list[tuple[str, str]], start: int) -> tuple[list, int]:
+def _read(tokens: list[tuple[str, str]], start: int) -> tuple[list[Any], int]:
     """The list whose opening parenthesis is `tokens[start]`, and the index after its closing."""
     if start >= len(tokens) or tokens[start][0] != "open":
         msg = "expected an opening parenthesis"
         raise ValueError(msg)
-    node: list = []
+    node: list[Any] = []
     position = start + 1
     while position < len(tokens):
         kind, text = tokens[position]
@@ -291,13 +292,10 @@ def _read(tokens: list[tuple[str, str]], start: int) -> tuple[list, int]:
     raise ValueError(msg)
 
 
-def parse_sexpr(text: str) -> list:
+def parse_sexpr(text: str) -> list[Any]:
     """Read one s-expression into nested lists of `str`, the way KiCad's lexer reads a netlist.
 
     A quoted string and a bare atom both become a `str`; only the parentheses make a list.
-
-    Raises:
-        ValueError: the text is not exactly one balanced expression.
     """
     tokens = _tokens(text)
     node, end = _read(tokens, 0)
@@ -311,3 +309,21 @@ def parse_sexpr(text: str) -> list:
 def sexpr():
     """`parse_sexpr`, for a test that reads a netlist back."""
     return parse_sexpr
+
+
+@pytest.fixture
+def make_kicad_sym():
+    """A minimal `.kicad_sym` library with one symbol, invented for these tests.
+
+    The factory takes `units`, a map of a `"<unit>_<style>"` sub-symbol suffix (e.g. `"1_1"`) to the pin
+    numbers of that sub-symbol, the way KiCad nests one sub-symbol per unit and body style.
+    """
+
+    def make(symbol: str, units: dict[str, list[str]]) -> str:
+        sub_symbols = "".join(
+            f'(symbol "{symbol}_{suffix}" ' + "".join(f'(pin passive line (number "{number}" (effects (font))))' for number in pins) + ")"
+            for suffix, pins in units.items()
+        )
+        return f'(kicad_symbol_lib (version 1) (symbol "{symbol}" {sub_symbols}))'
+
+    return make

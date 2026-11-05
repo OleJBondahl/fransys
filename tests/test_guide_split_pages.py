@@ -1,13 +1,10 @@
 """The drawing, documents and reading pages' rewritten blocks keep their wire rows (API-DETAIL)."""
+# RATING_CURRENT_BELOW_BRANCH 2 per default-salt build set: refusal or induced finding, asserted through expect_codes.
 
 import fransys as fr
+from _expected_codes import expect_codes
 from fransys.colours import BK, BU, WH
-
-
-def _cols(d) -> frozenset[tuple[str, str, str, str]]:
-    """The wires of a design as (from, to, colour, size): what a rewrite must keep."""
-    rows = fr.derive.wire_rows(fr.build(d).model)
-    return frozenset((r.from_, r.to, r.colour, str(r.cross_section_mm2)) for r in rows)
+from test_guide_high_level_first import _cols
 
 
 def _terminal_cabinet(*, series: bool):
@@ -18,8 +15,8 @@ def _terminal_cabinet(*, series: bool):
     if series:
         d.series(x1, k1.coil, x1, wire=(BK, 1.5))
     else:
-        d.detail.wire(x1[1], k1.coil["A1"], wire=(BK, 1.5))
-        d.detail.wire(x1[2], k1.coil["A2"], wire=(BK, 1.5))
+        d.series(x1[1].inner, k1.coil["A1"], wire=(BK, 1.5))
+        d.series(x1[2].inner, k1.coil["A2"], wire=(BK, 1.5))
     return d
 
 
@@ -41,26 +38,22 @@ def _lamps(*, series: bool, after_contact: bool, colour=BU):
             d.series(dc.plus, h.lamp, dc.minus, wire=(colour, 0.75))
         else:
             if after_contact:
-                d.detail.wire(psu.output["+"], k.co_1["11"], wire=(BU, 0.75))
-                d.detail.wire(k.co_1["14"], h.lamp["1"], wire=(BU, 0.75))
+                d.series(psu.output["+"], k.co_1["11"], wire=(BU, 0.75))
+                d.series(k.co_1["14"], h.lamp["1"], wire=(BU, 0.75))
             else:
-                d.detail.wire(psu.output["+"], h.lamp["1"], wire=(BU, 0.75))
-            d.detail.wire(h.lamp["2"], psu.output["-"], wire=(BU, 0.75))
+                d.series(psu.output["+"], h.lamp["1"], wire=(BU, 0.75))
+            d.series(h.lamp["2"], psu.output["-"], wire=(BU, 0.75))
     return d
 
 
 def test_the_lamp_pair_series_keeps_the_hand_wired_wires():
     for after_contact in (False, True):
-        assert _cols(_lamps(series=True, after_contact=after_contact)) == _cols(
-            _lamps(series=False, after_contact=after_contact)
-        )
+        assert _cols(_lamps(series=True, after_contact=after_contact)) == _cols(_lamps(series=False, after_contact=after_contact))
 
 
 def test_the_lamp_pair_series_differs_when_a_colour_changes():
     """Can fail: a planted one-colour change in the series form is seen by the comparison."""
-    assert _cols(_lamps(series=True, after_contact=True, colour=WH)) != _cols(
-        _lamps(series=False, after_contact=True)
-    )
+    assert _cols(_lamps(series=True, after_contact=True, colour=WH)) != _cols(_lamps(series=False, after_contact=True))
 
 
 def _branch(*, series: bool):
@@ -75,17 +68,24 @@ def _branch(*, series: bool):
     else:
         x1 = d.device("X1", "DEMO-TB-2.5", external=True)
         x2 = d.device("X2", "DEMO-TB-2.5", external=True)
-        d.detail.wire(dc.plus.pin, f1[1], wire=(BK, 1.5))
-        d.detail.wire(f1[2], k1[1], wire=(BK, 1.5))
-        d.detail.wire(k1[2], x1["internal"], wire=(BK, 1.5))
-        d.detail.wire(dc.minus.pin, x2["internal"], wire=(BK, 1.5))
+        d.series(dc.plus.pin, f1[1], wire=(BK, 1.5))
+        d.series(f1[2], k1[1], wire=(BK, 1.5))
+        d.series(k1[2], x1["internal"], wire=(BK, 1.5))
+        d.series(dc.minus.pin, x2["internal"], wire=(BK, 1.5))
     return d
+
+
+def _asserted_cols(d):
+    """reading.md rates the contactor below the fuse on purpose: the finding is the example's subject."""
+    result = fr.build(d)
+    expect_codes(result, "RATING_CURRENT_BELOW_BRANCH")
+    return frozenset((r.from_, r.to, r.colour, str(r.cross_section_mm2)) for r in fr.derive.wire_rows(result.model))
 
 
 def test_the_branch_series_keeps_the_wires_but_the_two_end_terminals_join_one_strip():
     """The ends differ by name only: two lone terminals have no poles, so a strip of two holds
     them, and -X1:internal, -X2:internal read -X1:1, -X1:2. The hops before them are the same."""
-    new, old = _cols(_branch(series=True)), _cols(_branch(series=False))
+    new, old = (_asserted_cols(_branch(series=series)) for series in (True, False))
     assert new - old == {("-X1:1", "-K1:2", "BK", "1.5"), ("-X1:2", "-G1:-", "BK", "1.5")}
     assert old - new == {
         ("-K1:2", "-X1:internal", "BK", "1.5"),
@@ -104,8 +104,8 @@ def _relays(*, series: bool):
         if series:
             d.series(dc.plus, k.coil, dc.minus, wire=(BU, 0.75))
         else:
-            d.detail.wire(psu.output["+"], k.coil["A1"], wire=(BU, 0.75))
-            d.detail.wire(k.coil["A2"], psu.output["-"], wire=(BU, 0.75))
+            d.series(psu.output["+"], k.coil["A1"], wire=(BU, 0.75))
+            d.series(k.coil["A2"], psu.output["-"], wire=(BU, 0.75))
     return d
 
 

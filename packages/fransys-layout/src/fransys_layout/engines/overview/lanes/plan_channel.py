@@ -77,9 +77,7 @@ def _spanned(nets: Sequence[Net]) -> dict[int, set[int]]:
     A net whose top lies inside another's span runs above it, one whose bottom does runs below it.
     A pair that asks both ways must cross whatever the tracks, so it asks nothing.
     """
-    pairs = [
-        (i, j) for i in range(len(nets)) for j in range(len(nets)) if nets[i].core != nets[j].core
-    ]
+    pairs = [(i, j) for i in range(len(nets)) for j in range(len(nets)) if nets[i].core != nets[j].core]
     asks = {(i, j) for i, j in pairs if _inside(nets[i].top, nets[j])}
     asks |= {(j, i) for i, j in pairs if _inside(nets[i].bottom, nets[j])}
     found: dict[int, set[int]] = {i: set() for i in range(len(nets))}
@@ -116,9 +114,7 @@ def _jog_column(net: Net, taken: Collection[int]) -> int | None:
     return min(free, key=lambda x: (abs(x - net.bottom), x)) if free else None
 
 
-def _split(
-    nets: Sequence[Net], cycle: Sequence[int], taken: Collection[int]
-) -> tuple[tuple[Net, ...], int] | None:
+def _split(nets: Sequence[Net], cycle: Sequence[int], taken: Collection[int]) -> tuple[tuple[Net, ...], int] | None:
     """Jog the highest-keyed whole core of `cycle`: the nets with it halved, and its jog column."""
     whole = [i for i in cycle if nets[i].part == 0]
     if not whole:
@@ -131,9 +127,7 @@ def _split(
     return (*nets[:i], *halves, *nets[i + 1 :]), column
 
 
-def _one_track(
-    nets: Sequence[Net], above: Mapping[int, AbstractSet[int]], done: AbstractSet[int]
-) -> list[int]:
+def _one_track(nets: Sequence[Net], above: Mapping[int, AbstractSet[int]], done: AbstractSet[int]) -> list[int]:
     """The nets one track takes: by left edge, then core key, apart and with their demands met."""
     order = sorted(
         (i for i in range(len(nets)) if i not in done),

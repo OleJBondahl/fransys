@@ -144,9 +144,7 @@ def test_an_unknown_field_is_reported_by_name() -> None:
         "decimal-negative-zero",
     ],
 )
-def test_text_that_does_not_convert_is_collected_with_its_field(
-    field: str, broken: Any, phrase: str, expected_kind: str
-) -> None:
+def test_text_that_does_not_convert_is_collected_with_its_field(field: str, broken: Any, phrase: str, expected_kind: str) -> None:
     """A bad id, an enum value that is not a member, a `Decimal` that does not parse.
 
     `expected_kind` pins decode.py:173's `kind=exc.kind`: `"id"` comes from `ids.parse_id`
@@ -191,9 +189,7 @@ def test_a_mapping_at_an_undeclared_position_must_be_exactly_one_known_tag(ext: 
     ],
     ids=["syntax", "duplicate-key", "float", "nan", "exponent"],
 )
-def test_json_that_is_not_canonical_is_a_schema_error_not_a_stdlib_error(
-    text: str, phrase: str
-) -> None:
+def test_json_that_is_not_canonical_is_a_schema_error_not_a_stdlib_error(text: str, phrase: str) -> None:
     """Syntax errors, repeated keys, floats and NaN are refused as `SchemaError`."""
     with pytest.raises(SchemaError, match=phrase):
         loads(text)

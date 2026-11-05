@@ -4,30 +4,25 @@ from __future__ import annotations
 
 from dataclasses import replace
 
+import pytest
 from turn_fixtures import refit
 
 from fransys_layout import core
-from fransys_layout.core.topology_elements import NetEnd, elements, net_ends, wired_pins
+from fransys_layout.core.topology_elements import NetEnd, elements, net_ends, netted_pins
 from fransys_layout.core.values import BoxSpec, CutEnd, Net, Pin, PinRef
 lazy from fransys_layout.core.sym_values import Sym
 
 from .flow_builders import OPTIONS, elem, free, net, poles, problem
 
 
-def _ends(syms: list[Sym], nets: list[Net], net_id: str) -> tuple[NetEnd, ...]:
+def _ends(syms: list[Sym], nets: list[Net], net_id: str, joined: tuple[frozenset[PinRef], ...] = ()) -> tuple[NetEnd, ...]:
     """The ends of one net, with elements read from the symbols as stage 1 reads them."""
     prob = problem(syms, nets)
-    wired = wired_pins(prob)
-    elem_of_pin = {
-        PinRef(sym.id, pin): e
-        for sym in prob.symbols
-        for e in elements(sym, wired)
-        for pin in (e.n_pin, e.s_pin)
-        if pin is not None
-    }
+    wired = netted_pins(prob)
+    elem_of_pin = {PinRef(sym.id, pin): e for sym in prob.symbols for e in elements(sym, wired) for pin in (e.n_pin, e.s_pin) if pin is not None}
     by_id = {sym.id: sym for sym in prob.symbols}
     found = next(n for n in prob.nets if n.id == net_id)
-    return net_ends(found, elem_of_pin, by_id)
+    return net_ends(found, elem_of_pin, by_id, joined)
 
 
 def test_poles_with_equal_pin_dx_become_one_element_per_pole() -> None:
@@ -50,17 +45,22 @@ def test_a_single_is_one_element() -> None:
     assert (only.form, only.n_pin, only.s_pin) == ("single", None, "s")
 
 
+@pytest.mark.rule("NET-END-THROUGH")
 def test_net_end_roles_top_bottom_side_through_and_boxpin() -> None:
     top = _ends([elem("a"), elem("b")], [net("x", "a.n", "b.n"), net("y", "a.s", "b.s")], "x")
     bottom = _ends([elem("a"), elem("b")], [net("x", "a.n", "b.n"), net("y", "a.s", "b.s")], "y")
-    through = _ends([elem("a"), elem("b")], [net("x", "a.n", "a.s", "b.n")], "x")
+    both = _ends([elem("a"), elem("b")], [net("x", "a.n", "a.s", "b.n")], "x")
+    linked = _ends([elem("a"), elem("b")], [net("x", "a.n", "a.s", "b.n")], "x", (frozenset((PinRef("a", "n"), PinRef("a", "s"))),))
+    through = _ends([free("t")], [net("x", "t.n", "t.s")], "x")
     side_pin = replace(elem("a"), pins=(Pin("e", "E", 8, 0, 0),), nodes=(("e",),))
     side = _ends([side_pin, elem("b")], [net("x", "a.e", "b.n")], "x")
-    box = replace(elem("c"), box=BoxSpec(("n", "s"), "S", 16, 16))
+    box = replace(elem("c"), box=BoxSpec(("n", "s"), 16))
     boxed = _ends([elem("a"), box], [net("x", "c.s", "a.n")], "x")
     assert [e.site for e in top] == ["top", "top"]
     assert [e.site for e in bottom] == ["bottom", "bottom"]
-    assert [e.site for e in through] == ["through", "top"]
+    assert [e.site for e in both] == ["top", "bottom", "top"]  # R1574: a pole keeps one end per pin
+    assert [e.site for e in linked] == ["through", "top"]  # R1580: a link-joined pole passes the net through
+    assert [e.site for e in through] == ["through"]  # a terminal's two pins fold to one end
     assert [e.site for e in side] == ["side", "top"]
     assert [e.site for e in boxed] == ["top", "boxpin"]
 
@@ -94,5 +94,5 @@ def test_elements_come_back_in_natural_key_order_whatever_the_pin_order() -> Non
 
 def test_solve_carries_the_wired_pins_and_the_surface_does_not_export_the_function() -> None:
     prob = problem([elem("a"), elem("b")], [net("x", "a.n", "b.n")])
-    assert "wired_pins" not in core.__all__
+    assert "netted_pins" not in core.__all__
     assert dict(core.solve(prob, OPTIONS).wired) == {PinRef("a", "n"): "x", PinRef("b", "n"): "x"}

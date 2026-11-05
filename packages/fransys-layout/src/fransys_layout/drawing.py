@@ -8,7 +8,7 @@ give its JSON form. Imports the standard library and the core's plain values onl
 from dataclasses import dataclass
 from typing import Literal
 
-lazy from .core.values import XY, Box, Orientation, Side, Size
+lazy from .core.values import XY, Box, Orientation, Size
 lazy from .drawing_reads import (
     fill_percent,
     page_texts,
@@ -23,7 +23,6 @@ lazy from .geometry.symbols import port_points
 __all__ = (
     "Corner",
     "Drawing",
-    "DrawnMarker",
     "DrawnOutline",
     "DrawnSymbol",
     "DrawnText",
@@ -72,7 +71,8 @@ class DrawnSymbol:
     `outline` is the body box in G on the page, absolute: the box the core placed, or the
     symbol's own body at its origin; `None` when the producer knew no body. `ports` and `net`
     are identity strings with no meaning to the core or to render: the ports the symbol draws,
-    and the net a marker stands for.
+    and the net a marker stands for. `slot_ink` is the page box of each string in `slots`, measured from
+    the string (TEXT-BOX-MEASURED): the box the overlap and page checks read.
     """
 
     id: str
@@ -93,6 +93,7 @@ class DrawnSymbol:
     outline: Box | None = None
     ports: tuple[str, ...] = ()
     net: str = ""
+    slot_ink: tuple[tuple[str, Box], ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -106,21 +107,7 @@ class DrawnWire:
     points: tuple[XY, ...]
     style: str
     lanes: int = 1
-    label: DrawnText | None = None
     net: str = ""
-
-
-@dataclass(frozen=True, slots=True)
-class DrawnMarker:
-    """A reference marker at (x, y) facing `side`, with its texts by slot id."""
-
-    id: str
-    key: str
-    x: int
-    y: int
-    side: Side
-    texts: tuple[tuple[str, str], ...]
-    tint: str | None
 
 
 @dataclass(frozen=True, slots=True)
@@ -140,7 +127,6 @@ class Drawing:
     area: Size
     symbols: tuple[DrawnSymbol, ...]
     wires: tuple[DrawnWire, ...]
-    markers: tuple[DrawnMarker, ...]
     texts: tuple[DrawnText, ...]
     outlines: tuple[DrawnOutline, ...]
     library_version: str
@@ -189,7 +175,6 @@ class Style:
     line_thin_mm: float
     line_thick_mm: float
     line_rule_mm: float
-    junction_dot_mm: float
     muted_colour: str
     module_mm: float
     wiring_grid: int

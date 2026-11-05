@@ -1,10 +1,9 @@
-"""The facts behind the connectivity, supply and bar checks (EL-4)."""
+"""The facts behind the connectivity and supply checks (EL-4)."""
 
 from decimal import Decimal
 
 from plant import Plant
 
-from fransys_model.derive.facts.bars import bar_ports_not_pe
 from fransys_model.derive.facts.closure import net_on_one_board, port_item
 from fransys_model.derive.facts.net_facts import declared_nets_of
 from fransys_model.derive.facts.potential_without_supply import (
@@ -17,22 +16,20 @@ from fransys_model.derive.facts.supply_sources import (
     supply_differences,
 )
 from fransys_model.derive.facts.wired_ports import half_connected, mated_ports, wired_ports
+from fransys_model.elecdef import Current
 from fransys_model.kernel import make_id
-from fransys_model.vocab import Current, Earthing, Rail, SupplySystem
+from fransys_model.vocab import Rail, SupplySystem
 from fransys_model.vocab.core import Function, Item
 from fransys_model.vocab.enums import FunctionKind
 
 
-def _supply(
-    key: str, name: str, *potentials: str, earthing: Earthing = Earthing.EARTHED
-) -> SupplySystem:
+def _supply(key: str, name: str, *potentials: str) -> SupplySystem:
     rails = frozendict({p: Rail(max_v=Decimal(24), phase=None) for p in potentials})
     return SupplySystem(
         id=make_id(SupplySystem, (key,)),
         key=(key,),
         name=name,
         current=Current.DC,
-        earthing=earthing,
         rails=rails,
     )
 
@@ -42,7 +39,7 @@ def test_declared_nets_of_lists_the_nets_that_hold_a_port() -> None:
     a, b, c = (plant.pin(name, "f", "1") for name in "abc")
     first, second = plant.net("n1", (a, b)), plant.net("n2", (a,))
     model = plant.model()
-    assert declared_nets_of(model, a) == (first, second)
+    assert sorted(declared_nets_of(model, a)) == sorted((first, second))
     assert declared_nets_of(model, c) == ()
 
 
@@ -86,19 +83,12 @@ def test_potentials_without_supply_skips_declared_rails() -> None:
     assert declared_rails(model) == ("24V",)
 
 
-def test_bar_ports_not_pe_lists_a_generic_bar_port() -> None:
-    plant = Plant()
-    bar = plant.function(plant.item("bar"), "pe", kind=FunctionKind.BAR)
-    port = plant.port(bar, "1")
-    assert bar_ports_not_pe(plant.model()) == (port,)
-
-
 def test_supply_facts_group_by_name_and_potential() -> None:
     plant = Plant()
-    plant.add(_supply("s1", "A", "24V"), _supply("s2", "A", "24V", earthing=Earthing.IT))
+    plant.add(_supply("s1", "A", "24V"), _supply("s2", "A", "24V", "0V"))
     plant.add(_supply("s3", "B", "24V"))
     model = plant.model()
-    assert [s.key[0] for s in declarations_by_name(model)["A"]] == ["s1", "s2"]
-    assert [s.key[0] for s in supplies_by_potential(model)["24V"]] == ["s1", "s2", "s3"]
+    assert sorted(s.key[0] for s in declarations_by_name(model)["A"]) == ["s1", "s2"]
+    assert sorted(s.key[0] for s in supplies_by_potential(model)["24V"]) == ["s1", "s2", "s3"]
     assert list(supply_differences(model)) == ["A"]
-    assert "earthing" in supply_differences(model)["A"]
+    assert "rails" in supply_differences(model)["A"]

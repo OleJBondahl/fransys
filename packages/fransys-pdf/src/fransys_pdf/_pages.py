@@ -22,14 +22,9 @@ def _flatten_lists(elements: tuple[Element, ...]) -> tuple[Element, ...]:
     flat = []
     for element in elements:
         if isinstance(element, BulletList):
-            flat.extend(
-                Paragraph(element.line, (Run("plain", "• "), *item)) for item in element.items
-            )
+            flat.extend(Paragraph(element.line, (Run("plain", "• "), *item)) for item in element.items)
         elif isinstance(element, NumberedList):
-            flat.extend(
-                Paragraph(element.line, (Run("plain", f"{i}. "), *item))
-                for i, item in enumerate(element.items, start=1)
-            )
+            flat.extend(Paragraph(element.line, (Run("plain", f"{i}. "), *item)) for i, item in enumerate(element.items, start=1))
         else:
             flat.append(element)
     return tuple(flat)
@@ -91,9 +86,7 @@ def cover_page(
     return "\n".join(parts)
 
 
-def notes_page(record: DocumentRow, heading_word: str) -> str:
+def notes_page(notes: str, heading_word: str) -> str:
     """The notes page: the `notes` word as heading, then the notes text."""
-    notes = record.notes
-    assert notes is not None  # noqa: S101 -- document_pages excludes NOTES when there is no notes text
     heading = f"#heading(level: 1, text({literal(heading_word)}))"
     return "\n".join([heading, to_typst(parse(notes))])

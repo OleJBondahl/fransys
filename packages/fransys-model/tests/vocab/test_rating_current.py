@@ -2,12 +2,12 @@
 
 Every device is an item `key` with one function `f` (builders in `current_plant`); a supply and
 its rails are put on the string's first port, so `port_rails` reaches the whole line. The expected
-values are written by hand from the spec, never copied from the output.
 """
 
 from typing import TYPE_CHECKING
 
 from current_plant import (
+    Ports,
     changeover,
     contactor,
     device,
@@ -23,13 +23,14 @@ from rating_plant import rail, supply
 from fransys_model.checks.ratings_current import (
     check_ratings_current,
 )
+from fransys_model.elecdef import Current
 from fransys_model.kernel import make_id
 from fransys_model.vocab.core import Item
-from fransys_model.vocab.enums import Current
 from fransys_model.vocab.finding_ref import ref
 
 if TYPE_CHECKING:
-    from fransys_model.kernel import Finding
+    from fransys_model.kernel import Finding, Id
+    from fransys_model.vocab.core import Function
 
 
 def _dc_plant() -> Plant:
@@ -38,14 +39,14 @@ def _dc_plant() -> Plant:
     return plant
 
 
-def _source(plant: Plant, key: str = "S", limit: str = "186", *, at: int = 1) -> tuple:
+def _source(plant: Plant, key: str = "S", limit: str = "186", *, at: int = 1) -> Ports:
     """A source limited to `limit` A DC with DC+ on its port `at` (0 or 1), DC- on the other."""
     rails = [["DC-"], ["DC-"]]
     rails[at] = ["DC+"]
     return device(plant, key, limit=limit, rails=rails)
 
 
-def _ids(*keys: str) -> set:
+def _ids(*keys: str) -> set[Id[Function]]:
     return {Plant.function_id(key, "f") for key in keys}
 
 
@@ -72,10 +73,7 @@ def test_a_full_range_fuse_bounds_the_branch_at_its_own_rating() -> None:
     assert check_ratings_current(_fused("120").model()) == ()
     finding = _the_finding(_fused("90"))
     assert finding.subjects == (Plant.function_id("K", "f"),)
-    assert finding.message.endswith(
-        "below its branch's 100 A DC set by the protective device of function "
-        + ref(Plant.function_id("F", "f"))
-    )
+    assert finding.message.endswith("below its branch's 100 A DC set by the protective device of function " + ref(Plant.function_id("F", "f")))
 
 
 # -- two strings on one bus ------------------------------------------------------
@@ -104,8 +102,6 @@ def _changeover_plant(d_amps: str, *, rated: bool = True, unrelated: bool = Fals
     the common through a 400 A full-range fuse `F` to `D`, all ends at external items.
 
     The changeover `CO` is rated 500 A, or with `rated` false unrated (its links are wires).
-    With `unrelated` a second unrated changeover `U` has its common on `D`'s far end: in the same
-    component, but nothing that `D`'s bound depends on.
     """
     plant = _dc_plant()
     common, make, brk = changeover(plant, "CO", "500" if rated else None)

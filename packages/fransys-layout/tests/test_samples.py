@@ -2,7 +2,6 @@
 geometry.md 5.2).
 
 A skipped skeleton with an off-grid origin would fail once implemented for a reason
-that is a fixture bug, so this check runs today: it needs no stub.
 """
 
 import ast

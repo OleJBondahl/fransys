@@ -1,6 +1,7 @@
 """`external=` on `item`, `strip`, `cable` and `harness`."""
 
-from fransys_author import Design
+import pytest
+from fransys_author.design import Design
 
 from fransys_model import derive
 from fransys_model.kernel import Draft, freeze, merge
@@ -9,18 +10,22 @@ from fransys_model.vocab import Item as ModelItem
 
 
 def _items(draft: Draft) -> dict[tuple[str, ...], ModelItem]:
-    found = {r.key: r for r in draft.records() if isinstance(r, ModelItem)}
+    found: dict[tuple[str, ...], ModelItem] = {r.key: r for r in draft.records() if isinstance(r, ModelItem)}
     assert len(found) > 0
     return found
 
 
-def test_item_with_a_part_carries_external_and_defaults_to_false(parts):
+@pytest.mark.parametrize(
+    ("method", "args", "on", "off"),
+    [("item", ("TEST-RLY-2CO",), "K1", "K2"), ("item", (None,), "A1", "A2"), ("harness", (), "WH1", "WH2")],
+)
+def test_item_carries_external_and_defaults_to_false(parts, method, args, on, off):
     d = Design(parts)
-    d.item("TEST-RLY-2CO", tag="K1", external=True)
-    d.item("TEST-RLY-2CO", tag="K2")
+    getattr(d, method)(*args, tag=on, external=True)
+    getattr(d, method)(*args, tag=off)
     items = _items(d.draft())
-    assert items[("K1",)].external is True
-    assert items[("K2",)].external is False
+    assert items[(on,)].external is True
+    assert items[(off,)].external is False
 
 
 def test_external_part_item_flags_the_item_record_only(parts):
@@ -29,15 +34,6 @@ def test_external_part_item_flags_the_item_record_only(parts):
     records = tuple(r for r in d.draft().records() if isinstance(r, ModelItem))
     assert len(records) == 1
     assert records[0].external is True
-
-
-def test_part_less_item_carries_external_and_defaults_to_false(parts):
-    d = Design(parts)
-    d.item(None, tag="A1", external=True)
-    d.item(None, tag="A2")
-    items = _items(d.draft())
-    assert items[("A1",)].external is True
-    assert items[("A2",)].external is False
 
 
 def test_external_strip_is_external_for_its_terminals_through_the_parent_chain(parts):
@@ -76,15 +72,6 @@ def test_external_cable_flags_its_item_and_not_its_conductors(parts):
     assert derive.external(model, w1.id) is True
     assert derive.external(model, x1.id) is False
     assert derive.external(model, t1.id) is False
-
-
-def test_external_harness_carries_the_flag(parts):
-    d = Design(parts)
-    d.harness(tag="WH1", external=True)
-    d.harness(tag="WH2")
-    items = _items(d.draft())
-    assert items[("WH1",)].external is True
-    assert items[("WH2",)].external is False
 
 
 def test_scope_and_unit_scope_pass_external_through(parts):

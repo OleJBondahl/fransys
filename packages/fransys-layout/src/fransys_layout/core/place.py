@@ -7,17 +7,20 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from .marker_flags import with_rooms
+from .fold_page import refolded
+from .outline import unit_hulls
 from .outputs import Placement
-from .place_assemble import assemble, placed_rooms
+from .place_assemble import assemble
 from .place_env import page_envs
+from .place_pairs import settled
 from .place_x import place_x
 from .place_y import place_y
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
-    from .values import CutResult, Finding, Options, PlacementProblem
+    from .flow_values import CutResult
+    from .values import Finding, Options, PlacementProblem
 
 
 def place_pages(
@@ -30,12 +33,15 @@ def place_pages(
 
     reserves (stage 7): a (left column, right column) pair to the tracks its gap must hold.
     """
-    pages = []
+    stages, pages = [], []
     findings: list[Finding] = []
-    for bare in page_envs(cut, problem, options, reserves):
-        x, wide = place_x(bare)
-        env = with_rooms(bare, x, placed_rooms(bare, x))
+    for page in page_envs(cut, problem, options, reserves):
+        x, wide = place_x(page)
+        env = refolded(page, x)
         y, dropped = place_y(env, x)
+        stages.append((env, x, y))
         pages.append(assemble(env, x, y))
         findings.extend((*wide, *dropped))
-    return Placement(tuple(pages), tuple(findings))
+    placement = Placement(tuple(settled(stages, pages)))
+    outlines, room = unit_hulls(placement, problem, options)
+    return Placement(placement.pages, (*findings, *room), outlines)

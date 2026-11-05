@@ -1,8 +1,7 @@
 """A baseline cut by an older fransys is compared under the rules of that release (LS3).
 
-A PE bar with two wired motors is released, then its stored listing is re-cut the way a release
-before 0.18.4 wrote it (the bar's screw printed) and its manifest says so. `fr.verify` notes the
-moved rule as one INFO; a real change on top of it is an ERROR naming the changed section only.
+A PE strip with two wired motors is released, then its manifest is made to say an older fransys wrote it.
+`fr.verify` compares it under the rules of that release.
 """
 
 import hashlib
@@ -25,10 +24,10 @@ class _Open(NamedTuple):
 def _bar(revision: int, wired: tuple[str, ...]) -> Any:
     @fr.unit("ls-bar", revision=revision, interface_version=1, date="2026-10-14", text="r", by="AB")
     def bar(u: Any) -> _Open:
-        pe1 = u.device("PE1", "DEMO-PEBAR-20").pe
+        pe = u.terminal_strip("X1", "DEMO-TB-PE-2.5")
         motors = {n: u.device(n, "DEMO-MOTOR-4KW") for n in ("M1", "M2", "M3")}
-        for name in wired:
-            u.detail.wire(motors[name].motor["PE"], pe1, wire=(GNYE, 2.5))
+        for i, name in enumerate(wired, 1):
+            u.series(motors[name].motor["PE"], pe[i], wire=(GNYE, 2.5))
         return _Open()
 
     return bar
@@ -50,10 +49,10 @@ def _build(unit: Any) -> fr.BuildResult:
 
 
 def _plant(folder: Path, result: fr.BuildResult, version: str | None) -> None:
-    """Re-cut `folder`'s listing as before 0.18.4 and say `version` in its manifest."""
+    """Say `version` in `folder`'s manifest."""
     model = result.model
     uid = next(i for i in units(model) if unit_release(model, i).name == "ls-bar")
-    old = baseline.listing(model, uid, baseline.ListingRules(bar_end_without_screw=False))
+    old = baseline.listing(model, uid, baseline.ListingRules())
     text = baseline.dumps(old)
     (folder / "baseline" / "listing.json").write_text(text, encoding="utf-8")
     digest = hashlib.sha256(text.encode("utf-8")).hexdigest()
@@ -80,11 +79,27 @@ def _codes(findings: Any) -> list[tuple[str, str]]:
     return [(f.code, f.severity.name) for f in findings]
 
 
-def test_a_moved_rule_is_one_info_and_no_error(tmp_path: Path) -> None:
-    into = _released(tmp_path, "0.18.3")
+def _moved_rule(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Every demo row the old holder rule changes is unprintable (`rows_unchecked`), so say `rules_moved` by hand."""
+    status = baseline.ListingStatus("rules_moved", moved_in="0.18.2")
+    monkeypatch.setattr(baseline, "listing_status", lambda *_a, **_k: status)
+
+
+def test_a_moved_rule_is_one_info_and_no_error(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    into = _released(tmp_path, "0.18.1")
+    _moved_rule(monkeypatch)
     findings = fr.verify(_build(_bar(1, ("M1", "M2"))), into)
-    assert _codes(findings) == [("BASELINE_RULES_MOVED", "INFO")]
-    assert "0.18.4" in findings[0].message
+    assert _codes(findings) == [("BASELINE_RULES_MOVED_NOTE", "INFO")]
+    assert "0.18.2" in findings[0].message
+
+
+def test_release_over_a_stale_subtree_is_refused_and_writes_nothing(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    into = _released(tmp_path, "0.18.1")
+    _moved_rule(monkeypatch)
+    with pytest.raises(fr.BuildFailedError) as raised:
+        fr.release(_build(_cabinet(_bar(1, ("M1", "M2")))), into, unit="ls-cab")
+    assert _codes(raised.value.findings) == [("BASELINE_RULES_MOVED_REFUSED", "ERROR")]
+    assert not (into / "ls-cab").exists()
 
 
 def test_a_real_change_beside_a_moved_rule_is_an_error_naming_conductors_only(
@@ -97,28 +112,17 @@ def test_a_real_change_beside_a_moved_rule_is_an_error_naming_conductors_only(
 
 
 @pytest.mark.parametrize("version", ["0.9.0", None])
-def test_a_baseline_older_than_the_table_or_with_no_version_is_refused(
-    tmp_path: Path, version: str | None
-) -> None:
+def test_a_baseline_older_than_the_table_or_with_no_version_is_refused(tmp_path: Path, version: str | None) -> None:
     into = _released(tmp_path, version)
     findings = fr.verify(_build(_bar(1, ("M1", "M2"))), into)
     assert _codes(findings) == [("BASELINE_TOO_OLD", "ERROR")]
-    assert baseline.OLDEST_VERIFIABLE in findings[0].message
-
-
-def test_release_over_a_stale_subtree_is_refused_and_writes_nothing(tmp_path: Path) -> None:
-    into = _released(tmp_path, "0.18.3")
-    bar = _bar(1, ("M1", "M2"))
-    with pytest.raises(fr.BuildErrors) as raised:
-        fr.release(_build(_cabinet(bar)), into, unit="ls-cab")
-    assert _codes(raised.value.findings) == [("BASELINE_RULES_MOVED", "ERROR")]
-    assert not (into / "ls-cab").exists()
+    assert "cut a new revision with fr.release; the old revision stays as released" in findings[0].message
 
 
 def test_a_new_revision_is_never_refused_by_a_baseline_too_old(tmp_path: Path) -> None:
     """The way out of `BASELINE_TOO_OLD`: release the unit's next revision, then its container."""
     into = _released(tmp_path, "0.9.0")
-    with pytest.raises(fr.BuildErrors) as raised:
+    with pytest.raises(fr.BuildFailedError) as raised:
         fr.release(_build(_cabinet(_bar(1, ("M1", "M2")))), into, unit="ls-cab")
     assert [f.code for f in raised.value.findings] == ["BASELINE_TOO_OLD"]
     bar2 = _bar(2, ("M1", "M2"))

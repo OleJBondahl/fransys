@@ -1,15 +1,6 @@
-"""Field case: a jumper bar bought with a bridged run is an accessory of its strip.
-
-The engineering shape: a terminal strip X1 with a run of three terminals bridged together, which
-feeds a lamp. The bridge is physically a jumper bar, a part with no function that sits on the strip.
-The author states it once: `d.device(None, part, name=..., parent=X1)`.
-
-The bug: `parent=` took only a device, so a strip, a run or a terminal as parent crashed with a bare
-`AttributeError: '_item'`.
-
-Fixing decision: author-0025 (`parent=` also takes a strip, the accessory prints the strip's
-designation and the BOM counts it; a run or a terminal raises `AuthorError` naming the strip).
-"""
+"""Field case: a jumper bar bought with a bridged run of three terminals on strip X1 is an accessory of that strip.
+The bug: parent= took only a device, so a strip, run or terminal as parent crashed with a bare AttributeError.
+Fixed by author-0025, parent= also takes a strip (the accessory prints its designation); a run or terminal raises AuthorError."""
 
 import fransys as fr
 import pytest
@@ -25,7 +16,8 @@ def _design() -> tuple[fr.Design, fr.TerminalStrip]:
     x1 = d.terminal_strip("X1", "DEMO-TB-2.5")
     run = x1.run("L", 3, bridged=True)
     h1 = d.device("H1", "DEMO-LAMP-24")
-    d.detail.wire(h1[1], run[1], wire=("BK", 1.5))
+    d.series(h1[1], run[1], wire=("BK", 1.5))
+    d.series(h1[2], x1.run("N", 1)[1], wire=("BU", 1.5))
     return d, x1
 
 

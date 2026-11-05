@@ -72,6 +72,10 @@ net n20 -U1-X1:1.terminal.n -U1-X1:1.terminal.s =R-U1-K1.coil.in =R-U1-K5.coil.i
 fact attached =R-U1-K1.coil =R-U1-K7.coil =R-U1-K9.coil =R-U1-K4.coil =R-U1-K3.coil =R-U1-K8.coil =R-U1-K2.coil =R-U1-K5.coil =R-U1-K10.coil =R-U1-K12.coil =R-U1-K6.coil =R-U1-K11.coil
 fact boxpin 
 fact strip -U1-X1 -U1-X1:1.terminal -U1-X1:3.terminal -U1-X1:4.terminal -U1-X1:2.terminal
+fact joined -U1-X1:2.terminal.n -U1-X1:2.terminal.s
+fact joined -U1-X1:3.terminal.n -U1-X1:3.terminal.s
+fact joined -U1-X1:4.terminal.n -U1-X1:4.terminal.s
+fact joined -U1-X1:1.terminal.n -U1-X1:1.terminal.s
 # legend only: a general placer must not read a symbol's kind.
 kind =R-U1-K1.coil coil
 kind -U1-X1:1.terminal terminal

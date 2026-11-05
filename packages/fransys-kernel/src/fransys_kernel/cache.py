@@ -2,7 +2,7 @@
 
 import dataclasses
 import functools
-from typing import Any, Final
+from typing import Any, Final, cast
 lazy from collections.abc import Callable
 
 # Results kept by each `digest_cached` builder, least recently used out first. Each entry keeps
@@ -53,8 +53,4 @@ class DigestCached[M, T]:
 
 def digest_cached[M, T](maxsize: int) -> Callable[[Callable[[M], T]], DigestCached[M, T]]:
     """Decorate a builder `M -> T` so it is cached on `model.digest`, `maxsize` results kept."""
-
-    def decorate(build: Callable[[M], T]) -> DigestCached[M, T]:
-        return DigestCached(build, maxsize)
-
-    return decorate
+    return cast("Callable[[Callable[[M], T]], DigestCached[M, T]]", functools.partial(DigestCached, maxsize=maxsize))

@@ -5,11 +5,12 @@ the design-wide number, so a unit's PDF reads nothing above it (layout-0177) and
 no label. A block diagram sheet's label is `b<n>` (PAGES-INDEX); no label repeats in one PDF.
 """
 
-from fransys_model.layout import DiagramSheet, Page
 lazy from fransys_model.kernel import Model
+lazy from fransys_model.layout import Page
 
-from .house_settings import reference_text_of
+from .facts.house_settings import reference_text_of
 from .page_reference_text import page_reference_text
+from .rows_sheet import DiagramSheet
 from .set_rank import set_rank
 from .sheet_forms import diagram_text, set_page_text
 

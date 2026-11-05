@@ -1,5 +1,7 @@
 """`derive.drawn_sheets`: the drawn pages and sheets pdf reads as plain rows (OUTPUT-DOORS)."""
 
+from typing import Any
+
 from _build import document, drawing_set, layout_page, location, model, sheet_format
 
 from fransys_model.derive import (
@@ -19,7 +21,7 @@ def _cabinet(*formats):
     """A cabinet document whose one drawing set has a page per entry of `formats`."""
     c1 = location("C1", "Demo cabinet")
     ds = drawing_set("ds1", location=c1)
-    records: list = [c1, ds]
+    records: list[Any] = [c1, ds]
     for index, fmt in enumerate(formats, start=1):
         records += [] if fmt is None else [fmt]
         records.append(layout_page(f"p{index}", drawing_set=ds, number=index, sheet_format=fmt))

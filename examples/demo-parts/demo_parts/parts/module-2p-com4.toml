@@ -1,4 +1,4 @@
-schema = 1
+schema = 2
 
 # A chain module: a power pass-through (minus, plus) and a 4-pin comms IN and OUT connector pair.
 # It stands in a daisy chain, each module wired to the next (field case LONG-CHAIN).
@@ -18,8 +18,8 @@ ports = [
 ]
 
 [function.operating]
-voltage_dc_v = "24"
-nominal_power_w = "1.2"
+voltage = [{ nom = "24 V", at = ["DC"] }]
+nominal_power = "1.2 W"
 
 [[function]]
 name = "IN"

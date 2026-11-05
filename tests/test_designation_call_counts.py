@@ -2,54 +2,22 @@
 
 The numbering pass's duplicate checks used to reach `designation.item_designation` with
 neither `relative_to` nor `unit`, many times per item, and every call rendered live. The cache puts
-`_plain_item_designations` (a `@digest_cached` map, built once per `model.digest`) in front of
-the live render; `item_designation` now serves a plain-shape call from that map and only falls
-through to the newly private `_render_item_designation` on a miss or a keyword call.
-
-`takes_parents_designation`'s subtree check used to run a fresh `descendants` BFS per item
-asked about, O(depth) work every time. The fix replaces it with
-`_items_with_a_function_at_or_below`, a `@digest_cached` set built once per digest; the
-per-item BFS is gone from that call path entirely.
-
-Counted by code object under `sys.monitoring` (PY_START), the same mechanism
-`tests/test_freeze_field_derivation_counts.py` uses: a `unittest.mock.patch` on
-`fransys.pipeline.number` would see nothing at the real call sites, because `pipeline.py`
-calls `number` as a bare name bound into its own module at import time -- patching
-`fransys_model.derive.passes.numbering.number` (the definition site) never touches that
-binding. This module patches the bare-name binding itself (`pipeline.number`), the same way
-`test_freeze_field_derivation_counts.py::_merged_draft` patches `pipeline.freeze`, only to
-CAPTURE `number`'s own input once; the call counted for the assertions is a second, direct
-`numbering.number(model)` call made explicitly under monitoring.
-
-Gotcha: under `-n 2`/`-n 4` (parallel test workers sharing one process), a PRIOR test in the
-same worker can leave `_plain_item_designations` or `_items_with_a_function_at_or_below`
-already built for this exact model digest (both are `@digest_cached`, so they persist across
-calls, unlike a memo scoped to one call). Left uncleared, that warm cache would make the
-"live render" count read as low, or the subtree count read as already-satisfied, for reasons that
-have nothing to do with the fix under test. `_count_render_and_descendants_calls` clears both
-caches immediately before the one monitored call it measures, every time.
 """
 
 import sys
-from pathlib import Path
 from typing import TYPE_CHECKING
+from unittest.mock import patch
 
 import pytest
+from fransys import pipeline
+from scale_units_fixture import build_scale
 
-_TESTS_DIR = Path(__file__).resolve().parent
-if str(_TESTS_DIR) not in sys.path:
-    # `--import-mode=importlib` (root pyproject.toml) never puts this folder on `sys.path`.
-    sys.path.insert(0, str(_TESTS_DIR))
-
-from fransys import pipeline  # noqa: E402
-from scale_units_fixture import build_scale  # noqa: E402
-
-from fransys_model.derive import designation, designation_label  # noqa: E402
-from fransys_model.derive.facts.unit_index import descendants  # noqa: E402
-from fransys_model.derive.passes import numbering  # noqa: E402
-from fransys_model.derive.texts import designation_render  # noqa: E402
-from fransys_model.kernel import make_id  # noqa: E402
-from fransys_model.vocab.core import Item  # noqa: E402
+from fransys_model.derive import designation, designation_label
+from fransys_model.derive.facts.unit_index import descendants
+from fransys_model.derive.passes import numbering
+from fransys_model.derive.texts import designation_render
+from fransys_model.kernel import make_id
+from fransys_model.vocab.core import Item
 
 if TYPE_CHECKING:
     from types import CodeType
@@ -78,11 +46,8 @@ def _captured_model(n: int) -> Model:
         captured["model"] = model
         return original(model)
 
-    pipeline.number = capture  # ty: ignore[invalid-assignment]
-    try:
+    with patch.object(pipeline, "number", capture):
         build_scale(n)
-    finally:
-        pipeline.number = original
     return captured["model"]
 
 
@@ -111,8 +76,6 @@ def test_descendants_py_start_frame_one_up_is_its_own_caller() -> None:
     that inside a PY_START callback registered on `unit_index.descendants`,
     `sys._getframe(1)` is `descendants`' OWN frame (already pushed onto the stack by the time
     PY_START fires) and `.f_back.f_code` is the code object that actually called it. Calls
-    `descendants` directly from this test (never from `takes_parents_designation`), so both
-    frame identities are checked against known values rather than assumed.
     """
     descendants_code = descendants.__code__
     seen: dict[str, bool] = {}
@@ -122,9 +85,7 @@ def test_descendants_py_start_frame_one_up_is_its_own_caller() -> None:
         seen["own_frame_is_descendants"] = own_frame.f_code is descendants_code
         back = own_frame.f_back
         assert back is not None, "descendants' own frame has no caller frame: cannot be"
-        seen["caller_is_this_test"] = (
-            back.f_code is test_descendants_py_start_frame_one_up_is_its_own_caller.__code__
-        )
+        seen["caller_is_this_test"] = back.f_code is test_descendants_py_start_frame_one_up_is_its_own_caller.__code__
 
     tool = _use_tool_id()
     probe_root = make_id(Item, ("probe", "root"))
@@ -152,11 +113,6 @@ def _count_render_and_descendants_calls(model: Model) -> tuple[int, int]:
     """One monitored `numbering.number(model)` call: counts calls into the new private
     `designation_render.designation_text` (the live-render path) and calls into
     `unit_index.descendants` attributed to `takes_parents_designation`'s own frame (the old
-    per-item subtree BFS, which the aggregate set now fully replaces).
-
-    Clears both new `@digest_cached` builders immediately before the one monitored call: one
-    `cache_clear()` pair covers both assertions, since both are counted over the same single
-    `number(model)` call (simpler than clearing twice for two separate calls).
     """
     designation._plain_item_designations.cache_clear()
     designation_label._items_with_a_function_at_or_below.cache_clear()
@@ -198,16 +154,6 @@ def test_item_designation_render_and_accessory_subtree_check_stay_cheap(
     """Before the fix, the profiling measurement
     (pre-cache code, `build_scale(8)`'s captured model, one `numbering.number(model)` call)
     counted 464 live renders of `item_designation` -- the hardcoded
-    `_BASELINE_ITEM_DESIGNATION_CALLS_N8` above. This test counts the same call shape against
-    `designation_render.designation_text` after the plain-shape cache map sits in front
-    of it, and measures 144: comfortably under `464 // 2 == 232`, the margin the
-    "about one render per item" estimate implies (roughly an 8x reduction against the
-    consumer-scale total), not merely under the bare baseline.
-
-    `takes_parents_designation`'s old per-item `descendants` BFS is fully replaced by
-    `_items_with_a_function_at_or_below`, the once-per-digest aggregate set (model-0103); this
-    asserts EXACTLY 0 calls attributed to `takes_parents_designation`'s own frame into
-    `unit_index.descendants`, counted over the same single monitored `number(model)` call.
     """
     render_calls, descendants_calls = _count_render_and_descendants_calls(model_n8)
     assert render_calls < _BASELINE_ITEM_DESIGNATION_CALLS_N8 // 2, (

@@ -20,6 +20,7 @@ if TYPE_CHECKING:
 __all__ = (
     "LibrarySymbol",
     "Shape",
+    "SymbolLibrary",
     "library_symbol",
     "stretched_body",
     "symbol_shape",
@@ -27,6 +28,9 @@ __all__ = (
 
 #: A symdef symbol, named here so a caller can annotate the value it only passes on.
 type LibrarySymbol = Symbol
+
+#: A symdef library, named here so an engine can annotate the build's library it only passes on.
+type SymbolLibrary = Library
 
 
 @dataclass(frozen=True, slots=True)
@@ -54,7 +58,7 @@ def library_symbol(library: Library, key: str, repeats: int = 1) -> LibrarySymbo
     if repeats < 1 or not any(path.through for path in base.paths):
         msg = f"symbol {key!r} cannot be repeated {repeats} times; it has no through path"
         raise CoreError(msg)
-    return repeat(base, repeats)
+    return repeat(base, repeats, port_format=library.port_format)
 
 
 def symbol_shape(symbol: LibrarySymbol, library: Library) -> Shape:
@@ -71,13 +75,12 @@ def symbol_shape(symbol: LibrarySymbol, library: Library) -> Shape:
 def stretched_body(
     symbol: LibrarySymbol,
     orient: Orientation,
-    axis: Literal["x", "y"],
-    length: int,
+    lengths: Mapping[Literal["x", "y"], int],
     library: Library,
 ) -> Box:
-    """The body of `symbol` stretched to `length` divisions along `axis`, then turned to `orient`.
+    """The body of `symbol` stretched to `lengths` divisions along each axis, then turned to `orient`.
 
     Only the body is read: a stretched symbol's slot anchors may sit between divisions (R450.3).
     """
-    grown = {axis: from_divisions(library.grid, length)}
+    grown = {axis: from_divisions(library.grid, length) for axis, length in lengths.items()}
     return to_box(measure(symbol, symdef_orientation(orient), library, stretch=grown).body)

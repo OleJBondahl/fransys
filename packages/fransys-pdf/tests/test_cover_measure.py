@@ -25,14 +25,12 @@ def _source(*, revision: bool) -> str:
     entries = [revision_entry("r1", unit=None, revision=1, date="2026-09-22")] if revision else []
     doc = _document("# Cover\n\nText.")
     m = model(c1, p, *entries, doc)
-    return source(m, doc.id, {}, fransys_render.sheets(document_sheets_of(m), LIBRARY))
+    return str(source(m, doc.id, {}, fransys_render.sheets(document_sheets_of(m, ()), LIBRARY), diagrams=()))
 
 
 def test_a_panic_text_becomes_an_error_finding_with_the_heights():
     doc = _document()
-    found = cover_overflow_finding(
-        doc.id, "panicked with: COVER_OVERFLOW cover=240.5 table=30 available=257"
-    )
+    found = cover_overflow_finding(doc.id, "panicked with: COVER_OVERFLOW cover=240.5 table=30 available=257")
     assert found is not None
     assert (found.code, found.severity, found.subjects) == (
         "COVER_OVERFLOW",

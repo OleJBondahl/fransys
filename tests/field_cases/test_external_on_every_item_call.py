@@ -1,13 +1,6 @@
-"""Field case: every item-making call takes `external=` (device, terminal_strip, cable, harness).
-
-The engineering shape: an upstream strip, cable or harness supplied by others. A device already
-takes `external=True`; the other three item-making calls did not, so only a device could be
-marked "by others" and the rest showed in the bill of materials.
-
-The rule: `external=True` flags the item. A strip's terminals are external through
-the parent chain; a cable's conductors carry no flag; no item flagged
-external reaches the bill of materials.
-"""
+"""Field case: a device, strip and cable each take external=, but only a device could be marked by others.
+The bug: the other two item calls had no external= flag, so their items showed in the bill of materials.
+Fixed by the external= keyword on every item-making call, the rule that flagged items stay out of the BOM."""
 
 import fransys as fr
 
@@ -19,13 +12,12 @@ _LAMP = "DEMO-LAMP-24"
 
 
 def _built(*, external: bool) -> fr.Model:
-    """One device, strip, cable and harness, each made with `external=`."""
+    """One device, strip and cable, each made with `external=`."""
     d = fr.design("demo_parts", place="CAB")
     d.location("CAB", "Cabinet")
     d.device("H1", _LAMP, external=external)
     d.terminal_strip("X0", _TERMINAL, 2, external=external)
     d.cable("W0", _CABLE, external=external)
-    d.harness("WH", external=external)
     return fr.build(d).model
 
 
@@ -35,9 +27,9 @@ def _flags(model: fr.Model) -> dict[str, bool]:
 
 
 def test_every_item_call_flags_its_item() -> None:
-    """The four items carry the flag; the strip's terminals are external by the parent chain."""
+    """The three items carry the flag; the strip's terminals are external by the parent chain."""
     model = _built(external=True)
-    assert _flags(model) == {"H1": True, "X0": True, "W0": True, "WH": True}
+    assert _flags(model) == {"H1": True, "X0": True, "W0": True}
     strip = next(i for i in items(model).values() if i.tag == "X0")
     terminals = [i for i in items(model).values() if i.parent == strip.id]
     assert len(terminals) == 2

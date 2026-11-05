@@ -7,6 +7,7 @@ from options_fixtures import core_options
 from turn_fixtures import refit
 
 from fransys_layout.core import Box, PlacementProblem
+from fransys_layout.core.errors import CoreError
 from fransys_layout.core.geometry import box_reach
 from fransys_layout.core.node_names import HIGH, box_node, col_node
 from fransys_layout.core.pack_row import row_width, solve_row
@@ -24,12 +25,6 @@ def _extent(prob: PlacementProblem) -> tuple[int, int]:
     """(placed extent, row_width) of the first row of the first page, justify off."""
     options = core_options(
         justify=False,
-        flip_turn="R180",
-        tag_stagger=True,
-        label_gap=8,
-        parallel_pitch=48,
-        driver_first=True,
-        arrow_sides=("E", "W"),
     )
     cut = cut_of(prob, options)
     env = page_envs(cut, prob, options)[0]
@@ -42,12 +37,12 @@ def _extent(prob: PlacementProblem) -> tuple[int, int]:
 @pytest.mark.parametrize("grow", [0, 16, 52])
 def test_row_width_includes_the_card_footprint(grow: int) -> None:
     placed, measured = _extent(card_with_label(grow))
-    assert placed == measured
+    assert 0 <= measured - placed < 8  # the row solver rounds each reach up to the wiring grid (R1614)
 
 
 def test_a_row_without_a_card_is_unchanged() -> None:
     placed, measured = _extent(card_with_label(0))
-    assert placed == measured
+    assert 0 <= measured - placed < 8  # the row solver rounds each reach up to the wiring grid (R1614)
 
 
 def test_a_card_whose_footprint_is_its_body_reaches_nothing() -> None:
@@ -61,13 +56,13 @@ def test_the_reach_is_the_footprint_minus_the_body() -> None:
 
 
 def test_a_symbol_without_a_box_spec_has_no_reach() -> None:
-    with pytest.raises(ValueError, match="no box spec"):
+    with pytest.raises(CoreError, match="no box spec"):
         box_reach(elem("a"))
 
 
 def test_a_footprint_inside_the_body_is_refused() -> None:
     sym = card("box", 3)
-    with pytest.raises(ValueError, match="holds its body"):
+    with pytest.raises(CoreError, match="holds its body"):
         box_reach(refit(sym, footprint=Box(0, 0, 8, 32)))
 
 
@@ -87,12 +82,6 @@ def test_a_card_in_the_middle_keeps_the_next_column_clear_by_its_footprint() -> 
         prob,
         core_options(
             justify=False,
-            flip_turn="R180",
-            tag_stagger=True,
-            label_gap=8,
-            parallel_pitch=48,
-            driver_first=True,
-            arrow_sides=("E", "W"),
         ),
     )
     x, _ = solve_row(spec, 10_000)

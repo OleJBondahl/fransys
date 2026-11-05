@@ -59,28 +59,18 @@ def _moved(sheet: PlacedSheet, dx: int, dy: int) -> PlacedSheet:
     return PlacedSheet(number=1, boxes=boxes, lines=lines, markers=())
 
 
-def _down(value: int) -> int:
-    return value - value % WIRING_GRID
-
-
 def _slots(sheets: Sequence[PlacedSheet], shape: tuple[int, int]) -> list[tuple[int, int]]:
     """The `(dx, dy)` that moves each sheet to its packed place, from its grid-snapped corner."""
     corners = [extent(s) for s in sheets]
-    origin = [(_down(left), _down(top)) for left, top, _, _ in corners]
+    origin = [(left - left % WIRING_GRID, top - top % WIRING_GRID) for left, top, _, _ in corners]
     sizes = [(r - ox, b - oy) for (_, _, r, b), (ox, oy) in zip(corners, origin, strict=True)]
     at = pack_rows(sizes, shape=shape, gap=PIECE_GAP)
-    return [
-        (PAGE_PAD + x - ox, PAGE_PAD + y - oy) for (x, y), (ox, oy) in zip(at, origin, strict=True)
-    ]
+    return [(PAGE_PAD + x - ox, PAGE_PAD + y - oy) for (x, y), (ox, oy) in zip(at, origin, strict=True)]
 
 
 def _merged(moved: Sequence[PlacedSheet], indexes: Sequence[Sequence[int]]) -> PlacedSheet:
     """One sheet of the moved pieces, its lines back in the order of the facts."""
-    lines = [
-        (i, ln)
-        for m, idx in zip(moved, indexes, strict=True)
-        for i, ln in zip(idx, m.lines, strict=True)
-    ]
+    lines = [(i, ln) for m, idx in zip(moved, indexes, strict=True) for i, ln in zip(idx, m.lines, strict=True)]
     return PlacedSheet(
         number=1,
         boxes=tuple(b for m in moved for b in m.boxes),
@@ -109,11 +99,7 @@ def place_packed(facts: DiagramFacts, shape: tuple[int, int]) -> PlacedDiagram |
     if any(p is None or len(p.sheets) != 1 for p in placed):
         return None
     width = shape[0] - 2 * PAGE_PAD
-    sheets = [
-        _wrapped(p.sheets[0], part, width)
-        for (part, _), p in zip(parts, placed, strict=True)
-        if p is not None
-    ]
+    sheets = [_wrapped(p.sheets[0], part, width) for (part, _), p in zip(parts, placed, strict=True) if p is not None]
     if len(parts) == 1:
         return PlacedDiagram(unit=facts.unit, sheets=(sheets[0],))
     moved = [_moved(s, dx, dy) for s, (dx, dy) in zip(sheets, _slots(sheets, shape), strict=True)]

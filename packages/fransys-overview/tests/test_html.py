@@ -92,14 +92,11 @@ def _data_block(page):
 
 def _labels(model):
     """The item labels the rows print, in the rows' order."""
-    return [
-        n.designation if n.designation is not None else n.description
-        for n in overview_graph(model).nodes
-    ]
+    return [n.designation if n.designation is not None else n.description for n in overview_graph(model).nodes]
 
 
 def test_the_page_is_one_document_with_three_scripts(demo_cabinet):
-    page = html(demo_cabinet)
+    page = html(demo_cabinet, text_height=8)
     parsed = _Page(page)
     assert page.startswith("<!DOCTYPE html>\n<html lang=")
     assert page.endswith("</html>\n")
@@ -115,7 +112,7 @@ def test_the_page_is_one_document_with_three_scripts(demo_cabinet):
 
 
 def test_the_page_reaches_no_network(demo_cabinet):
-    page = html(demo_cabinet)
+    page = html(demo_cabinet, text_height=8)
     assert page.count(CYTOSCAPE_MIN_JS) == 1
     assert _network_problems(page) == []
 
@@ -132,17 +129,17 @@ def test_the_page_reaches_no_network(demo_cabinet):
     ],
 )
 def test_the_network_check_can_fail(demo_cabinet, spoiler):
-    page = html(demo_cabinet).replace("<body>", "<body>" + spoiler)
+    page = html(demo_cabinet, text_height=8).replace("<body>", "<body>" + spoiler)
     assert _network_problems(page) != []
 
 
 def test_the_items_table_is_the_rows_in_printed_order(demo_cabinet):
-    data = json.loads(_data_block(html(demo_cabinet)))
+    data = json.loads(_data_block(html(demo_cabinet, text_height=8)))
     assert [item["label"] for item in data["items"]] == _labels(demo_cabinet)
 
 
 def test_the_demo_plant_covers_what_the_page_shows(demo_cabinet):
-    data = json.loads(_data_block(html(demo_cabinet)))
+    data = json.loads(_data_block(html(demo_cabinet, text_height=8)))
     assert 20 <= len(data["items"]) <= 40
     assert {item["location"] for item in data["items"]} == {None, "+C1", "+F2"}
     assert any(not item["installed"] for item in data["items"])
@@ -152,24 +149,20 @@ def test_the_demo_plant_covers_what_the_page_shows(demo_cabinet):
 
 
 def test_the_block_is_written_the_documented_way(demo_cabinet):
-    block = _data_block(html(demo_cabinet))
-    assert block == json.dumps(
-        json.loads(block), sort_keys=True, separators=(",", ":"), ensure_ascii=True
-    )
+    block = _data_block(html(demo_cabinet, text_height=8))
+    assert block == json.dumps(json.loads(block), sort_keys=True, separators=(",", ":"), ensure_ascii=True)
     assert block.isascii()
 
 
 def test_things_are_named_by_table_index_never_by_id(demo_cabinet):
-    data = json.loads(_data_block(html(demo_cabinet)))
-    assert "item:" not in html(demo_cabinet)
-    assert all(
-        item["parent"] is None or 0 <= item["parent"] < len(data["items"]) for item in data["items"]
-    )
+    data = json.loads(_data_block(html(demo_cabinet, text_height=8)))
+    assert "item:" not in html(demo_cabinet, text_height=8)
+    assert all(item["parent"] is None or 0 <= item["parent"] < len(data["items"]) for item in data["items"])
     assert all(0 <= p[0] < len(data["items"]) for signal in data["signals"] for p in signal)
 
 
 def test_an_unnumbered_item_is_labelled_by_its_description(demo_cabinet):
-    items = json.loads(_data_block(html(demo_cabinet)))["items"]
+    items = json.loads(_data_block(html(demo_cabinet, text_height=8)))["items"]
     assert [i["label"] for i in items if i["label"] == "Spare relay"] == ["Spare relay"]
     assert "-K1" in [i["label"] for i in items]
 
@@ -190,7 +183,7 @@ def _awkward_plant(plant):
 
 def test_text_that_could_end_a_script_is_safe_and_comes_back_exactly(plant):
     model = _awkward_plant(plant)
-    page = html(model)
+    page = html(model, text_height=8)
     block = _data_block(page)
     assert not set("<>&") & set(block)
     assert block.isascii()
@@ -206,7 +199,7 @@ def test_text_that_could_end_a_script_is_safe_and_comes_back_exactly(plant):
 
 def test_the_escape_is_a_json_escape_not_an_entity(plant):
     model = _awkward_plant(plant)
-    block = _data_block(html(model))
+    block = _data_block(html(model, text_height=8))
     backslash = chr(92)
     assert backslash + "u003c" in block
     assert backslash + "u003e" in block
@@ -217,13 +210,13 @@ def test_the_escape_is_a_json_escape_not_an_entity(plant):
 def test_token_looking_text_in_the_data_survives(plant):
     plant.item("t", "@@APP@@", description="@@DATA@@ @@TITLE@@ @@NOPE@@")
     model = plant.freeze()
-    page = html(model)
+    page = html(model, text_height=8)
     assert json.loads(_data_block(page))["items"][0]["label"] == "-@@APP@@"
     assert page.count(APP_JS) == 1
 
 
 def test_an_empty_model_is_a_valid_page_with_empty_lists(plant):
-    page = html(plant.freeze())
+    page = html(plant.freeze(), text_height=8)
     data = json.loads(_data_block(page))
     assert (data["items"], data["views"], data["signals"], data["units"]) == ([], [], [], [])
     assert _Page(page).title == "System overview"
@@ -231,16 +224,16 @@ def test_an_empty_model_is_a_valid_page_with_empty_lists(plant):
 
 
 def test_the_same_model_gives_the_same_bytes(demo_cabinet):
-    assert html(demo_cabinet) == html(demo_cabinet)
+    assert html(demo_cabinet, text_height=8) == html(demo_cabinet, text_height=8)
 
 
 @pytest.mark.parametrize("seed", range(6))
 def test_insertion_order_does_not_change_the_bytes(demo_plant, seed):
-    assert html(demo_plant.freeze(seed)) == html(demo_plant.freeze())
+    assert html(demo_plant.freeze(seed), text_height=8) == html(demo_plant.freeze(), text_height=8)
 
 
 def test_the_page_has_no_date_time_or_user(demo_cabinet):
-    rest = html(demo_cabinet).replace(CYTOSCAPE_MIN_JS, "")
+    rest = html(demo_cabinet, text_height=8).replace(CYTOSCAPE_MIN_JS, "")
     assert not re.search(r"\b(19|20)\d\d-\d\d-\d\d\b", rest)
     assert not re.search(r"\b\d\d:\d\d(:\d\d)?\b", rest)
 

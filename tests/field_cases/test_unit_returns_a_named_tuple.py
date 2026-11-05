@@ -1,15 +1,6 @@
-"""Field case: a unit returns a `NamedTuple` and `d.add` hands that same instance back.
-
-The engineering shape: a cabinet unit exposing two boundary devices, one of them a terminal
-strip's run, which the parent cabinet reads by name.
-
-The bug: a unit returned a `dict[str, Device]`, so every boundary was typed `Device` and a
-misspelt name was found at run time only.
-
-The rule: a unit function returns an instance of a `typing.NamedTuple`
-class and `d.add` returns that instance. Any other return raises and shows the `NamedTuple`
-form.
-"""
+"""Field case: a unit returns a NamedTuple and d.add hands that same instance back.
+The bug: a unit returned a dict[str, Device], so every boundary was typed Device and a misspelt name was found at run time only.
+Fixed by no decision record named; the rule: a unit returns a typing.NamedTuple instance, and any other return raises."""
 
 from typing import NamedTuple
 

@@ -31,18 +31,18 @@ if TYPE_CHECKING:
 # Every workspace package's own distribution name (root `pyproject.toml`'s `[tool.uv.workspace]
 # members`, confirmed): the manifest's `packages` list.
 _WORKSPACE_PACKAGES = (
-    "fransys",
-    "fransys-model",
     "electrical-symbols",
-    "fransys-parts",
+    "fransys",
     "fransys-author",
+    "fransys-kicad",
     "fransys-layout",
+    "fransys-model",
+    "fransys-overview",
+    "fransys-parts",
+    "fransys-pdf",
     "fransys-render",
     "fransys-reports",
-    "fransys-pdf",
-    "fransys-kicad",
     "fransys-wago",
-    "fransys-overview",
 )
 
 
@@ -89,20 +89,14 @@ def _concerns(finding: Finding, owned: frozenset[Id[Any]]) -> bool:
     return not kinded or any(s in owned for s in kinded)
 
 
-def _warning_entries(
-    model: Model, unit: Id[ModelUnit] | None, findings: tuple[Finding, ...]
-) -> list[JsonValue]:
+def _warning_entries(model: Model, unit: Id[ModelUnit] | None, findings: tuple[Finding, ...]) -> list[JsonValue]:
     """Every `WARNING` of `findings` that concerns `unit` (`None` is the system: all of them).
 
     `message` is the raw pre-`describe` text, never the resolved one.
     """
     owned = None if unit is None else unit_owned_ids(model, unit)
     selected = sorted(
-        (
-            finding
-            for finding in findings
-            if finding.severity is Severity.WARNING and (owned is None or _concerns(finding, owned))
-        ),
+        (finding for finding in findings if finding.severity is Severity.WARNING and (owned is None or _concerns(finding, owned))),
         key=lambda finding: (finding.code, finding.message),
     )
     return [
@@ -112,14 +106,6 @@ def _warning_entries(
             "message": finding.message,
         }
         for finding in selected
-    ]
-
-
-def _package_versions() -> list[JsonValue]:
-    """The installed version of every Fransys workspace package."""
-    return [
-        {"name": name, "version": importlib.metadata.version(name)}
-        for name in sorted(_WORKSPACE_PACKAGES)
     ]
 
 
@@ -152,7 +138,7 @@ def _manifest(
         "model_digest": model.digest,
         "unit": dataclasses.asdict(rows.identity),
         "history": None if rows.entry is None else dataclasses.asdict(rows.entry),
-        "packages": _package_versions(),
+        "packages": [{"name": name, "version": importlib.metadata.version(name)} for name in _WORKSPACE_PACKAGES],
         "part_libraries": [dataclasses.asdict(r) for r in rows.part_libraries],
         "tool_versions": _tool_versions(),
         "warnings": _warning_entries(model, unit, raw_findings),

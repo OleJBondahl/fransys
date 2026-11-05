@@ -2,6 +2,7 @@
 
 from typing import TYPE_CHECKING
 
+from derive_helpers import with_house
 from plant import Plant
 
 from fransys_model.derive.export_names import export_fragment
@@ -46,5 +47,6 @@ def test_a_located_item_drops_the_location_prefix_at_and_above_its_context() -> 
 
 def test_an_export_fragment_drops_the_leading_sign_and_dashes_the_others() -> None:
     """`=G1+C1-K1` gives `G1-C1-K1`; `-X2` gives `X2`."""
-    assert export_fragment("=G1+C1-K1") == "G1-C1-K1"
-    assert export_fragment("-X2") == "X2"
+    model = with_house(Plant().model())
+    assert export_fragment(model, "=G1+C1-K1") == "G1-C1-K1"
+    assert export_fragment(model, "-X2") == "X2"

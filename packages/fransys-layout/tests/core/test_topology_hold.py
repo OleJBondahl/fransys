@@ -5,18 +5,23 @@ from __future__ import annotations
 from dataclasses import replace
 from typing import TYPE_CHECKING
 
+import pytest
+
 from fransys_layout.core.pack import cell_node
 from fransys_layout.core.place_x import place_x
 from fransys_layout.core.place_y import place_y
 from fransys_layout.core.series_values import Parallel, Series
+from fransys_layout.core.topology_tree import tree_folds
 
 from .flow_builders import elem, net, problem
 from .pipeline_fixtures import flow_of
 from .test_place_x import env_of
+from .topology_fixtures import read
 
 if TYPE_CHECKING:
+    from fransys_layout.core.flow_values import FlowGraph
     from fransys_layout.core.series_values import SeriesPart
-    from fransys_layout.core.values import FlowGraph, PlacementProblem
+    from fransys_layout.core.values import PlacementProblem
 
 
 def _circuit(first: SeriesPart, second: SeriesPart) -> PlacementProblem:
@@ -73,3 +78,12 @@ def test_the_cell_after_a_shorter_first_branch_stands_wire_min_below_the_tallest
     prob = _circuit("P1", Series(("P2a", "P2b")))
     bottom, top = _bottom_and_top(prob)
     assert top - bottom >= env_of(prob).options.wire_min
+
+
+@pytest.mark.rule("SERIES-PARALLEL")
+def test_a_parallel_with_a_one_pin_leaf_stands_no_tree() -> None:
+    """A is wired at n only, so P's far net would have no pin to join: the tree is not folded."""
+    r = read([elem("A"), elem("P")], [net("a", "A.n", "P.n"), net("b", "P.s")])
+    ends, folds = tree_folds((Series((Parallel(("A", "P")),)),), r.ends_by_net, r.elems, ({}, 0))
+    assert folds == ()
+    assert ends == r.ends_by_net

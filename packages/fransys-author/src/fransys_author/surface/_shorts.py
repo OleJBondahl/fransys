@@ -24,10 +24,7 @@ def _poles(width: int, before: Ends | None) -> str:
 def _fix(tags: list[str]) -> str:
     taps = ", ".join(f"{tag[:-1]}, n, bridged=True)[1]" for tag in tags)
     more = ", ..." if len(tags) < _TIED else ""
-    return (
-        "Give each pole its own sized run and take one tap of each as a tuple, "
-        f"one terminal per pole: ({taps}{more})"
-    )
+    return f"Give each pole its own sized run and take one tap of each as a tuple, one terminal per pole: ({taps}{more})"
 
 
 def refuse_tied_poles(parallel: Parallel, width: int, before: Ends | None) -> None:

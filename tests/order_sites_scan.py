@@ -2,9 +2,6 @@
 and reverse slice outside the order homes is a site.
 
 Four scanners of `test_one_home.Scanner` shape, each returning `(enclosing function, line)`:
-`order_sites`, `core_order_sites`, `core_text_keys` and `order_id_reads`. The allowance is by
-name: inside `fransys_model` a `key=` that resolves through the module's imports to a name in the
-`__all__` of `fransys_model.derive.order` or `order_*`, or to `kernel.natural_key`, is no site.
 """
 
 import ast
@@ -92,9 +89,7 @@ def import_aliases(tree: ast.AST, module: str) -> dict[str, str]:
                 aliases[alias.asname or alias.name] = f"{source}.{alias.name}"
         elif isinstance(node, ast.Import):
             for alias in node.names:
-                aliases[alias.asname or alias.name.split(".")[0]] = (
-                    alias.name if alias.asname else alias.name.split(".")[0]
-                )
+                aliases[alias.asname or alias.name.split(".")[0]] = alias.name if alias.asname else alias.name.split(".")[0]
     return aliases
 
 
@@ -116,37 +111,22 @@ def is_home_key(key: ast.expr | None, aliases: dict[str, str]) -> bool:
 def _has_text(args: list[ast.expr]) -> bool:
     for arg in args:
         for node in ast.walk(arg):
-            if isinstance(node, ast.JoinedStr) or (
-                isinstance(node, ast.Constant) and isinstance(node.value, str)
-            ):
+            if isinstance(node, ast.JoinedStr) or (isinstance(node, ast.Constant) and isinstance(node.value, str)):
                 return True
-            if (
-                isinstance(node, ast.Call)
-                and isinstance(node.func, ast.Name)
-                and node.func.id == "str"
-            ):
+            if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "str":
                 return True
     return False
 
 
 def _is_reverse_slice(node: ast.Subscript) -> bool:
     step = node.slice.step if isinstance(node.slice, ast.Slice) else None
-    return (
-        isinstance(step, ast.UnaryOp)
-        and isinstance(step.op, ast.USub)
-        and isinstance(step.operand, ast.Constant)
-        and step.operand.value == 1
-    )
+    return isinstance(step, ast.UnaryOp) and isinstance(step.op, ast.USub) and isinstance(step.operand, ast.Constant) and step.operand.value == 1
 
 
 def _set_source(node: ast.expr) -> bool:
     if isinstance(node, ast.Set):
         return True
-    return (
-        isinstance(node, ast.Call)
-        and isinstance(node.func, ast.Name)
-        and node.func.id in {"set", "frozenset"}
-    )
+    return isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id in {"set", "frozenset"}
 
 
 def _walk_named(node: ast.AST, name: str = "<module>") -> Iterator[tuple[ast.AST, str]]:
@@ -179,9 +159,7 @@ def _sites(tree: ast.AST, module: str, *, allow: bool, sets: bool) -> list[Hit]:
     aliases = import_aliases(tree, module) if allow else None
     found: list[Hit] = []
     for node, name in _walk_named(tree):
-        if (isinstance(node, ast.Subscript) and _is_reverse_slice(node)) or (
-            isinstance(node, ast.Call) and _call_is_site(node, aliases)
-        ):
+        if (isinstance(node, ast.Subscript) and _is_reverse_slice(node)) or (isinstance(node, ast.Call) and _call_is_site(node, aliases)):
             found.append((name, node.lineno))
         elif sets and isinstance(node, ast.For | ast.comprehension) and _set_source(node.iter):
             found.append((name, node.iter.lineno))
@@ -208,9 +186,7 @@ def _attribute_lambda_sites(tree: ast.AST) -> list[Hit]:
     return [
         (name, node.lineno)
         for node, name in _walk_named(tree)
-        if isinstance(node, ast.Call)
-        and _call_is_site(node, None)
-        and _attribute_only(_key_of(node))
+        if isinstance(node, ast.Call) and _call_is_site(node, None) and _attribute_only(_key_of(node))
     ]
 
 
@@ -245,11 +221,7 @@ def _text_uses(expr: ast.AST) -> Iterator[ast.expr]:
         elif isinstance(node, ast.Name | ast.Attribute):
             attr = node.id if isinstance(node, ast.Name) else node.attr
             if attr == "natural_key" or (
-                isinstance(node, ast.Attribute)
-                and (
-                    attr in STR_METHODS
-                    or (isinstance(node.value, ast.Name) and node.value.id == "re")
-                )
+                isinstance(node, ast.Attribute) and (attr in STR_METHODS or (isinstance(node.value, ast.Name) and node.value.id == "re"))
             ):
                 yield node
 
@@ -262,7 +234,7 @@ def core_text_keys(tree: ast.AST, module: str) -> list[Hit]:
     if not in_core(module):
         return []
     defs = {n.name: n for n in ast.walk(tree) if isinstance(n, ast.FunctionDef)}
-    found = []
+    found: list[tuple[str, int]] = []
     for key, name in _key_exprs(tree):
         bodies = [defs[key.id]] if isinstance(key, ast.Name) and key.id in defs else [key]
         found += [(name, use.lineno) for body in bodies for use in _text_uses(body)]
@@ -297,16 +269,8 @@ def order_id_reads(tree: ast.AST, module: str) -> list[Hit]:
         return []
     found: list[Hit] = []
     for body, ids, name in _key_bodies(tree):
-        found += [
-            (name, n.lineno)
-            for n in ast.walk(body)
-            if isinstance(n, ast.Attribute) and n.attr == "id" and isinstance(n.ctx, ast.Load)
-        ]
-        found += [
-            (name, e.lineno)
-            for e in _tuple_elements(body)
-            if isinstance(e, ast.Name) and e.id in ids
-        ]
+        found += [(name, n.lineno) for n in ast.walk(body) if isinstance(n, ast.Attribute) and n.attr == "id" and isinstance(n.ctx, ast.Load)]
+        found += [(name, e.lineno) for e in _tuple_elements(body) if isinstance(e, ast.Name) and e.id in ids]
     return found
 
 

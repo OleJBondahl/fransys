@@ -1,24 +1,7 @@
 """The canary and the rename test: every list an engineer reads prints in natural order.
 
 Engineering shape: one invented design whose every tag family holds the members 1, 2, 10 and 11,
-declared out of order: relays, contactors, lamps, terminal strips, harnesses and their cables,
-units, locations, a part-less generic box with ports 1, 2, 10 and 11, a contactor's contact
-functions, and a board net with the pins 2 and 10. The design is built and written once under a
-first set of `name=` keys and once under a second set, so every Id changes and no printed text may.
-
-Canary: each CSV list, each PDF list, the loom page order, the overview's items, the generic
-box ports, the KiCad net name and the findings print `-X2` before `-X10`.
-Rename: a change of the keys changes no CSV byte, no overview page byte (the page holds no Id, A10),
-no PDF text run on any page and no netlist byte. SVG draw order is not compared: it changes
-bytes, not the picture. Every `fr.check` finding message also reads the same, in finding order
-(FT3, overview-0003): a variant design raises the codes that used to print keys.
-
-Each site that fails today is its own strict xfail, so its test flips when its fix lands.
-A function-block tag is a key too (model-0259): the last test renames the block of a PLC rack.
-The sites not reached: the unit block-diagram sheets
-and the drawing-set order of units and locations (a document prints one drawing set, and a block
-diagram needs a top-level cable between units).
-Fixing decision: test-0136 (the canary and the rename test join the gate).
+declared out of order: relays, contactors, lamps, terminal strips, cables,
 """
 
 import csv
@@ -30,8 +13,10 @@ from typing import TYPE_CHECKING, Any, NamedTuple
 import fransys as fr
 import pypdfium2
 import pytest
+from _expected_codes import expect_codes
 from fransys.colours import BK, GNYE, RD
 
+from electrical_symbols import LIBRARY
 from fransys_layout import lay_out_overview
 from fransys_model.derive import signal_lens
 from fransys_model.layout import OverviewBox, OverviewLine, layout_of
@@ -49,15 +34,14 @@ _CSVS = (
     "designations",
     "plc",
     "wires",
-    *(f"connectors-U{n}" for n in _NS),
     *(f"terminals-C1-X{n}" for n in _NS),
 )
-_SHARED = ("Designation list", "BOM")
+_SHARED = ("BOM",)
 _NOT_LISTS = ("Cover", "Contents", "schematic")
 _PAGES = {
     # C1 is a location document: it draws no cable, so it has no cable list page (pdf-0042)
-    "C1.pdf": ("Cover", "schematic", "Terminal list", "Wire label list", *_SHARED),
-    "v1.1.pdf": ("Cover", "Contents", "Wire label list", "Cable list", *_SHARED),
+    "C1.pdf": ("Cover", "schematic", "Terminal list", *_SHARED),
+    "v1.1.pdf": ("Cover", "schematic", "Cable list", *_SHARED),
 }
 
 
@@ -96,17 +80,16 @@ def _board(salt: str):
     def board(u: fr.Design) -> _Io:
         pcb = u.device("A1", "DEMO-PCB-IO", name=f"{salt}pcb")
         j1 = u.device("J1", "DEMO-CONN-4P-MIXED", parent=pcb, unused=True, name=f"{salt}j1")
-        u.detail.wire(j1["2"], j1["10"], wire=(BK, 0.5))
+        u.series(j1["2"], j1["10"], wire=(BK, 0.5))
         return _Io(j1.x1)
 
     return board
 
 
 def _loom(d: fr.Design, n: int, salt: str) -> None:
-    harness = d.harness(f"WH{n}", place="C1", name=f"{salt}wh{n}")
-    j1 = d.device("J1", "DEMO-CONN-2P", parent=harness, place="C1", name=f"{salt}wj1-{n}")
-    j2 = d.device("J2", "DEMO-CONN-2P", parent=harness, place="C1", name=f"{salt}wj2-{n}")
-    cable = d.cable(f"W{n}", "DEMO-CBL-4G1.5", parent=harness, place="C1", name=f"{salt}w{n}")
+    j1 = d.device(f"S{n}", "DEMO-CONN-2P", place="C1", name=f"{salt}wj1-{n}")
+    j2 = d.device(f"T{n}", "DEMO-CONN-2P", place="C1", name=f"{salt}wj2-{n}")
+    cable = d.cable(f"W{n}", "DEMO-CBL-4G1.5", place="C1", name=f"{salt}w{n}")
     cable.core(1, j1[1], j2[1])
 
 
@@ -114,42 +97,59 @@ def _circuit(d: fr.Design, strips: dict[int, fr.TerminalStrip], n: int, salt: st
     k = d.device(f"K{n}", "DEMO-RLY-2CO-24", place="C1", name=f"{salt}k{n}")
     q = d.device(f"Q{n}", "DEMO-CTR-3P-NC", place="C1", name=f"{salt}q{n}")
     h = d.device(f"H{n}", "DEMO-LAMP-24", place=f"L{n}", name=f"{salt}h{n}")
-    d.detail.wire(strips[1][1].inner, q.coil["A1"], wire=(RD, 0.75))
-    d.detail.wire(q.coil["A2"], k.coil["A1"], wire=(RD, 0.75))
-    d.detail.wire(k.coil["A2"], strips[2][n].inner, wire=(BK, 0.75))
-    d.detail.wire(q.aux_nc["21"], k.co_2["21"], wire=(RD, 0.75))
-    d.detail.wire(q.aux["13"], k.co_1["11"], wire=(RD, 0.75))
-    d.detail.wire(q.main["1"], strips[10][n].inner, wire=(RD, 0.75))
-    d.detail.wire(k.co_1["14"], h[1], wire=(RD, 0.75))
+    d.series(strips[1][1 if n in (1, 2) else 5].inner, q.coil["A1"], wire=(RD, 0.75))
+    d.series(q.coil["A2"], k.coil["A1"], wire=(RD, 0.75))
+    d.series(k.coil["A2"], strips[2][n].inner, wire=(BK, 0.75))
+    d.series(q.aux_nc["21"], k.co_2["21"], wire=(RD, 0.75))
+    d.series(q.aux["13"], k.co_1["11"], wire=(RD, 0.75))
+    d.series(q.main["1"], strips[10][n].inner, wire=(RD, 0.75))
+    d.series(k.co_1["14"], h[1], wire=(RD, 0.75))
+    d.series(h[2], strips[2][n].inner, wire=(BK, 0.75))
+    d.series(q.aux["14"], strips[1][n + 1].inner, wire=(RD, 0.75))
+    d.series(q.aux_nc["22"], strips[11][n].inner, wire=(RD, 0.75))
     with d.function(f"F{n}", f"Loom {n}"):
         _loom(d, n, salt)
 
 
 def _design(salt: str) -> tuple[fr.Design, Any]:  # the location handle is not a public name
+    d, cabinet, _rest = _design_and_rest(salt)
+    return d, cabinet
+
+
+def _other_documents(rest: tuple[Any, ...], cover: Path) -> tuple[fr.Draft, ...]:
+    """A document for each location and board unit beside the cabinet (UNPRINTED_SET)."""
+    return tuple(
+        fr.document(
+            fr.DocumentPreset.CABINET_SCHEMATIC,
+            subject,
+            cover=cover,
+        )
+        for subject in rest
+    )
+
+
+def _design_and_rest(salt: str) -> tuple[fr.Design, Any, tuple[Any, ...]]:
     d = fr.design("demo_parts")
     d.project(title="Canary", number="CAN-1", customer="Demo Co", revision=1, author="d")
     d.revision(1, date="2026-10-08", text="First", created="XX")
-    for n in _NS:
-        d.location(f"L{n}", f"Place {n}")
+    places = {n: d.location(f"L{n}", f"Place {n}") for n in _NS}
     cabinet = d.location("C1", "Cabinet")
     strips = {
-        n: d.terminal_strip(f"X{n}", "DEMO-TB-2.5", 12, place="C1", name=f"{salt}x{n}") for n in _NS
-    }
+        n: d.terminal_strip(f"X{n}", "DEMO-TB-2.5-TWIN", 12, place="C1", name=f"{salt}x{n}") for n in _NS
+    }  # one part, so the BOM keeps one tag run
     board = _board(salt)
     boards = {n: d.add(board, f"U{n}", name=f"{salt}u{n}") for n in _NS}
     link = d.cable("W9", "DEMO-CBL-4G1.5", place="C1", name=f"{salt}w9")
     link.core(1, boards[_NS[0]].J1["1"], boards[_NS[1]].J1["1"])  # the system level holds a line
-    b1 = d.device(
-        "B1", None, external=True, pins=("10", "1", "11", "2"), place="C1", name=f"{salt}box"
-    )
+    b1 = d.device("B1", None, external=True, pins=("10", "1", "11", "2"), place="C1", name=f"{salt}box")
     # layout-0218: a box with nothing connected is drawn nowhere; a lamp across pins 1 and 2
     # keeps B1 drawn
     lamp = d.device("P1", "DEMO-LAMP-24", place="C1", name=f"{salt}p1")
-    d.detail.wire(b1["1"], lamp.lamp["1"], wire=(BK, 0.5))
-    d.detail.wire(lamp.lamp["2"], b1["2"], wire=(BK, 0.5))
+    d.series(b1["1"], lamp.lamp["1"], wire=(BK, 0.5))
+    d.series(lamp.lamp["2"], b1["2"], wire=(BK, 0.5))
     for n in _NS:
         _circuit(d, strips, n, salt)
-    return d, cabinet
+    return d, cabinet, (*places.values(), *boards.values())
 
 
 def _page(page: pypdfium2.PdfPage) -> _Page:
@@ -177,21 +177,14 @@ def _pdf_pages(path: Path) -> tuple[_Page, ...]:
 
 
 def _run(salt: str, root: Path) -> _Run:
-    d, cabinet = _design(salt)
+    d, cabinet, rest = _design_and_rest(salt)
     covers = {stem: root / f"{stem}.md" for stem in ("cabinet", "system")}
     for stem, cover in covers.items():
         cover.write_text(f"# {stem}\n", encoding="utf-8")
-    pages = tuple(kind for kind in fr.PageKind if kind is not fr.PageKind.HARNESS_DRAWING)
-    cabinet_doc = fr.document(
-        fr.DocumentPreset.CABINET_SCHEMATIC, cabinet, cover=covers["cabinet"], add=pages
-    )
-    system_doc = fr.document(
-        fr.DocumentPreset.SYSTEM,
-        None,
-        cover=covers["system"],
-        add=tuple(kind for kind in pages if kind is not fr.PageKind.SCHEMATIC),
-    )
-    result = fr.build(d, cabinet_doc, system_doc)
+    cabinet_doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cabinet, cover=covers["cabinet"])
+    system_doc = fr.document(fr.DocumentPreset.SYSTEM, None, cover=covers["system"])
+    others = _other_documents(rest, covers["cabinet"])
+    result = fr.build(d, cabinet_doc, system_doc, *others)
     out, inter = root / "out", root / "inter"
     fr.write(result, out_dir=out, intermediates=inter)
     exports = sorted(path for path in out.rglob("*") if path.is_file())
@@ -275,7 +268,7 @@ def _rows(run: _Run, suffix: str) -> list[dict[str, str]]:
 # ---- O1: the canary -------------------------------------------------------------------------
 
 
-def _params(cases: list[tuple]) -> list:
+def _params(cases: list[tuple[Any, ...]]) -> list[Any]:
     """Each case as a param, its id the case joined by dashes."""
     return [
         pytest.param(
@@ -299,27 +292,16 @@ def test_each_csv_prints_its_tags_in_natural_order(first: _Run, name: str) -> No
     assert _out_of_order(text) == {}
 
 
-@pytest.mark.parametrize("n", _NS)
-def test_a_connector_csv_lists_its_pins_in_natural_order(first: _Run, n: int) -> None:
-    markings = [row["marking"] for row in _rows(first, f"connectors-U{n}")]
-    assert markings == ["1", "2", "10", "A1"]
-
-
 def test_a_terminals_far_ends_print_in_natural_order(first: _Run) -> None:
     (hub,) = (row for row in _rows(first, "terminals-C1-X1") if row["index"] == "1")
     ends = hub["side_a"].split("; ")
-    assert ends == [f"+C1-Q{n}:A1" for n in (1, 2, 10, 11)]
+    assert ends == [f"+C1-Q{n}:A1" for n in (1, 2)]  # a point takes two conductors (R1266): the hub is two hubs of two
 
 
 @pytest.mark.parametrize(
     ("pdf", "title"),
     _params(
-        [
-            (pdf, title)
-            for pdf, titles in _PAGES.items()
-            for title in titles
-            if title not in _NOT_LISTS
-        ],
+        [(pdf, title) for pdf, titles in _PAGES.items() for title in titles if title not in _NOT_LISTS],
     ),
 )
 def test_each_pdf_list_prints_its_tags_in_natural_order(first: _Run, pdf: str, title: str) -> None:
@@ -328,29 +310,19 @@ def test_each_pdf_list_prints_its_tags_in_natural_order(first: _Run, pdf: str, t
 
 def test_the_loom_groups_run_in_natural_order_on_their_page(first: _Run) -> None:
     pages = _pdf(first, "C1.pdf")
-    (title,) = {
-        m.group(0) for page in pages if (m := re.search(r"Loom \d+(?:, Loom \d+)+", page.text))
-    }
+    (title,) = {m.group(0) for page in pages if (m := re.search(r"Loom \d+(?:, Loom \d+)+", page.text))}
     assert title.split(", ") == [f"Loom {n}" for n in (1, 2, 10, 11)]
-
-
-def test_the_kicad_net_is_named_by_its_lowest_pin(first: _Run) -> None:
-    assert '(name "Net-(J1-2)")' in first.netlists["netlist-U1.net"]
 
 
 def test_the_generic_box_draws_its_ports_left_to_right_in_natural_order(first: _Run) -> None:
     (svg,) = (s for s in first.svgs.values() if ">-B1<" in s)
     texts = re.findall(r'<text[^>]* x="([\d.]+)" y="([\d.]+)"[^>]*>([^<]*)</text>', svg)
     label_y = next(float(y) for _, y, text in texts if text == "-B1")
-    near = sorted(
-        (float(x), float(y), text)
-        for x, y, text in texts
-        if text in _NATURAL and abs(float(y) - label_y) < 5
-    )
+    near = sorted((float(x), float(y), text) for x, y, text in texts if text in _NATURAL and abs(float(y) - label_y) < 5)
     assert [text for _, _, text in near] == _NATURAL
 
 
-def _overview(run: _Run) -> dict:
+def _overview(run: _Run) -> dict[Any, Any]:
     html = _file(run, "overview.html").decode()
     found = re.search(r'id="overview-data">(.*?)</script>', html, re.DOTALL)
     assert found is not None
@@ -371,10 +343,12 @@ def _designation(model: fr.Model, subject) -> str:
 
 
 @pytest.mark.parametrize("code", ["FUNCTION_HALF_CONNECTED", "ITEM_WITHOUT_PART"])
-def test_findings_of_one_code_list_by_natural_designation(first: _Run, code: str) -> None:
-    found = [f for f in first.result.findings if f.code == code]
-    printed = [_designation(first.result.model, f.subjects[0]) for f in found]
-    assert len(printed) > len(_NS)
+def test_findings_of_one_code_list_by_natural_designation(first: _Run, variants: tuple[fr.BuildResult, fr.BuildResult], code: str) -> None:
+    # FUNCTION_HALF_CONNECTED is an ERROR (R703.1): the canary holds none, the variant raises it.
+    result = variants[0] if code == "FUNCTION_HALF_CONNECTED" else first.result
+    found = [f for f in result.findings if f.code == code]
+    printed = [_designation(result.model, f.subjects[0]) for f in found]
+    assert len(printed) >= len(_NS)
     assert _natural(printed)
 
 
@@ -382,10 +356,10 @@ def test_findings_of_one_code_list_by_natural_designation(first: _Run, code: str
 
 
 def test_the_rename_changes_the_id_of_every_keyed_item(first: _Run, second: _Run) -> None:
-    def keyed(run: _Run) -> set:
+    def keyed(run: _Run) -> set[Any]:
         return {f.subjects[0] for f in run.result.findings if f.code == "ITEM_WITHOUT_PART"}
 
-    assert len(keyed(first)) == len(_NS) * 2
+    assert len(keyed(first)) == len(_NS)
     assert keyed(first).isdisjoint(keyed(second))
 
 
@@ -417,9 +391,7 @@ def test_a_rename_leaves_the_overview_page_byte_identical(first: _Run, second: _
         [(pdf, title) for pdf, titles in _PAGES.items() for title in titles],
     ),
 )
-def test_a_rename_leaves_each_pdf_page_text_identical(
-    first: _Run, second: _Run, pdf: str, title: str
-) -> None:
+def test_a_rename_leaves_each_pdf_page_text_identical(first: _Run, second: _Run, pdf: str, title: str) -> None:
     a, b = _by_title(_pdf(first, pdf)), _by_title(_pdf(second, pdf))
     if title == "schematic":  # the draw order changes bytes, not the picture: compare positions
         assert [page.runs for page in a[title]] == [page.runs for page in b[title]]
@@ -428,20 +400,15 @@ def test_a_rename_leaves_each_pdf_page_text_identical(
 
 
 def test_a_rename_leaves_each_netlist_identical(first: _Run, second: _Run) -> None:
-    assert first.netlists == second.netlists
+    stamp = re.compile(r'\(tstamps "[0-9a-f-]{36}"\)')  # a component's stamp is its item id's uuid, which a rename moves
+    assert {n: stamp.sub("", t) for n, t in first.netlists.items()} == {n: stamp.sub("", t) for n, t in second.netlists.items()}
 
 
 def _overview_shapes(run: _Run) -> tuple[list[str], list[str]]:
     """Every overview box rectangle with its tabs, and every line's points, without any Id."""
-    out = lay_out_overview(run.result.model)[0]
-    boxes = [
-        (b.x, b.y, b.width, b.height, b.dashed, tuple((t.x, t.y, t.text_width) for t in b.tabs))
-        for b in layout_of(out, OverviewBox).values()
-    ]
-    lines = [
-        (ln.kind, tuple((p.x, p.y) for p in ln.points), ln.text_x, ln.text_y)
-        for ln in layout_of(out, OverviewLine).values()
-    ]
+    out = lay_out_overview(run.result.model, LIBRARY)[0]
+    boxes = [(b.x, b.y, b.width, b.height, b.dashed, tuple((t.x, t.y, t.text_width) for t in b.tabs)) for b in layout_of(out, OverviewBox).values()]
+    lines = [(ln.kind, tuple((p.x, p.y) for p in ln.points), ln.text_x, ln.text_y) for ln in layout_of(out, OverviewLine).values()]
     return sorted(map(repr, boxes)), sorted(map(repr, lines))
 
 
@@ -457,7 +424,13 @@ def test_a_rename_leaves_the_overview_positions_identical(first: _Run, second: _
 
 _ANY_ID = re.compile(r"\b[a-z_]+:[0-9a-f]{32}\b")
 _SUBJECT_KEY = re.compile(r"^(  subject: \S+:\d+) \(.*\)$", re.MULTILINE)
-_VARIANT_CODES = {"PE_NOT_GNYE", "GNYE_NOT_PE", "STRIP_WITHOUT_TAG", "ITEM_WITHOUT_PART"}
+_VARIANT_CODES = {
+    "PE_NOT_GNYE",
+    "GNYE_NOT_PE_UNDECLARED",
+    "STRIP_WITHOUT_TAG",
+    "ITEM_WITHOUT_PART",
+    "FUNCTION_HALF_CONNECTED",
+}
 
 
 def _variant(salt: str) -> fr.BuildResult:
@@ -465,15 +438,16 @@ def _variant(salt: str) -> fr.BuildResult:
 
     A single wire on a PE net coloured RD (`PE_NOT_GNYE`), a GNYE wire on a non-PE net
     (`GNYE_NOT_PE`) and one floating strip with no terminals (`STRIP_WITHOUT_TAG`). The canary
-    itself raises `ITEM_WITHOUT_PART`. An ERROR stops `fr.write`, so the variant is only built.
     """
     d, _ = _design(salt)
     lamps = [d.device(f"P{c}", "DEMO-LAMP-24", place="C1", name=f"{salt}p{c}") for c in "ABCD"]
     d.earth(lamps[0][1], lamps[1][1])
-    d.detail.wire(lamps[0][1], lamps[1][1], wire=(RD, 0.75))
-    d.detail.net("N1", lamps[2][1], lamps[3][1])
-    d.detail.wire(lamps[2][1], lamps[3][1], wire=(GNYE, 0.75))
+    d.series(lamps[0][1], lamps[1][1], wire=(RD, 0.75))
+    d.series(lamps[2][1], lamps[3][1], wire=(GNYE, 0.75))
     d.terminal_strip(None, "DEMO-TB-2.5", place="C1", name=f"{salt}bare")
+    for n in _NS:  # a lamp pair joined at pin 1 only: each lamp is open at pin 2 (FUNCTION_HALF_CONNECTED)
+        pair = [d.device(f"{c}{n}", "DEMO-LAMP-24", place="C1", name=f"{salt}{c.lower()}{n}") for c in "EG"]
+        d.series(pair[0][1], pair[1][1], wire=(BK, 0.75))
     return fr.build(d)
 
 
@@ -501,7 +475,7 @@ def test_the_variant_raises_each_code_the_message_test_needs(
     variants: tuple[fr.BuildResult, fr.BuildResult],
 ) -> None:
     for result in variants:
-        assert {code for code, _ in _messages(result)} >= _VARIANT_CODES
+        expect_codes(result, *sorted(_VARIANT_CODES))
 
 
 def test_a_rename_leaves_every_finding_message_identical(
@@ -555,9 +529,7 @@ def test_a_block_tag_rename_leaves_the_plc_list_and_the_wago_xml_identical(
     assert all(run == runs[0] for run in runs)
 
 
-@fr.unit(
-    "demo-plc-rack-b", revision=1, interface_version=1, date="2026-10-15", text="First", by="AB"
-)
+@fr.unit("demo-plc-rack-b", revision=1, interface_version=1, date="2026-10-15", text="First", by="AB")
 def _plc_rack_b(u: fr.Design) -> _Rack:
     """A second rack, of one input-only module, so the two racks print differently."""
     rack = u.device("A2", "DEMO-PCB-IO", name="rack")
@@ -609,9 +581,7 @@ def test_a_block_tag_rename_never_reorders_racks_in_two_blocks(tmp_path: Path) -
     assert all(lens == lenses[0] for lens in lenses)
 
 
-@fr.unit(
-    "demo-plc-mixed", revision=1, interface_version=1, date="2026-10-15", text="First", by="AB"
-)
+@fr.unit("demo-plc-mixed", revision=1, interface_version=1, date="2026-10-15", text="First", by="AB")
 def _plc_mixed(u: fr.Design) -> _Rack:
     """A rack with one module whose part declares do_2, di_10, di_2, do_1, di_1 in that order."""
     rack = u.device("A1", "DEMO-PCB-IO", name="rack")

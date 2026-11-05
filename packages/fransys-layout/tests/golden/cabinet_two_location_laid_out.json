@@ -1,6 +1,6 @@
 {
   "aliases": [],
-  "schema_version": 20,
+  "schema_version": 23,
   "tables": {
     "aspect_node": [
       {
@@ -1347,6 +1347,7 @@
       {
         "a": "port_template:614b7c9db5e951d885e4ce6068a317db",
         "b": "port_template:7abb15a848685903a81bbbd4e04240e6",
+        "closed_at_rest": null,
         "ext": {},
         "id": "internal_link:0f626cacf55e5c37a6af1471f7c4ee47",
         "key": [
@@ -1354,12 +1355,12 @@
           "link",
           "1"
         ],
-        "kind": "switched",
-        "rest": null
+        "kind": "SWITCHED"
       },
       {
         "a": "port_template:a61df70985e0587db18e3dd079e8c18e",
         "b": "port_template:d61e57e8d52c5e709047b4c8780dfec0",
+        "closed_at_rest": null,
         "ext": {},
         "id": "internal_link:21b0ad6a7a1c51ce8b68335f37890d4a",
         "key": [
@@ -1367,12 +1368,12 @@
           "link",
           "1"
         ],
-        "kind": "switched",
-        "rest": null
+        "kind": "SWITCHED"
       },
       {
         "a": "port_template:3cca936e1ff7543698dc73ab59066ab7",
         "b": "port_template:aced7184b70b5340a19c8e2cbff587d4",
+        "closed_at_rest": null,
         "ext": {},
         "id": "internal_link:3af0d4935d7258aaabe79eb69c657d1d",
         "key": [
@@ -1380,12 +1381,12 @@
           "link",
           "1"
         ],
-        "kind": "conductive",
-        "rest": null
+        "kind": "CONDUCTIVE"
       },
       {
         "a": "port_template:dce86ef396fc5564a5f4cfe91dca4e58",
         "b": "port_template:fca7f4e2184e50a38ff9134b43de7aa2",
+        "closed_at_rest": null,
         "ext": {},
         "id": "internal_link:4e8ada7429c155c2b6a0ad1591f0e9fc",
         "key": [
@@ -1393,12 +1394,12 @@
           "link",
           "2"
         ],
-        "kind": "switched",
-        "rest": null
+        "kind": "SWITCHED"
       },
       {
         "a": "port_template:491b3af15e5a536aa87b9887b1caeedf",
         "b": "port_template:58b11d0461fe5a9a9a7a908d56519f8b",
+        "closed_at_rest": null,
         "ext": {},
         "id": "internal_link:5c6abcdd40455f7d89908c0bb151106d",
         "key": [
@@ -1406,12 +1407,12 @@
           "link",
           "1"
         ],
-        "kind": "conductive",
-        "rest": null
+        "kind": "CONDUCTIVE"
       },
       {
         "a": "port_template:0e66cdb9c9b45959b54ea9b7cded2e69",
         "b": "port_template:e2a178fc796f5a9f94c12465978ae92a",
+        "closed_at_rest": null,
         "ext": {},
         "id": "internal_link:6169c3afe4e556c6a6d375282dff90e8",
         "key": [
@@ -1419,12 +1420,12 @@
           "link",
           "1"
         ],
-        "kind": "switched",
-        "rest": null
+        "kind": "SWITCHED"
       },
       {
         "a": "port_template:3645ceca945f565b9f350abc0d570c7e",
         "b": "port_template:a7d7900cfae85c8183e72878ba8cbc52",
+        "closed_at_rest": null,
         "ext": {},
         "id": "internal_link:97847d5c99c15d57a38957c5e14d67cb",
         "key": [
@@ -1432,12 +1433,12 @@
           "link",
           "1"
         ],
-        "kind": "switched",
-        "rest": null
+        "kind": "SWITCHED"
       },
       {
         "a": "port_template:31763409062f52e281c970e18a62c341",
         "b": "port_template:3cde3386516655a1b532457db5b3d341",
+        "closed_at_rest": null,
         "ext": {},
         "id": "internal_link:c5c9b79a811d594e8036bdabade3c251",
         "key": [
@@ -1445,12 +1446,12 @@
           "link",
           "4"
         ],
-        "kind": "switched",
-        "rest": null
+        "kind": "SWITCHED"
       },
       {
         "a": "port_template:17f69259d8f252a2a72b477deb68fa6a",
         "b": "port_template:44037f92e4095bacb1d914c0f69edb25",
+        "closed_at_rest": null,
         "ext": {},
         "id": "internal_link:c95015491af6590894fd08a619da217d",
         "key": [
@@ -1458,12 +1459,12 @@
           "link",
           "1"
         ],
-        "kind": "conductive",
-        "rest": null
+        "kind": "CONDUCTIVE"
       },
       {
         "a": "port_template:ec11e677fb535240867020c3f4972168",
         "b": "port_template:f08702f21e1b5d77b3fd8394377ed4d9",
+        "closed_at_rest": null,
         "ext": {},
         "id": "internal_link:f2a2f40781b15916bc3ee81caf4bad5e",
         "key": [
@@ -1471,12 +1472,12 @@
           "link",
           "3"
         ],
-        "kind": "switched",
-        "rest": null
+        "kind": "SWITCHED"
       },
       {
         "a": "port_template:681f708abba650a1880209073057017f",
         "b": "port_template:f42d0870796c599f8b7aab62541d6593",
+        "closed_at_rest": null,
         "ext": {},
         "id": "internal_link:f2df8ab267025397953941285234fe45",
         "key": [
@@ -1484,8 +1485,7 @@
           "link",
           "2"
         ],
-        "kind": "switched",
-        "rest": null
+        "kind": "SWITCHED"
       }
     ],
     "item": [
@@ -1899,154 +1899,6 @@
         "unit": null
       }
     ],
-    "layout.chain": [
-      {
-        "beside": null,
-        "entries": [
-          {
-            "function": "function:7220f358b642551a968d35ecacd5b79c",
-            "index": 0
-          },
-          {
-            "function": "function:0bb877dde50f5c299aac7da7bbe6d831",
-            "index": 1
-          },
-          {
-            "function": "function:978ca067eeb65126839684a2803b9e5e",
-            "index": 2
-          },
-          {
-            "function": "function:74430b6a4e3155dc8646251490d49649",
-            "index": 3
-          }
-        ],
-        "ext": {},
-        "id": "layout.chain:1ea94fd06c795e2193d276799e2f0941",
-        "key": [
-          "cabinet",
-          "p2",
-          "power"
-        ]
-      },
-      {
-        "beside": null,
-        "entries": [
-          {
-            "function": "function:e014637e3e6754d783907fb9124c9875",
-            "index": 0
-          },
-          {
-            "function": "function:81094f59d71657dd9fbc2a02a3d22f38",
-            "index": 1
-          },
-          {
-            "function": "function:20152ab52a725409ad2ab868bd48305b",
-            "index": 2
-          }
-        ],
-        "ext": {},
-        "id": "layout.chain:5f6d595e5e2e56cbb2e7669710c15b96",
-        "key": [
-          "cabinet",
-          "p2",
-          "control"
-        ]
-      },
-      {
-        "beside": null,
-        "entries": [
-          {
-            "function": "function:b152e534388550838f619bbfd3dbb38d",
-            "index": 0
-          },
-          {
-            "function": "function:04e686f06f825ab8a0eda97999e53344",
-            "index": 1
-          },
-          {
-            "function": "function:b1830dee2e8756f58718fd7bc9b21c95",
-            "index": 2
-          }
-        ],
-        "ext": {},
-        "id": "layout.chain:9813441eb7995ddea24c8d9d78a13103",
-        "key": [
-          "cabinet",
-          "sup"
-        ]
-      },
-      {
-        "beside": null,
-        "entries": [
-          {
-            "function": "function:d0dcedc3d4725cd9a140d39c0bbdeb15",
-            "index": 0
-          },
-          {
-            "function": "function:6cb0cfe586a453c1860667b7533ec101",
-            "index": 1
-          }
-        ],
-        "ext": {},
-        "id": "layout.chain:b0b4c180232f5a93aea42a87311bbb7b",
-        "key": [
-          "cabinet",
-          "es"
-        ]
-      },
-      {
-        "beside": null,
-        "entries": [
-          {
-            "function": "function:ff1a82bf6a7157309692a1de38676abb",
-            "index": 0
-          },
-          {
-            "function": "function:5284506cc0265749b0520c4036986974",
-            "index": 1
-          },
-          {
-            "function": "function:89861c5bcc1157c6b800d0f7a30106a7",
-            "index": 2
-          },
-          {
-            "function": "function:2012b18ed5075f229f14bd45c0cc934d",
-            "index": 3
-          }
-        ],
-        "ext": {},
-        "id": "layout.chain:c66d7df45ce856bfb5ef0261527a6fb0",
-        "key": [
-          "cabinet",
-          "p1",
-          "power"
-        ]
-      },
-      {
-        "beside": null,
-        "entries": [
-          {
-            "function": "function:171734551b48537dbbdc8f027f22ccd1",
-            "index": 0
-          },
-          {
-            "function": "function:d313734a3258536db89e9b5c7b42e129",
-            "index": 1
-          },
-          {
-            "function": "function:665763e7e2f458378873d2a54990e765",
-            "index": 2
-          }
-        ],
-        "ext": {},
-        "id": "layout.chain:f739ecd8554059be8af8b11f77b30ada",
-        "key": [
-          "cabinet",
-          "p1",
-          "control"
-        ]
-      }
-    ],
     "layout.drawing_library": [
       {
         "ascent_ratio": "0.759765625",
@@ -2135,10 +1987,8 @@
     "layout.link_marker": [
       {
         "box_x": null,
-        "carrier": null,
         "ext": {},
         "facing": "n",
-        "far": "port:45afd9b9fc6251f3841ffea81284d852",
         "height": 53,
         "id": "layout.link_marker:4989c4da7ee5566d83c534bc925c106f",
         "key": [
@@ -2161,6 +2011,13 @@
         ],
         "lead": true,
         "page": "layout.page:ccc8957bfa8f54c4a43a32d328336255",
+        "pairs": [
+          {
+            "carrier": null,
+            "far": "port:45afd9b9fc6251f3841ffea81284d852",
+            "port": "port:19feed79d0b75cc7bee6999e0523f84f"
+          }
+        ],
         "partner": "layout.link_marker:4989c4da7ee5566d83c534bc925c106f",
         "port": "port:19feed79d0b75cc7bee6999e0523f84f",
         "produced_by": "fransys-layout/schematic 0.0.0",
@@ -2177,10 +2034,8 @@
       },
       {
         "box_x": null,
-        "carrier": null,
         "ext": {},
         "facing": "s",
-        "far": "port:246677f05f75581eab1f344c23df66b9",
         "height": 53,
         "id": "layout.link_marker:74ab4da834015522a06f9ae72a09f37e",
         "key": [
@@ -2204,6 +2059,13 @@
         ],
         "lead": true,
         "page": "layout.page:2c44b2c0c4075cc6a7e4c62981d5e93e",
+        "pairs": [
+          {
+            "carrier": null,
+            "far": "port:246677f05f75581eab1f344c23df66b9",
+            "port": "port:86cb8649f1015667a1574ad660c2be8d"
+          }
+        ],
         "partner": "layout.link_marker:74ab4da834015522a06f9ae72a09f37e",
         "port": "port:86cb8649f1015667a1574ad660c2be8d",
         "produced_by": "fransys-layout/schematic 0.0.0",
@@ -2220,10 +2082,8 @@
       },
       {
         "box_x": null,
-        "carrier": null,
         "ext": {},
         "facing": "s",
-        "far": "port:19feed79d0b75cc7bee6999e0523f84f",
         "height": 53,
         "id": "layout.link_marker:de1d5a5fa9d45f42a6d80df494461f4b",
         "key": [
@@ -2246,6 +2106,13 @@
         ],
         "lead": true,
         "page": "layout.page:2c44b2c0c4075cc6a7e4c62981d5e93e",
+        "pairs": [
+          {
+            "carrier": null,
+            "far": "port:19feed79d0b75cc7bee6999e0523f84f",
+            "port": "port:45afd9b9fc6251f3841ffea81284d852"
+          }
+        ],
         "partner": "layout.link_marker:de1d5a5fa9d45f42a6d80df494461f4b",
         "port": "port:45afd9b9fc6251f3841ffea81284d852",
         "produced_by": "fransys-layout/schematic 0.0.0",
@@ -2262,10 +2129,8 @@
       },
       {
         "box_x": null,
-        "carrier": null,
         "ext": {},
         "facing": "n",
-        "far": "port:86cb8649f1015667a1574ad660c2be8d",
         "height": 49,
         "id": "layout.link_marker:fc4b703d64455c8da4cef1519a227ad7",
         "key": [
@@ -2289,6 +2154,13 @@
         ],
         "lead": true,
         "page": "layout.page:ccc8957bfa8f54c4a43a32d328336255",
+        "pairs": [
+          {
+            "carrier": null,
+            "far": "port:86cb8649f1015667a1574ad660c2be8d",
+            "port": "port:246677f05f75581eab1f344c23df66b9"
+          }
+        ],
         "partner": "layout.link_marker:fc4b703d64455c8da4cef1519a227ad7",
         "port": "port:246677f05f75581eab1f344c23df66b9",
         "produced_by": "fransys-layout/schematic 0.0.0",
@@ -3241,6 +3113,7 @@
     ],
     "port": [
       {
+        "boundary": "external",
         "ext": {},
         "function": "function:b152e534388550838f619bbfd3dbb38d",
         "id": "port:00ebd6f9664754ff8d2c19ab95ef4171",
@@ -3255,10 +3128,11 @@
         ],
         "marking": null,
         "name": "external",
-        "role": "external",
+        "pin_role": null,
         "template": "port_template:491b3af15e5a536aa87b9887b1caeedf"
       },
       {
+        "boundary": "external",
         "ext": {},
         "function": "function:74430b6a4e3155dc8646251490d49649",
         "id": "port:00ef0978bbce5c6a8b942f4f7544862e",
@@ -3273,10 +3147,11 @@
         ],
         "marking": null,
         "name": "external",
-        "role": "external",
+        "pin_role": null,
         "template": "port_template:491b3af15e5a536aa87b9887b1caeedf"
       },
       {
+        "boundary": "generic",
         "ext": {},
         "function": "function:89861c5bcc1157c6b800d0f7a30106a7",
         "id": "port:057824ef5b0656d6b2fb6250a8779951",
@@ -3290,10 +3165,11 @@
         ],
         "marking": null,
         "name": "1",
-        "role": "generic",
+        "pin_role": null,
         "template": "port_template:a7d7900cfae85c8183e72878ba8cbc52"
       },
       {
+        "boundary": "external",
         "ext": {},
         "function": "function:665763e7e2f458378873d2a54990e765",
         "id": "port:06b19eee32985f95973caf4ee4eda68a",
@@ -3308,10 +3184,11 @@
         ],
         "marking": null,
         "name": "external",
-        "role": "external",
+        "pin_role": null,
         "template": "port_template:491b3af15e5a536aa87b9887b1caeedf"
       },
       {
+        "boundary": "external",
         "ext": {},
         "function": "function:2012b18ed5075f229f14bd45c0cc934d",
         "id": "port:0b3053c09fd352c6a5da1450c06f84ab",
@@ -3326,10 +3203,11 @@
         ],
         "marking": null,
         "name": "external",
-        "role": "external",
+        "pin_role": null,
         "template": "port_template:491b3af15e5a536aa87b9887b1caeedf"
       },
       {
+        "boundary": "generic",
         "ext": {},
         "function": "function:674cc5ba9dd955e090a0de802cdb3d32",
         "id": "port:0c33114b84405b6bb50eb9c1400aaab2",
@@ -3343,10 +3221,11 @@
         ],
         "marking": null,
         "name": "1",
-        "role": "generic",
+        "pin_role": null,
         "template": "port_template:57f6315978d559d784bd7339b841b2d1"
       },
       {
+        "boundary": "generic",
         "ext": {},
         "function": "function:89861c5bcc1157c6b800d0f7a30106a7",
         "id": "port:0e81585171845cc79382debbeca1e62b",
@@ -3360,10 +3239,11 @@
         ],
         "marking": null,
         "name": "5",
-        "role": "generic",
+        "pin_role": null,
         "template": "port_template:f08702f21e1b5d77b3fd8394377ed4d9"
       },
       {
+        "boundary": "generic",
         "ext": {},
         "function": "function:34d7dc47566651ed8a36fcbf57f2ccbe",
         "id": "port:0ea18459514a55679efd50f17298c3d2",
@@ -3377,10 +3257,11 @@
         ],
         "marking": null,
         "name": "shield",
-        "role": "generic",
+        "pin_role": null,
         "template": "port_template:e687926790a75c62a2d7ac66daf9dc0e"
       },
       {
+        "boundary": "generic",
         "ext": {},
         "function": "function:e014637e3e6754d783907fb9124c9875",
         "id": "port:0fa411fdc4865b64827b88e18c4ce4d5",
@@ -3394,10 +3275,11 @@
         ],
         "marking": null,
         "name": "12",
-        "role": "generic",
+        "pin_role": null,
         "template": "port_template:7abb15a848685903a81bbbd4e04240e6"
       },
       {
+        "boundary": "generic",
         "ext": {},
         "function": "function:04e686f06f825ab8a0eda97999e53344",
         "id": "port:145127dbbe58575e8c0c97f21ea8432f",
@@ -3411,10 +3293,11 @@
         ],
         "marking": null,
         "name": "1",
-        "role": "generic",
+        "pin_role": null,
         "template": "port_template:17f69259d8f252a2a72b477deb68fa6a"
       },
       {
+        "boundary": "generic",
         "ext": {},
         "function": "function:171734551b48537dbbdc8f027f22ccd1",
         "id": "port:158f431d5b725b57be33fbd70d51173b",
@@ -3428,10 +3311,11 @@
         ],
         "marking": null,
         "name": "12",
-        "role": "generic",
+        "pin_role": null,
         "template": "port_template:7abb15a848685903a81bbbd4e04240e6"
       },
       {
+        "boundary": "generic",
         "ext": {},
         "function": "function:371e58913676513d803655360c53e424",
         "id": "port:19feed79d0b75cc7bee6999e0523f84f",
@@ -3445,10 +3329,11 @@
         ],
         "marking": null,
         "name": "13",
-        "role": "generic",
+        "pin_role": null,
         "template": "port_template:31763409062f52e281c970e18a62c341"
       },
       {
+        "boundary": "generic",
         "ext": {},
         "function": "function:6cb0cfe586a453c1860667b7533ec101",
         "id": "port:20d144873c0b55cc8775a28324adb668",
@@ -3462,10 +3347,11 @@
         ],
         "marking": null,
         "name": "22",
-        "role": "generic",
+        "pin_role": null,
         "template": "port_template:681f708abba650a1880209073057017f"
       },
       {
+        "boundary": "generic",
         "ext": {},
         "function": "function:e014637e3e6754d783907fb9124c9875",
         "id": "port:246677f05f75581eab1f344c23df66b9",
@@ -3479,10 +3365,11 @@
         ],
         "marking": null,
         "name": "11",
-        "role": "generic",
+        "pin_role": null,
         "template": "port_template:614b7c9db5e951d885e4ce6068a317db"
       },
       {
+        "boundary": "generic",
         "ext": {},
         "function": "function:0bb877dde50f5c299aac7da7bbe6d831",
         "id": "port:250a27f3b48e537c932851bda3e6117f",
@@ -3496,10 +3383,11 @@
         ],
         "marking": null,
         "name": "2",
-        "role": "generic",
+        "pin_role": null,
         "template": "port_template:aced7184b70b5340a19c8e2cbff587d4"
       },
       {
+        "boundary": "generic",
         "ext": {},
         "function": "function:e282182afdde52a98be93a171f09db73",
         "id": "port:2f71fb2525755ef4aea7edd1dcdfc8c5",
@@ -3513,10 +3401,11 @@
         ],
         "marking": null,
         "name": "13",
-        "role": "generic",
+        "pin_role": null,
         "template": "port_template:e2a178fc796f5a9f94c12465978ae92a"
       },
       {
+        "boundary": "internal",
         "ext": {},
         "function": "function:20152ab52a725409ad2ab868bd48305b",
         "id": "port:316204b72f935c5b8c8350da91b2f1d2",
@@ -3531,10 +3420,11 @@
         ],
         "marking": null,
         "name": "internal",
-        "role": "internal",
+        "pin_role": null,
         "template": "port_template:58b11d0461fe5a9a9a7a908d56519f8b"
       },
       {
+        "boundary": "internal",
         "ext": {},
         "function": "function:665763e7e2f458378873d2a54990e765",
         "id": "port:395e8d70cc0b549d9b169c54310ce23a",
@@ -3549,10 +3439,11 @@
         ],
         "marking": null,
         "name": "internal",
-        "role": "internal",
+        "pin_role": null,
         "template": "port_template:58b11d0461fe5a9a9a7a908d56519f8b"
       },
       {
+        "boundary": "internal",
         "ext": {},
         "function": "function:b152e534388550838f619bbfd3dbb38d",
         "id": "port:396d463cb07e59e3acd9abc652e1c9e4",
@@ -3567,10 +3458,11 @@
         ],
         "marking": null,
         "name": "internal",
-        "role": "internal",
+        "pin_role": null,
         "template": "port_template:58b11d0461fe5a9a9a7a908d56519f8b"
       },
       {
+        "boundary": "generic",
         "ext": {},
         "function": "function:254d80eacdcf50c7a3e88351520518a8",
         "id": "port:3b298f6763f85767b8676a8ad6ca26e7",
@@ -3584,10 +3476,11 @@
         ],
         "marking": null,
         "name": "A2",
-        "role": "generic",
+        "pin_role": "COIL",
         "template": "port_template:7d9b3a7c04ac55989e8db3b7fed7026b"
       },
       {
+        "boundary": "generic",
         "ext": {},
         "function": "function:978ca067eeb65126839684a2803b9e5e",
         "id": "port:3f41267c98715918b12c9ad0dc3f2607",
@@ -3601,10 +3494,11 @@
         ],
         "marking": null,
         "name": "6",
-        "role": "generic",
+        "pin_role": null,
         "template": "port_template:ec11e677fb535240867020c3f4972168"
       },
       {
+        "boundary": "generic",
         "ext": {},
         "function": "function:89861c5bcc1157c6b800d0f7a30106a7",
         "id": "port:42d760ffc7ee5b8699ad6eb76d50f893",
@@ -3618,10 +3512,11 @@
         ],
         "marking": null,
         "name": "4",
-        "role": "generic",
+        "pin_role": null,
         "template": "port_template:dce86ef396fc5564a5f4cfe91dca4e58"
       },
       {
+        "boundary": "generic",
         "ext": {},
         "function": "function:5284506cc0265749b0520c4036986974",
         "id": "port:43fc60d96e0d52528eac5456b3a46de4",
@@ -3635,10 +3530,11 @@
         ],
         "marking": null,
         "name": "2",
-        "role": "generic",
+        "pin_role": null,
         "template": "port_template:aced7184b70b5340a19c8e2cbff587d4"
       },
       {
+        "boundary": "generic",
         "ext": {},
         "function": "function:63779d7cade159a88670e59db0aee451",
         "id": "port:45afd9b9fc6251f3841ffea81284d852",
@@ -3652,10 +3548,11 @@
         ],
         "marking": null,
         "name": "14",
-        "role": "generic",
+        "pin_role": null,
         "template": "port_template:3cde3386516655a1b532457db5b3d341"
       },
       {
+        "boundary": "generic",
         "ext": {},
         "function": "function:5284506cc0265749b0520c4036986974",
         "id": "port:490cc3d74f7059a99cd374d6ad856883",
@@ -3669,10 +3566,11 @@
         ],
         "marking": null,
         "name": "1",
-        "role": "generic",
+        "pin_role": null,
         "template": "port_template:3cca936e1ff7543698dc73ab59066ab7"
       },
       {
+        "boundary": "generic",
         "ext": {},
         "function": "function:978ca067eeb65126839684a2803b9e5e",
         "id": "port:49fc7c31215551dd838dc09b78fa9743",
@@ -3686,10 +3584,11 @@
         ],
         "marking": null,
         "name": "3",
-        "role": "generic",
+        "pin_role": null,
         "template": "port_template:fca7f4e2184e50a38ff9134b43de7aa2"
       },
       {
+        "boundary": "generic",
         "ext": {},
         "function": "function:254d80eacdcf50c7a3e88351520518a8",
         "id": "port:4d8588b4b15d5484801684fb1616df66",
@@ -3703,10 +3602,11 @@
         ],
         "marking": null,
         "name": "A1",
-        "role": "generic",
+        "pin_role": "COIL",
         "template": "port_template:1127c8c73bab500c8a0d2ff45a3f21c3"
       },
       {
+        "boundary": "generic",
         "ext": {},
         "function": "function:171734551b48537dbbdc8f027f22ccd1",
         "id": "port:543cca800edd51e3a0b82d46d832f809",
@@ -3720,10 +3620,11 @@
         ],
         "marking": null,
         "name": "11",
-        "role": "generic",
+        "pin_role": null,
         "template": "port_template:614b7c9db5e951d885e4ce6068a317db"
       },
       {
+        "boundary": "generic",
         "ext": {},
         "function": "function:978ca067eeb65126839684a2803b9e5e",
         "id": "port:5711a91bd77c5c1a9b1c04f8e378b15c",
@@ -3737,10 +3638,11 @@
         ],
         "marking": null,
         "name": "5",
-        "role": "generic",
+        "pin_role": null,
         "template": "port_template:f08702f21e1b5d77b3fd8394377ed4d9"
       },
       {
+        "boundary": "generic",
         "ext": {},
         "function": "function:0bb877dde50f5c299aac7da7bbe6d831",
         "id": "port:59578fddceb65170a7f44e99528d0c05",
@@ -3754,10 +3656,11 @@
         ],
         "marking": null,
         "name": "1",
-        "role": "generic",
+        "pin_role": null,
         "template": "port_template:3cca936e1ff7543698dc73ab59066ab7"
       },
       {
+        "boundary": "generic",
         "ext": {},
         "function": "function:89861c5bcc1157c6b800d0f7a30106a7",
         "id": "port:5da9b795565658d19e2ddf9e68dbacb8",
@@ -3771,10 +3674,11 @@
         ],
         "marking": null,
         "name": "6",
-        "role": "generic",
+        "pin_role": null,
         "template": "port_template:ec11e677fb535240867020c3f4972168"
       },
       {
+        "boundary": "generic",
         "ext": {},
         "function": "function:371e58913676513d803655360c53e424",
         "id": "port:5e65cafe1fa458b09e2d9e375318cac4",
@@ -3788,10 +3692,11 @@
         ],
         "marking": null,
         "name": "14",
-        "role": "generic",
+        "pin_role": null,
         "template": "port_template:3cde3386516655a1b532457db5b3d341"
       },
       {
+        "boundary": "generic",
         "ext": {},
         "function": "function:89861c5bcc1157c6b800d0f7a30106a7",
         "id": "port:693feaf569485bdd925938c3b7f0a9be",
@@ -3805,10 +3710,11 @@
         ],
         "marking": null,
         "name": "3",
-        "role": "generic",
+        "pin_role": null,
         "template": "port_template:fca7f4e2184e50a38ff9134b43de7aa2"
       },
       {
+        "boundary": "generic",
         "ext": {},
         "function": "function:04e686f06f825ab8a0eda97999e53344",
         "id": "port:7436d655f86b574293dc98c28e259621",
@@ -3822,10 +3728,11 @@
         ],
         "marking": null,
         "name": "2",
-        "role": "generic",
+        "pin_role": null,
         "template": "port_template:44037f92e4095bacb1d914c0f69edb25"
       },
       {
+        "boundary": "generic",
         "ext": {},
         "function": "function:978ca067eeb65126839684a2803b9e5e",
         "id": "port:762b0ca017295929ae164dda7b1ce8a8",
@@ -3839,10 +3746,11 @@
         ],
         "marking": null,
         "name": "2",
-        "role": "generic",
+        "pin_role": null,
         "template": "port_template:3645ceca945f565b9f350abc0d570c7e"
       },
       {
+        "boundary": "generic",
         "ext": {},
         "function": "function:81094f59d71657dd9fbc2a02a3d22f38",
         "id": "port:76c73e301db3544194b5a61a85630920",
@@ -3856,10 +3764,11 @@
         ],
         "marking": null,
         "name": "A2",
-        "role": "generic",
+        "pin_role": "COIL",
         "template": "port_template:f5338e4145c453aaaf31d0a29b29a012"
       },
       {
+        "boundary": "generic",
         "ext": {},
         "function": "function:978ca067eeb65126839684a2803b9e5e",
         "id": "port:82da7d09686c58718c9db5aec2a27b04",
@@ -3873,10 +3782,11 @@
         ],
         "marking": null,
         "name": "1",
-        "role": "generic",
+        "pin_role": null,
         "template": "port_template:a7d7900cfae85c8183e72878ba8cbc52"
       },
       {
+        "boundary": "generic",
         "ext": {},
         "function": "function:81094f59d71657dd9fbc2a02a3d22f38",
         "id": "port:859ebdba6be856349f34142302e48808",
@@ -3890,10 +3800,11 @@
         ],
         "marking": null,
         "name": "A1",
-        "role": "generic",
+        "pin_role": "COIL",
         "template": "port_template:76d34a8b7ca35bc1aeca85713300fd10"
       },
       {
+        "boundary": "external",
         "ext": {},
         "function": "function:b1830dee2e8756f58718fd7bc9b21c95",
         "id": "port:86cb8649f1015667a1574ad660c2be8d",
@@ -3908,10 +3819,11 @@
         ],
         "marking": null,
         "name": "external",
-        "role": "external",
+        "pin_role": null,
         "template": "port_template:491b3af15e5a536aa87b9887b1caeedf"
       },
       {
+        "boundary": "generic",
         "ext": {},
         "function": "function:d313734a3258536db89e9b5c7b42e129",
         "id": "port:90ead34cb43f5a498e16fda89f9723d1",
@@ -3925,10 +3837,11 @@
         ],
         "marking": null,
         "name": "A2",
-        "role": "generic",
+        "pin_role": "COIL",
         "template": "port_template:f5338e4145c453aaaf31d0a29b29a012"
       },
       {
+        "boundary": "generic",
         "ext": {},
         "function": "function:e282182afdde52a98be93a171f09db73",
         "id": "port:96ce0cb31cd753868750d7686e30ed1c",
@@ -3942,10 +3855,11 @@
         ],
         "marking": null,
         "name": "14",
-        "role": "generic",
+        "pin_role": null,
         "template": "port_template:0e66cdb9c9b45959b54ea9b7cded2e69"
       },
       {
+        "boundary": "generic",
         "ext": {},
         "function": "function:d0dcedc3d4725cd9a140d39c0bbdeb15",
         "id": "port:9ab9cd6fa2b45c3a84155166f0441d07",
@@ -3959,10 +3873,11 @@
         ],
         "marking": null,
         "name": "12",
-        "role": "generic",
+        "pin_role": null,
         "template": "port_template:d61e57e8d52c5e709047b4c8780dfec0"
       },
       {
+        "boundary": "external",
         "ext": {},
         "function": "function:ff1a82bf6a7157309692a1de38676abb",
         "id": "port:a0f00cb9c94153e7b049b48eecf4f3b4",
@@ -3977,10 +3892,11 @@
         ],
         "marking": null,
         "name": "external",
-        "role": "external",
+        "pin_role": null,
         "template": "port_template:491b3af15e5a536aa87b9887b1caeedf"
       },
       {
+        "boundary": "generic",
         "ext": {},
         "function": "function:89861c5bcc1157c6b800d0f7a30106a7",
         "id": "port:ad48479fba165a30a870efc1ed1f9fe2",
@@ -3994,10 +3910,11 @@
         ],
         "marking": null,
         "name": "2",
-        "role": "generic",
+        "pin_role": null,
         "template": "port_template:3645ceca945f565b9f350abc0d570c7e"
       },
       {
+        "boundary": "generic",
         "ext": {},
         "function": "function:605cdfd1bfec551d8259ef8060f42756",
         "id": "port:b2c1254043475366be20fa458d477b3f",
@@ -4012,10 +3929,11 @@
         ],
         "marking": null,
         "name": "1",
-        "role": "generic",
+        "pin_role": null,
         "template": "port_template:17f69259d8f252a2a72b477deb68fa6a"
       },
       {
+        "boundary": "internal",
         "ext": {},
         "function": "function:b1830dee2e8756f58718fd7bc9b21c95",
         "id": "port:b7fb1f2347d954958a08d62233623ae2",
@@ -4030,10 +3948,11 @@
         ],
         "marking": null,
         "name": "internal",
-        "role": "internal",
+        "pin_role": null,
         "template": "port_template:58b11d0461fe5a9a9a7a908d56519f8b"
       },
       {
+        "boundary": "generic",
         "ext": {},
         "function": "function:674cc5ba9dd955e090a0de802cdb3d32",
         "id": "port:bad71d289f08572c8ccdc08bc3caf4b1",
@@ -4047,10 +3966,11 @@
         ],
         "marking": null,
         "name": "2",
-        "role": "generic",
+        "pin_role": null,
         "template": "port_template:1f0372d6e1435e898f51767c24679f73"
       },
       {
+        "boundary": "generic",
         "ext": {},
         "function": "function:0c004be55cfb5ae4b5f02476a92148a6",
         "id": "port:bcb5ee52b7f15e12ab169f673abbd0b9",
@@ -4064,10 +3984,11 @@
         ],
         "marking": null,
         "name": "1",
-        "role": "generic",
+        "pin_role": null,
         "template": "port_template:08b117df8db057c08c1e359583417209"
       },
       {
+        "boundary": "external",
         "ext": {},
         "function": "function:7220f358b642551a968d35ecacd5b79c",
         "id": "port:c0d7e6ee4ce056eb8d22ee2d1091ad06",
@@ -4082,10 +4003,11 @@
         ],
         "marking": null,
         "name": "external",
-        "role": "external",
+        "pin_role": null,
         "template": "port_template:491b3af15e5a536aa87b9887b1caeedf"
       },
       {
+        "boundary": "internal",
         "ext": {},
         "function": "function:7220f358b642551a968d35ecacd5b79c",
         "id": "port:c3fa81bacb585411a3e9a33eaeba9873",
@@ -4100,10 +4022,11 @@
         ],
         "marking": null,
         "name": "internal",
-        "role": "internal",
+        "pin_role": null,
         "template": "port_template:58b11d0461fe5a9a9a7a908d56519f8b"
       },
       {
+        "boundary": "generic",
         "ext": {},
         "function": "function:0c004be55cfb5ae4b5f02476a92148a6",
         "id": "port:ca51c6542465553caef31e346ae6a168",
@@ -4117,10 +4040,11 @@
         ],
         "marking": null,
         "name": "2",
-        "role": "generic",
+        "pin_role": null,
         "template": "port_template:6c1dab1836b85be0905fd20c60401b15"
       },
       {
+        "boundary": "internal",
         "ext": {},
         "function": "function:ff1a82bf6a7157309692a1de38676abb",
         "id": "port:cfb4d8c93af051298e60fdc5c2060fd0",
@@ -4135,10 +4059,11 @@
         ],
         "marking": null,
         "name": "internal",
-        "role": "internal",
+        "pin_role": null,
         "template": "port_template:58b11d0461fe5a9a9a7a908d56519f8b"
       },
       {
+        "boundary": "internal",
         "ext": {},
         "function": "function:74430b6a4e3155dc8646251490d49649",
         "id": "port:d00801eac22a54499338b43f3dfb4a53",
@@ -4153,10 +4078,11 @@
         ],
         "marking": null,
         "name": "internal",
-        "role": "internal",
+        "pin_role": null,
         "template": "port_template:58b11d0461fe5a9a9a7a908d56519f8b"
       },
       {
+        "boundary": "generic",
         "ext": {},
         "function": "function:d313734a3258536db89e9b5c7b42e129",
         "id": "port:d6537073a21156caa3383d939ec25ea9",
@@ -4170,10 +4096,11 @@
         ],
         "marking": null,
         "name": "A1",
-        "role": "generic",
+        "pin_role": "COIL",
         "template": "port_template:76d34a8b7ca35bc1aeca85713300fd10"
       },
       {
+        "boundary": "generic",
         "ext": {},
         "function": "function:6cb0cfe586a453c1860667b7533ec101",
         "id": "port:d6e5900cb4b75d509633134ddc222c59",
@@ -4187,10 +4114,11 @@
         ],
         "marking": null,
         "name": "21",
-        "role": "generic",
+        "pin_role": null,
         "template": "port_template:f42d0870796c599f8b7aab62541d6593"
       },
       {
+        "boundary": "internal",
         "ext": {},
         "function": "function:2012b18ed5075f229f14bd45c0cc934d",
         "id": "port:dbfbe88f4d4a524cb044f6d6a220d322",
@@ -4205,10 +4133,11 @@
         ],
         "marking": null,
         "name": "internal",
-        "role": "internal",
+        "pin_role": null,
         "template": "port_template:58b11d0461fe5a9a9a7a908d56519f8b"
       },
       {
+        "boundary": "generic",
         "ext": {},
         "function": "function:d0dcedc3d4725cd9a140d39c0bbdeb15",
         "id": "port:dfdfa90b77085ea78eabf6e40e84f265",
@@ -4222,10 +4151,11 @@
         ],
         "marking": null,
         "name": "11",
-        "role": "generic",
+        "pin_role": null,
         "template": "port_template:a61df70985e0587db18e3dd079e8c18e"
       },
       {
+        "boundary": "generic",
         "ext": {},
         "function": "function:63779d7cade159a88670e59db0aee451",
         "id": "port:e03d5b75790d5ae2a0eb13b0880d9938",
@@ -4239,10 +4169,11 @@
         ],
         "marking": null,
         "name": "13",
-        "role": "generic",
+        "pin_role": null,
         "template": "port_template:31763409062f52e281c970e18a62c341"
       },
       {
+        "boundary": "external",
         "ext": {},
         "function": "function:20152ab52a725409ad2ab868bd48305b",
         "id": "port:e65ee5bcb1925e1899d5ed704d6e0740",
@@ -4257,10 +4188,11 @@
         ],
         "marking": null,
         "name": "external",
-        "role": "external",
+        "pin_role": null,
         "template": "port_template:491b3af15e5a536aa87b9887b1caeedf"
       },
       {
+        "boundary": "generic",
         "ext": {},
         "function": "function:605cdfd1bfec551d8259ef8060f42756",
         "id": "port:e7937aa7629f53a7bccaf0bd24a73057",
@@ -4275,10 +4207,11 @@
         ],
         "marking": null,
         "name": "2",
-        "role": "generic",
+        "pin_role": null,
         "template": "port_template:44037f92e4095bacb1d914c0f69edb25"
       },
       {
+        "boundary": "generic",
         "ext": {},
         "function": "function:978ca067eeb65126839684a2803b9e5e",
         "id": "port:fb7ee816ac7f50f6b1c36670a4beaa34",
@@ -4292,12 +4225,13 @@
         ],
         "marking": null,
         "name": "4",
-        "role": "generic",
+        "pin_role": null,
         "template": "port_template:dce86ef396fc5564a5f4cfe91dca4e58"
       }
     ],
     "port_template": [
       {
+        "boundary": "generic",
         "conductor_mark": null,
         "ext": {},
         "function": "function_template:ccf16c159d6853af8eb0f20f5a6f4f41",
@@ -4310,10 +4244,11 @@
         ],
         "marking": null,
         "name": "1",
-        "pole_side": null,
-        "role": "generic"
+        "pin_role": null,
+        "side": null
       },
       {
+        "boundary": "generic",
         "conductor_mark": null,
         "ext": {},
         "function": "function_template:0621f47823805d8fb2100eed410641c5",
@@ -4326,10 +4261,11 @@
         ],
         "marking": null,
         "name": "14",
-        "pole_side": null,
-        "role": "generic"
+        "pin_role": null,
+        "side": null
       },
       {
+        "boundary": "generic",
         "conductor_mark": null,
         "ext": {},
         "function": "function_template:1b39e85e11d350bca1edcff8b715cf2e",
@@ -4342,10 +4278,11 @@
         ],
         "marking": null,
         "name": "A1",
-        "pole_side": null,
-        "role": "generic"
+        "pin_role": "COIL",
+        "side": null
       },
       {
+        "boundary": "generic",
         "conductor_mark": null,
         "ext": {},
         "function": "function_template:be16e5a8d1e95e199527a2f0aa1593b2",
@@ -4358,10 +4295,11 @@
         ],
         "marking": null,
         "name": "1",
-        "pole_side": null,
-        "role": "generic"
+        "pin_role": null,
+        "side": null
       },
       {
+        "boundary": "generic",
         "conductor_mark": null,
         "ext": {},
         "function": "function_template:d2ab2eda9099548499607c9f68343af7",
@@ -4374,10 +4312,11 @@
         ],
         "marking": null,
         "name": "2",
-        "pole_side": null,
-        "role": "generic"
+        "pin_role": null,
+        "side": null
       },
       {
+        "boundary": "generic",
         "conductor_mark": null,
         "ext": {},
         "function": "function_template:a07aa089ea61504ca5841e77a5f83eff",
@@ -4390,10 +4329,11 @@
         ],
         "marking": null,
         "name": "13",
-        "pole_side": null,
-        "role": "generic"
+        "pin_role": null,
+        "side": null
       },
       {
+        "boundary": "generic",
         "conductor_mark": null,
         "ext": {},
         "function": "function_template:beb8aee68d6b59988dd89deb67cbf6ac",
@@ -4406,10 +4346,11 @@
         ],
         "marking": null,
         "name": "2",
-        "pole_side": null,
-        "role": "generic"
+        "pin_role": null,
+        "side": null
       },
       {
+        "boundary": "generic",
         "conductor_mark": null,
         "ext": {},
         "function": "function_template:e8af1315f81f52b6b592e6e101cc9a69",
@@ -4422,10 +4363,11 @@
         ],
         "marking": null,
         "name": "1",
-        "pole_side": null,
-        "role": "generic"
+        "pin_role": null,
+        "side": null
       },
       {
+        "boundary": "generic",
         "conductor_mark": null,
         "ext": {},
         "function": "function_template:a07aa089ea61504ca5841e77a5f83eff",
@@ -4438,10 +4380,11 @@
         ],
         "marking": null,
         "name": "14",
-        "pole_side": null,
-        "role": "generic"
+        "pin_role": null,
+        "side": null
       },
       {
+        "boundary": "generic",
         "conductor_mark": null,
         "ext": {},
         "function": "function_template:be16e5a8d1e95e199527a2f0aa1593b2",
@@ -4454,10 +4397,11 @@
         ],
         "marking": null,
         "name": "2",
-        "pole_side": null,
-        "role": "generic"
+        "pin_role": null,
+        "side": null
       },
       {
+        "boundary": "external",
         "conductor_mark": null,
         "ext": {},
         "function": "function_template:b9a2531e7ab355b39231b97b1313041d",
@@ -4470,10 +4414,11 @@
         ],
         "marking": null,
         "name": "external",
-        "pole_side": null,
-        "role": "external"
+        "pin_role": null,
+        "side": null
       },
       {
+        "boundary": "generic",
         "conductor_mark": null,
         "ext": {},
         "function": "function_template:d2ab2eda9099548499607c9f68343af7",
@@ -4486,10 +4431,11 @@
         ],
         "marking": null,
         "name": "1",
-        "pole_side": null,
-        "role": "generic"
+        "pin_role": null,
+        "side": null
       },
       {
+        "boundary": "internal",
         "conductor_mark": null,
         "ext": {},
         "function": "function_template:b9a2531e7ab355b39231b97b1313041d",
@@ -4502,10 +4448,11 @@
         ],
         "marking": null,
         "name": "internal",
-        "pole_side": null,
-        "role": "internal"
+        "pin_role": null,
+        "side": null
       },
       {
+        "boundary": "generic",
         "conductor_mark": null,
         "ext": {},
         "function": "function_template:16f8a483a30559f09c94023f8091ac7c",
@@ -4518,10 +4465,11 @@
         ],
         "marking": null,
         "name": "11",
-        "pole_side": null,
-        "role": "generic"
+        "pin_role": null,
+        "side": null
       },
       {
+        "boundary": "generic",
         "conductor_mark": null,
         "ext": {},
         "function": "function_template:1e7f14b1bd855912aed21b7fca32026d",
@@ -4534,10 +4482,11 @@
         ],
         "marking": null,
         "name": "22",
-        "pole_side": null,
-        "role": "generic"
+        "pin_role": null,
+        "side": null
       },
       {
+        "boundary": "generic",
         "conductor_mark": null,
         "ext": {},
         "function": "function_template:ccf16c159d6853af8eb0f20f5a6f4f41",
@@ -4550,10 +4499,11 @@
         ],
         "marking": null,
         "name": "2",
-        "pole_side": null,
-        "role": "generic"
+        "pin_role": null,
+        "side": null
       },
       {
+        "boundary": "generic",
         "conductor_mark": null,
         "ext": {},
         "function": "function_template:1fc0e337d83753d88e6566de4b825d72",
@@ -4566,10 +4516,11 @@
         ],
         "marking": null,
         "name": "A1",
-        "pole_side": null,
-        "role": "generic"
+        "pin_role": "COIL",
+        "side": null
       },
       {
+        "boundary": "generic",
         "conductor_mark": null,
         "ext": {},
         "function": "function_template:16f8a483a30559f09c94023f8091ac7c",
@@ -4582,10 +4533,11 @@
         ],
         "marking": null,
         "name": "12",
-        "pole_side": null,
-        "role": "generic"
+        "pin_role": null,
+        "side": null
       },
       {
+        "boundary": "generic",
         "conductor_mark": null,
         "ext": {},
         "function": "function_template:1b39e85e11d350bca1edcff8b715cf2e",
@@ -4598,10 +4550,11 @@
         ],
         "marking": null,
         "name": "A2",
-        "pole_side": null,
-        "role": "generic"
+        "pin_role": "COIL",
+        "side": null
       },
       {
+        "boundary": "generic",
         "conductor_mark": null,
         "ext": {},
         "function": "function_template:9cd49df9fa615d8f9b8000b2cd276cee",
@@ -4614,10 +4567,11 @@
         ],
         "marking": null,
         "name": "11",
-        "pole_side": null,
-        "role": "generic"
+        "pin_role": null,
+        "side": null
       },
       {
+        "boundary": "generic",
         "conductor_mark": null,
         "ext": {},
         "function": "function_template:beb8aee68d6b59988dd89deb67cbf6ac",
@@ -4630,10 +4584,11 @@
         ],
         "marking": null,
         "name": "1",
-        "pole_side": null,
-        "role": "generic"
+        "pin_role": null,
+        "side": null
       },
       {
+        "boundary": "generic",
         "conductor_mark": null,
         "ext": {},
         "function": "function_template:e8af1315f81f52b6b592e6e101cc9a69",
@@ -4646,10 +4601,11 @@
         ],
         "marking": null,
         "name": "2",
-        "pole_side": null,
-        "role": "generic"
+        "pin_role": null,
+        "side": null
       },
       {
+        "boundary": "generic",
         "conductor_mark": null,
         "ext": {},
         "function": "function_template:9cd49df9fa615d8f9b8000b2cd276cee",
@@ -4662,10 +4618,11 @@
         ],
         "marking": null,
         "name": "12",
-        "pole_side": null,
-        "role": "generic"
+        "pin_role": null,
+        "side": null
       },
       {
+        "boundary": "generic",
         "conductor_mark": null,
         "ext": {},
         "function": "function_template:beb8aee68d6b59988dd89deb67cbf6ac",
@@ -4678,10 +4635,11 @@
         ],
         "marking": null,
         "name": "4",
-        "pole_side": null,
-        "role": "generic"
+        "pin_role": null,
+        "side": null
       },
       {
+        "boundary": "generic",
         "conductor_mark": null,
         "ext": {},
         "function": "function_template:0621f47823805d8fb2100eed410641c5",
@@ -4694,10 +4652,11 @@
         ],
         "marking": null,
         "name": "13",
-        "pole_side": null,
-        "role": "generic"
+        "pin_role": null,
+        "side": null
       },
       {
+        "boundary": "generic",
         "conductor_mark": null,
         "ext": {},
         "function": "function_template:53431f0a17ff528891426384604e1446",
@@ -4710,10 +4669,11 @@
         ],
         "marking": null,
         "name": "shield",
-        "pole_side": null,
-        "role": "generic"
+        "pin_role": null,
+        "side": null
       },
       {
+        "boundary": "generic",
         "conductor_mark": null,
         "ext": {},
         "function": "function_template:beb8aee68d6b59988dd89deb67cbf6ac",
@@ -4726,10 +4686,11 @@
         ],
         "marking": null,
         "name": "6",
-        "pole_side": null,
-        "role": "generic"
+        "pin_role": null,
+        "side": null
       },
       {
+        "boundary": "generic",
         "conductor_mark": null,
         "ext": {},
         "function": "function_template:beb8aee68d6b59988dd89deb67cbf6ac",
@@ -4742,10 +4703,11 @@
         ],
         "marking": null,
         "name": "5",
-        "pole_side": null,
-        "role": "generic"
+        "pin_role": null,
+        "side": null
       },
       {
+        "boundary": "generic",
         "conductor_mark": null,
         "ext": {},
         "function": "function_template:1e7f14b1bd855912aed21b7fca32026d",
@@ -4758,10 +4720,11 @@
         ],
         "marking": null,
         "name": "21",
-        "pole_side": null,
-        "role": "generic"
+        "pin_role": null,
+        "side": null
       },
       {
+        "boundary": "generic",
         "conductor_mark": null,
         "ext": {},
         "function": "function_template:1fc0e337d83753d88e6566de4b825d72",
@@ -4774,10 +4737,11 @@
         ],
         "marking": null,
         "name": "A2",
-        "pole_side": null,
-        "role": "generic"
+        "pin_role": "COIL",
+        "side": null
       },
       {
+        "boundary": "generic",
         "conductor_mark": null,
         "ext": {},
         "function": "function_template:beb8aee68d6b59988dd89deb67cbf6ac",
@@ -4790,8 +4754,8 @@
         ],
         "marking": null,
         "name": "3",
-        "pole_side": null,
-        "role": "generic"
+        "pin_role": null,
+        "side": null
       }
     ]
   }

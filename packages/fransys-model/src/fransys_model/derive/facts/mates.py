@@ -14,7 +14,7 @@ def mate_ports(model: Model) -> tuple[tuple[Id[Port], Id[Port]], ...]:
     on the other side, so equal-named ports stay one chain.
     """
     by_function: dict[Id[object], dict[str, list[Id[Port]]]] = {}
-    for port in sorted(ports(model).values(), key=lambda p: p.id):
+    for port in ports(model).values():
         by_function.setdefault(port.function, {}).setdefault(port.name, []).append(port.id)
     found: set[tuple[Id[Port], Id[Port]]] = set()
     for mate in mates(model).values():

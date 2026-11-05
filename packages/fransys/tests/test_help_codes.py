@@ -5,12 +5,12 @@ from fransys._help_codes import lookup_code, suggest
 
 
 def test_a_code_prints_its_severity_and_its_fix():
-    info = BY_CODE["SHEET_FORMAT_UNUSED"]
-    text = lookup_code("SHEET_FORMAT_UNUSED")
+    info = BY_CODE["PAGE_OVERFLOW"]
+    text = lookup_code("PAGE_OVERFLOW")
     assert text is not None
     assert info.fix in text
     assert info.cause in text
-    assert info.severities[0].name in text
+    assert info.severity.name in text
     assert f"{info.page}.md" in text
 
 
@@ -26,5 +26,5 @@ def test_a_near_miss_offers_the_close_name():
 
 
 def test_a_near_miss_of_a_code_offers_the_code():
-    assert "SHEET_FORMAT_UNUSED" in suggest("SHEET_FORMAT_UNUSD")
+    assert "PAGE_OVERFLOW" in suggest("PAGE_OVERFLO")
     assert suggest("zzzzzzzz") == ()

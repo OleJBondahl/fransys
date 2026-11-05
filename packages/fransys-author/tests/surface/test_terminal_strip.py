@@ -1,16 +1,15 @@
 """`terminal_strip` and `X1[3]`, explicit numbers only."""
 
-from typing import NamedTuple
+from typing import Any, NamedTuple
 
 import pytest
 from fransys_author import AuthorError
 from fransys_author.surface import TerminalStrip, TypedDevice, design, unit
+from series_parts import pair_library, series_library
 
 from fransys_model.vocab import Boundary, Placement, TerminalFacet, UnusedBoundary
 from fransys_model.vocab import Item as ModelItem
 lazy from fransys_model.kernel import Draft
-
-from ..equivalence.series_parts import pair_library, series_library  # noqa: TID252 -- importlib mode puts tests/ on no path
 
 
 @pytest.fixture(scope="module")
@@ -79,7 +78,7 @@ def test_place_defaults_and_none(parts: Draft) -> None:
     assert items["X2"] not in placed
 
 
-def _groups_of(d, terminal) -> list:
+def _groups_of(d, terminal) -> list[Any]:
     """The ids of the places and functions `terminal` is placed at."""
     return [p.node for p in _records(d, Placement) if p.item == terminal.id]
 

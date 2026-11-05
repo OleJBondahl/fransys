@@ -1,4 +1,4 @@
-schema = 1
+schema = 2
 
 [part]
 mpn = "DEMO-VALVE-24"
@@ -17,5 +17,5 @@ ports = [
 ]
 
 [function.operating]
-nominal_voltage_v = "24"
-nominal_current_a = "0.2"
+voltage = [{ nom = "24 V" }]
+nominal_current = "0.2 A"

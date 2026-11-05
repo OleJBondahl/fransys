@@ -1,20 +1,6 @@
-"""Field case: one device whose coil is the unit's boundary and whose wired contact is not.
-
-The engineering shape: a unit holds one relay and hands back only its coil as interface. A
-contact pin of the relay is wired to the coil's pin inside the unit. The coil stands on the
-parent's sheets and the contact on the unit's, so the parent's cross-reference names the contact
-pin on a unit sheet, and no label on a unit sheet names that pin. A layout profile (hiding
-unused pins, or a wider column gap) in the unit body or on the design makes the unit and the
-design lay out in two runs.
-
-The bug: building raised LayoutError "cross-reference partner ... is on a replaced page its
-unit's run lacks" (splice.py `_homed`). A port's home was taken from the labels on the pages its
-run owns, so a port named only by a label on a page the splice drops had none.
-The rule (model-0192): a partner names the page and column of the run that owns its page; that
-run's labels on the pages it drops name its ports too.
-
-Each profile placement builds once, in a module fixture shared by the tests.
-"""
+"""Field case: a unit hands up only the coil of its one relay as interface, while a contact pin of that relay is wired inside the unit.
+The bug: build raised LayoutError (partner on a replaced page), since a port's home came only from labels on pages its run owns.
+Fixed by model-0192, a partner names the page and column of the run that owns its page, and that run's labels name its ports too."""
 
 from typing import TYPE_CHECKING, Any, NamedTuple
 
@@ -29,7 +15,6 @@ if TYPE_CHECKING:
 
 _PROFILES: dict[str, dict[str, Any]] = {
     "hide": {"hide_unused_pins": True},
-    "gap": {"column_gap": 16},
 }
 
 
@@ -43,7 +28,8 @@ def _unit(profile: dict[str, Any] | None) -> Any:
         if profile:
             u.layout.profile(**profile)
         k1 = u.device("K1", "DEMO-RLY-2CO-24", interface=("coil",))
-        u.detail.wire(k1.co_1["11"], k1.coil["A1"], wire=("RD", 0.75))
+        u.series(k1.co_1["11"], k1.coil["A1"], wire=("RD", 0.75))
+        u.series(k1.co_2["21"], k1.coil["A2"], wire=("RD", 0.75))
         return _Interface(k1)
 
     return unit
@@ -55,15 +41,11 @@ def _build(root: Path, *, design: str | None, body: str | None) -> fr.BuildResul
         d.layout.profile(**_PROFILES[design])
     d.add(_unit(_PROFILES[body] if body else None), "U1")
     (root / "own.md").write_text("# Split\n", encoding="utf-8")
-    return fr.build(
-        d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, "demo-split", cover=root / "own.md")
-    )
+    return fr.build(d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, "demo-split", cover=root / "own.md"))
 
 
-@pytest.fixture(scope="module", params=["hide-design", "hide-body", "gap-design", "gap-body"])
-def result(
-    request: pytest.FixtureRequest, tmp_path_factory: pytest.TempPathFactory
-) -> fr.BuildResult:
+@pytest.fixture(scope="module", params=["hide-design", "hide-body"])
+def result(request: pytest.FixtureRequest, tmp_path_factory: pytest.TempPathFactory) -> fr.BuildResult:
     profile, where = request.param.split("-")
     root = tmp_path_factory.mktemp(request.param)
     return _build(

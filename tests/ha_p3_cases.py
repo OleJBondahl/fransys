@@ -3,25 +3,23 @@ cable, and a unit with a line interface beside a single-wire one. Built from `de
 """
 
 import fransys as fr
-import fransys_author
 import fransys_parts
-from _model_build_cover import layout_trigger_document
-lazy from fransys_author import Item, Location
+from _model_build_cover import printed
+from fransys_author.design import Design
+lazy from fransys_author.handles import Item, Location
 
 lazy from fransys_model.kernel import Draft
 
 
-def _design() -> tuple[Draft, fransys_author.Design]:
+def _design() -> tuple[Draft, Design]:
     parts = fransys_parts.load("demo_parts")
-    d = fransys_author.Design(parts)
+    d = Design(parts)
     d.project(title="P3 cases", number="P3", customer="Demo", revision=1, author="XX")
     d.revision(1, date="2026-10-07", text="First issue", created="XX")
     return parts, d
 
 
-def _unit(
-    d: fransys_author.Design, scope: str, tags: tuple[str, ...]
-) -> tuple[Location, list[Item]]:
+def _unit(d: Design, scope: str, tags: tuple[str, ...]) -> tuple[Location, list[Item]]:
     """A top-level unit at its own location with one boundary connector per tag."""
     u = d.scope(scope).unit(f"demo-{scope}", revision=1, interface="1")
     u.revision(1, date="2026-01-01", text="First release", created="XX")
@@ -33,7 +31,7 @@ def _unit(
     return at, connectors
 
 
-def _harness(d: fransys_author.Design, tag: str, near: Item, far: Item, at: Location) -> None:
+def _harness(d: Design, tag: str, near: Item, far: Item, at: Location) -> None:
     """A top-level harness: a two-core cable from a plug mated to `near` to a plug on `far`."""
     group = d.group(tag, tag)
     harness = d.harness(name=tag.lower(), tag=tag, at=at, group=group)
@@ -51,7 +49,7 @@ def leaving() -> fr.BuildResult:
     fld = d.location("FLD", "Field")
     q1 = d.item("DEMO-CONN-2P", tag="Q1", at=fld, group=d.group("F", "Field"))
     _harness(d, "W3", x1, q1, cab)
-    return fr.build(parts, d.draft(), layout_trigger_document())
+    return fr.build(parts, *printed(d.draft()))
 
 
 def two_units() -> fr.BuildResult:
@@ -69,7 +67,7 @@ def two_units() -> fr.BuildResult:
     cable.core(2, p1["2"], p2["2"])
     d.mate(p1, x1)
     d.mate(p2, x2)
-    return fr.build(parts, d.draft(), layout_trigger_document())
+    return fr.build(parts, *printed(d.draft()))
 
 
 def mixed() -> fr.BuildResult:
@@ -84,28 +82,7 @@ def mixed() -> fr.BuildResult:
     wire = d.wiring(colour="BU", gauge="0.5")
     wire(x2["1"], relay.fn("coil")["A1"])
     wire(x2["2"], relay.fn("coil")["A2"])
-    return fr.build(parts, d.draft(), layout_trigger_document())
-
-
-def field_cable() -> fr.BuildResult:
-    """Defect 1 (pump p03's -W1): a cable from the terminals at its columns' top to the field."""
-    parts, d = _design()
-    c1 = d.location("C1", "Cabinet")
-    group = d.group("P1", "Pump 1")
-    m1 = d.item("DEMO-MOTOR-4KW", tag="M1", at=d.location("F1", "Field"), group=group)
-    x1 = d.strip("X1", at=c1)
-    terminals = [x1.terminal("DEMO-TB-2.5", group=group) for _ in range(4)]
-    q1 = d.item("DEMO-MCB-C6", tag="Q1", at=c1, group=group)
-    lamp = d.item("DEMO-LAMP-24", tag="H1", at=c1, group=group)
-    wire = d.wiring(colour="BU", gauge="0.75")
-    wire(terminals[0].inner, q1["1"])
-    wire(terminals[1].inner, lamp["1"])
-    wire(terminals[2].inner, lamp["2"])
-    wire(terminals[3].inner, q1["2"])
-    w1 = d.cable("DEMO-CBL-4G1.5", tag="W1", length_mm=12000)
-    for core, (terminal, port) in enumerate(zip(terminals, ("U", "V", "W", "PE"), strict=True), 1):
-        w1.core(core, terminal.outer, m1[port])
-    return fr.build(parts, d.draft(), layout_trigger_document())
+    return fr.build(parts, *printed(d.draft()))
 
 
 def owned_by_nested() -> fr.BuildResult:
@@ -139,4 +116,4 @@ def owned_by_nested() -> fr.BuildResult:
     cable = n.cable("DEMO-CBL-4G1.5", name="w7c", parent=harness)
     cable.core(1, plug["1"], field[0].inner)
     cable.core(2, plug["2"], field[1].inner)
-    return fr.build(parts, d.draft(), layout_trigger_document())
+    return fr.build(parts, *printed(d.draft()))

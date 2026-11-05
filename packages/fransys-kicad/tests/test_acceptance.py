@@ -12,28 +12,12 @@ GOLDEN = Path(__file__).resolve().parent / "golden" / "board.net"
 pytestmark = pytest.mark.wp("kicad")
 
 
-def _kicad_sym(symbol: str, units: dict[str, list[str]]) -> str:
-    """A minimal `.kicad_sym` library with one symbol, invented for these tests.
-
-    `units` maps a `"<unit>_<style>"` sub-symbol suffix (e.g. `"1_1"`) to the pin numbers
-    of that sub-symbol, the way KiCad nests one sub-symbol per unit and body style under
-    the top-level `(symbol "<name>" ...)`.
-    """
-    sub_symbols = "".join(
-        f'(symbol "{symbol}_{suffix}" '
-        + "".join(f'(pin passive line (number "{number}" (effects (font))))' for number in pins)
-        + ")"
-        for suffix, pins in units.items()
-    )
-    return f'(kicad_symbol_lib (version 1) (symbol "{symbol}" {sub_symbols}))'
-
-
 def _library(tmp_path: Path, part_text: str, *, name: str = "demo-conn-2p.toml") -> Path:
     """A one-part library in `tmp_path`, ready for `fransys_parts.lint`."""
     root = tmp_path / "lib"
     root.mkdir()
     (root / "library.toml").write_text(
-        'schema = 1\nname = "kicad-skeleton-demo"\nversion = "0.1.0"\ndescription = "d"\n',
+        'schema = 2\nname = "kicad-skeleton-demo"\nversion = "0.1.0"\ndescription = "d"\n',
         encoding="utf-8",
     )
     parts_dir = root / "parts"
@@ -51,18 +35,18 @@ _FILLED = {
 }
 
 
-def test_skeleton_lint_trips_only_the_human_fields(tmp_path):
+def test_skeleton_lint_trips_only_the_human_fields(tmp_path, make_kicad_sym):
     """The raw skeleton lints clean except the fields a human must fill."""
-    kicad_sym = _kicad_sym("DEMO-CONN-2P", {"1_1": ["1", "2"]})
+    kicad_sym = make_kicad_sym("DEMO-CONN-2P", {"1_1": ["1", "2"]})
     skeleton = part_file_skeleton(kicad_sym, "DEMO-CONN-2P")
     root = _library(tmp_path, skeleton)
     codes = {finding.code for finding in fransys_parts.lint(root)}
     assert codes == {"CLASS_CODE", "ENUM_VALUE"}
 
 
-def test_skeleton_twin_with_human_fields_filled_lints_clean(tmp_path):
+def test_skeleton_twin_with_human_fields_filled_lints_clean(tmp_path, make_kicad_sym):
     """Filling in the five human fields makes the skeleton lint clean: it was otherwise correct."""
-    kicad_sym = _kicad_sym("DEMO-CONN-2P", {"1_1": ["1", "2"]})
+    kicad_sym = make_kicad_sym("DEMO-CONN-2P", {"1_1": ["1", "2"]})
     skeleton = part_file_skeleton(kicad_sym, "DEMO-CONN-2P")
     for placeholder, filled in _FILLED.items():
         assert placeholder in skeleton
@@ -92,9 +76,9 @@ def test_unconnected_pin_is_a_finding(demo_board):
     assert any(f.code == "UNCONNECTED_PIN" for f in findings)
 
 
-def test_skeleton_lists_every_pin():
+def test_skeleton_lists_every_pin(make_kicad_sym):
     """One `[[function]]`, one port per pin (P1's ports are inline, not a table)."""
-    kicad_sym = _kicad_sym("DEMO-CONN-2P", {"1_1": ["1", "2"]})
+    kicad_sym = make_kicad_sym("DEMO-CONN-2P", {"1_1": ["1", "2"]})
     skeleton = part_file_skeleton(kicad_sym, "DEMO-CONN-2P")
     assert skeleton.count("[[function]]") == 1
     assert skeleton.count('role = "generic"') == 2

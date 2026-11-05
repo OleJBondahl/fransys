@@ -9,17 +9,10 @@ from typing import TYPE_CHECKING
 
 from kit import Kit, PartSpec, Slot, template_of
 
+from fransys_model.elecdef import LinkKind, PinRole
 from fransys_model.kernel import make_id
 from fransys_model.vocab.core import Function, Item, Port
-from fransys_model.vocab.enums import (
-    Aspect,
-    FunctionKind,
-    Gender,
-    LinkKind,
-    NetClass,
-    PartCategory,
-    PortRole,
-)
+from fransys_model.vocab.enums import Aspect, FunctionKind, Gender, NetClass, PartCategory, PortBoundary
 from fransys_model.vocab.facets.cable import CableFacet, CableProductFacet
 from fransys_model.vocab.facets.connector import ConnectorFacet
 from fransys_model.vocab.facets.pcb import FootprintFacet, PcbFacet
@@ -27,7 +20,7 @@ from fransys_model.vocab.facets.pcb import FootprintFacet, PcbFacet
 if TYPE_CHECKING:
     from fransys_model.kernel import Draft
 
-_FOUR_PINS = tuple((str(number), PortRole.GENERIC) for number in range(1, 5))
+_FOUR_PINS = tuple((str(number), PortBoundary.GENERIC) for number in range(1, 5))
 _CORE_COLOURS = ("BN", "WH", "BU", "SH")
 
 
@@ -36,24 +29,6 @@ def build_harness_board() -> Draft:
 
     The invented design (the fan-out cable is the one item left unnumbered, so
     `passes.numbering` has a `W`-class item to number):
-
-    - Board `JB1` (`SIM-BOARD-IOEXP`, a `pcb` facet, `class_code="A"`) with the board-edge
-      connector `J1` as a function (`connector` facet, male, 4 pins), a fuse `F1`
-      (`SIM-FUSE-1A-SMD`) and a relay `K10` (`SIM-RELAY-SMD-5V`) as child items, both parts
-      with a `footprint` facet. The board's traces are the declared nets `V5`, `V5_RET`
-      and `OUT` (no conductor models a trace; a board-realised net is not a finding).
-    - Harness `WH1`, a part-less item (decision 0026): its children by `parent` are the
-      housing and the fan-out cable below. The sensors and the board are the plant's, not its
-      children. The designation is `WH1` and not `W1`, which the cabinet design already holds
-      among the parentless items of the merged design.
-    - Harness housing `H1` (`SIM-CONN-HOUSING-4P`, female, 4 pins), a child of `WH1`, mated to
-      `J1`: ports of equal name become conductive.
-    - Fan-out cable (`SIM-CABLE-4X0.5`, `designation=None`, a child of `WH1`, a `cable`
-      facet of 1500 mm): four cores, one
-      end each on the housing's pins `P1:1` to `P1:4`; three run on to remote sensors `B10`,
-      `B11`, `B12` (part-less items, one `signal` port each) and the fourth, the shield, to the
-      housing's `shell:PE` port.
-    - Board-side items placed at product node `-JB1` and location node `+C2`.
     """
     kit = Kit("tests/usecases/harness_board.py")
     board = kit.part(
@@ -74,7 +49,7 @@ def build_harness_board() -> Draft:
             {
                 "element": (
                     FunctionKind.PROTECTION,
-                    (("1", PortRole.GENERIC), ("2", PortRole.GENERIC)),
+                    (("1", PortBoundary.GENERIC), ("2", PortBoundary.GENERIC)),
                 )
             },
             ((("element", "1"), ("element", "2"), LinkKind.CONDUCTIVE),),
@@ -87,10 +62,10 @@ def build_harness_board() -> Draft:
             "K",
             PartCategory.ELECTROMECHANICAL,
             {
-                "coil": (FunctionKind.COIL, (("A1", PortRole.GENERIC), ("A2", PortRole.GENERIC))),
+                "coil": (FunctionKind.COIL, (("A1", PortBoundary.GENERIC), ("A2", PortBoundary.GENERIC))),
                 "no_1": (
                     FunctionKind.CONTACT_NO,
-                    (("13", PortRole.GENERIC), ("14", PortRole.GENERIC)),
+                    (("13", PortBoundary.GENERIC), ("14", PortBoundary.GENERIC)),
                 ),
             },
             ((("no_1", "13"), ("no_1", "14"), LinkKind.SWITCHED),),
@@ -104,7 +79,7 @@ def build_harness_board() -> Draft:
             PartCategory.CONNECTOR,
             {
                 "P1": (FunctionKind.CONNECTOR, _FOUR_PINS),
-                "shell": (FunctionKind.CONNECTOR, (("PE", PortRole.PE),)),
+                "shell": (FunctionKind.CONNECTOR, (("PE", PinRole.PE),)),
             },
         )
     )
@@ -183,7 +158,7 @@ def build_harness_board() -> Draft:
             function=function.id,
             template=None,
             name="signal",
-            role=PortRole.GENERIC,
+            boundary=PortBoundary.GENERIC,
         )
         kit.add(item, function, port)
         sensors.append(port.id)

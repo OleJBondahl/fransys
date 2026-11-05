@@ -1,35 +1,30 @@
 """Which builds need the schematic and the diagram layout, and laying them out (0118, 0119)."""
 
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 
 from fransys_author import AuthorError
 
-from fransys_layout import HintError, SymbolPortError, lay_out_diagrams
+from fransys_layout import DiagramLayout, HintError, lay_out_diagrams
 from fransys_model.derive import (
+    DiagramSheet,
     document_ids,
     document_page_kinds,
-    subject_part_mpn,
-    symbol_port_subject,
 )
-from fransys_model.kernel import Finding, Severity, describe
+from fransys_model.kernel import describe
 from fransys_model.vocab import PageKind
 
-from ._codes import fix_text
-from ._layout_core import NO_DRAWINGS, NO_LINKS, Laid, lay_out_on_core
+from ._layout_core import NO_DRAWINGS, Laid, lay_out_on_core
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
     from electrical_symbols import Library
-    from fransys_model.kernel import Id, Model
-    from fransys_model.vocab import Function
+    from fransys_model.kernel import Model
 
 
 def kept_page_kinds(model: Model) -> frozenset[PageKind]:
     """The page kinds some document keeps: the one place that reads every document's pages."""
-    return frozenset(
-        kind for document in document_ids(model) for kind in document_page_kinds(model, document)
-    )
+    return frozenset(kind for document in document_ids(model) for kind in document_page_kinds(model, document))
 
 
 def needs_schematic_layout(model: Model) -> bool:
@@ -47,48 +42,31 @@ def hint_error_to_author_error(model: Model, error: HintError) -> AuthorError:
     return AuthorError(describe(error, model))
 
 
-def _schematic_if_needed(
-    model: Model, library: Library, layout: Mapping[str, object] | None
-) -> Laid:
+def _schematic_if_needed(model: Model, library: Library, layout: Mapping[str, object] | None) -> Laid:
     if not needs_schematic_layout(model):
-        return model, (), NO_DRAWINGS, NO_LINKS
+        return model, (), NO_DRAWINGS, {}
     try:
         return lay_out_on_core(model, library, layout)
     except HintError as error:
         raise hint_error_to_author_error(model, error) from error
 
 
-def lay_out_if_needed(
-    model: Model, library: Library, layout: Mapping[str, object] | None = None
-) -> Laid:
+def lay_out_if_needed(model: Model, library: Library, layout: Mapping[str, object] | None) -> tuple[Laid, DiagramLayout]:
     """The core layout and `lay_out_diagrams` when a document keeps their page, else nothing.
 
-    Also the page `Drawing`s and reference links of the core layout (empty when it did not run).
+    The core layout's `Laid` (its findings include the diagram's) with the page `Drawing`s and
+    page SVGs (empty when it did not run), then the `DiagramLayout` (empty likewise).
     """
-    model, findings, drawn, links = _schematic_if_needed(model, library, layout)
+    model, findings, drawn, svgs = _schematic_if_needed(model, library, layout)
     if not needs_diagram_layout(model):
-        return model, findings, drawn, links
+        return (model, findings, drawn, svgs), DiagramLayout(diagrams=())
     try:
-        model, diagram_findings = lay_out_diagrams(model)
+        diagrams, diagram_findings = lay_out_diagrams(model, library)
     except HintError as error:
         raise hint_error_to_author_error(model, error) from error
-    return model, (*findings, *diagram_findings), drawn, links
+    return (model, (*findings, *diagram_findings), drawn, svgs), diagrams
 
 
-def symbol_port_missing_finding(model: Model, error: SymbolPortError) -> Finding:
-    """One `SYMBOL_PORT_MISSING` `ERROR` for a `SymbolPortError` layout raised (decision 0018).
-
-    `error.function` is a Function of this model, or the whole Item of a one-view draw.
-    Message: part mpn + `error`'s text; origin: PortTemplate, else Part, else `error.function`.
-    """
-    mpn = subject_part_mpn(model, error.function)
-    if mpn is None:
-        mpn = "no part"
-    subject = symbol_port_subject(model, cast("Id[Function]", error.function), error.port_name)
-    return Finding(
-        code="SYMBOL_PORT_MISSING",
-        severity=Severity.ERROR,
-        subjects=(subject,),
-        fix=fix_text("SYMBOL_PORT_MISSING"),
-        message=f"part {mpn!r}: {error}",
-    )
+def diagram_sheets_of(diagrams: DiagramLayout) -> tuple[DiagramSheet, ...]:
+    """The `DiagramSheet` of every sheet `diagrams` placed: what derive and pdf read (R588)."""
+    return tuple(DiagramSheet(unit=unit, number=number) for unit, number in diagrams.sheet_places())

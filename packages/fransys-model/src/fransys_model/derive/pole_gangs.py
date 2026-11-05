@@ -21,11 +21,7 @@ def pole_gangs(model: Model, drawn: frozenset[Id[Function]]) -> tuple[PoleGang, 
     for group in (groups[i] for i in canonical(groups)):
         if not all(function in drawn for function in group.functions):
             continue
-        pole_of = tuple(
-            PolePort(port=port, pole=pole)
-            for pole, function in enumerate(group.functions)
-            for port in ports.get(function, ())
-        )
+        pole_of = tuple(PolePort(port=port, pole=pole) for pole, function in enumerate(group.functions) for port in ports.get(function, ()))
         rows.append(
             PoleGang(
                 group=group.id,

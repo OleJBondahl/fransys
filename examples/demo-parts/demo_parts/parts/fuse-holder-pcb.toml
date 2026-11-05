@@ -1,4 +1,4 @@
-schema = 1
+schema = 2
 
 [part]
 mpn = "DEMO-FUSE-HOLDER-PCB"
@@ -21,8 +21,8 @@ ports = [
 ]
 links = [{ a = "1", b = "2", kind = "protective" }]
 
-[function.protection]
+[function.block]
 type = "fuse"
 
 [function.rating]
-voltage_dc_v = "1000"
+voltage = [{ nom = "1000 V", at = ["DC"] }]

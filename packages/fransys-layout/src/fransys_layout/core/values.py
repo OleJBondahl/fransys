@@ -17,9 +17,6 @@ XY = tuple[int, int]
 
 Side = Literal["N", "E", "S", "W"]
 Orientation = Literal["R0", "R90", "R180", "R270", "MR0", "MR90", "MR180", "MR270"]
-EndKind = Literal["biased", "boxpin", "boundary", "fan", "crosslink", "join", "open"]
-BlockKind = Literal["card", "fan", "column", "blackbox"]
-Seat = Literal["none", "beside", "alone"]
 
 
 class RefKind(StrEnum):
@@ -30,6 +27,14 @@ class RefKind(StrEnum):
     STAR = "star"
     STUB = "stub"
     COPY = "copy"
+
+
+class StandClass(StrEnum):
+    """Where a reference end stands, decided with the end at the cut (CUT-LEDGER CL2): at its pin, at its fan's trunk end, or below its lane."""
+
+    PIN = "pin"
+    TRUNK_END = "trunk_end"
+    LEG = "leg"
 
 
 MarkerKind = RefKind
@@ -45,16 +50,18 @@ FindingCode = Literal[
     "KEEP_TOGETHER_UNMET",
     "HEAD_OFF_LEGS",
     "ALIGN_DROPPED",
-    "ROUTE_FAILED",
-    "TRUNK_THROUGH_BODY",
+    "WIRE_AS_REFERENCE",
+    "WIRE_THROUGH_BODY",
     "PAGE_OVERFLOW",
-    "TEXT_OVERLAP",
     "ANNEX_UNPLACED",
+    "OUTLINE_NO_ROOM",
     "FILL_UNDER_MIN",
     "WIDER_THAN_PAGE",
     "LANE_TURNED",
     "MARKER_UNPLACED",
     "WIRE_MEETS_NET",
+    "TAG_ACROSS_BODY",
+    "PLACEMENT_PROBLEM",
 ]
 
 
@@ -105,17 +112,19 @@ class BoxSpec:
     """Fact 16: movable pins in printed-marking order; margin is body beyond the end pins."""
 
     order: tuple[str, ...]
-    natural_edge: str
-    min_pitch: int
     margin: int
 
 
 @dataclass(frozen=True, slots=True)
 class Bundle:
-    """Nets with one id travel as one trunk; `pole` is the lane index the caller passes for it."""
+    """Nets with one id travel as one trunk; `pole` is the lane index the caller passes for it.
+
+    `form` names what the trunk is (the caller's word); `Options.trunk_forms` lists those that always trunk.
+    """
 
     id: str
     pole: int
+    form: str = ""
 
 
 @dataclass(frozen=True, slots=True)
@@ -128,14 +137,14 @@ class CutEnd:
 
 @dataclass(frozen=True, slots=True)
 class Net:
-    """A net: its id, pins, bundle, unit-crossing and label facts, and `cut` ends off the set."""
+    """A net: its id, pins, bundle, unit-crossing facts, `cut` ends off the set, and `tagged` links drawn as a tag pair (layout-0508)."""
 
     id: str
     pins: tuple[PinRef, ...]
     bundle: Bundle | None = None
     crosses_unit: bool = False
-    label: Size | None = None
     cut: tuple[CutEnd, ...] = ()
+    tagged: tuple[tuple[PinRef, ...], ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -149,12 +158,19 @@ class Unit:
 
 @dataclass(frozen=True, slots=True)
 class Facts:
-    """Problem facts: groups kept whole, units, mated pins, one series per region."""
+    """Problem facts: groups kept whole, units, mated pins, series, page-free far ends, the model's required pin groups, link-joined pins.
+
+    `joined` holds each pin pair the part joins by a conductive internal link: a pole of such a pair passes its net through,
+    so layout never asks what the element is (R1580).
+    """
 
     keep_whole: tuple[frozenset[str], ...] = ()
     units: tuple[Unit, ...] = ()
     mates: tuple[tuple[PinRef, PinRef], ...] = ()
     series: tuple[Series, ...] = ()
+    far_ends: tuple[tuple[PinRef, PinRef], ...] = ()
+    groups: tuple[tuple[PinRef, ...], ...] = ()
+    joined: tuple[tuple[PinRef, PinRef], ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -168,6 +184,19 @@ class Hints:
     chains: tuple[tuple[str, ...], ...] = ()
     draw_in: tuple[tuple[str, str], ...] = ()
     sides: tuple[tuple[PinRef, str], ...] = ()
+    frames: tuple[tuple[str, frozenset[str]], ...] = ()  # R900 G9: (unit key, member symbol ids) of each unit frame
+
+
+@dataclass(frozen=True, slots=True)
+class OutlineRoom:
+    """What a unit frame needs of its symbol (R889, R900): the margin off the boxes it holds, the label slot box and the size it never draws below.
+
+    `label` is relative to the frame's top-left corner; the symdef layer copies both fields from the library.
+    """
+
+    margin: int
+    label: Box
+    least: Size
 
 
 @dataclass(frozen=True, slots=True)
@@ -243,10 +272,13 @@ class Options:
     jog_lanes: int = field(kw_only=True)  # grids a jog at level 0 takes between its two pins
     spare_cells: int = field(kw_only=True)  # grid cells an occupancy keeps past its extent
     reroute_rounds: int = field(kw_only=True)
+    share_penalty: int = field(kw_only=True)  # a negotiated round's price of a cell another net holds
+    history_step: int = field(kw_only=True)  # added to a shared cell's history after each round
+    ripup_worst: int = field(kw_only=True)  # links laid alone again after a negotiation, most crossings first
     recut_rounds: int = field(kw_only=True)
-    solve_rounds: int = field(
-        kw_only=True
-    )  # layouts after the first that hold missed anchor outlines
+    label_moves: int = field(kw_only=True)  # standing labels a blocked label may move before the recut (R1479)
+    route_fallback_rounds: int = field(kw_only=True)  # routing and reference loop bound (R1246)
+    solve_rounds: int = field(kw_only=True)  # layouts after the first that hold missed anchor outlines
     # owner 2026-10-18: a designation stands in a corner of its symbol, top left by default
     corner_order: tuple[str, ...] = field(kw_only=True)
     slack: tuple[int, ...] = field(kw_only=True)
@@ -255,22 +287,29 @@ class Options:
     marker: Mapping[Orientation, Box] | None = None
     # R318: the boxes of a marker whose text the caller fitted, by (pin, kind text); the symdef
     # layer measured each, and a marker not named here takes `marker`
-    marker_fit: Mapping[tuple[PinRef, str], Mapping[Orientation, Box]] = field(
-        default_factory=frozendict
-    )
+    marker_fit: Mapping[tuple[PinRef, str], Mapping[Orientation, Box]] = field(default_factory=frozendict)
+    # R1597: the width (G) of each line a stub prints for the conductor (near pin, far pin), an upper bound that needs no
+    # placement, and the box (by orientation) of a stub with that widest width and that many lines; the ledger's lines pick the box
+    stub_lines: Mapping[tuple[PinRef, PinRef], tuple[int, ...]] = field(default_factory=frozendict)
+    stub_table: Mapping[tuple[int, int], Mapping[Orientation, Box]] = field(default_factory=frozendict)
     # R377: the views whose box lies above or below its pin, and the one that lies above; el
     # passes them from the marker symbol's facing, so the core names no view
     marker_vertical: frozenset[Orientation] = frozenset()
+    # layout-0375: the turn that points a marker's box along each side of its pin; the symdef layer
+    # passes `MARKER_FACING` once, and the core names no turn of its own
+    marker_facing: Mapping[Side, Orientation] = field(kw_only=True)
     marker_above: Orientation | None = None
     marker_below: Orientation | None = None
+    outline: OutlineRoom | None = None  # R889, R900: the unit frame's room; None draws no frame
     # R350: the box of an arrow, fitted to the widest text it can print
     link_fit: Mapping[Orientation, Box] | None = None
     cells: tuple[int, int] = field(kw_only=True)
-    # layout-0310: a run direction ("horiz" or "vert") then the sides a wire label tries, in order
-    wire_label_sides: tuple[tuple[str, ...], ...] = (("horiz", "N", "S"), ("vert", "E", "W"))
     open_stub: int = field(kw_only=True)
     box_columns: bool = field(kw_only=True)
+    # layout-0440: a pin on one side of a body wired to a column hung on its other side is a tag pair, not a wire round the body
+    tag_across_body: bool = field(kw_only=True)
     bundle_direction: bool = False  # layout-0363: a bundle takes one direction, else one per chain
+    trunk_forms: frozenset[str] = frozenset()  # layout-0421: bundles of these forms are trunks, never chain links
     # layout-0309: a keep-whole fan wider alone than the page may wrap at a column;
     # False keeps it one row
     wrap_wide_fans: bool = field(kw_only=True)
@@ -282,6 +321,9 @@ class Options:
     # how far a pin's end_bias pulls its chain end toward the head (below 0) or the foot (above 0),
     # against the one-step pull of the pin's side
     end_bias_weight: int = field(kw_only=True)
+    # the pull of a box-drawn function's anchor on a chain end; it beats every other term
+    anchor_weight: int = field(kw_only=True)
+    boxpin_weight: int = field(kw_only=True)  # the pull of a box pin's side on a chain end
     # the turn that flips a chain's cell; the base orientation is R0
     flip_turn: Orientation = field(kw_only=True)
     # the first driver column of a fan block stands first
@@ -301,172 +343,6 @@ class Options:
 
 
 @dataclass(frozen=True, slots=True)
-class Cell:
-    """One symbol in a lane; top_pin is on the head side and bottom_pin on the foot side."""
-
-    sym: str
-    orient: Orientation
-    top_pin: str | None
-    bottom_pin: str | None
-    hold: int = 0  # G of extra gap above the cell
-
-
-@dataclass(frozen=True, slots=True)
-class Lane:
-    """Cells from head to foot; offset is the lane's x against lane 0 of its column."""
-
-    cells: tuple[Cell, ...]
-    offset: int
-
-
-@dataclass(frozen=True, slots=True)
-class End:
-    """A lane's end: biased, boxpin, boundary, fan, crosslink, join or open.
-
-    lane is the index into the column's lanes this end belongs to; None means every lane.
-    """
-
-    kind: EndKind
-    net: str | None = None
-    pin: PinRef | None = None
-    fan: str | None = None
-    lane: int | None = None
-
-    @property
-    def is_join(self) -> bool:
-        """The one place that asks whether an end is a folded member's join."""
-        return self.kind == "join"
-
-
-@dataclass(frozen=True, slots=True)
-class Column:
-    """width and height are a cache of the cells' extent; width spans the full footprints."""
-
-    id: str
-    lanes: tuple[Lane, ...]
-    heads: tuple[End, ...]
-    feet: tuple[End, ...]
-    height: int
-    width: int
-    hops: tuple[tuple[str, ...], ...] = ()
-
-    @property
-    def is_chain(self) -> bool:
-        """The one place that asks whether a column is a chain of boxes."""
-        return bool(self.hops)
-
-
-@dataclass(frozen=True, slots=True)
-class Attach:
-    """Where a trunk meets a lane: pin of cell `cell` in lane `lane`; column None is a box pin.
-
-    `pole` is a lane index, a value the caller passes; `lane` is the column's own index.
-    `net` is the net the attach joins, set once when the fan is drafted; always given.
-    """
-
-    column: str | None
-    lane: int
-    cell: int
-    pin: PinRef
-    pole: int = 0
-    net: str = field(kw_only=True)
-
-
-@dataclass(frozen=True, slots=True)
-class Fan:
-    """A trunk: drivers drop to it from above, legs hang from it; side says where it lies."""
-
-    id: str
-    nets: tuple[str, ...]
-    drivers: tuple[Attach, ...]
-    legs: tuple[Attach, ...]
-    hub: str | None
-    lanes: int
-    side: str
-    crossed: tuple[tuple[str, tuple[int, ...]], ...] = ()
-    head: Attach | None = None
-
-
-@dataclass(frozen=True, slots=True)
-class CrossLink:
-    """A net that crosses between column ends, given by its attachments."""
-
-    net: str
-    ends: tuple[Attach, ...]
-
-
-@dataclass(frozen=True, slots=True)
-class BiasedEnd:
-    """A pin that prefers an end of its chain, with its rank among the biased ends."""
-
-    sym: str
-    pin: str
-    rank: int
-
-
-@dataclass(frozen=True, slots=True)
-class CycleSplit:
-    """How many bundles, ladders and cross links were cut to break cycles in the flow."""
-
-    bundles: int
-    ladders: int
-    cross_links: int
-
-
-@dataclass(frozen=True, slots=True)
-class FlowGraph:
-    """The flow after stage 2: columns, fans, cross links, biased ends, cycle split, drawn."""
-
-    columns: tuple[Column, ...]
-    fans: tuple[Fan, ...]
-    cross_links: tuple[CrossLink, ...]
-    biased: tuple[BiasedEnd, ...]
-    cycle_split: CycleSplit
-    drawn: tuple[str, ...]
-    findings: tuple[Finding, ...] = ()
-
-
-@dataclass(frozen=True, slots=True)
-class Block:
-    """pin_edges maps a card's pin to the edge it uses; id is opaque, read kind and anchor.
-
-    seat: "beside" a column-less card stage 3 put after a fan block, "alone" one stage 3 gave a row
-    of its own, "none" every other block (layout-0288); stage 4 cuts no other column-less card.
-    """
-
-    id: str
-    kind: BlockKind
-    unit: str
-    columns: tuple[str, ...]
-    anchor: str | None
-    fan: str | None
-    group: str | None
-    width_est: int
-    height_est: int
-    short: bool
-    keep_whole: bool
-    forced_break_before: bool
-    seat: Seat
-    pin_edges: tuple[tuple[str, str], ...] = ()
-    fixed_order: bool = False
-    rise: int = 0
-
-    @property
-    def is_card(self) -> bool:
-        """The one place that asks whether a block is a card box."""
-        return self.kind == "card"
-
-
-@dataclass(frozen=True, slots=True)
-class BlockList:
-    """The blocks of one unit, with the findings raised while building them."""
-
-    unit: str
-    blocks: tuple[Block, ...]
-    findings: tuple[Finding, ...] = ()
-
-
-@dataclass(frozen=True, slots=True)
 class RowPlan:
     """One row of a page plan: its columns, its blocks and its estimated height."""
 
@@ -477,32 +353,42 @@ class RowPlan:
 
 @dataclass(frozen=True, slots=True)
 class PagePlan:
-    """One planned page of a unit: its rows, whether it is forced to end, and its groups."""
+    """One planned page of a unit: its rows and its groups."""
 
     page: int
     unit: str
     rows: tuple[RowPlan, ...]
-    forced_end: bool
     groups: tuple[str, ...]
 
 
 @dataclass(frozen=True, slots=True)
 class RefEnd:
-    """One end of a reference: its page, column, pin and row."""
+    """One end of a reference: its page, column, pin, row and stand class.
+
+    `also` are the other pins whose conductors this one end stands for: a bundle's one stub (BUNDLE, R1319).
+    `far` are the far pins of the undrawn conductors a stub end stands for, in `stub_far_order` order: one box, a line each (R1581).
+    """
 
     page: int
     column: str | None
     pin: PinRef | None
     row: int | None = None
+    stand: StandClass = StandClass.PIN
+    also: tuple[PinRef, ...] = ()
+    far: tuple[PinRef, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
 class Ref:
-    """A cut net drawn as references at its ends."""
+    """A cut net drawn as references at its ends.
+
+    `cut` is the boundary the cut planned it at, -1 for a reference no cut planned (R550).
+    """
 
     net: str
     kind: RefKind
     ends: tuple[RefEnd, ...]
+    cut: int = -1
 
 
 @dataclass(frozen=True, slots=True)
@@ -517,17 +403,14 @@ class Finding:
 
 @dataclass(frozen=True, slots=True)
 class PageSpec:
-    """The page plan for all units, with the reference plan and the findings."""
+    """The page plan for all units, the reference plan, the findings, the drawn pairs."""
 
     pages: tuple[PagePlan, ...]
     reference_plan: tuple[Ref, ...]
     findings: tuple[Finding, ...] = ()
-
-
-@dataclass(frozen=True, slots=True)
-class CutResult:
-    """The spec, plus the flow and blocks after tall-column cuts; later stages read these."""
-
-    spec: PageSpec
-    flow: FlowGraph
-    blocks: tuple[BlockList, ...]
+    drawn: frozenset[tuple[PinRef, PinRef]] = field(kw_only=True)
+    stubbed: frozenset[PinRef] = field(kw_only=True, default=frozenset())
+    leads: frozenset[PinRef] = field(kw_only=True, default=frozenset())
+    unjoined: tuple[tuple[str, tuple[PinRef, PinRef]], ...] = field(
+        kw_only=True, default=()
+    )  # (net, (near, far)): pieces the loop must join; `widen._stand` stands each through the route fallback, no reserve and no re-cut (R1713)

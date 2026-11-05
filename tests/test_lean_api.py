@@ -2,8 +2,6 @@
 
 Loaded like `test_lean_surface_types.py` loads `scripts/lean_surface_types.py`
 (`importlib.util.spec_from_file_location`), since the script is not a package module. The
-acceptance-8 and model tests read the real installed workspace (this order's own point: build on
-demand, never store the surface separately) rather than a mocked fixture.
 """
 
 from __future__ import annotations
@@ -21,17 +19,19 @@ _HEADER_RE = re.compile(r"^(fransys[\w.]*)\.(\w+)", re.MULTILINE)
 
 def _headers(output: str) -> list[tuple[str, str]]:
     """Every `(module, name)` a printed block's own header line names, in order."""
-    return _HEADER_RE.findall(output)
+    headers: list[tuple[str, str]] = [(str(a), str(b)) for a, b in _HEADER_RE.findall(output)]
+    return headers
 
 
 def test_fransys_pdf_gives_exactly_its_five_surface_names():
-    """`fransys_pdf`'s `__all__` has 4 names; `api()` prints exactly those 4,
+    """`fransys_pdf`'s `__all__` has 5 names; `api()` prints exactly those 5,
     including `FINDING_CODES`, a plain data value with no signature.
     """
     import fransys_pdf
 
     assert tuple(fransys_pdf.__all__) == (
         "FINDING_CODES",
+        "PdfError",
         "check",
         "cover_overflow_finding",
         "source",
@@ -47,8 +47,8 @@ def test_fransys_pdf_output_is_byte_identical_across_two_calls():
     assert lean_api.api("fransys_pdf") == lean_api.api("fransys_pdf")
 
 
-def test_model_package_maps_to_its_nineteen_surface_modules():
-    """`_package_modules("fransys_model")` is exactly the nineteen public modules, sorted --
+def test_model_package_maps_to_its_eighteen_surface_modules():
+    """`_package_modules("fransys_model")` is exactly the eighteen public modules, sorted --
     the general prefix rule, not a special case for the model.
     """
     assert lean_api._package_modules("fransys_model") == (
@@ -60,12 +60,10 @@ def test_model_package_maps_to_its_nineteen_surface_modules():
         "fransys_model.derive.docs_site",
         "fransys_model.derive.drawing_text",
         "fransys_model.derive.grid_mm",
-        "fransys_model.derive.marker_box",
         "fransys_model.derive.numbering_pins",
         "fransys_model.derive.order",
         "fransys_model.derive.page_nav",
         "fransys_model.derive.print_sizes",
-        "fransys_model.derive.text_width",
         "fransys_model.elecdef",
         "fransys_model.kernel",
         "fransys_model.layout",
@@ -74,8 +72,8 @@ def test_model_package_maps_to_its_nineteen_surface_modules():
     )
 
 
-def test_model_api_output_covers_all_nineteen_modules_own_names():
-    """`api("fransys_model")` prints at least one header per one of the nineteen modules."""
+def test_model_api_output_covers_all_eighteen_modules_own_names():
+    """`api("fransys_model")` prints at least one header per one of the eighteen modules."""
     output = lean_api.api("fransys_model")
     modules_seen = {module for module, _name in _headers(output)}
     assert modules_seen == {
@@ -87,12 +85,10 @@ def test_model_api_output_covers_all_nineteen_modules_own_names():
         "fransys_model.derive.docs_site",
         "fransys_model.derive.drawing_text",
         "fransys_model.derive.grid_mm",
-        "fransys_model.derive.marker_box",
         "fransys_model.derive.numbering_pins",
         "fransys_model.derive.order",
         "fransys_model.derive.page_nav",
         "fransys_model.derive.print_sizes",
-        "fransys_model.derive.text_width",
         "fransys_model.elecdef",
         "fransys_model.kernel",
         "fransys_model.layout",
@@ -120,9 +116,7 @@ def test_unknown_package_fails_with_a_one_line_message():
 def test_data_value_is_printed_with_no_signature_or_docstring():
     """`FINDING_CODES` (a tuple, not a def) prints as a bare header naming its type."""
     output = lean_api.api("fransys_pdf")
-    codes_line = next(
-        line for line in output.splitlines() if line.startswith("fransys_pdf.FINDING_CODES")
-    )
+    codes_line = next(line for line in output.splitlines() if line.startswith("fransys_pdf.FINDING_CODES"))
     assert codes_line == "fransys_pdf.FINDING_CODES (tuple)"
 
 
@@ -131,8 +125,8 @@ def test_a_function_prints_a_real_signature():
     output = lean_api.api("fransys_pdf")
     check_line = next(line for line in output.splitlines() if line.startswith("fransys_pdf.check("))
     assert check_line == (
-        "fransys_pdf.check(model: Model, svgs: Mapping[str, str], "
-        "built: tuple[Finding, ...]=()) -> tuple[Finding, ...]"
+        "fransys_pdf.check(model: Model, svgs: Mapping[str, str], *, diagrams: tuple[DiagramSheet, ...], laid: CableSizes, "
+        "pdf: Mapping[str, float]) -> tuple[Finding, ...]"
     )
 
 

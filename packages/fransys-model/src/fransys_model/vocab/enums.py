@@ -35,7 +35,7 @@ class FunctionKind(Enum):
     """What kind of `Function` an item exposes.
 
     Example: the relay `-K1` example has one `COIL` function and `CONTACT_NO`/
-    `CONTACT_CO` functions for its contacts. A `BAR` is a conductor bar sold as one product.
+    `CONTACT_CO` functions for its contacts.
     """
 
     COIL = "coil"
@@ -52,7 +52,6 @@ class FunctionKind(Enum):
     SENSOR = "sensor"
     ACTUATOR = "actuator"
     GENERIC = "generic"
-    BAR = "bar"
 
 
 @register_enum
@@ -70,7 +69,6 @@ class ItemKind(Enum):
     CABLE = "cable"
     HARNESS = "harness"
     BOARD = "board"
-    BAR = "bar"
     DEVICE = "device"
 
 
@@ -91,48 +89,16 @@ class SubjectKind(Enum):
 
 
 @register_enum
-class PortRole(Enum):
-    """What a `Port` is for.
+class PortBoundary(Enum):
+    """Which side of a unit boundary a `Port` is on.
 
     Example: a terminal's two ports are `INTERNAL` (panel wiring side) and `EXTERNAL`
-    (field cable side); which side a wire lands on is this role, not a drawing side. A
-    `CONTACT_CO` function's ports are `COMMON`, `BREAK` (the throw it closes at rest) or `MAKE`
-    (the throw it closes operated), whatever the part's pin names.
+    (field cable side); which side a wire lands on is this boundary, not a drawing side.
     """
 
     GENERIC = "generic"
     INTERNAL = "internal"
     EXTERNAL = "external"
-    PE = "pe"
-    COMMON = "common"
-    BREAK = "break"
-    MAKE = "make"
-
-
-@register_enum
-class LinkKind(Enum):
-    """Connectivity inside a part, between `PortTemplate`s (design/vocabulary.md 6, `InternalLink`).
-
-    Example: a wire-like path is `CONDUCTIVE` and joins net closure; a relay contact
-    (design/examples.md 11's `co_1`) is `SWITCHED` and does not, though overview reads
-    it. A fuse or breaker element is `PROTECTIVE`: it can open, but is closed in service,
-    so the rail closure crosses it and the physical net stops at it.
-    """
-
-    CONDUCTIVE = "conductive"
-    SWITCHED = "switched"
-    PROTECTIVE = "protective"
-
-
-@register_enum
-class LinkRest(Enum):
-    """The state a `SWITCHED` `InternalLink` is in at rest, before it is operated.
-
-    Example: a push button's normally open contact is `OPEN`; an emergency stop's is `CLOSED`.
-    """
-
-    OPEN = "open"
-    CLOSED = "closed"
 
 
 @register_enum
@@ -194,10 +160,9 @@ class ConductorKind(Enum):
 
     Example: a panel wire is `WIRE`; one core of the invented cable `W012` example
     is `CORE`; a bridge between two terminals is `JUMPER`.
-    `JUMPER`, `MOUNT`, `BUSBAR`, `RAIL` and `LEAD` are links: a bridge between terminals,
-    plug-on contacts, a rack's power jumper, terminals bonded through their rail, a device's own
-    lead ending in a pin of a fitted connector. A link joins its net and is never a wire: it has
-    no `WireFacet`.
+    `JUMPER`, `MOUNT`, `BUSBAR` and `LEAD` are links: a bridge between terminals,
+    plug-on contacts, a rack's power jumper, a device's own lead ending in a pin of a fitted connector.
+    A link joins its net and is never a wire: it has no `WireFacet`.
     """
 
     WIRE = "wire"
@@ -205,7 +170,6 @@ class ConductorKind(Enum):
     JUMPER = "jumper"
     BUSBAR = "busbar"
     MOUNT = "mount"
-    RAIL = "rail"
     LEAD = "lead"
 
 
@@ -262,8 +226,6 @@ class DocumentPreset(Enum):
     """
 
     CABINET_SCHEMATIC = "cabinet_schematic"
-    HARNESS_DRAWING = "harness_drawing"
-    PCB_SCHEMATIC = "pcb_schematic"
     SYSTEM = "system"
 
 
@@ -292,42 +254,8 @@ class PageKind(Enum):
 
 
 @register_enum
-class Current(Enum):
-    """The kind of current a `SupplySystem` carries (decision model-0075).
-
-    Example: a 400 V three-phase supply is `AC`; a 24 V control supply is `DC`.
-    """
-
-    AC = "ac"
-    DC = "dc"
-
-
-@register_enum
-class Earthing(Enum):
-    """How a `SupplySystem` is earthed (decision model-0075).
-
-    Example: a TN or TT source is `EARTHED`; a floating or impedance-earthed one is `IT`,
-    for AC and DC alike.
-    """
-
-    EARTHED = "earthed"
-    IT = "it"
-
-
-@register_enum
-class PoleSide(Enum):
-    """Which side of a switching or protective device a pin sits on (IEC 60947-1).
-
-    Example: the contactor's pin `1` is `LINE` (supply side), pin `2` is `LOAD`.
-    """
-
-    LINE = "line"
-    LOAD = "load"
-
-
-@register_enum
 class ConductorMark(Enum):
-    """A conductor designation of IEC 60445; protective earth is a `PortRole`, not one.
+    """A conductor designation of IEC 60445; protective earth is a `PinRole`, not one.
 
     Example: a motor's `U` pin carries `L1`; a PSU's `+` output carries `L+`.
     """

@@ -1,15 +1,6 @@
-"""Field case: a three-pole breaker prints the pin number of each of its six pole pins.
-
-The engineering shape: a three-pole breaker and a three-pole fuse (the same demo part), each in
-a series that ends on a three-terminal strip.
-
-The bug: the drawn symbol repeats its pole, so its MARKING slots are `marking.<k>.in` and
-`marking.<k>.out`; `marking_slots` looked up the one-pole slot `marking.1.in`, found none, and
-the 1-6 of the poles were never printed.
-
-The rule (PORT-LINE; DESIGNATION-SCHEME, printed pin names): a pole's pins print the part's pin
-marking (`derive.port_marking`), as a one-pole symbol's do.
-"""
+"""Field case: a three-pole breaker and fuse, each ending a series on a three-terminal strip, print their pole pin numbers.
+The bug: pole marking slots are marking.<k>.in/out, but the lookup used the one-pole slot, so pins 1-6 never printed.
+Fixed by PORT-LINE and DESIGNATION-SCHEME, a pole's pins print the part's pin marking (derive.port_marking)."""
 
 import re
 import tempfile

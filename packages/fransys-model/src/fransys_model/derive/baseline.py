@@ -16,8 +16,8 @@ disjoint from it). This module is the surface only; the code lives beside it by 
 - `baseline_rules`: `ListingRules`, `RULES_BY_RELEASE`, `listing_rules`: the rules a stored listing
   was cut under, read from its release's `fransys` version (LS2, model-0289).
 - `baseline_keys`: `listing_key`, the one text of an item's key a version-2 listing stores (CR6).
-- `baseline_codec_keys`: the key fields of a version-2 row, `has_item_keys`, `keyless_release` and
-  `boundary_changed`, a boundary compared on the fields its previous listing carries.
+- `baseline_codec_keys`: the key fields of a version-2 row, `has_item_keys` and
+  `boundary_changed`, a boundary compared field for field.
 - `baseline_status`: `listing_status`, a stored listing compared under its own rules (LS3).
 - `baseline_codec`: `dumps`/`loads`, the canonical JSON codec, and `differing_sections`, which
   names the top-level fields two listings disagree on, and `matches`, whether stored text equals a
@@ -29,7 +29,7 @@ disjoint from it). This module is the surface only; the code lives beside it by 
 
 from .baseline_change_text import change_clause, change_identity, interface_text, renamed_text
 from .baseline_codec import differing_sections, dumps, loads, matches, stored_version
-from .baseline_codec_keys import boundary_changed, has_item_keys, keyless_release
+from .baseline_codec_keys import boundary_changed, has_item_keys
 from .baseline_designation import unit_designation
 from .baseline_diff import diff
 from .baseline_keys import listing_key
@@ -80,7 +80,6 @@ __all__ = [
     "dumps",
     "has_item_keys",
     "interface_text",
-    "keyless_release",
     "listing",
     "listing_key",
     "listing_rules",

@@ -37,9 +37,7 @@ def _cables(model: Model, document: Document, unit: Id[Unit] | None) -> tuple[Ha
     return harness_cables(model, document.item) if document.item is not None else ()
 
 
-def _harnesses(
-    model: Model, document: Document, unit: Id[Unit] | None, cables: tuple[HarnessCable, ...]
-) -> tuple[Id[Item], ...]:
+def _harnesses(model: Model, document: Document, unit: Id[Unit] | None, cables: tuple[HarnessCable, ...]) -> tuple[Id[Item], ...]:
     """The wired harnesses a unit document has, or an item document that has no cable."""
     if document.preset is DocumentPreset.SYSTEM:
         return ()
@@ -49,15 +47,11 @@ def _harnesses(
     return tuple(
         subject
         for block_unit, subject in drawn_blocks(model)
-        if block_unit == unit
-        and subject in wired
-        and (unit is not None or subject == document.item)
+        if block_unit == unit and subject in wired and (unit is not None or subject == document.item)
     )
 
 
-def _at_location(
-    model: Model, document: Document, found: tuple[Id[Item], ...]
-) -> tuple[Id[Item], ...]:
+def _at_location(model: Model, document: Document, found: tuple[Id[Item], ...]) -> tuple[Id[Item], ...]:
     """`found` kept to the items at the document's location, in `found`'s order."""
     if document.location is None:
         return ()
@@ -72,9 +66,7 @@ def _strips(model: Model, document: Document, unit: Id[Unit] | None) -> tuple[Id
     return _at_location(model, document, terminal_strips(model))
 
 
-def _connector_items(
-    model: Model, document: Document, unit: Id[Unit] | None, undrawn: tuple[Id[Item], ...]
-) -> tuple[Id[Item], ...]:
+def _connector_items(model: Model, document: Document, unit: Id[Unit] | None, undrawn: tuple[Id[Item], ...]) -> tuple[Id[Item], ...]:
     """A unit's own connector items, else the location's less the undrawn; none for an item."""
     if document.item is not None:
         return ()

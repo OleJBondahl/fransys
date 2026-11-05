@@ -31,15 +31,16 @@ WORDS = (
     "designation",
     "electrical",
 )
+#: The one measure rounds a width up to the grid (CC1, model-0373); the only file exempt from the
+#: arithmetic gate. Shrink-only.
+MEASURE = {"text.py"}
 BANNED_CALLS = {"min", "max", "sum", "round", "abs", "divmod", "pow"}
 
 
 def imports_symdef(source: str) -> bool:
     """Whether the source imports symdef or one of its submodules."""
     for node in ast.walk(ast.parse(source)):
-        if isinstance(node, ast.Import) and any(
-            a.name.split(".")[0] == "symdef" for a in node.names
-        ):
+        if isinstance(node, ast.Import) and any(a.name.split(".")[0] == "symdef" for a in node.names):
             return True
         if isinstance(node, ast.ImportFrom) and (node.module or "").split(".")[0] == "symdef":
             return True
@@ -69,13 +70,9 @@ def layer_files() -> list[Path]:
 
 
 def test_only_the_layer_and_the_legacy_adapter_import_symdef() -> None:
-    found = {
-        p.relative_to(SRC).as_posix() for p in SRC.rglob("*.py") if imports_symdef(p.read_text())
-    }
+    found = {p.relative_to(SRC).as_posix() for p in SRC.rglob("*.py") if imports_symdef(p.read_text())}
     outside = {f for f in found if not f.startswith("symbols/")}
-    assert outside == LEGACY, (
-        "a module other than the layer imports symdef; the legacy set only falls"
-    )
+    assert outside == LEGACY, "a module other than the layer imports symdef; the legacy set only falls"
     assert any(f.startswith("symbols/") for f in found)
 
 
@@ -88,9 +85,7 @@ def test_the_import_gate_can_fail() -> None:
 
 def test_the_layer_holds_no_electrical_word() -> None:
     assert layer_files()
-    assert {p.name: electrical_words(p.read_text()) for p in layer_files()} == {
-        p.name: [] for p in layer_files()
-    }
+    assert {p.name: electrical_words(p.read_text()) for p in layer_files()} == {p.name: [] for p in layer_files()}
 
 
 @pytest.mark.parametrize("word", WORDS)
@@ -99,9 +94,9 @@ def test_the_word_gate_can_fail(word: str) -> None:
 
 
 def test_the_layer_does_no_arithmetic() -> None:
-    assert {p.name: arithmetic(p.read_text()) for p in layer_files()} == {
-        p.name: [] for p in layer_files()
-    }
+    files = [p for p in layer_files() if p.name not in MEASURE]
+    assert {p.name: arithmetic(p.read_text()) for p in files} == {p.name: [] for p in files}
+    assert {p.name for p in layer_files()} >= MEASURE
 
 
 @pytest.mark.parametrize(
@@ -124,7 +119,4 @@ def test_a_type_union_is_not_arithmetic() -> None:
 
 
 def test_copies_and_the_union_call_are_not_arithmetic() -> None:
-    assert (
-        arithmetic("def f(g):\n    return Box(g.min.x, g.min.y, g.width, GridBox.union(g, g))\n")
-        == []
-    )
+    assert arithmetic("def f(g):\n    return Box(g.min.x, g.min.y, g.width, GridBox.union(g, g))\n") == []

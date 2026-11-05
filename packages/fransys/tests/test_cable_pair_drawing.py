@@ -12,7 +12,6 @@ from fransys_render import cable_blocks
 
 from electrical_symbols import LIBRARY
 from fransys_layout import lay_out_cables
-from fransys_model.layout import OpenCoreWire, layout_of
 
 
 @functools.cache
@@ -25,16 +24,20 @@ def _model():
     w1.core(2, x1[2], h1[2])
     w1.spare(3, at=x1[7])
     w1.spare()
-    return lay_out_cables(fr.build(d).model)[0]
+    return fr.build(d).model
+
+
+def _open_wires(model):
+    return [w for b in lay_out_cables(model, LIBRARY).blocks.values() for w in b.wires if w.open]
 
 
 def _svg() -> str:
-    (svg,) = dict(cable_blocks(_model(), LIBRARY)).values()
+    (svg,) = dict(cable_blocks(_model(), lay_out_cables(_model(), LIBRARY), LIBRARY)).values()
     return svg
 
 
 def test_the_block_writes_one_open_core_wire_per_spare_core():
-    assert len(layout_of(_model(), OpenCoreWire)) == 4
+    assert len(_open_wires(_model())) == 4
 
 
 def test_a_pair_is_bracketed_and_labelled_and_a_spare_is_marked():
@@ -60,15 +63,17 @@ def test_a_cable_with_no_open_core_writes_no_open_core_wire():
     h1 = d.device("H1", "DEMO-LAMP-24")
     w1 = d.cable("W1", "DEMO-CBL-4G1.5", length_m=5)
     w1.core(1, x1[1], h1[1])
-    model = lay_out_cables(fr.build(d).model)[0]
-    assert not layout_of(model, OpenCoreWire)
-    assert ">spare<" not in dict(cable_blocks(model, LIBRARY)).popitem()[1]
+    w1.core(2, x1[2], h1[2])
+    model = fr.build(d).model
+    cables = lay_out_cables(model, LIBRARY)
+    assert not _open_wires(model)
+    assert ">spare<" not in dict(cable_blocks(model, cables, LIBRARY)).popitem()[1]
 
 
 def test_a_stub_stands_one_grid_unit_long_and_clear_of_the_tracks():
     """Every open wire has a run of one grid unit or a routed lower run, none of zero length."""
-    for wire in layout_of(_model(), OpenCoreWire).values():
-        stubs = [run for run, on in ((wire.run_a, wire.stub_a), (wire.run_b, wire.stub_b)) if on]
+    for wire in _open_wires(_model()):
+        stubs = [run for run in (wire.run_a, wire.run_b) if run]
         assert stubs
         for run in stubs:
             assert len({p.x for p in run}) == 1

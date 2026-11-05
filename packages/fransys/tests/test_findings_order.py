@@ -26,10 +26,7 @@ def test_findings_of_one_code_list_by_natural_designation_not_by_id():
     draft = Draft()
     draft.extend(items, origin=_ORIGIN)
     model = freeze(draft)
-    findings = tuple(
-        Finding(code="ITEM_WITHOUT_PART", severity=Severity.INFO, subjects=(i.id,), message="m")
-        for i in items
-    )
+    findings = tuple(Finding(code="ITEM_WITHOUT_PART", severity=Severity.INFO, subjects=(i.id,), message="m") for i in items)
 
     printed = [fr.derive.item_designation(model, f.subjects[0]) for f in _resolved(findings, model)]
 

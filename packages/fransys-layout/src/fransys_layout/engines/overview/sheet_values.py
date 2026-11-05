@@ -33,7 +33,7 @@ class LineFacts:
 class DiagramFacts:
     """One reading's diagram to place: boxes in text order, lines in line order, the sheet in G.
 
-    `column` stands in one column, `left` lists its left neighbours; `row_height` above 0 is
+    `column` stands in one column, `left` lists its left neighbours; `row_height`, when set, is
     each column box's least height; `share_tracks` lets disjoint same-column lines share a track.
     """
 
@@ -47,13 +47,13 @@ class DiagramFacts:
     height: int
     column: tuple[Ident, ...] = ()
     left: tuple[Ident, ...] = ()
-    row_height: int = 0
+    row_height: int | None = None
     share_tracks: bool = False
     nest_same: bool = False  # same-column ends and tracks nest (layout-0201)
 
 
 @value
-class PlacedTab:
+class DiagramTab:
     """A tab outside a box edge: the line's cable, the edge, the centre `y`, its text's width."""
 
     cable: Ident
@@ -63,7 +63,7 @@ class PlacedTab:
 
 
 @value
-class PlacedBox:
+class DiagramBox:
     """A box in G from the sheet's content corner; `tabs` are in the order they were placed."""
 
     box: Ident
@@ -72,15 +72,15 @@ class PlacedBox:
     y: int
     width: int
     height: int
-    tabs: tuple[PlacedTab, ...]
+    tabs: tuple[DiagramTab, ...]
 
 
 @value
-class PlacedLine:
+class DiagramLine:
     """A line on one sheet; its identity is `(cable, a, b)`.
 
     `points` start at the box that lies on this sheet. A line cut between sheets is one
-    `PlacedLine` per sheet, each ending at its marker. `text_x`, `text_y` is the label's centre.
+    `DiagramLine` per sheet, each ending at its marker. `text_x`, `text_y` is the label's centre.
     """
 
     cable: Ident
@@ -119,8 +119,8 @@ class PlacedSheet:
     """One sheet of a diagram, numbered from 1 left to right; `texts` are the free texts."""
 
     number: int
-    boxes: tuple[PlacedBox, ...]
-    lines: tuple[PlacedLine, ...]
+    boxes: tuple[DiagramBox, ...]
+    lines: tuple[DiagramLine, ...]
     markers: tuple[PlacedMarker, ...]
     texts: tuple[PlacedText, ...] = ()
 

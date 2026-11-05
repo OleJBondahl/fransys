@@ -1,4 +1,4 @@
-"""The reading of `wire=` and of a pin argument, shared by `d.series` and `d.detail.wire`."""
+"""The reading of `wire=` and of a pin argument, shared by `d.series`."""
 
 from collections.abc import Mapping
 from decimal import Decimal
@@ -6,12 +6,10 @@ from typing import TYPE_CHECKING, NamedTuple
 
 from fransys_author.errors import AuthorError
 from fransys_author.handles import Port, Terminal
-from fransys_author.surface._bar import take_screw
-from fransys_author.surface._carry import refuse_carried
-from fransys_author.surface._handles import Fn
 from fransys_author.surface._strip import TerminalStrip
-from fransys_author.surface._unit_strip import is_unit_strip, take
-from fransys_model.vocab import COLOUR_GRAMMAR, split_colour
+from fransys_author.surface._unit_strip import is_unit_strip
+from fransys_model.derive import split_colour
+from fransys_model.vocab import COLOUR_GRAMMAR
 
 if TYPE_CHECKING:
     from fransys_author.surface._rows import RowValue, WiringRow
@@ -92,10 +90,7 @@ def read_wire(design: Design, wire: WireArg) -> Wiring | RowWire | PoleWire:
         return RowWire(None, wire)
     if isinstance(wire, int | float | str | Decimal) and not isinstance(wire, bool):
         return RowWire(_size(wire), None)
-    msg = (
-        "wire= is a size, a table of rows, a (colour, mm2) tuple, or one such tuple per pole, "
-        f"got {wire!r}"
-    )
+    msg = f"wire= is a size, a table of rows, a (colour, mm2) tuple, or one such tuple per pole, got {wire!r}"
     raise AuthorError(msg)
 
 
@@ -109,14 +104,3 @@ def _port(design: Design, pin: object) -> Port:
         return pin
     msg = f"a pin argument is one pin: name one pin, got {type(pin).__name__}"
     raise AuthorError(msg)
-
-
-def _wire_port(design: Design, pin: object) -> Port:
-    """`_port`, but a unit's strip gives the next free boundary terminal's outer side (0023)."""
-    if isinstance(pin, Fn):
-        return take_screw(design, pin)  # PE-BAR B2: d.detail.wire only, never a net or a link
-    if isinstance(pin, TerminalStrip) and is_unit_strip(pin, design):
-        return take(pin, design, 1)[0].outer
-    port = _port(design, pin)
-    refuse_carried(design, (port,))
-    return port

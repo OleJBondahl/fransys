@@ -3,8 +3,8 @@
 from _build import document, location, model
 from test_signed_scope import _nested_cabinet, _schematic_background
 
-from fransys_model.derive import scope_path
-from fransys_model.vocab import DocumentPreset, documents
+from fransys_model.derive import documents, scope_path
+from fransys_model.vocab import DocumentPreset
 
 
 def _doc(subject):

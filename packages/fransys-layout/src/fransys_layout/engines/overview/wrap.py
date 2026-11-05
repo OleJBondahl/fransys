@@ -16,11 +16,11 @@ from fransys_layout.engines.overview.wrap_route import clear, fold_points
 from fransys_layout.geometry import WIRING_GRID as G
 from fransys_layout.geometry import Facing, Point
 lazy from fransys_layout.engines.overview.sheet_values import (
+    DiagramBox,
+    DiagramLine,
+    DiagramTab,
     Ident,
-    PlacedBox,
-    PlacedLine,
     PlacedSheet,
-    PlacedTab,
 )
 
 MAX_TRACKS = 8  # the most lines that fold between two rows before the sheet stays as it is
@@ -29,12 +29,12 @@ INNER = -1  # a line inside one band
 type Bounds = tuple[int, int, int, int]  # left, top, right, bottom
 
 
-def _tab_x(box: PlacedBox, tab: PlacedTab) -> int:
+def _tab_x(box: DiagramBox, tab: DiagramTab) -> int:
     reach = tab_reach(tab.text_width)
     return box.x + box.width + reach if tab.side is Facing.E else box.x - reach
 
 
-def _span(box: PlacedBox) -> tuple[int, int]:
+def _span(box: DiagramBox) -> tuple[int, int]:
     xs = (box.x, box.x + box.width, *(_tab_x(box, t) for t in box.tabs))
     return min(xs), max(xs)
 
@@ -47,7 +47,7 @@ def extent(sheet: PlacedSheet) -> Bounds:
     return min(xs), min(ys), max(xs), max(ys)
 
 
-def _cut(boxes: Sequence[PlacedBox], limit: int) -> dict[int, int] | None:
+def _cut(boxes: Sequence[DiagramBox], limit: int) -> dict[int, int] | None:
     """The band of each box column (by its x), a band ending before it passes `limit`."""
     cols: dict[int, list[int]] = {}
     for box in boxes:
@@ -67,9 +67,7 @@ def _cut(boxes: Sequence[PlacedBox], limit: int) -> dict[int, int] | None:
     return band_of
 
 
-def _classify(
-    sheet: PlacedSheet, band: Mapping[Ident, int], by_id: Mapping[Ident, PlacedBox]
-) -> list[int] | None:
+def _classify(sheet: PlacedSheet, band: Mapping[Ident, int], by_id: Mapping[Ident, DiagramBox]) -> list[int] | None:
     """Per line `INNER` or the band it leaves; None for a line over two bands or off a side."""
     kinds = []
     for ln in sheet.lines:
@@ -83,14 +81,12 @@ def _classify(
     return kinds
 
 
-def _leaves_east(ln: PlacedLine, first: PlacedBox, second: PlacedBox) -> bool:
+def _leaves_east(ln: DiagramLine, first: DiagramBox, second: DiagramBox) -> bool:
     pts = ln.points if ln.a == first.box else ln.points[::-1]
     return pts[0].x == first.x + first.width and pts[-1].x == second.x
 
 
-def _bounds(
-    sheet: PlacedSheet, band: Mapping[Ident, int], kinds: Sequence[int], count: int
-) -> list[Bounds]:
+def _bounds(sheet: PlacedSheet, band: Mapping[Ident, int], kinds: Sequence[int], count: int) -> list[Bounds]:
     """Each band's `(left, top, right, bottom)`: its boxes, tabs and the lines inside it."""
     xs: list[list[int]] = [[] for _ in range(count)]
     ys: list[list[int]] = [[] for _ in range(count)]
@@ -104,9 +100,7 @@ def _bounds(
     return [(min(x), min(y), max(x), max(y)) for x, y in zip(xs, ys, strict=True)]
 
 
-def _offsets(
-    bounds: Sequence[Bounds], folds: Mapping[int, int], left: int
-) -> list[tuple[int, int]]:
+def _offsets(bounds: Sequence[Bounds], folds: Mapping[int, int], left: int) -> list[tuple[int, int]]:
     """Each band's move: to start at `left`, under the one before with room for its folds."""
     moves = []
     bottom = 0
@@ -121,12 +115,12 @@ def _shift(point: Point, move: tuple[int, int]) -> Point:
     return Point(x=point.x + move[0], y=point.y + move[1])
 
 
-def _moved_box(box: PlacedBox, move: tuple[int, int]) -> PlacedBox:
+def _moved_box(box: DiagramBox, move: tuple[int, int]) -> DiagramBox:
     tabs = tuple(replace(t, y=t.y + move[1]) for t in box.tabs)
     return replace(box, x=box.x + move[0], y=box.y + move[1], tabs=tabs)
 
 
-def _moved_line(ln: PlacedLine, move: tuple[int, int]) -> PlacedLine:
+def _moved_line(ln: DiagramLine, move: tuple[int, int]) -> DiagramLine:
     points = tuple(_shift(p, move) for p in ln.points)
     return replace(ln, points=points, text_x=ln.text_x + move[0], text_y=ln.text_y + move[1])
 
@@ -142,7 +136,7 @@ class _Plan:
     left: int
 
 
-def _oriented(ln: PlacedLine, band: Mapping[Ident, int]) -> tuple[Point, ...]:
+def _oriented(ln: DiagramLine, band: Mapping[Ident, int]) -> tuple[Point, ...]:
     """The points of `ln` from its end in the earlier band to its end in the later one."""
     return ln.points if band[ln.a] < band[ln.b] else ln.points[::-1]
 
@@ -157,7 +151,7 @@ def _tracks(sheet: PlacedSheet, kinds: Sequence[int], band: Mapping[Ident, int])
     return at
 
 
-def _folded(ln: PlacedLine, k: int, track: int, plan: _Plan, text_height: int) -> PlacedLine:
+def _folded(ln: DiagramLine, k: int, track: int, plan: _Plan, text_height: int) -> DiagramLine:
     """`ln` as its fold route round the end of band `k` and the start of band `k + 1`."""
     pts = _oriented(ln, plan.band)
     count = plan.folds[k]
@@ -190,16 +184,12 @@ def _plan(sheet: PlacedSheet, width: int, tracks: int) -> tuple[_Plan, list[int]
     return _Plan(band, bounds, _offsets(bounds, folds, left), folds, left), kinds
 
 
-def _wrap_with(
-    sheet: PlacedSheet, plan: _Plan, kinds: Sequence[int], text_height: int
-) -> PlacedSheet:
+def _wrap_with(sheet: PlacedSheet, plan: _Plan, kinds: Sequence[int], text_height: int) -> PlacedSheet:
     """`sheet` moved by `plan`, its bridging lines folded."""
     at = _tracks(sheet, kinds, plan.band)
     boxes = tuple(_moved_box(b, plan.moves[plan.band[b.box]]) for b in sheet.boxes)
     lines = tuple(
-        _moved_line(ln, plan.moves[plan.band[ln.a]])
-        if kd == INNER
-        else _folded(ln, kd, at[i], plan, text_height)
+        _moved_line(ln, plan.moves[plan.band[ln.a]]) if kd == INNER else _folded(ln, kd, at[i], plan, text_height)
         for i, (ln, kd) in enumerate(zip(sheet.lines, kinds, strict=True))
     )
     return replace(sheet, boxes=boxes, lines=lines)
@@ -217,8 +207,6 @@ def wrapped(sheet: PlacedSheet, width: int, text_height: int) -> PlacedSheet:
         made = _wrap_with(sheet, *found, text_height)
         new_left, _, new_right, _ = extent(made)
         folded = [ln.points for ln, kd in zip(made.lines, found[1], strict=True) if kd != INNER]
-        if new_right - new_left <= width and clear(
-            folded, made.boxes, [ln.points for ln in made.lines]
-        ):
+        if new_right - new_left <= width and clear(folded, made.boxes, [ln.points for ln in made.lines]):
             return made
     return sheet

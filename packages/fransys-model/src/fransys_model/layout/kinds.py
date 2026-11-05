@@ -4,25 +4,19 @@ A new kind goes into exactly one of the tuples: the tests and `derived_layout_id
 by them. Each pass removes only its own tuple's kinds (CT5, Q3).
 """
 
-from .cable_results import CableBlock, CableBox, CoreWire, EndBox, OpenCoreWire
-from .diagram_results import DiagramBox, DiagramLine, DiagramMarker, DiagramSheet
 from .formats import Profile, SheetFormat
 from .hints import (
-    BreakBefore,
-    Chain,
     GroupHint,
-    KeepTogether,
     OrderHint,
-    PageTitle,
-    PinsBelowHint,
     PoleGroup,
-    SideHint,
     SymbolChoice,
 )
+from .house_export import DesignationForm, ExportForm
+from .house_lists import Lists
 from .house_text import (
-    ColourCodes,
     FrameForm,
     HarnessText,
+    HouseProfile,
     ReferenceText,
     RevisionForm,
     RevisionTableForm,
@@ -39,28 +33,23 @@ from .results import DrawingSet, LinkMarker, Page, PowerSymbol
 from .sheets import LayoutSheet
 
 AUTHORED_KINDS: tuple[type, ...] = (
-    BreakBefore,
-    Chain,
     GroupHint,
-    KeepTogether,
     OrderHint,
-    PageTitle,
-    PinsBelowHint,
     PoleGroup,
     Profile,
     SheetFormat,
-    SideHint,
     SymbolChoice,
 )
 DERIVED_KINDS: tuple[type, ...] = (DrawingSet, LinkMarker, Page, PowerSymbol)
-CABLE_KINDS: tuple[type, ...] = (CableBlock, CableBox, CoreWire, EndBox, OpenCoreWire)
-DIAGRAM_KINDS: tuple[type, ...] = (DiagramSheet, DiagramBox, DiagramLine, DiagramMarker)
 OVERVIEW_KINDS: tuple[type, ...] = (OverviewView, OverviewBox, OverviewLine)
 # Written once by the facade (the symbol library, the settings tables), never authored, kept.
 HOUSE_TEXT_KINDS: tuple[type, ...] = (
-    ColourCodes,
+    DesignationForm,
+    ExportForm,
     FrameForm,
     HarnessText,
+    HouseProfile,
+    Lists,
     ReferenceText,
     RevisionForm,
     RevisionTableForm,

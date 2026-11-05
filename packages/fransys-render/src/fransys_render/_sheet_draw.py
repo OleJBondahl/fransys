@@ -7,8 +7,9 @@ The symbols are `electrical_symbols`' data; the sizes, the words and the cuts ar
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
+from symdef import bold_layer
+
 from electrical_symbols import (
-    bold_layer,
     frame_border,
     frame_strip,
     notice_table,
@@ -17,9 +18,9 @@ from electrical_symbols import (
     title_block,
     title_logo,
 )
-from fransys_model.derive import notice_line_count, notice_pitch_mm
 
 from ._symbols import symbol_body
+from .title_text import notice_line_count, notice_pitch_mm
 
 if TYPE_CHECKING:
     from collections.abc import Mapping

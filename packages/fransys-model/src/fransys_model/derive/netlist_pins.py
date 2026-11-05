@@ -1,9 +1,9 @@
 """A board's pins resolved once: reference, pad and the spelling `ref:pad` (decision model-0275)."""
 
-from fransys_model.kernel import Id, Model  # noqa: TC001 -- signature tests resolve hints at runtime
 from fransys_model.vocab import ports
-from fransys_model.vocab.core import Item, Port  # noqa: TC001 -- signature tests resolve hints at runtime
 from fransys_model.vocab.tables import unused_boundaries
+lazy from fransys_model.kernel import Id, Model
+lazy from fransys_model.vocab.core import Item, Port
 
 from .designation import item_designation
 from .indexes import build_indexes
@@ -34,11 +34,7 @@ def _pin(
 ) -> NetlistPin:
     """`port`'s item, reference and pad by ids; no part row: board-relative (model-0040)."""
     item = item_of_port(model, port)
-    ref = (
-        designations[item]
-        if item in designations
-        else item_designation(model, item, relative_to=board)
-    )
+    ref = designations[item] if item in designations else item_designation(model, item, relative_to=board)
     return NetlistPin(port=port, item=item, ref=ref, pad=ports(model)[port].name)
 
 
@@ -78,9 +74,5 @@ def board_pins(model: Model, board: Id[Item]) -> BoardPins:
         for function in idx.functions_by_item.get(part.item, ())
         for port in idx.ports_by_function.get(function, ())
     )
-    open_pins = tuple(
-        pin
-        for pin in part_pins
-        if (pin.ref, pin.pad) not in connected and pin.port not in quiet_ports
-    )
+    open_pins = tuple(pin for pin in part_pins if (pin.ref, pin.pad) not in connected and pin.port not in quiet_ports)
     return BoardPins(nets=nets, unconnected=open_pins, part_pins=part_pins)

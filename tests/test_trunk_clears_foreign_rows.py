@@ -2,7 +2,6 @@
 
 The 16-input and the machine panel of the placement corpus share a net whose trunks hang on
 sensors in a late row. Without the clearance each trunk stood at the page top and the sensors had
-no free path to it (ROUTE_FAILED); place_foreign now keeps it under the earlier rows' boxes.
 """
 
 import importlib.util
@@ -25,6 +24,8 @@ def _codes(case: str) -> Counter[str]:
 
 
 @pytest.mark.private_input  # reads internal/ (R462)
-@pytest.mark.parametrize("case", ["panel_di16p", "machine_panel"])
-def test_every_sensor_reaches_its_trunk(case: str) -> None:
-    assert _codes(case)["ROUTE_FAILED"] == 0
+@pytest.mark.parametrize(
+    ("case", "references"), [("panel_di16p", 0), ("machine_panel", 0)]
+)  # R1727: the ledger sees the lane join, S2 reaches its trunk by wire
+def test_every_sensor_reaches_its_trunk(case: str, references: int) -> None:
+    assert _codes(case)["WIRE_AS_REFERENCE"] == references

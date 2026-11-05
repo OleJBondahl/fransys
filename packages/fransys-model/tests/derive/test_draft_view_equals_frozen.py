@@ -2,13 +2,11 @@
 
 The facts that take a tables view are `unit_boundary_pins`, `boundary`, `unit_items`,
 `crosses_unit`, `wired_ports` and `physical_nets`. Excluded, because they need what a freeze
-resolves: any fact reading an alias, and any fact reading a catalogue kind (`PortTemplate`,
-`InternalLink`, `Part`) the author's own draft does not hold. That list is `Draft.tables()`'s
-contract.
 """
 
 from types import SimpleNamespace
 
+import pytest
 from plant import Plant
 
 from fransys_model.derive.facts.boundary_pins import unit_boundary_pins
@@ -82,13 +80,6 @@ def test_a_view_is_not_cached_and_sees_a_later_snapshot() -> None:
     assert physical_nets(before) != physical_nets(after)
 
 
-def test_a_view_missing_the_wires_differs_from_the_frozen_model() -> None:
-    """The equality can fail: a view without the wires (the mate stays) has other nets."""
-    draft = _draft()
-    tables = {kind: table for kind, table in draft.tables().items() if kind != "conductor"}
-    assert physical_nets(SimpleNamespace(tables=tables)) != physical_nets(freeze(draft))
-
-
 def test_the_unit_reach_facts_agree_on_view_and_model_and_name_the_crossing() -> None:
     """`wired_inside_outside` splits the wires by unit, `nested_boundary_functions` lists X1."""
     draft = _draft()
@@ -103,8 +94,9 @@ def test_the_unit_reach_facts_agree_on_view_and_model_and_name_the_crossing() ->
     assert len(nested_boundary_functions(view, cabinet)) == 1
 
 
-def test_a_view_missing_the_mate_differs_from_the_frozen_model() -> None:
-    """The mate alone joins X1.10 to X3.10: a view without mates has more physical nets."""
+@pytest.mark.parametrize("dropped", ["conductor", "mate"])
+def test_a_view_missing_the_wires_or_the_mate_differs_from_the_frozen_model(dropped: str) -> None:
+    """The equality can fail: a view without the wires (the mate stays) or without the mate (which alone joins X1.10 to X3.10) has other nets."""
     draft = _draft()
-    tables = {kind: table for kind, table in draft.tables().items() if kind != "mate"}
+    tables = {kind: table for kind, table in draft.tables().items() if kind != dropped}
     assert physical_nets(SimpleNamespace(tables=tables)) != physical_nets(freeze(draft))

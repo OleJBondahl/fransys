@@ -2,7 +2,6 @@
 
 The two-release plant is the units worked example plus a yard switch `-K7` with a connector child
 `-P7`, and a device `-K9`; release 2 drops `-P7` and `-K9`. Each test
-names what breaks it.
 """
 
 import dataclasses
@@ -17,6 +16,7 @@ from _model_build_cover import system_document
 from fransys_overview import html
 from test_units_worked_example import _system_design
 
+from electrical_symbols import LIBRARY
 from fransys_layout.engines.overview import lay_out_overview
 from fransys_model.derive.baseline import diff, dumps, listing, loads
 
@@ -27,16 +27,16 @@ _DEVICE = "=YARD+YARD-K9"
 
 def _plant(*, child: bool, device: bool) -> Any:
     parts = fransys_parts.load("demo_parts")
-    design, field1, _field2 = _system_design(parts)
+    design, field1, _field2 = _system_design(parts, spares=True)
     yard = design.location("YARD", "Yard")
     group = design.group("YARD", "Yard wiring")
     wire = design.wiring(colour="BU", gauge="0.5")
     host = design.item("DEMO-SWITCH-2P", tag="K7", at=yard, group=group)
-    wire(field1[0].outer, host.fn("x1")["1"])
+    wire(field1[2].outer, host.fn("x1")["1"])
     if child:
         design.item("DEMO-CONN-2P", tag="P7", parent=host, at=yard, group=group)
     if device:
-        wire(field1[1].outer, design.item("DEMO-SWITCH-2P", tag="K9", at=yard, group=group)["1"])
+        wire(field1[2].outer, design.item("DEMO-SWITCH-2P", tag="K9", at=yard, group=group)["1"])
     return fr.build(parts, design.draft(), system_document()).model
 
 
@@ -47,7 +47,7 @@ def _releases() -> tuple[Any, Any]:
 
 def _page(previous: Any) -> dict[str, Any]:
     model = _releases()[1]
-    shown = html(lay_out_overview(model)[0], changes=diff(previous, listing(model, None)))
+    shown = html(lay_out_overview(model, LIBRARY)[0], changes=diff(previous, listing(model, None)), text_height=8)
     found = re.search(r'id="overview-data">(.*?)</script>', shown, re.DOTALL)
     assert found is not None
     return json.loads(found.group(1))
@@ -72,9 +72,7 @@ def test_a_removed_child_marks_its_host_and_a_parentless_device_stays_listed() -
 
 
 def _without_parent(old: Any) -> Any:
-    return dataclasses.replace(
-        old, items=tuple(dataclasses.replace(row, parent=None) for row in old.items)
-    )
+    return dataclasses.replace(old, items=tuple(dataclasses.replace(row, parent=None) for row in old.items))
 
 
 def test_a_listing_written_before_the_parent_field_loads_with_its_bytes() -> None:

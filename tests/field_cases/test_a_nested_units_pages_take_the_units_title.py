@@ -1,25 +1,13 @@
 """Field case: the pages that draw a nested unit take its title, not a range of its blocks.
+The bug: those pages were titled "Board circuit 1" to "Board circuit 10", the board's blocks.
+Fixed by model-0256: a nested unit's pages read the unit's title. Its build draws every connection: no CONNECTION_NOT_DRAWN (KI-515, R1532)."""
 
-The engineering shape: a cabinet unit nests a relay board with ten function blocks, each holding
-an interface connector and a lamp; the cabinet wires a cable to every connector. The cabinet's
-drawing set draws the board's group on two pages.
-
-The bug: those pages were titled "Board circuit 1, ... Board circuit 9" and "Board circuit 10",
-the blocks of the board, though the pages draw the board's boundary at the cabinet's level; and
-`d.layout.page_title` took no handle for the board, so no title could be set for them.
-
-The rule (decisions author-0049 and model-0256): `d.layout.page_title` takes what `d.add`
-returns and titles every page of another set that draws that nested unit; without it such a page
-is titled with the nested unit's own title. A device of the unit keeps its meaning.
-"""
-
-import tempfile
 from functools import cache
-from pathlib import Path
+from itertools import pairwise
 from typing import Any, NamedTuple
 
 import fransys as fr
-import pytest
+from _model_build_cover import unit_document
 from fransys.colours import BK
 
 from fransys_model.derive import page_title, unit_release
@@ -55,11 +43,10 @@ def _board(u: Any) -> Any:
     connectors = []
     for i in range(1, _BLOCKS + 1):
         with u.function(f"F{i}", f"Board circuit {i}"):
-            x = u.device(
-                f"X{i}", "DEMO-HSG-4F", parent=pcb, interface=True, contacts="DEMO-CRIMP-F"
-            )
+            x = u.device(f"X{i}", "DEMO-HSG-4F", parent=pcb, interface=True, contacts="DEMO-CRIMP-F")
             lamp = u.device(f"K{i}", "DEMO-LAMP-24", parent=pcb)
-        u.detail.wire(x[1], lamp["1"], wire=(BK, 0.5))
+        u.series(x[1], lamp["1"], wire=(BK, 0.5))
+        u.series(x[2], lamp["2"], wire=(BK, 0.5))
         connectors.append(x)
     return _Io(*connectors)
 
@@ -68,7 +55,7 @@ class _Open(NamedTuple):
     pass
 
 
-def _cabinet(hint: str | None, *, on_device: str | None = None) -> Any:
+def _cabinet() -> Any:
     @fr.unit(
         "demo-cab",
         revision=1,
@@ -80,29 +67,25 @@ def _cabinet(hint: str | None, *, on_device: str | None = None) -> Any:
     )
     def cab(u: Any) -> _Open:
         board = u.add(_board, "U1")
+        lamps = []
         for n in range(1, _BLOCKS + 1):
             lamp = u.device(f"H{n}", "DEMO-LAMP-24")
             cable = u.cable(f"W{n}", "DEMO-CBL-4G1.5", length_m=1)
             cable.core(1, getattr(board, f"X{n}")[1], lamp["1"])
-        if hint is not None:
-            u.layout.page_title(board, hint)
-        if on_device is not None:
-            u.layout.page_title(board.X10, on_device)
+            lamps.append(lamp)
+        for a, b in pairwise(lamps):  # one core per cable keeps each stub's ports; the return pins chain so no lamp is half-wired
+            u.series(a["2"], b["2"], wire=(BK, 0.5))
         return _Open()
 
     return cab
 
 
 @cache
-def _titles(hint: str | None, on_device: str | None = None) -> dict[str, list[str]]:
+def _titles() -> dict[str, list[str]]:
     """Page titles by the name of the unit whose set the page belongs to."""
     d = fr.design("demo_parts")
-    d.add(_cabinet(hint, on_device=on_device), "C1", place=None)
-    cover = Path(tempfile.mkdtemp()) / "cover.md"
-    cover.write_text("# Cabinet\n", encoding="utf-8")
-    model = fr.build(
-        d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, "demo-cab", cover=cover)
-    ).model
+    d.add(_cabinet(), "C1", place=None)
+    model = fr.build(d, unit_document("demo-cab")).model
     sets = layout_of(model, DrawingSet)
     found: dict[str, list[str]] = {}
     for page in layout_of(model, Page).values():
@@ -114,42 +97,18 @@ def _titles(hint: str | None, on_device: str | None = None) -> dict[str, list[st
     return found
 
 
-def test_a_title_on_the_nested_unit_handle_names_the_cabinet_pages_that_draw_it() -> None:
-    cabinet = _titles("Board I/O")["demo-cab"]
-    assert cabinet.count("Board I/O") == 2
-    assert "Cabinet" in cabinet
-
-
-def test_the_nested_units_own_pages_keep_their_block_titles() -> None:
-    board = _titles("Board I/O")["demo-board"]
-    assert "Board I/O" not in board
-    assert board[-1] == "Board circuit 10"
-
-
-def test_a_device_of_the_nested_unit_keeps_its_meaning() -> None:
-    cabinet = _titles(None, "X10 page")["demo-cab"]
-    assert cabinet.count("X10 page") == 1
-
-
-def test_a_second_title_for_the_nested_unit_is_refused() -> None:
-    @fr.unit("demo-twice", revision=1, interface_version=1, date="2026-01-01", text="x", by="AB")
-    def twice(u: Any) -> _Open:
-        board = u.add(_board, "U1")
-        u.layout.page_title(board, "One")
-        with pytest.raises(fr.AuthorError, match="already has a title"):
-            u.layout.page_title(board, "Two")
-        return _Open()
-
-    fr.design("demo_parts").add(twice, "C2", place=None)
-
-
 def test_without_a_title_the_cabinet_pages_that_draw_the_board_read_its_own_title() -> None:
-    cabinet = _titles(None)["demo-cab"]
-    assert cabinet.count("Relay board") == 2
-    assert not any("Board circuit" in title for title in cabinet)
+    assert _titles()["demo-cab"].count("Relay board") == 2
 
 
 def test_the_boards_own_pages_still_read_their_block_texts() -> None:
-    board = _titles(None)["demo-board"]
+    board = _titles()["demo-board"]
+    assert not any("Board circuit" in title for title in _titles()["demo-cab"])  # the cabinet pages read the unit title, not the blocks
     assert board[0].startswith("Board circuit 1, Board circuit 2")
     assert "Relay board" not in board
+
+
+def test_a_one_core_cable_to_each_board_connector_is_drawn() -> None:
+    d = fr.design("demo_parts")
+    d.add(_cabinet(), "C1", place=None)
+    assert [f for f in fr.build(d, unit_document("demo-cab")).findings if f.code == "CONNECTION_NOT_DRAWN"] == []

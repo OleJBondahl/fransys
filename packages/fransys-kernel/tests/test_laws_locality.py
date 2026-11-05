@@ -2,17 +2,6 @@
 
 Each law and its `*_check_fails_*` counterpart follow `test_laws.py`'s pattern: a real law must
 pass, and a deliberately broken implementation of the same shape must be caught, so no law here
-can pass vacuously (REVIEW-M M2).
-
-1. Numbering: an item added to one numbering group -- `(unit, scope)`, `scope` the nearest
-   board/harness the designation reads through (`derive.passes.numbering`, `number`'s
-   docstring); here every item's scope is `None` (no boards), so the group is just the unit --
-   changes no designation outside that group.
-2. PLC allocation: a request added to one serving queue -- `(unit, signal)` -- changes no
-   binding in another queue.
-3. Permuting the authored order of `InternalLink.a`/`b` (built via `laws_pool.pools()`,
-   which already includes one `InternalLink` in every pool) leaves the whole model's digest
-   unchanged.
 """
 
 import dataclasses
@@ -30,6 +19,7 @@ from fransys_kernel import Finding, Model, Origin, evolve, make_id
 from fransys_model.derive import item_designation
 from fransys_model.derive.passes.numbering import number
 from fransys_model.derive.passes.plc_allocation import allocate_plc
+from fransys_model.layout import DesignationForm
 from fransys_model.vocab.core import Function, Item, Unit, UnitRelease
 from fransys_model.vocab.enums import FunctionKind, PartCategory, SignalType
 from fransys_model.vocab.facets.assigned_designation import AssignedDesignationFacet
@@ -76,17 +66,11 @@ def _numbering_group(draw: st.DrawFn, prefix: str) -> _NumberingGroup:
         revision=1,
         interface="1",
     )
-    unit = Unit(
-        id=make_id(Unit, (prefix, "unit")), key=(prefix, "unit"), release=release.id, parent=None
-    )
+    unit = Unit(id=make_id(Unit, (prefix, "unit")), key=(prefix, "unit"), release=release.id, parent=None)
     count = draw(st.integers(1, 3))
     built = []
     for i in range(count):
-        tag = (
-            None
-            if i == 0
-            else draw(st.none() | st.text(string.ascii_uppercase, min_size=1, max_size=2))
-        )
+        tag = None if i == 0 else draw(st.none() | st.text(string.ascii_uppercase, min_size=1, max_size=2))
         built.append(
             Item(
                 id=make_id(Item, (prefix, "item", str(i))),
@@ -108,8 +92,6 @@ def numbering_locality_cases(draw: st.DrawFn) -> tuple[list[_NumberingGroup], It
 
     The extra item's key sorts before every other group's (a `g0` prefix precedes `g1`,
     `g2`, ...), so under the real pass it changes only group 0's own designations, and under
-    a single-shared-counter pass it deterministically shifts every later group's numbers --
-    the failing twin does not depend on which example Hypothesis happens to draw.
     """
     group_count = draw(st.integers(2, 3))
     groups = [draw(_numbering_group(f"g{g}")) for g in range(group_count)]
@@ -127,7 +109,10 @@ def numbering_locality_cases(draw: st.DrawFn) -> tuple[list[_NumberingGroup], It
 
 
 def _numbering_records(groups: list[_NumberingGroup], extra: Item | None) -> list[Any]:
-    records: list[Any] = [_RELAY]
+    records: list[Any] = [
+        _RELAY,
+        DesignationForm(id=make_id(DesignationForm, ("build", "designation")), key=("build", "designation"), number_start=1),
+    ]
     for group in groups:
         records.append(group.release)
         records.append(group.unit)
@@ -208,9 +193,7 @@ def _plc_group(prefix: str) -> _PlcGroup:
         revision=1,
         interface="1",
     )
-    unit = Unit(
-        id=make_id(Unit, (prefix, "unit")), key=(prefix, "unit"), release=release.id, parent=None
-    )
+    unit = Unit(id=make_id(Unit, (prefix, "unit")), key=(prefix, "unit"), release=release.id, parent=None)
     module_part = Part(
         id=make_id(Part, (prefix, "mod")),
         key=(prefix, "mod"),
@@ -334,9 +317,7 @@ def plc_locality_cases(
     return groups, extra
 
 
-def _plc_records(
-    groups: list[_PlcGroup], extra: tuple[Item, Function, PlcRequestFacet] | None
-) -> list[Any]:
+def _plc_records(groups: list[_PlcGroup], extra: tuple[Item, Function, PlcRequestFacet] | None) -> list[Any]:
     records: list[Any] = []
     for group in groups:
         records += [
@@ -417,14 +398,11 @@ def test_plc_allocation_is_local_to_its_queue(
 # Law 3: permutation invariance.
 
 
-def check_link_permutation_invariant(
-    pool: Pool, build: Callable[..., Model] = freeze_records, *, unsorted: bool = False
-) -> None:
+def check_link_permutation_invariant(pool: Pool, build: Callable[..., Model] = freeze_records, *, unsorted: bool = False) -> None:
     """Permuting `InternalLink.a`/`b`'s authored order leaves the whole model's digest unchanged.
 
     `unsorted=True` simulates a `__post_init__` that never sorts (the gap before this order):
     the swapped copy is forced back to its swapped fields instead of letting the real
-    `__post_init__` re-normalise them, so this twin must fail.
     """
     link = next(record for record in pool.records if record.id.kind == "internal_link")
     swapped = dataclasses.replace(link, a=link.b, b=link.a)
@@ -467,9 +445,7 @@ def test_numbering_locality_check_fails_with_one_shared_counter() -> None:
 
 
 def test_plc_locality_check_fails_with_one_shared_queue() -> None:
-    _must_fail(
-        check_plc_locality, plc_locality_cases(), allocate_impl=_allocate_from_one_shared_queue
-    )
+    _must_fail(check_plc_locality, plc_locality_cases(), allocate_impl=_allocate_from_one_shared_queue)
 
 
 def test_link_permutation_check_fails_when_stored_unsorted() -> None:

@@ -1,4 +1,4 @@
-"""`CABLE_CORE_COUNT` counts open cores; `FUNCTION_HALF_CONNECTED` treats a spare's pin as wired."""
+"""`CABLE_CORES_FEWER` counts open cores; `FUNCTION_HALF_CONNECTED` counts a spare pin wired."""
 
 from decimal import Decimal
 from typing import Any
@@ -7,16 +7,17 @@ from plant import Plant
 from query_builders import make_part, make_pin
 
 from fransys_model.checks.cables import (
-    CABLE_CORE_COUNT,
+    CABLE_CORES_FEWER,
     CORE_INDEX_PAST_PRODUCT,
     check_cables,
 )
 from fransys_model.checks.connectivity import FUNCTION_HALF_CONNECTED, check_connectivity
 from fransys_model.checks.earth import PE_PORT_OFF_PE, check_earth
 from fransys_model.derive.core_pairs import open_core_is_spare
+from fransys_model.elecdef import PinRole
 from fransys_model.kernel import Id, Severity, make_id
 from fransys_model.vocab.core import Item, Port
-from fransys_model.vocab.enums import FunctionKind, PartCategory, PortRole
+from fransys_model.vocab.enums import FunctionKind, PartCategory, PortBoundary
 from fransys_model.vocab.facets.cable import (
     CableFacet,
     CableProductFacet,
@@ -42,11 +43,7 @@ def _plant(pairs: tuple[CorePair, ...] = ()) -> tuple[Plant, Id[Port]]:
         )
     )
     cable = plant.item("w1", designation="W1", part=part)
-    plant.add(
-        CableFacet(
-            id=make_id(CableFacet, ("w1", "c")), key=("w1", "c"), subject=cable, length_mm=None
-        )
-    )
+    plant.add(CableFacet(id=make_id(CableFacet, ("w1", "c")), key=("w1", "c"), subject=cable, length_mm=None))
     core = plant.core(make_pin(plant, "a", "A"), make_pin(plant, "b", "B"), key="c1", carrier=cable)
     plant.add(CoreFacet(id=make_id(CoreFacet, ("c1", "f")), key=("c1", "f"), subject=core, index=1))
     return plant, make_pin(plant, "park", "P")
@@ -55,16 +52,14 @@ def _plant(pairs: tuple[CorePair, ...] = ()) -> tuple[Plant, Id[Port]]:
 def _open(plant: Plant, index: int, at: Id[Port] | None) -> None:
     cable = make_id(Item, ("w1",))
     key = ("w1", "open", str(index))
-    plant.add(
-        OpenCoreFacet(id=make_id(OpenCoreFacet, key), key=key, subject=cable, index=index, at=at)
-    )
+    plant.add(OpenCoreFacet(id=make_id(OpenCoreFacet, key), key=key, subject=cable, index=index, at=at))
 
 
 def test_two_unwired_cores_warn_with_the_remedy() -> None:
     # MUTATION: the count ignores `OpenCoreFacet`
     plant, _ = _plant()
     (finding,) = check_cables(plant.model())
-    assert finding.code == CABLE_CORE_COUNT
+    assert finding.code == CABLE_CORES_FEWER
     assert "wire it, or mark it with W1.spare(...)" in finding.message
 
 
@@ -131,7 +126,8 @@ def _pe_port_plant(*, wired: bool) -> tuple[Plant, Id[Port]]:
         function=function,
         template=None,
         name="PE",
-        role=PortRole.PE,
+        boundary=PortBoundary.GENERIC,
+        pin_role=PinRole.PE,
     )
     plant.add(port)
     port = port.id

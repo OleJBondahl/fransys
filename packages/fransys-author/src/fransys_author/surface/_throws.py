@@ -1,17 +1,16 @@
 """Changeover throws in a series (SERIES-GAPS S7, S8): `k1.co_1.no` and `k1.co_1.nc`.
 
-The throws come from the part's roles and links (`derive.link_throw`), never from a pin name.
+The throws come from the part's roles and links (`derive.template_throws`), never from a pin name.
 """
 
 from copy import copy
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from fransys_author.errors import AuthorAttributeError, AuthorError
 from fransys_author.surface._fixed import fixed_count
-from fransys_author.surface._pairing import End, Ends
-from fransys_model.derive import contact_kind_of, throws_of
-from fransys_model.vocab import THROWS as VOCAB_THROWS
-from fransys_model.vocab import PoleSide, PortRole
+from fransys_author.surface._pairing import End, Ends, SeriesElement
+from fransys_model.derive import THROW_WORDS, contact_kind_of, template_throws
+from fransys_model.elecdef import PinRole, Side
 lazy from fransys_author.handles import Fn as EngineFn
 
 if TYPE_CHECKING:
@@ -19,7 +18,7 @@ if TYPE_CHECKING:
     from fransys_author.surface._pairing import PartFacts
     from fransys_author.surface.design import Design
 
-THROWS = {row.word: role for role, row in VOCAB_THROWS.items() if row.word}
+THROWS = {word: role for role, word in THROW_WORDS.items() if role is not PinRole.COMMON}
 
 
 def whole_changeover(label: str, fn: EngineFn) -> AuthorError:
@@ -35,25 +34,25 @@ def not_a_changeover(label: str, fn: EngineFn, name: str) -> AuthorAttributeErro
     return AuthorAttributeError(msg)
 
 
-def _poles(facts: PartFacts, fn: EngineFn, role: PortRole) -> list[tuple[Port, Port]]:
+def _poles(facts: PartFacts, fn: EngineFn, role: PinRole) -> list[tuple[Port, Port]]:
     """Each common of `fn` with its throw of `role`, as (common, throw), in common order."""
     by_template = {facts.port_template(port).id: port for port in fn.ports}
-    found = throws_of(facts.links(fn), facts.templates)
-    return [(by_template[t.common], by_template[t.throw]) for t in found if t.role is role]
+    found = template_throws(facts.templates, facts.links(fn))
+    return [(by_template[common], by_template[throw]) for common, throw, closed in found if closed is (role is PinRole.BREAK)]
 
 
 def _is_selector(facts: PartFacts, poles: list[tuple[Port, Port]]) -> bool:
     """A changeover whose throws state the line side and commons the load side (S8)."""
-    sides = [(facts.port_template(t).pole_side, facts.port_template(c).pole_side) for c, t in poles]
-    return bool(sides) and all(side == (PoleSide.LINE, PoleSide.LOAD) for side in sides)
+    sides = [(facts.port_template(t).side, facts.port_template(c).side) for c, t in poles]
+    return bool(sides) and all(side == (Side.A, Side.B) for side in sides)
 
 
 def states_selector(facts: PartFacts, fn: EngineFn) -> bool:
     """Whether the part of the changeover `fn` states S8's sides: a selector by its part."""
-    return _is_selector(facts, _poles(facts, fn, PortRole.MAKE))
+    return _is_selector(facts, _poles(facts, fn, PinRole.MAKE))
 
 
-class Throw:
+class Throw(SeriesElement):
     """One throw of changeovers in a series: line at the common, load at the throw.
 
     A selector (its throws on the line side, or a `d.poles` group with `selector=True`) is
@@ -66,12 +65,14 @@ class Throw:
         """The throw `name` (`no` or `nc`) of the changeovers `fns`."""
         self._fns, self._role, self._selector = fns, THROWS[name], selector
         self._turned = False  # entered at the throw, left at the common (`turn_throws`)
-        self._commons = tuple(p for fn in fns for p in fn.ports if p.role is PortRole.COMMON)
+        self._commons = tuple(p for fn in fns for p in fn.ports if p.pin_role is PinRole.COMMON)
 
+    @override
     def _series_width(self) -> int:
         return len(self._commons)
 
-    def _series_ends(self, design: Design, width: int | None) -> Ends:  # noqa: ARG002 -- the SeriesElement protocol
+    @override
+    def _series_ends(self, design: Design, width: int | None) -> Ends:
         facts = design._pairing_facts
         poles = [pole for fn in self._fns for pole in _poles(facts, fn, self._role)]
         commons = tuple(End(common, facts.mark(common)) for common, _ in poles)
@@ -99,8 +100,9 @@ def turn_throws(elements: tuple[object, ...]) -> tuple[object, ...]:
     """
     turned = []
     for i, element in enumerate(elements):
+        out = element
         if isinstance(element, Throw) and _fixed_at(elements, i - 1) and _fixed_at(elements, i + 1):
-            element = copy(element)  # noqa: PLW2901 -- the caller's handle is not changed
-            element._turned = True
-        turned.append(element)
+            out = copy(element)
+            out._turned = True
+        turned.append(out)
     return tuple(turned)

@@ -2,24 +2,16 @@
 
 The demo part `DEMO-IO-2X` has two connector functions `x1` and `x2`, marked `X1` and `X2`. The
 item `A1` at `+B` is wired from two plugs `P1` and `P2` at `+A` by one cable `-W1`, core 1 to
-`A1`'s `X1` pin 1 and core 2 to its `X2` pin 1. Before the rule both pins printed `-A1:1`, the two
-off stubs on the `+A` side read one text for two different far ends, and the layout raised
-`LayoutError`. Every test reads the text the pipeline prints (connector list, drawn pin tags, stub
-texts), never a private name.
-
-Can-fail: with `connector_segment` (`fransys_model.derive.designation`) returning `""`, the
-build carries an ERROR finding and draws nothing, and every test here fails (checked by hand on
-a scratch copy): a test id, not a collection error.
 """
 
 import functools
 from typing import Any
 
 import fransys as fr
-import fransys_author
 import fransys_parts
-from _drawn_pages import drawn_pages
-from _model_build_cover import layout_trigger_document
+from _drawn_pages import drawn_pages, markers_in, ref_texts
+from _model_build_cover import cabinet_document, layout_trigger_document
+from fransys_author.design import Design
 from fransys_reports import connectors_csv
 
 from fransys_model.derive import item_designation
@@ -41,7 +33,7 @@ _ARROW = "\N{RIGHTWARDS ARROW}"
 def _build():
     """The build result; cached so the four tests share one build, called inside each test."""
     parts = fransys_parts.load("demo_parts")
-    d = fransys_author.Design(parts)
+    d = Design(parts)
     d.project(**_PROJECT)
     d.revision(1, date="2026-09-25", text="First issue", created="XX")
     cabinet, field = d.location("A", "Cabinet"), d.location("B", "Field")
@@ -52,7 +44,7 @@ def _build():
     cable = d.cable("DEMO-CBL-4G1.5", tag="W1")
     cable.core(1, p1["1"], a1.fn("x1")["1"])
     cable.core(2, p2["1"], a1.fn("x2")["1"])
-    return fr.build(parts, d.draft(), layout_trigger_document())
+    return fr.build(parts, d.draft(), layout_trigger_document(), cabinet_document(cabinet), cabinet_document(field))
 
 
 def _a1(model):
@@ -61,11 +53,11 @@ def _a1(model):
 
 def _markers(model):
     """Every drawn marker of every page, in drawn order."""
-    return [m for drawing in drawn_pages(model).values() for m in drawing.markers]
+    return [m for drawing in drawn_pages(model).values() for m in markers_in(drawing)]
 
 
 def _marker_texts(model) -> list[str]:
-    return sorted(value for m in _markers(model) for _, value in m.texts)
+    return sorted(value for m in _markers(model) for value in ref_texts(m))
 
 
 def test_the_build_completes_and_carries_no_error_finding() -> None:

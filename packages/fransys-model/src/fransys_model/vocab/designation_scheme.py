@@ -52,9 +52,7 @@ class DesignationScheme:
 
 DESIGNATION_SCHEME = DesignationScheme(
     # unit_nodes.py:26 SIGNS (function, location); author surface/_tags.py:6 _PREFIX (product)
-    signs=frozendict(
-        complete({Aspect.FUNCTION: "=", Aspect.PRODUCT: "-", Aspect.LOCATION: "+"}, Aspect)
-    ),
+    signs=frozendict(complete({Aspect.FUNCTION: "=", Aspect.PRODUCT: "-", Aspect.LOCATION: "+"}, Aspect)),
     reference_aspects=(Aspect.FUNCTION, Aspect.LOCATION),
     # parts/lint.py:36 _CLASS_CODE; author surface/_unit_tags.py:9 (same set of strings)
     class_code=r"[A-Z]{1,3}",

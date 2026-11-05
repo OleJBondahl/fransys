@@ -37,9 +37,7 @@ def _unit_subjects(model: Model, unit: Id[Unit] | None) -> Subjects:
     for record in units(model).values():
         if record.parent != unit:
             continue
-        instance = min(
-            unit_designation(model, unit, root) for root in unit_own_roots(model, record.id)
-        )
+        instance = min(unit_designation(model, unit, root) for root in unit_own_roots(model, record.id))
         found.setdefault(("units", f"{unit_release(model, record.id).name} {instance}"), record.id)
     return found
 

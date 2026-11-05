@@ -44,6 +44,8 @@ _RESERVED_TABLES = ("limits", "exempt")
 
 #: The inline comment printed after a `[limits]` key; a limit with no entry prints bare.
 LIMIT_NOTES: dict[str, str] = {
+    "code_lines": "code-only ceiling (decision 0408)",
+    "code_lines_enforce": "1 once the release flips it; until then it only reports (KI-050)",
     "docstring_lines": "summary, blank, two why lines, closing quotes (LC3)",
 }
 
@@ -117,16 +119,12 @@ def render_ceilings(file: CeilingsFile) -> str:
     sorted). Skip a table header entirely when its dict is empty (except `[limits]`, always
     emitted). One blank line between tables. Trailing newline.
     """
-    tables = ["\n".join(_limit_line(key, file.limits[key]) for key in sorted(file.limits))]
+    tables: list[str] = ["\n".join(_limit_line(key, file.limits[key]) for key in sorted(file.limits))]
     tables[0] = "[limits]\n" + tables[0] if file.limits else "[limits]"
 
     ordered_known = [name for name in SECTION_ORDER if file.sections.get(name)]
-    ordered_extra = sorted(
-        name for name in file.sections if name not in SECTION_ORDER and file.sections[name]
-    )
-    tables.extend(
-        _render_int_table(name, file.sections[name]) for name in [*ordered_known, *ordered_extra]
-    )
+    ordered_extra = sorted(name for name in file.sections if name not in SECTION_ORDER and file.sections[name])
+    tables.extend(_render_int_table(name, file.sections[name]) for name in [*ordered_known, *ordered_extra])
 
     if file.exempt:
         lines = ["[exempt]"]
@@ -156,13 +154,9 @@ def check(
         if site in exempt:
             continue
         if site not in ceilings:
-            violations.append(
-                Violation(site=site, measured=measured[site], limit=limit, listed=False)
-            )
+            violations.append(Violation(site=site, measured=measured[site], limit=limit, listed=False))
         elif measured[site] > ceilings[site]:
-            violations.append(
-                Violation(site=site, measured=measured[site], limit=ceilings[site], listed=True)
-            )
+            violations.append(Violation(site=site, measured=measured[site], limit=ceilings[site], listed=True))
     return tuple(sorted(violations, key=lambda violation: violation.site))
 
 
@@ -190,9 +184,7 @@ def lower(
     return result
 
 
-def first_run(
-    measured: Mapping[str, int], exempt: Mapping[str, str] = types.MappingProxyType({})
-) -> dict[str, int]:
+def first_run(measured: Mapping[str, int], exempt: Mapping[str, str] = types.MappingProxyType({})) -> dict[str, int]:
     """Write a ceilings baseline entry for every measured site.
 
     LC6 step 3's baseline-writer mode, never called by the lowering run (the caller, not

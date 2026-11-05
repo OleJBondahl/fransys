@@ -9,15 +9,16 @@ import pytest
 
 from fransys_layout.core import build_flow
 from fransys_layout.core.topology_split import BundleError
-from fransys_layout.core.values import BoxSpec, Bundle
+from fransys_layout.core.values import BoxSpec, Bundle, PinRef
 
 from .flow_builders import OPTIONS, elem, free, net, poles, problem
 
 if TYPE_CHECKING:
     from collections.abc import Callable
 
+    from fransys_layout.core.flow_values import FlowGraph
     from fransys_layout.core.sym_values import Sym
-    from fransys_layout.core.values import FlowGraph, Net
+    from fransys_layout.core.values import Net
 
 POLES = 3
 ON = replace(OPTIONS, bundle_direction=True)
@@ -25,7 +26,10 @@ Shape = "tuple[list[Sym], list[Net], str]"
 
 
 def _box(sym: Sym, order: tuple[str, ...]) -> Sym:
-    return replace(sym, box=BoxSpec(order, "S", 16, 16))
+    return replace(sym, box=BoxSpec(order, 16))
+
+
+_OVERLOAD = tuple((PinRef("B", f"n{k}"), PinRef("B", f"s{k}")) for k in range(POLES))  # the overload's poles are link-joined
 
 
 def _mounted_overload() -> tuple[list[Sym], list[Net], str]:
@@ -54,22 +58,15 @@ def _contactor() -> tuple[list[Sym], list[Net], str]:
 
 def _two_pin_box() -> tuple[list[Sym], list[Net], str]:
     """Two lanes to a 2-pin box: pin 1 on its N side, pin 2 on its S side (a loom end)."""
-    pins = tuple(
-        replace(p, id=i, side=s)
-        for p, i, s in zip(elem("X").pins, ("1", "2"), ("N", "S"), strict=True)
-    )
+    pins = tuple(replace(p, id=i, side=s) for p, i, s in zip(elem("X").pins, ("1", "2"), ("N", "S"), strict=True))
     x = replace(_box(elem("X"), ("1", "2")), pins=pins, nodes=(("1",), ("2",)))
     syms = [poles("J", 2), poles("K", 2), x]
-    nets = [
-        net(f"w{k}", f"J.s{k}", f"K.n{k}", f"X.{k + 1}", bundle=Bundle("w", k)) for k in range(2)
-    ]
+    nets = [net(f"w{k}", f"J.s{k}", f"K.n{k}", f"X.{k + 1}", bundle=Bundle("w", k)) for k in range(2)]
     return syms, nets, "J"
 
 
 def _orients(flow: FlowGraph, sym: str) -> set[str]:
-    return {
-        c.orient for col in flow.columns for lane in col.lanes for c in lane.cells if c.sym == sym
-    }
+    return {c.orient for col in flow.columns for lane in col.lanes for c in lane.cells if c.sym == sym}
 
 
 @pytest.mark.rule("BUNDLE")
@@ -78,7 +75,7 @@ def test_every_pole_of_a_device_takes_the_bundles_direction(
     shape: Callable[[], tuple[list[Sym], list[Net], str]],
 ) -> None:
     syms, nets, device = shape()
-    flow = build_flow(problem(syms, nets), ON)
+    flow = build_flow(problem(syms, nets, joined=_OVERLOAD), ON)
     assert flow.fans
     assert len(_orients(flow, device)) == 1
     for fan in flow.fans:

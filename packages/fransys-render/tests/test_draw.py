@@ -1,6 +1,5 @@
 """`svg`: a hand-built Drawing drawn against symdef called in the plain way (the oracle)."""
 
-import dataclasses
 import re
 from decimal import Decimal
 from typing import Any
@@ -15,7 +14,6 @@ from electrical_symbols import LIBRARY, drawn_slots, drawn_symbol
 from fransys_layout.core.values import Box, Size
 from fransys_layout.drawing import (
     Drawing,
-    DrawnMarker,
     DrawnOutline,
     DrawnSymbol,
     DrawnText,
@@ -29,15 +27,12 @@ M = Decimal(str(STYLE.module_mm))
 
 
 def drawing(symbols=(), wires=(), **fields: Any) -> Drawing:
-    base = {"markers": (), "texts": (), "outlines": ()}
-    return Drawing(
-        Size(800, 400), tuple(symbols), tuple(wires), library_version="v", **base | fields
-    )
+    base = {"texts": (), "outlines": ()}
+    return Drawing(Size(800, 400), tuple(symbols), tuple(wires), library_version="v", **base | fields)
 
 
 def oracle(symbol, **kwargs):
     font = LIBRARY.font
-    assert font is not None
     ratio = Decimal(font.cap_height) / Decimal(font.units_per_em)
     dash, gap = dict(STYLE.dashes)["symbol"]
     label = dict(STYLE.texts)["label"]
@@ -68,7 +63,7 @@ def test_symbol_with_slots_matches_the_plain_symdef_call():
     expected = (
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}mm" height="{height}mm"'
         f' viewBox="0 0 {width} {height}">'
-        f'<g transform="translate({format_g(80)},{format_g(16)})">{body}</g></svg>'
+        f'<g transform="translate({format_g(80)} {format_g(16)})">{body}</g></svg>'
     )
     assert svg(drawing([drawn]), LIBRARY, STYLE) == expected
 
@@ -80,7 +75,7 @@ def test_deterministic():
 
 def test_translate_coordinates_are_g_to_mm_without_trailing_zeros():
     text = svg(drawing([sym(x=8, y=0)]), LIBRARY, STYLE)
-    assert f"translate({format_g(8)},0)" in text
+    assert f"translate({format_g(8)} 0)" in text
 
 
 def format_g(g):
@@ -120,9 +115,7 @@ def test_listed_leads_keep_only_their_bound_leads():
 def test_offsets_place_the_ports_along_the_stretch_axis():
     base = symdef.stretch(LIBRARY.get("card"), "x", 40.0, offsets={"c1": 6.0, "c2": 14.0})
     base = symdef.leads(base, ("c1", "c2"))
-    drawn = sym(
-        key="card", stretch=(("x", 320),), offsets=(("c1", 48), ("c2", 112)), leads=("c1", "c2")
-    )
+    drawn = sym(key="card", stretch=(("x", 320),), offsets=(("c1", 48), ("c2", 112)), leads=("c1", "c2"))
     assert oracle(base) in svg(drawing([drawn]), LIBRARY, STYLE)
 
 
@@ -156,16 +149,14 @@ def test_two_drawings_differing_in_one_point_differ():
 
 def test_a_bundle_draws_one_line_per_lane_at_the_library_pitch():
     one = svg(drawing(wires=[DrawnWire("w7", ((0, 0), (80, 0)), "trunk")]), LIBRARY, STYLE)
-    three = svg(
-        drawing(wires=[DrawnWire("w7", ((0, 0), (80, 0)), "trunk", lanes=3)]), LIBRARY, STYLE
-    )
+    three = svg(drawing(wires=[DrawnWire("w7", ((0, 0), (80, 0)), "trunk", lanes=3)]), LIBRARY, STYLE)
     assert one.count("<polyline") == 1
     assert three.count("<polyline") == 3
     assert 'points="0,2.5 25,2.5"' in three
     assert 'points="0,5 25,5"' in three
 
 
-def _polylines(text: str) -> list[str]:
+def _polylines(text: str) -> list[Any]:
     return re.findall(r"<polyline[^>]*>", text)
 
 
@@ -187,9 +178,7 @@ def test_a_lane_line_off_the_pitch_draws_elsewhere():
     ys = (0, pitch, 2 * pitch + 1)
     lines = [DrawnWire(f"w{k}", ((0, y), (80, y)), "trunk") for k, y in enumerate(ys)]
     old = DrawnWire("w", ((0, 0), (80, 0)), "trunk", lanes=3)
-    assert _polylines(svg(drawing(wires=lines), LIBRARY, STYLE)) != _polylines(
-        svg(drawing(wires=[old]), LIBRARY, STYLE)
-    )
+    assert _polylines(svg(drawing(wires=lines), LIBRARY, STYLE)) != _polylines(svg(drawing(wires=[old]), LIBRARY, STYLE))
 
 
 def test_a_slanted_bundle_is_refused_naming_the_wire():
@@ -211,13 +200,10 @@ def test_a_text_is_symdef_s_corner_text_and_text_tag():
     out = svg(drawing(texts=(DrawnText("-A1", Box(16, 16, 40, 8), "TAG", "SE"),)), LIBRARY, STYLE)
     label = dict(STYLE.texts)["label"]
     font = LIBRARY.font
-    assert font is not None
     ratio = font.cap_height / font.units_per_em
     size = round(label.height_mm / ratio, 4)
     m, g = STYLE.module_mm, STYLE.g_per_module
-    placed = symdef.corner_text(
-        symdef.Box(symdef.Point(16 / g, 16 / g), symdef.Point(56 / g, 24 / g)), "SE", size / m, font
-    )
+    placed = symdef.corner_text(symdef.Box(symdef.Point(16 / g, 16 / g), symdef.Point(56 / g, 24 / g)), "SE", size / m, font)
     tag = symdef.text_tag(
         "-A1",
         symdef.Point(placed.point.x * m, placed.point.y * m),
@@ -230,13 +216,6 @@ def test_a_text_is_symdef_s_corner_text_and_text_tag():
     assert 'text-anchor="end"' in tag
 
 
-def test_a_wire_label_is_drawn_after_its_wire():
-    label = DrawnText("N1", Box(0, 0, 8, 8), "WIRE", "NW")
-    wire = dataclasses.replace(DrawnWire("w8", ((0, 0), (8, 0)), "wire"), label=label)
-    out = svg(drawing(wires=[wire]), LIBRARY, STYLE)
-    assert _count_texts(out) == 1
-
-
 def test_an_unknown_corner_is_symdef_s_error_and_not_a_guess():
     anchor: Any = "XX"
     text = DrawnText("-A1", Box(16, 16, 40, 8), "TAG", anchor)
@@ -246,7 +225,7 @@ def test_an_unknown_corner_is_symdef_s_error_and_not_a_guess():
 
 def _placed(body, x_g, y_g):
     x, y = Decimal(x_g) * M / STYLE.g_per_module, Decimal(y_g) * M / STYLE.g_per_module
-    return f'<g transform="translate({format_decimal(x)},{format_decimal(y)})">{body}</g>'
+    return f'<g transform="translate({format_decimal(x)} {format_decimal(y)})">{body}</g>'
 
 
 def test_an_outline_is_its_frame_stretched_to_its_points():
@@ -262,33 +241,18 @@ def test_an_outline_label_is_drawn_after_the_frame():
     label = DrawnText("-A1", Box(16, 16, 40, 8), "TAG", "NW")
     points = ((16, 24), (96, 72))
     plain = svg(drawing(outlines=(DrawnOutline("o", "group-frame", points, None),)), LIBRARY, STYLE)
-    labelled = svg(
-        drawing(outlines=(DrawnOutline("o", "group-frame", points, label),)), LIBRARY, STYLE
-    )
+    labelled = svg(drawing(outlines=(DrawnOutline("o", "group-frame", points, label),)), LIBRARY, STYLE)
     assert _count_texts(labelled) == _count_texts(plain) + 1
-
-
-def test_a_marker_is_its_symbol_turned_to_its_side_with_its_slots():
-    marker = DrawnMarker("m", "reference-marker", 40, 8, "S", (("ref", "7/2"),), "#ff0000")
-    turned = symdef.orient(LIBRARY.get("reference-marker"), symdef.Orientation.R90)
-    text = svg(drawing(markers=(marker,)), LIBRARY, STYLE)
-    assert _placed(oracle(turned, tint="#ff0000", texts={"ref": "7/2"}), 40, 8) in text
 
 
 @pytest.mark.parametrize(
     ("field", "value", "message"),
     [
-        ("markers", DrawnMarker("m", "nope", 0, 0, "N", (), None), r"marker 'm'.*nope"),
         ("outlines", DrawnOutline("o", "nope", ((0, 0), (8, 8)), None), r"outline 'o'.*nope"),
         (
             "outlines",
             DrawnOutline("o", "unit-outline", ((0, 0), (8, 0), (8, 8)), None),
             r"outline 'o'.*rectangle",
-        ),
-        (
-            "markers",
-            DrawnMarker("m", "reference-marker", 0, 0, "Q", (), None),  # ty: ignore[invalid-argument-type] -- a bad side
-            r"marker 'm'.*'Q'",
         ),
     ],
 )
@@ -321,7 +285,7 @@ _POLE_LEADS = ("1.in", "1.out", "2.in", "2.out", "3.in", "3.out")
 
 def test_poles_repeat_the_symbol_before_its_leads():
     drawn = sym(key="make-contact", poles=3, leads=_POLE_LEADS)
-    base = symdef.leads(symdef.repeat(LIBRARY.get("make-contact"), 3), _POLE_LEADS)
+    base = symdef.leads(symdef.repeat(LIBRARY.get("make-contact"), 3, port_format=LIBRARY.port_format), _POLE_LEADS)
     assert oracle(base) in svg(drawing([drawn]), LIBRARY, STYLE)
 
 

@@ -5,16 +5,15 @@ unwired with the same requests, for the pass to bind. Both use `plc_channel_tie`
 """
 
 import pytest
+from author_catalogue import _ORIGIN
 from fransys_author.surface import AI, DI, DO, design
+from series_parts import series_library
+from test_series_channels import WIRE, _module
 
 from fransys_model.derive.passes.plc_allocation import allocate_plc
 from fransys_model.kernel import freeze, make_id, merge
 from fransys_model.vocab import PlcBindingFacet
 from fransys_model.vocab.tables import facets_of
-
-from .conftest import _ORIGIN
-from .equivalence.series_parts import series_library
-from .surface.test_series_channels import WIRE, _module
 
 IO, MIX = "TEST-PLC-IO", "TEST-PLC-MIX"
 

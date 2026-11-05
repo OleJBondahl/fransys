@@ -2,7 +2,6 @@
 
 One digest over the cabinet model: each port's potential rank and current, power kind, power
 text, rail-terminal flag, the stands, each net's power kind and text, and the baseline listing.
-`stands.py` has no net_class or potential read; it is covered through `stands`.
 """
 
 from hashlib import sha256
@@ -24,7 +23,7 @@ from fransys_model.derive.stands import stands
 from fransys_model.kernel import freeze
 from fransys_model.vocab.tables import items, nets, ports
 
-_DIGEST = "31543ecbb30d1ef8caa898e6c04486a9bbed2126b27035b68a1a0af82267378a"
+_DIGEST = "1e7af1d76049f5140b7ac505780db25b23d01a1398514a55e4f757e51eb55564"
 
 
 def observed() -> str:
@@ -45,10 +44,10 @@ def observed() -> str:
     lines += [repr((n, power_kind(model, n), power_text(model, n))) for n in sorted(nets(model))]
     lines += [repr((i, is_rail_terminal(model, i))) for i in sorted(items(model))]
     lines.append(repr(sorted(stands(model).items())))
-    lines.append(repr(_net_rows(model, None, ListingRules(item_keys=False))))
+    lines.append(repr(_net_rows(model, None, ListingRules())))
     return "\n".join(lines)
 
 
 def test_the_sites_print_what_they_printed_before_the_switch() -> None:
-    """The digest was taken before any site read a net fact (re-taken for the key fields, 0300)."""
+    """The digest was taken before any site read a net fact (re-taken: R1289 and earlier)."""
     assert sha256(observed().encode()).hexdigest() == _DIGEST

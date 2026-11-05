@@ -12,6 +12,7 @@ from fransys_model.derive import sheet_key_text
 from ._labels import LAST_PAGE
 from ._sizes import font_mm, sizes_of
 from ._typst import literal
+from .errors import PdfError
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -35,10 +36,7 @@ _Box = tuple[float, float, float, float]
 
 def _place(box: _Box, content: str) -> str:
     x, y, width, height = box
-    return (
-        f"#place(top+left, dx: {x:g}mm, dy: {y:g}mm, "
-        f"box(width: {width:g}mm, height: {height:g}mm, align(center+horizon, {content})))"
-    )
+    return f"#place(top+left, dx: {x:g}mm, dy: {y:g}mm, box(width: {width:g}mm, height: {height:g}mm, align(center+horizon, {content})))"
 
 
 def sheet_of(sheets: Mapping[SheetKey, SheetBackground], key: SheetKey) -> SheetBackground:
@@ -48,24 +46,19 @@ def sheet_of(sheets: Mapping[SheetKey, SheetBackground], key: SheetKey) -> Sheet
             f"no sheet background for {sheet_key_text(key)!r}: pass `fransys_render.sheets` of "
             "the same model's `derive.document_sheets_of` to `fransys_pdf.source`"
         )
-        raise KeyError(msg)
+        raise PdfError(msg)
     return sheets[key]
 
 
-def page_background(
-    model: Model, record: DocumentRow, sheets: Mapping[SheetKey, SheetBackground], key: SheetKey
-) -> str:
+def page_background(model: Model, record: DocumentRow, sheets: Mapping[SheetKey, SheetBackground], key: SheetKey) -> str:
     """The `#page` background of page `key`: the sheet SVG, the page counter and the logo."""
     sheet = sheet_of(sheets, key)
     parts = [f'#place(top+left, image(bytes({literal(sheet.svg)}), format: "svg"))']
     if sheet.counter_box is not None:
-        size = font_mm(sizes_of(model, record.id).body)
+        size = font_mm(sizes_of(model).body)
         value = f"text(size: {size}, {_PAGE_COUNTER})"
         parts.append(_place(sheet.counter_box, f"[#{value}<{PAGE_COUNTER_LABEL}>]"))
     if sheet.logo_box is not None and record.logo is not None:
-        image = (
-            f'image(bytes({literal(record.logo)}), format: "svg", '
-            'width: 100%, height: 100%, fit: "contain")'
-        )
+        image = f'image(bytes({literal(record.logo)}), format: "svg", width: 100%, height: 100%, fit: "contain")'
         parts.append(_place(sheet.logo_box, image))
     return "[" + "\n".join(parts) + "]"

@@ -1,22 +1,14 @@
 """Hand-built Sym, Column, Block and PlacedColumn values for the packing tests."""
 
+from dataclasses import replace
+
 from turn_fixtures import views_of
 
+from fransys_layout.core.flow_values import Block, Cell, Column, End, Lane
 from fransys_layout.core.pack import PlacedColumn
+from fransys_layout.core.pack_row import RowSpec, pin_pitches
 from fransys_layout.core.sym_values import Sym
-from fransys_layout.core.values import (
-    Block,
-    Box,
-    BoxSpec,
-    Cell,
-    Column,
-    End,
-    Lane,
-    Pin,
-    PinRef,
-    RowPlan,
-    Size,
-)
+from fransys_layout.core.values import Box, BoxSpec, Pin, PinRef, RowPlan, Size
 
 
 def elem(
@@ -45,13 +37,8 @@ def elem(
 def card(sym_id: str, pin_count: int, pitch: int = 16, north: int = 0) -> Sym:
     """A box symbol whose pins p1.. face south in marking order; the first `north` face north."""
     body = Box(0, 0, pitch * (pin_count + 1), 32)
-    pins = tuple(
-        Pin(f"p{i}", "N", pitch * i, 0, i - 1)
-        if i <= north
-        else Pin(f"p{i}", "S", pitch * i, 32, i - 1)
-        for i in range(1, pin_count + 1)
-    )
-    spec = BoxSpec(tuple(p.id for p in pins), "S", pitch, pitch)
+    pins = tuple(Pin(f"p{i}", "N", pitch * i, 0, i - 1) if i <= north else Pin(f"p{i}", "S", pitch * i, 32, i - 1) for i in range(1, pin_count + 1))
+    spec = BoxSpec(tuple(p.id for p in pins), pitch)
     return Sym(
         sym_id,
         None,
@@ -69,19 +56,18 @@ def lane(*syms: str, offset: int = 0) -> Lane:
     return Lane(tuple(Cell(s, "R0", "n", "s") for s in syms), offset)
 
 
-def column(col_id: str, *lanes: Lane, head: End | None = None) -> Column:
-    """A column of the given lanes; head is the end of lane 0 (open otherwise)."""
+def column(col_id: str, *lanes: Lane, head: End | None = None, foot: End | None = None) -> Column:
+    """A column of the given lanes; head and foot are the ends of lane 0 (open otherwise)."""
     heads = tuple(head if (i == 0 and head) else End("open") for i in range(len(lanes)))
-    return Column(col_id, lanes, heads, tuple(End("open") for _ in lanes), 0, 0)
+    feet = tuple(foot if (i == 0 and foot) else End("open") for i in range(len(lanes)))
+    return Column(col_id, lanes, heads, feet, 0, 0)
 
 
 def boxpin_end(box: str, pin: str) -> End:
     return End("boxpin", pin=PinRef(box, pin))
 
 
-def card_block(
-    box: str, columns: tuple[str, ...], edges: tuple[tuple[str, str], ...], block_id: str = ""
-) -> Block:
+def card_block(box: str, columns: tuple[str, ...], edges: tuple[tuple[str, str], ...], block_id: str = "") -> Block:
     return Block(
         block_id or f"b:{box}",
         "card",
@@ -126,3 +112,8 @@ def placed(col_id: str, *syms: str, offset: int = 0, row: int = 0) -> PlacedColu
     """A one-lane placed column of the given symbols."""
     ln = lane(*syms, offset=offset)
     return PlacedColumn(col_id, (ln.cells,), (offset,), row, flipped=False)
+
+
+def with_pitches(spec: RowSpec) -> RowSpec:
+    """`spec` with pin_pitch from `pin_pitches`, as `one_row` reads it (one window over every column); a hand-built RowSpec passes {}."""
+    return replace(spec, pin_pitch=pin_pitches(spec))

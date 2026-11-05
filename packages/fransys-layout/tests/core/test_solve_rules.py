@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING
 import pytest
 from options_fixtures import core_options
 
+from fransys_layout.core import PinRef
 from fransys_layout.core.solve import solve
 from fransys_layout.core.values import Finding
 
@@ -37,12 +38,6 @@ if TYPE_CHECKING:
 
 OPTIONS = core_options(
     marker=MARKER,
-    flip_turn="R180",
-    tag_stagger=True,
-    label_gap=8,
-    parallel_pitch=48,
-    driver_first=True,
-    arrow_sides=("E", "W"),
 )
 ALL = {**PLANTS, "two_unit_crossing_nets": two_unit_crossing_nets}
 
@@ -67,7 +62,7 @@ def test_is2_placed_once(planted: PlacementProblem) -> None:
 
 
 def test_is3_every_net(planted: PlacementProblem) -> None:
-    assert check_every_net(solved_of(planted, OPTIONS), planted) == []
+    assert check_every_net(solved_of(planted, OPTIONS), planted, OPTIONS) == []
 
 
 def test_is4_no_overlap(planted: PlacementProblem) -> None:
@@ -87,41 +82,38 @@ def test_is7_kind_blind(planted: PlacementProblem, form: str) -> None:
     assert check_kind_blind(planted, OPTIONS, form) == []
 
 
-def test_is3_names_a_refused_link_open_with_no_tag_to_hide_it(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """The refused n3 is open on its page and gets no tag pair: IS.3 sees it (R424)."""
-    from .test_fallbacks import ENDS
-
-    _refusing(monkeypatch, ENDS)
+def test_a_refused_link_is_drawn_as_its_tag_pair_with_room_so_no_net_is_open(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The refused n3 is handed to the cut, which plans its tag pair and reserves its room (layout-0508): IS.3 and IS.6 see nothing."""
+    _refusing(monkeypatch, (PinRef("b", "s"), PinRef("s", "s"), PinRef("c", "n")))
     prob = ring_beside_a_tall_chain()
     layout = solved_of(prob, OPTIONS)
-    assert [r.kind.value for r in layout.references if r.net == "n3"] == []
-    assert check_every_net(layout, prob) == []
+    assert [r.kind.value for r in layout.references if r.net == "n3"] == ["tag"]
+    assert check_every_net(layout, prob, OPTIONS) == []
     assert check_plan_drawn(layout) == []
 
 
 # ---- each checker can fail -----------------------------------------------------------------------
 
 
-def test_is1_names_a_solve_that_depends_on_the_input_order(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_is1_names_a_solve_that_gives_two_layouts(monkeypatch: pytest.MonkeyPatch) -> None:
     real = solve
+    calls: list[int] = []
 
-    def by_order(prob: PlacementProblem, options: Options) -> CoreLayout:
+    def by_call(prob: PlacementProblem, options: Options) -> CoreLayout:
         found = real(prob, options)
-        extra = Finding("TEXT_OVERLAP", "order", 1, prob.symbols[0].id)
+        calls.append(1)
+        extra = Finding("ANNEX_UNPLACED", "call", len(calls), prob.symbols[0].id)
         return replace(found, findings=(*found.findings, extra))
 
-    monkeypatch.setattr(solve_checks, "solve", by_order)
+    monkeypatch.setattr(solve_checks, "solve", by_call)
     msgs = check_pure(ring_beside_a_tall_chain(), OPTIONS)
-    assert any("reversing" in m for m in msgs)
+    assert any("twice" in m for m in msgs)
 
 
 def test_is2_names_a_missing_and_a_stray_placed(ring) -> None:
     prob, layout = ring
     page, *rest = layout.placement.pages
-    lost = replace(page, placed=page.placed[1:])
-    broken = replace(layout, placement=replace(layout.placement, pages=(lost, *rest)))
+    broken = replace(layout, placement=replace(layout.placement, pages=(replace(page, placed=page.placed[1:]), *rest)))
     assert [m for m in check_placed_once(broken, prob, OPTIONS) if f"{page.placed[0].sym}: 0" in m]
     stray = replace(page, placed=(*page.placed, replace(page.placed[0], sym="ghost")))
     broken = replace(layout, placement=replace(layout.placement, pages=(stray, *rest)))
@@ -130,16 +122,14 @@ def test_is2_names_a_missing_and_a_stray_placed(ring) -> None:
 
 def test_is3_names_an_open_net(ring) -> None:
     prob, layout = ring
-    bare = tuple(replace(pr, wires=()) for pr in layout.routes.pages)
-    open_net = replace(layout, routes=replace(layout.routes, pages=bare))
-    assert any(m.startswith("IS.3 n3") for m in check_every_net(open_net, prob))
+    open_net = replace(layout, routes=replace(layout.routes, pages=tuple(replace(pr, wires=()) for pr in layout.routes.pages)))
+    assert any(m.startswith("IS.3 n3") for m in check_every_net(open_net, prob, OPTIONS))
 
 
 def test_is3_names_a_reference_end_without_a_marker() -> None:
     prob = tag_chain()
     layout = solved_of(prob, OPTIONS)
-    unmarked = replace(layout, annotations=replace(layout.annotations, markers=()))
-    assert any("marker(s)" in m for m in check_every_net(unmarked, prob))
+    assert any("marker(s)" in m for m in check_every_net(replace(layout, annotations=replace(layout.annotations, markers=())), prob, OPTIONS))
 
 
 def test_is4_names_two_bodies_that_overlap(ring) -> None:
@@ -156,13 +146,13 @@ def test_is5_names_a_foreign_code_page_and_subject(ring) -> None:
     prob, layout = ring
     bad = (
         Finding("NOT_A_CODE", "x"),  # ty: ignore[invalid-argument-type] -- the foreign code is the point
-        Finding("TEXT_OVERLAP", "x", 99),
+        Finding("ANNEX_UNPLACED", "x", 99),
         Finding("NO_CELL", "x", 1, "zz"),
     )
     msgs = check_findings(replace(layout, findings=bad), prob, OPTIONS)
     assert [m.split(":")[0] for m in msgs] == [
         "IS.5 NOT_A_CODE",
-        "IS.5 TEXT_OVERLAP",
+        "IS.5 ANNEX_UNPLACED",
         "IS.5 NO_CELL",
     ]
 
@@ -179,7 +169,7 @@ def test_is7_names_a_solve_that_reads_an_id_spelling(monkeypatch: pytest.MonkeyP
     def reads_spelling(prob: PlacementProblem, options: Options) -> CoreLayout:
         found = real(prob, options)
         if not prob.symbols[0].id.islower():
-            found = replace(found, findings=(Finding("TEXT_OVERLAP", "x", 1),))
+            found = replace(found, findings=(Finding("ANNEX_UNPLACED", "x", 1),))
         return found
 
     monkeypatch.setattr(solve_checks, "solve", reads_spelling)
@@ -195,8 +185,6 @@ def test_is3_exempts_only_the_end_a_marker_unplaced_names_r449() -> None:
     layout = solved_of(prob, OPTIONS)
     first = layout.annotations.markers[0]
     bare = replace(layout.annotations, markers=layout.annotations.markers[1:])
-    exact = _unplaced_note(f"{first.end.sym},{first.net}")
-    same_symbol_other_net = _unplaced_note(f"{first.end.sym},other")
-    assert check_every_net(replace(layout, annotations=bare, findings=(exact,)), prob) == []
-    narrow = replace(layout, annotations=bare, findings=(same_symbol_other_net,))
-    assert any("marker(s)" in m for m in check_every_net(narrow, prob))
+    narrow = replace(layout, annotations=bare, findings=(_unplaced_note(f"{first.end.sym},other"),))
+    assert check_every_net(replace(layout, annotations=bare, findings=(_unplaced_note(f"{first.end.sym},{first.net}"),)), prob, OPTIONS) == []
+    assert any("marker(s)" in m for m in check_every_net(narrow, prob, OPTIONS))

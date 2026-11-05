@@ -2,16 +2,16 @@
 
 lazy from collections.abc import Sequence
 
-from fransys_layout.engines.overview.cutting import stubs
+from fransys_layout.engines.overview.cutting import jump_stubs, stubs
 from fransys_layout.engines.overview.lanes.diagram_frame import build_frame
 from fransys_layout.engines.overview.lanes.diagram_route import Half, route
 from fransys_layout.engines.overview.lanes.labels import label_lines
 from fransys_layout.engines.overview.sheet_values import (
-    PlacedBox,
+    DiagramBox,
+    DiagramTab,
     PlacedDiagram,
     PlacedMarker,
     PlacedSheet,
-    PlacedTab,
 )
 lazy from fransys_layout.engines.overview.lanes.frame_values import Frame, FrameBox
 lazy from fransys_layout.engines.overview.sheet_values import DiagramFacts
@@ -20,6 +20,8 @@ lazy from fransys_layout.engines.overview.sheet_values import DiagramFacts
 def _halves(frame: Frame, facts: DiagramFacts, i: int) -> tuple[Half, ...]:
     """The runs of line `i`, one per sheet, each from the box on it (a to b on a single sheet)."""
     first, second = frame.ends_of(i)
+    if i in frame.jumps:
+        return jump_stubs(first, second, facts.lines[i].label_width)
     if first[0] != second[0]:
         cut = next(c for c in frame.cuts if i in c.lines)
         return stubs(first, second, cut)
@@ -29,13 +31,9 @@ def _halves(frame: Frame, facts: DiagramFacts, i: int) -> tuple[Half, ...]:
     return (Half(sheet=first[0], points=points, other=None),)
 
 
-def _box(box: FrameBox, facts: DiagramFacts) -> PlacedBox:
-    tabs = tuple(
-        PlacedTab(cable=facts.lines[e.line].cable, side=e.side, y=e.y, text_width=e.tab)
-        for e in box.ends
-        if e.tab is not None
-    )
-    return PlacedBox(
+def _box(box: FrameBox, facts: DiagramFacts) -> DiagramBox:
+    tabs = tuple(DiagramTab(cable=facts.lines[e.line].cable, side=e.side, y=e.y, text_width=e.tab) for e in box.ends if e.tab is not None)
+    return DiagramBox(
         box=box.box,
         dashed=box.dashed,
         x=box.x,
@@ -46,19 +44,13 @@ def _box(box: FrameBox, facts: DiagramFacts) -> PlacedBox:
     )
 
 
-def _sheet(
-    number: int, frame: Frame, facts: DiagramFacts, halves: Sequence[tuple[Half, ...]]
-) -> PlacedSheet:
+def _sheet(number: int, frame: Frame, facts: DiagramFacts, halves: Sequence[tuple[Half, ...]]) -> PlacedSheet:
     """Sheet `number` with its boxes and the lines and markers of the halves lying on it."""
     boxes = tuple(_box(b, facts) for c in frame.sheets[number - 1].columns for b in c.boxes)
     here = [(facts.lines[i], h) for i, hs in enumerate(halves) for h in hs if h.sheet == number]
     lines = label_lines([(ln, h.points) for ln, h in here], boxes, facts.text_height)
     markers = tuple(
-        PlacedMarker(
-            cable=ln.cable, a=ln.a, b=ln.b, at_sheet=h.other, x=h.points[-1].x, y=h.points[-1].y
-        )
-        for ln, h in here
-        if h.other is not None
+        PlacedMarker(cable=ln.cable, a=ln.a, b=ln.b, at_sheet=h.other, x=h.points[-1].x, y=h.points[-1].y) for ln, h in here if h.other is not None
     )
     return PlacedSheet(number=number, boxes=boxes, lines=lines, markers=markers)
 

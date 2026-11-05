@@ -34,7 +34,7 @@ What `place=` changes, on every call that takes it.
 | `"HOLD"` | The item stands in that place. Its designation gains the prefix `+HOLD`, or `+HOLD+BATT` in a nested place. The place must exist. |
 | `None` | The item has no place, even when the design names one. |
 
-A place sorts the lists by place and sets the `+` part of the printed designation. It does not move a cell on a drawing: `d.layout.draw_in` does.
+A place sorts the lists by place and sets the `+` part of the printed designation. It does not move a cell on a drawing: `d.series` does.
 
 `d.device(tag, part, place=, parent=, mounted_on=, joins=, interface=, unused=, name=)` adds one device.
 `unused=` works on a boundary device and on an internal one.
@@ -42,6 +42,7 @@ A place sorts the lists by place and sets the `+` part of the printed designatio
 A contact block with `parent=` an operator head prints the head's tag, as `-S1:11` (guide `parts.md`).
 `part` is a manufacturer part number such as `"DEMO-LAMP-24"`.
 
+A second call with a tag already used by a device or a strip raises, naming both calls: keep the handle from the first call.
 Floating tags: every item call takes `None` for the tag and numbers the item from its class code.
 Pass `name=`, the identity a released number holds to; a floating call with no `name=` raises.
 An accessory takes its holder's designation, no number of its own.
@@ -169,6 +170,23 @@ for tag in ("H1", "H2", "H3"):
     d.series(dc.plus, feed, d.device(tag, "DEMO-LAMP-24").lamp, dc.minus, wire=(BU, 0.75))
 ```
 
+## Power rails
+
+A power rail is declared, never guessed. `rail=True` on a bridged run (`x1.run("24V", 4, bridged=True, rail=True)`) or on
+`d.terminal_strip(..., bridged=True, rail=True)` flags that one group. A flagged terminal draws as the rail's power symbol.
+An unflagged terminal draws as a terminal, even on a power net, and its bridges show in the terminal table only.
+A group of several terminals must be bridged; give a run its count. One group per potential in a unit.
+
+```python
+# two flagged rails feeding one supply
+import fransys as fr
+
+d = fr.design("demo_parts")
+live = d.terminal_strip("X1", "DEMO-TB-2.5", 4).run("24V", 4, bridged=True, rail=True)
+zero = d.terminal_strip("X2", "DEMO-TB-2.5", 4).run("0V", 4, bridged=True, rail=True)
+dc = d.dc_supply("24VDC", plus=live[1], minus=zero[1], voltage=24)
+```
+
 ## Wiring and cables
 
 The series, branches, changeovers, cables, wire colours and earth pins are on `series.md`.
@@ -184,11 +202,7 @@ on a plus and minus 15 V supply.
 Without `mid`, `minus` is 0 V and `plus` carries the voltage. With `mid`, `mid` is 0 V, `plus` is
 plus the voltage and `minus` is minus the voltage. `names=(plus, minus, mid)` renames the potentials; `ac_supply` takes one name per phase pin, then one for `n`.
 
-`earthing=fr.IT` declares a floating supply; the default is `fr.EARTHED`. Two 0 V rails are two supplies.
-
-`fault_current_a=` is the supply's prospective fault current in amps; `dc_supply` also takes
-`fault_time_constant_ms=`. A supply that states one is a source for the breaking-capacity check
-(`reading.md`). A `dc_supply` declared from a `source` device refuses both.
+Two 0 V rails are two supplies.
 
 A nested unit's declaration of a supply name its container also declares is not a source.
 
@@ -214,15 +228,16 @@ dc = d.dc_supply("24VDC", plus=x1[1], minus=x1[2], voltage=24)
 `d.mate(a, b)` plugs connector `a` into connector `b`, each a device with one function
 (`units.md` covers a mate across a unit boundary).
 
+Refused in 0.22 (`MATES_DISABLED`, an ERROR): a mate has no correctness guarantee yet. Draw the link as a cable or wires.
+
 ## Add a harness
 
-`d.harness("W5")` adds a harness item: see `harnesses.md`.
+`d.harness("W5")` adds a harness item: see `harnesses.md`. Refused in 0.22 (`MATES_DISABLED`): its drawing has no correctness guarantee yet; use a cable.
 
 
 ## Request a PLC channel
 
-`K1.coil.plc(fr.DO, "Pump run")` asks for a digital output named for the signal, and
-`.scale("bar", raw=(0, 100), eng=("0", "10"))` scales an analogue one. A series that ends or starts
+`K1.coil.plc(fr.DO, "Pump run")` asks for a digital output named for the signal. A series that ends or starts
 at a PLC module binds the request to a channel (next section). A request no series wires keeps the
 build's own allocation.
 `d.rack("U1")` adds the part-less rack the modules sit under with `parent=`; a `d.harness` rack stops with `HARNESS_HOLDS_PLC_MODULE`.

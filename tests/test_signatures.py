@@ -2,7 +2,6 @@
 
 An annotation that names a type imported only under TYPE_CHECKING breaks `inspect.signature`
 consumers, `just api` and the guide examples; this checks each surface name and each public
-method of each public class.
 """
 
 import importlib
@@ -104,7 +103,8 @@ CASES = [_param(symbol, obj) for symbol, obj in [*_callables(), *_live()]]
 @pytest.mark.parametrize("obj", CASES)
 def test_signature_and_hints_resolve(obj: object) -> None:
     if not (inspect.isclass(obj) and issubclass(obj, BaseException)):  # no signature, by design
-        inspect.signature(obj)  # ty: ignore[invalid-argument-type] -- obj is a callable by construction
+        assert callable(obj)
+        inspect.signature(obj)
     if not inspect.ismethod(obj):  # a live method's `self: "Design"` is quoted on purpose (0111)
         typing.get_type_hints(obj)
 

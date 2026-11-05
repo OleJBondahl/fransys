@@ -2,8 +2,6 @@
 
 The rules are layout-0031 (three lanes free above row 0), layout-0035 (one lane free below the
 last row) and layout-0068 (nothing past the content box). The values are typed here on purpose:
-they are the rule, and a probe that drops the headroom from the options must fail this test.
-The cases are the study instances w04 and p02, the unit outline, the drawn supply and the pilot.
 """
 
 import pytest
@@ -29,19 +27,11 @@ def _outside(layout: CoreLayout) -> list[str]:
         for p in page.placed:
             box(f"symbol {p.sym}", p.footprint, TOP, BOTTOM)
     wires = [wire for page in layout.routes.pages for wire in page.wires]
-    found += [
-        f"wire {wire.net} {wire.points}"
-        for wire in wires
-        if any(not (0 <= x <= w and 0 <= y <= h) for x, y in wire.points)
-    ]
+    found += [f"wire {wire.net} {wire.points}" for wire in wires if any(not (0 <= x <= w and 0 <= y <= h) for x, y in wire.points)]
     notes = layout.annotations
-    for item in (*notes.annexes, *notes.tables, *notes.wire_labels):
+    for item in notes.annexes:
         box(f"{type(item).__name__} page {item.page}", item.box, 0, 0)
-    found += [
-        f"marker {m.net} at {m.x},{m.y}"
-        for m in notes.markers
-        if not (0 <= m.x <= w and 0 <= m.y <= h)
-    ]
+    found += [f"marker {m.net} at {m.x},{m.y}" for m in notes.markers if not (0 <= m.x <= w and 0 <= m.y <= h)]
     return found
 
 

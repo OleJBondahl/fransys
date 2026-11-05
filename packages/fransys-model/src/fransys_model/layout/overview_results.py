@@ -59,15 +59,13 @@ class OverviewTab:
 class OverviewBox:
     """The box of what `ref` stands for, or of a stub whose far end `ref` names.
 
-    A stub box sets `stub_of`, the box inside the level it hangs on; one far end is one stub
-    box. `x`, `y` is the top-left corner. `tabs` are stored in `index` order.
+    One far end is one stub box. `x`, `y` is the top-left corner. `tabs` are stored in `index` order.
     """
 
     id: Id[OverviewBox]
     key: AuthoringKey
     view: Id[OverviewView]
     ref: OverviewRef
-    stub_of: Id[OverviewBox] | None
     dashed: bool
     x: int
     y: int
@@ -110,8 +108,6 @@ class OverviewLine:
 
     def __post_init__(self) -> None:
         """Store `points` in `index` order; a repeated `index` is refused."""
-        points = by_index(
-            self.points, RoutePoint, kind="layout.overview_line", holder=holder_of(self)
-        )
+        points = by_index(self.points, RoutePoint, kind="layout.overview_line", holder=holder_of(self))
         if points is not None:
             object.__setattr__(self, "points", points)

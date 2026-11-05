@@ -1,4 +1,4 @@
-"""The `supply_system` core kind: `SupplySystem`, `Rail`, `Current`, `Earthing`.
+"""The `supply_system` core kind: `SupplySystem`, `Rail`, `Current`.
 
 Decision model-0075; `docs/archive/specs/2026-09-25-model-review.md` Q2, Storage.
 Invented data only.
@@ -9,6 +9,7 @@ from typing import Any
 
 import pytest
 
+from fransys_model.elecdef import Current
 from fransys_model.kernel import (
     Draft,
     FreezeError,
@@ -17,15 +18,13 @@ from fransys_model.kernel import (
     freeze,
     make_id,
 )
-from fransys_model.vocab import Current, Earthing, Rail, SupplySystem
+from fransys_model.vocab import Rail, SupplySystem
 
 _ORIGIN = Origin(file="test_supply_system.py", line=1, note="fixture")
 
 
 def _system(key: str, rails: Any, **fields: Any) -> SupplySystem:
-    return SupplySystem(
-        id=make_id(SupplySystem, (key,)), key=(key,), name=key, rails=rails, **fields
-    )
+    return SupplySystem(id=make_id(SupplySystem, (key,)), key=(key,), name=key, rails=rails, **fields)
 
 
 def _link() -> SupplySystem:
@@ -38,7 +37,6 @@ def _link() -> SupplySystem:
             }
         ),
         current=Current.DC,
-        earthing=Earthing.IT,
     )
 
 

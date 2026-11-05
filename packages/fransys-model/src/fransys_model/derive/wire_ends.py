@@ -12,9 +12,7 @@ if TYPE_CHECKING:
     from fransys_model.vocab import Port
 
 
-def _end_key(
-    model: Model, port: Id[Port]
-) -> tuple[tuple[int, NaturalKey, str, int], str, Id[Port]]:
+def _end_key(model: Model, port: Id[Port]) -> tuple[tuple[int, NaturalKey, str, int], str, Id[Port]]:
     return (bom_sort_key(model, item_of_port(model, port)), port_marking(model, port), port)
 
 

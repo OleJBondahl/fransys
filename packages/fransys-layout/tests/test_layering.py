@@ -2,23 +2,12 @@
 
 Enforces the layer table. The layers are `engines` → `lint` → `routing` → `geometry`
 (decision layout-0111), and a layer imports only layers to its right.
-Every layer may
-import
-`fransys_model.kernel`; only `engines` may import anything else of `fransys_model`,
-with one recorded exception (decision layout-0037, extended by layout-0089): any module may import
-`fransys_model.derive.drawing_text` for its pure formatters
-(`frame_column`, `frame_row`, `row_letter`, `position_text`, `location_prefix`, `off_stub_line`);
-the readers it also holds (`marker_text`
-and the rest, which take a model) stay engine-only, like every other `derive` name. Only
-`geometry/symbols.py` may import the symbol libraries. Inside `engines`, only the `read/`
-package may import `fransys_model.derive` or `vocab` (`drawing_text` formatters
-excepted), and only the `read/` and `write/` packages may import `fransys_model.layout`
-(the three enums `Orientation`, `MarkerSide` and `LabelKind` excepted); the modules that
-still do are listed in `ENGINE_ALLOWED_OFFENDERS`, which is empty and stays as the refusal.
 """
 
 import ast
 from pathlib import Path
+
+import pytest
 
 SRC_ROOT = Path(__file__).resolve().parent.parent / "src" / "fransys_layout"
 
@@ -42,20 +31,13 @@ MODEL_KERNEL = "fransys_model.kernel"
 # import this module, but only for its pure formatters; its readers (which take a model) are
 # as off-limits outside `engines` as any other `fransys_model.derive` name.
 DRAWING_TEXT_MODULE = "fransys_model.derive.drawing_text"
-TEXT_WIDTH_MODULE = "fransys_model.derive.text_width"  # model-0190: pure, takes only values
 SET_RANK_MODULE = "fransys_model.derive.set_rank"  # model-0282: `set_ranks` takes only values
 DRAWING_TEXT_FORMATTERS = frozenset(
     {
-        "frame_column",
-        "frame_row",
-        "reference_digits",
-        "tag_echo_text",
         "row_letter",
         "position_text",
         "location_prefix",
         "off_stub_line",
-        "marker_lines",
-        "more_count",
         "more_text",
         "partner_position_text",
         "heads_group",
@@ -145,17 +127,11 @@ def _beyond_kernel(imported: set[str]) -> set[str]:
 
     `from fransys_model import vocab` resolves to the bare package name, so the bare
     name counts as a violation too. `fransys_model.derive.drawing_text` is allowed here
-    at the module level (decision layout-0037); `_drawing_text_readers` separately checks
-    that only its two pure formatters are the names actually imported from it.
     """
     return {
         m
         for m in imported
-        if _under(m, MODEL)
-        and not _under(m, MODEL_KERNEL)
-        and not _under(m, DRAWING_TEXT_MODULE)
-        and not _under(m, TEXT_WIDTH_MODULE)
-        and not _under(m, SET_RANK_MODULE)
+        if _under(m, MODEL) and not _under(m, MODEL_KERNEL) and not _under(m, DRAWING_TEXT_MODULE) and not _under(m, SET_RANK_MODULE)
     }
 
 
@@ -183,9 +159,7 @@ def _drawing_text_names(module_name: str, source: str, *, is_init: bool) -> set[
     tree = ast.parse(source)
     names: set[str] = set()
     for node in ast.walk(tree):
-        if isinstance(node, ast.ImportFrom) and _resolve_import(
-            module_name, is_init=is_init, node=node
-        ) == [DRAWING_TEXT_MODULE]:
+        if isinstance(node, ast.ImportFrom) and _resolve_import(module_name, is_init=is_init, node=node) == [DRAWING_TEXT_MODULE]:
             names.update(alias.name for alias in node.names)
     return names
 
@@ -246,8 +220,6 @@ def _model_targets(node: ast.Import | ast.ImportFrom) -> set[str]:
 
     `from fransys_model import derive`, `from ...derive.drawing_text import name` and
     `from fransys_model.layout import name` reach the name itself, so each imported name is
-    appended to those three modules. Relative imports cannot reach `fransys_model` and give
-    nothing.
     """
     if isinstance(node, ast.Import):
         return {alias.name for alias in node.names}
@@ -260,9 +232,7 @@ def _model_targets(node: ast.Import | ast.ImportFrom) -> set[str]:
 
 def _is_layout_target(target: str) -> bool:
     """Whether `target` is a `fransys_model.layout` name other than the three enums."""
-    is_enum = target.rpartition(".")[0] == MODEL_LAYOUT and (
-        target.rpartition(".")[2] in LAYOUT_ENUMS
-    )
+    is_enum = target.rpartition(".")[0] == MODEL_LAYOUT and (target.rpartition(".")[2] in LAYOUT_ENUMS)
     return _under(target, MODEL_LAYOUT) and not is_enum
 
 
@@ -270,9 +240,7 @@ def _is_derive_or_vocab_target(target: str) -> bool:
     """Whether `target` is a `derive` or `vocab` name outside the `drawing_text` formatters."""
     if not (_under(target, MODEL_DERIVE) or _under(target, MODEL_VOCAB)):
         return False
-    is_formatter = target.rpartition(".")[0] == DRAWING_TEXT_MODULE and (
-        target.rpartition(".")[2] in DRAWING_TEXT_FORMATTERS
-    )
+    is_formatter = target.rpartition(".")[0] == DRAWING_TEXT_MODULE and (target.rpartition(".")[2] in DRAWING_TEXT_FORMATTERS)
     return not is_formatter
 
 
@@ -299,9 +267,7 @@ def _engine_imports_found() -> dict[str, set[str]]:
     for path in _layer_files("engines"):
         module_name, is_init = _module_name(path)
         source = path.read_text(encoding="utf-8")
-        found[path.relative_to(SRC_ROOT).as_posix()] = _forbidden_engine_imports(
-            module_name, source, is_init=is_init
-        )
+        found[path.relative_to(SRC_ROOT).as_posix()] = _forbidden_engine_imports(module_name, source, is_init=is_init)
     return found
 
 
@@ -345,10 +311,7 @@ def test_only_engines_import_beyond_the_model_kernel() -> None:
 def test_only_engines_import_the_drawing_text_readers() -> None:
     """Outside `engines`, only `DRAWING_TEXT_FORMATTERS` may come from `drawing_text`."""
     problems = [
-        f"{path}: imports {bad}"
-        for layer in KERNEL_ONLY_LAYERS
-        for path in _layer_files(layer)
-        for bad in sorted(_drawing_text_readers(path))
+        f"{path}: imports {bad}" for layer in KERNEL_ONLY_LAYERS for path in _layer_files(layer) for bad in sorted(_drawing_text_readers(path))
     ]
     assert problems == []
 
@@ -387,47 +350,43 @@ def _engine_source_problems(source: str, allowed: dict[str, frozenset[str]]) -> 
     return _engine_problems(found, allowed)
 
 
-def test_checker_fails_when_an_engine_imports_a_derive_module() -> None:
-    """An engine module outside `read/` importing `derive.designation` is reported."""
-    source = "from fransys_model.derive.designation import reference_designation\n"
-    assert _engine_source_problems(source, {}) == [
-        "bad.py: imports fransys_model.derive.designation, not in ENGINE_ALLOWED_OFFENDERS"
-    ]
+_NOT_ALLOWED = "bad.py: imports {}, not in ENGINE_ALLOWED_OFFENDERS"
+_DT = "from fransys_model.derive.drawing_text import "
 
 
-def test_checker_fails_when_an_engine_imports_derive_by_its_bare_name() -> None:
-    """`from fransys_model import derive` resolves to the imported name, and is reported."""
-    source = "from fransys_model import derive, kernel\n"
-    assert _engine_source_problems(source, {}) == [
-        "bad.py: imports fransys_model.derive, not in ENGINE_ALLOWED_OFFENDERS"
-    ]
-
-
-def test_checker_fails_when_an_engine_imports_a_vocab_table() -> None:
-    """`from fransys_model.vocab.tables import ports` is reported, under `TYPE_CHECKING` too."""
-    source = (
-        "from typing import TYPE_CHECKING\n"
-        "if TYPE_CHECKING:\n"
-        "    from fransys_model.vocab.tables import ports\n"
-    )
-    assert _engine_source_problems(source, {}) == [
-        "bad.py: imports fransys_model.vocab.tables, not in ENGINE_ALLOWED_OFFENDERS"
-    ]
-
-
-def test_checker_allows_the_drawing_text_formatters_and_kernel_in_an_engine() -> None:
-    """The three `drawing_text` formatters and `kernel` are not reported, but a reader is."""
-    source = (
-        "from fransys_model.derive.drawing_text import frame_column, position_text\n"
-        "from fransys_model.derive.drawing_text import location_prefix, marker_text\n"
-        "from fransys_model.kernel import Id\n"
-    )
-    assert _engine_source_problems(source, {}) == [
+@pytest.mark.parametrize(
+    ("source", "reported"),
+    [
+        ("from fransys_model.derive.designation import reference_designation\n", ["fransys_model.derive.designation"]),
+        ("from fransys_model import derive, kernel\n", ["fransys_model.derive"]),
+        ("from typing import TYPE_CHECKING\nif TYPE_CHECKING:\n    from fransys_model.vocab.tables import ports\n", ["fransys_model.vocab.tables"]),
         (
-            "bad.py: imports fransys_model.derive.drawing_text.marker_text, "
-            "not in ENGINE_ALLOWED_OFFENDERS"
-        )
-    ]
+            f"{_DT}row_letter, position_text\n{_DT}location_prefix, marker_text\nfrom fransys_model.kernel import Id\n",
+            ["fransys_model.derive.drawing_text.marker_text"],
+        ),
+        ("from fransys_model.layout import derived_layout_ids\n", ["fransys_model.layout.derived_layout_ids"]),
+        ("from fransys_model.layout import Orientation, MarkerSide, LabelKind\n", []),
+        ("from fransys_model import layout\n", ["fransys_model.layout"]),
+        (f"{_DT}off_stub_line\n", []),
+    ],
+)
+def test_checker_reports_exactly_the_engine_imports_that_are_not_allowed(source: str, reported: list[str]) -> None:
+    """Derive modules, vocab tables, layout names and drawing-text readers are reported; the pure formatters and layout enums are not."""
+    assert _engine_source_problems(source, {}) == [_NOT_ALLOWED.format(r) for r in reported]
+
+
+@pytest.mark.parametrize(
+    ("layer", "source", "reported"),
+    [
+        ("routing", "from fransys_layout.engines.diagram import engine\n", "fransys_layout.engines.diagram"),
+        ("geometry", "from fransys_layout.routing import space\n", "fransys_layout.routing"),
+        ("geometry", "from ..lint import codes\n", "fransys_layout.lint"),
+    ],
+)
+def test_checker_fails_when_a_layer_imports_a_layer_to_its_left(layer: str, source: str, reported: str) -> None:
+    """The layer check catches an import to the left, absolute or relative, fed as a source string."""
+    imported = _imported_modules(f"fransys_layout.{layer}.bad", source, is_init=False)
+    assert _violates(imported, FORBIDDEN[layer]) == {reported}
 
 
 def test_checker_reports_a_stale_allow_list_entry() -> None:
@@ -435,61 +394,23 @@ def test_checker_reports_a_stale_allow_list_entry() -> None:
     source = "from fransys_model.kernel import Id\n"
     allowed = {"bad.py": frozenset({"fransys_model.vocab.enums"})}
     assert _engine_source_problems(source, allowed) == [
-        (
-            "bad.py: stale ENGINE_ALLOWED_OFFENDERS entry fransys_model.vocab.enums, "
-            "no longer imported"
-        )
+        ("bad.py: stale ENGINE_ALLOWED_OFFENDERS entry fransys_model.vocab.enums, no longer imported")
     ]
 
 
 def test_checker_exempts_the_reader_package_but_not_the_reader_file() -> None:
     """A module under `read/` may import `derive`; today's `read.py` file is not exempt."""
     source = "from fransys_model.derive.designation import port_designation\n"
-    inside = _forbidden_engine_imports(
-        "fransys_layout.engines.diagram.read.items", source, is_init=False
-    )
+    inside = _forbidden_engine_imports("fransys_layout.engines.diagram.read.items", source, is_init=False)
     init = _forbidden_engine_imports("fransys_layout.engines.diagram.read", source, is_init=True)
     file = _forbidden_engine_imports("fransys_layout.engines.diagram.read", source, is_init=False)
     assert (inside, init, file) == (set(), set(), {"fransys_model.derive.designation"})
 
 
-def test_checker_fails_when_an_engine_imports_a_layout_name() -> None:
-    """A `fransys_model.layout` name outside `read/` and `write/` is reported."""
-    source = "from fransys_model.layout import derived_layout_ids\n"
-    assert _engine_source_problems(source, {}) == [
-        ("bad.py: imports fransys_model.layout.derived_layout_ids, not in ENGINE_ALLOWED_OFFENDERS")
-    ]
-
-
-def test_checker_allows_the_three_layout_enums_in_an_engine() -> None:
-    """Orientation, MarkerSide and LabelKind from `fransys_model.layout` are not reported."""
-    source = "from fransys_model.layout import Orientation, MarkerSide, LabelKind\n"
-    assert _engine_source_problems(source, {}) == []
-
-
-def test_checker_fails_when_an_engine_imports_layout_by_its_bare_name() -> None:
-    """`from fransys_model import layout` resolves to the imported name, and is reported."""
-    source = "from fransys_model import layout\n"
-    assert _engine_source_problems(source, {}) == [
-        "bad.py: imports fransys_model.layout, not in ENGINE_ALLOWED_OFFENDERS"
-    ]
-
-
-def test_checker_allows_off_stub_line_from_drawing_text_in_an_engine() -> None:
-    """`off_stub_line` is a pure formatter of `drawing_text`, so it is not reported."""
-    source = "from fransys_model.derive.drawing_text import off_stub_line\n"
-    assert _engine_source_problems(source, {}) == []
-
-
 def test_checker_exempts_the_writer_package_for_layout_only() -> None:
     """A module under `write/` may import `layout` but not `derive`; today's `write.py` may not."""
-    source = (
-        "from fransys_model.layout import derived_layout_ids\n"
-        "from fransys_model.derive.designation import port_designation\n"
-    )
-    inside = _forbidden_engine_imports(
-        "fransys_layout.engines.diagram.write.records", source, is_init=False
-    )
+    source = "from fransys_model.layout import derived_layout_ids\nfrom fransys_model.derive.designation import port_designation\n"
+    inside = _forbidden_engine_imports("fransys_layout.engines.diagram.write.records", source, is_init=False)
     init = _forbidden_engine_imports("fransys_layout.engines.diagram.write", source, is_init=True)
     file = _forbidden_engine_imports("fransys_layout.engines.diagram.write", source, is_init=False)
     assert (inside, init, file) == (
@@ -506,40 +427,13 @@ def test_checker_exempts_the_reader_package_for_layout_too() -> None:
         "from fransys_model.derive.designation import port_designation\n"
         "from fransys_model.vocab.tables import ports\n"
     )
-    inside = _forbidden_engine_imports(
-        "fransys_layout.engines.diagram.read.items", source, is_init=False
-    )
+    inside = _forbidden_engine_imports("fransys_layout.engines.diagram.read.items", source, is_init=False)
     assert inside == set()
-
-
-def test_checker_fails_when_routing_imports_an_engine() -> None:
-    """The layer check catches a `routing` module importing `engines`, fed as a source string."""
-    source = "from fransys_layout.engines.diagram import engine\n"
-    imported = _imported_modules("fransys_layout.routing.bad", source, is_init=False)
-    assert _violates(imported, FORBIDDEN["routing"]) == {"fransys_layout.engines.diagram"}
-
-
-def test_checker_fails_when_geometry_imports_routing() -> None:
-    """`geometry` sits to the right of `routing`, so it may not import it."""
-    source = "from fransys_layout.routing import space\n"
-    imported = _imported_modules("fransys_layout.geometry.bad", source, is_init=False)
-    assert _violates(imported, FORBIDDEN["geometry"]) == {"fransys_layout.routing"}
-
-
-def test_checker_fails_on_a_relative_import_to_the_left() -> None:
-    """The layer check resolves `from ..lint import codes` inside `geometry`."""
-    source = "from ..lint import codes\n"
-    imported = _imported_modules("fransys_layout.geometry.bad", source, is_init=False)
-    assert _violates(imported, FORBIDDEN["geometry"]) == {"fransys_layout.lint"}
 
 
 def test_checker_fails_when_routing_imports_the_model_vocabulary() -> None:
     """The kernel-only check catches `vocab`, and the bare package, but not `kernel`."""
-    source = (
-        "from fransys_model.kernel import Id\n"
-        "from fransys_model.vocab.enums import FunctionKind\n"
-        "from fransys_model import derive\n"
-    )
+    source = "from fransys_model.kernel import Id\nfrom fransys_model.vocab.enums import FunctionKind\nfrom fransys_model import derive\n"
     imported = _imported_modules("fransys_layout.routing.bad", source, is_init=False)
     assert _beyond_kernel(imported) == {"fransys_model.vocab.enums", "fransys_model"}
 
@@ -553,10 +447,7 @@ def test_checker_still_fails_when_routing_imports_another_derive_module() -> Non
 
 def test_checker_allows_the_drawing_text_formatters_from_routing() -> None:
     """`fransys_model.derive.drawing_text` itself is not a kernel-only violation."""
-    source = (
-        "from fransys_model.derive.drawing_text import "
-        "frame_column, location_prefix, position_text\n"
-    )
+    source = "from fransys_model.derive.drawing_text import row_letter, location_prefix, position_text\n"
     imported = _imported_modules("fransys_layout.routing.bad", source, is_init=False)
     assert _beyond_kernel(imported) == set()
 
@@ -572,7 +463,7 @@ def test_symbol_adapter_may_import_only_the_model_orientation_from_layout() -> N
 
 def test_checker_fails_when_routing_imports_a_drawing_text_reader() -> None:
     """A name from `drawing_text` other than the three pure formatters still fails."""
-    source = "from fransys_model.derive.drawing_text import frame_column, marker_text\n"
+    source = "from fransys_model.derive.drawing_text import row_letter, marker_text\n"
     names = _drawing_text_names("fransys_layout.routing.bad", source, is_init=False)
     assert names - DRAWING_TEXT_FORMATTERS == {"marker_text"}
 
@@ -589,9 +480,7 @@ CABLE_DERIVE = "from fransys_model.derive.cable_drawing import cable_drawing\n"
 
 def test_checker_reports_derive_in_a_cable_engine_module() -> None:
     """`engines.cable.bad` importing `derive.cable_drawing` is reported."""
-    found = _forbidden_engine_imports(
-        "fransys_layout.engines.cable.bad", CABLE_DERIVE, is_init=False
-    )
+    found = _forbidden_engine_imports("fransys_layout.engines.cable.bad", CABLE_DERIVE, is_init=False)
     assert found == {"fransys_model.derive.cable_drawing"}
 
 
@@ -604,8 +493,6 @@ def test_checker_exempts_the_cable_reader_package() -> None:
 def test_checker_lets_the_cable_writer_import_layout_but_not_derive() -> None:
     """`engines.cable.write.records` may import a `layout` record, not a `derive` name."""
     name = "fransys_layout.engines.cable.write.records"
-    layout = "from fransys_model.layout import CableBlock\n"
+    layout = "from fransys_model.layout import LayoutSheet\n"
     assert _forbidden_engine_imports(name, layout, is_init=False) == set()
-    assert _forbidden_engine_imports(name, CABLE_DERIVE, is_init=False) == {
-        "fransys_model.derive.cable_drawing"
-    }
+    assert _forbidden_engine_imports(name, CABLE_DERIVE, is_init=False) == {"fransys_model.derive.cable_drawing"}

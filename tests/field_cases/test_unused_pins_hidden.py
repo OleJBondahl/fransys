@@ -1,22 +1,12 @@
-"""Field case: a pin with no conductor, and a function with none at all, can be left off the page.
+"""Field case: a supply with an unwired DC-OK contact and a four-channel PLC input module with a spare channel, both drawn as boxes.
+The bug (v0.5.0 look): the supply box carried its idle contact's pins and the module box a pin per channel, leading nowhere.
+Fixed by the hide_unused_pins profile rule (no record named): a box leaves out pins and functions with no conductor when on."""
 
-The engineering shape: a power supply with a DC-OK signal contact that nobody wired, and a PLC
-input module with four channels of which the fourth is a spare. Both are drawn as boxes.
-Since the demo part's `dc_ok` became `contact_no` (cleanup round 2, rider R), the supply's
-idle contact is no box pin in either mode: it stands apart and, wired to nothing, is not drawn.
-
-The bug (v0.5.0 look): the supply's box carried the idle contact's two pins and the module's
-box one pin per channel, so a page showed pins that lead nowhere. The rule
-(`d.profile(hide_unused_pins=True)`): with the switch on, a box leaves out its pins and its
-functions without a conductor; every list keeps them, and with it off nothing changes.
-"""
-
-import tempfile
 from functools import cache
-from pathlib import Path
 
 import fransys as fr
 from _drawn_facts import symbol_subjects
+from _model_build_cover import unit_document
 from fransys.colours import BU
 
 from fransys_model.derive import plc_channel_rows
@@ -33,9 +23,7 @@ def _layout(plant, *, hide: bool):
     cab = d.location("CAB", "Cabinet")
     with d.function("G", "Group"):
         plant(d)
-    cover = Path(tempfile.mkdtemp()) / "cover.md"
-    cover.write_text("# Cabinet\n", encoding="utf-8")
-    doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover)
+    doc = unit_document(cab)
     return fr.build(d, doc).model
 
 
@@ -43,12 +31,7 @@ def _drawn_ports(model, tag: str) -> list[str]:
     """Every port name drawn for item `tag`'s functions, over all placements, and its box."""
     (item,) = (one.id for one in items(model).values() if one.tag == tag)
     own = {f.id.value for f in functions(model).values() if f.item == item}
-    return [
-        name
-        for one in symbol_subjects(model)
-        if one.owner in own or one.tag == tag
-        for name in one.offsets
-    ]
+    return [name for one in symbol_subjects(model) if one.owner in own or one.tag == tag for name in one.offsets]
 
 
 def _channel_ports(model) -> list[str]:
@@ -60,17 +43,19 @@ def _psu(d) -> None:
     psu = d.device("T1", "DEMO-PSU-24-OK")
     lamp = d.device("P1", "DEMO-LAMP-24")
     mains = d.device("P2", "DEMO-LAMP-24")
-    d.detail.wire(psu.output["+"], lamp["1"], wire=(BU, 0.5))
-    d.detail.wire(psu.output["-"], lamp["2"], wire=(BU, 0.5))
-    d.detail.wire(psu.input["L"], mains["1"], wire=(BU, 0.5))
-    d.detail.wire(psu.input["N"], mains["2"], wire=(BU, 0.5))
+    d.series(psu.output["+"], lamp["1"], wire=(BU, 0.5))
+    d.series(psu.output["-"], lamp["2"], wire=(BU, 0.5))
+    d.series(psu.input["L"], mains["1"], wire=(BU, 0.5))
+    d.series(psu.input["N"], mains["2"], wire=(BU, 0.5))
 
 
 def _module(d) -> None:
     module = d.device("K1", "DEMO-PLC-DI-4P")
+    feed = d.terminal_strip("X1", "DEMO-TB-2.5", 3)
     for i in range(1, 4):
         switch = d.device(f"S{i}", "DEMO-SWITCH-2P")
-        d.detail.wire(switch.sw["B"], getattr(module, f"di_{i}")[i], wire=(BU, 0.5))
+        d.series(switch.sw["B"], getattr(module, f"di_{i}")[i], wire=(BU, 0.5))
+        d.series(switch.sw["A"], feed[i].outer, wire=(BU, 0.5))
 
 
 def test_a_supply_box_leaves_out_its_unwired_signal_contact() -> None:
@@ -100,9 +85,11 @@ def _half_wired_psu(d) -> None:
     psu = d.device("T1", "DEMO-PSU-24-OK")
     lamp = d.device("P1", "DEMO-LAMP-24")
     mains = d.device("P2", "DEMO-LAMP-24")
-    d.detail.wire(psu.output["+"], lamp["1"], wire=(BU, 0.5))
-    d.detail.wire(psu.input["L"], mains["1"], wire=(BU, 0.5))
-    d.detail.wire(psu.input["N"], mains["2"], wire=(BU, 0.5))
+    zero = d.terminal_strip("X1", "DEMO-TB-2.5", 1)
+    d.series(psu.output["+"], lamp["1"], wire=(BU, 0.5))
+    d.series(lamp["2"], zero[1].outer, wire=(BU, 0.5))
+    d.series(psu.input["L"], mains["1"], wire=(BU, 0.5))
+    d.series(psu.input["N"], mains["2"], wire=(BU, 0.5))
 
 
 def test_a_half_wired_box_function_keeps_its_wired_pin_and_drops_the_bare_one() -> None:

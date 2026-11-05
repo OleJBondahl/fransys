@@ -33,11 +33,7 @@ def _problems(pairs: list[_toml.Table], colours: list[str]) -> list[str]:
     screens: list[int] = []
     for pair in pairs:
         cores = pair.get("cores")
-        if (
-            type(cores) is not list
-            or len(cores) != _PAIR_SIZE
-            or any(type(c) is not int for c in cores)
-        ):
+        if type(cores) is not list or len(cores) != _PAIR_SIZE or any(type(c) is not int for c in cores):
             problems.append("cores must hold exactly two core numbers")
             continue
         named.extend(cores)

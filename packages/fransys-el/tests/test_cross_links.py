@@ -2,15 +2,13 @@
 
 The generic builder carries the family: a loop is a cross-link of stage 1, which the core brings
 together (stage 3) and routes. The study's counts are the `expected result` cells of design
-section 4.10. Of its rows one, the drawn supply, misses today's engine in the core: a strict
-xfail that holds for the named core X only.
 """
 
 from dataclasses import replace
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 import pytest
-from conventions_fixtures import house
+from conventions_fixtures import house, unwired
 from cross_link_cases import (
     channels_model,
     drawn_supply_model,
@@ -21,6 +19,7 @@ from cross_link_cases import (
     two_units_model,
 )
 from fransys_el import build, options, symbol_kit
+from ring_cases import score_of
 
 from electrical_symbols import LIBRARY
 from fransys_layout.core import solve
@@ -44,12 +43,6 @@ def units() -> CoreLayout:
     return solved(two_units_model())
 
 
-def score_of(layout: CoreLayout) -> Any:
-    """The layout's score, which `solve` always sets."""
-    assert layout.score is not None
-    return layout.score
-
-
 def counts(layout: CoreLayout) -> str:
     """The measured numbers, printed into a failure message."""
     s = score_of(layout)
@@ -59,9 +52,7 @@ def counts(layout: CoreLayout) -> str:
 def test_the_seal_in_circuit_is_one_column_with_no_crossing_and_no_reference(
     seal_in: CoreLayout,
 ) -> None:
-    assert (score_of(seal_in).X, score_of(seal_in).R, score_of(seal_in).pages) == (0, (), 1), (
-        counts(seal_in)
-    )
+    assert (score_of(seal_in).X, score_of(seal_in).R, score_of(seal_in).pages) == (0, (), 1), counts(seal_in)
     assert seal_in.references == (), counts(seal_in)
     contact_pins = {pin.pin for pin, _ in seal_in.wired}
     assert {"com", "no"} <= contact_pins, "the parallel contact is wired in the loop"
@@ -77,10 +68,19 @@ def test_a_crossing_rung_planted_in_the_pilot_shows_in_x() -> None:
     assert score_of(solved(pilot_model(crossed=True))).X > 0
 
 
-def test_loads_in_two_units_end_in_stubs_only(units: CoreLayout) -> None:
-    classes = dict(score_of(units).R)
-    assert classes.get("stub", 0) > 0, counts(units)
-    assert set(classes) == {"stub"}, counts(units)
+def test_loads_in_two_units_end_in_stubs_only_where_no_wire_is_drawn() -> None:
+    model = two_units_model()
+    problem, _ = build(model, symbol_kit(model, LIBRARY), house(), LIBRARY)
+    bare = unwired(problem)
+    layout = solve(bare, options(house(), LIBRARY))
+    classes = dict(score_of(layout).R)
+    assert classes.get("stub", 0) > 0, counts(layout)
+    assert set(classes) == {"stub"}, counts(layout)
+    assert score_of(layout).X == 0, counts(layout)
+
+
+def test_loads_in_two_units_drawn_to_their_far_ends_carry_no_stub(units: CoreLayout) -> None:
+    assert "stub" not in dict(score_of(units).R), counts(units)
     assert score_of(units).X == 0, counts(units)
 
 

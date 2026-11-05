@@ -1,13 +1,6 @@
 """Field case: a marker prints one line for each place its net continues, not one per end.
-
-The engineering shape: the three line-side poles of a three-pole contactor paralleled on one net
-that also reaches the coil of each of two relays, so the net is a fan-out with five ends and the
-three poles stand in one cell.
-
-The bug: a marker listed one line for every other end, so a relay's marker printed the contactor's
-cell three times ("#1-2A", "#1-2A", "#1-2A").
-The rule (decisions model-0137 / model-0139): identical targets count once, in `target_lines`.
-"""
+The bug: a relay's marker printed the contactor's cell three times ("#1-2A", "#1-2A", "#1-2A").
+Fixed by model-0137 and model-0139, identical targets count once, in target_lines."""
 
 import fransys as fr
 from _model_build_cover import cabinet_document
@@ -28,19 +21,19 @@ def _texts() -> dict[str, list[str]]:
         k1 = d.device("K1", "DEMO-CTR-3P-24")
         k2, k3 = (d.device(tag, "DEMO-RLY-2CO-24") for tag in ("K2", "K3"))
         # layout-0218: unwired, K1's coil and aux draw nothing; one wire draws both
-        d.detail.wire(k1.coil["A1"], k1.aux["13"], wire=(BU, 0.5))
+        d.series(k1.coil["A1"], k1.aux["13"], wire=(BU, 0.5))
+    d.series(k1.aux["14"], k2.coil["A1"], wire=(BU, 0.5))
+    d.series(k1.coil["A2"], k3.coil["A1"], wire=(BU, 0.5))
     ends = [k1.main[pin] for pin in "135"] + [k2.coil["A2"], k3.coil["A2"]]
     for end in ends[1:]:
-        d.detail.wire(ends[0], end, wire=(BU, 0.5))
+        d.series(ends[0], end, wire=(BU, 0.5))
     model = fr.build(d, cabinet_document(_cabinet)).model
-    return {
-        port_designation(model, m.port): marker_text(model, m).split("\n")
-        for m in layout_of(model, LinkMarker).values()
-    }
+    return {port_designation(model, m.port): marker_text(model, m).split("\n") for m in layout_of(model, LinkMarker).values()}
 
 
 def test_three_ends_in_one_cell_give_one_marker_line() -> None:
     texts = _texts()
+    assert "-K3:A2" in texts, f"no marker is drawn for -K3:A2: the net fits one page and is drawn as wires (have {sorted(texts)})"
     # layout-0218: the drawn K1 coil takes a cell of its own: one more place
     assert texts["-K3:A2"] == ["#1-2A +2"]  # C2: the first place and two more distinct ones
     assert all(len(lines) == len(set(lines)) for lines in texts.values())

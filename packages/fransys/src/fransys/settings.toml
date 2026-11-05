@@ -29,6 +29,9 @@ ref_tints = ["#ffc0aa", "#85e7cd", "#e4c0ff", "#efcc83", "#80e1fe", "#ffbad4", "
 [pdf]
 list_share_pct = 40  # a list page's column, percent of the content width (pdf-0026, L1)
 list_gutter_pct = 20  # the gap between its two columns, same unit
+page_margin_mm = 5  # the padding of a non-drawing page inside the content box
+cable_run_header_mm = 11  # a cable run page's extra top margin: the part line and a 4 mm gap below it (pdf-0021)
+bridge_column_mm = 15  # the terminal list's Bridge column width
 
 # Stroke widths in mm and dash patterns in mm: library data a consumer may replace key by key. Every
 # dash number is a float, so the merge reads a list of numbers (symdef prints them, SYMDEF-DATA).
@@ -41,13 +44,6 @@ rule = 0.18
 dashed = [1.25, 0.625]
 dash_dot = [4.0, 1.0, 0.25, 1.0]
 long = [4.0, 1.0]
-
-# Capital heights in mm by role; `[font]` name and files are read by their own code.
-[font.heights]
-smallest = 1.8
-body = 2.5
-heading_2 = 3.5
-heading_1 = 5.0
 
 [reference]
 page_prefix = "p"  # opens a page in a reference, "p3"
@@ -74,25 +70,12 @@ show_ends = true  # print both ends
 [harness]
 branch_sep = "."  # a branch of a harness line, "-W13.n"
 
-[colours]
-pe = "GNYE"  # the protective-earth core
-shield = "SH"  # the screen of a cable
-
-[colours.defaults]  # a wiring row and its [colour, size]; an empty size is none
-AC_L1 = ["BK", ""]
-AC_L2 = ["BK", ""]
-AC_L3 = ["BK", ""]
-AC_N = ["BU", ""]
-AC_CONTROL = ["RD", ""]
-DC_SUPPLY = ["BU", ""]
-DC_CONTROL = ["BU", ""]
-DC_GROUND = ["BU", ""]
-DC_SIGNAL = ["BU", ""]
-
 [title_block]
 fields = ["title", "number", "revision", "revision_date", "customer", "author", "page_title", "scope", "sheet", "page"]
 band_mm = 20.0  # the band's height
 centre_gap_mm = 3.125  # label centre to value centre
+label_height_mm = 1.8  # the capital heights the stack above is authored for; the band grows when the build's heights exceed them
+value_height_mm = 2.5
 
 [revision_table]
 columns = ["revision", "date", "description", "created", "checked", "approved"]  # keys of [words]
@@ -102,6 +85,325 @@ description_mm = 120.0  # the one wrapping column
 date_format = "YYYY-MM-DD"
 initials_required = true
 format = "{version}.{revision}"
+
+[designation]
+number_start = 1  # the first number an automatic designation takes, -K1
+
+[export]
+reports = ["bom", "plc", "wires", "designations", "cables", "cores"]  # the whole-model reports written, in this order
+name_join = "-"  # between the prefix, the kind and the fragment of a file name
+version_sign = "-v"  # between a set name and its version, "pump-v1.0"
+ref_sign = "-"  # replaces each sign of a designation in a file name
+data_dir = "data"  # the folder of the CSV and XML files in the output folder
+data_suffixes = [".csv", ".xml"]  # the files that go to data_dir
+csv_delimiter = ","  # between the cells of a CSV line
+csv_encoding = "utf-8"  # a CSV file's encoding; "utf-8-sig" opens in Excel with its accents
+csv_quoting = "minimal"  # minimal, all, nonnumeric or none
+csv_newline = "\n"  # ends a CSV line
+
+# The columns each list prints, in order: the row `field`, and the `[words]` keys of its PDF
+# heading (`pdf`) and its CSV header (`csv`). `pdf_columns` is the subset the PDF prints.
+[lists.terminal]
+pdf_columns = ["designation", "group", "index", "internal_ends", "external_ends"]
+
+[[lists.terminal.columns]]
+field = "designation"
+pdf = "designation"
+csv = "csv_designation"
+
+[[lists.terminal.columns]]
+field = "group"
+pdf = "head_group"
+csv = "csv_group"
+
+[[lists.terminal.columns]]
+field = "index"
+pdf = "head_index"
+csv = "csv_index"
+
+[[lists.terminal.columns]]
+field = "internal_ends"
+pdf = "side_a"
+csv = "csv_internal_ends"
+
+[[lists.terminal.columns]]
+field = "external_ends"
+pdf = "side_b"
+csv = "csv_external_ends"
+
+[[lists.terminal.columns]]
+field = "jumper_group"
+pdf = "head_jumper_group"
+csv = "csv_jumper_group"
+
+
+[[lists.plc.columns]]
+field = "pin"
+pdf = "pin"
+csv = "csv_pin"
+
+[[lists.plc.columns]]
+field = "channel_name"
+pdf = "head_channel_name"
+csv = "csv_channel_name"
+
+[[lists.plc.columns]]
+field = "signal"
+pdf = "head_signal"
+csv = "csv_signal"
+
+[[lists.plc.columns]]
+field = "signal_name"
+pdf = "head_signal_name"
+csv = "csv_signal_name"
+
+[[lists.plc.columns]]
+field = "wired_to"
+pdf = "head_wired_to"
+csv = "csv_wired_to"
+
+
+[[lists.bom.columns]]
+field = "mpn"
+pdf = "head_mpn"
+csv = "csv_mpn"
+
+[[lists.bom.columns]]
+field = "revision"
+pdf = "head_revision"
+csv = "csv_revision"
+
+[[lists.bom.columns]]
+field = "manufacturer"
+pdf = "head_manufacturer"
+csv = "csv_manufacturer"
+
+[[lists.bom.columns]]
+field = "description"
+pdf = "description"
+csv = "csv_description"
+
+[[lists.bom.columns]]
+field = "count"
+pdf = "head_count"
+csv = "csv_count"
+
+[[lists.bom.columns]]
+field = "designations"
+pdf = "head_designations"
+csv = "csv_designations"
+
+
+[[lists.wires.columns]]
+field = "from_"
+pdf = "head_from"
+csv = "wire_from"
+
+[[lists.wires.columns]]
+field = "to"
+pdf = "head_to"
+csv = "csv_to"
+
+[[lists.wires.columns]]
+field = "colour"
+pdf = "head_colour"
+csv = "csv_colour"
+
+[[lists.wires.columns]]
+field = "cross_section_mm2"
+pdf = "head_cross_section_mm2"
+csv = "csv_cross_section_mm2"
+
+[[lists.wires.columns]]
+field = "ends"
+pdf = "head_label"
+csv = "csv_label"
+
+
+[[lists.designations.columns]]
+field = "designation"
+pdf = "designation"
+csv = "csv_designation"
+
+[[lists.designations.columns]]
+field = "reference"
+pdf = "head_reference"
+csv = "csv_reference"
+
+[[lists.designations.columns]]
+field = "description"
+pdf = "description"
+csv = "csv_description"
+
+
+[lists.connectors]
+pdf_columns = ["marking", "net", "mate_port_designation", "ends"]
+
+[[lists.connectors.columns]]
+field = "designation"
+pdf = "designation"
+csv = "csv_designation"
+
+[[lists.connectors.columns]]
+field = "style"
+pdf = "head_style"
+csv = "csv_style"
+
+[[lists.connectors.columns]]
+field = "pincount"
+pdf = "head_pincount"
+csv = "csv_pincount"
+
+[[lists.connectors.columns]]
+field = "gender"
+pdf = "head_gender"
+csv = "csv_gender"
+
+[[lists.connectors.columns]]
+field = "mate_designation"
+pdf = "head_mate_designation"
+csv = "csv_mate_designation"
+
+[[lists.connectors.columns]]
+field = "marking"
+pdf = "pin"
+csv = "csv_marking"
+
+[[lists.connectors.columns]]
+field = "net"
+pdf = "head_net"
+csv = "csv_net"
+
+[[lists.connectors.columns]]
+field = "mate_port_designation"
+pdf = "mate"
+csv = "csv_mate_port_designation"
+
+[[lists.connectors.columns]]
+field = "ends"
+pdf = "ends"
+csv = "csv_ends"
+
+
+[lists.cables]
+pdf_columns = ["designation", "mpn", "description", "core_count", "gauge_mm2", "length_mm", "from_label", "to_label"]
+
+[[lists.cables.columns]]
+field = "designation"
+pdf = "designation"
+csv = "csv_designation"
+
+[[lists.cables.columns]]
+field = "mpn"
+pdf = "head_mpn"
+csv = "csv_mpn"
+
+[[lists.cables.columns]]
+field = "description"
+pdf = "description"
+csv = "csv_description"
+
+[[lists.cables.columns]]
+field = "core_count"
+pdf = "head_core_count"
+csv = "csv_core_count"
+
+[[lists.cables.columns]]
+field = "gauge_mm2"
+pdf = "head_gauge_mm2"
+csv = "csv_gauge_mm2"
+
+[[lists.cables.columns]]
+field = "length_mm"
+pdf = "length_mm"
+csv = "csv_length_mm"
+
+[[lists.cables.columns]]
+field = "from_label"
+pdf = "head_from_label"
+csv = "csv_from_label"
+
+[[lists.cables.columns]]
+field = "to_label"
+pdf = "head_to_label"
+csv = "csv_to_label"
+
+[[lists.cables.columns]]
+field = "pairs"
+pdf = "head_pairs"
+csv = "csv_pairs"
+
+
+[[lists.contents.columns]]
+field = "designation"
+pdf = "designation"
+csv = "designation"
+
+[[lists.contents.columns]]
+field = "mpn"
+pdf = "mpn"
+csv = "mpn"
+
+[[lists.contents.columns]]
+field = "description"
+pdf = "description"
+csv = "description"
+
+[[lists.contents.columns]]
+field = "core_count"
+pdf = "cores"
+csv = "cores"
+
+[[lists.contents.columns]]
+field = "gauge_mm2"
+pdf = "gauge"
+csv = "gauge"
+
+[[lists.contents.columns]]
+field = "length_mm"
+pdf = "length_mm"
+csv = "length_mm"
+
+[[lists.contents.columns]]
+field = "ends"
+pdf = "ends"
+csv = "ends"
+
+
+[[lists.cores.columns]]
+field = "cable"
+pdf = "head_cable"
+csv = "csv_cable"
+
+[[lists.cores.columns]]
+field = "core"
+pdf = "head_core"
+csv = "csv_core"
+
+[[lists.cores.columns]]
+field = "colour"
+pdf = "head_colour"
+csv = "csv_colour"
+
+[[lists.cores.columns]]
+field = "pair"
+pdf = "head_pair"
+csv = "csv_pair"
+
+[[lists.cores.columns]]
+field = "end_a"
+pdf = "head_end_a"
+csv = "csv_end_a"
+
+[[lists.cores.columns]]
+field = "end_b"
+pdf = "head_end_b"
+csv = "csv_end_b"
+
+[[lists.cores.columns]]
+field = "note"
+pdf = "head_note"
+csv = "csv_note"
 
 [words]
 side_a = "Side A"
@@ -152,7 +454,6 @@ designation_list = "Designation list"
 cable_list = "Cable list"
 bom = "BOM"
 cabinet_schematic = "Cabinet schematic"
-pcb_schematic = "PCB schematic"
 system = "System"
 continued = "(cont.)"
 range_word = "to"
@@ -167,3 +468,79 @@ date = "Date"
 created = "Created"
 checked = "Checked"
 approved = "Approved"
+csv_designation = "designation"
+head_group = "Group"
+csv_group = "group"
+head_index = "Index"
+csv_index = "index"
+csv_internal_ends = "side_a"
+csv_external_ends = "side_b"
+head_jumper_group = "Jumper group"
+csv_jumper_group = "jumper_group"
+csv_pin = "pin"
+head_channel_name = "Channel name"
+csv_channel_name = "channel_name"
+head_signal = "Signal"
+csv_signal = "signal"
+head_signal_name = "Signal name"
+csv_signal_name = "signal_name"
+head_wired_to = "Wired to"
+csv_wired_to = "wired_to"
+head_mpn = "Mpn"
+csv_mpn = "mpn"
+head_revision = "Revision"
+csv_revision = "revision"
+head_manufacturer = "Manufacturer"
+csv_manufacturer = "manufacturer"
+csv_description = "description"
+head_count = "Count"
+csv_count = "count"
+head_designations = "Designations"
+csv_designations = "designations"
+head_from = "From"
+head_to = "To"
+csv_to = "to"
+head_colour = "Colour"
+csv_colour = "colour"
+head_cross_section_mm2 = "Cross section mm2"
+csv_cross_section_mm2 = "cross_section_mm2"
+head_label = "Label"
+csv_label = "label"
+head_reference = "Reference"
+csv_reference = "reference"
+head_style = "Style"
+csv_style = "style"
+head_pincount = "Pincount"
+csv_pincount = "pincount"
+head_gender = "Gender"
+csv_gender = "gender"
+head_mate_designation = "Mate designation"
+csv_mate_designation = "mate_designation"
+csv_marking = "marking"
+head_net = "Net"
+csv_net = "net"
+csv_mate_port_designation = "mate_port_designation"
+csv_ends = "ends"
+head_core_count = "Core count"
+csv_core_count = "core_count"
+head_gauge_mm2 = "Gauge mm2"
+csv_gauge_mm2 = "gauge_mm2"
+csv_length_mm = "length_mm"
+head_from_label = "From label"
+csv_from_label = "from_label"
+head_to_label = "To label"
+csv_to_label = "to_label"
+head_pairs = "Pairs"
+csv_pairs = "pairs"
+head_cable = "Cable"
+csv_cable = "cable"
+head_core = "Core"
+csv_core = "core"
+head_pair = "Pair"
+csv_pair = "pair"
+head_end_a = "End a"
+csv_end_a = "end_a"
+head_end_b = "End b"
+csv_end_b = "end_b"
+head_note = "Note"
+csv_note = "note"

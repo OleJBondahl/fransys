@@ -16,8 +16,8 @@ from .cut_fixtures import AREA, chain, elem, net, side
 from .cycle_fixtures import ring_problem
 
 if TYPE_CHECKING:
+    from fransys_layout.core.flow_values import CutResult
     from fransys_layout.core.outputs import Placement
-    from fransys_layout.core.values import CutResult
 
 
 def ring_beside_a_tall_chain() -> PlacementProblem:
@@ -39,17 +39,11 @@ def tag_on_the_wire() -> tuple[PlacementProblem, CutResult, Placement, Options]:
     prob = ring_beside_a_tall_chain()
     opts = core_options(
         marker=MARKER,
-        flip_turn="R180",
-        tag_stagger=True,
-        label_gap=8,
-        parallel_pitch=48,
-        driver_first=True,
-        arrow_sides=("E", "W"),
     )
     cut = pipeline_fixtures.cut_of(prob, opts)
     ends = (RefEnd(1, None, PinRef("k00", "n")), RefEnd(1, None, PinRef("k02", "s")))
     plan = (*cut.spec.reference_plan, Ref("x9", RefKind.TAG, ends))
-    cut = replace(cut, spec=PageSpec(cut.spec.pages, plan, cut.spec.findings))
+    cut = replace(cut, spec=PageSpec(cut.spec.pages, plan, cut.spec.findings, drawn=cut.spec.drawn, stubbed=cut.spec.stubbed, leads=cut.spec.leads))
     return prob, cut, pipeline_fixtures.placed_from(cut, prob, opts), opts
 
 

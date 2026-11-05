@@ -5,30 +5,19 @@ from typing import TYPE_CHECKING, Any
 
 import pytest
 from layout_cabinet import build_cabinet
-from layout_library import freeze
+from library_records import freeze
 
+from fransys_model.derive import function_templates, internal_links, port_templates
+from fransys_model.elecdef import LinkKind
 from fransys_model.kernel import make_id
-from fransys_model.layout import Chain, GroupHint, layout_of
-from fransys_model.vocab import (
-    Item,
-    LinkKind,
-    aspect_nodes,
-    conductors,
-    function_templates,
-    internal_links,
-    items,
-    nets,
-    parts,
-    port_templates,
-)
+from fransys_model.layout import GroupHint, layout_of
+from fransys_model.vocab import Item, aspect_nodes, conductors, items, nets, parts
 
 if TYPE_CHECKING:
     from fransys_model.kernel import Model
 
-FLAGS = ("reverse", "extra_relay", "broken_chain", "second_location")
-COMBINATIONS = [
-    dict(zip(FLAGS, values, strict=True)) for values in itertools.product((False, True), repeat=4)
-]
+FLAGS = ("reverse", "extra_relay", "second_location")
+COMBINATIONS = [dict(zip(FLAGS, values, strict=True)) for values in itertools.product((False, True), repeat=3)]
 
 
 def _model(**flags: bool) -> Model:
@@ -39,16 +28,12 @@ def _item(model: Model, *key: str) -> Item | None:
     return items(model).get(make_id(Item, ("cabinet", *key)))
 
 
-@pytest.mark.parametrize(
-    "flags", COMBINATIONS, ids=lambda flags: "+".join(k for k in flags if flags[k]) or "default"
-)
+@pytest.mark.parametrize("flags", COMBINATIONS, ids=lambda flags: "+".join(k for k in flags if flags[k]) or "default")
 def test_freezes_in_every_flag_combination(flags: dict[str, Any]) -> None:
     assert _model(**flags).digest
 
 
-@pytest.mark.parametrize(
-    "extra", [{}, {"extra_relay": True}, {"broken_chain": True, "second_location": True}]
-)
+@pytest.mark.parametrize("extra", [{}, {"extra_relay": True}, {"second_location": True}])
 def test_reverse_gives_an_equal_digest(extra: dict[str, Any]) -> None:
     assert _model(**extra).digest == _model(reverse=True, **extra).digest
 
@@ -56,11 +41,6 @@ def test_reverse_gives_an_equal_digest(extra: dict[str, Any]) -> None:
 def test_extra_relay_adds_k9() -> None:
     assert _item(_model(), "k9") is None
     assert _item(_model(extra_relay=True), "k9") is not None
-
-
-def test_broken_chain_adds_one_chain() -> None:
-    before = len(layout_of(_model(), Chain))
-    assert len(layout_of(_model(broken_chain=True), Chain)) == before + 1
 
 
 def test_second_location_adds_the_location_c2() -> None:
@@ -84,16 +64,18 @@ def test_items_are_found_by_key() -> None:
     assert child.parent == board.id
 
 
-def test_one_group_hint_and_no_other_layout_kind_but_chains_and_symbol_choices() -> None:
+def test_one_group_hint_and_no_other_layout_kind_but_symbol_choices() -> None:
     model = _model()
     assert len(layout_of(model, GroupHint)) == 1
     assert {kind for kind in model.tables if kind.startswith("layout.")} == {
-        "layout.chain",
-        "layout.colour_codes",
+        "layout.designation",
         "layout.drawing_library",
+        "layout.export",
         "layout.frame_form",
         "layout.group_hint",
         "layout.harness_text",
+        "layout.house_profile",
+        "layout.lists",
         "layout.paper",
         "layout.reference_text",
         "layout.revision_form",
@@ -124,9 +106,7 @@ def test_the_contactor_main_contact_has_three_disjoint_poles() -> None:
     links = [
         frozenset((pins[link.a].name, pins[link.b].name))
         for link in internal_links(model).values()
-        if pins[link.a].function == templates["main"].id
-        and pins[link.b].function == templates["main"].id
-        and link.kind is LinkKind.SWITCHED
+        if pins[link.a].function == templates["main"].id and pins[link.b].function == templates["main"].id and link.kind is LinkKind.SWITCHED
     ]
     assert len(links) == 3
     assert len(frozenset().union(*links)) == 6

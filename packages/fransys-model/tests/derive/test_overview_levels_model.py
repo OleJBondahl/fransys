@@ -20,10 +20,7 @@ def test_lines_are_lifted_with_the_count_of_connections() -> None:
     mate K1 to the nested unit is its own line beside the wire."""
     model, outer, nested = unit_plant()
     level = overview_level(model, outer)
-    counts = {
-        (frozenset((line.ref.a, line.ref.b)), line.ref.kind.value): line.count
-        for line in level.lines
-    }
+    counts = {(frozenset((line.ref.a, line.ref.b)), line.ref.kind.value): line.count for line in level.lines}
     assert counts == {
         (frozenset((item_id("x1"), item_id("k1"))), "wire"): 2,
         (frozenset((item_id("x1"), item_id("k2"))), "wire"): 1,
@@ -31,9 +28,7 @@ def test_lines_are_lifted_with_the_count_of_connections() -> None:
         (frozenset((item_id("k1"), nested)), "wire"): 1,
         (frozenset((item_id("k1"), nested)), "mate"): 1,
     }
-    (pair,) = (
-        one for one in level.lines if {one.ref.a, one.ref.b} == {item_id("x1"), item_id("k1")}
-    )
+    (pair,) = (one for one in level.lines if {one.ref.a, one.ref.b} == {item_id("x1"), item_id("k1")})
     assert len(pair.conductors) == 2
 
 

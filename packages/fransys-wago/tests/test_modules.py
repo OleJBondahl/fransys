@@ -1,5 +1,4 @@
 import xml.etree.ElementTree as ET
-from decimal import Decimal
 from pathlib import Path
 
 import pytest
@@ -81,31 +80,8 @@ def test_every_module_and_channel_matches_the_rows(demo_rack):
             assert channel.get("Type") == kind
             assert channel.get("Value") == "0"
             assert channel.get("Description") == description
-            assert (channel.get("Unit") is not None) == (source.scaling is not None)
-            operators = list(channel)
-            if source.scaling is None:
-                assert operators == []
-                continue
-            assert channel.get("Unit") == source.scaling.unit
-            (operator,) = operators
-            assert operator.attrib == {
-                "Interpolation": "Linear",
-                "Model": "Automation.ScalingOperator<double>",
-                "Name": "Scale",
-                "Type": "double",
-            }
-            low, high = list(operator)
-            for point, name, raw, eng in (
-                (low, "ScalingPoint", source.scaling.raw_min, source.scaling.eng_min),
-                (high, "ScalingPoint1", source.scaling.raw_max, source.scaling.eng_max),
-            ):
-                assert point.attrib == {
-                    "InValue": str(raw),
-                    "OutValue": str(eng),
-                    "Model": "Automation.ScalingPoint<double>",
-                    "Name": name,
-                    "Type": "double",
-                }
+            assert channel.get("Unit") is None
+            assert list(channel) == []
 
 
 def test_the_demo_rack_reads_as_the_spec_says(demo_rack):
@@ -144,15 +120,7 @@ def test_attributes_come_in_the_order_of_the_spec(demo_rack):
         "Value",
         "Description",
     ]
-    scaled = root[2][0]
-    assert list(scaled.attrib)[-2:] == ["Description", "Unit"]
-    assert list(scaled[0].attrib) == ["Interpolation", "Model", "Name", "Type"]
-    assert list(scaled[0][0].attrib) == ["InValue", "OutValue", "Model", "Name", "Type"]
     assert '\n    <Channel Input="0" Model="CDPSignalChannel&lt;bool&gt;" Name="B1_Door"' in text
-    assert (
-        '<ScalingPoint InValue="4" OutValue="0" Model="Automation.ScalingPoint&lt;double&gt;" '
-        'Name="ScalingPoint" Type="double"></ScalingPoint>'
-    ) in text
 
 
 def test_a_module_without_channels_is_not_emitted(demo_rack):
@@ -241,9 +209,7 @@ def test_the_signal_table_covers_every_signal_type():
 @pytest.mark.parametrize("signal", list(SignalType))
 def test_the_package_table_is_the_spelled_out_one(signal):
     entry = SIGNALS[signal]
-    assert (entry.abbr, "1" if entry.output else "0", entry.kind, entry.description) == EXPECTED[
-        signal
-    ]
+    assert (entry.abbr, "1" if entry.output else "0", entry.kind, entry.description) == EXPECTED[signal]
 
 
 @pytest.mark.parametrize(
@@ -261,9 +227,7 @@ def test_the_package_table_is_the_spelled_out_one(signal):
         ("-X", "Y", "X_Y"),
     ],
 )
-def test_a_bound_channel_name_is_the_sanitised_designation_and_signal_name(
-    new_rack, designation, signal_name, expected
-):
+def test_a_bound_channel_name_is_the_sanitised_designation_and_signal_name(new_rack, designation, signal_name, expected):
     rack, _ = _one_module_rack(new_rack, (SignalType.DI,), [(designation, signal_name)])
     assert _channel_names(rack) == [expected]
 
@@ -272,9 +236,7 @@ def test_a_bound_channel_name_is_the_sanitised_designation_and_signal_name(
     ("module_designation", "expected"),
     [("A1", ["A1_0", "A1_1"]), ("3rd", ["N_3rd_0", "N_3rd_1"]), ("A-1", ["A_1_0", "A_1_1"])],
 )
-def test_a_spare_channel_name_is_the_module_designation_and_the_zero_based_number(
-    new_rack, module_designation, expected
-):
+def test_a_spare_channel_name_is_the_module_designation_and_the_zero_based_number(new_rack, module_designation, expected):
     rack = new_rack()
     rack.module(rack.part("p", "750-X", (SignalType.DI,) * 2), "m", module_designation, 1)
     assert _channel_names(rack) == expected
@@ -301,70 +263,17 @@ def test_a_name_that_sanitises_to_nothing_is_emitted_empty(new_rack):
     assert 'Name="" NetworkConvert' in text
 
 
-def test_scaling_prints_the_numbers_as_they_are(new_rack):
-    rack = new_rack()
-    module = rack.module(rack.part("p", "750-X", (SignalType.AI_CURRENT,) * 2), "m", "A1", 1)
-    rack.device(
-        "t1",
-        "T1",
-        "Lvl",
-        module.channels[0],
-        signal=SignalType.AI_CURRENT,
-        scaling=("bar", 0, 32767, Decimal("0.50"), Decimal("-1E+2")),
-    )
-    rack.device(
-        "t2",
-        "T2",
-        "Flw",
-        module.channels[1],
-        signal=SignalType.AI_CURRENT,
-        scaling=("m", 4, 20, Decimal(0), Decimal(5)),
-    )
-    text = modules_xml(rack.freeze(), rack.rack)
-    assert 'InValue="0" OutValue="0.50"' in text
-    assert 'InValue="32767" OutValue="-1E+2"' in text
-    assert 'InValue="4" OutValue="0"' in text
-    assert 'InValue="20" OutValue="5"' in text
-    assert 'OutValue="0.5"' not in text
-
-
-def test_scaling_follows_the_row_whatever_the_signal(new_rack):
-    rack = new_rack()
-    module = rack.module(rack.part("p", "750-X", (SignalType.DI,)), "m", "A1", 1)
-    rack.device("d", "B1", "Door", module.channels[0], scaling=("x", 0, 1, Decimal(0), Decimal(1)))
-    ((channel,),) = [list(m) for m in _parse(modules_xml(rack.freeze(), rack.rack))]
-    assert channel.get("Unit") == "x"
-    assert [child.tag for child in channel] == ["Operator"]
-
-
-def test_a_channel_without_scaling_has_no_unit_and_no_operator(demo_rack):
-    root = _parse(modules_xml(demo_rack.freeze(), demo_rack.rack))
-    unscaled = root[2][1]
-    assert unscaled.get("Name") == "T2_Flow"
-    assert "Unit" not in unscaled.attrib
-    assert list(unscaled) == []
-
-
 def test_xml_special_characters_are_escaped_and_round_trip(new_rack):
     description = 'Module <A> & "B"\nline two\ttab\rend'
-    unit = 'a<b>&"c"\nd'
     rack = new_rack()
     part = rack.part("p", "750-X", (SignalType.AI_CURRENT,), description=description)
     module = rack.module(part, "m", "A1", 1)
-    rack.device(
-        "t1",
-        "T1",
-        "Lvl",
-        module.channels[0],
-        signal=SignalType.AI_CURRENT,
-        scaling=(unit, 4, 20, Decimal(0), Decimal(100)),
-    )
+    rack.device("t1", "T1", "Lvl", module.channels[0], signal=SignalType.AI_CURRENT)
     text = modules_xml(rack.freeze(), rack.rack)
     assert "Module <A>" not in text
     assert "Module &lt;A&gt; &amp; &quot;B&quot;&#10;line two&#9;tab&#13;end" in text
     (module_element,) = _parse(text)
     assert module_element.get("Description") == description
-    assert module_element[0].get("Unit") == unit
 
 
 def test_an_empty_rack_is_an_empty_modules_element(new_rack):
@@ -385,9 +294,7 @@ def test_the_same_model_gives_the_same_bytes(demo_rack):
 
 @pytest.mark.parametrize("seed", range(6))
 def test_insertion_order_does_not_change_the_bytes(demo_rack, seed):
-    assert modules_xml(demo_rack.freeze(seed), demo_rack.rack) == modules_xml(
-        demo_rack.freeze(), demo_rack.rack
-    )
+    assert modules_xml(demo_rack.freeze(seed), demo_rack.rack) == modules_xml(demo_rack.freeze(), demo_rack.rack)
 
 
 def test_a_rack_that_is_not_an_item_is_refused(demo_rack):

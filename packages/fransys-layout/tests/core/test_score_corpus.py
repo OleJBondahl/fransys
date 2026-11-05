@@ -1,6 +1,7 @@
 """The scorer on the 18 corpus instances reproduces today's numbers in their `.score.json`."""
 
 import json
+from typing import Any
 
 import pytest
 from corpus_reader import CORPUS, corpus_names, read_instance, read_score, resided_names
@@ -12,7 +13,7 @@ lazy from fransys_layout.core.outputs import Score
 NAMES = corpus_names()
 
 
-def snapshot(scene, got: Score) -> dict:
+def snapshot(scene, got: Score) -> dict[str, Any]:
     """The scorer's counts of one instance, as stored in `scorer_baseline.json`."""
     return {
         "P": dict(got.P),
@@ -56,10 +57,8 @@ def test_junction_off_line_equals_the_terminal_counter(name: str) -> None:
     assert len(FLAGS[name]["junction_off_line"]) == want
 
 
-@pytest.mark.parametrize("name", NAMES)
+@pytest.mark.parametrize("name", [n for n in NAMES if n not in resided_names()])
 def test_attached_off_pin_equals_the_coil_counter(name: str) -> None:
-    if name in resided_names():
-        pytest.skip("pins re-sided (BOX-SIDES Q1); today's coils keep the old pin places")
     want = read_score(name)["placement"].get("coil_off_channel", 0)
     assert len(FLAGS[name]["attached_off_pin"]) == want
 

@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from collections.abc import Iterable
     from collections.abc import Set as AbstractSet
 
-    from .values import Attach, Fan
+    from .flow_values import Attach, Fan
 
 
 def fan_head(fan: Fan) -> Attach | None:
@@ -23,9 +23,7 @@ def fan_head(fan: Fan) -> Attach | None:
     return fan.head
 
 
-def head_short(
-    head_pages: AbstractSet[int], leg_pages: Iterable[int]
-) -> tuple[int, int, int] | None:
+def head_short(head_pages: AbstractSet[int], leg_pages: Iterable[int]) -> tuple[int, int, int] | None:
     """P3: (legs on the head's page, the page holding most of the others, its legs), or None.
 
     None when no other page holds more legs than the head's page. A tie keeps the lower page.

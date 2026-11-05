@@ -4,9 +4,7 @@ import importlib.util
 from pathlib import Path
 from types import SimpleNamespace
 
-_spec = importlib.util.spec_from_file_location(
-    "scale_first_conftest", Path(__file__).parents[1] / "conftest.py"
-)
+_spec = importlib.util.spec_from_file_location("scale_first_conftest", Path(__file__).parents[1] / "conftest.py")
 assert _spec is not None
 assert _spec.loader is not None
 conftest = importlib.util.module_from_spec(_spec)
@@ -17,9 +15,7 @@ def _item(name: str, *, marked: bool = False) -> SimpleNamespace:
     added: list[object] = []
     return SimpleNamespace(
         path=Path("/x") / name,
-        get_closest_marker=lambda marker: (
-            object() if marked and marker == "private_input" else None
-        ),
+        get_closest_marker=lambda marker: object() if marked and marker == "private_input" else None,
         add_marker=added.append,
         added=added,
     )

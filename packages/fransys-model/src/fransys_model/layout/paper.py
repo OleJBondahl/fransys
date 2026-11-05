@@ -25,9 +25,7 @@ class PaperChoice:
     ext: frozendict[str, Value] = frozendict()
 
 
-def sheet_format_record(
-    key: AuthoringKey, name: str, numbers: Mapping[str, int], module_mm: Decimal
-) -> SheetFormat:
+def sheet_format_record(key: AuthoringKey, name: str, numbers: Mapping[str, int], module_mm: Decimal) -> SheetFormat:
     """A `SheetFormat` of `key` named `name`; `numbers` holds its other whole-mm and grid fields.
 
     The keys of `numbers` are the record's own: `width_mm`, `height_mm`, `content_x_mm`,
@@ -50,10 +48,6 @@ def sheet_format_record(
     )
 
 
-def paper_choice(
-    key: AuthoringKey, *, default: Id[SheetFormat], by_kind: Mapping[str, Id[SheetFormat]]
-) -> PaperChoice:
+def paper_choice(key: AuthoringKey, *, default: Id[SheetFormat], by_kind: Mapping[str, Id[SheetFormat]]) -> PaperChoice:
     """The `PaperChoice` of `key`: the default sheet and one per `PageKind` value."""
-    return PaperChoice(
-        id=make_id(PaperChoice, key), key=key, default=default, by_kind=frozendict(by_kind)
-    )
+    return PaperChoice(id=make_id(PaperChoice, key), key=key, default=default, by_kind=frozendict(by_kind))

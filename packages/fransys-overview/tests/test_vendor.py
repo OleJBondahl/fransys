@@ -45,12 +45,10 @@ def test_the_licence_ships_in_the_package():
 
 
 def test_the_page_carries_the_librarys_licence_banner(demo_cabinet):
-    page = html(demo_cabinet)
+    page = html(demo_cabinet, text_height=8)
     start = page.index("/**")
     banner = page[start : page.index("*/", start)]
-    stripped = "\n".join(
-        line.removeprefix(" * ").removeprefix(" *").rstrip() for line in banner.splitlines()[1:]
-    )
+    stripped = "\n".join(line.removeprefix(" * ").removeprefix(" *").rstrip() for line in banner.splitlines()[1:])
     licence = (PACKAGE / "LICENSE-cytoscape.txt").read_text(encoding="utf-8")
     assert stripped.strip() == licence.strip()
 
@@ -62,8 +60,7 @@ def test_the_vendored_module_is_what_the_script_writes():
 
 
 AWKWARD_SOURCE = (
-    "a \"double\" and 'single' quote, back\\slash, tab\t, newline\n, carriage\r, "
-    "café, “quotes”, astral \U0001f600, control \x01, " + "x" * 400
+    "a \"double\" and 'single' quote, back\\slash, tab\t, newline\n, carriage\r, café, “quotes”, astral \U0001f600, control \x01, " + "x" * 400
 )
 
 

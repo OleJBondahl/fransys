@@ -62,11 +62,7 @@ def _switch_entries(model: Model, function: Function) -> tuple[list[Entry], list
     own = _own_templates(model, function)
     templates = {t: port_templates(model)[t] for t in own if t is not None}
     for link in internal_links(model).values():
-        if (
-            link.a not in templates
-            or link.b not in templates
-            or not link_role(model, link.id).switched
-        ):
+        if link.a not in templates or link.b not in templates or not link_role(model, link.id).switched:
             continue
         (pole,) = poles_by_role(function_role(model, function.id), [link], templates)
         a, b = (printed_name(model, own[end.id].id) for end in pole.ends)
@@ -77,7 +73,8 @@ def _switch_entries(model: Model, function: Function) -> tuple[list[Entry], list
 
 def _own_templates(model: Model, function: Function) -> dict[Id[PortTemplate] | None, Port]:
     """The function's ports by their port template."""
-    return {p.template: p for p in ports(model).values() if p.function == function.id}
+    table = ports(model)
+    return {table[p].template: table[p] for p in build_indexes(model).ports_by_function.get(function.id, ())}
 
 
 def _is_main(line: str, load: str) -> bool:
@@ -89,10 +86,7 @@ def _poles(model: Model, function: Function) -> list[tuple[str, str]]:
     """A contact's printed `(line, load)` pole names; a one-pin pole repeats its pin."""
     own = _own_templates(model, function)
     templates = {t: port_templates(model)[t] for t in own if t is not None}
-    return [
-        (printed_name(model, own[a.id].id), printed_name(model, own[b.id].id))
-        for a, b in (pole.ends for pole in poles_of(model, templates))
-    ]
+    return [(printed_name(model, own[a.id].id), printed_name(model, own[b.id].id)) for a, b in (pole.ends for pole in poles_of(model, templates))]
 
 
 def printed_name(model: Model, port: Id[Port]) -> str:

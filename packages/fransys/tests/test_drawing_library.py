@@ -5,6 +5,7 @@ from decimal import Decimal
 import fransys as fr
 import pytest
 from fransys._drawing_library import with_drawing_library
+from fransys._house import with_house
 
 from electrical_symbols import LIBRARY
 from fransys_model.derive import mm_per_division
@@ -42,6 +43,11 @@ def _built():
     return fr.build(d).model
 
 
+def _housed():
+    """A frozen empty model with the house records, which `with_drawing_library` reads."""
+    return with_house(freeze(Draft()), fr.settings())
+
+
 def test_a_built_model_holds_the_library_record_once() -> None:
     model = _built()
     (record,) = layout_of(model, DrawingLibrary).values()
@@ -62,7 +68,7 @@ def test_a_planted_authored_record_is_refused() -> None:
 
 
 def test_a_model_that_already_holds_the_record_is_refused() -> None:
-    once = with_drawing_library(freeze(Draft()))
+    once = with_drawing_library(_housed())
     with pytest.raises(SchemaError, match=r"layout\.drawing_library"):
         with_drawing_library(once)
 
@@ -84,8 +90,7 @@ def test_the_record_holds_each_height_the_build_prints_at_as_symdefs_em() -> Non
     from fransys._drawing_library import _record
     from symdef import em_height
 
-    model = freeze(Draft())
-    record, font = _record(model), LIBRARY.font
+    record, font = _record(), LIBRARY.font
     assert font is not None
     assert record.ems["1.8"] == Decimal(repr(em_height(font, 1.8)))
     assert set(record.ems) == {"1.8", "2.5", "3.5", "5"}
@@ -94,7 +99,7 @@ def test_the_record_holds_each_height_the_build_prints_at_as_symdefs_em() -> Non
 def test_the_record_holds_the_library_lines_as_symdef_prints_them() -> None:
     from fransys._drawing_library import _record
 
-    record = _record(freeze(Draft()))
+    record = _record()
     assert dict(record.lines) == {
         "normal": Decimal("0.25"),
         "rule": Decimal("0.18"),

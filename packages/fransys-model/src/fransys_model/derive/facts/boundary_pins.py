@@ -10,14 +10,10 @@ lazy from fransys_model.vocab.tables import HasTables
 
 
 def unit_boundary_pins(model: HasTables, unit: Id[Unit] | None) -> tuple[Id[Port], ...]:
-    """The ports of `unit`'s boundary functions: functions in `Id` order, pins in pin order."""
+    """The ports of `unit`'s boundary functions: boundary functions as `boundary` orders them, pins in pin order."""
     if unit is None:
         return ()
     ports_of = build_indexes(model).ports_by_function
     return tuple(
-        port
-        for function in boundary(model, unit)
-        for port in sorted(
-            ports_of.get(function, ()), key=lambda p: pin_order(port_marking(model, p), p)
-        )
+        port for function in boundary(model, unit) for port in sorted(ports_of.get(function, ()), key=lambda p: pin_order(port_marking(model, p), p))
     )

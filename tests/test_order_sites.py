@@ -23,10 +23,7 @@ from test_one_home import (
 REPORTS = "fransys_reports.x"
 DERIVE_ROWS = "fransys_model.derive.rows"
 DESIGNATION_IMPORT = "from fransys_model.derive.order import designation_key\n"
-SORTS_BY_DESIGNATION = (
-    "from .order import designation_key\n"
-    "def f(m, xs):\n    return sorted(xs, key=designation_key)\n"
-)
+SORTS_BY_DESIGNATION = "from .order import designation_key\ndef f(m, xs):\n    return sorted(xs, key=designation_key)\n"
 
 
 def _sites(scanner, source, module):
@@ -58,9 +55,7 @@ def test_each_site_kind_is_an_order_site(stmt):
 
 def test_a_method_reverse_in_the_model_is_a_site_outside_a_home():
     source = "def f(xs):\n    xs.reverse()\n"
-    assert _sites(order_sites, source, "fransys_model.derive.x") == {
-        "fransys_model.derive.x::f": [2]
-    }
+    assert _sites(order_sites, source, "fransys_model.derive.x") == {"fransys_model.derive.x::f": [2]}
 
 
 def test_plain_min_max_and_model_set_loop_are_not_sites():
@@ -73,18 +68,9 @@ def test_plain_min_max_and_model_set_loop_are_not_sites():
     "source",
     [
         SORTS_BY_DESIGNATION,
-        (
-            "from fransys_model.derive.order import designation_key\n"
-            "def f(m, xs):\n    return sorted(xs, key=designation_key)\n"
-        ),
-        (
-            "from fransys_model.kernel import natural_key\n"
-            "def f(xs):\n    return sorted(xs, key=natural_key)\n"
-        ),
-        (
-            "from fransys_model.derive import order\n"
-            "def f(m, xs):\n    return sorted(xs, key=order.designation_key)\n"
-        ),
+        ("from fransys_model.derive.order import designation_key\ndef f(m, xs):\n    return sorted(xs, key=designation_key)\n"),
+        ("from fransys_model.kernel import natural_key\ndef f(xs):\n    return sorted(xs, key=natural_key)\n"),
+        ("from fransys_model.derive import order\ndef f(m, xs):\n    return sorted(xs, key=order.designation_key)\n"),
     ],
     ids=["relative", "absolute", "natural_key", "attribute"],
 )
@@ -98,24 +84,15 @@ def test_the_same_home_import_is_a_site_outside_the_model():
 
 
 def test_a_non_home_key_in_the_model_is_a_site():
-    lam = (
-        DESIGNATION_IMPORT
-        + "def f(m, xs):\n    return sorted(xs, key=lambda i: designation_key(m, i))\n"
-    )
+    lam = DESIGNATION_IMPORT + "def f(m, xs):\n    return sorted(xs, key=lambda i: designation_key(m, i))\n"
     assert _sites(order_sites, lam, DERIVE_ROWS) == {"fransys_model.derive.rows::f": [3]}
 
     local_def = (
-        DESIGNATION_IMPORT
-        + "def f(m, xs):\n"
-        + "    def k(i):\n"
-        + "        return designation_key(m, i)\n"
-        + "    return sorted(xs, key=k)\n"
+        DESIGNATION_IMPORT + "def f(m, xs):\n" + "    def k(i):\n" + "        return designation_key(m, i)\n" + "    return sorted(xs, key=k)\n"
     )
     assert _sites(order_sites, local_def, DERIVE_ROWS) == {"fransys_model.derive.rows::f": [5]}
 
-    tuple_key = (
-        DESIGNATION_IMPORT + "def f(m, xs):\n    return sorted(xs, key=(designation_key, 1))\n"
-    )
+    tuple_key = DESIGNATION_IMPORT + "def f(m, xs):\n    return sorted(xs, key=(designation_key, 1))\n"
     assert _sites(order_sites, tuple_key, DERIVE_ROWS) == {"fransys_model.derive.rows::f": [3]}
 
     no_key = "def f(xs):\n    return sorted(xs)\n"
@@ -141,14 +118,10 @@ def test_the_homes_are_not_scanned(module):
 
 def test_core_order_sites_scans_only_the_core():
     source = "def f(xs):\n    return sorted(xs)\n"
-    assert _sites(core_order_sites, source, "fransys_layout.core.keys") == {
-        "fransys_layout.core.keys::f": [2]
-    }
+    assert _sites(core_order_sites, source, "fransys_layout.core.keys") == {"fransys_layout.core.keys::f": [2]}
     assert _sites(core_order_sites, source, REPORTS) == {}
     home_key = DESIGNATION_IMPORT + "def f(m, xs):\n    return sorted(xs, key=designation_key)\n"
-    assert _sites(core_order_sites, home_key, "fransys_layout.core.keys") == {
-        "fransys_layout.core.keys::f": [3]
-    }
+    assert _sites(core_order_sites, home_key, "fransys_layout.core.keys") == {"fransys_layout.core.keys::f": [3]}
 
 
 CORE = "fransys_layout.core.k"
@@ -188,10 +161,7 @@ def test_order_id_reads_finds_an_id_read_in_a_tie():
 
 
 def test_order_id_reads_finds_a_bare_id_tuple_element_in_a_key_lambda():
-    source = (
-        "def in_designation_order(model, listed):\n"
-        "    return sorted(listed, key=lambda item: (designation_key(model, item), item))\n"
-    )
+    source = "def in_designation_order(model, listed):\n    return sorted(listed, key=lambda item: (designation_key(model, item), item))\n"
     assert _sites(order_id_reads, source, ORDER) == {f"{ORDER}::in_designation_order": [2]}
 
 
@@ -200,9 +170,7 @@ def test_order_id_reads_needs_an_id_read_and_the_home_module():
     assert _sites(order_id_reads, no_id, ORDER) == {}
     tie = "def plc_channel_tie(number, function):\n    return number, function.id\n"
     assert _sites(order_id_reads, tie, "fransys_model.derive.other") == {}
-    assert _sites(order_id_reads, tie, "fransys_model.derive.order_lists") == {
-        "fransys_model.derive.order_lists::plc_channel_tie": [2]
-    }
+    assert _sites(order_id_reads, tie, "fransys_model.derive.order_lists") == {"fransys_model.derive.order_lists::plc_channel_tie": [2]}
 
 
 SECTIONS = ("order_sites", "core_order_sites", "core_text_keys", "order_id_reads")
@@ -211,9 +179,7 @@ SECTIONS = ("order_sites", "core_order_sites", "core_text_keys", "order_id_reads
 @pytest.fixture(scope="module")
 def tree_sites() -> dict[str, Sites]:
     """Each gate section's sites over the tree, with every file parsed once for the module."""
-    trees = [
-        (module, ast.parse(path.read_text(encoding="utf-8"))) for module, path in src_modules()
-    ]
+    trees = [(module, ast.parse(path.read_text(encoding="utf-8"))) for module, path in src_modules()]
     assert trees, "the source walk found no file"
     return {section: _sites_over(SCANNERS[section], trees) for section in SECTIONS}
 
@@ -256,18 +222,16 @@ def test_the_layout_core_text_keys_only_fall(tree_sites):
     assert _problems("core_text_keys", tree_sites) == []
 
 
-def test_no_order_key_of_the_home_reads_an_id_more_than_today(tree_sites):
-    assert _rises("order_id_reads", tree_sites) == []
+def test_no_order_key_of_the_home_reads_an_id(tree_sites):
+    """KI-384: the stock is zero, so a read of an id in a home key is a site with no allowance."""
+    assert tree_sites["order_id_reads"] == {}
+    assert load_allowlist()["order_id_reads"] == {}
 
 
 def test_the_order_gate_can_fail():
     sites = scan(order_sites, "def f(rows):\n    return sorted(rows)\n", "fransys_reports.x")
-    assert compare(sites, {}) == [
-        "fransys_reports.x::f read 1 times, allowed 0: fransys_reports.x:2"
-    ]
-    assert compare(sites, {"fransys_reports.x::f": 2}) == [
-        "fransys_reports.x::f read 1 times, allowed 2: lower the allowlist"
-    ]
+    assert compare(sites, {}) == ["fransys_reports.x::f read 1 times, allowed 0: fransys_reports.x:2"]
+    assert compare(sites, {"fransys_reports.x::f": 2}) == ["fransys_reports.x::f read 1 times, allowed 2: lower the allowlist"]
 
 
 def test_no_order_function_takes_a_key_or_rank_callable():
@@ -279,9 +243,7 @@ def test_no_order_function_takes_a_key_or_rank_callable():
     assert found == set()
 
 
-@pytest.mark.parametrize(
-    "params", ["values, rank: Callable[[T], Any]", "values, *, key: 'Callable[[T], int] | None'"]
-)
+@pytest.mark.parametrize("params", ["values, rank: Callable[[T], Any]", "values, *, key: 'Callable[[T], int] | None'"])
 def test_an_order_function_with_a_callable_parameter_is_refused_by_name(params):
     source = f"def first_ranked({params}):\n    return min(values, key=rank)\n"
     tree = ast.parse(source)
@@ -294,9 +256,7 @@ def test_an_order_function_with_a_callable_parameter_is_refused_by_name(params):
 ORDER_SIBLING = "fransys_model.derive.order_kit"
 
 
-@pytest.mark.parametrize(
-    "key", ["lambda f: f.origin", "lambda p: (p.upper, p.lower)", "lambda f: f.a.b"]
-)
+@pytest.mark.parametrize("key", ["lambda f: f.origin", "lambda p: (p.upper, p.lower)", "lambda f: f.a.b"])
 def test_an_order_sibling_sorting_by_an_attribute_lambda_is_a_site(key):
     source = f"def f(xs):\n    return sorted(xs, key={key})\n"
     assert _sites(order_sites, source, ORDER_SIBLING) == {f"{ORDER_SIBLING}::f": [2]}

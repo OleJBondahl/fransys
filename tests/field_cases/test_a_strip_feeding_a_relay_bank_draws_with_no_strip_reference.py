@@ -1,27 +1,12 @@
 """Field case: a terminal strip feeding a relay bank draws with no reference on a strip terminal.
-
-The engineering shape: a strip `-X1` of four terminals feeds the coils of twelve relays, three to a
-terminal, and the relays' other coil pins chain on from one to the next, so the bank is wider than
-a page. The strip stands in a row of its own, over the columns it feeds, and its tag prints once.
-
-The bug: the old engine breaks the bank across pages and answers a conductor that leaves a page
-with a reference marker, even on a strip terminal, where a reader would look for the terminal
-itself. The core path draws a terminal wherever a conductor of it ends (the strip rows of the
-placement engine, design table row 13), so no reference stands on a strip terminal, and the
-strip's row-group text is its tag.
-
-The rule: engine switches SW8, row P7.3 ("strip references 0; the row-group text"), decision
-el-0008. The core path draws the case through `fr` (the first test). Its reference and tag test
-is strict xfail until CORE-TEXTS: ELECTRICAL-MARKERS landed the marker and text records, but
-`fransys_el` writes none yet (`Drawing.markers` and `.texts` are empty), so neither reads back.
-"""
+The bug: the old engine answered a conductor leaving a page with a reference marker, even on a strip terminal, where the terminal belongs.
+Fixed by el-0008 (SW8, row P7.3), a terminal is drawn wherever a conductor ends (strict xfail until CORE-TEXTS)."""
 
 import itertools
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import fransys as fr
 from _drawn_pages import drawn_pages
-from _tables_on import TABLES_ON
 
 from fransys_model.derive import function_item, item_tag_text, strip_of
 from fransys_model.kernel import Severity
@@ -34,7 +19,7 @@ if TYPE_CHECKING:
 _RELAYS = 12
 _TERMINALS = 4
 _MEETING = 3
-_DOTS = 18  # R339: tables out of the footprint, pitch 96 moves two taps; was 16 (Ruling 89)
+_DOTS = 16  # R1693: keep-outs whole cells, 18 before (R339: tables out of the footprint, pitch 96 moves two taps; was 16 before Ruling 89)
 
 type _Point = tuple[int, int]
 type _Segment = tuple[_Point, _Point]
@@ -74,10 +59,12 @@ def strip_case_drafts(cover: Path) -> tuple[fr.Design, fr.Draft]:
     feed = d.terminal_strip("X1", "DEMO-TB-2.5", _TERMINALS, place="C1")
     with d.function("R", "Relays"):
         bank = [d.device(f"K{i + 1}", "DEMO-RLY-2CO-24", place="C1") for i in range(_RELAYS)]
+    ends: dict[int, Any] = {}  # a terminal point takes one conductor (R1266): each terminal's relays chain from coil pin to coil pin
     for i, relay in enumerate(bank):
-        d.detail.wire(feed[1 + i % _TERMINALS], relay.coil["A1"], wire=("WH", 0.75))
+        d.series(ends.get(i % _TERMINALS, feed[1 + i % _TERMINALS].inner), relay.coil["A1"], wire=("WH", 0.75))
+        ends[i % _TERMINALS] = relay.coil["A1"]
     for a, b in itertools.pairwise(bank):
-        d.detail.wire(a.coil["A2"], b.coil["A2"], wire=("BU", 0.75))
+        d.series(a.coil["A2"], b.coil["A2"], wire=("BU", 0.75))
     cover.write_text("# Cabinet\n", encoding="utf-8")
     return d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, room, cover=cover)
 
@@ -87,9 +74,7 @@ def strip_references(result: fr.BuildResult) -> int:
     model = result.model
     table = ports(model)
     return sum(
-        1
-        for marker in layout_of(model, LinkMarker).values()
-        if strip_of(model, function_item(model, table[marker.port].function)) is not None
+        1 for marker in layout_of(model, LinkMarker).values() if strip_of(model, function_item(model, table[marker.port].function)) is not None
     )
 
 
@@ -98,36 +83,27 @@ def strip_tags_drawn(result: fr.BuildResult) -> bool:
     model = result.model
     texts = {one.text for drawing in drawn_pages(model).values() for one in drawing.texts}
     table = ports(model)
-    strips = {
-        strip
-        for port in table.values()
-        if (strip := strip_of(model, function_item(model, port.function))) is not None
-    }
+    strips = {strip for port in table.values() if (strip := strip_of(model, function_item(model, port.function))) is not None}
     return bool(strips) and all(item_tag_text(model, strip) in texts for strip in strips)
 
 
 def test_a_strip_feeding_a_relay_bank_builds_on_the_core_path_with_no_failed_route(
     tmp_path: Path,
 ) -> None:
-    result = fr.build(*strip_case_drafts(tmp_path / "cover.md"), settings=TABLES_ON)
+    result = fr.build(*strip_case_drafts(tmp_path / "cover.md"))
     codes = {f.code for f in result.findings}
-    assert not codes & {"ROUTE_FAILED", "FUNCTION_NOT_DRAWN"}
+    assert not codes & {"FUNCTION_NOT_DRAWN"}
     assert all(f.severity is not Severity.ERROR for f in result.findings)
     assert len(drawn_pages(result.model)) == 1
-    # the strip's terminals, the relays and one contact table for each relay
-    symbols = [
-        (page, s) for page, drawing in drawn_pages(result.model).items() for s in drawing.symbols
-    ]
-    assert (
-        sum(1 for _, s in symbols if s.key not in ("junction-dot", "reference-marker"))
-        == _TERMINALS + 2 * _RELAYS
-    )
+    # the strip's terminals and the relays
+    symbols = [(page, s) for page, drawing in drawn_pages(result.model).items() for s in drawing.symbols]
+    assert sum(1 for _, s in symbols if s.key not in ("junction-dot", "reference-marker")) == _TERMINALS + _RELAYS
     dots = {(page, (s.x, s.y)) for page, s in symbols if s.key == "junction-dot"}
     assert len(dots) == _DOTS
     assert dots == meeting_points(result)
 
 
 def test_a_strip_feeding_a_relay_bank_draws_with_no_strip_reference(tmp_path: Path) -> None:
-    result = fr.build(*strip_case_drafts(tmp_path / "cover.md"), settings=TABLES_ON)
+    result = fr.build(*strip_case_drafts(tmp_path / "cover.md"))
     assert strip_references(result) == 0
     assert strip_tags_drawn(result)

@@ -1,25 +1,22 @@
-"""Synthetic use case: a small cabinet with chain hints.
+"""Synthetic use case: a small cabinet with its groups and relays.
 
 All parts, designations and groups are invented for this repo; none describe a real
 product or project. This repo keeps its own fixture until fransys-model's use-case
-fixtures exist; then this fixture switches to those, extended with chain hints.
 """
 
 from dataclasses import dataclass
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 
+from fransys_author.instantiate import instantiate
+
+from fransys_model.elecdef import LinkKind
 from fransys_model.kernel import Draft, Origin, make_id
 from fransys_model.layout import (
-    Chain,
-    ChainEntry,
     GroupHint,
     SymbolChoice,
-    default_profile,
-    default_sheet_format,
 )
 from fransys_model.layout import Profile as ModelProfile
-from fransys_model.layout import SheetFormat as ModelSheetFormat
 from fransys_model.vocab import (
     Aspect,
     AspectNode,
@@ -32,7 +29,6 @@ from fransys_model.vocab import (
     FunctionTemplate,
     InternalLink,
     Item,
-    LinkKind,
     Net,
     NetClass,
     Part,
@@ -42,22 +38,18 @@ from fransys_model.vocab import (
     PcbFacet,
     Placement,
     Port,
-    PortRole,
+    PortBoundary,
     PortTemplate,
     TerminalFacet,
-    Unit,
-    UnitRelease,
     WireFacet,
-    instantiate,
 )
 
 if TYPE_CHECKING:
     from fransys_model.kernel import Id, Record
 
-_HOUSE = default_profile()
 
 _ORIGIN = Origin(file="tests/layout_cabinet.py", line=1, note="synthetic cabinet")
-_ROLES = {"internal": PortRole.INTERNAL, "external": PortRole.EXTERNAL}
+_ROLES = {"internal": PortBoundary.INTERNAL, "external": PortBoundary.EXTERNAL}
 _CONDUCTIVE, _SWITCHED = LinkKind.CONDUCTIVE, LinkKind.SWITCHED
 
 type Key = tuple[str, ...]
@@ -69,7 +61,7 @@ class _PartSpec:
     """A part: identity, class letter, `(name, kind, pins)` per function, and its links.
 
     A link is `(function name, pin, pin, kind)`; a pin named `internal` or `external` has
-    that `PortRole`, any other is generic.
+    that `PortBoundary`, any other is generic.
     """
 
     key: str
@@ -105,13 +97,9 @@ def _specs() -> tuple[_PartSpec, ...]:
     contact_no = FunctionKind.CONTACT_NO
     contact_nc = FunctionKind.CONTACT_NC
     return (
-        _PartSpec(
-            "terminal", "EX-TERMINAL-2.5", "X", PartCategory.TERMINAL, terminal, link_terminal
-        ),
+        _PartSpec("terminal", "EX-TERMINAL-2.5", "X", PartCategory.TERMINAL, terminal, link_terminal),
         _PartSpec("fuse", "EX-FUSE-2A", "F", PartCategory.PROTECTION, element, link_element),
-        _PartSpec(
-            "breaker", "EX-BREAKER-1P-10A", "Q", PartCategory.PROTECTION, element, link_element
-        ),
+        _PartSpec("breaker", "EX-BREAKER-1P-10A", "Q", PartCategory.PROTECTION, element, link_element),
         _PartSpec(
             "contactor",
             "EX-CONTACTOR-3P",
@@ -180,16 +168,10 @@ def _specs() -> tuple[_PartSpec, ...]:
 class _Builder:
     """The records of the cabinet, in construction order, and the vocabulary to write them in."""
 
-    def __init__(self, *, second_location: bool, chains_enabled: bool = True) -> None:
-        """Start with the part library, the group nodes and the location node(s).
-
-        `chains_enabled=False` (`discovery=True`) makes `chain` a no-op, the same
-        suppression an earlier spike used, so the fixture's functions are left for
-        `discover_chains` to find instead of an authored `layout.chain`.
-        """
+    def __init__(self, *, second_location: bool) -> None:
+        """Start with the part library, the group nodes and the location node(s)."""
         self.records: list[Record] = []
         self.wires = 0
-        self.chains_enabled = chains_enabled
         self.library = PartLibrary(
             id=make_id(PartLibrary, ("part_library", "invented-parts")),
             key=("part_library", "invented-parts"),
@@ -268,7 +250,7 @@ class _Builder:
                 key=(spec.key, name, pin),
                 function=templates[name].id,
                 name=pin,
-                role=_ROLES.get(pin, PortRole.GENERIC),
+                boundary=_ROLES.get(pin, PortBoundary.GENERIC),
             )
             for name, _, names in spec.functions
             for pin in names
@@ -301,9 +283,7 @@ class _Builder:
         installed: bool = True,
     ) -> _Ref:
         """Add the bundle's records (an identical record is a no-op) and one placed item."""
-        self.add(
-            bundle.part, *bundle.function_templates, *bundle.port_templates, *bundle.internal_links
-        )
+        self.add(bundle.part, *bundle.function_templates, *bundle.port_templates, *bundle.internal_links)
         stamped = instantiate(
             bundle,
             key,
@@ -386,19 +366,6 @@ class _Builder:
         self.add(conductor)
         return conductor.id
 
-    def chain(self, key: Key, *cells: tuple[_Ref, str]) -> None:
-        """A `layout.chain` of `(item, function name)` cells, indexed 0, 1, 2 ... in order.
-
-        A no-op when `chains_enabled` is `False`.
-        """
-        if not self.chains_enabled:
-            return
-        entries = tuple(
-            ChainEntry(function=ref.functions[name], index=index)
-            for index, (ref, name) in enumerate(cells)
-        )
-        self.add(Chain(id=make_id(Chain, key), key=key, entries=entries))
-
     def rail(self, key: Key, potential: str, port: Id[Port]) -> None:
         """A declared `Net` naming one port, giving it `potential` (model decision 0011).
 
@@ -434,17 +401,16 @@ class _Builder:
 
 
 def _supply(b: _Builder, parts: dict[str, PartBundle], cab: Cabinet) -> None:
-    """Group `=SUP`: feed terminal `X1:1`, fuse `F1`, rail terminal `X2:1`, in one chain."""
+    """Group `=SUP`: feed terminal `X1:1`, fuse `F1`, rail terminal `X2:1`."""
     feed = cab["x1/1"] = b.terminal(parts["terminal"], cab["x1"], 1, "sup")
     fuse = cab["f1"] = b.stamp(parts["fuse"], ("cabinet", "f1"), "F1", "sup")
     rail = cab["x2/1"] = b.terminal(parts["terminal"], cab["x2"], 1, "sup")
     b.wire(feed.port("terminal", "internal"), fuse.port("element", "1"))
     b.wire(fuse.port("element", "2"), rail.port("terminal", "internal"))
-    b.chain(("cabinet", "sup"), (feed, "terminal"), (fuse, "element"), (rail, "terminal"))
 
 
 def _pump(b: _Builder, parts: dict[str, PartBundle], cab: Cabinet, n: int) -> None:
-    """Group `=Pn`: a power chain and a control chain around contactor `Kn`.
+    """Group `=Pn`: a power path and a control path around contactor `Kn`.
 
     `inlet` and `field` are also kept in `cab` (`x1/<n+1>`, `x3/<n>`), unused by the
     default cabinet: the `discovery=True` extras declare distribution rails there.
@@ -461,18 +427,9 @@ def _pump(b: _Builder, parts: dict[str, PartBundle], cab: Cabinet, n: int) -> No
     b.wire(inlet.port("terminal", "internal"), breaker.port("element", "1"))
     b.wire(breaker.port("element", "2"), contactor.port("main", "1"))
     b.wire(contactor.port("main", "2"), field.port("terminal", "internal"))
-    b.chain(
-        ("cabinet", group, "power"),
-        (inlet, "terminal"),
-        (breaker, "element"),
-        (contactor, "main"),
-        (field, "terminal"),
-    )
     b.wire(rail.port("terminal", "external"), stop.port("nc_1", "11"))
     b.wire(stop.port("nc_1", "12"), contactor.port("coil", "A1"))
     b.wire(contactor.port("coil", "A2"), zero.port("terminal", "internal"))
-    # the rail terminal has one home, the `sup` chain: this chain only wires to it
-    b.chain(("cabinet", group, "control"), (stop, "nc_1"), (contactor, "coil"), (zero, "terminal"))
 
 
 def _estop_and_signal(b: _Builder, parts: dict[str, PartBundle], cab: Cabinet) -> None:
@@ -480,7 +437,6 @@ def _estop_and_signal(b: _Builder, parts: dict[str, PartBundle], cab: Cabinet) -
 
     The contact string runs rail, `S0` contact 1, `S0` contact 2 (drawn in `=P1`), then the
     auxiliary contact of `K1`, and on to the auxiliary contact of `K2` in `=P2` with no
-    terminal between: the severed signal.
     """
     estop = b.stamp(parts["estop"], ("cabinet", "s0"), "S0", "es")
     k1, k2 = cab["k1"], cab["k2"]
@@ -488,7 +444,6 @@ def _estop_and_signal(b: _Builder, parts: dict[str, PartBundle], cab: Cabinet) -
     b.wire(estop.port("nc_1", "12"), estop.port("nc_2", "21"), label=False)
     b.wire(estop.port("nc_2", "22"), k1.port("aux", "13"), label=False)
     b.wire(k1.port("aux", "14"), k2.port("aux", "13"), label=False)
-    b.chain(("cabinet", "es"), (estop, "nc_1"), (estop, "nc_2"))
     key = (*estop.key, "nc_2", "group_hint")
     b.add(
         GroupHint(
@@ -533,16 +488,14 @@ def _extras(b: _Builder, parts: dict[str, PartBundle], cab: Cabinet) -> None:
 
 
 def _extra_relay(b: _Builder, parts: dict[str, PartBundle], cab: Cabinet) -> None:
-    """Relay `K9` in `=P2`: a coil chain and, in its own chain, one contact to terminal `X5:1`."""
+    """Relay `K9` in `=P2`: its coil, and one contact to terminal `X5:1`."""
     relay = b.stamp(parts["relay"], ("cabinet", "k9"), "K9", "p2")
     output = b.terminal(parts["terminal"], b.strip("X5"), 1, "p2")
     rail, zero = cab["x2/1"], cab["x4/2"]
     b.wire(rail.port("terminal", "external"), relay.port("coil", "A1"))
     b.wire(relay.port("coil", "A2"), zero.port("terminal", "internal"))
-    b.chain(("cabinet", "k9", "coil"), (relay, "coil"))
     b.wire(rail.port("terminal", "external"), relay.port("no_1", "13"))
     b.wire(relay.port("no_1", "14"), output.port("terminal", "internal"))
-    b.chain(("cabinet", "k9", "contact"), (relay, "no_1"), (output, "terminal"))
 
 
 def _fan_net(b: _Builder, parts: dict[str, PartBundle]) -> None:
@@ -552,10 +505,7 @@ def _fan_net(b: _Builder, parts: dict[str, PartBundle]) -> None:
     set's boxes already carry the +k room before `extra_relay` adds an end (model-0196).
     """
     strip = b.strip("X6")
-    hub, *rest = (
-        b.terminal(parts["terminal"], strip, i, group)
-        for i, group in enumerate(("sup", "p1", "es", "sup"), 1)
-    )
+    hub, *rest = (b.terminal(parts["terminal"], strip, i, group) for i, group in enumerate(("sup", "p1", "es", "sup"), 1))
     for end in rest:
         b.wire(hub.port("terminal", "external"), end.port("terminal", "internal"))
 
@@ -564,20 +514,6 @@ def _discovery_extras(b: _Builder, parts: dict[str, PartBundle], cab: Cabinet) -
     """With `discovery=True`: potentials on the rail nets, and the three invented circuits
     ladder discovery needs that no hinted chain in this fixture exercises (layout-0034,
     "What the fixture lacks").
-
-    Rails: `L1` on the incoming feed and each pump's own inlet (the natural feed and the
-    two distribution points read as one physical net through the fuse pass-through),
-    `24V` on the control-bus rail terminal and on a second, dedicated terminal
-    `X6:1` (so the branch and reconvergent circuits below do not further crowd `X2:1`,
-    already fanning out to five existing devices); `0V` on both zero-volt returns (two
-    rails, one text); `M1`/`M2` on each pump's own field terminal. A wired second pole of
-    `K1`'s main contact, in parallel with pole 1 (a side element: the chain runs on
-    through it, layout-0050). A terminal `X7:1`
-    fed from the second `24V` terminal, fanning through two invented contacts `S10`/`S11`
-    to two invented `0V` terminals (the branch case,
-    a shared device before the fork). Two invented relays `K20`/`K21`, their `no_1` contacts
-    wired in parallel between the second `24V` terminal and one coil `K22`'s `A1`, `A2` to
-    one invented `0V` terminal (the reconvergent case, hint-mandatory).
     """
     b.rail(("cabinet", "rail", "l1", "feed"), "L1", cab["x1/1"].port("terminal", "external"))
     b.rail(("cabinet", "rail", "l1", "p1"), "L1", cab["x1/2"].port("terminal", "external"))
@@ -629,28 +565,10 @@ def _discovery_extras(b: _Builder, parts: dict[str, PartBundle], cab: Cabinet) -
     b.rail(("cabinet", "rail", "0v", "x9"), "0V", x9.port("terminal", "external"))
 
 
-def unit_with_release(
-    key: Key, *, name: str, parent: Id[Unit] | None = None
-) -> tuple[Unit, UnitRelease]:
-    """A `Unit` keyed `key` and the version 1, revision `"1"` `UnitRelease` it instantiates."""
-    release_key = ("unit_release", name, "1", "1")
-    release = UnitRelease(
-        id=make_id(UnitRelease, release_key),
-        key=release_key,
-        name=name,
-        version=1,
-        revision=1,
-        interface="1",
-    )
-    unit = Unit(id=make_id(Unit, key), key=key, release=release.id, parent=parent)
-    return unit, release
-
-
 def build_cabinet(  # noqa: PLR0913 -- one keyword per fixture variant
     *,
     reverse: bool = False,
     extra_relay: bool = False,
-    broken_chain: bool = False,
     second_location: bool = False,
     discovery: bool = False,
     side_terminals: bool = False,
@@ -660,77 +578,13 @@ def build_cabinet(  # noqa: PLR0913 -- one keyword per fixture variant
 
     The invented design this must produce, in location `+C1`. Groups are the top-level
     `FUNCTION` nodes `SUP`, `P1`, `P2`, `ES`; every item is placed at one of them and at
-    a location node.
-
-    - Group `=SUP` (supply): supply terminal `-X1:1`, fuse `-F1`, 24 V rail terminal
-      `-X2:1`, in one chain.
-    - Groups `=P1`, `=P2` (two pump starters, siblings of equal shape). Each has a power
-      chain (supply terminal `-X1:n+1`, breaker `-Qn`, contactor main contact `-Kn`,
-      field terminal `-X3:n`) and a control chain (stop contact `-Sn`, contactor coil
-      `-Kn`, 0 V rail terminal `-X4:n`), wired from the 24 V rail terminal `-X2:1`.
-      `-X2:1` is one terminal with one home, the `sup` chain, and is in no other chain
-      (a function is in one chain, layout-0021); both control chains wire to it from
-      another group, so the engine replicates it. The contactor `Kn` is one item of the
-      part `EX-CONTACTOR-3P` with three function templates: `coil` (`A1`, `A2`), `main`
-      (three poles, ports `1`-`2`, `3`-`4`, `5`-`6`, three `switched` links) and `aux`
-      (`13`-`14`, one `switched` link).
-      Coil and main contact are two `Function`s of one `Item`, so they give a tag echo
-      between a control page and a power page. Only pole 1 of `main` is wired.
-    - Group `=ES` (e-stop): item `-S0` with two contacts `nc_1` and `nc_2` in one chain;
-      the function `nc_2` carries a `layout.group_hint` to `=P1`, the straddling case.
-    - One control signal from `-K1` `aux` (in `=P1`) to `-K2` `aux` (in `=P2`) with no
-      terminal between them: a severed signal with one marker pair.
-    - Functions in no chain (`FUNCTION_UNPLACED_IN_COLUMN`): lamp `-H1`, the two `aux`
-      contacts (their wires carry the e-stop signal) and the relay `-K8`.
-    - One cable item `W1` (its part has a `cable_product` facet, one `screen` function)
-      with two cores from the rails to lamp `-H1`, and one relay `K8` with
-      `installed=False` (drawn all the same).
-    - One board item `A1` (its part has a `pcb` facet) with one board-edge connector
-      function and a child fuse item `A1/F1`: functions of these are not drawn here.
-    - One declared `Net`, `LATCH`, with no conductor on either port (both are ports of
-      `-K8`), so the engine reads one `NetGroup` of exactly two ports.
-    - Every chain link is a wire with a `wire` facet; the chain wires carry labels `W1001`
-      and on, the e-stop and signal wires none.
-    - Item authoring keys are `("cabinet", <tag in lower case>)`, for example
-      `("cabinet", "w1")`, `("cabinet", "k8")`, `("cabinet", "a1")`, `("cabinet", "a1", "f1")`;
-      a terminal is `("cabinet", "x1", "2")`. Tests find items by these keys, never by
-      designation.
-    - No `layout.profile`, `layout.sheet_format`, and `layout.symbol_choice` only where
-      the default symbol table needs a port map: every terminal (`terminal` has no
-      through path; `internal` is drawn at `n`, `external` at `s`) and every coil (a coil
-      has no internal link, so no pole pair). A breaker or fuse needs none: `circuit-breaker`
-      has a through path and the part's conductive link gives the pole pair.
-    - The model validators find exactly one warning, `NET_UNREALISED` for the declared net
-      (it has no conductor by design); every `layout.chain` link but the `broken_chain`
-      one joins its two functions in one physical net.
-
-    `reverse=True` adds the same records in the opposite order, for the shuffle test: the
-    frozen models have one digest. `extra_relay=True` adds one relay `-K9` (its coil alone in a
-    chain and one contact in its own chain, to terminal `-X5:1`) to `=P2` only, for the stability
-    test. `broken_chain=True` adds a `layout.chain` (lamp `-H1`, contact of `-K8`) whose two
-    functions share no connection, which must raise `HintError`. `second_location=True`
-    adds a second location node `+C2` and places the items of `=P2` (and only those) there,
-    so `=P2` is drawn in another drawing set. The shared terminal `-X2:1` stays in `=SUP`
-    at `+C1`, so the control chain of `=P2` then crosses locations. `side_terminals=True`
-    draws every terminal's `internal` port at `w` and `external` at `e`: the
-    rail terminal `-X2:1` then carries a reference beside an E port. `fan_net=True` adds one
-    net of four ends outside `=P2` (`_fan_net`), the base of the stability tests (model-0196).
-
-    `discovery=True` leaves out every `layout.chain` above (`chain` becomes a no-op,
-    the spike's own method) and authors a `layout.profile` with a wider sheet,
-    the house numbers otherwise unchanged, so ladder discovery must find every rung this
-    fixture's chains would otherwise have hinted, plus `_discovery_extras`' three invented
-    circuits. Not combined with `broken_chain` or `extra_relay`: nothing here reads that
-    combination, so it is unspecified.
     """
-    b = _Builder(second_location=second_location, chains_enabled=not discovery)
+    b = _Builder(second_location=second_location)
     parts = {spec.key: b.part(spec) for spec in _specs()}
     cab = {tag: b.strip(tag.upper()) for tag in ("x1", "x2", "x3", "x4")}
     # `side_terminals`: a terminal draws its ports on its W and E sides (an E or W reference)
     terminal_ports = {"internal": "w", "external": "e"} if side_terminals else None
-    b.choice(
-        FunctionKind.TERMINAL, "terminal", terminal_ports or {"internal": "n", "external": "s"}
-    )
+    b.choice(FunctionKind.TERMINAL, "terminal", terminal_ports or {"internal": "n", "external": "s"})
     b.choice(FunctionKind.COIL, "operating-device", {"A1": "in", "A2": "out"})
     _supply(b, parts, cab)
     _pump(b, parts, cab, 1)
@@ -741,49 +595,10 @@ def build_cabinet(  # noqa: PLR0913 -- one keyword per fixture variant
         _fan_net(b, parts)
     if extra_relay:
         _extra_relay(b, parts, cab)
-    if broken_chain:
-        b.chain(("cabinet", "broken"), (cab["h1"], "lamp"), (cab["k8"], "no_1"))
     if discovery:
         _discovery_extras(b, parts, cab)
-        # The house sheet's own values, doubled in width and a third taller, authored under
-        # a fresh key: its own fixed id is never put into a model (model decision 0029), but
-        # `layout.profile.sheet_format` must name an authored `layout.sheet_format` record.
-        # This fixture's extra circuits, all undirected by a chain, need the room: at the
-        # house width, `=SUP` no longer fits one page (`GROUP_SPLIT`), which severs a wire
-        # onto a port's own lane and trips open-questions.md 13.18's known, open `ROUTE_FAILED` --
-        # not a discovery defect, so this sidesteps it rather than exercising it here.
-        house = default_sheet_format()
-        sheet_key = ("cabinet", "discovery", "sheet")
-        sheet = ModelSheetFormat(
-            id=make_id(ModelSheetFormat, sheet_key),
-            key=sheet_key,
-            name=house.name,
-            width_mm=house.width_mm * 2,
-            height_mm=house.height_mm + 100,
-            content_x_mm=house.content_x_mm,
-            content_y_mm=house.content_y_mm,
-            content_width_mm=house.content_width_mm * 2,
-            content_height_mm=house.content_height_mm + 100,
-            frame_columns=house.frame_columns,
-            frame_rows=house.frame_rows,
-            module_mm=house.module_mm,
-        )
-        b.add(sheet)
         profile_key = ("cabinet", "discovery", "profile")
-        b.add(
-            ModelProfile(
-                id=make_id(ModelProfile, profile_key),
-                key=profile_key,
-                sheet_format=sheet.id,
-                column_gap=_HOUSE.column_gap,
-                row_gap=_HOUSE.row_gap,
-                route_margin=_HOUSE.route_margin,
-                marker_padding=_HOUSE.marker_padding,
-                route_turn_penalty=_HOUSE.route_turn_penalty,
-                route_crossing_penalty=_HOUSE.route_crossing_penalty,
-                band_ranks=_HOUSE.band_ranks,
-            )
-        )
+        b.add(ModelProfile(id=make_id(ModelProfile, profile_key), key=profile_key))
     draft = Draft()
     draft.extend(reversed(b.records) if reverse else b.records, origin=_ORIGIN)
     return draft

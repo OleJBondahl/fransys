@@ -5,36 +5,30 @@ invented; nothing here names a real plant.
 """
 
 from dataclasses import replace
-from functools import cache
+from functools import cache, partial
 from itertools import pairwise
 from types import SimpleNamespace
 from typing import Any
 
-import fransys_author
-import fransys_parts
-from cable_checks import assert_no_shared_stretch, assert_on_the_grid, assert_outside_the_box
+from cable_checks import (
+    assert_no_shared_stretch,
+    assert_on_the_grid,
+    assert_outside_the_box,
+    block_of,
+)
 from cable_facts import block_facts
-from layout_library import freeze
+from cable_models import design
+from cable_models import lay as _lay
 
-from fransys_layout import lay_out_cables
+from electrical_symbols import LIBRARY
 from fransys_layout.engines.cable.place import _widest, block_pitch, place_block
 from fransys_layout.engines.cable.read.facts import block_facts as block_facts_of
 from fransys_layout.engines.cable.values import CableFacts, CoreFacts, EndFacts, PinFacts
-from fransys_layout.geometry import WIRING_GRID, text_width
-from fransys_model.derive import text_room
+from fransys_layout.geometry import WIRING_GRID, text_width_g
+from fransys_layout.symbols import text_room_on
 from fransys_model.derive.cable_drawing import block_cables, cable_heading
-from fransys_model.derive.passes.numbering import number as number_pass
-from fransys_model.kernel import make_id, merge
-from fransys_model.layout import (
-    BlockRow,
-    BoxKind,
-    CableBlock,
-    CableBox,
-    CoreWire,
-    EndBox,
-    layout_of,
-    profile_of,
-)
+from fransys_model.kernel import make_id
+from fransys_model.layout import sheet_format_of, tuning_of
 from fransys_model.vocab import Conductor, Item, Port
 
 G = WIRING_GRID
@@ -47,20 +41,7 @@ _PROJECT: dict[str, Any] = {
     "author": "OJB",
 }
 
-
-def _design():
-    parts = fransys_parts.load("demo_parts")
-    d = fransys_author.Design(parts)
-    d.project(**_PROJECT)
-    d.revision(1, date="2026-10-07", text="First issue", created="XX")
-    return parts, d
-
-
-def _lay(parts, d):
-    frozen, _ = number_pass(freeze(merge(parts, d.draft())))
-    model, findings = lay_out_cables(frozen)
-    assert findings == ()
-    return frozen, model
+_design = partial(design, _PROJECT)
 
 
 @cache
@@ -75,8 +56,8 @@ def _fan_out() -> SimpleNamespace:
     w1.core(2, m1["V"], m2["V"])
     w2 = d.cable(_CABLE, tag="W2", parent=harness, at=c1)
     w2.core(1, m1["W"], m3["U"])
-    frozen, model = _lay(parts, d)
-    return SimpleNamespace(frozen=frozen, model=model, harness=harness.id, m1=m1.id, w1=w1.id)
+    frozen, layout = _lay(parts, d)
+    return SimpleNamespace(frozen=frozen, layout=layout, harness=harness.id, m1=m1.id, w1=w1.id)
 
 
 @cache
@@ -89,8 +70,8 @@ def _short() -> SimpleNamespace:
     w1 = d.cable(_CABLE, tag="W1", parent=harness, at=c1, length_mm=5000)
     w1.core(1, m1["U"], m2["U"])
     d.cable(_CABLE, tag="W2", parent=harness, at=c1).core(1, m1["V"], m3["U"])
-    frozen, model = _lay(parts, d)
-    return SimpleNamespace(frozen=frozen, model=model, harness=harness.id, w1=w1.id)
+    frozen, layout = _lay(parts, d)
+    return SimpleNamespace(frozen=frozen, layout=layout, harness=harness.id, w1=w1.id)
 
 
 @cache
@@ -102,8 +83,8 @@ def _shared_lone() -> SimpleNamespace:
     cable = d.cable(_CABLE, tag="W1", at=c1, group=g)
     cable.core(1, m1["U"], m2["U"])
     cable.core(2, m1["U"], m2["V"])
-    _, model = _lay(parts, d)
-    return SimpleNamespace(model=model, cable=cable.id, m1=m1.id)
+    _, layout = _lay(parts, d)
+    return SimpleNamespace(layout=layout, cable=cable.id, m1=m1.id)
 
 
 @cache
@@ -115,8 +96,8 @@ def _chain() -> SimpleNamespace:
     x1, x2, x3 = (d.item(_MOTOR, tag=f"X{n}", parent=harness, at=c1, group=g) for n in (1, 2, 3))
     d.cable(_CABLE, tag="W1", parent=harness, at=c1).core(1, x1["U"], x2["U"])
     d.cable(_CABLE, tag="W2", parent=harness, at=c1).core(1, x2["V"], x3["U"])
-    _, model = _lay(parts, d)
-    return SimpleNamespace(model=model, harness=harness.id, ends=(x1.id, x2.id, x3.id))
+    _, layout = _lay(parts, d)
+    return SimpleNamespace(layout=layout, harness=harness.id, ends=(x1.id, x2.id, x3.id))
 
 
 @cache
@@ -125,13 +106,11 @@ def _pair() -> SimpleNamespace:
     parts, d = _design()
     c1, g = d.location("C1", "Cabinet"), d.group("G", "Group")
     harness = d.harness(tag="WH3", at=c1, group=g)
-    a1, b1, a2, b2 = (
-        d.item(_MOTOR, tag=tag, parent=harness, at=c1, group=g) for tag in ("A1", "B1", "A2", "B2")
-    )
+    a1, b1, a2, b2 = (d.item(_MOTOR, tag=tag, parent=harness, at=c1, group=g) for tag in ("A1", "B1", "A2", "B2"))
     d.cable(_CABLE, tag="W1", parent=harness, at=c1).core(1, a1["U"], b1["U"])
     d.cable(_CABLE, tag="W2", parent=harness, at=c1).core(1, a2["U"], b2["U"])
-    _, model = _lay(parts, d)
-    return SimpleNamespace(model=model, harness=harness.id, tops=(a1.id, a2.id))
+    _, layout = _lay(parts, d)
+    return SimpleNamespace(layout=layout, harness=harness.id, tops=(a1.id, a2.id))
 
 
 @cache
@@ -143,8 +122,8 @@ def _lone() -> SimpleNamespace:
     a, b = (d.item(_MOTOR, tag=tag, parent=harness, at=c1, group=g) for tag in ("A1", "B1"))
     cable = d.cable(_CABLE, tag="W1", parent=harness, at=c1)
     cable.core(1, a["U"], b["U"])
-    _, model = _lay(parts, d)
-    return SimpleNamespace(model=model, harness=harness.id, cable=cable.id)
+    _, layout = _lay(parts, d)
+    return SimpleNamespace(layout=layout, harness=harness.id, cable=cable.id)
 
 
 @cache
@@ -156,20 +135,13 @@ def _shared() -> SimpleNamespace:
     m1, m2, m3 = (d.item(_MOTOR, tag=f"M{n}", parent=harness, at=c1, group=g) for n in (1, 2, 3))
     d.cable(_CABLE, tag="W1", parent=harness, at=c1).core(1, m1["U"], m2["U"])
     d.cable(_CABLE, tag="W2", parent=harness, at=c1).core(1, m1["U"], m3["U"])
-    _, model = _lay(parts, d)
-    return SimpleNamespace(model=model, harness=harness.id, m1=m1.id)
+    _, layout = _lay(parts, d)
+    return SimpleNamespace(layout=layout, harness=harness.id, m1=m1.id)
 
 
-def _block(model, subject):
-    """(head, boxes by kind, ends by item, wires) of the absolute block of `subject`, or None."""
-    heads = [h for h in layout_of(model, CableBlock).values() if h.subject == subject]
-    if not heads:
-        return None
-    (head,) = heads
-    boxes = [b for b in layout_of(model, CableBox).values() if b.block == head.id]
-    ends = [e for e in layout_of(model, EndBox).values() if e.block == head.id]
-    wires = [w for w in layout_of(model, CoreWire).values() if w.block == head.id]
-    return head, boxes, ends, wires
+def _block(layout, subject):
+    """The placed block of the absolute reading of `subject`, or None."""
+    return block_of(layout, subject)
 
 
 def _rect(box):
@@ -182,19 +154,21 @@ def test_a_two_cable_harness_is_one_dashed_box_around_two_solid_ones():
     Probe: draw the dashed box for every harness (the lone test below fails).
     """
     s = _fan_out()
-    head, boxes, _, wires = _block(s.model, s.harness)
-    (dash,) = (b for b in boxes if b.kind is BoxKind.HARNESS)
-    cables = sorted((b for b in boxes if b.kind is BoxKind.CABLE), key=lambda b: b.x)
+    head = _block(s.layout, s.harness)
+    dash = head.harness
+    assert dash is not None
+    placed = sorted(head.boxes, key=lambda p: p.box.x)
+    cables = [p.box for p in placed]
     assert len(cables) == 2
-    assert len(wires) == 3
-    assert cables[0].item == s.w1
+    assert len(head.wires) == 3
+    assert placed[0].cable == s.w1
     for box in cables:
         assert dash.x < box.x
         assert box.x + box.width < dash.x + dash.width
         assert dash.y < box.y
         assert box.y + box.height < dash.y + dash.height
     assert all(a.x + a.width < b.x for a, b in pairwise(cables))
-    assert (dash.item, dash.external) == (s.harness, False)
+    assert head.subject == s.harness
     assert head.width >= dash.x + dash.width
     assert head.height >= dash.y + dash.height
 
@@ -205,9 +179,10 @@ def test_a_lone_cable_harness_has_a_cable_block_and_no_dashed_box():
     Probe: draw the dashed box for every harness.
     """
     s = _lone()
-    assert _block(s.model, s.harness) is None
-    _, boxes, _, _ = _block(s.model, s.cable)
-    assert [b.kind for b in boxes] == [BoxKind.CABLE]
+    assert _block(s.layout, s.harness) is None
+    block = _block(s.layout, s.cable)
+    assert block.harness is None
+    assert len(block.boxes) == 1
 
 
 def test_two_cables_landing_on_one_end_draw_one_end_box_with_every_pin_landed():
@@ -216,25 +191,25 @@ def test_two_cables_landing_on_one_end_draw_one_end_box_with_every_pin_landed():
     Probe: one end box per cable and item.
     """
     s = _fan_out()
-    _, _, ends, _ = _block(s.model, s.harness)
+    ends = _block(s.layout, s.harness).ends
     assert sorted(e.item for e in ends).count(s.m1) == 1
     (m1,) = (e for e in ends if e.item == s.m1)
-    assert m1.row is BlockRow.TOP
-    assert [pin.landed for pin in m1.pins][:3] == [True] * 3
+    assert m1.top
+    assert [cell.landed for cell in m1.cells][:3] == [True] * 3
     assert len(ends) == 3
 
 
 def test_harness_block_geometry_is_clean():
     """On the grid; no run enters a cable box; no shared stretch."""
     for s in (_fan_out(), _chain(), _pair()):
-        _, boxes, ends, wires = _block(s.model, s.harness)
-        runs = [run for w in wires for run in (w.run_a, w.run_b)]
+        block = _block(s.layout, s.harness)
+        runs = [run for w in block.wires for run in (w.run_a, w.run_b)]
         assert_on_the_grid(runs)
         assert_no_shared_stretch(runs)
-        for box in boxes:
-            if box.kind is BoxKind.CABLE:
-                assert_outside_the_box(runs, (box.x, box.y, box.width, box.height))
-        for record in (*boxes, *ends):
+        for placed in block.boxes:
+            box = placed.box
+            assert_outside_the_box(runs, (box.x, box.y, box.width, box.height))
+        for record in (block.harness, *(p.box for p in block.boxes), *block.ends):
             assert all(v % G == 0 for v in (record.x, record.y, record.width, record.height))
 
 
@@ -244,12 +219,12 @@ def test_a_daisy_chain_draws_with_its_middle_end_below():
     Probe: the old rows (the lowest-ranked end alone on top).
     """
     s = _chain()
-    _, boxes, ends, wires = _block(s.model, s.harness)
-    rows = {e.item: e.row for e in ends}
+    block = _block(s.layout, s.harness)
+    rows = {e.item: e.top for e in block.ends}
     x1, x2, x3 = s.ends
-    assert (rows[x1], rows[x2], rows[x3]) == (BlockRow.TOP, BlockRow.BOTTOM, BlockRow.TOP)
-    assert len(wires) == 2
-    assert sum(b.kind is BoxKind.CABLE for b in boxes) == 2
+    assert (rows[x1], rows[x2], rows[x3]) == (True, False, True)
+    assert len(block.wires) == 2
+    assert len(block.boxes) == 2
 
 
 def test_two_independent_cables_draw_each_from_its_own_top_end():
@@ -258,9 +233,9 @@ def test_two_independent_cables_draw_each_from_its_own_top_end():
     Probe: the old rows.
     """
     s = _pair()
-    _, _, ends, wires = _block(s.model, s.harness)
-    assert {e.item for e in ends if e.row is BlockRow.TOP} == set(s.tops)
-    assert len(wires) == 2
+    block = _block(s.layout, s.harness)
+    assert {e.item for e in block.ends if e.top} == set(s.tops)
+    assert len(block.wires) == 2
 
 
 def test_a_short_cable_box_grows_the_pitch_until_its_heading_fits():
@@ -270,22 +245,22 @@ def test_a_short_cable_box_grows_the_pitch_until_its_heading_fits():
     the pitch at its plain measure.
     """
     s = _short()
-    head, boxes, _, _ = _block(s.model, s.harness)
-    profile = profile_of(s.model, None)
+    head = _block(s.layout, s.harness)
+    tuning = tuning_of(s.frozen)
     cables = {c.cable: c for c in block_cables(s.frozen, s.harness, None)}
-    for box in (b for b in boxes if b.kind is BoxKind.CABLE):
-        heading = cable_heading(s.frozen, cables[box.item], None)
-        wide = text_width(heading, height=text_room(s.model)) + 2 * profile.marker_padding
-        assert box.width >= wide
-    assert cable_heading(s.frozen, cables[s.w1], None).endswith("5000 mm")
-    plain = block_pitch(_widest(block_facts_of(s.frozen, s.harness, None)))
+    for placed in head.boxes:
+        heading = cable_heading(s.frozen, cables[placed.cable])
+        wide = text_width_g(heading, height=text_room_on(s.frozen, sheet_format_of(s.frozen, None), LIBRARY)) + 2 * tuning.marker_padding
+        assert placed.box.width >= wide
+    assert cable_heading(s.frozen, cables[s.w1]).endswith("5000 mm")
+    plain = block_pitch(_widest(block_facts_of(s.frozen, s.harness, None, LIBRARY)))
     assert head.pitch > plain
     assert head.pitch % 16 == 0
 
 
 def _landing(wire, end):
     """The x where `wire` meets `end`'s box: the one run point on the box edge, inside its width."""
-    edge = end.y + end.height if end.row is BlockRow.TOP else end.y
+    edge = end.y + end.height if end.top else end.y
     points = {p.x for run in (wire.run_a, wire.run_b) for p in run if p.y == edge}
     (x,) = (x for x in points if end.x <= x <= end.x + end.width)
     return x
@@ -298,9 +273,10 @@ def test_a_pin_two_cores_land_on_is_a_cell_two_places_wide_with_a_core_in_each()
     Probe: give the pin one place (`PinFacts.places` returns 1); the cell is one pitch wide.
     """
     for s, subject in ((_shared(), _shared().harness), (_shared_lone(), _shared_lone().cable)):
-        head, _, ends, wires = _block(s.model, subject)
+        head = _block(s.layout, subject)
+        ends, wires = head.ends, head.wires
         (m1,) = [e for e in ends if e.item == s.m1]
-        (cell,) = m1.pins
+        (cell,) = m1.cells
         assert m1.width == 2 * head.pitch
         assert cell.x == m1.x + head.pitch
         assert len(wires) == 2
@@ -322,15 +298,11 @@ def _two_cable_facts(*, interleaved: bool):
     landing = {ids[n]: (make_id(Conductor, (str(key),)),) for key, *ends in wires for n in ends}
 
     def end(item, *ports, blank=False):
-        pins = tuple(
-            PinFacts(port=p, landed=True, marking_width=16, cores=landing[p]) for p in ports
-        )
+        pins = tuple(PinFacts(port=p, landed=True, marking_width=16, cores=landing[p]) for p in ports)
         return EndFacts(item=item, dashed=False, blank=blank, label_width=16, pins=pins)
 
     def core(key, a, b):
-        return CoreFacts(
-            key=key, conductor=make_id(Conductor, (str(key),)), end_a=a, end_b=b, text_width=16
-        )
+        return CoreFacts(key=key, conductor=make_id(Conductor, (str(key),)), end_a=a, end_b=b, text_width=16)
 
     top = (end(owner[0], ids[0], ids[1]), end(owner[1], ids[2]))
     cables = (

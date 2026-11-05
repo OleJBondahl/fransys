@@ -1,9 +1,9 @@
 """`STYLE` holds every constant render reads from the model and the symbols today (el-0004)."""
 
 from fransys_el import REF_TINTS, style
+from symdef import Weight
 
 from electrical_symbols import G_PER_MODULE, LIBRARY, WIRING_GRID
-from fransys_model.derive import print_sizes as sizes
 
 STYLE = style(LIBRARY)
 
@@ -12,14 +12,12 @@ def _dash(name: str) -> tuple[float, ...]:
     return dict(STYLE.dashes)[name]
 
 
-def test_the_pens_and_dashes_equal_the_print_sizes():
-    assert STYLE.line_thin_mm == float(sizes.LINE_THIN_MM)
-    assert STYLE.line_thick_mm == float(sizes.LINE_THICK_MM)
-    assert STYLE.line_rule_mm == float(sizes.LINE_RULE_MM)
-    assert STYLE.junction_dot_mm == float(sizes.JUNCTION_DOT_MM)
-    assert _dash("long") == (float(sizes.DASH_LONG_MM), float(sizes.DASH_GAP_MM))
-    assert _dash("outline") == tuple(float(d) for d in sizes.OUTLINE_DASHES_MM)
-    assert _dash("symbol") == (float(sizes.SYMBOL_DASH_MM), float(sizes.SYMBOL_DASH_GAP_MM))
+def test_the_pens_and_dashes_equal_the_library_tables():
+    assert (STYLE.line_thin_mm, STYLE.line_thick_mm, STYLE.line_rule_mm) == (0.25, 0.5, 0.18)
+    assert (LIBRARY.lines[Weight.NORMAL], LIBRARY.lines[Weight.THICK], LIBRARY.lines[Weight.RULE]) == (0.25, 0.5, 0.18)
+    assert _dash("long") == (4.0, 1.0)
+    assert _dash("outline") == (4.0, 1.0, 0.25, 1.0)
+    assert _dash("symbol") == (1.25, 0.625)
 
 
 def test_the_grid_the_tints_and_the_font_equal_their_homes():

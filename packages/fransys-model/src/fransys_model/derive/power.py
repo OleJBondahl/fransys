@@ -1,21 +1,13 @@
 """What a physical net is on the drawing: supply, ground, protective earth or none (model-0117)."""
 
-from fransys_model.derive.facts.closure import link_groups, net_of, physical_nets
+from fransys_model.derive.facts.closure import net_of, physical_nets
 from fransys_model.derive.facts.potentials import pe_firsts, physical_potentials
+from fransys_model.elecdef import Current
 from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, digest_cached
-from fransys_model.vocab import (
-    Current,
-    Item,
-    Net,
-    Port,
-    PowerKind,
-)
-from fransys_model.vocab.tables import conductors, items, nets, supply_of_potential
+from fransys_model.vocab import Item, Net, Port, PowerKind
+from fransys_model.vocab.tables import nets, rail_groups, supply_of_potential
 
-from .facts.conductor_facts import is_bonded
-from .facts.net_facts import is_earth_net, net_potential
-from .indexes import build_indexes
-from .lookups import item_of_port, terminal_items
+from .facts.net_facts import net_potential
 from .order import NaturalKey, natural_key
 
 _WIRE_PORTS = 2  # a physical net of this many ports is one wire, not a rail
@@ -31,15 +23,17 @@ def _potential_kind(model: Model, potential: str) -> PowerKind:
 
 @digest_cached(DIGEST_CACHE_SIZE)
 def _kinds(model: Model) -> frozendict[Id[Port], PowerKind]:
-    """Each net's kind by first port: `PE`, else its potential's, none for two ports."""
+    """Each net's kind by first port: none for two ports, else `PE`, else its potential's."""
     earth = pe_firsts(model)
     kinds: dict[Id[Port], PowerKind] = {}
     for physical in physical_nets(model):
         first = physical.ports[0]
         potentials = tuple(physical_potentials(model, physical))
+        if len(physical.ports) == _WIRE_PORTS:
+            continue
         if first in earth:
             kinds[first] = PowerKind.PE
-        elif len(potentials) == 1 and len(physical.ports) != _WIRE_PORTS:
+        elif len(potentials) == 1:
             kinds[first] = _potential_kind(model, potentials[0])
     return frozendict(kinds)
 
@@ -51,15 +45,13 @@ def port_power_kind(model: Model, port: Id[Port]) -> PowerKind:
     Cost: O(1) once per model digest, like `port_rails`.
     """
     physical = net_of(model, port)
-    return (
-        PowerKind.NONE if physical is None else _kinds(model).get(physical.ports[0], PowerKind.NONE)
-    )
+    return PowerKind.NONE if physical is None else _kinds(model).get(physical.ports[0], PowerKind.NONE)
 
 
 def power_kind(model: Model, net: Id[Net]) -> PowerKind:
     """The `PowerKind` of declared `net`, read from its physical net, never from its name.
 
-    A net of class `PE` is `PE`, supplied or not. Otherwise the physical net's one potential is
+    A physical net holding a net of class `PE` is `PE`, supplied or not. Otherwise its one potential is
     looked up in the supplies: a DC rail above or below 0 V is `SUPPLY`, a DC rail at 0 V is
     `GROUND`. An AC rail, a potential in no supply, no potential, or two potentials on one
     physical net are `NONE`, as is a net whose ports fall in physical nets of different kinds.
@@ -71,8 +63,6 @@ def power_kind(model: Model, net: Id[Net]) -> PowerKind:
         KeyError: `net` is not a declared `Net` of `model`.
     """
     declared = nets(model)[net]
-    if is_earth_net(model, net):
-        return PowerKind.PE
     kinds = {port_power_kind(model, port) for port in declared.ports}
     return kinds.pop() if len(kinds) == 1 else PowerKind.NONE
 
@@ -117,37 +107,15 @@ def port_power_text(model: Model, port: Id[Port]) -> str | None:
 
 
 @digest_cached(DIGEST_CACHE_SIZE)
-def _bridged(model: Model) -> frozenset[Id[Item]]:
-    """Terminals a `JUMPER` or `RAIL` conductor joins to another terminal of their strip."""
-    terminals = terminal_items(model)
-    found: set[Id[Item]] = set()
-    for conductor in conductors(model).values():
-        if not is_bonded(model, conductor.id):
-            continue
-        a, b = item_of_port(model, conductor.a), item_of_port(model, conductor.b)
-        if a != b and {a, b} <= terminals and items(model)[a].parent == items(model)[b].parent:
-            found |= {a, b}
-    return frozenset(found)
-
-
-@digest_cached(DIGEST_CACHE_SIZE)
-def _fused(model: Model) -> frozenset[Id[Item]]:
-    """Items whose part has a `protective` link (a fuse in the path), model-0215."""
-    return frozenset(g.item for g in link_groups(model, lambda role: role.protective))
+def _flagged(model: Model) -> frozenset[Id[Item]]:
+    """The terminals of every declared `RailGroup`."""
+    return frozenset(terminal for group in rail_groups(model).values() for terminal in group.terminals)
 
 
 def is_rail_terminal(model: Model, terminal: Id[Item]) -> bool:
-    """Whether `terminal` is a rail terminal: on a DC rail or a PE net, bridged within its strip.
+    """Whether `terminal` is a rail terminal: true exactly when its group carries the flag.
 
-    A rail terminal draws no symbol: its pins show the rail's power symbol. An AC rail,
-    an unbridged terminal, a terminal whose part has a protective link and any
-    item that is not a terminal are `False`.
+    A rail terminal draws no symbol: its pins show the rail's power symbol. An unflagged
+    terminal, bridged or not, and any item that is not a terminal are `False`.
     """
-    if terminal not in _bridged(model) or terminal in _fused(model):
-        return False
-    idx = build_indexes(model)
-    return any(
-        port_power_kind(model, port) is not PowerKind.NONE
-        for function in idx.functions_by_item.get(terminal, ())
-        for port in idx.ports_by_function.get(function, ())
-    )
+    return terminal in _flagged(model)

@@ -1,4 +1,4 @@
-"""Row shapes of `derive.footprints`: a box in grid units and a symbol's two footprints."""
+"""Row shapes of `fransys_el.footprints`: a box in grid units and a symbol's two footprints."""
 
 from fransys_model.kernel import value
 

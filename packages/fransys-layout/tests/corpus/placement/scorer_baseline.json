@@ -641,10 +641,6 @@
       "pair_cut": 0,
       "row_broken": 4
      },
-     "errors": {
-      "CONNECTION_NOT_DRAWN": 33,
-      "ROUTE_FAILED": 11
-     },
      "pages": 25,
      "references": {
       "star": 88,

@@ -1,7 +1,5 @@
 """Handles and kinds: model ids, a tagless harness, net kind names, a unit child's history."""
 
-from typing import Any
-
 import pytest
 from fransys_author import AuthorError
 from fransys_author.surface import CONTROL, GENERIC, SIGNAL, design, unit
@@ -42,15 +40,6 @@ def test_a_harness_with_neither_tag_nor_name_raises(parts: Draft) -> None:
 
 def test_the_net_kinds_are_the_model_classes() -> None:
     assert (CONTROL, SIGNAL, GENERIC) == (NetClass.CONTROL, NetClass.SIGNAL, NetClass.GENERIC)
-
-
-def test_net_defaults_to_control(parts: Draft) -> None:
-    d = design(parts, place="C1")
-    k1 = d.device("K1", "TEST-RLY-2CO")
-    d.detail.net("S1", k1.coil["A1"], k1.coil["A2"])
-    nets: list[Any] = [r for r in d.draft().records() if type(r).__name__ == "Net"]
-    (net,) = nets
-    assert net.net_class is NetClass.CONTROL
 
 
 def test_a_unit_child_refuses_revision_and_the_parent_does_not(parts: Draft) -> None:

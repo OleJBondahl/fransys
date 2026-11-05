@@ -87,3 +87,21 @@ def test_reading_cables_unit_is_the_unit_cables() -> None:
     model = plant.model()
     assert reading_cables(model, unit) == unit_cables(model, unit)
     assert tuple(row.cable for row in reading_cables(model, unit)) == (own,)
+
+
+def test_all_cables_are_built_once_per_model() -> None:
+    """`all_cables` and `all_unit_cables` walk a model once, however often they are asked (R1654)."""
+    from fransys_model.derive.harness import all_cables, all_unit_cables
+
+    plant = Plant()
+    unit = _unit(plant, "harness-unit")
+    _cable(plant, "w1", "W1", unit=unit)
+    _cable(plant, "t1", "T1")
+    model = plant.model()
+    for fact in (all_cables, all_unit_cables):
+        fact.cache_clear()
+        first = fact(model)
+        assert fact(model) is first
+        assert fact.builds == 1
+    assert len(all_cables(model)) == 2
+    assert tuple(row.cable for row in all_unit_cables(model)) != ()

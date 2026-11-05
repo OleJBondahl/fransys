@@ -2,12 +2,11 @@
 
 Six author paths make an item; each is frozen and read two ways: the stored field, and
 `derive.item_description`. The catalogue's parts have distinct, non-empty descriptions, so a
-swap between two parts would show.
 """
 
 from typing import TYPE_CHECKING
 
-from fransys_author import Design
+from fransys_author.design import Design
 
 from fransys_model.derive import designation_list, item_description, items, overview_graph
 from fransys_model.kernel import Id, Model, freeze, merge

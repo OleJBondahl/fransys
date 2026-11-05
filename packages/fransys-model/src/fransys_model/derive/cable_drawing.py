@@ -27,14 +27,14 @@ from .core_pairs import (
 from .drawing_text import external_note
 from .drawn_marks import DrawnBracket, PairRoom, pair_room
 from .drawn_wires import DrawnWire, block_wires, wire_cores, wire_ends, wire_harness_subjects
+from .facts.house_settings import word
 from .harness import _facts_of, _pin_marking, all_cables, all_unit_cables
-from .house_settings import word
 from .indexes import build_indexes
 from .lone_cable import lone_cable_harness
 from .lookups import item_of_port, pin_order
 from .open_core_ends import open_core_text
 from .open_drawn import DrawnOpen, drawn_open_cores
-from .order import designation_key, port_designation_key
+from .order import blocks_in_print_order, port_designation_key
 from .texts.context import PrintContext
 from .texts.core_text import core_text as core_text_of
 from .texts.end_text import DRAWN_END, end_text
@@ -107,9 +107,7 @@ def cable_block_key(unit: Id[Unit] | None, subject: Id[Item]) -> str:
     return f"{render_id(unit)}~{render_id(subject)}"
 
 
-def block_cables(
-    model: Model, subject: Id[Item], unit: Id[Unit] | None
-) -> tuple[HarnessCable, ...]:
+def block_cables(model: Model, subject: Id[Item], unit: Id[Unit] | None) -> tuple[HarnessCable, ...]:
     """The subject's cables in the reading's own cable list, in its printed order.
 
     The absolute reading is `all_cables`; a unit's is `all_unit_cables`, the cables whose own
@@ -117,12 +115,7 @@ def block_cables(
     """
     all_items = items(model)
     reading = all_cables(model) if unit is None else all_unit_cables(model)
-    return tuple(
-        cable
-        for cable in reading
-        if cable_subject(model, cable.cable) == subject
-        and (unit is None or all_items[cable.cable].unit == unit)
-    )
+    return tuple(cable for cable in reading if cable_subject(model, cable.cable) == subject and (unit is None or all_items[cable.cable].unit == unit))
 
 
 def block_drawn(model: Model, subject: Id[Item], unit: Id[Unit] | None) -> bool:
@@ -142,25 +135,14 @@ def drawn_blocks(model: Model) -> tuple[tuple[Id[Unit] | None, Id[Item]], ...]:
     """
     all_items = items(model)
     pairs = [(None, cable_subject(model, c.cable)) for c in all_cables(model)]
-    pairs += [
-        (all_items[c.cable].unit, cable_subject(model, c.cable)) for c in all_unit_cables(model)
-    ]
+    pairs += [(all_items[c.cable].unit, cable_subject(model, c.cable)) for c in all_unit_cables(model)]
     cabled = set(pairs)
     for harness in wire_harness_subjects(model):
         pairs.append((None, harness))
         if all_items[harness].unit is not None:
             pairs.append((all_items[harness].unit, harness))
     drawn = [pair for pair in dict.fromkeys(pairs) if block_drawn(model, pair[1], pair[0])]
-    return tuple(sorted(drawn, key=lambda pair: _block_key(model, pair, cabled=pair in cabled)))
-
-
-def _block_key(
-    model: Model, pair: tuple[Id[Unit] | None, Id[Item]], *, cabled: bool
-) -> tuple[object, ...]:
-    """Print order: absolute then units'; cable blocks by id, then wire-only ones by designation."""
-    unit, subject = pair
-    name = () if cabled else designation_key(model, subject)
-    return (unit is not None, render_id(unit) if unit else "", not cabled, name, render_id(subject))
+    return blocks_in_print_order(model, drawn, cabled=cabled)
 
 
 type _Key = tuple[int, tuple[object, ...]]
@@ -174,9 +156,7 @@ def _keyed_cores(model: Model, subject: Id[Item], unit: Id[Unit] | None) -> _Key
     from-end, then to-end (model-0185), its index breaking a tie.
     """
     cables = block_cables(model, subject, unit)
-    keyed: _Keyed = [
-        ((place, (core.index,)), core) for place, c in enumerate(cables) for core in c.cores
-    ]
+    keyed: _Keyed = [((place, (core.index,)), core) for place, c in enumerate(cables) for core in c.cores]
     for core in wire_cores(model, subject, unit):
         ends = [port_designation_key(model, p, unit=unit) for p in (core.end_a, core.end_b)]
         keyed.append(((len(cables), (*ends, core.index)), core))
@@ -192,9 +172,7 @@ def _keyed_open(model: Model, subject: Id[Item], unit: Id[Unit] | None) -> _Open
     return [((o.place, (o.index,)), o) for o in drawn_open_cores(model, cables)]
 
 
-def _landed_by_end(
-    model: Model, keyed: _Keyed, opened: _Opened
-) -> dict[Id[Item], dict[Id[Port], _Key]]:
+def _landed_by_end(model: Model, keyed: _Keyed, opened: _Opened) -> dict[Id[Item], dict[Id[Port], _Key]]:
     """The block's landed ports with their lowest core key, grouped by their end item.
 
     An open core lands its one port; an unlanded one adds none.
@@ -212,17 +190,13 @@ def _landed_by_end(
     return ends
 
 
-def _cores_by_port(
-    model: Model, keyed: _Keyed, opened: _Opened, top: set[Id[Item]]
-) -> dict[Id[Port], tuple[Id[Any], ...]]:
+def _cores_by_port(model: Model, keyed: _Keyed, opened: _Opened, top: set[Id[Item]]) -> dict[Id[Port], tuple[Id[Any], ...]]:
     """Each port's cores in core-key order; a core with both ends on a port counts once.
 
     An open core stands in its anchor port's cell (`DrawnOpen.anchor`), and one landed below also
     in the top row's end of its neighbour core.
     """
-    entries: list[tuple[_Key, Id[Any], tuple[Id[Port], ...]]] = [
-        (key, core.conductor, (core.end_a, core.end_b)) for key, core in keyed
-    ]
+    entries: list[tuple[_Key, Id[Any], tuple[Id[Port], ...]]] = [(key, core.conductor, (core.end_a, core.end_b)) for key, core in keyed]
     entries += [(key, one.core, _open_ports(model, one, top)) for key, one in opened]
     found: dict[Id[Port], list[Id[Any]]] = {}
     for _, core_id, ports in sorted(entries, key=lambda entry: entry[0]):
@@ -268,9 +242,7 @@ def _top_row(groups: _Groups, seeds: list[Id[Item]]) -> set[Id[Item]]:
     return {end for end, group in groups.items() if group[end] == first[id(group)]}
 
 
-def _colouring(
-    model: Model, subject: Id[Item], unit: Id[Unit] | None
-) -> tuple[list[Id[Item]], set[Id[Item]], tuple[Id[Conductor], ...]]:
+def _colouring(model: Model, subject: Id[Item], unit: Id[Unit] | None) -> tuple[list[Id[Item]], set[Id[Item]], tuple[Id[Conductor], ...]]:
     """The block's end items in row order, its top row and its row links (model-0166).
 
     The cores, in core-key order, join groups of ends each with a side. After the last core each
@@ -284,17 +256,13 @@ def _colouring(
     groups: _Groups = {end: {end: 0} for end in ends}
     links = []
     for _, core in keyed:
-        one, two = (
-            cable_end_owner(model, item_of_port(model, p)) for p in (core.end_a, core.end_b)
-        )
+        one, two = (cable_end_owner(model, item_of_port(model, p)) for p in (core.end_a, core.end_b))
         if _joined(groups, one, two):
             links.append(core.conductor)
     return ends, _top_row(groups, seeds), tuple(links)
 
 
-def end_rows(
-    model: Model, subject: Id[Item], unit: Id[Unit] | None
-) -> tuple[tuple[Id[Item], ...], tuple[Id[Item], ...]]:
+def end_rows(model: Model, subject: Id[Item], unit: Id[Unit] | None) -> tuple[tuple[Id[Item], ...], tuple[Id[Item], ...]]:
     """The block's end items, top row then bottom row, each left to right (model-0166).
 
     The ends are coloured in core-key order (`_colouring`). A row runs by lowest core key, rank
@@ -312,9 +280,7 @@ def row_links(model: Model, subject: Id[Item], unit: Id[Unit] | None) -> tuple[I
     return _colouring(model, subject, unit)[2]
 
 
-def drawn_pins(
-    model: Model, subject: Id[Item], item: Id[Item], unit: Id[Unit] | None
-) -> tuple[DrawnPin, ...]:
+def drawn_pins(model: Model, subject: Id[Item], item: Id[Item], unit: Id[Unit] | None) -> tuple[DrawnPin, ...]:
     """The pins of the end box of `item` in the block of `unit`'s reading, drawing order.
 
     A port any core of the block lands on is landed, at the place of its lowest core key, and
@@ -334,31 +300,21 @@ def drawn_pins(
         (port for port in _connector_ports(model, subject, unit, item) if port not in landed),
         key=lambda port: pin_order(_pin_marking(model, port), port),
     )
-    pins.extend(
-        DrawnPin(port=port, marking=_pin_marking(model, port), landed=False) for port in free
-    )
+    pins.extend(DrawnPin(port=port, marking=_pin_marking(model, port), landed=False) for port in free)
     return tuple(pins)
 
 
-def _end_connector(
-    model: Model, subject: Id[Item], unit: Id[Unit] | None, item: Id[Item]
-) -> Id[Function] | None:
+def _end_connector(model: Model, subject: Id[Item], unit: Id[Unit] | None, item: Id[Item]) -> Id[Function] | None:
     """The connector function `item` is drawn as in the block, or `None` for any other end.
 
     The function is read off the ends of the block's cables and of its wires alike.
     """
     ends = [e for cable in block_cables(model, subject, unit) for e in cable.ends]
-    found = [
-        end.connector
-        for end in (*ends, *wire_ends(model, subject, unit))
-        if end.item == item and end.connector is not None
-    ]
+    found = [end.connector for end in (*ends, *wire_ends(model, subject, unit)) if end.item == item and end.connector is not None]
     return min(found, default=None)
 
 
-def _connector_ports(
-    model: Model, subject: Id[Item], unit: Id[Unit] | None, item: Id[Item]
-) -> tuple[Id[Port], ...]:
+def _connector_ports(model: Model, subject: Id[Item], unit: Id[Unit] | None, item: Id[Item]) -> tuple[Id[Port], ...]:
     """Every port of the connector function `item` is drawn as, or `()` for any other end."""
     function = _end_connector(model, subject, unit, item)
     return () if function is None else build_indexes(model).ports_by_function.get(function, ())
@@ -377,9 +333,7 @@ def end_by_others(model: Model, item: Id[Item]) -> bool:
     return external(model, item)
 
 
-def end_label(
-    model: Model, item: Id[Item], unit: Id[Unit] | None, subject: Id[Item] | None = None
-) -> str:
+def end_label(model: Model, item: Id[Item], unit: Id[Unit] | None, subject: Id[Item] | None = None) -> str:
     """The end's designation in `unit`'s reading, plus " (by others)"; a blank end is "".
 
     With the block's `subject`, a device that prints its connectors as sub-parts names the
@@ -391,7 +345,7 @@ def end_label(
     return end_text(model, item, DRAWN_END, ctx, function)
 
 
-def cable_heading(model: Model, cable: HarnessCable, unit: Id[Unit] | None) -> str:  # noqa: ARG001 - the reading no longer decides; callers keep one signature
+def cable_heading(model: Model, cable: HarnessCable) -> str:
     """The cable's heading: designation, pair form, "shielded", length, then "by others".
 
     Example: `-W3, shielded, 3000 mm`, or `-W5, 2x2x0.75, screened pairs, 25000 mm` (CC10:
@@ -413,9 +367,7 @@ def cable_heading(model: Model, cable: HarnessCable, unit: Id[Unit] | None) -> s
     return ", ".join(parts)
 
 
-def core_texts(
-    model: Model, subject: Id[Item], unit: Id[Unit] | None
-) -> frozendict[Id[Conductor] | Id[OpenCoreFacet], str]:
+def core_texts(model: Model, subject: Id[Item], unit: Id[Unit] | None) -> frozendict[Id[Conductor] | Id[OpenCoreFacet], str]:
     """The text of every core and single wire of the block, by core id (conductor or open core).
 
     A paired cable's cores add their pair word (`core_mark`); an open core adds `spare`.
@@ -435,9 +387,7 @@ def core_texts(
     return frozendict(found)
 
 
-def block_brackets(
-    model: Model, subject: Id[Item], unit: Id[Unit] | None
-) -> tuple[DrawnBracket, ...]:
+def block_brackets(model: Model, subject: Id[Item], unit: Id[Unit] | None) -> tuple[DrawnBracket, ...]:
     """The block's brackets in cable and pair order: a pair whose cores are neighbours."""
     cables = block_cables(model, subject, unit)
     opens = drawn_open_cores(model, cables)

@@ -2,16 +2,15 @@
 
 Golden files live in `tests/golden/`, written by `tests/usecases/regenerate_goldens.py`. Row-query
 golden tests are parametrized by query name so the parametrize id names the query,
-covering every row query.
 """
 
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import pytest
 from cabinet import build_cabinet
 from derive_helpers import with_house
 from harness_board import build_harness_board
+from regenerate_goldens import item_by_designation
 
 from fransys_model.derive import (
     board_netlist,
@@ -26,20 +25,10 @@ from fransys_model.derive import (
     wire_rows,
 )
 from fransys_model.derive.designation_label import own_designation_or_none
-from fransys_model.kernel import Id, Model, dumps, freeze, merge
+from fransys_model.kernel import dumps, freeze, merge
 from fransys_model.vocab.tables import items as items_of
 
-if TYPE_CHECKING:
-    from fransys_model.vocab.core import Item
-
 _GOLDEN_DIR = Path(__file__).resolve().parent.parent / "golden"
-
-
-def _item_by_designation(model: Model, designation: str) -> Id[Item]:
-    (item,) = (
-        i for i in items_of(model).values() if own_designation_or_none(model, i) == designation
-    )
-    return item.id
 
 
 def test_cabinet_canonical_json_matches_golden() -> None:
@@ -103,7 +92,7 @@ def test_cabinet_whole_model_row_query_matches_golden(query_name: str) -> None:
 def test_cabinet_terminal_rows_for_x1_matches_golden() -> None:
     """`terminal_rows` for strip `X1` matches its golden dump."""
     model = with_house(freeze(build_cabinet()))
-    rows = terminal_rows(model, _item_by_designation(model, "X1"))
+    rows = terminal_rows(model, item_by_designation(model, "X1"))
     golden = (_GOLDEN_DIR / "cabinet.terminal_rows.x1.json").read_text(encoding="utf-8")
     assert repr(rows) == golden
 
@@ -111,7 +100,7 @@ def test_cabinet_terminal_rows_for_x1_matches_golden() -> None:
 def test_cabinet_cable_rows_for_w1_matches_golden() -> None:
     """`cable_rows` for cable `W1` matches its golden dump."""
     model = freeze(build_cabinet())
-    rows = cable_rows(model, _item_by_designation(model, "W1"))
+    rows = cable_rows(model, item_by_designation(model, "W1"))
     golden = (_GOLDEN_DIR / "cabinet.cable_rows.w1.json").read_text(encoding="utf-8")
     assert repr(rows) == golden
 
@@ -119,7 +108,7 @@ def test_cabinet_cable_rows_for_w1_matches_golden() -> None:
 def test_harness_board_board_netlist_for_jb1_matches_golden() -> None:
     """`board_netlist` for board `JB1` matches its golden dump."""
     model = freeze(build_harness_board())
-    netlist = board_netlist(model, _item_by_designation(model, "JB1"))
+    netlist = board_netlist(model, item_by_designation(model, "JB1"))
     golden = (_GOLDEN_DIR / "harness_board.board_netlist.jb1.json").read_text(encoding="utf-8")
     assert repr(netlist) == golden
 
@@ -133,7 +122,7 @@ def test_harness_board_overview_graph_matches_golden() -> None:
 
 def test_harness_board_harness_cables_for_wh1_matches_golden() -> None:
     """`harness_cables` for harness `WH1`, after numbering the fan-out cable `W1`, matches."""
-    model, _ = number(freeze(build_harness_board()))
-    cables = harness_cables(model, _item_by_designation(model, "WH1"))
+    model, _ = number(with_house(freeze(build_harness_board())))
+    cables = harness_cables(model, item_by_designation(model, "WH1"))
     golden = (_GOLDEN_DIR / "harness_board.harness_cables.wh1.json").read_text(encoding="utf-8")
     assert repr(cables) == golden

@@ -11,7 +11,7 @@ from typing import Any, Protocol, cast
 from fransys_model.kernel import Id, Record, SchemaError, namespace_of
 
 from .aspects import AspectNode, Placement
-from .connectivity import Conductor, Mate, Net
+from .connectivity import Conductor, Mate, Net, RailGroup
 from .core import Function, Item, Port, Unit, UnitRelease
 from .document import Document
 from .project import Project
@@ -33,23 +33,15 @@ class HasTables(Protocol):
 _NO_RECORDS: frozendict[Id[Any], Any] = frozendict()
 
 
-def kind_of(record_type: type) -> str:
+def kind_of(record_type: object) -> str:
     """The kind `record_type` is registered under.
 
     Raises `SchemaError` when `record_type` is not a `@record` class.
     """
     # The two isinstance tests stay: a non-class argument is tested and must raise SchemaError.
-    kind = (
-        vars(record_type).get("__kind__")
-        if isinstance(record_type, type)  # ty: ignore[redundant-condition-strict] -- see above
-        else None
-    )
+    kind = vars(record_type).get("__kind__") if isinstance(record_type, type) else None
     if kind is None:
-        name = (
-            record_type.__qualname__
-            if isinstance(record_type, type)  # ty: ignore[redundant-condition-strict] -- see above
-            else repr(record_type)
-        )
+        name = record_type.__qualname__ if isinstance(record_type, type) else repr(record_type)
         msg = f"{name} is not a @record class"
         raise SchemaError(msg, kind=name)
     return cast("str", kind)  # vars() values are Any; `@record` sets `__kind__` to a str
@@ -153,6 +145,11 @@ def conductors(model: HasTables) -> frozendict[Id[Conductor], Conductor]:
 def mates(model: HasTables) -> frozendict[Id[Mate], Mate]:
     """Return every `Mate` in `model`, by id."""
     return table_of(model, Mate)
+
+
+def rail_groups(model: HasTables) -> frozendict[Id[RailGroup], RailGroup]:
+    """Return every `RailGroup` in `model`, by id."""
+    return table_of(model, RailGroup)
 
 
 def units(model: HasTables) -> frozendict[Id[Unit], Unit]:

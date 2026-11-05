@@ -2,7 +2,6 @@
 
 LIB-ADOPT K1 reorders no circuit structure: the parts of a parallel stay in `series_part_key`
 order (TAG O4, as amended by the owner 2026-10-23: the first branch is the first in that order).
-The expected order is the hand corpus of the kernel's `natural_orders.json` (old key).
 """
 
 import json

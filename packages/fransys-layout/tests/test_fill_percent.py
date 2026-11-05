@@ -7,7 +7,7 @@ _AREA = Size(100, 50)
 
 
 def _drawing(*, symbols=(), wires=(), texts=(), area=_AREA) -> Drawing:
-    return Drawing(area, symbols, wires, (), texts, (), "t")
+    return Drawing(area, symbols, wires, texts, (), "t")
 
 
 def _symbol(box: Box | None) -> DrawnSymbol:

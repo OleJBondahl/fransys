@@ -3,11 +3,12 @@
 import json
 
 from .errors import SchemaError
+lazy from .encode import JsonValue
 
 _KIND = "canonical"
 
 
-def read_json(text: str) -> object:
+def read_json(text: str) -> JsonValue:
     """Parse canonical JSON into frozendicts, tuples and primitives.
 
     Refuses a repeated key, a fraction or exponent (a `Decimal` is a string), `NaN`, `Infinity`.
@@ -57,7 +58,7 @@ def _refuse_constant(text: str) -> object:
     raise SchemaError(msg, kind=_KIND)
 
 
-def _thaw(value: object) -> object:
+def _thaw(value: JsonValue) -> JsonValue:
     if isinstance(value, dict):
         return frozendict({key: _thaw(item) for key, item in value.items()})
     if isinstance(value, list):

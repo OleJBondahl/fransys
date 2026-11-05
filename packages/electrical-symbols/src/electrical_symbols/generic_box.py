@@ -15,6 +15,7 @@ from electrical_symbols.box_ports import (
     SOUTH,
     default_sides,
 )
+from electrical_symbols.errors import SymbolsError
 
 # Geometry, in module units (M, DESIGN 6.1): a port every 2 M, a body 4 M tall and at least 4 M
 # wide, and a 6 M x 1 M `tag` slot 0.5 M to the body's right.
@@ -48,13 +49,10 @@ def _ports(
     pitch: float,
 ) -> tuple[Port, ...]:
     """One port per name: at its offset, else its place in its side's row at the pitch."""
-    if bad := sorted(set(sides) - {NORTH, SOUTH}):
-        msg = f"sides are {NORTH!r} or {SOUTH!r}, got {bad[0]!r}"
-        raise ValueError(msg)
-    row = {
-        side: [name for name, one in zip(port_names, sides, strict=True) if one == side]
-        for side in set(sides)
-    }
+    if bad := set(sides) - {NORTH, SOUTH}:
+        msg = f"sides are {NORTH!r} or {SOUTH!r}, got {min(bad)!r}"
+        raise SymbolsError(msg)
+    row = {side: [name for name, one in zip(port_names, sides, strict=True) if one == side] for side in set(sides)}
     top, bottom = -_BODY_HEIGHT / 2, _BODY_HEIGHT / 2
     return tuple(
         Port(
@@ -83,8 +81,7 @@ def _marks(ports: tuple[Port, ...]) -> tuple[Slot, ...]:
             id=f"marking.{port.id}",
             position=Point(
                 x=port.position.x + _MARK_OFFSET_X,
-                y=port.position.y
-                + (_MARK_OFFSET_Y if port.direction is Direction.N else -_MARK_OFFSET_Y),
+                y=port.position.y + (_MARK_OFFSET_Y if port.direction is Direction.N else -_MARK_OFFSET_Y),
             ),
             side=Direction.E,
             box=(_MARK_WIDTH, _TAG_HEIGHT),
@@ -118,7 +115,7 @@ def generic_box(
     """
     if offsets and len(offsets) != len(port_names):
         msg = f"offsets are one per port name, got {len(offsets)} for {len(port_names)}"
-        raise ValueError(msg)
+        raise SymbolsError(msg)
     plain = box_pitch(marking_widths)
     pitch = box_pitch(marking_widths, stand)
     # `sides` overrides the alternating rule; each side's ports then run
@@ -148,7 +145,7 @@ def generic_box(
         name="Generic box",
         kind=SymbolKind.SYMBOL,
         status=Status.UNVERIFIED,
-        reference=Reference(standard="fransys", number=GENERIC_BOX_KEY),
+        reference=Reference(standard="generic", number=GENERIC_BOX_KEY),
         elements=(outline,),
         ports=ports,
         slots=(tag, *_marks(ports)),

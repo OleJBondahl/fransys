@@ -1,31 +1,18 @@
 """Re-authoring proof: the layout package's cabinet
 fixture (`packages/fransys-layout/tests/layout_cabinet.py::build_cabinet()`), the
-hand-built `Draft` the layout golden `cabinet_laid_out.json` came from, re-authored with
+hand-built `Draft` the layout golden came from, re-authored with
 `fransys_author` and compared structurally (fransys-v2's ruling): catalogue records
-by id (the two models share the same catalogue `Draft`, so these hash-match exactly);
-instance records mapped by content (designation, function/port name, ...), then every
-field compared except id/key/origin, with every difference listed and explained. The
-id-scheme mismatch itself is not a difference: A9's key rule (scope prefix + name) is
-independently designed from the fixture's own ad hoc keys.
 """
 
-import sys
-from pathlib import Path
+from fransys_author.design import Design
+from layout_cabinet import build_cabinet
+from root_library import freeze
 
-_LAYOUT_TESTS = Path(__file__).resolve().parent.parent / "packages" / "fransys-layout" / "tests"
-if str(_LAYOUT_TESTS) not in sys.path:
-    sys.path.insert(0, str(_LAYOUT_TESTS))
-
-from fransys_author import Design  # noqa: E402
-from layout_cabinet import build_cabinet  # noqa: E402
-from root_library import freeze  # noqa: E402 -- after the sys.path insert
-
-from fransys_model.derive import item_description  # noqa: E402
-from fransys_model.derive.designation_label import own_designation_or_none  # noqa: E402
-from fransys_model.kernel import Draft, Origin, merge  # noqa: E402 -- after the sys.path insert
-from fransys_model.vocab import (  # noqa: E402
+from fransys_model.derive import item_description
+from fransys_model.derive.designation_label import own_designation_or_none
+from fransys_model.kernel import Draft, Origin, merge
+from fransys_model.vocab import (
     CableProductFacet,
-    FunctionKind,
     FunctionTemplate,
     InternalLink,
     Part,
@@ -52,7 +39,6 @@ def _catalogue_from(hand_built: Draft) -> Draft:
 
     The re-authored cabinet is built against this, so every catalogue record's id
     matches the hand-built model's exactly (same object, same key): the catalogue
-    comparison is a free, exact check, never a mapped one.
     """
     catalogue = Draft()
     for record in hand_built.records():
@@ -74,9 +60,6 @@ def _reauthor(catalogue: Draft) -> Draft:
     p2 = d.group("P2", "invented P2")
     es = d.group("ES", "invented ES")
 
-    d.symbol(FunctionKind.TERMINAL, "terminal", {"internal": "n", "external": "s"})
-    d.symbol(FunctionKind.COIL, "operating-device", {"A1": "in", "A2": "out"})
-
     x1, x2, x3, x4 = d.strip("X1"), d.strip("X2"), d.strip("X3"), d.strip("X4")
     wire = d.wiring(colour="blue", gauge="0.75")
 
@@ -86,7 +69,6 @@ def _reauthor(catalogue: Draft) -> Draft:
     rail = x2.terminal("EX-TERMINAL-2.5", group=sup)
     wire(feed.inner, f1.fn("element")["1"], label="W1001")
     wire(f1.fn("element")["2"], rail.inner, label="W1002")
-    d.chain(feed, f1.fn("element"), rail)
 
     def pump(n: int, group, counter: int):
         inlet = x1.terminal("EX-TERMINAL-2.5", group=group)
@@ -98,11 +80,9 @@ def _reauthor(catalogue: Draft) -> Draft:
         wire(inlet.inner, breaker.fn("element")["1"], label=f"W{1000 + counter}")
         wire(breaker.fn("element")["2"], contactor.fn("main")["1"], label=f"W{1000 + counter + 1}")
         wire(contactor.fn("main")["2"], field.inner, label=f"W{1000 + counter + 2}")
-        d.chain(inlet, breaker.fn("element"), contactor.fn("main"), field)
         wire(rail.outer, stop.fn("nc_1")["11"], label=f"W{1000 + counter + 3}")
         wire(stop.fn("nc_1")["12"], contactor.fn("coil")["A1"], label=f"W{1000 + counter + 4}")
         wire(contactor.fn("coil")["A2"], zero.inner, label=f"W{1000 + counter + 5}")
-        d.chain(stop.fn("nc_1"), contactor.fn("coil"), zero)
         return inlet, breaker, contactor, field, stop, zero
 
     _, _, k1, _, _, zero1 = pump(1, p1, 3)
@@ -114,8 +94,6 @@ def _reauthor(catalogue: Draft) -> Draft:
     wire(estop.fn("nc_1")["12"], estop.fn("nc_2")["21"])
     wire(estop.fn("nc_2")["22"], k1.fn("aux")["13"])
     wire(k1.fn("aux")["14"], k2.fn("aux")["13"])
-    d.chain(estop.fn("nc_1"), estop.fn("nc_2"))
-    d.draw_in(estop.fn("nc_2"), p1)
 
     # -- extras: lamp, cable (2 cores), spare relay + declared net, board + child fuse --
     lamp = d.item("EX-LAMP-24V", tag="H1", at=c1, group=sup)
@@ -148,9 +126,6 @@ _COUNT_ONLY_KINDS = (
     "function_template",
     "internal_link",
     "item",
-    "layout.chain",
-    "layout.group_hint",
-    "layout.symbol_choice",
     "net",
     "part",
     "part_library",
@@ -257,9 +232,7 @@ def test_items_functions_ports_match_by_content():
         # The fixture stores the part's text on the item; the API stores only an authored one
         # so the compared text is the one a list shows, `item_description`.
         if key[0] != "terminal" and key[2] is not None:
-            assert item_description(hand_model, hand_item.id) == item_description(
-                reauthored_model, reauth_item.id
-            )
+            assert item_description(hand_model, hand_item.id) == item_description(reauthored_model, reauth_item.id)
 
     hand_fns, reauth_fns = _function_keys(hand_model), _function_keys(reauthored_model)
     assert set(hand_fns) == set(reauth_fns)
@@ -269,7 +242,7 @@ def test_items_functions_ports_match_by_content():
     hand_ports, reauth_ports = _port_keys(hand_model), _port_keys(reauthored_model)
     assert set(hand_ports) == set(reauth_ports)
     for key, hand_port in hand_ports.items():
-        assert hand_port.role == reauth_ports[key].role
+        assert (hand_port.boundary, hand_port.pin_role) == (reauth_ports[key].boundary, reauth_ports[key].pin_role)
 
 
 def test_conductors_match_by_their_mapped_endpoints():
@@ -322,6 +295,10 @@ def test_every_other_record_kind_matches_by_count_except_the_two_explained_ones(
     for kind in _COUNT_ONLY_KINDS:
         assert hand_counts.get(kind, 0) == reauth_counts.get(kind, 0), kind
 
+    # the fixture's group hint (a draw-in) and symbol choices have no author call left: hand-built only
+    assert reauth_counts.get("layout.group_hint", 0) == reauth_counts.get("layout.symbol_choice", 0) == 0
+    assert hand_counts["layout.group_hint"] == 1
+    assert hand_counts["layout.symbol_choice"] > 0
     assert hand_counts.get("facet.cable", 0) == _HAND_BUILT_CABLE_FACETS
     assert reauth_counts.get("facet.cable", 0) == _REAUTHORED_CABLE_FACETS
     assert hand_counts["placement"] == _HAND_BUILT_PLACEMENTS

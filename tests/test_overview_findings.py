@@ -2,7 +2,6 @@
 
 The page's data holds, per view, the worst severity and the count on each box and line a finding
 names. A subject not drawn on a view counts on its nearest drawn ancestor box. Each test names what
-breaks it.
 """
 
 import json
@@ -11,7 +10,7 @@ from typing import Any
 
 import fransys as fr
 import fransys_parts
-from fransys import pipeline
+from fransys import _exports as export_files
 from fransys_overview import html
 from test_overview_page import _data, _laid
 from test_units_worked_example import _system_design
@@ -22,13 +21,11 @@ from fransys_model.vocab import conductors, ports
 
 
 def _finding(severity: Severity, *subjects: Any) -> Finding:
-    return Finding(
-        code="DEMO_FINDING", severity=severity, subjects=subjects, message="demo", fix="Write: x"
-    )
+    return Finding(code="DEMO_FINDING", severity=severity, subjects=subjects, message="demo", fix="Write: x")
 
 
 def _page(*findings: Finding) -> dict[str, Any]:
-    found = re.search(r'id="overview-data">(.*?)</script>', html(_laid()[0], findings=findings))
+    found = re.search(r'id="overview-data">(.*?)</script>', html(_laid()[0], findings=findings, text_height=8))
     assert found is not None
     return json.loads(found.group(1))
 
@@ -117,12 +114,12 @@ def test_write_passes_its_findings_into_the_page(monkeypatch: Any, tmp_path: Any
     known = _finding(Severity.WARNING)
     seen: dict[str, Any] = {}
 
-    def spy(*_args: Any, findings: Any = (), **_kwargs: Any) -> dict[str, bytes]:
-        seen["findings"] = findings
+    def spy(job: Any) -> dict[str, bytes]:
+        seen["findings"] = job.findings
         return {}
 
-    monkeypatch.setattr(pipeline, "_raw_findings", lambda *_: (known,))
-    monkeypatch.setattr(pipeline, "_exports", spy)
+    monkeypatch.setattr(export_files, "_raw_findings", lambda *_: (known,))
+    monkeypatch.setattr(export_files, "_exports", spy)
     fr.write(result, tmp_path)
     assert seen["findings"] == (known,)
 
@@ -137,9 +134,7 @@ def test_a_large_count_is_printed_in_full() -> None:
 
 def test_the_badge_is_a_pill_that_grows_with_its_label() -> None:
     """Breaks if the badge goes back to a fixed-size ellipse or the count gets a cap."""
-    text = html(
-        _laid()[0], findings=(_finding(Severity.ERROR, overview_graph(_laid()[0]).nodes[0].item),)
-    )
+    text = html(_laid()[0], findings=(_finding(Severity.ERROR, overview_graph(_laid()[0]).nodes[0].item),), text_height=8)
     rule = re.search(r"selector: 'node\[role=\"badge\"\]', style: \{(.*?)\} \}", text, re.DOTALL)
     assert rule is not None
     assert "'round-rectangle'" in rule.group(1)

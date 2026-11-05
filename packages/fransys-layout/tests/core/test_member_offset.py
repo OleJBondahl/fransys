@@ -31,9 +31,7 @@ def _offsets(prob: PlacementProblem) -> list[int]:
     return [ln.offset for ln in flow_of(prob).columns[0].lanes]
 
 
-def test_the_second_branch_stands_a_pitch_right_of_the_first_when_the_edge_rule_is_smaller() -> (
-    None
-):
+def test_the_second_branch_stands_a_pitch_right_of_the_first_when_the_edge_rule_is_smaller() -> None:
     """Edge rule: 8 half-width + 8 gap + 8 own half-width = 24, under the 48 pitch."""
     assert OPTIONS.parallel_pitch == 48
     assert _offsets(_branches(2, {})) == [0, 48]

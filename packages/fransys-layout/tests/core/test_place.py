@@ -44,12 +44,6 @@ PLANTED = {
 def test_every_pin_of_every_placed_symbol_lies_on_the_wiring_grid(name: str) -> None:
     step = core_options(
         marker=MARKER,
-        flip_turn="R180",
-        tag_stagger=True,
-        label_gap=8,
-        parallel_pitch=48,
-        driver_first=True,
-        arrow_sides=("E", "W"),
     ).wiring_grid
     for (sym, pin), (x, y) in all_pins(placed_of(PLANTED[name]())).items():
         assert x % step == 0, (sym, pin, x)
@@ -61,9 +55,7 @@ def test_no_two_footprints_of_one_row_overlap(name: str) -> None:
     """Bodies never overlap; footprints of two cells of one column do not either."""
     prob = PLANTED[name]()
     cut = cut_of(prob)
-    column_of = {
-        c.sym: col.id for col in flow_of(prob).columns for ln in col.lanes for c in ln.cells
-    }
+    column_of = {c.sym: col.id for col in flow_of(prob).columns for ln in col.lanes for c in ln.cells}
     for page in placed_of(prob).pages:
         for a, b in combinations(page.placed, 2):
             assert not overlaps(a.body, b.body), (a.sym, b.sym)
@@ -77,12 +69,6 @@ def _row_extent(prob: PlacementProblem) -> tuple[int, int]:
     options = core_options(
         marker=MARKER,
         justify=False,
-        flip_turn="R180",
-        tag_stagger=True,
-        label_gap=8,
-        parallel_pitch=48,
-        driver_first=True,
-        arrow_sides=("E", "W"),
     )
     cut = cut_of(prob, options)
     env = page_envs(cut, prob, options)[0]
@@ -107,9 +93,7 @@ def _respelled(prob: PlacementProblem) -> tuple[PlacementProblem, dict[str, str]
 
 def _coords(placement: Placement, back: dict[str, str]) -> dict[str, object]:
     return {
-        back[p.sym]: (p.x, p.y, p.orient, p.body, p.footprint, sorted(q.x + q.y for q in p.pin_xy))
-        for page in placement.pages
-        for p in page.placed
+        back[p.sym]: (p.x, p.y, p.orient, p.body, p.footprint, sorted(q.x + q.y for q in p.pin_xy)) for page in placement.pages for p in page.placed
     }
 
 

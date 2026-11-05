@@ -2,12 +2,7 @@
 
 import fransys as fr
 from fransys.colours import BU, WH
-
-
-def _cols(d) -> frozenset[tuple[str, str, str, str]]:
-    """The wires of a design as (from, to, colour, size): what a rewrite must keep."""
-    rows = fr.derive.wire_rows(fr.build(d).model)
-    return frozenset((r.from_, r.to, r.colour, str(r.cross_section_mm2)) for r in rows)
+from test_guide_high_level_first import _cols
 
 
 def _sensors(*, series: bool, colour=BU):
@@ -17,10 +12,11 @@ def _sensors(*, series: bool, colour=BU):
         x1 = d.terminal_strip("X1", "DEMO-TB-2.5")
         for n in range(16, 0, -1):
             b = d.device(f"B{n}", "DEMO-SWITCH-2P")
+            d.earth(b.sw.A)
             if series:
                 d.series(b.sw, x1, wire=(colour, 0.75))
             else:
-                d.detail.wire(b.sw.B, x1[17 - n], wire=(colour, 0.75))
+                d.series(b.sw.B, x1[17 - n], wire=(colour, 0.75))
     return d
 
 

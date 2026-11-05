@@ -4,6 +4,8 @@ The backend data structure of Fransys. **Internal: Fransys is the only consumer.
 
 Status: implemented and absorbed into the workspace (root decision 0010). The kernel, vocabulary, derive layer and layout records are in place and covered by tests; further work is on the project roadmap.
 
+`SCHEMA_VERSION` is 21: family-library values are stored through the kernel registry (decision model-0370), so a stored model of version 20 no longer loads.
+
 ## What it is
 
 One strict, immutable model of an electrical system, built on Python 3.15's builtin `frozendict`. Every Fransys input writes into it. Every output (schematic pages, cable drawings, terminal lists, PLC lists, BOMs, wire labels, KiCad netlists) is a pure function of it.

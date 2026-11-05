@@ -13,14 +13,14 @@ from fransys_model.derive.texts.designation_segments import designation_segments
 from fransys_model.kernel import SchemaError, make_id
 from fransys_model.vocab import DESIGNATION_SCHEME
 from fransys_model.vocab.aspects import AspectNode, Placement
-from fransys_model.vocab.core import Unit
+from fransys_model.vocab.core import Item, Unit
 from fransys_model.vocab.enums import Aspect
 
 if TYPE_CHECKING:
     from fransys_model.kernel import Id
 
 
-def _node(plant: Plant, key: str, aspect: Aspect, label: str, parent: Id[AspectNode] | None):
+def _node(plant: Plant, key: str, aspect: Aspect, label: str, parent: Id[AspectNode] | None) -> Id[AspectNode]:
     node = AspectNode(
         id=make_id(AspectNode, (key,)),
         key=(key,),
@@ -33,12 +33,12 @@ def _node(plant: Plant, key: str, aspect: Aspect, label: str, parent: Id[AspectN
     return node.id
 
 
-def _place(plant: Plant, item: Id, node: Id[AspectNode]) -> None:
+def _place(plant: Plant, item: Id[Item], node: Id[AspectNode]) -> None:
     key = f"place-{node.value}"
     plant.add(Placement(id=make_id(Placement, (key,)), key=(key,), item=item, node=node))
 
 
-def _located_relay() -> tuple[Plant, Id, Id, Id, Id]:
+def _located_relay() -> tuple[Plant, Id[Item], Id[Item], Id[AspectNode], Id[AspectNode]]:
     """A relay `K1` on board `A1`, placed at function `G1` and location `C1` then `SUB`."""
     plant = Plant()
     board = plant.item("board", part=plant.board_part(), designation="A1")

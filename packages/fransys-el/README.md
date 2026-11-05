@@ -1,3 +1,5 @@
+# fransys-el
+
 Fransys electrical conventions: the values the general layout core takes as options.
 
 Role contract: conventions as values, and the placement-problem builder. `fransys_el` holds our drawing conventions as frozen option values that `fransys_layout` accepts. Its `build(model, kit, conventions)` is a pure function from a model, a symbol kit and conventions to a `PlacementProblem`. It reads facts from `fransys_model.derive`, derives none, and reads no file (el-0002). `fransys_layout` and `fransys_render` never import it; the bundle `fransys` passes `fransys_el.OPTIONS` into every layout call (FRANSYS-SPLIT, seam 1).

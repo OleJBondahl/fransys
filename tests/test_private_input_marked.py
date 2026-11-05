@@ -2,10 +2,6 @@
 
 The export has no `internal/` root and no `rules/`, so conftest skips a marked test there. An
 unmarked reader fails the export's own gate. A test reads when it, a module-level name it uses, a
-fixture it asks for or a name it imports from a sibling test module builds a path under those
-folders (`ROOT / "internal"`) or loads a `placement_corpus` module. It is marked when its own
-decorators, a fixture it asks for, or the module's `pytestmark` carry the marker, directly or
-through a shared name whose value carries it (such as `CASE_PARAMS`).
 """
 
 import ast
@@ -21,10 +17,12 @@ CORPUS = "placement" + "_corpus"  # split, so this file does not flag itself
 TOLERANT = frozenset(
     {
         "is_export",
-        "INTERNAL_FILE",
         "DEFAULT_SCAN",
         "_strict_xfail_sites",
         "test_covered_files_includes_package_docs_two_folders_deep",
+        "test_the_ty_gate_adds_the_internal_search_paths_only_when_the_full_repo_lists_them",
+        "test_the_internal_gate_joins_only_where_the_full_repo_has_its_recipes",
+        "test_the_full_repo_lists_its_search_paths_wherever_it_has_its_recipes",
     }
 )
 
@@ -74,10 +72,7 @@ def _top_levels(tree: ast.Module) -> dict[str, ast.AST]:
 def _imports(tree: ast.Module) -> list[tuple[str, str]]:
     """(sibling module, name) of every `from module import name`."""
     return [
-        (stmt.module, alias.asname or alias.name)
-        for stmt in tree.body
-        if isinstance(stmt, ast.ImportFrom) and stmt.module
-        for alias in stmt.names
+        (stmt.module, alias.asname or alias.name) for stmt in tree.body if isinstance(stmt, ast.ImportFrom) and stmt.module for alias in stmt.names
     ]
 
 
@@ -98,10 +93,7 @@ def _analyse(
 ) -> tuple[dict[str, set[str]], dict[str, set[str]]]:
     """Per module: its reader names and its marked names, imports followed to a fixed point."""
     tops = {m: _top_levels(t) for m, t in trees.items()}
-    tainted = {
-        m: {n for n, node in d.items() if n not in TOLERANT and _reads(node)}
-        for m, d in tops.items()
-    }
+    tainted = {m: {n for n, node in d.items() if n not in TOLERANT and _reads(node)} for m, d in tops.items()}
     marked = {m: {n for n, node in d.items() if _carries([node], set())} for m, d in tops.items()}
     for _ in range(3):  # one sibling import chain deep is enough; a third pass settles it
         for module, tree in trees.items():
@@ -125,9 +117,7 @@ def unmarked_readers(sources: dict[str, str]) -> list[str]:
     found = []
     for module, tree in trees.items():
         tops = _top_levels(tree)
-        module_mark = [
-            s.value for s in tree.body if isinstance(s, ast.Assign) and _is_pytestmark(s)
-        ]
+        module_mark = [s.value for s in tree.body if isinstance(s, ast.Assign) and _is_pytestmark(s)]
         for name, node in tops.items():
             if not (name.startswith("test_") and name in tainted[module]):
                 continue
@@ -177,11 +167,7 @@ def test_a_marker_on_the_test_the_module_or_a_shared_name_clears_it() -> None:
     own = READER + "@pytest.mark.private_input\ndef test_a():\n    _RUN\n"
     module = READER + "pytestmark = pytest.mark.private_input\ndef test_a():\n    _RUN\n"
     shared_value = "CASES = [pytest.param(1, marks=pytest.mark.private_input)]\n"
-    fixture = (
-        READER
-        + "@pytest.fixture(params=CASES)\ndef run(request):\n    return _RUN\n"
-        + "def test_a(run):\n    pass\n"
-    )
+    fixture = READER + "@pytest.fixture(params=CASES)\ndef run(request):\n    return _RUN\n" + "def test_a(run):\n    pass\n"
     assert unmarked_readers({"m": own}) == []
     assert unmarked_readers({"m": module}) == []
     assert unmarked_readers({"base": shared_value, "m": "from base import CASES\n" + fixture}) == []

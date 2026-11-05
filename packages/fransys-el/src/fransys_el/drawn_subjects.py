@@ -22,7 +22,4 @@ def drawn_subjects(model: Model, kit: SymbolKit) -> dict[str, Id[Function]]:
     function of its port. A marker, a table and a power symbol are no pick and are absent.
     The core Drawing names no model thing: this is where a drawn id meets its function.
     """
-    return {
-        core_symbol_id(sym): function_of(model, lead)
-        for lead, sym in symbol_ids(model, kit).items()
-    }
+    return {core_symbol_id(sym): function_of(model, lead) for lead, sym in symbol_ids(model, kit).items()}

@@ -1,24 +1,15 @@
-"""Number each unit instance that has no tag, from its release's `class_code`."""
+"""Unit-instance tag checks, and the number sets the item numbering shares."""
 
-import dataclasses
-from collections.abc import Callable, Collection
+lazy from collections.abc import Collection
 
-from fransys_kernel import require_origin
-from fransys_model.derive.designation_label import own_designation_or_none
-from fransys_model.derive.facts.units import designating_ancestors
+from fransys_model.derive.facts.unit_index import unit_index
 from fransys_model.derive.instance_tag import unit_tag
-from fransys_model.derive.lookups import terminal_items
-from fransys_model.derive.unit_release import unit_release
-from fransys_model.kernel import Finding, Id, Model, Severity, evolve, make_id
 from fransys_model.refdef import lowest_free
-from fransys_model.vocab.codes import fix_text
-from fransys_model.vocab.facets.assigned_unit_tag import AssignedUnitTagFacet
+from fransys_model.vocab.codes import finding
 from fransys_model.vocab.finding_ref import ref
-from fransys_model.vocab.tables import items
 from fransys_model.vocab.tables import units as units_table
+lazy from fransys_model.kernel import Finding, Id, Model
 lazy from fransys_model.vocab.core import Unit
-
-type Reserved = Callable[..., frozenset[str]]
 
 
 def _number_of(code: str, text: str) -> int | None:
@@ -34,14 +25,15 @@ def used_numbers(code: str, taken: Collection[str]) -> set[int]:
     return {n for text in taken if (n := _number_of(code, text)) is not None}
 
 
-def next_number(taken: set[str], numbers: dict[str, set[int]], code: str) -> int:
+def next_number(taken: set[str], numbers: dict[str, set[int]], code: str, *, first: int) -> int:
     """The lowest free number of `code`; the number joins `taken` and every built set it fits.
 
-    `numbers` holds the used-number set of each code, built from `taken` the first time.
+    `numbers` holds the used-number set of each code, built from `taken` the first time. `first`
+    is the lowest number any code takes (`[designation] number_start`).
     """
     if code not in numbers:
         numbers[code] = used_numbers(code, taken)
-    n = lowest_free(numbers[code])
+    n = lowest_free(numbers[code], first=first)
     text = f"{code}{n}"
     taken.add(text)
     for other, found in numbers.items():
@@ -50,68 +42,10 @@ def next_number(taken: set[str], numbers: dict[str, set[int]], code: str) -> int
     return n
 
 
-def _item_texts(model: Model, parent: Id[Unit] | None) -> set[str]:
-    """Own texts of the items in `parent`'s top group (no designating ancestor), terminals out."""
-    terminals = terminal_items(model)
-    found = set()
-    for item in items(model).values():
-        if item.unit != parent or item.id in terminals or designating_ancestors(model, item.id):
-            continue
-        if (text := own_designation_or_none(model, item)) is not None:
-            found.add(text)
-    return found
-
-
 def instance_tags_in(model: Model, parent: Id[Unit] | None) -> set[str]:
     """The tags, written or assigned, of the instances directly inside `parent`."""
-    siblings = (u.id for u in units_table(model).values() if u.parent == parent)
+    siblings = unit_index(model).child_units.get(parent, ())
     return {tag for unit in siblings if (tag := unit_tag(model, unit)) is not None}
-
-
-def _taken(model: Model, parent: Id[Unit] | None, reserved: Reserved) -> set[str]:
-    """Every text already used in `parent`'s top group: item texts, instance tags, reserved ones."""
-    return (
-        _item_texts(model, parent) | instance_tags_in(model, parent) | reserved(model, parent, None)
-    )
-
-
-def _floating(model: Model) -> list[Unit]:
-    """The instances with no tag, written or assigned, whose release has a `class_code`."""
-    found = [
-        unit
-        for unit in units_table(model).values()
-        if unit_tag(model, unit.id) is None and unit_release(model, unit.id).class_code
-    ]
-    return sorted(found, key=lambda unit: (unit.key, unit.id))
-
-
-def _facets(model: Model, reserved: Reserved) -> list[AssignedUnitTagFacet]:
-    taken: dict[Id[Unit] | None, set[str]] = {}
-    numbers: dict[Id[Unit] | None, dict[str, set[int]]] = {}
-    facets = []
-    for unit in _floating(model):
-        parent = unit.parent
-        texts = taken.setdefault(parent, _taken(model, parent, reserved))
-        code = unit_release(model, unit.id).class_code
-        n = next_number(texts, numbers.setdefault(parent, {}), code)
-        key = (*unit.key, "assigned_unit_tag")
-        facet_id = make_id(AssignedUnitTagFacet, key)
-        facets.append(
-            AssignedUnitTagFacet(id=facet_id, key=key, subject=unit.id, text=f"{code}{n}")
-        )
-    return facets
-
-
-def number_unit_tags(model: Model, reserved: Reserved) -> Model:
-    """`model` with a `facet.assigned_unit_tag` on each floating instance."""
-    # Runs after the items, so their assigned texts count as taken (model-0044).
-    facets = _facets(model, reserved)
-    if not facets:
-        return model
-    authored = {facet.id: require_origin(model.origins, facet.subject) for facet in facets}
-    evolved = evolve(model, put=facets, origin=authored[facets[0].id])
-    origins = type(evolved.origins)({**evolved.origins, **authored})
-    return dataclasses.replace(evolved, origins=origins)
 
 
 def unit_tag_duplicates(model: Model, code: str) -> list[Finding]:
@@ -121,13 +55,10 @@ def unit_tag_duplicates(model: Model, code: str) -> list[Finding]:
         if (tag := unit_tag(model, unit.id)) is not None:
             groups.setdefault((unit.parent, tag), []).append(unit)
     return [
-        Finding(
-            code=code,
-            severity=Severity.ERROR,
-            subjects=(unit.id,),
-            message=f"unit instance {ref(unit)} has the tag {tag!r}, "
-            "which another instance under the same parent has too",
-            fix=fix_text(code),
+        finding(
+            code,
+            (unit.id,),
+            f"unit instance {ref(unit)} has the tag {tag!r}, which another instance under the same parent has too",
         )
         for (_, tag), same in groups.items()
         if len(same) > 1

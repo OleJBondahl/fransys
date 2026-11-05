@@ -1,12 +1,7 @@
-"""The font sizes of a document's pages, from the capital heights (EXACT-SIZES E3, E7, E10)."""
+"""The font sizes of the build's pages, from the library heights (EXACT-SIZES E3, E7, E10)."""
 
-lazy from decimal import Decimal
+lazy from fransys_model.kernel import Model
 
-from fransys_model.layout import profile_of
-lazy from fransys_model.kernel import Id, Model
-lazy from fransys_model.vocab import Document
-
-from .document_unit import document_unit
 from .print_sizes import TextRole, font_size_mm, role_height_mm
 from .rows_sheet import Sizes
 from .title_band import title_band_need
@@ -14,21 +9,17 @@ from .title_band import title_band_need
 __all__ = ["sizes_of"]
 
 
-def _font_mm(model: Model, role: TextRole, text_height_mm: Decimal) -> float:
-    return float(font_size_mm(model, role_height_mm(model, role, text_height_mm)))
+def _font_mm(model: Model, role: TextRole) -> float:
+    return float(font_size_mm(model, role_height_mm(model, role)))
 
 
-def sizes_of(model: Model, document: Id[Document]) -> Sizes:
-    """The font sizes of a document's pages: its unit's profile (the top's) sets the smallest.
-
-    `document` is the document's id.
-    """
-    height = profile_of(model, document_unit(model, document)).text_height_mm
-    label, body = _font_mm(model, TextRole.LABEL, height), _font_mm(model, TextRole.BODY, height)
+def sizes_of(model: Model) -> Sizes:
+    """The font sizes of the build's pages, from the build's library heights."""
+    label, body = _font_mm(model, TextRole.LABEL), _font_mm(model, TextRole.BODY)
     return Sizes(
         label=label,
         body=body,
-        heading_2=_font_mm(model, TextRole.HEADING_2, height),
-        heading_1=_font_mm(model, TextRole.HEADING_1, height),
-        title_band_mm=title_band_need(model, label, body),
+        heading_2=_font_mm(model, TextRole.HEADING_2),
+        heading_1=_font_mm(model, TextRole.HEADING_1),
+        title_band_mm=title_band_need(model),
     )

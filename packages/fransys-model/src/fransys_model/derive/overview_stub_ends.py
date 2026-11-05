@@ -54,9 +54,7 @@ class StubLine(NamedTuple):
 
 
 def _lines(stub: OverviewStub | FoldStub) -> tuple[str, ...]:
-    return (
-        overview_fold_stub_lines(stub) if isinstance(stub, FoldStub) else overview_stub_lines(stub)
-    )
+    return overview_fold_stub_lines(stub) if isinstance(stub, FoldStub) else overview_stub_lines(stub)
 
 
 def _box(
@@ -104,23 +102,17 @@ def stub_ends(
     texts: dict[tuple[OverviewRef, OverviewRef], list[tuple[str, ...]]] = {}
     members: dict[tuple[OverviewRef, OverviewRef], tuple[OverviewStub, ...]] = {}
     counts: dict[tuple[OverviewRef, OverviewRef, OverviewLinkKind, Id[Item] | None], int] = {}
-    closed: dict[
-        tuple[OverviewRef, OverviewRef, OverviewLinkKind, Id[Item] | None], set[Id[Item]]
-    ] = {}
+    closed: dict[tuple[OverviewRef, OverviewRef, OverviewLinkKind, Id[Item] | None], set[Id[Item]]] = {}
     for at, stub in placed:
         texts.setdefault((at, stub.end), []).append(_lines(stub))
-        members[at, stub.end] = tuple(
-            dict.fromkeys((*members.get((at, stub.end), ()), *_members(stub)))
-        )
+        members[at, stub.end] = tuple(dict.fromkeys((*members.get((at, stub.end), ()), *_members(stub))))
         key = (at, stub.end, stub.kind, stub.via)
         counts[key] = counts.get(key, 0) + stub.count
         if isinstance(stub, FoldStub) and closed_fold(stub):
             cables = closed.setdefault(key, set())
             if stub.kind is OverviewLinkKind.CABLE:
                 cables.update(m.via for m in stub.members if m.via is not None)
-    boxes = tuple(
-        _box(model, at, end, (rows, members[at, end])) for (at, end), rows in texts.items()
-    )
+    boxes = tuple(_box(model, at, end, (rows, members[at, end])) for (at, end), rows in texts.items())
     lines = tuple(
         StubLine(
             key[0],

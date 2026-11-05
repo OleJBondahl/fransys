@@ -1,10 +1,9 @@
 """Page script, part 4: the drawing, its events, the theme and the URL hash (O1, O14, O20, O23)."""
 
-# ruff: noqa: E501 -- the JavaScript source is not wrapped
-
 from typing import Final
 
-JS_MAIN: Final[str] = r"""
+JS_MAIN: Final[str] = (
+    r"""
 const cy = cytoscape({ container: $('cy'), elements: [], minZoom: 0.05, maxZoom: 6,
   autounselectify: true, boxSelectionEnabled: false });
 
@@ -132,7 +131,8 @@ cy.on('zoom pan', () => zoomUpdate(false));
 ['wheel', 'pointerdown'].forEach((name) => $('cy').addEventListener(name, () => cy.stop(), { capture: true, passive: true }));
 cy.on('tap', 'node, edge', (event) => {
   const role = event.target.data('role');
-  if (role === 'line' || role === 'text' || (role === 'badge' && event.target.data('line') !== undefined)) state.sel = 'l' + event.target.data('line');
+  if (role === 'line' || role === 'text' || (role === 'badge' && event.target.data('line') !== undefined))"""
+    r""" state.sel = 'l' + event.target.data('line');
   else if (event.target.data('box') !== undefined) state.sel = 'b' + event.target.data('box');
   else return;
   commit(false);
@@ -193,3 +193,4 @@ render(false);
 fitView();
 lastHash = encode();
 """
+)

@@ -1,16 +1,13 @@
-"""Names gates: the old name stays out of the tree; the library's project-word count only falls.
+"""Names gates: the old name stays out of the tree; the library docs hold no project word.
 
 Any tracked file outside the skip list that holds the word, in any case, fails. The public
-electrical-symbols library's count of the project word is a ratchet (`[public_lib_names]`). The
-allowances are the moving page that names the old spellings, the two seed strings that keep model
-ids and KiCad tstamps stable, the consumer-guide quote (an owner's words), and the two gitleaks
-history fingerprints, which name a file by its path in that commit.
+electrical-symbols library holds none (libraries never mention the project). The
 """
 
 from pathlib import Path
 
 import pytest
-from gate_scan import ROOT, check_stock, stock
+from gate_scan import ROOT
 
 OLD = "schematika"
 PUBLIC_LIB = "packages/electrical-symbols"
@@ -24,6 +21,7 @@ SKIP_PREFIXES = (
     "docs/archive/specs/2026-10-05-fransys-rename.md",
     "packages/fransys/src/fransys/guide/moving-to-fransys.md",
     "tests/test_names.py",
+    "docs/KNOWN-ISSUES.toml",
 )
 IGNORED_DIRS = {
     ".git",
@@ -42,15 +40,9 @@ IGNORED_DIRS = {
     "node_modules",
 }
 ALLOWED_LINES = {
-    ("packages/fransys-kernel/src/fransys_kernel/ids.py", '"schematika-model:id"'),
-    ("packages/fransys-kicad/src/fransys_kicad/netlist.py", '"schematika_kicad"'),
     (
         "docs/archive/specs/2026-09-26-consumer-guide.md",
         "external consumers of schematika, so when",
-    ),
-    (
-        "security-allowlist.toml",
-        ":packages/schematika-model/tests/kernel/test_record.py:generic-api-key:",
     ),
 }
 
@@ -58,12 +50,10 @@ ALLOWED_LINES = {
 def hits(files: dict[str, str]) -> list[str]:
     found = []
     for rel, text in files.items():
-        if rel.startswith(SKIP_PREFIXES) or Path(rel).name == "CLAUDE.md":
+        if rel.startswith(SKIP_PREFIXES) or Path(rel).name in {"CLAUDE.md", "scan_consumer_names.py"}:  # the scanner lists the old name on purpose
             continue
         for n, line in enumerate(text.splitlines(), 1):
-            if OLD in line.lower() and not any(
-                rel == r and frag in line for r, frag in ALLOWED_LINES
-            ):
+            if OLD in line.lower() and not any(rel == r and frag in line for r, frag in ALLOWED_LINES):
                 found.append(f"{rel}:{n}: {line.strip()[:80]}")
     return found
 
@@ -119,9 +109,9 @@ def public_lib_name_count(files: list[Path]) -> int:
 
 
 @pytest.mark.private_input  # a private-gate count (R462)
-def test_public_lib_names_stock():
+def test_public_lib_names_are_zero():
     found = public_lib_name_count(public_lib_files())
-    check_stock("public_lib_names", found, stock("public_lib_names"))
+    assert found == 0
 
 
 def test_synthetic_count_in_counts_each_case_and_each_occurrence():

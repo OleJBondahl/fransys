@@ -1,13 +1,6 @@
 """Field case: every diagram line of a fan-out cable prints the cable's own designation.
-
-The engineering shape: a 1:3 fan-out cable W1. Core 1 runs from a header J1 to J2, core 2 to J3
-and core 3 to J4, so the block diagram draws three lines from the cable's first box. A second
-cable W2 joins two boxes.
-
-The bug: layout-0199 (LEGACY-B3 L17) gave the three lines `-W1.1`, `-W1.2`, `-W1.3`, carrying
-the harness-line suffix (owner F3) onto the diagram, where it read as three different cables.
-Fixed by decision layout-0259: each line prints `-W1`. Harness lines on cabinet pages keep `.n`.
-"""
+The bug: layout-0199 gave the three lines `-W1.1`, `-W1.2` and `-W1.3`, so the harness-line suffix read as three cables.
+Fixed by layout-0259, each line prints `-W1`; harness lines on cabinet pages keep `.n`."""
 
 import fransys as fr
 import pytest

@@ -9,11 +9,11 @@ elements = [
   { polyline = [[0, 0], [1, -1], [6, -1], [6, 1], [1, 1]], closed = true },
 ]
 
-stretch = [{ axis = "x", at = 3.5 }]
+stretch = [{ axis = "x", at = 3.5 }, { axis = "y", at = 0 }]
 
 lint_allow = [
   { rule = "slot-overlap-body", reason = "the reference text box does not rotate and is wider than the flag is tall; the marker is drawn unrotated and the text stays inside the outline" },
 ]
 
 [slots]
-ref = { at = [1.25, 0], side = "E", box = [4.5, 1] }
+ref = { at = [1.25, -0.5], side = "SE", box = [4.5, 1] }

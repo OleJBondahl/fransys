@@ -1,4 +1,4 @@
-schema = 1
+schema = 2
 
 [part]
 mpn = "DEMO-SAFETY-RLY-24"
@@ -16,8 +16,8 @@ ports = [
 ]
 
 [function.operating]
-voltage_dc_v = "24"
-nominal_current_a = "0.1"
+voltage = [{ nom = "24 V", at = ["DC"] }]
+nominal_current = "0.1 A"
 
 # An input loop leaves on its pulse output and returns on its input: S11 is the load side, the
 # first pin a series wires out of, and S12 the line side it comes back in on.

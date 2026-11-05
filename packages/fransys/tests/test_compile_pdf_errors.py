@@ -4,11 +4,12 @@ import fransys as fr
 import fransys_pdf
 import pytest
 import typst
-from fransys import pipeline
+from fransys import _exports, pipeline
 
 from electrical_symbols import LIBRARY
+from fransys_layout import DiagramLayout
+from fransys_model.derive import documents
 from fransys_model.kernel import Severity
-from fransys_model.vocab import documents
 
 
 def _compile(monkeypatch: pytest.MonkeyPatch, tmp_path, source_text: str):
@@ -21,7 +22,7 @@ def _compile(monkeypatch: pytest.MonkeyPatch, tmp_path, source_text: str):
     model = fr.build(d, doc).model
     (document_id,) = documents(model)
     monkeypatch.setattr(fransys_pdf, "source", lambda *_args, **_kwargs: source_text)
-    return pipeline._compile_pdf(model, {}, document_id, {}, pdf=fr.settings().pdf, library=LIBRARY)
+    return _exports._compile_pdf(pipeline._Drawn(model, {}, DiagramLayout(diagrams=()), LIBRARY, {}), document_id, fr.settings())
 
 
 def test_another_typst_error_is_re_raised_untouched(monkeypatch, tmp_path):
@@ -31,7 +32,7 @@ def test_another_typst_error_is_re_raised_untouched(monkeypatch, tmp_path):
 
 def test_the_cover_panic_becomes_build_errors_naming_the_heights(monkeypatch, tmp_path):
     panic = '#panic("COVER_OVERFLOW cover=240.5 table=30 available=257")'
-    with pytest.raises(pipeline.BuildErrors) as raised:
+    with pytest.raises(pipeline.BuildFailedError) as raised:
         _compile(monkeypatch, tmp_path, panic)
     (finding,) = raised.value.findings
     assert (finding.code, finding.severity) == ("COVER_OVERFLOW", Severity.ERROR)

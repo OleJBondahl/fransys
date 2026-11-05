@@ -1,13 +1,20 @@
 """What a terminal strip checks before it declares a named run."""
 
-from typing import Any
+from typing import Protocol
 
 from fransys_author.errors import AuthorError
 
 _PAIR = 2  # a bridged range is (first, last)
 
 
-def check_run(strip: Any, label: object, count: object, bridged: object) -> None:  # noqa: ANN401 -- the strip imports this module, so it cannot be named here
+class _Strip(Protocol):
+    """What `check_run` reads of a strip; the strip imports this module, so it cannot be named here."""
+
+    _tag: str
+    _runs: set[str]
+
+
+def check_run(strip: _Strip, label: object, count: object, bridged: object) -> None:
     """Raise `AuthorError` for a bad `label`, `count` or `bridged`, or a label `strip` has."""
     named = f"{strip._tag}.run({label!r})"
     if not isinstance(label, str) or not label:
@@ -39,11 +46,7 @@ def _check_bridged(named: str, count: int, bridged: object) -> None:
     """Raise `AuthorError` unless `bridged` is a bool or a `(first, last)` inside 1 to `count`."""
     if isinstance(bridged, bool):
         return
-    if not (
-        isinstance(bridged, tuple)
-        and len(bridged) == _PAIR
-        and all(type(number) is int for number in bridged)
-    ):
+    if not (isinstance(bridged, tuple) and len(bridged) == _PAIR and all(type(number) is int for number in bridged)):
         msg = f"{named}: bridged is True, False or a (first, last) pair, got {bridged!r}"
         raise AuthorError(msg)
     first, last = bridged

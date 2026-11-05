@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from fransys_layout.core import Size
+from fransys_layout.core.errors import CoreError
 from fransys_layout.core.text_cells import cell_of
 
 AREA = Size(800, 600)
@@ -30,10 +31,10 @@ def test_the_option_sets_the_names() -> None:
 
 @pytest.mark.parametrize("point", [(-1, 0), (801, 0), (0, -1), (0, 601)])
 def test_a_point_outside_the_area_raises(point: tuple[int, int]) -> None:
-    with pytest.raises(ValueError, match="outside"):
+    with pytest.raises(CoreError, match="outside"):
         cell_of(*point, AREA, GRID)
 
 
 def test_a_grid_with_more_rows_than_letters_raises() -> None:
-    with pytest.raises(ValueError, match="cannot be named"):
+    with pytest.raises(CoreError, match="cannot be named"):
         cell_of(0, 0, AREA, (4, 27))

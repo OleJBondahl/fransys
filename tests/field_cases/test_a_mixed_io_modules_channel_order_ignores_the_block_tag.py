@@ -1,16 +1,6 @@
-"""Field case: a PLC export's channel and module order do not depend on the block's tag.
-
-The engineering shape: a rack of mixed digital I/O modules, where input 1 and output 1 of one
-module share the channel number 1, inside one unit block that the design adds under a tag.
-
-The bug: the tie between DI 1 and DO 1 broke on the channel function's id, a hash of a key
-that holds the block's tag. Renaming the block (and nothing else) turned the direction of each
-channel in `plc.csv` (row order) and in the Wago XML (`Input`, `Nr`).
-
-The invented module has one DI and one DO, both numbered 1 (the demo part has no 16-channel
-mixed module). Decision model-0259 fixed it: within a channel number the part's own function
-name orders, and modules order by `position=`, else by their own tag.
-"""
+"""Field case: a rack of mixed digital I/O modules whose input 1 and output 1 share channel number 1, inside one tagged unit block.
+The bug: the DI/DO tie broke on the channel function's id, a hash of a key holding the block's tag, so renaming flipped directions.
+Fixed by model-0259, a channel number orders by the part's function name, modules by `position=`, else by their own tag."""
 
 import re
 from typing import TYPE_CHECKING, Any, NamedTuple
@@ -77,8 +67,6 @@ def _module_order(text: str) -> list[str]:
 def test_renaming_the_block_does_not_swap_modules_without_a_position(tmp_path: Path) -> None:
     """Without `position=`, the modules keep their order when only the block tag changes."""
     mpns = ("DEMO-PLC-DO-2", "DEMO-PLC-DI-2")
-    orders = [
-        _module_order(_exports(tag, tmp_path, mpns=mpns, positions=False)["csv"]) for tag in _TAGS
-    ]
+    orders = [_module_order(_exports(tag, tmp_path, mpns=mpns, positions=False)["csv"]) for tag in _TAGS]
     assert orders[0] == ["A2", "A3"]
     assert all(order == orders[0] for order in orders)

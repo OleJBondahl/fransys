@@ -1,15 +1,15 @@
-"""`lay_out_drawn` returns the page `Drawing` values beside `lay_out`'s model (el-0039, R228)."""
+"""`lay_out_drawn` returns the page `Drawing` values with the laid model (el-0039, R228)."""
 
 import pytest
 from conventions_fixtures import house
-from fransys_el import build, lay_out, lay_out_drawn
+from fransys_el import build, lay_out_drawn
 from ring_cases import bank_model, box_kit
 
 from electrical_symbols import LIBRARY, library_version
 from fransys_layout.core import Size
 from fransys_model.derive import ordered_pages
 
-AREA = Size(1312, 854)  # the default sheet's content box in G
+AREA = Size(1312, 854)  # the house A3 content box in G (410 x 267 mm at module 2.5)
 
 
 @pytest.fixture(scope="module")
@@ -17,18 +17,11 @@ def laid():
     model = bank_model(8)
     conventions, kit = house(), box_kit(model)
     problem, _ = build(model, kit, conventions, LIBRARY)
-    args = (model, kit, problem, conventions, LIBRARY)
-    return model, lay_out(*args), lay_out_drawn(*args)
-
-
-def test_the_model_and_findings_equal_lay_outs(laid):
-    _, (plain, found), (model, more, _, _) = laid
-    assert model == plain
-    assert more[: len(found)] == found  # the drawing invariants append their own findings
+    return lay_out_drawn(model, kit, problem, conventions, LIBRARY)
 
 
 def test_the_pages_come_in_print_order_with_the_content_box_and_library(laid):
-    _, _, (model, _, drawn, _) = laid
+    model, _, drawn = laid
     assert drawn
     assert list(drawn) == [p.id for p in ordered_pages(model) if p.id in drawn]
     for page in ordered_pages(model):
@@ -38,7 +31,7 @@ def test_the_pages_come_in_print_order_with_the_content_box_and_library(laid):
 
 
 def test_the_symbol_ids_are_unique_render_ids(laid):
-    _, _, (_, _, drawn, _) = laid
+    _, _, drawn = laid
     ids = [s.id for d in drawn.values() for s in d.symbols]
     assert ids
     assert len(set(ids)) == len(ids)

@@ -3,16 +3,18 @@
 from collections import defaultdict
 lazy from collections.abc import Mapping
 
-from fransys_model.derive.frame_position import cell, place_text
+from fransys_model.derive.frame_position import position_at
 from fransys_model.derive.marker_targets import target_lines, target_order
 from fransys_model.derive.order import port_designation_key
 from fransys_model.derive.reference_heads import heads_group
 from fransys_model.derive.stub_text import off_stub_text
-from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, digest_cached
+from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, SchemaError, digest_cached, render_id
 from fransys_model.layout import (
     DrawingSet,
     LinkMarker,
+    Membership,
     Page,
+    Shown,
     StarKind,
     layout_of,
 )
@@ -40,10 +42,7 @@ def marker_text(model: Model, marker: LinkMarker) -> str:
     (`wrap_at`) is split after that many words: the space becomes the line break.
     """
     group = _boxmates_of(model).get(marker.id)
-    if group is None:
-        text = _own_text(model, marker)
-    else:
-        text = "\n".join(_own_text(model, one) for one in group)
+    text = _own_text(model, marker) if group is None else "\n".join(_own_text(model, one) for one in group)
     if marker.wrap_at is None:
         return text
     words = text.split(" ")
@@ -60,9 +59,7 @@ def _own_text(model: Model, marker: LinkMarker) -> str:
     positions = [_marker_position(model, marker, one) for one in target_order(model, marker, ends)]
     lines = target_lines(reference_number(model, marker), positions)
     # the merged stub's own text, last, unprefixed
-    return "\n".join(
-        [*lines, off_stub_text(model, marker)] if marker.star is StarKind.OFF else lines
-    )
+    return "\n".join([*lines, off_stub_text(model, marker)] if marker.star is StarKind.OFF else lines)
 
 
 def _reference_group(
@@ -111,25 +108,45 @@ def _boxmates_of(model: Model) -> Mapping[Id[LinkMarker], tuple[LinkMarker, ...]
     """
     keyed: dict[_PinKey, list[LinkMarker]] = defaultdict(list)
     for one in layout_of(model, LinkMarker).values():
-        keyed[one.page, one.x, one.y, one.stub_extra, one.width, one.height, one.vertical].append(
-            one
-        )
+        keyed[one.page, one.x, one.y, one.stub_extra, one.width, one.height, one.vertical].append(one)
     found: dict[Id[LinkMarker], tuple[LinkMarker, ...]] = {}
     for ones in keyed.values():
         leads = [one for one in ones if one.lead]
         if len(leads) == 1 and len(ones) > 1:
-            found[leads[0].id] = tuple(
-                sorted(ones, key=lambda one: (port_designation_key(model, one.port), one.id))
-            )
+            found[leads[0].id] = tuple(sorted(ones, key=lambda one: (port_designation_key(model, one.port), one.id)))
     return found
+
+
+@digest_cached(DIGEST_CACHE_SIZE)
+def _reference_cells(model: Model) -> Mapping[tuple[Id[Page], str], tuple[int, str]]:
+    """Each reference marker's stored cell by its page and marker id, from the `Membership` rows el wrote.
+
+    A marker's row key ends `ref`, the marker's rendered id, the port and the page number (`write_membership`).
+    """
+    return {
+        (row.page, row.key[-3]): (row.cell.column, row.cell.row)
+        for row in layout_of(model, Membership).values()
+        if row.shown is Shown.REFERENCE and row.port is not None and row.page is not None
+    }
+
+
+def marker_cell(model: Model, marker: LinkMarker) -> tuple[int, str]:
+    """The frame cell `(column, row letter)` of `marker`: the stored cell of its `Membership` row, never computed.
+
+    Raises when the model holds no such row (a layout el wrote carries one for every marker).
+    """
+    try:
+        return _reference_cells(model)[marker.page, render_id(marker.id)]
+    except KeyError:
+        msg = f"marker {render_id(marker.id)} has no reference Membership row: write the layout through fransys_el"
+        raise SchemaError(msg, kind="layout.membership", record_id=marker.id) from None
 
 
 def _reading_key(model: Model, pages: Mapping[Id[Page], Page], marker: LinkMarker) -> _ReadingKey:
     """The reading order for one marker's own end: `(page.number, column, row, port)`."""
-    page = pages[marker.page]
     return (
-        page.number,
-        *cell(model, page, marker.x, marker.y),
+        pages[marker.page].number,
+        *marker_cell(model, marker),
         marker.port,
     )
 
@@ -154,9 +171,7 @@ def _reference_groups(
     return groups
 
 
-def _rank_drawing_set(
-    model: Model, groups: list[tuple[LinkMarker, ...]], pages: Mapping[Id[Page], Page]
-) -> dict[Id[LinkMarker], int]:
+def _rank_drawing_set(model: Model, groups: list[tuple[LinkMarker, ...]], pages: Mapping[Id[Page], Page]) -> dict[Id[LinkMarker], int]:
     """One drawing set's `#n`s: every reference group's 1-based rank by its own first end.
 
     `groups` are those assigned to this set, so the count runs through one drawing.
@@ -206,4 +221,4 @@ def reference_slot(model: Model, marker: LinkMarker) -> int | None:
 def _marker_position(model: Model, marker: LinkMarker, partner: LinkMarker) -> str:
     """`partner`'s position, with its location label across drawing sets."""
     pages = layout_of(model, Page)
-    return place_text(model, pages[marker.page], pages[partner.page], partner.x, partner.y)
+    return position_at(model, pages[marker.page], pages[partner.page], *marker_cell(model, partner))

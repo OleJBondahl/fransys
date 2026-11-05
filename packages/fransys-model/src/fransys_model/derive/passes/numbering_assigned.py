@@ -6,6 +6,7 @@ from fransys_model.derive.designation_label import (
     own_designation_or_none,
     takes_parents_designation,
 )
+from fransys_model.derive.facts.house_settings import designation_form_of
 from fransys_model.derive.facts.item_predicates import item_class_code
 from fransys_model.derive.facts.units import designating_ancestors
 from fransys_model.derive.passes.numbering_units import instance_tags_in, next_number
@@ -17,9 +18,7 @@ if TYPE_CHECKING:
 
 
 def _taken_texts(model: Model, siblings: list[Item], reserved: frozenset[str]) -> set[str]:
-    taken = {
-        text for item in siblings if (text := own_designation_or_none(model, item)) is not None
-    } | reserved
+    taken = {text for item in siblings if (text := own_designation_or_none(model, item)) is not None} | reserved
     if siblings and not designating_ancestors(model, siblings[0].id):
         taken |= instance_tags_in(model, siblings[0].unit)  # One count with the instances
     return taken
@@ -27,9 +26,7 @@ def _taken_texts(model: Model, siblings: list[Item], reserved: frozenset[str]) -
 
 def _assigned_facet(item: Item, text: str) -> AssignedDesignationFacet:
     key = (*item.key, "assigned_designation")
-    return AssignedDesignationFacet(
-        id=make_id(AssignedDesignationFacet, key), key=key, subject=item.id, text=text
-    )
+    return AssignedDesignationFacet(id=make_id(AssignedDesignationFacet, key), key=key, subject=item.id, text=text)
 
 
 def assigned_facets(
@@ -39,19 +36,18 @@ def assigned_facets(
 ) -> list[AssignedDesignationFacet]:
     """One `facet.assigned_designation` for each unnumbered sibling that can be numbered.
 
-    Each takes the first `code + str(n)`, from n = 1, not already an exact string in the group.
+    Each takes the first free `code + str(n)` from `[designation] number_start`.
     An item with an own text is skipped and its text taken; an accessory uses up no number.
     """
     taken = _taken_texts(model, siblings, reserved)
     numbers: dict[str, set[int]] = {}
+    first = designation_form_of(model).number_start
     numbered: list[AssignedDesignationFacet] = []
     for item in sorted(siblings, key=lambda item: (item.key, item.id)):
-        if own_designation_or_none(model, item) is not None or takes_parents_designation(
-            model, item.id
-        ):
+        if own_designation_or_none(model, item) is not None or takes_parents_designation(model, item.id):
             continue
         code = item_class_code(model, item.id)
         if not code:
             continue
-        numbered.append(_assigned_facet(item, f"{code}{next_number(taken, numbers, code)}"))
+        numbered.append(_assigned_facet(item, f"{code}{next_number(taken, numbers, code, first=first)}"))
     return numbered

@@ -10,6 +10,7 @@ import fransys as fr
 from conventions_fixtures import house
 from fransys.colours import BU
 from fransys_el import build, options, symbol_kit
+from ring_cases import channels_model, drawn_supply_model
 
 from electrical_symbols import LIBRARY
 from fransys_layout.core import solve
@@ -59,8 +60,8 @@ def seal_in_model() -> Model:
     k1 = d.device("K1", "DEMO-RLY-2CO-24")
     with d.function("SEAL", "Seal-in"):
         d.series(supply[1], s2.sw, s1.sw, k1.coil, supply[2], wire=(BU, 0.75))
-        d.detail.wire(s2.sw["B"], k1.co_1["11"], wire=(BU, 0.75))
-        d.detail.wire(k1.co_1["14"], k1.coil["A1"], wire=(BU, 0.75))
+        d.series(s2.sw["B"], k1.co_1["11"], wire=(BU, 0.75))
+        d.series(k1.co_1["14"], k1.coil["A1"], wire=(BU, 0.75))
     return fr.build(d).model
 
 
@@ -70,7 +71,7 @@ def pilot_model(*, crossed: bool = False) -> Model:
     `crossed` plants a third coil K3 from the lamp's far end back to the supply, which crosses.
     """
     d = fr.design("demo_parts")
-    supply = d.terminal_strip("X1", "DEMO-TB-2.5", 2)
+    supply = d.terminal_strip("X1", "DEMO-TB-2.5-TWIN", 2)
     k1, k2 = d.device("K1", "DEMO-RLY-2CO-24"), d.device("K2", "DEMO-RLY-2CO-24")
     with d.function("PILOT", "Pilot beside its coil"):
         d.series(supply[1], k1.coil, supply[2], wire=(BU, 0.75))
@@ -78,8 +79,8 @@ def pilot_model(*, crossed: bool = False) -> Model:
         d.series(k1.co_1["14"], supply[2], wire=(BU, 0.75))
         if crossed:
             k3 = d.device("K3", "DEMO-RLY-2CO-24")
-            d.detail.wire(k2.coil["A2"], k3.coil["A1"], wire=(BU, 0.75))
-            d.detail.wire(k3.coil["A2"], supply[1], wire=(BU, 0.75))
+            d.series(k2.coil["A2"], k3.coil["A1"], wire=(BU, 0.75))
+            d.series(k3.coil["A2"], k1.coil["A1"], wire=(BU, 0.75))  # chained pin to pin: a point takes 2 (R1266)
     return fr.build(d).model
 
 
@@ -91,8 +92,8 @@ class _Io(NamedTuple):
 def _block(d: Any) -> _Io:
     x1 = d.terminal_strip("X1", "DEMO-TB-2.5", 2, interface=True)
     load = d.device("K9", "DEMO-RLY-2CO-24")
-    d.detail.wire(x1[1].inner, load.coil["A1"], wire=(BU, 0.75))
-    d.detail.wire(x1[2].inner, load.coil["A2"], wire=(BU, 0.75))
+    d.series(x1[1].inner, load.coil["A1"], wire=(BU, 0.75))
+    d.series(x1[2].inner, load.coil["A2"], wire=(BU, 0.75))
     return _Io(x1)
 
 
@@ -102,37 +103,7 @@ def two_units_model() -> Model:
     k1 = d.device("K1", "DEMO-RLY-2CO-24")
     u0, u1 = d.add(_block, "BLK0"), d.add(_block, "BLK1")
     with d.function("FEED", "Feed"):
-        d.detail.wire(k1.co_1["14"], u0.x1[1].outer, wire=(BU, 0.75))
-        d.detail.wire(k1.co_1["14"], u1.x1[1].outer, wire=(BU, 0.75))
-        d.detail.wire(u0.x1[2].outer, u1.x1[2].outer, wire=(BU, 0.75))
-    return fr.build(d).model
-
-
-def drawn_supply_model() -> Model:
-    """A supply box with + and - on one edge feeds a coil and a second coil; the loop closes (5)."""
-    d = fr.design("demo_parts")
-    with d.function("SUP", "Supply"):
-        g1 = d.device("G1", None, pins=("P", "M"), external=True)
-    k1, k2 = d.device("K1", "DEMO-RLY-2CO-24"), d.device("K2", "DEMO-RLY-2CO-24")
-    with d.function("LOOP", "Supply loop"):
-        d.detail.wire(g1["P"], k1.coil["A1"], wire=(BU, 0.75))
-        d.detail.wire(g1["P"], k2.coil["A1"], wire=(BU, 0.75))
-        d.detail.wire(k2.coil["A2"], k1.co_1["11"], wire=(BU, 0.75))
-        d.detail.wire(k1.co_1["14"], g1["M"], wire=(BU, 0.75))
-        d.detail.wire(k1.coil["A2"], g1["M"], wire=(BU, 0.75))
-    return fr.build(d).model
-
-
-def channels_model(count: int = 2) -> Model:
-    """`count` coils, A1 on a feed terminal and A2 on an own channel of an external controller."""
-    pins = tuple(f"CH{n:02d}-" for n in range(1, count + 1))
-    d = fr.design("demo_parts")
-    with d.function("PLC", "Controller"):
-        plc = d.device("A1", None, pins=pins, external=True)
-    live = d.terminal_strip("X1", "DEMO-TB-2.5", BANK)
-    with d.function("B", "Relay bank"):
-        for n in range(count):
-            relay = d.device(f"K{n + 1}", "DEMO-RLY-2CO-24")
-            d.detail.wire(live[1 + n % BANK], relay.coil["A1"], wire=(BU, 0.5))
-            d.detail.wire(plc[pins[n]], relay.coil["A2"], wire=(BU, 0.5))
+        d.series(k1.co_1["14"], u0.x1[1].outer, wire=(BU, 0.75))
+        d.series(k1.co_1["14"], u1.x1[1].outer, wire=(BU, 0.75))
+        d.series(u0.x1[2].outer, u1.x1[2].outer, wire=(BU, 0.75))
     return fr.build(d).model

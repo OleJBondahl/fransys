@@ -1,30 +1,20 @@
 """Field case: the stubs of cables leaving one unit's box printed over each other.
-
-The engineering shape: a cabinet unit inside an outer unit, documented as a cabinet schematic. Three
-cables of four cores leave the cabinet's box side by side, each core landing on a different
-kind of interface pin (a breaker pole, a relay contact, an input channel, a strip terminal).
-
-The bug: every leaving line runs the same fixed length out of the box and ends in a stub text of
-about 250 grid units. The lines stand 4 to 8 grids apart, so the three stub texts sat in one row,
-one over the other, and the page read as one smear. `fr.check` gave TEXT_OVERLAP and
-WIRE_OVER_LABEL.
-
-The rule (decision layout-0256): stubs whose boxes meet stand in a staircase. Each stub after the
-first runs one tier further out and its box starts at its own line, so no two boxes meet and no
-line runs through another's box.
-"""
+The bug: every leaving line ran the same length and ended in a stub text, so the stub texts sat in one row, over each other.
+Fixed by layout-0256: stubs whose boxes meet stand in a staircase, each one tier further out, so no two boxes meet."""
 
 from itertools import pairwise
 from typing import TYPE_CHECKING, Any, NamedTuple
 
 import fransys as fr
 import pytest
-from _drawn_pages import drawn_pages
+from _drawn_pages import drawn_pages, markers_in, ref_texts
 from _model_build_cover import cabinet_document
 
-from fransys_layout.geometry import G_PER_MODULE, Box, boxes_meet, text_width, through
+from electrical_symbols import LIBRARY, MARKER_TURN_FACING
+from fransys_layout.geometry import G_PER_MODULE, Box, boxes_meet, text_width_g, through
 from fransys_layout.geometry.units import Point
-from fransys_model.derive import text_room
+from fransys_layout.symbols import text_room_on
+from fransys_model.layout import sheet_format_of
 
 _CABLES = 3
 _VALVE = (("coil", "A1"), ("coil", "A2"), ("co_1", "11"), ("co_1", "14"))
@@ -45,21 +35,24 @@ class _Top(NamedTuple):
 
 @fr.unit("demo-inner", revision=1, interface_version=1, date="2026-01-01", text="r", by="XX")
 def _inner(d: fr.Design) -> _Cabinet:
-    d.layout.profile(hide_unused_pins=True, column_gap=4, row_spacing=400)
+    d.layout.profile(hide_unused_pins=True)
     relays = [d.device(f"K{k}", "DEMO-RLY-4CO-24", interface=("co_1",)) for k in (1, 3, 5)]
+    f8 = d.device("F8", "DEMO-MCB-2P", interface=("pole_1",))
+    xf = d.terminal_strip("XF", "DEMO-TB-2.5", 6, interface=(4, 5, 6), bridged=True)
+    d.series(f8.pole_1["1"], xf[1], wire=("BK", 1.5))
     return _Cabinet(
-        d.device("F8", "DEMO-MCB-2P", interface=("pole_1",)),
+        f8,
         relays[0],
         relays[1],
         relays[2],
         d.device("DI", "DEMO-PLC-DI-16", interface=("di_9", "di_11", "di_13")),
-        d.terminal_strip("XF", "DEMO-TB-2.5", 6, interface=(4, 5, 6), bridged=True),
+        xf,
     )
 
 
 @fr.unit("demo-outer", revision=1, interface_version=1, date="2026-01-01", text="r", by="XX")
 def _outer(d: fr.Design) -> _Top:
-    d.layout.profile(hide_unused_pins=True, column_gap=16, row_spacing=400)
+    d.layout.profile(hide_unused_pins=True)
     cab = d.add(_inner, "CSC")
     for n in range(_CABLES):
         pins = (
@@ -83,23 +76,24 @@ def built() -> fr.BuildResult:
     return fr.build(d, cabinet_document("demo-outer"))
 
 
-def _box(marker: DrawnMarker, text_height: int) -> Box:
-    """The box as drawn: one module out of the port along `side`, as wide as its longest text."""
-    width = max(text_width(text, height=text_height) for _, text in marker.texts)
-    out = marker.y - G_PER_MODULE - text_height if marker.side == "N" else marker.y + G_PER_MODULE
+def _box(marker: DrawnSymbol, text_height: int) -> Box:
+    """The box as drawn: one module out of the port along its facing, as wide as its longest text."""
+    width = max(text_width_g(text, height=text_height) for text in ref_texts(marker))
+    out = marker.y - G_PER_MODULE - text_height if marker.orient == MARKER_TURN_FACING["N"] else marker.y + G_PER_MODULE
     return Box(x=marker.x - width // 2, y=out, width=width, height=text_height)
 
 
 def _stubs(built: fr.BuildResult) -> list[tuple[Any, Box]]:
     """Each leaving-line stub as `(page, box)`; the case's stubs face north or south.
 
-    The Drawing marks no stub as a leaving line's, so every marker counts.
+    The Drawing marks no stub as a leaving line's: the three cables leave toward the one device DI.
     """
-    height = text_room(built.model)
+    height = text_room_on(built.model, sheet_format_of(built.model, None), LIBRARY)
     return [
         (page, _box(m, height))
         for page, drawing in drawn_pages(built.model).items()
-        for m in drawing.markers
+        for m in markers_in(drawing)
+        if ref_texts(m)[0].endswith("-CSC-DI")
     ]
 
 
@@ -112,12 +106,7 @@ def test_the_case_has_three_stubs_in_one_row(built: fr.BuildResult) -> None:
 def test_no_two_stub_boxes_meet(built: fr.BuildResult) -> None:
     boxes = [box for _, box in _stubs(built)]
     assert len(boxes) == _CABLES, "the check would pass over nothing"
-    meeting = [
-        (a, b)
-        for n, a in enumerate(boxes)
-        for b in boxes[n + 1 :]
-        if boxes_meet(a, b, closed=False)
-    ]
+    meeting = [(a, b) for n, a in enumerate(boxes) for b in boxes[n + 1 :] if boxes_meet(a, b, closed=False)]
     assert meeting == []
 
 
@@ -138,4 +127,4 @@ def test_no_line_runs_through_a_stub_box(built: fr.BuildResult) -> None:
 
 
 if TYPE_CHECKING:
-    from fransys_layout.drawing import DrawnMarker
+    from fransys_layout.drawing import DrawnSymbol

@@ -57,17 +57,13 @@ def _struck(label, *lines) -> list[str]:
 
 def test_a_line_through_a_label_strikes_it() -> None:
     other = hid("cable", 8)
-    line = SceneLine(
-        cable=other, a=A, b=B, start=A, stop=B, points=(Point(x=40, y=0), Point(x=40, y=40))
-    )
+    line = SceneLine(cable=other, a=A, b=B, start=A, stop=B, points=(Point(x=40, y=0), Point(x=40, y=40)))
     assert _struck(_label(32, 16), line) == ["DIAGRAM_LABEL_STRUCK"]
     assert _struck(_label(48, 16), line) == []
 
 
 def test_a_line_along_a_label_edge_does_not_strike_it() -> None:
-    line = SceneLine(
-        cable=CABLE, a=A, b=B, start=A, stop=B, points=(Point(x=32, y=0), Point(x=32, y=40))
-    )
+    line = SceneLine(cable=CABLE, a=A, b=B, start=A, stop=B, points=(Point(x=32, y=0), Point(x=32, y=40)))
     assert _struck(_label(32, 16), line) == []
 
 

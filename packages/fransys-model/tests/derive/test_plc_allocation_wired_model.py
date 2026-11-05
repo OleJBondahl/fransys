@@ -2,11 +2,6 @@
 
 Before any queue is served, a request whose function shares a physical net with a channel
 function is bound to that channel, whatever unit the channel is in; a channel two requests
-share is not booked by wiring; a request wired to nothing is allocated by the scope rules;
-where the scope rules find no unit on the request's chain that declares its signal, a request
-whose net reaches a boundary port of a standalone unit on that chain gets no finding instead of
-`PLC_REQUEST_UNSERVABLE` (it never changes a binding). Invented data. The helpers `Site`,
-`_site` and `_bound` come from `test_plc_allocation_units_model.py` next to this one.
 """
 
 from typing import TYPE_CHECKING
@@ -89,9 +84,6 @@ def _board(*, with_cab_channel: bool) -> tuple[Model, Id[Function], Id[Function]
 
     The relay `dev-k1` is in `board`; its request is wired through a conductor to connector
     function `x1`, the boundary of `board`. With `with_cab_channel` the cab also holds a spare
-    channel (rack sorts first, unwired) and a channel wired to `x1` (the parent build); without,
-    the model holds no channel at all (the board built alone). Returns the model, the request
-    function and the wired channel (None when alone).
     """
     plant = Plant()
     cab = plant.unit("cab", name="cab")
@@ -310,15 +302,11 @@ def test_same_signal_contacts_on_a_shared_return_each_bind_their_directly_wired_
     assert check_plc_wiring(model) == ()
 
 
-def _misbound(
-    plant: Plant, name: str, unit: Id[Unit], wired: Id[Port], bound: Id[Function]
-) -> None:
+def _misbound(plant: Plant, name: str, unit: Id[Unit], wired: Id[Port], bound: Id[Function]) -> None:
     """A request wired to port `wired` but hand-bound to channel `bound`: a wiring mismatch."""
     function = _request(plant, name, unit, to=wired)
     key = (name, "signal", "plc_binding")
-    plant.add(
-        PlcBindingFacet(id=make_id(PlcBindingFacet, key), key=key, subject=function, channel=bound)
-    )
+    plant.add(PlcBindingFacet(id=make_id(PlcBindingFacet, key), key=key, subject=function, channel=bound))
 
 
 def test_a_wiring_mismatch_names_each_channel_by_its_pin_not_by_its_module() -> None:

@@ -2,8 +2,6 @@
 
 Each test pins what a derive module printed on a planted model when the sites still read
 `Id.kind` and the item and function kinds (model-0297). The modules are `kinds`, `view_rollup`,
-`bom`, `block_diagram`, `finding_names` and `order`. `marker_targets` and `page_nav` read
-`ItemKind.TERMINAL`, which no role field carries, and are not switched, so they are not pinned.
 """
 
 from typing import Any, cast
@@ -39,14 +37,13 @@ MISTYPED_SCOPE = "a BOM scope is an item or a location node of the model"
 
 
 def test_item_kind_of_every_planted_item() -> None:
-    """The decider names strip, terminal, connector, bar and cable; the rest are devices."""
+    """The decider names strip, terminal, connector and cable; the rest are devices."""
     found = {k: item_kind(ROLES_MODEL, v).name for k, v in ROLES_IDS.items() if k[:5] == "item:"}
     assert {k: v for k, v in found.items() if v != "DEVICE"} == {
         "item:strip": "STRIP",
         "item:terminal_1": "TERMINAL",
         "item:terminal_2": "TERMINAL",
         "item:connector": "CONNECTOR",
-        "item:bar": "BAR",
         "item:cable": "CABLE",
     }
     assert item_kind(MODEL, ITEM_A) is ItemKind.DEVICE
@@ -130,9 +127,9 @@ def test_bom_unit_scope_of_a_missing_unit_raises() -> None:
 def test_block_diagram_box_lines_and_dash() -> None:
     """A unit box prints its tag then its title; an item box prints its designation."""
     assert box_lines(MODEL, UNIT, None) == ("-U1", "unit rev 1.1")
-    assert box_dashed(MODEL, UNIT, None) is False
+    assert box_dashed(MODEL, UNIT) is False
     assert box_lines(MODEL, ITEM_A, None) == ("-U1--K1",)
-    assert box_dashed(MODEL, ITEM_A, None) is False
+    assert box_dashed(MODEL, ITEM_A) is False
 
 
 def test_finding_names_by_subject_kind() -> None:
@@ -144,18 +141,14 @@ def test_finding_names_by_subject_kind() -> None:
     assert name_of(MODEL, UNIT) == "unit -U1"
     assert subject_text(MODEL, WIRE) == "wire -U1--K1:A1 to -U1--Q1:1"
     assert subject_text(MODEL, ITEM_A) == "-U1--K1"
-    assert subject_text(ROLES_MODEL, ROLES_IDS["net_power"]) == name_of(
-        ROLES_MODEL, ROLES_IDS["net_power"]
-    )
+    assert subject_text(ROLES_MODEL, ROLES_IDS["net_power"]) == name_of(ROLES_MODEL, ROLES_IDS["net_power"])
 
 
 def test_finding_order_key_reads_an_item_or_a_port_and_skips_the_rest() -> None:
     """An item and a port give a natural key; a function, conductor or unit sorts after them."""
 
     def key(subject: Id[Any]) -> tuple[int, object]:
-        finding = Finding(
-            code="X", severity=Severity.WARNING, message="m", subjects=(subject,), fix="Write: x"
-        )
+        finding = Finding(code="X", severity=Severity.WARNING, message="m", subjects=(subject,), fix="Write: x")
         return finding_order_key(MODEL, finding)
 
     assert key(ITEM_A)[0] == 0

@@ -3,12 +3,13 @@
 import re
 from typing import TYPE_CHECKING, Final
 
-from fransys_model.checks._finding import finding, ordered
+from fransys_model.checks._finding import ordered
 from fransys_model.derive.facts.house_settings import revision_form_of
 from fransys_model.derive.facts.revision_label import revision_label
-from fransys_model.kernel import Finding, Severity
+from fransys_model.vocab.codes import finding
 from fransys_model.vocab.finding_ref import ref
 from fransys_model.vocab.tables import projects, revisions, unit_releases
+lazy from fransys_model.kernel import Finding
 
 if TYPE_CHECKING:
     from fransys_model.kernel import Model
@@ -28,9 +29,7 @@ def _date_regex(pattern: str) -> re.Pattern[str]:
 
 
 def _current_missing(model: Model) -> list[Finding]:
-    current = {
-        (entry.release, entry.version, entry.revision) for entry in revisions(model).values()
-    }
+    current = {(entry.release, entry.version, entry.revision) for entry in revisions(model).values()}
     form = revision_form_of(model)
     found = []
     # One finding per unit release record: its instances share it and its history.
@@ -39,12 +38,12 @@ def _current_missing(model: Model) -> list[Finding]:
         if (release.id, release.version, release.revision) in current:
             continue
         message = f"{ref(release)}: its current revision has no Revision entry: {_ADD_ENTRY}"
-        found.append(finding(REVISION_CURRENT_MISSING, Severity.ERROR, (release.id,), message))
+        found.append(finding(REVISION_CURRENT_MISSING, (release.id,), message))
     for project in projects(model).values():
         if (None, project.version, project.revision) not in current:
             text = revision_label(form, project.version, project.revision)
             message = f"project's current revision {text} has no Revision entry: {_ADD_ENTRY}"
-            found.append(finding(REVISION_CURRENT_MISSING, Severity.ERROR, (project.id,), message))
+            found.append(finding(REVISION_CURRENT_MISSING, (project.id,), message))
     return found
 
 
@@ -56,7 +55,7 @@ def _date_format(model: Model) -> list[Finding]:
         if not date_re.fullmatch(entry.date):
             text = revision_label(form, entry.version, entry.revision)
             message = f"revision {text}'s date {entry.date!r} is not {form.date_format}"
-            found.append(finding(REVISION_DATE_FORMAT, Severity.ERROR, (entry.id,), message))
+            found.append(finding(REVISION_DATE_FORMAT, (entry.id,), message))
     return found
 
 
@@ -69,7 +68,7 @@ def _initials_missing(model: Model) -> list[Finding]:
         if entry.created == "":
             text = revision_label(form, entry.version, entry.revision)
             message = f"revision {text} has no created initials"
-            found.append(finding(REVISION_INITIALS_MISSING, Severity.ERROR, (entry.id,), message))
+            found.append(finding(REVISION_INITIALS_MISSING, (entry.id,), message))
     return found
 
 

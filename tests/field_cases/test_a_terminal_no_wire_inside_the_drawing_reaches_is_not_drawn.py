@@ -1,19 +1,5 @@
-"""Field case: a terminal that no wire inside the drawing reaches is left to its table (L7).
-
-The engineering shape: three terminals in three places.
-- A nested unit hands its strip `X1` up as its interface; only the parent wires it. The nested
-  unit's own document drew a lone column for it.
-- A top-level unit's interface terminal `X4` is wired only to a device outside the unit.
-- A strip `X5` of a bridged run: one terminal is wired, the other two are reached by the bridge.
-
-The bug: `without_idle_terminals` exempted every unit boundary function, so the nested unit's own
-pages drew `X1` with nothing to wire it. The rule (owner 2026-10-13, decision layout-0202): a
-terminal is drawn only where a wire inside the document reaches it; otherwise only its terminal
-table lists it. The parent's black box still draws the terminals the parent wires. A top-level
-unit's terminal wired only from outside stays drawn with its stub label (layout-0080). A bridge is
-no wire (owner 2026-09-24), so the bridged terminals stay off the page.
-
-The connector half of L7 waits for the connector tables (L18).
+"""Field case: a nested unit's strip X1, a top-level interface X4 and a bridged strip X5; the bug drew X1 with nothing to wire it (layout-0202).
+Amended by layout-0463 (R937): a wire from another set reaches a terminal through its cut, so the unit's set draws it with the cut's reference.
 """
 
 import re
@@ -48,7 +34,8 @@ def _inner(u: Any) -> _Strip:
     run = u.terminal_strip("X1", "DEMO-TB-2.5", interface=True).run("SIG", 1)
     x2 = u.terminal_strip("X2", "DEMO-TB-2.5")
     lamp = u.device("P1", "DEMO-LAMP-24")
-    u.detail.wire(lamp.lamp["1"], x2.run("A", 1)[1], wire=("WH", 0.75))
+    u.series(lamp.lamp["1"], x2.run("A", 1)[1].inner, wire=("WH", 0.75))
+    u.series(lamp.lamp["2"], x2.run("0V", 1)[1].inner, wire=("WH", 0.75))
     return _Strip(run)
 
 
@@ -56,7 +43,9 @@ def _inner(u: Any) -> _Strip:
 def _outer(u: Any) -> _Lamp:
     inner = u.add(_inner, "U2")
     h1 = u.device("H1", "DEMO-LAMP-24")
-    u.detail.wire(h1.lamp["1"], inner.X1[1], wire=("WH", 0.75))
+    x3 = u.terminal_strip("X3", "DEMO-TB-2.5")
+    u.series(h1.lamp["1"], inner.X1[1].outer, wire=("WH", 0.75))
+    u.series(h1.lamp["2"], x3.run("0V", 1)[1].inner, wire=("WH", 0.75))
     return _Lamp(h1)
 
 
@@ -65,7 +54,9 @@ def _box(u: Any) -> _Box:
     run = u.terminal_strip("X4", "DEMO-TB-2.5", interface=True).run("SIG", 1)
     bridged = u.terminal_strip("X5", "DEMO-TB-2.5").run("B", 3, bridged=True)
     lamp = u.device("P2", "DEMO-LAMP-24")
-    u.detail.wire(lamp.lamp["1"], bridged[1], wire=("WH", 0.75))
+    x6 = u.terminal_strip("X6", "DEMO-TB-2.5")
+    u.series(lamp.lamp["1"], bridged[1].inner, wire=("WH", 0.75))
+    u.series(lamp.lamp["2"], x6.run("0V", 1)[1].inner, wire=("WH", 0.75))
     return _Box(run)
 
 
@@ -82,14 +73,14 @@ def written() -> _Written:
     d.add(_outer, "U1")
     box = d.add(_box, "U3", place="C1")
     outside = d.device("H9", "DEMO-LAMP-24", place="C1")
-    d.detail.wire(outside.lamp["1"], box.X4[1], wire=("WH", 0.75))
+    ret = d.terminal_strip("X9", "DEMO-TB-2.5", place="C1")
+    d.series(outside.lamp["1"], box.X4[1].outer, wire=("WH", 0.75))
+    d.series(outside.lamp["2"], ret.run("0V", 1)[1].inner, wire=("WH", 0.75))
     names = ("demo-idle-outer", "demo-idle-inner", "demo-idle-box")
     docs = []
     for name in names:
         (root / f"{name}.md").write_text("# x\n", encoding="utf-8")
-        docs.append(
-            fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, name, cover=root / f"{name}.md")
-        )
+        docs.append(fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, name, cover=root / f"{name}.md"))
     result = fr.build(d, *docs)
     assert [f for f in result.findings if f.severity.name == "ERROR"] == []
     fr.write(result, root / "out", intermediates=root / "inter")
@@ -106,20 +97,16 @@ def written() -> _Written:
 
 
 def _rows(model: Any, designation: str) -> int:
-    (strip,) = [
-        s
-        for s in derive.terminal_strips(model)
-        if derive.item_designation(model, s).endswith(designation)
-    ]
+    (strip,) = [s for s in derive.terminal_strips(model) if derive.item_designation(model, s).endswith(designation)]
     return len(derive.terminal_rows(model, strip))
 
 
 def test_a_nested_units_strip_only_the_parent_wires_is_not_drawn_on_its_own_pages(
     written: _Written,
 ) -> None:
-    assert [t for t in written.texts["demo-idle-inner"] if "X1" in t] == []
+    assert any(t.startswith("-X1:SIG:1") for t in written.texts["demo-idle-inner"])  # drawn with its cut's reference (R937)
     assert any(t.startswith("-X2:A:1") for t in written.texts["demo-idle-inner"])
-    assert any(t.startswith("-U2-X1:SIG:1") for t in written.texts["demo-idle-outer"])
+    assert any(t.removeprefix("← ").startswith("-U2-X1:SIG:1") for t in written.texts["demo-idle-outer"])
 
 
 def test_a_top_level_units_terminal_wired_from_outside_stays_with_its_stub(
@@ -143,21 +130,14 @@ def test_each_terminal_table_lists_every_terminal_of_its_strip(written: _Written
 
 def _reached(model: Any, designation: str) -> list[bool]:
     """`function_is_reached` for each terminal of the strip, in row order."""
-    (strip,) = [
-        s
-        for s in derive.terminal_strips(model)
-        if derive.item_designation(model, s).endswith(designation)
-    ]
+    (strip,) = [s for s in derive.terminal_strips(model) if derive.item_designation(model, s).endswith(designation)]
     by_item = {f.item: f.id for f in functions(model).values()}
-    return [
-        derive.function_is_reached(model, by_item[row.terminal])
-        for row in derive.terminal_rows(model, strip)
-    ]
+    return [derive.function_is_reached(model, by_item[row.terminal]) for row in derive.terminal_rows(model, strip)]
 
 
 def test_the_one_fact_reads_the_three_shapes(written: _Written) -> None:
-    """Nested: the parent's wire does not count. Top-level: the leaving wire does. A bridge: no."""
+    """Nested: the parent's wire counts, through its cut (R937). Top-level: the leaving wire does. A bridge: no."""
     model = written.model
-    assert _reached(model, "X1") == [False]
+    assert _reached(model, "X1") == [True]
     assert _reached(model, "X4") == [True]
     assert _reached(model, "X5") == [True, False, False]

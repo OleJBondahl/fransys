@@ -3,10 +3,9 @@
 They sit beside `rows.py`, which is at its ceiling (model-0199).
 """
 
-from fransys_model.kernel import Id, value
-from fransys_model.vocab.core import Port
+from fransys_model.kernel import value
 
-__all__ = ["ContactRow", "OutlineSheet", "ReferenceLink", "TableGeometry"]
+__all__ = ["OutlineSheet", "ReferenceLink", "TableGeometry"]
 
 
 @value
@@ -43,21 +42,4 @@ class TableGeometry:
     titles: int
     rule: int
     first_row: int
-    height: int
-
-
-@value
-class ContactRow:
-    """One printed row of a coil's contact table (model-0216, CR1).
-
-    `column` is `"NO"` or `"NC"`; `text` is the printed row; `partner` is the port of the contact
-    it names, `None` for a spare. `x`, `y`, `width`, `height` are its box in G, one row step high.
-    """
-
-    column: str
-    text: str
-    partner: Id[Port] | None
-    x: int
-    y: int
-    width: int
     height: int

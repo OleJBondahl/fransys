@@ -8,16 +8,21 @@ from dataclasses import replace
 from typing import TYPE_CHECKING
 
 from conventions_fixtures import house
+from fransys_el.kit_keys import function_of
 from fransys_el.placement_env import make_env
 from fransys_el.placement_syms import syms_of
+from fransys_el.placement_where import where_room
 from oracle_syms import Old, old_of
 from placement_fixtures import leads
 from turns_by_path import turn_fixtures
 
 from electrical_symbols import LIBRARY
+from fransys_layout.core import Size, grid_out
+from fransys_layout.symbols import text_width_g
 
 if TYPE_CHECKING:
-    from fransys_el.placement_kit import SymbolKit
+    from fransys_el.placement_env import Env
+    from fransys_el.placement_kit import PickKey, SymbolKit
 
     from fransys_layout.core import Box, Sym
     from fransys_model.kernel import Model
@@ -36,9 +41,14 @@ def pairs(model: Model, kit: SymbolKit) -> list[tuple[Old, Sym]]:
     """The old builder's values and the layer-built `Sym` of each function of `kit`."""
     env = make_env(model, kit, house(), LIBRARY)
     built = {s.id: s for s in syms_of(env)}
-    return [
-        (old_of(env, lead, pick), built[env.ids[lead]]) for lead, pick in leads(env.kit).items()
-    ]
+    return [(_with_where_line(env, lead, old_of(env, lead, pick)), built[env.ids[lead]]) for lead, pick in leads(env.kit).items()]
+
+
+def _with_where_line(env: Env, lead: PickKey, old: Old) -> Old:
+    """`old` with the tag slot a text line taller, and as wide as the where-text line when that is wider, for a terminal (R1397)."""
+    line = where_room(env, function_of(env.model, lead)).strip("\n")
+    wide = text_width_g(env.library.font, line, height=env.conventions.text_height)
+    return replace(old, label=Size(max(old.label.w, wide), 2 * old.label.h)) if line else old
 
 
 def diffs(old: Old, new: Sym) -> list[str]:
@@ -47,7 +57,8 @@ def diffs(old: Old, new: Sym) -> list[str]:
     A coil's table is an Anchor now (R327): only its height is compared, and the footprint is not.
     """
     turns = turn_fixtures()
-    found = []
+    pitch = int(LIBRARY.grid.wire_pitch)  # the layer grows each keep-out to whole cells (R1693)
+    found: list[str] = []
     flat = {
         "label": (old.label, new.label),
         "pins": (old.pins, new.pins),
@@ -59,11 +70,9 @@ def diffs(old: Old, new: Sym) -> list[str]:
     for orient, view in new.views.items():
         want = {
             "body": turns.turn_box(old.body, orient),
-            "keepout": turns.turn_box(old.keepout, orient),
-            "footprint": turns.turn_box(old.footprint, orient),
-            "row_footprint": None
-            if old.row_footprint is None
-            else turns.turn_box(old.row_footprint, orient),
+            "keepout": turns.turn_box(grid_out(old.keepout, pitch), orient),
+            "footprint": turns.turn_box(grid_out(old.footprint, pitch), orient),
+            "row_footprint": None if old.row_footprint is None else turns.turn_box(grid_out(old.row_footprint, pitch), orient),
             "pins": tuple(turns.turn_pin(p, orient) for p in old.pins),
         }
         found += [

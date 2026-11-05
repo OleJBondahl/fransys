@@ -24,7 +24,5 @@ def page_links(model: Model, sheet: SheetRow, links: tuple[ReferenceLink, ...]) 
         width = grid_to_mm(0, link.width, per_division)
         height = grid_to_mm(0, link.height, per_division)
         body = f"box(width: {width:.3f}mm, height: {height:.3f}mm)"
-        boxes.append(
-            f"#place(top + left, dx: {left:.3f}mm, dy: {top:.3f}mm, link(<{link.target}>, {body}))"
-        )
+        boxes.append(f"#place(top + left, dx: {left:.3f}mm, dy: {top:.3f}mm, link(<{link.target}>, {body}))")
     return "".join(boxes)

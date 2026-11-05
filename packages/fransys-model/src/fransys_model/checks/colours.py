@@ -2,13 +2,14 @@
 
 from typing import TYPE_CHECKING, Final
 
-from fransys_model.checks._finding import finding, ordered
+from fransys_model.checks._finding import ordered
 from fransys_model.derive.facts.colours import unknown_core_colours, unknown_wire_colours
 from fransys_model.derive.facts.cores import is_core
-from fransys_model.kernel import Finding, Severity
+from fransys_model.vocab.codes import finding
 from fransys_model.vocab.colours import COLOUR_GRAMMAR
 from fransys_model.vocab.finding_ref import ref
 from fransys_model.vocab.tables import conductors, parts
+lazy from fransys_model.kernel import Finding
 
 if TYPE_CHECKING:
     from fransys_model.kernel import Model
@@ -27,13 +28,8 @@ def check_colours(model: Model) -> tuple[Finding, ...]:
         conductor = conductors(model)[facet.subject]
         what = "core" if is_core(model, conductor.id) else "wire"
         text = f"{what} {ref(conductor)} has colour {facet.colour!r}, which is not {COLOUR_GRAMMAR}"
-        found.append(finding(WIRE_COLOUR_UNKNOWN, Severity.ERROR, (conductor.id, facet.id), text))
+        found.append(finding(WIRE_COLOUR_UNKNOWN, (conductor.id, facet.id), text))
     for product, index, colour in unknown_core_colours(model):
-        text = (
-            f"cable part {parts(model)[product.subject].mpn} core colour "
-            f"{index} is {colour!r}, which is not {COLOUR_GRAMMAR}"
-        )
-        found.append(
-            finding(WIRE_COLOUR_UNKNOWN, Severity.ERROR, (product.subject, product.id), text)
-        )
+        text = f"cable part {parts(model)[product.subject].mpn} core colour {index} is {colour!r}, which is not {COLOUR_GRAMMAR}"
+        found.append(finding(WIRE_COLOUR_UNKNOWN, (product.subject, product.id), text))
     return ordered(found)

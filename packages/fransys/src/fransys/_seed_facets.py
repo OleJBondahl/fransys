@@ -19,32 +19,24 @@ if TYPE_CHECKING:
     from fransys_model.vocab import UnitRelease
 
 
-def assigned_facets(
-    model: Model, rows: tuple[AssignedSeed, ...], origins: dict[Id[Any], Origin]
-) -> list[AssignedDesignationFacet]:
+def assigned_facets(model: Model, rows: tuple[AssignedSeed, ...], origins: dict[Id[Any], Origin]) -> list[AssignedDesignationFacet]:
     """One `assigned_designation` facet per row, its origin the item's."""
     seeded = []
     for row in rows:
         key = (*row.key, "assigned_designation")
         facet_id = make_id(AssignedDesignationFacet, key)
-        seeded.append(
-            AssignedDesignationFacet(id=facet_id, key=key, subject=row.item, text=row.text)
-        )
+        seeded.append(AssignedDesignationFacet(id=facet_id, key=key, subject=row.item, text=row.text))
         origins[facet_id] = require_origin(model.origins, row.item)
     return seeded
 
 
-def tag_facets(
-    model: Model, rows: tuple[UnitTagSeed, ...], origins: dict[Id[Any], Origin]
-) -> list[AssignedUnitTagFacet]:
+def tag_facets(model: Model, rows: tuple[UnitTagSeed, ...], origins: dict[Id[Any], Origin]) -> list[AssignedUnitTagFacet]:
     """One `assigned_unit_tag` facet per row, its origin the instance's."""
     seeded = []
     for row in rows:
         key = (*row.key, "assigned_unit_tag")
         facet_id = make_id(AssignedUnitTagFacet, key)
-        seeded.append(
-            AssignedUnitTagFacet(id=facet_id, key=key, subject=row.instance, text=row.text)
-        )
+        seeded.append(AssignedUnitTagFacet(id=facet_id, key=key, subject=row.instance, text=row.text))
         origins[facet_id] = require_origin(model.origins, row.instance)
     return seeded
 

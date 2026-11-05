@@ -2,14 +2,14 @@
 
 Built through `import fransys as fr` from `examples/demo-parts` (DEMO-RELAY-MOD-2) and one
 throwaway one-header part. The join puts the header pin and the function port on one physical
-net, reaches the rail closure, counts as a connection, and prints the pin as `-M1-J1:1`.
 """
 
 from typing import TYPE_CHECKING
 
 import fransys as fr
 import fransys_parts
-from fransys_author import Design
+from _expected_codes import expect_codes
+from fransys_author.design import Design
 from root_library import freeze
 
 from fransys_model.derive import net_of, port_designation, port_is_unused, port_rails
@@ -22,7 +22,7 @@ if TYPE_CHECKING:
     from fransys_model.vocab import Port
 
 _HALF_CONNECTED = "FUNCTION_HALF_CONNECTED"
-_ONE_HEADER = """schema = 1
+_ONE_HEADER = """schema = 2
 
 [part]
 mpn = "ONE-HEADER-MOD"
@@ -56,14 +56,11 @@ gender = "male"
 """
 
 
-def _module(*, mate: bool) -> tuple[fr.BuildResult, fr.Device, fr.Device]:
+def _module() -> fr.BuildResult:
     d = fr.design("demo_parts", place="C1")
     d.location("C1", "Cabinet")
-    module = d.device("M1", "DEMO-RELAY-MOD-2")
-    plug = d.device("P1", "DEMO-CONN-4P")
-    if mate:
-        d.mate(plug, module.j1)
-    return fr.build(d), module, plug
+    d.device("M1", "DEMO-RELAY-MOD-2")
+    return fr.build(d)
 
 
 def _port(model: Model, designation: str) -> Id[Port]:
@@ -78,31 +75,16 @@ def _net_designations(model: Model, designation: str) -> set[str]:
     return {port_designation(model, p) for p in net.ports}
 
 
-def test_a_mated_plug_pin_the_header_pin_and_the_relay_port_share_one_net() -> None:
-    """Pin n of the plug, header pin n and the relay port are one physical net."""
-    result, *_ = _module(mate=True)
-    model = result.model
-    for pin, relay_port in [("1", "A1"), ("2", "A2"), ("3", "B1"), ("4", "B2")]:
-        # MUTATION: closure `_join_mates` returns without unioning (the relay ports leave the net)
-        assert _net_designations(model, f"-M1-J1:{pin}") == {
-            f"-P1:{pin}",
-            f"-M1-J1:{pin}",
-            f"-M1:{relay_port}",
-        }
-
-
 def test_a_header_pin_not_mated_still_joins_the_relay_port() -> None:
     """With no plug, the header pin and the relay port still form a two-port net."""
-    result, *_ = _module(mate=False)
+    result = _module()
     model = result.model
     assert _net_designations(model, "-M1-J1:1") == {"-M1-J1:1", "-M1:A1"}
     assert _net_designations(model, "-M1-J2:2") == {"-M1-J2:2", "-M1:M"}
 
 
 def _half_open(result: fr.BuildResult, model: Model) -> set[str]:
-    return {
-        port_designation(model, f.subjects[0]) for f in result.findings if f.code == _HALF_CONNECTED
-    }
+    return {port_designation(model, f.subjects[0]) for f in result.findings if f.code == _HALF_CONNECTED}
 
 
 def test_a_joined_relay_port_is_connected_and_an_unjoined_one_is_not() -> None:
@@ -112,9 +94,10 @@ def test_a_joined_relay_port_is_connected_and_an_unjoined_one_is_not() -> None:
     m1 = d.device("M1", "DEMO-RELAY-MOD-2")
     k1 = d.device("K1", "DEMO-RLY-2CO-24")
     k2 = d.device("K2", "DEMO-RLY-2CO-24")
-    d.detail.wire(k1.coil["A1"], k2.coil["A1"], wire=("BK", 1.0))
-    d.detail.wire(m1.k1["A1"], k1.coil["A1"], wire=("BK", 1.0))  # M1:A2 is open but joined to J1:2
+    d.series(k1.coil["A1"], k2.coil["A1"], wire=("BK", 1.0))
+    d.series(m1.k1["A1"], k1.coil["A1"], wire=("BK", 1.0))  # M1:A2 is open but joined to J1:2
     result = fr.build(d)
+    expect_codes(result, _HALF_CONNECTED)
     model = result.model
     half_open = _half_open(result, model)
     # MUTATION: connectivity `_half_connected` ignores joins (-M1:A1 then reports)
@@ -136,16 +119,14 @@ def test_a_joined_relay_port_is_in_use_and_an_unjoined_one_is_unused() -> None:
 
 def test_a_two_header_module_prints_its_pins_with_the_header_segment() -> None:
     """Two headers J1, J2 print `-M1-J1:1` and `-M1-J2:1`; a relay port `-M1:A1`."""
-    result, *_ = _module(mate=False)
+    result = _module()
     printed = {port_designation(result.model, p) for p in ports(result.model)}
     assert {"-M1-J1:1", "-M1-J2:1", "-M1:A1"} <= printed
 
 
 def test_a_one_header_module_prints_its_pin_without_a_segment(tmp_path: Path) -> None:
     """A lone header adds no segment, so its pin reads `-M1:1`."""
-    (tmp_path / "library.toml").write_text(
-        'schema = 1\nname = "t"\nversion = "0.0.0"\ndescription = "d"\n'
-    )
+    (tmp_path / "library.toml").write_text('schema = 2\nname = "t"\nversion = "0.0.0"\ndescription = "d"\n')
     (tmp_path / "parts").mkdir()
     (tmp_path / "parts" / "m.toml").write_text(_ONE_HEADER)
     draft = merge(fransys_parts.load("demo_parts"), fransys_parts.load_path(tmp_path))

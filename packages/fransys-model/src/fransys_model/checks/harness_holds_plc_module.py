@@ -2,13 +2,14 @@
 
 from typing import TYPE_CHECKING, Final
 
-from fransys_model.checks._finding import finding, ordered
+from fransys_model.checks._finding import ordered
 from fransys_model.derive.facts.children import parent_item
 from fransys_model.derive.facts.item_predicates import is_plc_module
 from fransys_model.derive.facts.units import marked_harnesses
-from fransys_model.kernel import Finding, Severity
+from fransys_model.vocab.codes import finding
 from fransys_model.vocab.finding_ref import ref
 from fransys_model.vocab.tables import items
+lazy from fransys_model.kernel import Finding
 
 if TYPE_CHECKING:
     from fransys_model.kernel import Model
@@ -25,10 +26,8 @@ def check_harness_holds_plc_module(model: Model) -> tuple[Finding, ...]:
     found = [
         finding(
             HARNESS_HOLDS_PLC_MODULE,
-            Severity.ERROR,
             (item.id, parent),
-            f"{ref(item)} is a PLC module under the harness "
-            f"{ref(items(model)[parent])}: build the rack with d.rack, not d.harness",
+            f"{ref(item)} is a PLC module under the harness {ref(items(model)[parent])}: build the rack with d.rack, not d.harness",
         )
         for item in items(model).values()
         if (parent := parent_item(model, item.id)) in marked and is_plc_module(model, item)

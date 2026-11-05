@@ -13,10 +13,7 @@ if TYPE_CHECKING:
     from fransys_model.kernel import AuthoringKey, Draft, Id, Origin
     from fransys_model.vocab import Port
 
-_WITH_NET = (
-    'd.detail.net("PE", ...) beside d.earth in one scope: d.earth is the scope\'s one PE net, '
-    "so join every PE pin with d.earth"
-)
+_WITH_NET = "a PE net beside d.earth in one scope: d.earth is the scope's one PE net, so join every PE pin with d.earth"
 
 
 class Earths:
@@ -32,15 +29,10 @@ class Earths:
         self._origin: dict[AuthoringKey, Origin] = {}
         self.closed = False
 
-    def collect(
-        self, prefix: AuthoringKey, ports: tuple[Id[Port], ...], origin: Origin, draft: Draft
-    ) -> None:
+    def collect(self, prefix: AuthoringKey, ports: tuple[Id[Port], ...], origin: Origin, draft: Draft) -> None:
         """Add `ports` to the scope `prefix`'s PE ports; raises once the draft was given out."""
         if self.closed:
-            msg = (
-                "d.earth came after the draft was read (fr.build or d.draft()): "
-                "make every d.earth call first"
-            )
+            msg = "d.earth came after the draft was read (fr.build or d.draft()): make every d.earth call first"
             raise AuthorError(msg)
         if not self.has(prefix) and draft.record_of(make_id(Net, pe_key(prefix))) is not None:
             raise AuthorError(_WITH_NET)

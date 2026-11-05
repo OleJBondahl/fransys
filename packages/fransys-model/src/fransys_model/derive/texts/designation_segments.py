@@ -38,9 +38,7 @@ def board_through(model: Model, item: Id[Item], ctx: PrintContext) -> Id[Item] |
     return unit_root(model, item, ctx.reading)
 
 
-def plain_segments(
-    model: Model, item: Id[Item], ctx: PrintContext, *, held_switches: bool = True
-) -> tuple[Segment, ...]:
+def plain_segments(model: Model, item: Id[Item], ctx: PrintContext, *, held_switches: bool = True) -> tuple[Segment, ...]:
     """`item`'s product chain behind `-`: enclosing boards' and harnesses' labels, then its own.
 
     Raises the `SchemaError` an unlabelled ancestor or item gives; the refusal is this raise.
@@ -58,9 +56,7 @@ def plain_segments(
     return tuple(Segment(sign=sign, label=label) for label in labels)
 
 
-def _instance_segments(
-    model: Model, item: Id[Item], ctx: PrintContext, *, held_switches: bool
-) -> tuple[Segment, ...] | None:
+def _instance_segments(model: Model, item: Id[Item], ctx: PrintContext, *, held_switches: bool) -> tuple[Segment, ...] | None:
     """The instance tags then the item read in its own unit (`-U3-J1`), else `None`."""
     record = items(model).get(item)
     if ctx.board is not None or record is None or record.unit is None:
@@ -76,9 +72,7 @@ def _instance_segments(
     return (*segments, *designation_segments(model, item, own, held_switches=held_switches))
 
 
-def designation_segments(
-    model: Model, item: Id[Item], ctx: PrintContext, *, held_switches: bool = True
-) -> tuple[Segment, ...]:
+def designation_segments(model: Model, item: Id[Item], ctx: PrintContext, *, held_switches: bool = True) -> tuple[Segment, ...]:
     """`item`'s designation as segments in the reading `ctx` states: the one grammar of it.
 
     The plain chain is built first and refuses first, as `designation_refusal` reports (it asks
@@ -91,9 +85,7 @@ def designation_segments(
     return plain if held_switches else plain_segments(model, item, ctx, held_switches=False)
 
 
-def node_segments(
-    model: Model, leaf: Id[AspectNode] | None, ctx: PrintContext
-) -> tuple[Segment, ...]:
+def node_segments(model: Model, leaf: Id[AspectNode] | None, ctx: PrintContext) -> tuple[Segment, ...]:
     """The labels from the root down to `leaf`, each behind its aspect's sign, minus `ctx`'s drops.
 
     `None` (no location) gives none. A parent cycle ends the walk.
@@ -105,18 +97,12 @@ def node_segments(
     aspect = nodes[leaf].aspect
     sign = DESIGNATION_SCHEME.sign(aspect)
     chain = tuple(chain_up(nodes, leaf))[::-1]
-    return tuple(
-        Segment(sign=sign, label=nodes[node].label)
-        for node in kept_nodes(model, chain, aspect, ctx)
-    )
+    return tuple(Segment(sign=sign, label=nodes[node].label) for node in kept_nodes(model, chain, aspect, ctx))
 
 
 def aspect_segments(model: Model, item: Id[Item], ctx: PrintContext) -> tuple[Segment, ...]:
     """The `=` function then `+` location segments of `item`'s own placements (no product part)."""
     leaves = reference_leaves(model, item)
     return tuple(
-        segment
-        for aspect in DESIGNATION_SCHEME.reference_aspects
-        if aspect in leaves
-        for segment in node_segments(model, leaves[aspect].id, ctx)
+        segment for aspect in DESIGNATION_SCHEME.reference_aspects if aspect in leaves for segment in node_segments(model, leaves[aspect].id, ctx)
     )

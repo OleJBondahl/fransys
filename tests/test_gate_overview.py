@@ -4,22 +4,19 @@ E14: no rendered id in the overview page. E15: no random, clock or network in th
 E16: the wago signal table has one home (README-wago-2); the version string's home is HOMES.
 """
 
+from __future__ import annotations
+
 import ast
-import sys
-from pathlib import Path
+from typing import TYPE_CHECKING
 
-import fransys as fr
-import fransys_parts
 import pytest
-from _model_build_cover import system_document
-from fransys_overview import html
 from gate_scan import PACKAGES_ROOT, src_modules
+from test_overview_page import _laid
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-from test_units_worked_example import _system_design
-
-from fransys_layout.engines.overview import lay_out_overview
 from fransys_model.kernel import render_id
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 OVERVIEW_SRC = PACKAGES_ROOT / "fransys-overview" / "src" / "fransys_overview"
 FORBIDDEN_JS = ("Math.random", "Date", "fetch(", "XMLHttpRequest", "innerHTML")
@@ -33,11 +30,7 @@ def rendered_ids_in(page: str, ids: list[str]) -> list[str]:
 
 def forbidden_in(source: str) -> list[str]:
     """E15: the forbidden substrings held by a string constant of `source`."""
-    texts = [
-        n.value
-        for n in ast.walk(ast.parse(source))
-        if isinstance(n, ast.Constant) and isinstance(n.value, str)
-    ]
+    texts = [n.value for n in ast.walk(ast.parse(source)) if isinstance(n, ast.Constant) and isinstance(n.value, str)]
     return sorted({word for word in FORBIDDEN_JS for text in texts if word in text})
 
 
@@ -48,9 +41,7 @@ def signal_format_sites(sources: dict[str, str]) -> list[str]:
         for module, source in sources.items()
         if module != SIGNAL_HOME
         for n in ast.walk(ast.parse(source))
-        if isinstance(n, ast.Call)
-        and (n.func.id if isinstance(n.func, ast.Name) else getattr(n.func, "attr", ""))
-        == "SignalFormat"
+        if isinstance(n, ast.Call) and (n.func.id if isinstance(n.func, ast.Name) else getattr(n.func, "attr", "")) == "SignalFormat"
     ]
 
 
@@ -61,11 +52,7 @@ def _sources() -> dict[str, str]:
 @pytest.fixture(scope="module")
 def demo_overview():
     """The units worked example's overview: its model and page, built once."""
-    parts = fransys_parts.load("demo_parts")
-    design, _field1, _field2 = _system_design(parts)
-    model = fr.build(parts, design.draft(), system_document()).model
-    out = lay_out_overview(model)[0]
-    return out, html(out)
+    return _laid()
 
 
 def test_the_overview_page_prints_no_id(demo_overview):
@@ -106,7 +93,5 @@ def test_the_signal_table_has_one_home():
 
 
 def test_the_home_gate_can_fail():
-    assert signal_format_sites({"fransys_wago.x": "SignalFormat(abbr='DI')"}) == [
-        "fransys_wago.x:1"
-    ]
+    assert signal_format_sites({"fransys_wago.x": "SignalFormat(abbr='DI')"}) == ["fransys_wago.x:1"]
     assert signal_format_sites({"fransys_wago.x": "m.SignalFormat(1)"}) == ["fransys_wago.x:1"]

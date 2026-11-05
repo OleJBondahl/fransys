@@ -11,9 +11,9 @@ import pytest
 from options_fixtures import core_options
 
 from fransys_layout.core import CoreError, Facts, Hints, PlacementProblem
+from fransys_layout.core.flow_values import Fan, FlowGraph
 from fransys_layout.core.place import place_pages
 from fransys_layout.core.place_y import YCycleError
-from fransys_layout.core.values import Fan, FlowGraph
 
 from .cut_fixtures import AREA, elem, net
 from .pipeline_fixtures import cut_of
@@ -38,14 +38,7 @@ def test_a_symbol_dealt_into_two_lanes_of_one_column_is_placed() -> None:
     assert place_pages(
         cut_of(prob),
         prob,
-        core_options(
-            flip_turn="R180",
-            tag_stagger=True,
-            label_gap=8,
-            parallel_pitch=48,
-            driver_first=True,
-            arrow_sides=("E", "W"),
-        ),
+        core_options(),
     ).pages
 
 
@@ -61,30 +54,22 @@ def test_the_ring_raises_the_named_error_with_the_column_and_the_fix() -> None:
     prob = lamp_ring()
     cut = cut_of(prob)
     ring = replace(cut.flow, fans=(ring_fan(cut.flow),), cross_links=())
-    with pytest.raises(
-        YCycleError, match=r"page 1: cyclic y constraints through symbols .*"
-    ) as caught:
+    with pytest.raises(YCycleError, match=r"page 1: cyclic y constraints through symbols .*") as caught:
         place_pages(
             replace(cut, flow=ring),
             prob,
-            core_options(
-                flip_turn="R180",
-                tag_stagger=True,
-                label_gap=8,
-                parallel_pitch=48,
-                driver_first=True,
-                arrow_sides=("E", "W"),
-            ),
+            core_options(),
         )
     assert isinstance(caught.value, CoreError)
     named = str(caught.value).split("through symbols ")[1].split(":")[0].split(", ")
     assert named == ["a", "b", "c", "d", "lamp"]
 
 
+@pytest.mark.rule("ALIGN-PARALLEL")
 def test_a_row_group_the_cut_spread_over_two_rows_is_not_dropped() -> None:
-    """The cut plant's circuit (a row group of three beside a wide column): R1 is ALIGN_DROPPED.
+    """The cut plant's circuit (a row group of three beside a wide column): R1 levels per page row.
 
-    Corpus w02 and w06 each drop a row group the same way (the findings name X1 and X6).
+    Corpus w02 and w06 drop nothing now (ALIGN-PARALLEL, split by page row).
     """
     members = [replace(elem(f"r{i}", 300), row_group="R1") for i in (1, 2, 3)]
     syms = [elem("x0", 500, 32, "G0"), elem("x1", 500, 32, "G0"), *members]
@@ -101,13 +86,6 @@ def test_a_row_group_the_cut_spread_over_two_rows_is_not_dropped() -> None:
     found = place_pages(
         cut_of(prob),
         prob,
-        core_options(
-            flip_turn="R180",
-            tag_stagger=True,
-            label_gap=8,
-            parallel_pitch=48,
-            driver_first=True,
-            arrow_sides=("E", "W"),
-        ),
+        core_options(),
     ).findings
     assert [f for f in found if f.code == "ALIGN_DROPPED"] == []

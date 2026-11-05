@@ -7,7 +7,6 @@ arguments. An identity argument that is not a record of that kind in the model r
 
 from typing import TYPE_CHECKING
 
-from fransys_model.derive.facts.bars import is_bar_port
 from fransys_model.derive.facts.item_predicates import terminal_items
 from fransys_model.derive.facts.unit_index import descendants
 from fransys_model.derive.facts.units import item_chain, require
@@ -40,14 +39,14 @@ lazy from fransys_model.vocab.aspects import AspectNode
 lazy from fransys_model.vocab.core import Item, Port, Unit
 lazy from fransys_model.vocab.templates import FunctionTemplate
 
-from .facts.roles import port_role
+from .facts.roles import port_boundary
 from .facts.strips import strip_of
 from .indexes import build_indexes
 
 if TYPE_CHECKING:
     from fransys_model.vocab.connectivity import Conductor, Net
     from fransys_model.vocab.core import Function
-    from fransys_model.vocab.enums import PortRole
+    from fransys_model.vocab.enums import PortBoundary
 
     from .indexes import Indexes
 
@@ -73,7 +72,6 @@ __all__ = [
     "no_conductor_at",
     "pin_order",
     "position_rank",
-    "printed_port_name",
     "require",
     "strip_set",
     "terminal_items",
@@ -123,13 +121,12 @@ def effective_placement(model: Model, item: Id[Item], aspect: Aspect) -> Id[Aspe
     all_placements = placements(model)
     nodes = aspect_nodes(model)
     for node in item_chain(model, item):
-        found = sorted(
-            placement_id
-            for placement_id in indexes.placements_by_item.get(node, ())
-            if nodes[all_placements[placement_id].node].aspect is aspect
+        found = min(
+            (placement_id for placement_id in indexes.placements_by_item.get(node, ()) if nodes[all_placements[placement_id].node].aspect is aspect),
+            default=None,
         )
-        if found:
-            return all_placements[found[0]].node
+        if found is not None:
+            return all_placements[found].node
     return None
 
 
@@ -174,9 +171,7 @@ def item_location(model: Model, item: Id[Item]) -> Id[AspectNode] | None:
     return effective_placement(model, item, Aspect.LOCATION)
 
 
-def list_context(
-    model: Model, subject: Id[Item], *, location: Id[AspectNode] | None = None
-) -> Id[AspectNode] | None:
+def list_context(model: Model, subject: Id[Item], *, location: Id[AspectNode] | None = None) -> Id[AspectNode] | None:
     """The location a list's ends print short against: the document's, else `subject`'s own.
 
     `None` means no context: the list queries print full paths.
@@ -261,24 +256,13 @@ def terminal_strip(model: Model, item: Id[Item]) -> Id[Item] | None:
     return strip_of(model, item)
 
 
-def conductors_by_role(
-    model: Model, idx: Indexes, terminal: Id[Item]
-) -> dict[PortRole, set[Id[Conductor]]]:
-    """The conductors on `terminal`'s ports, by the role of the port they land on."""
-    by_role: dict[PortRole, set[Id[Conductor]]] = {}
+def conductors_by_role(model: Model, idx: Indexes, terminal: Id[Item]) -> dict[PortBoundary, set[Id[Conductor]]]:
+    """The conductors on `terminal`'s ports, by the boundary of the port they land on."""
+    by_role: dict[PortBoundary, set[Id[Conductor]]] = {}
     for function in idx.functions_by_item.get(terminal, ()):
         for port in idx.ports_by_function.get(function, ()):
-            role = port_role(model, port)
+            role = port_boundary(model, port)
             landed = idx.conductors_by_port.get(port, ())
             if landed:
                 by_role.setdefault(role, set()).update(landed)
     return by_role
-
-
-def printed_port_name(model: Model, port: Id[Port], *, bar_screw: bool = False) -> str:
-    """The port name a list prints after its item's designation; `""` for a bar's port (PE-BAR B4).
-
-    A bar's screw is no part of the wiring, so a bar end prints the bar alone (`-PE1`). Overview
-    and the release listing read this. `bar_screw=True`: the rule before 0.18.4 (screw printed).
-    """
-    return "" if is_bar_port(model, port) and not bar_screw else ports(model)[port].name

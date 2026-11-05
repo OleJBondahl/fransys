@@ -62,11 +62,7 @@ def _cable(plant: Plant, key: str, unit: Id[Unit]) -> Id[Item]:
     )
     plant.add(part, product)
     item = plant.item(key, part=part.id, unit=unit)
-    plant.add(
-        CableFacet(
-            id=make_id(CableFacet, (key, "cable")), key=(key, "cable"), subject=item, length_mm=None
-        )
-    )
+    plant.add(CableFacet(id=make_id(CableFacet, (key, "cable")), key=(key, "cable"), subject=item, length_mm=None))
     return item
 
 

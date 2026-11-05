@@ -1,24 +1,15 @@
-"""Field case: a cabinet connects to equipment that other parties supplied, known by terminals only.
+"""Field case: an external cabinet connects to equipment known only by terminal names, with no part file for them.
+The bug (v0.13.1): external strips and devices with part None raised 'part must be an MPN string' (AuthorError).
+Fixed by author-0033, model-0183 and layout-0161, an external device or strip may take None for its part and needs a tag."""
 
-The engineering shape: an alarm system's input terminals `X8` (4 of them) and a switchboard's
-outgoing feeder `Q8` (pins L1 L2 L3 N PE) feed a cabinet's motor and supply. No part file exists
-for either: only the terminal names are known, and for the feeder its voltage and earthing.
-
-The bug (v0.13.1): `d.terminal_strip("X8", None, 4, external=True)` and `d.device("Q8", None,
-external=True, pins=...)` raised `AuthorError: part must be an MPN string or a part class with an
-mpn, not None`. The rule (decisions author-0033, model-0183, layout-0161): an
-external device or strip may take `None` for its part, needs a tag, has no BOM line and draws as
-a generic box or as terminals.
-"""
-
-import tempfile
-from pathlib import Path
 from typing import TYPE_CHECKING, Any
+lazy from pathlib import Path
 
 import fransys as fr
 import pytest
 from _drawn_facts import Placed, PlacedText, symbol_subjects, text_subjects
 from _drawn_pages import drawn_pages
+from _model_build_cover import unit_document
 from fransys.colours import BK
 
 from fransys_model.derive.drawing_text import external_note
@@ -35,8 +26,8 @@ def _plant(d: fr.Design) -> tuple[fr.TerminalStrip, fr.Device]:
     q8 = d.device("Q8", None, external=True, pins=("L1", "L2", "L3", "N", "PE"))
     d.ac_supply("S", 400, q8["L1"], q8["L2"], q8["L3"], n=q8["N"])
     motor = d.device("M1", "DEMO-MOTOR-4KW")
-    d.detail.wire(x8[1].outer, motor["U"], wire=(BK, 1.5))
-    d.detail.wire(q8["PE"], motor["PE"], wire=(BK, 1.5))
+    d.series(x8[1].outer, motor["U"], wire=(BK, 1.5))
+    d.series(q8["PE"], motor["PE"], wire=(BK, 1.5))
     return x8, q8
 
 
@@ -45,9 +36,7 @@ def _built() -> fr.BuildResult:
     cab = d.location("CAB", "Cabinet")
     with d.function("G", "Group"):
         _plant(d)
-    cover = Path(tempfile.mkdtemp()) / "cover.md"
-    cover.write_text("# Cabinet\n", encoding="utf-8")
-    doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover)
+    doc = unit_document(cab)
     return fr.build(d, doc)
 
 
@@ -131,5 +120,5 @@ def test_a_part_less_device_pins_take_a_dc_supply() -> None:
     d = fr.design("demo_parts", place="CAB")
     q9 = d.device("Q9", None, external=True, pins=("L+", "L-"))
     d.dc_supply("D", plus=q9["L+"], minus=q9["L-"], voltage=24)
-    d.detail.wire(q9["L+"], d.device("M1", "DEMO-MOTOR-4KW")["U"], wire=(BK, 1.5))
+    d.series(q9["L+"], d.device("M1", "DEMO-MOTOR-4KW")["U"], wire=(BK, 1.5))
     assert not [f for f in fr.build(d).findings if f.severity.value == "error"]

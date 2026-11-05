@@ -50,11 +50,7 @@ def namespace_digests(hashes: Mapping[Id[Any], str], schema_version: int) -> fro
         pairs[namespace].append((render_id(target), hashes[target]))
     return frozendict(
         {
-            namespace: _sha256(
-                write_json(
-                    {"records": tuple(records), "schema_version": schema_version}, compact=True
-                )
-            )
+            namespace: _sha256(write_json({"records": tuple(records), "schema_version": schema_version}, compact=True))
             for namespace, records in pairs.items()
         }
     )

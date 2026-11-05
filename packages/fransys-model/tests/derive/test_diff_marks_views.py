@@ -30,9 +30,7 @@ def _key(*key: str) -> BoxKey:
 
 def _view(*keys: BoxKey, lines: tuple[ViewLine, ...] = ()) -> ViewRows:
     boxes = tuple(ViewBox(key=k, lines=(str(n),), dashed=False) for n, k in enumerate(keys))
-    return ViewRows(
-        unit=None, level=None, mode=OverviewMode.PLAIN, open=None, boxes=boxes, lines=lines
-    )
+    return ViewRows(unit=None, level=None, mode=OverviewMode.PLAIN, open=None, boxes=boxes, lines=lines)
 
 
 def _full():

@@ -1,5 +1,6 @@
 """The pins of a sideless series end in pin order, and whether two such ends pair (model-0242)."""
 
+from collections import Counter
 from typing import NamedTuple
 
 from fransys_model.vocab.markings import port_order_key
@@ -19,23 +20,16 @@ class SidelessPins(NamedTuple):
     problem: str | None
 
 
-def _problem(
-    one: str, a: tuple[PortTemplate, ...], two: str, b: tuple[PortTemplate, ...]
-) -> str | None:
+def _problem(one: str, a: tuple[PortTemplate, ...], two: str, b: tuple[PortTemplate, ...]) -> str | None:
     if len(a) != len(b):
         return f"{one} has {len(a)} pins and {two} has {len(b)}: name the pins"
     first, second = [t.name for t in a], [t.name for t in b]
-    if first != second and sorted(first) == sorted(second):
-        return (
-            f"{one} and {two} name the same pins in different orders "
-            f"({', '.join(first)} against {', '.join(second)}): name the pins"
-        )
+    if first != second and Counter(first) == Counter(second):
+        return f"{one} and {two} name the same pins in different orders ({', '.join(first)} against {', '.join(second)}): name the pins"
     return None
 
 
-def sideless_pins(
-    one: str, first: tuple[PortTemplate, ...], two: str, second: tuple[PortTemplate, ...]
-) -> SidelessPins:
+def sideless_pins(one: str, first: tuple[PortTemplate, ...], two: str, second: tuple[PortTemplate, ...]) -> SidelessPins:
     """Order each end by `port_order_key`; `problem` names `one` and `two` when they do not pair.
 
     A pin with no printed marking sorts by its name. The ends do not pair when they have a

@@ -14,7 +14,7 @@ from types import NoneType
 from typing import TYPE_CHECKING, Any, cast, get_args, get_origin
 
 from .errors import ModelError, SchemaError, ValueTypeError
-from .registry import is_value_class
+from .registry import is_value_class, optional_arm, slot_tag
 from .schema import FieldInfo, cached_field_info, id_type, key_and_value_aliases, resolve_target
 from .values import check_value
 
@@ -55,9 +55,7 @@ def check_record(record: Record) -> tuple[tuple[ModelError, ...], tuple[Referenc
     return _check_record(record, {})
 
 
-def _check_record(
-    record: Record, specs: dict[type, FieldInfo]
-) -> tuple[tuple[ModelError, ...], tuple[Reference, ...]]:
+def _check_record(record: Record, specs: dict[type, FieldInfo]) -> tuple[tuple[ModelError, ...], tuple[Reference, ...]]:
     info = cached_field_info(type(record), specs)
     errors = []
     references = []
@@ -69,9 +67,7 @@ def _check_record(
     return tuple(errors), tuple(references)
 
 
-def _check_field(
-    record: Record, name: str, annotation: object, specs: dict[type, FieldInfo]
-) -> tuple[ModelError | None, tuple[Reference, ...]]:
+def _check_field(record: Record, name: str, annotation: object, specs: dict[type, FieldInfo]) -> tuple[ModelError | None, tuple[Reference, ...]]:
     cls = type(record)
     kind = vars(cls)["__kind__"]
     value = getattr(record, name)
@@ -99,25 +95,33 @@ def _legality(record: Record, name: str, value: object) -> ValueTypeError | None
     return None
 
 
-def _walk(
-    value: object, annotation: object, path: str, owner: type, specs: dict[type, FieldInfo]
-) -> Iterator[Reference | _Mismatch]:
-    if annotation is key_and_value_aliases()[0]:  # AuthoringKey is `tuple[str, ...]`
+def _declared(value: object, annotation: object) -> object:
+    """The annotation to walk `value` by: `AuthoringKey` is `tuple[str, ...]`; a slot of several classes walks the value's own."""
+    if annotation is key_and_value_aliases()[0]:
         annotation = annotation.__value__
+    return type(value) if slot_tag(annotation, value) else annotation
+
+
+def _walk(value: object, annotation: object, path: str, owner: type, specs: dict[type, FieldInfo]) -> Iterator[Reference | _Mismatch]:
+    annotation = _declared(value, annotation)
     origin = get_origin(annotation)
     if origin is types.UnionType:
-        member = next(arg for arg in get_args(annotation) if arg is not NoneType)
         if value is not None:
-            yield from _walk(value, member, path, owner, specs)
-    elif origin is tuple:
-        yield from _walk_tuple(value, get_args(annotation)[0], path, owner, specs)
+            yield from _walk(value, optional_arm(annotation), path, owner, specs)
+    elif origin in (tuple, frozenset):
+        yield from _walk_seq(value, annotation, path, owner, specs)
     elif origin is frozendict:
         yield from _walk_mapping(value, get_args(annotation)[1], path, owner, specs)
     elif origin is id_type():
         yield from _walk_id(value, get_args(annotation)[0], path, owner)
-    elif isinstance(annotation, type) and is_value_class(annotation):
+    else:
+        yield from _walk_leaf(value, annotation, path, owner, specs)
+
+
+def _walk_leaf(value: object, annotation: object, path: str, owner: type, specs: dict[type, FieldInfo]) -> Iterator[Reference | _Mismatch]:
+    if isinstance(annotation, type) and is_value_class(annotation):
         yield from _walk_value(value, annotation, path, owner, specs)
-    elif _is_exact(annotation):
+    elif annotation is None or annotation in _EXACT or (isinstance(annotation, type) and issubclass(annotation, Enum)):
         expected = NoneType if annotation is None else annotation
         if type(value) is not expected:
             yield _wrong(path, expected, value)
@@ -125,28 +129,16 @@ def _walk(
         yield from _undeclared(value, path)
 
 
-def _is_exact(annotation: object) -> bool:
-    """Whether a value must be exactly this scalar type, `None`, or this enum's own member."""
-    return (
-        annotation is None
-        or annotation in _EXACT
-        or (isinstance(annotation, type) and issubclass(annotation, Enum))
-    )
-
-
-def _walk_tuple(
-    value: object, item_annotation: object, path: str, owner: type, specs: dict[type, FieldInfo]
-) -> Iterator[Reference | _Mismatch]:
-    if type(value) is not tuple:
-        yield _wrong(path, tuple, value)
+def _walk_seq(value: object, annotation: object, path: str, owner: type, specs: dict[type, FieldInfo]) -> Iterator[Reference | _Mismatch]:
+    container, item_annotation = get_origin(annotation), get_args(annotation)[0]
+    if type(value) is not container:
+        yield _wrong(path, container, value)
         return
-    for index, item in enumerate(value):
+    for index, item in enumerate(cast("tuple[object, ...]", value)):
         yield from _walk(item, item_annotation, f"{path}.{index}", owner, specs)
 
 
-def _walk_mapping(
-    value: object, item_annotation: object, path: str, owner: type, specs: dict[type, FieldInfo]
-) -> Iterator[Reference | _Mismatch]:
+def _walk_mapping(value: object, item_annotation: object, path: str, owner: type, specs: dict[type, FieldInfo]) -> Iterator[Reference | _Mismatch]:
     if type(value) is not frozendict:
         yield _wrong(path, frozendict, value)
         return
@@ -154,20 +146,14 @@ def _walk_mapping(
         yield from _walk(item, item_annotation, _key_path(path, key), owner, specs)
 
 
-def _walk_id(
-    value: object, target: object, path: str, owner: type
-) -> Iterator[Reference | _Mismatch]:
+def _walk_id(value: object, target: object, path: str, owner: type) -> Iterator[Reference | _Mismatch]:
     if type(value) is not id_type():
         yield _wrong(path, id_type(), value)
         return
-    yield Reference(
-        path=path, target=cast("Id[Any]", value), kind=resolve_target(target, owner, path)
-    )
+    yield Reference(path=path, target=cast("Id[Any]", value), kind=resolve_target(target, owner, path))
 
 
-def _walk_value(
-    value: object, value_class: type, path: str, owner: type, specs: dict[type, FieldInfo]
-) -> Iterator[Reference | _Mismatch]:
+def _walk_value(value: object, value_class: type, path: str, owner: type, specs: dict[type, FieldInfo]) -> Iterator[Reference | _Mismatch]:
     if type(value) is not value_class:
         yield _wrong(path, value_class, value)
         return

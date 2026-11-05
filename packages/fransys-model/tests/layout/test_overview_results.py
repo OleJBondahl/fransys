@@ -6,9 +6,7 @@ import pytest
 
 from fransys_model.kernel import Draft, Id, Model, Origin, SchemaError, freeze, make_id
 from fransys_model.layout import (
-    DIAGRAM_KINDS,
     OVERVIEW_KINDS,
-    DiagramSheet,
     OverviewBox,
     OverviewLine,
     OverviewMode,
@@ -62,7 +60,6 @@ def _box(view: OverviewView, item: Item, tabs: tuple[OverviewTab, ...] = ()) -> 
         key=key,
         view=view.id,
         ref=OverviewRef(kind=OverviewRefKind.ITEM, item=item.id),
-        stub_of=None,
         dashed=False,
         x=0,
         y=0,
@@ -73,9 +70,7 @@ def _box(view: OverviewView, item: Item, tabs: tuple[OverviewTab, ...] = ()) -> 
     )
 
 
-def _line(
-    view: OverviewView, a: OverviewBox, b: OverviewBox, points: tuple[RoutePoint, ...]
-) -> OverviewLine:
+def _line(view: OverviewView, a: OverviewBox, b: OverviewBox, points: tuple[RoutePoint, ...]) -> OverviewLine:
     key = (*view.key, "line", a.key[-1], b.key[-1])
     return OverviewLine(
         id=make_id(OverviewLine, key),
@@ -97,13 +92,6 @@ def _freeze(*records: Any) -> Model:
     draft = Draft()
     draft.extend(records, origin=_ORIGIN)
     return freeze(draft)
-
-
-def _sheet() -> DiagramSheet:
-    key = ("sheet", "1")
-    return DiagramSheet(
-        id=make_id(DiagramSheet, key), key=key, unit=None, number=1, produced_by=_STAMP
-    )
 
 
 def test_a_view_a_box_and_a_line_freeze_and_read_back_unchanged() -> None:
@@ -236,22 +224,9 @@ def test_derived_ids_of_the_overview_kinds_are_its_three_kinds_only() -> None:
     view = _view()
     one, two = _box(view, w1), _box(view, w2)
     line = _line(view, one, two, (RoutePoint(index=0, x=1, y=2),))
-    sheet = _sheet()
-    model = _freeze(w1, w2, view, one, two, line, sheet)
+    model = _freeze(w1, w2, view, one, two, line)
     expected = {view.id, one.id, two.id, line.id}
     assert derived_layout_ids(model, kinds=OVERVIEW_KINDS) == tuple(sorted(expected))
-    assert sheet.id not in derived_layout_ids(model, kinds=OVERVIEW_KINDS)
-
-
-def test_derived_ids_of_the_diagram_kinds_leave_the_overview_records_alone() -> None:
-    """Listing DIAGRAM_KINDS names the sheet only; no overview record shows in it."""
-    w1, w2 = _item("W1"), _item("W2")
-    view = _view()
-    one, two = _box(view, w1), _box(view, w2)
-    line = _line(view, one, two, (RoutePoint(index=0, x=1, y=2),))
-    sheet = _sheet()
-    model = _freeze(w1, w2, view, one, two, line, sheet)
-    assert derived_layout_ids(model, kinds=DIAGRAM_KINDS) == (sheet.id,)
 
 
 @pytest.mark.parametrize(
@@ -271,7 +246,6 @@ def test_derived_ids_of_the_diagram_kinds_leave_the_overview_records_alone() -> 
             key=("b",),
             view=Id(kind="layout.overview_view", value="1" * 32),
             ref=OverviewRef(kind=OverviewRefKind.STRIPS),
-            stub_of=None,
             dashed=False,
             x=0,
             y=0,

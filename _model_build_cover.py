@@ -31,38 +31,74 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import fransys as fr
+import fransys_parts
+from demo_designs import cabinet_design
+from fransys_author.design import Design
 
-from fransys_model.vocab import DocumentPreset, PageKind
+from fransys_model.kernel import Origin
+from fransys_model.vocab import Aspect, AspectNode, DocumentPreset, Unit
 
 if TYPE_CHECKING:
+    from fransys import BuildResult
+
     from fransys_model.kernel import Draft
 
 _COVER = Path(__file__).resolve().parent / "tests" / "_model_build_cover.md"
-_EMPTY_ON_A_BLANK_MODEL = (PageKind.HARNESS_DRAWING, PageKind.CABLE_LIST, PageKind.BOM)
-_KEEPS_LAYOUT = (PageKind.SCHEMATIC,)
 
 
 def system_document() -> Draft:
-    """A `SYSTEM` document draft with no page that could report itself empty."""
-    return fr.document(DocumentPreset.SYSTEM, None, cover=_COVER, remove=_EMPTY_ON_A_BLANK_MODEL)
+    """A `SYSTEM` document draft (the preset's own pages; no subject)."""
+    return fr.document(DocumentPreset.SYSTEM, None, cover=_COVER)
 
 
-def layout_trigger_document() -> Draft:
-    """SYSTEM plus SCHEMATIC so fr.build lays out; it never checks or writes clean (DOCUMENT_NO_DRAWINGS)."""  # noqa: E501 -- the ruled one-line docstring
-    return fr.document(
-        DocumentPreset.SYSTEM,
-        None,
-        cover=_COVER,
-        add=_KEEPS_LAYOUT,
-        remove=_EMPTY_ON_A_BLANK_MODEL,
-    )
+def layout_trigger_document(subject: object = None) -> Draft:
+    """A `CABINET_SCHEMATIC` draft whose SCHEMATIC page makes `fr.build` lay out; `subject` is what it prints.
+
+    With no `subject` it prints the location `LT`, which it adds; a build that must hold no ERROR names its own.
+    """
+    if subject is not None:
+        return fr.document(DocumentPreset.CABINET_SCHEMATIC, subject, cover=_COVER)
+    design = Design(fransys_parts.load("demo_parts"))
+    document = fr.document(DocumentPreset.CABINET_SCHEMATIC, design.location("LT", "Layout trigger"), cover=_COVER)
+    draft = design.draft()
+    draft.extend(document.records(), origin=Origin(file=__file__, line=1, note="layout trigger"))
+    return draft
+
+
+def printed(draft: Draft) -> tuple[Draft, ...]:
+    """`draft` and a `CABINET_SCHEMATIC` document for each of its locations and top-level units: every drawing set of the build prints."""
+    subjects = [
+        r.id for r in draft.records() if (isinstance(r, AspectNode) and r.aspect is Aspect.LOCATION) or (isinstance(r, Unit) and r.parent is None)
+    ]
+    return (draft, *(cabinet_document(subject) for subject in subjects)) if subjects else (draft, layout_trigger_document())
 
 
 def cabinet_document(location: object) -> Draft:
-    """A `CABINET_SCHEMATIC` draft for `location`, SCHEMATIC kept: its page finds drawings."""
-    return fr.document(
-        DocumentPreset.CABINET_SCHEMATIC,
-        location,
-        cover=_COVER,
-        remove=(PageKind.PLC_LIST, PageKind.TERMINAL_LIST, PageKind.BOM),
-    )
+    """A `CABINET_SCHEMATIC` draft for `location`: its page finds drawings."""
+    return fr.document(DocumentPreset.CABINET_SCHEMATIC, location, cover=_COVER)
+
+
+def cabinet_build() -> BuildResult:
+    """The demo cabinet design built with its `CABINET_SCHEMATIC` document."""
+    parts = fransys_parts.load("demo_parts")
+    return fr.build(parts, cabinet_design(parts).draft(), cabinet_document(Design(parts).location("C1", "Demo cabinet")))
+
+
+def error_codes(result: BuildResult) -> set[str]:
+    """The codes of the ERROR findings `fr.check` reports on a build."""
+    return {f.code for f in fr.check(result) if f.severity is fr.Severity.ERROR}
+
+
+def error_messages(result: BuildResult) -> list[str]:
+    """The messages of the ERROR findings the build itself carries."""
+    return [f.message for f in result.findings if f.severity == fr.Severity.ERROR]
+
+
+def schematic_document(name: str) -> Draft:
+    """A `CABINET_SCHEMATIC` draft for the location `name`, every default page kept."""
+    return fr.document(DocumentPreset.CABINET_SCHEMATIC, name, cover=_COVER)
+
+
+def unit_document(unit: object) -> Draft:
+    """A `CABINET_SCHEMATIC` draft for `unit` with its default pages: the unit's drawing set is printed."""
+    return fr.document(DocumentPreset.CABINET_SCHEMATIC, unit, cover=_COVER)

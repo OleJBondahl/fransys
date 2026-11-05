@@ -1,4 +1,4 @@
-schema = 1
+schema = 2
 
 [part]
 mpn = "DEMO-FUSE-ABAT"
@@ -17,10 +17,10 @@ ports = [
 ]
 links = [{ a = "1", b = "2", kind = "protective" }]
 
-[function.protection]
+[function.block]
 type = "fuse"
+breaking_capacity = [{ min = "4000 A" }]
 
 [function.rating]
-voltage_dc_v = "1500"
-current_dc_a = "400"
-min_breaking_current_a = "4000"
+voltage = [{ nom = "1500 V", at = ["DC"] }]
+current = [{ nom = "400 A", at = ["DC"] }]

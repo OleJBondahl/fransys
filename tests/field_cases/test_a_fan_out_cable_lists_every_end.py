@@ -1,12 +1,6 @@
-"""Field case: a cable with one near end and three far ends lists every end.
-
-The engineering shape: a 1:3 fan-out cable. Core 1 runs from a header J1 to J2, core 2 to J3
-and core 3 to J4, so the cable has four ends.
-
-The bug: the cable list row named the first two ends only and dropped J3 and J4 without a
-finding. Fixed by decision model-0155 (ruling CD-H4): From is the first end, To lists every
-other end in `cable_end_rank` order, joined by ", ".
-"""
+"""Field case: a 1:3 fan-out cable, core 1 from header J1 to J2, core 2 to J3, core 3 to J4, has four ends.
+The bug: the cable list row named the first two ends only and dropped J3 and J4 without a finding.
+Fixed by model-0155, From is the first end and To lists every other end in cable_end_rank order, joined by a comma."""
 
 import fransys as fr
 import pytest
@@ -19,17 +13,13 @@ _CABLE = "DEMO-CBL-4G1.5"
 
 @pytest.fixture(scope="module")
 def built() -> fr.BuildResult:
-    """Loom W1 holding one cable, J1 on its near side and J2, J3, J4 on its far side."""
+    """One cable, J1 on its near side and J2, J3, J4 on its far side."""
     d = fr.design("demo_parts")
     d.location("L0", "Workshop")
-    with d.function("W1", "Loom W1"):
-        loom = d.harness("W1", place="L0")
-        near, *far = (
-            d.device(tag, _PLUG, parent=loom, place="L0") for tag in ("J1", "J2", "J3", "J4")
-        )
-        cable = d.cable("W1", _CABLE, parent=loom, name="fan", place="L0")
-        for core, end in enumerate(far, start=1):
-            cable.core(core, near[core], end[core])
+    near, *far = (d.device(tag, _PLUG, place="L0") for tag in ("J1", "J2", "J3", "J4"))
+    cable = d.cable("W1", _CABLE, name="fan", place="L0")
+    for core, end in enumerate(far, start=1):
+        cable.core(core, near[core], end[core])
     return fr.build(d)
 
 

@@ -3,6 +3,7 @@
 from functools import cache
 
 import fransys as fr
+from fransys.colours import BU
 
 
 @cache
@@ -15,6 +16,7 @@ def _model() -> fr.Model:
     w1.spare(3, at=x1[7])
     w1.core(5, x1[8])
     w1.spare()
+    d.series(h1[2], x1[2], wire=(BU, 0.75))
     return fr.build(d).model
 
 

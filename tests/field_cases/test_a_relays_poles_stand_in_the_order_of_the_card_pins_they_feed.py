@@ -1,25 +1,15 @@
-"""Field case: a relay's poles feed a card's pins, and the poles stand in the pins' order (R11).
+"""Field case: a relay's poles feed a card's pins, and the poles stand in the order of the pins they feed (R11).
+The bug: the card printed its pins in marking order, but the poles kept the relay's own order, so the three wires crossed.
+Fixed by layout-0264, every column wired to a box's pins takes the order of the pins it lands on (a device's poles may reverse)."""
 
-The engineering shape: a relay with three independent changeover contacts, each common fed from
-its own pin of a controller. Each make throw runs to a pin of an output card whose pins are marked
-13, 23 and 43. Pole 1 feeds pin 43, pole 2 pin 23, pole 3 pin 13.
-
-The bug: the card printed 13 23 43 in marking order, but the poles kept the relay's own order
-(1, 2, 3), so the three wires from the poles to the pins crossed.
-
-The rule (layout-0264): every column wired to a box's pins, above or below, takes the order of
-the pins it lands on; a device's poles may reverse their column order to match.
-"""
-
-import itertools
-import tempfile
 from functools import cache
-from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import fransys as fr
 from _drawn_facts import symbol_subjects
 from _drawn_pages import drawn_pages
+from _field_designs import wire_crossings
+from _model_build_cover import unit_document
 from fransys.colours import BU
 
 from fransys_model.vocab.tables import functions
@@ -44,30 +34,12 @@ def _built() -> Model:
         relay = d.device("K1", "DEMO-RLY-4CO-24")
     for pole, pin in FEEDS.items():
         contact = getattr(relay, f"co_{pole}")
-        d.detail.wire(source.X1[str(pole)], contact[f"{pole}1"], wire=WIRE)
-        d.detail.wire(contact[f"{pole}4"], card[pin], wire=WIRE)
-    cover = Path(tempfile.mkdtemp()) / "cover.md"
-    cover.write_text("# Cabinet\n", encoding="utf-8")
-    return fr.build(d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover)).model
+        d.series(source.X1[str(pole)], contact[f"{pole}1"], wire=WIRE)
+        d.series(contact[f"{pole}4"], card[pin], wire=WIRE)
+    return fr.build(d, unit_document(cab)).model
 
 
-def _crossings(wires: tuple) -> int:
-    """Horizontal-over-vertical crossings, strictly inside both segments, between drawn wires."""
-    found = 0
-    for one, two in itertools.combinations(wires, 2):
-        for (a0, a1), (b0, b1) in itertools.product(
-            itertools.pairwise(one.points), itertools.pairwise(two.points)
-        ):
-            if (a0[1] == a1[1]) == (b0[1] == b1[1]):
-                continue
-            (h0, h1), (v0, v1) = ((a0, a1), (b0, b1)) if a0[1] == a1[1] else ((b0, b1), (a0, a1))
-            found += min(h0[0], h1[0]) < v0[0] < max(h0[0], h1[0]) and min(v0[1], v1[1]) < h0[
-                1
-            ] < max(v0[1], v1[1])
-    return found
-
-
-def _x_of_poles_and_pins() -> tuple[dict[int, int], dict[str, int], dict[str, str]]:
+def _x_of_poles_and_pins() -> tuple[dict[Any, Any], dict[Any, Any], dict[Any, Any]]:
     """The x of each K1 pole's symbol, of each DO1 pin (box origin plus offset) and its side."""
     model = _built()
     name_of = {f.id.value: f.name for f in functions(model).values()}
@@ -94,4 +66,4 @@ def test_the_poles_stand_in_the_order_of_the_pins_they_feed_and_no_wire_crosses(
     assert sorted(poles, key=lambda pole: pins[FEEDS[pole]]) == sorted(poles, key=poles.__getitem__)
     drawings = drawn_pages(_built()).values()
     assert sum(len(d.wires) for d in drawings) == 6, "every wire is drawn"
-    assert sum(_crossings(d.wires) for d in drawings) == 0
+    assert sum(wire_crossings(d.wires) for d in drawings) == 0

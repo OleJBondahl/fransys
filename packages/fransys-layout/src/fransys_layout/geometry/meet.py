@@ -15,15 +15,11 @@ if TYPE_CHECKING:
 type Span = tuple[int, int]
 
 
-def meets(
-    a: Span, b: Span, *, closed: bool = True, open_a: tuple[bool, bool] = (False, False)
-) -> bool:
+def meets(a: Span, b: Span, *, closed: bool = True, open_a: tuple[bool, bool] = (False, False)) -> bool:
     """Whether span `a` meets span `b`; `open_a` leaves one end of `a` out of a closed test."""
     low_strict = not closed or open_a[0]
     high_strict = not closed or open_a[1]
-    return (b[1] > a[0] if low_strict else b[1] >= a[0]) and (
-        b[0] < a[1] if high_strict else b[0] <= a[1]
-    )
+    return (b[1] > a[0] if low_strict else b[1] >= a[0]) and (b[0] < a[1] if high_strict else b[0] <= a[1])
 
 
 def boxes_meet(a: Box, b: Box, *, closed: bool, gap: int = 0) -> bool:

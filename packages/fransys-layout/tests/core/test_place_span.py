@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import replace
 from typing import TYPE_CHECKING
 
-from fransys_layout.core import Room
+from fransys_layout.core import Box
 from fransys_layout.core.place_env import page_envs
 from fransys_layout.core.place_span import solved_spans
 
@@ -58,9 +58,26 @@ def test_a_symbols_reach_holds_its_column_and_block_spans_out() -> None:
     env = page_envs(cut, prob, PLAIN)[0]
     placed: dict[str, Placed] = {p.sym: p for p in page.placed}
     bare = solved_spans(env, placed, page.trunks)
-    held = solved_spans(env, placed, page.trunks, rooms={"k1": Room(up=80, down=64)})
+    k1 = placed["k1"]
+    f = k1.footprint
+    wide = replace(k1, footprint=Box(f.x, f.y - 80, f.w, f.h + 144))
+    held = solved_spans(env, {**placed, "k1": wide}, page.trunks)
     assert held["c:k1"][0] < bare["c:k1"][0]
     assert held["c:k1"][1] == bare["c:k1"][1] + 64
     assert held["fan:c:k1"][0] <= bare["fan:c:k1"][0]
     assert held != bare
-    assert solved_spans(env, placed, page.trunks, rooms={}) == bare
+    assert solved_spans(env, placed, page.trunks) == bare
+
+
+def test_a_spans_band_is_the_room_the_solve_held_for_its_trunk() -> None:
+    """ROW-ON-GRID: the span reads `Trunk.room`, so a deeper room the solve held reaches the cut."""
+    prob = fan_legs()
+    cut = cut_of(prob, PLAIN)
+    page = placed_from(cut, prob, PLAIN).pages[0]
+    env = page_envs(cut, prob, PLAIN)[0]
+    assert page.trunks
+    placed: dict[str, Placed] = {p.sym: p for p in page.placed}
+    before = solved_spans(env, placed, page.trunks)["fan:c:k1"]
+    deep = replace(page.trunks[0], room=(page.trunks[0].room[0], page.trunks[0].room[1] + 400))
+    after = solved_spans(env, placed, (deep, *page.trunks[1:]))["fan:c:k1"]
+    assert after[1] == page.trunks[0].y + deep.room[1] > before[1]

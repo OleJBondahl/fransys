@@ -43,9 +43,7 @@ def _load_lean_ceilings() -> types.ModuleType:
     """Load `scripts/lean_ceilings.py` the way its own tests do, reusing a prior load."""
     if _LEAN_CEILINGS_NAME in sys.modules:
         return sys.modules[_LEAN_CEILINGS_NAME]
-    spec = importlib.util.spec_from_file_location(
-        _LEAN_CEILINGS_NAME, _SCRIPTS_DIR / "lean_ceilings.py"
-    )
+    spec = importlib.util.spec_from_file_location(_LEAN_CEILINGS_NAME, _SCRIPTS_DIR / "lean_ceilings.py")
     if spec is None or spec.loader is None:
         msg = "could not load scripts/lean_ceilings.py"
         raise ImportError(msg)
@@ -142,10 +140,7 @@ def measure_ruff_sections(root: Path) -> dict[str, dict[str, int]]:
         check=False,
     )
     if completed.returncode not in (0, 1):
-        msg = (
-            f"ruff check exited {completed.returncode} (0=clean, 1=findings expected); "
-            f"stderr: {completed.stderr}"
-        )
+        msg = f"ruff check exited {completed.returncode} (0=clean, 1=findings expected); stderr: {completed.stderr}"
         raise RuntimeError(msg)
     findings = json.loads(completed.stdout or "[]")
     if completed.returncode == 1 and not findings:
@@ -195,7 +190,7 @@ class UnreasonedSite:
 def _reason(comment: str) -> str | None:
     """The trailing reason text of a `# noqa`/`# ty: ignore` comment, or `None` if neither."""
     match = _NOQA_RE.match(comment) or _TY_IGNORE_RE.match(comment)
-    return None if match is None else match.group(1).strip()
+    return None if match is None else str(match.group(1).strip())
 
 
 def unreasoned_sites(paths: Iterable[Path], root: Path) -> tuple[UnreasonedSite, ...]:
@@ -220,9 +215,7 @@ def unreasoned_sites(paths: Iterable[Path], root: Path) -> tuple[UnreasonedSite,
     return tuple(sites)
 
 
-def report_unreasoned(
-    sites: tuple[UnreasonedSite, ...], exempt: Mapping[str, str]
-) -> tuple[UnreasonedSite, ...]:
+def report_unreasoned(sites: tuple[UnreasonedSite, ...], exempt: Mapping[str, str]) -> tuple[UnreasonedSite, ...]:
     """Drop every `sites` entry under a directory-scope `[exempt]` entry.
 
     Matches via `lean_ceilings.is_exempt_under` (subtree scope), never plain `site in exempt`

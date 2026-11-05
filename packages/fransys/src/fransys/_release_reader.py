@@ -8,10 +8,13 @@ import dataclasses
 import json
 import re
 from typing import Any, cast
+lazy from collections.abc import Mapping
 lazy from pathlib import Path
 
 from fransys_model.derive import baseline, numbering_pins
 from fransys_model.derive.baseline import StoredRelease, StoredReleases
+
+from .errors import FransysError
 
 _REVISION_DIR_RE = re.compile(r"[0-9]+\.[0-9]+")
 # Every file a release folder holds beside its exports, by role, as its path in the folder (R07).
@@ -86,11 +89,6 @@ def stored_listing(folder: Path) -> str | None:
     return _text(folder / BASELINE_FILES["listing"])
 
 
-def stored_numbering(folder: Path) -> str | None:
-    """`folder`'s stored `baseline/numbering.json` text, or `None` when it has none."""
-    return _text(folder / BASELINE_FILES["numbering"])
-
-
 def listed_siblings(parent: Path) -> tuple[tuple[Path, str], ...]:
     """Each `<version>.<revision>` folder of `parent` that has a stored listing, with its text."""
     pairs = ((folder, stored_listing(folder)) for folder in revision_dirs(parent))
@@ -117,7 +115,7 @@ def _broken(folder: Path, why: str) -> ValueError:
     return ValueError(f"{manifest_path(folder)}: {why}")
 
 
-def _pin(folder: Path, row: Any) -> ReleasePin:  # noqa: ANN401 -- a JSON value, checked below
+def _pin(folder: Path, row: Mapping[str, object]) -> ReleasePin:
     try:
         return ReleasePin(
             name=_typed(row["name"], str),
@@ -131,11 +129,11 @@ def _pin(folder: Path, row: Any) -> ReleasePin:  # noqa: ANN401 -- a JSON value,
 
 def _typed[T](value: object, kind: type[T]) -> T:
     if type(value) is not kind:
-        raise TypeError(value)
+        raise FransysError(value)
     return cast("T", value)
 
 
-def _file_pair(folder: Path, row: Any) -> tuple[str, str]:  # noqa: ANN401 -- a JSON value
+def _file_pair(folder: Path, row: Mapping[str, object]) -> tuple[str, str]:
     try:
         return _typed(row["path"], str), _typed(row["sha256"], str)
     except (KeyError, TypeError) as error:
@@ -218,9 +216,7 @@ def read_release(folder: Path) -> Release:
     version, revision = _folder_order(folder)
     identity = {"name": folder.parent.name, "version": version, "revision": revision}
     if not has_manifest(folder):
-        return Release(
-            **identity, interface="", listing_digest="", nested=(), files=(), path=folder
-        )
+        return Release(**identity, interface="", listing_digest="", nested=(), files=(), path=folder)
     interface, digest, nested, files = manifest_fields(folder)
     return Release(
         **identity,
@@ -264,7 +260,7 @@ def read_stored(parent: Path) -> StoredReleases:
     """
     stored = []
     for folder, listing_text in listed_siblings(parent):
-        numbering_text = stored_numbering(folder)
+        numbering_text = _text(folder / BASELINE_FILES["numbering"])
         numbering = None if numbering_text is None else numbering_pins.loads(numbering_text)
         stored.append(
             StoredRelease(

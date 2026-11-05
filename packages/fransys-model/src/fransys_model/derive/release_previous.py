@@ -9,9 +9,7 @@ lazy from .rows_baseline import Listing, ReleaseIdentity, StoredRelease, StoredR
 __all__ = ["pin_source", "pin_source_pins", "previous_release", "previous_release_listing"]
 
 
-def _highest(
-    candidates: tuple[StoredRelease, ...], ceiling: ReleaseOrder, *, inclusive: bool
-) -> StoredRelease | None:
+def _highest(candidates: tuple[StoredRelease, ...], ceiling: ReleaseOrder, *, inclusive: bool) -> StoredRelease | None:
     """The first candidate of the highest `order` below `ceiling` (at it too when `inclusive`)."""
     best: StoredRelease | None = None
     for candidate in candidates:
@@ -39,8 +37,7 @@ def pin_source(stored: StoredReleases, identity: ReleaseIdentity) -> StoredRelea
     same = tuple(
         r
         for r in stored.releases
-        if r.numbering is not None
-        and same_version((r.identity.name, r.identity.version), (identity.name, identity.version))
+        if r.numbering is not None and same_version((r.identity.name, r.identity.version), (identity.name, identity.version))
     )
     return _highest(same, release_order(identity.version, identity.revision), inclusive=True)
 
@@ -51,9 +48,7 @@ def previous_release_listing(stored: StoredReleases, identity: ReleaseIdentity) 
     return None if previous is None else previous.listing
 
 
-def pin_source_pins(
-    stored: StoredReleases, identity: ReleaseIdentity
-) -> tuple[str, NumberingPins] | None:
+def pin_source_pins(stored: StoredReleases, identity: ReleaseIdentity) -> tuple[str, NumberingPins] | None:
     """The folder name and numbering of `pin_source`, or `None` when it has no numbering."""
     source = pin_source(stored, identity)
     if source is None or source.numbering is None:

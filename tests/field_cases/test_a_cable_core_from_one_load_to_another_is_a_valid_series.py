@@ -1,14 +1,6 @@
-"""Field case: an earth core goes to a PE end only; with none, too few cores is an error.
-
-The engineering shape: a multi-pole load joined by a multi-core cable to another load. One core is
-the earth core (GNYE). It lands on a PE port or a strip's PE terminal, never on a pole.
-
-The bug (work order API-FRICTION-3 item 7): a motor with U V W and PE, fed through a four-core
-cable from a three-pole breaker, must put the GNYE core on the PE port. With no PE end and more
-poles than non-earth cores, the series is refused with an error that names the cable, both counts
-and the fix (designer 2026-10-16, option (a): no positional fallback). Demo parts: DEMO-MOTOR-4KW,
-DEMO-ISO-4P, DEMO-CBL-4G1.5. Decision author-0061 (API-FRICTION-3 item 7).
-"""
+"""Field case: a multi-pole load joined by a multi-core cable to another load, one core of it the earth core (GNYE).
+The bug (API-FRICTION-3 item 7): a motor (U V W PE) fed by a four-core cable from a three-pole breaker must put GNYE on the PE port.
+Fixed by author-0061 (option (a), designer 2026-10-16), an earth core goes to a PE end only, else the series is refused with the fix."""
 
 import fransys as fr
 import pytest
@@ -34,9 +26,7 @@ def _pe_design() -> fr.Design:
 
 
 def _cores(d: fr.Design) -> list[tuple[int, str, str, str]]:
-    return [
-        (r.core, r.colour, r.end_a, r.end_b) for r in fr.derive.core_list_rows(fr.build(d).model)
-    ]
+    return [(r.core, r.colour, r.end_a, r.end_b) for r in fr.derive.core_list_rows(fr.build(d).model)]
 
 
 def test_with_no_pe_end_and_too_few_cores_the_series_is_refused() -> None:

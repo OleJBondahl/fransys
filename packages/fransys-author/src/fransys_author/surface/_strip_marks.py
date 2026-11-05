@@ -29,16 +29,11 @@ def check_marks(tag: str, count: int | None, **specs: Marks) -> None:
             raise AuthorError(msg)
         for number in spec:
             if isinstance(number, bool) or not isinstance(number, int) or not 1 <= number <= count:
-                msg = (
-                    f"{tag}: {keyword}={spec} names terminal {number!r}, outside 1..{count}: "
-                    f"name numbers from 1 to {count}"
-                )
+                msg = f"{tag}: {keyword}={spec} names terminal {number!r}, outside 1..{count}: name numbers from 1 to {count}"
                 raise AuthorError(msg)
 
 
-def check_run_marks(
-    tag: str, strip_spec: tuple[Marks, Marks], *, interface: Marks, unused: Marks
-) -> None:
+def check_run_marks(tag: str, strip_spec: tuple[Marks, Marks], *, interface: Marks, unused: Marks) -> None:
     """Raise when a run marks (`interface=True`, `unused=True`) a strip that already marks all."""
     if (interface or unused) and any(spec is True for spec in strip_spec):
         msg = (
@@ -57,9 +52,7 @@ def _ranges(tag: str, count: int | None, bridged: Bridged) -> tuple[tuple[int, i
         raise AuthorError(msg)
     if bridged is True:
         if count < _PAIR:
-            msg = (
-                f"{tag}: bridged=True needs a strip of at least 2 terminals, got a count of {count}"
-            )
+            msg = f"{tag}: bridged=True needs a strip of at least 2 terminals, got a count of {count}"
             raise AuthorError(msg)
         return ((1, count),)
     pairs = (bridged,) if isinstance(bridged[0], int) else bridged
@@ -90,3 +83,26 @@ def bridge_ranges(strip: TerminalStrip, bridged: Bridged) -> None:
         strip._bridge(*(strip._terminal(number) for number in numbers))
         if strip._now() is not None:  # outside every block each terminal joins its first block
             strip._claim(*numbers)
+
+
+def rail_numbers(tag: str, count: int | None, bridged: Bridged, *, rail: bool) -> range | None:
+    """The terminal numbers `rail=True` flags: the one bridged group, else a lone terminal; `None` for no flag.
+
+    Raises `AuthorError` when the call names no one group: several ranges, an unbridged
+    group of more than one terminal, or a strip with no count.
+    """
+    if not rail:
+        return None
+    if count is None:
+        msg = f"{tag}: rail=True flags the terminals by number, so give it a count"
+        raise AuthorError(msg)
+    ranges = _ranges(tag, count, bridged)
+    if len(ranges) > 1:
+        msg = f"{tag}: rail=True flags one group, and bridged names {len(ranges)} ranges: flag each group with run(..., rail=True)"
+        raise AuthorError(msg)
+    if ranges:
+        return range(ranges[0][0], ranges[0][1] + 1)
+    if count > 1:
+        msg = f"{tag}: a rail is one bridged group: add bridged=True, or give a count of 1"
+        raise AuthorError(msg)
+    return range(1, 2)

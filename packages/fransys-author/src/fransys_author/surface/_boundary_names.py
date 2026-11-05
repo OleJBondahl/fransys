@@ -11,7 +11,7 @@ from fransys_model.derive import nested_boundary_functions
 from fransys_model.kernel import make_id
 from fransys_model.vocab import Boundary, Function
 
-from ._unused import _handles, _own
+from ._unused import UnitResult, _handles, _own
 
 if TYPE_CHECKING:
     from fransys_author.design import Scope
@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 def _field_functions(value: object, field: str) -> list[Any]:
     """The engine functions a field holds; a handle kind `unused=` does not know holds none."""
     found = []
-    for handle in _handles(value, field, None):
+    for handle in _handles(value):
         try:
             found.extend(_own(handle, field, None))
         except AuthorError:
@@ -54,7 +54,7 @@ def _pass_through(scope: Scope, names: dict[Any, str]) -> None:
             scope._design._add(record, caller_origin())
 
 
-def write_boundaries(scope: Scope, result: Any) -> None:  # noqa: ANN401 -- the unit's own NamedTuple
+def write_boundaries(scope: Scope, result: UnitResult) -> None:
     """Write the boundaries `scope` held, each named by its first field, and stop holding.
 
     A field that holds a boundary function of a directly nested unit makes it this unit's too
@@ -68,7 +68,5 @@ def write_boundaries(scope: Scope, result: Any) -> None:  # noqa: ANN401 -- the 
     for record, origin, only_if_named in held:
         if only_if_named and record.function not in names:
             continue  # `unused=` alone marks a boundary only on a function the interface holds
-        scope._design._add(
-            dataclasses.replace(record, name=record.name or names.get(record.function)), origin
-        )
+        scope._design._add(dataclasses.replace(record, name=record.name or names.get(record.function)), origin)
     _pass_through(scope, names)

@@ -10,9 +10,7 @@ def _same[S](state: S) -> S:
     return state
 
 
-def follow[S](
-    start: S, step: Callable[[S], S | None], *, key: Callable[[S], object] = _same
-) -> list[S]:
+def follow[S](start: S, step: Callable[[S], S | None], *, key: Callable[[S], object] = _same) -> list[S]:
     """`start`, then `step` of each, until `None` or a repeated `key` (the repeat is left out)."""
     seen = {key(start)}
     states = [start]

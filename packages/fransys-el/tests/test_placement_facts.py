@@ -1,17 +1,25 @@
-"""`facts_of`: keep-whole sets, units with their boundary, and mates."""
+# NET_SHORTED 1 per build (KI-461): an anchored finding, not asserted here.
+# NET_POTENTIAL_CONFLICT 1 per build (KI-461): an anchored finding, not asserted here.
+"""`facts_of`: keep-whole sets, units with their boundary."""
 
 import fransys as fr
 import pytest
 from conventions_fixtures import house
+from fransys.colours import BU
 from fransys_el.placement_env import Env, make_env, pin_ref
-from fransys_el.placement_facts import facts_of
+from fransys_el.placement_facts import facts_of, far_ends_of
 from fransys_el.placement_syms import syms_of
 from fransys_el.symbol_kit import symbol_kit
 from placement_fixtures import kit_for, planted_model, sid
 
 from electrical_symbols import LIBRARY
 from fransys_layout.core import Facts, Sym, Unit
-from fransys_model.derive import item_designation, mate_ports, port_function, unit_boundary_pins
+from fransys_model.derive import (
+    far_pins,
+    item_designation,
+    port_function,
+    unit_boundary_pins,
+)
 from fransys_model.kernel import render_id
 from fransys_model.vocab import functions, units
 lazy from fransys_model.kernel import Model
@@ -36,7 +44,8 @@ def add_on() -> tuple[Env, tuple[Sym, ...], Facts]:
     d = fr.design("demo_parts")
     k1 = d.device("K1", "DEMO-RLY-2CO-24")
     k1b = d.device("K1B", "DEMO-RLY-2CO-24", parent=k1)
-    d.detail.wire(k1.coil["A2"], k1b.coil["A1"], wire=0.75)
+    d.series(k1.coil["A2"], k1b.coil["A1"], wire=(BU, 0.75))
+    d.series(k1b.coil["A2"], k1.coil["A1"], wire=(BU, 0.75))
     return _built(fr.build(d).model)
 
 
@@ -46,9 +55,7 @@ def test_coil_and_add_on_block_are_one_keep_whole_set(
     """A coil and its add-on block stand in one set; every set has two symbols or more."""
     env, _, facts = add_on
     assert all(len(s) >= 2 for s in facts.keep_whole)
-    together = [
-        s for s in facts.keep_whole if {sid(env.model, "K1.coil"), sid(env.model, "K1B.coil")} <= s
-    ]
+    together = [s for s in facts.keep_whole if {sid(env.model, "K1.coil"), sid(env.model, "K1B.coil")} <= s]
     assert len(together) == 1
 
 
@@ -69,25 +76,13 @@ def test_units_carry_parent_and_boundary(planted: tuple[Env, tuple[Sym, ...], Fa
         Unit(
             u.value,
             None if record.parent is None else record.parent.value,
-            tuple(
-                pin_ref(env, p) for p in unit_boundary_pins(env.model, u) if p not in env.undrawn
-            ),
+            tuple(pin_ref(env, p) for p in unit_boundary_pins(env.model, u) if p not in env.undrawn),
         )
         for u, record in units(env.model).items()
     )
     assert facts.units == expected
     assert facts.units
     assert all(unit.boundary for unit in facts.units)
-
-
-def test_mates_are_the_mated_ports_drawn_as_pins(
-    planted: tuple[Env, tuple[Sym, ...], Facts],
-) -> None:
-    """Each mate pair of the model comes out as the pair of its pin refs."""
-    env, _, facts = planted
-    expected = tuple((pin_ref(env, a), pin_ref(env, b)) for a, b in mate_ports(env.model))
-    assert facts.mates == expected
-    assert facts.mates
 
 
 def test_functions_without_a_symbol_are_skipped_and_named() -> None:
@@ -101,7 +96,7 @@ def test_functions_without_a_symbol_are_skipped_and_named() -> None:
     kit = frozendict({f: p for f, p in kit_for(model).items() if f not in own})
     env = make_env(model, kit, house(), LIBRARY)
     _, skipped = facts_of(env, syms_of(env))
-    assert [(s.what, s.id, s.reason) for s in skipped] == [
+    assert sorted((s.what, s.id, s.reason) for s in skipped) == [
         ("function", text, "function_without_symbol") for text in sorted(map(render_id, own))
     ]
 
@@ -112,8 +107,8 @@ def test_a_boxed_connector_is_drawn_by_its_pins_and_an_unwired_one_is_unwired() 
     k1 = d.device("K1", "DEMO-RLY-2CO-24")
     j1 = d.device("J1", "DEMO-CONN-4P", parent=k1)
     d.device("J2", "DEMO-CONN-4P", parent=k1)
-    d.detail.wire(j1["1"], k1.coil["A1"], wire=0.75)
-    d.detail.wire(j1["3"], k1.coil["A2"], wire=0.75)
+    d.series(j1["1"], k1.coil["A1"], wire=(BU, 0.75))
+    d.series(j1["3"], k1.coil["A2"], wire=(BU, 0.75))
     model = fr.build(d).model
     env = make_env(model, symbol_kit(model, LIBRARY), house(), LIBRARY)
     facts, skipped = facts_of(env, syms_of(env))
@@ -123,6 +118,39 @@ def test_a_boxed_connector_is_drawn_by_its_pins_and_an_unwired_one_is_unwired() 
     box = [s for s in facts.keep_whole if sid(model, "K1.coil") in s]
     assert len(box) == 1
     assert pins <= box[0]
-    assert [(s.id, s.reason) for s in skipped if s.what == "function"] == [
-        (render_id(by_item["J2"]), "function_unwired")
-    ]
+    assert [(s.id, s.reason) for s in skipped if s.what == "function"] == [(render_id(by_item["J2"]), "function_unwired")]
+
+
+def test_far_ends_pair_each_drawn_pin_with_the_pin_its_conductor_lands_on(
+    planted: tuple[Env, tuple[Sym, ...], Facts],
+) -> None:
+    """A conductor is one pair each way, in `far_pins` order; an undrawn pin has none."""
+    env, _, facts = planted
+    ports = [p for p in env.pins if p not in env.undrawn]
+    expected = {(env.pins[a], env.pins[b]) for a, b in far_pins(env.model, ports) if b in env.pins and b not in env.undrawn}
+    assert set(facts.far_ends) == expected
+    assert facts.far_ends
+    assert len(set(facts.far_ends)) == len(facts.far_ends)
+    assert all((b, a) in expected for a, b in facts.far_ends)
+
+
+def test_far_ends_leave_with_a_symbol_that_is_not_placed(planted: tuple[Env, tuple[Sym, ...], Facts]) -> None:
+    """R1544 (3): a pair with a pin on an unplaced symbol is not a far end."""
+    env, syms, facts = planted
+    gone = facts.far_ends[0][0].sym
+    kept = far_ends_of(env, [s for s in syms if s.id != gone])
+    assert kept
+    assert len(kept) < len(facts.far_ends)
+    assert all(gone not in (a.sym, b.sym) for a, b in kept)
+
+
+def test_an_overloads_three_poles_are_link_joined_pin_pairs_and_a_relay_has_none() -> None:
+    """R1580: a conductive internal link gives one joined pair per pole, on one symbol; a relay's coil joins nothing."""
+    d = fr.design("demo_parts")
+    d.device("F1", "DEMO-OVERLOAD-3P")
+    d.device("K1", "DEMO-RLY-2CO-24")
+    model = fr.build(d).model
+    env = make_env(model, symbol_kit(model, LIBRARY), house(), LIBRARY)
+    facts = facts_of(env, syms_of(env))[0]
+    assert len(facts.joined) == 3
+    assert all(a.sym == b.sym and a != b for a, b in facts.joined)

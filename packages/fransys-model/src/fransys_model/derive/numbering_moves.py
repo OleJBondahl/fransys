@@ -19,9 +19,7 @@ def same_place(pin: NumberingItem, current: NumberingItem | PinPosition) -> bool
     return (current.scope, current.code) == (pin.scope, pin.code)
 
 
-def gone_or_moved(
-    source: NumberingPins, current: Iterable[NumberingItem | PinPosition]
-) -> tuple[NumberingRetired, ...]:
+def gone_or_moved(source: NumberingPins, current: Iterable[NumberingItem | PinPosition]) -> tuple[NumberingRetired, ...]:
     """Every `source` pin no longer matched by a current item of the same (key, scope, code).
 
     Gone or moved (group/class code), carried forward at `source`'s position, plus `source.retired`.
@@ -51,9 +49,7 @@ def designation_moves(source: NumberingPins, current: NumberingPins) -> tuple[De
     moves = [
         DesignationMove(key=entry.key, old_text=entry.text, new_text=match.text)
         for entry in source.items
-        if (match := current_by_key.get(entry.key)) is not None
-        and same_place(entry, match)
-        and match.text != entry.text
+        if (match := current_by_key.get(entry.key)) is not None and same_place(entry, match) and match.text != entry.text
     ]
     return tuple(sorted(moves, key=lambda m: m.key))
 

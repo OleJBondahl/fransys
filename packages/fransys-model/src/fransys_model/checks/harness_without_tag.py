@@ -2,12 +2,13 @@
 
 from typing import TYPE_CHECKING, Final
 
-from fransys_model.checks._finding import finding, ordered
+from fransys_model.checks._finding import ordered
 from fransys_model.derive.facts.item_predicates import has_own_designation
 from fransys_model.derive.facts.units import is_harness
-from fransys_model.kernel import Finding, Severity
+from fransys_model.vocab.codes import finding
 from fransys_model.vocab.finding_ref import ref
 from fransys_model.vocab.tables import items
+lazy from fransys_model.kernel import Finding
 
 if TYPE_CHECKING:
     from fransys_model.kernel import Model
@@ -24,7 +25,6 @@ def check_harness_without_tag(model: Model) -> tuple[Finding, ...]:
     found = [
         finding(
             HARNESS_WITHOUT_TAG,
-            Severity.ERROR,
             (item.id,),
             f"{ref(item)} reads as a harness (a marked harness or a cable child), "
             "but has no designation: give it a tag: d.harness(tag=...), or tag= on the item",

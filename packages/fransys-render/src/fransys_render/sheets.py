@@ -7,13 +7,14 @@ the SVG behind a page and fills the two boxes it returns with the page counter a
 from functools import partial
 from typing import TYPE_CHECKING
 
+from symdef import sheet_svg
+
 from electrical_symbols import (
     TITLE_BLOCK_MIN_BAND_MM,
     TITLE_BLOCK_MIN_WIDTH_MM,
-    sheet_svg,
     slot_box_mm,
 )
-from fransys_model.derive import SheetBackground, title_block_strings
+from fransys_model.derive import SheetBackground
 
 from ._sheet_draw import (
     frame_fragment,
@@ -23,6 +24,7 @@ from ._sheet_draw import (
     title_rooms,
     title_symbol,
 )
+from .title_text import index_titles, title_block_strings
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -53,26 +55,20 @@ def _background(
             svg=page_svg(frames[key]),
             counter_box=None,
             logo_box=None,
-            title_room_mm=None,
-            ellipsis=listing.title_text.ellipsis,
+            index_titles=index_titles(page.index, listing.title_text.ellipsis, sizes, None),
         )
     block, logo = title_symbol(frame, notice=bool(page.fields.notice)), logo_symbol(frame)
     rooms = title_rooms(block)
-    strings = title_block_strings(
-        page.fields, rooms, sizes, text=listing.title_text, notice=notice_room(block, sizes)
-    )
+    strings = title_block_strings(page.fields, rooms, sizes, text=listing.title_text, notice=notice_room(block, sizes))
     return SheetBackground(
         svg=page_svg(frames[key] + title_fragment(library, block, logo, strings, listing)),
         counter_box=slot_box_mm(block.lines, "page"),
         logo_box=slot_box_mm(logo, "logo"),
-        title_room_mm=rooms["page_title"],
-        ellipsis=listing.title_text.ellipsis,
+        index_titles=index_titles(page.index, listing.title_text.ellipsis, sizes, rooms["page_title"]),
     )
 
 
-def sheets(
-    listings: Mapping[Id[Document], DocumentSheets], library: Library
-) -> frozendict[SheetKey, SheetBackground]:
+def sheets(listings: Mapping[Id[Document], DocumentSheets], library: Library) -> frozendict[SheetKey, SheetBackground]:
     """The background of every page of every `Document`, by `SheetPage.key`.
 
     Args:

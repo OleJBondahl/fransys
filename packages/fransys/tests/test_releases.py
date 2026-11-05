@@ -14,9 +14,7 @@ def _manifest(folder, *, interface="1", nested=(), files=(), text=None) -> None:
         "nested": [dict(n) for n in nested],
         "files": [{"path": p, "sha256": h} for p, h in files],
     }
-    (folder / "baseline" / "manifest.json").write_text(
-        json.dumps(data) if text is None else text, encoding="utf-8"
-    )
+    (folder / "baseline" / "manifest.json").write_text(json.dumps(data) if text is None else text, encoding="utf-8")
 
 
 def test_releases_sort_by_name_then_integer_version_and_revision(tmp_path):
@@ -56,9 +54,7 @@ def test_names_that_are_not_revisions_and_a_missing_root_are_skipped(tmp_path):
     assert fr.releases(tmp_path / "missing") == ()
 
 
-@pytest.mark.parametrize(
-    "text", ['{"listing_digest": "x", "unit"', "[]", '{"listing_digest": "x", "unit": {}}']
-)
+@pytest.mark.parametrize("text", ['{"listing_digest": "x", "unit"', "[]", '{"listing_digest": "x", "unit": {}}'])
 def test_a_broken_manifest_raises_value_error_naming_the_path(tmp_path, text):
     _manifest(tmp_path / "cab" / "1.1", text=text)
     with pytest.raises(ValueError, match=r"cab.1\.1.baseline.manifest\.json"):

@@ -3,8 +3,9 @@
 Row shapes beside `rows.py` (model-0199); they import nothing from it.
 """
 
+from fransys_model.elecdef import Rating
 from fransys_model.kernel import AuthoringKey, value
-from fransys_model.vocab.ratings import Operating, Rating
+from fransys_model.vocab.operating import Operating
 
 from .release_order import ReleaseOrder, release_order
 from .rows_removed import RemovedAncestry
@@ -244,9 +245,7 @@ class StoredRelease:
     def identity(self) -> ReleaseIdentity:
         """The listed unit's name, version, revision and interface."""
         unit = self.listing.unit
-        return ReleaseIdentity(
-            name=unit.name, version=unit.version, revision=unit.revision, interface=unit.interface
-        )
+        return ReleaseIdentity(name=unit.name, version=unit.version, revision=unit.revision, interface=unit.interface)
 
     @property
     def order(self) -> ReleaseOrder:

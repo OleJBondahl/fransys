@@ -14,12 +14,9 @@ from _build import document, drawing_set, layout_page, location, model, source, 
 from electrical_symbols import LIBRARY, font_dir
 from fransys_model.derive import document_sheets_of, page_destination
 from fransys_model.kernel import render_id
-from fransys_model.vocab import DocumentPreset, PageKind
+from fransys_model.vocab import DocumentPreset
 
-_SVG = (
-    '<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">'
-    '<rect width="10" height="10"/></svg>'
-)
+_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><rect width="10" height="10"/></svg>'
 
 
 def _compiled(notes: str | None) -> tuple[bytes, list[str]]:
@@ -36,23 +33,18 @@ def _compiled(notes: str | None) -> tuple[bytes, list[str]]:
         subject=u,
         cover="# Cover",
         notes=notes,
-        remove=(PageKind.PLC_LIST, PageKind.TERMINAL_LIST, PageKind.BOM),
     )
     m = model(cabinet, u, ds1, *pages, doc)
     svgs = {render_id(page.id): _SVG for page in pages}
     compiler = typst.Compiler(font_paths=[font_dir()], ignore_system_fonts=True)
-    compiled = compiler.compile(
-        input=source(m, doc.id, svgs, fransys_render.sheets(document_sheets_of(m), LIBRARY)).encode(
-            "utf-8"
-        )
-    )
+    compiled = compiler.compile(input=source(m, doc.id, svgs, fransys_render.sheets(document_sheets_of(m, ()), LIBRARY), diagrams=()).encode("utf-8"))
     assert isinstance(compiled, bytes)
     return compiled, [page_destination(m, page) for page in pages]
 
 
 def _landing(pdf: pdfium.PdfDocument, name: str) -> int:
     dest = pdfium_raw.FPDF_GetNamedDestByName(pdf.raw, name.encode("utf-8"))
-    return pdfium_raw.FPDFDest_GetDestPageIndex(pdf.raw, dest)
+    return int(pdfium_raw.FPDFDest_GetDestPageIndex(pdf.raw, dest))
 
 
 @pytest.mark.parametrize("notes_pages", [0, 16])

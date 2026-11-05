@@ -1,16 +1,6 @@
 """Field case: `wire=` of a series takes one `(colour, size)` per pole.
-
-The engineering shape: a multi-pole device fed from a terminal strip, where each pole has its own
-colour and size, such as brown, black and grey phases, or brown line and blue neutral. With no
-supply on the path the rows give no colour, and with a supply they give one the engineer
-overrides: a stated colour stays stated.
-
-The need: `wire=` took one `(colour, size)` for all the poles of a series, so each pole needed its
-own `d.detail.wire` call, the pairing the series already knows.
-
-Decision author-0060: `wire=` also takes a tuple of `(colour, size)`, one per pole in pole order,
-its length equal to the series' width. The rewrite keeps the per-pole spelling.
-"""
+The bug: wire= took one (colour, size) for all poles of a series, so each pole needed its own d.detail.wire call.
+Fixed by author-0060, wire= also takes one (colour, size) per pole, in pole order, its length the series' width."""
 
 from typing import Any
 
@@ -86,15 +76,6 @@ def test_a_colour_that_is_not_allowed_raises() -> None:
         _strip_to_breaker((*_POLES[:2], ("PINK", 4)))
 
 
-def test_detail_wire_refuses_a_per_pole_tuple() -> None:
-    """`d.detail.wire` is one wire: it names the fix."""
-    d = fr.design("demo_parts", place="C1")
-    x1 = d.terminal_strip("X1", "DEMO-TB-2.5", 2)
-    q = d.device("Q1", "DEMO-MCB-3P")
-    with pytest.raises(AuthorError, match=r"belongs to d.series"):
-        d.detail.wire(x1[1], q.element["1"], wire=_POLES[:2])
-
-
 def test_one_spec_still_wires_every_pole() -> None:
     """A single `(colour, size)` keeps its meaning: all poles take it."""
     assert set(_colours(_strip_to_breaker((BN, 1.5))).values()) == {BN}
@@ -103,8 +84,8 @@ def test_one_spec_still_wires_every_pole() -> None:
 def test_a_parallel_branch_takes_the_colour_of_its_pole() -> None:
     """Two breakers in parallel: each pole keeps its colour on both branches."""
     d = fr.design("demo_parts", place="C1")
-    x0 = d.terminal_strip("X0", "DEMO-TB-2.5", 4)
-    out = d.terminal_strip("X2", "DEMO-TB-2.5", 3)
+    x0 = d.terminal_strip("X0", "DEMO-TB-2.5-TWIN", 4)
+    out = d.terminal_strip("X2", "DEMO-TB-2.5-TWIN", 3)  # two branches land on a point (R1266)
     mains = d.ac_supply("400V", 230, x0[1], x0[2], x0[3])
     q1, q2 = (d.device(tag, "DEMO-MCB-3P") for tag in ("Q1", "Q2"))
     d.series(mains, d.parallel(q1.element, q2.element), out, wire=_POLES)

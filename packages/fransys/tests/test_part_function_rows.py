@@ -29,7 +29,7 @@ def test_a_supply_has_a_row_with_its_rating(rows) -> None:
     row = rows[("DEMO-CTRL-8", "supply_field")]
     assert row.kind is fr.derive.FunctionKind.SUPPLY
     assert row.rating is not None
-    assert row.rating.current_dc_a == 10
+    assert row.rating.current[0].nom == fr.elecdef.Unit.A(10)
 
 
 def test_a_function_less_part_has_one_row_with_the_parts_rating(rows) -> None:
@@ -37,7 +37,7 @@ def test_a_function_less_part_has_one_row_with_the_parts_rating(rows) -> None:
     row = rows[("DEMO-FUSE-LINK-4A-T", "")]
     assert (row.template, row.kind) == (None, None)
     assert row.rating is not None
-    assert row.rating.current_dc_a == 4
+    assert row.rating.current[0].nom == fr.elecdef.Unit.A(4)
 
 
 def test_profile_of_is_the_layout_reader() -> None:

@@ -7,9 +7,10 @@ label. All numeric fields are `int` or `Decimal`, never `float`; every sequence 
 `tuple`.
 
 The list outputs' shared read of these rows lives in `derive.columns`, once: which fields of each
-row shape a list prints and in what order (`*_COLUMNS`) and the terminal list's two ends labels
-(`TERMINAL_LABELS`). The one text of a list cell (`cell_text`, `cell_parts`, `CELL_SEPARATOR`) and
-the field extraction (`column_values`, `column_rows`, `pin_lines`) live in `derive.list_cells`.
+row shape a list prints and in what order (`list_columns`, the `[lists.<name>]` settings tables)
+and the heading word of a few fields (`list_label`). The one text of a list cell (`cell_text`,
+`cell_parts`, `CELL_SEPARATOR`)
+and the field extraction (`column_values`, `column_rows`, `pin_lines`) live in `derive.list_cells`.
 The PDF lists and the CSVs both call them, so the two can never print a different header or
 cell. This is a choice of fields and a text for one cell, never a reshaping of a row.
 """
@@ -18,13 +19,13 @@ from decimal import Decimal
 from enum import Enum
 from typing import Any
 
+from fransys_model.elecdef import Rating
 from fransys_model.kernel import Id, register_enum, value
 from fransys_model.layout import OverviewRef
 from fransys_model.vocab.aspects import AspectNode
 from fransys_model.vocab.connectivity import Conductor
 from fransys_model.vocab.core import Function, Item, Port, Unit
 from fransys_model.vocab.enums import FunctionKind, Gender, ItemKind
-from fransys_model.vocab.ratings import Rating
 from fransys_model.vocab.templates import FunctionTemplate, Part
 
 from .rows_cores import OpenCoreRow
@@ -101,7 +102,7 @@ class WireRow:
     to: str
     colour: str
     cross_section_mm2: Decimal
-    label: str
+    ends: str
 
 
 @value
@@ -563,8 +564,8 @@ class PartFunctionRow:
     """One function a part declares, with the rating it has.
 
     A part with no function template has one row: `template` is `None`, `name` is `""`, `kind` is
-    `None`, and `rating` is the part's own. Otherwise `rating` is `effective_rating`: the
-    template's, else the part's.
+    `None`, and `rating` is the part's own. Otherwise `rating` is the template's, else
+    the part's.
     """
 
     part: Id[Part]

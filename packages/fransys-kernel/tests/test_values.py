@@ -4,10 +4,8 @@ from collections import namedtuple
 
 import pytest
 
-from fransys_kernel import (
-    ValueTypeError,
-    check_value,
-)
+from fransys_kernel import ValueTypeError
+from fransys_kernel.values import check_value
 
 _Point = namedtuple("_Point", "x y")  # noqa: PYI024 -- deliberate fixture the kernel must reject
 

@@ -12,7 +12,7 @@ PIN_WIDE = ("pin-cell-wide", None, "y", None)
 
 
 def build(row, head, axis, n=3):
-    return table(LIBRARY.get(row), n, axis, head=LIBRARY.get(head) if head else None)
+    return table(LIBRARY.get(row), n, axis, head=LIBRARY.get(head) if head else None, port_format=LIBRARY.port_format)
 
 
 def slot_ids(symbol):
@@ -67,9 +67,7 @@ def test_cable_head_is_stretched_to_n_steps():
         built = build("cable-column", "cable-head", "x", n)
         box = body_box(built)
         assert box.max.x - box.min.x == n * step
-        head_xs = [
-            p.x for e in built.elements if hasattr(e, "points") for p in e.points if p.y == -5
-        ]
+        head_xs = [p.x for e in built.elements if hasattr(e, "points") for p in e.points if p.y == -5]
         assert max(head_xs) - min(head_xs) == n * step
 
 
@@ -77,10 +75,8 @@ def test_fitted_contact_table_sizes_each_column_to_its_widest_text():
     """A coil's NO and NC cells: each column is as wide as its widest text, rows stack on y."""
     row, head = LIBRARY.get("contact-row"), LIBRARY.get("contact-head")
     height = from_divisions(LIBRARY.grid, 8)
-    short = fitted_table(row, "y", [{"no": "13 /1.1", "nc": "21 /1.1"}], LIBRARY, height, head=head)
-    long = fitted_table(
-        row, "y", [{"no": "13 /1.1", "nc": "21 /99.99 and more"}], LIBRARY, height, head=head
-    )
+    short = fitted_table(row, "y", [{"no": "13 /1.1", "nc": "21 /1.1"}], LIBRARY, height, head=head, port_format=LIBRARY.port_format)
+    long = fitted_table(row, "y", [{"no": "13 /1.1", "nc": "21 /99.99 and more"}], LIBRARY, height, head=head, port_format=LIBRARY.port_format)
     wide = lambda t: body_box(t).max.x - body_box(t).min.x  # noqa: E731 - a one-use measure
     xs = lambda t: {s.id: s.position.x for s in t.slots}  # noqa: E731 - a one-use read
     assert wide(long) > wide(short)
@@ -91,9 +87,7 @@ def test_fitted_contact_table_sizes_each_column_to_its_widest_text():
 def test_stacked_contact_rows_keep_the_closing_pad_out_of_the_keepout():
     """The row's `pad` slot box lies 0.25 below its body; symdef 0.22 keeps it out."""
     row, head = LIBRARY.get("contact-row"), LIBRARY.get("contact-head")
-    built = fitted_table(
-        row, "y", [{"no": "13 /1.1"}] * 3, LIBRARY, from_divisions(LIBRARY.grid, 8), head=head
-    )
+    built = fitted_table(row, "y", [{"no": "13 /1.1"}] * 3, LIBRARY, from_divisions(LIBRARY.grid, 8), head=head, port_format=LIBRARY.port_format)
     assert keepout_box(built).max.y == body_box(built).max.y
 
 
@@ -115,9 +109,7 @@ def test_the_headed_head_takes_the_heading_text_and_grows_at_the_row_cuts():
     row, head = LIBRARY.get("contact-row"), LIBRARY.get("contact-head-headed")
     height = from_divisions(LIBRARY.grid, 8)
     rows = [{"no": "13 /1.1", "nc": "21 /1.1"}]
-    plain = fitted_table(row, "y", rows, LIBRARY, height, head=head)
-    long = fitted_table(
-        row, "y", rows, LIBRARY, height, head=head, head_texts={"heading": "-U1-K1234567890"}
-    )
+    plain = fitted_table(row, "y", rows, LIBRARY, height, head=head, port_format=LIBRARY.port_format)
+    long = fitted_table(row, "y", rows, LIBRARY, height, head=head, head_texts={"heading": "-U1-K1234567890"}, port_format=LIBRARY.port_format)
     wide = lambda t: body_box(t).max.x - body_box(t).min.x  # noqa: E731 - a one-use measure
     assert wide(long) > wide(plain)

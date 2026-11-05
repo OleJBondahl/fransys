@@ -14,8 +14,7 @@ from fransys_model.vocab.tables import units
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.core import Unit
 
-from .instance_tag import instance_name, instance_tags
-from .order import natural_key
+from .order import units_in_order
 from .overview_field import field_fold
 from .overview_fold import fold_level
 from .overview_levels import open_strips, overview_level, strip_view
@@ -38,8 +37,7 @@ _LEVELS = {OverviewRefKind.GROUP, OverviewRefKind.STRIPS}
 
 def overview_units(model: Model) -> tuple[Id[Unit] | None, ...]:
     """`None` for the system, then every unit instance by the natural order of its designation."""
-    named = [(natural_key(instance_name(instance_tags(model, u, None))), u) for u in units(model)]
-    return (None, *(unit for _, unit in sorted(named)))
+    return (None, *units_in_order(model, units(model)))
 
 
 def _view(
@@ -76,17 +74,13 @@ def _plain(model: Model, unit: Id[Any] | None, tabs: Tabs) -> Iterator[ViewRows]
         return
     yield _view((unit, None, OverviewMode.LANES), None, rows)
     for strip in open_strips(level):
-        opened = strip_rows(
-            model, unit, rows, strip_view(model, strip, unit), strip_stubs(model, strip, unit)
-        )
+        opened = strip_rows(model, unit, rows, strip_view(model, strip, unit), strip_stubs(model, strip, unit))
         ref = OverviewRef(kind=OverviewRefKind.ITEM, item=strip)
         yield _view((unit, None, OverviewMode.PLAIN), ref, opened)
         yield _view((unit, None, OverviewMode.LANES), ref, opened)
 
 
-def _fold_views(
-    model: Model, level: FoldLevel, mode: OverviewMode, tabs: Tabs
-) -> Iterator[ViewRows]:
+def _fold_views(model: Model, level: FoldLevel, mode: OverviewMode, tabs: Tabs) -> Iterator[ViewRows]:
     """A folded level, once per strip it opens.
 
     None when it is empty. The groups view opens no strip (O5).

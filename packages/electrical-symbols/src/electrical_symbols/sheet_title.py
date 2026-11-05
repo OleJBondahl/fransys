@@ -40,15 +40,9 @@ def title_block(corner: Corner, width: float, band: float, *, notice: bool) -> T
     whole = translate(sized(key, width, band), *corner)
     slots = whole.slots
     return TitleBlock(
-        lines=replace(
-            whole, slots=tuple(s for s in slots if s.id != _BOLD and not s.id.startswith(_LABEL))
-        ),
-        bold=replace(
-            whole, elements=(), anchors=(), slots=tuple(s for s in slots if s.id == _BOLD)
-        ),
-        labels=replace(
-            whole, elements=(), anchors=(), slots=tuple(s for s in slots if s.id.startswith(_LABEL))
-        ),
+        lines=replace(whole, slots=tuple(s for s in slots if s.id != _BOLD and not s.id.startswith(_LABEL))),
+        bold=replace(whole, elements=(), anchors=(), slots=tuple(s for s in slots if s.id == _BOLD)),
+        labels=replace(whole, elements=(), anchors=(), slots=tuple(s for s in slots if s.id.startswith(_LABEL))),
     )
 
 
@@ -61,4 +55,4 @@ def notice_table(block: TitleBlock, pitch: float, count: int) -> Symbol:
     """`count` notice lines `pitch` mm apart from the block's `notice` anchor; slots `<k>.line`."""
     anchor = next(a.position for a in block.lines.anchors if a.id == "notice")
     row = stretch(LIBRARY.get("title-block-notice-line"), "y", pitch)
-    return translate(table(row, count, "y"), anchor.x, anchor.y)
+    return translate(table(row, count, "y", port_format=LIBRARY.port_format), anchor.x, anchor.y)

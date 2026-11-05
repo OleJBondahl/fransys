@@ -41,6 +41,8 @@ from .order import in_designation_order, natural_key
 from .rows import BoardNetlist, ExtUsage, NetlistNet, NetlistPart
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable
+
     from fransys_model.vocab.connectivity import Net
     from fransys_model.vocab.core import Port
 
@@ -81,8 +83,20 @@ def board_netlist(model: Model, board: Id[Item]) -> BoardNetlist:
     idx = build_indexes(model)
     below = descendants(idx.children_by_item, board)
     on_board = {board, *below}
-    all_parts = parts(model)
     board_designation = item_designation(model, board)
+    listed, without_footprint = _netlist_parts(model, board, below)
+    return BoardNetlist(
+        board=board,
+        board_designation=board_designation,
+        parts=listed,
+        nets=_board_nets(model, board, on_board),
+        without_footprint=without_footprint,
+    )
+
+
+def _netlist_parts(model: Model, board: Id[Item], below: Iterable[Id[Item]]) -> tuple[tuple[NetlistPart, ...], tuple[Id[Item], ...]]:
+    """`board_netlist`'s footprinted parts in reader order, and the listed items with no footprint."""
+    all_parts = parts(model)
     listed = []
     without_footprint = []
     for item_id in below:
@@ -103,31 +117,19 @@ def board_netlist(model: Model, board: Id[Item]) -> BoardNetlist:
                 installed=item.installed,
             )
         )
-    return BoardNetlist(
-        board=board,
-        board_designation=board_designation,
-        parts=tuple(sorted(listed, key=lambda part: (natural_key(part.designation), part.item))),
-        nets=_board_nets(model, board, on_board),
-        without_footprint=tuple(without_footprint),
-    )
+    return tuple(sorted(listed, key=lambda part: (natural_key(part.designation), part.item))), tuple(without_footprint)
 
 
 def _board_nets(model: Model, board: Id[Item], on_board: set[Id[Item]]) -> tuple[NetlistNet, ...]:
     """`board_netlist`'s `nets` (decision model-0042): see its docstring for the rule."""
-
-    def _on_board(port: Id[Port]) -> bool:
-        return item_of_port(model, port) in on_board
-
     conductor_pairs = [
         (conductor.a, conductor.b)
         for conductor in conductors(model).values()
-        if _on_board(conductor.a)
-        and _on_board(conductor.b)
+        if _port_on_board(model, on_board, conductor.a)
+        and _port_on_board(model, on_board, conductor.b)
         and (conductor.carrier is None or conductor.carrier in on_board)
     ]
-    on_board_nets = [
-        net for net in nets(model).values() if net.ports and all(_on_board(p) for p in net.ports)
-    ]
+    on_board_nets = [net for net in nets(model).values() if net.ports and all(_port_on_board(model, on_board, p) for p in net.ports)]
     declared_groups = [net.ports for net in on_board_nets]
     declared_by_port: dict[Id[Port], list[Id[Net]]] = {}
     for net in on_board_nets:
@@ -145,6 +147,10 @@ def _board_nets(model: Model, board: Id[Item], on_board: set[Id[Item]]) -> tuple
         pins = tuple(sorted(group.ports, key=lambda port: _pin_key(model, board, port)))
         found.append(NetlistNet(name=name, pins=pins))
     return tuple(sorted(found, key=lambda net: (net.name, net.pins)))
+
+
+def _port_on_board(model: Model, on_board: set[Id[Item]], port: Id[Port]) -> bool:
+    return item_of_port(model, port) in on_board
 
 
 def _pin_key(model: Model, board: Id[Item], port: Id[Port]) -> tuple[Any, Any, Id[Port]]:
@@ -174,9 +180,7 @@ def boards(model: Model) -> tuple[Id[Item], ...]:
         Every board item's id, by natural designation, then id.
     """
     pcb_parts = unit_index(model).pcb_parts
-    return in_designation_order(
-        model, (item.id for item in items(model).values() if item.part in pcb_parts)
-    )
+    return in_designation_order(model, (item.id for item in items(model).values() if item.part in pcb_parts))
 
 
 def schematic_functions(model: Model) -> tuple[Id[Function], ...]:
@@ -195,22 +199,17 @@ def schematic_functions(model: Model) -> tuple[Id[Function], ...]:
     Returns:
         Every drawn function's id, sorted.
     """
+    return tuple(function.id for function in functions(model).values() if not _excluded(model, function.item, function.id))
 
-    def excluded(item_id: Id[Item], function: Id[Function]) -> bool:
-        if is_cable(model, item_id):
-            return True
-        board_chain = enclosing_boards(model, item_id)
-        if not board_chain or function_role(model, function).pin_group:
-            return False
-        return not is_sole_unit_root(model, board_chain[-1])
 
-    return tuple(
-        sorted(
-            function.id
-            for function in functions(model).values()
-            if not excluded(function.item, function.id)
-        )
-    )
+def _excluded(model: Model, item_id: Id[Item], function: Id[Function]) -> bool:
+    """`schematic_functions`' rule: is `function` left out of the schematic?"""
+    if is_cable(model, item_id):
+        return True
+    board_chain = enclosing_boards(model, item_id)
+    if not board_chain or function_role(model, function).pin_group:
+        return False
+    return not is_sole_unit_root(model, board_chain[-1])
 
 
 def subtree(model: Model, node: Id[AspectNode]) -> tuple[Id[AspectNode], ...]:
@@ -252,12 +251,8 @@ def items_at(model: Model, node: Id[AspectNode]) -> tuple[Id[Item], ...]:
     target = require(aspect_nodes(model).get(node), "aspect_node", node)
     below = {node, *subtree(model, node)}
     direct = {placement.item for placement in placements(model).values() if placement.node in below}
-    inherited = {
-        item_id
-        for item_id in items(model)
-        if item_id not in direct and effective_placement(model, item_id, target.aspect) in below
-    }
-    return tuple(sorted(direct | inherited))
+    inherited = {item_id for item_id in items(model) if item_id not in direct and effective_placement(model, item_id, target.aspect) in below}
+    return tuple(item_id for item_id in items(model) if item_id in direct or item_id in inherited)
 
 
 def ext_usage(model: Model) -> tuple[ExtUsage, ...]:
@@ -279,6 +274,5 @@ def ext_usage(model: Model) -> tuple[ExtUsage, ...]:
             for key in record.ext:
                 found.setdefault((kind, key), []).append(record.id)
     return tuple(
-        ExtUsage(kind=kind, key=key, count=len(subjects), subjects=tuple(sorted(subjects)))
-        for (kind, key), subjects in sorted(found.items())
+        ExtUsage(kind=kind, key=key, count=len(subjects), subjects=tuple(sorted(subjects))) for (kind, key), subjects in sorted(found.items())
     )

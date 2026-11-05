@@ -1,21 +1,15 @@
-"""Field case: a unit whose first drawing set is numbered 2 is set 1 of its own PDF.
-
-The engineering shape: a container unit holds a cabinet unit. The document numbers the sets
-design-wide, so the container's set is 1 and the cabinet unit's set is 2. Each unit's PDF counts
-its own sets, so the cabinet unit's page is `p1.1` in the PDF the engineer holds.
-
-The bug: the PDF's named destination and sheet text said `p1.1` (`set_rank`), but the render
-check text and the drawing's own derived reference text printed the design-wide `p2.1`, a page
-no PDF shows. The rule (render-0018, amending render-0015): every printed page reference names
-its set by `set_rank`, and `page_reference_text` is the one function that prints it.
-"""
+"""Field case: a container unit holds a cabinet unit, and the document numbers the drawing sets design-wide, so the cabinet's set is 2.
+The bug: the PDF's sheet text said p1.1, but the render check and the derived reference text printed the design-wide p2.1.
+Fixed by render-0018 (amends render-0015), every printed page reference names its set by set_rank, and page_reference_text prints it."""
 
 import tempfile
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, NamedTuple
+from typing import TYPE_CHECKING, Any
 
 import fransys as fr
+import pytest
 from _drawn_pages import drawn_pages
+from test_a_unit_boundary_port_wired_inside_and_out import _supply_cab
 
 from fransys_model.derive.page_destination import page_destination
 from fransys_model.derive.page_reference_text import page_reference_text
@@ -33,26 +27,13 @@ _UNIT: dict[str, Any] = {
 }
 
 
-class _Supply(NamedTuple):
-    T1: Any
-
-
-@fr.unit("demo-supply-cab", **_UNIT)
-def _supply_cab(u: Any) -> _Supply:
-    t1 = u.device("T1", "DEMO-PSU-24", interface=("output",))
-    lamp = u.device("H2", "DEMO-LAMP-24")
-    u.detail.wire(lamp["1"], t1.output["+"], wire=("WH", 0.5))
-    u.detail.wire(lamp["2"], t1.output["-"], wire=("WH", 0.5))
-    return _Supply(t1)
-
-
 def _built() -> Model:
     @fr.unit("demo-container", **_UNIT)
-    def container(c: Any) -> _Supply:
+    def container(c: Any) -> Any:
         io = c.add(_supply_cab, "U1")
         lamp = c.device("H1", "DEMO-LAMP-24")
-        c.detail.wire(lamp["1"], io.T1.output["+"], wire=("WH", 0.5))
-        c.detail.wire(lamp["2"], io.T1.output["-"], wire=("WH", 0.5))
+        c.series(lamp["1"], io.T1.output["+"], wire=("WH", 0.5))
+        c.series(lamp["2"], io.T1.output["-"], wire=("WH", 0.5))
         return io
 
     d = fr.design("demo_parts")
@@ -77,11 +58,10 @@ def test_a_units_first_set_numbered_two_is_named_set_one_everywhere() -> None:
     assert page_reference_text(model, page, with_location=True).endswith("p1.1")
 
 
-def test_a_reference_from_another_page_names_the_units_first_set_one() -> None:
+@pytest.mark.rule("G12-UNIT-SCOPE")
+def test_a_conductor_leaving_the_documents_unit_ends_in_a_stub_naming_the_far_end_and_no_page() -> None:
     model = _built()
-    page = _inner_page(model)
-    other = next(p for p in layout_of(model, Page).values() if p.id != page.id)
-    drawing = drawn_pages(model)[other.id]
-    shown = [t.text for t in drawing.texts]
-    shown += [text for one in drawing.symbols for _, text in one.slots]
-    assert any(text.startswith("p1.1:") for text in shown)
+    drawing = drawn_pages(model)[next(p.id for p in layout_of(model, Page).values() if p.id != _inner_page(model).id)]
+    shown = [t.text for t in drawing.texts] + [text for one in drawing.symbols for _, text in one.slots]
+    assert {"← -U1-T1:+", "→ -U1-T1:-"} <= set(shown)
+    assert not any(t.startswith("p1.1:") for t in shown)

@@ -2,8 +2,6 @@
 
 Loaded by file path (`importlib.util.spec_from_file_
 location`), since the script is not a package module. Every case builds a small in-memory
-`coverage.json`-shaped dict and a `Decimal` floors dict by hand; there is no real `pytest --cov`
-run anywhere in this file.
 """
 
 from __future__ import annotations
@@ -12,11 +10,10 @@ import importlib.util
 import sys
 from decimal import Decimal
 from pathlib import Path
+from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
-_spec = importlib.util.spec_from_file_location(
-    "fransys_cov_floors", ROOT / "scripts" / "cov_floors.py"
-)
+_spec = importlib.util.spec_from_file_location("fransys_cov_floors", ROOT / "scripts" / "cov_floors.py")
 if _spec is None or _spec.loader is None:
     msg = "could not load scripts/cov_floors.py"
     raise ImportError(msg)
@@ -25,46 +22,35 @@ sys.modules[_spec.name] = cov_floors
 _spec.loader.exec_module(cov_floors)
 
 
-def _report(files: dict[str, tuple[int, int]]) -> dict:
+def _report(files: dict[str, tuple[int, int]]) -> dict[Any, Any]:
     """A `coverage.json`-shaped dict from `{path: (num_statements, missing_lines)}`."""
-    return {
-        "files": {
-            path: {"summary": {"num_statements": statements, "missing_lines": missing}}
-            for path, (statements, missing) in files.items()
-        }
-    }
+    return {"files": {path: {"summary": {"num_statements": statements, "missing_lines": missing}} for path, (statements, missing) in files.items()}}
+
+
+def _failures(floors, files):
+    expected = {"fransys_model": "packages/fransys-model"}
+    return cov_floors.check(expected, floors, cov_floors.measure_packages(_report(files), expected))
 
 
 # --- check: below floor, missing from floors, the vacuous-pass guard -----------------------
 
 
 def test_a_package_below_its_floor_fails_naming_the_package_measured_and_floor():
-    expected = {"fransys_model": "packages/fransys-model"}
-    floors = {"fransys_model": Decimal("99.0")}
-    report = _report({"packages/fransys-model/src/fransys_model/x.py": (100, 5)})
-    measured = cov_floors.measure_packages(report, expected)
-    failures = cov_floors.check(expected, floors, measured)
-    assert failures == ("FAIL fransys_model: 95.0 measured, floor 99.0 (coverage-floors.toml)",)
+    assert _failures({"fransys_model": Decimal("99.0")}, {"packages/fransys-model/src/fransys_model/x.py": (100, 5)}) == (
+        "FAIL fransys_model: 95.0 measured, floor 99.0 (coverage-floors.toml)",
+    )
 
 
 def test_a_package_missing_from_the_floors_dict_fails_naming_it():
-    expected = {"fransys_model": "packages/fransys-model"}
-    floors: dict[str, Decimal] = {}
-    report = _report({"packages/fransys-model/src/fransys_model/x.py": (10, 0)})
-    measured = cov_floors.measure_packages(report, expected)
-    failures = cov_floors.check(expected, floors, measured)
-    assert failures == ("FAIL fransys_model: missing from coverage-floors.toml",)
+    assert _failures({}, {"packages/fransys-model/src/fransys_model/x.py": (10, 0)}) == ("FAIL fransys_model: missing from coverage-floors.toml",)
 
 
 def test_the_vacuous_pass_guard_fails_a_package_with_zero_matching_files():
     # The report has files, but none of them are under this package's src/ -- the grouping must
     # fail loudly, never silently report zero failures.
-    expected = {"fransys_model": "packages/fransys-model"}
-    floors = {"fransys_model": Decimal("90.0")}
-    report = _report({"packages/fransys/src/fransys/unrelated.py": (10, 0)})
-    measured = cov_floors.measure_packages(report, expected)
-    failures = cov_floors.check(expected, floors, measured)
-    assert failures == ("FAIL fransys_model: no measured coverage found (coverage.json)",)
+    assert _failures({"fransys_model": Decimal("90.0")}, {"packages/fransys/src/fransys/unrelated.py": (10, 0)}) == (
+        "FAIL fransys_model: no measured coverage found (coverage.json)",
+    )
 
 
 # --- grouping: by path segment, never by a name prefix --------------------------------------

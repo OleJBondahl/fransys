@@ -51,16 +51,11 @@ def _matches(pattern: object, stored: object) -> bool:
     if isinstance(pattern, tuple):
         return _tuple_matches(pattern, stored)
     if dataclasses.is_dataclass(pattern):
-        return type(pattern) is type(stored) and all(
-            _matches(getattr(pattern, f.name), getattr(stored, f.name))
-            for f in dataclasses.fields(pattern)
-        )
+        return type(pattern) is type(stored) and all(_matches(getattr(pattern, f.name), getattr(stored, f.name)) for f in dataclasses.fields(pattern))
     return pattern == stored
 
 
-def _section(
-    stored: tuple[object, ...], fresh: tuple[object, ...]
-) -> tuple[tuple[object, ...], tuple[object, ...]]:
+def _section(stored: tuple[object, ...], fresh: tuple[object, ...]) -> tuple[tuple[object, ...], tuple[object, ...]]:
     wild = [row for row in fresh if _holds(row)]
     kept = tuple(row for row in stored if not any(_matches(w, row) for w in wild))
     return kept, tuple(row for row in fresh if not _holds(row))

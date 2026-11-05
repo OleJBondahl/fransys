@@ -1,7 +1,6 @@
 """The author-side argument shapes `build` and `write` accept: a `Design`, a `Scope`."""
 
-from fransys_author import Scope
-from fransys_author.surface import Design
+from fransys_author.surface import Design, Scope
 
 lazy from fransys_model.kernel import Draft
 

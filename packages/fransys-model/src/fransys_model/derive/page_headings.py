@@ -8,7 +8,7 @@ a `[words]` entry of the house settings.
 from fransys_model.vocab import DocumentPreset, PageKind
 lazy from fransys_model.kernel import Model
 
-from .house_settings import word
+from .facts.house_settings import word
 
 __all__ = [
     "continued_heading",
@@ -35,8 +35,6 @@ _PAGE_WORDS: dict[PageKind, str] = {
 }
 _PRESET_WORDS: dict[DocumentPreset, str] = {
     DocumentPreset.CABINET_SCHEMATIC: "cabinet_schematic",
-    DocumentPreset.HARNESS_DRAWING: "harness_drawing",
-    DocumentPreset.PCB_SCHEMATIC: "pcb_schematic",
     DocumentPreset.SYSTEM: "system",
 }
 

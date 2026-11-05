@@ -36,10 +36,7 @@ def _flat(model: Model, tally: Tally, findings: tuple[Finding, ...]) -> list[lis
         for i, rank in held.items():
             counts.setdefault((rank, findings[i].code), []).append(findings[i])
         ordered = sorted(counts.items(), key=lambda one: (-one[0][0], one[0][1]))
-        listed = [
-            [_NAME[rank], code, len(found), _messages(model, found)]
-            for (rank, code), found in ordered
-        ]
+        listed = [[_NAME[rank], code, len(found), _messages(model, found)] for (rank, code), found in ordered]
         out.append([at, _NAME[worst], sum(1 for r in held.values() if r == worst), listed])
     return out
 
@@ -51,14 +48,10 @@ def _messages(model: Model, found: list[Finding]) -> list[str]:
 
 def _tally(marks: tuple[FindingMark, ...], *, lines: bool) -> Tally:
     """The `at -> {finding index: severity rank}` of the boxes, or of the lines."""
-    return {
-        m.at: {h.finding: _RANK[h.severity] for h in m.held} for m in marks if m.on_line is lines
-    }
+    return {m.at: {h.finding: _RANK[h.severity] for h in m.held} for m in marks if m.on_line is lines}
 
 
-def findings_data(
-    tables: _Tables, drawn: list[ViewRows], findings: tuple[Finding, ...]
-) -> list[Any] | None:
+def findings_data(tables: _Tables, drawn: list[ViewRows], findings: tuple[Finding, ...]) -> list[Any] | None:
     """`[[boxes, lines]]` per view, each `[index, severity, count, finding indexes]`, or `None`.
 
     `drawn` holds the rows of the views the page has, in the page's order.

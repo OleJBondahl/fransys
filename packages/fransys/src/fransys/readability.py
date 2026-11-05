@@ -18,7 +18,5 @@ def readability(result: BuildResult) -> DrawnReading:
     Does not write a file, lay the pages out again or raise on findings.
     """
     sets = layout_of(result.model, DrawingSet)
-    units = {
-        page.id: set_unit(sets[page.drawing_set]) for page in layout_of(result.model, Page).values()
-    }
+    units = {page.id: set_unit(sets[page.drawing_set]) for page in layout_of(result.model, Page).values()}
     return fransys_el.readability(result.drawings, units)

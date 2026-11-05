@@ -2,6 +2,7 @@
 
 import fransys as fr
 import pytest
+from _expected_codes import expect_codes
 from fransys.colours import BU
 from fransys_el import build, house_conventions, options, symbol_kit
 from fransys_el.placement_series import within
@@ -36,9 +37,10 @@ def _bridge_model() -> fr.Model:
         h1 = d.device("H1", "DEMO-LAMP-24", place="L0").lamp
         pairs = (("1", "2"), ("1", "3"), ("2", "4"), ("2", "5"), ("4", "3"), ("3", "6"))
         for a, b in pairs:
-            d.detail.wire(s[a]["B"], s[b]["A"], wire=(BU, 0.5))
+            d.series(s[a]["B"], s[b]["A"], wire=(BU, 0.5))
+        d.series(s["1"]["A"], h1["2"], wire=(BU, 0.5))
         for a in ("5", "6"):
-            d.detail.wire(s[a]["B"], h1["1"], wire=(BU, 0.5))
+            d.series(s[a]["B"], h1["1"], wire=(BU, 0.5))
     return fr.build(d).model
 
 
@@ -46,17 +48,18 @@ def _bridge_model() -> fr.Model:
 def test_a_bridge_in_a_build_is_skipped_once_and_its_symbols_stay_drawn() -> None:
     """Catches the bridge's warning dropped on the way out of el, or a bridge symbol left out."""
     model = _bridge_model()
-    problem, skipped = build(
-        model, symbol_kit(model, LIBRARY), house_conventions(fr.settings().layout, LIBRARY), LIBRARY
-    )
+    problem, skipped = build(model, symbol_kit(model, LIBRARY), house_conventions(fr.settings().layout, LIBRARY, text_height=8), LIBRARY)
     bridges = [s for s in skipped if s.reason == NOT_SERIES_PARALLEL]
     assert len(bridges) == 1
     assert len(bridges[0].more) == len(problem.symbols) - 1 == 6
     assert problem.facts.series == ()
 
 
-def _control_model() -> fr.Model:
-    """`d.series(s1, d.parallel(s2, d.series(s3, s4)), h1)` as wires: the spec's control circuit."""
+def _control_build() -> fr.BuildResult:
+    """`d.series(s1, d.parallel(s2, d.series(s3, s4)), h1)` as wires: the spec's control circuit.
+
+    S1:A and H1:2 stay open on purpose: a wire to either breaks the series the circuit checks.
+    """
     d = fr.design("demo_parts")
     d.location("L0", "Workshop")
     with d.function("G", "Group"):
@@ -64,18 +67,30 @@ def _control_model() -> fr.Model:
         h1 = d.device("H1", "DEMO-LAMP-24", place="L0").lamp
         pairs = ((s["1"]["B"], s["2"]["A"]), (s["1"]["B"], s["3"]["A"]), (s["3"]["B"], s["4"]["A"]))
         for a, b in (*pairs, (s["2"]["B"], h1["1"]), (s["4"]["B"], h1["1"])):
-            d.detail.wire(a, b, wire=(BU, 0.5))
-    return fr.build(d).model
+            d.series(a, b, wire=(BU, 0.5))
+    return fr.build(d)
+
+
+def test_the_control_circuit_has_exactly_its_two_open_ends() -> None:
+    """R1736.2: S1:A and H1:2 are the deliberate open legs, asserted and not anchored."""
+    built = _control_build()
+    expect_codes(built, "FUNCTION_HALF_CONNECTED")
+    found = [f for f in built.findings if f.code == "FUNCTION_HALF_CONNECTED"]
+    assert sorted(f.message for f in found) == [
+        "-H1 is connected at one port and open at -H1:2",
+        "-S1 is connected at one port and open at -S1:A",
+    ]
 
 
 @pytest.mark.rule("SERIES-PARALLEL")
 def test_a_nested_control_circuit_stands_as_one_column_source_first() -> None:
     """Acceptance 2: S1, S2 and H1 in one lane, S3 and S4 in the lane beside S2, H1 below both."""
-    model = _control_model()
-    problem, _ = build(
-        model, symbol_kit(model, LIBRARY), house_conventions(fr.settings().layout, LIBRARY), LIBRARY
-    )
-    laid = solve(problem, options(house_conventions(fr.settings().layout, LIBRARY), LIBRARY))
+    built = _control_build()
+    expect_codes(built, "FUNCTION_HALF_CONNECTED")  # open ends; valid fixture is KI-657 (R1745)
+    assert [f.code for f in built.findings].count("FUNCTION_HALF_CONNECTED") == 2
+    model = built.model
+    problem, _ = build(model, symbol_kit(model, LIBRARY), house_conventions(fr.settings().layout, LIBRARY, text_height=8), LIBRARY)
+    laid = solve(problem, options(house_conventions(fr.settings().layout, LIBRARY, text_height=8), LIBRARY))
     at = {p.sym.split(" ")[0]: (p.x, p.y) for page in laid.placement.pages for p in page.placed}
     assert at["S1"][0] == at["S2"][0] == at["H1"][0]
     assert at["S3"][0] == at["S4"][0] > at["S2"][0]

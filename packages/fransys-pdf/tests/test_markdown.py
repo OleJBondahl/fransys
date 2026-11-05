@@ -52,27 +52,19 @@ def test_spaced_asterisks_stay_literal_but_closed_ones_still_open_emphasis():
     (CommonMark's flanking rule, reduced to this subset). The spec names this exact contrast.
     """
     assert parse("a * b * c") == (Paragraph(1, (Run("plain", "a * b * c"),)),)
-    assert parse("a *b* c") == (
-        Paragraph(1, (Run("plain", "a "), Run("italic", "b"), Run("plain", " c"))),
-    )
+    assert parse("a *b* c") == (Paragraph(1, (Run("plain", "a "), Run("italic", "b"), Run("plain", " c"))),)
 
 
 def test_arithmetic_with_spaced_asterisks_stays_literal():
-    assert parse("torque * 1.5 * factor") == (
-        Paragraph(1, (Run("plain", "torque * 1.5 * factor"),)),
-    )
+    assert parse("torque * 1.5 * factor") == (Paragraph(1, (Run("plain", "torque * 1.5 * factor"),)),)
 
 
 def test_bullet_list():
-    assert parse("- one\n- two") == (
-        BulletList(1, ((Run("plain", "one"),), (Run("plain", "two"),))),
-    )
+    assert parse("- one\n- two") == (BulletList(1, ((Run("plain", "one"),), (Run("plain", "two"),))),)
 
 
 def test_numbered_list_any_number():
-    assert parse("1. first\n7. second") == (
-        NumberedList(1, ((Run("plain", "first"),), (Run("plain", "second"),))),
-    )
+    assert parse("1. first\n7. second") == (NumberedList(1, ((Run("plain", "first"),), (Run("plain", "second"),))),)
 
 
 def test_markup_injection_is_never_interpreted():
@@ -89,17 +81,7 @@ def test_markup_injection_is_never_interpreted():
 
 
 def test_unsupported_constructs_report_line_and_construct():
-    text = (
-        "#### too deep\n\n"
-        "| a | b |\n\n"
-        "![alt](x.png)\n\n"
-        "[link](x)\n\n"
-        "`code`\n\n"
-        "```\n\n"
-        "> quoted\n\n"
-        "  - indented\n\n"
-        "<div>html</div>"
-    )
+    text = "#### too deep\n\n| a | b |\n\n![alt](x.png)\n\n[link](x)\n\n`code`\n\n```\n\n> quoted\n\n  - indented\n\n<div>html</div>"
     found = unsupported(parse(text))
     assert [(u.line, u.construct) for u in found] == [
         (1, "heading level 4"),

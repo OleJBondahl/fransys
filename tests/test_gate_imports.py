@@ -10,9 +10,7 @@ KERNEL_SOURCES = ("fransys_model.kernel", "fransys_kernel")
 FREEZE_NAMES = frozenset(["freeze", "merge"])
 FREEZE_PACKAGES = frozenset(["fransys", "fransys_model", "fransys_kernel"])
 
-LAY_OUT_NAMES = frozenset(
-    ["lay_out_cables", "lay_out_diagrams", "lay_out_overview", "lay_out_schematic"]
-)
+LAY_OUT_NAMES = frozenset(["lay_out_cables", "lay_out_diagrams", "lay_out_overview", "lay_out_schematic"])
 PASS_NAMES = frozenset(["number", "allocate_plc", "resolve_wire_rows"])
 STAGE_PACKAGES = frozenset(["fransys", "fransys_model", "fransys_layout"])
 
@@ -22,9 +20,7 @@ def freeze_imports(rows: list[Import]) -> list[Import]:
     return [
         row
         for row in rows
-        if row.name in FREEZE_NAMES
-        and any(in_package(row.source, kernel) for kernel in KERNEL_SOURCES)
-        and row.package not in FREEZE_PACKAGES
+        if row.name in FREEZE_NAMES and any(in_package(row.source, kernel) for kernel in KERNEL_SOURCES) and row.package not in FREEZE_PACKAGES
     ]
 
 

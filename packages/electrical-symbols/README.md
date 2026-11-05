@@ -5,8 +5,7 @@ the conventions of IEC 60617. They are not IEC's drawings, and this repo is not 
 endorsed by IEC. The geometry is our own and has not been checked against the standard's drawings,
 so every symbol carries `status = "unverified"`.
 
-Status: alpha, under construction, a package of the Fransys workspace
-(`packages/electrical-symbols`). Nothing is released.
+Status: alpha, under construction. Nothing is released.
 
 ## What is here
 
@@ -14,11 +13,11 @@ Status: alpha, under construction, a package of the Fransys workspace
   `reference.number` and the name other symbols use to compose it.
 - `library.toml`: the library's settings, and its `[grid]` and `[font]`, the one home of the drawing grid and the Regular text font (es-0069).
 - `src/electrical_symbols/`: a thin Python package exposing `LIBRARY`, loaded from the bundled
-  `bundle.json`; `font_dir()`, the path to the vendored DejaVu Sans Condensed faces and their
-  licence, which the facade passes to the PDF compiler; `generic_box(port_names)` and `GENERIC_BOX_KEY`, the labelled-box placeholder
-  layout draws for a function with no symbol; and `library_version()` /
-  `LIBRARY_VERSION`, the one home of the version string placements record and
-  `fransys_render.check` compares.
+  `bundle.json`. It also exposes `font_dir()`, the path to the vendored DejaVu Sans Condensed faces and their
+  licence, which the facade passes to the PDF compiler. It also exposes `generic_box(port_names)` and `GENERIC_BOX_KEY`,
+  the labelled-box placeholder layout draws for a function with no symbol. And `library_version()` /
+  `LIBRARY_VERSION` is the one home of the version string placements record and
+  a renderer compares.
 - `build/` and `src/electrical_symbols/bundle.json`: the generated output, tracked in git so a
   symbol change shows up as a reviewable diff.
 
@@ -139,6 +138,6 @@ just build-electrical-symbols   # regenerate the tracked output
 
 ## Rules moved from docstrings
 
-- `library_version`: `fransys_layout.geometry.symbols` re-uses it and keeps no copy. `fransys_render.check` compares it with `SymbolPlacement.library_version`.
+- `library_version`: a consumer re-uses it and keeps no copy; a renderer compares it with the version a placement records.
 - `generic_box` module: layout's `resolve` stage calls it (layout-0042). The placeholder is a real toolkit symbol, converted through the ordinary recipe, not a private struct.
 - `_pitch`: a marking shows the model port name, the part after the last `"."` (an item view names a port `<function>.<port>`). Width is about 0.65 M per character at the house text height. Add the 0.25 M wire offset and a gap, then round up to whole M so ports stay on the grid.

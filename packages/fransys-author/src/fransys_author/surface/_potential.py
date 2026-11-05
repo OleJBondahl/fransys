@@ -6,15 +6,15 @@ A power path keeps each pole's conductor row; a control path takes a rail's row 
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, NamedTuple, cast
 
-from fransys_author.surface._ends import is_bridge
-from fransys_author.surface._pairing import label_of, pair
+from fransys_author.handles import Port
+from fransys_author.surface._pairing import SeriesBridge, label_of, pair
 from fransys_author.surface._strip import TerminalStrip
-from fransys_model.vocab import WiringRow, control_of, is_control
+from fransys_model.derive import control_of, is_control
+from fransys_model.vocab import WiringRow
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    from fransys_author.handles import Port
     from fransys_author.surface._pairing import Ends
     from fransys_model.kernel import Id
     from fransys_model.vocab import Port as ModelPort
@@ -60,16 +60,16 @@ def _rails(element: object) -> tuple[WiringRow, ...]:
 
 def _passes(element: object) -> bool:
     """A strip, run or cable carries a rail's potential on: no other element does (S2)."""
-    return isinstance(element, TerminalStrip) or is_bridge(element)
+    return isinstance(element, TerminalStrip | SeriesBridge)
 
 
 def hops(elements: Sequence[object], found: list[list[Ends]]) -> list[Hop]:
     """Every join of neighbouring elements; a cable joins the elements on its two sides."""
     joins: list[Hop] = []
     for i in range(len(elements) - 1):
-        if is_bridge(elements[i]):
+        if isinstance(elements[i], SeriesBridge):
             continue
-        if is_bridge(elements[i + 1]):
+        if isinstance(elements[i + 1], SeriesBridge):
             pairs = pair(
                 found[i][0].load,
                 found[i + 2][0].line,
@@ -78,9 +78,7 @@ def hops(elements: Sequence[object], found: list[list[Ends]]) -> list[Hop]:
             joins.append(Hop(i, i + 2, pairs, made=False))
             continue
         names = (label_of(elements[i]), label_of(elements[i + 1]))
-        pairs = [
-            (x, y) for a in found[i] for b in found[i + 1] for x, y in pair(a.load, b.line, names)
-        ]
+        pairs = [(x, y) for a in found[i] for b in found[i + 1] for x, y in pair(a.load, b.line, names)]
         joins.append(Hop(i, i + 1, pairs, made=True))
     return joins
 
@@ -95,9 +93,7 @@ def _start(ends: list[Ends], record: dict[PortId, Given]) -> Given | None:
     return None
 
 
-def _walk(
-    elements: Sequence[object], found: list[list[Ends]], record: dict[PortId, Given]
-) -> _Walk:
+def _walk(elements: Sequence[object], found: list[list[Ends]], record: dict[PortId, Given]) -> _Walk:
     """The path kind (S2, S3) and the control row of its wires with no rail's potential."""
     first = elements[0]
     if getattr(first, "_whole_supply", False):
@@ -121,12 +117,7 @@ def _seed(walk: _Walk, element: object, ends: list[Ends], record: dict[PortId, G
 
     A recorded load port keeps its row; a recorded line port is carried through the element.
     """
-    came = {
-        one.port.id: _state(record[one.port.id])
-        for end in ends
-        for one in end.line
-        if one.port.id in record
-    }
+    came = {one.port.id: _state(record[one.port.id]) for end in ends for one in end.line if one.port.id in record}
     _carry(walk, element, ends, came)
     for end in ends:
         for load in end.load:
@@ -163,7 +154,7 @@ def _forward(
     came: dict[PortId, _State] = {}
     by_start = {hop.a: hop for hop in joins}
     for i, element in enumerate(elements):
-        if is_bridge(element):
+        if isinstance(element, SeriesBridge):
             continue
         if i == 0 and not _rails(element):
             _seed(walk, element, found[0], record)
@@ -173,9 +164,7 @@ def _forward(
             came[b.id] = (walk.ahead.get(a.id), walk.near.get(a.id))
 
 
-def _backward(
-    walk: _Walk, elements: Sequence[object], found: list[list[Ends]], joins: list[Hop]
-) -> None:
+def _backward(walk: _Walk, elements: Sequence[object], found: list[list[Ends]], joins: list[Hop]) -> None:
     """Walk from the last element back: a line port near a rail ahead of it (S2)."""
     out: dict[PortId, WiringRow] = {}
     by_end = {hop.b: hop for hop in joins}
@@ -198,6 +187,18 @@ def _row(walk: _Walk, a: Port, b: Port) -> WiringRow | None:
     return walk.near.get(a.id) or walk.behind.get(b.id) or walk.ahead.get(a.id) or walk.family
 
 
+def _pin_rows(joins: list[Hop], record: dict[PortId, Given]) -> Walked | None:
+    """Bare pins alone: each wire takes the row an earlier series gave either of its ends (S4)."""
+    known = dict(record)
+    rows: dict[Wire, WiringRow] = {}
+    for hop in joins:
+        for a, b in hop.pairs:
+            if (given := known.get(a.id) or known.get(b.id)) is not None:
+                rows[a.id, b.id] = given.row
+                known[a.id] = known[b.id] = Given(given.row, power=False)
+    return (rows, False) if rows else None
+
+
 def wire_rows(
     elements: Sequence[object],
     found: list[list[Ends]],
@@ -208,6 +209,8 @@ def wire_rows(
 
     `None` when the series touches no rail and starts on no net an earlier series made (S4).
     """
+    if all(isinstance(element, Port) for element in elements):
+        return _pin_rows(joins, record)
     walk = _walk(elements, found, record)
     if not walk.power and walk.family is None:
         return None

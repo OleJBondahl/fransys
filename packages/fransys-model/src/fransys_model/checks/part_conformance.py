@@ -1,14 +1,11 @@
 """Validator: an item's functions and ports match its part's templates (design/vocabulary.md 7)."""
 
 from dataclasses import dataclass
-from operator import attrgetter
 from typing import TYPE_CHECKING, Any, Final
 
-from fransys_model.derive.facts.bars import screws_made_by_landing
-from fransys_model.derive.facts.roles import port_role
+from fransys_model.derive.facts.roles import port_boundary, port_pin_role
 from fransys_model.derive.facts.unit_index import unit_index
-from fransys_model.kernel import Finding, Severity
-from fransys_model.vocab.codes import fix_text
+from fransys_model.vocab.codes import finding
 from fransys_model.vocab.finding_ref import ref
 from fransys_model.vocab.tables import (
     function_templates,
@@ -17,6 +14,7 @@ from fransys_model.vocab.tables import (
     port_templates,
     ports,
 )
+lazy from fransys_model.kernel import Finding
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterable
@@ -56,11 +54,9 @@ def _group[K, R](records: Iterable[R], key_of: Callable[[R], K]) -> frozendict[K
     return frozendict({key: tuple(found) for key, found in grouped.items()})
 
 
-def _pair_up[I: Function | Port, T: FunctionTemplate | PortTemplate](
-    instances: tuple[I, ...], templates: tuple[T, ...]
-) -> _Pairing[I, T]:
+def _pair_up[I: Function | Port, T: FunctionTemplate | PortTemplate](instances: tuple[I, ...], templates: tuple[T, ...]) -> _Pairing[I, T]:
     """Match each template to its instance: the one with the lowest id; later ones are repeats."""
-    by_template = _group(sorted(instances, key=attrgetter("id")), lambda i: i.template)
+    by_template = _group(instances, lambda i: i.template)
     known = {template.id for template in templates}
     matched: list[tuple[T, I]] = []
     missing: list[T] = []
@@ -77,13 +73,7 @@ def _pair_up[I: Function | Port, T: FunctionTemplate | PortTemplate](
 
 
 def _mismatch(message: str, *subjects: Id[Any]) -> Finding:
-    return Finding(
-        code=ITEM_PART_MISMATCH,
-        severity=Severity.ERROR,
-        subjects=subjects,
-        message=message,
-        fix=fix_text(ITEM_PART_MISMATCH),
-    )
+    return finding(ITEM_PART_MISMATCH, subjects, message)
 
 
 def _differing(*facts: tuple[str, object, object]) -> str:
@@ -91,56 +81,32 @@ def _differing(*facts: tuple[str, object, object]) -> str:
     return " and ".join(label for label, own, declared in facts if own != declared)
 
 
-def _port_findings(
-    model: Model, item: Item, function: Function, template: FunctionTemplate, index: _Index
-) -> list[Finding]:
+def _port_findings(model: Model, item: Item, function: Function, template: FunctionTemplate, index: _Index) -> list[Finding]:
     pins = index.pins_of.get(template.id, ())
-    if screws_made_by_landing(model, function, len(pins)):
-        return []
     where = f"function {function.name!r} of item {ref(item)}"
     pairing = _pair_up(index.ports_of.get(function.id, ()), pins)
-    found = [
-        _mismatch(f"{where} has no port for template {pin.name!r}", item.id, function.id, pin.id)
-        for pin in pairing.missing
-    ]
-    found += [
-        _mismatch(f"{where} has a second port for template {pin.name!r}", item.id, port.id)
-        for pin, port in pairing.repeated
-    ]
-    found += [
-        _mismatch(
-            f"{where} has port {port.name!r}, which no port template declares", item.id, port.id
-        )
-        for port in pairing.extra
-    ]
+    found = [_mismatch(f"{where} has no port for template {pin.name!r}", item.id, function.id, pin.id) for pin in pairing.missing]
+    found += [_mismatch(f"{where} has a second port for template {pin.name!r}", item.id, port.id) for pin, port in pairing.repeated]
+    found += [_mismatch(f"{where} has port {port.name!r}, which no port template declares", item.id, port.id) for port in pairing.extra]
     for pin, port in pairing.matched:
         differing = _differing(
             ("name", port.name, pin.name),
-            ("role", port_role(model, port.id), pin.role),
+            ("boundary", port_boundary(model, port.id), pin.boundary),
+            ("pin_role", port_pin_role(model, port.id), pin.pin_role),
             ("marking", port.marking, pin.marking),
         )
         if differing:
-            message = (
-                f"port {port.name!r} of {where} differs from template {pin.name!r} in {differing}"
-            )
+            message = f"port {port.name!r} of {where} differs from template {pin.name!r} in {differing}"
             found.append(_mismatch(message, item.id, port.id))
     return found
 
 
-def _item_findings(
-    model: Model, item: Item, templates: tuple[FunctionTemplate, ...], index: _Index
-) -> list[Finding]:
+def _item_findings(model: Model, item: Item, templates: tuple[FunctionTemplate, ...], index: _Index) -> list[Finding]:
     where = f"item {ref(item)}"
     pairing = _pair_up(index.functions_of.get(item.id, ()), templates)
-    found = [
-        _mismatch(f"{where} has no function for template {template.name!r}", item.id, template.id)
-        for template in pairing.missing
-    ]
+    found = [_mismatch(f"{where} has no function for template {template.name!r}", item.id, template.id) for template in pairing.missing]
     found += [
-        _mismatch(
-            f"{where} has a second function for template {template.name!r}", item.id, function.id
-        )
-        for template, function in pairing.repeated
+        _mismatch(f"{where} has a second function for template {template.name!r}", item.id, function.id) for template, function in pairing.repeated
     ]
     found += [
         _mismatch(
@@ -151,14 +117,9 @@ def _item_findings(
         for function in pairing.extra
     ]
     for template, function in pairing.matched:
-        differing = _differing(
-            ("name", function.name, template.name), ("kind", function.kind, template.kind)
-        )
+        differing = _differing(("name", function.name, template.name), ("kind", function.kind, template.kind))
         if differing:
-            message = (
-                f"function {function.name!r} of {where} differs from template "
-                f"{template.name!r} in {differing}"
-            )
+            message = f"function {function.name!r} of {where} differs from template {template.name!r} in {differing}"
             found.append(_mismatch(message, item.id, function.id))
         found += _port_findings(model, item, function, template, index)
     return found
@@ -183,16 +144,12 @@ def check_part_conformance(model: Model) -> tuple[Finding, ...]:
             if item.id in outside:
                 continue
             found.append(
-                Finding(
-                    code=ITEM_WITHOUT_PART,
-                    severity=Severity.INFO,
-                    subjects=(item.id,),
-                    message=f"item {ref(item)} has no part: its functions are not checked",
-                    fix=fix_text(ITEM_WITHOUT_PART),
+                finding(
+                    ITEM_WITHOUT_PART,
+                    (item.id,),
+                    f"item {ref(item)} has no part: its functions are not checked",
                 )
             )
         else:
             found += _item_findings(model, item, index.templates_of.get(item.part, ()), index)
-    return tuple(
-        sorted(found, key=lambda finding: (finding.code, finding.subjects, finding.message))
-    )
+    return tuple(sorted(found, key=lambda finding: (finding.code, finding.subjects, finding.message)))

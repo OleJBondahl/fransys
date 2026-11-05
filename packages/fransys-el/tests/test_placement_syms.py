@@ -1,35 +1,21 @@
 """`syms_of`: the `Sym` of each picked function, its row, table, box, stand, unit and errors."""
+# NET_POTENTIAL_CONFLICT 1 per default-salt build set (KI-461): planted_model or demo_model 24 V to 0 V short through strip and mate.
+# NET_SHORTED 1 per default-salt build set (KI-461): planted_model or demo_model 24 V to 0 V short through strip and mate.
+# WIRE_ROW_UNRESOLVED 6 per default-salt build set (KI-461): planted_model or demo_model 24 V to 0 V short through strip and mate.
 
 import dataclasses
 
 import pytest
-from conventions_fixtures import house
-from fransys_el.placement_env import Env, make_env
 from fransys_el.placement_kit import ProblemError
 from fransys_el.placement_syms import syms_of
-from placement_fixtures import demo_model, kit_for, leads, planted_model, sid
+from placement_fixtures import leads, sid
+lazy from fransys_el.placement_env import Env
 
-from electrical_symbols import LIBRARY
 from fransys_layout.core import Box, PinRef, Sym
 from fransys_model.derive import stands
+from fransys_model.derive.order import functions_in_order
 lazy from fransys_model.kernel import Id
 lazy from fransys_model.vocab import Function
-
-
-@pytest.fixture(scope="module")
-def planted() -> tuple[Env, tuple[Sym, ...]]:
-    """The planted model's env and syms, built once for the module."""
-    model = planted_model()
-    env = make_env(model, kit_for(model), house(), LIBRARY)
-    return env, syms_of(env)
-
-
-@pytest.fixture(scope="module")
-def demo() -> tuple[Env, tuple[Sym, ...]]:
-    """The demo model's env and syms, built once for the module."""
-    model = demo_model()
-    env = make_env(model, kit_for(model), house(), LIBRARY)
-    return env, syms_of(env)
 
 
 def _sym(syms: tuple[Sym, ...], text: str) -> Sym:
@@ -114,10 +100,10 @@ def test_unknown_port_name_raises_problem_with_fix(planted: tuple[Env, tuple[Sym
 def test_nested_unit_sym_differs_and_syms_keep_the_kit_order(
     planted: tuple[Env, tuple[Sym, ...]],
 ) -> None:
-    """A sym inside a nested unit carries that unit's id, and syms come in the kit's order."""
+    """A sym inside a nested unit carries that unit's id, and syms come in function order (model-0396)."""
     env, syms = planted
     nested = _sym(syms, sid(env.model, "U1-1.terminal"))
     top = _sym(syms, sid(env.model, "1.terminal"))
     assert nested.unit != ""
     assert nested.unit != top.unit
-    assert [s.id for s in syms] == [env.ids[lead] for lead in env.kit]
+    assert [s.id for s in syms] == [env.ids[lead] for lead in functions_in_order(env.model, env.kit)]

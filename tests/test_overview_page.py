@@ -6,9 +6,7 @@ what breaks it.
 
 import json
 import re
-import sys
 from functools import cache
-from pathlib import Path
 from typing import Any
 
 import fransys as fr
@@ -16,10 +14,9 @@ import fransys_parts
 from _model_build_cover import system_document
 from fransys_overview import html
 from fransys_overview._app import APP_JS
-
-sys.path.insert(0, str(Path(__file__).resolve().parent))
 from test_units_worked_example import _system_design
 
+from electrical_symbols import LIBRARY
 from fransys_layout.engines.overview import lay_out_overview
 from fransys_model.derive import (
     overview_tree,
@@ -37,8 +34,8 @@ def _laid() -> tuple[Any, str]:
     parts = fransys_parts.load("demo_parts")
     design, _field1, _field2 = _system_design(parts)
     model = fr.build(parts, design.draft(), system_document()).model
-    out = lay_out_overview(model)[0]
-    return out, html(out)
+    out = lay_out_overview(model, LIBRARY)[0]
+    return out, html(out, text_height=8)
 
 
 def _data() -> dict[str, Any]:
@@ -68,15 +65,11 @@ def test_the_page_holds_each_recorded_position() -> None:
     lines = list(layout_of(out, OverviewLine).values())
     page_boxes = [b for v in _data()["views"] for b in v["boxes"]]
     page_lines = [ln for v in _data()["views"] for ln in v["lines"]]
-    assert sorted((b["x"], b["y"], b["w"], b["h"]) for b in page_boxes) == sorted(
-        (b.x, b.y, b.width, b.height) for b in boxes
-    )
+    assert sorted((b["x"], b["y"], b["w"], b["h"]) for b in page_boxes) == sorted((b.x, b.y, b.width, b.height) for b in boxes)
     assert sorted((t[0], t[1], t[2], t[4], t[5]) for b in page_boxes for t in b["tabs"]) == sorted(
         (t.x, t.y, t.text_width, t.width, t.height) for b in boxes for t in b.tabs
     )
-    assert sorted(map(tuple, (p for ln in page_lines for p in ln["pts"]))) == sorted(
-        (p.x, p.y) for ln in lines for p in ln.points
-    )
+    assert sorted(map(tuple, (p for ln in page_lines for p in ln["pts"]))) == sorted((p.x, p.y) for ln in lines for p in ln.points)
     assert len(page_lines) == len(lines)
 
 
@@ -87,11 +80,7 @@ def test_the_page_script_runs_no_layout() -> None:
 
 
 def _system_view() -> dict[str, Any]:
-    (view,) = (
-        v
-        for v in _data()["views"]
-        if v["unit"] is None and v["mode"] == "plain" and v["open"] is None
-    )
+    (view,) = (v for v in _data()["views"] if v["unit"] is None and v["mode"] == "plain" and v["open"] is None)
     return view
 
 
@@ -102,19 +91,13 @@ def test_the_system_level_prints_the_block_diagram_rows() -> None:
     view = _system_view()
     assert sorted(ln["text"] for ln in view["lines"]) == sorted(r.designation for r in rows)
     reached = {box for row in rows for box in (row.a, row.b)}
-    assert {tuple(b["lines"]) for b in view["boxes"]} == {
-        box_lines(out, box, None) for box in reached
-    }
+    assert {tuple(b["lines"]) for b in view["boxes"]} == {box_lines(out, box, None) for box in reached}
 
 
 def test_no_carrier_inside_an_opened_unit_is_printed_absolute() -> None:
     """A3 at page level: a unit view prints a cable as the unit's own list does (`-W1`)."""
     out = _laid()[0]
-    page = {
-        (v["unit"], v["mode"]): v
-        for v in _data()["views"]
-        if v["level"] is None and v["open"] is None
-    }
+    page = {(v["unit"], v["mode"]): v for v in _data()["views"] if v["level"] is None and v["open"] is None}
     units = [u for u in overview_units(out) if u]
     differs = checked = 0
     for unit in units:
@@ -145,15 +128,13 @@ def test_the_parts_tree_prints_the_rows_derive_gives() -> None:
 
 def test_the_features_panel_names_every_switch_and_holds_its_state() -> None:
     """O16: breaks if a switch is missing from the panel or its default is not off."""
-    page = html(_laid()[0])
+    page = html(_laid()[0], text_height=8)
     assert 'id="feat-body"' in page
     for name in ("Continuous zoom", "Matrix", "Signals lens", "Location fold", "Focus"):
         assert f"'{name}'" in APP_JS
     for name in ("Findings", "Changes", "Unit view", "Groups folded", "All devices", "Lanes"):
         assert f"'{name}'" in APP_JS
-    assert (
-        "feat: { zoom: false, matrix: false, signals: false, locfold: false, focus: false" in APP_JS
-    )
+    assert "feat: { zoom: false, matrix: false, signals: false, locfold: false, focus: false" in APP_JS
 
 
 def test_no_switch_says_next_round() -> None:
@@ -163,7 +144,7 @@ def test_no_switch_says_next_round() -> None:
 
 def test_continuous_zoom_is_live_and_composes_the_recorded_levels_in_the_page() -> None:
     """O6: breaks if the switch stays disabled, the script is missing, or zoom ships data."""
-    page = html(_laid()[0])
+    page = html(_laid()[0], text_height=8)
     assert "['zoom', 'Continuous zoom']" in APP_JS
     assert "const zoomUpdate" in page
     assert "childViewOf" in page
@@ -202,11 +183,5 @@ def test_a_folds_member_rows_are_one_per_member_and_name_their_line() -> None:
 
 def test_a_field_fold_member_row_reads_as_a_stub_label_carrier_first() -> None:
     """O14: breaks if a member row joins its text with " - " again, or drops the carrier."""
-    rows = [
-        m["text"]
-        for v in _data()["views"]
-        for b in v["boxes"]
-        if b["ref"][0] == "fields"
-        for m in b["members"]
-    ]
+    rows = [m["text"] for v in _data()["views"] for b in v["boxes"] if b["ref"][0] == "fields" for m in b["members"]]
     assert sorted(rows) == ["-WM1 → +FLD-M1", "-WM2 → +FLD-M2"]

@@ -8,7 +8,7 @@ from fransys_kernel import (
     AuthoringKey,
     Finding,
     Id,
-    MergeConflict,
+    MergeConflictError,
     ModelError,
     Origin,
     SchemaError,
@@ -49,17 +49,14 @@ def _holder_source() -> _Source:
 
 def test_describe_a_merge_conflict_names_both_origins() -> None:
     """The two origins are already `Origin`s; only the record id needs resolving."""
-    conflict = MergeConflict(
+    conflict = MergeConflictError(
         "same id, different content",
         record_id=_HOLDER,
         origin_a=Origin(file="a.py", line=1, note="first"),
         origin_b=Origin(file="b.py", line=2, note="second"),
     )
     assert describe(conflict, _holder_source()) == (
-        "same id, different content\n"
-        "  record: pumps.py:12 (aux/pumps/pump1)\n"
-        "  first: a.py:1\n"
-        "  second: b.py:2"
+        "same id, different content\n  record: pumps.py:12 (aux/pumps/pump1)\n  first: a.py:1\n  second: b.py:2"
     )
 
 
@@ -118,6 +115,4 @@ def test_describe_parts_keeps_the_head_and_each_subject_apart() -> None:
     parts = describe_parts(finding, _holder_source(), {_HOLDER: "pump 1"})
     assert parts.head == "DEMO (warning): two lines\nof text"
     assert parts.subjects == ("pump 1 (pumps.py:12)", f"unknown origin (kind {_MISSING.kind})")
-    assert describe(finding, _holder_source(), {_HOLDER: "pump 1"}) == "\n".join(
-        [parts.head, *(f"  subject: {text}" for text in parts.subjects)]
-    )
+    assert describe(finding, _holder_source(), {_HOLDER: "pump 1"}) == "\n".join([parts.head, *(f"  subject: {text}" for text in parts.subjects)])

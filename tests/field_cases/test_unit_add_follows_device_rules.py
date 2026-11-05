@@ -1,16 +1,6 @@
 """Field case: `d.add` follows `device`: the open function block, the default place, `place=`.
-
-The engineering shape: a controller cabinet with an I/O board built as a unit, added inside the
-`PLC` function block of a design whose default place is the cabinet `C1`. A second board is
-added with `place="C2"`.
-
-The bug: `d.add` took no place and ignored the open block, so the board's boundary device carried
-neither `=PLC` nor `+C1`: its designation lost the function group (0.5.1 wrote scope at=C1,
-group=PLC).
-
-The rule: `d.add` joins the open `d.function` block, takes the default place, and
-takes `place=` with `device`'s meaning. The board's own drawing does not change.
-"""
+The bug: d.add ignored the open block and took no place, so the board's boundary device lost its =PLC and +C1 parts.
+Fixed by the d.add rule (no decision record), it joins the open function block and takes the default place and place=."""
 
 from typing import NamedTuple
 
@@ -25,7 +15,7 @@ class _Board(NamedTuple):
 
 @fr.unit("demo-io-board", revision=1, interface_version=1, date="2026-01-01", text="first", by="AB")
 def _board(d: fr.Design) -> _Board:
-    return _Board(d.device("X1", "DEMO-CONN-2P", interface=True))
+    return _Board(d.device("X1", "DEMO-CONN-2P", interface=True, unused=True))
 
 
 def _labels(model: fr.Model, device: fr.Device) -> set[str]:

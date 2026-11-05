@@ -65,18 +65,14 @@ class _PlcScope:
     requests: dict[Id[Function], PlcRequestFacet]
 
 
-def _plc_pin_rows(
-    scope: _PlcScope, function: Function, facet: PlcChannelFacet
-) -> tuple[PlcChannelRow, ...]:
+def _plc_pin_rows(scope: _PlcScope, function: Function, facet: PlcChannelFacet) -> tuple[PlcChannelRow, ...]:
     """One `PlcChannelRow` per pin of channel `function`, in pin order (`facet`: its template's)."""
     model, unit = scope.model, scope.unit
     device = scope.devices.get(function.id)
     device_item = None if device is None else functions(model)[device].item
     request = None if device is None else scope.requests.get(device)
     device_designation = (
-        None
-        if device_item is None or end_outside_nested_unit(model, device_item, unit)
-        else printed_designation(model, device_item, unit=unit)
+        None if device_item is None or end_outside_nested_unit(model, device_item, unit) else printed_designation(model, device_item, unit=unit)
     )
     pins = channel_pin_designations(model, scope.idx, function.id, unit)
     return tuple(
@@ -124,9 +120,7 @@ def plc_channel_pairs(
     return tuple((item, row) for _, item, row in sorted(keyed, key=lambda one: one[0]))
 
 
-def plc_channel_rows(
-    model: Model, *, unit: Id[Unit] | None = None, context: Id[AspectNode] | None = None
-) -> tuple[PlcChannelRow, ...]:
+def plc_channel_rows(model: Model, *, unit: Id[Unit] | None = None, context: Id[AspectNode] | None = None) -> tuple[PlcChannelRow, ...]:
     """One `PlcChannelRow` per pin of each PLC channel `Function`, in the PLC list's table order.
 
     The order is `plc_channel_key`: controllers by designation, each one's own channels

@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 
+import pytest
 from options_fixtures import core_options
 from turn_fixtures import refit
 
@@ -26,12 +27,6 @@ from .route_fixtures import overlaps, reversing_pair, with_crossed
 
 OPTIONS = core_options(
     marker=MARKER,
-    flip_turn="R180",
-    tag_stagger=True,
-    label_gap=8,
-    parallel_pitch=48,
-    driver_first=True,
-    arrow_sides=("E", "W"),
 )
 G = OPTIONS.wiring_grid
 
@@ -56,18 +51,10 @@ def _step(prob: PlacementProblem) -> int:
     return pins[("U", "s1")][1] - pins[("L", "n1")][1]
 
 
-def test_three_overlapping_jogs_on_one_step_need_four_grid_steps() -> None:
-    """Input: U pole pins at x 24k, L pole pins at x 80 (U.s<k> to L.n<k>, k 0..3): lanes 1..3 jog.
-    Expected: the pin-to-pin y of that step is 4 * G, i.e. 32 with G = 8 (three levels).
-    """
-    assert _step(_stair(24, 0, 80)) == 4 * G
-
-
-def test_three_disjoint_jogs_on_one_step_need_two_grid_steps() -> None:
-    """Input: U pole pins at x 32k, L pole pins at x 24k (U.s<k> to L.n<k>, k 0..3): lanes 1..3 jog.
-    Expected: the pin-to-pin y of that step is 2 * G, i.e. 16 with G = 8 (one level).
-    """
-    assert _step(_stair(32, 24, 0)) == 2 * G
+@pytest.mark.parametrize(("args", "grid_steps"), [((24, 0, 80), 4), ((32, 24, 0), 2)])
+def test_three_jogs_on_one_step_need_the_grid_steps_of_their_levels(args: tuple[int, int, int], grid_steps: int) -> None:
+    """U.s<k> to L.n<k>, k 0..3: lanes 1..3 jog. Overlapping jogs take three levels (4 G), disjoint ones one level (2 G)."""
+    assert _step(_stair(*args)) == grid_steps * G
 
 
 def test_four_fan_trunks_with_overlapping_spans_take_four_y_lines() -> None:
@@ -119,11 +106,11 @@ def test_a_free_tall_column_inside_a_trunk_span_stands_below_the_trunk() -> None
 
 def test_a_box_riser_is_a_span_of_its_fan_for_the_level_ordering() -> None:
     """Input: box A1 (pins p1, p2 south) right of L and M; net k = A1.p<k>, L.n<k-1>, M.n<k-1>.
-    Expected: fan f:n1's span ends at the x of A1.p1 (1264), f:n2's at A1.p2 (1280).
+    Expected: fan f:n1's span ends at the x of A1.p1 (984), f:n2's at A1.p2 (1000).
     """
     syms = (box_sym(2), poles("L", 2), poles("M", 2))
     nets = (net("n1", "A1.p1", "L.n0", "M.n0"), net("n2", "A1.p2", "L.n1", "M.n1"))
     prob = PlacementProblem(AREA, syms, nets, facts=Facts())
     (env,) = page_envs(cut_of(prob, OPTIONS), prob, OPTIONS)
     ends = {s.fan: s.x1 for s in _spans(env, place_x(env)[0])}
-    assert ends == {"f:n1": 1264, "f:n2": 1280}
+    assert ends == {"f:n1": 984, "f:n2": 1000}

@@ -1,21 +1,12 @@
 """Field case: an unwired interface redundancy device, with `hide_unused_pins` on.
-
-The engineering shape: a unit hands back a redundancy module of its interface that nothing is
-wired to, next to a lamp that nothing is wired to, and sets `hide_unused_pins` on its own profile.
-
-The bug: building raised RefError "the id names no record" when the layout runs were spliced
-(splice.py `spliced`). A page id follows its first drawn group. The unit hides its spare lamp, so
-its own run named its page differently, and the cabinet's cross-reference kept the top run's id.
-The rule: a spliced cross-reference names the page and the column the unit's own run draws.
-Hiding the lamps shifts the interface port's column, so the base run's x would print a stale cell.
-Read from the core path: every reference marker names a page the build draws.
-"""
+The bug: building raised RefError when layout runs were spliced, as the cabinet kept the top run's page id.
+Fixed by the rule, no record named: a spliced cross-reference names the page and column the unit's own run draws."""
 
 import re
 from typing import TYPE_CHECKING, NamedTuple
 
 import fransys as fr
-from _drawn_pages import drawn_pages
+from _drawn_pages import drawn_pages, markers_in, ref_texts
 
 from fransys_model.layout import Page, layout_of
 
@@ -47,7 +38,7 @@ def test_an_unwired_redundancy_interface_builds(tmp_path: Path) -> None:
     result = fr.build(d, own, fr.document(preset, cabinet, cover=tmp_path / "c.md"))
     drawings = drawn_pages(result.model)
     numbers = {layout_of(result.model, Page)[page].number for page in drawings}
-    refs = [text for drawing in drawings.values() for m in drawing.markers for _, text in m.texts]
+    refs = [text for drawing in drawings.values() for m in markers_in(drawing) for text in ref_texts(m)]
     assert refs, "the cabinet's references to the unit's boundary are drawn"
     named = [int(n) for ref in refs for n in re.findall(r"p(\d+):", ref)]
     assert named

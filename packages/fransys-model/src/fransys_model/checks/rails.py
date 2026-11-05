@@ -1,0 +1,45 @@
+"""Validator: a declared rail group has a potential, no fuse, and is the only one of its potential in a unit (R885)."""
+
+from typing import TYPE_CHECKING, Final
+
+from fransys_model.checks._finding import ordered
+from fransys_model.derive.facts.closure import link_groups
+from fransys_model.derive.facts.potentials import rail_potential
+from fransys_model.derive.facts.unit_index import item_unit
+from fransys_model.vocab.codes import finding
+from fransys_model.vocab.finding_ref import ref
+from fransys_model.vocab.tables import rail_groups
+
+if TYPE_CHECKING:
+    from fransys_model.kernel import Finding, Model
+    from fransys_model.vocab import RailGroup
+
+RAIL_DUPLICATE_POTENTIAL: Final[str] = "RAIL_DUPLICATE_POTENTIAL"
+RAIL_WITHOUT_POTENTIAL: Final[str] = "RAIL_WITHOUT_POTENTIAL"
+RAIL_ON_FUSED: Final[str] = "RAIL_ON_FUSED"
+
+
+def _where(model: Model, group: RailGroup) -> str:
+    origin = model.origins[group.id]
+    return f"rail group {ref(group)} ({origin.file}:{origin.line})"
+
+
+def check_rails(model: Model) -> tuple[Finding, ...]:
+    """Error on a rail group with no power potential, on a fused terminal, and on two groups of one potential in one unit."""
+    fused = {g.item for g in link_groups(model, lambda role: role.protective)}
+    first: dict[tuple[object, str], RailGroup] = {}
+    found = []
+    for group in rail_groups(model).values():
+        potential = rail_potential(model, group)
+        if potential is None:
+            found.append(finding(RAIL_WITHOUT_POTENTIAL, (group.id,), f"{_where(model, group)} carries no potential: declare the potential first"))
+            continue
+        if any(terminal in fused for terminal in group.terminals):
+            found.append(
+                finding(RAIL_ON_FUSED, (group.id,), f"{_where(model, group)} holds a terminal whose part has a protective link (a fuse in the path)")
+            )
+        key = (item_unit(model, group.terminals[0]), potential)
+        if (other := first.setdefault(key, group)) is not group:
+            msg = f"{_where(model, group)} and {_where(model, other)} are both the {potential} rail of one unit: one group per potential"
+            found.append(finding(RAIL_DUPLICATE_POTENTIAL, (other.id, group.id), msg))
+    return ordered(found)

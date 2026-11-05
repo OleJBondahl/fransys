@@ -1,44 +1,30 @@
 """Lint a part library without building a model.
 
-Every check is `ERROR` unless the call site passes `severity=Severity.WARNING`. Codes are
+Every finding has the one severity of its code. Codes are
 listed next to the check that raises them, and every finding's message carries its file
 and line (`_toml.finding`): `lint()` hands back bare findings with no model to resolve
 an id's origin through, so the location lives in the text instead.
 """
 
 import re
-from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from fransys_model.derive import connector_label, connector_segments
-from fransys_model.kernel import Finding, Severity
 from fransys_model.vocab import DESIGNATION_SCHEME
+lazy from fransys_model.kernel import Finding
 
-from . import (
-    _cable_pairs,
-    _changeover,
-    _fields,
-    _function_facts,
-    _joins,
-    _lint_ports,
-    _power_loss,
-    _ratings,
-    _toml,
-)
+from . import _cable_pairs, _connection, _fields, _lint_function, _ratings, _toml
 
 if TYPE_CHECKING:
     from ._toml import ParsedFile
 
-SUPPORTED_SCHEMAS: frozenset[int] = frozenset({1})
+SUPPORTED_SCHEMAS: frozenset[int] = frozenset({2})
 
+_OLD_SCHEMA = 1
 _FILE_NAME = re.compile(r"^[a-z0-9_-]+$")
-_SYMBOL_SLUG = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
 _CLASS_CODE = re.compile(DESIGNATION_SCHEME.class_code)
 
-_PART_FILE_TABLES = frozenset(
-    {"part", "function", "supply", "footprint", "cable_product", "pcb", "rating"}
-)
+_PART_FILE_TABLES = frozenset({"part", "function", "supply", "footprint", "cable_product", "pcb", "rating", "block", "connection"})
 
 
 def lint(root: Path) -> tuple[Finding, ...]:
@@ -51,32 +37,9 @@ def lint(root: Path) -> tuple[Finding, ...]:
     root = Path(root)
     library_file = root / "library.toml"
     if not library_file.is_file():
-        return (
-            _toml.finding(
-                "LIBRARY_FILE_MISSING", "library.toml", 1, "no library.toml under this root"
-            ),
-        )
+        return (_toml.finding("LIBRARY_FILE_MISSING", "library.toml", 1, "no library.toml under this root"),)
 
-    findings: list[Finding] = []
-    library = _toml.parse(library_file, relative_to=root)
-    findings.extend(library.findings)
-    library_schema: int | None = None
-    if library.data is not None:
-        findings.extend(
-            _fields.check_fields(
-                library.data,
-                _fields.LIBRARY_FIELDS,
-                path=library.path,
-                line=1,
-                table_name="library.toml",
-            )
-        )
-        raw_schema = library.data.get("schema")
-        if type(raw_schema) is int:
-            library_schema = raw_schema
-            if library_schema not in SUPPORTED_SCHEMAS:
-                findings.append(_schema_unsupported(library.path, 1, library_schema))
-
+    findings, library_schema = _lint_library(library_file, root)
     parts_dir = root / "parts"
     part_files = sorted(parts_dir.glob("*.toml")) if parts_dir.is_dir() else []
     seen_parts: dict[tuple[str, str], str] = {}
@@ -85,9 +48,22 @@ def lint(root: Path) -> tuple[Finding, ...]:
     return tuple(findings)
 
 
-def _lint_part_file(
-    file_path: Path, root: Path, library_schema: int | None, seen_parts: dict[tuple[str, str], str]
-) -> list[Finding]:
+def _lint_library(library_file: Path, root: Path) -> tuple[list[Finding], int | None]:
+    """The findings of `library.toml` and its schema, if it names one."""
+    library = _toml.parse(library_file, relative_to=root)
+    findings: list[Finding] = list(library.findings)
+    if library.data is None:
+        return findings, None
+    findings.extend(_fields.check_fields(library.data, _fields.LIBRARY_FIELDS, path=library.path, line=1, table_name="library.toml"))
+    raw_schema = library.data.get("schema")
+    if type(raw_schema) is not int:
+        return findings, None
+    if raw_schema not in SUPPORTED_SCHEMAS:
+        findings.append(_schema_unsupported(library.path, 1, raw_schema))
+    return findings, raw_schema
+
+
+def _lint_part_file(file_path: Path, root: Path, library_schema: int | None, seen_parts: dict[tuple[str, str], str]) -> list[Finding]:
     findings: list[Finding] = []
     rel_name = file_path.relative_to(root).as_posix()
     if _FILE_NAME.fullmatch(file_path.stem) is None:
@@ -97,7 +73,6 @@ def _lint_part_file(
                 rel_name,
                 1,
                 "a part file name should be lowercase with hyphens, digits and underscores",
-                severity=Severity.WARNING,
             )
         )
     parsed = _toml.parse(file_path, relative_to=root)
@@ -108,22 +83,19 @@ def _lint_part_file(
 
 
 def _schema_unsupported(path: str, line: int, value: int) -> Finding:
+    if value == _OLD_SCHEMA:
+        text = "schema 1 is old: run the migrate_parts_022 script from the Fransys repository (piece MIGRATE-022-DROP) on the library folder"
+        return _toml.finding("PART_SCHEMA_OLD", path, line, text)
     supported = ", ".join(str(v) for v in sorted(SUPPORTED_SCHEMAS))
-    return _toml.finding(
-        "SCHEMA_UNSUPPORTED",
-        path,
-        line,
-        f"schema {value} is not supported (supported: {supported})",
-    )
+    text = f"schema {value} is not supported (supported: {supported})"
+    return _toml.finding("SCHEMA_UNSUPPORTED", path, line, text)
 
 
 def _line(origins: _toml.Origins, path_key: _toml.TablePath, default: int = 1) -> int:
     return origins.get(path_key, default)
 
 
-def _check_part_file(
-    parsed: ParsedFile, library_schema: int | None, seen_parts: dict[tuple[str, str], str]
-) -> list[Finding]:
+def _check_part_file(parsed: ParsedFile, library_schema: int | None, seen_parts: dict[tuple[str, str], str]) -> list[Finding]:
     """Every check for one part file: schema, `[part]`, `[[function]]` and the facets."""
     data = parsed.data
     if data is None:
@@ -138,22 +110,21 @@ def _check_part_file(
         _check_top_level_tables(data, path, origins),
         _check_schema(data, path, library_schema),
         _check_part_section(data, part, path, part_line, seen_parts),
-        _check_functions(data, path, origins),
+        _lint_function.check_functions(data, path, origins),
         _check_supplies(data, path, origins),
         _check_footprint(data, path, origins),
         _check_cable_product_section(data, path, origins, category, part_line),
         _check_pcb_section(data, path, origins, category, part_line),
         _ratings.check_part_rating(data, path, origins),
-        _power_loss.check_power_loss_twice(data, path, origins),
+        _ratings.check_part_block(data, path, origins),
+        _connection.check_part_connection(data, path, origins),
     )
     return [finding for group in groups for finding in group]
 
 
 def _check_top_level_tables(data: _toml.Table, path: str, origins: _toml.Origins) -> list[Finding]:
     return [
-        _toml.finding(
-            "TABLE_UNKNOWN", path, _table_line(data, origins, key), f"unknown table {key!r}"
-        )
+        _toml.finding("TABLE_UNKNOWN", path, _table_line(data, origins, key), f"unknown table {key!r}")
         for key in data
         if key != "schema" and key not in _PART_FILE_TABLES
     ]
@@ -173,11 +144,7 @@ def _check_schema(data: _toml.Table, path: str, library_schema: int | None) -> l
         return [_toml.finding("FIELD_MISSING", path, 1, "part file is missing 'schema'")]
     raw_schema = data["schema"]
     if type(raw_schema) is not int:
-        return [
-            _toml.finding(
-                "FIELD_TYPE", path, 1, f"schema must be int, not {type(raw_schema).__name__}"
-            )
-        ]
+        return [_toml.finding("FIELD_TYPE", path, 1, f"schema must be int, not {type(raw_schema).__name__}")]
     findings: list[Finding] = []
     if raw_schema not in SUPPORTED_SCHEMAS:
         findings.append(_schema_unsupported(path, 1, raw_schema))
@@ -193,20 +160,14 @@ def _check_schema(data: _toml.Table, path: str, library_schema: int | None) -> l
     return findings
 
 
-def _check_part_section(
-    data: _toml.Table, part: object, path: str, part_line: int, seen: dict[tuple[str, str], str]
-) -> list[Finding]:
+def _check_part_section(data: _toml.Table, part: object, path: str, part_line: int, seen: dict[tuple[str, str], str]) -> list[Finding]:
     if "part" not in data:
         return [_toml.finding("FIELD_MISSING", path, 1, "part file has no [part] table")]
-    findings = _fields.check_fields(
-        part, _fields.PART_FIELDS, path=path, line=part_line, table_name="part"
-    )
+    findings = _fields.check_fields(part, _fields.PART_FIELDS, path=path, line=part_line, table_name="part")
     if type(part) is not dict:
         return findings
     findings.extend(_check_class_code(part.get("class_code"), path, part_line))
-    findings.extend(
-        _check_part_duplicate(part.get("manufacturer"), part.get("mpn"), path, part_line, seen)
-    )
+    findings.extend(_check_part_duplicate(part.get("manufacturer"), part.get("mpn"), path, part_line, seen))
     return findings
 
 
@@ -222,9 +183,7 @@ def _check_class_code(class_code: object, path: str, line: int) -> list[Finding]
     return [_toml.finding("CLASS_CODE", path, line, text)]
 
 
-def _check_part_duplicate(
-    manufacturer: object, mpn: object, path: str, line: int, seen: dict[tuple[str, str], str]
-) -> list[Finding]:
+def _check_part_duplicate(manufacturer: object, mpn: object, path: str, line: int, seen: dict[tuple[str, str], str]) -> list[Finding]:
     if type(manufacturer) is not str or type(mpn) is not str:
         return []
     earlier = seen.get((manufacturer, mpn))
@@ -244,11 +203,7 @@ def _check_supplies(data: _toml.Table, path: str, origins: _toml.Origins) -> lis
     findings: list[Finding] = []
     for index, supply in enumerate(supplies):
         line = _line(origins, ("supply", index))
-        findings.extend(
-            _fields.check_fields(
-                supply, _fields.SUPPLY_FIELDS, path=path, line=line, table_name="supply"
-            )
-        )
+        findings.extend(_fields.check_fields(supply, _fields.SUPPLY_FIELDS, path=path, line=line, table_name="supply"))
     return findings
 
 
@@ -256,14 +211,10 @@ def _check_footprint(data: _toml.Table, path: str, origins: _toml.Origins) -> li
     if "footprint" not in data:
         return []
     line = _line(origins, ("footprint",))
-    return _fields.check_fields(
-        data["footprint"], _fields.FOOTPRINT_FIELDS, path=path, line=line, table_name="footprint"
-    )
+    return _fields.check_fields(data["footprint"], _fields.FOOTPRINT_FIELDS, path=path, line=line, table_name="footprint")
 
 
-def _check_cable_product_section(
-    data: _toml.Table, path: str, origins: _toml.Origins, category: object, part_line: int
-) -> list[Finding]:
+def _check_cable_product_section(data: _toml.Table, path: str, origins: _toml.Origins, category: object, part_line: int) -> list[Finding]:
     if "cable_product" not in data:
         if category == "cable":
             return [
@@ -289,7 +240,7 @@ def _check_cable_product_section(
         if type(core_count) is int and type(colours) is list and core_count != len(colours):
             findings.append(
                 _toml.finding(
-                    "CABLE_CORE_COUNT",
+                    "CABLE_PRODUCT_CORE_COUNT",
                     path,
                     line,
                     f"core_count {core_count} does not match {len(colours)} core_colours",
@@ -297,17 +248,11 @@ def _check_cable_product_section(
             )
         findings.extend(_cable_pairs.check_pairs(cable_product, path, line))
     if category is not None and category != "cable":
-        findings.append(
-            _toml.finding(
-                "CABLE_WITHOUT_PRODUCT", path, line, "[cable_product] is set on a non-cable part"
-            )
-        )
+        findings.append(_toml.finding("CABLE_WITHOUT_PRODUCT", path, line, "[cable_product] is set on a non-cable part"))
     return findings
 
 
-def _check_pcb_section(
-    data: _toml.Table, path: str, origins: _toml.Origins, category: object, part_line: int
-) -> list[Finding]:
+def _check_pcb_section(data: _toml.Table, path: str, origins: _toml.Origins, category: object, part_line: int) -> list[Finding]:
     if "pcb" not in data:
         if category == "board":
             return [
@@ -316,215 +261,8 @@ def _check_pcb_section(
                     path,
                     part_line,
                     "category is board with no [pcb]",
-                    severity=Severity.WARNING,
                 )
             ]
         return []
     line = _line(origins, ("pcb",))
-    return _fields.check_fields(
-        data["pcb"], _fields.PCB_FIELDS, path=path, line=line, table_name="pcb"
-    )
-
-
-@dataclass(slots=True)
-class _FunctionState:
-    """What one part's functions are checked against each other with, in function order."""
-
-    names_seen: set[str]
-    plc_seen: set[tuple[object, object]]
-    port_holders: dict[str, list[tuple[str, str]]]
-    labels_seen: dict[str, str]
-    segments: tuple[str, ...]
-
-
-def _check_functions(data: _toml.Table, path: str, origins: _toml.Origins) -> list[Finding]:
-    if "function" not in data:
-        return []
-    functions = data["function"]
-    if type(functions) is not list:
-        return [_toml.finding("FIELD_TYPE", path, 1, "function must be an array of tables")]
-    findings: list[Finding] = []
-    segments = connector_segments(
-        _connector_label(e) if type(e) is dict else None for e in functions
-    )
-    state = _FunctionState(
-        names_seen=set(), plc_seen=set(), port_holders={}, labels_seen={}, segments=segments
-    )
-    for index, entry in enumerate(functions):
-        line = _line(origins, ("function", index))
-        if not isinstance(entry, dict):  # isinstance narrows to a dict ty accepts as a Table
-            findings.append(
-                _toml.finding("FIELD_TYPE", path, line, "function entry must be a table")
-            )
-            continue
-        findings.extend(_check_function_entry(entry, path, line, state, index))
-        findings.extend(_ratings.check_function_tables(entry, path, origins, index, line))
-    return [*findings, *_joins.check(functions, path, origins)]
-
-
-def _check_function_entry(
-    entry: _toml.Table, path: str, line: int, state: _FunctionState, index: int
-) -> list[Finding]:
-    sub_tables = ("connector", "plc_channel", "rating", "operating", "protection")
-    body = {k: v for k, v in entry.items() if k not in sub_tables}
-    findings = _fields.check_fields(
-        body, _fields.FUNCTION_FIELDS, path=path, line=line, table_name="function"
-    )
-
-    name = entry.get("name")
-    if type(name) is str:
-        if name in state.names_seen:
-            findings.append(
-                _toml.finding(
-                    "FUNCTION_NAME_DUPLICATE",
-                    path,
-                    line,
-                    f"function name {name!r} repeats within this part",
-                )
-            )
-        state.names_seen.add(name)
-
-    symbol = entry.get("symbol")
-    if type(symbol) is str and _SYMBOL_SLUG.fullmatch(symbol) is None:
-        findings.append(
-            _toml.finding(
-                "SYMBOL_SLUG", path, line, f"symbol {symbol!r} must be a lowercase, hyphenated slug"
-            )
-        )
-
-    findings.extend(_lint_ports.check_ports(entry, symbol, path, line))
-    findings.extend(_check_port_names_shared(entry, path, line, state, index))
-    findings.extend(_lint_ports.check_links(entry, path, line))
-    findings.extend(_changeover.check(entry, path, line))
-    findings.extend(_function_facts.check(entry, path, line))
-    findings.extend(_check_connector_facet(entry, path, line))
-    findings.extend(_check_connector_marking_reused(entry, path, line, state))
-    findings.extend(_check_plc_channel_facet(entry, path, line, state.plc_seen))
-    return findings
-
-
-def _connector_label(entry: _toml.Table) -> str | None:
-    """The label a connector function prints, or `None` (parts-0003, `derive.connector_label`).
-
-    `None` too for a non-string `marking` (`FIELD_TYPE` reports it); the rule is `derive`'s.
-    """
-    name = entry.get("name")
-    if entry.get("kind") != "connector" or type(name) is not str:
-        return None
-    connector = entry.get("connector")
-    marking = connector.get("marking") if type(connector) is dict else None
-    if marking is not None and type(marking) is not str:
-        return None
-    return connector_label(marking, name)
-
-
-def _check_port_names_shared(
-    entry: _toml.Table, path: str, line: int, state: _FunctionState, index: int
-) -> list[Finding]:
-    """`PORT_NAME_SHARED`: same-named ports of two functions print one designation (parts-0005).
-
-    A port prints `<item><segment>:<name>`; `derive.connector_segments` decides the segment.
-    """
-    ports = entry.get("ports")
-    if type(ports) is not list:
-        return []
-    name = entry.get("name")
-    function = name if type(name) is str else "<unnamed>"
-    segment = state.segments[index]
-    findings: list[Finding] = []
-    named = (p.get("name") for p in ports if type(p) is dict)
-    for port_name in dict.fromkeys(n for n in named if type(n) is str):
-        holders = state.port_holders.setdefault(port_name, [])
-        clash = next((h for h, other in holders if other == segment), None)
-        if clash is not None:
-            findings.append(
-                _toml.finding(
-                    "PORT_NAME_SHARED",
-                    path,
-                    line,
-                    f"port name {port_name!r} is on both function {clash!r} and function "
-                    f"{function!r}, which would print one designation, "
-                    f"{f'<item>{segment}:{port_name}'!r}",
-                )
-            )
-        holders.append((function, segment))
-    return findings
-
-
-def _check_connector_marking_reused(
-    entry: _toml.Table, path: str, line: int, state: _FunctionState
-) -> list[Finding]:
-    """`CONNECTOR_MARKING_REUSED`: two connector functions of one part print one label."""
-    label = _connector_label(entry)
-    if label is None:
-        return []
-    name = entry["name"]
-    earlier = state.labels_seen.get(label)
-    if earlier is None:
-        state.labels_seen[label] = name
-        return []
-    return [
-        _toml.finding(
-            "CONNECTOR_MARKING_REUSED",
-            path,
-            line,
-            f"connector label {label!r} is printed by both function {earlier!r} and "
-            f"function {name!r}",
-        )
-    ]
-
-
-def _check_connector_facet(entry: _toml.Table, path: str, line: int) -> list[Finding]:
-    if "connector" not in entry:
-        return []
-    connector = entry["connector"]
-    findings = _fields.check_fields(
-        connector, _fields.CONNECTOR_FIELDS, path=path, line=line, table_name="function.connector"
-    )
-    if entry.get("kind") != "connector":
-        findings.append(
-            _toml.finding(
-                "FACET_KIND_MISMATCH",
-                path,
-                line,
-                "[function.connector] is set on a function whose kind is not connector",
-            )
-        )
-    pincount = connector.get("pincount") if type(connector) is dict else None
-    if type(pincount) is int and pincount < 1:
-        findings.append(_toml.finding("PINCOUNT", path, line, f"pincount {pincount} is below 1"))
-    return findings
-
-
-def _check_plc_channel_facet(
-    entry: _toml.Table, path: str, line: int, plc_seen: set[tuple[object, object]]
-) -> list[Finding]:
-    if "plc_channel" not in entry:
-        return []
-    plc = entry["plc_channel"]
-    findings = _fields.check_fields(
-        plc, _fields.PLC_CHANNEL_FIELDS, path=path, line=line, table_name="function.plc_channel"
-    )
-    if entry.get("kind") != "plc_channel":
-        findings.append(
-            _toml.finding(
-                "FACET_KIND_MISMATCH",
-                path,
-                line,
-                "[function.plc_channel] is set on a function whose kind is not plc_channel",
-            )
-        )
-    if type(plc) is dict:
-        dup_key = (plc.get("channel"), plc.get("signal"))
-        if dup_key in plc_seen:
-            findings.append(
-                _toml.finding(
-                    "PLC_CHANNEL_DUPLICATE",
-                    path,
-                    line,
-                    f"channel {dup_key[0]!r} signal {dup_key[1]!r} repeats within this part",
-                )
-            )
-        else:
-            plc_seen.add(dup_key)
-    return findings
+    return _fields.check_fields(data["pcb"], _fields.PCB_FIELDS, path=path, line=line, table_name="pcb")

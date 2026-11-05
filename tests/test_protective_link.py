@@ -2,11 +2,10 @@
 
 Built from `examples/demo-parts` only. A 24 V rail is declared on a fuse's input; the fuse's
 output goes to a terminal of strip X01 (the valve supply). The strip side is on no physical net of
-the rail (the fuse can open), yet it is in the rail closure (the fuse is closed in service).
 """
 
 import fransys_parts
-from fransys_author import Design
+from fransys_author.design import Design
 from root_library import freeze
 
 from fransys_model.derive import net_of, port_rails

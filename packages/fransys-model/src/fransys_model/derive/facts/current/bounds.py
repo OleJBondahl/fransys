@@ -16,18 +16,23 @@ lazy from decimal import Decimal
 
 from fransys_model.derive.facts.current.blocks import blocks
 from fransys_model.derive.facts.energy_flow import gives_energy
-from fransys_model.derive.facts.function_ratings import function_operatings
+from fransys_model.derive.facts.figures import figure, minimum_breaking
+from fransys_model.derive.facts.function_ratings import fitted_link_block, function_operatings, function_ratings
+from fransys_model.derive.facts.rating_index import function_block
 from fransys_model.derive.facts.roles import function_role
-from fransys_model.derive.facts.stated_ratings import function_ratings
-from fransys_model.vocab.enums import Current
+from fransys_model.elecdef import Current, Unit
 lazy from fransys_model.derive.facts.contacts import LinkState
 lazy from fransys_model.kernel import Id
 lazy from fransys_model.vocab.core import Function, Item, Port
 
 if TYPE_CHECKING:
-    from collections.abc import Hashable, Iterable, Sequence
+    from collections.abc import Collection, Hashable, Iterable, Sequence
 
+    from fransys_model.elecdef import Range
     from fransys_model.kernel import Model
+
+
+_TWO_EDGES = 2  # the docstring's own "two edges or more", not an arbitrary constant
 
 
 class LimitRole(Enum):
@@ -65,42 +70,30 @@ class Tie:
     source: bool
 
 
-def _limits_of(
-    model: Model, function: Id[Function], ports: tuple[Id[Port], ...] = ()
-) -> list[CurrentBound]:
+def _limits_of(model: Model, function: Id[Function], ports: tuple[Id[Port], ...] = ()) -> list[CurrentBound]:
     """The limits `function` states: a source's `max_current_*`, a full-range fuse's rating."""
     found: list[CurrentBound] = []
     for envelope in function_operatings(model, function):
-        found += _bounds(
-            function,
-            LimitRole.SOURCE,
-            envelope.operating.max_current_ac_a,
-            envelope.operating.max_current_dc_a,
-            ports,
-        )
-    ratings = [stated.rating for stated in function_ratings(model, function)]
-    # Partial-range is a fact of the function: one rating with a minimum breaking current
-    # (part, template or a unit's boundary) makes all of its rating currents bound nothing.
-    partial = any(rating.min_breaking_current_a is not None for rating in ratings)
+        found += _bounds(function, LimitRole.SOURCE, envelope.operating.max_current, ports)
+    # Partial-range is a fact of the function: a block (the function's or its fitted link's) with a minimum breaking current makes
+    # all of its rating currents bound nothing.
+    partial = any(minimum_breaking(b) is not None for b in (function_block(model, function), fitted_link_block(model, function)))
     if function_role(model, function).protects and not partial:
-        for rating in ratings:
-            found += _bounds(
-                function, LimitRole.PROTECTION, rating.current_ac_a, rating.current_dc_a, ports
-            )
+        for stated in function_ratings(model, function):
+            found += _bounds(function, LimitRole.PROTECTION, stated.rating.current, ports)
     return found
 
 
 def _bounds(
     function: Id[Function],
     role: LimitRole,
-    ac: Decimal | None,
-    dc: Decimal | None,
+    ranges: tuple[Range, ...],
     ports: tuple[Id[Port], ...],
 ) -> list[CurrentBound]:
     return [
         CurrentBound(kind=kind, value=value, by=function, role=role, ports=ports)
-        for kind, value in ((Current.AC, ac), (Current.DC, dc))
-        if value is not None
+        for kind in (Current.AC, Current.DC)
+        if (value := figure(ranges, kind, Unit.A)) is not None
     ]
 
 
@@ -115,33 +108,25 @@ def tie_of(model: Model, stated: Sequence[Id[Function]], ports: tuple[Id[Port], 
     )
 
 
-def _holds_source(members: Sequence[int], ties: Sequence[Tie | None]) -> bool:
+def _holds_source(members: Collection[int], ties: Sequence[Tie | None]) -> bool:
     """Whether the block `members` (two edges or more) holds a source; `None` is the outside."""
-    return len(members) >= 2 and any(  # noqa: PLR2004 -- the docstring's own "two edges or more", not an arbitrary constant
-        tie is None or tie.source for tie in (ties[at] for at in members)
-    )
+    return len(members) >= _TWO_EDGES and any(tie is None or tie.source for tie in (ties[at] for at in members))
 
 
-def block_bounds[V: Hashable](
-    block: frozenset[int], ends: Sequence[tuple[V, V]], ties: Sequence[Tie | None]
-) -> dict[int, tuple[CurrentBound, ...]]:
+def block_bounds[V: Hashable](block: frozenset[int], ends: Sequence[tuple[V, V]], ties: Sequence[Tie | None]) -> dict[int, tuple[CurrentBound, ...]]:
     """The bounds of every position in `block`, by edge index; the outside (`None`) has none.
 
     A block with one edge or no source edge bounds nothing; else `L` bounds `D` when `L` is `D` or
     `D` has no source-holding cycle without `L`. Each gets the tightest limit per kind.
     """
     found: dict[int, list[CurrentBound]] = {at: [] for at in block if ties[at] is not None}
-    if _holds_source(sorted(block), ties):
+    if _holds_source(block, ties):
         for limiter in sorted(block):
             tie = ties[limiter]
             if tie is None or not tie.limits:
                 continue
-            rest = sorted(block - {limiter})
-            free = {
-                rest[at]: _holds_source([rest[i] for i in part], ties)
-                for part in blocks([ends[at] for at in rest])
-                for at in part
-            }
+            rest = list(block - {limiter})
+            free = {rest[at]: _holds_source([rest[i] for i in part], ties) for part in blocks([ends[at] for at in rest]) for at in part}
             for device, limits in found.items():
                 if device == limiter or not free[device]:
                     limits.extend(tie.limits)

@@ -3,16 +3,14 @@
 from typing import TYPE_CHECKING
 
 from electrical_symbols import (
-    G_PER_MODULE,
-    box_port_marking,
+    box_marking_widths,
     default_order,
     generic_box,
     is_generic_box,
 )
-from fransys_layout.core import BoxSpec, Pin, natural_key
+from fransys_layout.core import BoxSpec, CoreError, Pin, natural_key
 from fransys_layout.symbols import library_symbol, symbol_shape
 from fransys_model.derive import port_potential_rank, stands
-from fransys_model.derive.text_width import marking_widths
 from fransys_model.kernel import natural_key as kernel_key
 
 from .placement_kit import refuse
@@ -44,11 +42,11 @@ def symbol_of(env: Env, lead: PickKey, pick: Pick) -> LibrarySymbol:
     """The pick's library symbol; a generic box is built over the pick's port names."""
     if is_generic_box(pick.key):
         names = default_order(pick.ports.values(), kernel_key)
-        widths = marking_widths((box_port_marking(n) for n in names), height=G_PER_MODULE)
+        widths = box_marking_widths(env.library, names)
         return generic_box(names, box_sides(env.model, pick, names), marking_widths=widths)
     try:
         return library_symbol(env.library, pick.key, pick.poles)
-    except Exception as error:  # noqa: BLE001 - the layer's own errors, re-raised as ours
+    except CoreError as error:
         refuse(
             f"function {env.ids[lead]}, symbol {pick.key!r}",
             f"pick a library symbol: {error}",
@@ -103,7 +101,7 @@ def _bias(env: Env, port: Id[Port] | None, power: Mapping[Id[Port], PowerKind]) 
     return END_BIAS[power[port].name], UNRANKED if rank is None else rank
 
 
-def box_of(env: Env, pick: Pick, shape: Shape, pins: tuple[Pin, ...]) -> BoxSpec | None:
+def box_of(pick: Pick, shape: Shape, pins: tuple[Pin, ...]) -> BoxSpec | None:
     """Fact 16: the movable pins of a generic box in printed-marking order, else `None`."""
     if not is_generic_box(pick.key):
         return None
@@ -111,7 +109,5 @@ def box_of(env: Env, pick: Pick, shape: Shape, pins: tuple[Pin, ...]) -> BoxSpec
     if not edge:
         return None
     order = default_order((p.id for p in edge), kernel_key)
-    sides = sorted({p.side for p in edge})
-    natural = max(sides, key=lambda side: sum(p.side == side for p in edge))
     margin = min(p.dx for p in edge) - shape.body.x
-    return BoxSpec(order, natural, env.conventions.options.box_pin_pitch_min, margin)
+    return BoxSpec(order, margin)

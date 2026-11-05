@@ -15,7 +15,6 @@ def unit_plant(*, project: bool = False) -> tuple[Model, Id[Unit], Id[Unit]]:
 
     K1 has two wires to X1 (to L1 and to L2), K2 one, and two wires join K1 and K2; X1's L1
     external goes to B1; K1 to Z1; a jumper joins L1 to L2 inside the strip.
-    `project=True` adds the `Project` the system listing needs.
     """
     plant = Plant()
     outer = plant.unit("u", name="cab", tag="U1")
@@ -36,12 +35,7 @@ def unit_plant(*, project: bool = False) -> tuple[Model, Id[Unit], Id[Unit]]:
     plant.wire(k1b, k2, key="w7")
     plant.mate(plant.function_id("k1", "f"), plant.function_id("z1", "f"), key="m1")
     homes = {"x1": outer, "k1": outer, "k2": outer, "z1": nested}
-    plant.records = [
-        dataclasses.replace(r, unit=homes[r.key[0]])
-        if isinstance(r, Item) and r.key[0] in homes
-        else r
-        for r in plant.records
-    ]
+    plant.records = [dataclasses.replace(r, unit=homes[r.key[0]]) if isinstance(r, Item) and r.key[0] in homes else r for r in plant.records]
     if project:
         plant.add(
             Project(

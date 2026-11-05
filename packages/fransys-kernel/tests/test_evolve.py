@@ -29,9 +29,7 @@ def _model(*records: Any) -> Model:
 
 def _base() -> Model:
     """Owners 1, 2 and 3, a holder of owner 1, and a facet of owner 1."""
-    return _model(
-        make_owner("1"), make_owner("2"), make_owner("3"), make_holder("5"), make_facet("7", "1")
-    )
+    return _model(make_owner("1"), make_owner("2"), make_owner("3"), make_holder("5"), make_facet("7", "1"))
 
 
 def _aliased() -> Model:

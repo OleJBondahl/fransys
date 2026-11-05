@@ -24,7 +24,7 @@ Other 0.17 changes need no code change:
 - Several requests wired to one channel give `PLC_BINDING_WIRING_MISMATCH`. Request that channel once, on one of the devices. 0.18 gives one clear finding.
 - A finding message names an untagged unit by its name and revision, as its title block prints it. `unit unit` no longer appears (overview-0003).
 - A coil switched by a channel pin stands under that channel (layout-0208).
-- A beside branch under a host pin no longer fails with `ROUTE_FAILED`. That was a 0.16.0 regression (layout-0174).
+- A beside branch under a host pin no longer fails. That was a 0.16.0 regression (layout-0174).
 - A terminal whose part has a protective link, such as a fuse terminal, is no longer a rail terminal (model-0215).
 - PDF navigation: link markers and sheet-index rows link, viewer page labels show the sheet text, and the outline lists sheets and devices (pdf-0029, pdf-0034).
 - A new package, `fransys-el`, comes in with `fransys`. A lock file gains one package (layout-0192).

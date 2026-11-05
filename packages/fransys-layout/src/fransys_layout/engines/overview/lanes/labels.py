@@ -7,7 +7,7 @@ from fransys_layout.engines.overview.sizes import TEXT_LEAD
 from fransys_layout.geometry import WIRING_GRID as G
 from fransys_layout.geometry import Box, overlaps
 from fransys_layout.routing.space import crosses, run_of
-lazy from fransys_layout.engines.overview.sheet_values import LineFacts, PlacedBox, PlacedLine
+lazy from fransys_layout.engines.overview.sheet_values import DiagramBox, DiagramLine, LineFacts
 lazy from fransys_layout.geometry import Point
 lazy from fransys_layout.routing.space import Run
 
@@ -30,9 +30,7 @@ def _spots(points: tuple[Point, ...], text_height: int, width: int) -> list[tupl
     Runs go longest first. `reach` is how far the centre may move either side with the label's
     width still over the run, 0 when the run is the narrower.
     """
-    runs = sorted(
-        (r for r in pairwise(points) if r[0].y == r[1].y), key=lambda r: -abs(r[1].x - r[0].x)
-    )
+    runs = sorted((r for r in pairwise(points) if r[0].y == r[1].y), key=lambda r: -abs(r[1].x - r[0].x))
     gap = text_height // 2 + TEXT_LEAD
     return [
         (
@@ -61,18 +59,16 @@ def label_clear(
         for step in range(0, reach + 1, G):
             for cx in dict.fromkeys((x - step, x + step)):
                 box = label_box(cx, y, width, text_height)
-                if not any(crosses(box, r) for r in blocked) and not any(
-                    overlaps(box, t) for t in taken
-                ):
+                if not any(crosses(box, r) for r in blocked) and not any(overlaps(box, t) for t in taken):
                     return cx, y
     return label_at(points, text_height)
 
 
 def label_lines(
     here: Sequence[tuple[LineFacts, tuple[Point, ...]]],
-    boxes: Sequence[PlacedBox],
+    boxes: Sequence[DiagramBox],
     text_height: int,
-) -> tuple[PlacedLine, ...]:
+) -> tuple[DiagramLine, ...]:
     """The lines of one sheet, each label clear of every line run and of the boxes and labels."""
     runs = [run_of(a, b) for _, pts in here for a, b in pairwise(pts)]
     taken = [Box(x=b.x, y=b.y, width=b.width, height=b.height) for b in boxes]
@@ -80,5 +76,5 @@ def label_lines(
     for ln, pts in here:
         x, y = label_clear(pts, text_height, ln.label_width, runs, taken)
         taken.append(label_box(x, y, ln.label_width, text_height))
-        lines.append(PlacedLine(cable=ln.cable, a=ln.a, b=ln.b, points=pts, text_x=x, text_y=y))
+        lines.append(DiagramLine(cable=ln.cable, a=ln.a, b=ln.b, points=pts, text_x=x, text_y=y))
     return tuple(lines)

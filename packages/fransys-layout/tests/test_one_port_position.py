@@ -1,8 +1,7 @@
-"""No module recomputes a port's page position: `geometry.port_page_at` is its one home.
+"""No module recomputes a port's page position: the symbol port offset is added in one place only.
 
 A port's page position is a placed function's origin plus the port's own offset, written
 `placed.at.x + port.at.x`. This scans `src/fransys_layout` with stdlib `ast` for a sum of two
-`.at.x` (or two `.at.y`) reads on different bases, which is that shape.
 """
 
 import ast
@@ -12,20 +11,13 @@ SRC_ROOT = Path(__file__).resolve().parent.parent / "src" / "fransys_layout"
 
 # Files where such a sum is not a port's page position, each with its reason.
 EXCLUDED = {
-    "stages/texts/markers.py": (
-        "mid-point of a C21 run's two end stubs: `(first.at.x + last.at.x) // 2`"
-    ),
+    "stages/texts/markers.py": ("mid-point of a C21 run's two end stubs: `(first.at.x + last.at.x) // 2`"),
 }
 
 
 def _at_read(node: ast.expr) -> tuple[str, str] | None:
     """`(base, axis)` for `<base>.at.x` or `<base>.at.y`, else `None`."""
-    if (
-        isinstance(node, ast.Attribute)
-        and node.attr in {"x", "y"}
-        and isinstance(node.value, ast.Attribute)
-        and node.value.attr == "at"
-    ):
+    if isinstance(node, ast.Attribute) and node.attr in {"x", "y"} and isinstance(node.value, ast.Attribute) and node.value.attr == "at":
         return ast.unparse(node.value.value), node.attr
     return None
 
@@ -51,7 +43,7 @@ def test_the_scan_finds_the_shape_it_looks_for() -> None:
 
 
 def test_no_module_recomputes_a_port_page_position() -> None:
-    """Every module calls `port_page_at`; none adds a placed origin to a port offset itself."""
+    """No module adds a placed origin to a port offset itself."""
     found = {}
     for path in sorted(SRC_ROOT.rglob("*.py")):
         name = path.relative_to(SRC_ROOT).as_posix()
@@ -59,4 +51,4 @@ def test_no_module_recomputes_a_port_page_position() -> None:
             continue
         if lines := recomputed_positions(path.read_text(encoding="utf-8")):
             found[name] = lines
-    assert not found, f"use geometry.port_page_at instead of adding .at.x/.at.y: {found}"
+    assert not found, f"a port page position is not summed from .at.x/.at.y: {found}"

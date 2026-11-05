@@ -1,13 +1,12 @@
 """The motor starter with its latch, by hand and by series, one model."""
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
-from fransys_author import Design
+from equivalence_helpers import assert_same_model
+from fransys_author.design import Design
 from fransys_author.surface import design
 from fransys_author.surface.colours import BK, BU
-
-from .conftest import assert_same_model
-from .series_parts import pair_library
+from series_parts import pair_library
 
 if TYPE_CHECKING:
     from fransys_model.kernel import Draft
@@ -28,7 +27,7 @@ def engine(lib: Draft) -> Draft:
     x0, x1 = e.strip("X0", at=c1), e.strip("X1", at=c1)
     t = [x0.terminal("TEST-TERM", index=n) for n in (1, 2, 3)]
     rails = {"L1": ("230", 0), "L2": ("230", 120), "L3": ("230", 240)}
-    e.supply("400V", current="ac", rails=rails, earthing="earthed", pins=[x.inner for x in t])
+    e.supply("400V", current="ac", rails=rails, pins=[x.inner for x in t])
     for rail, term in zip(rails, t, strict=True):
         e.net(rail, term.inner, cls="power", potential=rail)
     i = {tag: e.item(mpn, name=tag, tag=tag, at=c1) for tag, mpn in PARTS.items()}
@@ -84,7 +83,7 @@ def surface(lib: Draft) -> Draft:
     return d.draft()
 
 
-def _devices(d, table: dict[str, str]) -> dict:
+def _devices(d, table: dict[str, str]) -> dict[str, Any]:
     return {tag: d.device(tag, mpn) for tag, mpn in table.items()}
 
 

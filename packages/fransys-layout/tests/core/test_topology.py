@@ -2,33 +2,16 @@
 
 from __future__ import annotations
 
-from dataclasses import replace
 from typing import TYPE_CHECKING
 
-from options_fixtures import core_options
+from turn_fixtures import refit
 
-from fransys_layout.core import build_flow
 from fransys_layout.core.values import Bundle
 
-from .flow_builders import elem, free, net, poles, problem
+from .flow_builders import elem, flow_of, free, net, poles
 
 if TYPE_CHECKING:
-    from fransys_layout.core.sym_values import Sym
-    from fransys_layout.core.values import FlowGraph, Net
-
-
-def flow_of(syms: list[Sym], nets: list[Net]) -> FlowGraph:
-    return build_flow(
-        problem(syms, nets),
-        core_options(
-            flip_turn="R180",
-            tag_stagger=True,
-            label_gap=8,
-            parallel_pitch=48,
-            driver_first=True,
-            arrow_sides=("E", "W"),
-        ),
-    )
+    from fransys_layout.core.flow_values import FlowGraph
 
 
 def test_series_chain_between_stands_is_one_column_of_one_lane() -> None:
@@ -57,14 +40,12 @@ def test_free_sided_symbol_is_the_hub_of_a_fan() -> None:
     assert (len(fan.drivers), len(fan.legs)) == (1, 3)
 
 
-def test_bundle_nets_make_one_fan_of_three_lanes() -> None:
+def test_bundle_nets_make_one_fan_of_three_lanes_named_in_lane_order_not_in_id_order() -> None:
     syms = [poles("src"), poles("ld1"), poles("ld2")]
-    nets = [
-        net(f"b{k}", f"src.s{k}", f"ld1.n{k}", f"ld2.n{k}", bundle=Bundle("b", k)) for k in range(3)
-    ]
-    (fan,) = flow_of(syms, nets).fans
-    assert fan.lanes == 3
-    assert fan.nets == ("b0", "b1", "b2")
+    for poles_of, names in (((0, 1, 2), ("b0", "b1", "b2")), ((2, 0, 1), ("b1", "b2", "b0"))):
+        nets = [net(f"b{k}", f"src.s{p}", f"ld1.n{p}", f"ld2.n{p}", bundle=Bundle("b", p)) for k, p in enumerate(poles_of)]
+        (fan,) = flow_of(syms, nets).fans
+        assert (fan.lanes, fan.nets) == (3, names)
 
 
 def test_two_end_net_between_s_pins_stays_a_link_and_flips_one_symbol() -> None:
@@ -79,7 +60,7 @@ def test_a_symbol_with_the_terminal_structure_is_placed_the_same_whatever_it_is(
     """T4: the core reads pins, nodes, row group and footprint, never what the symbol is."""
 
     def build(hub_id: str, **kind: object) -> FlowGraph:
-        hub = replace(free(hub_id, row_group="r"), pins=free(hub_id).pins[::2], **kind)
+        hub = refit(free(hub_id, row_group="r"), pins=free(hub_id).pins[::2], **kind)
         syms = [hub, elem("l1"), elem("l2")]
         return flow_of(syms, [net("bus", f"{hub_id}.s", "l1.n", "l2.n")])
 
@@ -95,19 +76,7 @@ def _anon(flow: FlowGraph, hub_id: str) -> str:
 
 def test_bundle_poles_that_skip_an_index_make_one_lane_per_pole() -> None:
     syms = [poles("src"), poles("ld1"), poles("ld2")]
-    nets = [
-        net(f"b{k}", f"src.s{k}", f"ld1.n{k}", f"ld2.n{k}", bundle=Bundle("b", k)) for k in (1, 2)
-    ]
+    nets = [net(f"b{k}", f"src.s{k}", f"ld1.n{k}", f"ld2.n{k}", bundle=Bundle("b", k)) for k in (1, 2)]
     (fan,) = flow_of(syms, nets).fans
     assert (fan.lanes, fan.nets) == (2, ("b1", "b2"))
     assert sorted({a.pole for a in (*fan.drivers, *fan.legs)}) == [0, 1]
-
-
-def test_a_bundle_names_its_nets_in_lane_order_not_in_id_order() -> None:
-    syms = [poles("src"), poles("ld1"), poles("ld2")]
-    nets = [
-        net(f"b{k}", f"src.s{pole}", f"ld1.n{pole}", f"ld2.n{pole}", bundle=Bundle("b", pole))
-        for k, pole in ((0, 2), (1, 0), (2, 1))
-    ]
-    (fan,) = flow_of(syms, nets).fans
-    assert fan.nets == ("b1", "b2", "b0")

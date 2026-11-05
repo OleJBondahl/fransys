@@ -29,7 +29,6 @@ PLANTED = Drawing(
         ),
     ),
     wires=(DrawnWire("w1", ((0, 0), (80, 0), (80, 48)), "wire"),),
-    markers=(),
     texts=(),
     outlines=(),
     library_version="planted",

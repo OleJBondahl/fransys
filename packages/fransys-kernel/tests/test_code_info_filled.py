@@ -8,7 +8,7 @@ from fransys_kernel import CodeInfo, SchemaError, Severity
 def _info(fix: str) -> CodeInfo:
     return CodeInfo(
         code="SOME_CODE",
-        severities=(Severity.ERROR,),
+        severity=Severity.ERROR,
         stage="build",
         who="consumer",
         cause="c",

@@ -2,7 +2,6 @@
 
 The fixture holds a corpus (goldens' strings and a hand list) sorted by the old kernel key, and the
 old `canonical` order of each golden's Id set. Only an entry with a non-ASCII decimal digit may
-differ: refdef reads digits as `[0-9]`, the old key read `\\d`. That set is named below.
 """
 
 import json
@@ -13,9 +12,7 @@ import refdef
 
 from fransys_kernel import Id, canonical
 
-_FIXTURE = json.loads(
-    (Path(__file__).parent / "fixtures" / "natural_orders.json").read_text("utf-8")
-)
+_FIXTURE = json.loads((Path(__file__).parent / "fixtures" / "natural_orders.json").read_text("utf-8"))
 #: The known difference (ruling LIB-ADOPT N1): the old key read an Arabic-Indic digit as a number.
 KNOWN_DIFFERENCE = frozenset({"A٣"})
 

@@ -8,11 +8,12 @@ from typing import Any
 import pytest
 
 from fransys_layout.core import CoreError
+from fransys_layout.core.flow_values import Attach, Cell, Column, End, Fan, Lane
 from fransys_layout.core.pack import PlacedColumn
 from fransys_layout.core.place_ring import ring_symbols
 from fransys_layout.core.place_trunk import fan_roles
 from fransys_layout.core.topology_split import y_cycles
-from fransys_layout.core.values import Attach, Cell, Column, End, Fan, Lane, PinRef
+from fransys_layout.core.values import PinRef
 
 
 def _cells(*names: str) -> tuple[Cell, ...]:

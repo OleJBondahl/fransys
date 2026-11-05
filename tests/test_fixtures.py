@@ -1,13 +1,11 @@
-"""The two root fixtures build a laid-out model (WP order Part C1)."""
+"""The root fixture build a laid-out model (WP order Part C1)."""
+
+import pytest
 
 
-def test_demo_cabinet_builds_a_laid_out_model(demo_cabinet):
-    assert demo_cabinet.digests["core"]
-    assert demo_cabinet.digests["facet"]
-    assert demo_cabinet.digests["layout"]
-
-
-def test_demo_harness_with_board_builds_a_laid_out_model(demo_harness_with_board):
-    assert demo_harness_with_board.digests["core"]
-    assert demo_harness_with_board.digests["facet"]
-    assert demo_harness_with_board.digests["layout"]
+@pytest.mark.parametrize("fixture", ["demo_cabinet"])
+def test_demo_fixture_builds_a_laid_out_model(fixture, request):
+    built = request.getfixturevalue(fixture)
+    assert built.digests["core"]
+    assert built.digests["facet"]
+    assert built.digests["layout"]

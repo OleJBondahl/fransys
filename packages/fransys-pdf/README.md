@@ -1,3 +1,5 @@
+# fransys-pdf
+
 Fransys output: document assembly to Typst source.
 
 Output contract: pure function of a Model returning str, bytes or a tuple of pages. No file I/O, no clock, no randomness. Same model digest, same bytes.
@@ -5,10 +7,9 @@ Output contract: pure function of a Model returning str, bytes or a tuple of pag
 `source(model, document, svgs, sheets, bridges, *, links, list_share_pct, list_gutter_pct) -> str` returns the complete, self-contained Typst source of
 one document: every drawing SVG is inlined, so the source references no file. `links` maps each drawn page to its reference links, which the layout returns and the facade passes: the source places one box per link. The facade
 compiles it (third-party dependency `typst`, pinned per the pdf spec's decision record); this
-package never depends on `typst` itself. `check(model, svgs, built=()) -> tuple[Finding, ...]` takes the
+package never depends on `typst` itself. `check(model, svgs) -> tuple[Finding, ...]` takes the
 same SVG mapping, because it is the only way to tell a missing drawing-set page from one that
-is present. `built` takes the build's own findings, so a missing drawing names the finding
-that caused it, such as DIAGRAM_COLUMN_TOO_TALL. This package holds no font file: the drawing
+is present. This package holds no font file: the drawing
 font's faces are symbol data, at `electrical_symbols.font_dir()`.
 
 The page list is `derive.document_page_kinds(model, document)` in `fransys_model`: its preset's
@@ -16,9 +17,9 @@ pages, plus `add`, minus `remove`, in canonical order, the notes page dropped wh
 notes text. This package calls it and holds no copy.
 
 Unit documents (decisions pdf-0012, pdf-0014, model-0061). A document whose `unit` is set names
-the unit, not the project: its title block prints `Unit.title` and `Unit.number` with an empty
-customer, the revision and date of the unit's own revision, the author (`created` of that revision)
-and the notice from the document; the PDF metadata title and date come from the same `document_facts`. A system
+the unit, not the project. Its title block prints `Unit.title` and `Unit.number` with an empty
+customer. It also takes the revision and date of the unit's own revision, the author (`created` of that revision)
+and the notice from the document. The PDF metadata title and date come from the same `document_facts`. A system
 document (`unit=None`) is unchanged. `check` gives one `TITLE_BLOCK_UNIT_IDENTITY_MISSING`
 (`WARNING`) per unit document whose unit has an empty title or number, naming the empty field or
 fields; the cell prints empty, with no fallback text. The terminal and connector lists print no
@@ -33,12 +34,12 @@ reads it. A `HARNESS_DRAWING` page is a run of pages per cable part (pdf-0020). 
 the cable block SVGs the facade hands in, one per block (pdf-0022). Its page header is the part
 line (mpn, description, cores x gauge, pdf-0021). A harness block runs under its harness's own part, else under "No part number" (pdf-0022). `fransys_layout`'s cable engine places each
 block and `fransys_render.cable_blocks` draws it. `check` reports a block with no SVG, or one
-larger than the page body, as `DOCUMENT_NO_DRAWINGS`. A block's SVG is keyed `cable_block_key(unit, subject)` of `derive.cable_drawing` (model-0159). A unit document's blocks print its cables unit-relative (model-0090). So a
+larger than the page body (it takes the block sizes as `laid`), as `DOCUMENT_NO_DRAWINGS`. A block's SVG is keyed `cable_block_key(unit, subject)` of `derive.cable_drawing` (model-0159). A unit document's blocks print its cables unit-relative (model-0090). So a
 harness that is a unit's appears twice: absolute in its item document, unit-relative in the
 unit's. `CONTENTS` is left out when the document's subject has no cable (pdf-0019).
 
 Rules moved from docstrings. Page frame: margin strips take their depth
-from `content_x_mm` and `content_y_mm`, a `1fr` row or column fills it so labels centre, and
+from `content_x_mm` and `content_y_mm`. A `1fr` row or column fills it so labels centre, and
 only interior ticks are drawn (pdf-0004; the 5 mm margin is model-0051). The title block is one `grid()`: Title spans c1 to c3,
 Notice and Logo span both rows (pdf-0010). The notice wraps and is clipped at its box, never cut
 with an ellipsis (pdf-0010). Cover: lists are flattened to centred paragraphs because Typst lists
@@ -65,7 +66,7 @@ From, To and Label, with no colour or screening. The SYSTEM "by others" line lis
 cable if external, then its external ends in `cable_end_rank` order, never a blank end
 (model-0048, wireviz-0010).
 
-Block diagram pages (pdf-0023): `BLOCK_DIAGRAM` follows NOTES and CONTENTS and precedes SCHEMATIC. Each `DiagramSheet` of the document's reading is one page on the house A2 sheet (`sheet_for`, 594 x 420 mm). The size is set per page, so every other page keeps the profile's sheet. The SVG comes from `svgs[render_id(sheet.id)]`. Pdf draws the frame, grid and title block from the sheet's numbers. Only SYSTEM carries the kind by default; `add=` puts it on any document. A reading with no sheet gives no page. A reading with lines but no sheet is `DOCUMENT_NO_DRAWINGS`.
+Block diagram pages (pdf-0023): `BLOCK_DIAGRAM` follows NOTES and CONTENTS and precedes SCHEMATIC. `DiagramSheet` is a `fransys_model.derive` row that the facade builds and passes in. Each `DiagramSheet` of the document's reading is one page on the house A2 sheet (`sheet_for`, 594 x 420 mm). The size is set per page, so every other page keeps the profile's sheet. The SVG comes from `svgs[render_id(sheet.id)]`. Pdf draws the frame, grid and title block from the sheet's numbers. Only SYSTEM carries the kind by default; `add=` puts it on any document. A reading with no sheet gives no page. A reading with lines but no sheet is `DOCUMENT_NO_DRAWINGS`.
 
 Terminal and list tables: each Bridge mark is a `place(...)`d image render drew (pdf-0049) and takes no flow space. The
 Bridge cell is `breakable: false` because a breakable `auto` row resolves `%` against the page;

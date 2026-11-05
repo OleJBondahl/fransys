@@ -1,24 +1,15 @@
 """The build's house text records, one per `settings.toml` table: written once after `freeze()`."""
 
-from typing import TYPE_CHECKING, cast
-lazy from collections.abc import Mapping
+import codecs
+from typing import TYPE_CHECKING, NoReturn, cast
+lazy from collections.abc import Iterable
 
+from fransys_model.derive import REPORT_KINDS
 from fransys_model.kernel import Draft, Origin, SchemaError, evolve
-from fransys_model.layout import (
-    HOUSE_TEXT_KINDS,
-    colour_codes,
-    frame_form,
-    harness_text,
-    reference_text,
-    revision_form,
-    revision_table_form,
-    stub_text,
-    title_block_form,
-    wire_label_text,
-    words,
-)
+from fransys_model.layout import CSV_QUOTINGS, HOUSE_TABLES, HOUSE_TEXT_KINDS, house_records
 
 from ._paper import refuse_authored_paper, with_paper
+from ._settings_merge import SettingsError
 
 if TYPE_CHECKING:
     from fransys_model.kernel import Model, Record
@@ -35,70 +26,33 @@ def _str(table: Table, key: str) -> str:
     return cast("str", table[key])
 
 
-def _strs(table: Table, key: str) -> tuple[str, ...]:
-    return cast("tuple[str, ...]", table[key])
+def _refused(table: str, key: str, value: object, known: Iterable[str]) -> NoReturn:
+    msg = f'[{table}] "{key}" is {value!r}; known: {", ".join(known)}'
+    raise SettingsError(msg)
 
 
-def _float(table: Table, key: str) -> float:
-    return float(cast("float", table[key]))
-
-
-def _first(settings: Settings) -> tuple[Record, ...]:
-    ref, frame, stub = (settings.table(n) for n in ("reference", "frame", "stub"))
-    label, harness = (settings.table(n) for n in ("wire_label", "harness"))
-    return (
-        reference_text(
-            page_prefix=_str(ref, "page_prefix"),
-            cell_sep=_str(ref, "cell_sep"),
-            location_sign=_str(ref, "location_sign"),
-            set_sep=_str(ref, "set_sep"),
-            width_sample=_str(ref, "width_sample"),
-        ),
-        frame_form(
-            row_labels=_str(frame, "row_labels"),
-            column_labels=_str(frame, "column_labels"),
-            row_order=_str(frame, "row_order"),
-        ),
-        stub_text(
-            arrow_in=_str(stub, "arrow_in"),
-            arrow_out=_str(stub, "arrow_out"),
-            port_sep=_str(stub, "port_sep"),
-            port_join=_str(stub, "port_join"),
-        ),
-        wire_label_text(separator=_str(label, "separator"), show_ends=bool(label["show_ends"])),
-        harness_text(branch_sep=_str(harness, "branch_sep")),
-    )
-
-
-def _second(settings: Settings) -> tuple[Record, ...]:
-    colours, block = (settings.table(n) for n in ("colours", "title_block"))
-    rev_table, rev = settings.table("revision_table"), settings.table("revision")
-    return (
-        colour_codes(
-            pe=_str(colours, "pe"),
-            shield=_str(colours, "shield"),
-            defaults=cast("Mapping[str, list[str]]", colours["defaults"]),
-        ),
-        title_block_form(
-            fields=_strs(block, "fields"),
-            band_mm=_float(block, "band_mm"),
-            centre_gap_mm=_float(block, "centre_gap_mm"),
-        ),
-        revision_table_form(
-            columns=_strs(rev_table, "columns"), description_mm=_float(rev_table, "description_mm")
-        ),
-        revision_form(
-            date_format=_str(rev, "date_format"),
-            initials_required=bool(rev["initials_required"]),
-            printed=_str(rev, "format"),
-        ),
-        words(cast("Mapping[str, str]", settings.table("words"))),
-    )
+def _check_export(table: Table) -> None:
+    """Refuse a report kind, quoting, encoding or delimiter of `[export]`."""
+    for kind in cast("tuple[str, ...]", table["reports"]):
+        if kind not in REPORT_KINDS:
+            _refused("export", "reports", kind, REPORT_KINDS)
+    if table["csv_quoting"] not in CSV_QUOTINGS:
+        _refused("export", "csv_quoting", table["csv_quoting"], CSV_QUOTINGS)
+    if len(_str(table, "csv_delimiter")) != 1:
+        msg = f'[export] "csv_delimiter" is {table["csv_delimiter"]!r}: use one character'
+        raise SettingsError(msg)
+    try:
+        codecs.lookup(_str(table, "csv_encoding"))
+    except LookupError:
+        msg = f'[export] "csv_encoding" is {table["csv_encoding"]!r}: not a Python codec name'
+        raise SettingsError(msg) from None
 
 
 def _records(settings: Settings) -> tuple[Record, ...]:
-    """One record per settings table, built by the model's builders."""
-    return (*_first(settings), *_second(settings))
+    """One record per settings table, built by the model's `house_records`."""
+    tables = {name: settings.table(name) for name in HOUSE_TABLES}
+    _check_export(tables["export"])
+    return house_records(tables)
 
 
 def refuse_authored_house(draft: Draft) -> None:

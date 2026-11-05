@@ -11,9 +11,7 @@ from .closure import PhysicalNet, net_of, port_groups
 def _ink_nets(model: Model) -> frozendict[Id[Port], PhysicalNet]:
     """Each pin of a declared net of two or more pins, to the net joining those pins' nets."""
     groups = [
-        [q for p in net.ports for q in (net_of(model, p) or PhysicalNet(ports=(p,))).ports]
-        for net in nets(model).values()
-        if len(net.ports) > 1
+        [q for p in net.ports for q in (net_of(model, p) or PhysicalNet(ports=(p,))).ports] for net in nets(model).values() if len(net.ports) > 1
     ]
     return frozendict({port: group for group in port_groups(groups) for port in group.ports})
 

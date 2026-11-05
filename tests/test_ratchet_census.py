@@ -57,12 +57,12 @@ def test_a_name_read_only_through_a_signature_counts_as_read(tmp_path, monkeypat
 
 def test_the_real_kernel_census_lists_no_more_unread_than_the_old_script():
     """The old script listed 25 unread kernel names (measured at 75584c550); NS-2 adds five, and
-    FAN-2 (R338) one: `parent_chain` lost its one outside reader with the old engine: 29.
+    FAN-2 (R338) one: `parent_chain` lost its one outside reader with the old engine: 29; R809 adds `value_data` and `value_from`: 31.
 
     Reads the kernel rows of `door_census()`, the build test_ratchet_unread_doors shares.
     """
     rows = {k: r for k, r in door_census().items() if r.module == "fransys_model.kernel"}
-    assert 0 < sum(not r.outside for r in rows.values()) <= 29
+    assert 0 < sum(not r.outside for r in rows.values()) <= 31
     assert sum(r.unread for r in rows.values()) <= sum(not r.outside for r in rows.values())
     assert any(r.transitive for r in rows.values()), "no name was read through a signature"
 

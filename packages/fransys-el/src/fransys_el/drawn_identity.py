@@ -11,7 +11,7 @@ from fransys_layout.core import Box
 from fransys_model.derive import net_of
 from fransys_model.layout import Orientation
 
-from .placement_ids import pin_names, symbol_ids
+from .placement_ids import net_key, pin_names, symbol_ids
 
 if TYPE_CHECKING:
     from fransys_model.kernel import Id, Model
@@ -37,6 +37,6 @@ def ports_of(model: Model, kit: SymbolKit) -> dict[str, tuple[str, ...]]:
 
 
 def net_text(model: Model, port: Id[Port]) -> str:
-    """The identity of `port`'s physical net: its first port's value; `""` for none."""
+    """The identity of `port`'s physical net, spelled as `Net.id` is (`net_key`); `""` for none."""
     net = net_of(model, port)
-    return net.ports[0].value if net else ""
+    return net_key(model, net.ports) if net else ""

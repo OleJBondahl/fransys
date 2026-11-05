@@ -2,7 +2,6 @@
 
 The page's data marks, per view, each box and line a `ListingDiff` names as added or changed, and
 lists the removed rows the model can no longer draw. No diff means no switch. Each test names what
-breaks it.
 """
 
 import dataclasses
@@ -12,7 +11,7 @@ from typing import TYPE_CHECKING, Any
 
 import fransys as fr
 import fransys_parts
-from fransys import pipeline
+from fransys import _exports as export_files
 from fransys_overview import html
 from fransys_overview._app import APP_JS
 from test_overview_page import _laid
@@ -39,7 +38,7 @@ def _previous() -> Any:
 
 
 def _page(change: Any) -> dict[str, Any]:
-    found = re.search(r'id="overview-data">(.*?)</script>', html(_laid()[0], changes=change))
+    found = re.search(r'id="overview-data">(.*?)</script>', html(_laid()[0], changes=change, text_height=8))
     assert found is not None
     return json.loads(found.group(1))
 
@@ -110,18 +109,16 @@ def _written_changes(monkeypatch: Any, root: Path, **kwargs: Any) -> Any:
     result = fr.build(fransys_parts.load("demo_parts"), design.draft())
     seen: list[Any] = []
 
-    def spy(*_args: Any, changes: Any = None, **_kwargs: Any) -> dict[str, bytes]:
-        seen.append(changes)
+    def spy(job: Any) -> dict[str, bytes]:
+        seen.append(job.changes)
         return {}
 
-    monkeypatch.setattr(pipeline, "_exports", spy)
+    monkeypatch.setattr(export_files, "_exports", spy)
     fr.write(result, root / "out", **kwargs)
     return seen[0], listing(result.model, None)
 
 
-def test_write_without_releases_or_a_stored_release_passes_no_diff(
-    monkeypatch: Any, tmp_path: Path
-) -> None:
+def test_write_without_releases_or_a_stored_release_passes_no_diff(monkeypatch: Any, tmp_path: Path) -> None:
     """Breaks if the page would get a diff (and a switch) with no previous release to compare."""
     assert _written_changes(monkeypatch, tmp_path)[0] is None
     assert _written_changes(monkeypatch, tmp_path, releases=tmp_path / "none")[0] is None
@@ -129,18 +126,14 @@ def test_write_without_releases_or_a_stored_release_passes_no_diff(
 
 def test_write_passes_the_diff_since_the_previous_release(monkeypatch: Any, tmp_path: Path) -> None:
     """Breaks if `write` ignores `releases=` or diffs against the wrong release."""
-    previous = dataclasses.replace(
-        _previous(), unit=dataclasses.replace(listing(_laid()[0], None).unit, revision=0)
-    )
+    previous = dataclasses.replace(_previous(), unit=dataclasses.replace(listing(_laid()[0], None).unit, revision=0))
     _store(tmp_path / "rel", "1.0", previous)
     passed, now = _written_changes(monkeypatch, tmp_path, releases=tmp_path / "rel")
     assert passed == diff(previous, now)
     assert any(c.change == "removed" and c.subject == _GHOST for c in passed.changes)
 
 
-def test_write_prefers_the_release_stored_at_the_models_own_revision(
-    monkeypatch: Any, tmp_path: Path
-) -> None:
+def test_write_prefers_the_release_stored_at_the_models_own_revision(monkeypatch: Any, tmp_path: Path) -> None:
     """Breaks if edits made since the release at this revision are not what the page marks."""
     stored = _previous()
     _store(tmp_path / "rel", "1.1", stored)
@@ -152,9 +145,7 @@ def test_every_removed_row_reaches_the_page_and_nothing_caps_the_list() -> None:
     """Breaks if the removed list is cut at a size (it was 40) or loses its count heading."""
     model = _laid()[0]
     now = listing(model, None)
-    ghosts = [
-        dataclasses.replace(now.items[0], designation=f"-ZZ{n}", key=f"ghost{n}") for n in range(45)
-    ]
+    ghosts = [dataclasses.replace(now.items[0], designation=f"-ZZ{n}", key=f"ghost{n}") for n in range(45)]
     data = _page(diff(dataclasses.replace(now, items=(*now.items, *ghosts)), now))
     assert len(data["changes"]["rest"]) == 45
     assert "CHANGE_LIST_MAX" not in APP_JS

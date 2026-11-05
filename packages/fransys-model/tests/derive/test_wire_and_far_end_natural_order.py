@@ -11,9 +11,7 @@ def test_wire_rows_sort_terminal_ends_by_digit_runs() -> None:
     plant.item("x1", designation="X1")
     for index in (10, 2, 11, 3):
         terminal = make_terminal(plant, "x1", f"t{index}", group="L", index=index)
-        make_labelled(
-            plant, f"w{index}", terminal.internal, make_pin(plant, f"p{index}", "K1"), None
-        )
+        make_labelled(plant, f"w{index}", terminal.internal, make_pin(plant, f"p{index}", "K1"), None)
     rows = wire_rows(plant.model())
     assert [row.from_ for row in rows] == [f"-X1:L:{n}" for n in (2, 3, 10, 11)]
 

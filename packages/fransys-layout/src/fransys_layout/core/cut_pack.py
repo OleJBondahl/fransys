@@ -10,6 +10,7 @@ from __future__ import annotations
 from dataclasses import replace
 from typing import TYPE_CHECKING, NamedTuple
 
+from .hang_build import fold_page
 from .pack_row import extent, join_gap, reserve_extra, row_width, segments
 from .pack_sep import separation
 from .rowspec import one_row
@@ -17,8 +18,9 @@ from .rowspec import one_row
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
+    from .flow_values import BlockList, FlowGraph
     from .pack_row import RowSpec
-    from .values import BlockList, FlowGraph, Options, PlacementProblem
+    from .values import Options, PlacementProblem
 
 
 class Pack(NamedTuple):
@@ -48,30 +50,34 @@ def left_pack(
     reserves (stage 7): a column pair to the tracks its gap holds; each adds its grids.
     """
     cols = tuple(c for b in unit.blocks for c in b.columns)
-    spec = replace(
-        one_row(cols, unit.blocks, flow, problem, options), reserves=dict(reserves or {})
-    )
+    problem = _folded(problem, options)
+    spec = replace(one_row(cols, unit.blocks, flow, problem, options), reserves=dict(reserves or {}))
     out: dict[str, Pack] = {}
     edge: Edge | None = None
     for block, here in segments(cols, unit.blocks):
-        bare = block is not None and not here and block.seat != "none"
-        if not here and not bare:
+        if not (here or (block is not None and block.seat != "none")):
             continue
         if block is None:
             packs, edge = _run(spec, here, edge)
         else:
-            card = replace(
-                one_row(here, (block,), flow, problem, options), reserves=dict(reserves or {})
-            )
+            card = replace(one_row(here, (block,), flow, problem, options), reserves=dict(reserves or {}))
             width = row_width(card)
             packs, edge = _card(spec, here or [block.anchor or ""], width, edge)
         out.update(packs)
     return out
 
 
+def _folded(problem: PlacementProblem, options: Options) -> PlacementProblem:
+    """The problem whose symbols hold the anchor hangings, as the placement folds them (layout-0420)."""
+    plain = {s.id: s for s in problem.symbols}
+    _, syms = fold_page(plain, (), problem, (0, frozenset(plain)), ((), options))
+    return replace(problem, symbols=tuple(syms[s.id] for s in problem.symbols))
+
+
 def _start(edge: Edge | None, left_reach: int, spec: RowSpec) -> int:
     """The x of a segment's entry node: after the previous segment's join, else at its own reach."""
-    return left_reach if edge is None else edge.x + join_gap(edge.reach, left_reach, spec.options)
+    gap = left_reach if edge is None else join_gap(edge.reach, left_reach, spec.options)
+    return (0 if edge is None else edge.x) + gap
 
 
 def _run(spec: RowSpec, here: Sequence[str], edge: Edge | None) -> tuple[dict[str, Pack], Edge]:
@@ -82,17 +88,14 @@ def _run(spec: RowSpec, here: Sequence[str], edge: Edge | None) -> tuple[dict[st
     prev: str | None = None
     for col in here:
         if prev is not None:
-            x += separation(spec.pcs[prev], spec.pcs[col], spec.syms, spec.in_row, spec.options)
-            x += reserve_extra(spec, prev, col)
+            x += separation(spec.pcs[prev], spec.pcs[col], spec.syms, spec.in_row, spec.options) + reserve_extra(spec, prev, col)
         lo, hi = extent(spec, col)
         packs[col] = Pack(x, -lo, hi)
         prev = col
     return packs, Edge(x, packs[here[-1]].tail)
 
 
-def _card(
-    spec: RowSpec, here: Sequence[str], width: int, edge: Edge | None
-) -> tuple[dict[str, Pack], Edge]:
+def _card(spec: RowSpec, here: Sequence[str], width: int, edge: Edge | None) -> tuple[dict[str, Pack], Edge]:
     """A card is one segment as wide as its own row; its columns share its left edge."""
     x = _start(edge, 0, spec)
     return {c: Pack(x, 0, width) for c in here}, Edge(x + width, 0)

@@ -1,32 +1,20 @@
 """Declared-dependency gate: every import a package's `src` makes must be declared in that
 package's OWN `pyproject.toml` `[project] dependencies` (root CLAUDE.md
 invariant 2).
-
-`test_boundaries.py` checks imports against the allowed-import TABLE, never against each
-package's declared dependencies: inside the uv workspace every member is installed, so a
-package that imports an undeclared sibling never fails there -- only a consumer installing one
-package by itself (e.g. by git subdirectory) sees `ModuleNotFoundError`. This is the check that
-was missing, and what caught `fransys` importing `fransys_layout`
-(`packages/fransys/src/fransys/pipeline.py:29`) without declaring it in
-`packages/fransys/pyproject.toml`.
-
-First-party only. `test_boundaries.THIRD_PARTY` maps each package to the third-party IMPORT
-names it may use, not to PyPI/git distribution names (`PIL`/`pillow`, `yaml`/`pyyaml` are the
-classic cases where the two differ) -- there is no import-name -> distribution-name table
-anywhere in the workspace to check third-party imports against, so this gate does not attempt
-it.
 """
 
-import sys
+from __future__ import annotations
+
 import tomllib
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
-
-sys.path.insert(0, str(Path(__file__).resolve().parent))
 from test_boundaries import ALLOWED, FIRST_PARTY, _imported, _source_packages
 from test_pins import _REQUIREMENT as _DEPENDENCY
 from test_pins import _normalize
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 def _own_pyproject(package_dir: Path) -> Path:
@@ -36,7 +24,8 @@ def _own_pyproject(package_dir: Path) -> Path:
 
 def _declared_dependencies(pyproject_path: Path) -> list[str]:
     data = tomllib.loads(pyproject_path.read_text(encoding="utf-8"))
-    return data.get("project", {}).get("dependencies", [])
+    deps: list[str] = list(data.get("project", {}).get("dependencies", []))
+    return deps
 
 
 def undeclared(imports: set[str], dependencies: list[str]) -> set[str]:

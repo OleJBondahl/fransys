@@ -73,6 +73,7 @@ net n65 =F1+C1-K1.coil.out =F2+C1-K2.coil.in
 fact attached =F5+C1-K5.coil =F1+C1-K1.coil =F8+C1-K8.coil =F2+C1-K2.coil =F7+C1-K7.coil =F10+C1-K10.coil =F3+C1-K3.coil =F9+C1-K9.coil =F4+C1-K4.coil =F11+C1-K11.coil =F6+C1-K6.coil
 fact boxpin 
 fact strip -X1 +C1-X1:SIG:1.terminal
+fact joined +C1-X1:SIG:1.terminal.n +C1-X1:SIG:1.terminal.s
 # legend only: a general placer must not read a symbol's kind.
 kind =F5+C1-K5.coil coil
 kind =F1+C1-K1.coil coil

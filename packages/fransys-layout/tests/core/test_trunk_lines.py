@@ -5,7 +5,8 @@ from __future__ import annotations
 from dataclasses import replace
 
 from fransys_layout.core import Facts, PlacementProblem
-from fransys_layout.core.outputs import Placed
+from fransys_layout.core.outputs import Placed, Wire
+from fransys_layout.core.route import through_bodies
 from fransys_layout.core.route_trunk import trunk_wires
 from fransys_layout.core.values import Box
 
@@ -64,18 +65,59 @@ def test_a_single_lane_fan_is_one_plain_line() -> None:
     assert (line.net, line.lane) == ("n", None)
 
 
+def _hits(env):
+    """The finding codes the trunk's wires raise, once each."""
+    return sorted({f.code for f in through_bodies(env, trunk_wires(env, env.trunks[0]).wires)})
+
+
 def _with_body(env, box: Box):
     body = Placed("X", env.page, box.x, box.y, "R0", box, box, ())
     return replace(env, placed={**env.placed, "X": body})
 
 
 def test_a_lane_line_through_a_footprint_is_a_warning_and_still_drawn() -> None:
-    """RL-W1: a footprint on the line's y warns TRUNK_THROUGH_BODY (R486); beside it none."""
+    """RL-W1: a footprint on the line's y warns WIRE_THROUGH_BODY (R486); beside it none."""
     xs = [100, 124, 148]
     env, trunk, _ = synthetic((0, 1, 2), xs, above=False)
     env = replace(env, trunks=(replace(trunk, lane_ends=((100, 148),) * 3),))
-    clear = trunk_wires(_with_body(env, Box(110, trunk.y + 100, 8, 8)), env.trunks[0])
-    assert [f.code for f in clear.findings] == []
-    hit = trunk_wires(_with_body(env, Box(110, trunk.y - 4, 8, 8)), env.trunks[0])
-    assert [f.code for f in hit.findings] == ["TRUNK_THROUGH_BODY"]
-    assert hit.wires != ()
+    clear = _hits(_with_body(env, Box(110, trunk.y + 100, 8, 8)))
+    assert clear == []
+    hit = _hits(_with_body(env, Box(110, trunk.y - 4, 8, 8)))
+    assert hit == ["WIRE_THROUGH_BODY"]
+    margin = Placed("X", env.page, 110, trunk.y - 4, "R0", Box(110, trunk.y + 100, 8, 8), Box(110, trunk.y - 4, 8, 8), ())
+    assert _hits(replace(env, placed={**env.placed, "X": margin})) == []  # R1146: a keep-out margin only is looks, not this error
+
+
+def test_a_footprint_edge_on_the_line_is_a_hit() -> None:
+    """Edges are closed (layout-0394): a body whose edge lies on the line's y is passed; a point touch at a lane end is looks (R1164)."""
+    xs = [100, 124, 148]
+    env, trunk, _ = synthetic((0, 1, 2), xs, above=False)
+    env = replace(env, trunks=(replace(trunk, lane_ends=((100, 148),) * 3),))
+    for box in (Box(110, trunk.y, 8, 8), Box(110, trunk.y - 8, 8, 8)):
+        assert _hits(_with_body(env, box)) == ["WIRE_THROUGH_BODY"]
+    assert _hits(_with_body(env, Box(148, trunk.y - 4, 8, 8))) == []
+
+
+def test_the_fans_own_attached_symbol_on_the_line_is_not_a_hit() -> None:
+    """R515: own = the symbols the fan attaches to; a foreign body on the same line is a hit."""
+    xs = [100, 124, 148]
+    env, trunk, _ = synthetic((0, 1, 2), xs, above=False)
+    env = replace(env, trunks=(replace(trunk, lane_ends=((100, 148),) * 3),))
+    box = Box(110, trunk.y, 8, 8)
+    away = Box(110, trunk.y + 100, 8, 8)
+    own = replace(env, placed={"K": Placed("K", env.page, box.x, box.y, "R0", away, box, ())})
+    assert _hits(own) == []
+    assert _hits(_with_body(own, box)) == ["WIRE_THROUGH_BODY"]
+    # R533: the own exemption is the keep-out margin only; the own body on the line is hit
+    on_the_line = replace(env, placed={"K": Placed("K", env.page, box.x, box.y, "R0", box, box, ())})
+    assert _hits(on_the_line) == ["WIRE_THROUGH_BODY"]
+
+
+def test_a_wire_of_any_kind_through_a_body_is_a_hit_not_only_a_trunk() -> None:
+    """R1290 (iv), KI-626: a straight or join wire over a foreign body raises WIRE_THROUGH_BODY; beside it none."""
+    env, _, _ = synthetic((0, 1, 2), [100, 124, 148], above=False)
+    wall = _with_body(env, Box(110, 96, 8, 8))
+    for kind in ("straight", "join"):
+        run = Wire("n", env.page, ((100, 100), (148, 100)), kind)
+        assert [f.code for f in through_bodies(wall, [run])] == ["WIRE_THROUGH_BODY"]
+        assert through_bodies(env, [run]) == []

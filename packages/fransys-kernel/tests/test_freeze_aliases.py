@@ -31,9 +31,7 @@ def test_a_record_that_mentions_no_retired_id_is_kept_as_the_same_object(origin:
     ],
     ids=["cycle", "missing-target", "old-still-exists"],
 )
-def test_an_alias_that_cannot_be_followed_is_a_ref_error_on_the_old_id(
-    aliases: list[tuple[str, str]], why: str, origin: Origin
-) -> None:
+def test_an_alias_that_cannot_be_followed_is_a_ref_error_on_the_old_id(aliases: list[tuple[str, str]], why: str, origin: Origin) -> None:
     """Every alias problem is a `RefError` whose holder is the retired id."""
     draft = draft_of(origin, make_owner("1"), make_owner("2"))
     for old, new in aliases:

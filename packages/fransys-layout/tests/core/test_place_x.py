@@ -8,12 +8,12 @@ from itertools import pairwise
 from options_fixtures import core_options
 
 from fransys_layout.core import Facts, Options, PlacementProblem
+from fransys_layout.core.flow_values import Lane
 from fransys_layout.core.geometry import column_extent
 from fransys_layout.core.node_names import HIGH, LOW, box_node, col_node, pin_node
 from fransys_layout.core.pack_row import RowSpec, row_width, solve_row
 from fransys_layout.core.place_env import PageEnv, page_envs
 from fransys_layout.core.place_x import place_x, row_specs
-from fransys_layout.core.values import Lane
 
 from .conftest import MARKER
 from .cut_fixtures import AREA, elem, net
@@ -25,12 +25,6 @@ def env_of(prob: PlacementProblem, options: Options | None = None) -> PageEnv:
     """The env of the first page of a problem."""
     opts = options or core_options(
         marker=MARKER,
-        flip_turn="R180",
-        tag_stagger=True,
-        label_gap=8,
-        parallel_pitch=48,
-        driver_first=True,
-        arrow_sides=("E", "W"),
     )
     return page_envs(cut_of(prob, opts), prob, opts)[0]
 
@@ -92,51 +86,30 @@ def _four_columns() -> PlacementProblem:
 
 
 def test_justify_lays_columns_out_to_the_page_margin() -> None:
-    """Justified, the row ends within one wiring grid of the right margin; packed it falls short."""
-    ends = {}
+    """Justified, the row ends one edge gap short of the right margin, as far in as it starts; packed it falls short."""
+    ends, starts = {}, {}
     for justify in (True, False):
         env = env_of(
             _four_columns(),
             core_options(
                 marker=MARKER,
                 justify=justify,
-                flip_turn="R180",
-                tag_stagger=True,
-                label_gap=8,
-                parallel_pitch=48,
-                driver_first=True,
-                arrow_sides=("E", "W"),
             ),
         )
         spec = row_specs(env)[0]
         assert len(spec.cols) == 4
-        ends[justify] = _reach(spec, place_x(env)[0])
+        x = place_x(env)[0]
+        ends[justify] = _reach(spec, x)
+        starts[justify] = x[col_node(spec.cols[0])]
     limit = (
         AREA.w
         - core_options(
             marker=MARKER,
-            flip_turn="R180",
-            tag_stagger=True,
-            label_gap=8,
-            parallel_pitch=48,
-            driver_first=True,
-            arrow_sides=("E", "W"),
         ).margin.w
     )
-    assert (
-        limit
-        - core_options(
-            marker=MARKER,
-            flip_turn="R180",
-            tag_stagger=True,
-            label_gap=8,
-            parallel_pitch=48,
-            driver_first=True,
-            arrow_sides=("E", "W"),
-        ).wiring_grid
-        < ends[True]
-        <= limit
-    )
+    edge_gap = starts[True] - starts[False]
+    assert edge_gap > 0
+    assert limit - edge_gap - 5 * 8 < ends[True] <= limit - edge_gap
     assert ends[False] < limit - 100
 
 
@@ -154,18 +127,8 @@ def test_a_row_wider_than_the_page_is_left_packed_and_named() -> None:
     for word in (f"page {env.plan.page}", "row 0", f"{overflow} G", "short_height"):
         assert word in finding.text
     left = column_extent(spec.syms, (Lane(spec.pcs["c:e"].lanes[0], 0),), spec.in_row)[0]
-    assert (
-        x[col_node("c:e")] + left
-        == core_options(
-            marker=MARKER,
-            flip_turn="R180",
-            tag_stagger=True,
-            label_gap=8,
-            parallel_pitch=48,
-            driver_first=True,
-            arrow_sides=("E", "W"),
-        ).margin.w
-    )
+    options = core_options(marker=MARKER)
+    assert 0 <= x[col_node("c:e")] + left - options.margin.w < options.wiring_grid  # on the grid: its reach rounds up
     assert place_x(env_of(card_with_coils()))[1] == ()
 
 
@@ -181,12 +144,6 @@ def test_fixed_box_pins_chain_at_the_pitch() -> None:
     fixed = core_options(
         marker=MARKER,
         box_pins="fixed",
-        flip_turn="R180",
-        tag_stagger=True,
-        label_gap=8,
-        parallel_pitch=48,
-        driver_first=True,
-        arrow_sides=("E", "W"),
     )
     env = env_of(card_with_coils(4, 84), fixed)
     x, _ = place_x(env)

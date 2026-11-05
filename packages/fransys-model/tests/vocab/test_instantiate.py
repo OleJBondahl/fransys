@@ -14,10 +14,6 @@ if TYPE_CHECKING:
 _KEY = ("examples", "relay-1")
 
 
-def _only[R](records: tuple, record_type: type[R]) -> list[R]:
-    return [r for r in records if isinstance(r, record_type)]
-
-
 # ---- PartBundle refuses what could not be one part's templates --------------------------
 
 

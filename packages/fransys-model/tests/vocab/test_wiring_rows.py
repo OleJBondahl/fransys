@@ -6,23 +6,13 @@ from pathlib import Path
 
 import pytest
 from examples import relay_part_bundle
+from fransys_author.instantiate import instantiate
 from plant import Plant
 
+from fransys_model.derive import rail_row
+from fransys_model.elecdef import Current
 from fransys_model.kernel import dumps, from_data, loads, make_id, to_data
-from fransys_model.vocab import (
-    ConductorMark,
-    Current,
-    Port,
-    Rail,
-    RowSpec,
-    SupplySystem,
-    WireRowHint,
-    WiringRow,
-    facets_of,
-    instantiate,
-    rail_row,
-    supply_rail_row,
-)
+from fransys_model.vocab import ConductorMark, Port, Rail, RowSpec, SupplySystem, WireRowHint, WiringRow, facets_of, supply_rail_row
 
 _M = ConductorMark
 
@@ -135,10 +125,8 @@ def test_every_row_name_is_its_value(row: WiringRow) -> None:
 
 def test_a_stored_v20_text_loads_and_writes_back_byte_identical() -> None:
     """Fails if `source_row` is written as `null` (the stored text has no such key)."""
-    stored = (Path(__file__).resolve().parent.parent / "golden" / "cabinet.json").read_text(
-        encoding="utf-8"
-    )
-    assert '"schema_version": 20' in stored
+    stored = (Path(__file__).resolve().parent.parent / "golden" / "cabinet.json").read_text(encoding="utf-8")
+    assert '"schema_version": 23' in stored
     assert "source_row" not in stored
     assert dumps(loads(stored)) == stored
 
@@ -147,10 +135,7 @@ def test_a_port_with_a_source_row_writes_the_key_and_reads_it_back() -> None:
     """Fails if a set `source_row` is dropped on write or not read on load."""
     plant = Plant()
     port = plant.port(plant.function(plant.item("drive"), "out"), "U")
-    plant.records[:] = [
-        dataclasses.replace(r, source_row=WiringRow.AC_L2) if r.id == port else r
-        for r in plant.records
-    ]
+    plant.records[:] = [dataclasses.replace(r, source_row=WiringRow.AC_L2) if r.id == port else r for r in plant.records]
     text = dumps(plant.model())
     assert text.count('"source_row": "AC_L2"') == 1
     loaded = loads(text).tables["port"][port]

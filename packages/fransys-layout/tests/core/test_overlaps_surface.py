@@ -1,11 +1,6 @@
 """`overlaps` is on the core surface: shared interior area meets, touching edges do not (R360)."""
 
-from fransys_layout import core
 from fransys_layout.core import Box, overlaps
-
-
-def test_overlaps_is_a_name_of_the_core_surface():
-    assert "overlaps" in core.__all__
 
 
 def test_boxes_with_shared_area_overlap():

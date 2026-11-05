@@ -3,8 +3,6 @@
 The script computes no fact: it picks which recorded view to show, and hides what is switched off.
 """
 
-# ruff: noqa: E501 -- the JavaScript source is not wrapped
-
 from typing import Final
 
 JS_CORE: Final[str] = r"""

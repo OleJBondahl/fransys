@@ -2,19 +2,16 @@
 
 from typing import Literal, overload
 lazy from collections.abc import Sequence
-lazy from decimal import Decimal
 
-from fransys_author._limits import state_limits
 from fransys_author.errors import AuthorAttributeError, AuthorError
 from fransys_author.handles import Port
-from fransys_author.surface._bar_pe import join_pe
 lazy from fransys_author.design import Scope
 lazy from fransys_author.handles import Fn as EngineFn
 lazy from fransys_author.surface import _fn_pole, _throws
 lazy from fransys_model.derive import pin_order
 lazy from fransys_model.kernel import Id, natural_join
 lazy from fransys_model.vocab import Function as ModelFunction
-lazy from fransys_model.vocab import FunctionKind, Operating, Rating, SignalType, identifier
+lazy from fransys_model.vocab import SignalType, identifier
 
 Pin = Port
 
@@ -83,18 +80,12 @@ class Fn:
     def _pins(self) -> list[tuple[str, Pin]]:
         return [(self._fn.name, pin) for pin in self._fn.ports]
 
-    def _screw(self, pin: Pin) -> Pin:
-        """`pin`, joined to the PE net when this function is a bar: a named screw is PE too."""
-        if self._fn.kind is FunctionKind.BAR:
-            join_pe(self._fn, pin)
-        return pin
-
     def __getitem__(self, marking: str | int) -> Pin:
         """The pin marked `marking`; an integer needs no quotes.
 
         Does not guess: an unknown marking raises and lists the pins.
         """
-        return self._screw(pick(f"{self._label}.{self._fn.name}", str(marking), self._pins()))
+        return pick(f"{self._label}.{self._fn.name}", str(marking), self._pins())
 
     @overload
     def __getattr__(self, name: Literal["no", "nc"]) -> _throws.Throw: ...
@@ -106,12 +97,11 @@ class Fn:
         Does not guess: an unknown name raises an `AttributeError` that lists the pins.
         """
         if name.startswith("__") or "_fn" not in vars(self):  # copy, unpickle: no recursion
-            raise AttributeError(name)
+            raise AuthorAttributeError(name)
         if name in _throws.THROWS and not any(pin.name == name for pin in self._fn.ports):
             return _throws.throw(self._label, self._fn, name)
         owner, pins = f"{self._label}.{self._fn.name}", self._pins()
-        pin = pick(owner, attribute_pin(name, pins), pins, AuthorAttributeError)
-        return self._screw(pin)
+        return pick(owner, attribute_pin(name, pins), pins, AuthorAttributeError)
 
     def pole(self, n: int, /) -> _fn_pole.FnPole:
         """Core: one pole of this function as a series element, counted from 1 in pole order.
@@ -128,24 +118,4 @@ class Fn:
         Does not pick a channel: the allocation pass binds the request later.
         """
         self._fn.plc(signal.value, name, priority)
-        return self
-
-    def scale(
-        self, unit: str, *, raw: tuple[int, int], eng: tuple[str | Decimal, str | Decimal]
-    ) -> Fn:
-        """Core: scale the raw signal range `raw` to the engineering range `eng` in `unit`.
-
-        Does not accept a float: write the values as strings or Decimal.
-        """
-        self._fn.scale(unit, raw=raw, eng=eng)
-        return self
-
-    def limits(self, *, rating: Rating | None = None, operating: Operating | None = None) -> Fn:
-        """Core: state the values a unit says about this boundary function.
-
-        Example: `X1.power.limits(rating=...)`.
-
-        Does not mark the boundary: interface=True on the device does.
-        """
-        state_limits(self._label, self._fn, self._scope, rating, operating)
         return self

@@ -1,10 +1,10 @@
-"""XF-HINTS part 3 (R467 C6): a unit profile's `group_ranks` order the schematic's function groups.
+"""XF-HINTS part 3 (R467 C6): `d.layout.order` orders the schematic's function groups.
 
-Three relay blocks built in a unit that ranks them F3, F2, F1 stand in that order on the page. The
-overview already read the ranks; the drawing path did not (guide `drawing.md`, order hints).
+Three relay blocks built in a unit that orders them F3, F2, F1 stand in that order on the page. The
+overview and the drawing path both read the order hints (guide `drawing.md`).
 """
 
-from typing import NamedTuple
+from typing import Any, NamedTuple
 lazy from pathlib import Path
 
 import fransys as fr
@@ -19,6 +19,7 @@ class _Cabinet(NamedTuple):
 
 def _groups_in_page_order(tmp_path: Path, *, ranked: bool) -> list[str]:
     names: dict[object, str] = {}
+    groups: dict[int, Any] = {}
 
     @fr.unit(
         "cab",
@@ -37,8 +38,9 @@ def _groups_in_page_order(tmp_path: Path, *, ranked: bool) -> list[str]:
                 feed = c.terminal_strip(f"X{i}", "DEMO-TB-2.5", 2)
                 c.series(feed, k.coil, feed, wire=(BU, 0.75))
             names[group.id] = f"F{i}"
+            groups[i] = group
         if ranked:
-            c.layout.profile(group_ranks={"F3": 1, "F2": 2, "F1": 3})
+            c.layout.order(groups[3], groups[2], groups[1])
         return _Cabinet()
 
     cover = tmp_path / "cover.md"

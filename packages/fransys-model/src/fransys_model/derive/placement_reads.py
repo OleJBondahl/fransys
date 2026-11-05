@@ -3,6 +3,7 @@
 Each returns what the table walk it replaced gave, in the same order.
 """
 
+from fransys_model.derive.indexes import build_indexes
 from fransys_model.vocab.tables import aspect_nodes, functions, ports
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.aspects import AspectNode
@@ -38,8 +39,8 @@ def item_functions(model: Model) -> frozendict[Id[Item], frozenset[Id[Function]]
 
 
 def function_ports(model: Model, function: Id[Function]) -> tuple[Id[Port], ...]:
-    """The ports of `function`, in table order."""
-    return tuple(p.id for p in ports(model).values() if p.function == function)
+    """The ports of `function`, in `Id` order."""
+    return build_indexes(model).ports_by_function.get(function, ())
 
 
 def port_name(model: Model, port: Id[Port]) -> str:

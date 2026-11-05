@@ -26,12 +26,6 @@ from .pipeline_fixtures import blocks_of, flow_of
 
 OPTIONS = core_options(
     marker=MARKER,
-    flip_turn="R180",
-    tag_stagger=True,
-    label_gap=8,
-    parallel_pitch=48,
-    driver_first=True,
-    arrow_sides=("E", "W"),
 )
 SPELLINGS = ("{}", "{:04d}")  # each keeps the natural order of the ranks, spells it anew
 
@@ -96,9 +90,7 @@ def test_the_cut_does_not_depend_on_how_ids_are_spelled(case: str, form: str) ->
     want = canon(cut_pages(lists, flow, prob, OPTIONS), back_of({}))
     assert want[1] or len(want[0]) > 1 or len(want[0][0][1]) > 1  # something is cut: not vacuous
     maps = make_maps(id_sets(prob, flow, lists), form)
-    got = cut_pages(
-        respell_blocks(lists, maps), respell_flow(flow, maps), respell_problem(prob, maps), OPTIONS
-    )
+    got = cut_pages(respell_blocks(lists, maps), respell_flow(flow, maps), respell_problem(prob, maps), OPTIONS)
     assert canon(got, back_of(maps)) == want
 
 
@@ -107,9 +99,7 @@ def test_the_cut_does_not_depend_on_the_order_of_the_input_tuples(case: str) -> 
     prob = CASES[case]()
     lists, flow = stages(prob)
     want = canon(cut_pages(lists, flow, prob, OPTIONS), back_of({}))
-    flipped = replace(
-        flow, columns=flow.columns[::-1], fans=flow.fans[::-1], cross_links=flow.cross_links[::-1]
-    )
+    flipped = replace(flow, columns=flow.columns[::-1], fans=flow.fans[::-1], cross_links=flow.cross_links[::-1])
     reversed_prob = replace(prob, symbols=prob.symbols[::-1], nets=prob.nets[::-1])
     got = canon(cut_pages(lists, flipped, reversed_prob, OPTIONS), back_of({}))
     assert got[0] == want[0]

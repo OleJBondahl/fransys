@@ -6,14 +6,10 @@ One module fixture releases the board once; each test edits its own copy.
 import hashlib
 import json
 import shutil
-import sys
-from pathlib import Path
 
 import fransys as fr
-import fransys_author
 import pytest
-
-sys.path.insert(0, str(Path(__file__).parent))
+from fransys_author.design import Design
 from release_folders_fixture import build_board, release_board
 
 
@@ -48,34 +44,21 @@ def test_an_untouched_release_gives_no_file_finding(copy):
     assert _codes(result, into) == []
 
 
-def test_a_changed_byte_in_a_released_csv_gives_release_file_changed(copy):
+@pytest.mark.parametrize(
+    ("damage", "code", "where"),
+    [
+        (lambda _i, c: c.write_bytes(c.read_bytes() + b"x"), "RELEASE_FILE_CHANGED", "data/{csv}"),
+        (lambda _i, c: c.unlink(), "RELEASE_FILE_MISSING", "data/{csv}"),
+        (lambda i, _c: (_folder(i) / "baseline" / "manifest.json").unlink(), "RELEASE_FILE_MISSING", "baseline/manifest.json"),
+        (lambda i, _c: (_folder(i) / "Thumbs.db").write_bytes(b"x"), "RELEASE_FILE_CHANGED", "Thumbs.db (not in the manifest)"),
+    ],
+    ids=["changed-byte", "deleted-csv", "deleted-manifest", "added-file"],
+)
+def test_a_damaged_release_folder_gives_one_file_finding(copy, damage, code, where):
     into, result = copy
-    path = _csv(into)
-    path.write_bytes(path.read_bytes() + b"x")
-    assert _codes(result, into) == [("RELEASE_FILE_CHANGED", f"wb-board 1.1: data/{path.name}")]
-
-
-def test_a_deleted_released_file_gives_release_file_missing(copy):
-    into, result = copy
-    path = _csv(into)
-    path.unlink()
-    assert _codes(result, into) == [("RELEASE_FILE_MISSING", f"wb-board 1.1: data/{path.name}")]
-
-
-def test_a_deleted_manifest_gives_release_file_missing(copy):
-    into, result = copy
-    (_folder(into) / "baseline" / "manifest.json").unlink()
-    assert _codes(result, into) == [
-        ("RELEASE_FILE_MISSING", "wb-board 1.1: baseline/manifest.json")
-    ]
-
-
-def test_a_file_added_to_a_release_folder_gives_release_file_changed(copy):
-    into, result = copy
-    (_folder(into) / "Thumbs.db").write_bytes(b"x")
-    assert _codes(result, into) == [
-        ("RELEASE_FILE_CHANGED", "wb-board 1.1: Thumbs.db (not in the manifest)")
-    ]
+    csv = _csv(into)
+    damage(into, csv)
+    assert _codes(result, into) == [(code, f"wb-board 1.1: {where.format(csv=csv.name)}")]
 
 
 def test_crlf_line_ends_in_every_text_file_pass(copy):
@@ -108,16 +91,14 @@ def test_a_manifest_cut_in_half_is_a_changed_file_for_verify_and_value_error_for
     into, result = copy
     manifest = _folder(into) / "baseline" / "manifest.json"
     manifest.write_bytes(manifest.read_bytes()[:40])
-    assert _codes(result, into) == [
-        ("RELEASE_FILE_CHANGED", "wb-board 1.1: baseline/manifest.json")
-    ]
+    assert _codes(result, into) == [("RELEASE_FILE_CHANGED", "wb-board 1.1: baseline/manifest.json")]
     with pytest.raises(ValueError, match=r"manifest\.json"):
         fr.releases(into)
 
 
 def test_a_release_the_model_no_longer_has_is_still_checked(copy):
     into, _result = copy
-    other = fr.build(fr.parts("demo_parts"), fransys_author.Design(fr.parts("demo_parts")).draft())
+    other = fr.build(fr.parts("demo_parts"), Design(fr.parts("demo_parts")).draft())
     path = _csv(into)
     path.write_bytes(b"changed")
     assert _codes(other, into) == [("RELEASE_FILE_CHANGED", f"wb-board 1.1: data/{path.name}")]

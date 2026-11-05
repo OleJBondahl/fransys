@@ -2,15 +2,14 @@
 
 Every case here is about what the kinds do together: their fields against the DESIGN table,
 their enums resolving at runtime, their normalisation surviving alias rewriting and loading,
-and one model holding a record of each kind.
 """
 
-import sys
-from typing import TYPE_CHECKING, Any
+from typing import Any
 lazy from enum import Enum
 
 import pytest
 
+from fransys_model.elecdef import LinkKind
 from fransys_model.kernel import (
     Id,
     Origin,
@@ -20,15 +19,7 @@ from fransys_model.kernel import (
 from fransys_model.vocab.aspects import AspectNode, Placement
 from fransys_model.vocab.connectivity import Conductor, Mate, Net
 from fransys_model.vocab.core import Function, Item, Port
-from fransys_model.vocab.enums import (
-    Aspect,
-    ConductorKind,
-    FunctionKind,
-    LinkKind,
-    NetClass,
-    PartCategory,
-    PortRole,
-)
+from fransys_model.vocab.enums import Aspect, ConductorKind, FunctionKind, NetClass, PartCategory, PortBoundary
 from fransys_model.vocab.project import Project
 from fransys_model.vocab.templates import (
     FunctionTemplate,
@@ -38,9 +29,6 @@ from fransys_model.vocab.templates import (
     PortTemplate,
 )
 
-if TYPE_CHECKING:
-    from collections.abc import Iterator
-
 _ORIGIN = Origin(file="test_core_vocabulary.py", line=1, note="")
 
 # Field by field, without the `id`, `key` and `ext` every record has.
@@ -48,8 +36,8 @@ _DESIGNED: dict[type, tuple[str, ...]] = {
     PartLibrary: ("name", "version"),
     Part: ("mpn", "manufacturer", "description", "category", "class_code", "library"),
     FunctionTemplate: ("part", "name", "kind", "protection_type", "energy"),
-    PortTemplate: ("function", "name", "role", "marking", "pole_side", "conductor_mark", "joins"),
-    InternalLink: ("a", "b", "kind", "rest"),
+    PortTemplate: ("function", "name", "role", "marking", "side", "conductor_mark", "joins"),
+    InternalLink: ("a", "b", "kind", "closed_at_rest"),
     Item: (
         "part",
         "parent",
@@ -100,10 +88,10 @@ _REFERENCES = {
 _ENUM_FIELDS: dict[tuple[type, str], type[Enum]] = {
     (Part, "category"): PartCategory,
     (FunctionTemplate, "kind"): FunctionKind,
-    (PortTemplate, "role"): PortRole,
+    (PortTemplate, "role"): PortBoundary,
     (InternalLink, "kind"): LinkKind,
     (Function, "kind"): FunctionKind,
-    (Port, "role"): PortRole,
+    (Port, "role"): PortBoundary,
     (Net, "net_class"): NetClass,
     (Conductor, "kind"): ConductorKind,
     (AspectNode, "aspect"): Aspect,
@@ -112,25 +100,6 @@ _ENUM_FIELDS: dict[tuple[type, str], type[Enum]] = {
 
 def _key_id(cls: type, *key: str) -> Id[Any]:
     return make_id(cls, key)
-
-
-def _fransys_modules() -> list[str]:
-    prefix = "fransys_model."
-    return [name for name in sys.modules if name == "fransys_model" or name.startswith(prefix)]
-
-
-@pytest.fixture
-def fresh_package() -> Iterator[None]:
-    """Import the package again from nothing, so its registries start empty; then restore it."""
-    saved = {name: sys.modules[name] for name in _fransys_modules()}
-    for name in saved:
-        del sys.modules[name]
-    try:
-        yield
-    finally:
-        for name in _fransys_modules():
-            del sys.modules[name]
-        sys.modules.update(saved)
 
 
 def _conductor(a: Any, b: Any) -> Conductor:

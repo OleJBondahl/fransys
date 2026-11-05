@@ -2,7 +2,6 @@
 
 A card whose own supply pin hangs from the trunk while its inputs drive it holds a driver and a
 leg on one y node. The cut takes out only that leg, as a cross link to a driver elsewhere; the
-whole net leaving its fan (layout-0378) drew none of its other ends.
 """
 
 from __future__ import annotations
@@ -10,8 +9,8 @@ from __future__ import annotations
 from options_fixtures import core_options
 
 from fransys_layout.core import PinRef
+from fransys_layout.core.flow_values import Attach, CrossLink, Fan
 from fransys_layout.core.topology import ColumnEnv, _split_cycles
-from fransys_layout.core.values import Attach, CrossLink, Fan
 
 SUPPLY = Attach(None, 0, 0, PinRef("F", "out"), net="n")
 INPUT = Attach(None, 0, 0, PinRef("CARD", "in.1"), net="n")

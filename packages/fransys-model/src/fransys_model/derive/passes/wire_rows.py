@@ -12,8 +12,8 @@ from typing import TYPE_CHECKING, Final
 from fransys_model.derive.facts.closure import net_of, port_rails
 from fransys_model.derive.facts.roles import plc_channel_facets
 from fransys_model.derive.lookups import item_of_port, unit_chain
-from fransys_model.kernel import Finding, Model, Severity, evolve, make_id
-from fransys_model.vocab.codes import fix_text
+from fransys_model.kernel import Finding, Model, evolve, make_id
+from fransys_model.vocab.codes import finding
 from fransys_model.vocab.enums import SignalType
 from fransys_model.vocab.facets.wire import WireFacet
 from fransys_model.vocab.facets.wire_row_hint import WireRowHint
@@ -52,11 +52,7 @@ def _sourced(model: Model, net_ports: tuple[Id[Port], ...]) -> set[WiringRow]:
 def _signal_on(model: Model, net_ports: tuple[Id[Port], ...]) -> bool:
     channels = {t: f.signal for t, f in plc_channel_facets(model).items()}
     fns, table = functions(model), ports(model)
-    return any(
-        channels.get(fns[table[p].function].template) in _DC_SIGNALS
-        for p in net_ports
-        if fns[table[p].function].template is not None
-    )
+    return any(channels.get(fns[table[p].function].template) in _DC_SIGNALS for p in net_ports if fns[table[p].function].template is not None)
 
 
 def _in_scope(model: Model, wire_unit: Id[Unit] | None, supply_unit: Id[Unit] | None) -> bool:
@@ -72,11 +68,7 @@ def _rail_rows(model: Model, conductor: Conductor) -> set[WiringRow]:
     rows: set[WiringRow] = set()
     for supply in supply_systems(model).values():
         if _in_scope(model, unit, supply.unit):
-            rows.update(
-                row
-                for rail in carried & set(supply.rails)
-                if (row := supply_rail_row(supply, rail)) is not None
-            )
+            rows.update(row for rail in carried & set(supply.rails) if (row := supply_rail_row(supply, rail)) is not None)
     return rows
 
 
@@ -100,8 +92,8 @@ def _row(model: Model, conductor: Conductor) -> tuple[WiringRow | None, str]:
 
 def _net_name(model: Model, conductor: Conductor) -> str:
     here = set(_on_net(model, conductor))
-    named = sorted(n.name for n in nets(model).values() if n.name and here & set(n.ports))
-    return f"net {named[0]!r}" if named else "an unnamed net"
+    named = [n.name for n in nets(model).values() if n.name and here & set(n.ports)]
+    return f"net {min(named)!r}" if named else "an unnamed net"
 
 
 def _unresolved(model: Model, hint: WireRowHint, conductor: Conductor, why: str) -> Finding:
@@ -109,13 +101,7 @@ def _unresolved(model: Model, hint: WireRowHint, conductor: Conductor, why: str)
         f"the wire from {ref(conductor.a)} to {ref(conductor.b)} on {_net_name(model, conductor)} "
         f"has no row: {why}. Give wire= on that series (a size and a colour, or a row table)"
     )
-    return Finding(
-        code=WIRE_ROW_UNRESOLVED,
-        severity=Severity.ERROR,
-        subjects=(hint.id, conductor.id),
-        message=message,
-        fix=fix_text(WIRE_ROW_UNRESOLVED),
-    )
+    return finding(WIRE_ROW_UNRESOLVED, (hint.id, conductor.id), message)
 
 
 def _facet(hint: WireRowHint, conductor: Conductor, row: WiringRow) -> WireFacet | str:
@@ -153,10 +139,7 @@ def resolve_wire_rows(model: Model) -> tuple[Model, tuple[Finding, ...]]:
     comes back as the same object when nothing is hinted.
     """
     done = {f.subject for f in facets_of(model, WireFacet).values()}
-    hints = sorted(
-        (h for h in facets_of(model, WireRowHint).values() if h.subject not in done),
-        key=lambda h: h.id,
-    )
+    hints = [h for h in facets_of(model, WireRowHint).values() if h.subject not in done]
     results = [(hint, _resolved(model, hint)) for hint in hints]
     findings = tuple(r for _, r in results if isinstance(r, Finding))
     made = [(r, hint) for hint, r in results if isinstance(r, WireFacet)]
@@ -164,6 +147,4 @@ def resolve_wire_rows(model: Model) -> tuple[Model, tuple[Finding, ...]]:
         return model, findings
     origins = {facet.id: model.origins[hint.id] for facet, hint in made}
     evolved = evolve(model, put=[f for f, _ in made], origin=next(iter(origins.values())))
-    return dataclasses.replace(
-        evolved, origins=frozendict({**evolved.origins, **origins})
-    ), findings
+    return dataclasses.replace(evolved, origins=frozendict({**evolved.origins, **origins})), findings

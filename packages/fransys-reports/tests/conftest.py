@@ -2,37 +2,17 @@
 
 Every id comes from `make_id` over a key chosen here; nothing names a real project. `Plant`
 collects records and `model()` freezes them, in the order given or in any other. The tests take
-their models from the fixtures at the bottom; this workspace resolves no test-directory imports.
 """
 
-import tomllib
 from decimal import Decimal
-from pathlib import Path
 from random import Random
 from typing import Any
 
 import pytest
 from hypothesis import settings
+from library_records import freeze
 
-from fransys_model.kernel import Draft, Id, Model, Origin, Record, evolve, make_id
-from fransys_model.kernel import freeze as kernel_freeze
-from fransys_model.layout import (
-    DrawingLibrary,
-    PaperChoice,
-    a2_sheet_format,
-    colour_codes,
-    default_sheet_format,
-    frame_form,
-    harness_text,
-    reference_text,
-    revision_form,
-    revision_table_form,
-    stub_text,
-    title_block_form,
-    wire_label_text,
-    words,
-)
-from fransys_model.vocab import PageKind
+from fransys_model.kernel import Draft, Id, Model, Origin, make_id
 from fransys_model.vocab.aspects import AspectNode, Placement
 from fransys_model.vocab.connectivity import Conductor, Mate, Net
 from fransys_model.vocab.core import Function, Item, Port, Unit, UnitRelease
@@ -43,7 +23,7 @@ from fransys_model.vocab.enums import (
     Gender,
     NetClass,
     PartCategory,
-    PortRole,
+    PortBoundary,
     SignalType,
 )
 from fransys_model.vocab.facets.connector import ConnectorFacet
@@ -56,80 +36,6 @@ from fransys_model.vocab.templates import FunctionTemplate, Part
 # same name with the same settings is a no-op); see that file's comment.
 settings.register_profile("fransys", deadline=None, derandomize=True, max_examples=25)
 settings.load_profile("fransys")
-
-
-_LIBRARY_KEY = ("test", "library")
-_EM = Decimal(2048)
-
-
-def paper_records() -> tuple[Record, Record, PaperChoice]:
-    """The paper records the facade writes: A3 by default, the block diagram on A2 (stock)."""
-    a3, a2 = default_sheet_format(), a2_sheet_format()
-    key = ("test", "paper")
-    by_kind = frozendict({PageKind.BLOCK_DIAGRAM.value: a2.id})
-    return (
-        a3,
-        a2,
-        PaperChoice(id=make_id(PaperChoice, key), key=key, default=a3.id, by_kind=by_kind),
-    )
-
-
-def house_records() -> tuple[Record, ...]:
-    """The house text records of `settings.toml`, built by the model's builders."""
-    path = Path(__file__).parents[2] / "fransys" / "src" / "fransys" / "settings.toml"
-    t = tomllib.loads(path.read_text(encoding="utf-8"))
-    return (
-        reference_text(**t["reference"]),
-        frame_form(**t["frame"]),
-        stub_text(**t["stub"]),
-        wire_label_text(**t["wire_label"]),
-        harness_text(**t["harness"]),
-        colour_codes(**t["colours"]),
-        title_block_form(**t["title_block"]),
-        revision_table_form(**t["revision_table"]),
-        revision_form(
-            date_format=t["revision"]["date_format"],
-            initials_required=t["revision"]["initials_required"],
-            printed=t["revision"]["format"],
-        ),
-        words(t["words"]),
-    )
-
-
-def freeze(draft: Draft) -> Model:
-    """`draft` frozen, with the drawing library record the facade writes (GRID-HOME G6)."""
-    record = DrawingLibrary(
-        id=make_id(DrawingLibrary, _LIBRARY_KEY),
-        key=_LIBRARY_KEY,
-        module_mm=Decimal("2.5"),
-        divisions=8,
-        wire_pitch=8,
-        wire_pitch_fine=4,
-        font_family="DejaVu Sans",
-        ascent_ratio=Decimal(1556) / _EM,
-        descent_ratio=Decimal(426) / _EM,
-        ems=frozendict(
-            {
-                h: Decimal(h) * _EM / 1493
-                for h in ("1", "1.8", "2", "2.2", "2.5", "3", "3.2", "3.5", "4", "5", "6")
-            }
-        ),
-        lines=frozendict(
-            {"normal": Decimal("0.25"), "thick": Decimal("0.5"), "rule": Decimal("0.18")}
-        ),
-        heights=frozendict(
-            {
-                "smallest": Decimal("1.8"),
-                "body": Decimal("2.5"),
-                "heading_2": Decimal("3.5"),
-                "heading_1": Decimal(5),
-            }
-        ),
-    )
-    origin = Origin(file="conftest.py", line=0, note="test library")
-    return evolve(
-        kernel_freeze(draft), put=(record, *paper_records(), *house_records()), origin=origin
-    )
 
 
 _ORIGIN = Origin(file="conftest.py", line=1, note="fixture")
@@ -167,9 +73,7 @@ class Plant:
         self.add(part)
         return part.id
 
-    def unit(
-        self, key: str, name: str, *, revision: int = 1, interface: str = "1", version: int = 1
-    ) -> Id[Unit]:
+    def unit(self, key: str, name: str, *, revision: int = 1, interface: str = "1", version: int = 1) -> Id[Unit]:
         """Add a top-level `Unit` keyed `(key,)`, an instance of `(name, version, revision)`."""
         release_key = ("unit_release", name, str(version), str(revision))
         release = UnitRelease(
@@ -210,9 +114,7 @@ class Plant:
         self.add(item)
         return item.id
 
-    def function(
-        self, item: Id[Item], name: str, *, template: Id[FunctionTemplate] | None = None
-    ) -> Id[Function]:
+    def function(self, item: Id[Item], name: str, *, template: Id[FunctionTemplate] | None = None) -> Id[Function]:
         """Add a function of `item`, keyed by the item's key and `name`."""
         key = (*self._key_of(item), name)
         function = Function(
@@ -226,9 +128,7 @@ class Plant:
         self.add(function)
         return function.id
 
-    def port(
-        self, function: Id[Function], name: str, role: PortRole = PortRole.GENERIC
-    ) -> Id[Port]:
+    def port(self, function: Id[Function], name: str, role: PortBoundary = PortBoundary.GENERIC) -> Id[Port]:
         """Add a port of `function` called `name`."""
         key = (*self._key_of(function), name)
         port = Port(
@@ -237,7 +137,7 @@ class Plant:
             function=function,
             template=None,
             name=name,
-            role=role,
+            boundary=role,
         )
         self.add(port)
         return port.id
@@ -286,8 +186,8 @@ class Plant:
                 index=index,
             ),
         )
-        internal = self.port(function.id, "internal", PortRole.INTERNAL)
-        external = self.port(function.id, "external", PortRole.EXTERNAL)
+        internal = self.port(function.id, "internal", PortBoundary.INTERNAL)
+        external = self.port(function.id, "external", PortBoundary.EXTERNAL)
         return internal, external
 
     def wire(
@@ -299,9 +199,7 @@ class Plant:
         kind: ConductorKind = ConductorKind.WIRE,
     ) -> Id[Conductor]:
         """Add a conductor between two ports."""
-        conductor = Conductor(
-            id=make_id(Conductor, (key,)), key=(key,), a=a, b=b, kind=kind, carrier=None
-        )
+        conductor = Conductor(id=make_id(Conductor, (key,)), key=(key,), a=a, b=b, kind=kind, carrier=None)
         self.add(conductor)
         return conductor.id
 
@@ -347,9 +245,7 @@ class Plant:
         unit: Id[Unit] | None = None,
     ) -> list[Id[Function]]:
         """A module item with one channel function per signal, numbered from 1."""
-        part = self.part(
-            f"{key}-part", f"EXAMPLE-{key}", category=PartCategory.PLC_MODULE, description="Module"
-        )
+        part = self.part(f"{key}-part", f"EXAMPLE-{key}", category=PartCategory.PLC_MODULE, description="Module")
         module = self.item(key, designation, part=part, unit=unit)
         found = []
         for number, signal in enumerate(signals, start=1):
@@ -464,7 +360,7 @@ class Plant:
         draft.extend(self.insertion_order(shuffled), origin=_ORIGIN)
         return freeze(draft)
 
-    def _key_of(self, record_id: Id[Any]) -> tuple[str, ...]:
+    def _key_of(self, record_id: Id[Any]) -> tuple[Any, ...]:
         return next(record.key for record in self.records if record.id == record_id)
 
 
@@ -473,8 +369,6 @@ def small_plant(*, k3_installed: bool = False) -> Plant:
 
     Strip `X1` holds terminals L:1, L:2 (jumpered), N:1 (unused) and S:1. Relays `K1` and
     `K2` are installed; `K3` is not, unless `k3_installed`. A DI/AI/DI module `A1` has device
-    `B7` on its first channel, wired to S:1 and placed at `+C1`. Three wires: `W1` and `W2`
-    labelled, one not.
     """
     plant = Plant()
     relay = plant.part("relay", "R-1", description="Relay, 24 V")
@@ -505,11 +399,6 @@ def board_plant() -> Plant:
 
     Connector `J1` (male, markings 1, 2, 10, A1) is mated to housing connector `P1`, which has
     the pins 1, 2, 10, A1 and Z9. The board's child `X1` holds `J2` (female, pins 1 and 2),
-    unmated, and the board holds `J3`, a connector with no pins. Each connector is its own item,
-    as a real connector part numbers it (decision model-0049); its row's designation is that
-    item's own -- `J1`, `J2`, `J3`, `P1` -- never `JB1`, `X1` or `H1` with the connector
-    function's own internal name tacked on. Net `V5` joins `J1:1` and `J2:1`; an unnamed net
-    `gnd` joins `J1:2` and `J2:2`.
     """
     plant = Plant()
     board = plant.item("jb1", "JB1")

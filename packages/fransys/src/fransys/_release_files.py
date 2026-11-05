@@ -3,9 +3,9 @@
 import hashlib
 from pathlib import Path
 
-from fransys_model.kernel import Finding, Severity
+lazy from fransys_model.kernel import Finding
 
-from ._codes import fix_text
+from ._codes import finding
 from ._release_reader import (
     BASELINE_FILES,
     file_bytes,
@@ -21,13 +21,7 @@ _TEXT_SUFFIXES = frozenset({".csv", ".json", ".md", ".xml", ".html", ".txt"})
 
 
 def _finding(code: str, release_name: str, folder: Path, detail: str) -> Finding:
-    return Finding(
-        code=code,
-        severity=Severity.ERROR,
-        subjects=(),
-        message=f"{release_name} {folder.name}: {detail}",
-        fix=fix_text(code),
-    )
+    return finding(code, (), f"{release_name} {folder.name}: {detail}")
 
 
 def _same(data: bytes, relative: str, expected: str) -> bool:

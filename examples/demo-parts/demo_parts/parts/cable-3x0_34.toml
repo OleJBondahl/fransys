@@ -1,4 +1,4 @@
-schema = 1
+schema = 2
 
 [part]
 mpn = "DEMO-CBL-3X0.34"
@@ -8,7 +8,7 @@ category = "cable"
 class_code = "W"
 
 [rating]
-voltage_dc_v = "60"
+voltage = [{ nom = "60 V", at = ["DC"] }]
 
 [cable_product]
 core_count = 3

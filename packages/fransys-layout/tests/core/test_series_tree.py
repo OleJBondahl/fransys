@@ -2,6 +2,7 @@
 
 import pytest
 
+from fransys_layout.core import leaves_of
 from fransys_layout.core.series_tree import TreeLane, tree_holds, tree_lanes
 from fransys_layout.core.series_values import Parallel, Series
 
@@ -103,3 +104,7 @@ def test_a_series_branch_with_more_cells_is_held_with_the_wires_between_its_cell
     """
     tree = Series((Parallel(("A", Series(("E", "F", "E")))), "B"))
     assert tree_holds(tree, _H, _W) == {"B": 40}
+
+
+def test_leaves_of_lists_every_symbol_id_in_tree_order() -> None:
+    assert leaves_of(Series(("a", Parallel(("b", Series(("c", "d")))), "e"))) == ("a", "b", "c", "d", "e")

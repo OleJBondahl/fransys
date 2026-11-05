@@ -8,79 +8,73 @@
 stock = 0
 mark = "forbid"
 home = "scripts/ci_gates.py source_files"
-forbid_after = "now (L14 part 1)"
+forbid_after = "stays 0 (forbid); no deferral"
 
 # Rules 1 (order) and 8 (designation parsing) wait for TIE-KEY to land: no rule file, no table yet.
 # Covered by: GATES-TESTS rules 1, 8 - after TIE-KEY.
 
 [r02-grid-snap]
-stock = 7
+stock = 4
 mark = "count"
 home = "the one grid snap function"
-forbid_after = "L7"
+forbid_after = "KI-059, settings in core: KI-057 (CR-022)"
 
 [r03-side-table]
-stock = 3
+stock = 2
 mark = "count"
 home = "fransys_layout/core/sides.py"
-forbid_after = "one table (stock 1)"
+forbid_after = "KI-059, twin of the side table: KI-064"
 
 [r04-kind-compare]
-stock = 34
+stock = 33
 mark = "count"
 home = "the named facts in fransys_model/derive (item_kind and siblings); replaces the rejected PLR2004 setting (C3)"
-forbid_after = "as the facts replace the compares"
+forbid_after = "KI-063, the named facts replace the compares"
 
 [r05-text-measure]
 stock = 1
 mark = "count"
-home = "fransys_model/derive/text_width.py"
+home = "fransys_layout/symbols/text.py"
 forbid_after = "L4"
 
 [r06-svg-literal]
-stock = 4
+stock = 0
 mark = "count"
 home = "symdef / electrical_symbols data"
-forbid_after = "the symdef release"
+forbid_after = "KI-059, the symdef release"
 
 [r07-size-decimal]
-stock = 5
+stock = 0
 mark = "count"
 home = "the package TOML settings"
-forbid_after = "L0 and L6"
+forbid_after = "KI-059, package TOML settings: KI-057"
 
 [r07b-size-option]
 stock = 9
 mark = "count"
 home = "the package TOML settings"
-forbid_after = "L0 and L6"
-
-[r09-pass-through]
-stock = 0
-mark = "count"
-home = "none: call the target"
-forbid_after = "stays 0; the pattern as written fits unannotated parameters only, so it cannot fire in typed code (an ast form finds 26 sites; reported, not built)"
+forbid_after = "KI-059, package TOML settings: KI-057"
 
 [r10-flip-literal]
-stock = 5
+stock = 4
 mark = "count"
 home = "fransys_layout/symbols and electrical_symbols"
-forbid_after = "L8"
+forbid_after = "KI-059, the flip literals move to symdef orientation data"
 
 [r11-power-literal]
 stock = 9
 mark = "count"
 home = "vocab/enums.py power_literals"
-forbid_after = "power_literals fold"
+forbid_after = "KI-062, power_literals fold in vocab"
 
 [r12-union-find]
 stock = 13
 mark = "count"
 home = "fransys_kernel, derive/indexes.py, fransys_layout/core"
-forbid_after = "L12"
+forbid_after = "KI-059, the UnionFind twin (KI-064)"
 
 [r14-ascent-baseline]
 stock = 0
-mark = "count"
+mark = "forbid"
 home = "symdef"
-forbid_after = "the flip"
+forbid_after = "stays 0 (forbid); symdef owns the baseline"

@@ -10,7 +10,6 @@ CORE = Path(__file__).parent.parent / "packages/fransys-layout/src/fransys_layou
 SITES = [
     ("blocks", "assign_blocks", "by_box.items()"),
     ("blocks_hints", "keep_together", "members"),
-    ("place_levels", "_groups", "spans"),
 ]
 
 

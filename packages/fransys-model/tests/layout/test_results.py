@@ -1,7 +1,5 @@
 """Derived layout kinds, cross-record rules."""
 
-from dataclasses import replace
-
 import pytest
 from layout_examples import (
     drawn_function,
@@ -11,31 +9,22 @@ from layout_examples import (
 
 from fransys_model.kernel import (
     Draft,
-    FreezeError,
     Id,
     Model,
     Origin,
     Record,
     SchemaError,
-    dumps,
     freeze,
-    loads,
 )
-from fransys_model.layout import (
-    Chain,
-    ChainEntry,
-    PoleGroup,
-    Side,
-    SideHint,
-)
+from fransys_model.layout import PoleGroup
 from fransys_model.vocab.aspects import AspectNode
 from fransys_model.vocab.connectivity import Conductor
 from fransys_model.vocab.core import Port
-from fransys_model.vocab.enums import Aspect, ConductorKind, PortRole
+from fransys_model.vocab.enums import Aspect, ConductorKind, PortBoundary
 
-_LOW_PORT: Id[Port] = Id(kind="port", value="1" * 32)
-_HIGH_PORT: Id[Port] = Id(kind="port", value="2" * 32)
-_CONDUCTOR: Id[Conductor] = Id(kind="conductor", value="3" * 32)
+_LOW_PORT: Id[Port] = Id[Port](kind="port", value="1" * 32)
+_HIGH_PORT: Id[Port] = Id[Port](kind="port", value="2" * 32)
+_CONDUCTOR: Id[Conductor] = Id[Conductor](kind="conductor", value="3" * 32)
 
 
 def _freeze(records: tuple[Record, ...]) -> Model:
@@ -53,7 +42,7 @@ def _ports() -> tuple[Port, Port]:
             function=function_id("c"),
             template=None,
             name="1",
-            role=PortRole.GENERIC,
+            boundary=PortBoundary.GENERIC,
         ),
         Port(
             id=_HIGH_PORT,
@@ -61,7 +50,7 @@ def _ports() -> tuple[Port, Port]:
             function=function_id("c"),
             template=None,
             name="2",
-            role=PortRole.GENERIC,
+            boundary=PortBoundary.GENERIC,
         ),
     )
 
@@ -88,23 +77,8 @@ def _other_group() -> AspectNode:
     )
 
 
-def _side_hint(value: str, side: Side = Side.N) -> SideHint:
-    return SideHint(
-        id=Id(kind="layout.side_hint", value=value * 32),
-        key=("examples", "layout", "side_hint", value),
-        function=function_id("c"),
-        side=side,
-    )
-
-
 def _engineering() -> tuple[Record, ...]:
     return (*drawn_function(), *_ports(), _conductor(), group_node(), _other_group())
-
-
-@pytest.mark.parametrize("side", [Side.E, Side.W])
-def test_a_side_hint_is_above_or_below_only(side: Side) -> None:
-    with pytest.raises(SchemaError):
-        _side_hint("a", side)
 
 
 def _pole_group(*functions: str) -> PoleGroup:
@@ -125,18 +99,3 @@ def test_a_pole_group_keeps_the_authors_pole_order() -> None:
 def test_a_pole_group_lists_one_function_or_more_each_once(functions: tuple[str, ...]) -> None:
     with pytest.raises(SchemaError, match="each once"):
         _pole_group(*functions)
-
-
-def test_a_chain_beside_freezes_round_trips_and_needs_its_host() -> None:
-    """A chain's `beside` is a function of the model; a dangling host is refused."""
-    entry = ChainEntry(function=function_id("c"), index=0)
-    chain = Chain(
-        id=Id(kind="layout.chain", value="c" * 32),
-        key=("examples", "layout", "chain", "c"),
-        entries=(entry,),
-        beside=function_id("c"),
-    )
-    model = _freeze((*_engineering(), chain))
-    assert loads(dumps(model)) == model
-    with pytest.raises(FreezeError):
-        _freeze((*_engineering(), replace(chain, beside=function_id("z"))))

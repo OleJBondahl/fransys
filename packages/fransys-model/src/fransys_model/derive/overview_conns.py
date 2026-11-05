@@ -57,9 +57,7 @@ def connections(model: Model) -> tuple[Conn, ...]:
     found: list[Conn] = []
     for link in overview_graph(model).links:
         if not link.conductors:
-            found += [
-                Conn(link.a, None, link.b, None, link.kind, None, None, wire=False)
-            ] * link.count
+            found += [Conn(link.a, None, link.b, None, link.kind, None, None, wire=False)] * link.count
             continue
         for conductor in link.conductors:
             record = conductors(model)[conductor]
@@ -112,9 +110,7 @@ def _far(conn: Conn, terminal: Id[Item]) -> tuple[Id[Item], Id[Port] | None, Con
 
 def _joined(first: Conn, second: Conn, terminal: Id[Item]) -> Conn:
     """The conn between the far ends of two conns at `terminal`; a cable if either is one."""
-    (a, a_port, one), (b, b_port, two) = sorted(
-        (_far(first, terminal), _far(second, terminal)), key=lambda end: end[0]
-    )
+    (a, a_port, one), (b, b_port, two) = sorted((_far(first, terminal), _far(second, terminal)), key=lambda end: end[0])
     carried = [c for c in (one, two) if c.via is not None]
     kind = OverviewLinkKind.CABLE if carried else OverviewLinkKind.WIRE
     via = carried[0] if carried else None
@@ -130,9 +126,7 @@ def _joined(first: Conn, second: Conn, terminal: Id[Item]) -> Conn:
     )
 
 
-def split_through(
-    model: Model, conns: tuple[Conn, ...]
-) -> tuple[tuple[Conn, ...], tuple[Through, ...]]:
+def split_through(model: Model, conns: tuple[Conn, ...]) -> tuple[tuple[Conn, ...], tuple[Through, ...]]:
     """`conns` without those at a pass-through terminal, and one `Through` per such terminal.
 
     The terminals are in item order. A conn between two terminals never passes through.

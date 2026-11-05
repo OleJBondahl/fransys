@@ -28,18 +28,14 @@ def link_box(sid: str, wires: int, *, first: bool = False, last: bool = False) -
         pins=tuple(pins),
         nodes=tuple((p.id,) for p in pins),
         views=views_of(body, body, body, pins, ("R0",)),
-        box=BoxSpec(tuple(p.id for p in pins), "S", 16, 16),
+        box=BoxSpec(tuple(p.id for p in pins), 16),
     )
 
 
 def facing_chain(n: int, wires: int = 2) -> PlacementProblem:
     """n boxes B1..Bn, each wired to the next by `wires` nets from its outputs to its inputs."""
     boxes = [link_box(f"B{i}", wires, first=i == 1, last=i == n) for i in range(1, n + 1)]
-    nets = [
-        net(f"h{h}k{k}", f"B{h}.o{k}", f"B{h + 1}.i{k}")
-        for h in range(1, n)
-        for k in range(1, wires + 1)
-    ]
+    nets = [net(f"h{h}k{k}", f"B{h}.o{k}", f"B{h + 1}.i{k}") for h in range(1, n) for k in range(1, wires + 1)]
     return problem(boxes, nets)
 
 

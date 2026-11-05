@@ -2,14 +2,6 @@
 
 Targets `fransys_kernel.checks` directly -- never through `Draft`/`freeze()` --
 so a walk order is exactly what the test built, not re-sorted underneath it. Kinds are
-unique per test: the registries are global and never cleared, and these tests build raw
-`Id`s and plain probe classes rather than `@record`-decorated ones wherever `checks.py`'s
-functions only need `.id` (and, for cardinality, a `subject`-named attribute) -- they read
-`vars(type(...))`, not the registry.
-
-Locators (`Problem.stage`/`.holder`/`.path`, and an error's `.kind`/`.record_id`/`.field`/
-`.target`) are pinned throughout; message wording (`why`) never is (CLAUDE.md: "one rule
-computed in two places" is the model's problem, not a reason to pin prose here).
 """
 
 from typing import Any

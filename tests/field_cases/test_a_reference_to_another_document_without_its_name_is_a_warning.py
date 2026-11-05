@@ -1,18 +1,6 @@
-"""Field case: a reference to a page of another document, not naming it, is counted and warned.
-
-The engineering shape: a contactor in a cabinet document whose add-on contact block stands in a
-field location, wired there to a lamp. The coil's contact table names the block's contacts with
-the location prefix, `+FLD`, so a reader knows which drawing to open although the cabinet document
-does not print the field pages.
-
-The need: a printed reference whose target page is in no page of this document, and whose text
-does not name the other document, sends a reader nowhere. `references_off_document` on the page and
-unit rows counts them, and `REFERENCE_OFF_DOCUMENT` (WARNING) names the reference, its page and the
-fix. A reference that names its other document is correct and is not counted. Decision model-0258.
-
-Layout always names the location, so the unnamed case is planted: the field drawing set loses its
-location in the built model, which leaves the same references with no location prefix.
-"""
+"""Field case: a cabinet contact's coil table cites a field-location block by prefix only, without naming its other document.
+The bug: an unnamed reference to a page of no document in this set sends a reader nowhere, and nothing counted or warned it.
+Fixed by model-0258, references_off_document counts them and REFERENCE_OFF_DOCUMENT (WARNING) names the reference and its fix."""
 
 import dataclasses
 import tempfile
@@ -33,21 +21,22 @@ def _built() -> fr.BuildResult:
     d.project(title="Docs", number="P-1", customer="Example Co", revision=1, author="OJB")
     d.revision(1, date="2026-10-15", text="First issue", created="XX")
     cab = d.location("CAB", "Cabinet")
-    d.location("FLD", "Field")
+    fld = d.location("FLD", "Field")
     psu = d.device("T1", "DEMO-PSU-24")
     q = d.device("Q1", "DEMO-CTR-3P-NC")
     block = d.device(None, "DEMO-CTR-BLOCK-1NO1NC", name="blk", parent=q, place="FLD")
     lamp = d.device("P1", "DEMO-LAMP-24", place="FLD")
-    d.detail.wire(psu.output["+"], q.coil["A1"], wire=_WIRE)
-    d.detail.wire(psu.output["-"], q.coil["A2"], wire=_WIRE)
-    d.detail.wire(psu.output["+"], q.aux["13"], wire=_WIRE)
-    d.detail.wire(q.aux["14"], lamp["1"], wire=_WIRE)
-    d.detail.wire(psu.output["-"], lamp["2"], wire=_WIRE)
-    d.detail.wire(lamp["1"], block.no["53"], wire=_WIRE)
-    d.detail.wire(block.no["54"], lamp["2"], wire=_WIRE)
+    d.series(psu.output["+"], q.coil["A1"], wire=_WIRE)
+    d.series(psu.output["-"], q.coil["A2"], wire=_WIRE)
+    d.series(psu.output["+"], q.aux["13"], wire=_WIRE)
+    d.series(q.aux["14"], lamp["1"], wire=_WIRE)
+    d.series(psu.output["-"], lamp["2"], wire=_WIRE)
+    d.series(lamp["1"], block.no["53"], wire=_WIRE)
+    d.series(block.no["54"], lamp["2"], wire=_WIRE)
     cover = Path(tempfile.mkdtemp()) / "cover.md"
     cover.write_text("# Docs\n", encoding="utf-8")
-    return fr.build(d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover))
+    cabinet = fr.DocumentPreset.CABINET_SCHEMATIC
+    return fr.build(d, fr.document(cabinet, cab, cover=cover), fr.document(cabinet, fld, cover=cover))
 
 
 def _unnamed(result: fr.BuildResult) -> fr.BuildResult:

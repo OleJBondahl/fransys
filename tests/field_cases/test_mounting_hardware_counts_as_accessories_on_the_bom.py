@@ -1,19 +1,9 @@
 """Field case: mounting hardware on a bolted part is an accessory and reaches the BOM with a count.
-
-The engineering shape: a board carries two bolted fuses F1 and F2, each tag on a press-fit
-threaded sleeve. The four sleeves are mounting hardware: they are bought, counted and fitted, but
-they are no circuit device. The author states each once, as a part with no function put in its
-fuse: `d.device(None, part, name=..., parent=f1)`. A name is unique in the design,
-so each sleeve has its own.
-
-The ask: the sleeves must reach the BOM with a count per part, and draw nothing.
-
-The answer is the accessory spelling that already exists (guide parts.md, "An accessory in its
-holder"): one BOM line for the sleeve part, count 4, designations the holders' (F1 and F2), and no
-symbol. No code changed; the case pins the behaviour and the guide now shows it.
-"""
+The bug: none; the ask was that fitted sleeves reach the BOM with a count per part and draw no symbol.
+Fixed by the accessory spelling the guide already shows (parts.md); no code changed, the case pins it."""
 
 import csv
+from typing import Any
 lazy from pathlib import Path
 
 import fransys as fr
@@ -24,7 +14,7 @@ from fransys_model.derive import bom_lines, item_designation, item_functions
 _SLEEVE = "DEMO-JUMPER-BAR-3P"  # a functionless demo part, standing in for a press-fit sleeve
 
 
-def _built(root: Path) -> tuple[fr.BuildResult, list[fr.Device]]:
+def _built(root: Path) -> tuple[fr.BuildResult, list[Any]]:
     """F1 and F2 feeding the lamp H1, two sleeves on each fuse."""
     d = fr.design("demo_parts", place="CAB")
     cab = d.location("CAB", "Cabinet")
@@ -32,12 +22,11 @@ def _built(root: Path) -> tuple[fr.BuildResult, list[fr.Device]]:
         h1 = d.device("H1", "DEMO-LAMP-24")
         fuses = [d.device(tag, "DEMO-FUSE-HOLDER-PCB") for tag in ("F1", "F2")]
         sleeves = [
-            d.device(None, _SLEEVE, name=f"{tag}_sleeve_{n}", parent=fuse)
-            for tag, fuse in zip(("f1", "f2"), fuses, strict=True)
-            for n in "ab"
+            d.device(None, _SLEEVE, name=f"{tag}_sleeve_{n}", parent=fuse) for tag, fuse in zip(("f1", "f2"), fuses, strict=True) for n in "ab"
         ]
-        d.detail.wire(fuses[0][2], h1[1], wire=("BK", 1.5))
-        d.detail.wire(fuses[1][2], h1[2], wire=("BU", 1.5))
+        d.series(fuses[0][1], fuses[1][1], wire=("BN", 1.5))
+        d.series(fuses[0][2], h1[1], wire=("BK", 1.5))
+        d.series(fuses[1][2], h1[2], wire=("BU", 1.5))
     (root / "cover.md").write_text("# board\n", encoding="utf-8")
     doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=root / "cover.md")
     return fr.build(d, doc), sleeves
@@ -69,7 +58,5 @@ def test_the_sleeves_draw_nothing(tmp_path: Path) -> None:
     model = result.model
     owned = item_functions(model)
     assert all(s.id not in owned for s in sleeves)
-    drawn = sorted(
-        symbol.key for drawing in drawn_pages(model).values() for symbol in drawing.symbols
-    )
+    drawn = sorted(symbol.key for drawing in drawn_pages(model).values() for symbol in drawing.symbols)
     assert drawn == ["fuse", "fuse", "lamp"]  # F1, F2 and H1: no symbol for a sleeve

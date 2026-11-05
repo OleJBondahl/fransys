@@ -2,7 +2,6 @@
 
 It reads only the wires, the pins' placed points and the reference plan, so it can check any
 router: a pin is joined to another when their points are joined by wires of the net (a vertex
-of one wire on a segment of another counts as a join).
 """
 
 from __future__ import annotations
@@ -10,10 +9,13 @@ from __future__ import annotations
 from itertools import pairwise
 from typing import TYPE_CHECKING
 
+from fransys_layout.core.cut_costs import ref_name
+
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
     from fransys_layout.core import Net, Placement
+    from fransys_layout.core.flow_values import Fan
     from fransys_layout.core.outputs import Routes, Wire
     from fransys_layout.core.values import Ref
 
@@ -35,23 +37,22 @@ def _owners(net: Net) -> set[str]:
     return {net.id, *([f"f:{net.bundle.id}"] if net.bundle else [])}
 
 
-def _page_pins(placement: Placement, net: Net, page: int) -> dict[tuple[str, str], XY]:
+def _page_pins(placement: Placement, net: Net, page: int, nodes: Mapping[str, tuple[tuple[str, ...], ...]]) -> dict[tuple[str, str], XY]:
     out: dict[tuple[str, str], XY] = {}
     for pg in (p for p in placement.pages if p.page == page):
         by_sym = {p.sym: p for p in pg.placed}
         for ref in net.pins:
             placed = by_sym.get(ref.sym)
             if placed is not None:
-                out.update(
-                    {(ref.sym, q.pin): (q.x, q.y) for q in placed.pin_xy if q.pin == ref.pin}
-                )
+                same = {ref.pin, *(q for nd in nodes.get(ref.sym, ()) if ref.pin in nd for q in nd)}
+                out.update({(ref.sym, q.pin): (q.x, q.y) for q in placed.pin_xy if q.pin in same})
     return out
 
 
 def _find(parent: list[int], i: int) -> int:
     while parent[i] != i:
         parent[i] = parent[parent[i]]
-        i = parent[i]
+        i = int(parent[i])
     return i
 
 
@@ -90,11 +91,7 @@ def _same_node(
     nodes: Mapping[str, tuple[tuple[str, ...], ...]],
 ) -> bool:
     """Some pin of a and some pin of b are two pins of one symbol node (one conductor inside)."""
-    return any(
-        x[0] == y[0] and any(x[1] in nd and y[1] in nd for nd in nodes.get(x[0], ()))
-        for x in a
-        for y in b
-    )
+    return any(x[0] == y[0] and any(x[1] in nd and y[1] in nd for nd in nodes.get(x[0], ())) for x in a for y in b)
 
 
 def connected_or_referenced(  # noqa: PLR0913, PLR0917 -- one per oracle input; a bundle object would be a second shape
@@ -104,23 +101,16 @@ def connected_or_referenced(  # noqa: PLR0913, PLR0917 -- one per oracle input; 
     net: Net,
     page: int,
     nodes: Mapping[str, tuple[tuple[str, ...], ...]] | None = None,
+    fans: Sequence[Fan] = (),
 ) -> bool:
     """True when every pin of `net` on `page` is joined by drawn wires, or its piece ends in a Ref.
 
     A piece ends in a Ref when one of its pins is the pin of a planned end of the net on this page.
-    A net with at most one pin on the page has nothing to join. `nodes` maps a symbol id to its
-    `Sym.nodes`: two pins of one node are one conductor and need no wire between them.
+    A net with at most one pin on the page has nothing to join. `nodes` maps a symbol id to its node pin groups.
     """
-    pins = _page_pins(placement, net, page)
+    pins = _page_pins(placement, net, page, nodes or {})
     wires = [w for pg in routes.pages if pg.page == page for w in pg.wires if w.net in _owners(net)]
     pieces = _pieces(pins, wires, nodes or {})
-    if len(pieces) <= 1:
-        return True
-    referenced = {
-        (e.pin.sym, e.pin.pin)
-        for r in refs
-        if r.net == net.id
-        for e in r.ends
-        if e.page == page and e.pin is not None
-    }
-    return all(piece & referenced for piece in pieces)
+    names = {net.id, *(ref_name(f) for f in fans if net.id in f.nets)}
+    referenced = {(e.pin.sym, e.pin.pin) for r in refs if r.net in names for e in r.ends if e.page == page and e.pin is not None}
+    return len(pieces) <= 1 or all(piece & referenced for piece in pieces)

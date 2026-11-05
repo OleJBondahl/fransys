@@ -2,9 +2,6 @@
 
 Loaded by file path (`importlib.util.spec_from_file_
 location`), since the script is not a package module. The module-list and `__all__` tests read
-the real workspace (this module's whole point is to be the one home other checks trust), so a
-change here is a real change in review; the AST-vs-`__doc__` trap test needs no real file at
-all, since `literal_docstring` only ever looks at an in-memory `ast` tree.
 """
 
 from __future__ import annotations
@@ -16,9 +13,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-_spec = importlib.util.spec_from_file_location(
-    "fransys_lean_surface", ROOT / "scripts" / "lean_surface.py"
-)
+_spec = importlib.util.spec_from_file_location("fransys_lean_surface", ROOT / "scripts" / "lean_surface.py")
 if _spec is None or _spec.loader is None:
     msg = "could not load scripts/lean_surface.py"
     raise ImportError(msg)
@@ -52,12 +47,10 @@ _EXPECTED_SURFACE_MODULES = (
     "fransys_model.derive.docs_site",
     "fransys_model.derive.drawing_text",
     "fransys_model.derive.grid_mm",
-    "fransys_model.derive.marker_box",
     "fransys_model.derive.numbering_pins",
     "fransys_model.derive.order",
     "fransys_model.derive.page_nav",
     "fransys_model.derive.print_sizes",
-    "fransys_model.derive.text_width",
     "fransys_model.elecdef",
     "fransys_model.kernel",
     "fransys_model.layout",
@@ -135,14 +128,14 @@ def test_resolve_surface_names_skips_module_references_without_erroring():
 
 
 def test_resolve_surface_names_skips_plain_data_without_erroring():
-    """`fransys_model.derive.__all__` lists plain constants (`TOP_LEVEL`, `BOM_COLUMNS`,
+    """`fransys_model.derive.__all__` lists plain constants (`TOP_LEVEL`, `CELL_SEPARATOR`,
     ...) alongside real defs -- `resolve_surface_names` skips the constants, never raises, and
     still resolves the real defs.
     """
     resolved = lean_surface.resolve_surface_names(("fransys_model.derive",))
     names = {entry.name for entry in resolved}
     assert "TOP_LEVEL" not in names
-    assert "BOM_COLUMNS" not in names
+    assert "CELL_SEPARATOR" not in names
     assert "bom_lines" in names
 
 
@@ -159,9 +152,7 @@ def test_dataclass_auto_doc_is_not_a_literal_docstring():
     assert Foo.__doc__ is not None
     assert Foo.__doc__.startswith("Foo(x:")
 
-    tree = ast.parse(
-        "import dataclasses\n\n\n@dataclasses.dataclass(frozen=True)\nclass Foo:\n    x: int\n"
-    )
+    tree = ast.parse("import dataclasses\n\n\n@dataclasses.dataclass(frozen=True)\nclass Foo:\n    x: int\n")
     node = lean_surface.find_def(tree, "Foo")
     assert node is not None
     assert lean_surface.literal_docstring(node) is None

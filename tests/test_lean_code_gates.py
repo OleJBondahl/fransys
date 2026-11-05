@@ -2,9 +2,6 @@
 
 Loaded by file path (`importlib.util.spec_from_file_
 location`), since the script is not a package module. `measure_ruff_sections`'s own test runs a
-real `ruff` subprocess against a `tmp_path` fixture -- never mocked, since the point is to catch
-a change in ruff's own message format or JSON shape. `report_unreasoned`'s exempt honoring and
-the `check`-wiring probe use plain in-memory data, no subprocess needed for those.
 """
 
 from __future__ import annotations
@@ -18,9 +15,7 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
-_spec = importlib.util.spec_from_file_location(
-    "fransys_lean_code_gates", ROOT / "scripts" / "lean_code_gates.py"
-)
+_spec = importlib.util.spec_from_file_location("fransys_lean_code_gates", ROOT / "scripts" / "lean_code_gates.py")
 if _spec is None or _spec.loader is None:
     msg = "could not load scripts/lean_code_gates.py"
     raise ImportError(msg)
@@ -42,7 +37,6 @@ def _statement_function(name: str, count: int, indent: str = "", params: str = "
 
     A docstring plus `count - 1` assignments plus a `return` -- confirmed against real ruff
     (`sample16.py`/`sample.py` probes) to measure as exactly `count` statements, regardless of
-    the docstring line.
     """
     lines = [f"{indent}def {name}({params}):", f'{indent}    """Docstring."""']
     lines += [f"{indent}    x = {i}" for i in range(1, count)]
@@ -87,11 +81,7 @@ def test_measure_ruff_sections_wired_through_check(tmp_path: Path) -> None:
     assert measured == {"packages/fakepkg/src/mod.py::over_limit": 16}
 
     violations = lean_ceilings.check(measured, ceilings={}, limit=15)
-    assert violations == (
-        lean_ceilings.Violation(
-            site="packages/fakepkg/src/mod.py::over_limit", measured=16, limit=15, listed=False
-        ),
-    )
+    assert violations == (lean_ceilings.Violation(site="packages/fakepkg/src/mod.py::over_limit", measured=16, limit=15, listed=False),)
 
 
 def _complexity_function(name: str, branches: int) -> str:
@@ -116,9 +106,7 @@ def test_measure_ruff_sections_ignores_the_projects_per_file_ignores(tmp_path: P
     assert sections["complexity"] == {"packages/fakepkg/src/cx.py::branchy": 9}
 
 
-def test_measure_ruff_sections_fails_when_the_call_fails_without_findings(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_measure_ruff_sections_fails_when_the_call_fails_without_findings(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """A uv or ruff failure (exit 1, empty stdout, an error on stderr) is not
     "no findings"; the gate raises instead of passing clean.
     """
@@ -143,9 +131,7 @@ def test_unreasoned_bare_noqa_detected(tmp_path: Path) -> None:
 
     sites = lean_code_gates.unreasoned_sites([tmp_path / "pkgtree" / "src"], tmp_path)
 
-    assert sites == (
-        lean_code_gates.UnreasonedSite(path="pkgtree/src/mod.py", line=1, text="# noqa: C901"),
-    )
+    assert sites == (lean_code_gates.UnreasonedSite(path="pkgtree/src/mod.py", line=1, text="# noqa: C901"),)
 
 
 def test_reasoned_noqa_passes(tmp_path: Path) -> None:
@@ -161,12 +147,8 @@ def test_reasoned_noqa_passes(tmp_path: Path) -> None:
 def test_report_unreasoned_honors_directory_exempt() -> None:
     """A site under an `[exempt]` directory entry is dropped; a sibling package's site is not."""
     sites = (
-        lean_code_gates.UnreasonedSite(
-            path="packages/fake-layout/src/x.py", line=1, text="# noqa: C901"
-        ),
-        lean_code_gates.UnreasonedSite(
-            path="packages/fake-render/src/y.py", line=2, text="# noqa: C901"
-        ),
+        lean_code_gates.UnreasonedSite(path="packages/fake-layout/src/x.py", line=1, text="# noqa: C901"),
+        lean_code_gates.UnreasonedSite(path="packages/fake-render/src/y.py", line=2, text="# noqa: C901"),
     )
     exempt = {"packages/fake-layout": "dated exemption (owner-0001)"}
 

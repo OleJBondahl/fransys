@@ -3,13 +3,11 @@
 One module fixture releases the board twice (1.1, 1.2) into one folder; the tests read it.
 """
 
-import sys
-from pathlib import Path
-
 import fransys as fr
-import fransys_author
 import pytest
 from fransys._release_reader import read_stored
+from fransys_author.design import Design
+from release_folders_fixture import build_board, release_board
 
 from fransys_model.derive import (
     manifest_rows,
@@ -19,9 +17,6 @@ from fransys_model.derive import (
     release_identity,
     units_named,
 )
-
-sys.path.insert(0, str(Path(__file__).parent))
-from release_folders_fixture import build_board, release_board
 
 _HISTORY = [(1, 1, "2026-09-26"), (1, 2, "2026-09-27")]
 
@@ -76,15 +71,15 @@ def test_manifest_rows_of_the_board(board):
 def test_two_instances_of_one_release_give_one_nested_row():
     """Two units of one release hash to one listing digest, so the system has one nested row."""
     parts = fr.parts("demo_parts")
-    design = fransys_author.Design(parts)
+    design = Design(parts)
     design.project(title="WB system", number="P-WB", customer="Demo", revision=1, author="OJB")
     design.revision(1, version=1, date="2026-09-26", text="Revision 1", created="OJB")
     for tag in ("a", "b"):
-        u = design.scope(tag).unit("wb-board", version=1, revision=1, interface="1")
+        u = design.scope(tag, at=design.location(tag.upper(), "Box")).unit("wb-board", version=1, revision=1, interface="1")
         u.revision(1, date="2026-09-26", text="Revision 1", created="OJB")
-        u.boundary(u.item("DEMO-CONN-2P", tag="X1", group=u.group("BRD", "I/O board")))
+        x1 = u.item("DEMO-CONN-2P", tag="X1", group=u.group("BRD", "I/O board"))
+        u.boundary(x1)
+        u.unused(x1)
     model = fr.build(parts, design.draft()).model
     assert len(nested_units(model, None)) == 2
-    assert [(r.name, len(r.listing_digest)) for r in manifest_rows(model, None).nested] == [
-        ("wb-board", 64)
-    ]
+    assert [(r.name, len(r.listing_digest)) for r in manifest_rows(model, None).nested] == [("wb-board", 64)]

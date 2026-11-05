@@ -9,9 +9,7 @@ from fransys_model.derive import page_destination
 from fransys_model.kernel import Draft, Origin, make_id
 from fransys_model.layout import DrawingSet, Page, PageRole
 
-_ORIGIN = Origin(
-    file="packages/fransys-model/tests/derive/test_page_destination.py", line=1, note="invented"
-)
+_ORIGIN = Origin(file="packages/fransys-model/tests/derive/test_page_destination.py", line=1, note="invented")
 
 
 def _set(key: str, number: int) -> DrawingSet:

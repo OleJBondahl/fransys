@@ -23,9 +23,7 @@ def _rows(sizes: Sequence[Size], limit: int, gap: int) -> list[list[int]]:
     return rows
 
 
-def _place(
-    sizes: Sequence[Size], rows: Sequence[Sequence[int]], gap: int
-) -> tuple[list[Size], Size]:
+def _place(sizes: Sequence[Size], rows: Sequence[Sequence[int]], gap: int) -> tuple[list[Size], Size]:
     """The top left of every piece for `rows`, and the bounding box."""
     at: list[Size] = [(0, 0)] * len(sizes)
     y = widest = 0
@@ -56,9 +54,7 @@ def pack_rows(sizes: Sequence[Size], *, shape: Size, gap: int) -> tuple[Size, ..
     return tuple(min(tried, key=lambda c: c[0])[1])
 
 
-def _candidate(
-    sizes: Sequence[Size], limit: int, gap: int, target: float
-) -> tuple[tuple[float, int, int], list[Size]]:
+def _candidate(sizes: Sequence[Size], limit: int, gap: int, target: float) -> tuple[tuple[float, int, int], list[Size]]:
     """The ranking key and the placement for one row limit."""
     at, (w, h) = _place(sizes, _rows(sizes, limit, gap), gap)
     return (round(abs(log(max(w, 1) / max(h, 1)) - target), 9), w * h, limit), at

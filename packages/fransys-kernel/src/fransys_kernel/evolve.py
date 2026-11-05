@@ -15,7 +15,7 @@ from .checks import (
     type_problems,
 )
 from .conform import check_record
-from .errors import MergeConflict, SchemaError, ValueTypeError
+from .errors import MergeConflictError, SchemaError, ValueTypeError
 from .hashes import model_digest, namespace_digests, record_hash
 from .ids import Id
 from .origin import Origin, require_origin
@@ -30,7 +30,7 @@ def evolve(
     model: Model,
     *,
     put: Iterable[Record] = (),
-    remove: Iterable[Id[Any]] = (),
+    remove: Iterable[Id[Record]] = (),
     origin: Origin | None = None,
 ) -> Model:
     """Path-copy the tables `put` and `remove` touch, and check what they touch.
@@ -44,7 +44,7 @@ def evolve(
     Raises:
         SchemaError: bad `put`, `remove` or `origin`; a malformed record; a `remove` id no
             record holds; no origin for a conflicting record; `unique`/`singleton` broken.
-        MergeConflict: a `put` record has the id of a record with different content.
+        MergeConflictError: a `put` record has the id of a record with different content.
         RefError: `remove` orphans a reference, a `put` record dangles, or an alias breaks.
         ValueTypeError: a `put` value is outside the closed set or nested too deeply.
     """
@@ -95,9 +95,7 @@ def _is_table_record(record: Record) -> bool:
     return kind is not None and isinstance(record.id, Id) and record.id.kind == kind
 
 
-def _evolve(
-    model: Model, put: tuple[Record, ...], removed: frozenset[Id[Any]], origin: Origin | None
-) -> Model:
+def _check_evolve_args(model: Model, put: tuple[Record, ...], removed: frozenset[Id[Any]], origin: Origin | None) -> None:
     if put and not isinstance(origin, Origin):
         msg = "evolve needs an origin (an Origin) to attribute the records it puts to"
         raise SchemaError(msg, kind=put[0].id.kind)
@@ -105,6 +103,10 @@ def _evolve(
         if target not in model.hashes:
             msg = "there is no record with this id to remove"
             raise SchemaError(msg, kind=target.kind, record_id=target)
+
+
+def _evolve(model: Model, put: tuple[Record, ...], removed: frozenset[Id[Any]], origin: Origin | None) -> Model:
+    _check_evolve_args(model, put, removed, origin)
     changes = _changes(model, put, removed, cast("Origin", origin)) if put else ()
     if not changes and not removed:
         return model
@@ -113,17 +115,17 @@ def _evolve(
     problems = _problems(model, changes, removed, final_ids, touched)
     if problems:
         raise min(problems, key=Problem.sort_key).error
+    return _apply(model, changes, removed, touched, cast("Origin", origin))
+
+
+def _apply(model: Model, changes: tuple[Record, ...], removed: frozenset[Id[Any]], touched: dict[str, tuple[Record, ...]], origin: Origin) -> Model:
     hashes = {target: found for target, found in model.hashes.items() if target not in removed}
     hashes.update((record.id, record_hash(record)) for record in changes)
     origins = {target: where for target, where in model.origins.items() if target not in removed}
-    origins.update((record.id, cast("Origin", origin)) for record in changes)
+    origins.update((record.id, origin) for record in changes)
     digests = namespace_digests(hashes, model.schema_version)
     tables = {kind: table for kind, table in model.tables.items() if kind not in touched}
-    tables.update(
-        (kind, frozendict({record.id: record for record in rows}))
-        for kind, rows in touched.items()
-        if rows
-    )
+    tables.update((kind, frozendict({record.id: record for record in rows})) for kind, rows in touched.items() if rows)
     tables = {kind: tables[kind] for kind in sorted(tables)}  # as `freeze()` orders them
     return dataclasses.replace(
         model,
@@ -135,9 +137,7 @@ def _evolve(
     )
 
 
-def _changes(
-    model: Model, put: tuple[Record, ...], removed: frozenset[Id[Any]], origin: Origin
-) -> tuple[Record, ...]:
+def _changes(model: Model, put: tuple[Record, ...], removed: frozenset[Id[Any]], origin: Origin) -> tuple[Record, ...]:
     """The put records that add or replace something, in `Id` order."""
     changes = []
     for record in put:
@@ -146,7 +146,7 @@ def _changes(
             changes.append(record)
         elif present != record:
             msg = "two different records share one id"
-            raise MergeConflict(
+            raise MergeConflictError(
                 msg,
                 record_id=record.id,
                 origin_a=require_origin(model.origins, record.id),
@@ -155,18 +155,12 @@ def _changes(
     return tuple(changes)
 
 
-def _final_tables(
-    model: Model, changes: tuple[Record, ...], removed: frozenset[Id[Any]]
-) -> dict[str, tuple[Record, ...]]:
+def _final_tables(model: Model, changes: tuple[Record, ...], removed: frozenset[Id[Any]]) -> dict[str, tuple[Record, ...]]:
     """The records of every table the call touches as they will be, in `Id` order."""
     kinds = {record.id.kind for record in changes} | {target.kind for target in removed}
     tables = {}
     for kind in sorted(kinds):
-        rows = {
-            target: record
-            for target, record in model.tables.get(kind, {}).items()
-            if target not in removed
-        }
+        rows = {target: record for target, record in model.tables.get(kind, {}).items() if target not in removed}
         rows.update((record.id, record) for record in changes if record.id.kind == kind)
         tables[kind] = tuple(rows[target] for target in sorted(rows))
     return tables
@@ -192,15 +186,11 @@ def _problems(
         *schema_found,
         *record_found,
         *reference_problems(references, final_ids),
-        *cardinality_problems(
-            tuple((kind, rows) for kind, rows in touched.items() if kind in put_kinds)
-        ),
+        *cardinality_problems(tuple((kind, rows) for kind, rows in touched.items() if kind in put_kinds)),
     )
 
 
-def _references_into(
-    model: Model, removed: frozenset[Id[Any]], orphaned: frozenset[Id[Any]]
-) -> tuple[tuple[Id[Any], Reference], ...]:
+def _references_into(model: Model, removed: frozenset[Id[Any]], orphaned: frozenset[Id[Any]]) -> tuple[tuple[Id[Any], Reference], ...]:
     """The references, in the records that stay, to an id that goes.
 
     Those records passed `freeze()` once, so only what they point at can be wrong now.

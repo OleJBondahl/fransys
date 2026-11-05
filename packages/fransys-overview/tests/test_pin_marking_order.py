@@ -2,7 +2,6 @@
 
 Moved from the field case `test_a_connector_lists_a2_before_a10` (`overview_graph` is not on the
 consumer surface). The overview once sorted a marking by number only when it was all digits.
-Fixing decision: model-0153 (`marking_key` is the one marking order; amends model-0149).
 """
 
 from fransys_model.derive import overview_graph

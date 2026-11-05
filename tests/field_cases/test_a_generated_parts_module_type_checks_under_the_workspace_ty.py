@@ -1,16 +1,6 @@
 """Field case: the module `fransys parts-module` writes passes the workspace ty by default.
-
-The engineering shape: a part library turned into a typed parts module, which a design imports and
-a consumer's ty gate checks together with the design, under ty's default rules.
-
-The bug (consumer on ty 0.0.88, which the workspace now pins): each generated `__getitem__` was
-an error,
-`invalid-attribute-override`, because `TypedDevice` and `TypedFn` declared `__getitem__:
-ClassVar[None]` to hide the catch-all and the stub's method could not override a `None`. The
-workspace pin was 0.0.84, which lacks that check, so the TY6 gate stayed green.
-The fix (decision 0203, amended 2026-10-15): the base declares `__getitem__(self, m: Never) ->
-Pin` for the type checker, a valid base for the stub's narrowing override; a typo stays one error.
-"""
+The bug: each generated `__getitem__` was an invalid-attribute-override error under ty 0.0.88; the workspace pin 0.0.84 lacked that check.
+Fixed by decision 0203 (amended 2026-10-15), the base declares `__getitem__(self, m: Never) -> Pin`, a valid base for the override."""
 
 import subprocess
 from pathlib import Path

@@ -1,49 +1,29 @@
 """A port's pole side and conductor mark, from its marking or as stated (parts-0010)."""
 
-import itertools
 from pathlib import Path
 
 import fransys_parts
 import pytest
 from fransys_parts import PartLibraryError
+from part_roots import part_root
 
+from fransys_model.derive import function_templates, port_templates
+from fransys_model.elecdef import Side
 from fransys_model.kernel import freeze
-from fransys_model.vocab import (
-    ConductorMark,
-    PoleSide,
-    PortTemplate,
-    WiringRow,
-    function_templates,
-    parts,
-    port_templates,
-)
+from fransys_model.vocab import ConductorMark, PortTemplate, WiringRow, parts
 
-DEMO = (
-    next(p for p in Path(__file__).resolve().parents if (p / "examples").is_dir())
-    / "examples"
-    / "demo-parts"
-    / "demo_parts"
-)
-_LIBRARY = 'schema = 1\nname = "l"\nversion = "0.1.0"\ndescription = "d"\n'
-_HEAD = (
-    'schema = 1\n\n[part]\nmpn = "X-1"\nmanufacturer = "Demo"\ndescription = "d"\n'
-    'category = "generic"\nclass_code = "X"\n'
-)
-_roots = itertools.count()
+DEMO = next(p for p in Path(__file__).resolve().parents if (p / "examples").is_dir()) / "examples" / "demo-parts" / "demo_parts"
+_HEAD = 'schema = 2\n\n[part]\nmpn = "X-1"\nmanufacturer = "Demo"\ndescription = "d"\ncategory = "generic"\nclass_code = "X"\n'
 
 
 def _facts(model, name):
-    """`(pole_side, conductor_mark)` of the one port template called `name`."""
+    """`(side, conductor_mark)` of the one port template called `name`."""
     (port,) = (p for p in model.tables["port_template"].values() if p.name == name)
-    return port.pole_side, port.conductor_mark
+    return port.side, port.conductor_mark
 
 
 def _model(tmp_path, body):
-    root = tmp_path / f"lib-{next(_roots)}"
-    (root / "parts").mkdir(parents=True)
-    (root / "library.toml").write_text(_LIBRARY)
-    (root / "parts" / "p.toml").write_text(_HEAD + body)
-    return freeze(fransys_parts.load_path(root))
+    return freeze(fransys_parts.load_path(part_root(tmp_path, _HEAD + body)))
 
 
 def _function(kind, ports, links=""):
@@ -52,25 +32,24 @@ def _function(kind, ports, links=""):
 
 def _ports(model, function_kind):
     return {
-        p.name: (p.pole_side, p.conductor_mark)
+        p.name: (p.side, p.conductor_mark)
         for p in model.tables["port_template"].values()
-        if isinstance(p, PortTemplate)
-        and model.tables["function_template"][p.function].kind.value == function_kind
+        if isinstance(p, PortTemplate) and model.tables["function_template"][p.function].kind.value == function_kind
     }
 
 
 def test_the_demo_contactor_poles_take_side_from_odd_and_even_markings():
     ports = _ports(freeze(fransys_parts.load_path(DEMO)), "contact_no")
-    assert ports["1"] == (PoleSide.LINE, None)
-    assert ports["2"] == (PoleSide.LOAD, None)
-    assert ports["13"] == (PoleSide.LINE, None)
-    assert ports["14"] == (PoleSide.LOAD, None)
+    assert ports["1"] == (Side.A, None)
+    assert ports["2"] == (Side.B, None)
+    assert ports["13"] == (Side.A, None)
+    assert ports["14"] == (Side.B, None)
 
 
 def test_the_demo_coil_a1_is_line_and_a2_is_load():
     ports = _ports(freeze(fransys_parts.load_path(DEMO)), "coil")
-    assert ports["A1"][0] is PoleSide.LINE
-    assert ports["A2"][0] is PoleSide.LOAD
+    assert ports["A1"][0] is Side.A
+    assert ports["A2"][0] is Side.B
 
 
 def test_the_demo_motor_ends_are_the_three_phases_and_pe_has_no_mark():
@@ -107,19 +86,16 @@ def test_a_protective_link_pole_takes_side_from_its_markings(tmp_path):
     ports = '{ name = "1", role = "generic" }, { name = "2", role = "generic" }'
     links = 'links = [{ a = "1", b = "2", kind = "protective" }]'
     model = _model(tmp_path, _function("protection", ports, links))
-    assert _facts(model, "1")[0] is PoleSide.LINE
-    assert _facts(model, "2")[0] is PoleSide.LOAD
+    assert _facts(model, "1")[0] is Side.A
+    assert _facts(model, "2")[0] is Side.B
 
 
 def test_a_stated_value_wins_over_the_marking(tmp_path):
-    ports = (
-        '{ name = "1", role = "generic", side = "load", conductor = "N" }, '
-        '{ name = "2", role = "generic", side = "line" }'
-    )
+    ports = '{ name = "1", role = "generic", side = "load", conductor = "N" }, { name = "2", role = "generic", side = "line" }'
     links = 'links = [{ a = "1", b = "2", kind = "switched", rest = "open" }]'
     model = _model(tmp_path, _function("switch", ports, links))
-    assert _facts(model, "1") == (PoleSide.LOAD, ConductorMark.N)
-    assert _facts(model, "2")[0] is PoleSide.LINE
+    assert _facts(model, "1") == (Side.B, ConductorMark.N)
+    assert _facts(model, "2")[0] is Side.A
 
 
 def test_a_stated_conductor_wins_over_the_name(tmp_path):
@@ -142,9 +118,7 @@ def test_a_bad_side_value_is_refused(tmp_path):
 
 
 def test_a_stated_conductor_m_loads_as_the_mid_conductor(tmp_path):
-    model = _model(
-        tmp_path, _function("actuator", '{ name = "X", role = "generic", conductor = "M" }')
-    )
+    model = _model(tmp_path, _function("actuator", '{ name = "X", role = "generic", conductor = "M" }'))
     assert _facts(model, "X")[1] is ConductorMark.M
 
 
@@ -154,22 +128,15 @@ def test_the_demo_three_pole_parts_carry_pole_sides_and_conductors():
     for mpn in ("DEMO-MCB-3P", "DEMO-OVERLOAD-3P"):
         (part,) = (p for p in parts(model).values() if p.mpn == mpn)
         functions = {f.id for f in function_templates(model).values() if f.part == part.id}
-        ports = [
-            p
-            for p in port_templates(model).values()
-            if p.function in functions and p.name in "123456"
-        ]
-        facts = {p.name: (p.pole_side, p.conductor_mark) for p in ports}
-        assert facts["1"] == (PoleSide.LINE, ConductorMark.L1)
-        assert facts["4"] == (PoleSide.LOAD, ConductorMark.L2)
-        assert facts["5"] == (PoleSide.LINE, ConductorMark.L3)
+        ports = [p for p in port_templates(model).values() if p.function in functions and p.name in "123456"]
+        facts = {p.name: (p.side, p.conductor_mark) for p in ports}
+        assert facts["1"] == (Side.A, ConductorMark.L1)
+        assert facts["4"] == (Side.B, ConductorMark.L2)
+        assert facts["5"] == (Side.A, ConductorMark.L3)
         assert len(facts) == 6
 
 
-_TWO_PINS = (
-    '{ name = "a", marking = "1", role = "generic" }, '
-    '{ name = "b", marking = "2", role = "generic" }'
-)
+_TWO_PINS = '{ name = "a", marking = "1", role = "generic" }, { name = "b", marking = "2", role = "generic" }'
 
 
 def test_an_overload_main_path_takes_side_from_its_markings(tmp_path):
@@ -177,8 +144,8 @@ def test_an_overload_main_path_takes_side_from_its_markings(tmp_path):
     ports = _TWO_PINS
     links = 'links = [{ a = "a", b = "b", kind = "conductive" }]'
     model = _model(tmp_path, _function("protection", ports, links))
-    assert _facts(model, "a")[0] is PoleSide.LINE
-    assert _facts(model, "b")[0] is PoleSide.LOAD
+    assert _facts(model, "a")[0] is Side.A
+    assert _facts(model, "b")[0] is Side.B
 
 
 def test_a_terminals_conductive_link_states_no_side(tmp_path):
@@ -190,9 +157,7 @@ def test_a_terminals_conductive_link_states_no_side(tmp_path):
 
 def test_a_stated_source_row_loads_on_the_port_template_and_a_bad_one_is_refused(tmp_path):
     """A pin states the wiring row it sources (model-0260); an unknown row name is refused."""
-    ports = (
-        '{ name = "u", role = "generic", source_row = "AC_L1" }, { name = "v", role = "generic" }'
-    )
+    ports = '{ name = "u", role = "generic", source_row = "AC_L1" }, { name = "v", role = "generic" }'
     model = _model(tmp_path, _function("generic", ports))
     rows = {p.name: p.source_row for p in port_templates(model).values()}
     assert rows == {"u": WiringRow.AC_L1, "v": None}

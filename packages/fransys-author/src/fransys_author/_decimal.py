@@ -4,7 +4,7 @@ from decimal import Decimal
 
 from .errors import AuthorError
 
-type ProfileNumber = int | Decimal | frozendict[str, int]  # a profile keyword: G, mm or a rank map
+type ProfileNumber = int | Decimal  # a profile keyword: G or mm
 
 
 def as_decimal(value: str | Decimal, *, field: str) -> Decimal:

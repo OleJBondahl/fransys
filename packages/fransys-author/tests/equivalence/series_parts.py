@@ -4,29 +4,35 @@
 """
 
 from decimal import Decimal
+from typing import TYPE_CHECKING, Any
 
 import fransys_parts
+from author_catalogue import _ORIGIN, _function, _library, _link, _part, build_test_catalogue
 
+from fransys_model.elecdef import LinkKind, PinRole, Range, Role, Side, Unit
 from fransys_model.kernel import Draft, make_id, merge
 from fransys_model.vocab import (
     CableProductFacet,
+    Conductor,
+    ConductorKind,
     ConductorMark,
+    CoreFacet,
     FunctionKind,
     FunctionTemplate,
-    LinkKind,
+    OpenCoreFacet,
     Operating,
     OperatingFacet,
     Part,
     PartCategory,
-    PoleSide,
-    PortRole,
+    PortBoundary,
     PortTemplate,
     ProtectionType,
 )
 
-from ..conftest import _ORIGIN, _function, _library, _link, _part, build_test_catalogue  # noqa: TID252 -- importlib mode puts tests/ on no path
+if TYPE_CHECKING:
+    from fransys_author.surface import Design
 
-LINE, LOAD = PoleSide.LINE, PoleSide.LOAD
+LINE, LOAD = Side.A, Side.B
 L1, L2, L3 = ConductorMark.L1, ConductorMark.L2, ConductorMark.L3
 PLUS, MINUS = ConductorMark.L_PLUS, ConductorMark.L_MINUS
 
@@ -35,9 +41,9 @@ def _pin(  # noqa: PLR0913, PLR0917 -- test builder: one pin with every fact `_p
     draft: Draft,
     function: FunctionTemplate,
     name: str,
-    side: PoleSide | None = None,
+    side: Side | None = None,
     mark: ConductorMark | None = None,
-    role: PortRole = PortRole.GENERIC,
+    role: PortBoundary | PinRole = PortBoundary.GENERIC,
 ) -> PortTemplate:
     key = (*function.key, "port", name)
     port = PortTemplate(
@@ -45,8 +51,9 @@ def _pin(  # noqa: PLR0913, PLR0917 -- test builder: one pin with every fact `_p
         key=key,
         function=function.id,
         name=name,
-        role=role,
-        pole_side=side,
+        boundary=role if isinstance(role, PortBoundary) else PortBoundary.GENERIC,
+        pin_role=role if isinstance(role, PinRole) else None,
+        side=side,
         conductor_mark=mark,
     )
     draft.add(port, origin=_ORIGIN)
@@ -85,13 +92,9 @@ def _poles(  # noqa: PLR0913, PLR0917 -- test builder: one function and its pole
 _THREE = [("1", "2"), ("3", "4"), ("5", "6")]
 
 
-def breaker(
-    draft: Draft, lib, mpn: str = "TEST-MCB-3P", order=_THREE, *, sides: bool = True
-) -> None:
+def breaker(draft: Draft, lib, mpn: str = "TEST-MCB-3P", order=_THREE, *, sides: bool = True) -> None:
     """Facts: main PROTECTIVE poles 1/2 3/4 5/6, odd pin LINE (none when `sides` is False)."""
-    part = _part(
-        draft, lib, manufacturer="TestCo", mpn=mpn, category=PartCategory.PROTECTION, letter="Q"
-    )
+    part = _part(draft, lib, manufacturer="TestCo", mpn=mpn, category=PartCategory.PROTECTION, letter="Q")
     _poles(
         draft, part, "main", FunctionKind.PROTECTION, LinkKind.PROTECTIVE, order,
         sides=sides, protection=ProtectionType.MCB,
@@ -147,7 +150,7 @@ def _loads(draft: Draft, lib) -> None:
     load = _function(draft, motor, "load", FunctionKind.LOAD)
     for name, mark in (("U", L1), ("V", L2), ("W", L3)):
         _pin(draft, load, name, None, mark)
-    _pin(draft, load, "PE", None, None, PortRole.PE)
+    _pin(draft, load, "PE", None, None, PinRole.PE)
     coil = _part(
         draft, lib, manufacturer="TestCo", mpn="TEST-COIL",
         category=PartCategory.ELECTROMECHANICAL, letter="K",
@@ -172,7 +175,7 @@ def _supply_and_plc(draft: Draft, lib) -> None:
             id=make_id(OperatingFacet, key),
             key=key,
             subject=out.id,
-            operating=Operating(nominal_voltage_v=Decimal(24)),
+            operating=Operating(voltage=(Range(Role.RATED, nom=Unit.V(24)),)),
         ),
         origin=_ORIGIN,
     )
@@ -191,8 +194,8 @@ def _terminals_and_cables(draft: Draft, lib) -> None:
             category=PartCategory.TERMINAL, letter="X",
         )  # fmt: skip
         fn = _function(draft, part, "terminal", FunctionKind.TERMINAL)
-        inner = _pin(draft, fn, "internal", role=PortRole.INTERNAL)
-        outer = _pin(draft, fn, "external", role=PortRole.EXTERNAL)
+        inner = _pin(draft, fn, "internal", role=PortBoundary.INTERNAL)
+        outer = _pin(draft, fn, "external", role=PortBoundary.EXTERNAL)
         _link(draft, fn, inner, outer, LinkKind.CONDUCTIVE)
     for mpn, colours in (
         ("TEST-CBL-4", ("BN", "BU", "BK", "GNYE")),
@@ -233,3 +236,15 @@ def series_library() -> Draft:
 def pair_library() -> Draft:
     """`series_library()` plus the demo parts: the pairs' PE terminal is `DEMO-TB-PE-2.5`."""
     return merge(series_library(), fransys_parts.load("demo_parts"))
+
+
+def core_ends(d: Design) -> dict[int, frozenset[Any]]:
+    """Core number -> the two port ids its conductor joins, in no order."""
+    records = d.draft().records()
+    facets = {r.subject: r.index for r in records if isinstance(r, CoreFacet)}
+    return {facets[r.id]: frozenset((r.a, r.b)) for r in records if isinstance(r, Conductor) and r.kind is ConductorKind.CORE}
+
+
+def open_core_at(d: Design) -> dict[int, Any]:
+    """Open core number -> the port it lands on."""
+    return {r.index: r.at for r in d.draft().records() if isinstance(r, OpenCoreFacet)}

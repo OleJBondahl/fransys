@@ -10,7 +10,9 @@ them and cannot import either (`ids` imports `record`, which imports `schema`).
 """
 
 import re
-from typing import TypeAliasType
+from enum import Enum
+from types import NoneType, UnionType
+from typing import TypeAliasType, TypeVar, get_args, get_origin
 
 from .errors import SchemaError
 
@@ -20,40 +22,43 @@ _KIND_NAME = re.compile(r"[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)?")
 
 _kinds: dict[str, type] = {}
 _records_by_name: dict[str, list[type]] = {}
-_value_classes: set[type] = set()
-_namespaces_after_core: tuple[str, ...] = ()
-_schema_version: int | None = None
-_id_class: type | None = None
-_authoring_key_alias: TypeAliasType | None = None
-_value_alias: TypeAliasType | None = None
+_value_classes: dict[type, str] = {}
+_enums_by_name: set[type] = set()
+_class_by_tag: dict[str, type] = {}
+
+
+class _Reg:
+    namespaces_after_core: tuple[str, ...] = ()
+    schema_version: int | None = None
+    id_class: type | None = None
+    authoring_key_alias: TypeAliasType | None = None
+    value_alias: TypeAliasType | None = None
 
 
 def register_id(id_class: type, authoring_key: TypeAliasType) -> None:
     """Record `Id` and `AuthoringKey`; `ids` calls this right after defining them."""
-    global _id_class, _authoring_key_alias  # noqa: PLW0603 -- the registry is filled once at import
-    _id_class = id_class
-    _authoring_key_alias = authoring_key
+    _Reg.id_class = id_class
+    _Reg.authoring_key_alias = authoring_key
 
 
 def register_value_alias(alias: TypeAliasType) -> None:
     """Record the `Value` alias; `values` calls this right after defining it."""
-    global _value_alias  # noqa: PLW0603 -- the registry is filled once at import
-    _value_alias = alias
+    _Reg.value_alias = alias
 
 
 def registered_id_class() -> type | None:
     """Return `Id`, or `None` if `ids` has not been imported."""
-    return _id_class
+    return _Reg.id_class
 
 
 def registered_authoring_key() -> TypeAliasType | None:
     """Return `AuthoringKey`, or `None` if `ids` has not been imported."""
-    return _authoring_key_alias
+    return _Reg.authoring_key_alias
 
 
 def registered_value_alias() -> TypeAliasType | None:
     """Return `Value`, or `None` if `values` has not been imported."""
-    return _value_alias
+    return _Reg.value_alias
 
 
 def register_kind(kind: str, cls: type) -> None:
@@ -103,14 +108,54 @@ def records_named(name: str) -> tuple[type, ...]:
     return tuple(_records_by_name.get(name, ()))
 
 
-def register_value_class(cls: type) -> None:
-    """Record that `cls` was declared with `@value`, so `check_value` may accept its instances."""
-    _value_classes.add(cls)
+def register_value_class(cls: type, tag: str | None = None, *, by_name: bool = False) -> None:
+    """Record that `cls` is a value class or an allowed enum, so `check_value` accepts it.
+
+    `tag` names it where a slot holds one of several classes; the default is module and name.
+    `by_name` stores the members of an enum by name, not by value.
+    """
+    _value_classes[cls] = name = tag or f"{cls.__module__}.{cls.__qualname__}"
+    _class_by_tag[name] = cls
+    if by_name:
+        _enums_by_name.add(cls)
 
 
 def is_value_class(cls: type) -> bool:
-    """Whether `cls` was declared with `@value`."""
-    return cls in _value_classes
+    """Whether `cls` is a registered value class (`@value` or a family library's)."""
+    return cls in _value_classes and not issubclass(cls, Enum)
+
+
+def is_registered_enum(cls: type) -> bool:
+    """Whether `cls` was registered as an allowed enum."""
+    return cls in _value_classes and issubclass(cls, Enum)
+
+
+def is_enum_by_name(cls: type) -> bool:
+    """Whether the members of `cls` are stored by name."""
+    return cls in _enums_by_name
+
+
+def class_for_tag(tag: object) -> type | None:
+    """The registered class stored under `tag`, or `None`."""
+    return _class_by_tag.get(tag) if isinstance(tag, str) else None
+
+
+def optional_arm(annotation: object) -> object:
+    """The one class of `V | None`, or the first of a union of several."""
+    return next(arm for arm in get_args(annotation) if arm is not NoneType)
+
+
+def slot_tag(annotation: object, value: object) -> str | None:
+    """The class tag of `value` when `annotation` names more than one class, else `None`.
+
+    Such a slot is a type variable, a union of several classes or a base class of `value`'s
+    class. Its value is stored with that tag, so a reader tells the arms apart.
+    """
+    cls = type(value)
+    arms = get_args(annotation) if get_origin(annotation) is UnionType else (annotation,)
+    fits = any(isinstance(arm, type) and issubclass(cls, arm) for arm in arms)
+    tagged = isinstance(annotation, TypeVar) or (fits and set(arms) - {NoneType, cls})
+    return _value_classes[cls] if tagged and cls in _value_classes else None
 
 
 def register_namespaces(*order: str) -> None:
@@ -124,14 +169,13 @@ def register_namespaces(*order: str) -> None:
     Raises:
         SchemaError: `core` is in `order`, or a different order is already registered.
     """
-    global _namespaces_after_core  # noqa: PLW0603 -- the registry is filled once at import
     if "core" in order:
         msg = "`core` is implicit and always first, so it is not registered"
         raise SchemaError(msg, kind="core")
-    if _namespaces_after_core and _namespaces_after_core != order:
-        msg = f"namespaces are already registered as {_namespaces_after_core}, not {order}"
+    if _Reg.namespaces_after_core and _Reg.namespaces_after_core != order:
+        msg = f"namespaces are already registered as {_Reg.namespaces_after_core}, not {order}"
         raise SchemaError(msg, kind=order[0] if order else "core")
-    _namespaces_after_core = order
+    _Reg.namespaces_after_core = order
 
 
 def register_schema_version(version: int) -> None:
@@ -143,22 +187,21 @@ def register_schema_version(version: int) -> None:
     Raises:
         SchemaError: `version` is not an int of 1 or more, or a different one is registered.
     """
-    global _schema_version  # noqa: PLW0603 -- the registry is filled once at import
     if type(version) is not int or version < 1:
         msg = f"the schema version must be an int of 1 or more, not {version!r}"
         raise SchemaError(msg, kind="schema_version")
-    if _schema_version is not None and _schema_version != version:
-        msg = f"the schema version is already registered as {_schema_version}, not {version}"
+    if _Reg.schema_version is not None and _Reg.schema_version != version:
+        msg = f"the schema version is already registered as {_Reg.schema_version}, not {version}"
         raise SchemaError(msg, kind="schema_version")
-    _schema_version = version
+    _Reg.schema_version = version
 
 
 def registered_schema_version() -> int:
     """Return the registered schema version, or raise `SchemaError` if no domain registered one."""
-    if _schema_version is None:
+    if _Reg.schema_version is None:
         msg = "no schema version is registered; the domain's vocabulary must be imported"
         raise SchemaError(msg, kind="schema_version")
-    return _schema_version
+    return _Reg.schema_version
 
 
 def namespace_of(kind: str) -> str:
@@ -169,10 +212,10 @@ def namespace_of(kind: str) -> str:
 
 def registered_namespaces() -> tuple[str, ...]:
     """Return every registered namespace in order: `core`, then the ones `vocab` declared."""
-    return ("core", *_namespaces_after_core)
+    return ("core", *_Reg.namespaces_after_core)
 
 
 def namespace_rank(namespace: str) -> int | None:
     """Return `namespace`'s place in the registered order (`core` is 0), or `None` if unknown."""
-    order = ("core", *_namespaces_after_core)
+    order = ("core", *_Reg.namespaces_after_core)
     return order.index(namespace) if namespace in order else None

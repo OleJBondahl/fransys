@@ -43,12 +43,11 @@ def test_counts_equal_the_scorers_wiring_on_the_same_polylines() -> None:
     wires = (H, V, z)
     scene = tuple(SceneWire(w.net, w.page, w.points, w.kind) for w in wires)
     got, want = counts(wires), wiring(scene)
-    assert (got.crossings, got.bends, got.excess, got.length, got.detour) == (
+    assert (got.crossings, got.bends, got.excess, got.length) == (
         want["crossings"],
         want["bends"],
         want["excess_bends"],
         want["length_g"],
-        want["detour_g"],
     )
     assert got.crossings > 0
     assert got.bends == 2
@@ -70,9 +69,9 @@ def test_two_nets_in_one_gap_give_demand_two() -> None:
     assert demand((a, b), (GAP,))[0].tracks == 2
 
 
-def test_two_vertical_runs_at_one_x_give_demand_one() -> None:
+def test_two_nets_with_vertical_runs_at_one_x_give_demand_two() -> None:
     a, b = wire("A", (45, 0), (45, 40)), wire("B", (45, 50), (45, 90))
-    assert demand((a, b), (GAP,))[0].tracks == 1
+    assert demand((a, b), (GAP,))[0].tracks == 2
 
 
 def test_a_run_in_another_rows_band_gives_demand_zero() -> None:

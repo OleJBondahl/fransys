@@ -6,7 +6,6 @@ A function of the model alone, so `write` and the overview page name a file the 
 import re
 
 from fransys_model.vocab.designation_scheme import DESIGNATION_SCHEME
-from fransys_model.vocab.enums import DocumentPreset
 from fransys_model.vocab.tables import projects
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.core import Item, Unit
@@ -19,6 +18,7 @@ from .designation import (
     reference_designation,
 )
 from .document_unit import document_unit, record_unit
+from .facts.house_settings import export_form_of
 from .overview_tree import unit_system_designation
 from .release_identity import release_identity
 from .revision_text import revision_text
@@ -36,9 +36,13 @@ __all__ = [
 _REF_SPECIAL = re.compile("[" + re.escape(DESIGNATION_SCHEME.sign_characters()) + "]")
 
 
-def export_fragment(designation: str) -> str:
-    """`designation` as an export-name fragment: leading sign dropped, each `+`, `=`, `-` a `-`."""
-    return _REF_SPECIAL.sub("-", designation[1:])
+def export_fragment(model: Model, designation: str) -> str:
+    """`designation` as an export-name fragment: leading sign dropped, each sign the `ref_sign`.
+
+    With the default `-`, `=A1+C1-K1` gives `A1-C1-K1`.
+    """
+    sign = export_form_of(model).ref_sign
+    return _REF_SPECIAL.sub(lambda _match: sign, designation[1:])
 
 
 def reference_fragment(model: Model, item: Id[Item]) -> str:
@@ -46,7 +50,7 @@ def reference_fragment(model: Model, item: Id[Item]) -> str:
 
     Names a per-item export in `out/all/` (`unit=None`) and a netlist intermediate.
     """
-    return export_fragment(reference_designation(model, item))
+    return export_fragment(model, reference_designation(model, item))
 
 
 def export_ref(model: Model, item: Id[Item], unit: Id[Unit] | None) -> str:
@@ -60,7 +64,7 @@ def export_ref(model: Model, item: Id[Item], unit: Id[Unit] | None) -> str:
         return reference_fragment(model, item)
     if is_own_unit_root(model, item, unit):
         return ""
-    return export_fragment(printed_designation(model, item, unit=unit))
+    return export_fragment(model, printed_designation(model, item, unit=unit))
 
 
 def export_set_name(model: Model, unit: Id[Unit] | None) -> str:
@@ -75,7 +79,7 @@ def export_set_name(model: Model, unit: Id[Unit] | None) -> str:
 
 
 def export_prefix(model: Model, unit: Id[Unit] | None) -> str:
-    """`unit`'s export name prefix, `<set name>-v<V>.<R>`.
+    """`unit`'s export name prefix, `<set name><version sign><V>.<R>`.
 
     A unit's prefix never depends on the Project; its version and revision come from its release.
     The system's come from the Project; empty when `export_set_name` is.
@@ -84,7 +88,8 @@ def export_prefix(model: Model, unit: Id[Unit] | None) -> str:
     if not set_name:
         return ""
     identity = release_identity(model, unit)
-    return f"{set_name}-v{revision_text(identity.version, identity.revision)}"
+    sign = export_form_of(model).version_sign
+    return f"{set_name}{sign}{revision_text(identity.version, identity.revision)}"
 
 
 def export_name(
@@ -95,21 +100,24 @@ def export_name(
     kind: str | None = None,
     fragment: str | None = None,
 ) -> str:
-    """`<prefix>[-<kind>][-<fragment>].<extension>`; an empty part is left out.
+    """`<prefix>[<join><kind>][<join><fragment>].<extension>`; an empty part is left out.
 
     The one place prefix, kind and fragment are joined; the prefix is `export_prefix`.
     """
-    joined = "-".join(part for part in (export_prefix(model, unit), kind, fragment) if part)
+    joined = export_form_of(model).name_join.join(part for part in (export_prefix(model, unit), kind, fragment) if part)
     return f"{joined}.{extension}"
 
 
-def _placement_fragment(model: Model, record: Document) -> str | None:
-    """A document of one placement (no `unit_name`) is named by its instance's tag in the system."""
+def _placement_fragment(model: Model, record: Document, scope: Id[Unit] | None) -> str | None:
+    """A document of one placement (no `unit_name`) is named by its instance's tag in the system.
+
+    A unit's own write names its one PDF bare: only the whole-model write tells instances apart.
+    """
     own_unit = record_unit(model, record)
-    if own_unit is None or record.unit_name is not None:
+    if scope is not None or own_unit is None or record.unit_name is not None:
         return None
     tag = unit_system_designation(model, own_unit)
-    return export_fragment(tag) if tag else None
+    return export_fragment(model, tag) if tag else None
 
 
 def document_export_name(model: Model, unit: Id[Unit] | None, record: Document) -> str:
@@ -121,14 +129,11 @@ def document_export_name(model: Model, unit: Id[Unit] | None, record: Document) 
     """
     document_own_unit = document_unit(model, record.id)
     if document_own_unit is not None:
-        kind = "harness" if record.preset is DocumentPreset.HARNESS_DRAWING else None
-        return export_name(
-            model, document_own_unit, "pdf", kind=kind, fragment=_placement_fragment(model, record)
-        )
+        return export_name(model, document_own_unit, "pdf", fragment=_placement_fragment(model, record, unit))
     if not export_prefix(model, unit):
         return export_name(model, unit, "pdf", fragment=record.key[1])
     if record.location is not None:
-        fragment = export_fragment(location_node_designation(model, record.location))
+        fragment = export_fragment(model, location_node_designation(model, record.location))
         return export_name(model, unit, "pdf", fragment=fragment)
     if record.item is not None:
         return export_name(model, unit, "pdf", fragment=export_ref(model, record.item, unit))

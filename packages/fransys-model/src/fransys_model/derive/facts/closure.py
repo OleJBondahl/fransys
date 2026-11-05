@@ -5,11 +5,12 @@ A fact of `derive`: the checks import it from here (EL-3).
 
 import dataclasses
 from typing import TYPE_CHECKING, Final, Literal, cast
-lazy from collections.abc import Callable, Iterator
+lazy from collections.abc import Callable, Iterable, Iterator, Sequence
 
+from fransys_model.derive.facts.conductor_facts import is_bridge
 from fransys_model.derive.facts.contacts import link_state
 from fransys_model.derive.facts.joins import port_joins
-from fransys_model.derive.facts.units import enclosing_boards
+from fransys_model.derive.facts.units import enclosing_boards, is_sole_unit_root
 from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, digest_cached, value
 from fransys_model.vocab.core import Function, Port
 from fransys_model.vocab.tables import (
@@ -32,8 +33,6 @@ from .net_facts import net_potential
 from .roles import link_role
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable, Sequence
-
     from fransys_model.vocab.templates import PortTemplate
 
 # The links each closure joins, read from the link's role: the physical net joins `joins_net`; a
@@ -100,9 +99,7 @@ class LinkGroup:
     ports: tuple[Id[Port], ...]
 
 
-def link_groups(
-    model: HasTables, select: Callable[[LinkRole], bool] = any_link
-) -> Iterator[LinkGroup]:
+def link_groups(model: HasTables, select: Callable[[LinkRole], bool] = any_link) -> Iterator[LinkGroup]:
     """Yield, per item, the ports whose templates a link whose role `select` accepts connects.
 
     The one home of the grouping. The scope is the item, not the function: a link is a part fact.
@@ -124,7 +121,7 @@ def link_groups(
             yield LinkGroup(link, item, first.function, (first.id, *others))
 
 
-def _mate_joins(model: HasTables) -> Iterator[Sequence[Id[Port]]]:
+def mate_joins(model: HasTables) -> Iterator[Sequence[Id[Port]]]:
     """Yield each header join's two ports, then, per port name, the ports of two mated functions."""
     yield from port_joins(model)
     by_function: dict[Id[Function], list[Port]] = {}
@@ -137,6 +134,27 @@ def _mate_joins(model: HasTables) -> Iterator[Sequence[Id[Port]]]:
         yield from by_name.values()
 
 
+def _on_sole_root_board(model: HasTables, net_ports: Iterable[Id[Port]]) -> bool:
+    """Whether one board that is the only top-level device of its own unit holds every port's item: its declared net is its traces."""
+    common: frozenset[Id[Item]] | None = None
+    for port in net_ports:
+        mine = frozenset(b for b in enclosing_boards(model, port_item(model, port)) if is_sole_unit_root(model, b))
+        common = mine if common is None else common & mine
+    return bool(common)
+
+
+def required_groups(model: HasTables) -> tuple[tuple[Id[Port], ...], ...]:
+    """The port groups the model joins: each conductor's two ends, each conductive link's ports and each mate join.
+
+    The one list of what the physical nets are closed over; the drawing reads `drawn_groups`.
+    """
+    groups: list[tuple[Id[Port], ...]] = [(c.a, c.b) for c in conductors(model).values()]
+    groups += [g.ports for g in link_groups(model, _physical)]
+    groups += [tuple(m) for m in mate_joins(model)]
+    groups += [n.ports for n in nets(model).values() if _on_sole_root_board(model, n.ports)]
+    return tuple(groups)
+
+
 def _nets_from(groups: Iterable[Sequence[Id[Port]]]) -> tuple[PhysicalNet, ...]:
     """The nets of `groups`: each net's ports sorted, the nets sorted by their `ports`."""
     return tuple(
@@ -147,15 +165,15 @@ def _nets_from(groups: Iterable[Sequence[Id[Port]]]) -> tuple[PhysicalNet, ...]:
     )
 
 
+def _joined(model: HasTables, groups: Iterable[Sequence[Id[Port]]]) -> tuple[PhysicalNet, ...]:
+    """Every port of `model` unioned through `groups`: the one builder of the physical and the drawn nets."""
+    return _nets_from(components(ports(model), groups))
+
+
 @digest_cached(DIGEST_CACHE_SIZE)
 def _closure(model: HasTables) -> _Closure:
-    joins: list[Sequence[Id[Port]]] = [(c.a, c.b) for c in conductors(model).values()]
-    joins.extend(group.ports for group in link_groups(model, _physical))
-    joins.extend(_mate_joins(model))
-    joined = _nets_from(components(ports(model), joins))
-    return _Closure(
-        nets=joined, by_port=frozendict({port: net for net in joined for port in net.ports})
-    )
+    joined = _joined(model, required_groups(model))
+    return _Closure(nets=joined, by_port=frozendict({port: net for net in joined for port in net.ports}))
 
 
 def physical_nets(model: HasTables) -> tuple[PhysicalNet, ...]:
@@ -174,6 +192,36 @@ def physical_nets(model: HasTables) -> tuple[PhysicalNet, ...]:
         Every physical net, sorted by its own `ports` tuple.
     """
     return _closure(model).nets
+
+
+@digest_cached(DIGEST_CACHE_SIZE)
+def drawn_groups(model: Model) -> tuple[tuple[Id[Port], ...], ...]:
+    """`required_groups` less each conductor `is_bridge` calls a bridge: what a drawing must join.
+
+    The drawing's nets leave out bridges; the terminal table carries them.
+    """
+    groups, wires = required_groups(model), tuple(conductors(model))
+    return (*(g for g, c in zip(groups, wires, strict=False) if not is_bridge(model, c)), *groups[len(wires) :])
+
+
+@digest_cached(DIGEST_CACHE_SIZE)
+def drawn_physical_nets(model: Model) -> tuple[PhysicalNet, ...]:
+    """The nets a drawing joins: `physical_nets` built from `drawn_groups`, so a bridge joins nothing."""
+    return _joined(model, drawn_groups(model))
+
+
+@digest_cached(DIGEST_CACHE_SIZE)
+def _drawn_by_port(model: Model) -> frozendict[Id[Port], PhysicalNet]:
+    return frozendict({port: net for net in drawn_physical_nets(model) for port in net.ports})
+
+
+def drawn_net_of(model: Model, port: Id[Port]) -> PhysicalNet | None:
+    """The drawn net containing `port` (`net_of` less the bridges), or `None` for a port in no drawn net.
+
+    A bridge joins two nets in `net_of` and none here, so a net a model bundle names by one of its ports
+    is this net, not the electrical net `net_of` returns.
+    """
+    return _drawn_by_port(model).get(port)
 
 
 def net_of(model: Model, port: Id[Port]) -> PhysicalNet | None:
@@ -204,7 +252,7 @@ def _adjacency(model: Model) -> dict[Id[Port], set[Id[Port]]]:
         join_all((conductor.a, conductor.b))
     for group in link_groups(model, _rail):
         join_all(group.ports)
-    for pair in _mate_joins(model):
+    for pair in mate_joins(model):
         join_all(pair)
     return edges
 
@@ -237,7 +285,7 @@ def _conditional_adjacency(model: Model) -> dict[Id[Port], dict[Id[Port], set[Co
         join_all((conductor.a, conductor.b))
     for group in link_groups(model, _rail):
         join_all(group.ports, _condition(model, group))
-    for pair in _mate_joins(model):
+    for pair in mate_joins(model):
         join_all(pair)
     return edges
 

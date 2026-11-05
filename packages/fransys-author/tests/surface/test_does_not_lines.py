@@ -3,6 +3,7 @@
 import inspect
 lazy from collections.abc import Iterator
 
+from does_not_lines import has_does_not
 from fransys_author import surface
 
 _DUNDERS = ("__getitem__", "__call__")
@@ -33,11 +34,6 @@ def _public_callables() -> Iterator[tuple[str, object]]:
             yield from _members(name, obj)
 
 
-def has_does_not(doc: str | None) -> bool:
-    """True when one line of `doc` starts with "Does not"."""
-    return any(line.strip().startswith("Does not") for line in (doc or "").splitlines())
-
-
 def test_every_public_callable_has_a_does_not_line() -> None:
     missing = [name for name, obj in _public_callables() if not has_does_not(obj.__doc__)]
     assert not missing, f"no 'Does not' line: {missing}"
@@ -46,7 +42,7 @@ def test_every_public_callable_has_a_does_not_line() -> None:
 def test_the_walk_finds_the_surface_and_the_check_can_fail() -> None:
     found = {name for name, _ in _public_callables()}
     wanted = {"design", "Design.location", "Design.function", "Design.draft"}
-    assert wanted | {"Design.device", "Detail.wire", "Design.terminal_strip"} <= found
+    assert wanted | {"Design.device", "Detail.busbar", "Design.terminal_strip"} <= found
     assert not has_does_not("Declares a place.\n\nIt places nothing.")
     assert not has_does_not(None)
     assert has_does_not("Declares a place.\nDoes not place anything.")

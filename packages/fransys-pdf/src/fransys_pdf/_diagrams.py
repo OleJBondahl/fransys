@@ -1,10 +1,10 @@
 """The BLOCK_DIAGRAM section: one A2 page per `DiagramSheet` of the reading (pdf-0023)."""
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from fransys_model.derive import (
-    PageForm,
     SheetKey,
+    diagram_sheet_key,
     diagram_sheets,
     document_scope,
     document_unit,
@@ -13,11 +13,9 @@ from fransys_model.derive import (
 )
 from fransys_model.derive.block_diagram import diagram_lines
 from fransys_model.derive.page_nav import outline_sheets
-from fransys_model.kernel import render_id
 from fransys_model.vocab import PageKind
 
 from ._background import page_background
-from ._forms import has_form
 from ._labels import sheet_label
 from ._marks import sheet_mark
 from ._typst import literal
@@ -25,8 +23,8 @@ from ._typst import literal
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
-    from fransys_model.derive import DocumentRow, SheetBackground
-    from fransys_model.kernel import Id, Model
+    from fransys_model.derive import DiagramSheet, DocumentRow, SheetBackground
+    from fransys_model.kernel import Model
 
 
 def diagram_source(
@@ -34,15 +32,16 @@ def diagram_source(
     record: DocumentRow,
     svgs: Mapping[str, str],
     sheets: Mapping[SheetKey, SheetBackground],
+    diagrams: tuple[DiagramSheet, ...],
 ) -> str:
     """The section text: an A2 `#page` per sheet that has an SVG, `""` with none (pdf-0023)."""
-    found = diagram_sheets(model, record.id)
+    found = diagram_sheets(model, record.id, diagrams)
     sheet = kind_sheet(model, PageKind.BLOCK_DIAGRAM)
     size = f"width: {sheet.width_mm}mm, height: {sheet.height_mm}mm"
     pages = []
     outline = {entry.destination: entry for entry in outline_sheets(model, found)}
     for index, diagram in enumerate(found):
-        if (svg := svgs.get(render_id(diagram.id))) is None:
+        if (svg := svgs.get(diagram_sheet_key(diagram))) is None:
             continue
         entry = outline[page_destination(model, diagram)]
         image = f'#image(bytes({literal(svg)}), format: "svg")'
@@ -50,36 +49,23 @@ def diagram_source(
         back = page_background(model, record, sheets, key)
         numbering, start = sheet_label(entry.number)
         mark = sheet_mark(entry)
-        pages.append(
-            f"#page({size}, margin: 0mm, background: {back}{numbering})[{start}{mark}{image}]"
-        )
+        pages.append(f"#page({size}, margin: 0mm, background: {back}{numbering})[{start}{mark}{image}]")
     return "\n#pagebreak()\n".join(pages)
 
 
 def diagram_no_drawings_messages(
     model: Model,
     record: DocumentRow,
-    pages: tuple[PageKind, ...],
     svgs: Mapping[str, str],
-    tall_cables: frozenset[Id[Any]],
+    found: tuple[DiagramSheet, ...],
 ) -> list[str]:
-    """Why a kept BLOCK_DIAGRAM page lacks its drawing; none when it is drawn or has no line.
-
-    The tall-column pointer appears only when the build named that diagram's column.
-    """
+    """Why a kept BLOCK_DIAGRAM page lacks its drawing; none when it is drawn or has no line."""
     unit = document_unit(model, record.id)  # None for the SYSTEM document: it has no subject
     reading = document_scope(model, record.id).top_level or unit is not None
     lines = diagram_lines(model, unit) if reading else ()
-    if not has_form(pages, PageForm.BLOCK_DIAGRAM) or not lines:
+    if not lines:
         return []
-    found = diagram_sheets(model, record.id)
     if not found:
-        cause = (
-            "a column taller than one sheet is a known limit of the system diagram, "
-            "see DIAGRAM_COLUMN_TOO_TALL"
-            if lines[0].cable in tall_cables
-            else "no finding names the cause"
-        )
-        return [f"BLOCK_DIAGRAM: the diagram has lines but could not be drawn ({cause})"]
-    missing = [render_id(d.id) for d in found if render_id(d.id) not in svgs]
+        return ["BLOCK_DIAGRAM: the diagram has lines but could not be drawn (no finding names the cause)"]
+    missing = [key for d in found if (key := diagram_sheet_key(d)) not in svgs]
     return [f"BLOCK_DIAGRAM: missing drawing for {', '.join(missing)}"] if missing else []

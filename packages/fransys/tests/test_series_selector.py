@@ -25,9 +25,7 @@ def _selector(c) -> None:
 @pytest.fixture(scope="module")
 def built(tmp_path_factory: pytest.TempPathFactory) -> fr.BuildResult:
     """The selector circuit in a unit, built with its cabinet schematic (one build per module)."""
-    unit = fr.unit(
-        "sel", revision=1, interface_version=1, date="2026-10-14", text="First", by="XX"
-    )(lambda c: (_selector(c), _Io())[1])
+    unit = fr.unit("sel", revision=1, interface_version=1, date="2026-10-14", text="First", by="XX")(lambda c: (_selector(c), _Io())[1])
     d = fr.design("demo_parts")
     d.add(unit, "U1")
     cover = tmp_path_factory.mktemp("selector") / "cover.md"
@@ -43,13 +41,9 @@ def test_supply_a_reaches_the_make_throws_and_the_commons_feed_the_motor(built) 
         assert frozenset((f"-U1-Q1:{pole}1", f"-U1-M1:{motor}")) in ends
 
 
+@pytest.mark.rule("CHAIN-COLUMN")
 def test_the_selector_is_drawn_turned_with_its_commons_toward_the_load(built) -> None:
-    (placed,) = (
-        symbol
-        for drawing in drawn_pages(built.model).values()
-        for symbol in drawing.symbols
-        if symbol.key == "change-over-contact"
-    )
+    (placed,) = (symbol for drawing in drawn_pages(built.model).values() for symbol in drawing.symbols if symbol.key == "change-over-contact")
     assert placed.orient in {"R180", "MR180"}
 
 
@@ -57,18 +51,19 @@ def test_q1s_unwired_coil_is_not_drawn_and_its_contacts_print_q1_with_no_cell(bu
     """layout-0218 (A3): -Q1's coil has nothing connected, so no symbol and no contact table.
 
     Each drawn contact of -Q1 still prints its tag, "-Q1", with no cell: no cross-reference.
-
     # UNDO: engines/schematic/read/loose.py, `without_loose` returns `inputs` unchanged
     """
     drawings = tuple(drawn_pages(built.model).values())
     symbols = [symbol for drawing in drawings for symbol in drawing.symbols]
     texts = [text for drawing in drawings for text in drawing.texts if "Q1" in text.text]
-    assert not [s for s in symbols if s.key in {"operating-device", "contact-head"}], (
-        "no coil symbol and no contact table for -Q1"
-    )
-    assert [s for s in symbols if s.key == "change-over-contact"], (
-        "the selector's contacts are drawn"
-    )
-    assert [(text.text, text.kind) for text in texts] == [("-Q1", "TAG")], (
-        "the drawn contact prints its tag and no cross-reference"
-    )
+    assert not [s for s in symbols if s.key in {"operating-device", "contact-head"}], "no coil symbol and no contact table for -Q1"
+    assert [s for s in symbols if s.key == "change-over-contact"], "the selector's contacts are drawn"
+    assert [(text.text, text.kind) for text in texts] == [("-Q1", "TAG")], "the drawn contact prints its tag and no cross-reference"
+
+
+def test_the_selector_build_shows_no_shorted_nets(built) -> None:
+    assert "DRAWING_SHORTS_NETS" not in {f.code for f in built.findings}
+
+
+def test_the_selector_build_shows_no_wire_meets_net(built) -> None:
+    assert "WIRE_MEETS_NET" not in {f.code for f in built.findings}

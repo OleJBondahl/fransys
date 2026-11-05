@@ -1,11 +1,9 @@
 """The staged site nav lists Roadmap right after Examples and before API (public monorepo spec)."""
 
 import importlib
-import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "scripts"))
 
 build_site = importlib.import_module("build_site")
 

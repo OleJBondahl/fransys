@@ -2,25 +2,24 @@
 
 A test that needs a drawn fact (symbol, wire, text, outline, marker) calls `drawn_pages(model)`.
 `fr.build` is wrapped on import to note each result's `drawings` under its model's digest, so a
-helper that holds only the model still finds them. When a public `fr` call takes a result
-(FRAMES p4c) the callers pass the result and this memo goes.
 """
 
 import functools
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 lazy from collections.abc import Mapping
 
 import fransys
 from fransys import pipeline
 
-lazy from fransys_layout.drawing import Drawing
+from electrical_symbols import MARKER_SLOT, MARKER_TURNED, marker_symbol
+lazy from fransys_layout.drawing import Drawing, DrawnSymbol
 
 if TYPE_CHECKING:
     from fransys_model.kernel import Id, Model
 
-__all__ = ["drawn_pages"]
+__all__ = ["drawn_pages", "markers_in", "ref_texts"]
 
-_NOTED: dict[str, Mapping[Id, Drawing]] = {}
+_NOTED: dict[str, Mapping[Id[Any], Drawing]] = {}
 
 
 def _noting(build):
@@ -38,10 +37,23 @@ if not getattr(pipeline.build, "__wrapped__", None):
     pipeline.build = fransys.build = _noting(pipeline.build)
 
 
-def drawn_pages(model: Model) -> Mapping[Id, Drawing]:
+def drawn_pages(model: Model) -> Mapping[Id[Any], Drawing]:
     """The page Drawings `fransys.build` made for `model`; LookupError if it never built it."""
     try:
         return _NOTED[model.digest]
     except KeyError:
         msg = "no drawings for this model: only a model `fransys.build` laid out has them"
         raise LookupError(msg) from None
+
+
+_MARKER_KEYS = frozenset({marker_symbol("tag"), MARKER_TURNED})
+
+
+def markers_in(drawing: Drawing) -> list[DrawnSymbol]:
+    """The reference markers and stubs of a page: its symbols of a marker key (layout-0444)."""
+    return [s for s in drawing.symbols if s.key in _MARKER_KEYS]
+
+
+def ref_texts(marker: DrawnSymbol) -> list[str]:
+    """The reference text of a marker symbol: the values of its `ref` slot."""
+    return [value for slot, value in marker.slots if slot == MARKER_SLOT]

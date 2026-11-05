@@ -1,7 +1,5 @@
 """The one readers of `Item.parent` (as a children list), `Unit.parent` and `AspectNode.parent`."""
 
-from typing import cast
-
 from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, digest_cached, index_ids
 from fransys_model.vocab.tables import HasTables, aspect_nodes, items, units
 lazy from fransys_model.vocab.aspects import AspectNode
@@ -12,7 +10,7 @@ lazy from fransys_model.vocab.core import Item, Unit
 def children_index(model: HasTables) -> frozendict[Id[Item], tuple[Id[Item], ...]]:
     """Every item's children by `Item.parent`, in `Id` order."""
     pairs = ((i.parent, i.id) for i in items(model).values() if i.parent is not None)
-    return cast("frozendict[Id[Item], tuple[Id[Item], ...]]", index_ids(pairs))
+    return index_ids(pairs)
 
 
 def child_items(model: Model, item: Id[Item]) -> tuple[Id[Item], ...]:

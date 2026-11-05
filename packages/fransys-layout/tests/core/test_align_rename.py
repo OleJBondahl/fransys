@@ -29,14 +29,7 @@ if TYPE_CHECKING:
 
     from fransys_layout.core import PlacementProblem
 
-OPTIONS = core_options(
-    flip_turn="R180",
-    tag_stagger=True,
-    label_gap=8,
-    parallel_pitch=48,
-    driver_first=True,
-    arrow_sides=("E", "W"),
-)
+OPTIONS = core_options()
 CASES: dict[str, Callable[[], PlacementProblem]] = {
     "band": fx.two_band_columns,
     "mate": fx.mate_columns,
@@ -45,9 +38,7 @@ CASES: dict[str, Callable[[], PlacementProblem]] = {
 
 def _mates(prob: PlacementProblem, maps: dict[str, str]) -> Facts:
     return Facts(
-        mates=tuple(
-            (PinRef(maps[a.sym], a.pin), PinRef(maps[b.sym], b.pin)) for a, b in prob.facts.mates
-        ),
+        mates=tuple((PinRef(maps[a.sym], a.pin), PinRef(maps[b.sym], b.pin)) for a, b in prob.facts.mates),
     )
 
 

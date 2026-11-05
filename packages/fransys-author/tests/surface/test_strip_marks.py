@@ -9,11 +9,12 @@ from fransys_author.surface import Design, design, unit
 from fransys_model.checks.units import check_units
 from fransys_model.derive.numbering_pins import name_findings
 from fransys_model.kernel import freeze, merge
+from fransys_model.vocab import RailGroup
 
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-from ..equivalence.series_parts import pair_library  # noqa: TID252 -- importlib mode puts tests/ on no path
+from series_parts import pair_library
 
 _CONTAINER_BAD = {"BOUNDARY_UNCONNECTED", "UNIT_BOUNDARY_BYPASSED"}
 
@@ -55,8 +56,8 @@ def test_a_run_marked_interface_makes_its_terminals_boundary() -> None:
     d = design(pair_library(), place="C1")
     io = d.add(cab, "U1")
     lamp = d.device("H1", "DEMO-LAMP-24")
-    d.detail.wire(io.X2[1], lamp.lamp["1"], wire=("BK", 1.5))
-    d.detail.wire(io.X2[2], lamp.lamp["2"], wire=("BK", 1.5))
+    d.series(io.X2[1], lamp.lamp["1"], wire=("BK", 1.5))
+    d.series(io.X2[2], lamp.lamp["2"], wire=("BK", 1.5))
     assert not _codes(d) & {"UNIT_BOUNDARY_BYPASSED"}
 
 
@@ -102,11 +103,7 @@ def test_bridged_on_a_strip_with_no_count_names_the_fix() -> None:
 def _jumper_count(d: Design) -> int:
     from fransys_model.vocab import Conductor, ConductorKind
 
-    return sum(
-        1
-        for r in d.draft().records()
-        if isinstance(r, Conductor) and r.kind is ConductorKind.JUMPER
-    )
+    return sum(1 for r in d.draft().records() if isinstance(r, Conductor) and r.kind is ConductorKind.JUMPER)
 
 
 def test_bridged_true_on_a_strip_jumpers_every_adjacent_pair() -> None:
@@ -136,10 +133,47 @@ def _codes_wiring_terminal(number: int) -> set[str]:
     d = design(pair_library(), place="C1")
     io = d.add(cab, "U1")
     lamp = d.device("H1", "DEMO-LAMP-24")
-    d.detail.wire(io.X2[number], lamp.lamp["1"], wire=("BK", 1.5))
+    d.series(io.X2[number], lamp.lamp["1"], wire=("BK", 1.5))
     return _codes(d)
 
 
 def test_unused_on_a_strip_names_only_its_named_terminals() -> None:
     assert "UNUSED_CONTRADICTED" in _codes_wiring_terminal(1)
     assert "UNUSED_CONTRADICTED" not in _codes_wiring_terminal(3)
+
+
+def _rails(d: Design) -> list[RailGroup]:
+    return [r for r in d.draft().records() if isinstance(r, RailGroup)]
+
+
+def test_rail_flags_one_group_per_flagged_run_and_none_for_an_unflagged_one() -> None:
+    """Can-fail: dropping the `rail_numbers` call in `Run.__init__` leaves no group and fails the first assert."""
+    d = design(pair_library())
+    x = d.terminal_strip("X4", "DEMO-TB-2.5", 8)
+    x.run("L1", 3, bridged=True, rail=True)
+    x.run("L2", 3, bridged=True)
+    x.run("L3", 1, rail=True)
+    sizes = sorted(len(r.terminals) for r in _rails(d))
+    assert sizes == [1, 3]
+
+
+def test_rail_on_a_strip_flags_its_one_bridged_range() -> None:
+    d = design(pair_library())
+    d.terminal_strip("X4", "DEMO-TB-2.5", 6, bridged=(2, 4), rail=True)
+    (group,) = _rails(d)
+    assert len(group.terminals) == 3
+
+
+def test_rail_on_several_bridged_ranges_is_refused_with_the_fix() -> None:
+    with pytest.raises(AuthorError, match=r"flag each group with run\(\.\.\., rail=True\)"):
+        design(pair_library()).terminal_strip("X4", "DEMO-TB-2.5", 6, bridged=((1, 2), (4, 5)), rail=True)
+
+
+def test_rail_on_an_unbridged_group_of_more_than_one_terminal_is_refused() -> None:
+    with pytest.raises(AuthorError, match="a rail is one bridged group"):
+        design(pair_library()).terminal_strip("X4", "DEMO-TB-2.5", 3).run("L1", 2, rail=True)
+
+
+def test_rail_on_a_run_with_no_count_is_refused() -> None:
+    with pytest.raises(AuthorError, match="give it a count"):
+        design(pair_library()).terminal_strip("X4", "DEMO-TB-2.5", 3).run("L1", bridged=True, rail=True)

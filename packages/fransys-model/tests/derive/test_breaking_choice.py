@@ -2,11 +2,12 @@
 
 from decimal import Decimal
 
-from fransys_model.derive.facts.fault.breaking import chosen_point
-from fransys_model.vocab.ratings import BreakingPoint
+from rating_plant import point
 
-_LOW = BreakingPoint(voltage_v=Decimal(400), current_a=Decimal(3000))
-_HIGH = BreakingPoint(voltage_v=Decimal(800), current_a=Decimal(900))
+from fransys_model.derive.facts.fault.breaking import chosen_point
+
+_LOW = point("400", "3000")
+_HIGH = point("800", "900")
 
 
 def test_the_lowest_voltage_at_or_above_the_circuit_wins() -> None:
@@ -15,8 +16,6 @@ def test_the_lowest_voltage_at_or_above_the_circuit_wins() -> None:
 
 
 def test_a_point_below_the_sources_time_constant_is_short_of_time_constant() -> None:
-    point = BreakingPoint(
-        voltage_v=Decimal(1000), current_a=Decimal(15000), time_constant_ms=Decimal(15)
-    )
-    assert chosen_point((point,), Decimal(60), Decimal(20)) == "time constant"
-    assert chosen_point((point,), Decimal(60), Decimal(15)) == point
+    slow = point("1000", "15000", "15")
+    assert chosen_point((slow,), Decimal(60), Decimal(20)) == "time constant"
+    assert chosen_point((slow,), Decimal(60), Decimal(15)) == slow

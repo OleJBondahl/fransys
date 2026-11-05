@@ -15,7 +15,8 @@ FIXED = frozenset()
 
 
 def _cuts(edges: list[tuple[str, str, frozenset[str]]], **cost: int) -> frozenset[str]:
-    return y_cycle_cuts(edges, cost, natural_key)
+    keys = {n: natural_key(n) for a, b, owners in edges for n in (a, b, *owners)}
+    return y_cycle_cuts(edges, cost, keys)
 
 
 def test_a_two_node_ring_closed_by_one_owned_edge_cuts_that_owner() -> None:
@@ -103,4 +104,3 @@ def test_stage_one_splits_the_ring_into_a_cross_link(extra: int) -> None:
     assert y_cycles(flow.columns, flow.fans) == []
     assert flow.findings == ()
     assert len(flow.cross_links) == 1
-    assert flow.cycle_split.cross_links == 1

@@ -1,33 +1,25 @@
 """The text of a component, strip and terminal tag, in a unit's own set or outside it."""
 
-from functools import partial
-from typing import Any, cast
-
 from fransys_model.derive.designation import (
-    connector_designation,
     item_designation,
     port_designation,
 )
 from fransys_model.derive.designation_label import own_label, terminal_of
 from fransys_model.derive.indexes import build_indexes
 from fransys_model.derive.instance_tag import dashed
-from fransys_model.derive.port_marking import port_marking
-from fransys_model.derive.texts.context import PrintContext
-from fransys_model.derive.texts.terminal_text import terminal_text
-from fransys_model.vocab.tables import functions, items, ports
+from fransys_model.derive.order import first_terminal_port
+from fransys_model.vocab.tables import functions, items
 lazy from fransys_model.derive.facts.roles import function_role
 lazy from fransys_model.kernel import Id, Model
-lazy from fransys_model.vocab.core import Function, Item, Port, Unit
+lazy from fransys_model.vocab.core import Function, Item, Unit
 
 __all__ = [
     "external_note",
     "is_device_terminal",
     "item_tag_text",
-    "point_text",
     "run_point_text",
     "strip_tag_text",
     "tag_text",
-    "unit_tag_text",
 ]
 
 
@@ -44,12 +36,12 @@ def item_tag_text(model: Model, item: Id[Item], *, unit: Id[Unit] | None = None)
 def tag_text(model: Model, function: Id[Function], *, unit: Id[Unit] | None = None) -> str:
     """A TAG label's text, as the lists of `unit`'s own document print it (`None`: whole model).
 
-    A terminal function's tag is the designation of its lowest-handle port; every other
+    A terminal function's tag is the designation of its first port (internal side first); every other
     function's tag is its item's `item_tag_text`.
     """
     record = functions(model)[function]
     if function_role(model, function).terminal:
-        port = min(build_indexes(model).ports_by_function[function])
+        port = first_terminal_port(model, build_indexes(model).ports_by_function[function])
         return port_designation(model, port, unit=unit)
     return item_tag_text(model, record.item, unit=unit)
 
@@ -58,7 +50,7 @@ def strip_tag_text(model: Model, function: Id[Function]) -> str:
     """A run's one strip tag: the item designation of the terminal's strip, "-X01".
 
     Printed once, left of a run of terminals of one strip (`run_point_text` is each one's own
-    point); a unit's own set prints the unit-relative form instead (`unit_tag_text`). A device's
+    point); a unit's own set prints the unit-relative form instead. A device's
     own terminal (`is_device_terminal`) names the device itself, never the board it is mounted
     on.
     """
@@ -88,62 +80,6 @@ def run_point_text(model: Model, function: Id[Function]) -> str:
     A terminal that is no part of a run prints `terminal_text`, never this.
     """
     return own_label(model, functions(model)[function].item)
-
-
-def point_text(model: Model, function: Id[Function]) -> str:
-    """A terminal's point text inside its strip's row.
-
-    A strip terminal's is `run_point_text`, "L2:1"; a device terminal's is its port marking,
-    "A2".
-    """
-    if is_device_terminal(model, function):
-        return port_marking(model, min(build_indexes(model).ports_by_function[function]))
-    return run_point_text(model, function)
-
-
-def _unit_port_tag_text(
-    model: Model, handle: Id[Any], port: Port, slot: str, unit: Id[Unit]
-) -> str:
-    """`unit_tag_text` for a port handle: a terminal's point, or a pin view's connector or pin."""
-    # a terminal's point "X2:0V:3", or a pin view's pin (tag.pin) as outside a unit set, less the
-    # unit's root; a pin view's connector (tag.conn) is the one other form
-    if slot == "tag.conn" and not function_role(model, port.function).terminal:
-        return connector_designation(model, port.function, unit=unit)
-    return port_designation(model, handle, unit=unit)
-
-
-def unit_tag_text(
-    model: Model, handle: Id[Item] | Id[Port] | Id[Function], slot: str, unit: Id[Unit]
-) -> str | None:
-    """A TAG text as printed in `unit`'s own set, for a stage handle and its slot.
-
-    The handle is a function, a pin view's port or an item view's item; `None` keeps the
-    ordinary text (a run's point tag `run_point_text`, a device terminal's port marking).
-
-    A component's tag is its item designation only, "-Q11", below the unit's sole root; the
-    page states the location, unit and groups.
-    """
-    short = partial(item_tag_text, model, unit=unit)
-    if handle.kind == "item":
-        return short(cast("Id[Item]", handle))
-    port = ports(model).get(cast("Id[Port]", handle))
-    if port is not None:
-        return _unit_port_tag_text(model, handle, port, slot, unit)
-    function = cast("Id[Function]", handle)
-    record = functions(model)[function]
-    if slot == "tag.strip":  # a terminal row's strip, in the unit's own form
-        return short(_strip_item(model, function))
-    if slot == "tag.point":  # a run's point text, unit-independent, and a device's marking
-        return None
-    if function_role(model, function).terminal:
-        # a terminal outside a run prints its full form in the unit's own strip form; a
-        # device terminal keeps its ordinary text
-        return (
-            None
-            if is_device_terminal(model, function)
-            else terminal_text(model, record.item, PrintContext(reading=unit))
-        )
-    return short(record.item)
 
 
 def external_note() -> str:

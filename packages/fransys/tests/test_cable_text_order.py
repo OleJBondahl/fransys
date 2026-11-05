@@ -2,8 +2,6 @@
 
 One strip `X1`, a motor `M1`, one three-core cable `W1` (`demo_parts`). Typst keeps the SVG's
 element order in the PDF, so extraction follows it. Before the fix the cores came out in record
-order (`3 GY`, `1 BN`, `2 BK`; `pdftotext -raw` on a turned page read "2 BK21 BK13 BK3"), and
-every shape and text was interleaved. The rows read top to bottom, each left to right (render-0011).
 """
 
 import functools
@@ -12,8 +10,8 @@ import shutil
 from pathlib import Path
 
 import fransys as fr
-import fransys_author
 from _model_build_cover import _COVER
+from fransys_author.design import Design
 from fransys_render import cable_blocks
 
 from electrical_symbols import LIBRARY
@@ -26,7 +24,7 @@ _TEXT = re.compile(r"<text [^>]*>([^<]*)</text>")
 @functools.cache
 def _svg() -> str:
     parts = fr.parts("demo_parts")
-    d = fransys_author.Design(parts)
+    d = Design(parts)
     d.project(title="Cable", number="DEMO-5", customer="Demo Co", revision=1, author="d")
     d.revision(1, date="2026-10-07", text="First issue", created="XX")
     loc = d.location("C1", "Demo cabinet")
@@ -38,7 +36,7 @@ def _svg() -> str:
     for n, (terminal, pin) in enumerate(zip(terminals, "UVW", strict=True), 1):
         cable.core(n, terminal.outer, motor[pin])
     built = fr.build(parts, d.draft(), fr.document(DocumentPreset.SYSTEM, None, cover=_COVER))
-    (svg,) = dict(cable_blocks(lay_out_cables(built.model)[0], LIBRARY)).values()
+    (svg,) = dict(cable_blocks(built.model, lay_out_cables(built.model, LIBRARY), LIBRARY)).values()
     return svg
 
 
@@ -61,7 +59,7 @@ def test_every_shape_is_emitted_before_the_first_text():
 
 
 _BK_CABLE = """\
-schema = 1
+schema = 2
 
 [part]
 mpn = "DEMO-CBL-3BK"
@@ -71,7 +69,7 @@ category = "cable"
 class_code = "W"
 
 [rating]
-voltage_ac_v = "500"
+voltage = [{ nom = "500 V", at = ["AC"] }]
 
 [cable_product]
 core_count = 3
@@ -90,7 +88,7 @@ def test_equal_colours_read_number_then_colour_in_core_order(tmp_path_factory, m
     (root / "bk_parts" / "parts" / "cable-3bk.toml").write_text(_BK_CABLE)
     monkeypatch.syspath_prepend(str(root))
     parts = fr.parts("bk_parts")
-    d = fransys_author.Design(parts)
+    d = Design(parts)
     d.project(title="Cable", number="DEMO-5", customer="Demo Co", revision=1, author="d")
     d.revision(1, date="2026-10-07", text="First issue", created="XX")
     loc = d.location("C1", "Demo cabinet")
@@ -102,6 +100,6 @@ def test_equal_colours_read_number_then_colour_in_core_order(tmp_path_factory, m
     for n, (terminal, pin) in enumerate(zip(terminals, "UVW", strict=True), 1):
         cable.core(n, terminal.outer, motor[pin])
     built = fr.build(parts, d.draft(), fr.document(DocumentPreset.SYSTEM, None, cover=_COVER))
-    (svg,) = dict(cable_blocks(lay_out_cables(built.model)[0], LIBRARY)).values()
+    (svg,) = dict(cable_blocks(built.model, lay_out_cables(built.model, LIBRARY), LIBRARY)).values()
     texts = _TEXT.findall(svg)
     assert texts[texts.index("-W1, 5000 mm") + 1 : -4] == ["1 BK", "2 BK", "3 BK"]

@@ -3,7 +3,7 @@
 from dataclasses import replace
 from typing import TYPE_CHECKING
 
-from fransys_layout.core import Size
+from fransys_layout.core import PinRef, Size
 from fransys_layout.core.route import route_page
 
 from .route_fixtures import link_env
@@ -29,4 +29,5 @@ def test_a_bounded_route_draws_nothing_past_the_content_box_and_names_the_net() 
     routes, refused, findings = _route(AREA)
     assert [r.net for r in refused] == ["n"]
     assert all(y <= AREA.h for w in routes.wires for _, y in w.points)
-    assert [f.code for f in findings] == ["ROUTE_FAILED"]
+    assert findings == ()
+    assert [r.ends for r in refused] == [(PinRef("a", "p"), PinRef("z", "p"))]

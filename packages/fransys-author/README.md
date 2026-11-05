@@ -1,3 +1,5 @@
+# fransys-author
+
 Fransys input: the engineer API and its engine. The surface (`fransys_author.surface`) is
 what a consumer sees as `fransys`. The engine (`Design`, `Scope`, the handles) builds the Draft
 and is internal.
@@ -24,14 +26,14 @@ Surface status:
   - A cable lands core i on pole i. Its GNYE core goes to the PE ports, through a terminal of the
     strip's `pe=` part.
   - `device(..., mounted_on=Q1)` joins a directly mounted device's line side to Q1's load side.
-- EA-COVERAGE (author-0016): `earth`, `net`, `busbar`, `rail_bond`, `mate` and `harness`; the
-  project facts `project`, `revision`, `rating` and `operating`; the drawing hints under
+- EA-COVERAGE (author-0016): `earth`, `net`, `busbar`, `mate` and `harness`; the
+  project facts `project` and `revision`; the drawing hints under
   `d.layout`. `with d.function(...) as m1:` gives the function's handle for those hints.
 - EA-UNITS-RUNS (author-0014):
   - `@unit(...)` makes a function a unit release. `io = d.add(fn, "U1")` builds it as a child
     and returns what the unit function returned, a `NamedTuple` instance, so `io.X1` is typed.
   - `interface=True` marks a boundary device or strip, and `unused=True` marks one left open on
-    purpose. A boundary function states its values with `X1.power.limits(rating=, operating=)`.
+    purpose.
   - `X3.run("valve supply", 8, bridged=True)` declares a named run. A series may name a run in
     place of its strip.
 - SWAP (decision 0103, author-0017): `fransys` re-exports the surface; `fransys.author` is
@@ -41,17 +43,15 @@ Surface status:
 Engine status: WP done (decisions
 `docs/decisions/author-0001-builder-implementation-choices.md`, author-0002, author-0003, author-0010). `Design`, `Scope` and
 the handle types (`Location`, `Group`, `Item`, `Strip`, `Terminal`, `Cable`, `Fn`,
-`Port`, `Wiring`) cover the spec's public names, plus `Rating` and `Operating`, the model's own
-value types for a unit's boundary values (`u.boundary(fn, rating=, operating=)`; a scope reads a
-part's values with `s.rating(mpn, function=None)` and `s.operating(mpn, function)`, decision
-`docs/decisions/author-0010-boundary-values-and-part-reads.md`). 100% test coverage.
+`Port`, `Wiring`) cover the spec's public names. `Operating` is the model's value type for a part's operating
+envelope. 100% test coverage.
 
 The engine's own form, for agents changing it. A consumer writes the surface: the same circuit
 takes 242 tokens there against 745 here (the DOL pair in `tests/equivalence/`).
 
 ```python
 import fransys_parts
-from fransys_author import Design
+from fransys_author.design import Design
 
 parts = fransys_parts.load("demo_parts")      # the part library, a Draft
 d = Design(parts)
@@ -88,9 +88,6 @@ w1.core(1, l1.outer, m1["U"])                       # colour comes from the cabl
 
 k1.fn("coil").plc("do", "PUMP1_RUN")                # a request; the allocation pass binds it
 
-d.chain(q1, k1.fn("coil"), t2)                      # a layout hint: one column, in this order;
-                                                     # t1 (=SUP) is reached by its wire and drawn
-                                                     # again in =P1 by the layout engine
 
 draft = d.draft()                                   # the Draft the facade builds
 ```
@@ -98,7 +95,7 @@ draft = d.draft()                                   # the Draft the facade build
 Every call that creates something returns a small immutable handle (`Location`,
 `Group`, `Item`, `Strip`, `Terminal`, `Cable`, `Fn`, `Port`); later calls take handles,
 never a designation string. `group=` on an item, a terminal or a cable is a placement at
-the `=` node, exactly like `at=` at the `+` node; `d.draw_in(fn, group)` is the only way
-to draw one function of a multi-function item in a different group than the rest of it.
+the `=` node, exactly like `at=` at the `+` node. A function of a multi-function item
+written in another block's `d.series` draws in that block, not with the rest of its item.
 There is no argument anywhere that takes a coordinate, a page or a column number (a test
 walks every public signature and proves it).

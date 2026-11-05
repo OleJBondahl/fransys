@@ -1,18 +1,6 @@
-"""Field case: one function block of 18 chained two-port devices on the overview's All devices view.
-
-Engineering shape: a unit holds two function blocks. The first has a terminal strip and 18 fuses in
-one series chain between two of its terminals; the second holds a lamp that the chain's return
-terminal feeds. The reader opens the block and switches to "All devices".
-
-The bugs (legacy finding C1): the 18 devices stood in one row 1880 G wide, so the page fitted the
-row to the canvas and printed every label about 4 px high, and a canvas label is no text that the
-DOM, Ctrl-F or a screen reader finds. The panel said "22 boxes, 21 lines" and named none of them.
-
-Fix: overview-0008. A row wider than the view wraps into more rows, in chain order, each cut
-between two columns; the page data holds `order` per view, its boxes in reading order, and the
-panel lists them by designation, a click selecting the box. The browser itself is not in the gate
-(overview-0001): the tests read the page's data and its script text.
-"""
+"""Field case: 18 chained two-port fuses in one series, read on the overview's All devices view.
+The bugs (legacy finding C1): the 18 devices stood in one 1880 G row, so labels printed about 4 px high and the panel named no box.
+Fixed by overview-0008, a row wider than the view wraps in chain order; the panel lists boxes by designation from the page data."""
 
 import json
 import re
@@ -35,15 +23,16 @@ class _Io(NamedTuple):
 @fr.unit("demo-rs", revision=1, interface_version=1, date="2026-10-14", text="first", by="AB")
 def _rs(u: fr.Design) -> _Io:
     with u.function("B1", "Block"):
-        strip = u.terminal_strip("X1", "DEMO-TB-2.5")
+        strip = u.terminal_strip("X1", "DEMO-TB-2.5-TWIN")
         feed, back = strip.run("A", 1), strip.run("B", 1)
         fuses = [u.device(f"G{n}", "DEMO-FUSE-DC-160") for n in range(1, _CHAIN + 1)]
     with u.function("B2", "Other"):
         lamp = u.device("H1", "DEMO-LAMP-24")
     u.series(*[f.element for f in fuses], wire=(RD, 1.0))
-    u.detail.wire(feed[1], fuses[0].element["1"], wire=(RD, 1.0))
-    u.detail.wire(fuses[-1].element["2"], back[1], wire=(RD, 1.0))
-    u.detail.wire(back[1], lamp["1"], wire=(RD, 1.0))
+    u.series(feed[1].inner, fuses[0].element["1"], wire=(RD, 1.0))
+    u.series(fuses[-1].element["2"], back[1].inner, wire=(RD, 1.0))
+    u.series(back[1].inner, lamp["1"], wire=(RD, 1.0))
+    u.series(strip.run("C", 1)[1].inner, lamp["2"], wire=(RD, 1.0))
     return _Io()
 
 
@@ -63,11 +52,7 @@ def data(tmp_path_factory) -> dict[str, Any]:
 @pytest.fixture(scope="module")
 def block_view(data) -> dict[str, Any]:
     """The All devices view of the first block, opened (`level` a group, no strip open)."""
-    found = [
-        v
-        for v in data["views"]
-        if v["mode"] == "see_through" and v["level"] is not None and v["open"] is None
-    ]
+    found = [v for v in data["views"] if v["mode"] == "see_through" and v["level"] is not None and v["open"] is None]
     return max(found, key=lambda v: len(v["boxes"]))
 
 
@@ -129,9 +114,7 @@ def test_the_data_lists_every_box_in_reading_order(block_view) -> None:
     order = block_view["order"]
     assert sorted(order) == list(range(len(block_view["boxes"])))
     names = [block_view["boxes"][i]["lines"][0] for i in order]
-    assert [n for n in names if re.fullmatch(r"-G\d+", n)] == [
-        f"-G{n}" for n in range(1, _CHAIN + 1)
-    ]
+    assert [n for n in names if re.fullmatch(r"-G\d+", n)] == [f"-G{n}" for n in range(1, _CHAIN + 1)]
 
 
 def test_the_panel_lists_the_boxes_and_a_click_selects_one() -> None:

@@ -2,34 +2,26 @@
 
 A battery string (`DEMO-STRING-864V`, 186 A continuous), a partial-range fuse (`DEMO-FUSE-ABAT`,
 400 A) and a DC contactor pole (`DEMO-CONTACTOR-DC`, 150 A) on each pole, ending at an external
-terminal (`DEMO-TB-2.5`, `external=True`): the outside closes the loop through the string.
-The 200 A contactor, the 100 A fuse and the full-range fuse are copies of the demo library with
-one text replaced, loaded by `load_path` like the tracked one.
-
-Can-fail probes, each one Edit, run and undone: counting a partial-range fuse as a bound in
-`vocab/current_bounds._limits_of` fails the 100 A fuse test; leaving a source's own limit out
-of `_limits_of` fails the 150 A and the full-range tests.
 """
 
 import shutil
-from decimal import Decimal
 from pathlib import Path
 
 import fransys_parts
-from fransys_author import Design, Item
+from fransys_author.design import Design
 from root_library import freeze
+lazy from fransys_author.handles import Item
 
 from fransys_model.checks.ratings_current import (
     RATING_CURRENT_BELOW_BRANCH,
     check_ratings_current,
 )
 from fransys_model.kernel import Model, merge
-from fransys_model.vocab import Operating, Rating
 
 DEMO = Path(__file__).resolve().parents[1] / "examples" / "demo-parts" / "demo_parts"
-_CONTACTOR = ("parts/contactor-dc.toml", 'current_dc_a = "150"')
-_FUSE = ("parts/fuse-abat.toml", 'current_dc_a = "400"')
-_PARTIAL = ("parts/fuse-abat.toml", 'min_breaking_current_a = "4000"\n')
+_CONTACTOR = ("parts/contactor-dc.toml", 'current = [{ nom = "150 A", at = ["DC"] }]')
+_FUSE = ("parts/fuse-abat.toml", 'current = [{ nom = "400 A", at = ["DC"] }]')
+_PARTIAL = ("parts/fuse-abat.toml", 'breaking_capacity = [{ min = "4000 A" }]\n')
 
 
 def _library(tmp_path: Path, *edits: tuple[tuple[str, str], str]) -> Path:
@@ -49,7 +41,7 @@ def _string(root: Path) -> tuple[Model, dict[str, Item]]:
     library = fransys_parts.load_path(root)
     d = Design(library)
     wire = d.wiring(colour="BK", gauge="1.5")
-    d.supply("HV", current="dc", rails={"DC+": ("985.5", None), "DC-": ("0", None)}, earthing="it")
+    d.supply("HV", current="dc", rails={"DC+": ("985.5", None), "DC-": ("0", None)})
     string = d.item("DEMO-STRING-864V", name="s1")
     items: dict[str, Item] = {}
     for pole, port in (("plus", "+"), ("minus", "-")):
@@ -70,19 +62,6 @@ def _findings(tmp_path: Path, *edits: tuple[tuple[str, str], str]):
     return model, items, check_ratings_current(model)
 
 
-def test_the_demo_contactor_is_rated_150_a_dc_on_the_186_a_string() -> None:
-    d = Design(fransys_parts.load("demo_parts"))
-    assert d.rating("DEMO-CONTACTOR-DC", "pole") == Rating(
-        voltage_dc_v=Decimal(1500), current_dc_a=Decimal(150)
-    )
-    operating = d.operating("DEMO-STRING-864V", "string")
-    assert operating == Operating(
-        nominal_voltage_v=Decimal(864),
-        max_voltage_v=Decimal("985.5"),
-        max_current_dc_a=Decimal(186),
-    )
-
-
 def test_a_contactor_rated_150_a_on_each_pole_gives_a_finding_per_pole(tmp_path) -> None:
     _, items, found = _findings(tmp_path)
     assert {f.subjects for f in found} == {
@@ -92,17 +71,15 @@ def test_a_contactor_rated_150_a_on_each_pole_gives_a_finding_per_pole(tmp_path)
     for finding in found:
         assert finding.code == RATING_CURRENT_BELOW_BRANCH
         assert "rated 150 A DC" in finding.message
-        assert "below its branch's 186 A DC set by the source of function ⟨function:" in (
-            finding.message
-        )
+        assert "below its branch's 186 A DC set by the source of function ⟨function:" in (finding.message)
 
 
 def test_a_contactor_rated_200_a_passes(tmp_path) -> None:
-    assert _findings(tmp_path, (_CONTACTOR, 'current_dc_a = "200"'))[2] == ()
+    assert _findings(tmp_path, (_CONTACTOR, 'current = [{ nom = "200 A", at = ["DC"] }]'))[2] == ()
 
 
 def test_a_full_range_fuse_of_400_a_leaves_the_bound_at_186_a(tmp_path) -> None:
-    """The spec's remark: without `min_breaking_current_a` the fuse is full-range, and min(186,
+    """The spec's remark: without a `min` breaking figure the fuse is full-range, and min(186,
     400) is still 186 A."""
     found = _findings(tmp_path, (_PARTIAL, ""))[2]
     assert len(found) == 2
@@ -113,7 +90,7 @@ def test_a_partial_range_fuse_of_100_a_bounds_nothing_and_is_itself_below_the_bo
     tmp_path,
 ) -> None:
     """The 150 A contactor still fires (bound 186 A, not 100 A), and so do the two 100 A fuses."""
-    _, items, found = _findings(tmp_path, (_FUSE, 'current_dc_a = "100"'))
+    _, items, found = _findings(tmp_path, (_FUSE, 'current = [{ nom = "100 A", at = ["DC"] }]'))
     assert {f.subjects for f in found} == {
         (items[name].fn(function).id,)
         for name, function in (

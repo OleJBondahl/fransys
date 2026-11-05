@@ -7,7 +7,7 @@ from . import codes_netlist
 _CORE: tuple[CodeInfo, ...] = (
     CodeInfo(
         code="MARKER_UNPLACED",
-        severities=(Severity.WARNING,),
+        severity=Severity.WARNING,
         stage="render",
         who="Fransys",
         cause=(
@@ -18,8 +18,20 @@ _CORE: tuple[CodeInfo, ...] = (
         page="findings-render",
     ),
     CodeInfo(
+        code="TAG_ACROSS_BODY",
+        severity=Severity.WARNING,
+        stage="render",
+        who="consumer",
+        cause=(
+            "A net joins a pin on one half of a generic box to a column of parts hung on its other half, "
+            "so it is drawn as a tag pair, not a wire round the box (CROSS-HALF-TAGS)."
+        ),
+        fix=("Wire the parts to the box pins in one path. Write: d.series(<subject>, <other>)"),
+        page="findings-render",
+    ),
+    CodeInfo(
         code="OVERLAP",
-        severities=(Severity.WARNING,),
+        severity=Severity.WARNING,
         stage="render",
         who="consumer",
         cause=(
@@ -27,54 +39,59 @@ _CORE: tuple[CodeInfo, ...] = (
             "symbol), a text and a body, two texts, or a wire and a text meet on one page; the "
             "message names the first of them."
         ),
-        fix=(
-            "No call clears this: send the smallest model that shows it. The message names the "
-            "page and the members."
-        ),
+        fix=("No call clears this: send the smallest model that shows it. The message names the page and the members."),
         page="findings-render",
     ),
     CodeInfo(
         code="WIRE_OVER_MARKER",
-        severities=(Severity.WARNING,),
+        severity=Severity.WARNING,
         stage="render",
         who="consumer",
         cause=(
-            "A wire or a junction dot meets the box of a reference marker on one page, or a wire "
-            "ends in it; the message names the first of them."
+            "A wire or a junction dot meets the box of a reference marker on one page, or a wire ends in it; the message names the first of them."
         ),
-        fix=(
-            "No call clears this: send the smallest model that shows it. The message names the "
-            "page and the members."
-        ),
+        fix=("No call clears this: send the smallest model that shows it. The message names the page and the members."),
         page="findings-render",
     ),
     CodeInfo(
         code="OUT_OF_PAGE",
-        severities=(Severity.WARNING,),
+        severity=Severity.WARNING,
         stage="render",
-        who="consumer",
+        who="Fransys",
         cause="A symbol body or a text lies outside the content box of its page.",
-        fix='Split the block that holds it, or use a taller sheet. Write: [paper] default = "A2".',
+        fix="No call clears this: report it with the smallest model that shows it.",
         page="findings-render",
     ),
     CodeInfo(
         code="ANNEX_UNPLACED",
-        severities=(Severity.WARNING,),
+        severity=Severity.WARNING,
         stage="render",
         who="consumer",
         cause=(
             "A tag, marking or table beside a symbol found no spot free of every outline, wire "
             "and text; it stands at its first spot, over what blocks it."
         ),
+        fix=("No call clears this: shorten the tag of <subject>, or move the symbols around it to leave a corner free."),
+        page="findings-render",
+    ),
+    CodeInfo(
+        code="OUTLINE_NO_ROOM",
+        severity=Severity.WARNING,
+        stage="render",
+        who="consumer",
+        cause=(
+            "A nested unit stands on its parent's page, but its frame does not fit the page or would hold "
+            "another unit's symbol; the unit is drawn with no frame."
+        ),
         fix=(
-            "No call clears this: shorten the tag of <subject>, or move the symbols around it "
-            "to leave a corner free."
+            "Move the unit's devices together on the page, or give the unit its own page. "
+            "Write: d.function(name, text) to place each device in one group."
         ),
         page="findings-render",
     ),
     CodeInfo(
         code="ALIGN_DROPPED",
-        severities=(Severity.WARNING,),
+        severity=Severity.WARNING,
         stage="render",
         who="consumer",
         cause=(
@@ -82,45 +99,33 @@ _CORE: tuple[CodeInfo, ...] = (
             "cannot stand level because the stacks in their columns contradict it; "
             "layout dropped the alignment."
         ),
-        fix=(
-            "Shorten the stack, or move the members to the same end of their columns. Write: "
-            "d.layout.chain(a, b) to stand them in one column, source first."
-        ),
+        fix=("Shorten the stack, or move the members to the same end of their columns. Write: d.series(a, b, c) to stand a path in one column."),
         page="findings-render",
     ),
     CodeInfo(
-        code="TRUNK_THROUGH_BODY",
-        severities=(Severity.WARNING,),
+        code="WIRE_THROUGH_BODY",
+        severity=Severity.ERROR,
         stage="render",
         who="consumer",
         cause=(
-            "A line of a bundle's trunk is drawn through the keep-out of a symbol; the message "
-            "names the trunk and the symbol."
+            "A trunk is drawn through the drawn body of a symbol, or along its outline (a touch at a point or in its margin is not this error); "
+            "the message names the net and the symbol."
         ),
-        fix=(
-            "No call clears this: send the smallest model that shows it. The trunk is drawn as "
-            "placed; stage 5 does not yet stand it clear of bodies."
-        ),
+        fix=("No call clears this: send the smallest model that shows it. A wire never passes a symbol's body, so the model shows a drawing fault."),
         page="findings-render",
     ),
     CodeInfo(
         code="CARD_OVERFULL",
-        severities=(Severity.WARNING,),
+        severity=Severity.INFO,
         stage="render",
-        who="consumer",
-        cause=(
-            "A box has more attached columns than its card holds; the columns that do not fit "
-            "stand free of the card."
-        ),
-        fix=(
-            "No call clears this: wire fewer columns to <subject>, or split the box into two "
-            "devices."
-        ),
+        who="note",
+        cause=("The card of a box is wider than a page; the columns that do not fit stand free of the card on later pages."),
+        fix=("Nothing is wrong; each such column is joined to its pin of <subject> by a drawn tag pair."),
         page="findings-render",
     ),
     CodeInfo(
         code="PAGE_OVERFLOW",
-        severities=(Severity.ERROR,),
+        severity=Severity.ERROR,
         stage="render",
         who="consumer",
         cause="A row of one block is taller than the page, so it stands on a page of its own.",
@@ -133,61 +138,49 @@ _CORE: tuple[CodeInfo, ...] = (
     ),
     CodeInfo(
         code="FILL_UNDER_MIN",
-        severities=(Severity.WARNING,),
+        severity=Severity.WARNING,
         stage="render",
         who="consumer",
         cause="A page is filled less than the minimum because no cut of the blocks fills it more.",
-        fix=(
-            "Merge the group with its neighbour, or drop its page break, so the page fills. "
-            "Write: d.layout.keep_together(a, b) for the neighbouring groups."
-        ),
+        fix=("Merge the group with its neighbour so the page fills. Write: d.function(name, text) to draw a device in the neighbour group."),
         page="findings-render",
     ),
     CodeInfo(
         code="HEAD_OFF_LEGS",
-        severities=(Severity.WARNING,),
+        severity=Severity.WARNING,
         stage="render",
         who="consumer",
         cause="A trunk is cut by a page and its head stands on the page with fewer of its legs.",
-        fix=(
-            "Reorder the groups so the head and most of its legs share a page. Write: "
-            "d.layout.order(a, b) with the head's group first."
-        ),
+        fix=("Reorder the groups so the head and most of its legs share a page. Write: d.layout.order(a, b) with the head's group first."),
         page="findings-render",
     ),
     CodeInfo(
         code="NO_CELL",
-        severities=(Severity.WARNING,),
+        severity=Severity.WARNING,
         stage="render",
-        who="consumer",
+        who="Fransys",
         cause=(
             "A symbol is drawn but stands in no cell of any column, or in more cells than it has "
             "elements, so layout places it by no rule; the message names it."
         ),
-        fix=(
-            "Wire <subject> into a current path, or remove it. Write: d.layout.chain(a, "
-            "<subject>) to stand it in a column, source first."
-        ),
+        fix="No call clears this: report it with the smallest model that shows it.",
         page="findings-render",
     ),
     CodeInfo(
         code="LANE_WIRE_DROPPED",
-        severities=(Severity.WARNING,),
+        severity=Severity.ERROR,
         stage="render",
         who="consumer",
         cause=(
             "Two consecutive cells of a lane have no pin facing each other, or a facing pin on "
             "no net, so no wire is drawn between them; the message names the cells."
         ),
-        fix=(
-            "Put the facing pins of <subject> and its neighbour on one net. "
-            "Write: d.detail.wire(pin_a, pin_b)."
-        ),
+        fix=("Put the facing pins of <subject> and its neighbour on one net. Write: d.series(pin_a, pin_b)."),
         page="findings-render",
     ),
     CodeInfo(
         code="WIRE_MEETS_NET",
-        severities=(Severity.WARNING,),
+        severity=Severity.WARNING,
         stage="render",
         who="consumer",
         cause=(
@@ -196,28 +189,22 @@ _CORE: tuple[CodeInfo, ...] = (
         ),
         fix=(
             "Move a symbol of <subject> or widen the gap beside it so the wire has a free path. "
-            "Write: d.layout.chain(a, b) to stand the two symbols in one column."
+            "Write: d.add(unit, tag) to move the device into a unit."
         ),
         page="findings-render",
     ),
     CodeInfo(
         code="NO_BLOCK",
-        severities=(Severity.WARNING,),
+        severity=Severity.ERROR,
         stage="render",
         who="consumer",
-        cause=(
-            "A box is drawn but belongs to no block, or to more than one, so layout places it "
-            "by no rule; the message names it."
-        ),
-        fix=(
-            "Wire <subject> to one function block, or remove it. Write: "
-            "d.layout.draw_in(<subject>, g) to draw it in a group."
-        ),
+        cause=("A box is drawn but belongs to no block, or to more than one, so layout places it by no rule; the message names it."),
+        fix=("Wire <subject> to one function block, or remove it. Write: d.series(a, b, ...) to draw it in a block."),
         page="findings-render",
     ),
     CodeInfo(
         code="BLOCK_NOT_PLACED",
-        severities=(Severity.ERROR,),
+        severity=Severity.ERROR,
         stage="render",
         who="Fransys",
         cause=(
@@ -229,34 +216,30 @@ _CORE: tuple[CodeInfo, ...] = (
     ),
     CodeInfo(
         code="NOT_SERIES_PARALLEL",
-        severities=(Severity.WARNING,),
+        severity=Severity.INFO,
         stage="render",
-        who="consumer",
+        who="note",
         cause="The named symbols are wired as a bridge, which no series or parallel holds.",
-        fix="Wire them as series and parallel parts. Write: d.series(a, d.parallel(b, c), d)",
+        fix="Nothing is wrong; the symbols stay drawn, and CONNECTION_NOT_DRAWN names each wire of the bridge left undrawn.",
         page="findings-render",
     ),
     CodeInfo(
         code="CHAIN_REFUSED",
-        severities=(Severity.WARNING,),
+        severity=Severity.INFO,
         stage="render",
-        who="consumer",
+        who="note",
         cause=(
             "Boxes wired box to box do not make a chain that draws as one column: a ring, a box "
             "joined to three boxes, a box also wired by a trunk, or pins that do not face; or a "
             "box in parallel below another box, which has no layout yet. The message names the "
             "boxes and the hop that failed; the boxes are drawn unchained."
         ),
-        fix=(
-            "Wire each box only to the next, with the pins toward the previous box on the north "
-            "side and those toward the next on the south side. Write: d.series(a, b, c). A box in "
-            "parallel below another box has no layout yet; it is drawn unchained."
-        ),
+        fix="Nothing is wrong; the boxes are drawn unchained (rule CHAIN-COLUMN).",
         page="findings-render",
     ),
     CodeInfo(
         code="WIDER_THAN_PAGE",
-        severities=(Severity.WARNING,),
+        severity=Severity.ERROR,
         stage="render",
         who="consumer",
         cause="A row of columns is wider than the page even at its closest spacing.",
@@ -269,7 +252,7 @@ _CORE: tuple[CodeInfo, ...] = (
     ),
     CodeInfo(
         code="PLACEMENT_PROBLEM",
-        severities=(Severity.ERROR,),
+        severity=Severity.ERROR,
         stage="render",
         who="Fransys",
         cause=(
@@ -280,17 +263,23 @@ _CORE: tuple[CodeInfo, ...] = (
         page="findings-render",
     ),
     CodeInfo(
+        code="SYMBOL_PORT_MISSING",
+        severity=Severity.ERROR,
+        stage="render",
+        who="consumer",
+        cause=("A model port matches no port on its drawn symbol by any of the three binding rules."),
+        fix=("Fix the part's port names, or map them with symbol_port keys. Write: symbol_port = 'in' on the port in the part file."),
+        page="findings-render",
+    ),
+    CodeInfo(
         code="UNKNOWN_SYMBOL_KEY",
-        severities=(Severity.ERROR,),
+        severity=Severity.ERROR,
         stage="el",
         who="consumer",
-        cause=(
-            "A function's chosen symbol key is not in the installed symbol library; it is "
-            "drawn as a generic box."
-        ),
+        cause=("A function's chosen symbol key is not in the installed symbol library; it is drawn as a generic box."),
         fix=(
             "Fix the symbol key of <subject> in its rule, choice or part data, or install a "
-            "library version that has it. Write: d.layout.symbol(<target>, <symbol>)"
+            "library version that has it. Write: symbol = '<symbol>' in the part file."
         ),
         page="findings-render",
     ),

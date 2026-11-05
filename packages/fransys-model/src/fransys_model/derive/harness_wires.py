@@ -27,8 +27,4 @@ def harness_wires(model: Model, harness: Id[Item]) -> tuple[WireRow, ...]:
         SchemaError: `harness` is not an item.
     """
     require(items(model).get(harness), "item", harness)
-    return tuple(
-        row
-        for row in _all_wire_rows(model, None, None)
-        if harness_of_wire(model, row.conductor) == harness
-    )
+    return tuple(row for row in _all_wire_rows(model, None, None) if harness_of_wire(model, row.conductor) == harness)

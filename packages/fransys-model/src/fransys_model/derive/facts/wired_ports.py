@@ -3,8 +3,8 @@
 from fransys_model.derive.facts.joins import joined_ports
 from fransys_model.derive.facts.mates import mate_ports
 from fransys_model.derive.facts.net_facts import declared_nets_of
-from fransys_model.derive.facts.rail_reach import ports_by_function
 from fransys_model.derive.facts.roles import function_role
+from fransys_model.derive.indexes import build_indexes
 from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, digest_cached
 from fransys_model.vocab.facets.cable import OpenCoreFacet
 from fransys_model.vocab.tables import HasTables, conductors, facets_of, functions, ports
@@ -33,7 +33,7 @@ def half_connected(model: Model) -> tuple[tuple[Function, Port], ...]:
     """Each through function of two ports used at one, with its open port, in port order."""
     used = wired_ports(model) | mated_ports(model)
     found = []
-    for function_id, held in ports_by_function(model).items():
+    for function_id, held in build_indexes(model).ports_by_function.items():
         if len(held) != _TWO_PORTS or not function_role(model, function_id).through:
             continue
         taken = [port in used or bool(declared_nets_of(model, port)) for port in held]

@@ -22,7 +22,6 @@ from fransys_model.derive import (
     overview_units,
     overview_view_rows,
     own_drawing_line,
-    text_room,
     unit_parent,
 )
 
@@ -63,9 +62,9 @@ Texts = dict[tuple[int, int], str]
 class _Tables:
     """The tables a view names things by: items, units and aspect nodes, each by its index."""
 
-    def __init__(self, model: Model) -> None:
+    def __init__(self, model: Model, text_height: int) -> None:
         self.model = model
-        self.text_height = text_room(model)
+        self.text_height = text_height
         graph = overview_graph(model)
         self.nodes = graph.nodes
         self.pages = item_pages(model)
@@ -151,15 +150,9 @@ def _box(tables: _Tables, view: ViewRows, at: tuple[int, ViewBox, PlacedBox], te
         "dashed": box.dashed,
         "h": placed.height,
         "lines": list(box.lines),
-        "members": [
-            {"lines": list(m.lines), "ref": tables.ref(ref), "text": m.text}
-            for m, ref in zip(box.members, placed.members, strict=True)
-        ],
+        "members": [{"lines": list(m.lines), "ref": tables.ref(ref), "text": m.text} for m, ref in zip(box.members, placed.members, strict=True)],
         "ref": tables.ref(placed.ref),
-        "tabs": [
-            [t.x, t.y, t.text_width, texts.get((index, t.index)), t.width, t.height]
-            for t in placed.tabs
-        ],
+        "tabs": [[t.x, t.y, t.text_width, texts.get((index, t.index)), t.width, t.height] for t in placed.tabs],
         "w": placed.width,
         "x": placed.x,
         "y": placed.y,
@@ -183,9 +176,7 @@ def _view(tables: _Tables, placed: PlacedView) -> Json:
     rows = placed.rows
     texts = tab_texts(rows, placed, tables.text_height)
     return {
-        "boxes": [
-            _box(tables, rows, (i, b, placed.boxes[i]), texts) for i, b in enumerate(rows.boxes)
-        ],
+        "boxes": [_box(tables, rows, (i, b, placed.boxes[i]), texts) for i, b in enumerate(rows.boxes)],
         "order": reading_order(placed.boxes),
         "level": tables.ref(placed.level),
         "heads": heads_data(tables.model, placed.lane_heads),
@@ -206,10 +197,7 @@ def _item(tables: _Tables, node: OverviewNode) -> Json:
         "label": node.designation if node.designation is not None else node.description,
         "location": node.location_label,
         "mpn": node.mpn,
-        "pages": [
-            [f"{quote(p.file)}#nameddest={quote(p.destination)}", p.text]
-            for p in tables.pages.get(node.item, ())
-        ],
+        "pages": [[f"{quote(p.file)}#nameddest={quote(p.destination)}", p.text] for p in tables.pages.get(node.item, ())],
         "parent": None if node.parent is None else tables.item_ix[node.parent],
         "unit": None if unit is None else tables.unit_ix[unit],
     }
@@ -229,11 +217,9 @@ def _tree(tables: _Tables) -> list[Json]:
     ]
 
 
-def page_data(
-    model: Model, findings: tuple[Finding, ...] = (), changes: ListingDiff | None = None
-) -> Json:
+def page_data(model: Model, text_height: int, findings: tuple[Finding, ...] = (), changes: ListingDiff | None = None) -> Json:
     """Every view that has records, the tables they name, and the signals for tracing."""
-    tables = _Tables(model)
+    tables = _Tables(model, text_height)
     found = [rows for unit in overview_units(model) for rows in overview_view_rows(model, unit)]
     for rows in found:
         tables.learn(rows)
@@ -256,9 +242,7 @@ def page_data(
         "tree": _tree(tables),
         "unit_parents": [_unit_parent(tables, u) for u in tables.unit_ix],
         "own_drawings": [own_drawing_line(model, u) for u in tables.unit_ix],
-        "unit_systems": [
-            unit_system_label(model, u, one) for u, one in zip(tables.unit_ix, labels, strict=True)
-        ],
+        "unit_systems": [unit_system_label(model, u, one) for u, one in zip(tables.unit_ix, labels, strict=True)],
         "units": labels,
         "palette": palette_data(),
         "views": views,

@@ -1,10 +1,12 @@
-"""`BuildErrors` prints each finding under one `CODE (severity):` head (BUILD-MESSAGES M6)."""
+"""`BuildFailedError` prints each finding under one `CODE (severity):` head (BUILD-MESSAGES M6)."""
+
+from typing import Any
 
 import fransys as fr
 import pytest
 from fransys._codes import BY_CODE
 from fransys._finding_text import filled_fix
-from fransys.pipeline import BuildErrors
+from fransys.pipeline import BuildFailedError
 
 from fransys_model.kernel import SchemaError
 
@@ -32,13 +34,13 @@ def _finding(message: str) -> fr.Finding:
 
 def test_a_described_message_keeps_its_one_head() -> None:
     head = "UNIT_REVISION_CLASH (error): two releases\n  subject: unit -U1"
-    text = str(BuildErrors((_finding(head),), model=_MODEL))
+    text = str(BuildFailedError((_finding(head),), model=_MODEL))
     assert text.count("UNIT_REVISION_CLASH") == 1
     assert text.startswith("UNIT_REVISION_CLASH (error): two releases")
 
 
 def test_a_plain_message_gets_the_same_head() -> None:
-    text = str(BuildErrors((_finding("two releases"),), model=_MODEL))
+    text = str(BuildFailedError((_finding("two releases"),), model=_MODEL))
     assert text.startswith("UNIT_REVISION_CLASH (error): two releases")
 
 
@@ -52,11 +54,11 @@ def test_an_error_ends_with_its_fix_and_findings_row_url() -> None:
         fix=info_fix,
     )
     info = BY_CODE["EXPORT_NAME_CLASH"]
-    lines = str(BuildErrors((finding,), model=_MODEL)).splitlines()
+    lines = str(BuildFailedError((finding,), model=_MODEL)).splitlines()
     assert lines[-2:] == [f"  fix: {filled_fix(finding, _MODEL)}", f"  see: {_row_url(info)}"]
 
 
-def _templated(fix: str, subjects: tuple = ()) -> fr.Finding:
+def _templated(fix: str, subjects: tuple[Any, ...] = ()) -> fr.Finding:
     return fr.Finding(
         code="UNIT_REVISION_CLASH",
         severity=fr.Severity.ERROR,
@@ -69,7 +71,7 @@ def _templated(fix: str, subjects: tuple = ()) -> fr.Finding:
 def test_a_subject_placeholder_prints_the_subjects_text_and_others_stay_literal() -> None:
     subject = next(i for i in _MODEL.origins if i.kind == "item")
     finding = _templated("Move <subject> to <preset>", (subject,))
-    text = str(BuildErrors((finding,), model=_MODEL))
+    text = str(BuildFailedError((finding,), model=_MODEL))
     assert "  fix: Move " in text
     assert "<subject>" not in text
     assert " to <preset>" in text
@@ -78,4 +80,4 @@ def test_a_subject_placeholder_prints_the_subjects_text_and_others_stay_literal(
 
 def test_a_subject_placeholder_with_no_subject_raises() -> None:
     with pytest.raises(SchemaError, match=r"UNIT_REVISION_CLASH.*<subject>.*Move <subject>"):
-        BuildErrors((_templated("Move <subject>"),), model=_MODEL)
+        BuildFailedError((_templated("Move <subject>"),), model=_MODEL)

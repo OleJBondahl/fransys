@@ -1,21 +1,12 @@
-"""Field case: one breaker fanning out to three cables on a page draws no net onto another's ink.
+"""Field case: a nested unit's breaker fans out to three eight-core cables whose cores share two nets on one page.
+The bug (v0.19.1): the build gave a DRAWING_SHORTS_NETS finding, 0 in v0.18.7 on the same model.
+Open: no deciding record is named; the test is a plain regression check."""
 
-The engineering shape: a container unit nests a cabinet unit that hands up a two-pole breaker,
-two relays, a PLC input module and a fused terminal. Three valve functions each hold a four-pin
-actuator with two changeover position switches and an eight-core cable. Cores 1 and 2 come from
-the breaker's two outputs, the same two nets for all three valves. Cores 3 and 4 come from relay
-changeover contacts. Cores 5 and 7 run by series from input channels to the position switches
-and cores 6 and 8 from one fused-terminal pin.
-
-The bug (v0.19.1): the build gave a `DRAWING_SHORTS_NETS` finding, 0 in v0.18.7 on the same model.
-"""
-
-import tempfile
 from functools import cache
-from pathlib import Path
 from typing import Any, NamedTuple
 
 import fransys as fr
+from _model_build_cover import unit_document
 from fransys.colours import BK
 
 WIRE = (BK, 0.75)
@@ -46,6 +37,11 @@ def _cab(u: Any) -> _Io:
 @fr.unit("demo-skid", revision=1, interface_version=1, date="2026-01-01", text="first", by="AB")
 def _skid(u: Any) -> _Open:
     cab = u.add(_cab, "N")
+    x9 = u.terminal_strip("X9", "DEMO-TB-FUSE-2.5", 2)
+    w0 = u.cable("W0", "DEMO-CBL-4G1.5", length_m=5)
+    w0.core(1, x9[1], cab.F1.pole_1["1"])
+    w0.core(2, x9[2], cab.F1.pole_2["3"])
+    feed = cab.X1[1].outer
     for i in (1, 2, 3):
         with u.function(f"V{i}", f"Valve {i}"):
             v = u.device(f"V{i}", "DEMO-ACT-4P-2SW")
@@ -54,8 +50,9 @@ def _skid(u: Any) -> _Open:
             c.core(2, cab.F1.pole_2["4"], v.power["2"])
             c.core(3, getattr(cab.K1, f"co_{i}")[f"{i}4"], v.drive["3"])
             c.core(4, getattr(cab.K2, f"co_{i}")[f"{i}4"], v.drive["4"])
-            c.core(6, cab.X1[1].outer, v.sw_1["6"])
-            c.core(8, cab.X1[1].outer, v.sw_2["8"])
+            c.core(6, feed, v.sw_1["6"])
+            c.core(8, v.sw_1["6"], v.sw_2["8"])
+            feed = v.sw_2["8"]
             v.sw_1.plc(fr.DI, f"Pos {i}.1")
             v.sw_2.plc(fr.DI, f"Pos {i}.2")
             u.series(v.sw_1, c, cab.A1, wire=WIRE)
@@ -65,14 +62,11 @@ def _skid(u: Any) -> _Open:
 
 @cache
 def _findings() -> list[fr.Finding]:
-    with tempfile.TemporaryDirectory() as tmp:
-        cover = Path(tmp) / "cover.md"
-        cover.write_text("# Skid\n", encoding="utf-8")
-        d = fr.design("demo_parts")
-        d.add(_skid, "S1", place=None)
-        document = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, "demo-skid", cover=cover)
-        return list(fr.check(fr.build(d, document)))
+    d = fr.design("demo_parts")
+    d.add(_skid, "S1", place=None)
+    document = unit_document("demo-skid")
+    return list(fr.check(fr.build(d, document)))
 
 
-def test_the_fan_out_draws_no_shorted_nets() -> None:
-    assert [f for f in _findings() if f.code == "DRAWING_SHORTS_NETS"] == []
+def test_the_fan_out_draws_every_connection_and_no_shorted_nets() -> None:
+    assert [f for f in _findings() if f.code in {"DRAWING_SHORTS_NETS", "CONNECTION_NOT_DRAWN"}] == []

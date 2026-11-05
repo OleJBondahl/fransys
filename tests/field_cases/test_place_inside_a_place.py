@@ -1,9 +1,6 @@
-"""Field case: a container names a place `BATT` inside a place `HOLD`, and places a device in it.
-
-The bug (v0.7.0): the model nests places and prints them `+HOLD+BATT`, but `d.location(tag, text)`
-took no outer place, so a place nested only when a unit was placed in it. Fixing decision:
-author-0020 (`d.location(..., within=)`).
-"""
+"""Field case: a container names a place BATT inside a place HOLD, and places a device in it.
+The bug (v0.7.0): d.location took no outer place, so a nested place printed only when a unit was placed in it.
+Fixed by author-0020, d.location takes within= to nest a place."""
 
 import fransys as fr
 import pytest

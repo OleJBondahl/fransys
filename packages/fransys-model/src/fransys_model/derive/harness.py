@@ -11,9 +11,8 @@ from typing import TYPE_CHECKING
 from fransys_model.derive.facts.item_predicates import cable_items
 from fransys_model.derive.facts.roles import function_role
 from fransys_model.derive.facts.units import cable_children, in_reading
-from fransys_model.kernel import Id, Model, SchemaError
+from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, SchemaError, digest_cached
 from fransys_model.vocab.facets.cable import CableFacet, CableProductFacet
-from fransys_model.vocab.facets.wire import WireFacet
 from fransys_model.vocab.tables import (
     facets_of,
     functions,
@@ -30,9 +29,9 @@ from .core_pairs import cable_pairs, conductor_count
 from .designation import (
     end_outside_nested_unit,
     printed_designation,
-    prints_connector_label,
     unit_list_context,
 )
+from .designation_connector import prints_connector_label
 from .designation_label import own_label
 from .lookups import (
     connector_facets,
@@ -47,6 +46,7 @@ from .order import natural_key
 from .rows import CableListRow, ContentsRow, HarnessCable, HarnessCore, HarnessEnd, HarnessPin
 from .texts.context import PrintContext
 from .texts.end_text import LIST_END, end_designation, end_text
+from .wire_list import wire_labels
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -60,9 +60,7 @@ if TYPE_CHECKING:
     from .rows import CableRow
 
 
-def _cores(
-    rows: tuple[CableRow, ...], labels: frozendict[Id[Conductor], str | None]
-) -> tuple[HarnessCore, ...]:
+def _cores(rows: tuple[CableRow, ...], labels: frozendict[Id[Conductor], str | None]) -> tuple[HarnessCore, ...]:
     return tuple(
         HarnessCore(
             conductor=row.conductor,
@@ -105,9 +103,7 @@ def _end(model: Model, item: Id[Item], landed: list[Id[Port]], facts: _Facts) ->
         (
             function
             for function in landed_on
-            if function_role(model, function).pin_group
-            and all_functions[function].template in shapes
-            and prints_connector_label(model, function)
+            if function_role(model, function).pin_group and all_functions[function].template in shapes and prints_connector_label(model, function)
         ),
         default=None,
     )
@@ -116,9 +112,7 @@ def _end(model: Model, item: Id[Item], landed: list[Id[Port]], facts: _Facts) ->
     part_id = items(model)[item].part
     return HarnessEnd(
         item=item,
-        designation=end_designation(
-            model, item, PrintContext(reading=facts.unit, location=facts.context)
-        ),
+        designation=end_designation(model, item, PrintContext(reading=facts.unit, location=facts.context)),
         connector=None if outside else connector,
         style=None if outside or shape is None else shape.style,
         pincount=None if outside or shape is None else shape.pincount,
@@ -192,9 +186,7 @@ def _facts_of(model: Model, unit: Id[Unit] | None = None) -> _Facts:
     return _Facts(
         lengths={facet.subject: facet.length_mm for facet in facets_of(model, CableFacet).values()},
         products={facet.subject: facet for facet in facets_of(model, CableProductFacet).values()},
-        labels=frozendict(
-            {facet.subject: facet.label for facet in facets_of(model, WireFacet).values()}
-        ),
+        labels=wire_labels(model),
         shapes=connector_facets(model),
         all_parts=parts(model),
         unit=unit,
@@ -225,9 +217,7 @@ def _top_level_cable_ids(model: Model) -> set[Id[Item]]:
     return _cable_ids_of_unit(model, None)
 
 
-def _sorted_cables(
-    model: Model, cables: set[Id[Item]], unit: Id[Unit] | None = None
-) -> tuple[HarnessCable, ...]:
+def _sorted_cables(model: Model, cables: set[Id[Item]], unit: Id[Unit] | None = None) -> tuple[HarnessCable, ...]:
     """`cables` built by `_cable_facts`, sorted by `(designation, id)`, `harness_cables`' order.
 
     `unit` is `_facts_of`'s: the unit whose own document reads them, `None` for the absolute text.
@@ -319,6 +309,7 @@ def reading_cables(model: Model, unit: Id[Unit] | None) -> tuple[HarnessCable, .
     return top_level_cables(model) if unit is None else unit_cables(model, unit)
 
 
+@digest_cached(DIGEST_CACHE_SIZE)
 def all_cables(model: Model) -> tuple[HarnessCable, ...]:
     """Every cable item whose ends can all be rendered, whatever its harness or unit.
 
@@ -328,6 +319,7 @@ def all_cables(model: Model) -> tuple[HarnessCable, ...]:
     return _readable_cables(model, ((cable, None) for cable in _all_cable_ids(model)))
 
 
+@digest_cached(DIGEST_CACHE_SIZE)
 def all_unit_cables(model: Model) -> tuple[HarnessCable, ...]:
     """Every unit-owned cable `all_cables` finds, read as its own unit's document reads it.
 
@@ -337,11 +329,7 @@ def all_unit_cables(model: Model) -> tuple[HarnessCable, ...]:
     all_items = items(model)
     return _readable_cables(
         model,
-        (
-            (cable, all_items[cable].unit)
-            for cable in _all_cable_ids(model)
-            if in_reading(model, cable, None)
-        ),
+        ((cable, all_items[cable].unit) for cable in _all_cable_ids(model) if in_reading(model, cable, None)),
     )
 
 
@@ -349,9 +337,7 @@ def _all_cable_ids(model: Model) -> set[Id[Item]]:
     return set(cable_items(model))
 
 
-def _readable_cables(
-    model: Model, readings: Iterable[tuple[Id[Item], Id[Unit] | None]]
-) -> tuple[HarnessCable, ...]:
+def _readable_cables(model: Model, readings: Iterable[tuple[Id[Item], Id[Unit] | None]]) -> tuple[HarnessCable, ...]:
     """Each `(cable, unit)` built by `_cable_facts` with `unit`'s facts, unreadable ones left out.
 
     The tolerant walk of `all_cables` and `all_unit_cables`: a `SchemaError` (a missing

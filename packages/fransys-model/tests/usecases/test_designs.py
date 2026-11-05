@@ -2,13 +2,11 @@
 
 The golden files pin every byte; these tests pin the reasons: no validator complains, the
 PLC bindings are the ones the pass would choose, the numbering pass handles the unnumbered
-cable, and the closure runs from a remote sensor into the board.
 """
 
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-import pytest
 from cabinet import build_cabinet
 from derive_helpers import with_house
 from harness_board import build_harness_board
@@ -27,7 +25,6 @@ from fransys_model.kernel import Id, Model, Severity, dumps, evolve, freeze, mer
 from fransys_model.vocab.enums import ConductorKind
 from fransys_model.vocab.facets.cable import CoreFacet
 from fransys_model.vocab.facets.plc import PlcBindingFacet
-from fransys_model.vocab.facets.scaling import ScalingFacet
 from fransys_model.vocab.tables import conductors, facets_of, items, ports
 
 if TYPE_CHECKING:
@@ -53,9 +50,7 @@ def _design(name: str, *, bare: bool = False) -> Model:
 
 
 def _item(model: Model, designation: str) -> Item:
-    (found,) = (
-        i for i in items(model).values() if own_designation_or_none(model, i) == designation
-    )
+    (found,) = (i for i in items(model).values() if own_designation_or_none(model, i) == designation)
     return found
 
 
@@ -65,10 +60,10 @@ def _port(model: Model, *key: str) -> Id[Port]:
 
 
 def test_a_one_record_change_shows_in_the_canonical_json_and_the_digest() -> None:
-    """The golden comparison can fail: drop the `scaling` facet of `B1` and both differ."""
+    """The golden comparison can fail: drop a `plc_binding` facet and both differ."""
     model = _design("cabinet", bare=True)
-    (scaling,) = facets_of(model, ScalingFacet).values()
-    changed = evolve(model, remove=[scaling.id])
+    binding = next(iter(facets_of(model, PlcBindingFacet).values()))
+    changed = evolve(model, remove=[binding.id])
     golden = (_GOLDEN_DIR / "cabinet.json").read_text(encoding="utf-8")
     golden_digest = (_GOLDEN_DIR / "cabinet.digest").read_text(encoding="utf-8").strip()
     assert dumps(model) == golden
@@ -77,53 +72,27 @@ def test_a_one_record_change_shows_in_the_canonical_json_and_the_digest() -> Non
     assert changed.digest != golden_digest
 
 
-@pytest.mark.parametrize("name", ["cabinet", "harness_board", "merged"])
-def test_no_validator_reports_a_warning_or_an_error(name: str) -> None:
-    """The only non-INFO findings are the expected ones, and there is no error.
+def test_no_validator_reports_a_warning_or_an_error() -> None:
+    """The only non-INFO finding is the expected one, and there is no error.
 
-    `K1`'s open contact `14` is one (cabinet and merged). The other is the harness shell's `PE`
-    port (H1), which rides a core to a pin on no declared PE net: `PE_PORT_OFF_PE` (G2) fires on
-    that port alone, on the board and on the merged design. The fan-out cable's `SH` core lands
-    there too and is no conductor core, so `CORE_ON_PE_NOT_GNYE` (EARTH-12) stays silent.
+    `K1`'s open contact `14` is the one.
     """
-    model = _design(name)
+    model = _design("cabinet")
     findings = [f for check in ALL_VALIDATORS for f in check(model)]
     loud = sorted((f.code, f.subjects) for f in findings if f.severity is not Severity.INFO)
-    shell = (
-        []
-        if name == "cabinet"
-        else [("PE_PORT_OFF_PE", (_port(model, "h1", "fn", "shell", "port", "PE"),))]
-    )
-    if name == "harness_board":
-        assert loud == shell
-        return
     open_14 = _port(model, "k1", "fn", "no_1", "port", "14")
-    assert loud == sorted([("FUNCTION_HALF_CONNECTED", (open_14,)), *shell])
+    assert loud == [("FUNCTION_HALF_CONNECTED", (open_14,))]
     assert findings, "the designs keep some INFO findings, so an empty list means a broken check"
 
 
-def test_the_part_less_harness_is_one_info_finding_and_nothing_else() -> None:
-    """Decision 0026: harness `WH1` has no part, which is `ITEM_WITHOUT_PART` at `INFO` alone."""
-    model = _design("harness_board")
-    harness = _item(model, "WH1")
-    on_harness = [f for check in ALL_VALIDATORS for f in check(model) if harness.id in f.subjects]
-    assert [(f.code, f.severity) for f in on_harness] == [("ITEM_WITHOUT_PART", Severity.INFO)]
-    children = {
-        own_designation_or_none(model, child)
-        for child in items(model).values()
-        if child.parent == harness.id
-    }
-    assert children == {"H1", None}
-
-
 def test_the_cable_validator_can_fail_on_the_cabinet() -> None:
-    """Removing one core of `W1` gives `CABLE_CORE_COUNT`, so a clean run means something."""
+    """Removing one core of `W1` gives `CABLE_CORES_FEWER`, so a clean run means something."""
     model = _design("cabinet")
     w1 = _item(model, "W1").id
     core = next(c for c in conductors(model).values() if c.carrier == w1)
     facet = next(f for f in facets_of(model, CoreFacet).values() if f.subject == core.id)
     broken = evolve(model, remove=[facet.id, core.id])
-    assert [f.code for f in check_cables(broken)] == ["CABLE_CORE_COUNT"]
+    assert [f.code for f in check_cables(broken)] == ["CABLE_CORES_FEWER"]
     assert check_cables(model) == ()
 
 

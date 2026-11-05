@@ -2,9 +2,6 @@
 
 The chain is the request's own unit, its `Unit.parent`s, and the top level (`Item.unit` None)
 last. One free-channel queue per (unit, signal type), the order inside each queue unchanged; an
-exhausted serving unit gets `PLC_REQUEST_UNSERVABLE` with no fall-through (ruling
-2026-09-25). Invented data: unit B's rack key sorts before unit A's, so a model-wide queue
-would hand unit A the channels of unit B.
 """
 
 import dataclasses
@@ -128,10 +125,7 @@ def _units_a_and_b(*, alone: bool = False) -> Built:
     if not alone:
         unit_b = plant.unit("unit-b", name="unit B")
         _site(plant, Site("rack-a1", "mod-b", "A2", 3, unit_b))
-    devices = [
-        _device(plant, f"dev-a{number}", unit_a, channel=channel)
-        for number, channel in enumerate(channels, start=1)
-    ]
+    devices = [_device(plant, f"dev-a{number}", unit_a, channel=channel) for number, channel in enumerate(channels, start=1)]
     return Built(plant.model(), unit_a, devices, channels)
 
 
@@ -162,13 +156,8 @@ def test_a_unit_built_alone_and_inside_a_system_get_the_same_bindings() -> None:
     assert alone_findings == system_findings == ()
     columns = ("pin", "signal", "wired_to", "field_device_designation")
     columns += ("signal_name",)
-    alone_rows = [
-        tuple(getattr(row, column) for column in columns) for row in plc_channel_rows(alone)
-    ]
-    system_rows = [
-        tuple(getattr(row, column) for column in columns)
-        for row in plc_channel_rows(system, unit=system_built.unit_a)
-    ]
+    alone_rows = [tuple(getattr(row, column) for column in columns) for row in plc_channel_rows(alone)]
+    system_rows = [tuple(getattr(row, column) for column in columns) for row in plc_channel_rows(system, unit=system_built.unit_a)]
     assert len(alone_rows) == 3
     assert system_rows == alone_rows
     assert _binding_keys(system) == _binding_keys(alone)
@@ -214,9 +203,7 @@ def test_a_top_level_request_with_only_a_unit_rack_declared_is_unservable() -> N
     assert top in finding.subjects
 
 
-def test_units_each_with_exactly_enough_channels_are_all_served_in_priority_then_key_order() -> (
-    None
-):
+def test_units_each_with_exactly_enough_channels_are_all_served_in_priority_then_key_order() -> None:
     """Guard: inside a unit the priority ranks before the key, as before the unit scope."""
     plant = Plant()
     unit_a = plant.unit("unit-a", name="unit A")
@@ -289,16 +276,12 @@ def _siblings(*, parent_declares: bool) -> tuple[Model, Id[Function], list[Id[Fu
     unit_x = plant.unit("unit-x", name="unit X", parent=parent)
     unit_y = plant.unit("unit-y", name="unit Y", parent=parent)
     _site(plant, Site("rack-a1", "mod-x", "X1", 2, unit_x))
-    parent_channels = (
-        _site(plant, Site("rack-p1", "mod-p", "P1", 1, parent)) if parent_declares else []
-    )
+    parent_channels = _site(plant, Site("rack-p1", "mod-p", "P1", 1, parent)) if parent_declares else []
     device = _device(plant, "dev-y", unit_y)
     return plant.model(), device, parent_channels
 
 
-def test_a_sibling_never_shares_a_rack_so_a_child_with_no_declaring_ancestor_is_unservable() -> (
-    None
-):
+def test_a_sibling_never_shares_a_rack_so_a_child_with_no_declaring_ancestor_is_unservable() -> None:
     """Unit X's rack is not unit Y's, and the parent declares nothing: one ERROR."""
     model, _, _ = _siblings(parent_declares=False)
     bound, (finding,) = allocate_plc(model)
@@ -327,9 +310,7 @@ def test_a_top_level_unit_that_declares_no_channel_takes_a_top_level_rack() -> N
     assert _bound(model) == {device: top_channel}
 
 
-def test_a_grandchild_uses_the_grandparents_channel_when_neither_it_nor_its_parent_declares() -> (
-    None
-):
+def test_a_grandchild_uses_the_grandparents_channel_when_neither_it_nor_its_parent_declares() -> None:
     """The chain is walked past the parent to the grandparent."""
     plant = Plant()
     grandparent = plant.unit("grandparent", name="grandparent")
@@ -413,10 +394,7 @@ def test_a_cabinet_serving_from_its_own_subtree_lists_the_same_alone_and_in_a_sy
     columns += ("signal_name",)
 
     def rows(model: Model, cab: Id[Unit]) -> list[tuple[object, ...]]:
-        return [
-            tuple(getattr(row, column) for column in columns)
-            for row in plc_channel_rows(model, unit=cab)
-        ]
+        return [tuple(getattr(row, column) for column in columns) for row in plc_channel_rows(model, unit=cab)]
 
     alone_rows = rows(*build(with_system=False))
     system_rows = rows(*build(with_system=True))

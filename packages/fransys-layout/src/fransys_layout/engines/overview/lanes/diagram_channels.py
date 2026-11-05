@@ -39,6 +39,7 @@ class Pair:
     tracks: tuple[FrameTrack, ...]
     count: int
     same_first: bool = False
+    stubbed: bool = False
 
     @property
     def width(self) -> int:
@@ -46,7 +47,7 @@ class Pair:
         if not self.lines and not self.same:
             return 2 * PAGE_PAD
         last = max([self.count + max(self.same_tracks, default=0), *(t.track for t in self.tracks)])
-        tracks = (last + 1) * TRACK_PITCH
+        tracks = (last + 1) * TRACK_PITCH + (MARKER_W if self.stubbed else 0)
         return self.tab_l + self.label + tracks + (self.label + self.tab_r if self.right else 0)
 
     @property
@@ -61,7 +62,7 @@ class Pair:
     @property
     def lead(self) -> int:
         """The room right of a sheet's start before the right column when this pair is cut."""
-        return self.tab_r + self.cut_label + MARKER_W if self.lines else PAGE_PAD
+        return self.tab_r + self.cut_label + MARKER_W if self.lines or self.stubbed else PAGE_PAD
 
 
 def tab_room(boxes: Sequence[Ident], ends: Ends, side: Facing) -> int:
@@ -70,9 +71,7 @@ def tab_room(boxes: Sequence[Ident], ends: Ends, side: Facing) -> int:
     return max(reach, default=0)
 
 
-def _tracks(
-    between: Sequence[Joint], line_y: Mapping[tuple[int, Ident], int]
-) -> tuple[tuple[FrameTrack, ...], int] | None:
+def _tracks(between: Sequence[Joint], line_y: Mapping[tuple[int, Ident], int]) -> tuple[tuple[FrameTrack, ...], int] | None:
     """The plan of the lines between two columns as tracks and their count, or None."""
     plan = plan_channel(
         [(j.line, line_y[j.line, j.left], line_y[j.line, j.right]) for j in between],
@@ -80,10 +79,7 @@ def _tracks(
     )
     if plan is None:
         return None
-    runs = tuple(
-        FrameTrack(line=n.core, part=n.part, left_y=n.top, right_y=n.bottom, track=t)
-        for n, t in zip(plan.nets, plan.tracks, strict=True)
-    )
+    runs = tuple(FrameTrack(line=n.core, part=n.part, left_y=n.top, right_y=n.bottom, track=t) for n, t in zip(plan.nets, plan.tracks, strict=True))
     return runs, plan.count
 
 
@@ -126,9 +122,7 @@ def _nested_tracks(spans: Sequence[tuple[int, int]], *, share: bool) -> tuple[in
     return tuple(found)
 
 
-def same_tracks(
-    spans: Sequence[tuple[int, int]], *, share: bool, nest: bool = False
-) -> tuple[int, ...]:
+def same_tracks(spans: Sequence[tuple[int, int]], *, share: bool, nest: bool = False) -> tuple[int, ...]:
     """Each span's track, 1 nearest the column: its own, or with `share` the fewest that fit.
 
     Spans that overlap (or touch) never share a track; greedy by start is optimal for intervals.
@@ -145,11 +139,6 @@ def same_tracks(
         free[track : track + 1] = [spans[k][1]]
         found[k] = track + 1
     return tuple(found)
-
-
-def _after(tracks: Sequence[FrameTrack], skip: int) -> tuple[FrameTrack, ...]:
-    """The tracks moved `skip` tracks outward, past the same-column lines' tracks."""
-    return tuple(replace(t, track=t.track + skip) for t in tracks)
 
 
 def _struck(r: FrameTrack, runs: Sequence[FrameTrack], ys: frozenset[int], first: int) -> bool:
@@ -174,16 +163,12 @@ def _apart(runs: Sequence[FrameTrack], ys: frozenset[int], first: int) -> tuple[
         if hit is None:
             break
         r = out[hit]
-        out[hit] = FrameTrack(
-            line=r.line, part=r.part, left_y=r.left_y, right_y=r.right_y, track=free
-        )
+        out[hit] = FrameTrack(line=r.line, part=r.part, left_y=r.left_y, right_y=r.right_y, track=free)
         free += 1
     return tuple(out)
 
 
-def _plan(
-    between: Sequence[Joint], same: Sequence[Joint], ctx: Context
-) -> tuple[tuple[FrameTrack, ...], int, tuple[int, ...]] | None:
+def _plan(between: Sequence[Joint], same: Sequence[Joint], ctx: Context) -> tuple[tuple[FrameTrack, ...], int, tuple[int, ...]] | None:
     """The between tracks, their count and the same-column tracks of a pair, or None."""
     planned = _tracks(between, ctx.line_y)
     if planned is None:
@@ -192,23 +177,25 @@ def _plan(
     spans = [_span(ctx.line_y, j) for j in same]
     own = same_tracks(spans, share=ctx.share, nest=ctx.nest)
     if ctx.nest:
-        runs = _after(runs, max(own, default=0))
+        runs = tuple(replace(t, track=t.track + max(own, default=0)) for t in runs)  # moved outward past the same-column lines' tracks
     ys = frozenset(y for span in spans for y in span)
     return _apart(runs, ys, count + max(own, default=0) + 1), count, own
 
 
-def _pair(c: int, ctx: Context) -> Pair | None:
+def _pair(c: int, ctx: Context, jumps: Sequence[int]) -> Pair | None:
     """The pair of column `c` and the next, or None when its channel cannot be planned."""
     columns = ctx.columns
     where = {b: i for i, col in enumerate(columns) for b in col}
-    between = [j for j in ctx.joints if not j.same and where[j.left] == c]
+    between = [j for j in ctx.joints if not j.same and where[j.left] == c and j.line not in jumps]
+    stubbed = any(j.line in jumps and c in (where[j.left], where[j.right] - 1) for j in ctx.joints)
     same = [j for j in ctx.joints if j.same and where[j.left] == c]
     planned = _plan(between, same, ctx)
     if planned is None:
         return None
     right = c + 1 if c + 1 < len(columns) else None
     tab_r = tab_room(columns[c + 1], ctx.ends, Facing.W) if right is not None else 0
-    wide = max((ctx.labels[j.line] for j in between), default=0)
+    landing = [j for j in ctx.joints if j.line in jumps and where[j.right] - 1 == c]
+    wide = max((ctx.labels[j.line] for j in (*between, *landing)), default=0)
     widest = max((ctx.labels[j.line] for j in (*between, *same)), default=0)
     return Pair(
         left=c,
@@ -223,6 +210,7 @@ def _pair(c: int, ctx: Context) -> Pair | None:
         tracks=planned[0],
         count=planned[1],
         same_first=ctx.nest,
+        stubbed=stubbed,
     )
 
 
@@ -231,6 +219,7 @@ def build_pairs(
     columns: Sequence[Sequence[Ident]],
     joints: Sequence[Joint],
     ends: Ends,
+    jumps: Sequence[int] = (),
 ) -> tuple[Pair, ...] | None:
     """Every pair, left to right, or None when any channel cannot be planned."""
     line_y = {(e.line, box): e.y for (box, _), found in ends.items() for e in found}
@@ -244,7 +233,7 @@ def build_pairs(
         share=facts.share_tracks,
         nest=facts.nest_same,
     )
-    pairs = [_pair(c, ctx) for c in range(len(columns))]
+    pairs = [_pair(c, ctx, jumps) for c in range(len(columns))]
     return None if None in pairs else tuple(p for p in pairs if p is not None)
 
 

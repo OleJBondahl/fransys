@@ -2,7 +2,8 @@
 
 from .codes import FINDING_CODES
 from .drawn_subjects import drawn_subjects
-from .lay_out_core import lay_out, lay_out_drawn
+from .lay_out_core import lay_out_drawn
+from .placement_env import port_pins
 from .placement_kit import Pick, ProblemError, SymbolKit
 from .placement_options import Conventions, house_conventions, options
 from .placement_problem import build
@@ -17,7 +18,6 @@ from .symbol_unknown import unknown_symbol_key_findings
 from .texts import OPTIONS, TEXT_ROW_IDS, TEXTS
 from .write import write_layout
 from .write_skipped import skipped_findings
-from .write_unread import unread_hint_findings
 
 __all__ = [
     "FINDING_CODES",
@@ -33,9 +33,9 @@ __all__ = [
     "build",
     "drawn_subjects",
     "house_conventions",
-    "lay_out",
     "lay_out_drawn",
     "options",
+    "port_pins",
     "problem_finding",
     "read_findings",
     "readability",
@@ -44,6 +44,5 @@ __all__ = [
     "symbol_kit",
     "unknown_symbol_key_findings",
     "unknown_symbols",
-    "unread_hint_findings",
     "write_layout",
 ]

@@ -83,9 +83,7 @@ def terminal_class_codes(model: Model, item: Id[Item]) -> frozenset[str]:
     all_items = items(model)
     terminals = terminal_items(model)
     return frozenset(
-        all_parts[part].class_code
-        for child in child_items(model, item)
-        if child in terminals and (part := all_items[child].part) is not None
+        all_parts[part].class_code for child in child_items(model, item) if child in terminals and (part := all_items[child].part) is not None
     )
 
 

@@ -4,6 +4,7 @@ import pytest
 from plant import Plant
 
 from fransys_model.derive.facts.unit_names import unit_name_unresolved
+from fransys_model.kernel import ModelError
 from fransys_model.vocab.finding_ref import ref
 
 # ---- unit_name_unresolved: case (a), no release of that name ---------------------------------
@@ -60,5 +61,5 @@ def test_case_c_names_where_a_parented_instance_sits() -> None:
 def test_exactly_one_match_raises_value_error() -> None:
     plant = Plant()
     plant.unit("a", name="relay-board")
-    with pytest.raises(ValueError, match="resolves to exactly one unit"):
+    with pytest.raises(ModelError, match="resolves to exactly one unit"):
         unit_name_unresolved(plant.model(), "relay-board")

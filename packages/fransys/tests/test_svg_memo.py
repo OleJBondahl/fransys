@@ -2,41 +2,30 @@
 
 Without the memo, `write`/`check`/`release` would each re-render every schematic page for a
 model whose digest has not changed, for no reason; without the fresh-copy wrapper, one caller
-could mutate the dict the memo hands to the next caller. Both properties are checked here
-against the real drawing path (a document with a top-level cable and a rendered schematic
-page), not against a stub.
 """
 
+lazy from pathlib import Path
+
 import fransys as fr
-import fransys_author
 import pytest
 from demo_designs import cabinet_design
-from fransys import pipeline
+from fransys import _layout_core, pipeline
+from fransys_author.design import Design
 
 from electrical_symbols import LIBRARY
+from fransys_layout import DiagramLayout
+
+from ._spy import spy
 
 
-def _spy(monkeypatch, module, name):
-    """Wrap `module.name` in a call-counting delegate to the real function."""
-    calls: list[tuple] = []
-    original = getattr(module, name)
-
-    def wrapper(*args, **kwargs):
-        calls.append((args, kwargs))
-        return original(*args, **kwargs)
-
-    monkeypatch.setattr(module, name, wrapper)
-    return calls
-
-
-def _document_build(parts, cover_dir, text="# Demo cabinet\n"):
+def _document_build(parts: fr.Draft, cover_dir: Path, text="# Demo cabinet\n"):
     """The demo cabinet design plus a `CABINET_SCHEMATIC` document over its own location.
 
     Same shape as `test_model_only_build.py::_document_build`: the document gives a rendered
     schematic page for `_draw_svgs` to draw.
     """
     design = cabinet_design(parts)
-    c1 = fransys_author.Design(parts).location("C1", "Demo cabinet")
+    c1 = Design(parts).location("C1", "Demo cabinet")
     cover = cover_dir / "cabinet.md"
     cover.write_text(text, encoding="utf-8")
     document_draft = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, c1, cover=cover)
@@ -51,6 +40,7 @@ def result(tmp_path_factory) -> fr.BuildResult:
     parts = fr.parts("demo_parts")
     cover_dir = tmp_path_factory.mktemp("cover")
     built = _document_build(parts, cover_dir)
+    assert isinstance(built, fr.BuildResult)
     findings = fr.check(built)
     assert not any(f.severity is fr.Severity.ERROR for f in findings), findings
     return built
@@ -66,7 +56,7 @@ def test_two_writes_of_the_same_result_draw_only_once(result, tmp_path, monkeypa
     """Two `write`s of one model share the one draw the memo holds (decision 0054): without
     it, the second write would render again for a digest already drawn.
     """
-    calls = _spy(monkeypatch, pipeline, "draw_on_core")
+    calls = spy(monkeypatch, pipeline.fransys_render, "cable_blocks")
 
     first = fr.write(result, tmp_path / "out1", unit=None)
     second = fr.write(result, tmp_path / "out2", unit=None)
@@ -77,7 +67,7 @@ def test_two_writes_of_the_same_result_draw_only_once(result, tmp_path, monkeypa
 
 
 def test_a_changed_model_draws_again(result, tmp_path, monkeypatch):
-    """A model with a different digest is not served the stale memo: `draw_on_core` runs once
+    """A model with a different digest is not served the stale memo: `_draw_svgs` runs once
     per distinct digest, twice here for two digests, never once for both.
     """
     parts = fr.parts("demo_parts")
@@ -86,7 +76,7 @@ def test_a_changed_model_draws_again(result, tmp_path, monkeypatch):
     changed = _document_build(parts, cover_dir, text="# Demo cabinet v2\n")
     assert changed.model.digest != result.model.digest, "the perturbed cover must change the digest"
 
-    calls = _spy(monkeypatch, pipeline, "draw_on_core")
+    calls = spy(monkeypatch, pipeline.fransys_render, "cable_blocks")
 
     fr.write(result, tmp_path / "out1", unit=None)
     fr.write(changed, tmp_path / "out2", unit=None)
@@ -113,13 +103,29 @@ def test_svgs_hands_out_a_fresh_copy_every_call(result):
     """`_svgs` returns `dict(_svgs_cache(model))`, a copy, every call: a caller that mutates
     what it got back must never affect the memo's held value or a later caller's dict.
     """
-    svgs1 = pipeline._svgs(result.model, result.drawings, LIBRARY)
+    svgs1 = pipeline._svgs(pipeline._Drawn(result.model, result.drawings, DiagramLayout(diagrams=()), LIBRARY, result.page_svgs))
     real_keys = set(svgs1)
     svgs1["bogus"] = "x"
     svgs1.clear()
 
-    svgs2 = pipeline._svgs(result.model, result.drawings, LIBRARY)
+    svgs2 = pipeline._svgs(pipeline._Drawn(result.model, result.drawings, DiagramLayout(diagrams=()), LIBRARY, result.page_svgs))
 
     assert svgs2 is not svgs1
     assert set(svgs2) == real_keys
     assert "bogus" not in svgs2
+
+
+def test_a_build_then_check_and_write_render_each_page_once(tmp_path, monkeypatch):
+    """S5b: one `svg` call per drawn page over build, check and write together (R588).
+
+    Probe: render a page twice (a second `svg` call in the page loop) -> 2N calls, not N.
+    """
+    calls = spy(monkeypatch, _layout_core, "svg")
+    built = _document_build(fr.parts("demo_parts"), tmp_path)
+    assert len(built.drawings) > 0, "sanity: the build drew schematic pages"
+    pipeline._svgs_cache.cache_clear()
+
+    fr.check(built)
+    fr.write(built, tmp_path / "out")
+
+    assert len(calls) == len(built.drawings)

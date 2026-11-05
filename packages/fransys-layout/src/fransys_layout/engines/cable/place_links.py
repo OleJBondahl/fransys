@@ -77,29 +77,19 @@ def _line(link: Link, y: int) -> Line:
 def upper_lines(facts: BlockFacts, links: Sequence[Link]) -> dict[int, Line]:
     """Each top-row link's polyline, pin to pin, by core key: tracks one room apart."""
     top = [link for link in links if link.top]
-    return {
-        link.core.key: _line(link, link.y + G + (level - 1) * room(facts))
-        for link, level in zip(top, _levels(links), strict=True)
-    }
+    return {link.core.key: _line(link, link.y + G + (level - 1) * room(facts)) for link, level in zip(top, _levels(links), strict=True)}
 
 
 def _blocked(lines: Sequence[Line], low: int, high: int) -> list[tuple[int, int]]:
     """The x of every vertical run that enters the open band `low` to `high`."""
-    return [
-        (p.x, p.x)
-        for line in lines
-        for p, q in pairwise(line)
-        if p.x == q.x and min(p.y, q.y) < high and max(p.y, q.y) > low
-    ]
+    return [(p.x, p.x) for line in lines for p, q in pairwise(line) if p.x == q.x and min(p.y, q.y) < high and max(p.y, q.y) > low]
 
 
 def _left(width: int, wanted: int, blocked: Sequence[tuple[int, int]], gap: int) -> int:
     """The left edge nearest `wanted` where a text `width` wide meets no blocked x, or `wanted`."""
     for step in range(width + 2 * G + abs(wanted)):
         for left in (wanted - step, wanted + step):
-            if left >= 0 and all(
-                left + width + gap < low or high + gap < left for low, high in blocked
-            ):
+            if left >= 0 and all(left + width + gap < low or high + gap < left for low, high in blocked):
                 return left
     return wanted
 
@@ -113,14 +103,10 @@ def _wire(facts: BlockFacts, link: Link, line: Line, left: int) -> PlacedWire:
         run_b=(line[3], line[2]),
         text_x=left + link.core.text_width // 2,
         text_y=y + room(facts) // 2 if link.top else y - room(facts) // 2,
-        stub_a=False,
-        stub_b=False,
     )
 
 
-def link_wires(
-    facts: BlockFacts, links: Sequence[Link], lines: Mapping[int, Line], others: Sequence[Line]
-) -> tuple[PlacedWire, ...]:
+def link_wires(facts: BlockFacts, links: Sequence[Link], lines: Mapping[int, Line], others: Sequence[Line]) -> tuple[PlacedWire, ...]:
     """Every link's `PlacedWire`; `lines` holds each link's polyline, `others` the other wires.
 
     A text stays clear of every vertical wire in its room and of the texts placed before it.

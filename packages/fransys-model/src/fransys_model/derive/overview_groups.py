@@ -36,21 +36,15 @@ __all__ = [
 def _item_group(model: Model, unit: Id[Unit], item: Id[Item]) -> Id[AspectNode] | None:
     """`item`'s group in `unit`'s level: its topmost own function ancestor, else its own node."""
     nodes = aspect_nodes(model)
-    chain = [
-        node
-        for node in chain_up(nodes, effective_placement(model, item, Aspect.FUNCTION))
-        if nodes[node].aspect is Aspect.FUNCTION
-    ]
+    chain = [node for node in chain_up(nodes, effective_placement(model, item, Aspect.FUNCTION)) if nodes[node].aspect is Aspect.FUNCTION]
     own = own_nodes(model, unit)
     return next((node for node in reversed(chain) if node in own), chain[0] if chain else None)
 
 
-def box_groups(
-    model: Model, unit: Id[Unit], boxes: tuple[OverviewBox, ...]
-) -> dict[Id[Any], Id[AspectNode] | None]:
+def box_groups(model: Model, unit: Id[Unit], boxes: tuple[OverviewBox, ...]) -> dict[Id[Any], Id[AspectNode] | None]:
     """The group of each box of `unit`'s level; a unit box takes the one group its items share."""
     shared: dict[Id[Any], set[Id[AspectNode] | None]] = {}
-    for item in sorted(unit_items(model, unit)):
+    for item in unit_items(model, unit):
         box = level_box(model, item, unit)
         if box is not None and box.kind == "unit":
             shared.setdefault(box, set()).add(_item_group(model, unit, item))
@@ -87,9 +81,7 @@ def fold_box(box: OverviewBox) -> FoldBox:
     )
 
 
-def group_box(
-    model: Model, node: Id[AspectNode], members: list[OverviewBox], inner_lines: int
-) -> FoldBox:
+def group_box(model: Model, node: Id[AspectNode], members: list[OverviewBox], inner_lines: int) -> FoldBox:
     """A function group as one box: its designation and name, its counts of what it holds."""
     return FoldBox(
         key=OverviewRef(kind=OverviewRefKind.GROUP, node=node),

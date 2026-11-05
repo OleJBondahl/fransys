@@ -1,14 +1,6 @@
 """Field case: a long tag stands in a body corner clear of its wire and never widens the pitch.
-
-The engineering shape: three lamps in three parallel circuits off one terminal strip. One build
-names them `H1`..`H3`, the other gives each a long designation.
-
-The bug: the designation's size was folded into each symbol's footprint, so the long tags pushed
-the lamps apart; the tag was a reserved room, not a text placed after the symbols.
-The rule: a tag is placed after the symbols and wires, in the first body corner where it fits
-(TEXT-CANDIDATES, layout-0371, the 2026-10-18 corners ruling, R327). It reserves no room and adds
-no pitch; with no free corner it gives `LABEL_UNPLACED`.
-"""
+The bug: the designation's size was folded into each symbol's footprint, so long tags pushed the lamps apart.
+Fixed by layout-0371 (TEXT-CANDIDATES, R327): a tag is placed after the symbols in the first fitting corner, adding no pitch."""
 
 from typing import TYPE_CHECKING
 
@@ -35,8 +27,8 @@ def _build(names: tuple[str, ...]) -> fr.BuildResult:
     with d.function("G1", "Lamps"):
         for k, name in enumerate(names):
             lamp = d.device(name, "DEMO-LAMP-24")
-            d.detail.wire(strip[2 * k + 1], lamp[1], wire=(BU, 0.5))
-            d.detail.wire(lamp[2], strip[2 * k + 2], wire=(BU, 0.5))
+            d.series(strip[2 * k + 1].inner, lamp[1], wire=(BU, 0.5))
+            d.series(lamp[2], strip[2 * k + 2].inner, wire=(BU, 0.5))
     return fr.build(d, cabinet_document(cabinet))
 
 

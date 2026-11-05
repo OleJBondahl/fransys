@@ -10,13 +10,12 @@ from typing import TYPE_CHECKING
 from fransys_model.derive import bridge_piece_key, jumper_lane_count
 
 from ._typst import literal
+from .errors import PdfError
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
     from fransys_model.derive import BridgePieceRow, JumperLanes
-
-BRIDGE_COLUMN_WIDTH_MM = 15  # fixed column width
 
 
 @dataclass(frozen=True, slots=True)
@@ -28,9 +27,7 @@ class _BridgeMark:
     tick: bool
 
 
-def bridge_geometry(
-    groups: tuple[int | None, ...], lanes: JumperLanes
-) -> tuple[tuple[_BridgeMark | None, ...], ...]:
+def bridge_geometry(groups: tuple[int | None, ...], lanes: JumperLanes) -> tuple[tuple[_BridgeMark | None, ...], ...]:
     """One entry per row, a mark (or `None`) per lane; an empty tuple with no group."""
     rows: list[list[_BridgeMark | None]] = [[None] * jumper_lane_count(lanes) for _ in groups]
     for span in lanes.lanes:
@@ -43,9 +40,9 @@ def bridge_geometry(
     return tuple(tuple(row) for row in rows)
 
 
-def bridge_lane_x_mm(lane_count: int, gap_mm: float) -> tuple[float, ...]:
-    """Each lane's x offset (mm): centred in the Bridge column, `gap_mm` (a line's width) apart."""
-    centre = BRIDGE_COLUMN_WIDTH_MM / 2
+def bridge_lane_x_mm(lane_count: int, gap_mm: float, column_mm: float) -> tuple[float, ...]:
+    """Each lane's x offset (mm): centred in the Bridge column of `column_mm`, `gap_mm` (a line's width) apart."""
+    centre = column_mm / 2
     offset = (lane_count - 1) / 2
     return tuple(centre + (index - offset) * gap_mm for index in range(lane_count))
 
@@ -54,11 +51,8 @@ def piece_of(pieces: Mapping[str, BridgePieceRow] | None, piece: str) -> BridgeP
     """The Bridge mark `piece` render drew; a missing one is a caller error, never a blank."""
     key = bridge_piece_key(piece)
     if pieces is None or key not in pieces:
-        msg = (
-            f"no Bridge mark piece {key!r}: pass `fransys_render.bridge_pieces()` "
-            "as `bridges` to `fransys_pdf.source`"
-        )
-        raise KeyError(msg)
+        msg = f"no Bridge mark piece {key!r}: pass `fransys_render.bridge_pieces()` as `bridges` to `fransys_pdf.source`"
+        raise PdfError(msg)
     return pieces[key]
 
 
@@ -70,9 +64,7 @@ def _place(dx_mm: float, dy: str, image: str) -> str:
     return f"#place(top+left, dx: {dx_mm:g}mm, dy: {dy}, {image})\n"
 
 
-def _bridge_mark_typst(
-    mark: _BridgeMark | None, x_mm: float, line: BridgePieceRow, tick: BridgePieceRow
-) -> str:
+def _bridge_mark_typst(mark: _BridgeMark | None, x_mm: float, line: BridgePieceRow, tick: BridgePieceRow) -> str:
     """One lane's marks for one row as placed images; line `y` and height are % of the cell."""
     if mark is None:
         return ""
@@ -88,15 +80,11 @@ def _bridge_mark_typst(
     return "".join(parts)
 
 
-def bridge_cell_typst(
-    row_marks: tuple[_BridgeMark | None, ...], pieces: Mapping[str, BridgePieceRow] | None
-) -> str:
+def bridge_cell_typst(row_marks: tuple[_BridgeMark | None, ...], pieces: Mapping[str, BridgePieceRow] | None, column_mm: float) -> str:
     """One row's Bridge cell (pdf-0007, 0049): `breakable: false` scopes `%` to the row."""
     if not row_marks:
         return 'table.cell(inset: 0pt, text(""))'
     line, tick = piece_of(pieces, "line"), piece_of(pieces, "tick")
-    xs = bridge_lane_x_mm(len(row_marks), line.width_mm)
-    content = "".join(
-        _bridge_mark_typst(mark, x, line, tick) for mark, x in zip(row_marks, xs, strict=True)
-    )
+    xs = bridge_lane_x_mm(len(row_marks), line.width_mm, column_mm)
+    content = "".join(_bridge_mark_typst(mark, x, line, tick) for mark, x in zip(row_marks, xs, strict=True))
     return f"table.cell(inset: 0pt, breakable: false)[{content}]"

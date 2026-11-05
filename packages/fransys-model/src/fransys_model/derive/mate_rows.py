@@ -13,7 +13,7 @@ from .rows import MateRow
 def mates(model: Model) -> tuple[MateRow, ...]:
     """One `MateRow` per mate in `model`, sorted by `(a_designation, b_designation)`.
 
-    A mate joins two connector or terminal functions, kept in the authored order of `d.mate`. A
+    A mate joins two connector or terminal functions, kept in id order (a mate has no direction). A
     mate on a board and one between a plug and a unit's interface connector both appear, where
     `connector_rows` covers board connectors only. Each designation is the text the connector list
     prints at system level. Reach an item through the function.
@@ -50,11 +50,4 @@ def mate_partners(model: Model) -> frozendict[Id[Function], tuple[Id[Function], 
     for mate in mates_table(model).values():
         found.setdefault(mate.a, []).append(mate.b)
         found.setdefault(mate.b, []).append(mate.a)
-    return frozendict(
-        {
-            key: tuple(
-                sorted(value, key=lambda f: (natural_key(connector_designation(model, f)), f))
-            )
-            for key, value in found.items()
-        }
-    )
+    return frozendict({key: tuple(sorted(value, key=lambda f: (natural_key(connector_designation(model, f)), f))) for key, value in found.items()})

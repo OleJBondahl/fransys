@@ -1,4 +1,4 @@
-schema = 1
+schema = 2
 
 [part]
 mpn = "DEMO-RCD-4P-40-30"
@@ -28,9 +28,9 @@ links = [
     { a = "N1", b = "N2", kind = "protective" },
 ]
 
-[function.protection]
+[function.block]
 type = "rcd"
 
 [function.rating]
-voltage_ac_v = "400"
-current_ac_a = "40"
+voltage = [{ nom = "400 V", at = ["AC"] }]
+current = [{ nom = "40 A", at = ["AC"] }]

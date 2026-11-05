@@ -2,10 +2,8 @@
 
 Run `uv run python tests/listing_golden_cases.py` (or `just regen-goldens listing`) to rewrite
 `tests/golden/listing/`. A golden moves only with a `listing_version` bump and a release-note line.
-Demo parts only; the demo cabinet and board are `test_baseline_listing`'s own builders.
 """
 
-import sys
 from pathlib import Path
 from typing import Any, NamedTuple
 
@@ -17,7 +15,6 @@ from fransys_model.derive import baseline
 from fransys_model.vocab.tables import units
 
 GOLDEN_DIR = Path(__file__).resolve().parent / "golden" / "listing"
-_TESTS = Path(__file__).resolve().parent
 
 
 class _Io(NamedTuple):
@@ -34,30 +31,25 @@ def _board(u: Any) -> _Io:
     pcb = u.device("A1", "DEMO-PCB-IO")
     x7 = u.device("X7", "DEMO-HSG-4F", parent=pcb, interface=True, contacts="DEMO-CRIMP-F")
     lamp = u.device("H1", "DEMO-LAMP-24", parent=pcb)
-    u.detail.wire(x7[1], lamp["1"], wire=(BK, 0.5))
-    u.detail.wire(x7[2], lamp["2"], wire=(BK, 0.5))
+    u.series(x7[1], lamp["1"], wire=(BK, 0.5))
+    u.series(x7[2], lamp["2"], wire=(BK, 0.5))
     return _Io(x7)
 
 
 @fr.unit("lg-cabinet", revision=1, interface_version=1, date="2026-10-14", text="first", by="AB")
 def _cabinet(u: Any) -> _Open:
-    """Every moving text rule at once: bar, loom, tagged instance, head and block, strip, mate."""
+    """Every moving text rule at once: PE strip, tagged instance, head and block, strip."""
     board = u.add(_board, "U1")
-    pe1 = u.device("PE1", "DEMO-PEBAR-20").pe
-    for name in ("M1", "M2"):
-        u.detail.wire(u.device(name, "DEMO-MOTOR-4KW").motor["PE"], pe1, wire=(GNYE, 2.5))
-    with u.function("W5", "Loom"):
-        loom = u.harness("W5")
-        plug = u.device("P5", "DEMO-HSG-4M", parent=loom, contacts="DEMO-CRIMP-M")
-        far = u.device("P6", "DEMO-CONN-2P", parent=loom)
-        u.cable("W5", "DEMO-CBL-4G1.5", parent=loom, name="cable").core(1, plug[3], far[1])
-    u.mate(plug, board.X7)
-    u.detail.net("LAMP", far[2], board.X7[3])
+    pe = u.terminal_strip("X2", "DEMO-TB-PE-2.5")
+    for i, name in enumerate(("M1", "M2"), 1):
+        u.series(u.device(name, "DEMO-MOTOR-4KW").motor["PE"], pe[i].inner, wire=(GNYE, 2.5))
+    far = u.device("P6", "DEMO-CONN-2P")
+    u.series(far[2], board.X7[3], wire=(BK, 0.5))
     strip = u.terminal_strip("X1", "DEMO-TB-2.5")
     head = u.device("S1", "DEMO-HEAD-ESTOP")
     block = u.device(None, "DEMO-BLOCK-1NC", name="block-1", parent=head)
-    u.detail.wire(strip[1], block["11"], wire=(BK, 0.5))
-    u.detail.wire(block["12"], strip[2], wire=(BK, 0.5))
+    u.series(strip[1].inner, block["11"], wire=(BK, 0.5))
+    u.series(block["12"], strip[2].inner, wire=(BK, 0.5))
     return _Open()
 
 
@@ -72,7 +64,6 @@ def _all_moves() -> Any:
 
 def _demo_models() -> dict[str, Any]:
     """The baseline spec's worked example: `demo-pump-cabinet` nesting one `demo-io-board`."""
-    sys.path.append(str(_TESTS))
     from test_baseline_listing import _board, _cabinet, _new_design
 
     parts = fransys_parts.load("demo_parts")

@@ -2,11 +2,6 @@
 
 Gates over every `packages/*/src` file, each with a table in `one-home.toml` of today's
 sites as `"module::name" = count`. A count above the table fails and names each `module:line`;
-a count below fails with "lower the allowlist", so the table only shrinks. `uv run python
-tests/test_one_home.py --write` rewrites the file from the tree. A later gate adds a scanner
-to `SCANNERS` and a test; the walk, the compare and the writer are shared. Decision root-0212:
-a printed literal and a selection each have one home, and the facade reads no fact field. The
-render gates (derive imports, SVG literals) are tested in `tests/test_boundaries.py`.
 """
 
 import ast
@@ -20,9 +15,11 @@ import tomllib
 from collections import defaultdict
 from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
+from typing import Any
 
 import pytest
 from gate_scan import src_modules
+from library_twins_scan import library_twins
 from order_sites_scan import core_order_sites, core_text_keys, order_id_reads, order_sites
 from text_joins_scan import text_joins
 
@@ -41,7 +38,7 @@ HEADER = """\
 # [kind_reads_legacy_layout]: the same reads in `fransys_layout`, which empties as families switch.
 # [literal_homes]: "module::literal" = a string constant holding a HOMES literal outside its home.
 # [word_literals]: "module::word" = a string constant equal to a `[words]` value of settings.toml
-# (the words' one home, R503 W4). Falls to zero as SO-C and the cleanup rounds move readers.
+# (the words' one home, R503 W4). Zero: `_not_printed_ids` skips the positions that name, select or fill a developer message.
 # [selection_branches]: "module::PageKind" = compares and dispatch keys on `DocumentPreset` or
 # `PageKind` members outside `fransys_model.derive` (root-0212).
 # [render_derive_imports]: "module::name" = a `fransys_model.derive` function imported by render
@@ -60,6 +57,9 @@ HEADER = """\
 # [core_text_keys]: `natural_key`, a `str` method, a `re` call or a string literal in a core sort
 # key. Falls to zero with NS-7.
 # [order_id_reads]: an `Id` read in a key body of `derive/order*.py`. Falls to zero in NS-4.
+# [library_twins]: "path" = code lines of a file that copies `symdef`, `elecdef` or `refdef`;
+# "name:module::name" = a top-level def, class or assignment named as a library `__all__` name.
+# Only falls; lower it in the order that deletes (root-0409, LIB-ADOPT).
 """
 
 # Record field -> the one module that may read it (design 7.1). The home modules do not exist
@@ -67,12 +67,12 @@ HEADER = """\
 # false positive that the allowlist holds.
 FACT_FIELDS = {
     "function.kind": "fransys_model.derive.facts.roles",
-    "port.role": "fransys_model.derive.facts.roles",
+    "port.pin_role": "fransys_model.derive.facts.roles",
     "net.net_class": "fransys_model.derive.facts.net_facts",
     "net.potential": "fransys_model.derive.facts.net_facts",
     "conductor.kind": "fransys_model.derive.facts.roles",
     "internal_link.kind": "fransys_model.derive.facts.roles",
-    "internal_link.rest": "fransys_model.derive.facts.roles",
+    "internal_link.closed_at_rest": "fransys_model.derive.facts.roles",
     "cable_product.core_colours": "fransys_model.derive.facts.cores",
     "item.parent": "fransys_model.derive.facts.children",
     "item.unit": "fransys_model.derive.facts.unit_index",
@@ -124,11 +124,9 @@ TABLE_WALK_SKIP = ("fransys_model",)
 # them (the vocabulary, the role fact, the enum definitions and the parts lint's field specs).
 # The test for this list (root-0215): a read counts when EL-2 or EL-3 switches it to a role table.
 # Port roles and net classes are such reads, as are the kind enums. `Current` and `LimitRole` are
-# values of a fact, not a kind branch, so they are not here, and neither is a `.kind` or `.role`
+# values of a fact, not a kind branch, so they are not here, and neither is a `.kind`
 # read on a record that holds them (`NON_FACT_RECEIVERS`). The next enum is judged by this test.
-KIND_ENUMS = frozenset(
-    ["FunctionKind", "PortRole", "NetClass", "ConductorKind", "LinkKind", "ItemKind"]
-)
+KIND_ENUMS = frozenset(["FunctionKind", "PortBoundary", "NetClass", "ConductorKind", "LinkKind", "ItemKind"])
 KIND_HOMES = frozenset(
     [
         "fransys_model.vocab.roles",
@@ -180,7 +178,7 @@ SELECTION_ENUMS = frozenset(["DocumentPreset", "PageKind"])
 SELECTION_HOMES = ("fransys_model.derive", "fransys_model.vocab")
 
 # Gate 2: render calls no derive function except these, and reads derive's row types and constants.
-TITLE_BLOCK_TEXT = frozenset(["title_block_strings"])
+TITLE_BLOCK_TEXT = frozenset(["title_block_forms"])
 RENDER_PACKAGE = "fransys_render"
 RENDER_MODEL_OK = frozenset(["layout", "vocab", "kernel", "derive"])
 SVG_TAGS = ("<text", "<rect", "<line", "<polyline", "<circle", "<path")
@@ -198,9 +196,7 @@ ALL_DOORS = frozenset(["kernel", "vocab", "layout", "derive", "refdef", "elecdef
 INPUT_DOORS = ALL_DOORS
 OUTPUT_DOORS = frozenset(["kernel", "derive"])
 OUTPUT_VOCAB_NAMES = frozenset(["PageKind", "DocumentPreset", "SignalType", "Aspect"])
-OUTPUTS = frozenset(
-    ["fransys_reports", "fransys_pdf", "fransys_kicad", "fransys_wago", "fransys_overview"]
-)
+OUTPUTS = frozenset(["fransys_reports", "fransys_pdf", "fransys_kicad", "fransys_wago", "fransys_overview"])
 MODEL_DOORS: dict[str, frozenset[str]] = {
     "fransys_author": INPUT_DOORS,
     "fransys_parts": INPUT_DOORS,
@@ -222,16 +218,9 @@ LAYOUT_FOR_INPUTS = frozenset(
         "SheetFormat",
         "Profile",
         "GroupHint",
-        "SideHint",
-        "BreakBefore",
-        "Chain",
-        "ChainEntry",
-        "KeepTogether",
         "OrderHint",
         "PoleGroup",
         "SymbolChoice",
-        "PageTitle",
-        "PinsBelowHint",
     ]
 )
 INPUTS = frozenset(["fransys_author", "fransys_parts"])
@@ -268,17 +257,13 @@ def _non_fact_receivers(tree: ast.AST, module: str) -> frozenset[str]:
     """`NON_FACT_RECEIVERS` when the module names `Current` or `LimitRole`; `marker` in its home."""
     names = {n.id for n in ast.walk(tree) if isinstance(n, ast.Name)}
     names |= {a.name for n in ast.walk(tree) if isinstance(n, ast.ImportFrom) for a in n.names}
-    found = NON_FACT_RECEIVERS if names & NON_FACT_ENUMS else frozenset()
+    found: frozenset[str] = NON_FACT_RECEIVERS if names & NON_FACT_ENUMS else frozenset[str]()
     return found | {MARKER_RECEIVER} if module == MARKER_MODULE else found
 
 
 def _is_non_fact_value(node: ast.Attribute, receivers: frozenset[str]) -> bool:
-    """`bound.kind` or `bound.role` on a receiver that holds a `Current` or `LimitRole`."""
-    return (
-        node.attr in ("kind", "role")
-        and isinstance(node.value, ast.Name)
-        and node.value.id in receivers
-    )
+    """`bound.kind` on a receiver that holds a `Current` or `LimitRole`."""
+    return node.attr == "kind" and isinstance(node.value, ast.Name) and node.value.id in receivers
 
 
 def _model_match_args() -> dict[str, tuple[str, ...]]:
@@ -348,29 +333,21 @@ def _table_call_name(node: ast.AST, aliases: dict[str, str]) -> str | None:
     if isinstance(func, ast.Name):
         name = aliases.get(func.id, func.id)
         return name if name in TABLE_FUNCTIONS else None
-    if (
-        isinstance(func, ast.Attribute)
-        and isinstance(func.value, ast.Name)
-        and func.value.id == "tables"
-    ):
+    if isinstance(func, ast.Attribute) and isinstance(func.value, ast.Name) and func.value.id == "tables":
         return func.attr if func.attr in TABLE_FUNCTIONS else None
     return None
 
 
 def _is_tables_subscript(node: ast.AST) -> bool:
     """True for `<anything>.tables[...]`."""
-    return (
-        isinstance(node, ast.Subscript)
-        and isinstance(node.value, ast.Attribute)
-        and node.value.attr == "tables"
-    )
+    return isinstance(node, ast.Subscript) and isinstance(node.value, ast.Attribute) and node.value.attr == "tables"
 
 
 def table_walks(tree: ast.AST, module: str) -> list[tuple[str, int]]:
     """Raw record-table reads outside `fransys_model`."""
     if module.split(".", maxsplit=1)[0] in TABLE_WALK_SKIP or _in_core(module):
         return []
-    found = []
+    found: list[tuple[str, int]] = []
     aliases = _aliases(tree)
     for node in ast.walk(tree):
         name = "tables[]" if _is_tables_subscript(node) else _table_call_name(node, aliases)
@@ -385,6 +362,7 @@ def _enum_name(node: ast.AST) -> str | None:
         return None
     base = node.value
     name = base.id if isinstance(base, ast.Name) else getattr(base, "attr", None)
+    assert name is None or isinstance(name, str)
     return name if name in KIND_ENUMS else None
 
 
@@ -392,9 +370,7 @@ def _is_str_operand(node: ast.AST) -> bool:
     """A string constant, or a tuple, list or set made only of string constants."""
     if isinstance(node, ast.Constant):
         return isinstance(node.value, str)
-    return isinstance(node, ast.Tuple | ast.List | ast.Set) and all(
-        _is_str_operand(e) for e in node.elts
-    )
+    return isinstance(node, ast.Tuple | ast.List | ast.Set) and all(_is_str_operand(e) for e in node.elts)
 
 
 def _is_kind_compare(node: ast.AST) -> bool:
@@ -414,7 +390,7 @@ def _kind_reads(tree: ast.AST, module: str, *, legacy: bool) -> list[tuple[str, 
     in_layout = module.split(".", maxsplit=1)[0] == LEGACY_LAYOUT
     if module in KIND_HOMES or in_layout != legacy or _in_core(module):
         return []
-    found = []
+    found: list[tuple[str, int]] = []
     for node in ast.walk(tree):
         name = _enum_name(node)
         if name and isinstance(node, ast.Attribute) and isinstance(node.ctx, ast.Load):
@@ -448,11 +424,7 @@ def _docstring_ids(tree: ast.AST) -> set[int]:
 def _string_nodes(tree: ast.AST) -> list[ast.Constant]:
     """Every string constant outside a docstring; an f-string's parts too."""
     skip = _docstring_ids(tree)
-    return [
-        n
-        for n in ast.walk(tree)
-        if isinstance(n, ast.Constant) and isinstance(n.value, str) and id(n) not in skip
-    ]
+    return [n for n in ast.walk(tree) if isinstance(n, ast.Constant) and isinstance(n.value, str) and id(n) not in skip]
 
 
 def _strings(tree: ast.AST) -> list[tuple[str, int]]:
@@ -462,42 +434,49 @@ def _strings(tree: ast.AST) -> list[tuple[str, int]]:
 
 def literal_homes(tree: ast.AST, module: str) -> list[tuple[str, int]]:
     """String constants holding a HOMES literal in a module that is not its home."""
-    return [
-        (literal, line)
-        for text, line in _strings(tree)
-        for literal, home in HOMES.items()
-        if literal in text and module != home
-    ]
+    return [(literal, line) for text, line in _strings(tree) for literal, home in HOMES.items() if literal in text and module != home]
 
 
 def _word_values() -> frozenset[str]:
     """The printed words of settings.toml `[words]` that carry a letter (a bare sign is no word)."""
-    table = tomllib.loads((ROOT / SETTINGS_TOML).read_text(encoding="utf-8"))["words"]
+    table: dict[str, str] = dict(tomllib.loads((ROOT / SETTINGS_TOML).read_text(encoding="utf-8"))["words"])
     return frozenset(v for v in table.values() if any(c.isalpha() for c in v))
 
 
-def word_literals(tree: ast.AST, _module: str) -> list[tuple[str, int]]:
-    """String constants equal to a `[words]` value: the word is typed outside its home (R503 W4)."""
-    words = _word_values()
-    skip = _word_key_ids(tree)
-    return [
-        (str(n.value), n.lineno)
-        for n in _string_nodes(tree)
-        if n.value in words and id(n) not in skip
-    ]
+TEXT_SINKS = {"text": 1, "upward_text": 1, "Cell": 0, "Paragraph": 0, "Heading": 0, "writerow": 0}  # callee: arguments before the text
+LEAVES = ast.Constant | ast.Tuple | ast.List | ast.Set | ast.IfExp | ast.BoolOp
 
 
-def _word_key_ids(tree: ast.AST) -> set[int]:
-    """Ids of the strings that name a word, not print it: `word(model, "key")` and `__all__`."""
+def _consts(node: ast.AST) -> set[int]:
+    """Ids of the string constants reached through tuples, lists, sets, conditionals and `or` only, never through a call."""
+    if isinstance(node, ast.Constant):
+        return {id(node)}
+    if not isinstance(node, LEAVES):
+        return set()
+    return {i for child in ast.iter_child_nodes(node) for i in _consts(child)}
+
+
+def _printed_ids(tree: ast.AST) -> set[int]:
+    """Ids of the string constants that reach a `TEXT_SINKS` callee, directly or through a local assigned in the same function (R794)."""
     ids: set[int] = set()
-    for node in ast.walk(tree):
-        if isinstance(node, ast.Call) and getattr(node.func, "id", "") == "word" and node.args[1:]:
-            ids.add(id(node.args[1]))
-        if isinstance(node, ast.Assign) and any(
-            getattr(t, "id", "") == "__all__" for t in node.targets
-        ):
-            ids.update(id(c) for c in ast.walk(node.value))
+    for scope in [tree, *(n for n in ast.walk(tree) if isinstance(n, ast.FunctionDef | ast.AsyncFunctionDef))]:
+        local: dict[str, set[int]] = defaultdict(set)
+        for node in ast.walk(scope):
+            if isinstance(node, ast.Assign):
+                for t in node.targets:
+                    local[getattr(t, "id", "")] |= _consts(node.value)
+        for node in ast.walk(scope):
+            if isinstance(node, ast.Call) and (skip := TEXT_SINKS.get(getattr(node.func, "id", getattr(node.func, "attr", "")))) is not None:
+                for arg in [*node.args[skip:], *(k.value for k in node.keywords)]:
+                    ids |= _consts(arg) | (local[arg.id] if isinstance(arg, ast.Name) else set())
     return ids
+
+
+def word_literals(tree: ast.AST, _module: str) -> list[tuple[str, int]]:
+    """String constants equal to a `[words]` value that reach a text sink: the word is typed outside its home (R503 W4)."""
+    words = _word_values()
+    printed = _printed_ids(tree)
+    return [(str(n.value), n.lineno) for n in _string_nodes(tree) if n.value in words and id(n) in printed]
 
 
 MAPPING_READS = frozenset(["get", "pop", "setdefault"])
@@ -532,15 +511,13 @@ def selection_branches(tree: ast.AST, module: str) -> list[tuple[str, int]]:
     """Members of `DocumentPreset` or `PageKind` that select a branch or a value outside derive."""
     if module.startswith(SELECTION_HOMES):
         return []
-    found = []
+    found: list[tuple[str, int]] = []
     for node in ast.walk(tree):
         line = getattr(node, "lineno", 0)
         found.extend(
             (op.value.id, line)
             for op in _flat(_selected_operands(node))
-            if isinstance(op, ast.Attribute)
-            and isinstance(op.value, ast.Name)
-            and op.value.id in SELECTION_ENUMS
+            if isinstance(op, ast.Attribute) and isinstance(op.value, ast.Name) and op.value.id in SELECTION_ENUMS
         )
         if (name := _enum_lookup(node)) is not None:
             found.append((name, line))
@@ -581,10 +558,7 @@ def _is_render(module: str) -> bool:
 def _type_checking_ids(tree: ast.AST) -> set[int]:
     """The ids of every node under an `if TYPE_CHECKING:` block."""
     return {
-        id(inner)
-        for node in ast.walk(tree)
-        if isinstance(node, ast.If) and "TYPE_CHECKING" in ast.unparse(node.test)
-        for inner in ast.walk(node)
+        id(inner) for node in ast.walk(tree) if isinstance(node, ast.If) and "TYPE_CHECKING" in ast.unparse(node.test) for inner in ast.walk(node)
     }
 
 
@@ -607,11 +581,7 @@ def _target_module(node: ast.ImportFrom, module: str, *, is_package: bool) -> st
 
 def _assigned_kind(value: ast.expr | None) -> str:
     """A `Memo(f)` wrapper is a named function; any other assignment is a constant."""
-    wrapped = (
-        isinstance(value, ast.Call)
-        and isinstance(value.func, ast.Name)
-        and value.func.id in MEMO_WRAPPERS
-    )
+    wrapped = isinstance(value, ast.Call) and isinstance(value.func, ast.Name) and value.func.id in MEMO_WRAPPERS
     return "function" if wrapped else "constant"
 
 
@@ -653,11 +623,7 @@ def derive_modules(sources: dict[str, str] | None = None) -> Resolved:
     `sources` is module -> source text; None reads `fransys_model` from the tree.
     """
     if sources is None:
-        sources = {
-            module: path.read_text(encoding="utf-8")
-            for module, path in src_modules()
-            if module.split(".")[0] == "fransys_model"
-        }
+        sources = {module: path.read_text(encoding="utf-8") for module, path in src_modules() if module.split(".")[0] == "fransys_model"}
     defs: Defs = {
         module: _module_defs(
             ast.parse(text),
@@ -745,9 +711,7 @@ def _derive_function_imports(tree: ast.AST, resolved: Resolved) -> list[tuple[st
             continue
         if isinstance(node, ast.ImportFrom) and _is_derive(node.module):
             found.extend(_star_imports(node, resolved))
-            found.extend(
-                (a.name, node.lineno) for a in node.names if kinds.get(a.name) == "function"
-            )
+            found.extend((a.name, node.lineno) for a in node.names if kinds.get(a.name) == "function")
         elif isinstance(node, ast.Attribute) and (name := _attribute_use(node, aliases, resolved)):
             found.append((name, node.lineno))
     return [(name, line) for name, line in found if name not in TITLE_BLOCK_TEXT]
@@ -779,12 +743,7 @@ def render_svg_literals(tree: ast.AST, module: str) -> list[tuple[str, int]]:
     """String constants in render that open an SVG element."""
     if not _is_render(module):
         return []
-    return [
-        (tag, line)
-        for text, line in _strings(tree)
-        for tag in SVG_TAGS
-        if text.lstrip().startswith(tag)
-    ]
+    return [(tag, line) for text, line in _strings(tree) for tag in SVG_TAGS if text.lstrip().startswith(tag)]
 
 
 def facade_field_reads(tree: ast.AST, module: str) -> list[tuple[str, int]]:
@@ -794,10 +753,7 @@ def facade_field_reads(tree: ast.AST, module: str) -> list[tuple[str, int]]:
     return [
         (node.attr, node.lineno)
         for node in ast.walk(tree)
-        if isinstance(node, ast.Attribute)
-        and isinstance(node.ctx, ast.Load)
-        and node.attr in FACADE_FIELDS
-        and not _is_path_parent(node)
+        if isinstance(node, ast.Attribute) and isinstance(node.ctx, ast.Load) and node.attr in FACADE_FIELDS and not _is_path_parent(node)
     ]
 
 
@@ -846,9 +802,7 @@ def model_doors(tree: ast.AST, module: str) -> list[tuple[str, int]]:
         if door not in MODEL_DOORS[package]:
             found.append((f"{MODEL}.{door}", line))
         elif door == "vocab" and package in OUTPUTS:
-            found.extend(
-                (f"{MODEL}.vocab", line) for name in names if name not in OUTPUT_VOCAB_NAMES
-            )
+            found.extend((f"{MODEL}.vocab", line) for name in names if name not in OUTPUT_VOCAB_NAMES)
     return found
 
 
@@ -870,16 +824,14 @@ def _vocab_aliases(tree: ast.AST) -> set[str]:
 @functools.cache
 def vocab_reexport_names() -> frozenset[str]:
     """The lowercase names in `fransys_model.vocab.__all__`, read from `lean_surface`."""
-    spec = importlib.util.spec_from_file_location(
-        "fransys_lean_surface", ROOT / "scripts" / "lean_surface.py"
-    )
+    spec = importlib.util.spec_from_file_location("fransys_lean_surface", ROOT / "scripts" / "lean_surface.py")
     assert spec is not None
     assert spec.loader is not None
     lean_surface = sys.modules.get(spec.name) or importlib.util.module_from_spec(spec)
     if spec.name not in sys.modules:
         sys.modules[spec.name] = lean_surface
         spec.loader.exec_module(lean_surface)
-    names = lean_surface.surface_names([VOCAB_MODULE])[VOCAB_MODULE]
+    names: frozenset[str] = frozenset(str(n) for n in lean_surface.surface_names([VOCAB_MODULE])[VOCAB_MODULE])
     return frozenset(n for n in names if n[:1].islower())
 
 
@@ -897,10 +849,7 @@ def vocab_reexports(tree: ast.AST, module: str) -> list[tuple[str, int]]:
             isinstance(node, ast.Attribute)
             and isinstance(node.ctx, ast.Load)
             and node.attr in names
-            and (
-                (isinstance(node.value, ast.Name) and node.value.id in aliases)
-                or ast.unparse(node.value) == VOCAB_MODULE
-            )
+            and ((isinstance(node.value, ast.Name) and node.value.id in aliases) or ast.unparse(node.value) == VOCAB_MODULE)
         ):
             found.append((node.attr, node.lineno))
     return found
@@ -938,9 +887,10 @@ SCANNERS: dict[str, Scanner] = {
 }
 
 
-def load_allowlist() -> dict[str, dict[str, int]]:
+def load_allowlist() -> dict[str, Any]:
     """The tables of `one-home.toml`."""
-    return tomllib.loads(ALLOWLIST.read_text(encoding="utf-8"))
+    allowlist: dict[str, Any] = tomllib.loads(ALLOWLIST.read_text(encoding="utf-8"))
+    return allowlist
 
 
 def compare(sites: Mapping[str, Sequence[int | str]], allowed: dict[str, int]) -> list[str]:
@@ -968,7 +918,8 @@ def render(tables: dict[str, Sites]) -> str:
 
 def write() -> None:
     """Rewrite `one-home.toml` from the tree, as `lean_check.py` writes `ceilings.toml`."""
-    text = render({section: scan_tree(scanner) for section, scanner in SCANNERS.items()})
+    tables = {section: scan_tree(scanner) for section, scanner in SCANNERS.items()}
+    text = render({**tables, "library_twins": library_twins()})
     ALLOWLIST.write_text(text, encoding="utf-8", newline="\n")
 
 
@@ -987,6 +938,10 @@ def gate(section: str, *, done: bool = False) -> list[str]:
     return compare(sites, allowed)
 
 
+def test_no_library_twin_grows_or_stays_after_its_deletion():
+    assert compare(library_twins(), load_allowlist()["library_twins"]) == []
+
+
 def test_no_field_read_outside_its_fact_module():
     assert gate("field_reads") == []
 
@@ -996,30 +951,25 @@ def test_no_raw_table_walk_outside_the_model():
 
 
 def test_no_kind_branch_outside_the_role_fact():
-    assert gate("kind_reads") + gate("kind_reads_legacy_layout") == []
+    assert gate("kind_reads") + gate("kind_reads_legacy_layout", done=True) == []
 
 
 def test_the_field_gate_can_fail():
     module = "fransys_model.derive.bom"
-    sites = scan(field_reads, "x = fn.kind\ny = port.role\nport.role = 1\n", module)
-    assert {k: len(v) for k, v in sites.items()} == {f"{module}::kind": 1, f"{module}::role": 1}
+    sites = scan(field_reads, "x = fn.kind\ny = port.pin_role\nport.pin_role = 1\n", module)
+    assert {k: len(v) for k, v in sites.items()} == {f"{module}::kind": 1, f"{module}::pin_role": 1}
     assert compare(sites, {}) != []
     assert "fransys_model.derive.bom:1" in compare(sites, {})[0]
-    assert compare(sites, {f"{module}::kind": 2, f"{module}::role": 1}) == [
-        f"{module}::kind read 1 times, allowed 2: lower the allowlist"
-    ]
+    assert compare(sites, {f"{module}::kind": 2, f"{module}::pin_role": 1}) == [f"{module}::kind read 1 times, allowed 2: lower the allowlist"]
     home = FACT_FIELDS["function.kind"]
     assert scan(field_reads, "x = fn.kind", home) == {}
 
 
 def test_the_field_gate_counts_class_pattern_keywords():
     module = "fransys_model.derive.bom"
-    source = (
-        "match x:\n    case Ref(kind=k, role=r):\n        pass\n"
-        "    case int(plain):\n        pass\n"
-    )
+    source = "match x:\n    case Ref(kind=k, pin_role=r):\n        pass\n    case int(plain):\n        pass\n"
     sites = scan(field_reads, source, module)
-    assert {k: len(v) for k, v in sites.items()} == {f"{module}::kind": 1, f"{module}::role": 1}
+    assert {k: len(v) for k, v in sites.items()} == {f"{module}::kind": 1, f"{module}::pin_role": 1}
     assert compare(sites, {}) != []
     home_sites = scan(field_reads, source, FACT_FIELDS["function.kind"])
     assert not any(key.endswith("::kind") for key in home_sites)
@@ -1042,14 +992,9 @@ def test_the_kind_gate_skips_current_and_limit_role_values():
     module = "fransys_model.vocab.x"
     source = "a = Current.AC\nb = LimitRole.MAX\nc = bound.kind is Current.AC\n"
     assert scan(kind_reads, source, module) == {}
-    assert scan(field_reads, source + "d = bound.role\n", module) == {}
-    planted = source + "e = bound.role is PortRole.LINE\nf = port.role\n"
-    assert {k.split("::")[1]: v for k, v in scan(kind_reads, planted, module).items()} == {
-        "PortRole": [4]
-    }
-    assert {k.split("::")[1]: v for k, v in scan(field_reads, planted, module).items()} == {
-        "role": [5]
-    }
+    planted = source + "e = bound.role is PortBoundary.LINE\nf = port.pin_role\n"
+    assert {k.split("::")[1]: v for k, v in scan(kind_reads, planted, module).items()} == {"PortBoundary": [4]}
+    assert {k.split("::")[1]: v for k, v in scan(field_reads, planted, module).items()} == {"pin_role": [5]}
 
 
 def test_a_bound_receiver_counts_where_no_current_is_named():
@@ -1103,13 +1048,13 @@ def test_the_kind_gate_can_fail():
         "ok = 'unit' != box.kind\n"
         "ok = box.kind in ('a', 'b')\n"
         "x = Energy.DC\ny = box.kind == other\nz = box.name == 'unit'\n"
-        "w = enums.PortRole.LINE\n"
+        "w = enums.PortBoundary.LINE\n"
     )
     sites = scan(kind_reads, source, module)
     assert {k.split("::")[1]: v for k, v in sites.items()} == {
         "FunctionKind": [1],
         "kind==str": [3, 4, 5],
-        "PortRole": [9],
+        "PortBoundary": [9],
     }
     assert "fransys_model.derive.bom:1" in compare(sites, {})[0]
     assert scan(kind_reads, source, "fransys_model.derive.facts.roles") == {}
@@ -1151,13 +1096,13 @@ def test_no_words_value_typed_outside_settings_toml():
 
 def test_the_word_gate_can_fail():
     module = "fransys_pdf.x"
-    sources = (
-        'a = "Block diagram"\nb = "Blockdiagram"\nc = "to"\n"""d"""\n'
-        'e = word(m, "to")\n__all__ = ["Pin"]\n'
-    )
+    printed = 'ink.text("pin", at, "Block diagram")\nink.text("core", at, "Blockdiagram")\nink.text("core", at, "to")\n'
+    local = 'def f():\n    h = "Pin"\n    return Cell(h)\n'
+    kept = 'd = {"Pin": 1}\nd["Pin"]\nf(kind="Pin")\nfinding("C", s, "Pin")\nrow = "Pin"\nif a == "Pin":\n    pass\n'
+    sources = printed + kept + local + '"""d"""\ne = word(m, "to")\n__all__ = ["Pin"]\n'
     sites = scan(word_literals, sources, module)
-    assert {k.split("::")[1]: v for k, v in sites.items()} == {"Block diagram": [1], "to": [3]}
-    assert compare(sites, {f"{module}::Block diagram": 1, f"{module}::to": 1}) == []
+    assert {k.split("::")[1]: v for k, v in sites.items()} == {"Block diagram": [1], "to": [3], "Pin": [12]}
+    assert compare(sites, {f"{module}::Block diagram": 1, f"{module}::to": 1, f"{module}::Pin": 1}) == []
     assert "fransys_pdf.x:1" in compare(sites, {})[0]
 
 
@@ -1170,9 +1115,9 @@ def test_the_literal_gate_can_fail():
         "Own drawing: ": [2],
     }
     assert "fransys_pdf.x:1" in compare(sites, {})[0]
-    assert compare(
-        sites, {f"{module}::Digital input channel": 2, f"{module}::Own drawing: ": 1}
-    ) == [f"{module}::Digital input channel read 1 times, allowed 2: lower the allowlist"]
+    assert compare(sites, {f"{module}::Digital input channel": 2, f"{module}::Own drawing: ": 1}) == [
+        f"{module}::Digital input channel read 1 times, allowed 2: lower the allowlist"
+    ]
     home = HOMES["Digital input channel"]
     assert scan(literal_homes, source, home).keys() == {f"{home}::Own drawing: "}
     docstring = '"""Digital input channel."""\ndef f():\n    """Own drawing: x"""\n'
@@ -1210,9 +1155,7 @@ def test_the_selection_gate_flags_a_match_on_a_member():
         "match PageKind.NOTES:\n    case _:\n        pass\n"
     )
     assert _enum_sites(source) == {"PageKind": [2, 2, 6], "DocumentPreset": [4]}
-    assert "fransys_pdf.x:2" in " ".join(
-        compare(scan(selection_branches, source, "fransys_pdf.x"), {})
-    )
+    assert "fransys_pdf.x:2" in " ".join(compare(scan(selection_branches, source, "fransys_pdf.x"), {}))
     plain = 'match kind:\n    case "bom":\n        pass\n    case Energy.DC:\n        pass\n'
     assert _enum_sites(plain) == {}
 
@@ -1225,10 +1168,7 @@ def test_the_selection_gate_flags_a_name_or_member_subscript():
 
 
 def test_the_selection_gate_flags_a_mapping_read_keyed_by_a_member():
-    source = (
-        "a = t.get(PageKind.BOM)\nb = t.get(DocumentPreset.FULL, d)\nc = t.pop(PageKind.NOTES)\n"
-        "d = t.setdefault(PageKind.COVER, [])\n"
-    )
+    source = "a = t.get(PageKind.BOM)\nb = t.get(DocumentPreset.FULL, d)\nc = t.pop(PageKind.NOTES)\nd = t.setdefault(PageKind.COVER, [])\n"
     assert _enum_sites(source) == {"PageKind": [1, 3, 4], "DocumentPreset": [2]}
     near = "a = t.get(kind)\nb = t.get('x', PageKind.BOM)\nc = t.update(PageKind.BOM)\n"
     assert _enum_sites(near) == {}
@@ -1257,13 +1197,9 @@ def test_the_facade_gate_can_fail():
 PLANTED = {
     "fransys_model.vocab": "def real_fn(): pass\nclass lower_class: pass\n",
     "fransys_model.derive": (
-        "from fransys_model.vocab import real_fn, lower_class\n"
-        "from .a import CamelFn, lower_const, Wrapped, _hidden, limit as top\n"
+        "from fransys_model.vocab import real_fn, lower_class\nfrom .a import CamelFn, lower_const, Wrapped, _hidden, limit as top\n"
     ),
-    "fransys_model.derive.a": (
-        "def CamelFn(): pass\nlower_const: Final = 3\nWrapped = Memo(f)\nlimit = 3\n"
-        "def _hidden(): pass\n"
-    ),
+    "fransys_model.derive.a": ("def CamelFn(): pass\nlower_const: Final = 3\nWrapped = Memo(f)\nlimit = 3\ndef _hidden(): pass\n"),
     "fransys_model.derive.b": "class OnlyClass: pass\nLIMIT_B = 1\n",
 }
 
@@ -1283,10 +1219,7 @@ def test_the_derive_kind_lookup_can_fail():
         "OnlyClass": "class",
         "LIMIT_B": "constant",
     }
-    source = (
-        "from fransys_model.derive import real_fn, CamelFn, Wrapped, lower_class, "
-        "lower_const, top\n"
-    )
+    source = "from fransys_model.derive import real_fn, CamelFn, Wrapped, lower_class, lower_const, top\n"
     flagged = _derive_function_imports(ast.parse(source), resolved)
     assert [name for name, _ in flagged] == ["real_fn", "CamelFn", "Wrapped"]
     sites = {"fransys_render.x::CamelFn": [1]}
@@ -1322,9 +1255,7 @@ def test_a_star_import_of_derive_is_one_site_per_public_function():
 def test_a_derive_module_alias_use_is_flagged():
     aliased = "import fransys_model.derive as d\nx = d.real_fn(d.lower_class, d.LIMIT_B)\n"
     assert _flagged(aliased) == [("real_fn", 2)]
-    assert _flagged("import fransys_model.derive\nfransys_model.derive.CamelFn()\n") == [
-        ("CamelFn", 2)
-    ]
+    assert _flagged("import fransys_model.derive\nfransys_model.derive.CamelFn()\n") == [("CamelFn", 2)]
     assert _flagged("from fransys_model import derive\nderive.Wrapped(1)\n") == [("Wrapped", 2)]
     assert _flagged("from fransys_model.derive import a\na.CamelFn()\n") == [("CamelFn", 2)]
     assert "fransys_render.x:2" in _named(aliased)
@@ -1362,19 +1293,13 @@ def test_the_model_door_gate_can_fail():
     assert compare(sites, {"fransys_reports::fransys_model.layout": 2}) == [
         "fransys_reports::fransys_model.layout read 1 times, allowed 2: lower the allowlist"
     ]
-    assert _door_sites("import fransys_model.layout.pages\n") == {
-        "fransys_reports::fransys_model.layout": ["fransys_reports.x:1"]
-    }
+    assert _door_sites("import fransys_model.layout.pages\n") == {"fransys_reports::fransys_model.layout": ["fransys_reports.x:1"]}
 
 
 def test_a_derive_submodule_counts_as_the_derive_door(monkeypatch):
     monkeypatch.setitem(MODEL_DOORS, "fransys_reports", frozenset(["kernel", "vocab"]))
-    sites = _door_sites(
-        "from fransys_model.derive.bom import f\nfrom fransys_model import derive\n"
-    )
-    assert sites == {
-        "fransys_reports::fransys_model.derive": ["fransys_reports.x:1", "fransys_reports.x:2"]
-    }
+    sites = _door_sites("from fransys_model.derive.bom import f\nfrom fransys_model import derive\n")
+    assert sites == {"fransys_reports::fransys_model.derive": ["fransys_reports.x:1", "fransys_reports.x:2"]}
 
 
 def test_a_type_checking_model_import_counts():
@@ -1385,9 +1310,7 @@ def test_a_type_checking_model_import_counts():
 def test_an_output_may_import_four_vocab_names_only():
     assert _door_sites("from fransys_model.vocab import PageKind, Aspect, SignalType\n") == {}
     sites = _door_sites("from fransys_model.vocab import PageKind, items, ports\n")
-    assert sites == {
-        "fransys_reports::fransys_model.vocab": ["fransys_reports.x:1", "fransys_reports.x:1"]
-    }
+    assert sites == {"fransys_reports::fransys_model.vocab": ["fransys_reports.x:1", "fransys_reports.x:1"]}
     inputs = scan(model_doors, "from fransys_model.vocab import items\n", "fransys_author.x")
     assert inputs == {}
 
@@ -1406,12 +1329,7 @@ def _reads(source: str, module: str = "fransys_pdf.x") -> dict[str, list[int | s
 
 
 def test_the_vocab_reexport_count_can_fail():
-    source = (
-        "from fransys_model.vocab import ports, items, Aspect\n"
-        "from fransys_model import vocab as v\n"
-        "y = v.units(m)\n"
-        "z = Page.ports\n"
-    )
+    source = "from fransys_model.vocab import ports, items, Aspect\nfrom fransys_model import vocab as v\ny = v.units(m)\nz = Page.ports\n"
     sites = _reads(source)
     assert sites == {
         "ports": ["fransys_pdf.x:1"],
@@ -1419,14 +1337,10 @@ def test_the_vocab_reexport_count_can_fail():
         "units": ["fransys_pdf.x:3"],
     }
     assert "fransys_pdf.x:1" in compare(sites, {})[0]
-    assert compare(sites, {"ports": 1, "items": 1, "units": 2}) == [
-        "units read 1 times, allowed 2: lower the allowlist"
-    ]
+    assert compare(sites, {"ports": 1, "items": 1, "units": 2}) == ["units read 1 times, allowed 2: lower the allowlist"]
     assert _reads(source, "fransys_model.derive.x") == {}
     assert _reads("import fransys_model.vocab as v\nv.parts\n") == {"parts": ["fransys_pdf.x:2"]}
-    assert _reads("import fransys_model.vocab\nfransys_model.vocab.nets\n") == {
-        "nets": ["fransys_pdf.x:2"]
-    }
+    assert _reads("import fransys_model.vocab\nfransys_model.vocab.nets\n") == {"nets": ["fransys_pdf.x:2"]}
 
 
 if __name__ == "__main__":
@@ -1434,3 +1348,52 @@ if __name__ == "__main__":
         write()
     else:
         sys.exit("usage: uv run python tests/test_one_home.py --write")
+
+
+MODEL_FRAME_NAMES = frozenset({"frame_column", "frame_row", "frame_cell", "place_text", "cell"})  # SY4: the frame cell is the layout symbols layer's
+
+
+def _model_frame_defs(source: str) -> list[str]:
+    return [n.name for n in ast.parse(source).body if isinstance(n, ast.FunctionDef) and n.name in MODEL_FRAME_NAMES]
+
+
+def test_the_model_defines_no_frame_cell_arithmetic():
+    found = [
+        f"{module}::{name}"
+        for module, path in src_modules()
+        if module.startswith("fransys_model")
+        for name in _model_frame_defs(path.read_text(encoding="utf-8"))
+    ]
+    assert not found, f"the frame cell is read through symdef in fransys_layout.symbols (SY4): {found}"
+
+
+def test_the_frame_cell_gate_can_fail():
+    assert _model_frame_defs("def frame_column(x):\n    return x\n") == ["frame_column"]
+    assert _model_frame_defs("def row_letter(x):\n    return x\n") == []
+
+
+def _box_roundings(source: str) -> list[int]:
+    """Lines of a `Box(...)` call that builds an edge with `grid_up`: a second rounding of a box (R1706)."""
+    return [
+        n.lineno
+        for n in ast.walk(ast.parse(source))
+        if isinstance(n, ast.Call)
+        and isinstance(n.func, ast.Name)
+        and n.func.id == "Box"
+        and any(isinstance(c, ast.Call) and isinstance(c.func, ast.Name) and c.func.id == "grid_up" for a in n.args for c in ast.walk(a))
+    ]
+
+
+def test_a_box_grows_to_the_grid_in_grid_out_only():
+    found = [
+        f"{module}:{line}"
+        for module, path in src_modules()
+        if module.startswith("fransys_layout") and module != "fransys_layout.core.row_extent"
+        for line in _box_roundings(path.read_text(encoding="utf-8"))
+    ]
+    assert not found, f"a box is grown to the grid by core grid_out (R1706): {found}"
+
+
+def test_the_box_rounding_gate_can_fail():
+    assert _box_roundings("Box(grid_up(a, 8), 0, 1, 1)\n") == [1]
+    assert _box_roundings("Box(a, 0, 1, 1)\ngrid_up(a, 8)\n") == []

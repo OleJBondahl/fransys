@@ -14,8 +14,8 @@ from fransys_model.derive.designation import (
     printed_designation,
 )
 from fransys_model.derive.drawing_text import outline_title, release_title, tag_text, wire_text
+from fransys_model.derive.facts.house_settings import revision_form_of
 from fransys_model.derive.facts.subjects import subject_kind
-from fransys_model.derive.house_settings import revision_form_of
 from fransys_model.derive.instance_tag import instance_name, unit_tag
 from fransys_model.derive.kinds import item_kind
 from fransys_model.derive.plc_channel_text import plc_channel_text
@@ -49,11 +49,7 @@ def _unit(model: Model, target: Id[Any]) -> str:
 
 def _release(model: Model, target: Id[Any]) -> str:
     releases = unit_releases(model)
-    return (
-        release_title(revision_form_of(model), releases[target])
-        if target in releases
-        else "unit release"
-    )
+    return release_title(revision_form_of(model), releases[target]) if target in releases else "unit release"
 
 
 def _net(model: Model, target: Id[Any]) -> str:
@@ -126,9 +122,4 @@ def _printed(model: Model, text: str) -> str:
 
 def name_findings(model: Model, findings: tuple[Finding, ...]) -> tuple[Finding, ...]:
     """Each finding with every reference in its message and fix printed as `name_of`."""
-    return tuple(
-        dataclasses.replace(
-            finding, message=_printed(model, finding.message), fix=_printed(model, finding.fix)
-        )
-        for finding in findings
-    )
+    return tuple(dataclasses.replace(finding, message=_printed(model, finding.message), fix=_printed(model, finding.fix)) for finding in findings)

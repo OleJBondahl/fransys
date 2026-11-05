@@ -9,9 +9,10 @@ from fractions import Fraction
 from typing import TYPE_CHECKING
 
 from fransys_model.derive.facts.closure import port_rails, rail_pairs
+from fransys_model.derive.indexes import build_indexes
+from fransys_model.elecdef import Current
 from fransys_model.kernel import DIGEST_CACHE_SIZE, digest_cached
 from fransys_model.vocab import voltage
-from fransys_model.vocab.enums import Current, Earthing
 from fransys_model.vocab.tables import nets, ports, supply_of_potential, supply_systems
 
 from .net_facts import is_earth_net, net_potential
@@ -34,7 +35,7 @@ class Stand:
 def earth_potentials(model: Model) -> frozenset[str]:
     """The potentials that are earth: those a net of class `PE` carries (decision model-0085).
 
-    The one place of the rule. Such a rail stands at 0 V to earth in every supply, IT included,
+    The one place of the rule. Such a rail stands at 0 V to earth in every supply,
     whatever values a supply lists for it.
     """
     potentials = (net_potential(model, net) for net in nets(model) if is_earth_net(model, net))
@@ -51,23 +52,12 @@ def rails_by_potential(model: Model) -> dict[str, voltage.RailV]:
     found: dict[str, voltage.RailV] = {}
     for supply in sorted(supply_systems(model).values(), key=lambda s: (s.name, s.id)):
         ac = supply.current is Current.AC
-        it = supply.earthing is Earthing.IT
-        points = {
-            name: (Fraction(0), None) if name in earth_rails else (Fraction(rail.max_v), rail.phase)
-            for name, rail in supply.rails.items()
-        }
-        live = tuple(point for name, point in points.items() if name not in earth_rails)
-        shared = voltage.it_earth(live, ac=ac) if it else None
+        points = {name: (Fraction(0), None) if name in earth_rails else (Fraction(rail.max_v), rail.phase) for name, rail in supply.rails.items()}
         for name in sorted(points):
             if supply_of_potential(model, name) is not supply:
                 continue
             max_v, phase = points[name]
-            earth = (
-                shared
-                if shared is not None and name not in earth_rails
-                else voltage.exact(abs(max_v))
-            )
-            found[name] = voltage.RailV(name, supply.name, it, ac, max_v, phase, earth)
+            found[name] = voltage.RailV(name, supply.name, ac, max_v, phase, voltage.exact(abs(max_v)))
     return found
 
 
@@ -86,14 +76,6 @@ def _stands(
     return [Stand(rail.earth, (rail,)) for rail in reached.values()]
 
 
-def ports_by_function(model: Model) -> dict[Id[Function], list[Id[Port]]]:
-    """The ports of each function that has any."""
-    ports_of: dict[Id[Function], list[Id[Port]]] = {}
-    for port in ports(model).values():
-        ports_of.setdefault(port.function, []).append(port.id)
-    return ports_of
-
-
 @dataclasses.dataclass(frozen=True, slots=True)
 class RailReach:
     """What a function's ports reach: the rails by potential, per port, and the pairs across it."""
@@ -105,17 +87,12 @@ class RailReach:
     def stands(self, *, ac: bool) -> list[Stand] | None:
         """The stands of current kind `ac`, or `None` when no port reaches a rail of that kind."""
         lookup = self.lookup
-        at_ports = [
-            [lookup[name] for name in names if name in lookup and lookup[name].ac is ac]
-            for names in self.reached
-        ]
+        at_ports = [[lookup[name] for name in names if name in lookup and lookup[name].ac is ac] for names in self.reached]
         at_ports = [rails for rails in at_ports if rails]
         if not at_ports:
             return None
         pairs = [
-            (lookup[low], lookup[high])
-            for low, high in self.standing
-            if low in lookup and high in lookup and lookup[low].ac is lookup[high].ac is ac
+            (lookup[low], lookup[high]) for low, high in self.standing if low in lookup and high in lookup and lookup[low].ac is lookup[high].ac is ac
         ]
         return _stands(at_ports, pairs)
 
@@ -134,9 +111,9 @@ def reach_of(
 @digest_cached(DIGEST_CACHE_SIZE)
 def _reach_inputs(
     model: Model,
-) -> tuple[dict[str, voltage.RailV], dict[Id[Function], list[Id[Port]]]]:
+) -> tuple[dict[str, voltage.RailV], Mapping[Id[Function], tuple[Id[Port], ...]]]:
     """The rails by potential and the ports by function, built once per model digest."""
-    return rails_by_potential(model), ports_by_function(model)
+    return rails_by_potential(model), build_indexes(model).ports_by_function
 
 
 def function_reach(model: Model, function: Id[Function]) -> RailReach:

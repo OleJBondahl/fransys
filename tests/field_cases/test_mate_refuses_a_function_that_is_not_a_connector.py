@@ -1,31 +1,53 @@
-"""Field case: a harness plug mated with the coil function of a relay.
+"""Field case: a mate and a harness line are refused with MATES_DISABLED (R1216) and `fr.write` raises.
+The plug-to-coil case (`MATE_NOT_CONNECTOR`) is deleted: its only concern was a mate, which 0.22 refuses (R1249)."""
 
-The engineering shape: a plug on a harness is plugged into a relay's coil, a function that is
-neither a connector nor a terminal. A mate joins two connector or terminal functions and makes
-same-named pins conductive; a coil takes no plug.
-
-The bug: `d.mate` accepted the coil, the model froze, and the plug's pins joined the coil's
-same-named pins without a word. Nothing checked the kind of a mate's ends.
-The rule (decision model-0169): a mate whose end is neither a connector nor a terminal function
-is the ERROR `MATE_NOT_CONNECTOR`.
-"""
+from typing import NamedTuple
+lazy from collections.abc import Callable
+lazy from pathlib import Path
 
 import fransys as fr
+import pytest
+from _expected_codes import expect_codes
 
 _PLUG = "DEMO-CONN-2P"
-_RELAY = "DEMO-RLY-2CO-24"
 
 
-def _findings() -> tuple[fr.Finding, ...]:
-    d = fr.design("demo_parts", place="EXT")
-    d.location("EXT", "External")
-    relay = d.device("K1", _RELAY, external=True)
-    harness = d.harness("W3")
-    plug = d.device(None, _PLUG, name="p1", parent=harness)
-    d.mate(plug, relay.coil)
-    return fr.build(d).findings
+class _Io(NamedTuple):
+    X1: fr.Device
+    X2: fr.Device
 
 
-def test_a_plug_mated_to_a_coil_is_an_error() -> None:
-    codes = [f.code for f in _findings() if f.severity.name == "ERROR"]
-    assert "MATE_NOT_CONNECTOR" in codes
+@fr.unit("demo-mated-board", revision=1, interface_version=1, date="2026-02-02", text="First", by="XX")
+def _mated_board(u: fr.Design) -> _Io:
+    first, second = u.device("X1", _PLUG, interface=True), u.device("X2", _PLUG, interface=True)
+    u.mate(first, second)
+    return _Io(first, second)
+
+
+def _design_mate(_cover: Path) -> tuple[fr.Design, tuple[fr.Draft, ...]]:
+    d = fr.design("demo_parts")
+    d.mate(d.device("P1", _PLUG), d.device("P2", _PLUG))
+    return d, ()
+
+
+def _design_unit_mate(_cover: Path) -> tuple[fr.Design, tuple[fr.Draft, ...]]:
+    d = fr.design("demo_parts")
+    d.add(_mated_board, "U1")
+    return d, ()
+
+
+def _design_harness(_cover: Path) -> tuple[fr.Design, tuple[fr.Draft, ...]]:
+    d = fr.design("demo_parts")
+    d.harness("W1")
+    return d, ()
+
+
+@pytest.mark.parametrize("make", [_design_mate, _design_unit_mate, _design_harness])
+def test_write_refuses_a_mate_and_a_harness_line(make: Callable[[Path], tuple[fr.Design, tuple[fr.Draft, ...]]], tmp_path: Path) -> None:
+    cover = tmp_path / "cover.md"
+    cover.write_text("# Cover\n", encoding="utf-8")
+    d, documents = make(cover)
+    result = fr.build(d, *documents)
+    expect_codes(result, "MATES_DISABLED")
+    with pytest.raises(fr.BuildFailedError, match=r"MATES_DISABLED.*draw the connection as a cable or wires"):
+        fr.write(result, tmp_path / "out")

@@ -4,10 +4,10 @@ from typing import TYPE_CHECKING, Any, Final
 
 from fransys_model.checks._finding import ordered
 from fransys_model.derive.facts.children import aspect_parent, parent_item, unit_parent
-from fransys_model.kernel import Finding, Severity
-from fransys_model.vocab.codes import fix_text
+from fransys_model.vocab.codes import finding
 from fransys_model.vocab.finding_ref import ref
 from fransys_model.vocab.tables import aspect_nodes, items, placements, units
+lazy from fransys_model.kernel import Finding
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Mapping
@@ -22,13 +22,7 @@ UNIT_CYCLE: Final[str] = "UNIT_CYCLE"
 
 
 def _finding(code: str, subjects: Iterable[Id[Any]], message: str) -> Finding:
-    return Finding(
-        code=code,
-        severity=Severity.ERROR,
-        subjects=tuple(subjects),
-        message=message,
-        fix=fix_text(code),
-    )
+    return finding(code, tuple(subjects), message)
 
 
 def _cycles[K](parent_of: Mapping[Id[K], Id[K] | None]) -> list[tuple[Id[K], ...]]:
@@ -39,7 +33,7 @@ def _cycles[K](parent_of: Mapping[Id[K], Id[K] | None]) -> list[tuple[Id[K], ...
     """
     settled: set[Id[K]] = set()
     found: list[tuple[Id[K], ...]] = []
-    for start in sorted(parent_of):
+    for start in parent_of:
         path: list[Id[K]] = []
         node: Id[K] | None = start
         while node is not None and node not in settled:
@@ -58,9 +52,7 @@ def _aspect_findings(model: Model) -> list[Finding]:
         _finding(
             ASPECT_CYCLE,
             members,
-            "the parent chain of aspect nodes "
-            + ", ".join(sorted(nodes[member].label for member in members))
-            + " loops",
+            "the parent chain of aspect nodes " + ", ".join(sorted(nodes[member].label for member in members)) + " loops",
         )
         for members in _cycles({node.id: aspect_parent(model, node.id) for node in nodes.values()})
     ]
@@ -68,10 +60,7 @@ def _aspect_findings(model: Model) -> list[Finding]:
         parent_id = aspect_parent(model, node.id)
         parent = None if parent_id is None else nodes[parent_id]
         if parent is not None and parent.aspect is not node.aspect:
-            message = (
-                f"{node.aspect.value} node {node.label} is parented under "
-                f"{parent.aspect.value} node {parent.label}"
-            )
+            message = f"{node.aspect.value} node {node.label} is parented under {parent.aspect.value} node {parent.label}"
             found.append(_finding(ASPECT_CROSS_PARENT, (node.id, parent.id), message))
     return found
 
@@ -99,13 +88,9 @@ def _containment_findings(model: Model) -> list[Finding]:
         _finding(
             CONTAINMENT_CYCLE,
             members,
-            "the parent chain of items "
-            + ", ".join(sorted(ref(member) for member in members))
-            + " loops",
+            "the parent chain of items " + ", ".join(sorted(ref(member) for member in members)) + " loops",
         )
-        for members in _cycles(
-            {item.id: parent_item(model, item.id) for item in all_items.values()}
-        )
+        for members in _cycles({item.id: parent_item(model, item.id) for item in all_items.values()})
     ]
 
 
@@ -115,13 +100,9 @@ def _unit_findings(model: Model) -> list[Finding]:
         _finding(
             UNIT_CYCLE,
             members,
-            "the parent chain of units "
-            + ", ".join(sorted(ref(member) for member in members))
-            + " loops",
+            "the parent chain of units " + ", ".join(sorted(ref(member) for member in members)) + " loops",
         )
-        for members in _cycles(
-            {unit.id: unit_parent(model, unit.id) for unit in all_units.values()}
-        )
+        for members in _cycles({unit.id: unit_parent(model, unit.id) for unit in all_units.values()})
     ]
 
 

@@ -4,11 +4,13 @@ Every colour and size named in the spec's comments is asserted by pin pair. The 
 inside each test, because its names (`fr.DC_SUPPLY`, `k1.co_1.no`, ...) land in Part 2 and 3.
 """
 
+from typing import Any
+
 import fransys as fr
 from fransys.colours import BK, BN, GY, RD, WH
 
 
-def _build() -> list:
+def _build() -> list[Any]:
     """The spec's worked example, verbatim, and its wire rows."""
     d = fr.design(
         "demo_parts",
@@ -36,7 +38,7 @@ def _build() -> list:
     return list(fr.derive.wire_rows(fr.build(d).model))
 
 
-def _row(rows: list, a: str, b: str):
+def _row(rows: list[Any], a: str, b: str):
     """The one wire row whose two ends are pins `a` and `b`, in either order."""
     want = {f"-{a}", f"-{b}"}
     found = [r for r in rows if {r.from_, r.to} == want]
@@ -44,7 +46,7 @@ def _row(rows: list, a: str, b: str):
     return found[0]
 
 
-def _check(rows: list, a: str, b: str, colour, size: float) -> None:
+def _check(rows: list[Any], a: str, b: str, colour, size: float) -> None:
     row = _row(rows, a, b)
     assert (row.colour, row.cross_section_mm2) == (colour, size), f"{a} to {b}"
 

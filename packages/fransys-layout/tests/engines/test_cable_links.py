@@ -2,46 +2,34 @@
 
 A link is a core with both ends in one row: two runs from its pins to a track beside that row and
 a straight run between the corners, its text horizontal on the track. The model tests read the
-records of `cable_models`; the hand-built tests use `block_facts(loops=...)`. Each test names its
-probe.
 """
 
 from dataclasses import replace
 from itertools import pairwise
 
+from cable_checks import block_of
 from cable_facts import TEXT_HEIGHT, block_facts
 from cable_models import l1_picture, ring
 
+from electrical_symbols import LIBRARY
 from fransys_layout.engines.cable.place import place_block
 from fransys_layout.engines.cable.read import read_blocks
 from fransys_layout.engines.overview.lanes.plan_channel import plan_channel, rise
-from fransys_layout.geometry import WIRING_GRID, text_width
-from fransys_model.derive import text_room
+from fransys_layout.geometry import WIRING_GRID, text_width_g
+from fransys_layout.symbols import text_room_on
 from fransys_model.derive.cable_drawing import block_cables, cable_heading, core_text, row_links
 from fransys_model.derive.cable_drawing import end_label as label_of
-from fransys_model.layout import (
-    BlockRow,
-    BoxKind,
-    CableBlock,
-    CableBox,
-    CoreWire,
-    EndBox,
-    EndStyle,
-    layout_of,
-    profile_of,
-)
+from fransys_model.layout import sheet_format_of, tuning_of
 
 G = WIRING_GRID
 ROOM = G + TEXT_HEIGHT  # a link track's room: a grid unit and the text's height
 
 
-def _laid(model, subject):
-    """The block of `subject` as (head, its cable boxes, its end boxes, its wires)."""
-    (head,) = (h for h in layout_of(model, CableBlock).values() if h.subject == subject)
-    boxes = [b for b in layout_of(model, CableBox).values() if b.block == head.id]
-    ends = [e for e in layout_of(model, EndBox).values() if e.block == head.id]
-    wires = [w for w in layout_of(model, CoreWire).values() if w.block == head.id]
-    return head, [b for b in boxes if b.kind is not BoxKind.HARNESS], ends, wires
+def _laid(layout, subject):
+    """The block of `subject` as (block, its cable boxes, its end boxes, its wires)."""
+    block = block_of(layout, subject)
+    assert block is not None
+    return block, [p.box for p in block.boxes], list(block.ends), list(block.wires)
 
 
 def _texts(model, block):
@@ -49,31 +37,30 @@ def _texts(model, block):
 
     Copied from test_cable_engine.py: the test modules do not import each other.
     """
-    h, pad = text_room(model), profile_of(model, None).marker_padding
+    h, pad = text_room_on(model, sheet_format_of(model, None), LIBRARY), tuning_of(model).marker_padding
     cables = {c.cable: c for c in block_cables(model, block.subject, block.unit)}
     cores = {c.conductor: c for cable in cables.values() for c in cable.cores}
     links = set(row_links(model, block.subject, block.unit))
     out = []
-    for end in layout_of(model, EndBox).values():
-        label = label_of(model, end.item, block.unit) if end.block == block.id else ""
-        if label and end.style is not EndStyle.BLANK:
-            w = text_width(label, height=h)
-            y = end.y + end.height + pad if end.row is BlockRow.BOTTOM else end.y - pad - h
+    for end in block.ends:
+        label = label_of(model, end.item, block.unit)
+        if label and not end.blank:
+            w = text_width_g(label, height=h)
+            y = end.y + end.height + pad if not end.top else end.y - pad - h
             x = end.x + (end.width - w) / 2
             out.append(("label", x, x + w, y, y + h))
-    for box in layout_of(model, CableBox).values():
-        if box.block == block.id and box.item in cables:
-            w = text_width(cable_heading(model, cables[box.item], block.unit), height=h)
-            out.append(("heading", box.x + pad, box.x + pad + w, box.y + pad, box.y + pad + h))
-    for wire in layout_of(model, CoreWire).values():
-        if wire.block == block.id:
-            w = text_width(core_text(cores[wire.conductor]), height=h)
-            if wire.conductor in links:
-                x0, y0 = wire.text_x - w / 2, wire.text_y - h / 2
-                out.append(("link", x0, x0 + w, y0, y0 + h))
-            else:
-                y0 = wire.text_y - w / 2
-                out.append(("core", wire.text_x - h / 2, wire.text_x + h / 2, y0, y0 + w))
+    for placed in block.boxes:
+        box = placed.box
+        w = text_width_g(cable_heading(model, cables[placed.cable]), height=h)
+        out.append(("heading", box.x + pad, box.x + pad + w, box.y + pad, box.y + pad + h))
+    for wire in block.wires:
+        w = text_width_g(core_text(cores[wire.conductor]), height=h)
+        if wire.conductor in links:
+            x0, y0 = wire.text_x - w / 2, wire.text_y - h / 2
+            out.append(("link", x0, x0 + w, y0, y0 + h))
+        else:
+            y0 = wire.text_y - w / 2
+            out.append(("core", wire.text_x - h / 2, wire.text_x + h / 2, y0, y0 + w))
     return out
 
 
@@ -93,9 +80,7 @@ def _enters(a, b, rect):
 def _touches(a, b, rect):
     """Whether segment a-b has a point in `rect` or on its edge."""
     x0, x1, y0, y1 = rect
-    return (
-        min(a.x, b.x) <= x1 and max(a.x, b.x) >= x0 and min(a.y, b.y) <= y1 and max(a.y, b.y) >= y0
-    )
+    return min(a.x, b.x) <= x1 and max(a.x, b.x) >= x0 and min(a.y, b.y) <= y1 and max(a.y, b.y) >= y0
 
 
 def _closed(box):
@@ -106,31 +91,26 @@ def test_looped_core_picture_draws_it_at_the_row_outside_the_box():
     """Core 3 joins two pins of -H2; both runs stand on those cells at the row's
     edge, none of its points is in the box or on its edge, its text is outside the box, no text
     overlaps a wire, and the box holds the texts of the two crossing cores only.
-
-    Probe: `place._cores` not excluding links (the looped core gets a box column).
     """
     s = l1_picture()
-    head, (box,), ends, wires = _laid(s.model, s.cable)
-    links = set(row_links(s.model, s.cable, None))
+    head, (box,), ends, wires = _laid(s.layout, s.cable)
+    links = set(row_links(s.frozen, s.cable, None))
     (link,) = [w for w in wires if w.conductor in links]
-    (facts,) = [f for f in read_blocks(s.frozen) if f.subject == s.cable]
+    (facts,) = [f for f in read_blocks(s.frozen, LIBRARY) if f.subject == s.cable]
     (core,) = [c for c in facts.cables[0].cores if c.link]
-    cell_x = {pin.port: pin.x for end in ends for pin in end.pins}
-    bottom = next(e for e in ends if e.row is BlockRow.BOTTOM)
+    cell_x = {cell.port: cell.x for end in ends for cell in end.cells}
+    bottom = next(e for e in ends if not e.top)
     assert (link.run_a[0].x, link.run_b[0].x) == (cell_x[core.end_a], cell_x[core.end_b])
     assert link.run_a[0].y == link.run_b[0].y == bottom.y  # the bottom row's top edge
     assert (len(link.run_a), len(link.run_b)) == (3, 2)
     inside = _closed(box)
     assert not any(_touches(a, b, inside) for a, b in _segments(link))
     assert not (inside[0] <= link.text_x <= inside[1] and inside[2] <= link.text_y <= inside[3])
-    texts = _texts(s.model, head)
+    texts = _texts(s.frozen, head)
     segments = [seg for wire in wires for seg in _segments(wire)]
     assert not any(_enters(a, b, t[1:]) for a, b in segments for t in texts)
     held = [
-        t[0]
-        for t in texts
-        if t[0] in ("core", "link")
-        if inside[0] < (t[1] + t[2]) / 2 < inside[1] and inside[2] < (t[3] + t[4]) / 2 < inside[3]
+        t[0] for t in texts if t[0] in ("core", "link") if inside[0] < (t[1] + t[2]) / 2 < inside[1] and inside[2] < (t[3] + t[4]) / 2 < inside[3]
     ]
     assert held == ["core", "core"]
     assert [t[0] for t in texts].count("link") == 1
@@ -143,22 +123,17 @@ def test_the_ring_draws_its_highest_keyed_core_as_the_one_link_and_an_empty_box(
     Probe: `end_rows` colouring the ring so the link is the lowest-keyed core.
     """
     s = ring()
-    head, boxes, _, wires = _laid(s.model, s.harness)
-    links = row_links(s.model, s.harness, None)
-    (w3,) = [
-        c
-        for cable in block_cables(s.model, s.harness, None)
-        if cable.cable == s.w3
-        for c in cable.cores
-    ]
+    head, _, _, wires = _laid(s.layout, s.harness)
+    links = row_links(s.frozen, s.harness, None)
+    (w3,) = [c for cable in block_cables(s.frozen, s.harness, None) if cable.cable == s.w3 for c in cable.cores]
     assert links == (w3.conductor,)
     (link,) = [w for w in wires if w.conductor in links]
     assert (len(link.run_a), len(link.run_b)) == (3, 2)
     assert len(wires) == 3
-    (box3,) = [b for b in boxes if b.item == s.w3]
+    (box3,) = [p.box for p in head.boxes if p.cable == s.w3]
     segments = [seg for wire in wires for seg in _segments(wire)]
     assert not any(_touches(a, b, _closed(box3)) for a, b in segments)
-    texts = _texts(s.model, head)
+    texts = _texts(s.frozen, head)
     assert not any(_enters(a, b, t[1:]) for a, b in segments for t in texts)
     assert [t[0] for t in texts].count("link") == 1
 
@@ -177,9 +152,7 @@ def _link_wires(block, facts):
 def _reorder(facts, order):
     """The first top end's pins in `order` (indices into its current pins)."""
     end = facts.top[0]
-    return replace(
-        facts, top=(replace(end, pins=tuple(end.pins[i] for i in order)), *facts.top[1:])
-    )
+    return replace(facts, top=(replace(end, pins=tuple(end.pins[i] for i in order)), *facts.top[1:]))
 
 
 def _all_segments(block):
@@ -235,9 +208,7 @@ def test_a_top_link_moves_the_cable_box_down_one_room_a_level():
     plain = block_facts([(0, 0)], loops=[(True, 0)])
     disjoint = block_facts([(0, 0)], loops=[(True, 0), (True, 0)])
     overlap = _reorder(disjoint, (0, 1, 3, 2, 4))
-    placed = {
-        name: place_block(f) for name, f in (("one", plain), ("two", disjoint), ("over", overlap))
-    }
+    placed = {name: place_block(f) for name, f in (("one", plain), ("two", disjoint), ("over", overlap))}
     assert base is not None
     assert all(b is not None for b in placed.values())
     over = placed["over"]
@@ -267,9 +238,7 @@ def test_a_bottom_link_raises_the_lower_band_by_its_text_room():
     row = next(e for e in block.ends if not e.top)
     (box,) = (b.box for b in block.boxes)
     assert row.y - (box.y + box.height) == rise(plan, 1, TEXT_HEIGHT) + G
-    gap = next(e for e in base.ends if not e.top).y - (
-        base.boxes[0].box.y + base.boxes[0].box.height
-    )
+    gap = next(e for e in base.ends if not e.top).y - (base.boxes[0].box.y + base.boxes[0].box.height)
     assert row.y - (box.y + box.height) == gap + TEXT_HEIGHT  # the empty band already held a track
     (link,) = _link_wires(block, facts)
     track = link.run_a[1].y

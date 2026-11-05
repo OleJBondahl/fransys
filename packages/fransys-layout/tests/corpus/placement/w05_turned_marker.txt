@@ -100,6 +100,14 @@ fact head =MAIN-U1-F1.main =MAIN-U1-Q1.element
 fact attached -U1-K2.coil -U1-K1.coil
 fact strip -U1-X1 -U1-X1:1.terminal -U1-X1:3.terminal -U1-X1:2.terminal
 fact strip -U1-X2 -U1-X2:1.terminal -U1-X2:2.terminal
+fact joined =MAIN-U1-F1.main.2.in =MAIN-U1-F1.main.2.out
+fact joined =MAIN-U1-F1.main.3.in =MAIN-U1-F1.main.3.out
+fact joined -U1-X1:1.terminal.n -U1-X1:1.terminal.s
+fact joined -U1-X1:2.terminal.n -U1-X1:2.terminal.s
+fact joined -U1-X1:3.terminal.n -U1-X1:3.terminal.s
+fact joined -U1-X2:2.terminal.n -U1-X2:2.terminal.s
+fact joined =MAIN-U1-F1.main.1.in =MAIN-U1-F1.main.1.out
+fact joined -U1-X2:1.terminal.n -U1-X2:1.terminal.s
 # legend only: a general placer must not read a symbol's kind.
 kind =MAIN-U1-M1.motor actuator
 kind -U1-X1:1.terminal terminal

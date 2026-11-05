@@ -3,12 +3,12 @@
 from typing import TYPE_CHECKING
 
 from fransys_model.derive import (
-    CONTENTS_COLUMNS,
-    CONTENTS_LABELS,
     cell_text,
     column_values,
     contents_rows,
     harness_cables_for,
+    list_columns,
+    list_pdf_heading,
 )
 
 from ._sizes import rule_of
@@ -25,15 +25,11 @@ def contents_page(model: Model, record: DocumentRow, pages: tuple[PageKind, ...]
     cables = harness_cables_for(model, record.id, pages)
     if not cables:
         return ""
-    header = (
-        "table.header(" + ", ".join(f"strong(text({literal(h)}))" for h in CONTENTS_LABELS) + ")"
-    )
+    columns = list_columns(model, "contents")
+    headings = [list_pdf_heading(model, "contents", f) for f in columns]
+    header = "table.header(" + ", ".join(f"strong(text({literal(h)}))" for h in headings) + ")"
     cells = [header]
     for row in contents_rows(cables):
-        values = column_values(row, CONTENTS_COLUMNS)
+        values = column_values(row, columns)
         cells.extend(f"text({literal(cell_text(value))})" for value in values)
-    return (
-        f"#table(columns: {len(CONTENTS_LABELS)}, stroke: {rule_of(model)}, "
-        + ", ".join(cells)
-        + ")"
-    )
+    return f"#table(columns: {len(headings)}, stroke: {rule_of(model)}, " + ", ".join(cells) + ")"

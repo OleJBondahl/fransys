@@ -2,20 +2,15 @@
 example's real facade-built geometry.
 
 Does not modify `test_units_worked_example.py`'s shared fixture functions
-(`pump_cabinet`/`_system_design`): only imports and calls them, the same pattern
-`test_write_unit_worked_example.py` already uses for a sibling root test module.
 """
-
-import sys
-from pathlib import Path
+# CONNECTION_NOT_DRAWN 4 per default-salt build set (MATES-DISABLED): mated, harness or board-unit input, refused for 0.22 (R1216).
 
 import fransys as fr
-import fransys_author
 import fransys_parts
+from _expected_codes import expect_codes
+from fransys_author.design import Design
 
 # `test_declared_dependencies.py`'s own pattern for importing a sibling root test module by
-# name: `--import-mode=importlib` (root pyproject.toml) never puts `tests/` on `sys.path`.
-sys.path.insert(0, str(Path(__file__).resolve().parent))
 from test_units_worked_example import _PROJECT, _system_design, pump_cabinet
 
 from fransys_model.checks.documents import DOCUMENT_UNIT_UNRESOLVED
@@ -35,7 +30,7 @@ def _single_cabinet_design(parts, *, prefix="p", name="C1"):
     """A one-cabinet model, built the same five lines `_build_cabinet_own` uses internally
     (`test_units_worked_example.py`, ~lines 205-211), but returning the `Design` before it is
     built, so a document can be added to the same draft before `fr.build`."""
-    d = fransys_author.Design(parts)
+    d = Design(parts)
     d.project(**_PROJECT)
     d.revision(1, date="2026-09-22", text="First issue", created="XX")
     pump_cabinet(d.scope(prefix), name=name)
@@ -44,11 +39,7 @@ def _single_cabinet_design(parts, *, prefix="p", name="C1"):
 
 def _the_cabinet_unit_id(model):
     """The one `demo-pump-cabinet` unit id in a single-cabinet model."""
-    return next(
-        unit_id
-        for unit_id in units_table(model)
-        if unit_release(model, unit_id).name == "demo-pump-cabinet"
-    )
+    return next(unit_id for unit_id in units_table(model) if unit_release(model, unit_id).name == "demo-pump-cabinet")
 
 
 def _codes(result):
@@ -63,9 +54,6 @@ def test_unit_name_subject_gives_the_same_pdf_and_bom_bytes_as_the_unit_id(tmp_p
     release name resolves to the same unit a document naming it by `Id` does, so `write`
     produces the same file set and byte-identical PDF and `bom.csv` either way.
     Probe (per spec): edit `derive.document_unit`'s
-    `unit_name` branch to `return None`; the by-name write then drops `cabinet.pdf` from its
-    export set (it no longer resolves to the unit at all), and the file-name-set assertion
-    below fails.
     """
     parts = fransys_parts.load("demo_parts")
     cover = _cover(tmp_path, "cabinet.md", "# Cabinet\n")
@@ -106,6 +94,7 @@ def test_unit_name_subject_with_two_instances_gives_one_document_unit_unresolved
 
     result = fr.build(parts, d.draft(), doc)
 
+    expect_codes(result, DOCUMENT_UNIT_UNRESOLVED)
     unresolved = [f for f in result.findings if f.code == DOCUMENT_UNIT_UNRESOLVED]
     assert len(unresolved) == 1
     raw = Finding(
@@ -130,6 +119,7 @@ def test_unit_name_subject_unknown_name_gives_one_document_unit_unresolved(tmp_p
 
     result = fr.build(parts, d.draft(), doc)
 
+    expect_codes(result, DOCUMENT_UNIT_UNRESOLVED)
     unresolved = [f for f in result.findings if f.code == DOCUMENT_UNIT_UNRESOLVED]
     assert len(unresolved) == 1
     expected = unit_name_unresolved(result.model, "no-such-release")

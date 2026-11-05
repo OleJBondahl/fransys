@@ -7,13 +7,13 @@ import fransys_parts
 import pytest
 from fransys_parts import PartLibraryError
 
+from fransys_model.derive import port_templates
 from fransys_model.kernel import Severity, freeze
-from fransys_model.vocab import port_templates
 
 pytestmark = pytest.mark.wp("parts")
 
-_LIBRARY = 'schema = 1\nname = "t"\nversion = "0.0.0"\ndescription = "d"\n'
-_HEAD = """schema = 1
+_LIBRARY = 'schema = 2\nname = "t"\nversion = "0.0.0"\ndescription = "d"\n'
+_HEAD = """schema = 2
 
 [part]
 mpn = "X-1"
@@ -32,8 +32,8 @@ ports = [
 ]
 
 [function.operating]
-nominal_voltage_v = "24"
-resistance_ohm = "1600"
+voltage = [{ nom = "24 V" }]
+resistance = "1600 ohm"
 """
 
 
@@ -120,8 +120,8 @@ ports = [
 ]
 
 [function.operating]
-nominal_voltage_v = "24"
-resistance_ohm = "1600"
+voltage = [{ nom = "24 V" }]
+resistance = "1600 ohm"
 """
     root = _library(tmp_path, relay + body)
     assert "PORT_NAME_SHARED" in _codes(root)

@@ -2,21 +2,20 @@
 
 Every test builds a small library in `tmp_path`: a `library.toml` and, unless a test is
 about `library.toml` itself, one part file under `parts/`. `_codes` reads back the set of
-finding codes `lint` returned, so a test checks exactly the code (and severity) its check
-owns, not incidental noise from the rest of the file.
 """
 
 import itertools
 
 import fransys_parts
+import pytest
 
 from fransys_model.kernel import Severity
 
-_LIBRARY = 'schema = 1\nname = "l"\nversion = "0.1.0"\ndescription = "d"\n'
+_LIBRARY = 'schema = 2\nname = "l"\nversion = "0.1.0"\ndescription = "d"\n'
 _roots = itertools.count()
 
 # A minimal, lint-clean part file: one function, one port, no facets.
-_CLEAN_PART = """schema = 1
+_CLEAN_PART = """schema = 2
 
 [part]
 mpn = "X-1"
@@ -58,7 +57,7 @@ def _codes(root):
 
 
 def test_toml_invalid(tmp_path):
-    root = _root(tmp_path, parts={"p.toml": "schema = 1\n[part\n"})
+    root = _root(tmp_path, parts={"p.toml": "schema = 2\n[part\n"})
     findings = _findings(root)
     assert "TOML_INVALID" in _codes(root)
     assert "TOML_INVALID" not in _codes(_root(tmp_path))
@@ -77,9 +76,16 @@ def test_file_unreadable(tmp_path):
 
 
 def test_schema_unsupported_on_library(tmp_path):
-    root = _root(tmp_path, library='schema = 2\nname = "l"\nversion = "0.1.0"\ndescription = "d"\n')
+    root = _root(tmp_path, library='schema = 3\nname = "l"\nversion = "0.1.0"\ndescription = "d"\n')
     assert "SCHEMA_UNSUPPORTED" in _codes(root)
     assert "SCHEMA_UNSUPPORTED" not in _codes(_root(tmp_path))
+
+
+def test_schema_1_library_is_part_schema_old_with_the_migrate_command(tmp_path):
+    root = _root(tmp_path, library='schema = 1\nname = "l"\nversion = "0.1.0"\ndescription = "d"\n')
+    old = [f for f in fransys_parts.lint(root) if f.code == "PART_SCHEMA_OLD"]
+    assert old
+    assert "migrate_parts_022 script" in old[0].message
 
 
 def test_table_unknown(tmp_path):
@@ -113,15 +119,10 @@ def test_links_with_no_ports_key_reports_link_port_unknown_not_a_crash(tmp_path)
     assert "LINK_PORT_UNKNOWN" in {f.code for f in findings}
 
 
-_CABLE_PRODUCT = (
-    "[cable_product]\n"
-    'core_count = 3\ncore_colours = ["BN", "BK"]\ngauge_mm2 = "1.5"\nshielded = false'
-)
+_CABLE_PRODUCT = '[cable_product]\ncore_count = 3\ncore_colours = ["BN", "BK"]\ngauge_mm2 = "1.5"\nshielded = false'
 
 
-_CABLE_PRODUCT_ONE_CORE = (
-    '[cable_product]\ncore_count = 1\ncore_colours = ["BN"]\ngauge_mm2 = "1.5"\nshielded = false'
-)
+_CABLE_PRODUCT_ONE_CORE = '[cable_product]\ncore_count = 1\ncore_colours = ["BN"]\ngauge_mm2 = "1.5"\nshielded = false'
 
 
 _PART_HEAD = _CLEAN_PART[: _CLEAN_PART.index("[[function]]")]
@@ -143,11 +144,7 @@ _SIX_CORES = '["WH", "BN", "WH", "BN", "SH", "SH"]'
 def _pair_part(pairs, colours=_SIX_CORES):
     """A cable part whose `[cable_product]` carries `pairs` (inline-table text) over six cores."""
     cable = _CLEAN_PART.replace('category = "generic"', 'category = "cable"')
-    return (
-        cable + "\n[cable_product]\n"
-        f'core_count = 6\ncore_colours = {colours}\ngauge_mm2 = "0.75"\nshielded = false\n'
-        f"pairs = {pairs}\n"
-    )
+    return cable + f'\n[cable_product]\ncore_count = 6\ncore_colours = {colours}\ngauge_mm2 = "0.75"\nshielded = false\npairs = {pairs}\n'
 
 
 def _pair_codes(tmp_path, pairs, colours=_SIX_CORES):
@@ -191,45 +188,12 @@ def test_cable_pair_screen_named_twice(tmp_path):
     assert "CABLE_PAIR_INVALID" in _pair_codes(tmp_path, pairs)
 
 
-def _bar_part(symbol_line="", ports=None):
-    """A bar function with `ports` (a TOML array), and `symbol_line` before it if given."""
-    ports = ports if ports is not None else _bar_ports(20)
-    return _PART_HEAD + f'[[function]]\nname = "pe"\nkind = "bar"\n{symbol_line}ports = {ports}\n'
-
-
-def _bar_ports(count):
-    """`count` PE ports named `1`..`count`, as one TOML array."""
-    return "[" + ", ".join(f'{{ name = "{n}", role = "pe" }}' for n in range(1, count + 1)) + "]"
-
-
-def test_bar_with_a_symbol_is_refused_and_the_message_names_the_fix(tmp_path):
-    root = _root(tmp_path, parts={"p.toml": _bar_part('symbol = "terminal"\n')})
-    (finding,) = [f for f in _findings(root) if f.code == "BAR_SYMBOL"]
-    assert finding.severity is Severity.ERROR
-    assert "a bar is never drawn: remove symbol" in finding.message
-    assert "BAR_SYMBOL" not in _codes(_root(tmp_path, parts={"p.toml": _bar_part()}))
-
-
-def test_bar_with_twenty_pe_ports_and_no_symbol_is_clean(tmp_path):
-    root = _root(tmp_path, parts={"p.toml": _bar_part()})
-    assert "BAR_SYMBOL" not in _codes(root)
-    assert "FUNCTION_WITHOUT_PORTS" not in _codes(root)
-    assert _codes(root) == set()
-
-
-def test_cut_to_length_bar_with_no_ports_is_not_a_function_without_ports(tmp_path):
-    root = _root(tmp_path, parts={"p.toml": _bar_part(ports="[]")})
-    assert "FUNCTION_WITHOUT_PORTS" not in _codes(root)
-
-
 def test_a_generic_function_with_no_ports_is_still_refused(tmp_path):
     part = _PART_HEAD + '[[function]]\nname = "f1"\nkind = "generic"\nports = []\n'
     assert "FUNCTION_WITHOUT_PORTS" in _codes(_root(tmp_path, parts={"p.toml": part}))
 
 
-_OPERATED_HEAD = _PART_HEAD.replace(
-    'class_code = "X"\n', 'class_code = "X"\noperated_by = "mushroom"\n'
-)
+_OPERATED_HEAD = _PART_HEAD.replace('class_code = "X"\n', 'class_code = "X"\noperated_by = "mushroom"\n')
 
 
 def test_operated_by_head_without_function_lints_clean(tmp_path):
@@ -269,8 +233,13 @@ def test_class_code_letter_rules_come_from_the_designation_scheme(tmp_path):
         ("Z", "reserved"),
     ):
         part = _CLEAN_PART.replace('class_code = "X"', f'class_code = "{code}"')
-        found = [
-            f for f in _findings(_root(tmp_path, parts={"p.toml": part})) if f.code == "CLASS_CODE"
-        ]
+        found = [f for f in _findings(_root(tmp_path, parts={"p.toml": part})) if f.code == "CLASS_CODE"]
         assert [rule in f.message for f in found] == [True], code
     assert "CLASS_CODE" not in _codes(_root(tmp_path))
+
+
+def test_loading_a_schema_1_library_raises_with_part_schema_old(tmp_path):
+    root = _root(tmp_path, library='schema = 1\nname = "l"\nversion = "0.1.0"\ndescription = "d"\n')
+    with pytest.raises(fransys_parts.PartLibraryError) as caught:
+        fransys_parts.load_path(root)
+    assert "PART_SCHEMA_OLD" in {f.code for f in caught.value.findings}

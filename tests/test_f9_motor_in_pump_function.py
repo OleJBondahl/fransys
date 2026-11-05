@@ -1,25 +1,15 @@
 """A field motor that belongs to a pump's function group `=P1`
 sits outside the cabinet unit, at a top-level `+EXT`, in no unit and in no field group of its
 own. It never un-owns `=P1` for the cabinet, so the cabinet's own set titles the page with the
-group ("Pump 1", not the unit's name) and `own_nodes` keeps `=P1` and `+C1` and leaves `+EXT`
-out; an off-stub names the far end by its product designation, "+EXT-M1:...", with no
-function segment. A function node an item of another unit sits in is not the unit's own: the
-relay board nested in the cabinet, in the cabinet's `=PLC`, keeps its short designation list
-("-J1") and its unit-name page title (a unit's own groups title its pages).
-
-Can-fail, checked by hand: with `own_nodes` un-owning a function node for any outside item
-(`if item not in members: outside.add(node_id)` for both aspects) the page-title tests and
-the `own_nodes` test fail; with `_full_port` (folded into `end_text`, `stub_far_end`'s head
-now, A3) reading `reference_designation` again the off-stub test failed.
 """
 
 import re
 from typing import Any
 
 import fransys as fr
-import fransys_author
 import fransys_parts
-from _model_build_cover import layout_trigger_document
+from _model_build_cover import cabinet_document, layout_trigger_document, unit_document
+from fransys_author.design import Design
 
 from fransys_model.derive import designation_list, page_title, unit_release
 from fransys_model.derive.stub_text import off_stub_text
@@ -39,10 +29,10 @@ _PROJECT: dict[str, Any] = {
 _STUB = re.compile(r"^-W\d+ [→←] \+EXT-\S+:.+")
 
 
-def _laid_out(parts, draft):
+def _laid_out(parts, draft, *printed):
     """`fr.build`'s model, after asserting it carries no `ERROR` (decision 0028: an `ERROR`
     stops `build` before layout, so the test would find no `layout.*` record to measure)."""
-    result = fr.build(parts, draft, layout_trigger_document())
+    result = fr.build(parts, draft, layout_trigger_document(), *printed)
     errors = [f.code for f in result.findings if f.severity is Severity.ERROR]
     assert errors == []
     return result.model
@@ -53,7 +43,7 @@ def _build():
     motor M1 at the top-level +EXT. Both cabinet items and the motor sit in the top-level
     group `=P1` ("Pump 1"); the motor has no field group of its own."""
     parts = fransys_parts.load("demo_parts")
-    d = fransys_author.Design(parts)
+    d = Design(parts)
     d.project(**_PROJECT)
     d.revision(1, date="2026-09-24", text="First issue", created="XX")
     p1 = d.group("P1", "Pump 1")
@@ -70,7 +60,7 @@ def _build():
     cable = d.cable("DEMO-CBL-4G1.5", tag="W1", length_mm=15000)
     cable.core(1, terminals[0].outer, motor["U"])
     u.unused(terminals[1])  # the spare terminal: declared, so no BOUNDARY_UNCONNECTED
-    return _laid_out(parts, d.draft())
+    return _laid_out(parts, d.draft(), unit_document(u), cabinet_document(ext))  # all sets printed
 
 
 def _cabinet(model):
@@ -134,7 +124,7 @@ def test_a_function_node_shared_with_another_units_item_is_not_the_units_own() -
     function node owned (drop `elif all_items[item].unit is not None` in `own_nodes`) and
     both units own "P1"."""
     parts = fransys_parts.load("demo_parts")
-    d = fransys_author.Design(parts)
+    d = Design(parts)
     d.project(**_PROJECT)
     d.revision(1, date="2026-09-24", text="First issue", created="XX")
     p1 = d.group("P1", "Pump 1")
@@ -152,7 +142,7 @@ def _build_nested_board():
     """A cabinet unit whose relay board is a unit nested in it; both stand in the top-level
     group `=PLC`, so `=PLC` holds items of two units."""
     parts = fransys_parts.load("demo_parts")
-    d = fransys_author.Design(parts)
+    d = Design(parts)
     d.project(**_PROJECT)
     d.revision(1, date="2026-09-24", text="First issue", created="XX")
     plc = d.group("PLC", "WAGO PLC")
@@ -170,7 +160,7 @@ def _build_nested_board():
     wire(j1["2"], k1.fn("coil")["A2"])
     board.boundary(j1)
     board.unused(j1)  # nothing crosses the board's boundary: declared, so no BOUNDARY_UNCONNECTED
-    return _laid_out(parts, d.draft())
+    return _laid_out(parts, d.draft(), unit_document(cab))  # the nested board prints with its cabinet
 
 
 def test_a_nested_board_keeps_its_short_list_and_its_unit_name_title() -> None:

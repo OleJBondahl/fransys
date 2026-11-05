@@ -1,17 +1,20 @@
-"""One builder per house text record, taking plain values: the facade and the tests share them.
+"""`house_records`: the house text records of the `settings.toml` tables, one path for all of them.
 
 The key of each record is `("build", <table>)`, so a record is the same wherever it is built.
 """
 
 from decimal import Decimal
-lazy from collections.abc import Mapping, Sequence
+from typing import Any, cast
+lazy from collections.abc import Mapping
 
-from fransys_model.kernel import make_id
+from fransys_model.kernel import Record, SchemaError, make_id
 
+from .house_export import DesignationForm, ExportForm
+from .house_lists import Lists
 from .house_text import (
-    ColourCodes,
     FrameForm,
     HarnessText,
+    HouseProfile,
     ReferenceText,
     RevisionForm,
     RevisionTableForm,
@@ -21,126 +24,67 @@ from .house_text import (
     Words,
 )
 
-__all__ = [
-    "colour_codes",
-    "frame_form",
-    "harness_text",
-    "reference_text",
-    "revision_form",
-    "revision_table_form",
-    "stub_text",
-    "title_block_form",
-    "wire_label_text",
-    "words",
-]
+__all__ = ["HOUSE_TABLES", "house_records"]
+
+# The tables whose keys are the record's fields; `words` and `lists` are built below.
+_FORMS = {
+    "reference": ReferenceText,
+    "frame": FrameForm,
+    "stub": StubText,
+    "wire_label": WireLabelText,
+    "harness": HarnessText,
+    "profile": HouseProfile,
+    "title_block": TitleBlockForm,
+    "revision_table": RevisionTableForm,
+    "revision": RevisionForm,
+}
+_LAST = {"export": ExportForm, "designation": DesignationForm}
+HOUSE_TABLES = (*_FORMS, "words", "lists", *_LAST)
 
 
-def reference_text(
-    *, page_prefix: str, cell_sep: str, location_sign: str, set_sep: str, width_sample: str
-) -> ReferenceText:
-    """The `[reference]` record from its five values."""
-    return ReferenceText(
-        id=make_id(ReferenceText, ("build", "reference")),
-        key=("build", "reference"),
-        page_prefix=page_prefix,
-        cell_sep=cell_sep,
-        location_sign=location_sign,
-        set_sep=set_sep,
-        width_sample=width_sample,
+def _field(key: str, value: object) -> object:
+    """A `*_mm` length is an exact decimal of the mm; a list is a tuple."""
+    if key.endswith("_mm"):
+        return Decimal(str(float(cast("float", value))))
+    return tuple(value) if isinstance(value, (list, tuple)) else value
+
+
+def _column(name: str, table: Mapping[str, Any], key: str) -> tuple[str, ...]:
+    """The `key` of each row of `table["columns"]`, in order; a row without it is refused."""
+    out: list[str] = []
+    for number, row in enumerate(table["columns"], start=1):
+        if key not in row:
+            msg = f"[lists.{name}.columns] row {number} has no `{key}` key; give every row of that table a `{key} = ...` line"
+            raise SchemaError(msg, kind="layout.lists")
+        out.append(str(row[key]))
+    return tuple(out)
+
+
+def _lists(tables: Mapping[str, Mapping[str, Any]]) -> Lists:
+    """The `[lists]` record: per list name its `columns` rows and its `pdf_columns`."""
+    key = ("build", "lists")
+    return Lists(
+        id=make_id(Lists, key),
+        key=key,
+        columns=frozendict({name: _column(name, t, "field") for name, t in tables.items()}),
+        pdf_words=frozendict({name: _column(name, t, "pdf") for name, t in tables.items()}),
+        csv_words=frozendict({name: _column(name, t, "csv") for name, t in tables.items()}),
+        pdf_columns=frozendict({name: tuple(t["pdf_columns"]) for name, t in tables.items() if "pdf_columns" in t}),
     )
 
 
-def frame_form(*, row_labels: str, column_labels: str, row_order: str) -> FrameForm:
-    """The `[frame]` record from its three values."""
-    return FrameForm(
-        id=make_id(FrameForm, ("build", "frame")),
-        key=("build", "frame"),
-        row_labels=row_labels,
-        column_labels=column_labels,
-        row_order=row_order,
-    )
+def _record(cls: type[Any], name: str, table: Mapping[str, Any]) -> Record:
+    key = ("build", name)
+    return cls(id=make_id(cls, key), key=key, **{k: _field(k, v) for k, v in table.items()})
 
 
-def stub_text(*, arrow_in: str, arrow_out: str, port_sep: str, port_join: str) -> StubText:
-    """The `[stub]` record from its four values."""
-    return StubText(
-        id=make_id(StubText, ("build", "stub")),
-        key=("build", "stub"),
-        arrow_in=arrow_in,
-        arrow_out=arrow_out,
-        port_sep=port_sep,
-        port_join=port_join,
-    )
-
-
-def wire_label_text(*, separator: str, show_ends: bool) -> WireLabelText:
-    """The `[wire_label]` record from its two values."""
-    return WireLabelText(
-        id=make_id(WireLabelText, ("build", "wire_label")),
-        key=("build", "wire_label"),
-        separator=separator,
-        show_ends=show_ends,
-    )
-
-
-def harness_text(*, branch_sep: str) -> HarnessText:
-    """The `[harness]` record from its value."""
-    return HarnessText(
-        id=make_id(HarnessText, ("build", "harness")),
-        key=("build", "harness"),
-        branch_sep=branch_sep,
-    )
-
-
-def colour_codes(*, pe: str, shield: str, defaults: Mapping[str, Sequence[str]]) -> ColourCodes:
-    """The `[colours]` record: `defaults` maps a wiring row name to its colour and size text."""
-    return ColourCodes(
-        id=make_id(ColourCodes, ("build", "colours")),
-        key=("build", "colours"),
-        pe=pe,
-        shield=shield,
-        defaults=frozendict({row: tuple(spec) for row, spec in defaults.items()}),
-    )
-
-
-def title_block_form(
-    *, fields: Sequence[str], band_mm: float, centre_gap_mm: float
-) -> TitleBlockForm:
-    """The `[title_block]` record; the two lengths are held as exact decimals of the mm."""
-    return TitleBlockForm(
-        id=make_id(TitleBlockForm, ("build", "title_block")),
-        key=("build", "title_block"),
-        fields=tuple(fields),
-        band_mm=Decimal(str(band_mm)),
-        centre_gap_mm=Decimal(str(centre_gap_mm)),
-    )
-
-
-def revision_table_form(*, columns: Sequence[str], description_mm: float) -> RevisionTableForm:
-    """The `[revision_table]` record; the width is held as an exact decimal of the mm."""
-    return RevisionTableForm(
-        id=make_id(RevisionTableForm, ("build", "revision_table")),
-        key=("build", "revision_table"),
-        columns=tuple(columns),
-        description_mm=Decimal(str(description_mm)),
-    )
-
-
-def revision_form(*, date_format: str, initials_required: bool, printed: str) -> RevisionForm:
-    """The `[revision]` record; `printed` is the table's `format` key, the form of `1.1`."""
-    return RevisionForm(
-        id=make_id(RevisionForm, ("build", "revision")),
-        key=("build", "revision"),
-        date_format=date_format,
-        initials_required=initials_required,
-        format=printed,
-    )
-
-
-def words(table: Mapping[str, str]) -> Words:
-    """The `[words]` record from the whole table, key to text."""
-    return Words(
-        id=make_id(Words, ("build", "words")),
-        key=("build", "words"),
-        words=frozendict(table),
+def house_records(tables: Mapping[str, Mapping[str, object]]) -> tuple[Record, ...]:
+    """One record per table of `HOUSE_TABLES` in `tables`, in that order; a table key is a record field."""
+    key = ("build", "words")
+    words = Words(id=make_id(Words, key), key=key, words=frozendict(cast("Mapping[str, str]", tables["words"])))
+    return (
+        *(_record(cls, name, tables[name]) for name, cls in _FORMS.items()),
+        words,
+        _lists(cast("Mapping[str, Mapping[str, Any]]", tables["lists"])),
+        *(_record(cls, name, tables[name]) for name, cls in _LAST.items()),
     )

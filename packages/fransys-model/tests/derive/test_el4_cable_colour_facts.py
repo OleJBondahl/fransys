@@ -17,9 +17,10 @@ from fransys_model.derive.facts.colours import (
     unknown_wire_colours,
 )
 from fransys_model.derive.facts.potentials import is_wired, on_declared_net, pe_ports_off_pe
+from fransys_model.elecdef import PinRole
 from fransys_model.kernel import Id, make_id
 from fransys_model.vocab.core import Item, Port
-from fransys_model.vocab.enums import PartCategory, PortRole
+from fransys_model.vocab.enums import PartCategory, PortBoundary
 from fransys_model.vocab.facets.cable import CableFacet, CableProductFacet, CoreFacet
 from fransys_model.vocab.facets.wire import WireFacet
 lazy from fransys_model.vocab.connectivity import Conductor
@@ -41,11 +42,7 @@ def _plant(colours: tuple[str, ...]) -> Plant:
         )
     )
     cable = plant.item("w1", designation="W1", part=part)
-    plant.add(
-        CableFacet(
-            id=make_id(CableFacet, ("w1", "c")), key=("w1", "c"), subject=cable, length_mm=None
-        )
-    )
+    plant.add(CableFacet(id=make_id(CableFacet, ("w1", "c")), key=("w1", "c"), subject=cable, length_mm=None))
     return plant
 
 
@@ -122,7 +119,8 @@ def test_is_wired_and_pe_ports_off_pe() -> None:
         function=function,
         template=None,
         name="PE",
-        role=PortRole.PE,
+        boundary=PortBoundary.GENERIC,
+        pin_role=PinRole.PE,
     )
     plant.add(pe)
     assert not is_wired(plant.model(), pe.id)

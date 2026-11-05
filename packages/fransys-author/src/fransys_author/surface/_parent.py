@@ -29,9 +29,7 @@ def cable_parent_item(parent: object) -> Item:
     """The device item a cable is fitted to, or an `AuthorError` naming what `parent=` takes."""
     item = getattr(parent, "_item", None)
     if item is None or isinstance(parent, Terminal):
-        kind = {"TerminalStrip": "strip", "Run": "run", "Terminal": "terminal"}.get(
-            type(parent).__name__, type(parent).__name__
-        )
+        kind = {"TerminalStrip": "strip", "Run": "run", "Terminal": "terminal"}.get(type(parent).__name__, type(parent).__name__)
         msg = f"parent= takes a device, not a {kind}"
         raise AuthorError(msg)
     return cast("Item", item)

@@ -6,11 +6,13 @@ Layout reads it to stand a box over the pin group it feeds (CONVENTIONS-V06 V1).
 import dataclasses
 lazy from collections.abc import Collection
 
-from fransys_model.derive.facts.closure import physical_nets
+from fransys_model.derive.facts.closure import drawn_physical_nets
 from fransys_model.derive.indexes import build_indexes
 from fransys_model.vocab.tables import functions, ports
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.core import Function, Item, Port
+
+_TWO_PORT = 2  # "two-port net" is the rule
 
 
 @dataclasses.dataclass(frozen=True, slots=True)
@@ -28,12 +30,10 @@ class BoxPair:
     port_pairs: tuple[tuple[Id[Port], Id[Port]], ...]
 
 
-def _far_ports(
-    nets: dict[Id[Port], tuple[Id[Port], ...]], own: tuple[Id[Port], ...]
-) -> list[Id[Port]] | None:
+def _far_ports(nets: dict[Id[Port], tuple[Id[Port], ...]], own: tuple[Id[Port], ...]) -> list[Id[Port]] | None:
     """The other end of each of `own`'s two-port nets, or `None` when one is not a two-port net."""
     ends = [nets.get(port, ()) for port in own]
-    if not own or any(len(net) != 2 for net in ends):  # noqa: PLR2004 -- "two-port net" is the rule
+    if not own or any(len(net) != _TWO_PORT for net in ends):
         return None
     return [next(p for p in net if p != port) for port, net in zip(own, ends, strict=True)]
 
@@ -43,9 +43,7 @@ def _item_of(model: Model, function: Id[Function]) -> Id[Item]:
     return functions(model)[function].item
 
 
-def _ports_of(
-    model: Model, function: Id[Function], drawn: Collection[Id[Port]] | None
-) -> tuple[Id[Port], ...]:
+def _ports_of(model: Model, function: Id[Function], drawn: Collection[Id[Port]] | None) -> tuple[Id[Port], ...]:
     """`function`'s ports, or only those in `drawn` when it is given."""
     every = build_indexes(model).ports_by_function.get(function, ())
     return every if drawn is None else tuple(port for port in every if port in drawn)
@@ -72,9 +70,7 @@ def _pair_of(
     return BoxPair(function, partner, tuple(zip(own, far, strict=True)))
 
 
-def box_pairs(
-    model: Model, drawn: Collection[Id[Port]] | None = None
-) -> dict[Id[Function], BoxPair]:
+def box_pairs(model: Model, drawn: Collection[Id[Port]] | None = None) -> dict[Id[Function], BoxPair]:
     """Each function wired point to point to one function of another item, and the port pairs.
 
     Every port of the function has a two-port net to a port of that one function, one to one, and
@@ -83,6 +79,6 @@ def box_pairs(
     reading of the box sides. With `drawn`, only the ports in it count on either
     side: a port the profile leaves off the page is no member of its function.
     """
-    nets = {port: net.ports for net in physical_nets(model) for port in net.ports}
+    nets = {port: net.ports for net in drawn_physical_nets(model) for port in net.ports}
     pairs = {f: _pair_of(model, nets, f, drawn) for f in build_indexes(model).ports_by_function}
     return {function: pair for function, pair in pairs.items() if pair is not None}

@@ -2,7 +2,6 @@
 
 The core holds no turn rule (SB4). A test that needs a symbol at several orientations builds
 its views here, where symdef turns them; a test of the core's pick-and-move writes a `Turned`
-by hand instead (test_views.py).
 """
 
 from __future__ import annotations
@@ -33,7 +32,7 @@ def turn_pin(pin: Pin, orient: Orientation) -> PinTurn:
     """The pin's offset and facing turned by symdef's `orient_point` and `orient_direction`."""
     where = symdef.orient_point(symdef.Point(pin.dx, pin.dy), symdef.Orientation(orient))
     facing = symdef.orient_direction(symdef.Direction[pin.side], symdef.Orientation(orient))
-    return PinTurn(round(where.x), round(where.y), facing.name)  # type: ignore[arg-type]
+    return PinTurn(round(where.x), round(where.y), facing.name)
 
 
 def turned(  # noqa: PLR0913, PLR0917 -- the R0 symbol's parts and the orient, as Sym holds them
@@ -64,9 +63,7 @@ def views_of(  # noqa: PLR0913, PLR0917 -- the R0 symbol's parts, as Sym holds t
 ) -> Mapping[Orientation, Turned]:
     """The views of a symbol given at R0, one per orientation in orients."""
     held = tuple(pins)
-    return frozendict(
-        {o: turned(body, keepout, footprint, held, row_footprint, o) for o in orients}
-    )
+    return frozendict({o: turned(body, keepout, footprint, held, row_footprint, o) for o in orients})
 
 
 def marker_views(box: Box, orients: Iterable[Orientation] = ALL_EIGHT) -> Mapping[Orientation, Box]:
@@ -79,9 +76,7 @@ def refit(sym: Sym, **changes: Any) -> Sym:
 
     `body`, `keepout`, `footprint` and `row_footprint` are the R0 view's parts, not Sym fields.
     """
-    flat = {
-        k: changes.pop(k) for k in ("body", "keepout", "footprint", "row_footprint") if k in changes
-    }
+    flat = {k: changes.pop(k) for k in ("body", "keepout", "footprint", "row_footprint") if k in changes}
     new = replace(sym, **changes)
     views = views_of(
         flat.get("body", sym.body),

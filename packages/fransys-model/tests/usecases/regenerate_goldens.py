@@ -1,9 +1,7 @@
 """Write the golden files `test_usecases.py` compares against (run by hand, never by pytest).
 
     uv run python tests/usecases/regenerate_goldens.py
-
 A golden changes only on purpose: run this, read `git diff tests/golden/`, and commit the
-diff together with the change that caused it.
 """
 
 from pathlib import Path
@@ -36,10 +34,8 @@ if TYPE_CHECKING:
 _GOLDEN_DIR = Path(__file__).resolve().parent.parent / "golden"
 
 
-def _item_by_designation(model: Model, designation: str) -> Id[Item]:
-    (item,) = (
-        i for i in items_of(model).values() if own_designation_or_none(model, i) == designation
-    )
+def item_by_designation(model: Model, designation: str) -> Id[Item]:
+    (item,) = (i for i in items_of(model).values() if own_designation_or_none(model, i) == designation)
     return item.id
 
 
@@ -65,21 +61,21 @@ def main() -> None:
         _write(f"cabinet.{name}.json", repr(query(housed)))
     _write(
         "cabinet.terminal_rows.x1.json",
-        repr(terminal_rows(housed, _item_by_designation(housed, "X1"))),
+        repr(terminal_rows(housed, item_by_designation(housed, "X1"))),
     )
     _write(
         "cabinet.cable_rows.w1.json",
-        repr(cable_rows(cabinet, _item_by_designation(cabinet, "W1"))),
+        repr(cable_rows(cabinet, item_by_designation(cabinet, "W1"))),
     )
     _write(
         "harness_board.board_netlist.jb1.json",
-        repr(board_netlist(harness, _item_by_designation(harness, "JB1"))),
+        repr(board_netlist(harness, item_by_designation(harness, "JB1"))),
     )
     _write("harness_board.overview_graph.json", repr(overview_graph(harness)))
-    numbered, _ = number(harness)
+    numbered, _ = number(with_house(harness))
     _write(
         "harness_board.harness_cables.wh1.json",
-        repr(harness_cables(numbered, _item_by_designation(numbered, "WH1"))),
+        repr(harness_cables(numbered, item_by_designation(numbered, "WH1"))),
     )
 
 

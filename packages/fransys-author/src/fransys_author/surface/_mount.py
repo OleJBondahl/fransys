@@ -30,9 +30,7 @@ def _poled(facts: PartFacts, fn: EngineFn) -> list[tuple[Port, Port]]:
     return found if any(a.id != b.id for a, b in found) else []
 
 
-def _mount_poles(
-    design: Design, fn: EngineFn, k: int, carrier: Device | Fn, mounted: Device | Fn
-) -> None:
+def _mount_poles(design: Design, fn: EngineFn, k: int, carrier: Device | Fn, mounted: Device | Fn) -> None:
     """Join the one carrier function of `k` poles, load side to line side, pole by pole."""
     facts = design._pairing_facts
     found = carrier_function(

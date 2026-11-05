@@ -13,14 +13,12 @@ PACKAGE_ROOT = Path(__file__).resolve().parent.parent
 SRC_ROOT = PACKAGE_ROOT / "src" / "fransys_layout"
 
 ALLOWED_CODES = frozenset({"PLR2004"})
-NOQA = re.compile(
-    r"#\s*noqa\b(?::\s*(?P<codes>[A-Za-z0-9]+(?:\s*,\s*[A-Za-z0-9]+)*))?", re.IGNORECASE
-)
+NOQA = re.compile(r"#\s*noqa\b(?::\s*(?P<codes>[A-Za-z0-9]+(?:\s*,\s*[A-Za-z0-9]+)*))?", re.IGNORECASE)
 
 
 def suppressions(source: str) -> list[tuple[int, str]]:
     """(line, what) of each bare `# noqa` and each noqa code outside ALLOWED_CODES."""
-    found = []
+    found: list[tuple[int, str]] = []
     for tok in tokenize.generate_tokens(io.StringIO(source).readline):
         match = NOQA.search(tok.string) if tok.type == tokenize.COMMENT else None
         if match is None:
@@ -35,7 +33,7 @@ def suppressions(source: str) -> list[tuple[int, str]]:
 
 def scan(src_root: Path) -> list[str]:
     """One `path:line: what` per forbidden suppression under `src_root`."""
-    out = []
+    out: list[str] = []
     for path in sorted(src_root.rglob("*.py")):
         rel = path.relative_to(src_root).as_posix()
         hits = suppressions(path.read_text(encoding="utf-8"))

@@ -20,6 +20,7 @@ import sys
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path, PurePosixPath
+from typing import Any
 
 _GROUPS: tuple[tuple[tuple[str, ...], ...], ...] = (
     (("just", "check"),),
@@ -60,11 +61,33 @@ DATA_GLOBS: tuple[str, ...] = (
     "examples/**",
     "**/pyproject.toml",
     "uv.lock",
-    "ceilings.toml",
-    "one-home.toml",
     "packages/*/src/*/conventions/**",  # module-level tables are read at import only
     "packages/fransys-el/src/*/texts.py",  # the text-placement table, read at import only
     "packages/fransys-model/src/fransys_model/derive/rows.py",  # the same, for the row shapes
+)
+# Gate config the always-run tests read: not data, so an edit selects them instead of forcing a full run (R1649 FG4).
+GATE_CONFIG: tuple[str, ...] = ("ceilings.toml", "one-home.toml", "tests/ratchets.toml")
+# Tests that read a GATE_CONFIG file: testmon cannot see it, so they run when one of those files changed (R1649 FG4).
+GATE_READERS: tuple[str, ...] = (
+    "tests/test_ceilings_keys.py",
+    "tests/test_order_sites.py",
+    "tests/field_cases/test_a_wire_does_not_run_on_a_harness_line.py",
+    "tests/test_corpus_drawing_invariants.py",
+    "tests/test_drawn_symbols_placed_by_core.py",
+    "tests/test_escape_hatches.py",
+    "tests/test_placement_corpus_mcc.py",
+    "tests/test_ratchet_census.py",
+    "tests/test_ratchet_clones.py",
+    "tests/test_ratchet_mutable_surface.py",
+    "tests/test_ratchet_own_errors.py",
+    "tests/test_ratchet_table_scans.py",
+    "tests/test_ratchet_twin_doors.py",
+    "tests/test_ratchet_unread_doors.py",
+    "tests/test_rule_marker_free_side.py",
+    "tests/test_rule_where_wired_terminal_copy.py",
+    "tests/test_settings_literals.py",
+    "tests/test_trunk_lane_ends_corpus.py",
+    "tests/test_lean_ceilings.py",
 )
 # Every non-.py file under these is data too (bundle.json, guide pages, fonts, fixtures).
 NON_PY_UNDER: tuple[str, ...] = ("packages/*/src/**", "packages/*/tests/**", "tests/**")
@@ -117,8 +140,15 @@ def run_group(group: tuple[tuple[str, ...], ...]) -> list[Block]:
     return blocks
 
 
-def run_all(groups: Groups = _GROUPS) -> int:
-    """Run `groups` at once, print every block in group order, return the first failing code."""
+def all_groups(root: Path = ROOT) -> Groups:
+    """`_GROUPS`, plus the maintainers' own gate (`internal-gate`, internal/internal.just) where the full repo has its recipes (R1348)."""
+    internal = (("just", "internal-gate"),)
+    return (*_GROUPS, internal) if (root / "internal" / "internal.just").is_file() else _GROUPS
+
+
+def run_all(groups: Groups | None = None) -> int:
+    """Run `groups` (default `all_groups()`) at once, print every block in group order, return the first failing code."""
+    groups = all_groups() if groups is None else groups
     with ThreadPoolExecutor(len(groups)) as pool:
         results = list(pool.map(run_group, groups))
     code = 0
@@ -137,6 +167,8 @@ def run_all(groups: Groups = _GROUPS) -> int:
 def is_data(path: str) -> bool:
     """Whether a tracked path is a file whose change testmon cannot see."""
     pure = PurePosixPath(path)
+    if path in GATE_CONFIG:
+        return False
     if any(pure.full_match(glob) for glob in DATA_GLOBS):
         return True
     return pure.suffix != ".py" and any(pure.full_match(glob) for glob in NON_PY_UNDER)
@@ -156,21 +188,28 @@ def source_files(root: Path) -> list[Path]:
     return sorted(root.glob("packages/*/src/**/*.py"))
 
 
+def test_files(root: Path) -> list[Path]:
+    """Every `.py` under `packages/*/tests`, `tests` and the root-level `*/tests` (the internal tools'), sorted: the one walk of the test trees."""
+    return sorted(f for pattern in ("packages/*/tests/**/*.py", "tests/**/*.py", "*/tests/**/*.py") for f in root.glob(pattern))
+
+
 def data_manifest(root: Path, paths: list[str]) -> dict[str, str]:
     """Each data file's path and content hash; a tracked file missing from disk is left out."""
     found: dict[str, str] = {}
     for path in sorted(paths):
-        if is_data(path) and (root / path).is_file():
+        if (is_data(path) or path in GATE_CONFIG) and (root / path).is_file():
             found[path] = hashlib.sha256((root / path).read_bytes()).hexdigest()
     return found
 
 
-def saved_manifest(manifest_file: Path) -> dict[str, str] | None:
+def saved_manifest(manifest_file: Path) -> dict[str, Any] | None:
     try:
         saved = json.loads(manifest_file.read_text(encoding="utf-8"))
     except OSError, ValueError:
         return None
-    return saved if isinstance(saved, dict) else None
+    if not isinstance(saved, dict):
+        return None
+    return saved
 
 
 def known_tests(datafile: Path) -> int | None:
@@ -185,11 +224,18 @@ def known_tests(datafile: Path) -> int | None:
     return int(row[0])
 
 
-def full_run_reason(
-    current: dict[str, str], saved: dict[str, str] | None, known: int | None
-) -> str:
+def without_config(manifest: dict[str, str]) -> dict[str, str]:
+    return {path: digest for path, digest in manifest.items() if path not in GATE_CONFIG}
+
+
+def gate_config_changed(current: dict[str, str], saved: dict[str, str] | None) -> bool:
+    """Whether a GATE_CONFIG file differs from the one the testmon data was saved with."""
+    return saved is None or any(current.get(path) != saved.get(path) for path in GATE_CONFIG)
+
+
+def full_run_reason(current: dict[str, str], saved: dict[str, str] | None, known: int | None) -> str:
     """Why every test must run, or an empty string when testmon may select."""
-    if saved is None or saved != current:
+    if saved is None or without_config(saved) != without_config(current):
         return "data files changed"
     return "no testmon data" if known is None else ""
 
@@ -218,9 +264,7 @@ def testmon_line(reason: str, ran: int, collected: int) -> str:
     return f"TESTMON: all ({reason}), {counts}" if reason else f"TESTMON: {counts}"
 
 
-def run_testmon(
-    extra: list[str], root: Path = ROOT, run: Runner = run_pytest, workers: str = ""
-) -> int:
+def run_testmon(extra: list[str], root: Path = ROOT, run: Runner = run_pytest, workers: str = "") -> int:
     """Pytest under testmon, then the always-run tests without it; print the `TESTMON:` line."""
     workers = workers or os.environ.get("PYTEST_WORKERS", "6")
     state = root / STATE_DIR
@@ -231,22 +275,26 @@ def run_testmon(
     known = known_tests(datafile)
     if known is None:
         datafile.unlink(missing_ok=True)  # unreadable data is a full run, never an error
-    reason = full_run_reason(current, saved_manifest(state / MANIFEST), known)
+    saved = saved_manifest(state / MANIFEST)
+    reason = full_run_reason(current, saved, known)
     always = [path for path, _ in ALWAYS_RUN]
+    if gate_config_changed(current, saved) and not reason:
+        always += GATE_READERS
     ignores = [f"--ignore={path}" for path in always]
     flags = ["--durations=20", "--testmon", *(["--testmon-noselect"] if reason else []), *ignores]
     code, text = run(pytest_argv(workers, *flags, *extra), env)
-    if (
-        code == NOTHING_COLLECTED
-    ):  # pytest: nothing collected, which is what a testmon run with no change does
+    if code == NOTHING_COLLECTED:  # pytest: nothing collected, which is what a testmon run with no change does
         code = 0
-    if code in (0, 1):
-        (state / MANIFEST).write_text(json.dumps(current, indent=1) + "\n", encoding="utf-8")
     ran, collected = counted(text), known_tests(datafile) or 0
-    if ALWAYS_RUN:
+    kept = current
+    if always:
         always_code, always_text = run(pytest_argv(workers, "-p", "no:testmon", *always), env)
+        if always_code:  # a failed reader must run again: keep the config digests it ran against
+            kept = {**without_config(current), **{p: d for p, d in (saved or {}).items() if p in GATE_CONFIG}}
         code = code or always_code
         ran, collected = ran + counted(always_text), collected + counted(always_text)
+    if code in (0, 1):
+        (state / MANIFEST).write_text(json.dumps(kept, indent=1) + "\n", encoding="utf-8")
     sys.stdout.write(testmon_line(reason, ran, collected) + "\n")
     sys.stdout.flush()
     return code
@@ -255,15 +303,13 @@ def run_testmon(
 def testmon_groups(extra: list[str]) -> Groups:
     """The gate groups with the `cov` group replaced by the testmon test run (TM2)."""
     tests = (("uv", "run", "python", "scripts/ci_gates.py", "--testmon-tests", *extra),)
-    return tuple(tests if group[0] == ("just", "cov") else group for group in _GROUPS)
+    return tuple(tests if group[0] == ("just", "cov") else group for group in all_groups())
 
 
 def main(argv: list[str]) -> int:
     if argv and argv[0] in ("--testmon", "--testmon-tests"):
         extra = [word for i, word in enumerate(argv[1:]) if not (i == 0 and word == "--")]
-        return (
-            run_testmon(extra) if argv[0] == "--testmon-tests" else run_all(testmon_groups(extra))
-        )
+        return run_testmon(extra) if argv[0] == "--testmon-tests" else run_all(testmon_groups(extra))
     return run_all()
 
 

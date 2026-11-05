@@ -1,6 +1,4 @@
-"""model-0312: `sheet_for` reads the build's `PaperChoice`; a page's authored sheet still wins."""
-
-import dataclasses
+"""model-0312: `sheet_for` reads the build's `PaperChoice`."""
 
 import pytest
 from derive_helpers import frozen_with_library
@@ -8,10 +6,8 @@ from derive_helpers import frozen_with_library
 from fransys_model.kernel import Draft, Model, Origin, Record, SchemaError, freeze, make_id
 from fransys_model.layout import (
     PaperChoice,
-    Profile,
     SheetFormat,
     a2_sheet_format,
-    default_profile,
     default_sheet_format,
     sheet_for,
     sheet_format_of,
@@ -45,13 +41,6 @@ def test_a_default_of_a2_is_the_sheet_of_a_page_with_no_sheet() -> None:
     model = _model(A2, {})
     assert sheet_format_of(model, None).id == A2.id
     assert sheet_for(model, PageKind.BLOCK_DIAGRAM).id == A2.id
-
-
-def test_a_profile_s_authored_sheet_wins_until_settings_c() -> None:
-    own = dataclasses.replace(default_profile(), id=make_id(Profile, ("t", "p")), key=("t", "p"))
-    own = dataclasses.replace(own, sheet_format=A2.id)
-    model = _model(A3, {PageKind.BLOCK_DIAGRAM: A3}, own)
-    assert sheet_for(model, PageKind.SCHEMATIC).id == A2.id
 
 
 def test_a_model_with_no_paper_record_raises_naming_the_fix() -> None:

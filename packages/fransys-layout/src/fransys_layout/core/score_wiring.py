@@ -11,8 +11,9 @@ from typing import TYPE_CHECKING, Protocol
 if TYPE_CHECKING:
     from collections.abc import Iterable, Mapping, Sequence
 
+    from .flow_values import Fan
     from .outputs import SceneWire
-    from .values import XY, Fan
+    from .values import XY
 
 
 MIN_POINTS = 2  # a polyline needs two vertices to be a wire
@@ -31,20 +32,18 @@ class Polyline(Protocol):
     def kind(self) -> str: ...
 
 
-def _heading(a: XY, b: XY) -> tuple[int, int]:
+def heading(a: XY, b: XY) -> tuple[int, int]:
     return ((b[0] > a[0]) - (b[0] < a[0]), (b[1] > a[1]) - (b[1] < a[1]))
 
 
 def shape(points: tuple[XY, ...]) -> tuple[int, int, int, int]:
     """Bends, excess bends, length and Manhattan distance between the ends of one polyline."""
-    dirs = [_heading(a, b) for a, b in pairwise(points) if a != b]
+    dirs = [heading(a, b) for a, b in pairwise(points) if a != b]
     bends = sum(1 for a, b in pairwise(dirs) if a != b)
     length = sum(abs(b[0] - a[0]) + abs(b[1] - a[1]) for a, b in pairwise(points))
     (x0, y0), (x1, y1) = points[0], points[-1]
-    if x0 == x1 or y0 == y1:
-        need = 0
-    else:  # an L needs 1 bend; ends leaving on the same axis need a Z, 2
-        need = 2 if dirs and (dirs[0][0] == 0) == (dirs[-1][0] == 0) else 1
+    # an L needs 1 bend; ends leaving on the same axis need a Z, 2
+    need = 0 if x0 == x1 or y0 == y1 else 2 if dirs and (dirs[0][0] == 0) == (dirs[-1][0] == 0) else 1
     return bends, max(0, bends - need), length, abs(x1 - x0) + abs(y1 - y0)
 
 
@@ -53,9 +52,7 @@ def bundles(fans: Iterable[Fan]) -> dict[str, str]:
     return {net: fan.id for fan in fans if fan.lanes > 1 for net in fan.nets}
 
 
-def crossing_points(
-    wires: Sequence[Polyline], bundle_of: Mapping[str, str] | None = None
-) -> set[tuple[int, int, str, str]]:
+def crossing_points(wires: Sequence[Polyline], bundle_of: Mapping[str, str] | None = None) -> set[tuple[int, int, str, str]]:
     """Distinct (x, y, horizontal net, vertical net) where a run passes straight across another.
 
     A member's drop never crosses a trunk line of its own bundle: `bundle_of` names the members.
@@ -73,10 +70,7 @@ def crossing_points(
         (x, y, hn, vn)
         for hn, y, left, right, owner in horizontal
         for vn, x, top, bottom in vertical
-        if hn != vn
-        and (owner is None or owner != own.get(vn))
-        and left < x < right
-        and top < y < bottom
+        if hn != vn and (owner is None or owner != own.get(vn)) and left < x < right and top < y < bottom
     }
 
 
@@ -85,9 +79,7 @@ def crossings_on_page(wires: Sequence[Polyline], bundle_of: Mapping[str, str] | 
     return len(crossing_points(wires, bundle_of))
 
 
-def wiring(
-    wires: tuple[SceneWire, ...], bundle_of: Mapping[str, str] | None = None
-) -> dict[str, int]:
+def wiring(wires: tuple[SceneWire, ...], bundle_of: Mapping[str, str] | None = None) -> dict[str, int]:
     """The five wiring terms over all wires of a scene."""
     total = {"crossings": 0, "bends": 0, "excess_bends": 0, "length_g": 0, "detour_g": 0}
     by_page: dict[int, list[SceneWire]] = defaultdict(list)

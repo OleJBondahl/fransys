@@ -1,4 +1,4 @@
-schema = 1
+schema = 2
 
 [part]
 mpn = "DEMO-TBLK-2P-DUAL"
@@ -8,8 +8,7 @@ category = "terminal"
 class_code = "X"
 
 [rating]
-voltage_ac_v = "500"
-voltage_dc_v = "400"
+voltage = [{ nom = "500 V", at = ["AC"] }, { nom = "400 V", at = ["DC"] }]
 
 [[function]]
 name = "terminal"
@@ -22,4 +21,4 @@ ports = [
 links = [{ a = "internal", b = "external", kind = "conductive" }]
 
 [function.rating]
-voltage_ac_v = "250"
+voltage = [{ nom = "250 V", at = ["AC"] }]

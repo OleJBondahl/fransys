@@ -9,7 +9,7 @@ zero-baseline on the real repo (see this order's own report) and is exposed sepa
 `measure_surface_docstring_lines` for the lead to route, unwired here.
 
 Check 2 (`measure_docstring_lines`, `banned_section_sites`): every OTHER docstring under
-`packages/*/src` is optional, but when written is capped at `[limits].docstring_lines` (5)
+`packages/*/src` and the test trees is optional, but when written is capped at `[limits].docstring_lines` (5)
 lines (ceiling-bound, ready for `lean_ceilings.check`/`lower`/`first_run`) and may not carry a
 Google-style `Args:`/`Returns:`/`Raises:`/`Yields:`/`Attributes:` section header (LC3's
 original rule for everything off the surface).
@@ -56,18 +56,23 @@ ci_gates = _load("fransys_ci_gates", "ci_gates.py")
 
 DEFAULT_SURFACE_DOCSTRING_LINES_LIMIT = 15
 DEFAULT_DOCSTRING_LINES_LIMIT = 5
+FIELD_CASE_MODULE_DOCSTRING_LINES = 3  # a field-case module docstring (decision 0087, R677)
 
 _DEF_TYPES = (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)
 _BANNED_SECTION_RE = re.compile(r"^(Args|Returns|Raises|Yields|Attributes):\s*$")
 
 
+def _is_overload(node: ast.FunctionDef | ast.AsyncFunctionDef) -> bool:
+    """True for an `@overload` stub, whose one implementation carries the docstring."""
+    return any(isinstance(d, ast.Name) and d.id == "overload" for d in node.decorator_list)
+
+
 def _public_methods(class_node: ast.ClassDef) -> tuple[ast.FunctionDef | ast.AsyncFunctionDef, ...]:
-    """`class_node`'s own public (non-`_`-prefixed) methods and properties, direct children only."""
+    """`class_node`'s own public (non-`_`-prefixed) methods and properties, but no `@overload` stub."""
     return tuple(
         child
         for child in class_node.body
-        if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef))
-        and not child.name.startswith("_")
+        if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef)) and not child.name.startswith("_") and not _is_overload(child)
     )
 
 
@@ -77,6 +82,29 @@ class SurfaceDocstringViolation:
 
     site: str
     reason: str
+
+
+def _class_in(path: Path, name: str) -> tuple[Path, ast.ClassDef] | None:
+    """The `class name` that `path` defines or imports from a relative module, with its file."""
+    for stmt in lean_surface.module_tree(path).body:
+        if isinstance(stmt, ast.ClassDef) and stmt.name == name:
+            return path, stmt
+        if isinstance(stmt, ast.ImportFrom) and stmt.level and any((a.asname or a.name) == name for a in stmt.names):
+            origin = next(a.name for a in stmt.names if (a.asname or a.name) == name)
+            base = path.parent.joinpath(*[".."] * (stmt.level - 1), *(stmt.module or "").split("."))
+            for target in (base.with_suffix(".py"), base / "__init__.py"):
+                if target.is_file():
+                    return _class_in(target.resolve(), origin)
+    return None
+
+
+def _base_classes(path: Path, node: ast.ClassDef) -> Iterable[tuple[Path, ast.ClassDef]]:
+    """Every class `node` inherits from through its AST bases, each with its defining file (R665)."""
+    for base in node.bases:
+        found = _class_in(path, base.id) if isinstance(base, ast.Name) else None
+        if found is not None:
+            yield found
+            yield from _base_classes(*found)
 
 
 def _surface_sites(
@@ -98,7 +126,7 @@ def _surface_sites(
     if entries is None:
         entries = lean_surface.resolve_surface_names()
     if root is None:
-        root = lean_surface.ROOT
+        root = cast("Path", lean_surface.ROOT)
     trees: dict[Path, ast.Module] = {}
     seen: set[tuple[Path, str]] = set()
     pairs: list[tuple[str, ast.ClassDef | ast.FunctionDef | ast.AsyncFunctionDef | None]] = []
@@ -112,16 +140,14 @@ def _surface_sites(
         rel = entry.defining_file.relative_to(root).as_posix()
         pairs.append((f"{rel}::{entry.qualname}", node))
         if isinstance(node, ast.ClassDef):
-            pairs.extend(
-                (f"{rel}::{entry.qualname}.{method.name}", method)
-                for method in _public_methods(node)
-            )
+            pairs.extend((f"{rel}::{entry.qualname}.{method.name}", method) for method in _public_methods(node))
+            for base_path, base in _base_classes(entry.defining_file, node):
+                base_rel = base_path.relative_to(root).as_posix()
+                pairs.extend((f"{base_rel}::{base.name}.{method.name}", method) for method in _public_methods(base))
     return tuple(pairs)
 
 
-def surface_site_keys(
-    entries: tuple[Any, ...] | None = None, root: Path | None = None
-) -> frozenset[str]:
+def surface_site_keys(entries: tuple[Any, ...] | None = None, root: Path | None = None) -> frozenset[str]:
     r"""Every `f"{path}::{qualname}"` site Check 1 examines, pass or fail.
 
     `measure_docstring_lines`/`banned_section_sites` (Check 2) pass this in as `surface`, so a
@@ -130,9 +156,7 @@ def surface_site_keys(
     return frozenset(site for site, _node in _surface_sites(entries, root))
 
 
-def _docstring_violations(
-    node: ast.ClassDef | ast.FunctionDef | ast.AsyncFunctionDef, site: str, limit: int
-) -> list[SurfaceDocstringViolation]:
+def _docstring_violations(node: ast.ClassDef | ast.FunctionDef | ast.AsyncFunctionDef, site: str, limit: int) -> list[SurfaceDocstringViolation]:
     """`node`'s own presence/length violation, as a 0- or 1-element list."""
     docstring = lean_surface.literal_docstring(node)
     if docstring is None:
@@ -196,12 +220,14 @@ def measure_surface_docstring_lines(
 
 def _iter_docstring_nodes(
     tree: ast.Module,
-) -> Iterable[tuple[str, ast.ClassDef | ast.FunctionDef | ast.AsyncFunctionDef, ast.Constant]]:
-    """Every `(dotted qualname, node, docstring)` in `tree` that has a literal docstring."""
+    *,
+    module: bool = False,
+) -> Iterable[tuple[str, ast.ClassDef | ast.FunctionDef | ast.AsyncFunctionDef | ast.Module, ast.Constant]]:
+    """Every `(dotted qualname, node, docstring)` in `tree` that has a literal docstring; `module` adds the module's own as `<module>`."""
+    if module and (own := lean_surface.literal_docstring(tree)) is not None:
+        yield "<module>", tree, own
 
-    def visit(
-        node: ast.AST, scope: tuple[str, ...]
-    ) -> Iterable[tuple[str, ast.ClassDef | ast.FunctionDef | ast.AsyncFunctionDef, ast.Constant]]:
+    def visit(node: ast.AST, scope: tuple[str, ...]) -> Iterable[tuple[str, ast.ClassDef | ast.FunctionDef | ast.AsyncFunctionDef, ast.Constant]]:
         for child in ast.iter_child_nodes(node):
             if isinstance(child, _DEF_TYPES):
                 qualname = ".".join([*scope, child.name])
@@ -215,8 +241,20 @@ def _iter_docstring_nodes(
     yield from visit(tree, ())
 
 
+def _walk(root: Path) -> Iterable[tuple[Path, str, ast.Module, bool]]:
+    """`(path, rel, tree, is_test)` for every source and test file; tests also yield their module docstring."""
+    for files, is_test in ((ci_gates.source_files(root), False), (ci_gates.test_files(root), True)):
+        for path in files:
+            yield path, path.relative_to(root).as_posix(), lean_surface.module_tree(path), is_test
+
+
+def _cap(rel: str, qualname: str) -> int:
+    """The line cap of one docstring: 3 for a field-case module docstring, else 5."""
+    return FIELD_CASE_MODULE_DOCSTRING_LINES if qualname == "<module>" and rel.startswith("tests/field_cases/") else DEFAULT_DOCSTRING_LINES_LIMIT
+
+
 def measure_docstring_lines(root: Path, surface: frozenset[str]) -> dict[str, int]:
-    """Every non-surface docstring under `packages/*/src` over `DEFAULT_DOCSTRING_LINES_LIMIT`.
+    """Every non-surface docstring under `packages/*/src` and the test trees over its cap (`_cap`).
 
     Keyed `f"{path}::{qualname}"`, matching `lean_ceilings`'s per-function site shape. `surface`
     holds the same `f"{path}::{qualname}"` keys `check_surface_docstrings` already checked (its
@@ -225,15 +263,13 @@ def measure_docstring_lines(root: Path, surface: frozenset[str]) -> dict[str, in
     sites, `lean_ceilings.check`'s own contract.
     """
     measured: dict[str, int] = {}
-    for path in ci_gates.source_files(root):
-        tree = lean_surface.module_tree(path)
-        rel = path.relative_to(root).as_posix()
-        for qualname, _node, docstring in _iter_docstring_nodes(tree):
+    for _path, rel, tree, is_test in _walk(root):
+        for qualname, _node, docstring in _iter_docstring_nodes(tree, module=is_test):
             site = f"{rel}::{qualname}"
             if site in surface:
                 continue
             lines = lean_surface.docstring_line_count(docstring)
-            if lines > DEFAULT_DOCSTRING_LINES_LIMIT:
+            if lines > _cap(rel, qualname):
                 measured[site] = lines
     return measured
 
@@ -247,15 +283,13 @@ def banned_section_sites(root: Path, surface: frozenset[str]) -> tuple[str, ...]
     the genuinely new case -- short (`<= DEFAULT_DOCSTRING_LINES_LIMIT` lines) and still banned.
     """
     sites: list[str] = []
-    for path in ci_gates.source_files(root):
-        tree = lean_surface.module_tree(path)
-        rel = path.relative_to(root).as_posix()
-        for qualname, _node, docstring in _iter_docstring_nodes(tree):
+    for _path, rel, tree, is_test in _walk(root):
+        for qualname, _node, docstring in _iter_docstring_nodes(tree, module=is_test):
             site = f"{rel}::{qualname}"
             if site in surface:
                 continue
             lines = lean_surface.docstring_line_count(docstring)
-            if lines > DEFAULT_DOCSTRING_LINES_LIMIT:
+            if lines > _cap(rel, qualname):
                 continue
             text_lines = cast("str", docstring.value).splitlines()
             if any(_BANNED_SECTION_RE.match(line.strip()) for line in text_lines):

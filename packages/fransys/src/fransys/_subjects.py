@@ -6,10 +6,12 @@ Racks are `derive.unit_racks` (model-0280).
 
 from typing import TYPE_CHECKING, Any, cast
 
-from fransys_author import Scope
+from fransys_author.surface import Scope
 
 from fransys_model.derive import boards, subject_kind, subject_kind_text, terminal_strips
 from fransys_model.vocab import SubjectKind
+
+from .errors import FransysError
 
 if TYPE_CHECKING:
     from fransys_model.kernel import Id
@@ -31,13 +33,10 @@ def unit_of(handle: Scope | Id[Any], what: str, instead: str) -> Id[Unit]:
     """
     if isinstance(handle, Scope):
         if handle.unit_id is None:
-            msg = (
-                f"{what} needs a unit (a plain Scope, or a bare Design, is not a valid unit); "
-                f"write it as a unit with @fr.unit, or pass {instead}"
-            )
-            raise TypeError(msg)
+            msg = f"{what} needs a unit (a plain Scope, or a bare Design, is not a valid unit); write it as a unit with @fr.unit, or pass {instead}"
+            raise FransysError(msg)
         return handle.unit_id
     if subject_kind(handle) is not SubjectKind.UNIT:
         msg = f"{what} must be a unit id, not a {subject_kind_text(handle)!r} id"
-        raise TypeError(msg)
+        raise FransysError(msg)
     return cast("Id[Unit]", handle)  # the kind check above is the runtime proof

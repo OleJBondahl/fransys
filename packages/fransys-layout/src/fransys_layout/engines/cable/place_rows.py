@@ -2,7 +2,8 @@
 
 from typing import Any
 
-from fransys_layout.geometry import WIRING_GRID, snap_up
+from fransys_layout.core import grid_up
+from fransys_layout.geometry import WIRING_GRID
 lazy from fransys_layout.engines.cable.values import EndFacts, PlacedEnd
 lazy from fransys_model.kernel import Id
 
@@ -17,12 +18,7 @@ def landing_map(
     ends: tuple[PlacedEnd, ...],
 ) -> dict[tuple[Id[Any], Id[Any]], tuple[int, PlacedEnd]]:
     """Per (core, port): the x of the core's place in the port's cell, and the end it stands in."""
-    return {
-        (place.core, cell.port): (place.x, end)
-        for end in ends
-        for cell in end.cells
-        for place in cell.landings
-    }
+    return {(place.core, cell.port): (place.x, end) for end in ends for cell in end.cells for place in cell.landings}
 
 
 def row_xs(ends: tuple[EndFacts, ...], x0: int, pitch: int) -> tuple[int, ...]:
@@ -41,5 +37,5 @@ def row_xs(ends: tuple[EndFacts, ...], x0: int, pitch: int) -> tuple[int, ...]:
         before_width = before.places * pitch
         apart = (_label(before) + _label(end) + 1) // 2 + G  # centres at least this far apart
         label_x = xs[-1] + before_width // 2 + apart - width // 2
-        xs.append(snap_up(max(xs[-1] + before_width + pitch, label_x)))
+        xs.append(grid_up(max(xs[-1] + before_width + pitch, label_x), WIRING_GRID))
     return tuple(xs)

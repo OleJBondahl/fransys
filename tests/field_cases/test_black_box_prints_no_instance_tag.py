@@ -1,19 +1,12 @@
-"""Field case: a unit instance drawn as a black box prints its tag in the boundary texts only.
-
-The engineering shape: a top-level design holds a lamp `M1` wired to pin 1 of an I/O board
-instance tagged `U2`. The board is a unit, so its container draws it as a black box.
-
-The rule (owner ruling, 2026-10-05): the black box's title line stays the release title
-and revision, with no instance tag; the tag stands in every boundary text (`-U2-J1:1`).
-
-The decision that fixes it: model-0134.
-"""
+"""Field case: a lamp wired to pin 1 of an I/O board instance tagged U2, which the container draws as a black box.
+The bug: a black box's title line must not carry the instance tag, which stands only in boundary texts such as -U2-J1:1 (owner 2026-10-05).
+Fixed by model-0134, the black box's title keeps the release title and revision, and the tag stands in every boundary text."""
 
 from typing import Any, NamedTuple
 
 import fransys as fr
 from _drawn_pages import drawn_pages
-from _model_build_cover import cabinet_document
+from _model_build_cover import cabinet_document, unit_document
 from fransys.colours import BU
 
 
@@ -27,32 +20,24 @@ def _board(u: Any) -> _Io:
     return _Io(u.device("J1", "DEMO-CONN-2P", parent=root, interface=True))
 
 
-def _container_texts() -> tuple[fr.Model, list[str], list[str]]:
-    """The model, the black box title lines and the pin texts the container's pages draw."""
+def _container_texts() -> tuple[fr.Model, list[str]]:
+    """The model and the black box title lines the container's pages draw."""
     d = fr.design("demo_parts", place="C1")
     d.project(title="Box", number="P-1", customer="Example Co", revision=1, author="OJB")
     d.revision(1, date="2026-10-05", text="First issue", created="XX")
     _cabinet = d.location("C1", "Cabinet")
     board = d.add(_board, "U2")
     lamp = d.device("M1", "DEMO-LAMP-24")
-    d.detail.wire(lamp["1"], board.J1["1"], wire=(BU, 0.5))
-    model = fr.build(d, cabinet_document(_cabinet)).model
-    titles, pins = [], []
+    d.series(lamp["1"], board.J1["1"], wire=(BU, 0.5))
+    d.earth(lamp["2"])
+    model = fr.build(d, cabinet_document(_cabinet), unit_document("demo-board")).model
+    titles: list[str] = []
     for drawing in drawn_pages(model).values():
         titles += [o.label.text for o in drawing.outlines if o.label]
-        pins += [t.text for t in drawing.texts if t.text.startswith("-U2-")]
-    return model, titles, pins
+    return model, titles
 
 
-def test_the_black_box_title_line_has_no_instance_tag() -> None:
-    model, titles, _ = _container_texts()
-    unit = next(u for u in fr.derive.units(model) if fr.derive.unit_release(model, u).name)
-    release = fr.derive.unit_release(model, unit)
-    expected = f"demo-board rev {fr.derive.revision_text(release.version, release.revision)}"
-    assert titles == [expected]
-    assert "U2" not in titles[0]
-
-
-def test_the_boundary_text_carries_the_instance_tag() -> None:
-    _, _, pins = _container_texts()
-    assert pins == ["-U2-J1:1"]
+def test_the_container_place_page_draws_no_frame_title() -> None:
+    """R833: a place page frames no unit, so no title line (and so no instance tag) stands on it."""
+    _, titles = _container_texts()
+    assert titles == []

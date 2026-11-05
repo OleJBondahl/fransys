@@ -61,7 +61,6 @@ class EndFacts:
     blank: bool
     label_width: int
     pins: tuple[PinFacts, ...]
-    earth: bool = False
 
     @property
     def places(self) -> int:
@@ -79,7 +78,6 @@ class BlockFacts:
 
     subject: Id[Any]
     unit: Id[Any] | None
-    sheet_format: Id[Any] | None
     text_height: int
     turn_penalty: int
     crossing_penalty: int
@@ -133,7 +131,6 @@ class PlacedEnd:
     width: int
     height: int
     cells: tuple[PlacedCell, ...]
-    earth: bool = False
 
 
 @value
@@ -148,8 +145,6 @@ class PlacedWire:
     run_b: tuple[Point, ...]
     text_x: int
     text_y: int
-    stub_a: bool
-    stub_b: bool
     open: bool = False
 
 
@@ -168,7 +163,6 @@ class PlacedBlock:
 
     subject: Id[Any]
     unit: Id[Any] | None
-    sheet_format: Id[Any] | None
     width: int
     height: int
     pitch: int
@@ -176,3 +170,13 @@ class PlacedBlock:
     harness: Box | None
     ends: tuple[PlacedEnd, ...]
     wires: tuple[PlacedWire, ...]
+
+
+@value
+class CableLayout:
+    """Every cable block the engine could draw whole, by `cable_block_key`, in the reader's order.
+
+    A block it cannot draw is absent, and the pdf check stops an export that asks for it.
+    """
+
+    blocks: frozendict[str, PlacedBlock]

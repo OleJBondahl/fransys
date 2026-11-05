@@ -28,9 +28,7 @@ def detail_calls_outside(pages: dict[str, str]) -> list[str]:
 
 def _guide() -> dict[str, str]:
     guide = files("fransys").joinpath("guide")
-    return {
-        p.name: p.read_text(encoding="utf-8") for p in guide.iterdir() if p.name.endswith(".md")
-    }
+    return {p.name: p.read_text(encoding="utf-8") for p in guide.iterdir() if p.name.endswith(".md")}
 
 
 def test_no_fence_outside_detail_md_and_moving_to_calls_a_detail_call():

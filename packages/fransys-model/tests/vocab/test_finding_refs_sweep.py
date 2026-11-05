@@ -35,11 +35,7 @@ def test_a_net_without_a_supply_names_the_net_by_reference() -> None:
     plant = Plant()
     function = plant.function(plant.item("dev"), "fn")
     net = plant.net("the-net", (plant.port(function, "1"),), potential="L9")
-    (finding,) = [
-        f
-        for f in check_potential_without_supply(plant.model())
-        if f.code == POTENTIAL_WITHOUT_SUPPLY
-    ]
+    (finding,) = [f for f in check_potential_without_supply(plant.model()) if f.code == POTENTIAL_WITHOUT_SUPPLY]
     assert f"net {ref(net)} (" in finding.message
     assert "the-net" not in finding.message
 

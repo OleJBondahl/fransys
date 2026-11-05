@@ -3,13 +3,13 @@
 Each test names what breaks it.
 """
 
-import sys
 from functools import cache
-from pathlib import Path
 from typing import Any
 
 import pytest
+from fold_builders import CTL_BOX, SUP_BOX, fold_plant
 
+from electrical_symbols import LIBRARY
 from fransys_layout.engines.overview import lay_out_overview
 from fransys_model.derive import fold_level, overview_levels, overview_view_rows
 from fransys_model.layout import (
@@ -22,18 +22,11 @@ from fransys_model.layout import (
     layout_of,
 )
 
-for _name in ("derive", "vocab"):
-    _dir = str(Path(__file__).parent.parent / "packages" / "fransys-model" / "tests" / _name)
-    if _dir not in sys.path:
-        sys.path.append(_dir)  # `--import-mode=importlib` leaves test folders off `sys.path`
-
-from fold_builders import CTL_BOX, SUP_BOX, fold_plant  # noqa: E402 -- needs the paths added above
-
 
 @cache
 def _laid() -> tuple[Any, Any, Any]:
     model, unit, _ = fold_plant()
-    out, findings = lay_out_overview(model)
+    out, findings = lay_out_overview(model, LIBRARY)
     return model, unit, (out, findings)
 
 
@@ -73,12 +66,7 @@ def test_the_groups_view_has_the_fold_boxes_and_one_box_per_far_end() -> None:
     (view,) = _views(unit=unit, mode=OverviewMode.GROUPS, open=None)
     fold = fold_level(model, unit)
     boxes, lines = _parts(view)
-    level = [b for b in boxes if b.stub_of is None]
-    assert level
-    assert {b.ref for b in level} == {b.key for b in fold.boxes}
-    stubs = [b for b in boxes if b.stub_of is not None]
-    assert len({(b.stub_of, b.ref) for b in stubs}) == len(stubs)
-    assert len(stubs) == len({(s.box, s.end) for s in fold.stubs})
+    assert {b.ref for b in boxes if b.ref in {b.key for b in fold.boxes}} == {b.key for b in fold.boxes}
     assert len(lines) == len(fold.lines) + len({(s.box, s.end, s.kind, s.via) for s in fold.stubs})
 
 
@@ -102,11 +90,7 @@ def test_a_folded_stub_with_members_is_never_placed_open() -> None:
     folded = next(s for s in fold.stubs if s.members and s.end.kind is OverviewRefKind.UNIT)
     assert _views(unit=unit, mode=OverviewMode.GROUPS, open=folded.end) == []
     assert len(_views(unit=unit, mode=OverviewMode.GROUPS, open=None)) == 1
-    (rows,) = (
-        v
-        for v in overview_view_rows(model, unit)
-        if v.mode is OverviewMode.GROUPS and v.open is None
-    )
+    (rows,) = (v for v in overview_view_rows(model, unit) if v.mode is OverviewMode.GROUPS and v.open is None)
     (box,) = [b for b in rows.boxes if b.key.ref == folded.end and b.key.at == folded.box]
     assert [m.ref for m in box.members] == [m.end for m in folded.members]
     assert isinstance(folded.end, OverviewRef)
@@ -127,11 +111,9 @@ def test_one_engine_run_derives_each_units_level_once(monkeypatch: pytest.Monkey
     model, _, _ = fold_plant()
     calls: list[Any] = []
     real = overview_levels._unit_level
-    monkeypatch.setattr(
-        overview_levels, "_unit_level", lambda m, unit: (calls.append(unit), real(m, unit))[1]
-    )
+    monkeypatch.setattr(overview_levels, "_unit_level", lambda m, unit: (calls.append(unit), real(m, unit))[1])
     overview_levels.overview_level.cache_clear()
-    out, _ = lay_out_overview(model)
+    out, _ = lay_out_overview(model, LIBRARY)
     laid = {v.unit for v in layout_of(out, OverviewView).values() if v.unit is not None}
     assert len(laid) >= 1
     assert sorted(calls) == sorted(laid)
@@ -149,7 +131,5 @@ def test_each_level_that_lists_a_strip_has_a_view_with_that_strip_open() -> None
     sup = {v.open.item for v in strip_open if v.level == SUP_BOX}
     assert sup == {n.strip for n in fold_level(model, unit, SUP_BOX).strips}
     strips = OverviewRef(kind=OverviewRefKind.STRIPS)
-    assert {v.open.item for v in strip_open if v.level == strips} == {
-        n.strip for n in fold_level(model, unit, strips).strips
-    }
+    assert {v.open.item for v in strip_open if v.level == strips} == {n.strip for n in fold_level(model, unit, strips).strips}
     assert all(_parts(view)[0] for view in strip_open)

@@ -43,17 +43,13 @@ def test_terminal_csv_names_where_each_conductor_goes_and_the_jumper_group(cabin
 def test_terminal_csv_of_a_strip_with_no_terminals_is_the_header(new_plant):
     plant = new_plant()
     plant.item("x1", "X1")
-    assert terminal_csv(plant.model(), make_id(Item, ("x1",))) == (
-        "designation,group,index,side_a,side_b,jumper_group\n"
-    )
+    assert terminal_csv(plant.model(), make_id(Item, ("x1",))) == ("designation,group,index,side_a,side_b,jumper_group\n")
 
 
 def test_bom_excludes_not_installed(cabinet):
     csv_text = bom_csv(cabinet)
     not_installed = {
-        text
-        for item in cabinet.tables["item"].values()
-        if not item.installed and (text := own_designation_or_none(cabinet, item)) is not None
+        text for item in cabinet.tables["item"].values() if not item.installed and (text := own_designation_or_none(cabinet, item)) is not None
     }
     assert not_installed == {"K3"}
     assert not any(designation in csv_text for designation in not_installed)

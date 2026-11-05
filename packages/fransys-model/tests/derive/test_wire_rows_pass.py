@@ -9,15 +9,9 @@ from rating_plant import AC_400, supply
 from test_plc_allocation_units_model import Site, _site
 
 from fransys_model.derive import resolve_wire_rows
+from fransys_model.elecdef import Current
 from fransys_model.kernel import Severity, make_id
-from fransys_model.vocab import (
-    Current,
-    Rail,
-    RowSpec,
-    WireFacet,
-    WireRowHint,
-    WiringRow,
-)
+from fransys_model.vocab import Rail, RowSpec, WireFacet, WireRowHint, WiringRow
 from fransys_model.vocab.tables import facets_of
 
 if TYPE_CHECKING:
@@ -97,10 +91,7 @@ def test_a_pin_that_states_a_source_row_gives_its_wire_that_row() -> None:
     """Fails if `Port.source_row` is not read for a net with no rail."""
     plant = Plant()
     out = plant.port(plant.function(plant.item("drive"), "out"), "U")
-    plant.records[:] = [
-        dataclasses.replace(r, source_row=WiringRow.AC_L2) if r.id == out else r
-        for r in plant.records
-    ]
+    plant.records[:] = [dataclasses.replace(r, source_row=WiringRow.AC_L2) if r.id == out else r for r in plant.records]
     _hinted(plant, out, _load(plant, "motor"), "w")
     model, findings = resolve_wire_rows(plant.model())
     assert (_facet(model).colour, findings) == ("BN", ())

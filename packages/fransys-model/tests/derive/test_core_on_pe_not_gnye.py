@@ -8,26 +8,25 @@ from query_builders import make_part, make_pin
 
 from fransys_model.checks.earth import CORE_ON_PE_NOT_GNYE, check_earth
 from fransys_model.derive import core_on_pe_not_gnye
+from fransys_model.elecdef import PinRole
 from fransys_model.kernel import Severity, make_id
 from fransys_model.vocab.core import Item, Port
-from fransys_model.vocab.enums import PartCategory, PortRole
+from fransys_model.vocab.enums import PartCategory, PortBoundary
 from fransys_model.vocab.facets.cable import CableFacet, CableProductFacet, CoreFacet
 
 
 @pytest.mark.parametrize(
     ("colour", "roles", "expected"),
     [
-        ("BN", [PortRole.PE], True),
-        ("BN", [PortRole.GENERIC, PortRole.PE], True),
-        ("GNYE", [PortRole.PE], False),
-        ("SH", [PortRole.PE], False),
-        ("BN", [PortRole.GENERIC], False),
+        ("BN", [PinRole.PE], True),
+        ("BN", [None, PinRole.PE], True),
+        ("GNYE", [PinRole.PE], False),
+        ("SH", [PinRole.PE], False),
+        ("BN", [None], False),
         ("BN", [], False),
     ],
 )
-def test_the_fact_is_a_non_gnye_colour_with_a_pe_role(
-    colour: str, roles: list[PortRole], *, expected: bool
-) -> None:
+def test_the_fact_is_a_non_gnye_colour_with_a_pe_role(colour: str, roles: list[PinRole | None], *, expected: bool) -> None:
     assert core_on_pe_not_gnye(colour, roles) is expected
 
 
@@ -47,23 +46,17 @@ def _findings(colour: str) -> list[tuple[str, Severity]]:
         )
     )
     cable = plant.item("w1", designation="W1", part=part)
-    plant.add(
-        CableFacet(
-            id=make_id(CableFacet, ("w1", "c")), key=("w1", "c"), subject=cable, length_mm=None
-        )
-    )
+    plant.add(CableFacet(id=make_id(CableFacet, ("w1", "c")), key=("w1", "c"), subject=cable, length_mm=None))
     function = plant.function(plant.item("m1"), "motor")
     key = ("m1", "motor", "PE")
     pe = Port(
         id=make_id(Port, key), key=key, function=function, template=None, name="PE",
-        role=PortRole.PE,
+        boundary=PortBoundary.GENERIC, pin_role=PinRole.PE,
     )  # fmt: skip
     plant.add(pe)
     core = plant.core(pe.id, make_pin(plant, "b", "B"), key="c1", carrier=make_id(Item, ("w1",)))
     plant.add(CoreFacet(id=make_id(CoreFacet, ("c1", "f")), key=("c1", "f"), subject=core, index=1))
-    return [
-        (f.code, f.severity) for f in check_earth(plant.model()) if f.code == CORE_ON_PE_NOT_GNYE
-    ]
+    return [(f.code, f.severity) for f in check_earth(plant.model()) if f.code == CORE_ON_PE_NOT_GNYE]
 
 
 def test_a_non_gnye_core_on_a_pe_port_is_an_error() -> None:

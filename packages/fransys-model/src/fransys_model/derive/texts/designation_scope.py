@@ -5,12 +5,13 @@ reading unit or the location the text is printed against.
 """
 
 from fransys_model.derive.designation_label import reference_leaves
+from fransys_model.derive.facts.unit_index import unit_index
 from fransys_model.derive.instance_tag import below
 from fransys_model.derive.texts.context import PrintContext, Scope
 from fransys_model.derive.unit_nodes import chain_up, common_node, own_nodes
 from fransys_model.kernel import SchemaError
 from fransys_model.vocab.enums import Aspect
-from fransys_model.vocab.tables import aspect_nodes, items, units
+from fransys_model.vocab.tables import aspect_nodes, units
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.aspects import AspectNode
 
@@ -39,16 +40,13 @@ def common_location(model: Model, ctx: PrintContext) -> Id[AspectNode] | None:
     nodes = aspect_nodes(model)
     leaves = {
         leaf.id
-        for item in items(model).values()
-        if item.unit == ctx.reading
-        and (leaf := reference_leaves(model, item.id).get(Aspect.LOCATION)) is not None
+        for item in unit_index(model).own_items.get(ctx.reading, ())
+        if (leaf := reference_leaves(model, item).get(Aspect.LOCATION)) is not None
     }
     return common_node([list(chain_up(nodes, leaf))[::-1] for leaf in leaves])
 
 
-def kept_nodes(
-    model: Model, chain: tuple[Id[AspectNode], ...], aspect: Aspect, ctx: PrintContext
-) -> tuple[Id[AspectNode], ...]:
+def kept_nodes(model: Model, chain: tuple[Id[AspectNode], ...], aspect: Aspect, ctx: PrintContext) -> tuple[Id[AspectNode], ...]:
     """`chain` (root first) without the nodes `ctx` drops from a segment of `aspect`.
 
     `UNIT_OWN` keeps the unit's own nodes; `BELOW_COMMON` cuts the location at the unit's
@@ -58,11 +56,7 @@ def kept_nodes(
         own = own_nodes(model, ctx.reading)
         return tuple(node for node in chain if node in own)
     if ctx.scope is Scope.BELOW_COMMON:
-        return (
-            chain
-            if aspect is not Aspect.LOCATION
-            else tuple(below(chain, common_location(model, ctx)))
-        )
+        return chain if aspect is not Aspect.LOCATION else tuple(below(chain, common_location(model, ctx)))
     if ctx.location is None:
         return chain
     dropped = frozenset(chain_up(aspect_nodes(model), ctx.location))

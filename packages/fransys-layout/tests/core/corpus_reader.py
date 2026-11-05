@@ -1,16 +1,13 @@
 """Reads one corpus instance into the contract's `fransys_layout.core.Scene`.
 
 The one copy of the dump-line reader: `internal/placement_research/` imports it by path.
-
 It parses the `today`, `route` and `marker` lines. It reads `sym`, `pin` and `net` lines only as
-far as the scene needs: a box's body and pins at their absolute places, each pin's net and node.
-Of the `fact` lines it reads `boxpin`, `attached`, `head` and `strip`, the flags the P rules read.
 """
 
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import cast
+from typing import Any, cast
 
 from fransys_layout.core import Box, Orientation, Side, Size
 from fransys_layout.core.outputs import Scene, SceneBox, SceneMarker, ScenePin, SceneWire
@@ -128,9 +125,7 @@ def _flip(side: str, sx: int, sy: int) -> Side:
     return cast("Side", swap.get(side, side))
 
 
-def _pin(
-    sid: str, pw: list[str], origin: tuple[int, int], turn: tuple[int, int], ctx: tuple
-) -> ScenePin:
+def _pin(sid: str, pw: list[str], origin: tuple[int, int], turn: tuple[int, int], ctx: tuple[Any, ...]) -> ScenePin:
     net_of, facts = ctx
     dx, dy = _ints(pw[3])
     kv = _kv(pw)
@@ -149,7 +144,7 @@ def _pin(
     )
 
 
-def _box(sid: str, sym: Sym, words: list[str], page: int, ctx: tuple) -> SceneBox:
+def _box(sid: str, sym: Sym, words: list[str], page: int, ctx: tuple[Any, ...]) -> SceneBox:
     turn = TURN[_kv(words)["orient"]]
     ox, oy = _ints(_kv(words)["at"])
     origin = (ox, oy)
@@ -193,17 +188,12 @@ def read_text(text: str, name: str) -> Instance:
     number = {k: i for i, k in enumerate(sorted({_key(w) for w in keyed}))}
     ctx = (net_of, _facts(by_kind))
     boxes = [_box(w[1], syms[w[1]], w, number[_key(w)], ctx) for w in today]
-    wires = [
-        SceneWire(w[1], number[_key(w)], tuple((x, y) for x, y in map(_ints, w[6:])), "straight")
-        for w in by_kind.get("route", [])
-    ]
+    wires = [SceneWire(w[1], number[_key(w)], tuple((x, y) for x, y in map(_ints, w[6:])), "straight") for w in by_kind.get("route", [])]
     markers = []
     for w in by_kind.get("marker", []):
         sid, pin = _owner(w[2], syms)
         x, y = _ints(_kv(w)["at"])
-        markers.append(
-            SceneMarker(w[1], KIND[_kv(w)["star"]], number[_key(w)], x, y, sid, pin, "", "N")
-        )
+        markers.append(SceneMarker(w[1], KIND[_kv(w)["star"]], number[_key(w)], x, y, sid, pin, "", "N"))
     pages: dict[str, set[int]] = {}
     for b in boxes:
         pages.setdefault(b.sym, set()).add(b.page)
@@ -216,7 +206,6 @@ def read_text(text: str, name: str) -> Instance:
         tuple(wires),
         tuple(markers),
         frozenset(rails),
-        (),
         (),
         (),
         (),  # a dump of today's engine has no rows: a page is one row
@@ -236,5 +225,5 @@ def resided_names() -> frozenset[str]:
     return frozenset((CORPUS / "resided.names").read_text(encoding="utf-8").split())
 
 
-def read_score(name: str) -> dict:
+def read_score(name: str) -> dict[str, Any]:
     return json.loads((CORPUS / f"{name}.score.json").read_text(encoding="utf-8"))

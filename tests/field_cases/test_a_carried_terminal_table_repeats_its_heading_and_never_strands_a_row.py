@@ -1,17 +1,6 @@
-"""Field case: a terminal table carried to the next column keeps its heading and two rows a side.
-
-The engineering shape: a cabinet with a long terminal strip and a second, shorter strip with a
-one-line description, so the second strip's table meets the foot of the first column. The
-list flows down 40 % columns, left then right.
-
-The bug (v0.15): the second strip's heading and header row and one data row stood at the foot of
-column 1, and its remaining rows stood in column 2 under a repeated header row but no heading.
-Nothing told the reader whose rows they were, and one row hung alone at the foot. A table of
-three rows split the same way.
-The rule (decision pdf-0027): a table carried to the next column or page repeats its heading with
-" (cont.)", a split leaves at least two data rows on each side, and a table of three rows or
-fewer that does not fit moves whole.
-"""
+"""Field case: a short second terminal table with a one-line description meets the foot of a column of a list.
+The bug (v0.15): its heading and one data row stood at the foot of column 1, and its other rows hung in column 2 with no heading.
+Fixed by pdf-0027, a carried table repeats its heading with (cont.), keeps two rows a side, and a table of three or fewer moves whole."""
 
 import re
 lazy from pathlib import Path
@@ -39,8 +28,6 @@ def _pdf(root: Path, counts: tuple[int, ...]) -> Path:
         fr.DocumentPreset.CABINET_SCHEMATIC,
         cabinet,
         cover=cover,
-        add=(fr.PageKind.TERMINAL_LIST,),
-        remove=(fr.PageKind.SCHEMATIC,),
     )
     fr.write(fr.build(d, document), out_dir=root / "out", intermediates=root / "inter")
     (pdf,) = (root / "out").glob("*.pdf")

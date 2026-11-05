@@ -8,10 +8,10 @@ import dataclasses
 import json
 
 import fransys as fr
-import fransys_author
 import pytest
 from fransys import DocumentPreset
 from fransys._times import BuildTimes, StepTime
+from fransys_author.design import Design
 
 _BUILD_STEPS = [
     "merge and freeze",
@@ -20,13 +20,12 @@ _BUILD_STEPS = [
     "numbering",
     "validators",
     "schematic layout",
-    "cable layout",
 ]
 
 
 def _design():
     parts = fr.parts("demo_parts")
-    d = fransys_author.Design(parts)
+    d = Design(parts)
     d.project(title="Times", number="T-1", customer="Demo Co", revision=1, author="d")
     d.revision(1, date="2026-10-15", text="First issue", created="XX")
     c1 = d.location("C1", "Demo cabinet")
@@ -34,7 +33,10 @@ def _design():
     strip = d.strip("X1", at=c1)
     t1 = strip.terminal("DEMO-TB-2.5", group=sup)
     q1 = d.item("DEMO-MCB-C6", tag="Q1", at=c1, group=sup)
-    d.wiring(colour="BU", gauge="0.75")(t1.inner, q1.fn("element")["1"])
+    t2 = strip.terminal("DEMO-TB-2.5", group=sup)
+    wire = d.wiring(colour="BU", gauge="0.75")
+    wire(t1.inner, q1.fn("element")["1"])
+    wire(t2.inner, q1.fn("element")["2"])
     return parts, d, c1
 
 

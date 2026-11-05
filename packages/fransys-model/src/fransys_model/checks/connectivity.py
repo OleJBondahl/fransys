@@ -2,13 +2,14 @@
 
 from typing import TYPE_CHECKING, Final
 
-from fransys_model.checks._finding import finding, ordered
+from fransys_model.checks._finding import ordered
 from fransys_model.derive.facts.closure import net_of, net_on_one_board, physical_nets, port_item
 from fransys_model.derive.facts.net_crossings import net_crossings
 from fransys_model.derive.facts.net_facts import declared_nets_of, is_earth_net
 from fransys_model.derive.facts.potentials import physical_potentials
 from fransys_model.derive.facts.wired_ports import half_connected
-from fransys_model.kernel import Finding, Severity, natural_join
+from fransys_model.kernel import Finding, natural_join
+from fransys_model.vocab.codes import finding
 from fransys_model.vocab.finding_ref import ref
 from fransys_model.vocab.tables import conductors, items, nets
 
@@ -36,7 +37,7 @@ def _unrealised(model: Model) -> list[Finding]:
         pieces = {net_of(model, port) for port in net.ports}
         if len(pieces) > 1 and not net_on_one_board(model, net.ports):
             message = f"net {_label(net)} falls into {len(pieces)} physical nets"
-            found.append(finding(NET_UNREALISED, Severity.WARNING, (net.id,), message))
+            found.append(finding(NET_UNREALISED, (net.id,), message))
     return found
 
 
@@ -67,28 +68,24 @@ def _per_physical_net(model: Model) -> list[Finding]:
         if len(shorting) > 1 and not _one_intent(model, shorting):
             names = natural_join(_label(nets(model)[net]) for net in shorting)
             message = f"one physical net joins the declared nets {names}"
-            found.append(finding(NET_SHORTED, Severity.ERROR, shorting, message))
+            found.append(finding(NET_SHORTED, shorting, message))
         by_potential = physical_potentials(model, physical)
         if len(by_potential) > 1:
             message = f"one physical net joins the rails {natural_join(by_potential)}"
             rails = (net for ids in by_potential.values() for net in ids)
-            found.append(finding(NET_POTENTIAL_CONFLICT, Severity.ERROR, rails, message))
+            found.append(finding(NET_POTENTIAL_CONFLICT, rails, message))
     return found
 
 
 def _conductor_findings(model: Model) -> list[Finding]:
     found = []
     for conductor in conductors(model).values():
-        pulled = {
-            item.id: item
-            for item in (items(model)[port_item(model, end)] for end in (conductor.a, conductor.b))
-            if not item.installed
-        }
+        pulled = {item.id: item for item in (items(model)[port_item(model, end)] for end in (conductor.a, conductor.b)) if not item.installed}
         if pulled:
             names = natural_join(ref(item) for item in pulled.values())
             message = f"conductor {ref(conductor)} lands on an item that is not installed: {names}"
             subjects = (conductor.id, *pulled)
-            found.append(finding(CONDUCTOR_ON_UNINSTALLED, Severity.WARNING, subjects, message))
+            found.append(finding(CONDUCTOR_ON_UNINSTALLED, subjects, message))
     return found
 
 
@@ -96,7 +93,6 @@ def _half_connected(model: Model) -> list[Finding]:
     return [
         finding(
             FUNCTION_HALF_CONNECTED,
-            Severity.WARNING,
             (opened.id,),
             f"{ref(function)} is connected at one port and open at {ref(opened)}",
         )

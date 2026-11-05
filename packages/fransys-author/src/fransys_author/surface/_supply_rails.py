@@ -1,11 +1,11 @@
 """Supply rail handles: `SupplyRail`, the `_Rails` base and `AcSupply` / `DcSupply`."""
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 lazy from collections.abc import Iterable
 
-from fransys_author.errors import AuthorError
-from fransys_author.surface._pairing import End, Ends
+from fransys_author.errors import AuthorAttributeError, AuthorError
+from fransys_author.surface._pairing import End, Ends, SeriesElement
 lazy from fransys_author.handles import Port
 lazy from fransys_model.vocab import ConductorMark, WiringRow
 
@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 
 
 @dataclass(frozen=True)
-class SupplyRail:
+class SupplyRail(SeriesElement):
     """One rail of a supply: its source pin, the potential it carries and its conductor mark.
 
     Does not wire itself: it stands in a `series` as a one-conductor element.
@@ -27,18 +27,20 @@ class SupplyRail:
     phase: int | None
     row: WiringRow
 
+    @override
     def _series_width(self) -> int | None:
         return 1
 
     def _conductor_rows(self) -> tuple[WiringRow, ...]:
         return (self.row,)
 
-    def _series_ends(self, design: Design, width: int | None) -> Ends:  # noqa: ARG002 -- the SeriesElement protocol
+    @override
+    def _series_ends(self, design: Design, width: int | None) -> Ends:
         end = (End(self.pin, self.mark),)
         return Ends(end, end)
 
 
-class _Rails:
+class _Rails(SeriesElement):
     """The rails of one supply by attribute; a misspelt rail raises and lists the real ones."""
 
     def __init__(self, name: str, rails: Iterable[SupplyRail]) -> None:
@@ -47,10 +49,12 @@ class _Rails:
 
     _whole_supply = True  # a series that starts on a whole supply is a power path (S3)
 
+    @override
     def _series_width(self) -> int | None:
         return len(self._rails)
 
-    def _series_ends(self, design: Design, width: int | None) -> Ends:  # noqa: ARG002 -- the SeriesElement protocol
+    @override
+    def _series_ends(self, design: Design, width: int | None) -> Ends:
         """The first `width` rails: a path with no N pole leaves N, the last rail, unwired."""
         # `ac_supply` appends N after the phases, so N is always the last rail.
         ends = tuple(End(rail.pin, rail.mark) for rail in self._rails[:width])
@@ -67,7 +71,7 @@ class _Rails:
             Does not guess: an unknown rail raises and lists the rails.
             """
             if name.startswith("_"):
-                raise AttributeError(name)
+                raise AuthorAttributeError(name)
             names = ", ".join(rail.name for rail in self._rails)
             msg = f"no rail {name!r}; rails: {names}"
             raise AuthorError(msg)

@@ -1,12 +1,7 @@
 """`BASELINE_DIFFERS` names the child whose release moved."""
 
-import sys
-from pathlib import Path
-
 import fransys as fr
 import pytest
-
-sys.path.insert(0, str(Path(__file__).parent))
 from release_folders_fixture import build_cabinet
 
 
@@ -26,10 +21,7 @@ def _messages(result, into):
 
 def test_a_moved_child_is_named_right_after_units_and_before_later_sections(released):
     result, _scope = build_cabinet(board_revision=3, extra_wire=True)
-    expected = (
-        "wb-cabinet 1.1 differs from its released baseline in: "
-        "items, units (wb-board revision 1.1 → 1.3), conductors"
-    )
+    expected = "wb-cabinet 1.1 differs from its released baseline in: items, units (wb-board revision 1.1 → 1.3), conductors"
     assert _messages(result, released) == [expected]
 
 
@@ -56,7 +48,7 @@ def test_a_container_whose_units_did_not_change_keeps_todays_text(released):
 def test_the_change_note_names_a_moved_child_revision(released):
     result, _scope = build_cabinet(board_revision=3)
     note = fr.diff(result, released, unit="wb-cabinet")
-    assert "- Changed `=BRD-U1` (wb-board): revision 1.1 → 1.3." in note
+    assert "- Changed `=BRD-X1` (wb-board): revision 1.1 → 1.3." in note
 
 
 def test_the_cause_names_a_moved_child_revision_in_the_cause(released):

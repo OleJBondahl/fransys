@@ -31,8 +31,4 @@ def change_sections(diff: ListingDiff) -> tuple[ChangeSection, ...]:
     for change in diff.changes:
         if change.section != "unit":
             by_section.setdefault(change.section, []).append(change)
-    return tuple(
-        ChangeSection(section=section, groups=_subject_groups(by_section[section]))
-        for section in _SECTION_ORDER
-        if section in by_section
-    )
+    return tuple(ChangeSection(section=section, groups=_subject_groups(by_section[section])) for section in _SECTION_ORDER if section in by_section)

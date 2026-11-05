@@ -39,24 +39,17 @@ def _spell(signal: SignalType) -> str:
     return f"fr.{_SHORT[signal.value]}" if signal.value in _SHORT else signal.value
 
 
-def _requested(
-    elements: tuple[object, ...], index: int, asks: dict[Id[Function], PlcRequestFacet]
-) -> PlcRequestFacet | None:
+def _requested(elements: tuple[object, ...], index: int, asks: dict[Id[Function], PlcRequestFacet]) -> PlcRequestFacet | None:
     """The request on the function of the path nearest the module, else `None`."""
     near = elements[1:] if index == 0 else reversed(elements[:index])
     return next((asks[e._fn.id] for e in near if isinstance(e, Fn) and e._fn.id in asks), None)
 
 
-def _kind(
-    label: str, way: str, kinds: list[SignalType], asked: PlcRequestFacet | None
-) -> SignalType:
+def _kind(label: str, way: str, kinds: list[SignalType], asked: PlcRequestFacet | None) -> SignalType:
     """The signal this path takes: the requested one, else the module's only one this way."""
     if asked is not None and asked.signal not in kinds:
         have = ", ".join(k.value for k in kinds) or "none"
-        msg = (
-            f"{label} has no {asked.signal.value} {way} for the request "
-            f"{asked.signal_name!r}; its {way}s: {have}"
-        )
+        msg = f"{label} has no {asked.signal.value} {way} for the request {asked.signal_name!r}; its {way}s: {have}"
         raise AuthorError(msg)
     if asked is not None:
         return asked.signal
@@ -66,20 +59,14 @@ def _kind(
         msg = f"{label} has no PLC {way}, and this path needs one"
         raise AuthorError(msg)
     spoken = " or ".join(f".plc({_spell(k)}, name)" for k in kinds)
-    msg = (
-        f"{label} has {' and '.join(k.value for k in kinds)} {way}s: "
-        f"request one on a function of the path first, {spoken}"
-    )
+    msg = f"{label} has {' and '.join(k.value for k in kinds)} {way}s: request one on a function of the path first, {spoken}"
     raise AuthorError(msg)
 
 
 def _take(design: Design, device: Device, elements: tuple[object, ...], index: int) -> Fn:
     """The lowest free channel of the module at `index`, now taken."""
     if 0 < index < len(elements) - 1:
-        msg = (
-            f"{device._label} is in the middle of a path: a PLC module ends a path "
-            "(an input) or starts one (an output)"
-        )
+        msg = f"{device._label} is in the middle of a path: a PLC module ends a path (an input) or starts one (an output)"
         raise AuthorError(msg)
     facts = design._pairing_facts
     every = _channels(facts, device)
@@ -111,7 +98,4 @@ def take_channels(design: Design, elements: tuple[object, ...]) -> tuple[object,
     for fn in (fn for element in elements for fn in _fixed(element)):
         if facts.channel(fn._fn) is not None:
             design._taken_channels.add(fn._fn.id)
-    return tuple(
-        _take(design, e, elements, i) if isinstance(e, Device) and _channels(facts, e) else e
-        for i, e in enumerate(elements)
-    )
+    return tuple(_take(design, e, elements, i) if isinstance(e, Device) and _channels(facts, e) else e for i, e in enumerate(elements))

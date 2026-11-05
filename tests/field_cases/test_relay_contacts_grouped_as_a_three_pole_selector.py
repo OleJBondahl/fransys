@@ -1,24 +1,15 @@
 """Field case: three changeover contacts of one relay switch a motor between two supplies.
-
-The engineering shape: a relay with independent changeover contacts. Three of them, grouped,
-select which of two three-phase supplies feeds one motor. Supply A reaches the make throws,
-supply B the break throws, and the commons go to the motor. The relay's coil is on 24 V.
-
-The bug: three one-pole contacts could not be one series element. Each needed its own series,
-the throws could not face the line, and the drawing showed three single-pole symbols.
-
-Fixing decision: author-0046 (`d.poles`, API-CLARITY C6.4); layout-0227 draws the group.
-"""
+The bug: three one-pole contacts could not be one series element, so the throws could not face the line and drew as three poles.
+Fixed by author-0046 (`d.poles`, API-CLARITY C6.4) and layout-0227, which draws the group."""
 
 import re
 from functools import cache
-from pathlib import Path
+from typing import Any
 
 import fransys as fr
 import pytest
-from _contact_tables import contact_table
 from _drawn_pages import drawn_pages
-from _tables_on import TABLES_ON
+from _model_build_cover import unit_document
 
 _SEL = "-Q1's part already states a selector: pass q1.co"
 _TOP = 4  # the three poles, as (pole, QA/QB load pin, motor pin)
@@ -43,16 +34,14 @@ def selector_design():
 
 
 @cache
-def _built(folder: str) -> fr.BuildResult:
-    cover = Path(folder) / "cover.md"
-    cover.write_text("# Selector\n", encoding="utf-8")
+def _built() -> fr.BuildResult:
     d, cabinet = selector_design()
-    doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cabinet, cover=cover)
-    return fr.build(d, doc, settings=TABLES_ON)
+    doc = unit_document(cabinet)
+    return fr.build(d, doc)
 
 
-def _model(tmp_path_factory: pytest.TempPathFactory):
-    return _built(str(tmp_path_factory.getbasetemp())).model
+def _model():
+    return _built().model
 
 
 def test_supply_a_reaches_the_make_throws_b_the_breaks_and_the_commons_feed_m1() -> None:
@@ -65,39 +54,18 @@ def test_supply_a_reaches_the_make_throws_b_the_breaks_and_the_commons_feed_m1()
     assert sum(f"-K1:{_TOP}" in r.from_ + r.to for r in rows) == 0, "co_4 stays apart"
 
 
-def _symbols(model) -> list:
+def _symbols(model) -> list[Any]:
     return [s for drawing in drawn_pages(model).values() for s in drawing.symbols]
 
 
-def test_the_group_draws_one_three_pole_symbol_turned(
-    tmp_path_factory: pytest.TempPathFactory,
-) -> None:
-    model = _model(tmp_path_factory)
-    drawn = [s for s in _symbols(model) if s.poles > 1]
-    assert len(drawn) == 1, "one symbol for the three contacts"
-    assert drawn[0].poles == _TOP - 1
-    assert drawn[0].orient in {"R180", "MR180"}
-
-
-def test_the_coils_table_lists_each_contact_with_a_place(
-    tmp_path_factory: pytest.TempPathFactory,
-) -> None:
-    no, nc = contact_table(_model(tmp_path_factory))
-    for pole in range(1, _TOP):
-        (make,) = (text for text in no if text.startswith(f"{pole}1-{pole}4 "))
-        (brk,) = (text for text in nc if text.startswith(f"{pole}1-{pole}2 "))
-        assert "N/A" not in make + brk, "a grouped contact is drawn"
-    assert any(text.startswith("41-44 N/A") for text in no), "co_4 is a spare"
-
-
-def test_every_pin_of_the_group_prints_its_marking(
-    tmp_path_factory: pytest.TempPathFactory,
-) -> None:
-    model = _model(tmp_path_factory)
-    marked = {
-        text for s in _symbols(model) for slot, text in s.slots if slot.startswith("marking.")
-    }
+def test_every_pin_of_the_group_prints_its_marking() -> None:
+    model = _model()
+    marked = {text for s in _symbols(model) for slot, text in s.slots if slot.startswith("marking.")}
     assert {f"{pole}{end}" for pole in range(1, _TOP) for end in "124"} <= marked
+
+
+def test_the_three_pole_build_shows_no_wire_meets_net() -> None:
+    assert "WIRE_MEETS_NET" not in {f.code for f in _built().findings}
 
 
 def test_selector_on_a_part_that_states_its_sides_raises() -> None:

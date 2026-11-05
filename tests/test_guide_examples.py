@@ -2,23 +2,17 @@
 
 Deliberately not built once: each page gets its own fresh namespace so that a page's blocks
 can build on each other (a later block reuses an earlier one's imports and variables) while
-two different pages never share state. The guide's twelve pages are written by parallel
-subagents working on their own files at the same time; a shared namespace across pages would
-let one page's leftover state mask or cause another page's failure, making a probe's FAILED
-test id ambiguous about which page actually broke. So this module shares no build across its
-parametrized cases at all, unlike the modules elsewhere in this suite that build once.
-`documents.md`'s two builds run a full layout on a real cabinet, which is this module's main cost;
-every other page's blocks are small enough to stay well under 1 s each, `examples.md`'s included
-(it builds a document but keeps its designs tiny).
-`drawing.md` builds 33-relay cabinets (about 2 s each): it builds each size once and reuses its page
-count, and a build is added there only when its assertion needs a new input (CL5.6).
 """
 
-import ast
 import importlib
 import re
 import sys
 from importlib.resources import files
+from typing import Any
+
+import fransys as fr
+from _expected_codes import expect_codes
+from first_party_imports import first_party_violations
 
 # The fixed twelve guide pages, by filename stem; `AGENTS.md` is not one of
 # them. Parametrize id is the page name itself (e.g. `test_...[build]`), not a discovered
@@ -29,6 +23,7 @@ GUIDE_PAGES = (
     "parts",
     "authoring",
     "series",
+    "drawn-ledger",
     "detail",
     "harnesses",
     "units",
@@ -43,6 +38,7 @@ GUIDE_PAGES = (
     "keywords-handles",
     "keywords-output",
     "settings",
+    "moving-to-0.22",
     "moving-to-0.20",
     "moving-to-0.19",
     "moving-to-0.16-and-0.17",
@@ -64,44 +60,13 @@ GUIDE_PAGES = (
     "overview",
 )
 
-# Same shape as `packages/fransys/tests/test_api.py`'s own `_FIRST_PARTY_NOT_FRANSYS`/
-# `first_party_violations`, duplicated here: a root test file can't import from a sibling
-# package's `tests/` directory (no `__init__.py` there). Kept in sync by hand if that list
-# ever changes.
-_FIRST_PARTY_NOT_FRANSYS = frozenset(
-    {
-        "fransys_model",
-        "symdef",
-        "electrical_symbols",
-        "fransys_parts",
-        "fransys_author",
-        "fransys_layout",
-        "fransys_render",
-        "fransys_reports",
-        "fransys_pdf",
-        "fransys_kicad",
-        "fransys_wago",
-        "fransys_overview",
-    }
-)
-
 _FENCE = re.compile(r"```python\n(.*?)```", re.DOTALL)
-
-
-def first_party_violations(source: str) -> set[str]:
-    """First-party top-level packages `source` imports besides `fransys` itself."""
-    imported: set[str] = set()
-    for node in ast.walk(ast.parse(source)):
-        if isinstance(node, ast.Import):
-            imported.update(alias.name.split(".")[0] for alias in node.names)
-        elif isinstance(node, ast.ImportFrom) and node.level == 0 and node.module:
-            imported.add(node.module.split(".")[0])
-    return imported & _FIRST_PARTY_NOT_FRANSYS
 
 
 def _python_blocks(markdown: str) -> list[str]:
     """Every ```python fenced code block of `markdown`, its own text, in document order."""
-    return _FENCE.findall(markdown)
+    blocks: list[str] = [str(block) for block in _FENCE.findall(markdown)]
+    return blocks
 
 
 def _page_blocks(page: str) -> list[str]:
@@ -118,7 +83,7 @@ def run_blocks(page: str, blocks: list[str]) -> None:
     working directory within the finder's cached directory mtime tick would not find it.
     """
     path, modules, finders = list(sys.path), set(sys.modules), set(sys.path_importer_cache)
-    namespace: dict = {}
+    namespace: dict[Any, Any] = {}
     try:
         for block in blocks:
             importlib.invalidate_caches()
@@ -136,17 +101,24 @@ def test_guide_page_blocks_run(page, tmp_path, monkeypatch):
     page_dir = tmp_path / page
     page_dir.mkdir()
     monkeypatch.chdir(page_dir)
+    built: list[Any] = []
+    real = fr.build
+
+    def spy(*args: Any, **kwargs: Any) -> Any:
+        built.append(real(*args, **kwargs))
+        return built[-1]
+
+    monkeypatch.setattr(fr, "build", spy)
     run_blocks(page, blocks)
+    if page == "reading":  # its first build, the branch-current example, shows the finding by design (R1741 Q1, R1712)
+        expect_codes(built[0], "RATING_CURRENT_BELOW_BRANCH")
 
 
 def test_a_block_creating_a_package_in_the_cached_tick_still_imports_it(tmp_path, monkeypatch):
     """UNDO: drop `importlib.invalidate_caches()` from `run_blocks`; block 2 cannot import."""
     monkeypatch.chdir(tmp_path)
     monkeypatch.setattr(sys, "dont_write_bytecode", True)  # a __pycache__ would move the mtime
-    first = (
-        "import sys\nsys.path.insert(0, '.')\n"
-        "open('one_mod.py', 'w').write('X = 1')\nimport one_mod\n"
-    )
+    first = "import sys\nsys.path.insert(0, '.')\nopen('one_mod.py', 'w').write('X = 1')\nimport one_mod\n"
     # Block 2 sets the directory's mtime back to what block 1's import cached: the same tick.
     second = (
         "import os\nstamp = os.stat('.').st_mtime_ns\n"
@@ -160,9 +132,7 @@ def test_run_blocks_restores_sys_path_and_modules(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     importlib.invalidate_caches()  # run_blocks drops stale finder entries; compare like with like
     before = list(sys.path), set(sys.modules), set(sys.path_importer_cache)
-    block = (
-        "import sys\nsys.path.insert(0, '.')\nopen('gone_mod.py', 'w').write('')\nimport gone_mod\n"
-    )
+    block = "import sys\nsys.path.insert(0, '.')\nopen('gone_mod.py', 'w').write('')\nimport gone_mod\n"
     run_blocks("restore", [block])
     assert (list(sys.path), set(sys.modules), set(sys.path_importer_cache)) == before
 

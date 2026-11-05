@@ -2,40 +2,26 @@
 
 Layout exists only to draw documents. With no document there is nothing to draw, so `fr.build`
 returns the numbered, validated model unlaid, with no layout call attempted -- no flag, no new
-function. Every absence assertion below is
-paired with the positive case that proves the same mechanism can produce the opposite result
-(root CLAUDE.md's field-cases convention, applied here to a unit test rather than a field case).
 """
 
 import fransys as fr
-import fransys_author
 import fransys_pdf
 import fransys_render
 import pytest
 from demo_designs import cabinet_design
 from fransys import pipeline
+from fransys_author.design import Design
+
+from ._spy import spy
 
 _GATED_PIPELINE_NAMES = ("lay_out_if_needed",)
 
 
-def _spy(monkeypatch, module, name):
-    """Wrap `module.name` in a call-counting delegate to the real function."""
-    calls: list[tuple] = []
-    original = getattr(module, name)
-
-    def wrapper(*args, **kwargs):
-        calls.append((args, kwargs))
-        return original(*args, **kwargs)
-
-    monkeypatch.setattr(module, name, wrapper)
-    return calls
-
-
 def _spy_every_gated_call(monkeypatch):
     """One call list per function the gate covers, keyed by name."""
-    calls = {name: _spy(monkeypatch, pipeline, name) for name in _GATED_PIPELINE_NAMES}
-    calls["fransys_pdf.check"] = _spy(monkeypatch, fransys_pdf, "check")
-    calls["fransys_render.check"] = _spy(monkeypatch, fransys_render, "check")
+    calls = {name: spy(monkeypatch, pipeline, name) for name in _GATED_PIPELINE_NAMES}
+    calls["fransys_pdf.check"] = spy(monkeypatch, fransys_pdf, "check")
+    calls["fransys_render.check"] = spy(monkeypatch, fransys_render, "check")
     return calls
 
 
@@ -50,11 +36,9 @@ def _document_build(parts, tmp_path):
 
     `cabinet_design`'s own top-level cable (`demo_designs.py` line 43, `d.cable(...)`, not
     inside a harness) gives this build a rendered `SCHEMATIC` page to make that
-    `_no_document_build` never makes, so the two are a real positive/negative pair, not just
-    "one has a document record".
     """
     design = cabinet_design(parts)
-    c1 = fransys_author.Design(parts).location("C1", "Demo cabinet")
+    c1 = Design(parts).location("C1", "Demo cabinet")
     cover = tmp_path / "cabinet.md"
     cover.write_text("# Demo cabinet\n", encoding="utf-8")
     document_draft = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, c1, cover=cover)
@@ -98,7 +82,7 @@ def _changeover_no_document_draft(parts):
     strips), with no document draft -- the same shape as
     `tests/field_cases/test_changeover_throws_to_two_strips.py::_build(in_unit=True)`.
     """
-    design = fransys_author.Design(parts)
+    design = Design(parts)
     scope = design.scope("unit").unit("unit", revision=1, interface="1")
     scope.revision(1, date="2026-09-26", text="First issue", created="XX")
     cab = scope.location("CAB", "Cabinet")

@@ -1,12 +1,13 @@
 """A series between two functions with no line side: pins pair in pin order (C6.2, author-0045)."""
 
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, cast, override
 
 from fransys_author.errors import AuthorError
 from fransys_author.surface._handles import Fn, fn_label
-from fransys_author.surface._pairing import End, Ends, ends_of
+from fransys_author.surface._pairing import End, Ends, SeriesElement, ends_of
 from fransys_model.derive import sideless_pins
-from fransys_model.vocab import FunctionKind, PortRole
+from fransys_model.elecdef import PinRole
+from fransys_model.vocab import FunctionKind
 
 if TYPE_CHECKING:
     from fransys_author.handles import Port
@@ -16,7 +17,7 @@ if TYPE_CHECKING:
 type _Pins = tuple[Port, ...]
 
 
-class _Bare:
+class _Bare(SeriesElement):
     """A function whose pins stand as both its line and its load ends, in pin order.
 
     Does not pair anything: the series pairs this element's pins with the other end's.
@@ -26,10 +27,12 @@ class _Bare:
         ends = tuple(End(port, None) for port in ports)
         self._ends = Ends(ends, ends)
 
+    @override
     def _series_width(self) -> int:
         return len(self._ends.line)
 
-    def _series_ends(self, design: Design, width: int | None) -> Ends:  # noqa: ARG002 -- the protocol
+    @override
+    def _series_ends(self, design: Design, width: int | None) -> Ends:
         return self._ends
 
 
@@ -43,12 +46,10 @@ def _pins(design: Design, element: object) -> _Pins:
         return ()
     if ends_of(design._pairing_facts, element._fn, partless_ok=True).line:
         return ()
-    return tuple(port for port in element._fn.ports if port.role is not PortRole.PE)
+    return tuple(port for port in element._fn.ports if port.pin_role is not PinRole.PE)
 
 
-def _in_pin_order(
-    design: Design, ends: tuple[object, object], pins: tuple[_Pins, _Pins]
-) -> tuple[_Pins, _Pins]:
+def _in_pin_order(design: Design, ends: tuple[object, object], pins: tuple[_Pins, _Pins]) -> tuple[_Pins, _Pins]:
     """Both ends' pins in pin order; raise `derive`'s text when they cannot pair."""
     facts = design._pairing_facts
     by_id = [{facts.port_template(port).id: port for port in end} for end in pins]

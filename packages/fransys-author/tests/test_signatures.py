@@ -2,31 +2,17 @@
 
 Every public callable of `Design`, `Scope` and the handle types is walked; a parameter
 named like a geometry concept, or annotated with a geometry type, fails the walk.
-`position` and `index` are legitimate build facts (rail slot, terminal position), not
-coordinates, and stay off the forbidden list.
 """
 
 import annotationlib
 import inspect
 
 import fransys_author
-from fransys_author import (
-    Cable,
-    Design,
-    Fn,
-    Group,
-    Item,
-    Location,
-    Port,
-    Scope,
-    Strip,
-    Terminal,
-    Wiring,
-)
+from fransys_author.design import Design, Scope
+from fransys_author.handles import Cable, Fn, Group, Item, Location, Port, Strip, Terminal
+from fransys_author.wiring import Wiring
 
-_FORBIDDEN_NAMES = frozenset(
-    {"x", "y", "page", "column", "row", "page_number", "column_number", "row_number", "points"}
-)
+_FORBIDDEN_NAMES = frozenset({"x", "y", "page", "column", "row", "page_number", "column_number", "row_number", "points"})
 _FORBIDDEN_ANNOTATION_WORDS = ("point", "coordinate")
 # Not forbidden: `Project.number` (a project number like "P-1001") is a business
 # field, not a layout page number; `position`/`index` are build facts (the model's
@@ -76,10 +62,7 @@ def _violations(owner: str, name: str, signature: inspect.Signature) -> list[str
 
 def test_no_public_callable_takes_a_coordinate_page_or_column():
     problems = [
-        problem
-        for cls in _WALKED_TYPES
-        for owner, name, signature in _public_callables(cls)
-        for problem in _violations(owner, name, signature)
+        problem for cls in _WALKED_TYPES for owner, name, signature in _public_callables(cls) for problem in _violations(owner, name, signature)
     ]
     assert problems == []
 
@@ -87,31 +70,11 @@ def test_no_public_callable_takes_a_coordinate_page_or_column():
 def test_public_names_are_exactly_the_ones_the_spec_lists():
     assert set(fransys_author.__all__) == {
         "AuthorError",
-        "Cable",
-        "Design",
-        "Fn",
-        "Group",
-        "Item",
-        "Location",
         "Operating",
-        "Port",
-        "Rating",
         "RowValue",
-        "Scope",
-        "Strip",
-        "Terminal",
-        "Wiring",
         "WiringRow",
         "caller_origin",
     }
-
-
-def test_boundary_takes_rating_and_operating_as_keyword_only_values():
-    signature = inspect.signature(Scope.boundary, annotation_format=annotationlib.Format.STRING)
-    parameters = signature.parameters
-    for name in ("rating", "operating"):
-        assert parameters[name].kind is inspect.Parameter.KEYWORD_ONLY
-        assert parameters[name].default is None
 
 
 def test_the_walk_can_fail_on_a_deliberately_bad_stub():
@@ -120,11 +83,7 @@ def test_the_walk_can_fail_on_a_deliberately_bad_stub():
 
         def good(self, name: str) -> None: ...
 
-    problems = [
-        problem
-        for owner, name, signature in _public_callables(BadStub)
-        for problem in _violations(owner, name, signature)
-    ]
+    problems = [problem for owner, name, signature in _public_callables(BadStub) for problem in _violations(owner, name, signature)]
     assert problems == [
         "BadStub.place(x=...): forbidden parameter name",
         "BadStub.place(y=...): forbidden parameter name",
@@ -138,11 +97,7 @@ def test_the_walk_can_fail_on_a_geometry_annotated_stub():
     class BadStub:
         def move(self, to: Point) -> None: ...
 
-    problems = [
-        problem
-        for owner, name, signature in _public_callables(BadStub)
-        for problem in _violations(owner, name, signature)
-    ]
+    problems = [problem for owner, name, signature in _public_callables(BadStub) for problem in _violations(owner, name, signature)]
     assert len(problems) == 1
     assert "forbidden annotation" in problems[0]
 
@@ -152,13 +107,9 @@ def test_the_walk_covers_every_callable_the_spec_names():
     found = {(owner, name) for cls in _WALKED_TYPES for owner, name, _ in _public_callables(cls)}
     for owner, name in (
         ("Design", "item"),
-        ("Scope", "chain"),
-        ("Scope", "draw_in"),
-        ("Scope", "rating"),
         ("Scope", "operating"),
         ("Cable", "core"),
         ("Fn", "plc"),
-        ("Fn", "scale"),
         ("Item", "fn"),
         ("Strip", "terminal"),
         ("Wiring", "__call__"),

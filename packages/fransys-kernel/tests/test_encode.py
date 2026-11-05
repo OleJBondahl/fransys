@@ -5,7 +5,7 @@ Every expected value below is written out by hand, never computed by the code un
 
 import json
 from decimal import Decimal
-from typing import Any
+from typing import Any, cast
 
 import pytest
 from canon_probes import (
@@ -90,7 +90,6 @@ def test_a_multi_segment_key_is_written_as_a_json_array_of_strings() -> None:
 
     If `_encode_value` forgot to unwrap the alias (`annotation.__value__`), the key would
     still reach `json.dumps` as a tuple of strings and look right by accident for a
-    single-segment key; a multi-segment key makes the per-item walk observable.
     """
     item = make_item("2", key=("a", "b", "c"))
     written = json.loads(_write(record_data(item), compact=True))["key"]
@@ -102,9 +101,7 @@ def test_a_nested_value_is_written_as_a_mapping_of_its_fields() -> None:
     """A `@value` inside a tuple has no tag of its own: its annotation says what it is."""
     detail = CanonDetail(amount=Decimal("2.50"), owner=owner_id("1"), shade=Shade.BLUE)
     data = record_data(make_item("2", details=(detail,)))
-    assert json.loads(_write(data, compact=True))["details"] == [
-        {"amount": "2.5", "owner": "canon_owner_probe:" + "1" * 32, "shade": "blue"}
-    ]
+    assert json.loads(_write(data, compact=True))["details"] == [{"amount": "2.5", "owner": "canon_owner_probe:" + "1" * 32, "shade": "blue"}]
 
 
 def test_an_undeclared_position_tags_what_json_cannot_tell_apart() -> None:
@@ -140,9 +137,9 @@ def test_the_model_is_tables_of_records_in_id_order_plus_aliases(origin: Origin)
     """`to_data` carries the schema version, aliases and tables, and nothing derived."""
     second, first = make_item("3"), make_item("2")
     model = model_of(origin, second, first, make_owner("1"))
-    data = to_data(model)
+    data = cast("frozendict[str, Any]", to_data(model))
     assert list(data) == ["aliases", "schema_version", "tables"]
-    assert data["schema_version"] == 20
+    assert data["schema_version"] == 23
     assert data["aliases"] == ()
     assert list(data["tables"]) == ["canon_item_probe", "canon_owner_probe"]
     assert [entry["key"] for entry in data["tables"]["canon_item_probe"]] == [("2",), ("3",)]
@@ -210,3 +207,17 @@ def test_mapping_keys_are_sorted_in_the_data_and_not_only_in_the_text() -> None:
     assert list(written["ext"]) == ["a", "z"]
     assert list(written["ext"]["a"]["$map"]) == ["aa", "zz"]
     assert list(written["scores"]) == ["b", "y"]
+
+
+def test_value_data_and_value_from_round_trip_a_family_value() -> None:
+    from elecdef import At, Range, Rating, Role, Unit
+    from elecdef.vocab import Current
+
+    from fransys_kernel import value_data, value_from
+
+    rating = Rating(current=(Range(Role.RATED, nom=Unit.A(16), at=At(Current.AC)),))
+    data = value_data(rating)
+    assert _write(data, compact=True) == _write(value_data(value_from(data, Rating)), compact=True)
+    assert value_from(data, Rating) == rating
+    with pytest.raises(Exception, match="unknown fields"):
+        value_from({"nope": None}, Rating)

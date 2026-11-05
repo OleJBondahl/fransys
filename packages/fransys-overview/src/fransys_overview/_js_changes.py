@@ -4,8 +4,6 @@ The data holds what each view marks, and the things no box carries; this only
 colours, filters and lists them (A4: nothing is computed that the data does not hold).
 """
 
-# ruff: noqa: E501 -- the JavaScript source is not wrapped
-
 from typing import Final
 
 JS_CHANGES: Final[str] = r"""

@@ -3,14 +3,13 @@
 from typing import TYPE_CHECKING, Any
 
 import pytest
+from author_catalogue import _ORIGIN, _function, _library, _part
 from fransys_author import AuthorError
 from fransys_author.surface import AI, DI, DO, design
+from series_parts import _pin, series_library
 
 from fransys_model.kernel import make_id
 from fransys_model.vocab import Conductor, FunctionKind, PartCategory, PlcChannelFacet, SignalType
-
-from ..conftest import _ORIGIN, _function, _library, _part  # noqa: TID252 -- importlib mode puts tests/ on no path
-from ..equivalence.series_parts import _pin, series_library  # noqa: TID252 -- same
 
 if TYPE_CHECKING:
     from fransys_author.surface import Design
@@ -56,10 +55,10 @@ def lib() -> Draft:
     return draft
 
 
-def _wired(d: Design, *pins: object) -> bool:
+def _wired(d: Design, *pins: Any) -> bool:
     """Whether a conductor ends at every pin of `pins`."""
     ends = {end for r in d.draft().records() if isinstance(r, Conductor) for end in (r.a, r.b)}
-    return all(pin.id in ends for pin in pins)  # ty: ignore[unresolved-attribute] -- a pin has an id
+    return all(pin.id in ends for pin in pins)
 
 
 def _button(d: Design, tag: str) -> Any:

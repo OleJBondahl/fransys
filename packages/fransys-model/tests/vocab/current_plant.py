@@ -2,19 +2,18 @@
 
 Invented data only. Every device is an item `key` with one function `f`; a hub is a one-port
 wiring point, so several ports may be wired to one node. A device is rated in DC and in AC, and
-may state a source limit in either kind. A port may stand on rails (a `Net` with that potential),
-as `rating_plant.load` does, so a check test can put a string on a supply.
 """
 
-from decimal import Decimal
 from typing import TYPE_CHECKING
 
+from rating_plant import figures, rated, states_block
 lazy from plant import Plant
 
+from fransys_model.elecdef import Fuse, LinkKind, PinRole, Range, Role, Unit
 from fransys_model.kernel import make_id
-from fransys_model.vocab import Operating, OperatingFacet, PartRatingFacet, Rating
+from fransys_model.vocab import Operating, OperatingFacet, PartRatingFacet
 from fransys_model.vocab.core import Item
-from fransys_model.vocab.enums import FunctionKind, LinkKind, PortRole
+from fransys_model.vocab.enums import FunctionKind, PortBoundary
 from fransys_model.vocab.templates import FunctionTemplate, PortTemplate
 
 if TYPE_CHECKING:
@@ -37,23 +36,12 @@ def rate(
     key: str,
     amps: str | None,
     *,
-    partial: bool = False,
     amps_ac: str | None = None,
 ) -> Id[Part]:
-    """The part of item `key`, rated `amps` DC and `amps_ac` AC when given.
-
-    A partial-range fuse when `partial`.
-    """
+    """The part of item `key`, rated `amps` DC and `amps_ac` AC when given."""
     part = plant.part(key)
     if amps is not None or amps_ac is not None:
-        rating = Rating(
-            current_dc_a=None if amps is None else Decimal(amps),
-            current_ac_a=None if amps_ac is None else Decimal(amps_ac),
-            min_breaking_current_a=Decimal(4000) if partial else None,
-        )
-        facet = PartRatingFacet(
-            id=make_id(PartRatingFacet, (key,)), key=(key,), subject=part, rating=rating
-        )
+        facet = PartRatingFacet(id=make_id(PartRatingFacet, (key,)), key=(key,), subject=part, rating=rated(amps_ac=amps_ac, amps_dc=amps))
         plant.add(facet)
     return part
 
@@ -75,30 +63,26 @@ def device(  # noqa: PLR0913 -- one keyword per thing a test varies
 
     The `_ac` keywords give the AC values. With `link` the two pins are tied by an internal
     link of that kind; without, the function is a two-port source or load. `rails` names, per
-    port, the potentials it stands on (none by default).
     """
-    part = rate(plant, key, amps, partial=partial, amps_ac=amps_ac)
-    template = FunctionTemplate(
-        id=make_id(FunctionTemplate, (key, "f")), key=(key, "f"), part=part, name="f", kind=kind
-    )
+    part = rate(plant, key, amps, amps_ac=amps_ac)
+    template = FunctionTemplate(id=make_id(FunctionTemplate, (key, "f")), key=(key, "f"), part=part, name="f", kind=kind)
     pins = [
         PortTemplate(
             id=make_id(PortTemplate, (key, "f", name)),
             key=(key, "f", name),
             function=template.id,
             name=name,
-            role=PortRole.GENERIC,
+            boundary=PortBoundary.GENERIC,
         )
         for name in ("1", "2")
     ]
     plant.add(template, *pins)
+    if partial:
+        states_block(plant, template.id, Fuse(breaking_capacity=(Range(Role.RATED, min=Unit.A(4000)),)))
     if link is not None:
         plant.link(pins[0], pins[1], link, key=f"link-{key}")
     if limit is not None or limit_ac is not None:
-        operating = Operating(
-            max_current_dc_a=None if limit is None else Decimal(limit),
-            max_current_ac_a=None if limit_ac is None else Decimal(limit_ac),
-        )
+        operating = Operating(max_current=figures(Unit.A, limit_ac, limit))
         facet_id = make_id(OperatingFacet, (key,))
         plant.add(OperatingFacet(id=facet_id, key=(key,), subject=template.id, operating=operating))
     function = plant.function(plant.item(key, part=part), "f", template=template.id, kind=kind)
@@ -181,14 +165,11 @@ def open_string(plant: Plant, source: Ports, devices: Sequence[Ports], key: str 
     run(plant, source[1], devices, external(plant, f"{key}1"))
 
 
-def changeover(
-    plant: Plant, key: str, amps: str | None = "500"
-) -> tuple[Id[Port], Id[Port], Id[Port]]:
+def changeover(plant: Plant, key: str, amps: str | None = "500") -> tuple[Id[Port], Id[Port], Id[Port]]:
     """A changeover contact `key`: `com` switched to `no` (made when operated) and to `nc`
     (closed at rest), rated `amps` DC (`None`: unrated, so both links are plain wires).
 
     The port templates carry the roles `COMMON`, `MAKE` and `BREAK`, which `link_state` reads.
-    Returns the ports (`com`, `no`, `nc`).
     """
     part = rate(plant, key, amps)
     template = FunctionTemplate(
@@ -204,19 +185,18 @@ def changeover(
             key=(key, "f", name),
             function=template.id,
             name=name,
-            role=role,
+            boundary=role if isinstance(role, PortBoundary) else PortBoundary.GENERIC,
+            pin_role=role if isinstance(role, PinRole) else None,
         )
         for name, role in (
-            ("com", PortRole.COMMON),
-            ("no", PortRole.MAKE),
-            ("nc", PortRole.BREAK),
+            ("com", PinRole.COMMON),
+            ("no", PinRole.MAKE),
+            ("nc", PinRole.BREAK),
         )
     ]
     plant.add(template, *pins)
     plant.link(pins[0], pins[1], LinkKind.SWITCHED, key=f"link-{key}-no")
     plant.link(pins[0], pins[2], LinkKind.SWITCHED, key=f"link-{key}-nc")
-    function = plant.function(
-        plant.item(key, part=part), "f", template=template.id, kind=FunctionKind.CONTACT_CO
-    )
+    function = plant.function(plant.item(key, part=part), "f", template=template.id, kind=FunctionKind.CONTACT_CO)
     com, no, nc = (plant.port(function, pin.name, template=pin.id) for pin in pins)
     return com, no, nc

@@ -1,17 +1,6 @@
-"""Field case: the builder's wire list, `<set>-wires.csv`.
-
-The engineering shape: a small cabinet with one connector pin on a nested board and one terminal
-of a strip, joined by one coloured wire of a given size. The panel builder cuts the wire
-from the list and prints the same text at both of its ends.
-
-The bug: the export was the wire-label CSV, `wire-labels.csv`, with the columns `label`,
-`end_a_designation` and `end_b_designation`. It carried no colour and no size, and its label was
-only what the author typed (`None` when none was). The builder needs `from`, `to`, `colour`,
-`cross_section_mm2` and a `label` that reads from-to, as `-B12:96 -Q11:A1`.
-
-Decision 0092 (the owner's answers): `wires.csv` with those five columns, one
-row per wire, the label being both end designations with one space between.
-"""
+"""Field case: one coloured wire joins a nested board's connector pin to a strip terminal in a small cabinet.
+The bug: the export was wire-labels.csv, with no colour or size and a label only as typed, but the builder needs from, to and colour.
+Fixed by decision 0092, wires.csv has from, to, colour, cross_section_mm2 and label columns, one row per wire."""
 
 import csv
 import io
@@ -44,7 +33,7 @@ def _cabinet(d: fr.Design) -> _Open:
     board = d.device(None, "DEMO-PCB-IO", name="board")
     plug = d.device("X1", "DEMO-CONN-2P", parent=board)
     strip = d.terminal_strip("X9", "DEMO-TB-2.5")
-    d.detail.wire(plug["1"], strip[1].outer, wire=(BU, 0.5))
+    d.series(plug["1"], strip[1].outer, wire=(BU, 0.5))
     return _Open()
 
 

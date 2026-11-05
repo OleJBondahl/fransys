@@ -1,19 +1,20 @@
-"""A `BuildResult` carries the drawings its build laid out (FLIP-NOW F7, el-0039, R223/R240).
+"""A `BuildResult` carries the drawings its build laid out (FLIP-NOW F7, el-0039, R223/R240). (known: DRAWING_SHORTS_NETS KI-417)
 
 `build` lays out once and keeps the page Drawings on the result's `drawings` field; `check`,
 `write` and `release` read them from the result they get. The SVGs and the pdf links equal what
-a fresh `lay_out_drawn` run and `reference_links` give.
 """
 
 import dataclasses
 import importlib.util
 from pathlib import Path
+from typing import Any
 
 import fransys as fr
 import pytest
 from _direct_case import built_with_unlaid, laid_again
 from _motor_feeder_case import motor_feeder_case_drafts
-from fransys import _layout_core, pipeline
+from fransys import _exports, _layout_core, pipeline
+from fransys._link_boxes import link_boxes
 from fransys._settings_library import library_of
 from fransys_el import style
 from fransys_render import svg
@@ -26,7 +27,7 @@ from fransys_model.layout import Page, layout_of
 SKID = Path(__file__).resolve().parent.parent / "examples" / "demo-skid" / "skid.py"
 
 
-def _skid_drafts() -> tuple:
+def _skid_drafts() -> tuple[Any, ...]:
     spec = importlib.util.spec_from_file_location("demo_skid_laid", SKID)
     assert spec is not None
     assert spec.loader is not None
@@ -48,9 +49,7 @@ def _fresh_svgs(model, unlaid) -> dict[str, str]:
     look = style(LIBRARY)
     drawn = laid_again(unlaid)[1]
     return {
-        render_id(page).replace(":", "-"): svg(
-            drawing, LIBRARY, look, sheet_mm=_layout_core._sheet_mm(model, page)
-        )
+        render_id(page).replace(":", "-"): svg(drawing, LIBRARY, look, sheet_mm=_layout_core._sheet_mm(model, page))
         for page, drawing in drawn.items()
     }
 
@@ -71,26 +70,28 @@ def test_the_svg_comparison_can_fail(skid):
 
 def test_the_pdf_links_equal_reference_links(tmp_path, monkeypatch):
     result = fr.build(*motor_feeder_case_drafts(8))
+    assert not [f for f in result.findings if f.code == "MARKER_UNPLACED"]  # LEDGER-RECUT A4: the 8-starter feeder legs every one-sided pin (KI-466)
     seen = []
 
-    real = pipeline.fransys_pdf.source
+    real = _exports.fransys_pdf.source
 
     def spy(*args, **kwargs):
         seen.append(kwargs["links"])
         return real(*args, **kwargs)
 
-    monkeypatch.setattr(pipeline.fransys_pdf, "source", spy)
+    monkeypatch.setattr(_exports.fransys_pdf, "source", spy)
     model = result.model
     # `write` would refuse this 8-starter case on the old `render.check`; the sources come first
     library = library_of(result.settings)
-    pipeline._write_intermediates(
-        pipeline._Drawn(model, result.drawings, library),
-        pipeline._svgs(model, result.drawings, library),
+    _exports._write_intermediates(
+        pipeline._Drawn(model, result.drawings, result.diagrams, library, result.page_svgs),
+        pipeline._svgs(pipeline._Drawn(model, result.drawings, result.diagrams, library, result.page_svgs)),
         tmp_path,
         result.settings.pdf,
     )
     known = set(layout_of(model, Page))
-    expected = {page: reference_links(model, page, known) for page in known}
+    boxes = link_boxes(model, result.drawings, library)
+    expected = {page: reference_links(model, page, known, boxes) for page in known}
     assert sum(len(found) for found in expected.values()) == 2
     assert seen
     assert all(links == expected for links in seen)
@@ -126,7 +127,9 @@ def test_build_result_fields_are_unchanged_but_for_drawings_and_library():
         "settings",
         "times",
         "drawings",
+        "page_svgs",
         "library",
+        "diagrams",
     ]
 
 
@@ -136,3 +139,8 @@ def test_repr_and_equality_ignore_the_drawings():
     bare = dataclasses.replace(result, drawings={})
     assert bare == result
     assert "drawings" not in repr(result)
+
+
+def test_the_skids_rail_terminals_leave_no_function_not_wired(skid):
+    """R911: a flagged terminal draws as its rail's power symbol, so it is not left off the page."""
+    assert [f for f in skid[0].findings if f.code == "FUNCTION_NOT_WIRED"] == []

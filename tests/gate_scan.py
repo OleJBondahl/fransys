@@ -6,10 +6,11 @@ walks `packages/*/src`. A gate keeps its own rule; this file holds only the walk
 
 import ast
 import importlib.util
+import subprocess
 import sys
 import tomllib
 from pathlib import Path
-from typing import NamedTuple
+from typing import Any, NamedTuple
 
 ROOT = Path(__file__).resolve().parent.parent
 PACKAGES_ROOT = ROOT / "packages"
@@ -27,6 +28,17 @@ def load_script(module_name: str, filename: str):
     return module
 
 
+def tracked() -> list[str]:
+    """Every git-tracked path of the repo, relative to the root."""
+    out = subprocess.run(  # noqa: S603  git from PATH, fixed args only
+        ["git", "-C", str(ROOT), "ls-files"],  # noqa: S607  git from PATH
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    return out.stdout.splitlines()
+
+
 ci_gates = load_script("fransys_ci_gates", "ci_gates.py")
 
 
@@ -42,7 +54,7 @@ class Import(NamedTuple):
 
 def src_modules() -> list[tuple[str, Path]]:
     """Every `packages/*/src` .py file with its dotted module name, sorted; an empty walk fails."""
-    found = []
+    found: list[tuple[str, Path]] = []
     for path in ci_gates.source_files(ROOT):
         src = next(p for p in path.parents if p.name == "src")
         parts = path.relative_to(src).with_suffix("").parts
@@ -105,14 +117,12 @@ def imports_of(source: str, module: str) -> list[Import]:
     """Every level-0 import form in `source`, plus attribute reads on an imported module alias."""
     tree = ast.parse(source)
     package = package_of(module)
-    rows = []
+    rows: list[Import] = []
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
             rows += [Import(package, module, node.lineno, item.name, "") for item in node.names]
         elif isinstance(node, ast.ImportFrom) and node.level == 0 and node.module:
-            rows += [
-                Import(package, module, node.lineno, node.module, item.name) for item in node.names
-            ]
+            rows += [Import(package, module, node.lineno, node.module, item.name) for item in node.names]
     for src, name, line in _attribute_uses(tree, _alias_map(tree)):
         rows.append(Import(package, module, line, src, name))
     return rows
@@ -120,7 +130,7 @@ def imports_of(source: str, module: str) -> list[Import]:
 
 def src_imports() -> list[Import]:
     """`imports_of` over every `packages/*/src` file."""
-    rows = []
+    rows: list[Import] = []
     for module, path in src_modules():
         rows += imports_of(path.read_text(encoding="utf-8"), module)
     return rows
@@ -137,7 +147,8 @@ RATCHETS = ROOT / "tests" / "ratchets.toml"
 def stock(check: str, key: str = "stock") -> int:
     """The stock of a ratchet: `[check] key` in `tests/ratchets.toml`; it only falls."""
     with RATCHETS.open("rb") as handle:
-        return tomllib.load(handle)[check][key]
+        count: int = int(tomllib.load(handle)[check][key])
+        return count
 
 
 def check_stock(check: str, found: int, stock_: int) -> None:
@@ -158,9 +169,7 @@ def _qualnames(tree: ast.AST, prefix: str = "") -> set[str]:
     return found
 
 
-def stale_ceiling_keys(
-    ceilings: dict, root: Path = ROOT, *, skip_missing: bool = False
-) -> list[str]:
+def stale_ceiling_keys(ceilings: dict[Any, Any], root: Path = ROOT, *, skip_missing: bool = False) -> list[str]:
     """One message per `ceilings.toml` key (`path::name`, or a bare file path) naming nothing.
 
     `skip_missing` passes a key whose file is absent: the export lacks the private docs (R462).
@@ -174,20 +183,10 @@ def stale_ceiling_keys(
                 continue
             if path not in cache:
                 file = root / path
-                cache[path] = (
-                    _qualnames(ast.parse(file.read_text()))
-                    if file.suffix == ".py" and file.exists()
-                    else None
-                )
+                cache[path] = _qualnames(ast.parse(file.read_text())) if file.suffix == ".py" and file.exists() else None
             if not (root / path).exists():
                 if not skip_missing:
-                    problems.append(
-                        f"ceilings.toml [{section}] key {key}: {path} does not exist; "
-                        "delete the key (the file was moved or removed)"
-                    )
+                    problems.append(f"ceilings.toml [{section}] key {key}: {path} does not exist; delete the key (the file was moved or removed)")
             elif name and name not in (cache[path] or set()):
-                problems.append(
-                    f"ceilings.toml [{section}] key {key}: {path} has no {name}; "
-                    "delete the key (the function was renamed or removed)"
-                )
+                problems.append(f"ceilings.toml [{section}] key {key}: {path} has no {name}; delete the key (the function was renamed or removed)")
     return problems

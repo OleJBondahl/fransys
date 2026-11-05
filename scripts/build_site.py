@@ -17,18 +17,18 @@ import tempfile
 from importlib.resources import files
 from pathlib import Path
 
+import findings_guide
+import fransys as fr
+import lean_api
+import pypdfium2
+import site_gallery
+import site_markdown
+
+from fransys_model.derive import page_kinds
+from fransys_model.derive.docs_site import OFFLINE_NOTE
+
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "scripts"))
 
-import findings_guide  # noqa: E402  its page list is the findings pages' one source
-import fransys as fr  # noqa: E402  the home example's own page kinds
-import lean_api  # noqa: E402  scripts/ goes on sys.path first, as the one home of the surface listing
-import pypdfium2  # noqa: E402  the site group's pin; imported here only after sys.path is set
-import site_gallery  # noqa: E402  sibling script, same reason
-import site_markdown  # noqa: E402  the same
-
-from fransys_model.derive import page_kinds  # noqa: E402  the home example's own page kinds
-from fransys_model.derive.docs_site import OFFLINE_NOTE  # noqa: E402  the offline banner the site drops
 
 STATE = ROOT / ".fransys"
 SRC = STATE / "site-src"
@@ -42,10 +42,8 @@ def guide_pages() -> tuple[str, ...]:
     """`GUIDE_PAGES`, read from the test module's source so the nav has one list."""
     tree = ast.parse((ROOT / "tests" / "test_guide_examples.py").read_text(encoding="utf-8"))
     for node in tree.body:
-        if isinstance(node, ast.Assign) and any(
-            isinstance(t, ast.Name) and t.id == "GUIDE_PAGES" for t in node.targets
-        ):
-            return tuple(ast.literal_eval(node.value))
+        if isinstance(node, ast.Assign) and any(isinstance(t, ast.Name) and t.id == "GUIDE_PAGES" for t in node.targets):
+            return tuple(str(page) for page in ast.literal_eval(node.value))
     msg = "GUIDE_PAGES not found in tests/test_guide_examples.py"
     raise SystemExit(msg)
 
@@ -115,11 +113,7 @@ def llms_txt(sections: list[tuple[str, list[tuple[str, str]]]], site_url: str, v
     ]
     for heading, entries in sections:
         lines += [f"## {heading}", ""]
-        lines += [
-            f"- [{title}]({site_url}{site_markdown.copy_path(page)}): "
-            f"{plain(opening_paragraph(SRC / page))}"
-            for title, page in entries
-        ]
+        lines += [f"- [{title}]({site_url}{site_markdown.copy_path(page)}): {plain(opening_paragraph(SRC / page))}" for title, page in entries]
         lines.append("")
     return "\n".join(lines)
 
@@ -146,10 +140,7 @@ def stage_llms(guide: list[tuple[str, str]], api: list[tuple[str, str]]) -> None
     sections = [("Guide", guide), ("Part files", list(CONTRACTS)), ("API", api)]
     (SRC / "llms.txt").write_text(llms_txt(sections, url, fr.__version__), encoding="utf-8")
     pages = [page for _, entries in sections for _, page in entries]
-    head = (
-        f"# Fransys {fr.__version__}\n\n"
-        "> The whole guide, the part-file contracts and the API pages in one file.\n"
-    )
+    head = f"# Fransys {fr.__version__}\n\n> The whole guide, the part-file contracts and the API pages in one file.\n"
     full = site_markdown.llms_full(SRC, STATE, pages, url, head)
     (SRC / "llms-full.txt").write_text(full, encoding="utf-8")
 
@@ -177,7 +168,7 @@ def stage_home() -> None:
     kinds = [k.value for k in page_kinds(fr.DocumentPreset.CABINET_SCHEMATIC) if k.value != "notes"]
     with tempfile.TemporaryDirectory() as work:
         subprocess.run([sys.executable, str(WEBSITE / "example.py")], cwd=work, check=True)  # noqa: S603  our own script, no outside input
-        (pdf,) = Path(work, "out").glob("*.pdf")
+        (pdf,) = Path(work, "out").glob("motor-starter*.pdf")  # the unit's
         document = pypdfium2.PdfDocument(pdf)
         page = document[kinds.index("schematic")]
         image = page.render(scale=site_gallery.PICTURE_WIDTH / page.get_size()[0]).to_pil()
@@ -204,7 +195,7 @@ def nav_sections(
 
 
 def _nav_lines(sections: list[tuple[str, list[tuple[str, str]] | str]]) -> list[str]:
-    lines = ["", "nav:", "  - Home: index.md"]
+    lines: list[str] = ["", "nav:", "  - Home: index.md"]
     for title, entries in sections:
         if isinstance(entries, str):
             lines.append(f"  - {json.dumps(title)}: {entries}")

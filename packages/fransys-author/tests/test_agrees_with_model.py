@@ -2,13 +2,12 @@
 
 The expected pole pins are typed here, not computed by `poles_of_template`, so a change inside
 that fact moves the code and not the table. A sideless function (a PLC analog channel, a terminal)
-gives the author no poles; the model pairs its pins. A 3-phase motor's U, V, W are one pole each
-in both (NS-2b: its terminals are not line and load ends).
 """
 
 import importlib.util
 from pathlib import Path
 from types import SimpleNamespace
+from typing import Any, cast
 
 import fransys as fr
 from fransys_author.surface._pairing import poles
@@ -25,10 +24,10 @@ def _skid() -> tuple[fr.Design, fr.Draft]:
     assert spec.loader is not None
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
-    return module.design()
+    return cast("tuple[fr.Design, fr.Draft]", module.design())
 
 
-def _author_functions(d: fr.Design) -> list[SimpleNamespace]:
+def _author_functions(d: fr.Design) -> list[Any]:
     """The design's functions that have a part, shaped as `poles` reads them."""
     records = list(d.draft().records())
     ports = [r for r in records if isinstance(r, Port)]
@@ -88,11 +87,13 @@ def test_author_and_model_poles_of_every_skid_function() -> None:
     model = fr.build(d, document).model
     seen = set()
     for fn in _author_functions(d):
-        pairs = poles(d._pairing_facts, fn)  # ty: ignore[invalid-argument-type] -- a shim shaped like Fn
+        pairs = poles(d._pairing_facts, fn)
         author = tuple((a.name, b.name) for a, b in pairs)
         found = poles_of(model, [p.template for p in fn.ports if p.template is not None])
         mine = tuple((p.ends[0].name, p.ends[1].name) for p in found)
-        assert (author, mine) in _rows(fn.name, fn.kind.value)
+        assert (tuple(sorted(author)), tuple(sorted(mine))) in {
+            (tuple(sorted(a)), tuple(sorted(m))) for a, m in _rows(fn.name, fn.kind.value)
+        }  # id order is no pole order
         seen.add((fn.name, fn.kind.value))
     assert set(_TABLE) <= seen
     assert any(not rows[0][0] for rows in map(_rows_of, seen))

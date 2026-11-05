@@ -3,12 +3,7 @@ from pathlib import Path
 import fransys_parts
 import pytest
 
-DEMO = (
-    next(p for p in Path(__file__).resolve().parents if (p / "examples").is_dir())
-    / "examples"
-    / "demo-parts"
-    / "demo_parts"
-)
+DEMO = next(p for p in Path(__file__).resolve().parents if (p / "examples").is_dir()) / "examples" / "demo-parts" / "demo_parts"
 
 pytestmark = pytest.mark.wp("parts")
 
@@ -53,9 +48,9 @@ def test_origin_names_the_part_file():
 
 
 def test_a_float_in_a_part_file_is_a_finding(tmp_path):
-    (tmp_path / "library.toml").write_text('schema = 1\nname = "bad"\nversion = "0.0.0"\n')
+    (tmp_path / "library.toml").write_text('schema = 2\nname = "bad"\nversion = "0.0.0"\n')
     (tmp_path / "parts").mkdir()
-    (tmp_path / "parts" / "x.toml").write_text("schema = 1\n[part]\nmpn = 1.5\n")
+    (tmp_path / "parts" / "x.toml").write_text("schema = 2\n[part]\nmpn = 1.5\n")
     assert fransys_parts.lint(tmp_path) != ()
 
 
@@ -63,17 +58,11 @@ def test_part_library_error_holds_every_finding_warnings_included(tmp_path):
     """`findings` is the whole `lint()` report, not only the `ERROR`s."""
     from fransys_model.kernel import Severity
 
-    (tmp_path / "library.toml").write_text('schema = 1\nname = "bad"\nversion = "0.0.0"\n')
+    (tmp_path / "library.toml").write_text('schema = 2\nname = "bad"\nversion = "0.0.0"\n')
     (tmp_path / "parts").mkdir()
     # BOARD_WITHOUT_PCB is a WARNING; class_code "Xx" is an ERROR (CLASS_CODE).
     (tmp_path / "parts" / "Bad Name.toml").write_text(
-        "schema = 1\n\n"
-        "[part]\n"
-        'mpn = "X-1"\n'
-        'manufacturer = "Demo"\n'
-        'description = "d"\n'
-        'category = "board"\n'
-        'class_code = "Xx"\n'
+        'schema = 2\n\n[part]\nmpn = "X-1"\nmanufacturer = "Demo"\ndescription = "d"\ncategory = "board"\nclass_code = "Xx"\n'
     )
     with pytest.raises(fransys_parts.PartLibraryError) as excinfo:
         fransys_parts.load_path(tmp_path)
@@ -87,20 +76,12 @@ def test_connector_facet_origin_is_its_own_header_line():
     from fransys_model.kernel import freeze
 
     text = (DEMO / "parts" / "connector-header-2p.toml").read_text()
-    connector_header_line = next(
-        i
-        for i, line in enumerate(text.splitlines(), start=1)
-        if line.strip() == "[function.connector]"
-    )
+    connector_header_line = next(i for i, line in enumerate(text.splitlines(), start=1) if line.strip() == "[function.connector]")
     model = freeze(fransys_parts.load_path(DEMO))
     # NEW (unit-documents worked example): the demo library also
     # carries `switch-2p.toml`'s own `[function.connector]` (DEMO-SWITCH-2P's `x1`) now, so
     # `facet.connector` has two entries, not one -- filtered to the one under test.
-    facet = next(
-        f
-        for f in model.tables["facet.connector"].values()
-        if model.origins[f.id].file.endswith("connector-header-2p.toml")
-    )
+    facet = next(f for f in model.tables["facet.connector"].values() if model.origins[f.id].file.endswith("connector-header-2p.toml"))
     origin = model.origins[facet.id]
     assert origin.line == connector_header_line
     assert origin.file.endswith("connector-header-2p.toml")
@@ -111,92 +92,21 @@ def test_demo_library_record_counts_and_keys():
     unit-documents worked example added `switch-2p.toml`'s field switch, 2 functions/4
     ports/1 internal link/2 symbol choices more, measured directly against this build; the
     connector-sub-part work added `io-2-connectors.toml`, 2 functions/4 ports/2 symbol choices
-    more; `io-clamps-and-sockets.toml` (lint-print) adds a part with 4 functions/33 ports, no
-    symbol choice, so 14 parts; the ratings work adds `terminal-dual-rated-2p.toml`, 1
-    function/2 ports/1 internal link/1 symbol choice, and `cell-3v6.toml`, 1 function/2 ports;
-    adds `fuse-abat.toml`, 1 function/2 ports/1 internal link/1 symbol choice, and
-    `string-864v.toml`, 1 function/2 ports; the check adds `contactor-dc.toml`, 1 function/2
-    ports/1 internal link/1 symbol choice, so 19 parts; the contact-states case adds
-    `changeover-4p.toml`,
-    `mcb-2p.toml` and `psu-24v.toml`, 3 more parts, so 22; adds
-    `overload-a2.toml`, 1 function/1 port/1 symbol choice, so 23; adds
-    `contact-block-addon.toml`, 2 functions/4 ports/2 internal links/2 symbol choices, so 24;
-    adds `plc-di-4ch-pwr.toml` (5 functions/6 ports), `psu-24v-dcok.toml` (3/6) and
-    `redundancy-2in.toml` (3/6), no link or symbol choice, so 27; adds
-    `contactor-3p-aux-nc.toml` (4 functions/12 ports/5 links/4 symbol choices), so 28;
-    adds `mcb-3p.toml` (1 function/6 ports/3 links),
-    `overload-3p.toml` (2/8/4/1 symbol choice) and `pb-nc.toml` (1/2/1/1), so 31;
-    adds `terminal-pe-2_5.toml` (1/2/1/1), so 32;
-    the 16-channel DI module adds `plc-di-16ch.toml` (16 functions/16 ports), so 33;
-    adds `connector-header-4p.toml` and `connector-header-4p-mixed.toml`
-    (1 function/4 ports/1 symbol choice each), so 35;
-    adds `plc-ai-4ch.toml` (4 functions/8 ports, no link or symbol choice), so 36;
-    gave the DC-OK contact of `psu-24v-dcok.toml` its switched link, so 41 links;
-    gave `redundancy-2in.toml` a DC-OK contact: 83 functions, 194 ports, 42 links;
-    adds `redundancy-2in-net.toml` (4/8/1 symbol choice), so 37;
-    the guide's current check adds `fuse-dc-160.toml` (1/2/1/1), so 38; adds
-    `fuse-holder-pcb.toml` (1 function/2 ports/1 link/1 symbol choice), `switch-dc-2a.toml`
-    (1/2/1/1) and two function-less fuse links (`fuse-link-4a-t.toml`, `fuse-link-500ma-t.toml`);
-    adds `connector-header-2p-lettered.toml` (1/2/0/1),
-    adds `psu-24v-5out.toml` (2 functions/7 ports),
-    adds `ctrl-8.toml` (4 functions/16 ports),
-    adds `jumper-bar-3p.toml` (no function, no port),
-    adds `psu-24v-pm.toml` (2 functions/4 ports),
-    adds `housing-4f.toml` and `housing-4m.toml` (1 function/4 ports/1 symbol choice each),
-    adds `crimp-contact-f.toml` and `crimp-contact-m.toml` (no function, no port),
-    adds `relay-mod-2.toml` (5 functions/12 ports/4 symbol choices, 6 header joins),
-    adds `contactor-leads.toml` (2 functions/4 ports/2 symbol choices, 1 link),
-    adds `switch-8p.toml` (9 functions/10 ports, no link or symbol choice),
-    adds `ctrl-20p.toml` (21 functions/22 ports, no link or symbol choice),
-    adds `cable-2x2x0_75-sp.toml` (a cable with no function or port),
-    adds `plc-dio-1-1.toml` (2 functions/2 ports, no link or symbol choice),
-    adds `terminal-fused-2_5.toml` (1 function/2 ports/1 symbol choice, a protective link),
-    adds `module-2p-com4.toml` (3 functions/10 ports, 2 symbol choices),
-    SERIES-GAPS adds `switch-dc-2p.toml` (1/4/2/1), `heater-dc.toml` (1/2) and
-    `selector-3p.toml` (2/11/6/2),
-    makes `changeover-4p.toml` one four-pole `co` function (S9: 3 functions and 3 symbol
-    choices fewer) and adds `relay-4co-24vdc.toml`, the old four-function changeover as a
-    relay (5/14/8/5), so 63 parts, 150 templates, 338 ports, 63 links, 56 symbol choices;
-    OPERATED-BY adds two function-less heads (`head-estop.toml`, `head-sel.toml`), three blocks
-    (`block-1nc.toml`, `block-1nc-21.toml`, `block-1no.toml`, 1/2/1 each) and `ls-1no1nc.toml`
-    (2/4/2), none with a symbol choice, and `pb-nc.toml` drops its symbol: 69 parts, 155
-    templates, 348 ports, 68 links, 55 symbol choices; PE-BAR adds `pe-bar-20.toml` (1/20)
-    and `pe-bar-cut.toml` (1/0); BAR-LANDING-STAND adds `pe-bar-3-linked.toml` and
-    `pe-bar-2-linked.toml` (1/3 and 1/2, 3 and 1 links); ACTUATOR-ONCE adds
-    `block-1nc-31.toml` (1/2/1), so 74 parts; COIL-FAN-PINS adds `plc-do-16ch.toml` (16/16),
-    so 75 parts, 176 templates, 391 ports, 72 links, 55 symbol choices; LEGACY-SHORTS adds
-    `actuator-4p-2sw.toml` (4/8/0, 2 links) and `cable-8g0_75.toml` (a cable, no function or
-    port), so 77 parts, 180 templates, 399 ports, 74 links, 55 symbol choices; CORPUS-MCC adds
-    `switch-disconnector-4p.toml` (1/8/4), `pb-no.toml` (1/2/1), `timer-star-delta.toml` (3/6/2,
-    3 symbol choices), `vfd-4kw.toml` (4/10/1, 1 symbol choice) and `motor-11kw-star-delta.toml`
-    (2/7/0), so 82 parts, 191 templates, 432 ports, 82 links, 59 symbol choices; CORPUS-BOARD adds
-    `rcd-4p.toml` and `mcb-3pn.toml` (1/8/4 each, one symbol choice each), so 84 parts, 193
-    templates, 448 ports, 90 links, 61 symbol choices; CORPUS-PANEL adds a safety relay, a PNP
-    sensor, a 3-core cable, a valve,
-    a push-button head, a PLC CPU, powered input and output cards, a class I power supply and
-    an e-stop station, so 94 parts, 243 templates, 516 ports, 96 links, 62 symbol choices;
-    PLC-CHANNEL-ORDER-FIX adds `plc-dio-mixed.toml` (5/5/0), so 95 parts, 248 templates, 521
-    ports, 96 links, 62 symbol choices; TYPED-PINS adds `contactor-1p-marked.toml` (2/4/1, pins
-    1/L1 and 2/T1) and `psu-24v-marked.toml` (2/4/0, pins 24V1 and 0V1), so 97 parts, 252
-    templates, 529 ports, 97 links, 64 symbol choices; PAIR adds `sensor-2w.toml` (1/2/0, no
-    symbol choice), so 98 parts, 253 templates, 531 ports)."""
+    """
+    from fransys_model.derive import function_templates, internal_links, port_templates
     from fransys_model.kernel import freeze
-    from fransys_model.vocab import function_templates, internal_links, parts, port_templates
+    from fransys_model.vocab import parts
 
     model = freeze(fransys_parts.load_path(DEMO))
-    assert len(parts(model)) == 98
-    assert len(function_templates(model)) == 253
-    assert len(port_templates(model)) == 531
-    assert len(internal_links(model)) == 97
-    assert (
-        len(model.tables["layout.symbol_choice"]) == 65
-    )  # Ruling 91: DEMO-LAMP-24 adds one, was 64
+    assert len(parts(model)) == 96
+    assert len(function_templates(model)) == 251
+    assert len(port_templates(model)) == 510
+    assert len(internal_links(model)) == 96
+    assert len(model.tables["layout.symbol_choice"]) == 67  # Ruling 91: DEMO-LAMP-24 adds one, was 64; the two twin terminals (R1266) add two, was 65
 
     relay = next(p for p in parts(model).values() if p.mpn == "DEMO-RLY-2CO-24")
     assert relay.key == ("part", "Demo", "DEMO-RLY-2CO-24")
-    coil = next(
-        t for t in function_templates(model).values() if t.part == relay.id and t.name == "coil"
-    )
+    coil = next(t for t in function_templates(model).values() if t.part == relay.id and t.name == "coil")
     assert coil.key == (*relay.key, "function", "coil")
     a1 = next(p for p in port_templates(model).values() if p.function == coil.id and p.name == "A1")
     assert a1.key == (*coil.key, "port", "A1")
@@ -204,8 +114,9 @@ def test_demo_library_record_counts_and_keys():
 
 def test_the_demo_switch_has_eight_one_pin_connectors_and_a_supply():
     """DEMO-SW-8P: eight one-pin connector functions beside one 24 V supply function."""
+    from fransys_model.derive import function_templates, port_templates
     from fransys_model.kernel import freeze
-    from fransys_model.vocab import function_templates, parts, port_templates
+    from fransys_model.vocab import parts
 
     model = freeze(fransys_parts.load_path(DEMO))
     part = next(p for p in parts(model).values() if p.mpn == "DEMO-SW-8P")
@@ -227,15 +138,13 @@ def test_two_loads_give_equal_drafts():
 def test_port_marking_loads_onto_the_port_template(tmp_path):
     """model-0053: `ports[].marking` loads onto `PortTemplate.marking`, one case each --
     an explicit marking, an explicit empty marking (no printed text) and no key at all."""
+    from fransys_model.derive import port_templates
     from fransys_model.kernel import freeze
-    from fransys_model.vocab import port_templates
 
-    (tmp_path / "library.toml").write_text(
-        'schema = 1\nname = "t"\nversion = "0.0.0"\ndescription = "d"\n'
-    )
+    (tmp_path / "library.toml").write_text('schema = 2\nname = "t"\nversion = "0.0.0"\ndescription = "d"\n')
     (tmp_path / "parts").mkdir()
     (tmp_path / "parts" / "x.toml").write_text(
-        "schema = 1\n\n"
+        "schema = 2\n\n"
         "[part]\n"
         'mpn = "X-1"\n'
         'manufacturer = "Demo"\n'
@@ -259,23 +168,17 @@ def test_port_marking_loads_onto_the_port_template(tmp_path):
 def test_port_marking_round_trips_from_the_part_file_to_an_instance(tmp_path):
     """model-0053: a marking loaded from TOML survives `instantiate` onto the `Port`,
     unchanged, for all three cases."""
+    from fransys_author.instantiate import instantiate
+
+    from fransys_model.derive import function_templates, internal_links, port_templates
     from fransys_model.kernel import freeze
-    from fransys_model.vocab import (
-        PartBundle,
-        function_templates,
-        instantiate,
-        internal_links,
-        parts,
-        port_templates,
-    )
+    from fransys_model.vocab import PartBundle, parts
     from fransys_model.vocab.core import Port
 
-    (tmp_path / "library.toml").write_text(
-        'schema = 1\nname = "t"\nversion = "0.0.0"\ndescription = "d"\n'
-    )
+    (tmp_path / "library.toml").write_text('schema = 2\nname = "t"\nversion = "0.0.0"\ndescription = "d"\n')
     (tmp_path / "parts").mkdir()
     (tmp_path / "parts" / "x.toml").write_text(
-        "schema = 1\n\n"
+        "schema = 2\n\n"
         "[part]\n"
         'mpn = "X-1"\n'
         'manufacturer = "Demo"\n'
@@ -307,24 +210,14 @@ def test_port_marking_round_trips_from_the_part_file_to_an_instance(tmp_path):
 def test_connector_marking_loads_onto_the_connector_facet(tmp_path):
     """parts-0003: `[function.connector].marking` loads onto `ConnectorFacet.marking`, read like
     `Port.marking`: no key loads `None` (the function's name), `""` stays `""` (no label)."""
+    from fransys_model.derive import function_templates
     from fransys_model.kernel import freeze
-    from fransys_model.vocab import function_templates
     from fransys_model.vocab.facets.connector import ConnectorFacet
     from fransys_model.vocab.tables import facets_of
 
-    (tmp_path / "library.toml").write_text(
-        'schema = 1\nname = "t"\nversion = "0.0.0"\ndescription = "d"\n'
-    )
+    (tmp_path / "library.toml").write_text('schema = 2\nname = "t"\nversion = "0.0.0"\ndescription = "d"\n')
     (tmp_path / "parts").mkdir()
-    head = (
-        "schema = 1\n\n"
-        "[part]\n"
-        'mpn = "X-1"\n'
-        'manufacturer = "Demo"\n'
-        'description = "d"\n'
-        'category = "generic"\n'
-        'class_code = "X"\n\n'
-    )
+    head = 'schema = 2\n\n[part]\nmpn = "X-1"\nmanufacturer = "Demo"\ndescription = "d"\ncategory = "generic"\nclass_code = "X"\n\n'
     function = (
         "[[function]]\n"
         'name = "{name}"\n'
@@ -336,13 +229,7 @@ def test_connector_marking_loads_onto_the_connector_facet(tmp_path):
         'gender = "male"\n'
     )
     (tmp_path / "parts" / "x.toml").write_text(
-        head
-        + function.format(name="a")
-        + 'marking = "X1"\n\n'
-        + function.format(name="b")
-        + "\n"
-        + function.format(name="c")
-        + 'marking = ""\n'
+        head + function.format(name="a") + 'marking = "X1"\n\n' + function.format(name="b") + "\n" + function.format(name="c") + 'marking = ""\n'
     )
     model = freeze(fransys_parts.load_path(tmp_path))
     by_subject = {f.subject: f.marking for f in facets_of(model, ConnectorFacet).values()}
@@ -394,11 +281,7 @@ def _cable_product(mpn):
     from fransys_model.vocab.facets.cable import CableProductFacet
 
     subject = make_id(Part, ("part", "Demo", mpn))
-    (facet,) = (
-        r
-        for r in fransys_parts.load_path(DEMO).records()
-        if isinstance(r, CableProductFacet) and r.subject == subject
-    )
+    (facet,) = (r for r in fransys_parts.load_path(DEMO).records() if isinstance(r, CableProductFacet) and r.subject == subject)
     return facet
 
 
@@ -425,12 +308,12 @@ def test_internal_link_loads_the_same_record_whichever_end_is_written_first(tmp_
     """model-0096: `InternalLink.__post_init__` orders its ends itself, so the loader
     no longer normalizes `a`/`b`; the stored record's ends are the same regardless of which
     port name a part file's `links` entry writes first as `a`."""
+    from fransys_model.derive import internal_links
     from fransys_model.kernel import freeze
-    from fransys_model.vocab import internal_links
 
-    library_text = 'schema = 1\nname = "t"\nversion = "0.0.0"\ndescription = "d"\n'
+    library_text = 'schema = 2\nname = "t"\nversion = "0.0.0"\ndescription = "d"\n'
     part_text = (
-        "schema = 1\n\n"
+        "schema = 2\n\n"
         "[part]\n"
         'mpn = "X-1"\n'
         'manufacturer = "Demo"\n'
@@ -477,12 +360,10 @@ def test_supply_footprint_cable_product_and_pcb_facets_load_their_fields_and_ori
     from fransys_model.vocab.facets.supply import SupplyFacet
     from fransys_model.vocab.tables import facets_of
 
-    (tmp_path / "library.toml").write_text(
-        'schema = 1\nname = "t"\nversion = "0.0.0"\ndescription = "d"\n'
-    )
+    (tmp_path / "library.toml").write_text('schema = 2\nname = "t"\nversion = "0.0.0"\ndescription = "d"\n')
     (tmp_path / "parts").mkdir()
     part_text = (
-        "schema = 1\n\n"
+        "schema = 2\n\n"
         "# comment padding so [part] is not line 1\n"
         "[part]\n"
         'mpn = "X-1"\n'
@@ -540,9 +421,7 @@ def test_supply_footprint_cable_product_and_pcb_facets_load_their_fields_and_ori
     assert cable_product.core_colours == ("BN", "BK")
     assert cable_product.gauge_mm2 == Decimal("1.5")
     assert cable_product.shielded is False
-    assert model.origins[cable_product.id] == Origin(
-        file=rel_path, line=cable_product_line, note=""
-    )
+    assert model.origins[cable_product.id] == Origin(file=rel_path, line=cable_product_line, note="")
 
     (pcb,) = facets_of(model, PcbFacet).values()
     assert pcb.revision == "A"
@@ -555,12 +434,10 @@ def test_footprint_missing_name_is_a_field_missing_finding_on_its_header_line(tm
     `line = _line(origins, ("footprint",))` default and `table_name="footprint"` argument
     survive uncaught too. `FIELD_MISSING` names the missing field and the table's own header
     line, not line 1."""
-    (tmp_path / "library.toml").write_text(
-        'schema = 1\nname = "t"\nversion = "0.0.0"\ndescription = "d"\n'
-    )
+    (tmp_path / "library.toml").write_text('schema = 2\nname = "t"\nversion = "0.0.0"\ndescription = "d"\n')
     (tmp_path / "parts").mkdir()
     part_text = (
-        "schema = 1\n\n"
+        "schema = 2\n\n"
         "[part]\n"
         'mpn = "X-1"\n'
         'manufacturer = "Demo"\n'
@@ -589,12 +466,10 @@ def test_part_records_its_library_and_the_part_headers_own_line(tmp_path):
     from fransys_model.kernel import Origin, freeze, make_id
     from fransys_model.vocab import PartLibrary, parts
 
-    (tmp_path / "library.toml").write_text(
-        'schema = 1\nname = "t"\nversion = "0.0.0"\ndescription = "d"\n'
-    )
+    (tmp_path / "library.toml").write_text('schema = 2\nname = "t"\nversion = "0.0.0"\ndescription = "d"\n')
     (tmp_path / "parts").mkdir()
     part_text = (
-        "schema = 1\n\n"
+        "schema = 2\n\n"
         "# padding\n"
         "# more padding\n"
         "[part]\n"
@@ -633,21 +508,18 @@ def test_demo_redundancy_module_takes_class_code_r():
 
 def test_demo_housings_name_the_parts_they_mate_with():
     """parts-0016: `mates` is data on the connector facet; schema version 10."""
+    from fransys_model.derive import function_templates
     from fransys_model.kernel import freeze
-    from fransys_model.vocab import SCHEMA_VERSION, function_templates, parts
+    from fransys_model.vocab import SCHEMA_VERSION, parts
     from fransys_model.vocab.facets.connector import ConnectorFacet
     from fransys_model.vocab.tables import facets_of
 
     model = freeze(fransys_parts.load_path(DEMO))
     mpn_of = {p.id: p.mpn for p in parts(model).values()}
     template_mpn = {t.id: mpn_of[t.part] for t in function_templates(model).values()}
-    mates = {
-        template_mpn[f.subject]: f.mates
-        for f in facets_of(model, ConnectorFacet).values()
-        if template_mpn[f.subject].startswith("DEMO-HSG-")
-    }
+    mates = {template_mpn[f.subject]: f.mates for f in facets_of(model, ConnectorFacet).values() if template_mpn[f.subject].startswith("DEMO-HSG-")}
     assert mates == {
         "DEMO-HSG-4F": ("DEMO-HSG-4M", "DEMO-CONN-4P"),
         "DEMO-HSG-4M": ("DEMO-HSG-4F",),
     }
-    assert SCHEMA_VERSION == 20
+    assert SCHEMA_VERSION == 23

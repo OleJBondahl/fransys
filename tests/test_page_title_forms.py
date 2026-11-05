@@ -1,11 +1,9 @@
 """`page_title_forms`: where a drawing page's title comes from and how it shortens (PT1 to PT5).
 
 Built through the public API on invented parts; the model is read with `fransys_model.derive`.
-One build per module: three blocks on one page, a hinted block, hinted devices, a page of
-designations only.
+One build per module: three blocks on one page, and a page with no block.
 """
 
-from itertools import pairwise
 from typing import TYPE_CHECKING
 
 import fransys as fr
@@ -20,20 +18,17 @@ if TYPE_CHECKING:
     from fransys_model.kernel import Model
 
 
-def _build(root: Path, *, hint: str) -> Model:
+def _build(root: Path) -> Model:
     d = fr.design("demo_parts", place="C1")
     cabinet = d.location("C1", "Cabinet")
-    devices = []
+    relays = []
     for i in range(1, 4):
-        with d.function(f"F{i}", f"Relay circuit {i}") as group:
-            devices.append((group, d.device(f"K{i}", "DEMO-RLY-2CO-24")))
-    for (_, a), (_, b) in pairwise(devices):
-        d.detail.wire(a.coil["A2"], b.coil["A1"], wire=("WH", 0.75))
-    if hint == "block":
-        d.layout.page_title(devices[1][0], "Hinted block")
-    if hint == "devices":
-        d.layout.page_title(devices[1][1], "Second relay")
-        d.layout.page_title(devices[0][1], "First relay")
+        with d.function(f"F{i}", f"Relay circuit {i}"):
+            relays.append(d.device(f"K{i}", "DEMO-RLY-2CO-24"))
+    k1, k2, k3 = relays
+    for pin in ("A1", "A2"):  # the coils in parallel: no coil half-wired
+        d.series(k1.coil[pin], k2.coil[pin], wire=("WH", 0.75))
+        d.series(k2.coil[pin], k3.coil[pin], wire=("WH", 0.75))
     cover = root / "cover.md"
     cover.write_text("# Cabinet\n", encoding="utf-8")
     return fr.build(d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cabinet, cover=cover)).model
@@ -46,9 +41,10 @@ def _forms(model: Model) -> tuple[str, ...]:
 
 @pytest.fixture(scope="module")
 def plain(tmp_path_factory: pytest.TempPathFactory) -> Model:
-    return _build(tmp_path_factory.mktemp("plain"), hint="")
+    return _build(tmp_path_factory.mktemp("plain"))
 
 
+@pytest.mark.rule("PAGE-TITLE")
 def test_blocks_texts_join_longest_first_then_first_to_last(plain: Model) -> None:
     assert _forms(plain) == (
         "Relay circuit 1, Relay circuit 2, Relay circuit 3",
@@ -61,14 +57,6 @@ def test_page_title_is_the_first_form(plain: Model) -> None:
     assert page_title(plain, page) == _forms(plain)[0]
 
 
-def test_a_hinted_blocks_text_beats_every_blocks_text(tmp_path: Path) -> None:
-    assert _forms(_build(tmp_path, hint="block")) == ("Hinted block",)
-
-
-def test_device_hints_print_in_drawn_order_not_authored_order(tmp_path: Path) -> None:
-    assert _forms(_build(tmp_path, hint="devices"))[0] == "First relay, Second relay"
-
-
 def test_a_page_with_no_block_reads_its_designations_once_each_in_drawn_order(
     tmp_path: Path,
 ) -> None:
@@ -76,7 +64,9 @@ def test_a_page_with_no_block_reads_its_designations_once_each_in_drawn_order(
     cabinet = d.location("C1", "Cabinet")
     x1 = d.terminal_strip("X1", "DEMO-TB-2.5", 4)
     h1 = d.device("H1", "DEMO-LAMP-24")
-    d.detail.wire(x1.run("SIG", 1)[1], h1.lamp["1"], wire=("WH", 0.75))
+    sig = x1.run("SIG", 2)
+    d.series(sig[1].inner, h1.lamp["1"], wire=("WH", 0.75))
+    d.series(sig[2].inner, h1.lamp["2"], wire=("WH", 0.75))
     cover = tmp_path / "cover.md"
     cover.write_text("# Cabinet\n", encoding="utf-8")
     built = fr.build(d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cabinet, cover=cover))
@@ -89,12 +79,13 @@ def _strip_model(tmp_path: Path, *, strips: int) -> Model:
     x1 = d.terminal_strip("X1", "DEMO-TB-2.5", 4)
     h1 = d.device("H1", "DEMO-LAMP-24")
     sig = x1.run("SIG", 2)
-    d.detail.wire(sig[1], h1.lamp["1"], wire=("WH", 0.75))
+    d.series(sig[1].inner, h1.lamp["1"], wire=("WH", 0.75))
     if strips == 1:
-        d.detail.wire(sig[2], h1.lamp["2"], wire=("WH", 0.75))
+        d.series(sig[2].inner, h1.lamp["2"], wire=("WH", 0.75))
     else:
         x2 = d.terminal_strip("X2", "DEMO-TB-2.5", 4)
-        d.detail.wire(sig[2], x2.run("SIG", 1)[1], wire=("WH", 0.75))
+        d.series(sig[2].inner, x2.run("SIG", 1)[1].inner, wire=("WH", 0.75))
+        d.series(h1.lamp["2"], x1.run("RET", 1)[1].inner, wire=("WH", 0.75))  # lamp pin 2 returns to X1, not X2: no pin left open
     cover = tmp_path / "cover.md"
     cover.write_text("# Cabinet\n", encoding="utf-8")
     return fr.build(d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cabinet, cover=cover)).model

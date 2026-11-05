@@ -3,6 +3,8 @@
 import re
 from typing import TYPE_CHECKING, Final
 
+from .errors import OverviewError
+
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
@@ -136,5 +138,5 @@ def fill(template: str, values: Mapping[str, str]) -> str:
         missing = sorted(tokens - set(values))
         unused = sorted(set(values) - tokens)
         msg = f"the template and the values disagree: no value for {missing}, no token for {unused}"
-        raise ValueError(msg)
+        raise OverviewError(msg)
     return _TOKEN.sub(lambda match: values[match[1]], template)

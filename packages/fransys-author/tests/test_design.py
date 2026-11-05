@@ -2,24 +2,23 @@
 
 import dataclasses
 from decimal import Decimal
+from typing import Any
 
 import pytest
-from fransys_author import AuthorError, Cable, Design, Fn, Item, Location, Port, Strip, Terminal
+from author_library import with_house
+from fransys_author import AuthorError
 from fransys_author._design_support import _required_and_defaults
+from fransys_author.design import Design
+from fransys_author.handles import Cable, Fn, Item, Location, Port, Strip, Terminal
 
 from fransys_model.checks.revisions import REVISION_CURRENT_MISSING, check_revisions
 from fransys_model.kernel import Draft, Record, Severity, freeze, merge
 from fransys_model.layout import (
-    BreakBefore,
-    Chain,
     GroupHint,
-    KeepTogether,
     OrderHint,
-    SymbolChoice,
     default_profile,
 )
 from fransys_model.layout import Profile as ModelProfile
-from fransys_model.layout import SheetFormat as ModelSheetFormat
 from fransys_model.vocab import (
     CableFacet,
     Conductor,
@@ -30,9 +29,8 @@ from fransys_model.vocab import (
     NetClass,
     Placement,
     PlcRequestFacet,
-    PortRole,
+    PortBoundary,
     Project,
-    ScalingFacet,
     SignalType,
     WireFacet,
 )
@@ -41,8 +39,6 @@ from fransys_model.vocab import (
 )
 from fransys_model.vocab.enums import ConductorKind
 from fransys_model.vocab.tables import revisions, units
-
-from .author_library import with_house
 
 
 def _only[R: Record](draft: Draft, cls: type[R]) -> tuple[R, ...]:
@@ -173,8 +169,8 @@ def test_strip_and_terminal_expose_inner_outer_by_role(parts):
     assert isinstance(x1, Strip)
     t1 = x1.terminal("TEST-TB")
     assert isinstance(t1, Terminal)
-    assert t1.inner.role is PortRole.INTERNAL
-    assert t1.outer.role is PortRole.EXTERNAL
+    assert t1.inner.boundary is PortBoundary.INTERNAL
+    assert t1.outer.boundary is PortBoundary.EXTERNAL
 
 
 def test_terminal_in_a_unit_scope_is_stamped_with_that_unit(parts):
@@ -504,33 +500,6 @@ def test_bridge_puts_every_bridged_terminal_in_one_terminal_rows_group(parts):
     assert {row.jumper_group for row in rows} == {1}
 
 
-def test_chain_indexes_functions_in_argument_order(parts):
-    d = Design(parts)
-    x1 = d.strip("X1")
-    t1, t2 = x1.terminal("TEST-TB"), x1.terminal("TEST-TB")
-    k1 = d.item("TEST-RLY-2CO", tag="K1")
-    d.chain(t1, k1.fn("coil"), t2)
-    chain = _one(d.draft(), Chain)
-    ordered = sorted(chain.entries, key=lambda e: e.index)
-    assert [e.function for e in ordered] == [t1.function.id, k1.fn("coil").id, t2.function.id]
-
-
-def test_keep_together_stores_groups_sorted_by_id(parts):
-    d = Design(parts)
-    g1, g2 = d.group("G1"), d.group("G2")
-    d.keep_together(g2, g1)
-    record = _one(d.draft(), KeepTogether)
-    assert record.groups == tuple(sorted((g1.id, g2.id)))
-
-
-def test_break_before_names_the_group(parts):
-    d = Design(parts)
-    g1 = d.group("G1")
-    d.break_before(g1)
-    record = _one(d.draft(), BreakBefore)
-    assert record.group == g1.id
-
-
 def test_order_writes_one_hint_per_neighbour_pair(parts):
     d = Design(parts)
     g1, g2, g3 = d.group("G1"), d.group("G2"), d.group("G3")
@@ -557,138 +526,19 @@ def test_order_hint_key_carries_scope_prefix(parts):
     assert hint.key[0] == "p1"
 
 
-def test_symbol_on_a_function_writes_one_choice(parts):
+def test_profile_round_trips_its_numbers(parts):
     d = Design(parts)
-    k1 = d.item("TEST-RLY-2CO", tag="K1")
-    d.symbol(k1.fn("coil"), "operating-device", {"A1": "in"})
-    choice = _one(d.draft(), SymbolChoice)
-    assert choice.function == k1.fn("coil").id
-    assert choice.part is None
-    assert choice.kind is None
-    assert choice.port_map["A1"] == "in"
-    assert choice.key == (*k1.fn("coil").key, "symbol_choice")
-
-
-def test_symbol_on_an_item_fans_out_to_every_function(parts):
-    d = Design(parts)
-    k1 = d.item("TEST-RLY-2CO", tag="K1")
-    d.symbol(k1, "generic")
-    choices = _only(d.draft(), SymbolChoice)
-    assert len(choices) == len(k1.functions)
-    assert {c.function for c in choices} == {fn.id for fn in k1.functions}
-
-
-def test_symbol_with_no_port_map_defaults_to_empty(parts):
-    d = Design(parts)
-    k1 = d.item("TEST-RLY-2CO", tag="K1")
-    d.symbol(k1.fn("coil"), "generic")
-    choice = _one(d.draft(), SymbolChoice)
-    assert choice.port_map == frozendict({})
-
-
-def test_symbol_by_function_kind_value_writes_a_kind_choice(parts):
-    d = Design(parts)
-    d.symbol(FunctionKind.TERMINAL, "terminal", {"internal": "n", "external": "s"})
-    choice = _one(d.draft(), SymbolChoice)
-    assert choice.kind is FunctionKind.TERMINAL
-    assert choice.function is None
-    assert choice.port_map["internal"] == "n"
-    assert choice.port_map["external"] == "s"
-
-
-def test_symbol_by_kind_string_is_equivalent_to_the_enum(parts):
-    d = Design(parts)
-    d.symbol("terminal", "terminal")
-    choice = _one(d.draft(), SymbolChoice)
-    assert choice.kind is FunctionKind.TERMINAL
-
-
-def test_symbol_by_kind_from_a_nested_scope_prefixes_the_key(parts):
-    d = Design(parts)
-    u = d.scope("p1")
-    u.symbol(FunctionKind.TERMINAL, "terminal")
-    choice = _one(d.draft(), SymbolChoice)
-    assert choice.key == ("p1", "symbol", "terminal")
-
-
-def test_sheet_and_profile_round_trip_every_required_number(parts):
-    d = Design(parts)
-    sheet = d.sheet(
-        "A3",
-        width_mm=420,
-        height_mm=297,
-        content_x_mm=10,
-        content_y_mm=10,
-        content_width_mm=400,
-        content_height_mm=277,
-        frame_columns=8,
-        frame_rows=6,
-        module_mm=Decimal("2.5"),
-    )
-    sheet_record = _one(d.draft(), ModelSheetFormat)
-    assert sheet_record.id == sheet
-    assert sheet_record.name == "A3"
-    assert sheet_record.key == ("sheet", "A3")
-    assert sheet_record.width_mm == 420
-    assert sheet_record.height_mm == 297
-    assert sheet_record.content_x_mm == 10
-    assert sheet_record.content_y_mm == 10
-    assert sheet_record.content_width_mm == 400
-    assert sheet_record.content_height_mm == 277
-    assert sheet_record.frame_columns == 8
-    assert sheet_record.frame_rows == 6
-    assert sheet_record.module_mm == Decimal("2.5")
-    d.profile(
-        sheet=sheet,
-        column_gap=4,
-        row_gap=4,
-        route_margin=2,
-        text_height_mm=Decimal("1.2"),
-        marker_padding=1,
-        route_turn_penalty=1,
-        route_crossing_penalty=2,
-    )
-    profile = _one(d.draft(), ModelProfile)
-    assert profile.sheet_format == sheet
-    assert profile.column_gap == 4
-    assert profile.band_ranks == default_profile().band_ranks
+    d.profile(hide_unused_pins=True)
+    assert _one(d.draft(), ModelProfile).hide_unused_pins is True
 
 
 def test_profile_accepts_the_optional_rank_maps(parts):
     d = Design(parts)
-    sheet = d.sheet(
-        "A3",
-        width_mm=420,
-        height_mm=297,
-        content_x_mm=10,
-        content_y_mm=10,
-        content_width_mm=400,
-        content_height_mm=277,
-        frame_columns=8,
-        frame_rows=6,
-        module_mm=Decimal("2.5"),
-    )
-    d.profile(
-        sheet=sheet,
-        column_gap=4,
-        row_gap=4,
-        route_margin=2,
-        text_height_mm=Decimal("1.2"),
-        marker_padding=1,
-        route_turn_penalty=1,
-        route_crossing_penalty=2,
-        band_ranks=frozendict({"coil": 0}),
-    )
-    profile = _one(d.draft(), ModelProfile)
-    assert profile.band_ranks == frozendict({"coil": 0})
+    d.profile(hide_unused_pins=True)
 
 
 def _fields_but_identity(profile: ModelProfile) -> dict[str, object]:
-    return {
-        f.name: getattr(profile, f.name)
-        for f in dataclasses.fields(profile)
-        if f.name not in {"id", "key"}
-    }
+    return {f.name: getattr(profile, f.name) for f in dataclasses.fields(profile) if f.name not in {"id", "key"}}
 
 
 def test_profile_with_no_arguments_is_the_house_profile(parts):
@@ -696,23 +546,21 @@ def test_profile_with_no_arguments_is_the_house_profile(parts):
     d.profile()
     profile = _one(d.draft(), ModelProfile)
     assert _fields_but_identity(profile) == _fields_but_identity(default_profile())
-    assert profile.sheet_format is None
+
+
+@pytest.mark.parametrize("keyword", ["text_height_mm", "min_text_height_mm"])
+def test_profile_refuses_the_removed_text_height_keywords(parts, keyword):
+    """R850: the text heights left the profile; they come from the drawing library only."""
+    kwargs: dict[str, Any] = {keyword: Decimal("1.8")}
+    with pytest.raises(AuthorError, match=keyword):
+        Design(parts).profile(**kwargs)
 
 
 def test_profile_sets_one_field_and_replaces_it_whole(parts):
     d = Design(parts)
-    d.profile(group_ranks=frozendict({"=A": 0}))
+    d.profile(hide_unused_pins=True)
     profile = _one(d.draft(), ModelProfile)
-    house = default_profile()
-    assert profile.group_ranks == frozendict({"=A": 0})
-    assert profile.band_ranks == house.band_ranks
-    assert profile.column_gap == house.column_gap
-
-
-def test_profile_rank_map_given_is_not_merged_with_the_house_map(parts):
-    d = Design(parts)
-    d.profile(band_ranks=frozendict({"coil": 0}))
-    assert _one(d.draft(), ModelProfile).band_ranks == frozendict({"coil": 0})
+    assert profile.hide_unused_pins is True
 
 
 def test_scope_prefixes_every_key_it_writes(parts):
@@ -751,24 +599,17 @@ def test_nested_scope_extends_the_prefix(parts):
     assert k.key == ("p1", "sub", "run")
 
 
-def test_plc_and_scale_return_the_function_for_chaining(parts):
+def test_plc_returns_the_function_for_chaining(parts):
     d = Design(parts)
     k1 = d.item("TEST-RLY-2CO", tag="K1")
     coil = k1.fn("coil")
-    result = coil.plc("do", "PUMP1_RUN", priority=5).scale("m", raw=(0, 100), eng=("0", "10"))
+    result = coil.plc("do", "PUMP1_RUN", priority=5)
     assert isinstance(result, Fn)
     plc = _one(d.draft(), PlcRequestFacet)
-    scaling = _one(d.draft(), ScalingFacet)
     assert plc.signal_name == "PUMP1_RUN"
     assert plc.signal is SignalType.DO
     assert plc.priority == 5
     assert plc.subject == coil.id
-    assert scaling.eng_max == Decimal(10)
-    assert scaling.subject == coil.id
-    assert scaling.raw_min == 0
-    assert scaling.raw_max == 100
-    assert scaling.eng_min == Decimal(0)
-    assert scaling.unit == "m"
 
 
 def test_draft_returns_only_the_design_s_own_records_not_the_parts(parts):
@@ -777,20 +618,6 @@ def test_draft_returns_only_the_design_s_own_records_not_the_parts(parts):
     part_ids = {r.id for r in parts.records()}
     design_ids = {r.id for r in d.draft().records()}
     assert part_ids.isdisjoint(design_ids)
-
-
-def test_draw_in_writes_one_group_hint_and_nothing_else(parts):
-    """`draw_in` is the only way to hint a group; `group=` stays a placement."""
-    d = Design(parts)
-    p1, es = d.group("P1"), d.group("ES")
-    estop = d.item("TEST-RLY-2CO", tag="S0", group=es)
-    d.draw_in(estop.fn("co_2"), p1)
-    hint = _one(d.draft(), GroupHint)
-    assert hint.function == estop.fn("co_2").id
-    assert hint.group == p1.id
-    placements = _only(d.draft(), Placement)
-    assert len(placements) == 1
-    assert placements[0].node == es.id
 
 
 def test_cable_group_writes_a_second_placement(parts):
@@ -828,7 +655,6 @@ def test_the_full_worked_example_shape_freezes(parts):
     w1 = d.cable("TEST-CBL-2", tag="W1", length_mm=12000)
     w1.core(1, t2.outer, k1["13"])
     k1.fn("coil").plc("do", "PUMP1_RUN")
-    d.chain(t1, k1.fn("coil"), t2)
     model = freeze(merge(parts, d.draft()))
     assert model.digests["core"]
     assert model.digests["facet"]

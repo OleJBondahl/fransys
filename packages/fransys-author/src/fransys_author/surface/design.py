@@ -10,7 +10,7 @@ from fransys_author.errors import AuthorError
 lazy from fransys_author.design import Scope
 lazy from fransys_author.handles import Group, Location
 lazy from fransys_model.kernel import Draft, Id, natural_join
-lazy from fransys_model.vocab import Function
+lazy from fransys_model.vocab import AspectNode, Function
 
 from ._coverage import Coverage
 from ._detail import Details
@@ -45,8 +45,7 @@ class Design(Devices, Details, Strips, Series, Pairs, Coverage, Units):
         `wiring` replaces rows of the IEC 60204-1 default table for this design's series.
         """
         self.library = library
-        engine = EngineDesign(library) if scope is None else scope
-        self._engine = cast("EngineDesign", engine)  # a unit's Scope serves the calls used here
+        self._engine = cast("EngineDesign", EngineDesign(library) if scope is None else scope)  # a unit's Scope serves the calls used here
         self._place = None if place is None else bare(place, "location")
         self._locations: dict[str, tuple[Location, str]] = {}
         self._function: str | None = None
@@ -54,7 +53,6 @@ class Design(Devices, Details, Strips, Series, Pairs, Coverage, Units):
         self._claimed: set[tuple[str | None, str]] = set()
         self._wiring = table(wiring, IEC)
         self._given: dict[PortId, Given] = {}  # the row a series gave each port (S4)
-        self._screws: dict[Id[Function], set[int]] = {}  # screw numbers taken on each PE bar
         self._wired_commons: set[PortId] = set()  # changeover commons a series wired (S7)
         self._carried: dict[PortId, tuple[str, str]] = {}  # a load's PE pin -> (label, series)
         self._taken_channels: set[Id[Function]] = set()  # PLC channels a series took (C6.5)
@@ -84,23 +82,19 @@ class Design(Devices, Details, Strips, Series, Pairs, Coverage, Units):
             raise AuthorError(msg)
         return self._locations[within][0]
 
-    def _known_place(
-        self, name: str, text: str, known: tuple[Location, str], outer: Location | None
-    ) -> Location:
+    def _known_place(self, name: str, text: str, known: tuple[Location, str], outer: Location | None) -> Location:
         """A repeat call for `name`: it may add its text once, and never moves the place."""
         node, had = known
         records = self._engine._design._draft._records  # A place a device made first
-        old = records[node.id]
-        if outer is not None and old.parent != outer.id:  # ty: ignore[unresolved-attribute] -- the record of a place is an AspectNode
+        old = cast("AspectNode", records[node.id])  # the record of a place is an AspectNode
+        if outer is not None and old.parent != outer.id:
             msg = f"place {name!r} already exists elsewhere; give within= when it is first made"
             raise AuthorError(msg)
         if had and text and had != text:
-            msg = (
-                f"place {name!r} has the text {had!r} and was given {text!r}; a place has one text"
-            )
+            msg = f"place {name!r} has the text {had!r} and was given {text!r}; a place has one text"
             raise AuthorError(msg)
         if text and not had:
-            records[node.id] = dataclasses.replace(old, description=text)  # ty: ignore[invalid-argument-type] -- every Record is a dataclass
+            records[node.id] = dataclasses.replace(old, description=text)
             self._locations[name] = (node, text)
         return node
 

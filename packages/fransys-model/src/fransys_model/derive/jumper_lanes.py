@@ -1,6 +1,6 @@
 """Jumper groups as lanes: first fit over their row spans, so spans that overlap never share one."""
 
-from collections.abc import Sequence  # noqa: TC003 -- signature tests resolve hints at runtime
+lazy from collections.abc import Sequence
 
 from .rows_jumper_lanes import JumperLane, JumperLanes
 
@@ -45,8 +45,7 @@ def jumper_lanes(groups: tuple[int | None, ...]) -> JumperLanes:
     lanes = first_fit_lanes(spans)
     return JumperLanes(
         lanes=tuple(
-            JumperLane(group=group, first=start, last=end, lane=lane)
-            for group, (start, end), lane in zip(numbers, spans, lanes, strict=True)
+            JumperLane(group=group, first=start, last=end, lane=lane) for group, (start, end), lane in zip(numbers, spans, lanes, strict=True)
         )
     )
 

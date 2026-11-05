@@ -3,17 +3,16 @@
 import re
 
 import fransys as fr
-import fransys_author
 import fransys_render
 import typst
 from _pdf_lists import source
 from demo_designs import cabinet_design
+from fransys_author.design import Design
 
 from electrical_symbols import LIBRARY
-from fransys_model.derive import document_page_kinds, document_sheets_of
+from fransys_model.derive import document_page_kinds, document_sheets_of, documents
 from fransys_model.kernel import render_id
 from fransys_model.layout import DrawingSet, Page, layout_of
-from fransys_model.vocab import documents
 
 # `/Type /Page` but not `/Type /Pages` (the page tree root) or `/Type /PageLabel` (NV4) --
 # confirmed by compiling and inspecting a real PDF (plan `.fransys/sdd-plan-pdf-stage2.md`, Task 7).
@@ -22,10 +21,7 @@ _PDF_PAGE = re.compile(rb"/Type\s*/Page(?![A-Za-z])")
 # A minimal valid SVG, sized to the house sheet's content box: enough
 # for Typst to place and compile, standing in for the facade's page SVGs (still a
 # scaffold) so a `SCHEMATIC` page can be compiled at all.
-_STUB_DRAWING_SVG = (
-    '<svg xmlns="http://www.w3.org/2000/svg" width="400mm" height="257mm" '
-    'viewBox="0 0 400 257"></svg>'
-)
+_STUB_DRAWING_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="400mm" height="257mm" viewBox="0 0 400 257"></svg>'
 
 
 def test_author_build_write_produces_the_cabinet_exports(tmp_path):
@@ -33,11 +29,9 @@ def test_author_build_write_produces_the_cabinet_exports(tmp_path):
 
     `SCHEMATIC` is removed: `fransys_render` is still a scaffold, so a cabinet document
     that keeps its `SCHEMATIC` pages carries `DOCUMENT_NO_DRAWINGS` and does not export at
-    all (decision 0011). The fuller PDF assertion (page count, font family,
-    byte-equality) is a separate, later task's job.
     """
     parts = fr.parts("demo_parts")
-    d = fransys_author.Design(parts)
+    d = Design(parts)
     d.project(
         title="End to end",
         number="E2E-1",
@@ -51,12 +45,12 @@ def test_author_build_write_produces_the_cabinet_exports(tmp_path):
     q1 = d.item("DEMO-MCB-C6", tag="Q1", at=c1, group=sup)
     k1 = d.item("DEMO-RLY-2CO-24", tag="K1", at=c1, group=sup)
     d.wiring(colour="BU", gauge="0.75")(q1.fn("element")["2"], k1.fn("coil")["A1"])
+    d.net("0V", k1.fn("coil")["A2"], cls="power", potential="0V")
+    d.net("P24", q1.fn("element")["1"], cls="power", potential="+24V")
 
     cover = tmp_path / "cabinet.md"
     cover.write_text("# Demo cabinet\n", encoding="utf-8")
-    document_draft = fr.document(
-        fr.DocumentPreset.CABINET_SCHEMATIC, c1, cover=cover, remove=(fr.PageKind.SCHEMATIC,)
-    )
+    document_draft = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, c1, cover=cover)
 
     result = fr.build(parts, d.draft(), document_draft)
     written = fr.write(result, tmp_path / "out")
@@ -73,7 +67,6 @@ def test_document_pdf_has_the_expected_pages_and_embedded_font(demo_cabinet_docu
 
     The acceptance bullet: "a page count equal to `document_page_kinds` expanded
     ... the DejaVu Sans family name in the bytes ... `<stem>.typ` in the intermediates
-    that compiles on its own." Byte-equality on a second write is the separate test below.
     """
     model = demo_cabinet_document.model
     (document_id,) = documents(model)
@@ -140,21 +133,10 @@ def test_every_page_carries_the_frame_including_a_drawing_page(tmp_path):
 
     `fransys_render` is still a scaffold (`NotImplementedError`), so this cannot go
     through `fr.write`: it calls `fransys_pdf.source` directly with a stand-in SVG for
-    the cabinet's one real `SCHEMATIC` page (from `fransys_layout`'s actual output, not a
-    hand-built fixture), the same substitution `test_golden.py` and this package's own tests
-    already make for a page's drawing. `typst.query` cannot help verify the rendered
-    `n of N` text: it returns Typst's `context` nodes unevaluated (probed directly against
-    this package's compiled source, not assumed), and no PDF-text-extraction library is
-    installed or addable here (root CLAUDE.md: no new dependency without asking). The proof
-    is source-structural instead, split on the exact `#pagebreak()` separator `source` itself
-    joins pages with, so each element of the split is one physical page's own Typst block in
-    page order -- equally strict against the trap: the background carrying the project
-    number and the `<fransys-page-counter>`-labelled document counter is only present on
-    a block when that block's own `#page`/`#set page` call actually names `background:`.
     """
     parts = fr.parts("demo_parts")
     design = cabinet_design(parts)
-    c1 = fransys_author.Design(parts).location("C1", "Demo cabinet")
+    c1 = Design(parts).location("C1", "Demo cabinet")
     cover = tmp_path / "cabinet.md"
     cover.write_text("# Demo cabinet\n", encoding="utf-8")
     (tmp_path / "cabinet.notes.md").write_text("Some notes.\n", encoding="utf-8")
@@ -162,7 +144,6 @@ def test_every_page_carries_the_frame_including_a_drawing_page(tmp_path):
         fr.DocumentPreset.CABINET_SCHEMATIC,
         c1,
         cover=cover,
-        remove=(fr.PageKind.PLC_LIST, fr.PageKind.TERMINAL_LIST, fr.PageKind.BOM),
     )
     result = fr.build(parts, design.draft(), document_draft)
     model = result.model
@@ -171,14 +152,15 @@ def test_every_page_carries_the_frame_including_a_drawing_page(tmp_path):
     assert fr.PageKind.SCHEMATIC in pages
 
     drawing_set = next(ds for ds in layout_of(model, DrawingSet).values() if ds.location == c1.id)
-    drawing_pages = [
-        page for page in layout_of(model, Page).values() if page.drawing_set == drawing_set.id
-    ]
+    drawing_pages = [page for page in layout_of(model, Page).values() if page.drawing_set == drawing_set.id]
     assert drawing_pages  # the cabinet design places symbols at C1, so layout drew a page
     svgs = {render_id(page.id): _STUB_DRAWING_SVG for page in drawing_pages}
 
     text = source(
-        model, document_id, svgs, fransys_render.sheets(document_sheets_of(model), LIBRARY)
+        model,
+        document_id,
+        svgs,
+        fransys_render.sheets(document_sheets_of(model, ()), LIBRARY),
     )
     typst.compile(input=text.encode())  # compiles on its own: proves it's a real document
 
@@ -186,7 +168,7 @@ def test_every_page_carries_the_frame_including_a_drawing_page(tmp_path):
     assert number in text
 
     blocks = text.split("\n#pagebreak()\n")
-    assert len(blocks) == 3  # COVER, SCHEMATIC (one page), NOTES
+    assert len(blocks) == 5  # COVER, NOTES, SCHEMATIC (one page), TERMINAL_LIST, BOM
     drawing_blocks = [block for block in blocks if "#image(bytes(" in block]
     assert len(drawing_blocks) == 1  # covers a drawing page specifically, not only list pages
     for index, block in enumerate(blocks, start=1):

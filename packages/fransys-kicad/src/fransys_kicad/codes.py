@@ -1,20 +1,23 @@
 """The KiCad check's finding codes (BUILD-MESSAGES M1)."""
 
-from fransys_model.kernel import CodeInfo, Severity
+from typing import Any
+lazy from collections.abc import Iterable
+
+from fransys_model.kernel import CodeInfo, Finding, Id, Severity
 
 FINDING_CODES: tuple[CodeInfo, ...] = (
     CodeInfo(
         code="NET_NAME_DUPLICATE",
-        severities=(Severity.ERROR,),
+        severity=Severity.ERROR,
         stage="kicad",
         who="consumer",
         cause="Two or more KiCad netlist nets share a name, so KiCad would merge them on import.",
-        fix="Give each net a distinct name. Write: d.detail.net(<distinct name>, *ports)",
+        fix="No call clears this: rename one of the two supplies that share the name.",
         page="findings-kicad",
     ),
     CodeInfo(
         code="NET_SINGLE_PIN",
-        severities=(Severity.INFO,),
+        severity=Severity.INFO,
         stage="kicad",
         who="note",
         cause="A KiCad netlist net has one pin.",
@@ -23,22 +26,16 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
     ),
     CodeInfo(
         code="NODE_WITHOUT_COMPONENT",
-        severities=(Severity.WARNING,),
+        severity=Severity.ERROR,
         stage="kicad",
         who="consumer",
-        cause=(
-            "A netlist pin belongs to an item with no footprint (or is the board's own pin), "
-            "so KiCad drops it on import."
-        ),
-        fix=(
-            "No call clears this: give the item's part a footprint, or model the connector as a "
-            "child item with one."
-        ),
+        cause=("A netlist pin belongs to an item with no footprint (or is the board's own pin), so KiCad drops it on import."),
+        fix=("No call clears this: give the item's part a footprint, or model the connector as a child item with one."),
         page="findings-kicad",
     ),
     CodeInfo(
         code="PAD_ON_MULTIPLE_NETS",
-        severities=(Severity.ERROR,),
+        severity=Severity.ERROR,
         stage="kicad",
         who="consumer",
         cause="One component pad is in more than one KiCad netlist net.",
@@ -47,7 +44,7 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
     ),
     CodeInfo(
         code="PART_WITHOUT_FOOTPRINT",
-        severities=(Severity.WARNING,),
+        severity=Severity.WARNING,
         stage="kicad",
         who="consumer",
         cause="A board item's part has no footprint, so the KiCad netlist omits it.",
@@ -56,7 +53,7 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
     ),
     CodeInfo(
         code="PIN_ID_COLLISION",
-        severities=(Severity.ERROR,),
+        severity=Severity.ERROR,
         stage="kicad",
         who="part author",
         cause=(
@@ -64,27 +61,21 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
             "its name, which is the footprint pad name. A labelled connector may repeat a pin name "
             "in the drawing; the netlist cannot."
         ),
-        fix=(
-            "No call clears this: rename the part's pins so each is its footprint pad name, "
-            "in the part file."
-        ),
+        fix=("No call clears this: rename the part's pins so each is its footprint pad name, in the part file."),
         page="findings-kicad",
     ),
     CodeInfo(
         code="REFERENCE_DUPLICATE",
-        severities=(Severity.ERROR,),
+        severity=Severity.ERROR,
         stage="kicad",
         who="consumer",
         cause="Two board parts share one reference designation in the KiCad netlist.",
-        fix=(
-            "Give each part a distinct tag, which sets its designation. Write: "
-            "d.device(<tag>, <mpn>)"
-        ),
+        fix=("Give each part a distinct tag, which sets its designation. Write: d.device(<tag>, <mpn>)"),
         page="findings-kicad",
     ),
     CodeInfo(
         code="UNCONNECTED_PIN",
-        severities=(Severity.INFO,),
+        severity=Severity.INFO,
         stage="kicad",
         who="note",
         cause="A pin of a board part is in no net in the KiCad netlist.",
@@ -96,6 +87,6 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
 _BY_CODE: dict[str, CodeInfo] = {info.code: info for info in FINDING_CODES}
 
 
-def fix_text(code: str, **values: str) -> str:
-    """The `fix` of one finding of `code`: the code's template filled with `values`."""
-    return _BY_CODE[code].filled(**values)
+def finding(code: str, subjects: Iterable[Id[Any]], message: str, **fix_values: str) -> Finding:
+    """The `Finding` of `code`: its one severity, its fix filled from `fix_values`."""
+    return _BY_CODE[code].finding(subjects, message, **fix_values)

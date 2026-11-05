@@ -1,14 +1,12 @@
 """Geometry layer: units, boxes, the symbol-library adapter and text metrics."""
 
 from .boxes import Box, contains, hull, overlaps, pad, translate, union
-from .clear import first_clear, is_clear, push_clear
-from .errors import GeometryError, HintError, LayoutError, SymbolPortError, UnknownSymbolError
+from .errors import GeometryError, HintError, LayoutError, UnknownSymbolError
 from .exits import FACING_STEP, port_exit
 from .flow import flow
 from .follow import follow
 from .legs import legs
 from .meet import Span, boxes_meet, contains_point, meets, through
-from .runs import cut_runs
 from .symbols import (
     GENERIC_BOX_KEY,
     NORTH,
@@ -18,29 +16,23 @@ from .symbols import (
     Facing,
     Orientation,
     PortGeometry,
-    SlotGeometry,
     SlotSide,
     SymbolGeometry,
-    ThroughPath,
     box_port_name,
     default_order,
     default_sides,
     draw_order,
     generic_box_geometry,
     library_version,
-    port_page_at,
     power_symbol_key,
     symbol_geometry,
-    text_width,
+    text_width_g,
 )
 from .units import (
     G_PER_MODULE,
     PAGE_PAD,
     WIRING_GRID,
-    Coord,
     Point,
-    on_wiring_grid,
-    snap_up,
     to_grid,
 )
 
@@ -55,7 +47,6 @@ __all__ = (
     "SOUTH",
     "WIRING_GRID",
     "Box",
-    "Coord",
     "Facing",
     "GeometryError",
     "HintError",
@@ -63,40 +54,30 @@ __all__ = (
     "Orientation",
     "Point",
     "PortGeometry",
-    "SlotGeometry",
     "SlotSide",
     "Span",
     "SymbolGeometry",
-    "SymbolPortError",
-    "ThroughPath",
     "UnknownSymbolError",
     "box_port_name",
     "boxes_meet",
     "contains",
     "contains_point",
-    "cut_runs",
     "default_order",
     "default_sides",
     "draw_order",
-    "first_clear",
     "flow",
     "follow",
     "generic_box_geometry",
     "hull",
-    "is_clear",
     "legs",
     "library_version",
     "meets",
-    "on_wiring_grid",
     "overlaps",
     "pad",
     "port_exit",
-    "port_page_at",
     "power_symbol_key",
-    "push_clear",
-    "snap_up",
     "symbol_geometry",
-    "text_width",
+    "text_width_g",
     "through",
     "to_grid",
     "translate",

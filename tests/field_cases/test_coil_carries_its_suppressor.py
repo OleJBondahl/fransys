@@ -1,15 +1,6 @@
-"""Field case: a coil carries its column; a suppressor wired across it is a side element.
-
-The engineering shape: a contactor coil fed from a terminal at A1 and returning to a terminal at
-A2, with a suppressor (a two-port element) wired across A1 and A2. The suppressor has no item
-relation to the coil in the model and its designation, D1, sorts before the coil's K1. The demo
-parts have no diode, so a fuse stands in: any two-port part with a through link is the same shape.
-
-The bug: the carrier was the lower designation, so D1 stood in the terminals' column and the coil
-was pushed aside as its side element.
-The rule (decisions model-0137 / layout-0115): the coil carries and the suppressor is the side
-element whatever the designations are, as it already is for a suppressor that is a child item.
-"""
+"""Field case: a contactor coil with a suppressor wired across its terminals, where the suppressor's designation sorts first.
+The bug: the carrier was the lower designation, so the suppressor stood in the terminals' column and the coil was pushed aside.
+Fixed by model-0137 and layout-0115, the coil carries and the suppressor is the side element whatever the designations are."""
 
 import fransys as fr
 from _drawn_pages import drawn_pages
@@ -28,10 +19,10 @@ def _columns() -> dict[str, list[int]]:
         k1 = d.device("K1", "DEMO-CTR-3P-24")
         d1 = d.device("D1", "DEMO-FUSE-ABAT")
     wire = (BU, 0.5)
-    d.detail.wire(feed[1].outer, k1.coil["A1"], wire=wire)
-    d.detail.wire(k1.coil["A2"], back[1].outer, wire=wire)
-    d.detail.wire(k1.coil["A1"], d1["1"], wire=wire)
-    d.detail.wire(k1.coil["A2"], d1["2"], wire=wire)
+    d.series(feed[1].outer, k1.coil["A1"], wire=wire)
+    d.series(k1.coil["A2"], back[1].outer, wire=wire)
+    d.series(k1.coil["A1"], d1["1"], wire=wire)
+    d.series(k1.coil["A2"], d1["2"], wire=wire)
     model = fr.build(d, cabinet_document(_cabinet)).model
     columns: dict[str, list[int]] = {}
     for drawing in drawn_pages(model).values():

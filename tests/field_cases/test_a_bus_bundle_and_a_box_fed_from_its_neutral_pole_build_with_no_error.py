@@ -1,19 +1,16 @@
 """Field case: a main switch feeds a bus, and its neutral pole runs straight into a supply box.
-
-The engineering shape: a four-pole main switch feeds a three-phase-and-neutral bus. Two motor
-feeders and a 24 V supply (a breaker on one phase, then the supply box) hang on the bus. The
-supply box's neutral input is wired to the switch's fourth pole, its phase input from the breaker.
-
-The bug: the box is one place in the stack, so the switch (the bus bundle's driver) and the
-breaker (one of its legs) stood on one node, and the build raised BundleError "a driver and a
-leg on one node". The rule (BUNDLE, layout-0341): a column that would put a bundle's driver and
-leg on one node through a box leaves that box pin as a cross-link wire instead of standing on it.
-"""
+The bug: the box stood the bus driver and a leg on one node, so the build raised BundleError "a driver and a leg on one node".
+Fixed by layout-0341 (BUNDLE), a column that puts a bundle's driver and leg on one node leaves that box pin as a cross-link wire."""
 
 import tempfile
+from contextlib import nullcontext
 from pathlib import Path
 
 import fransys as fr
+import pytest
+from _model_build_cover import error_messages
+
+from fransys_model.kernel import id_namespace
 
 POWER = 2.5
 
@@ -58,6 +55,14 @@ def _design() -> tuple[fr.Design, fr.Draft]:
 
 
 def test_the_build_has_no_error_finding() -> None:
-    result = fr.build(*_design())
-    errors = [f.message for f in result.findings if f.severity == fr.Severity.ERROR]
-    assert errors == []
+    assert error_messages(fr.build(*_design())) == []
+
+
+def _cnd(salt: str) -> int:
+    with id_namespace(salt) if salt else nullcontext():
+        return sum(f.code == "CONNECTION_NOT_DRAWN" for f in fr.build(*_design()).findings)
+
+
+@pytest.mark.parametrize("salt", ["", "e", "l", "n", "r"])
+def test_the_neutral_crossing_is_drawn_or_stood_for_by_a_reference_pair_with_leads(salt: str) -> None:
+    assert _cnd(salt) == 0

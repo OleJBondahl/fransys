@@ -2,22 +2,10 @@
 
 The check (decision layout-0086). No code object is
 exempt by name. `count_build` (tests/scale_counter.py) counts calls, generator resumes and loop
-iterations per code object on `build_scale(8)` and `build_scale(16)`; a code object whose count
-grows by more than 2.5x with count(16) >= 100 is flagged. Ratios only, never exact counts; no wall
-time.
 """
 
-import sys
-from pathlib import Path
-
 import pytest
-
-_TESTS_DIR = Path(__file__).resolve().parent
-if str(_TESTS_DIR) not in sys.path:
-    # `--import-mode=importlib` (root pyproject.toml) never puts this folder on `sys.path`.
-    sys.path.insert(0, str(_TESTS_DIR))
-
-from scale_counter import BuildCounts, check_passes, count_pair, flagged  # noqa: E402
+from scale_counter import BuildCounts, check_passes, count_pair, flagged
 
 _METRICS = ("jumps", "calls", "resumes")
 
@@ -69,11 +57,5 @@ def test_no_layout_code_object_grows_faster_than_2_5x_per_doubling(builds):
         assert any(key.startswith("stages/place.py:place:") for key in run.calls), (
             f"no call of stages/place.py:place counted at {size}: the counter saw no layout code"
         )
-    grown = [
-        f"{key} {metric} {ratio:.2f}"
-        for metric in _METRICS
-        for key, ratio in flagged(getattr(small, metric), getattr(big, metric)).items()
-    ]
-    assert not grown, "grows more than 2.5x per doubling (file:qualname:line metric ratio):\n" + (
-        "\n".join(sorted(grown))
-    )
+    grown = [f"{key} {metric} {ratio:.2f}" for metric in _METRICS for key, ratio in flagged(getattr(small, metric), getattr(big, metric)).items()]
+    assert not grown, "grows more than 2.5x per doubling (file:qualname:line metric ratio):\n" + ("\n".join(sorted(grown)))

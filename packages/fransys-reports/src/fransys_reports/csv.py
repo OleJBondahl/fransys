@@ -5,25 +5,17 @@ import io
 from typing import TYPE_CHECKING
 
 from fransys_model.derive import (
-    BOM_COLUMNS,
-    CABLE_LIST_COLUMNS,
-    CONNECTOR_COLUMNS,
-    CORE_LIST_COLUMNS,
-    DESIGNATION_COLUMNS,
-    PIN_COLUMNS,
-    PLC_COLUMNS,
-    TERMINAL_COLUMNS,
-    TERMINAL_LABELS,
-    WIRE_COLUMNS,
-    WIRE_LABELS,
     bom_lines,
     cable_list_rows,
     cell_text,
     column_rows,
     connector_rows,
     core_list_rows,
-    csv_name,
+    csv_dialect,
     designation_list,
+    export_form_of,
+    list_columns,
+    list_csv_header,
     pin_lines,
     plc_channel_rows,
     terminal_rows,
@@ -37,24 +29,29 @@ if TYPE_CHECKING:
     from fransys_model.kernel import Model
 
 
-def _write(columns: tuple[str, ...], lines: Iterable[Iterable[object]]) -> str:
-    """The header of `columns`, then one line per item of `lines` in the order given."""
+def _write(model: Model, header: tuple[str, ...], lines: Iterable[Iterable[object]]) -> str:
+    """The `header`, then one line per item of `lines` in the order given, in the CSV form."""
     buffer = io.StringIO()
-    writer = csv.writer(buffer, delimiter=",", quoting=csv.QUOTE_MINIMAL, lineterminator="\n")
-    writer.writerow(columns)
+    writer = csv.writer(buffer, csv_dialect(export_form_of(model)))
+    writer.writerow(header)
     writer.writerows([cell_text(value) for value in line] for line in lines)
     return buffer.getvalue()
 
 
-def _csv(
-    rows: Iterable[object], columns: tuple[str, ...], labels: dict[str, str] | None = None
-) -> str:
-    """One line per row, each the row's fields named by `columns`.
+def _header(model: Model, name: str) -> tuple[str, ...]:
+    """The CSV header cells of list `name`: the text of each column's `csv` word."""
+    return tuple(list_csv_header(model, name, field) for field in list_columns(model, name))
 
-    The header cell of a column is its name, or `labels[name]` where `labels` has one.
-    """
-    header = tuple((labels or {}).get(name, name) for name in columns)
-    return _write(header, column_rows(rows, columns))
+
+def _csv(model: Model, rows: Iterable[object], columns: tuple[str, ...]) -> str:
+    """One line per row, each the row's fields named by `columns`; the header is their names."""
+    return _write(model, columns, column_rows(rows, columns))
+
+
+def _list_csv(model: Model, name: str, rows: Iterable[object]) -> str:
+    """One line per row of list `name`, under the `csv` headers of its columns."""
+    lines = column_rows(rows, list_columns(model, name))
+    return _write(model, _header(model, name), lines)
 
 
 def terminal_csv(
@@ -79,13 +76,10 @@ def terminal_csv(
     Returns:
         The CSV text. Same model digest, same bytes.
     """
-    labels = {field: csv_name(label) for field, label in TERMINAL_LABELS.items()}
-    return _csv(terminal_rows(model, strip, unit=unit, context=context), TERMINAL_COLUMNS, labels)
+    return _list_csv(model, "terminal", terminal_rows(model, strip, unit=unit, context=context))
 
 
-def plc_csv(
-    model: Model, *, unit: UnitId | None = None, context: AspectNodeId | None = None
-) -> str:
+def plc_csv(model: Model, *, unit: UnitId | None = None, context: AspectNodeId | None = None) -> str:
     """Write the PLC channel report as CSV.
 
     Formats ``fransys_model.derive.queries.plc_channel_rows``: channel, signal, where the
@@ -100,12 +94,10 @@ def plc_csv(
     Returns:
         The CSV text. Same model digest, same bytes.
     """
-    return _csv(plc_channel_rows(model, unit=unit, context=context), PLC_COLUMNS)
+    return _list_csv(model, "plc", plc_channel_rows(model, unit=unit, context=context))
 
 
-def bom_csv(
-    model: Model, scope: ItemId | AspectNodeId | UnitId | TopLevelScope | None = None
-) -> str:
+def bom_csv(model: Model, scope: ItemId | AspectNodeId | UnitId | TopLevelScope | None = None) -> str:
     """Write the bill of materials as CSV.
 
     Formats ``fransys_model.derive.queries.bom_lines``, one row per part used by an
@@ -121,16 +113,14 @@ def bom_csv(
     Raises:
         SchemaError: `scope` is neither an item, an aspect node nor a unit of `model`.
     """
-    return _csv(bom_lines(model, scope), BOM_COLUMNS)
+    return _list_csv(model, "bom", bom_lines(model, scope))
 
 
-def wires_csv(
-    model: Model, *, unit: UnitId | None = None, context: AspectNodeId | None = None
-) -> str:
+def wires_csv(model: Model, *, unit: UnitId | None = None, context: AspectNodeId | None = None) -> str:
     """Write the wire list as CSV.
 
     Formats ``fransys_model.derive.wire_rows``, one row per wire: `from`, `to`, `colour`,
-    `cross_section_mm2` and the `label` printed at both ends. `unit` and `context` pass
+    `cross_section_mm2` and the `ends` printed at both ends. `unit` and `context` pass
     through. Pure.
 
     Args:
@@ -141,7 +131,7 @@ def wires_csv(
     Returns:
         The CSV text. Same model digest, same bytes.
     """
-    return _csv(wire_rows(model, unit=unit, context=context), WIRE_COLUMNS, WIRE_LABELS)
+    return _list_csv(model, "wires", wire_rows(model, unit=unit, context=context))
 
 
 def designations_csv(model: Model, *, unit: UnitId | None = None) -> str:
@@ -157,7 +147,7 @@ def designations_csv(model: Model, *, unit: UnitId | None = None) -> str:
     Returns:
         The CSV text. Same model digest, same bytes.
     """
-    return _csv(designation_list(model, unit=unit), DESIGNATION_COLUMNS)
+    return _list_csv(model, "designations", designation_list(model, unit=unit))
 
 
 def connectors_csv(
@@ -183,8 +173,9 @@ def connectors_csv(
         The CSV text. Same model digest, same bytes.
     """
     return _write(
-        (*CONNECTOR_COLUMNS, *PIN_COLUMNS),
-        pin_lines(connector_rows(model, board, unit=unit, context=context)),
+        model,
+        _header(model, "connectors"),
+        pin_lines(model, connector_rows(model, board, unit=unit, context=context)),
     )
 
 
@@ -201,7 +192,7 @@ def cables_csv(model: Model, *, unit: UnitId | None = None) -> str:
     Returns:
         The CSV text. Same model digest, same bytes.
     """
-    return _csv(cable_list_rows(model, unit=unit), CABLE_LIST_COLUMNS)
+    return _list_csv(model, "cables", cable_list_rows(model, unit=unit))
 
 
 def cores_csv(model: Model, *, unit: UnitId | None = None) -> str:
@@ -217,4 +208,4 @@ def cores_csv(model: Model, *, unit: UnitId | None = None) -> str:
     Returns:
         The CSV text. Same model digest, same bytes.
     """
-    return _csv(core_list_rows(model, unit=unit), CORE_LIST_COLUMNS)
+    return _list_csv(model, "cores", core_list_rows(model, unit=unit))

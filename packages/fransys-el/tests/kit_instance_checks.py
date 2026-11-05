@@ -3,7 +3,7 @@
 from typing import TYPE_CHECKING
 
 from conventions_fixtures import house
-from fransys_el import build, lay_out, symbol_kit
+from fransys_el import build, lay_out_drawn, symbol_kit
 
 from electrical_symbols import LIBRARY
 from fransys_model.derive import (
@@ -40,11 +40,7 @@ def check_pins(model: Model, kit: SymbolKit) -> int:
 def check_channels(model: Model, kit: SymbolKit) -> int:
     """Every PLC channel is a pick or a member of one; returns the channel count."""
     held = {m for pick in kit.values() for m in pick.members}
-    channels = [
-        f
-        for f in schematic_functions(model)
-        if functions(model)[f].kind is FunctionKind.PLC_CHANNEL
-    ]
+    channels = [f for f in schematic_functions(model) if functions(model)[f].kind is FunctionKind.PLC_CHANNEL]
     assert {f for f in channels if f in kit or f in held} == set(channels)
     return len(channels)
 
@@ -58,9 +54,9 @@ def check_gangs(model: Model, kit: SymbolKit) -> int:
 
 
 def laid_out(model: Model, kit: SymbolKit) -> int:
-    """`lay_out` writes the instance's layout: every scope and table read takes a pin's key."""
+    """`lay_out_drawn` writes the instance's layout: every scope and table read takes a pin's key."""
     conventions = house()
     problem, _ = build(model, kit, conventions, LIBRARY)
-    laid, _ = lay_out(model, kit, problem, conventions, LIBRARY)
+    laid, *_ = lay_out_drawn(model, kit, problem, conventions, LIBRARY)
     assert laid is not model
     return len(problem.symbols)

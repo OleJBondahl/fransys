@@ -17,14 +17,14 @@ def _next_x(sheet: Sequence[tuple[int, int]], widths: Sequence[int], pairs: Sequ
 
 
 def split_sheets(
-    widths: Sequence[int], pairs: Sequence[Pair], sheet_width: int
+    widths: Sequence[int], pairs: Sequence[Pair], sheet_width: int, starts: frozenset[int] = frozenset()
 ) -> tuple[tuple[tuple[int, int], ...], ...] | None:
     """Each sheet's columns as (column index, x), or None when a column fits no sheet alone."""
     limit = sheet_width - PAGE_PAD
     sheets: list[list[tuple[int, int]]] = [[]]
     for c, width in enumerate(widths):
         x = _next_x(sheets[-1], widths, pairs) if sheets[-1] else PAGE_PAD
-        if sheets[-1] and x + width + pairs[c].trail > limit:
+        if sheets[-1] and (c in starts or x + width + pairs[c].trail > limit):
             sheets.append([])
             x = pairs[c - 1].lead
         if x + width + pairs[c].trail > limit:

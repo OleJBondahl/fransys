@@ -2,8 +2,6 @@
 
 Scans every `packages/*/src` module except `fransys_model/derive/drawing_text.py` for an
 f-string, a `+` or a `join` that combines a wire's two end texts (an `end_a...` name with an
-`end_b...` name, `from_` with `to`, or two designation calls). The scan is proved able to fail
-on a synthetic module.
 """
 
 import ast
@@ -24,11 +22,7 @@ def _names(node: ast.AST) -> set[str]:
 
 
 def _is_join(node: ast.AST) -> bool:
-    return (
-        isinstance(node, ast.Call)
-        and isinstance(node.func, ast.Attribute)
-        and node.func.attr == "join"
-    )
+    return isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr == "join"
 
 
 def _called(call: ast.Call) -> str | None:
@@ -44,9 +38,7 @@ def _designation_calls(node: ast.AST) -> int:
     return sum(
         1
         for sub in ast.walk(node)
-        if isinstance(sub, ast.Call)
-        and _called(sub) is not None
-        and ("designation" in str(_called(sub)) or _called(sub) == "_end_text")
+        if isinstance(sub, ast.Call) and _called(sub) is not None and ("designation" in str(_called(sub)) or _called(sub) == "_end_text")
     )
 
 

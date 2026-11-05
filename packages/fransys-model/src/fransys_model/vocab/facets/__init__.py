@@ -12,9 +12,8 @@ from .crimp import ContactFit, ContactsFacet
 from .harness import HarnessFacet
 from .pcb import FootprintFacet, PcbFacet
 from .plc import PlcBindingFacet, PlcChannelFacet, PlcRequestFacet
-from .rating import BoundaryValuesFacet, OperatingFacet, PartRatingFacet, RatingFacet
+from .rating import BlockFacet, OperatingFacet, PartRatingFacet, RatingFacet
 from .reserved_designation import ReservedDesignationFacet
-from .scaling import ScalingFacet
 from .supply import SupplyFacet
 from .terminal import TerminalFacet
 from .wire import WireFacet
@@ -23,7 +22,7 @@ from .wire_row_hint import RowSpec, WireRowHint
 __all__ = [
     "AssignedDesignationFacet",
     "AssignedUnitTagFacet",
-    "BoundaryValuesFacet",
+    "BlockFacet",
     "CableFacet",
     "CableProductFacet",
     "ConnectorFacet",
@@ -43,7 +42,6 @@ __all__ = [
     "RatingFacet",
     "ReservedDesignationFacet",
     "RowSpec",
-    "ScalingFacet",
     "SupplyFacet",
     "TerminalFacet",
     "WireFacet",

@@ -19,9 +19,7 @@ def is_black_box_item(model: Model, item: Id[Item], drawing_set_unit: Id[Unit] |
     """Whether an item at a drawing set of the given unit is that set's black-box content.
 
     True when the item's own unit is set and differs from `drawing_set_unit`
-    -- the same comparison `fransys_layout`'s `replicate_boundaries` already encodes on
-    the layout side, and `fransys_render`'s outline already reads on the render side;
-    this is the one place both may share it (outputs never import each other).
+    -- the one comparison layout and render both read (outputs never import each other).
 
     Raises:
         SchemaError: `item` is not an item of `model`.
@@ -42,15 +40,12 @@ def drawing_set_is_replica_only(model: Model, drawing_set: Id[DrawingSet]) -> bo
     Raises:
         SchemaError: `drawing_set` is not a `layout.drawing_set` of `model`.
     """
-    found = require(
-        layout_of(model, DrawingSet).get(drawing_set), "layout.drawing_set", drawing_set
-    )
+    found = require(layout_of(model, DrawingSet).get(drawing_set), "layout.drawing_set", drawing_set)
     all_functions = functions(model)
-    pages = {page.id for page in layout_of(model, Page).values() if page.drawing_set == drawing_set}
     placed_items = {
         all_functions[row.function].item
         for page in layout_of(model, Page).values()
-        if page.id in pages
+        if page.drawing_set == drawing_set
         for row in page_members(model, page)
         if row.function is not None
     }

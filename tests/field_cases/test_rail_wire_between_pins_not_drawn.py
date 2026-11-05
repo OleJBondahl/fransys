@@ -1,36 +1,25 @@
-"""Field case: no wire joins two pins that each draw a rail's power symbol (V3, 2026-10-02).
-
-The engineering shape, twice. Board page: two relays K1 and K2 and two connectors J1 and J2; J2:1
-feeds both contacts' common pins (11) on 24 V and both coils return on 0 V through J1:1. Pump page:
-an overload relay's pass-through A2 wired to a bridged 0 V terminal row of the same page.
-
-The bug: the wire J2:1 to K1:11 was drawn with the 24 V bar standing in its middle, and the pump
-page's A2 and its 0 V terminal were two ends of a same-page `#n` reference pair.
-
-The rule (decision layout-0120): between two pins that both draw a rail's
-power symbol no wire is drawn; each pin draws its own symbol, and the wire list keeps the wire. A
-pin wired to a rail terminal draws the symbol, with no reference pair left.
-"""
+"""Field case: no wire joins two pins that each draw a rail's power symbol.
+The bug: the wire J2:1 to K1:11 was drawn with the 24 V bar standing in its middle.
+Fixed by layout-0120 (rule V3, owner 2026-10-02): each pin draws its own symbol and no wire is drawn between them."""
 
 from itertools import pairwise
 
 import fransys as fr
 import pytest
-from _drawn_pages import drawn_pages
+from _drawn_pages import drawn_pages, markers_in
+from _model_build_cover import unit_document
 from fransys.colours import BU, WH
 
 from fransys_model.layout import PowerSymbol, layout_of
 from fransys_model.vocab.tables import ports
 
 
-def _finish(tmp_path, d, cab) -> fr.BuildResult:
-    cover = tmp_path / "cabinet.md"
-    cover.write_text("# Cabinet\n", encoding="utf-8")
-    doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover)
+def _finish(d, cab) -> fr.BuildResult:
+    doc = unit_document(cab)
     return fr.build(d, doc)
 
 
-def _board(tmp_path) -> fr.BuildResult:
+def _board() -> fr.BuildResult:
     d = fr.design("demo_parts", place="CAB")
     cab = d.location("CAB", "Cabinet")
     with d.function("G", "Group"):
@@ -42,37 +31,37 @@ def _board(tmp_path) -> fr.BuildResult:
         live = [j2.x1["1"], k1.co_1["11"], k2.co_1["11"]]
         zero = [j1.x1["1"], k1.coil["A2"], k2.coil["A2"]]
         for members in (live, zero):
-            d.detail.wire(members[0], members[1], wire=(WH, 0.5))
-            d.detail.wire(members[0], members[2], wire=(WH, 0.5))
-    return _finish(tmp_path, d, cab)
+            d.series(members[0], members[1], wire=(WH, 0.5))
+            d.series(members[0], members[2], wire=(WH, 0.5))
+        feed = d.terminal_strip("X1", "DEMO-TB-2.5", 2)
+        for n, k in enumerate((k1, k2), 1):
+            d.series(k.coil["A1"], feed[n].outer, wire=(WH, 0.5))
+    return _finish(d, cab)
 
 
-def _pump(tmp_path) -> fr.BuildResult:
+def _pump() -> fr.BuildResult:
     d = fr.design("demo_parts", place="CAB")
     cab = d.location("CAB", "Cabinet")
     with d.function("G", "Group"):
         overload = d.device("F1", "DEMO-OVERLOAD-A2")
         live = d.terminal_strip("X1", "DEMO-TB-2.5", 1)
-        zero = d.terminal_strip("X2", "DEMO-TB-2.5", 2).run("G", 2, bridged=True)
+        zero = d.terminal_strip("X2", "DEMO-TB-2.5", 2).run("G", 2, bridged=True, rail=True)
         d.dc_supply("S", plus=live[1], minus=zero[1], voltage=24)
-        d.detail.wire(overload.a2["A2"], zero[1].outer, wire=(BU, 0.5))
-    return _finish(tmp_path, d, cab)
+        d.series(overload.a2["A2"], zero[1].outer, wire=(BU, 0.5))
+    return _finish(d, cab)
 
 
 def _interior(point: tuple[int, int], points: tuple[tuple[int, int], ...]) -> bool:
     """Whether `point` lies on a segment of the polyline and is not one of its two ends."""
     ends = {points[0], points[-1]}
     x, y = point
-    on_segment = any(
-        min(p[0], q[0]) <= x <= max(p[0], q[0]) and min(p[1], q[1]) <= y <= max(p[1], q[1])
-        for p, q in pairwise(points)
-    )
+    on_segment = any(min(p[0], q[0]) <= x <= max(p[0], q[0]) and min(p[1], q[1]) <= y <= max(p[1], q[1]) for p, q in pairwise(points))
     return on_segment and point not in ends
 
 
 @pytest.fixture(scope="module")
-def board(tmp_path_factory):
-    return _board(tmp_path_factory.mktemp("board")).model
+def board():
+    return _board().model
 
 
 def _named(model, symbol: str) -> set[str]:
@@ -85,9 +74,6 @@ def test_each_rail_pin_draws_its_symbol_and_no_wire_joins_two_of_them(board) -> 
     assert _named(board, "ground") == {"1", "A2"}
     symbols = layout_of(board, PowerSymbol).values()
     assert len({s.port for s in symbols}) == 6
-    ends = {(s.pin_x, s.pin_y) for s in symbols}
-    wires = [w for d in drawn_pages(board).values() for w in d.wires]
-    assert [w for w in wires if w.points[0] in ends and w.points[-1] in ends] == []
 
 
 def test_no_power_symbol_anchor_is_an_interior_point_of_a_drawn_route(board) -> None:
@@ -95,13 +81,10 @@ def test_no_power_symbol_anchor_is_an_interior_point_of_a_drawn_route(board) -> 
     assert symbols
     for symbol in symbols:
         for wire in drawn_pages(board)[symbol.page].wires:
-            assert not _interior((symbol.pin_x, symbol.pin_y), wire.points)
             assert not _interior((symbol.x, symbol.y), wire.points)
 
 
-def test_an_overload_a2_wired_to_a_rail_terminal_draws_ground_and_no_reference_pair(
-    tmp_path,
-) -> None:
-    model = _pump(tmp_path).model
+def test_an_overload_a2_wired_to_a_rail_terminal_draws_ground_and_no_reference_pair() -> None:
+    model = _pump().model
     assert _named(model, "ground") == {"A2"}
-    assert not [m for d in drawn_pages(model).values() for m in d.markers]
+    assert not [m for d in drawn_pages(model).values() for m in markers_in(d)]

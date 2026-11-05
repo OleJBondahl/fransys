@@ -12,10 +12,9 @@ def lookup_code(key: str) -> str | None:
     info = BY_CODE.get(key)
     if info is None:
         return None
-    severities = ", ".join(s.name for s in info.severities)
     return "\n".join(
         [
-            f"{info.code}: {severities}",
+            f"{info.code}: {info.severity.name}",
             f"stage: {info.stage}",
             f"who acts: {info.who}",
             f"cause: {info.cause}",

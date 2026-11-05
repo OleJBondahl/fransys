@@ -1,25 +1,33 @@
 """The warnings of a drawing set that cannot draw all it holds (el-0022, designer Ruling 83).
 
-A net with one symbol in a set loses it from that set; a set with symbols and no page draws nothing.
+A net cut by a set with no pin to carry its stub loses its end from that set; a set with
+symbols and no page draws nothing.
 Neither is ever silent: each is a WARNING naming the net or the set.
 """
 
 from typing import TYPE_CHECKING
 
-from fransys_model.derive import port_designation
-from fransys_model.kernel import Finding, Severity
+from fransys_model.derive import connected_ports, item_designation, item_unit
 from fransys_model.vocab import FINDING_CODES
+lazy from fransys_model.kernel import Finding, natural_join
 
+from .board_findings import undrawn_board_nets
 from .codes import FINDING_CODES as EL_CODES
-from .write_ids import port_values
+from .drawn_ids import core_symbol_id
+from .drawn_netlist import pin_owner
 
 if TYPE_CHECKING:
-    from fransys_layout.core import CoreLayout, PlacementProblem
-    from fransys_model.kernel import Id, Model
+    from collections.abc import Collection, Iterable, Mapping
 
+    from fransys_layout.core import PlacementProblem
+    from fransys_model.kernel import Id, Model
+    from fransys_model.vocab import Port
+
+    from .drawn_netlist import Netlist
+    from .placement_kit import SymbolKit
     from .placement_sets import DrawingScope
 
-__all__ = ["cut_net_findings", "set_failure_finding", "set_without_page_findings"]
+__all__ = ["set_failure_finding", "set_without_page_findings"]
 
 _INFO = {info.code: info for info in (*FINDING_CODES, *EL_CODES)}
 
@@ -30,69 +38,55 @@ def _symbols(problem: PlacementProblem, scope: DrawingScope) -> str:
     return ", ".join(dict.fromkeys(names))
 
 
-def cut_net_findings(
-    model: Model, problem: PlacementProblem, scope: DrawingScope, number: int
-) -> tuple[Finding, ...]:
-    """One WARNING per net whose single symbol in `scope` is all `restrict` leaves of it."""
-    ports = port_values(model)
+def _board_cause(model: Model, scope: DrawingScope) -> str:
+    """The boards of the set's unit with nets drawn nowhere, as the clause that says why."""
+    boards = [
+        f"{item_designation(model, b)} ({natural_join(names)})"
+        for b, names in undrawn_board_nets(model).items()
+        if item_unit(model, b) == scope.of_unit
+    ]
+    if not boards:
+        return ""
+    return f"; board {', '.join(boards)} is a black box, so its nets are drawn nowhere (BOARD_NETS_NOT_DRAWN)"
+
+
+def _nets_drawn(model: Model, owners: Mapping[str, Mapping[str, Id[Port]]], net: Netlist, scope: DrawingScope, drawn: Collection[str]) -> bool:
+    """True when the net of each wired port of the set is drawn on some page; a set with no wired port has no net to lose (NO-SILENT-DROP)."""
+    mine = {core_symbol_id(s) for s in scope.symbols}
+    wired = {p.value for p in connected_ports(model)}
+    ports = [p.value for sid, pins in owners.items() if sid in mine for p in pins.values() if p.value in wired]
+    return all(net.net(model, p) in drawn for p in ports)
+
+
+def set_without_page_findings(model: Model, kit: SymbolKit, net: Netlist, pageless: Iterable[tuple[DrawingScope, int]]) -> tuple[Finding, ...]:
+    """One ERROR per set that holds symbols, got no page and has its nets drawn on no other page.
+
+    A black-box set drawn in its container counts as drawn when all its nets are drawn there.
+    """
+    drawn = {net.net(model, p) for p in net.placed}
+    owners = pin_owner(model, kit)
     found = []
-    for net in problem.nets:
-        inside = [p for p in net.pins if p.sym in scope.symbols]
-        if len({p.sym for p in inside}) != 1 or len(inside) == len(net.pins):
+    for scope, number in pageless:
+        if _nets_drawn(model, owners, net, scope, drawn):
             continue
-        port = ports.get(net.id)
-        name = port_designation(model, port) if port is not None else net.id  # ty: ignore[invalid-argument-type] - a port id
+        subjects: tuple[Id[object], ...] = (scope.of_unit,) if scope.of_unit is not None else ()
+        held = natural_join({s.partition(" ")[0] for s in scope.symbols})
         found.append(
-            Finding(
-                code="NET_CUT_BY_SET",
-                severity=Severity.WARNING,
-                subjects=(port,) if port is not None else (),
-                message=(
-                    f"the net of port {name} has one end in drawing set {number} "
-                    f"({_symbols(problem, scope)}) and its other end in another set: not drawn here"
-                ),
-                fix=_INFO["NET_CUT_BY_SET"].filled(),
+            _INFO["SET_WITHOUT_PAGE"].finding(
+                subjects,
+                f"drawing set {number} holds {held} but has no page and its nets are drawn on no other page" + _board_cause(model, scope),
             )
         )
     return tuple(found)
 
 
-def set_without_page_findings(
-    problem: PlacementProblem, scope: DrawingScope, layout: CoreLayout, number: int
-) -> tuple[Finding, ...]:
-    """One WARNING when `scope` holds symbols and the core gave it no page."""
-    if not scope.symbols or layout.pages:
-        return ()
-    subjects: tuple[Id[object], ...] = (scope.of_unit,) if scope.of_unit is not None else ()
-    return (
-        Finding(
-            code="SET_WITHOUT_PAGE",
-            severity=Severity.WARNING,
-            subjects=subjects,
-            message=(
-                f"drawing set {number} holds {_symbols(problem, scope)} but has no page: "
-                "every net of its symbols has its other end in another set"
-            ),
-            fix=_INFO["SET_WITHOUT_PAGE"].filled(),
-        ),
-    )
-
-
-def set_failure_finding(
-    error: Exception, problem: PlacementProblem, scope: DrawingScope, number: int
-) -> Finding:
+def set_failure_finding(error: Exception, problem: PlacementProblem, scope: DrawingScope, number: int) -> Finding:
     """One `PLACEMENT_PROBLEM` ERROR for a drawing set whose layout raised `error` (FLIP-NOW F2).
 
     It names the set, its unit and symbols, and the error class; the set draws no page.
     """
     subjects: tuple[Id[object], ...] = (scope.of_unit,) if scope.of_unit is not None else ()
-    return Finding(
-        code="PLACEMENT_PROBLEM",
-        severity=Severity.ERROR,
-        subjects=subjects,
-        message=(
-            f"drawing set {number} ({_symbols(problem, scope)}) could not be laid out, "
-            f"so it has no page: {type(error).__name__}: {error}"
-        ),
-        fix=_INFO["PLACEMENT_PROBLEM"].filled(),
+    return _INFO["PLACEMENT_PROBLEM"].finding(
+        subjects,
+        f"drawing set {number} ({_symbols(problem, scope)}) could not be laid out, so it has no page: {type(error).__name__}: {error}",
     )

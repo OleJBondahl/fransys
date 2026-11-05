@@ -2,13 +2,6 @@
 
 On the demo cabinet document, for every
 schematic page, the SVG's `width`/`height`/`viewBox` equal the sheet `resolve_sheet_format`
-gives PDF, and every coordinate the SVG draws lies inside that sheet's content box. Root
-tests are the one place `fransys_render` and `fransys_pdf` may both be imported (spec
-section 5's boundary table holds neither to import the other).
-`resolve_sheet_format` and `schematic_pages` are not in
-`fransys_pdf`'s `__all__`, so they are imported from their own private modules directly,
-the same way that package's own `tests/test_source.py` and `tests/test_determinism.py`
-already import `_geometry` -- there is no public equivalent to reach for instead.
 """
 
 import re
@@ -16,17 +9,14 @@ import xml.etree.ElementTree as ET
 from typing import TYPE_CHECKING
 
 import fransys as fr
-import fransys_author
 import fransys_parts
 from demo_designs import cabinet_design
-from fransys._layout_core import draw_on_core
+from fransys_author.design import Design
 from fransys_pdf._drawings import schematic_pages
 
-import electrical_symbols
-from fransys_model.derive import document_page_kinds, document_row
+from fransys_model.derive import document_page_kinds, document_row, documents
 from fransys_model.derive import document_sheet_format as resolve_sheet_format
 from fransys_model.kernel import render_id
-from fransys_model.vocab import documents
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -38,26 +28,12 @@ _SVG_NS = "{http://www.w3.org/2000/svg}"
 _MIN_PAGE_COUNT = 1
 _MIN_COORDINATE_COUNT = 1
 
-# Every direct child `_render_page` can put on a page (the fixed content-group order):
-# `<style>` carries no coordinate, the rest are checked by `_element_coordinates`. An
-# unrecognised top-level tag is a real gap in this test, not something to skip quietly.
-_KNOWN_TOP_TAGS = frozenset({"style", "g", "rect", "text", "polyline", "circle", "line"})
-
-# Inside a `<g class="symbol">` wrapper, the toolkit's own fragment tags
-# (`symdef.svg._element`/`to_fragment`): `line`, `polygon`/`polyline`, `circle`,
-# `text` carry a simple local x/y pair; `path` (an SVG arc, `_arc`) does not -- its `d`
-# mixes coordinate and flag numbers in path-command syntax, not a plain point list, and is
-# a known gap here (see `_symbol_fragment_coordinates`'s docstring). Bare `g` is the
-# toolkit's own non-transformed style wrapper, carrying no coordinate of its own.
-_FRAGMENT_POINT_TAGS = frozenset({"line", "polygon", "polyline", "circle", "text"})
-_FRAGMENT_IGNORED_TAGS = frozenset({"g", "path"})
-
 
 def _built_document(tmp_path: Path):
     """A cabinet document with real laid-out `SCHEMATIC` pages (mirrors `demo_cabinet_document`)."""
     parts = fransys_parts.load("demo_parts")
     design = cabinet_design(parts)
-    c1 = fransys_author.Design(parts).location("C1", "Demo cabinet")
+    c1 = Design(parts).location("C1", "Demo cabinet")
     cover = tmp_path / "cabinet.md"
     cover.write_text("# Demo cabinet\n", encoding="utf-8")
     document_draft = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, c1, cover=cover)
@@ -74,110 +50,35 @@ def _tag(element: ET.Element) -> str:
     return element.tag.removeprefix(_SVG_NS)
 
 
-def _point(x_text: str, y_text: str) -> tuple[float, float]:
-    return (float(x_text), float(y_text))
+_TRANSLATE = re.compile(r"translate\(([-\d.]+)[ ,]+([-\d.]+)\)(?:\s*scale\(([-\d.]+)\))?")
+_POINTS = {
+    "line": (("x1", "y1"), ("x2", "y2")),
+    "circle": (("cx", "cy"),),
+    "text": (("x", "y"),),
+}
+_LISTED = frozenset({"polygon", "polyline"})
 
 
-def _fragment_local_points(element: ET.Element) -> tuple[tuple[float, float], ...]:
-    """One toolkit fragment element's own local (pre-transform) x/y pair(s)."""
-    tag = _tag(element)
-    attrib = element.attrib
-    if tag == "line":
-        return (_point(attrib["x1"], attrib["y1"]), _point(attrib["x2"], attrib["y2"]))
-    if tag == "circle":
-        return (_point(attrib["cx"], attrib["cy"]),)
-    if tag in ("polygon", "polyline"):
-        points = attrib.get("points", "").split()
-        return tuple(_point(*point.split(",")) for point in points)
-    if tag == "text":
-        return (_point(attrib["x"], attrib["y"]),)
-    return ()
+def _all_coordinates(element: ET.Element, tx: float = 0.0, ty: float = 0.0, scale: float = 1.0) -> tuple[tuple[float, float], ...]:
+    """Every point `element` and its descendants draw, in page mm, through each `translate`.
 
-
-def _symbol_fragment_coordinates(g_element: ET.Element) -> tuple[tuple[float, float], ...]:
-    """A `<g class="symbol"...>` wrapper's real drawn coordinates, in absolute page mm.
-
-    `_symbols.py`'s `_symbol_fragment`: `transform="translate(tx,ty) scale(s)"` on the outer
-    `<g>`, wrapping the toolkit's own fragment elements in the symbol's local, unscaled
-    coordinate space. SVG's `transform` composes right-to-left onto a point, so the true
-    absolute page point of a local `(lx, ly)` is `(tx + s*lx, ty + s*ly)` -- exactly
-    `_symbol_fragment`'s own docstring formula. Every descendant's own local point(s) are
-    read via `_fragment_local_points` and mapped through that formula; `path` (an SVG arc)
-    is skipped, a known gap (module docstring).
-
-    Raises:
-        AssertionError: a descendant tag is neither a known point tag nor a known ignored
-            one -- an unrecognised toolkit output shape, not something to skip quietly.
-    """
-    transform = g_element.attrib.get("transform", "")
-    match = re.match(r"translate\(([^,]+),([^)]+)\)\s*scale\(([^)]+)\)", transform)
-    if match is None:
-        return ()
-    tx, ty, s = float(match.group(1)), float(match.group(2)), float(match.group(3))
-    coords: list[tuple[float, float]] = []
-    for element in g_element.iter():
-        if element is g_element:
-            continue
-        tag = _tag(element)
-        assert tag in _FRAGMENT_POINT_TAGS or tag in _FRAGMENT_IGNORED_TAGS, (
-            g_element.attrib.get("class"),
-            tag,
-            "unrecognised symbol-fragment tag",
-        )
-        for lx, ly in _fragment_local_points(element):
-            coords.append((tx + s * lx, ty + s * ly))
-    return tuple(coords)
-
-
-def _element_coordinates(  # noqa: PLR0911 -- one branch per SVG tag `_render_page` can emit
-    element: ET.Element,
-) -> tuple[tuple[float, float], ...]:
-    """Every x/y-shaped coordinate `element` itself draws, including a symbol's real body.
-
-    `.attrib[...]` (not `.get(...)`) throughout except where a default is meaningful:
-    every attribute checked here is one `_render_page`'s own glyph functions always write
-    for that tag, so a missing attribute is a real bug to raise on, not a `None` to
-    silently thread through `float()`.
+    An unrecognised tag or transform fails loud, so a new shape never draws zero checked points.
     """
     tag = _tag(element)
     attrib = element.attrib
-    if tag == "circle":
-        return (_point(attrib["cx"], attrib["cy"]),)
-    if tag == "line":
-        return (_point(attrib["x1"], attrib["y1"]), _point(attrib["x2"], attrib["y2"]))
-    if tag == "rect":
-        x, y = float(attrib["x"]), float(attrib["y"])
-        w, h = float(attrib["width"]), float(attrib["height"])
-        return ((x, y), (x + w, y), (x, y + h), (x + w, y + h))
-    if tag == "text":
-        return (_point(attrib["x"], attrib["y"]),)
-    if tag == "polyline":
-        points = attrib.get("points", "").split()
-        return tuple(_point(*point.split(",")) for point in points)
-    if tag == "g":
-        return _symbol_fragment_coordinates(element)
-    return ()
-
-
-def _all_coordinates(root: ET.Element) -> tuple[tuple[float, float], ...]:
-    """Every coordinate of every page-level element -- direct children of `<svg>` only.
-
-    Not `root.iter()`: a `<g class="symbol">` wrapper's own descendants are handled by
-    `_symbol_fragment_coordinates` instead, which transforms each one from the fragment's
-    local, unscaled coordinate space into absolute page mm before returning it -- recursing
-    here too would double-count them as untransformed, absolute-looking numbers, a parsing
-    bug, not a real off-page coordinate. Every other content group (routes, junctions,
-    markers, labels, the placeholder rect+text) is flat, one level deep, so plain direct
-    children cover them correctly. Every direct child's own tag must be recognised
-    (`_KNOWN_TOP_TAGS`): a future content group emitting an unhandled tag must fail loud,
-    not silently draw zero checked coordinates.
-    """
-    coords: list[tuple[float, float]] = []
-    for element in root:
-        tag = _tag(element)
-        assert tag in _KNOWN_TOP_TAGS, (tag, "unrecognised top-level SVG tag")
-        coords.extend(_element_coordinates(element))
-    return tuple(coords)
+    if "transform" in attrib:
+        match = _TRANSLATE.fullmatch(attrib["transform"])
+        assert match, (tag, attrib["transform"], "unrecognised transform")
+        tx, ty = tx + scale * float(match[1]), ty + scale * float(match[2])
+        scale *= float(match[3] or 1)
+    if tag in {"svg", "g"}:
+        return tuple(p for child in element for p in _all_coordinates(child, tx, ty, scale))
+    assert tag in _POINTS or tag in _LISTED, (tag, "unrecognised SVG tag")
+    if tag in _LISTED:
+        pairs = [tuple(map(float, point.split(","))) for point in attrib["points"].split()]
+    else:
+        pairs = [(float(attrib[x]), float(attrib[y])) for x, y in _POINTS[tag]]
+    return tuple((tx + scale * x, ty + scale * y) for x, y in pairs)
 
 
 def _core_pages(tmp_path: Path):
@@ -188,7 +89,7 @@ def _core_pages(tmp_path: Path):
     record = document_row(model, document_id)
     pages = document_page_kinds(model, document_id)
     sheet = resolve_sheet_format(model, record.id, pages)
-    svgs = draw_on_core(model, built.drawings, electrical_symbols.LIBRARY)
+    svgs = built.page_svgs
     schematic = schematic_pages(model, record, pages)
     assert len(schematic) >= _MIN_PAGE_COUNT, "no real schematic page to check"
     return sheet, [(page, ET.fromstring(svgs[render_id(page)])) for page in schematic]  # noqa: S314

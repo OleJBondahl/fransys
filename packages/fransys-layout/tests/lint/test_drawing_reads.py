@@ -4,6 +4,7 @@ from fransys_layout.core.values import Box, Size
 from fransys_layout.drawing import (
     Drawing,
     DrawnOutline,
+    DrawnSymbol,
     DrawnText,
     DrawnWire,
     page_texts,
@@ -15,8 +16,8 @@ from fransys_layout.drawing import (
 )
 
 
-def _wire(name, *points, label=None):
-    return DrawnWire(name, tuple(points), "s", label=label)
+def _wire(name, *points):
+    return DrawnWire(name, tuple(points), "s")
 
 
 def _text(x, y, w=10, h=4, text="t"):
@@ -69,18 +70,22 @@ def test_struck_negatives() -> None:
     text = _text(0, 0)
     assert struck_texts([_wire("a", (-5, 4), (20, 4))], [text]) == 0
     assert struck_texts([_wire("a", (-5, 2), (0, 2))], [text]) == 0
-    assert struck_texts([_wire("a", (-5, 2), (20, 2), label=text)], [text]) == 0
+
+
+def test_page_texts_ends_with_the_ink_of_each_slot_string() -> None:
+    owner = DrawnSymbol("s", "k", 0, 0, "R0", slot_ink=(("marking.a", Box(3, 3, 6, 2)),))
+    drawing = Drawing(Size(100, 100), (owner,), (), (_text(0, 0),), (), "v")
+    assert [t.box for t in page_texts(drawing)] == [Box(0, 0, 10, 4), Box(3, 3, 6, 2)]
 
 
 def test_page_texts_order() -> None:
-    free, wired, outlined = _text(0, 0, text="f"), _text(1, 1, text="w"), _text(2, 2, text="o")
+    free, outlined = _text(0, 0, text="f"), _text(2, 2, text="o")
     drawing = Drawing(
         Size(100, 100),
         (),
-        (_wire("a", (0, 0), (1, 0), label=wired), _wire("b", (0, 0), (1, 0))),
-        (),
+        (_wire("a", (0, 0), (1, 0)), _wire("b", (0, 0), (1, 0))),
         (free,),
         (DrawnOutline("o", "k", (), outlined), DrawnOutline("p", "k", (), None)),
         "v",
     )
-    assert page_texts(drawing) == (free, wired, outlined)
+    assert page_texts(drawing) == (free, outlined)

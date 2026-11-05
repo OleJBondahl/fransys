@@ -4,15 +4,13 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from fransys_model.vocab import THROWS, PortRole
-
 from . import _toml
 
 if TYPE_CHECKING:
     from fransys_model.kernel import Finding
 
-_COMMONS = [role.value for role in PortRole if THROWS[role].common]
-_THROWS = [role.value for role in PortRole if THROWS[role].throw]
+_COMMONS = ["common"]
+_THROWS = ["break", "make"]
 _THROW_ROLES: frozenset[str] = frozenset(_COMMONS + _THROWS)
 _CHANGEOVER_PAIRS: tuple[set[str], ...] = tuple({c, t} for c in _COMMONS for t in _THROWS)
 
@@ -39,8 +37,7 @@ def _check_changeover_roles(entry: _toml.Table, path: str, line: int) -> list[Fi
             "CHANGEOVER_ROLE",
             path,
             line,
-            f"port {port.get('name')!r} of a contact_co function has role {port['role']!r}, "
-            f"not one of {', '.join(sorted(_THROW_ROLES))}",
+            f"port {port.get('name')!r} of a contact_co function has role {port['role']!r}, not one of {', '.join(sorted(_THROW_ROLES))}",
         )
         for port in ports
         if type(port) is dict and type(port.get("role")) is str and port["role"] not in _THROW_ROLES
@@ -60,8 +57,7 @@ def _check_changeover_symbol_port(entry: _toml.Table, path: str, line: int) -> l
             "CHANGEOVER_SYMBOL_PORT",
             path,
             line,
-            f"port {port.get('name')!r} of a contact_co function has symbol_port "
-            f"{port['symbol_port']!r}: the drawing binds it by its role",
+            f"port {port.get('name')!r} of a contact_co function has symbol_port {port['symbol_port']!r}: the drawing binds it by its role",
         )
         for port in ports
         if type(port) is dict and "symbol_port" in port
@@ -76,11 +72,7 @@ def _check_changeover_links(entry: _toml.Table, path: str, line: int) -> list[Fi
     ports, links = entry.get("ports"), entry.get("links")
     if entry.get("kind") != "contact_co" or type(ports) is not list or type(links) is not list:
         return []
-    roles = {
-        p["name"]: p["role"]
-        for p in ports
-        if type(p) is dict and type(p.get("name")) is str and type(p.get("role")) is str
-    }
+    roles = {p["name"]: p["role"] for p in ports if type(p) is dict and type(p.get("name")) is str and type(p.get("role")) is str}
     findings: list[Finding] = []
     for link in links:
         if type(link) is not dict or link.get("kind") != "switched":

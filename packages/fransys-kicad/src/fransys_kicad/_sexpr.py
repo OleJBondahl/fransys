@@ -2,9 +2,9 @@
 
 import re
 
-_TOKEN = re.compile(
-    r'\s*(?:(?P<open>\()|(?P<close>\))|"(?P<string>(?:[^"\\]|\\.)*)"|(?P<atom>[^\s()"]+))'
-)
+from .errors import KicadError
+
+_TOKEN = re.compile(r'\s*(?:(?P<open>\()|(?P<close>\))|"(?P<string>(?:[^"\\]|\\.)*)"|(?P<atom>[^\s()"]+))')
 _ESCAPES = {"n": "\n", "r": "\r"}
 
 type Sexpr = list[str | Sexpr]
@@ -23,17 +23,21 @@ def _tokens(text: str) -> list[tuple[str, str]]:
         match = _TOKEN.match(text, position)
         if match is None or match.lastgroup is None:
             msg = f"cannot read a token at offset {position}"
-            raise ValueError(msg)
+            raise KicadError(msg)
         found.append((match.lastgroup, match[match.lastgroup]))
         position = match.end()
     return found
 
 
-def _read(tokens: list[tuple[str, str]], start: int) -> tuple[Sexpr, int]:
-    """The list whose opening parenthesis is `tokens[start]`, and the index after its closing."""
+def _expect_open(tokens: list[tuple[str, str]], start: int) -> None:
     if start >= len(tokens) or tokens[start][0] != "open":
         msg = "expected an opening parenthesis"
-        raise ValueError(msg)
+        raise KicadError(msg)
+
+
+def _read(tokens: list[tuple[str, str]], start: int) -> tuple[Sexpr, int]:
+    """The list whose opening parenthesis is `tokens[start]`, and the index after its closing."""
+    _expect_open(tokens, start)
     node: Sexpr = []
     position = start + 1
     while position < len(tokens):
@@ -47,17 +51,17 @@ def _read(tokens: list[tuple[str, str]], start: int) -> tuple[Sexpr, int]:
             node.append(_unescape(text) if kind == "string" else text)
             position += 1
     msg = "an unclosed parenthesis"
-    raise ValueError(msg)
+    raise KicadError(msg)
 
 
 def parse_sexpr(text: str) -> Sexpr:
-    """Read one s-expression into nested lists of `str`; `ValueError` unless it is exactly one."""
+    """Read one s-expression into nested lists of `str`; `KicadError` unless it is exactly one."""
     tokens = _tokens(text)
     if not tokens:
         msg = "no s-expression found in the text"
-        raise ValueError(msg)
+        raise KicadError(msg)
     node, end = _read(tokens, 0)
     if end != len(tokens):
         msg = "text after the top-level expression"
-        raise ValueError(msg)
+        raise KicadError(msg)
     return node

@@ -1,18 +1,8 @@
 """Field case: a sized run of 4 terminals, bridged, made outside every function block.
+The bug: the bridge took every terminal with no block open, so each printed with no block (`-U1-X1:24V:2`).
+Fixed by author-0037: a run's bridge takes terminals only inside an open block, else each joins its first block."""
 
-Terminal 1 is wired to the supply outside a block; terminals 2 and 3 are first wired inside two
-lamps' own blocks. The shape is the usual feed rail of a cabinet.
-
-The bug: the run's bridge took every terminal at once, with no block open, so each printed with
-no block (`-U1-X1:24V:2`) and the block of its first circuit wire could never take it. The same
-run unbridged printed `=F1-U1-X1:24V:2`, as ruled.
-
-Reported by a consumer, reproduced 2026-10-14. Fixing decision: author-0037 -- a run's bridge
-takes its terminals only when a function block is open; each terminal otherwise joins the block
-it is first taken in.
-"""
-
-from typing import NamedTuple
+from typing import Any, NamedTuple
 
 import fransys as fr
 import pytest
@@ -39,16 +29,16 @@ def _designations(*, bridged: bool | tuple[int, int]) -> dict[int, str]:
     def cab(c):
         psu = c.device("G1", "DEMO-PSU-24")
         run = c.terminal_strip("X1", "DEMO-TB-2.5").run("24V", 4, bridged=bridged)
-        c.detail.wire(psu.output["+"], run[1], wire=(BU, 0.75))
+        c.series(psu.output["+"], run[1].inner, wire=(BU, 0.75))
         for i in (1, 2):
             with c.function(f"F{i}", f"Lamp {i}"):
                 lamp = c.device(f"H{i}", "DEMO-LAMP-24")
-                c.detail.wire(run[i + 1], lamp.lamp["1"], wire=(BU, 0.75))
-            c.detail.wire(lamp.lamp["2"], psu.output["-"], wire=(BU, 0.75))
+                c.series(run[i + 1].inner, lamp.lamp["1"], wire=(BU, 0.75))
+            c.series(lamp.lamp["2"], psu.output["-"], wire=(BU, 0.75))
         ids[2], ids[3] = run[2].id, run[3].id
         return _Cab()
 
-    ids: dict = {}
+    ids: dict[int, Any] = {}
     d = fr.design("demo_parts")
     d.add(cab, "U1")
     model = fr.build(d).model

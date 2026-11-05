@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 from itertools import pairwise
-from typing import TYPE_CHECKING, Protocol
+from typing import TYPE_CHECKING
 lazy from decimal import Decimal
 
 from fransys_model.kernel import AuthoringKey, make_id
@@ -24,17 +24,10 @@ lazy from .handles import Port, as_port
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
-    from fransys_model.kernel import Origin, Record
-
-    from .handles import Group, Item, Location
+    from .design import Scope
+    from .handles import Group, Item, Location, _Recorder
 
 _MINIMUM_RUN_POINTS = 2
-
-
-class _Recorder(Protocol):
-    """What a `Wiring` needs back from the `Design` that made it."""
-
-    def _add(self, record: Record, origin: Origin) -> None: ...
 
 
 def _wire_conductor(prefix: AuthoringKey, a: Port, b: Port, n: int | None) -> Conductor:
@@ -43,9 +36,7 @@ def _wire_conductor(prefix: AuthoringKey, a: Port, b: Port, n: int | None) -> Co
     key = scoped(prefix, "wire", spliced(ends[0]), spliced(ends[1]))
     if n is not None:
         key = scoped(key, "n", str(n))
-    return Conductor(
-        id=make_id(Conductor, key), key=key, a=a.id, b=b.id, kind=ConductorKind.WIRE, carrier=None
-    )
+    return Conductor(id=make_id(Conductor, key), key=key, a=a.id, b=b.id, kind=ConductorKind.WIRE, carrier=None)
 
 
 @dataclass(frozen=True, slots=True)
@@ -55,7 +46,7 @@ class WireHints:
     _recorder: _Recorder
     _prefix: AuthoringKey
 
-    def __call__(  # noqa: PLR0913 -- the two ports and the hint's table, size, n and label
+    def __call__(  # noqa: PLR0913 -- the two ports and the hint's table, size, n and label [public keyword API kept, decision 0444]
         self,
         a: Port,
         b: Port,
@@ -74,12 +65,7 @@ class WireHints:
             id=make_id(WireRowHint, key),
             key=key,
             subject=conductor.id,
-            rows=frozendict(
-                {
-                    row: RowSpec(colour=colour, gauge_mm2=gauge)
-                    for row, (colour, gauge) in rows.items()
-                }
-            ),
+            rows=frozendict({row: RowSpec(colour=colour, gauge_mm2=gauge) for row, (colour, gauge) in rows.items()}),
             gauge_mm2=size,
             label=label,
         )
@@ -96,7 +82,7 @@ class Wiring:
     gauge: Decimal
     label: str | None
 
-    def __call__(  # noqa: PLR0913 -- the two ports and four per-wire overrides
+    def __call__(  # noqa: PLR0913 -- the two ports and four per-wire overrides [public keyword API kept, decision 0444]
         self,
         a: Port,
         b: Port,
@@ -142,30 +128,8 @@ class Wiring:
 _LINK_KINDS = {
     "mount": ConductorKind.MOUNT,
     "bus": ConductorKind.BUSBAR,
-    "rail": ConductorKind.RAIL,
     "lead": ConductorKind.LEAD,
 }
-
-
-class _Linkable(Protocol):
-    """What `LinkScope` reads of its `Scope`."""
-
-    @property
-    def _prefix(self) -> AuthoringKey: ...
-
-    @property
-    def _design(self) -> _Recorder: ...
-
-    def item(  # noqa: PLR0913 -- the `Scope.item` keywords a harness passes
-        self,
-        mpn: None,
-        *,
-        name: str | None,
-        tag: str | None,
-        at: Location | None,
-        group: Group | None,
-        external: bool,
-    ) -> Item: ...
 
 
 class LinkScope:
@@ -173,7 +137,7 @@ class LinkScope:
 
     __slots__ = ()
 
-    def link(self: _Linkable, a: Port, b: Port, *, kind: str) -> None:
+    def link(self: Scope, a: Port, b: Port, *, kind: str) -> None:
         """A link (`mount`, `bus`, `rail` or `lead`): closes its net, never a wire (author-0012)."""
         if kind not in _LINK_KINDS:
             msg = f"{kind!r} is not a valid link kind; valid: {', '.join(_LINK_KINDS)}"
@@ -194,7 +158,7 @@ class LinkScope:
         self._design._add(conductor, caller_origin())
 
     def harness_item(
-        self: _Linkable,
+        self: Scope,
         name: str | None,
         tag: str | None,
         at: Location | None,

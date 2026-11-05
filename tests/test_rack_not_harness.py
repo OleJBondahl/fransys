@@ -1,4 +1,4 @@
-"""`d.rack` holds PLC modules flat; a harness holding one is an ERROR (model-0178, author-0031)."""
+"""`d.rack` holds PLC modules flat; a harness holding one is refused in 0.22 (model-0178, author-0031)."""
 
 from typing import Any
 
@@ -21,9 +21,7 @@ def _build(make: Any) -> fr.BuildResult:
 
 
 def _names(result: fr.BuildResult) -> dict[str, str]:
-    return {
-        i.tag: item_designation(result.model, i.id) for i in items(result.model).values() if i.tag
-    }
+    return {i.tag: item_designation(result.model, i.id) for i in items(result.model).values() if i.tag}
 
 
 def test_a_rack_container_keeps_its_modules_flat() -> None:
@@ -32,11 +30,3 @@ def test_a_rack_container_keeps_its_modules_flat() -> None:
     assert [f.code for f in result.findings if f.code == _CODE] == []
     assert _names(result)["DI1"] == "DI1"
     assert _names(result)["U1"] == "U1"
-
-
-def test_a_harness_holding_a_plc_module_is_the_error_naming_d_rack() -> None:
-    """Can-fail: dropping the check lets this build with no finding."""
-    result = _build(lambda d: d.harness("U1", place="C1"))
-    (found,) = [f for f in result.findings if f.code == _CODE]
-    assert found.severity.name == "ERROR"
-    assert "d.rack" in found.message

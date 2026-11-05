@@ -1,13 +1,6 @@
-"""Field case: a pin named `+` or `-` is reached by its typed attribute `_plus` or `_minus`.
-
-The engineering shape: a primary cell with one function holding the pins `+` and `-`; the
-generated parts module declares them as `_plus` and `_minus` (decision 0206, point 1).
-
-The bug (0.19.6): `Device` and `Fn` refused every attribute that starts with `_`, so the
-attributes the type checker accepted raised `AttributeError` at build time.
-The fix (decision 0206, point 3): the catch-alls resolve a mapped name too; a dunder or a
-private name that maps to no pin still raises.
-"""
+"""Field case: pins named + and - are reached by the typed attributes _plus and _minus of the parts module.
+The bug (0.19.6): Device and Fn refused every attribute starting with _, so typed names raised AttributeError at build.
+Fixed by decision 0206 (points 1 and 3), the catch-alls resolve a mapped name; a dunder or unmapped private name still raises."""
 
 import copy
 

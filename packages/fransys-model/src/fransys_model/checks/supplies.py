@@ -2,13 +2,14 @@
 
 from typing import TYPE_CHECKING, Final
 
-from fransys_model.checks._finding import finding, ordered
+from fransys_model.checks._finding import ordered
 from fransys_model.derive.facts.supply_sources import (
     declarations_by_name,
     supplies_by_potential,
     supply_differences,
 )
-from fransys_model.kernel import Finding, Severity
+from fransys_model.vocab.codes import finding
+lazy from fransys_model.kernel import Finding
 
 if TYPE_CHECKING:
     from fransys_model.kernel import Model
@@ -31,8 +32,7 @@ def _supply_differs(model: Model) -> list[Finding]:
     return [
         finding(
             SUPPLY_DIFFERS,
-            Severity.ERROR,
-            sorted(supply.id for supply in by_name[name]),
+            [supply.id for supply in by_name[name]],
             f"supplies named {name!r} differ in {_detail(details)}",
         )
         for name, details in supply_differences(model).items()
@@ -45,19 +45,16 @@ def _potential_in_two_supplies(model: Model) -> list[Finding]:
         names = sorted({supply.name for supply in members})
         if len(names) <= 1:
             continue
-        message = (
-            f"potential {potential!r} is a rail of more than one supply: "
-            f"{', '.join(map(repr, names))}"
-        )
-        subjects = sorted(supply.id for supply in members)
-        found.append(finding(POTENTIAL_IN_TWO_SUPPLIES, Severity.ERROR, subjects, message))
+        message = f"potential {potential!r} is a rail of more than one supply: {', '.join(map(repr, names))}"
+        subjects = [supply.id for supply in members]
+        found.append(finding(POTENTIAL_IN_TWO_SUPPLIES, subjects, message))
     return found
 
 
 def check_supplies(model: Model) -> tuple[Finding, ...]:
     """Check that a supply name means one supply and a potential belongs to one supply.
 
-    `SUPPLY_DIFFERS`, `POTENTIAL_IN_TWO_SUPPLIES`: `ERROR`. Declarations agreeing in `current`,
-    `earthing` and `rails` are one supply; a potential in two supplies is reported once.
+    `SUPPLY_DIFFERS`, `POTENTIAL_IN_TWO_SUPPLIES`: `ERROR`. Declarations agreeing in `current`
+    and `rails` are one supply; a potential in two supplies is reported once.
     """
     return ordered([*_supply_differs(model), *_potential_in_two_supplies(model)])

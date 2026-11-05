@@ -1,27 +1,15 @@
-"""Field case: a monitor whose measuring function is fed from two poles of a switch.
+"""Field case: a two-pole DC switch, each pole through its own fuse to a monitor whose inner measure function joins both nets.
+The bug (v0.21.1): the drawing set cannot be laid out, a PLACEMENT_PROBLEM ERROR (TrunkError in route_trunk); v0.20 laid it out.
+Fixed by layout-0392 (BUNDLE R283), a bundle has one lane per pole in use, so the set has a page and no ERROR."""
 
-The engineering shape: a two-pole DC switch. Each pole runs through its own fuse to a
-connector function of a monitor; the connector pins join the ports of an inner `measure`
-function (`joins`), so the monitor's measuring ports Lp1 and Lm1 stand on the two nets.
-
-The bug (v0.21.1): the drawing set cannot be laid out. PLACEMENT_PROBLEM ERROR "TrunkError:
-Lp1 is on pole 2, but the bundle has 3 lanes and 2 nets", raised in `route_trunk._check_poles`.
-v0.20 laid it out. The correct behaviour: the set has a page and no ERROR.
-
-Covered by: BUNDLE (R283), the bundle's poles and nets - layout core.
-Decision: layout-0392 (a bundle has one lane per pole in use).
-"""
-
-import sys
-import tempfile
-from pathlib import Path
+from functools import cache
 
 import fransys as fr
+from _model_build_cover import unit_document
 from fransys.colours import BK, RD
 
-sys.path.insert(0, str(Path(__file__).parent / "data"))  # the invented monitor part
 
-
+@cache
 def _built() -> fr.BuildResult:
     d = fr.design("demo_parts", "intake_parts", place="CAB")
     cab = d.location("CAB", "Cabinet")
@@ -31,14 +19,25 @@ def _built() -> fr.BuildResult:
     f2, f5 = d.device("F2", "DEMO-FUSE-DC-160"), d.device("F5", "DEMO-FUSE-DC-160")
     a4 = d.device("A4", "DEMO-MONITOR-JOINS")
     d.series(s1.main.pole(1), f2.element, wire=(RD, 0.5))
-    d.detail.wire(f2.element[2], a4.LA[1], wire=(RD, 0.5))
+    d.series(f2.element[2], a4.LA[1], wire=(RD, 0.5))
     d.series(s1.main.pole(2), f5.element, wire=(BK, 0.5))
-    d.detail.wire(f5.element[2], a4.LB[1], wire=(BK, 0.5))
-    cover = Path(tempfile.mkdtemp()) / "cover.md"
-    cover.write_text("# Monitor\n", encoding="utf-8")
-    return fr.build(d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover))
+    d.series(f5.element[2], a4.LB[1], wire=(BK, 0.5))
+    lamps = [d.device(f"P{n}", "DEMO-LAMP-24") for n in range(1, 5)]
+    for pin, lamp in zip((a4.LA[2], a4.LB[2], a4.K[3], a4.K[4]), lamps, strict=True):
+        d.series(pin, lamp["1"], wire=(BK, 0.5))
+    returns = d.terminal_strip("X1", "DEMO-TB-2.5", 4)
+    for n, lamp in enumerate(lamps, start=1):
+        d.series(lamp["2"], returns[n].outer, wire=(BK, 0.5))
+    return fr.build(d, unit_document(cab))
 
 
 def test_the_set_is_laid_out_with_no_error() -> None:
     errors = [f.message for f in _built().findings if f.severity == fr.Severity.ERROR]
     assert errors == []
+
+
+def test_no_arrow_of_the_set_stands_over_a_foreign_wire() -> None:
+    """a fed arrow is never refused (MARKER_UNPLACED 0) and a marker over a foreign wire (looks) only falls."""
+    codes = [f.code for f in _built().findings]
+    assert codes.count("MARKER_UNPLACED") == 0
+    assert codes.count("WIRE_OVER_MARKER") <= 1  # KI-352, R1081, R1101 (looks): the tip's count at salt -, falls only

@@ -2,34 +2,21 @@
 
 Loaded like `test_lean_ceilings.py` loads `scripts/lean_ceilings.py` (`importlib.util.spec_from_
 file_location`), since the script is not a package module. `test_layout_directory_exempt_*`
-below are the two real-repo probes this order's own text names explicitly; every other case
-builds its own small `CeilingsFile`/measured dict by hand.
 """
 
 from __future__ import annotations
 
-import importlib.util
-import sys
 import types
 from pathlib import Path
+from typing import Any
 
 import pytest
+from gate_scan import load_script
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def _load(name: str, relpath: str):
-    spec = importlib.util.spec_from_file_location(name, ROOT / relpath)
-    if spec is None or spec.loader is None:
-        msg = f"could not load {relpath}"
-        raise ImportError(msg)
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[spec.name] = module
-    spec.loader.exec_module(module)
-    return module
-
-
-lean_check = _load("fransys_lean_check", "scripts/lean_check.py")
+lean_check = load_script("fransys_lean_check", "lean_check.py")
 lean_ceilings = lean_check.lean_ceilings
 
 
@@ -153,12 +140,13 @@ def _write_ceilings_text(path: Path) -> str:
     return text
 
 
-def test_a_raising_checker_aborts_lower_without_deleting_anything(tmp_path, monkeypatch):
-    """`lower`'s CLI entry point catches a checker's own exception, writes NOTHING, exits
-    non-zero -- it never silently continues with a partial/empty measured dict for that section.
+@pytest.mark.parametrize(("command", "existing"), [("lower", True), ("first-run", False)])
+def test_a_raising_checker_aborts_without_writing_anything(tmp_path, monkeypatch, command, existing):
+    """`lower` and `first-run` catch a checker's own exception, write NOTHING (`first-run` against a `ceilings.toml` that
+    does not exist yet), exit non-zero -- never continue with a partial/empty measured dict for that section.
     """
     ceilings_path = tmp_path / "ceilings.toml"
-    before = _write_ceilings_text(ceilings_path)
+    before = _write_ceilings_text(ceilings_path) if existing else None
 
     def _boom(_root):
         msg = "stubbed checker failure"
@@ -167,27 +155,9 @@ def test_a_raising_checker_aborts_lower_without_deleting_anything(tmp_path, monk
     monkeypatch.setattr(lean_check.lean_code_shape, "measure_nested_defs", _boom)
     monkeypatch.setattr(lean_check, "CEILINGS_PATH", ceilings_path)
 
-    exit_code = lean_check.main(["lower"])
-
-    assert exit_code == 1
-    assert ceilings_path.read_text(encoding="utf-8") == before
-
-
-def test_a_raising_checker_aborts_first_run_without_writing_anything(tmp_path, monkeypatch):
-    """Same abort contract for `first-run`, against a `ceilings.toml` that does not exist yet."""
-    ceilings_path = tmp_path / "ceilings.toml"
-
-    def _boom(_root):
-        msg = "stubbed checker failure"
-        raise RuntimeError(msg)
-
-    monkeypatch.setattr(lean_check.lean_code_shape, "measure_nested_defs", _boom)
-    monkeypatch.setattr(lean_check, "CEILINGS_PATH", ceilings_path)
-
-    exit_code = lean_check.main(["first-run"])
-
-    assert exit_code == 1
-    assert not ceilings_path.exists()
+    assert lean_check.main([command]) == 1
+    assert (ceilings_path.read_text(encoding="utf-8") if existing else None) == before
+    assert ceilings_path.exists() is existing
 
 
 def test_a_bad_ruff_exit_code_raises_instead_of_returning_empty_sections(monkeypatch):
@@ -200,9 +170,7 @@ def test_a_bad_ruff_exit_code_raises_instead_of_returning_empty_sections(monkeyp
         stdout = ""
         stderr = "ruff: invalid --config"
 
-    monkeypatch.setattr(
-        lean_check.lean_code_gates.subprocess, "run", lambda *_args, **_kwargs: _FakeCompleted()
-    )
+    monkeypatch.setattr(lean_check.lean_code_gates.subprocess, "run", lambda *_args, **_kwargs: _FakeCompleted())
 
     with pytest.raises(RuntimeError, match="exited 2"):
         lean_check.lean_code_gates.measure_ruff_sections(ROOT)
@@ -214,12 +182,12 @@ def test_a_bad_ruff_exit_code_raises_instead_of_returning_empty_sections(monkeyp
 def test_assert_limits_match_checkers_passes_for_the_real_starting_limits():
     """The hand-authored `STARTING_LIMITS` agree with every checker's own hardcoded default."""
     lean_check._assert_limits_match_checkers(lean_check.STARTING_LIMITS)
+    assert lean_check.lean_docstrings.measure_docstring_lines(ROOT, lean_check.lean_docstrings.surface_site_keys(root=ROOT)) == {}
 
 
 def test_assert_limits_match_checkers_rejects_drift():
     """A `[limits]` value that disagrees with a checker's own constant raises, loudly."""
-    drifted = dict(lean_check.STARTING_LIMITS)
-    drifted["statements"] = 999
+    drifted = {**lean_check.STARTING_LIMITS, "statements": 999}
     with pytest.raises(ValueError, match="statements"):
         lean_check._assert_limits_match_checkers(drifted)
 
@@ -245,9 +213,7 @@ def _numeric(root: Path, keys: dict[str, dict[str, int]] | None = None):
         "nested_defs": lean_check.lean_code_shape.measure_nested_defs(root),
         "module_code_lines": lean_check.lean_code_shape.measure_module_code_lines(root, limit=300),
     }
-    file = lean_ceilings.CeilingsFile(
-        limits=dict(lean_check.STARTING_LIMITS), sections=keys or {}, exempt={}
-    )
+    file = lean_ceilings.CeilingsFile(limits=dict(lean_check.STARTING_LIMITS), sections=keys or {}, exempt={})
     return lean_check.numeric_violations(sections, file)
 
 
@@ -255,17 +221,13 @@ def test_enforce_statements_unlisted_listed_and_grown(tmp_path: Path):
     """16 statements without a key fail; keyed at 16 passes; grown to 17 fails as listed."""
     site = _module(tmp_path, "m.py", _fn_with(16)) + "::f"
     unkeyed = _numeric(tmp_path)
-    assert [(s, v.site, v.measured, v.limit, v.listed) for s, v in unkeyed] == [
-        ("statements", site, 16, 15, False)
-    ]
+    assert [(s, v.site, v.measured, v.limit, v.listed) for s, v in unkeyed] == [("statements", site, 16, 15, False)]
 
     assert _numeric(tmp_path, {"statements": {site: 16}}) == []
 
     _module(tmp_path, "m.py", _fn_with(17))
     grown = _numeric(tmp_path, {"statements": {site: 16}})
-    assert [(s, v.site, v.measured, v.limit, v.listed) for s, v in grown] == [
-        ("statements", site, 17, 16, True)
-    ]
+    assert [(s, v.site, v.measured, v.limit, v.listed) for s, v in grown] == [("statements", site, 17, 16, True)]
 
 
 def test_enforce_nested_def_fails_but_lambda_does_not(tmp_path: Path):
@@ -282,9 +244,7 @@ def test_enforce_module_code_lines_301_fails_300_passes(tmp_path: Path):
     """A module of 301 code lines is over the 300 limit; one of 300 is not."""
     site = _module(tmp_path, "big.py", "".join(f"a{i} = {i}\n" for i in range(301)))
     got = _numeric(tmp_path)
-    assert [(s, v.site, v.measured, v.limit, v.listed) for s, v in got] == [
-        ("module_code_lines", site, 301, 300, False)
-    ]
+    assert [(s, v.site, v.measured, v.limit, v.listed) for s, v in got] == [("module_code_lines", site, 301, 300, False)]
 
     _module(tmp_path, "big.py", "".join(f"a{i} = {i}\n" for i in range(300)))
     assert _numeric(tmp_path) == []
@@ -335,21 +295,15 @@ def test_cmd_enforce_exit_code_and_text(tmp_path: Path, monkeypatch, capsys):
 # --- lower: what a deleted key says (gone vs within limit), and lower never raises a value ----
 
 
-def _lower(tmp_path: Path, monkeypatch, capsys, ceilings: dict, measured: dict):
+def _lower(tmp_path: Path, monkeypatch, capsys, ceilings: dict[Any, Any], measured: dict[Any, Any]):
     """Run `cmd_lower` on `tmp_path` with `measure_all` stubbed; return (exit, lines, file text)."""
     path = tmp_path / "ceilings.toml"
     path.write_text(
-        lean_ceilings.render_ceilings(
-            lean_ceilings.CeilingsFile(
-                limits=dict(lean_check.STARTING_LIMITS), sections=ceilings, exempt={}
-            )
-        ),
+        lean_ceilings.render_ceilings(lean_ceilings.CeilingsFile(limits=dict(lean_check.STARTING_LIMITS), sections=ceilings, exempt={})),
         encoding="utf-8",
     )
     monkeypatch.setattr(lean_check, "cmd_hard", lambda _root, _path: 0)
-    monkeypatch.setattr(
-        lean_check, "measure_all", lambda _root, _limits: types.SimpleNamespace(sections=measured)
-    )
+    monkeypatch.setattr(lean_check, "measure_all", lambda _root, _limits: types.SimpleNamespace(sections=measured))
     code = lean_check.cmd_lower(tmp_path, path)
     return code, capsys.readouterr().out.splitlines(), path.read_text(encoding="utf-8")
 
@@ -362,9 +316,7 @@ def test_lower_deleted_key_whose_file_is_gone_says_gone(tmp_path, monkeypatch, c
     assert lines == [f"lowered [statements]: {key} deleted (gone)"]
 
 
-def test_lower_deleted_key_whose_function_is_now_short_says_within_limit(
-    tmp_path, monkeypatch, capsys
-):
+def test_lower_deleted_key_whose_function_is_now_short_says_within_limit(tmp_path, monkeypatch, capsys):
     """A method that still exists (dotted qualname) and is now short says `(within limit)`."""
     rel = _module(tmp_path, "m.py", "class _Plant:\n    def __init__(self):\n        pass\n")
     key = f"{rel}::_Plant.__init__"
@@ -372,9 +324,7 @@ def test_lower_deleted_key_whose_function_is_now_short_says_within_limit(
     assert lines == [f"lowered [statements]: {key} deleted (within limit)"]
 
 
-def test_lower_deleted_key_whose_function_left_an_existing_file_says_gone(
-    tmp_path, monkeypatch, capsys
-):
+def test_lower_deleted_key_whose_function_left_an_existing_file_says_gone(tmp_path, monkeypatch, capsys):
     """The file exists but the function is not in it: `(gone)`; a file check alone is not enough."""
     rel = _module(tmp_path, "m.py", "def other():\n    pass\n")
     key = f"{rel}::f"
@@ -382,9 +332,7 @@ def test_lower_deleted_key_whose_function_left_an_existing_file_says_gone(
     assert lines == [f"lowered [statements]: {key} deleted (gone)"]
 
 
-def test_lower_gone_function_names_the_new_path_where_it_is_over_its_limit(
-    tmp_path, monkeypatch, capsys
-):
+def test_lower_gone_function_names_the_new_path_where_it_is_over_its_limit(tmp_path, monkeypatch, capsys):
     """A moved function: `(gone)` plus every other path with the same qualname, sorted."""
     old = "packages/p/src/p/old.py::f"
     new_b = _module(tmp_path, "b.py", _fn_with(16))
@@ -401,11 +349,7 @@ def test_lower_never_raises_a_value_and_enforce_still_fails(tmp_path, monkeypatc
     measured = {"statements": {"a.py::f": 17}}
     code, lines, after = _lower(tmp_path, monkeypatch, capsys, ceilings, measured)
     path = tmp_path / "ceilings.toml"
-    before = lean_ceilings.render_ceilings(
-        lean_ceilings.CeilingsFile(
-            limits=dict(lean_check.STARTING_LIMITS), sections=ceilings, exempt={}
-        )
-    )
+    before = lean_ceilings.render_ceilings(lean_ceilings.CeilingsFile(limits=dict(lean_check.STARTING_LIMITS), sections=ceilings, exempt={}))
     assert (code, lines, after) == (0, ["no ceiling lowered"], before)
     assert lean_check.cmd_enforce(tmp_path, path) == 1
 
@@ -413,13 +357,9 @@ def test_lower_never_raises_a_value_and_enforce_still_fails(tmp_path, monkeypatc
 def test_lower_lowers_a_shrunk_site(tmp_path, monkeypatch, capsys):
     """A site measured below its ceiling is lowered in the file and reported."""
     ceilings = {"statements": {"a.py::f": 20}}
-    _, lines, after = _lower(
-        tmp_path, monkeypatch, capsys, ceilings, {"statements": {"a.py::f": 18}}
-    )
+    _, lines, after = _lower(tmp_path, monkeypatch, capsys, ceilings, {"statements": {"a.py::f": 18}})
     assert lines == ["lowered [statements]: a.py::f 20 -> 18"]
-    assert lean_ceilings.load_ceilings(tmp_path / "ceilings.toml").sections == {
-        "statements": {"a.py::f": 18}
-    }
+    assert lean_ceilings.load_ceilings(tmp_path / "ceilings.toml").sections == {"statements": {"a.py::f": 18}}
     assert '"a.py::f" = 18' in after
 
 
@@ -430,33 +370,21 @@ def _surface_fn(tmp_path: Path, extra_lines: int) -> tuple[object, str]:
     """A tmp surface function `f` whose docstring has `extra_lines` body lines; (entry, site)."""
     body = "\n".join(f"    Line {n}." for n in range(extra_lines))
     path = tmp_path / "surf.py"
-    path.write_text(
-        f'def f():\n    """Summary.\n\n{body}\n    """\n    return 1\n', encoding="utf-8"
-    )
-    entry = lean_check.lean_surface.SurfaceName(
-        module="fake", name="f", defining_file=path, qualname="f"
-    )
+    path.write_text(f'def f():\n    """Summary.\n\n{body}\n    """\n    return 1\n', encoding="utf-8")
+    entry = lean_check.lean_surface.SurfaceName(module="fake", name="f", defining_file=path, qualname="f")
     return entry, "surf.py::f"
 
 
 def _measured_surface(tmp_path: Path, extra_lines: int) -> dict[str, dict[str, int]]:
     entry, _ = _surface_fn(tmp_path, extra_lines)
-    return {
-        "surface_docstring_lines": lean_check.lean_docstrings.measure_surface_docstring_lines(
-            limit=15, entries=(entry,), root=tmp_path
-        )
-    }
+    return {"surface_docstring_lines": lean_check.lean_docstrings.measure_surface_docstring_lines(limit=15, entries=(entry,), root=tmp_path)}
 
 
 def test_surface_docstring_of_16_lines_without_a_ceiling_fails_enforce(tmp_path):
     """A 16-line surface docstring is unlisted over 15 and fails; a 15-line one passes."""
-    empty = lean_ceilings.CeilingsFile(
-        limits=dict(lean_check.STARTING_LIMITS), sections={}, exempt={}
-    )
+    empty = lean_ceilings.CeilingsFile(limits=dict(lean_check.STARTING_LIMITS), sections={}, exempt={})
     found = lean_check.numeric_violations(_measured_surface(tmp_path, 13), empty)
-    assert [(s, v.site, v.measured, v.limit, v.listed) for s, v in found] == [
-        ("surface_docstring_lines", "surf.py::f", 16, 15, False)
-    ]
+    assert [(s, v.site, v.measured, v.limit, v.listed) for s, v in found] == [("surface_docstring_lines", "surf.py::f", 16, 15, False)]
     assert lean_check.numeric_violations(_measured_surface(tmp_path, 12), empty) == []
 
 

@@ -1,18 +1,16 @@
 """Changeover throws: which ports of a `CONTACT_CO` function are its common, break and make.
 
 `derive.contacts` re-exports it (CONTACT-STATES CS2, CS4, decision 0019); `link_state` labels the
-rail closure's edges. A throw is a part fact, the `PortTemplate.role` `COMMON`/`BREAK`/`MAKE`,
+rail closure's edges. A throw is a part fact, the `PortTemplate.pin_role` `COMMON`/`BREAK`/`MAKE`,
 never a pin name.
 """
 
 from typing import Literal
-lazy from collections.abc import Mapping
 
+from fransys_model.derive.facts.part_pins import template_throws
 from fransys_model.derive.facts.roles import function_role, link_rest, link_role
 from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, digest_cached, value
-from fransys_model.vocab.enums import LinkKind, LinkRest, PortRole
 from fransys_model.vocab.tables import functions, internal_links, port_templates, ports
-from fransys_model.vocab.throws import THROWS
 lazy from fransys_model.vocab.core import Function, Port
 lazy from fransys_model.vocab.templates import InternalLink, PortTemplate
 
@@ -37,35 +35,6 @@ class Throws:
     makes: tuple[Id[Port], ...]
 
 
-def _pole(a_role: PortRole, b_role: PortRole) -> tuple[bool, PortRole] | None:
-    """What a link between ends of roles `a_role` and `b_role` joins, if it joins a pole.
-
-    The one home of "a link joins a common to a throw". Returns `(common_is_a, throw)`, the
-    throw `BREAK` or `MAKE`, if one end is `COMMON` and the other a throw, either way; else `None`.
-    """
-    if THROWS[a_role].common and THROWS[b_role].throw:
-        return True, b_role
-    if THROWS[b_role].common and THROWS[a_role].throw:
-        return False, a_role
-    return None
-
-
-def link_throw(
-    link: InternalLink, templates: Mapping[Id[PortTemplate], PortTemplate]
-) -> tuple[Id[PortTemplate], PortRole, Id[PortTemplate]] | None:
-    """`(common, BREAK or MAKE, throw)` when `link` is a switched link joining a common to a throw.
-
-    The template-level reading `changeover_throws` builds on; authoring reads it before a model.
-    """
-    if link.kind is not LinkKind.SWITCHED:
-        return None
-    pole = _pole(templates[link.a].role, templates[link.b].role)
-    if pole is None:
-        return None
-    common_is_a, throw = pole
-    return (link.a, throw, link.b) if common_is_a else (link.b, throw, link.a)
-
-
 def _changeover_ports(model: Model) -> dict[Id[PortTemplate], list[Port]]:
     """The ports with a template that belong to a `CONTACT_CO` function, by template."""
     by_template: dict[Id[PortTemplate], list[Port]] = {}
@@ -75,22 +44,18 @@ def _changeover_ports(model: Model) -> dict[Id[PortTemplate], list[Port]]:
     return by_template
 
 
-def _poles(
-    reached: dict[Id[Port], dict[PortRole, set[Id[Port]]]], model: Model
-) -> dict[Id[Function], tuple[Throws, ...]]:
+def _poles(reached: dict[Id[Port], dict[bool, set[Id[Port]]]], model: Model) -> dict[Id[Function], tuple[Throws, ...]]:
     """Each function's `Throws`, one per common in `reached`, sorted by `common`."""
     poles: dict[Id[Function], list[Throws]] = {}
     for common, by_role in reached.items():
         poles.setdefault(ports(model)[common].function, []).append(
             Throws(
                 common=common,
-                breaks=tuple(sorted(by_role.get(PortRole.BREAK, ()))),
-                makes=tuple(sorted(by_role.get(PortRole.MAKE, ()))),
+                breaks=tuple(sorted(by_role.get(True, ()))),
+                makes=tuple(sorted(by_role.get(False, ()))),
             )
         )
-    return {
-        function: tuple(sorted(found, key=lambda t: t.common)) for function, found in poles.items()
-    }
+    return {function: tuple(sorted(found, key=lambda t: t.common)) for function, found in poles.items()}
 
 
 @digest_cached(DIGEST_CACHE_SIZE)
@@ -102,18 +67,13 @@ def _throws(model: Model) -> frozendict[Id[Function], tuple[Throws, ...]]:
     for template, members in by_template.items():
         for port in members:
             by_function_template.setdefault((port.function, template), []).append(port)
-    reached: dict[Id[Port], dict[PortRole, set[Id[Port]]]] = {}
+    reached: dict[Id[Port], dict[bool, set[Id[Port]]]] = {}
     for link in internal_links(model).values():
-        found = link_throw(link, templates)
-        if found is None:
-            continue
-        common, throw, thrown = found
-        for port in by_template.get(common, ()):
-            others = by_function_template.get((port.function, thrown), ())
-            if others:
-                reached.setdefault(port.id, {}).setdefault(throw, set()).update(
-                    other.id for other in others
-                )
+        for common, thrown, closed_at_rest in template_throws(templates, (link,)):
+            for port in by_template.get(common, ()):
+                others = by_function_template.get((port.function, thrown), ())
+                if others:
+                    reached.setdefault(port.id, {}).setdefault(closed_at_rest, set()).update(other.id for other in others)
     return frozendict(_poles(reached, model))
 
 
@@ -140,23 +100,21 @@ def changeover_throws(model: Model, function: Id[Function]) -> tuple[Throws, ...
 # closed, or not governed by a contact: a `CONDUCTIVE` or `PROTECTIVE` link, or an undeclared
 # switched link of a switch or generic function, which parts lint refuses).
 LinkState = Literal["rest", "operated", "both"]
-_REST_STATE: dict[LinkRest, LinkState] = {LinkRest.OPEN: "operated", LinkRest.CLOSED: "rest"}
 
 
 def _changeover_state(model: Model, link: InternalLink) -> LinkState:
-    """The state of a changeover's switched `link` by the roles of its ends, else "both"."""
+    """The state of a changeover's switched `link`: the rest of the elecdef throw it makes, else "both"."""
     templates = port_templates(model)
-    a, b = templates.get(link.a), templates.get(link.b)
-    pole = None if a is None or b is None else _pole(a.role, b.role)
-    if pole is None:
+    if link.a not in templates or link.b not in templates:
         return "both"
-    return "rest" if THROWS[pole[1]].closed_at_rest else "operated"
+    found = template_throws(templates, (link,))
+    return "both" if not found else "rest" if found[0][2] else "operated"
 
 
 def link_state(model: Model, function: Id[Function], link: Id[InternalLink]) -> LinkState:
     """The state in which the internal link `link` of the contact `function` is closed.
 
-    A switched link's declared `rest` decides first (`CLOSED` is `"rest"`, `OPEN` `"operated"`).
+    A switched link's declared `rest` decides first (closed is `"rest"`, open `"operated"`).
     Otherwise `CONTACT_NO` implies `"operated"`, `CONTACT_NC` `"rest"`, and `CONTACT_CO` the roles
     of the link's ends through `_pole` (common to `BREAK` `"rest"`, to `MAKE` `"operated"`).
     Anything else is `"both"`, an unknown id too; it never raises.
@@ -174,5 +132,5 @@ def link_state(model: Model, function: Id[Function], link: Id[InternalLink]) -> 
         return "both"
     rest = link_rest(model, link)
     if rest is not None:
-        return _REST_STATE[rest]
+        return "rest" if rest else "operated"
     return _changeover_state(model, joined) if function_role(model, function).changeover else "both"

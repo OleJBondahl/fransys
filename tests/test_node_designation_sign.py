@@ -12,11 +12,7 @@ def test_the_sign_comes_from_the_nodes_own_aspect() -> None:
     with d.function("G", "Group"):
         d.device("K1", "DEMO-RLY-2CO-24")
     model = fr.build(d).model
-    text = {
-        node.aspect: location_node_designation(model, node.id)
-        for node in aspect_nodes(model).values()
-        if node.label in {"CAB", "G"}
-    }
+    text = {node.aspect: location_node_designation(model, node.id) for node in aspect_nodes(model).values() if node.label in {"CAB", "G"}}
     assert text == {Aspect.LOCATION: "+CAB", Aspect.FUNCTION: "=G"}
 
 

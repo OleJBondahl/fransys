@@ -49,24 +49,16 @@ def _plant(
         )
     )
     cable = plant.item("w1", designation="W1", part=part)
-    plant.add(
-        CableFacet(
-            id=make_id(CableFacet, ("w1", "c")), key=("w1", "c"), subject=cable, length_mm=25000
-        )
-    )
+    plant.add(CableFacet(id=make_id(CableFacet, ("w1", "c")), key=("w1", "c"), subject=cable, length_mm=25000))
     for index, at in ((3, open_at), (5, None)):
         key = ("w1", "open", str(index))
-        plant.add(
-            OpenCoreFacet(
-                id=make_id(OpenCoreFacet, key), key=key, subject=cable, index=index, at=at
-            )
-        )
+        plant.add(OpenCoreFacet(id=make_id(OpenCoreFacet, key), key=key, subject=cable, index=index, at=at))
     return plant, cable
 
 
 def _heading(model: Model) -> str:
     (cable,) = top_level_cables(model)
-    return cable_heading(model, cable, None)
+    return cable_heading(model, cable)
 
 
 def test_open_core_rows_carry_colour_landing_and_spare() -> None:
@@ -88,9 +80,7 @@ def test_open_core_text_says_spare_for_a_core_and_screen_for_a_screen() -> None:
 
 
 def test_a_pair_mark_prints_only_off_a_bracket() -> None:
-    plant, cable = _plant(
-        (CorePair(cores=(1, 3), screen=None), CorePair(cores=(2, 4), screen=None))
-    )
+    plant, cable = _plant((CorePair(cores=(1, 3), screen=None), CorePair(cores=(2, 4), screen=None)))
     pairs = drawn_pairs(plant.model(), cable)
     assert [pair.bracket for pair in pairs] == [False, False]
     assert [core_mark(pairs, n) for n in (1, 2, 3, 4)] == ["P1", "P2", "P1", "P2"]

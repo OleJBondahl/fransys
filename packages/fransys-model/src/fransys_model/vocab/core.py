@@ -2,9 +2,10 @@
 
 import dataclasses
 
+from fransys_model.elecdef import PinRole
 from fransys_model.kernel import AuthoringKey, Id, Value, record
 
-from .enums import FunctionKind, PortRole
+from .enums import FunctionKind, PortBoundary
 from .release_version import refuse_below_one
 from .templates import FunctionTemplate, Part, PortTemplate
 from .wiring_rows import WiringRow
@@ -21,8 +22,7 @@ class UnitRelease:
     `version` and `revision` are ints of 1 or more (`release_version`), printed as
     `derive.revision_text` (`1.3`). `interface` is the boundary's version, bumped by hand and
     checked at release against every other revision of the name (`INTERFACE_NOT_BUMPED`).
-    `title` and `number` are the unit's own; `class_code` is the letter its floating instances
-    number from (`U`); all default to `""`. Read through `derive.unit_release`.
+    `title` and `number` are the unit's own; both default to `""`. Read through `derive.unit_release`.
     """
 
     id: Id[UnitRelease]
@@ -33,7 +33,6 @@ class UnitRelease:
     interface: str
     title: str = ""
     number: str = ""
-    class_code: str = ""
     ext: frozendict[str, Value] = frozendict()
 
     def __post_init__(self) -> None:
@@ -129,7 +128,8 @@ class Port:
     function: Id[Function]
     template: Id[PortTemplate] | None
     name: str
-    role: PortRole
+    boundary: PortBoundary
     marking: str | None = None
+    pin_role: PinRole | None = None
     source_row: WiringRow | None = dataclasses.field(default=None, metadata={"omit_none": True})
     ext: frozendict[str, Value] = frozendict()

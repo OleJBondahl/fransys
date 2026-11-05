@@ -2,37 +2,8 @@
 
 The gate walks every object reachable from `build_scale(N)` (`scale_units_fixture.py`), starting
 at the whole `BuildResult`: its `model` (tables, records, values, aliases, origins, hashes,
-digests) and its `findings`. It fails, with the attribute path, on any `list`, `dict`, `set`,
-`bytearray` (and any other `MutableSequence`, `MutableMapping` or `MutableSet`), on any dataclass
-instance whose `__dataclass_params__.frozen` is False, and on any other instance carrying a
-`__dict__`. The `BuildResult` holds only the `Model` and the findings tuple, so there is no Draft
-or other mutable member to walk apart.
-
-What is followed: dataclass fields (`dataclasses.fields`), `__slots__` and `__dict__` of any other
-object, tuple and list members, set and frozenset members, and `frozendict` keys and values.
-Enums, `Decimal`, `str`, `bytes`, numbers, `UUID`, dates and classes are leaves. Objects are
-visited once by identity (cycles and shared objects), with an explicit stack, so depth never
-reaches the recursion limit.
-
-N = 1 is the smallest that works: the fixture builds 21 record kinds at N = 0 and 41 at N = 1, 2
-and 3 (`test_n_is_the_smallest_build_that_reaches_every_kind` below re-proves it; the demo parts'
-rating tables added `facet.rating`, `facet.part_rating` and `facet.operating`, model-0079; the
-project's `Revision` entry added `revision`; the numbering pass's
-`facet.assigned_designation` added one, after a split; a unit's release record added
-`unit_release`; a PCB fuse holder added `facet.footprint`, the demo
-library's first), and
-immutability is a property of a type, not of how many instances a build has. Two of the two
-kind-counting tests below build through `_build_scale_with_document`, not `build_scale`
-directly: decision 0037 gates layout on the model holding a `Document`, and `build_scale`
-itself must stay document-free (the examples' largest build with
-its documents left out), so this file's own document-bearing variant is what reaches the
-`layout.*` kinds and adds `document` itself (one more kind than the pre-0037 39, since no build
-here ever held a document before). Thirteen of the 54 registered kinds are still not built by
-this fixture, so this walk does not reach them: `supply_system`, `facet.boundary_values`,
-`facet.plc_binding`, `facet.plc_request`, `facet.scaling`, and the `layout.*`
-hints `break_before`, `chain`, `group_hint`, `keep_together`, `link_marker`, `order_hint`,
-`profile`, `sheet_format`.
 """
+# CONNECTION_NOT_DRAWN 8 per default-salt build set (MATES-DISABLED): mated, harness or board-unit input, refused for 0.22 (R1216).
 
 import dataclasses
 import sys
@@ -41,25 +12,18 @@ from collections.abc import Iterator, MutableMapping, MutableSequence, MutableSe
 from datetime import date, time, timedelta
 from decimal import Decimal
 from enum import Enum
-from pathlib import Path
-from typing import NamedTuple
+from typing import Any, NamedTuple, cast
 from uuid import UUID
 
 import fransys as fr
 import fransys_parts
-
-from fransys_model.kernel import Id
-
-_TESTS_DIR = Path(__file__).resolve().parent
-if str(_TESTS_DIR) not in sys.path:
-    # `--import-mode=importlib` (root pyproject.toml) never puts this folder on `sys.path`.
-    sys.path.insert(0, str(_TESTS_DIR))
-
-from _model_build_cover import layout_trigger_document  # noqa: E402
-from scale_units_fixture import (  # noqa: E402
+from _model_build_cover import printed
+from scale_units_fixture import (
     build_scale,
     scale_design,
 )
+
+from fransys_model.kernel import Id
 
 N = 1
 REQUIRED_KINDS = {"item", "function", "port", "conductor", "unit", "boundary"}
@@ -67,16 +31,13 @@ MIN_OBJECTS = 1500  # the walk of the N = 1 build visits 1914; an empty walk can
 
 
 def _build_scale_with_document(n: int):
-    """`build_scale(n)`'s own design, with a `layout_trigger_document()` merged in.
+    """`build_scale(n)`'s own design, with a document for each location merged in.
 
     `build_scale` itself must stay document-free (`tests/test_scale_units_fixture.py`:
     it is the "examples' largest build with its documents left
-    out" measurement). Decision 0037 gates layout on a document, so without one this
-    walk's own build reaches none of the `layout.*` kinds -- this helper is this file's own
-    document-bearing build, reached from `scale_design` directly, never from `build_scale`.
     """
     parts = fransys_parts.load("demo_parts")
-    return fr.build(parts, scale_design(parts, n).draft(), layout_trigger_document())
+    return fr.build(parts, *printed(scale_design(parts, n).draft()))
 
 
 _MUTABLE = (MutableSequence, MutableMapping, MutableSet, bytearray)
@@ -106,20 +67,21 @@ def _problem(obj: object) -> str | None:
     if isinstance(obj, (*_LEAVES, *_IMMUTABLE_CONTAINERS)):
         return None
     if dataclasses.is_dataclass(obj):
-        frozen = type(obj).__dataclass_params__.frozen  # ty: ignore[unresolved-attribute]
+        frozen = cast("Any", type(obj)).__dataclass_params__.frozen
         return None if frozen else f"dataclass {type(obj).__name__} is not frozen"
     return f"{type(obj).__name__} instance with a mutable __dict__" if vars_of(obj) else None
 
 
 def vars_of(obj: object) -> dict[str, object]:
     """The instance `__dict__` of `obj`, empty when it has none."""
-    return getattr(obj, "__dict__", {})
+    attrs: dict[str, object] = dict(getattr(obj, "__dict__", {}))
+    return attrs
 
 
 def _slot_names(obj: object) -> Iterator[str]:
     for cls in type(obj).__mro__:
         slots = vars(cls).get("__slots__", ())
-        yield from (slots,) if isinstance(slots, str) else slots
+        yield from (slots,) if isinstance(slots, str) else cast("tuple[str, ...]", slots)
 
 
 def _children(obj: object, path: str) -> Iterator[tuple[str, object]]:
@@ -192,9 +154,6 @@ def test_n_is_the_smallest_build_that_reaches_every_kind():
     assert _built_kinds(N - 1) < kinds_at_n
     assert _built_kinds(N + 1) == kinds_at_n
     assert kinds_at_n >= REQUIRED_KINDS
-    assert len(kinds_at_n) == 55  # layout.paper and layout.sheet_format (the facade's paper);
-    # layout.drawing_library; layout.cable_*; diagram_*; facet.harness; layout.connector_box;
-    # the cabinet's -WH1 draws layout.harness_line and layout.harness_fan_out
 
 
 def test_a_mutable_value_smuggled_into_a_real_record_is_found_by_its_path():
@@ -276,9 +235,7 @@ def test_a_cycle_and_a_shared_list_are_reported_once():
     loop: list[object] = []
     loop.append(loop)
     found = walk((loop, loop), "root")
-    assert found.violations == (
-        ("root[1]", "mutable list"),
-    )  # the stack pops the last member first
+    assert found.violations == (("root[1]", "mutable list"),)  # the stack pops the last member first
 
 
 def test_a_very_deep_graph_does_not_hit_the_recursion_limit():

@@ -2,9 +2,6 @@
 
 The study's counts: w01 crossings 0 from 84, w09 crossings 0 from 17, p02 terminals 0 off column
 (`junction_off_line`) from 13, w03 crossings 0 from 25 (el-0011). The kit's card and connector pick
-(KIT-PINS, el-0014) lifted the xfails. The builds give w01 0 (today 83), p02 (0, 0)
-(today 2 crossings, 13 off column) and the interleaved extra 0 (today 0). w09 is the fan, `__2` of
-its test; `w09_interleaved`, its first build, is an extra.
 """
 
 from dataclasses import replace
@@ -30,7 +27,16 @@ def test_a_strip_wired_to_a_card_has_every_terminal_on_its_column() -> None:
 @pytest.mark.parametrize("name", ["w01", "w09_interleaved"])
 def test_the_count_fails_when_the_cards_pins_are_not_spread(name: str) -> None:
     found = counts(solved(name, **PINS_NOT_SPREAD))
-    assert found["X"] > 0, f"{name}: {found}"
+    # The footprint guard (layout-0394) reroutes the wire that crossed, and a jog whose Z passes a body is lost (R1290 ii):
+    # the unspread card shows as `attached_off_pin` instead of `X`.
+    term = "attached_off_pin"
+    assert found[term] > 0, f"{name}: {found}"
+
+
+def test_the_spread_interleaved_card_has_no_wire_attached_off_its_pin() -> None:
+    """The control above reads `attached_off_pin`: the spread card must show 0 there (R534)."""
+    found = counts(solved("w09_interleaved"))
+    assert found["attached_off_pin"] == 0, f"w09_interleaved: {found}"
 
 
 def test_the_p02_count_fails_when_the_card_has_no_movable_pins() -> None:
@@ -53,9 +59,6 @@ def test_the_later_channel_card_has_no_crossing() -> None:
 def test_the_p02_terminals_fall_off_their_column_when_no_wire_is_straight(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Planted: with no straight vertical wire the terminals fall off, so the 0 above can fail.
-
-    Today's engine on this build leaves 13 terminals off column (the study's score file).
-    """
+    """Planted: with no straight vertical wire the terminals fall off, so the 0 above can fail."""
     monkeypatch.setattr("fransys_layout.core.score_placement._straight", lambda _scene: set())
     assert counts(solved("p02"))["junction_off_line"] > 0

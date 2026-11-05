@@ -44,9 +44,7 @@ def terminal_boxes(model: Model, unit: Id[Unit], strip: Id[Item]) -> tuple[FoldB
     )
 
 
-def freed(
-    conns: tuple[Conn, ...], passing: tuple[Through, ...], strip: Id[Item]
-) -> tuple[tuple[Conn, ...], tuple[Through, ...]]:
+def freed(conns: tuple[Conn, ...], passing: tuple[Through, ...], strip: Id[Item]) -> tuple[tuple[Conn, ...], tuple[Through, ...]]:
     """The conns at the pass-through terminals of `strip`, and the passes that remain.
 
     An opened strip draws each of its terminals, so their wires are plain lines, not one pass.

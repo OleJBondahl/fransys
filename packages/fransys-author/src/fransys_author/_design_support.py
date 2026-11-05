@@ -7,7 +7,6 @@ import dataclasses
 from typing import TYPE_CHECKING, Any
 
 from fransys_model.layout import Profile as ModelProfile
-from fransys_model.layout import SheetFormat as ModelSheetFormat
 from fransys_model.vocab import Item as ModelItem
 from fransys_model.vocab import Unit as ModelUnit
 
@@ -17,12 +16,10 @@ from .handles import Fn, Item, Terminal
 if TYPE_CHECKING:
     from _typeshed import DataclassInstance
 
-    from fransys_model.kernel import AuthoringKey, Id, Record
+    from fransys_model.kernel import AuthoringKey, Id, Origin, Record
 
 
-def _required_and_defaults(
-    cls: type[DataclassInstance], *, exclude: set[str]
-) -> tuple[tuple[str, ...], dict[str, Any]]:
+def _required_and_defaults(cls: type[DataclassInstance], *, exclude: set[str]) -> tuple[tuple[str, ...], dict[str, Any]]:
     """The tunable fields of a record `cls`: its required and its defaulted fields."""
     required: list[str] = []
     defaults: dict[str, Any] = {}
@@ -36,14 +33,7 @@ def _required_and_defaults(
     return tuple(required), defaults
 
 
-_SHEET_REQUIRED, _SHEET_DEFAULTS = _required_and_defaults(
-    ModelSheetFormat, exclude={"id", "key", "name", "ext"}
-)
-
-
-_PROFILE_REQUIRED, _PROFILE_DEFAULTS = _required_and_defaults(
-    ModelProfile, exclude={"id", "key", "unit", "sheet_format", "ext"}
-)
+_PROFILE_REQUIRED, _PROFILE_DEFAULTS = _required_and_defaults(ModelProfile, exclude={"id", "key", "unit", "ext"})
 
 
 @dataclasses.dataclass(frozen=True, slots=True)
@@ -69,27 +59,16 @@ def _as_function(value: Fn | Item | Terminal) -> Fn:
         return value.as_function()
     if isinstance(value, Terminal):
         return value.function
-    msg = (
-        f"expected a function, an item with one function, or a terminal, not {type(value).__name__}"
-    )
-    raise TypeError(msg)
+    msg = f"expected a function, an item with one function, or a terminal, not {type(value).__name__}"
+    raise AuthorError(msg)
 
 
-def _stamped(
-    records: tuple[Record, ...], *, unit: Id[ModelUnit] | None, external: bool
-) -> tuple[Record, ...]:
+def _stamped(records: tuple[Record, ...], *, unit: Id[ModelUnit] | None, external: bool) -> tuple[Record, ...]:
     """Stamp `unit` and `external` onto the `Item` record `instantiate()` made."""
-    return tuple(
-        dataclasses.replace(record, unit=unit, external=external)
-        if isinstance(record, ModelItem)
-        else record
-        for record in records
-    )
+    return tuple(dataclasses.replace(record, unit=unit, external=external) if isinstance(record, ModelItem) else record for record in records)
 
 
-def _validated_fields(
-    given: dict[str, Any], required: tuple[str, ...], defaults: dict[str, Any], *, what: str
-) -> dict[str, Any]:
+def _validated_fields(given: dict[str, Any], required: tuple[str, ...], defaults: dict[str, Any], *, what: str) -> dict[str, Any]:
     allowed = set(required) | set(defaults)
     unknown = sorted(set(given) - allowed)
     if unknown:
@@ -106,9 +85,11 @@ def _strip_text(strip_key: AuthoringKey | None) -> str:
     return "none" if strip_key is None else "'" + "/".join(strip_key) + "'"
 
 
-def _name_clash_message(record: Record) -> str:
+def _name_clash_message(record: Record, first: Origin | None = None, again: Origin | None = None) -> str:
+    """A different record under the key, or with `first` and `again` the same Item key added twice."""
+    label = "/".join(record.key)
     kind = vars(type(record)).get("__kind__", "record")
-    return (
-        f"'{'/'.join(record.key)}' already names a different {kind} record "
-        "in this scope; use a different name= or tag="
-    )
+    if first is not None and again is not None:
+        where = f"first at {first.file}:{first.line}, again at {again.file}:{again.line}"
+        return f"'{label}' was already added to this design ({where}); keep the handle from the first call"
+    return f"'{label}' already names a different {kind} record in this scope; use a different name= or tag="

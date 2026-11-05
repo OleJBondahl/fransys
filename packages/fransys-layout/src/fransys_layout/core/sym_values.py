@@ -57,7 +57,6 @@ class Sym:
     band: int | None = None
     item: str | None = None
     child_of: str | None = None
-    boundary_of: str | None = None
     rank: int | None = None
 
     @property

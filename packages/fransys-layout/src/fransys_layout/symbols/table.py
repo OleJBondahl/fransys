@@ -49,6 +49,7 @@ def placed_table(ask: TableAsk, library: Library, text_height: int) -> LibrarySy
         ask.texts,
         library,
         from_divisions(library.grid, text_height),
+        port_format=library.port_format,
         head=ask.head,
         head_texts=None if ask.heading is None else {HEADING_SLOT: ask.heading},
     )

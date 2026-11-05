@@ -28,9 +28,7 @@ from fransys_kernel import (
 # --- helpers: build a class from a dict of annotations, as a `class` statement would ---------
 
 
-def _make_class(
-    name: str, annotations: dict[str, Any], *, bases: tuple[type, ...] = (), **defaults: Any
-) -> Any:
+def _make_class(name: str, annotations: dict[str, Any], *, bases: tuple[type, ...] = (), **defaults: Any) -> Any:
     """Build a class at runtime, so it is `Any` to the type checker."""
 
     def body(namespace: dict[str, Any]) -> None:
@@ -209,16 +207,16 @@ def test_a_string_annotation_is_refused_with_advice() -> None:
 @pytest.mark.parametrize(
     ("slot", "helper", "named"),
     [
-        ("_id_class", schema.id_type, "Id is not registered"),
-        ("_authoring_key_alias", schema.key_and_value_aliases, "AuthoringKey is not registered"),
-        ("_value_alias", schema.key_and_value_aliases, "Value is not registered"),
+        ("id_class", schema.id_type, "Id is not registered"),
+        ("authoring_key_alias", schema.key_and_value_aliases, "AuthoringKey is not registered"),
+        ("value_alias", schema.key_and_value_aliases, "Value is not registered"),
     ],
 )
 def test_a_schema_helper_called_before_its_registration_names_it(
     monkeypatch: pytest.MonkeyPatch, slot: str, helper: Callable[[], object], named: str
 ) -> None:
     """With the registry slot empty, the helper raises a `SchemaError` naming what is missing."""
-    monkeypatch.setattr(registry, slot, None)
+    monkeypatch.setattr(registry._Reg, slot, None)
     with pytest.raises(SchemaError, match=named):
         helper()
 
@@ -251,16 +249,16 @@ class _P5aRecordProbe:
 @pytest.mark.parametrize(
     ("slot", "helper", "kind"),
     [
-        ("_id_class", schema.id_type, "id"),
-        ("_authoring_key_alias", schema.key_and_value_aliases, "id"),
-        ("_value_alias", schema.key_and_value_aliases, "value"),
+        ("id_class", schema.id_type, "id"),
+        ("authoring_key_alias", schema.key_and_value_aliases, "id"),
+        ("value_alias", schema.key_and_value_aliases, "value"),
     ],
 )
 def test_a_schema_helper_called_before_its_registration_pins_kind(
     monkeypatch: pytest.MonkeyPatch, slot: str, helper: Callable[[], object], kind: str
 ) -> None:
     """B-locator schema.py:65,80,84: each hardcoded `kind=` literal must survive verbatim."""
-    monkeypatch.setattr(registry, slot, None)
+    monkeypatch.setattr(registry._Reg, slot, None)
     with pytest.raises(SchemaError) as excinfo:
         helper()
     assert excinfo.value.kind == kind

@@ -2,8 +2,8 @@
 
 Each instance is rebuilt from its named test's builder and goes through `fransys_el.build`: it
 returns, and the picks of each kind equal the view fact's rows. The skid of P7.2 is checked in
-`internal/tests/test_skid_kit.py` (its corpus is private). No kit is written here.
 """
+# CONNECTION_NOT_DRAWN 10 per default-salt build set (MATES-DISABLED): mated, harness or board-unit input, refused for 0.22 (R1216).
 
 from functools import cache
 from typing import TYPE_CHECKING

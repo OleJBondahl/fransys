@@ -40,6 +40,6 @@ def refuse_carried(design: Design | None, ports: tuple[Port, ...]) -> None:
 
 
 def earth_pin(design: Design, port: Port) -> None:
-    """Join `port` to the `PE` net alone, as `d.earth` does (PE-BAR B0); one net per pin."""
+    """Join `port` to the `PE` net alone, as `d.earth` does; one net per pin."""
     net = earth_net(scoped(port.key, "pe"), (port.id,))
     design._engine._design._add(net, caller_origin())

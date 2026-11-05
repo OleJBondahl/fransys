@@ -38,10 +38,8 @@ class ChainPin:
 
 @value
 class ChainHop:
-    """The wires from the upper device (`feeder`) to the lower (`fed`), upper pin order."""
+    """The wires from the upper device to the lower, upper pin order."""
 
-    fed: Id[Item]
-    feeder: Id[Item]
     pins: tuple[ChainPin, ...]
 
 

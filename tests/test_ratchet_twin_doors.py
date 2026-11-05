@@ -2,7 +2,6 @@
 
 A twin is one runtime object (by identity) in the `__all__` of two or more surface modules; a
 small immutable scalar constant is skipped. A clash is one public name bound to two different
-objects across surface modules. Both stocks only fall (`tests/ratchets.toml [twin_doors]`).
 """
 
 import importlib
@@ -17,9 +16,7 @@ from gate_scan import ROOT, check_stock, stock
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
-_spec = importlib.util.spec_from_file_location(
-    "fransys_lean_surface_twins", ROOT / "scripts" / "lean_surface.py"
-)
+_spec = importlib.util.spec_from_file_location("fransys_lean_surface_twins", ROOT / "scripts" / "lean_surface.py")
 if _spec is None or _spec.loader is None:
     msg = "could not load scripts/lean_surface.py"
     raise ImportError(msg)
@@ -58,10 +55,7 @@ def clashing_names(doors: Mapping[str, Mapping[str, object]]) -> dict[str, tuple
 def doors() -> dict[str, dict[str, object]]:
     """Module -> {name: object} over every surface module."""
     names = lean_surface.surface_names()
-    return {
-        module: {name: getattr(importlib.import_module(module), name) for name in found}
-        for module, found in names.items()
-    }
+    return {module: {name: getattr(importlib.import_module(module), name) for name in found} for module, found in names.items()}
 
 
 @pytest.mark.private_input  # a private-gate count (R462)

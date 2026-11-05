@@ -10,19 +10,21 @@ from collections import Counter
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
-from .band import centred_span
+from .band import trunk_room
 from .blocks_card import box_pin, pin_order
+from .cut_height import lowered
+from .flow_values import Block
+from .hang_build import stack_extra
 from .keys import natural_key
-from .marker_room import lowered
 from .unionfind import UnionFind
-from .values import Block
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
     from .blocks_card import CardEdges
+    from .flow_values import BlockKind, Column, Fan, FlowGraph
     from .sym_values import Sym
-    from .values import BlockKind, Column, Fan, FlowGraph, Options, PlacementProblem
+    from .values import Options, PlacementProblem
 
 
 @dataclass(frozen=True, slots=True)
@@ -57,19 +59,12 @@ class _Acc:
 
 def make_env(flow: FlowGraph, problem: PlacementProblem, options: Options) -> Env:
     syms = {s.id: s for s in problem.symbols}
-    return Env(
-        flow,
-        problem,
-        options,
-        syms,
-        {c.id: c for c in flow.columns},
-        {c.id: column_group(c, syms) for c in flow.columns},
-        {g: i for i, g in enumerate(problem.hints.group_order)},
-    )
+    rank = {g: i for i, g in enumerate(problem.hints.group_order)}
+    return Env(flow, problem, options, syms, {c.id: c for c in flow.columns}, {c.id: column_group(c, syms, rank) for c in flow.columns}, rank)
 
 
-def column_group(column: Column, syms: Mapping[str, Sym]) -> str | None:
-    """The most frequent group of the column's symbols; a tie goes to the foot symbol's group."""
+def column_group(column: Column, syms: Mapping[str, Sym], rank: Mapping[str, int]) -> str | None:
+    """The most frequent group of the column's symbols; a tie goes to the foot symbol's group, then the earlier in authored order."""
     cells = (syms[c.sym].group for lane in column.lanes for c in lane.cells)
     votes = Counter(g for g in cells if g)
     if not votes:
@@ -78,7 +73,7 @@ def column_group(column: Column, syms: Mapping[str, Sym]) -> str | None:
     foot = syms[column.lanes[0].cells[-1].sym].group
     if votes.get(foot) == best:
         return foot
-    return min((g for g, n in votes.items() if n == best), key=natural_key)
+    return min((g for g, n in votes.items() if n == best), key=lambda g: rank.get(g, len(rank)))
 
 
 def attached_boxes(flow: FlowGraph) -> dict[str, str]:
@@ -91,15 +86,7 @@ def attached_boxes(flow: FlowGraph) -> dict[str, str]:
     return out
 
 
-def _free_columns(fan: Fan, box_of: Mapping[str, str]) -> list[str]:
-    """The columns of a fan that hang on no box, in the fan's order."""
-    found = (a.column for a in (*fan.drivers, *fan.legs) if a.column and a.column not in box_of)
-    return list(dict.fromkeys(found))
-
-
-def _unite(
-    box_of: Mapping[str, str], spill: Sequence[str], live: Sequence[tuple[Fan, list[str]]]
-) -> UnionFind:
+def _unite(box_of: Mapping[str, str], spill: Sequence[str], live: Sequence[tuple[Fan, list[str]]]) -> UnionFind:
     uf = UnionFind()
     for col, box in box_of.items():
         if col not in spill:
@@ -115,7 +102,7 @@ def members(env: Env, box_of: Mapping[str, str], spill: Sequence[str]) -> list[M
 
     A spilled column joins no box and, being in box_of, no fan: it stands alone.
     """
-    live = [(f, _free_columns(f, box_of)) for f in env.flow.fans]
+    live = [(f, list(dict.fromkeys(a.column for a in (*f.drivers, *f.legs) if a.column and a.column not in box_of))) for f in env.flow.fans]
     uf = _unite(box_of, spill, live)
     acc: dict[str, _Acc] = {}
     for box in sorted(set(box_of.values()), key=natural_key):
@@ -182,11 +169,7 @@ def block_unit(m: Member, env: Env) -> str:
 def draft_block(m: Member, edges: CardEdges | None, env: Env) -> Block:
     """The block of a member with its estimates left at 0; blocks.py measures them."""
     fan = next((f for f in env.flow.fans if f.id == m.fan), None)
-    keep_whole = (
-        m.kind == "card"
-        or (fan is not None and fan.lanes > 1)
-        or any(len(env.columns[c].lanes) > 1 for c in m.cols)
-    )
+    keep_whole = m.kind == "card" or (fan is not None and fan.lanes > 1) or any(len(env.columns[c].lanes) > 1 for c in m.cols)
     return Block(
         f"{m.kind}:{m.anchor or m.cols[0]}",
         m.kind,
@@ -217,7 +200,7 @@ def height_est(block: Block, env: Env) -> int:
         for c in block.columns:
             edge = edge_of.get(box_pin(env.columns[c]) or "", "S")
             tall[edge] = max(tall.get(edge, 0), lowered(env.columns[c].height, [env.columns[c]], o))
-        return env.syms[block.anchor].body.h + sum(h + o.wire_min for h in tall.values())
+        return env.syms[block.anchor].body.h + sum(h + o.wire_min for h in tall.values()) + stack_extra(env.syms[block.anchor], o)
     fan = next((f for f in env.flow.fans if f.id == block.fan), None)
     tallest = max(lowered(env.columns[c].height, [env.columns[c]], o) for c in block.columns)
-    return tallest + (centred_span(fan.lanes, o.wiring_grid) if fan else 0)
+    return tallest + (sum(trunk_room(fan.lanes, o.wiring_grid)) if fan else 0)

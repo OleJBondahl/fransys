@@ -1,6 +1,6 @@
 """`Scope.unit(..., title=, number=)` writes the unit's own identity."""
 
-from fransys_author import Design
+from fransys_author.design import Design
 
 from fransys_model.vocab import UnitRelease
 

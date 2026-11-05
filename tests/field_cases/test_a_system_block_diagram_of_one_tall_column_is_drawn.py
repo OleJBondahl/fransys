@@ -1,24 +1,14 @@
-"""Field case: a system block diagram with one tall column is drawn, not refused.
+"""Field case: a system block diagram of one tall column is drawn, not refused.
+The bug: the column is taller than the A2 sheet, so no frame is placed and check raises DOCUMENT_NO_DRAWINGS with no document written.
+A tall column continues on the next sheet; each hub line to a moved box ends in a marker on both sheets (BLOCK-DIAGRAM-CUT)."""
 
-The engineering shape: one hub device joined by a cable to each of twenty leaf devices, read at the
-top of the system. Every leaf sits in the one column right of the hub, so the diagram has a tall
-column, as a station with many junction boxes does.
-
-The bug: the column's boxes and gaps are taller than the A2 sheet. The placer returns no frame
-(`arrange.stack`, `frame._stacked`), so no diagram records exist and `check` raises
-`DOCUMENT_NO_DRAWINGS`, "the diagram has lines but could not be drawn". No document is written.
-
-The rule: a diagram the sheet cannot hold is drawn on more than one sheet. Decision: API-FRICTION-1
-F7 (RIO10). Today's engine is frozen (decision 0201); the repro waits for the new layout engine.
-"""
-
-import dataclasses
 import tempfile
 from pathlib import Path
 
 import fransys as fr
 
-from fransys_model.layout import DiagramLine, layout_of
+from electrical_symbols import LIBRARY
+from fransys_layout import lay_out_diagrams
 
 _LEAVES = 20
 
@@ -35,42 +25,10 @@ def test_a_system_block_diagram_of_one_tall_column_is_drawn() -> None:
         result = fr.build(d, fr.document(fr.DocumentPreset.SYSTEM, None, cover=cover))
     errors = [f.code for f in fr.check(result) if f.severity.name == "ERROR"]
     assert errors == []
-    assert len(layout_of(result.model, DiagramLine)) == _LEAVES
-
-
-def test_the_undrawn_tall_column_is_named_with_its_boxes_and_what_fits() -> None:
-    """Today's limit: the INFO names the column and the count, the ERROR points to it."""
-    with tempfile.TemporaryDirectory() as tmp:
-        cover = Path(tmp) / "cover.md"
-        cover.write_text("# Station\n", encoding="utf-8")
-        d = fr.design("demo_parts")
-        hub = d.device("P0", "DEMO-CONN-2P")
-        for k in range(1, _LEAVES + 1):
-            leaf = d.device(f"P{k}", "DEMO-CONN-2P")
-            d.cable(f"W{k}", "DEMO-CBL-4G1.5", length_m=2).core(1, hub[1], leaf[1])
-        result = fr.build(d, fr.document(fr.DocumentPreset.SYSTEM, None, cover=cover))
-    by_code = {f.code: f for f in fr.check(result)}
-    assert (
-        "The system diagram is not drawn: column 2 holds 20 boxes and one sheet holds 17. "
-        "This is a known limit of the system diagram."
-    ) in by_code["DIAGRAM_COLUMN_TOO_TALL"].message
-    assert "see DIAGRAM_COLUMN_TOO_TALL" in by_code["DOCUMENT_NO_DRAWINGS"].message
-
-
-def test_an_undrawn_diagram_without_a_tall_column_finding_does_not_claim_one() -> None:
-    """The ERROR points to DIAGRAM_COLUMN_TOO_TALL only when the build emitted that INFO."""
-    with tempfile.TemporaryDirectory() as tmp:
-        cover = Path(tmp) / "cover.md"
-        cover.write_text("# Station\n", encoding="utf-8")
-        d = fr.design("demo_parts")
-        hub = d.device("P0", "DEMO-CONN-2P")
-        for k in range(1, _LEAVES + 1):
-            leaf = d.device(f"P{k}", "DEMO-CONN-2P")
-            d.cable(f"W{k}", "DEMO-CBL-4G1.5", length_m=2).core(1, hub[1], leaf[1])
-        built = fr.build(d, fr.document(fr.DocumentPreset.SYSTEM, None, cover=cover))
-    kept = tuple(f for f in built.findings if f.code != "DIAGRAM_COLUMN_TOO_TALL")
-    assert len(kept) < len(built.findings)
-    by_code = {f.code: f for f in fr.check(dataclasses.replace(built, findings=kept))}
-    message = by_code["DOCUMENT_NO_DRAWINGS"].message
-    assert "could not be drawn (no finding names the cause)" in message
-    assert "DIAGRAM_COLUMN_TOO_TALL" not in message
+    diagrams, found = lay_out_diagrams(result.model, LIBRARY)
+    assert found == ()  # no label overlaps the hub (BLOCK-DIAGRAM)
+    lines = tuple(line for d in diagrams.diagrams for sheet in d.sheets for line in sheet.lines)
+    assert len({line.cable for line in lines}) == _LEAVES
+    (diagram,) = diagrams.diagrams
+    assert len(diagram.sheets) == 2
+    assert sum(len(sheet.markers) for sheet in diagram.sheets) == 2 * (len(lines) - _LEAVES)

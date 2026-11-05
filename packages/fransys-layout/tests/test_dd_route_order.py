@@ -2,9 +2,6 @@
 
 Two identical coil columns on `examples/demo-parts`: a feed terminal, a breaker, a carrier relay
 coil, a side relay coil strapped to it (D2), and a zero terminal. The long wire runs from the
-breaker's port 2 to the side coil's A1, the join from the carrier's A1 to the side coil's A1. A
-conductor's handle is content-hashed from its authoring key, so the order the router draws two
-wires in must not depend on it: the same design under another handle order draws the same page.
 """
 
 from typing import TYPE_CHECKING
@@ -18,9 +15,9 @@ if TYPE_CHECKING:
 RELAY = "DEMO-RLY-2CO-24"
 # (carrier tag, side tag, breaker tag) per column. With these tags the handle of column 1's long
 # wire sorts before its join and column 2's long wire sorts after its join (the guard in the first
-# test checks it), found by a scratch search over the tags K1 to K6: the base router then draws
+# test checks it), found by a scratch search over the tags K1 to K6 (searched again for the R1070 id seed): the base router then draws
 # column 1's long wire first, down the side coil's lane, and column 2's second, down the carrier's.
-COLUMNS = (("K1", "K2", "Q1"), ("K3", "K4", "Q2"))
+COLUMNS = (("K1", "K4", "Q1"), ("K2", "K3", "Q2"))
 # `wire(..., n=12)` renames column 1's long conductor and nothing else: only its handle changes,
 # and it then sorts after its join. Found by scratch search over n = 2 to 13.
 RENAMED = 12
@@ -44,16 +41,12 @@ def _build(rename: int | None = None) -> Model:
         wire(feed.outer, breaker["1"])
         wire(breaker["2"], side["A1"], n=rename if column == 0 else None)
         wire(side["A2"], zero.inner)
-    return build(parts, d).model
+    return build(parts, d, prints=c).model
 
 
 def _wires(model: Model) -> list[tuple[Point, ...]]:
     """Every drawn wire's points, read in the lesser direction so a flip is moot, in page order."""
-    return [
-        min(w.points, w.points[::-1])
-        for drawing in drawn_pages(model).values()
-        for w in drawing.wires
-    ]
+    return [min(w.points, w.points[::-1]) for drawing in drawn_pages(model).values() for w in drawing.wires]
 
 
 def test_the_long_wire_of_a_side_element_net_runs_on_the_carriers_lane() -> None:
@@ -76,9 +69,7 @@ def test_the_long_wire_of_a_side_element_net_runs_on_the_carriers_lane() -> None
             for w in carrier.drawing.wires
             if {x for x, _ in w.points} <= set(range(min(lanes), max(lanes) + 1))
         ]
-        runs = [
-            w for w in carrier.drawing.wires if {x for x, _ in w.points} == {breaker.x, carrier.x}
-        ]
+        runs = [w for w in carrier.drawing.wires if {x for x, _ in w.points} == {breaker.x, carrier.x}]
         assert runs, "the long wire runs from the breaker's lane to the carrier's, not the side's"
         columns.append(sorted(min(w, w[::-1]) for w in mine))
     assert columns[0] == columns[1]

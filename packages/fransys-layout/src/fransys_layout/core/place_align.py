@@ -16,8 +16,9 @@ from .pack import cell_node
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
+    from .flow_values import Cell
     from .place_env import PageEnv
-    from .values import Cell, PinRef
+    from .values import PinRef
 
 Line = tuple[tuple[str, int], ...]
 Mate = tuple["PinRef", "PinRef"]
@@ -25,17 +26,13 @@ Where = dict[str, tuple[str, "Cell", int]]
 
 
 _ROW_GROUP = (
-    "row group {}: its members cannot share one y with the stacks; "
-    "dropped, shorten the stack or move the members to the same end of their columns"
+    "row group {}: its members cannot share one y with the stacks; dropped, shorten the stack or move the members to the same end of their columns"
 )
 _BAND = (
     "band {}: its cells cannot share one y with the stacks or trunks; dropped, "
     "shorten the stack above the lower cell or take the band off one of them"
 )
-_MATE = (
-    "mate {}: its pins cannot share one y with the stacks or trunks; dropped, "
-    "move one symbol to the head of its column or unmate the pair"
-)
+_MATE = "mate {}: its pins cannot share one y with the stacks or trunks; dropped, move one symbol to the head of its column or unmate the pair"
 
 
 @dataclass(frozen=True, slots=True)
@@ -52,21 +49,20 @@ class Align:
 
 
 def row_group_aligns(env: PageEnv) -> tuple[Align, ...]:
-    """Each row group with its cells at one end of their columns level, head and foot apart."""
-    found: dict[tuple[str, str], list[tuple[str, int]]] = {}
+    """Each row group, per page row, with its cells at one end of their columns level, head and foot apart."""
+    found: dict[tuple[str, int, str], list[tuple[str, int]]] = {}
     for pc in env.pcs.values():
         for li, cells in enumerate(pc.lanes):
             for end, i in (("head", 0), ("foot", len(cells) - 1)):
                 group = env.syms[cells[i].sym].row_group
                 if group:
-                    found.setdefault((group, end), []).append((cell_node(pc.id, li, i), 0))
+                    found.setdefault((group, pc.row, end), []).append((cell_node(pc.id, li, i), 0))
     out = []
-    for g in sorted({g for g, _ in found}, key=natural_key):
-        lines = tuple(
-            tuple(line) for end in ("head", "foot") if len(line := found.get((g, end), [])) > 1
-        )
+    for g, row in sorted({(g, r) for g, r, _ in found}, key=lambda k: (natural_key(k[0]), k[1])):
+        lines = tuple(tuple(line) for end in ("head", "foot") if len(line := found.get((g, row, end), [])) > 1)
         if lines:
-            out.append(Align("row_group", g, lines, _ROW_GROUP.format(g)))
+            subject = f"{g}, row {row}"
+            out.append(Align("row_group", subject, lines, _ROW_GROUP.format(subject)))
     return tuple(out)
 
 
@@ -95,11 +91,7 @@ def band_aligns(env: PageEnv) -> tuple[Align, ...]:
     if not env.options.band_align:
         return ()
     found = _topmost(env)
-    return tuple(
-        _band(rank, row, tuple(found[rank, row]))
-        for rank, row in sorted(found)
-        if len(found[rank, row]) > 1
-    )
+    return tuple(_band(rank, row, tuple(found[rank, row])) for rank, row in sorted(found) if len(found[rank, row]) > 1)
 
 
 def _where(env: PageEnv) -> Where:
@@ -110,10 +102,6 @@ def _where(env: PageEnv) -> Where:
             for i, cell in enumerate(cells):
                 where.setdefault(cell.sym, (cell_node(pc.id, li, i), cell, pc.row))
     return where
-
-
-def _mate_key(pair: Mate) -> tuple[tuple[tuple[tuple[int, int | str], ...], ...], ...]:
-    return tuple((natural_key(p.sym), natural_key(p.pin)) for p in pair)
 
 
 def _canonical(pair: Mate) -> Mate:
@@ -141,7 +129,7 @@ def _mates(env: PageEnv) -> tuple[list[Align], list[Mate]]:
     here = set(where) | {env.blocks[b].anchor for r in env.plan.rows for b in r.blocks}
     levelled: list[Align] = []
     unmet: list[Mate] = []
-    for pair in sorted((_canonical(m) for m in env.problem.facts.mates), key=_mate_key):
+    for pair in sorted((_canonical(m) for m in env.problem.facts.mates), key=lambda m: tuple((natural_key(p.sym), natural_key(p.pin)) for p in m)):
         if pair[0].sym in here and pair[1].sym in here:
             align = _level(env, where, pair)
             if align is None:

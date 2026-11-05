@@ -2,7 +2,6 @@
 
 The shape is the p02 gap: a box wired to a trunk by its pin alone (`Attach.column` None) and
 three terminals on that trunk. Before the fix the first terminal was dealt as the hub of a lane
-the trunk does not have, and dropped: it stood in no cell, so no block held it.
 """
 
 from __future__ import annotations
@@ -18,7 +17,8 @@ from .pipeline_fixtures import blocks_of, flow_of
 from .topology_fixtures import box
 
 if TYPE_CHECKING:
-    from fransys_layout.core.values import FlowGraph, PlacementProblem
+    from fransys_layout.core.flow_values import FlowGraph
+    from fransys_layout.core.values import PlacementProblem
 
 TERMINALS = ("T1", "T2", "T3")
 
@@ -30,13 +30,7 @@ def hub_shape() -> PlacementProblem:
 
 
 def _cells_of(flow: FlowGraph, sym: str) -> list[str]:
-    return [
-        col.id
-        for col in flow.columns
-        for lane in col.lanes
-        for cell in lane.cells
-        if cell.sym == sym
-    ]
+    return [col.id for col in flow.columns for lane in col.lanes for cell in lane.cells if cell.sym == sym]
 
 
 def test_every_drawn_symbol_stands_in_one_cell_and_a_hub_in_its_fans_column() -> None:
@@ -57,17 +51,9 @@ def test_every_drawn_symbol_is_held_and_the_trunk_wired_box_is_a_card_with_no_co
     held = {b.anchor for b in blocks if b.anchor}
     for b in blocks:
         for col_id in b.columns:
-            held |= {
-                c.sym
-                for col in flow.columns
-                if col.id == col_id
-                for ln in col.lanes
-                for c in ln.cells
-            }
+            held |= {c.sym for col in flow.columns if col.id == col_id for ln in col.lanes for c in ln.cells}
     assert set(flow.drawn) - held == set()
-    assert [(b.kind, b.anchor, b.columns) for b in blocks if b.kind == "card"] == [
-        ("card", "K", ())
-    ]
+    assert [(b.kind, b.anchor, b.columns) for b in blocks if b.kind == "card"] == [("card", "K", ())]
 
 
 def test_a_flow_with_every_symbol_in_its_cells_has_no_finding() -> None:

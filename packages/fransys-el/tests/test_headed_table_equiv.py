@@ -2,22 +2,18 @@
 
 Today's engine draws a table that shares its foot with a heading line over the NO/NC titles,
 `table_geometry(rows, step, pad, headed=True)`. The layer's `placed_table` with a heading must give
-that total height, that heading line and those titles, at every row count the models' coils have.
-The width is the fitted rule; a heading wider than the NO column widens it (Q3, accepted).
 """
+# NET_POTENTIAL_CONFLICT 1 per default-salt build set (KI-461): planted_model or demo_model 24 V to 0 V short through strip and mate.
+# NET_SHORTED 1 per default-salt build set (KI-461): planted_model or demo_model 24 V to 0 V short through strip and mate.
+# WIRE_ROW_UNRESOLVED 6 per default-salt build set (KI-461): planted_model or demo_model 24 V to 0 V short through strip and mate.
 
 import pytest
-from conventions_fixtures import house
-from fransys_el.placement_env import make_env
-from fransys_el.placement_syms import heading_of
-from placement_fixtures import demo_model, kit_for, leads, planted_model
+from placement_fixtures import demo_model, kit_for, planted_model
 from symdef_layer_equivalence import tables
 
 from electrical_symbols import LIBRARY
 from fransys_layout.symbols import Ask, TableAsk, library_symbol, symbol_shape, symbol_views
-from fransys_model.derive import function_item, item_unit
 from fransys_model.derive.contact_rows import table_geometry
-from fransys_model.derive.drawing_text import coil_heading
 
 STEP, PAD = 8, 2
 CELLS = {"no": "13 /1.1", "nc": "21 /1.1"}
@@ -53,16 +49,3 @@ def test_the_headed_table_matches_at_the_row_count_of_every_coil(make) -> None:
     assert found
     for rows in found:
         assert _height(rows, "-K1") == table_geometry(rows, STEP, PAD, headed=True).height
-
-
-def test_the_heading_of_a_coil_is_the_derive_heading_in_its_own_unit() -> None:
-    """A coil in a unit reads `coil_heading` in that unit, never the bare tag (model-0238)."""
-    model = planted_model()
-    env = make_env(model, kit_for(model), house(), LIBRARY)
-    seen = set()
-    for lead in leads(env.kit):
-        item = function_item(model, lead)
-        unit = item_unit(model, item)
-        assert heading_of(env, lead) == coil_heading(model, item, unit=unit)
-        seen.add(unit is not None and coil_heading(model, item) != heading_of(env, lead))
-    assert True in seen

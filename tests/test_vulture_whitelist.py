@@ -1,33 +1,6 @@
 """`whitelist.py` and `pyproject.toml`'s `[tool.vulture].ignore_names`: every entry still
 defined, every entry carries its reader-class reason, and the entry count never exceeds a
 shrink-only ceiling (decision 0050).
-
-"Still defined" is class-aware: OTHER and TESTS entries cite one real reader `file:line`
--- the specific site whose literal `obj.attr`/call syntax is the whole proof the name is used --
-so staleness is checked there and only there: the name must still be spelled (as vulture itself
-matches, by bare identifier, not only where first defined) inside that one cited file. A
-workspace-wide check would pass even after that exact reader site was rewritten, as long as some
-unrelated definition elsewhere in `packages/*/src` happens to share the same spelling (e.g.
-`design.py`'s own `def scope(...)` keeps a bare "still defined" check green even if the cited
-test no longer calls it). FIELDS and DICT entries cite a shared, generic mechanism site instead
-(`kernel/schema.py:37`'s `dataclasses.fields()`, `derive/rows.py:765`'s `getattr(record, name)`)
-that never spells any one field's name literally -- their citation is structural, "the class
-alone is sufficient evidence" (whitelist.py's own docstring), so they keep the original
-workspace-wide "still defined somewhere under packages/*/src" check.
-
-`ignore_names` predates this order by one absorption move (decision 0015): its 15 entries were
-`symdef`' own enum members, back when that package's `src` was still scanned by
-`packages/*/src`; since it became an external, pinned, unscanned dependency none of the 15
-resolves in `packages/*/src` any more, and none is this order's to fix (root `pyproject.toml`).
-`_LEGACY_IGNORE_NAMES` names them so the "still a real enum member" check below applies only to
-whatever is added beyond them -- today, nothing (the hand-back adds 51 more; until
-that lands, every check on `ignore_names` here is vacuously true, proven able to fail by the
-probes instead, on a patched copy).
-
-`IGNORE_NAMES_CEILING` is set to 66 (15 legacy + the 51 adds), not today's real count
-of 15: the shrink-only rule only ever lowers a ceiling, so its initial value has to be
-the one it settles at the moment those 51 names land, not a number a later, non-root-owned commit
-would need to raise.
 """
 
 from __future__ import annotations
@@ -49,7 +22,6 @@ _REASONED_ENTRY_RE = re.compile(r"^_\.(\w+)  # (FIELDS|DICT|OTHER|TESTS) (\S+):(
 # by adding real, reasoned entries.
 # 90 + ConductorKind.MOUNT and Scope.link (links order, ruling), each with its reader
 # + cross_section_mm2 + LabelKind.WIRE (model twin, tests)
-# + four data-only fields (nominal_power_w, nominal_current_a, power_loss_w, resistance_ohm)
 # + PoleSide.LINE, six ConductorMark members, pole_side and conductor_mark
 # + two first-half names (default_symbol, pole_order), wired by the second half
 # + five ProtectionType members (model-0127), read by value in the loader and by tests
@@ -63,8 +35,6 @@ _REASONED_ENTRY_RE = re.compile(r"^_\.(\w+)  # (FIELDS|DICT|OTHER|TESTS) (\S+):(
 # does not apply)
 # 112: _.dashed read by fransys-render/_diagram_boxes.py; render defines its own `dashed`
 # (owner 2026-10-07: ceilings may rise; cleanup round 2026-10-08 lowers)
-# +1: CableBlock.pitch read only by layout tests; owner 2026-10-07: ceilings may
-# rise; cleanup round 2026-10-08 lowers
 # +1: Design.rack read only by author tests ; owner 2026-10-07: ceilings may rise;
 # cleanup round 2026-10-08 lowers
 # +3: overview row fields read only by tests until the OVERVIEW Part 3 page reads them; owner
@@ -74,7 +44,6 @@ _REASONED_ENTRY_RE = re.compile(r"^_\.(\w+)  # (FIELDS|DICT|OTHER|TESTS) (\S+):(
 # owner 2026-10-07: ceilings may rise; cleanup round lowers
 # 77: CLEANUP-CEILINGS-2 dropped 58 entries a per-package run without the whitelist never flags
 # +61: CORE-WAVE0 contract fields, read by later stages; cleanup round lowers
-# +1: d.detail.star (DETAIL-STAR), 2026-10-15
 # +3: KeepWhole item_boxes, pole_groups, line_units (EL-GATES-FACTS), 2026-10-15
 # +3: Natural.keepout, cut_x, cut_y (SYMDEF-SLOTS-WS Part 4), read by the first engine switch's
 # builder; cleanup round lowers
@@ -82,40 +51,23 @@ _REASONED_ENTRY_RE = re.compile(r"^_\.(\w+)  # (FIELDS|DICT|OTHER|TESTS) (\S+):(
 # +23: EL-2a role-table fields (model-0288), 2026-10-16
 # +4: SignalKind members built by value from SIGNAL_TYPES (EL-3), 2026-10-16; cleanup lowers
 # +7: core names cut from __all__ (decision 0226), read by layout tests until P6.1; cleanup lowers
-# +1: label_nets (P5.3), called by tests until P6.1, 2026-10-16; cleanup lowers
 # +1: PlacedView.lane_heads (OVERVIEW-ROWS), read only by fransys_overview, 2026-10-16
 # -15: CLEANUP-MODEL-3 dropped entries vulture no longer needs; +2: Settings.pdf and
 # Settings.look, read when SETTINGS-LOOK lands (SETTINGS-A1); cleanup lowers
 # +9 (measured): Style, Sheet and DrawnWire fields read only by layout tests (DRAWING-VALUE);
 # cleanup lowers
 # +5 (measured): DrawnText.turned and the Corner members, read by the Label/WireLabel mapping and
-# render (ELECTRICAL-MARKERS part F, model-0319); +3 (EL-7): SupplyRails L1-L3; +7 (KIT-FACTS): the
-# rows_device_chains, rows_pin_views and rows_undrawn fields read by fransys_layout's read package;
+# render (ELECTRICAL-MARKERS part F, model-0319); +3 (EL-7): SupplyRails L1-L3; +5 (KIT-FACTS): the
+# rows_device_chains and rows_pin_views fields read by fransys_layout's read package;
 # +2 (TABLE-T2): Footprints no_cells, nc_cells; cleanup lowers;
 # +2 (SHEETS, Ruling 128): SheetKind.BLOCK, LayoutSheet.sheet_kind
-# +1 FLIP: symbol_port_missing_finding (GAP-FLIP-203)
-WHITELIST_CEILING = 217  # +11 DEL-4 (deleted stored kind readers), +2 SHEETS; cleanup lowers
-IGNORE_NAMES_CEILING = 70  # 15 legacy + 51 names + 4 layout-0111 enum members
-
-_LEGACY_IGNORE_NAMES = frozenset(
-    {
-        "THICK",
-        "VERIFIED",
-        "UNVERIFIED",
-        "ELEMENT",
-        "QUALIFIER",
-        "SWITCH_OPEN",
-        "SWITCH_CLOSED",
-        "IMPEDANCE",
-        "SOURCE",
-        "DIODE",
-        "CONDUCTOR",
-        "EARTH",
-        "PROTECTIVE_EARTH",
-        "FUNCTIONAL_EARTH",
-        "FRAME",
-    }
+WHITELIST_CEILING = (
+    # +1 PageRoutes.dots (P3c, R535); -1 `_.pitch`; +2 PlacedWire.run_a/run_b (layout-0408);
+    # -1 shape_key (LINT-ESCAPES-2 P5, its one reader was its test, deleted with it);
+    # -6 DS-2 zero-use; -1 R608 band_ranks; +1 SlotSide.C (LAYOUT-LEFTOVERS, KI-034: a deleted TypeVar C had hidden it)
+    111  # FIELDS-1: 107 entries gone (84 no run flags, 23 fields deleted); cleanup lowers
 )
+IGNORE_NAMES_CEILING = 14  # FIELDS-1: the 52 names no per-package vulture run flags are gone
 
 
 def _whitelist_lines(text: str) -> list[str]:
@@ -125,7 +77,7 @@ def _whitelist_lines(text: str) -> list[str]:
 
 def _reasoned_entries(text: str) -> list[tuple[str, str, str, int]]:
     """`(name, reader_class, path, line)` for every entry line that matches the reasoned shape."""
-    entries = []
+    entries: list[tuple[str, str, str, int]] = []
     for line in _whitelist_lines(text):
         match = _REASONED_ENTRY_RE.match(line)
         if match:
@@ -135,7 +87,8 @@ def _reasoned_entries(text: str) -> list[tuple[str, str, str, int]]:
 
 def _ignore_names() -> tuple[str, ...]:
     data = tomllib.loads(PYPROJECT_PATH.read_text(encoding="utf-8"))
-    return tuple(data.get("tool", {}).get("vulture", {}).get("ignore_names", ()))
+    names: tuple[str, ...] = tuple(str(n) for n in data.get("tool", {}).get("vulture", {}).get("ignore_names", ()))
+    return names
 
 
 def _collect_target_names(target: ast.expr, names: set[str]) -> None:
@@ -149,9 +102,7 @@ def _collect_target_names(target: ast.expr, names: set[str]) -> None:
 
 
 def _is_enum_base(base: ast.expr) -> bool:
-    return (isinstance(base, ast.Name) and base.id == "Enum") or (
-        isinstance(base, ast.Attribute) and base.attr == "Enum"
-    )
+    return (isinstance(base, ast.Name) and base.id == "Enum") or (isinstance(base, ast.Attribute) and base.attr == "Enum")
 
 
 @pytest.fixture(scope="module")
@@ -159,10 +110,7 @@ def workspace_trees() -> list[ast.Module]:
     """Every `packages/*/src/**/*.py` file, parsed once (module-scoped: this walk is the
     expensive part, shared by every fixture below it).
     """
-    return [
-        ast.parse(path.read_text(encoding="utf-8"))
-        for path in (ROOT / "packages").glob("*/src/**/*.py")
-    ]
+    return [ast.parse(path.read_text(encoding="utf-8")) for path in (ROOT / "packages").glob("*/src/**/*.py")]
 
 
 def _defined_in(tree: ast.Module) -> set[str]:
@@ -238,21 +186,14 @@ def enum_member_names(workspace_trees: list[ast.Module]) -> frozenset[str]:
         for node in ast.walk(tree):
             if isinstance(node, ast.ClassDef) and any(_is_enum_base(base) for base in node.bases):
                 assigns = (stmt for stmt in node.body if isinstance(stmt, ast.Assign))
-                names.update(
-                    target.id
-                    for stmt in assigns
-                    for target in stmt.targets
-                    if isinstance(target, ast.Name)
-                )
+                names.update(target.id for stmt in assigns for target in stmt.targets if isinstance(target, ast.Name))
     return frozenset(names)
 
 
 # --- whitelist.py: defined, reasoned, ceiling -----------------------------------------------
 
 
-def test_every_whitelist_entry_is_still_defined(
-    defined_names: frozenset[str], spelled_names_by_cited_path: dict[str, frozenset[str]]
-) -> None:
+def test_every_whitelist_entry_is_still_defined(defined_names: frozenset[str], spelled_names_by_cited_path: dict[str, frozenset[str]]) -> None:
     entries = _reasoned_entries(WHITELIST_PATH.read_text(encoding="utf-8"))
     stale = []
     for name, reader_class, path, _ in entries:
@@ -287,20 +228,12 @@ def defining_packages() -> dict[str, frozenset[str]]:
     return {name: frozenset(packages) for name, packages in found.items()}
 
 
-def _counted_entries(
-    entries: list[tuple[str, str, str, int]], defining: dict[str, frozenset[str]]
-) -> list[tuple[str, str, str, int]]:
+def _counted_entries(entries: list[tuple[str, str, str, int]], defining: dict[str, frozenset[str]]) -> list[tuple[str, str, str, int]]:
     """The entries the ceiling counts: all but an OTHER one citing a reader in a package that
     defines no such name (proven used there, decision 0115).
     """
     return [
-        entry
-        for entry in entries
-        if not (
-            entry[1] == "OTHER"
-            and "/src/" in entry[2]
-            and _package_of(entry[2]) not in defining.get(entry[0], ())
-        )
+        entry for entry in entries if not (entry[1] == "OTHER" and "/src/" in entry[2] and _package_of(entry[2]) not in defining.get(entry[0], ()))
     ]
 
 
@@ -314,8 +247,8 @@ def test_whitelist_entry_count_is_at_most_the_ceiling(
 def test_an_other_entry_citing_its_own_package_is_counted(
     defining_packages: dict[str, frozenset[str]],
 ) -> None:
-    same = ("pitch", "OTHER", "fransys-model/src/fransys_model/x.py", 1)
-    cross = ("pitch", "OTHER", "fransys-render/src/fransys_render/cables.py", 1)
+    same = ("port_pairs", "OTHER", "fransys-model/src/fransys_model/x.py", 1)
+    cross = ("port_pairs", "OTHER", "fransys-render/src/fransys_render/cables.py", 1)
     assert _counted_entries([same, cross], defining_packages) == [same]
 
 
@@ -326,14 +259,13 @@ def test_an_other_entry_citing_another_packages_tests_is_counted(
     assert _counted_entries([tests_reader], defining_packages) == [tests_reader]
 
 
-# --- ignore_names: still a real enum member (beyond the legacy set), ceiling ----------------
+# --- ignore_names: still a real enum member, ceiling ----------------
 
 
 def test_ignore_names_beyond_the_legacy_set_are_real_enum_members(
     enum_member_names: frozenset[str],
 ) -> None:
-    new_entries = [name for name in _ignore_names() if name not in _LEGACY_IGNORE_NAMES]
-    stale = [name for name in new_entries if name not in enum_member_names]
+    stale = [name for name in _ignore_names() if name not in enum_member_names]
     assert stale == []
 
 

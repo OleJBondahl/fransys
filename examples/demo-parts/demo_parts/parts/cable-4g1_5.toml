@@ -1,4 +1,4 @@
-schema = 1
+schema = 2
 
 [part]
 mpn = "DEMO-CBL-4G1.5"
@@ -7,8 +7,12 @@ description = "Control cable, 4 cores including PE, 1.5 mm2"
 category = "cable"
 class_code = "W"
 
+[footprint]
+library = "Demo_Cable"
+name = "Lead_4C"
+
 [rating]
-voltage_ac_v = "500"
+voltage = [{ nom = "500 V", at = ["AC"] }]
 
 [cable_product]
 core_count = 4

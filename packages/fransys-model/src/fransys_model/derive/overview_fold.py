@@ -36,9 +36,7 @@ __all__ = ["fold_level"]
 _FOLD_MIN = 2
 
 
-def _keymap(
-    boxes: tuple[OverviewBox, ...], groups: dict[Id[Any], Id[AspectNode] | None]
-) -> dict[Id[Any], OverviewRef]:
+def _keymap(boxes: tuple[OverviewBox, ...], groups: dict[Id[Any], Id[AspectNode] | None]) -> dict[Id[Any], OverviewRef]:
     """The folded key of each box: its group, else the strips box, else its own."""
     found = {}
     for box in boxes:
@@ -52,9 +50,7 @@ def _keymap(
     return found
 
 
-def _folded_boxes(
-    model: Model, members: dict[OverviewRef, list[OverviewBox]], inner: dict[OverviewRef, int]
-) -> tuple[FoldBox, ...]:
+def _folded_boxes(model: Model, members: dict[OverviewRef, list[OverviewBox]], inner: dict[OverviewRef, int]) -> tuple[FoldBox, ...]:
     """One fold box per key, in text order."""
     made = [
         group_box(model, cast("Id[AspectNode]", key.node), held, inner.get(key, 0))
@@ -69,9 +65,7 @@ def _folded_boxes(
 
 def _lift(
     model: Model, unit: Id[Unit], conns: tuple[Conn, ...], keymap: dict[Id[Any], OverviewRef]
-) -> tuple[
-    dict[tuple[OverviewRef, OverviewRef], list[Conn]], dict[OverviewRef, int], list[RawStub]
-]:
+) -> tuple[dict[tuple[OverviewRef, OverviewRef], list[Conn]], dict[OverviewRef, int], list[RawStub]]:
     """The connections between boxes by key pair, those inside a group, and the stubs leaving."""
     pairs: dict[tuple[OverviewRef, OverviewRef], list[Conn]] = {}
     inner: dict[OverviewRef, int] = {}

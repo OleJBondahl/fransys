@@ -51,9 +51,7 @@ def _connector_label(model: Model, function: Function) -> str:
     """
     if not function_role(model, function.id).pin_group:
         return ""
-    facet = (
-        None if function.template is None else facet_on(model, function.template, ConnectorFacet)
-    )
+    facet = None if function.template is None else facet_on(model, function.template, ConnectorFacet)
     return connector_label(None if facet is None else facet.marking, function.name) or ""
 
 

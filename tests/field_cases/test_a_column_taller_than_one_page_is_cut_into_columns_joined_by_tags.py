@@ -1,18 +1,12 @@
-"""Field case: a series of forty contacts, taller than one page, is cut into columns with tags.
-
-The engineering shape: a 24 V supply, forty contacts in series, a relay coil and the return to
-0 V, in one unit. Drawn as one column the contacts stand 2000 G tall on an 822 G page.
-
-The bug: the column was kept whole when its block was a card, so the row stood taller than the
-page and the build named PAGE_OVERFLOW, or drew past the frame. A column taller than one page is
-cut where a piece fills the page, each cut a tag pair, and the block is as tall as its pieces
-(CUT-TALL; rule PAGE-CUT).
-"""
+"""Field case: a series of forty contacts, taller than one page, is cut into columns joined by tags.
+The bug: a column kept whole as a card stood taller than the page, so the build named PAGE_OVERFLOW or drew past the frame.
+Fixed by CUT-TALL, a column taller than one page is cut where a piece fills the page, each cut a tag pair (PAGE-CUT)."""
 
 from typing import Any, NamedTuple
 
 import fransys as fr
 import pytest
+from _model_build_cover import unit_document
 
 CONTACTS = 40
 
@@ -30,12 +24,10 @@ def _tall(c: Any) -> _Unit:
 
 
 @pytest.fixture(scope="module")
-def built(tmp_path_factory: pytest.TempPathFactory) -> fr.BuildResult:
-    cover = tmp_path_factory.mktemp("tall") / "cover.md"
-    cover.write_text("# C\n", encoding="utf-8")
+def built() -> fr.BuildResult:
     d = fr.design("demo_parts")
     d.add(_tall, "U1")
-    return fr.build(d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, "tall-chain", cover=cover))
+    return fr.build(d, unit_document("tall-chain"))
 
 
 @pytest.mark.rule("PAGE-CUT")

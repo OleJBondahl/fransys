@@ -8,16 +8,14 @@ panic text to `cover_overflow_finding`. The panic format lives only here.
 import re
 from typing import TYPE_CHECKING
 
-from fransys_model.kernel import Finding, Severity
+lazy from fransys_model.kernel import Finding
 
-from .codes import fix_text
+from .codes import finding
 
 if TYPE_CHECKING:
     from fransys_model.derive import DocumentId
 
-_PANIC = re.compile(
-    r"COVER_OVERFLOW cover=(?P<cover>[\d.]+) table=(?P<table>[\d.]+) available=(?P<avail>[\d.]+)"
-)
+_PANIC = re.compile(r"COVER_OVERFLOW cover=(?P<cover>[\d.]+) table=(?P<table>[\d.]+) available=(?P<avail>[\d.]+)")
 
 
 def measuring_block(*, has_table: bool) -> str:
@@ -41,13 +39,8 @@ def cover_overflow_finding(document: DocumentId, typst_error: str) -> Finding | 
     found = _PANIC.search(typst_error)
     if found is None:
         return None
-    return Finding(
-        code="COVER_OVERFLOW",
-        severity=Severity.ERROR,
-        subjects=(document,),
-        fix=fix_text("COVER_OVERFLOW"),
-        message=(
-            f"cover text {found['cover']} mm plus revision table {found['table']} mm exceeds "
-            f"the {found['avail']} mm content box"
-        ),
+    return finding(
+        "COVER_OVERFLOW",
+        (document,),
+        f"cover text {found['cover']} mm plus revision table {found['table']} mm exceeds the {found['avail']} mm content box",
     )

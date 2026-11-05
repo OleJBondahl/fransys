@@ -87,10 +87,7 @@ def test_place_defaults_overrides_and_none(parts: Draft) -> None:
     d.device("K2", "TEST-RLY-2CO", place="EXT")
     d.device("K3", "TEST-RLY-2CO", place=None)
     labels = {n.id: n.label for n in _records(d, AspectNode)}
-    where = {
-        i.key[0]: [labels[p.node] for p in _records(d, Placement) if p.item == i.id]
-        for i in _records(d, ModelItem)
-    }
+    where = {i.key[0]: [labels[p.node] for p in _records(d, Placement) if p.item == i.id] for i in _records(d, ModelItem)}
     assert where == {"K1": ["C1"], "K2": ["EXT"], "K3": []}
 
 
@@ -173,12 +170,11 @@ def test_private_names_are_not_functions_or_pins(parts: Draft) -> None:
         _ = k1.coil._nope
 
 
-def test_plc_and_scale_reach_the_engine_function(parts: Draft) -> None:
+def test_plc_reaches_the_engine_function(parts: Draft) -> None:
     d, k1 = _relay(parts)
     assert k1.coil.plc(SignalType.DO, "Pump run") is not None
     (request,) = _records(d, PlcRequestFacet)
     assert (request.signal.value, request.signal_name) == ("do", "Pump run")
-    k1.coil.scale("bar", raw=(0, 100), eng=("0", "10"))
 
 
 def test_a_device_reports_the_tag_it_was_given_or_none(parts: Draft) -> None:

@@ -60,20 +60,14 @@ def _wire_ends(model: Model, subject: Id[Item]) -> list[_End]:
             for port in (conductor.a, conductor.b):
                 function = ports(model)[port].function
                 connector = function if function_role(model, function).pin_group else None
-                found.append(
-                    _End(cable_end_owner(model, item_of_port(model, port)), connector, (port,))
-                )
+                found.append(_End(cable_end_owner(model, item_of_port(model, port)), connector, (port,)))
     return found
 
 
 def _merged(model: Model, subject: Id[Item], cables: tuple[HarnessCable, ...]) -> list[_End]:
     """Cable ends and wire ends merged by end item: one end per item, ports in first-seen order."""
     by_item: dict[Id[Item], _End] = {}
-    cable_ends = (
-        _End(end.item, end.connector, tuple(pin.port for pin in end.pins))
-        for cable in cables
-        for end in cable.ends
-    )
+    cable_ends = (_End(end.item, end.connector, tuple(pin.port for pin in end.pins)) for cable in cables for end in cable.ends)
     for end in (*cable_ends, *_wire_ends(model, subject)):
         old = by_item.get(end.item)
         if old is None:

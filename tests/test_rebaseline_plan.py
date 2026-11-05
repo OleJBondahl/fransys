@@ -44,7 +44,7 @@ def test_a_moved_rule_is_one_rewrite_and_children_come_before_parents(tmp_path: 
     cabinet, plant = plan.rewrites
     assert (cabinet.listing_text is None, plant.listing_text is None) == (False, True)
     assert [pin.key[0] for pin in plant.pins] == ["lg-cabinet"]
-    assert (cabinet.old_fransys, cabinet.unchecked) == ("0.18.3", 0)
+    assert (cabinet.old_fransys, cabinet.unchecked) == ("0.18.1", 3)
 
 
 def test_rows_the_old_holder_rule_cannot_print_are_counted(tmp_path: Path) -> None:
@@ -63,7 +63,7 @@ def test_a_unit_scopes_the_plan_to_itself_and_the_units_below(tmp_path: Path) ->
 def test_a_unit_with_no_stored_baseline_is_skipped(tmp_path: Path) -> None:
     result = build_plant()
     folders = release_all(result, tmp_path)
-    cut_old(folders["lg-cabinet"], result, "lg-cabinet", "0.18.3")
+    cut_old(folders["lg-cabinet"], result, "lg-cabinet", "0.18.1")
     for path in sorted(folders["lg-plant"].rglob("*"), reverse=True):
         path.unlink() if path.is_file() else path.rmdir()
     folders["lg-plant"].rmdir()
@@ -76,14 +76,12 @@ def test_a_real_change_is_baseline_differs_naming_the_section_and_no_rewrite(
     result = build_plant()
     folders = release_all(result, tmp_path)
     listing = old_listing(result, "lg-cabinet")
-    rows = tuple(
-        dataclasses.replace(c, colour="BU") if c.a == "-M1:PE" else c for c in listing.conductors
-    )
+    rows = tuple(dataclasses.replace(c, colour="BU") if c.a == "-M1:PE" else c for c in listing.conductors)
     cut_old(
         folders["lg-cabinet"],
         result,
         "lg-cabinet",
-        "0.18.3",
+        "0.18.1",
         dataclasses.replace(listing, conductors=rows),
     )
     before = tree_hashes(tmp_path)
@@ -112,5 +110,5 @@ def test_a_release_file_not_as_released_refuses_the_plan(tmp_path: Path) -> None
 def test_a_pin_already_at_the_new_digest_moves_nothing(tmp_path: Path) -> None:
     result = build_plant()
     folders = release_all(result, tmp_path)
-    cut_old(folders["lg-cabinet"], result, "lg-cabinet", "0.18.3")
+    cut_old(folders["lg-cabinet"], result, "lg-cabinet", "0.18.1")
     assert _names(_plan(result, tmp_path)) == ["lg-cabinet"]

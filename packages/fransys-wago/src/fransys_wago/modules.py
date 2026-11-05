@@ -11,7 +11,7 @@ from .signals import SIGNALS
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    from fransys_model.derive import CdpRackModule, ChannelScaling, ItemId, PlcRackChannel, UnitId
+    from fransys_model.derive import CdpRackModule, ItemId, PlcRackChannel, UnitId
     from fransys_model.kernel import Model
 
 # `escape` does `&`, `<` and `>`; a line break or a tab in an attribute would be read back as a
@@ -40,40 +40,13 @@ def _letters(index: int) -> str:
     return text
 
 
-def _element(
-    tag: str, depth: int, attributes: Sequence[tuple[str, str]], children: Sequence[str] = ()
-) -> list[str]:
+def _element(tag: str, depth: int, attributes: Sequence[tuple[str, str]], children: Sequence[str] = ()) -> list[str]:
     """The lines of one element: attributes as given, an explicit end tag, never `/>`."""
     indent = "  " * depth
     text = "".join(f' {name}="{_attr(value)}"' for name, value in attributes)
     if not children:
         return [f"{indent}<{tag}{text}></{tag}>"]
     return [f"{indent}<{tag}{text}>", *children, f"{indent}</{tag}>"]
-
-
-def _point(name: str, raw: int, engineering: object) -> list[str]:
-    attributes = [
-        ("InValue", str(raw)),
-        ("OutValue", str(engineering)),
-        ("Model", "Automation.ScalingPoint<double>"),
-        ("Name", name),
-        ("Type", "double"),
-    ]
-    return _element("ScalingPoint", 4, attributes)
-
-
-def _scaling(scaling: ChannelScaling) -> list[str]:
-    points = [
-        *_point("ScalingPoint", scaling.raw_min, scaling.eng_min),
-        *_point("ScalingPoint1", scaling.raw_max, scaling.eng_max),
-    ]
-    attributes = [
-        ("Interpolation", "Linear"),
-        ("Model", "Automation.ScalingOperator<double>"),
-        ("Name", "Scale"),
-        ("Type", "double"),
-    ]
-    return _element("Operator", 3, attributes, points)
 
 
 def _channel(channel: PlcRackChannel, nr: int) -> list[str]:
@@ -88,11 +61,7 @@ def _channel(channel: PlcRackChannel, nr: int) -> list[str]:
         ("Value", "0"),
         ("Description", signal.description),
     ]
-    children: list[str] = []
-    if channel.scaling is not None:
-        attributes.append(("Unit", channel.scaling.unit))
-        children = _scaling(channel.scaling)
-    return _element("Channel", 2, attributes, children)
+    return _element("Channel", 2, attributes, [])
 
 
 def _module_name(entry: CdpRackModule) -> str:
@@ -103,9 +72,7 @@ def _module_name(entry: CdpRackModule) -> str:
 
 def _module(entry: CdpRackModule) -> list[str]:
     module = entry.module
-    channels = [
-        line for nr, channel in enumerate(module.channels) for line in _channel(channel, nr)
-    ]
+    channels = [line for nr, channel in enumerate(module.channels) for line in _channel(channel, nr)]
     attributes = [
         ("Model", "WagoIOModules.IOModule"),
         ("Name", _module_name(entry)),
@@ -130,7 +97,5 @@ def modules_xml(model: Model, rack: ItemId, *, unit: UnitId | None = None) -> st
     Raises:
         SchemaError: as `rack_modules_for_cdp` raises it.
     """
-    lines = [
-        line for entry in rack_modules_for_cdp(model, rack, unit=unit) for line in _module(entry)
-    ]
+    lines = [line for entry in rack_modules_for_cdp(model, rack, unit=unit) for line in _module(entry)]
     return "\n".join(_element("Modules", 0, [], lines)) + "\n"

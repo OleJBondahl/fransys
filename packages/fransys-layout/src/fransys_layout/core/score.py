@@ -32,9 +32,7 @@ WEIGHTS = frozendict(
         "f": 1.0,  # per unit of squared empty fill
     }
 )
-R_CLASS = frozendict(
-    {"tag": "tag_pair", "arrow": "arrow_pair", "star": "star", "stub": "stub", "copy": "copy"}
-)
+R_CLASS = frozendict({"tag": "tag_pair", "arrow": "arrow_pair", "star": "star", "stub": "stub", "copy": "copy"})
 
 
 def placement_flags(scene: Scene) -> dict[str, list[str]]:
@@ -51,11 +49,7 @@ def placement_flags(scene: Scene) -> dict[str, list[str]]:
 
 def _quality(refs: frozendict[str, int], x: int, b: int, d: int, scene: Scene) -> float:
     """Q by design section 3.1; a scene with no rows has fill `()`, so its fill term is 0."""
-    ref = (
-        WEIGHTS["tag"] * refs.get("tag_pair", 0)
-        + WEIGHTS["arrow"] * refs.get("arrow_pair", 0)
-        + WEIGHTS["star"] * refs.get("star", 0)
-    )
+    ref = WEIGHTS["tag"] * refs.get("tag_pair", 0) + WEIGHTS["arrow"] * refs.get("arrow_pair", 0) + WEIGHTS["star"] * refs.get("star", 0)
     return (
         WEIGHTS["ref"] * ref
         + WEIGHTS["x"] * x

@@ -4,9 +4,9 @@ from typing import TYPE_CHECKING, Final
 
 from fransys_model.derive.designation_label import item_label
 from fransys_model.derive.facts.roles import plc_channel_facets
-from fransys_model.kernel import Finding, Severity
-from fransys_model.vocab.codes import fix_text
+from fransys_model.vocab.codes import finding
 from fransys_model.vocab.tables import functions
+lazy from fransys_model.kernel import Finding
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
@@ -33,30 +33,20 @@ def ambiguous_findings(
         return []
     all_functions = functions(model)
     channel_of = plc_channel_facets(model)
-    number = {
-        function.id: channel_of[function.template].channel
-        for function in all_functions.values()
-        if function.template in channel_of
-    }
+    number = {function.id: channel_of[function.template].channel for function in all_functions.values() if function.template in channel_of}
     found: list[Finding] = []
     for request in requests:
         channels = ambiguous.get(request.subject)
         if channels is None:
             continue
-        names = ", ".join(
-            f"{item_label(model, all_functions[c].item)}:{number[c]}" for c in channels
-        )
+        names = ", ".join(f"{item_label(model, all_functions[c].item)}:{number[c]}" for c in channels)
         found.append(
-            Finding(
-                code=PLC_REQUEST_AMBIGUOUS,
-                severity=Severity.ERROR,
-                subjects=(request.id, request.subject, *channels),
-                message=(
-                    f"{_label(model, all_functions[request.subject])} asks for "
-                    f"{request.signal.value} as {request.signal_name!r}, but its wiring ties "
-                    f"channels {names}: wire it to one channel directly, or free the others"
-                ),
-                fix=fix_text(PLC_REQUEST_AMBIGUOUS),
+            finding(
+                PLC_REQUEST_AMBIGUOUS,
+                (request.id, request.subject, *channels),
+                f"{_label(model, all_functions[request.subject])} asks for "
+                f"{request.signal.value} as {request.signal_name!r}, but its wiring ties "
+                f"channels {names}: wire it to one channel directly, or free the others",
             )
         )
     return found

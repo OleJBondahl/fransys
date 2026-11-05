@@ -2,21 +2,14 @@
 
 A unit is one drawing, so a wire between two of its own items is a wire (or a marker pair where a
 page break cuts it), never a stub, even when the two ends stand at two top-level locations. The
-unit `u2-board` has a root board `-U2` at +A with a labelled connector `-X1` (the unit's
-boundary, on the board), and a lamp `-L1` mounted on the board at +B. `X1:2` is wired to `L1:2`
-(before: two stubs, `+A-U2-X1:2` beside the lamp and `+B-U2-L1:2` beside the connector) and
-`X1:1` to a top-level plug `-P1` at +C (a wire that leaves the drawing: still a stub, the
-control that keeps this test from passing on a design with no stubs at all).
-
-Built through the `fransys` facade from `examples/demo-parts`; read from `layout.*` records.
 """
 
 from typing import Any
 
 import fransys as fr
-import fransys_author
 import fransys_parts
-from _model_build_cover import layout_trigger_document
+from _model_build_cover import cabinet_document, layout_trigger_document
+from fransys_author.design import Design
 
 from fransys_model.derive.drawing_text import marker_text
 from fransys_model.kernel import Severity
@@ -35,7 +28,7 @@ _PROJECT: dict[str, Any] = {
 def _build():
     """The design of the module docstring."""
     parts = fransys_parts.load("demo_parts")
-    d = fransys_author.Design(parts)
+    d = Design(parts)
     d.project(**_PROJECT)
     d.revision(1, date="2026-09-25", text="First issue", created="XX")
     u = d.scope("u").unit("u2-board", revision=1, interface="1")
@@ -46,21 +39,20 @@ def _build():
     x1 = u.item("DEMO-CONN-2P", tag="X1", parent=board, at=side_a, group=group)
     lamp = u.item("DEMO-LAMP-24", tag="L1", parent=board, at=side_b, group=group)
     u.boundary(x1)
-    plug = d.item("DEMO-CONN-2P", tag="P1", at=d.location("C", "Field"))
+    field = d.location("C", "Field")
+    plug = d.item("DEMO-CONN-2P", tag="P1", at=field)
     wire = d.wiring(colour="BU", gauge="0.5")
     wire(x1.fn("x1")["2"], lamp.fn("lamp")["2"])
+    x2 = u.item("DEMO-CONN-2P", tag="X2", parent=board, at=side_b, group=group)
+    wire(lamp.fn("lamp")["1"], x2.fn("x1")["1"])
     wire(x1.fn("x1")["1"], plug.fn("x1")["1"])
-    return fr.build(parts, d.draft(), layout_trigger_document())
+    return fr.build(parts, d.draft(), layout_trigger_document("u2-board"), cabinet_document(field))
 
 
 def _own_set_stubs(model) -> list[LinkMarker]:
     """The off stubs standing on pages of a unit's own drawing set."""
     pages, sets = layout_of(model, Page), layout_of(model, DrawingSet)
-    return [
-        m
-        for m in layout_of(model, LinkMarker).values()
-        if m.star is StarKind.OFF and sets[pages[m.page].drawing_set].unit is not None
-    ]
+    return [m for m in layout_of(model, LinkMarker).values() if m.star is StarKind.OFF and sets[pages[m.page].drawing_set].unit is not None]
 
 
 def _far_unit(model, marker: LinkMarker):

@@ -20,9 +20,7 @@ def box_port_text(function: str, port: str) -> str:
     return f"{function}.{port}"
 
 
-def item_box_views(
-    model: Model, candidates: Sequence[BoxCandidate], wired: AbstractSet[Id[Port]]
-) -> tuple[ItemBoxView, ...]:
+def item_box_views(model: Model, candidates: Sequence[BoxCandidate], wired: AbstractSet[Id[Port]]) -> tuple[ItemBoxView, ...]:
     """One row per item of `candidates` drawn as an item box, in candidate order.
 
     An item's boxed functions form its box when two or more; the rest stand `apart`. A box is
@@ -77,9 +75,7 @@ def _box_ports(model: Model, group: list[BoxCandidate]) -> tuple[BoxPort, ...]:
     )
 
 
-def _view(
-    model: Model, item: Id[Item], whole: list[BoxCandidate], wired: AbstractSet[Id[Port]]
-) -> ItemBoxView | None:
+def _view(model: Model, item: Id[Item], whole: list[BoxCandidate], wired: AbstractSet[Id[Port]]) -> ItemBoxView | None:
     """The item's row, or `None` when its functions stay as they are."""
     group, apart = _split(whole)
     first = group[0]

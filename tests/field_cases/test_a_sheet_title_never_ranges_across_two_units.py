@@ -1,19 +1,12 @@
-"""Field case: a sheet title never reads "A to B" across two units.
-
-The engineering shape: a cabinet's own blocks "Feed 1" and "Feed 2" share a sheet with a nested
-relay board's block; the board is a unit of its own.
-
-The bug: the title offered the range "Relay board to Feed 2", which names a span from the
-board's unit into the cabinet's.
-
-The rule (decision layout-0268, PAGE-TITLE-FIT T2): a range never spans two units. A sheet that
-holds groups of two units composes by T1: the joined texts, then the lead and "n more".
-"""
+"""Field case: a cabinet's own blocks Feed 1 and Feed 2 share a sheet with a nested relay board's block, which is a unit of its own.
+The bug: the title offered the range "Relay board to Feed 2", a span from the board's unit into the cabinet's.
+Fixed by layout-0268 (PAGE-TITLE-FIT T2), a range never spans two units; a sheet holding groups of two units composes by T1."""
 
 from typing import Any, NamedTuple
 
 import fransys as fr
 import pytest
+from _model_build_cover import unit_document
 from fransys.colours import BK
 
 from fransys_model.derive import page_title_forms, unit_release
@@ -42,7 +35,8 @@ def _board(u: Any) -> _Io:
     with u.function("F1", "Board circuit"):
         x = u.device("X1", "DEMO-HSG-4F", parent=pcb, interface=True, contacts="DEMO-CRIMP-F")
         lamp = u.device("K1", "DEMO-LAMP-24", parent=pcb)
-    u.detail.wire(x[1], lamp["1"], wire=(BK, 0.5))
+    u.series(x[1], lamp["1"], wire=(BK, 0.5))
+    u.series(x[2], lamp["2"], wire=(BK, 0.5))
     return _Io(x)
 
 
@@ -63,32 +57,29 @@ def _cabinet(u: Any) -> _Open:
         h2 = u.device("H2", "DEMO-LAMP-24")
     cable = u.cable("W1", "DEMO-CBL-4G1.5", length_m=1)
     cable.core(1, board.X1[1], h2["1"])
-    u.detail.wire(h1["1"], h2["2"], wire=(BK, 0.5))
+    cable.core(2, board.X1[2], h1["2"])
+    u.series(h1["1"], h2["2"], wire=(BK, 0.5))
     return _Open()
 
 
 @pytest.fixture(scope="module")
-def forms(tmp_path_factory: pytest.TempPathFactory) -> tuple[str, ...]:
+def forms() -> tuple[str, ...]:
     d = fr.design("demo_parts")
     d.add(_cabinet, "C1", place=None)
-    cover = tmp_path_factory.mktemp("cover") / "cover.md"
-    cover.write_text("# Cabinet\n", encoding="utf-8")
-    model = fr.build(
-        d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, "demo-cab", cover=cover)
-    ).model
+    model = fr.build(d, unit_document("demo-cab")).model
     sets = layout_of(model, DrawingSet)
     (found,) = (
         page_title_forms(model, page)
         for page in layout_of(model, Page).values()
-        if (owner := sets[page.drawing_set].unit) is not None
-        and unit_release(model, owner).name == "demo-cab"
+        if (owner := sets[page.drawing_set].unit) is not None and unit_release(model, owner).name == "demo-cab"
     )
     return found
 
 
-def test_no_form_is_a_range_across_the_two_units(forms: tuple[str, ...]) -> None:
-    assert not any(" to " in form for form in forms)
+def test_no_form_names_the_board_the_page_does_not_draw(forms: tuple[str, ...]) -> None:
+    """The board's groups stand on its own sheets (model-0405), so no form ranges from the board into the cabinet."""
+    assert not any("Relay board" in form for form in forms)
 
 
 def test_the_forms_are_the_joined_texts_then_the_lead_and_n_more(forms: tuple[str, ...]) -> None:
-    assert forms == ("Relay board, Feed 1, Feed 2", "Relay board and 2 more")
+    assert forms == ("Feed 1, Feed 2", "Feed 1 to 2")

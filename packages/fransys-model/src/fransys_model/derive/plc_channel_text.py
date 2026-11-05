@@ -11,13 +11,9 @@ lazy from fransys_model.vocab.core import Function, Port, Unit
 __all__ = ["channel_pin_designations", "plc_channel_text"]
 
 
-def channel_pin_designations(
-    model: Model, idx: Indexes, function: Id[Function], unit: Id[Unit] | None = None
-) -> tuple[tuple[Id[Port], str], ...]:
+def channel_pin_designations(model: Model, idx: Indexes, function: Id[Function], unit: Id[Unit] | None = None) -> tuple[tuple[Id[Port], str], ...]:
     """Each pin of `function` with its printed designation, in the PLC list's pin order."""
-    pins = sorted(
-        idx.ports_by_function.get(function, ()), key=lambda p: natural_key(ports(model)[p].name)
-    )
+    pins = sorted(idx.ports_by_function.get(function, ()), key=lambda p: natural_key(ports(model)[p].name))
     return tuple((port, port_designation(model, port, unit=unit)) for port in pins)
 
 

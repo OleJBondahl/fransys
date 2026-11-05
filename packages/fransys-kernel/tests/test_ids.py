@@ -1,11 +1,12 @@
 """Tests: `kernel.ids`."""
 
+import contextvars
 from itertools import permutations
 from typing import Any
 
 import pytest
 
-from fransys_kernel import Id, ModelError, SchemaError, make_id
+from fransys_kernel import Id, ModelError, SchemaError, id_namespace, make_id
 from fransys_kernel.ids import parse_id, render_id
 
 
@@ -55,9 +56,7 @@ def test_id_orders_by_kind_then_value() -> None:
 
 def test_make_id_value_is_pinned_across_machines(thing_cls: type) -> None:
     """A golden value: the namespace, separator or hashing changing would change every id."""
-    assert make_id(thing_cls, ("aux", "pumps", "pump1")) == Id(
-        kind="thing", value="53c14214f97b5f25a561c34375da3ba0"
-    )
+    assert make_id(thing_cls, ("aux", "pumps", "pump1")) == Id(kind="thing", value="7c63aa7e1ce9571cb1a3bdf35e19057e")
 
 
 def test_make_id_key_segments_are_not_concatenated(thing_cls: type) -> None:
@@ -94,7 +93,7 @@ def test_make_id_rejects_a_class_that_is_not_a_record_kind() -> None:
 
 def test_make_id_does_not_inherit_a_parent_kind(thing_cls: type) -> None:
     """A subclass is not itself a kind: reusing the parent's kind would alias ids."""
-    sub = type("Sub", (thing_cls,), {})
+    sub = type(thing_cls)("Sub", (thing_cls,), {})
 
     with pytest.raises(SchemaError, match="not a @record kind") as excinfo:
         make_id(sub, ("a",))
@@ -190,9 +189,7 @@ def test_parse_id_does_not_insist_on_hex() -> None:
     assert parse_id("thing:not-hex") == Id(kind="thing", value="not-hex")
 
 
-@pytest.mark.parametrize(
-    "text", ["", "thing", ":abc", "thing:"], ids=["empty", "no-colon", "no-kind", "no-value"]
-)
+@pytest.mark.parametrize("text", ["", "thing", ":abc", "thing:"], ids=["empty", "no-colon", "no-kind", "no-value"])
 def test_parse_id_refuses_text_that_is_not_kind_colon_value(text: str) -> None:
     """A missing kind, value or separator is a `SchemaError`, not a stray `ValueError`."""
     with pytest.raises(SchemaError, match="not `kind:value`") as excinfo:
@@ -216,3 +213,24 @@ def test_a_colon_in_the_value_is_fine() -> None:
     """The first colon is the separator, so the value may hold more."""
     made = Id(kind="thing", value="a:b")
     assert parse_id(render_id(made)) == made
+
+
+def test_id_namespace_salts_every_later_id(thing_cls: type) -> None:
+    """A salt moves each id, the same salt gives the same ids; leaving the `with` reads the default again."""
+    plain = make_id(thing_cls, ("a",))
+    with id_namespace("a"):
+        salted = make_id(thing_cls, ("a",))
+        again = make_id(thing_cls, ("a",))
+    with id_namespace("b"):
+        other = make_id(thing_cls, ("a",))
+    assert salted == again
+    assert salted != plain
+    assert other not in {plain, salted}
+    assert make_id(thing_cls, ("a",)) == plain
+
+
+def test_two_builds_with_the_default_namespace_give_identical_ids(thing_cls: type) -> None:
+    """The facade never sets the namespace, so the same input always gives the same ids."""
+    first = contextvars.copy_context().run(make_id, thing_cls, ("a",))
+    second = contextvars.copy_context().run(make_id, thing_cls, ("a",))
+    assert first == second == make_id(thing_cls, ("a",))

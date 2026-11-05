@@ -10,9 +10,7 @@ if TYPE_CHECKING:
     from _typeshed import SupportsRichComparison
 
 
-def components[K: SupportsRichComparison](
-    members: Iterable[K], joins: Iterable[Sequence[K]]
-) -> tuple[tuple[K, ...], ...]:
+def components[K: SupportsRichComparison](members: Iterable[K], joins: Iterable[Sequence[K]]) -> tuple[tuple[K, ...], ...]:
     """Each connected group, sorted with the smallest member first, groups in that order.
 
     A join is a group of members that become one; the caller chooses which groups to pass,

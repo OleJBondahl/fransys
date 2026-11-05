@@ -34,23 +34,14 @@ def _group(plant: Plant, key: str, label: str, members: tuple[str, ...]) -> None
     plant.add(node)
     for member in members:
         item = make_id(Item, (member,))
-        plant.add(
-            Placement(
-                id=make_id(Placement, (key, member)), key=(key, member), item=item, node=node.id
-            )
-        )
+        plant.add(Placement(id=make_id(Placement, (key, member)), key=(key, member), item=item, node=node.id))
 
 
-def fold_plant(
-    *, ctl_group: bool = True, external: tuple[str, ...] = ()
-) -> tuple[Model, Id[Unit], Id[Unit]]:
+def fold_plant(*, ctl_group: bool = True, external: tuple[str, ...] = ()) -> tuple[Model, Id[Unit], Id[Unit]]:
     """The model, the unit `u` and the far unit `v`; `ctl_group` false leaves K1, K2, Z1 loose.
 
     The items keyed in `external` are by others.
-
     X1: t1 passes P1 to D1 through; t2 and t3 are bridged by a jumper, t2 fed by P1, t3 to D1.
-    X2: t4 and t5 both pass P1 to D1 through. X9 (no group): t9 passes K2 to D1.
-    Wires: P1-K1, K1-K2, K1-F1, K2-F2, K2-B1; a mate K1-Z1.
     """
     plant = Plant()
     outer = plant.unit("u", name="cab", tag="U1")
@@ -93,9 +84,6 @@ def fold_plant(
     homes = {"x1": outer, "x2": outer, "x9": outer, "p1": outer, "d1": outer, "k1": outer}
     homes |= {"k2": outer, "z1": nested, "f1": far, "f2": far}
     plant.records = [
-        dataclasses.replace(r, unit=homes.get(r.key[0]), external=r.key[0] in external)
-        if isinstance(r, Item)
-        else r
-        for r in plant.records
+        dataclasses.replace(r, unit=homes.get(r.key[0]), external=r.key[0] in external) if isinstance(r, Item) else r for r in plant.records
     ]
     return with_library(plant.model()), outer, far

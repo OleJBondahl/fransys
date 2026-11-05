@@ -78,9 +78,7 @@ def test_a_box_takes_the_sides_it_is_given():
     """es-0085: `sides` put each port on its own side; none keeps the alternating sides."""
     texts = (("a",), ("b",), ("c",))
     sides = {"a": "n", "b": "n", "c": "s"}
-    box = drawn_symbol(
-        "generic-box", texts, library=LIBRARY, offsets={"a": 0, "b": 16, "c": 0}, sides=sides
-    )
+    box = drawn_symbol("generic-box", texts, library=LIBRARY, offsets={"a": 0, "b": 16, "c": 0}, sides=sides)
     assert {p.id: p.direction.name for p in box.ports} == {"a": "N", "b": "N", "c": "S"}
     plain = drawn_symbol("generic-box", texts, library=LIBRARY)
     assert {p.id: p.direction.name for p in plain.ports} == {"a": "N", "b": "S", "c": "N"}

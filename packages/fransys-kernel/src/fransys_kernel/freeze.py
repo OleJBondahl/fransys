@@ -85,9 +85,7 @@ def _freeze(draft: Draft) -> Model:
     )
 
 
-def _rewrite_records(
-    records: tuple[Record, ...], aliases: frozendict[Id[Any], Id[Any]]
-) -> tuple[tuple[Record, ...], tuple[Problem, ...]]:
+def _rewrite_records(records: tuple[Record, ...], aliases: frozendict[Id[Any], Id[Any]]) -> tuple[tuple[Record, ...], tuple[Problem, ...]]:
     """Rewrite retired ids in every record; one whose own rules then refuse is reported.
 
     A rebuild re-runs `__post_init__`, which may refuse the new values: report it, never raise.
@@ -102,11 +100,7 @@ def _rewrite_records(
             rewritten.append(cast("Record", _rewrite(record, aliases)))
         except ModelError as exc:
             rewritten.append(record)
-            error = (
-                SchemaError(str(exc), kind=exc.kind, record_id=record.id)
-                if isinstance(exc, SchemaError)
-                else exc
-            )
+            error = SchemaError(str(exc), kind=exc.kind, record_id=record.id) if isinstance(exc, SchemaError) else exc
             problems.append(Problem(ALIAS, record.id, ALIAS_FIELD, error))
     return tuple(rewritten), tuple(problems)
 
@@ -131,7 +125,5 @@ def _rewrite(value: object, aliases: frozendict[Id[Any], Id[Any]]) -> object:
             replaced = _rewrite(current, aliases)
             if replaced is not current:
                 changes[field.name] = replaced
-        return (
-            dataclasses.replace(cast("DataclassInstance", value), **changes) if changes else value
-        )
+        return dataclasses.replace(cast("DataclassInstance", value), **changes) if changes else value
     return value

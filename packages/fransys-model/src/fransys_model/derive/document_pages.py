@@ -19,8 +19,8 @@ lazy from fransys_model.vocab.document import Document
 from .black_box import drawing_set_is_replica_only
 from .drawing_text import position_text
 from .export_names import document_export_name
+from .facts.house_settings import frame_form_of, reference_text_of
 from .frame_labels import cell_labels
-from .house_settings import frame_form_of, reference_text_of
 from .page_destination import page_destination
 from .printed_sets import document_drawing_sets
 from .set_rank import set_rank
@@ -74,11 +74,7 @@ def page_order_key(set_number: int, page: Page) -> tuple[int, int]:
 def ordered_pages(model: Model, *, include_replica_only: bool = True) -> tuple[Page, ...]:
     """Every `layout.page` in set then page order; replica-only sets drop out when asked."""
     sets = layout_of(model, DrawingSet)
-    skipped = (
-        set()
-        if include_replica_only
-        else {s.id for s in sets.values() if is_replica_only_undrawn(model, s)}
-    )
+    skipped = set() if include_replica_only else {s.id for s in sets.values() if is_replica_only_undrawn(model, s)}
     pages = [p for p in layout_of(model, Page).values() if p.drawing_set not in skipped]
     return tuple(sorted(pages, key=lambda p: page_order_key(sets[p.drawing_set].number, p)))
 
@@ -114,11 +110,7 @@ def item_pages(model: Model) -> dict[Id[Item], tuple[ItemPage, ...]]:
                     continue
                 column, row = member.cell.column, member.cell.row
                 labels = cell_labels(frame, rows, column, row)
-                text = position_text(
-                    refs, page.number, labels, (), set_number=set_rank(model, page)
-                )
+                text = position_text(refs, page.number, labels, (), set_number=set_rank(model, page))
                 item = funcs[member.function].item
-                found[item].setdefault(
-                    (name, destination), ItemPage(file=name, destination=destination, text=text)
-                )
+                found[item].setdefault((name, destination), ItemPage(file=name, destination=destination, text=text))
     return {item: tuple(pages.values()) for item, pages in found.items()}

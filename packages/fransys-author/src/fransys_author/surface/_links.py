@@ -4,12 +4,11 @@ from typing import TYPE_CHECKING
 lazy from types import EllipsisType
 
 from fransys_author.errors import AuthorError
-from fransys_author.handles import Terminal
 from fransys_author.surface._device import Device
 from fransys_author.surface._handles import Fn
 from fransys_author.surface._tags import bare
 from fransys_author.surface._wire import _port
-lazy from fransys_author.handles import Port
+lazy from fransys_author.handles import Port, Terminal
 
 if TYPE_CHECKING:
     from fransys_author.handles import Fn as EngineFn
@@ -17,16 +16,12 @@ if TYPE_CHECKING:
     from fransys_author.surface.design import Design
 
 
-def engine_handle(
-    target: object, call: str, *, terminal: bool = False
-) -> Item | EngineFn | Terminal:
-    """The engine handle of a surface `Device` or `Fn` (a `Terminal` too when `terminal`)."""
+def engine_handle(target: object, call: str) -> Item | EngineFn:
+    """The engine handle of a surface `Device` or `Fn`."""
     if isinstance(target, Device):
         return target._item
     if isinstance(target, Fn):
         return target._fn
-    if terminal and isinstance(target, Terminal):
-        return target
     msg = f"{call} takes a device or a function, got {type(target).__name__}"
     raise AuthorError(msg)
 
@@ -50,7 +45,7 @@ class Links:
 
         Does not take pins, strings or terminals; a device needs exactly one function.
         """
-        self._engine.mate(engine_handle(a, "d.mate"), engine_handle(b, "d.mate"))  # ty: ignore[invalid-argument-type] -- Item | Fn | Terminal narrowed by the call's own check
+        self._engine.mate(engine_handle(a, "d.mate"), engine_handle(b, "d.mate"))
 
     def harness(
         self: "Design",

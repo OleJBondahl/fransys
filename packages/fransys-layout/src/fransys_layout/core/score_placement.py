@@ -20,12 +20,7 @@ def _vertices(scene: Scene) -> frozenset[tuple[int, int, int]]:
 
 def _straight(scene: Scene) -> frozenset[tuple[int, int, int]]:
     """Vertices of the polylines that stay on one x: a straight vertical wire's ends."""
-    return frozenset(
-        (w.page, x, y)
-        for w in scene.wires
-        if len({p[0] for p in w.points}) == 1
-        for x, y in w.points
-    )
+    return frozenset((w.page, x, y) for w in scene.wires if len({p[0] for p in w.points}) == 1 for x, y in w.points)
 
 
 def _touching(box: SceneBox, vertices: frozenset[tuple[int, int, int]]) -> list[str]:
@@ -36,17 +31,7 @@ def loose(scene: Scene) -> list[str]:
     """P5: a box no wire touches, with no biased end and no marker on any pin."""
     vertices = _vertices(scene)
     marked = {(m.box, m.pin) for m in scene.markers}
-    return [
-        b.sym
-        for b in scene.boxes
-        if not _touching(b, vertices)
-        and not any(p.biased or (b.sym, p.pin) in marked for p in b.pins)
-    ]
-
-
-def _is_junction(box: SceneBox) -> bool:
-    nodes = {p.node for p in box.pins}
-    return len(box.pins) > 1 and len(nodes) == 1 and None not in nodes
+    return [b.sym for b in scene.boxes if not _touching(b, vertices) and not any(p.biased or (b.sym, p.pin) in marked for p in b.pins)]
 
 
 def junction_off_line(scene: Scene) -> list[str]:
@@ -57,7 +42,8 @@ def junction_off_line(scene: Scene) -> list[str]:
     vertices, straight, lone = _vertices(scene), _straight(scene), set(loose(scene))
     out = []
     for box in scene.boxes:
-        if not _is_junction(box) or box.sym in lone:
+        nodes = {p.node for p in box.pins}
+        if not (len(box.pins) > 1 and len(nodes) == 1 and None not in nodes) or box.sym in lone:
             continue
         touching = _touching(box, vertices)
         on_line = any((box.page, p.x, p.y) in straight for p in box.pins if p.pin in touching)

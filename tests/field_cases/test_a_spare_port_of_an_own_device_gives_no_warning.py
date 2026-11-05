@@ -1,12 +1,6 @@
-"""Field case: a spare port of a unit's own device gives no warning.
-
-The engineering shape: a cabinet unit holds an I/O device with two connectors and a terminal
-strip. Only the first connector is wired, to the strip. The second connector is a spare: the
-part has the port, so it cannot be removed.
-
+"""Field case: a cabinet unit's I/O device has two connectors, and only the first is wired, to a terminal strip.
 The bug: `UNIT_CONNECTOR_DANGLING` warned on every such spare, and the consumer had no fix to make.
-Fixed by decision model-0219: the code is retired. A spare connector is no finding at all.
-"""
+Fixed by model-0219, the code is retired, and a spare connector is no finding at all."""
 
 from typing import Any, NamedTuple
 
@@ -23,8 +17,8 @@ def test_a_spare_port_of_an_own_device_gives_no_warning() -> None:
     def _spare(d: Any) -> _Cab:
         x1 = d.terminal_strip("X1", "DEMO-TB-2.5", 2, interface=True)
         io = d.device("A1", "DEMO-IO-2X")  # x2 stays free
-        d.detail.wire(x1[1], io.x1["1"], wire=(BU, 0.75))
-        d.detail.wire(x1[2], io.x1["2"], wire=(BU, 0.75))
+        d.series(x1[1].inner, io.x1["1"], wire=(BU, 0.75))
+        d.series(x1[2].inner, io.x1["2"], wire=(BU, 0.75))
         return _Cab(x1)
 
     d = fr.design("demo_parts")

@@ -4,21 +4,13 @@ A block diagram that strikes a label or shares a track is a Fransys drawing defe
 `DIAGRAM_LABEL_STRUCK` and `DIAGRAM_LINES_SHARE_TRACK` are INFO and `fr.write` still writes.
 """
 
-import sys
-from pathlib import Path
-
+import fransys as fr
 import pytest
+from test_block_diagram_facade import _built, _system
 
-_TESTS_DIR = Path(__file__).resolve().parent
-if str(_TESTS_DIR) not in sys.path:
-    sys.path.insert(0, str(_TESTS_DIR))
-
-import fransys as fr  # noqa: E402 -- after the sys.path insert
-from test_block_diagram_facade import _built, _system  # noqa: E402 -- ditto
-
-from fransys_layout.lint import diagram  # noqa: E402 -- ditto
-from fransys_layout.lint.codes import DIAGRAM_LABEL_STRUCK, DIAGRAM_LINES_SHARE_TRACK  # noqa: E402
-from fransys_model.kernel import Severity  # noqa: E402 -- ditto
+from fransys_layout.lint import diagram
+from fransys_layout.lint.codes import DIAGRAM_LABEL_STRUCK, DIAGRAM_LINES_SHARE_TRACK
+from fransys_model.kernel import Severity
 
 _CASES = [
     (DIAGRAM_LABEL_STRUCK, "check_label_struck"),

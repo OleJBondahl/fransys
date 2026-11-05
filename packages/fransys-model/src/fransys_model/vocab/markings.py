@@ -5,19 +5,19 @@ contact entries and every output read the same answer. A pole is a declared `Int
 """
 
 import re
-from collections.abc import Iterable, Mapping  # noqa: TC003 -- signature tests resolve hints at runtime
 from typing import NamedTuple
+lazy from collections.abc import Iterable, Mapping
 
+from fransys_model.elecdef import LinkKind, Side
 from fransys_model.kernel import Id, NaturalKey, natural_key
 
-from .enums import FunctionKind, LinkKind, PoleSide
-from .roles import LINK_ROLES, function_role_of
-from .roles_types import FunctionRole  # noqa: TC001 -- signature tests resolve hints at runtime
-from .templates import InternalLink, PortTemplate  # noqa: TC001 -- signature tests resolve hints at runtime
+from .roles import LINK_ROLES
+lazy from .roles_types import FunctionRole
+lazy from .templates import InternalLink, PortTemplate
 
 
 class Pole(NamedTuple):
-    """One pole's ends: `line` is the end whose `pole_side` is `line`, else `None`.
+    """One pole's ends: `line` is the end on `Side.A` (supply side) when the other is not, else `None`.
 
     `ends` is `(line, load)` when `line` is known, else the two ends in natural marking order.
     """
@@ -43,20 +43,18 @@ def port_order_key(template: PortTemplate) -> tuple[NaturalKey, str]:
 
 
 def pole_between(a: PortTemplate, b: PortTemplate) -> Pole:
-    """The pole joining `a` and `b`; the line end first when exactly one end is `line`."""
+    """The pole joining `a` and `b`; the line end first when exactly one end is on `Side.A`."""
     for line, load in ((a, b), (b, a)):
-        if line.pole_side is PoleSide.LINE and load.pole_side is not PoleSide.LINE:
+        if line.side is Side.A and load.side is not Side.A:
             return Pole(line, (line, load))
     first, second = sorted((a, b), key=port_order_key)
     return Pole(None, (first, second))
 
 
-def pole_order(
-    links: Iterable[InternalLink], templates: Mapping[Id[PortTemplate], PortTemplate]
-) -> tuple[Pole, ...]:
-    """The poles of `links` in natural order of each pole's first marking (9 before 10)."""
+def pole_order(links: Iterable[InternalLink], templates: Mapping[Id[PortTemplate], PortTemplate]) -> tuple[Pole, ...]:
+    """The poles of `links` in natural order of each pole's markings (9 before 10)."""
     poles = (pole_between(templates[link.a], templates[link.b]) for link in links)
-    return tuple(sorted(poles, key=lambda pole: min(map(port_order_key, pole.ends))))
+    return tuple(sorted(poles, key=lambda pole: (min(map(port_order_key, pole.ends)), max(map(port_order_key, pole.ends)))))
 
 
 def is_pole_by_role(role: FunctionRole, link: LinkKind) -> bool:
@@ -71,12 +69,3 @@ def poles_by_role(
 ) -> tuple[Pole, ...]:
     """The poles of a function of `role` from all its links, as `(line, load)` in order."""
     return pole_order((link for link in links if is_pole_by_role(role, link.kind)), templates)
-
-
-def function_poles(
-    function: FunctionKind,
-    links: Iterable[InternalLink],
-    templates: Mapping[Id[PortTemplate], PortTemplate],
-) -> tuple[Pole, ...]:
-    """`poles_by_role` at a kind's row: kept for the legacy engine until SCHEMATIC-FLIP."""
-    return poles_by_role(function_role_of(function), links, templates)

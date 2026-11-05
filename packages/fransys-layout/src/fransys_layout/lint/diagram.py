@@ -2,10 +2,10 @@
 
 from itertools import combinations, pairwise
 
-from fransys_layout.fix_text import fix_text
+from fransys_layout.fix_text import finding
 from fransys_layout.geometry import Box, Point, contains_point, overlaps
 from fransys_layout.routing.space import Run, crosses, run_of
-from fransys_model.kernel import Finding, Severity
+lazy from fransys_model.kernel import Finding
 
 from ._diagram_scene import Ident, Scene, SceneBox, SceneLine, shapes
 from .codes import (
@@ -15,16 +15,12 @@ from .codes import (
     DIAGRAM_LINE_THROUGH_BOX,
     DIAGRAM_LINES_SHARE_TRACK,
     DIAGRAM_TEXT_OVERLAP,
-    UNCLEARABLE,
 )
 
 
 def _error(code: str, subjects: tuple[Ident, ...], message: str) -> Finding:
-    """ERROR, or INFO for a code in `UNCLEARABLE` (layout-0252)."""
-    severity = Severity.INFO if code in UNCLEARABLE else Severity.ERROR
-    return Finding(
-        code=code, severity=severity, subjects=subjects, message=message, fix=fix_text(code)
-    )
+    """The code's finding (layout-0252: an unclearable defect is INFO in its `CodeInfo`)."""
+    return finding(code, subjects, message)
 
 
 def check_box_overlap(scene: Scene) -> tuple[Finding, ...]:
@@ -37,12 +33,19 @@ def check_box_overlap(scene: Scene) -> tuple[Finding, ...]:
 
 
 def check_text_overlap(scene: Scene) -> tuple[Finding, ...]:
-    """Two printed texts share interior area."""
-    return tuple(
+    """Two printed texts share interior area, or a line label shares it with a box or a tab."""
+    texts = tuple(
         _error(DIAGRAM_TEXT_OVERLAP, (one.owner, two.owner), "Two texts overlap.")
         for one, two in combinations(scene.texts, 2)
         if overlaps(one.rect, two.rect)
     )
+    on_box = tuple(
+        _error(DIAGRAM_TEXT_OVERLAP, (label.owner, one.box), "A label overlaps a box.")
+        for label in scene.labels
+        for one in scene.boxes
+        if any(overlaps(label.rect, shape) for shape in shapes(one))
+    )
+    return texts + on_box
 
 
 def _passes_through(line: SceneLine, one: SceneBox) -> bool:
@@ -66,9 +69,7 @@ def _on_outline(point: Point, rect: Box) -> bool:
 
 
 def _ends_on(point: Point, box: Ident, scene: Scene) -> bool:
-    return any(
-        _on_outline(point, shape) for one in scene.boxes if one.box == box for shape in shapes(one)
-    )
+    return any(_on_outline(point, shape) for one in scene.boxes if one.box == box for shape in shapes(one))
 
 
 def _off_ends(line: SceneLine, scene: Scene) -> list[tuple[Ident, Ident]]:
@@ -87,9 +88,7 @@ def _off_ends(line: SceneLine, scene: Scene) -> list[tuple[Ident, Ident]]:
 def check_line_off_box(scene: Scene) -> tuple[Finding, ...]:
     """A line end is not on the outline of its box or a tab of it, or of a marker."""
     return tuple(
-        _error(DIAGRAM_LINE_OFF_BOX, subjects, "A line end is off its box outline.")
-        for line in scene.lines
-        for subjects in _off_ends(line, scene)
+        _error(DIAGRAM_LINE_OFF_BOX, subjects, "A line end is off its box outline.") for line in scene.lines for subjects in _off_ends(line, scene)
     )
 
 

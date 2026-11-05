@@ -42,9 +42,7 @@ def _load_lean_surface() -> types.ModuleType:
     """Load `scripts/lean_surface.py` the way its own tests do, reusing a prior load."""
     if _LEAN_SURFACE_NAME in sys.modules:
         return sys.modules[_LEAN_SURFACE_NAME]
-    spec = importlib.util.spec_from_file_location(
-        _LEAN_SURFACE_NAME, _SCRIPTS_DIR / "lean_surface.py"
-    )
+    spec = importlib.util.spec_from_file_location(_LEAN_SURFACE_NAME, _SCRIPTS_DIR / "lean_surface.py")
     if spec is None or spec.loader is None:
         msg = "could not load scripts/lean_surface.py"
         raise ImportError(msg)
@@ -112,12 +110,7 @@ def _public_methods(class_node: ast.ClassDef) -> tuple[ast.FunctionDef | ast.Asy
 
     `__init__` is the one dunder read: it is the signature a caller builds the class by.
     """
-    return tuple(
-        child
-        for child in class_node.body
-        if isinstance(child, _DEF_TYPES)
-        and (child.name == "__init__" or not child.name.startswith("_"))
-    )
+    return tuple(child for child in class_node.body if isinstance(child, _DEF_TYPES) and (child.name == "__init__" or not child.name.startswith("_")))
 
 
 def _is_record_decorated(class_node: ast.ClassDef) -> bool:
@@ -163,9 +156,7 @@ def _resolved_surface_defs(
     return resolved
 
 
-def measure_surface_types(
-    modules: Iterable[str] | None = None, entries: tuple[Any, ...] | None = None
-) -> dict[str, int]:
+def measure_surface_types(modules: Iterable[str] | None = None, entries: tuple[Any, ...] | None = None) -> dict[str, int]:
     """Every offending surface function/method/property signature, keyed `path::qualname`.
 
     Valued by the COUNT of `Any`/`object`/unparameterised `dict`/`list`/`tuple`/missing
@@ -188,9 +179,7 @@ def measure_surface_types(
     return measured
 
 
-def measure_record_field_types(
-    modules: Iterable[str] | None = None, entries: tuple[Any, ...] | None = None
-) -> dict[str, int]:
+def measure_record_field_types(modules: Iterable[str] | None = None, entries: tuple[Any, ...] | None = None) -> dict[str, int]:
     """Every offending `@value`/`@record` surface class's field annotations, keyed `path::Class`.
 
     One count per class, summed over its own fields (the same four violation kinds, `Any`/
@@ -204,11 +193,7 @@ def measure_record_field_types(
     for rel, qualname, node in _resolved_surface_defs(modules, entries):
         if not isinstance(node, ast.ClassDef) or not _is_record_decorated(node):
             continue
-        count = sum(
-            1
-            for field in node.body
-            if isinstance(field, ast.AnnAssign) and _contains_banned(field.annotation)
-        )
+        count = sum(1 for field in node.body if isinstance(field, ast.AnnAssign) and _contains_banned(field.annotation))
         if count:
             measured[f"{rel}::{qualname}"] = count
     return measured

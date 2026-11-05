@@ -8,7 +8,7 @@ import re
 from typing import TYPE_CHECKING
 lazy from collections.abc import Iterator
 
-from _drawn_pages import drawn_pages
+from _drawn_pages import drawn_pages, markers_in, ref_texts
 
 from fransys_model.derive import item_designation
 from fransys_model.layout import DrawingSet, Page, layout_of
@@ -28,7 +28,7 @@ def designation_of(model: Model, name: str) -> str:
 
 
 def strings(drawing: Drawing) -> Iterator[str]:
-    """Every string the page prints: texts, slots, cells, outline and wire labels, marker texts."""
+    """Every string the page prints: texts, slots, cells, outline labels, marker texts."""
     yield from (t.text for t in drawing.texts)
     for symbol in drawing.symbols:
         yield from (value for _, value in symbol.slots)
@@ -36,9 +36,6 @@ def strings(drawing: Drawing) -> Iterator[str]:
     for outline in drawing.outlines:
         if outline.label is not None:
             yield outline.label.text
-    yield from (w.label.text for w in drawing.wires if w.label is not None)
-    for marker in drawing.markers:
-        yield from (value for _, value in marker.texts)
 
 
 def _names(text: str, designation: str) -> bool:
@@ -47,11 +44,7 @@ def _names(text: str, designation: str) -> bool:
 
 def pages_with(model: Model, designation: str) -> dict[Id[Page], Drawing]:
     """The pages (id -> Drawing) that print `designation` as a whole designation."""
-    return {
-        page: drawing
-        for page, drawing in drawn_pages(model).items()
-        if any(_names(text, designation) for text in strings(drawing))
-    }
+    return {page: drawing for page, drawing in drawn_pages(model).items() if any(_names(text, designation) for text in strings(drawing))}
 
 
 def pages_of(model: Model, name: str) -> dict[Id[Page], Drawing]:
@@ -66,4 +59,4 @@ def set_of(model: Model, page: Id[Page]) -> DrawingSet:
 
 def marker_texts(model: Model, page: Id[Page]) -> list[str]:
     """Every text of every marker on `page`, in drawn order."""
-    return [value for marker in drawn_pages(model)[page].markers for _, value in marker.texts]
+    return [value for marker in markers_in(drawn_pages(model)[page]) for value in ref_texts(marker)]

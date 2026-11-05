@@ -9,11 +9,10 @@ import importlib.util
 import sys
 import tomllib
 from pathlib import Path
+from typing import cast
 
 ROOT = Path(__file__).resolve().parents[1]
-_spec = importlib.util.spec_from_file_location(
-    "fransys_lean_surface", ROOT / "scripts" / "lean_surface.py"
-)
+_spec = importlib.util.spec_from_file_location("fransys_lean_surface", ROOT / "scripts" / "lean_surface.py")
 if _spec is None or _spec.loader is None:
     msg = "could not load scripts/lean_surface.py"
     raise ImportError(msg)
@@ -26,8 +25,7 @@ ORDER = "an order names the surface move"
 
 def _snapshot() -> dict[str, list[str]]:
     data = tomllib.loads((ROOT / "surface.toml").read_text(encoding="utf-8"))
-    modules: dict[str, list[str]] = data["modules"]
-    return modules
+    return cast("dict[str, list[str]]", data["modules"])
 
 
 def test_module_set_equals_the_snapshot() -> None:
@@ -35,10 +33,7 @@ def test_module_set_equals_the_snapshot() -> None:
     snap = set(_snapshot())
     added = sorted(code - snap)
     removed = sorted(snap - code)
-    assert code == snap, (
-        f"surface modules differ from surface.toml; added in code: {added}; "
-        f"removed from code: {removed}; {ORDER}"
-    )
+    assert code == snap, f"surface modules differ from surface.toml; added in code: {added}; removed from code: {removed}; {ORDER}"
 
 
 def test_each_modules_names_equal_the_snapshot() -> None:
@@ -52,8 +47,7 @@ def test_each_modules_names_equal_the_snapshot() -> None:
         added += [f"{module}.{name}" for name in code_names - snap_names]
         removed += [f"{module}.{name}" for name in snap_names - code_names]
     assert not [*added, *removed], (
-        f"surface names differ from surface.toml; added in code: {sorted(added)}; "
-        f"removed from code: {sorted(removed)}; {ORDER}"
+        f"surface names differ from surface.toml; added in code: {sorted(added)}; removed from code: {sorted(removed)}; {ORDER}"
     )
 
 

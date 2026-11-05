@@ -3,24 +3,29 @@
 The planted model solves once for the module; it holds a generic box (a sized box with movable
 pins) and two pages, so every record family and the box's `lengths` and `offsets` are present.
 """
+# NET_POTENTIAL_CONFLICT 1 per default-salt build set (KI-461): planted_model or demo_model 24 V to 0 V short through strip and mate.
+# NET_SHORTED 1 per default-salt build set (KI-461): planted_model or demo_model 24 V to 0 V short through strip and mate.
 
 from dataclasses import replace
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 import pytest
-from conventions_fixtures import house, tables_on
-from fransys_el import ProblemError, build, lay_out, options, write_layout
+from conventions_fixtures import house
+from fransys_el import ProblemError, build, lay_out_drawn, options, write_layout
+from fransys_el.codes import FINDING_CODES
 from fransys_el.draw_layout import _wires as drawn_wires
 from fransys_el.draw_write import write_layout_drawn
-from fransys_el.placement_ids import symbol_key
-from fransys_el.placement_tables import is_table_spot
+from fransys_el.drawn_identity import net_text
+from fransys_el.placement_ids import net_key, symbol_key
+from fransys_el.placement_nets import net_ports
 from fransys_el.write_findings import kernel_findings
+from fransys_el.write_ids import symbol_subjects
 from fransys_el.write_pages import write_pages
 from placement_fixtures import kit_for, planted_model
 
 from electrical_symbols import LIBRARY
 from fransys_layout.core import Finding, PinRef, Wire, solve
-from fransys_model.derive import net_of
+from fransys_model.derive import net_of, unit_label
 from fransys_model.kernel import Origin, Severity, evolve, make_id
 from fransys_model.layout import (
     DrawingSet,
@@ -33,16 +38,17 @@ lazy from fransys_layout.drawing import DrawnSymbol
 
 if TYPE_CHECKING:
     from fransys_layout.core import CoreLayout, PlacementProblem
+    from fransys_layout.core.values import FindingCode
     from fransys_model.kernel import Model
 
 
 class Written:
     """The planted model, its kit, its solved layout, and what `write_layout` made of them."""
 
-    def __init__(self, *, tables: bool = True) -> None:
+    def __init__(self) -> None:
         self.model: Model = planted_model()
         self.kit = kit_for(self.model)
-        conventions = tables_on() if tables else house()
+        conventions = house()
         self.problem: PlacementProblem
         self.problem, _ = build(self.model, self.kit, conventions, LIBRARY)
         self.layout: CoreLayout = solve(self.problem, options(conventions, LIBRARY))
@@ -61,33 +67,15 @@ def written() -> Written:
     return Written()
 
 
-def test_the_default_builds_no_table_annex_and_draws_no_head() -> None:
-    """CONTACT-TABLE: `contact_tables` is off by default; on, a table annex is built per coil."""
-    off, on = Written(tables=False), Written()
-
-    def spots(w: Written) -> set[str]:
-        return {a.spot for a in w.layout.annotations.annexes if is_table_spot(a.spot)}
-
-    assert not _tables(off)
-    assert not spots(off)
-    assert _tables(on)
-    assert spots(on)
-
-
 def _symbols(written: Written) -> list[DrawnSymbol]:
     """Every symbol of every page Drawing."""
     return [s for d in written.drawn.values() for s in d.symbols]
 
 
 def _bodies(written: Written) -> list[DrawnSymbol]:
-    """The drawn symbols that stand for a placed function: no contact table, no junction dot."""
+    """The drawn symbols that stand for a placed function: no junction dot."""
     at = {(p.x, p.y) for pg in written.layout.placement.pages for p in pg.placed}
     return [s for s in _symbols(written) if s.key != "contact-head" and (s.x, s.y) in at]
-
-
-def _tables(written: Written) -> list[DrawnSymbol]:
-    """The drawn contact tables."""
-    return [s for s in _symbols(written) if s.key == "contact-head"]
 
 
 def _placed(written: Written) -> dict[tuple[int, int], Any]:
@@ -100,7 +88,6 @@ def test_one_drawing_per_page_and_one_symbol_per_placed_function(written: Writte
     assert len(layout_of(out, Page)) == len(written.drawn) == len(layout.pages)
     assert len(layout_of(out, DrawingSet)) == 1
     assert len(_bodies(written)) == sum(len(p.placed) for p in layout.placement.pages)
-    assert _tables(written)  # a relay coil with contacts draws its table head
     wires = sum(len(d.wires) for d in written.drawn.values())
     assert wires == sum(len(p.wires) for p in layout.routes.pages)
 
@@ -110,10 +97,7 @@ def test_a_symbol_takes_the_key_of_its_pick_and_its_position(written: Written) -
     poles = {symbol_key(written.model, f): pick.poles for f, pick in written.kit.items()}
     placed = {p.sym: p for pg in written.layout.placement.pages for p in pg.placed}
     drawn = sorted((s.key, s.poles, s.x, s.y, s.orient) for s in _bodies(written))
-    expected = sorted(
-        (keys[sym], poles[sym], p.x, p.y, p.orient.name if hasattr(p.orient, "name") else p.orient)
-        for sym, p in placed.items()
-    )
+    expected = sorted((keys[sym], poles[sym], p.x, p.y, p.orient.name if hasattr(p.orient, "name") else p.orient) for sym, p in placed.items())
     assert drawn == expected
 
 
@@ -126,20 +110,10 @@ def test_a_box_carries_its_pin_offsets_and_its_port_rows(written: Written) -> No
     assert all(len(row) == 1 for row in boxes[0].texts)
 
 
-def test_a_symbol_that_is_not_a_box_carries_no_texts_but_its_tables_do(written: Written) -> None:
+def test_a_symbol_that_is_not_a_box_carries_no_texts_or_offsets(written: Written) -> None:
     plain = [s for s in _bodies(written) if s.key != "generic-box"]
     assert plain
-    assert all(not s.texts for s in plain)
-    tables = _tables(written)
-    assert tables
-    assert all(t.texts[0] == ("NO", "NC") and len(t.texts) > 1 for t in tables)
-    assert all(dict(t.slots)["1.no"] or dict(t.slots)["1.nc"] for t in tables)
-
-
-def test_a_symbol_that_is_not_a_box_carries_no_offsets(written: Written) -> None:
-    others = [s for s in _bodies(written) if s.key != "generic-box"]
-    assert others
-    assert all(not s.offsets for s in others)
+    assert all(not s.texts and not s.offsets for s in plain)
 
 
 def test_leads_are_the_wired_pins_and_an_unwired_pin_has_none(written: Written) -> None:
@@ -190,12 +164,14 @@ def test_writing_twice_gives_one_model(written: Written) -> None:
 
 
 def test_a_core_finding_keeps_its_code_text_and_the_registry_severity(written: Written) -> None:
-    net = next(iter(written.model.tables["port"])).value
+    net = next(iter(net_ports(written.model)))
     found = kernel_findings(
-        written.model, [Finding("ROUTE_FAILED", "no path", 1, net), Finding("NO_CELL", "nowhere")]
+        written.model,
+        [Finding("WIRE_THROUGH_BODY", "no path", 1, net), Finding("NO_CELL", "nowhere")],
+        {},
     )
     assert [(f.code, f.message) for f in found] == [
-        ("ROUTE_FAILED", "no path"),
+        ("WIRE_THROUGH_BODY", "no path"),
         ("NO_CELL", "nowhere"),
     ]
     assert [f.severity for f in found] == [Severity.ERROR, Severity.WARNING]
@@ -205,29 +181,45 @@ def test_a_core_finding_keeps_its_code_text_and_the_registry_severity(written: W
 
 
 def test_a_subject_that_is_no_record_names_no_subject(written: Written) -> None:
-    (found,) = kernel_findings(written.model, [Finding("NO_BLOCK", "no block", None, "col:9")])
+    (found,) = kernel_findings(written.model, [Finding("NO_BLOCK", "no block", None, "col:9")], {})
     assert found.subjects == ()
 
 
 def test_an_unmapped_token_beside_a_mapped_one_stays_in_the_message(written: Written) -> None:
-    net = next(iter(written.model.tables["port"])).value
-    (found,) = kernel_findings(
-        written.model, [Finding("NO_BLOCK", "no block", None, f"{net},col:9")]
-    )
+    net = next(iter(net_ports(written.model)))
+    (found,) = kernel_findings(written.model, [Finding("NO_BLOCK", "no block", None, f"{net},col:9")], {})
     assert [s.kind for s in found.subjects] == ["port"]
     assert found.message == "no block (subject not a model record: col:9)"
 
 
-def test_a_fully_mapped_subject_leaves_the_message_unchanged(written: Written) -> None:
-    net = next(iter(written.model.tables["port"])).value
-    (found,) = kernel_findings(written.model, [Finding("ROUTE_FAILED", "no path", 1, net)])
-    assert found.message == "no path"
-    assert len(found.subjects) == 1
+@pytest.mark.rule("NO-SILENT-DROP")
+def test_a_core_symbol_id_maps_to_its_record(written: Written) -> None:
+    """A core symbol id maps to the function it draws, so a fix naming `<subject>` gets one.
+
+    Open gap: CARD_OVERFULL and NO_BLOCK pass a box (blocks_card.py:125, blocks_check.py:24), and
+    WIRE_MEETS_NET can pass ids outside the map. Covered by SPEC-022 (finding subject
+    """
+    from typing import get_args
+
+    from fransys_layout import FINDING_CODES as LAYOUT_CODES
+    from fransys_layout.core.values import FindingCode
+
+    emitted = set(get_args(FindingCode))
+    wants = sorted(info.code for info in (*LAYOUT_CODES, *FINDING_CODES) if info.code in emitted and "<subject>" in info.fix)
+    assert {"ANNEX_UNPLACED", "LANE_WIRE_DROPPED", "WIRE_MEETS_NET"} <= set(wants)
+    symbols = symbol_subjects(written.model, written.kit)
+    sym = next(iter(symbols))
+    net = next(iter(net_ports(written.model)))
+    for code in wants:
+        subject = net if code == "WIRE_MEETS_NET" else sym
+        core = Finding(cast("FindingCode", code), "text", None, subject)
+        (found,) = kernel_findings(written.model, [core], symbols)
+        assert [s.kind for s in found.subjects] in (["function"], ["port"]), code
 
 
 def test_a_code_the_registry_does_not_hold_is_refused(written: Written) -> None:
     with pytest.raises(ProblemError, match="LANE_TURNED"):
-        kernel_findings(written.model, [Finding("LANE_TURNED", "turned")])
+        kernel_findings(written.model, [Finding("LANE_TURNED", "turned")], {})
 
 
 def test_a_bundle_is_a_trunk_and_a_single_wire_is_a_wire(written: Written) -> None:
@@ -236,21 +228,21 @@ def test_a_bundle_is_a_trunk_and_a_single_wire_is_a_wire(written: Written) -> No
         Wire("n1", page.number, ((0, 0), (8, 0)), "routed"),
         Wire("n1", page.number, ((0, 8), (8, 8)), "trunk", lane=2),
     )
-    drawn = [w for _, _, w in drawn_wires(wires, written.model, {page.number: page}, 1)]
+    drawn = [w for _, w in drawn_wires(wires, written.model, {page.number: page}, 1)]
     assert [(w.style, w.lanes) for w in drawn] == [("wire", 1), ("trunk", 1)]
     assert drawn[0].id != drawn[1].id
 
 
 def test_a_wire_takes_the_declared_net_of_the_port_its_net_is_named_for(written: Written) -> None:
-    """A drawn wire's `net` is the value of the first port of the net its port is on."""
+    """A drawn wire's `net` is the `net_key` of the net its lead port is on."""
     model = written.model
-    port_of = {port.value: port for port in ports(model)}
+    lead_of = net_ports(model)
     wires = [w for d in written.drawn.values() for w in d.wires]
     assert wires
     for w in wires:
-        net = net_of(model, port_of[w.net])
+        net = net_of(model, lead_of[w.net])
         assert net is not None
-        assert w.net == net.ports[0].value
+        assert w.net == net_key(model, net.ports)
 
 
 def test_a_port_on_two_nets_is_refused(written: Written) -> None:
@@ -267,7 +259,7 @@ def test_a_port_on_two_nets_is_refused(written: Written) -> None:
     )
     model = evolve(written.model, put=nets, origin=Origin(file="t", line=0, note="t"))
     page = next(iter(layout_of(written.out, Page).values()))
-    wire = Wire(port.value, page.number, ((0, 0), (8, 0)), "routed")
+    wire = Wire(net_text(model, port), page.number, ((0, 0), (8, 0)), "routed")
     with pytest.raises(ProblemError, match="is on 2 nets"):
         drawn_wires((wire,), model, {page.number: page}, 1)
 
@@ -278,7 +270,7 @@ def test_wire_styles_exist(written: Written) -> None:
         Wire("n", page.number, ((0, 0), (8, 0)), "routed"),
         Wire("n", page.number, ((0, 8), (8, 8)), "trunk", lane=0),
     )
-    styles = {w.style for _, _, w in drawn_wires(wires, written.model, {page.number: page}, 1)}
+    styles = {w.style for _, w in drawn_wires(wires, written.model, {page.number: page}, 1)}
     assert styles == {"trunk", "wire"}
     assert styles <= {w.id for w in LIBRARY.wires}
 
@@ -310,7 +302,7 @@ def test_a_page_whose_first_group_holds_a_power_net_is_a_power_page(written: Wri
 
 def test_a_page_with_no_group_is_a_control_page(written: Written) -> None:
     plan = replace(written.layout.pages[0], groups=())
-    _, pages = write_pages(written.model, (plan,), None, {}, "stamp")
+    _, pages = write_pages(written.model, (plan,), None, {})
     assert pages[plan.page].role is PageRole.CONTROL
 
 
@@ -324,4 +316,26 @@ def test_the_same_net_in_two_drawing_sets_makes_distinct_wires(written: Written)
 
 def test_a_kit_with_no_function_for_the_symbols_is_refused(written: Written) -> None:
     with pytest.raises(ProblemError, match="the kit: has no function"):
-        lay_out(written.model, frozendict(), written.problem, house(), LIBRARY)
+        lay_out_drawn(written.model, frozendict(), written.problem, house(), LIBRARY)
+
+
+def test_a_call_without_the_symbol_map_is_a_type_error(written: Written) -> None:
+    with pytest.raises(TypeError, match="symbols"):
+        cast("Any", kernel_findings)(written.model, [Finding("NO_CELL", "nowhere")])
+
+
+def test_a_fill_under_min_text_names_the_unit_label_not_its_id(written: Written) -> None:
+    unit = next(iter(written.model.tables["unit"]))
+    core = Finding("FILL_UNDER_MIN", f"unit {unit.value}, block b: page filled 5%", 2, "b")
+    (found,) = kernel_findings(written.model, [core], {})
+    assert unit.value not in found.message
+    assert found.message.startswith(f"unit {unit_label(written.model, unit)}, block b")
+
+
+def test_the_drawn_net_text_is_the_net_key_of_its_port_not_the_first_port_value(written: Written) -> None:
+    """R1615: `net_text` spells a port's net as `Net.id` does (`net_key`), so power leads and markers name the core's net."""
+    model = written.model
+    for port in list(ports(model))[:20]:
+        net = net_of(model, port)
+        assert net is not None
+        assert net_text(model, port) == net_key(model, net.ports) != net.ports[0].value

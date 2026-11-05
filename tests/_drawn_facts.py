@@ -2,12 +2,10 @@
 
 The core Drawing names no model thing (R467 C1). `symbol_subjects` joins each `DrawnSymbol` to
 its function through `fransys_el.drawn_subjects`; `document_facts` gives each drawn page's
-record (number, drawing set); `wire_nets` and `marker_symbols` give a wire's and a marker's net
-as the port value its `net` string names. One home: the field cases copy none of this.
 """
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from _drawn_pages import drawn_pages
 from fransys_el import drawn_subjects, symbol_kit
@@ -41,14 +39,13 @@ class Placed:
 
     Reads fall through to the drawn symbol. `symbol` is its library key, `owner` the value of
     its function's id, `tag` its item's printed designation (`fransys_model.derive`); `offsets`,
-    `sides` and `slots` are dicts.
     """
 
     drawn: DrawnSymbol
-    page: Id
-    function: Id
+    page: Id[Any]
+    function: Id[Any]
     tag: str
-    drawing_set: Id
+    drawing_set: Id[Any]
 
     def __getattr__(self, name: str):
         return getattr(self.drawn, name)
@@ -74,13 +71,13 @@ class Placed:
         return dict(self.drawn.slots)
 
 
-def document_facts(model: Model) -> Mapping[Id, Page]:
+def document_facts(model: Model) -> Mapping[Id[Any], Page]:
     """Each drawn page's record: its `number` and `drawing_set`; the key is the Drawing's page."""
     pages = layout_of(model, Page)
     return {page: pages[page] for page in drawn_pages(model)}
 
 
-def _subjects(model: Model) -> dict[str, Id]:
+def _subjects(model: Model) -> dict[str, Id[Any]]:
     """The lead function of each drawn id, for the kit `fransys.build` made (deterministic)."""
     return drawn_subjects(model, symbol_kit(model, LIBRARY))
 
@@ -110,8 +107,8 @@ class PlacedText:
     """A `DrawnText` on a page with the function of the symbol it annotates (`owner`)."""
 
     drawn: DrawnText
-    page: Id
-    function: Id
+    page: Id[Any]
+    function: Id[Any]
 
     def __getattr__(self, name: str):
         return getattr(self.drawn, name)
@@ -120,12 +117,7 @@ class PlacedText:
 def text_subjects(model: Model) -> list[PlacedText]:
     """Every drawn text that annotates a symbol with a subject; a free text is left out."""
     subjects = _subjects(model)
-    return [
-        PlacedText(t, page, subjects[t.owner])
-        for page, d in drawn_pages(model).items()
-        for t in d.texts
-        if t.owner in subjects
-    ]
+    return [PlacedText(t, page, subjects[t.owner]) for page, d in drawn_pages(model).items() for t in d.texts if t.owner in subjects]
 
 
 def marker_symbols(model: Model) -> list[Placed]:
@@ -133,7 +125,7 @@ def marker_symbols(model: Model) -> list[Placed]:
     return [p for p in symbol_subjects(model) if p.drawn.net and "ref" in p.slots]
 
 
-def wire_nets(model: Model) -> list[tuple[Id, DrawnWire]]:
+def wire_nets(model: Model) -> list[tuple[Id[Any], DrawnWire]]:
     """Each drawn wire with the page it is on; its `net` is the port value of its net."""
     return [(page, w) for page, d in drawn_pages(model).items() for w in d.wires]
 

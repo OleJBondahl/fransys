@@ -39,9 +39,7 @@ class ListingStatus:
     against: Listing | None = None
 
 
-def listing_status(
-    stored_text: str, model: Model, unit: Id[Unit] | None, fransys_version: str
-) -> ListingStatus:
+def listing_status(stored_text: str, model: Model, unit: Id[Unit] | None, fransys_version: str) -> ListingStatus:
     """`stored_text` against `unit`'s listing, under the rules `fransys_version` cut it by."""
     rules = listing_rules(stored_version(stored_text), fransys_version)
     if rules is None:

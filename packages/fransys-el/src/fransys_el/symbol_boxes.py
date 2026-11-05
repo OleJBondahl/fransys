@@ -28,9 +28,7 @@ if TYPE_CHECKING:
 __all__ = ["box_picks"]
 
 
-def _candidate(
-    model: Model, function: Function, channels: AbstractSet[Id[Function]]
-) -> BoxCandidate:
+def _candidate(model: Model, function: Function, channels: AbstractSet[Id[Function]]) -> BoxCandidate:
     """`band` decides only a view's kind, which a pick does not read."""
     return BoxCandidate(
         function=function.id,
@@ -62,11 +60,7 @@ def box_picks(
     found: dict[Id[Function], Pick] = {}
     views = item_box_views(model, candidates, wired)
     for view in (v for v in views if not v.lone):
-        names = {
-            p: box_port_text(name_of[f], port_name(model, p))
-            for f in view.members
-            for p in function_ports(model, f)
-        }
+        names = {p: box_port_text(name_of[f], port_name(model, p)) for f in view.members for p in function_ports(model, f)}
         rest = tuple(f for f in view.members if f != view.lead)
         found[view.lead] = Pick(GENERIC_BOX_KEY, 1, frozendict(names), rest)
     grouped = {f for view in views if not view.lone for f in view.members}

@@ -11,17 +11,19 @@ from itertools import pairwise
 from typing import TYPE_CHECKING
 
 from .constraints import Graph
+from .errors import CoreError
+from .flow_values import Lane
 from .geometry import box_reach, column_extent
 from .node_names import HIGH, LOW, box_node, col_node, pin_node, slot_node
 from .pack_sep import separation
-from .values import Lane
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
+    from .flow_values import Block
     from .pack import Attached, LanePins, PlacedColumn
     from .sym_values import Sym
-    from .values import Block, Options
+    from .values import Options
 
 Reach = tuple[str, int]
 
@@ -41,16 +43,14 @@ class RowSpec:
     in_row: frozenset[str]
     options: Options
     attach: Attached
+    pin_pitch: dict[tuple[str, str, str], int]  # a block's pin pitches, from the block's own columns (`pin_pitches`)
     reserves: dict[tuple[str, str], int] = field(default_factory=dict)
     more_pins: LanePins = field(default_factory=dict)
     lead_extra: int = 0  # x kept free before the first column (an arrow at the row's left end)
-    floors: dict[str, int] = field(default_factory=dict)  # a column's least x (a fitted box)
     tail_extra: int = 0  # x kept free after the last column (an arrow at the right end)
 
 
-def segments(
-    cols: tuple[str, ...], blocks: tuple[Block, ...]
-) -> list[tuple[Block | None, list[str]]]:
+def segments(cols: tuple[str, ...], blocks: tuple[Block, ...]) -> list[tuple[Block | None, list[str]]]:
     """A card is one segment; consecutive non-card blocks form one run of columns."""
     block_of = {c: b for b in blocks for c in b.columns}
     out: list[tuple[Block | None, list[str]]] = []
@@ -92,17 +92,13 @@ def join_gap(prev_reach: int, left_reach: int, options: Options, extra: int = 0)
 
 
 def build_row_graph(spec: RowSpec, extra: int) -> tuple[Graph, list[Reach]]:
-    """Segments left to right; extra widens every gap and pitch (justify); returns right reaches."""
+    """Segments left to right; extra widens every gap, page edges included, and pitch (justify); returns right reaches."""
     g = Graph()
     prev: Reach | None = None
     rights: list[Reach] = []
     for block, here in segments(spec.cols, spec.blocks):
         left, right = _segment(g, spec, block, here, extra)
-        gap = (
-            join_gap(prev[1], left[1], spec.options, extra)
-            if prev
-            else spec.options.margin.w + left[1] + spec.lead_extra
-        )
+        gap = join_gap(prev[1], left[1], spec.options, extra) if prev else spec.options.margin.w + left[1] + spec.lead_extra + extra
         if prev:
             g.after(prev[0], left[0], gap)
         else:
@@ -110,14 +106,10 @@ def build_row_graph(spec: RowSpec, extra: int) -> tuple[Graph, list[Reach]]:
         prev = right
         rights.append(right)
     _reserve(g, spec, extra)
-    for col, floor in spec.floors.items():
-        g.at_least(col_node(col), floor)
     return g, rights
 
 
-def _segment(
-    g: Graph, spec: RowSpec, block: Block | None, here: Sequence[str], extra: int
-) -> tuple[Reach, Reach]:
+def _segment(g: Graph, spec: RowSpec, block: Block | None, here: Sequence[str], extra: int) -> tuple[Reach, Reach]:
     """Constrain one segment; its left and right node with the reach past each."""
     if block is not None:
         _card(g, spec, block, here, extra)
@@ -144,9 +136,11 @@ def _reserve(g: Graph, spec: RowSpec, extra: int) -> None:
             )
 
 
-def _run(g: Graph, spec: RowSpec, cols: Sequence[str], extra: int) -> None:
+def _run(g: Graph, spec: RowSpec, cols: Sequence[str], extra: int, *, free: bool = False) -> None:
+    """Chain neighbours at their separation; with `free`, only a pair with a column that has no card pin."""
     for a, b in pairwise(cols):
-        g.after(col_node(a), col_node(b), _sep(spec, a, b) + extra)
+        if not free or a not in spec.attach or b not in spec.attach:
+            g.after(col_node(a), col_node(b), _sep(spec, a, b) + extra)
 
 
 def _card(g: Graph, spec: RowSpec, block: Block, cols: Sequence[str], extra: int) -> None:
@@ -163,6 +157,7 @@ def _card(g: Graph, spec: RowSpec, block: Block, cols: Sequence[str], extra: int
             extra,
         )
     _card_columns(g, spec, block.id, box, cols)
+    _run(g, spec, cols, extra, free=True)
     _pair_pins(g, spec, box, block)
     lead, tail = box_reach(spec.syms[box])
     g.after(slot_node(block.id, LOW), box_node(box, LOW), lead)
@@ -180,9 +175,7 @@ def _pair_pins(g: Graph, spec: RowSpec, box: str, block: Block) -> None:
     Only two edges with as many pins each pair, and only a pin held by a one-pin column; any other
     pin keeps its own x. Pairing is a preference, not a rule (layout-0341).
     """
-    held = {
-        spec.attach[c][1] for c in block.columns if c in spec.attach and c not in spec.more_pins
-    }
+    held = {spec.attach[c][1] for c in block.columns if c in spec.attach and c not in spec.more_pins}
     for first, second in spec.options.pin_pairs:
         pins = [[p for p, e in block.pin_edges if e == edge] for edge in (first, second)]
         if len(pins[0]) != len(pins[1]):
@@ -214,16 +207,33 @@ def _one_column(spec: RowSpec, a: str, b: str) -> bool:
     return False
 
 
+def pin_pitches(spec: RowSpec) -> dict[tuple[str, str, str], int]:
+    """(box, pin, next pin) to its pitch: the column's reach plus a grid where one pin holds a column and the other none, else the minimum.
+
+    A block's value: `one_row` computes it over the block's own columns, so a cut window never changes it.
+    """
+    out: dict[tuple[str, str, str], int] = {}
+    for block in spec.blocks:
+        box = block.anchor or ""
+        held = {pin: col for col, (b, pin, _) in spec.attach.items() if b == box}
+        for edge in ("N", "S"):
+            for a, b in pairwise([p for p, e in block.pin_edges if e == edge]):
+                out[box, a, b] = spec.options.box_pin_pitch_min
+                if (a in held) != (b in held):
+                    lo, hi = extent(spec, held[a] if a in held else held[b])
+                    out[box, a, b] = max(out[box, a, b], (hi if a in held else -lo) + spec.options.wiring_grid)
+    return out
+
+
 def _pin_chain(g: Graph, spec: RowSpec, box: str, pins: Sequence[str], extra: int) -> None:
     margin = _margin(spec, box)
-    pitch = spec.options.box_pin_pitch_min
     for a, b in pairwise(pins):
         if _one_column(spec, a, b):
             continue
         if spec.options.box_pins == "fixed":
-            g.equal(pin_node(box, a), pin_node(box, b), pitch)
+            g.equal(pin_node(box, a), pin_node(box, b), spec.pin_pitch[box, a, b])
         else:
-            g.after(pin_node(box, a), pin_node(box, b), pitch + extra)
+            g.after(pin_node(box, a), pin_node(box, b), spec.pin_pitch[box, a, b] + extra)
     if pins:
         g.after(box_node(box, LOW), pin_node(box, pins[0]), margin)
         g.after(pin_node(box, pins[-1]), box_node(box, HIGH), margin)
@@ -235,7 +245,7 @@ def _solve(spec: RowSpec, extra: int) -> tuple[dict[str, int], int] | None:
     x = g.solve()
     if x is None:
         return None
-    return x, max(x[node] + reach for node, reach in rights) + spec.tail_extra
+    return x, max(x[node] + reach for node, reach in rights) + spec.tail_extra + extra
 
 
 def row_width(spec: RowSpec) -> int:
@@ -243,7 +253,7 @@ def row_width(spec: RowSpec) -> int:
     base = _solve(spec, 0)
     if base is None:
         msg = "contradictory x constraints"
-        raise ValueError(msg)
+        raise CoreError(msg)
     return base[1] - spec.options.margin.w
 
 
@@ -270,7 +280,7 @@ def solve_row(spec: RowSpec, page_w: int) -> tuple[dict[str, int], int]:
     base = _solve(spec, 0)
     if base is None:
         msg = "contradictory x constraints"
-        raise ValueError(msg)
+        raise CoreError(msg)
     overflow = max(0, base[1] - (page_w - spec.options.margin.w))
     if not spec.options.justify:
         return base[0], overflow

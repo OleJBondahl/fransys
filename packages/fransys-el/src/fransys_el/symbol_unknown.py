@@ -10,8 +10,8 @@ from electrical_symbols import GENERIC_BOX_KEY
 from fransys_layout.core import CoreError
 from fransys_layout.symbols import library_symbol
 from fransys_model.derive import function_designation, page_reference_text
-from fransys_model.kernel import Finding, Severity
 from fransys_model.layout import Membership, Page, layout_of
+lazy from fransys_model.kernel import Finding
 
 from .codes import FINDING_CODES
 
@@ -39,30 +39,19 @@ def is_unknown(library: Library, key: str) -> bool:
 def _page_of(model: Model, function: Id[Function]) -> Page | None:
     """The first page whose `Membership` shows `function`, or `None` when none does."""
     pages = layout_of(model, Page)
-    for row in layout_of(model, Membership).values():
-        if row.function == function and row.page is not None:
-            return pages[row.page]
-    return None
+    return next((pages[row.page] for row in layout_of(model, Membership).values() if row.function == function and row.page is not None), None)
 
 
-def unknown_symbol_key_findings(
-    laid: Model, unknown: dict[Id[Function], str]
-) -> tuple[Finding, ...]:
+def unknown_symbol_key_findings(laid: Model, unknown: dict[Id[Function], str]) -> tuple[Finding, ...]:
     """One `UNKNOWN_SYMBOL_KEY` ERROR per function of `unknown` (to its key), read after layout."""
     found = []
     for function, key in unknown.items():
         page = _page_of(laid, function)
         where = "" if page is None else f"{page_reference_text(laid, page, with_location=True)}: "
         found.append(
-            Finding(
-                code="UNKNOWN_SYMBOL_KEY",
-                severity=Severity.ERROR,
-                subjects=(function,),
-                fix=_INFO.filled(),
-                message=(
-                    f"symbol {key!r} is not in the library "
-                    f"({where}{function_designation(laid, function)})"
-                ),
+            _INFO.finding(
+                (function,),
+                f"symbol {key!r} is not in the library ({where}{function_designation(laid, function)})",
             )
         )
     return tuple(found)

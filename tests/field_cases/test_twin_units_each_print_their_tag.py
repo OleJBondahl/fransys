@@ -1,51 +1,23 @@
-"""Field case: two instances of one unit release each print their own instance tag.
-
-The engineering shape: a cabinet holds two identical I/O boards, built from one board release
-and placed at one place. A cabinet unit with a terminal-strip root and a second root device
-sits in a system; a board instance also sits inside that cabinet.
-
-The bug: an instance had no printed identity. Two boards at one place printed the one tag the
-unit's own document gives its root (`-U9-J1` twice), so the build reported a duplicate for a
-circuit with nothing wrong in it, and the system pages of a cabinet printed `-X1:L1` with no
-sign of which cabinet.
-
-The rule: `d.add(definition, tag)` writes the instance's tag. In its container an
-item prints the instance tag, then the designation the unit's own document prints, behind one
-dash: `-U1-J1`. A sole board root prints as the tag alone (`-U1`); a unit with several roots
-prints the tag before each (`-U1-X1:L1:1`). The unit's own document does not change. One tag
-twice at one place gives `PRODUCT_DESIGNATION_DUPLICATE`.
-
-The decision that fixes it: model-0134 (instance tag, rendering, numbering) and author-0019
-(`d.add`'s tag).
-"""
+"""Field case: two identical boards from one release sit at one place in a cabinet, each under its own tag.
+The bug: an instance printed no identity, so both boards printed the one root tag (-U9-J1 twice), a false duplicate.
+Fixed by model-0134 and author-0019, d.add writes the instance tag, which an item prints before its designation."""
 
 from functools import cache
 from typing import Any, NamedTuple
 
 import fransys as fr
+from _demo_board import Io, demo_board
+from _expected_codes import expect_codes
 
 from fransys_model.vocab.tables import items, ports
 
 
-class _Io(NamedTuple):
-    J1: fr.Device
-
-
 class _Cab(NamedTuple):
     X1: fr.TerminalStrip
-    B: _Io
+    B: Io
 
 
-@cache
-def _board() -> Any:
-    @fr.unit(
-        "demo-board", revision=1, interface_version=1, date="2026-01-01", text="first", by="AB"
-    )
-    def board(u: Any) -> _Io:
-        root = u.device("U9", "DEMO-PCB-IO")
-        return _Io(u.device("J1", "DEMO-CONN-2P", parent=root, interface=True, unused=True))
-
-    return board
+_board = cache(demo_board)
 
 
 @cache
@@ -96,7 +68,7 @@ def test_one_tag_twice_at_one_place_gives_the_duplicate_finding() -> None:
         d.add(_board(), "U1")
     with d.function("F2", "Second"):
         d.add(_board(), "U1")
-    assert "PRODUCT_DESIGNATION_DUPLICATE" in _codes(fr.build(d))
+    expect_codes(fr.build(d), "PRODUCT_DESIGNATION_DUPLICATE", "DESIGNATION_DUPLICATE")
 
 
 def test_a_unit_with_several_roots_prints_the_tag_before_each() -> None:

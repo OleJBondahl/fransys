@@ -30,7 +30,7 @@ def test_freeze_stamps_the_registered_number_not_a_constant(
 ) -> None:
     """Fails if the kernel keeps a number of its own: a registered +1 reaches model and data."""
     base = freeze(Draft())
-    monkeypatch.setattr(registry, "_schema_version", SCHEMA_VERSION + 1)
+    monkeypatch.setattr(registry._Reg, "schema_version", SCHEMA_VERSION + 1)
     model = freeze(Draft())
     assert model.schema_version == SCHEMA_VERSION + 1
     assert model.digest != base.digest
@@ -42,7 +42,7 @@ def test_from_data_refuses_the_old_version_once_a_new_one_is_registered(
 ) -> None:
     """Fails if `from_data` compares to a number other than the registered one."""
     stored = dict(to_data(model_of(_ORIGIN, make_owner("1"), make_item("2"))))
-    monkeypatch.setattr(registry, "_schema_version", SCHEMA_VERSION + 1)
+    monkeypatch.setattr(registry._Reg, "schema_version", SCHEMA_VERSION + 1)
     with pytest.raises(SchemaVersionError) as excinfo:
         from_data(stored)
     assert (excinfo.value.expected, excinfo.value.actual) == (SCHEMA_VERSION + 1, SCHEMA_VERSION)
@@ -64,7 +64,7 @@ def test_a_version_must_be_an_int_of_one_or_more(bad: object) -> None:
 
 def test_no_registered_version_stops_freeze_and_from_data(monkeypatch: pytest.MonkeyPatch) -> None:
     """Fails if the kernel falls back to a number when no domain registered one."""
-    monkeypatch.setattr(registry, "_schema_version", None)
+    monkeypatch.setattr(registry._Reg, "schema_version", None)
     with pytest.raises(SchemaError, match="no schema version is registered"):
         freeze(Draft())
     with pytest.raises(SchemaError, match="no schema version is registered"):

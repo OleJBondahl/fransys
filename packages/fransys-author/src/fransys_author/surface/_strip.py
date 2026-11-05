@@ -9,6 +9,7 @@ from fransys_author._partless import check_partless
 from fransys_author.errors import AuthorError
 from fransys_author.surface._device import Device, _mark_boundary, _one_maker, part_mpn
 from fransys_author.surface._fixed import FixedTerminals, span
+from fransys_author.surface._pairing import SeriesElement
 from fransys_author.surface._runs import check_run
 from fransys_author.surface._strip_marks import (
     Bridged,
@@ -17,6 +18,7 @@ from fransys_author.surface._strip_marks import (
     check_marks,
     check_run_marks,
     marked,
+    rail_numbers,
 )
 from fransys_author.surface._tags import floating_name
 from fransys_author.surface._unit_strip import take
@@ -41,14 +43,14 @@ def _need_pe(strip: TerminalStrip) -> None:
         raise AuthorError(msg)
 
 
-class TerminalStrip:
+class TerminalStrip(SeriesElement):
     """One strip: `X1[3]` is its terminal 3, made on first use and the same handle after.
 
     A terminal joins the function block it is first taken in, else the strip's own group.
     Does not pick a terminal for `X1[3]`: a number is explicit; `take` picks the next free ones.
     """
 
-    def __init__(  # noqa: PLR0913 -- the strip's facts and the engine's bridge, keyword-only
+    def __init__(  # noqa: PLR0913 -- the strip's facts and the engine's bridge, keyword-only [public keyword API kept, decision 0444]
         self,
         tag: str,
         strip: Strip,
@@ -57,31 +59,36 @@ class TerminalStrip:
         pe_mpn: str | None = None,
         *,
         bridge: Callable[..., None] | None = None,
+        rail_group: Callable[..., None] | None = None,
         group: Callable[[], Group | None] = lambda: None,
         boundary: Callable[[Marks, Marks], Callable[[Terminal, int], None] | None] | None = None,
         interface: Marks = False,
         unused: Marks = False,
         bridged: Bridged = False,
+        rail: bool = False,
         scope: Scope | None = None,
     ) -> None:
         """Wrap the engine `strip` of `tag`; `group` reads the open block, `boundary` marks."""
         check_marks(tag, count, interface=interface, unused=unused)
         self._tag, self._strip, self._mpn, self._count = tag, strip, mpn, count
-        self._pe_mpn, self._bridge = pe_mpn, bridge
+        self._pe_mpn, self._bridge, self._rail_group = pe_mpn, bridge, rail_group
         self._now, self._scope = group, scope
         self._spec, self._boundary_for = (interface, unused), boundary
         self._boundary = None if boundary is None else boundary(interface, unused)
         self._runs: set[str] = set()
-        self._outside: set[int] = (
-            set()
-        )  # numbers a container took through `d.series` or `d.detail.wire`
+        self._outside: set[int] = set()  # numbers a container took through `d.series`
         self._pe_run: Run | None = None
         self._made: dict[int, Terminal] = {}
-        self._used: set[int] = set()
-        self._placed: set[int] = set()
+        self._used, self._placed = set[int](), set[int]()
         for number in range(1, (count or 0) + 1):
             self._terminal(number)
         bridge_ranges(self, bridged)
+        self._declare_rail(rail_numbers(tag, count, bridged, rail=rail))
+
+    def _declare_rail(self, numbers: range | None) -> None:
+        """Flag the terminals `numbers` as one rail group."""
+        if numbers is not None and self._rail_group is not None:
+            self._rail_group(*(self._terminal(number) for number in numbers))
 
     @property
     def label(self) -> str:
@@ -118,9 +125,7 @@ class TerminalStrip:
                 self._placed.add(number)
                 if group is not None:
                     terminal = self._made[number]
-                    _write_placement(
-                        self._strip._recorder, terminal.id, terminal.key, group, caller_origin()
-                    )
+                    _write_placement(self._strip._recorder, terminal.id, terminal.key, group, caller_origin())
 
     @overload
     def __getitem__(self, number: int) -> Terminal: ...
@@ -182,17 +187,19 @@ class TerminalStrip:
         self._claim(number)
         return terminal
 
-    def run(
+    def run(  # noqa: PLR0913 -- one keyword per run fact, as the strip has [public keyword API kept, decision 0444]
         self,
         label: str,
         count: int | None = None,
         *,
         bridged: bool | tuple[int, int] = False,
+        rail: bool = False,
         interface: Marks = False,
         unused: Marks = False,
     ) -> Run:
         """Core: a named run of `count` terminals that counts inside `label`, bridged when asked.
 
+        `rail=True` declares the bridged run a power rail; a run of one is allowed.
         `bridged=True` jumpers the whole run; `bridged=(first, last)` terminals `first` to `last`.
         With no `count` the run is `bridged=True` and grows, each new terminal bridged to the last.
         Does not shift, or get shifted by, the strip's own numbering or another run.
@@ -202,16 +209,14 @@ class TerminalStrip:
         if label == PE_LABEL:
             _need_pe(self)
         check_run(self, label, count, bridged)
-        run = Run(self, label, count, bridged=bridged, interface=interface, unused=unused)
+        run = Run(self, label, count, bridged=bridged, rail=rail, interface=interface, unused=unused)
         if label == PE_LABEL:
             self._pe_run = run
         return run
 
     _enters_from_field = True  # a series that comes from a cable enters at the outer side
 
-    def _series_width(self) -> None:
-        """A strip has no width of its own: the series gives it one."""
-
+    @override
     def _series_ends(self, design: Design, width: int | None) -> Ends:
         """The line ends (inner) and load ends (outer) of `width` taken terminals."""
         terminals = take(self, design, width or 1)
@@ -227,13 +232,14 @@ class Run(TerminalStrip):
     Does not share numbering with the strip or another run; a series may name it as a strip.
     """
 
-    def __init__(  # noqa: PLR0913 -- the run's facts, keyword-only as the strip's
+    def __init__(  # noqa: PLR0913 -- the run's facts, keyword-only as the strip's [public keyword API kept, decision 0444]
         self,
         strip: TerminalStrip,
         label: str,
         count: int | None,
         *,
         bridged: bool | tuple[int, int],
+        rail: bool = False,
         interface: Marks = False,
         unused: Marks = False,
     ) -> None:
@@ -251,6 +257,7 @@ class Run(TerminalStrip):
             count,
             strip._pe_mpn,
             bridge=strip._bridge,
+            rail_group=strip._rail_group,
             group=strip._now,
             boundary=strip._boundary_for,
             interface=spec[0],
@@ -263,6 +270,7 @@ class Run(TerminalStrip):
             strip._bridge(*(self._terminal(number) for number in numbers))
             if strip._now() is not None:  # outside every block each terminal joins its first block
                 self._claim(*numbers)
+        self._declare_rail(rail_numbers(tag, count, bridged, rail=rail))
 
     @property
     @override
@@ -281,21 +289,17 @@ class Run(TerminalStrip):
         raise AuthorError(msg)
 
 
-def _make_marker(
-    design: Design, interface: Marks, unused: Marks
-) -> Callable[[Terminal, int], None] | None:
+def _make_marker(design: Design, interface: Marks, unused: Marks) -> Callable[[Terminal, int], None] | None:
     """The call that marks terminal `number` boundary as `device` does, or `None` for no mark."""
     if not (interface or unused):
         return None
-    return lambda terminal, number: _mark_boundary(
-        design, terminal, interface=marked(interface, number), unused=marked(unused, number)
-    )
+    return lambda terminal, number: _mark_boundary(design, terminal, interface=marked(interface, number), unused=marked(unused, number))
 
 
 class Strips:
     """The `terminal_strip` call of `Design`."""
 
-    def terminal_strip(  # noqa: PLR0913 -- one keyword per strip fact, as `device` has
+    def terminal_strip(  # noqa: PLR0913 -- one keyword per strip fact, as `device` has [public keyword API kept, decision 0444]
         self: "Design",
         tag: str | None,
         part: str | type[Device] | None,
@@ -308,11 +312,13 @@ class Strips:
         interface: Marks = False,
         unused: Marks = False,
         bridged: Bridged = False,
+        rail: bool = False,
         external: bool = False,
     ) -> TerminalStrip:
         """Add terminal strip `tag` (printed `-tag`) of terminal `part`, `count` terminals if given.
 
         Does not take a prefixed tag. `tag=None` needs `name=`; `external=True` flags its terminals.
+        `rail=True` declares the one bridged group a power rail; several ranges refuse.
         `part=None` makes terminals with no part, each with only `.outer`; it needs `external=True`.
         """
         if part is None:
@@ -326,9 +332,7 @@ class Strips:
         name = floating_name(tag, name, "terminal_strip")
         where = self._place if place is ... else place
         self._claim(name or tag or "", per_function=False)
-        strip = self._engine.strip(
-            tag, name=name, at=self._place_node(where), description=description, external=external
-        )
+        strip = self._engine.strip(tag, name=name, at=self._place_node(where), description=description, external=external)
         return TerminalStrip(
             name or tag or "",
             strip,
@@ -336,10 +340,12 @@ class Strips:
             count,
             pe_mpn,
             bridge=self._engine.bridge,
+            rail_group=self._engine.rail,
             group=lambda: self._group,
             boundary=partial(_make_marker, self),
             interface=interface,
             unused=unused,
             bridged=bridged,
+            rail=rail,
             scope=self._engine,
         )

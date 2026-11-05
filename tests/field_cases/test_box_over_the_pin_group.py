@@ -1,21 +1,13 @@
 """Field case: a box that feeds one pin group of another box stands over that group.
+The bug: the module's groups did not stand under their feeders, so supply wires bent or crossed on the way to the module.
+Fixed by layout-0107, a box fed by one box over a whole pin group is placed so pin stands under pin, one vertical wire each."""
 
-The engineering shape: two power supplies side by side, each with an AC input on top and a DC
-output below, and a redundancy module with one input group per supply and an output to the 24 V
-and 0 V rails. Each supply's output is wired plus to plus and minus to minus to its own group.
-
-The bug: the module's groups do not stand under their feeders, so the supply wires bend or cross
-on the way to the module, and a supply authored second can end up over the first one's group.
-The rule (decision layout-0107): a box fed by one box over a whole pin
-group is placed so pin stands under pin, and every wire between them is one vertical segment.
-"""
-
-import tempfile
-from pathlib import Path
+from typing import Any
 
 import fransys as fr
 from _drawn_facts import symbol_subjects
 from _drawn_pages import drawn_pages
+from _model_build_cover import unit_document
 from fransys.colours import BU
 
 from fransys_model.layout import PowerSymbol, layout_of
@@ -26,14 +18,14 @@ def _plant(d, order: tuple[str, str]) -> None:
     with d.function("G", "Group"):
         psus = {tag: d.device(tag, "DEMO-PSU-24") for tag in order}
         module = d.device("U1", "DEMO-RED-2IN")
-    live = d.terminal_strip("X1", "DEMO-TB-2.5", 2).run("L", 2, bridged=True)
-    zero = d.terminal_strip("X2", "DEMO-TB-2.5", 2).run("L", 2, bridged=True)
+    live = d.terminal_strip("X1", "DEMO-TB-2.5", 2).run("L", 2, bridged=True, rail=True)
+    zero = d.terminal_strip("X2", "DEMO-TB-2.5", 2).run("L", 2, bridged=True, rail=True)
     d.dc_supply("S", plus=live[1], minus=zero[1], voltage=24)
-    d.detail.wire(module.out["+"], live[1].outer, wire=(BU, 0.5))
-    d.detail.wire(module.out["-"], zero[1].outer, wire=(BU, 0.5))
+    d.series(module.out["+"], live[1].outer, wire=(BU, 0.5))
+    d.series(module.out["-"], zero[1].outer, wire=(BU, 0.5))
     for tag, group, n in (("T1", module.in_1, "1"), ("T2", module.in_2, "2")):
-        d.detail.wire(psus[tag].output["+"], group[f"{n}+"], wire=(BU, 0.5))
-        d.detail.wire(psus[tag].output["-"], group[f"{n}-"], wire=(BU, 0.5))
+        d.series(psus[tag].output["+"], group[f"{n}+"], wire=(BU, 0.5))
+        d.series(psus[tag].output["-"], group[f"{n}-"], wire=(BU, 0.5))
 
 
 def _built(order: tuple[str, str]):
@@ -41,9 +33,7 @@ def _built(order: tuple[str, str]):
     d = fr.design("demo_parts", place="CAB")
     cab = d.location("CAB", "Cabinet")
     _plant(d, order)
-    cover = Path(tempfile.mkdtemp()) / "cover.md"
-    cover.write_text("# Cabinet\n", encoding="utf-8")
-    doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover)
+    doc = unit_document(cab)
     return fr.build(d, doc).model
 
 
@@ -54,11 +44,11 @@ def _box(model, tag: str):
     return found[0]
 
 
-def _pin_x(box, name: str) -> int:
+def _pin_x(box, name: str) -> Any:
     return box.x + dict(box.offsets)[name]
 
 
-def _overlap(a, b) -> bool:
+def _overlap(a, b) -> Any:
     """Two boxes of one page whose pin spans meet in x and stand at one y (the body is symdef's)."""
 
     def span(box):
@@ -94,10 +84,7 @@ def _check(order: tuple[str, str]) -> None:
             assert not _overlap(a, b), "two boxes overlap"
     (module_item,) = (one.id for one in items(model).values() if one.tag == "U1")
     outs = {
-        pid
-        for pid, p in ports(model).items()
-        if functions(model)[p.function].item == module_item
-        and functions(model)[p.function].key[-1] == "out"
+        pid for pid, p in ports(model).items() if functions(model)[p.function].item == module_item and functions(model)[p.function].key[-1] == "out"
     }
     drawn = {s.port for s in layout_of(model, PowerSymbol).values()}
     assert len(outs) == 2

@@ -2,21 +2,18 @@
 
 A battery bus declared by pins with no fault current; strings of modules join its plus bus
 through string fuses `SF{i}`, a main fuse `FM` leaves it. Every fuse states breaking points.
-Expected values are written by hand from the spec's worked example.
 """
 
 import dataclasses
-from decimal import Decimal
 from typing import TYPE_CHECKING
 
-from current_plant import device, fuse, hub, run, wire
-from fault_plant import breaker, module
+from current_plant import device, fuse, hub, run
+from fault_plant import module
 from plant import Plant
-from rating_plant import AC_400, rail, supply
+from rating_plant import figures, point, rail, states_block, supply
 
 from fransys_model.checks.ratings_breaking import (
     RATING_BREAKING_BELOW_FAULT,
-    RATING_BREAKING_NO_DATA,
     check_breaking,
 )
 from fransys_model.checks.ratings_current import (
@@ -24,15 +21,13 @@ from fransys_model.checks.ratings_current import (
     LOADS_ABOVE_LIMIT,
     check_load_draw,
 )
+from fransys_model.elecdef import Current, Fuse, Range, Unit
 from fransys_model.kernel import Finding, Model, Severity, make_id
 from fransys_model.vocab import (
-    BreakingPoint,
     Operating,
     OperatingFacet,
-    Rating,
-    RatingFacet,
 )
-from fransys_model.vocab.enums import Current, FunctionKind
+from fransys_model.vocab.enums import FunctionKind
 from fransys_model.vocab.finding_ref import ref
 from fransys_model.vocab.templates import FunctionTemplate
 
@@ -47,24 +42,12 @@ def _fn(key: str) -> Id[Function]:
     return Plant.function_id(key, "f")
 
 
-def _point(volts: str, amps: str, tau: str | None = None) -> BreakingPoint:
-    return BreakingPoint(
-        voltage_v=Decimal(volts),
-        current_a=Decimal(amps),
-        time_constant_ms=None if tau is None else Decimal(tau),
-    )
+_WORKED = (point("1000", "15000", "15"),)
 
 
-_WORKED = (_point("1000", "15000", "15"),)
-
-
-def _states(plant: Plant, key: str, points: Sequence[BreakingPoint]) -> None:
-    """Make fuse `key`'s template state `points` DC, as a part library would."""
-    template = make_id(FunctionTemplate, (key, "f"))
-    rating = Rating(current_dc_a=Decimal(125), breaking_dc=tuple(points))
-    plant.add(
-        RatingFacet(id=make_id(RatingFacet, (key,)), key=(key,), subject=template, rating=rating)
-    )
+def _states(plant: Plant, key: str, points: Sequence[Range]) -> None:
+    """Make fuse `key`'s template state `points`, as a part library would."""
+    states_block(plant, make_id(FunctionTemplate, (key, "f")), Fuse(breaking_capacity=tuple(points)), key=key)
 
 
 def _limit(plant: Plant, key: str) -> None:
@@ -72,12 +55,12 @@ def _limit(plant: Plant, key: str) -> None:
     facet_id = make_id(OperatingFacet, (key,))
     for at, record in enumerate(plant.records):
         if record.id == facet_id:
-            operating = dataclasses.replace(record.operating, max_current_dc_a=Decimal(186))
+            operating = dataclasses.replace(record.operating, max_current=figures(Unit.A, None, "186"))
             plant.records[at] = dataclasses.replace(record, operating=operating)
 
 
 def _battery(  # noqa: PLR0913 -- one keyword per thing a test varies
-    points: Sequence[BreakingPoint] = _WORKED,
+    points: Sequence[Range] = _WORKED,
     *,
     strings: int = 3,
     per: int = 4,
@@ -95,9 +78,7 @@ def _battery(  # noqa: PLR0913 -- one keyword per thing a test varies
     plus, minus = hub(plant, "P"), hub(plant, "M")
     plant.net("bus+", (plus,), potential="B+")
     plant.net("bus-", (minus,), potential="B-")
-    supply(
-        plant, "bat", {"B+": rail(volts), "B-": rail("0")}, current=Current.DC, pins=(plus, minus)
-    )
+    supply(plant, "bat", {"B+": rail(volts), "B-": rail("0")}, current=Current.DC, pins=(plus, minus))
     for at in range(strings):
         modules = [module(plant, f"m{at}{n}", fault, tc) for n in range(per)]
         run(plant, minus, [*modules, fuse(plant, f"SF{at}", "125")], plus)
@@ -113,13 +94,9 @@ def _battery(  # noqa: PLR0913 -- one keyword per thing a test varies
         for number, draw in enumerate(loads):
             lamp = device(plant, f"L{at}{number}", kind=FunctionKind.LOAD)
             template = make_id(FunctionTemplate, (f"L{at}{number}", "f"))
-            operating = Operating(nominal_current_a=Decimal(draw))
+            operating = Operating(nominal_current=Unit.A(draw))
             facet_id = make_id(OperatingFacet, (f"L{at}{number}", "n"))
-            plant.add(
-                OperatingFacet(
-                    id=facet_id, key=(f"L{at}{number}", "n"), subject=template, operating=operating
-                )
-            )
+            plant.add(OperatingFacet(id=facet_id, key=(f"L{at}{number}", "n"), subject=template, operating=operating))
             run(plant, node, [lamp], minus)
     return plant
 
@@ -151,31 +128,13 @@ def test_worked_example_gives_the_three_findings() -> None:
     assert draw[1].subjects == (_fn("L00"),)
 
 
+def test_the_blocks_points_decide_the_outcome() -> None:
+    """The same main fuse is over its point at 15000 A and clear of it at 20000 A."""
+    assert _main(_battery(points=(point("1000", "20000", "15"),)).model()) == []
+    assert len(_main(_battery().model())) == 1
+
+
 def test_an_unknown_time_constant_leaves_only_points_without_one() -> None:
     model = _battery(strings=1, per=1, fault="1000", tc=None).model()
     (finding,) = _main(model)
     assert "time constant of the sources, unknown" in finding.message
-
-
-def test_no_data_prints_the_circuit_voltage_to_one_decimal() -> None:
-    """Breaker `Q` on L1 and L2 of a 10000 A grid stands at 398.37... V, above its 230 V."""
-    plant = Plant()
-    pins = [hub(plant, name) for name in AC_400]
-    for name, pin in zip(AC_400, pins, strict=True):
-        plant.net(f"grid-{name}", (pin,), potential=name)
-    supply(plant, "grid", AC_400, pins=pins, fault_current_a=Decimal(10000))
-    poles = breaker(plant, "Q")
-    rating = Rating(current_ac_a=Decimal(16), breaking_ac=(_point("230", "20000"),))
-    template = make_id(FunctionTemplate, ("Q", "f"))
-    plant.add(
-        RatingFacet(id=make_id(RatingFacet, ("Q",)), key=("Q",), subject=template, rating=rating)
-    )
-    for pin, (line, _) in zip(pins[:2], poles, strict=False):
-        wire(plant, pin, line)
-    (finding,) = check_breaking(plant.model())
-    assert (finding.code, finding.severity, finding.subjects) == (
-        RATING_BREAKING_NO_DATA,
-        Severity.WARNING,
-        (_fn("Q"),),
-    )
-    assert "no point is rated for the circuit voltage of 398.4 V" in finding.message

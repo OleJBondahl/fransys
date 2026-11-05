@@ -2,28 +2,23 @@
 
 The engineering shape: one unit released alone, with no `d.project`. Its documents carry the IP
 notice and the logo; the release has one subject. With a `d.project` beside it, the unit's
-Author cell is the unit revision's `created`, the project's document keeps the project's author.
-Decisions model-0225, pdf-0036, root 0193.
 """
 
 import fransys as fr
-import fransys_author
 import fransys_parts
 import pypdfium2 as pdfium
+from fransys_author.design import Design
 from pypdfium2 import raw
 
-from fransys_model.vocab import PageKind, projects, unit_releases
+from fransys_model.vocab import projects, unit_releases
 
 NOTICE = "(c) Demo AS"
-LOGO = (
-    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10">'
-    '<rect width="10" height="10" fill="#f00"/></svg>'
-)
+LOGO = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><rect width="10" height="10" fill="#f00"/></svg>'
 
 
 def _build(tmp_path, *, notice: str, logo: bool, project: bool = False):
     parts = fransys_parts.load("demo_parts")
-    d = fransys_author.Design(parts)
+    d = Design(parts)
     if project:
         d.project(title="Station", number="P-1", customer="Demo", revision=1, author="XYQ")
         d.revision(1, date="2026-01-01", text="First issue", created="XYQ")
@@ -47,7 +42,6 @@ def _build(tmp_path, *, notice: str, logo: bool, project: bool = False):
             fr.DocumentPreset.CABINET_SCHEMATIC,
             "demo-unit",
             cover=cover,
-            remove=(PageKind.SCHEMATIC,),
             notice=notice,
             logo=logo_path,
         )
@@ -55,17 +49,11 @@ def _build(tmp_path, *, notice: str, logo: bool, project: bool = False):
     if project:
         system_cover = tmp_path / "system.md"
         system_cover.write_text("# System\n", encoding="utf-8")
-        documents.append(
-            fr.document(fr.DocumentPreset.SYSTEM, None, cover=system_cover, notice=notice)
-        )
+        documents.append(fr.document(fr.DocumentPreset.SYSTEM, None, cover=system_cover, notice=notice))
     result = fr.build(parts, d.draft(), *documents)
     out = tmp_path / "out"
     unit_pdf = [p for p in fr.write(result, out, unit=u) if p.suffix == ".pdf"]
-    system_pdf = [
-        p
-        for p in fr.write(result, out, unit=None)
-        if p.suffix == ".pdf" and p.name.startswith("P-1")
-    ]
+    system_pdf = [p for p in fr.write(result, out, unit=None) if p.suffix == ".pdf" and p.name.startswith("P-1")]
     return result, unit_pdf, system_pdf
 
 

@@ -1,4 +1,4 @@
-schema = 1
+schema = 2
 
 [part]
 mpn = "DEMO-CELL-3V6"
@@ -16,7 +16,5 @@ ports = [
 ]
 
 [function.operating]
-nominal_voltage_v = "3.6"
-max_voltage_v = "4.2"
-min_voltage_v = "0"
-capacity_ah = "3"
+voltage = [{ nom = "3.6 V", min = "0 V", max = "4.2 V" }]
+capacity = "3 Ah"

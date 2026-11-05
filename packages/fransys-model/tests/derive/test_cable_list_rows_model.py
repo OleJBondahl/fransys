@@ -23,7 +23,6 @@ def _cable(plant: Plant, key: str, designation: str, *, unit: Id[Unit] | None = 
     `CableProductFacet`, not just a `cable` facet), `unit` set or left `None`.
 
     `core_colours` starts empty; `query_builders.make_core`'s `_colour_core` grows it to match
-    whatever cores the caller adds afterwards, so it always matches the modelled cores exactly.
     """
     part = Part(
         id=make_id(Part, (key, "cable-part")),

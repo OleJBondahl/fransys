@@ -10,7 +10,7 @@ from electrical_symbols._library import LIBRARY
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterable
 
-# `SymbolGeometry.key` (`fransys_layout`) is the generic box's `reference.number`.
+# A placement's symbol key is the generic box's `reference.number`.
 GENERIC_BOX_KEY = "generic-box"
 
 # Grid units in one module unit (M, DESIGN 6.1): a read of the library's one home (library.toml).

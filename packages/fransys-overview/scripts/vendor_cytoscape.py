@@ -67,7 +67,8 @@ def _chunks(source: str) -> list[str]:
         size = len(_escape(char, '"'))
         if width + size > MAX_WIDTH:
             pieces.append("".join(piece))
-            piece, width = [], 0
+            piece.clear()
+            width = 0
         piece.append(char)
         width += size
     pieces.append("".join(piece))
@@ -86,7 +87,8 @@ def _read_back(text: str) -> str:
     """The string constant of the generated module, from its syntax tree (nothing is run)."""
     for node in ast.walk(ast.parse(text)):
         if isinstance(node, ast.List):
-            return "".join(ast.literal_eval(element) for element in node.elts)
+            chunks: list[str] = [ast.literal_eval(element) for element in node.elts]
+            return "".join(chunks)
     msg = "no list of chunks in the generated module"
     raise SystemExit(msg)
 

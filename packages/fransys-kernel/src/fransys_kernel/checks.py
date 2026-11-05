@@ -5,7 +5,7 @@ stage, holder, path and message, and either raise them all (`freeze`) or the fir
 """
 
 import dataclasses
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from .conform import _check_record
 from .errors import ModelError, RefError, SchemaError, ValueTypeError
@@ -42,27 +42,30 @@ def kind_of(record: Record) -> str:
     return record.id.kind
 
 
-def close_aliases(
-    alias_map: frozendict[Id[Any], Id[Any]], ids: frozenset[Id[Any]]
-) -> tuple[frozendict[Id[Any], Id[Any]], tuple[Problem, ...]]:
+def close_aliases(alias_map: frozendict[Id[Any], Id[Any]], ids: frozenset[Id[Any]]) -> tuple[frozendict[Id[Any], Id[Any]], tuple[Problem, ...]]:
     """Follow every chain of aliases to its end; report the ones that cannot be followed."""
     closed = {}
     problems = []
     ends = finals(alias_map)
     for old, new in alias_map.items():
         final = ends[old]
-        if old in ids:
-            why = "a retired id must not still have a record of its own"
-        elif final is None:
-            why = "the aliases form a cycle"
-        elif final not in ids:
-            why = "the alias leads to an id that names no record"
-        else:
-            closed[old] = final
+        why = _alias_fault(old, final, ids)
+        if why is None:
+            closed[old] = cast("Id[Any]", final)  # `_alias_fault` is `None` only for a final id
             continue
         error = RefError(why, record_id=old, field=ALIAS_FIELD, target=new)
         problems.append(Problem(ALIAS, old, ALIAS_FIELD, error))
     return frozendict(closed), tuple(problems)
+
+
+def _alias_fault(old: Id[Any], final: Id[Any] | None, ids: frozenset[Id[Any]]) -> str | None:
+    if old in ids:
+        return "a retired id must not still have a record of its own"
+    if final is None:
+        return "the aliases form a cycle"
+    if final not in ids:
+        return "the alias leads to an id that names no record"
+    return None
 
 
 def finals(
@@ -103,9 +106,7 @@ def type_problems(
     return frozenset(bad), tuple(problems)
 
 
-def record_problems(
-    records: tuple[Record, ...], bad_kinds: frozenset[str]
-) -> tuple[tuple[Problem, ...], tuple[tuple[Id[Any], Reference], ...]]:
+def record_problems(records: tuple[Record, ...], bad_kinds: frozenset[str]) -> tuple[tuple[Problem, ...], tuple[tuple[Id[Any], Reference], ...]]:
     """Check each record on its own; also return every reference found, with its holder.
 
     One `{class: FieldInfo}` memo, built empty and shared for the whole call, resolves each kind
@@ -126,9 +127,7 @@ def record_problems(
     return tuple(problems), tuple(references)
 
 
-def reference_problems(
-    references: tuple[tuple[Id[Any], Reference], ...], ids: frozenset[Id[Any]]
-) -> tuple[Problem, ...]:
+def reference_problems(references: tuple[tuple[Id[Any], Reference], ...], ids: frozenset[Id[Any]]) -> tuple[Problem, ...]:
     """Report each reference whose target is not in `ids`, or is of another kind than declared."""
     problems = []
     for holder, reference in references:
@@ -161,7 +160,4 @@ def cardinality_problems(
                 owner = getattr(record, subject)
                 if isinstance(owner, Id) and first.setdefault(owner, record) is not record:
                     offenders.append((kind, record, why))
-    return tuple(
-        Problem(_CARDINALITY, record.id, "", SchemaError(why, kind=kind, record_id=record.id))
-        for kind, record, why in offenders
-    )
+    return tuple(Problem(_CARDINALITY, record.id, "", SchemaError(why, kind=kind, record_id=record.id)) for kind, record, why in offenders)

@@ -27,7 +27,8 @@ from fransys_layout.core import (
 from . import pipeline_fixtures
 
 if TYPE_CHECKING:
-    from fransys_layout.core.values import CutResult, Ref
+    from fransys_layout.core.flow_values import CutResult
+    from fransys_layout.core.values import Ref
 
 AREA = Size(1312, 854)
 LABEL = Size(16, 8)
@@ -86,11 +87,8 @@ def side(sym_id: str, width: int, height: int, group: str | None = None) -> Sym:
 def box_sym(count: int, north: int = 0) -> Sym:
     """A box A1 of `count` pins p1.. in marking order; the first `north` face north, the rest S."""
     body = Box(0, 0, 16 * count + 16, 120)
-    pins = tuple(
-        Pin(f"p{i}", "N", 16 * i, 0, i - 1) if i <= north else Pin(f"p{i}", "S", 16 * i, 120, i - 1)
-        for i in range(1, count + 1)
-    )
-    spec = BoxSpec(tuple(p.id for p in pins), "S", 16, 16)
+    pins = tuple(Pin(f"p{i}", "N", 16 * i, 0, i - 1) if i <= north else Pin(f"p{i}", "S", 16 * i, 120, i - 1) for i in range(1, count + 1))
+    spec = BoxSpec(tuple(p.id for p in pins), 16)
     return Sym(
         "A1",
         "PLC",

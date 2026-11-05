@@ -2,8 +2,6 @@
 
 Loaded by file path (`importlib.util.spec_from_file_
 location`), since the script is not a package module. Each test builds its own tiny
-`packages/<pkg>/src/<pkg>/mod.py` tree under `tmp_path`, since both measure functions walk
-`packages/*/src` off the `root` they are given.
 """
 
 from __future__ import annotations
@@ -13,9 +11,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-_spec = importlib.util.spec_from_file_location(
-    "fransys_lean_code_shape", ROOT / "scripts" / "lean_code_shape.py"
-)
+_spec = importlib.util.spec_from_file_location("fransys_lean_code_shape", ROOT / "scripts" / "lean_code_shape.py")
 if _spec is None or _spec.loader is None:
     msg = "could not load scripts/lean_code_shape.py"
     raise ImportError(msg)
@@ -23,9 +19,7 @@ lean_code_shape = importlib.util.module_from_spec(_spec)
 sys.modules[_spec.name] = lean_code_shape
 _spec.loader.exec_module(lean_code_shape)
 
-_ceilings_spec = importlib.util.spec_from_file_location(
-    "fransys_lean_ceilings", ROOT / "scripts" / "lean_ceilings.py"
-)
+_ceilings_spec = importlib.util.spec_from_file_location("fransys_lean_ceilings", ROOT / "scripts" / "lean_ceilings.py")
 if _ceilings_spec is None or _ceilings_spec.loader is None:
     msg = "could not load scripts/lean_ceilings.py"
     raise ImportError(msg)
@@ -75,13 +69,7 @@ def test_method_with_nested_def_qualname(tmp_path):
     """A method's nested def is keyed `Class.method`, not just the method's bare name."""
     root = _write_module(
         tmp_path,
-        (
-            "class Foo:\n"
-            "    def method(self):\n"
-            "        def inner():\n"
-            "            return 1\n\n"
-            "        return inner\n"
-        ),
+        ("class Foo:\n    def method(self):\n        def inner():\n            return 1\n\n        return inner\n"),
     )
     measured = lean_code_shape.measure_nested_defs(root)
     assert measured == {f"{_MOD_KEY}::Foo.method": 1}
@@ -93,14 +81,7 @@ def test_nested_def_two_levels_deep_charged_to_own_immediate_parent():
     """
     import ast
 
-    tree = ast.parse(
-        "def outer():\n"
-        "    def middle():\n"
-        "        def inner():\n"
-        "            return 1\n\n"
-        "        return inner\n\n"
-        "    return middle\n"
-    )
+    tree = ast.parse("def outer():\n    def middle():\n        def inner():\n            return 1\n\n        return inner\n\n    return middle\n")
     walker = lean_code_shape._ScopeWalker()
     walker.visit(tree)
     assert walker.counts == {"outer": 1, "outer.middle": 1}

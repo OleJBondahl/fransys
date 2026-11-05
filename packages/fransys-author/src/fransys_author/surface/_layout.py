@@ -1,23 +1,9 @@
-"""Layout hints: `d.layout.chain`, `order`, `symbol` and more, through the engine."""
+"""Layout hints: `d.layout.order`, `symbol` and more, through the engine."""
 
-from typing import TYPE_CHECKING, Any, NamedTuple
-lazy from collections.abc import Mapping
-lazy from decimal import Decimal
+from typing import TYPE_CHECKING
 
-from fransys_author.errors import AuthorError
-from fransys_author.handles import Item
-from fransys_author.surface._links import engine_handle
-from fransys_author.surface._page_title import hint_page_title
-from fransys_author.surface._pins_below import hint_pins_below
-from fransys_author.surface._side import hint_side
-from fransys_model.vocab import FunctionKind
 lazy from fransys_author.design import Design as EngineDesign
-lazy from fransys_author.handles import Group, Terminal
-lazy from fransys_author.surface._device import Device
-lazy from fransys_author.surface._handles import Fn
-lazy from fransys_author.surface._strip import TerminalStrip
-lazy from fransys_model.kernel import Id
-lazy from fransys_model.layout import SheetFormat, Side
+lazy from fransys_author.handles import Group
 
 if TYPE_CHECKING:
     from fransys_author.surface.design import Design
@@ -33,32 +19,6 @@ class Layout:
         """Hold the engine `Design`; `d.layout` makes these."""
         self._engine = engine
 
-    def chain(self, *functions: Fn | Device | Terminal, beside: Fn | Device | None = None) -> None:
-        """Advise one drawn current path through the functions, source first.
-
-        `beside` names a host function: the chain is drawn next to it, joined by short
-        horizontals at each end net it shares with the host, one or two. Wire first: it raises
-        `AuthorError` when no end net is a net of the host.
-        Does not connect anything: it only advises the layout engine.
-        """
-        handles = [engine_handle(f, "d.layout.chain", terminal=True) for f in functions]
-        host = None if beside is None else engine_handle(beside, "d.layout.chain beside=")
-        self._engine.chain(*handles, beside=host)  # ty: ignore[invalid-argument-type] -- Item | EngineFn, never a Terminal here
-
-    def keep_together(self, *groups: Group) -> None:
-        """Advise that these function groups share a page when they fit.
-
-        Does not place anything: it only advises the layout engine.
-        """
-        self._engine.keep_together(*groups)
-
-    def break_before(self, group: Group) -> None:
-        """Advise a new page before this function group.
-
-        Does not draw or place anything: it only advises the layout engine.
-        """
-        self._engine.break_before(group)
-
     def order(self, *groups: Group) -> None:
         """Advise that each neighbour pair of function groups is drawn in this order.
 
@@ -66,103 +26,13 @@ class Layout:
         """
         self._engine.order(*groups)
 
-    def symbol(
-        self,
-        target: Fn | Device | FunctionKind,
-        symbol: str,
-        port_map: dict[str, str] | None = None,
-    ) -> None:
-        """Advise the library symbol `symbol` for a function, a device or a function kind.
-
-        Does not draw anything itself; a kind is a name (`FunctionKind.X`), never a string.
-        """
-        if isinstance(target, str):
-            msg = f"d.layout.symbol: a kind is a name: FunctionKind.X, got {target!r}"
-            raise AuthorError(msg)
-        kind = isinstance(target, FunctionKind)
-        handle = target if kind else engine_handle(target, "d.layout.symbol")
-        self._engine.symbol(handle, symbol, port_map)  # ty: ignore[invalid-argument-type] -- Item | Fn | FunctionKind, narrowed above
-
-    def draw_in(self, function: Fn | Device, group: Group) -> None:
-        """Advise drawing the function in this group, whatever its device's place says.
-
-        Does not place the device: it only advises the layout engine.
-        """
-        handle = engine_handle(function, "d.layout.draw_in")
-        fn = handle.as_function() if isinstance(handle, Item) else handle
-        self._engine.draw_in(fn, group)  # ty: ignore[invalid-argument-type] -- terminal=False never returns a Terminal
-
-    def side(self, target: Fn | Device | Terminal | TerminalStrip, side: Side) -> None:
-        """Advise the edge, `fr.ABOVE` or `fr.BELOW`, a unit's interface stands on.
-
-        Does not move anything itself: it only advises the layout engine. `target` is a field of
-        the unit's interface, as `u1.bus_in`; an interface with no harness line ignores it.
-        """
-        hint_side(self._engine, target, side)
-
-    def pins_below(self, box: Fn | Device) -> None:
-        """Advise a generic box to draw all its pins on its south side, below the body.
-
-        Does not move anything itself: it only advises the layout engine. A repeat raises.
-        """
-        hint_pins_below(self._engine, box)
-
-    def page_title(
-        self, thing: Group | Fn | Device | TerminalStrip | NamedTuple, text: str
-    ) -> None:
-        """Advise the title of every drawing page that draws a block, a function or a device.
-
-        `thing` may be what `d.add` returned: the pages that draw that nested unit at this level.
-        Does not draw anything itself: the page prints this text before its blocks' texts. A
-        thing takes one title; an empty text raises `AuthorError`.
-        """
-        hint_page_title(self._engine, thing, text)
-
-    def sheet(self, name: str, **numbers: int | Decimal) -> Id[SheetFormat]:
-        """Advise a sheet format by name and numbers; returns its handle for `profile`.
-
-        Does not draw anything: it only advises the layout engine.
-        """
-        return self._engine.sheet(name, **numbers)
-
-    def profile(  # noqa: PLR0913 -- one keyword per profile field, as the model's `Profile` has
-        self,
-        *,
-        sheet: Id[SheetFormat] | None = None,
-        column_gap: int | None = None,
-        row_gap: int | None = None,
-        row_spacing: int | None = None,
-        route_margin: int | None = None,
-        text_height_mm: Decimal | None = None,
-        min_text_height_mm: Decimal | None = None,
-        marker_padding: int | None = None,
-        route_turn_penalty: int | None = None,
-        route_crossing_penalty: int | None = None,
-        hide_unused_pins: bool | None = None,
-        actuator_each_contact: bool | None = None,
-        band_ranks: Mapping[str, int] | None = None,
-        group_ranks: Mapping[str, int] | None = None,
-    ) -> None:
+    def profile(self, *, hide_unused_pins: bool | None = None) -> None:
         """Advise the layout numbers of the model, at most one profile.
 
-        Does not draw anything; a keyword left out keeps its house value, a rank map replaces whole.
+        Does not draw anything; a keyword left out keeps its house value.
         """
-        given: dict[str, Any] = {
-            "column_gap": column_gap,
-            "row_gap": row_gap,
-            "row_spacing": row_spacing,
-            "route_margin": route_margin,
-            "text_height_mm": text_height_mm,
-            "min_text_height_mm": min_text_height_mm,
-            "marker_padding": marker_padding,
-            "route_turn_penalty": route_turn_penalty,
-            "route_crossing_penalty": route_crossing_penalty,
-            "hide_unused_pins": hide_unused_pins,
-            "actuator_each_contact": actuator_each_contact,
-            "band_ranks": None if band_ranks is None else frozendict(band_ranks),
-            "group_ranks": None if group_ranks is None else frozendict(group_ranks),
-        }
-        self._engine.profile(sheet=sheet, **{k: v for k, v in given.items() if v is not None})
+        given = {} if hide_unused_pins is None else {"hide_unused_pins": hide_unused_pins}
+        self._engine.profile(**given)
 
 
 class Layouts:
@@ -170,7 +40,7 @@ class Layouts:
 
     @property
     def layout(self: "Design") -> Layout:
-        """The drawing hints: `d.layout.chain`, `order`, `symbol` and the rest.
+        """The drawing hints: `d.layout.order` and the rest.
 
         Does not draw anything: its hints only advise the layout engine.
         """

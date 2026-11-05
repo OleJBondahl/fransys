@@ -6,7 +6,7 @@ one end join it to every end they meet, as one node. Rails, open ends and hubs e
 
 lazy from collections.abc import Mapping, Sequence
 
-from fransys_model.derive.facts.closure import physical_nets
+from fransys_model.derive.facts.closure import drawn_physical_nets
 from fransys_model.derive.order import series_part_key
 from fransys_model.derive.rows_series_parallel import SeriesParallel, SeriesRow
 from fransys_model.derive.series_parallel_reduce import SINK, SOURCE, reduce_region
@@ -50,10 +50,10 @@ def series_parallel(model: Model, ends: Ends) -> SeriesParallel:
 
 
 def _wiring(model: Model, ends: Ends) -> list[Net]:
-    """The drawn ports of each net that joins two symbols or more; a net in `stands` is a rail."""
+    """The drawn ports of each drawn net (no bridge joins) that joins two symbols or more; a net in `stands` is a rail."""
     rail = stands(model)
     out: list[Net] = []
-    for net in physical_nets(model):
+    for net in drawn_physical_nets(model):
         drawn = tuple(p for p in net.ports if p in ends)
         joins = len({ends[p][0] for p in drawn}) > 1
         if joins and not any(p in rail for p in net.ports):
@@ -77,9 +77,7 @@ def _root[T](parent: dict[T, T], x: T) -> T:
     return x
 
 
-def _nodes(
-    ends: Ends, nets: Sequence[Net], hubs: frozenset[str]
-) -> tuple[dict[End, int], set[int]]:
+def _nodes(ends: Ends, nets: Sequence[Net], hubs: frozenset[str]) -> tuple[dict[End, int], set[int]]:
     """Each wired end of a symbol that is no hub to its node, and the nodes that meet a hub."""
     parent: dict[End, End] = {}
     met: list[tuple[list[End], bool]] = []
@@ -91,9 +89,7 @@ def _nodes(
     return _labelled(parent, met)
 
 
-def _labelled(
-    parent: dict[End, End], met: Sequence[tuple[list[End], bool]]
-) -> tuple[dict[End, int], set[int]]:
+def _labelled(parent: dict[End, End], met: Sequence[tuple[list[End], bool]]) -> tuple[dict[End, int], set[int]]:
     """Each end's node number, first met first, and the nodes on a net that meets a hub."""
     label: dict[End, int] = {}
     node: dict[End, int] = {}

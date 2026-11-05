@@ -3,8 +3,10 @@
 Its names stay off `fransys_author.__all__` until the facade swap.
 """
 
-from fransys_author.handles import Terminal
+from fransys_author.design import Scope
+from fransys_author.handles import Item, Location, Terminal
 
+from ._added import added_unit
 from ._cable import Cable
 from ._detail import Detail
 from ._device import Device, TypedDevice, TypedFn
@@ -21,7 +23,7 @@ from ._rows import (
     DC_SIGNAL,
     DC_SUPPLY,
 )
-from ._signals import ABOVE, AI, AO, BELOW, CONTROL, DI, DO, EARTHED, GENERIC, IT, SIGNAL
+from ._signals import AI, AO, CONTROL, DI, DO, GENERIC, SIGNAL
 from ._strip import Run, TerminalStrip
 from ._supplies import AcSupply, DcSupply, SupplyRail
 from ._throws import Throw
@@ -29,7 +31,6 @@ from ._units import UnitDef, unit
 from .design import Design, design
 
 __all__ = [
-    "ABOVE",
     "AC_CONTROL",
     "AC_L1",
     "AC_L2",
@@ -37,7 +38,6 @@ __all__ = [
     "AC_N",
     "AI",
     "AO",
-    "BELOW",
     "CONTROL",
     "DC_CONTROL",
     "DC_GROUND",
@@ -45,9 +45,7 @@ __all__ = [
     "DC_SUPPLY",
     "DI",
     "DO",
-    "EARTHED",
     "GENERIC",
-    "IT",
     "SIGNAL",
     "AcSupply",
     "Cable",
@@ -56,9 +54,12 @@ __all__ = [
     "Detail",
     "Device",
     "Fn",
+    "Item",
     "Layout",
+    "Location",
     "Pin",
     "Run",
+    "Scope",
     "SupplyRail",
     "Terminal",
     "TerminalStrip",
@@ -66,6 +67,7 @@ __all__ = [
     "TypedDevice",
     "TypedFn",
     "UnitDef",
+    "added_unit",
     "design",
     "unit",
 ]

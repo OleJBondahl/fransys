@@ -1,22 +1,13 @@
 """The seven list/BOM pages: tables over model-wide or per-subject derive rows.
 
-The header tuples, the terminal ends labels and the cell text are `fransys_model.derive`'s
-own (`derive.rows`), the same objects `fransys_reports.csv` prints from: a root test pins
-that neither package keeps a copy of its own.
+The column lists, the column headings and the cell text are `fransys_model.derive`'s own, the
+same ones `fransys_reports.csv` prints from.
 """
 
 from typing import TYPE_CHECKING
 
 from fransys_model.derive import (
-    BOM_COLUMNS,
-    CABLE_LIST_COLUMNS,
-    CONNECTOR_LABELS,
-    DESIGNATION_COLUMNS,
-    PIN_COLUMNS,
-    PLC_COLUMNS,
-    WIRE_COLUMNS,
     cable_list_rows_of,
-    column_label,
     column_rows,
     connector_item,
     connector_rows,
@@ -29,7 +20,10 @@ from fransys_model.derive import (
     document_unit,
     is_own_unit_root,
     item_description,
+    list_columns,
     list_context,
+    list_pdf_columns,
+    list_pdf_heading,
     plc_channel_rows,
     plc_list_rows,
     plc_tables,
@@ -48,11 +42,8 @@ from ._tables import table_source
 from ._typst import description_par, literal
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping
-
     from fransys_model.derive import (
         AspectNodeId,
-        BridgePieceRow,
         CableListRow,
         ConnectorRow,
         DocumentRow,
@@ -64,39 +55,45 @@ if TYPE_CHECKING:
     )
     from fransys_model.kernel import Model
 
+    from ._doc import BridgeInputs
+
 
 def _carried(model: Model, title: str) -> str:
     """The heading a carried table repeats; none for a table with no title."""
     return continued_heading(model, title) if title else ""
 
 
-def _table(  # noqa: PLR0913 -- the model, the list, its wide columns, its heading, anchor and labels
+_WIDE = {  # per list, the free-text columns (`1fr`, pdf-0008): `auto` ones would starve a `1fr`
+    "plc": ("wired_to", "signal_name"),
+    "wires": ("from_", "to", "ends"),  # pdf-0027
+    "designations": ("description",),
+    "connectors": ("net", "ends"),
+    "cables": ("description", "from_label", "to_label"),
+    "bom": ("description", "designations"),
+}
+
+
+def _table(
     model: Model,
+    name: str,
     headers: tuple[str, ...],
     rows: list[tuple[object, ...]],
-    wide: tuple[str, ...],
-    *,
-    title: str = "",
-    label: str = "",
-    labels: Mapping[str, str] | None = None,
+    heading: tuple[str, str] = ("", ""),
 ) -> str:
-    """The list table: `""` if no rows or all blank (pdf-0019, 0011); `wide`: `1fr` (0008).
+    """The list table: `""` if no rows or all blank (pdf-0019, 0011); `_WIDE` columns: `1fr`.
 
-    `title` is the heading a carried table repeats, `label` its anchor (pdf-0027),
-    `labels` the header text of a column whose field name reads badly (pdf-0030).
+    `name` is the list whose headings the columns take; `heading` is the `(title, anchor)` of
+    a carried table: the heading it repeats and its anchor (pdf-0027).
     """
     if not rows:
         return ""
     kept = _kept_columns(rows, len(headers))
     if not kept:
         return ""
-    shown = labels or {}
-    names = [
-        f"strong(text({literal(shown.get(headers[i]) or column_label(headers[i]))}))" for i in kept
-    ]
+    names = [f"strong(text({literal(list_pdf_heading(model, name, headers[i]))}))" for i in kept]
     body = [[_cell_typst(row[i]) for i in kept] for row in rows]
-    widths = _widths([headers[i] in wide for i in kept])
-    return table_source(widths, names, body, rule=rule_of(model), heading=(title, label))
+    widths = _widths([headers[i] in _WIDE[name] for i in kept])
+    return table_source(widths, names, body, rule=rule_of(model), heading=heading)
 
 
 def plc_channel_rows_for(model: Model, record: DocumentRow) -> tuple[PlcChannelRow, ...]:
@@ -115,11 +112,10 @@ def plc_list_page(model: Model, record: DocumentRow, *, share_pct: float, gutter
             _list_heading(title)
             + _table(
                 model,
-                PLC_COLUMNS,
+                "plc",
+                list_columns(model, "plc"),
                 rows,
-                ("wired_to", "signal_name"),
-                title=_carried(model, title),
-                label=f"plc{number}",
+                (_carried(model, title), f"plc{number}"),
             )
         )
     return flow_columns(sections, share_pct=share_pct, gutter_pct=gutter_pct)
@@ -140,9 +136,7 @@ def terminal_rows_for(model: Model, record: DocumentRow, strip: ItemId) -> tuple
     )
 
 
-def connector_rows_for(
-    model: Model, record: DocumentRow, board: ItemId
-) -> tuple[ConnectorRow, ...]:
+def connector_rows_for(model: Model, record: DocumentRow, board: ItemId) -> tuple[ConnectorRow, ...]:
     """`board`'s `connector_rows`, printed in `record`'s context (`_list_context`)."""
     return connector_rows(
         model,
@@ -157,30 +151,27 @@ def wire_rows_for(model: Model, record: DocumentRow) -> tuple[WireRow, ...]:
     return wire_rows(model, unit=document_unit(model, record.id), context=record.location)
 
 
-def wire_label_list_page(
-    model: Model, record: DocumentRow, *, share_pct: float, gutter_pct: float
-) -> str:
+def wire_label_list_page(model: Model, record: DocumentRow, *, share_pct: float, gutter_pct: float) -> str:
     """The WIRE_LABEL_LIST table: every `wire`-faceted conductor, scoped to the unit."""
+    wires = list_columns(model, "wires")
     table = _table(
         model,
-        WIRE_COLUMNS,
-        column_rows(wire_rows_for(model, record), WIRE_COLUMNS),
-        ("from_", "to", "label"),  # every free-text column: `auto` ones starve a `1fr` (pdf-0027)
+        "wires",
+        wires,
+        column_rows(wire_rows_for(model, record), wires),
     )
     return flow_columns([table], share_pct=share_pct, gutter_pct=gutter_pct)
 
 
-def designation_list_page(
-    model: Model, record: DocumentRow, *, share_pct: float, gutter_pct: float
-) -> str:
+def designation_list_page(model: Model, record: DocumentRow, *, share_pct: float, gutter_pct: float) -> str:
     """The DESIGNATION_LIST table: every item's designation, scoped to the unit."""
+    name = "designations"
+    designations = list_columns(model, name)
     table = _table(
         model,
-        DESIGNATION_COLUMNS,
-        column_rows(
-            designation_list(model, unit=document_unit(model, record.id)), DESIGNATION_COLUMNS
-        ),
-        ("description",),
+        name,
+        designations,
+        column_rows(designation_list(model, unit=document_unit(model, record.id)), designations),
     )
     return flow_columns([table], share_pct=share_pct, gutter_pct=gutter_pct)
 
@@ -193,26 +184,22 @@ def document_cable_rows(model: Model, record: DocumentRow) -> tuple[CableListRow
 
 def cable_list_page(model: Model, record: DocumentRow) -> str:
     """The CABLE_LIST table: one row per cable the document's drawings draw (pdf-0042)."""
-    columns = tuple(name for name in CABLE_LIST_COLUMNS if name != "pairs")
+    columns = list_pdf_columns(model, "cables")
     rows = [
-        tuple(
-            cores_text(row.core_count, row.pairs) if n == "core_count" else getattr(row, n)
-            for n in columns
-        )
+        tuple(cores_text(row.core_count, row.pairs) if n == "core_count" else getattr(row, n) for n in columns)
         for row in document_cable_rows(model, record)
     ]
-    return _table(model, columns, rows, ("description", "from_label", "to_label"))
+    return _table(model, "cables", columns, rows)
 
 
 def bom_page(model: Model, record: DocumentRow) -> str:
     """The BOM table, scoped by `DocumentScope.bom_scope`."""
-    rows = column_rows(document_bom_lines(model, record.id), BOM_COLUMNS)
-    return _table(model, BOM_COLUMNS, rows, ("description", "designations"))
+    bom = list_columns(model, "bom")
+    rows = column_rows(document_bom_lines(model, record.id), bom)
+    return _table(model, "bom", bom, rows)
 
 
-def _list_title(
-    model: Model, item: ItemId, unit: UnitId | None, designation: str | None = None
-) -> str:
+def _list_title(model: Model, item: ItemId, unit: UnitId | None, designation: str | None = None) -> str:
     """A section's heading text, unit-relative; `""` for a unit's own root (model-0061).
 
     `designation` is the printed one when the caller has it (`PlcTable.designation`).
@@ -227,12 +214,11 @@ def _list_heading(title: str) -> str:
     return f"{LIST_HEADING}text({literal(title)}))\n" if title else ""
 
 
-def terminal_list_page(  # noqa: PLR0913 -- the page's inputs, the Bridge word and the two list-share values
+def terminal_list_page(
     model: Model,
     record: DocumentRow,
-    bridges: Mapping[str, BridgePieceRow] | None = None,
+    bridge_inputs: BridgeInputs,
     *,
-    bridge_word: str,
     share_pct: float,
     gutter_pct: float,
 ) -> str:
@@ -250,10 +236,8 @@ def terminal_list_page(  # noqa: PLR0913 -- the page's inputs, the Bridge word a
                 model,
                 rows,
                 strip_side_headings(model, strip),
-                title=_carried(model, title),
-                label=f"term{number}",
-                bridges=bridges,
-                bridge_word=bridge_word,
+                (_carried(model, title), f"term{number}"),
+                bridge_inputs,
             )
         )
     return flow_columns(sections, share_pct=share_pct, gutter_pct=gutter_pct)
@@ -263,41 +247,32 @@ def _connector_rows_for_page(model: Model, record: DocumentRow) -> tuple[Connect
     """The CONNECTOR_LIST rows: a board document's board, else a unit's own, else the location's."""
     scope = document_scope(model, record.id)
     if record.item is not None:
-        return tuple(
-            row for board in scope.boards for row in connector_rows_for(model, record, board)
-        )
+        return tuple(row for board in scope.boards for row in connector_rows_for(model, record, board))
     return connector_rows_of(model, scope.connector_items, unit=scope.unit, context=record.location)
 
 
 def _connector_section(model: Model, row: ConnectorRow, description: str, number: int) -> str:
     """One connector: heading and table, or with no wired pin its description and one line."""
     if not any(pin.ends or pin.net is not None for pin in row.pins):  # a wire or a net is wired
-        return description_par(description) + (
-            f"#par(text({literal(f'{row.designation}: no pin wired')}))\n"
-        )
+        return description_par(description) + (f"#par(text({literal(f'{row.designation}: no pin wired')}))\n")
+    pins = list_pdf_columns(model, "connectors")
     return (
         _list_heading(row.designation)
         + description_par(description)
         + _table(
             model,
-            PIN_COLUMNS,
-            column_rows(row.pins, PIN_COLUMNS),
-            ("net", "ends"),
-            title=_carried(model, row.designation),
-            label=f"conn{number}",
-            labels=CONNECTOR_LABELS,
+            "connectors",
+            pins,
+            column_rows(row.pins, pins),
+            (_carried(model, row.designation), f"conn{number}"),
         )
     )
 
 
-def connector_list_page(
-    model: Model, record: DocumentRow, *, share_pct: float, gutter_pct: float
-) -> str:
+def connector_list_page(model: Model, record: DocumentRow, *, share_pct: float, gutter_pct: float) -> str:
     """The CONNECTOR_LIST section: a table per connector, headed by its designation (pdf-0030)."""
     sections = [
-        _connector_section(
-            model, row, item_description(model, connector_item(model, row.connector)), n
-        )
+        _connector_section(model, row, item_description(model, connector_item(model, row.connector)), n)
         for n, row in enumerate(_connector_rows_for_page(model, record))
     ]
     return flow_columns(sections, share_pct=share_pct, gutter_pct=gutter_pct)

@@ -5,11 +5,14 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from .cut_ledger import copy_nets
+
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
     from .cut_pack import Pack
-    from .values import Block, BlockList, Column, Fan, FlowGraph, Options, Seat
+    from .flow_values import Block, BlockList, Column, Fan, FlowGraph, Seat
+    from .values import Options
 
 TWO_ENDS = 2  # a trunk with two attachments is a two-pin net
 
@@ -67,9 +70,7 @@ def item_height(column: Column, options: Options) -> int:
     return with_wires(column.height, options)
 
 
-def column_items(
-    unit: BlockList, flow: FlowGraph, options: Options, packed: Mapping[str, Pack], page_h: int
-) -> tuple[Item, ...]:
+def column_items(unit: BlockList, flow: FlowGraph, options: Options, packed: Mapping[str, Pack], page_h: int) -> tuple[Item, ...]:
     """The unit's items over a given pack: stage 4's, or the pack stage 7 widened."""
     columns = {c.id: c for c in flow.columns}
     limit = options.short_height * page_h
@@ -165,7 +166,7 @@ def boundaries(
     tally = _Tally(len(seq))
     for fan in flow.fans:
         name = ref_name(fan)
-        tally.add(_span(fan_columns(fan), pos), name, pair=is_pair(fan), copy=fan.id in copyable)
+        tally.add(_span(fan_columns(fan), pos), name, pair=is_pair(fan), copy=bool(copy_nets(fan, copyable)))
     for link in flow.cross_links:
         ends = [a.column or a.pin.sym for a in link.ends]
         tally.add(_span(ends, pos), link.net, pair=True, copy=False)

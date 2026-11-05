@@ -149,9 +149,7 @@ def make_holder(digit: str, **overrides: Any) -> Any:
 
 def make_facet(digit: str, subject: str) -> Any:
     """A facet `digit` for the owner `subject`."""
-    return Facet(
-        id=Id(kind="freeze_unique_probe", value=digit * 32), key=(digit,), subject=owner_id(subject)
-    )
+    return Facet(id=Id(kind="freeze_unique_probe", value=digit * 32), key=(digit,), subject=owner_id(subject))
 
 
 def draft_of(origin: Origin, *records: Any) -> Draft:

@@ -5,7 +5,7 @@ from typing import Any
 lazy from collections.abc import Iterable
 
 from .checks import kind_of
-from .errors import MergeConflict, SchemaError
+from .errors import MergeConflictError, SchemaError
 from .ids import Id
 lazy from .ids import AuthoringKey
 lazy from .origin import Origin
@@ -16,7 +16,7 @@ class Draft:
     """The only mutable type in the repo. Collects records before `freeze()`.
 
     Accepts a duplicate `add` of identical content as a no-op; a conflicting `add` under
-    the same id raises `MergeConflict` immediately, naming both origins. Nothing here
+    the same id raises `MergeConflictError` immediately, naming both origins. Nothing here
     depends on the order things were added in: the accessors sort. A draft that raised is
     to be discarded, not repaired.
     """
@@ -36,7 +36,7 @@ class Draft:
         Raises:
             SchemaError: `record` is not an instance of a `@record` class, or its id is of
                 another kind than its class.
-            MergeConflict: `record.id` is already present with different content.
+            MergeConflictError: `record.id` is already present with different content.
         """
         cls = type(record)
         kind = vars(cls).get("__kind__")
@@ -48,12 +48,10 @@ class Draft:
             self._records[record.id] = record
             self._origins[record.id] = origin
         elif present == record:
-            self._origins[record.id] = min(self._origins[record.id], origin, key=_origin_order)
+            self._origins[record.id] = min(self._origins[record.id], origin, key=lambda o: (o.file, o.line, o.note))
         else:
             msg = "two different records share one id"
-            raise MergeConflict(
-                msg, record_id=record.id, origin_a=self._origins[record.id], origin_b=origin
-            )
+            raise MergeConflictError(msg, record_id=record.id, origin_a=self._origins[record.id], origin_b=origin)
 
     def extend(self, records: Iterable[Record], *, origin: Origin) -> None:
         """Add every record in `records`, all attributed to `origin`.
@@ -63,7 +61,7 @@ class Draft:
         for record in records:
             self.add(record, origin=origin)
 
-    def alias(self, old: Id[Any], new: Id[Any]) -> None:
+    def alias(self, old: Id[Record], new: Id[Record]) -> None:
         """Record that `old` has been retired in favour of `new`.
 
         `freeze()` rewrites a reference to `old` into one to `new`. Saying the same thing
@@ -94,34 +92,25 @@ class Draft:
         that reads a kind the draft does not hold, such as a catalogue `PortTemplate`,
         `InternalLink` or `Part` that only the facade merges in.
         """
-        return frozendict(
-            {
-                kind: frozendict({record.id: record for record in group})
-                for kind, group in groupby(self.records(), key=kind_of)
-            }
-        )
+        return frozendict({kind: frozendict({record.id: record for record in group}) for kind, group in groupby(self.records(), key=kind_of)})
 
-    def origins(self) -> frozendict[Id[Any], Origin]:
+    def origins(self) -> frozendict[Id[Record], Origin]:
         """Where each record was authored."""
         return frozendict(self._origins)
 
-    def alias_map(self) -> frozendict[Id[Any], Id[Any]]:
+    def alias_map(self) -> frozendict[Id[Record], Id[Record]]:
         """Every retired id and the id that replaces it, as authored."""
         return frozendict(self._aliases)
 
-    def origin_of(self, target: Id[Any]) -> Origin | None:
+    def origin_of(self, target: Id[Record]) -> Origin | None:
         """Where the record `target` was authored, or `None` (`OriginSource`, kernel-model.md)."""
         return self._origins.get(target)
 
-    def key_of(self, target: Id[Any]) -> AuthoringKey | None:
+    def key_of(self, target: Id[Record]) -> AuthoringKey | None:
         """The authoring key of the record `target`, or `None` (`OriginSource`, kernel-model.md)."""
         record = self._records.get(target)
         return None if record is None else record.key
 
-    def record_of(self, target: Id[Any]) -> Record | None:
+    def record_of(self, target: Id[Record]) -> Record | None:
         """The record under `target`, or `None` (kernel-model.md), like `key_of`, no alias."""
         return self._records.get(target)
-
-
-def _origin_order(origin: Origin) -> tuple[str, int, str]:
-    return origin.file, origin.line, origin.note

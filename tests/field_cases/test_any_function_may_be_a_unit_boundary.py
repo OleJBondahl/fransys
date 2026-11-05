@@ -1,23 +1,21 @@
-"""Field case: a cabinet unit's field cables land straight on a PLC channel, a relay coil or a
-supply output, with no strip between (model-0188).
-
-The engineering shape: a cabinet unit holds a device, and its container wires a field device to
-a channel, a coil pin or a supply output of that device. The unit marks the device an interface
-(`interface=True`, or `interface=("coil",)` for one function). A nested case passes the boundary
-up through a skid unit that holds the cabinet.
-
-The bug: the build gave `BOUNDARY_KIND` (ERROR) for every function that was not a terminal or a
-connector, and without the interface mark `UNIT_BOUNDARY_BYPASSED` once the cable was wired.
-The rule (decision model-0188, amending model-0038 U3): any function may be a unit's boundary.
-"""
+"""Field case: a cabinet unit's field cables land straight on a PLC channel, a relay coil or a supply output, with no strip between.
+The bug: BOUNDARY_KIND (ERROR) rejected any non-terminal, non-connector boundary, and UNIT_BOUNDARY_BYPASSED followed without the mark.
+Fixed by model-0188 (amending model-0038 U3), any function may be a unit's boundary."""
 
 import re
 import tempfile
 from pathlib import Path
-from typing import Any, NamedTuple
+from typing import TYPE_CHECKING, Any, NamedTuple
 
 import fransys as fr
 import pytest
+
+from fransys_model.derive import item_of_port, item_unit, port_designation, printed_designation
+from fransys_model.vocab.tables import conductors, ports, units
+lazy from fransys_model.vocab.core import Unit
+
+if TYPE_CHECKING:
+    from fransys_model.kernel import Id, Model
 
 _UNIT: dict[str, Any] = {
     "revision": 1,
@@ -67,20 +65,20 @@ def _skid(u: Any) -> _Plc:
 
 def _wire_plc(c: Any, io: _Plc) -> None:
     field = c.device("J1", "DEMO-CONN-2P")
-    c.detail.wire(field["1"], io.AI1.ai_1["1"], wire=("WH", 0.5))
-    c.detail.wire(field["2"], io.AI1.ai_1["2"], wire=("WH", 0.5))
+    c.series(field["1"], io.AI1.ai_1["1"], wire=("WH", 0.5))
+    c.series(field["2"], io.AI1.ai_1["2"], wire=("WH", 0.5))
 
 
 def _wire_relay(c: Any, io: _Relay) -> None:
     field = c.device("J1", "DEMO-CONN-2P")
-    c.detail.wire(field["1"], io.K1.coil["A1"], wire=("WH", 0.5))
-    c.detail.wire(field["2"], io.K1.coil["A2"], wire=("WH", 0.5))
+    c.series(field["1"], io.K1.coil["A1"], wire=("WH", 0.5))
+    c.series(field["2"], io.K1.coil["A2"], wire=("WH", 0.5))
 
 
 def _wire_supply(c: Any, io: _Supply) -> None:
     lamp = c.device("H1", "DEMO-LAMP-24")
-    c.detail.wire(lamp["1"], io.T1.output["+"], wire=("WH", 0.5))
-    c.detail.wire(lamp["2"], io.T1.output["-"], wire=("WH", 0.5))
+    c.series(lamp["1"], io.T1.output["+"], wire=("WH", 0.5))
+    c.series(lamp["2"], io.T1.output["-"], wire=("WH", 0.5))
 
 
 _CASES = {
@@ -107,19 +105,34 @@ def test_a_direct_landing_on_any_function_builds_clean(case: str) -> None:
     unit, wire = _CASES[case]
     codes = {f.code for f in fr.build(_container(unit, wire)).findings}
     assert codes & _BAD == set()
-    assert [
-        f.code for f in fr.build(_container(unit, wire)).findings if f.severity.name == "ERROR"
-    ] == []
+    assert [f.code for f in fr.build(_container(unit, wire)).findings if f.severity.name == "ERROR"] == []
+
+
+@pytest.mark.parametrize("case", ["plc channel", "nested plc channel"])
+def test_a_pin_column_hanging_under_a_framed_box_clears_the_frame(case: str) -> None:
+    """The column stands off the box's grown footprint, so the unit's frame has room (place_y._attach_y)."""
+    unit, wire = _CASES[case]
+    assert "OUTLINE_NO_ROOM" not in {f.code for f in fr.build(_container(unit, wire)).findings}
 
 
 # the container page's texts: the unit's title, the field device and, for the boundary ports,
 # only their pin cells (a connector's, model-0188): never the item box or the symbol
-_PAGE = {
-    "plc channel": ("demo-plc-cab", ["-U1-AI1", "1", "2", "1", "2", "-J1"]),
-    "relay coil": ("demo-relay-cab", ["-U1-K1", "A1", "A2", "1", "2", "-J1"]),
-    "supply output": ("demo-supply-cab", ["-U1-T1:+", "-U1-T1:-", "-H1", "1", "2"]),
-    "nested plc channel": ("demo-skid", ["-U1-U2-AI1", "1", "1", "2", "2", "-J1"]),
-}
+_TITLE = {"plc channel": "demo-plc-cab", "relay coil": "demo-relay-cab", "supply output": "demo-supply-cab", "nested plc channel": "demo-plc-cab"}
+
+
+def _page_texts(model: Model, container: Id[Unit]) -> list[str]:
+    """Each conductor port's pin name, the container-relative designation of a field port, and each boundary item's once."""
+    texts: list[str] = []
+    for c in conductors(model).values():
+        for end in (c.a, c.b):
+            texts.append(ports(model)[end].name)
+            item = item_of_port(model, end)
+            if item_unit(model, item) == container:
+                texts.append(port_designation(model, end, unit=container))
+            else:
+                texts.append(printed_designation(model, item, unit=container))
+    boundary = {t for t in texts if t.startswith("-") and ":" not in t}
+    return [t for t in texts if t not in boundary] + sorted(boundary)
 
 
 @pytest.mark.parametrize("case", sorted(_CASES))
@@ -131,11 +144,12 @@ def test_the_container_page_draws_the_boundary_ports_as_pin_cells(case: str) -> 
     cover = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, "demo-container", cover=root / "c.md")
     result = fr.build(_container(unit, wire), cover)
     fr.write(result, root / "out", intermediates=root / "inter")
-    title, expected = _PAGE[case]
-    pages = [
-        re.findall(r">([^<>]+)</text>", svg.read_text("utf-8"))
-        for svg in (root / "inter").glob("layout.page-*.svg")
-    ]
-    (texts,) = (page for page in pages if f"{title} rev 1.1" in page)
-    texts = [t for t in texts if t != f"{title} rev 1.1"]  # One per outline run
+    title = _TITLE[case]
+    model = result.model
+    (container,) = (u.id for u in units(model).values() if u.parent is None)
+    expected = _page_texts(model, container)
+    pages = [re.findall(r">([^<>]+)</text>", svg.read_text("utf-8")) for svg in (root / "inter").glob("layout.page-*.svg")]
+    holding = [page for page in pages if f"{title} rev 1.1" in page]
+    assert len(holding) == 1, f"expected one page printing the unit frame title '{title} rev 1.1', found {len(holding)}: no unit frame is drawn"
+    texts = [t for t in holding[0] if t != f"{title} rev 1.1"]  # One per outline run
     assert sorted(texts) == sorted(expected)

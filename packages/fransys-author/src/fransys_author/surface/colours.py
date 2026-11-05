@@ -6,7 +6,8 @@ Every value is read from the model's colour lists, so a code the model lacks can
 from typing import Final
 
 from fransys_author.errors import AuthorError
-from fransys_model.vocab import BASE_COLOURS, RESERVED_CODES, split_colour
+from fransys_model.derive import split_colour
+from fransys_model.vocab import BASE_COLOURS, RESERVED_CODES
 
 
 def _code(name: str) -> str:

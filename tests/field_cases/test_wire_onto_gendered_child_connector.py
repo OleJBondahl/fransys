@@ -1,17 +1,6 @@
 """Field case: a container wires straight onto a nested unit's boundary connector.
-
-Engineering shape: a cabinet unit holds a nested board unit, and the board's boundary is a
-pin header (a part whose connector gender is male). The cabinet's own wire lands on a header
-pin directly, with no plug and no mate in between. A pin header needs a plug, so the build
-must warn `CONNECTOR_WIRED_WITHOUT_MATE`. A second nested unit's boundary is a screw terminal
-with no gender; a wire onto it is the ordinary way to reach it, and the build stays silent.
-
-The bug: neither wire was reported at authoring time. The direct wire onto the header only
-surfaced later as `CONNECTION_NOT_DRAWN` at render, far from its cause.
-
-Fixing decision: model-0116 (model validator, WARNING; a gender of male or female takes a
-plug, a neutral or unstated gender takes the wire).
-"""
+The bug: neither wire was reported at authoring time; the direct wire onto the header surfaced only as `CONNECTION_NOT_DRAWN`.
+Fixed by model-0116 (model validator, WARNING): a male or female gender takes a plug; a neutral or unstated gender takes the wire."""
 
 from typing import Any, NamedTuple, TypedDict
 
@@ -71,8 +60,10 @@ def _cabinet(d: fr.Design) -> _Open:
     header = d.add(_header_board, "HDR")
     terminal = d.add(_terminal_board, "TRM")
     feed = d.terminal_strip("X9", "DEMO-TB-2.5", 2)
-    d.detail.wire(feed[1].outer, header.X1[1], wire=(BU, 0.5))
-    d.detail.wire(feed[2].outer, terminal.X2[1].outer, wire=(BU, 0.5))
+    d.series(feed[1].outer, header.X1[1], wire=(BU, 0.5))
+    d.series(feed[2].outer, terminal.X2[1].outer, wire=(BU, 0.5))
+    lead = d.terminal_strip("X8", "DEMO-TB-2.5", 1)
+    d.cable("W1", "DEMO-CBL-4G1.5").core(1, lead[1].outer, header.X1[2])
     return _Open()
 
 
@@ -88,6 +79,16 @@ def test_wire_onto_a_male_header_warns(findings: tuple[fr.Finding, ...]) -> None
     fired = [f for f in findings if f.code == _CODE and "-CAB-HDR-X1" in f.message]
     assert len(fired) == 1
     assert fired[0].severity is fr.Severity.WARNING
+    assert "cable's cores at the connector's pins, with no mate" in fired[0].message
+    assert "mate it" not in fired[0].message
+
+
+def test_a_cable_core_onto_the_male_header_is_silent(findings: tuple[fr.Finding, ...]) -> None:
+    """R1260: in 0.22 a cable core on a gendered connector gives no warning; the bare wire on pin 1 still does."""
+    fired = [f for f in findings if f.code == _CODE and "-CAB-HDR-X1" in f.message]
+    assert len(fired) == 1
+    assert "-CAB-X9:1" in fired[0].message
+    assert not [f for f in findings if f.code == _CODE and "-CAB-X8" in f.message]
 
 
 def test_wire_onto_a_neutral_terminal_is_silent(findings: tuple[fr.Finding, ...]) -> None:

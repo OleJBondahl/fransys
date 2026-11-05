@@ -25,7 +25,7 @@ import inspect
 import sys
 import types
 from pathlib import Path
-from typing import TYPE_CHECKING, Protocol, override
+from typing import TYPE_CHECKING, Protocol, cast, override
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -51,9 +51,7 @@ def _load_lean_surface() -> types.ModuleType:
     """Load `scripts/lean_surface.py` the way its own tests do, reusing a prior load."""
     if _LEAN_SURFACE_NAME in sys.modules:
         return sys.modules[_LEAN_SURFACE_NAME]
-    spec = importlib.util.spec_from_file_location(
-        _LEAN_SURFACE_NAME, _SCRIPTS_DIR / "lean_surface.py"
-    )
+    spec = importlib.util.spec_from_file_location(_LEAN_SURFACE_NAME, _SCRIPTS_DIR / "lean_surface.py")
     if spec is None or spec.loader is None:
         msg = "could not load scripts/lean_surface.py"
         raise ImportError(msg)
@@ -81,7 +79,7 @@ def _package_modules(package: str, modules: Iterable[str] | None = None) -> tupl
     `lean_surface.surface_modules()`; a test passes its own small list instead.
     """
     if modules is None:
-        modules = lean_surface.surface_modules()
+        modules = cast("Iterable[str]", lean_surface.surface_modules())
     return tuple(m for m in modules if m == package or m.startswith(f"{package}."))
 
 
@@ -104,7 +102,7 @@ class _SurfaceNames(ast.NodeTransformer):
 
 def _surface_of(module_path: str) -> frozenset[str]:
     """Every name in `module_path`'s own `__all__`."""
-    return frozenset(lean_surface.surface_names((module_path,))[module_path])
+    return frozenset(str(name) for name in lean_surface.surface_names((module_path,))[module_path])
 
 
 def _signature_text(node: ast.AST | None, surface: frozenset[str] = frozenset()) -> str:
@@ -118,7 +116,7 @@ def _signature_text(node: ast.AST | None, surface: frozenset[str] = frozenset())
     """
     if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
         return ""
-    node = _SurfaceNames(surface).visit(copy.deepcopy(node))
+    node = cast("ast.FunctionDef | ast.AsyncFunctionDef", _SurfaceNames(surface).visit(copy.deepcopy(node)))
     params = ast.unparse(node.args)
     if node.returns is None:
         return f"({params})"
@@ -180,9 +178,7 @@ def api(package: str) -> str:
         msg = f"unknown package: {package!r}"
         raise UnknownPackageError(msg)
     names_by_module = lean_surface.surface_names(modules)
-    resolved = {
-        (entry.module, entry.name): entry for entry in lean_surface.resolve_surface_names(modules)
-    }
+    resolved = {(entry.module, entry.name): entry for entry in lean_surface.resolve_surface_names(modules)}
     trees: dict[Path, ast.Module] = {}
     blocks = [
         _entry_text(module_path, name, resolved.get((module_path, name)), trees)
@@ -231,10 +227,7 @@ def api_md(module_path: str) -> str:
     each, so the page is byte-identical across calls (FS5).
     """
     names = lean_surface.surface_names((module_path,))[module_path]
-    resolved = {
-        (entry.module, entry.name): entry
-        for entry in lean_surface.resolve_surface_names((module_path,))
-    }
+    resolved = {(entry.module, entry.name): entry for entry in lean_surface.resolve_surface_names((module_path,))}
     trees: dict[Path, ast.Module] = {}
     groups: dict[str, list[tuple[str, str]]] = {"Functions": [], "Classes": [], "Constants": []}
     for name in names:

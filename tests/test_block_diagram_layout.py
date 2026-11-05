@@ -2,22 +2,14 @@
 
 Both readings lay out with none of the four geometry findings, and write their records.
 """
-
-import sys
-from pathlib import Path
+# CONNECTION_NOT_DRAWN 2 per default-salt build set (MATES-DISABLED): mated, harness or board-unit input, refused for 0.22 (R1216).
 
 import pytest
+from test_block_diagram_worked_examples import _station
+from test_units_worked_example import _build_cabinet_own
 
-_TESTS_DIR = Path(__file__).resolve().parent
-if str(_TESTS_DIR) not in sys.path:
-    # `--import-mode=importlib` (root pyproject.toml) never puts this folder on `sys.path`.
-    sys.path.insert(0, str(_TESTS_DIR))
-
-from test_block_diagram_worked_examples import _station  # noqa: E402 -- after the sys.path insert
-from test_units_worked_example import _build_cabinet_own  # noqa: E402 -- after the sys.path insert
-
-from fransys_layout import lay_out_diagrams  # noqa: E402 -- after the sys.path insert
-from fransys_model.layout import DiagramLine, DiagramSheet, layout_of  # noqa: E402 -- ditto
+from electrical_symbols import LIBRARY
+from fransys_layout import lay_out_diagrams
 
 _GEOMETRY = {
     "DIAGRAM_BOX_OVERLAP",
@@ -35,7 +27,7 @@ def _cabinet():
 
 @pytest.mark.parametrize("build", [_station, _cabinet], ids=["station", "cabinet"])
 def test_a_worked_example_lays_out_without_geometry_findings(build):
-    model, findings = lay_out_diagrams(build())
+    layout, findings = lay_out_diagrams(build(), LIBRARY)
     assert not _GEOMETRY & {f.code for f in findings}
-    assert layout_of(model, DiagramSheet)
-    assert layout_of(model, DiagramLine)
+    assert layout.sheet_places()
+    assert all(sheet.lines for d in layout.diagrams for sheet in d.sheets)

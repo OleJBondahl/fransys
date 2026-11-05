@@ -2,11 +2,6 @@
 
 A site is an f-string, a `+` chain of strings or a `.join` of a tuple or list that combines two
 operands, one at least a row field, in an output package, render, the facade or author. A row field
-is `x.field` (or `x.a.b`) where `x` is a parameter or a loop or comprehension variable of the
-enclosing scopes, not `self`, `cls` or an imported module name. The other operand is a second row
-field or a string literal. A direct argument of a `raise` is not a site, nor is a join assigned
-to a local name that a `raise` in the same function passes as its exception's message (the house
-form `msg = f"..."; raise X(msg)`, designer 2026-10-18); a `Finding(...)` message is.
 """
 
 import ast
@@ -38,9 +33,7 @@ class Site(NamedTuple):
 
 
 def _targets(node: ast.AST) -> set[str]:
-    return {
-        n.id for n in ast.walk(node) if isinstance(n, ast.Name) and isinstance(n.ctx, ast.Store)
-    }
+    return {n.id for n in ast.walk(node) if isinstance(n, ast.Name) and isinstance(n.ctx, ast.Store)}
 
 
 def _bound(scope: ast.AST) -> set[str]:
@@ -119,11 +112,7 @@ def _inner_ids(node: ast.AST) -> set[int]:
             if sub is not node and isinstance(sub, ast.BinOp) and isinstance(sub.op, ast.Add):
                 inner.add(id(sub))
     elif isinstance(node, ast.JoinedStr):
-        inner |= {
-            id(v.format_spec)
-            for v in node.values
-            if isinstance(v, ast.FormattedValue) and v.format_spec
-        }
+        inner |= {id(v.format_spec) for v in node.values if isinstance(v, ast.FormattedValue) and v.format_spec}
     return inner
 
 
@@ -151,10 +140,7 @@ def _raise_messages(func: ast.AST) -> set[int]:
     return {
         id(n.value)
         for n in ast.walk(func)
-        if isinstance(n, ast.Assign)
-        and len(n.targets) == 1
-        and isinstance(n.targets[0], ast.Name)
-        and n.targets[0].id in named
+        if isinstance(n, ast.Assign) and len(n.targets) == 1 and isinstance(n.targets[0], ast.Name) and n.targets[0].id in named
     }
 
 

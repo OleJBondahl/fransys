@@ -2,6 +2,7 @@
 
 lazy from collections.abc import Sequence
 
+from fransys_layout.core import grid_up
 from fransys_layout.engines.cable.place_frame import (
     Spans,
     box_room,
@@ -43,7 +44,7 @@ from fransys_layout.engines.cable.values import (
     PlacedWire,
 )
 from fransys_layout.engines.overview.lanes.plan_channel import Plan, plan_channel, rise
-from fransys_layout.geometry import PORT_PITCH_G, WIRING_GRID, Box, LayoutError, Point, snap_up
+from fransys_layout.geometry import PORT_PITCH_G, WIRING_GRID, Box, LayoutError, Point
 from fransys_layout.routing.space import Obstacle
 
 G = WIRING_GRID
@@ -52,7 +53,7 @@ ROW = 2 * G  # label room, end-box height and the band between an end box and th
 
 def block_pitch(widest: int) -> int:
     """The pitch rule: `widest` plus one grid unit, rounded up to whole pin pitches."""
-    return snap_up(widest + G, grid=PORT_PITCH_G)
+    return grid_up(widest + G, PORT_PITCH_G)
 
 
 def _cores(facts: BlockFacts) -> tuple[CoreFacts, ...]:
@@ -75,33 +76,21 @@ def _spans(facts: BlockFacts, ends: tuple[PlacedEnd, ...]) -> Spans:
 def _pitch(facts: BlockFacts) -> int:
     """The block pitch; a harness grows it by whole pin pitches until each heading fits."""
     pitch = block_pitch(_widest(facts))
-    while facts.harness_width is not None and not boxes_fit(
-        facts, _spans(facts, _place_rows(facts, 0, pitch, 2 * G)[0]), pitch
-    ):
+    while facts.harness_width is not None and not boxes_fit(facts, _spans(facts, _place_rows(facts, 0, pitch, 2 * G)[0]), pitch):
         pitch += PORT_PITCH_G
     return pitch
 
 
-def _overhang(end: EndFacts, pitch: int) -> int:
-    return max(0, -(-(end.label_width - end.places * pitch) // 2))
-
-
 def _origin(facts: BlockFacts, pitch: int) -> int:
     drawn = (row[0] for row in (facts.top, facts.bottom) if row and not row[0].blank)
-    return snap_up(max((_overhang(end, pitch) for end in drawn), default=0))
-
-
-def _earth_room(row: tuple[EndFacts, ...]) -> int:
-    """One module more for a bar's PE symbol: it reaches 37 units past the core, the band 32."""
-    return G if any(end.earth for end in row) else 0
+    return grid_up(max((max(0, -(-(end.label_width - end.places * pitch) // 2)) for end in drawn), default=0), WIRING_GRID)
 
 
 def _top_y(row: tuple[EndFacts, ...], rise_by: int) -> tuple[int, int]:
     """The end box's y and the cable box's y of a top row; its links lift the box by `rise_by`."""
     if row[0].blank:
         return 0, STUB
-    room = _earth_room(row)
-    return ROW + room, 3 * ROW + room + rise_by
+    return ROW, 3 * ROW + rise_by
 
 
 def _place_end(end: EndFacts, x0: int, pitch: int, y: int, *, top: bool) -> PlacedEnd:
@@ -109,10 +98,7 @@ def _place_end(end: EndFacts, x0: int, pitch: int, y: int, *, top: bool) -> Plac
     cells = []
     left = x0
     for pin in end.pins:
-        places = tuple(
-            CorePlace(core=core, x=left + pitch // 2 + n * pitch)
-            for n, core in enumerate(pin.cores)
-        )
+        places = tuple(CorePlace(core=core, x=left + pitch // 2 + n * pitch) for n, core in enumerate(pin.cores))
         cells.append(
             PlacedCell(
                 port=pin.port,
@@ -128,7 +114,6 @@ def _place_end(end: EndFacts, x0: int, pitch: int, y: int, *, top: bool) -> Plac
         top=top,
         dashed=end.dashed,
         blank=end.blank,
-        earth=end.earth,
         x=x0,
         y=y,
         width=end.places * pitch,
@@ -137,9 +122,7 @@ def _place_end(end: EndFacts, x0: int, pitch: int, y: int, *, top: bool) -> Plac
     )
 
 
-def _place_row(
-    row: tuple[EndFacts, ...], x0: int, pitch: int, y: int, *, top: bool
-) -> tuple[PlacedEnd, ...]:
+def _place_row(row: tuple[EndFacts, ...], x0: int, pitch: int, y: int, *, top: bool) -> tuple[PlacedEnd, ...]:
     """One row's end boxes at height `y`, packed left to right (a row is all drawn or all blank)."""
     if len({end.blank for end in row}) > 1:
         message = "a cable block row holds drawn ends or blank ends, never both"
@@ -154,9 +137,7 @@ def _gap(facts: BlockFacts) -> int:
     return G if facts.harness_width is not None or stubbed else 0
 
 
-def _place_rows(
-    facts: BlockFacts, x0: int, pitch: int, drop: int
-) -> tuple[tuple[PlacedEnd, ...], int, int]:
+def _place_rows(facts: BlockFacts, x0: int, pitch: int, drop: int) -> tuple[tuple[PlacedEnd, ...], int, int]:
     """The placed ends, the cable box's y and the block's height.
 
     `drop` is the height between the box and a drawn bottom row: its tracks. The upper
@@ -174,7 +155,7 @@ def _place_rows(
     blank = facts.bottom[0].blank
     end_y = below + (STUB if blank else drop)
     bottom = _place_row(facts.bottom, x0, pitch, end_y, top=False)
-    return (*top, *bottom), box_y, end_y + (0 if blank else 2 * ROW + _earth_room(facts.bottom))
+    return (*top, *bottom), box_y, end_y + (0 if blank else 2 * ROW)
 
 
 def _landings(facts: BlockFacts, ends: tuple[PlacedEnd, ...], box_y: int = 0) -> list[Landing]:
@@ -198,17 +179,12 @@ def _columns(
     landings: Sequence[tuple[bool, tuple[int, PlacedEnd], tuple[int, PlacedEnd]]],
 ) -> list[tuple[int, int, int]]:
     """Each core's key, top x and bottom x; a blank bottom row takes the column (a stub)."""
-    return [
-        (core.key, top[0], top[0] if bottom[1].blank else bottom[0])
-        for core, (_, top, bottom) in zip(_cores(facts), landings, strict=True)
-    ]
+    return [(core.key, top[0], top[0] if bottom[1].blank else bottom[0]) for core, (_, top, bottom) in zip(_cores(facts), landings, strict=True)]
 
 
 def _band(facts: BlockFacts, ends: tuple[PlacedEnd, ...], boxes: tuple[Box, ...], top: int) -> Band:
     """The lower band: from `top` down to the bottom row; the cable boxes and that row close it."""
-    drawn = [
-        Box(x=e.x, y=e.y, width=e.width, height=e.height) for e in ends if not e.top and not e.blank
-    ]
+    drawn = [Box(x=e.x, y=e.y, width=e.width, height=e.height) for e in ends if not e.top and not e.blank]
     return Band(
         top=top,
         obstacles=tuple(Obstacle(box=b, lanes=()) for b in (*boxes, *drawn)),
@@ -218,19 +194,14 @@ def _band(facts: BlockFacts, ends: tuple[PlacedEnd, ...], boxes: tuple[Box, ...]
     )
 
 
-def _wires(
-    facts: BlockFacts, ends: tuple[PlacedEnd, ...], box_y: int, plan: Plan, band: Band
-) -> tuple[PlacedWire, ...] | None:
+def _wires(facts: BlockFacts, ends: tuple[PlacedEnd, ...], box_y: int, plan: Plan, band: Band) -> tuple[PlacedWire, ...] | None:
     """Each core's two runs: a straight drop in the upper band, the routed lower run.
 
     A row link keeps its row (`place_links`); a bottom-row link is routed with the lower cores.
     """
     landings = _landings(facts, ends, box_y)
     below = box_y + box_room(facts)[0]
-    pairs = [
-        (Point(x=top[0], y=below), Point(x=top[0] if bottom[1].blank else bottom[0], y=bottom[1].y))
-        for _, top, bottom in landings
-    ]
+    pairs = [(Point(x=top[0], y=below), Point(x=top[0] if bottom[1].blank else bottom[0], y=bottom[1].y)) for _, top, bottom in landings]
     cores, links = _cores(facts), links_of(facts, ends)
     low = lower(links)
     keys = [core.key for core in cores] + [link.core.key for link in low]
@@ -239,19 +210,14 @@ def _wires(
         return None
     lines = upper_lines(facts, links)
     lines |= {k.core.key: line for k, line in zip(low, lowers[len(cores) :], strict=True)}
-    built = [
-        _core_wire(facts, box_y, core, landing, run)
-        for core, landing, run in zip(cores, landings, lowers[: len(cores)], strict=True)
-    ]
+    built = [_core_wire(facts, box_y, core, landing, run) for core, landing, run in zip(cores, landings, lowers[: len(cores)], strict=True)]
     drawn = [run for _, runs in built for run in runs]
     return (*(wire for wire, _ in built), *link_wires(facts, links, lines, drawn))
 
 
-def _core_wire(
-    facts: BlockFacts, box_y: int, core: CoreFacts, landing: Landing, lower_run: Line
-) -> tuple[PlacedWire, tuple[Line, Line]]:
+def _core_wire(facts: BlockFacts, box_y: int, core: CoreFacts, landing: Landing, lower_run: Line) -> tuple[PlacedWire, tuple[Line, Line]]:
     """One crossing core's record and its upper and lower runs."""
-    a_top, top, bottom = landing
+    a_top, top, _ = landing
     stop = upper_stop(facts, core, box_y)
     upper = (Point(x=top[0], y=top[1].y + top[1].height), Point(x=top[0], y=stop))
     down, up = (upper, lower_run[::-1]) if a_top else (lower_run, upper[::-1])
@@ -261,8 +227,6 @@ def _core_wire(
         run_b=up,
         text_x=text_x(facts, core, top[0]),
         text_y=box_y + box_room(facts)[1],
-        stub_a=(top if a_top else bottom)[1].blank,
-        stub_b=(bottom if a_top else top)[1].blank,
         open=core.open,
     )
     return wire, (upper, lower_run)
@@ -273,18 +237,14 @@ def _box_width(facts: BlockFacts, ends: tuple[PlacedEnd, ...]) -> int:
     tops = [e for e in ends if e.top]
     bottoms = [e.width for e in ends if not e.top]
     row = max((e.x + e.width for e in tops), default=0) - min((e.x for e in tops), default=0)
-    return snap_up(max(facts.cables[0].heading_width + 2 * facts.pad, row, *bottoms))
+    return grid_up(max(facts.cables[0].heading_width + 2 * facts.pad, row, *bottoms), WIRING_GRID)
 
 
-def _frame(
-    facts: BlockFacts, ends: tuple[PlacedEnd, ...], pitch: int, x0: int, box_y: int
-) -> tuple[tuple[PlacedCable, ...], Box | None] | None:
+def _frame(facts: BlockFacts, ends: tuple[PlacedEnd, ...], pitch: int, x0: int, box_y: int) -> tuple[tuple[PlacedCable, ...], Box | None] | None:
     """The cable boxes and the dashed box: one lone box over the top row, or the harness frame."""
     if facts.harness_width is None:
         box = Box(x=x0, y=box_y, width=_box_width(facts, ends), height=box_room(facts)[0])
-        return (
-            PlacedCable(cable=facts.cables[0].cable, external=facts.cables[0].external, box=box),
-        ), None
+        return (PlacedCable(cable=facts.cables[0].cable, external=facts.cables[0].external, box=box),), None
     boxes = cable_boxes(facts, _spans(facts, ends), pitch, box_y, x0)
     label = (facts.harness_width or 0) + 2 * facts.pad
     if boxes is None:
@@ -297,13 +257,7 @@ def _frame(
     if crosses(shapes, xs):
         return None
     framed = [*shapes, *([envelope(facts, xs, pitch, box_y)] if xs else [])]
-    return boxes, dashed_box(
-        label, framed, min(tops, default=None), dash_top(_top_y_of(facts, ends))
-    )
-
-
-def _top_y_of(facts: BlockFacts, ends: tuple[PlacedEnd, ...]) -> int:
-    return _top_y(facts.top, lift(facts, ends))[1] if facts.top else 0
+    return boxes, dashed_box(label, framed, min(tops, default=None), dash_top(_top_y(facts.top, lift(facts, ends))[1] if facts.top else 0))
 
 
 def _right(
@@ -319,7 +273,7 @@ def _right(
     wide = {c.conductor: c.text_width for c in facts.cores if c.link}
     edges += [w.text_x + (wide[w.conductor] + 1) // 2 for w in wires if w.conductor in wide]
     edges += text_edges(facts, wires)
-    return snap_up(max(edges))
+    return grid_up(max(edges), WIRING_GRID)
 
 
 def _plan(facts: BlockFacts, pitch: int, x0: int) -> Plan | None:
@@ -329,9 +283,7 @@ def _plan(facts: BlockFacts, pitch: int, x0: int) -> Plan | None:
     return plan_channel(columns, {link.core.key for link in low})
 
 
-def _place_at(
-    facts: BlockFacts, pitch: int, x0: int, tracks: int, plan: Plan
-) -> PlacedBlock | None:
+def _place_at(facts: BlockFacts, pitch: int, x0: int, tracks: int, plan: Plan) -> PlacedBlock | None:
     drop = rise(plan, tracks, facts.text_height) + G
     ends, box_y, height = _place_rows(facts, x0, pitch, drop)
     frame = _frame(facts, ends, pitch, x0, box_y)
@@ -347,7 +299,6 @@ def _place_at(
     return PlacedBlock(
         subject=facts.subject,
         unit=facts.unit,
-        sheet_format=facts.sheet_format,
         width=_right(facts, ends, tuple(edges), wires),
         height=height,
         pitch=pitch,
@@ -367,7 +318,7 @@ def place_tracks(facts: BlockFacts, tracks: int) -> PlacedBlock | None:
         return None
     block = _place_at(facts, pitch, x0, tracks, plan)
     if block is not None and block.harness is not None and block.harness.x < 0:
-        x0 += snap_up(-block.harness.x)
+        x0 += grid_up(-block.harness.x, WIRING_GRID)
         plan = _plan(facts, pitch, x0)
         block = None if plan is None else _place_at(facts, pitch, x0, tracks, plan)
     return block

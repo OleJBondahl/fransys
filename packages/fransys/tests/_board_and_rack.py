@@ -1,44 +1,23 @@
 """An invented board and PLC rack, built with raw part/item records through `fr.build`
 (the board and rack legs of the facade's build). `examples/demo-parts` carries no `[pcb]`-faceted
 part and neither root fixture uses a PLC module, so `connectors-*.csv`, `wago-*.xml`,
-`netlist-*.net` and `fransys_kicad.check` are otherwise unexercisable from the two pinned
-fixtures (whose `core`/`facet` digests must not move). Every part, MPN and
-designation here is invented (CLAUDE.md invariant 6), following the pattern of
-`packages/fransys-kicad/tests/conftest.py` and `packages/fransys-wago/tests/conftest.py`.
-
-One `Function` record in this model, directly on `board_item` (model-0039):
-it proves `schematic_functions(model)` correctly excludes a real board-mounted
-function (the board exclusion covers the board item's own leaf, not only its descendants --
-see `structure.schematic_functions`'s docstring), so `fransys_render.check`'s
-`LAYOUT_MISSING` -- which now fires on `schematic_functions(model)`, not every `Function`
-record -- correctly stays quiet even though a `Function` record exists, for a genuine
-board/rack-only submission built through the real pipeline (`fr.build`, not a hand-frozen
-`Draft`). `test_acceptance.py::test_board_and_rack_model_has_no_layout_missing_finding` is
-the can-fail proof of this. The module's channel content (a `FunctionTemplate` +
-`PlcChannelFacet` naming a real `Function`) is exactly what
-`packages/fransys-wago/tests/conftest.py`'s own fixtures already exercise; this facade-
-level fixture only needs to prove the naming and routing, which a channel-less module still
-does (`fransys_wago.modules.modules_xml`'s own `if not module.channels: continue` skips
-the module's `<Module>` element but the rack still writes a `wago-R1.xml`, and
-`derive.unit_racks` finds `R1` by its module's `PartCategory.PLC_MODULE`, never by
-any `Function`).
 """
 
 import fransys as fr
-from _model_build_cover import layout_trigger_document, system_document
+from _model_build_cover import system_document
 
 from fransys_model.kernel import Draft, Model, Origin, make_id
 from fransys_model.vocab.core import Function, Item
 from fransys_model.vocab.enums import FunctionKind, PartCategory
 from fransys_model.vocab.facets.pcb import PcbFacet
-from fransys_model.vocab.templates import Part
+from fransys_model.vocab.templates import FunctionTemplate, Part
 
 _ORIGIN = Origin(file="packages/fransys/tests/_board_and_rack.py", line=1, note="invented")
 
 
-def build_board_and_rack_model(*, lays_out: bool = False) -> Model:
+def build_board_and_rack_model() -> Model:
     """A board `PCB1` (one function of its own) and a PLC rack `R1` with one (channel-less)
-    module, via `fr.build`; `lays_out` keeps a SCHEMATIC page so the layout call runs.
+    module, via `fr.build`.
     """
     board_part = Part(
         id=make_id(Part, ("board",)),
@@ -55,6 +34,13 @@ def build_board_and_rack_model(*, lays_out: bool = False) -> Model:
         subject=board_part.id,
         revision="A",
     )
+    board_template = FunctionTemplate(
+        id=make_id(FunctionTemplate, ("board", "fn")),
+        key=("board", "fn"),
+        part=board_part.id,
+        name="fn",
+        kind=FunctionKind.GENERIC,
+    )
     board_item = Item(
         id=make_id(Item, ("board-item",)),
         key=("board-item",),
@@ -68,7 +54,7 @@ def build_board_and_rack_model(*, lays_out: bool = False) -> Model:
         id=make_id(Function, ("board-item", "fn")),
         key=("board-item", "fn"),
         item=board_item.id,
-        template=None,
+        template=board_template.id,
         name="fn",
         kind=FunctionKind.GENERIC,
     )
@@ -105,6 +91,7 @@ def build_board_and_rack_model(*, lays_out: bool = False) -> Model:
         [
             board_part,
             board_pcb,
+            board_template,
             board_item,
             board_function,
             module_part,
@@ -113,5 +100,4 @@ def build_board_and_rack_model(*, lays_out: bool = False) -> Model:
         ],
         origin=_ORIGIN,
     )
-    document = layout_trigger_document() if lays_out else system_document()
-    return fr.build(draft, document).model
+    return fr.build(draft, system_document()).model

@@ -20,6 +20,9 @@ elements = [
   { circle = [0, 1], r = 1.625, fill = "none" },
 ]
 
+lint_allow = [
+  { rule = "slot-missing", reason = "no tag is drawn on a power symbol; the library requires a tag slot of every symbol until TEXT-IN-LOOP T1 drops it (SUPPLY-SLOT R1605)" },
+]
+
 [slots]
-tag          = { at = [-2, 0.5],    side = "W", box = [6, 1] }
 "marking.pe" = { at = [0.25, -1.5], side = "E", box = [1.5, 1] }

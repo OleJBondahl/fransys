@@ -10,3 +10,4 @@ Status: moved out of `fransys-model` (root decision 0208). `fransys_model.kernel
 - The registry is module-global state in `fransys_kernel.registry`. One instance exists per process; import it only through this package.
 - A domain package registers its own kinds, namespaces and schema version (decision model-0251).
 - Output is deterministic: no file I/O, no clock, no randomness.
+- Family-library classes (`elecdef`, `refdef`) are stored values, registered in `values.py`. Their enums store by member name. A union slot stores its class tag. A frozenset stores as a sorted list (decision model-0370).

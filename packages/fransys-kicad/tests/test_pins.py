@@ -4,11 +4,7 @@ from fransys_model.derive import board_pins
 def _ref_pad(model, board, port):
     """`(ref, pad)` of `port` among the resolved pins, in nets or open."""
     pins = board_pins(model, board)
-    (found,) = {
-        (pin.ref, pin.pad)
-        for pin in (*(p for net in pins.nets for p in net.pins), *pins.unconnected)
-        if pin.port == port
-    }
+    (found,) = {(pin.ref, pin.pad) for pin in (*(p for net in pins.nets for p in net.pins), *pins.unconnected) if pin.port == port}
     return found
 
 

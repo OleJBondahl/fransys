@@ -4,6 +4,8 @@ The core breaks ties by `natural_key` of the symbol id, so the id leads with the
 designation. Twelve independent lamp pairs are equal columns: only the id orders them.
 """
 
+from typing import Any
+
 import fransys as fr
 from conventions_fixtures import house
 from fransys.colours import BU
@@ -19,12 +21,13 @@ from fransys_model.vocab import functions, items
 _PAIRS = 12
 
 
-def _placed_tags() -> tuple[list, list]:
+def _placed_tags() -> tuple[list[Any], list[Any]]:
     """The tag of each lamp, left to right, top to bottom, and the tags in Id-text order."""
     d = fr.design("demo_parts")
     for i in range(1, _PAIRS + 1):
         first, second = d.device(f"P{i}", "DEMO-LAMP-24"), d.device(f"Q{i}", "DEMO-LAMP-24")
-        d.detail.wire(first.lamp["2"], second.lamp["1"], wire=(BU, 0.5))
+        d.series(first.lamp["2"], second.lamp["1"], wire=(BU, 0.5))
+        d.series(first.lamp["1"], second.lamp["2"], wire=(BU, 0.5))
     model = fr.build(d).model
     kit = symbol_kit(model, LIBRARY)
     conventions = house()
@@ -41,6 +44,6 @@ def _placed_tags() -> tuple[list, list]:
 def test_equal_columns_stand_in_designation_order() -> None:
     tags, id_order = _placed_tags()
     assert len(tags) == 2 * _PAIRS
-    designation = sorted(tags, key=lambda t: (t[0] != "P", natural_key(t)))
+    designation = sorted(tags, key=lambda t: (int(t[1:]), t[0]))  # each pair is a ring, so a pair stands together
     assert id_order != designation  # precondition: the Id text alone would order them otherwise
     assert tags == designation

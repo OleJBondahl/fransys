@@ -1,4 +1,4 @@
-"""The order of function groups: profile rank, then natural key, then the authored order hints.
+"""The order of function groups: natural key, then the authored order hints.
 
 The one home of the overview's lane order (R338, ported from the old schematic stages). A hint
 cycle leaves the hints out; the drawing engine reports the cycle.
@@ -9,7 +9,7 @@ lazy from collections.abc import Set as AbstractSet
 lazy from typing import Any
 
 from fransys_model.kernel import natural_key
-from fransys_model.layout import OrderHint, layout_of, profile_of
+from fransys_model.layout import OrderHint, layout_of
 from fransys_model.vocab.enums import Aspect
 from fransys_model.vocab.tables import aspect_nodes
 lazy from fransys_model.kernel import Id, Model
@@ -21,14 +21,6 @@ __all__ = ["function_groups_in_order"]
 def _key_text(key: tuple[Any, ...]) -> tuple[Any, ...]:
     """An authoring key's parts in natural order, part by part (`F2` before `F10`)."""
     return tuple(natural_key(str(part)) for part in key)
-
-
-def _rank_key(
-    node: AspectNode, ranks: Mapping[str, int], place: Mapping[tuple[Any, ...], int]
-) -> tuple[Any, ...]:
-    """The label's profile rank; unranked groups last, by natural key, then by key."""
-    rank = ranks.get(node.label)
-    return (1, 0, place[_key_text(node.key)], node.key) if rank is None else (0, rank, 0, node.key)
 
 
 def _blockers(heads: Sequence[Id[Any]], hints: Sequence[OrderHint]) -> dict[int, set[int]] | None:
@@ -57,21 +49,17 @@ def _unblocked(count: int, blockers: Mapping[int, set[int]]) -> list[int] | None
     return order
 
 
-def function_groups_in_order(
-    model: Model, unit: Id[Any] | None, used: AbstractSet[Id[Any]]
-) -> tuple[Id[AspectNode], ...]:
-    """The `used` function groups (`=` aspect nodes) in order, for `unit`'s profile (`None`: top).
+def function_groups_in_order(model: Model, used: AbstractSet[Id[Any]]) -> tuple[Id[AspectNode], ...]:
+    """The `used` function groups (`=` aspect nodes) in order.
 
-    By the profile's `group_ranks` of each label, unranked last in natural key order, then moved
-    by the authored order hints in a stable pass. A hint cycle leaves every hint out.
+    In natural key order, then moved by the authored order hints in a stable pass. A hint cycle leaves every hint out.
     """
     nodes = sorted(
         (n for n in aspect_nodes(model).values() if n.aspect is Aspect.FUNCTION),
         key=lambda n: n.key,
     )
     place = {text: rank for rank, text in enumerate(sorted({_key_text(n.key) for n in nodes}))}
-    ranks = profile_of(model, unit).group_ranks
-    ranked = sorted((n for n in nodes if n.id in used), key=lambda n: _rank_key(n, ranks, place))
+    ranked = sorted((n for n in nodes if n.id in used), key=lambda n: (place[_key_text(n.key)], n.key))
     heads = [n.id for n in ranked]
     blockers = _blockers(heads, tuple(layout_of(model, OrderHint).values()))
     order = None if blockers is None else _unblocked(len(heads), blockers)

@@ -3,22 +3,22 @@
 from typing import Any
 lazy from pathlib import Path
 
-from fransys_author import Item, Location, Scope
-from fransys_author.surface import Design, Device
+from fransys_author.surface import Device, Item, Location, Scope, added_unit
 
 from fransys_model.derive import subject_kind, subject_kind_text
 from fransys_model.kernel import Draft, Id, make_id
 from fransys_model.vocab import Document as ModelDocument
-from fransys_model.vocab import DocumentPreset, PageKind, SubjectKind
+from fransys_model.vocab import DocumentPreset, SubjectKind
 
 from ._origin import caller_origin
 from ._subjects import unit_of
+from .errors import FransysError
 
 
 def engine_subject(subject: object) -> object:
-    """A surface `Device` as its engine `Item`; else as is."""
+    """A surface `Device` as its model item `Id`; else as is."""
     if isinstance(subject, Device):
-        return subject._item  # noqa: SLF001 -- the facade is the surface's one consumer of the engine handle
+        return subject.id
     return subject
 
 
@@ -32,11 +32,8 @@ def _id_subject_ids(
         return None, subject, None, None
     if kind is SubjectKind.UNIT:
         return None, None, subject, None
-    msg = (
-        "a document subject id must be an aspect_node, an item or a unit id, "
-        f"not {subject_kind_text(subject)!r}"
-    )
-    raise TypeError(msg)
+    msg = f"a document subject id must be an aspect_node, an item or a unit id, not {subject_kind_text(subject)!r}"
+    raise FransysError(msg)
 
 
 def _subject_ids(
@@ -58,11 +55,9 @@ def _subject_ids(
         return subject.id, None, None, None
     if isinstance(subject, Item):
         return None, subject.id, None, None
-    unit = Design._added_unit(subject)  # noqa: SLF001 -- the facade is the surface's one consumer
+    unit = added_unit(subject)
     if unit is None and isinstance(subject, Scope):
-        unit = unit_of(
-            subject, "a unit Scope document subject", "a Location, Item or unit Id instead"
-        )
+        unit = unit_of(subject, "a unit Scope document subject", "a Location, Item or unit Id instead")
     if unit is not None:
         return None, None, unit, None
     msg = (
@@ -71,24 +66,20 @@ def _subject_ids(
         "a unit release's name (a str), "
         f"or None (the system preset), not {type(subject).__name__}"
     )
-    raise TypeError(msg)
+    raise FransysError(msg)
 
 
-def _document_key(
-    stem: str, preset: DocumentPreset, subject: tuple[object, ...]
-) -> tuple[str, ...]:
+def _document_key(stem: str, preset: DocumentPreset, subject: tuple[object, ...]) -> tuple[str, ...]:
     """The key: cover stem, preset and subject, so documents may share one cover path."""
     named = [str(one.value if isinstance(one, Id) else one) for one in subject if one is not None]
     return ("document", stem, preset.name, *named)
 
 
-def document(  # noqa: PLR0913 -- the new `logo` argument
+def document(
     preset: DocumentPreset,
     subject: object,
     *,
     cover: Path,
-    add: tuple[PageKind, ...] = (),
-    remove: tuple[PageKind, ...] = (),
     logo: Path | None = None,
     notice: str = "",
 ) -> Draft:
@@ -120,8 +111,6 @@ def document(  # noqa: PLR0913 -- the new `logo` argument
         item=item_id,
         unit=unit_id,
         unit_name=unit_name,
-        add=tuple(add),
-        remove=tuple(remove),
         cover=cover_text,
         notes=notes_text,
         logo=logo_text,

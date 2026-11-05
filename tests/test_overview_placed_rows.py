@@ -3,18 +3,16 @@
 Each test names what breaks it. The model is the units worked example, laid out by the engine.
 """
 
-import sys
 from functools import cache
-from pathlib import Path
-from typing import Any
+from typing import Any, cast
+lazy from collections.abc import Iterable
 
 import fransys as fr
 import fransys_parts
 from _model_build_cover import system_document
-
-sys.path.insert(0, str(Path(__file__).resolve().parent))
 from test_units_worked_example import _system_design
 
+from electrical_symbols import LIBRARY
 from fransys_layout.engines.overview import lay_out_overview
 from fransys_model.derive import overview_placed_views
 from fransys_model.kernel import make_id
@@ -34,7 +32,7 @@ from fransys_model.layout import (
 def _model() -> Any:
     parts = fransys_parts.load("demo_parts")
     design, _field1, _field2 = _system_design(parts)
-    return lay_out_overview(fr.build(parts, design.draft(), system_document()).model)[0]
+    return lay_out_overview(fr.build(parts, design.draft(), system_document()).model, LIBRARY)[0]
 
 
 def _modes() -> set[OverviewMode]:
@@ -88,7 +86,7 @@ def test_the_lane_heads_are_the_views_stored_triples() -> None:
     for view in lanes:
         rows = view.rows
         rec = views[make_id(OverviewView, view_key(rows.unit, rows.level, rows.mode, rows.open))]
-        assert [(h.node, h.x, h.y) for h in view.lane_heads] == list(rec.ext.get("lane_heads", ()))  # ty: ignore[invalid-argument-type] -- ext values are a Value union
+        assert [(h.node, h.x, h.y) for h in view.lane_heads] == list(cast("Iterable[Any]", rec.ext.get("lane_heads", ())))
 
 
 def test_an_unplaced_model_has_no_placed_view() -> None:

@@ -1,40 +1,17 @@
 """Speed guard: `fields_of`/`annotations_of` (kernel/schema.py) run once per class
 touched during a freeze, not once per record (decision model-0102). `checks.record_problems`
 and the hashing loop in `freeze._freeze` each build one `{class: FieldInfo}` memo
-(`schema.cached_field_info`) and share it across every record and nested `@value` class the
-walk enters, so a kind or a value type used by many records is resolved once, not once per
-occurrence.
-
-Counted by code object under `sys.monitoring` (PY_START), the same mechanism
-`tests/scale_counter.py` uses: a `unittest.mock.patch` on `schema.fields_of`/`annotations_of`
-would see nothing, because `conform.py`, `encode.py` and `record.py` each import the name into
-their own module and call it as a bare local -- patching the `schema` module attribute never
-touches those bindings.
-
-Uses `tests/scale_units_fixture.py::build_scale`, the fixture `test_scale_call_counts.py` also
-uses, at n=8 and n=16: both sizes repeat the same cabinet and board units, so they touch the
-same kinds and nested `@value` types -- only the record COUNT doubles. A per-class count must
-then be equal at both sizes; a per-record one would grow.
-
-This is the only test in its module and takes over 1s (two full `build_scale` runs, at n=8 and
-n=16, each merged and frozen under `sys.monitoring`): it cannot share a module fixture's build
-with another test, since the size it needs to build is itself the thing under test.
 """
 
 import sys
-from pathlib import Path
 from typing import TYPE_CHECKING
+from unittest.mock import patch
 
-_TESTS_DIR = Path(__file__).resolve().parent
-if str(_TESTS_DIR) not in sys.path:
-    # `--import-mode=importlib` (root pyproject.toml) never puts this folder on `sys.path`.
-    sys.path.insert(0, str(_TESTS_DIR))
+from fransys import pipeline
+from root_library import freeze
+from scale_units_fixture import build_scale
 
-from fransys import pipeline  # noqa: E402
-from root_library import freeze  # noqa: E402 -- after the sys.path insert
-from scale_units_fixture import build_scale  # noqa: E402
-
-from fransys_kernel import schema  # noqa: E402
+from fransys_kernel import schema
 
 if TYPE_CHECKING:
     from types import CodeType
@@ -53,11 +30,8 @@ def _merged_draft(n: int) -> Draft:
         captured["draft"] = draft
         return original(draft)
 
-    pipeline.freeze = capture  # ty: ignore[invalid-assignment]
-    try:
+    with patch.object(pipeline, "freeze", capture):
         build_scale(n)
-    finally:
-        pipeline.freeze = original
     return captured["draft"]
 
 
@@ -99,6 +73,5 @@ def test_field_derivation_runs_once_per_class_not_once_per_record() -> None:
     for name in ("fields_of", "annotations_of"):
         assert counts8[name] > 0, f"{name} never ran: the counter saw nothing"
         assert counts16[name] == counts8[name], (
-            f"{name} ran {counts8[name]} times at n=8 but {counts16[name]} times at n=16: "
-            "per-record derivation is back"
+            f"{name} ran {counts8[name]} times at n=8 but {counts16[name]} times at n=16: per-record derivation is back"
         )

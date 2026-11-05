@@ -5,9 +5,11 @@ A model the facade did not build holds no record: each accessor then raises, nam
 
 from fransys_model.kernel import Model, SchemaError
 from fransys_model.layout import (
-    ColourCodes,
+    DesignationForm,
+    ExportForm,
     FrameForm,
     HarnessText,
+    Lists,
     ReferenceText,
     RevisionForm,
     RevisionTableForm,
@@ -20,9 +22,11 @@ from fransys_model.layout import (
 from fransys_model.vocab.tables import kind_of
 
 __all__ = [
-    "colour_codes_of",
+    "designation_form_of",
+    "export_form_of",
     "frame_form_of",
     "harness_text_of",
+    "lists_of",
     "reference_text_of",
     "revision_form_of",
     "revision_table_form_of",
@@ -71,9 +75,19 @@ def harness_text_of(model: Model) -> HarnessText:
     return _one(model, HarnessText)
 
 
-def colour_codes_of(model: Model) -> ColourCodes:
-    """The `[colours]` record of `model`."""
-    return _one(model, ColourCodes)
+def lists_of(model: Model) -> Lists:
+    """The `[lists]` record of `model`."""
+    return _one(model, Lists)
+
+
+def designation_form_of(model: Model) -> DesignationForm:
+    """The `[designation]` record of `model`."""
+    return _one(model, DesignationForm)
+
+
+def export_form_of(model: Model) -> ExportForm:
+    """The `[export]` record of `model`: the form of every export name, file and CSV."""
+    return _one(model, ExportForm)
 
 
 def title_block_form_of(model: Model) -> TitleBlockForm:

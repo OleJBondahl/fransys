@@ -5,21 +5,20 @@ Each test names what breaks it. The sheets are rows of boxes `PITCH` apart, join
 
 from typing import Any
 
-from fransys_layout.engines.overview.sheet_values import PlacedBox, PlacedLine, PlacedSheet
+from fransys_layout.engines.overview.sheet_values import DiagramBox, DiagramLine, PlacedSheet
 from fransys_layout.engines.overview.wrap import extent, wrapped
 from fransys_layout.engines.overview.wrap_route import clear
 from fransys_layout.geometry import Point
-from fransys_model.kernel import make_id
-from fransys_model.layout import DiagramBox
+from fransys_model.kernel import Id
 
 PITCH = 112
 BOX_W, BOX_H = 32, 48
 WIDTH = 480
 
 
-def _box(n: int) -> PlacedBox:
-    return PlacedBox(
-        box=make_id(DiagramBox, ("b", str(n))),
+def _box(n: int) -> DiagramBox:
+    return DiagramBox(
+        box=Id(kind="item", value=f"b{n}"),
         dashed=False,
         x=16 + n * PITCH,
         y=56,
@@ -29,11 +28,11 @@ def _box(n: int) -> PlacedBox:
     )
 
 
-def _line(a: int, b: int) -> PlacedLine:
+def _line(a: int, b: int) -> DiagramLine:
     start, end = _box(a), _box(b)
     points = (Point(x=start.x + BOX_W, y=80), Point(x=end.x, y=80))
-    return PlacedLine(
-        cable=make_id(DiagramBox, ("c", str(a))),
+    return DiagramLine(
+        cable=Id(kind="item", value=f"c{a}"),
         a=start.box,
         b=end.box,
         points=points,
@@ -42,7 +41,7 @@ def _line(a: int, b: int) -> PlacedLine:
     )
 
 
-def _sheet(count: int, extra: tuple[PlacedLine, ...] = ()) -> PlacedSheet:
+def _sheet(count: int, extra: tuple[DiagramLine, ...] = ()) -> PlacedSheet:
     boxes = tuple(_box(n) for n in range(count))
     lines = tuple(_line(n, n + 1) for n in range(count - 1)) + extra
     return PlacedSheet(number=1, boxes=boxes, lines=lines, markers=())
@@ -72,9 +71,7 @@ def test_a_wide_row_wraps_to_the_width() -> None:
 def test_the_rows_keep_the_chain_order_and_the_boxes_keep_their_size() -> None:
     """Breaks if a wrap shuffles boxes or resizes one."""
     out = wrapped(_sheet(12), WIDTH, 8)
-    assert [b.box for row in _rows(out) for b in row] == [
-        make_id(DiagramBox, ("b", str(n))) for n in range(12)
-    ]
+    assert [b.box for row in _rows(out) for b in row] == [Id(kind="item", value=f"b{n}") for n in range(12)]
     assert {(b.width, b.height) for b in out.boxes} == {(BOX_W, BOX_H)}
 
 

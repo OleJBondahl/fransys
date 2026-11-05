@@ -22,11 +22,7 @@ def cable_products_by_part(model: Model) -> frozendict[Id[Part], CableProductFac
 def cable_product(model: Model, item: Id[Item]) -> CableProductFacet | None:
     """The `CableProductFacet` of `item`'s part, `None` when `item` is unknown or has none."""
     record = items(model).get(item)
-    return (
-        None
-        if record is None or record.part is None
-        else cable_products_by_part(model).get(record.part)
-    )
+    return None if record is None or record.part is None else cable_products_by_part(model).get(record.part)
 
 
 @digest_cached(DIGEST_CACHE_SIZE)

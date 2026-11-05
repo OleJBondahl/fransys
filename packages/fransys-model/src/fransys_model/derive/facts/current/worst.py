@@ -6,9 +6,9 @@ from fransys_model.derive.facts.current.bounds import CurrentBound, highest
 from fransys_model.derive.facts.current.chains import chains_unordered
 
 if TYPE_CHECKING:
+    from fransys_model.elecdef import Current
     from fransys_model.kernel import Id, Model
     from fransys_model.vocab.core import Function
-    from fransys_model.vocab.enums import Current
 
 
 def worst_bounds(model: Model) -> dict[tuple[Id[Function], Current], CurrentBound]:

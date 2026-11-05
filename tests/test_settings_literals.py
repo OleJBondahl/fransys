@@ -30,11 +30,7 @@ NUMBER_CALLS = frozenset({"Decimal", "float", "int"})
 
 def _numeric(node: ast.expr) -> bool:
     """A numeric Constant, a bool not counted."""
-    return (
-        isinstance(node, ast.Constant)
-        and isinstance(node.value, int | float)
-        and not isinstance(node.value, bool)
-    )
+    return isinstance(node, ast.Constant) and isinstance(node.value, int | float) and not isinstance(node.value, bool)
 
 
 def _literal(node: ast.expr) -> bool:
@@ -62,12 +58,7 @@ def _targets(stmt: ast.stmt) -> list[str]:
 
 def _hits(body: list[ast.stmt], *, upper: bool) -> list[tuple[int, str]]:
     """`(line, name)` per suffixed literal in `body`; `upper` keeps UPPER_CASE names only."""
-    return [
-        (stmt.lineno, name)
-        for stmt in body
-        for name in _targets(stmt)
-        if name.lower().endswith(SUFFIXES) and (not upper or name.isupper())
-    ]
+    return [(stmt.lineno, name) for stmt in body for name in _targets(stmt) if name.lower().endswith(SUFFIXES) and (not upper or name.isupper())]
 
 
 def setting_literals(source: str) -> list[tuple[int, str]]:

@@ -9,15 +9,21 @@ import fransys_layout
 from fransys_layout.core import Options, Size
 
 _NAMES = {f.name for f in fields(Options)}
-_TABLE = tomllib.loads(
-    (Path(fransys_layout.__file__).parent / "layout.toml").read_text(encoding="utf-8")
-)["layout"]
+_TABLE = tomllib.loads((Path(fransys_layout.__file__).parent / "layout.toml").read_text(encoding="utf-8"))["layout"]
 
 _GRID = 8
 
 # The core values these tests were recorded on; the house's layout.toml pairs N/S pins and
 # leaves card pitch at the footprint (E4), which the core tests do not assume.
-RECORDED: dict[str, Any] = {"justify_cards": True, "pin_pairs": ()}
+RECORDED: dict[str, Any] = {
+    "justify_cards": True,
+    "pin_pairs": (),
+    "tag_across_body": False,
+    "flip_turn": "R180",
+    "driver_first": True,
+    "arrow_sides": ("E", "W"),
+    "marker_facing": {"E": "R0", "S": "R90", "W": "R180", "N": "R270"},
+}
 
 
 def _plain(value: object) -> object:

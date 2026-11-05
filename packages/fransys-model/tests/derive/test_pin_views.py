@@ -19,9 +19,7 @@ def test_each_port_of_a_connector_is_one_row_and_a_contact_has_none() -> None:
     plant.pin("K1", "aux", "13")
     rows = connector_pin_views(plant.model(), frozenset(), frozenset())
     assert [row.port for row in rows] == sorted([p1, p2])
-    assert [row.name for row in sorted(rows, key=lambda r: r.port)] == [
-        name for _, name in sorted([(p1, "1"), (p2, "2")])
-    ]
+    assert [row.name for row in sorted(rows, key=lambda r: r.port)] == [name for _, name in sorted([(p1, "1"), (p2, "2")])]
     assert all(row.gender == "" and row.mate is None for row in rows)
 
 
@@ -40,20 +38,18 @@ def test_a_pin_is_drawn_when_wired_or_its_mate_is() -> None:
     assert {port for port, row in rows.items() if row.drawn} == {a1, b1}
     assert rows[a1].mate == b1
     assert rows[a2].mate == b2
-    assert not any(row.elsewhere for row in rows.values())
 
 
-def test_a_boundary_pin_no_wire_inside_reaches_is_kept_elsewhere() -> None:
+def test_a_boundary_pin_no_wire_inside_reaches_is_kept() -> None:
     plant = Plant()
     unit = plant.unit("u")
     _, function, (a1, a2) = _connector(plant, "J1", "1", "2", unit=unit)
     plant.boundary(unit, function)
     rows = {r.port: r for r in connector_pin_views(plant.model(), frozenset(), frozenset())}
-    assert all(row.drawn and row.elsewhere for row in rows.values())
+    assert all(row.drawn for row in rows.values())
     plant.wire(a1, plant.pin("K1", "aux", "13"), key="w")
     rows = {r.port: r for r in connector_pin_views(plant.model(), frozenset(), frozenset({a1}))}
     assert rows[a1].drawn
-    assert not rows[a1].elsewhere
     assert not rows[a2].drawn
 
 

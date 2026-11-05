@@ -2,27 +2,6 @@
 
 `tests/golden/cabinet_two_location_laid_out.json` (`test_usecases.py`'s `_two_location_laid_out`,
 `layout_cabinet.build_cabinet(second_location=True)` on the house sheet) puts `-K1` `aux`
-(`=P1`, `+C1`) and `-K2` `aux` (`=P2`, `+C2`) in two drawing sets. Now a conductor between
-two locations is no owner/user pair: each end is an off stub naming the far end and its
-location (`test_properties_layout.py`'s
-`test_a_conductor_between_two_locations_ends_in_a_stub_label_at_each_end` proves this over the
-fixture; this module checks the committed golden file instead). The golden holds four such
-stubs (the K1 and K2 signal ends and two more), five branch markers and two references
-(layout-0052, layout-0053, layout-0057, layout-0093). Every marker is a turned box, so
-"width" below means the side its text reads along, its height.
-
-A separate module, not an addition to `test_usecases.py`: that module's tests are golden-vs-engine
-byte comparisons (`dumps`/digest), while this one reads persisted records and checks a semantic
-property of them, the same split `test_drawing_text_equality.py` already draws in this directory.
-
-The can-fail proof below reuses `tests/golden/cabinet_narrow_laid_out.json`: its 2 pair markers
-sit on two different pages but inside one drawing set (`+C1`, the narrow fixture is never given
-a second location). That is the one case that tells a correct location comparison apart from a
-page comparison, or from a predicate that just counts every marker: `own_page != partner_page`
-is true for both pair markers, while the marker's counterpart port being in another location
-than its own drawing set is false for all 9 markers. A page-vs-location confusion, or a stub
-that always returns "crosses", each give the wrong count there; only the location comparison
-gives 0.
 """
 
 from pathlib import Path
@@ -51,9 +30,7 @@ _EXPECTED_LOCATION_CROSSING_MARKER_COUNT = 4
 # break. Not 11: the removed pair is the K1:aux:13 <-> S0:nc_2:22 wire (wire 17): K1's aux now
 # stands on page 1 (layout-0049: the aux stands second in =P1), so the wire is drawn on page
 # 1 and is no longer cut.
-_EXPECTED_NARROW_MARKER_COUNT = (
-    4  # was 8: model-0220 copies, and the K1:13 - S0:22 pair is a wire (layout-0224)
-)
+_EXPECTED_NARROW_MARKER_COUNT = 4  # was 8: model-0220 copies, and the K1:13 - S0:22 pair is a wire (layout-0224)
 _EXPECTED_NARROW_PAIR_MARKER_COUNT = 2
 _EXPECTED_NARROW_LOCATION_CROSSING_COUNT = 0
 # The fixed reference box width for the house sheet format (`links.reference_box_width`,
@@ -70,9 +47,6 @@ def _crosses_location(model: Model, marker: LinkMarker) -> bool:
 
     The counterpart is the off stub's `far` port, else the partner marker's port. Its item's
     effective location is compared with `DrawingSet.location`, never `marker.page` or the
-    partner's page, and never `marker_text(...)` for a leading `"+"`, which would test the
-    reader against itself. Both goldens' drawing sets are top-level locations, so the leaf
-    location of an item and the drawing set's location are equal when they are the same.
     """
     markers, pages = layout_of(model, LinkMarker), layout_of(model, Page)
     port = marker.far if marker.far is not None else markers[marker.partner].port
@@ -114,13 +88,7 @@ def test_the_location_prefix_and_width_checks_can_fail() -> None:
     """The narrow golden's 2 same-location pair markers cross no location.
 
     Every marker but the 2 line stubs is 47 G wide.
-
     Exercises the identical `_crosses_location` helper and width rule the real assertion above
-    uses, over a golden where the correct answer (0 crossing, width exactly 47) differs from
-    what a page-vs-location confusion or a hardcoded non-42 width would give: the pair markers
-    sit on different pages (asserted), so a page comparison counts both. Since decision
-    layout-0089 every reference on this golden -- pair and star alike, it has no off stub --
-    shares the identical fixed width, so the check below covers every marker, not only the pairs.
     """
     model = loads(_NARROW_GOLDEN.read_text(encoding="utf-8"))
     markers = layout_of(model, LinkMarker)
@@ -137,6 +105,4 @@ def test_the_location_prefix_and_width_checks_can_fail() -> None:
     line_stubs = [m for m in markers.values() if "line_stub" in str(m.key)]
     assert len(line_stubs) == 2
     assert {_along(marker) for marker in line_stubs} == _LINE_STUB_WIDTHS_G
-    assert {_along(m) for m in markers.values() if m not in line_stubs} == {
-        _FIXED_REFERENCE_WIDTH_G
-    }
+    assert {_along(m) for m in markers.values() if m not in line_stubs} == {_FIXED_REFERENCE_WIDTH_G}

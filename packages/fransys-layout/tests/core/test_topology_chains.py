@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 
 from fransys_layout.core.topology_chains import (
     Node,
+    break_cycles,
     cells_of,
     chains,
     group_columns,
@@ -36,22 +37,34 @@ def _stood(sym_id: str) -> Sym:
     return elem(sym_id, stand_n="SUPPLY", stand_s="GROUND")
 
 
-def test_links_are_two_end_nets_of_different_roles_or_without_a_through_element() -> None:
-    syms = [elem(s) for s in "abcdefgij"] + [free("h")]
+def test_links_are_two_end_nets_of_different_roles_or_of_ends_that_can_carry_a_turn_without_a_through_element() -> None:
+    syms = [elem(s) for s in "abcdefgijklmpq"] + [free("h"), _stood("u"), _stood("v")]
     nets = [
         net("series", "a.s", "b.n"),
         net("side", "c.s", "d.s"),
         net("fan", "e.s", "f.s", "h.n", "h.s"),
         net("three", "g.n", "i.n", "j.n"),
+        net("poles", "k.s", "l.s"),
+        net("kn", "k.n", "p.s"),
+        net("ln", "l.n", "q.s"),
+        net("biased", "u.s", "v.s"),
     ]
-    got = links_of(read(syms, nets).ends_by_net)
-    assert sorted(got) == ["series", "side"]
+    r = read(syms, nets)
+    ends = r.ends_by_net
+    # "side" joins two lone elements and "poles" two free poles: an end turns. "biased" joins two poles whose other pins are biased: none turns
+    assert sorted(links_of(ends, r.elems, r.syms)) == ["kn", "ln", "poles", "series", "side"]
+    assert sorted(links_of(ends, r.elems, r.syms, {"poles"})) == [
+        "kn",
+        "ln",
+        "series",
+        "side",
+    ]  # a trunked net is a trunk, never a chain link (layout-0421)
 
 
 def test_a_chain_is_the_union_of_links_from_one_extreme_to_the_other() -> None:
     syms = [elem("a", stand_n="SUPPLY"), elem("b"), elem("c", stand_s="GROUND")]
     r = read(syms, [net("x", "a.s", "b.n"), net("y", "b.s", "c.n")])
-    (path,) = chains(links_of(r.ends_by_net), r.elems, NO_DEALT)
+    (path,) = chains(links_of(r.ends_by_net, r.elems, r.syms), r.elems, NO_DEALT)
     assert _order(path) == ["a#0", "b#0", "c#0"]
     assert [(n.top, n.bottom) for n in path] == [("n", "s")] * 3
 
@@ -66,7 +79,9 @@ def test_a_cycle_is_broken_at_the_natural_last_net() -> None:
     syms = [elem("a"), elem("b"), elem("c")]
     nets = [net("n2", "a.s", "b.n"), net("n9", "b.s", "c.n"), net("n10", "c.s", "a.n")]
     r = read(syms, nets)
-    (path,) = chains(links_of(r.ends_by_net), r.elems, NO_DEALT)
+    kept = break_cycles(links_of(r.ends_by_net, r.elems, r.syms))
+    assert set(kept) == {"n2", "n9"}
+    (path,) = chains(kept, r.elems, NO_DEALT)
     assert _order(path) == ["a#0", "b#0", "c#0"]
 
 
@@ -78,7 +93,7 @@ def _two(box_pin: str | None = None, stand_n: Power | None = None) -> tuple[Read
         syms.append(box("c"))
         nets.append(net("bp", "a.n", f"c.{box_pin}"))
     r = read(syms, nets)
-    (path,) = chains(links_of(r.ends_by_net), r.elems, NO_DEALT)
+    (path,) = chains(links_of(r.ends_by_net, r.elems, r.syms), r.elems, NO_DEALT)
     return r, path
 
 
@@ -114,7 +129,15 @@ def test_a_cell_is_r180_when_an_s_pin_points_at_the_head_and_a_hub_never_flips()
     path = (Node("a#0", "n", "s"), Node("b#0", "s", "n"), Node("h#0", "s", "n"))
     cells = cells_of(path, r.elems, r.syms, "R180")
     assert [c.orient for c in cells] == ["R0", "R180", "R0"]
-    assert [(c.top_pin, c.bottom_pin) for c in cells] == [("n", "s"), ("s", "n"), ("s", "n")]
+    assert [(c.top_pin, c.bottom_pin) for c in cells] == [("n", "s"), ("s", "n"), ("n", "s")]
+
+
+def test_a_symbol_has_the_orientation_of_its_first_chain_and_a_later_cell_takes_its_pins_from_it() -> None:
+    r = read([_stood("a")], [])
+    (first,) = cells_of((Node("a#0", "n", "s"),), r.elems, r.syms, "R180")
+    (later,) = cells_of((Node("a#0", "s", "n"),), r.elems, r.syms, "R180", {first.sym: first.orient})
+    assert (first.orient, first.top_pin, first.bottom_pin) == ("R0", "n", "s")
+    assert (later.orient, later.top_pin, later.bottom_pin) == ("R0", "n", "s")
 
 
 def test_a_cell_stays_r0_when_the_symbol_has_no_r180() -> None:

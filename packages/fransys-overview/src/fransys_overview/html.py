@@ -27,10 +27,10 @@ def _json_escape(char: str) -> str:
 _SCRIPT_SAFE = {char: _json_escape(char) for char in "<>&"}
 
 
-def _data_block(model: Model, findings: tuple[Finding, ...], changes: ListingDiff | None) -> str:
+def _data_block(model: Model, text_height: int, findings: tuple[Finding, ...], changes: ListingDiff | None) -> str:
     """The JSON of `page_data`, safe inside a `<script>` element."""
     text = json.dumps(
-        page_data(model, findings, changes),
+        page_data(model, text_height, findings, changes),
         sort_keys=True,
         separators=(",", ":"),
         ensure_ascii=True,
@@ -40,17 +40,15 @@ def _data_block(model: Model, findings: tuple[Finding, ...], changes: ListingDif
     return text
 
 
-def html(
-    model: Model, *, findings: tuple[Finding, ...] = (), changes: ListingDiff | None = None
-) -> str:
+def html(model: Model, *, text_height: int, findings: tuple[Finding, ...] = (), changes: ListingDiff | None = None) -> str:
     """Render the system overview as one self-contained, interactive page.
 
-    Draws the views `fransys_model.derive.overview_view_rows` gives at the positions of the
-    `layout.overview_*` records, so `model` is the one `lay_out_overview` returns; none gives no
-    views. Library, script and data are inline: no network, no layout. Pure.
+    Draws the views `fransys_model.derive.overview_view_rows` gives at the `layout.overview_*` positions,
+    so `model` is the one `lay_out_overview` returns. Library, script and data are inline. Pure.
 
     Args:
         model: A frozen model with its overview records.
+        text_height: The grid units of one text line (`text_room_on`); the tab texts fit it.
         findings: The findings of the same build; the Findings switch badges what they name.
         changes: The `ListingDiff` from the last release, or `None`. The Changes switch marks
             what it adds or changes, lists what it removes, and offers "Changes only".
@@ -61,7 +59,7 @@ def html(
     values = {
         "TITLE": escape(TITLE),
         "CYTOSCAPE": CYTOSCAPE_MIN_JS,
-        "DATA": _data_block(model, findings, changes),
+        "DATA": _data_block(model, text_height, findings, changes),
         "APP": APP_JS,
     }
     return fill(TEMPLATE, values)

@@ -13,11 +13,10 @@ def _build(d):
     wire = d.wiring(colour="BU", gauge="0.75")
     wire(t1.inner, k1.fn("coil")["A1"])
     wire(k1.fn("coil")["A2"], t2.inner)
-    d.chain(t1, k1.fn("coil"), t2)
 
 
 def test_two_runs_from_the_same_call_site_give_equal_models(parts):
-    from fransys_author import Design
+    from fransys_author.design import Design
 
     a = Design(parts)
     _build(a)
@@ -31,7 +30,7 @@ def test_two_runs_from_the_same_call_site_give_equal_models(parts):
 
 def test_two_runs_can_disagree_when_content_differs(parts):
     """Can-fail proof: a real content change does break model equality."""
-    from fransys_author import Design
+    from fransys_author.design import Design
 
     a = Design(parts)
     _build(a)
@@ -43,10 +42,9 @@ def test_two_runs_can_disagree_when_content_differs(parts):
     t1 = x1.terminal("TEST-TB", group=sup)
     t2 = x1.terminal("TEST-TB", group=sup)
     k1 = b.item("TEST-RLY-2CO", name="run", at=c1, group=sup)
-    wire = b.wiring(colour="BU", gauge="0.75")
+    wire = b.wiring(colour="RD", gauge="0.75")  # the deliberate difference: wire colour
     wire(t1.inner, k1.fn("coil")["A1"])
     wire(k1.fn("coil")["A2"], t2.inner)
-    # no chain here: the deliberate difference
 
     model_a = freeze(merge(parts, a.draft()))
     model_b = freeze(merge(parts, b.draft()))
@@ -55,7 +53,7 @@ def test_two_runs_can_disagree_when_content_differs(parts):
 
 def test_statement_order_does_not_change_any_id(parts):
     """Two independent groups authored in opposite order give the same ids and digest."""
-    from fransys_author import Design
+    from fransys_author.design import Design
 
     forward = Design(parts)
     c1 = forward.location("C1", "cabinet")
@@ -78,7 +76,7 @@ def test_statement_order_does_not_change_any_id(parts):
 
 def test_terminal_index_is_the_one_exception_call_order_counts(parts):
     """A terminal's auto index counts up in call order, so swapping calls swaps it."""
-    from fransys_author import Design
+    from fransys_author.design import Design
 
     forward = Design(parts)
     x1 = forward.strip("X1")

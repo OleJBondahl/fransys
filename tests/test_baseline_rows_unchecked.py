@@ -21,7 +21,7 @@ def test_left_out_rows_are_one_info_naming_the_release_and_the_count(tmp_path: P
     folders = release_all(result, tmp_path)
     cut_old(folders["lg-cabinet"], result, "lg-cabinet", "0.18.1")
     findings = fr.verify(result, tmp_path)
-    assert _codes(findings) == [("BASELINE_ROWS_UNCHECKED", "INFO")]
+    assert _codes(findings) == [("BASELINE_ROWS_UNCHECKED_NOTE", "INFO")]
     message = findings[0].message
     assert "lg-cabinet 1.1" in message
     assert "3 rows" in message
@@ -33,9 +33,7 @@ def test_a_real_change_beside_the_left_out_rows_is_baseline_differs(tmp_path: Pa
     result = build_plant()
     folders = release_all(result, tmp_path)
     listing = old_listing(result, "lg-cabinet")
-    rows = tuple(
-        dataclasses.replace(c, colour="BU") if c.a == "-M1:PE" else c for c in listing.conductors
-    )
+    rows = tuple(dataclasses.replace(c, colour="BU") if c.a == "-M1:PE" else c for c in listing.conductors)
     changed = dataclasses.replace(listing, conductors=rows)
     cut_old(folders["lg-cabinet"], result, "lg-cabinet", "0.18.1", changed)
     findings = fr.verify(result, tmp_path)

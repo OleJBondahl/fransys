@@ -3,24 +3,18 @@
 from options_fixtures import core_options
 
 from fransys_layout.core.cut_tall import Tall, _cuts
+from fransys_layout.core.flow_values import Cell, Column, Lane
 from fransys_layout.core.geometry import stack_lane
 from fransys_layout.core.pack import PlacedColumn, flip_column
 from fransys_layout.core.pack_sep import placed_cells
 from fransys_layout.core.topology import build_column
-from fransys_layout.core.values import Cell, Column, Lane, Options
+lazy from fransys_layout.core.values import Options
 
 from .pack_fixtures import elem
 
 
 def _options() -> Options:
-    return core_options(
-        flip_turn="R180",
-        tag_stagger=True,
-        label_gap=8,
-        parallel_pitch=48,
-        driver_first=True,
-        arrow_sides=("E", "W"),
-    )
+    return core_options()
 
 
 def _cell(sym: str = "U1", hold: int = 0) -> Cell:
@@ -72,11 +66,11 @@ def test_a_cut_moves_up_to_the_held_cell_when_the_hold_pushes_it_past_room() -> 
     """With room 80, the plain lane cuts at cell 2 (pieces 0 and 2); the hold on cell 1 pushes
     cell 1 past room, so the cut comes at cell 1 and the lane has one more piece."""
     syms = {"U1": elem("U1")}
-    env = Tall(syms, _options(), 0, {}, frozenset(), {}, {}, {})
+    env = Tall(syms, _options(), 0, 0, {}, frozenset(), {}, {}, {}, ())
     plain = (_cell(), _cell(), _cell())
     held = (_cell(), _cell(hold=24), _cell())
-    assert _cuts(plain, env, 80) == (0, 2, 3)
-    assert _cuts(held, env, 80) == (0, 1, 3)
+    assert _cuts(plain, env, 80, 0) == (0, 2, 3)
+    assert _cuts(held, env, 80, 0) == (0, 1, 3)
 
 
 def test_flip_moves_each_hold_to_the_cell_above_it_and_the_first_cell_gets_none() -> None:

@@ -24,10 +24,8 @@ def test_symbols_and_pages_equal_the_score_file(name: str) -> None:
     assert len(inst.scene.markers) == want["references"]
 
 
-@pytest.mark.parametrize("name", NAMES)
+@pytest.mark.parametrize("name", [n for n in NAMES if n not in resided_names()])
 def test_every_route_runs_pin_to_pin(name: str) -> None:
-    if name in resided_names():
-        pytest.skip("pins re-sided (BOX-SIDES Q1); the exported routes keep the old pin places")
     scene = READ[name].scene
     pins = {(b.page, p.x, p.y) for b in scene.boxes for p in b.pins}
     for w in scene.wires:

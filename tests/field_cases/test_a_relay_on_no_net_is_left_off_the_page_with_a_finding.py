@@ -1,11 +1,6 @@
-"""Field case: a relay on no net is left off the page, and a finding names it (R324, R335).
-
-The engineering shape: three relays in one cabinet, the coils of K1 and K2 wired together and K3
-wired to nothing (its contacts are unwired too). The bug: layout dropped K3's symbols without a
-word. The rule: a thing left off a page is a Finding that names it; leaving an unwired symbol
-off is an el convention
-(FUNCTION_NOT_WIRED, decision NO-SILENT-DROP).
-"""
+"""Field case: three relays in one cabinet, with the coils of K1 and K2 wired together and K3 wired to nothing (R324, R335).
+The bug: layout dropped K3's symbols without a word, so a thing left off a page was silent.
+Fixed by decision NO-SILENT-DROP, a thing left off a page is a Finding that names it (FUNCTION_NOT_WIRED)."""
 
 from typing import TYPE_CHECKING
 
@@ -21,7 +16,8 @@ def _build(cover: Path) -> fr.BuildResult:
     room = d.location("C1", "Cabinet")
     with d.function("R", "Relays"):
         k1, k2, _k3 = (d.device(f"K{i}", "DEMO-RLY-2CO-24", place="C1") for i in (1, 2, 3))
-    d.detail.wire(k1.coil["A1"], k2.coil["A1"], wire=("WH", 0.75))
+    d.series(k1.coil["A1"], k2.coil["A1"], wire=("WH", 0.75))
+    d.series(k1.coil["A2"], k2.coil["A2"], wire=("WH", 0.75))
     cover.write_text("# Cabinet\n", encoding="utf-8")
     return fr.build(d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, room, cover=cover))
 

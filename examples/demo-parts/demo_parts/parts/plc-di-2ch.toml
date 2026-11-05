@@ -1,4 +1,4 @@
-schema = 1
+schema = 2
 
 [part]
 mpn = "DEMO-PLC-DI-2"
@@ -6,6 +6,10 @@ manufacturer = "Demo"
 description = "PLC digital input module, 2 channels"
 category = "plc_module"
 class_code = "K"
+
+[footprint]
+library = "Demo_Plc"
+name = "Module_DI_2"
 
 [[function]]
 name = "di_1"

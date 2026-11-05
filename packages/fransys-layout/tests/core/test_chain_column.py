@@ -21,14 +21,13 @@ if TYPE_CHECKING:
     from fransys_layout.core.values import PlacementProblem
 
 NOT_DRAWN_CODES = {
-    "OUT_OF_CONTENT_BOX",
-    "PAGE_OVERFULL",
     "NO_BLOCK",
     "NO_CELL",
     "BLOCK_NOT_PLACED",
 }
 
 
+@pytest.mark.rule("CHAIN-COLUMN")
 def test_a_chain_of_boxes_is_one_column_in_natural_key_order():
     flow = flow_of(facing_chain(3))
 
@@ -48,6 +47,7 @@ def test_a_chain_is_one_block_that_is_no_card():
     assert blocks[0].anchor is None
 
 
+@pytest.mark.rule("CHAIN-COLUMN")
 def test_a_tall_chain_folds_into_two_columns_with_a_tag_per_net():
     result = cut_of(tall_chain())
 
@@ -118,14 +118,7 @@ def test_the_box_columns_option_off_leaves_every_box_to_a_card() -> None:
     flow = flow_of(
         facing_chain(3),
         replace(
-            core_options(
-                flip_turn="R180",
-                tag_stagger=True,
-                label_gap=8,
-                parallel_pitch=48,
-                driver_first=True,
-                arrow_sides=("E", "W"),
-            ),
+            core_options(),
             box_columns=False,
         ),
     )
@@ -177,9 +170,7 @@ def test_every_net_of_the_fold_hop_is_tagged_and_the_others_are_not() -> None:
     """No Ref is lost: 23 hops of two nets, and only the fold hop's two nets are tags."""
     result = cut_of(tall_chain())
     top, bottom = result.flow.columns
-    crossed = {n for hop in tall_chain().nets for n in [hop.id]} - {
-        n for c in (top, bottom) for hop in c.hops for n in hop
-    }
+    crossed = {n for hop in tall_chain().nets for n in [hop.id]} - {n for c in (top, bottom) for hop in c.hops for n in hop}
     assert {r.net for r in result.spec.reference_plan} == crossed
     assert len(crossed) == 2
 

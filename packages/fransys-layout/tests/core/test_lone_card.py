@@ -2,8 +2,6 @@
 
 A box wired by fan trunks alone is a card block with `columns=()` (layout-0283). Stage 3 seats it
 immediately after the fan block that most trunks end at it from (ties: natural key of the block
-id), or, with no such block, in a row of its own at the end of its unit. Stage 4 cuts it like any
-block.
 """
 
 from __future__ import annotations
@@ -24,7 +22,8 @@ from .pipeline_fixtures import blocks_of, cut_of, flow_of, placed_of
 from .test_box_blocks import chain_shape
 
 if TYPE_CHECKING:
-    from fransys_layout.core.values import CutResult, PlacementProblem
+    from fransys_layout.core.flow_values import CutResult
+    from fransys_layout.core.values import PlacementProblem
 
 
 def _sym(sid: str, group: str):
@@ -55,12 +54,6 @@ def _seated(prob: PlacementProblem) -> list[str]:
     """Stage 3's block ids for the problem's one unit, in order."""
     opts = core_options(
         marker=MARKER,
-        flip_turn="R180",
-        tag_stagger=True,
-        label_gap=8,
-        parallel_pitch=48,
-        driver_first=True,
-        arrow_sides=("E", "W"),
     )
     lists = order_blocks(blocks_of(prob, opts), flow_of(prob, opts), opts)
     return [b.id for bl in lists for b in bl.blocks]
@@ -117,12 +110,6 @@ def test_a_refused_chain_box_is_seated_and_drawn_not_dropped() -> None:
 
 OPTIONS = core_options(
     marker=MARKER,
-    flip_turn="R180",
-    tag_stagger=True,
-    label_gap=8,
-    parallel_pitch=48,
-    driver_first=True,
-    arrow_sides=("E", "W"),
 )
 
 
@@ -161,9 +148,7 @@ def test_the_guard_flags_a_whole_block_in_two_rows() -> None:
 
 def test_a_split_fan_is_no_finding() -> None:
     """A single-lane fan cut across rows stands in several rows and is fine."""
-    prob = problem(
-        [free(f"T{i}") for i in range(120)], [net("t", *(f"T{i}.e" for i in range(120)))]
-    )
+    prob = problem([free(f"T{i}") for i in range(120)], [net("t", *(f"T{i}.e" for i in range(120)))])
     result = cut_of(prob)
     assert len(result.spec.pages[0].rows) > 1
     assert result.spec.findings == ()

@@ -21,7 +21,7 @@ from electrical_symbols.generic_box import generic_box
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
-__all__ = ["drawn_slots", "drawn_symbol"]
+__all__ = ["box_marking_widths", "drawn_slots", "drawn_symbol"]
 
 _HEADS = ("contact-head", "contact-head-headed")
 _HEADED = "contact-head-headed"
@@ -29,10 +29,13 @@ _ROW = "contact-row"
 _TITLES = ("no", "nc")  # the head's two title slots, and each row's two cell slots
 
 
-def _marking_width(library: Library, name: str) -> int:
-    """The width in G of a port's marking set 1 M high in the library font, rounded up."""
-    width = symdef_text_width(library.font, box_port_marking(name), 1.0)
-    return math.ceil(round(width, 9) * G_PER_MODULE)
+def box_marking_widths(library: Library, names: Sequence[str]) -> tuple[int, ...]:
+    """The width in G of each port's marking set 1 M high in the library font, rounded up.
+
+    `generic_box` takes these as `marking_widths`; the layout and the placer both read them here.
+    """
+    widths = (symdef_text_width(library.font, box_port_marking(n), 1.0) for n in names)
+    return tuple(math.ceil(round(width, 9) * G_PER_MODULE) for width in widths)
 
 
 def _box(
@@ -47,7 +50,7 @@ def _box(
         names,
         tuple(sides[n] for n in names) if sides else (),
         offsets=tuple(offsets[n] / G_PER_MODULE for n in names) if offsets else (),
-        marking_widths=tuple(_marking_width(library, n) for n in names),
+        marking_widths=box_marking_widths(library, names),
     )
 
 
@@ -63,22 +66,19 @@ def _table(key: str, texts: Sequence[Sequence[str]], library: Library) -> Symbol
     `texts[0]` is the head row: the NO and NC titles, then the heading for the headed head. Each
     further row is a NO cell and an NC cell, an empty cell leaving its column unset.
     """
-    font = library.font
-    assert font is not None  # noqa: S101 -- a drawn library carries its font
     head, *rows = texts
     made = fitted_table(
         library.get(_ROW),
         "y",
         [{c: cell for c, cell in zip(_TITLES, row, strict=False) if cell} for row in rows],
         library,
-        font.heights["body"] / library.grid.module_mm,
+        library.font.heights["body"] / library.grid.module_mm,
+        port_format=library.port_format,
         head=library.get(key),
         head_texts=_head_texts(key, head),
     )
     corner = measure(made, Orientation.R0, library).keepout.min
-    return translate(
-        made, from_divisions(library.grid, -corner.x), from_divisions(library.grid, -corner.y)
-    )
+    return translate(made, from_divisions(library.grid, -corner.x), from_divisions(library.grid, -corner.y))
 
 
 def drawn_symbol(

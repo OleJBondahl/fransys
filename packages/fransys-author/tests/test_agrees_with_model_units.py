@@ -7,13 +7,12 @@ pins of the functions its `Boundary` records name. A nested unit's pass-through 
 from typing import Any, NamedTuple
 
 from fransys_author.surface import Design, Device, design, unit
+from series_parts import pair_library
+from test_units import io_board
 
 from fransys_model.derive import unit_boundary_pins
 from fransys_model.kernel import freeze, merge
 from fransys_model.vocab import units
-
-from .equivalence.series_parts import pair_library
-from .surface.test_units import io_board
 
 
 class _Outer(NamedTuple):

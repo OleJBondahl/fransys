@@ -11,13 +11,14 @@ from typing import Any
 lazy from collections.abc import Sequence
 
 import pytest
-from derive_helpers import add_all, frozen_with_library
+from derive_helpers import add_all, frozen_with_library, reference_row
 
 from fransys_model.derive.marker_text import REF_SLOTS, reference_number, reference_slot
 from fransys_model.kernel import Draft, Id, Model, Origin
 from fransys_model.layout import (
     DrawingSet,
     LinkMarker,
+    MarkerPair,
     MarkerSide,
     Page,
     PageRole,
@@ -27,7 +28,7 @@ from fransys_model.layout import (
     layout_of,
 )
 from fransys_model.vocab.core import Function, Item, Port
-from fransys_model.vocab.enums import FunctionKind, PortRole
+from fransys_model.vocab.enums import FunctionKind, PortBoundary
 
 LAST_PAGE = 99
 PRODUCED_BY = "test-engine 0.0.0"
@@ -52,14 +53,12 @@ def _marker(id_: Id[Any], page: Page, port: Port, star: StarKind, partner: Id[An
         height=8,
         produced_by=PRODUCED_BY,
         facing=Side.E,
-        far=port.id if star is StarKind.OFF else None,
+        pairs=(MarkerPair(port=port.id, far=port.id),) if star is StarKind.OFF else (),
     )
 
 
-def _build(
-    origin: Origin, ref_places: Sequence[tuple[int, int]]
-) -> tuple[Model, list[LinkMarker], LinkMarker]:
-    """A model with one net per `(page number, x)`; returns it, the REFs in order, the off stub."""
+def _build(origin: Origin, ref_places: Sequence[tuple[int, ...]]) -> tuple[Model, list[LinkMarker], LinkMarker]:
+    """A model with one net per `(page number, x[, y])`; returns it, the REFs in order, the off stub."""
     counter = itertools.count(1)
 
     def new_id(kind: str) -> Id[Any]:
@@ -83,7 +82,7 @@ def _build(
     ds_id = new_id("layout.drawing_set")
     ds = DrawingSet(id=ds_id, key=_key(ds_id), location=None, number=1, produced_by=PRODUCED_BY)
     pages: dict[int, Page] = {}
-    for n in sorted({n for n, _ in ref_places} | {LAST_PAGE}):
+    for n in sorted({p[0] for p in ref_places} | {LAST_PAGE}):
         page_id = new_id("layout.page")
         pages[n] = Page(
             id=page_id,
@@ -120,15 +119,15 @@ def _build(
             function=fn.id,
             template=None,
             name=str(k),
-            role=PortRole.GENERIC,
+            boundary=PortBoundary.GENERIC,
         )
         for k in range(2 * len(ref_places) + 1)
     ]
     refs: list[LinkMarker] = []
     branches: list[LinkMarker] = []
-    for k, (n, x) in enumerate(ref_places):
+    for k, (n, x, *at_y) in enumerate(ref_places):
         ref_id = new_id("layout.link_marker")
-        refs.append(replace(_marker(ref_id, pages[n], ports[2 * k], StarKind.REF, ref_id), x=x))
+        refs.append(replace(_marker(ref_id, pages[n], ports[2 * k], StarKind.REF, ref_id), x=x, y=at_y[0] if at_y else 0))
         branch_id = new_id("layout.link_marker")
         branches.append(
             _marker(
@@ -142,9 +141,8 @@ def _build(
     stub_id = new_id("layout.link_marker")
     stub = _marker(stub_id, pages[LAST_PAGE], ports[-1], StarKind.OFF, stub_id)
     draft = Draft()
-    add_all(
-        draft, sheet, ds, *pages.values(), item, fn, *ports, *refs, *branches, stub, origin=origin
-    )
+    rows = [reference_row(m, 1, "B" if m.y > 137 else "A") for m in (*refs, *branches)]  # 6 rows over 257 mm: B starts at 137
+    add_all(draft, sheet, ds, *pages.values(), item, fn, *ports, *refs, *branches, stub, *rows, origin=origin)
     return frozen_with_library(draft), refs, stub
 
 
@@ -165,9 +163,9 @@ def test_both_ends_of_a_net_on_different_pages_share_a_slot(origin: Origin) -> N
 
 
 def test_two_nets_on_one_page_take_different_slots(origin: Origin) -> None:
-    model, refs, _ = _build(origin, [(1, 0), (1, 400)])
+    model, refs, _ = _build(origin, [(1, 0, 171), (1, 0, 104)])
     assert refs[0].page == refs[1].page
-    assert [reference_slot(model, r) for r in refs] == [0, 1]
+    assert [reference_slot(model, r) for r in refs] == [1, 0]  # row B reads after row A, P4D
 
 
 def test_an_unnumbered_off_stub_has_no_slot(origin: Origin) -> None:

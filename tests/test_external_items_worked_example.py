@@ -2,42 +2,26 @@
 
 The units spec's `demo_system` (two pump cabinets, four top-level cables, one shared top-level
 switch `K1`, `DEMO-SWITCH-2P`, wired by cables `WM1S`/`WM2S` to the cabinets' field terminals)
-with the switch set `external=True`. The unit-documents fixture has no upstream strip; a scratch
-external strip `X0` on demo parts stands in: `X0` (two terminals) is wired by the non-external
-cable `WX0` to the switch's two contact ports. The cabinets' own strip `X2`, motors `M1`/`M2`
-and cables `WM1`/`WM2` are the non-external controls.
-
-The design is built here from the helpers of `test_units_worked_example.py` (imported by name,
-the same way `test_write_unit_worked_example.py` does), with its own `Design` because
-`_system_design` builds the switch without the flag.
 """
 
-import sys
-from pathlib import Path
-
 import fransys as fr
-import fransys_author
 import fransys_parts
+import fransys_render
 import pytest
 from _model_build_cover import _COVER
-
-from electrical_symbols import LIBRARY
-
-# `--import-mode=importlib` (root pyproject.toml) never puts `tests/` on `sys.path`.
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-import fransys_render
+from _worked_wiring import wire_field_to_motor, wire_field_to_switch
+from fransys_author.design import Design
 from test_units_worked_example import (
     _PROJECT,
-    _wire_field_to_motor,
-    _wire_field_to_switch,
     pump_cabinet,
 )
 
+from electrical_symbols import LIBRARY
+from fransys_layout import lay_out_cables
 from fransys_model.derive import bom_lines, external
 from fransys_model.derive.cable_drawing import cable_block_key, end_label
 from fransys_model.derive.designation import printed_designation
 from fransys_model.kernel import dumps, loads
-from fransys_model.layout import CableBlock, EndBox, EndStyle, layout_of
 from fransys_model.vocab import DocumentPreset
 from fransys_model.vocab.tables import items as items_of
 
@@ -50,7 +34,7 @@ def _build(*, x0_external=True, switch_external=True):
     `SYSTEM` document ("by others" is drawn on the cable blocks, a dashed end box and a
     label)."""
     parts = fransys_parts.load("demo_parts")
-    d = fransys_author.Design(parts)
+    d = Design(parts)
     d.project(**_PROJECT)
     d.revision(1, date="2026-09-22", text="First issue", created="XX")
     er = d.location("ER", "Engine room")
@@ -58,11 +42,11 @@ def _build(*, x0_external=True, switch_external=True):
     field2, _ = pump_cabinet(d.scope("pump2", at=er), name="C2")
     fld = d.location("FLD", "Field")
     fld_grp = d.group("FLD", "Field wiring")
-    _wire_field_to_motor(d, field1, fld=fld, grp=fld_grp, motor_tag="M1")
-    _wire_field_to_motor(d, field2, fld=fld, grp=fld_grp, motor_tag="M2")
+    wire_field_to_motor(d, field1, fld=fld, grp=fld_grp, motor_tag="M1")
+    wire_field_to_motor(d, field2, fld=fld, grp=fld_grp, motor_tag="M2")
     switch = d.item("DEMO-SWITCH-2P", tag="K1", at=fld, group=fld_grp, external=switch_external)
-    _wire_field_to_switch(d, field1[1], switch.fn("x1")["1"], cable_tag="WM1S")
-    _wire_field_to_switch(d, field2[1], switch.fn("x1")["2"], cable_tag="WM2S")
+    wire_field_to_switch(d, field1[1], switch.fn("x1")["1"], cable_tag="WM1S")
+    wire_field_to_switch(d, field2[1], switch.fn("x1")["2"], cable_tag="WM2S")
     x0 = d.strip("X0", at=fld, external=x0_external)
     x0_terminals = [x0.terminal("DEMO-TB-2.5", group=fld_grp) for _ in range(2)]
     cable = d.cable("DEMO-CBL-4G1.5", tag="WX0", length_mm=15000)
@@ -196,21 +180,17 @@ def test_a_round_trip_of_the_unflagged_design_has_no_external_item(unflagged_mod
 def _end_boxes(model, cable_key):
     """The end boxes of `cable_key`'s block in the absolute reading, by end item."""
     cable = _by_key(model, cable_key)
-    (block,) = [
-        b.id for b in layout_of(model, CableBlock).values() if b.unit is None and b.subject == cable
-    ]
-    return {e.item: e for e in layout_of(model, EndBox).values() if e.block == block}
+    block = lay_out_cables(model, LIBRARY).blocks[cable_block_key(None, cable)]
+    return {e.item: e for e in block.ends}
 
 
 def _block_svg(model, cable_key):
     """The SVG `fransys_render` draws for `cable_key`'s block in the absolute reading."""
-    return fransys_render.cable_blocks(model, LIBRARY)[
-        cable_block_key(None, _by_key(model, cable_key))
-    ]
+    return fransys_render.cable_blocks(model, lay_out_cables(model, LIBRARY), LIBRARY)[cable_block_key(None, _by_key(model, cable_key))]
 
 
 def _dashed(model, cable_key):
-    return {i for i, e in _end_boxes(model, cable_key).items() if e.style is EndStyle.DASHED}
+    return {i for i, e in _end_boxes(model, cable_key).items() if e.dashed}
 
 
 def _by_others(model, item):
@@ -224,10 +204,10 @@ def test_the_block_of_a_cable_to_the_switch_draws_the_switch_dashed_only(default
     boxes = _end_boxes(model, "WM1S")
     switch = _by_key(model, "K1")
     assert switch in boxes
-    assert boxes[switch].style is EndStyle.DASHED
+    assert boxes[switch].dashed
     assert _by_others(model, switch)
     (other,) = set(boxes) - {switch}
-    assert boxes[other].style is EndStyle.SOLID
+    assert not boxes[other].dashed
     assert not _by_others(model, other)
     svg = _block_svg(model, "WM1S")
     assert svg.count(f" ({BY_OTHERS})") == 1

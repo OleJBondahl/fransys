@@ -2,8 +2,6 @@
 
 A surface name is a hit when it is a dict, list or set, or a class that is not a frozen dataclass,
 an Enum, an exception, a Protocol, a NamedTuple or a TypedDict. Each object counts once, so a
-re-export of one class is one hit. The named builders are exempt: kernel `Draft` and consumer
-`Design` (designer ruling 2026-10-16, SURFACE-COHERENCE S1: "the builder is named").
 """
 
 import dataclasses
@@ -18,9 +16,7 @@ import pytest
 
 BUILDERS = frozenset({"Draft", "Design"})
 _ROOT = Path(__file__).resolve().parents[1]
-_spec = importlib.util.spec_from_file_location(
-    "fransys_lean_surface", _ROOT / "scripts" / "lean_surface.py"
-)
+_spec = importlib.util.spec_from_file_location("fransys_lean_surface", _ROOT / "scripts" / "lean_surface.py")
 if _spec is None or _spec.loader is None:
     msg = "could not load scripts/lean_surface.py"
     raise ImportError(msg)
@@ -57,8 +53,7 @@ def mutable_hits(names: dict[str, dict[str, object]]) -> list[str]:
 @pytest.fixture(scope="module")
 def real_names() -> dict[str, dict[str, object]]:
     return {
-        module: {name: getattr(importlib.import_module(module), name) for name in surface}
-        for module, surface in lean_surface.surface_names().items()
+        module: {name: getattr(importlib.import_module(module), name) for name in surface} for module, surface in lean_surface.surface_names().items()
     }
 
 

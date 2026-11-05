@@ -4,17 +4,15 @@ import ast
 from pathlib import Path
 
 SRC = Path(__file__).resolve().parents[1] / "src" / "fransys"
-READS = frozenset(
-    {"read_text", "read_bytes", "open", "iterdir", "glob", "rglob", "is_file", "is_dir"}
-)
-# `documents.py` reads a cover, notes and logo; `pipeline.py`'s `out_dir` globs are the write side.
+READS = frozenset({"read_text", "read_bytes", "open", "iterdir", "glob", "rglob", "is_file", "is_dir"})
+# `documents.py` reads a cover, notes and logo; `_exports.py`'s `out_dir` globs are the write side.
 # `settings.py` reads our packaged TOML files and a consumer's settings file, not a release folder.
 # `_settings_library.py` reads a consumer's font files, named in the settings file.
 # `_help_names.py` reads the packaged guide pages (`help KEY`), not a release folder.
 ALLOWED = {
     "_release_reader.py": READS,
     "documents.py": READS,
-    "pipeline.py": {"glob", "is_file"},
+    "_exports.py": {"glob", "is_file"},
     "settings.py": {"read_text"},
     "_settings_library.py": {"read_bytes", "is_file"},
     "_help_names.py": {"iterdir", "read_text"},
@@ -25,9 +23,7 @@ def _reads(source: str) -> set[str]:
     return {
         node.func.attr
         for node in ast.walk(ast.parse(source))
-        if isinstance(node, ast.Call)
-        and isinstance(node.func, ast.Attribute)
-        and node.func.attr in READS
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr in READS
     }
 
 

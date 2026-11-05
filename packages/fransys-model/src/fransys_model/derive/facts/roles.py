@@ -1,4 +1,4 @@
-"""The role readers: the one home of `Function.kind`, `Port.role` and the other kind fields.
+"""The role readers: the one home of `Function.kind`, `Port.boundary` and the other kind fields.
 
 Each reader is the table row of `vocab/roles.py`, refined by the facets the one site may read
 (EL-2a, model-0288). A drawing decision reads a role, never a kind.
@@ -8,10 +8,12 @@ from dataclasses import replace
 from typing import Any
 
 from fransys_model.derive.accessory_blocks import operating_item
-from fransys_model.derive.facts.function_ratings import function_rating
+from fransys_model.derive.facts.figures import breaking
 from fransys_model.derive.facts.net_facts import net_class_of
+from fransys_model.derive.facts.rating_index import function_block
+from fransys_model.elecdef import LinkKind, PinRole
 from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, digest_cached
-from fransys_model.vocab.enums import FunctionKind, LinkKind, LinkRest, PortRole
+from fransys_model.vocab.enums import FunctionKind, PortBoundary
 from fransys_model.vocab.facets.plc import PlcChannelFacet
 from fransys_model.vocab.markings import is_pole_by_role
 from fransys_model.vocab.roles import (
@@ -53,8 +55,7 @@ def _refined(model: Model, function: Function, channels: frozenset[Id[Any] | Non
         role = replace(role, energy=template.energy)
     if function.template in channels:
         role = replace(role, channel=True)
-    rating = function_rating(model, function.id)
-    if rating is not None and (rating.breaking_ac or rating.breaking_dc):
+    if breaking(function_block(model, function.id)):
         role = replace(role, protects=True)
     if operating_item(model, function.id) == function.item:
         role = replace(role, operator=True)
@@ -103,12 +104,13 @@ def link_role(model: HasTables, link: Id[InternalLink]) -> LinkRole:
     role = replace(role, pole=is_pole_by_role(function_role_of(kind), record.kind))
     if record.kind is not LinkKind.SWITCHED:
         return role
-    return replace(role, rest=record.rest or function_role_of(kind).rest)
+    declared = record.closed_at_rest
+    return replace(role, closed_at_rest=function_role_of(kind).closed_at_rest if declared is None else declared)
 
 
-def link_rest(model: Model, link: Id[InternalLink]) -> LinkRest | None:
+def link_rest(model: Model, link: Id[InternalLink]) -> bool | None:
     """The state at rest of an internal link: as declared, else its function's kind implies."""
-    return link_role(model, link).rest
+    return link_role(model, link).closed_at_rest
 
 
 def conductor_role(model: Model, conductor: Id[Conductor]) -> ConductorRole:
@@ -121,25 +123,26 @@ def net_class_role(model: Model, net: Id[Net]) -> NetClassRole:
     return NET_CLASS_ROLES[net_class_of(model, net)]
 
 
-def port_role(model: Model, port: Id[Port]) -> PortRole:
-    """The `PortRole` of `port`: the one reader of `Port.role`."""
-    return ports(model)[port].role
+def port_boundary(model: Model, port: Id[Port]) -> PortBoundary:
+    """The `PortBoundary` of `port`: the one reader of `Port.boundary`."""
+    return ports(model)[port].boundary
 
 
-def is_pe_role(role: PortRole) -> bool:
-    """Whether `role` is PE: the one compare of `PortRole.PE`."""
-    return role is PortRole.PE
+def is_internal_port(model: Model, port: Id[Port]) -> bool:
+    """Whether `port` is on the internal (panel wiring) side of its unit boundary."""
+    return port_boundary(model, port) is PortBoundary.INTERNAL
+
+
+def port_pin_role(model: Model, port: Id[Port]) -> PinRole | None:
+    """The pin role of `port`, `None` if the part states none: the one reader of `Port.pin_role`."""
+    return ports(model)[port].pin_role
 
 
 def is_pe_port(model: Model, port: Id[Port]) -> bool:
-    """Whether `port` has role PE."""
-    return is_pe_role(port_role(model, port))
+    """Whether `port` has pin role PE: the one compare of `PinRole.PE`."""
+    return port_pin_role(model, port) is PinRole.PE
 
 
 def changeover_functions(model: Model) -> set[tuple[Id[Part], str]]:
     """The (part, name) of every changeover function template (its kind is the one fact)."""
-    return {
-        (template.part, template.name)
-        for template in function_templates(model).values()
-        if template.kind is FunctionKind.CONTACT_CO
-    }
+    return {(template.part, template.name) for template in function_templates(model).values() if template.kind is FunctionKind.CONTACT_CO}

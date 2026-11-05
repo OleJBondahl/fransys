@@ -4,6 +4,7 @@ from typing import NamedTuple
 
 import fransys as fr
 import pytest
+from _expected_codes import expect_codes
 from fransys.colours import BK, BN, BU, RD, WH
 
 _HOUSE = {fr.DC_SUPPLY: (RD, 0.75), fr.DC_CONTROL: (WH, 0.75), fr.DC_GROUND: (BK, 0.75)}
@@ -15,8 +16,9 @@ def _rows(d) -> dict[frozenset[str], tuple[str, float]]:
     return {frozenset((r.from_, r.to)): (r.colour, float(r.cross_section_mm2)) for r in found}
 
 
-def _wire(rows: dict, a: str, b: str) -> tuple[str, float]:
-    return rows[frozenset((a, b))]
+def _wire(rows: dict[frozenset[str], tuple[str, float]], a: str, b: str) -> tuple[str, float]:
+    row: tuple[str, float] = rows[frozenset((a, b))]
+    return row
 
 
 def test_a_split_branch_starts_on_a_control_net_and_takes_control_rows() -> None:
@@ -36,16 +38,17 @@ def test_a_series_that_reaches_no_supply_is_resolved_at_build_end_or_an_error_na
     d = fr.design("demo_parts")
     k3, k4 = d.device("K3", "DEMO-CTR-3P-24"), d.device("K4", "DEMO-CTR-3P-24")
     d.series(k3.aux, k4.aux, wire=0.5)
-    found = [f for f in fr.build(d).findings if f.code == "WIRE_ROW_UNRESOLVED"]
-    assert found
-    assert "wire=" in found[0].message
+    d.series(k4.aux["14"], k3.aux["13"], wire=(BK, 0.5))
+    result = fr.build(d)
+    expect_codes(result, "WIRE_ROW_UNRESOLVED")
+    assert "wire=" in next(f for f in result.findings if f.code == "WIRE_ROW_UNRESOLVED").message
 
 
 class _Io(NamedTuple):
     """No boundary."""
 
 
-def _unit_rows(wiring) -> dict:
+def _unit_rows() -> dict[frozenset[str], tuple[str, float]]:
     @fr.unit(
         "cab",
         revision=1,
@@ -55,7 +58,6 @@ def _unit_rows(wiring) -> dict:
         by="XX",
         title="Cabinet",
         number="C-1",
-        wiring=wiring,
     )
     def cab(c):
         dc = c.dc_supply("24VDC", c.device("G1", "DEMO-PSU-24"))
@@ -69,13 +71,8 @@ def _unit_rows(wiring) -> dict:
 
 
 def test_a_unit_with_no_wiring_draws_the_iec_default_not_its_parents_rows() -> None:
-    rows = _unit_rows(None)
+    rows = _unit_rows()
     assert {colour for colour, _ in rows.values()} == {BU}
-
-
-def test_a_unit_with_wiring_draws_its_own_rows() -> None:
-    rows = _unit_rows({fr.DC_SUPPLY: BN, fr.DC_CONTROL: WH, fr.DC_GROUND: BK})
-    assert sorted(colour for colour, _ in rows.values()) == sorted([BN, WH, BK])
 
 
 def test_a_row_with_no_size_and_no_size_on_the_series_raises() -> None:
@@ -191,9 +188,7 @@ def test_a_two_pole_first_element_on_a_three_phase_supply_with_n_names_both_coun
     x0 = d.terminal_strip("X0", "DEMO-TB-2.5")
     ac = d.ac_supply("400V", "230", x0[1], x0[2], x0[3], n=x0[4])
     s1, e1 = d.device("S1", "DEMO-SWITCH-DC-2P"), d.device("E1", "DEMO-HEATER-24")
-    with pytest.raises(
-        fr.AuthorError, match=r"S1 has 2 poles, the path from 400V carries 3 .* or 4 .*d\.series"
-    ):
+    with pytest.raises(fr.AuthorError, match=r"S1 has 2 poles, the path from 400V carries 3 .* or 4 .*d\.series"):
         d.series(ac, s1.main, e1.load, wire=1.5)
 
 
@@ -207,24 +202,27 @@ def _dc_with_k1_k2(wiring=_HOUSE):
 def test_a_detail_wire_by_size_takes_the_row_an_earlier_series_gave_its_ports() -> None:
     d, dc, s1, k1, k2 = _dc_with_k1_k2()
     d.series(dc.plus, s1.no, k1.coil, dc.minus, wire=0.75)
-    d.detail.wire(k1.coil["A2"], k2.coil["A1"], wire=0.5)
+    d.series(k1.coil["A2"], k2.coil["A1"], wire=0.5)
+    d.series(k2.coil["A2"], dc.minus.pin, wire=0.75)
     assert _wire(_rows(d), "-K1:A2", "-K2:A1") == (BK, 0.5)
 
 
 def test_a_detail_wire_with_a_row_table_takes_that_rows_colour_and_size() -> None:
     d, dc, s1, k1, k2 = _dc_with_k1_k2()
     d.series(dc.plus, s1.no, k1.coil, dc.minus, wire=0.75)
-    d.detail.wire(k1.coil["A2"], k2.coil["A1"], wire={fr.DC_GROUND: (BN, 1.0)})
+    d.series(k1.coil["A2"], k2.coil["A1"], wire={fr.DC_GROUND: (BN, 1.0)})
+    d.series(k2.coil["A2"], dc.minus.pin, wire=0.75)
     assert _wire(_rows(d), "-K1:A2", "-K2:A1") == (BN, 1.0)
 
 
 def test_a_detail_wire_by_size_with_no_row_on_either_end_is_hinted_and_errors_at_build() -> None:
     d = fr.design("demo_parts", wiring=_HOUSE)
     k1, k2 = d.device("K1", "DEMO-CTR-3P-24"), d.device("K2", "DEMO-CTR-3P-24")
-    d.detail.wire(k1.coil["A1"], k2.coil["A1"], wire=0.75)
-    assert [f.code for f in fr.build(d).findings if f.code == "WIRE_ROW_UNRESOLVED"] == [
-        "WIRE_ROW_UNRESOLVED"
-    ]
+    d.series(k1.coil["A1"], k2.coil["A1"], wire=0.75)
+    d.series(k2.coil["A2"], k1.coil["A2"], wire=(BK, 0.75))
+    result = fr.build(d)
+    expect_codes(result, "WIRE_ROW_UNRESOLVED")
+    assert [f.code for f in result.findings if f.code == "WIRE_ROW_UNRESOLVED"] == ["WIRE_ROW_UNRESOLVED"]
 
 
 def test_a_series_of_only_a_cable_and_loads_with_no_supply_wires_no_series_wire() -> None:
@@ -247,12 +245,13 @@ def test_a_series_starting_on_a_net_a_detail_wire_touched_takes_that_rows_contro
     d, dc, s1, k1, k2 = _dc_with_k1_k2()
     k3 = d.device("K3", "DEMO-CTR-3P-24")
     d.series(dc.plus, s1.no, k1.coil, dc.minus, wire=0.75)
-    d.detail.wire(k1.coil["A2"], k2.coil["A1"], wire=0.5)
-    d.series(k2.coil, k3.aux, wire=0.5)  # starts on K2 A1, which the detail wire gave DC_GROUND
+    d.series(k1.coil["A2"], k2.coil["A1"], wire=0.5)
+    d.series(k2.coil, k3.aux, dc.minus, wire=0.5)  # starts on K2 A1, which the detail wire gave DC_GROUND
     assert _wire(_rows(d), "-K2:A2", "-K3:13") == (WH, 0.5)  # the control row of DC_GROUND
 
 
 def test_a_detail_wire_to_a_rail_pin_with_no_given_row_takes_the_rails_row_at_build_end() -> None:
     d, dc, _s1, k1, _k2 = _dc_with_k1_k2()
-    d.detail.wire(k1.coil["A2"], dc.minus.pin, wire=0.75)
+    d.series(k1.coil["A2"], dc.minus.pin, wire=0.75)
+    d.series(k1.coil["A1"], dc.plus.pin, wire=0.75)
     assert _wire(_rows(d), "-K1:A2", "-G1:-") == (BK, 0.75)

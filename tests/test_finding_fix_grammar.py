@@ -2,7 +2,6 @@
 
 The grammar is `<valid values>. Write: <corrected call>`; the message holds the cause. A fix is a
 `str.format` template whose placeholders come from one closed set, so a raise site can fill it. A
-code no consumer call clears says so in the words `No call clears this:` and is never silent.
 """
 
 import re
@@ -45,14 +44,14 @@ GROUPS: dict[str, tuple[CodeInfo, ...]] = {
     "facade": tuple(info for info in _codes._OWN),
 }
 # Every group's templates are in the grammar (API-FINDINGS B to E).
-PENDING: frozenset[str] = frozenset()
+PENDING: frozenset[str] = frozenset[str]()
 
 NEEDS_FIX = [
     pytest.param(info, id=info.code)
     for group, infos in GROUPS.items()
     if group not in PENDING
     for info in infos
-    if set(info.severities) & {Severity.ERROR, Severity.WARNING}
+    if info.severity in {Severity.ERROR, Severity.WARNING}
 ]
 
 
@@ -77,7 +76,7 @@ def test_a_fix_uses_only_the_closed_set_of_fields(info: CodeInfo) -> None:
 
 def test_the_checks_can_fail() -> None:
     bad = CodeInfo(
-        code="X", severities=(Severity.ERROR,), stage="s", who="consumer", cause="c",
+        code="X", severity=Severity.ERROR, stage="s", who="consumer", cause="c",
         fix="Give a name {nope}.", page="p",
     )  # fmt: skip
     assert not WRITE.search(bad.fix)
@@ -86,16 +85,15 @@ def test_the_checks_can_fail() -> None:
 
 def test_the_word_defect_is_in_only_the_two_info_fixes() -> None:
     """A consumer-clearable code never calls itself a Fransys defect (API-FINDINGS G)."""
-    named = {
-        info.code for infos in GROUPS.values() for info in infos if "defect" in info.fix.lower()
-    }
+    named = {info.code for infos in GROUPS.values() for info in infos if "defect" in info.fix.lower()}
     assert named == set()
     for code in named:
-        assert _codes.BY_CODE[code].severities == (Severity.INFO,), code
+        assert _codes.BY_CODE[code].severity is Severity.INFO, code
 
 
 def _unknown_placeholders(template: str) -> set[str]:
-    return set(PLACEHOLDER.findall(template)) - FILLED - CALL_NAMES
+    found: set[str] = {str(p) for p in PLACEHOLDER.findall(template)} - FILLED - CALL_NAMES
+    return found
 
 
 @pytest.mark.parametrize("info", [pytest.param(i, id=i.code) for i in _codes.BY_CODE.values()])

@@ -1,22 +1,10 @@
-"""Field case: two contact blocks on one emergency-stop head, in two circuits.
-
-The engineering shape: an e-stop head sold apart from its contact blocks, with two break-contact
-blocks clipped on and joined to it with `parent=`. Each block opens its own circuit. An
-electrician reads the head's tag on both blocks, and each block's contact is an e-stop contact.
-
-The bug: the blocks printed their own designations (`-S2:11`, `-S3:21`) and drew plain break
-contacts, because nothing said what operates a `switch`.
-
-Fixing decisions: parts-0020 (`[part] operated_by`), model-0222 (the holder's operator, and switch
-blocks under a stating head print its designation) and layout-0220 (a switch draws by its
-operator). Invented parts from `demo_parts`: `DEMO-HEAD-ESTOP`, `DEMO-BLOCK-1NC` and
-`DEMO-BLOCK-1NC-21`.
-The drawn symbols are read from the core path's page Drawings (`drawn_pages`).
-"""
+"""Field case: an e-stop head sold apart from two break-contact blocks clipped on with parent=, each block opening its own circuit.
+The bug: the blocks printed their own designations and drew plain break contacts, because nothing said what operates a switch.
+Fixed by parts-0020 (operated_by), model-0222 (the holder's operator) and layout-0220 (a switch draws by its operator)."""
 
 import csv
 import io
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import fransys as fr
 from _drawn_pages import drawn_pages
@@ -27,13 +15,12 @@ if TYPE_CHECKING:
     from pathlib import Path
 
 
-def _design() -> tuple[fr.Design, object, fr.Device, fr.Device]:
+def _design() -> tuple[fr.Design, object, Any, Any]:
     """The head `S1` with two NC blocks, each in its own circuit off strip `X1`."""
     d = fr.design("demo_parts", place="CAB")
     d.project(title="E-stop", number="P-1", customer="Example Co", revision=1, author="OJB")
     d.revision(1, date="2026-10-14", text="First issue", created="XX")
     cabinet = d.location("CAB", "Cabinet")
-    d.layout.profile(actuator_each_contact=False)  # one actuator per device (the default is True)
     strip = d.terminal_strip("X1", "DEMO-TB-2.5")
     head = d.device("S1", "DEMO-HEAD-ESTOP")
     with d.function("G1", "Stop circuit 1"):
@@ -41,15 +28,15 @@ def _design() -> tuple[fr.Design, object, fr.Device, fr.Device]:
     with d.function("G2", "Stop circuit 2"):
         second = d.device(None, "DEMO-BLOCK-1NC-21", name="block-2", parent=head)
     wire = (BU, 0.5)
-    d.detail.wire(strip[1], first["11"], wire=wire)
-    d.detail.wire(first["12"], strip[2], wire=wire)
-    d.detail.wire(strip[3], second["21"], wire=wire)
-    d.detail.wire(second["22"], strip[4], wire=wire)
+    d.series(strip[1].inner, first["11"], wire=wire)
+    d.series(first["12"], strip[2].inner, wire=wire)
+    d.series(strip[3].inner, second["21"], wire=wire)
+    d.series(second["22"], strip[4].inner, wire=wire)
     return d, cabinet, first, second
 
 
-def test_the_lead_block_draws_the_emergency_stop_and_the_other_its_contact() -> None:
-    """ACTUATOR-ONCE (layout-0237): one mushroom, at 11-12; 21-22 keeps its positive opening."""
+def test_every_block_draws_the_emergency_stop() -> None:
+    """Each block draws its own mushroom."""
     d, cabinet, _, _ = _design()
     model = fr.build(d, cabinet_document(cabinet)).model
     pins = {"11", "21"}  # each block's first pin, the marking on its drawn symbol
@@ -59,7 +46,7 @@ def test_the_lead_block_draws_the_emergency_stop_and_the_other_its_contact() -> 
         for symbol in drawing.symbols
         if dict(symbol.slots).get("marking.in") in pins
     }
-    assert drawn == {"11": "emergency-stop", "21": "break-contact-positive-opening"}
+    assert drawn == {"11": "emergency-stop", "21": "emergency-stop"}
 
 
 def test_the_wire_list_prints_the_heads_designation_on_both_blocks(tmp_path: Path) -> None:

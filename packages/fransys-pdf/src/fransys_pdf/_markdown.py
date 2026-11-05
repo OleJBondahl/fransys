@@ -181,36 +181,46 @@ class _Blocks:
         self.flush_numbers()
 
 
-def _handle_line(blocks: _Blocks, index: int, line: str) -> None:
-    """Classify one line and fold it into `blocks`: a flush, a new element, or accumulation."""
-    if line.strip() == "":
-        blocks.flush_all()
-        return
+def _fold_block(blocks: _Blocks, index: int, line: str) -> bool:
+    """Fold an unsupported line or a heading into `blocks`; False when `line` is neither."""
     construct = _unsupported_construct(line)
     if construct is not None:
         blocks.flush_all()
         blocks.elements.append(Unsupported(index, construct, line))
-        return
+        return True
     heading = _HEADING.match(line)
     if heading is not None:
         blocks.flush_all()
         blocks.elements.append(Heading(index, len(heading.group(1)), _runs(heading.group(2))))
-        return
+        return True
+    return False
+
+
+def _fold_item(blocks: _Blocks, index: int, line: str) -> bool:
+    """Fold a bullet or numbered item into `blocks`; False when `line` is neither."""
     bullet = _BULLET.match(line)
     if bullet is not None:
         blocks.flush_paragraph()
         blocks.flush_numbers()
         blocks.add_bullet(index, _runs(bullet.group(1)))
-        return
+        return True
     numbered = _NUMBERED.match(line)
     if numbered is not None:
         blocks.flush_paragraph()
         blocks.flush_bullets()
         blocks.add_number(index, _runs(numbered.group(1)))
-        return
-    blocks.flush_bullets()
-    blocks.flush_numbers()
-    blocks.add_paragraph_line(index, line)
+        return True
+    return False
+
+
+def _handle_line(blocks: _Blocks, index: int, line: str) -> None:
+    """Classify one line and fold it into `blocks`: a flush, a new element, or accumulation."""
+    if line.strip() == "":
+        blocks.flush_all()
+    elif not (_fold_block(blocks, index, line) or _fold_item(blocks, index, line)):
+        blocks.flush_bullets()
+        blocks.flush_numbers()
+        blocks.add_paragraph_line(index, line)
 
 
 def parse(text: str) -> tuple[Element, ...]:

@@ -22,9 +22,7 @@ def test_tables_run_controller_first_then_modules_in_rack_order() -> None:
         *built.modules_in_rack_order,
         built.loose,
     ]
-    assert [table.designation for table in tables] == [
-        printed_designation(built.model, table.item) for table in tables
-    ]
+    assert [table.designation for table in tables] == [printed_designation(built.model, table.item) for table in tables]
 
 
 def test_a_module_without_channels_has_no_table() -> None:

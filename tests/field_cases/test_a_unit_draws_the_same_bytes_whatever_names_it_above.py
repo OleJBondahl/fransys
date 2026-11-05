@@ -1,20 +1,11 @@
-"""Field case: a unit's own PDF is the same bytes whatever instance tag or parent it has.
-
-The engineering shape: a unit of three lamps, the first one's two pins each wired to the other
-two lamps (a star net per pin), with its own schematic document. It is added to a design as
-"U1", as "U2", and inside another unit.
-
-The bug: a model stores a conductor's ends in id order, and an id follows the instance path. The
-router drew each conductor from its first end, so renaming "U1" to "U2" or nesting the unit drew
-some conductors from the opposite end: the same ink, other bytes.
-
-The rule (decision layout-0177): a unit's drawing reads nothing from above it. A conductor is
-drawn from its upper end (then the left one), the bracket's own end points.
-"""
+"""Field case: a unit of three lamps with a star net per pin, added to a design as "U1", as "U2" and nested in another unit.
+The bug: the router drew each conductor from its first end, which follows the instance path, so renaming changed the bytes.
+Fixed by layout-0177, a unit's drawing reads nothing from above it, and a conductor is drawn from its upper end, then its left one."""
 
 from typing import TYPE_CHECKING, Any, NamedTuple
 
 import fransys as fr
+import pytest
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -32,15 +23,19 @@ def _inner(u: Any) -> _Io:
     second = u.device("P2", "DEMO-LAMP-24")
     third = u.device("P3", "DEMO-LAMP-24")
     for pin in ("1", "2"):
-        u.detail.wire(first[pin], second[pin], wire=("WH", 0.75))
-        u.detail.wire(first[pin], third[pin], wire=("WH", 0.75))
+        u.series(first[pin], second[pin], wire=("WH", 0.75))
+        u.series(first[pin], third[pin], wire=("WH", 0.75))
     return _Io(first)
 
 
 @fr.unit("demo-outer-box", revision=1, interface_version=1, date="2026-01-01", text="x", by="AB")
 def _outer(u: Any) -> _Io:
     u.add(_inner, "U2")
-    return _Io(u.device("P9", "DEMO-LAMP-24"))
+    lamp = u.device("P9", "DEMO-LAMP-24")
+    peer = u.device("P8", "DEMO-LAMP-24")
+    for pin in ("1", "2"):
+        u.series(lamp[pin], peer[pin], wire=("WH", 0.75))
+    return _Io(lamp)
 
 
 def _inner_pdf(tmp_path: Path, unit: Any, tag: str) -> bytes:
@@ -49,13 +44,22 @@ def _inner_pdf(tmp_path: Path, unit: Any, tag: str) -> bytes:
     d.location("C1", "Cabinet")
     d.add(unit, tag)
     (tmp_path / "own.md").write_text("# Box\n", encoding="utf-8")
-    own = fr.document(
-        fr.DocumentPreset.CABINET_SCHEMATIC, "demo-inner-box", cover=tmp_path / "own.md"
-    )
-    fr.write(fr.build(d, own), tmp_path / "out")
+    own = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, "demo-inner-box", cover=tmp_path / "own.md")
+    docs = [own]
+    if unit is _outer:
+        (tmp_path / "outer.md").write_text("# Outer\n", encoding="utf-8")
+        docs.append(
+            fr.document(
+                fr.DocumentPreset.CABINET_SCHEMATIC,
+                "demo-outer-box",
+                cover=tmp_path / "outer.md",
+            )
+        )
+    fr.write(fr.build(d, *docs), tmp_path / "out")
     return (tmp_path / "out" / _PDF).read_bytes()
 
 
+@pytest.mark.rule("NUMBER-SORT")
 def test_renaming_the_instance_tag_leaves_the_units_pdf_unchanged(tmp_path: Path) -> None:
     """U1 against U2, no nesting."""
     for sub in ("one", "two"):
@@ -63,6 +67,7 @@ def test_renaming_the_instance_tag_leaves_the_units_pdf_unchanged(tmp_path: Path
     assert _inner_pdf(tmp_path / "one", _inner, "U1") == _inner_pdf(tmp_path / "two", _inner, "U2")
 
 
+@pytest.mark.rule("NUMBER-SORT")
 def test_nesting_the_unit_leaves_its_pdf_unchanged(tmp_path: Path) -> None:
     """The unit alone against the same unit inside an outer unit."""
     for sub in ("alone", "nested"):

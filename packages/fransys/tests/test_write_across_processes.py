@@ -32,20 +32,10 @@ def _write_in_a_fresh_process(work: Path, hash_seed: str) -> tuple[str, dict[str
 
 
 def test_two_processes_with_different_hash_seeds_write_byte_equal_files(tmp_path):
-    """Two harness documents written in two interpreters, seeds "1" and "2", differ in no byte.
+    """A cabinet document written in two interpreters, seeds "1" and "2", differ in no byte.
 
     Root `CLAUDE.md` invariant 1: the same model digest always gives the same bytes.
     `test_two_writes_of_one_result_give_byte_equal_files` cannot see a set-order effect (one
-    process has one hash seed) and its fixture has no `Document`, so no PDF is compared there.
-    The third document is a cabinet document at C1: it carries the schematic SVG (record 0118).
-    Here every file of `out_dir` and of the intermediates directory is compared: the PDFs, the
-    `.typ` sources and the one remaining SVG. Both harness pages are cable tables now
-    no SVG of their own; the facade still draws one `layout.page:...`
-    SVG for the whole model regardless of either document's own `remove=(PageKind.SCHEMATIC,)`
-    (`_draw_svgs`'s own docstring), so exactly one survives, not zero.
-
-    The two children must really hold different hash seeds: each reports the hash of one fixed
-    string, and the two values differ (a control, or equal bytes would prove nothing).
     """
     first_hash, first = _write_in_a_fresh_process(tmp_path / "seed1", "1")
     second_hash, second = _write_in_a_fresh_process(tmp_path / "seed2", "2")
@@ -53,10 +43,10 @@ def test_two_processes_with_different_hash_seeds_write_byte_equal_files(tmp_path
     assert first_hash != second_hash
     names = sorted(first)
     assert names == sorted(second)
-    # Not vacuous: the trees hold three PDFs, three Typst sources, one page SVG, two block SVGs.
+    # Not vacuous: the trees hold two PDFs, two Typst sources and four SVGs.
     suffixes = [name.rpartition(".")[2] for name in names]
-    assert suffixes.count("pdf") == 3
-    assert suffixes.count("typ") == 3
-    assert suffixes.count("svg") == 3  # One schematic page, two cable blocks
+    assert suffixes.count("pdf") == 2
+    assert suffixes.count("typ") == 2
+    assert suffixes.count("svg") == 4  # One schematic page, the system diagram, two cable blocks
     assert all(first[name] for name in names)
     assert [name for name in names if first[name] != second[name]] == []

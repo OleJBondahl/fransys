@@ -2,8 +2,9 @@
 
 from fransys import colours
 
+from fransys_model.derive import split_colour
 from fransys_model.derive.core_pairs import SCREEN
-from fransys_model.vocab import BASE_COLOURS, RESERVED_CODES, split_colour
+from fransys_model.vocab import BASE_COLOURS, RESERVED_CODES
 
 
 def test_table_holds_the_screen_and_the_protective_earth_core():
@@ -23,3 +24,9 @@ def test_gnye_is_gn_and_ye_and_sh_is_no_base_colour():
 def test_grammar_still_accepts_both_alone():
     for code in RESERVED_CODES.values():
         assert split_colour(code) == (code, "")
+
+
+def test_a_core_number_has_no_leading_zero_and_follows_one_base_code():
+    assert split_colour("BK1") == ("BK", "1")
+    assert split_colour("BK01") is None
+    assert split_colour("SHBK") is None

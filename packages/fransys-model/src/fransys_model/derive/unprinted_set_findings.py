@@ -3,10 +3,10 @@
 No document, no layout (owner 2026-09-26): a set no document covers is named, never silent.
 """
 
-from fransys_model.kernel import Finding, Model, Severity
 from fransys_model.layout import DrawingSet, Page, layout_of
-from fransys_model.vocab.codes import fix_text
+from fransys_model.vocab.codes import finding
 from fransys_model.vocab.tables import items
+lazy from fransys_model.kernel import Finding, Model
 
 from .designation import printed_designation
 from .document_sets import set_unit
@@ -26,8 +26,7 @@ def _items_of(model: Model, drawing_set: DrawingSet) -> str:
     held = [
         item.id
         for item in items(model).values()
-        if item_unit(model, item.id) == set_unit(drawing_set)
-        and item_location(model, item.id) == drawing_set.location
+        if item_unit(model, item.id) == set_unit(drawing_set) and item_location(model, item.id) == drawing_set.location
     ]
     names = [printed_designation(model, item) for item in in_designation_order(model, held)]
     return ", ".join(names)
@@ -41,19 +40,15 @@ def _subject(model: Model, drawing_set: DrawingSet) -> str:
 
 
 def check_unprinted_sets(model: Model) -> tuple[Finding, ...]:
-    """One WARNING per drawing set with a page that no document prints, naming its items."""
+    """One ERROR per drawing set with a page that no document prints, naming its items."""
     drawn = {page.drawing_set for page in layout_of(model, Page).values()}
     printed = {s.id for s in printed_drawing_sets(model)}
     return tuple(
-        Finding(
-            code=UNPRINTED_SET,
-            severity=Severity.WARNING,
-            subjects=(),
-            message=(
-                f"drawing set {s.number} has pages that no document prints; its items: "
-                f"{_items_of(model, s)}. Add a document for {_subject(model, s)}, or nest it."
-            ),
-            fix=fix_text(UNPRINTED_SET),
+        finding(
+            UNPRINTED_SET,
+            (),
+            f"drawing set {s.number} has pages that no document prints; its items: "
+            f"{_items_of(model, s)}. Add a document for {_subject(model, s)}, or nest it.",
         )
         for s in layout_of(model, DrawingSet).values()
         if s.id in drawn and s.id not in printed

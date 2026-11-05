@@ -1,21 +1,24 @@
+# fransys-parts
+
 Fransys input: part-file loader and linter.
 
 Input contract: produces a Draft. Every record carries an Origin (file, line). An input never calls freeze().
 
 Turns a part library (TOML files under a `library.toml` root, `docs/contracts/part-file.md`) into
 `Part`, `FunctionTemplate`, `PortTemplate`, `InternalLink`, the facets (`supply`, `footprint`,
-`cable_product`, `connector`, `plc_channel`, `pcb`, and from the `[rating]`, `[function.rating]` and
-`[function.operating]` tables `part_rating`, `rating` and `operating`, decision parts-0004; lint
-codes `RATING_TABLE_EMPTY` and `RATING_VALUE_INVALID`; a rating value is positive, an operating
-value may be 0, decision parts-0006) and one authored `layout.symbol_choice` per
-function that names a `symbol`, selecting by `template` (model decision 0030). Every record's
+`cable_product`, `connector`, `plc_channel`, `pcb`, `part_rating`, `rating`, `operating`, `block`). It adds one authored
+`layout.symbol_choice` per function that names a `symbol`, selecting by `template` (model decision 0030).
+The rating facets come from the `[rating]`, `[function.rating]` and `[function.operating]` tables (decision parts-0004).
+The `block` facet, an elecdef `Fuse` or `Breaker`, comes from the breaking figures of `[function.block]` (decision model-0381).
+Lint codes are `RATING_TABLE_EMPTY` and `RATING_VALUE_INVALID`.
+A rating value is positive and an operating value may be 0 (decision parts-0006). Every record's
 origin names the part file and the line its table header started on: `tomllib` gives no line
 numbers, so `_toml.py` scans a file's text once for its own headers. A `contact_co` port states
 its throw role (`common`, `break` or `make`) and no `symbol_port`; lint codes `CHANGEOVER_ROLE`,
 `CHANGEOVER_LINK` and `CHANGEOVER_SYMBOL_PORT` (decision parts-0007).
 A switched link may state `rest` (`open` or `closed`), a protection function its `type`, and a fuse or
 breaker link is `protective`; eight lint codes cover them (decisions parts-0008 and model-0122).
-A part states `power_loss_w` once; `POWER_LOSS_TWICE` refuses both the part and a function (decision parts-0009).
+A part states `power_loss` once; `POWER_LOSS_TWICE` refuses both the part and a function (decision parts-0009).
 
 - Lint findings are bare (no `Draft` to resolve an origin through), so file and line sit in the
   message text. `FLOAT_FORBIDDEN` and `MULTILINE_STRING` walk the whole parsed tree, unknown
@@ -28,7 +31,7 @@ A part states `power_loss_w` once; `POWER_LOSS_TWICE` refuses both the part and 
   what `lint` already checked (no second, weaker validation, decision parts-0001).
 - `load(package)` finds an installed data package with `importlib.resources` and calls the same
   code as `load_path`.
-- `SUPPORTED_SCHEMAS: frozenset[int]` names the accepted `schema` values (`frozenset({1})`
+- `SUPPORTED_SCHEMAS: frozenset[int]` names the accepted `schema` values (`frozenset({2})`
   today).
 
 ## Worked examples
@@ -39,7 +42,7 @@ It is the worked example of the part-file contract and the fixture every test bu
 The library file is `examples/demo-parts/demo_parts/library.toml`.
 
 ```toml
-schema = 1
+schema = 2
 name = "demo-parts"
 version = "0.1.0"
 description = "Invented parts for Fransys's tests and documentation."
@@ -49,7 +52,7 @@ The relay is `examples/demo-parts/demo_parts/parts/relay-2co-24vdc.toml`.
 It has a coil function and two changeover-contact functions, each contact's `links` marking the switched connectivity inside it.
 
 ```toml
-schema = 1
+schema = 2
 
 [part]
 mpn = "DEMO-RLY-2CO-24"
@@ -95,7 +98,7 @@ The feed-through terminal is `examples/demo-parts/demo_parts/parts/terminal-feed
 It has one function with `internal`/`external` ports joined by a `conductive` link, so a wire on either side is the same net.
 
 ```toml
-schema = 1
+schema = 2
 
 [part]
 mpn = "DEMO-TB-2.5"
@@ -119,7 +122,7 @@ The cable is `examples/demo-parts/demo_parts/parts/cable-4g1_5.toml`.
 It has no functions of its own; its cores are conductors created when an item is instantiated as a cable, not functions or ports on the part itself.
 
 ```toml
-schema = 1
+schema = 2
 
 [part]
 mpn = "DEMO-CBL-4G1.5"

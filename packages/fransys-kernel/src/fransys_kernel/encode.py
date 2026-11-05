@@ -11,12 +11,11 @@ import json
 import types
 from decimal import Decimal
 from enum import Enum
-from types import NoneType
 from typing import TYPE_CHECKING, Any, cast, get_args, get_origin
 
 from .errors import ValueTypeError
 from .ids import render_id
-from .registry import is_value_class
+from .registry import is_enum_by_name, is_value_class, optional_arm, slot_tag
 from .schema import FieldInfo, cached_field_info, id_type, key_and_value_aliases
 lazy from .model import Model
 
@@ -24,44 +23,30 @@ if TYPE_CHECKING:
     from .ids import Id
     from .record_protocol import Record
 
-type JsonValue = (
-    bool
-    | int
-    | str
-    | list[JsonValue]
-    | tuple[JsonValue, ...]
-    | dict[str, JsonValue]
-    | frozendict[str, JsonValue]
-    | None
-)
+type JsonValue = bool | int | str | list[JsonValue] | tuple[JsonValue, ...] | dict[str, JsonValue] | frozendict[str, JsonValue] | None
 """What `write_json` accepts: the JSON data model, nothing else."""
 
 MAP_TAG = "$map"
 ID_TAG = "$id"
+CLASS_TAG = "$class"
+CLASS_VALUE = "value"
 
 
-def to_data(model: Model) -> frozendict[str, Any]:
+def to_data(model: Model) -> frozendict[str, JsonValue]:
     """Render `model` as nested `frozendict`s, tuples and primitives only.
 
     Keys are sorted, tables hold their records in `Id` order and aliases are sorted pairs.
     Origins are not written (a moved line is not a change to the plant), nor are `hashes`,
     `digests` and `digest`, which are derived and recomputed on load.
     """
-    aliases = tuple(
-        (render_id(old), render_id(new))
-        for old, new in sorted(model.aliases.items(), key=lambda pair: pair[0])
-    )
-    tables = frozendict(
+    aliases: JsonValue = tuple((render_id(old), render_id(new)) for old, new in sorted(model.aliases.items(), key=lambda pair: pair[0]))
+    tables: JsonValue = frozendict(
         {
-            kind: tuple(
-                record_data(record) for _, record in sorted(table.items(), key=lambda pair: pair[0])
-            )
+            kind: tuple(record_data(record) for _, record in sorted(table.items(), key=lambda pair: pair[0]))
             for kind, table in sorted(model.tables.items(), key=lambda pair: pair[0])
         }
     )
-    return frozendict(
-        {"aliases": aliases, "schema_version": model.schema_version, "tables": tables}
-    )
+    return frozendict({"aliases": aliases, "schema_version": model.schema_version, "tables": tables})
 
 
 def record_data(record: Record) -> frozendict[str, Any]:
@@ -83,23 +68,35 @@ def _record_data(record: Record, specs: dict[type, FieldInfo]) -> frozendict[str
     )
 
 
+def value_data[T](value: T) -> JsonValue:
+    """The canonical data of one value, as the model writes it: no tags, read back by `value_from`.
+
+    Example: `write_json(value_data(rating), compact=True)` is the canonical text of an elecdef
+    `Rating`. The value is a `@value`, a family-library value or a plain leaf; its class is not
+    written, so the reader names it.
+    """
+    return cast("JsonValue", _encode_value(value, type(value), {}))
+
+
 def _encode_value(value: object, annotation: object, specs: dict[type, FieldInfo]) -> object:
     """Render `value` as its annotation says a reader will expect it."""
     if annotation is key_and_value_aliases()[0]:  # AuthoringKey is `tuple[str, ...]`
         annotation = annotation.__value__
+    if tag := slot_tag(annotation, value):  # the slot names several classes: say which one
+        return frozendict({CLASS_TAG: tag, CLASS_VALUE: _encode_value(value, type(value), specs)})
     origin = get_origin(annotation)
     if origin is types.UnionType:
-        member = next(arg for arg in get_args(annotation) if arg is not NoneType)
-        return None if value is None else _encode_value(value, member, specs)
-    if origin is tuple:
-        items = cast("tuple[object, ...]", value)
-        return tuple(_encode_value(item, get_args(annotation)[0], specs) for item in items)
+        return None if value is None else _encode_value(value, optional_arm(annotation), specs)
+    if origin in (tuple, frozenset):
+        inner = get_args(annotation)[0]
+        items = [_encode_value(i, inner, specs) for i in cast("tuple[Any, ...]", value)]
+        if origin is frozenset:  # canonical order: by JSON text
+            items.sort(key=lambda item: write_json(cast("JsonValue", item), compact=True))
+        return tuple(items)
     if origin is frozendict:
         pairs = cast("frozendict[str, object]", value)
         item_annotation = get_args(annotation)[1]
-        return frozendict(
-            {key: _encode_value(pairs[key], item_annotation, specs) for key in sorted(pairs)}
-        )
+        return frozendict({key: _encode_value(pairs[key], item_annotation, specs) for key in sorted(pairs)})
     if origin is id_type():
         return render_id(cast("Id[Any]", value))
     return _encode_plain(value, annotation, specs)
@@ -109,16 +106,12 @@ def _encode_plain(value: object, annotation: object, specs: dict[type, FieldInfo
     """Render a value whose annotation is a class or a scalar, not a generic."""
     if isinstance(annotation, type) and is_value_class(annotation):
         info = cached_field_info(annotation, specs)
-        return frozendict(
-            {
-                name: _encode_value(getattr(value, name), info.annotations[name], specs)
-                for name in info.names
-            }
-        )
+        return frozendict({name: _encode_value(getattr(value, name), info.annotations[name], specs) for name in info.names})
     if annotation is Decimal:
         return decimal_text(cast("Decimal", value))
     if isinstance(annotation, type) and issubclass(annotation, Enum):
-        return cast("Enum", value).value
+        member = cast("Enum", value)
+        return member.name if is_enum_by_name(annotation) else member.value
     # a dict cannot reach here: check_value (values.py:81-98), run at conform.py:99 during
     # freeze(), refuses a bare dict on every field before a Model exists (design/kernel-records.md
     # 5.1)
@@ -137,9 +130,7 @@ def _encode_undeclared(value: object) -> object:
         return tuple(_encode_undeclared(item) for item in value)
     if type(value) is frozendict:
         pairs = cast("frozendict[str, object]", value)
-        return frozendict(
-            {MAP_TAG: frozendict({key: _encode_undeclared(pairs[key]) for key in sorted(pairs)})}
-        )
+        return frozendict({MAP_TAG: frozendict({key: _encode_undeclared(pairs[key]) for key in sorted(pairs)})})
     if type(value) is id_type():
         return frozendict({ID_TAG: render_id(cast("Id[Any]", value))})
     return value
@@ -164,9 +155,7 @@ def write_json(data: JsonValue, *, compact: bool = False) -> str:
     encode with `surrogatepass` before hashing.
     """
     if compact:
-        return json.dumps(
-            data, sort_keys=True, ensure_ascii=False, separators=(",", ":"), default=_plain
-        )
+        return json.dumps(data, sort_keys=True, ensure_ascii=False, separators=(",", ":"), default=_plain)
     return json.dumps(data, sort_keys=True, ensure_ascii=False, indent=2, default=_plain) + "\n"
 
 

@@ -7,11 +7,12 @@ import inspect
 import pkgutil
 import types
 import typing
+from typing import Any
 
 import pytest
 
 from fransys_layout import core
-from fransys_layout.core.values import Cell
+from fransys_layout.core.flow_values import Cell
 
 CORE = "fransys_layout.core"
 # The two sort keys: a named key function is the one Callable parameter S2 allows.
@@ -27,17 +28,13 @@ def _namespace() -> dict[str, object]:
     """Every name a core annotation may use: typing, collections.abc, and each core module's own."""
     ns: dict[str, object] = {**vars(typing), **vars(cabc)}
     for info in pkgutil.iter_modules(core.__path__):
-        ns |= {
-            k: v
-            for k, v in vars(importlib.import_module(f"{CORE}.{info.name}")).items()
-            if not k.startswith("_")
-        }
+        ns |= {k: v for k, v in vars(importlib.import_module(f"{CORE}.{info.name}")).items() if not k.startswith("_")}
     return ns
 
 
 def _is_core(obj: object) -> bool:
     module = getattr(obj, "__module__", "") or ""
-    return module == CORE or module.startswith(CORE + ".")
+    return bool(module == CORE or module.startswith(CORE + "."))
 
 
 _NS = _namespace()
@@ -71,13 +68,13 @@ def _bad(ann: object) -> list[str]:
     return [] if plain or home_ok else [f"outside type {ann}"]
 
 
-def _hints(obj: object) -> dict[str, object]:
+def _hints(obj: object) -> dict[str, Any]:
     return annotationlib.get_annotations(obj, format=annotationlib.Format.FORWARDREF)
 
 
 def _signature_problems(name: str, func: object) -> list[str]:
     module = getattr(func, "__module__", "").rsplit(".", 1)[-1]
-    found = []
+    found: list[str] = []
     for param, ann in _hints(func).items():
         if (module, param) in SORT_KEY_EXEMPT:
             continue
@@ -86,7 +83,7 @@ def _signature_problems(name: str, func: object) -> list[str]:
 
 
 def _public_problems() -> list[str]:
-    found = []
+    found: list[str] = []
     for name in core.__all__:
         obj = getattr(core, name)
         if inspect.isfunction(obj):

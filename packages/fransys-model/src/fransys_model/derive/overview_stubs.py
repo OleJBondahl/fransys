@@ -19,7 +19,7 @@ from .drawing_text import stub_far_end
 from .kinds import item_kind
 from .lookups import unit_chain
 from .order import natural_key
-from .overview_field import field_devices
+from .overview_field import field_devices, folded_name
 from .overview_levels import level_box, level_box_lines, merge_stubs, stub_far_root
 from .overview_location import top_place_of
 from .overview_names import display_unit
@@ -62,9 +62,7 @@ def _far_unit(model: Model, unit: Id[Unit], far: Id[Item]) -> Id[Unit] | None:
     return outside[-1] if outside else None
 
 
-def _far_text(
-    model: Model, unit: Id[Unit], far: Id[Item], ports: tuple[Id[Port] | None, Id[Port] | None]
-) -> tuple[str, str]:
+def _far_text(model: Model, unit: Id[Unit], far: Id[Item], ports: tuple[Id[Port] | None, Id[Port] | None]) -> tuple[str, str]:
     """The far end's name and port tails, relative to the innermost opened unit holding it."""
     shown = display_unit(model, far, unit)
     far_port, near_port = ports
@@ -73,21 +71,13 @@ def _far_text(
     return stub_far_end(model, far_port, near_port, unit=shown)
 
 
-def outside_stub(
-    model: Model, unit: Id[Unit], key: OverviewRef, conn: Conn, *, inside_a: bool
-) -> RawStub:
+def outside_stub(model: Model, unit: Id[Unit], key: OverviewRef, conn: Conn, *, inside_a: bool) -> RawStub:
     """The stub for `conn`, whose `a` end is inside the level when `inside_a`, else its `b` end."""
-    near, near_port, far, far_port = (
-        (conn.a, conn.a_port, conn.b, conn.b_port)
-        if inside_a
-        else (conn.b, conn.b_port, conn.a, conn.a_port)
-    )
+    near, near_port, far, far_port = (conn.a, conn.a_port, conn.b, conn.b_port) if inside_a else (conn.b, conn.b_port, conn.a, conn.a_port)
     inside = cast("Id[Item]", level_box(model, near, unit))
     text, tails = _far_text(model, unit, far, (far_port, near_port))
     end = stub_far_root(model, far)
-    member = OverviewStub(
-        box=inside, kind=conn.kind, via=conn.via, far=text, ports=tails, end=end, count=1
-    )
+    member = OverviewStub(box=inside, kind=conn.kind, via=conn.via, far=text, ports=tails, end=end, count=1)
     home = field_devices(model).get(far)
     if home is not None:
         field = OverviewRef(kind=OverviewRefKind.FIELDS, unit=home)
@@ -109,9 +99,7 @@ def outside_stub(
     return RawStub(key, StubPlace.END, text, end, conn.kind, conn.via, member)
 
 
-def inner_stub(
-    key: OverviewRef, place: StubPlace, name: str, end: OverviewRef, conn: Conn
-) -> RawStub:
+def inner_stub(key: OverviewRef, place: StubPlace, name: str, end: OverviewRef, conn: Conn) -> RawStub:
     """The stub of a connection to another group or box of the same unit, which has no members."""
     return RawStub(key, place, name, end, conn.kind, conn.via, None)
 
@@ -138,7 +126,7 @@ def _field_folds(raws: list[RawStub]) -> list[RawStub]:
         elif len(ends := devices[(raw.box, raw.kind)]) == 1:
             out.append(raw._replace(place=StubPlace.END, end=raw.member.end))
         else:
-            out.append(raw._replace(far=f"Field devices ({len(ends)})"))
+            out.append(raw._replace(far=folded_name(len(ends))))
     return out
 
 
@@ -182,24 +170,18 @@ def _grouped(raws: list[RawStub]) -> tuple[list[RawStub], list[list[int]]]:
     return folded, list(held.values())
 
 
-def fold_stubs(
-    model: Model, unit: Id[Unit], raws: list[RawStub], rank: dict[OverviewRef, int]
-) -> tuple[FoldStub, ...]:
+def fold_stubs(model: Model, unit: Id[Unit], raws: list[RawStub], rank: dict[OverviewRef, int]) -> tuple[FoldStub, ...]:
     """Equal stubs joined, with the single stubs they open to, in box then name order."""
     folded, groups = _grouped(raws)
     return _ordered([_folded(model, unit, [folded[at] for at in ats]) for ats in groups], rank)
 
 
-def _part(
-    model: Model, unit: Id[Unit], whole: FoldStub, mine: list[RawStub], box: OverviewRef
-) -> FoldStub:
+def _part(model: Model, unit: Id[Unit], whole: FoldStub, mine: list[RawStub], box: OverviewRef) -> FoldStub:
     """What `box` holds of `whole`, named and ended as `whole` is."""
     return replace(_folded(model, unit, mine), box=box, far=whole.far, end=whole.end)
 
 
-def _wires(
-    model: Model, unit: Id[Unit], whole: FoldStub, shut: list[RawStub], boxes: list[OverviewRef]
-) -> list[StubWire]:
+def _wires(model: Model, unit: Id[Unit], whole: FoldStub, shut: list[RawStub], boxes: list[OverviewRef]) -> list[StubWire]:
     """The share of each box in `whole`, whose folded raws `shut` stand at `boxes` in turn."""
     return [
         StubWire(
@@ -216,9 +198,7 @@ def _wires(
     ]
 
 
-def _shared(
-    model: Model, unit: Id[Unit], raws: list[RawStub]
-) -> tuple[list[FoldStub], list[StubWire]]:
+def _shared(model: Model, unit: Id[Unit], raws: list[RawStub]) -> tuple[list[FoldStub], list[StubWire]]:
     """`raws` folded as if they stood at one box, the stub of each far end and the wires to it."""
     owner: dict[OverviewRef, OverviewRef] = {}
     for raw in raws:
@@ -231,15 +211,11 @@ def _shared(
     wires: list[StubWire] = []
     for ats in held.values():
         stubs.append(_folded(model, unit, [shut[at] for at in ats]))
-        wires += _wires(
-            model, unit, stubs[-1], [shut[at] for at in ats], [raws[at].box for at in ats]
-        )
+        wires += _wires(model, unit, stubs[-1], [shut[at] for at in ats], [raws[at].box for at in ats])
     return stubs, wires
 
 
-def _homed(
-    model: Model, unit: Id[Unit], raws: list[RawStub], count: int
-) -> tuple[list[FoldStub], list[StubWire]]:
+def _homed(model: Model, unit: Id[Unit], raws: list[RawStub], count: int) -> tuple[list[FoldStub], list[StubWire]]:
     """`raws` folded at their boxes, and the wires of the stubs holding the last `count` of them.
 
     Those last raws stand at a terminal but are folded at their `home`.
@@ -250,9 +226,7 @@ def _homed(
     for ats in groups:
         stubs.append(_folded(model, unit, [folded[at] for at in ats]))
         if any(at >= len(raws) - count for at in ats):
-            wires += _wires(
-                model, unit, stubs[-1], [folded[at] for at in ats], [raws[at].box for at in ats]
-            )
+            wires += _wires(model, unit, stubs[-1], [folded[at] for at in ats], [raws[at].box for at in ats])
     return stubs, wires
 
 

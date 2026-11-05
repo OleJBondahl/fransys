@@ -18,9 +18,10 @@ class BundleNet:
 class Bundle:
     """Nets that travel as one trunk, one lane each in pole order.
 
-    `id` is the first-pole net's key. A pole is the index at the source, the least function end
-    the nets meet.
+    `id` is the first-pole net's key; a pole is the index at the source, the least function end
+    the nets meet. `form` is "pole" (poles of one device) or "line" (a cable or harness line).
     """
 
     id: Id[Port]
     nets: tuple[BundleNet, ...]
+    form: str = "pole"

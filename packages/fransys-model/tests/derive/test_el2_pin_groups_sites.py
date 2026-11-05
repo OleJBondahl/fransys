@@ -9,9 +9,9 @@ from typing import Any
 from plant import Plant
 from roles_plants import roles_plant
 
-from fransys_model.derive import connector_box_lines, schematic_functions
+from fransys_model.derive import schematic_functions
 from fransys_model.derive.connectors import connector_items
-from fransys_model.derive.designation import prints_connector_label
+from fransys_model.derive.designation_connector import prints_connector_label
 from fransys_model.derive.indexes import build_indexes
 from fransys_model.derive.lookups import conductors_by_role
 from fransys_model.derive.tag_text import is_device_terminal, tag_text
@@ -43,19 +43,14 @@ def test_connectors_lists_none_without_a_connector_facet() -> None:
 
 def test_designation_prints_a_label_only_for_the_connector() -> None:
     """`prints_connector_label` is true for the planted connector, false for other kinds."""
-    printed = {
-        n
-        for n in ("coil", "terminal_1", "connector", "no")
-        if prints_connector_label(MODEL, IDS[n])
-    }
+    printed = {n for n in ("coil", "terminal_1", "connector", "no") if prints_connector_label(MODEL, IDS[n])}
     assert printed == {"connector"}
 
 
-def test_tag_text_and_box_lines_need_a_numbered_plant() -> None:
-    """The plant carries no designation, so each text function refuses the same way."""
+def test_tag_text_needs_a_numbered_plant() -> None:
+    """The plant carries no designation, so the text function refuses."""
     for name in ("coil", "terminal_1", "connector"):
         assert _outcome(lambda n=name: tag_text(MODEL, IDS[n])) == "SchemaError"
-        assert _outcome(lambda n=name: connector_box_lines(MODEL, IDS[n])) == "SchemaError"
 
 
 def test_a_terminal_function_of_a_non_terminal_item_is_a_device_terminal() -> None:

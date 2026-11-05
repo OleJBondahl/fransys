@@ -27,7 +27,8 @@ def _piece_nets(model: Model, net: Netlist) -> dict[object, dict[str, Id[Port]]]
     found: dict[object, dict[str, Id[Port]]] = defaultdict(dict)
     for port in net.placed:
         if net.reached(port):
-            found[net.root(port)].setdefault(net.net(model, port), net.ids[port])
+            for root in net.roots(port):
+                found[root].setdefault(net.net(model, port), net.ids[port])
     return found
 
 
@@ -42,9 +43,7 @@ def _wire_roots(net: Netlist) -> dict[tuple[Id[Page], int], object]:
     return roots
 
 
-def _tee_finding(
-    page: Id[Page], at: XY, here: dict[str, Id[Port]], there: dict[str, Id[Port]]
-) -> Finding:
+def _tee_finding(page: Id[Page], at: XY, here: dict[str, Id[Port]], there: dict[str, Id[Port]]) -> Finding:
     nets = {**here, **there}
     where = f"a wire ends on another at {at} with no junction dot"
     if len(nets) > 1:
@@ -56,11 +55,7 @@ def short_findings(model: Model, net: Netlist) -> tuple[Finding, ...]:
     """DRAWING_SHORTS_NETS per piece with two nets; each dotless T is a short or a missing dot."""
     nets = _piece_nets(model, net)
     roots = _wire_roots(net)
-    found = [
-        drawn_finding("DRAWING_SHORTS_NETS", tuple(held.values()), f"{len(held)} nets in one piece")
-        for held in nets.values()
-        if len(held) > 1
-    ]
+    found = [drawn_finding("DRAWING_SHORTS_NETS", tuple(held.values()), f"{len(held)} nets in one piece") for held in nets.values() if len(held) > 1]
     for page, part in net.pages.items():
         for at, ending, through in part.graph.tees:
             here = nets.get(roots.get((page, ending)), {})
@@ -82,7 +77,5 @@ def wrong_port_findings(model: Model, net: Netlist) -> tuple[Finding, ...]:
             last = {net.net(model, p): p for p in _ends_at(part.ports, wire.points[-1])}
             if first and last and not first.keys() & last.keys():
                 ids = [net.ids[next(iter(m.values()))] for m in (first, last)]
-                found.append(
-                    drawn_finding("ROUTE_WRONG_PORT", ids, f"a wire joins ports of {len(ids)} nets")
-                )
+                found.append(drawn_finding("ROUTE_WRONG_PORT", ids, f"a wire joins ports of {len(ids)} nets"))
     return tuple(found)

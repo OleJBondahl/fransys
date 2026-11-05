@@ -1,15 +1,6 @@
-"""Field case: a GNYE core to a device with no PE port still lands on the strip's PE terminal.
-
-The engineering shape: a field box strip X1 with a PE part feeds a lamp H1 (a device with no PE
-port) through a four-core cable W1: `d.series(dc.plus, x1, w1, h1.lamp, dc.minus)`.
-
-The bug: the series marked the GNYE core spare, so the strip's PE terminal stayed unused and the
-guide's "else open and earthed" never ran for the far end.
-
-Rule (API-FRICTION-1 F9, author-0044): the core's near end lands on the strip's next free PE
-terminal and its far end stays open, because the device has no PE port. Without a strip PE part
-either, the core is spare.
-"""
+"""Field case: a field box strip with a PE part feeds a lamp with no PE port through a four-core cable.
+The bug: the series marked the GNYE core spare, so the strip's PE terminal stayed unused and the far end never ran "else open and earthed".
+Fixed by API-FRICTION-1 F9 (author-0044), the core lands on the strip's next free PE terminal; its far end stays open."""
 
 import fransys as fr
 from fransys.colours import BK, GNYE
@@ -24,8 +15,7 @@ def _pe_terminal(model) -> str:
     (pe,) = {
         fr.derive.port_designation(model, port.id)
         for port in ports(model).values()
-        if (item := items(model)[fr.derive.item_of_port(model, port.id)]).part
-        and parts(model)[item.part].mpn == _PE_PART
+        if (item := items(model)[fr.derive.item_of_port(model, port.id)]).part and parts(model)[item.part].mpn == _PE_PART
     }
     return pe
 
@@ -33,16 +23,8 @@ def _pe_terminal(model) -> str:
 def _pe_core(model) -> list[tuple[str, str, str]]:
     """The ends and the word of the GNYE core of W1, wired or open."""
     (cable,) = fr.derive.cable_items(model)
-    wired = [
-        (r.end_a_designation, r.end_b_designation, "")
-        for r in fr.derive.cable_rows(model, cable)
-        if r.colour == GNYE
-    ]
-    opened = [
-        (r.at_designation, "", "spare" if r.spare else "")
-        for r in fr.derive.open_core_rows(model, cable)
-        if r.colour == GNYE
-    ]
+    wired = [(r.end_a_designation, r.end_b_designation, "") for r in fr.derive.cable_rows(model, cable) if r.colour == GNYE]
+    opened = [(r.at_designation, "", "spare" if r.spare else "") for r in fr.derive.open_core_rows(model, cable) if r.colour == GNYE]
     return wired + opened
 
 

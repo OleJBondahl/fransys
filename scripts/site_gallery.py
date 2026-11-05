@@ -86,7 +86,7 @@ def _file_lines(export: Path, rel: PurePosixPath, page_dir: Path) -> list[str]:
 
 
 def _section_lines(folder: PurePosixPath, exports: list[Path], page_dir: Path) -> list[str]:
-    lines = [f"## {PurePosixPath('out') / folder}", ""]
+    lines: list[str] = [f"## {PurePosixPath('out') / folder}", ""]
     for export in sorted(exports, key=lambda e: (KIND_ORDER.get(e.suffix, 2), e.name)):
         rel = folder / export.name
         (page_dir / "files" / rel).parent.mkdir(parents=True, exist_ok=True)

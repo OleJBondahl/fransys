@@ -6,10 +6,8 @@ Results are `tuple`s (or one `frozendict`), sorted by an explicit key so inserti
 `model` never shows through (CLAUDE.md invariant 7).
 """
 
-from typing import TYPE_CHECKING
-
 from fransys_model.kernel import Id, Model, UnionFind
-from fransys_model.vocab.enums import PortRole
+from fransys_model.vocab.enums import PortBoundary
 from fransys_model.vocab.facets.terminal import TerminalFacet
 from fransys_model.vocab.tables import conductors, facets_of, items, nets
 lazy from fransys_model.vocab.aspects import AspectNode
@@ -20,7 +18,7 @@ from .designation import unit_list_context
 from .facts.children import child_items
 from .facts.closure import physical_nets
 from .facts.conductor_facts import is_bridge
-from .facts.roles import port_role
+from .facts.roles import port_boundary
 from .far_ends import far_ends
 from .indexes import build_indexes
 from .lookups import conductors_by_role, item_of_port, require, strip_set, terminal_items
@@ -30,13 +28,10 @@ from .rows import TerminalRow
 from .texts.context import PrintContext
 from .texts.terminal_text import terminal_text
 
-if TYPE_CHECKING:
-    from .indexes import Indexes
+_GROUP_TERMINALS = 2  # a group needs two terminals
 
 
-def conductors_on_item(
-    model: Model, item: Id[Item]
-) -> frozendict[Id[Item], frozendict[PortRole, tuple[Id[Conductor], ...]]]:
+def conductors_on_item(model: Model, item: Id[Item]) -> frozendict[Id[Item], frozendict[PortBoundary, tuple[Id[Conductor], ...]]]:
     """`item`'s conductors, grouped by terminal child item and then by port role.
 
     Holds only the `terminal`-facet children with a conductor and, per child, only the roles with
@@ -47,7 +42,7 @@ def conductors_on_item(
         item: The item whose terminal children's conductors are grouped.
 
     Returns:
-        `item`'s terminal children, each mapped to its conductors by `PortRole`.
+        `item`'s terminal children, each mapped to its conductors by `PortBoundary`.
 
     Raises:
         SchemaError: `item` is not an item of `model`.
@@ -55,23 +50,35 @@ def conductors_on_item(
     require(items(model).get(item), "item", item)
     idx = build_indexes(model)
     terminals = terminal_items(model)
-    grouped: dict[Id[Item], frozendict[PortRole, tuple[Id[Conductor], ...]]] = {}
+    grouped: dict[Id[Item], frozendict[PortBoundary, tuple[Id[Conductor], ...]]] = {}
     for child in child_items(model, item):
         if child not in terminals:
             continue
         by_role = conductors_by_role(model, idx, child)
         if by_role:
-            grouped[child] = frozendict(
-                {
-                    role: tuple(sorted(by_role[role]))
-                    for role in sorted(by_role, key=lambda r: r.value)
-                }
-            )
+            grouped[child] = frozendict({role: tuple(sorted(by_role[role])) for role in sorted(by_role, key=lambda r: r.value)})
     return frozendict(grouped)
 
 
 def _jumper_groups(model: Model, rows: list[Id[Item]]) -> dict[Id[Item], int]:
     """Number the terminals `rows` (in row order) that `jumper` conductors bridge, from 1."""
+    sets = _bridge_sets(model, rows)
+    size: dict[Id[Item], int] = {}
+    for terminal in rows:
+        size[sets.find(terminal)] = size.get(sets.find(terminal), 0) + 1
+    number: dict[Id[Item], int] = {}
+    numbered: dict[Id[Item], int] = {}
+    for terminal in rows:
+        root = sets.find(terminal)
+        if size[root] < _GROUP_TERMINALS:
+            continue
+        numbered.setdefault(root, len(numbered) + 1)
+        number[terminal] = numbered[root]
+    return number
+
+
+def _bridge_sets(model: Model, rows: list[Id[Item]]) -> UnionFind[Id[Item]]:
+    """The terminals `rows`, unioned across every bridge conductor whose two ends are both in `rows`."""
     members = set(rows)
     sets = UnionFind(rows)
     for conductor in conductors(model).values():
@@ -80,42 +87,18 @@ def _jumper_groups(model: Model, rows: list[Id[Item]]) -> dict[Id[Item], int]:
         ends = (item_of_port(model, conductor.a), item_of_port(model, conductor.b))
         if ends[0] in members and ends[1] in members:
             sets.union(ends[0], ends[1])
-    size: dict[Id[Item], int] = {}
-    for terminal in rows:
-        size[sets.find(terminal)] = size.get(sets.find(terminal), 0) + 1
-    number: dict[Id[Item], int] = {}
-    numbered: dict[Id[Item], int] = {}
-    for terminal in rows:
-        root = sets.find(terminal)
-        if size[root] < 2:  # noqa: PLR2004 -- a group needs two terminals
-            continue
-        numbered.setdefault(root, len(numbered) + 1)
-        number[terminal] = numbered[root]
-    return number
+    return sets
 
 
-def _far_ends(  # noqa: PLR0913 -- one end's lookups, its unit and the list's context
-    model: Model,
-    idx: Indexes,
-    terminal: Id[Item],
-    role: PortRole,
-    landed: tuple[Id[Conductor], ...],
-    *,
-    unit: Id[Unit] | None,
-    context: Id[AspectNode] | None,
-) -> tuple[tuple[Id[Conductor], ...], tuple[str, ...]]:
-    """`landed` and the end each reaches from `terminal`'s ports of `role`, by `natural_key`.
-
-    An end is `""` when its item is outside the nested `unit`, so the tuples stay as long as
-    `landed`. Conductor and end stay paired; a tie on the printed end breaks on the conductor id.
-    """
-    near = {
+def _near_ports(model: Model, terminal: Id[Item], role: PortBoundary) -> set[Id[Port]]:
+    """`terminal`'s ports of `role`."""
+    idx = build_indexes(model)
+    return {
         port
         for function in idx.functions_by_item.get(terminal, ())
         for port in idx.ports_by_function.get(function, ())
-        if port_role(model, port) is role
+        if port_boundary(model, port) is role
     }
-    return far_ends(model, near, landed, unit=unit, context=context)
 
 
 def terminal_rows(
@@ -151,24 +134,18 @@ def terminal_rows(
     rows = []
     for child in children:
         by_role = conductors_by_role(model, idx, child)
-        internal, internal_ends = _far_ends(
-            model,
-            idx,
-            child,
-            PortRole.INTERNAL,
-            tuple(by_role.get(PortRole.INTERNAL, ())),
-            unit=unit,
-            context=context,
-        )
-        external, external_ends = _far_ends(
-            model,
-            idx,
-            child,
-            PortRole.EXTERNAL,
-            tuple(by_role.get(PortRole.EXTERNAL, ())),
-            unit=unit,
-            context=context,
-        )
+        ends = {
+            role: far_ends(
+                model,
+                _near_ports(model, child, role),
+                tuple(by_role.get(role, ())),
+                unit=unit,
+                context=context,
+            )
+            for role in (PortBoundary.INTERNAL, PortBoundary.EXTERNAL)
+        }
+        internal, internal_ends = ends[PortBoundary.INTERNAL]
+        external, external_ends = ends[PortBoundary.EXTERNAL]
         rows.append(
             TerminalRow(
                 terminal=child,
@@ -179,11 +156,11 @@ def terminal_rows(
                 external=external,
                 internal_ends=(
                     *internal_ends,
-                    *open_ends_at(model, child, PortRole.INTERNAL, unit=unit),
+                    *open_ends_at(model, child, PortBoundary.INTERNAL, unit=unit),
                 ),
                 external_ends=(
                     *external_ends,
-                    *open_ends_at(model, child, PortRole.EXTERNAL, unit=unit),
+                    *open_ends_at(model, child, PortBoundary.EXTERNAL, unit=unit),
                 ),
                 jumper_group=groups.get(child),
             )
@@ -273,8 +250,4 @@ def unused_terminals(model: Model, strip: Id[Item]) -> tuple[Id[Item], ...]:
     require(items(model).get(strip), "item", strip)
     idx = build_indexes(model)
     terminals = terminal_items(model)
-    return tuple(
-        child
-        for child in child_items(model, strip)
-        if child in terminals and not conductors_by_role(model, idx, child)
-    )
+    return tuple(child for child in child_items(model, strip) if child in terminals and not conductors_by_role(model, idx, child))

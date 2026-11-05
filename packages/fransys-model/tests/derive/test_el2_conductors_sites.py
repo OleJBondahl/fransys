@@ -14,6 +14,7 @@ from fransys_model.derive.bundles import bundles
 from fransys_model.derive.line_fact import draws_as_line, line_conductors
 from fransys_model.derive.loose import function_is_loose
 from fransys_model.derive.unused import (
+    function_is_idle_terminal,
     function_is_reached,
     function_is_unused,
     port_is_reached,
@@ -28,7 +29,7 @@ from fransys_model.derive.wiring import (
 from fransys_model.derive.wiring_ends import ends_without_jumpers, strip_side_headings
 from fransys_model.kernel import Id, Model, make_id
 from fransys_model.vocab.core import Port
-from fransys_model.vocab.enums import ConductorKind, FunctionKind, PortRole
+from fransys_model.vocab.enums import ConductorKind, FunctionKind, PortBoundary
 from fransys_model.vocab.facets.terminal import TerminalFacet
 from fransys_model.vocab.tables import functions, items, ports
 
@@ -41,10 +42,11 @@ EXPECTED_KEPT = [((), ("-K1:a",)), ((), ()), (("-K1:b",), ())]
 EXPECTED_HEADINGS = ("Side A", "Side B")
 EXPECTED_UNCONNECTED = ["t3.t3.ext"]
 EXPECTED_UNUSED_TERMINALS: list[str] = []
-EXPECTED_PORT_UNUSED = [False, False, False, True, False, False, False, False, False]
-EXPECTED_PORT_REACHED = [True, True, True, False, False, False, False, False, True]
+EXPECTED_PORT_UNUSED = [False, False, True, False, False, False, False, False, False]
+EXPECTED_PORT_REACHED = [False, True, False, False, True, False, False, True, True]
 EXPECTED_FUNCTION_UNUSED = [False, False, False, False]
-EXPECTED_FUNCTION_REACHED = [False, True, True, True]
+EXPECTED_FUNCTION_REACHED = [True, False, True, True]
+EXPECTED_IDLE_TERMINAL = [False, True, False, False]
 EXPECTED_LOOSE = [False, False, False, False]
 EXPECTED_ON_ITEM = {
     "t3": [("internal", ["w2"])],
@@ -69,20 +71,16 @@ def _strip_plant() -> tuple[Model, dict[str, Id[Any]]]:
     for index in (1, 2, 3):
         key = f"t{index}"
         item = plant.item(key, parent=strip)
-        plant.add(
-            TerminalFacet(
-                id=make_id(TerminalFacet, (key,)), key=(key,), subject=item, group="X", index=index
-            )
-        )
+        plant.add(TerminalFacet(id=make_id(TerminalFacet, (key,)), key=(key,), subject=item, group="X", index=index))
         function = plant.function(item, key, kind=FunctionKind.TERMINAL)
-        for name, role in (("int", PortRole.INTERNAL), ("ext", PortRole.EXTERNAL)):
+        for name, role in (("int", PortBoundary.INTERNAL), ("ext", PortBoundary.EXTERNAL)):
             port = Port(
                 id=make_id(Port, (key, key, name)),
                 key=(key, key, name),
                 function=function,
                 template=None,
                 name=name,
-                role=role,
+                boundary=role,
             )
             plant.add(port)
             ids[f"{key}.{name}"] = port.id
@@ -138,12 +136,10 @@ def test_unused_reached_and_unconnected_pin_the_jumper_exclusion() -> None:
     every_f = tuple(functions(model))
     assert [function_is_unused(model, f) for f in every_f] == EXPECTED_FUNCTION_UNUSED
     assert [function_is_reached(model, f) for f in every_f] == EXPECTED_FUNCTION_REACHED
+    assert [function_is_idle_terminal(model, f) for f in every_f] == EXPECTED_IDLE_TERMINAL
     assert [function_is_loose(model, f) for f in every_f] == EXPECTED_LOOSE
     on_item = conductors_on_item(model, ids["strip"])
-    got = {
-        ".".join(items(model)[i].key): [(r.value, _names(model, c)) for r, c in g.items()]
-        for i, g in on_item.items()
-    }
+    got = {".".join(items(model)[i].key): [(r.value, _names(model, c)) for r, c in g.items()] for i, g in on_item.items()}
     assert got == EXPECTED_ON_ITEM
 
 

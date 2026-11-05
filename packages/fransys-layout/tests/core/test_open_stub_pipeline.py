@@ -8,13 +8,17 @@ from __future__ import annotations
 from options_fixtures import core_options
 
 from fransys_layout.core import Box, Facts, PlacementProblem
+from fransys_layout.core.clearance import Keep
 from fransys_layout.core.route import route_pages
+from fransys_layout.core.route_fixed import Laid
+lazy from fransys_layout.core.outputs import Routes
 
+from .conftest import MARKER
 from .cut_fixtures import AREA, chain, elem
 from .pipeline_fixtures import cut_of, placed_from
 
-FOOT = ((24, 638), (24, 646))  # e1.s (S) out 8 G
-HEAD = ((1288, 26), (1288, 18))  # e2.n (N) out 8 G
+FOOT = ((432, 638), (432, 646))  # e1.s (S) out 8 G
+HEAD = ((864, 74), (864, 66))  # e2.n (N) out 8 G, under the 48 G the tag above it holds
 
 
 def tall_problem() -> PlacementProblem:
@@ -23,28 +27,23 @@ def tall_problem() -> PlacementProblem:
     return PlacementProblem(AREA, tuple(syms), tuple(chain([s.id for s in syms])), facts=Facts())
 
 
-def routed(open_stub: int, obstacles: tuple[Box, ...] = ()):
+def routed(open_stub: int, obstacles: tuple[Keep, ...] = ()):
     prob, opts = (
         tall_problem(),
         core_options(
             open_stub=open_stub,
-            flip_turn="R180",
-            tag_stagger=True,
-            label_gap=8,
-            parallel_pitch=48,
-            driver_first=True,
-            arrow_sides=("E", "W"),
+            marker=MARKER,
         ),
     )
     cut = cut_of(prob, opts)
-    return route_pages(placed_from(cut, prob, opts), cut, prob, opts, obstacles)
+    return route_pages(placed_from(cut, prob, opts), cut, prob, opts, Laid(obstacles))
 
 
-def stubs(routes) -> list[tuple[tuple[int, int], ...]]:
+def stubs(routes: Routes) -> list[tuple[tuple[int, int], ...]]:
     return sorted(w.points for p in routes.pages for w in p.wires if w.net == "x1")
 
 
-def length(routes) -> int:
+def length(routes: Routes) -> int:
     return sum(p.counts.length for p in routes.pages)
 
 
@@ -57,7 +56,7 @@ def test_no_stub_without_open_stub() -> None:
 
 
 def test_a_blocked_stub_target_is_drawn_and_counted_not_refused() -> None:
-    free, blocked = routed(8), routed(8, (Box(16, 640, 16, 16),))
+    free, blocked = routed(8), routed(8, (Keep("", Box(16, 640, 16, 16), "marker", "M"),))
     assert FOOT in stubs(blocked)
     assert blocked.failed == ()
     assert blocked.findings == ()

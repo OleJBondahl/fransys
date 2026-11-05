@@ -7,19 +7,12 @@ component (CLAUDE.md).
 from dataclasses import replace
 from typing import Any
 
+from fransys_model.elecdef import LinkKind
 from fransys_model.kernel import Draft, Id, Model, Origin, Record, freeze, make_id
 from fransys_model.vocab.aspects import AspectNode, Placement
-from fransys_model.vocab.connectivity import Conductor, Mate, Net
+from fransys_model.vocab.connectivity import Conductor, Mate, Net, RailGroup
 from fransys_model.vocab.core import Function, Item, Port
-from fransys_model.vocab.enums import (
-    Aspect,
-    ConductorKind,
-    FunctionKind,
-    LinkKind,
-    NetClass,
-    PartCategory,
-    PortRole,
-)
+from fransys_model.vocab.enums import Aspect, ConductorKind, FunctionKind, NetClass, PartCategory, PortBoundary
 from fransys_model.vocab.instantiate import PartBundle
 from fransys_model.vocab.project import Project
 from fransys_model.vocab.templates import (
@@ -69,13 +62,9 @@ def relay_part_bundle() -> PartBundle:
         kind=FunctionKind.CONTACT_CO,
     )
 
-    def port(
-        function: FunctionTemplate, name: str, role: PortRole = PortRole.GENERIC
-    ) -> PortTemplate:
+    def port(function: FunctionTemplate, name: str, role: PortBoundary = PortBoundary.GENERIC) -> PortTemplate:
         key = (*function.key, "port", name)
-        return PortTemplate(
-            id=make_id(PortTemplate, key), key=key, function=function.id, name=name, role=role
-        )
+        return PortTemplate(id=make_id(PortTemplate, key), key=key, function=function.id, name=name, boundary=role)
 
     a1, a2 = port(coil, "A1"), port(coil, "A2")
     p13, p14 = port(no_1, "13"), port(no_1, "14")
@@ -113,20 +102,6 @@ def bundle_records(bundle: PartBundle) -> tuple[Record, ...]:
         *bundle.function_templates,
         *bundle.port_templates,
         *bundle.internal_links,
-    )
-
-
-def terminal_block_part() -> Part:
-    """An invented feed-through terminal-block `Part` (strip `X03`)."""
-    key = ("examples", "terminal_block")
-    return Part(
-        id=make_id(Part, key),
-        key=key,
-        mpn="EXAMPLE-TB-1",
-        manufacturer="Example Co",
-        description="Invented example feed-through terminal block for tests",
-        category=PartCategory.TERMINAL,
-        class_code="X",
     )
 
 
@@ -222,7 +197,7 @@ def core_model() -> Model:
             function=coil,
             template=a1.id,
             name="A1",
-            role=PortRole.GENERIC,
+            boundary=PortBoundary.GENERIC,
         ),
         Port(
             id=port_a2,
@@ -230,7 +205,7 @@ def core_model() -> Model:
             function=coil,
             template=a2.id,
             name="A2",
-            role=PortRole.GENERIC,
+            boundary=PortBoundary.GENERIC,
         ),
         Port(
             id=housing_pin,
@@ -238,7 +213,7 @@ def core_model() -> Model:
             function=housing_j1,
             template=None,
             name="1",
-            role=PortRole.EXTERNAL,
+            boundary=PortBoundary.EXTERNAL,
         ),
         Net(
             id=net,
@@ -257,6 +232,7 @@ def core_model() -> Model:
             carrier=None,
         ),
         Mate(id=_key(Mate, "plant", "mate"), key=("plant", "mate"), a=housing_j1, b=board_j1),
+        RailGroup(id=_key(RailGroup, "plant", "rail"), key=("plant", "rail"), terminals=(board, housing)),
         AspectNode(
             id=location,
             key=("plant", "c1"),

@@ -3,24 +3,24 @@
 from dataclasses import replace
 from functools import cache
 from itertools import pairwise
+from typing import Any
 
-from diagram_models import chain
+from diagram_models import chain, diagram_facts
 
-from fransys_layout import lay_out_cables
+from electrical_symbols import LIBRARY
+from fransys_layout import DiagramLayout
 from fransys_layout.engines.diagram.read import read_diagrams
-from fransys_layout.engines.diagram.write import write_diagrams
 from fransys_layout.engines.overview.compose import place_diagram
 from fransys_layout.engines.overview.lanes.diagram_frame import build_frame
 from fransys_layout.engines.overview.sheet_values import BoxFacts, DiagramFacts, LineFacts
 from fransys_layout.engines.overview.sizes import MARKER_W, TEXT_LEAD, tab_reach
 from fransys_layout.geometry import WIRING_GRID, Facing
 from fransys_model.kernel import Id
-from fransys_model.layout import DiagramLine, DiagramMarker, layout_of
 
 TH = 8
 
 
-def _id(name: str) -> Id:
+def _id(name: str) -> Id[Any]:
     return Id(kind="item", value=name)
 
 
@@ -31,19 +31,6 @@ def _box(name: str) -> BoxFacts:
 def _line(a: str, b: str, tab_a: int | None = None, tab_b: int | None = None) -> LineFacts:
     cable = Id(kind="item", value=f"w-{a}{b}")
     return LineFacts(cable=cable, a=_id(a), b=_id(b), label_width=20, tab_a=tab_a, tab_b=tab_b)
-
-
-def _facts(boxes, lines, width: int = 1868, height: int = 1248) -> DiagramFacts:
-    return DiagramFacts(
-        unit=None,
-        boxes=tuple(boxes),
-        lines=tuple(lines),
-        text_height=TH,
-        turn_penalty=1,
-        crossing_penalty=1,
-        width=width,
-        height=height,
-    )
 
 
 def _place(facts: DiagramFacts):
@@ -58,7 +45,7 @@ def _lines(placed):
 
 def _star(leaves: int):
     names = [f"l{i}" for i in range(leaves)]
-    return _facts([_box("hub"), *(_box(n) for n in names)], [_line("hub", n) for n in names])
+    return diagram_facts([_box("hub"), *(_box(n) for n in names)], [_line("hub", n) for n in names])
 
 
 def _orthogonal(points) -> bool:
@@ -69,12 +56,12 @@ def _orthogonal(points) -> bool:
 def _cut():
     boxes = [_box(f"b{i}") for i in range(12)]
     lines = [_line(f"b{i}", f"b{i + 1}") for i in range(11)]
-    return _place(_facts(boxes, lines, width=600))
+    return _place(diagram_facts(boxes, lines, width=600))
 
 
 def test_a_straight_line_is_two_points_from_a_to_b():
     """Equal end y: no track, two points a to b; kills: a jog on a straight run, a/b swapped."""
-    placed = _place(_facts([_box("hub"), _box("a")], [_line("hub", "a")]))
+    placed = _place(diagram_facts([_box("hub"), _box("a")], [_line("hub", "a")]))
     line = _lines(placed)["w-huba"]
     boxes = {b.box.value: b for b in placed.sheets[0].boxes}
     assert len(line.points) == 2
@@ -86,7 +73,7 @@ def test_a_straight_line_is_two_points_from_a_to_b():
 
 def test_a_reversed_line_runs_from_a_all_the_same():
     """Line a to hub, with hub in the left column: points still start at a; kills: no reverse."""
-    placed = _place(_facts([_box("hub"), _box("a")], [_line("a", "hub")]))
+    placed = _place(diagram_facts([_box("hub"), _box("a")], [_line("a", "hub")]))
     boxes = {b.box.value: b for b in placed.sheets[0].boxes}
     first = _lines(placed)["w-ahub"].points[0]
     assert first.x == boxes["a"].x  # a is the right box; its west edge
@@ -123,7 +110,7 @@ def test_crossing_lines_take_distinct_tracks_and_no_vertical_runs_overlap():
 def test_a_same_column_line_detours_to_the_reserved_track():
     """Line a-b inside column 1 leaves both east edges for track count+1; kills: wrong track."""
     boxes = [_box("hub"), _box("a"), _box("b")]
-    facts = _facts(boxes, [_line("hub", "a"), _line("hub", "b"), _line("a", "b")])
+    facts = diagram_facts(boxes, [_line("hub", "a"), _line("hub", "b"), _line("a", "b")])
     placed = _place(facts)
     line = _lines(placed)["w-ab"]
     by = {b.box.value: b for b in placed.sheets[0].boxes}
@@ -140,8 +127,8 @@ def test_a_same_column_line_detours_to_the_reserved_track():
 
 
 def test_a_tab_moves_the_touch_point_out_and_is_placed_with_its_box():
-    """A 20 wide tab at hub: touch at the tab's outer edge, a PlacedTab E; kills: no tab."""
-    placed = _place(_facts([_box("hub"), _box("a")], [_line("hub", "a", tab_a=20)]))
+    """A 20 wide tab at hub: touch at the tab's outer edge, a DiagramTab E; kills: no tab."""
+    placed = _place(diagram_facts([_box("hub"), _box("a")], [_line("hub", "a", tab_a=20)]))
     hub = next(b for b in placed.sheets[0].boxes if b.box.value == "hub")
     line = _lines(placed)["w-huba"]
     (tab,) = hub.tabs
@@ -153,7 +140,7 @@ def test_a_tab_moves_the_touch_point_out_and_is_placed_with_its_box():
 
 
 def test_a_west_tab_is_on_the_west_side():
-    placed = _place(_facts([_box("hub"), _box("a")], [_line("hub", "a", tab_b=24)]))
+    placed = _place(diagram_facts([_box("hub"), _box("a")], [_line("hub", "a", tab_b=24)]))
     leaf = next(b for b in placed.sheets[0].boxes if b.box.value == "a")
     assert [(t.side, t.text_width) for t in leaf.tabs] == [(Facing.W, 24)]
     assert _lines(placed)["w-huba"].points[-1].x == leaf.x - tab_reach(24)
@@ -194,7 +181,7 @@ def test_a_cut_stub_ends_inside_its_zone():
 
 def test_a_label_sits_above_the_longest_horizontal_run():
     """Straight line: label centred over the run, one text lead above it; kills: label below."""
-    placed = _place(_facts([_box("hub"), _box("a")], [_line("hub", "a")]))
+    placed = _place(diagram_facts([_box("hub"), _box("a")], [_line("hub", "a")]))
     line = _lines(placed)["w-huba"]
     p, q = line.points
     assert line.text_x == (p.x + q.x) // 2 // WIRING_GRID * WIRING_GRID
@@ -203,20 +190,21 @@ def test_a_label_sits_above_the_longest_horizontal_run():
 
 
 def test_a_diagram_that_does_not_fit_is_none():
-    assert place_diagram(_facts([_box("a"), _box("b")], [_line("a", "b")], height=8)) is None
+    assert place_diagram(diagram_facts([_box("a"), _box("b")], [_line("a", "b")], height=8)) is None
 
 
 def test_the_same_facts_give_the_same_placement():
     assert _place(_star(3)) == _place(_star(3))
 
 
-def test_a_cut_chain_writes_as_records_with_matching_markers():
-    """write_diagrams accepts the cut placement: every marker finds its line on its sheet."""
-    (facts,) = read_diagrams(chain(12))
+def test_a_cut_chain_is_a_layout_with_matching_markers():
+    """DiagramLayout accepts the cut placement: every marker finds its line on its sheet."""
+    (facts,) = read_diagrams(chain(12), LIBRARY)
     placed = _place(replace(facts, width=600))
     assert len(placed.sheets) >= 2
-    model = write_diagrams(lay_out_cables(chain(12))[0], (placed,))
-    markers = layout_of(model, DiagramMarker)
+    layout = DiagramLayout(diagrams=(placed,))
+    markers = [m for s in layout.diagrams[0].sheets for m in s.markers]
     assert len(markers) == 2 * (len(placed.sheets) - 1)
-    lines = layout_of(model, DiagramLine)
-    assert all(m.line in lines for m in markers.values())
+    for sheet in placed.sheets:
+        lines = {(ln.cable, ln.a, ln.b) for ln in sheet.lines}
+        assert all((m.cable, m.a, m.b) in lines for m in sheet.markers)

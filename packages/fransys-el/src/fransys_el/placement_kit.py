@@ -4,14 +4,14 @@ The caller picks each function's symbol once (el-0002); the builder never choose
 """
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, NoReturn, Protocol
+from typing import TYPE_CHECKING, NoReturn
 
 lazy from fransys_model.kernel import Id
 
 if TYPE_CHECKING:
     from fransys_model.vocab import Function, Port
 
-__all__ = ["Pick", "ProblemError", "Rect", "SymbolKit", "refuse"]
+__all__ = ["Pick", "PortMissingError", "ProblemError", "SymbolKit", "refuse"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -46,19 +46,16 @@ class ProblemError(ValueError):
         self.key = key
 
 
+class PortMissingError(ProblemError):
+    """A model port that has no free port on the symbol chosen for its function (SYMBOL_PORT_MISSING)."""
+
+    def __init__(self, function: Id[Function], port_name: str, symbol: str, key: str | None) -> None:
+        super().__init__(f"function {function} port {port_name}", f"no free port on symbol {symbol}", key)
+        self.function = function
+        self.port_name = port_name
+        self.symbol = symbol
+
+
 def refuse(subject: str, fix: str, key: str | None = None) -> NoReturn:
     """Raise `ProblemError` for `subject` with the `fix`; `key` is the symbol id of the thing."""
     raise ProblemError(subject, fix, key)
-
-
-class Rect(Protocol):
-    """Any box with an origin and a size: a geometry box or a measured extent."""
-
-    @property
-    def x(self) -> int: ...
-    @property
-    def y(self) -> int: ...
-    @property
-    def width(self) -> int: ...
-    @property
-    def height(self) -> int: ...

@@ -1,14 +1,15 @@
 """A series between two functions with no line side pairs their pins in pin order (C6.2)."""
 
+from typing import Any
+
 import pytest
+from author_catalogue import _ORIGIN, _function, _library, _part
 from fransys_author import AuthorError
 from fransys_author.surface import design
+from series_parts import series_library
 
 from fransys_model.kernel import Draft, make_id
-from fransys_model.vocab import Conductor, FunctionKind, PartCategory, PortRole, PortTemplate
-
-from ..conftest import _ORIGIN, _function, _library, _part  # noqa: TID252 -- importlib mode puts tests/ on no path
-from ..equivalence.series_parts import series_library  # noqa: TID252 -- importlib mode puts tests/ on no path
+from fransys_model.vocab import Conductor, FunctionKind, PartCategory, PortBoundary, PortTemplate
 
 WIRE = ("BK", 0.75)
 # (mpn, [(name, marking)] in the part file's order)
@@ -39,7 +40,7 @@ def lib() -> Draft:
                     key=key,
                     function=fn.id,
                     name=name,
-                    role=PortRole.GENERIC,
+                    boundary=PortBoundary.GENERIC,
                     marking=marking,
                 ),
                 origin=_ORIGIN,
@@ -47,11 +48,11 @@ def lib() -> Draft:
     return draft
 
 
-def _wires(d) -> set[frozenset]:
+def _wires(d) -> set[frozenset[Any]]:
     return {frozenset((r.a, r.b)) for r in d.draft().records() if isinstance(r, Conductor)}
 
 
-def _pairs(a, b, names: list[tuple[str, str]]) -> set[frozenset]:
+def _pairs(a, b, names: list[tuple[str, str]]) -> set[frozenset[Any]]:
     return {frozenset((a[x].id, b[y].id)) for x, y in names}
 
 

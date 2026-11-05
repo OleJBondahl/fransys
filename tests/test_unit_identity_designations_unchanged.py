@@ -2,20 +2,9 @@
 
 Unit identity only stops the board's root tag printing on its own set (model-0061); it changes
 neither `item_designation` nor `printed_designation`, and `board_netlist` keeps its path. Proven on
-the units worked example (the same board the units spec built): the children print unit-relative
-exactly as at v0.3.0 (`-X1`, `-K1`; the values below are the v0.3.0 ones, measured by
-building `_build_system()` at base commit `73fd159`, before this change, and equal on this branch),
-the root still prints `-U1`
-everywhere but the board's own BOM and designation rows, and the board's KiCad netlist is the text
-`test_units_worked_example.py::test_step_4b_the_kicad_netlist_of_the_board_is_board_relative`
-already pins verbatim.
 """
+# CONNECTION_NOT_DRAWN 4 per default-salt build set (MATES-DISABLED): mated, harness or board-unit input, refused for 0.22 (R1216).
 
-import sys
-from pathlib import Path
-
-# `--import-mode=importlib` (root pyproject.toml) never puts `tests/` on `sys.path`.
-sys.path.insert(0, str(Path(__file__).resolve().parent))
 from test_units_worked_example import _build_system
 
 from fransys_model.derive import (

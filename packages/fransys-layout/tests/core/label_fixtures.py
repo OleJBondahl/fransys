@@ -2,7 +2,6 @@
 
 A body is 16 by 32 with its origin at the centre top, a label is 16 by 8 and the marker is
 48 by 16 (Options.marker, MARKER_BOX).
-core_options(marker=MARKER) applies. Symbol (x, y) has body Box(x-8, y-16, 16, 32).
 """
 
 from __future__ import annotations
@@ -23,17 +22,17 @@ from fransys_layout.core import (
     PlacementProblem,
     Size,
     Sym,
-    place_annexes,
 )
+from fransys_layout.core.annex import place_labels
+from fransys_layout.core.geometry import marker_drawn_box
 from fransys_layout.core.outputs import (
-    Annotations,
+    Anchored,
     Counts,
     Marker,
     PagePlacement,
     PageRoutes,
     Placed,
     Routes,
-    Table,
     Wire,
 )
 from fransys_layout.core.values import Finding, RefKind
@@ -44,36 +43,29 @@ from .pipeline_fixtures import with_annexes
 
 @dataclass(frozen=True, slots=True)
 class LabelCase:
-    """The inputs of place_annexes, all on page 1; the annexes are el's, one per symbol."""
+    """The inputs of place_labels, all on page 1; the annexes are el's, one per symbol."""
 
     placement: Placement
     routes: Routes
     markers: tuple[Marker, ...]
-    tables: tuple[Table, ...]
+    anchored: tuple[Anchored, ...]
     problem: PlacementProblem
 
-    def run(
-        self, options: Options | None = None
-    ) -> tuple[tuple[AnnexBox, ...], tuple[Finding, ...]]:
-        """place_annexes on this case with the designation annexes `options` gives."""
+    def run(self, options: Options | None = None) -> tuple[tuple[AnnexBox, ...], tuple[Finding, ...]]:
+        """place_labels on this case with the designation annexes `options` gives: the markers and anchors are solids."""
         opts = options or bl_first_options()
-        return place_annexes(
-            self.placement,
-            self.routes,
-            Annotations(markers=self.markers, tables=self.tables),
-            with_annexes(self.problem, opts),
-            opts,
-        )
+        problem = with_annexes(self.problem, opts)
+        wires = tuple(w for r in self.routes.pages for w in r.wires)
+        solids = [marker_drawn_box(m, opts) for m in self.markers] + [a.outline for a in self.anchored]
+        placed_by = {p.sym: p for p in self.placement.pages[0].placed}
+        labels, found, _ = place_labels(problem.annexes, placed_by, (wires, solids), (1, problem.area, opts.label_gap, opts.label_moves))
+        return tuple(labels), tuple(found)
 
 
 def house_options(*, label_gap: int = 8, **fields: Any) -> Options:
     """Options with the house defaults for a label case; `fields` overrides any of them."""
     return core_options(
         marker=MARKER,
-        flip_turn="R180",
-        tag_stagger=True,
-        driver_first=True,
-        arrow_sides=("E", "W"),
         label_gap=label_gap,
         **fields,
     )
@@ -117,14 +109,14 @@ def _case(
     *,
     wires: tuple[Wire, ...] = (),
     markers: tuple[Marker, ...] = (),
-    tables: tuple[Table, ...] = (),
+    anchored: tuple[Anchored, ...] = (),
 ) -> LabelCase:
     """Page 1 with the symbols placed at the given (id, x, y) and the given wires and markers."""
     placed_all = tuple(placed(sid, x, y) for sid, x, y in at)
     page = PagePlacement(1, placed_all, (), (), (), ())
-    routes = Routes((PageRoutes(1, wires, (), Counts(0, 0, 0, 0, 0)),))
+    routes = Routes((PageRoutes(1, wires, (), Counts(0, 0, 0, 0), (), (), ()),))
     problem = PlacementProblem(Size(400, 300), syms, (), facts=Facts())
-    return LabelCase(Placement((page,)), routes, markers, tables, problem)
+    return LabelCase(Placement((page,)), routes, markers, anchored, problem)
 
 
 def lone() -> LabelCase:
@@ -143,19 +135,16 @@ def colliding_neighbours() -> LabelCase:
 
     S1 at (88, 96) has body Box(80, 80, 16, 32) and first candidate Box(80, 112, 16, 8).
     S2 at (88, 64) has body Box(80, 48, 16, 32): the bodies touch at y 80 and do not overlap.
-    S2's first candidate is Box(80, 80, 16, 8), inside S1's body, so it is not free.
-    Two BL labels of equal size cannot overlap without their bodies overlapping, so a label
-    collision needs another shape; this case tests the move off a body.
     """
     return _case((sym("S1"), sym("S2")), (("S1", 88, 96), ("S2", 88, 64)))
 
 
 def dense() -> LabelCase:
-    """Three symbols in a row at y 96 (bodies x 80, 132, 184) and a table covering the page."""
+    """Three symbols in a row at y 96 (bodies x 80, 132, 184) and an anchored outline covering the page."""
     syms = (sym("S1"), sym("S2"), sym("S3"))
     at = (("S1", 88, 96), ("S2", 140, 96), ("S3", 192, 96))
-    table = Table("K1", 1, (), Box(0, 0, 400, 300), 0)
-    return _case(syms, at, tables=(table,))
+    cover = Anchored("S1", "p", 1, 0, 0, "R0", Box(0, 0, 400, 300), (0, 0), ((0, 0), (0, 0)))
+    return _case(syms, at, anchored=(cover,))
 
 
 def marker_over_candidate() -> LabelCase:

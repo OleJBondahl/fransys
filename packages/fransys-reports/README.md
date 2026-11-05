@@ -1,3 +1,5 @@
+# fransys-reports
+
 Fransys output: derive rows formatted as CSV.
 
 Output contract: pure function of a Model returning str, bytes or a tuple of pages. No file I/O, no clock, no randomness. Same model digest, same bytes.

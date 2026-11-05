@@ -6,6 +6,7 @@ Cached on `model.digest`, like `vocab.closure`; the index holds ids only.
 
 import dataclasses
 from collections import deque
+lazy from collections.abc import Iterable
 
 from fransys_model.derive.facts.children import parent_item, unit_parent
 from fransys_model.derive.facts.item_predicates import cable_items
@@ -13,6 +14,7 @@ from fransys_model.kernel import DIGEST_CACHE_SIZE, Model, digest_cached, index_
 from fransys_model.vocab.facets.pcb import PcbFacet
 from fransys_model.vocab.tables import HasTables, boundaries, facets_of, items
 from fransys_model.vocab.tables import units as units_table
+lazy from fransys_model.derive.order_authoring import functions_by_authoring_key
 lazy from fransys_model.kernel import Id
 lazy from fransys_model.vocab.core import Function, Item, Unit
 lazy from fransys_model.vocab.templates import Part
@@ -56,6 +58,11 @@ class UnitIndex:
     containing: frozendict[Id[Unit], frozenset[Id[Unit]]]
     # Each unit -> the functions of its `Boundary` records, once each in `Id` order; `()` if none.
     boundary_of: frozendict[Id[Unit], tuple[Id[Function], ...]]
+    # Each unit, or `None` for the top level -> the items whose `unit` is exactly it, in `Id`
+    # order; no entry when it has none (`items_of` is the whole subtree).
+    own_items: frozendict[Id[Unit] | None, tuple[Id[Item], ...]]
+    # Each unit, or `None` for the top level -> the units whose `parent` is it, in `Id` order.
+    child_units: frozendict[Id[Unit] | None, tuple[Id[Unit], ...]]
 
 
 def _external_items(model: HasTables, all_items: frozendict[Id[Item], Item]) -> frozenset[Id[Item]]:
@@ -83,9 +90,7 @@ def _external_items(model: HasTables, all_items: frozendict[Id[Item], Item]) -> 
     return frozenset(item_id for item_id, is_external in verdict.items() if is_external)
 
 
-def _own_roots(
-    model: HasTables, all_items: frozendict[Id[Item], Item], external: frozenset[Id[Item]]
-) -> dict[Id[Unit], list[Id[Item]]]:
+def _own_roots(model: HasTables, all_items: frozendict[Id[Item], Item], external: frozenset[Id[Item]]) -> dict[Id[Unit], list[Id[Item]]]:
     """Each unit -> its items whose parent is in no unit or another unit, external ones left out."""
     roots: dict[Id[Unit], list[Id[Item]]] = {}
     for record in all_items.values():
@@ -109,12 +114,10 @@ def _containing(
     return frozendict({unit: frozenset(holders) for unit, holders in above.items()})
 
 
-def _boundary_of(
-    model: HasTables, all_units: frozendict[Id[Unit], Unit]
-) -> frozendict[Id[Unit], tuple[Id[Function], ...]]:
-    """Each unit -> its boundary functions, one pass over the `Boundary` table."""
+def _boundary_of(model: HasTables, all_units: frozendict[Id[Unit], Unit]) -> frozendict[Id[Unit], tuple[Id[Function], ...]]:
+    """Each unit -> its boundary functions by authoring key, one pass over the `Boundary` table."""
     grouped = index_ids({(record.unit, record.function) for record in boundaries(model).values()})
-    return frozendict({unit: grouped.get(unit, ()) for unit in all_units})
+    return frozendict({unit: functions_by_authoring_key(model, grouped.get(unit, ())) for unit in all_units})
 
 
 def boundary_unit(model: Model, boundary: Id[Boundary]) -> Id[Unit]:
@@ -131,6 +134,16 @@ def boundary_owners(model: HasTables) -> frozendict[Id[Function], tuple[Id[Unit]
     return frozendict({function: tuple(owners) for function, owners in found.items()})
 
 
+def _group_by_unit[K](
+    pairs: Iterable[tuple[Id[Unit] | None, Id[K]]],
+) -> frozendict[Id[Unit] | None, tuple[Id[K], ...]]:
+    """`pairs` grouped by first element, `None` a key (`index_ids` sorts keys); members sorted."""
+    grouped: dict[Id[Unit] | None, list[Id[K]]] = {}
+    for key, member in pairs:
+        grouped.setdefault(key, []).append(member)
+    return frozendict({key: tuple(found) for key, found in grouped.items()})
+
+
 @digest_cached(DIGEST_CACHE_SIZE)
 def unit_index(model: HasTables) -> UnitIndex:
     """The `UnitIndex` of `model`, built once per digest and kept for the last few models.
@@ -139,33 +152,23 @@ def unit_index(model: HasTables) -> UnitIndex:
     """
     all_units = units_table(model)
     all_items = items(model)
-    children = index_ids(
-        (parent, unit) for unit in all_units if (parent := unit_parent(model, unit)) is not None
-    )
-    subtree_of = {unit: frozenset({unit, *descendants(children, unit)}) for unit in all_units}
+    children = _group_by_unit((unit_parent(model, unit), unit) for unit in all_units)
+    below_of = frozendict({unit: kids for unit, kids in children.items() if unit is not None})
+    subtree_of = {unit: frozenset({unit, *descendants(below_of, unit)}) for unit in all_units}
 
     external = _external_items(model, all_items)
-    by_unit = index_ids(
-        (record.unit, record.id) for record in all_items.values() if record.unit is not None
-    )
+    by_unit = _group_by_unit((record.unit, record.id) for record in all_items.values())
     roots = _own_roots(model, all_items, external)
     cable_items_ = cable_items(model)
-    cables = index_ids(
-        (parent, item)
-        for item in all_items
-        if item in cable_items_ and (parent := parent_item(model, item)) is not None
-    )
+    cables = index_ids((parent, item) for item in all_items if item in cable_items_ and (parent := parent_item(model, item)) is not None)
 
     return UnitIndex(
         containing=_containing(subtree_of),
         boundary_of=_boundary_of(model, all_units),
         subtree_of=frozendict(subtree_of),
-        items_of=frozendict(
-            {
-                unit: frozenset(item for below in subtree for item in by_unit.get(below, ()))
-                for unit, subtree in subtree_of.items()
-            }
-        ),
+        items_of=frozendict({unit: frozenset(item for below in subtree for item in by_unit.get(below, ())) for unit, subtree in subtree_of.items()}),
+        own_items=by_unit,
+        child_units=children,
         external=external,
         own_roots=frozendict({unit: tuple(roots.get(unit, ())) for unit in all_units}),
         cable_children=cables,

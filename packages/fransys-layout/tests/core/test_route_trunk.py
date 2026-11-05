@@ -4,32 +4,30 @@ from __future__ import annotations
 
 from dataclasses import replace
 from itertools import permutations
+from typing import Any
 
 import pytest
 from options_fixtures import core_options
 
 from fransys_layout.core import Box, PinRef
+from fransys_layout.core.arrow_reserve import leg_lines
+from fransys_layout.core.errors import CoreError
+from fransys_layout.core.flow_values import Attach, Fan
 from fransys_layout.core.outputs import PinXY, Placed, Trunk, Wire
+from fransys_layout.core.route import route_page
 from fransys_layout.core.route_counts import collinear, counts
-from fransys_layout.core.route_env import RouteEnv
-from fransys_layout.core.route_trunk import TrunkError, drop_kind, trunk_wires
+from fransys_layout.core.route_env import RouteEnv, body_hit
+from fransys_layout.core.route_trunk import Line, TrunkError, _leg_wires, drop_kind, trunk_wires
 from fransys_layout.core.score_wiring import bundles
-from fransys_layout.core.values import Attach, Fan
 
 from .conftest import MARKER
 from .cycle_fixtures import acyclic_problem
 from .pipeline_fixtures import cut_of
 from .place_fixtures import all_pins, bundle_fan
-from .route_fixtures import envs_of, inherent, overlaps, own_crossings, reversing_pair, with_crossed
+from .route_fixtures import envs_of, inherent, link_env, overlaps, own_crossings, reversing_pair, with_crossed
 
 STEP = core_options(
     marker=MARKER,
-    flip_turn="R180",
-    tag_stagger=True,
-    label_gap=8,
-    parallel_pitch=48,
-    driver_first=True,
-    arrow_sides=("E", "W"),
 ).wiring_grid
 FULL = (2, 1, 0)
 
@@ -117,7 +115,7 @@ def synthetic(  # noqa: PLR0913 - a fixture builder; each knob is keyword-only
     n, ty = len(perm), 100
     pin_y = ty - 2 * grid * n if above else ty + 2 * grid * n
     pins = tuple(PinXY(f"n{p}", xs[p], pin_y) for p in range(n) if p != skip)
-    box = Box(min(xs) - 4, pin_y - 4, max(xs) - min(xs) + 8, 8)
+    box = Box(min(xs) - 4, pin_y - 8 if above else pin_y, max(xs) - min(xs) + 8, 8)  # behind the pins
     placed = {"K": Placed("K", 1, min(xs), pin_y, "R0", box, box, pins)}
     at = columns or tuple(range(n))
     atts = tuple(Attach("c:K", at[p], 0, PinRef("K", f"n{p}"), p, net="n") for p in range(n))
@@ -148,12 +146,6 @@ def synthetic(  # noqa: PLR0913 - a fixture builder; each knob is keyword-only
         replace(
             core_options(
                 marker=MARKER,
-                flip_turn="R180",
-                tag_stagger=True,
-                label_gap=8,
-                parallel_pitch=48,
-                driver_first=True,
-                arrow_sides=("E", "W"),
             ),
             wiring_grid=grid,
         ),
@@ -174,9 +166,7 @@ def lanes_reached(wires: list[Wire], pin_y: int, xs: list[int]) -> dict[int, int
 @pytest.mark.parametrize("n", [3, 4])
 @pytest.mark.parametrize("above", [False, True], ids=["legs", "drivers"])
 @pytest.mark.parametrize("mirrored", [False, True], ids=["poles-rightward", "poles-leftward"])
-def test_every_permutation_draws_square_without_overlap_and_crosses_only_where_inverted(
-    n: int, *, above: bool, mirrored: bool
-) -> None:
+def test_every_permutation_draws_square_without_overlap_and_crosses_only_where_inverted(n: int, *, above: bool, mirrored: bool) -> None:
     xs = [100 + 24 * (n - 1 - p if mirrored else p) for p in range(n)]
     for perm in permutations(range(n)):
         env, trunk, pin_y = synthetic(perm, xs, above=above)
@@ -187,23 +177,20 @@ def test_every_permutation_draws_square_without_overlap_and_crosses_only_where_i
         assert own_crossings_of(wires) == inherent(xs, perm), perm
         assert not overlaps_of(wires), perm
         levels = [a[1] for a, b in runs if a[1] == b[1]]
-        assert all(
-            pin_y < y <= trunk.y - STEP if above else trunk.y + STEP * n <= y < pin_y
-            for y in levels
-        ), perm
+        assert all(pin_y < y <= trunk.y - STEP if above else trunk.y + STEP * n <= y < pin_y for y in levels), perm
 
 
 def own_crossings_of(wires: list[Wire]) -> int:
     from fransys_layout.core.outputs import Counts, PageRoutes, Routes
 
-    page = PageRoutes(1, tuple(wires), (), Counts(0, 0, 0, 0, 0))
+    page = PageRoutes(1, tuple(wires), (), Counts(0, 0, 0, 0), (), (), ())
     return own_crossings(Routes((page,)))
 
 
-def overlaps_of(wires: list[Wire]) -> list:
+def overlaps_of(wires: list[Wire]) -> list[Any]:
     from fransys_layout.core.outputs import Counts, PageRoutes, Routes
 
-    page = PageRoutes(1, tuple(wires), (), Counts(0, 0, 0, 0, 0))
+    page = PageRoutes(1, tuple(wires), (), Counts(0, 0, 0, 0), (), (), ())
     return overlaps(Routes((page,)))
 
 
@@ -230,7 +217,12 @@ def crossed_env(*, lower: int) -> tuple[RouteEnv, Trunk]:
     cut = with_crossed(cut_of(prob), "f:bL", (("K2", FULL),))
     (env,) = envs_of(prob, cut=cut)
     k2 = env.placed["K2"]
-    moved = replace(k2, pin_xy=tuple(replace(q, y=q.y + lower) for q in k2.pin_xy))
+    moved = replace(
+        k2,
+        pin_xy=tuple(replace(q, y=q.y + lower) for q in k2.pin_xy),
+        body=replace(k2.body, y=k2.body.y + lower),
+        footprint=replace(k2.footprint, y=k2.footprint.y + lower),
+    )  # the body goes with its pins: a drop from a pin inside a body is a rise (R1290 ii)
     env = replace(env, placed={**env.placed, "K2": moved})
     return env, trunk_of(env, "f:bL")
 
@@ -244,14 +236,14 @@ def test_a_reversing_pair_through_the_stages_draws_its_inherent_crossings() -> N
     assert not overlaps_of(drops)
 
 
-def test_a_crossed_trunk_with_no_room_for_its_levels_is_a_finding_and_draws_nothing() -> None:
+def test_a_crossed_trunk_with_no_room_for_its_levels_loses_each_drop_and_draws_nothing() -> None:
     """Stage 5 now leaves grid * (3 + 2); K2 raised by two steps leaves the lanes' share only."""
     env, trunk = crossed_env(lower=-2 * STEP)
     drawn = trunk_wires(env, trunk)
-    (finding,) = drawn.findings
-    assert (finding.code, finding.subject) == ("ROUTE_FAILED", "K2")
-    assert "crossed" in finding.text
-    assert "stage 5" in finding.text
+    assert drawn.findings == ()
+    assert drawn.lost
+    assert {r.ends[0].sym for r in drawn.lost if r.ends} == {"K2"}
+    assert all(r.ends is not None and len(r.ends) == 1 for r in drawn.lost)
     assert not [w for w in drawn.wires if w.points[0] in k2_pins(env)]
 
 
@@ -259,9 +251,7 @@ def k2_pins(env: RouteEnv) -> set[tuple[int, int]]:
     return {(q.x, q.y) for q in env.placed["K2"].pin_xy}
 
 
-def drawn_with_trunk(
-    perm: tuple[int, ...], xs: list[int], *, above: bool
-) -> tuple[RouteEnv, list[Wire]]:
+def drawn_with_trunk(perm: tuple[int, ...], xs: list[int], *, above: bool) -> tuple[RouteEnv, list[Wire]]:
     """The whole bundle of `synthetic` (trunk line and drops) and the env it came from."""
     env, trunk, _ = synthetic(perm, xs, above=above)
     return env, list(trunk_wires(env, trunk).wires)
@@ -315,6 +305,12 @@ def test_a_pole_beyond_the_bundles_nets_raises_naming_the_bundle() -> None:
         trunk_wires(short, trunk)
 
 
+def test_a_trunk_with_no_fan_in_the_flow_raises_naming_the_fan_and_the_fix() -> None:
+    env, trunk, _ = synthetic((0, 1, 2), [100, 124, 148], above=False)
+    with pytest.raises(CoreError, match=r"trunk of fan f:b has no fan in the flow, so it is not drawn: report it"):
+        trunk_wires(replace(env, fans={}), trunk)
+
+
 def _runs_without_length(wires: list[Wire]) -> list[Wire]:
     return [w for w in wires if any(a == b for a, b in zip(w.points, w.points[1:], strict=False))]
 
@@ -330,3 +326,46 @@ def test_a_trunk_with_one_x_draws_no_line_of_no_length_and_still_its_drops(perm)
         wires = list(trunk_wires(replace(env, trunks=(t,)), t).wires)
         assert [w for w in wires if w.kind != "trunk"]
         assert _runs_without_length(wires) == []
+
+
+@pytest.mark.parametrize("lanes", [1, 3])
+def test_a_rise_from_a_pin_off_the_wiring_grid_reaches_its_lane_line(lanes: int) -> None:
+    """KI-199: the pin stands at x 42, a foreign body under it; the last lane's line takes the rise at that x."""
+    env = link_env({"p": (42, 16, "S"), "f": (42, 40, "N")}, {})
+    nets = ("a", "b", "c")[:lanes]
+    fan = Fan("f1", nets, (Attach(None, 0, 0, PinRef("p", "p"), pole=lanes - 1, net="n"),), (), None, lanes, "S")
+    trunk = Trunk("f1", 1, 72, 24, 80, lanes, 0, ((24, 80),) * lanes)
+    env = replace(env, fans={"f1": fan}, trunks=(trunk,), bands=((0, 120),))
+    page, _, _ = route_page(env)
+    y = 72 + (lanes - 1) * STEP
+    rise = next(w for w in page.wires if w.kind == "riser")
+    assert rise.points[0] == (42, 16)
+    assert rise.points[-1] == (42, y)
+
+
+def test_an_uncrossed_drop_of_a_crossed_bundle_through_a_foreign_body_is_a_rise_for_the_router() -> None:
+    """R1290 (ii), KI-394: crossed_drops asks the same keepout test as every drop; a body in the way sends the drop to A*."""
+    env, trunk = crossed_env(lower=3 * STEP)
+    assert not trunk_wires(env, trunk).rises, "control: nothing stands in the way"
+    wall = replace(env.placed["K1"], sym="Z", body=Box(0, 90, 2000, 8), footprint=Box(0, 90, 2000, 8), pin_xy=())
+    drawn = trunk_wires(replace(env, placed={**env.placed, "Z": wall}), trunk)
+    assert drawn.rises
+
+
+def test_a_one_sided_pins_leg_stands_clear_of_every_body_because_leg_lines_places_it_around_them() -> None:
+    """R1632, KI-626: leg_lines places each leg once around the page footprints, so _leg_wires needs no body test of its own."""
+    env, trunk = crossed_env(lower=3 * STEP)
+    fan, wall = env.fans[trunk.fan], Box(820, 70, 30, 10)
+    pin = fan.drivers[0].pin
+    placed = {
+        **env.placed,
+        "Z": replace(env.placed["K1"], sym="Z", body=wall, footprint=Box(wall.x - 4, wall.y - 4, wall.w + 8, wall.h + 8), pin_xy=()),
+    }
+
+    def hits(feet: list[Box]) -> list[bool]:
+        lines = leg_lines([trunk], {fan.id: fan}, {pin: trunk.row}, env.options, (feet, {}, None))
+        e = replace(env, placed=placed, legs={pin: trunk.row}, leg_lines=lines)
+        return [body_hit(e, w.net, w.points) is not None for w in _leg_wires(e, Line(fan, trunk, fan.id, STEP))]
+
+    assert hits([p.footprint for p in env.placed.values()]) == [True], "control: a leg placed blind to the wall runs through it"
+    assert hits([p.footprint for p in placed.values()]) == [False]

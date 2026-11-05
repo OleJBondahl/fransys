@@ -3,9 +3,9 @@
 from graphlib import CycleError, TopologicalSorter
 
 from fransys_model.derive.order import order_hint_key
-from fransys_model.kernel import Finding, Model, Severity
 from fransys_model.layout import OrderHint, layout_of
-from fransys_model.vocab.codes import ORDER_HINT_CYCLE, fix_text
+from fransys_model.vocab.codes import ORDER_HINT_CYCLE, finding
+lazy from fransys_model.kernel import Finding, Model
 
 __all__ = ["check_order_hint_cycle"]
 
@@ -25,11 +25,9 @@ def check_order_hint_cycle(model: Model) -> tuple[Finding, ...]:
     ring = sorted((h for h in hints if h.before in loop and h.after in loop), key=order_hint_key)
     places = ", ".join(f"{model.origins[h.id].file}:{model.origins[h.id].line}" for h in ring)
     return (
-        Finding(
-            code=ORDER_HINT_CYCLE,
-            severity=Severity.ERROR,
-            subjects=tuple(h.id for h in ring),
-            message=f"order hints contradict each other in a cycle ({places})",
-            fix=fix_text(ORDER_HINT_CYCLE),
+        finding(
+            ORDER_HINT_CYCLE,
+            tuple(h.id for h in ring),
+            f"order hints contradict each other in a cycle ({places})",
         ),
     )

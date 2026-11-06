@@ -7,14 +7,14 @@ build's correctness code is asserted here, so `finding_rise` anchors it without 
 import importlib
 import os
 
-REFUSED: list[object] = []  # builds that showed MATES_DISABLED; conftest fails the test unless it asserts the refusal
+REFUSED: list[object] = []  # builds that showed MATES_DISABLED or SCREEN_DISABLED; conftest fails the test unless it asserts the refusal
 
 
 def expect_codes(result, *codes: str) -> None:
     """Assert that `result` (a `fr.build` result) shows every code in `codes`; the sweep reads the call."""
     shown = sorted({f.code for f in result.findings})
     missing = sorted(set(codes) - set(shown))
-    if "MATES_DISABLED" in codes:
+    if {"MATES_DISABLED", "SCREEN_DISABLED"} & set(codes):
         REFUSED.clear()
     assert not missing, f"the build does not show {missing}; it shows {shown}"
     if "REL_SWEEP_RECORD" in os.environ:

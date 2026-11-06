@@ -42,6 +42,6 @@ def test_an_untagged_block_cannot_print_before_0_18_2_and_is_marked_unprintable(
 
 
 def test_a_listing_below_version_5_has_no_rules():
-    assert baseline.listing_rules(5, "0.19.10") is None
+    assert baseline.listing_rules(6, "0.19.10") is None
     assert baseline.listing_rules(1, "0.19.8") is None
-    assert baseline.listing_rules(6, "0.19.10") == baseline.ListingRules()
+    assert baseline.listing_rules(7, "0.19.10") == baseline.ListingRules()

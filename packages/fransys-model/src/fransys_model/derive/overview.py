@@ -7,9 +7,9 @@ from typing import TYPE_CHECKING
 
 from fransys_model.derive.facts.units import unit_items
 from fransys_model.kernel import DIGEST_CACHE_SIZE, Model, digest_cached
-from fransys_model.vocab.tables import conductors, functions, items, mates, parts, ports
+from fransys_model.vocab.tables import conductors, functions, items, mates, parts
 
-from .designation import printed_designation
+from .designation import port_marking, printed_designation
 from .designation_label import designation_holder, own_designation_or_none
 from .facts.closure import physical_nets
 from .lookups import (
@@ -150,7 +150,7 @@ def _signals(model: Model) -> tuple[OverviewSignal, ...]:
                 OverviewPort(
                     item=item_of_port(model, port),
                     port=port,
-                    marking=ports(model)[port].name,
+                    marking=port_marking(model, port),
                 )
                 for port in net.ports
             ),

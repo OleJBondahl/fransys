@@ -125,7 +125,6 @@
 "fransys_model.derive.finding_names::kind" = 5
 "fransys_model.derive.group_role::net_class" = 1
 "fransys_model.derive.group_role::parent" = 1
-"fransys_model.derive.harness::core_colours" = 1
 "fransys_model.derive.harness::unit" = 8
 "fransys_model.derive.harness_blocks::unit" = 1
 "fransys_model.derive.indexes::parent" = 2

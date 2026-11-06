@@ -1,9 +1,16 @@
 """`derive.far_pins`: the far port of each conductor at a set of ports, lowest far port first."""
 
+from typing import TYPE_CHECKING
+
 from plant import Plant
 from query_builders import make_pin
 
 from fransys_model.derive import far_pins, port_designation, stub_far
+from fransys_model.derive.designation import port_marking
+
+if TYPE_CHECKING:
+    from fransys_model.kernel import Id, Model
+    from fransys_model.vocab import Port
 
 
 def _three_pins():
@@ -61,3 +68,23 @@ def test_far_ends_print_in_designation_order_whatever_their_id_order() -> None:
     (only,) = printed
     assert len(only) == 4
     assert list(only) == sorted(only)
+
+
+def _marked_item() -> tuple[Model, dict[str, Id[Port]]]:
+    plant = Plant()
+    function = plant.function(plant.item("q", designation="Q1"), "element")
+    ports = {
+        "plain": plant.port(function, "1", marking="P01"),
+        "blank": plant.port(function, "2", marking=""),
+        "line": plant.port(function, "N1", marking="N"),
+        "load": plant.port(function, "N2", marking="N"),
+    }
+    return plant.model(), ports
+
+
+def test_a_list_end_prints_the_marking_and_the_name_where_the_marking_is_empty_or_repeats() -> None:
+    """R1794, R1796: the marking, else the name; a blank or a repeated marking prints the name."""
+    model, ports = _marked_item()
+    printed = {key: port_designation(model, port) for key, port in ports.items()}
+    assert printed == {"plain": "-Q1:P01", "blank": "-Q1:2", "line": "-Q1:N1", "load": "-Q1:N2"}
+    assert port_marking(model, ports["line"]) == port_marking(model, ports["load"]) == "N"

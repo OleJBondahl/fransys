@@ -79,8 +79,8 @@ def test_a_header_pin_not_mated_still_joins_the_relay_port() -> None:
     """With no plug, the header pin and the relay port still form a two-port net."""
     result = _module()
     model = result.model
-    assert _net_designations(model, "-M1-J1:1") == {"-M1-J1:1", "-M1:A1"}
-    assert _net_designations(model, "-M1-J2:2") == {"-M1-J2:2", "-M1:M"}
+    assert _net_designations(model, "-M1-J1:P01") == {"-M1-J1:P01", "-M1:A1"}
+    assert _net_designations(model, "-M1-J2:P02") == {"-M1-J2:P02", "-M1:M"}
 
 
 def _half_open(result: fr.BuildResult, model: Model) -> set[str]:
@@ -118,10 +118,10 @@ def test_a_joined_relay_port_is_in_use_and_an_unjoined_one_is_unused() -> None:
 
 
 def test_a_two_header_module_prints_its_pins_with_the_header_segment() -> None:
-    """Two headers J1, J2 print `-M1-J1:1` and `-M1-J2:1`; a relay port `-M1:A1`."""
+    """Two headers J1, J2 print `-M1-J1:P01` and `-M1-J2:P01` (R1799(3): the marking is unique under each prefix); a relay port `-M1:A1`."""
     result = _module()
     printed = {port_designation(result.model, p) for p in ports(result.model)}
-    assert {"-M1-J1:1", "-M1-J2:1", "-M1:A1"} <= printed
+    assert {"-M1-J1:P01", "-M1-J2:P01", "-M1:A1"} <= printed
 
 
 def test_a_one_header_module_prints_its_pin_without_a_segment(tmp_path: Path) -> None:

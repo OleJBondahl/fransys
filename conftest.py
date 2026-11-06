@@ -56,6 +56,16 @@ def _recording_refuse(subject: object, what: str) -> object:
 
 
 _refuse._refuse = _recording_refuse  # the guard below sees every MATES_DISABLED the check raises
+_screens_one = _refuse._connected_screens
+
+
+def _recording_screens(model: object) -> list[Any]:
+    found = _screens_one(model)
+    REFUSED.extend(found)
+    return found
+
+
+_refuse._connected_screens = _recording_screens  # and every SCREEN_DISABLED (R1799)
 
 
 @pytest.hookimpl(tryfirst=True, wrapper=True)
@@ -67,11 +77,12 @@ def pytest_runtest_setup() -> Generator[None, object, object]:
 
 @pytest.hookimpl(wrapper=True)
 def pytest_runtest_call() -> Generator[None, object, object]:
-    """A test that built a mate, a harness or a board must assert the refusal with `expect_codes` (model-0405)."""
+    """A test that built a mate, a harness, a board or a connected screen must assert the refusal with `expect_codes` (model-0405)."""
     result = yield
     if REFUSED:
         pytest.fail(
-            "this test built a mate, a harness or a board and ignored MATES_DISABLED: assert it with expect_codes or build without it", pytrace=False
+            "this test built a refused thing (mate, harness, board, screen) and ignored its finding: assert it with expect_codes or build without it",
+            pytrace=False,
         )
     return result
 

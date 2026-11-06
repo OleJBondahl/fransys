@@ -12,8 +12,6 @@ from fransys_model.vocab.tables import items
 lazy from fransys_model.vocab.core import Item, Port
 lazy from fransys_model.vocab.facets.cable import CableProductFacet, CorePair
 
-SCREEN = RESERVED_CODES["shield"]
-
 
 def cable_product(model: Model, cable: Id[Item]) -> CableProductFacet | None:
     """The `cable_product` of `cable`'s part, `None` when it has none.
@@ -36,7 +34,7 @@ def open_core_is_spare(model: Model, colour: str, at: Id[Port] | None) -> bool:
     A core landing on a port of the PE net is a protective core earthed at that port. The author
     joins a PE-role port to the PE net (author-0044), so a PE-role port off it is not earthed.
     """
-    return colour != SCREEN and not (at is not None and on_pe_net(model, at))
+    return colour != RESERVED_CODES["shield"] and not (at is not None and on_pe_net(model, at))
 
 
 @value
@@ -87,11 +85,6 @@ def core_mark(pairs: tuple[DrawnPair, ...], index: int) -> str:
     """The pair word on core `index`'s row: `P1` off a bracket, `screen P1` on a screen, or `""`."""
     bracketed = any(pair.bracket and index in pair.cores for pair in pairs)
     return "" if bracketed else core_pair_word(pairs, index)
-
-
-def conductor_count(colours: tuple[str, ...]) -> int:
-    """The conductor cores among a product's `core_colours`: a screen (`SH`) is not a core."""
-    return sum(colour != SCREEN for colour in colours)
 
 
 def pair_form(pairs: tuple[CorePair, ...], gauge_mm2: object) -> str:

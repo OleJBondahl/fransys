@@ -3,7 +3,6 @@
 from fransys import colours
 
 from fransys_model.derive import split_colour
-from fransys_model.derive.core_pairs import SCREEN
 from fransys_model.vocab import BASE_COLOURS, RESERVED_CODES
 
 
@@ -12,7 +11,7 @@ def test_table_holds_the_screen_and_the_protective_earth_core():
 
 
 def test_readers_expose_the_table_values():
-    assert colours.SH == RESERVED_CODES["shield"] == SCREEN
+    assert RESERVED_CODES["shield"] == colours.SH
     assert RESERVED_CODES["protective earth"] == colours.GNYE
 
 

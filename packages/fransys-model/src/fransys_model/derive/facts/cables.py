@@ -1,8 +1,9 @@
 """The cable-product facts: a cable's product, its core counts, and where they fail the product."""
 
-from fransys_model.derive.facts.cores import core_count, cores_past_product, is_core
+from fransys_model.derive.facts.cores import conductor_count, core_colour_at, core_count, cores_past_product, is_core
 from fransys_model.derive.facts.item_predicates import is_cable
 from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, digest_cached
+from fransys_model.vocab.colours import RESERVED_CODES
 from fransys_model.vocab.facets.cable import CableProductFacet, CoreFacet, OpenCoreFacet
 from fransys_model.vocab.tables import conductors, facets_of, items
 lazy from fransys_model.vocab.connectivity import Conductor
@@ -25,15 +26,30 @@ def cable_product(model: Model, item: Id[Item]) -> CableProductFacet | None:
     return None if record is None or record.part is None else cable_products_by_part(model).get(record.part)
 
 
+def _conductor_core(model: Model, cable: Id[Item], index: int) -> bool:
+    """Whether core `index` of `cable` is a conductor core: a screen is none; an unknown core counts."""
+    product = cable_product(model, cable)
+    colour = None if product is None else core_colour_at(product, index)
+    return colour is None or colour != RESERVED_CODES["shield"]
+
+
+def connected_screens(model: Model) -> tuple[OpenCoreFacet, ...]:
+    """Each open core that is a screen of its cable's product and lands on a pin."""
+    return tuple(f for f in facets_of(model, OpenCoreFacet).values() if f.at is not None and not _conductor_core(model, f.subject, f.index))
+
+
 @digest_cached(DIGEST_CACHE_SIZE)
 def core_counts(model: Model) -> frozendict[Id[Item], int]:
-    """Cores per cable: its wired cores plus its open cores."""
+    """Conductor cores per cable: its wired cores plus its open cores, a screen in neither."""
     counts: dict[Id[Item], int] = {}
+    indexes = {f.subject: f.index for f in facets_of(model, CoreFacet).values()}
     for conductor in conductors(model).values():
-        if is_core(model, conductor.id) and conductor.carrier is not None:
+        index = indexes.get(conductor.id)
+        if is_core(model, conductor.id) and conductor.carrier is not None and (index is None or _conductor_core(model, conductor.carrier, index)):
             counts[conductor.carrier] = counts.get(conductor.carrier, 0) + 1
     for opened in facets_of(model, OpenCoreFacet).values():
-        counts[opened.subject] = counts.get(opened.subject, 0) + 1
+        if _conductor_core(model, opened.subject, opened.index):
+            counts[opened.subject] = counts.get(opened.subject, 0) + 1
     return frozendict(counts)
 
 
@@ -53,11 +69,11 @@ def wired_cores_past_product(model: Model) -> tuple[tuple[Id[Item], Id[Conductor
 
 @digest_cached(DIGEST_CACHE_SIZE)
 def core_count_gaps(model: Model) -> tuple[tuple[Id[Item], Id[CableProductFacet], int, int], ...]:
-    """Each cable whose core count differs from its product's, as (cable, product, have, want)."""
+    """Each cable whose conductor-core count differs from its product's, as (cable, product, have, want)."""
     found = []
     for cable in items(model).values():
         product = cable_product(model, cable.id) if is_cable(model, cable.id) else None
         have = core_counts(model).get(cable.id, 0)
-        if product is not None and have != core_count(product):
-            found.append((cable.id, product.id, have, core_count(product)))
+        if product is not None and have != conductor_count(product):
+            found.append((cable.id, product.id, have, conductor_count(product)))
     return tuple(found)

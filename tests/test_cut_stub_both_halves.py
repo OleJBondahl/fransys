@@ -16,7 +16,7 @@ WRAPS = {  # census 2026-10-25: the 7 builds of R847
     "panel_di16p": 1,  # SUPPLY-SLOT (R1605): was 2 (BRIDGE-NOT-DRAWN R1145: was 3)
     "mcc": 0,
     "distribution_board": 2,  # R1730: ARROW row wraps of net f:U1-F1, at cuts 4 and 16; was 0
-    "distribution_board_large": 0,  # R1105 (S2-TRACE-B-5): 3 at the old default id seed, 0 at the new; a looks count (KI-386)
+    "distribution_board_large": 5,  # R1800 (KI-705, looks): ARROW row wraps of f:U1-F1 cuts 51, 63, 72, 83, f:U1-F9 cut 83; was 0
     "skid_v48_m6": 3,  # TEXT-IN-LOOP 1 (R1450): a blocked label widens its gap in the recut; was 2
     "demo-skid": 1,
 }

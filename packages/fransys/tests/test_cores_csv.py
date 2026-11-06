@@ -49,7 +49,6 @@ def _paired() -> fr.BuildResult:
     w1.core(1, x1[1], h1[1])
     w1.core(2, x1[2], h1[2])
     w1.spare(3, at=x1[7])
-    w1.core(5, x1[8])
     w1.spare()
     return fr.build(d)
 
@@ -59,11 +58,9 @@ def test_the_worked_example_lists_every_core_with_its_ends(tmp_path: Path) -> No
     assert text == (f"{_HEADER}\n-W1,1,BN,,-H1:1,-X1:1,\n-W1,2,BK,,-H1:2,-X1:2,\n-W1,3,GY,,-X1:7,,spare\n-W1,4,GNYE,,,,spare\n")
 
 
-def test_a_paired_cable_prints_pairs_screens_and_the_earthed_end(tmp_path: Path) -> None:
+def test_a_paired_cable_prints_its_pairs_and_the_spare(tmp_path: Path) -> None:
     lines = _lines(_cores_csv(fr.write(_paired(), tmp_path)))
     assert lines[0] == _HEADER
-    assert "-W1,5,SH,screen P1,-X1:8,," in lines
-    assert "-W1,6,SH,screen P2,,," in lines
     assert "-W1,3,WH,P2,-X1:7,,spare" in lines
 
 

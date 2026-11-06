@@ -81,8 +81,9 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         who="consumer",
         cause=("A drawing set has pages but no document prints it, so its items are not in any export. The message names the set and its items."),
         fix=(
-            "Add a document for the set's unit or location, or nest the unit in one that has "
-            'one. Write: fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, "demo-mini-mcc")'
+            "Add a document for the set's unit or location, passing its handle as the subject, "
+            "or nest the unit in one that has one. "
+            "Write: fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cabinet, cover=cover)"
         ),
         page="findings-render",
     ),

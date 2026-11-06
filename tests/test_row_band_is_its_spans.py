@@ -76,7 +76,7 @@ def misses(request: pytest.FixtureRequest) -> list[tuple[Any, ...]]:
 
 #: R1193 (KI-455, ROW-BAND-TRACE): rows the spans do not fill after the ledger's leg stubs; a looks count, it only falls.
 _LOOKS = {
-    "machine_panel": 1,
+    "machine_panel": 2,  # R1800 (KI-705, looks): new p5 row 0 band 232 with -B15..-B20/-MB13..-MB17 (PE-EARTH-JOIN); was 1
     "panel_di16p": 15,
     "remote_io": 3,
     "mcc": 4,  # R1673/R1675: accepted move (3 -> 4)

@@ -86,4 +86,13 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         ),
         page="findings-validators",
     ),
+    CodeInfo(
+        code="SCREEN_DISABLED",
+        severity=Severity.ERROR,
+        stage="validators",
+        who="consumer",
+        cause="A cable screen core is connected to a pin; screen connections are refused for now.",
+        fix="Leave the screen unconnected: the cable prints as shielded. Write: w1.core(fr.colours.BN, a, b)",
+        page="findings-validators",
+    ),
 )

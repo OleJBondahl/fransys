@@ -1,13 +1,12 @@
 """A paired cable with spare cores through the facade: the block SVG's printed marks (CC6, CC10).
 
 One strip `X1` and a motor `M1` joined by `W1` of a 2x2x0.75 part with a screen per pair.
-Cores 1 and 2 (pair P1) are wired, core 3 (pair P2) is a spare parked on `X1`, the rest are spare.
+Cores 1 and 2 (pair P1) are wired, cores 3 and 4 (pair P2) are spares parked on `X1`, the two screens land on `X1` too.
 """
 
 import functools
 
 import fransys as fr
-import pytest
 from fransys_render import cable_blocks
 
 from electrical_symbols import LIBRARY
@@ -23,6 +22,7 @@ def _model():
     w1.core(1, x1[1], h1[1])
     w1.core(2, x1[2], h1[2])
     w1.spare(3, at=x1[7])
+    w1.spare(4, at=x1[4])
     w1.spare()
     return fr.build(d).model
 
@@ -37,7 +37,7 @@ def _svg() -> str:
 
 
 def test_the_block_writes_one_open_core_wire_per_spare_core():
-    assert len(_open_wires(_model())) == 4
+    assert len(_open_wires(_model())) == 2
 
 
 def test_a_pair_is_bracketed_and_labelled_and_a_spare_is_marked():
@@ -50,11 +50,6 @@ def test_a_pair_is_bracketed_and_labelled_and_a_spare_is_marked():
 
 def test_the_heading_names_the_pairs():
     assert "2x2x0.75, screened pairs, 25000 mm" in _svg()
-
-
-@pytest.mark.parametrize("text", ["SH", "screen P1", "screen P2"])
-def test_a_screen_row_reads_sh_and_its_pair(text):
-    assert text in _svg()
 
 
 def test_a_cable_with_no_open_core_writes_no_open_core_wire():

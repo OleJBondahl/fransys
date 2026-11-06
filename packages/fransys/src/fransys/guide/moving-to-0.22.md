@@ -55,7 +55,7 @@ Each row is a name that 0.22 removed. A removed attribute raises an error that n
 | <a id="removed-class-code"></a>`fr.unit(..., class_code="K")`, `d.add(defn, None)` | `d.add(board, "U1")`: an authored tag, a bare string; `None` is no longer allowed |
 | <a id="removed-font-heights"></a>`[font.heights]` in the settings file | Removed on purpose: Fransys decides (R1458); delete the table |
 | <a id="removed-text-heights"></a>`text_height_mm`, `min_text_height_mm`, `TEXT_TOO_SMALL` | Removed on purpose: Fransys decides (R1458); text heights are fixed library data |
-| <a id="removed-document-add"></a>`fr.document(..., add=, remove=)`, presets `HARNESS_DRAWING`, `PCB_SCHEMATIC` | `fr.document(preset, subject, cover=, logo=, notice=)`; the preset sets the pages |
+| <a id="removed-document-add"></a>`fr.document(..., add=, remove=)`, presets `HARNESS_DRAWING`, `PCB_SCHEMATIC` | `fr.document(preset, subject, cover=, logo=, notice=)`; the preset sets the pages. `remove=(fr.PageKind.SHEET_INDEX,)` and every other `remove=` has no replacement: a preset prints its fixed pages |
 | <a id="removed-add-unused"></a>`d.add(defn, tag, unused=(...))` | `d.device(tag, part, unused=True)` for the unit's own open pins; `d.unused(pc.x3[3], pc.x4_1)` in the carrier for a unit's boundary points it leaves open (0.22.3) |
 | <a id="removed-port-role"></a>`Port.role` (`PortRole`) | `Port.boundary` (`fr.derive.PortBoundary`), and new `Port.pin_role` |
 | <a id="removed-cable-core-fn"></a>`Cable.core(which, a, fn)` with a PE-bar function | Use a PE terminal strip: `W1.core(GNYE, x1[1].outer)` |

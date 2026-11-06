@@ -7,6 +7,7 @@ wire. Checks and derives read these functions, never the field (EL-3, model-0288
 from typing import TYPE_CHECKING
 
 from fransys_model.derive.facts.roles import conductor_role
+from fransys_model.vocab.colours import RESERVED_CODES
 
 if TYPE_CHECKING:
     from fransys_model.kernel import Id, Model
@@ -17,6 +18,11 @@ if TYPE_CHECKING:
 def core_count(product: CableProductFacet) -> int:
     """The number of cores `product` lists, a screen included."""
     return len(product.core_colours)
+
+
+def conductor_count(product: CableProductFacet) -> int:
+    """The conductor cores `product` lists: a screen is not one."""
+    return sum(colour != RESERVED_CODES["shield"] for colour in product.core_colours)
 
 
 def cores_past_product(product_cores: int, asked: int) -> bool:

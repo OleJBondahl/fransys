@@ -13,9 +13,10 @@ from fransys_author.surface._parent import cable_parent_item
 from fransys_author.surface._strip import TerminalStrip
 from fransys_author.surface._tags import floating_name
 from fransys_author.surface._unit_strip import take, take_pe
-from fransys_author.surface.colours import GNYE, SH
+from fransys_author.surface.colours import GNYE
 from fransys_model.derive import core_on_pe_not_gnye, cores_past_product
 from fransys_model.refdef import lowest_free
+from fransys_model.vocab import RESERVED_CODES
 lazy from fransys_author.handles import Cable as EngineCable
 lazy from fransys_author.surface._device import Device
 
@@ -114,7 +115,7 @@ class Cable(SeriesBridge):
     ) -> None:
         """Detail: wire core `which` (a colour or a 1-based number) between `a` and `b`.
 
-        Try `d.series` first: it takes the next free core. `core(which, a)` is for `SH` only.
+        Try `d.series` first: it takes the next free core. `core(which, a)` is for `SH` only, refused for now.
         Does not accept a colour twice, or a non-GNYE core on a PE port.
         """
         index = self._index(which)
@@ -128,7 +129,7 @@ class Cable(SeriesBridge):
         self._cable.core(index, *ends)
 
     def _screen_end(self, index: int, a: Port | Terminal | TerminalStrip) -> None:
-        if self._colours[index - 1] != SH:
+        if self._colours[index - 1] != RESERVED_CODES["shield"]:
             msg = f"{self._label} core {index} is not SH: park a spare with spare(..., at=)"
             raise AuthorError(msg)
         self._claim(index)
@@ -137,16 +138,18 @@ class Cable(SeriesBridge):
     def spare(self, *cores: str | int, at: Port | Terminal | TerminalStrip | None = None) -> None:
         """Core: mark cores spare: `spare(GY)`, `spare(BK, at=x1[7])`, or `spare()`.
 
-        `spare()` marks every core not wired or marked so far, so wire first. `at=` parks one
-        core on a pin.
+        `spare()` marks every conductor core not wired or marked so far, so wire first;
+        it never marks the screen. `at=` parks one core on a pin.
         Does not take `at=` for an `SH` core (use `core(which, a)`).
         """
         if at is not None and len(cores) != 1:
             msg = f"{self._label} spare(at=) takes exactly one core, got {len(cores)}"
             raise AuthorError(msg)
-        indexes = [self._index(c) for c in cores] or [i for i in range(1, len(self._colours) + 1) if i not in self._used]
-        if at is not None and self._colours[indexes[0] - 1] == SH:
-            msg = f"{self._label} core {indexes[0]} is SH: earth it with core(which, a)"
+        indexes = [self._index(c) for c in cores] or [
+            i for i, colour in enumerate(self._colours, 1) if colour != RESERVED_CODES["shield"] and i not in self._used
+        ]
+        if at is not None and self._colours[indexes[0] - 1] == RESERVED_CODES["shield"]:
+            msg = f"{self._label} core {indexes[0]} is SH: a screen connection is refused for now and returns later"
             raise AuthorError(msg)
         for index in indexes:
             self._claim(index)

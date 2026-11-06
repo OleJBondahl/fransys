@@ -130,13 +130,14 @@ w1.spare(GY, at=x1[7])
 w1.spare()
 w2 = d.cable("W2", "DEMO-CBL-2X2X0.75-SP", length_m=25)
 w2.core(1, x1[3], h1[1])
-w2.core(5, pe[1])
 w2.spare()
 ```
 
-A core you leave unused is `w1.spare(GY)`, or `w1.spare()` for every core not wired so far. `at=x1[7]`
-parks one on a pin. The cable drawing prints "spare" on its row. A screen (`SH`) earthed at one end
-takes one pin: `w2.core(5, pe[1])`. A part with `pairs` in its `[cable_product]` table gets a bracket
+A core you leave unused is `w1.spare(GY)`, or `w1.spare()` for every conductor core not wired so far.
+`at=x1[7]` parks one on a pin. The cable drawing prints "spare" on its row. A screen (`SH`) is not a
+core: `CABLE_CORES_FEWER` and `spare()` skip it. A product with an `SH` colour prints "shielded" in its
+heading. A screen cannot be connected for now: `w2.core(5, pe[1])` is refused with `SCREEN_DISABLED`
+(an ERROR), and a screen you leave open needs no call. A part with `pairs` in its `[cable_product]` table gets a bracket
 and a P1, P2 label over each pair's rows.
 
 `fn.pins` gives a function's pins as a tuple, in the order the connector list prints (`1, 2, 10, A1`).

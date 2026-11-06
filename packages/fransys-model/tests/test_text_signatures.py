@@ -18,11 +18,10 @@ LEGACY_FLAT = (
     "overview_text",
     "page_destination",
     "plc_channel_text",
-    "port_marking",
     "sheet_forms",
     "stub_text",
 )
-LEGACY_FLAT_CEILING = 9
+LEGACY_FLAT_CEILING = 8
 
 # Value formatters and slot-table helpers that read no print context (the table builds the context).
 VALUE_FORMATTERS = frozenset(

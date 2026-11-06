@@ -23,7 +23,7 @@ from fransys_model.derive.stands import stands
 from fransys_model.kernel import freeze
 from fransys_model.vocab.tables import items, nets, ports
 
-_DIGEST = "1e7af1d76049f5140b7ac505780db25b23d01a1398514a55e4f757e51eb55564"
+_DIGEST = "6eefc328857e42e554a78342d944458ef7669b70211dd65c5dbfc955d90e9420"
 
 
 def observed() -> str:
@@ -49,5 +49,5 @@ def observed() -> str:
 
 
 def test_the_sites_print_what_they_printed_before_the_switch() -> None:
-    """The digest was taken before any site read a net fact (re-taken: R1289 and earlier)."""
+    """The digest was taken before any site read a net fact (re-taken: R1289, R1798: an earthed terminal stands on PE)."""
     assert sha256(observed().encode()).hexdigest() == _DIGEST

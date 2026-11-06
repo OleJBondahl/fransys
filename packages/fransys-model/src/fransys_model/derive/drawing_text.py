@@ -21,7 +21,7 @@ from fransys_model.derive.contact_image import (
     coil_heading,
     contact_marks,
 )
-from fransys_model.derive.designation import connector_designation, port_designation
+from fransys_model.derive.designation import connector_designation, port_designation, port_marking
 from fransys_model.derive.facts.house_settings import revision_form_of, wire_label_text_of
 from fransys_model.derive.facts.revision_label import revision_label
 from fransys_model.derive.frame_position import (
@@ -39,7 +39,6 @@ from fransys_model.derive.location_text import (
 from fransys_model.derive.marker_targets import more_text
 from fransys_model.derive.marker_text import REF_SLOTS, marker_text, reference_slot
 from fransys_model.derive.pole_ports import pole_prefix
-from fransys_model.derive.port_marking import port_marking
 from fransys_model.derive.reference_heads import heads_group
 from fransys_model.derive.stub_text import (
     line_stub_line,

@@ -1,9 +1,9 @@
 """The one reader of `Boundary` as a unit's interface: its pins."""
 
+from fransys_model.derive.designation import port_marking
 from fransys_model.derive.facts.units import boundary
 from fransys_model.derive.indexes import build_indexes
 from fransys_model.derive.lookups import pin_order
-from fransys_model.derive.port_marking import port_marking
 lazy from fransys_model.kernel import Id
 lazy from fransys_model.vocab.core import Port, Unit
 lazy from fransys_model.vocab.tables import HasTables

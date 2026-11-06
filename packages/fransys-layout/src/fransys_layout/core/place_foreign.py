@@ -17,6 +17,8 @@ from .geometry import cell_anchor
 from .node_names import col_node
 from .pack import cell_node
 from .pack_sep import hard_soft
+from .place_accept import accept
+from .place_align import page_aligns
 from .place_lanes import lane_segments
 from .place_levels import _below, _reachable
 from .place_trunk import trunk_node
@@ -131,13 +133,16 @@ def _cells(pairs: AbstractSet[tuple[str, str]]) -> frozenset[str]:
 def clear_foreign(g: Graph, env: PageEnv, x: Mapping[str, int], spans: Sequence[Span]) -> frozenset[str]:
     """Add the edges that take every trunk line out of the foreign hard boxes its span meets.
 
+    Each round reads the y the page is drawn at, the alignments kept (KI-702): a level can stand a cell on a trunk's line.
     Returns the nodes of the foreign cells it pushed a trunk away from.
     """
     seen: set[tuple[str, str]] = set()
+    aligns = page_aligns(env)
     for _ in range(ROUNDS):
-        y = g.solve()
-        if y is None:
+        kept = accept(g, aligns)
+        if kept is None:
             return _cells(seen)
+        y = kept.y
         fresh = [p for s in spans for p in _pushes(env, x, y, s, hard_order(g, trunk_node(s.fan, s.row))) if (p[0], p[1]) not in seen]
         if not fresh:
             return _cells(seen)

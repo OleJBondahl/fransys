@@ -8,7 +8,8 @@ or similar is not a missing feature; it reintroduces the exact bug this model re
 """
 
 import contextlib
-from typing import TYPE_CHECKING
+from collections import Counter
+from typing import TYPE_CHECKING, cast
 
 from fransys_model.derive.designation_connector import (
     connector_segment,
@@ -27,6 +28,7 @@ from fransys_model.derive.unit_nodes import chain_up, common_node
 from fransys_model.kernel import DIGEST_CACHE_SIZE, SchemaError, digest_cached
 from fransys_model.vocab.enums import Aspect
 from fransys_model.vocab.tables import (
+    HasTables,
     aspect_nodes,
     functions,
     items,
@@ -156,6 +158,39 @@ def connector_designation(model: Model, function: Id[Function], *, unit: Id[Unit
     return printed_designation(model, item, unit=unit) + segment
 
 
+def _drawn(record: Port) -> str:
+    return record.name if record.marking is None else record.marking
+
+
+@digest_cached(DIGEST_CACHE_SIZE)
+def _marking_counts(model: Model) -> dict[tuple[str, str], int]:
+    idx = build_indexes(model)
+    return dict(
+        Counter(
+            (connector_designation(model, function), _drawn(ports(model)[port]))
+            for item, held in idx.functions_by_item.items()
+            if can_print_designation(model, item)
+            for function in held
+            for port in idx.ports_by_function.get(function, ())
+        )
+    )
+
+
+def port_marking(model: HasTables, port: Id[Port], *, list_end: bool = False) -> str:
+    """What a port's MARKING label prints.
+
+    The part's pin marking (`Port.marking`), else the port's name; "" when the part prints
+    none. In `list_end` mode a list names its pin: the marking only when it is non-empty and no
+    other port under the same printed prefix (`connector_designation`) prints it, else the name.
+    """
+    record = ports(model)[port]
+    text = _drawn(record)
+    if not list_end:
+        return text
+    prefix = connector_designation(cast("Model", model), record.function)
+    return text if text and _marking_counts(cast("Model", model))[prefix, text] == 1 else record.name
+
+
 def port_designation(model: Model, port: Id[Port], *, unit: Id[Unit] | None = None) -> str:
     """Render `port` as its item's designation and its name (`-K1:13`), always dash-prefixed.
 
@@ -175,10 +210,11 @@ def port_designation(model: Model, port: Id[Port], *, unit: Id[Unit] | None = No
         msg = "the id is not a port of the model"
         raise SchemaError(msg, kind="port", record_id=port)
     owner = items(model)[functions(model)[record.function].item]
-    if not record.name:
+    text = port_marking(model, port, list_end=True)
+    if not text:
         return printed_designation(model, owner.id, unit=unit)
     if terminal_of(model, owner.id) is None:
-        return f"{connector_designation(model, record.function, unit=unit)}:{record.name}"
+        return f"{connector_designation(model, record.function, unit=unit)}:{text}"
     return terminal_of_item(model, owner.id, unit)
 
 

@@ -1,0 +1,82 @@
+schema = 2
+
+# A board with one connector function per plug, each numbering its pins P01, P02 (field case MARK-DOOR).
+# J4 repeats P01 on both of its pins, so a list end there falls back to the pin name.
+[part]
+mpn = "DEMO-BOARD-4J"
+manufacturer = "Demo"
+description = "24 V DC signal I/O board with four 2-pin pluggable pin-header connectors, rated 30 V DC and 0.5 A per pin, pins marked P01 and P02 on each"
+category = "generic"
+class_code = "U"
+
+[[function]]
+name = "j1"
+kind = "connector"
+ports = [
+    { name = "1", role = "generic", marking = "P01" },
+    { name = "2", role = "generic", marking = "P02" },
+]
+
+[function.rating]
+voltage = [{ nom = "30 V", at = ["DC"] }]
+current = [{ nom = "0.5 A", at = ["DC"] }]
+
+[function.connector]
+style = "header-2p"
+pincount = 2
+gender = "male"
+marking = "J1"
+
+[[function]]
+name = "j2"
+kind = "connector"
+ports = [
+    { name = "1", role = "generic", marking = "P01" },
+    { name = "2", role = "generic", marking = "P02" },
+]
+
+[function.rating]
+voltage = [{ nom = "30 V", at = ["DC"] }]
+current = [{ nom = "0.5 A", at = ["DC"] }]
+
+[function.connector]
+style = "header-2p"
+pincount = 2
+gender = "male"
+marking = "J2"
+
+[[function]]
+name = "j3"
+kind = "connector"
+ports = [
+    { name = "1", role = "generic", marking = "P01" },
+    { name = "2", role = "generic", marking = "P02" },
+]
+
+[function.rating]
+voltage = [{ nom = "30 V", at = ["DC"] }]
+current = [{ nom = "0.5 A", at = ["DC"] }]
+
+[function.connector]
+style = "header-2p"
+pincount = 2
+gender = "male"
+marking = "J3"
+
+[[function]]
+name = "j4"
+kind = "connector"
+ports = [
+    { name = "1", role = "generic", marking = "P01" },
+    { name = "2", role = "generic", marking = "P01" },
+]
+
+[function.rating]
+voltage = [{ nom = "30 V", at = ["DC"] }]
+current = [{ nom = "0.5 A", at = ["DC"] }]
+
+[function.connector]
+style = "header-2p"
+pincount = 2
+gender = "male"
+marking = "J4"

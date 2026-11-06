@@ -596,3 +596,21 @@ def test_a_leg_stands_clear_of_a_hanging_at_a_placed_pin_as_of_a_footprint() -> 
     held = leg_lines(trunks, fans, {pin: 0}, OPTIONS, (leg_feet((), hung), {}, None))["f0", 0, pin]
     assert held[1][0] >= free[1][0] + 6
     assert leg_feet((), hung) == hung["card"]
+
+
+def test_a_tag_stood_at_a_pin_of_the_row_is_held_clear_under_its_trunk_and_other_rows_are_not() -> None:
+    """CUT-CND, R1802: `arrow_room` is the tag box and one grid for a tag end with a pin on the row, else 0; `held_room` deepens the legs by it."""
+    from fransys_layout.core.band import arrow_hang
+    from fransys_layout.core.cut_end_rooms import arrow_room
+    from fransys_layout.core.place_trunk import held_room
+
+    env = _env()
+    pin = PinRef("L", "n0")
+    tag = Ref("f:n1", RefKind.TAG, (RefEnd(env.plan.page, "c", pin, 0), RefEnd(env.plan.page + 1, "c", pin, 0)))
+    env = replace(env, refs=(tag,))
+    fan = next(f for f in env.flow.fans if f.id == "f:n1")
+    grid = env.options.wiring_grid
+    want = marker_box_at(0, 0, env.options, env.options.marker_facing["S"], (pin, str(RefKind.TAG))).h + grid
+    assert arrow_room(env.refs, env.plan, [fan], 0, env.options) == want
+    assert arrow_room(env.refs, env.plan, [fan], 1, env.options) == 0
+    assert held_room(fan, env, 0)[1] == fan.lanes * grid + arrow_hang(fan.lanes, grid, want)

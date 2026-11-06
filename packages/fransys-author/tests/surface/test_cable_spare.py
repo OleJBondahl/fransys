@@ -70,7 +70,7 @@ def test_core_with_one_end_is_for_a_screen_only(lib: Draft) -> None:
 def test_spare_at_on_a_screen_names_core(lib: Draft) -> None:
     d = design(lib)
     x1 = d.terminal_strip("X1", "TEST-TERM")
-    with pytest.raises(AuthorError, match=r"is SH: earth it with core\(which, a\)"):
+    with pytest.raises(AuthorError, match=r"is SH: a screen connection is refused for now and returns later"):
         _screened(d).spare(SH, at=x1[1])
 
 

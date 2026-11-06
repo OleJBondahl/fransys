@@ -39,7 +39,7 @@ stock = 1
 # BoxKey, DiagramLine, DrawnWire (across fransys_model.derive*/layout/vocab, fransys_layout(.core),
 # fransys_author, fransys_kernel, fransys_render).
 [twin_doors]
-twins = 97  # -ModelDiff, -diff (CL-KER-1), -check_value (DS-1), +value_data, +value_from (kernel and fransys_model.kernel), -Rating: R809, ADOPT-PARTS-3
+twins = 98  # +port_marking (derive door, R1799(2), MARK-DOOR), -ModelDiff, -diff (CL-KER-1), -check_value (DS-1), +value_data, +value_from (kernel and fransys_model.kernel), -Rating: R809, ADOPT-PARTS-3
 clashes = 28
 
 # HOMES-GATES (root-0350): typed setting literals (numeric value bound to a name ending _mm, _pct,
@@ -223,7 +223,7 @@ mcc_small_four_feeders = 0
 # lane_end_faults = trunk lane ends past their last tap. Correctness class, target 0 on every seed (piece CORPUS-SEED-DEFECTS).
 mcc_unplaced_symbols = 0
 mcc_lane_end_faults = 5  # R1715 falls, KI-636: was 17; R1684 (looks class, KI-636): 2-point legs whose lane overruns the leg start by one pitch; was 12
-distribution_board_lane_end_faults = 2  # R1715 falls, KI-636: was 6; R1684: as mcc; was 4
+distribution_board_lane_end_faults = 1  # R1800 (PE-EARTH-RATCHETS): falls 2 -> 1 with PE-EARTH-JOIN; R1715 falls, KI-636: was 6; R1684: as mcc; was 4
 
 [table_scans]
 stock = 0

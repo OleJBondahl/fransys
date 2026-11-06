@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, NamedTuple
 
 from .band import arrow_box
 from .flow_values import block_id
-from .geometry import stub_views
+from .geometry import marker_box_at, stub_views
 from .ref_kind import kind_of
 from .values import RefKind, StandClass
 
@@ -115,11 +115,13 @@ def stub_room(refs: Iterable[Ref], plan: PagePlan, fans: Iterable[Fan], r: int, 
 
 
 def arrow_room(refs: Iterable[Ref], plan: PagePlan, fans: Iterable[Fan], r: int, options: Options) -> int:
-    """The y a lane-end arrow takes under its lane in row r: its half box and one grid (N2, R1646); 0 with none.
+    """The y a marker takes under row r's trunk line: an arrow's half box, a tag's box, each and one grid (N2, R1646); 0 with none.
 
+    A tag stood at a pin of the row is under every trunk of the row, so the trunk keeps its box clear (CUT-CND, R1802).
     The one value of the term: the placed trunk, the solved spans and the cut's row size all read it.
     """
-    return next(
+    refs = tuple(refs)
+    arrow = next(
         (
             arrow_box(options, options.arrow_sides[0], 0, 0, (c.key[0], c.key[1])).h // 2 + options.wiring_grid
             for c in cut_ends(refs, plan, fans, r)
@@ -127,3 +129,12 @@ def arrow_room(refs: Iterable[Ref], plan: PagePlan, fans: Iterable[Fan], r: int,
         ),
         0,
     )
+    tall = options.marker_facing["S"]
+    tags = [
+        marker_box_at(0, 0, options, tall, (e.pin, str(RefKind.TAG))).h + options.wiring_grid
+        for rf in refs
+        if kind_of(rf) is RefKind.TAG
+        for e in rf.ends
+        if (e.page, e.row) == (plan.page, r) and e.pin is not None
+    ]
+    return max([arrow, *tags])

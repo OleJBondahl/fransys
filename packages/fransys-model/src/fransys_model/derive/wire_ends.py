@@ -2,9 +2,9 @@
 
 from typing import TYPE_CHECKING
 
+from fransys_model.derive.designation import port_marking
 from fransys_model.derive.lookups import item_of_port
 from fransys_model.derive.order import bom_sort_key
-from fransys_model.derive.port_marking import port_marking
 
 if TYPE_CHECKING:
     from fransys_model.derive.order import NaturalKey

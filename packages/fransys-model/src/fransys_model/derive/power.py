@@ -8,6 +8,7 @@ from fransys_model.vocab import Item, Net, Port, PowerKind
 from fransys_model.vocab.tables import nets, rail_groups, supply_of_potential
 
 from .facts.net_facts import net_potential
+from .lookups import item_of_port
 from .order import NaturalKey, natural_key
 
 _WIRE_PORTS = 2  # a physical net of this many ports is one wire, not a rail
@@ -29,7 +30,8 @@ def _kinds(model: Model) -> frozendict[Id[Port], PowerKind]:
     for physical in physical_nets(model):
         first = physical.ports[0]
         potentials = tuple(physical_potentials(model, physical))
-        if len(physical.ports) == _WIRE_PORTS:
+        link = first in earth and len({item_of_port(model, p) for p in physical.ports}) == 1  # a PE terminal's two sides: no wire
+        if len(physical.ports) == _WIRE_PORTS and not link:
             continue
         if first in earth:
             kinds[first] = PowerKind.PE

@@ -1,0 +1,28 @@
+schema = 2
+
+[part]
+mpn = "CHAIN-GAS-DETECTOR"
+manufacturer = "Demo"
+description = "Fixed gas detector (catalytic/IR transmitter class), 18-32 V DC supply at 0.1 A, with a 2-pin 4-20 mA signal output"
+category = "generic"
+class_code = "B"
+
+[[function]]
+name = "sup"
+kind = "load"
+ports = [
+    { name = "2", role = "generic", side = "line" },
+    { name = "1", role = "generic", side = "load" },
+]
+
+[function.operating]
+voltage = [{ min = "18 V", max = "32 V" }]
+nominal_current = "0.1 A"
+
+[[function]]
+name = "sig"
+kind = "sensor"
+ports = [
+    { name = "6", role = "generic", side = "line" },
+    { name = "7", role = "generic", side = "load" },
+]

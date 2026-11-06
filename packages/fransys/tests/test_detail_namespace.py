@@ -69,8 +69,8 @@ from fransys_author.surface._removed import REMOVED
 # STUB-PER-CONDUCTOR (layout-0533) bumps SCHEMA_VERSION 22 -> 23, which the digest holds: only that moves it; it ended e755c0bb2d24...
 # MATES-LIB (R1740) stores the connector Gender by its elecdef name (MALE, not male): it moves again; the pin before it ended ede710deb701...
 # DEMO-TB-2.5-X12 left the demo library (R1778); DEMO-CTRL-SUPPLY-2DO-1AI (N5c) joined it: the merge moves it; it ended dcb48ccd9eca...
-# DEMO-GAS-DETECTOR, DEMO-TRAFO-400-230 and DEMO-MCB-2P-C2 joined the demo library (DET-CND): the merge moves it again.
-_DIGEST_BEFORE_THE_MOVE = "c99074c8915c65953d584e7b57aaee9e3aaca9bc52473d579f6cd1f6c9105826"
+# DEMO-GAS-DETECTOR, DEMO-TRAFO-400-230, DEMO-MCB-2P-C2 (DET-CND) and DEMO-BOARD-4J (MARK-DOOR-FIX) joined the demo library: it moves again.
+_DIGEST_BEFORE_THE_MOVE = "c8b1536b4f9e1afefd0d905d99cb5254b9d543bc71cf1742956155257ecf3530"
 
 
 def test_each_moved_call_builds_the_model_it_built_on_d():

@@ -20,12 +20,12 @@ def test_a_rating_and_an_operating_round_trip() -> None:
     operating = Operating(fault_current=(Range(Role.RATED, max=Unit.A(800), at=At(Current.DC)),), fault_time_constant=Unit.MS(5))
     listing = _listing(rating, operating)
     text = dumps(listing)
-    assert '"listing_version":6' in text
+    assert '"listing_version":7' in text
     assert loads(text) == listing
     assert dumps(loads(text)) == text
 
 
 def test_a_stored_version_2_listing_is_refused_with_the_fix() -> None:
-    text = dumps(_listing(None, None)).replace('"listing_version":6', '"listing_version":2')
+    text = dumps(_listing(None, None)).replace('"listing_version":7', '"listing_version":2')
     with pytest.raises(SchemaVersionError, match=r"fr\.rebaseline"):
         loads(text)

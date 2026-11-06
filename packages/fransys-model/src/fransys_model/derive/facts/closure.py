@@ -4,7 +4,7 @@ A fact of `derive`: the checks import it from here (EL-3).
 """
 
 import dataclasses
-from typing import TYPE_CHECKING, Final, Literal, cast
+from typing import TYPE_CHECKING, Final, Literal
 lazy from collections.abc import Callable, Iterable, Iterator, Sequence
 
 from fransys_model.derive.facts.conductor_facts import is_bridge
@@ -58,8 +58,7 @@ def any_link(_role: LinkRole) -> bool:
 # What a rail needs to reach a port: the state each item on its way must be in. An empty
 # condition needs nothing. A condition that names one item in two states can never hold.
 type Condition = frozenset[tuple[Id[Item], Literal["rest", "operated"]]]
-# The cast: an empty set, whose elements ty infers Unknown.
-_ALWAYS: Final[Condition] = cast("Condition", frozenset())
+_ALWAYS: Final[Condition] = frozenset()
 
 
 @value

@@ -161,6 +161,7 @@ class Plant:
         *,
         template: Id[PortTemplate] | None = None,
         again: str = "",
+        marking: str | None = None,
     ) -> Id[Port]:
         """Add a port called `name`; `again` tells the key of a second port of that name apart."""
         key = (*self._key_of(function), name + again)
@@ -170,6 +171,7 @@ class Plant:
             function=function,
             template=template,
             name=name,
+            marking=marking,
             boundary=PortBoundary.GENERIC,
         )
         self.add(port)

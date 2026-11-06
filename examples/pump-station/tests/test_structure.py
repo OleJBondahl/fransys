@@ -5,7 +5,7 @@ Three things this design decided and nothing else pins down:
 - Every item outside the cabinet is at the one location `+EXT` (owner ruling 2026-09-24). No
   location `FLD`, `DB` or `NET` exists, and an item added outside the cabinet at any other
   location fails the first test.
-- The cabinet is the unit `pump-cabinet` revision `1.10`, with its ten revisions in order, and the
+- The cabinet is the unit `pump-cabinet` revision `1.11`, with its eleven revisions in order, and the
   only unit of the design.
 - the two `fr.write` calls produce exactly the two folders `cabinet/` and `all/`, each with
   its own set of files, and no file directly in the root of `out/`.
@@ -29,22 +29,22 @@ units = fr.derive.units
 EXT_ITEMS = {"X0", "M1", "M2", "W1", "W11", "W21", "K1", "W3"}
 
 CABINET_FILES = {
-    "data/pump-cabinet-v1.10-bom.csv",
-    "data/pump-cabinet-v1.10-cables.csv",
-    "data/pump-cabinet-v1.10-cores.csv",
-    "pump-cabinet-v1.10.pdf",
-    "data/pump-cabinet-v1.10-designations.csv",
-    "data/pump-cabinet-v1.10-plc.csv",
-    "data/pump-cabinet-v1.10-terminals-X4.csv",
-    "data/pump-cabinet-v1.10-terminals-X1.csv",
-    "data/pump-cabinet-v1.10-terminals-X2.csv",
-    "data/pump-cabinet-v1.10-terminals-X3.csv",
-    "data/pump-cabinet-v1.10-wago-U1.xml",
-    "data/pump-cabinet-v1.10-wires.csv",
+    "data/pump-cabinet-v1.11-bom.csv",
+    "data/pump-cabinet-v1.11-cables.csv",
+    "data/pump-cabinet-v1.11-cores.csv",
+    "pump-cabinet-v1.11.pdf",
+    "data/pump-cabinet-v1.11-designations.csv",
+    "data/pump-cabinet-v1.11-plc.csv",
+    "data/pump-cabinet-v1.11-terminals-X4.csv",
+    "data/pump-cabinet-v1.11-terminals-X1.csv",
+    "data/pump-cabinet-v1.11-terminals-X2.csv",
+    "data/pump-cabinet-v1.11-terminals-X3.csv",
+    "data/pump-cabinet-v1.11-wago-U1.xml",
+    "data/pump-cabinet-v1.11-wires.csv",
 }
 ALL_FILES = {
     "data/EX-1-v1.6-bom.csv",
-    "pump-cabinet-v1.10.pdf",
+    "pump-cabinet-v1.11.pdf",
     "data/EX-1-v1.6-cables.csv",
     "data/EX-1-v1.6-cores.csv",
     "data/EX-1-v1.6-designations.csv",
@@ -105,10 +105,10 @@ def test_every_item_outside_the_cabinet_is_at_ext(built: tuple[fr.BuildResult, P
     assert not outside_ext, f"items with no unit and not at +EXT: {sorted(outside_ext)}"
 
 
-def test_cabinet_is_unit_pump_cabinet_rev_1_10_with_all_revisions(
+def test_cabinet_is_unit_pump_cabinet_rev_1_11_with_all_revisions(
     built: tuple[fr.BuildResult, Path, Path],
 ) -> None:
-    """`pump-cabinet` rev `1.10` has revisions `1` to `10`, oldest first, and is the only unit.
+    """`pump-cabinet` rev `1.11` has revisions `1` to `11`, oldest first, and is the only unit.
 
     The cabinet's `bom.csv` lists the two interface relays and no board part.
     """
@@ -120,7 +120,7 @@ def test_cabinet_is_unit_pump_cabinet_rev_1_10_with_all_revisions(
     assert set(by_release_name) == {"pump-cabinet"}, sorted(by_release_name)
     cabinet = by_release_name["pump-cabinet"]
     cabinet_release = fr.derive.unit_release(model, cabinet.id)
-    assert cabinet_release.revision == 10, f"cabinet revision is {cabinet_release.revision!r}"
+    assert cabinet_release.revision == 11, f"cabinet revision is {cabinet_release.revision!r}"
     assert cabinet.parent is None, "the cabinet unit must be a top-level unit"
 
     history = fr.derive.revision_history(model, cabinet.release)
@@ -160,9 +160,10 @@ def test_cabinet_is_unit_pump_cabinet_rev_1_10_with_all_revisions(
             "No mate, board unit or harness line: the interface relays are wired in the cabinet, and the Ethernet link is a cable (R1216, R1253)",
             "SK",
         ),
+        (11, "2026-11-06", "Re-release on Fransys v0.22.6; the design is unchanged (R1807).", "SK"),
     ]
 
-    with (out_dir / "cabinet" / "data" / "pump-cabinet-v1.10-bom.csv").open(
+    with (out_dir / "cabinet" / "data" / "pump-cabinet-v1.11-bom.csv").open(
         newline="", encoding="utf-8"
     ) as handle:
         rows = list(csv.DictReader(handle))

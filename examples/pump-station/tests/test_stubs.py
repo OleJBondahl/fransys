@@ -4,7 +4,7 @@ The cable `-W3` runs from the controller's port `-U1-C1-X1` to the port on the s
 The cabinet page that carries the wires of `-W3` writes a stub (layout deep dive D10): the text
 `-W3 ← +EXT-K1`, the cable, an arrow, then the far end and its ports.
 
-The check reads `pump-cabinet-v1.10.typ`, the Typst source the cabinet PDF is compiled from, in the intermediates
+The check reads `pump-cabinet-v1.11.typ`, the Typst source the cabinet PDF is compiled from, in the intermediates
 directory of the `built` fixture: the PDF compresses its page content, while the `.typ` embeds each
 layout page's SVG verbatim, so the stub text is plain text there. Pages are split at `#pagebreak()`.
 The stub's page is found by its sheet title (the title block's `Page title` cell lists the page's
@@ -43,7 +43,7 @@ def assert_stub_present(typ_text: str) -> None:
 def test_stub_shows_on_the_cabinet_wago_plc_page(built: tuple[fr.BuildResult, Path, Path]) -> None:
     """G18: the stub of `-W3` from `+EXT-K1` is on the cabinet page titled `WAGO PLC`."""
     _, _, intermediates = built
-    assert_stub_present((intermediates / "pump-cabinet-v1.10.typ").read_text(encoding="utf-8"))
+    assert_stub_present((intermediates / "pump-cabinet-v1.11.typ").read_text(encoding="utf-8"))
 
 
 def test_stub_check_fails_when_the_stub_text_is_removed(
@@ -51,7 +51,7 @@ def test_stub_check_fails_when_the_stub_text_is_removed(
 ) -> None:
     """Can-fail proof: the same check raises on a copy of the real text without the stub."""
     _, _, intermediates = built
-    real_text = (intermediates / "pump-cabinet-v1.10.typ").read_text(encoding="utf-8")
+    real_text = (intermediates / "pump-cabinet-v1.11.typ").read_text(encoding="utf-8")
     assert STUB_TEXT in real_text
     with pytest.raises(AssertionError):
         assert_stub_present(real_text.replace(STUB_TEXT, "-W3"))
@@ -62,7 +62,7 @@ def test_stub_check_fails_when_the_stub_is_not_on_the_wago_plc_page(
 ) -> None:
     """Can-fail proof: the same check raises when the sheet title is not `WAGO PLC`."""
     _, _, intermediates = built
-    real_text = (intermediates / "pump-cabinet-v1.10.typ").read_text(encoding="utf-8")
+    real_text = (intermediates / "pump-cabinet-v1.11.typ").read_text(encoding="utf-8")
     assert STUB_TITLE.search(real_text)
     with pytest.raises(AssertionError):
         assert_stub_present(real_text.replace("WAGO PLC", "OTHER"))

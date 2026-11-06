@@ -24,7 +24,7 @@ EXPECTED_DO_CHANNEL_NAMES = ["K1_P1_RUN", "K2_P2_RUN", "DO1_2", "DO1_3"]
 
 def test_wago_export_lists_di_and_do_modules_and_channels(built: tuple) -> None:
     _result, out_dir, _intermediates = built
-    xml_path: Path = out_dir / "cabinet" / "data" / "pump-cabinet-v1.10-wago-U1.xml"
+    xml_path: Path = out_dir / "cabinet" / "data" / "pump-cabinet-v1.11-wago-U1.xml"
     root = ET.parse(xml_path).getroot()
 
     modules = root.findall("Module")

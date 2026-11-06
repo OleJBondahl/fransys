@@ -27,10 +27,10 @@ import pytest
 Built = tuple[fr.BuildResult, Path, Path]
 
 DOCUMENTS = {
-    "pump-cabinet-v1.10.typ": {
+    "pump-cabinet-v1.11.typ": {
         "Title": "Pump cabinet",
         "Number": "SKX-PC-2",
-        "Revision": "1.10",
+        "Revision": "1.11",
         "Customer": "",
     },
     "EX-1-v1.6.typ": {
@@ -41,7 +41,7 @@ DOCUMENTS = {
     },
 }
 CABINET_ROW = (
-    'text("SKX-PC-2"), text("1.10"), text(""), text("Pump cabinet"), text("1"), box(text("-U1"))'
+    'text("SKX-PC-2"), text("1.11"), text(""), text("Pump cabinet"), text("1"), box(text("-U1"))'
 )
 
 
@@ -118,7 +118,7 @@ def test_pdf_metadata_title_is_the_document_title(built: Built, name: str) -> No
 
 def test_document_title_check_fails_on_another_title(built: Built) -> None:
     """Can-fail proof: the title read from a mutated copy differs from the expected one."""
-    real = read_typ(built[2], "pump-cabinet-v1.10.typ")
+    real = read_typ(built[2], "pump-cabinet-v1.11.typ")
     assert document_title(real) == "Pump cabinet"
     assert document_title(
         real.replace('#set document(title: "Pump cabinet"', '#set document(title: ""')
@@ -134,7 +134,7 @@ def assert_cabinet_unit_line(lines: tuple, system_typ: str) -> None:
         for line in lines
         if line.mpn == "SKX-PC-2"
     ]
-    assert found == [(None, "SKX-PC-2", "1.10", "", "Pump cabinet", 1, ("-U1",))], found
+    assert found == [(None, "SKX-PC-2", "1.11", "", "Pump cabinet", 1, ("-U1",))], found
     assert CABINET_ROW in system_typ, "the system document's BOM lacks the cabinet row"
 
 

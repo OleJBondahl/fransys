@@ -32,7 +32,7 @@ def _assert_references_end_with_their_designation(path: Path) -> None:
 def test_cabinet_designations_reference_ends_with_designation(built: tuple) -> None:
     _result, out_dir, _intermediates = built
     _assert_references_end_with_their_designation(
-        out_dir / "cabinet" / "data" / "pump-cabinet-v1.10-designations.csv"
+        out_dir / "cabinet" / "data" / "pump-cabinet-v1.11-designations.csv"
     )
 
 

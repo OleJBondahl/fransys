@@ -156,7 +156,7 @@ def test_all_plc_csv_matches_io_list(built: tuple) -> None:
 
 def test_cabinet_plc_csv_matches_io_list(built: tuple) -> None:
     _result, out_dir, _intermediates = built
-    path = out_dir / "cabinet" / "data" / "pump-cabinet-v1.10-plc.csv"
+    path = out_dir / "cabinet" / "data" / "pump-cabinet-v1.11-plc.csv"
     rows = _read_plc_rows(path)
     with path.open(newline="", encoding="utf-8") as f:
         header = next(csv.reader(f))
@@ -168,7 +168,7 @@ def test_cabinet_plc_csv_matches_io_list(built: tuple) -> None:
 def test_cabinet_do1_1_wired_to_reads_k1_a1(built: tuple) -> None:
     """Acceptance 5: pin `-DO1:DO1` (channel 1) reads the relay coil `-K1:A1` in `cabinet/`."""
     _result, out_dir, _intermediates = built
-    rows = _read_plc_rows(out_dir / "cabinet" / "data" / "pump-cabinet-v1.10-plc.csv")
+    rows = _read_plc_rows(out_dir / "cabinet" / "data" / "pump-cabinet-v1.11-plc.csv")
     row = next(r for r in rows if r["pin"] == "-DO1:DO1")
     assert row["channel_name"] == "1", row
     assert row["wired_to"] == "-K1:A1", row

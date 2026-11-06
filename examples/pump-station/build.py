@@ -102,10 +102,10 @@ def pump(
 
 @fr.unit(
     "pump-cabinet",
-    revision=10,
+    revision=11,
     interface_version=1,
-    date="2026-10-28",
-    text="No mate, board unit or harness line: the interface relays are wired in the cabinet, and the Ethernet link is a cable (R1216, R1253)",
+    date="2026-11-06",
+    text="Re-release on Fransys v0.22.6; the design is unchanged (R1807).",
     by="SK",
     title="Pump cabinet",
     number="SKX-PC-2",
@@ -161,6 +161,12 @@ def pump(
             "revision": 9,
             "date": "2026-10-26",
             "text": "Terminal strip X01 is X4 and breaker F01 is F1: a tag takes no leading zero (R1114)",
+            "created": "SK",
+        },
+        {
+            "revision": 10,
+            "date": "2026-10-28",
+            "text": "No mate, board unit or harness line: the interface relays are wired in the cabinet, and the Ethernet link is a cable (R1216, R1253)",
             "created": "SK",
         },
     ],

@@ -34,7 +34,7 @@ _CSVS = (
     "designations",
     "plc",
     "wires",
-    *(f"terminals-C1-X{n}" for n in _NS),
+    "terminals",
 )
 _SHARED = ("BOM",)
 _NOT_LISTS = ("Cover", "Contents", "schematic")
@@ -293,7 +293,7 @@ def test_each_csv_prints_its_tags_in_natural_order(first: _Run, name: str) -> No
 
 
 def test_a_terminals_far_ends_print_in_natural_order(first: _Run) -> None:
-    (hub,) = (row for row in _rows(first, "terminals-C1-X1") if row["index"] == "1")
+    (hub,) = (row for row in _rows(first, "terminals") if row["designation"].startswith("-X1:") and row["index"] == "1")
     ends = hub["side_a"].split("; ")
     assert ends == [f"+C1-Q{n}:A1" for n in (1, 2)]  # a point takes two conductors (R1266): the hub is two hubs of two
 

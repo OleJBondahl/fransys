@@ -82,7 +82,7 @@ def _hand_built_model():
     cable_part = _part("cable", PartCategory.CABLE)
 
     ext_root = _item("ext-root", unit=mid, external=True)
-    ext_child = _item("ext-child", unit=mid, parent=ext_root)
+    ext_child = _item("ext-child", unit=mid, parent=ext_root, external=True)
     ext_grandchild = _item("ext-grandchild", unit=deep, parent=ext_child)
     free = _item("free")
     top_item = _item("top-item", unit=top)
@@ -344,3 +344,11 @@ def test_boundary_of_lists_each_units_boundary_functions_once_in_authoring_key_o
         assert list(boundary_of[id_]) == sorted(boundary_of[id_], key=lambda f: functions(model)[f].key)
         assert membership.boundary(model, id_) == boundary_of[id_]
     assert len(boundary_of) == len(unit_id)
+
+
+def test_external_root_names_the_outermost_external_ancestor():
+    model = _hand_built_model()
+    item_id = {record.key[-1]: record.id for record in items(model).values()}
+    roots = unit_index(model).external_root
+    assert {roots[item_id[n]] for n in ("ext-root", "ext-child", "ext-grandchild")} == {item_id["ext-root"]}
+    assert item_id["free"] not in roots

@@ -37,7 +37,6 @@ from fransys_model.derive import (
     export_form_of,
     export_set,
     export_set_name,
-    list_context,
     pdf_texts,
     reference_fragment,
     release_names,
@@ -175,11 +174,6 @@ def _resolve_unit(model: Model, unit: object) -> Id[ModelUnit] | None:
     raise FransysError(msg)
 
 
-def _list_context(model: Model, unit: Id[ModelUnit] | None, subject: Id[Any]) -> Id[Any] | None:
-    """The list context a CSV prints its ends in (model-0054 section 4); none in `out/all/`."""
-    return None if unit is None else list_context(model, subject)
-
-
 def _produce(make: Callable[[Id[Any]], Callable[[], str | bytes]], subject: Id[Any]) -> str | bytes:
     return make(subject)()
 
@@ -199,7 +193,6 @@ class _Export:
 def _producers(job: _Export) -> dict[str, Callable[[Id[Any]], Callable[[], str | bytes]]]:
     """The bytes' producer of each kind of `export_set`, by the row's subject."""
     model, unit = job.drawn.model, job.within
-    context = partial(_list_context, model, unit)
     return {
         "bom": lambda _s: partial(bom_csv, model, unit),
         "plc": lambda _s: partial(plc_csv, model, unit=unit),
@@ -214,8 +207,8 @@ def _producers(job: _Export) -> dict[str, Callable[[Id[Any]], Callable[[], str |
             findings=job.findings,
             changes=job.changes,
         ),
-        "terminals": lambda s: partial(terminal_csv_of, model, s, unit=unit, context=context(s)),
-        "connectors": lambda s: partial(connectors_csv_of, model, s, unit=unit, context=context(s)),
+        "terminals": lambda _s: partial(terminal_csv_of, model, unit=unit),
+        "connectors": lambda _s: partial(connectors_csv_of, model, unit=unit),
         "wago": lambda s: partial(modules_xml_of, model, s, unit=unit),
         "pdf": lambda s: partial(_compile_pdf, job.drawn, s, job.settings),
     }

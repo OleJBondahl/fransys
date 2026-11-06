@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 
 from electrical_symbols import is_generic_box
 from fransys_layout.symbols import library_symbol
+from fransys_model.derive import hidden_pins
 from fransys_model.derive.drawing_text import port_marking
 
 if TYPE_CHECKING:
@@ -22,13 +23,16 @@ __all__ = ["marking_slots"]
 def marking_slots(model: Model, pick: Pick, library: Library) -> dict[str, str]:
     """`marking.<symbol port>` to its text, for each port of `pick` whose slot the symbol declares.
 
-    A generic box is left to `drawn_slots`; a port the part marks with nothing prints nothing.
+    A generic box is left to `drawn_slots`; a port the part marks with nothing prints nothing, and a hidden pin (`derive.hidden_pins`) none.
     """
     if is_generic_box(pick.key):
         return {}
     declared = {slot.id for slot in library_symbol(library, pick.key, pick.poles).slots}
     found = {}
+    hidden = hidden_pins(model)
     for port, name in pick.ports.items():
+        if port in hidden:  # a pin the sheets leave off prints no marking
+            continue
         slot = f"marking.{name}"
         text = port_marking(model, port)
         if slot in declared and text:

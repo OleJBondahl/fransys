@@ -1,7 +1,7 @@
 """UNIT-ID I5 and acceptance 4 (files half) and 6: export names in a unit's folder.
 
-A per-item export in a unit's folder is named from the item's designation printed for that unit
-(`terminals-X2.csv`, no location path of the parent's); the unit's own root takes the bare kind
+The terminal list and the connector list are one file each in a unit's folder (`terminals.csv`, `connectors.csv`);
+a per-rack export is named from the rack's designation printed for that unit (`wago-U1.xml`, no location path of the parent's)
 """
 # CONNECTION_NOT_DRAWN 4 per default-salt build set (MATES-DISABLED): mated, harness or board-unit input, refused for 0.22 (R1216).
 
@@ -47,7 +47,7 @@ from fransys_model.vocab import (
 from fransys_model.vocab.facets.pcb import PcbFacet
 from fransys_model.vocab.templates import Part
 
-_BARE_NAMES = ("terminals.csv", "connectors.csv", "wago.xml")
+_BARE_NAMES = ("wago.xml",)
 
 
 @pytest.fixture(scope="module")
@@ -106,8 +106,7 @@ def _rows(path):
 
 def test_the_cabinets_strip_list_is_named_relative_to_the_unit(cabinet_write):
     names = _names(cabinet_write)
-    assert {n for n in names if "terminals" in n} == {"demo-pump-cabinet-v1.2-terminals-X2.csv"}
-    assert "terminals.csv" not in names, "the strip is not the unit's sole root, so not bare"
+    assert {n for n in names if "terminals" in n} == {"demo-pump-cabinet-v1.2-terminals.csv"}
 
 
 def test_no_name_in_a_unit_folder_carries_the_location_path(cabinet_write, board_write):
@@ -122,8 +121,8 @@ def test_out_all_keeps_the_full_reference_designation_names(worked, tmp_path):
     result, _cabinet, _board = worked
     names = _names(fr.write(result, tmp_path, unit=None))
     assert names == _ALL_WRITE_FILES
-    assert "P-1001-v1.1-terminals-ER-C1-P1-X2.csv" in names
-    assert not names & {"terminals-X2.csv", *_BARE_NAMES}
+    assert {n for n in names if "terminals" in n or "connectors" in n} == {"P-1001-v1.1-terminals.csv", "P-1001-v1.1-connectors.csv"}
+    assert not names & set(_BARE_NAMES)
 
 
 # -- acceptance 4, files half -----------------------------------------------------------------
@@ -198,7 +197,7 @@ def _unit_names(tmp_path, *, strip, rack):
     return _names(fr.write(result, tmp_path, unit=unit))
 
 
-def test_a_strip_that_is_the_sole_root_of_its_unit_is_the_bare_terminals_csv(tmp_path):
+def test_a_unit_with_strips_writes_one_terminals_csv(tmp_path):
     names = _unit_names(tmp_path, strip=True, rack=False)
     assert "demo-unit-v1.1-terminals.csv" in names
     assert not any(("terminals-" in name) or ("wago" in name) for name in names)
@@ -212,7 +211,7 @@ def test_a_rack_that_is_the_sole_root_of_its_unit_is_the_bare_wago_xml(tmp_path)
 
 def test_a_strip_and_a_rack_beside_each_other_take_unit_relative_names(tmp_path):
     names = _unit_names(tmp_path, strip=True, rack=True)
-    assert {"demo-unit-v1.1-terminals-X1.csv", "demo-unit-v1.1-wago-U1.xml"} <= names
+    assert {"demo-unit-v1.1-terminals.csv", "demo-unit-v1.1-wago-U1.xml"} <= names
     assert not names & set(_BARE_NAMES)
     assert not any("C1" in name for name in names)
 
@@ -236,7 +235,7 @@ def test_a_rewrite_removes_stale_bare_and_dashed_exports_and_keeps_other_files(w
     assert not remaining & set(stale)
     in_data = {p.name for p in (tmp_path / "data").iterdir()}
     assert not in_data & set(stale)
-    assert "demo-pump-cabinet-v1.2-terminals-X2.csv" in in_data
+    assert "demo-pump-cabinet-v1.2-terminals.csv" in in_data
     assert not [name for name in remaining if name.endswith((".csv", ".xml"))]
     assert (tmp_path / "notes.txt").read_text(encoding="utf-8") == "keep me"
 
@@ -290,16 +289,10 @@ def _two_boards_in_one_unit(tags):
     return freeze(draft), unit.id
 
 
-def test_two_boards_with_one_relative_name_in_one_unit_folder_raise(tmp_path):
+def test_two_boards_in_one_unit_folder_write_one_connectors_csv(tmp_path):
     model, unit = _two_boards_in_one_unit(("X1", "X1"))
-    with pytest.raises(ExportNameClashError, match=r"connectors-X1\.csv"):
-        fr.write(BuildResult(model=model, findings=()), tmp_path, unit=unit)
-
-
-def test_two_boards_with_distinct_relative_names_in_one_unit_folder_do_not_clash(tmp_path):
-    model, unit = _two_boards_in_one_unit(("X1", "X2"))
     written = fr.write(BuildResult(model=model, findings=()), tmp_path, unit=unit)
-    assert {"u-v1.1-connectors-X1.csv", "u-v1.1-connectors-X2.csv"} <= _names(written)
+    assert {n for n in _names(written) if "connectors" in n} == {"u-v1.1-connectors.csv"}
 
 
 # -- EXPORT-NAMES Part 1: export_set_name, export_prefix, export_name's join -----------------
@@ -370,14 +363,14 @@ def test_export_name_joins_prefix_kind_and_fragment(worked):
     model = result.model
     assert export_name(model, None, "pdf") == "P-1001-v1.1.pdf"
     assert export_name(model, None, "csv", kind="bom") == "P-1001-v1.1-bom.csv"
-    assert export_name(model, None, "csv", kind="terminals", fragment="X2") == ("P-1001-v1.1-terminals-X2.csv")
+    assert export_name(model, None, "csv", kind="wago", fragment="U2") == ("P-1001-v1.1-wago-U2.csv")
 
 
 def test_export_name_with_no_project_gives_todays_bare_names():
     """EN1's own escape hatch: an empty prefix leaves `export_name` at today's bare names."""
     model = freeze(Draft())
     assert export_name(model, None, "csv", kind="bom") == "bom.csv"
-    assert export_name(model, None, "csv", kind="terminals", fragment="X1") == "terminals-X1.csv"
+    assert export_name(model, None, "csv", kind="wago", fragment="U1") == "wago-U1.csv"
 
 
 # -- EXPORT-NAMES Part 1, acceptance 2: stale exports removed by prefix (EN4) -----------------
@@ -657,7 +650,7 @@ def test_export_set_rows_are_the_names_write_gives_and_the_overview_is_whole_mod
         names = fr.export_names(result, unit=unit)
         assert {(r.export_kind, r.subject): export_path(export_form_of(model), r.name) for r in rows} == names
     system = export_set(model, None)
-    assert [r.export_kind for r in system[:7]] == [
+    assert [r.export_kind for r in system[:9]] == [
         "bom",
         "plc",
         "wires",
@@ -665,6 +658,8 @@ def test_export_set_rows_are_the_names_write_gives_and_the_overview_is_whole_mod
         "cables",
         "cores",
         "overview",
+        "terminals",
+        "connectors",
     ]
     assert system[0].name == "P-1001-v1.1-bom.csv"
     assert "overview" not in {r.export_kind for r in export_set(model, cabinet)}

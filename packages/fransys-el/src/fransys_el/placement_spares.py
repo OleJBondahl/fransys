@@ -3,7 +3,7 @@
 from collections import defaultdict
 from typing import TYPE_CHECKING
 
-from fransys_model.derive import PowerKind, drawn_physical_nets, function_item, stands, terminal_items
+from fransys_model.derive import PowerKind, drawn_physical_nets, drawn_stands, function_item, terminal_items
 
 from .kit_keys import function_of
 from .placement_skips import SPARE_TERMINAL
@@ -35,7 +35,7 @@ def spare_leads(
         if len(ends) > 1:
             for sym in filter(None, ends):
                 met[sym].add("")
-    for port, kind in stands(model).items():  # a PE terminal joined by d.earth ends on the PE net
+    for port, kind in drawn_stands(model).items():  # a PE terminal joined by d.earth ends on the PE net
         if kind is PowerKind.PE and port in pins:
             met[pins[port].sym].add("")
     terminals = terminal_items(model)

@@ -396,14 +396,7 @@ def _findings_table_rows(markdown: str) -> list[list[str]]:
     return [[cell.strip() for cell in line.strip("|").split("|")] for line in table_lines[2:]]
 
 
-FINDINGS_PAGES = (
-    "findings-validators",
-    "findings-release",
-    "findings-render",
-    "findings-pdf",
-    "findings-kicad",
-    "findings-parts",
-)
+FINDINGS_PAGES = tuple(sorted(p.name.removesuffix(".md") for p in files("fransys").joinpath("guide").iterdir() if p.name.startswith("findings-")))
 
 
 def _all_rows() -> list[list[str]]:

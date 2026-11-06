@@ -70,7 +70,8 @@ from fransys_author.surface._removed import REMOVED
 # MATES-LIB (R1740) stores the connector Gender by its elecdef name (MALE, not male): it moves again; the pin before it ended ede710deb701...
 # DEMO-TB-2.5-X12 left the demo library (R1778); DEMO-CTRL-SUPPLY-2DO-1AI (N5c) joined it: the merge moves it; it ended dcb48ccd9eca...
 # DEMO-GAS-DETECTOR, DEMO-TRAFO-400-230, DEMO-MCB-2P-C2 (DET-CND) and DEMO-BOARD-4J (MARK-DOOR-FIX) joined the demo library: it moves again.
-_DIGEST_BEFORE_THE_MOVE = "c8b1536b4f9e1afefd0d905d99cb5254b9d543bc71cf1742956155257ecf3530"
+# HIDE-PE (R1830) adds `hide_pe` to the `[export]` house record, which the digest holds: only that moves it; it ended c8b1536b4f9e...
+_DIGEST_BEFORE_THE_MOVE = "0fd1ae32af131f5134cc5c78ea685cb746d5692d0f5c5849c2e10e4879ff0c3a"
 
 
 def test_each_moved_call_builds_the_model_it_built_on_d():

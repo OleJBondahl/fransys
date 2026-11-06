@@ -138,7 +138,7 @@ def external(model: Model, item: Id[Item]) -> bool:
         SchemaError: `item` is not an item of `model`.
     """
     require(items(model).get(item), "item", item)
-    return item in unit_index(model).external
+    return item in unit_index(model).external_root
 
 
 def unit_own_roots(model: HasTables, unit: Id[Unit]) -> tuple[Id[Item], ...]:

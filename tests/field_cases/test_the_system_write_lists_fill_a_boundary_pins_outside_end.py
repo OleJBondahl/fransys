@@ -92,18 +92,18 @@ def test_the_units_wire_list_has_no_outside_row(written: _Written) -> None:
 
 
 def test_the_terminal_list_fills_the_outside_side(written: _Written) -> None:
-    (row,) = _rows(written.system, "terminals-C1-U1-X1.csv")
+    (row,) = (r for r in _rows(written.system, "*terminals.csv") if r["designation"].endswith("-C1-U1-X1:1"))
     assert (row["side_a"], row["side_b"]) == ("-C1-U1-M1:U", "-C1-X9:1")
 
 
 def test_the_units_terminal_list_prints_the_outside_side_empty(written: _Written) -> None:
-    (row,) = _rows(written.unit, "*-terminals-X1.csv")
+    (row,) = _rows(written.unit, "*-terminals.csv")
     assert (row["side_a"], row["side_b"]) == ("-M1:U", "")
 
 
 def test_the_parent_strip_list_reaches_the_far_pin(written: _Written) -> None:
     """The strip above the boundary pin prints both its sides: the pin and the motor beyond."""
-    (row,) = _rows(written.system, "terminals-C1-X9.csv")
+    (row,) = (r for r in _rows(written.system, "*terminals.csv") if "-C1-X9" in r["designation"])
     assert (row["side_a"], row["side_b"]) == ("-C1-U1-X1:1", "+F1-M9:U")
 
 

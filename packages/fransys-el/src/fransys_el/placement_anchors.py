@@ -9,7 +9,7 @@ from electrical_symbols import WIRING_GRID, power_symbol_key
 from fransys_layout import Facing, symbol_geometry
 from fransys_layout.core import SIDE_STEP, Anchor, Box, PinRef, Pose
 from fransys_layout.symbols import library_symbol, measured_slots
-from fransys_model.derive import port_power_text, stands
+from fransys_model.derive import drawn_stands, port_power_text
 from fransys_model.derive.order import functions_in_order
 from fransys_model.layout import Orientation
 
@@ -49,7 +49,7 @@ _AROUND = tuple(Facing)  # clockwise from N, so two on is the opposite
 
 def stood(model: Model, kit: SymbolKit) -> Iterator[tuple[str, str, Id[Port], str]]:
     """(symbol id, pin name, port, `PowerKind` value) of each pick port on a power net."""
-    power = stands(model)
+    power = drawn_stands(model)
     for function in cast("tuple[Id[Function], ...]", functions_in_order(model, kit)):
         pick = kit[function]
         for port in cast("tuple[Id[Port], ...]", functions_in_order(model, pick.ports)):

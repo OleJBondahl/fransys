@@ -9,10 +9,7 @@ from typing import Any
 import fransys as fr
 import pytest
 from _expected_codes import expect_codes
-from fransys._drawing_library import with_drawing_library
-from fransys._export_ledger import ExportNameClashError
 from fransys._exports import _Export, _exports, _file_safe
-from fransys._house import with_house
 from fransys.pipeline import (
     BuildFailedError,
     BuildResult,
@@ -20,17 +17,15 @@ from fransys.pipeline import (
     _svgs,
     _svgs_cache,
 )
-from fransys.settings import settings
 
 from electrical_symbols import LIBRARY
 from fransys_layout import DiagramLayout
-from fransys_model.kernel import Draft, Finding, Id, Origin, Severity, freeze, make_id
+from fransys_model.kernel import Draft, Finding, Id, Origin, Severity, make_id
 from fransys_model.vocab import Document, DocumentPreset
 from fransys_model.vocab.connectivity import Conductor
 from fransys_model.vocab.core import Function, Item, Port, Unit, UnitRelease
 from fransys_model.vocab.enums import ConductorKind, FunctionKind, PartCategory, PortBoundary
 from fransys_model.vocab.facets.cable import CableFacet, CableProductFacet, CoreFacet
-from fransys_model.vocab.facets.pcb import PcbFacet
 from fransys_model.vocab.revision import Revision
 from fransys_model.vocab.templates import FunctionTemplate, Part, PortTemplate
 
@@ -257,21 +252,21 @@ def test_stale_exports_are_removed_on_the_raise_path(demo_cabinet, tmp_path, dem
 # -- F6: naming ------------------------------------------------------------------
 
 
-def test_terminal_export_is_named_from_the_strip_reference(tmp_path, demo_cabinet_result):
+def test_terminal_export_is_one_file_for_every_strip(tmp_path, demo_cabinet_result):
     result = replace(demo_cabinet_result, findings=())
     written = fr.write(result, tmp_path / "out")
     names = {p.name for p in written}
-    assert "DEMO-1-v1.1-terminals-C1-X1.csv" in names
+    assert "DEMO-1-v1.1-terminals.csv" in names
     assert not [p for p in tmp_path.joinpath("out").iterdir() if p.suffix in {".csv", ".xml"}]
     assert all(p.parent.name == "data" for p in written if p.suffix in {".csv", ".xml"})
 
 
-def test_board_and_rack_exports_are_named_from_their_reference(tmp_path):
+def test_connector_export_is_one_file_and_the_rack_export_is_named_from_its_reference(tmp_path):
     model = build_board_and_rack_model()
     result = BuildResult(model=model, findings=())
     written = fr.write(result, tmp_path / "out")
     names = {p.name for p in written}
-    assert "connectors-PCB1.csv" in names
+    assert "connectors.csv" in names
     assert "wago-R1.xml" in names
 
 
@@ -296,53 +291,6 @@ def test_out_dir_never_receives_an_svg(tmp_path, demo_cabinet_result):
     assert not any(path.suffix == ".svg" for path in written)
     assert not list(out_dir.glob("*.svg"))
     assert list(intermediates.glob("*.svg"))
-
-
-_CLASH_ORIGIN = Origin(file="test_acceptance.py", line=1, note="deliberate clash")
-
-
-def _clashing_boards_model():
-    """Two boards, one designation, no placement: `reference_fragment` collides."""
-    parts_and_boards = []
-    for suffix in ("a", "b"):
-        part = Part(
-            id=make_id(Part, (f"board-{suffix}",)),
-            key=(f"board-{suffix}",),
-            mpn=f"SIM-BOARD-{suffix}",
-            manufacturer="Example Co",
-            description="Invented board",
-            category=PartCategory.BOARD,
-            class_code="A",
-        )
-        pcb = PcbFacet(
-            id=make_id(PcbFacet, (f"board-{suffix}", "pcb")),
-            key=(f"board-{suffix}", "pcb"),
-            subject=part.id,
-            revision="A",
-        )
-        item = Item(
-            id=make_id(Item, (f"board-item-{suffix}",)),
-            key=(f"board-item-{suffix}",),
-            part=part.id,
-            parent=None,
-            position=None,
-            tag="X1",
-            description="Invented board",
-        )
-        parts_and_boards.extend([part, pcb, item])
-    draft = Draft()
-    draft.extend(parts_and_boards, origin=_CLASH_ORIGIN)
-    return with_drawing_library(with_house(freeze(draft), settings()))
-
-
-def test_a_deliberate_export_name_clash_raises(tmp_path):
-    """`ExportNameClashError` has no `.findings` (unlike `BuildFailedError`): assert on its own text."""
-    model = _clashing_boards_model()
-    result = BuildResult(model=model, findings=())
-    with pytest.raises(ExportNameClashError) as excinfo:
-        fr.write(result, tmp_path / "out")
-    text = str(excinfo.value)
-    assert "EXPORT_NAME_CLASH (error): two subjects both resolve to the export name" in text
 
 
 # -- Determinism -------------------------------------------------------------------

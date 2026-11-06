@@ -4,6 +4,8 @@ This page holds the `[function.connector]` table of the part-file contract. It i
 
 ### `[function.connector]`
 
+Mated connectors are refused for 0.22: a design that mates two connectors or draws a harness line gets `MATES_DISABLED`, an ERROR (model-0405). The part file still states the connector, and `mates` stays data only.
+
 A sub-table of the `[[function]]` entry it describes (P1). The `connector` facet's subject is a
 `FunctionTemplate`, not the `Part`. So a part with more than one connector-style function names
 each one under its own `[[function]]` entry, never in one top-level table. Maps to the model's

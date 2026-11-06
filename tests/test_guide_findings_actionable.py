@@ -9,14 +9,7 @@ from __future__ import annotations
 import re
 from importlib.resources import files
 
-FINDINGS_PAGES = (
-    "findings-validators",
-    "findings-release",
-    "findings-render",
-    "findings-pdf",
-    "findings-kicad",
-    "findings-parts",
-)
+FINDINGS_PAGES = tuple(sorted(p.name.removesuffix(".md") for p in files("fransys").joinpath("guide").iterdir() if p.name.startswith("findings-")))
 _WHO = frozenset({"consumer", "part author", "Fransys", "note"})
 _BANNED = re.compile(r"nothing to fix|accept", re.IGNORECASE)
 

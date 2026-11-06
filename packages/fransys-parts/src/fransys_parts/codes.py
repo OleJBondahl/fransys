@@ -119,7 +119,7 @@ _OWN: tuple[CodeInfo, ...] = (
         who="consumer",
         cause="A part-file could not be read (missing file, permission error, or bad encoding).",
         fix=("No call clears this: fix the path, the file permissions or the UTF-8 encoding, then load again."),
-        page="findings-validators",
+        page="findings-build",
     ),
     CodeInfo(
         code="FLOAT_FORBIDDEN",
@@ -128,7 +128,7 @@ _OWN: tuple[CodeInfo, ...] = (
         who="consumer",
         cause=("A part-file has a bare TOML float, which the contract forbids (quote values as strings)."),
         fix=('A number is a quoted string in a part file, never a bare TOML float. Write: nominal_current = "24.5 A"'),
-        page="findings-validators",
+        page="findings-build",
     ),
     CodeInfo(
         code="LIBRARY_FILE_MISSING",
@@ -146,7 +146,7 @@ _OWN: tuple[CodeInfo, ...] = (
         who="consumer",
         cause="A part-file string contains a line break, which the contract forbids.",
         fix=('A string stays on one line; a line break is written as TOML\'s escaped `\\n`. Write: description = "one line"'),
-        page="findings-validators",
+        page="findings-build",
     ),
     CodeInfo(
         code="PART_DUPLICATE",

@@ -21,9 +21,10 @@ from .facts.conductor_facts import is_bridge
 from .facts.roles import port_boundary
 from .far_ends import far_ends
 from .indexes import build_indexes
-from .lookups import conductors_by_role, item_of_port, require, strip_set, terminal_items
+from .lookups import conductors_by_role, item_of_port, require, scope_context, terminal_items
 from .open_core_ends import open_ends_at
-from .order import in_designation_order, natural_key
+from .order import terminals_in_order
+from .report_scope import terminal_strips, unit_strips
 from .rows import TerminalRow
 from .texts.context import PrintContext
 from .texts.terminal_text import terminal_text
@@ -103,33 +104,33 @@ def _near_ports(model: Model, terminal: Id[Item], role: PortBoundary) -> set[Id[
 
 def terminal_rows(
     model: Model,
-    strip: Id[Item],
+    strip: Id[Item] | None = None,
     *,
     unit: Id[Unit] | None = None,
     context: Id[AspectNode] | None = None,
 ) -> tuple[TerminalRow, ...]:
-    """One `TerminalRow` per `strip` terminal, by `(natural_key(group), index, id)`.
+    """One `TerminalRow` per terminal of `strip`, or of every strip of the scope with `strip=None`.
+
+    Strips are `terminal_strips`, or the `unit_strips` of `unit`; the terminals of a strip are in
+    `order.terminals_in_order`.
 
     Args:
         model: The model to read.
-        strip: The terminal strip item whose rows are built.
+        strip: The terminal strip item whose rows are built; `None` is every strip of the scope.
         unit: The unit whose own document prints the list, keyword-only; `None` for none.
         context: The location node the list prints for, keyword-only; ignored once `unit` has one.
-
-    Returns:
-        One `TerminalRow` per terminal child of `strip`, sorted.
 
     Raises:
         SchemaError: `strip` is not an item of `model`, or a far end's item has no designation.
     """
+    if strip is None:
+        strips = terminal_strips(model) if unit is None else unit_strips(model, unit)
+        return tuple(row for each in strips for row in terminal_rows(model, each, unit=unit, context=scope_context(model, each, unit, context)))
     require(items(model).get(strip), "item", strip)
     context = unit_list_context(model, unit, context)
     idx = build_indexes(model)
     facets = {facet.subject: facet for facet in facets_of(model, TerminalFacet).values()}
-    children = sorted(
-        (child for child in child_items(model, strip) if child in facets),
-        key=lambda child: (natural_key(facets[child].group), facets[child].index, child),
-    )
+    children = list(terminals_in_order(model, {child: facets[child] for child in child_items(model, strip) if child in facets}))
     groups = _jumper_groups(model, children)
     rows = []
     for child in children:
@@ -214,24 +215,6 @@ def unconnected_ports(model: Model) -> tuple[Id[Port], ...]:
         Every port with no other port on its physical net, sorted.
     """
     return tuple(net.ports[0] for net in physical_nets(model) if len(net.ports) == 1)
-
-
-def terminal_strips(model: Model) -> tuple[Id[Item], ...]:
-    """Every item that at least one `terminal` facet names as its strip, in designation order.
-
-    A terminal's strip is its parent item: `TerminalFacet` carries no strip field of its
-    own. Shared by `fransys`'s export enumeration and the
-    pdf document contents, so the two never disagree about what a
-    strip is.
-
-    Args:
-        model: The model to read.
-
-    Returns:
-        Every strip item's id, by natural designation, then id.
-    """
-    strips = strip_set(model)
-    return in_designation_order(model, strips)
 
 
 def unused_terminals(model: Model, strip: Id[Item]) -> tuple[Id[Item], ...]:

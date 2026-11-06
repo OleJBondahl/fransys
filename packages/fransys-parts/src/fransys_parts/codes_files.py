@@ -28,6 +28,6 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         who="consumer",
         cause="A part-file is not valid TOML.",
         fix=('The file is valid TOML: fix the syntax error the message names. Write: name = "value"'),
-        page="findings-validators",
+        page="findings-build",
     ),
 )

@@ -22,10 +22,12 @@ from .facts.mates import mate_port_of
 from .far_ends import far_ends
 from .indexes import build_indexes
 from .location_text import port_designation_in, product_designation_in
-from .lookups import connector_facets, descendants, net_name, pin_order, require
+from .lookups import connector_facets, descendants, net_name, pin_order, require, scope_context
 from .mate_rows import mate_partners
 from .order import in_designation_order, natural_key
+from .report_scope import unit_boards
 from .rows import ConnectorPin, ConnectorRow
+from .structure import boards
 from .unit_nodes import outside_unit
 
 if TYPE_CHECKING:
@@ -36,26 +38,28 @@ if TYPE_CHECKING:
 
 def connector_rows(
     model: Model,
-    board: Id[Item],
+    board: Id[Item] | None = None,
     *,
     unit: Id[Unit] | None = None,
     context: Id[AspectNode] | None = None,
 ) -> tuple[ConnectorRow, ...]:
-    """One `ConnectorRow` per connector of `board`, with its pins, nets and mate.
+    """One `ConnectorRow` per connector of `board`, or of every board of the scope (`boards`, `unit_boards`) with `None`.
 
     A connector is a `connector`-kind `Function` of `board` or a descendant whose template carries a
-    `connector` facet. `designation` is `connector_designation`: the item's own designation, or
-    `<item designation>-<label>` when the item has two or more connector functions. Rows sort by
-    `(designation, connector id)`. `mate` is the other end of a `Mate`; a pin's `mate_port` is the
-    port of equal name on it, and its `net` the declared net listing its port. `pins` sort by
+    `connector` facet. `designation` is `connector_designation`: the item's own, or
+    `<item designation>-<label>` for an item with two or more connector functions. Rows sort by
+    `(designation, connector id)`. `mate` is the other end of a `Mate`, a pin's `mate_port` the port of
+    equal name on it, its `net` the declared net listing its port. `pins` sort by
     marking, digits first by value. `context` (default `None`, full paths) is the location the list
-    prints against. `unit` is the unit whose document prints it: inside it reads unit-relative, and
-    for a nested `unit` a mate outside its subtree prints `None`; `context` is ignored once `unit`
-    has one.
+    prints against. `unit` is the unit whose document prints it: inside it reads unit-relative, a
+    mate outside a nested `unit` prints `None`, and `context` is ignored once `unit` has one.
 
     Raises:
         SchemaError: `board` is not an item of `model`, or an item shown has no designation.
     """
+    if board is None:
+        scope = boards(model) if unit is None else unit_boards(model, unit)
+        return tuple(row for each in scope for row in connector_rows(model, each, unit=unit, context=scope_context(model, each, unit, context)))
     require(items(model).get(board), "item", board)
     idx = build_indexes(model)
     on_board = {board, *descendants(idx.children_by_item, board)}

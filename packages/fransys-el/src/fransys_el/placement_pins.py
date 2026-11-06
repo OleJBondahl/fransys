@@ -10,7 +10,7 @@ from electrical_symbols import (
 )
 from fransys_layout.core import BoxSpec, CoreError, Pin, natural_key
 from fransys_layout.symbols import library_symbol, symbol_shape
-from fransys_model.derive import port_potential_rank, stands
+from fransys_model.derive import drawn_stands, port_potential_rank
 from fransys_model.kernel import natural_key as kernel_key
 
 from .placement_kit import refuse
@@ -79,7 +79,7 @@ def pins_of(env: Env, pick: Pick, shape: Shape) -> tuple[Pin, ...]:
     """One `Pin` per symbol port, in natural order; the end bias and rank from its port's rail."""
     node_of = {name: index for index, node in enumerate(nodes_of(shape)) for name in node}
     port_of = {name: port for port, name in pick.ports.items()}
-    power = stands(env.model)
+    power = drawn_stands(env.model)
     return tuple(
         Pin(
             name,

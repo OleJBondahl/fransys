@@ -27,6 +27,7 @@ from fransys_model.vocab.enums import (
     SignalType,
 )
 from fransys_model.vocab.facets.connector import ConnectorFacet
+from fransys_model.vocab.facets.pcb import PcbFacet
 from fransys_model.vocab.facets.plc import PlcBindingFacet, PlcChannelFacet, PlcRequestFacet
 from fransys_model.vocab.facets.terminal import TerminalFacet
 from fransys_model.vocab.facets.wire import WireFacet
@@ -401,7 +402,9 @@ def board_plant() -> Plant:
     the pins 1, 2, 10, A1 and Z9. The board's child `X1` holds `J2` (female, pins 1 and 2),
     """
     plant = Plant()
-    board = plant.item("jb1", "JB1")
+    pcb = plant.part("pcb", "PCB-1")
+    plant.add(PcbFacet(id=make_id(PcbFacet, ("pcb", "pcb")), key=("pcb", "pcb"), subject=pcb, revision="A"))
+    board = plant.item("jb1", "JB1", part=pcb)
     j1_item = plant.item("j1", "J1", parent=board)
     j1, j1_ports = plant.connector(j1_item, "x", ("10", "2", "A1", "1"))
     child = plant.item("x1", "X1", parent=board)
@@ -434,12 +437,6 @@ def cabinet_plant() -> Plant:
 def cabinet(cabinet_plant: Plant) -> Model:
     """The small invented cabinet, frozen."""
     return cabinet_plant.model()
-
-
-@pytest.fixture
-def strip() -> Id[Item]:
-    """The terminal strip `X1` of the small invented cabinet."""
-    return make_id(Item, ("x1",))
 
 
 @pytest.fixture

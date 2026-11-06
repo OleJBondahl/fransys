@@ -10,12 +10,30 @@ from _expected_codes import expect_codes
 from fransys.colours import BU, GNYE
 
 from fransys_model.checks.rails import check_rails
-from fransys_model.derive import connected_ports, is_rail_terminal, terminal_items
+from fransys_model.derive import (
+    conductor_ends,
+    connected_ports,
+    drawn_stands,
+    function_scopes,
+    is_bridge,
+    is_pe_conductor,
+    is_rail_terminal,
+    terminal_items,
+    terminal_rows,
+    terminal_strips,
+    wire_rows,
+)
+from fransys_model.derive.facts.conductor_facts import drawn_conductors
+from fransys_model.derive.lookups import item_of_port
+from fransys_model.derive.power import port_power_kind
 from fransys_model.derive.stands import stands
+from fransys_model.layout import PowerSymbol, layout_of
 from fransys_model.vocab import PowerKind
-from fransys_model.vocab.tables import functions, items, ports
+from fransys_model.vocab.tables import conductors, functions, items, ports
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from fransys_model.kernel import Id, Model
     from fransys_model.vocab import Port
 
@@ -209,3 +227,81 @@ def test_pe_follows_the_24v_path_through_a_flagged_terminal(lamps: int) -> None:
         return standing, joined, rails
 
     assert shape("PE") == shape("24V")
+
+
+def _pe_cabinet(tmp_path: Path, *, hide: bool = False) -> fr.BuildResult:
+    """A flagged PE strip with its jumper, a motor wired to Z1 whose PE pin is wired to the strip, and Z1:4 wired to Z2."""
+    d = fr.design("demo_parts", place="CAB")
+    cab = d.location("CAB", "Cabinet")
+    bar = d.terminal_strip("X1", "DEMO-TB-2.5", pe="DEMO-TB-PE-2.5").run("PE", 2, bridged=True, rail=True)
+    motor = d.device("M1", "DEMO-MOTOR-4KW")
+    zero = d.terminal_strip("Z1", "DEMO-TB-2.5", 4).run("L", 4)
+    for k, pin in enumerate("UVW", 1):
+        d.series(motor.motor[pin], zero[k].outer, wire=_WIRE)
+    d.series(motor.motor["PE"], bar[1].inner, wire=(GNYE, 2.5))
+    d.earth(motor.motor["PE"], bar[1])
+    other = d.terminal_strip("Z2", "DEMO-TB-2.5", 1)
+    d.series(zero[4].inner, other[1].inner, wire=_WIRE)
+    tmp_path.mkdir(parents=True, exist_ok=True)
+    (tmp_path / "c.md").write_text("# C\n", encoding="utf-8")
+    doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=tmp_path / "c.md")
+    path = tmp_path / "fransys.toml"
+    path.write_text(f"[export]\nhide_pe = {str(hide).lower()}\n", encoding="utf-8")
+    return fr.build(d, doc, settings=fr.settings(path))
+
+
+def test_the_pe_conductors_are_the_wire_and_the_jumper_on_the_pe_rail_terminals(tmp_path: Path) -> None:
+    """Can-fail (model-0435): a predicate that names no PE-rail end leaves the set empty or takes the lamp's wire."""
+    model = _pe_cabinet(tmp_path).model
+    pe = {c for c in conductors(model) if is_pe_conductor(model, c)}
+    assert len(pe) == 2
+    assert all(
+        any(is_rail_terminal(model, item_of_port(model, p)) and port_power_kind(model, p) is PowerKind.PE for p in conductor_ends(model, c))
+        for c in pe
+    )
+    assert {c for c in conductors(model) if is_bridge(model, c)} <= pe
+
+
+def test_hide_pe_leaves_out_exactly_the_pe_conductors_and_the_lists_keep_them(tmp_path: Path) -> None:
+    """Can-fail (model-0435): a filter that takes one more or one fewer conductor, or one the lists read, breaks the sets or the rows."""
+    shown, hidden = _pe_cabinet(tmp_path / "a").model, _pe_cabinet(tmp_path / "b", hide=True).model
+    pe = {c for c in conductors(shown) if is_pe_conductor(shown, c)}
+    assert pe
+    assert set(conductors(hidden)) - drawn_conductors(hidden) == pe | {c for c in conductors(hidden) if is_bridge(hidden, c)}
+    assert set(conductors(shown)) - drawn_conductors(shown) == {c for c in conductors(shown) if is_bridge(shown, c)}
+    assert wire_rows(shown) == wire_rows(hidden)
+    assert [terminal_rows(shown, x) for x in sorted(terminal_strips(shown), key=str)] == [
+        terminal_rows(hidden, x) for x in sorted(terminal_strips(hidden), key=str)
+    ]
+
+
+def test_hide_pe_draws_no_protective_earth_and_every_other_connection_with_cnd_0(tmp_path: Path) -> None:
+    """Can-fail (el-0119): an option that left the stand or the PE wire in, or took a Z1 wire out, shows a PE symbol or a CND finding."""
+    shown, hidden = _pe_cabinet(tmp_path / "a"), _pe_cabinet(tmp_path / "b", hide=True)
+    assert PowerKind.PE in stands(hidden.model).values()
+    assert PowerKind.PE not in drawn_stands(hidden.model).values()
+    assert PowerKind.PE in drawn_stands(shown.model).values()
+    assert "CONNECTION_NOT_DRAWN" not in {f.code for f in fr.check(hidden)}
+    assert {f: function_scopes(shown.model, f) for f in functions(shown.model)} == {
+        f: function_scopes(hidden.model, f) for f in functions(hidden.model)
+    }
+    assert "protective-earth" in [s.symbol for s in layout_of(shown.model, PowerSymbol).values()]
+    assert "protective-earth" not in [s.symbol for s in layout_of(hidden.model, PowerSymbol).values()]
+
+
+def _page_svg(result: fr.BuildResult, folder: Path) -> str:
+    """The compiled SVG of every page of `result`, joined."""
+    fr.write(result, folder / "out", intermediates=folder / "inter")
+    return "".join(p.read_text("utf-8") for p in sorted((folder / "inter").glob("layout.page-*.svg")))
+
+
+def test_hide_pe_leaves_no_pe_pin_ink_on_the_motor_page(tmp_path: Path) -> None:
+    """Can-fail (model-0435): without the PE stroke bound to its port, or without the marking drop, the PE polyline or its text stays."""
+    shown = _page_svg(_pe_cabinet(tmp_path / "a"), tmp_path / "a")
+    hidden = _page_svg(_pe_cabinet(tmp_path / "b", hide=True), tmp_path / "b")
+    pe_lead = 'points="6.5625,-3.75 10,-8.125 10,-12.5"'
+    assert pe_lead in shown
+    assert ">PE</text>" in shown
+    assert pe_lead not in hidden
+    assert ">PE</text>" not in hidden
+    assert all(f">{pin}</text>" in hidden for pin in "UVW")

@@ -648,7 +648,6 @@
 "fransys_model.derive.texts.designation_segments::node_segments" = 1
 "fransys_model.derive.wire_list::_all_wire_rows" = 1
 "fransys_model.derive.wiring::conductors_on_item" = 2
-"fransys_model.derive.wiring::terminal_rows" = 1
 "fransys_model.layout.order::by_index" = 1
 "fransys_model.layout.tables::derived_layout_ids" = 1
 "fransys_model.vocab.connectivity::__post_init__" = 1

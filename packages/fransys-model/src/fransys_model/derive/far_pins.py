@@ -7,7 +7,7 @@ A harness wire's conductor is a pair like any other (R546).
 
 lazy from collections.abc import Iterable
 
-from fransys_model.derive.facts.conductor_facts import conductor_ends, is_bridge
+from fransys_model.derive.facts.conductor_facts import conductor_ends, drawn_conductors
 from fransys_model.derive.indexes import build_indexes
 from fransys_model.derive.order import stub_far_order
 from fransys_model.derive.rows_drawn import ConductorEnd
@@ -20,11 +20,10 @@ __all__ = ["far_pins"]
 def reach(model: Model, near: Iterable[Id[Port]]) -> list[ConductorEnd]:
     """Every conductor end at any `near` port, lowest far port first."""
     by_port = build_indexes(model).conductors_by_port
+    drawn = drawn_conductors(model)
     found: list[ConductorEnd] = []
     for port in near:
-        for conductor in by_port.get(port, ()):
-            if is_bridge(model, conductor):
-                continue
+        for conductor in filter(drawn.__contains__, by_port.get(port, ())):
             a, b = conductor_ends(model, conductor)
             found.append(ConductorEnd(conductor=conductor, port=port, far=b if a == port else a))
     return stub_far_order(model, found)

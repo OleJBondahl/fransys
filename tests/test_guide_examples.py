@@ -46,6 +46,7 @@ GUIDE_PAGES = (
     "moving-to-0.14",
     "findings",
     "findings-validators",
+    "findings-build",
     "findings-release",
     "findings-render",
     "findings-pdf",

@@ -45,9 +45,6 @@ surface_docstring_lines = 15
 "packages/fransys/src/fransys/documents.py::document" = 1
 "packages/fransys/src/fransys/settings.py::Settings.table" = 1
 
-[md_tokens]
-"packages/fransys/src/fransys/guide/findings-validators.md" = 5274
-
 [md_long_sentences]
 "CLAUDE.md" = 7
 "packages/electrical-symbols/CLAUDE.md" = 5

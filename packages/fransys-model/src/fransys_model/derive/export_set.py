@@ -8,16 +8,15 @@ from typing import Any
 
 from fransys_model.vocab.tables import documents, units
 lazy from fransys_model.kernel import Id, Model
-lazy from fransys_model.vocab.core import Item, Unit
+lazy from fransys_model.vocab.core import Unit
 
 from .document_unit import document_unit
 from .export_names import document_export_name, export_name, export_ref, export_set_name
 from .facts.house_settings import export_form_of
-from .report_scope import unit_boards, unit_strips
+from .report_scope import terminal_strips, unit_boards, unit_strips
 from .rows_export_set import ExportRow
 from .structure import boards
 from .unit_racks import unit_racks
-from .wiring import terminal_strips
 
 __all__ = ["REPORT_KINDS", "export_set", "stale_patterns"]
 
@@ -33,55 +32,51 @@ _REPORTS = {
 }
 REPORT_KINDS: tuple[str, ...] = tuple(_REPORTS)
 _OVERVIEW = ("overview", "html", "overview.html")
-# (kind, extension) of the per-item exports: `<kind>-<ref>.<ext>`, bare `<kind>.<ext>` for a root.
-_ITEMS = (("terminals", "csv"), ("connectors", "csv"), ("wago", "xml"))
+# (kind, extension) of the per-rack export: `wago-<ref>.xml`, bare `wago.xml` for a root.
+_ITEMS = (("wago", "xml"),)
+# The lists of every strip and of every board, each one file per write (model-0437).
+_LISTS = ("terminals", "connectors")
 
 
 def stale_patterns() -> tuple[str, ...]:
     """The top-level file patterns a write owns and sweeps: every kind of `export_set`.
 
-    Per-item kinds give `<kind>-*.<ext>` and the bare `<kind>.<ext>`; PDFs are `*.pdf`.
+    The lists give `<kind>.csv`, and `<kind>-*.csv` still so a release deletes the old per-strip and
+    per-board files; the per-rack kind gives `<kind>-*.<ext>` and the bare name; PDFs are `*.pdf`.
     """
+    lists = tuple(p for kind in _LISTS for p in (f"{kind}-*.csv", f"{kind}.csv"))
     items = tuple(p for kind, ext in _ITEMS for p in (f"{kind}-*.{ext}", f"{kind}.{ext}"))
-    return ("*.pdf", *(pattern for _ext, pattern in _REPORTS.values()), *items, _OVERVIEW[2])
+    return ("*.pdf", *(pattern for _ext, pattern in _REPORTS.values()), *lists, *items, _OVERVIEW[2])
 
 
 def _report_rows(model: Model, unit: Id[Unit] | None) -> list[ExportRow]:
     rows = [(kind, _REPORTS[kind][0]) for kind in export_form_of(model).reports]
     if unit is None:
         rows.append(_OVERVIEW[:2])
-    return [
-        ExportRow(
-            export_kind=kind,
-            extension=ext,
-            subject=None,
-            name=export_name(model, unit, ext, kind=kind),
-            hint=None,
-        )
-        for kind, ext in rows
-    ]
+    return [_whole_row(model, unit, kind, ext) for kind, ext in rows]
 
 
-def _item_subjects(model: Model, unit: Id[Unit] | None) -> tuple[tuple[Id[Item], ...], tuple[Id[Item], ...], tuple[Id[Item], ...]]:
-    """The strips, boards and racks of `unit` (all of them with `unit=None`)."""
-    racks = unit_racks(model, unit)
-    if unit is None:
-        return terminal_strips(model), boards(model), racks
-    return unit_strips(model, unit), unit_boards(model, unit), racks
+def _whole_row(model: Model, unit: Id[Unit] | None, kind: str, ext: str) -> ExportRow:
+    return ExportRow(export_kind=kind, extension=ext, subject=None, name=export_name(model, unit, ext, kind=kind), hint=None)
+
+
+def _list_rows(model: Model, unit: Id[Unit] | None) -> list[ExportRow]:
+    """`terminals` when `unit` (the whole model with `None`) has a strip, `connectors` when it has a board."""
+    subjects = (terminal_strips(model), boards(model)) if unit is None else (unit_strips(model, unit), unit_boards(model, unit))
+    return [_whole_row(model, unit, kind, "csv") for kind, found in zip(_LISTS, subjects, strict=True) if found]
 
 
 def _item_rows(model: Model, unit: Id[Unit] | None) -> list[ExportRow]:
-    by_kind = dict(zip((kind for kind, _ext in _ITEMS), _item_subjects(model, unit), strict=True))
     return [
         ExportRow(
             export_kind=kind,
             extension=ext,
-            subject=item,
-            name=export_name(model, unit, ext, kind=kind, fragment=export_ref(model, item, unit)),
+            subject=rack,
+            name=export_name(model, unit, ext, kind=kind, fragment=export_ref(model, rack, unit)),
             hint=None,
         )
         for kind, ext in _ITEMS
-        for item in by_kind[kind]
+        for rack in unit_racks(model, unit)
     ]
 
 
@@ -120,8 +115,8 @@ def _document_rows(model: Model, unit: Id[Unit] | None) -> list[ExportRow]:
 def export_set(model: Model, unit: Id[Unit] | None) -> tuple[ExportRow, ...]:
     """Every export a write of `unit` makes (the whole model with `unit=None`), in write order.
 
-    The reports (and the overview for the whole model), one terminal CSV per strip, one connector
-    CSV per board, one WAGO XML per rack, then one PDF per document. Names are unplaced: the
+    The reports (and the overview for the whole model), one terminal CSV and one connector CSV for
+    all strips and boards, one WAGO XML per rack, then one PDF per document. Names are unplaced: the
     caller puts CSV and XML into `data/`. Two rows may share a name; the caller refuses that.
     """
-    return (*_report_rows(model, unit), *_item_rows(model, unit), *_document_rows(model, unit))
+    return (*_report_rows(model, unit), *_list_rows(model, unit), *_item_rows(model, unit), *_document_rows(model, unit))

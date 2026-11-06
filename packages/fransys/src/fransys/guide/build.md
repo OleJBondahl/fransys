@@ -178,7 +178,7 @@ assert sorted(p.relative_to("out").as_posix() for p in written) == [
 
 `fr.export_names(result, *, unit=None)` gives the name `write` gives each export, by `(kind, subject)`,
 without writing anything. A kind is `bom`, `plc`, `wires`, `designations`, `overview`,
-`cables` or `cores` (subject `None`); `terminals`, `connectors` or `wago` with the item's id; or `pdf` with
+`cables`, `cores`, `terminals` or `connectors` (subject `None`); `wago` with the rack's id; or `pdf` with
 the document's id. The key is a tuple: `("bom", None)` for a whole-set file, `("pdf", <document id>)`
 for a document.
 
@@ -202,8 +202,8 @@ appears only in file names, never in a title block or history table. The names h
   (`demo-io-board-v1.1`); the system's is the project's number (`EX-1-v1.1`). A system write of
   a model with no project record has no prefix: its own files keep bare names (`bom.csv`).
 - **Prefix, kind, fragment.** A name is `<prefix>[-<kind>][-<fragment>].<ext>`:
-  `demo-io-board-v1.1-bom.csv`, per item `demo-io-board-v1.1-terminals-X1.csv`, and for the
-  unit's own root the bare kind `demo-io-board-v1.1-terminals.csv`.
+  `demo-io-board-v1.1-bom.csv`, and per PLC rack `demo-io-board-v1.1-wago-U1.xml`.
+- **Lists.** `terminals.csv` holds every strip, `connectors.csv` every board.
 - **Where each list is.** A unit's cables stay in its own `cables.csv`; a parent sees the unit as a black box.
 - **A PDF is named by its subject, not its cover file.** The set's own document is
   `<prefix>.pdf`. A document of an item or location inside
@@ -382,7 +382,7 @@ writes into. At `None` (the default), numbering is free. Given the releases root
 released numbering before assigning new tags. An item still in the same group keeps the number it was released with. A number
 freed by a removed or moved item is never handed to a different item within that unit's
 version. An authored tag that equals a pinned or reserved number is `DESIGNATION_DUPLICATE`
-(see `findings-validators.md`). Releasing without
+(see `findings-build.md`). Releasing without
 `releases=` still catches a moved number, as `DESIGNATION_MOVED`.
 
 ## Point a finding past a helper

@@ -73,6 +73,7 @@ __all__ = [
     "pin_order",
     "position_rank",
     "require",
+    "scope_context",
     "strip_set",
     "terminal_items",
     "terminal_strip",
@@ -188,6 +189,14 @@ def list_context(model: Model, subject: Id[Item], *, location: Id[AspectNode] | 
         SchemaError: `location` is `None` and `subject` is not an item of `model`.
     """
     return location if location is not None else item_location(model, subject)
+
+
+def scope_context(model: Model, subject: Id[Item], unit: Id[Unit] | None, context: Id[AspectNode] | None) -> Id[AspectNode] | None:
+    """The context of one strip's or board's rows in a whole-scope list: `context`, else its own location in a unit's.
+
+    `unit=None` keeps `context` (no context prints full paths); the `unit`'s own location still wins later.
+    """
+    return context if context is not None or unit is None else list_context(model, subject)
 
 
 def location_label(model: Model, item: Id[Item]) -> str | None:

@@ -138,7 +138,7 @@ def check_part_conformance(model: Model) -> tuple[Finding, ...]:
         ports_of=_group(ports(model).values(), lambda port: port.function),
     )
     found: list[Finding] = []
-    outside = unit_index(model).external
+    outside = unit_index(model).external_root
     for item in items(model).values():
         if item.part is None:
             if item.id in outside:

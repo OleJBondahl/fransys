@@ -56,27 +56,25 @@ def _list_csv(model: Model, name: str, rows: Iterable[object]) -> str:
 
 def terminal_csv(
     model: Model,
-    strip: ItemId,
     *,
     unit: UnitId | None = None,
     context: AspectNodeId | None = None,
 ) -> str:
-    """Write the terminal connection list of one strip as CSV.
+    """Write the terminal connection list of every strip as CSV.
 
-    Formats ``fransys_model.derive.queries.terminal_rows``, one row per terminal child of `strip`,
-    including unused terminals. Side A is the internal ports' far ends, side B the external ports';
-    ``jumper_group`` names the bridge. `unit` and `context` pass through (`derive.list_context`).
+    Formats ``fransys_model.derive.queries.terminal_rows``, one row per terminal child of each strip,
+    strips in designation order, including unused terminals. Side A is the internal ports' far ends,
+    side B the external ports'; ``jumper_group`` names the bridge, and each designation names its strip.
 
     Args:
         model: A frozen, numbered model.
-        strip: The terminal-strip item.
-        unit: Keep only that unit's rows; `None` is the whole model.
+        unit: Keep only the strips of that unit; `None` is the whole model.
         context: The location node the list is printed for; `None` prints full paths.
 
     Returns:
         The CSV text. Same model digest, same bytes.
     """
-    return _list_csv(model, "terminal", terminal_rows(model, strip, unit=unit, context=context))
+    return _list_csv(model, "terminal", terminal_rows(model, unit=unit, context=context))
 
 
 def plc_csv(model: Model, *, unit: UnitId | None = None, context: AspectNodeId | None = None) -> str:
@@ -152,21 +150,19 @@ def designations_csv(model: Model, *, unit: UnitId | None = None) -> str:
 
 def connectors_csv(
     model: Model,
-    board: ItemId,
     *,
     unit: UnitId | None = None,
     context: AspectNodeId | None = None,
 ) -> str:
-    """Write the connector pinout list of one board as CSV.
+    """Write the connector pinout list of every board as CSV.
 
-    Formats ``fransys_model.derive.queries.connector_rows``: each board-edge connector, its pins,
+    Formats ``fransys_model.derive.queries.connector_rows``: each board's connectors, boards in designation order, its pins,
     the net on each pin, and what it mates with. One line per pin, the connector's fields repeated
     on each line, so an engineer can filter the file; a connector with no pins has no line.
 
     Args:
         model: A frozen, numbered model.
-        board: The board item; its part carries a ``pcb`` facet.
-        unit: Keep only that unit's rows; `None` is the whole model.
+        unit: Keep only the boards of that unit; `None` is the whole model.
         context: The location node the list is printed for, as `terminal_csv`'s.
 
     Returns:
@@ -175,7 +171,7 @@ def connectors_csv(
     return _write(
         model,
         _header(model, "connectors"),
-        pin_lines(model, connector_rows(model, board, unit=unit, context=context)),
+        pin_lines(model, connector_rows(model, unit=unit, context=context)),
     )
 
 

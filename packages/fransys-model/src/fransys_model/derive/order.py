@@ -45,6 +45,8 @@ lazy from fransys_model.vocab.core import Function, Item, Port, Unit
 if TYPE_CHECKING:
     from collections.abc import Iterable, Mapping
 
+    from fransys_model.vocab.facets.terminal import TerminalFacet
+
 
 __all__ = [
     "NaturalKey",
@@ -163,6 +165,11 @@ def first_terminal_port(model: Model, terminal_ports: Iterable[Id[Port]]) -> Id[
 def in_designation_order(model: Model, listed: Iterable[Id[Item]]) -> tuple[Id[Item], ...]:
     """`listed` sorted by `natural_key` of its designation (`-X2` before `-X10`), then the authoring key."""
     return tuple(sorted(listed, key=lambda item: (designation_key(model, item), items(model)[item].key)))
+
+
+def terminals_in_order(model: Model, facets: Mapping[Id[Item], TerminalFacet]) -> tuple[Id[Item], ...]:
+    """The terminals of `facets` in a strip's order: group in natural order, index, then authoring key."""
+    return tuple(sorted(facets, key=lambda t: (natural_key(facets[t].group), facets[t].index, items(model)[t].key)))
 
 
 def bom_sort_key(model: Model, item: Id[Item]) -> tuple[int, NaturalKey, str, int]:

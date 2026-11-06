@@ -21,6 +21,8 @@ A port the model does not hold raises `SchemaError`. Pass the port ids of the sa
 
 ## Example
 
+With `[export] hide_pe` on, a PE conductor the sheets leave out is not required, not carried and not missing: the ledger expects none of it.
+
 ```python
 import fransys as fr
 

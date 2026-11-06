@@ -84,7 +84,7 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
             "Give the wire a (colour, size), or a size with a row table; a rail never crosses"
             " a unit boundary. Write: d.series(a, b, wire=(fr.colours.BU, 0.75))"
         ),
-        page="findings-validators",
+        page="findings-build",
     ),
     CodeInfo(
         code="SCREEN_DISABLED",

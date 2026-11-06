@@ -50,7 +50,7 @@ def test_the_name_signs_are_the_consumers(tmp_path: Path) -> None:
     text = '[export]\nname_join = "_"\nversion_sign = "_r"\nref_sign = "~"\n'
     names = set(_written(tmp_path, text))
     assert "data/P-1_r1.1_bom.csv" in names
-    assert "data/P-1_r1.1_terminals_CAB~U1~X3.csv" in names
+    assert "data/P-1_r1.1_terminals.csv" in names
     assert "demo-skid_r1.1.pdf" in names
 
 
@@ -58,7 +58,7 @@ def test_the_name_signs_are_the_consumers(tmp_path: Path) -> None:
 def test_the_default_signs_name_the_files_as_before(tmp_path: Path) -> None:
     names = set(_written(tmp_path, None))
     assert "data/P-1-v1.1-bom.csv" in names
-    assert "data/P-1-v1.1-terminals-CAB-U1-X3.csv" in names
+    assert "data/P-1-v1.1-terminals.csv" in names
 
 
 def test_the_data_folder_is_the_consumers(tmp_path: Path) -> None:

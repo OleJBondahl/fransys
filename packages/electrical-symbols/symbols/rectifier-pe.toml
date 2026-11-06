@@ -32,7 +32,7 @@ elements = [
   { arc = [0, -1.125],  r = 0.5, start = 0, end = 180 },
   { line = [[-0.5, 1], [1.5, 1]] },
   { line = [[-0.5, 1.5], [1.5, 1.5]], style = "dashed" },
-  { polyline = [[3, -3], [3, 0], [2, 0]] },
+  { polyline = [[3, -3], [3, 0], [2, 0]], port = "pe" },
 ]
 
 [slots]

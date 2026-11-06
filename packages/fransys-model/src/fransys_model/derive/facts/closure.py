@@ -7,7 +7,6 @@ import dataclasses
 from typing import TYPE_CHECKING, Final, Literal
 lazy from collections.abc import Callable, Iterable, Iterator, Sequence
 
-from fransys_model.derive.facts.conductor_facts import is_bridge
 from fransys_model.derive.facts.contacts import link_state
 from fransys_model.derive.facts.joins import port_joins
 from fransys_model.derive.facts.units import enclosing_boards, is_sole_unit_root
@@ -164,14 +163,14 @@ def _nets_from(groups: Iterable[Sequence[Id[Port]]]) -> tuple[PhysicalNet, ...]:
     )
 
 
-def _joined(model: HasTables, groups: Iterable[Sequence[Id[Port]]]) -> tuple[PhysicalNet, ...]:
+def joined_nets(model: HasTables, groups: Iterable[Sequence[Id[Port]]]) -> tuple[PhysicalNet, ...]:
     """Every port of `model` unioned through `groups`: the one builder of the physical and the drawn nets."""
     return _nets_from(components(ports(model), groups))
 
 
 @digest_cached(DIGEST_CACHE_SIZE)
 def _closure(model: HasTables) -> _Closure:
-    joined = _joined(model, required_groups(model))
+    joined = joined_nets(model, required_groups(model))
     return _Closure(nets=joined, by_port=frozendict({port: net for net in joined for port in net.ports}))
 
 
@@ -191,36 +190,6 @@ def physical_nets(model: HasTables) -> tuple[PhysicalNet, ...]:
         Every physical net, sorted by its own `ports` tuple.
     """
     return _closure(model).nets
-
-
-@digest_cached(DIGEST_CACHE_SIZE)
-def drawn_groups(model: Model) -> tuple[tuple[Id[Port], ...], ...]:
-    """`required_groups` less each conductor `is_bridge` calls a bridge: what a drawing must join.
-
-    The drawing's nets leave out bridges; the terminal table carries them.
-    """
-    groups, wires = required_groups(model), tuple(conductors(model))
-    return (*(g for g, c in zip(groups, wires, strict=False) if not is_bridge(model, c)), *groups[len(wires) :])
-
-
-@digest_cached(DIGEST_CACHE_SIZE)
-def drawn_physical_nets(model: Model) -> tuple[PhysicalNet, ...]:
-    """The nets a drawing joins: `physical_nets` built from `drawn_groups`, so a bridge joins nothing."""
-    return _joined(model, drawn_groups(model))
-
-
-@digest_cached(DIGEST_CACHE_SIZE)
-def _drawn_by_port(model: Model) -> frozendict[Id[Port], PhysicalNet]:
-    return frozendict({port: net for net in drawn_physical_nets(model) for port in net.ports})
-
-
-def drawn_net_of(model: Model, port: Id[Port]) -> PhysicalNet | None:
-    """The drawn net containing `port` (`net_of` less the bridges), or `None` for a port in no drawn net.
-
-    A bridge joins two nets in `net_of` and none here, so a net a model bundle names by one of its ports
-    is this net, not the electrical net `net_of` returns.
-    """
-    return _drawn_by_port(model).get(port)
 
 
 def net_of(model: Model, port: Id[Port]) -> PhysicalNet | None:

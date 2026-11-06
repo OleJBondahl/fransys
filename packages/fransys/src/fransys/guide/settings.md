@@ -160,7 +160,7 @@ assert [row["field"] for row in bom["columns"]] == ["mpn"]
 
 `[export]` sets which files `fr.write` makes and how it names, places and encodes them. `reports` lists the whole-model reports, in order: `bom`, `plc`, `wires`, `designations`, `cables` and `cores`. A name outside those six raises `SettingsError`. `name_join` joins the prefix, the kind and the fragment of a file name, `version_sign` sits before the version, and `ref_sign` replaces each sign of a designation, so `=A1+C1-K1` gives `A1-C1-K1`.
 
-`data_dir` is the folder of the files that end in one of `data_suffixes`. The CSV files follow `csv_delimiter`, `csv_encoding`, `csv_quoting` (`minimal`, `all`, `nonnumeric` or `none`) and `csv_newline`. Only a `.csv` file takes `csv_encoding`; the others stay UTF-8. `fr.derive.export_form_of(model)` gives the record a build holds.
+`data_dir` is the folder of the files that end in one of `data_suffixes`. The CSV files follow `csv_delimiter`, `csv_encoding`, `csv_quoting` (`minimal`, `all`, `nonnumeric` or `none`) and `csv_newline`. Only a `.csv` file takes `csv_encoding`; the others stay UTF-8. `hide_pe` (default `false`, one choice for the whole build) leaves the PE rail's terminals, wires and pins off every drawing sheet; the terminal list and the other lists keep them. `fr.derive.export_form_of(model)` gives the record a build holds.
 
 ```toml
 [export]

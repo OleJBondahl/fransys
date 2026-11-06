@@ -82,7 +82,7 @@ def _four() -> fr.BuildResult:
 
 
 def _rows(directory: Path, pattern: str) -> list[dict[str, str]]:
-    texts = (path.read_text(encoding="utf-8") for path in sorted(directory.glob(f"data/{pattern}")))  # one file per strip
+    texts = (path.read_text(encoding="utf-8") for path in sorted(directory.glob(f"data/{pattern}")))
     return [row for text in texts for row in csv.DictReader(io.StringIO(text))]
 
 
@@ -114,7 +114,7 @@ def test_four_far_pins_leave_the_wire_row_unchanged(tmp_path: Path) -> None:
 def test_the_terminal_list_names_all_four_far_pins(tmp_path: Path) -> None:
     """The boundary terminal row prints both far pins of its twin point; the bridged terminal prints the other two."""
     fr.write(_four(), tmp_path)
-    rows = _rows(tmp_path, "terminals-*.csv")
+    rows = _rows(tmp_path, "*terminals.csv")
     row = _boundary_row(rows, "F1:2")
     assert row["side_b"] == "-S-P-M1:U; -S-P-M1:V"
     assert sorted(r["side_b"] for r in rows if r["designation"] == "-S-X1:2") == ["-S-P-M1:PE; -S-P-M1:W"]
@@ -125,7 +125,7 @@ def test_a_unit_write_leaves_the_outside_end_empty(tmp_path: Path) -> None:
     result = _system(MOTOR_PINS, strip_in_unit=True)
     fr.write(result, tmp_path / "system")
     fr.write(result, tmp_path / "unit", unit="demo-cab-strip")
-    system_rows = _rows(tmp_path / "system", "terminals-*.csv")
+    system_rows = _rows(tmp_path / "system", "*terminals.csv")
     assert sum(r["side_b"].count("M1:") for r in system_rows) == len(MOTOR_PINS)
-    unit_row = _boundary_row(_rows(tmp_path / "unit", "*terminals-*.csv"), "F1:2")
+    unit_row = _boundary_row(_rows(tmp_path / "unit", "*terminals.csv"), "F1:2")
     assert unit_row["side_b"] == ""

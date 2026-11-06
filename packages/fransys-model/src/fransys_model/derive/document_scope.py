@@ -19,10 +19,9 @@ from .document_unit import record_unit
 from .drawn_wires import wire_harness_subjects
 from .harness import harness_cables, reading_cables
 from .memo import Memo
-from .report_scope import unit_strips
+from .report_scope import terminal_strips, unit_strips
 from .rows_document import DocumentScope
 from .structure import boards, items_at
-from .wiring import terminal_strips
 lazy from .rows import BomLine, HarnessCable
 
 __all__ = ["document_bom_lines", "document_scope"]

@@ -6,7 +6,7 @@ one end join it to every end they meet, as one node. Rails, open ends and hubs e
 
 lazy from collections.abc import Mapping, Sequence
 
-from fransys_model.derive.facts.closure import drawn_physical_nets
+from fransys_model.derive.facts.drawn_closure import drawn_physical_nets
 from fransys_model.derive.order import series_part_key
 from fransys_model.derive.rows_series_parallel import SeriesParallel, SeriesRow
 from fransys_model.derive.series_parallel_reduce import SINK, SOURCE, reduce_region

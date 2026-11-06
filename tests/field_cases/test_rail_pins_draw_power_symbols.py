@@ -49,6 +49,6 @@ def test_the_terminal_table_lists_every_landing(tmp_path) -> None:
     written = fr.write(_build(), tmp_path / "out")
     rows = []
     for path in written:
-        if path.name.startswith("terminals-") and path.suffix == ".csv":
+        if path.name.startswith("terminals") and path.suffix == ".csv":
             rows += list(csv.DictReader(io.StringIO(path.read_text(encoding="utf-8"))))
     assert len(rows) >= 2 * _LAMPS

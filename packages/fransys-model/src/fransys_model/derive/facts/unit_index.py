@@ -43,8 +43,8 @@ class UnitIndex:
     subtree_of: frozendict[Id[Unit], frozenset[Id[Unit]]]
     # Each unit -> the items whose `unit` is in its subtree; a unit with no items maps to empty.
     items_of: frozendict[Id[Unit], frozenset[Id[Item]]]
-    # Every item that is external: it or an ancestor by `Item.parent` has `external=True`.
-    external: frozenset[Id[Item]]
+    # Every external item (it or an ancestor by `Item.parent` has `external=True`) -> its outermost external ancestor.
+    external_root: frozendict[Id[Item], Id[Item]]
     # Each unit -> its own root items in the items table's order; a unit with none maps to `()`.
     own_roots: frozendict[Id[Unit], tuple[Id[Item], ...]]
     # Each item with a cable child (is_cable, model-0108) -> those children in `Id` order; no
@@ -65,32 +65,19 @@ class UnitIndex:
     child_units: frozendict[Id[Unit] | None, tuple[Id[Unit], ...]]
 
 
-def _external_items(model: HasTables, all_items: frozendict[Id[Item], Item]) -> frozenset[Id[Item]]:
-    """The external items, one memoised `parent` walk per item; a `parent` cycle ends its walk."""
-    verdict: dict[Id[Item], bool] = {}
-    for start in all_items.values():
-        path: list[Id[Item]] = []
-        result = False
+def _external_roots(model: HasTables, all_items: frozendict[Id[Item], Item]) -> frozendict[Id[Item], Id[Item]]:
+    """Each external item -> its outermost external ancestor (itself if none above); a `parent` cycle ends the walk."""
+    roots: dict[Id[Item], Id[Item]] = {}
+    for start in all_items:
         # A `parent` naming no item ends the walk, as a root does.
-        chain = parent_chain(
-            lambda node: parent if (parent := parent_item(model, node)) in all_items else None,
-            start.id,
-        )
-        for node_id in chain:
-            known = verdict.get(node_id)
-            if known is not None:
-                result = known
-                break
-            path.append(node_id)
-            if all_items[node_id].external:
-                result = True
-                break
-        for item_id in path:
-            verdict[item_id] = result
-    return frozenset(item_id for item_id, is_external in verdict.items() if is_external)
+        chain = parent_chain(lambda node: parent if (parent := parent_item(model, node)) in all_items else None, start)
+        outer = [node for node in chain if all_items[node].external]
+        if outer:
+            roots[start] = outer[-1]
+    return frozendict(roots)
 
 
-def _own_roots(model: HasTables, all_items: frozendict[Id[Item], Item], external: frozenset[Id[Item]]) -> dict[Id[Unit], list[Id[Item]]]:
+def _own_roots(model: HasTables, all_items: frozendict[Id[Item], Item], external: frozendict[Id[Item], Id[Item]]) -> dict[Id[Unit], list[Id[Item]]]:
     """Each unit -> its items whose parent is in no unit or another unit, external ones left out."""
     roots: dict[Id[Unit], list[Id[Item]]] = {}
     for record in all_items.values():
@@ -156,7 +143,7 @@ def unit_index(model: HasTables) -> UnitIndex:
     below_of = frozendict({unit: kids for unit, kids in children.items() if unit is not None})
     subtree_of = {unit: frozenset({unit, *descendants(below_of, unit)}) for unit in all_units}
 
-    external = _external_items(model, all_items)
+    external = _external_roots(model, all_items)
     by_unit = _group_by_unit((record.unit, record.id) for record in all_items.values())
     roots = _own_roots(model, all_items, external)
     cable_items_ = cable_items(model)
@@ -169,7 +156,7 @@ def unit_index(model: HasTables) -> UnitIndex:
         items_of=frozendict({unit: frozenset(item for below in subtree for item in by_unit.get(below, ())) for unit, subtree in subtree_of.items()}),
         own_items=by_unit,
         child_units=children,
-        external=external,
+        external_root=external,
         own_roots=frozendict({unit: tuple(roots.get(unit, ())) for unit in all_units}),
         cable_children=cables,
         pcb_parts=frozenset(facet.subject for facet in facets_of(model, PcbFacet).values()),

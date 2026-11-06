@@ -23,6 +23,7 @@ FORM = ExportForm(
     csv_encoding="utf-8",
     csv_quoting="minimal",
     csv_newline="\n",
+    hide_pe=False,
 )
 
 

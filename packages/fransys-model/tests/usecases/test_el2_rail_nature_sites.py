@@ -7,6 +7,7 @@ text, rail-terminal flag, the stands, each net's power kind and text, and the ba
 from hashlib import sha256
 
 from cabinet import build_cabinet
+from derive_helpers import with_house
 
 from fransys_model.derive import (
     is_rail_terminal,
@@ -28,7 +29,7 @@ _DIGEST = "6eefc328857e42e554a78342d944458ef7669b70211dd65c5dbfc955d90e9420"
 
 def observed() -> str:
     """The text every switched site prints on the cabinet model, sorted by id."""
-    model = freeze(build_cabinet(cpu=True))
+    model = with_house(freeze(build_cabinet(cpu=True)))
     lines = [
         repr(
             (

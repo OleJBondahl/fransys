@@ -67,6 +67,17 @@ Each row is a name that 0.22 removed. A removed attribute raises an error that n
 | <a id="parts-schema-2"></a>Part schema 1 (`schema = 1`) | `schema = 2`; convert with `python -m fransys migrate-parts DIR` |
 | <a id="terminal-point-overfilled"></a>`TERMINAL_POINT_OVERFILLED` (new in 0.22, no 0.21 spelling) | Set `conductors_per_clamp = 2` in the terminal part's `[connection]` table, or use a twin part, or bridge a second terminal |
 
+## New in 0.22.8
+
+- One `terminals.csv` holds every terminal strip, and one `connectors.csv` every board. They replace the files per strip or board: read the one file instead (decision model-0437).
+- `[export] hide_pe = true` leaves the PE rail's terminals, wires and pins off every drawing sheet; the lists keep them. Off by default: drawings do not change (decisions model-0435, el-0119).
+
+## New in 0.22.7
+
+- A leg's run is cleared of a footprint's pin tips. Only the PE terminal joined by `d.earth` stops being a spare. The shorts this drew there (`DRAWING_SHORTS_NETS`) are gone (KI-708, layout-0446, model-0429). No action.
+- A copied cut piece joins no pins: its ends pair two by two (KI-710). No action.
+- `OVERLAP`, `WIRE_OVER_MARKER` and the width refusal name the elements and the fix. The guide gained the width table, net rows, bare-pin use and the full-cabinet path. No action.
+
 ## New in 0.22.6
 
 - A revision cut by 0.22.4 or earlier reads again, with no rebaseline needed. `fr.verify` finds nothing to report. `fr.release` cuts the next revision, also for a container that pins such a revision (decisions model-0289, model-0428).

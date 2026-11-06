@@ -10,9 +10,9 @@ lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.connectivity import Conductor
 lazy from fransys_model.vocab.core import Item, Unit
 
-from .lookups import item_of_port, require, unit_chain
+from .lookups import item_of_port, require, strip_set, unit_chain
+from .order import in_designation_order
 from .structure import boards
-from .wiring import terminal_strips
 
 
 def _require_unit(model: Model, unit: Id[Unit] | None) -> None:
@@ -28,6 +28,24 @@ def _item_belongs(model: Model, item_id: Id[Item], unit: Id[Unit]) -> bool:
     nested unit alone, never to its ancestor.
     """
     return items(model)[item_id].unit == unit
+
+
+def terminal_strips(model: Model) -> tuple[Id[Item], ...]:
+    """Every item that at least one `terminal` facet names as its strip, in designation order.
+
+    A terminal's strip is its parent item: `TerminalFacet` carries no strip field of its
+    own. Shared by `fransys`'s export enumeration and the
+    pdf document contents, so the two never disagree about what a
+    strip is.
+
+    Args:
+        model: The model to read.
+
+    Returns:
+        Every strip item's id, by natural designation, then id.
+    """
+    strips = strip_set(model)
+    return in_designation_order(model, strips)
 
 
 def unit_strips(model: Model, unit: Id[Unit]) -> tuple[Id[Item], ...]:

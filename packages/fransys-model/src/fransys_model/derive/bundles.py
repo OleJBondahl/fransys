@@ -11,7 +11,7 @@ where a net is in both, the line bundle wins (G07-BUNDLES).
 from collections import defaultdict
 lazy from collections.abc import Collection
 
-from fransys_model.derive.facts.closure import drawn_net_of, drawn_physical_nets
+from fransys_model.derive.facts.drawn_closure import drawn_net_of, drawn_physical_nets
 from fransys_model.derive.facts.roles import function_role
 from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, UnionFind, digest_cached
 from fransys_model.vocab import Function, Port, PortTemplate

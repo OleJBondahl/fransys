@@ -4,12 +4,12 @@ build-backend = "hatchling.build"
 
 [project]
 name = "fransys-model"
-version = "0.22.7"
+version = "0.22.8"
 requires-python = ">=3.15"
 dependencies = [
-    "refdef==0.2.0",
-    "elecdef==0.5.0",
-    "fransys-kernel @ git+https://github.com/OleJBondahl/fransys@v0.22.7#subdirectory=packages/fransys-kernel",
+    "refdef==0.3.1",
+    "elecdef==0.6.0",
+    "fransys-kernel @ git+https://github.com/OleJBondahl/fransys@v0.22.8#subdirectory=packages/fransys-kernel",
 ]
 
 [tool.hatch.metadata]

@@ -21,7 +21,7 @@ _OWN: tuple[CodeInfo, ...] = (
         fix=(
             'Give each item or unit instance under one parent its own tag, one no released revision reserved. Write: d.device("X2", "DEMO-CONN-2P")'
         ),
-        page="findings-validators",
+        page="findings-build",
     ),
     CodeInfo(
         code="DIAGRAM_CABLE_FANOUT",
@@ -57,7 +57,7 @@ _OWN: tuple[CodeInfo, ...] = (
         who="consumer",
         cause="Two or more ends of one cable print the same text in its drawing.",
         fix=('Give each cable end its own text with distinct locations or distinct tags. Write: d.device("X2", "DEMO-CONN-2P", place="A2")'),
-        page="findings-validators",
+        page="findings-build",
     ),
     CodeInfo(
         code="PART_LIBRARY_VERSION_CONFLICT",
@@ -66,7 +66,7 @@ _OWN: tuple[CodeInfo, ...] = (
         who="consumer",
         cause="Two `PartLibrary` records share a name but declare different versions.",
         fix='Load one version of each named part library. Write: fr.design("demo-parts")',
-        page="findings-validators",
+        page="findings-build",
     ),
     CodeInfo(
         code="PLC_CHANNEL_CONTESTED",
@@ -79,7 +79,7 @@ _OWN: tuple[CodeInfo, ...] = (
             "none goes to the free queue."
         ),
         fix=('Keep one PLC request per channel and wire each other request to a channel of its own. Write: d.series(k1.coil["A1"], a1.di_1)'),
-        page="findings-validators",
+        page="findings-build",
     ),
     CodeInfo(
         code="PLC_REQUEST_AMBIGUOUS",
@@ -91,7 +91,7 @@ _OWN: tuple[CodeInfo, ...] = (
             "reaches them all, or all by a direct conductor. It gets no binding."
         ),
         fix=('Wire the request straight to one channel of its signal, or free the other channels. Write: d.series(k1.coil["A1"], a1.di_1)'),
-        page="findings-validators",
+        page="findings-build",
     ),
     CodeInfo(
         code="PLC_REQUEST_UNSERVABLE",
@@ -104,7 +104,7 @@ _OWN: tuple[CodeInfo, ...] = (
             ' a parent unit, or move another request off one. Write: d.device("A1", "DEMO-'
             'PLC-DI-16")'
         ),
-        page="findings-validators",
+        page="findings-build",
     ),
     CodeInfo(
         code="PORT_DESIGNATION_DUPLICATE",
@@ -113,7 +113,7 @@ _OWN: tuple[CodeInfo, ...] = (
         who="consumer",
         cause=("Two or more ports of one item print the same designation text, so a drawing or list cannot tell them apart."),
         fix=('Give each port of one item its own printed pin marking in the part file. Write: marking = "A2"'),
-        page="findings-validators",
+        page="findings-build",
     ),
     CodeInfo(
         code="PRODUCT_DESIGNATION_DUPLICATE",
@@ -125,7 +125,7 @@ _OWN: tuple[CodeInfo, ...] = (
             "one location or, unplaced, both unnumbered alike in one unit instance."
         ),
         fix=('Give each item a distinct location or label: place one elsewhere, or tag it. Write: d.device("X2", "DEMO-CONN-2P", place="A2")'),
-        page="findings-validators",
+        page="findings-build",
     ),
     CodeInfo(
         code="REFERENCE_DESIGNATION_DUPLICATE",
@@ -134,7 +134,7 @@ _OWN: tuple[CodeInfo, ...] = (
         who="consumer",
         cause=("Two items in the function or location aspect print the same full reference designation (e.g. two unit instances at one location)."),
         fix=('Place the two items at different locations so their designations differ. Write: d.device("X2", "DEMO-CONN-2P", place="A2")'),
-        page="findings-validators",
+        page="findings-build",
     ),
     CodeInfo(
         code=ORDER_HINT_CYCLE,
@@ -143,7 +143,7 @@ _OWN: tuple[CodeInfo, ...] = (
         who="consumer",
         cause=("Authored `d.layout.order` hints contradict each other in a cycle (a before b, b before a), so no page order can honour them."),
         fix=("Drop one hint of the cycle the message names. Write: d.layout.order(a, b) for one direction only"),
-        page="findings-validators",
+        page="findings-build",
     ),
     CodeInfo(
         code="DESIGNATION_MOVED",
@@ -152,7 +152,7 @@ _OWN: tuple[CodeInfo, ...] = (
         who="consumer",
         cause=("An item or unit instance pinned in the previous release now prints a different designation, written or numbered."),
         fix=("No call clears this: restore the released tag on {subject}; only a new version may change it."),
-        page="findings-validators",
+        page="findings-build",
     ),
     CodeInfo(
         code="DESIGNATION_NEW_IN_REVISION",
@@ -161,7 +161,7 @@ _OWN: tuple[CodeInfo, ...] = (
         who="note",
         cause="A new untagged item or unit instance took the next free number in a later revision.",
         fix="Nothing is wrong; tag it if its number must stay fixed.",
-        page="findings-validators",
+        page="findings-build",
     ),
 )
 

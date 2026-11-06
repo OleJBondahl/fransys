@@ -1,6 +1,6 @@
 """Each CSV of a unit's write prints what the PDF list beside it prints (model-0054 section 4).
 
-Ruling (a), 2026-09-24: a unit's `terminals-*.csv`, `connectors-*.csv` and
+Ruling (a), 2026-09-24: a unit's `terminals.csv`, `connectors.csv` and
 `wires.csv` get the SAME document context as the unit document's PDF lists, so their end
 """
 
@@ -128,7 +128,7 @@ def test_a_units_terminal_csv_ends_equal_the_pdf_terminal_list_cell_for_cell(bui
     """Both lists, same strip: the same `side_a` and `side_b` cells, and not vacuously empty.
     Can-fail: dropping `context=` in the facade's per-strip CSV makes the inside end
     `+C1-B12:2/T1`, not the PDF's `-B12:2/T1`."""
-    rows = _read(_unit_exports(built), "terminals-")
+    rows = _read(_unit_exports(built), "terminals.csv")
     csv_cells = [(row["designation"], row["side_a"], row["side_b"]) for row in rows]
     assert csv_cells == _pdf_terminal_cells(built)
     assert csv_cells == [("-X3:T:1", "-B12:2/T1", "+EXT-M1:U1")]
@@ -137,7 +137,7 @@ def test_a_units_terminal_csv_ends_equal_the_pdf_terminal_list_cell_for_cell(bui
 def test_out_all_terminal_csv_prints_the_full_text_of_the_no_unit_context(built):
     """`unit=None`: no document, no context: the inside end carries `+C1` too.
     Can-fail: passing the strip's context there makes the inside end short."""
-    (row,) = _read(_all_exports(built), "terminals-")
+    (row,) = _read(_all_exports(built), "terminals.csv")
     assert (row["side_a"], row["side_b"]) == ("+C1-B12:2/T1", "+EXT-M1:U1")
 
 
@@ -156,7 +156,7 @@ def test_a_units_wire_label_csv_equals_the_pdf_wire_label_list_row_for_row(built
 def test_a_units_connector_csv_mate_pins_equal_the_pdf_connector_list_cell_for_cell(built):
     """Both mate pins are outside the board: each prints its whole path."""
     m, _unit_id, doc, _strip, board = built
-    rows = _read(_unit_exports(built), "connectors-")
+    rows = _read(_unit_exports(built), "connectors.csv")
     csv_cells = [(r["designation"], r["marking"], r["mate_port_designation"]) for r in rows]
     pdf_cells = [(line[0], line[5], line[7]) for line in pin_lines(m, connector_rows_for(m, doc, board))]
     assert csv_cells == pdf_cells
@@ -165,5 +165,5 @@ def test_a_units_connector_csv_mate_pins_equal_the_pdf_connector_list_cell_for_c
 
 def test_out_all_connector_csv_prints_every_mate_pin_with_its_full_path(built):
     """Can-fail: passing the board's context there makes `+C1-H2:1` short."""
-    rows = _read(_all_exports(built), "connectors-")
+    rows = _read(_all_exports(built), "connectors.csv")
     assert {r["mate_port_designation"] for r in rows} == {"+EXT-H1:1", "+C1-H2:1"}

@@ -12,7 +12,6 @@ import fransys_parts
 from _drawn_pages import drawn_pages, markers_in, ref_texts
 from _model_build_cover import cabinet_document, layout_trigger_document
 from fransys_author.design import Design
-from fransys_reports import connectors_csv
 
 from fransys_model.derive import item_designation
 from fransys_model.derive.queries import connector_rows
@@ -83,8 +82,6 @@ def test_the_connector_list_names_each_connector_of_the_device_behind_its_tag() 
     assert [row.designation for row in rows] == ["-A1-X1", "-A1-X2"]
     assert [(row.style, row.pincount) for row in rows] == [("header-2p", 2)] * 2
     assert [[pin.marking for pin in row.pins] for row in rows] == [["1", "2"], ["1", "2"]]
-    lines = connectors_csv(model, _a1(model).id).splitlines()
-    assert [line.split(",")[0] for line in lines[1:]] == ["-A1-X1", "-A1-X1", "-A1-X2", "-A1-X2"]
 
 
 def test_the_drawn_boxes_of_the_device_name_the_connector() -> None:

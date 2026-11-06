@@ -42,7 +42,7 @@ _PUMP1_WRITE_FILES = frozenset(
         "demo-pump-cabinet-v1.2.pdf",
         "demo-pump-cabinet-v1.2-designations.csv",
         "demo-pump-cabinet-v1.2-plc.csv",
-        "demo-pump-cabinet-v1.2-terminals-X2.csv",
+        "demo-pump-cabinet-v1.2-terminals.csv",
         "demo-pump-cabinet-v1.2-wires.csv",
     }
 )
@@ -68,8 +68,8 @@ _PUMP1_BOARD_WRITE_FILES = frozenset(
 
 # The whole model's own write (`unit=None`): every document (cabinet, board, system), every
 # whole-model CSV including `cables.csv` (root decision 0016, STEP 6) and `overview.html`,
-# and every strip/board's own list across the whole model with no unit filter -- both pump1's
-# and pump2's terminal lists, both io-boards' connector lists. Confirmed by running
+# and the one terminal list and the one connector list of the whole model with no unit filter --
+# both pump1's and pump2's strips, both io-boards' connectors. Confirmed by running
 # `fr.write(result, tmp_path / "all", unit=None)`, not guessed.
 _ALL_WRITE_FILES = frozenset(
     {
@@ -80,14 +80,12 @@ _ALL_WRITE_FILES = frozenset(
         "P-1001-v1.1-bom.csv",
         "P-1001-v1.1-cables.csv",
         "P-1001-v1.1-cores.csv",
-        "P-1001-v1.1-connectors-BRD-ER-C1-P1-U1.csv",
-        "P-1001-v1.1-connectors-BRD-ER-C2-P2-U1.csv",
+        "P-1001-v1.1-connectors.csv",
         "P-1001-v1.1-designations.csv",
         "P-1001-v1.1-overview.html",
         "P-1001-v1.1-plc.csv",
         "P-1001-v1.1.pdf",
-        "P-1001-v1.1-terminals-ER-C1-P1-X2.csv",
-        "P-1001-v1.1-terminals-ER-C2-P2-X2.csv",
+        "P-1001-v1.1-terminals.csv",
         "P-1001-v1.1-wires.csv",
     }
 )
@@ -163,11 +161,11 @@ def test_write_unit_pump1_excludes_pump2s_own_terminal_list(pump1_cabinet_write)
     """The discriminating assertion: both cabinets share the unit *name*
     `demo-pump-cabinet`, so this proves the filter matches the specific unit *instance* id,
     not the name. A unit folder's names are unit-relative (UNIT-ID I5), so both cabinets'
-    strip lists are `terminals-X2.csv`: what tells them apart is the content (pump1's field
+    strip lists are `terminals.csv`: what tells them apart is the content (pump1's field
     """
     written = pump1_cabinet_write
     (terminals,) = (p for p in written if "terminals" in p.name)
-    assert terminals.name == "demo-pump-cabinet-v1.2-terminals-X2.csv"
+    assert terminals.name == "demo-pump-cabinet-v1.2-terminals.csv"
     text = terminals.read_text(encoding="utf-8")
     assert "+FLD-M1:U" in text
     assert "+FLD-M2:U" not in text
@@ -191,7 +189,7 @@ def test_write_unit_none_and_pump2_also_succeed(built, tmp_path):
     assert {p.name for p in written_all} == _ALL_WRITE_FILES
     written_pump2 = fr.write(result, tmp_path / "pump2", unit=pump2_cabinet)
     (terminals,) = (p for p in written_pump2 if "terminals" in p.name)
-    assert terminals.name == "demo-pump-cabinet-v1.2-terminals-X2.csv"
+    assert terminals.name == "demo-pump-cabinet-v1.2-terminals.csv"
     text = terminals.read_text(encoding="utf-8")
     assert "+FLD-M2:U" in text
     assert "+FLD-M1:U" not in text

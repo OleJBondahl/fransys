@@ -42,7 +42,7 @@ from .pdf_texts import pdf_texts
 from .plc_list import plc_channel_rows
 from .plc_rack import is_plc_module, plc_rack_modules
 from .release_order import release_order, same_version
-from .report_scope import unit_boards, unit_strips
+from .report_scope import terminal_strips, unit_boards, unit_strips
 from .revision_text import revision_text
 from .revisions import current_revision, revision_history
 from .structure import (
@@ -66,7 +66,6 @@ from .wiring import (
     conductors_on_item,
     first_leg,
     terminal_rows,
-    terminal_strips,
     unconnected_ports,
     unused_terminals,
 )

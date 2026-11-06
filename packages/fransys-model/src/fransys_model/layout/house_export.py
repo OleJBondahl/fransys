@@ -27,6 +27,7 @@ class ExportForm:
     """The `[export]` table: which reports are written, how files are named, placed and encoded.
 
     `csv_quoting` is the name of a `csv` quoting mode: minimal, all, nonnumeric or none.
+    `hide_pe` leaves the PE rail off the drawing sheets (lists keep it).
     """
 
     id: Id[ExportForm]
@@ -41,4 +42,5 @@ class ExportForm:
     csv_encoding: str
     csv_quoting: str
     csv_newline: str
+    hide_pe: bool
     ext: frozendict[str, Value] = frozendict()

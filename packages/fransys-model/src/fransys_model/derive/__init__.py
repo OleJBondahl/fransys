@@ -154,9 +154,6 @@ from .facts.children import child_items, item_parents
 from .facts.closure import (
     LinkGroup,
     PhysicalNet,
-    drawn_groups,
-    drawn_net_of,
-    drawn_physical_nets,
     link_groups,
     net_of,
     physical_nets,
@@ -164,8 +161,9 @@ from .facts.closure import (
     rail_pairs,
     required_groups,
 )
-from .facts.conductor_facts import conductor_ends, is_bridge
+from .facts.conductor_facts import conductor_ends, is_bridge, is_pe_conductor
 from .facts.cores import cores_past_product
+from .facts.drawn_closure import drawn_groups, drawn_net_of, drawn_physical_nets
 from .facts.fault.prospective import ProspectiveFault, prospective_fault
 from .facts.house_settings import export_form_of
 from .facts.ink_net import ink_net
@@ -538,7 +536,7 @@ from .sheet_forms import set_page_text, sheet_counter_text
 from .sheet_frame import sheet_frame
 from .sheets import diagram_sheets, sheets
 from .sideless_pins import SidelessPins, sideless_pins
-from .stands import stands
+from .stands import drawn_stands, hidden_pins, stands
 from .stub_far import stub_far
 from .stub_text import stub_text_at
 from .supply_share import supply_share
@@ -854,6 +852,7 @@ __all__ = [
     "drawn_net_of",
     "drawn_pages",
     "drawn_physical_nets",
+    "drawn_stands",
     "draws_as_line",
     "effective_placement",
     "enclosing_boards",
@@ -911,6 +910,7 @@ __all__ = [
     "has_function",
     "has_project",
     "has_schematic_subject",
+    "hidden_pins",
     "implied_rest",
     "ink_net",
     "internal_links",
@@ -920,6 +920,7 @@ __all__ = [
     "is_contact_kind",
     "is_control",
     "is_own_unit_root",
+    "is_pe_conductor",
     "is_plc_module",
     "is_rail_terminal",
     "is_replica_only_undrawn",

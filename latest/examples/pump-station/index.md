@@ -78,29 +78,29 @@ their published datasheets.
 
 [![EX-1-v1.6, page 8](img/all/EX-1-v1.6-p08.png)](img/all/EX-1-v1.6-p08.png)
 
-### pump-cabinet-v1.10.pdf
+### pump-cabinet-v1.11.pdf
 
-[Download the PDF](files/all/pump-cabinet-v1.10.pdf)
+[Download the PDF](files/all/pump-cabinet-v1.11.pdf)
 
-[![pump-cabinet-v1.10, page 1](img/all/pump-cabinet-v1.10-p01.png)](img/all/pump-cabinet-v1.10-p01.png)
+[![pump-cabinet-v1.11, page 1](img/all/pump-cabinet-v1.11-p01.png)](img/all/pump-cabinet-v1.11-p01.png)
 
-[![pump-cabinet-v1.10, page 2](img/all/pump-cabinet-v1.10-p02.png)](img/all/pump-cabinet-v1.10-p02.png)
+[![pump-cabinet-v1.11, page 2](img/all/pump-cabinet-v1.11-p02.png)](img/all/pump-cabinet-v1.11-p02.png)
 
-[![pump-cabinet-v1.10, page 3](img/all/pump-cabinet-v1.10-p03.png)](img/all/pump-cabinet-v1.10-p03.png)
+[![pump-cabinet-v1.11, page 3](img/all/pump-cabinet-v1.11-p03.png)](img/all/pump-cabinet-v1.11-p03.png)
 
-[![pump-cabinet-v1.10, page 4](img/all/pump-cabinet-v1.10-p04.png)](img/all/pump-cabinet-v1.10-p04.png)
+[![pump-cabinet-v1.11, page 4](img/all/pump-cabinet-v1.11-p04.png)](img/all/pump-cabinet-v1.11-p04.png)
 
-[![pump-cabinet-v1.10, page 5](img/all/pump-cabinet-v1.10-p05.png)](img/all/pump-cabinet-v1.10-p05.png)
+[![pump-cabinet-v1.11, page 5](img/all/pump-cabinet-v1.11-p05.png)](img/all/pump-cabinet-v1.11-p05.png)
 
-[![pump-cabinet-v1.10, page 6](img/all/pump-cabinet-v1.10-p06.png)](img/all/pump-cabinet-v1.10-p06.png)
+[![pump-cabinet-v1.11, page 6](img/all/pump-cabinet-v1.11-p06.png)](img/all/pump-cabinet-v1.11-p06.png)
 
-[![pump-cabinet-v1.10, page 7](img/all/pump-cabinet-v1.10-p07.png)](img/all/pump-cabinet-v1.10-p07.png)
+[![pump-cabinet-v1.11, page 7](img/all/pump-cabinet-v1.11-p07.png)](img/all/pump-cabinet-v1.11-p07.png)
 
-[![pump-cabinet-v1.10, page 8](img/all/pump-cabinet-v1.10-p08.png)](img/all/pump-cabinet-v1.10-p08.png)
+[![pump-cabinet-v1.11, page 8](img/all/pump-cabinet-v1.11-p08.png)](img/all/pump-cabinet-v1.11-p08.png)
 
-[![pump-cabinet-v1.10, page 9](img/all/pump-cabinet-v1.10-p09.png)](img/all/pump-cabinet-v1.10-p09.png)
+[![pump-cabinet-v1.11, page 9](img/all/pump-cabinet-v1.11-p09.png)](img/all/pump-cabinet-v1.11-p09.png)
 
-[![pump-cabinet-v1.10, page 10](img/all/pump-cabinet-v1.10-p10.png)](img/all/pump-cabinet-v1.10-p10.png)
+[![pump-cabinet-v1.11, page 10](img/all/pump-cabinet-v1.11-p10.png)](img/all/pump-cabinet-v1.11-p10.png)
 
 - Open the overview page: [EX-1-v1.6-overview.html](files/all/EX-1-v1.6-overview.html)
 
@@ -426,9 +426,9 @@ their published datasheets.
 
 ## out/cabinet/data
 
-### pump-cabinet-v1.10-bom.csv
+### pump-cabinet-v1.11-bom.csv
 
-[Download the CSV](files/cabinet/data/pump-cabinet-v1.10-bom.csv)
+[Download the CSV](files/cabinet/data/pump-cabinet-v1.11-bom.csv)
 
 | mpn | revision | manufacturer | description | count | designations |
 | --- | --- | --- | --- | --- | --- |
@@ -449,23 +449,23 @@ their published datasheets.
 | LRD08 |  | Schneider Electric | TeSys thermal overload relay, class 10A, 2.5-4 A, 1 NO + 1 NC | 2 | -B12; -B22 |
 | QUINT4-PS/1AC/24DC/2.5/SC |  | Phoenix Contact | Power supply, 1-phase, 24 V DC; 2.5 A | 1 | -T1 |
 
-### pump-cabinet-v1.10-cables.csv
+### pump-cabinet-v1.11-cables.csv
 
-[Download the CSV](files/cabinet/data/pump-cabinet-v1.10-cables.csv)
+[Download the CSV](files/cabinet/data/pump-cabinet-v1.11-cables.csv)
 
 | designation | mpn | description | core_count | gauge_mm2 | length_mm | from_label | to_label | pairs |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 
-### pump-cabinet-v1.10-cores.csv
+### pump-cabinet-v1.11-cores.csv
 
-[Download the CSV](files/cabinet/data/pump-cabinet-v1.10-cores.csv)
+[Download the CSV](files/cabinet/data/pump-cabinet-v1.11-cores.csv)
 
 | cable | core | colour | pair | end_a | end_b | note |
 | --- | --- | --- | --- | --- | --- | --- |
 
-### pump-cabinet-v1.10-designations.csv
+### pump-cabinet-v1.11-designations.csv
 
-[Download the CSV](files/cabinet/data/pump-cabinet-v1.10-designations.csv)
+[Download the CSV](files/cabinet/data/pump-cabinet-v1.11-designations.csv)
 
 | designation | reference | description |
 | --- | --- | --- |
@@ -535,9 +535,9 @@ their published datasheets.
 | -X4:L3:3 | =SUP-X4:L3:3 | TOPJOB S feed-through terminal block, 2.5 mm2, grey; 24 A; 800 V |
 | -X4:L3:4 | =SUP-X4:L3:4 | TOPJOB S feed-through terminal block, 2.5 mm2, grey; 24 A; 800 V |
 
-### pump-cabinet-v1.10-plc.csv
+### pump-cabinet-v1.11-plc.csv
 
-[Download the CSV](files/cabinet/data/pump-cabinet-v1.10-plc.csv)
+[Download the CSV](files/cabinet/data/pump-cabinet-v1.11-plc.csv)
 
 | pin | channel_name | signal | signal_name | wired_to |
 | --- | --- | --- | --- | --- |
@@ -550,9 +550,9 @@ their published datasheets.
 | -DO1:DO3 | 3 | do |  |  |
 | -DO1:DO4 | 4 | do |  |  |
 
-### pump-cabinet-v1.10-terminals-X1.csv
+### pump-cabinet-v1.11-terminals-X1.csv
 
-[Download the CSV](files/cabinet/data/pump-cabinet-v1.10-terminals-X1.csv)
+[Download the CSV](files/cabinet/data/pump-cabinet-v1.11-terminals-X1.csv)
 
 | designation | group | index | side_a | side_b | jumper_group |
 | --- | --- | --- | --- | --- | --- |
@@ -562,9 +562,9 @@ their published datasheets.
 | -X1:N:1 | N | 1 | -F1:3 N | +EXT-X0:N:1 |  |
 | -X1:PE:1 | PE | 1 |  | +EXT-X0:PE:1 |  |
 
-### pump-cabinet-v1.10-terminals-X2.csv
+### pump-cabinet-v1.11-terminals-X2.csv
 
-[Download the CSV](files/cabinet/data/pump-cabinet-v1.10-terminals-X2.csv)
+[Download the CSV](files/cabinet/data/pump-cabinet-v1.11-terminals-X2.csv)
 
 | designation | group | index | side_a | side_b | jumper_group |
 | --- | --- | --- | --- | --- | --- |
@@ -587,9 +587,9 @@ their published datasheets.
 | -X2:GND:6 | GND | 6 | -Q21:A2; -X2:GND:5; -X2:GND:7 |  | 2 |
 | -X2:GND:7 | GND | 7 | -P2:X2; -X2:GND:6 |  | 2 |
 
-### pump-cabinet-v1.10-terminals-X3.csv
+### pump-cabinet-v1.11-terminals-X3.csv
 
-[Download the CSV](files/cabinet/data/pump-cabinet-v1.10-terminals-X3.csv)
+[Download the CSV](files/cabinet/data/pump-cabinet-v1.11-terminals-X3.csv)
 
 | designation | group | index | side_a | side_b | jumper_group |
 | --- | --- | --- | --- | --- | --- |
@@ -602,9 +602,9 @@ their published datasheets.
 | -X3:W:1 | W | 1 | -B12:6/T3 | +EXT-M1:W1 |  |
 | -X3:W:2 | W | 2 | -B22:6/T3 | +EXT-M2:W1 |  |
 
-### pump-cabinet-v1.10-terminals-X4.csv
+### pump-cabinet-v1.11-terminals-X4.csv
 
-[Download the CSV](files/cabinet/data/pump-cabinet-v1.10-terminals-X4.csv)
+[Download the CSV](files/cabinet/data/pump-cabinet-v1.11-terminals-X4.csv)
 
 | designation | group | index | side_a | side_b | jumper_group |
 | --- | --- | --- | --- | --- | --- |
@@ -621,9 +621,9 @@ their published datasheets.
 | -X4:L3:3 | L3 | 3 | -F11:5; -X4:L3:2; -X4:L3:4 |  | 3 |
 | -X4:L3:4 | L3 | 4 | -F21:5; -X4:L3:3 |  | 3 |
 
-### pump-cabinet-v1.10-wires.csv
+### pump-cabinet-v1.11-wires.csv
 
-[Download the CSV](files/cabinet/data/pump-cabinet-v1.10-wires.csv)
+[Download the CSV](files/cabinet/data/pump-cabinet-v1.11-wires.csv)
 
 | from | to | colour | cross_section_mm2 | label |
 | --- | --- | --- | --- | --- |
@@ -688,31 +688,31 @@ their published datasheets.
 | -X4:L3:3 | -F11:5 | GY | 1.5 | -X4:L3:3 -F11:5 |
 | -X4:L3:4 | -F21:5 | GY | 1.5 | -X4:L3:4 -F21:5 |
 
-- Download: [pump-cabinet-v1.10-wago-U1.xml](files/cabinet/data/pump-cabinet-v1.10-wago-U1.xml)
+- Download: [pump-cabinet-v1.11-wago-U1.xml](files/cabinet/data/pump-cabinet-v1.11-wago-U1.xml)
 
 ## out/cabinet
 
-### pump-cabinet-v1.10.pdf
+### pump-cabinet-v1.11.pdf
 
-[Download the PDF](files/cabinet/pump-cabinet-v1.10.pdf)
+[Download the PDF](files/cabinet/pump-cabinet-v1.11.pdf)
 
-[![pump-cabinet-v1.10, page 1](img/cabinet/pump-cabinet-v1.10-p01.png)](img/cabinet/pump-cabinet-v1.10-p01.png)
+[![pump-cabinet-v1.11, page 1](img/cabinet/pump-cabinet-v1.11-p01.png)](img/cabinet/pump-cabinet-v1.11-p01.png)
 
-[![pump-cabinet-v1.10, page 2](img/cabinet/pump-cabinet-v1.10-p02.png)](img/cabinet/pump-cabinet-v1.10-p02.png)
+[![pump-cabinet-v1.11, page 2](img/cabinet/pump-cabinet-v1.11-p02.png)](img/cabinet/pump-cabinet-v1.11-p02.png)
 
-[![pump-cabinet-v1.10, page 3](img/cabinet/pump-cabinet-v1.10-p03.png)](img/cabinet/pump-cabinet-v1.10-p03.png)
+[![pump-cabinet-v1.11, page 3](img/cabinet/pump-cabinet-v1.11-p03.png)](img/cabinet/pump-cabinet-v1.11-p03.png)
 
-[![pump-cabinet-v1.10, page 4](img/cabinet/pump-cabinet-v1.10-p04.png)](img/cabinet/pump-cabinet-v1.10-p04.png)
+[![pump-cabinet-v1.11, page 4](img/cabinet/pump-cabinet-v1.11-p04.png)](img/cabinet/pump-cabinet-v1.11-p04.png)
 
-[![pump-cabinet-v1.10, page 5](img/cabinet/pump-cabinet-v1.10-p05.png)](img/cabinet/pump-cabinet-v1.10-p05.png)
+[![pump-cabinet-v1.11, page 5](img/cabinet/pump-cabinet-v1.11-p05.png)](img/cabinet/pump-cabinet-v1.11-p05.png)
 
-[![pump-cabinet-v1.10, page 6](img/cabinet/pump-cabinet-v1.10-p06.png)](img/cabinet/pump-cabinet-v1.10-p06.png)
+[![pump-cabinet-v1.11, page 6](img/cabinet/pump-cabinet-v1.11-p06.png)](img/cabinet/pump-cabinet-v1.11-p06.png)
 
-[![pump-cabinet-v1.10, page 7](img/cabinet/pump-cabinet-v1.10-p07.png)](img/cabinet/pump-cabinet-v1.10-p07.png)
+[![pump-cabinet-v1.11, page 7](img/cabinet/pump-cabinet-v1.11-p07.png)](img/cabinet/pump-cabinet-v1.11-p07.png)
 
-[![pump-cabinet-v1.10, page 8](img/cabinet/pump-cabinet-v1.10-p08.png)](img/cabinet/pump-cabinet-v1.10-p08.png)
+[![pump-cabinet-v1.11, page 8](img/cabinet/pump-cabinet-v1.11-p08.png)](img/cabinet/pump-cabinet-v1.11-p08.png)
 
-[![pump-cabinet-v1.10, page 9](img/cabinet/pump-cabinet-v1.10-p09.png)](img/cabinet/pump-cabinet-v1.10-p09.png)
+[![pump-cabinet-v1.11, page 9](img/cabinet/pump-cabinet-v1.11-p09.png)](img/cabinet/pump-cabinet-v1.11-p09.png)
 
-[![pump-cabinet-v1.10, page 10](img/cabinet/pump-cabinet-v1.10-p10.png)](img/cabinet/pump-cabinet-v1.10-p10.png)
+[![pump-cabinet-v1.11, page 10](img/cabinet/pump-cabinet-v1.11-p10.png)](img/cabinet/pump-cabinet-v1.11-p10.png)
 

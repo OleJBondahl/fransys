@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.5/guide/moving-to-0.22/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.6/guide/moving-to-0.22/">
       
       
       
@@ -947,6 +947,28 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         Removed in 0.22
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#new-in-0226" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        New in 0.22.6
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#new-in-0225" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        New in 0.22.5
       </span>
     </span>
   </a>
@@ -2031,6 +2053,28 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#new-in-0226" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        New in 0.22.6
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#new-in-0225" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        New in 0.22.5
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#new-in-0221" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -2245,6 +2289,16 @@ for example <code>fault_time_constant=fr.elecdef.Unit.MS(15)</code>. In a part f
 </tr>
 </tbody>
 </table>
+<h2 id="new-in-0226">New in 0.22.6</h2>
+<ul>
+<li>A revision cut by 0.22.4 or earlier reads again, with no rebaseline needed. <code>fr.verify</code> finds nothing to report. <code>fr.release</code> cuts the next revision, also for a container that pins such a revision (decisions model-0289, model-0428).</li>
+</ul>
+<h2 id="new-in-0225">New in 0.22.5</h2>
+<ul>
+<li>listing_version 7: a list end prints the pin's marking when it is set and unique under its printed prefix, else its name (decisions model-0428, model-0431).</li>
+<li>0.22.5 cannot read a revision cut by 0.22.4 or earlier: <code>fr.verify</code> reports <code>BASELINE_TOO_OLD</code>, and <code>fr.release</code> and <code>fr.rebaseline</code> refuse. Stay on 0.22.4 to release; 0.22.6 reads them again.</li>
+<li>A connected cable screen (<code>core(SH, ...)</code>, <code>spare(SH, at=...)</code>) is refused with <code>SCREEN_DISABLED</code> until screen connections return; the cable heading still prints "shielded" (decision model-0430).</li>
+</ul>
 <h2 id="new-in-0221">New in 0.22.1</h2>
 <ul>
 <li><code>python -m fransys migrate-parts DIR</code> rewrites a schema 1 parts library to the 0.22 format (decision 0474). <code>DIR</code> is the library's folder (the one holding <code>library.toml</code> and <code>parts/</code>) or a folder above it, never <code>parts/</code>.</li>
@@ -2295,7 +2349,7 @@ for example <code>fault_time_constant=fr.elecdef.Unit.MS(15)</code>. In a part f
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.22.5 documentation
+      Fransys 0.22.6 documentation
     </div>
   
   

@@ -1,15 +1,15 @@
 """Terminal strip checks.
 
 Expected rows are hardcoded from E3's terminal plan and checked against the committed row
-shape of the `terminals-*.csv` files: `designation,group,index,side_a,side_b,jumper_group`.
+shape of the `terminals.csv` file: `designation,group,index,side_a,side_b,jumper_group`.
 `side_a` is the terminal's internal port role and lists every conductor on it, jumpers included
 (the far end of a `cab.bridge` jumper is the neighbouring terminal); `side_b` is the external
 role. Every cell is a full designation (`-X3:PE:1`, `+EXT-M1:PE`). `jumper_group` numbers each
 bridged group from 1 in row order (empty when not bridged).
-The upstream strip `-X0` sits on `+EXT`, outside the cabinet, so its file is
-`terminals-EXT-X0.csv` and exists only in the whole-model `out/all/`, where every designation is
+The upstream strip `-X0` sits on `+EXT`, outside the cabinet, so its rows are
+in `out/all/` only in the whole-model `out/all/`, where every designation is
 location-qualified (`-U1-X1:L1:1`). The cabinet's own strips are read from `out/cabinet/`
-(`terminals-X1.csv` and so on, the unit folder's names), the
+(`terminals.csv`, one file for every strip), the
 cabinet unit's view, where its own items print without the location (`-Q1:1L1`) and what
 lies outside it prints with its location (`+EXT-X0:L1:1`).
 `side_a` lists a terminal's conductors in a fixed order (the output is deterministic).
@@ -424,35 +424,36 @@ EXPECTED_X3 = [
 ]
 
 
-def _read_rows(path: Path) -> list[dict[str, str]]:
+def _read_rows(path: Path, strip: str) -> list[dict[str, str]]:
+    """The rows of one strip from the export's one `terminals.csv`, in file order."""
     with path.open(newline="", encoding="utf-8") as f:
-        return list(csv.DictReader(f))
+        return [row for row in csv.DictReader(f) if row["designation"].startswith(f"{strip}:")]
 
 
 def test_ext_x0_matches_terminal_plan(built: tuple) -> None:
     _result, out_dir, _intermediates = built
-    rows = _read_rows(out_dir / "all" / "data" / "EX-1-v1.6-terminals-EXT-X0.csv")
+    rows = _read_rows(out_dir / "all" / "data" / "EX-1-v1.6-terminals.csv", "-X0")
     assert len(rows) == 5, f"expected exactly 5 rows on +EXT-X0, got {len(rows)}: {rows}"
     assert rows == EXPECTED_EXT_X0
 
 
 def test_x1_matches_terminal_plan(built: tuple) -> None:
     _result, out_dir, _intermediates = built
-    rows = _read_rows(out_dir / "cabinet" / "data" / "pump-cabinet-v1.11-terminals-X1.csv")
+    rows = _read_rows(out_dir / "cabinet" / "data" / "pump-cabinet-v1.11-terminals.csv", "-X1")
     assert len(rows) == 5, f"expected exactly 5 rows on -X1, got {len(rows)}: {rows}"
     assert rows == EXPECTED_X1
 
 
 def test_x01_matches_terminal_plan(built: tuple) -> None:
     _result, out_dir, _intermediates = built
-    rows = _read_rows(out_dir / "cabinet" / "data" / "pump-cabinet-v1.11-terminals-X4.csv")
+    rows = _read_rows(out_dir / "cabinet" / "data" / "pump-cabinet-v1.11-terminals.csv", "-X4")
     assert len(rows) == 12, f"expected exactly 12 rows on -X4, got {len(rows)}: {rows}"
     assert rows == EXPECTED_X4
 
 
 def test_x2_matches_terminal_plan(built: tuple) -> None:
     _result, out_dir, _intermediates = built
-    rows = _read_rows(out_dir / "cabinet" / "data" / "pump-cabinet-v1.11-terminals-X2.csv")
+    rows = _read_rows(out_dir / "cabinet" / "data" / "pump-cabinet-v1.11-terminals.csv", "-X2")
     assert len(rows) == 18, f"expected exactly 18 rows on -X2, got {len(rows)}: {rows}"
     assert rows == EXPECTED_X2
 
@@ -479,7 +480,7 @@ def test_x2_24v_bridge_joins_every_24v_landing(built: tuple) -> None:
     the terminals carry no `jumper_group`.
     """
     _result, out_dir, _intermediates = built
-    rows = _read_rows(out_dir / "cabinet" / "data" / "pump-cabinet-v1.11-terminals-X2.csv")
+    rows = _read_rows(out_dir / "cabinet" / "data" / "pump-cabinet-v1.11-terminals.csv", "-X2")
     rail = _x2_group(rows, "24V", 11)
     for designation, landing in (
         ("-X2:24V:1", "-T1:+"),
@@ -505,7 +506,7 @@ def test_x2_gnd_bridge_joins_every_gnd_landing(built: tuple) -> None:
     terminals carry no `jumper_group`.
     """
     _result, out_dir, _intermediates = built
-    rows = _read_rows(out_dir / "cabinet" / "data" / "pump-cabinet-v1.11-terminals-X2.csv")
+    rows = _read_rows(out_dir / "cabinet" / "data" / "pump-cabinet-v1.11-terminals.csv", "-X2")
     ground = _x2_group(rows, "GND", 7)
     rail = _x2_group(rows, "24V", 11)
     assert ground["-X2:GND:1"]["jumper_group"] != rail["-X2:24V:1"]["jumper_group"], (
@@ -526,6 +527,6 @@ def test_x2_gnd_bridge_joins_every_gnd_landing(built: tuple) -> None:
 
 def test_x3_matches_terminal_plan(built: tuple) -> None:
     _result, out_dir, _intermediates = built
-    rows = _read_rows(out_dir / "cabinet" / "data" / "pump-cabinet-v1.11-terminals-X3.csv")
+    rows = _read_rows(out_dir / "cabinet" / "data" / "pump-cabinet-v1.11-terminals.csv", "-X3")
     assert len(rows) == 8, f"expected exactly 8 rows on -X3, got {len(rows)}: {rows}"
     assert rows == EXPECTED_X3

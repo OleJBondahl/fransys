@@ -30,20 +30,18 @@ EXT_ITEMS = {"X0", "M1", "M2", "W1", "W11", "W21", "K1", "W3"}
 
 CABINET_FILES = {
     "data/pump-cabinet-v1.11-bom.csv",
+    "data/pump-cabinet-v1.11-terminals.csv",
     "data/pump-cabinet-v1.11-cables.csv",
     "data/pump-cabinet-v1.11-cores.csv",
     "pump-cabinet-v1.11.pdf",
     "data/pump-cabinet-v1.11-designations.csv",
     "data/pump-cabinet-v1.11-plc.csv",
-    "data/pump-cabinet-v1.11-terminals-X4.csv",
-    "data/pump-cabinet-v1.11-terminals-X1.csv",
-    "data/pump-cabinet-v1.11-terminals-X2.csv",
-    "data/pump-cabinet-v1.11-terminals-X3.csv",
     "data/pump-cabinet-v1.11-wago-U1.xml",
     "data/pump-cabinet-v1.11-wires.csv",
 }
 ALL_FILES = {
     "data/EX-1-v1.6-bom.csv",
+    "data/EX-1-v1.6-terminals.csv",
     "pump-cabinet-v1.11.pdf",
     "data/EX-1-v1.6-cables.csv",
     "data/EX-1-v1.6-cores.csv",
@@ -51,11 +49,6 @@ ALL_FILES = {
     "EX-1-v1.6-overview.html",
     "data/EX-1-v1.6-plc.csv",
     "EX-1-v1.6.pdf",
-    "data/EX-1-v1.6-terminals-U1-X4.csv",
-    "data/EX-1-v1.6-terminals-U1-X1.csv",
-    "data/EX-1-v1.6-terminals-U1-X2.csv",
-    "data/EX-1-v1.6-terminals-U1-X3.csv",
-    "data/EX-1-v1.6-terminals-EXT-X0.csv",
     "data/EX-1-v1.6-wago-PLC-U1-U1.xml",
     "data/EX-1-v1.6-wires.csv",
 }

@@ -1,0 +1,2427 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.4/guide/findings-render/">
+      
+      
+      
+        <link rel="prev" href="../findings-release/">
+      
+      
+        <link rel="next" href="../findings-pdf/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/fransys-icon.svg">
+      <meta name="generator" content="zensical-0.1.0">
+    
+    
+      
+        <title>Finding codes: layout and render - Fransys</title>
+      
+    
+    
+      
+        
+      
+      <link rel="stylesheet" href="../../assets/stylesheets/modern/main.4ab2de0c.min.css">
+      
+        
+          
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/modern/palette.b60ce83d.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,500,500i,700,700i%7CJetBrains+Mono:400,400i,700,700i&amp;display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
+    
+      
+
+    
+    
+
+<link rel="alternate" type="text/markdown" href="../../guide/findings-render/index.md">
+
+
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer" aria-hidden="true"></label>
+    <div data-md-component="skip">
+      <a href="#__skip" class="md-skip">
+        Skip to content
+      </a>
+    </div>
+    <div data-md-component="announce">
+      
+        <aside class="md-banner">
+          <div class="md-banner__inner md-grid md-typeset">
+            
+            Beta: the API may change between minor versions until 1.0.0.
+          </div>
+          
+        </aside>
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Fransys" class="md-header__button md-logo" aria-label="Fransys" data-md-component="logo">
+      
+  <img src="../../assets/fransys-wordmark-white.svg" alt="Fransys">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-menu" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
+      <span class="md-visually-hidden">Navigation</span>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Fransys
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Finding codes: layout and render
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+          <span class="md-visually-hidden">Search</span>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog" aria-label="Search">
+  <button type="button" class="md-search__button">
+    Search
+  </button>
+</div>
+      
+    
+    <div class="md-header__source">
+      
+        <a href="https://github.com/OleJBondahl/fransys" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      
+    </div>
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Fransys" class="md-nav__button md-logo" aria-label="Fransys" data-md-component="logo">
+      
+  <img src="../../assets/fransys-wordmark-white.svg" alt="Fransys">
+
+    </a>
+    Fransys
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/OleJBondahl/fransys" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Home
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Guide
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+            <label class="md-nav__title" for="__nav_2">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Guide
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Overview
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../parts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Parts
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../authoring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Authoring a design
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../series/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Wiring a design
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../drawn-ledger/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  The required-drawn ledger
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../detail/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Detail calls
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../harnesses/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Harnesses
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../units/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Units
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../build/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Building a design
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../documents/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Documents
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reading/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Reading a model
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../layout-numbers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Layout numbers
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reading-rows/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Reading: rows, columns and printed texts
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reading-records/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Reading: records, lookups and ratings
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../keywords/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Keywords and handles
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../keywords-design/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Keywords of the d calls
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../keywords-handles/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Keywords of the handle methods and layout hints
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../keywords-output/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Keywords of the fr functions
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../settings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Settings
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../moving-to-0.22/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Moving to 0.22
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../moving-to-0.20/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Moving to 0.20
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../moving-to-0.19/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Moving to 0.19
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../moving-to-0.16-and-0.17/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Moving to 0.16 and 0.17
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../moving-to-0.15/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Moving to 0.15
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../moving-to-0.14/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Moving to 0.14
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../findings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Finding codes
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../findings-validators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Finding codes: validators, build and release
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../findings-release/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Finding codes: build, release and verify
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      
+      
+      
+        
+      
+      
+      <a href="././" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Finding codes: layout and render
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../findings-pdf/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Finding codes: PDF
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../findings-kicad/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Finding codes: KiCad
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../findings-parts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Finding codes: part files
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Examples
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../moving-to-0.6/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Moving to 0.6
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../kicad/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  KiCad
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../moving-to-fransys/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Moving to Fransys
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../drawing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Drawing well
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../readability/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Reading the pages as numbers
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  The system overview
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../AGENTS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  For coding agents
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Part files
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_3">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Part files
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contracts/part-file/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Part file contract
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contracts/part-file-connectors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Part file connectors
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Examples
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_4">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Examples
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Overview
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/pump-station/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  pump-station
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Roadmap
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  API
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_6">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  API
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Overview
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/fransys/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  fransys
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/derive/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  fransys_model.derive
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  
+                    
+                    
+                    
+                      
+                    
+                    
+                  
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                <a id="__skip" tabindex="-1"></a>
+                
+
+                  
+
+  
+  
+
+
+<h1 id="finding-codes-layout-and-render">Finding codes: layout and render</h1>
+<p>Codes the layout and the drawing stage emit. Who acts is explained in <a href="../findings/"><code>findings.md</code></a>.</p>
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>Severity</th>
+<th>Stage</th>
+<th>Who acts</th>
+<th>Meaning</th>
+<th>Fix</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a id="align_dropped"></a>ALIGN_DROPPED</td>
+<td>WARNING</td>
+<td>render</td>
+<td>consumer</td>
+<td>Symbols of a row group or a band rank, mated pins, or the legs of a trunk, cannot stand level because the stacks in their columns contradict it; layout dropped the alignment.</td>
+<td>Shorten the stack, or move the members to the same end of their columns. Write: d.series(a, b, c) to stand a path in one column.</td>
+</tr>
+<tr>
+<td><a id="annex_unplaced"></a>ANNEX_UNPLACED</td>
+<td>WARNING</td>
+<td>render</td>
+<td>consumer</td>
+<td>A tag, marking or table beside a symbol found no spot free of every outline, wire and text; it stands at its first spot, over what blocks it.</td>
+<td>No call clears this: shorten the tag of <subject>, or move the symbols around it to leave a corner free.</td>
+</tr>
+<tr>
+<td><a id="block_not_placed"></a>BLOCK_NOT_PLACED</td>
+<td>ERROR</td>
+<td>render</td>
+<td>Fransys</td>
+<td>A block stands in no row of any page, or a whole block in more than one, so layout draws it by no rule; the message names the block and the stage.</td>
+<td>No call clears this: send the smallest model that shows it.</td>
+</tr>
+<tr>
+<td><a id="board_nets_not_drawn"></a>BOARD_NETS_NOT_DRAWN</td>
+<td>WARNING</td>
+<td>render</td>
+<td>consumer</td>
+<td>A board shares its unit with another top-level device, so layout draws it as a black box and drops the nets between its parts.</td>
+<td>Make the board its own unit's only top-level device, with its parts as children. Write: @fr.unit(...) def board(d): b = d.device("A1", "DEMO-PCB-IO") and d.device("J1", "DEMO-CONN-2P", parent=b) in a unit of their own.</td>
+</tr>
+<tr>
+<td><a id="card_overfull"></a>CARD_OVERFULL</td>
+<td>INFO</td>
+<td>render</td>
+<td>note</td>
+<td>The card of a box is wider than a page; the columns that do not fit stand free of the card on later pages.</td>
+<td>Nothing is wrong; each such column is joined to its pin of <subject> by a drawn tag pair.</td>
+</tr>
+<tr>
+<td><a id="chain_refused"></a>CHAIN_REFUSED</td>
+<td>INFO</td>
+<td>render</td>
+<td>note</td>
+<td>Boxes wired box to box do not make a chain that draws as one column: a ring, a box joined to three boxes, a box also wired by a trunk, or pins that do not face; or a box in parallel below another box, which has no layout yet. The message names the boxes and the hop that failed; the boxes are drawn unchained.</td>
+<td>Nothing is wrong; the boxes are drawn unchained (rule CHAIN-COLUMN).</td>
+</tr>
+<tr>
+<td><a id="connection_drawn_twice"></a>CONNECTION_DRAWN_TWICE</td>
+<td>ERROR</td>
+<td>render</td>
+<td>Fransys</td>
+<td>Two routes on one page join the same ports: the wires of a page close a loop.</td>
+<td>No call clears this: send the smallest model that shows it. The message names the page.</td>
+</tr>
+<tr>
+<td><a id="connection_not_drawn"></a>CONNECTION_NOT_DRAWN</td>
+<td>ERROR</td>
+<td>render</td>
+<td>consumer</td>
+<td>The drawn ports of one physical net do not lie in one drawn piece: a port no wire, dot, link or reference reaches, or two pieces with no reference pair between them. A group the model joins with a port off the document needs each drawn piece to end in a stub that names a port of the group outside it.</td>
+<td>Give both ends a location so layout can route or cut them; check <code>layout.route</code>, <code>layout.symbol_placement</code> and <code>layout.page</code>. Wire the open end's function into a function block, or move its device into a unit. Write: d.series(a, b, ...) to draw it in its block.</td>
+</tr>
+<tr>
+<td><a id="connection_to_undrawn"></a>CONNECTION_TO_UNDRAWN</td>
+<td>WARNING</td>
+<td>render</td>
+<td>consumer</td>
+<td>A connection, net group or rail has an end whose function layout never draws.</td>
+<td>Put the missing end's item in a drawn unit or location, or remove the connection. Write: d.function(name, text) to place that item in a drawn group.</td>
+</tr>
+<tr>
+<td><a id="dangling_wire_end"></a>DANGLING_WIRE_END</td>
+<td>ERROR</td>
+<td>render</td>
+<td>Fransys</td>
+<td>A Fransys drawing defect: a drawn wire ends where no symbol port, junction dot, reference marker, other wire or joined bundle lane end stands.</td>
+<td>No call clears this: send the smallest model that shows it. The message names the page.</td>
+</tr>
+<tr>
+<td><a id="diagram_box_overlap"></a>DIAGRAM_BOX_OVERLAP</td>
+<td>ERROR</td>
+<td>render</td>
+<td>Fransys</td>
+<td>Two boxes of a block diagram or of an overview view, or a tab and a box, overlap.</td>
+<td>No call clears this: send the smallest model that shows it.</td>
+</tr>
+<tr>
+<td><a id="diagram_cable_fanout"></a>DIAGRAM_CABLE_FANOUT</td>
+<td>INFO</td>
+<td>render</td>
+<td>note</td>
+<td>A cable reaches three or more boxes, so the block diagram draws a line from its first box to each other.</td>
+<td>Nothing is wrong; split the cable only if a line per pair is not wanted.</td>
+</tr>
+<tr>
+<td><a id="diagram_cable_one_box"></a>DIAGRAM_CABLE_ONE_BOX</td>
+<td>INFO</td>
+<td>render</td>
+<td>note</td>
+<td>A cable's ends reach one box or none, so the block diagram draws no line for it.</td>
+<td>Usually nothing to fix: the cable runs inside one box, or an end is an unmated plug.</td>
+</tr>
+<tr>
+<td><a id="diagram_label_struck"></a>DIAGRAM_LABEL_STRUCK</td>
+<td>INFO</td>
+<td>render</td>
+<td>Fransys</td>
+<td>A line of a block diagram or an overview view passes through a line label.</td>
+<td>Fransys could not draw this cleanly; please report it with the smallest model</td>
+</tr>
+<tr>
+<td><a id="diagram_lines_share_track"></a>DIAGRAM_LINES_SHARE_TRACK</td>
+<td>INFO</td>
+<td>render</td>
+<td>Fransys</td>
+<td>Two cables of a block diagram or an overview view run along one track.</td>
+<td>Fransys could not draw this cleanly; please report it with the smallest model</td>
+</tr>
+<tr>
+<td><a id="diagram_line_off_box"></a>DIAGRAM_LINE_OFF_BOX</td>
+<td>ERROR</td>
+<td>render</td>
+<td>Fransys</td>
+<td>A line of a block diagram or an overview view does not end on its box's outline or tab.</td>
+<td>No call clears this: send the smallest model that shows it.</td>
+</tr>
+<tr>
+<td><a id="diagram_line_through_box"></a>DIAGRAM_LINE_THROUGH_BOX</td>
+<td>ERROR</td>
+<td>render</td>
+<td>Fransys</td>
+<td>A line of a block diagram or an overview view crosses a box other than its own two.</td>
+<td>No call clears this: send the smallest model that shows it.</td>
+</tr>
+<tr>
+<td><a id="diagram_loose_wire"></a>DIAGRAM_LOOSE_WIRE</td>
+<td>INFO</td>
+<td>render</td>
+<td>note</td>
+<td>In the system reading, a wire with no cable joins two boxes and is not drawn.</td>
+<td>Usually nothing to fix: the unit pages show it as stubs. Put it in a cable to give it a line.</td>
+</tr>
+<tr>
+<td><a id="diagram_text_overlap"></a>DIAGRAM_TEXT_OVERLAP</td>
+<td>ERROR</td>
+<td>render</td>
+<td>Fransys</td>
+<td>Two texts of a block diagram or an overview view overlap.</td>
+<td>No call clears this: send the smallest model that shows it.</td>
+</tr>
+<tr>
+<td><a id="drawing_shorts_nets"></a>DRAWING_SHORTS_NETS</td>
+<td>ERROR</td>
+<td>render</td>
+<td>Fransys</td>
+<td>The wires, junction dots and references of the drawings join ports of two physical nets, or a wire ends on another net's wire with no junction dot.</td>
+<td>No call clears this: send the smallest model that shows it. The message names the page.</td>
+</tr>
+<tr>
+<td><a id="draw_problem"></a>DRAW_PROBLEM</td>
+<td>ERROR</td>
+<td>render</td>
+<td>Fransys</td>
+<td>A drawing set holds a record the renderer cannot draw, such as an unknown symbol key or an outline that is not a rectangle; the set draws no page.</td>
+<td>No call clears this: send the smallest model that shows it. The message names the record and what the renderer expected.</td>
+</tr>
+<tr>
+<td><a id="fill_under_min"></a>FILL_UNDER_MIN</td>
+<td>WARNING</td>
+<td>render</td>
+<td>consumer</td>
+<td>A page is filled less than the minimum because no cut of the blocks fills it more.</td>
+<td>Merge the group with its neighbour so the page fills. Write: d.function(name, text) to draw a device in the neighbour group.</td>
+</tr>
+<tr>
+<td><a id="function_not_drawn"></a>FUNCTION_NOT_DRAWN</td>
+<td>ERROR</td>
+<td>render</td>
+<td>consumer</td>
+<td>A function of a connected set has no symbol (reason function_without_symbol), so the layout leaves it out of the drawing. The message names the function and the reason.</td>
+<td>Give the function a part whose kind has a symbol. Write: d.device("K1", "DEMO-RLY-2CO-24")</td>
+</tr>
+<tr>
+<td><a id="function_not_wired"></a>FUNCTION_NOT_WIRED</td>
+<td>WARNING</td>
+<td>render</td>
+<td>consumer</td>
+<td>An undeclared function's symbol is on no net, so the page leaves it off (reason function_unwired). The message names the function.</td>
+<td>Wire a pin of <subject> to another function, declare it spare, or remove it. Write: d.device("K1", "DEMO-RLY-2CO-24", unused=True)</td>
+</tr>
+<tr>
+<td><a id="head_off_legs"></a>HEAD_OFF_LEGS</td>
+<td>WARNING</td>
+<td>render</td>
+<td>consumer</td>
+<td>A trunk is cut by a page and its head stands on the page with fewer of its legs.</td>
+<td>Reorder the groups so the head and most of its legs share a page. Write: d.layout.order(a, b) with the head's group first.</td>
+</tr>
+<tr>
+<td><a id="keep_together_unmet"></a>KEEP_TOGETHER_UNMET</td>
+<td>WARNING</td>
+<td>render</td>
+<td>consumer</td>
+<td>A set of groups that must share a page could not be kept on one page (it does not fit, or its groups sit on different drawing sets).</td>
+<td>Shrink the set, or move its groups onto one drawing set. Write: d.function(name, text) to move a device to another group.</td>
+</tr>
+<tr>
+<td><a id="lane_wire_dropped"></a>LANE_WIRE_DROPPED</td>
+<td>ERROR</td>
+<td>render</td>
+<td>consumer</td>
+<td>Two consecutive cells of a lane have no pin facing each other, or a facing pin on no net, so no wire is drawn between them; the message names the cells.</td>
+<td>Put the facing pins of <subject> and its neighbour on one net. Write: d.series(pin_a, pin_b).</td>
+</tr>
+<tr>
+<td><a id="marker_unpaired"></a>MARKER_UNPAIRED</td>
+<td>ERROR</td>
+<td>render</td>
+<td>Fransys</td>
+<td>A reference marker is drawn and the marker it refers to is drawn on no page.</td>
+<td>No call clears this: send the smallest model that shows it. The message names the page.</td>
+</tr>
+<tr>
+<td><a id="marker_unplaced"></a>MARKER_UNPLACED</td>
+<td>WARNING</td>
+<td>render</td>
+<td>Fransys</td>
+<td>A reference marker has no place inside the page: every level of its stagger leaves the content box, so layout draws no marker there; the message names its pin and page.</td>
+<td>No call clears this: send the smallest model that shows it.</td>
+</tr>
+<tr>
+<td><a id="missing_junction_dot"></a>MISSING_JUNCTION_DOT</td>
+<td>ERROR</td>
+<td>render</td>
+<td>Fransys</td>
+<td>A wire ends on the middle of another wire of the same net with no junction dot, so the page does not show them joined.</td>
+<td>No call clears this: send the smallest model that shows it. The message names the page.</td>
+</tr>
+<tr>
+<td><a id="net_not_drawn"></a>NET_NOT_DRAWN</td>
+<td>ERROR</td>
+<td>render</td>
+<td>consumer</td>
+<td>A net of two or more ends has under two drawn pins, so it is left out. A lone pin gives none. The message names the port.</td>
+<td>Give the net a second drawn pin. Write: d.series(a, <subject>)</td>
+</tr>
+<tr>
+<td><a id="not_series_parallel"></a>NOT_SERIES_PARALLEL</td>
+<td>INFO</td>
+<td>render</td>
+<td>note</td>
+<td>The named symbols are wired as a bridge, which no series or parallel holds.</td>
+<td>Nothing is wrong; the symbols stay drawn, and CONNECTION_NOT_DRAWN names each wire of the bridge left undrawn.</td>
+</tr>
+<tr>
+<td><a id="no_block"></a>NO_BLOCK</td>
+<td>ERROR</td>
+<td>render</td>
+<td>consumer</td>
+<td>A box is drawn but belongs to no block, or to more than one, so layout places it by no rule; the message names it.</td>
+<td>Wire <subject> to one function block, or remove it. Write: d.series(a, b, ...) to draw it in a block.</td>
+</tr>
+<tr>
+<td><a id="no_cell"></a>NO_CELL</td>
+<td>WARNING</td>
+<td>render</td>
+<td>Fransys</td>
+<td>A symbol is drawn but stands in no cell of any column, or in more cells than it has elements, so layout places it by no rule; the message names it.</td>
+<td>No call clears this: report it with the smallest model that shows it.</td>
+</tr>
+<tr>
+<td><a id="order_hint_unmet"></a>ORDER_HINT_UNMET</td>
+<td>WARNING</td>
+<td>render</td>
+<td>consumer</td>
+<td>An authored order hint names two groups that are not on the same drawing set, so no page order can honour it.</td>
+<td>Move both groups onto one drawing set, or drop the hint. Write: d.layout.order(a, b) for groups on one drawing set.</td>
+</tr>
+<tr>
+<td><a id="outline_no_room"></a>OUTLINE_NO_ROOM</td>
+<td>WARNING</td>
+<td>render</td>
+<td>consumer</td>
+<td>A nested unit stands on its parent's page, but its frame does not fit the page or would hold another unit's symbol; the unit is drawn with no frame.</td>
+<td>Move the unit's devices together on the page, or give the unit its own page. Write: d.function(name, text) to place each device in one group.</td>
+</tr>
+<tr>
+<td><a id="out_of_page"></a>OUT_OF_PAGE</td>
+<td>WARNING</td>
+<td>render</td>
+<td>Fransys</td>
+<td>A symbol body or a text lies outside the content box of its page.</td>
+<td>No call clears this: report it with the smallest model that shows it.</td>
+</tr>
+<tr>
+<td><a id="overlap"></a>OVERLAP</td>
+<td>WARNING</td>
+<td>render</td>
+<td>consumer</td>
+<td>Two drawn boxes (symbol bodies, and symbols drawn at a pin end such as a power symbol), a text and a body, two texts, or a wire and a text meet on one page; the message names the first of them.</td>
+<td>No call clears this: send the smallest model that shows it. The message names the page and the members.</td>
+</tr>
+<tr>
+<td><a id="overview_unplaced"></a>OVERVIEW_UNPLACED</td>
+<td>ERROR</td>
+<td>render</td>
+<td>Fransys</td>
+<td>The overview placer found no room plan for one view of the system overview, so the page would have no positions for it.</td>
+<td>No call clears this: send the smallest model that shows it.</td>
+</tr>
+<tr>
+<td><a id="page_overflow"></a>PAGE_OVERFLOW</td>
+<td>ERROR</td>
+<td>render</td>
+<td>consumer</td>
+<td>A row of one block is taller than the page, so it stands on a page of its own.</td>
+<td>Split <block> into smaller function blocks, or use a taller sheet. Write: [paper] default = "A2" in the settings file, passed as fr.build(settings=fr.settings(path))</td>
+</tr>
+<tr>
+<td><a id="placement_problem"></a>PLACEMENT_PROBLEM</td>
+<td>ERROR</td>
+<td>render</td>
+<td>Fransys</td>
+<td>The placement core cannot take the design, or a set of it; the set draws no page. The message names the thing and what the core expected.</td>
+<td>No call clears this: send the smallest model that shows it.</td>
+</tr>
+<tr>
+<td><a id="reference_off_document"></a>REFERENCE_OFF_DOCUMENT</td>
+<td>WARNING</td>
+<td>render</td>
+<td>consumer</td>
+<td>A printed reference points to a page that no page of its own document holds, and its text prints no location, so a reader cannot tell which document to open. The message names the reference, its page and the target page.</td>
+<td>Print both drawing sets in one document, or give the target's drawing set a location so the reference names it. Write: fr.document(<preset>, <subject>, cover=<cover>)</td>
+</tr>
+<tr>
+<td><a id="route_wrong_port"></a>ROUTE_WRONG_PORT</td>
+<td>ERROR</td>
+<td>render</td>
+<td>Fransys</td>
+<td>A wire of one lane ends on a port of one net and on a port of another net.</td>
+<td>No call clears this: send the smallest model that shows it. The message names the page.</td>
+</tr>
+<tr>
+<td><a id="set_without_page"></a>SET_WITHOUT_PAGE</td>
+<td>ERROR</td>
+<td>render</td>
+<td>consumer</td>
+<td>A drawing set holds symbols but every net of them has its other end in another set, so the core path gives it no page. The message names the set.</td>
+<td>Put the set's functions in the unit and location of the functions they are wired to. Write: d.device("K1", "DEMO-RLY-2CO-24", place="R") with the same place.</td>
+</tr>
+<tr>
+<td><a id="spare_functions"></a>SPARE_FUNCTIONS</td>
+<td>INFO</td>
+<td>render</td>
+<td>note</td>
+<td>A function on no net, on an item that has other wired functions or declared <code>unused=</code>, is a spare: it is left off the schematic. One finding per document names the count and the items.</td>
+<td>Nothing is wrong; wire the function if it is not a spare.</td>
+</tr>
+<tr>
+<td><a id="spare_terminals"></a>SPARE_TERMINALS</td>
+<td>INFO</td>
+<td>render</td>
+<td>note</td>
+<td>A terminal none of whose nets has a second end is a spare: it stands in the terminal list and is not drawn on the schematic. One finding per document names the count and the strips.</td>
+<td>Nothing is wrong; wire the terminal if it is not a spare.</td>
+</tr>
+<tr>
+<td><a id="symbol_port_missing"></a>SYMBOL_PORT_MISSING</td>
+<td>ERROR</td>
+<td>render</td>
+<td>consumer</td>
+<td>A model port matches no port on its drawn symbol by any of the three binding rules.</td>
+<td>Fix the part's port names, or map them with symbol_port keys. Write: symbol_port = 'in' on the port in the part file.</td>
+</tr>
+<tr>
+<td><a id="tag_across_body"></a>TAG_ACROSS_BODY</td>
+<td>WARNING</td>
+<td>render</td>
+<td>consumer</td>
+<td>A net joins a pin on one half of a generic box to a column of parts hung on its other half, so it is drawn as a tag pair, not a wire round the box (CROSS-HALF-TAGS).</td>
+<td>Wire the parts to the box pins in one path. Write: d.series(<subject>, <other>)</td>
+</tr>
+<tr>
+<td><a id="title_block_notice_overflow"></a>TITLE_BLOCK_NOTICE_OVERFLOW</td>
+<td>WARNING</td>
+<td>render</td>
+<td>consumer</td>
+<td>The <code>notice</code> text passed to <code>fr.document(notice=)</code> does not fit the notice cell and would be cut.</td>
+<td>Shorten the notice of <subject> to fit its cell. Write: fr.document(<preset>, <subject>, cover=<cover>, notice=<shorter notice>)</td>
+</tr>
+<tr>
+<td><a id="title_block_no_room"></a>TITLE_BLOCK_NO_ROOM</td>
+<td>WARNING</td>
+<td>render</td>
+<td>consumer</td>
+<td>The sheet format's title-block band is under the required 20mm, or its title block is under the required 97.5mm wide.</td>
+<td>Use a sheet format with a taller title-block band or a wider title block. Write: [paper] default = "A2" in the settings file, passed as fr.build(settings=fr.settings(path))</td>
+</tr>
+<tr>
+<td><a id="title_block_stack_overlap"></a>TITLE_BLOCK_STACK_OVERLAP</td>
+<td>ERROR</td>
+<td>render</td>
+<td>consumer</td>
+<td>The profile's text height needs a taller title-block band than the sheet format has, so a title-block label overlaps its value.</td>
+<td>Use a sheet format whose title-block band is at least the named height, or the house text height. Write: [paper] default = "A2" in the settings file, passed as fr.build(settings=fr.settings(path))</td>
+</tr>
+<tr>
+<td><a id="title_block_text_overflow"></a>TITLE_BLOCK_TEXT_OVERFLOW</td>
+<td>WARNING</td>
+<td>render</td>
+<td>consumer</td>
+<td>A one-line title-block field (title, number, customer, revision, date, author, page title, scope or sheet counter) does not fit its cell.</td>
+<td>Shorten the field the message names. Write: d.project(title=<shorter text>, number=<number>, customer=<shorter text>, revision=<n>, author=<shorter text>) for the title, number, customer, revision or author, or d.function(<name>, <shorter text>) for a page title: the text of a block the page draws.</td>
+</tr>
+<tr>
+<td><a id="unknown_symbol_key"></a>UNKNOWN_SYMBOL_KEY</td>
+<td>ERROR</td>
+<td>el</td>
+<td>consumer</td>
+<td>A function's chosen symbol key is not in the installed symbol library; it is drawn as a generic box.</td>
+<td>Fix the symbol key of <subject> in its rule, choice or part data, or install a library version that has it. Write: symbol = '<symbol>' in the part file.</td>
+</tr>
+<tr>
+<td><a id="unprinted_set"></a>UNPRINTED_SET</td>
+<td>ERROR</td>
+<td>render</td>
+<td>consumer</td>
+<td>A drawing set has pages but no document prints it, so its items are not in any export. The message names the set and its items.</td>
+<td>Add a document for the set's unit or location, or nest the unit in one that has one. Write: fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, "demo-mini-mcc")</td>
+</tr>
+<tr>
+<td><a id="wider_than_page"></a>WIDER_THAN_PAGE</td>
+<td>ERROR</td>
+<td>render</td>
+<td>consumer</td>
+<td>A row of columns is wider than the page even at its closest spacing.</td>
+<td>Shorten the row, lower the column count of the block, or raise the page width. Write: [paper] default = "A2" in the settings file, passed as fr.build(settings=fr.settings(path)).</td>
+</tr>
+<tr>
+<td><a id="wire_as_reference"></a>WIRE_AS_REFERENCE</td>
+<td>INFO</td>
+<td>render</td>
+<td>consumer</td>
+<td>No orthogonal path on the wiring grid could be found for a connection, so it is drawn as a reference at its pin.</td>
+<td>None needed: the connection is shown by its reference. To draw it as a wire, give its ports more room.</td>
+</tr>
+<tr>
+<td><a id="wire_meets_net"></a>WIRE_MEETS_NET</td>
+<td>WARNING</td>
+<td>render</td>
+<td>consumer</td>
+<td>A fixed wire (a lane wire, join, trunk or drop) meets another net's wire and no detour exists, so it is drawn as placed; the message names the wire and its ends.</td>
+<td>Move a symbol of <subject> or widen the gap beside it so the wire has a free path. Write: d.add(unit, tag) to move the device into a unit.</td>
+</tr>
+<tr>
+<td><a id="wire_not_orthogonal"></a>WIRE_NOT_ORTHOGONAL</td>
+<td>ERROR</td>
+<td>render</td>
+<td>Fransys</td>
+<td>A drawn wire has a segment that is neither horizontal nor vertical.</td>
+<td>No call clears this: send the smallest model that shows it. The message names the page.</td>
+</tr>
+<tr>
+<td><a id="wire_over_marker"></a>WIRE_OVER_MARKER</td>
+<td>WARNING</td>
+<td>render</td>
+<td>consumer</td>
+<td>A wire or a junction dot meets the box of a reference marker on one page, or a wire ends in it; the message names the first of them.</td>
+<td>No call clears this: send the smallest model that shows it. The message names the page and the members.</td>
+</tr>
+<tr>
+<td><a id="wire_through_body"></a>WIRE_THROUGH_BODY</td>
+<td>ERROR</td>
+<td>render</td>
+<td>consumer</td>
+<td>A trunk is drawn through the drawn body of a symbol, or along its outline (a touch at a point or in its margin is not this error); the message names the net and the symbol.</td>
+<td>No call clears this: send the smallest model that shows it. A wire never passes a symbol's body, so the model shows a drawing fault.</td>
+</tr>
+</tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                
+
+<p class="markdown-copy"><a href="../../guide/findings-render/index.md">Markdown copy of this page</a></p>
+
+
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Fransys 0.22.4 documentation
+    </div>
+  
+  
+    Made with
+    <a href="https://zensical.org/" target="_blank" rel="noopener">
+      Zensical
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog" role="status" aria-atomic="true">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"../..","features":["navigation.sections","search.highlight","content.code.copy"],"redirect":null,"search":"../../assets/javascripts/workers/search.719e0d91.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","clipboard.error":"Could not copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d31f0ffa.min.js"></script>
+      
+    
+  </body>
+</html>

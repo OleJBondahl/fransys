@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.3/guide/series/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.4/guide/series/">
       
       
       
@@ -2359,7 +2359,7 @@ it draws the IEC 60204-1 default: AC phases <code>BK</code>, <code>AC_N</code> <
 <li>a table, <code>wire={fr.DC_CONTROL: (WH, 0.75)}</code>: replaces only those rows for this series.</li>
 <li>a spec, <code>wire=(BU, 0.75)</code>: every wire gets that colour and size, and the rows are ignored.</li>
 </ul>
-<p>A wire whose row has no size and no size on the series is <code>WIRE_ROW_UNRESOLVED</code>.</p>
+<p>A wire whose row has no size and no size on the series is <code>WIRE_ROW_UNRESOLVED</code>. A size alone, <code>wire=0.75</code>, leaves the colour to the row and gives the same error when no row resolves; write <code>wire=(BU, 0.75)</code>.</p>
 <p>A series that starts on one rail (<code>dc.plus</code>, <code>ac.L1</code>) is a control path. A wire at the rail's
 potential takes the rail's row. A fuse or a contact ends that potential: the wires after it take
 <code>DC_CONTROL</code> or <code>AC_CONTROL</code>. A series that starts on a whole supply (<code>dc</code>, <code>ac</code>) is a power path:
@@ -2429,7 +2429,7 @@ It names the cable and both counts; pick a cable with that many non-earth cores.
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.22.3 documentation
+      Fransys 0.22.4 documentation
     </div>
   
   

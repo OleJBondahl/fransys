@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.3/guide/units/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.4/guide/units/">
       
       
       
@@ -2112,7 +2112,7 @@ a PLC channel, a coil or a supply output. A cable landing straight on a channel,
 between, is the use. <code>interface=True</code> marks every function of the device; <code>interface=("coil",)</code>
 names some, and the others stay inside the unit.</p>
 <p>On a terminal strip <code>interface=(1, 2)</code> names terminals by number and <code>unused=</code> works the same;
-<code>True</code> marks every terminal. A run takes <code>interface=True</code> or <code>unused=True</code> for the whole run. A
+<code>True</code> marks every terminal. A run takes <code>interface=True</code> or <code>unused=True</code> for the whole run, or a tuple of terminal numbers: <code>x1.run("L1", 3, interface=(1,))</code>. A
 container reaches only the boundary terminals.</p>
 <p><code>d.device(tag, part, unused=True)</code> declares an interface device left unconnected on purpose,
 so the build does not ask for it to be wired. <code>unused=</code> works on a boundary device and on an
@@ -2482,7 +2482,7 @@ documents and lists. A unit's release name is the <code>unit=</code> value. The 
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.22.3 documentation
+      Fransys 0.22.4 documentation
     </div>
   
   

@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.3/guide/findings-validators/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.4/guide/findings-validators/">
       
       
       
@@ -2470,7 +2470,7 @@
 <td>validators</td>
 <td>consumer</td>
 <td>A boundary point or a port named in d.unused is wired.</td>
-<td>Remove the point or port from d.unused, or the wire on it. Write: d.unused(pc.x3[4], h1.minus) with only unwired points</td>
+<td>Drop the pin from d.unused, or its wire; list an interface pin in the carrier, not the unit. Write: d.unused(pc.x3[4])</td>
 </tr>
 <tr>
 <td><a id="wire_colour_unknown"></a>WIRE_COLOUR_UNKNOWN</td>
@@ -2533,7 +2533,7 @@
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.22.3 documentation
+      Fransys 0.22.4 documentation
     </div>
   
   

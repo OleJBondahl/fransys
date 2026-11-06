@@ -1,6 +1,6 @@
 """The cut's piece fact: which pins of a required group one drawn piece holds, read once as connectivity (layout-0508 A21).
 
-A piece is joined to its group by ink, one page's trunk or routed link, a planned arrow, tag or copy pair, or a join wire.
+A piece is joined to its group by ink, one page's trunk or routed link, a planned arrow or tag pair, or a join wire.
 A piece left apart is joined by a reference the loop stands, or ended by a stub.
 """
 
@@ -54,8 +54,8 @@ def components(group: Sequence[PinRef], where: Mapping[str, Hashable], piece: Un
 
 
 def pairs(refs: Sequence[Ref]) -> set[Pair]:
-    """The pairs a planned arrow, tag or copy joins: its ends, two by two. A stub joins nothing: it ends a piece."""
-    return {pair for r in refs if r.kind is not RefKind.STUB for pair in permutations([e.pin for e in r.ends if e.pin], 2)}
+    """The pairs a planned arrow or tag joins: its ends, two by two. A stub or copy joins nothing (CL1, R1133)."""
+    return {pair for r in refs if r.kind in {RefKind.TAG, RefKind.ARROW} for pair in permutations([e.pin for e in r.ends if e.pin], 2)}
 
 
 def _sides(attached: Iterable[Attach], where: Mapping[str, int]) -> list[list[PinRef]]:

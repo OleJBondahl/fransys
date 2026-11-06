@@ -87,7 +87,7 @@ declared, _ = draw(relays)
 The pump-station example in the examples repository has this shape.
 
 1. One unit per cabinet, and one function block per circuit: incoming supply, control supply, PLC, one block per motor starter.
-2. Keep every device of a circuit inside its block, so no path crosses a block edge.
+2. Keep every device of a circuit inside its block, so no path crosses a block edge. Put each series in the block of the circuit it belongs to. If the page that results reads badly, report it; a block chosen to shape the page hides a layout defect.
 3. Declare each supply where it starts: `d.ac_supply` on the incoming terminals, `d.dc_supply` on the 24 V strip.
 4. Distribute through terminal strips with named, bridged runs, and give each consumer its own terminal.
 5. Wire each circuit as a path, source first: supply, protection, switching, load. Layout stands the bands in that order, with the first terminal on top and the last at the bottom.

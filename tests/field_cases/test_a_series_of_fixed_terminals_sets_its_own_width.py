@@ -42,5 +42,5 @@ def test_a_series_with_nothing_fixed_still_names_the_fix() -> None:
     d = fr.design("demo_parts")
     w1 = d.cable("W1", "DEMO-CBL-4G1.5")
     x1 = d.terminal_strip("X1", "DEMO-TB-2.5", 4)
-    with pytest.raises(AuthorError, match=r"name a supply, a rail or a function with poles"):
+    with pytest.raises(AuthorError, match=r"set no width: .*Name a supply, a rail or a function with poles"):
         d.series(w1, x1, wire=(BU, 1.5))

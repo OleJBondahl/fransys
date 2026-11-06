@@ -85,7 +85,7 @@ machine_panel = 3  # R1771 (looks class, KI-688): the N5c below-branch card rese
 mcc = 0  # R1730 (looks class): as machine_panel; was 3
 # R1165: R1138 looks trade (OVERLAP -1, WIRE_OVER_MARKER +1)
 panel_di16p = 3  # R1771 (looks class, KI-688): the N5c below-branch card reserve; was 1
-remote_io = 0
+remote_io = 6  # R1822 (looks class, KI-711): the leg stands past a footprint edge on its lane, its tag meets a reference marker; was 0
 skid = 0
 
 # MARKER-FREE-SIDE (spec 4.4, note 6): the wire and dot members that meet a reference marker's box,
@@ -124,7 +124,7 @@ machine_panel = 0  # R1730 (looks class): the cut flags the handed link it plans
 mcc = 0  # R1730 (looks class): as machine_panel; was 3
 # R1165: R1138 looks trade (OVERLAP -1, WIRE_OVER_MARKER +1)
 panel_di16p = 0
-remote_io = 0
+remote_io = 6  # R1822 (looks class, KI-711): the leg stands past a footprint edge on its lane, its tag meets a reference marker; was 0
 skid = 0
 
 # MARKER_UNPLACED counts findings (A9: it ends 0 or goes to the owner page); 0 on every case but

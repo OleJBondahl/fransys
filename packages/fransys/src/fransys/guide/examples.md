@@ -141,6 +141,17 @@ with d.function("SENS", "Sensors"):
         d.series(dc.plus, sensor.sw, x1, wire=(BU, 0.75))
 ```
 
+## One full cabinet
+
+`examples/demo-skid` is one whole cabinet on demo parts: terminal strips with rails, a PLC with its
+channels, and fans and valves wired through them. Read it in this order:
+
+1. `examples/demo-skid/README.md`: what the skid holds and how to load it.
+2. `examples/demo-skid/skid.py`: `supply`, `starters`, `valves`, then the `skid` unit that joins them.
+   `design()` adds the unit as `U1` to a cabinet.
+
+The skid has no cable. For a cable, read the motor starter above and series.md, Cables.
+
 ## The whole shape of a build script
 
 The examples above build small pieces of a design. For a real build script end to end, see

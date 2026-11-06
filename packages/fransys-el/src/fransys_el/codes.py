@@ -33,24 +33,30 @@ _CORE: tuple[CodeInfo, ...] = (
         code="OVERLAP",
         severity=Severity.WARNING,
         stage="render",
-        who="consumer",
+        who="Fransys",
         cause=(
             "Two drawn boxes (symbol bodies, and symbols drawn at a pin end such as a power "
             "symbol), a text and a body, two texts, or a wire and a text meet on one page; the "
             "message names the first of them."
         ),
-        fix=("No call clears this: send the smallest model that shows it. The message names the page and the members."),
+        fix=(
+            "No call clears this: every fact is drawn and only the looks suffer. Report it with the smallest model that shows it. "
+            "The message names the page and the members."
+        ),
         page="findings-render",
     ),
     CodeInfo(
         code="WIRE_OVER_MARKER",
         severity=Severity.WARNING,
         stage="render",
-        who="consumer",
+        who="Fransys",
         cause=(
             "A wire or a junction dot meets the box of a reference marker on one page, or a wire ends in it; the message names the first of them."
         ),
-        fix=("No call clears this: send the smallest model that shows it. The message names the page and the members."),
+        fix=(
+            "No call clears this: every fact is drawn and only the looks suffer. Report it with the smallest model that shows it. "
+            "The message names the page and the members."
+        ),
         page="findings-render",
     ),
     CodeInfo(

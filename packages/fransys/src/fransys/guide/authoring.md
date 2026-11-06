@@ -38,6 +38,7 @@ A place sorts the lists by place and sets the `+` part of the printed designatio
 
 `d.device(tag, part, place=, parent=, mounted_on=, joins=, interface=, unused=, name=)` adds one device.
 `unused=` works on a boundary device and on an internal one.
+On an internal device, `unused=True` declares its unwired functions as spares. A spare is left off the page and counted in `SPARE_FUNCTIONS` (INFO). Without it, a function on no net gives `FUNCTION_NOT_WIRED` (WARNING). `d.unused(...)` is another call: it declares open boundary points of a nested unit.
 `joins={1: K1.coil["A1"]}` with `parent=K1` fits a housing on K1's own leads: pin 1 is that pin, no wire.
 A contact block with `parent=` an operator head prints the head's tag, as `-S1:11` (guide `parts.md`).
 `part` is a manufacturer part number such as `"DEMO-LAMP-24"`.

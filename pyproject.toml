@@ -28,7 +28,7 @@ dev = [
     "fransys",
     "demo-parts",
     "pillow==13.0.0",
-    "pypdfium2==5.14.0",
+    "pypdfium2==5.15.0",
     "rust-just==1.59.0",
     "ast-grep-cli==0.51.1",
 ]

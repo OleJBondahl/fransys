@@ -247,13 +247,13 @@ def test_the_leg_of_a_one_lane_bundle_drops_at_the_arrow_one_marker_width_back_f
     trunk = Trunk("f", 1, 100, 40, 500, 1, 0, ((40, 500),))
     grid = OPTIONS.wiring_grid
     legs = ((0, PinRef("a", "out")),)
-    assert leg_line(trunk, 0, legs, OPTIONS, ((), ARROWED, (), None)) == (
+    assert leg_line(trunk, 0, legs, OPTIONS, ((), (), ARROWED, (), None)) == (
         (468, 100),
         (500 - grid, 100 + 0),
         (500 - grid, 100 + grid),
     )  # the leg starts at the last tap (468), BUNDLE
-    pushed = Box(500 - grid - 20, 100, 60, 60)  # a footprint pushes the arrowed leg past the trunk end: it still starts at the last tap
-    line = _must(trunk, 0, legs, OPTIONS, ([pushed], ARROWED, (), None))
+    pushed = Box(500 - grid - 20, 100 + grid, 60, 60)  # a footprint pushes the arrowed leg past the trunk end: it still starts at the last tap
+    line = _must(trunk, 0, legs, OPTIONS, ([pushed], (), ARROWED, (), None))
     assert line[1][0] > 500
     assert line[0] == (468, 100)
     past = 500 + MARKER_BOX.h + grid  # no arrow: the legs start at the trunk end
@@ -281,10 +281,10 @@ def test_a_leg_steps_out_from_its_slot_until_its_marker_box_hits_no_footprint() 
     trunk = Trunk("f", 1, 100, 40, 500, 1, 0, ((40, 500),))
     legs = ((0, PinRef("a", "out")),)
     x = 500 - OPTIONS.wiring_grid
-    near = Box(x + MARKER_BOX.h // 2 - 2, 100, 20, 60)  # starts two short of the marker box's far edge
-    assert _must(trunk, 0, legs, OPTIONS, ([near], ARROWED, (), None))[1][0] > x
-    wide = Box(470, 100, 200, 60)
-    assert _must(trunk, 0, legs, OPTIONS, ([wide], ARROWED, (), None))[1][0] - 8 == 670  # out to the footprint's far edge
+    near = Box(x + MARKER_BOX.h // 2 - 2, 100 + OPTIONS.wiring_grid, 20, 60)  # starts two short of the marker box's far edge
+    assert _must(trunk, 0, legs, OPTIONS, ([near], (), ARROWED, (), None))[1][0] > x
+    wide = Box(470, 100 + OPTIONS.wiring_grid, 200, 60)
+    assert _must(trunk, 0, legs, OPTIONS, ([wide], (), ARROWED, (), None))[1][0] - 8 == 670  # out to the footprint's far edge
 
 
 def test_a_leg_clears_the_legs_already_placed_and_the_page_edge_else_has_no_place() -> None:
@@ -299,12 +299,12 @@ def test_a_leg_clears_the_legs_already_placed_and_the_page_edge_else_has_no_plac
     assert own is not None
     x = own[1][0]
     placed = Box(x - 2, 100, MARKER_BOX.h, MARKER_BOX.w)  # another fan's marker box on the leg's own x
-    moved = leg_line(trunk, 0, legs, OPTIONS, ([placed], {}, (), None))
+    moved = leg_line(trunk, 0, legs, OPTIONS, ([], [placed], {}, (), None))
     assert moved is not None
     assert moved[1][0] != x
-    assert leg_line(trunk, 0, legs, OPTIONS, ([], {}, (), Size(2000, 400))) == own
-    assert leg_line(trunk, 0, legs, OPTIONS, ([], {}, (), Size(x - 100, 400))) is None  # the page ends before any clear x
-    assert leg_line(trunk, 0, legs, OPTIONS, ([], {}, (), Size(x + 1, 400))) is None  # the x is on the page, its marker box is not (A3)
+    assert leg_line(trunk, 0, legs, OPTIONS, ([], (), {}, (), Size(2000, 400))) == own
+    assert leg_line(trunk, 0, legs, OPTIONS, ([], (), {}, (), Size(x - 100, 400))) is None  # the page ends before any clear x
+    assert leg_line(trunk, 0, legs, OPTIONS, ([], (), {}, (), Size(x + 1, 400))) is None  # the x is on the page, its marker box is not (A3)
 
 
 def test_a_leg_stands_past_another_fans_trunk_it_would_end_on() -> None:
@@ -321,11 +321,47 @@ def test_a_leg_stands_past_another_fans_trunk_it_would_end_on() -> None:
     far = Trunk("g", 1, 100 + 4 * grid, 0, 900, 1, 0, ((0, 900),))
     beside = Trunk("g", 1, 100 + grid, 0, 100, 1, 0, ((0, 100),))
     assert free[2][1] == 100 + grid
-    past = _must(trunk, 0, legs, OPTIONS, ((), {}, [on], None))
+    past = _must(trunk, 0, legs, OPTIONS, ((), (), {}, [on], None))
     assert past[2][1] == free[2][1]
     assert past[1][0] > on.x1
-    assert leg_line(trunk, 0, legs, OPTIONS, ((), {}, [far, beside], None)) == free
-    assert leg_line(trunk, 0, legs, OPTIONS, ((), {}, [replace(on, fan="f")], None)) == free
+    assert leg_line(trunk, 0, legs, OPTIONS, ((), (), {}, [far, beside], None)) == free
+    assert leg_line(trunk, 0, legs, OPTIONS, ((), (), {}, [replace(on, fan="f")], None)) == free
+
+
+@pytest.mark.rule("MARKER-FREE-SIDE")
+@pytest.mark.parametrize("ahead", [0, 1, 3])
+def test_a_legs_run_never_lies_along_a_foreign_pin_tip(ahead: int) -> None:
+    """ONE-SIDED-PIN (R1816, R1818): a footprint pin tip on the leg's run blocks it (no leg); a collinear placed run too; a crossing is none."""
+    from fransys_layout.core.arrow_reserve import leg_line
+    from fransys_layout.core.outputs import Trunk
+    from fransys_layout.core.values import PinRef
+
+    grid = OPTIONS.wiring_grid
+    page = Size(4000, 400)
+    trunk = Trunk("f", 1, 100, 40, 500, 1, 0, ((40, 500),))
+    legs = ((0, PinRef("a", "out")),)
+    free = _must(trunk, 0, legs, OPTIONS, ((), (), {}, (), page))
+    lane = free[0][1]
+    inside = Box(free[0][0] + 1 + ahead, lane, grid, 2)  # between the trunk end and the stand: on the run
+    assert leg_line(trunk, 0, legs, OPTIONS, ([inside], (), {}, (), page)) is None
+    past = Box(free[1][0] + 40 + ahead, lane, grid, 2)  # beyond the stand: off the run
+    assert leg_line(trunk, 0, legs, OPTIONS, ([past], (), {}, (), page)) == free
+    run = Box(inside.x, lane - 1, grid, 1)  # a placed leg run as `_stand` records it, collinear on the lane
+    assert leg_line(trunk, 0, legs, OPTIONS, ([], [run], {}, (), page)) is None  # refused at gap -1: it has a true extent
+    hung = Box(inside.x, lane - 1, grid, 2)  # a hanging at a pin is a foot like a footprint: same refusal
+    assert leg_line(trunk, 0, legs, OPTIONS, ([hung], (), {}, (), page)) is None
+
+
+@pytest.mark.timeout(20)
+def test_a_run_blocked_on_a_page_of_no_edge_ends_the_search_with_no_leg() -> None:
+    """ONE-SIDED-PIN: a footprint's pin tip on the run blocks every farther stand, so the search ends: no leg, never a loop."""
+    from fransys_layout.core.arrow_reserve import leg_line
+    from fransys_layout.core.outputs import Trunk
+    from fransys_layout.core.values import PinRef
+
+    trunk = Trunk("f", 1, 100, 40, 500, 1, 0, ((40, 500),))
+    legs = ((0, PinRef("a", "out")),)
+    assert leg_line(trunk, 0, legs, OPTIONS, ([Box(501, 99, 8, 2)], (), {}, (), None)) is None
 
 
 def test_legs_of_two_fans_that_would_stand_on_one_x_take_two_xs() -> None:
@@ -592,7 +628,7 @@ def test_a_leg_stands_clear_of_a_hanging_at_a_placed_pin_as_of_a_footprint() -> 
     fans = {"f0": Fan("f0", ("n0",), (Attach("c", 0, 0, pin, 0, net="n0"),), (), "H", 1, "S")}
     trunks = [Trunk("f0", 1, 100, 40, 480, 1, 0, ((40, 480),))]
     free = leg_lines(trunks, fans, {pin: 0}, OPTIONS, ((), {}, None))["f0", 0, pin]
-    hung = {"card": (Box(free[1][0] - 6, 100, 12, 40),)}  # a planned tag at a card pin, hanging over the free leg's drop
+    hung = {"card": (Box(free[1][0] - 6, 100 + OPTIONS.wiring_grid, 12, 40),)}  # a planned tag at a card pin, hanging over the free leg's drop
     held = leg_lines(trunks, fans, {pin: 0}, OPTIONS, (leg_feet((), hung), {}, None))["f0", 0, pin]
     assert held[1][0] >= free[1][0] + 6
     assert leg_feet((), hung) == hung["card"]

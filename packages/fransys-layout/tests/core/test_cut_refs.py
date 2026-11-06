@@ -595,6 +595,41 @@ def test_a_piece_whose_references_pair_among_themselves_is_joined_to_the_rest_by
     assert {near, far} & {c, d}
 
 
+def _copy_account(*, fanned: bool):
+    """`account` on a and b, a required pair on two pages: a COPY stands at c (a's page, wired to a) and at b, a tag at a; b has ink to d."""
+    from fransys_layout.core.flow_values import Attach, Fan
+
+    syms = [side(n, 100, 100) for n in "abczd"]
+    a, b, c, z, d = (PinRef(n, "e") for n in "abczd")
+    facts = Facts(units=(), far_ends=((a, b), (b, a), (a, c), (c, a), (b, d), (d, b)), groups=((a, b),))
+    planned = (
+        Ref("m", RefKind.COPY, (RefEnd(1, None, c), RefEnd(2, None, b))),
+        Ref("m", RefKind.TAG, (RefEnd(1, None, a), RefEnd(1, None, z))),
+    )
+    pages = (
+        PagePlan(1, "U1", (RowPlan(("a", "c", "z"), ("a", "c", "z"), 100),), ()),
+        PagePlan(2, "U1", (RowPlan(("c:b", "d"), ("c:b", "d"), 100),), ()),
+    )
+    problem = PlacementProblem(AREA, tuple(syms), (net("m", "a.e", "b.e", "c.e", "z.e", "d.e"),), facts)
+    fan = Fan("f", ("m",), (Attach("c:b", 0, 0, b, net="m"),), (), None, 1, "H")
+    flow: Any = SimpleNamespace(fans=[fan] if fanned else [], columns=(), cross_links=())
+    return account(problem, flow, {"a": 1, "c": 1, "z": 1, "b": 2, "c:b": 2, "d": 2}, planned, pages), (a, b)
+
+
+def test_a_copy_joins_no_pins_so_a_group_whose_ends_it_touches_is_joined_by_a_pair() -> None:
+    """KI-710 (R1819, CL1): a copy covers its own conductor to its hub, so a is not joined to b: a is touched by a tag, so the ledger
+    hands the loop one join pair a-b."""
+    got, (a, b) = _copy_account(fanned=False)
+    assert [pair for _, pair in got.unjoined] == [(a, b)]
+
+
+def test_a_pin_the_loop_joins_gets_no_leg_for_the_conductor_the_join_carries() -> None:
+    """KI-710 (R1819): b is a fan pin with ink to d and the undrawn conductor to a; the loop's pair a-b carries it, so no leg stands at b."""
+    got, (_, b) = _copy_account(fanned=True)
+    assert got.unjoined
+    assert not [r for r in got.refs if r.kind is RefKind.STUB and b in {e.pin for e in r.ends}]
+
+
 def test_a_pieces_marked_pin_is_the_same_in_every_order_of_its_pins() -> None:
     """BANK-PIECES-JOINED (R1717): the pin a piece is marked at follows the far-end order the model gives, not the order of the group's pins."""
     from itertools import permutations

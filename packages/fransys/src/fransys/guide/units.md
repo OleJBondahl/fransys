@@ -160,6 +160,8 @@ A variant is a parameter of your own builders, never a Fransys feature. Fransys 
 and nothing patches `fr.Design`. A revised copy of a unit is a factory around `@fr.unit`: a function that
 takes the name, the revision and the variant, and returns the decorated unit.
 
+`@fr.unit` returns a `fr.UnitDef[R]`, where `R` is the tuple or NamedTuple your build returns. Annotate a parameter or a return with it.
+
 ```python
 from typing import NamedTuple
 
@@ -201,6 +203,46 @@ wired nor `unused`.
 
 Nets do not cross a unit boundary. Join across it with `d.series(a, b, wire=...)`. A net with pins in two units that no wire joins gives
 `NET_ACROSS_UNIT_BOUNDARY_OPEN` or `NET_ACROSS_UNIT_BOUNDARY_JOINED`, which names the net and the boundary pin.
+
+The container below wires terminal 1 of strip unit `U1` to terminal 1 of strip unit `U2`. The wire
+goes through the container, and each unit's strip is seen from outside through its interface field `x1`.
+
+```python
+from typing import NamedTuple
+
+import fransys as fr
+
+
+class StripIo(NamedTuple):
+    x1: fr.TerminalStrip
+
+
+@fr.unit("demo-supply-strip", revision=1, interface_version=1, date="2026-01-01", text="first", by="AB")
+def supply(d):
+    return StripIo(d.terminal_strip("X1", "DEMO-TB-2.5", 2, interface=(1,)))
+
+
+@fr.unit("demo-load-strip", revision=1, interface_version=1, date="2026-01-01", text="first", by="AB")
+def load(d):
+    return StripIo(d.terminal_strip("X1", "DEMO-TB-2.5", 2, interface=(1,)))
+
+
+class Cabinet(NamedTuple):
+    pass
+
+
+@fr.unit("demo-cabinet", revision=1, interface_version=1, date="2026-01-01", text="first", by="AB")
+def cabinet(d):
+    a = d.add(supply, "U1")
+    b = d.add(load, "U2")
+    d.series(a.x1[1], b.x1[1], wire=("BU", 0.75))
+    return Cabinet()
+
+
+d = fr.design("demo_parts")
+d.add(cabinet, "U1")
+assert not [f for f in fr.check(fr.build(d)) if f.severity is fr.Severity.ERROR]
+```
 
 A nested unit with a harness line at one of its interfaces draws on its parent's page as one
 outline, with its columns above and below it. A unit with none keeps its usual frame. Inside stand

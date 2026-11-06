@@ -61,6 +61,14 @@ build. Two part names that map to one attribute fail generation, and so do two p
 
 A function stands in a `d.series` when its line side is known: a coil's A1 and a contact's odd pin give it, else state `side`.
 
+```toml
+[[function.port]]
+name = "output_1"
+side = "line"
+```
+
+`side` is `line` for the pin that stands toward the supply, or `load`. A two-pin output with no `side` is wired pin by pin: `d.series(f.output_1, x1[3], wire=(BU, 0.75))`.
+
 A pin that sources a wiring row, such as a drive's `U`, `V` and `W` outputs, states it with `source_row = "AC_L1"` (any `WiringRow` name). A `d.series` wire from that pin then takes the row's colour without `wire=`.
 
 The module records the library's digest. `fr.design(P, ...)` compares that digest with the
@@ -295,7 +303,7 @@ conductors_per_clamp = 2
 
 ## The marking printed for a port
 
-A `[[function.port]]` has a `name` and may state a `marking`. The marking is the text printed for the port; from 0.22.5 it prints on the drawing and in every list. A port without `marking` prints its full name.
+A `[[function.port]]` has a `name` and may state a `marking`. The marking is the text printed for the port; from 0.22.5 it prints on the drawing and in every list. A port without `marking` prints its `name`, here `port_4_1`. A short label on the as-built part is a `marking`; set it on every port that has one.
 
 ```toml
 [[function.port]]
@@ -303,4 +311,4 @@ name = "port_4_1"
 marking = "1"
 ```
 
-This port prints `1`, not `port_4_1`.
+This port prints `1`, not `port_4_1`. A role function (plc_channel, supply, load) prints the marking of its port and no connector designation. A port will name its physical connector in 0.23. Until then there is no spelling for a connector beside a pin of a role function.

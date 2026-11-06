@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from collections import Counter
 from dataclasses import dataclass, replace
-from itertools import count
+from itertools import count, takewhile
 from typing import TYPE_CHECKING
 
 from .band import arrow_box, arrow_hang, lane_line, lane_offset, lane_rows, trunk_room
@@ -209,14 +209,14 @@ def leg_line(
     leg: int,
     legs: Sequence[tuple[int, PinRef]],
     options: Options,
-    around: tuple[Sequence[Box], ArrowEnds, Sequence[Trunk], Size | None] = ((), {}, (), None),
+    around: tuple[Sequence[Box], Sequence[Box], ArrowEnds, Sequence[Trunk], Size | None] = ((), (), {}, (), None),
 ) -> tuple[XY, XY, XY] | None:
     """The leg `leg` of `legs` (one a pin), on its lane: out from the cut x, then down below the bundle to its marker (ONE-SIDED-PIN).
 
-    Leg k starts at `leg_cut` + (k+1) units (R1454); `around` is (obstacles, arrowed, trunks, page). The stand is the first x at or past
-    cut + (rank+1)*unit clear of every obstacle, its trunk's own drops and a sibling trunk below (R1299, R1465), box inside the page (R887).
+    Leg k starts at `leg_cut` + (k+1) units (R1454); `around` is (footprints and hangings, placed legs' boxes, arrowed, trunks, page).
+    The run is clear of a footprint's pin tips (gap 0); the stand is the first x past cut + (rank+1)*unit clear of all (R1299, R1465, R887).
     """
-    feet, arrowed, lines, area = around
+    feet, placed, arrowed, lines, area = around
     span = leg_unit(legs, options)
     grid = options.wiring_grid
     pole, pin = legs[leg]
@@ -226,13 +226,21 @@ def leg_line(
     x = cut + (sum(1 for j, (q, _) in enumerate(legs) if (q, j) < (pole, leg)) + 1) * (span // len(legs))
     low = _lane_y(trunk, grid) + grid
     box = marker_box_at(0, 0, options, options.marker_facing["S"], (pin, str(RefKind.STUB)))
-    feet = [*feet, *(Box(t.x0 - 1, t.y - 1, t.x1 - t.x0 + 2, 2) for t in lines if t.fan != trunk.fan and y < t.y <= low)]
+    cells = [Keep("", f, "foot", "") for f in feet]
     room = (
-        [*(Keep("", f, "foot", "") for f in feet), *_arrow_keeps(trunk, lines, arrowed, options)],
+        [
+            *cells,
+            *(Keep("", f, "foot", "") for f in placed),
+            *(Keep("", Box(t.x0 - 1, t.y - 1, t.x1 - t.x0 + 2, 2), "foot", "") for t in lines if t.fan != trunk.fan and y < t.y <= low),
+            *_arrow_keeps(trunk, lines, arrowed, options),
+        ],
         frozenset(d for e in trunk.lane_ends if e for d in e if not reach or d <= leg_hull(trunk, reach)),  # an arrow's step-out is no drop
         area,
     )
-    x = next((c for c in (range(x, area.w) if area else count(x)) if _clear(c, Box(c + box.x, low, box.w, box.h), (min(end, c), y), room)), None)
+    runs = takewhile(
+        lambda c: not clear(Box(min(end, c), y, c - min(end, c), 0), cells, {}), range(x, area.w) if area else count(x)
+    )  # a wire run: a foot's pin tip on it ends the search (ONE-SIDED-PIN)
+    x = next((c for c in runs if _clear(c, Box(c + box.x, low, box.w, box.h), (min(end, c), y), room)), None)
     return None if x is None else ((min(end, x), y), (x, y), (x, low))
 
 
@@ -270,7 +278,7 @@ def leg_lines(
     legs = {(t.fan, t.row): leg_pins(fans[t.fan], rows, t.row) for t in trunks if t.fan in fans}
     standing, runs = list[Box](), list[tuple[str, Box]]()  # a leg's marker and drop; its run (no other fan's foot)
     given = {
-        (t, i): leg_line(t, i, legs[t.fan, t.row], options, ([*feet, *(b for f, b in runs if f != t.fan)], arrowed, trunks, area))
+        (t, i): leg_line(t, i, legs[t.fan, t.row], options, (feet, [b for f, b in runs if f != t.fan], arrowed, trunks, area))
         for t in trunks
         for i in range(len(legs.get((t.fan, t.row), ())))
     }
@@ -291,7 +299,7 @@ def leg_lines(
                     i,
                     legs[t.fan, t.row],
                     options,
-                    ([*feet, *standing, *(b for f, b in runs if f != t.fan)], arrowed, trunks, area),
+                    (feet, [*standing, *(b for f, b in runs if f != t.fan)], arrowed, trunks, area),
                 ):
                     out[key] = placed
                     _stand(placed, mark, (t.fan, standing, runs))

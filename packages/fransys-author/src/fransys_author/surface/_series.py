@@ -79,7 +79,11 @@ def _width(design: Design, elements: tuple[object, ...]) -> int:
         return first
     if all(is_lone_pin(element) or isinstance(element, TerminalStrip) for element in elements):
         return 1  # bare pins and strips alone: one wire between each neighbouring pair
-    msg = "name a supply, a rail or a function with poles to set the width"
+    names = ", ".join(str(getattr(e, "_label", type(e).__name__)) for e in elements if not is_lone_pin(e) and not isinstance(e, TerminalStrip))
+    msg = (
+        f"these elements set no width: {names}. Name a supply, a rail or a function with poles to set the width, "
+        "or wire the pins one by one with d.series(pin, pin, ...)"
+    )
     raise AuthorError(msg)
 
 

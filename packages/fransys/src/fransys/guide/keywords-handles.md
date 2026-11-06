@@ -16,7 +16,7 @@ The design calls are in `keywords-design.md`, the `fr.*` functions in `keywords-
 | [`name`](authoring.md#request-a-plc-channel) | required | The channel's name. It prints in the PLC lists and on the channel's address. | `k1.coil.plc(fr.DO, "pump-run")` |
 | `priority` | `0` | A lower number is served first when channels are short. Ties go by the requesting function's key, then its id. | `k1.coil.plc(fr.DO, "pump-run", priority=1)` |
 
-A per-instance engineering range is not modelled in 0.22. The part file holds only the part's own range. It returns in 0.22.2 (PLC-SCALING-RETURN).
+`fn.plc(...).scale(...)` sets a per-channel engineering range; see `Fn.scale`.
 
 ## `Fn.pole`
 

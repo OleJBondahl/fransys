@@ -290,7 +290,8 @@ def account(problem: PlacementProblem, flow: FlowGraph, where: Mapping[str, int]
     piece = {s: (plan.page, r) for plan in pages for r, row in enumerate(plan.rows) for col in row.columns for s in (col, *cells.get(col, ()))}
     lead = _leads(problem, flow, where)
     made, unjoined = _made(problem, where, ink, (planned, laned, {s: piece.get(s, (p, None)) for s, p in where.items()}), (lead, flow))
-    kept, legs = _legs(problem, flow, where, pages, (ink, made))
+    carried = {p for _, (a, b) in unjoined for p in ((a, b), (b, a))}  # a join the loop stands carries its conductor: no leg beside it (KI-710)
+    kept, legs = _legs(problem, flow, where, pages, (ink | carried, made))
     refs = _named([*_merged([*kept, *fanned]), *legs], far_ends, ink)
     return Account(ink, tuple(refs), frozenset(e.pin for r in made for e in r.ends if e.pin), frozenset(lead), tuple(unjoined))
 

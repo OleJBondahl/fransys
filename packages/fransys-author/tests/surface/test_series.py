@@ -223,7 +223,7 @@ def test_a_pin_in_the_middle_of_a_series_must_match_the_width(lib: Draft) -> Non
 def test_a_series_without_a_width_names_what_sets_it(lib: Draft) -> None:
     d = design(lib, place="C1")
     q1, k1 = d.device("Q1", "TEST-MCB-3P"), d.device("K1", "TEST-KM-3P")
-    with pytest.raises(AuthorError, match="name a supply, a rail or a function with poles"):
+    with pytest.raises(AuthorError, match=r"set no width: Q1, K1\. Name a supply.*d\.series\(pin, pin, \.\.\.\)"):
         d.series(q1, k1, wire=WIRE)
 
 

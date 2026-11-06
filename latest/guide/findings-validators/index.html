@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.4/guide/findings-validators/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.5/guide/findings-validators/">
       
       
       
@@ -2393,6 +2393,14 @@
 <td>Name the unit, e.g. "%" or "bar". Write: fn.plc(fr.AI, "level").scale("%", raw=(4, 20), eng=("0", "100"))</td>
 </tr>
 <tr>
+<td><a id="screen_disabled"></a>SCREEN_DISABLED</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>consumer</td>
+<td>A cable screen core is connected to a pin; screen connections are refused for now.</td>
+<td>Leave the screen unconnected: the cable prints as shielded. Write: w1.core(fr.colours.BN, a, b)</td>
+</tr>
+<tr>
 <td><a id="strip_without_tag"></a>STRIP_WITHOUT_TAG</td>
 <td>ERROR</td>
 <td>validators</td>
@@ -2533,7 +2541,7 @@
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.22.4 documentation
+      Fransys 0.22.5 documentation
     </div>
   
   

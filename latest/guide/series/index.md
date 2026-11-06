@@ -232,7 +232,7 @@ d.series(dc.plus, s1.no, k1.coil, dc.minus, wire=0.75)  # RD, WH, BK, each 0.75 
 
 `d.earth(*pins)` declares the `PE` net; a wire to the PE terminal builds it. A unit has one `PE` net: each further `d.earth` call in it adds its pins to that net.
 Call d.earth before draft(); a later call raises.
-Every pin joined by `d.earth` draws the PE symbol, wired or not. A wire to a PE terminal adds its list row. A series through a cable lands its GNYE core on the load's PE port and the strip's next free PE terminal, else open and earthed. With no PE end and more poles than non-earth cores, the series raises an error.
+Every pin joined by `d.earth` draws the PE symbol, wired or not, a PE terminal included: a terminal that only `d.earth` joins is no spare. A wire to a PE terminal adds its list row. A series through a cable lands its GNYE core on the load's PE port and the strip's next free PE terminal, else open and earthed. With no PE end and more poles than non-earth cores, the series raises an error.
 It names the cable and both counts; pick a cable with that many non-earth cores. A load with no PE port leaves the far end open, the near end on the strip's PE terminal. A single wire to a PE terminal is `d.series(pin, pe[1], wire=...)`: see `detail.md`.
 
 ```python

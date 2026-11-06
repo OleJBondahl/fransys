@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.4/api/derive/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.5/api/derive/">
       
       
       
@@ -5112,6 +5112,17 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         port_is_unused
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#port_marking" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        port_marking
       </span>
     </span>
   </a>
@@ -12113,6 +12124,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#port_marking" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        port_marking
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#port_name" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -17749,6 +17771,13 @@ this holds for it or its mated pin, or a parent's black box needs it.</p>
 <p>Whether no conductor (wire, jumper, cable core or link) ends at <code>port</code> and no net has it.</p>
 <p>A mate does not count. This is the one test of an unused port; a function is unused when all
 its ports are (<code>function_is_unused</code>).</p>
+<h3 id="port_marking">port_marking</h3>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">port_marking</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">HasTables</span><span class="p">,</span> <span class="n">port</span><span class="p">:</span> <span class="n">Id</span><span class="p">[</span><span class="n">Port</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">list_end</span><span class="p">:</span> <span class="nb">bool</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span>
+</code></pre></div>
+<p>What a port's MARKING label prints.</p>
+<p>The part's pin marking (<code>Port.marking</code>), else the port's name; "" when the part prints
+none. In <code>list_end</code> mode a list names its pin: the marking only when it is non-empty and no
+other port under the same printed prefix (<code>connector_designation</code>) prints it, else the name.</p>
 <h3 id="port_name">port_name</h3>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">port_name</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span> <span class="n">port</span><span class="p">:</span> <span class="n">Id</span><span class="p">[</span><span class="n">Port</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span>
 </code></pre></div>
@@ -19757,7 +19786,7 @@ for any other box.</p>
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.22.4 documentation
+      Fransys 0.22.5 documentation
     </div>
   
   

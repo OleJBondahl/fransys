@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.4/guide/findings-render/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.5/guide/findings-render/">
       
       
       
@@ -2302,7 +2302,7 @@
 <td>render</td>
 <td>consumer</td>
 <td>A drawing set has pages but no document prints it, so its items are not in any export. The message names the set and its items.</td>
-<td>Add a document for the set's unit or location, or nest the unit in one that has one. Write: fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, "demo-mini-mcc")</td>
+<td>Add a document for the set's unit or location, passing its handle as the subject, or nest the unit in one that has one. Write: fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cabinet, cover=cover)</td>
 </tr>
 <tr>
 <td><a id="wider_than_page"></a>WIDER_THAN_PAGE</td>
@@ -2389,7 +2389,7 @@
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.22.4 documentation
+      Fransys 0.22.5 documentation
     </div>
   
   

@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.4/guide/detail/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.5/guide/detail/">
       
       
       
@@ -2303,12 +2303,13 @@ colours come from the cable part. A green-yellow core goes to a protective-earth
 <span class="n">w1</span><span class="o">.</span><span class="n">spare</span><span class="p">()</span>
 <span class="n">w2</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">cable</span><span class="p">(</span><span class="s2">"W2"</span><span class="p">,</span> <span class="s2">"DEMO-CBL-2X2X0.75-SP"</span><span class="p">,</span> <span class="n">length_m</span><span class="o">=</span><span class="mi">25</span><span class="p">)</span>
 <span class="n">w2</span><span class="o">.</span><span class="n">core</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">x1</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">h1</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
-<span class="n">w2</span><span class="o">.</span><span class="n">core</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="n">pe</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
 <span class="n">w2</span><span class="o">.</span><span class="n">spare</span><span class="p">()</span>
 </code></pre></div>
-<p>A core you leave unused is <code>w1.spare(GY)</code>, or <code>w1.spare()</code> for every core not wired so far. <code>at=x1[7]</code>
-parks one on a pin. The cable drawing prints "spare" on its row. A screen (<code>SH</code>) earthed at one end
-takes one pin: <code>w2.core(5, pe[1])</code>. A part with <code>pairs</code> in its <code>[cable_product]</code> table gets a bracket
+<p>A core you leave unused is <code>w1.spare(GY)</code>, or <code>w1.spare()</code> for every conductor core not wired so far.
+<code>at=x1[7]</code> parks one on a pin. The cable drawing prints "spare" on its row. A screen (<code>SH</code>) is not a
+core: <code>CABLE_CORES_FEWER</code> and <code>spare()</code> skip it. A product with an <code>SH</code> colour prints "shielded" in its
+heading. A screen cannot be connected for now: <code>w2.core(5, pe[1])</code> is refused with <code>SCREEN_DISABLED</code>
+(an ERROR), and a screen you leave open needs no call. A part with <code>pairs</code> in its <code>[cable_product]</code> table gets a bracket
 and a P1, P2 label over each pair's rows.</p>
 <p><code>fn.pins</code> gives a function's pins as a tuple, in the order the connector list prints (<code>1, 2, 10, A1</code>).
 To land a cable's cores on two connectors pin by pin, loop over it. The pairing rule stays yours.</p>
@@ -2470,7 +2471,7 @@ A net from a pin on one half of a box to a column hung on the other half draws a
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.22.4 documentation
+      Fransys 0.22.5 documentation
     </div>
   
   

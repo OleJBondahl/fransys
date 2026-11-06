@@ -3469,6 +3469,18 @@ Whether no conductor (wire, jumper, cable core or link) ends at `port` and no ne
 A mate does not count. This is the one test of an unused port; a function is unused when all
 its ports are (`function_is_unused`).
 
+### port_marking
+
+```python
+def port_marking(model: HasTables, port: Id[Port], *, list_end: bool=False) -> str
+```
+
+What a port's MARKING label prints.
+
+The part's pin marking (`Port.marking`), else the port's name; "" when the part prints
+none. In `list_end` mode a list names its pin: the marking only when it is non-empty and no
+other port under the same printed prefix (`connector_designation`) prints it, else the name.
+
 ### port_name
 
 ```python

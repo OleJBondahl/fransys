@@ -52,8 +52,8 @@ Use `d.series` through the cable first: it takes the next free core. Use `core` 
 | keyword | default | effect | example |
 |---|---|---|---|
 | [`which`](../detail/index.md#w1core) | required | The core, by colour or by 1-based number. | `w1.core(BN, a, b)` |
-| [`a`](../detail/index.md#w1core) | required | The first pin of the core. With no `b`, the core is a shield core. | `w1.core(1, x1[1], m1["U"])` |
-| [`b`](../detail/index.md#w1core) | `None` | The second pin of the core. `None` is for a shield core only. | `w1.core(BN, x1[1], m1["U"])` |
+| [`a`](../detail/index.md#w1core) | required | The first pin of the core. With no `b`, the core is a shield core, refused for now (`SCREEN_DISABLED`). | `w1.core(1, x1[1], m1["U"])` |
+| [`b`](../detail/index.md#w1core) | `None` | The second pin of the core. `None` is for a shield core only, which is refused for now. | `w1.core(BN, x1[1], m1["U"])` |
 
 ## `Cable.spare`
 

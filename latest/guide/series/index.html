@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.4/guide/series/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.5/guide/series/">
       
       
       
@@ -2381,7 +2381,7 @@ starts on no rail takes the rows the earlier series gave its net.</p>
 <h2 id="earth-pins">Earth pins</h2>
 <p><code>d.earth(*pins)</code> declares the <code>PE</code> net; a wire to the PE terminal builds it. A unit has one <code>PE</code> net: each further <code>d.earth</code> call in it adds its pins to that net.
 Call d.earth before draft(); a later call raises.
-Every pin joined by <code>d.earth</code> draws the PE symbol, wired or not. A wire to a PE terminal adds its list row. A series through a cable lands its GNYE core on the load's PE port and the strip's next free PE terminal, else open and earthed. With no PE end and more poles than non-earth cores, the series raises an error.
+Every pin joined by <code>d.earth</code> draws the PE symbol, wired or not, a PE terminal included: a terminal that only <code>d.earth</code> joins is no spare. A wire to a PE terminal adds its list row. A series through a cable lands its GNYE core on the load's PE port and the strip's next free PE terminal, else open and earthed. With no PE end and more poles than non-earth cores, the series raises an error.
 It names the cable and both counts; pick a cable with that many non-earth cores. A load with no PE port leaves the far end open, the near end on the strip's PE terminal. A single wire to a PE terminal is <code>d.series(pin, pe[1], wire=...)</code>: see <code>detail.md</code>.</p>
 <div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">fransys</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">fr</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">fransys.colours</span><span class="w"> </span><span class="kn">import</span> <span class="n">GNYE</span>
@@ -2429,7 +2429,7 @@ It names the cable and both counts; pick a cable with that many non-earth cores.
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.22.4 documentation
+      Fransys 0.22.5 documentation
     </div>
   
   

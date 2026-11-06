@@ -105,6 +105,8 @@ A part's `class_code` seeds its printed designation (`-Q1`, `-Q2`). Recommended 
 | Heater | E |
 | Push button, selector, emergency stop | S |
 
+A board with several connectors whose pins repeat (`P01` on each) models one function per connector (kind `connector`); a list end then reads `-U2-J3:P04`.
+
 ## Loading a library without a design
 
 `fr.parts` takes the same import names and returns a single `Draft` holding every part,
@@ -288,3 +290,15 @@ A point with more wires and cable cores than that is an ERROR, `TERMINAL_POINT_O
 [connection]
 conductors_per_clamp = 2
 ```
+
+## The marking printed for a port
+
+A `[[function.port]]` has a `name` and may state a `marking`. The marking is the text printed for the port; from 0.22.5 it prints on the drawing and in every list. A port without `marking` prints its full name.
+
+```toml
+[[function.port]]
+name = "port_4_1"
+marking = "1"
+```
+
+This port prints `1`, not `port_4_1`.

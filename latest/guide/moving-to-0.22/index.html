@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.4/guide/moving-to-0.22/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.5/guide/moving-to-0.22/">
       
       
       
@@ -2201,7 +2201,7 @@ for example <code>fault_time_constant=fr.elecdef.Unit.MS(15)</code>. In a part f
 </tr>
 <tr>
 <td><a id="removed-document-add"></a><code>fr.document(..., add=, remove=)</code>, presets <code>HARNESS_DRAWING</code>, <code>PCB_SCHEMATIC</code></td>
-<td><code>fr.document(preset, subject, cover=, logo=, notice=)</code>; the preset sets the pages</td>
+<td><code>fr.document(preset, subject, cover=, logo=, notice=)</code>; the preset sets the pages. <code>remove=(fr.PageKind.SHEET_INDEX,)</code> and every other <code>remove=</code> has no replacement: a preset prints its fixed pages</td>
 </tr>
 <tr>
 <td><a id="removed-add-unused"></a><code>d.add(defn, tag, unused=(...))</code></td>
@@ -2295,7 +2295,7 @@ for example <code>fault_time_constant=fr.elecdef.Unit.MS(15)</code>. In a part f
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.22.4 documentation
+      Fransys 0.22.5 documentation
     </div>
   
   

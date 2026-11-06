@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.4/guide/parts/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.5/guide/parts/">
       
       
       
@@ -516,6 +516,17 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         How many conductors a terminal point takes
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-marking-printed-for-a-port" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        The marking printed for a port
       </span>
     </span>
   </a>
@@ -2107,6 +2118,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#the-marking-printed-for-a-port" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        The marking printed for a port
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -2259,6 +2281,7 @@ task builds the same model with the typed module and a loop:</p>
 </tr>
 </tbody>
 </table>
+<p>A board with several connectors whose pins repeat (<code>P01</code> on each) models one function per connector (kind <code>connector</code>); a list end then reads <code>-U2-J3:P04</code>.</p>
 <h2 id="loading-a-library-without-a-design">Loading a library without a design</h2>
 <p><code>fr.parts</code> takes the same import names and returns a single <code>Draft</code> holding every part,
 function, port and facet record, each carrying the file and line it came from. Use it to lint a
@@ -2400,6 +2423,13 @@ It prints its holder's designation and has no row or netlist line, and draws not
 <div class="highlight"><pre><span></span><code><span class="k">[connection]</span>
 <span class="n">conductors_per_clamp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span>
 </code></pre></div>
+<h2 id="the-marking-printed-for-a-port">The marking printed for a port</h2>
+<p>A <code>[[function.port]]</code> has a <code>name</code> and may state a <code>marking</code>. The marking is the text printed for the port; from 0.22.5 it prints on the drawing and in every list. A port without <code>marking</code> prints its full name.</p>
+<div class="highlight"><pre><span></span><code><span class="k">[[function.port]]</span>
+<span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"port_4_1"</span>
+<span class="n">marking</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"1"</span>
+</code></pre></div>
+<p>This port prints <code>1</code>, not <code>port_4_1</code>.</p>
 
 
 
@@ -2435,7 +2465,7 @@ It prints its holder's designation and has no row or netlist line, and draws not
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.22.4 documentation
+      Fransys 0.22.5 documentation
     </div>
   
   

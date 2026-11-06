@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.6/guide/units/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.7/guide/units/">
       
       
       
@@ -2221,6 +2221,7 @@ and a point listed twice raises <code>UNUSED_LISTED_TWICE</code>.</p>
 <p>A variant is a parameter of your own builders, never a Fransys feature. Fransys has no variant hook,
 and nothing patches <code>fr.Design</code>. A revised copy of a unit is a factory around <code>@fr.unit</code>: a function that
 takes the name, the revision and the variant, and returns the decorated unit.</p>
+<p><code>@fr.unit</code> returns a <code>fr.UnitDef[R]</code>, where <code>R</code> is the tuple or NamedTuple your build returns. Annotate a parameter or a return with it.</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">NamedTuple</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">fransys</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">fr</span>
@@ -2257,6 +2258,43 @@ The finding fires once the unit sits inside something larger and an interface de
 wired nor <code>unused</code>.</p>
 <p>Nets do not cross a unit boundary. Join across it with <code>d.series(a, b, wire=...)</code>. A net with pins in two units that no wire joins gives
 <code>NET_ACROSS_UNIT_BOUNDARY_OPEN</code> or <code>NET_ACROSS_UNIT_BOUNDARY_JOINED</code>, which names the net and the boundary pin.</p>
+<p>The container below wires terminal 1 of strip unit <code>U1</code> to terminal 1 of strip unit <code>U2</code>. The wire
+goes through the container, and each unit's strip is seen from outside through its interface field <code>x1</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">NamedTuple</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">fransys</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">fr</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">StripIo</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
+    <span class="n">x1</span><span class="p">:</span> <span class="n">fr</span><span class="o">.</span><span class="n">TerminalStrip</span>
+
+
+<span class="nd">@fr</span><span class="o">.</span><span class="n">unit</span><span class="p">(</span><span class="s2">"demo-supply-strip"</span><span class="p">,</span> <span class="n">revision</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">interface_version</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">date</span><span class="o">=</span><span class="s2">"2026-01-01"</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s2">"first"</span><span class="p">,</span> <span class="n">by</span><span class="o">=</span><span class="s2">"AB"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">supply</span><span class="p">(</span><span class="n">d</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">StripIo</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">terminal_strip</span><span class="p">(</span><span class="s2">"X1"</span><span class="p">,</span> <span class="s2">"DEMO-TB-2.5"</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">interface</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,)))</span>
+
+
+<span class="nd">@fr</span><span class="o">.</span><span class="n">unit</span><span class="p">(</span><span class="s2">"demo-load-strip"</span><span class="p">,</span> <span class="n">revision</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">interface_version</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">date</span><span class="o">=</span><span class="s2">"2026-01-01"</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s2">"first"</span><span class="p">,</span> <span class="n">by</span><span class="o">=</span><span class="s2">"AB"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">load</span><span class="p">(</span><span class="n">d</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">StripIo</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">terminal_strip</span><span class="p">(</span><span class="s2">"X1"</span><span class="p">,</span> <span class="s2">"DEMO-TB-2.5"</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">interface</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,)))</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Cabinet</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+
+<span class="nd">@fr</span><span class="o">.</span><span class="n">unit</span><span class="p">(</span><span class="s2">"demo-cabinet"</span><span class="p">,</span> <span class="n">revision</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">interface_version</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">date</span><span class="o">=</span><span class="s2">"2026-01-01"</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s2">"first"</span><span class="p">,</span> <span class="n">by</span><span class="o">=</span><span class="s2">"AB"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">cabinet</span><span class="p">(</span><span class="n">d</span><span class="p">):</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">supply</span><span class="p">,</span> <span class="s2">"U1"</span><span class="p">)</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">load</span><span class="p">,</span> <span class="s2">"U2"</span><span class="p">)</span>
+    <span class="n">d</span><span class="o">.</span><span class="n">series</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">x1</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">b</span><span class="o">.</span><span class="n">x1</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">wire</span><span class="o">=</span><span class="p">(</span><span class="s2">"BU"</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">Cabinet</span><span class="p">()</span>
+
+
+<span class="n">d</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">design</span><span class="p">(</span><span class="s2">"demo_parts"</span><span class="p">)</span>
+<span class="n">d</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">cabinet</span><span class="p">,</span> <span class="s2">"U1"</span><span class="p">)</span>
+<span class="k">assert</span> <span class="ow">not</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">fr</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">fr</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">d</span><span class="p">))</span> <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">severity</span> <span class="ow">is</span> <span class="n">fr</span><span class="o">.</span><span class="n">Severity</span><span class="o">.</span><span class="n">ERROR</span><span class="p">]</span>
+</code></pre></div>
 <p>A nested unit with a harness line at one of its interfaces draws on its parent's page as one
 outline, with its columns above and below it. A unit with none keeps its usual frame. Inside stand
 only its interfaces, title and revision. Each line-end interface is a connector box on the outline,
@@ -2482,7 +2520,7 @@ documents and lists. A unit's release name is the <code>unit=</code> value. The 
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.22.6 documentation
+      Fransys 0.22.7 documentation
     </div>
   
   

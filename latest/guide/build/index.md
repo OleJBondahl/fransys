@@ -339,6 +339,8 @@ if any(f.code.startswith(("BASELINE_RULES_MOVED", "BASELINE_ROWS_UNCHECKED")) fo
 assert fr.verify(second_result, Path("releases")) == ()
 ```
 
+A patch release reads every revision; rebaseline only on `BASELINE_RULES_MOVED_NOTE`.
+
 ## Listing the releases
 
 `fr.releases(root) -> tuple[Release, ...]` reads every `<name>/<version>.<revision>/` folder under

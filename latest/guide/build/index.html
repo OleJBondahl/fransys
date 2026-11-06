@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.6/guide/build/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.7/guide/build/">
       
       
       
@@ -2515,6 +2515,7 @@ so a Windows checkout passes.</p>
     <span class="n">fr</span><span class="o">.</span><span class="n">rebaseline</span><span class="p">(</span><span class="n">second_result</span><span class="p">,</span> <span class="n">Path</span><span class="p">(</span><span class="s2">"releases"</span><span class="p">))</span>  <span class="c1"># commit the rewritten baseline files</span>
 <span class="k">assert</span> <span class="n">fr</span><span class="o">.</span><span class="n">verify</span><span class="p">(</span><span class="n">second_result</span><span class="p">,</span> <span class="n">Path</span><span class="p">(</span><span class="s2">"releases"</span><span class="p">))</span> <span class="o">==</span> <span class="p">()</span>
 </code></pre></div>
+<p>A patch release reads every revision; rebaseline only on <code>BASELINE_RULES_MOVED_NOTE</code>.</p>
 <h2 id="listing-the-releases">Listing the releases</h2>
 <p><code>fr.releases(root) -&gt; tuple[Release, ...]</code> reads every <code>&lt;name&gt;/&lt;version&gt;.&lt;revision&gt;/</code> folder under
 <code>root</code>, in name, version and revision order. Versions and revisions sort as integers. A
@@ -2603,7 +2604,7 @@ in a helper that builds a repeated circuit, and the finding names the helper's c
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.22.6 documentation
+      Fransys 0.22.7 documentation
     </div>
   
   

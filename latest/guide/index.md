@@ -67,6 +67,7 @@ from `fransys.colours`.
 | name a place | `d.location("HOLD", text)`, then `place="HOLD"` | authoring.md, name a place |
 | name a function block | `with d.function("M1", text):` | authoring.md, name a function block |
 | add a device | `d.device("Q1", P.X, place=, parent=, mounted_on=, joins=)` | authoring.md, add a device |
+| a device outside the cabinet, with named pins only | `d.device("Q8", None, external=True, pins=("L1", "L2"))` | detail.md, Equipment others supply |
 | read a function or pin | `Q1.coil`, `Q1["A1"]`, `Q1[2]` | authoring.md, read a function or pin |
 | add a terminal strip, take a terminal | `d.terminal_strip("X1", P.X, n)`, `X1[3]` | authoring.md, Strips and terminals |
 | a named, bridged run on a strip | `X1.run(label, n, bridged=True)` | authoring.md, Bridges |
@@ -96,10 +97,11 @@ from `fransys.colours`.
 | wire a path to a PLC channel | `d.series(dc.plus, s1.no, a1)`; fixed: `a1.di_7` | authoring.md, how channels are numbered |
 | title block, revision | `d.project(...)`, `d.revision(...)` | authoring.md, title block, revision |
 | advise the drawing | `order`, `sheet`, `profile` | detail.md, Layout profile |
-| define a unit | `@fr.unit(name, revision=, interface_version=, ...)` | units.md, define a unit |
+| define a unit | `@fr.unit(name, revision=, interface_version=, ...)`, which returns `fr.UnitDef` | units.md, define a unit |
 | add a unit instance, reach its boundary | `d.add(fn, "U1")` returns the unit's `NamedTuple`, `io.X1` | units.md, Nesting units |
 | mark some terminals of a strip a unit boundary | `d.terminal_strip("X1", P.X, 4, interface=(1, 2))`, `unused=` the same | units.md, The boundary |
-| mark a boundary device | `interface=True`, `unused=True` on `d.device` | units.md, The boundary |
+| mark a boundary device: the boundary mark | `interface=True`, `unused=True` on `d.device` | units.md, The boundary |
+| declare an internal device's spare functions | `d.device("AI1", P.X, unused=True)`: left off the page, counted in SPARE_FUNCTIONS | authoring.md, name a function block |
 | build the model | `fr.build(d, *documents)` | build.md |
 | set the paper or a consumer's settings for a build | `s = fr.settings("fransys.toml", paper={fr.PageKind.BLOCK_DIAGRAM: "A2"})`, then `fr.build(d, settings=s)` | settings.md |
 | add a document | `fr.document(preset, subject, cover=)` | documents.md |
@@ -110,9 +112,11 @@ from `fransys.colours`.
 | release a baseline | `fr.release(result, into)` | build.md, Releasing |
 | list changes since a release | `fr.diff(result, baselines)` | build.md, Getting the change list |
 | test a baseline stays true | `fr.verify(result, baselines)` | build.md, Checking a baseline |
+| re-cut baselines after a printing rule moved | `fr.rebaseline(result, Path("releases"))` | build.md, Checking a baseline stays true |
 | list the releases on disk | `fr.releases(root)` | build.md, Listing the releases |
 | read a built model | `fr.derive.<function>(model, ...)` | reading.md |
 | an easy and an efficient level | same calls, a function or a loop around them | examples.md, easy and efficient |
+| A full cabinet from strips, rails, PLC and cables | `@fr.unit` and `d.add`, with `d.series` for each path | examples.md, One full cabinet |
 
 ## Install
 

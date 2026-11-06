@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.6/guide/series/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.7/guide/series/">
       
       
       
@@ -516,6 +516,17 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         Contacts that switch together
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-sets-the-width-of-a-series" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        What sets the width of a series
       </span>
     </span>
   </a>
@@ -2066,6 +2077,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#what-sets-the-width-of-a-series" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        What sets the width of a series
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#how-a-series-pairs" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -2262,6 +2284,51 @@ selecting supply A or B for M1:</p>
 <span class="k">for</span> <span class="n">tag</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"K1"</span><span class="p">,</span> <span class="s2">"K2"</span><span class="p">):</span>
     <span class="n">feed_coil</span><span class="p">(</span><span class="n">tag</span><span class="p">)</span>
 </code></pre></div>
+<h3 id="what-sets-the-width-of-a-series">What sets the width of a series</h3>
+<p>The first element that sets a width decides it. When none does, the call raises and names those elements.</p>
+<table>
+<thead>
+<tr>
+<th>element</th>
+<th>width</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>a function with a line side</td>
+<td>its pole count</td>
+</tr>
+<tr>
+<td>a supply</td>
+<td>its phases, with N when it carries it; a DC supply gives its rails</td>
+</tr>
+<tr>
+<td>a single rail, such as <code>dc.plus</code></td>
+<td>1</td>
+</tr>
+<tr>
+<td>a pin tuple, a terminal slice or a tuple of terminals</td>
+<td>its count</td>
+</tr>
+<tr>
+<td>a tuple of functions and pins</td>
+<td>its length</td>
+</tr>
+<tr>
+<td>two lone pins, or pins and whole strips alone</td>
+<td>1</td>
+</tr>
+<tr>
+<td>a whole device</td>
+<td>none</td>
+</tr>
+<tr>
+<td>a function with no line side</td>
+<td>none: it raises its own pole-pair refusal</td>
+</tr>
+</tbody>
+</table>
+<p>With N, the first element after the supply that sets a width decides: the phases, or the phases and N. Any other count raises.</p>
 <h3 id="how-a-series-pairs">How a series pairs</h3>
 <p>A series wires each element's load poles to the next element's line poles. The rule:</p>
 <ul>
@@ -2359,7 +2426,7 @@ it draws the IEC 60204-1 default: AC phases <code>BK</code>, <code>AC_N</code> <
 <li>a table, <code>wire={fr.DC_CONTROL: (WH, 0.75)}</code>: replaces only those rows for this series.</li>
 <li>a spec, <code>wire=(BU, 0.75)</code>: every wire gets that colour and size, and the rows are ignored.</li>
 </ul>
-<p>A wire whose row has no size and no size on the series is <code>WIRE_ROW_UNRESOLVED</code>. A size alone, <code>wire=0.75</code>, leaves the colour to the row and gives the same error when no row resolves; write <code>wire=(BU, 0.75)</code>.</p>
+<p>A wire whose row has no size and no size on the series is <code>WIRE_ROW_UNRESOLVED</code>. A size alone, <code>wire=0.75</code>, leaves the colour to the row and gives the same error when no row resolves; write <code>wire=(BU, 0.75)</code>. A net has a row when the wire ends on a rail of its own unit, on a pin that states <code>source_row</code>, or on a PLC channel. A wire that ends only on strips, devices or the other unit's pins has none, so give it <code>wire=(colour, size)</code>. A rail never crosses a unit boundary.</p>
 <p>A series that starts on one rail (<code>dc.plus</code>, <code>ac.L1</code>) is a control path. A wire at the rail's
 potential takes the rail's row. A fuse or a contact ends that potential: the wires after it take
 <code>DC_CONTROL</code> or <code>AC_CONTROL</code>. A series that starts on a whole supply (<code>dc</code>, <code>ac</code>) is a power path:
@@ -2429,7 +2496,7 @@ It names the cable and both counts; pick a cable with that many non-earth cores.
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.22.6 documentation
+      Fransys 0.22.7 documentation
     </div>
   
   

@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.6/guide/drawing/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.7/guide/drawing/">
       
       
       
@@ -2119,7 +2119,7 @@ one declared 24 V supply.</p>
 <p>The pump-station example in the examples repository has this shape.</p>
 <ol>
 <li>One unit per cabinet, and one function block per circuit: incoming supply, control supply, PLC, one block per motor starter.</li>
-<li>Keep every device of a circuit inside its block, so no path crosses a block edge.</li>
+<li>Keep every device of a circuit inside its block, so no path crosses a block edge. Put each series in the block of the circuit it belongs to. If the page that results reads badly, report it; a block chosen to shape the page hides a layout defect.</li>
 <li>Declare each supply where it starts: <code>d.ac_supply</code> on the incoming terminals, <code>d.dc_supply</code> on the 24 V strip.</li>
 <li>Distribute through terminal strips with named, bridged runs, and give each consumer its own terminal.</li>
 <li>Wire each circuit as a path, source first: supply, protection, switching, load. Layout stands the bands in that order, with the first terminal on top and the last at the bottom.</li>
@@ -2282,7 +2282,7 @@ one declared 24 V supply.</p>
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.22.6 documentation
+      Fransys 0.22.7 documentation
     </div>
   
   

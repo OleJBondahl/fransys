@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.6/guide/examples/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.7/guide/examples/">
       
       
       
@@ -1272,6 +1272,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#one-full-cabinet" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        One full cabinet
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#the-whole-shape-of-a-build-script" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -1943,6 +1954,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#one-full-cabinet" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        One full cabinet
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#the-whole-shape-of-a-build-script" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -2098,6 +2120,15 @@ loop.</p>
         <span class="n">sensor</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="n">tag</span><span class="p">,</span> <span class="s2">"DEMO-SWITCH-2P"</span><span class="p">)</span>
         <span class="n">d</span><span class="o">.</span><span class="n">series</span><span class="p">(</span><span class="n">dc</span><span class="o">.</span><span class="n">plus</span><span class="p">,</span> <span class="n">sensor</span><span class="o">.</span><span class="n">sw</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">wire</span><span class="o">=</span><span class="p">(</span><span class="n">BU</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">))</span>
 </code></pre></div>
+<h2 id="one-full-cabinet">One full cabinet</h2>
+<p><code>examples/demo-skid</code> is one whole cabinet on demo parts: terminal strips with rails, a PLC with its
+channels, and fans and valves wired through them. Read it in this order:</p>
+<ol>
+<li><code>examples/demo-skid/README.md</code>: what the skid holds and how to load it.</li>
+<li><code>examples/demo-skid/skid.py</code>: <code>supply</code>, <code>starters</code>, <code>valves</code>, then the <code>skid</code> unit that joins them.
+   <code>design()</code> adds the unit as <code>U1</code> to a cabinet.</li>
+</ol>
+<p>The skid has no cable. For a cable, read the motor starter above and series.md, Cables.</p>
 <h2 id="the-whole-shape-of-a-build-script">The whole shape of a build script</h2>
 <p>The examples above build small pieces of a design. For a real build script end to end, see
 <code>examples/pump-station/build.py</code> in the public <code>fransys</code> repository, at the tag you pinned. It has its
@@ -2148,7 +2179,7 @@ module's docstring states the engineering shape and the decision that fixed it.<
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.22.6 documentation
+      Fransys 0.22.7 documentation
     </div>
   
   

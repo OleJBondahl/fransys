@@ -157,7 +157,7 @@ Refused in 0.22 (`MATES_DISABLED`, an ERROR): draw the link as a cable or wires.
 |---|---|---|---|
 | [`a`](../detail/index.md#when-a-detail-call-is-right) | required | The first end: terminals (`x8[1:3]`; field side), a function (`b1.sig`, pins in connector order), or pins (`b1.sig[1]`), as `d.series` reads them. | `x8[1:3]` |
 | [`cable`](../detail/index.md#when-a-detail-call-is-right) | required | The cable between the ends. | `w3` |
-| [`b`](../detail/index.md#when-a-detail-call-is-right) | required | The second end, with as many pins as `a`; a strip or a device raises. | `b1.sig` |
+| [`b`](../detail/index.md#when-a-detail-call-is-right) | required | The second end, with as many pins as `a`; a strip or a device raises. Both ends need the same number of pins, or the call raises. | `b1.sig` |
 
 Example: `d.pair(x8[1:3], w3, b1.sig)`.
 

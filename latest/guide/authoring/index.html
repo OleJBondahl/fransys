@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.6/guide/authoring/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.7/guide/authoring/">
       
       
       
@@ -2284,6 +2284,7 @@ tag raises.</p>
 <p>A place sorts the lists by place and sets the <code>+</code> part of the printed designation. It does not move a cell on a drawing: <code>d.series</code> does.</p>
 <p><code>d.device(tag, part, place=, parent=, mounted_on=, joins=, interface=, unused=, name=)</code> adds one device.
 <code>unused=</code> works on a boundary device and on an internal one.
+On an internal device, <code>unused=True</code> declares its unwired functions as spares. A spare is left off the page and counted in <code>SPARE_FUNCTIONS</code> (INFO). Without it, a function on no net gives <code>FUNCTION_NOT_WIRED</code> (WARNING). <code>d.unused(...)</code> is another call: it declares open boundary points of a nested unit.
 <code>joins={1: K1.coil["A1"]}</code> with <code>parent=K1</code> fits a housing on K1's own leads: pin 1 is that pin, no wire.
 A contact block with <code>parent=</code> an operator head prints the head's tag, as <code>-S1:11</code> (guide <code>parts.md</code>).
 <code>part</code> is a manufacturer part number such as <code>"DEMO-LAMP-24"</code>.</p>
@@ -2532,7 +2533,7 @@ adds a history line. Both are optional.</p>
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.22.6 documentation
+      Fransys 0.22.7 documentation
     </div>
   
   

@@ -135,6 +135,23 @@ for tag in ("K1", "K2"):
     feed_coil(tag)
 ```
 
+### What sets the width of a series
+
+The first element that sets a width decides it. When none does, the call raises and names those elements.
+
+| element | width |
+|---|---|
+| a function with a line side | its pole count |
+| a supply | its phases, with N when it carries it; a DC supply gives its rails |
+| a single rail, such as `dc.plus` | 1 |
+| a pin tuple, a terminal slice or a tuple of terminals | its count |
+| a tuple of functions and pins | its length |
+| two lone pins, or pins and whole strips alone | 1 |
+| a whole device | none |
+| a function with no line side | none: it raises its own pole-pair refusal |
+
+With N, the first element after the supply that sets a width decides: the phases, or the phases and N. Any other count raises.
+
 ### How a series pairs
 
 A series wires each element's load poles to the next element's line poles. The rule:
@@ -204,7 +221,7 @@ it draws the IEC 60204-1 default: AC phases `BK`, `AC_N` `BU`, `AC_CONTROL` `RD`
 - a table, `wire={fr.DC_CONTROL: (WH, 0.75)}`: replaces only those rows for this series.
 - a spec, `wire=(BU, 0.75)`: every wire gets that colour and size, and the rows are ignored.
 
-A wire whose row has no size and no size on the series is `WIRE_ROW_UNRESOLVED`. A size alone, `wire=0.75`, leaves the colour to the row and gives the same error when no row resolves; write `wire=(BU, 0.75)`.
+A wire whose row has no size and no size on the series is `WIRE_ROW_UNRESOLVED`. A size alone, `wire=0.75`, leaves the colour to the row and gives the same error when no row resolves; write `wire=(BU, 0.75)`. A net has a row when the wire ends on a rail of its own unit, on a pin that states `source_row`, or on a PLC channel. A wire that ends only on strips, devices or the other unit's pins has none, so give it `wire=(colour, size)`. A rail never crosses a unit boundary.
 
 A series that starts on one rail (`dc.plus`, `ac.L1`) is a control path. A wire at the rail's
 potential takes the rail's row. A fuse or a contact ends that potential: the wires after it take

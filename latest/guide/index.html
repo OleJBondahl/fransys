@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.6/guide/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.7/guide/">
       
       
       
@@ -2312,6 +2312,11 @@ from <code>fransys.colours</code>.</p>
 <td>authoring.md, add a device</td>
 </tr>
 <tr>
+<td>a device outside the cabinet, with named pins only</td>
+<td><code>d.device("Q8", None, external=True, pins=("L1", "L2"))</code></td>
+<td>detail.md, Equipment others supply</td>
+</tr>
+<tr>
 <td>read a function or pin</td>
 <td><code>Q1.coil</code>, <code>Q1["A1"]</code>, <code>Q1[2]</code></td>
 <td>authoring.md, read a function or pin</td>
@@ -2458,7 +2463,7 @@ from <code>fransys.colours</code>.</p>
 </tr>
 <tr>
 <td>define a unit</td>
-<td><code>@fr.unit(name, revision=, interface_version=, ...)</code></td>
+<td><code>@fr.unit(name, revision=, interface_version=, ...)</code>, which returns <code>fr.UnitDef</code></td>
 <td>units.md, define a unit</td>
 </tr>
 <tr>
@@ -2472,9 +2477,14 @@ from <code>fransys.colours</code>.</p>
 <td>units.md, The boundary</td>
 </tr>
 <tr>
-<td>mark a boundary device</td>
+<td>mark a boundary device: the boundary mark</td>
 <td><code>interface=True</code>, <code>unused=True</code> on <code>d.device</code></td>
 <td>units.md, The boundary</td>
+</tr>
+<tr>
+<td>declare an internal device's spare functions</td>
+<td><code>d.device("AI1", P.X, unused=True)</code>: left off the page, counted in SPARE_FUNCTIONS</td>
+<td>authoring.md, name a function block</td>
 </tr>
 <tr>
 <td>build the model</td>
@@ -2527,6 +2537,11 @@ from <code>fransys.colours</code>.</p>
 <td>build.md, Checking a baseline</td>
 </tr>
 <tr>
+<td>re-cut baselines after a printing rule moved</td>
+<td><code>fr.rebaseline(result, Path("releases"))</code></td>
+<td>build.md, Checking a baseline stays true</td>
+</tr>
+<tr>
 <td>list the releases on disk</td>
 <td><code>fr.releases(root)</code></td>
 <td>build.md, Listing the releases</td>
@@ -2540,6 +2555,11 @@ from <code>fransys.colours</code>.</p>
 <td>an easy and an efficient level</td>
 <td>same calls, a function or a loop around them</td>
 <td>examples.md, easy and efficient</td>
+</tr>
+<tr>
+<td>A full cabinet from strips, rails, PLC and cables</td>
+<td><code>@fr.unit</code> and <code>d.add</code>, with <code>d.series</code> for each path</td>
+<td>examples.md, One full cabinet</td>
 </tr>
 </tbody>
 </table>
@@ -2668,7 +2688,7 @@ found an <code>ERROR</code>. A design with no document has nothing to draw, so <
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.22.6 documentation
+      Fransys 0.22.7 documentation
     </div>
   
   

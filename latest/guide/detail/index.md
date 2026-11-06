@@ -21,7 +21,7 @@ smallest shape.
 `d.series(a, b, wire=(BU, 0.75))` draws one wire between two named pins. `wire=` takes a size, a table of rows,
 a `(colour, size)`, or one `(colour, size)` per pole in a tuple. A size or a table takes the row of the net.
 More than two pins draw a chain, one wire per neighbouring pair, and a pin stands anywhere in a series. A strip
-or a run as a pin stands for its next free terminal.
+or a run as a pin stands for its next free terminal. Use a bare-pin series only for a wire no core call can write: a pinout the plan fixes, a swap, or a jumper between two named pins. For a supply, a rail or a function with a line side, use the ordinary `d.series`.
 
 ### A wire with no row
 
@@ -65,7 +65,7 @@ d.series(x8[1].outer, d.device("M1", "DEMO-MOTOR-4KW")["U"], wire=(BK, 1.5))
 ### Fixed terminals
 
 `X1[3]` takes terminal 3 and `.inner` or `.outer` names its side. A series enters a strip at the
-right side by itself: a bare `x[i]` lands on the side facing the unit that holds the other end, and `x[i].outer` writes a field end. `.outer` and `.inner` decide which column of the terminal CSV a wire lands in. Name a side only when the plan fixes it; `d.series(x1[3].outer, f1.element)` takes it too. A series may also start at a pin: `d.series(k1.coil["A1"], a1.di_1)`.
+right side by itself: a bare `x[i]` lands on the side facing the unit that holds the other end, and `x[i].outer` writes a field end. `.outer` and `.inner` decide which column of the terminal CSV a wire lands in. Name a side only when the plan fixes the field end; `d.series(x1[3].outer, f1.element)` takes it too. Otherwise the series picks the side that faces another unit's pin or terminal; next to a device or function, it keeps the default side. A series may also start at a pin: `d.series(k1.coil["A1"], a1.di_1)`.
 
 ```python
 import fransys as fr

@@ -27,5 +27,10 @@ def test_a_rating_and_an_operating_round_trip() -> None:
 
 def test_a_stored_version_2_listing_is_refused_with_the_fix() -> None:
     text = dumps(_listing(None, None)).replace('"listing_version":7', '"listing_version":2')
-    with pytest.raises(SchemaVersionError, match=r"fr\.rebaseline"):
+    with pytest.raises(SchemaVersionError, match=r"fr\.release"):
         loads(text)
+
+
+def test_a_stored_version_6_listing_is_read() -> None:
+    listing = _listing(None, None)
+    assert loads(dumps(listing).replace('"listing_version":7', '"listing_version":6')) == listing

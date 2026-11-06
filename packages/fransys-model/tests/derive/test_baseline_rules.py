@@ -9,7 +9,7 @@ from fransys_model.derive.baseline import (
     listing_rules,
     rules_moved_in,
 )
-from fransys_model.derive.baseline_rules import version_key
+from fransys_model.derive.baseline_rules import CURRENT, version_key
 
 
 def test_the_table_is_ordered_oldest_first_and_ends_at_today() -> None:
@@ -47,8 +47,14 @@ def test_versions_compare_as_numbers_not_text() -> None:
     assert version_key("0.13.14") > version_key("0.13.8")
 
 
-def test_another_listing_version_has_no_rules() -> None:
-    assert listing_rules(6, "0.19.8") is None
+@pytest.mark.parametrize("listing_version", [5, 8])
+def test_another_listing_version_has_no_rules(listing_version: int) -> None:
+    assert listing_rules(listing_version, "0.19.8") is None
+
+
+def test_listing_versions_6_and_7_are_one_rule_set() -> None:
+    """The 7 bump moved no listing text (model-0428): a version-6 revision reads under the same rules."""
+    assert listing_rules(6, "0.22.4") == listing_rules(7, "0.22.4") == CURRENT
 
 
 @pytest.mark.parametrize(

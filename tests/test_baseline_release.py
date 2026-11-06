@@ -1373,3 +1373,48 @@ def test_an_old_listing_without_parent_matches_the_new_derived_one(released, tmp
     assert "BASELINE_DIFFERS" not in codes
     target = fr.release(result, into, unit=board_scope)
     assert target == into / board_target.relative_to(base_into)
+
+
+def test_a_listing_6_revision_cut_by_0_22_4_verifies_clean_and_releases_the_next(tmp_path, monkeypatch):
+    """BASELINE-V6 (designer R1807): listing 6 and 7 are one rule set, so a revision cut by 0.22.4 reads,
+    `fr.verify` finds nothing to say, and `fr.release` cuts revision 2 with a `changes.md` against it.
+    """
+    from stale_releases import cut_old, unit_id
+
+    from fransys_model.derive import baseline_codec
+
+    parts = fr.parts("demo_parts")
+    design = Design(parts)
+    _x1, u = _board_unit(design.scope("brd"))
+    first = fr.build(parts, design.draft())
+    folder = _release_clean(first, tmp_path, u)
+    with monkeypatch.context() as patch:
+        patch.setattr(baseline_codec, "KEYED_LISTING_VERSION", 6)
+        cut_old(folder, first, "baseline-board", "0.22.4", baseline.listing(first.model, unit_id(first, "baseline-board")))
+    assert '"listing_version":6' in (folder / "baseline" / "listing.json").read_text(encoding="utf-8")
+    assert fr.verify(first, tmp_path) == ()
+    _result, _unit, second = _second_board_release(parts, tmp_path, revision=2, wire_colour="RD")
+    assert "colour BU → RD" in (second / "changes.md").read_text(encoding="utf-8")
+
+
+def test_a_container_pinning_a_listing_6_nested_revision_releases_and_verifies_clean(released, tmp_path_factory, monkeypatch):
+    """BASELINE-V6 (designer R1807): `fr.release` of a container reads the nested unit's stored revisions
+    (`_pin_source` -> `read_stored` -> `baseline.loads`); one cut by 0.22.4 at listing 6 must not refuse it.
+    """
+    import shutil
+
+    from stale_releases import cut_old, unit_id
+
+    from fransys_model.derive import baseline_codec
+
+    result, base_into, _board_target, _cabinet_target, _board_scope, cabinet_scope = released
+    into = _copy_into(tmp_path_factory, base_into)
+    shutil.rmtree(into / "baseline-cabinet")
+    board_folder = next((into / "baseline-board").iterdir())
+    with monkeypatch.context() as patch:
+        patch.setattr(baseline_codec, "KEYED_LISTING_VERSION", 6)
+        cut_old(board_folder, result, "baseline-board", "0.22.4", baseline.listing(result.model, unit_id(result, "baseline-board")))
+    assert '"listing_version":6' in (board_folder / "baseline" / "listing.json").read_text(encoding="utf-8")
+    cabinet = fr.release(result, into, unit=cabinet_scope)
+    assert (cabinet / "baseline" / "manifest.json").exists()
+    assert fr.verify(result, into) == ()

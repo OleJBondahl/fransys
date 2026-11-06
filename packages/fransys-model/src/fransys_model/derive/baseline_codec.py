@@ -17,7 +17,7 @@ from .baseline_codec_keys import (
     key_kwargs,
 )
 from .baseline_item_order import key_ordered
-from .baseline_rules import KEYED_LISTING_VERSION
+from .baseline_rules import KEYED_LISTING_VERSION, READABLE_LISTING_VERSIONS
 from .rows_baseline import (
     BaselineBoundary,
     BaselineConductor,
@@ -228,13 +228,14 @@ def loads(text: str) -> Listing:
 
     Raises:
         SchemaError: the text is not valid canonical JSON, or its envelope is malformed.
-        SchemaVersionError: `text`'s `listing_version` is not `3`, the one shape this build reads:
-            keyed rows with `rating` and `operating` in the kernel's canonical form.
+        SchemaVersionError: `text`'s `listing_version` is not 6 or 7, the versions this build reads (one shape:
+            keyed rows with `rating` and `operating` in the kernel's canonical form).
     """
     data = _mapping(read_json(text))
-    if (version := _version_of(data)) != KEYED_LISTING_VERSION:
+    if (version := _version_of(data)) not in READABLE_LISTING_VERSIONS:
         msg = (
-            f"listing_version {version} is not known; this build reads {KEYED_LISTING_VERSION}: rebuild the release and re-cut it with fr.rebaseline"
+            f"listing_version {version} is not known; this build reads {READABLE_LISTING_VERSIONS}: "
+            "verify this revision with the fransys that cut it, or cut a new revision with fr.release; the old revision stays as released"
         )
         raise SchemaVersionError(msg, expected=KEYED_LISTING_VERSION, actual=version)
     return Listing(
@@ -257,7 +258,7 @@ def _version_of(data: Mapping[str, object]) -> int:
 
 
 def stored_version(text: str) -> int:
-    """The `listing_version` of stored listing `text`, whatever it is; `loads` refuses all but 3."""
+    """The `listing_version` of stored listing `text`, whatever it is; `loads` refuses all but 6 and 7."""
     return _version_of(_mapping(read_json(text)))
 
 

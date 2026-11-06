@@ -67,6 +67,16 @@ Each row is a name that 0.22 removed. A removed attribute raises an error that n
 | <a id="parts-schema-2"></a>Part schema 1 (`schema = 1`) | `schema = 2`; convert with `python -m fransys migrate-parts DIR` |
 | <a id="terminal-point-overfilled"></a>`TERMINAL_POINT_OVERFILLED` (new in 0.22, no 0.21 spelling) | Set `conductors_per_clamp = 2` in the terminal part's `[connection]` table, or use a twin part, or bridge a second terminal |
 
+## New in 0.22.6
+
+- A revision cut by 0.22.4 or earlier reads again, with no rebaseline needed. `fr.verify` finds nothing to report. `fr.release` cuts the next revision, also for a container that pins such a revision (decisions model-0289, model-0428).
+
+## New in 0.22.5
+
+- listing_version 7: a list end prints the pin's marking when it is set and unique under its printed prefix, else its name (decisions model-0428, model-0431).
+- 0.22.5 cannot read a revision cut by 0.22.4 or earlier: `fr.verify` reports `BASELINE_TOO_OLD`, and `fr.release` and `fr.rebaseline` refuse. Stay on 0.22.4 to release; 0.22.6 reads them again.
+- A connected cable screen (`core(SH, ...)`, `spare(SH, at=...)`) is refused with `SCREEN_DISABLED` until screen connections return; the cable heading still prints "shielded" (decision model-0430).
+
 ## New in 0.22.1
 
 - `python -m fransys migrate-parts DIR` rewrites a schema 1 parts library to the 0.22 format (decision 0474). `DIR` is the library's folder (the one holding `library.toml` and `parts/`) or a folder above it, never `parts/`.

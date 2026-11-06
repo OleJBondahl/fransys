@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.7/guide/moving-to-0.22/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.8/guide/moving-to-0.22/">
       
       
       
@@ -954,6 +954,28 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#new-in-0228" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        New in 0.22.8
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#new-in-0227" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        New in 0.22.7
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#new-in-0226" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -1193,7 +1215,34 @@
   <span class="md-ellipsis">
     
   
-  Finding codes: validators, build and release
+  Finding codes: validators
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../findings-build/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Finding codes: build, release and library load
 
     
   </span>
@@ -2053,6 +2102,28 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#new-in-0228" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        New in 0.22.8
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#new-in-0227" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        New in 0.22.7
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#new-in-0226" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -2289,6 +2360,17 @@ for example <code>fault_time_constant=fr.elecdef.Unit.MS(15)</code>. In a part f
 </tr>
 </tbody>
 </table>
+<h2 id="new-in-0228">New in 0.22.8</h2>
+<ul>
+<li>One <code>terminals.csv</code> holds every terminal strip, and one <code>connectors.csv</code> every board. They replace the files per strip or board: read the one file instead (decision model-0437).</li>
+<li><code>[export] hide_pe = true</code> leaves the PE rail's terminals, wires and pins off every drawing sheet; the lists keep them. Off by default: drawings do not change (decisions model-0435, el-0119).</li>
+</ul>
+<h2 id="new-in-0227">New in 0.22.7</h2>
+<ul>
+<li>A leg's run is cleared of a footprint's pin tips. Only the PE terminal joined by <code>d.earth</code> stops being a spare. The shorts this drew there (<code>DRAWING_SHORTS_NETS</code>) are gone (KI-708, layout-0446, model-0429). No action.</li>
+<li>A copied cut piece joins no pins: its ends pair two by two (KI-710). No action.</li>
+<li><code>OVERLAP</code>, <code>WIRE_OVER_MARKER</code> and the width refusal name the elements and the fix. The guide gained the width table, net rows, bare-pin use and the full-cabinet path. No action.</li>
+</ul>
 <h2 id="new-in-0226">New in 0.22.6</h2>
 <ul>
 <li>A revision cut by 0.22.4 or earlier reads again, with no rebaseline needed. <code>fr.verify</code> finds nothing to report. <code>fr.release</code> cuts the next revision, also for a container that pins such a revision (decisions model-0289, model-0428).</li>
@@ -2349,7 +2431,7 @@ for example <code>fault_time_constant=fr.elecdef.Unit.MS(15)</code>. In a part f
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.22.7 documentation
+      Fransys 0.22.8 documentation
     </div>
   
   

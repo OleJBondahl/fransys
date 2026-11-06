@@ -8,7 +8,8 @@ A finding's message names each thing as the drawings print it. An item reads as 
 
 Every `Finding` row carries its own `fix`: `<valid values>. Write: <corrected call>`, filled with that finding's names and values. A test reads `exc.findings` (from `BuildFailedError`) or `fr.check(result)` and finds the template: `<subject>` and `<other>` stand for the finding's first and second subject. `fr.report` and the `BuildFailedError` message print them filled with those subjects' names. A code no call clears starts with `No call clears this:`. The worked example is in `build.md`, under "write".
 
-- [`findings-validators.md`](../findings-validators/index.md): the model checks and the library load.
+- [`findings-validators.md`](../findings-validators/index.md): the model checks.
+- [`findings-build.md`](../findings-build/index.md): the build, `release` and the library load.
 - [`findings-release.md`](../findings-release/index.md): the build, `release`, `verify` and the baseline check.
 - [`findings-render.md`](../findings-render/index.md): layout and the drawing stage.
 - [`findings-pdf.md`](../findings-pdf/index.md): the PDF output.

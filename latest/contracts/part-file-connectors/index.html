@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.7/contracts/part-file-connectors/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.8/contracts/part-file-connectors/">
       
       
       
@@ -1034,7 +1034,34 @@
   <span class="md-ellipsis">
     
   
-  Finding codes: validators, build and release
+  Finding codes: validators
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/findings-build/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Finding codes: build, release and library load
 
     
   </span>
@@ -1977,6 +2004,7 @@
 <h1 id="part-file-contract-connectors">Part-file contract: connectors</h1>
 <p>This page holds the <code>[function.connector]</code> table of the part-file contract. It is read with <code>part-file.md</code>, which holds the rest of the contract.</p>
 <h3 id="functionconnector"><code>[function.connector]</code></h3>
+<p>Mated connectors are refused for 0.22: a design that mates two connectors or draws a harness line gets <code>MATES_DISABLED</code>, an ERROR (model-0405). The part file still states the connector, and <code>mates</code> stays data only.</p>
 <p>A sub-table of the <code>[[function]]</code> entry it describes (P1). The <code>connector</code> facet's subject is a
 <code>FunctionTemplate</code>, not the <code>Part</code>. So a part with more than one connector-style function names
 each one under its own <code>[[function]]</code> entry, never in one top-level table. Maps to the model's
@@ -2086,7 +2114,7 @@ field yet.</p>
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.22.7 documentation
+      Fransys 0.22.8 documentation
     </div>
   
   

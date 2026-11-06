@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.7/guide/drawn-ledger/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.8/guide/drawn-ledger/">
       
       
       
@@ -1116,7 +1116,34 @@
   <span class="md-ellipsis">
     
   
-  Finding codes: validators, build and release
+  Finding codes: validators
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../findings-build/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Finding codes: build, release and library load
 
     
   </span>
@@ -1987,6 +2014,7 @@
 <h2 id="carried">Carried</h2>
 <p><code>Carried(reason, end=, symbol=)</code> says a row stands undrawn on purpose. Exactly one of <code>end</code> and <code>symbol</code> is set. <code>CarriedReason</code> is a closed list: <code>SPARE</code>, <code>UNWIRED</code> and <code>OFF_DOCUMENT</code>.</p>
 <h2 id="example">Example</h2>
+<p>With <code>[export] hide_pe</code> on, a PE conductor the sheets leave out is not required, not carried and not missing: the ledger expects none of it.</p>
 <div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">fransys</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">fr</span>
 
 <span class="n">d</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">design</span><span class="p">(</span><span class="s2">"demo_parts"</span><span class="p">)</span>
@@ -2035,7 +2063,7 @@
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.22.7 documentation
+      Fransys 0.22.8 documentation
     </div>
   
   

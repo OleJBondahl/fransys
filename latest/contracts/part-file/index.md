@@ -87,6 +87,7 @@ Zero or more per file, one array entry per function the part has. Maps to the mo
 | `side` | string | Optional: `"line"` or `"load"`; else the marking fills it (parts-0010). A two-port function that a series passes through needs it when its marking gives no side |
 | `conductor` | string | Optional: `"L1"`, `"L2"`, `"L3"`, `"N"`, `"L+"`, `"L-"`, `"M"`; not `"PE"` (use `role = "pe"`), filled likewise |
 | `source_row` | string | Optional. The wiring row a wire on this pin takes, a `WiringRow` value: `"DC_SUPPLY"`, `"DC_GROUND"`, `"DC_CONTROL"`, `"DC_SIGNAL"`, `"AC_L1"`, `"AC_L2"`, `"AC_L3"`, `"AC_N"`, `"AC_CONTROL"`. Omit it to let the build resolve the row from the pin's net (model-0260); a `wire=` row map overrides it |
+| `joins` | string | Optional. `"<function>.<port>"`: a connector header pin that joins a port of another function of the same part, with no conductor. See `part-file-connectors.md` (parts-0017) |
 
 `links` entries:
 
@@ -331,4 +332,4 @@ files, no Fransys code inside it.
   today `frozenset({2})`; a `schema = 1` file is `PART_SCHEMA_OLD`. `library.toml` and every part file carry `schema`. A value outside
   `SUPPORTED_SCHEMAS` is the lint finding `SCHEMA_UNSUPPORTED`, naming the file and the value
   found. A part file whose `schema` differs from its `library.toml` is `SCHEMA_MIXED`.
-- `python -m fransys migrate-parts DIR [--dry-run]` (decision 0474, dropped in 0.23, MIGRATE-022-DROP) rewrites every schema 1 library under `DIR` to schema 2 (model-0369). A library bumps `schema` for every part file in one commit.
+- `python -m fransys migrate-parts DIR` (decision 0474, dropped in 0.23, MIGRATE-022-DROP) rewrites every schema 1 library under `DIR` to schema 2 (model-0369). A library bumps `schema` for every part file in one commit.

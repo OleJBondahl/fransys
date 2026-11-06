@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.7/contracts/part-file/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.8/contracts/part-file/">
       
       
       
@@ -1034,7 +1034,34 @@
   <span class="md-ellipsis">
     
   
-  Finding codes: validators, build and release
+  Finding codes: validators
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/findings-build/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Finding codes: build, release and library load
 
     
   </span>
@@ -2535,6 +2562,11 @@ contract are copied from it and can go stale, the module cannot.</p>
 <td>string</td>
 <td>Optional. The wiring row a wire on this pin takes, a <code>WiringRow</code> value: <code>"DC_SUPPLY"</code>, <code>"DC_GROUND"</code>, <code>"DC_CONTROL"</code>, <code>"DC_SIGNAL"</code>, <code>"AC_L1"</code>, <code>"AC_L2"</code>, <code>"AC_L3"</code>, <code>"AC_N"</code>, <code>"AC_CONTROL"</code>. Omit it to let the build resolve the row from the pin's net (model-0260); a <code>wire=</code> row map overrides it</td>
 </tr>
+<tr>
+<td><code>joins</code></td>
+<td>string</td>
+<td>Optional. <code>"&lt;function&gt;.&lt;port&gt;"</code>: a connector header pin that joins a port of another function of the same part, with no conductor. See <code>part-file-connectors.md</code> (parts-0017)</td>
+</tr>
 </tbody>
 </table>
 <p><code>links</code> entries:</p>
@@ -2921,7 +2953,7 @@ files, no Fransys code inside it.</p>
   today <code>frozenset({2})</code>; a <code>schema = 1</code> file is <code>PART_SCHEMA_OLD</code>. <code>library.toml</code> and every part file carry <code>schema</code>. A value outside
   <code>SUPPORTED_SCHEMAS</code> is the lint finding <code>SCHEMA_UNSUPPORTED</code>, naming the file and the value
   found. A part file whose <code>schema</code> differs from its <code>library.toml</code> is <code>SCHEMA_MIXED</code>.</li>
-<li><code>python -m fransys migrate-parts DIR [--dry-run]</code> (decision 0474, dropped in 0.23, MIGRATE-022-DROP) rewrites every schema 1 library under <code>DIR</code> to schema 2 (model-0369). A library bumps <code>schema</code> for every part file in one commit.</li>
+<li><code>python -m fransys migrate-parts DIR</code> (decision 0474, dropped in 0.23, MIGRATE-022-DROP) rewrites every schema 1 library under <code>DIR</code> to schema 2 (model-0369). A library bumps <code>schema</code> for every part file in one commit.</li>
 </ul>
 
 
@@ -2958,7 +2990,7 @@ files, no Fransys code inside it.</p>
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.22.7 documentation
+      Fransys 0.22.8 documentation
     </div>
   
   

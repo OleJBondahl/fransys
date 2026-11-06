@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.7/guide/build/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.8/guide/build/">
       
       
       
@@ -1237,7 +1237,34 @@
   <span class="md-ellipsis">
     
   
-  Finding codes: validators, build and release
+  Finding codes: validators
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../findings-build/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Finding codes: build, release and library load
 
     
   </span>
@@ -2381,7 +2408,7 @@ counted per code on one line.</p>
 </code></pre></div>
 <p><code>fr.export_names(result, *, unit=None)</code> gives the name <code>write</code> gives each export, by <code>(kind, subject)</code>,
 without writing anything. A kind is <code>bom</code>, <code>plc</code>, <code>wires</code>, <code>designations</code>, <code>overview</code>,
-<code>cables</code> or <code>cores</code> (subject <code>None</code>); <code>terminals</code>, <code>connectors</code> or <code>wago</code> with the item's id; or <code>pdf</code> with
+<code>cables</code>, <code>cores</code>, <code>terminals</code> or <code>connectors</code> (subject <code>None</code>); <code>wago</code> with the rack's id; or <code>pdf</code> with
 the document's id. The key is a tuple: <code>("bom", None)</code> for a whole-set file, <code>("pdf", &lt;document id&gt;)</code>
 for a document.</p>
 <div class="highlight"><pre><span></span><code><span class="n">names</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">export_names</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
@@ -2400,8 +2427,8 @@ appears only in file names, never in a title block or history table. The names h
   (<code>demo-io-board-v1.1</code>); the system's is the project's number (<code>EX-1-v1.1</code>). A system write of
   a model with no project record has no prefix: its own files keep bare names (<code>bom.csv</code>).</li>
 <li><strong>Prefix, kind, fragment.</strong> A name is <code>&lt;prefix&gt;[-&lt;kind&gt;][-&lt;fragment&gt;].&lt;ext&gt;</code>:
-  <code>demo-io-board-v1.1-bom.csv</code>, per item <code>demo-io-board-v1.1-terminals-X1.csv</code>, and for the
-  unit's own root the bare kind <code>demo-io-board-v1.1-terminals.csv</code>.</li>
+  <code>demo-io-board-v1.1-bom.csv</code>, and per PLC rack <code>demo-io-board-v1.1-wago-U1.xml</code>.</li>
+<li><strong>Lists.</strong> <code>terminals.csv</code> holds every strip, <code>connectors.csv</code> every board.</li>
 <li><strong>Where each list is.</strong> A unit's cables stay in its own <code>cables.csv</code>; a parent sees the unit as a black box.</li>
 <li><strong>A PDF is named by its subject, not its cover file.</strong> The set's own document is
   <code>&lt;prefix&gt;.pdf</code>. A document of an item or location inside
@@ -2548,7 +2575,7 @@ writes into. At <code>None</code> (the default), numbering is free. Given the re
 released numbering before assigning new tags. An item still in the same group keeps the number it was released with. A number
 freed by a removed or moved item is never handed to a different item within that unit's
 version. An authored tag that equals a pinned or reserved number is <code>DESIGNATION_DUPLICATE</code>
-(see <code>findings-validators.md</code>). Releasing without
+(see <code>findings-build.md</code>). Releasing without
 <code>releases=</code> still catches a moved number, as <code>DESIGNATION_MOVED</code>.</p>
 <h2 id="point-a-finding-past-a-helper">Point a finding past a helper</h2>
 <p>A finding names the file and line of the call that authored the thing. Set <code>__tracebackhide__ = True</code>
@@ -2604,7 +2631,7 @@ in a helper that builds a repeated circuit, and the finding names the helper's c
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.22.7 documentation
+      Fransys 0.22.8 documentation
     </div>
   
   

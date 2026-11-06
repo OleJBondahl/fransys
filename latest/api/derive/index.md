@@ -709,20 +709,19 @@ has no such pin. `wired` is the engine's set of ports on kept connections.
 ### connector_rows
 
 ```python
-def connector_rows(model: Model, board: Id[Item], *, unit: Id[Unit] | None=None, context: Id[AspectNode] | None=None) -> tuple[ConnectorRow, ...]
+def connector_rows(model: Model, board: Id[Item] | None=None, *, unit: Id[Unit] | None=None, context: Id[AspectNode] | None=None) -> tuple[ConnectorRow, ...]
 ```
 
-One `ConnectorRow` per connector of `board`, with its pins, nets and mate.
+One `ConnectorRow` per connector of `board`, or of every board of the scope (`boards`, `unit_boards`) with `None`.
 
 A connector is a `connector`-kind `Function` of `board` or a descendant whose template carries a
-`connector` facet. `designation` is `connector_designation`: the item's own designation, or
-`<item designation>-<label>` when the item has two or more connector functions. Rows sort by
-`(designation, connector id)`. `mate` is the other end of a `Mate`; a pin's `mate_port` is the
-port of equal name on it, and its `net` the declared net listing its port. `pins` sort by
+`connector` facet. `designation` is `connector_designation`: the item's own, or
+`<item designation>-<label>` for an item with two or more connector functions. Rows sort by
+`(designation, connector id)`. `mate` is the other end of a `Mate`, a pin's `mate_port` the port of
+equal name on it, its `net` the declared net listing its port. `pins` sort by
 marking, digits first by value. `context` (default `None`, full paths) is the location the list
-prints against. `unit` is the unit whose document prints it: inside it reads unit-relative, and
-for a nested `unit` a mate outside its subtree prints `None`; `context` is ignored once `unit`
-has one.
+prints against. `unit` is the unit whose document prints it: inside it reads unit-relative, a
+mate outside a nested `unit` prints `None`, and `context` is ignored once `unit` has one.
 
 Raises:
     SchemaError: `board` is not an item of `model`, or an item shown has no designation.
@@ -1233,7 +1232,7 @@ Raises:
 def drawn_groups(model: Model) -> tuple[tuple[Id[Port], ...], ...]
 ```
 
-`required_groups` less each conductor `is_bridge` calls a bridge: what a drawing must join.
+`required_groups` less each conductor `drawn_conductors` leaves out: what a drawing must join.
 
 The drawing's nets leave out bridges; the terminal table carries them.
 
@@ -1265,6 +1264,16 @@ def drawn_physical_nets(model: Model) -> tuple[PhysicalNet, ...]
 ```
 
 The nets a drawing joins: `physical_nets` built from `drawn_groups`, so a bridge joins nothing.
+
+### drawn_stands
+
+```python
+def drawn_stands(model: Model) -> frozendict[Id[Port], PowerKind]
+```
+
+`stands` as a drawing sheet draws them: with `[export] hide_pe` the PE ports are left out.
+
+`stands` itself stays whole for ratings, rail reach and series-parallel, which are not drawings.
 
 ### draws_as_line
 
@@ -1417,8 +1426,8 @@ def export_set(model: Model, unit: Id[Unit] | None) -> tuple[ExportRow, ...]
 
 Every export a write of `unit` makes (the whole model with `unit=None`), in write order.
 
-The reports (and the overview for the whole model), one terminal CSV per strip, one connector
-CSV per board, one WAGO XML per rack, then one PDF per document. Names are unplaced: the
+The reports (and the overview for the whole model), one terminal CSV and one connector CSV for
+all strips and boards, one WAGO XML per rack, then one PDF per document. Names are unplaced: the
 caller puts CSV and XML into `data/`. Two rows may share a name; the caller refuses that.
 
 ### export_set_name
@@ -1924,6 +1933,14 @@ True for a location, unit or root (subject-less) document; an item document draw
 
 `document` is the document's id.
 
+### hidden_pins
+
+```python
+def hidden_pins(model: Model) -> frozenset[Id[Port]]
+```
+
+The stand ports `drawn_stands` leaves off whose pin no drawn conductor reaches: a pin the sheets do not show.
+
 ### implied_rest
 
 ```python
@@ -2029,6 +2046,16 @@ Returns:
 
 Raises:
     SchemaError: `unit` is set and `item` is not an item of `model`.
+
+### is_pe_conductor
+
+```python
+def is_pe_conductor(model: Model, conductor: Id[Conductor]) -> bool
+```
+
+Whether an end of `conductor` is a pin of a rail terminal on the PE net: the PE rail's own wire or link.
+
+The one home of what the hide-PE option leaves off the drawing sheets.
 
 ### is_plc_module
 
@@ -4250,7 +4277,8 @@ def stale_patterns() -> tuple[str, ...]
 
 The top-level file patterns a write owns and sweeps: every kind of `export_set`.
 
-Per-item kinds give `<kind>-*.<ext>` and the bare `<kind>.<ext>`; PDFs are `*.pdf`.
+The lists give `<kind>.csv`, and `<kind>-*.csv` still so a release deletes the old per-strip and
+per-board files; the per-rack kind gives `<kind>-*.<ext>` and the bare name; PDFs are `*.pdf`.
 
 ### standalone
 
@@ -4536,19 +4564,19 @@ Every item that carries a `terminal` facet, built once per model digest.
 ### terminal_rows
 
 ```python
-def terminal_rows(model: Model, strip: Id[Item], *, unit: Id[Unit] | None=None, context: Id[AspectNode] | None=None) -> tuple[TerminalRow, ...]
+def terminal_rows(model: Model, strip: Id[Item] | None=None, *, unit: Id[Unit] | None=None, context: Id[AspectNode] | None=None) -> tuple[TerminalRow, ...]
 ```
 
-One `TerminalRow` per `strip` terminal, by `(natural_key(group), index, id)`.
+One `TerminalRow` per terminal of `strip`, or of every strip of the scope with `strip=None`.
+
+Strips are `terminal_strips`, or the `unit_strips` of `unit`; the terminals of a strip are in
+`order.terminals_in_order`.
 
 Args:
     model: The model to read.
-    strip: The terminal strip item whose rows are built.
+    strip: The terminal strip item whose rows are built; `None` is every strip of the scope.
     unit: The unit whose own document prints the list, keyword-only; `None` for none.
     context: The location node the list prints for, keyword-only; ignored once `unit` has one.
-
-Returns:
-    One `TerminalRow` per terminal child of `strip`, sorted.
 
 Raises:
     SchemaError: `strip` is not an item of `model`, or a far end's item has no designation.

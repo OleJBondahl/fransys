@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.7/guide/findings/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.8/guide/findings/">
       
       
       
@@ -1046,7 +1046,34 @@
   <span class="md-ellipsis">
     
   
-  Finding codes: validators, build and release
+  Finding codes: validators
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../findings-build/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Finding codes: build, release and library load
 
     
   </span>
@@ -1864,7 +1891,8 @@
 <p>"Who acts" is one of four. <code>consumer</code>: change your design as the fix says. <code>part author</code>: the part library's author fixes the part file as the fix says. <code>Fransys</code>: a defect in layout or an output, so send the smallest model that shows it. <code>note</code>: nothing is wrong.</p>
 <p>Every <code>Finding</code> row carries its own <code>fix</code>: <code>&lt;valid values&gt;. Write: &lt;corrected call&gt;</code>, filled with that finding's names and values. A test reads <code>exc.findings</code> (from <code>BuildFailedError</code>) or <code>fr.check(result)</code> and finds the template: <code>&lt;subject&gt;</code> and <code>&lt;other&gt;</code> stand for the finding's first and second subject. <code>fr.report</code> and the <code>BuildFailedError</code> message print them filled with those subjects' names. A code no call clears starts with <code>No call clears this:</code>. The worked example is in <code>build.md</code>, under "write".</p>
 <ul>
-<li><a href="../findings-validators/"><code>findings-validators.md</code></a>: the model checks and the library load.</li>
+<li><a href="../findings-validators/"><code>findings-validators.md</code></a>: the model checks.</li>
+<li><a href="../findings-build/"><code>findings-build.md</code></a>: the build, <code>release</code> and the library load.</li>
 <li><a href="../findings-release/"><code>findings-release.md</code></a>: the build, <code>release</code>, <code>verify</code> and the baseline check.</li>
 <li><a href="../findings-render/"><code>findings-render.md</code></a>: layout and the drawing stage.</li>
 <li><a href="../findings-pdf/"><code>findings-pdf.md</code></a>: the PDF output.</li>
@@ -1906,7 +1934,7 @@
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.22.7 documentation
+      Fransys 0.22.8 documentation
     </div>
   
   

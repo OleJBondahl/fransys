@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.7/api/derive/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.8/api/derive/">
       
       
       
@@ -1032,7 +1032,34 @@
   <span class="md-ellipsis">
     
   
-  Finding codes: validators, build and release
+  Finding codes: validators
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/findings-build/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Finding codes: build, release and library load
 
     
   </span>
@@ -2963,6 +2990,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#drawn_stands" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        drawn_stands
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#draws_as_line" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -3590,6 +3628,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#hidden_pins" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        hidden_pins
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#implied_rest" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -3682,6 +3731,17 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         is_own_unit_root
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#is_pe_conductor" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        is_pe_conductor
       </span>
     </span>
   </a>
@@ -9968,6 +10028,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#drawn_stands" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        drawn_stands
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#draws_as_line" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -10595,6 +10666,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#hidden_pins" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        hidden_pins
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#implied_rest" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -10687,6 +10769,17 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         is_own_unit_root
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#is_pe_conductor" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        is_pe_conductor
       </span>
     </span>
   </a>
@@ -16217,18 +16310,17 @@ and the part lint call it after reading their own inputs.</p>
 A pin is drawn if it or its mate is in <code>wired</code>, or it is on a unit boundary whose function
 has no such pin. <code>wired</code> is the engine's set of ports on kept connections.</p>
 <h3 id="connector_rows">connector_rows</h3>
-<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">connector_rows</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span> <span class="n">board</span><span class="p">:</span> <span class="n">Id</span><span class="p">[</span><span class="n">Item</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">Id</span><span class="p">[</span><span class="n">Unit</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="n">Id</span><span class="p">[</span><span class="n">AspectNode</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ConnectorRow</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">connector_rows</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span> <span class="n">board</span><span class="p">:</span> <span class="n">Id</span><span class="p">[</span><span class="n">Item</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">Id</span><span class="p">[</span><span class="n">Unit</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="n">Id</span><span class="p">[</span><span class="n">AspectNode</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ConnectorRow</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
 </code></pre></div>
-<p>One <code>ConnectorRow</code> per connector of <code>board</code>, with its pins, nets and mate.</p>
+<p>One <code>ConnectorRow</code> per connector of <code>board</code>, or of every board of the scope (<code>boards</code>, <code>unit_boards</code>) with <code>None</code>.</p>
 <p>A connector is a <code>connector</code>-kind <code>Function</code> of <code>board</code> or a descendant whose template carries a
-<code>connector</code> facet. <code>designation</code> is <code>connector_designation</code>: the item's own designation, or
-<code>&lt;item designation&gt;-&lt;label&gt;</code> when the item has two or more connector functions. Rows sort by
-<code>(designation, connector id)</code>. <code>mate</code> is the other end of a <code>Mate</code>; a pin's <code>mate_port</code> is the
-port of equal name on it, and its <code>net</code> the declared net listing its port. <code>pins</code> sort by
+<code>connector</code> facet. <code>designation</code> is <code>connector_designation</code>: the item's own, or
+<code>&lt;item designation&gt;-&lt;label&gt;</code> for an item with two or more connector functions. Rows sort by
+<code>(designation, connector id)</code>. <code>mate</code> is the other end of a <code>Mate</code>, a pin's <code>mate_port</code> the port of
+equal name on it, its <code>net</code> the declared net listing its port. <code>pins</code> sort by
 marking, digits first by value. <code>context</code> (default <code>None</code>, full paths) is the location the list
-prints against. <code>unit</code> is the unit whose document prints it: inside it reads unit-relative, and
-for a nested <code>unit</code> a mate outside its subtree prints <code>None</code>; <code>context</code> is ignored once <code>unit</code>
-has one.</p>
+prints against. <code>unit</code> is the unit whose document prints it: inside it reads unit-relative, a
+mate outside a nested <code>unit</code> prints <code>None</code>, and <code>context</code> is ignored once <code>unit</code> has one.</p>
 <p>Raises:
     SchemaError: <code>board</code> is not an item of <code>model</code>, or an item shown has no designation.</p>
 <h3 id="connector_rows_of">connector_rows_of</h3>
@@ -16516,7 +16608,7 @@ content.</p>
 <h3 id="drawn_groups">drawn_groups</h3>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">drawn_groups</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">Id</span><span class="p">[</span><span class="n">Port</span><span class="p">],</span> <span class="o">...</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span>
 </code></pre></div>
-<p><code>required_groups</code> less each conductor <code>is_bridge</code> calls a bridge: what a drawing must join.</p>
+<p><code>required_groups</code> less each conductor <code>drawn_conductors</code> leaves out: what a drawing must join.</p>
 <p>The drawing's nets leave out bridges; the terminal table carries them.</p>
 <h3 id="drawn_net_of">drawn_net_of</h3>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">drawn_net_of</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span> <span class="n">port</span><span class="p">:</span> <span class="n">Id</span><span class="p">[</span><span class="n">Port</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">PhysicalNet</span> <span class="o">|</span> <span class="kc">None</span>
@@ -16533,6 +16625,11 @@ is this net, not the electrical net <code>net_of</code> returns.</p>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">drawn_physical_nets</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">PhysicalNet</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
 </code></pre></div>
 <p>The nets a drawing joins: <code>physical_nets</code> built from <code>drawn_groups</code>, so a bridge joins nothing.</p>
+<h3 id="drawn_stands">drawn_stands</h3>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">drawn_stands</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">frozendict</span><span class="p">[</span><span class="n">Id</span><span class="p">[</span><span class="n">Port</span><span class="p">],</span> <span class="n">PowerKind</span><span class="p">]</span>
+</code></pre></div>
+<p><code>stands</code> as a drawing sheet draws them: with <code>[export] hide_pe</code> the PE ports are left out.</p>
+<p><code>stands</code> itself stays whole for ratings, rail reach and series-parallel, which are not drawings.</p>
 <h3 id="draws_as_line">draws_as_line</h3>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">draws_as_line</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span> <span class="n">item</span><span class="p">:</span> <span class="n">Id</span><span class="p">[</span><span class="n">Item</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span>
 </code></pre></div>
@@ -16618,8 +16715,8 @@ its set.</p>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">export_set</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">Id</span><span class="p">[</span><span class="n">Unit</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ExportRow</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
 </code></pre></div>
 <p>Every export a write of <code>unit</code> makes (the whole model with <code>unit=None</code>), in write order.</p>
-<p>The reports (and the overview for the whole model), one terminal CSV per strip, one connector
-CSV per board, one WAGO XML per rack, then one PDF per document. Names are unplaced: the
+<p>The reports (and the overview for the whole model), one terminal CSV and one connector CSV for
+all strips and boards, one WAGO XML per rack, then one PDF per document. Names are unplaced: the
 caller puts CSV and XML into <code>data/</code>. Two rows may share a name; the caller refuses that.</p>
 <h3 id="export_set_name">export_set_name</h3>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">export_set_name</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">Id</span><span class="p">[</span><span class="n">Unit</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span>
@@ -16906,6 +17003,10 @@ A wire on no harness, or on two, is left out.</p>
 </code></pre></div>
 <p>True for a location, unit or root (subject-less) document; an item document draws no schematic.</p>
 <p><code>document</code> is the document's id.</p>
+<h3 id="hidden_pins">hidden_pins</h3>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">hidden_pins</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">frozenset</span><span class="p">[</span><span class="n">Id</span><span class="p">[</span><span class="n">Port</span><span class="p">]]</span>
+</code></pre></div>
+<p>The stand ports <code>drawn_stands</code> leaves off whose pin no drawn conductor reaches: a pin the sheets do not show.</p>
 <h3 id="implied_rest">implied_rest</h3>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">implied_rest</span><span class="p">(</span><span class="n">kind</span><span class="p">:</span> <span class="n">FunctionKind</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span>
 </code></pre></div>
@@ -16965,6 +17066,11 @@ as-installed length of a cable and stays that way.</p>
     <code>True</code> if <code>item</code> is the sole root of <code>unit</code>.</p>
 <p>Raises:
     SchemaError: <code>unit</code> is set and <code>item</code> is not an item of <code>model</code>.</p>
+<h3 id="is_pe_conductor">is_pe_conductor</h3>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">is_pe_conductor</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span> <span class="n">conductor</span><span class="p">:</span> <span class="n">Id</span><span class="p">[</span><span class="n">Conductor</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span>
+</code></pre></div>
+<p>Whether an end of <code>conductor</code> is a pin of a rail terminal on the PE net: the PE rail's own wire or link.</p>
+<p>The one home of what the hide-PE option leaves off the drawing sheets.</p>
 <h3 id="is_plc_module">is_plc_module</h3>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">is_plc_module</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span> <span class="n">item</span><span class="p">:</span> <span class="n">Item</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span>
 </code></pre></div>
@@ -18211,7 +18317,8 @@ then not a base code; <code>SHBK</code>, <code>BKSH</code> and <code>SH1</code> 
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">stale_patterns</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
 </code></pre></div>
 <p>The top-level file patterns a write owns and sweeps: every kind of <code>export_set</code>.</p>
-<p>Per-item kinds give <code>&lt;kind&gt;-*.&lt;ext&gt;</code> and the bare <code>&lt;kind&gt;.&lt;ext&gt;</code>; PDFs are <code>*.pdf</code>.</p>
+<p>The lists give <code>&lt;kind&gt;.csv</code>, and <code>&lt;kind&gt;-*.csv</code> still so a release deletes the old per-strip and
+per-board files; the per-rack kind gives <code>&lt;kind&gt;-*.&lt;ext&gt;</code> and the bare name; PDFs are <code>*.pdf</code>.</p>
 <h3 id="standalone">standalone</h3>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">standalone</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">Id</span><span class="p">[</span><span class="n">Unit</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span>
 </code></pre></div>
@@ -18370,16 +18477,16 @@ declared <code>unused=True</code>. Unknown: <code>False</code>.</p>
 </code></pre></div>
 <p>Every item that carries a <code>terminal</code> facet, built once per model digest.</p>
 <h3 id="terminal_rows">terminal_rows</h3>
-<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">terminal_rows</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span> <span class="n">strip</span><span class="p">:</span> <span class="n">Id</span><span class="p">[</span><span class="n">Item</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">Id</span><span class="p">[</span><span class="n">Unit</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="n">Id</span><span class="p">[</span><span class="n">AspectNode</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">TerminalRow</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">terminal_rows</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span> <span class="n">strip</span><span class="p">:</span> <span class="n">Id</span><span class="p">[</span><span class="n">Item</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">Id</span><span class="p">[</span><span class="n">Unit</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="n">Id</span><span class="p">[</span><span class="n">AspectNode</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">TerminalRow</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
 </code></pre></div>
-<p>One <code>TerminalRow</code> per <code>strip</code> terminal, by <code>(natural_key(group), index, id)</code>.</p>
+<p>One <code>TerminalRow</code> per terminal of <code>strip</code>, or of every strip of the scope with <code>strip=None</code>.</p>
+<p>Strips are <code>terminal_strips</code>, or the <code>unit_strips</code> of <code>unit</code>; the terminals of a strip are in
+<code>order.terminals_in_order</code>.</p>
 <p>Args:
     model: The model to read.
-    strip: The terminal strip item whose rows are built.
+    strip: The terminal strip item whose rows are built; <code>None</code> is every strip of the scope.
     unit: The unit whose own document prints the list, keyword-only; <code>None</code> for none.
     context: The location node the list prints for, keyword-only; ignored once <code>unit</code> has one.</p>
-<p>Returns:
-    One <code>TerminalRow</code> per terminal child of <code>strip</code>, sorted.</p>
 <p>Raises:
     SchemaError: <code>strip</code> is not an item of <code>model</code>, or a far end's item has no designation.</p>
 <h3 id="terminal_strips">terminal_strips</h3>
@@ -19786,7 +19893,7 @@ for any other box.</p>
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.22.7 documentation
+      Fransys 0.22.8 documentation
     </div>
   
   

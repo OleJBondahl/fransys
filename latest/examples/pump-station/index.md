@@ -272,21 +272,9 @@ their published datasheets.
 | -U1-DO1:DO3 | 3 | do |  |  |
 | -U1-DO1:DO4 | 4 | do |  |  |
 
-### EX-1-v1.6-terminals-EXT-X0.csv
+### EX-1-v1.6-terminals.csv
 
-[Download the CSV](files/all/data/EX-1-v1.6-terminals-EXT-X0.csv)
-
-| designation | group | index | side_a | side_b | jumper_group |
-| --- | --- | --- | --- | --- | --- |
-| -X0:L1:1 | L1 | 1 |  | -U1-X1:L1:1 |  |
-| -X0:L2:1 | L2 | 1 |  | -U1-X1:L2:1 |  |
-| -X0:L3:1 | L3 | 1 |  | -U1-X1:L3:1 |  |
-| -X0:N:1 | N | 1 |  | -U1-X1:N:1 |  |
-| -X0:PE:1 | PE | 1 |  | -U1-X1:PE:1 |  |
-
-### EX-1-v1.6-terminals-U1-X1.csv
-
-[Download the CSV](files/all/data/EX-1-v1.6-terminals-U1-X1.csv)
+[Download the CSV](files/all/data/EX-1-v1.6-terminals.csv)
 
 | designation | group | index | side_a | side_b | jumper_group |
 | --- | --- | --- | --- | --- | --- |
@@ -295,13 +283,6 @@ their published datasheets.
 | -U1-X1:L3:1 | L3 | 1 | -U1-Q1:5L3 | +EXT-X0:L3:1 |  |
 | -U1-X1:N:1 | N | 1 | -U1-F1:3 N | +EXT-X0:N:1 |  |
 | -U1-X1:PE:1 | PE | 1 |  | +EXT-X0:PE:1 |  |
-
-### EX-1-v1.6-terminals-U1-X2.csv
-
-[Download the CSV](files/all/data/EX-1-v1.6-terminals-U1-X2.csv)
-
-| designation | group | index | side_a | side_b | jumper_group |
-| --- | --- | --- | --- | --- | --- |
 | -U1-X2:24V:1 | 24V | 1 | -U1-T1:+; -U1-X2:24V:2 |  | 1 |
 | -U1-X2:24V:2 | 24V | 2 | -U1-C1:24 V; -U1-X2:24V:1; -U1-X2:24V:3 |  | 1 |
 | -U1-X2:24V:3 | 24V | 3 | -U1-C1:+; -U1-X2:24V:2; -U1-X2:24V:4 |  | 1 |
@@ -320,13 +301,6 @@ their published datasheets.
 | -U1-X2:GND:5 | GND | 5 | -U1-P1:X2; -U1-X2:GND:4; -U1-X2:GND:6 |  | 2 |
 | -U1-X2:GND:6 | GND | 6 | -U1-Q21:A2; -U1-X2:GND:5; -U1-X2:GND:7 |  | 2 |
 | -U1-X2:GND:7 | GND | 7 | -U1-P2:X2; -U1-X2:GND:6 |  | 2 |
-
-### EX-1-v1.6-terminals-U1-X3.csv
-
-[Download the CSV](files/all/data/EX-1-v1.6-terminals-U1-X3.csv)
-
-| designation | group | index | side_a | side_b | jumper_group |
-| --- | --- | --- | --- | --- | --- |
 | -U1-X3:PE:1 | PE | 1 |  | +EXT-M1:PE |  |
 | -U1-X3:PE:2 | PE | 2 |  | +EXT-M2:PE |  |
 | -U1-X3:U:1 | U | 1 | -U1-B12:2/T1 | +EXT-M1:U1 |  |
@@ -335,13 +309,6 @@ their published datasheets.
 | -U1-X3:V:2 | V | 2 | -U1-B22:4/T2 | +EXT-M2:V1 |  |
 | -U1-X3:W:1 | W | 1 | -U1-B12:6/T3 | +EXT-M1:W1 |  |
 | -U1-X3:W:2 | W | 2 | -U1-B22:6/T3 | +EXT-M2:W1 |  |
-
-### EX-1-v1.6-terminals-U1-X4.csv
-
-[Download the CSV](files/all/data/EX-1-v1.6-terminals-U1-X4.csv)
-
-| designation | group | index | side_a | side_b | jumper_group |
-| --- | --- | --- | --- | --- | --- |
 | -U1-X4:L1:1 | L1 | 1 | -U1-Q1:2T1; -U1-X4:L1:2 |  | 1 |
 | -U1-X4:L1:2 | L1 | 2 | -U1-F1:1; -U1-X4:L1:1; -U1-X4:L1:3 |  | 1 |
 | -U1-X4:L1:3 | L1 | 3 | -U1-F11:1; -U1-X4:L1:2; -U1-X4:L1:4 |  | 1 |
@@ -354,6 +321,11 @@ their published datasheets.
 | -U1-X4:L3:2 | L3 | 2 | -U1-X4:L3:1; -U1-X4:L3:3 |  | 3 |
 | -U1-X4:L3:3 | L3 | 3 | -U1-F11:5; -U1-X4:L3:2; -U1-X4:L3:4 |  | 3 |
 | -U1-X4:L3:4 | L3 | 4 | -U1-F21:5; -U1-X4:L3:3 |  | 3 |
+| -X0:L1:1 | L1 | 1 |  | -U1-X1:L1:1 |  |
+| -X0:L2:1 | L2 | 1 |  | -U1-X1:L2:1 |  |
+| -X0:L3:1 | L3 | 1 |  | -U1-X1:L3:1 |  |
+| -X0:N:1 | N | 1 |  | -U1-X1:N:1 |  |
+| -X0:PE:1 | PE | 1 |  | -U1-X1:PE:1 |  |
 
 ### EX-1-v1.6-wires.csv
 
@@ -550,9 +522,9 @@ their published datasheets.
 | -DO1:DO3 | 3 | do |  |  |
 | -DO1:DO4 | 4 | do |  |  |
 
-### pump-cabinet-v1.11-terminals-X1.csv
+### pump-cabinet-v1.11-terminals.csv
 
-[Download the CSV](files/cabinet/data/pump-cabinet-v1.11-terminals-X1.csv)
+[Download the CSV](files/cabinet/data/pump-cabinet-v1.11-terminals.csv)
 
 | designation | group | index | side_a | side_b | jumper_group |
 | --- | --- | --- | --- | --- | --- |
@@ -561,13 +533,6 @@ their published datasheets.
 | -X1:L3:1 | L3 | 1 | -Q1:5L3 | +EXT-X0:L3:1 |  |
 | -X1:N:1 | N | 1 | -F1:3 N | +EXT-X0:N:1 |  |
 | -X1:PE:1 | PE | 1 |  | +EXT-X0:PE:1 |  |
-
-### pump-cabinet-v1.11-terminals-X2.csv
-
-[Download the CSV](files/cabinet/data/pump-cabinet-v1.11-terminals-X2.csv)
-
-| designation | group | index | side_a | side_b | jumper_group |
-| --- | --- | --- | --- | --- | --- |
 | -X2:24V:1 | 24V | 1 | -T1:+; -X2:24V:2 |  | 1 |
 | -X2:24V:2 | 24V | 2 | -C1:24 V; -X2:24V:1; -X2:24V:3 |  | 1 |
 | -X2:24V:3 | 24V | 3 | -C1:+; -X2:24V:2; -X2:24V:4 |  | 1 |
@@ -586,13 +551,6 @@ their published datasheets.
 | -X2:GND:5 | GND | 5 | -P1:X2; -X2:GND:4; -X2:GND:6 |  | 2 |
 | -X2:GND:6 | GND | 6 | -Q21:A2; -X2:GND:5; -X2:GND:7 |  | 2 |
 | -X2:GND:7 | GND | 7 | -P2:X2; -X2:GND:6 |  | 2 |
-
-### pump-cabinet-v1.11-terminals-X3.csv
-
-[Download the CSV](files/cabinet/data/pump-cabinet-v1.11-terminals-X3.csv)
-
-| designation | group | index | side_a | side_b | jumper_group |
-| --- | --- | --- | --- | --- | --- |
 | -X3:PE:1 | PE | 1 |  | +EXT-M1:PE |  |
 | -X3:PE:2 | PE | 2 |  | +EXT-M2:PE |  |
 | -X3:U:1 | U | 1 | -B12:2/T1 | +EXT-M1:U1 |  |
@@ -601,13 +559,6 @@ their published datasheets.
 | -X3:V:2 | V | 2 | -B22:4/T2 | +EXT-M2:V1 |  |
 | -X3:W:1 | W | 1 | -B12:6/T3 | +EXT-M1:W1 |  |
 | -X3:W:2 | W | 2 | -B22:6/T3 | +EXT-M2:W1 |  |
-
-### pump-cabinet-v1.11-terminals-X4.csv
-
-[Download the CSV](files/cabinet/data/pump-cabinet-v1.11-terminals-X4.csv)
-
-| designation | group | index | side_a | side_b | jumper_group |
-| --- | --- | --- | --- | --- | --- |
 | -X4:L1:1 | L1 | 1 | -Q1:2T1; -X4:L1:2 |  | 1 |
 | -X4:L1:2 | L1 | 2 | -F1:1; -X4:L1:1; -X4:L1:3 |  | 1 |
 | -X4:L1:3 | L1 | 3 | -F11:1; -X4:L1:2; -X4:L1:4 |  | 1 |

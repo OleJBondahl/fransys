@@ -182,6 +182,11 @@ class Block:
         return self.kind == "card"
 
 
+def block_id(kind: str, name: str) -> str:
+    """The id of a block of `kind` named by its anchor or first column: the one place that makes it, never read back."""
+    return f"{kind}:{name}"
+
+
 @dataclass(frozen=True, slots=True)
 class BlockList:
     """The blocks of one unit, with the findings raised while building them."""

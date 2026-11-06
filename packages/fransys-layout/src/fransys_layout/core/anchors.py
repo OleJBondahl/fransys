@@ -13,7 +13,7 @@ from types import MappingProxyType
 from typing import TYPE_CHECKING
 
 from .clearance import Keep, clear
-from .geometry import marker_drawn_box, overlaps, shift, union
+from .geometry import around, inset, marker_drawn_box, overlaps, shift, union
 from .hang_levels import raised
 from .hangings import hung_keeps
 from .outline import outline_keeps
@@ -29,7 +29,7 @@ if TYPE_CHECKING:
     from .sym_values import Sym, Turned
     from .values import Anchor, Options, Orientation, PlacementProblem, Pose
 
-__all__ = ("anchor_misses", "anchor_pages", "reserved")
+__all__ = ("anchor_keeps", "anchor_misses", "anchor_pages", "reserved")
 
 
 def _frame(problem: PlacementProblem, options: Options) -> Box:
@@ -189,31 +189,38 @@ def folded(
     return _anchored(out, anchors)
 
 
-def _sym_reserved(sym: Sym, anchors: Sequence[Anchor]) -> Sym:
+def _sym_reserved(sym: Sym, anchors: Sequence[Anchor], margin: int) -> Sym:
     views = dict(sym.views)
     for anchor in anchors:
         index = _index(sym, anchor.pin.pin)
         for orient, view in views.items():
             turn = view.pins[index]
             if poses := _poses(anchor, turn.side):
-                views[orient] = _joined(view, (turn.dx, turn.dy), poses[0].outline)
+                views[orient] = _joined(view, (turn.dx, turn.dy), around(poses[0].outline, margin))
     return replace(sym, views=views)
 
 
-def reserved(problem: PlacementProblem, missed: AbstractSet[tuple[str, str]] = frozenset()) -> PlacementProblem:
-    """The problem whose owners' views also hold their anchored outlines.
-
-    A card holds only those of `missed` (owner, pin) pairs: the wires of its other pins enter
-    through its footprint, so `solve` asks for them where the first pass left an outline astray.
-    """
-    if not problem.anchors:
-        return problem
+def _owned(problem: PlacementProblem, missed: AbstractSet[tuple[str, str]]) -> dict[str, list[Anchor]]:
+    """The anchors an owner holds: all of a non-card's, a card's only of `missed`."""
     cards = {s.id for s in problem.symbols if s.box is not None}
     by_sym: dict[str, list[Anchor]] = {}
     for a in problem.anchors:
         if a.pin.sym not in cards or (a.pin.sym, a.pin.pin) in missed:
             by_sym.setdefault(a.pin.sym, []).append(a)
-    syms = tuple(_sym_reserved(s, by_sym[s.id]) if s.id in by_sym else s for s in problem.symbols)
+    return by_sym
+
+
+def reserved(problem: PlacementProblem, options: Options, missed: AbstractSet[tuple[str, str]] = frozenset()) -> PlacementProblem:
+    """The problem whose owners' views also hold their anchored outlines.
+
+    A card holds only those of `missed` (owner, pin) pairs; a frame member's outline joins with the frame margin (KI-691).
+    """
+    if not problem.anchors:
+        return problem
+    by_sym = _owned(problem, missed)
+    members = frozenset().union(*(m for _, m in problem.hints.frames))
+    margin = 0 if options.outline is None else options.outline.margin
+    syms = tuple(_sym_reserved(s, by_sym[s.id], margin if s.id in members else 0) if s.id in by_sym else s for s in problem.symbols)
     return replace(problem, symbols=syms)
 
 
@@ -229,9 +236,8 @@ def anchor_pages(
     placement: Placement,
     problem: PlacementProblem,
     options: Options,
-    markers: Sequence[Marker] = (),
 ) -> tuple[tuple[Anchored, ...], tuple[Finding, ...]]:
-    """Each anchor posed at its owner's pin on the owner's page, clear of what stands there.
+    """Each anchor posed at its owner's pin, clear of bodies, lines and earlier anchors; the markers stand after and clear it (R1786).
 
     An anchor that fits no pose is posed at its first and named by a PLACEMENT_PROBLEM finding.
     """
@@ -245,12 +251,19 @@ def anchor_pages(
         sym = syms[a.pin.sym]
         if poses := _poses(a, sym.views[at.orient].pins[_index(sym, a.pin.pin)].side):
             lines = outline_keeps(placement.outlines, options.outline, page.page)
-            taken = [*_marker_keeps(page.page, markers, options), *_anchor_keeps(page.page, out, {}), *lines]
+            taken = [*_anchor_keeps(page.page, out, {}), *lines]
             pose = _fit(poses, pins[a.pin], page, taken, _frame(problem, options))
             if pose is None:
                 found.append(_unfit(a, page.page))
             out.append(_posed(a, page, at, pose or poses[0]))
     return tuple(out), tuple(found)
+
+
+def anchor_keeps(placement: Placement, problem: PlacementProblem, options: Options) -> dict[int, list[Keep]]:
+    """Each page's anchor outlines as keeps for the markers to clear (R1786); inset by one so that touching is clear, as in `_meets`."""
+    net_of = {ref: n.id for n in problem.nets for ref in n.pins}
+    anchored, _ = anchor_pages(placement, problem, options)
+    return {pg.page: [k._replace(box=inset(k.box)) for k in _anchor_keeps(pg.page, anchored, net_of)] for pg in placement.pages}
 
 
 def _on_trunk(page: PagePlacement, at: tuple[int, int], step: int) -> bool:

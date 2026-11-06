@@ -206,7 +206,7 @@ it draws the IEC 60204-1 default: AC phases `BK`, `AC_N` `BU`, `AC_CONTROL` `RD`
 - a table, `wire={fr.DC_CONTROL: (WH, 0.75)}`: replaces only those rows for this series.
 - a spec, `wire=(BU, 0.75)`: every wire gets that colour and size, and the rows are ignored.
 
-A wire whose row has no size and no size on the series is `WIRE_ROW_UNRESOLVED`.
+A wire whose row has no size and no size on the series is `WIRE_ROW_UNRESOLVED`. A size alone, `wire=0.75`, leaves the colour to the row and gives the same error when no row resolves; write `wire=(BU, 0.75)`.
 
 A series that starts on one rail (`dc.plus`, `ac.L1`) is a control path. A wire at the rail's
 potential takes the rail's row. A fuse or a contact ends that potential: the wires after it take

@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING
 from .annex_values import AnnexBox
 from .clearance import Keep
 from .errors import CoreError
-from .geometry import inside, overlaps
+from .geometry import around, inside, overlaps
 from .values import Box, Finding
 
 if TYPE_CHECKING:
@@ -81,11 +81,6 @@ def _through(wires: Sequence[Wire], box: Box) -> bool:
     return False
 
 
-def _around(box: Box, gap: int) -> Box:
-    """The box with `gap` more on every side: a wire inside it that does not touch the box is near it (R1118)."""
-    return Box(box.x - gap, box.y - gap, box.w + 2 * gap, box.h + 2 * gap)
-
-
 def free(box: Box, solids: Sequence[Box], wires: Sequence[Wire], area: Size | None) -> bool:
     """Whether a label stands at `box`: inside the content box and sharing no interior with a solid or a wire (TEXT-CANDIDATES)."""
     return (area is None or inside(box, area)) and not any(overlaps(box, s) for s in solids) and not _through(wires, box)
@@ -98,7 +93,7 @@ def _first(spots: Cands, ink: tuple[Sequence[Box], Sequence[Wire]], on: tuple[Si
     """The first free candidate, one with a wire within the gap taken last (R1118); None when every one is blocked."""
     (solids, wires), (area, gap) = ink, on
     clear = [s for s in spots if free(s[1], solids, wires, area)]
-    return next((s for s in clear if not _through(wires, _around(s[1], gap))), clear[0] if clear else None)
+    return next((s for s in clear if not _through(wires, around(s[1], gap))), clear[0] if clear else None)
 
 
 def _move_out(

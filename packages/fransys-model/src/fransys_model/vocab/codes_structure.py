@@ -274,7 +274,7 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         stage="validators",
         who="consumer",
         cause="A boundary point or a port named in d.unused is wired.",
-        fix="Remove the point or port from d.unused, or the wire on it. Write: d.unused(pc.x3[4], h1.minus) with only unwired points",
+        fix="Drop the pin from d.unused, or its wire; list an interface pin in the carrier, not the unit. Write: d.unused(pc.x3[4])",
         page="findings-validators",
     ),
     CodeInfo(

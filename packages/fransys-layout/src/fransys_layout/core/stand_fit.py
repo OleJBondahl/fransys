@@ -64,7 +64,8 @@ def _inside(k: Keep, end: tuple[int, int], grid: int) -> bool:
 
 def may_cross(run: Box, end: tuple[int, int], keeps: Sequence[Keep], own: Collection[str], grid: int) -> bool:
     """True when the run may be drawn to `end` (R1023): it meets only foreign wires across it, and `end` stands a cell clear of every foreign wire."""
-    foreign = [k for k in keeps if k.owner not in own]
+    # owner 2026-10-29: a marker is never crossed, even by its own fan (R1790)
+    foreign = [k for k in keeps if k.owner not in own or k.kind == "marker"]
     if any(not _across(k, run) for k in clear(run, foreign, {})):
         return False
     return not any(_inside(k, end, grid) for k in foreign)

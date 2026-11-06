@@ -1,0 +1,22 @@
+schema = 2
+
+[part]
+mpn = "REPRO-USB"
+manufacturer = "Demo"
+description = "USB panel-mount receptacle, 4-pin"
+category = "connector"
+class_code = "X"
+
+[[function]]
+name = "f5"
+kind = "connector"
+ports = [
+    { name = "GND", role = "generic", side = "line" },
+    { name = "p3", role = "generic", side = "line" },
+    { name = "p2", role = "generic", side = "line" },
+    { name = "p1", role = "generic", side = "line" },
+]
+
+[function.rating]
+voltage = [{ nom = "5 V", at = ["DC"] }]
+current = [{ nom = "1.5 A", at = ["DC"] }]

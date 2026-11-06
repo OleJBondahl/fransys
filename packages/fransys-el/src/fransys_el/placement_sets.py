@@ -212,24 +212,24 @@ def _joined(net: Net, own: int, scopes: Sequence[DrawingScope]) -> bool | None:
 def _net(
     net: Net,
     symbols: Collection[str],
-    boundary: Collection[PinRef],
-    bare: Collection[PinRef],
-    outward: Collection[PinRef],
+    carry: tuple[Collection[PinRef], Collection[PinRef], Collection[PinRef]],
+    ends: Collection[tuple[PinRef, PinRef]],
 ) -> Net | None:
     """`net` with the pins inside `symbols`, `None` when none is inside or a cut one has no carrier.
 
     A net the scope cuts keeps its in-set pins and names in `cut` the one that continues outside.
+    `carry` is the `_carriers` boundary, bare and outward pins; `ends` the far ends, to find a conductor between in-set pins.
     """
     pins = tuple(p for p in net.pins if p.sym in symbols)
     if not pins:
         return None
     if len(pins) == len(net.pins):
         return net
-    cut = _carriers(pins, boundary, bare, outward)
+    cut = _carriers(pins, *carry)
     if not cut:
         return None
-    if len({p.sym for p in pins}) == 1:
-        pins = cut  # one symbol's pins need no wire between them: only the stub is drawn
+    if len({p.sym for p in pins}) == 1 and not any(a in pins and b in pins for a, b in ends):
+        pins = cut  # one symbol's pins joined by no conductor need no wire between them: only the stub is drawn
     return replace(net, pins=pins, cut=tuple(CutEnd(p) for p in cut))
 
 
@@ -333,7 +333,7 @@ def _scoped(
     own = scopes.index(scope) if scope in scopes else -1
     joined = {n.id for n in problem.nets if _joined(n, own, scopes)}
     ended = {*bare, *(a.pin for a in problem.anchors)}  # an anchored pin ends its net: no conductor leaves it
-    cut = [(n, _net(n, scope.symbols, boundary, ended, outward)) for n in problem.nets if n.id not in joined]
+    cut = [(n, _net(n, scope.symbols, (boundary, ended, outward), problem.facts.far_ends)) for n in problem.nets if n.id not in joined]
     nets = tuple(_lined(n, lines or {}) for _, n in cut if n is not None) + tuple(_whole(n, scope, boundary) for n in problem.nets if n.id in joined)
     dropped = frozenset(o.id for o, n in cut if n is None and any(p.sym in scope.symbols for p in o.pins))
     return nets, dropped

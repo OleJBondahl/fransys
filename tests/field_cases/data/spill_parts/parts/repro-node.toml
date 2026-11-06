@@ -1,0 +1,41 @@
+schema = 2
+
+[part]
+mpn = "REPRO-NODE"
+manufacturer = "Demo"
+description = "Remote I/O node for a fieldbus rack, 24 V DC supply, bus connector"
+category = "plc_module"
+class_code = "K"
+
+[[function]]
+name = "f126"
+kind = "load"
+ports = [
+    { name = "p94", role = "generic", side = "load" },
+    { name = "p93", role = "generic", side = "line" },
+]
+
+[function.rating]
+
+[[function.rating.voltage]]
+nom = "31.2 V"
+at = ["DC"]
+
+[function.operating]
+
+[[function.operating.voltage]]
+nom = "24 V"
+min = "18 V"
+max = "31.2 V"
+
+[[function]]
+name = "f130"
+kind = "connector"
+ports = [
+    { name = "p118", role = "generic", side = "line" },
+]
+
+[function.connector]
+style = "D-Sub 9"
+pincount = 9
+gender = "male"

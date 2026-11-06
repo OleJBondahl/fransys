@@ -1,0 +1,36 @@
+schema = 2
+
+[part]
+mpn = "REPRO-DCS"
+manufacturer = "Demo"
+description = "DIN-rail power supply, 24 V DC output, 5 A"
+category = "generic"
+class_code = "T"
+
+[[function]]
+name = "f144"
+kind = "supply"
+ports = [
+    { name = "p136", role = "generic", side = "line" },
+    { name = "p134", role = "generic", side = "load" },
+]
+
+[function.rating]
+
+[[function.rating.voltage]]
+nom = "28 V"
+at = ["DC"]
+
+[[function.rating.current]]
+nom = "5 A"
+at = ["DC"]
+
+[function.operating]
+
+[[function.operating.voltage]]
+nom = "24 V"
+max = "28 V"
+
+[[function.operating.max_current]]
+max = "5 A"
+at = ["DC"]

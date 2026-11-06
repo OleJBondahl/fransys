@@ -12,6 +12,7 @@ from __future__ import annotations
 from dataclasses import replace
 from typing import TYPE_CHECKING
 
+from .anchors import anchor_keeps
 from .annex import text_keeps
 from .clearance import clear, own_end
 from .errors import CoreError
@@ -119,7 +120,8 @@ def _slot(m: Marker, st: Stand, step: int, ctx: tuple[Options, Size, Mapping[int
     fed, moved = _fed(m, st, keeps), False  # the wire that feeds a marker belongs to its stand, not to a slot
     bounds = Limits(area, st.band)
     if st.walked:  # walked clear of every keep at placement, the one fit test (R1331, R1338); no stand: no room (layout-0507)
-        return m if st.stood and inside(marker_box(m, options), area) else None
+        anchors = [k for k in here if k.kind == "anchor"]  # anchors stand after the placement that walked this stand (ANCHOR-FIRST)
+        return m if st.stood and inside(marker_box(m, options), area) and fit(marker_box(m, options), anchors, owner, None) == () else None
     while (hit := fit(box := marker_box(m, options), here if moved else stand, owner, bounds, (m.x, m.y))) is not None:
         if not hit and not (m.kind == "stub" and clear(inset(box), [k for k in (here if moved else stand) if k.kind == "wire"], {}, own=mine)):
             return m
@@ -151,8 +153,8 @@ def stagger(
     return [_slot(_moved(m, st, 0 if _fed(m, st, keeps) else lv, step), st, step, ctx) for (m, st), (lv, step) in zip(pairs, got, strict=True)]
 
 
-def _all_keeps(env: MarkEnv, placement: Placement, options: Options, fixed: Mapping[int, Fixed]) -> dict[int, list[Keep]]:
-    """Every page's keeps a marker clears: pins, fixed wires, the labels that stand, and unit frames."""
+def _all_keeps(env: MarkEnv, placement: Placement, problem: PlacementProblem, options: Options, fixed: Mapping[int, Fixed]) -> dict[int, list[Keep]]:
+    """Every page's keeps a marker clears: pins, fixed wires, the labels that stand, unit frames and anchor outlines."""
     keeps = pin_keeps(env)
     for page, more in wire_keeps(fixed).items():
         keeps.setdefault(page, []).extend(more)
@@ -162,6 +164,8 @@ def _all_keeps(env: MarkEnv, placement: Placement, options: Options, fixed: Mapp
         keeps.setdefault(pg.page, []).extend(hung_keeps(pg.hangings))
     for page in {o.page for o in placement.outlines}:
         keeps.setdefault(page, []).extend(outline_keeps(placement.outlines, options.outline, page))
+    for page, more in anchor_keeps(placement, problem, options).items():
+        keeps.setdefault(page, []).extend(more)
     return keeps
 
 
@@ -174,7 +178,7 @@ def placed_marks(
     MARKER_UNPLACED: an arrow by `Trunk.stood` (R1488), a tag or star here (R1566).
     """
     env = mark_env(cut, placement, problem, options)
-    keeps = _all_keeps(env, placement, options, fixed)
+    keeps = _all_keeps(env, placement, problem, options, fixed)
     env = replace(env, keeps=keeps)
     per_ref = [stand_ref(env, ref) for ref in cut.spec.reference_plan]
     own = {r.net: bundle_nets(env, r.net) for r in cut.spec.reference_plan}

@@ -1,0 +1,26 @@
+schema = 2
+
+[part]
+mpn = "REPRO-TB"
+manufacturer = "Demo"
+description = "Feed-through screw terminal block, 2.5 mm2"
+category = "terminal"
+class_code = "X"
+
+[[function]]
+name = "terminal"
+kind = "terminal"
+symbol = "terminal"
+ports = [
+    { name = "internal", role = "internal", symbol_port = "n" },
+    { name = "external", role = "external", symbol_port = "s" },
+]
+
+[[function.links]]
+a = "internal"
+b = "external"
+kind = "conductive"
+
+[function.rating]
+voltage = [{ nom = "800 V", at = ["AC"] }]
+current = [{ nom = "24 A", at = ["AC"] }]

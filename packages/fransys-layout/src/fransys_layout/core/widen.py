@@ -232,7 +232,7 @@ def routed(
     standing: Standing,
 ) -> Routes:
     """Stage 6 once per page, each with that page's marker and anchor keeps as obstacles."""
-    anchored, found = anchor_pages(placement, problem, options, standing.markers)
+    anchored, found = anchor_pages(placement, problem, options)
     parts = []
     for page in placement.pages:
         keeps = page_keeps(page, standing.markers, anchored, problem, options)

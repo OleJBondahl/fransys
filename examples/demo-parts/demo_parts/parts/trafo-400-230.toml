@@ -1,0 +1,37 @@
+schema = 2
+
+[part]
+mpn = "DEMO-TRAFO-400-230"
+manufacturer = "Demo"
+description = "Single-phase isolating transformer, 400 V / 230 V, 400 VA"
+category = "generic"
+class_code = "T"
+
+[[function]]
+name = "primary"
+kind = "load"
+ports = [
+    { name = "1U", role = "generic", side = "line" },
+    { name = "1V", role = "generic", side = "line" },
+]
+
+[function.rating]
+voltage = [{ nom = "440 V", at = ["AC"] }]
+
+[function.operating]
+voltage = [{ max = "440 V" }]
+
+[[function]]
+name = "secondary"
+kind = "supply"
+ports = [
+    { name = "2U", role = "generic", side = "load" },
+    { name = "2V", role = "generic", side = "load" },
+]
+
+[function.rating]
+voltage = [{ nom = "230 V", at = ["AC"] }]
+current = [{ nom = "1.7 A", at = ["AC"] }]
+
+[function.operating]
+voltage = [{ nom = "230 V", max = "230 V" }]

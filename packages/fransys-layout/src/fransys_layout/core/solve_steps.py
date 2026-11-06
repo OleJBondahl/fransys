@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 
 def annotate(placement: Placement, markers: tuple[Marker, ...], problem: PlacementProblem, options: Options) -> Annotations:
     """The frames, the markers and the anchors; the annexes are the router's, placed before its A* round (TEXT-CANDIDATES)."""
-    anchored, _ = anchor_pages(placement, problem, options, markers)
+    anchored, _ = anchor_pages(placement, problem, options)
     return Annotations(markers=markers, anchored=anchored, outlines=placement.outlines)
 
 

@@ -32,13 +32,13 @@ def solve(problem: PlacementProblem, options: Options) -> CoreLayout:
     left it missing, and a layout is kept only if fewer hangings miss.
     """
     problem = framed(problem, options)
-    best, held = _solve(reserved(problem), options), frozenset[tuple[str, str]]()
+    best, held = _solve(reserved(problem, options), options), frozenset[tuple[str, str]]()
     for _ in range(options.solve_rounds):
         gone = anchor_misses(best.placement, best.annotations.anchored, problem, options, best.annotations.markers)
         if not gone:
             break
         held |= {(a.sym, a.pin) for a, _ in gone}
-        again = _solve(reserved(problem, held), options)
+        again = _solve(reserved(problem, options, held), options)
         after = anchor_misses(again.placement, again.annotations.anchored, problem, options, again.annotations.markers)
         if len(after) >= len(gone):
             break
@@ -51,7 +51,7 @@ def _solve(problem: PlacementProblem, options: Options) -> CoreLayout:
 
     `widen` cuts, places, marks and routes again once. Findings run in stage order.
     """
-    problem = reserved(problem)
+    problem = reserved(problem, options)
     flow = build_flow(problem, options)
     lists = order_blocks(assign_blocks(flow, problem, options), flow, options)
     cut = cut_pages(lists, flow, problem, options)

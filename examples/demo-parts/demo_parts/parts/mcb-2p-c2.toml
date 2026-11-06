@@ -1,0 +1,26 @@
+schema = 2
+
+[part]
+mpn = "DEMO-MCB-2P-C2"
+manufacturer = "Demo"
+description = "Miniature circuit breaker, 2 pole, 2 A, C curve"
+category = "protection"
+class_code = "F"
+
+[[function]]
+name = "main"
+kind = "protection"
+ports = [
+    { name = "1", role = "generic", side = "line" },
+    { name = "2", role = "generic", side = "load" },
+    { name = "3", role = "generic", side = "line" },
+    { name = "4", role = "generic", side = "load" },
+]
+links = [{ a = "1", b = "2", kind = "protective" }, { a = "3", b = "4", kind = "protective" }]
+
+[function.block]
+type = "mcb"
+
+[function.rating]
+voltage = [{ nom = "440 V", at = ["AC"] }]
+current = [{ nom = "2 A", at = ["AC"] }]

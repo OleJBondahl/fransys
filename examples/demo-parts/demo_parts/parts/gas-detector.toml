@@ -1,0 +1,33 @@
+schema = 2
+
+[part]
+mpn = "DEMO-GAS-DETECTOR"
+manufacturer = "Demo"
+description = "Gas detector, 24 V DC supply on pins 1 and 2, signal pins 3 to 9"
+category = "generic"
+class_code = "B"
+
+[[function]]
+name = "supply"
+kind = "load"
+ports = [
+    { name = "1", role = "generic", side = "line" },
+    { name = "2", role = "generic", side = "load" },
+]
+
+[function.operating]
+voltage = [{ nom = "24 V", at = ["DC"] }]
+nominal_current = "0.1 A"
+
+[[function]]
+name = "signal"
+kind = "sensor"
+ports = [
+    { name = "3", role = "generic" },
+    { name = "4", role = "generic" },
+    { name = "5", role = "generic" },
+    { name = "6", role = "generic" },
+    { name = "7", role = "generic" },
+    { name = "8", role = "generic" },
+    { name = "9", role = "generic" },
+]

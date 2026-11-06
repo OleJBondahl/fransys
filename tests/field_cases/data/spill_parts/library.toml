@@ -1,0 +1,4 @@
+schema = 2
+name = "spill-parts"
+version = "0.1.0"
+description = "Invented parts for the 0.22.4 field-case intake."

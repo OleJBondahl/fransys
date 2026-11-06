@@ -69,7 +69,7 @@ Each row is a name that 0.22 removed. A removed attribute raises an error that n
 
 ## New in 0.22.1
 
-- `python -m fransys migrate-parts DIR` rewrites a schema 1 parts library to the 0.22 format (decision 0474).
+- `python -m fransys migrate-parts DIR` rewrites a schema 1 parts library to the 0.22 format (decision 0474). `DIR` is the library's folder (the one holding `library.toml` and `parts/`) or a folder above it, never `parts/`.
 - A removed 0.22 name raises an error that names the new spelling and the row above, from one table that is deleted at the 0.23 tag (decision 0475).
 
 ## New in 0.22.3

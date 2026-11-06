@@ -8,6 +8,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, NamedTuple
 
 from .band import arrow_box
+from .flow_values import block_id
 from .geometry import stub_views
 from .ref_kind import kind_of
 from .values import RefKind, StandClass
@@ -35,14 +36,15 @@ def pole_of(fan: Fan, pin: PinRef | None) -> int:
 
 
 def laned_stub(fan: Fan) -> bool:
-    """True for a bundle whose attachments stand in columns: its cross-document stub is a cut end on its lanes, not at a boundary pin."""
-    return fan.lanes > 1 and any(a.column is not None for a in (*fan.drivers, *fan.legs))
+    """True for a bundle of lanes: its cross-document stub is a cut end on its lanes, not at a boundary pin."""
+    return fan.lanes > 1
 
 
 def _first_row(fan: Fan, plan: PagePlan) -> int | None:
-    """The first row of the page that holds a column the fan attaches to: where its cross-document stub stands (CL2b)."""
+    """The first row of the page that holds a column or card the fan attaches to: where its cross-document stub stands (CL2b)."""
     cols = {a.column for a in (*fan.drivers, *fan.legs)}
-    return next((k for k, row in enumerate(plan.rows) if cols.intersection(row.columns)), None)
+    cards = {block_id("card", a.pin.sym) for a in (*fan.drivers, *fan.legs) if a.column is None}
+    return next((k for k, row in enumerate(plan.rows) if cols.intersection(row.columns) or cards.intersection(row.blocks)), None)
 
 
 def _arrow_ends(ref: Ref, fan: Fan, page: int, row: int) -> list[CutEnd]:

@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING
 
 from .cut_costs import with_wires
 from .cut_dp import wide_room
-from .flow_values import Attach, Block, Column, End, Lane
+from .flow_values import Attach, Block, Column, End, Lane, block_id
 from .geometry import lane_extent, marker_drawn_box_at, stack_lane
 from .row_extent import grid_up
 from .topology import build_column
@@ -323,7 +323,7 @@ def _rewrite_block(b: Block, folds: Mapping[str, Fold], env: Tall) -> tuple[Bloc
     cols = tuple(i for c in b.columns for i in ((p.id for p in folds[c].pieces) if c in folds else (c,)) if i not in gone)
     spilled = [
         Block(
-            f"column:{p.id}",
+            block_id("column", p.id),
             "column",
             b.unit,
             (p.id,),

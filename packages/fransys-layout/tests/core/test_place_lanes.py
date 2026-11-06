@@ -101,6 +101,14 @@ def test_a_run_crosses_a_foreign_wire_of_either_orientation_and_ends_a_cell_clea
     assert may_cross(Box(80, 100, 40, 0), (80, 100), (Keep("", Box(100, 90, 0, 20), "wire", "other"),), ("mine",), 8)
 
 
+def test_a_run_never_crosses_a_marker_even_one_hung_at_a_pin_of_its_own_symbol() -> None:
+    """R1790: `own` frees a symbol's footprint and wires, not its placed markers (owner 2026-10-29: no marker is crossed, even by its own fan)."""
+    tag = Keep("", Box(116, 90, 12, 66), "marker", "mine")
+    assert not may_cross(Box(100, 100, 40, 0), (140, 100), (tag,), ("mine",), 8)
+    assert may_cross(Box(100, 100, 10, 0), (110, 100), (tag,), ("mine",), 8)  # a run that stops short of it
+    assert may_cross(Box(100, 100, 40, 0), (140, 100), (tag._replace(kind="footprint"),), ("mine",), 8)  # the symbol's own footprint stays free
+
+
 def test_a_lane_end_has_no_stand_when_its_marker_would_leave_the_page() -> None:
     """R1333: the page is a hard limit of the walk; None is the answer `Trunk.stood` records (layout-0507)."""
     foot = Keep("", Box(40, 90, 20, 20), "footprint", "other")

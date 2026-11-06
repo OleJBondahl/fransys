@@ -126,7 +126,7 @@ A series of only fixed terminals takes its width from the first; one terminal is
 A tuple takes one-terminal runs, `(x4.l1[1], x4.l2[1])`, and the colours of the net an earlier series made.
 `interface=` and `unused=` on `d.terminal_strip` mark terminals a unit boundary: `True` marks every
 terminal, and a tuple of numbers, `interface=(1, 2)`, only those; the others stay inside the unit. On
-a run they take `True` only: `x1.run("24V", 4, bridged=True, interface=True)` (see `units.md`).
+a run they take `True` or a tuple too: `x1.run("24V", 4, bridged=True, interface=(1, 2))` (see `units.md`).
 
 ```python
 import fransys as fr

@@ -20,7 +20,7 @@ from fransys_layout.core.outline import outline_keeps
 from fransys_layout.core.outputs import Marker, Outline, Trunk, Wire
 from fransys_layout.core.place import place_pages
 from fransys_layout.core.route_env import Drawn
-from fransys_layout.core.route_fixed import Fixed, fixed_wires
+from fransys_layout.core.route_fixed import Fixed
 from fransys_layout.core.text_cells import cell_of
 from fransys_layout.core.text_ends import MarkEnv, Stand, _trunk_end_stand, bundle_nets, end_stand, hub_xy, mark_env, pin_keeps, pin_stand, wire_keeps
 from fransys_layout.core.text_markers import _order, placed_marks, stagger, stand_ref
@@ -462,11 +462,14 @@ def test_a_marker_names_the_cut_of_its_reference() -> None:
     assert m.ref == 4
 
 
-def _bundle_of_cut_pins(count: int = 8) -> PlacementProblem:
+def _bundle_of_cut_pins(count: int = 8, pole: int | None = None) -> PlacementProblem:
     """A box on one unit whose `count` south pins are lone nets cut at the pin, all lanes of one bundle fan."""
     box = replace(box_sym(count), unit="U1")
     pins = tuple(PinRef("A1", f"p{i}") for i in range(1, count + 1))
-    nets = tuple(replace(net(f"n{i}", f"A1.p{i}", crosses_unit=True), bundle=Bundle("b", i), cut=(CutEnd(pins[i - 1]),)) for i in range(1, count + 1))
+    nets = tuple(
+        replace(net(f"n{i}", f"A1.p{i}", crosses_unit=True), bundle=Bundle("b", i if pole is None else pole), cut=(CutEnd(pins[i - 1]),))
+        for i in range(1, count + 1)
+    )
     return PlacementProblem(AREA, (box,), nets, Facts(units=(Unit("U1", None, pins),)))
 
 
@@ -506,12 +509,25 @@ def test_a_marker_with_every_slot_refused_is_none(monkeypatch: pytest.MonkeyPatc
     keeps = {1: [_pin_at(replace(box, y=y - 1)) for y in range(0, AREA.h, 8)]}
     assert stagger(pairs, OPTIONS, AREA, keeps, {})[1] is None
     assert stagger(pairs, OPTIONS, AREA, keeps, {"n": frozenset({"other"})})[1] is not None
-    prob = _bundle_of_cut_pins()
+    prob = _bundle_of_cut_pins(8, pole=0)
     cut = pipeline_fixtures.cut_of(prob, OPTIONS)
     pl = place_pages(cut, prob, OPTIONS)
     assert placed_marks(cut, pl, prob, OPTIONS, {})[1] == ()
     wall = [Keep("", Box(x, y, 0, 0), "pin", "other") for x in range(0, AREA.w, 8) for y in range(0, AREA.h, 8)]
     monkeypatch.setattr("fransys_layout.core.text_markers.pin_keeps", lambda _env: {1: wall})
+    marks, findings = placed_marks(cut, pl, prob, OPTIONS, {})
+    assert marks == ()
+    assert [f.code for f in findings] == ["MARKER_UNPLACED"]
+
+
+def test_the_anchor_outlines_are_keeps_the_markers_clear(monkeypatch: pytest.MonkeyPatch) -> None:
+    """R1786: the anchors stand before the markers, so an anchor box over every slot leaves the marker no place."""
+    prob = _bundle_of_cut_pins()
+    cut = pipeline_fixtures.cut_of(prob, OPTIONS)
+    pl = place_pages(cut, prob, OPTIONS)
+    assert placed_marks(cut, pl, prob, OPTIONS, {})[1] == ()
+    wall = Keep("", Box(0, 0, AREA.w, AREA.h), "anchor", "K1")
+    monkeypatch.setattr("fransys_layout.core.text_markers.anchor_keeps", lambda *_: {1: [wall]})
     marks, findings = placed_marks(cut, pl, prob, OPTIONS, {})
     assert marks == ()
     assert [f.code for f in findings] == ["MARKER_UNPLACED"]
@@ -531,17 +547,13 @@ def test_a_marker_fed_by_a_fixed_wire_never_moves_and_a_refused_stand_is_marker_
 
 def test_a_boundary_stub_steps_straight_out_until_its_box_is_clear_of_a_foreign_wire() -> None:
     """R920: no fixed wire ends at the stand, so the stub lengthens along its pin's side (same row) and never bends; nothing is refused."""
-    prob = _bundle_of_cut_pins()
+    prob = _bundle_of_cut_pins(8, pole=0)
     cut = pipeline_fixtures.cut_of(prob, OPTIONS)
     pl = place_pages(cut, prob, OPTIONS)
     free = placed_marks(cut, pl, prob, OPTIONS, {})[0][0]
-    fixed = fixed_wires(pl, cut, prob, OPTIONS)
-    foreign = {
-        p: f._replace(
-            trunks=Drawn(wires=tuple(replace(w, net="foreign") for w in f.trunks.wires)),
-        )
-        for p, f in fixed.items()
-    }
+    box = marker_box(free, OPTIONS)
+    across = Wire("foreign", free.page, ((box.x + box.w // 2, box.y - 8), (box.x + box.w // 2, box.y + box.h + 8)), "trunk")
+    foreign = {free.page: Fixed(Drawn(wires=(across,)))}
     marks, findings = placed_marks(cut, pl, prob, OPTIONS, foreign)
     assert findings == ()
     assert [(m.kind, m.y, m.end) for m in marks] == [(RefKind.STUB, free.y, free.end)]
@@ -640,7 +652,7 @@ def test_a_tag_of_a_member_of_the_frames_unit_stands_across_its_line() -> None:
 @pytest.mark.rule("UNIT-OUTLINE")
 def test_a_marker_keeps_clear_of_the_frame_lines_the_placement_holds() -> None:
     """R900 UO6: the placement's frames are keeps for the markers; the marker stands off the line and its label box."""
-    prob = _bundle_of_cut_pins()
+    prob = _bundle_of_cut_pins(8, pole=0)
     cut = pipeline_fixtures.cut_of(prob, OPTIONS)
     room = OutlineRoom(4, Box(2, 2, 48, 8), Size(64, 48))
     options = replace(OPTIONS, outline=room)
@@ -680,7 +692,7 @@ def test_the_order_of_ends_follows_the_rank_never_the_symbol_id_text(names) -> N
 @pytest.mark.rule("TEXT-CANDIDATES")
 def test_a_marker_keeps_clear_of_a_label_the_round_before_stood() -> None:
     """A3: the labels of the round before are keeps of the marker stage, so a marker that would stand on one steps off it."""
-    prob = _bundle_of_cut_pins()
+    prob = _bundle_of_cut_pins(8, pole=0)
     cut = pipeline_fixtures.cut_of(prob, OPTIONS)
     pl = place_pages(cut, prob, OPTIONS)
     free = placed_marks(cut, pl, prob, OPTIONS, {})[0][0]
@@ -708,7 +720,7 @@ def test_a_pair_marker_with_an_end_that_found_no_slot_stands_whole_or_not_at_all
 @pytest.mark.rule("ROUTING")
 def test_a_marker_never_stands_on_a_pins_hanging_the_placement_holds() -> None:
     """layout-0547: the hangings of `PagePlacement` are keeps of the marker stage, so a marker that would stand on one steps off it."""
-    prob = _bundle_of_cut_pins()
+    prob = _bundle_of_cut_pins(8, pole=0)
     cut = pipeline_fixtures.cut_of(prob, OPTIONS)
     pl = place_pages(cut, prob, OPTIONS)
     free = placed_marks(cut, pl, prob, OPTIONS, {})[0][0]

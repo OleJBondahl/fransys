@@ -1,0 +1,53 @@
+schema = 2
+
+[part]
+mpn = "REPRO-RLY-A"
+manufacturer = "Demo"
+description = "Plug-in interface relay, one changeover contact, 24 V DC coil"
+category = "electromechanical"
+class_code = "K"
+
+[[function]]
+name = "coil"
+kind = "coil"
+symbol = "operating-device"
+ports = [
+    { name = "A1", role = "generic", side = "line", symbol_port = "in" },
+    { name = "A2", role = "generic", side = "load", symbol_port = "out" },
+]
+
+[function.operating]
+
+[[function.operating.voltage]]
+nom = "24 V"
+at = ["DC"]
+
+[[function]]
+name = "co"
+kind = "contact_co"
+symbol = "change-over-contact"
+ports = [
+    { name = "11", role = "common", side = "line" },
+    { name = "12", role = "break", side = "load" },
+    { name = "14", role = "make", side = "load" },
+]
+
+[[function.links]]
+a = "11"
+b = "12"
+kind = "switched"
+
+[[function.links]]
+a = "11"
+b = "14"
+kind = "switched"
+
+[function.rating]
+
+[[function.rating.voltage]]
+nom = "250 V"
+at = ["AC"]
+
+[[function.rating.voltage]]
+nom = "250 V"
+at = ["DC"]

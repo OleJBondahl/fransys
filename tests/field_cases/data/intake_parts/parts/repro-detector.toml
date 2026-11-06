@@ -1,0 +1,33 @@
+schema = 2
+
+[part]
+mpn = "REPRO-DETECTOR"
+manufacturer = "Demo"
+description = "Two-wire gas detector: a supply and seven signal pins (3 to 9)"
+category = "generic"
+class_code = "B"
+
+[[function]]
+name = "supply"
+kind = "load"
+ports = [
+    { name = "1", role = "generic", side = "line" },
+    { name = "2", role = "generic", side = "load" },
+]
+
+[function.operating]
+voltage = [{ nom = "24 V", at = ["DC"] }]
+nominal_current = "0.1 A"
+
+[[function]]
+name = "signal"
+kind = "sensor"
+ports = [
+    { name = "3", role = "generic" },
+    { name = "4", role = "generic" },
+    { name = "5", role = "generic" },
+    { name = "6", role = "generic" },
+    { name = "7", role = "generic" },
+    { name = "8", role = "generic" },
+    { name = "9", role = "generic" },
+]

@@ -1,0 +1,269 @@
+schema = 2
+
+[part]
+mpn = "REPRO-CTRL"
+manufacturer = "Demo"
+description = "Compact PLC controller, 24 V DC supply, digital outputs and inputs, analogue inputs, CAN, RS-485 and USB"
+category = "generic"
+class_code = "K"
+
+[[function]]
+name = "f73"
+kind = "load"
+ports = [
+    { name = "p34", role = "generic", side = "load" },
+    { name = "p33", role = "generic", side = "line" },
+]
+
+[function.rating]
+
+[[function.rating.voltage]]
+nom = "36 V"
+at = ["DC"]
+
+[function.operating]
+
+[[function.operating.voltage]]
+min = "10 V"
+max = "36 V"
+
+[[function]]
+name = "f75"
+kind = "generic"
+ports = [
+    { name = "p41", role = "generic" },
+    { name = "p40", role = "generic" },
+    { name = "p39", role = "generic" },
+    { name = "p38", role = "generic" },
+    { name = "p37", role = "generic" },
+    { name = "p36", role = "generic" },
+]
+
+[function.rating]
+
+[[function.rating.voltage]]
+nom = "36 V"
+at = ["DC"]
+
+[[function.rating.current]]
+nom = "4 A"
+at = ["DC"]
+
+[[function]]
+name = "f76"
+kind = "plc_channel"
+ports = [
+    { name = "OUT1-", role = "generic", side = "line" },
+]
+
+[function.plc_channel]
+signal = "do"
+channel = 1
+
+[function.rating]
+
+[[function.rating.current]]
+nom = "2 A"
+at = ["DC"]
+
+[[function]]
+name = "f77"
+kind = "plc_channel"
+ports = [
+    { name = "OUT2-", role = "generic", side = "line" },
+]
+
+[function.plc_channel]
+signal = "do"
+channel = 2
+
+[function.rating]
+
+[[function.rating.current]]
+nom = "2 A"
+at = ["DC"]
+
+[[function]]
+name = "f78"
+kind = "plc_channel"
+ports = [
+    { name = "OUT3-", role = "generic", side = "line" },
+]
+
+[function.plc_channel]
+signal = "do"
+channel = 3
+
+[function.rating]
+
+[[function.rating.current]]
+nom = "2 A"
+at = ["DC"]
+
+[[function]]
+name = "f79"
+kind = "plc_channel"
+ports = [
+    { name = "p45", role = "generic", side = "line" },
+]
+
+[function.plc_channel]
+signal = "do"
+channel = 4
+
+[function.rating]
+
+[[function.rating.current]]
+nom = "2 A"
+at = ["DC"]
+
+[[function]]
+name = "f80"
+kind = "plc_channel"
+ports = [
+    { name = "p46", role = "generic", side = "line" },
+]
+
+[function.plc_channel]
+signal = "do"
+channel = 5
+
+[function.rating]
+
+[[function.rating.current]]
+nom = "1 A"
+at = ["DC"]
+
+[[function]]
+name = "f81"
+kind = "plc_channel"
+ports = [
+    { name = "p47", role = "generic", side = "line" },
+]
+
+[function.plc_channel]
+signal = "do"
+channel = 6
+
+[function.rating]
+
+[[function.rating.current]]
+nom = "1 A"
+at = ["DC"]
+
+[[function]]
+name = "f82"
+kind = "plc_channel"
+ports = [
+    { name = "IN1B", role = "generic", side = "load" },
+    { name = "p48", role = "generic", side = "line" },
+]
+
+[function.plc_channel]
+signal = "di"
+channel = 1
+
+[[function]]
+name = "f83"
+kind = "plc_channel"
+ports = [
+    { name = "IN2B", role = "generic", side = "load" },
+    { name = "p50", role = "generic", side = "line" },
+]
+
+[function.plc_channel]
+signal = "di"
+channel = 2
+
+[[function]]
+name = "f84"
+kind = "plc_channel"
+ports = [
+    { name = "p53", role = "generic", side = "load" },
+    { name = "p52", role = "generic", side = "line" },
+]
+
+[function.plc_channel]
+signal = "di"
+channel = 3
+
+[[function]]
+name = "f85"
+kind = "plc_channel"
+ports = [
+    { name = "p55", role = "generic", side = "load" },
+    { name = "p54", role = "generic", side = "line" },
+]
+
+[function.plc_channel]
+signal = "di"
+channel = 4
+
+[[function]]
+name = "f86"
+kind = "plc_channel"
+ports = [
+    { name = "GND56", role = "generic", side = "load" },
+    { name = "p56", role = "generic", side = "line" },
+]
+
+[function.plc_channel]
+signal = "ai_voltage"
+channel = 5
+
+[function.rating]
+
+[[function.rating.voltage]]
+nom = "36 V"
+at = ["DC"]
+
+[[function]]
+name = "f87"
+kind = "plc_channel"
+ports = [
+    { name = "IN6", role = "generic", side = "line" },
+]
+
+[function.plc_channel]
+signal = "ai_voltage"
+channel = 6
+
+[function.rating]
+
+[[function.rating.voltage]]
+nom = "36 V"
+at = ["DC"]
+
+[[function]]
+name = "f88"
+kind = "sensor"
+ports = [
+    { name = "p61", role = "generic", side = "line" },
+    { name = "p60", role = "generic", side = "load" },
+    { name = "p59", role = "generic", side = "line" },
+]
+
+[function.rating]
+
+[[function.rating.voltage]]
+nom = "5 V"
+at = ["DC"]
+
+[[function]]
+name = "f89"
+kind = "generic"
+ports = [
+    { name = "p64", role = "generic", side = "line" },
+    { name = "CANL", role = "generic", side = "line" },
+    { name = "p62", role = "generic", side = "line" },
+]
+
+[[function]]
+name = "f92"
+kind = "generic"
+ports = [
+    { name = "GND", role = "generic", side = "line" },
+    { name = "D-", role = "generic", side = "line" },
+    { name = "D+", role = "generic", side = "line" },
+    { name = "p69", role = "generic", side = "line" },
+]

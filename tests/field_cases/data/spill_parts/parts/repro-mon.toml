@@ -1,0 +1,74 @@
+schema = 2
+
+[part]
+mpn = "REPRO-MON"
+manufacturer = "Demo"
+description = "Insulation monitoring device, 24 V DC supply, 1000 V DC measuring input"
+category = "generic"
+class_code = "B"
+
+[[function]]
+name = "f28"
+kind = "connector"
+ports = [
+    { name = "p14", role = "generic", side = "line", joins = "f31.p24" },
+    { name = "p11", role = "generic", side = "line", joins = "f29.p16" },
+    { name = "p10", role = "generic", side = "line", joins = "f29.p17" },
+]
+
+[function.connector]
+style = "Tyco Micro Mate-N-Lok"
+pincount = 8
+
+[function.rating]
+
+[[function.rating.voltage]]
+nom = "36 V"
+at = ["DC"]
+
+[[function]]
+name = "f29"
+kind = "load"
+ports = [
+    { name = "p17", role = "generic", side = "load" },
+    { name = "p16", role = "generic", side = "line" },
+]
+
+[function.rating]
+
+[[function.rating.voltage]]
+nom = "36 V"
+at = ["DC"]
+
+[function.operating]
+
+[[function.operating.voltage]]
+min = "10 V"
+max = "36 V"
+
+[[function]]
+name = "f30"
+kind = "sensor"
+ports = [
+    { name = "p23", role = "generic" },
+]
+
+[function.rating]
+
+[[function.rating.voltage]]
+nom = "1000 V"
+at = ["DC"]
+
+[[function]]
+name = "f31"
+kind = "generic"
+ports = [
+    { name = "p24", role = "generic" },
+]
+
+[[function]]
+name = "f32"
+kind = "generic"
+ports = [
+    { name = "p25", role = "generic" },
+]

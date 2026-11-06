@@ -25,6 +25,11 @@ def row_of(bands: Sequence[tuple[int, int]], y: int) -> int:
     return next((i for i, (top, bottom) in enumerate(bands) if top <= y <= bottom), -1)
 
 
+def around(box: Box, gap: int) -> Box:
+    """The box with `gap` more on every side."""
+    return Box(box.x - gap, box.y - gap, box.w + 2 * gap, box.h + 2 * gap)
+
+
 def shift(box: Box, x: int, y: int) -> Box:
     """The box moved by (x, y)."""
     return Box(box.x + x, box.y + y, box.w, box.h)

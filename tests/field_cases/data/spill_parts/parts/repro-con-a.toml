@@ -1,0 +1,73 @@
+schema = 2
+
+[part]
+mpn = "REPRO-CON-A"
+manufacturer = "Demo"
+description = "DC contactor, 1500 V DC main contact, 24 V DC coil, one auxiliary contact"
+category = "electromechanical"
+class_code = "Q"
+
+[[function]]
+name = "coil"
+kind = "coil"
+symbol = "operating-device"
+ports = [
+    { name = "X1", role = "generic", side = "line", symbol_port = "in" },
+    { name = "X2", role = "generic", side = "load", symbol_port = "out" },
+]
+
+[function.rating]
+
+[[function.rating.voltage]]
+nom = "32 V"
+at = ["DC"]
+
+[function.operating]
+
+[[function.operating.voltage]]
+nom = "24 V"
+at = ["DC"]
+
+[[function]]
+name = "main"
+kind = "contact_no"
+symbol = "make-contact"
+ports = [
+    { name = "A1", role = "generic", side = "line", symbol_port = "in" },
+    { name = "A2", role = "generic", side = "load", symbol_port = "out" },
+]
+
+[[function.links]]
+a = "A1"
+b = "A2"
+kind = "switched"
+
+[function.rating]
+
+[[function.rating.voltage]]
+nom = "1500 V"
+at = ["DC"]
+
+[[function]]
+name = "aux"
+kind = "contact_no"
+symbol = "make-contact"
+ports = [
+    { name = "T1", role = "generic", side = "line", symbol_port = "in" },
+    { name = "T2", role = "generic", side = "load", symbol_port = "out" },
+]
+
+[[function.links]]
+a = "T1"
+b = "T2"
+kind = "switched"
+
+[function.rating]
+
+[[function.rating.voltage]]
+nom = "24 V"
+at = ["DC"]
+
+[[function.rating.current]]
+nom = "2 A"
+at = ["DC"]

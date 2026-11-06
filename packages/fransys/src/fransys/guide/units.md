@@ -36,7 +36,7 @@ between, is the use. `interface=True` marks every function of the device; `inter
 names some, and the others stay inside the unit.
 
 On a terminal strip `interface=(1, 2)` names terminals by number and `unused=` works the same;
-`True` marks every terminal. A run takes `interface=True` or `unused=True` for the whole run. A
+`True` marks every terminal. A run takes `interface=True` or `unused=True` for the whole run, or a tuple of terminal numbers: `x1.run("L1", 3, interface=(1,))`. A
 container reaches only the boundary terminals.
 
 `d.device(tag, part, unused=True)` declares an interface device left unconnected on purpose,

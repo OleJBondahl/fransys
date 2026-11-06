@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING
 from .band import trunk_room
 from .blocks_card import box_pin, pin_order
 from .cut_height import lowered
-from .flow_values import Block
+from .flow_values import Block, block_id
 from .hang_build import stack_extra
 from .keys import natural_key
 from .unionfind import UnionFind
@@ -171,7 +171,7 @@ def draft_block(m: Member, edges: CardEdges | None, env: Env) -> Block:
     fan = next((f for f in env.flow.fans if f.id == m.fan), None)
     keep_whole = m.kind == "card" or (fan is not None and fan.lanes > 1) or any(len(env.columns[c].lanes) > 1 for c in m.cols)
     return Block(
-        f"{m.kind}:{m.anchor or m.cols[0]}",
+        block_id(m.kind, m.anchor or m.cols[0]),
         m.kind,
         block_unit(m, env),
         m.cols,

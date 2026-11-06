@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.1/guide/authoring/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.3/guide/authoring/">
       
       
       
@@ -2434,7 +2434,10 @@ A branch from the common feed is a second series; one looped at the line screws 
 <h2 id="add-a-harness">Add a harness</h2>
 <p><code>d.harness("W5")</code> adds a harness item: see <code>harnesses.md</code>. Refused in 0.22 (<code>MATES_DISABLED</code>): its drawing has no correctness guarantee yet; use a cable.</p>
 <h2 id="request-a-plc-channel">Request a PLC channel</h2>
-<p><code>K1.coil.plc(fr.DO, "Pump run")</code> asks for a digital output named for the signal. A series that ends or starts
+<p><code>K1.coil.plc(fr.DO, "Pump run")</code> asks for a digital output named for the signal, and
+<code>.scale("%", raw=(4, 20), eng=("0", "266"))</code> scales an analogue one. The range reaches the Wago rack XML only.
+A bad range is an ERROR: <code>SCALING_RANGE_INVALID</code>, <code>SCALING_NOT_ANALOGUE</code> or <code>SCALING_UNIT_EMPTY</code>. A float in <code>eng</code> raises.
+A series that ends or starts
 at a PLC module binds the request to a channel (next section). A request no series wires keeps the
 build's own allocation.
 <code>d.rack("U1")</code> adds the part-less rack the modules sit under with <code>parent=</code>; a <code>d.harness</code> rack stops with <code>HARNESS_HOLDS_PLC_MODULE</code>.</p>
@@ -2529,7 +2532,7 @@ adds a history line. Both are optional.</p>
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.22.1 documentation
+      Fransys 0.22.3 documentation
     </div>
   
   

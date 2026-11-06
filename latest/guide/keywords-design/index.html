@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.1/guide/keywords-design/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.3/guide/keywords-design/">
       
       
       
@@ -828,6 +828,17 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         <code>d.add</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dunused" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>d.unused</code>
       </span>
     </span>
   </a>
@@ -2152,6 +2163,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#dunused" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>d.unused</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#dac_supply" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -2633,6 +2655,10 @@ The <code>fr.*</code> functions are in <code>keywords-output.md</code>, the hand
 </tr>
 </tbody>
 </table>
+<h2 id="dunused"><code>d.unused</code></h2>
+<p><code>d.unused(*points)</code> takes typed boundary points of nested units, as <code>d.add</code> returned them (<code>pc.x3[3]</code>, a strip, a device or a function), or a port (<code>m1.minus</code>).
+It declares them left open on purpose by this design. It has no keywords. A wired point, a point that is no boundary and a point
+listed twice are refused; see <code>units.md</code>, which holds the worked example.</p>
 <h2 id="dac_supply"><code>d.ac_supply</code></h2>
 <p><code>d.ac_supply(name, voltage, *phases, ...)</code> takes the phase pins in phase order as <code>phases</code>: one or three.</p>
 <table>
@@ -3132,7 +3158,7 @@ The <code>fr.*</code> functions are in <code>keywords-output.md</code>, the hand
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.22.1 documentation
+      Fransys 0.22.3 documentation
     </div>
   
   

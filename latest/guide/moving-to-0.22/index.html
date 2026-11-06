@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.1/guide/moving-to-0.22/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.3/guide/moving-to-0.22/">
       
       
       
@@ -958,6 +958,28 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         New in 0.22.1
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#new-in-0223" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        New in 0.22.3
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#new-in-0222" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        New in 0.22.2
       </span>
     </span>
   </a>
@@ -2019,6 +2041,28 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#new-in-0223" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        New in 0.22.3
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#new-in-0222" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        New in 0.22.2
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -2161,7 +2205,7 @@ for example <code>fault_time_constant=fr.elecdef.Unit.MS(15)</code>. In a part f
 </tr>
 <tr>
 <td><a id="removed-add-unused"></a><code>d.add(defn, tag, unused=(...))</code></td>
-<td><code>d.device(tag, part, unused=True)</code>: declare open pins where the device is made</td>
+<td><code>d.device(tag, part, unused=True)</code> for the unit's own open pins; <code>d.unused(pc.x3[3], pc.x4_1)</code> in the carrier for a unit's boundary points it leaves open (0.22.3)</td>
 </tr>
 <tr>
 <td><a id="removed-port-role"></a><code>Port.role</code> (<code>PortRole</code>)</td>
@@ -2178,10 +2222,6 @@ for example <code>fault_time_constant=fr.elecdef.Unit.MS(15)</code>. In a part f
 <tr>
 <td><a id="removed-fn-limits"></a><code>Fn.limits(rating=, operating=)</code>, <code>Terminal.limits(...)</code></td>
 <td>Removed on purpose: Fransys decides (R1490)</td>
-</tr>
-<tr>
-<td><a id="removed-fn-scale"></a><code>Fn.scale(unit, raw=, eng=)</code>, <code>fr.derive.ChannelScaling</code></td>
-<td>Removed in 0.22.0 and 0.22.1. It returns in 0.22.2 as <code>.plc(...).scale(unit, raw=, eng=)</code> (PLC-SCALING-RETURN, R1753). The part file holds only the part's own range. <code>Fn.plc(signal, name, priority)</code> stays</td>
 </tr>
 <tr>
 <td><a id="removed-mates"></a>Mated connector, PCB board document, harness line</td>
@@ -2209,6 +2249,16 @@ for example <code>fault_time_constant=fr.elecdef.Unit.MS(15)</code>. In a part f
 <ul>
 <li><code>python -m fransys migrate-parts DIR</code> rewrites a schema 1 parts library to the 0.22 format (decision 0474).</li>
 <li>A removed 0.22 name raises an error that names the new spelling and the row above, from one table that is deleted at the 0.23 tag (decision 0475).</li>
+</ul>
+<h2 id="new-in-0223">New in 0.22.3</h2>
+<ul>
+<li><code>d.unused(pc.x3[3], pc.x4_1)</code> declares a nested unit's boundary points, or a port, that the design leaves open on purpose (decision 0481). The unit's own <code>unused=</code> stays the unit's fact. It reverses the <code>add(unused=)</code> part of the 0.22 removal.</li>
+<li>Two ERROR codes check it: <code>UNUSED_NOT_BOUNDARY</code> and <code>UNUSED_POINT_WIRED</code>; a point listed twice raises an <code>AuthorError</code>.</li>
+</ul>
+<h2 id="new-in-0222">New in 0.22.2</h2>
+<ul>
+<li>The per-channel engineering range returns as <code>.plc(...).scale(unit, raw=, eng=)</code>, written to the Wago rack XML exactly as in 0.21.2 (decision model-0425).</li>
+<li>Three ERROR codes check it: <code>SCALING_RANGE_INVALID</code>, <code>SCALING_NOT_ANALOGUE</code> and <code>SCALING_UNIT_EMPTY</code>.</li>
 </ul>
 
 
@@ -2245,7 +2295,7 @@ for example <code>fault_time_constant=fr.elecdef.Unit.MS(15)</code>. In a part f
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.22.1 documentation
+      Fransys 0.22.3 documentation
     </div>
   
   

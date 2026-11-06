@@ -235,7 +235,10 @@ Refused in 0.22 (`MATES_DISABLED`, an ERROR): a mate has no correctness guarante
 
 ## Request a PLC channel
 
-`K1.coil.plc(fr.DO, "Pump run")` asks for a digital output named for the signal. A series that ends or starts
+`K1.coil.plc(fr.DO, "Pump run")` asks for a digital output named for the signal, and
+`.scale("%", raw=(4, 20), eng=("0", "266"))` scales an analogue one. The range reaches the Wago rack XML only.
+A bad range is an ERROR: `SCALING_RANGE_INVALID`, `SCALING_NOT_ANALOGUE` or `SCALING_UNIT_EMPTY`. A float in `eng` raises.
+A series that ends or starts
 at a PLC module binds the request to a channel (next section). A request no series wires keeps the
 build's own allocation.
 `d.rack("U1")` adds the part-less rack the modules sit under with `parent=`; a `d.harness` rack stops with `HARNESS_HOLDS_PLC_MODULE`.

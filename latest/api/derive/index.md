@@ -3343,7 +3343,8 @@ module with no channel (a coupler, an end module) has `channels=()`. They order 
 (integers ascending, `None` last), then the module's own tag in natural order
 (`plc_module_key`), the order `allocate_plc` serves them in; `installed` is ignored. A module's
 channels are the functions whose template carries a `plc_channel`, bound or spare, ordered by
-`plc_channel_tie`. The field device is read as `plc_channel_rows` reads it.
+`plc_channel_tie`. The field device is read as `plc_channel_rows` reads it; `scaling` is its
+`scaling` facet, `None` for a spare channel or a device without one.
 
 `unit` prints the designations as that unit's own document does; `None` the full form.
 
@@ -5196,6 +5197,14 @@ class ChainPin
 
 A pin of the fed device and the feeder's pin wired to it.
 
+### ChannelScaling
+
+```python
+class ChannelScaling
+```
+
+The `scaling` facet of a field device, projected so a formatter never looks it up.
+
 ### Conductor
 
 ```python
@@ -6315,7 +6324,8 @@ class PlcRackChannel
 
 One channel of a rack module, bound or spare.
 
-The field fields are `None` for a spare channel, as in `PlcChannelRow`. `name_stem` is the text an output
+The field fields are `None` for a spare channel, as in `PlcChannelRow`; `scaling` is also
+`None` for a bound device that carries no `scaling` facet. `name_stem` is the text an output
 names the channel after, before its own character set: the field device and its signal name,
 else the module's designation and the channel's index in the module.
 

@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.1/guide/findings-validators/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.3/guide/findings-validators/">
       
       
       
@@ -1902,7 +1902,7 @@
 <td>validators</td>
 <td>consumer</td>
 <td>A unit's boundary function is not connected across the unit nor declared unused.</td>
-<td>Wire each boundary function across the unit, or declare it unused on purpose. Write: d.device("X2", "DEMO-CONN-2P", interface=True, unused=True)</td>
+<td>Wire each boundary function across the unit, or declare it unused on purpose: inside the unit for its own fact, d.device("X2", "DEMO-CONN-2P", interface=True, unused=True); in the design that adds it for a point it leaves to another carrier. Write: d.unused(pc.x3[3], pc.x4_1)</td>
 </tr>
 <tr>
 <td><a id="cable_cores_fewer"></a>CABLE_CORES_FEWER</td>
@@ -2369,6 +2369,30 @@
 <td>Give each revision entry its author's initials in <code>created</code>. Write: d.revision(1, date="2026-01-01", text="first", created="AB")</td>
 </tr>
 <tr>
+<td><a id="scaling_not_analogue"></a>SCALING_NOT_ANALOGUE</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>consumer</td>
+<td>A function with an engineering range has no PLC request, or requests a DI, DO or RELAY channel.</td>
+<td>Scale only an analogue channel: request it with fr.AI, fr.AO or fr.SignalType.RTD. Write: fn.plc(fr.AI, "level").scale("%", raw=(4, 20), eng=("0", "100"))</td>
+</tr>
+<tr>
+<td><a id="scaling_range_invalid"></a>SCALING_RANGE_INVALID</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>consumer</td>
+<td>A channel's engineering or raw range has its low value at or above its high value.</td>
+<td>Write the low value first, below the high value. Write: fn.plc(fr.AI, "level").scale("%", raw=(4, 20), eng=("0", "100"))</td>
+</tr>
+<tr>
+<td><a id="scaling_unit_empty"></a>SCALING_UNIT_EMPTY</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>consumer</td>
+<td>The unit of a channel's engineering range is blank or has several lines.</td>
+<td>Name the unit, e.g. "%" or "bar". Write: fn.plc(fr.AI, "level").scale("%", raw=(4, 20), eng=("0", "100"))</td>
+</tr>
+<tr>
 <td><a id="strip_without_tag"></a>STRIP_WITHOUT_TAG</td>
 <td>ERROR</td>
 <td>validators</td>
@@ -2433,6 +2457,22 @@
 <td>Declare unused only a function that is wired nowhere, and for a boundary not across its unit. Write: d.device("X2", "DEMO-CONN-2P", interface=True, unused=True)</td>
 </tr>
 <tr>
+<td><a id="unused_not_boundary"></a>UNUSED_NOT_BOUNDARY</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>consumer</td>
+<td>A point named in d.unused is no boundary point of its nested unit.</td>
+<td>List in d.unused only the boundary points a nested unit offers; remove this one. Write: d.unused(pc.x3[3])</td>
+</tr>
+<tr>
+<td><a id="unused_point_wired"></a>UNUSED_POINT_WIRED</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>consumer</td>
+<td>A boundary point or a port named in d.unused is wired.</td>
+<td>Remove the point or port from d.unused, or the wire on it. Write: d.unused(pc.x3[4], h1.minus) with only unwired points</td>
+</tr>
+<tr>
 <td><a id="wire_colour_unknown"></a>WIRE_COLOUR_UNKNOWN</td>
 <td>ERROR</td>
 <td>validators</td>
@@ -2493,7 +2533,7 @@
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.22.1 documentation
+      Fransys 0.22.3 documentation
     </div>
   
   

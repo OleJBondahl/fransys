@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.1/api/derive/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.3/api/derive/">
       
       
       
@@ -6801,6 +6801,17 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         ChainPin
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#channelscaling" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        ChannelScaling
       </span>
     </span>
   </a>
@@ -13791,6 +13802,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#channelscaling" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        ChannelScaling
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#conductor" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -17655,7 +17677,8 @@ module with no channel (a coupler, an end module) has <code>channels=()</code>. 
 (integers ascending, <code>None</code> last), then the module's own tag in natural order
 (<code>plc_module_key</code>), the order <code>allocate_plc</code> serves them in; <code>installed</code> is ignored. A module's
 channels are the functions whose template carries a <code>plc_channel</code>, bound or spare, ordered by
-<code>plc_channel_tie</code>. The field device is read as <code>plc_channel_rows</code> reads it.</p>
+<code>plc_channel_tie</code>. The field device is read as <code>plc_channel_rows</code> reads it; <code>scaling</code> is its
+<code>scaling</code> facet, <code>None</code> for a spare channel or a device without one.</p>
 <p><code>unit</code> prints the designations as that unit's own document does; <code>None</code> the full form.</p>
 <p>Raises:
     SchemaError: <code>rack</code> is not an item of <code>model</code>, or a module or device has no designation.</p>
@@ -18698,6 +18721,10 @@ natural rank. <code>ports</code> are in port order.</p>
 <div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">ChainPin</span>
 </code></pre></div>
 <p>A pin of the fed device and the feeder's pin wired to it.</p>
+<h3 id="channelscaling">ChannelScaling</h3>
+<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">ChannelScaling</span>
+</code></pre></div>
+<p>The <code>scaling</code> facet of a field device, projected so a formatter never looks it up.</p>
 <h3 id="conductor">Conductor</h3>
 <div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">Conductor</span>
 </code></pre></div>
@@ -19337,7 +19364,8 @@ channel's own number, <code>wired_to</code> the printed far ends at that port jo
 <div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">PlcRackChannel</span>
 </code></pre></div>
 <p>One channel of a rack module, bound or spare.</p>
-<p>The field fields are <code>None</code> for a spare channel, as in <code>PlcChannelRow</code>. <code>name_stem</code> is the text an output
+<p>The field fields are <code>None</code> for a spare channel, as in <code>PlcChannelRow</code>; <code>scaling</code> is also
+<code>None</code> for a bound device that carries no <code>scaling</code> facet. <code>name_stem</code> is the text an output
 names the channel after, before its own character set: the field device and its signal name,
 else the module's designation and the channel's index in the module.</p>
 <h3 id="plcrackmodule">PlcRackModule</h3>
@@ -19729,7 +19757,7 @@ for any other box.</p>
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.22.1 documentation
+      Fransys 0.22.3 documentation
     </div>
   
   

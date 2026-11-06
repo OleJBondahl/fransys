@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.1/guide/detail/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.3/guide/detail/">
       
       
       
@@ -2254,7 +2254,7 @@ A series of only cables, strips and loads needs no <code>wire=</code>.</p>
 </code></pre></div>
 <h3 id="fixed-terminals">Fixed terminals</h3>
 <p><code>X1[3]</code> takes terminal 3 and <code>.inner</code> or <code>.outer</code> names its side. A series enters a strip at the
-right side by itself. <code>.outer</code> and <code>.inner</code> decide which column of the terminal CSV a wire lands in. Name a side only when the plan fixes it; <code>d.series(x1[3].outer, f1.element)</code> takes it too. A series may also start at a pin: <code>d.series(k1.coil["A1"], a1.di_1)</code>.</p>
+right side by itself: a bare <code>x[i]</code> lands on the side facing the unit that holds the other end, and <code>x[i].outer</code> writes a field end. <code>.outer</code> and <code>.inner</code> decide which column of the terminal CSV a wire lands in. Name a side only when the plan fixes it; <code>d.series(x1[3].outer, f1.element)</code> takes it too. A series may also start at a pin: <code>d.series(k1.coil["A1"], a1.di_1)</code>.</p>
 <div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">fransys</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">fr</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">fransys.colours</span><span class="w"> </span><span class="kn">import</span> <span class="n">BU</span>
 
@@ -2470,7 +2470,7 @@ A net from a pin on one half of a box to a column hung on the other half draws a
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.22.1 documentation
+      Fransys 0.22.3 documentation
     </div>
   
   

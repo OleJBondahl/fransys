@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.1/guide/keywords-handles/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.3/guide/keywords-handles/">
       
       
       
@@ -833,6 +833,17 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         <code>Fn.pole</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fnscale" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>Fn.scale</code>
       </span>
     </span>
   </a>
@@ -1987,6 +1998,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#fnscale" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>Fn.scale</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#terminalstriprun" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -2103,6 +2125,37 @@ A call that takes only <code>*args</code> has no table, and one sentence says wh
 <p><code>fn.pole(n)</code> takes one pole number, counted from 1 in pole order, and gives that one pole of the function as a series element: <code>d.series(s1.main.pole(2), f2.element, wire=(BK, 1.5))</code>.</p>
 <p>A pin, or a tuple of one device's pins, is a series element anywhere. First, its pins are the load ends: <code>d.series(k1.coil["A1"], a1.di_1, wire=(BK, 1.0))</code> leaves from A1, where <code>d.series(k1.coil, a1.di_1)</code> leaves from A2. Last, they are the line ends. In the middle a pin is both: it takes as many pins as its neighbours have poles.</p>
 <p><code>fn.pins</code> is the function's pins as a typed tuple in the connector list's order (<code>1, 2, 10, A1</code>): <code>a.pins[i]</code> is the i-th pin from 0, and a loop over it types as <code>fr.Pin</code>.</p>
+<h2 id="fnscale"><code>Fn.scale</code></h2>
+<table>
+<thead>
+<tr>
+<th>keyword</th>
+<th>default</th>
+<th>effect</th>
+<th>example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="../authoring/#request-a-plc-channel"><code>unit</code></a></td>
+<td>required</td>
+<td>The engineering unit of the scaled value. It prints in the Wago rack XML only, not in the PLC list.</td>
+<td><code>ai.scale("bar", raw=(0, 27648), eng=("0", "10"))</code></td>
+</tr>
+<tr>
+<td><a href="../authoring/#request-a-plc-channel"><code>raw</code></a></td>
+<td>required</td>
+<td>The raw range as two integers.</td>
+<td><code>raw=(0, 27648)</code></td>
+</tr>
+<tr>
+<td><a href="../authoring/#request-a-plc-channel"><code>eng</code></a></td>
+<td>required</td>
+<td>The engineering range as two strings or Decimals. Floats are refused.</td>
+<td><code>eng=("0", "10")</code></td>
+</tr>
+</tbody>
+</table>
 <h2 id="terminalstriprun"><code>TerminalStrip.run</code></h2>
 <table>
 <thead>
@@ -2135,7 +2188,7 @@ A call that takes only <code>*args</code> has no table, and one sentence says wh
 <tr>
 <td><a href="../authoring/#power-rails"><code>rail</code></a></td>
 <td><code>False</code></td>
-<td>Declares the bridged run a power rail: its terminals draw as the rail's power symbol, not as terminals. A run of one terminal is allowed.</td>
+<td>Declares the bridged run a power rail: its terminals draw as the rail's power symbol, not as terminals. A run of one terminal is allowed. A fused terminal in the group is <code>RAIL_ON_FUSED</code>: flag the supply side of the fuse.</td>
 <td><code>x1.run("24V", 4, bridged=True, rail=True)</code></td>
 </tr>
 <tr>
@@ -2248,7 +2301,7 @@ A call that takes only <code>*args</code> has no table, and one sentence says wh
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.22.1 documentation
+      Fransys 0.22.3 documentation
     </div>
   
   

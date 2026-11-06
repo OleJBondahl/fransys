@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.1/guide/parts/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.3/guide/parts/">
       
       
       
@@ -2161,7 +2161,7 @@ not have. Regenerate the module whenever the library changes. Run this from a sh
 <p>A library written in schema 1 (0.21) is refused with <code>PART_SCHEMA_OLD</code>. Move it to schema 2 in place from a shell:</p>
 <div class="highlight"><pre><span></span><code>python -m fransys migrate-parts DIR
 </code></pre></div>
-<p>The command rewrites every part file and <code>library.toml</code> under <code>DIR</code> and prints each file it rewrote. A file it cannot convert is named with the fix, and its <code>library.toml</code> stays unchanged.</p>
+<p>The command rewrites every part file and <code>library.toml</code> under <code>DIR</code> and prints each file it rewrote. <code>DIR</code> is the library's folder (the one holding <code>library.toml</code> and <code>parts/</code>) or any folder above it, never its <code>parts/</code> folder: a <code>DIR</code> with no <code>library.toml</code> under it exits 1 and names the folder. A file it cannot convert is named with the fix, and its <code>library.toml</code> stays unchanged. A part with a PE bar function (<code>kind = "bar"</code>) is one of them: replace it with a PE terminal-strip part (moving-to-0.22.md#removed-cable-core-fn).</p>
 <p>The part library generates this module and ships it, and the projects that use the library import it
 rather than generate their own. A pin whose marking is not a Python name gets an attribute by the
 one name rule (authoring.md): the pin <code>1/L1</code> is <code>k.main.P_1_L1</code> and <code>24V1</code> is <code>psu.P_24V1</code>, each checked by ty.
@@ -2435,7 +2435,7 @@ It prints its holder's designation and has no row or netlist line, and draws not
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.22.1 documentation
+      Fransys 0.22.3 documentation
     </div>
   
   

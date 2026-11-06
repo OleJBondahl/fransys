@@ -120,6 +120,38 @@ d.cable("W1", "DEMO-CBL-4G1.5").core(1, d.device("P1", "DEMO-CONN-2P")[1], unit.
 assert not [f for f in fr.build(d).findings if f.code == "UNIT_BOUNDARY_BYPASSED"]
 ```
 
+A unit's own `unused=` is the unit's fact. A carrier that leaves some boundary points of a unit it adds open for another carrier
+declares them itself. `d.unused(pc.x3[3], pc.x4_1)` takes typed points of the returned fields, never a string.
+The same call takes a port, `d.unused(m1.minus)`: the port is open on purpose and `FUNCTION_HALF_CONNECTED` stays silent for it.
+A point or port that is wired gives `UNUSED_POINT_WIRED`, one that is no boundary point gives `UNUSED_NOT_BOUNDARY`,
+and a point listed twice raises `UNUSED_LISTED_TWICE`.
+
+```python
+from typing import NamedTuple
+
+import fransys as fr
+
+
+class CabinetIo(NamedTuple):
+    x3: fr.TerminalStrip
+
+
+@fr.unit("demo-cabinet", revision=1, interface_version=1, date="2026-01-01", text="first", by="AB")
+def cabinet(d: fr.Design) -> CabinetIo:
+    return CabinetIo(d.terminal_strip("X3", "DEMO-TB-2.5", 4, interface=(1, 2, 3, 4)))
+
+
+d = fr.design("demo_parts")
+pc = d.add(cabinet, "PC")
+lamp = d.device("H1", "DEMO-LAMP-24")
+d.series(pc.x3[1], lamp["1"], wire=("RD", 2.5))
+d.series(pc.x3[2], lamp["2"], wire=("BU", 2.5))
+m1, m2 = d.device("U1", "DEMO-MODULE-2P-COM4"), d.device("U2", "DEMO-MODULE-2P-COM4")
+d.series(m1.plus, m2.plus, wire=("RD", 1.5))
+d.unused(pc.x3[3], pc.x3[4], m1.minus, m2.minus)  # two boundary points and two ports left open on purpose
+assert not [f for f in fr.check(fr.build(d)) if f.code in {"BOUNDARY_UNCONNECTED", "FUNCTION_HALF_CONNECTED"}]
+```
+
 ## Variants and revised copies
 
 A variant is a parameter of your own builders, never a Fransys feature. Fransys has no variant hook,

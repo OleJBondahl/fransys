@@ -92,7 +92,7 @@ from `fransys.colours`.
 | plug a connector | refused in 0.22 (`MATES_DISABLED`): draw a cable or wires | authoring.md, plug a connector |
 | add a harness | refused in 0.22 (`MATES_DISABLED`): use a cable | harnesses.md, add a harness |
 | group PLC modules in a rack | `d.rack` | authoring.md |
-| request a PLC channel | `K1.coil.plc(fr.DO, name)` | authoring.md, request a PLC channel |
+| request a PLC channel, scale it | `K1.coil.plc(fr.DO, name)`, `.scale(...)` | authoring.md, request a PLC channel |
 | wire a path to a PLC channel | `d.series(dc.plus, s1.no, a1)`; fixed: `a1.di_7` | authoring.md, how channels are numbered |
 | title block, revision | `d.project(...)`, `d.revision(...)` | authoring.md, title block, revision |
 | advise the drawing | `order`, `sheet`, `profile` | detail.md, Layout profile |

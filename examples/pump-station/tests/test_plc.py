@@ -1,7 +1,7 @@
 """PLC export check: the PLC I/O list.
 
 The PLC list is a wiring list with one row per pin (Fransys 0.17, PLC-PIN-ROWS): `PLC_COLUMNS` is
-`pin, channel_name, signal, signal_name, wired_to`. The `pin` is the row's identity (`-DI1:DI1`);
+`pin, channel_name, signal, signal_name, description, wired_to`. The `pin` is the row's identity (`-DI1:DI1`);
 `channel_name` repeats across modules (`1` in both DI1 and DO1). `wired_to` is the far end of
 the conductors at that pin alone; an unwired spare pin gives an empty cell.
 
@@ -23,6 +23,7 @@ EXPECTED_ALL_PLC_ROWS = [
         "channel_name": "1",
         "signal": "di",
         "signal_name": "P1_OVERLOAD",
+        "description": "",
         "wired_to": "-U1-B12:98",
     },
     {
@@ -30,6 +31,7 @@ EXPECTED_ALL_PLC_ROWS = [
         "channel_name": "2",
         "signal": "di",
         "signal_name": "P1_RUNNING",
+        "description": "",
         "wired_to": "-U1-Q11:84",
     },
     {
@@ -37,6 +39,7 @@ EXPECTED_ALL_PLC_ROWS = [
         "channel_name": "3",
         "signal": "di",
         "signal_name": "P2_OVERLOAD",
+        "description": "",
         "wired_to": "-U1-B22:98",
     },
     {
@@ -44,6 +47,7 @@ EXPECTED_ALL_PLC_ROWS = [
         "channel_name": "4",
         "signal": "di",
         "signal_name": "P2_RUNNING",
+        "description": "",
         "wired_to": "-U1-Q21:84",
     },
     {
@@ -51,6 +55,7 @@ EXPECTED_ALL_PLC_ROWS = [
         "channel_name": "1",
         "signal": "do",
         "signal_name": "P1_RUN",
+        "description": "",
         "wired_to": "-U1-K1:A1",
     },
     {
@@ -58,6 +63,7 @@ EXPECTED_ALL_PLC_ROWS = [
         "channel_name": "2",
         "signal": "do",
         "signal_name": "P2_RUN",
+        "description": "",
         "wired_to": "-U1-K2:A1",
     },
     {
@@ -65,6 +71,7 @@ EXPECTED_ALL_PLC_ROWS = [
         "channel_name": "3",
         "signal": "do",
         "signal_name": "",
+        "description": "",
         "wired_to": "",
     },
     {
@@ -72,6 +79,7 @@ EXPECTED_ALL_PLC_ROWS = [
         "channel_name": "4",
         "signal": "do",
         "signal_name": "",
+        "description": "",
         "wired_to": "",
     },
 ]
@@ -82,6 +90,7 @@ EXPECTED_CABINET_PLC_ROWS = [
         "channel_name": "1",
         "signal": "di",
         "signal_name": "P1_OVERLOAD",
+        "description": "",
         "wired_to": "-B12:98",
     },
     {
@@ -89,6 +98,7 @@ EXPECTED_CABINET_PLC_ROWS = [
         "channel_name": "2",
         "signal": "di",
         "signal_name": "P1_RUNNING",
+        "description": "",
         "wired_to": "-Q11:84",
     },
     {
@@ -96,6 +106,7 @@ EXPECTED_CABINET_PLC_ROWS = [
         "channel_name": "3",
         "signal": "di",
         "signal_name": "P2_OVERLOAD",
+        "description": "",
         "wired_to": "-B22:98",
     },
     {
@@ -103,6 +114,7 @@ EXPECTED_CABINET_PLC_ROWS = [
         "channel_name": "4",
         "signal": "di",
         "signal_name": "P2_RUNNING",
+        "description": "",
         "wired_to": "-Q21:84",
     },
     {
@@ -110,6 +122,7 @@ EXPECTED_CABINET_PLC_ROWS = [
         "channel_name": "1",
         "signal": "do",
         "signal_name": "P1_RUN",
+        "description": "",
         "wired_to": "-K1:A1",
     },
     {
@@ -117,6 +130,7 @@ EXPECTED_CABINET_PLC_ROWS = [
         "channel_name": "2",
         "signal": "do",
         "signal_name": "P2_RUN",
+        "description": "",
         "wired_to": "-K2:A1",
     },
     {
@@ -124,6 +138,7 @@ EXPECTED_CABINET_PLC_ROWS = [
         "channel_name": "3",
         "signal": "do",
         "signal_name": "",
+        "description": "",
         "wired_to": "",
     },
     {
@@ -131,11 +146,12 @@ EXPECTED_CABINET_PLC_ROWS = [
         "channel_name": "4",
         "signal": "do",
         "signal_name": "",
+        "description": "",
         "wired_to": "",
     },
 ]
 
-PLC_COLUMNS = ["pin", "channel_name", "signal", "signal_name", "wired_to"]
+PLC_COLUMNS = ["pin", "channel_name", "signal", "signal_name", "description", "wired_to"]
 
 
 def _read_plc_rows(path: Path) -> list[dict[str, str]]:

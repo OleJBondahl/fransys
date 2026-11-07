@@ -77,7 +77,7 @@ Each row is a name that 0.22 removed. A removed attribute raises an error that n
 
 ### Known issues in 0.22.9
 
-- `MARKER_UNPLACED` on a 40-circuit demo-flags build leaves one tag marker unplaced at two salts. It is old (KI-745) and fixed in 0.23.
+- `MARKER_UNPLACED` on a 40-circuit demo-flags build leaves one tag marker unplaced at two salts. It is old (KI-745) and fixed in 0.23.1.
 
 ## New in 0.22.8
 

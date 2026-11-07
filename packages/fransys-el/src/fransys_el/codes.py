@@ -134,7 +134,10 @@ _CORE: tuple[CodeInfo, ...] = (
         severity=Severity.ERROR,
         stage="render",
         who="consumer",
-        cause="A row of one block is taller than the page, so it stands on a page of its own.",
+        cause=(
+            "A row of one block is taller than the page, so it stands on a page of its own. "
+            "The message names the drawing set, the page and the devices standing in the row."
+        ),
         fix=(
             "Split <block> into smaller function blocks, or use a taller sheet. "
             'Write: [paper] default = "A2" in the settings file, '
@@ -248,7 +251,10 @@ _CORE: tuple[CodeInfo, ...] = (
         severity=Severity.ERROR,
         stage="render",
         who="consumer",
-        cause="A row of columns is wider than the page even at its closest spacing.",
+        cause=(
+            "A row of columns is wider than the page even at its closest spacing. "
+            "The message names the drawing set, the page and the devices standing in the row."
+        ),
         fix=(
             "Shorten the row, lower the column count of the block, or raise the page width. "
             'Write: [paper] default = "A2" in the settings file, '

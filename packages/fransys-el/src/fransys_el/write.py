@@ -51,4 +51,5 @@ def write_layout(  # noqa: PLR0913 - the library and the place join the five inp
         *memberships(written),
     )
     own = set_rows(model, sets[0].number, STAMP)
-    return evolve(model, put=records, remove=own, origin=_ORIGIN), kernel_findings(model, layout.findings, symbol_subjects(model, kit))
+    laid = evolve(model, put=records, remove=own, origin=_ORIGIN)
+    return laid, kernel_findings(laid, layout.findings, symbol_subjects(model, kit), pages)

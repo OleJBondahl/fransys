@@ -8,6 +8,7 @@ from electrical_symbols import LIBRARY
 CABLE = ("cable-column", "cable-head", "x", "core")
 CONTACT = ("contact-row", "contact-head", "y", ("no", "nc"))
 PIN = ("pin-cell", None, "y", None)
+CONNECTOR = ("pin-cell", "connector-head", "y", "lines")
 PIN_WIDE = ("pin-cell-wide", None, "y", None)
 
 
@@ -48,6 +49,16 @@ def test_contact_head_lies_before_the_first_row_on_the_axis():
     row = body_box(LIBRARY.get("contact-row"))
     head = body_box(LIBRARY.get("contact-head"))
     assert head.max.y == row.min.y
+
+
+def test_connector_head_lies_before_the_first_pin_cell_and_follows_the_cuts():
+    row, head = body_box(LIBRARY.get("pin-cell")), body_box(LIBRARY.get("connector-head"))
+    assert head.max.y == row.min.y
+    assert "lines" in slot_ids(build(*CONNECTOR[:3]))
+    step = row.max.y - row.min.y
+    for n in (1, 3):
+        box = body_box(build(*CONNECTOR[:3], n))
+        assert box.max.y - box.min.y == n * step + (head.max.y - head.min.y)
 
 
 def test_head_stays_where_it_is_authored_in_the_built_table():

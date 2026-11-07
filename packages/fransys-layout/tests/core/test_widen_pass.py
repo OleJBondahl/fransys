@@ -104,6 +104,7 @@ def test_a_page_over_its_room_gets_page_overflow_naming_page_overflow_and_fix() 
     assert found[0].subject == cut2.blocks[0].blocks[0].id
     assert f"{8 + 2 * OPTS.margin.w} G wide" in found[0].text
     assert "enlarge the page" in found[0].text
+    assert found[0].text.startswith(f"{'set ' + cut2.spec.pages[0].unit + ', ' if cut2.spec.pages[0].unit else ''}page 1, row 0 (devices ")
     assert len(after.pages) == 1
 
 

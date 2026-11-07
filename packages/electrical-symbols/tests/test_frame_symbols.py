@@ -9,7 +9,7 @@ from symdef import Polyline, Style, Weight, body_box, load_bundle, stretch, wire
 from electrical_symbols import LIBRARY
 
 BUNDLE = Path(__file__).parent.parent / "src" / "electrical_symbols" / "bundle.json"
-FRAMES = ["unit-outline", "harness-frame", "group-frame"]
+FRAMES = ["unit-outline", "unit-outline-by-others", "harness-frame", "group-frame"]
 POINTS = [(0, 0), (4, 0), (4, 6)]
 
 
@@ -92,6 +92,7 @@ def test_the_dot_is_one_filled_circle_with_no_ports_or_slots():
     ("key", "style", "weight"),
     [
         ("unit-outline", Style.DASH_DOT, Weight.NORMAL),
+        ("unit-outline-by-others", Style.DASHED, Weight.NORMAL),
         ("harness-frame", Style.SOLID, Weight.THICK),
         ("group-frame", Style.SOLID, Weight.NORMAL),
     ],
@@ -99,3 +100,9 @@ def test_the_dot_is_one_filled_circle_with_no_ports_or_slots():
 def test_frame_outline_styles(key, style, weight):
     outline = next(e for e in LIBRARY.get(key).elements if isinstance(e, Polyline))
     assert (outline.style, outline.weight) == (style, weight)
+
+
+def test_the_by_others_outline_has_the_unit_outline_slots_and_body():
+    plain, others = LIBRARY.get("unit-outline"), LIBRARY.get("unit-outline-by-others")
+    assert others.slots == plain.slots
+    assert body_box(others) == body_box(plain)

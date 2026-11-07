@@ -70,3 +70,8 @@ def test_readability_reports_a_unit_with_its_own_profile_and_power_symbols(
 ) -> None:
     report = fr.readability(built)
     assert [page.wire_crossings for page in report.pages] == PAGES
+
+
+def test_a_make_throw_whose_pin_faces_away_from_its_card_pin_is_still_drawn(built: fr.BuildResult) -> None:
+    found = fr.check(built)
+    assert [f for f in found if f.code in ("PLACEMENT_PROBLEM", "CONNECTION_NOT_DRAWN")] == []

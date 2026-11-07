@@ -1,0 +1,21 @@
+schema = 1
+name = "Connector head (heading of a connector box)"
+kind = "element"
+status = "unverified"
+# our own head of a connector pin table, authored in the pin cell's frame: it sits before the first
+# row on the table's axis (y), its lower edge on the row's upper edge (y = 0) and over the row's
+# body x extent. Stretched on y it follows the cuts of table().
+reference = { standard = "IEC 60617", number = "connector-head" }
+
+elements = [
+  { polyline = [[-1, -2], [3, -2], [3, 0], [-1, 0]], closed = true },
+]
+
+stretch = [{ axis = "y", at = -1 }]
+
+lint_allow = [
+  { rule = "slot-overlap-body", reason = "the text box is wider than the cell is tall; a table cell is drawn unrotated and its text stays inside the outline" },
+]
+
+[slots]
+lines = { at = [-0.75, -1], side = "E", box = [3.5, 1] }

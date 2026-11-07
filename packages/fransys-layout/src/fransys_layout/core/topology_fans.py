@@ -180,6 +180,14 @@ def resolve(att: Att) -> Attach:
         "before-hub": (last - 1, False),
         "hub-foot": (last, True),
     }[att.where]
-    pin = cells[index].top_pin if top else cells[index].bottom_pin
-    where = att.pin or PinRef(cells[index].sym, pin or "")
+    where = att.pin or _facing(cells[index], top=top, at=att.where)
     return Attach(att.lane.column, att.lane.index, index, where, att.pole, net=att.net)
+
+
+def _facing(cell: Cell, *, top: bool, at: str) -> PinRef:
+    """The cell's pin on the head or foot side; a cell with none cannot be built, never an empty pin."""
+    pin = cell.top_pin if top else cell.bottom_pin
+    if pin is None:
+        msg = f"attachment {at} on {cell.sym} has no pin on its {'head' if top else 'foot'} side: a wired pin was dropped"
+        raise CoreError(msg)
+    return PinRef(cell.sym, pin)

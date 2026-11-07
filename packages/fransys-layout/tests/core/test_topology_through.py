@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING
 import pytest
 
 from fransys_layout.core import build_flow
-from fransys_layout.core.topology_split import BundleError
 from fransys_layout.core.values import BoxSpec, Bundle, PinRef
 
 from .flow_builders import OPTIONS, elem, free, net, poles, problem
@@ -87,7 +86,8 @@ def test_every_pole_of_a_device_takes_the_bundles_direction(
 
 @pytest.mark.rule("BUNDLE")
 def test_bundle_direction_off_turns_each_chain_alone() -> None:
-    """Per-chain turns split the contactor's poles, so a driver and a leg meet on one node."""
+    """Per-chain turns face a pole's pin away from its fan; the pin stays wired and no lane end claims it (KI-751)."""
     syms, nets, _ = _contactor()
-    with pytest.raises(BundleError):
-        build_flow(problem(syms, nets), replace(OPTIONS, bundle_direction=False))
+    flow = build_flow(problem(syms, nets), replace(OPTIONS, bundle_direction=False))
+    reached = {a.pin for fan in flow.fans for a in (*fan.drivers, *fan.legs)}
+    assert reached == {pin for n in nets if n.id in {i for f in flow.fans for i in f.nets} for pin in n.pins}

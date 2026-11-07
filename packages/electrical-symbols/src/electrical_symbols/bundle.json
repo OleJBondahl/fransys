@@ -2798,6 +2798,91 @@
       },
       "status": "unverified"
     },
+    "connector-head": {
+      "anchors": [],
+      "body_box": [
+        [
+          -1,
+          -2
+        ],
+        [
+          3,
+          0
+        ]
+      ],
+      "elements": [
+        {
+          "closed": true,
+          "fill": "none",
+          "polyline": [
+            [
+              -1,
+              -2
+            ],
+            [
+              3,
+              -2
+            ],
+            [
+              3,
+              0
+            ],
+            [
+              -1,
+              0
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        }
+      ],
+      "keepout_box": [
+        [
+          -1,
+          -2
+        ],
+        [
+          3,
+          0
+        ]
+      ],
+      "kind": "element",
+      "lint_allow": [
+        {
+          "reason": "the text box is wider than the cell is tall; a table cell is drawn unrotated and its text stays inside the outline",
+          "rule": "slot-overlap-body"
+        }
+      ],
+      "name": "Connector head (heading of a connector box)",
+      "nodes": [],
+      "paths": [],
+      "ports": [],
+      "reference": {
+        "number": "connector-head",
+        "standard": "IEC 60617"
+      },
+      "schema": 1,
+      "slots": {
+        "lines": {
+          "at": [
+            -0.75,
+            -1
+          ],
+          "box": [
+            3.5,
+            1
+          ],
+          "side": "E"
+        }
+      },
+      "status": "unverified",
+      "stretch": [
+        {
+          "at": -1,
+          "axis": "y"
+        }
+      ]
+    },
     "contact": {
       "anchors": [],
       "body_box": [
@@ -13125,6 +13210,95 @@
       "ports": [],
       "reference": {
         "number": "unit-outline",
+        "standard": "IEC 60617"
+      },
+      "schema": 1,
+      "slots": {
+        "label": {
+          "at": [
+            0.25,
+            0.75
+          ],
+          "box": [
+            6,
+            1
+          ],
+          "side": "E"
+        }
+      },
+      "status": "unverified",
+      "stretch": [
+        {
+          "at": 4,
+          "axis": "x"
+        },
+        {
+          "at": 3,
+          "axis": "y"
+        }
+      ]
+    },
+    "unit-outline-by-others": {
+      "anchors": [],
+      "body_box": [
+        [
+          0,
+          0
+        ],
+        [
+          8,
+          6
+        ]
+      ],
+      "elements": [
+        {
+          "closed": true,
+          "fill": "none",
+          "polyline": [
+            [
+              0,
+              0
+            ],
+            [
+              8,
+              0
+            ],
+            [
+              8,
+              6
+            ],
+            [
+              0,
+              6
+            ]
+          ],
+          "style": "dashed",
+          "weight": "normal"
+        }
+      ],
+      "keepout_box": [
+        [
+          0,
+          0
+        ],
+        [
+          8,
+          6
+        ]
+      ],
+      "kind": "element",
+      "lint_allow": [
+        {
+          "reason": "the label text box does not rotate and is wider than the frame is tall once rotated; the frame is drawn unrotated and the text stays inside the outline",
+          "rule": "slot-overlap-body"
+        }
+      ],
+      "name": "Unit outline, by others",
+      "nodes": [],
+      "paths": [],
+      "ports": [],
+      "reference": {
+        "number": "unit-outline-by-others",
         "standard": "IEC 60617"
       },
       "schema": 1,

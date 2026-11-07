@@ -123,6 +123,12 @@ def test_resolve_refuses_an_attachment_with_no_net() -> None:
         resolve(Att(_lane("L1", "x"), "head"))
 
 
+def test_resolve_refuses_an_attachment_on_a_cell_with_no_pin_on_that_side() -> None:
+    lane = LaneDraft("L1", 0, [Cell("x", "R180", "n", None)])
+    with pytest.raises(CoreError, match="x has no pin on its foot side"):
+        resolve(Att(lane, "foot", net="t"))
+
+
 def test_a_hub_at_a_lanes_foot_turns_to_stand_with_its_net_pin_toward_the_lane() -> None:
     d = _lane("D", "x")
     fan = FanDraft("f", ["t"], [Att(d, "foot")], [])

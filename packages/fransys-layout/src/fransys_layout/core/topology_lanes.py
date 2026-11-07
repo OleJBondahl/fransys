@@ -57,9 +57,16 @@ def lanes_of(
             lane = LaneDraft(f"c:{cells[order[0]][0].sym}", index, list(cells[k]), offsets[k])
             lanes.append(lane)
             first, last = paths[group[k]][0], paths[group[k]][-1]
-            slot[(first.elem, first.top or "")] = (lane, "head")
-            slot[(last.elem, last.bottom or "")] = (lane, "foot")
+            _claim(slot, lane, first, last)
     return lanes, slot, joins
+
+
+def _claim(slot: Slot, lane: LaneDraft, first: Node, last: Node) -> None:
+    """A lane's head and foot take the net ends on their pins; a pin the held turn put on the far side is no lane end: a cross-link reaches it."""
+    if lane.cells[0].top_pin == first.top:
+        slot[(first.elem, first.top or "")] = (lane, "head")
+    if lane.cells[-1].bottom_pin == last.bottom:
+        slot[(last.elem, last.bottom or "")] = (lane, "foot")
 
 
 def _dealt(path: tuple[Node, ...], elems: Mapping[str, Elem], hubs: Mapping[PinRef, set[str]]) -> set[str]:

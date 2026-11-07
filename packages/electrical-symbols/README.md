@@ -56,6 +56,7 @@ copied from the standard.
 | `circuit-breaker` | Circuit breaker | symbol |
 | `coil` | Coil, general symbol | symbol |
 | `connection-point` | Connection point | symbol |
+| `connector-head` | Connector head (heading of a connector box) | element |
 | `connector-fixed` | Connector, fixed portion of an assembly | symbol |
 | `contact` | Connector contact, no stated gender | symbol |
 | `contact-female` | Connector contact, female (socket) | symbol |
@@ -118,6 +119,7 @@ copied from the standard.
 | `title-block-notice-line` | Title block notice line | element |
 | `transformer` | Transformer with two windings, general symbol | symbol |
 | `unit-outline` | Unit outline | element |
+| `unit-outline-by-others` | Unit outline, by others | element |
 | `wire-label-frame` | Wire label frame | element |
 
 The `-pe` files are our own variants with a protective earth terminal. The two qualifiers are composed

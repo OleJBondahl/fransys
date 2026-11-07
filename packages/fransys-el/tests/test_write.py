@@ -24,8 +24,8 @@ from fransys_el.write_pages import write_pages
 from placement_fixtures import kit_for, planted_model
 
 from electrical_symbols import LIBRARY
-from fransys_layout.core import Finding, PinRef, Wire, solve
-from fransys_model.derive import net_of, unit_label
+from fransys_layout.core import Finding, PinRef, Size, Wire, solve
+from fransys_model.derive import net_of, pdf_page, unit_label
 from fransys_model.kernel import Origin, Severity, evolve, make_id
 from fransys_model.layout import (
     DrawingSet,
@@ -169,6 +169,7 @@ def test_a_core_finding_keeps_its_code_text_and_the_registry_severity(written: W
         written.model,
         [Finding("WIRE_THROUGH_BODY", "no path", 1, net), Finding("NO_CELL", "nowhere")],
         {},
+        {},
     )
     assert [(f.code, f.message) for f in found] == [
         ("WIRE_THROUGH_BODY", "no path"),
@@ -181,13 +182,13 @@ def test_a_core_finding_keeps_its_code_text_and_the_registry_severity(written: W
 
 
 def test_a_subject_that_is_no_record_names_no_subject(written: Written) -> None:
-    (found,) = kernel_findings(written.model, [Finding("NO_BLOCK", "no block", None, "col:9")], {})
+    (found,) = kernel_findings(written.model, [Finding("NO_BLOCK", "no block", None, "col:9")], {}, {})
     assert found.subjects == ()
 
 
 def test_an_unmapped_token_beside_a_mapped_one_stays_in_the_message(written: Written) -> None:
     net = next(iter(net_ports(written.model)))
-    (found,) = kernel_findings(written.model, [Finding("NO_BLOCK", "no block", None, f"{net},col:9")], {})
+    (found,) = kernel_findings(written.model, [Finding("NO_BLOCK", "no block", None, f"{net},col:9")], {}, {})
     assert [s.kind for s in found.subjects] == ["port"]
     assert found.message == "no block (subject not a model record: col:9)"
 
@@ -213,13 +214,49 @@ def test_a_core_symbol_id_maps_to_its_record(written: Written) -> None:
     for code in wants:
         subject = net if code == "WIRE_MEETS_NET" else sym
         core = Finding(cast("FindingCode", code), "text", None, subject)
-        (found,) = kernel_findings(written.model, [core], symbols)
+        (found,) = kernel_findings(written.model, [core], symbols, {})
         assert [s.kind for s in found.subjects] in (["function"], ["port"]), code
+
+
+def test_a_page_overflow_names_the_set_the_page_and_the_designations_of_its_row(written: Written) -> None:
+    short = solve(replace(written.problem, area=Size(written.problem.area.w, 80)), options(house(), LIBRARY))
+    found = kernel_findings(written.model, short.findings, symbol_subjects(written.model, written.kit), {})
+    (first, *_) = (f for f in found if f.code == "PAGE_OVERFLOW")
+    assert first.message.startswith("page 1, row 0 (devices -B1, ")
+    assert "set" not in first.message.partition("(devices")[0]
+    assert "function:" not in first.message
+    devices = first.message.partition("(devices ")[2].partition(")")[0].split(", ")
+    assert devices == list(dict.fromkeys(devices))
+    assert "enlarge the page" in first.message
+
+
+def test_a_row_finding_prints_the_page_number_its_pdf_prints(written: Written) -> None:
+    """A set drawn after another set's page prints its core page 1 as a later PDF page."""
+    short = solve(replace(written.problem, area=Size(written.problem.area.w, 80)), options(house(), LIBRARY))
+    laid, _ = write_layout(written.model, None, short, written.problem, written.kit, library=LIBRARY)
+    earlier = DrawingSet(id=make_id(DrawingSet, ("e",)), key=("e",), location=None, number=0, produced_by="t")
+    cover = Page(
+        id=make_id(Page, ("e", "1")),
+        key=("e", "1"),
+        drawing_set=earlier.id,
+        number=1,
+        role=PageRole.POWER,
+        sheet_format=None,
+        groups=(),
+        produced_by="t",
+    )
+    model = evolve(laid, put=(earlier, cover), origin=Origin(file="t", line=0, note="t"))
+    page = min(layout_of(laid, Page).values(), key=lambda p: p.number)
+    core_number = page.number
+    assert pdf_page(model, page) != core_number
+    found = kernel_findings(model, short.findings, symbol_subjects(written.model, written.kit), {core_number: page})
+    first = next(f for f in found if f.code == "PAGE_OVERFLOW")
+    assert first.message.startswith(f"page {pdf_page(model, page)}, row 0 (devices ")
 
 
 def test_a_code_the_registry_does_not_hold_is_refused(written: Written) -> None:
     with pytest.raises(ProblemError, match="LANE_TURNED"):
-        kernel_findings(written.model, [Finding("LANE_TURNED", "turned")], {})
+        kernel_findings(written.model, [Finding("LANE_TURNED", "turned")], {}, {})
 
 
 def test_a_bundle_is_a_trunk_and_a_single_wire_is_a_wire(written: Written) -> None:
@@ -327,7 +364,7 @@ def test_a_call_without_the_symbol_map_is_a_type_error(written: Written) -> None
 def test_a_fill_under_min_text_names_the_unit_label_not_its_id(written: Written) -> None:
     unit = next(iter(written.model.tables["unit"]))
     core = Finding("FILL_UNDER_MIN", f"unit {unit.value}, block b: page filled 5%", 2, "b")
-    (found,) = kernel_findings(written.model, [core], {})
+    (found,) = kernel_findings(written.model, [core], {}, {})
     assert unit.value not in found.message
     assert found.message.startswith(f"unit {unit_label(written.model, unit)}, block b")
 

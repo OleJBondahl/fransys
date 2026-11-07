@@ -51,9 +51,8 @@ def fans_of(
     for net in (n for n in ends_by_net if n not in links):
         ends = ends_by_net[net]
         pin = attached_pin(ends)
-        if pin is not None:
-            _lane_through(net, ends, env)
-            key = _attach_key(ends, env)
+        key = None if pin is None else _attach_key(net, ends, env)
+        if pin is not None and key is not None:
             attached[key], held[key] = pin, (net, ends)
         elif (split := _spans(ends, env.syms) if env.tag_across else ()) or not _fan_net(net, ends, parts, env):
             _lane_through(net, ends, env)
@@ -118,11 +117,12 @@ def _across(
     return out
 
 
-def _attach_key(ends: tuple[NetEnd, ...], env: FanEnv) -> tuple[str, int, str]:
-    """The lane slot of the end that is no box pin: (column, index, head or foot)."""
+def _attach_key(net: str, ends: tuple[NetEnd, ...], env: FanEnv) -> tuple[str, int, str] | None:
+    """The lane slot of the end that is no box pin: (column, index, head or foot); None when its pin faces away, a cross-link reaches it."""
+    _lane_through(net, ends, env)
     end = next(e for e in ends if e.site != "boxpin")
-    lane, where = env.slot[(end.elem or "", env.elems[end.elem or ""].n_pin or "" if end.site == "through" else end.pin.pin)]
-    return lane.column, lane.index, where
+    hit = env.slot.get((end.elem or "", env.elems[end.elem or ""].n_pin or "" if end.site == "through" else end.pin.pin))
+    return None if hit is None else (hit[0].column, hit[0].index, hit[1])
 
 
 def _lane_through(net: str, ends: tuple[NetEnd, ...], env: FanEnv) -> None:

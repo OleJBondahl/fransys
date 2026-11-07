@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 
 from .arrow_reserve import lead_reserve, row_arrows, row_legs
 from .pack_row import solve_row
+from .row_names import row_where
 from .rowspec import one_row
 from .values import Finding
 
@@ -35,7 +36,7 @@ def row_specs(env: PageEnv) -> tuple[RowSpec, ...]:
 def _wider(env: PageEnv, index: int, overflow: int) -> Finding:
     first = env.plan.rows[index].blocks[0]
     text = (
-        f"page {env.plan.page}, row {index}: {overflow} G wider than the page; shorten the row, "
+        f"{row_where(env.plan, index, env.blocks, env.columns)}: {overflow} G wider than the page; shorten the row, "
         "lower the column count of the block, raise the page width or set Options.short_height"
     )
     return Finding("WIDER_THAN_PAGE", text, env.plan.page, first)

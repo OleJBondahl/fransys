@@ -23,6 +23,7 @@ from .place import place_pages
 from .route import route_pages
 from .route_env import LostKey, lost_key
 from .route_fixed import Laid, fixed_wires
+from .row_names import row_where
 from .text_markers import placed_marks
 from .topology import build_flow
 from .values import Finding
@@ -101,10 +102,10 @@ def _over(page: PagePlacement, room_w: int, room_h: int) -> tuple[int, int]:
     return wide, (max(bottoms) - min(tops) if page.bands else 0) - room_h
 
 
-def _culprit(plan: PagePlan, page: PagePlacement, *, tall: bool) -> str | None:
-    """The first block of the page's tallest (or widest) placed row: the block a PAGE_OVERFLOW fix names."""
+def _culprit(plan: PagePlan, page: PagePlacement, *, tall: bool) -> int | None:
+    """The page's tallest (or widest) placed row: the row a PAGE_OVERFLOW fix names."""
     sizes = [b - t for t, b in page.bands] if tall else [w for _, w in page.rows]
-    rows = [(size, row.blocks[0]) for size, row in zip(sizes, plan.rows, strict=False) if row.blocks]
+    rows = [(size, i) for i, (size, row) in enumerate(zip(sizes, plan.rows, strict=False)) if row.blocks]
     return max(rows)[1] if rows else None
 
 
@@ -112,13 +113,17 @@ def overflows(placement: Placement, cut: CutResult, problem: PlacementProblem, o
     """PAGE_OVERFLOW, the one home of the verdict: each page, in page order, whose rows or bands pass the page less margin."""
     room_w = problem.area.w - 2 * options.margin.w
     room_h = problem.area.h - options.page_headroom
+    blocks = {b.id: b for lst in cut.blocks for b in lst.blocks}
+    columns = {c.id: c for c in cut.flow.columns}
     out = []
     for page, plan in zip(placement.pages, cut.spec.pages, strict=True):
         wide, tall = _over(page, room_w, room_h)
         if wide > 0 or tall > 0:
+            row = _culprit(plan, page, tall=tall > 0)
+            where = f"set {plan.unit or 'root'}, page {page.page}" if row is None else row_where(plan, row, blocks, columns)
             by = f"{max(wide, 0)} G wide and {max(tall, 0)} G high"
-            msg = f"page {page.page} is over by {by}: enlarge the page, split the unit or shorten the column"
-            out.append(Finding("PAGE_OVERFLOW", msg, page.page, _culprit(plan, page, tall=tall > 0)))
+            msg = f"{where}: the page is over by {by}; enlarge the page, split the unit or shorten the column"
+            out.append(Finding("PAGE_OVERFLOW", msg, page.page, None if row is None else plan.rows[row].blocks[0]))
     return tuple(out)
 
 

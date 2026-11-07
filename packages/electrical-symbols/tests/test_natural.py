@@ -13,6 +13,7 @@ STRETCHABLE = [
     "diagram-box-by-others",
     "card",
     "unit-outline",
+    "unit-outline-by-others",
     "harness-frame",
     "group-frame",
 ]
@@ -20,6 +21,7 @@ ROWS = {"pin-cell": "y", "pin-cell-wide": "y", "cable-column": "x", "contact-row
 SS5 = [
     *ROWS,
     "cable-head",
+    "connector-head",
     "contact-head",
     "diagram-box",
     "diagram-box-by-others",
@@ -27,6 +29,7 @@ SS5 = [
     "reference-marker",
     "wire-label-frame",
     "unit-outline",
+    "unit-outline-by-others",
     "harness-frame",
     "group-frame",
     "junction-dot",

@@ -8,7 +8,7 @@ import re
 from typing import TYPE_CHECKING, cast
 
 from fransys_layout import FINDING_CODES as LAYOUT_CODES
-lazy from fransys_model.derive import tag_text, unit_label
+lazy from fransys_model.derive import pdf_page, tag_text, unit_label
 lazy from fransys_model.kernel import Finding as KernelFinding
 
 from .codes import FINDING_CODES
@@ -21,9 +21,14 @@ if TYPE_CHECKING:
 
     from fransys_layout.core import Finding as CoreFinding
     from fransys_model.kernel import Id, Model
+    from fransys_model.layout import Page
     from fransys_model.vocab import Function
 
 __all__ = ["kernel_findings"]
+
+_DEVICES = re.compile(r"\(devices ([^)]*)\)")  # a row's devices as designations: a relay's contacts print its tag once
+
+_ROW_PAGE = re.compile(r"page \d+(, row)")  # the core's set-local page number in a row finding
 
 _BY_CODE = {info.code: info for info in (*LAYOUT_CODES, *FINDING_CODES)}
 
@@ -49,18 +54,26 @@ def _named(model: Model, symbols: Mapping[str, Id[object]], text: str) -> str:
     if not names:
         return text
     keys = re.compile("|".join(re.escape(k) for k in names))
-    return keys.sub(lambda m: names[m.group()], text)
+    named = keys.sub(lambda m: names[m.group()], text)
+    return _DEVICES.sub(lambda m: f"(devices {', '.join(dict.fromkeys(m[1].split(', ')))})", named)
+
+
+def _printed_page(model: Model, pages: Mapping[int, Page], found: CoreFinding) -> str:
+    """The text of `found` with its set-local page number replaced by the number the PDF prints (`derive.pdf_page`)."""
+    page = pages.get(found.page) if found.page is not None else None
+    return found.text if page is None else _ROW_PAGE.sub(lambda m: f"page {pdf_page(model, page)}{m[1]}", found.text)
 
 
 def _message(text: str, unmapped: tuple[str, ...]) -> str:
     return f"{text} (subject not a model record: {', '.join(unmapped)})" if unmapped else text
 
 
-def kernel_findings(model: Model, findings: Iterable[CoreFinding], symbols: Mapping[str, Id[object]]) -> tuple[KernelFinding, ...]:
+def kernel_findings(
+    model: Model, findings: Iterable[CoreFinding], symbols: Mapping[str, Id[object]], pages: Mapping[int, Page]
+) -> tuple[KernelFinding, ...]:
     """One kernel `Finding` per core finding, in order; an unregistered code is refused.
 
-    `symbols` maps a core symbol id to the function it draws (`symbol_subjects`), so a finding
-    on a cell, an annex owner or a box names a record and its fix can print the subject.
+    `symbols` maps a core symbol id to its function; `pages` (core number to `Page`) gives a row finding its PDF page number.
     """
     known = {**net_ports(model), **id_texts(model), **symbols}
     out = []
@@ -73,6 +86,8 @@ def kernel_findings(model: Model, findings: Iterable[CoreFinding], symbols: Mapp
             )
         subjects, unmapped = _subjects(known, found.subject)
         out.append(
-            info.finding(subjects, _message(_named(model, symbols, found.text), unmapped))  # the code is registry-checked above
+            info.finding(
+                subjects, _message(_named(model, symbols, _printed_page(model, pages, found)), unmapped)
+            )  # the code is registry-checked above
         )
     return tuple(out)

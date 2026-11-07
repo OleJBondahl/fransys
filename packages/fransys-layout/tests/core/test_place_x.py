@@ -124,7 +124,12 @@ def test_a_row_wider_than_the_page_is_left_packed_and_named() -> None:
     assert finding.code == "WIDER_THAN_PAGE"
     assert finding.subject == env.plan.rows[0].blocks[0]
     assert finding.page == env.plan.page
-    for word in (f"page {env.plan.page}", "row 0", f"{overflow} G", "short_height"):
+    for word in (
+        f"{'set ' + env.plan.unit + ', ' if env.plan.unit else ''}page {env.plan.page}, row 0 (devices e, wide)",
+        "wider than the page",
+        f"{overflow} G",
+        "short_height",
+    ):
         assert word in finding.text
     left = column_extent(spec.syms, (Lane(spec.pcs["c:e"].lanes[0], 0),), spec.in_row)[0]
     options = core_options(marker=MARKER)

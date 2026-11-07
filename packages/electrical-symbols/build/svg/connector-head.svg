@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="15mm" height="10mm" viewBox="-2 -3 6 4">
+<title>Connector head (heading of a connector box)</title>
+<g fill="none" stroke="#000" stroke-linecap="butt" stroke-linejoin="miter">
+<polygon points="-1,-2 3,-2 3,0 -1,0" stroke-width="0.1"/>
+</g>
+</svg>

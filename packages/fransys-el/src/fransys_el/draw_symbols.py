@@ -17,6 +17,7 @@ from .write_drawn import _leads, _offsets, _sides
 if TYPE_CHECKING:
     from collections.abc import Iterator, Mapping
 
+    from electrical_symbols import Library
     from fransys_layout.core import CoreLayout, PlacementProblem
     from fransys_model.kernel import Id
     from fransys_model.layout import Page
@@ -66,7 +67,7 @@ def placed_symbols(
             )
 
 
-def junction_dots(layout: CoreLayout, pages: Mapping[int, Page]) -> Iterator[tuple[Id[Page], DrawnSymbol]]:
+def junction_dots(layout: CoreLayout, pages: Mapping[int, Page], library: Library) -> Iterator[tuple[Id[Page], DrawnSymbol]]:
     """One `junction-dot` per junction point `PageRoutes.dots` holds (layout-0335, 0395).
 
     Its id names no document number, so a unit's page draws in one order alone and in a parent.
@@ -81,6 +82,6 @@ def junction_dots(layout: CoreLayout, pages: Mapping[int, Page]) -> Iterator[tup
                 x=j.x,
                 y=j.y,
                 orient="R0",
-                outline=outline_of("junction-dot", "R0", j.x, j.y),
+                outline=outline_of("junction-dot", "R0", j.x, j.y, library),
             ),
         )

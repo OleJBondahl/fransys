@@ -185,11 +185,7 @@ def _respelled(prob: PlacementProblem, maps: dict[str, str]) -> PlacementProblem
     )
     hints = replace(
         hints,
-        keep_together=tuple(frozenset(map(name, k)) for k in hints.keep_together),
         order_pairs=tuple((name(a), name(b)) for a, b in hints.order_pairs),
-        chains=tuple(tuple(map(name, c)) for c in hints.chains),
-        draw_in=tuple((name(a), name(b)) for a, b in hints.draw_in),
-        sides=tuple((pin(p), side) for p, side in hints.sides),
     )
     annexes = tuple(replace(a, owner=name(a.owner)) for a in out.annexes)
     return replace(out, facts=facts, hints=hints, annexes=annexes)

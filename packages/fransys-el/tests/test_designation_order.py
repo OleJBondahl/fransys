@@ -9,8 +9,9 @@ from typing import Any
 import fransys as fr
 from conventions_fixtures import house
 from fransys.colours import BU
-from fransys_el import build, options, symbol_kit
+from fransys_el import build, symbol_kit
 from fransys_el.placement_ids import symbol_key
+from fransys_el.placement_options import options
 from placement_fixtures import leads
 
 from electrical_symbols import LIBRARY

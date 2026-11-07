@@ -9,14 +9,13 @@ from typing import Any
 
 import fransys as fr
 import pytest
-from _drawn_facts import document_facts, symbol_subjects, text_subjects, wire_nets
-from _drawn_pages import drawn_pages
+from _drawn_facts import document_facts, pin_turn, symbol_subjects, text_subjects, wire_nets
 from _model_build_cover import unit_document
 from fransys.colours import BU
 
-from fransys_layout.geometry import GENERIC_BOX_KEY, WIRING_GRID, symbol_geometry
-from fransys_layout.geometry.symbols import channel_pitch
-from fransys_model.layout import Orientation, PowerSymbol, layout_of
+from electrical_symbols import GENERIC_BOX_KEY
+from fransys_layout.geometry import WIRING_GRID
+from fransys_model.layout import PowerSymbol, layout_of
 from fransys_model.vocab.tables import functions, items, ports
 
 
@@ -82,9 +81,8 @@ def _port_at(placed, port: str) -> tuple[Any, Any]:
     """The page position of port `port` of the drawn symbol `placed`."""
     if placed.symbol == GENERIC_BOX_KEY:
         return placed.x + placed.offsets[port], placed.y
-    geometry = symbol_geometry(placed.symbol, poles=placed.poles, orientation=Orientation[placed.orient])
-    (found,) = (g for g in geometry.ports if g.name == port)
-    return placed.x + found.at.x, placed.y + found.at.y
+    found = pin_turn(placed.symbol, port, poles=placed.poles, orient=placed.orient)
+    return placed.x + found.dx, placed.y + found.dy
 
 
 def _pin_x(placed, port: str) -> Any:
@@ -135,34 +133,6 @@ def test_each_moved_contact_references_its_coil_and_the_coil_lists_it() -> None:
         assert _pages(model, home.partners) == [_home(model, coil)]
         table = [r for r in refs if r.function == _fid(model, coil)]
         assert any(_home(model, contact) in _pages(model, [p]) for r in table for p in r.partners)
-
-
-def _boxes(model) -> list[Any]:
-    """The generic boxes the core path draws, all pages."""
-    return [s for drawing in drawn_pages(model).values() for s in drawing.symbols if s.key == GENERIC_BOX_KEY]
-
-
-def test_channel_pins_stand_one_and_a_half_pole_pitches_apart_and_their_texts_keep_the_gap() -> None:
-    """V5 pitch: pins 1.5 pole pitches apart (texts widen it only where needed), no text nearer."""
-    model = _built()
-    (box,) = (p for p in _boxes(model) if any("di_" in n for n, _ in p.offsets))
-    sides = dict(box.sides)
-    south = sorted(x for port, x in box.offsets if sides[port] == "s")
-    assert [b - a for a, b in pairwise(south)] == [channel_pitch()] * (len(south) - 1)
-    assert channel_pitch() * 2 == 3 * (symbol_geometry("circuit-breaker", poles=3).ports[2].at.x)
-    placed = [_placed(model, f"K{n}", "aux")[0] for n in (2, 3)]
-    x0, x1 = min(p.x for p in placed), max(p.x for p in placed)
-    y0 = min(p.y for p in placed)
-    under = [label for label in text_subjects(model) if label.page == placed[0].page and x0 - 20 <= label.box.x <= x1 + 90 and label.box.y >= y0 - 40]
-    assert len(under) >= 6, "the contacts' texts were not found: the check would pass over nothing"
-    pins = sorted(p.x for p in placed)
-    owner = lambda box: max(x for x in pins if x <= box.x)  # noqa: E731 -- local, one use
-    for one, other in combinations(under, 2):
-        if owner(one) == owner(other):
-            continue  # one contact's own texts sit by design
-        dx = max(one.box.x, other.box.x) - min(one.box.x + one.box.width, other.box.x + other.box.width)
-        dy = max(one.box.y, other.box.y) - min(one.box.y + one.box.height, other.box.y + other.box.height)
-        assert max(dx, dy) >= WIRING_GRID, (one, other)
 
 
 def _rail_plant(d) -> None:
@@ -235,6 +205,28 @@ def test_a_sixteen_channel_module_fits_one_page_with_a_contact_under_every_chann
         (contact,) = _placed(model, f"K{number + 1}", "aux")
         assert _home(model, contact) == _home(model, box), number
         assert _pin_x(contact, "out") == _pin_x(box, f"di_{number}.{number}"), number
+
+
+def test_channel_pins_stand_one_and_a_half_pole_pitches_apart_and_their_texts_keep_the_gap() -> None:
+    """V5 pitch: pins 1.5 pole pitches apart (texts widen it only where needed), no text nearer."""
+    model = _built()
+    box = _channel_box(model)
+    sides = dict(box.sides)
+    south = sorted(x for port, x in dict(box.offsets).items() if sides[port] == "s")
+    pole = pin_turn("circuit-breaker", "2.in", poles=3).dx - pin_turn("circuit-breaker", "1.in", poles=3).dx
+    assert [b - a for a, b in pairwise(south)] == [pole * 3 // 2] * (len(south) - 1)
+    placed = [_placed(model, f"K{n}", "aux")[0] for n in (2, 3)]
+    x0, x1 = min(p.x for p in placed), max(p.x for p in placed)
+    y0 = min(p.y for p in placed)
+    under = [label for label in text_subjects(model) if label.page == placed[0].page and x0 - 20 <= label.box.x <= x1 + 90 and label.box.y >= y0 - 40]
+    assert len(under) >= 6, "the contacts' texts were not found: the check would pass over nothing"
+    pins = sorted(p.x for p in placed)
+    for one, other in combinations(under, 2):
+        if max(x for x in pins if x <= one.box.x) == max(x for x in pins if x <= other.box.x):
+            continue  # one contact's own texts sit by design
+        dx = max(one.box.x, other.box.x) - min(one.box.x + one.box.width, other.box.x + other.box.width)
+        dy = max(one.box.y, other.box.y) - min(one.box.y + one.box.height, other.box.y + other.box.height)
+        assert max(dx, dy) >= WIRING_GRID, (one, other)
 
 
 def _drawing(model) -> str:

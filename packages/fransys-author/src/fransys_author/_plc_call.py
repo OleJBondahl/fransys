@@ -37,11 +37,11 @@ def _refuse_device_plc(fn: Fn, facet: PlcRequestFacet) -> None:
         raise AuthorError(msg)
 
 
-def refuse_plc(recorder: _Recorder, fn: Fn, facet: PlcRequestFacet) -> None:
-    """Raise `AuthorError` for a `.plc` call that a device or a module's channel cannot take."""
-    if not _is_channel(recorder, fn):
-        _refuse_device_plc(fn, facet)
-        return
+def _refuse_channel_plc(recorder: _Recorder, fn: Fn, facet: PlcRequestFacet) -> None:
+    """Raise `AuthorError` for a `.plc` call on a module's channel that sets what its module or its device owns."""
+    if facet.description is not None:
+        msg = f"{fn.name} is a channel of its module and prints no description: put the description on the field device's .plc request"
+        raise AuthorError(msg)
     if facet.signal is not None:
         msg = f"{fn.name} is a channel of its module and has its signal already: write .plc(name=...) to name it"
         raise AuthorError(msg)
@@ -49,6 +49,17 @@ def refuse_plc(recorder: _Recorder, fn: Fn, facet: PlcRequestFacet) -> None:
         what = "name" if facet.signal_name is not None else "routing" if facet.routing is not None else "scale" if _scaled(recorder, fn) else ""
         if what:
             raise AuthorError(_UNCONFIGURED.format(what=what))
+
+
+def refuse_plc(recorder: _Recorder, fn: Fn, facet: PlcRequestFacet) -> None:
+    """Raise `AuthorError` for a `.plc` call that a device or a module's channel cannot take."""
+    if facet.description is not None and (not facet.description.strip() or "\n" in facet.description):
+        msg = 'a description is text on one line: write it, e.g. "Tank 1 level", or leave it out for none'
+        raise AuthorError(msg)
+    if _is_channel(recorder, fn):
+        _refuse_channel_plc(recorder, fn, facet)
+    else:
+        _refuse_device_plc(fn, facet)
 
 
 def refuse_scale(recorder: _Recorder, fn: Fn, unit: str | None) -> None:

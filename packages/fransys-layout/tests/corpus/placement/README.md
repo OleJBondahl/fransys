@@ -25,7 +25,7 @@ Every circuit is invented demo data. No consumer data is in this folder.
 Units are G. 8 G is one wiring grid, 2.5 mm. x grows right and y grows down. Lines, in file order:
 
 - `area W H`: the content box of one page, in G (1,312 x 854 for A3).
-- `group LABEL order=K break_before=0|1 "description"`: the consumer's groups in order. `break_before=1` means the group starts a new page.
+- `group LABEL order=K "description"`: the consumer's groups in order.
 - `sym ID group=G body=x,y,w,h keepout=x,y,w,h`: one drawn symbol. Boxes are relative to the symbol origin, at orientation R0. The keep-out holds the designation and pin-marking slots.
 - `  pin NAME SIDE dx,dy [node=k] [stand=g]`: one pin. SIDE (N, E, S or W) is the way its wire leaves. Pins with the same `node=` are one electrical point (a terminal's four sides). `stand=` means the pin carries a power symbol (24 V, 0 V, PE) and no wire.
 - `net nI [rail rank=r power=K] SYM.PIN ...`: one physical net and its drawn pins. `rail` marks a net that carries a declared supply potential. A smaller `rank` is drawn higher: AC rails by phase, DC rails high to low, 0 V, PE last. `power=SUPPLY`, `GROUND` or `PE` draws as power symbols; `NONE` draws as wires.

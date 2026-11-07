@@ -6,9 +6,9 @@ Read once from the symdef layer (SB11); the core moves the values and knows no p
 from typing import TYPE_CHECKING, cast
 
 from electrical_symbols import WIRING_GRID, power_symbol_key
-from fransys_layout import Facing, symbol_geometry
+from fransys_layout import Facing
 from fransys_layout.core import SIDE_STEP, Anchor, Box, PinRef, Pose
-from fransys_layout.symbols import library_symbol, measured_slots
+from fransys_layout.symbols import library_symbol, measured_slots, turned_view
 from fransys_model.derive import drawn_stands, port_power_text
 from fransys_model.derive.order import functions_in_order
 from fransys_model.layout import Orientation
@@ -57,19 +57,31 @@ def stood(model: Model, kit: SymbolKit) -> Iterator[tuple[str, str, Id[Port], st
                 yield symbol_key(model, function), pick.ports[port], port, power[port].value
 
 
-def _pose(key: str, side: Facing, quarter: int, reach: int, keeps: Mapping[Orientation, Box]) -> Pose:
+def _first_port(library: Library, key: str) -> str:
+    """The id of `key`'s first port in name order: a power symbol has one."""
+    return min(port.id for port in library_symbol(library, key).ports)
+
+
+def _pins(library: Library, key: str) -> dict[Orientation, tuple[str, int, int]]:
+    """The first port of `key` at each turn: the side it faces and its offset."""
+    symbol = library_symbol(library, key)
+    first = (_first_port(library, key),)
+    pins = {turn: turned_view(symbol, library, turn.name, first).pins[0] for turn in _TURNS}
+    return {turn: (pin.side, pin.dx, pin.dy) for turn, pin in pins.items()}
+
+
+def _pose(key: str, side: Facing, quarter: int, reach: int, at: tuple[Mapping[Orientation, Box], Mapping[Orientation, tuple[str, int, int]]]) -> Pose:
     """The turn of `key` whose port faces a pin `reach` steps off, `quarter` turns round `side`.
 
     Its box is `keeps` at that turn: the keep-out with the rail's text measured into its slot.
     """
     out = _AROUND[(_AROUND.index(side) + quarter) % len(_AROUND)]
     back = _AROUND[(_AROUND.index(out) + 2) % len(_AROUND)]
-    for turn in _TURNS:
-        geometry = symbol_geometry(key, orientation=turn)
-        port = geometry.ports[0]
-        if port.facing is back:
+    keeps, pins = at
+    for turn, (facing, px, py) in pins.items():
+        if facing == back.name:
             sx, sy = SIDE_STEP[out.name]
-            dx, dy = sx * reach * WIRING_GRID - port.at.x, sy * reach * WIRING_GRID - port.at.y
+            dx, dy = sx * reach * WIRING_GRID - px, sy * reach * WIRING_GRID - py
             b = keeps[turn]
             box = Box(b.x + dx, b.y + dy, b.w, b.h)
             return Pose(turn.name, (dx, dy), box, (sx * reach * WIRING_GRID, sy * reach * WIRING_GRID))
@@ -83,7 +95,7 @@ def _keeps(model: Model, key: str, port: Id[Port], library: Library, height: int
     symbol = library_symbol(library, key)
     found = {}
     for turn in _TURNS:
-        slot = f"marking.{symbol_geometry(key, orientation=turn).ports[0].name}"
+        slot = f"marking.{_first_port(library, key)}"
         found[turn] = measured_slots(symbol, turn.name, {slot: text} if text else {}, library, height)[1]
     return found
 
@@ -93,7 +105,7 @@ def anchors_of(model: Model, kit: SymbolKit, library: Library, height: int) -> t
     found = []
     for sym_id, name, port, kind in stood(model, kit):
         key = power_symbol_key(kind)
-        keeps = _keeps(model, key, port, library, height)
-        poses = tuple((side.name, _pose(key, side, q, r, keeps)) for side in Facing for q, r in _APPROACHES)
+        at = (_keeps(model, key, port, library, height), _pins(library, key))
+        poses = tuple((side.name, _pose(key, side, q, r, at)) for side in Facing for q, r in _APPROACHES)
         found.append(Anchor(PinRef(sym_id, name), poses))
     return tuple(found)

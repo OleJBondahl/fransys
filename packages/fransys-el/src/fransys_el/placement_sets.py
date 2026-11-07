@@ -299,15 +299,9 @@ def _known[T](names: Iterable[T], known: Collection[T]) -> bool:
 
 def _hints(hints: Hints, names: Collection[str], scope: DrawingScope) -> Hints:
     """The hints whose every name stands in the scope, and the scope's frames (R900 G9)."""
-    symbols = scope.symbols
     return Hints(
         tuple(g for g in hints.group_order if g in names),
-        frozenset(n for n in hints.break_before if n in names),
-        tuple(s for s in hints.keep_together if _known(s, names)),
         tuple(p for p in hints.order_pairs if _known(p, names)),
-        tuple(c for c in hints.chains if _known(c, names)),
-        tuple(d for d in hints.draw_in if _known(d, names)),
-        tuple(s for s in hints.sides if _inside(s[0], symbols)),
         scope.frames,
     )
 

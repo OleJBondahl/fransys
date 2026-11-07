@@ -79,15 +79,15 @@ def test_pdf_draws_no_typst_shape_but_places_and_tables():
 
 
 def test_layout_calls_no_symdef_draw_function():
-    assert any("body_box" in path.read_text(encoding="utf-8") and module == "fransys_layout.geometry.symbols" for module, path in src_modules())
+    assert any("measure(" in path.read_text(encoding="utf-8") and module == "fransys_layout.symbols.views" for module, path in src_modules())
     assert _scan("fransys_layout", draw_calls) == []
 
 
-def test_layout_reads_body_box_from_symdef():
-    path = dict(src_modules())["fransys_layout.geometry.symbols"]
+def test_layout_reads_the_boxes_from_symdef():
+    path = dict(src_modules())["fransys_layout.symbols.views"]
     tree = ast.parse(path.read_text(encoding="utf-8"))
     taken = {a.name for n in ast.walk(tree) if isinstance(n, ast.ImportFrom) and _in_symdef(n.module or "") for a in n.names}
-    assert "body_box" in taken
+    assert "measure" in taken
 
 
 def test_the_svg_gate_can_fail():

@@ -22,10 +22,8 @@ from .test_rowspec import world
 
 
 def _extent(prob: PlacementProblem) -> tuple[int, int]:
-    """(placed extent, row_width) of the first row of the first page, justify off."""
-    options = core_options(
-        justify=False,
-    )
+    """(placed extent, row_width) of the first row of the first page."""
+    options = core_options()
     cut = cut_of(prob, options)
     env = page_envs(cut, prob, options)[0]
     spec = row_specs(env)[0]
@@ -80,9 +78,7 @@ def test_a_card_in_the_middle_keeps_the_next_column_clear_by_its_footprint() -> 
         (block, free_block("f", ("c4",))),
         flow,
         prob,
-        core_options(
-            justify=False,
-        ),
+        core_options(),
     )
     x, _ = solve_row(spec, 10_000)
     assert x[col_node("c4")] - 2 >= x[box_node("box", HIGH)] + 300

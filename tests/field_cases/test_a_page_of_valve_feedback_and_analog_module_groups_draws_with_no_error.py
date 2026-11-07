@@ -27,7 +27,7 @@ def _filler(d: Any, order: list[Any], tag: str, name: str, rails: Any) -> None:
     order.append(g)
 
 
-def _design() -> tuple[Any, Any]:  # noqa: PLR0915  one linear repro shape
+def _design(*, hide: bool = False) -> tuple[Any, Any]:  # noqa: PLR0915, C901  one linear repro shape
     d = fr.design("demo_parts", "intake_parts", "measure_parts", place="CAB")
     d.project(title="Skid", number="P-2", customer="Example Co", revision=1, author="OJB")
     d.revision(1, date="2026-11-06", text="First issue", created="XX")
@@ -126,13 +126,15 @@ def _design() -> tuple[Any, Any]:  # noqa: PLR0915  one linear repro shape
         d.series(lamp.lamp["2"], x0[22].inner, wire=(BU, 0.5))
     order.append(g)
     d.layout.order(*order)
+    if hide:
+        d.layout.profile(hide_unused_pins=True)
     return d, cab
 
 
 @cache
-def _built(salt: str) -> fr.BuildResult:
+def _built(salt: str, *, hide: bool = False) -> fr.BuildResult:
     with id_namespace(salt) if salt != "-" else nullcontext():
-        d, cab = _design()
+        d, cab = _design(hide=hide)
         return fr.build(d, cabinet_document(cab))
 
 
@@ -141,3 +143,10 @@ def test_the_page_builds_with_no_error(salt: str) -> None:
     """The engineer's result: no ERROR (the consumer's WIDER_THAN_PAGE, PAGE_OVERFLOW, WIRE_THROUGH_BODY and DRAWING_SHORTS_NETS included)."""
     errors = sorted(f.code for f in fr.check(_built(salt)) if f.severity is Severity.ERROR)
     assert errors == []
+
+
+@pytest.mark.parametrize("salt", SALTS)
+def test_a_pin_leaves_its_box_on_its_own_side_with_unused_pins_hidden(salt: str) -> None:
+    """KI-776: with `hide_unused_pins` the box is smaller and a stem leaves the nearest footprint edge, through the body (WIRE_THROUGH_BODY)."""
+    codes = [f.code for f in fr.check(_built(salt, hide=True))]
+    assert "WIRE_THROUGH_BODY" not in codes

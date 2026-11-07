@@ -50,7 +50,6 @@ TWINS = [
     # _ratings.py is no twin (R915 P5): function_ratings and the part-level [block] mapping read Fransys records; narrowed by name, ADOPT-POLES-2
     f"{P}_protection.py",
     f"{L}core/keys.py",
-    f"{L}geometry/symbols.py",  # symdef reader; falls with CC3
 ]
 
 

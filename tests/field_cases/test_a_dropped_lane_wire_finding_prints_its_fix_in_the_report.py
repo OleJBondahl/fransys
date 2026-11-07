@@ -1,7 +1,7 @@
 """Field case: the report of a build that drops a lane wire prints the fix, not a SchemaError.
 The bug: LANE_WIRE_DROPPED named no model record, so `fr.report(result)` raised SchemaError (kind Finding) for it.
 Fixed by `kernel_findings`; no design drops a lane wire since R868 (the core turns a free hub), so the drop is forced."""
-# CONNECTION_NOT_DRAWN 3 per default-salt build set (FORCED_FAILURES): forced core failure, asserted through expect_codes.
+# The forced drop is a layout ERROR, so no drawing check runs after it and no CONNECTION_NOT_DRAWN follows (KI-773).
 
 from typing import TYPE_CHECKING, NamedTuple
 
@@ -54,7 +54,7 @@ def test_a_dropped_lane_wire_names_its_cell_and_the_report_prints_the_fix(tmp_pa
     monkeypatch.setattr(route_wires, "_between", lambda env, col, i, cells: route_wires._dropped(env, col, i, cells, "has a facing pin on no net"))
     result = _result(tmp_path)
     dropped = [f for f in result.findings if f.code == "LANE_WIRE_DROPPED"]
-    expect_codes(result, "LANE_WIRE_DROPPED", "CONNECTION_NOT_DRAWN")
+    expect_codes(result, "LANE_WIRE_DROPPED")
     assert all(f.subjects for f in dropped)
     report = fr.report(result)
     assert "Put the facing pins of -U1-" in report

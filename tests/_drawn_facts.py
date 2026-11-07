@@ -8,25 +8,33 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 from _drawn_pages import drawn_pages
-from fransys_el import drawn_subjects, symbol_kit
+from fransys_el import symbol_kit
+from fransys_el.drawn_subjects import drawn_subjects
 
-from electrical_symbols import LIBRARY
-from fransys_layout.geometry import GENERIC_BOX_KEY
+from electrical_symbols import GENERIC_BOX_KEY, LIBRARY, box_marking_widths, generic_box
+from fransys_layout.geometry import Box as GeoBox
+from fransys_layout.symbols import library_symbol, symbol_shape, turned_view
 from fransys_model.derive import function_item, item_designation
 from fransys_model.layout import Page, layout_of
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
+    from fransys_layout.core import Orientation
     from fransys_layout.drawing import DrawnSymbol, DrawnText, DrawnWire
     from fransys_model.kernel import Id, Model
 
 __all__ = [
     "Placed",
     "PlacedText",
+    "box_boxes",
+    "box_pins",
     "document_facts",
     "item_box",
     "marker_symbols",
+    "pin_turn",
+    "pin_turns",
+    "symbol_boxes",
     "symbol_subjects",
     "text_subjects",
     "wire_nets",
@@ -135,3 +143,38 @@ def item_box(model: Model, tag: str) -> Placed:
     boxes = [s for s in symbol_subjects(model) if s.key == GENERIC_BOX_KEY and s.tag == tag]
     assert len(boxes) == 1, f"{tag} draws {len(boxes)} boxes, not one"
     return boxes[0]
+
+
+def pin_turn(key: str, port: str, *, poles: int = 1, orient: Orientation = "R0"):
+    """The offset and side of `port` of symbol `key` repeated `poles` times at `orient`."""
+    return turned_view(library_symbol(LIBRARY, key, poles), LIBRARY, orient, (port,)).pins[0]
+
+
+def _boxes(symbol) -> tuple[GeoBox, GeoBox]:
+    view = turned_view(symbol, LIBRARY, "R0")
+    body, keepout = (GeoBox(x=b.x, y=b.y, width=b.w, height=b.h) for b in (view.body, view.keepout))
+    return body, keepout
+
+
+def symbol_boxes(key: str, *, poles: int = 1, orient: Orientation = "R0") -> tuple[GeoBox, GeoBox]:
+    """The body and the keep-out of symbol `key` repeated `poles` times at `orient`, relative to its origin."""
+    view = turned_view(library_symbol(LIBRARY, key, poles), LIBRARY, orient)
+    body, keepout = (GeoBox(x=b.x, y=b.y, width=b.w, height=b.h) for b in (view.body, view.keepout))
+    return body, keepout
+
+
+def box_boxes(names: tuple[str, ...], sides: tuple[str, ...] = (), offsets: tuple[float, ...] = ()) -> tuple[GeoBox, GeoBox]:
+    """The body and the keep-out of the generic box with ports `names`, relative to its origin."""
+    return _boxes(generic_box(names, sides, offsets, 0, marking_widths=box_marking_widths(LIBRARY, names)))
+
+
+def pin_turns(key: str, *, orient: Orientation = "R0"):
+    """Every pin of symbol `key` at `orient`: its offset from the origin and the side it faces."""
+    symbol = library_symbol(LIBRARY, key)
+    return turned_view(symbol, LIBRARY, orient, tuple(symbol_shape(symbol, LIBRARY).pins)).pins
+
+
+def box_pins(names: tuple[str, ...]):
+    """The pins of the generic box with ports `names`, in that order."""
+    symbol = generic_box(names, marking_widths=box_marking_widths(LIBRARY, names))
+    return turned_view(symbol, LIBRARY, "R0", names).pins

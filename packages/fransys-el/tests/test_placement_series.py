@@ -4,7 +4,8 @@ import fransys as fr
 import pytest
 from _expected_codes import expect_codes
 from fransys.colours import BU
-from fransys_el import build, house_conventions, options, symbol_kit
+from fransys_el import build, house_conventions, symbol_kit
+from fransys_el.placement_options import options
 from fransys_el.placement_series import within
 from fransys_el.placement_skips import NOT_SERIES_PARALLEL
 

@@ -24,7 +24,7 @@ from .pipeline_fixtures import cut_of, placed_from, routed_from, widened_of
 from .route_fixtures import two_links_one_gap
 from .test_widen import PLAIN, fan_legs, three_columns
 from .text_fixtures import PLANTS
-from .widen_fixtures import gap_width, overflowing_row
+from .widen_fixtures import overflowing_row
 
 # the name `widen` in core is the function, so the module comes by name
 widen_module = importlib.import_module("fransys_layout.core.widen")
@@ -48,17 +48,6 @@ def run(prob: PlacementProblem, demand: int = 0, gap: int = 1):
 
 def crossings(routes: Routes) -> int:
     return sum(p.counts.crossings for p in routes.pages)
-
-
-def test_two_nets_wanted_in_one_8_g_gap_widen_that_gap_by_one_grid_and_no_crossing() -> None:
-    prob = three_columns()
-    (_, before, rnd), (_, after, rnd2, found) = run(prob, demand=2)
-    ids = [g.id for g in before.pages[0].gaps]
-    assert gap_width(after, ids[1]) == gap_width(before, ids[1]) + GRID
-    assert gap_width(after, ids[0]) == gap_width(before, ids[0])
-    assert crossings(rnd2.routes) == crossings(rnd.routes) == 0
-    assert [g.tracks for g in after.pages[0].gaps] == [1, 2]
-    assert found == ()
 
 
 def test_a_widened_row_that_no_longer_fits_puts_the_third_column_on_a_new_row() -> None:

@@ -10,7 +10,7 @@ closing pad). The layer's `symdef.fitted_table` must give that height and the ol
 import pytest
 from conventions_fixtures import house
 from placement_fixtures import demo_model, kit_for, planted_model
-from symdef_layer_equivalence import pairs, tables
+from table_fixtures import syms, tables
 
 from electrical_symbols import LIBRARY
 from fransys_model.derive.contact_rows import table_geometry
@@ -22,17 +22,13 @@ STEP, PAD = 8, 2
 def test_the_fitted_table_is_as_high_as_todays_table_at_every_view(make) -> None:
     model = make()
     held = tables(model, kit_for(model))
-    found = [(old, new) for old, new in pairs(model, kit_for(model)) if new.id in held]
-    assert found
+    assert held
     base = table_geometry(0, STEP, PAD, headed=False).height
-    for old, new in found:
-        table = held[new.id]
+    for table in held.values():
         rows, left = divmod(table.h - base, STEP)
         assert left == 0
         assert rows >= 1
         assert table.h == table_geometry(rows, STEP, PAD, headed=False).height
-        assert old.table is not None
-        assert old.table.h == table.h
 
 
 def test_the_library_body_text_is_the_house_text_room() -> None:
@@ -45,10 +41,10 @@ def test_the_library_body_text_is_the_house_text_room() -> None:
 
 def test_a_coil_with_a_table_is_offered_no_quarter_turn_and_one_without_has_no_table() -> None:
     model = planted_model()
-    found = pairs(model, kit_for(model))
+    found = syms(model, kit_for(model))
     held = tables(model, kit_for(model))
-    tabled = [new for _, new in found if new.id in held]
-    plain = [new for _, new in found if new.id not in held]
+    tabled = [new for new in found if new.id in held]
+    plain = [new for new in found if new.id not in held]
     assert tabled
     assert plain
     assert all(set(new.views) <= {"R0", "R180", "MR180"} for new in tabled)

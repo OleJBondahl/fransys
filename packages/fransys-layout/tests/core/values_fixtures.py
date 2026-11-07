@@ -130,12 +130,7 @@ def problem() -> PlacementProblem:
         anchors=(Anchor(PinRef("K1", "1"), (("E", Pose("R90", (8, 0), BOX, (8, 0))),)),),
         hints=Hints(
             group_order=("G1",),
-            break_before=frozenset({"G1"}),
-            keep_together=(frozenset({"K1", "K2"}),),
             order_pairs=(("K1", "K2"),),
-            chains=(("K1", "K2"),),
-            draw_in=(("K1", "U1"),),
-            sides=((PinRef("K1", "1"), "E"),),
             frames=(("u", frozenset({"K1"})),),
         ),
         annexes=(Annex("K1", Size(16, 8), "tags", {"R0": (Spot("TL", "TL", 0, -8, "up", 8),)}),),

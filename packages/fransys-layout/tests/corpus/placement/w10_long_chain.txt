@@ -4,7 +4,7 @@
 # [rail rank=r power=K]: the net carries a declared supply potential; smaller rank is drawn
 # higher (AC by phase, DC high to low, 0 V, PE last). power=SUPPLY/GROUND/PE draws a symbol.
 area 1312 854
-group CH order=0 break_before=0 "Chain"
+group CH order=0 "Chain"
 sym =CH-U1-R1.item group=CH body=-16,-16,32,32 keepout=-16,-16,84,32
   pin lamp.1 S 0,16
   pin lamp.2 N 0,-16

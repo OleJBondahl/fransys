@@ -269,7 +269,7 @@ Nest that unit in the enclosure unit, which holds the receptacles. Join the boar
 connector to the receptacles with `d.series(..., wire=...)`; the wire crosses the unit
 boundary and draws as a boundary connection. The board's parts draw on the board unit's pages, not
 the enclosure's. A board that shares its unit with another top-level device draws as a black box,
-and `BOARD_NETS_NOT_DRAWN` names its dropped nets.
+and `BOARD_NETS_NOT_DRAWN` is an ERROR that names its dropped nets.
 
 ## Task: a board unit in a cabinet
 

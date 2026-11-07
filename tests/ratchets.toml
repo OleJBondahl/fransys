@@ -51,10 +51,10 @@ stock = 16
 # C3 (spec CONSOLIDATE; root-0356): `# noqa` codes and `# ty: ignore` rules in packages/*/src. The total is
 # the sum of the per-code table. What is left is kept with a reason on its line (decisions 0111, 0414, 0444, KI-125; KI-044).
 [escape_hatches]
-total = 34
+total = 36
 
 [escape_hatches_codes]
-PLR0913 = 26
+PLR0913 = 28
 ANN401 = 1
 ty-invalid-method-override = 5
 UP037 = 2

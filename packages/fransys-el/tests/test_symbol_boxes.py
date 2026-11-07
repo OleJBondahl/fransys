@@ -5,8 +5,9 @@ box on the lead, its ports named by `derive.box_port_text`.
 """
 
 import fransys as fr
-from fransys_el import Pick, symbol_kit
+from fransys_el import symbol_kit
 from placement_fixtures import leads
+lazy from fransys_el.placement_kit import Pick
 
 from electrical_symbols import GENERIC_BOX_KEY, LIBRARY
 from fransys_model.derive import box_port_text

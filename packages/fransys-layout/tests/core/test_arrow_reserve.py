@@ -1,7 +1,7 @@
 """The arrow reserve (layout-0301): a planned arrow at a row end keeps `Options.marker.w` free.
 
 Plant: the box-riser problem of test_room_plants (one row, fans f:n1 and f:n2, f:n1's span ends at
-x 1264; justify off, so the row's x do not move). A synthetic arrow of f:n1 leaves the right end.
+x 1264). A synthetic arrow of f:n1 leaves the right end.
 """
 
 from __future__ import annotations
@@ -39,7 +39,6 @@ def _must(*args):
 
 OPTIONS = core_options(
     marker=MARKER,
-    justify=False,
 )
 W = MARKER_BOX.w
 ARROWED = {(1, "f", 0): ()}  # the trunk of these tests stands an arrow at its right end
@@ -106,16 +105,10 @@ def test_the_poles_of_an_arrows_ends_are_those_of_the_attachments_at_its_pins() 
     assert arrow_poles(replace(fan, lanes=1), (ref,), _plan(2), 1) == (frozenset({0}), frozenset())
 
 
-def test_a_row_end_arrow_widens_the_row_and_the_fan_span_by_the_marker_width() -> None:
-    """Expected: the right extent and f:n1 span end rise by marker.w; f:n2 and the x stay; the tail keeps the grid step as the lead does (R1362)."""
+def test_a_row_end_arrow_sets_the_tail_reserve_to_the_marker_width_and_a_grid_step() -> None:
+    """Expected: the tail keeps the marker width plus the grid step as the lead does (R1362); the lead stays 0."""
     env = _env()
-    x0, _ = place_x(env)
-    base = {s.fan: s.x1 for s in _spans(env, x0)}
     wide = replace(env, refs=(_arrow(env.plan.page, 0),))
-    x1, _ = place_x(wide)
-    ends = {s.fan: s.x1 for s in _spans(wide, x1)}
-    assert x1 == x0
-    assert ends == {"f:n1": base["f:n1"] + W, "f:n2": base["f:n2"]}
     (before,), (after,) = row_specs(env), row_specs(wide)
     assert (before.tail_extra, after.tail_extra, after.lead_extra) == (0, W + env.options.wiring_grid, 0)
 

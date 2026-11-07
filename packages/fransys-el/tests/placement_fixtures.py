@@ -4,9 +4,10 @@ from typing import TYPE_CHECKING, NamedTuple, cast
 
 import fransys as fr
 from fransys.colours import BU
-from fransys_el import Conventions, build, options
+from fransys_el import build
 from fransys_el.placement_ids import symbol_key
 from fransys_el.placement_kit import Pick, SymbolKit
+from fransys_el.placement_options import Conventions, options
 
 from electrical_symbols import LIBRARY
 from fransys_layout.core import Placement, build_flow, order_blocks

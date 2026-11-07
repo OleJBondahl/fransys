@@ -114,34 +114,6 @@ def test_only_the_wide_fan_has_a_row_that_ends_inside_it() -> None:
     assert all(st.start == 0 for sts in card for st in sts.values())
 
 
-def test_a_wide_fan_stays_whole_when_wrapping_is_off() -> None:
-    cut = replace(
-        _cut_of_kind("fan"),
-        options=core_options(
-            marker=MARKER,
-            wrap_wide_fans=False,
-        ),
-    )
-    assert splits_block(cut, 0, 1)
-    assert all(st.start == 0 for sts in rows(cut, 0, row_sizes(cut)) for st in sts.values())
-
-
-def test_without_wrapping_the_fan_page_has_one_row() -> None:
-    syms = [elem("src", 150)] + [elem(f"{p}{i:02d}", 100) for i in range(8) for p in "ab"]
-    nets = [net("bus", "src.s", *[f"{p}{i:02d}.n" for p in "ab" for i in range(8)])]
-    nets += [net(f"y{i:02d}", f"a{i:02d}.s", f"b{i:02d}.s") for i in range(8)]
-    result = cut_of(
-        syms,
-        nets,
-        options=core_options(
-            marker=MARKER,
-            wrap_wide_fans=False,
-        ),
-    )
-    (page,) = result.spec.pages
-    assert len(page.rows) == 1
-
-
 def test_a_wrapped_wide_fan_in_two_rows_is_not_a_block_not_placed() -> None:
     """The stage 4 guard takes the wrap (layout-0309): rows > 1 for a wide fan is no finding."""
     result = wide_fan_cut()

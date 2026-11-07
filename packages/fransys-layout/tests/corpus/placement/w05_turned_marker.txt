@@ -4,8 +4,8 @@
 # [rail rank=r power=K]: the net carries a declared supply potential; smaller rank is drawn
 # higher (AC by phase, DC high to low, 0 V, PE last). power=SUPPLY/GROUND/PE draws a symbol.
 area 1312 854
-group CTRL order=0 break_before=0 "Control"
-group MAIN order=1 break_before=0 "Motor power"
+group CTRL order=0 "Control"
+group MAIN order=1 "Motor power"
 sym =MAIN-U1-M1.motor group=MAIN body=-16,-16,64,32 keepout=-16,-16,116,32
   pin PE S 0,16
   pin U N 0,-16

@@ -17,7 +17,7 @@ from test_units_worked_example import _PROJECT
 from fransys_model.derive import unit_release
 from fransys_model.vocab.tables import units
 
-_HEADER = ["pin", "channel_name", "signal", "signal_name", "wired_to"]
+_HEADER = ["pin", "channel_name", "signal", "signal_name", "description", "wired_to"]
 
 
 @pytest.fixture(scope="module")

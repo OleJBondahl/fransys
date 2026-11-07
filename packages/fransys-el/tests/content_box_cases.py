@@ -12,7 +12,8 @@ import fransys as fr
 from _unit_outline_case import unit_outline_case_drafts
 from conventions_fixtures import house
 from fransys.colours import BU
-from fransys_el import build, options, symbol_kit
+from fransys_el import build, symbol_kit
+from fransys_el.placement_options import options
 from input_card_designs import field_case
 from ring_cases import drawn_supply_model
 

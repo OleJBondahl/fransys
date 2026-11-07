@@ -10,8 +10,15 @@ import re
 from dataclasses import dataclass, fields
 
 OLDEST_VERIFIABLE = "0.13.8"
-KEYED_LISTING_VERSION = 8  # keyed rows; no mate or harness line (0405); stored model schema 25, Conductor.block (0442); what a build writes
-READABLE_LISTING_VERSIONS = (6, 7, KEYED_LISTING_VERSION)  # 7 and 8 moved no listing text: 6, 7 and 8 are one rule set (model-0289, 0428, 0442)
+KEYED_LISTING_VERSION = (
+    9  # keyed rows; no mate or harness line (0405); stored model schema 25, Conductor.block (0442); schema 26 (0443); what a build writes
+)
+READABLE_LISTING_VERSIONS = (
+    6,
+    7,
+    8,
+    KEYED_LISTING_VERSION,
+)  # 7, 8 and 9 moved no listing text: 6 to 9 are one rule set (model-0289, 0428, 0442, 0443)
 
 
 @dataclass(frozen=True, slots=True)
@@ -54,7 +61,7 @@ def listing_rules(listing_version: int, fransys_version: str) -> ListingRules | 
     """The rules a version-`listing_version` listing cut by `fransys_version` was written under.
 
     `None` when no row covers it: a release older than `OLDEST_VERIFIABLE`, an unreadable
-    version, or a listing version the table does not know (only 6, 7 and 8 are). Never the current
+    version, or a listing version the table does not know (only 6 to 9 are). Never the current
     rules by default.
     """
     key = version_key(fransys_version)

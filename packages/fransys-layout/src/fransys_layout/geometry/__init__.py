@@ -1,33 +1,14 @@
-"""Geometry layer: units, boxes, the symbol-library adapter and text metrics."""
+"""Geometry layer: units, boxes, the facing sides and text metrics."""
 
+from .adapter import text_width_g
 from .boxes import Box, contains, hull, overlaps, pad, translate, union
 from .errors import GeometryError, HintError, LayoutError, UnknownSymbolError
 from .exits import FACING_STEP, port_exit
+from .facing import OPPOSITE, Facing
 from .flow import flow
 from .follow import follow
 from .legs import legs
 from .meet import Span, boxes_meet, contains_point, meets, through
-from .symbols import (
-    GENERIC_BOX_KEY,
-    NORTH,
-    OPPOSITE,
-    PORT_PITCH_G,
-    SOUTH,
-    Facing,
-    Orientation,
-    PortGeometry,
-    SlotSide,
-    SymbolGeometry,
-    box_port_name,
-    default_order,
-    default_sides,
-    draw_order,
-    generic_box_geometry,
-    library_version,
-    power_symbol_key,
-    symbol_geometry,
-    text_width_g,
-)
 from .units import (
     G_PER_MODULE,
     PAGE_PAD,
@@ -38,45 +19,29 @@ from .units import (
 
 __all__ = (
     "FACING_STEP",
-    "GENERIC_BOX_KEY",
     "G_PER_MODULE",
-    "NORTH",
     "OPPOSITE",
     "PAGE_PAD",
-    "PORT_PITCH_G",
-    "SOUTH",
     "WIRING_GRID",
     "Box",
     "Facing",
     "GeometryError",
     "HintError",
     "LayoutError",
-    "Orientation",
     "Point",
-    "PortGeometry",
-    "SlotSide",
     "Span",
-    "SymbolGeometry",
     "UnknownSymbolError",
-    "box_port_name",
     "boxes_meet",
     "contains",
     "contains_point",
-    "default_order",
-    "default_sides",
-    "draw_order",
     "flow",
     "follow",
-    "generic_box_geometry",
     "hull",
     "legs",
-    "library_version",
     "meets",
     "overlaps",
     "pad",
     "port_exit",
-    "power_symbol_key",
-    "symbol_geometry",
     "text_width_g",
     "through",
     "to_grid",

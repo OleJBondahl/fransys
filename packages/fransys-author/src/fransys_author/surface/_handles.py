@@ -116,16 +116,24 @@ class Fn:
         """
         return _fn_pole.checked(self, n)
 
-    def plc(
-        self, signal: SignalType | None = None, name: str | None = None, priority: int = 0, *, routing: str | None = None, configured: bool = True
+    def plc(  # noqa: PLR0913 -- one keyword per PLC fact the call sets; a request object would be a second spelling
+        self,
+        signal: SignalType | None = None,
+        name: str | None = None,
+        priority: int = 0,
+        *,
+        routing: str | None = None,
+        configured: bool = True,
+        description: str | None = None,
     ) -> Fn:
         """Core: request a PLC channel of kind `signal` (`DI`, `DO`, `AI`, `AO`) named `name`, or set a module channel's own settings.
 
         Does not pick a channel: the allocation pass binds the request later. On a module's channel
         handle (`module.ai_1.plc(name="unused")`) give no `signal`: `name`, `routing` (a CDP path,
         `""` writes it empty) and `configured=False` (leave the channel out of the CDP file) apply to it.
+        `description` is one line of text for the PLC list; a blank one raises.
         """
-        self._fn.plc(None if signal is None else signal.value, name, priority, routing=routing, configured=configured)
+        self._fn.plc(None if signal is None else signal.value, name, priority, routing=routing, configured=configured, description=description)
         return self
 
     def scale(self, unit: str | None = None, *, raw: tuple[int, int], eng: tuple[str | Decimal, str | Decimal]) -> Fn:

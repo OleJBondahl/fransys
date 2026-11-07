@@ -1,6 +1,5 @@
 """`write_layout` writes one `layout.power_symbol` per drawn stand pin (el-0020, P1-P5)."""
 
-from types import SimpleNamespace
 from typing import TYPE_CHECKING
 
 import fransys as fr
@@ -82,12 +81,11 @@ def test_a_two_port_net_draws_no_power_symbol() -> None:
     assert _laid(_rails(loads=1))[1] == []
 
 
-def test_a_power_symbol_with_no_turn_facing_its_pin_refuses_with_the_fix(monkeypatch) -> None:
+def test_a_power_symbol_with_no_turn_facing_its_pin_refuses_with_the_fix() -> None:
     """A symbol whose port faces one way in every turn is refused naming the symbol and the fix."""
-    one_way = SimpleNamespace(ports=[SimpleNamespace(facing=Facing.N)])
-    monkeypatch.setattr(placement_anchors, "symbol_geometry", lambda *_args, **_kw: one_way)
+    one_way = dict.fromkeys(placement_anchors._TURNS, ("N", 0, 0))
     with pytest.raises(ProblemError, match=r"symbol 'ground' has no turn.*use a one-port symbol"):
-        placement_anchors._pose("ground", Facing.N, 0, 1, {})  # a pin facing N needs a port facing S
+        placement_anchors._pose("ground", Facing.N, 0, 1, ({}, one_way))  # a pin facing N needs a port facing S
 
 
 def test_a_supply_pose_holds_the_box_symdef_measures_around_its_text_in_every_turn() -> None:

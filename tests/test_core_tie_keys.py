@@ -9,7 +9,6 @@ CORE = Path(__file__).parent.parent / "packages/fransys-layout/src/fransys_layou
 # (module, function, the sorted() call's first argument as written): sorts of id text
 SITES = [
     ("blocks", "assign_blocks", "by_box.items()"),
-    ("blocks_hints", "keep_together", "members"),
 ]
 
 

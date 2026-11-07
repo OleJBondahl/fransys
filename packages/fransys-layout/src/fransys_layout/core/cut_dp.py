@@ -69,7 +69,7 @@ def wide_room(page_w: int, options: Options) -> int:
 
 def wraps(block: Block, page_w: int, options: Options) -> bool:
     """True for a keep-whole fan or column block wider alone than `wide_room`: it wraps at a column (layout-0309, layout-0464)."""
-    return options.wrap_wide_fans and (block.fan is not None or block.kind == "column") and block.width_est > wide_room(page_w, options)
+    return (block.fan is not None or block.kind == "column") and block.width_est > wide_room(page_w, options)
 
 
 def wide_fan(cut: Cut, block: str) -> bool:

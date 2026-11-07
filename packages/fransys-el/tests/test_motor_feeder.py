@@ -11,7 +11,8 @@ import fransys as fr
 import pytest
 from _motor_feeder_case import motor_feeder_case_drafts
 from conventions_fixtures import house
-from fransys_el import build, options, symbol_kit
+from fransys_el import build, symbol_kit
+from fransys_el.placement_options import options
 
 from electrical_symbols import LIBRARY
 from fransys_layout.core import solve

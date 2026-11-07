@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any
 
 import fransys
-from fransys_el import REF_TINTS
+from fransys_el.ref_tints import REF_TINTS
 
 import fransys_layout
 from fransys_layout.core import Options
@@ -62,10 +62,7 @@ LAYOUT_VALUES = {
     "exact_order_limit": 12,
     "exact_order_nodes": 50000,
     "tag_stagger": True,
-    "justify": True,
-    "justify_cards": False,
     "pin_pairs": [["N", "S"]],
-    "band_align": True,
     "w_tag": 1.0,
     "w_arrow": 0.5,
     "w_ref": 3.0,
@@ -93,7 +90,6 @@ LAYOUT_VALUES = {
     "label_gap": 8,
     "open_stub": 0,
     "box_columns": True,
-    "wrap_wide_fans": True,
     "top_headroom_lanes": 3,
     "bottom_headroom_lanes": 1,
     "end_bias_weight": 3,
@@ -310,6 +306,8 @@ def test_words_toml_holds_todays_values() -> None:
         "head_signal": "Signal",
         "csv_signal": "signal",
         "head_signal_name": "Signal name",
+        "head_plc_description": "Description",
+        "csv_plc_description": "description",
         "csv_signal_name": "signal_name",
         "head_wired_to": "Wired to",
         "csv_wired_to": "wired_to",

@@ -64,7 +64,7 @@ def _carried(model: Model, title: str) -> str:
 
 
 _WIDE = {  # per list, the free-text columns (`1fr`, pdf-0008): `auto` ones would starve a `1fr`
-    "plc": ("wired_to", "signal_name"),
+    "plc": ("wired_to", "signal_name", "description"),
     "wires": ("from_", "to", "ends"),  # pdf-0027
     "designations": ("description",),
     "connectors": ("net", "ends"),

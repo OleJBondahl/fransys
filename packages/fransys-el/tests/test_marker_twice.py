@@ -6,7 +6,8 @@ sets' write, with a different page: `MergeConflictError` out of build. The set's
 
 import pytest
 from conventions_fixtures import house
-from fransys_el import build, options, symbol_kit
+from fransys_el import build, symbol_kit
+from fransys_el.placement_options import options
 from fransys_el.write_markers import link_markers
 from fransys_el.write_pages import SetPlace, Written, drawing_set
 from kit_instances import INSTANCES

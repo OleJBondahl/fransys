@@ -2,6 +2,7 @@
 
 from typing import TYPE_CHECKING
 
+from fransys_model.derive import refuses
 from fransys_model.kernel import Origin, evolve
 
 from .write_findings import kernel_findings
@@ -36,20 +37,18 @@ def write_layout(  # noqa: PLR0913 - the library and the place join the five inp
 ) -> tuple[Model, tuple[Finding, ...]]:
     """Write the pages, power symbols, markers and memberships of `layout`; map its findings.
 
-    The symbol of a placed function is `kit[function].key`: the pick the facade made once, never
-    made again here (el-0003). `unit` is the drawing set's unit, `None` for the whole design;
-    `where` its location and number.
-    `library` gives the markers their size.
+    A placed function's symbol is `kit[function].key`, the pick made once (el-0003).
     """
     sets, pages = write_pages(model, layout.pages, unit, group_ids(model), where)
     written = Written(model, layout, problem, kit, library, pages, sets[0], unit)
+    own = set_rows(model, sets[0].number, STAMP)
+    paged = evolve(model, put=(*sets, *pages.values()), remove=own, origin=_ORIGIN)
+    found = kernel_findings(paged, layout.findings, symbol_subjects(model, kit), pages)
+    if refuses(found):
+        return paged, found  # an ERROR in the layout's findings: no output step runs (KI-773, designer R1945)
     records = (
-        *sets,
-        *pages.values(),
         *power_symbols(model, layout, pages, kit, (STAMP, sets[0].number)),
         *link_markers(written),
         *memberships(written),
     )
-    own = set_rows(model, sets[0].number, STAMP)
-    laid = evolve(model, put=records, remove=own, origin=_ORIGIN)
-    return laid, kernel_findings(laid, layout.findings, symbol_subjects(model, kit), pages)
+    return evolve(paged, put=records, origin=_ORIGIN), found

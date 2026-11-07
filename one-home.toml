@@ -379,7 +379,7 @@
 "fransys_author.surface._strip_marks::bridge_ranges" = 1
 "fransys_author.surface._unit_strip::_reach" = 1
 "fransys_el.placement_facts::_sorted_sets" = 2
-"fransys_el.placement_hints::hints_of" = 2
+"fransys_el.placement_hints::hints_of" = 1
 "fransys_el.placement_nets::_net" = 1
 "fransys_el.placement_nets::nets_of" = 1
 "fransys_el.placement_pins::nodes_of" = 2
@@ -453,8 +453,6 @@
 "fransys_layout.engines.overview.wrap::_leaves_east" = 1
 "fransys_layout.engines.overview.wrap::_oriented" = 1
 "fransys_layout.engines.overview.wrap::_tracks" = 1
-"fransys_layout.geometry.box_reach::spread" = 2
-"fransys_layout.geometry.symbols::convert" = 4
 "fransys_layout.lint.diagram::lint_diagram" = 1
 "fransys_layout.options::__post_init__" = 1
 "fransys_layout.routing.cell_index::_cells" = 2
@@ -678,7 +676,6 @@
 "fransys_layout.core.blocks_card::pin_order" = 1
 "fransys_layout.core.blocks_check::box_findings" = 1
 "fransys_layout.core.blocks_hints::chain" = 1
-"fransys_layout.core.blocks_hints::keep_together" = 1
 "fransys_layout.core.blocks_members::_free_boxes" = 1
 "fransys_layout.core.blocks_members::_member" = 4
 "fransys_layout.core.blocks_members::block_group" = 1
@@ -769,7 +766,6 @@
 "fransys_layout.core.blocks::assign_blocks" = 2
 "fransys_layout.core.blocks_card::pin_order" = 2
 "fransys_layout.core.blocks_check::box_findings" = 1
-"fransys_layout.core.blocks_hints::keep_together" = 1
 "fransys_layout.core.blocks_members::_free_boxes" = 1
 "fransys_layout.core.blocks_members::_member" = 4
 "fransys_layout.core.blocks_members::block_group" = 1
@@ -922,7 +918,6 @@
 "packages/fransys-author/src/fransys_author/surface/_tags.py" = 28
 "packages/fransys-author/src/fransys_author/surface/_unit_tags.py" = 10
 "packages/fransys-layout/src/fransys_layout/core/keys.py" = 8
-"packages/fransys-layout/src/fransys_layout/geometry/symbols.py" = 252
 "packages/fransys-model/src/fransys_model/derive/contacts.py" = 41
 "packages/fransys-model/src/fransys_model/derive/facts/function_ratings.py" = 72
 "packages/fransys-model/src/fransys_model/derive/facts/part_poles.py" = 107

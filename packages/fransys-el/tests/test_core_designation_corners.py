@@ -8,9 +8,10 @@ import fransys as fr
 import pytest
 from _card_case import card_case_drafts, lamps_drafts
 from conventions_fixtures import house
-from fransys_el import build, options, symbol_kit
+from fransys_el import build, symbol_kit
 from fransys_el.kit_keys import tag_of
 from fransys_el.placement_ids import symbol_key
+from fransys_el.placement_options import options
 
 from electrical_symbols import LIBRARY
 from fransys_layout.core import Box, solve

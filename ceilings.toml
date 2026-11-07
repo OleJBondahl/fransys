@@ -22,6 +22,7 @@ surface_docstring_lines = 15
 "packages/fransys-model/src/fransys_model/derive/facts/closure.py::_conditional_adjacency" = 1
 
 [module_code_lines]
+"packages/fransys-author/src/fransys_author/handles.py" = 304
 "packages/fransys/src/fransys/derive.py" = 323
 
 [surface_types]

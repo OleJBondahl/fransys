@@ -1,6 +1,6 @@
 {
   "aliases": [],
-  "schema_version": 25,
+  "schema_version": 26,
   "tables": {
     "aspect_node": [
       {
@@ -589,6 +589,7 @@
     "facet.plc_request": [
       {
         "configured": true,
+        "description": null,
         "ext": {},
         "id": "facet.plc_request:71db629bef7a565da3ca1864adbcd0ff",
         "key": [
@@ -605,6 +606,7 @@
       },
       {
         "configured": true,
+        "description": null,
         "ext": {},
         "id": "facet.plc_request:d05a898f43115a2a9c5ba50c392971ab",
         "key": [
@@ -621,6 +623,7 @@
       },
       {
         "configured": true,
+        "description": null,
         "ext": {},
         "id": "facet.plc_request:d7eedd25604c58cbbd786ac60ea40970",
         "key": [

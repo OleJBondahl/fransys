@@ -6,7 +6,7 @@ import fransys as fr
 from _drawn_pages import drawn_pages
 from _model_build_cover import unit_document
 
-from fransys_layout.geometry import GENERIC_BOX_KEY
+from electrical_symbols import GENERIC_BOX_KEY
 
 
 def _built() -> fr.BuildResult:

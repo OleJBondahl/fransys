@@ -20,7 +20,6 @@ COLUMN = Column("c", (Lane((Cell("A", "R0", "a1", "a2"),), 0),), (), (), 100, 16
 def _options(fit: dict[Any, Any]) -> Options:
     base = core_options(
         marker=MARKER,
-        justify=False,
     )
     return replace(base, marker_fit=fit, marker_vertical=frozenset({"R90"}))
 

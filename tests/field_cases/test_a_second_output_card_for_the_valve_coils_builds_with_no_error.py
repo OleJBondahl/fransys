@@ -8,6 +8,7 @@ from itertools import count
 from typing import TYPE_CHECKING, Any, NamedTuple
 
 import fransys as fr
+import pytest
 from _model_build_cover import unit_document
 from fransys.colours import BU
 
@@ -24,8 +25,7 @@ class _Io(NamedTuple):
     pass
 
 
-@fr.unit("demo-skid", revision=1, interface_version=1, date="2026-11-06", text="first", by="XX")
-def _skid(d: Any) -> _Io:  # noqa: PLR0915  one linear repro shape
+def _skid_body(d: Any, *, hide: bool) -> _Io:  # noqa: PLR0915  one linear repro shape
     rack = d.rack("R1")
     order: list[Any] = []
     di_ch = count(1)
@@ -91,14 +91,26 @@ def _skid(d: Any) -> _Io:  # noqa: PLR0915  one linear repro shape
         d.series(x24[29].inner, cpu.power["24V"], wire=_W)
         d.series(cpu.power["0V"], x0[29].inner, wire=_W)
     d.layout.order(*order)
+    if hide:
+        d.layout.profile(hide_unused_pins=True)
     return _Io()
 
 
+@fr.unit("demo-skid", revision=1, interface_version=1, date="2026-11-06", text="first", by="XX")
+def _skid(d: Any) -> _Io:
+    return _skid_body(d, hide=False)
+
+
+@fr.unit("demo-skid", revision=1, interface_version=1, date="2026-11-06", text="first", by="XX")
+def _skid_hidden(d: Any) -> _Io:
+    return _skid_body(d, hide=True)
+
+
 @cache
-def _built(salt: str) -> fr.BuildResult:
+def _built(salt: str, *, hide: bool = False) -> fr.BuildResult:
     with id_namespace(salt) if salt != "-" else nullcontext():
         d = fr.design("demo_parts")
-        d.add(_skid, "U1")
+        d.add(_skid_hidden if hide else _skid, "U1")
         return fr.build(d, unit_document("demo-skid"))
 
 
@@ -109,3 +121,10 @@ def _errors(salt: str) -> list[str]:
 def test_three_starter_outputs_and_six_valve_coils_on_two_output_cards_build_with_no_error() -> None:
     """KI-739: no ERROR at any salt (a net whose fan splits into two out legs is one cross link)."""
     assert [_errors(salt) for salt in SALTS] == [[] for _ in SALTS]
+
+
+@pytest.mark.parametrize("salt", SALTS)
+def test_the_cut_row_fits_its_page_with_unused_pins_hidden(salt: str) -> None:
+    """KI-777: with `hide_unused_pins` a narrower card joins a row the placement then packs wider than the page (PAGE_OVERFLOW, WIDER_THAN_PAGE)."""
+    codes = {f.code for f in fr.check(_built(salt, hide=True))}
+    assert not codes & {"PAGE_OVERFLOW", "WIDER_THAN_PAGE"}

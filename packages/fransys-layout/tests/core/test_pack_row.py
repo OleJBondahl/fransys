@@ -27,14 +27,17 @@ def free_row(names: tuple[str, ...], syms: dict[str, Sym], options: Options) -> 
     return with_pitches(RowSpec(tuple(pcs), (block,), pcs, syms, NONE, options, {}, {}))
 
 
+def _packed(spec: RowSpec) -> dict[str, int]:
+    """The left-packed positions: a page with no slack leaves no extra to spread."""
+    return solve_row(spec, row_width(spec) + spec.options.margin.w * 2)[0]
+
+
 def test_two_free_columns_sit_at_the_separation() -> None:
     """Left-packed, the second column stands exactly `separation` right of the first."""
     syms = {"a": elem("a", footprint=Box(-24, -16, 48, 32)), "b": elem("b")}
-    options = core_options(
-        justify=False,
-    )
+    options = core_options()
     spec = free_row(("a", "b"), syms, options)
-    x, _ = solve_row(spec, 1312)
+    x = _packed(spec)
     assert x[col_node("c1")] - x[col_node("c0")] == separation(spec.pcs["c0"], spec.pcs["c1"], syms, NONE, options)
     assert x[col_node("c0")] == options.margin.w + 24
 
@@ -67,18 +70,17 @@ def test_justify_spreads_a_row_to_the_right_margin() -> None:
     syms = {"a": elem("a", footprint=Box(-50, -16, 100, 32))}
     page_w = 800
 
-    def edges(*, justify: bool) -> tuple[int, int]:
-        spec = free_row(
-            ("a",) * 4,
-            syms,
-            core_options(
-                justify=justify, flip_turn="R180", tag_stagger=True, label_gap=8, parallel_pitch=48, driver_first=True, arrow_sides=("E", "W")
-            ),
-        )
-        xs = [x for node, x in solve_row(spec, page_w)[0].items() if node.startswith(COL)]
+    spec = free_row(
+        ("a",) * 4,
+        syms,
+        core_options(flip_turn="R180", tag_stagger=True, label_gap=8, parallel_pitch=48, driver_first=True, arrow_sides=("E", "W")),
+    )
+
+    def edges(positions: dict[str, int]) -> tuple[int, int]:
+        xs = [x for node, x in positions.items() if node.startswith(COL)]
         return min(xs) - 50 - 16, page_w - 16 - (max(xs) + 50)
 
-    (lead, tail), (packed_lead, packed_tail) = edges(justify=True), edges(justify=False)
+    (lead, tail), (packed_lead, packed_tail) = edges(solve_row(spec, page_w)[0]), edges(_packed(spec))
     assert lead > packed_lead
     assert lead <= tail < lead + 5 * 8
     assert packed_tail > tail + 100
@@ -94,12 +96,9 @@ def test_a_cards_attached_columns_stand_under_their_spread_pins(free: int) -> No
     block = card_block("box", tuple(c.id for c in cols), tuple((f"p{i}", "S") for i in (1, 2, 3)))
     attach = attachments(cols, {block.id: block})
     pcs = {c.id: PlacedColumn(c.id, (c.lanes[0].cells,), (0,), 0, flipped=False) for c in cols}
-    options = core_options(
-        justify=False,
-        box_pin_pitch_min=40,
-    )
+    options = core_options(box_pin_pitch_min=40)
     spec = with_pitches(RowSpec(tuple(pcs), (block,), pcs, syms, NONE, options, attach, {}))
-    x, _ = solve_row(spec, 1312)
+    x = _packed(spec)
     pins = [x[pin_node("box", f"p{i}")] for i in (1, 2, 3)]
     assert [b - a for a, b in pairwise(pins)] == [40, 40]
     assert [x[col_node(f"c{i}")] for i in (1, 2, 3)] == pins
@@ -107,66 +106,29 @@ def test_a_cards_attached_columns_stand_under_their_spread_pins(free: int) -> No
 
 
 def test_a_row_wider_than_the_page_comes_back_left_packed() -> None:
-    """Positions are those of justify off; row_width exceeds the page and the caller reads it."""
+    """Positions are the left-packed ones; row_width exceeds the page and the caller reads it."""
     syms = {"a": elem("a", footprint=Box(-50, -16, 100, 32))}
     page_w = 250
-    spec = free_row(
-        ("a",) * 4,
-        syms,
-        core_options(
-            justify=True,
-        ),
-    )
-    off = free_row(
-        ("a",) * 4,
-        syms,
-        core_options(
-            justify=False,
-        ),
-    )
-    assert solve_row(spec, page_w)[0] == solve_row(off, page_w)[0]
+    spec = free_row(("a",) * 4, syms, core_options())
+    assert solve_row(spec, page_w)[0] == _packed(spec)
     assert row_width(spec) > page_w - spec.options.margin.w
 
 
 def test_a_fitting_row_has_no_overflow() -> None:
     """The overflow beside the positions is 0 when the row ends inside the page."""
     syms = {"a": elem("a", footprint=Box(-50, -16, 100, 32))}
-    spec = free_row(
-        ("a",) * 2,
-        syms,
-        core_options(
-            justify=True,
-        ),
-    )
+    spec = free_row(("a",) * 2, syms, core_options())
     assert solve_row(spec, 800)[1] == 0
 
 
 def test_a_row_24_g_too_wide_reports_24() -> None:
     """The overflow is the G the left-packed row ends past the page's right margin."""
     syms = {"a": elem("a", footprint=Box(-50, -16, 100, 32))}
-    spec = free_row(
-        ("a",) * 4,
-        syms,
-        core_options(
-            justify=True,
-        ),
-    )
+    spec = free_row(("a",) * 4, syms, core_options())
     fits = row_width(spec) + spec.options.margin.w * 2
     x, overflow = solve_row(spec, fits - 24)
     assert overflow == 24
-    assert (
-        x
-        == solve_row(
-            free_row(
-                ("a",) * 4,
-                syms,
-                core_options(
-                    justify=False,
-                ),
-            ),
-            fits - 24,
-        )[0]
-    )
+    assert x == _packed(spec)
 
 
 def _two_edge_card(heads: dict[str, str] | None = None, **extra) -> tuple[RowSpec, dict[str, Sym]]:
@@ -190,56 +152,55 @@ def _two_edge_card(heads: dict[str, str] | None = None, **extra) -> tuple[RowSpe
 
 
 def _pin_xs(spec: RowSpec) -> list[int]:
-    x, _ = solve_row(spec, 1312)
+    x = _packed(spec)
     return [x[pin_node("box", p)] for p in ("p1", "p2", "p3", "p4")]
 
 
 def test_paired_edges_put_pin_k_of_each_over_one_x() -> None:
     """The S columns are wider on the left, which alone pushes the S pins right of the N pins."""
-    apart, _ = _two_edge_card(justify=False)
+    apart, _ = _two_edge_card()
     p1, p2, p3, p4 = _pin_xs(apart)
     assert (p3 - p1, p4 - p2) != (0, 0)
-    paired, _ = _two_edge_card(justify=False, pin_pairs=(("N", "S"),))
+    paired, _ = _two_edge_card(pin_pairs=(("N", "S"),))
     p1, p2, p3, p4 = _pin_xs(paired)
     assert (p1, p2) == (p3, p4)
 
 
-def test_justify_cards_off_keeps_the_card_pitch_at_the_footprint_minimum() -> None:
-    off, _ = _two_edge_card(justify_cards=False, pin_pairs=(("N", "S"),))
-    on, _ = _two_edge_card(justify_cards=True, pin_pairs=(("N", "S"),))
-    off_pins, on_pins = _pin_xs(off), _pin_xs(on)
-    justify_off, _ = _two_edge_card(justify=False, pin_pairs=(("N", "S"),))
-    assert [x - off_pins[0] for x in off_pins] == [x - _pin_xs(justify_off)[0] for x in _pin_xs(justify_off)]
-    assert on_pins[1] - on_pins[0] > off_pins[1] - off_pins[0]
+def test_a_justified_row_keeps_the_card_pitch_at_the_footprint_minimum() -> None:
+    spec, _ = _two_edge_card(pin_pairs=(("N", "S"),))
+    spread = solve_row(spec, 1312)[0]
+    spread_pins = [spread[pin_node("box", p)] for p in ("p1", "p2", "p3", "p4")]
+    packed_pins = _pin_xs(spec)
+    assert [x - spread_pins[0] for x in spread_pins] == [x - packed_pins[0] for x in packed_pins]
 
 
 def test_a_pin_of_a_column_on_two_pins_is_not_paired() -> None:
     """p3 stands on a column that also holds p4: p1 and p3 do not share an x, and nothing raises."""
-    spec, _ = _two_edge_card(justify=False, pin_pairs=(("N", "S"),))
+    spec, _ = _two_edge_card(pin_pairs=(("N", "S"),))
     attach = {c: v for c, v in spec.attach.items() if c in ("p1", "p3")}
     pcs = {c: spec.pcs[c] for c in attach}
     two_pin = replace(spec, cols=tuple(attach), pcs=pcs, attach=attach)
-    x, _ = solve_row(replace(two_pin, more_pins={"p3": (("p4", 0),)}), 1312)
+    x = _packed(replace(two_pin, more_pins={"p3": (("p4", 0),)}))
     assert x[pin_node("box", "p1")] != x[pin_node("box", "p3")]
-    x, _ = solve_row(two_pin, 1312)
+    x = _packed(two_pin)
     assert x[pin_node("box", "p1")] == x[pin_node("box", "p3")]
 
 
 def test_edges_with_unequal_pin_counts_are_not_paired() -> None:
     """One N pin against three S pins is no half split: p3 keeps the x its own column gives it."""
-    spec, _ = _two_edge_card(justify=False, pin_pairs=(("N", "S"),))
+    spec, _ = _two_edge_card(pin_pairs=(("N", "S"),))
     edges = (("p3", "N"), ("p1", "S"), ("p2", "S"), ("p4", "S"))
     block = replace(spec.blocks[0], pin_edges=edges)
-    x, _ = solve_row(with_pitches(replace(spec, blocks=(block,))), 1312)
+    x = _packed(with_pitches(replace(spec, blocks=(block,))))
     assert x[pin_node("box", "p3")] != x[pin_node("box", "p1")]
 
 
 def test_a_pin_no_column_holds_is_not_paired() -> None:
     """p2 has no column: p2 and p4 do not share an x, and nothing raises; p1 and p3 still pair."""
-    spec, _ = _two_edge_card(justify=False, pin_pairs=(("N", "S"),))
+    spec, _ = _two_edge_card(pin_pairs=(("N", "S"),))
     attach = {c: v for c, v in spec.attach.items() if c != "p2"}
     pcs = {c: spec.pcs[c] for c in attach}
-    x, _ = solve_row(replace(spec, cols=tuple(attach), pcs=pcs, attach=attach), 1312)
+    x = _packed(replace(spec, cols=tuple(attach), pcs=pcs, attach=attach))
     assert x[pin_node("box", "p1")] == x[pin_node("box", "p3")]
     assert x[pin_node("box", "p2")] != x[pin_node("box", "p4")]
 
@@ -266,7 +227,7 @@ def _card_row(n: int, **extra) -> RowSpec:
 def test_a_justified_row_spreads_its_slack_equally_edges_included(n: int) -> None:
     """The left edge and every join hold the same extra; the right edge holds it too, up to the page's remainder."""
     page_w = 1000
-    spec = _card_row(n, justify=True)
+    spec = _card_row(n)
     x, _ = solve_row(spec, page_w)
     opts = spec.options
     low = [x[slot_node(f"b:box{k}", LOW)] for k in range(n)]
@@ -281,6 +242,6 @@ def test_a_justified_row_spreads_its_slack_equally_edges_included(n: int) -> Non
 @pytest.mark.rule("PORT-LINE")
 def test_a_free_card_pin_stands_clear_of_its_neighbour_columns_reach() -> None:
     """p2 holds a wide column, p1 none: p1 stands at least that reach and a wiring grid left of p2."""
-    spec, _ = _two_edge_card({"p2": "b"}, justify=False)
+    spec, _ = _two_edge_card({"p2": "b"})
     p1, p2, _, _ = _pin_xs(spec)
     assert p2 - p1 >= -extent(spec, "p2")[0] + spec.options.wiring_grid

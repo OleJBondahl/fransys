@@ -85,34 +85,6 @@ def _four_columns() -> PlacementProblem:
     return PlacementProblem(AREA, tuple(syms), tuple(nets), facts=Facts())
 
 
-def test_justify_lays_columns_out_to_the_page_margin() -> None:
-    """Justified, the row ends one edge gap short of the right margin, as far in as it starts; packed it falls short."""
-    ends, starts = {}, {}
-    for justify in (True, False):
-        env = env_of(
-            _four_columns(),
-            core_options(
-                marker=MARKER,
-                justify=justify,
-            ),
-        )
-        spec = row_specs(env)[0]
-        assert len(spec.cols) == 4
-        x = place_x(env)[0]
-        ends[justify] = _reach(spec, x)
-        starts[justify] = x[col_node(spec.cols[0])]
-    limit = (
-        AREA.w
-        - core_options(
-            marker=MARKER,
-        ).margin.w
-    )
-    edge_gap = starts[True] - starts[False]
-    assert edge_gap > 0
-    assert limit - edge_gap - 5 * 8 < ends[True] <= limit - edge_gap
-    assert ends[False] < limit - 100
-
-
 def test_a_row_wider_than_the_page_is_left_packed_and_named() -> None:
     """One WIDER_THAN_PAGE names block, overflow and fix; the row starts at the margin."""
     env = env_of(wide_row())

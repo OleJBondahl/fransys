@@ -10,9 +10,6 @@ from fransys_model.kernel import value
 
 from .errors import GeometryError
 
-# A text stands this far from what it must not touch: a neighbour's text, a page edge.
-TEXT_GAP = WIRING_GRID
-
 type Coord = int
 
 

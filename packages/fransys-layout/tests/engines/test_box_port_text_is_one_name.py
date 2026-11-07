@@ -5,7 +5,7 @@
 
 import pytest
 
-from fransys_layout.geometry import box_port_name
+from electrical_symbols import box_port_name
 from fransys_model.derive.item_boxes import box_port_text
 
 

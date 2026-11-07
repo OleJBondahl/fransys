@@ -105,3 +105,10 @@ def test_stub_views_reads_each_far_pin_at_the_first_of_pin_and_also_with_lines()
 def test_stub_views_refuses_a_table_without_the_entry():
     with pytest.raises(CoreError, match="stub_table has no box for 4 lines of width 2"):
         stub_views({(NEAR, FAR_A): (2, 2, 2, 2)}, STUB_TABLE, NEAR, [], [FAR_A])
+
+
+def test_a_tag_whose_link_fit_lacks_the_orientation_is_refused(marker_options):
+    options = replace(marker_options, link_fit={"R0": marker_options.marker["R0"]})
+    tag = replace(make_marker(10, 10, "R90"), kind=RefKind.TAG)
+    with pytest.raises(CoreError, match="link_fit has no box for orientation R90"):
+        marker_drawn_box(tag, options)

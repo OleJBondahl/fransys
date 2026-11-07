@@ -32,7 +32,7 @@ def _b(x: int, y: int, w: int, h: int) -> Box:
 _LONG = "QLONGTAGGEDDESIGNATION"
 _STEP, _PAD, _HEIGHT = 8, 2, 8
 
-# real library geometry (terminal, circuit-breaker, coil), printed from symbol_geometry
+# real library geometry (terminal, circuit-breaker, coil), printed from the symbols layer
 _TERMINAL = (_b(-8, -8, 16, 16), {"tag": _b(4, -30, 48, 8)}, Side.E)
 _BREAKER = (
     _b(-8, -16, 44, 32),

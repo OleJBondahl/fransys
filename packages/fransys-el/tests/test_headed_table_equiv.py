@@ -9,7 +9,7 @@ Today's engine draws a table that shares its foot with a heading line over the N
 
 import pytest
 from placement_fixtures import demo_model, kit_for, planted_model
-from symdef_layer_equivalence import tables
+from table_fixtures import tables
 
 from electrical_symbols import LIBRARY
 from fransys_layout.symbols import Ask, TableAsk, library_symbol, symbol_shape, symbol_views

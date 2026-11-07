@@ -25,6 +25,7 @@ __all__ = (
     "Ask",
     "Views",
     "symbol_views",
+    "turned_view",
 )
 
 
@@ -96,3 +97,9 @@ def symbol_views(symbol: LibrarySymbol, library: Library, ask: Ask) -> Views:
         Size(0, 0) if slot is None else Size(slot.w, slot.h),
         found["R0"][2],
     )
+
+
+def turned_view(symbol: LibrarySymbol, library: Library, orient: Orientation, order: Sequence[str] = ()) -> Turned:
+    """`symbol` alone at `orient`: its body and the pins `order` names, no text."""
+    ask = Ask(("R0", orient) if orient != "R0" else ("R0",), order, "", "", 1)
+    return symbol_views(symbol, library, ask).views[orient]

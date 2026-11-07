@@ -5,14 +5,13 @@ Fixed by layout-0099, a coil wired to a PLC output channel is drawn under that c
 from typing import Any
 
 import fransys as fr
-from _drawn_facts import symbol_subjects
+from _drawn_facts import pin_turn, symbol_subjects
 from _drawn_pages import drawn_pages
 from _model_build_cover import unit_document
 from fransys.colours import BU
 
-from fransys_layout.geometry import GENERIC_BOX_KEY
-from fransys_layout.geometry.symbols import symbol_geometry
-from fransys_model.layout import Orientation, Page, PowerSymbol, layout_of
+from electrical_symbols import GENERIC_BOX_KEY
+from fransys_model.layout import Page, PowerSymbol, layout_of
 from fransys_model.vocab.tables import functions, items, ports
 
 
@@ -54,9 +53,7 @@ def _pin_x(drawn, port: str) -> Any:
     """The page x of port `port` of `drawn`."""
     if drawn.key == GENERIC_BOX_KEY:
         return drawn.x + dict(drawn.offsets)[port]
-    geometry = symbol_geometry(drawn.key, poles=drawn.poles, orientation=Orientation[drawn.orient])
-    (found,) = (g for g in geometry.ports if g.name == port)
-    return drawn.x + found.at.x
+    return drawn.x + pin_turn(drawn.key, port, poles=drawn.poles, orient=drawn.orient).dx
 
 
 def _module_box(model) -> tuple[Any, ...]:

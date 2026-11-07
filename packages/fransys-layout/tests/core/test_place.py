@@ -65,10 +65,9 @@ def test_no_two_footprints_of_one_row_overlap(name: str) -> None:
 
 
 def _row_extent(prob: PlacementProblem) -> tuple[int, int]:
-    """(placed extent, row_width) of the first row of the first page, justify off."""
+    """(placed extent, row_width) of the first row of the first page."""
     options = core_options(
         marker=MARKER,
-        justify=False,
     )
     cut = cut_of(prob, options)
     env = page_envs(cut, prob, options)[0]

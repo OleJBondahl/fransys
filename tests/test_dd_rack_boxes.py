@@ -11,11 +11,11 @@ import fransys as fr
 import fransys_parts
 import pytest
 from _dd_core import designation_of
+from _drawn_facts import box_pins
 from _drawn_pages import drawn_pages
 from _model_build_cover import cabinet_document
 from fransys_author.design import Design
 
-from fransys_layout.geometry import generic_box_geometry
 from fransys_model.layout import Page, layout_of
 
 _PROJECT: dict[str, Any] = {
@@ -212,8 +212,8 @@ def test_a_boxs_port_pitch_comes_from_its_longest_port_name_in_whole_modules() -
     # UNDO: layout geometry/symbols.py:_generic measures the whole name (drop
     # `box_port_marking`), or generic_box.py:box_pitch drops the `math.ceil`
     def pitch(*names):
-        ports = generic_box_geometry(names).ports
-        return (ports[2].at.x - ports[0].at.x) / 8
+        ports = box_pins(names)
+        return (ports[2].dx - ports[0].dx) / 8
 
     assert pitch("1", "2", "3", "4") == 2
     assert pitch("do_1.1", "do_2.2", "do_3.3", "do_4.4") == 2

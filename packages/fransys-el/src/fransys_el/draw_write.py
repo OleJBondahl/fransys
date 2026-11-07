@@ -6,6 +6,7 @@ the layout and the pages that write produced, read back by number from the drawi
 
 from typing import TYPE_CHECKING
 
+from fransys_model.derive import refuses
 from fransys_model.layout import Page, layout_of
 
 from .draw_layout import draw_set
@@ -52,6 +53,8 @@ def write_layout_drawn(  # noqa: PLR0913 - `write_layout`'s inputs [internal bui
         library=library,
         where=where,
     )
+    if refuses(found):
+        return laid, found, {}, ()  # the layout's ERROR stops the build before any drawing (KI-773)
     owner = drawing_set(unit, where)
     pages = {p.number: p for p in layout_of(laid, Page).values() if p.drawing_set == owner.id}
     written = Written(model, layout, problem, kit, library, pages, owner, unit)

@@ -27,24 +27,12 @@ def _origins(pl: Placement) -> dict[str, int]:
 
 
 def test_bands_align_through_the_stages() -> None:
-    """Rank 1 and rank 2 cells of the two columns stand at one y each; unheld, they do not."""
-    prob = fx.two_band_columns()
-    held, free = (
-        placed_of(prob),
-        placed_of(
-            prob,
-            core_options(
-                marker=MARKER,
-                band_align=False,
-            ),
-        ),
-    )
-    y, y_free = _origins(held), _origins(free)
+    """Rank 1 and rank 2 cells of the two columns stand at one y each."""
+    held = placed_of(fx.two_band_columns())
+    y = _origins(held)
     assert held.findings == ()
     assert y["a1"] == y["b1"]
     assert y["a2"] == y["b2"]
-    assert y_free["a1"] != y_free["b1"]
-    assert y_free["a2"] != y_free["b2"]
 
 
 def test_mated_pins_share_a_y_through_the_stages() -> None:

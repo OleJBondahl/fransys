@@ -20,23 +20,21 @@ from .pipeline_fixtures import cut_of, routed_of
 @pytest.mark.rule("ROUTING")
 def test_a_loop_column_on_two_card_pins_never_puts_two_nets_on_one_point() -> None:
     """Element k leaves on A1.p2 and returns on A1.p3: two nets, so the pins stay a pitch apart."""
-    for justify in (True, False):
-        options = core_options(
-            justify=justify,
-            box_pin_pitch_min=16,
-        )
-        nets = (net("go", "A1.p2", "k.n"), net("back", "k.s", "A1.p3"))
-        prob = PlacementProblem(AREA, (box_sym(4), elem("k")), nets, facts=Facts())
-        env = page_envs(cut_of(prob, options), prob, options)[0]
-        spec = row_specs(env)[0]
-        cols = tuple(c for c in env.flow.columns if c.id in spec.cols)
-        assert [(e.pin.pin if e.pin else None) for c in cols for e in (*c.heads, *c.feet)] == [
-            "p2",
-            "p3",
-        ]
-        assert lane_pins(cols, env.blocks) == {}
-        x = place_x(env)[0]
-        assert x[pin_node("A1", "p3")] - x[pin_node("A1", "p2")] >= 16
+    options = core_options(
+        box_pin_pitch_min=16,
+    )
+    nets = (net("go", "A1.p2", "k.n"), net("back", "k.s", "A1.p3"))
+    prob = PlacementProblem(AREA, (box_sym(4), elem("k")), nets, facts=Facts())
+    env = page_envs(cut_of(prob, options), prob, options)[0]
+    spec = row_specs(env)[0]
+    cols = tuple(c for c in env.flow.columns if c.id in spec.cols)
+    assert [(e.pin.pin if e.pin else None) for c in cols for e in (*c.heads, *c.feet)] == [
+        "p2",
+        "p3",
+    ]
+    assert lane_pins(cols, env.blocks) == {}
+    x = place_x(env)[0]
+    assert x[pin_node("A1", "p3")] - x[pin_node("A1", "p2")] >= 16
 
 
 def _on(p: tuple[int, int], a: tuple[int, int], b: tuple[int, int]) -> bool:

@@ -22,8 +22,6 @@ _RAISED = [
     CycleCutError("cut"),
     BundleError("bundle"),
     YCycleError("ycycle"),
-    KeyError("pin"),
-    IndexError("tuple index out of range"),
 ]
 
 
@@ -37,8 +35,10 @@ def test_a_solve_failure_is_one_error_naming_the_set_and_the_class(error: Except
     model = built.model
     laid, findings, _, _ = lay_out_on_core(model, LIBRARY)
     assert laid is model
-    (found,) = (f for f in findings if f.severity is Severity.ERROR and f.code == "PLACEMENT_PROBLEM")  # the undrawn nets follow as CND ERRORs
-    expect_codes(built, "PLACEMENT_PROBLEM", "CONNECTION_NOT_DRAWN")
+    (found,) = (
+        f for f in findings if f.severity is Severity.ERROR and f.code == "PLACEMENT_PROBLEM"
+    )  # no drawing check runs after a layout ERROR, so no false CND follows
+    expect_codes(built, "PLACEMENT_PROBLEM")
     assert "drawing set 1" in found.message
     assert type(error).__name__ in found.message
     assert found.fix
@@ -53,7 +53,7 @@ def test_a_problem_error_while_writing_a_set_is_one_error_with_the_known_limit_f
 
     monkeypatch.setattr("fransys_el.lay_out_core.write_layout_drawn", fail)
     built = cabinet_build()
-    expect_codes(built, "PLACEMENT_PROBLEM", "CONNECTION_NOT_DRAWN")
+    expect_codes(built, "PLACEMENT_PROBLEM")
     (found,) = (f for f in lay_out_on_core(built.model, LIBRARY)[1] if f.severity is Severity.ERROR and f.code == "PLACEMENT_PROBLEM")
     assert "group label 'C1'" in found.message
     assert "give the two aspect nodes different labels" in found.message
@@ -67,6 +67,6 @@ def test_build_returns_the_error_and_write_refuses(monkeypatch: pytest.MonkeyPat
 
     monkeypatch.setattr("fransys_el.lay_out_core.solve", fail)
     result = cabinet_build()
-    expect_codes(result, "PLACEMENT_PROBLEM", "CONNECTION_NOT_DRAWN")
+    expect_codes(result, "PLACEMENT_PROBLEM")
     with pytest.raises(fr.BuildFailedError):
         fr.write(result, tmp_path / "out")

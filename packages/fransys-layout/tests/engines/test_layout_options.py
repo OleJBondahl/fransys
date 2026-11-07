@@ -1,7 +1,7 @@
 """`LayoutOptions`: a text kind with no row fails when the options are built (seam 1)."""
 
 import pytest
-from fransys_el import TEXTS
+from fransys_el.texts import TEXTS
 
 from fransys_layout import LayoutOptions, TextKind
 from fransys_layout.geometry import LayoutError
@@ -20,7 +20,7 @@ def test_a_kind_with_no_row_fails_when_the_options_are_built() -> None:
 
 def test_chain_boxes_is_the_callers_and_off_unless_asked() -> None:
     """LC4 (layout-0215): the core draws no device chain as boxes unless its caller asks."""
-    from fransys_el import OPTIONS
+    from fransys_el.texts import OPTIONS
 
     assert LayoutOptions(texts=TEXTS).chain_boxes is False
     assert OPTIONS.chain_boxes is True

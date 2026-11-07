@@ -7,7 +7,6 @@ Size(16, 8) and a column symbol's reach is its footprint (hard, so no stagger) u
 from __future__ import annotations
 
 import re
-from dataclasses import replace
 
 from options_fixtures import core_options
 from turn_fixtures import refit
@@ -41,19 +40,6 @@ def test_card_block_is_never_split_across_rows() -> None:
     (page,) = result.spec.pages
     assert block.keep_whole
     assert [set(row.columns) for row in page.rows] == [{c.id for c in result.flow.columns}]
-
-
-def test_break_before_group_starts_a_new_page() -> None:
-    syms = [elem(f"{p}{i}", group=f"G{n}") for n, p in ((1, "a"), (2, "b")) for i in (1, 2)]
-    nets = [net("x", "a1.s", "a2.n"), net("y", "b1.s", "b2.n")]
-    order = Hints(group_order=("G1", "G2"))
-    together = cut_of(syms, nets, hints=order)
-    apart = cut_of(syms, nets, hints=replace(order, break_before=frozenset({"G2"})))
-    assert len(together.spec.pages) == 1
-    assert [(p.groups, len(p.rows[0].columns)) for p in apart.spec.pages] == [
-        (("G1",), 1),
-        (("G2",), 1),
-    ]
 
 
 def pair_case(c_height: int) -> list[Sym]:

@@ -67,6 +67,10 @@ Each row is a name that 0.22 removed. A removed attribute raises an error that n
 | <a id="parts-schema-2"></a>Part schema 1 (`schema = 1`) | `schema = 2`; convert with `python -m fransys migrate-parts DIR` |
 | <a id="terminal-point-overfilled"></a>`TERMINAL_POINT_OVERFILLED` (new in 0.22, no 0.21 spelling) | Set `conductors_per_clamp = 2` in the terminal part's `[connection]` table, or use a twin part, or bridge a second terminal |
 
+## New in 0.23.1
+
+- `.plc(..., description="...")` gives a PLC channel a line of text. The PLC list prints it in a `description` column beside the signal name (PDF and `plc.csv`, which gains the column). The description lives in the PLC list only, and the Wago rack XML is unchanged. A blank description raises. listing_version 9: no listing text moves; a stored model of schema 25 is refused: rebuild it.
+
 ## New in 0.22.9
 
 - The Wago rack XML `<Modules>` follows the CDP reference, so every consumer's file changes. A module is named `<order>_<channels><kind>_<letter>` with the kind DI, AI, DO or AO (an RTD is AI, a relay output DO, an analogue output AO). A module whose channels mix kinds is named by the bare order number. A channel is named by its bare signal name, else `<kind><Nr>` (DO0, DI14). An analogue channel has no `Nr`. A mixed module lists outputs first and restarts `Nr` for each direction (decision wago-0003).

@@ -143,7 +143,7 @@ def draw_set(w: Written) -> dict[Id[Page], Drawing]:
             (
                 *placed_symbols(layout, w.problem, pages, shown, marks),
                 *table_heads(layout, pages, texts_of),
-                *junction_dots(layout, pages),
+                *junction_dots(layout, pages, w.library),
                 *power_marks(model, powers, w.library),
             ),
         )

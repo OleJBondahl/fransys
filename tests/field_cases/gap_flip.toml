@@ -105,5 +105,27 @@
 "test_untagged_unused_device_in_a_holder_is_an_accessory.py::test_no_wire_runs_across_the_box_of_a_reference_marker" = "GAP-FLIP-632"  # KI-632 MARKER-OBSTACLE (R1661): the jog bends over the marker box
 
 "test_a_wide_bank_of_relays_fed_from_a_controllers_pins_builds.py::test_no_reference_marker_overlaps_another_on_the_bank_of_forty" = "GAP-FLIP-640"  # KI-640 MARKER-LOOP-AVOID (R1732): the markers placed in the loop overlap one another on page 4f2c6ea0
+"test_a_boundary_supply_fan_of_twenty_relays_draws_every_connection.py::test_every_connection_and_marker_is_drawn[-]" = "GAP-FLIP-757"  # KI-757 WIDE-MARKER-CND: a coil return gets CONNECTION_NOT_DRAWN, MARKER_UNPLACED and DANGLING_WIRE_END
+"test_a_boundary_supply_fan_of_twenty_relays_draws_every_connection.py::test_every_connection_and_marker_is_drawn[a]" = "GAP-FLIP-757"  # KI-757 WIDE-MARKER-CND: a coil return gets CONNECTION_NOT_DRAWN, MARKER_UNPLACED and DANGLING_WIRE_END
+"test_a_boundary_supply_fan_of_twenty_relays_draws_every_connection.py::test_every_connection_and_marker_is_drawn[b]" = "GAP-FLIP-757"  # KI-757 WIDE-MARKER-CND: a coil return gets CONNECTION_NOT_DRAWN, MARKER_UNPLACED and DANGLING_WIRE_END
+"test_a_boundary_supply_fan_of_twenty_relays_draws_every_connection.py::test_every_connection_and_marker_is_drawn[c]" = "GAP-FLIP-757"  # KI-757 WIDE-MARKER-CND: a coil return gets CONNECTION_NOT_DRAWN, MARKER_UNPLACED and DANGLING_WIRE_END
+"test_a_boundary_supply_fan_of_twenty_relays_draws_every_connection.py::test_every_connection_and_marker_is_drawn[d]" = "GAP-FLIP-757"  # KI-757 WIDE-MARKER-CND: a coil return gets CONNECTION_NOT_DRAWN, MARKER_UNPLACED and DANGLING_WIRE_END
+"test_a_boundary_supply_fan_of_twenty_relays_draws_every_connection.py::test_every_connection_and_marker_is_drawn[e]" = "GAP-FLIP-757"  # KI-757 WIDE-MARKER-CND: a coil return gets CONNECTION_NOT_DRAWN, MARKER_UNPLACED and DANGLING_WIRE_END
+
+# KI-776 WTB-PIN-SIDE (R1952): a stem leaves the nearest footprint edge, not its pin's side
+"test_a_page_of_valve_feedback_and_analog_module_groups_draws_with_no_error.py::test_a_pin_leaves_its_box_on_its_own_side_with_unused_pins_hidden[-]" = "GAP-FLIP-776"  # KI-776 WTB-PIN-SIDE (R1952): a stem leaves the nearest footprint edge, not its pin's side
+"test_a_page_of_valve_feedback_and_analog_module_groups_draws_with_no_error.py::test_a_pin_leaves_its_box_on_its_own_side_with_unused_pins_hidden[a]" = "GAP-FLIP-776"  # KI-776 WTB-PIN-SIDE (R1952): a stem leaves the nearest footprint edge, not its pin's side
+"test_a_page_of_valve_feedback_and_analog_module_groups_draws_with_no_error.py::test_a_pin_leaves_its_box_on_its_own_side_with_unused_pins_hidden[b]" = "GAP-FLIP-776"  # KI-776 WTB-PIN-SIDE (R1952): a stem leaves the nearest footprint edge, not its pin's side
+"test_a_page_of_valve_feedback_and_analog_module_groups_draws_with_no_error.py::test_a_pin_leaves_its_box_on_its_own_side_with_unused_pins_hidden[c]" = "GAP-FLIP-776"  # KI-776 WTB-PIN-SIDE (R1952): a stem leaves the nearest footprint edge, not its pin's side
+"test_a_page_of_valve_feedback_and_analog_module_groups_draws_with_no_error.py::test_a_pin_leaves_its_box_on_its_own_side_with_unused_pins_hidden[d]" = "GAP-FLIP-776"  # KI-776 WTB-PIN-SIDE (R1952): a stem leaves the nearest footprint edge, not its pin's side
+"test_a_page_of_valve_feedback_and_analog_module_groups_draws_with_no_error.py::test_a_pin_leaves_its_box_on_its_own_side_with_unused_pins_hidden[e]" = "GAP-FLIP-776"  # KI-776 WTB-PIN-SIDE (R1952): a stem leaves the nearest footprint edge, not its pin's side
+
+# KI-777 CUT-FOLDS-AS-PLACED (R1952): the cut folds with no reference plan; joins the KI-768 order
+"test_a_second_output_card_for_the_valve_coils_builds_with_no_error.py::test_the_cut_row_fits_its_page_with_unused_pins_hidden[-]" = "GAP-FLIP-777"  # KI-777 CUT-FOLDS-AS-PLACED (R1952): the cut folds with no reference plan; joins the KI-768 order
+"test_a_second_output_card_for_the_valve_coils_builds_with_no_error.py::test_the_cut_row_fits_its_page_with_unused_pins_hidden[a]" = "GAP-FLIP-777"  # KI-777 CUT-FOLDS-AS-PLACED (R1952): the cut folds with no reference plan; joins the KI-768 order
+"test_a_second_output_card_for_the_valve_coils_builds_with_no_error.py::test_the_cut_row_fits_its_page_with_unused_pins_hidden[b]" = "GAP-FLIP-777"  # KI-777 CUT-FOLDS-AS-PLACED (R1952): the cut folds with no reference plan; joins the KI-768 order
+"test_a_second_output_card_for_the_valve_coils_builds_with_no_error.py::test_the_cut_row_fits_its_page_with_unused_pins_hidden[c]" = "GAP-FLIP-777"  # KI-777 CUT-FOLDS-AS-PLACED (R1952): the cut folds with no reference plan; joins the KI-768 order
+"test_a_second_output_card_for_the_valve_coils_builds_with_no_error.py::test_the_cut_row_fits_its_page_with_unused_pins_hidden[d]" = "GAP-FLIP-777"  # KI-777 CUT-FOLDS-AS-PLACED (R1952): the cut folds with no reference plan; joins the KI-768 order
+"test_a_second_output_card_for_the_valve_coils_builds_with_no_error.py::test_the_cut_row_fits_its_page_with_unused_pins_hidden[e]" = "GAP-FLIP-777"  # KI-777 CUT-FOLDS-AS-PLACED (R1952): the cut folds with no reference plan; joins the KI-768 order
 
 [raises]

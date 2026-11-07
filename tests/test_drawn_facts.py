@@ -18,7 +18,7 @@ from _drawn_pages import drawn_pages
 from fransys.colours import BU
 from fransys_el.placement_nets import net_ports
 
-from fransys_layout.geometry import GENERIC_BOX_KEY
+from electrical_symbols import GENERIC_BOX_KEY
 
 pytestmark = pytest.mark.rule("DRAWING-SUBJECT")
 

@@ -2,22 +2,20 @@
 The bug: a small row gap left no room for the symbol, so it sat on the box edge.
 Fixed by layout-0117 (owner's choice G1): a row and its box move apart by whole grids until the symbol clears."""
 
-from typing import TYPE_CHECKING
+from functools import cache
 
 import fransys as fr
-from _drawn_facts import symbol_subjects
+from _drawn_facts import box_boxes, pin_turn, symbol_boxes, symbol_subjects
 from _drawn_pages import drawn_pages
 from _model_build_cover import unit_document
 from fransys.colours import BU
 
-from fransys_layout import generic_box_geometry, symbol_geometry
+from electrical_symbols import GENERIC_BOX_KEY
 from fransys_layout.geometry import overlaps, translate
-from fransys_model.layout import Orientation, PowerSymbol, layout_of
-
-if TYPE_CHECKING:
-    from fransys_layout import SymbolGeometry
+from fransys_model.layout import PowerSymbol, layout_of
 
 
+@cache
 def _build() -> fr.BuildResult:
     d = fr.design("demo_parts", place="CAB")
     cab = d.location("CAB", "Cabinet")
@@ -36,57 +34,62 @@ def _build() -> fr.BuildResult:
     return fr.build(d, doc)
 
 
-def _geometry(one) -> SymbolGeometry:
-    """The geometry the drawn symbol stands in: a generic box from its sides and offsets."""
-    if one.key != "generic-box":
-        return symbol_geometry(one.key, orientation=Orientation[one.orient])
-    sides, offsets = dict(one.sides), dict(one.offsets)
-    names = tuple(sides)
-    return generic_box_geometry(names, tuple(sides[n] for n in names), offsets=tuple(offsets[n] for n in names))
+def _keepout(cell):
+    """The keep-out of the drawn symbol `cell` on its page: a generic box from its sides and offsets, else its library symbol."""
+    if cell.key == GENERIC_BOX_KEY:
+        names = tuple(dict(cell.sides))
+        box = box_boxes(names, tuple(dict(cell.sides)[n] for n in names), tuple(dict(cell.offsets)[n] for n in names))[1]
+    else:
+        box = symbol_boxes(cell.key, poles=cell.poles, orient=cell.orient)[1]
+    return translate(box, dx=cell.x, dy=cell.y)
 
 
 def _cells(model, tag):
-    """The drawn cells of the item `tag`, as (cell, geometry, pin page x, pin page y).
+    """The drawn cells of the item `tag`, as (cell, pin page x, pin page y).
 
     The pin is the port the cell's lead leaves from, else its `out` port.
     """
     found = []
     for cell in symbol_subjects(model):
         if cell.tag == tag:
-            geo = _geometry(cell)
-            (port,) = (p for p in geo.ports if p.name == (cell.leads or ("out",))[0])
-            found.append((cell, geo, cell.x + port.at.x, cell.y + port.at.y))
+            port = (cell.leads or ("out",))[0]
+            if cell.key == GENERIC_BOX_KEY:
+                found.append((cell, cell.x + dict(cell.offsets)[port], cell.y))
+            else:
+                at = pin_turn(cell.key, port, poles=cell.poles, orient=cell.orient)
+                found.append((cell, cell.x + at.dx, cell.y + at.dy))
     return found
 
 
-def _keepout(cell, geo: SymbolGeometry):
-    return translate(geo.keepout, dx=cell.x, dy=cell.y)
-
-
-def test_the_ground_row_keeps_one_height() -> None:
-    """The ground clears its box; each pin row keeps one height and the leads stay straight."""
-    result = _build()
-    model = result.model
-    k1, k1_geo, channel_x, channel_y = _cells(model, "K1")[0]
-    box = _keepout(k1, k1_geo)
+def test_the_ground_clears_its_box() -> None:
+    """The ground on the plug's pin stands clear of the output module's box."""
+    model = _build().model
+    k1, _, _ = _cells(model, "K1")[0]
+    box = _keepout(k1)
     grounds = [s for s in layout_of(model, PowerSymbol).values() if s.symbol == "ground"]
     jack = [s for s in grounds if (model.key_of(s.port) or ("",))[0] == "G/J1"]
     assert jack
     for one in jack:
-        body = translate(symbol_geometry("ground", orientation=one.orientation).body, dx=one.x, dy=one.y)
+        body = translate(symbol_boxes("ground", orient=one.orientation.name)[0], dx=one.x, dy=one.y)
         assert not overlaps(body, box)
 
+
+def test_the_ground_row_keeps_one_height() -> None:
+    """Each pin row keeps one height and the leads stay straight."""
+    model = _build().model
+    _, channel_x, channel_y = _cells(model, "K1")[0]
+    jack = [s for s in layout_of(model, PowerSymbol).values() if s.symbol == "ground" and (model.key_of(s.port) or ("",))[0] == "G/J1"]
     plug, board = _cells(model, "J1"), _cells(model, "B1")
     assert len({y for *_, y in plug}) == 1
     assert len({y for *_, y in board}) == 1
-    for cell, geo, x, _ in board:
-        (mate_cell, mate_geo, _, _) = next(one for one in plug if one[2] == x)
-        mate_box, board_box = _keepout(mate_cell, mate_geo), _keepout(cell, geo)
+    for cell, x, _ in board:
+        (mate_cell, _, _) = next(one for one in plug if one[1] == x)
+        mate_box, board_box = _keepout(mate_cell), _keepout(cell)
         assert mate_box.y == board_box.y + board_box.height
 
     channel = (channel_x, channel_y)
-    leads = [w for d in drawn_pages(model).values() for w in d.wires if channel in w.points and set(w.points) & {(x, y) for _, _, x, y in plug}]
+    leads = [w for d in drawn_pages(model).values() for w in d.wires if channel in w.points and set(w.points) & {(x, y) for _, x, y in plug}]
     (lead,) = leads
     (lead_x,) = {x for x, _ in lead.points}
-    (pin_two_x,) = {x for _, _, x, _ in plug} - {lead_x}
+    (pin_two_x,) = {x for _, x, _ in plug} - {lead_x}
     assert {one.x for one in jack} == {pin_two_x}

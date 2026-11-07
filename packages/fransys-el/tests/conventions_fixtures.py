@@ -4,7 +4,8 @@ import tomllib
 from dataclasses import replace
 from pathlib import Path
 
-from fransys_el import Conventions, house_conventions
+from fransys_el import house_conventions
+lazy from fransys_el.placement_options import Conventions
 
 import fransys_layout
 from electrical_symbols import LIBRARY

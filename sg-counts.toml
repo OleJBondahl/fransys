@@ -26,7 +26,7 @@ home = "fransys_layout/core/sides.py"
 forbid_after = "KI-059, twin of the side table: KI-064"
 
 [r04-kind-compare]
-stock = 33
+stock = 32
 mark = "count"
 home = "the named facts in fransys_model/derive (item_kind and siblings); replaces the rejected PLR2004 setting (C3)"
 forbid_after = "KI-063, the named facts replace the compares"
@@ -56,7 +56,7 @@ home = "the package TOML settings"
 forbid_after = "KI-059, package TOML settings: KI-057"
 
 [r10-flip-literal]
-stock = 4
+stock = 2
 mark = "count"
 home = "fransys_layout/symbols and electrical_symbols"
 forbid_after = "KI-059, the flip literals move to symdef orientation data"

@@ -32,6 +32,7 @@ class PlcRequestFacet:
     `passes.plc_allocation` in `(priority, function key)` order. A channel function with
     `signal=None` is a spare and these are its settings (WAGO-CDP, designer R1824); `routing` is an
     opaque CDP path, `None` writes none; `configured=False` leaves the channel out of the CDP file.
+    `description` is one line for the PLC list (model-0443).
     """
 
     id: Id[PlcRequestFacet]
@@ -42,6 +43,7 @@ class PlcRequestFacet:
     priority: int
     routing: str | None = None
     configured: bool = True
+    description: str | None = None
     ext: frozendict[str, Value] = frozendict()
 
 

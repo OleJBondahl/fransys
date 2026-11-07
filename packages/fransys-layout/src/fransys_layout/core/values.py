@@ -47,7 +47,6 @@ FindingCode = Literal[
     "BLOCK_NOT_PLACED",
     "CHAIN_REFUSED",
     "ORDER_HINT_UNMET",
-    "KEEP_TOGETHER_UNMET",
     "HEAD_OFF_LEGS",
     "ALIGN_DROPPED",
     "WIRE_AS_REFERENCE",
@@ -178,12 +177,7 @@ class Hints:
     """Authored hints; every name is a group or a symbol id, resolved by the builder."""
 
     group_order: tuple[str, ...] = ()
-    break_before: frozenset[str] = frozenset()
-    keep_together: tuple[frozenset[str], ...] = ()
     order_pairs: tuple[tuple[str, str], ...] = ()
-    chains: tuple[tuple[str, ...], ...] = ()
-    draw_in: tuple[tuple[str, str], ...] = ()
-    sides: tuple[tuple[PinRef, str], ...] = ()
     frames: tuple[tuple[str, frozenset[str]], ...] = ()  # R900 G9: (unit key, member symbol ids) of each unit frame
 
 
@@ -251,12 +245,8 @@ class Options:
     exact_order_nodes: int = field(kw_only=True)
     tag_stagger: bool = field(kw_only=True)
     label_gap: int = field(kw_only=True)  # the distance a designation keeps from a wire
-    justify: bool = field(kw_only=True)
-    # False: justify leaves a card's pin and column pitch at the footprint minimum
-    justify_cards: bool = field(kw_only=True)
     # edge pairs (e.g. ("N", "S")): pin k of the first edge and pin k of the second share one x
     pin_pairs: tuple[tuple[str, str], ...] = field(kw_only=True)
-    band_align: bool = field(kw_only=True)
     w_tag: float = field(kw_only=True)
     w_arrow: float = field(kw_only=True)
     w_ref: float = field(kw_only=True)
@@ -312,7 +302,6 @@ class Options:
     trunk_forms: frozenset[str] = frozenset()  # layout-0421: bundles of these forms are trunks, never chain links
     # layout-0309: a keep-whole fan wider alone than the page may wrap at a column;
     # False keeps it one row
-    wrap_wide_fans: bool = field(kw_only=True)
     # layout-0334 (from layout-0031 and layout-0035): whole wiring lanes kept free above row 0
     # and below the last row, so a turn and its label stay inside the content box;
     # `margin.h` is no longer read

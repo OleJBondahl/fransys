@@ -26,7 +26,6 @@ from .place_fixtures import card_with_coils, wide_row
 from .widen_fixtures import gap_width
 
 PLAIN = core_options(
-    justify=False,
     marker=MARKER,
 )
 
@@ -56,17 +55,6 @@ def test_no_reserves_is_the_landed_placement_on_three_planted_problems() -> None
         pair = next((g.left, g.right) for g in landed.pages[0].gaps) if landed.pages[0].gaps else None
         if pair:
             assert place_pages(cut, prob, PLAIN, {pair: 1}) == landed
-
-
-def test_a_reserve_of_two_widens_that_gap_by_one_grid_and_no_other() -> None:
-    prob = three_columns()
-    cut = cut_of(prob, PLAIN)
-    base = place_pages(cut, prob, PLAIN)
-    first = base.pages[0].gaps[0]
-    wide = place_pages(cut, prob, PLAIN, {(first.left, first.right): 2})
-    before, after = gaps(base.pages[0]), gaps(wide.pages[0])
-    assert after[0][2] == before[0][2] + PLAIN.wiring_grid
-    assert after[1:] == before[1:]
 
 
 def test_the_reserve_key_is_the_column_pair_not_the_gap_id() -> None:

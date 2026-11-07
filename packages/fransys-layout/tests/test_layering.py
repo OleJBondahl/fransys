@@ -45,9 +45,9 @@ DRAWING_TEXT_FORMATTERS = frozenset(
 )
 
 SYMBOL_LIBRARIES = ("symdef", "electrical_symbols")
-SYMBOL_ADAPTER = SRC_ROOT / "geometry" / "symbols.py"
+SYMBOL_ADAPTER = SRC_ROOT / "geometry" / "adapter.py"
 SYMBOLS_LAYER = SRC_ROOT / "symbols"  # layout-0316: the symdef layer, gated by tests/symbols
-# `units.py` takes the two grid constants from the library's one home; `symbols.py`
+# `units.py` takes the two grid constants from the library's one home; the symbols layer
 # imports `units`, so the constants cannot come through it. `units.py` may import nothing else.
 UNITS_MODULE = SRC_ROOT / "geometry" / "units.py"
 UNITS_ALLOWED = frozenset({"WIRING_GRID", "G_PER_MODULE"})
@@ -127,25 +127,6 @@ def _beyond_kernel(imported: set[str]) -> set[str]:
     name counts as a violation too. `fransys_model.derive.drawing_text` is allowed here
     """
     return {m for m in imported if _under(m, MODEL) and not _under(m, MODEL_KERNEL) and not _under(m, DRAWING_TEXT_MODULE)}
-
-
-def _layout_names(source: str) -> set[str]:
-    """The names `source` imports from `fransys_model.layout`."""
-    return {
-        target.rpartition(".")[2]
-        for node in ast.walk(ast.parse(source))
-        if isinstance(node, ast.Import | ast.ImportFrom)
-        for target in _model_targets(node)
-        if _under(target, MODEL_LAYOUT)
-    }
-
-
-def _beyond_kernel_in(path: Path, source: str) -> set[str]:
-    """`_beyond_kernel` of a file; the symbol adapter may also import the model's `Orientation`."""
-    found = _beyond_kernel(_imports_of(path))
-    if path == SYMBOL_ADAPTER and _layout_names(source) <= {"Orientation"}:
-        found.discard(MODEL_LAYOUT)
-    return found
 
 
 def _drawing_text_names(module_name: str, source: str, *, is_init: bool) -> set[str]:
@@ -294,10 +275,7 @@ def test_no_layer_imports_a_layer_to_its_left() -> None:
 def test_only_engines_import_beyond_the_model_kernel() -> None:
     """`geometry`, `routing` and `lint` import nothing of the model but its kernel."""
     problems = [
-        f"{path}: imports {bad}"
-        for layer in KERNEL_ONLY_LAYERS
-        for path in _layer_files(layer)
-        for bad in sorted(_beyond_kernel_in(path, path.read_text(encoding="utf-8")))
+        f"{path}: imports {bad}" for layer in KERNEL_ONLY_LAYERS for path in _layer_files(layer) for bad in sorted(_beyond_kernel(_imports_of(path)))
     ]
     assert problems == []
 
@@ -311,7 +289,7 @@ def test_only_engines_import_the_drawing_text_readers() -> None:
 
 
 def test_only_the_symbol_adapter_imports_the_symbol_libraries() -> None:
-    """No module but `geometry/symbols.py` (and `units.py`, for two constants) imports them."""
+    """No module but `geometry/adapter.py` and the symbols layer (and `units.py`, for two constants) imports them."""
     problems = [
         f"{path}: imports {bad}"
         for path in sorted(SRC_ROOT.rglob("*.py"))
@@ -444,15 +422,6 @@ def test_checker_allows_the_drawing_text_formatters_from_routing() -> None:
     source = "from fransys_model.derive.drawing_text import row_letter, partner_position_text, position_text\n"
     imported = _imported_modules("fransys_layout.routing.bad", source, is_init=False)
     assert _beyond_kernel(imported) == set()
-
-
-def test_symbol_adapter_may_import_only_the_model_orientation_from_layout() -> None:
-    """`Orientation` is the model's; the adapter may import it, and no other layout name."""
-    ok = "from fransys_model.layout import Orientation\n"
-    bad = "from fransys_model.layout import Orientation, SymbolPlacement\n"
-    assert _layout_names(ok) == {"Orientation"}
-    assert _beyond_kernel_in(SYMBOL_ADAPTER, ok) == set()
-    assert _beyond_kernel_in(SYMBOL_ADAPTER, bad) == {MODEL_LAYOUT}
 
 
 def test_checker_fails_when_routing_imports_a_drawing_text_reader() -> None:

@@ -4,16 +4,17 @@
 `net_text` the identity of a port's physical net, the value of its first port (as `Net.id`).
 """
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
-from fransys_layout import symbol_geometry
 from fransys_layout.core import Box
+from fransys_layout.symbols import library_symbol, turned_view
 from fransys_model.derive import net_of
-from fransys_model.layout import Orientation
 
 from .placement_ids import net_key, pin_names, symbol_ids
 
 if TYPE_CHECKING:
+    from electrical_symbols import Library
+    from fransys_layout.core import Orientation
     from fransys_model.kernel import Id, Model
     from fransys_model.vocab import Port
 
@@ -22,10 +23,10 @@ if TYPE_CHECKING:
 __all__ = ["net_text", "outline_of", "ports_of"]
 
 
-def outline_of(key: str, orient: str, x: int, y: int) -> Box:
+def outline_of(key: str, orient: str, x: int, y: int, library: Library) -> Box:
     """The body of library symbol `key` turned to `orient`, with its origin at (x, y) in G."""
-    body = symbol_geometry(key, orientation=Orientation[orient]).body
-    return Box(x + body.x, y + body.y, body.width, body.height)
+    body = turned_view(library_symbol(library, key), library, cast("Orientation", orient)).body
+    return Box(x + body.x, y + body.y, body.w, body.h)
 
 
 def ports_of(model: Model, kit: SymbolKit) -> dict[str, tuple[str, ...]]:

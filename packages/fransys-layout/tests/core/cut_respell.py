@@ -70,7 +70,6 @@ def respell_problem(prob: PlacementProblem, m: Maps) -> PlacementProblem:
     hints = replace(
         prob.hints,
         group_order=tuple(m[g] for g in prob.hints.group_order),
-        break_before=frozenset(m[g] for g in prob.hints.break_before),
     )
     return replace(prob, symbols=syms, nets=nets, hints=hints)
 

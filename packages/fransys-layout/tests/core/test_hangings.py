@@ -39,7 +39,6 @@ from .pipeline_fixtures import cut_of
 
 OPTIONS = core_options(
     marker=MARKER,
-    justify=False,
 )
 
 

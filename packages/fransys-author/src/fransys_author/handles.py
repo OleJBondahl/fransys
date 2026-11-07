@@ -128,13 +128,20 @@ class Fn:
         """
         return _port_by_marking(self.ports, marking, owner="function")
 
-    def plc(
-        self, signal: str | None = None, signal_name: str | None = None, priority: int = 0, *, routing: str | None = None, configured: bool = True
+    def plc(  # noqa: PLR0913 -- one keyword per PLC fact the call sets; a request object would be a second spelling
+        self,
+        signal: str | None = None,
+        signal_name: str | None = None,
+        priority: int = 0,
+        *,
+        routing: str | None = None,
+        configured: bool = True,
+        description: str | None = None,
     ) -> Fn:
         """Request a PLC channel of `signal` for this function, or set a module channel's own settings; returns `self`.
 
         `priority`: lower goes first when `derive.allocate_plc` serves requests. A module's channel
-        takes no `signal`: `signal_name`, `routing` and `configured` describe that channel.
+        takes no `signal`: `signal_name`, `routing` and `configured` describe that channel. `description` is one line of text for the PLC list.
         """
         signal_type = None if signal is None else member(SignalType, signal, field="PLC signal type")
         key = scoped(self.key, "plc_request")
@@ -147,6 +154,7 @@ class Fn:
             priority=priority,
             routing=routing,
             configured=configured,
+            description=description,
         )
         refuse_plc(self._recorder, self, facet)
         self._recorder._add(facet, caller_origin())

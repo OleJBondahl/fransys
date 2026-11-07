@@ -7,11 +7,8 @@ from typing import TYPE_CHECKING
 
 import fransys as fr
 import pytest
-from _drawn_facts import symbol_subjects
+from _drawn_facts import pin_turns, symbol_subjects
 from fransys.colours import BU
-
-from fransys_layout import symbol_geometry
-from fransys_model.layout import Orientation
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -62,7 +59,6 @@ def test_the_parts_of_a_parallel_share_one_top(shape: str, tmp_path: Path) -> No
     tops = {}
     for cell in symbol_subjects(result.model):
         if cell.tag in tags:
-            geo = symbol_geometry(cell.key, orientation=Orientation[cell.orient])
-            tops[cell.tag] = cell.y + min(p.at.y for p in geo.ports)
+            tops[cell.tag] = cell.y + min(p.dy for p in pin_turns(cell.key, orient=cell.orient))
     assert set(tops) == set(tags)
     assert len(set(tops.values())) == 1, tops

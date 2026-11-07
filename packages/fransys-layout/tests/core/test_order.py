@@ -421,7 +421,7 @@ def test_order_blocks_keeps_findings_and_every_block_field() -> None:
     fixed = replace(odd, id="b2", fixed_order=True)
     card = replace(odd, id="b3", kind="card", columns=("c2", "c1"), pin_edges=(("2", "S"), ("1", "N")))
     fl = flow([fan("f1", ["c1", "c3"])], columns=[box_column("c1", "1"), box_column("c2", "2")])
-    findings = (Finding("KEEP_TOGETHER_UNMET", "text", 2, "g9"),)
+    findings = (Finding("NO_CELL", "text", 2, "g9"),)
     lists = (BlockList("u7", (odd, fixed, card), findings), BlockList("u8", ()))
     out = order.order_blocks(lists, fl, OPTIONS)
     assert [(bl.unit, bl.findings) for bl in out] == [("u7", findings), ("u8", ())]

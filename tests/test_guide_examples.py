@@ -38,6 +38,7 @@ GUIDE_PAGES = (
     "keywords-handles",
     "keywords-output",
     "settings",
+    "moving-to-0.23",
     "moving-to-0.22",
     "moving-to-0.20",
     "moving-to-0.19",

@@ -59,20 +59,18 @@ def _stands(spec: RowSpec, x: dict[str, int]) -> list[bool]:
 
 
 def test_a_two_lane_column_stands_on_both_its_card_pins() -> None:
-    """Justified or packed, lane 0 stands on its pin and lane 1 on the second, 16 G on."""
-    for justify in (True, False):
-        options = core_options(
-            justify=justify,
-            box_pin_pitch_min=16,
-        )
-        env = _env(options)
-        spec = row_specs(env)[0]
-        assert spec.pcs["c:dual"].offsets == (0, 16)
-        assert lane_pins(tuple(c for c in env.flow.columns if c.id in spec.cols), env.blocks) == {"c:dual": (("p2", 16),)}
-        assert _stands(spec, place_x(env)[0]) == [True, True]
-        untied = solve_row(replace(spec, more_pins={}), AREA.w)[0]
-        if justify:  # without the tie the second pin drifts off its column (432, not 48)
-            assert _stands(spec, untied) == [True, False]
+    """Lane 0 stands on its pin and lane 1 on the second, 16 G on."""
+    options = core_options(
+        box_pin_pitch_min=16,
+    )
+    env = _env(options)
+    spec = row_specs(env)[0]
+    assert spec.pcs["c:dual"].offsets == (0, 16)
+    assert lane_pins(tuple(c for c in env.flow.columns if c.id in spec.cols), env.blocks) == {"c:dual": (("p2", 16),)}
+    assert _stands(spec, place_x(env)[0]) == [True, True]
+    untied = solve_row(replace(spec, more_pins={}), AREA.w)[0]
+    # without the tie the second pin drifts off its column (432, not 48)
+    assert _stands(spec, untied) == [True, False]
 
 
 @pytest.mark.rule("G06-WIRES")

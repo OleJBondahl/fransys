@@ -7,8 +7,9 @@ import fransys as fr
 import pytest
 from _model_build_cover import unit_document
 from fransys.colours import BU
-from fransys_el import drawn_subjects, symbol_kit
+from fransys_el import symbol_kit
 from fransys_el.drawn_ids import core_symbol_id
+from fransys_el.drawn_subjects import drawn_subjects
 from fransys_el.placement_ids import symbol_ids
 
 from electrical_symbols import LIBRARY

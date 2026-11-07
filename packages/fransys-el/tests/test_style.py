@@ -1,6 +1,7 @@
 """`STYLE` holds every constant render reads from the model and the symbols today (el-0004)."""
 
-from fransys_el import REF_TINTS, style
+from fransys_el import style
+from fransys_el.ref_tints import REF_TINTS
 from symdef import Weight
 
 from electrical_symbols import G_PER_MODULE, LIBRARY, WIRING_GRID

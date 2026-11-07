@@ -5,8 +5,6 @@ from __future__ import annotations
 from dataclasses import replace
 from typing import TYPE_CHECKING
 
-from options_fixtures import core_options
-
 from fransys_layout.core import Facts, PinRef
 from fransys_layout.core.geometry import pin_xy
 from fransys_layout.core.pack import cell_node
@@ -20,7 +18,6 @@ from fransys_layout.core.place_align import (
 )
 
 from . import align_fixtures as fx
-from .conftest import MARKER
 from .place_fixtures import row_group_three
 from .test_place_x import env_of
 
@@ -48,18 +45,6 @@ def test_band_ranks_align_across_columns() -> None:
     assert _nodes(one) == [cell_node("c:a0", 0, 1), cell_node("c:b1", 0, 0)]
     assert _nodes(two) == [cell_node("c:a0", 0, 2), cell_node("c:b1", 0, 2)]
     assert all(s == 0 for _, s in one.lines[0])
-
-
-def test_band_align_off_gives_no_band() -> None:
-    env = env_of(
-        fx.two_band_columns(),
-        core_options(
-            marker=MARKER,
-            band_align=False,
-        ),
-    )
-    assert band_aligns(env) == ()
-    assert page_aligns(env) == ()
 
 
 def test_a_lane_aligns_only_its_topmost_cell_of_a_rank() -> None:

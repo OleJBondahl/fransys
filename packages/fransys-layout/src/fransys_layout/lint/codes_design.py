@@ -5,7 +5,7 @@ from fransys_model.kernel import CodeInfo, Severity
 FINDING_CODES: tuple[CodeInfo, ...] = (
     CodeInfo(
         code="BOARD_NETS_NOT_DRAWN",
-        severity=Severity.WARNING,
+        severity=Severity.ERROR,
         stage="render",
         who="consumer",
         cause=("A board shares its unit with another top-level device, so layout draws it as a black box and drops the nets between its parts."),
@@ -26,17 +26,6 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
             "Put the missing end's item in a drawn unit or location, or remove the connection. "
             "Write: d.function(name, text) to place that item in a drawn group."
         ),
-        page="findings-render",
-    ),
-    CodeInfo(
-        code="KEEP_TOGETHER_UNMET",
-        severity=Severity.WARNING,
-        stage="render",
-        who="consumer",
-        cause=(
-            "A set of groups that must share a page could not be kept on one page (it does not fit, or its groups sit on different drawing sets)."
-        ),
-        fix=("Shrink the set, or move its groups onto one drawing set. Write: d.function(name, text) to move a device to another group."),
         page="findings-render",
     ),
     CodeInfo(

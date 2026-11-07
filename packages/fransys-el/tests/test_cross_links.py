@@ -18,7 +18,8 @@ from cross_link_cases import (
     solved,
     two_units_model,
 )
-from fransys_el import build, options, symbol_kit
+from fransys_el import build, symbol_kit
+from fransys_el.placement_options import options
 from ring_cases import score_of
 
 from electrical_symbols import LIBRARY

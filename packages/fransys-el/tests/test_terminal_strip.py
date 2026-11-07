@@ -12,7 +12,8 @@ from typing import TYPE_CHECKING
 import fransys as fr
 import pytest
 from conventions_fixtures import house
-from fransys_el import build, options, symbol_kit
+from fransys_el import build, symbol_kit
+from fransys_el.placement_options import options
 from input_card_designs import field_case
 
 from electrical_symbols import LIBRARY

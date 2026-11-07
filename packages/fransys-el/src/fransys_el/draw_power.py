@@ -47,7 +47,7 @@ def power_marks(model: Model, records: Iterable[PowerSymbol], library: Library) 
                 y=r.y,
                 orient=r.orientation.name,
                 slots=_supply_text(model, r, library),
-                outline=outline_of(r.symbol, r.orientation.name, r.x, r.y),
+                outline=outline_of(r.symbol, r.orientation.name, r.x, r.y, library),
                 ports=(r.port.value,),
             ),
         )

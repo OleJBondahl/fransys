@@ -38,16 +38,16 @@ def card_case() -> World:
 
 
 def fan_case() -> World:
-    """A fan of three columns of group A beside a column of group B; the chain swaps two."""
+    """A fan of three columns of group A beside a column of group B."""
     syms, cols = loose("A", "A", "A", "B")
-    hints = Hints(group_order=("A", "B"), chains=(("s3", "s1"),))
+    hints = Hints(group_order=("A", "B"))
     return World(tuple(syms), tuple(cols), (fan("f1", "c1", "c2", "c3"),), hints)
 
 
 def groups_case() -> World:
-    """Twelve free columns in two groups, a pair hint and a break: c2 sorts before c10."""
+    """Twelve free columns in two groups, a pair hint: c2 sorts before c10."""
     syms, cols = loose(*["A"] * 10, "B", "B")
-    hints = Hints(group_order=("A", "B"), order_pairs=(("s12", "s1"),), break_before=frozenset({"B"}))
+    hints = Hints(group_order=("A", "B"), order_pairs=(("s12", "s1"),))
     return World(tuple(syms), tuple(cols), (), hints)
 
 
@@ -100,10 +100,7 @@ def respell(w: World, m: dict[str, str]) -> World:
     h = w.hints
     hints = Hints(
         group_order=tuple(m[g] for g in h.group_order),
-        break_before=frozenset(m[g] for g in h.break_before),
-        keep_together=tuple(frozenset(m[n] for n in s) for s in h.keep_together),
         order_pairs=tuple((m[a], m[b]) for a, b in h.order_pairs),
-        chains=tuple(tuple(m[n] for n in c) for c in h.chains),
     )
     return World(syms, cols, fans, hints)
 
@@ -113,9 +110,7 @@ def reverse(w: World) -> World:
     h = w.hints
     hints = replace(
         h,
-        keep_together=h.keep_together[::-1],
         order_pairs=h.order_pairs[::-1],
-        chains=h.chains[::-1],
     )
     fans = tuple(replace(f, legs=f.legs[::-1], drivers=f.drivers[::-1]) for f in w.fans[::-1])
     return World(w.syms[::-1], w.cols[::-1], fans, hints)

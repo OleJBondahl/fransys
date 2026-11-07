@@ -24,6 +24,7 @@ COLUMNS = {
         ("channel_name", "Channel name", "channel_name"),
         ("signal", "Signal", "signal"),
         ("signal_name", "Signal name", "signal_name"),
+        ("description", "Description", "description"),
         ("wired_to", "Wired to", "wired_to"),
     ),
     "bom": (

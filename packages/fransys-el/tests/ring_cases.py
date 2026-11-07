@@ -11,7 +11,9 @@ import fransys as fr
 from _bank_case import built_bank
 from conventions_fixtures import house
 from fransys.colours import BU
-from fransys_el import Pick, build, options, symbol_kit
+from fransys_el import build, symbol_kit
+from fransys_el.placement_kit import Pick
+from fransys_el.placement_options import options
 
 from electrical_symbols import LIBRARY
 from fransys_layout.core import solve

@@ -15,7 +15,7 @@ from fransys_model.derive import (
 from fransys_model.vocab import FunctionKind, functions
 
 if TYPE_CHECKING:
-    from fransys_el import SymbolKit
+    from fransys_el.placement_kit import SymbolKit
 
     from fransys_model.kernel import Model
 

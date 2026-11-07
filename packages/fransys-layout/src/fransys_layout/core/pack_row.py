@@ -112,7 +112,7 @@ def build_row_graph(spec: RowSpec, extra: int) -> tuple[Graph, list[Reach]]:
 def _segment(g: Graph, spec: RowSpec, block: Block | None, here: Sequence[str], extra: int) -> tuple[Reach, Reach]:
     """Constrain one segment; its left and right node with the reach past each."""
     if block is not None:
-        _card(g, spec, block, here, extra)
+        _card(g, spec, block, here)
         return (slot_node(block.id, LOW), 0), (slot_node(block.id, HIGH), 0)
     _run(g, spec, here, extra)
     return (col_node(here[0]), -extent(spec, here[0])[0]), (
@@ -143,21 +143,20 @@ def _run(g: Graph, spec: RowSpec, cols: Sequence[str], extra: int, *, free: bool
             g.after(col_node(a), col_node(b), _sep(spec, a, b) + extra)
 
 
-def _card(g: Graph, spec: RowSpec, block: Block, cols: Sequence[str], extra: int) -> None:
+def _card(g: Graph, spec: RowSpec, block: Block, cols: Sequence[str]) -> None:
     """Pins in marking order per edge at least the pitch apart; each attached column on its pin."""
     box = block.anchor or ""
     edge_of = dict(block.pin_edges)
-    extra = extra if spec.options.justify_cards else 0
     for edge in ("N", "S"):
-        _pin_chain(g, spec, box, [p for p, e in block.pin_edges if e == edge], extra)
+        _pin_chain(g, spec, box, [p for p, e in block.pin_edges if e == edge], 0)
         _run(
             g,
             spec,
             [c for c in cols if c in spec.attach and edge_of.get(spec.attach[c][1], "") == edge],
-            extra,
+            0,
         )
     _card_columns(g, spec, block.id, box, cols)
-    _run(g, spec, cols, extra, free=True)
+    _run(g, spec, cols, 0, free=True)
     _pair_pins(g, spec, box, block)
     lead, tail = box_reach(spec.syms[box])
     g.after(slot_node(block.id, LOW), box_node(box, LOW), lead)
@@ -282,7 +281,5 @@ def solve_row(spec: RowSpec, page_w: int) -> tuple[dict[str, int], int]:
         msg = "contradictory x constraints"
         raise CoreError(msg)
     overflow = max(0, base[1] - (page_w - spec.options.margin.w))
-    if not spec.options.justify:
-        return base[0], overflow
     best = _solve(spec, _widest_extra(spec, page_w))
     return (best[0] if best else base[0]), overflow

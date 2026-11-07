@@ -18,7 +18,7 @@ lazy from .drawing_reads import (
     wire_crossings,
     wire_length,
 )
-lazy from .geometry.symbols import port_points
+lazy from .geometry.adapter import port_points
 
 __all__ = (
     "Corner",

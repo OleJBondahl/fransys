@@ -9,13 +9,12 @@ from typing import TYPE_CHECKING, Any
 import fransys as fr
 import pytest
 from _core_solves import caught_solves
-from _drawn_facts import document_facts, symbol_subjects
+from _drawn_facts import box_boxes, document_facts, symbol_boxes, symbol_subjects
 from _drawn_pages import drawn_pages
 from _model_build_cover import error_codes
 from fransys.colours import BU, GNYE
 
-from fransys_layout import symbol_geometry
-from fransys_layout.geometry import Box, generic_box_geometry, overlaps, translate
+from fransys_layout.geometry import Box, overlaps, translate
 from fransys_model.derive import port_power_text
 from fransys_model.kernel import id_namespace
 from fransys_model.layout import Orientation, PowerSymbol, layout_of
@@ -119,8 +118,7 @@ def _codes(result: fr.BuildResult) -> Counter[Any]:
 
 def _body(one: PowerSymbol) -> Box:
     """A power symbol's body on its page."""
-    geometry = symbol_geometry(one.symbol, orientation=one.orientation)
-    return translate(geometry.body, dx=one.x, dy=one.y)
+    return translate(symbol_boxes(one.symbol, orient=one.orientation.name)[0], dx=one.x, dy=one.y)
 
 
 def _gap(model, fact: str):
@@ -140,10 +138,10 @@ def _power_texts(model) -> list[Any]:
 def _drawn_body(one) -> Box:
     """A drawn function symbol's body on its page; a generic box is built from its sides."""
     if one.symbol != "generic-box":
-        return translate(symbol_geometry(one.symbol, orientation=one.orient).body, dx=one.x, dy=one.y)
+        return translate(symbol_boxes(one.symbol, orient=one.orient)[0], dx=one.x, dy=one.y)
     names = tuple(one.sides)
-    geometry = generic_box_geometry(names, tuple(one.sides[n] for n in names), offsets=tuple(one.offsets[n] for n in names))
-    return translate(geometry.body, dx=one.x, dy=one.y)
+    body = box_boxes(names, tuple(one.sides[n] for n in names), tuple(one.offsets[n] for n in names))[0]
+    return translate(body, dx=one.x, dy=one.y)
 
 
 @pytest.fixture(scope="module")

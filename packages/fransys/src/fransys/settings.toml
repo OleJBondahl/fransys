@@ -157,6 +157,11 @@ pdf = "head_signal_name"
 csv = "csv_signal_name"
 
 [[lists.plc.columns]]
+field = "description"
+pdf = "head_plc_description"
+csv = "csv_plc_description"
+
+[[lists.plc.columns]]
 field = "wired_to"
 pdf = "head_wired_to"
 csv = "csv_wired_to"
@@ -482,6 +487,8 @@ head_signal = "Signal"
 csv_signal = "signal"
 head_signal_name = "Signal name"
 csv_signal_name = "signal_name"
+head_plc_description = "Description"
+csv_plc_description = "description"
 head_wired_to = "Wired to"
 csv_wired_to = "wired_to"
 head_mpn = "Mpn"

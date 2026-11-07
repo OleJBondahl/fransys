@@ -2,7 +2,7 @@
 
 import re
 
-from fransys_el import REF_TINTS
+from fransys_el.ref_tints import REF_TINTS
 
 from fransys_model.derive.marker_text import REF_SLOTS
 

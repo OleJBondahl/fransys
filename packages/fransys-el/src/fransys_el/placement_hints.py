@@ -1,36 +1,25 @@
 """`Hints` (C2, C3): authored layout hints resolved to group labels and symbol ids."""
 
-from functools import partial
 from typing import TYPE_CHECKING
 
 from fransys_layout.core import Hints
-from fransys_model.derive import function_groups_in_order, function_moves
+from fransys_model.derive import function_groups_in_order
 from fransys_model.layout import (
     OrderHint,
     layout_of,
 )
 
 from .placement_groups import group_nodes, label_of
-from .placement_kit import refuse
 
 if TYPE_CHECKING:
     from collections.abc import Collection, Sequence
 
     from fransys_layout.core import Sym
-    from fransys_model.kernel import Id, Model
-    from fransys_model.vocab import AspectNode
+    from fransys_model.kernel import Model
 
     from .placement_env import Env
 
 __all__ = ["hints_of"]
-
-
-def _group(env: Env, known: Collection[str], node: Id[AspectNode]) -> str:
-    """The label of `node`; `ProblemError` when no symbol is drawn in that group."""
-    label = label_of(env.model, node)
-    if label not in known:
-        refuse(f"hint names group {label!r}", "draw a symbol in that group or drop the hint")
-    return label
 
 
 def _authored_order(model: Model, known: Collection[str]) -> tuple[str, ...]:
@@ -40,12 +29,10 @@ def _authored_order(model: Model, known: Collection[str]) -> tuple[str, ...]:
 
 
 def hints_of(env: Env, syms: Sequence[Sym]) -> Hints:
-    """The `Hints` the core reads: the order and group hints."""
+    """The `Hints` the core reads: the order hints."""
     model = env.model
     known = {s.group for s in syms if s.group}
-    group = partial(_group, env, known)
     return Hints(
         group_order=_authored_order(model, known),
         order_pairs=tuple(sorted({(label_of(model, o.before), label_of(model, o.after)) for o in layout_of(model, OrderHint).values()})),
-        draw_in=tuple(sorted((env.owner[function], group(node)) for function, node in function_moves(model).items() if function in env.owner)),
     )

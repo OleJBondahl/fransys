@@ -87,6 +87,7 @@ def _plc_pin_rows(scope: _PlcScope, function: Function, facet: PlcChannelFacet) 
             field_device=device,
             field_device_designation=device_designation,
             signal_name=None if request is None else request.signal_name,
+            description=None if request is None else request.description,
         )
         for port, pin in pins
     )

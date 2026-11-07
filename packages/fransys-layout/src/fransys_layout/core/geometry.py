@@ -109,6 +109,9 @@ def marker_drawn_box_at(
     keeps off this box. Equal to the outline `fransys_el` draws.
     """
     if key is not None and key[1] == RefKind.TAG and options.link_fit:
+        if orient not in options.link_fit:
+            msg = f"link_fit has no box for orientation {orient}: add a {orient} entry to options.link_fit"
+            raise CoreError(msg)
         return shift(options.link_fit[orient], x, y)
     return marker_box_at(x, y, options, orient, key)
 

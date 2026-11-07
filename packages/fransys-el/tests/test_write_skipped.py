@@ -3,12 +3,13 @@
 # NET_SHORTED 4 per default-salt build set (KI-461): planted_model or demo_model 24 V to 0 V short through strip and mate.
 
 import pytest
-from fransys_el import ProblemError, Skipped, skipped_findings
+from fransys_el import ProblemError, skipped_findings
 from fransys_el.drawn_identity import net_text
 from fransys_el.placement_skips import (
     FUNCTION_WITHOUT_SYMBOL,
     NET_UNDER_TWO_DRAWN_PINS,
     NOT_SERIES_PARALLEL,
+    Skipped,
 )
 from placement_fixtures import planted_model
 

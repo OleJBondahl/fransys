@@ -12,7 +12,7 @@ from _drawn_pages import drawn_pages
 from _model_build_cover import unit_document
 from fransys.colours import BU
 
-from fransys_layout.geometry import GENERIC_BOX_KEY
+from electrical_symbols import GENERIC_BOX_KEY
 
 COUNT = 8
 PINS = tuple(f"CH{j:02d}-" for j in range(1, COUNT + 1))

@@ -52,16 +52,6 @@ def card_that_wraps() -> PlacementProblem:
     return PlacementProblem(AREA, tuple(syms), tuple(nets), hints=hints, facts=Facts())
 
 
-def forced_break() -> PlacementProblem:
-    """Groups G2, G10 and G11 with a break before G10: the unit's second page starts there."""
-    syms, nets = [], []
-    for g in ("2", "10", "11"):
-        syms += [elem(f"a{g}", 100, 32, f"G{g}"), elem(f"b{g}", 100, 32, f"G{g}")]
-        nets.append(net(f"n{g}", f"a{g}.s", f"b{g}.n"))
-    hints = Hints(group_order=("G2", "G10", "G11"), break_before=frozenset({"G10"}))
-    return PlacementProblem(AREA, tuple(syms), tuple(nets), hints=hints, facts=Facts())
-
-
 def tall_column() -> PlacementProblem:
     """Twelve cells of 96 G in one column: the cut folds it into c#a and c#b over one tag."""
     ids = [f"k{i:02d}" for i in range(12)]
@@ -72,7 +62,6 @@ def tall_column() -> PlacementProblem:
 CASES = {
     "two_page_fan": two_page_fan,
     "card_that_wraps": card_that_wraps,
-    "break": forced_break,
     "tall_column": tall_column,
 }
 

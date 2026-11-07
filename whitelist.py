@@ -225,7 +225,6 @@ _.Q  # FIELDS fransys-layout/src/fransys_layout/core/jsonform.py:33
 _.R  # FIELDS fransys-layout/src/fransys_layout/core/jsonform.py:33
 _.X  # FIELDS fransys-layout/src/fransys_layout/core/jsonform.py:33
 _.corner_order  # FIELDS fransys-layout/src/fransys_layout/core/jsonform.py:33
-_.draw_in  # FIELDS fransys-layout/src/fransys_layout/core/jsonform.py:33
 
 # `electrical_symbols/natural.py`: `Natural` fields, read by the builder of the first engine
 # switch (SYMDEF-SLOTS SS6); until then (KI-048) only its own tests read them.
@@ -254,6 +253,7 @@ _.frame_key  # TESTS fransys-layout/tests/test_drawing.py:60
 _.dash_mm  # TESTS fransys-layout/tests/test_drawing.py:45
 _.tints  # TESTS fransys-layout/tests/test_drawing.py:44
 _.line_rule_mm  # TESTS fransys-layout/tests/test_drawing.py:50
+_.library_version  # FIELDS fransys-layout/src/fransys_layout/drawing.py:132
 _.width_mm  # TESTS fransys-el/tests/test_style.py:39
 _.height_mm  # OTHER fransys-render/src/fransys_render/draw.py:67
 _.W  # OTHER fransys/src/fransys/_link_boxes.py:18
@@ -296,7 +296,6 @@ _.HARNESS_LINE  # OTHER fransys-el/src/fransys_el/texts.py:53
 # PageRoutes.dots (layout-0395 P3c): written by route_page, read by el's junction_dots
 _.dots  # OTHER fransys-el/src/fransys_el/draw_symbols.py:77
 # SlotSide.C: the centre side, built by name from symdef's Centre (matched exhaustively)
-_.C  # OTHER fransys-layout/src/fransys_layout/geometry/symbols.py:248
 # F8 (2026-10-02): data-only record fields, no reader yet (model-0125); renamed by model-0381
 _.nominal_power  # FIELDS fransys-model/src/fransys_model/vocab/operating.py:27
 _.resistance  # FIELDS fransys-model/src/fransys_model/vocab/operating.py:26

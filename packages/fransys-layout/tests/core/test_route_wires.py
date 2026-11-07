@@ -83,7 +83,7 @@ def test_a_lane_wire_between_cells_and_a_box_wire_are_drawn() -> None:
     drawn = lane_wires(env, env.columns[0])
     (box_wire,) = drawn.wires
     assert box_wire.net == "c1"
-    assert box_wire.points == ((304, 144), (304, 152))
+    assert box_wire.points == ((552, 144), (552, 152))
     assert drawn.findings == ()
 
 
@@ -160,10 +160,10 @@ def test_a_join_is_a_z_wire_nested_with_the_jogs_and_its_source_is_the_joined_la
     drawn = join_wires(env, col)
     (jog,) = drawn.jogs
     assert (drawn.wires, jog.drawn_as, jog.source_top) == ((), "join", source_top)
-    assert jog.source_x == 648
+    assert jog.source_x == 656
     (wire,) = nest_jogs(free_env(), drawn.jogs).wires
-    a = (304, 184) if home_pin == "s" else (304, 152)
-    m = (648, 152) if member_pin == "n" else (648, 184)
+    a = (552, 184) if home_pin == "s" else (552, 152)
+    m = (656, 152) if member_pin == "n" else (656, 184)
     assert wire.kind == "join"
     assert {wire.points[0], wire.points[-1]} == {a, m}
     assert 152 < wire.points[1][1] < 184
@@ -204,7 +204,7 @@ def test_level_join_pins_are_one_run() -> None:
     env = card_env()
     col = join_column(env, "n", "n", foot=False)
     (wire,) = join_wires(env, col).wires
-    assert wire.points == ((304, 152), (648, 152))
+    assert wire.points == ((552, 152), (656, 152))
 
 
 def ring_env() -> tuple[RouteEnv, Column]:
@@ -236,11 +236,11 @@ def stub_points(orient: str = "R0", open_stub: int = 8) -> list[tuple[tuple[int,
 
 
 def test_an_open_end_draws_a_stub_of_open_stub_out_along_its_side() -> None:
-    assert stub_points() == [((648, 184), (648, 192))]
+    assert stub_points() == [((656, 184), (656, 192))]
 
 
 def test_a_turned_symbol_draws_its_stub_along_the_turned_side() -> None:
-    assert stub_points("R180") == [((648, 184), (648, 176))]
+    assert stub_points("R180") == [((656, 184), (656, 176))]
 
 
 def test_open_stub_zero_draws_no_stub() -> None:
@@ -287,7 +287,7 @@ def box_wire(env: RouteEnv) -> tuple[tuple[int, int], ...]:
 
 def test_a_box_wire_to_a_head_pin_runs_long_on_the_box_column_and_turns_above_the_cell() -> None:
     """SHORTS-ROUTE: the long vertical on the lane's pin column ran through the lane's cells."""
-    assert box_wire(far_box_env()) == ((100, 40), (100, 144), (304, 144), (304, 152))
+    assert box_wire(far_box_env()) == ((100, 40), (100, 144), (552, 144), (552, 152))
 
 
 def test_a_box_wire_never_runs_its_long_vertical_on_a_body_outline() -> None:
@@ -296,18 +296,18 @@ def test_a_box_wire_never_runs_its_long_vertical_on_a_body_outline() -> None:
     wall = replace(env.placed["A1"], sym="Z", body=Box(80, 80, 20, 40), footprint=Box(80, 80, 20, 40), pin_xy=())
     env = replace(env, placed={**env.placed, "Z": wall})
     g = env.options.wiring_grid
-    assert box_wire(env) == ((100, 40), (100, 40 + g), (100 + g, 40 + g), (100 + g, 144), (304, 144), (304, 152))
+    assert box_wire(env) == ((100, 40), (100, 40 + g), (100 + g, 40 + g), (100 + g, 144), (552, 144), (552, 152))
 
 
 def test_a_box_wire_to_a_foot_pin_comes_in_from_below_the_cell() -> None:
     """The foot pin faces south: the wire passes the cell on the box column, never over its body."""
-    assert box_wire(far_box_env(foot=True)) == ((100, 40), (100, 192), (304, 192), (304, 184))
+    assert box_wire(far_box_env(foot=True)) == ((100, 40), (100, 192), (552, 192), (552, 184))
 
 
 def test_a_box_pin_within_one_grid_above_the_head_pin_is_a_jog_not_a_wire_that_doubles_back() -> None:
     env = far_box_env(box_y=146)
     drawn = lane_wires(env, env.columns[0])
-    assert [(j.net, j.top, j.bottom) for j in drawn.jogs] == [("c1", (100, 146), (304, 152))]
+    assert [(j.net, j.top, j.bottom) for j in drawn.jogs] == [("c1", (100, 146), (552, 152))]
     assert not [w for w in drawn.wires if w.net == "c1"]
 
 
@@ -468,7 +468,7 @@ def test_a_jog_end_pin_missing_from_the_facings_raises_naming_it() -> None:
     """R1632: a placed pin with no facing is a defect, never side 0."""
     env = replace(_facing_env(("S", "S")), sides={})
     jog = Jog("p", (700, 100), (600, 150), ends=(PinRef("Z1", "o"), PinRef("Z2", "o")))
-    with pytest.raises(KeyError, match="Z1"):
+    with pytest.raises(CoreError, match="Z1"):
         nest_jogs(env, [jog])
 
 

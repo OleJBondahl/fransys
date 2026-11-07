@@ -52,7 +52,7 @@ def undrawn_board_nets(model: Model) -> dict[Id[Item], set[str]]:
 
 
 def board_nets_findings(model: Model) -> tuple[Finding, ...]:
-    """One `BOARD_NETS_NOT_DRAWN` (`WARNING`) per opaque board, naming its undrawn nets."""
+    """One `BOARD_NETS_NOT_DRAWN` (`ERROR`) per opaque board, naming its undrawn nets."""
     return tuple(
         _INFO["BOARD_NETS_NOT_DRAWN"].finding(
             (board,),

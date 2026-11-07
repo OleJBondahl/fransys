@@ -4,6 +4,7 @@ from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING
 
 from fransys_layout.core import CoreError, PinRef, solve
+from fransys_model.derive import refuses
 from fransys_model.layout import sheet_for
 from fransys_model.vocab import PageKind
 
@@ -38,7 +39,7 @@ __all__ = ["lay_out_drawn"]
 
 # KeyError and IndexError are core faults that today escape `solve`; one set's fault must not
 # hide the sets that lay out (FLIP-NOW F2, KI-022), so they are findings until the core names them.
-_SET_FAILURES = (CoreError, ProblemError, KeyError, IndexError)
+_SET_FAILURES = (CoreError, ProblemError)
 
 
 @dataclass(frozen=True)
@@ -144,6 +145,9 @@ def lay_out_drawn(
     sink = _Sink({}, [], [])
     run = _Run(model, problem, kit, options(conventions, library), conventions, library, sink)
     laid, found, lines = _lay_out(run)
+    if refuses(found):
+        undrawn: dict[Id[Page], Drawing] = {}
+        return laid, found, undrawn  # the layout stopped on an ERROR: nothing is drawn, so no drawing check runs (KI-773)
     drawings = finish_drawings(laid, sink.drawn, sink.markers, ORIGIN, library)
     drawings = place_texts(laid, kit, library, drawings)
     net = with_lines(drawn_netlist(laid, kit, drawings, sink.markers, library), laid, kit, lines)

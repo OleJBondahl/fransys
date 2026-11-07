@@ -11,13 +11,15 @@ from typing import TYPE_CHECKING, Any, cast
 
 import pytest
 from conventions_fixtures import house
-from fransys_el import ProblemError, build, lay_out_drawn, options, write_layout
+from fransys_el import ProblemError, build, lay_out_drawn
 from fransys_el.codes import FINDING_CODES
 from fransys_el.draw_layout import _wires as drawn_wires
 from fransys_el.draw_write import write_layout_drawn
 from fransys_el.drawn_identity import net_text
 from fransys_el.placement_ids import net_key, symbol_key
 from fransys_el.placement_nets import net_ports
+from fransys_el.placement_options import options
+from fransys_el.write import write_layout
 from fransys_el.write_findings import kernel_findings
 from fransys_el.write_ids import symbol_subjects
 from fransys_el.write_pages import write_pages

@@ -5,7 +5,6 @@ distribution board of the corpus runs in `internal/tests/test_placement_pipeline
 """
 # WIRE_ROW_UNRESOLVED 12 per default-salt build set (KI-461): planted_model or demo_model 24 V to 0 V short through strip and mate.
 
-from dataclasses import replace
 from typing import TYPE_CHECKING
 
 import fransys as fr
@@ -13,12 +12,14 @@ import pytest
 from _expected_codes import expect_codes
 from conventions_fixtures import house
 from fransys.colours import BU
-from fransys_el import Conventions, build, options
+from fransys_el import build
 from placement_fixtures import demo_model, kit_for, placed
 
 from electrical_symbols import LIBRARY
 
 if TYPE_CHECKING:
+    from fransys_el.placement_options import Conventions
+
     from fransys_layout.core import Placement
     from fransys_model.kernel import Model
 
@@ -94,9 +95,3 @@ def test_a_wide_strip_wraps_and_levels_its_row_group_per_page_row(wide: Placemen
     strip_group(strip_model(40), house())
     assert wide.findings == ()
     assert len(wide.pages[0].rows) > 1
-
-
-def test_a_strip_wider_than_the_area_gives_exactly_one_wider_than_page_when_not_wrapped() -> None:
-    model = strip_model(40)
-    conventions = replace(house(), options=replace(options(house(), LIBRARY), wrap_wide_fans=False))
-    assert [f.code for f in placed(model, kit_for(model), conventions).findings] == [WIDER]

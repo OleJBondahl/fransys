@@ -7,14 +7,13 @@ from typing import Any
 
 import fransys as fr
 import pytest
-from _drawn_facts import item_box
+from _drawn_facts import box_boxes, item_box, symbol_boxes
 from _drawn_pages import drawn_pages
 from _model_build_cover import unit_document
 from fransys.colours import BN, BU
 
-from fransys_layout.geometry import GENERIC_BOX_KEY, generic_box_geometry, overlaps, translate
-from fransys_layout.geometry.symbols import symbol_geometry
-from fransys_model.layout import Orientation
+from electrical_symbols import GENERIC_BOX_KEY
+from fransys_layout.geometry import overlaps, translate
 
 _LONG = "SUPPLY-PUMP-STATION-NUMBER-ONE-FEEDER-"
 _TAGS = pytest.mark.parametrize("name", ["T", _LONG], ids=["short", "long-tags"])
@@ -49,10 +48,10 @@ def _keepout(one):
         names = tuple(offsets)
         sides = tuple(sides.get(n, "s") for n in names)
         offsets = tuple(v / 8 for v in offsets.values())
-        geometry = generic_box_geometry(names, sides, offsets=offsets)
+        keepout = box_boxes(names, sides, offsets)[1]
     else:
-        geometry = symbol_geometry(one.key, poles=one.poles, orientation=Orientation[one.orient])
-    return translate(geometry.keepout, dx=one.x, dy=one.y)
+        keepout = symbol_boxes(one.key, poles=one.poles, orient=one.orient)[1]
+    return translate(keepout, dx=one.x, dy=one.y)
 
 
 @_TAGS

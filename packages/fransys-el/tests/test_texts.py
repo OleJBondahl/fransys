@@ -3,7 +3,7 @@
 from typing import Any
 
 import pytest
-from fransys_el import OPTIONS, TEXT_ROW_IDS, TEXTS
+from fransys_el.texts import OPTIONS, TEXT_ROW_IDS, TEXTS
 
 from fransys_layout import Facing, LayoutOptions, TextKind
 

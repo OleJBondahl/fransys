@@ -87,9 +87,7 @@ def _band(rank: int, row: int, line: Line) -> Align:
 
 
 def band_aligns(env: PageEnv) -> tuple[Align, ...]:
-    """One Align per (rank, row) with two or more lanes, by rank; none when band_align is off."""
-    if not env.options.band_align:
-        return ()
+    """One Align per (rank, row) with two or more lanes, by rank."""
     found = _topmost(env)
     return tuple(_band(rank, row, tuple(found[rank, row])) for rank, row in sorted(found) if len(found[rank, row]) > 1)
 

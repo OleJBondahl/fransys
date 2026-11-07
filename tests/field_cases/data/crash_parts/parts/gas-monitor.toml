@@ -1,0 +1,82 @@
+schema = 2
+
+[part]
+mpn = "FLD-GAS-MONITOR"
+manufacturer = "Demo"
+description = "Gas monitor: 6-pin sensor plug, sensor, supply, two relay contacts and two 2-pin outputs"
+category = "generic"
+class_code = "B"
+
+[[function]]
+name = "X1"
+kind = "connector"
+ports = [
+    { name = "1", role = "generic", side = "line", joins = "sensor.7" },
+    { name = "2", role = "generic", side = "line", joins = "sensor.8" },
+    { name = "3", role = "generic", side = "line", joins = "sensor.9" },
+    { name = "4", role = "generic", side = "line", joins = "sensor.10" },
+    { name = "5", role = "generic", side = "line", joins = "sensor.11" },
+    { name = "6", role = "generic", side = "line", joins = "sensor.12" },
+]
+
+[function.connector]
+style = "plug"
+pincount = 6
+
+[[function]]
+name = "sensor"
+kind = "sensor"
+ports = [
+    { name = "7", role = "generic" },
+    { name = "8", role = "generic" },
+    { name = "9", role = "generic" },
+    { name = "10", role = "generic" },
+    { name = "11", role = "generic" },
+    { name = "12", role = "generic" },
+]
+
+[[function]]
+name = "supply"
+kind = "load"
+ports = [
+    { name = "13", role = "generic" },
+    { name = "14", role = "generic" },
+]
+
+[function.operating]
+voltage = [{ nom = "24 V", at = ["DC"] }]
+
+[[function]]
+name = "g1"
+kind = "sensor"
+ports = [{ name = "15", role = "generic" }]
+
+[[function]]
+name = "g2"
+kind = "sensor"
+ports = [{ name = "16", role = "generic" }]
+
+[[function]]
+name = "X2"
+kind = "connector"
+ports = [
+    { name = "17", role = "generic" },
+    { name = "18", role = "generic" },
+]
+
+[function.connector]
+style = "plug"
+pincount = 2
+
+[[function]]
+name = "X3"
+kind = "connector"
+ports = [
+    { name = "19", role = "generic" },
+    { name = "20", role = "generic" },
+]
+
+[function.connector]
+style = "plug"
+pincount = 2
+

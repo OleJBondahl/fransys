@@ -57,5 +57,6 @@ def _plc_cells(model: Model, row: PlcChannelRow) -> tuple[str | None, ...]:
         "signal": signal_word(model, row.signal),
         "wired_to": row.wired_to,
         "signal_name": word(model, "spare") if spare else row.signal_name,
+        "description": row.description,
     }
     return tuple(cells[column] for column in list_columns(model, "plc"))

@@ -195,7 +195,6 @@ def test_natural_key_orders_digits_as_numbers():
 def test_options_defaults_follow_the_design_with_e4():
     o = core_options()
     assert o.box_pins == "spread"
-    assert o.justify is True
 
 
 def test_c3_contract_shape():
@@ -253,7 +252,6 @@ def test_the_options_carry_geometry_for_the_placement_strings_and_no_colours():
     o = core_options()
     assert o.open_stub == 0
     assert o.box_columns is True
-    assert o.wrap_wide_fans is True
     assert o.cells == (8, 6)
     assert o.marker is None  # layout-0305: symdef data, passed in, never typed in the core
     assert "colours" not in {f.name for f in dataclasses.fields(Options)}

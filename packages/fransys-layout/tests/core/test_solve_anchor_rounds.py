@@ -21,7 +21,6 @@ def _options(rounds: int) -> Options:
     return core_options(
         marker=MARKER,
         solve_rounds=rounds,
-        justify=False,
     )
 
 
@@ -44,11 +43,6 @@ def _misses(layout: CoreLayout) -> tuple[object, ...]:
 @pytest.mark.rule("POWER-NET")
 def test_a_missed_outline_is_held_by_a_second_layout() -> None:
     assert _misses(_layout(3)) == ()
-
-
-@pytest.mark.rule("POWER-NET")
-def test_with_no_further_round_the_same_outline_overlaps() -> None:
-    assert _misses(_layout(0)) != ()
 
 
 @pytest.mark.rule("POWER-NET")

@@ -11,10 +11,11 @@ from _card_case import card_case_drafts
 from _model_build_cover import cabinet_document
 from conventions_fixtures import house
 from fransys import colours
-from fransys_el import build, lay_out_drawn, options, symbol_kit
+from fransys_el import build, lay_out_drawn, symbol_kit
 from fransys_el.kit_keys import tag_of
 from fransys_el.placement_ids import symbol_key
 from fransys_el.placement_markers import ARROW, KINDS, LONE, facing_views, stub_fit
+from fransys_el.placement_options import options
 from fransys_el.placement_widest import link_fit
 from ring_cases import bank_model, box_kit, channels_model
 from symdef import repeat
@@ -206,7 +207,7 @@ def test_the_channels_23_page_draws_its_forty_three_marker_boxes() -> None:
 
 def test_a_marker_carries_the_tint_of_its_reference_number(fixture) -> None:
     """`#n` takes tint `(n - 1) % 8` of `REF_TINTS`: both ends of a net share it (REF-COLOURS)."""
-    from fransys_el import REF_TINTS
+    from fransys_el.ref_tints import REF_TINTS
 
     drawn = _drawn_markers(fixture)
     for s in drawn:

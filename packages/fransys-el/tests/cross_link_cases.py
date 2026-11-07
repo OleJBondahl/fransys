@@ -9,7 +9,8 @@ from typing import TYPE_CHECKING, Any, NamedTuple
 import fransys as fr
 from conventions_fixtures import house
 from fransys.colours import BU
-from fransys_el import build, options, symbol_kit
+from fransys_el import build, symbol_kit
+from fransys_el.placement_options import options
 from ring_cases import channels_model, drawn_supply_model
 
 from electrical_symbols import LIBRARY

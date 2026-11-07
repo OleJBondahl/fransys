@@ -2,7 +2,7 @@
 
 from fransys_layout.core.sides import SIDE_STEP
 
-from .symbols import Facing
+from .facing import Facing
 from .units import WIRING_GRID, Point
 
 # Facing to the page step of one wiring grid, read from the core's side table (layout-0306).

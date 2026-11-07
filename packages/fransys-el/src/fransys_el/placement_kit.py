@@ -18,9 +18,7 @@ __all__ = ["Pick", "PortMissingError", "ProblemError", "SymbolKit", "refuse"]
 class Pick:
     """The symbol that draws one function.
 
-    `ports` maps each model port of the function, and of each `members` function, to a port
-    name of the symbol. `members` are the other functions of a pole group drawn into this
-    symbol; a member has no symbol of its own. A pin view's key is its port (el-0014).
+    `ports` maps each port of the function and of its pole-group `members` to a symbol port name.
     """
 
     key: str

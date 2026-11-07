@@ -7,10 +7,10 @@ from pathlib import Path
 from typing import Any, NamedTuple
 
 import fransys as fr
+from _drawn_facts import box_boxes
 from _drawn_pages import drawn_pages
 
 from fransys_layout.geometry import Box, overlaps, translate
-from fransys_layout.geometry.symbols import generic_box_geometry
 
 _UNIT: dict[str, Any] = {
     "revision": 1,
@@ -87,7 +87,7 @@ def test_no_parent_function_is_drawn_inside_the_unit_outline() -> None:
     # the lamp is the page's one function drawn as a plain two-pin box: the parent's own
     lamps = [one for one in drawing.symbols if one.key == "lamp"]
     assert len(lamps) == 1
-    body = translate(generic_box_geometry(("1", "2")).body, dx=lamps[0].x, dy=lamps[0].y)
+    body = translate(box_boxes(("1", "2"))[0], dx=lamps[0].x, dy=lamps[0].y)
     for _, one in placed:
         xs, ys = [x for x, _ in one.points], [y for _, y in one.points]
         box = Box(x=min(xs), y=min(ys), width=max(xs) - min(xs), height=max(ys) - min(ys))

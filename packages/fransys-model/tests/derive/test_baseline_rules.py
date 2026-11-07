@@ -20,41 +20,41 @@ def test_the_table_is_ordered_oldest_first_and_ends_at_today() -> None:
 
 
 def test_the_oldest_verifiable_release_has_not_the_holder_rule() -> None:
-    rules = listing_rules(8, "0.13.8")
+    rules = listing_rules(9, "0.13.8")
     assert rules == ListingRules(holder_designation=False)
 
 
 def test_0_18_2_has_the_holder_rule_only() -> None:
-    assert listing_rules(8, "0.18.2") == ListingRules()
+    assert listing_rules(9, "0.18.2") == ListingRules()
 
 
 def test_0_18_4_and_later_are_todays_rules() -> None:
-    assert listing_rules(8, "0.18.4") == ListingRules()
+    assert listing_rules(9, "0.18.4") == ListingRules()
 
 
 def test_0_19_10_and_later_are_todays_rules() -> None:
-    assert listing_rules(8, "0.19.10") == ListingRules()
+    assert listing_rules(9, "0.19.10") == ListingRules()
 
 
 @pytest.mark.parametrize("version", ["0.13.7", "0.9.0", "", "unreadable"])
 def test_a_release_older_than_the_table_has_no_rules(version: str) -> None:
-    assert listing_rules(8, version) is None
+    assert listing_rules(9, version) is None
 
 
 def test_versions_compare_as_numbers_not_text() -> None:
-    assert listing_rules(8, "0.13.14") == listing_rules(8, "0.13.8")
-    assert listing_rules(8, "0.13.8") is not None
+    assert listing_rules(9, "0.13.14") == listing_rules(9, "0.13.8")
+    assert listing_rules(9, "0.13.8") is not None
     assert version_key("0.13.14") > version_key("0.13.8")
 
 
-@pytest.mark.parametrize("listing_version", [5, 9])
+@pytest.mark.parametrize("listing_version", [5, 10])
 def test_another_listing_version_has_no_rules(listing_version: int) -> None:
     assert listing_rules(listing_version, "0.19.8") is None
 
 
 def test_listing_versions_6_and_7_are_one_rule_set() -> None:
     """The 7 bump moved no listing text (model-0428): a version-6 revision reads under the same rules."""
-    assert listing_rules(6, "0.22.4") == listing_rules(8, "0.22.4") == CURRENT
+    assert listing_rules(6, "0.22.4") == listing_rules(9, "0.22.4") == CURRENT
 
 
 @pytest.mark.parametrize(
@@ -65,6 +65,6 @@ def test_listing_versions_6_and_7_are_one_rule_set() -> None:
     ],
 )
 def test_the_release_that_moved_each_rule_is_named(version: str, moved: str) -> None:
-    rules = listing_rules(8, version)
+    rules = listing_rules(9, version)
     assert rules is not None
     assert rules_moved_in(rules) == moved

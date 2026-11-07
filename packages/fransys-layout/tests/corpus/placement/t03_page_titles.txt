@@ -4,17 +4,17 @@
 # [rail rank=r power=K]: the net carries a declared supply potential; smaller rank is drawn
 # higher (AC by phase, DC high to low, 0 V, PE last). power=SUPPLY/GROUND/PE draws a symbol.
 area 1312 854
-group F1 order=0 break_before=0 "Relay and lamp circuit 1"
-group F2 order=1 break_before=0 "Relay and lamp circuit 2"
-group F3 order=2 break_before=0 "Relay and lamp circuit 3"
-group F4 order=3 break_before=0 "Relay and lamp circuit 4"
-group F5 order=4 break_before=0 "Relay and lamp circuit 5"
-group F6 order=5 break_before=0 "Relay and lamp circuit 6"
-group F7 order=6 break_before=0 "Relay and lamp circuit 7"
-group F8 order=7 break_before=0 "Relay and lamp circuit 8"
-group F9 order=8 break_before=0 "Relay and lamp circuit 9"
-group F10 order=9 break_before=0 "Relay and lamp circuit 10"
-group F11 order=10 break_before=0 "Relay and lamp circuit 11"
+group F1 order=0 "Relay and lamp circuit 1"
+group F2 order=1 "Relay and lamp circuit 2"
+group F3 order=2 "Relay and lamp circuit 3"
+group F4 order=3 "Relay and lamp circuit 4"
+group F5 order=4 "Relay and lamp circuit 5"
+group F6 order=5 "Relay and lamp circuit 6"
+group F7 order=6 "Relay and lamp circuit 7"
+group F8 order=7 "Relay and lamp circuit 8"
+group F9 order=8 "Relay and lamp circuit 9"
+group F10 order=9 "Relay and lamp circuit 10"
+group F11 order=10 "Relay and lamp circuit 11"
 sym =F5+C1-K5.coil group=F5 body=-16,-24,32,48 keepout=-68,-24,84,48
   pin in N 0,-24
   pin out S 0,24

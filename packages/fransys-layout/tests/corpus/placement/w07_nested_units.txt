@@ -4,16 +4,16 @@
 # [rail rank=r power=K]: the net carries a declared supply potential; smaller rank is drawn
 # higher (AC by phase, DC high to low, 0 V, PE last). power=SUPPLY/GROUND/PE draws a symbol.
 area 1312 854
-group F1 order=0 break_before=0 "Board circuit 1"
-group F2 order=1 break_before=0 "Board circuit 2"
-group F3 order=2 break_before=0 "Board circuit 3"
-group F4 order=3 break_before=0 "Board circuit 4"
-group F5 order=4 break_before=0 "Board circuit 5"
-group F6 order=5 break_before=0 "Board circuit 6"
-group F7 order=6 break_before=0 "Board circuit 7"
-group F8 order=7 break_before=0 "Board circuit 8"
-group F9 order=8 break_before=0 "Board circuit 9"
-group F10 order=9 break_before=0 "Board circuit 10"
+group F1 order=0 "Board circuit 1"
+group F2 order=1 "Board circuit 2"
+group F3 order=2 "Board circuit 3"
+group F4 order=3 "Board circuit 4"
+group F5 order=4 "Board circuit 5"
+group F6 order=5 "Board circuit 6"
+group F7 order=6 "Board circuit 7"
+group F8 order=7 "Board circuit 8"
+group F9 order=8 "Board circuit 9"
+group F10 order=9 "Board circuit 10"
 sym =F6-C1-U1-K6.lamp group=F6 body=-16,-16,48,32 keepout=-16,-16,100,32
   pin 1 S 0,16
   pin 2 S 16,16

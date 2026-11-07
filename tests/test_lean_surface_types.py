@@ -256,14 +256,11 @@ def test_the_two_known_violators_are_closed_and_the_check_holds_them():
         "DiagramTab",
         "PlacedWire",
         "Side",
-        "SymbolGeometry",
         "TextKind",
         "TextPlacement",
         "lay_out_cables",
         "lay_out_diagrams",
         "lay_out_overview",
-        "generic_box_geometry",
-        "symbol_geometry",
     }
     assert "write_json" in {entry.name for entry in lean_surface.resolve_surface_names(("fransys_model.kernel",))}
     measured = lean_surface_types.measure_surface_types()

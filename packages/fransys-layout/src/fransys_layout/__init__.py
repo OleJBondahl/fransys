@@ -1,12 +1,6 @@
 """Layout engines for Fransys: geometry <- stages <- lint <- engines."""
 
-from .geometry import (
-    Facing,
-    HintError,
-    SymbolGeometry,
-    generic_box_geometry,
-    symbol_geometry,
-)
+from .geometry import Facing, HintError
 from .options import LayoutOptions, Side, TextKind, TextPlacement
 lazy from .engines.cable import CableLayout, PlacedBlock, PlacedEnd, PlacedWire, lay_out_cables
 lazy from .engines.diagram import (
@@ -39,12 +33,9 @@ __all__ = (
     "PlacedSheet",
     "PlacedWire",
     "Side",
-    "SymbolGeometry",
     "TextKind",
     "TextPlacement",
-    "generic_box_geometry",
     "lay_out_cables",
     "lay_out_diagrams",
     "lay_out_overview",
-    "symbol_geometry",
 )

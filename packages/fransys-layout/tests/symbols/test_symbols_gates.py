@@ -13,8 +13,8 @@ import fransys_layout
 
 SRC = Path(fransys_layout.__file__).parent
 LAYER = SRC / "symbols"
-#: The old engine's adapter, the one other importer; it dies at SCHEMATIC-FLIP (SB9). Shrink-only.
-LEGACY = {"geometry/symbols.py"}
+#: The adapter, the one other importer; it dies at SCHEMATIC-FLIP (SB9). Shrink-only.
+LEGACY = {"geometry/adapter.py"}
 
 WORDS = (
     "coil",

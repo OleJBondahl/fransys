@@ -8,9 +8,11 @@ from dataclasses import replace
 
 import pytest
 from conventions_fixtures import house
-from fransys_el import build, options, write_layout
+from fransys_el import build
 from fransys_el.kit_keys import function_of
 from fransys_el.placement_ids import symbol_ids
+from fransys_el.placement_options import options
+from fransys_el.write import write_layout
 from test_write import Written as _Written
 
 from electrical_symbols import LIBRARY

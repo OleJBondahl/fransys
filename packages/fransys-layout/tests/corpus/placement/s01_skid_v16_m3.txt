@@ -5,12 +5,12 @@
 # [rail rank=r power=K]: the net carries a declared supply potential; smaller rank is drawn
 # higher (AC by phase, DC high to low, 0 V, PE last). power=SUPPLY/GROUND/PE draws a symbol.
 area 1312 854
-group G0 order=0 break_before=0 "Supply 24 V"
-group G1 order=1 break_before=0 "Mains"
-group G2 order=2 break_before=0 "Fan starters"
-group G3 order=3 break_before=0 "PLC"
-group G4 order=4 break_before=0 "Valve relays"
-group G5 order=5 break_before=0 "Valves"
+group G0 order=0 "Supply 24 V"
+group G1 order=1 "Mains"
+group G2 order=2 "Fan starters"
+group G3 order=3 "PLC"
+group G4 order=4 "Valve relays"
+group G5 order=5 "Valves"
 sym =G2+CAB-Q4.coil group=G2 body=-16,-24,32,48 keepout=-68,-24,84,48
   pin in N 0,-24
   pin out S 0,24 stand=16

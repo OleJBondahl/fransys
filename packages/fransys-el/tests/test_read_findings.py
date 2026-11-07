@@ -2,8 +2,8 @@
 # NET_POTENTIAL_CONFLICT 1 per default-salt build set (KI-461): planted_model or demo_model 24 V to 0 V short through strip and mate.
 # NET_SHORTED 1 per default-salt build set (KI-461): planted_model or demo_model 24 V to 0 V short through strip and mate.
 
-from fransys_el import Skipped, read_findings
-from fransys_el.placement_skips import FUNCTION_WITHOUT_SYMBOL
+from fransys_el import read_findings
+from fransys_el.placement_skips import FUNCTION_WITHOUT_SYMBOL, Skipped
 from placement_fixtures import planted_model
 lazy import fransys as fr
 

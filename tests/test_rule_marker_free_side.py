@@ -15,8 +15,9 @@ from typing import Any
 import fransys as fr
 import pytest
 from _direct_case import built_with_unlaid, laid_again
-from fransys_el import build, drawn_nets, house_conventions, lay_out_core, port_pins, symbol_kit
+from fransys_el import build, drawn_nets, house_conventions, lay_out_core, symbol_kit
 from fransys_el.drawn_nets import _powered
+from fransys_el.placement_env import port_pins
 from test_drawn_symbols_placed_by_core import R825_STUBS
 
 from electrical_symbols import LIBRARY, power_symbol_key

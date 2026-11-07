@@ -9,11 +9,12 @@ from pathlib import Path
 from typing import Any, NamedTuple
 
 import fransys as fr
+from _drawn_facts import symbol_boxes
 from _drawn_pages import drawn_pages
 
 from electrical_symbols import LIBRARY
 from fransys_layout import lay_out_cables
-from fransys_layout.geometry import Box, Orientation, overlaps, symbol_geometry, translate
+from fransys_layout.geometry import Box, overlaps, translate
 from fransys_model.derive.tag_text import external_note
 
 
@@ -94,8 +95,8 @@ def test_the_cable_end_box_of_the_strip_is_dashed() -> None:
 
 def _body(s: Any) -> Box:
     """The body box of a drawn symbol, on the page."""
-    geometry = symbol_geometry(s.key, poles=s.poles, orientation=Orientation[s.orient])
-    return translate(geometry.body, dx=s.x, dy=s.y)
+
+    return translate(symbol_boxes(s.key, poles=s.poles, orient=s.orient)[0], dx=s.x, dy=s.y)
 
 
 def test_no_outline_box_holds_a_foreign_symbol() -> None:

@@ -12,9 +12,10 @@ import pytest
 from _model_build_cover import unit_document
 from conventions_fixtures import house
 from fransys.colours import BU
-from fransys_el import build, options, symbol_kit
+from fransys_el import build, symbol_kit
 from fransys_el.drawn_netlist import POWER_KEYS
 from fransys_el.placement_anchors import stood
+from fransys_el.placement_options import options
 from ring_cases import bank_model, box_kit
 
 from electrical_symbols import LIBRARY, power_symbol_key

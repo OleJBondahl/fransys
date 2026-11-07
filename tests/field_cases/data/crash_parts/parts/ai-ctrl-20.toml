@@ -1,0 +1,188 @@
+schema = 2
+
+[part]
+mpn = "FLD-AI-CTRL-20"
+manufacturer = "Demo"
+description = "Analog input controller, 20 current channels with two pins each"
+category = "plc_module"
+class_code = "K"
+
+[[function]]
+name = "ai_1"
+kind = "plc_channel"
+ports = [{ name = "ANALOG_INPUT_01_P", role = "generic" }, { name = "ANALOG_INPUT_01_N", role = "generic" }]
+
+[function.plc_channel]
+signal = "ai_current"
+channel = 1
+
+[[function]]
+name = "ai_2"
+kind = "plc_channel"
+ports = [{ name = "ANALOG_INPUT_02_P", role = "generic" }, { name = "ANALOG_INPUT_02_N", role = "generic" }]
+
+[function.plc_channel]
+signal = "ai_current"
+channel = 2
+
+[[function]]
+name = "ai_3"
+kind = "plc_channel"
+ports = [{ name = "ANALOG_INPUT_03_P", role = "generic" }, { name = "ANALOG_INPUT_03_N", role = "generic" }]
+
+[function.plc_channel]
+signal = "ai_current"
+channel = 3
+
+[[function]]
+name = "ai_4"
+kind = "plc_channel"
+ports = [{ name = "ANALOG_INPUT_04_P", role = "generic" }, { name = "ANALOG_INPUT_04_N", role = "generic" }]
+
+[function.plc_channel]
+signal = "ai_current"
+channel = 4
+
+[[function]]
+name = "ai_5"
+kind = "plc_channel"
+ports = [{ name = "ANALOG_INPUT_05_P", role = "generic" }, { name = "ANALOG_INPUT_05_N", role = "generic" }]
+
+[function.plc_channel]
+signal = "ai_current"
+channel = 5
+
+[[function]]
+name = "ai_6"
+kind = "plc_channel"
+ports = [{ name = "ANALOG_INPUT_06_P", role = "generic" }, { name = "ANALOG_INPUT_06_N", role = "generic" }]
+
+[function.plc_channel]
+signal = "ai_current"
+channel = 6
+
+[[function]]
+name = "ai_7"
+kind = "plc_channel"
+ports = [{ name = "ANALOG_INPUT_07_P", role = "generic" }, { name = "ANALOG_INPUT_07_N", role = "generic" }]
+
+[function.plc_channel]
+signal = "ai_current"
+channel = 7
+
+[[function]]
+name = "ai_8"
+kind = "plc_channel"
+ports = [{ name = "ANALOG_INPUT_08_P", role = "generic" }, { name = "ANALOG_INPUT_08_N", role = "generic" }]
+
+[function.plc_channel]
+signal = "ai_current"
+channel = 8
+
+[[function]]
+name = "ai_9"
+kind = "plc_channel"
+ports = [{ name = "ANALOG_INPUT_09_P", role = "generic" }, { name = "ANALOG_INPUT_09_N", role = "generic" }]
+
+[function.plc_channel]
+signal = "ai_current"
+channel = 9
+
+[[function]]
+name = "ai_10"
+kind = "plc_channel"
+ports = [{ name = "ANALOG_INPUT_10_P", role = "generic" }, { name = "ANALOG_INPUT_10_N", role = "generic" }]
+
+[function.plc_channel]
+signal = "ai_current"
+channel = 10
+
+[[function]]
+name = "ai_11"
+kind = "plc_channel"
+ports = [{ name = "ANALOG_INPUT_11_P", role = "generic" }, { name = "ANALOG_INPUT_11_N", role = "generic" }]
+
+[function.plc_channel]
+signal = "ai_current"
+channel = 11
+
+[[function]]
+name = "ai_12"
+kind = "plc_channel"
+ports = [{ name = "ANALOG_INPUT_12_P", role = "generic" }, { name = "ANALOG_INPUT_12_N", role = "generic" }]
+
+[function.plc_channel]
+signal = "ai_current"
+channel = 12
+
+[[function]]
+name = "ai_13"
+kind = "plc_channel"
+ports = [{ name = "ANALOG_INPUT_13_P", role = "generic" }, { name = "ANALOG_INPUT_13_N", role = "generic" }]
+
+[function.plc_channel]
+signal = "ai_current"
+channel = 13
+
+[[function]]
+name = "ai_14"
+kind = "plc_channel"
+ports = [{ name = "ANALOG_INPUT_14_P", role = "generic" }, { name = "ANALOG_INPUT_14_N", role = "generic" }]
+
+[function.plc_channel]
+signal = "ai_current"
+channel = 14
+
+[[function]]
+name = "ai_15"
+kind = "plc_channel"
+ports = [{ name = "ANALOG_INPUT_15_P", role = "generic" }, { name = "ANALOG_INPUT_15_N", role = "generic" }]
+
+[function.plc_channel]
+signal = "ai_current"
+channel = 15
+
+[[function]]
+name = "ai_16"
+kind = "plc_channel"
+ports = [{ name = "ANALOG_INPUT_16_P", role = "generic" }, { name = "ANALOG_INPUT_16_N", role = "generic" }]
+
+[function.plc_channel]
+signal = "ai_current"
+channel = 16
+
+[[function]]
+name = "ai_17"
+kind = "plc_channel"
+ports = [{ name = "ANALOG_INPUT_17_P", role = "generic" }, { name = "ANALOG_INPUT_17_N", role = "generic" }]
+
+[function.plc_channel]
+signal = "ai_current"
+channel = 17
+
+[[function]]
+name = "ai_18"
+kind = "plc_channel"
+ports = [{ name = "ANALOG_INPUT_18_P", role = "generic" }, { name = "ANALOG_INPUT_18_N", role = "generic" }]
+
+[function.plc_channel]
+signal = "ai_current"
+channel = 18
+
+[[function]]
+name = "ai_19"
+kind = "plc_channel"
+ports = [{ name = "ANALOG_INPUT_19_P", role = "generic" }, { name = "ANALOG_INPUT_19_N", role = "generic" }]
+
+[function.plc_channel]
+signal = "ai_current"
+channel = 19
+
+[[function]]
+name = "ai_20"
+kind = "plc_channel"
+ports = [{ name = "ANALOG_INPUT_20_P", role = "generic" }, { name = "ANALOG_INPUT_20_N", role = "generic" }]
+
+[function.plc_channel]
+signal = "ai_current"
+channel = 20

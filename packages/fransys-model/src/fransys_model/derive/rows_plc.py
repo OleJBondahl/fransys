@@ -17,7 +17,7 @@ class PlcChannelRow:
 
     `pin` is its printed designation (`-A2:5`), `channel_name` the
     channel's own number, `wired_to` the printed far ends at that port joined with `CELL_SEPARATOR`
-    (`None` for none). The device fields and `signal_name` are `None` for an unbound channel.
+    (`None` for none). The device fields, `signal_name` and `description` are `None` for an unbound channel.
     """
 
     channel: Id[Function]
@@ -29,6 +29,7 @@ class PlcChannelRow:
     field_device: Id[Function] | None
     field_device_designation: str | None
     signal_name: str | None
+    description: str | None
 
 
 @value

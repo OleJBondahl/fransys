@@ -5,7 +5,7 @@ from pathlib import Path
 
 import fransys_el
 from conventions_fixtures import house
-from fransys_el import options
+from fransys_el.placement_options import options
 from fransys_el.placement_views import MARKER, marker_boxes
 
 from electrical_symbols import LIBRARY

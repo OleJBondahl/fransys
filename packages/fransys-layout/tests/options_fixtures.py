@@ -16,7 +16,6 @@ _GRID = 8
 # The core values these tests were recorded on; the house's layout.toml pairs N/S pins and
 # leaves card pitch at the footprint (E4), which the core tests do not assume.
 RECORDED: dict[str, Any] = {
-    "justify_cards": True,
     "pin_pairs": (),
     "tag_across_body": False,
     "flip_turn": "R180",

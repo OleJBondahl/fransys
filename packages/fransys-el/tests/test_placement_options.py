@@ -19,10 +19,7 @@ def test_default_options_are_the_layout_toml_with_the_placement_conventions() ->
     """Every `[layout]` key reaches `Options` as written; the marker is the library's."""
     got = options(house(), LIBRARY)
     assert got.box_pins == "spread"
-    assert got.justify is True
-    assert got.band_align is True
     assert got.bundle_direction is True
-    assert got.justify_cards is False
     assert got.pin_pairs == (("N", "S"),)
     for key, value in LAYOUT.items():
         if key in GENERAL:

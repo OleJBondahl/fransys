@@ -19,23 +19,23 @@ def test_each_subject_prints_as_an_at_line(monkeypatch):
     result = fr.build(d)
     subjects = tuple(result.model.origins)[:2]
     warning = fr.Finding(
-        code="KEEP_TOGETHER_UNMET",
+        code="ORDER_HINT_UNMET",
         severity=fr.Severity.WARNING,
         subjects=subjects,
         message="a set of groups spans two drawing sets (p1.1: -K1)",
-        fix=_codes.BY_CODE["KEEP_TOGETHER_UNMET"].fix,
+        fix=_codes.BY_CODE["ORDER_HINT_UNMET"].fix,
     )
     note = fr.Finding(code="SPARE_FUNCTIONS", severity=fr.Severity.INFO, subjects=(), message="")
     monkeypatch.setattr(_report, "_raw_findings", lambda _result, _svgs: (warning, note))
     lines = fr.report(result).splitlines()
     assert lines[:2] == [
         "build: 0 errors, 1 warning, 1 note",
-        "KEEP_TOGETHER_UNMET (warning): a set of groups spans two drawing sets (p1.1: -K1)",
+        "ORDER_HINT_UNMET (warning): a set of groups spans two drawing sets (p1.1: -K1)",
     ]
     assert lines[2:4] == [f"  at: {s}" for s in described_parts(warning, result.model).subjects]
     assert lines[4:] == [
         f"  fix: {filled_fix(warning, result.model)}",
-        f"  see: {_SITE}{fr.__version__}/guide/findings-render/#keep_together_unmet",
+        f"  see: {_SITE}{fr.__version__}/guide/findings-render/#order_hint_unmet",
         "notes: SPARE_FUNCTIONS 1",
     ]
 

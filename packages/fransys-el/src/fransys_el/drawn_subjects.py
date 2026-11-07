@@ -18,8 +18,6 @@ __all__ = ["drawn_subjects"]
 def drawn_subjects(model: Model, kit: SymbolKit) -> dict[str, Id[Function]]:
     """For the drawn id of each symbol `kit` picks, the lead function of its pick.
 
-    A member of a pole group has no symbol of its own and is absent; a pin view's lead is the
-    function of its port. A marker, a table and a power symbol are no pick and are absent.
-    The core Drawing names no model thing: this is where a drawn id meets its function.
+    A pole-group member, marker, table and power symbol are no pick and are absent.
     """
     return {core_symbol_id(sym): function_of(model, lead) for lead, sym in symbol_ids(model, kit).items()}

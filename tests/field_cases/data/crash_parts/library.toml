@@ -1,0 +1,4 @@
+schema = 2
+name = "crash-parts"
+version = "0.1.0"
+description = "Invented parts for the many-function device crash case."

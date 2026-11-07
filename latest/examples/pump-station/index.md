@@ -261,16 +261,16 @@ their published datasheets.
 
 [Download the CSV](files/all/data/EX-1-v1.6-plc.csv)
 
-| pin | channel_name | signal | signal_name | wired_to |
-| --- | --- | --- | --- | --- |
-| -U1-DI1:DI1 | 1 | di | P1_OVERLOAD | -U1-B12:98 |
-| -U1-DI1:DI2 | 2 | di | P1_RUNNING | -U1-Q11:84 |
-| -U1-DI1:DI3 | 3 | di | P2_OVERLOAD | -U1-B22:98 |
-| -U1-DI1:DI4 | 4 | di | P2_RUNNING | -U1-Q21:84 |
-| -U1-DO1:DO1 | 1 | do | P1_RUN | -U1-K1:A1 |
-| -U1-DO1:DO2 | 2 | do | P2_RUN | -U1-K2:A1 |
-| -U1-DO1:DO3 | 3 | do |  |  |
-| -U1-DO1:DO4 | 4 | do |  |  |
+| pin | channel_name | signal | signal_name | description | wired_to |
+| --- | --- | --- | --- | --- | --- |
+| -U1-DI1:DI1 | 1 | di | P1_OVERLOAD |  | -U1-B12:98 |
+| -U1-DI1:DI2 | 2 | di | P1_RUNNING |  | -U1-Q11:84 |
+| -U1-DI1:DI3 | 3 | di | P2_OVERLOAD |  | -U1-B22:98 |
+| -U1-DI1:DI4 | 4 | di | P2_RUNNING |  | -U1-Q21:84 |
+| -U1-DO1:DO1 | 1 | do | P1_RUN |  | -U1-K1:A1 |
+| -U1-DO1:DO2 | 2 | do | P2_RUN |  | -U1-K2:A1 |
+| -U1-DO1:DO3 | 3 | do |  |  |  |
+| -U1-DO1:DO4 | 4 | do |  |  |  |
 
 ### EX-1-v1.6-terminals.csv
 
@@ -511,16 +511,16 @@ their published datasheets.
 
 [Download the CSV](files/cabinet/data/pump-cabinet-v1.11-plc.csv)
 
-| pin | channel_name | signal | signal_name | wired_to |
-| --- | --- | --- | --- | --- |
-| -DI1:DI1 | 1 | di | P1_OVERLOAD | -B12:98 |
-| -DI1:DI2 | 2 | di | P1_RUNNING | -Q11:84 |
-| -DI1:DI3 | 3 | di | P2_OVERLOAD | -B22:98 |
-| -DI1:DI4 | 4 | di | P2_RUNNING | -Q21:84 |
-| -DO1:DO1 | 1 | do | P1_RUN | -K1:A1 |
-| -DO1:DO2 | 2 | do | P2_RUN | -K2:A1 |
-| -DO1:DO3 | 3 | do |  |  |
-| -DO1:DO4 | 4 | do |  |  |
+| pin | channel_name | signal | signal_name | description | wired_to |
+| --- | --- | --- | --- | --- | --- |
+| -DI1:DI1 | 1 | di | P1_OVERLOAD |  | -B12:98 |
+| -DI1:DI2 | 2 | di | P1_RUNNING |  | -Q11:84 |
+| -DI1:DI3 | 3 | di | P2_OVERLOAD |  | -B22:98 |
+| -DI1:DI4 | 4 | di | P2_RUNNING |  | -Q21:84 |
+| -DO1:DO1 | 1 | do | P1_RUN |  | -K1:A1 |
+| -DO1:DO2 | 2 | do | P2_RUN |  | -K2:A1 |
+| -DO1:DO3 | 3 | do |  |  |  |
+| -DO1:DO4 | 4 | do |  |  |  |
 
 ### pump-cabinet-v1.11-terminals.csv
 

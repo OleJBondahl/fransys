@@ -14,12 +14,12 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 EXPECTED_DI_CHANNEL_NAMES = [
-    "B12_P1_OVERLOAD",
-    "Q11_P1_RUNNING",
-    "B22_P2_OVERLOAD",
-    "Q21_P2_RUNNING",
+    "P1_OVERLOAD",
+    "P1_RUNNING",
+    "P2_OVERLOAD",
+    "P2_RUNNING",
 ]
-EXPECTED_DO_CHANNEL_NAMES = ["K1_P1_RUN", "K2_P2_RUN", "DO1_2", "DO1_3"]
+EXPECTED_DO_CHANNEL_NAMES = ["P1_RUN", "P2_RUN", "DO2", "DO3"]
 
 
 def test_wago_export_lists_di_and_do_modules_and_channels(built: tuple) -> None:

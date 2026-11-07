@@ -165,12 +165,12 @@ def test_cabinet_unit_line_check_fails_when_the_line_or_the_row_is_missing(built
 # remain, counted by code. They are layout notes, not wiring faults.
 # v0.18.2 (layout-0222, intended change): a row of contacts fed from a rail places every power
 # symbol, so the three POWER_SYMBOL_UNPLACED warnings are gone.
-# OVERLAP 1: a Fransys defect under v0.22.0, KI-658 (FIX-0.23, piece PUMP-OVERLAP; designer R1746)
+# OVERLAP 4 at 0.22.9: one finding per member now (was 1 finding holding 2 members); KI-658 (old, 2 members), KI-746, KI-747
 LAYOUT_WARNINGS = {
     "POWER_SYMBOL_UNPLACED": 0,
     "SYMBOL_OVERLAP": 0,
     "JOIN_UNALIGNED": 0,
-    "OVERLAP": 1,
+    "OVERLAP": 4,  # measured on 0.22.9: -B12 text/text and wire/text (KI-658, old) + KI-746 (-DI1 tag on the 24V wire) + KI-747 (CTL p2:6A over breaker slot N 4)
 }
 EXPECTED_WARNINGS = LAYOUT_WARNINGS
 

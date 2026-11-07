@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.8/guide/documents/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.9/guide/documents/">
       
       
       
@@ -2082,7 +2082,7 @@ means no notes page. <code>logo</code> is an optional path to an SVG for the tit
 default) leaves that cell empty. <code>notice</code> is the text of the title block's IP notice cell, printed
 on every page of that document; <code>""</code> (the default) leaves the cell empty. On A3 the cell is about 92 mm wide and holds about 370 characters at the label size. A longer notice gives <code>TITLE_BLOCK_NOTICE_OVERFLOW</code>. Customer and Author are narrower than with no notice. A unit released alone
 needs no <code>d.project</code> for either; its Author cell prints <code>created</code> of the unit's current revision, a project document's the project's <code>author</code>. <code>d.project(notice=...)</code> raises: the notice moved here.</p>
-<p>The page kinds each preset holds.</p>
+<p>The page kinds each preset holds, in the order of the PDF: the cover, the drawings, then the notes, the index and the lists. The cover is page 1 and the drawings start on page 2.</p>
 <table>
 <thead>
 <tr>
@@ -2098,13 +2098,8 @@ needs no <code>d.project</code> for either; its Author cell prints <code>created
 <td>yes</td>
 </tr>
 <tr>
-<td><code>NOTES</code></td>
-<td>yes</td>
-<td>yes</td>
-</tr>
-<tr>
-<td><code>SHEET_INDEX</code></td>
-<td>yes</td>
+<td><code>BLOCK_DIAGRAM</code></td>
+<td>no</td>
 <td>yes</td>
 </tr>
 <tr>
@@ -2113,13 +2108,18 @@ needs no <code>d.project</code> for either; its Author cell prints <code>created
 <td>no</td>
 </tr>
 <tr>
-<td><code>BLOCK_DIAGRAM</code></td>
+<td><code>HARNESS_DRAWING</code></td>
 <td>no</td>
 <td>yes</td>
 </tr>
 <tr>
-<td><code>HARNESS_DRAWING</code></td>
-<td>no</td>
+<td><code>NOTES</code></td>
+<td>yes</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>SHEET_INDEX</code></td>
+<td>yes</td>
 <td>yes</td>
 </tr>
 <tr>
@@ -2150,10 +2150,11 @@ needs no <code>d.project</code> for either; its Author cell prints <code>created
 </tbody>
 </table>
 <p>Every preset also takes <code>PageKind.SHEET_INDEX</code>, a "Sheets" page after the notes that lists each
-sheet (<code>3</code>, <code>2.3</code>, block diagram sheets <code>B1</code>, <code>B2</code>) with its title and PDF page. It prints from two
-sheets. The PDF is navigable and prints the same.
-Cross references and Sheets rows are invisible links. The outline lists sheets and devices. The
-viewer numbers a sheet by its sheet number and other pages in roman.</p>
+drawing page with its title and its PDF page. It prints from two pages. The PDF is navigable and
+prints the same. Cross references and Sheets rows are invisible links. The outline lists pages and
+devices. A page has one number: its place in its PDF, counted from 1 with the cover as page 1. Every reference,
+the Sheets page, the outline and the viewer print it. The title block prints it as <code>m of N</code>, with the
+PDF's page count.</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">NamedTuple</span>
 
@@ -2308,7 +2309,7 @@ document's subject, as the unit example on this page does.</p>
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.22.8 documentation
+      Fransys 0.22.9 documentation
     </div>
   
   

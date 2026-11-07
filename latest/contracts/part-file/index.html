@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.8/contracts/part-file/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.9/contracts/part-file/">
       
       
       
@@ -2466,6 +2466,11 @@ contract are copied from it and can go stale, the module cannot.</p>
 <td>1 to 3 uppercase letters, IEC 81346-2:2019, seeding numbering, e.g. <code>"K"</code>, <code>"Q"</code>, <code>"QA"</code>, <code>"X"</code>, <code>"W"</code>. The first letter is one of <code>B C E F G H J K M N P Q R S T U W X</code>; A, I and O are forbidden and D, L, V, Y and Z reserved (parts lint)</td>
 </tr>
 <tr>
+<td><code>catalogue_description</code></td>
+<td>string</td>
+<td>Optional. The maker's catalogue wording, apart from <code>description</code> (BOM text). The Wago export writes it as the module's <code>Description</code>; without it, <code>description</code> (WAGO-CDP, R1821)</td>
+</tr>
+<tr>
 <td><code>operated_by</code></td>
 <td>string</td>
 <td>Optional. An <code>OperatedBy</code> value, what operates the part's contacts as sold: <code>"push"</code>, <code>"mushroom"</code>, <code>"turn"</code>, <code>"position"</code> (parts-0020). A head sold apart from its blocks states it and has no function; its blocks join it with <code>parent=</code></td>
@@ -2990,7 +2995,7 @@ files, no Fransys code inside it.</p>
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.22.8 documentation
+      Fransys 0.22.9 documentation
     </div>
   
   

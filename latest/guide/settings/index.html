@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.8/guide/settings/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.9/guide/settings/">
       
       
       
@@ -2246,7 +2246,7 @@
 </code></pre></div>
 <h2 id="the-export-files">The export files</h2>
 <p><code>[export]</code> sets which files <code>fr.write</code> makes and how it names, places and encodes them. <code>reports</code> lists the whole-model reports, in order: <code>bom</code>, <code>plc</code>, <code>wires</code>, <code>designations</code>, <code>cables</code> and <code>cores</code>. A name outside those six raises <code>SettingsError</code>. <code>name_join</code> joins the prefix, the kind and the fragment of a file name, <code>version_sign</code> sits before the version, and <code>ref_sign</code> replaces each sign of a designation, so <code>=A1+C1-K1</code> gives <code>A1-C1-K1</code>.</p>
-<p><code>data_dir</code> is the folder of the files that end in one of <code>data_suffixes</code>. The CSV files follow <code>csv_delimiter</code>, <code>csv_encoding</code>, <code>csv_quoting</code> (<code>minimal</code>, <code>all</code>, <code>nonnumeric</code> or <code>none</code>) and <code>csv_newline</code>. Only a <code>.csv</code> file takes <code>csv_encoding</code>; the others stay UTF-8. <code>hide_pe</code> (default <code>false</code>, one choice for the whole build) leaves the PE rail's terminals, wires and pins off every drawing sheet; the terminal list and the other lists keep them. <code>fr.derive.export_form_of(model)</code> gives the record a build holds.</p>
+<p><code>data_dir</code> is the folder of the files that end in one of <code>data_suffixes</code>. The CSV files follow <code>csv_delimiter</code>, <code>csv_encoding</code>, <code>csv_quoting</code> (<code>minimal</code>, <code>all</code>, <code>nonnumeric</code> or <code>none</code>) and <code>csv_newline</code>. Only a <code>.csv</code> file takes <code>csv_encoding</code>; the others stay UTF-8. <code>hide_pe</code> (default <code>false</code>, one choice for the whole build) leaves the PE rail's wires and PE symbols on device pins, with their markings, off every drawing sheet. The terminal list and the other lists keep them. <code>fr.derive.export_form_of(model)</code> gives the record a build holds.</p>
 <div class="highlight"><pre><span></span><code><span class="k">[export]</span>
 <span class="n">reports</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"bom"</span><span class="p">,</span><span class="w"> </span><span class="s2">"wires"</span><span class="p">]</span>
 <span class="n">csv_delimiter</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">";"</span>
@@ -2321,7 +2321,7 @@
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.22.8 documentation
+      Fransys 0.22.9 documentation
     </div>
   
   

@@ -10,11 +10,13 @@ The design calls are in `keywords-design.md`, the `fr.*` functions in `keywords-
 
 | keyword | default | effect | example |
 |---|---|---|---|
-| [`signal`](../authoring/index.md#how-channels-are-numbered) | required | The `fr.SignalType` of the PLC channel this function needs, such as `fr.DI`. It picks the channel kind allocated. | `k1.coil.plc(fr.DO, "pump-run")` |
-| [`name`](../authoring/index.md#request-a-plc-channel) | required | The channel's name. It prints in the PLC lists and on the channel's address. | `k1.coil.plc(fr.DO, "pump-run")` |
+| [`signal`](../authoring/index.md#how-channels-are-numbered) | `None` | Required on a device. The `fr.SignalType` of the PLC channel this function needs, such as `fr.DI`. It picks the channel kind allocated. A module's channel handle (`ai.ai_3`) already has its signal and takes none. | `k1.coil.plc(fr.DO, "pump-run")` |
+| [`name`](../authoring/index.md#request-a-plc-channel) | `None` | Required on a device. The channel's name. It prints in the PLC lists and on the channel's address, and is the channel's `Name` in the Wago rack XML. On a spare channel's handle it names the spare (`unused`). | `k1.coil.plc(fr.DO, "pump-run")` |
 | `priority` | `0` | A lower number is served first when channels are short. Ties go by the requesting function's key, then its id. | `k1.coil.plc(fr.DO, "pump-run", priority=1)` |
+| [`routing`](../authoring/index.md#the-wago-rack-xml-follows-the-cdp-reference) | `None` | The channel's CDP routing path, never parsed. `None` writes no `Routing`, `""` writes `Routing=""`, a path writes the path. | `k1.coil.plc(fr.DO, "pump-run", routing="Controller.Section.Pump_run")` |
+| [`configured`](../authoring/index.md#the-wago-rack-xml-follows-the-cdp-reference) | `True` | `False` on a module's channel handle leaves the channel out of the Wago rack XML; the other channels keep their `Nr`. It takes no name, routing or scale; a device refuses it. | `ai.ai_4.plc(configured=False)` |
 
-`fn.plc(...).scale(...)` sets a per-channel engineering range; see `Fn.scale`.
+`fn.plc(...).scale(...)` sets a per-channel engineering range; see `Fn.scale`. On a spare analogue channel's handle, `scale` scales that channel.
 
 ## `Fn.pole`
 
@@ -28,7 +30,7 @@ A pin, or a tuple of one device's pins, is a series element anywhere. First, its
 
 | keyword | default | effect | example |
 |---|---|---|---|
-| [`unit`](../authoring/index.md#request-a-plc-channel) | required | The engineering unit of the scaled value. It prints in the Wago rack XML only, not in the PLC list. | `ai.scale("bar", raw=(0, 27648), eng=("0", "10"))` |
+| [`unit`](../authoring/index.md#request-a-plc-channel) | `None` | The engineering unit of the scaled value. It prints in the Wago rack XML only, not in the PLC list. `None` writes no `Unit`; `""` raises. | `ai.scale("bar", raw=(0, 27648), eng=("0", "10"))` |
 | [`raw`](../authoring/index.md#request-a-plc-channel) | required | The raw range as two integers. | `raw=(0, 27648)` |
 | [`eng`](../authoring/index.md#request-a-plc-channel) | required | The engineering range as two strings or Decimals. Floats are refused. | `eng=("0", "10")` |
 
@@ -65,7 +67,7 @@ Use `d.series` through the cable first: it takes the next free core. Use `core` 
 
 ## `d.layout.order`
 
-`d.layout.order(*groups)` takes function groups: each neighbour pair is drawn in this order. It has no named keyword. Example: `d.layout.order("pumps", "valves")`.
+`d.layout.order(*groups)` takes function groups: each neighbour pair is drawn in this order. It has no named keyword. A name that is not a group handle raises `AuthorError`. Example: `with d.function("PUMPS", "Pumps") as pumps: ...`, then `d.layout.order(pumps, valves)`.
 
 ## Keywords a consumer never passes
 

@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.8/guide/parts/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.9/guide/parts/">
       
       
       
@@ -472,6 +472,17 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         When a library fails to load
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#a-modules-catalogue-wording" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        A module's catalogue wording
       </span>
     </span>
   </a>
@@ -2102,6 +2113,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#a-modules-catalogue-wording" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        A module's catalogue wording
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#a-contact-a-person-or-a-machine-operates" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -2368,6 +2390,8 @@ by a separate team or vendor. An uncaught <code>PartLibraryError</code> already 
 there, with Python's own one-line traceback. Catching it instead gets you <code>e.findings</code>: every
 finding the failed load collected, not only the one that raised. You can then report the library's
 whole set of problems at once instead of fixing them one exception at a time.</p>
+<h2 id="a-modules-catalogue-wording">A module's catalogue wording</h2>
+<p>A PLC module part may state <code>catalogue_description = "2-channel analog input; For Pt100/RTD resistance sensors"</code> in <code>[part]</code>: the maker's catalogue text, apart from <code>description</code>, which stays BOM text. The Wago rack XML writes it as the module's <code>Description</code>; a part without it writes <code>description</code>.</p>
 <h2 id="a-contact-a-person-or-a-machine-operates">A contact a person or a machine operates</h2>
 <p>A push button, an emergency stop, a selector or a limit switch states what operates its
 contacts in <code>[part]</code>: <code>operated_by = "push"</code>, <code>"mushroom"</code>, <code>"turn"</code> or <code>"position"</code>. Its
@@ -2497,7 +2521,7 @@ It prints its holder's designation and has no row or netlist line, and draws not
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.22.8 documentation
+      Fransys 0.22.9 documentation
     </div>
   
   

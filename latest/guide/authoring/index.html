@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.8/guide/authoring/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.9/guide/authoring/">
       
       
       
@@ -577,6 +577,17 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         Request a PLC channel
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-wago-rack-xml-follows-the-cdp-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        The Wago rack XML follows the CDP reference
       </span>
     </span>
   </a>
@@ -2225,6 +2236,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#the-wago-rack-xml-follows-the-cdp-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        The Wago rack XML follows the CDP reference
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#how-channels-are-numbered" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -2464,11 +2486,21 @@ A branch from the common feed is a second series; one looped at the line screws 
 <h2 id="request-a-plc-channel">Request a PLC channel</h2>
 <p><code>K1.coil.plc(fr.DO, "Pump run")</code> asks for a digital output named for the signal, and
 <code>.scale("%", raw=(4, 20), eng=("0", "266"))</code> scales an analogue one. The range reaches the Wago rack XML only.
-A bad range is an ERROR: <code>SCALING_RANGE_INVALID</code>, <code>SCALING_NOT_ANALOGUE</code> or <code>SCALING_UNIT_EMPTY</code>. A float in <code>eng</code> raises.
+A bad range is an ERROR: <code>SCALING_RANGE_INVALID</code> or <code>SCALING_NOT_ANALOGUE</code>. A float in <code>eng</code> raises, and so does a blank unit (<code>unit=None</code> writes none).
+A spare analogue channel takes the same call on its handle: <code>ai.ai_3.plc(name="unused").scale("%", raw=(0, 32767), eng=("0", "100"))</code>.
+Two devices of one controller with one signal name are an ERROR, <code>PLC_SIGNAL_NAME_TWICE</code>: rename one with <code>.plc(signal, name)</code>.
 A series that ends or starts
 at a PLC module binds the request to a channel (next section). A request no series wires keeps the
 build's own allocation.
 <code>d.rack("U1")</code> adds the part-less rack the modules sit under with <code>parent=</code>; a <code>d.harness</code> rack stops with <code>HARNESS_HOLDS_PLC_MODULE</code>.</p>
+<h2 id="the-wago-rack-xml-follows-the-cdp-reference">The Wago rack XML follows the CDP reference</h2>
+<p>The <code>&lt;Modules&gt;</code> of the Wago rack XML is written as CDP's own reference file reads; no setting changes it.
+- A module is named <code>&lt;order&gt;_&lt;channels&gt;&lt;kind&gt;_&lt;letter&gt;</code>, with the kind DI, AI, DO or AO, or the bare order number when its channels mix kinds.
+- A channel is named by its bare signal name from <code>.plc(signal, name)</code>. A channel with no name is <code>&lt;kind&gt;&lt;Nr&gt;</code> (DO0, DI14), or the name set on its handle: <code>ai.ai_3.plc(name="unused")</code>.
+- An analogue channel has no <code>Nr</code>. A mixed module lists outputs first and <code>Nr</code> restarts at 0 for each direction.
+- <code>.plc(..., routing="Controller.Section.Tank")</code> writes the channel's <code>Routing</code>, <code>routing=""</code> writes it empty, and none writes none.
+- <code>.plc(configured=False)</code> on a module's channel handle leaves that channel out; the others keep their <code>Nr</code>.
+- A relay output reads "Digital output channel".</p>
 <h2 id="how-channels-are-numbered">How channels are numbered</h2>
 <p>A PLC module passed whole to <code>d.series</code> takes its lowest-numbered free channel, as a strip takes
 its next free terminal.</p>
@@ -2560,7 +2592,7 @@ adds a history line. Both are optional.</p>
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.22.8 documentation
+      Fransys 0.22.9 documentation
     </div>
   
   

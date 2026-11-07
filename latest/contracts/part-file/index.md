@@ -59,6 +59,7 @@ One per file. Maps to the model's `Part`.
 | `description` | string | |
 | `category` | string | A `PartCategory` value: `"electromechanical"`, `"protection"`, `"terminal"`, `"cable"`, `"connector"`, `"plc_module"`, `"board"`, `"generic"` |
 | `class_code` | string | 1 to 3 uppercase letters, IEC 81346-2:2019, seeding numbering, e.g. `"K"`, `"Q"`, `"QA"`, `"X"`, `"W"`. The first letter is one of `B C E F G H J K M N P Q R S T U W X`; A, I and O are forbidden and D, L, V, Y and Z reserved (parts lint) |
+| `catalogue_description` | string | Optional. The maker's catalogue wording, apart from `description` (BOM text). The Wago export writes it as the module's `Description`; without it, `description` (WAGO-CDP, R1821) |
 | `operated_by` | string | Optional. An `OperatedBy` value, what operates the part's contacts as sold: `"push"`, `"mushroom"`, `"turn"`, `"position"` (parts-0020). A head sold apart from its blocks states it and has no function; its blocks join it with `parent=` |
 
 ### `[[function]]`

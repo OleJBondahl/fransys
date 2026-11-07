@@ -383,6 +383,14 @@ The functions left off the schematic, one `Carried` each per reason, reasons in 
 A unit's boundary function is never loose, spare or idle: its replica column needs it.
 `wired` is the engine's set of ports on kept connections.
 
+### cdp_kind
+
+```python
+def cdp_kind(signal: SignalType) -> str
+```
+
+The CDP kind of a signal type: `DI`, `DO`, `AI` or `AO`; a Pt100 is `AI`, a relay output `DO`.
+
 ### cell_parts
 
 ```python
@@ -480,6 +488,14 @@ def check_order_hint_cycle(model: Model) -> tuple[Finding, ...]
 ```
 
 One ERROR naming the Origin of each hint in a cycle of `d.layout.order` hints, else none.
+
+### check_order_hint_draws_nothing
+
+```python
+def check_order_hint_draws_nothing(model: Model) -> tuple[Finding, ...]
+```
+
+One ERROR per end of an `OrderHint` naming a group in which no function is drawn, in any set.
 
 ### check_unprinted_sets
 
@@ -1232,9 +1248,10 @@ Raises:
 def drawn_groups(model: Model) -> tuple[tuple[Id[Port], ...], ...]
 ```
 
-`required_groups` less each conductor `drawn_conductors` leaves out: what a drawing must join.
+`required_groups` less what a drawing draws no wire for: what a drawing must join.
 
-The drawing's nets leave out bridges; the terminal table carries them.
+Left out: each conductor `drawn_conductors` omits (a bridge, in the terminal table), each group no drawn conductor
+ends in (a mate or a join inside a part), each group wholly on rail terminals (the power symbol stands for them).
 
 ### drawn_net_of
 
@@ -1629,6 +1646,14 @@ Returns:
 Raises:
     SchemaError: `function` is not a function of `model`, or its item has no designation.
 
+### function_group
+
+```python
+def function_group(model: Model, function: Id[Function]) -> Id[AspectNode] | None
+```
+
+The `=` node `function` is drawn in: its move (`function_moves`), else its item's placement.
+
 ### function_groups_in_order
 
 ```python
@@ -1691,6 +1716,14 @@ def function_item(model: Model, function: Id[Function]) -> Id[Item]
 ```
 
 The item `function` belongs to.
+
+### function_moves
+
+```python
+def function_moves(model: Model) -> dict[Id[Function], Id[AspectNode]]
+```
+
+Each function drawn away from its home: the block its wires were authored in, then its `GroupHint` (which wins).
 
 ### function_operating
 
@@ -1815,6 +1848,22 @@ Every `source` pin no longer matched by a current item of the same (key, scope, 
 
 Gone or moved (group/class code), carried forward at `source`'s position, plus `source.retired`.
 It seeds the reserved facets and serves `release()`: decided once.
+
+### group_draws
+
+```python
+def group_draws(model: Model, group: Id[AspectNode]) -> bool
+```
+
+Whether any drawn function lands in `group`: false for a group whose members are drawn elsewhere or never.
+
+### group_members_drawn_in
+
+```python
+def group_members_drawn_in(model: Model, group: Id[AspectNode]) -> tuple[Id[AspectNode], ...]
+```
+
+The other groups the functions placed in `group` are drawn in (by a `GroupHint`), first seen first.
 
 ### group_role
 
@@ -3076,7 +3125,7 @@ device's. Layout's contact table and the contacts' home references read it.
 def page_destination(model: Model, sheet: Page | DiagramSheet) -> str
 ```
 
-`p<k>.<page>`: the destination label of a page, `k` its set's rank; `b<n>` for a diagram.
+`p<n>`: the destination label of a page, `n` its place in its PDF.
 
 ### page_headings
 
@@ -3118,10 +3167,10 @@ Example: `page_preset(PageKind.BOM)` has form `LIST` and list key `BOM`.
 ### page_reference_text
 
 ```python
-def page_reference_text(model: Model, page: Page, *, with_location: bool=False) -> str
+def page_reference_text(model: Model, page: Page | DiagramSheet) -> str
 ```
 
-`p3`, `p2.3` for page 3 of the unit's second set; `+CAB p3` with the set's location path.
+`p3`: the page named alone, the text of a destination and of a finding about a whole page.
 
 ### page_title
 
@@ -3177,6 +3226,17 @@ def part_records(model: Model) -> tuple[Part, ...]
 ```
 
 Every part record, in table order.
+
+### pdf_page
+
+```python
+def pdf_page(model: Model, sheet: Page | DiagramSheet) -> int
+```
+
+The number `sheet` prints: its place in the PDF of the document that prints it, the cover being 1.
+
+A diagram sheet is its reading's number after the front pages; a drawing page is its place among
+its document's drawn pages. A SYSTEM document's diagram sheets come before its harness pages.
 
 ### pdf_texts
 
@@ -3370,8 +3430,8 @@ module with no channel (a coupler, an end module) has `channels=()`. They order 
 (integers ascending, `None` last), then the module's own tag in natural order
 (`plc_module_key`), the order `allocate_plc` serves them in; `installed` is ignored. A module's
 channels are the functions whose template carries a `plc_channel`, bound or spare, ordered by
-`plc_channel_tie`. The field device is read as `plc_channel_rows` reads it; `scaling` is its
-`scaling` facet, `None` for a spare channel or a device without one.
+`plc_channel_tie`. The field device is read as `plc_channel_rows` reads it; `scaling` is the
+`scaling` facet of the function that requests the channel: the bound device's, else the channel's own.
 
 `unit` prints the designations as that unit's own document does; `None` the full form.
 
@@ -3617,10 +3677,10 @@ def position_at(model: Model, own_page: Page, partner_page: Page, column: int, r
 
 The printed position of frame cell (`column`, `row letter`) on `partner_page`, as a reader of `own_page` sees it.
 
-The cell alone on the same page, `p<page>:<cell>` in the same drawing set, and with the set number or the
-location prefix below the common ancestor across sets. It is the one place a partner's position is printed;
-a reference marker and a copied terminal's where-text both call it. Compare a drawn text with this value by
-recomputing it, never by parsing the printed text.
+The cell alone on the same page, `p<n>:<cell>` in the same PDF, and the far document's unit text
+first across PDFs. It is the one place a partner's position is printed; a reference marker and a
+copied terminal's where-text both call it. Compare a drawn text with this value by recomputing it,
+never by parsing the printed text.
 
 ### power_kind
 
@@ -3744,14 +3804,27 @@ position no source reaches reads `0`.
 def rack_modules_for_cdp(model: Model, rack: Id[Item], *, unit: Id[Unit] | None=None) -> tuple[CdpRackModule, ...]
 ```
 
-The modules of `rack` that have channels, each with its `ordinal` and `single_signal`.
+The modules of `rack` that have channels, each with its `ordinal`, `kind` and CDP `channels`.
 
 A module with no channel (a coupler, an end module) is left out. `ordinal` counts the kept
-modules of one `mpn` in rack order from 0, so an output can letter them; `single_signal` is
-the one signal type all channels share, `None` when they differ. `unit`: as `plc_rack_modules`.
+modules of one `mpn` in rack order from 0, so an output can letter them. `kind` is the one CDP
+kind (`DI`, `AI`, `DO`, `AO`) all its channels share, `None` when they differ. `channels`:
+outputs first, then inputs, `nr` restarting at 0 in each direction; a channel with
+`configured=False` is left out and its neighbours keep their `nr`. `unit`: as `plc_rack_modules`.
 
 Raises:
     SchemaError: as `plc_rack_modules` raises it.
+
+### rail_drawn_by
+
+```python
+def rail_drawn_by(model: Model) -> frozendict[Id[Port], tuple[Id[Port], ...]]
+```
+
+Each rail terminal port, mapped to the pins of its rail net that stand its power symbol (`stands`, whole).
+
+A flagged terminal draws as the power symbol at each device pin wired to it, so a pin in `drawn_stands` draws it.
+A port that ends a boundary rail wire is absent: its wire is drawn to the terminal's replica.
 
 ### rail_pairs
 
@@ -3864,7 +3937,7 @@ The printed references whose target is off the document and whose text names no 
 
 A reference is a link marker with its partner. It
 is off the document when no document prints both its page's drawing set and its target's.
-Its text names the other document when it prints a location path (`location_prefix`).
+Its text names the other document by its `scope_path`, so it names none only when that is empty.
 
 ### refuses
 
@@ -4100,14 +4173,6 @@ S the output end, E and W neither. A net on a rail joins nothing. A symbol whose
 span more than two functions is a hub: it ends a region and is in none. An end on a rail, on
 no wire or on a hub, and a node no symbol enters or leaves, is the region's source or sink.
 
-### set_page_text
-
-```python
-def set_page_text(refs: ReferenceText, set_number: int, page_number: int) -> str
-```
-
-`<set>.<page>`, `"2.3"`: a page named with its drawing set (a reference prints `p` first).
-
 ### set_unit
 
 ```python
@@ -4115,14 +4180,6 @@ def set_unit(drawing_set: DrawingSet) -> Id[Unit] | None
 ```
 
 The unit `drawing_set` draws; none at the top level.
-
-### sheet_counter_text
-
-```python
-def sheet_counter_text(sheet: Page | DiagramSheet, total: int) -> str
-```
-
-`<number> / <total>`: the title block's sheet cell; `B1 / 2` for a block diagram sheet.
 
 ### sheet_frame
 
@@ -4152,23 +4209,13 @@ def sheet_key_text(key: SheetKey) -> str
 
 The printed form of a `SheetKey`, for a message: `<document>#<KIND>#<ordinal or none>`.
 
-### sheet_text
-
-```python
-def sheet_text(model: Model, sheet: Page | DiagramSheet) -> str
-```
-
-The sheet number a sheet prints: `3`, `2.3` in a set past its unit's first, `B1`.
-
-The destination label and a reference keep the set-and-page form `p1.3` (`set_page_text`).
-
 ### sheet_title_text
 
 ```python
 def sheet_title_text(model: Model, sheet: Page | DiagramSheet, title: str) -> str
 ```
 
-`Sheet 3: Pump 1`: a sheet's outline entry text; with no title, `Sheet 3`.
+`3: Pump 1`: a page's outline entry text; with no title, `3`.
 
 ### sheets
 
@@ -4965,25 +5012,24 @@ Each drawn box's index by its reference; a place box also by each member it hold
 ### widest_position_text
 
 ```python
-def widest_position_text(model: Model, digits: int, columns: int, rows: int, digit: str) -> str
+def widest_position_text(model: Model, count: int, columns: int, rows: int, digit: str) -> str
 ```
 
-The position text of a placement in another set, set number and page number every `digit`s: the set form is the wide one.
+The position text of a placement in another PDF: the widest document text, page number and cell every `digit`s.
 
-`digits` is the digit count of a page or set number, `columns` and `rows` the highest frame column and row, `digit` the
-widest digit the caller measured. Layout sizes a text that names another placement with it before the pages exist.
+`count` is the build's symbol count (a page holds at least one symbol), `columns` and `rows` the highest frame column and
+row, `digit` the widest digit the caller measured. Layout sizes a text that names another placement with it before the pages exist.
 
 ### widest_target_line
 
 ```python
-def widest_target_line(model: Model, digits: int, columns: int, rows: int, digit: str) -> str
+def widest_target_line(model: Model, count: int, columns: int, rows: int, digit: str) -> str
 ```
 
 The longest line a marker can print: `target_lines`' `+k` form with every number `digit`s.
 
-`digits` is the digit count of a page or net number, `columns` and `rows` the highest frame
-column and row, `digit` the widest digit the caller measured. Layout sizes a marker box with it
-before the pages exist.
+`count` is the build's symbol count, `columns` and `rows` the highest frame column and row,
+`digit` the widest digit the caller measured. Layout sizes a marker box with it before the pages exist.
 
 ### wire_rows
 
@@ -5198,16 +5244,26 @@ class CarriedReason
 
 Why a required row stands undrawn on purpose; the finding or ruling that names it follows.
 
+### CdpChannel
+
+```python
+class CdpChannel
+```
+
+One configured channel of a CDP module: `cdp_kind` (DI, AI, DO, AO) and `nr`, its number within its direction.
+
 ### CdpRackModule
 
 ```python
 class CdpRackModule
 ```
 
-A channel-bearing rack module with what CDP's module name is made of.
+A channel-bearing rack module with what CDP's module name and body are made of.
 
-`ordinal` counts the channel-bearing modules of the same `mpn`, in rack order, from 0.
-`single_signal` is the one `SignalType` all its channels share, `None` when they differ.
+`ordinal` counts the channel-bearing modules of the same `mpn`, in rack order, from 0. `kind` is
+the one CDP kind all its channels share (`cdp_kind`), `None` when they differ; `size` counts all its channels.
+`description` is the part's catalogue wording, else its description. `channels` are the
+configured ones, outputs first, then inputs, each in channel order.
 
 ### ChainCandidate
 
@@ -6365,9 +6421,9 @@ class PlcRackChannel
 One channel of a rack module, bound or spare.
 
 The field fields are `None` for a spare channel, as in `PlcChannelRow`; `scaling` is also
-`None` for a bound device that carries no `scaling` facet. `name_stem` is the text an output
-names the channel after, before its own character set: the field device and its signal name,
-else the module's designation and the channel's index in the module.
+`None` when the requesting function carries no `scaling` facet. `signal_name` is the bound
+device's request name, else a spare's own name. `routing` and `configured` are its `plc_request`
+settings (`None` and `True` when it has none).
 
 ### PlcRackModule
 
@@ -6377,8 +6433,9 @@ class PlcRackModule
 
 One PLC module of a rack with its channels, for an output that walks the rack in order.
 
-`mpn` and `description` are the `Part`'s, projected as `BomLine` does. `position` is the
-item's own `position`, `None` when it was never authored.
+`mpn` and `description` are the `Part`'s, projected as `BomLine` does; `catalogue_description` is
+its maker's wording, `None` when it has none. `position` is the item's own `position`, `None`
+when it was never authored.
 
 ### PlcTable
 
@@ -6540,11 +6597,10 @@ One sheet format a document's drawn pages name: its `name` and its pages' `numbe
 class SheetIndexRow
 ```
 
-One index row: the sheet text (`3`, `2.3`, `B1`), its title forms and its destination label.
+One index row: its title forms, its destination label and its page (`pdf_page`).
 
 `title` is the longest form and `shorter` the others (`page_title_forms`): the PDF prints
-the first that fits, as the title block does. The page cell is not here: Typst reads the
-physical page at `destination`.
+the first that fits, as the title block does.
 
 ### SheetKey
 
@@ -6729,7 +6785,7 @@ Attributes:
 class TitleBlockFields
 ```
 
-One page's title-block content; `sheet_counter` `""` off `SCHEMATIC`.
+One page's title-block content.
 
 ### TitleBlockOverflow
 
@@ -6748,7 +6804,7 @@ class TitleBlockStrings
 What a title block prints, after the cut.
 
 - `printed`: slot id (`title`, `number`, `revision`, `revision_date`, `customer`, `author`,
-  `page_title`, `scope`, `sheet`) to the shown text, cut with `…` when it missed.
+  `page_title`, `scope`) to the shown text, cut with `…` when it missed.
 - `notice`: the notice's wrapped lines, no more than the cell holds.
 - `unfit`: each field that missed its cell; `notice_unfit`: the notice needs more lines.
 

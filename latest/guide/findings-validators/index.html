@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.8/guide/findings-validators/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.9/guide/findings-validators/">
       
       
       
@@ -2132,6 +2132,14 @@
 <td>Put every port of the declared net on one board, or wire them into one net. Write: d.series(a, b)</td>
 </tr>
 <tr>
+<td><a id="order_group_draws_nothing"></a>ORDER_GROUP_DRAWS_NOTHING</td>
+<td>ERROR</td>
+<td>build</td>
+<td>consumer</td>
+<td>A <code>d.layout.order</code> hint names a group in which no function is drawn: its devices are drawn in another group (a series written there draws them there) or it holds none. The message names the group and where its members are drawn.</td>
+<td>Order the group the message names as the one its members are drawn in, or drop the hint. Write: d.layout.order(run, lamps)</td>
+</tr>
+<tr>
 <td><a id="pe_not_gnye"></a>PE_NOT_GNYE</td>
 <td>WARNING</td>
 <td>validators</td>
@@ -2170,6 +2178,22 @@
 <td>consumer</td>
 <td>A PLC binding disagrees with the wiring: the request or channel function is wired to a different channel or request than its binding.</td>
 <td>Wire the request to the channel its binding names, or change the binding. Write: K1.coil.plc(fr.DO, "pump-run")</td>
+</tr>
+<tr>
+<td><a id="plc_channel_has_settings"></a>PLC_CHANNEL_HAS_SETTINGS</td>
+<td>ERROR</td>
+<td>build</td>
+<td>consumer</td>
+<td>A device is wired to a PLC channel that carries its own settings (a name, routing, a scale or configured=False).</td>
+<td>Wire the device to a channel without settings. Write: d.series(K1.coil, A1.do_2)</td>
+</tr>
+<tr>
+<td><a id="plc_signal_name_twice"></a>PLC_SIGNAL_NAME_TWICE</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>consumer</td>
+<td>Two devices bound to one controller carry one signal name, so the CDP file would name two channels alike.</td>
+<td>Rename one. Write: K1.coil.plc(fr.DO, "pump-run")</td>
 </tr>
 <tr>
 <td><a id="potential_in_two_supplies"></a>POTENTIAL_IN_TWO_SUPPLIES</td>
@@ -2290,14 +2314,6 @@
 <td>consumer</td>
 <td>A channel's engineering or raw range has its low value at or above its high value.</td>
 <td>Write the low value first, below the high value. Write: fn.plc(fr.AI, "level").scale("%", raw=(4, 20), eng=("0", "100"))</td>
-</tr>
-<tr>
-<td><a id="scaling_unit_empty"></a>SCALING_UNIT_EMPTY</td>
-<td>ERROR</td>
-<td>validators</td>
-<td>consumer</td>
-<td>The unit of a channel's engineering range is blank or has several lines.</td>
-<td>Name the unit, e.g. "%" or "bar". Write: fn.plc(fr.AI, "level").scale("%", raw=(4, 20), eng=("0", "100"))</td>
 </tr>
 <tr>
 <td><a id="screen_disabled"></a>SCREEN_DISABLED</td>
@@ -2432,7 +2448,7 @@
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.22.8 documentation
+      Fransys 0.22.9 documentation
     </div>
   
   

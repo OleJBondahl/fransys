@@ -104,6 +104,8 @@ listed twice are refused; see `units.md`, which holds the worked example.
 | [`name`](../authoring/index.md#name-a-place-and-a-function-block) | required | The function block's name, printed `=name`. Devices made inside the `with` block belong to it, which sets their designation. | `with d.function("RUN", "Pump run"):` |
 | [`text`](../authoring/index.md#name-a-place-and-a-function-block) | required | The block's description, printed on the pages that draw it. | `with d.function("RUN", "Pump run"):` |
 
+A function block that holds only a connection draws nothing of its own. Put the devices of that circuit in the block, and the circuit draws there.
+
 ## `d.location`
 
 | keyword | default | effect | example |

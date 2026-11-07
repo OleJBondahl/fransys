@@ -513,8 +513,9 @@ class PageKind
 
 A kind of page in a document, in the one canonical page order.
 
-Declaration order is the canonical order: a document's pages are its preset's pages plus
-`add`, minus `remove`, in this order, so no project specifies one. The set is closed.
+Declaration order is the canonical order: the cover, the drawings, then the notes, the index
+and the lists. A document's pages are its preset's pages plus `add`, minus `remove`, in this
+order, so no project specifies one. The set is closed.
 
 ### PartLibraryError
 

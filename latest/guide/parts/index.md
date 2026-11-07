@@ -184,6 +184,10 @@ there, with Python's own one-line traceback. Catching it instead gets you `e.fin
 finding the failed load collected, not only the one that raised. You can then report the library's
 whole set of problems at once instead of fixing them one exception at a time.
 
+## A module's catalogue wording
+
+A PLC module part may state `catalogue_description = "2-channel analog input; For Pt100/RTD resistance sensors"` in `[part]`: the maker's catalogue text, apart from `description`, which stays BOM text. The Wago rack XML writes it as the module's `Description`; a part without it writes `description`.
+
 ## A contact a person or a machine operates
 
 A push button, an emergency stop, a selector or a limit switch states what operates its

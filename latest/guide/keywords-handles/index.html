@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.8/guide/keywords-handles/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.22.9/guide/keywords-handles/">
       
       
       
@@ -2129,14 +2129,14 @@ A call that takes only <code>*args</code> has no table, and one sentence says wh
 <tbody>
 <tr>
 <td><a href="../authoring/#how-channels-are-numbered"><code>signal</code></a></td>
-<td>required</td>
-<td>The <code>fr.SignalType</code> of the PLC channel this function needs, such as <code>fr.DI</code>. It picks the channel kind allocated.</td>
+<td><code>None</code></td>
+<td>Required on a device. The <code>fr.SignalType</code> of the PLC channel this function needs, such as <code>fr.DI</code>. It picks the channel kind allocated. A module's channel handle (<code>ai.ai_3</code>) already has its signal and takes none.</td>
 <td><code>k1.coil.plc(fr.DO, "pump-run")</code></td>
 </tr>
 <tr>
 <td><a href="../authoring/#request-a-plc-channel"><code>name</code></a></td>
-<td>required</td>
-<td>The channel's name. It prints in the PLC lists and on the channel's address.</td>
+<td><code>None</code></td>
+<td>Required on a device. The channel's name. It prints in the PLC lists and on the channel's address, and is the channel's <code>Name</code> in the Wago rack XML. On a spare channel's handle it names the spare (<code>unused</code>).</td>
 <td><code>k1.coil.plc(fr.DO, "pump-run")</code></td>
 </tr>
 <tr>
@@ -2145,9 +2145,21 @@ A call that takes only <code>*args</code> has no table, and one sentence says wh
 <td>A lower number is served first when channels are short. Ties go by the requesting function's key, then its id.</td>
 <td><code>k1.coil.plc(fr.DO, "pump-run", priority=1)</code></td>
 </tr>
+<tr>
+<td><a href="../authoring/#the-wago-rack-xml-follows-the-cdp-reference"><code>routing</code></a></td>
+<td><code>None</code></td>
+<td>The channel's CDP routing path, never parsed. <code>None</code> writes no <code>Routing</code>, <code>""</code> writes <code>Routing=""</code>, a path writes the path.</td>
+<td><code>k1.coil.plc(fr.DO, "pump-run", routing="Controller.Section.Pump_run")</code></td>
+</tr>
+<tr>
+<td><a href="../authoring/#the-wago-rack-xml-follows-the-cdp-reference"><code>configured</code></a></td>
+<td><code>True</code></td>
+<td><code>False</code> on a module's channel handle leaves the channel out of the Wago rack XML; the other channels keep their <code>Nr</code>. It takes no name, routing or scale; a device refuses it.</td>
+<td><code>ai.ai_4.plc(configured=False)</code></td>
+</tr>
 </tbody>
 </table>
-<p><code>fn.plc(...).scale(...)</code> sets a per-channel engineering range; see <code>Fn.scale</code>.</p>
+<p><code>fn.plc(...).scale(...)</code> sets a per-channel engineering range; see <code>Fn.scale</code>. On a spare analogue channel's handle, <code>scale</code> scales that channel.</p>
 <h2 id="fnpole"><code>Fn.pole</code></h2>
 <p><code>fn.pole(n)</code> takes one pole number, counted from 1 in pole order, and gives that one pole of the function as a series element: <code>d.series(s1.main.pole(2), f2.element, wire=(BK, 1.5))</code>.</p>
 <p>A pin, or a tuple of one device's pins, is a series element anywhere. First, its pins are the load ends: <code>d.series(k1.coil["A1"], a1.di_1, wire=(BK, 1.0))</code> leaves from A1, where <code>d.series(k1.coil, a1.di_1)</code> leaves from A2. Last, they are the line ends. In the middle a pin is both: it takes as many pins as its neighbours have poles.</p>
@@ -2165,8 +2177,8 @@ A call that takes only <code>*args</code> has no table, and one sentence says wh
 <tbody>
 <tr>
 <td><a href="../authoring/#request-a-plc-channel"><code>unit</code></a></td>
-<td>required</td>
-<td>The engineering unit of the scaled value. It prints in the Wago rack XML only, not in the PLC list.</td>
+<td><code>None</code></td>
+<td>The engineering unit of the scaled value. It prints in the Wago rack XML only, not in the PLC list. <code>None</code> writes no <code>Unit</code>; <code>""</code> raises.</td>
 <td><code>ai.scale("bar", raw=(0, 27648), eng=("0", "10"))</code></td>
 </tr>
 <tr>
@@ -2286,7 +2298,7 @@ A call that takes only <code>*args</code> has no table, and one sentence says wh
 </tbody>
 </table>
 <h2 id="dlayoutorder"><code>d.layout.order</code></h2>
-<p><code>d.layout.order(*groups)</code> takes function groups: each neighbour pair is drawn in this order. It has no named keyword. Example: <code>d.layout.order("pumps", "valves")</code>.</p>
+<p><code>d.layout.order(*groups)</code> takes function groups: each neighbour pair is drawn in this order. It has no named keyword. A name that is not a group handle raises <code>AuthorError</code>. Example: <code>with d.function("PUMPS", "Pumps") as pumps: ...</code>, then <code>d.layout.order(pumps, valves)</code>.</p>
 <h2 id="keywords-a-consumer-never-passes">Keywords a consumer never passes</h2>
 <ul>
 <li><code>engine</code> on <code>Layout</code>: the design's engine. <code>d.layout</code> builds the layout around it, so you never pass it.</li>
@@ -2328,7 +2340,7 @@ A call that takes only <code>*args</code> has no table, and one sentence says wh
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.22.8 documentation
+      Fransys 0.22.9 documentation
     </div>
   
   

@@ -48,7 +48,7 @@ class PlcTable:
 class ChannelScaling:
     """The `scaling` facet of a field device, projected so a formatter never looks it up."""
 
-    unit: str
+    unit: str | None
     raw_min: int
     raw_max: int
     eng_min: Decimal
@@ -60,9 +60,9 @@ class PlcRackChannel:
     """One channel of a rack module, bound or spare.
 
     The field fields are `None` for a spare channel, as in `PlcChannelRow`; `scaling` is also
-    `None` for a bound device that carries no `scaling` facet. `name_stem` is the text an output
-    names the channel after, before its own character set: the field device and its signal name,
-    else the module's designation and the channel's index in the module.
+    `None` when the requesting function carries no `scaling` facet. `signal_name` is the bound
+    device's request name, else a spare's own name. `routing` and `configured` are its `plc_request`
+    settings (`None` and `True` when it has none).
     """
 
     channel: Id[Function]
@@ -71,37 +71,55 @@ class PlcRackChannel:
     field_device: Id[Function] | None
     field_device_designation: str | None
     signal_name: str | None
+    routing: str | None
+    configured: bool
     scaling: ChannelScaling | None
-    name_stem: str
 
 
 @value
 class PlcRackModule:
     """One PLC module of a rack with its channels, for an output that walks the rack in order.
 
-    `mpn` and `description` are the `Part`'s, projected as `BomLine` does. `position` is the
-    item's own `position`, `None` when it was never authored.
+    `mpn` and `description` are the `Part`'s, projected as `BomLine` does; `catalogue_description` is
+    its maker's wording, `None` when it has none. `position` is the item's own `position`, `None`
+    when it was never authored.
     """
 
     module: Id[Item]
     designation: str
     mpn: str
     description: str
+    catalogue_description: str | None
     position: int | None
     channels: tuple[PlcRackChannel, ...]
 
 
 @value
-class CdpRackModule:
-    """A channel-bearing rack module with what CDP's module name is made of.
+class CdpChannel:
+    """One configured channel of a CDP module: `cdp_kind` (DI, AI, DO, AO) and `nr`, its number within its direction."""
 
-    `ordinal` counts the channel-bearing modules of the same `mpn`, in rack order, from 0.
-    `single_signal` is the one `SignalType` all its channels share, `None` when they differ.
+    channel: PlcRackChannel
+    cdp_kind: str
+    output: bool
+    nr: int
+
+
+@value
+class CdpRackModule:
+    """A channel-bearing rack module with what CDP's module name and body are made of.
+
+    `ordinal` counts the channel-bearing modules of the same `mpn`, in rack order, from 0. `kind` is
+    the one CDP kind all its channels share (`cdp_kind`), `None` when they differ; `size` counts all its channels.
+    `description` is the part's catalogue wording, else its description. `channels` are the
+    configured ones, outputs first, then inputs, each in channel order.
     """
 
     module: PlcRackModule
     ordinal: int
-    single_signal: SignalType | None
+    description: str
+    cdp_kind: str | None
+    size: int
+    channels: tuple[CdpChannel, ...]
 
 
 @register_enum

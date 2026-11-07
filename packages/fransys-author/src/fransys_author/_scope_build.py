@@ -186,6 +186,7 @@ class BuildScope:
         return Wiring(
             self._design,
             self._prefix,
+            self._block,
             colour=colour,
             gauge=as_decimal(gauge, field="gauge"),
             label=label,
@@ -193,7 +194,7 @@ class BuildScope:
 
     def _wire_hints(self: Scope) -> WireHints:
         """A maker for a wire whose row is resolved after freeze (model-0260)."""
-        return WireHints(self._design, self._prefix)
+        return WireHints(self._design, self._prefix, self._block)
 
     def net(self: Scope, name: str, *ports: Port, cls: str = "control", potential: str | None = None) -> None:
         """A declared `Net`."""

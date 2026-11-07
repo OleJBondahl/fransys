@@ -75,7 +75,7 @@ def test_the_manifest_names_the_old_values(tree: tuple[Path, Any]) -> None:
     assert record["listing_digest"] == old
     assert record["listing_digest"] != data["listing_digest"]
     assert (record["listing_version"], record["fransys"], record["reason"]) == (
-        7,
+        8,
         "0.18.1",
         "rules",
     )

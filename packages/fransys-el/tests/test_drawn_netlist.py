@@ -240,6 +240,20 @@ def test_a_wire_end_lying_along_another_wire_is_met_where_a_dot_lies_on_the_run(
     assert bank8.messages("DANGLING_WIRE_END", planted) == []
 
 
+@pytest.mark.rule("DRAWN-NETLIST")
+def test_a_wire_end_lying_along_another_wire_needs_a_dot_at_the_end_itself(bank8):
+    """R1861 (CORRECTNESS-PROOF S0 R6, T needs a dot): a dot further along the shared run does not meet the start of the overlap."""
+    page, i = _wire_between_ports(bank8)
+    wire = bank8.drawings[page].wires[i]
+    (x1, y1), (x2, y2) = wire.points[-2:]
+    a, b = (x1 + (x2 - x1) // 4, y1 + (y2 - y1) // 4), (x1 + (x2 - x1) * 3 // 4, y1 + (y2 - y1) * 3 // 4)
+    x, y = (a[0] + b[0]) // 2, (a[1] + b[1]) // 2
+    dot = DrawnSymbol("planted-dot", "junction-dot", x, y, "R0", outline=Box(x - 1, y - 1, 2, 2))
+    drawing = bank8.drawings[page]
+    planted = bank8.patched(page, wires=(*drawing.wires, DrawnWire(wire.net, (a, b), wire.style)), symbols=(*drawing.symbols, dot))
+    assert sorted(bank8.messages("DANGLING_WIRE_END", planted)) == sorted(f"wire end at {px}, {py}" for px, py in (a, b))
+
+
 def _drop_first(built: Built, wanted, code: str) -> None:
     """Dropping the first symbol `wanted` picks on any page raises `code` over the build's own count."""
     for page, part in built.netlist().pages.items():
@@ -286,8 +300,8 @@ def test_a_wire_through_a_body_is_an_overlap(bank8):
     y = body.y + body.h // 2
     across = DrawnWire("across", ((body.x - 8, y), (body.x + body.w + 8, y)), drawing.wires[0].style)
     planted = bank8.patched(page, wires=(*drawing.wires, across))
-    before = sum(int(m.split()[0]) for m in bank8.messages("OVERLAP", bank8.drawings))
-    assert sum(int(m.split()[0]) for m in bank8.messages("OVERLAP", planted)) == before + 1
+    before = len(bank8.messages("OVERLAP", bank8.drawings))
+    assert len(bank8.messages("OVERLAP", planted)) == before + 1
 
 
 @pytest.mark.rule("DRAWN-NETLIST")

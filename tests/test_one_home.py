@@ -158,6 +158,7 @@ HOMES = {
     "electrical-symbols ": "electrical_symbols",
     "Digital input channel": "fransys_wago.signals",
     "ORDER_HINT_CYCLE": "fransys_model.vocab.codes",
+    "ORDER_GROUP_DRAWS_NOTHING": "fransys_model.vocab.codes",
 }
 
 # A selection function is defined in exactly one module; a compare or dispatch key on these enums

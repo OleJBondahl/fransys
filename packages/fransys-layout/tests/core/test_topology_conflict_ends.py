@@ -36,3 +36,13 @@ def test_the_conflicting_leg_leaves_and_the_rest_keeps_its_fan() -> None:
     fans, cross = _split()
     assert [(f.drivers, f.legs) for f in fans] == [((SUPPLY, INPUT), (TERMINAL,))]
     assert cross == (CrossLink("n", (CARD_POWER, SUPPLY)),)
+
+
+def test_two_conflicting_legs_leave_as_one_link_of_the_net() -> None:
+    """KI-739: one link per net with every out leg, so the cut tallies and plans the name once."""
+    second = Attach(None, 0, 0, PinRef("CARD", "in.2"), net="n")
+    fan = Fan("f:n", ("n",), (SUPPLY, INPUT), (CARD_POWER, second, TERMINAL), None, 1, "below")
+    env = ColumnEnv({}, core_options(flip_turn="R180", driver_first=True, arrow_sides=("E", "W")), {"n": "f:n"}, set(), {}, {})
+    _, fans, cross = _split_cycles([], env, (fan,), ())
+    assert [(f.drivers, f.legs) for f in fans] == [((SUPPLY, INPUT), (TERMINAL,))]
+    assert cross == (CrossLink("n", (CARD_POWER, SUPPLY, second)),)

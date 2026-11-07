@@ -15,12 +15,12 @@ from fransys_model.derive import (
     page_preset,
 )
 
+from ._background import LAST_PAGE
 from ._contents import contents_page
 from ._diagrams import diagram_source
 from ._doc import background
 from ._drawings import harness_drawing_source, schematic_source
 from ._geometry import document_metadata, preamble, text_margin
-from ._labels import LAST_PAGE, RESTART
 from ._lists import (
     bom_page,
     cable_list_page,
@@ -60,7 +60,7 @@ type _Texts = tuple[Callable[[Model, DocumentRow], str], Mapping[str, str], Mapp
 def _section_prefix(doc: Doc, kind: PageKind) -> str:
     """`#set page(margin:, background:)` for every page of `kind` but `SCHEMATIC`."""
     margin, back = text_margin(doc[3], doc[6]["page_margin_mm"]), background(doc, kind, 0)
-    return f"#set page(margin: {margin}, background: {back})\n{RESTART}"
+    return f"#set page(margin: {margin}, background: {back})"
 
 
 def _list_pages(doc: Doc, bridge: BridgeInputs, flow: dict[str, float]) -> dict[ListKey, Callable[[], str]]:
@@ -87,7 +87,7 @@ def _text_page(kind: PageKind, doc: Doc, texts: _Texts) -> str:
     if preset.form is PageForm.NOTES:
         return notes_page(cast("str", record.notes), words["notes"])
     if preset.form is PageForm.SHEET_INDEX:
-        headers = (words["sheet"], words["title"], words["page"])
+        headers = (words["title"], words["page"])
         return sheet_index_page(doc, headers, **flow)
     if preset.form is PageForm.CONTENTS:
         return contents_page(model, record, pages)

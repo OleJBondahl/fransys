@@ -1,18 +1,38 @@
 """One root end-to-end test: author, build, write."""
 
 import re
+from typing import Any, NamedTuple
 
 import fransys as fr
 import fransys_render
+import pypdfium2
+import pytest
 import typst
+from _model_build_cover import unit_document
 from _pdf_lists import source
 from demo_designs import cabinet_design
+from fransys.colours import BU
 from fransys_author.design import Design
+from fransys_el import symbol_kit
+from fransys_el.placement_views import marker_boxes
+from fransys_el.placement_widest import link_fit
 
 from electrical_symbols import LIBRARY
-from fransys_model.derive import document_page_kinds, document_sheets_of, documents
+from fransys_model.derive import (
+    document_export_name,
+    document_page_kinds,
+    document_sheets_of,
+    documents,
+    page_title,
+    pdf_page,
+    position_at,
+    scope_path,
+)
+from fransys_model.derive.document_sets import set_printers
+from fransys_model.derive.frame_position import row_letter
+from fransys_model.derive.marker_targets import more_text
 from fransys_model.kernel import render_id
-from fransys_model.layout import DrawingSet, Page, layout_of
+from fransys_model.layout import DrawingSet, Page, layout_of, sheet_format_of
 
 # `/Type /Page` but not `/Type /Pages` (the page tree root) or `/Type /PageLabel` (NV4) --
 # confirmed by compiling and inspecting a real PDF (plan `.fransys/sdd-plan-pdf-stage2.md`, Task 7).
@@ -174,3 +194,107 @@ def test_every_page_carries_the_frame_including_a_drawing_page(tmp_path):
     for index, block in enumerate(blocks, start=1):
         assert number in block, f"page {index} carries no project number"
         assert "<fransys-page-counter>" in block, f"page {index} carries no document counter"
+
+
+_CITE = re.compile(r"#(\d+)-(.*?)p(\d+):\d+[A-Z]")
+
+
+def _pdf_page_texts(path):
+    """The text of each page of the PDF at `path`."""
+    pdf = pypdfium2.PdfDocument(path)
+    return [page.get_textpage().get_text_range() for page in pdf]
+
+
+def _two_documents(root):
+    """A cabinet and a field location, each its own document, with references from one into the other."""
+    d = fr.design("demo_parts", place="CAB")
+    d.project(title="Docs", number="P-1", customer="Example Co", revision=1, author="OJB")
+    d.revision(1, date="2026-10-15", text="First issue", created="XX")
+    cab, fld = d.location("CAB", "Cabinet"), d.location("FLD", "Field")
+    psu, q = d.device("T1", "DEMO-PSU-24"), d.device("Q1", "DEMO-CTR-3P-NC")
+    block = d.device(None, "DEMO-CTR-BLOCK-1NO1NC", name="blk", parent=q, place="FLD")
+    lamp = d.device("P1", "DEMO-LAMP-24", place="FLD")
+    wire = (BU, 0.5)
+    for a, b in [(psu.output["+"], q.coil["A1"]), (psu.output["-"], q.coil["A2"]), (psu.output["+"], q.aux["13"])]:
+        d.series(a, b, wire=wire)
+    for a, b in [(q.aux["14"], lamp["1"]), (psu.output["-"], lamp["2"]), (lamp["1"], block.no["53"]), (block.no["54"], lamp["2"])]:
+        d.series(a, b, wire=wire)
+    (root / "c.md").write_text("# Docs\n", encoding="utf-8")
+    cabinet = fr.DocumentPreset.CABINET_SCHEMATIC
+    return fr.build(d, fr.document(cabinet, cab, cover=root / "c.md"), fr.document(cabinet, fld, cover=root / "c.md"))
+
+
+def _pdf_texts(result, root):
+    """Each document's PDF text per page, by the document's `scope_path`."""
+    fr.write(result, root)
+    model = result.model
+    return {scope_path(model, record.id): _pdf_page_texts(root / document_export_name(model, None, record)) for record in documents(model).values()}
+
+
+class _Io(NamedTuple):
+    X1: Any
+
+
+@fr.unit("demo-flags", revision=1, interface_version=1, date="2026-01-01", text="first", by="AB", title="Flags", number="F-1")
+def _flags(d: Any) -> _Io:
+    """Twelve circuits sharing two strips: their reference flags cite other pages (the field case of the `+n` flag)."""
+    x1 = d.terminal_strip("X" + "W" * 20, "DEMO-TB-2.5", 8, interface=True)
+    x2 = d.terminal_strip("Y" + "W" * 20, "DEMO-TB-2.5", 8)
+    hub: Any = None
+    ends: dict[Any, Any] = {}
+    for i in range(40):
+        with d.function(f"C{i + 1:02d}", f"Circuit {i + 1}"):
+            k = d.device(f"K{i + 1}", "DEMO-RLY-2CO-24")
+            h = d.device(f"H{i + 1}", "DEMO-LAMP-24")
+            d.series(ends.get(("x1", i % 6), x1[1 + i % 6].inner), k.coil["A1"], wire=("RD", 0.75))
+            if hub is None:
+                hub = k
+            else:
+                d.series(hub.coil["A2"], k.coil["A2"], wire=("BK", 0.75))
+            d.series(ends.get(("x2", i % 6), x2[1 + i % 6].inner), k.co_1["11"], wire=("RD", 0.75))
+            d.series(k.co_1["14"], h.lamp[1], wire=("RD", 0.75))
+            d.series(h.lamp[2], ends.get("lamp", x2[8].inner), wire=("BU", 0.75))
+            ends[("x1", i % 6)], ends[("x2", i % 6)], ends["lamp"] = k.coil["A1"], k.co_1["11"], h.lamp[2]
+    return _Io(x1)
+
+
+@pytest.mark.rule("PAGE-NUMBER")
+def test_a_cited_page_is_the_pdf_page_that_holds_its_partner(tmp_path):
+    """Each cut tag cites `p<n>`, and the partner tag with the same `#net` stands on page n of the compiled PDF (cover = 1)."""
+    d = fr.design("demo_parts")
+    d.add(_flags, "U1")
+    ((_, pages),) = _pdf_texts(fr.build(d, unit_document("demo-flags")), tmp_path).items()
+    cites = [(net, int(cited)) for text in pages for net, prefix, cited in _CITE.findall(text)]
+    assert len(cites) >= 2, "the cut chain cites its other columns"
+    assert all(f"#{net}-" in pages[cited - 1] for net, cited in cites)
+
+
+@pytest.mark.rule("PAGE-NUMBER")
+def test_a_reference_into_another_pdf_names_that_document_and_its_page(tmp_path):
+    """The contact block in the field document cites the coil in the cabinet's PDF: the far document's text, then the page that holds the coil."""
+    result = _two_documents(tmp_path)
+    model = result.model
+    texts = _pdf_texts(result, tmp_path / "out")
+    pages = layout_of(model, Page)
+    cab = next(p for p in pages.values() if scope_path(model, set_printers(model)[p.drawing_set]) == "+CAB" and p.number == 1)
+    fld = next(p for p in pages.values() if scope_path(model, set_printers(model)[p.drawing_set]) == "+FLD" and p.number == 1)
+    text = position_at(model, cab, fld, 1, "A")
+    assert text == f"+FLD p{pdf_page(model, fld)}:1A"
+    assert page_title(model, fld) in texts["+FLD"][pdf_page(model, fld) - 1]
+
+
+@pytest.mark.rule("PAGE-NUMBER")
+def test_every_printed_position_fits_the_marker_box_placement_reserves(tmp_path):
+    """The widest line of `link_fit` is at least as wide as `#n-<position>` for every page pair, cell and the `+k` form."""
+    model = _two_documents(tmp_path).model
+    reserved = link_fit(model, symbol_kit(model, LIBRARY), LIBRARY, None)["R0"].w
+    pages = tuple(layout_of(model, Page).values())
+    lines = [
+        f"#{len(pages)}-{position_at(model, own, partner, column, row_letter(row))}{more_text(9)}"
+        for own in pages
+        for partner in pages
+        for column in range(1, sheet_format_of(model, partner.sheet_format).frame_columns + 1)
+        for row in range(sheet_format_of(model, partner.sheet_format).frame_rows)
+    ]
+    assert any("+FLD p" in line for line in lines), "the build has references into another PDF"
+    assert max(marker_boxes(LIBRARY, line)["R0"].w for line in lines) <= reserved

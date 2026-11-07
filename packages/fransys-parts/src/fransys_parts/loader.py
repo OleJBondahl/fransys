@@ -139,6 +139,7 @@ def _build_part_file(draft: Draft, parsed: _toml.ParsedFile, library_id: Id[Part
             class_code=part_data["class_code"],
             library=library_id,
             operated_by=OperatedBy(part_data["operated_by"]) if "operated_by" in part_data else None,
+            catalogue_description=part_data.get("catalogue_description"),
         ),
         origin=_origin(parsed, ("part",)),
     )

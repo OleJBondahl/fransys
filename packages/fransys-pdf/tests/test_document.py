@@ -21,9 +21,9 @@ def test_default_pages_with_notes_text():
     m = model(c1, doc)
     assert document_page_kinds(m, doc.id) == (
         K.COVER,
+        K.SCHEMATIC,
         K.NOTES,
         K.SHEET_INDEX,
-        K.SCHEMATIC,
         K.PLC_LIST,
         K.TERMINAL_LIST,
         K.CONNECTOR_LIST,

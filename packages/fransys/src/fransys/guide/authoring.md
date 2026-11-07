@@ -240,11 +240,23 @@ Refused in 0.22 (`MATES_DISABLED`, an ERROR): a mate has no correctness guarante
 
 `K1.coil.plc(fr.DO, "Pump run")` asks for a digital output named for the signal, and
 `.scale("%", raw=(4, 20), eng=("0", "266"))` scales an analogue one. The range reaches the Wago rack XML only.
-A bad range is an ERROR: `SCALING_RANGE_INVALID`, `SCALING_NOT_ANALOGUE` or `SCALING_UNIT_EMPTY`. A float in `eng` raises.
+A bad range is an ERROR: `SCALING_RANGE_INVALID` or `SCALING_NOT_ANALOGUE`. A float in `eng` raises, and so does a blank unit (`unit=None` writes none).
+A spare analogue channel takes the same call on its handle: `ai.ai_3.plc(name="unused").scale("%", raw=(0, 32767), eng=("0", "100"))`.
+Two devices of one controller with one signal name are an ERROR, `PLC_SIGNAL_NAME_TWICE`: rename one with `.plc(signal, name)`.
 A series that ends or starts
 at a PLC module binds the request to a channel (next section). A request no series wires keeps the
 build's own allocation.
 `d.rack("U1")` adds the part-less rack the modules sit under with `parent=`; a `d.harness` rack stops with `HARNESS_HOLDS_PLC_MODULE`.
+
+## The Wago rack XML follows the CDP reference
+
+The `<Modules>` of the Wago rack XML is written as CDP's own reference file reads; no setting changes it.
+- A module is named `<order>_<channels><kind>_<letter>`, with the kind DI, AI, DO or AO, or the bare order number when its channels mix kinds.
+- A channel is named by its bare signal name from `.plc(signal, name)`. A channel with no name is `<kind><Nr>` (DO0, DI14), or the name set on its handle: `ai.ai_3.plc(name="unused")`.
+- An analogue channel has no `Nr`. A mixed module lists outputs first and `Nr` restarts at 0 for each direction.
+- `.plc(..., routing="Controller.Section.Tank")` writes the channel's `Routing`, `routing=""` writes it empty, and none writes none.
+- `.plc(configured=False)` on a module's channel handle leaves that channel out; the others keep their `Nr`.
+- A relay output reads "Digital output channel".
 
 ## How channels are numbered
 

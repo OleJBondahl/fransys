@@ -9,7 +9,7 @@ from collections import defaultdict
 from typing import TYPE_CHECKING
 
 from electrical_symbols import power_symbol_key
-from fransys_model.derive import connected_ports, drawn_groups, far_pins, port_power_text
+from fransys_model.derive import drawn_groups, drawn_stands, far_pins, port_power_text, rail_drawn_by
 from fransys_model.layout import StarKind
 
 from .drawn_finding import drawn_finding
@@ -164,12 +164,12 @@ def not_drawn_findings(model: Model, net: Netlist) -> tuple[Finding, ...]:
 
     A group held by parallel conductors counts once.
     """
-    keep = {p.value for p in connected_ports(model)}
     stubs, seen = _stubs(net), set()
     joined = _pairs(net, stubs)
     found: list[Finding] = []
+    stood, drawn_by = drawn_stands(model), rail_drawn_by(model)
     for group in drawn_groups(model):
-        members = [p.value for p in group if p.value in keep]
+        members = [p.value for p in group if not any(s in stood and s in group for s in drawn_by.get(p, ()))]  # a rail terminal's stand draws it
         if len(members) < _MIN_PORTS or frozenset(members) in seen:
             continue
         seen.add(frozenset(members))

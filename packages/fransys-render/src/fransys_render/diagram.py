@@ -24,19 +24,20 @@ if TYPE_CHECKING:
 
 def _sheet_body(model: Model, pen: Pen, diagram: PlacedDiagram, sheet: PlacedSheet) -> str:
     """The diagram of one sheet in content-box grid units: boxes, lines, then markers."""
-    reading = diagram_lines(model, diagram.unit)
+    unit = diagram.unit
+    reading = diagram_lines(model, unit)
     tabs = {(line.cable, line.a): line.tab_a for line in reading}
     tabs |= {(line.cable, line.b): line.tab_b for line in reading}
     names = {(line.cable, line.a, line.b): line.designation for line in reading}
     lines = sheet.lines
-    body = [box_parts(pen, box, box_lines(model, box.box, diagram.unit), lines, tabs) for box in sheet.boxes]
+    body = [box_parts(pen, box, box_lines(model, box.box, unit), lines, tabs) for box in sheet.boxes]
     body += [line_parts(pen, ln, names[ln.cable, ln.a, ln.b]) for ln in lines]
     by_ends = {(ln.cable, ln.a, ln.b): ln for ln in lines}
     numbered = {other.number: other for other in diagram.sheets}
     for marker in sheet.markers:
         ends = (marker.cable, marker.a, marker.b)
         partner = next(m for m in numbered[marker.at_sheet].markers if (m.cable, m.a, m.b) == ends)
-        seat = (sheet.number, (partner.x, partner.y))
+        seat = (DiagramSheet(unit=unit, number=sheet.number), (partner.x, partner.y))
         body.append(marker_parts(model, pen, marker, by_ends[ends], seat))
     return "".join(body)
 

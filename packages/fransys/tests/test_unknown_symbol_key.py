@@ -42,7 +42,7 @@ def test_an_unknown_key_is_one_error_naming_the_function_and_its_page(tmp_path: 
     (found,) = (f for f in result.findings if f.code == "UNKNOWN_SYMBOL_KEY")
     assert found.severity is Severity.ERROR
     assert len(found.subjects) == 1
-    assert found.message.startswith(f"symbol {_KEY!r} is not in the library (+C1p1")
+    assert found.message.startswith(f"symbol {_KEY!r} is not in the library (p2")
     assert found.message.endswith(": K1:coil)")
     assert found.fix
     keys = [s.key for page in result.drawings.values() for s in page.symbols]

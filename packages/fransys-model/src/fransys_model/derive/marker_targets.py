@@ -13,7 +13,9 @@ from fransys_model.derive.facts.house_settings import frame_form_of, reference_t
 from fransys_model.derive.frame_labels import cell_labels
 from fransys_model.derive.frame_position import position_text, row_letter
 from fransys_model.derive.kinds import item_role
-from fransys_model.vocab.tables import functions, ports
+from fransys_model.vocab.tables import documents, functions, ports
+lazy from fransys_model.derive.document_subject import widest_scope
+lazy from fransys_model.derive.page_reference_text import front_pages
 lazy from fransys_model.kernel import Model
 
 if TYPE_CHECKING:
@@ -49,15 +51,20 @@ def target_order(model: Model, marker: LinkMarker, ends: Sequence[LinkMarker]) -
     return [*terminals[:1], *(one for one in others if one not in terminals[:1])]
 
 
-def widest_position_text(model: Model, digits: int, columns: int, rows: int, digit: str) -> str:
-    """The position text of a placement in another set, set number and page number every `digit`s: the set form is the wide one.
+def _wide_page(model: Model, count: int, digit: str) -> int:
+    """The widest page number of a build of `count` drawn pages: the front pages count too, every digit `digit`."""
+    front = max((front_pages(model, document) for document in documents(model)), default=0)
+    return int(digit * len(str(count + front)))
 
-    `digits` is the digit count of a page or set number, `columns` and `rows` the highest frame column and row, `digit` the
-    widest digit the caller measured. Layout sizes a text that names another placement with it before the pages exist.
+
+def widest_position_text(model: Model, count: int, columns: int, rows: int, digit: str) -> str:
+    """The position text of a placement in another PDF: the widest document text, page number and cell every `digit`s.
+
+    `count` is the build's symbol count (a page holds at least one symbol), `columns` and `rows` the highest frame column and
+    row, `digit` the widest digit the caller measured. Layout sizes a text that names another placement with it before the pages exist.
     """
-    wide = int(digit * digits)
     refs, labels = _widest_cells(model, columns, rows, digit)
-    return position_text(refs, wide, labels, (), wide)
+    return position_text(refs, _wide_page(model, count, digit), labels, widest_scope(model))
 
 
 def _widest_cells(model: Model, columns: int, rows: int, digit: str) -> tuple[ReferenceText, tuple[str, str]]:
@@ -65,14 +72,13 @@ def _widest_cells(model: Model, columns: int, rows: int, digit: str) -> tuple[Re
     return reference_text_of(model), cell_labels(frame_form_of(model), rows, int(digit * len(str(columns))), row_letter(rows - 1))
 
 
-def widest_target_line(model: Model, digits: int, columns: int, rows: int, digit: str) -> str:
+def widest_target_line(model: Model, count: int, columns: int, rows: int, digit: str) -> str:
     """The longest line a marker can print: `target_lines`' `+k` form with every number `digit`s.
 
-    `digits` is the digit count of a page or net number, `columns` and `rows` the highest frame
-    column and row, `digit` the widest digit the caller measured. Layout sizes a marker box with it
-    before the pages exist.
+    `count` is the build's symbol count, `columns` and `rows` the highest frame column and row,
+    `digit` the widest digit the caller measured. Layout sizes a marker box with it before the pages exist.
     """
-    wide = int(digit * digits)
     refs, labels = _widest_cells(model, columns, rows, digit)
-    position = position_text(refs, wide, labels, ())
+    wide = _wide_page(model, count, digit)
+    position = position_text(refs, wide, labels, widest_scope(model))
     return target_lines(wide, [position])[0] + more_text(int(digit))

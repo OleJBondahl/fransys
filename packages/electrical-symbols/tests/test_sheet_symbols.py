@@ -58,7 +58,7 @@ EXPECTED: dict[tuple[str, bool], dict[str, Any]] = {
             "author": 58.0,
             "page_title": 98.0,
             "scope": 53.0,
-            "sheet": 33.0,
+            "page": 68.0,
         },
     },
     ("a3", True): {
@@ -77,7 +77,7 @@ EXPECTED: dict[tuple[str, bool], dict[str, Any]] = {
             "author": 24.0,
             "page_title": 98.0,
             "scope": 53.0,
-            "sheet": 33.0,
+            "page": 68.0,
         },
     },
     ("a2", False): {
@@ -105,7 +105,7 @@ EXPECTED: dict[tuple[str, bool], dict[str, Any]] = {
             "author": 84.76923076923077,
             "page_title": 142.6153846153846,
             "scope": 77.53846153846153,
-            "sheet": 48.61538461538461,
+            "page": 99.23076923076923,
         },
     },
     ("a2", True): {
@@ -133,7 +133,7 @@ EXPECTED: dict[tuple[str, bool], dict[str, Any]] = {
             "author": 35.6,
             "page_title": 142.6153846153846,
             "scope": 77.53846153846153,
-            "sheet": 48.61538461538461,
+            "page": 99.23076923076923,
         },
     },
     ("a4", False): {
@@ -161,7 +161,7 @@ EXPECTED: dict[tuple[str, bool], dict[str, Any]] = {
             "author": 39.07692307692308,
             "page_title": 66.46153846153847,
             "scope": 35.65384615384615,
-            "sheet": 21.96153846153846,
+            "page": 45.92307692307692,
         },
     },
     ("a4", True): {
@@ -189,7 +189,7 @@ EXPECTED: dict[tuple[str, bool], dict[str, Any]] = {
             "author": 15.8,
             "page_title": 66.46153846153847,
             "scope": 35.65384615384615,
-            "sheet": 21.96153846153846,
+            "page": 45.92307692307692,
         },
     },
     ("a4t", False): {
@@ -217,7 +217,7 @@ EXPECTED: dict[tuple[str, bool], dict[str, Any]] = {
             "author": 36.92307692307692,
             "page_title": 62.871794871794876,
             "scope": 33.67948717948718,
-            "sheet": 20.705128205128204,
+            "page": 43.41025641025641,
         },
     },
     ("a4t", True): {
@@ -245,7 +245,7 @@ EXPECTED: dict[tuple[str, bool], dict[str, Any]] = {
             "author": 14.866666666666667,
             "page_title": 62.871794871794876,
             "scope": 33.67948717948718,
-            "sheet": 20.705128205128204,
+            "page": 43.41025641025641,
         },
     },
 }
@@ -364,9 +364,11 @@ def test_every_column_boundary_row_boundary_and_the_band_are_the_old_ones(name, 
     top, bottom = want["band_top"], want["band_top"] + want["band"]
     mid = top + want["band"] / 2
     full = sorted(e.start.x for e in lines if e.start.y == top and e.end.y == pytest.approx(bottom))
+    upper = sorted(e.start.x for e in lines if e.start.y == top and e.end.y == pytest.approx(mid))
     lower = sorted(e.start.x for e in lines if e.start.y == pytest.approx(mid) and e.end.y == pytest.approx(bottom))
     across = [(e.start.x, e.end.x) for e in lines if e.start.y == e.end.y]
-    assert full == pytest.approx(xs[3:7], abs=1e-9)
+    assert full == pytest.approx([*xs[3:5], xs[6]], abs=1e-9)
+    assert upper == pytest.approx([xs[5]], abs=1e-9)  # the page cell spans the sheet cell's old place
     assert lower == pytest.approx(xs[1:3], abs=1e-9)
     assert _flat(across) == pytest.approx([xs[0], xs[6]], abs=1e-9)
     assert [e.start.y for e in lines if e.start.y == e.end.y] == pytest.approx([mid], abs=1e-9)
@@ -445,7 +447,7 @@ def test_a_cell_is_a_label_over_a_value_and_the_growth_lands_by_the_cut_weights(
 def test_the_title_block_has_every_value_label_and_the_page_and_logo_boxes():
     block, logo = _band("a3", notice=False)
     fields = ["number", "revision", "revision_date", "customer", "author", "page_title"]
-    fields += ["scope", "sheet"]
+    fields += ["scope"]
     assert {s.id for s in block.lines.slots} == {*fields, "page", "notice"}
     assert [a.id for a in block.lines.anchors] == ["notice"]
     assert [s.id for s in block.bold.slots] == ["title"]
@@ -453,7 +455,7 @@ def test_the_title_block_has_every_value_label_and_the_page_and_logo_boxes():
     assert block.labels.elements == ()
     assert {s.id for s in block.labels.slots} == {f"label.{f}" for f in ["title", *fields, "page"]}
     page_top = 282 + 5 + VALUE_FROM_MIDDLE - BODY_CAP / 2
-    assert slot_box_mm(block.lines, "page") == pytest.approx((316.0, page_top, 33.0, BODY_CAP), abs=1e-9)
+    assert slot_box_mm(block.lines, "page") == pytest.approx((281.0, page_top, 68.0, BODY_CAP), abs=1e-9)
     assert slot_box_mm(logo, "logo") == pytest.approx((395.0, 272.0, 20.0, 20.0), abs=1e-9)
 
 

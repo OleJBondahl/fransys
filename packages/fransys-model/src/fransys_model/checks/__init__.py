@@ -12,7 +12,7 @@ from .harness_without_tag import check_harness_without_tag
 from .mates_disabled import check_mates_disabled
 from .part_conformance import check_part_conformance
 from .part_library import check_part_library
-from .plc import check_plc, check_plc_wiring
+from .plc import check_plc, check_plc_names, check_plc_wiring
 from .potential_without_supply import check_potential_without_supply
 from .rails import check_rails
 from .ratings import check_ratings
@@ -47,6 +47,7 @@ ALL_VALIDATORS: tuple[Callable[[Model], tuple[Finding, ...]], ...] = (
     check_strip_without_tag,
     check_plc,
     check_plc_wiring,
+    check_plc_names,
     check_scaling,
     check_units,
     check_supplies,
@@ -78,6 +79,7 @@ __all__ = [
     "check_part_conformance",
     "check_part_library",
     "check_plc",
+    "check_plc_names",
     "check_plc_wiring",
     "check_potential_without_supply",
     "check_rails",

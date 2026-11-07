@@ -20,7 +20,8 @@ lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab import AspectNode, Function, Unit
 
 from .designation_label import terminal_of
-from .drawing_text import page_title_groups, strip_tag_text, unit_label
+from .document_subject import unit_label
+from .drawing_text import page_title_groups, strip_tag_text
 from .facts.house_settings import word
 from .lookups import black_box_unit, unit_chain
 from .tag_text import tag_text

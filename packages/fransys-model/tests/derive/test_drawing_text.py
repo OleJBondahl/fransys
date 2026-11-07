@@ -179,10 +179,10 @@ _PATH_CAB: tuple[tuple[Id[Any], str], ...] = ((_NODE_IDS("aspect_node"), "C1"),)
 
 def test_a_position_without_a_cell_names_the_page_alone() -> None:
     refs = house_record(ReferenceText)
-    assert position_text(refs, 3, None, ()) == "p3"
-    assert position_text(refs, 3, None, ("C1",)) == "+C1p3"
-    assert position_text(refs, 3, None, (), 2) == "p2.3"
-    assert position_text(refs, 3, ("1", "A"), (), 2) == "p2.3:1A"
+    assert position_text(refs, 3, None) == "p3"
+    assert position_text(refs, 3, None, "+C1") == "+C1 p3"
+    assert position_text(refs, 3, ("1", "A")) == "p3:1A"
+    assert position_text(refs, 2, ("4", "A"), "+EXT-M1") == "+EXT-M1 p2:4A"
 
 
 def test_a_marker_with_no_reference_row_raises(origin: Origin) -> None:

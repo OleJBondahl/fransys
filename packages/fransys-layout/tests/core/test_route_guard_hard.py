@@ -12,10 +12,13 @@ import pytest
 
 from fransys_layout.core import Box, PinRef
 from fransys_layout.core.clearance import Keep, own_end
-from fransys_layout.core.outputs import Wire
-from fransys_layout.core.route_env import Drawn
-from fransys_layout.core.route_guard import guard
+from fransys_layout.core.flow_values import Attach, Fan
+from fransys_layout.core.occupancy import Occupancy
+from fransys_layout.core.outputs import PinXY, Placed, Refused, Wire
+from fransys_layout.core.route_env import Drawn, hard_keeps
+from fransys_layout.core.route_guard import _meets, guard
 
+from .route_fixtures import link_env
 from .test_route_guard_off_grid import X, _env_and_grid
 
 ACROSS = Wire("n", 1, ((496, 112), (776, 112)), "straight")  # through B's footprint (588..704)
@@ -125,7 +128,8 @@ def test_a_bundle_lane_through_a_symbol_of_its_fan_stays_as_drawn() -> None:
     lane = Wire("m1", 1, ((496, 112), (776, 112)), "trunk")
     own = replace(env, fans={"f:m": fan}, net_pins={"m1": (PinRef("P", "in"),)})
     assert _crossed(own, grid, lane).kind == "trunk"
-    assert _crossed(replace(own, fans={}), grid, lane).kind == "routed"
+    assert not _meets(own, grid, lane, "m1", (frozenset(), hard_keeps(own)))
+    assert _meets(replace(own, fans={}), grid, lane, "m1", (frozenset(), hard_keeps(replace(own, fans={}))))
 
 
 def test_a_wire_through_a_neighbours_tag_room_stays_as_drawn() -> None:
@@ -138,3 +142,47 @@ def test_a_wire_through_a_neighbours_tag_room_stays_as_drawn() -> None:
     drawn = guard(env, grid, Drawn(wires=(wire,)))
     assert drawn.wires == (wire,)
     assert not drawn.findings
+
+
+def _trunk_of_three(*, wall: bool):
+    """A trunk at y 136 from pin A (200) to pin C (400) with pin B (216) tapping inside; a foreign box F stands on it (KI-731)."""
+    env = link_env({"A": (200, 100, "N"), "B": (216, 100, "N"), "C": (400, 100, "N")}, {})
+    f_box = Box(280, 128, 48, 24)
+    placed = {**env.placed, "F": Placed("F", 1, 280, 152, "R0", f_box, f_box, (PinXY("p", 280, 152),))}
+    att = [Attach(None, 0, 0, PinRef(s, "p"), net="n") for s in "ABC"]
+    fan = Fan("f:n", ("n",), tuple(att[:2]), (att[2],), None, 1, "below")
+    env = replace(env, placed=placed, fans={"f:n": fan})
+    grid = Occupancy(100, 40, 8)
+    for p in placed.values():
+        grid.mark_box(p.footprint)
+    if wall:
+        grid.mark_box(Box(336, 0, 8, 320))
+    taps = tuple(Wire("n", 1, ((x, 100), (x, 136)), "drop") for x in (200, 216, 400))
+    return env, grid, Drawn(wires=(Wire("n", 1, ((200, 136), (400, 136)), "trunk"), *taps))
+
+
+def test_a_met_trunk_is_rerouted_as_one_tree_over_all_its_taps() -> None:
+    """KI-731: the inner tap is not dropped; the first-to-last reroute left it on nothing."""
+    env, grid, drawn = _trunk_of_three(wall=False)
+    out = guard(env, grid, drawn)
+    joined = [w for w in out.wires if w.points[0] == (216, 136) and w.points[-1] != (216, 100)]
+    assert joined, [w.points for w in out.wires]
+    assert any((200, 136) in (w.points[0], w.points[-1]) and (400, 136) in (w.points[0], w.points[-1]) for w in out.wires)
+    assert out.lost == ()
+
+
+def test_a_met_trunk_with_no_tree_hands_every_tap_to_the_reference_loop() -> None:
+    """KI-731: no way for the tree keeps no wire that meets the foreign box; the taps become one Refused."""
+    env, grid, drawn = _trunk_of_three(wall=True)
+    out = guard(env, grid, drawn)
+    assert out.wires == ()
+    assert out.lost == (Refused("n", (PinRef("A", "p"), PinRef("B", "p"), PinRef("C", "p"))),)
+
+
+def test_a_met_trunk_with_one_tap_and_no_tree_is_handed_to_the_reference_loop_not_kept() -> None:
+    """CASE2-CND-B: a one-tap trunk that still meets was kept with no finding; its tap is now one Refused."""
+    env, grid, drawn = _trunk_of_three(wall=True)
+    drawn = replace(drawn, wires=(drawn.wires[0], drawn.wires[2]))
+    out = guard(env, grid, drawn)
+    assert out.wires == ()
+    assert out.lost == (Refused("n", (PinRef("B", "p"),)),)

@@ -36,8 +36,6 @@ __all__ = [
 
 _NOTICE_LINE_EM = 1.2  # the notice's line pitch in em
 
-# the cell whose `TitleBlockFields` field has another name (`sheet_counter` fills `sheet`)
-_FIELD_OF_CELL = {"sheet": "sheet_counter"}
 # the cell pdf fills with the page counter: it holds no field of `TitleBlockFields`
 _COUNTER_CELL = "page"
 
@@ -168,19 +166,18 @@ def title_block_strings(
     printed: dict[str, str] = {}
     unfit = []
     for slot in (cell for cell in text.labels if cell != _COUNTER_CELL):
-        name = _FIELD_OF_CELL.get(slot, slot)
-        shorter = fields.page_title_shorter if name == "page_title" else ()
+        shorter = fields.page_title_shorter if slot == "page_title" else ()
         base, ok, shown = field_printed(
-            getattr(fields, name),
+            getattr(fields, slot),
             ellipsis=text.ellipsis,
             room_mm=rooms[slot],
             size_mm=sizes.body,
-            bold=name == "title",
+            bold=slot == "title",
             shorter=shorter,
         )
         printed[slot] = shown
         if not ok:
-            unfit.append(FieldOverflow(field=name, shown=base))
+            unfit.append(FieldOverflow(field=slot, shown=base))
     wrapped = notice_lines(fields.notice, width_mm=notice_width_mm, font_mm=sizes.label)
     return TitleBlockStrings(
         printed=frozendict(printed),
@@ -195,12 +192,11 @@ def _misses(form: FieldForms, rooms: Mapping[str, float], body_mm: float) -> Tit
 
     A field whose cell the `[title_block]` record leaves out prints nowhere and overflows nowhere.
     """
-    slot = "sheet" if form.field == "sheet_counter" else form.field
-    if slot not in rooms:
+    if form.field not in rooms:
         return None
     base, ok = one_line_field(
         form.forms[0],
-        width_mm=rooms[slot],
+        width_mm=rooms[form.field],
         size_mm=body_mm,
         bold=form.field == "title",
         shorter=form.forms[1:],

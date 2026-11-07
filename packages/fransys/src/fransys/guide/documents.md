@@ -19,16 +19,16 @@ default) leaves that cell empty. `notice` is the text of the title block's IP no
 on every page of that document; `""` (the default) leaves the cell empty. On A3 the cell is about 92 mm wide and holds about 370 characters at the label size. A longer notice gives `TITLE_BLOCK_NOTICE_OVERFLOW`. Customer and Author are narrower than with no notice. A unit released alone
 needs no `d.project` for either; its Author cell prints `created` of the unit's current revision, a project document's the project's `author`. `d.project(notice=...)` raises: the notice moved here.
 
-The page kinds each preset holds.
+The page kinds each preset holds, in the order of the PDF: the cover, the drawings, then the notes, the index and the lists. The cover is page 1 and the drawings start on page 2.
 
 | page kind | `CABINET_SCHEMATIC` | `SYSTEM` |
 |---|---|---|
 | `COVER` | yes | yes |
+| `BLOCK_DIAGRAM` | no | yes |
+| `SCHEMATIC` | yes | no |
+| `HARNESS_DRAWING` | no | yes |
 | `NOTES` | yes | yes |
 | `SHEET_INDEX` | yes | yes |
-| `SCHEMATIC` | yes | no |
-| `BLOCK_DIAGRAM` | no | yes |
-| `HARNESS_DRAWING` | no | yes |
 | `PLC_LIST` | yes | no |
 | `TERMINAL_LIST` | yes | no |
 | `CONNECTOR_LIST` | yes | no |
@@ -36,10 +36,11 @@ The page kinds each preset holds.
 | `BOM` | yes | yes |
 
 Every preset also takes `PageKind.SHEET_INDEX`, a "Sheets" page after the notes that lists each
-sheet (`3`, `2.3`, block diagram sheets `B1`, `B2`) with its title and PDF page. It prints from two
-sheets. The PDF is navigable and prints the same.
-Cross references and Sheets rows are invisible links. The outline lists sheets and devices. The
-viewer numbers a sheet by its sheet number and other pages in roman.
+drawing page with its title and its PDF page. It prints from two pages. The PDF is navigable and
+prints the same. Cross references and Sheets rows are invisible links. The outline lists pages and
+devices. A page has one number: its place in its PDF, counted from 1 with the cover as page 1. Every reference,
+the Sheets page, the outline and the viewer print it. The title block prints it as `m of N`, with the
+PDF's page count.
 
 ```python
 from pathlib import Path

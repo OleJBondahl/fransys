@@ -1,7 +1,7 @@
 """The placement core: plain values in, plain values out. It imports nothing outside the stdlib."""
 
 from .annex_values import Annex, AnnexBox, Spot
-from .clearance import own_end
+from .clearance import own_end, through
 from .errors import CoreError
 from .geometry import inside, overlaps, stub_views
 from .jsonform import from_plain, to_plain
@@ -89,5 +89,6 @@ __all__ = (
     "page_graph",
     "solve",
     "stub_views",
+    "through",
     "to_plain",
 )

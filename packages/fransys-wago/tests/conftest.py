@@ -51,13 +51,14 @@ class Rack:
             )
         )
 
-    def part(
+    def part(  # noqa: PLR0913 -- one keyword per thing a test varies
         self,
         key: str,
         mpn: str,
         signals: tuple[SignalType, ...],
         *,
         description: str | None = None,
+        catalogue_description: str | None = None,
         category: PartCategory = PartCategory.PLC_MODULE,
     ) -> Id[Part]:
         """A module part with one channel template per signal, numbered from 1."""
@@ -69,6 +70,7 @@ class Rack:
             description=f"Invented {mpn}" if description is None else description,
             category=category,
             class_code="A",
+            catalogue_description=catalogue_description,
         )
         self.records.append(part)
         self._templates[part.id] = []
@@ -125,7 +127,8 @@ class Rack:
         channel: Id[Function],
         *,
         signal: SignalType = SignalType.DI,
-        scaling: tuple[str, int, int, Decimal, Decimal] | None = None,
+        scaling: tuple[str | None, int, int, Decimal, Decimal] | None = None,
+        routing: str | None = None,
     ) -> None:
         """A field device bound to `channel`; without a `signal_name` it has no request."""
         item = Item(
@@ -166,6 +169,7 @@ class Rack:
                     signal=signal,
                     signal_name=signal_name,
                     priority=1,
+                    routing=routing,
                 )
             )
         if scaling is not None:
@@ -175,6 +179,44 @@ class Rack:
                     id=make_id(ScalingFacet, (key, "scaling")),
                     key=(key, "scaling"),
                     subject=function.id,
+                    unit=unit,
+                    raw_min=raw_min,
+                    raw_max=raw_max,
+                    eng_min=eng_min,
+                    eng_max=eng_max,
+                )
+            )
+
+    def spare(  # noqa: PLR0913 -- one keyword per setting a test varies
+        self,
+        key: str,
+        channel: Id[Function],
+        *,
+        name: str | None = None,
+        routing: str | None = None,
+        configured: bool = True,
+        scaling: tuple[str | None, int, int, Decimal, Decimal] | None = None,
+    ) -> None:
+        """Settings on a spare `channel` itself: its own name, routing, scaling, or `configured=False`."""
+        self.records.append(
+            PlcRequestFacet(
+                id=make_id(PlcRequestFacet, (key, "settings")),
+                key=(key, "settings"),
+                subject=channel,
+                signal=None,
+                signal_name=name,
+                priority=0,
+                routing=routing,
+                configured=configured,
+            )
+        )
+        if scaling is not None:
+            unit, raw_min, raw_max, eng_min, eng_max = scaling
+            self.records.append(
+                ScalingFacet(
+                    id=make_id(ScalingFacet, (key, "scaling")),
+                    key=(key, "scaling"),
+                    subject=channel,
                     unit=unit,
                     raw_min=raw_min,
                     raw_max=raw_max,
@@ -193,8 +235,9 @@ class Rack:
 
 
 def build_demo() -> Rack:
-    """Rack `R1` of five modules: a coupler, two digital-in parts, a digital-out and an analog one.
-    The analog `T1_Level` is scaled 4..20 to 0..100 percent; `T2_Flow` is bound without scaling.
+    """Rack `R1` of seven modules: a coupler, two digital-in parts, a digital-out, an analog one, a mixed one and a two-kind analog.
+    `T1_Level` is scaled 4..20 to 0..100 percent with a routing path, `T2_Flow` has `Routing=""`, the third analog
+    channel is a spare named `unused` and scaled; the first digital output is left out (`configured=False`).
     """
     rack = Rack()
     di_text = "16-channel digital input"
@@ -203,17 +246,37 @@ def build_demo() -> Rack:
     do = rack.part("do", "750-1504", (SignalType.DO,) * 2, description="4-channel digital output")
     ai = rack.part("ai", "750-455", (SignalType.AI_CURRENT,) * 3, description="4-channel 4-20 mA")
     di_one = rack.part("di1", "750-1405", (SignalType.DI,), description=di_text)
-    mods = [
-        rack.module(part, key, tag, n)
-        for n, (part, key, tag) in enumerate(((coupler, "a0", "A0"), (di, "a1", "A1"), (do, "a2", "A2"), (ai, "a3", "A3"), (di_one, "a4", "A4")))
-    ]
-    _, a1, a2, a3, _ = mods
+    mixed = rack.part("mix", "750-1506", (SignalType.DI, SignalType.DO, SignalType.DI, SignalType.DO), description="8-channel digital")
+    rtd = rack.part(
+        "rtd",
+        "750-460",
+        (SignalType.RTD, SignalType.AI_VOLTAGE),
+        description="2-channel Pt100",
+        catalogue_description="2-channel analog input; For Pt100/RTD resistance sensors",
+    )
+    parts = (
+        (coupler, "a0", "A0"),
+        (di, "a1", "A1"),
+        (do, "a2", "A2"),
+        (ai, "a3", "A3"),
+        (di_one, "a4", "A4"),
+        (mixed, "a5", "A5"),
+        (rtd, "a6", "A6"),
+    )
+    mods = [rack.module(part, key, tag, n) for n, (part, key, tag) in enumerate(parts)]
+    _, a1, a2, a3, _, a5, _ = mods
+    rack.device("m1", "M1", "Start", a5.channels[1], signal=SignalType.DO)
+    rack.device("m2", "M2", "Run", a5.channels[3], signal=SignalType.DO)
+    rack.device("m3", "M3", "Ready", a5.channels[0])
+    rack.device("m4", "M4", "Fault", a5.channels[2])
+    rack.spare("a2ch1", a2.channels[0], configured=False)
     rack.device("b1", "B1", "Door", a1.channels[0])
     rack.device("b2", "B2", "Gate", a1.channels[1])
-    rack.device("k1", "K1", "Fan", a2.channels[0], signal=SignalType.DO)
+    rack.device("k1", "K1", "Fan", a2.channels[1], signal=SignalType.DO)
     scaling = ("percent", 4, 20, Decimal(0), Decimal(100))
-    rack.device("t1", "T1", "Level", a3.channels[0], signal=SignalType.AI_CURRENT, scaling=scaling)
-    rack.device("t2", "T2", "Flow", a3.channels[1], signal=SignalType.AI_CURRENT)
+    rack.device("t1", "T1", "Level", a3.channels[0], signal=SignalType.AI_CURRENT, scaling=scaling, routing="Controller.Section.Level")
+    rack.device("t2", "T2", "Flow", a3.channels[1], signal=SignalType.AI_CURRENT, routing="")
+    rack.spare("a3ch3", a3.channels[2], name="unused", scaling=("percent", 0, 32767, Decimal(0), Decimal(100)))
     return rack
 
 

@@ -4,6 +4,7 @@ The canary design (several drawing sets, cross references between pages) is buil
 link is a rectangle of a page's drawing that jumps to the partner's page; nothing parses a printed
 """
 
+import re
 from typing import TYPE_CHECKING, Any
 
 import fransys as fr
@@ -17,8 +18,8 @@ from test_reader_order import _design_and_rest, _other_documents
 
 from fransys_model.derive import documents, mm_per_division, page_destination
 from fransys_model.derive.grid_mm import grid_to_mm
-from fransys_model.derive.page_destination import sheet_text
 from fransys_model.derive.page_nav import reference_links
+from fransys_model.derive.page_reference_text import pdf_page
 from fransys_model.derive.sheets import sheets
 from fransys_model.layout import Page, layout_of, sheet_format_of
 from fransys_model.vocab import PageKind, aspect_nodes
@@ -107,12 +108,12 @@ def _written(root: Path, cover_pages: int) -> tuple[fr.BuildResult, pypdfium2.Pd
 
 
 def _sheet_entries(toc) -> list[tuple[int, str, list[str]]]:
-    """Each "Sheet " entry as (landing page, title, the level-1 names under it), in order."""
+    """Each sheet entry (`<n>` or `<n>: <title>`) as (landing page, title, the level-1 names under it), in order."""
     found: list[tuple[int, str, list[str]]] = []
     inside = False
     for level, title, page in toc:
         if level == 0:
-            inside = title.startswith("Sheet ")
+            inside = re.fullmatch(r"\d+(: .*)?", title) is not None
             if inside:
                 found.append((page, title, []))
         elif inside:
@@ -129,7 +130,7 @@ def test_the_outline_has_a_sheet_entry_per_sheet_and_no_terminals_or_pins(tmp_pa
         found = sheets(model, record.id, (PageKind.SCHEMATIC,), ())
         entries = _sheet_entries(_toc(pdf))
         assert [page for page, _, _ in entries] == [_landing(pdf, page_destination(model, s)) for s in found]
-        assert all(title.startswith(f"Sheet {sheet_text(model, s)}") for (_, title, _), s in zip(entries, found, strict=True))
+        assert all(title.split(":")[0] == str(pdf_page(model, s)) for (_, title, _), s in zip(entries, found, strict=True))
         everything = [name for _, _, names in entries for name in names]
         assert everything
         assert not [name for name in everything if ":" in name]
@@ -157,13 +158,13 @@ def test_the_pdf_outline_nests_designations_under_each_sheet_and_lands_on_its_pa
         record = _cabinet_document(model)
         found = sheets(model, record.id, (PageKind.SCHEMATIC,), ())
         toc = _toc(pdf)
-        at = [i for i, (_, title, _) in enumerate(toc) if title.startswith("Sheet ")]
+        at = [i for i, (_, title, _) in enumerate(toc) if re.fullmatch(r"\d+(: .*)?", title)]
         assert len(at) == len(found)
         entries = _sheet_entries(toc)
         for start, sheet, (page, title, names) in zip(at, found, entries, strict=True):
             level, _, landing = toc[start]
             assert (level, landing) == (0, _landing(pdf, page_destination(model, sheet)))
-            assert title.startswith(f"Sheet {sheet_text(model, sheet)}")
+            assert title.split(":")[0] == str(pdf_page(model, sheet))
             below = toc[start + 1 : start + 1 + len(names)]
             assert below == [(1, name, page) for name in names]
     finally:

@@ -13,6 +13,7 @@ from fransys_model.derive.facts.plc_wiring import (
     channel_takes,
     direct_neighbours,
     owner_of_port,
+    requested_signal,
     wired_functions,
 )
 from fransys_model.derive.facts.units import boundary, standalone
@@ -62,7 +63,7 @@ def narrow(
     W2 keeps the channels of the request's signal; with none, all stay (the binding then raises
     `PLC_BINDING_SIGNAL_MISMATCH`). W3 keeps the channels one conductor from the request, if any.
     """
-    kept = [c for c in eligible if channel_takes(facts_of[c], request.signal)] or list(eligible)
+    kept = [c for c in eligible if channel_takes(facts_of[c], requested_signal(request))] or list(eligible)
     return [c for c in kept if c in adjacent] or kept
 
 
@@ -108,7 +109,7 @@ def uncontested(
 
     A pick of the wrong kind (W2 found none) yields to a kind-matched pick of that channel.
     """
-    kind = {request.subject: request.signal for request in requests}
+    kind = {request.subject: requested_signal(request) for request in requests}
     matched = {s for s, c in picked.items() if channel_takes(ranked[c][1], kind[s])}
     held = {picked[subject] for subject in matched}
     pool = {s: c for s, c in picked.items() if s in matched or c not in held}

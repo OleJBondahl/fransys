@@ -9,7 +9,6 @@ A block taller than the page body never reaches the flow: `check` stops it first
 from typing import TYPE_CHECKING
 
 from ._geometry import text_margin
-from ._labels import RESTART
 from ._typst import literal
 
 if TYPE_CHECKING:
@@ -97,5 +96,5 @@ def run_page(doc: Doc, index: int, headings: tuple[str, str], background_source:
     blocks = _flow(bodies, width, height, pdf["page_margin_mm"])
     return (
         f"#page(margin: {margin}, header-ascent: 4mm, header: {{ {_header(headings, label)} }}, "
-        f"background: {background_source})[{RESTART}\n#metadata(none) <{label}>\n{blocks}]"
+        f"background: {background_source})[#metadata(none) <{label}>\n{blocks}]"
     )

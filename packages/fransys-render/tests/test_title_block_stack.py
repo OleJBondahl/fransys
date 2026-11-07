@@ -16,7 +16,7 @@ _MODEL = freeze(Draft())
 _ORIGIN = Origin(file="test_title_block_stack.py", line=1, note="test library")
 _DESCENDER_RATIO = Decimal(426) / Decimal(2048)  # the bundled font's descender over its em
 _FIELDS = ("title", "number", "revision", "revision_date", "customer", "author", "page_title")
-_FIELDS += ("scope", "sheet", "page")
+_FIELDS += ("scope", "page")
 # the authored label and value centres of the 20 mm symbol, read off the unstretched toml
 _HOUSE = {
     "title": (3.25, 6.375),
@@ -27,7 +27,6 @@ _HOUSE = {
     "author": (13.25, 16.375),
     "page_title": (13.25, 16.375),
     "scope": (13.25, 16.375),
-    "sheet": (13.25, 16.375),
     "page": (13.25, 16.375),
 }
 

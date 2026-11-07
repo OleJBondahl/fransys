@@ -10,11 +10,12 @@ a box the order does not hold. The solution is taken again until none holds a tr
 from __future__ import annotations
 
 from collections import defaultdict
+from itertools import chain
 from typing import TYPE_CHECKING
 
 from .clearance import Keep, clear, fan_own, footprint_keeps
-from .geometry import cell_anchor
-from .node_names import col_node
+from .geometry import box_reach, cell_anchor
+from .node_names import HIGH, LOW, box_node, box_y_node, col_node
 from .pack import cell_node
 from .pack_sep import hard_soft
 from .place_accept import accept
@@ -41,8 +42,19 @@ def _fan(env: PageEnv, fan: str) -> Fan:
 
 
 def _foreign(env: PageEnv, x: Mapping[str, int], span: Span, rows: Iterable[int]) -> Iterator[Keep]:
-    """The hard-box keeps of every cell of the rows its fan does not attach to."""
-    return cell_keeps(env, x, rows, fan_own(_fan(env, span.fan)))
+    """The footprint keeps of every cell and card box of the rows its fan does not attach to."""
+    own = fan_own(_fan(env, span.fan))
+    return chain(cell_keeps(env, x, rows, own), _card_keeps(env, x, rows, own))
+
+
+def _card_keeps(env: PageEnv, x: Mapping[str, int], rows: Iterable[int], own: AbstractSet[str]) -> Iterator[Keep]:
+    """The footprint keep of every card box of `rows` not in `own`: its folded footprint holds its marker hangings (KI-731)."""
+    for r in rows:
+        for box in (env.blocks[b].anchor for b in env.plan.rows[r].blocks if env.blocks[b].is_card):
+            if box and box not in own:
+                fp, (lead, tail) = env.syms[box].footprint, box_reach(env.syms[box])
+                left, right = x[box_node(box, LOW)], x[box_node(box, HIGH)]
+                yield from footprint_keeps(((box_y_node(box), box),), Box(left - lead, fp.y, right - left + lead + tail, fp.h))
 
 
 def cell_keeps(env: PageEnv, x: Mapping[str, int], rows: Iterable[int], own: AbstractSet[str]) -> Iterator[Keep]:

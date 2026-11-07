@@ -60,7 +60,7 @@ def test_a_function_that_is_not_a_terminal_is_drawn_in_its_own_set_only(built) -
 def test_the_copies_leave_no_connection_undrawn_and_no_more_wire_over_marker(built) -> None:
     name, result = built
     assert sum(f.code == "CONNECTION_NOT_DRAWN" for f in result.findings) <= STOCK[name]  # the copies add none to the KI-132 stock
-    over = sum(int(f.message.split()[0]) for f in result.findings if f.code == "WIRE_OVER_MARKER")
+    over = sum(f.code == "WIRE_OVER_MARKER" for f in result.findings)
     assert over <= stock("drawing_wire_over_marker", name)
 
 

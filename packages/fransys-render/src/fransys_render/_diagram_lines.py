@@ -11,6 +11,7 @@ from ._constants import DIAGRAM_MARKER_DEPTH_G, DIAGRAM_MARKER_GAP_G, DIAGRAM_MA
 
 if TYPE_CHECKING:
     from fransys_layout import DiagramLine, PlacedMarker
+    from fransys_model.derive import DiagramSheet
     from fransys_model.kernel import Model
 
     from ._cable_pen import Pen
@@ -28,11 +29,11 @@ def marker_parts(
     pen: Pen,
     marker: PlacedMarker,
     line: DiagramLine,
-    seat: tuple[int, tuple[int, int]],
+    seat: tuple[DiagramSheet, tuple[int, int]],
 ) -> str:
     """A cut marker: an arrow at the line end, the partner's place printed past it.
 
-    `seat` is the marker's own sheet number and its partner marker's `(x, y)`.
+    `seat` is the marker's own sheet and its partner marker's `(x, y)`.
     """
     last, before = line.points[-1], line.points[-2]
     sign = 1 if last.x > before.x else -1

@@ -1,11 +1,12 @@
 """`Design` and `Scope`: the builder, no global state; `fr.build` merges `parts`."""
 
 import itertools
+from dataclasses import replace
 from typing import TYPE_CHECKING, cast, override
 
 from fransys_model.kernel import AuthoringKey, Draft, Id, MergeConflictError, Origin, Record, make_id
 from fransys_model.layout import OrderHint
-from fransys_model.vocab import Boundary, Placement, Project, Revision, UnitRelease
+from fransys_model.vocab import AspectNode, Boundary, Conductor, Placement, Project, Revision, UnitRelease
 from fransys_model.vocab import Item as ModelItem
 from fransys_model.vocab import Unit as ModelUnit
 
@@ -17,15 +18,15 @@ from ._origin import caller_origin
 from ._release import unit_release
 from ._scope_build import BuildScope
 from ._scope_unit import UnitScope
-from ._series_blocks import SeriesBlocks
 from ._supply import SupplyScope
 from .errors import AuthorError
 from .wiring import LinkScope
+lazy from .handles import Group
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
-    from .handles import Group, Item, Location
+    from .handles import Item, Location
 
 
 _MINIMUM_ORDER_GROUPS = 2
@@ -39,7 +40,7 @@ class Scope(UnitScope, BuildScope, LinkScope, SupplyScope):
     defaults for every item it creates, inherited by a nested scope unless overridden.
     """
 
-    __slots__ = ("_at", "_design", "_group", "_held", "_prefix", "_release", "_unit")
+    __slots__ = ("_at", "_block", "_design", "_group", "_held", "_prefix", "_release", "_unit")
 
     def __init__(  # noqa: PLR0913 -- this scope's own prefix, defaults, unit and unit release [public keyword API kept, decision 0444]
         self,
@@ -56,6 +57,7 @@ class Scope(UnitScope, BuildScope, LinkScope, SupplyScope):
         self._prefix = prefix
         self._at = at
         self._group = group
+        self._block: Id[AspectNode] | None = None  # the function block `d.function` is writing in (model-0442)
         self._unit = unit
         self._release = release
         self._held: list[tuple[Boundary, Origin, bool]] | None = None
@@ -129,6 +131,13 @@ class Scope(UnitScope, BuildScope, LinkScope, SupplyScope):
         if len(groups) < _MINIMUM_ORDER_GROUPS:
             msg = f"d.layout.order needs at least {_MINIMUM_ORDER_GROUPS} groups, got {len(groups)}"
             raise AuthorError(msg)
+        for group in groups:
+            if not isinstance(group, Group):
+                msg = (
+                    f"d.layout.order takes group handles, got {group!r} ({type(group).__name__}): "
+                    "pass the handle of `with d.function(...) as pumps`, e.g. d.layout.order(pumps, valves)"
+                )
+                raise AuthorError(msg)
         origin = caller_origin()
         for before, after in itertools.pairwise(groups):
             key = scoped(self._prefix, "order", spliced(before.key), spliced(after.key))
@@ -175,14 +184,12 @@ class Design(Scope):
         "_draft",
         "_earths",
         "_project_version",
-        "_series_blocks",
     )
 
     def __init__(self, parts: Draft) -> None:
         """Read `parts` once into a private index by `(manufacturer, mpn)` and by `mpn`."""
         self._draft = Draft()
         self._earths = Earths()
-        self._series_blocks = SeriesBlocks()
         self._catalogue = build_catalogue(parts)
         self._project_version: int | None = None
         self._assumed_version = False
@@ -268,18 +275,23 @@ class Design(Scope):
         """
         for net, origin in self._earths.nets():
             self._add(net, origin)
-        for hint, origin in self._series_blocks.resolve(self._draft):
-            self._add(hint, origin)
         return self._draft
 
     def _add(self, record: Record, origin: Origin) -> None:
         first = self._draft.origin_of(record.id) if isinstance(record, ModelItem) else None
+        if self._made_again(record):
+            return
         try:
             self._draft.add(record, origin=origin)
         except MergeConflictError as exc:
             raise AuthorError(_name_clash_message(record)) from exc
         if first is not None:
             raise AuthorError(_name_clash_message(record, first, origin))
+
+    def _made_again(self, record: Record) -> bool:
+        """Whether `record` is a wire made before, in another block: the first block stands (model-0442)."""
+        old = self._draft.record_of(record.id)
+        return isinstance(record, Conductor) and isinstance(old, Conductor) and replace(record, block=old.block) == old
 
     def _extend(self, records: Iterable[Record], origin: Origin) -> None:
         for record in records:

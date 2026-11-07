@@ -6,7 +6,6 @@ the same model. Each item link `file.pdf#nameddest=label` must name a file the w
 
 import json
 import re
-from collections import Counter
 from typing import Any
 from urllib.parse import unquote
 
@@ -18,7 +17,7 @@ from test_page_destinations_example import _cabinet_node, _canary, _landing, _pa
 
 from electrical_symbols import LIBRARY
 from fransys_layout.engines.overview import lay_out_overview
-from fransys_model.derive import page_destination
+from fransys_model.derive import page_destination, pdf_page
 
 
 @pytest.fixture(scope="module")
@@ -44,7 +43,6 @@ def test_every_link_of_the_page_lands_on_the_drawing_page_it_names(
     result, out, page = built
     pages = _pages_of(result, _cabinet_node(result))
     by_label = {page_destination(result.model, p): p for p in pages}
-    totals = Counter(p.drawing_set for p in pages)
     links = [(link, text) for link, text in _links(page) if "-C1.pdf#" in link]  # the labels repeat in each document's PDF
     assert len(links) > 5
     for link, text in links:
@@ -55,7 +53,6 @@ def test_every_link_of_the_page_lands_on_the_drawing_page_it_names(
             index = _landing(pdf, label)
             assert index is not None, link
             drawn = by_label[label]
-            landed = pdf[index].get_textpage().get_text_range()
-            assert f"{drawn.number} / {totals[drawn.drawing_set]}" in landed, link
+            assert index == pdf_page(result.model, drawn) - 1, link
         finally:
             pdf.close()

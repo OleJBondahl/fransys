@@ -46,6 +46,7 @@ def engine(lib: Draft) -> Draft:
     e = Design(lib)
     c1, g = e.location("C1"), e.group("SENS", "Sensors")
     x1 = e.strip("X1", at=c1)
+    e._block = g.id  # the engine spelling of `with d.function(...)`: wires made now carry the block (model-0442)
     wire = e.wiring(colour="BU", gauge="0.75")
     for tag, n in SENSORS.items():
         s = e.item("TEST-SENSOR", name=f"SENS/{tag}", tag=tag, at=c1, group=g)

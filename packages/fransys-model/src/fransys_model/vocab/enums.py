@@ -220,17 +220,18 @@ class DocumentPreset(Enum):
 class PageKind(Enum):
     """A kind of page in a document, in the one canonical page order.
 
-    Declaration order is the canonical order: a document's pages are its preset's pages plus
-    `add`, minus `remove`, in this order, so no project specifies one. The set is closed.
+    Declaration order is the canonical order: the cover, the drawings, then the notes, the index
+    and the lists. A document's pages are its preset's pages plus `add`, minus `remove`, in this
+    order, so no project specifies one. The set is closed.
     """
 
     COVER = "cover"
-    NOTES = "notes"
-    SHEET_INDEX = "sheet_index"
-    CONTENTS = "contents"
     BLOCK_DIAGRAM = "block_diagram"
     SCHEMATIC = "schematic"
     HARNESS_DRAWING = "harness_drawing"
+    NOTES = "notes"
+    SHEET_INDEX = "sheet_index"
+    CONTENTS = "contents"
     PLC_LIST = "plc_list"
     TERMINAL_LIST = "terminal_list"
     CONNECTOR_LIST = "connector_list"

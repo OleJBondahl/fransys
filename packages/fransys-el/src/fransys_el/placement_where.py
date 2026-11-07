@@ -25,9 +25,9 @@ __all__ = ["where_line", "where_room"]
 def where_line(model: Model, library: Library, count: int) -> str:
     """The widest position text of a build of `count` symbols: one value per build, read by `where_room`."""
     sheets = [sheet_for(model, kind) for kind in PageKind]
-    columns, rows, digits = max(s.frame_columns for s in sheets), max(s.frame_rows for s in sheets), len(str(count))
-    sample = len(widest_position_text(model, digits, columns, rows, "1"))
-    return widest_position_text(model, digits, columns, rows, widest_digit(library, sample))
+    columns, rows = max(s.frame_columns for s in sheets), max(s.frame_rows for s in sheets)
+    sample = len(widest_position_text(model, count, columns, rows, "1"))
+    return widest_position_text(model, count, columns, rows, widest_digit(library, sample))
 
 
 def where_room(env: Env, function: Id[Function]) -> str:

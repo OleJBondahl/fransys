@@ -1,16 +1,19 @@
-"""Stage 6 guard (R391, R419): a fixed wire meeting another net is rerouted by A*, else warned."""
+"""Stage 6 guard (R391, R419): a fixed wire meeting another net is rerouted by A*, else warned; a met trunk is rerouted as one tree (KI-731)."""
 
 from __future__ import annotations
 
 from dataclasses import replace
 from itertools import pairwise
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, NamedTuple
 
 from .clearance import clear
+from .flow_values import CrossLink
 from .net_keys import net_of_key
+from .outputs import Refused
 from .route_astar import Leg, anchor, astar, simplify, tidy
 from .route_env import hard_keeps, own_syms
-from .values import Box, Finding
+from .route_tree import tree
+from .values import Box, Finding, PinRef
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -18,7 +21,7 @@ if TYPE_CHECKING:
     from .clearance import Keep
     from .occupancy import Occupancy
     from .outputs import Wire
-    from .route_env import Drawn, RouteEnv
+    from .route_env import Drawn, Rise, RouteEnv
     from .values import XY
 
 
@@ -110,7 +113,7 @@ def _settle(
     wire: Wire,
     kept: tuple[frozenset[str], tuple[Keep, ...]],
 ) -> tuple[Wire, bool]:
-    """A marked wire that meets is unmarked and rerouted, marked anew; True if it has no way."""
+    """A marked two-end wire that meets is unmarked and rerouted, marked anew; True if it has no way."""
     net = net_of_key(wire.net)
     if not _meets(env, grid, wire, net, kept):
         return wire, False
@@ -121,26 +124,99 @@ def _settle(
     return routed, points is None
 
 
+def _on_line(trunk: Wire, p: XY) -> bool:
+    (x0, y), (x1, _) = trunk.points[0], trunk.points[-1]
+    return p[1] == y and min(x0, x1) <= p[0] <= max(x0, x1)
+
+
+class _Tree(NamedTuple):
+    """What a trunk becomes: its wires, the reference it hands the loop, and the taps and rises it took over."""
+
+    wires: tuple[Wire, ...]
+    lost: tuple[Refused, ...] = ()
+    taps: tuple[int, ...] = ()
+    rises: tuple[Rise, ...] = ()
+
+
+def _pin_at(env: RouteEnv, p: XY) -> PinRef | None:
+    return next((PinRef(sym, q.pin) for sym, placed in env.placed.items() for q in placed.pin_xy if (q.x, q.y) == p), None)
+
+
+def _taps(drawn: Drawn, trunk: Wire) -> tuple[tuple[int, ...], tuple[Rise, ...]]:
+    """The drops and risers that end on the trunk's line, by index, and the rises aimed at it."""
+    taps = tuple(j for j, w in enumerate(drawn.wires) if w.net == trunk.net and w.kind in ("drop", "riser") and _on_line(trunk, w.points[-1]))
+    return taps, tuple(r for r in drawn.rises if r.net == trunk.net and _on_line(trunk, r.target))
+
+
+def _retree(env: RouteEnv, grid: Occupancy, drawn: Drawn, i: int) -> tuple[Wire, ...] | None:
+    """A trunk rerouted as one tree over the points of all its taps; None, trunk marked as placed, when there is none.
+
+    The drops stay as drawn. The first-to-last reroute dropped every inner tap (KI-731).
+    """
+    trunk, net = drawn.wires[i], net_of_key(drawn.wires[i].net)
+    taps, aimed = _taps(drawn, trunk)
+    first, last = trunk.points[0], trunk.points[-1]
+    inner = dict.fromkeys(p for p in (*(drawn.wires[j].points[-1] for j in taps), *(r.target for r in aimed)) if p not in (first, last))
+    grid.unmark_wire(net, trunk.points)
+    reached = [_reach(env, first, last), _reach(env, last, first), *(_reach(env, p, last) for p in inner)]
+    anchors = [a for a in reached if a is not None]
+    found = tree(env, grid, CrossLink(net, ()), anchors) if len(anchors) == len(reached) else None
+    if found is None:
+        grid.mark_wire(net, trunk.points)
+        return None
+    return tuple(replace(w, net=trunk.net) for w in found)
+
+
+def _hand(env: RouteEnv, drawn: Drawn, i: int) -> _Tree | None:
+    """A trunk still meeting with no tree: no wire is kept, the pins of its taps are one Refused for the reference loop (ROUTE-FALLBACK-REFERENCE).
+
+    None when no tap has a pin: the trunk is then warned, never kept silently.
+    """
+    net = net_of_key(drawn.wires[i].net)
+    taps, aimed = _taps(drawn, drawn.wires[i])
+    pins = tuple(q for q in (*(_pin_at(env, drawn.wires[j].points[0]) for j in taps), *(r.pin for r in aimed)) if q is not None)
+    return _Tree((), (Refused(net, pins),), taps, aimed) if pins else None
+
+
+def _settled(
+    env: RouteEnv, grid: Occupancy, drawn: Drawn, ctx: tuple[frozenset[str], tuple[Keep, ...]]
+) -> tuple[dict[int, tuple[Wire, ...]], list[int]]:
+    """Every wire marked, then trunks first (R439) and the rest: what each becomes, and the ones with no way."""
+    wires, stuck = drawn.wires, list[int]()
+    kept: dict[int, tuple[Wire, ...]] = {}
+    for w in wires:
+        grid.mark_wire(net_of_key(w.net), w.points)
+    for i in [i for i, w in enumerate(wires) if w.kind == "trunk"] + [i for i, w in enumerate(wires) if w.kind != "trunk"]:
+        if not _meets(env, grid, wires[i], net_of_key(wires[i].net), ctx):
+            kept[i] = (wires[i],)
+        elif wires[i].kind == "trunk":
+            found = _retree(env, grid, drawn, i)
+            kept[i] = found or (wires[i],)
+            stuck += [i] * (found is None)
+        else:
+            w, no_way = _settle(env, grid, wires[i], ctx)
+            kept[i] = (w,)
+            stuck += [i] * no_way
+    return kept, stuck
+
+
 def guard(env: RouteEnv, grid: Occupancy, drawn: Drawn) -> Drawn:
     """Every fixed wire is marked first (R535 R-D); trunks first (R439), a meeting one is rerouted.
 
-    A wire with no way is warned only if it still meets once every other wire has settled.
+    A trunk is rerouted as one tree over its taps (KI-731). A wire with no way is kept while the others settle; one that
+    still meets then is warned, or for a trunk its taps go to the reference loop.
     """
-    kept: dict[int, Wire] = {}
-    stuck = []
     bundled = frozenset(n for f in env.fans.values() if f.lanes > 1 for n in (net_of_key(f.id), *f.nets))
-    wires, hard = drawn.wires, hard_keeps(env)
-    for w in wires:
-        grid.mark_wire(net_of_key(w.net), w.points)
-    first = [i for i, w in enumerate(wires) if w.kind == "trunk"]
-    for i in (*first, *(i for i, w in enumerate(wires) if w.kind != "trunk")):
-        kept[i], no_way = _settle(env, grid, wires[i], (bundled, hard))
-        stuck += [i] * no_way
-    warned = tuple(
-        _warn(env, wires[i], net_of_key(wires[i].net)) for i in stuck if _meets(env, grid, wires[i], net_of_key(wires[i].net), (bundled, hard))
-    )
+    ctx, wires = (bundled, hard_keeps(env)), drawn.wires
+    kept, stuck = _settled(env, grid, drawn, ctx)
+    still = [i for i in stuck if _meets(env, grid, wires[i], net_of_key(wires[i].net), ctx)]
+    handed = {i: t for i in still if wires[i].kind == "trunk" and (t := _hand(env, drawn, i))}
+    gone = {j for t in handed.values() for j in t.taps}
+    warned = tuple(_warn(env, wires[i], net_of_key(wires[i].net)) for i in still if i not in handed)
     return replace(
         drawn,
-        wires=tuple(kept[i] for i in range(len(wires))),
+        wires=tuple(w for i in range(len(wires)) if i not in gone for w in (handed[i].wires if i in handed else kept[i])),
         findings=drawn.findings + warned,
+        rises=tuple(r for r in drawn.rises if not any(r in t.rises for t in handed.values())),
+        lost=drawn.lost + tuple(r for t in handed.values() for r in t.lost),
     )

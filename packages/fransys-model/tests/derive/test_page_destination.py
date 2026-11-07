@@ -1,11 +1,11 @@
 """`derive.page_destination`: the named-destination label of a drawing page (OVERVIEW O21).
 
-Hand-built drawing sets and pages: two sets that both hold a page 3 must get different labels.
+Hand-built drawing sets and pages: two sets that both hold a page 3 must get different labels, `p<n>` of their place.
 """
 
 from derive_helpers import frozen_with_library
 
-from fransys_model.derive import page_destination
+from fransys_model.derive import page_destination, pdf_page
 from fransys_model.kernel import Draft, Origin, make_id
 from fransys_model.layout import DrawingSet, Page, PageRole
 
@@ -35,11 +35,11 @@ def _page(key: str, drawing_set: DrawingSet, number: int) -> Page:
     )
 
 
-def test_pages_of_two_drawing_sets_get_their_own_set_and_page_labels():
+def test_pages_of_two_drawing_sets_that_both_hold_a_page_3_get_their_own_labels():
     ds1, ds2 = _set("ds1", 1), _set("ds2", 2)
     p1, p2 = _page("p1", ds1, 3), _page("p2", ds2, 3)
     draft = Draft()
     draft.extend((ds1, ds2, p1, p2), origin=_ORIGIN)
     m = frozen_with_library(draft)
-    assert page_destination(m, p1) == "p1.3"
-    assert page_destination(m, p2) == "p2.3"
+    assert (pdf_page(m, p1), pdf_page(m, p2)) == (1, 2)
+    assert (page_destination(m, p1), page_destination(m, p2)) == ("p1", "p2")

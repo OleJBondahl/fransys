@@ -1,4 +1,4 @@
-"""`derive.sheets` and the sheet texts: `3`, `2.3`, `B1`, `B1 / 2`, label `b1` (PAGES-INDEX P1)."""
+"""`derive.sheets` and the one page number each sheet prints: `pdf_page`, label `p<n>` (PAGES-INDEX P1)."""
 
 from typing import TYPE_CHECKING
 
@@ -10,9 +10,8 @@ from fransys_model.derive import (
     DiagramSheet,
     page_destination,
     page_title_forms,
-    sheet_counter_text,
+    pdf_page,
     sheet_index_rows,
-    sheet_text,
     sheet_title_text,
     sheets,
 )
@@ -59,11 +58,12 @@ def test_diagram_sheets_come_first_then_pages_and_each_prints_its_form() -> None
     kinds = (PageKind.BLOCK_DIAGRAM, PageKind.SCHEMATIC)
     found = sheets(model, record.id, kinds, diagrams)
     assert found == (diagrams[1], diagrams[0], *pages)
-    assert [sheet_text(model, s) for s in found] == ["B1", "B2", "1", "2", "2.3"]
-    assert [page_destination(model, s) for s in found] == ["b1", "b2", "p1.1", "p1.2", "p2.3"]
-    assert sheet_counter_text(found[0], 2) == "B1 / 2"
-    assert sheet_counter_text(found[2], 3) == "1 / 3"
-    assert sheet_title_text(model, found[4], "Pump 1") == "Sheet 2.3: Pump 1"
+    numbers = [pdf_page(model, s) for s in found]
+    assert numbers[2:] == [2, 3, 4]  # the cover is 1, the pages follow it in order
+    assert pdf_page(model, diagrams[2]) == 2  # the absolute diagram sheet is the SYSTEM document's, after its cover
+    assert [page_destination(model, s) for s in found] == [f"p{n}" for n in numbers]
+    assert sheet_title_text(model, found[4], "Pump 1") == "4: Pump 1"
+    assert sheet_title_text(model, found[4], "") == "4"
 
 
 def test_a_dropped_kind_contributes_no_sheet_and_system_reads_the_absolute_diagram() -> None:
@@ -80,12 +80,8 @@ def test_the_index_rows_list_diagram_sheets_first_and_none_for_fewer_than_two_sh
     record = _document(DocumentPreset.CABINET_SCHEMATIC, _UNIT)
     both = (PageKind.BLOCK_DIAGRAM, PageKind.SCHEMATIC)
     rows = sheet_index_rows(model, record.id, both, diagrams)
-    assert [(r.sheet, r.title, r.destination) for r in rows[:3]] == [
-        ("B1", "Block diagram", "b1"),
-        ("B2", "Block diagram", "b2"),
-        ("1", page_title_forms(model, pages[0])[0], "p1.1"),
-    ]
-    assert [r.sheet for r in rows] == ["B1", "B2", "1", "2", "2.3"]
-    assert sheet_index_rows(model, record.id, (PageKind.BLOCK_DIAGRAM,), diagrams)[0].sheet == "B1"
+    assert [(r.title, r.destination) for r in rows[:2]] == [("Block diagram", f"p{rows[0].page}"), ("Block diagram", f"p{rows[1].page}")]
+    assert (rows[2].title, rows[2].page, rows[2].destination) == (page_title_forms(model, pages[0])[0], 2, "p2")
+    assert [r.page for r in rows[2:]] == [2, 3, 4]
     system = _document(DocumentPreset.SYSTEM, None)
     assert sheet_index_rows(model, system.id, both, diagrams) == ()  # one diagram sheet, no pages: one sheet

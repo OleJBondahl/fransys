@@ -1,0 +1,24 @@
+<Modules>
+  <Module Model="WagoIOModules.IOModule" Name="DEMO-PLC-AI-4_4AI_a" Description="PLC analog current input module, 4 channels with two pins each">
+    <Channel Input="0" Model="CDPSignalChannel&lt;short&gt;" Name="Tank_level_A" NetworkConvert="1" Routing="Controller.Section.Tank_level_A" Type="short" Value="0" Description="Analog input channel">
+      <Operator Interpolation="Linear" Model="Automation.ScalingOperator&lt;double&gt;" Name="Scale" Type="double">
+        <ScalingPoint InValue="0" OutValue="0" Model="Automation.ScalingPoint&lt;double&gt;" Name="ScalingPoint" Type="double"></ScalingPoint>
+        <ScalingPoint InValue="32767" OutValue="100" Model="Automation.ScalingPoint&lt;double&gt;" Name="ScalingPoint1" Type="double"></ScalingPoint>
+      </Operator>
+    </Channel>
+    <Channel Input="0" Model="CDPSignalChannel&lt;short&gt;" Name="Tank_level_B" NetworkConvert="1" Routing="" Type="short" Value="0" Description="Analog input channel"></Channel>
+    <Channel Input="0" Model="CDPSignalChannel&lt;short&gt;" Name="unused" NetworkConvert="1" Type="short" Value="0" Description="Analog input channel" Unit="%">
+      <Operator Interpolation="Linear" Model="Automation.ScalingOperator&lt;double&gt;" Name="Scale" Type="double">
+        <ScalingPoint InValue="0" OutValue="0" Model="Automation.ScalingPoint&lt;double&gt;" Name="ScalingPoint" Type="double"></ScalingPoint>
+        <ScalingPoint InValue="32767" OutValue="100" Model="Automation.ScalingPoint&lt;double&gt;" Name="ScalingPoint1" Type="double"></ScalingPoint>
+      </Operator>
+    </Channel>
+    <Channel Input="0" Model="CDPSignalChannel&lt;short&gt;" Name="AI3" NetworkConvert="1" Type="short" Value="0" Description="Analog input channel"></Channel>
+  </Module>
+  <Module Model="WagoIOModules.IOModule" Name="DEMO-PLC-DIO-MIXED" Description="PLC module of mixed inputs and outputs, declared out of order: di_1, di_2, di_10, do_1, do_2">
+    <Channel Input="1" Model="CDPSignalChannel&lt;bool&gt;" Name="Fan" NetworkConvert="1" Nr="1" Type="bool" Value="0" Description="Digital output channel"></Channel>
+    <Channel Input="0" Model="CDPSignalChannel&lt;bool&gt;" Name="Door" NetworkConvert="1" Nr="0" Type="bool" Value="0" Description="Digital input channel"></Channel>
+    <Channel Input="0" Model="CDPSignalChannel&lt;bool&gt;" Name="Gate" NetworkConvert="1" Nr="1" Type="bool" Value="0" Description="Digital input channel"></Channel>
+    <Channel Input="0" Model="CDPSignalChannel&lt;bool&gt;" Name="DI2" NetworkConvert="1" Nr="2" Type="bool" Value="0" Description="Digital input channel"></Channel>
+  </Module>
+</Modules>

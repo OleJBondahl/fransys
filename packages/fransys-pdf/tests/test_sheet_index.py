@@ -44,11 +44,11 @@ def _destination_page(pdf: pdfium.PdfDocument, name: str) -> int:
 
 
 def _page_cells(pdf: pdfium.PdfDocument) -> list[int]:
-    """The Page cell of each row, read from the index page's text after its `Sheet Title Page`."""
+    """The Page cell of each row, read from the index page's text after its `Title Page`."""
     for index in range(len(pdf)):
         text = pdf[index].get_textpage().get_text_bounded()
-        if "Sheet Title Page\r\n" in text:
-            rows = text.rsplit("Sheet Title Page\r\n", 1)[1].splitlines()
+        if "Title Page\r\n" in text:
+            rows = text.rsplit("Title Page\r\n", 1)[1].splitlines()
             return [int(row.split()[-1]) for row in rows]
     message = "no index page"
     raise AssertionError(message)
@@ -59,12 +59,13 @@ def test_every_page_cell_is_the_page_its_sheet_is_on_when_notes_overflow():
     pdf = _compile(m, doc, pages)
     rows = sheet_index_rows(m, doc.id, (PageKind.SCHEMATIC,), ())
     expected = [_destination_page(pdf, row.destination) for row in rows]
-    assert len(pdf) > 10  # the notes overflow pushes every later page
-    assert _page_cells(pdf) == expected
-    assert expected[0] > 10
-    for page_number, cell in zip(expected, _page_cells(pdf), strict=True):
+    assert len(pdf) > 10  # the notes overflow comes after the drawings, so it moves none of them
+    assert expected == [2, 3, 4]  # the cover is page 1, the drawings follow it
+    assert [row.page for row in rows] == expected  # the cell is `pdf_page`
+    assert _page_cells(pdf) == expected  # and the compiled PDF puts each sheet there
+    for page_number in expected:
         frame = pdf[page_number - 1].get_textpage().get_text_bounded()
-        assert f"{cell} of {len(pdf)}" in frame  # the frame's "Page m of M" at the sheet
+        assert str(page_number) in frame.split()  # the title block's page cell
 
 
 def test_the_same_model_gives_the_same_bytes_twice():
@@ -77,7 +78,7 @@ def test_the_same_model_gives_the_same_bytes_twice():
 
 def _index_page(pdf: pdfium.PdfDocument) -> int:
     for index in range(len(pdf)):
-        if "Sheet Title Page\r\n" in pdf[index].get_textpage().get_text_bounded():
+        if "Title Page\r\n" in pdf[index].get_textpage().get_text_bounded():
             return index
     message = "no index page"
     raise AssertionError(message)
@@ -96,7 +97,7 @@ def test_every_cell_of_a_row_links_to_its_sheets_page():
             targets.append(pdfium_raw.FPDFDest_GetDestPageIndex(pdf.raw, dest) + 1)
         pdfium_raw.FPDFPage_CloseAnnot(annot)
     expected = [_destination_page(pdf, row.destination) for row in rows]
-    assert sorted(targets) == sorted(expected * 3)
+    assert sorted(targets) == sorted(expected * 2)
 
 
 def test_the_index_page_background_carries_the_printed_titles_and_no_other_page_does():

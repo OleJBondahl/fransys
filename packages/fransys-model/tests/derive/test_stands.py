@@ -18,6 +18,7 @@ from fransys_model.derive import (
     is_bridge,
     is_pe_conductor,
     is_rail_terminal,
+    rail_drawn_by,
     terminal_items,
     terminal_rows,
     terminal_strips,
@@ -209,6 +210,15 @@ def _flagged_strip_case(potential: str, lamps: int) -> Model:
         else:
             d.dc_supply("S", plus=flag[1], minus=zero[1], voltage=24)
     return fr.build(d).model
+
+
+def test_a_rail_terminal_port_maps_to_the_stands_of_its_net_and_no_stand_maps_to_itself() -> None:
+    """Can-fail (KI-732): a `rail_drawn_by` that is empty fails the first assert; one that lists a stand as a key, the second."""
+    model = _flagged_strip_case("24V", 2)
+    drawn_by = rail_drawn_by(model)
+    assert drawn_by
+    assert all(pins and set(pins) <= stands(model).keys() for pins in drawn_by.values())
+    assert not drawn_by.keys() & stands(model).keys()
 
 
 @pytest.mark.parametrize("lamps", [1, 2])

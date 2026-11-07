@@ -5,8 +5,9 @@ lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.layout import Page
 lazy from fransys_model.vocab import Document, PageKind
 
-from .page_destination import page_destination, sheet_text
+from .page_destination import page_destination
 from .page_headings import diagram_title
+from .page_reference_text import pdf_page
 from .page_titles import page_title_forms
 from .rows_sheet import DiagramSheet
 from .sheets import sheets
@@ -16,17 +17,16 @@ _SHEETS = 2  # SI2: the index prints from two sheets
 
 @value
 class SheetIndexRow:
-    """One index row: the sheet text (`3`, `2.3`, `B1`), its title forms and its destination label.
+    """One index row: its title forms, its destination label and its page (`pdf_page`).
 
     `title` is the longest form and `shorter` the others (`page_title_forms`): the PDF prints
-    the first that fits, as the title block does. The page cell is not here: Typst reads the
-    physical page at `destination`.
+    the first that fits, as the title block does.
     """
 
-    sheet: str
     title: str
     shorter: tuple[str, ...]
     destination: str
+    page: int
 
 
 def sheet_index_rows(
@@ -48,8 +48,8 @@ def sheet_index_rows(
 def _row(model: Model, sheet: DiagramSheet | Page) -> SheetIndexRow:
     forms = (diagram_title(model),) if isinstance(sheet, DiagramSheet) else page_title_forms(model, sheet)
     return SheetIndexRow(
-        sheet=sheet_text(model, sheet),
         title=forms[0],
         shorter=forms[1:],
         destination=page_destination(model, sheet),
+        page=pdf_page(model, sheet),
     )

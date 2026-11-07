@@ -41,5 +41,4 @@ def title_block_forms(model: Model, document: Id[Document], sheets: DocumentShee
             found.append(FieldForms(field="scope", forms=(fields.scope,), where=page.group))
         titles = (fields.page_title, *fields.page_title_shorter)
         found.append(FieldForms(field="page_title", forms=titles, where=page.where))
-        found.append(FieldForms(field="sheet_counter", forms=(fields.sheet_counter,), where=page.where))
     return tuple(found)

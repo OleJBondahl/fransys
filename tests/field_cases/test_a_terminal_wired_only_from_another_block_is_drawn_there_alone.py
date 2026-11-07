@@ -58,9 +58,8 @@ def test_the_build_raises_nothing_and_has_no_error() -> None:
 def test_no_page_draws_the_strips_block() -> None:
     model = built().result.model
     strip_block = next(a.id for a in aspect_nodes(model).values() if a.key[-1] == "JB")
-    string = next(a.id for a in aspect_nodes(model).values() if a.key[-1] == "STRING")
     drawn = [{g.group for g in p.groups} for p in layout_of(model, Page).values() if any(g.group == strip_block for g in p.groups)]
-    assert drawn == [{strip_block, string}], "the strip's terminals stand on the card's page and its title names them (R958), no page of its own"
+    assert drawn == [{strip_block}], "the card's clamps are wired only in JB, so JB draws them (model-0442, R1855); the page title names JB alone"
 
 
 def test_the_parent_draws_nothing() -> None:

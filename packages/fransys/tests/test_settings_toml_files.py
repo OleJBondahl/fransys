@@ -148,8 +148,6 @@ def test_reference_toml_holds_todays_values() -> None:
     expected = {
         "page_prefix": "p",
         "cell_sep": ":",
-        "location_sign": "+",
-        "set_sep": ".",
         "width_sample": "/99.99",
     }
     assert _table("reference") == expected
@@ -186,7 +184,6 @@ def test_title_block_toml_holds_todays_values() -> None:
             "author",
             "page_title",
             "scope",
-            "sheet",
             "page",
         ],
         "band_mm": 20.0,
@@ -268,7 +265,6 @@ def test_words_toml_holds_todays_values() -> None:
         "author": "Author",
         "page_title": "Page title",
         "scope": "Scope",
-        "sheet": "Sheet",
         "page": "Page",
         "block_diagram": "Block diagram",
         "schematic": "Schematic",

@@ -7,13 +7,13 @@ model-0068, the wiring is the truth).
 from typing import TYPE_CHECKING, Final
 
 from fransys_model.checks._finding import ordered
-from fransys_model.derive.facts.plc_wiring import binding_wiring, plc_requests, request_functions
+from fransys_model.derive.facts.plc_wiring import binding_wiring, controller_signal_names, plc_requests, request_functions, requested_signal
 from fransys_model.derive.facts.roles import function_channel
 from fransys_model.kernel import Finding, natural_join
 from fransys_model.vocab.codes import finding
 from fransys_model.vocab.facets.plc import PlcBindingFacet
 from fransys_model.vocab.finding_ref import ref
-from fransys_model.vocab.tables import facets_of
+from fransys_model.vocab.tables import facets_of, functions
 
 if TYPE_CHECKING:
     from collections.abc import Collection
@@ -23,6 +23,7 @@ if TYPE_CHECKING:
 
 PLC_BINDING_SIGNAL_MISMATCH: Final[str] = "PLC_BINDING_SIGNAL_MISMATCH"
 PLC_BINDING_WIRING_MISMATCH: Final[str] = "PLC_BINDING_WIRING_MISMATCH"
+PLC_SIGNAL_NAME_TWICE: Final[str] = "PLC_SIGNAL_NAME_TWICE"
 
 
 def check_plc(model: Model) -> tuple[Finding, ...]:
@@ -38,15 +39,15 @@ def check_plc(model: Model) -> tuple[Finding, ...]:
         if request is None:
             continue
         channel = function_channel(model, binding.channel)
-        if channel is not None and channel.signal is request.signal:
+        if channel is not None and channel.signal is requested_signal(request):
             continue
         offered, other = (
             ("is not declared a channel", "a declared channel") if channel is None else (f"is {channel.signal.value}", channel.signal.value)
         )
         message = (
-            f"{ref(binding.subject)} asks for {request.signal.value} "
+            f"{ref(binding.subject)} asks for {requested_signal(request).value} "
             f"but its channel {ref(binding.channel)} {offered}: rewire it to a "
-            f"{request.signal.value} channel, or ask for {other}"
+            f"{requested_signal(request).value} channel, or ask for {other}"
         )
         subjects = (binding.id, binding.subject, binding.channel)
         found.append(finding(PLC_BINDING_SIGNAL_MISMATCH, subjects, message))
@@ -82,3 +83,20 @@ def _binding_findings(model: Model, binding: PlcBindingFacet) -> list[Finding]:
 def _refs(wired: Collection[Id[Function]]) -> str:
     """The references to several functions, sorted and joined with `, `."""
     return natural_join(ref(function) for function in wired)
+
+
+def check_plc_names(model: Model) -> tuple[Finding, ...]:
+    """Check no two bound field functions of one controller carry the same signal name (WAGO-CDP, R1820).
+
+    `PLC_SIGNAL_NAME_TWICE` (`ERROR`): the controller is the rack of the channel's module. A spare
+    channel's name and a placeholder are not signal names and never count.
+    """
+    all_functions = functions(model)
+    found: list[Finding] = []
+    for (_, name), pairs in controller_signal_names(model).items():
+        if len(pairs) == 1:
+            continue
+        where = natural_join(f"channel {ref(c)} of module {ref(all_functions[c].item)} (device {ref(d)})" for c, d in pairs)
+        message = f"{where} are all named {name!r} on one controller; rename one with .plc(signal, name)"
+        found.append(finding(PLC_SIGNAL_NAME_TWICE, tuple(f for pair in pairs for f in pair), message))
+    return ordered(found)

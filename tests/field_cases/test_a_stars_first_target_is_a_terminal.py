@@ -8,9 +8,9 @@ import fransys as fr
 from _model_build_cover import cabinet_document
 from fransys.colours import BU
 
+from fransys_model.derive import position_at
 from fransys_model.derive.designation import port_designation
 from fransys_model.derive.drawing_text import marker_text
-from fransys_model.derive.frame_position import position_at
 from fransys_model.derive.marker_text import marker_cell
 from fransys_model.layout import LinkMarker, Page, layout_of
 

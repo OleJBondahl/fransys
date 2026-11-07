@@ -96,10 +96,8 @@ from .designation_label import designation_holder, item_label, takes_parents_des
 from .device_chains import device_chains
 from .diagram_sheet_order import diagram_sheet_order_key
 from .document_pages import (
-    ItemPage,
     drawn_pages,
     is_replica_only_undrawn,
-    item_pages,
     ordered_pages,
     page_order_key,
 )
@@ -111,8 +109,8 @@ from .document_sheets import (
     document_sheets_of,
 )
 from .document_sizes import sizes_of
-from .document_subject import scope_path, subject_label
-from .drawing_text import unit_label
+from .document_subject import scope_path, subject_label, unit_label
+from .drawn_groups import function_group, function_moves, group_draws, group_members_drawn_in
 from .drawn_sheets import (
     cable_block_sizes,
     document_sheet,
@@ -201,7 +199,6 @@ from .far_pins import far_pins
 from .finding_errors import error_count, errors_of, refuses
 from .finding_marks import finding_marks
 from .frame_labels import frame_labels
-from .frame_position import position_at
 from .function_scopes import function_abroad, function_replicas, function_scopes
 from .group_role import group_role
 from .harness_blocks import (
@@ -234,7 +231,7 @@ from .jumper_lanes import (
     jumper_lane_count,
     jumper_lanes,
 )
-from .kinds import item_kind, item_role, signal_kind
+from .kinds import cdp_kind, item_kind, item_role, signal_kind
 from .library_grid import font_family, mm_per_division
 from .line_end_fact import connector_at_line_end
 from .line_fact import draws_as_line, line_conductors
@@ -266,7 +263,7 @@ from .open_cores import open_core_rows
 from .order import bom_sort_key, natural_key, plc_channel_tie
 from .order_box_sides import side_order_key
 from .order_groups import function_groups_in_order
-from .order_hint_findings import check_order_hint_cycle
+from .order_hint_findings import check_order_hint_cycle, check_order_hint_draws_nothing
 from .order_placements import function_placements
 from .overview_field import field_devices, field_fold
 from .overview_fold import fold_level
@@ -305,10 +302,10 @@ from .overview_tree import (
 )
 from .overview_view_rows import overview_units, overview_view_rows
 from .overview_views import signal_lens, unit_matrix
-from .page_destination import page_destination, sheet_text, sheet_title_text
+from .page_destination import ItemPage, item_pages, page_destination, sheet_title_text
 from .page_headings import continued_heading, page_headings, preset_headings
 from .page_presets import PRESET_PAGES, document_page_kinds, page_kinds, page_preset
-from .page_reference_text import page_reference_text
+from .page_reference_text import page_reference_text, pdf_page, position_at
 from .page_references import references_off_document
 from .page_titles import page_title, page_title_forms, short_title
 from .pairing import BoxPair, box_pairs
@@ -491,6 +488,7 @@ from .rows_overview_view import ViewBox, ViewLine, ViewMember, ViewRows
 from .rows_page import ListKey, PageForm, PagePreset
 from .rows_pin_views import PinMate, PinView
 from .rows_plc import (
+    CdpChannel,
     CdpRackModule,
     ChannelScaling,
     LensChannel,
@@ -532,11 +530,10 @@ from .rows_sheet_pages import (
 from .schematic_subject import has_schematic_subject
 from .series_pairs import series_pairs
 from .series_parallel import series_parallel
-from .sheet_forms import set_page_text, sheet_counter_text
 from .sheet_frame import sheet_frame
 from .sheets import diagram_sheets, sheets
 from .sideless_pins import SidelessPins, sideless_pins
-from .stands import drawn_stands, hidden_pins, stands
+from .stands import drawn_stands, hidden_pins, rail_drawn_by, stands
 from .stub_far import stub_far
 from .stub_text import stub_text_at
 from .supply_share import supply_share
@@ -581,6 +578,7 @@ __all__ = [
     "CableRun",
     "Carried",
     "CarriedReason",
+    "CdpChannel",
     "CdpRackModule",
     "ChainCandidate",
     "ChainHop",
@@ -777,6 +775,7 @@ __all__ = [
     "cable_runs",
     "cable_title",
     "carried_functions",
+    "cdp_kind",
     "cell_parts",
     "cell_text",
     "changeover_functions",
@@ -785,6 +784,7 @@ __all__ = [
     "channel_signal",
     "channel_takes",
     "check_order_hint_cycle",
+    "check_order_hint_draws_nothing",
     "check_unprinted_sets",
     "child_items",
     "coil_cells",
@@ -883,12 +883,14 @@ __all__ = [
     "function_abroad",
     "function_block",
     "function_designation",
+    "function_group",
     "function_groups_in_order",
     "function_is_idle_terminal",
     "function_is_loose",
     "function_is_reached",
     "function_is_unused",
     "function_item",
+    "function_moves",
     "function_operating",
     "function_placements",
     "function_poles",
@@ -901,6 +903,8 @@ __all__ = [
     "functions",
     "gives_energy",
     "gone_or_moved",
+    "group_draws",
+    "group_members_drawn_in",
     "group_role",
     "harness_cables",
     "harness_cables_for",
@@ -1025,6 +1029,7 @@ __all__ = [
     "part_function_rows",
     "part_rating",
     "part_records",
+    "pdf_page",
     "pdf_texts",
     "physical_nets",
     "pin_lines",
@@ -1072,6 +1077,7 @@ __all__ = [
     "project_facts",
     "prospective_fault",
     "rack_modules_for_cdp",
+    "rail_drawn_by",
     "rail_pairs",
     "rail_phase_problem",
     "rail_row",
@@ -1102,13 +1108,10 @@ __all__ = [
     "seed_pins",
     "series_pairs",
     "series_parallel",
-    "set_page_text",
     "set_unit",
-    "sheet_counter_text",
     "sheet_frame",
     "sheet_index_rows",
     "sheet_key_text",
-    "sheet_text",
     "sheet_title_text",
     "sheets",
     "short_title",

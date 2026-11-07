@@ -3,6 +3,7 @@
 from typing import TYPE_CHECKING, Final
 
 from fransys_model.derive.designation_label import item_label
+from fransys_model.derive.facts.plc_wiring import requested_signal
 from fransys_model.derive.facts.roles import plc_channel_facets
 from fransys_model.vocab.codes import finding
 from fransys_model.vocab.tables import functions
@@ -45,7 +46,7 @@ def ambiguous_findings(
                 PLC_REQUEST_AMBIGUOUS,
                 (request.id, request.subject, *channels),
                 f"{_label(model, all_functions[request.subject])} asks for "
-                f"{request.signal.value} as {request.signal_name!r}, but its wiring ties "
+                f"{requested_signal(request).value} as {request.signal_name!r}, but its wiring ties "
                 f"channels {names}: wire it to one channel directly, or free the others",
             )
         )

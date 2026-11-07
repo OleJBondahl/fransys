@@ -10,7 +10,7 @@ lazy from fransys_model.kernel import Finding, Model
 
 from .designation import printed_designation
 from .document_sets import set_unit
-from .drawing_text import unit_label
+from .document_subject import unit_label
 from .facts.unit_index import item_unit
 from .lookups import item_location
 from .order import in_designation_order

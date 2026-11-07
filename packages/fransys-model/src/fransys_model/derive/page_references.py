@@ -3,7 +3,7 @@
 from typing import Any
 lazy from collections.abc import Mapping
 
-from fransys_model.derive.frame_position import location_path, location_prefix
+from fransys_model.derive.page_reference_text import far_prefix
 from fransys_model.derive.printed_sets import document_drawing_sets
 from fransys_model.derive.rows_readability import OffDocumentReference
 from fransys_model.layout import DrawingSet, LinkMarker, Page, layout_of
@@ -23,14 +23,12 @@ def _documents_of_sets(model: Model) -> dict[Id[DrawingSet], set[Id[Any]]]:
 
 
 def _off_document(model: Model, own: Page, target: Page, printed: Mapping[Id[DrawingSet], set[Id[Any]]]) -> bool:
-    """Whether `target` is off the document that prints `own`, and the text names no location."""
+    """Whether `target` is off the document that prints `own`, and the text names no document."""
     if own.drawing_set == target.drawing_set or not printed[own.drawing_set]:
         return False
     if printed[own.drawing_set] & printed[target.drawing_set]:
         return False
-    sets = layout_of(model, DrawingSet)
-    here, there = (location_path(model, sets[p.drawing_set].location) for p in (own, target))
-    return not location_prefix(here, there)
+    return not far_prefix(model, own, target)
 
 
 def references_off_document(model: Model) -> tuple[OffDocumentReference, ...]:
@@ -38,7 +36,7 @@ def references_off_document(model: Model) -> tuple[OffDocumentReference, ...]:
 
     A reference is a link marker with its partner. It
     is off the document when no document prints both its page's drawing set and its target's.
-    Its text names the other document when it prints a location path (`location_prefix`).
+    Its text names the other document by its `scope_path`, so it names none only when that is empty.
     """
     pages, markers = layout_of(model, Page), layout_of(model, LinkMarker)
     printed = _documents_of_sets(model)

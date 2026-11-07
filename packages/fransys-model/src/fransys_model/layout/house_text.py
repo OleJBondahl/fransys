@@ -25,14 +25,12 @@ __all__ = [
 
 @record(kind="layout.reference_text", singleton=True)
 class ReferenceText:
-    """The `[reference]` table: the signs of a printed reference, `+A1p3:B2`, and a width sample."""
+    """The `[reference]` table: the signs of a printed reference, `p3:B2`, and a width sample."""
 
     id: Id[ReferenceText]
     key: AuthoringKey
     page_prefix: str
     cell_sep: str
-    location_sign: str
-    set_sep: str
     width_sample: str
     ext: frozendict[str, Value] = frozendict()
 

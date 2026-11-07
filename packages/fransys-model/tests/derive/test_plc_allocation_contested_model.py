@@ -10,8 +10,12 @@ from test_plc_allocation_wired_model import _request
 
 from fransys_model.derive.numbering_pins import name_findings
 from fransys_model.derive.passes._plc_contested import PLC_CHANNEL_CONTESTED
+from fransys_model.derive.passes._plc_own import PLC_CHANNEL_HAS_SETTINGS
 from fransys_model.derive.passes.plc_allocation import PLC_REQUEST_UNSERVABLE, allocate_plc
+from fransys_model.kernel import Id, make_id
 from fransys_model.vocab.enums import SignalType
+from fransys_model.vocab.facets.plc import PlcRequestFacet
+lazy from fransys_model.vocab.core import Function
 
 
 def test_two_requests_wired_to_one_channel_give_one_finding_and_no_binding() -> None:
@@ -68,3 +72,35 @@ def test_two_wrong_kind_requests_are_not_contested_and_go_to_the_free_queue() ->
     assert PLC_CHANNEL_CONTESTED not in {f.code for f in findings}
     assert {f.subjects[1] for f in findings} == {first, second}
     assert ch2 not in {s for f in findings for s in f.subjects}
+
+
+def _spare(plant: Plant, channel: Id[Function]) -> None:
+    """The channel carries its own settings: a name and `configured=False`."""
+    key = ("spare", "settings")
+    plant.add(
+        PlcRequestFacet(id=make_id(PlcRequestFacet, key), key=key, subject=channel, signal=None, signal_name="spare", priority=0, configured=False)
+    )
+
+
+def test_a_channel_with_its_own_settings_is_never_served_to_a_request() -> None:
+    plant = Plant()
+    unit = plant.unit("unit-u", name="unit U")
+    ch1, ch2 = _site(plant, Site("rack-u", "mod-u", "U1", 2, unit))
+    _spare(plant, ch1)
+    request = _request(plant, "dev-1", unit)
+    model, findings = allocate_plc(plant.model())
+    assert findings == ()
+    assert _bound(model) == {request: ch2}
+
+
+def test_a_request_wired_to_a_channel_with_its_own_settings_is_an_error_naming_both() -> None:
+    plant = Plant()
+    unit = plant.unit("unit-u", name="unit U")
+    ch1, _ch2 = _site(plant, Site("rack-u", "mod-u", "U1", 2, unit))
+    _spare(plant, ch1)
+    request = _request(plant, "dev-1", unit, to=plant.port(ch1, "1"))
+    model, findings = allocate_plc(plant.model())
+    assert _bound(model) == {}
+    (found,) = findings
+    assert (found.code, found.subjects) == (PLC_CHANNEL_HAS_SETTINGS, (request, ch1))
+    assert "wire the device to a channel without settings" in found.message

@@ -5,7 +5,7 @@ across a body meet with positive area. `OUT_OF_PAGE`: a body, a text or a wire v
 the content box or touches its edge (R746). `WIRE_OVER_MARKER`: a wire or a dot meets a reference marker's box.
 `WIRE_NOT_ORTHOGONAL`: a wire has a diagonal segment. A unit frame is not
 a body and a text is not part of an outline. Pure: reads `Drawing` values only. One finding per
-code and page, naming up to `_NAMED` of its members.
+member (a body pair, a wire and what it meets, a text).
 """
 
 from itertools import combinations
@@ -29,7 +29,6 @@ if TYPE_CHECKING:
 
 __all__ = ["drawing_invariant_findings"]
 
-_NAMED = 3
 XY = tuple[int, int]
 _INFO = {info.code: info for info in FINDING_CODES}
 
@@ -73,10 +72,9 @@ def outside(drawing: Drawing) -> list[str]:
     return found + texts
 
 
-def _finding(code: str, page: Id[Page], members: list[str]) -> Finding:
-    named = ", ".join(members[:_NAMED])
-    more = f" and {len(members) - _NAMED} more" if len(members) > _NAMED else ""
-    return _INFO[code].finding((page,), f"{len(members)} on one page: {named}{more}")
+def _findings(code: str, page: Id[Page], members: list[str]) -> list[Finding]:
+    """One finding per member, so a finding count is a member count; the message names the member."""
+    return [_INFO[code].finding((page,), member) for member in members]
 
 
 def _page_findings(page: Id[Page], part: PagePart) -> list[Finding]:
@@ -87,10 +85,10 @@ def _page_findings(page: Id[Page], part: PagePart) -> list[Finding]:
     out = [*outside(drawing), *stray(part, box)]
     bent = crooked(part)
     return [
-        *([_finding("OVERLAP", page, over)] if over else []),
-        *([_finding("WIRE_OVER_MARKER", page, marked)] if marked else []),
-        *([_finding("OUT_OF_PAGE", page, out)] if out else []),
-        *([_finding("WIRE_NOT_ORTHOGONAL", page, bent)] if bent else []),
+        *_findings("OVERLAP", page, over),
+        *_findings("WIRE_OVER_MARKER", page, marked),
+        *_findings("OUT_OF_PAGE", page, out),
+        *_findings("WIRE_NOT_ORTHOGONAL", page, bent),
     ]
 
 

@@ -12,7 +12,7 @@ from fransys.colours import BK
 if TYPE_CHECKING:
     from pathlib import Path
 
-_SHEET = re.compile(r'Sheet [0-9.]+: ([^"\\]*)')
+_SHEET = re.compile(r'"[0-9]+: ([^"\\]*)')
 
 
 class _Io(NamedTuple):

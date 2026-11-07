@@ -4,7 +4,6 @@ The canary design (several drawing sets) is built and written through the public
 destinations are read back from the written PDF with pypdfium2, and the landing page's own text
 """
 
-from collections import Counter
 from typing import Any
 lazy from pathlib import Path
 
@@ -14,7 +13,7 @@ import pytest
 from pypdfium2 import raw
 from test_reader_order import _design_and_rest, _other_documents
 
-from fransys_model.derive import page_destination
+from fransys_model.derive import page_destination, pdf_page
 from fransys_model.layout import DrawingSet, Page, layout_of
 
 
@@ -68,11 +67,9 @@ def test_every_drawing_page_of_the_example_is_a_destination_landing_on_that_page
     (pdf_path,) = (root / "out").glob("*-C1.pdf")
     pdf = pypdfium2.PdfDocument(pdf_path)
     try:
-        totals = Counter(page.drawing_set for page in pages)
         for page in pages:
             index = _landing(pdf, page_destination(result.model, page))
             assert index is not None, page_destination(result.model, page)
-            text = pdf[index].get_textpage().get_text_range()
-            assert f"{page.number} / {totals[page.drawing_set]}" in text
+            assert index == pdf_page(result.model, page) - 1
     finally:
         pdf.close()

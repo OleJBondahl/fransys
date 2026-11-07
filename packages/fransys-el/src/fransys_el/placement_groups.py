@@ -3,10 +3,8 @@
 from collections import Counter
 from typing import TYPE_CHECKING
 
-from fransys_model.derive import effective_placement, function_item, node_label
+from fransys_model.derive import function_group, node_label
 from fransys_model.kernel import DIGEST_CACHE_SIZE, digest_cached, render_id
-from fransys_model.layout import GroupHint, layout_of
-from fransys_model.vocab import Aspect
 
 if TYPE_CHECKING:
     from fransys_model.kernel import Id, Model
@@ -38,8 +36,5 @@ def group_nodes(model: Model) -> list[Id[AspectNode]]:
 
 def group_of(model: Model, function: Id[Function]) -> str | None:
     """The label of the group `function` is drawn in: its `GroupHint`, else its item's placement."""
-    for hint in layout_of(model, GroupHint).values():
-        if hint.function == function:
-            return label_of(model, hint.group)
-    node = effective_placement(model, function_item(model, function), Aspect.FUNCTION)
+    node = function_group(model, function)
     return None if node is None else label_of(model, node)

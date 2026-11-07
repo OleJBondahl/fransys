@@ -6,7 +6,7 @@ from types import SimpleNamespace
 from typing import Any
 
 from fransys_layout.core import Box
-from fransys_layout.core.clearance import Keep, pin_points, through
+from fransys_layout.core.clearance import Keep, pin_points, through_keeps
 from fransys_layout.core.outputs import PinXY, Placed
 from fransys_layout.core.route_env import hard_keeps
 
@@ -26,7 +26,7 @@ ENV: Any = SimpleNamespace(
 
 def _bodies_hit(env: Any, own: frozenset[str], xs: tuple[int, int], ys: tuple[int, int]) -> tuple[str, ...]:
     probe = Box(min(xs), min(ys), max(xs) - min(xs), max(ys) - min(ys))
-    return tuple(dict.fromkeys(k.owner for k in through(probe, hard_keeps(env), (), own, pin_points(env.placed))))
+    return tuple(dict.fromkeys(k.owner for k in through_keeps(probe, hard_keeps(env), (), own, pin_points(env.placed))))
 
 
 def test_a_probe_in_a_foreign_footprint_but_off_its_body_hits_nothing() -> None:
@@ -53,5 +53,5 @@ def test_the_merged_set_carries_the_pin_points_a_run_may_end_on() -> None:
     placed = {"A": Placed("A", 1, 0, 0, "R0", Box(0, 0, 10, 10), Box(-4, -4, 18, 18), (PinXY("1", 0, 10),))}
     env: Any = SimpleNamespace(placed=placed, obstacles=())
     probe = Box(0, 4, 0, 6)  # the left edge, from y 4 to the pin at y 10
-    assert through(probe, hard_keeps(env), ((0, 10),), frozenset(), pin_points(env.placed)) == ()
-    assert [k.owner for k in through(probe, hard_keeps(env), ((0, 10),), frozenset(), {})] == ["A"]
+    assert through_keeps(probe, hard_keeps(env), ((0, 10),), frozenset(), pin_points(env.placed)) == ()
+    assert [k.owner for k in through_keeps(probe, hard_keeps(env), ((0, 10),), frozenset(), {})] == ["A"]

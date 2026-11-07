@@ -18,7 +18,6 @@ LEGACY_FLAT = (
     "overview_text",
     "page_destination",
     "plc_channel_text",
-    "sheet_forms",
     "stub_text",
 )
 LEGACY_FLAT_CEILING = 8

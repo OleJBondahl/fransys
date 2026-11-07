@@ -5,7 +5,7 @@ from typing import Any
 
 from plant import Plant
 
-from fransys_model.checks.scaling import SCALING_NOT_ANALOGUE, SCALING_RANGE_INVALID, SCALING_UNIT_EMPTY, check_scaling
+from fransys_model.checks.scaling import SCALING_NOT_ANALOGUE, SCALING_RANGE_INVALID, check_scaling
 from fransys_model.checks.structure import (
     ASPECT_CROSS_PARENT,
     ASPECT_CYCLE,
@@ -200,7 +200,7 @@ def test_a_bridge_counts_no_conductor_on_a_terminal_point() -> None:
 # ---- SCALING_* (R1753, model-0425) --------------------------------------------------------
 
 
-def _scaled(signal: SignalType | None, *, unit: str = "%", raw: tuple[int, int] = (4, 20), eng: tuple[str, str] = ("0", "100")) -> Model:
+def _scaled(signal: SignalType | None, *, unit: str | None = "%", raw: tuple[int, int] = (4, 20), eng: tuple[str, str] = ("0", "100")) -> Model:
     item = _item("b1")
     function = Function(id=make_id(Function, ("b1", "f")), key=("b1", "f"), item=item.id, template=None, name="f", kind=FunctionKind.GENERIC)
     scale = ScalingFacet(
@@ -252,7 +252,6 @@ def test_a_scaled_digital_or_requestless_function_is_not_analogue() -> None:
     assert "request it with fr.AI" in next(iter(check_scaling(_scaled(None)))).message
 
 
-def test_a_blank_or_multi_line_unit_is_refused_and_every_analogue_signal_passes() -> None:
-    assert _scaling_codes(_scaled(SignalType.RTD, unit="  ")) == [SCALING_UNIT_EMPTY]
-    assert _scaling_codes(_scaled(SignalType.AO_VOLTAGE, unit="a\nb")) == [SCALING_UNIT_EMPTY]
+def test_every_analogue_signal_passes_and_a_scale_with_no_unit_does_too() -> None:
+    assert _scaling_codes(_scaled(SignalType.AI_CURRENT, unit=None)) == []
     assert all(_scaling_codes(_scaled(s)) == [] for s in (SignalType.AI_VOLTAGE, SignalType.AO_CURRENT, SignalType.RTD))

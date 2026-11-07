@@ -18,6 +18,7 @@ from fransys_model.derive import (
     ALL_VALIDATORS,
     allocate_plc,
     check_order_hint_cycle,
+    check_order_hint_draws_nothing,
     check_unprinted_sets,
     document_sheets_of,
     has_documents,
@@ -239,6 +240,7 @@ def _validated(model: Model, earlier: tuple[Finding, ...]) -> tuple[Finding, ...
     """`earlier` and every validator's findings, each named."""
     found = [finding for validator in ALL_VALIDATORS for finding in validator(model)]
     found.extend(check_order_hint_cycle(model))
+    found.extend(check_order_hint_draws_nothing(model))
     return name_findings(model, (*earlier, *found))
 
 

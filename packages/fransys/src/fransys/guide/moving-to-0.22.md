@@ -67,10 +67,24 @@ Each row is a name that 0.22 removed. A removed attribute raises an error that n
 | <a id="parts-schema-2"></a>Part schema 1 (`schema = 1`) | `schema = 2`; convert with `python -m fransys migrate-parts DIR` |
 | <a id="terminal-point-overfilled"></a>`TERMINAL_POINT_OVERFILLED` (new in 0.22, no 0.21 spelling) | Set `conductors_per_clamp = 2` in the terminal part's `[connection]` table, or use a twin part, or bridge a second terminal |
 
+## New in 0.22.9
+
+- The Wago rack XML `<Modules>` follows the CDP reference, so every consumer's file changes. A module is named `<order>_<channels><kind>_<letter>` with the kind DI, AI, DO or AO (an RTD is AI, a relay output DO, an analogue output AO). A module whose channels mix kinds is named by the bare order number. A channel is named by its bare signal name, else `<kind><Nr>` (DO0, DI14). An analogue channel has no `Nr`. A mixed module lists outputs first and restarts `Nr` for each direction (decision wago-0003).
+- New spellings: `.plc(signal, name, routing=)`, `.plc(name=)` and `.plc(configured=False)` on a module's channel handle, `.scale(raw=, eng=)` with no unit, and `.scale(...)` on a spare analogue channel. `SCALING_UNIT_EMPTY` is gone: a blank unit raises at the call. `PLC_SIGNAL_NAME_TWICE` is new.
+- Page text: pages replace sheets. The title block shows "page m of N" and has no sheet cell. A reference prints the page number alone (`p<n>:<cell>`), led by the far PDF's scope path across PDFs. The PDF order is the cover, the drawings, then the index and the lists. Drawings can move: the wider reserved reference text re-lays out some pages.
+- listing_version 8: no listing text moves. A stored model of schema 24 is refused: rebuild it. A wire made inside a `d.function` block now carries that block. A pin wired only in one other block that draws a function of its own is drawn there. A terminal, supply, connector or PLC channel stays with its item (decision model-0442).
+- `OVERLAP` now also counts text resting on a wire's edge and diagonal runs. A new `OVERLAP` WARNING is a Fransys looks defect: report it.
+- Fixed: phantom loops around a part's internal links with no conductor (KI-732), and a trunk drawn through a neighbouring card (KI-731).
+- Fixed: a connection lost when a net crossed a page cut twice, as with two output cards (KI-739), and a reference leg starting inside its trunk (KI-736).
+
+### Known issues in 0.22.9
+
+- `MARKER_UNPLACED` on a 40-circuit demo-flags build leaves one tag marker unplaced at two salts. It is old (KI-745) and fixed in 0.23.
+
 ## New in 0.22.8
 
 - One `terminals.csv` holds every terminal strip, and one `connectors.csv` every board. They replace the files per strip or board: read the one file instead (decision model-0437).
-- `[export] hide_pe = true` leaves the PE rail's terminals, wires and pins off every drawing sheet; the lists keep them. Off by default: drawings do not change (decisions model-0435, el-0119).
+- `[export] hide_pe = true` leaves the PE rail's wires and the PE symbols on device pins, with their markings, off every drawing sheet; the lists keep them. A flagged PE terminal never draws. Off by default: drawings do not change (decisions model-0435, el-0119).
 
 ## New in 0.22.7
 

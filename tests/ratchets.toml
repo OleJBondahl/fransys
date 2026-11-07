@@ -81,11 +81,11 @@ UP037 = 2
 # R1193 LEDGER-INTEGRATION: mcc 0 -> 9, the marker members of drawing_marker_overlap (KI-457)
 # SUPPLY-SLOT (R1619, TEXT-BOX-MEASURED): OVERLAP now sees slot ink, a looks rise: machine_panel 0 -> 2, panel_di16p 0 -> 1
 distribution_board = 0
-machine_panel = 3  # R1771 (looks class, KI-688): the N5c below-branch card reserve; was 1, before that 4 (R1730)
-mcc = 0  # R1730 (looks class): as machine_panel; was 3
+machine_panel = 0  # ONE-PAGE (R1830): the wider reserved marker lets the cards clear; measured 0 again with OVERLAP-CHECK (R1828) on the merged tree; was 3 (R1771, KI-688), before that 4 (R1730)
+mcc = 20  # R1828 OVERLAP-CHECK (looks class, checker-only, owner 10-29 rule): edge runs and diagonals now count, one per member, mcc pages byte-identical to main; was 0, before that 3 (R1730)
 # R1165: R1138 looks trade (OVERLAP -1, WIRE_OVER_MARKER +1)
-panel_di16p = 3  # R1771 (looks class, KI-688): the N5c below-branch card reserve; was 1
-remote_io = 6  # R1822 (looks class, KI-711): the leg stands past a footprint edge on its lane, its tag meets a reference marker; was 0
+panel_di16p = 0  # ONE-PAGE (R1830): as machine_panel; was 3. R1771 (looks class, KI-688): the N5c below-branch card reserve; was 1
+remote_io = 7  # ONE-PAGE (R1830, looks class): the widest reference text now names the far document; was 6, before R1822 0; R1822 (looks class, KI-711): the leg stands past a footprint edge on its lane, its tag meets a reference marker; was 0
 skid = 0
 
 # MARKER-FREE-SIDE (spec 4.4, note 6): the wire and dot members that meet a reference marker's box,
@@ -110,7 +110,7 @@ machine_panel = 0
 mcc = 10  # R1730 (looks class): the cut flags the handed link it plans a tag for; was 16
 # R1165: R1138 looks trade (OVERLAP -1, WIRE_OVER_MARKER +1)
 panel_di16p = 0  # R1693 and R1715 (looks falls, KI-636): was 1
-remote_io = 0
+remote_io = 2  # ONE-PAGE (R1830, looks class): the wider reserved marker meets two wires; was 0
 skid = 0
 
 # KI-017 (R867, R873): the OVERLAP members that name a marker (marker over marker, symbol or text), counted once per pair.
@@ -124,7 +124,7 @@ machine_panel = 0  # R1730 (looks class): the cut flags the handed link it plans
 mcc = 0  # R1730 (looks class): as machine_panel; was 3
 # R1165: R1138 looks trade (OVERLAP -1, WIRE_OVER_MARKER +1)
 panel_di16p = 0
-remote_io = 6  # R1822 (looks class, KI-711): the leg stands past a footprint edge on its lane, its tag meets a reference marker; was 0
+remote_io = 7  # ONE-PAGE (R1830, looks class): the widest reference text now names the far document; was 6, before R1822 0; R1822 (looks class, KI-711): the leg stands past a footprint edge on its lane, its tag meets a reference marker; was 0
 skid = 0
 
 # MARKER_UNPLACED counts findings (A9: it ends 0 or goes to the owner page); 0 on every case but

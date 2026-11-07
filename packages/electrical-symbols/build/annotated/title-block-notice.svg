@@ -5,7 +5,7 @@
 <line x1="0" y1="10" x2="74" y2="10" stroke-width="0.2"/>
 <line x1="42.75" y1="0" x2="42.75" y2="20" stroke-width="0.2"/>
 <line x1="56.5" y1="0" x2="56.5" y2="20" stroke-width="0.2"/>
-<line x1="65.25" y1="0" x2="65.25" y2="20" stroke-width="0.2"/>
+<line x1="65.25" y1="0" x2="65.25" y2="10" stroke-width="0.2"/>
 <line x1="74" y1="0" x2="74" y2="20" stroke-width="0.2"/>
 <line x1="11.25" y1="10" x2="11.25" y2="20" stroke-width="0.2"/>
 <line x1="17.75" y1="10" x2="17.75" y2="20" stroke-width="0.2"/>
@@ -2323,8 +2323,8 @@
 <text class="slot-id" x="1" y="12.275" font-size="0.3" text-anchor="start" fill="#06c" stroke="none" font-family="sans-serif">label.customer</text>
 <rect class="slot-box" x="43.75" y="2.375" width="11.75" height="1.75" fill="#06c" fill-opacity="0.12" stroke="#06c" stroke-width="0.03"/>
 <text class="slot-id" x="43.75" y="2.275" font-size="0.3" text-anchor="start" fill="#06c" stroke="none" font-family="sans-serif">label.number</text>
-<rect class="slot-box" x="66.25" y="12.375" width="6.75" height="1.75" fill="#06c" fill-opacity="0.12" stroke="#06c" stroke-width="0.03"/>
-<text class="slot-id" x="66.25" y="12.275" font-size="0.3" text-anchor="start" fill="#06c" stroke="none" font-family="sans-serif">label.page</text>
+<rect class="slot-box" x="57.5" y="12.375" width="15.5" height="1.75" fill="#06c" fill-opacity="0.12" stroke="#06c" stroke-width="0.03"/>
+<text class="slot-id" x="57.5" y="12.275" font-size="0.3" text-anchor="start" fill="#06c" stroke="none" font-family="sans-serif">label.page</text>
 <rect class="slot-box" x="18.75" y="12.375" width="23" height="1.75" fill="#06c" fill-opacity="0.12" stroke="#06c" stroke-width="0.03"/>
 <text class="slot-id" x="18.75" y="12.275" font-size="0.3" text-anchor="start" fill="#06c" stroke="none" font-family="sans-serif">label.page_title</text>
 <rect class="slot-box" x="57.5" y="2.375" width="6.75" height="1.75" fill="#06c" fill-opacity="0.12" stroke="#06c" stroke-width="0.03"/>
@@ -2333,16 +2333,14 @@
 <text class="slot-id" x="66.25" y="2.275" font-size="0.3" text-anchor="start" fill="#06c" stroke="none" font-family="sans-serif">label.revision_date</text>
 <rect class="slot-box" x="43.75" y="12.375" width="11.75" height="1.75" fill="#06c" fill-opacity="0.12" stroke="#06c" stroke-width="0.03"/>
 <text class="slot-id" x="43.75" y="12.275" font-size="0.3" text-anchor="start" fill="#06c" stroke="none" font-family="sans-serif">label.scope</text>
-<rect class="slot-box" x="57.5" y="12.375" width="6.75" height="1.75" fill="#06c" fill-opacity="0.12" stroke="#06c" stroke-width="0.03"/>
-<text class="slot-id" x="57.5" y="12.275" font-size="0.3" text-anchor="start" fill="#06c" stroke="none" font-family="sans-serif">label.sheet</text>
 <rect class="slot-box" x="1" y="2.375" width="40.75" height="1.75" fill="#06c" fill-opacity="0.12" stroke="#06c" stroke-width="0.03"/>
 <text class="slot-id" x="1" y="2.275" font-size="0.3" text-anchor="start" fill="#06c" stroke="none" font-family="sans-serif">label.title</text>
 <rect class="slot-box" x="75" y="1" width="21.5" height="18" fill="#06c" fill-opacity="0.12" stroke="#06c" stroke-width="0.03"/>
 <text class="slot-id" x="75" y="0.9" font-size="0.3" text-anchor="start" fill="#06c" stroke="none" font-family="sans-serif">notice</text>
 <rect class="slot-box" x="43.75" y="5.125" width="11.75" height="2.5" fill="#06c" fill-opacity="0.12" stroke="#06c" stroke-width="0.03"/>
 <text class="slot-id" x="43.75" y="5.025" font-size="0.3" text-anchor="start" fill="#06c" stroke="none" font-family="sans-serif">number</text>
-<rect class="slot-box" x="66.25" y="15.125" width="6.75" height="2.5" fill="#06c" fill-opacity="0.12" stroke="#06c" stroke-width="0.03"/>
-<text class="slot-id" x="66.25" y="15.025" font-size="0.3" text-anchor="start" fill="#06c" stroke="none" font-family="sans-serif">page</text>
+<rect class="slot-box" x="57.5" y="15.125" width="15.5" height="2.5" fill="#06c" fill-opacity="0.12" stroke="#06c" stroke-width="0.03"/>
+<text class="slot-id" x="57.5" y="15.025" font-size="0.3" text-anchor="start" fill="#06c" stroke="none" font-family="sans-serif">page</text>
 <rect class="slot-box" x="18.75" y="15.125" width="23" height="2.5" fill="#06c" fill-opacity="0.12" stroke="#06c" stroke-width="0.03"/>
 <text class="slot-id" x="18.75" y="15.025" font-size="0.3" text-anchor="start" fill="#06c" stroke="none" font-family="sans-serif">page_title</text>
 <rect class="slot-box" x="57.5" y="5.125" width="6.75" height="2.5" fill="#06c" fill-opacity="0.12" stroke="#06c" stroke-width="0.03"/>
@@ -2351,8 +2349,6 @@
 <text class="slot-id" x="66.25" y="5.025" font-size="0.3" text-anchor="start" fill="#06c" stroke="none" font-family="sans-serif">revision_date</text>
 <rect class="slot-box" x="43.75" y="15.125" width="11.75" height="2.5" fill="#06c" fill-opacity="0.12" stroke="#06c" stroke-width="0.03"/>
 <text class="slot-id" x="43.75" y="15.025" font-size="0.3" text-anchor="start" fill="#06c" stroke="none" font-family="sans-serif">scope</text>
-<rect class="slot-box" x="57.5" y="15.125" width="6.75" height="2.5" fill="#06c" fill-opacity="0.12" stroke="#06c" stroke-width="0.03"/>
-<text class="slot-id" x="57.5" y="15.025" font-size="0.3" text-anchor="start" fill="#06c" stroke="none" font-family="sans-serif">sheet</text>
 <rect class="slot-box" x="1" y="5.125" width="40.75" height="2.5" fill="#06c" fill-opacity="0.12" stroke="#06c" stroke-width="0.03"/>
 <text class="slot-id" x="1" y="5.025" font-size="0.3" text-anchor="start" fill="#06c" stroke="none" font-family="sans-serif">title</text>
 <path class="anchor" d="M 73.8 1 L 74 0.8 L 74.2 1 L 74 1.2 Z" fill="#088" stroke="none"/>

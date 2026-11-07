@@ -1,0 +1,4 @@
+schema = 2
+name = "measure-parts"
+version = "0.1.0"
+description = "Invented parts for the analog-page field case."

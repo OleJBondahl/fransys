@@ -1,43 +1,68 @@
-"""The label of a drawing page's PDF named destination, one fact in one place (OVERVIEW O21).
+"""The label of a drawing page's PDF named destination and its outline entry, one fact in one place (OVERVIEW O21).
 
-It is `position_text`'s set-and-page form. The set is counted among its own unit's sets, never
-the design-wide number, so a unit's PDF reads nothing above it (layout-0177) and nesting moves
-no label. A block diagram sheet's label is `b<n>` (PAGES-INDEX); no label repeats in one PDF.
+Both print the page's number in its PDF, `pdf_page` (model-0436), so no label repeats in one PDF.
 """
 
+from collections import defaultdict
+
+from fransys_model.kernel import Id, value
+from fransys_model.layout import Page, sheet_format_of
+from fransys_model.layout.page_slices import page_members
+from fransys_model.vocab.tables import documents, functions
 lazy from fransys_model.kernel import Model
-lazy from fransys_model.layout import Page
+lazy from fransys_model.vocab.core import Item
 
-from .facts.house_settings import reference_text_of
-from .page_reference_text import page_reference_text
-from .rows_sheet import DiagramSheet
-from .set_rank import set_rank
-from .sheet_forms import diagram_text, set_page_text
+from .document_pages import drawn_pages
+from .export_names import document_export_name
+from .facts.house_settings import frame_form_of, reference_text_of
+from .frame_labels import cell_labels
+from .frame_position import position_text
+from .page_reference_text import page_reference_text, pdf_page
+lazy from .rows_sheet import DiagramSheet
 
-__all__ = ["page_destination", "sheet_text", "sheet_title_text"]
+__all__ = ["ItemPage", "item_pages", "page_destination", "sheet_title_text"]
 
 
 def page_destination(model: Model, sheet: Page | DiagramSheet) -> str:
-    """`p<k>.<page>`: the destination label of a page, `k` its set's rank; `b<n>` for a diagram."""
-    if isinstance(sheet, DiagramSheet):
-        return diagram_text(sheet).lower()
+    """`p<n>`: the destination label of a page, `n` its place in its PDF."""
     return page_reference_text(model, sheet)
 
 
-def sheet_text(model: Model, sheet: Page | DiagramSheet) -> str:
-    """The sheet number a sheet prints: `3`, `2.3` in a set past its unit's first, `B1`.
-
-    The destination label and a reference keep the set-and-page form `p1.3` (`set_page_text`).
-    """
-    if isinstance(sheet, DiagramSheet):
-        return diagram_text(sheet)
-    rank = set_rank(model, sheet)
-    if rank == 1:
-        return str(sheet.number)
-    return set_page_text(reference_text_of(model), rank, sheet.number)
-
-
 def sheet_title_text(model: Model, sheet: Page | DiagramSheet, title: str) -> str:
-    """`Sheet 3: Pump 1`: a sheet's outline entry text; with no title, `Sheet 3`."""
-    number = f"Sheet {sheet_text(model, sheet)}"
+    """`3: Pump 1`: a page's outline entry text; with no title, `3`."""
+    number = str(pdf_page(model, sheet))
     return f"{number}: {title}" if title else number
+
+
+@value
+class ItemPage:
+    """One drawing page that shows an item: the PDF, the page's destination and its text."""
+
+    file: str
+    destination: str
+    text: str
+
+
+def item_pages(model: Model) -> dict[Id[Item], tuple[ItemPage, ...]]:
+    """Every item with each drawing page of a whole-system write that draws one of its functions.
+
+    The file is the one `write` names the document's PDF; the text is `position_text` of the
+    page and the frame cell of the first membership row on it. Empty when the model has no document.
+    """
+    found: dict[Id[Item], dict[tuple[str, str], ItemPage]] = defaultdict(dict)
+    funcs = functions(model)
+    refs, frame = reference_text_of(model), frame_form_of(model)
+    for record in documents(model).values():
+        name = document_export_name(model, None, record)
+        for page in drawn_pages(model, record.id):
+            rows = sheet_format_of(model, page.sheet_format).frame_rows
+            destination = page_destination(model, page)
+            for member in page_members(model, page):
+                if member.function is None:
+                    continue
+                column, row = member.cell.column, member.cell.row
+                labels = cell_labels(frame, rows, column, row)
+                text = position_text(refs, pdf_page(model, page), labels)
+                item = funcs[member.function].item
+                found[item].setdefault((name, destination), ItemPage(file=name, destination=destination, text=text))
+    return {item: tuple(pages.values()) for item, pages in found.items()}

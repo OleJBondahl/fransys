@@ -598,7 +598,7 @@ def page_links(model):
     return dict.fromkeys(layout_of(model, Page), ())
 
 
-WORDS = {"notes": "Notes", "sheet": "Sheet", "title": "Title", "page": "Page", "bridge": "Bridge"}
+WORDS = {"notes": "Notes", "title": "Title", "page": "Page", "bridge": "Bridge"}
 REVISION_HEADERS = ("Revision", "Date", "Description", "Created", "Checked", "Approved")
 
 

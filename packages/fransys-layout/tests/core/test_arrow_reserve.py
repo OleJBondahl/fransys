@@ -255,9 +255,21 @@ def test_the_leg_of_a_one_lane_bundle_drops_at_the_arrow_one_marker_width_back_f
     pushed = Box(500 - grid - 20, 100 + grid, 60, 60)  # a footprint pushes the arrowed leg past the trunk end: it still starts at the last tap
     line = _must(trunk, 0, legs, OPTIONS, ([pushed], (), ARROWED, (), None))
     assert line[1][0] > 500
-    assert line[0] == (468, 100)
+    assert line[0] == (500, 100)
     past = 500 + MARKER_BOX.h + grid  # no arrow: the legs start at the trunk end
     assert leg_line(trunk, 0, legs, OPTIONS) == ((500, 100), (past, 100), (past, 100 + grid))
+
+
+def test_a_leg_standing_at_or_past_its_trunk_end_starts_at_the_trunk_end() -> None:
+    """R1861: a leg never starts inside its own trunk's run, so a stand past the end draws no undotted overlap."""
+    from fransys_layout.core.outputs import Trunk
+
+    trunk = Trunk("f", 1, 100, 40, 500, 1, 0, ((40, 500),))
+    legs = ((0, PinRef("a", "out")),)
+    pushed = Box(500 - OPTIONS.wiring_grid - 20, 100 + OPTIONS.wiring_grid, 60, 60)  # a footprint pushes the arrowed leg's stand past the end
+    start, stand, _ = _must(trunk, 0, legs, OPTIONS, ([pushed], (), ARROWED, (), None))
+    assert stand[0] > trunk.x1
+    assert start == (trunk.x1, 100)
 
 
 def test_a_leg_starts_at_its_lanes_end_so_it_draws_no_run_over_a_lane_that_runs_on() -> None:

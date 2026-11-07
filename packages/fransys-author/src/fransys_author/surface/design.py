@@ -109,11 +109,11 @@ class Design(Devices, Details, Strips, Series, Pairs, Coverage, Units):
             msg = f"function {name!r} inside {self._function!r}: function blocks do not nest"
             raise AuthorError(msg)
         group = self._engine.group(name, text)
-        self._function, self._group = name, group
+        self._function, self._group, self._engine._block = name, group, group.id
         try:
             yield group
         finally:
-            self._function = self._group = None
+            self._function = self._group = self._engine._block = None
 
     def draft(self) -> Draft:
         """The records written so far.

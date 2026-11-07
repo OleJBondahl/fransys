@@ -1,11 +1,11 @@
-"""PT3's short form and SI3's sheet texts: the pure parts of the page title (PAGES-TITLES)."""
+"""PT3's short form and the title forms: the pure parts of the page title (PAGES-TITLES)."""
 
 import pytest
-from derive_helpers import frozen_with_library, house_record
+from derive_helpers import frozen_with_library
 
-from fransys_model.derive import page_title_forms, set_page_text, short_title
+from fransys_model.derive import page_title_forms, short_title
 from fransys_model.kernel import Draft, Origin, make_id
-from fransys_model.layout import DrawingSet, Page, PageGroup, PageRole, ReferenceText
+from fransys_model.layout import DrawingSet, Page, PageGroup, PageRole
 from fransys_model.vocab import Aspect, AspectNode
 
 MODEL = frozen_with_library(Draft())
@@ -32,10 +32,6 @@ MODEL = frozen_with_library(Draft())
 )
 def test_the_short_form_prints_shared_leading_words_once(entries: tuple[str, ...], short: str | None) -> None:
     assert short_title(MODEL, entries) == short
-
-
-def test_a_set_page_text_is_set_dot_page() -> None:
-    assert set_page_text(house_record(ReferenceText), 2, 3) == "2.3"
 
 
 def test_a_title_names_each_text_once_across_its_groups() -> None:

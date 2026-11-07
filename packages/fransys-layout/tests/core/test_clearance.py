@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from fransys_layout.core.clearance import Keep, clear, closed_cells, fan_own, own_end, reach, through
+from fransys_layout.core.clearance import Keep, clear, closed_cells, fan_own, own_end, reach, through, through_keeps
 from fransys_layout.core.flow_values import Attach, Fan
 from fransys_layout.core.values import Box, PinRef
 
@@ -109,12 +109,23 @@ def _body() -> tuple[Keep, ...]:
 
 def test_a_run_meets_a_body_only_at_its_own_end_pin() -> None:
     body, pins = _body(), {"T": ((8, 0), (8, 16), (16, 16))}
-    assert through(Box(8, 0, 0, 0), body, ((8, 0),), frozenset(), pins) == ()  # a point on its own pin
-    assert through(Box(8, 0, 0, 16), body, ((8, 0), (8, 40)), frozenset({"T"}), pins) == body  # the interior
-    assert through(Box(0, 16, 16, 0), body, ((0, 16),), frozenset(), pins) == body  # an edge run over the foreign pin (8, 16)
-    assert through(Box(0, 16, 16, 0), body, ((16, 16),), frozenset(), {"T": ((16, 16),)}) == ()  # an edge run into its own pin
-    assert through(Box(0, 16, 16, 0), body, ((0, 16),), frozenset(), {"T": ((8, 0),)}) == body  # the end is no pin of the body
-    assert through(Box(16, 16, 8, 0), body, ((24, 16),), frozenset(), {"T": ((8, 0),)}) == ()  # a point on a foreign corner is looks (R1164)
+    assert through_keeps(Box(8, 0, 0, 0), body, ((8, 0),), frozenset(), pins) == ()  # a point on its own pin
+    assert through_keeps(Box(8, 0, 0, 16), body, ((8, 0), (8, 40)), frozenset({"T"}), pins) == body  # the interior
+    assert through_keeps(Box(0, 16, 16, 0), body, ((0, 16),), frozenset(), pins) == body  # an edge run over the foreign pin (8, 16)
+    assert through_keeps(Box(0, 16, 16, 0), body, ((16, 16),), frozenset(), {"T": ((16, 16),)}) == ()  # an edge run into its own pin
+    assert through_keeps(Box(0, 16, 16, 0), body, ((0, 16),), frozenset(), {"T": ((8, 0),)}) == body  # the end is no pin of the body
+    assert through_keeps(Box(16, 16, 8, 0), body, ((24, 16),), frozenset(), {"T": ((8, 0),)}) == ()  # a point on a foreign corner is looks (R1164)
+
+
+def test_through_reads_a_diagonal_as_the_true_segment() -> None:
+    box = Box(0, 0, 16, 16)
+    assert through((-8, 8), (8, -8), box, (), ()) is False  # touches the corner (0, 0) only
+    assert through((-4, 20), (20, -4), box, (), ())  # crosses the interior
+    assert not through((-8, 20), (20, 24), box, (), ())  # clear of the body
+    assert through((0, 0), (16, 16), box, (), ())  # along the diagonal
+    assert through((-2, 6), (22, 6), box, (), ())  # orthogonal, through
+    assert through((0, 16), (16, 16), box, (), ())  # along an edge, no pin
+    assert not through((16, 16), (24, 16), box, (), ())  # a corner touch is looks
 
 
 @pytest.mark.rule("BUNDLE-LEGS")

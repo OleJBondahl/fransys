@@ -9,12 +9,12 @@ Pure: reads a `PagePart`.
 from itertools import pairwise
 from typing import TYPE_CHECKING
 
-from fransys_layout.core import overlaps, own_end
+from fransys_layout.core import overlaps, own_end, through
 
 from .drawn_netlist import is_marker
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping
+    from collections.abc import Mapping, Sequence
 
     from fransys_layout.core import Box
     from fransys_layout.drawing import DrawnSymbol
@@ -41,16 +41,13 @@ def stray(part: PagePart, page: Box) -> list[str]:
     ]
 
 
-def _crosses(a: XY, b: XY, box: Box) -> bool:
-    """True when the rectilinear segment a-b runs a positive length inside `box`'s interior."""
-    (x1, y1), (x2, y2) = a, b
-    if x1 == x2:
-        return box.x < x1 < box.x + box.w and min(y1, y2) < box.y + box.h and max(y1, y2) > box.y
-    return box.y < y1 < box.y + box.h and min(x1, x2) < box.x + box.w and max(x1, x2) > box.x
-
-
 def _in(p: XY, box: Box) -> bool:
     return box.x <= p[0] <= box.x + box.w and box.y <= p[1] <= box.y + box.h
+
+
+def _runs(points: Sequence[XY], box: Box, ports: Sequence[XY]) -> bool:
+    """True when a run of the wire `points` passes `box` (`core.through`), the wire's ends and the owner's `ports` being its pins."""
+    return any(through(a, b, box, (points[0], points[-1]), ports) for a, b in pairwise(points))
 
 
 def through_bodies(part: PagePart) -> list[str]:
@@ -67,7 +64,7 @@ def through_bodies(part: PagePart) -> list[str]:
         found += [
             f"wire / {symbol.key}"
             for w in part.drawing.wires
-            if not any(own_end(q, e) for q in ports for e in (w.points[0], w.points[-1])) and any(_crosses(a, b, box) for a, b in pairwise(w.points))
+            if not any(own_end(q, e) for q in ports for e in (w.points[0], w.points[-1])) and _runs(w.points, box, ports)
         ]
     return found
 
@@ -105,7 +102,7 @@ def over_markers(part: PagePart) -> list[str]:
             f"wire / {marker.key}"
             for w in part.drawing.wires
             if not any(own_end(q, e) for q in ports for e in (w.points[0], w.points[-1]))
-            and (any(_in(p, box) for p in w.points) or any(_crosses(a, b, box) for a, b in pairwise(w.points)))
+            and (any(_in(p, box) for p in w.points) or _runs(w.points, box, ports))
         ]
         found += [f"dot / {marker.key}" for d in part.drawing.symbols if dot_on_marker(d, marker) and not any(own_end(q, (d.x, d.y)) for q in ports)]
     return found

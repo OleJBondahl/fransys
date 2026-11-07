@@ -63,4 +63,6 @@ def test_a_bound_channel_and_the_request_it_serves_give_one_kind() -> None:
         template = functions(model)[binding.channel].template
         assert template is not None
         channel = channel_facets[template]
-        assert signal_kind(channel.signal) is signal_kind(requests[binding.subject].signal)
+        requested = requests[binding.subject].signal
+        assert requested is not None
+        assert signal_kind(channel.signal) is signal_kind(requested)

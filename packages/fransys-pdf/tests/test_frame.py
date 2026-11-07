@@ -108,6 +108,8 @@ def test_the_title_block_prints_its_labels_and_leaves_the_page_cell_to_typst():
     assert {"Title", "Customer", "Page"} <= set(_texts(back.svg))
     assert PAGE_COUNTER_LABEL in text  # the counter is Typst's: render's SVG holds no number
     assert "<fransys-page-counter>" in text
+    assert '" of " + str(locate(<fr-last>).page())' in text  # the cell reads `m of N`, N from the end marker
+    assert "#metadata(none) <fr-last>" in text
 
 
 def test_grid_columns_come_from_the_sheet_format_not_a_constant():

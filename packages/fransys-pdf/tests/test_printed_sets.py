@@ -37,5 +37,5 @@ def test_the_printed_sets_leave_out_a_set_no_document_prints():
 def test_the_pdf_takes_its_sets_from_the_derive_function(monkeypatch):
     m, record, _, _, p_own = _fixture()
     assert list(schematic_pages(m, record, (K.SCHEMATIC,))) == [p_own.id]
-    monkeypatch.setattr(document_pages, "document_drawing_sets", lambda *_: ())
+    monkeypatch.setattr(document_pages, "set_printers", lambda *_: {})
     assert schematic_pages(m, record, (K.SCHEMATIC,)) == ()

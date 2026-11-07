@@ -243,3 +243,19 @@ def test_loading_a_schema_1_library_raises_with_part_schema_old(tmp_path):
     with pytest.raises(fransys_parts.PartLibraryError) as caught:
         fransys_parts.load_path(root)
     assert "PART_SCHEMA_OLD" in {f.code for f in caught.value.findings}
+
+
+def test_a_catalogue_description_loads_and_none_when_the_part_states_none(tmp_path):
+    """`catalogue_description` is the maker's wording, apart from `description`; absent it is `None`."""
+    from fransys_model.kernel import freeze
+    from fransys_model.vocab import parts
+
+    stated = _PART_HEAD.replace('class_code = "X"\n', 'class_code = "X"\ncatalogue_description = "2-channel analog input"\n')
+    root = _root(tmp_path, parts={"p.toml": stated})
+    assert not _findings(root)
+    (part,) = parts(freeze(fransys_parts.load_path(root))).values()
+    assert (part.catalogue_description, part.description != part.catalogue_description) == ("2-channel analog input", True)
+    bare_dir = tmp_path / "bare"
+    bare_dir.mkdir()
+    (bare,) = parts(freeze(fransys_parts.load_path(_root(bare_dir)))).values()
+    assert bare.catalogue_description is None

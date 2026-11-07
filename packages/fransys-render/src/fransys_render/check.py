@@ -19,7 +19,7 @@ REFERENCE_OFF_DOCUMENT = "REFERENCE_OFF_DOCUMENT"
 
 
 def _page_text(model: Model, page: Page) -> str:
-    """`p3`, or `p2.3` for page 3 of set 2: the page as a reference prints it."""
+    """`p3`: the page as a destination prints it."""
     return page_reference_text(model, page)
 
 

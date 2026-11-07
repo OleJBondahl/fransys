@@ -61,7 +61,9 @@ class Part:
     Guarded by `part_conformance`, which checks every referencing `Item` matches its templates.
     `library` names the part library that supplied it, `None` for a part authored in
     Python. `operated_by` says what operates its contacts as sold (parts-0020);
-    `None` means not stated.
+    `None` means not stated. `catalogue_description` is the maker's catalogue wording, apart from
+    `description` (which is BOM text); `None` means the part has none and the Wago export uses
+    `description` (WAGO-CDP, designer R1821).
     """
 
     id: Id[Part]
@@ -73,6 +75,7 @@ class Part:
     class_code: str
     library: Id[PartLibrary] | None = None
     operated_by: OperatedBy | None = None
+    catalogue_description: str | None = None
     ext: frozendict[str, Value] = frozendict()
 
 

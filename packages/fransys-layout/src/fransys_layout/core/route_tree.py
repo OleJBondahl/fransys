@@ -77,13 +77,14 @@ def _further(
     return tuple(out)
 
 
-def tree(env: RouteEnv, grid: Occupancy, link: CrossLink) -> tuple[Wire, ...] | None:
+def tree(env: RouteEnv, grid: Occupancy, link: CrossLink, anchors: Sequence[tuple[XY, ...]] | None = None) -> tuple[Wire, ...] | None:
     """The net's ends as wires: the first to the second, each further end to the cells held.
 
+    The ends are the anchors of the link's pins, or the `anchors` given (the guard's trunk taps).
     The held cells are free for the own net. None on a dead end; the caller clears the net.
     """
     step, net = env.options.wiring_grid, link.net
-    anchors = end_anchors(env, link)
+    anchors = end_anchors(env, link) if anchors is None else anchors
     if len(anchors) < MIN_ENDS:
         return ()
     start, goal = _cell(anchors[0][-1], step), _cell(anchors[1][-1], step)

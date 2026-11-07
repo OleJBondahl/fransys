@@ -36,7 +36,7 @@ class Sizes:
 
 @dataclass(frozen=True)  # plain: positional callers, as before the move
 class TitleBlockFields:
-    """One page's title-block content; `sheet_counter` `""` off `SCHEMATIC`."""
+    """One page's title-block content."""
 
     title: str
     number: str
@@ -46,7 +46,6 @@ class TitleBlockFields:
     author: str
     page_title: str
     scope: str
-    sheet_counter: str
     notice: str = ""
     logo: str | None = None
     page_title_shorter: tuple[str, ...] = ()
@@ -65,7 +64,7 @@ class TitleBlockStrings:
     """What a title block prints, after the cut.
 
     - `printed`: slot id (`title`, `number`, `revision`, `revision_date`, `customer`, `author`,
-      `page_title`, `scope`, `sheet`) to the shown text, cut with `…` when it missed.
+      `page_title`, `scope`) to the shown text, cut with `…` when it missed.
     - `notice`: the notice's wrapped lines, no more than the cell holds.
     - `unfit`: each field that missed its cell; `notice_unfit`: the notice needs more lines.
     """

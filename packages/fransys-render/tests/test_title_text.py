@@ -30,7 +30,6 @@ _CELLS = [
     "author",
     "page_title",
     "scope",
-    "sheet",
     "page",
 ]
 _TEXT = TitleBlockText(labels=frozendict({cell: cell.title() for cell in _CELLS}), ellipsis="…")
@@ -160,7 +159,6 @@ _ROOMS = {
     "author": 40.0,
     "page_title": 60.0,
     "scope": 30.0,
-    "sheet": 20.0,
 }
 
 
@@ -174,7 +172,6 @@ def _fields(**over: Any) -> TitleBlockFields:
         "author": "me",
         "page_title": "Page",
         "scope": "S",
-        "sheet_counter": "1.2",
     }
     return TitleBlockFields(**(base | over))
 
@@ -230,9 +227,8 @@ def test_notice_room_chars_is_the_sample_estimate_to_the_ten_below():
 
 
 def test_title_block_strings_print_the_base_when_it_fits():
-    """Every field fits: printed is the text per slot (`sheet_counter` fills `sheet`)."""
+    """Every field fits: printed is the text per slot."""
     got = title_block_strings(_fields(), _ROOMS, _SIZES, _TEXT, notice=(30, 2))
-    assert got.printed["sheet"] == "1.2"
     assert got.printed["title"] == "T"
     assert set(got.printed) == set(_ROOMS)
     assert got.unfit == ()
@@ -278,8 +274,8 @@ def test_index_titles_print_whole_without_a_title_cell_and_cut_or_shorten_with_o
     from fransys_model.derive import SheetIndexRow
 
     long, short = "A very long page title indeed", "Short"
-    row = SheetIndexRow(sheet="1", title=long, shorter=(short,), destination="d")
-    bare = SheetIndexRow(sheet="2", title=long, shorter=(), destination="d")
+    row = SheetIndexRow(title=long, shorter=(short,), destination="d", page=2)
+    bare = SheetIndexRow(title=long, shorter=(), destination="d", page=2)
     assert index_titles((row, bare), "…", _SIZES, None) == (long, long)
     room = text_width_mm(short, size_mm=_SIZES.body) + 0.1
     shown = index_titles((row, bare), "…", _SIZES, room)

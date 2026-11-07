@@ -116,18 +116,23 @@ class Fn:
         """
         return _fn_pole.checked(self, n)
 
-    def plc(self, signal: SignalType, name: str, priority: int = 0) -> Fn:
-        """Core: request a PLC channel of kind `signal` (`DI`, `DO`, `AI`, `AO`) named `name`.
+    def plc(
+        self, signal: SignalType | None = None, name: str | None = None, priority: int = 0, *, routing: str | None = None, configured: bool = True
+    ) -> Fn:
+        """Core: request a PLC channel of kind `signal` (`DI`, `DO`, `AI`, `AO`) named `name`, or set a module channel's own settings.
 
-        Does not pick a channel: the allocation pass binds the request later.
+        Does not pick a channel: the allocation pass binds the request later. On a module's channel
+        handle (`module.ai_1.plc(name="unused")`) give no `signal`: `name`, `routing` (a CDP path,
+        `""` writes it empty) and `configured=False` (leave the channel out of the CDP file) apply to it.
         """
-        self._fn.plc(signal.value, name, priority)
+        self._fn.plc(None if signal is None else signal.value, name, priority, routing=routing, configured=configured)
         return self
 
-    def scale(self, unit: str, *, raw: tuple[int, int], eng: tuple[str | Decimal, str | Decimal]) -> Fn:
+    def scale(self, unit: str | None = None, *, raw: tuple[int, int], eng: tuple[str | Decimal, str | Decimal]) -> Fn:
         """Core: scale the raw signal range `raw` to the engineering range `eng` in `unit`.
 
-        Does not accept a float: write the values as strings or Decimal.
+        Does not accept a float: write the values as strings or Decimal. `unit=None` writes no unit
+        and `""` raises. On a spare analogue channel's handle it scales that channel.
         """
         self._fn.scale(unit, raw=raw, eng=eng)
         return self

@@ -96,6 +96,11 @@ def designation_key(model: Model, item: Id[Item]) -> NaturalKey:
     return natural_key(item_designation(model, item))
 
 
+def widest_text(texts: Iterable[str]) -> str:
+    """The longest of `texts` (the first on a tie); "" when there are none."""
+    return max(texts, key=len, default="")
+
+
 def function_order_text(model: Model, function: Id[Function]) -> str:
     """A function's order as text: its item's printed designation, contacts after the rest, its name, its authoring key; never an Id."""
     record = functions(model)[function]

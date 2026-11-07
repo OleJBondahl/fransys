@@ -11,14 +11,14 @@ class ScalingFacet:
     """The raw-to-engineering-unit range of an analog `Function`.
 
     Example: the design/examples.md 11 transmitter scales raw `4..20` to
-    `eng_min=Decimal("0"), eng_max=Decimal("5")` metres, `unit="m"`. Read by
+    `eng_min=Decimal("0"), eng_max=Decimal("5")` metres, `unit="m"`; `unit=None` writes no unit. Read by
     `derive.queries.plc_channel_rows`.
     """
 
     id: Id[ScalingFacet]
     key: AuthoringKey
     subject: Id[Function]
-    unit: str
+    unit: str | None
     raw_min: int
     raw_max: int
     eng_min: Decimal

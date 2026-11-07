@@ -2,6 +2,7 @@
 
 from fransys_model.kernel import AuthoringKey, Id, SchemaError, Value, record
 
+from .aspects import AspectNode
 from .core import Function, Item, Port
 from .enums import ConductorKind, NetClass
 from .templates import _holder, _order_ends
@@ -62,6 +63,7 @@ class Conductor:
     b: Id[Port]
     kind: ConductorKind
     carrier: Id[Item] | None
+    block: Id[AspectNode] | None = None
     ext: frozendict[str, Value] = frozendict()
 
     def __post_init__(self) -> None:

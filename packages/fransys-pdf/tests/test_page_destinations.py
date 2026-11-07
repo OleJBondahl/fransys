@@ -45,21 +45,21 @@ def _page_index_of(pdf: pdfium.PdfDocument, name: str) -> int | None:
 
 def _assert_destinations(compiled: bytes, expected: dict[str, int]) -> None:
     pdf = pdfium.PdfDocument(compiled)
-    assert len(pdf) == 2 + len(expected)  # the cover, the sheet index, then one page per schematic page
+    assert len(pdf) == 2 + len(expected)  # the cover, one page per schematic page, then the sheet index
     for name, index in expected.items():
         assert _page_index_of(pdf, name) == index, name
 
 
 def test_each_schematic_page_is_a_destination_on_its_own_page():
     m, doc, pages = _fixture()
-    expected = {page_destination(m, page): 2 + i for i, page in enumerate(pages)}
-    assert set(expected) == {"p1.1", "p1.2", "p2.1", "p2.2"}
+    expected = {page_destination(m, page): 1 + i for i, page in enumerate(pages)}
+    assert set(expected) == {"p2", "p3", "p4", "p5"}  # the label is the physical page, the cover being 1
     _assert_destinations(_compile(m, doc, pages), expected)
 
 
 def test_a_swapped_label_fails_the_destination_check(monkeypatch):
     m, doc, pages = _fixture()
-    expected = {page_destination(m, page): 2 + i for i, page in enumerate(pages)}
+    expected = {page_destination(m, page): 1 + i for i, page in enumerate(pages)}
     first, second = pages[0], pages[1]
     swapped = {first.id: page_destination(m, second), second.id: page_destination(m, first)}
     monkeypatch.setattr(

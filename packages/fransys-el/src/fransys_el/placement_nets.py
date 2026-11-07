@@ -11,7 +11,6 @@ from fransys_model.derive import (
     drawn_physical_nets,
     is_rail_terminal,
     item_of_port,
-    no_conductor_at,
     port_function,
     port_power_kind,
 )
@@ -60,8 +59,6 @@ def _net(env: Env, ports: Sequence[Id[Port]], unit_of: Mapping[str, Id[Unit] | N
     name = symbol_key(env.model, first)
     pins = sorted(set(drawn_pins(env, ports)), key=_pin_key)
     if len(pins) < _TWO_ENDS:
-        if all(no_conductor_at(env.model, p) for p in ports):
-            return None  # only a mate or a join inside a part joins them: no conductor, nothing to draw (R616.3, R1765)
         return Skipped("net", name, NET_UNDER_TWO_DRAWN_PINS)
     crosses = len({unit_of[p.sym] for p in pins}) > 1
     return Net(name, tuple(pins), _bundle(env, ports), crosses)

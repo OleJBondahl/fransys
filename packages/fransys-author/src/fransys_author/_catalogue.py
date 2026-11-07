@@ -12,6 +12,7 @@ from fransys_model.vocab import (
     OperatingFacet,
     Part,
     PartBundle,
+    PlcChannelFacet,
     PortTemplate,
 )
 
@@ -33,6 +34,7 @@ class Catalogue:
     internal_links: dict[Id[Part], tuple[InternalLink, ...]]
     cable_products: dict[Id[Part], CableProductFacet]
     operating_envelopes: dict[Id[FunctionTemplate], Operating]
+    plc_channels: frozenset[Id[FunctionTemplate]]
 
     def find(self, mpn: str | tuple[str, str]) -> Part:
         """The `Part` named by a bare MPN or an explicit `(manufacturer, mpn)`."""
@@ -99,6 +101,7 @@ class _Index:
     internal_links: dict[Id[Part], list[InternalLink]] = field(default_factory=dict)
     cable_products: dict[Id[Part], CableProductFacet] = field(default_factory=dict)
     operating_envelopes: dict[Id[FunctionTemplate], Operating] = field(default_factory=dict)
+    plc_channels: set[Id[FunctionTemplate]] = field(default_factory=set)
 
     def add(self, record: object) -> None:
         """File `record` under its subject."""
@@ -111,10 +114,17 @@ class _Index:
         elif isinstance(record, PortTemplate):
             self.port_templates.setdefault(record.function, []).append(record)
             self.port_template_function[record.id] = record.function
-        elif isinstance(record, CableProductFacet):
+        else:
+            self._add_facet(record)
+
+    def _add_facet(self, record: object) -> None:
+        """File a cable-product, operating or PLC-channel facet under its subject."""
+        if isinstance(record, CableProductFacet):
             self.cable_products[record.subject] = record
         elif isinstance(record, OperatingFacet):
             self.operating_envelopes[record.subject] = record.operating
+        elif isinstance(record, PlcChannelFacet):
+            self.plc_channels.add(record.subject)
 
     def add_link(self, record: InternalLink) -> None:
         """File an internal link under the part that owns its port."""
@@ -135,6 +145,7 @@ class _Index:
             internal_links={part: tuple(links) for part, links in self.internal_links.items()},
             cable_products=self.cable_products,
             operating_envelopes=self.operating_envelopes,
+            plc_channels=frozenset(self.plc_channels),
         )
 
 

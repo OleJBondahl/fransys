@@ -170,6 +170,15 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         page="findings-validators",
     ),
     CodeInfo(
+        code="PLC_SIGNAL_NAME_TWICE",
+        severity=Severity.ERROR,
+        stage="validators",
+        who="consumer",
+        cause="Two devices bound to one controller carry one signal name, so the CDP file would name two channels alike.",
+        fix='Rename one. Write: K1.coil.plc(fr.DO, "pump-run")',
+        page="findings-validators",
+    ),
+    CodeInfo(
         code="FUNCTION_HALF_CONNECTED",
         severity=Severity.ERROR,
         stage="validators",

@@ -10,7 +10,6 @@ from fransys_model.derive import (
     unit_release,
 )
 
-from ._labels import ROMAN
 from ._sizes import Sizes, font_mm
 from ._typst import literal
 
@@ -52,7 +51,7 @@ def preamble(sizes: Sizes, sheet: SheetRow, family: str) -> str:
     return "\n".join(
         [
             f'#set text(font: "{family}", size: {font_mm(sizes.body)})',
-            f"#set page(width: {sheet.width_mm}mm, height: {sheet.height_mm}mm, {ROMAN})",
+            f'#set page(width: {sheet.width_mm}mm, height: {sheet.height_mm}mm, numbering: "1", footer: none)',
             f"#show heading.where(level: 1): set text(size: {font_mm(sizes.heading_1)})",
             f"#show heading.where(level: 2): set text(size: {font_mm(sizes.heading_2)})",
             f"#show heading.where(level: 3): set text(size: {font_mm(sizes.body)})",

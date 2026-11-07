@@ -5,6 +5,7 @@ from collections import deque
 from typing import TYPE_CHECKING, Final
 
 from fransys_kernel import require_origin
+from fransys_model.derive.facts.plc_wiring import plc_requests, requested_signal
 from fransys_model.derive.facts.roles import plc_channel_facets
 from fransys_model.derive.lookups import unit_chain
 from fransys_model.derive.order import (
@@ -17,6 +18,7 @@ from fransys_model.derive.order import (
 )
 from fransys_model.derive.passes._plc_ambiguous import ambiguous_findings
 from fransys_model.derive.passes._plc_contested import contested_findings
+from fransys_model.derive.passes._plc_own import own_clashes, own_findings, own_settings
 from fransys_model.derive.passes._plc_wired import (
     WiredPick,
     reaches_open_boundary,
@@ -91,14 +93,14 @@ def _serving(
 
 def _unservable(function: Function, request: PlcRequestFacet, *, declared: bool) -> Finding:
     cause = (
-        f"but its unit declares no {request.signal.value} channel"
+        f"but its unit declares no {requested_signal(request).value} channel"
         if not declared
-        else f"but every {request.signal.value} channel of its unit is taken"
+        else f"but every {requested_signal(request).value} channel of its unit is taken"
     )
     return finding(
         PLC_REQUEST_UNSERVABLE,
         (request.id, function.id),
-        f"{ref(function)} asks for {request.signal.value} as {request.signal_name!r}, {cause}",
+        f"{ref(function)} asks for {requested_signal(request).value} as {request.signal_name!r}, {cause}",
     )
 
 
@@ -106,7 +108,7 @@ def _requests(model: Model) -> list[PlcRequestFacet]:
     """Every request in serving order: `(priority, requesting Function.key, Function.id)`."""
     all_functions = functions(model)
     return sorted(
-        facets_of(model, PlcRequestFacet).values(),
+        plc_requests(model).values(),
         key=lambda request: (request.priority, all_functions[request.subject].key, request.subject),
     )
 
@@ -127,7 +129,7 @@ def _serve_one(
     function = functions(model)[request.subject]
     channel = pick.bound.get(request.subject)
     if channel is None:
-        queue = _serving(model, unit_of(model, function), request.signal, channels)
+        queue = _serving(model, unit_of(model, function), requested_signal(request), channels)
         available = free.get(queue)
         if not available:
             declared = queue in channels
@@ -186,7 +188,9 @@ def allocate_plc(model: Model) -> tuple[Model, tuple[Finding, ...]]:
     back as the same object.
     """
     bindings = facets_of(model, PlcBindingFacet)
-    requests = _requests(model)
+    own = own_settings(model)
+    clashes = own_clashes(model, _requests(model), own)
+    requests = [request for request in _requests(model) if request.subject not in clashes]
     ranked = _ranked(model)
     existing = {binding.channel for binding in bindings.values()}
     pick = wired_requests(
@@ -197,9 +201,14 @@ def allocate_plc(model: Model) -> tuple[Model, tuple[Finding, ...]]:
         ranked={function.id: (place, facts) for place, (function, facts) in enumerate(ranked)},
     )
     channels = _channels(model, ranked)
-    taken = existing | set(pick.bound.values()) | set(pick.contested)
+    taken = existing | own | set(pick.bound.values()) | set(pick.contested)
     served, unservable, origins = _serve(model, requests, pick, channels, taken)
-    findings = [*ambiguous_findings(model, requests, pick.ambiguous), *contested_findings(model, pick.contested), *unservable]
+    findings = [
+        *own_findings(model, clashes),
+        *ambiguous_findings(model, requests, pick.ambiguous),
+        *contested_findings(model, pick.contested),
+        *unservable,
+    ]
     ordered = tuple(sorted(findings, key=lambda f: (f.code, f.subjects, f.message)))
     if not served:
         return model, ordered

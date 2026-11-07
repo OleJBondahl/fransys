@@ -1,0 +1,26 @@
+schema = 2
+
+[part]
+mpn = "DEMO-PLC-RTD-2"
+manufacturer = "Demo"
+description = "PLC resistance-thermometer input module, 2 channels with four pins each"
+category = "plc_module"
+class_code = "K"
+
+[[function]]
+name = "rtd_1"
+kind = "plc_channel"
+ports = [{ name = "1", role = "generic" }, { name = "2", role = "generic" }, { name = "3", role = "generic" }, { name = "4", role = "generic" }]
+
+[function.plc_channel]
+signal = "rtd"
+channel = 1
+
+[[function]]
+name = "rtd_2"
+kind = "plc_channel"
+ports = [{ name = "5", role = "generic" }, { name = "6", role = "generic" }, { name = "7", role = "generic" }, { name = "8", role = "generic" }]
+
+[function.plc_channel]
+signal = "rtd"
+channel = 2

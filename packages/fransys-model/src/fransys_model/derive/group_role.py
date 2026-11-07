@@ -2,11 +2,12 @@
 
 lazy from collections.abc import Mapping
 
+from fransys_model.derive.drawn_groups import function_moves
 from fransys_model.derive.indexes import build_indexes
 from fransys_model.derive.lookups import effective_placement
 from fransys_model.derive.structure import schematic_functions
 from fransys_model.kernel import parent_chain
-from fransys_model.layout import GroupHint, PageRole, layout_of
+from fransys_model.layout import PageRole
 from fransys_model.vocab.enums import Aspect, NetClass
 from fransys_model.vocab.tables import aspect_nodes, functions, items, nets
 lazy from fransys_model.kernel import Id, Model
@@ -47,7 +48,7 @@ def group_role(model: Model, group: Id[AspectNode]) -> PageRole:
     The old engine's page role differs on some pages: it is a packing artefact.
     """
     index = build_indexes(model)
-    hints = {h.function: h.group for h in layout_of(model, GroupHint).values()}
+    hints = function_moves(model)
     found: set[PageRole] = set()
     for function_id in schematic_functions(model):
         function = functions(model)[function_id]

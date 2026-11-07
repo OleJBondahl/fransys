@@ -48,9 +48,8 @@ def link_fit(model: Model, kit: SymbolKit, library: Library, unit: Id[Unit] | No
     """
     sheets = [sheet_for(model, kind) for kind in PageKind]
     count = sum(len(one.symbols) for one in drawing_scopes(model, kit) if one.of_unit == unit)
-    digits = len(str(count))
     columns = max(one.frame_columns for one in sheets)
     rows = max(one.frame_rows for one in sheets)
-    sample = len(widest_target_line(model, digits, columns, rows, _DIGITS[0]))
-    line = widest_target_line(model, digits, columns, rows, widest_digit(library, sample))
+    sample = len(widest_target_line(model, count, columns, rows, _DIGITS[0]))
+    line = widest_target_line(model, count, columns, rows, widest_digit(library, sample))
     return marker_boxes(library, line)

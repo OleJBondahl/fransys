@@ -1,6 +1,6 @@
 """Field case: a nested unit's breaker pole feeds a row of one-changeover relays; a control relay coil joins an input card on another page.
-The bug (v0.22.5): the build gave one DRAWING_SHORTS_NETS per relay column and a WIRE_THROUGH_BODY, 0 in v0.22.4.
-Fixed by layout-0446 (R1816, R1818): a leg run is cleared of footprint pin tips, so the relay row ends no wire on the leg."""
+The bug (v0.22.5): DRAWING_SHORTS_NETS per relay column, WIRE_THROUGH_BODY; fixed by layout-0446 (R1816, R1818); el-0120 (KI-732) drew no loop.
+KI-736 (layout-0516, R1861): the second reference-marker leg starts at the trunk end, no dangling end."""
 
 from functools import cache
 from typing import Any, NamedTuple

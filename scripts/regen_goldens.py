@@ -65,6 +65,8 @@ def _migrate_laid_out() -> None:
         for row in data["tables"].get("layout.profile", ()):
             for key in REMOVED_PROFILE_KEYS:
                 row.pop(key, None)
+        for row in data["tables"].get("conductor", ()):
+            row.setdefault("block", None)  # schema 25: Conductor.block (model-0442)
         for row in data["tables"].get("layout.link_marker", ()):
             if "far" in row:
                 far = row.pop("far")

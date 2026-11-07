@@ -31,12 +31,10 @@ MODEL_KERNEL = "fransys_model.kernel"
 # import this module, but only for its pure formatters; its readers (which take a model) are
 # as off-limits outside `engines` as any other `fransys_model.derive` name.
 DRAWING_TEXT_MODULE = "fransys_model.derive.drawing_text"
-SET_RANK_MODULE = "fransys_model.derive.set_rank"  # model-0282: `set_ranks` takes only values
 DRAWING_TEXT_FORMATTERS = frozenset(
     {
         "row_letter",
         "position_text",
-        "location_prefix",
         "off_stub_line",
         "more_text",
         "partner_position_text",
@@ -128,11 +126,7 @@ def _beyond_kernel(imported: set[str]) -> set[str]:
     `from fransys_model import vocab` resolves to the bare package name, so the bare
     name counts as a violation too. `fransys_model.derive.drawing_text` is allowed here
     """
-    return {
-        m
-        for m in imported
-        if _under(m, MODEL) and not _under(m, MODEL_KERNEL) and not _under(m, DRAWING_TEXT_MODULE) and not _under(m, SET_RANK_MODULE)
-    }
+    return {m for m in imported if _under(m, MODEL) and not _under(m, MODEL_KERNEL) and not _under(m, DRAWING_TEXT_MODULE)}
 
 
 def _layout_names(source: str) -> set[str]:
@@ -361,7 +355,7 @@ _DT = "from fransys_model.derive.drawing_text import "
         ("from fransys_model import derive, kernel\n", ["fransys_model.derive"]),
         ("from typing import TYPE_CHECKING\nif TYPE_CHECKING:\n    from fransys_model.vocab.tables import ports\n", ["fransys_model.vocab.tables"]),
         (
-            f"{_DT}row_letter, position_text\n{_DT}location_prefix, marker_text\nfrom fransys_model.kernel import Id\n",
+            f"{_DT}row_letter, position_text\n{_DT}partner_position_text, marker_text\nfrom fransys_model.kernel import Id\n",
             ["fransys_model.derive.drawing_text.marker_text"],
         ),
         ("from fransys_model.layout import derived_layout_ids\n", ["fransys_model.layout.derived_layout_ids"]),
@@ -447,7 +441,7 @@ def test_checker_still_fails_when_routing_imports_another_derive_module() -> Non
 
 def test_checker_allows_the_drawing_text_formatters_from_routing() -> None:
     """`fransys_model.derive.drawing_text` itself is not a kernel-only violation."""
-    source = "from fransys_model.derive.drawing_text import row_letter, location_prefix, position_text\n"
+    source = "from fransys_model.derive.drawing_text import row_letter, partner_position_text, position_text\n"
     imported = _imported_modules("fransys_layout.routing.bad", source, is_init=False)
     assert _beyond_kernel(imported) == set()
 

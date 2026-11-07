@@ -1,7 +1,7 @@
 """A page's background: render's sheet SVG, with the page counter and the logo set in their cells.
 
 The frame, the grid and the title block are drawn by render (render-0019). Two cells hold what
-only Typst or the consumer knows: the page number, known after the flow, and the logo image.
+only Typst or the consumer knows: the page number of a flowing section (pdf-0054), and the logo image.
 The boxes they sit in are the symbol's, handed over as values; pdf draws no line and no cell.
 """
 
@@ -9,7 +9,6 @@ from typing import TYPE_CHECKING
 
 from fransys_model.derive import sheet_key_text
 
-from ._labels import LAST_PAGE
 from ._sizes import font_mm, sizes_of
 from ._typst import literal
 from .errors import PdfError
@@ -24,13 +23,11 @@ PAGE_COUNTER_LABEL = "fransys-page-counter"
 """The label on the title block's document-counter value, for `typst query`."""
 
 
-def physical_page(position: str = "here()") -> str:
-    """Typst for the physical PDF page at `position`: the one source of "Page m" and the index."""
-    return f"{position}.page()"
+LAST_PAGE = "fr-last"
+"""The label of the end marker `document.source` appends: the title block's "of N" is its page."""
 
-
-_LAST = physical_page(f"locate(<{LAST_PAGE}>)")
-_PAGE_COUNTER = f'context (str({physical_page()}) + " of " + str({_LAST}))'
+_PAGE_COUNTER = f'context (str(here().page()) + " of " + str(locate(<{LAST_PAGE}>).page()))'
+"""The title block's page cell, `m of N`: the physical PDF page and the PDF's page count, which a flowing list only Typst can count."""
 _Box = tuple[float, float, float, float]
 
 

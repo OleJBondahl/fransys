@@ -99,6 +99,20 @@ def test_drawn_groups_leave_out_a_bridge_that_the_physical_nets_keep() -> None:
     assert drawn.ports == tuple(sorted((two, three)))  # R1625: the bridge leaves `one` out of the drawn net
 
 
+def test_drawn_groups_leave_out_a_group_no_drawn_conductor_ends_in() -> None:
+    """KI-732, NET-END-THROUGH: a pole's link group with no conductor at its pins draws no wire; one wired pin makes it a through net."""
+    from fransys_model import derive
+
+    plant, ports = _fuse(LinkKind.CONDUCTIVE, "g1")
+    model = plant.model()
+    assert {frozenset(g) for g in derive.required_groups(model)} == {frozenset(ports["g1"])}
+    assert derive.drawn_groups(model) == ()
+
+    wired, pins = _fuse(LinkKind.CONDUCTIVE, "g1")
+    wired.wire(pins["g1"][0], wired.pin("plug", "J1", "1"), key="w1")
+    assert frozenset(pins["g1"]) in {frozenset(g) for g in derive.drawn_groups(wired.model())}
+
+
 def _board_with_two_parts(*, sole_root: bool) -> tuple[Plant, Id[Port], Id[Port]]:
     """A board with two parts under it, alone in its unit or beside another root item; one pin on each part."""
     plant = Plant()
@@ -121,7 +135,7 @@ def test_a_sole_root_boards_declared_net_is_required_but_not_a_declared_net_off_
     plant.net("sig", (one, two))
     model = plant.model()
     assert {frozenset(g) for g in derive.required_groups(model)} == {frozenset((one, two))}
-    assert derive.drawn_groups(model) == derive.required_groups(model)
+    assert derive.drawn_groups(model) == ()  # KI-732: no conductor ends at a trace, so a drawing joins nothing there
 
     loose, three, four = _board_with_two_parts(sole_root=False)
     loose.net("sig", (three, four))

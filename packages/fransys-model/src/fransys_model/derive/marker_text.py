@@ -3,9 +3,9 @@
 from collections import defaultdict
 lazy from collections.abc import Mapping
 
-from fransys_model.derive.frame_position import position_at
 from fransys_model.derive.marker_targets import target_lines, target_order
 from fransys_model.derive.order import port_designation_key
+from fransys_model.derive.page_reference_text import position_at
 from fransys_model.derive.reference_heads import heads_group
 from fransys_model.derive.stub_text import off_stub_text
 from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, SchemaError, digest_cached, render_id

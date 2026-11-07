@@ -1,14 +1,15 @@
 """Field case: a contact written in another block's series draws in that block.
 The bug: the contact drew in its device's block A, so block B's path crossed blocks and `CHAIN_BROKEN` warned on a page split.
-Fixed by author-0050: a function in a `d.series` written in block B draws in block B."""
+Fixed by author-0050, now derived (model-0442): a function whose wires were all made in block B draws in block B."""
 
 from typing import TYPE_CHECKING, Any, NamedTuple
 lazy from pathlib import Path
 
 import fransys as fr
+import pytest
 from _drawn_pages import drawn_pages
 
-from fransys_model.layout import GroupHint, layout_of
+from fransys_model.derive import function_moves
 from fransys_model.vocab.tables import functions
 
 if TYPE_CHECKING:
@@ -103,11 +104,13 @@ def _codes(result: fr.BuildResult) -> set[str]:
     return {f.code for f in result.findings}
 
 
+@pytest.mark.rule("FUNCTION-BLOCK-DRAWS-ITS-WIRES")
 def test_a_contact_in_blocks_series_stands_with_the_path(
     tmp_path: Path,
 ) -> None:
     result = _build("one", tmp_path)
     assert "CHAIN_BROKEN" not in _codes(result)
+    assert _fn(result, "K4", "co_1") in function_moves(result.model)
     assert _page(result, "K4", "co_1") == _page(result, "F1", "element")
 
 
@@ -126,7 +129,7 @@ def test_a_contact_in_two_blocks_series_stays_in_its_device_block(
 ) -> None:
     result = _build("both", tmp_path)
     contact = _fn(result, "K4", "co_1")
-    assert contact not in {h.function for h in layout_of(result.model, GroupHint).values()}
+    assert contact not in function_moves(result.model)
 
 
 def test_a_one_function_device_wired_in_another_blocks_series_stays_in_its_block(
@@ -134,7 +137,7 @@ def test_a_one_function_device_wired_in_another_blocks_series_stays_in_its_block
 ) -> None:
     result = _build("single", tmp_path)
     fuse = _fn(result, "F2", "element")
-    assert fuse not in {h.function for h in layout_of(result.model, GroupHint).values()}
+    assert fuse not in function_moves(result.model)
 
 
 def test_the_contact_keeps_its_device_and_designation(tmp_path: Path) -> None:

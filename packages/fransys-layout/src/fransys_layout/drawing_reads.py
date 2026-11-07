@@ -1,7 +1,7 @@
 """Pure reads of a `Drawing`: counts a reader's eye would make, in G (R218).
 
-Each takes the drawn values and returns an int or a tuple. Only orthogonal segments count;
-a diagonal one is ignored. Imports the standard library and the core's plain values only: the
+Each takes the drawn values and returns an int or a tuple. Crossing and bend counts read orthogonal
+segments only; `struck_texts` reads any segment. Imports the standard library and the core's plain values only: the
 parameters are structural protocols that `fransys_layout.drawing`'s values satisfy.
 """
 
@@ -10,6 +10,7 @@ from itertools import pairwise
 from typing import Protocol
 lazy from collections.abc import Sequence
 
+lazy from .core.clearance import through
 lazy from .core.values import XY, Box, Size
 
 __all__ = (
@@ -132,21 +133,9 @@ def text_overlaps(texts: Sequence[DrawnText]) -> int:
     return sum(_overlap(a, b) for i, a in enumerate(texts) for b in texts[i + 1 :])
 
 
-def _passes(seg: tuple[XY, XY], text: DrawnText) -> bool:
-    (ax, ay), (bx, by) = seg
-    box = text.box
-    if ay == by:
-        spans = min(ax, bx) < box.x + box.w and max(ax, bx) > box.x
-        return box.y < ay < box.y + box.h and spans
-    if ax == bx:
-        spans = min(ay, by) < box.y + box.h and max(ay, by) > box.y
-        return box.x < ax < box.x + box.w and spans
-    return False
-
-
 def struck_texts(wires: Sequence[DrawnWire], texts: Sequence[DrawnText]) -> int:
-    """Texts that an orthogonal wire segment passes through the interior of."""
-    return sum(any(_passes(seg, text) for w in wires for seg in _segments(w.points)) for text in texts)
+    """Texts that a wire segment, orthogonal or not, passes through or runs along (`core.through`)."""
+    return sum(any(through(a, b, text.box, (), ()) for w in wires for a, b in _segments(w.points)) for text in texts)
 
 
 @dataclass(frozen=True, slots=True)

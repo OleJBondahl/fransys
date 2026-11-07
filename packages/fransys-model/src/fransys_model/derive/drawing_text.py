@@ -4,7 +4,7 @@ See derive-text.md.
 
 The layout engine sizes a marker's box and a cross-reference label from their text; render
 must print exactly that text but may not import `fransys_layout`. Pure formatters on
-plain values (`position_text`, `location_prefix`) and a family of readers on a
+plain values (`position_text`) and a family of readers on a
 laid-out model (`marker_text`, `cross_reference_text`) hold that
 text so both sides call the same code. `fransys_layout.stages.references` calls the
 formatters and keeps no copy; render will call the readers. `port_designation_in` applies
@@ -22,12 +22,11 @@ from fransys_model.derive.contact_image import (
     contact_marks,
 )
 from fransys_model.derive.designation import connector_designation, port_designation, port_marking
+from fransys_model.derive.document_subject import release_name
 from fransys_model.derive.facts.house_settings import revision_form_of, wire_label_text_of
 from fransys_model.derive.facts.revision_label import revision_label
 from fransys_model.derive.frame_position import (
     content_extent,
-    location_path,
-    location_prefix,
     partner_position_text,
     position_text,
     row_letter,
@@ -84,25 +83,13 @@ def wire_text(model: Model, conductor: Id[Conductor], *, unit: Id[Unit] | None =
     return wire_label_text(wire_label_text_of(model), *(port_designation(model, port, unit=unit) for port in ends))
 
 
-def _release_name(release: UnitRelease) -> str:
-    return release.title or release.name
-
-
 def release_title(form: RevisionForm, release: UnitRelease) -> str:
     """A release as a title block prints it: `"Pump rev 1.1"`.
 
     The title (else the name) and the revision text: the one home of the text, called by
     `outline_title` and by a finding naming a release.
     """
-    return f"{_release_name(release)} rev {revision_label(form, release.version, release.revision)}"
-
-
-def unit_label(model: Model, unit: Id[Unit]) -> str:
-    """What a drawing, a cover or a title block prints for a unit.
-
-    The unit's release title (`derive.unit_release`), else its name when the title is empty.
-    """
-    return _release_name(unit_release(model, unit))
+    return f"{release_name(release)} rev {revision_label(form, release.version, release.revision)}"
 
 
 def outline_title(model: Model, unit: Id[Unit] | None) -> str:
@@ -139,8 +126,6 @@ __all__ = [
     "is_device_terminal",
     "item_tag_text",
     "line_stub_line",
-    "location_path",
-    "location_prefix",
     "marker_text",
     "more_text",
     "off_stub_line",

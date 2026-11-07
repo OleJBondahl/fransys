@@ -156,11 +156,6 @@ def test_schematic_pages_are_inlined_in_number_order_when_every_key_is_present()
     assert text.count("#page(margin: 0mm, background:") == 2  # full bleed
     assert text.index("<svg>one</svg>") < text.index("<svg>two</svg>")
     assert text.count("#pagebreak()") == 3  # COVER|SHEET_INDEX, SHEET_INDEX|SCHEMATIC, then between the two SCHEMATIC pages
-    # The sheet counter (`n / N` within the drawing set) is its own number, not the document
-    # counter: page 1's cell reads "1 / 2", page 2's reads "2 / 2", each in its own block.
-    sheets = fransys_render.sheets(document_sheets_of(m, ()), LIBRARY)
-    assert ">1 / 2</text>" in sheets[SheetKey(doc.id, K.SCHEMATIC, 0)].svg
-    assert ">2 / 2</text>" in sheets[SheetKey(doc.id, K.SCHEMATIC, 1)].svg
 
 
 def test_schematic_pages_fall_back_to_no_drawings_when_one_key_is_missing():
@@ -261,11 +256,10 @@ def test_unit_document_gets_pages_from_every_one_of_its_units_sets_in_location_o
     assert list(pages) == [p1.id, p2.id]
 
 
-def test_unit_document_source_wires_title_block_scope_and_per_set_counter():
+def test_unit_document_source_wires_title_block_scope():
     """Integration proof, end to end through `source()`'s own `schematic_source` section, not
     the lower-level functions alone: `document_facts`' unit revision/date, the
-    unit-name scope cell (`subject_label`), and the per-drawing-set `n / N` counter (a bug
-    only reachable once a unit document can span more than one set).
+    unit-name scope cell (`subject_label`).
     """
     c1 = location("C1", "First cabinet")
     c2 = location("C2", "Second cabinet")
@@ -292,9 +286,6 @@ def test_unit_document_source_wires_title_block_scope_and_per_set_counter():
     first, second = (sheets[SheetKey(doc.id, K.SCHEMATIC, i)].svg for i in (0, 1))
     assert ">2026-09-01</text>" in first  # the unit's own current revision date
     assert "2020-01-01" not in first + second + text  # never Project's
-    assert ">1 / 1</text>" in first  # each page's own set, not the document-wide total
-    assert ">1 / 1</text>" in second
-    assert "1 / 2" not in first + second
     assert ">pump-cabinet</text>" in first  # the scope cell
 
 

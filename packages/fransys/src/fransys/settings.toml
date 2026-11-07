@@ -48,8 +48,6 @@ long = [4.0, 1.0]
 [reference]
 page_prefix = "p"  # opens a page in a reference, "p3"
 cell_sep = ":"  # between the page and the cell, "p3:A1"
-location_sign = "+"  # opens a location in a reference, "+A1"
-set_sep = "."  # between a drawing set and a page, "2.3"
 width_sample = "/99.99"  # a width stand-in for the contact-table and cross-reference column
 
 [frame]
@@ -71,7 +69,7 @@ show_ends = true  # print both ends
 branch_sep = "."  # a branch of a harness line, "-W13.n"
 
 [title_block]
-fields = ["title", "number", "revision", "revision_date", "customer", "author", "page_title", "scope", "sheet", "page"]
+fields = ["title", "number", "revision", "revision_date", "customer", "author", "page_title", "scope", "page"]
 band_mm = 20.0  # the band's height
 centre_gap_mm = 3.125  # label centre to value centre
 label_height_mm = 1.8  # the capital heights the stack above is authored for; the band grows when the build's heights exceed them
@@ -100,7 +98,7 @@ csv_delimiter = ","  # between the cells of a CSV line
 csv_encoding = "utf-8"  # a CSV file's encoding; "utf-8-sig" opens in Excel with its accents
 csv_quoting = "minimal"  # minimal, all, nonnumeric or none
 csv_newline = "\n"  # ends a CSV line
-hide_pe = false  # true leaves the PE rail (its terminals, wires and pins) off every drawing sheet; the lists keep it
+hide_pe = false  # true leaves the PE rail's wires and the PE symbols on device pins off every drawing sheet; the lists keep them
 
 # The columns each list prints, in order: the row `field`, and the `[words]` keys of its PDF
 # heading (`pdf`) and its CSV header (`csv`). `pdf_columns` is the subset the PDF prints.
@@ -438,7 +436,6 @@ customer = "Customer"
 author = "Author"
 page_title = "Page title"
 scope = "Scope"
-sheet = "Sheet"
 page = "Page"
 block_diagram = "Block diagram"
 schematic = "Schematic"

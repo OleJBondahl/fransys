@@ -5,11 +5,9 @@ from typing import TYPE_CHECKING
 lazy from collections.abc import Callable
 
 from fransys_author._draft_view import draft_view
-from fransys_author._origin import caller_origin
 from fransys_author.errors import AuthorError
 from fransys_author.handles import Port, Terminal
 from fransys_author.surface._bare import bare_series
-from fransys_author.surface._block_ports import series_ports
 from fransys_author.surface._cable import Cables
 from fransys_author.surface._carry import refuse_carried, series_name
 from fransys_author.surface._channels import take_channels
@@ -230,13 +228,6 @@ class Series(Supplies, Cables):
         _land_bridges(self, elements, found)
         self._wired_commons |= commons & touched
         self._remember(walked)
-        self._note_block(elements, found)
-
-    def _note_block(self: "Design", elements: tuple[object, ...], found: list[list[Ends]]) -> None:
-        """Tell the engine which block this series was written in (author-0050)."""
-        if self._group is not None:
-            ports = tuple(port.id for port in series_ports(elements, found))
-            self._engine._design._series_blocks.collect(self._group.id, ports, caller_origin())
 
     def _remember(self: "Design", walked: Walked | None) -> None:
         """Keep the row each wire took, for a later series that starts on its net (S4)."""

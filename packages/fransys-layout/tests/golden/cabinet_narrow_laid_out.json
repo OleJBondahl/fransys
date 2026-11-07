@@ -1,6 +1,6 @@
 {
   "aliases": [],
-  "schema_version": 23,
+  "schema_version": 25,
   "tables": {
     "aspect_node": [
       {
@@ -63,6 +63,7 @@
       {
         "a": "port:7436d655f86b574293dc98c28e259621",
         "b": "port:b7fb1f2347d954958a08d62233623ae2",
+        "block": null,
         "carrier": null,
         "ext": {},
         "id": "conductor:04c7f098f265584f8efb7def08ba5c53",
@@ -76,6 +77,7 @@
       {
         "a": "port:145127dbbe58575e8c0c97f21ea8432f",
         "b": "port:396d463cb07e59e3acd9abc652e1c9e4",
+        "block": null,
         "carrier": null,
         "ext": {},
         "id": "conductor:0e03040b21d357cc9ae9d582fe5d03f5",
@@ -89,6 +91,7 @@
       {
         "a": "port:246677f05f75581eab1f344c23df66b9",
         "b": "port:86cb8649f1015667a1574ad660c2be8d",
+        "block": null,
         "carrier": null,
         "ext": {},
         "id": "conductor:2eb9e9e8f123544d9469750e0572317f",
@@ -102,6 +105,7 @@
       {
         "a": "port:ad48479fba165a30a870efc1ed1f9fe2",
         "b": "port:dbfbe88f4d4a524cb044f6d6a220d322",
+        "block": null,
         "carrier": null,
         "ext": {},
         "id": "conductor:2fcd910613b35c29b6a7546cb38e3cde",
@@ -115,6 +119,7 @@
       {
         "a": "port:20d144873c0b55cc8775a28324adb668",
         "b": "port:e03d5b75790d5ae2a0eb13b0880d9938",
+        "block": null,
         "carrier": null,
         "ext": {},
         "id": "conductor:345390b8655250e98ad2352a152e3ff2",
@@ -128,6 +133,7 @@
       {
         "a": "port:86cb8649f1015667a1574ad660c2be8d",
         "b": "port:dfdfa90b77085ea78eabf6e40e84f265",
+        "block": null,
         "carrier": null,
         "ext": {},
         "id": "conductor:5a6fb4cbda825f278a657410069d95ee",
@@ -141,6 +147,7 @@
       {
         "a": "port:158f431d5b725b57be33fbd70d51173b",
         "b": "port:d6537073a21156caa3383d939ec25ea9",
+        "block": null,
         "carrier": null,
         "ext": {},
         "id": "conductor:6159ec1e953558058ed709a16c08fc39",
@@ -154,6 +161,7 @@
       {
         "a": "port:59578fddceb65170a7f44e99528d0c05",
         "b": "port:c3fa81bacb585411a3e9a33eaeba9873",
+        "block": null,
         "carrier": null,
         "ext": {},
         "id": "conductor:621baa122215563dab072e67aed52a04",
@@ -167,6 +175,7 @@
       {
         "a": "port:057824ef5b0656d6b2fb6250a8779951",
         "b": "port:43fc60d96e0d52528eac5456b3a46de4",
+        "block": null,
         "carrier": null,
         "ext": {},
         "id": "conductor:717537964dcf5cafb32b5c3e0ae5e5d7",
@@ -180,6 +189,7 @@
       {
         "a": "port:395e8d70cc0b549d9b169c54310ce23a",
         "b": "port:90ead34cb43f5a498e16fda89f9723d1",
+        "block": null,
         "carrier": null,
         "ext": {},
         "id": "conductor:761b5d9fc0a85fb5acf8ea13e9c94246",
@@ -193,6 +203,7 @@
       {
         "a": "port:0fa411fdc4865b64827b88e18c4ce4d5",
         "b": "port:859ebdba6be856349f34142302e48808",
+        "block": null,
         "carrier": null,
         "ext": {},
         "id": "conductor:7de1342cde795931a9a1e66a8bd1cb24",
@@ -206,6 +217,7 @@
       {
         "a": "port:06b19eee32985f95973caf4ee4eda68a",
         "b": "port:bad71d289f08572c8ccdc08bc3caf4b1",
+        "block": null,
         "carrier": "item:521c45788155565cbe11d129331d6c9e",
         "ext": {},
         "id": "conductor:9bf048bfeccd5b5eaa4ba1cf5124d5fd",
@@ -220,6 +232,7 @@
       {
         "a": "port:316204b72f935c5b8c8350da91b2f1d2",
         "b": "port:76c73e301db3544194b5a61a85630920",
+        "block": null,
         "carrier": null,
         "ext": {},
         "id": "conductor:9dbe6db88a435acf9bcbe53019a36165",
@@ -233,6 +246,7 @@
       {
         "a": "port:762b0ca017295929ae164dda7b1ce8a8",
         "b": "port:d00801eac22a54499338b43f3dfb4a53",
+        "block": null,
         "carrier": null,
         "ext": {},
         "id": "conductor:b53abfab4dd95301820859db3de72a8c",
@@ -246,6 +260,7 @@
       {
         "a": "port:543cca800edd51e3a0b82d46d832f809",
         "b": "port:86cb8649f1015667a1574ad660c2be8d",
+        "block": null,
         "carrier": null,
         "ext": {},
         "id": "conductor:ba866495b14c5e3c9fa9dea0354d71a4",
@@ -259,6 +274,7 @@
       {
         "a": "port:250a27f3b48e537c932851bda3e6117f",
         "b": "port:82da7d09686c58718c9db5aec2a27b04",
+        "block": null,
         "carrier": null,
         "ext": {},
         "id": "conductor:c16bb7fcbbd25c2b966e8e30a198f57f",
@@ -272,6 +288,7 @@
       {
         "a": "port:9ab9cd6fa2b45c3a84155166f0441d07",
         "b": "port:d6e5900cb4b75d509633134ddc222c59",
+        "block": null,
         "carrier": null,
         "ext": {},
         "id": "conductor:c77ffdb0ef7b5aa3bfe3c235191ce583",
@@ -285,6 +302,7 @@
       {
         "a": "port:19feed79d0b75cc7bee6999e0523f84f",
         "b": "port:45afd9b9fc6251f3841ffea81284d852",
+        "block": null,
         "carrier": null,
         "ext": {},
         "id": "conductor:d88c49cd8fbf5e5591bca03b4178e593",
@@ -298,6 +316,7 @@
       {
         "a": "port:490cc3d74f7059a99cd374d6ad856883",
         "b": "port:cfb4d8c93af051298e60fdc5c2060fd0",
+        "block": null,
         "carrier": null,
         "ext": {},
         "id": "conductor:e808ddec4d4b570d88a9d70a99470fbf",
@@ -311,6 +330,7 @@
       {
         "a": "port:0c33114b84405b6bb50eb9c1400aaab2",
         "b": "port:86cb8649f1015667a1574ad660c2be8d",
+        "block": null,
         "carrier": "item:521c45788155565cbe11d129331d6c9e",
         "ext": {},
         "id": "conductor:f3efeef677f25ff68f2fb299bb18085d",
@@ -2412,6 +2432,7 @@
     ],
     "part": [
       {
+        "catalogue_description": null,
         "category": "electromechanical",
         "class_code": "K",
         "description": "Invented EX-RELAY-1NO",
@@ -2426,6 +2447,7 @@
         "operated_by": null
       },
       {
+        "catalogue_description": null,
         "category": "protection",
         "class_code": "Q",
         "description": "Invented EX-BREAKER-1P-10A",
@@ -2440,6 +2462,7 @@
         "operated_by": null
       },
       {
+        "catalogue_description": null,
         "category": "terminal",
         "class_code": "X",
         "description": "Invented EX-TERMINAL-2.5",
@@ -2454,6 +2477,7 @@
         "operated_by": null
       },
       {
+        "catalogue_description": null,
         "category": "cable",
         "class_code": "W",
         "description": "Invented EX-CABLE-2X0.75",
@@ -2468,6 +2492,7 @@
         "operated_by": null
       },
       {
+        "catalogue_description": null,
         "category": "protection",
         "class_code": "F",
         "description": "Invented EX-FUSE-2A",
@@ -2482,6 +2507,7 @@
         "operated_by": null
       },
       {
+        "catalogue_description": null,
         "category": "board",
         "class_code": "A",
         "description": "Invented EX-BOARD-A",
@@ -2496,6 +2522,7 @@
         "operated_by": null
       },
       {
+        "catalogue_description": null,
         "category": "electromechanical",
         "class_code": "K",
         "description": "Invented EX-CONTACTOR-3P",
@@ -2510,6 +2537,7 @@
         "operated_by": null
       },
       {
+        "catalogue_description": null,
         "category": "generic",
         "class_code": "S",
         "description": "Invented EX-PUSHBUTTON-NC",
@@ -2524,6 +2552,7 @@
         "operated_by": null
       },
       {
+        "catalogue_description": null,
         "category": "generic",
         "class_code": "S",
         "description": "Invented EX-ESTOP-2NC",
@@ -2538,6 +2567,7 @@
         "operated_by": null
       },
       {
+        "catalogue_description": null,
         "category": "generic",
         "class_code": "H",
         "description": "Invented EX-LAMP-24V",

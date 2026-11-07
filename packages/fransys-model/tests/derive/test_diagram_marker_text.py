@@ -2,12 +2,13 @@
 
 from derive_helpers import frozen_with_library
 
+from fransys_model.derive import DiagramSheet
 from fransys_model.derive.block_diagram import diagram_marker_text
 from fransys_model.kernel import Draft
 
 
 def _text(sheet: int, at_sheet: int, cell: tuple[int, str]) -> str:
-    return diagram_marker_text(frozen_with_library(Draft()), sheet, at_sheet, *cell)
+    return diagram_marker_text(frozen_with_library(Draft()), DiagramSheet(unit=None, number=sheet), at_sheet, *cell)
 
 
 def test_two_cut_lines_of_one_pair_of_sheets_name_their_own_partners() -> None:

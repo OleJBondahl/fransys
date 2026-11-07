@@ -11,7 +11,7 @@ from .signals import SIGNALS
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    from fransys_model.derive import CdpRackModule, ChannelScaling, ItemId, PlcRackChannel, UnitId
+    from fransys_model.derive import CdpChannel, CdpRackModule, ChannelScaling, ItemId, UnitId
     from fransys_model.kernel import Model
 
 # `escape` does `&`, `<` and `>`; a line break or a tab in an attribute would be read back as a
@@ -74,38 +74,47 @@ def _scaling(scaling: ChannelScaling) -> list[str]:
     return _element("Operator", 3, attributes, points)
 
 
-def _channel(channel: PlcRackChannel, nr: int) -> list[str]:
-    signal = SIGNALS[channel.signal]
+def _channel_name(entry: CdpChannel) -> str:
+    """The bare signal name, else the placeholder `<kind><Nr>` (DO0, DI14)."""
+    name = entry.channel.signal_name
+    return _sanitise(name) if name else f"{entry.cdp_kind}{entry.nr}"
+
+
+def _channel(entry: CdpChannel) -> list[str]:
+    channel = entry.channel
+    signal = SIGNALS[entry.cdp_kind]
     attributes = [
-        ("Input", "1" if signal.output else "0"),
+        ("Input", "1" if entry.output else "0"),
         ("Model", f"CDPSignalChannel<{signal.kind}>"),
-        ("Name", _sanitise(channel.name_stem)),
+        ("Name", _channel_name(entry)),
         ("NetworkConvert", "1"),
-        ("Nr", str(nr)),
+        *((("Nr", str(entry.nr)),) if signal.digital else ()),
+        *(() if channel.routing is None else (("Routing", channel.routing),)),
         ("Type", signal.kind),
         ("Value", "0"),
         ("Description", signal.description),
     ]
     children: list[str] = []
     if channel.scaling is not None:
-        attributes.append(("Unit", channel.scaling.unit))
+        unit = channel.scaling.unit
+        if unit is not None:
+            attributes.append(("Unit", unit))
         children = _scaling(channel.scaling)
     return _element("Channel", 2, attributes, children)
 
 
 def _module_name(entry: CdpRackModule) -> str:
-    module = entry.module
-    abbr = "MIX" if entry.single_signal is None else SIGNALS[entry.single_signal].abbr
-    return f"{module.mpn}_{len(module.channels)}{abbr}_{_letters(entry.ordinal)}"
+    """`<order>_<channels><kind>_<letter>`; a module of mixed kinds is its bare order number."""
+    mpn = entry.module.mpn
+    return mpn if entry.cdp_kind is None else f"{mpn}_{entry.size}{entry.cdp_kind}_{_letters(entry.ordinal)}"
 
 
 def _module(entry: CdpRackModule) -> list[str]:
-    module = entry.module
-    channels = [line for nr, channel in enumerate(module.channels) for line in _channel(channel, nr)]
+    channels = [line for channel in entry.channels for line in _channel(channel)]
     attributes = [
         ("Model", "WagoIOModules.IOModule"),
         ("Name", _module_name(entry)),
-        ("Description", module.description),
+        ("Description", entry.description),
     ]
     return _element("Module", 1, attributes, channels)
 

@@ -5,11 +5,13 @@ PLC-WIRED spec) both ask the same question: which functions of a given set share
 with a function's ports. It is answered here, over `vocab.closure.net_of`, and nowhere else.
 """
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
+from fransys_model.derive.facts.children import parent_item
 from fransys_model.derive.facts.closure import net_of
 from fransys_model.derive.facts.roles import plc_channel_facets
 from fransys_model.derive.indexes import build_indexes
+from fransys_model.derive.lookups import channel_devices
 from fransys_model.kernel import DIGEST_CACHE_SIZE, digest_cached
 from fransys_model.vocab.facets.plc import PlcBindingFacet, PlcChannelFacet, PlcRequestFacet
 from fransys_model.vocab.tables import conductors, facets_of, functions, ports
@@ -19,7 +21,7 @@ if TYPE_CHECKING:
     from collections.abc import Collection, Mapping
 
     from fransys_model.kernel import Id, Model
-    from fransys_model.vocab.core import Function, Port
+    from fransys_model.vocab.core import Function, Item, Port
 
 
 def owner_of_port(by_function: Mapping[Id[Function], tuple[Id[Port], ...]], owners: Collection[Id[Function]]) -> dict[Id[Port], Id[Function]]:
@@ -56,9 +58,31 @@ def direct_neighbours(model: Model) -> dict[Id[Function], frozenset[Id[Function]
 
 
 @digest_cached(DIGEST_CACHE_SIZE)
+def plc_settings(model: Model) -> frozendict[Id[Function], PlcRequestFacet]:
+    """Each function with a `plc_request` facet: a device's request, or a spare channel's settings."""
+    return frozendict({f.subject: f for f in facets_of(model, PlcRequestFacet).values()})
+
+
+@digest_cached(DIGEST_CACHE_SIZE)
 def plc_requests(model: Model) -> frozendict[Id[Function], PlcRequestFacet]:
     """Each function that asks for a PLC signal, mapped to its `plc_request` facet."""
-    return frozendict({f.subject: f for f in facets_of(model, PlcRequestFacet).values()})
+    return frozendict({subject: facet for subject, facet in plc_settings(model).items() if facet.signal is not None})
+
+
+@digest_cached(DIGEST_CACHE_SIZE)
+def controller_signal_names(model: Model) -> frozendict[tuple[Id[Item] | None, str], tuple[tuple[Id[Function], Id[Function]], ...]]:
+    """The (channel, bound device) pairs carrying each (controller, signal name); the controller is the rack of the channel's module.
+
+    A spare channel's own name and a placeholder are no signal names and are not listed.
+    """
+    requests, all_functions = plc_requests(model), functions(model)
+    found: dict[tuple[Id[Item] | None, str], list[tuple[Id[Function], Id[Function]]]] = {}
+    for channel, device in channel_devices(model).items():
+        request = requests.get(device)
+        if request is not None and request.signal_name is not None:
+            rack = parent_item(model, all_functions[channel].item)
+            found.setdefault((rack, request.signal_name), []).append((channel, device))
+    return frozendict({key: tuple(pairs) for key, pairs in found.items()})
 
 
 def request_functions(model: Model) -> frozenset[Id[Function]]:
@@ -108,3 +132,8 @@ def channel_takes(channel_facts: PlcChannelFacet, signal: SignalType) -> bool:
     Example: a `di` channel takes `SignalType.DI` and nothing else.
     """
     return channel_facts.signal is signal
+
+
+def requested_signal(request: PlcRequestFacet) -> SignalType:
+    """The signal a device's request asks for; a spare channel's settings have none and are no request."""
+    return cast("SignalType", request.signal)

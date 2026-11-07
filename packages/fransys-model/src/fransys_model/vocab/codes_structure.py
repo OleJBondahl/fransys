@@ -215,15 +215,6 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         page="findings-validators",
     ),
     CodeInfo(
-        code="SCALING_UNIT_EMPTY",
-        severity=Severity.ERROR,
-        stage="validators",
-        who="consumer",
-        cause="The unit of a channel's engineering range is blank or has several lines.",
-        fix='Name the unit, e.g. "%" or "bar". Write: fn.plc(fr.AI, "level").scale("%", raw=(4, 20), eng=("0", "100"))',
-        page="findings-validators",
-    ),
-    CodeInfo(
         code="TERMINAL_MORE_THAN_TWO_PINS",
         severity=Severity.ERROR,
         stage="validators",

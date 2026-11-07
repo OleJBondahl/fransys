@@ -83,7 +83,7 @@ def test_board_own_listing_matches_the_worked_example_text():
     text = baseline.dumps(baseline.listing(result.model, u.unit_id))
 
     expected = {
-        "listing_version": 7,
+        "listing_version": 8,
         "unit": {"name": "demo-io-board", "version": 1, "revision": 3, "interface": "2"},
         "items": [
             {
@@ -204,8 +204,8 @@ def test_loads_dumps_round_trip(two_cabinet_system):
 def test_loads_refuses_an_unknown_listing_version(two_cabinet_system):
     result, cab1_id, _board1_id, _cab2_id, _board2_id = two_cabinet_system
     text = baseline.dumps(baseline.listing(result.model, cab1_id))
-    bad = text.replace('"listing_version":7', '"listing_version":8')
-    assert '"listing_version":8' in bad
+    bad = text.replace('"listing_version":8', '"listing_version":9')
+    assert '"listing_version":9' in bad
     with pytest.raises(SchemaVersionError):
         baseline.loads(bad)
 
@@ -301,5 +301,5 @@ def test_loads_reads_a_keyed_text(
     keyed = baseline.listing(result.model, cab1_id)
     assert all(row.key is not None for row in keyed.items)
     text = baseline.dumps(keyed)
-    assert '"listing_version":7' in text
+    assert '"listing_version":8' in text
     assert baseline.loads(text) == keyed

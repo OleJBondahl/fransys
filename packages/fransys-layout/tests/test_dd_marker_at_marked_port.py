@@ -102,7 +102,9 @@ def _own_branches(model, tag: str) -> list[tuple[DrawnSymbol, DrawnSymbol]]:
     for page, drawing in drawn_pages(model).items():
         if sets[pages[page].drawing_set].unit is None:
             continue
-        text = next(t for t in drawing.texts if t.text == tag)
+        text = next((t for t in drawing.texts if t.text == tag), None)
+        if text is None:  # the unit's set may span pages: only the terminal's own page counts
+            continue
         terminal = min(
             (s for s in drawing.symbols if s.key == "terminal"),
             key=lambda s: abs(s.x - text.box.x) + abs(s.y - text.box.y),

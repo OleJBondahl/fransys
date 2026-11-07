@@ -7,6 +7,7 @@ from fransys_model.kernel import CodeInfo, Finding, Id, Severity
 
 from . import codes_drawn, codes_structure, codes_wiring, codes_wiring_more
 
+ORDER_GROUP_DRAWS_NOTHING: Final[str] = "ORDER_GROUP_DRAWS_NOTHING"
 ORDER_HINT_CYCLE: Final[str] = "ORDER_HINT_CYCLE"
 
 _OWN: tuple[CodeInfo, ...] = (
@@ -94,6 +95,15 @@ _OWN: tuple[CodeInfo, ...] = (
         page="findings-build",
     ),
     CodeInfo(
+        code="PLC_CHANNEL_HAS_SETTINGS",
+        severity=Severity.ERROR,
+        stage="build",
+        who="consumer",
+        cause="A device is wired to a PLC channel that carries its own settings (a name, routing, a scale or configured=False).",
+        fix="Wire the device to a channel without settings. Write: d.series(K1.coil, A1.do_2)",
+        page="findings-validators",
+    ),
+    CodeInfo(
         code="PLC_REQUEST_UNSERVABLE",
         severity=Severity.ERROR,
         stage="build",
@@ -135,6 +145,18 @@ _OWN: tuple[CodeInfo, ...] = (
         cause=("Two items in the function or location aspect print the same full reference designation (e.g. two unit instances at one location)."),
         fix=('Place the two items at different locations so their designations differ. Write: d.device("X2", "DEMO-CONN-2P", place="A2")'),
         page="findings-build",
+    ),
+    CodeInfo(
+        code=ORDER_GROUP_DRAWS_NOTHING,
+        severity=Severity.ERROR,
+        stage="build",
+        who="consumer",
+        cause=(
+            "A `d.layout.order` hint names a group in which no function is drawn: its devices are drawn in another group "
+            "(a series written there draws them there) or it holds none. The message names the group and where its members are drawn."
+        ),
+        fix=("Order the group the message names as the one its members are drawn in, or drop the hint. Write: d.layout.order(run, lamps)"),
+        page="findings-validators",
     ),
     CodeInfo(
         code=ORDER_HINT_CYCLE,

@@ -204,8 +204,22 @@ def test_a_wire_sharing_interior_with_a_table_head_raises_overlap_ending_inside_
 
 
 @pytest.mark.rule("TEXT-CANDIDATES")
-def test_a_wire_on_a_table_heads_edge_or_corner_is_clear():
-    assert _head_codes(((0, 20), (60, 20)), ((40, 0), (40, 60)), ((0, 30), (20, 30))) == []
+def test_a_wire_running_along_a_table_heads_edge_raises_overlap_one_per_wire_and_a_corner_touch_is_clear():
+    """R1828, layout-0556: an edge run counts as `core.through` says (R1135, R1164); a zero-length corner touch stays clear (R976, R977)."""
+    assert _head_codes(((0, 20), (60, 20))) == ["OVERLAP"]
+    assert _head_codes(((0, 20), (60, 20)), ((40, 0), (40, 60))) == ["OVERLAP", "OVERLAP"]
+    assert _head_codes(((0, 30), (20, 30)), ((40, 30), (60, 30))) == []
+
+
+@pytest.mark.rule("TEXT-CANDIDATES")
+def test_a_diagonal_wire_through_a_body_a_marker_or_a_text_raises_its_finding():
+    """R1828: a diagonal segment is the true segment, not a horizontal at its first y."""
+    assert _head_codes(((0, 0), (60, 60))) == ["OVERLAP", "WIRE_NOT_ORTHOGONAL"]
+    assert _head_codes(((0, 40), (20, 30))) == ["WIRE_NOT_ORTHOGONAL"]  # ends at the corner, no length inside
+    assert _marker_codes(((0, 0), (30, 30))) == ["WIRE_OVER_MARKER", "WIRE_NOT_ORTHOGONAL"]
+    text = DrawnText("T1", Box(20, 20, 20, 10), "designation", "NW")
+    drawing = Drawing(Size(100, 100), (), (DrawnWire("w", ((0, 0), (60, 60)), "signal"),), (text,), (), "v")
+    assert _codes({PAGE: drawing}) == ["OVERLAP", "WIRE_NOT_ORTHOGONAL"]
 
 
 def test_a_wire_ending_inside_an_ordinary_body_not_at_its_pin_raises_overlap():

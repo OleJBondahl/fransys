@@ -4,6 +4,8 @@ A notes text of many pages pushes the sheets down; each entry must still land on
 The PDF is read back with pypdfium2, not the Typst source.
 """
 
+import re
+
 import fransys_render
 import pypdfium2 as pdfium
 import pypdfium2.raw as pdfium_raw
@@ -53,7 +55,7 @@ def test_each_sheet_entry_lands_on_its_sheet_in_sheet_order(notes_pages: int) ->
     compiled, destinations = _compiled(notes)
     pdf = pdfium.PdfDocument(compiled)
     toc = [(b.level, b.get_title(), b.get_dest().get_index()) for b in pdf.get_toc()]
-    sheets = [entry for entry in toc if entry[1].startswith("Sheet ")]
-    assert [entry[1].split(":")[0] for entry in sheets] == ["Sheet 1", "Sheet 2"]
+    sheets = [entry for entry in toc if re.fullmatch(r"\d+(: .*)?", entry[1])]
+    assert [entry[1].split(":")[0] for entry in sheets] == ["2", "3"]  # the page number, the cover being 1
     assert [entry[2] for entry in sheets] == [_landing(pdf, name) for name in destinations]
-    assert sheets[0][2] > (2 if notes_pages else 0)  # notes pages come before the sheets
+    assert [entry[2] + 1 for entry in sheets] == [2, 3]  # the notes come after the sheets

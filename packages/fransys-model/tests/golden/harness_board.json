@@ -1,6 +1,6 @@
 {
   "aliases": [],
-  "schema_version": 23,
+  "schema_version": 25,
   "tables": {
     "aspect_node": [
       {
@@ -30,6 +30,7 @@
       {
         "a": "port:524312338ff65931ba2587d8bb8321c9",
         "b": "port:7ddd556d737357ee9f594da0ed20d3ad",
+        "block": null,
         "carrier": "item:2bbec2ebd0cc5a49bf68d6133a098df2",
         "ext": {},
         "id": "conductor:0fa528416eb551f49fa14079390f9355",
@@ -43,6 +44,7 @@
       {
         "a": "port:6a81ad68d179589cb762353d9ba4af0e",
         "b": "port:b9ab243998455f48a0d7ce54debf61ec",
+        "block": null,
         "carrier": "item:2bbec2ebd0cc5a49bf68d6133a098df2",
         "ext": {},
         "id": "conductor:1f7edc28c42b528293df34fc4e7f7772",
@@ -56,6 +58,7 @@
       {
         "a": "port:4f059b81ea3159a9a8d155e99d2dba64",
         "b": "port:e24ec3d77dc752c098e11fbda8f97de9",
+        "block": null,
         "carrier": "item:2bbec2ebd0cc5a49bf68d6133a098df2",
         "ext": {},
         "id": "conductor:24ea9f23ae5a595b945d1384b40fa357",
@@ -69,6 +72,7 @@
       {
         "a": "port:53c06f9b5b4255d0bd88abad4e57cb66",
         "b": "port:e23f456182f8522f97379a15ab8680cb",
+        "block": null,
         "carrier": "item:2bbec2ebd0cc5a49bf68d6133a098df2",
         "ext": {},
         "id": "conductor:c865aa5ca3145c63a889e8c0d3c63f23",
@@ -671,6 +675,7 @@
     ],
     "part": [
       {
+        "catalogue_description": null,
         "category": "connector",
         "class_code": "H",
         "description": "Invented SIM-CONN-HOUSING-4P",
@@ -685,6 +690,7 @@
         "operated_by": null
       },
       {
+        "catalogue_description": null,
         "category": "cable",
         "class_code": "W",
         "description": "Invented SIM-CABLE-4X0.5",
@@ -699,6 +705,7 @@
         "operated_by": null
       },
       {
+        "catalogue_description": null,
         "category": "board",
         "class_code": "A",
         "description": "Invented SIM-BOARD-IOEXP",
@@ -713,6 +720,7 @@
         "operated_by": null
       },
       {
+        "catalogue_description": null,
         "category": "protection",
         "class_code": "F",
         "description": "Invented SIM-FUSE-1A-SMD",
@@ -727,6 +735,7 @@
         "operated_by": null
       },
       {
+        "catalogue_description": null,
         "category": "electromechanical",
         "class_code": "K",
         "description": "Invented SIM-RELAY-SMD-5V",

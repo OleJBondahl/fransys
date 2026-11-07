@@ -4,13 +4,31 @@ from fransys_model.vocab import aspect_nodes
 from fransys_model.vocab.tables import documents
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab import Document
+lazy from fransys_model.vocab.core import Unit, UnitRelease
 
 from .designation import item_designation, location_node_designation
 from .document_unit import document_unit
-from .drawing_text import unit_label
 from .lookups import item_description
+from .order import widest_text
+from .unit_release import unit_release
 
-__all__ = ["scope_path", "subject_label"]
+_TWO = 2
+
+
+def release_name(release: UnitRelease) -> str:
+    """A release's title, else its name when the title is empty."""
+    return release.title or release.name
+
+
+def unit_label(model: Model, unit: Id[Unit]) -> str:
+    """What a drawing, a cover or a title block prints for a unit.
+
+    The unit's release title (`derive.unit_release`), else its name when the title is empty.
+    """
+    return release_name(unit_release(model, unit))
+
+
+__all__ = ["scope_path", "subject_label", "widest_scope"]
 
 
 def subject_label(model: Model, document: Id[Document]) -> str:
@@ -42,3 +60,10 @@ def scope_path(model: Model, document: Id[Document]) -> str:
     if record.location is None:
         return subject_label(model, document)
     return location_node_designation(model, record.location)
+
+
+def widest_scope(model: Model) -> str:
+    """The longest `scope_path` among the documents, `""` with fewer than two: the widest prefix a reference into another PDF prints."""
+    if len(documents(model)) < _TWO:
+        return ""
+    return widest_text(scope_path(model, document) for document in documents(model))

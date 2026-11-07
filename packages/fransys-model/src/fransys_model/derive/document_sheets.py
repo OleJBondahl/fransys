@@ -4,8 +4,6 @@ The page list, the fields and the keys are derive's, so render draws each sheet 
 text from the model alone and pdf looks the same sheet up by the same key.
 """
 
-from collections import Counter
-
 from fransys_model.layout import SheetFormat, sheet_for, sheet_format_of
 from fransys_model.vocab import PageKind
 from fransys_model.vocab.tables import documents
@@ -27,7 +25,6 @@ from .rows_sheet import DiagramSheet, SheetKey, TitleBlockFields
 from .rows_sheet_index import sheet_index_rows
 from .rows_sheet_pages import DocumentSheets, SheetFrame, SheetPage
 from .schematic_subject import has_schematic_subject
-from .sheet_forms import sheet_counter_text
 from .sheet_frame import sheet_frame
 from .sheets import diagram_sheets
 from .title_block import document_facts
@@ -55,14 +52,12 @@ def _fields(
     forms: tuple[str, ...],
     *,
     scope: str | None = None,
-    counter: str = "",
 ) -> TitleBlockFields:
     """The title block of a page: the document facts, its title forms and what the page adds."""
     return TitleBlockFields(
         *document_facts(model, record.id),
         page_title=forms[0],
         scope=scope_path(model, record.id) if scope is None else scope,
-        sheet_counter=counter,
         notice=record.notice,
         logo=record.logo,
         page_title_shorter=forms[1:],
@@ -70,20 +65,10 @@ def _fields(
 
 
 def _drawing_fields(model: Model, record: Document, found: tuple[Page, ...]) -> list[TitleBlockFields]:
-    """Each drawing page's title block, `n / N` counted per drawing set."""
+    """Each drawing page's title block."""
     scope = scope_path(model, record.id)
-    totals = Counter(page.drawing_set for page in found)
     forms = [page_title_forms(model, page) for page in found]
-    return [
-        _fields(
-            model,
-            record,
-            form,
-            scope=scope,
-            counter=sheet_counter_text(page, totals[page.drawing_set]),
-        )
-        for page, form in zip(found, forms, strict=True)
-    ]
+    return [_fields(model, record, form, scope=scope) for form in forms]
 
 
 def _schematic_pages(model: Model, record: Document, sheet: SheetFormat) -> list[SheetPage]:
@@ -146,16 +131,11 @@ def _diagram_pages(model: Model, record: Document, diagrams: tuple[DiagramSheet,
             key=SheetKey(record.id, kind, i),
             kind=kind,
             sheet=paper,
-            fields=_fields(
-                model,
-                record,
-                (diagram_title(model),),
-                counter=sheet_counter_text(diagram, len(found)),
-            ),
+            fields=_fields(model, record, (diagram_title(model),)),
             where="",
             group="",
         )
-        for i, diagram in enumerate(found)
+        for i, _diagram in enumerate(found)
     ]
 
 

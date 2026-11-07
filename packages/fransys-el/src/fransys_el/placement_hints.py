@@ -4,9 +4,8 @@ from functools import partial
 from typing import TYPE_CHECKING
 
 from fransys_layout.core import Hints
-from fransys_model.derive import function_groups_in_order
+from fransys_model.derive import function_groups_in_order, function_moves
 from fransys_model.layout import (
-    GroupHint,
     OrderHint,
     layout_of,
 )
@@ -47,6 +46,6 @@ def hints_of(env: Env, syms: Sequence[Sym]) -> Hints:
     group = partial(_group, env, known)
     return Hints(
         group_order=_authored_order(model, known),
-        order_pairs=tuple(sorted({(group(o.before), group(o.after)) for o in layout_of(model, OrderHint).values()})),
-        draw_in=tuple(sorted((env.owner[h.function], group(h.group)) for h in layout_of(model, GroupHint).values() if h.function in env.owner)),
+        order_pairs=tuple(sorted({(label_of(model, o.before), label_of(model, o.after)) for o in layout_of(model, OrderHint).values()})),
+        draw_in=tuple(sorted((env.owner[function], group(node)) for function, node in function_moves(model).items() if function in env.owner)),
     )

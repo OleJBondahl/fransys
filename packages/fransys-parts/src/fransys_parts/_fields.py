@@ -70,6 +70,7 @@ PART_FIELDS = {
     "category": _Field(str, enum=PartCategory),
     "class_code": _Field(str),
     "operated_by": _Field(str, required=False, enum=OperatedBy),
+    "catalogue_description": _Field(str, required=False),
 }
 FUNCTION_FIELDS = {
     "name": _Field(str),

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from fractions import Fraction
 from typing import TYPE_CHECKING, NamedTuple
 
 from .values import Box
@@ -85,29 +86,47 @@ def blocked(box: Box, keeps: Sequence[Keep], own: frozenset[str], origin: tuple[
     return tuple(k for k in clear(box, keeps, {}, own=own) if not any(own_end(origin, e) for e in k.ends))
 
 
-def through(
+def _clip(lo: Fraction, hi: Fraction, p: int, q: int) -> tuple[Fraction, Fraction] | None:
+    """Narrow the parameter span [lo, hi] of a segment by one box side (Liang-Barsky): None when it lies outside that side."""
+    if p == 0:
+        return (lo, hi) if q >= 0 else None
+    r = Fraction(q, p)
+    return (max(lo, r), hi) if p < 0 else (lo, min(hi, r))
+
+
+def _meets(a: tuple[int, int], b: tuple[int, int], box: Box) -> bool:
+    """True when the segment a-b has a positive-length part in the closed `box`; a corner or point touch has none."""
+    span: tuple[Fraction, Fraction] | None = (Fraction(0), Fraction(1))
+    (x1, y1), (x2, y2) = a, b
+    for p, q in ((x1 - x2, x1 - box.x), (x2 - x1, box.x + box.w - x1), (y1 - y2, y1 - box.y), (y2 - y1, box.y + box.h - y1)):
+        span = span and _clip(*span, p, q)
+    return span is not None and span[0] < span[1]
+
+
+def through(a: tuple[int, int], b: tuple[int, int], box: Box, ends: tuple[tuple[int, int], ...], pins: Iterable[tuple[int, int]]) -> bool:
+    """True when the wire run a-b (a wire with `ends`) passes the body `box`: through its interior or along its outline, at any angle.
+
+    A zero-length touch is looks, and so is an edge run only at the run's own end pin (R1135, R1164); `pins` are the body's pin points.
+    """
+    if not _meets(a, b, box):
+        return False
+    x0, x1 = max(min(a[0], b[0]), box.x), min(max(a[0], b[0]), box.x + box.w)
+    y0, y1 = max(min(a[1], b[1]), box.y), min(max(a[1], b[1]), box.y + box.h)
+    edge = (x0 == x1 and x0 in (box.x, box.x + box.w)) or (y0 == y1 and y0 in (box.y, box.y + box.h))
+    return not (edge and (hit := [p for p in pins if x0 <= p[0] <= x1 and y0 <= p[1] <= y1]) and all(p in ends for p in hit))
+
+
+def through_keeps(
     probe: Box, keeps: Sequence[Keep], ends: tuple[tuple[int, int], ...], own: frozenset[str], pins: Mapping[str, Sequence[tuple[int, int]]]
 ) -> tuple[Keep, ...]:
     """The keeps a wire run (`probe`, with the wire's `ends`) passes; `pins` maps a body's owner to its pin points.
 
-    Own footprints are skipped, never a body (R533). A body is met by a run through its interior or along its outline; a zero-length touch is looks,
-    and so is an edge run only at the run's own end pin (R1135, R1164).
+    Own footprints are skipped, never a body (R533); a body is met as `through` says.
     """
-    out = []
-    for k in clear(probe, keeps, {}):
-        if k.kind != "body":
-            if k.owner not in own:
-                out.append(k)
-            continue
-        b = k.box
-        x0, x1, y0, y1 = max(probe.x, b.x), min(probe.x + probe.w, b.x + b.w), max(probe.y, b.y), min(probe.y + probe.h, b.y + b.h)
-        if x0 == x1 and y0 == y1:
-            continue
-        edge = (x0 == x1 and x0 in (b.x, b.x + b.w)) or (y0 == y1 and y0 in (b.y, b.y + b.h))
-        inside = [p for p in pins.get(k.owner, ()) if x0 <= p[0] <= x1 and y0 <= p[1] <= y1]
-        if not (edge and inside and all(p in ends for p in inside)):
-            out.append(k)
-    return tuple(out)
+    a, b = (probe.x, probe.y), (probe.x + probe.w, probe.y + probe.h)
+    return tuple(
+        k for k in clear(probe, keeps, {}) if (k.owner not in own if k.kind != "body" else through(a, b, k.box, ends, pins.get(k.owner, ())))
+    )
 
 
 def reach(pin_y: int, keeps: Iterable[Keep], side: str, gap: int, kind: str | None = None) -> int:

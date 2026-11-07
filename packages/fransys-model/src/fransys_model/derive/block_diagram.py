@@ -5,6 +5,7 @@ Reached as `fransys_model.derive.block_diagram.<name>`, never re-exported from `
 does. A diagram belongs to a reading: `unit=None` is the system, a unit its own.
 """
 
+from dataclasses import replace
 from typing import Any, cast
 
 from fransys_kernel import render_id
@@ -34,7 +35,9 @@ from .harness_line_ends import mate_of, plug_of
 from .instance_tag import instance_name, instance_tags
 from .lookups import item_of_port, terminal_strip, unit_chain
 from .order import NaturalKey, natural_key
+from .page_reference_text import pdf_page
 lazy from .rows import HarnessCable
+lazy from .rows_sheet import DiagramSheet
 
 __all__ = [
     "DIAGRAM_CABLE_FANOUT",
@@ -278,12 +281,13 @@ def diagram_facts(model: Model, unit: Id[Unit] | None) -> tuple[DiagramFact, ...
     return tuple(sorted(found, key=lambda fact: (fact.code, render_id(fact.subject))))
 
 
-def diagram_marker_text(model: Model, sheet: int, at_sheet: int, column: int, row: str) -> str:
-    """The text a cut marker on sheet `sheet` prints: its partner's cell `column`, `row` on `at_sheet`, `p2:3B`.
+def diagram_marker_text(model: Model, sheet: DiagramSheet, at_sheet: int, column: int, row: str) -> str:
+    """The text a cut marker on `sheet` prints: its partner's cell `column`, `row` on sheet number `at_sheet`, `p3:3B`.
 
-    The cell is the partner marker's, read by the caller from the layout layer's `frame_cell`.
+    The cell is the partner marker's, read by the caller from the layout layer's `frame_cell`. Both
+    sheets are pages of one PDF, so the page numbers are `pdf_page`'s (model-0436).
     """
     page = sheet_for(model, PageKind.BLOCK_DIAGRAM)
     labels = cell_labels(frame_form_of(model), page.frame_rows, column, row)
-    seats = (1, sheet, ()), (1, at_sheet, ())
-    return partner_position_text(reference_text_of(model), *seats, labels)
+    pages = pdf_page(model, sheet), pdf_page(model, replace(sheet, number=at_sheet))
+    return partner_position_text(reference_text_of(model), *pages, labels)

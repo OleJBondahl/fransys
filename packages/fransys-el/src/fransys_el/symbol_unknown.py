@@ -47,7 +47,7 @@ def unknown_symbol_key_findings(laid: Model, unknown: dict[Id[Function], str]) -
     found = []
     for function, key in unknown.items():
         page = _page_of(laid, function)
-        where = "" if page is None else f"{page_reference_text(laid, page, with_location=True)}: "
+        where = "" if page is None else f"{page_reference_text(laid, page)}: "
         found.append(
             _INFO.finding(
                 (function,),

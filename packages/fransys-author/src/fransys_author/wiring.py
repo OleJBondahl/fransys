@@ -5,8 +5,9 @@ from itertools import pairwise
 from typing import TYPE_CHECKING
 lazy from decimal import Decimal
 
-from fransys_model.kernel import AuthoringKey, make_id
+from fransys_model.kernel import AuthoringKey, Id, make_id
 from fransys_model.vocab import (
+    AspectNode,
     Conductor,
     ConductorKind,
     HarnessFacet,
@@ -30,13 +31,13 @@ if TYPE_CHECKING:
 _MINIMUM_RUN_POINTS = 2
 
 
-def _wire_conductor(prefix: AuthoringKey, a: Port, b: Port, n: int | None) -> Conductor:
+def _wire_conductor(prefix: AuthoringKey, a: Port, b: Port, n: int | None, block: Id[AspectNode] | None) -> Conductor:
     """The `wire` conductor between `a` and `b`, keyed by its ports; a parallel one needs `n=2`."""
     ends = sorted_pair(a.key, b.key)
     key = scoped(prefix, "wire", spliced(ends[0]), spliced(ends[1]))
     if n is not None:
         key = scoped(key, "n", str(n))
-    return Conductor(id=make_id(Conductor, key), key=key, a=a.id, b=b.id, kind=ConductorKind.WIRE, carrier=None)
+    return Conductor(id=make_id(Conductor, key), key=key, a=a.id, b=b.id, kind=ConductorKind.WIRE, carrier=None, block=block)
 
 
 @dataclass(frozen=True, slots=True)
@@ -45,6 +46,7 @@ class WireHints:
 
     _recorder: _Recorder
     _prefix: AuthoringKey
+    _block: Id[AspectNode] | None
 
     def __call__(  # noqa: PLR0913 -- the two ports and the hint's table, size, n and label [public keyword API kept, decision 0444]
         self,
@@ -57,7 +59,7 @@ class WireHints:
         label: str | None = None,
     ) -> None:
         """One wire between `a` and `b`; `resolve_wire_rows` picks its row from the nets."""
-        conductor = _wire_conductor(self._prefix, as_port(a), as_port(b), n)
+        conductor = _wire_conductor(self._prefix, as_port(a), as_port(b), n, self._block)
         origin = caller_origin()
         self._recorder._add(conductor, origin)
         key = scoped(conductor.key, "row_hint")
@@ -78,6 +80,7 @@ class Wiring:
 
     _recorder: _Recorder
     _prefix: AuthoringKey
+    _block: Id[AspectNode] | None
     colour: str
     gauge: Decimal
     label: str | None
@@ -93,7 +96,7 @@ class Wiring:
         label: str | None = None,
     ) -> None:
         """One wire between `a` and `b`, keyed by its ports; a parallel one needs `n=2`."""
-        conductor = _wire_conductor(self._prefix, as_port(a), as_port(b), n)
+        conductor = _wire_conductor(self._prefix, as_port(a), as_port(b), n, self._block)
         key = conductor.key
         origin = caller_origin()
         self._recorder._add(conductor, origin)

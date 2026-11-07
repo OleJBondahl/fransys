@@ -1,7 +1,7 @@
 """What the PDF's links and outline need from the model (NV2, NV3, PAGES-NAV).
 
 Reached as `fransys_model.derive.page_nav.<name>`, never re-exported from `derive/__init__.py`.
-Sheet numbers and titles come from `sheet_text`, `sheet_title_text` and `page_title`; nothing here
+Page numbers and titles come from `pdf_page`, `sheet_title_text` and `page_title`; nothing here
 formats them again.
 """
 
@@ -11,7 +11,7 @@ from fransys_model.layout import LinkMarker, Page, layout_of
 lazy from fransys_model.kernel import Id, Model
 
 from .order import drawn_on_page
-from .page_destination import page_destination, sheet_text, sheet_title_text
+from .page_destination import page_destination, sheet_title_text
 from .page_headings import diagram_title
 from .page_titles import page_title
 from .rows_nav import OutlineSheet, ReferenceLink
@@ -46,10 +46,7 @@ def _marker_links(model: Model, page: Page, known: Collection[Id[Page]], boxes: 
 
 
 def outline_sheets(model: Model, sheets: Iterable[Id[Page] | DiagramSheet]) -> tuple[OutlineSheet, ...]:
-    """One entry per sheet (a page id or a diagram sheet), in order: "Sheet 3: Pump 1" (NV3).
-
-    `number` is the sheet number it prints (`sheet_text`).
-    """
+    """One entry per sheet (a page id or a diagram sheet), in order: "3: Pump 1" (NV3)."""
     out = []
     for given in sheets:
         if isinstance(given, DiagramSheet):
@@ -60,7 +57,6 @@ def outline_sheets(model: Model, sheets: Iterable[Id[Page] | DiagramSheet]) -> t
         out.append(
             OutlineSheet(
                 destination=page_destination(model, sheet),
-                number=sheet_text(model, sheet),
                 title=sheet_title_text(model, sheet, title),
                 entries=entries,
             )

@@ -1,7 +1,8 @@
 """Field case: a container unit holds a cabinet unit, and the document numbers the drawing sets design-wide, so the cabinet's set is 2.
 The bug: the PDF's sheet text said p1.1, but the render check and the derived reference text printed the design-wide p2.1.
-Fixed by render-0018 (amends render-0015), every printed page reference names its set by set_rank, and page_reference_text prints it."""
+Fixed by model-0436: every printed page text is the page's place in its PDF, `pdf_page`."""
 
+import re
 import tempfile
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -12,7 +13,7 @@ from _drawn_pages import drawn_pages
 from test_a_unit_boundary_port_wired_inside_and_out import _supply_cab
 
 from fransys_model.derive.page_destination import page_destination
-from fransys_model.derive.page_reference_text import page_reference_text
+from fransys_model.derive.page_reference_text import page_reference_text, pdf_page
 from fransys_model.layout import DrawingSet, Page, layout_of
 
 if TYPE_CHECKING:
@@ -54,8 +55,7 @@ def _inner_page(model: Model) -> Page:
 def test_a_units_first_set_numbered_two_is_named_set_one_everywhere() -> None:
     model = _built()
     page = _inner_page(model)
-    assert page_destination(model, page) == "p1.1"
-    assert page_reference_text(model, page, with_location=True).endswith("p1.1")
+    assert page_destination(model, page) == page_reference_text(model, page) == f"p{pdf_page(model, page)}"
 
 
 @pytest.mark.rule("G12-UNIT-SCOPE")
@@ -64,4 +64,4 @@ def test_a_conductor_leaving_the_documents_unit_ends_in_a_stub_naming_the_far_en
     drawing = drawn_pages(model)[next(p.id for p in layout_of(model, Page).values() if p.id != _inner_page(model).id)]
     shown = [t.text for t in drawing.texts] + [text for one in drawing.symbols for _, text in one.slots]
     assert {"← -U1-T1:+", "→ -U1-T1:-"} <= set(shown)
-    assert not any(t.startswith("p1.1:") for t in shown)
+    assert not any(re.match(r"p\d+:", t) for t in shown)

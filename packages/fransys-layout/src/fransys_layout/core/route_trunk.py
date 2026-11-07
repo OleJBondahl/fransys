@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 
 from .arrow_reserve import leg_pins
 from .band import lane_offset, lane_rows, level_offset
-from .clearance import fan_own, pin_points, through
+from .clearance import fan_own, pin_points, through_keeps
 from .errors import CoreError
 from .outputs import Refused, Wire
 from .route_env import Drawn, Rise, hard_keeps, lost_key, pin_point, z_wire
@@ -81,7 +81,7 @@ def _foreign_body(env: RouteEnv, fan: Fan, xy: XY, y: int) -> bool:
         fan,
         ([c.sym for ln in col.lanes for c in ln.cells] for col in env.columns if col.id in cols),
     )
-    return bool(through(Box(xy[0], min(xy[1], y), 0, abs(y - xy[1])), hard_keeps(env), (xy,), own, pin_points(env.placed)))
+    return bool(through_keeps(Box(xy[0], min(xy[1], y), 0, abs(y - xy[1])), hard_keeps(env), (xy,), own, pin_points(env.placed)))
 
 
 def drop_or_rise(env: RouteEnv, line: Line, a: Attach, xy: XY, lane: int) -> Drawn:

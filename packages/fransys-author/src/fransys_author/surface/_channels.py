@@ -42,17 +42,18 @@ def _spell(signal: SignalType) -> str:
 def _requested(elements: tuple[object, ...], index: int, asks: dict[Id[Function], PlcRequestFacet]) -> PlcRequestFacet | None:
     """The request on the function of the path nearest the module, else `None`."""
     near = elements[1:] if index == 0 else reversed(elements[:index])
-    return next((asks[e._fn.id] for e in near if isinstance(e, Fn) and e._fn.id in asks), None)
+    return next((asks[e._fn.id] for e in near if isinstance(e, Fn) and e._fn.id in asks and asks[e._fn.id].signal is not None), None)
 
 
 def _kind(label: str, way: str, kinds: list[SignalType], asked: PlcRequestFacet | None) -> SignalType:
     """The signal this path takes: the requested one, else the module's only one this way."""
-    if asked is not None and asked.signal not in kinds:
+    signal = None if asked is None else asked.signal
+    if asked is not None and signal is not None and signal not in kinds:
         have = ", ".join(k.value for k in kinds) or "none"
-        msg = f"{label} has no {asked.signal.value} {way} for the request {asked.signal_name!r}; its {way}s: {have}"
+        msg = f"{label} has no {signal.value} {way} for the request {asked.signal_name!r}; its {way}s: {have}"
         raise AuthorError(msg)
-    if asked is not None:
-        return asked.signal
+    if signal is not None:
+        return signal
     if len(kinds) == 1:
         return kinds[0]
     if not kinds:

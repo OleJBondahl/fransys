@@ -40,13 +40,14 @@ from ._hint_writes import _write_placement
 from ._keys import scoped
 from ._origin import caller_origin
 from ._partless import terminal_records
+from ._plc_call import refuse_plc, refuse_scale
 from .errors import AuthorError
 from .instantiate import instantiate as instantiate_
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
 
-    from fransys_model.kernel import Origin, Record
+    from fransys_model.kernel import Draft, Origin, Record
 
     from ._catalogue import Catalogue
 
@@ -56,6 +57,9 @@ class _Recorder(Protocol):
 
     @property
     def _catalogue(self) -> Catalogue: ...
+
+    @property
+    def _draft(self) -> Draft: ...
 
     def _add(self, record: Record, origin: Origin) -> None: ...
 
@@ -124,12 +128,15 @@ class Fn:
         """
         return _port_by_marking(self.ports, marking, owner="function")
 
-    def plc(self, signal: str, signal_name: str, priority: int = 0) -> Fn:
-        """Request a PLC channel of `signal` for this function; returns `self`.
+    def plc(
+        self, signal: str | None = None, signal_name: str | None = None, priority: int = 0, *, routing: str | None = None, configured: bool = True
+    ) -> Fn:
+        """Request a PLC channel of `signal` for this function, or set a module channel's own settings; returns `self`.
 
-        `priority`: lower goes first when `derive.allocate_plc` serves requests.
+        `priority`: lower goes first when `derive.allocate_plc` serves requests. A module's channel
+        takes no `signal`: `signal_name`, `routing` and `configured` describe that channel.
         """
-        signal_type = member(SignalType, signal, field="PLC signal type")
+        signal_type = None if signal is None else member(SignalType, signal, field="PLC signal type")
         key = scoped(self.key, "plc_request")
         facet = PlcRequestFacet(
             id=make_id(PlcRequestFacet, key),
@@ -138,15 +145,19 @@ class Fn:
             signal=signal_type,
             signal_name=signal_name,
             priority=priority,
+            routing=routing,
+            configured=configured,
         )
+        refuse_plc(self._recorder, self, facet)
         self._recorder._add(facet, caller_origin())
         return self
 
-    def scale(self, unit: str, *, raw: tuple[int, int], eng: tuple[str | Decimal, str | Decimal]) -> Fn:
+    def scale(self, unit: str | None = None, *, raw: tuple[int, int], eng: tuple[str | Decimal, str | Decimal]) -> Fn:
         """Engineering-unit scaling for this function; returns `self`.
 
-        `eng` holds `str` or `Decimal`, never `float` (an `AuthorError`).
+        `eng` holds `str` or `Decimal`, never `float` (an `AuthorError`). `unit=None` writes no unit.
         """
+        refuse_scale(self._recorder, self, unit)
         key = scoped(self.key, "scaling")
         facet = ScalingFacet(
             id=make_id(ScalingFacet, key),

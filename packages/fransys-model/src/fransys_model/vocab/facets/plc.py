@@ -25,19 +25,23 @@ class PlcChannelFacet:
 
 @record(kind="facet.plc_request", subject="subject", unique=True)
 class PlcRequestFacet:
-    """A field function's request for a PLC channel of a given signal type.
+    """A channel's PLC settings: a field function's request for a channel, or a spare channel's own.
 
     Example: the design/examples.md 11 transmitter's `Function` carries
     `signal=SignalType.AI_CURRENT, signal_name="Pos", priority=1`. Served by
-    `passes.plc_allocation` in `(priority, function key)` order.
+    `passes.plc_allocation` in `(priority, function key)` order. A channel function with
+    `signal=None` is a spare and these are its settings (WAGO-CDP, designer R1824); `routing` is an
+    opaque CDP path, `None` writes none; `configured=False` leaves the channel out of the CDP file.
     """
 
     id: Id[PlcRequestFacet]
     key: AuthoringKey
     subject: Id[Function]
-    signal: SignalType
-    signal_name: str
+    signal: SignalType | None
+    signal_name: str | None
     priority: int
+    routing: str | None = None
+    configured: bool = True
     ext: frozendict[str, Value] = frozendict()
 
 

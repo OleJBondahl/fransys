@@ -193,7 +193,7 @@ def split_fans(
 
 
 def split_conflict_ends(columns: Sequence[Column], fans: Sequence[Fan], cross: Sequence[CrossLink]) -> tuple[tuple[Fan, ...], tuple[CrossLink, ...]]:
-    """A fan's legs on a node its drivers stand on leave it, each a cross link to a driver (R418).
+    """A fan's legs on a node its drivers stand on leave it as one cross link to a driver (R418).
 
     Only those ends conflict; the rest keeps the fan and its trunk. A fan left with no leg, or
     a bundle, stays whole for the net cut.
@@ -210,5 +210,5 @@ def split_conflict_ends(columns: Sequence[Column], fans: Sequence[Fan], cross: S
             kept.append(fan)
             continue
         kept.append(replace(fan, legs=legs))
-        links.extend(CrossLink(fan.nets[0], (a, free[0])) for a in out)
+        links.append(CrossLink(fan.nets[0], (out[0], free[0], *out[1:])))
     return tuple(kept), tuple(links)

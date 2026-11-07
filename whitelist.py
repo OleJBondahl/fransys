@@ -52,8 +52,6 @@ _ = _Whitelist()
 # `@record`/`@value` field read generically via `dataclasses.fields()` for hashing, freezing and
 # canonical JSON (FIELDS, `fransys_kernel/schema.py:37`, sufficient alone) -- never within
 # fransys-model/src itself.
-_.name_stem  # OTHER fransys-wago/src/fransys_wago/modules.py:85
-_.single_signal  # OTHER fransys-wago/src/fransys_wago/modules.py:101
 _.unconnected  # OTHER fransys-kicad/src/fransys_kicad/check.py:158
 _.jumper_group  # OTHER fransys-pdf/src/fransys_pdf/_lists_terminal.py:53
 _.footprint_library  # OTHER fransys-kicad/src/fransys_kicad/netlist.py:37

@@ -6,7 +6,7 @@ from collections import defaultdict
 from itertools import pairwise
 from typing import TYPE_CHECKING
 
-from .clearance import pin_points, through
+from .clearance import pin_points, through_keeps
 from .errors import CoreError
 from .flow_values import hop_wires
 from .geometry import stair_room
@@ -71,7 +71,7 @@ def _box_pair(env: RouteEnv, net: str, box: PinRef, cell: PinRef) -> Drawn | Non
 def _column_clear_of_bodies(env: RouteEnv, pb: XY, pc: XY, bottom: int) -> int:
     """The x of the long vertical: the box pin's column, moved one grid past each body outline it would lie on (R1146, layout-0480)."""
     bodies, x = tuple(k for k in hard_keeps(env) if k.kind == "body"), pb[0]
-    while hit := through(Box(x, pb[1], 0, bottom - pb[1]), bodies, (pb, pc), frozenset(), pin_points(env.placed)):
+    while hit := through_keeps(Box(x, pb[1], 0, bottom - pb[1]), bodies, (pb, pc), frozenset(), pin_points(env.placed)):
         x = hit[0].box.x + hit[0].box.w + env.options.wiring_grid
     return x
 

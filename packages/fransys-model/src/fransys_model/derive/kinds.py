@@ -25,7 +25,7 @@ from .lookups import strip_set
 from .plc_rack import is_plc_module
 from .rows_plc import SignalKind
 
-__all__ = ["item_kind", "item_role", "signal_kind"]
+__all__ = ["cdp_kind", "item_kind", "item_role", "signal_kind"]
 
 _SIGNAL_KINDS = {
     signal: SignalKind(f"{'analogue' if row.analogue else 'digital'}_{'out' if row.output else 'in'}") for signal, row in SIGNAL_TYPES.items()
@@ -87,3 +87,9 @@ def item_role(model: Model, item: Id[Item]) -> ItemRole:
         external=external(model, item),
         unit_root=root,
     )
+
+
+def cdp_kind(signal: SignalType) -> str:
+    """The CDP kind of a signal type: `DI`, `DO`, `AI` or `AO`; a Pt100 is `AI`, a relay output `DO`."""
+    form, _, direction = signal_kind(signal).name.partition("_")
+    return form[0] + direction[0]

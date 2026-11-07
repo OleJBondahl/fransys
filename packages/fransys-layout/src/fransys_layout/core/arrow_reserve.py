@@ -241,7 +241,11 @@ def leg_line(
         lambda c: not clear(Box(min(end, c), y, c - min(end, c), 0), cells, {}), range(x, area.w) if area else count(x)
     )  # a wire run: a foot's pin tip on it ends the search (ONE-SIDED-PIN)
     x = next((c for c in runs if _clear(c, Box(c + box.x, low, box.w, box.h), (min(end, c), y), room)), None)
-    return None if x is None else ((min(end, x), y), (x, y), (x, low))
+    return (
+        None
+        if x is None
+        else ((trunk.x1 if len(trunk.lane_ends) <= 1 and x >= trunk.x1 else min(end, x), y), (x, y), (x, low))  # R1861: no run inside the trunk
+    )
 
 
 def _ahead(line: tuple[XY, XY, XY], other: tuple[XY, XY, XY], low: int) -> bool:

@@ -10,7 +10,7 @@ from itertools import pairwise
 from typing import TYPE_CHECKING
 
 from .arrow_reserve import arrow_rows, leg_feet, leg_fit, leg_lines, leg_rows
-from .clearance import Keep, fan_own, pin_points, through
+from .clearance import Keep, fan_own, pin_points, through_keeps
 from .net_keys import net_of_key, port_key
 from .outputs import Marker, Refused, Wire
 from .sides import step_out
@@ -150,7 +150,7 @@ def body_hit(env: RouteEnv, net: str, points: Sequence[XY]) -> Keep | None:
     keeps, pins = tuple(k for k in hard_keeps(env) if k.kind == "body"), pin_points(env.placed)
     own, ends = own_syms(env, net_of_key(net), net), (points[0], points[-1])
     runs = (Box(min(ax, bx), min(ay, by), abs(bx - ax), abs(by - ay)) for (ax, ay), (bx, by) in pairwise(points))
-    return next((k for run in runs for k in through(run, keeps, ends, own, pins)), None)
+    return next((k for run in runs for k in through_keeps(run, keeps, ends, own, pins)), None)
 
 
 def own_syms(env: RouteEnv, net: str, fan: str | None = None) -> frozenset[str]:

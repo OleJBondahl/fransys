@@ -6,7 +6,7 @@ import pytest
 from fransys_wago import modules_xml
 from fransys_wago.signals import SIGNALS
 
-from fransys_model.derive import plc_rack_modules
+from fransys_model.derive import cdp_kind, plc_rack_modules, rack_modules_for_cdp
 from fransys_model.kernel import SchemaError
 from fransys_model.vocab.enums import SignalType
 
@@ -14,14 +14,14 @@ GOLDEN = Path(__file__).resolve().parent / "golden" / "rack.xml"
 
 # The table of the order, spelled out here so that a change to it in the package shows up.
 EXPECTED = {
-    SignalType.DI: ("DI", "0", "bool", "Digital input channel"),
-    SignalType.DO: ("DO", "1", "bool", "Digital output channel"),
-    SignalType.AI_CURRENT: ("AI", "0", "short", "Analog input channel"),
-    SignalType.AI_VOLTAGE: ("AI", "0", "short", "Analog input channel"),
-    SignalType.AO_CURRENT: ("AO", "1", "short", "Analog output channel"),
-    SignalType.AO_VOLTAGE: ("AO", "1", "short", "Analog output channel"),
-    SignalType.RTD: ("RTD", "0", "short", "Analog input channel"),
-    SignalType.RELAY: ("RO", "1", "bool", "Relay output channel"),
+    SignalType.DI: ("0", "bool", "Digital input channel"),
+    SignalType.DO: ("1", "bool", "Digital output channel"),
+    SignalType.AI_CURRENT: ("0", "short", "Analog input channel"),
+    SignalType.AI_VOLTAGE: ("0", "short", "Analog input channel"),
+    SignalType.AO_CURRENT: ("1", "short", "Analog output channel"),
+    SignalType.AO_VOLTAGE: ("1", "short", "Analog output channel"),
+    SignalType.RTD: ("0", "short", "Analog input channel"),
+    SignalType.RELAY: ("1", "bool", "Digital output channel"),
 }
 
 
@@ -62,22 +62,23 @@ def test_the_golden_is_exact_bytes(demo_rack):
 
 def test_every_module_and_channel_matches_the_rows(demo_rack):
     model = demo_rack.freeze()
-    rows = [row for row in plc_rack_modules(model, demo_rack.rack) if row.channels]
+    rows = list(rack_modules_for_cdp(model, demo_rack.rack))
     modules = list(_parse(modules_xml(model, demo_rack.rack)))
-    assert len(modules) == len(rows) == 4
+    assert len(modules) == len(rows) == 6
     for module, row in zip(modules, rows, strict=True):
         assert module.tag == "Module"
         assert module.get("Model") == "WagoIOModules.IOModule"
         assert module.get("Description") == row.description
         channels = list(module)
         assert len(channels) == len(row.channels)
-        for nr, (channel, source) in enumerate(zip(channels, row.channels, strict=True)):
-            _, input_, kind, description = EXPECTED[source.signal]
+        for channel, entry in zip(channels, row.channels, strict=True):
+            source = entry.channel
+            input_, kind, description = EXPECTED[source.signal]
             assert channel.tag == "Channel"
             assert channel.get("Input") == input_
             assert channel.get("Model") == f"CDPSignalChannel<{kind}>"
             assert channel.get("NetworkConvert") == "1"
-            assert channel.get("Nr") == str(nr)
+            assert channel.get("Nr") == (None if entry.cdp_kind.startswith("A") else str(entry.nr))
             assert channel.get("Type") == kind
             assert channel.get("Value") == "0"
             assert channel.get("Description") == description
@@ -87,6 +88,7 @@ def test_every_module_and_channel_matches_the_rows(demo_rack):
                 assert operators == []
                 continue
             assert channel.get("Unit") == source.scaling.unit
+            assert channel.get("Routing") == source.routing
             (operator,) = operators
             assert operator.attrib == {
                 "Interpolation": "Linear",
@@ -115,19 +117,26 @@ def test_the_demo_rack_reads_as_the_spec_says(demo_rack):
         ("750-1504_2DO_a", "4-channel digital output"),
         ("750-455_3AI_a", "4-channel 4-20 mA"),
         ("750-1405_1DI_b", "16-channel digital input"),
+        ("750-1506", "8-channel digital"),
+        ("750-460_2AI_a", "2-channel analog input; For Pt100/RTD resistance sensors"),
     ]
     assert [[c.get("Name") for c in module] for module in root] == [
-        ["B1_Door", "B2_Gate", "A1_2"],
-        ["K1_Fan", "A2_1"],
-        ["T1_Level", "T2_Flow", "A3_2"],
-        ["A4_0"],
+        ["Door", "Gate", "DI2"],
+        ["Fan"],
+        ["Level", "Flow", "unused"],
+        ["DI0"],
+        ["Start", "Run", "Ready", "Fault"],
+        ["AI0", "AI1"],
     ]
     assert [[c.get("Nr") for c in module] for module in root] == [
         ["0", "1", "2"],
-        ["0", "1"],
-        ["0", "1", "2"],
+        ["1"],
+        [None, None, None],
         ["0"],
+        ["0", "1", "0", "1"],
+        [None, None],
     ]
+    assert [[c.get("Routing") for c in module] for module in root][2] == ["Controller.Section.Level", "", None]
 
 
 def test_attributes_come_in_the_order_of_the_spec(demo_rack):
@@ -145,13 +154,31 @@ def test_attributes_come_in_the_order_of_the_spec(demo_rack):
         "Description",
     ]
     scaled = root[2][0]
-    assert list(scaled.attrib)[-2:] == ["Description", "Unit"]
+    assert list(scaled.attrib) == [
+        "Input",
+        "Model",
+        "Name",
+        "NetworkConvert",
+        "Routing",
+        "Type",
+        "Value",
+        "Description",
+        "Unit",
+    ]
     assert list(scaled[0].attrib) == ["Interpolation", "Model", "Name", "Type"]
     assert list(scaled[0][0].attrib) == ["InValue", "OutValue", "Model", "Name", "Type"]
-    assert '\n    <Channel Input="0" Model="CDPSignalChannel&lt;bool&gt;" Name="B1_Door"' in text
+    assert '\n    <Channel Input="0" Model="CDPSignalChannel&lt;bool&gt;" Name="Door"' in text
     assert (
         '<ScalingPoint InValue="4" OutValue="0" Model="Automation.ScalingPoint&lt;double&gt;" Name="ScalingPoint" Type="double"></ScalingPoint>'
     ) in text
+
+
+def test_the_module_description_is_the_catalogue_wording_else_the_part_description(demo_rack):
+    model = demo_rack.freeze()
+    rows = {row.module.mpn: row for row in rack_modules_for_cdp(model, demo_rack.rack)}
+    assert rows["750-460"].module.description == "2-channel Pt100"
+    assert rows["750-460"].description == "2-channel analog input; For Pt100/RTD resistance sensors"
+    assert rows["750-455"].description == rows["750-455"].module.description == "4-channel 4-20 mA"
 
 
 def test_a_module_without_channels_is_not_emitted(demo_rack):
@@ -207,85 +234,135 @@ def test_letters_continue_past_zz(new_rack):
 @pytest.mark.parametrize(
     ("signals", "suffix"),
     [
-        ((SignalType.DI,) * 4, "4DI"),
-        ((SignalType.RELAY,) * 2, "2RO"),
-        ((SignalType.AI_VOLTAGE,) * 3, "3AI"),
-        ((SignalType.DI, SignalType.DO), "2MIX"),
-        ((SignalType.AI_CURRENT,) * 2 + (SignalType.AI_VOLTAGE,) * 2, "4MIX"),
+        ((SignalType.DI,) * 4, "_4DI_a"),
+        ((SignalType.RELAY,) * 2, "_2DO_a"),
+        ((SignalType.AI_VOLTAGE,) * 3, "_3AI_a"),
+        ((SignalType.RTD, SignalType.AI_CURRENT), "_2AI_a"),
+        ((SignalType.AO_CURRENT,) * 2, "_2AO_a"),
+        ((SignalType.DI, SignalType.DO), ""),
+        ((SignalType.AI_CURRENT, SignalType.DI), ""),
     ],
 )
-def test_the_module_name_counts_channels_and_names_one_signal_or_mix(new_rack, signals, suffix):
+def test_the_module_name_is_the_cdp_kind_or_the_bare_order_number_when_kinds_are_mixed(new_rack, signals, suffix):
     rack, _ = _one_module_rack(new_rack, signals)
     (module,) = _parse(modules_xml(rack.freeze(), rack.rack))
-    assert module.get("Name") == f"750-X_{suffix}_a"
+    assert module.get("Name") == f"750-X{suffix}"
+
+
+def test_a_mixed_module_writes_outputs_first_and_nr_restarts_per_direction(new_rack):
+    rack, module = _one_module_rack(new_rack, (SignalType.DI, SignalType.DO, SignalType.DI, SignalType.DO))
+    for index, (name, signal) in enumerate((("In_a", SignalType.DI), ("Out_a", SignalType.DO), ("In_b", SignalType.DI), ("Out_b", SignalType.DO))):
+        rack.device(f"d{index}", f"B{index}", name, module.channels[index], signal=signal)
+    (element,) = _parse(modules_xml(rack.freeze(), rack.rack))
+    assert [(c.get("Name"), c.get("Input"), c.get("Nr")) for c in element] == [
+        ("Out_a", "1", "0"),
+        ("Out_b", "1", "1"),
+        ("In_a", "0", "0"),
+        ("In_b", "0", "1"),
+    ]
 
 
 @pytest.mark.parametrize("signal", list(SignalType))
 def test_each_signal_type_reads_from_the_table(new_rack, signal):
     rack, _ = _one_module_rack(new_rack, (signal,))
     ((channel,),) = [list(m) for m in _parse(modules_xml(rack.freeze(), rack.rack))]
-    abbr, input_, kind, description = EXPECTED[signal]
+    input_, kind, description = EXPECTED[signal]
     assert channel.get("Input") == input_
     assert channel.get("Type") == kind
     assert channel.get("Model") == f"CDPSignalChannel<{kind}>"
     assert channel.get("Description") == description
-    assert SIGNALS[signal].abbr == abbr
 
 
 def test_the_signal_table_covers_every_signal_type():
-    assert set(SIGNALS) == set(SignalType)
+    assert set(SIGNALS) == {cdp_kind(s) for s in SignalType}
     assert set(EXPECTED) == set(SignalType)
 
 
 @pytest.mark.parametrize("signal", list(SignalType))
 def test_the_package_table_is_the_spelled_out_one(signal):
-    entry = SIGNALS[signal]
-    assert (entry.abbr, "1" if entry.output else "0", entry.kind, entry.description) == EXPECTED[signal]
+    entry = SIGNALS[cdp_kind(signal)]
+    assert (entry.kind, entry.description) == EXPECTED[signal][1:]
 
 
 @pytest.mark.parametrize(
     ("designation", "signal_name", "expected"),
     [
-        ("B1", "Door", "B1_Door"),
-        ("B-1", "Door open", "B_1_Door_open"),
-        ("B1", 'a<b>&"c"', "B1_a_b_c"),
-        ("1B", "x", "N_1B_x"),
-        ("7", "8", "N_7_8"),
-        ("__a--", "--b__", "a_b"),
-        ("Tür", "Höhe", "T_r_H_he"),
-        ("=A1+C1", "Lvl", "A1_C1_Lvl"),
-        ("--", "!!", ""),
-        ("-X", "Y", "X_Y"),
+        ("B1", "Door", "Door"),
+        ("B1", "Door open", "Door_open"),
+        ("B1", 'a<b>&"c"', "a_b_c"),
+        ("B1", "8x", "N_8x"),
+        ("B1", "__b--", "b"),
+        ("B1", "Höhe", "H_he"),
+        ("B1", "Tank_level_A", "Tank_level_A"),
     ],
 )
-def test_a_bound_channel_name_is_the_sanitised_designation_and_signal_name(new_rack, designation, signal_name, expected):
+def test_a_bound_channel_name_is_the_bare_sanitised_signal_name_and_never_the_designation(new_rack, designation, signal_name, expected):
     rack, _ = _one_module_rack(new_rack, (SignalType.DI,), [(designation, signal_name)])
     assert _channel_names(rack) == [expected]
 
 
 @pytest.mark.parametrize(
-    ("module_designation", "expected"),
-    [("A1", ["A1_0", "A1_1"]), ("3rd", ["N_3rd_0", "N_3rd_1"]), ("A-1", ["A_1_0", "A_1_1"])],
+    ("signals", "expected"),
+    [
+        ((SignalType.DI,) * 2, ["DI0", "DI1"]),
+        ((SignalType.AI_CURRENT, SignalType.RTD), ["AI0", "AI1"]),
+        ((SignalType.DI, SignalType.DO, SignalType.DI, SignalType.DO), ["DO0", "DO1", "DI0", "DI1"]),
+    ],
 )
-def test_a_spare_channel_name_is_the_module_designation_and_the_zero_based_number(new_rack, module_designation, expected):
+def test_a_spare_channel_name_is_its_cdp_kind_and_its_number_within_its_direction(new_rack, signals, expected):
     rack = new_rack()
-    rack.module(rack.part("p", "750-X", (SignalType.DI,) * 2), "m", module_designation, 1)
+    rack.module(rack.part("p", "750-X", signals), "m", "A1", 1)
     assert _channel_names(rack) == expected
+
+
+def test_a_spare_takes_the_name_set_on_its_own_channel(new_rack):
+    rack = new_rack()
+    module = rack.module(rack.part("p", "750-X", (SignalType.DI,) * 2), "m", "A1", 1)
+    rack.spare("s", module.channels[0], name="unused")
+    assert _channel_names(rack) == ["unused", "DI1"]
+
+
+def test_an_unconfigured_channel_is_not_written_and_its_neighbours_keep_their_nr(new_rack):
+    rack = new_rack()
+    module = rack.module(rack.part("p", "750-X", (SignalType.DI,) * 3), "m", "A1", 1)
+    rack.spare("s", module.channels[1], configured=False)
+    (element,) = _parse(modules_xml(rack.freeze(), rack.rack))
+    assert [(c.get("Name"), c.get("Nr")) for c in element] == [("DI0", "0"), ("DI2", "2")]
+    assert element.get("Name") == "750-X_3DI_a"
+
+
+@pytest.mark.parametrize(("routing", "written"), [(None, None), ("", ""), ("Controller.Section.Tank_level_A", "Controller.Section.Tank_level_A")])
+def test_routing_is_written_only_when_set_and_empty_when_empty(new_rack, routing, written):
+    rack = new_rack()
+    module = rack.module(rack.part("p", "750-X", (SignalType.DI,)), "m", "A1", 1)
+    rack.device("d", "B1", "Door", module.channels[0], routing=routing)
+    ((channel,),) = [list(m) for m in _parse(modules_xml(rack.freeze(), rack.rack))]
+    assert channel.get("Routing") == written
+    assert ("Routing" in channel.attrib) is (routing is not None)
+
+
+def test_a_scale_with_no_unit_writes_no_unit_attribute_but_the_operator(new_rack):
+    rack = new_rack()
+    module = rack.module(rack.part("p", "750-X", (SignalType.AI_CURRENT,)), "m", "A1", 1)
+    rack.device("t", "T1", "Lvl", module.channels[0], signal=SignalType.AI_CURRENT, scaling=(None, 0, 10, Decimal(0), Decimal(1)))
+    ((channel,),) = [list(m) for m in _parse(modules_xml(rack.freeze(), rack.rack))]
+    assert "Unit" not in channel.attrib
+    assert [child.tag for child in channel] == ["Operator"]
 
 
 def test_a_channel_with_a_device_but_no_signal_name_is_named_as_a_spare(new_rack):
     rack = new_rack()
     module = rack.module(rack.part("p", "750-X", (SignalType.DI,) * 2), "m", "A1", 1)
     rack.device("dev", "B1", None, module.channels[1])
-    assert _channel_names(rack) == ["A1_0", "A1_1"]
+    assert _channel_names(rack) == ["DI0", "DI1"]
 
 
-def test_two_channels_with_one_name_are_both_kept_as_they_are(new_rack):
+def test_two_channels_with_one_name_are_both_written_as_they_are(new_rack):
     rack = new_rack()
     module = rack.module(rack.part("p", "750-X", (SignalType.DI,) * 2), "m", "A1", 1)
     rack.device("d1", "B-1", "Door", module.channels[0])
     rack.device("d2", "B_1", "Door", module.channels[1])
-    assert _channel_names(rack) == ["B_1_Door", "B_1_Door"]
+    assert _channel_names(rack) == ["Door", "Door"]
 
 
 def test_a_name_that_sanitises_to_nothing_is_emitted_empty(new_rack):
@@ -333,7 +410,7 @@ def test_scaling_follows_the_row_whatever_the_signal(new_rack):
 def test_a_channel_without_scaling_has_no_unit_and_no_operator(demo_rack):
     root = _parse(modules_xml(demo_rack.freeze(), demo_rack.rack))
     unscaled = root[2][1]
-    assert unscaled.get("Name") == "T2_Flow"
+    assert unscaled.get("Name") == "Flow"
     assert "Unit" not in unscaled.attrib
     assert list(unscaled) == []
 

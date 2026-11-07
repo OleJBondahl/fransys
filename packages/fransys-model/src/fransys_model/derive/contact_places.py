@@ -3,7 +3,7 @@
 lazy from collections.abc import Mapping
 
 from fransys_model.derive.contact_image import table_contacts
-from fransys_model.derive.frame_position import position_at
+from fransys_model.derive.page_reference_text import position_at
 from fransys_model.layout import Membership, Page, layout_of
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.core import Function

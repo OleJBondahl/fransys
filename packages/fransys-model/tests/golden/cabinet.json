@@ -1,6 +1,6 @@
 {
   "aliases": [],
-  "schema_version": 23,
+  "schema_version": 25,
   "tables": {
     "aspect_node": [
       {
@@ -19,6 +19,7 @@
       {
         "a": "port:66d54688a9675c6abcce3897ad4ae440",
         "b": "port:fd510648fa7859a38bedcbe3e844f144",
+        "block": null,
         "carrier": null,
         "ext": {},
         "id": "conductor:0b57a3f1536354268f78eea9400cd3f0",
@@ -32,6 +33,7 @@
       {
         "a": "port:0786219461e95233a48bb470167fb2cc",
         "b": "port:d3dc47d88d6a5e19be0e3c5891130bf7",
+        "block": null,
         "carrier": null,
         "ext": {},
         "id": "conductor:11425174069052058d66ff5608e340ba",
@@ -44,6 +46,7 @@
       {
         "a": "port:12012e5d11445f369374bcd2dc3612a6",
         "b": "port:7f0bd2e077865355b170322bff383cf5",
+        "block": null,
         "carrier": null,
         "ext": {},
         "id": "conductor:12c88d6caf09590b96f4160007fe6d5a",
@@ -57,6 +60,7 @@
       {
         "a": "port:5bf2858e03c45599ab7366da065a9554",
         "b": "port:8d2f4b9570cc5b9f83de5cd28bc37a23",
+        "block": null,
         "carrier": null,
         "ext": {},
         "id": "conductor:25fb5f0810e6562d92fcfbf462c955f2",
@@ -68,6 +72,7 @@
       {
         "a": "port:2b4980c886845bf3b27ce09821a792ce",
         "b": "port:a7826f298a7450749dace5b6cff821ce",
+        "block": null,
         "carrier": "item:cf096609a20e5659ad3c788e993c9723",
         "ext": {},
         "id": "conductor:2a84c0a1df4a5e50af8f995b96c2f8b0",
@@ -81,6 +86,7 @@
       {
         "a": "port:0a21442ac17758478480b976d8e3b3b0",
         "b": "port:f1c09f48b324555c93ed8d9a66ec3e60",
+        "block": null,
         "carrier": "item:cf096609a20e5659ad3c788e993c9723",
         "ext": {},
         "id": "conductor:509155158bcf572397421db6bc797e8d",
@@ -94,6 +100,7 @@
       {
         "a": "port:1be82875c46b5a458d4dd3fdf10b63ca",
         "b": "port:9b9e75bd36675529b0f51f99c39e1a52",
+        "block": null,
         "carrier": null,
         "ext": {},
         "id": "conductor:6e96c7c83348558ea0f52cd62a50eff1",
@@ -107,6 +114,7 @@
       {
         "a": "port:3c848aab818e53d3a3a201a1905ed688",
         "b": "port:ebccfc10e8f05bcbb314c4f32baab135",
+        "block": null,
         "carrier": null,
         "ext": {},
         "id": "conductor:6f153bb7a06355e0a75c4f6a7fc8476c",
@@ -119,6 +127,7 @@
       {
         "a": "port:ad1ed36e746e5d85b3d8af23b0b8a2da",
         "b": "port:fc4c34f9eaa453f783e4c0a8fa6594e5",
+        "block": null,
         "carrier": null,
         "ext": {},
         "id": "conductor:745e7c5189ca5ec38aa06621d665a895",
@@ -132,6 +141,7 @@
       {
         "a": "port:380c9b8e477b5e3199886a626ad49fd2",
         "b": "port:3e423c9f785157f09828bfaca68df81e",
+        "block": null,
         "carrier": null,
         "ext": {},
         "id": "conductor:876d473c5ee75ef3afc6bec987019696",
@@ -145,6 +155,7 @@
       {
         "a": "port:62c1a0fae3b8506a9a273461f421e1f0",
         "b": "port:7cf567db36565c39a18ff949c639fe31",
+        "block": null,
         "carrier": null,
         "ext": {},
         "id": "conductor:8801577e27785d128f8f58cd5d8d547d",
@@ -157,6 +168,7 @@
       {
         "a": "port:4bdb613aa8ec5f5b8374898763758e99",
         "b": "port:6df6471c82b4515db30a4a0ee25e58a3",
+        "block": null,
         "carrier": "item:e0e03322af9d504383a70b7d93ffe4c3",
         "ext": {},
         "id": "conductor:90524d3ee6b25b16b02d5b507e3f42b9",
@@ -170,6 +182,7 @@
       {
         "a": "port:1552cc4390a45d3c90951e33ad1e7b98",
         "b": "port:5c54d2a6fb475392971cdd361db0bcd7",
+        "block": null,
         "carrier": "item:e0e03322af9d504383a70b7d93ffe4c3",
         "ext": {},
         "id": "conductor:96aec6dcd65850e7b9b45d729bb718f9",
@@ -183,6 +196,7 @@
       {
         "a": "port:7847d19e15ea5a7689a753a68bf03baa",
         "b": "port:b60892391b785bc9b1607ec5b31744f6",
+        "block": null,
         "carrier": null,
         "ext": {},
         "id": "conductor:be112cc326a759e38d150a6a33058d92",
@@ -194,6 +208,7 @@
       {
         "a": "port:1906a3524ee15a96a9ab51531753ef8c",
         "b": "port:b3717a36c36b5cf1b1363ec1c5efa2eb",
+        "block": null,
         "carrier": null,
         "ext": {},
         "id": "conductor:bff1533b2ca0555787d7336a6dc3757c",
@@ -207,6 +222,7 @@
       {
         "a": "port:3582a7ed17425fc29277a2337012a7dc",
         "b": "port:62c1a0fae3b8506a9a273461f421e1f0",
+        "block": null,
         "carrier": null,
         "ext": {},
         "id": "conductor:d0e86e120758543fa14ce268ac03fa84",
@@ -219,6 +235,7 @@
       {
         "a": "port:7efec8c1add05938a43fc9c282429a18",
         "b": "port:8c8a5b1ff1dc5a3ba23d5cac5ca145bd",
+        "block": null,
         "carrier": null,
         "ext": {},
         "id": "conductor:d511fd1ce96452de9072f116f84b7700",
@@ -230,6 +247,7 @@
       {
         "a": "port:d3dc47d88d6a5e19be0e3c5891130bf7",
         "b": "port:f8938aa04e755b0084c271133cbeb291",
+        "block": null,
         "carrier": null,
         "ext": {},
         "id": "conductor:e9135f97c4075c7bbc8bc5cfd9cc89ec",
@@ -242,6 +260,7 @@
       {
         "a": "port:4525f35e47055adcbf58710a85f72030",
         "b": "port:b39a3f0b06755669af936d493add27d0",
+        "block": null,
         "carrier": null,
         "ext": {},
         "id": "conductor:f32174cb3ba95123983671f263bfdec6",
@@ -255,6 +274,7 @@
       {
         "a": "port:3039ee1c3f61510fadf620deca612191",
         "b": "port:af6bd3056a6b5d5796131ea32b23e826",
+        "block": null,
         "carrier": null,
         "ext": {},
         "id": "conductor:f98b29d12efa5b0b85df50d1efcca249",
@@ -568,6 +588,7 @@
     ],
     "facet.plc_request": [
       {
+        "configured": true,
         "ext": {},
         "id": "facet.plc_request:71db629bef7a565da3ca1864adbcd0ff",
         "key": [
@@ -577,11 +598,13 @@
           "plc_request"
         ],
         "priority": 1,
+        "routing": null,
         "signal": "di",
         "signal_name": "Start_PB",
         "subject": "function:c84a262965da5dc58e53c2c4d40f58f4"
       },
       {
+        "configured": true,
         "ext": {},
         "id": "facet.plc_request:d05a898f43115a2a9c5ba50c392971ab",
         "key": [
@@ -591,11 +614,13 @@
           "plc_request"
         ],
         "priority": 2,
+        "routing": null,
         "signal": "rtd",
         "signal_name": "TT01_Temp",
         "subject": "function:a764fa0210685913a20cd271aec82e35"
       },
       {
+        "configured": true,
         "ext": {},
         "id": "facet.plc_request:d7eedd25604c58cbbd786ac60ea40970",
         "key": [
@@ -605,6 +630,7 @@
           "plc_request"
         ],
         "priority": 1,
+        "routing": null,
         "signal": "ai_current",
         "signal_name": "PT01_Pressure",
         "subject": "function:75ac2f6fc07d5760808e7a58a651c347"
@@ -2520,6 +2546,7 @@
     ],
     "part": [
       {
+        "catalogue_description": null,
         "category": "generic",
         "class_code": "B",
         "description": "Invented SIM-PT100-2W",
@@ -2534,6 +2561,7 @@
         "operated_by": null
       },
       {
+        "catalogue_description": null,
         "category": "plc_module",
         "class_code": "A",
         "description": "Invented SIM-RACK-8",
@@ -2548,6 +2576,7 @@
         "operated_by": null
       },
       {
+        "catalogue_description": null,
         "category": "electromechanical",
         "class_code": "K",
         "description": "Invented SIM-CONTACTOR-9A-1CO",
@@ -2562,6 +2591,7 @@
         "operated_by": null
       },
       {
+        "catalogue_description": null,
         "category": "protection",
         "class_code": "F",
         "description": "Invented SIM-FUSE-2A",
@@ -2576,6 +2606,7 @@
         "operated_by": null
       },
       {
+        "catalogue_description": null,
         "category": "generic",
         "class_code": "B",
         "description": "Invented SIM-PT-4-20MA",
@@ -2590,6 +2621,7 @@
         "operated_by": null
       },
       {
+        "catalogue_description": null,
         "category": "terminal",
         "class_code": "X",
         "description": "Invented SIM-TERMINAL-2.5MM",
@@ -2604,6 +2636,7 @@
         "operated_by": null
       },
       {
+        "catalogue_description": null,
         "category": "generic",
         "class_code": "G",
         "description": "Invented SIM-PSU-24VDC-5A",
@@ -2618,6 +2651,7 @@
         "operated_by": null
       },
       {
+        "catalogue_description": null,
         "category": "plc_module",
         "class_code": "A",
         "description": "Invented SIM-AI4-020",
@@ -2632,6 +2666,7 @@
         "operated_by": null
       },
       {
+        "catalogue_description": null,
         "category": "generic",
         "class_code": "S",
         "description": "Invented SIM-PB-NO",
@@ -2646,6 +2681,7 @@
         "operated_by": null
       },
       {
+        "catalogue_description": null,
         "category": "plc_module",
         "class_code": "A",
         "description": "Invented SIM-RTD4-PT100",
@@ -2660,6 +2696,7 @@
         "operated_by": null
       },
       {
+        "catalogue_description": null,
         "category": "cable",
         "class_code": "W",
         "description": "Invented SIM-CABLE-2X0.75-SH",
@@ -2674,6 +2711,7 @@
         "operated_by": null
       },
       {
+        "catalogue_description": null,
         "category": "plc_module",
         "class_code": "A",
         "description": "Invented SIM-DI8-024",
@@ -2688,6 +2726,7 @@
         "operated_by": null
       },
       {
+        "catalogue_description": null,
         "category": "electromechanical",
         "class_code": "K",
         "description": "Invented SIM-CONTACTOR-9A-1NO",

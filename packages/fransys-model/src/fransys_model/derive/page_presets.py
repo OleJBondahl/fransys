@@ -20,9 +20,9 @@ PRESET_PAGES: frozendict[DocumentPreset, tuple[PageKind, ...]] = frozendict(
     {
         DocumentPreset.CABINET_SCHEMATIC: (
             _K.COVER,
+            _K.SCHEMATIC,
             _K.NOTES,
             _K.SHEET_INDEX,
-            _K.SCHEMATIC,
             _K.PLC_LIST,
             _K.TERMINAL_LIST,
             _K.CONNECTOR_LIST,
@@ -30,10 +30,10 @@ PRESET_PAGES: frozendict[DocumentPreset, tuple[PageKind, ...]] = frozendict(
         ),
         DocumentPreset.SYSTEM: (
             _K.COVER,
-            _K.NOTES,
-            _K.SHEET_INDEX,
             _K.BLOCK_DIAGRAM,
             _K.HARNESS_DRAWING,
+            _K.NOTES,
+            _K.SHEET_INDEX,
             _K.CABLE_LIST,
             _K.BOM,
         ),

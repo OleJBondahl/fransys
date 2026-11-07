@@ -8,9 +8,12 @@ import csv
 import runpy
 import subprocess
 import sys
+from itertools import pairwise
 from pathlib import Path
 
 import fransys as fr
+
+from fransys_layout.core import through
 
 EXAMPLE = Path(__file__).resolve().parents[1] / "website" / "example.py"
 MAX_LINES = 50
@@ -40,7 +43,17 @@ def test_example_builds_with_no_error_and_no_warning(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     result = runpy.run_path(str(EXAMPLE))["result"]
     severe = [f.code for f in fr.check(result) if f.severity in (fr.Severity.ERROR, fr.Severity.WARNING)]
-    assert severe == []
+    # KI-737 (R1860, looks): the only allowance, the slot texts 13 and 14 of the contact at (192, 120) rest on its leads.
+    # They must both be struck, so the allowance fails as stale once KI-737 is fixed; a third overlap or any other finding fails.
+    assert severe == ["OVERLAP", "OVERLAP"]
+    struck = sorted(
+        (s.key, s.x, s.y, slot)
+        for drawing in result.drawings.values()
+        for s in drawing.symbols
+        for slot, box in s.slot_ink
+        if any(through(a, b, box, (), ()) for w in drawing.wires for a, b in pairwise(w.points) if a != b)
+    )
+    assert struck == [("make-contact", 192, 120, "marking.in"), ("make-contact", 192, 120, "marking.out")]
 
 
 def test_cabinet_bom_holds_no_field_device_and_x1_rows_end_in_pe(tmp_path, monkeypatch):

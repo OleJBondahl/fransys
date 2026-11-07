@@ -11,7 +11,7 @@ from .rows_pdf_texts import PdfTexts
 
 __all__ = ["pdf_texts"]
 
-_WORDS = ("notes", "sheet", "title", "page", "bridge")
+_WORDS = ("notes", "title", "page", "bridge")
 
 
 def pdf_texts(model: Model) -> PdfTexts:

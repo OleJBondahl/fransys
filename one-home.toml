@@ -77,7 +77,6 @@
 "fransys_layout.engines.overview.write.records::unit" = 2
 "fransys_model.checks.part_conformance::kind" = 2
 "fransys_model.checks.units::kind" = 1
-"fransys_model.checks.scaling::unit" = 1
 "fransys_model.derive.accessory_blocks::kind" = 2
 "fransys_model.derive.baseline_ancestry::parent" = 2
 "fransys_model.derive.baseline_codec::kind" = 1
@@ -108,11 +107,12 @@
 "fransys_model.derive.designation::parent" = 1
 "fransys_model.derive.designation::unit" = 2
 "fransys_model.derive.designation_label::parent" = 2
-"fransys_model.derive.diagram_sheet_order::unit" = 2
+"fransys_model.derive.diagram_sheet_order::unit" = 1
 "fransys_model.derive.document_pages::unit" = 2
 "fransys_model.derive.document_sets::unit" = 1
 "fransys_model.derive.document_unit::unit" = 2
 "fransys_model.derive.drawing_text::unit" = 1
+"fransys_model.derive.drawn_groups::kind" = 1
 "fransys_model.derive.drawn_wires::unit" = 1
 "fransys_model.derive.facade_reads::unit" = 2
 "fransys_model.derive.facts.current.ties::kind" = 1
@@ -186,7 +186,6 @@
 "fransys_model.derive.rows_document::unit" = 1
 "fransys_model.derive.rows_sheet::kind" = 1
 "fransys_model.derive.rows_sheet::unit" = 2
-"fransys_model.derive.set_rank::unit" = 1
 "fransys_model.derive.sheets::unit" = 1
 "fransys_model.derive.stub_text::unit" = 1
 "fransys_model.derive.tag_text::parent" = 1
@@ -221,7 +220,7 @@
 "fransys_pdf._lists::unit" = 1
 "fransys_pdf._markdown::kind" = 2
 "fransys_render.cables::unit" = 5
-"fransys_render.diagram::unit" = 3
+"fransys_render.diagram::unit" = 2
 "fransys_wago.modules::kind" = 2
 "fransys_wago.modules::unit" = 1
 
@@ -252,6 +251,7 @@
 
 # KI-063 (decision 0423): each kind read becomes a named fact (NF-2 covers 13 scan sites).
 [kind_reads]
+"fransys_model.derive.drawn_groups::FunctionKind" = 4
 "fransys_model.derive.facts.part_pins::LinkKind" = 1
 "fransys_author._earth_net::NetClass" = 1
 "fransys_author._partless::FunctionKind" = 2
@@ -559,7 +559,6 @@
 "fransys_model.derive.facts.units::enclosing_boards" = 1
 "fransys_model.derive.far_ends::far_ends" = 1
 "fransys_model.derive.finding_marks::_marks" = 1
-"fransys_model.derive.frame_position::location_path" = 1
 "fransys_model.derive.harness::_end" = 1
 "fransys_model.derive.harness::_ends" = 1
 "fransys_model.derive.harness::_readable_cables" = 1
@@ -667,7 +666,6 @@
 "fransys_parts.lint::lint" = 1
 "fransys_parts.loader::_loaded_libraries" = 1
 "fransys_parts.loader::load_path" = 1
-"fransys_pdf._labels::sheet_label" = 1
 "fransys_pdf.checks::check" = 1
 "fransys_render._cable_ink::body" = 1
 "fransys_render.sheet_check::sheet_check" = 1
@@ -869,14 +867,13 @@
 "fransys_pdf._cable_checks::_too_big_messages" = 1
 "fransys_pdf._drawings::_cable_runs" = 1
 "fransys_pdf._geometry::preamble" = 7
-"fransys_pdf._labels::sheet_label" = 2
 "fransys_pdf._links::page_links" = 1
 "fransys_pdf._lists::_connector_section" = 2
 "fransys_pdf._markdown::_deep_heading" = 1
 "fransys_pdf._markdown::_element_typst" = 3
 "fransys_pdf._markdown::_run_typst" = 1
 "fransys_pdf._marks::sheet_mark" = 1
-"fransys_pdf._sheet_index::sheet_index_page" = 4
+"fransys_pdf._sheet_index::sheet_index_page" = 2
 "fransys_pdf.checks::_empty_list_findings" = 1
 "fransys_pdf.checks::_markdown_findings" = 1
 "fransys_pdf.checks::_mixed_sheet_format_findings" = 1
@@ -885,6 +882,7 @@
 "fransys_render.sheet_check::_no_room" = 2
 "fransys_render.sheet_check::_stack_overlap" = 1
 "fransys_reports.changes::changes_markdown" = 2
+"fransys_wago.modules::_channel_name" = 1
 "fransys_wago.modules::_module_name" = 1
 
 [library_twins]

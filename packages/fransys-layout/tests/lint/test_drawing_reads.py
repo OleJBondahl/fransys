@@ -68,8 +68,15 @@ def test_struck() -> None:
 
 def test_struck_negatives() -> None:
     text = _text(0, 0)
-    assert struck_texts([_wire("a", (-5, 4), (20, 4))], [text]) == 0
     assert struck_texts([_wire("a", (-5, 2), (0, 2))], [text]) == 0
+    assert struck_texts([_wire("a", (-5, 9), (20, 9))], [text]) == 0
+    assert struck_texts([_wire("a", (-4, 8), (0, 4))], [text]) == 0  # a diagonal touching one corner only
+
+
+def test_struck_by_an_edge_run_and_a_diagonal() -> None:
+    text = _text(0, 0)
+    assert struck_texts([_wire("a", (-5, 4), (20, 4))], [text]) == 1  # along the bottom edge
+    assert struck_texts([_wire("a", (-5, -5), (15, 9))], [text]) == 1  # a diagonal across it
 
 
 def test_page_texts_ends_with_the_ink_of_each_slot_string() -> None:

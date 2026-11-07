@@ -184,7 +184,7 @@ def test_the_title_block_forms_list_the_document_fields_then_each_pages_and_the_
     names = [f.field for f in forms]
     assert names[:6] == ["title", "number", "customer", "revision", "revision_date", "author"]
     pages = [p for p in listing.pages if p.group]
-    assert names.count("page_title") == names.count("sheet_counter") == len(pages) > 0
+    assert names.count("page_title") == len(pages) > 0
     assert names.count("scope") == len({p.group for p in pages})
     titled = [f for f in forms if f.field == "page_title"]
     assert [f.forms for f in titled] == [(p.fields.page_title, *p.fields.page_title_shorter) for p in pages]

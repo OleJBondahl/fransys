@@ -7,9 +7,9 @@ Every row field a human reads is rendered by `derive.designation`; a missing des
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from fransys_model.derive.facts.plc_wiring import plc_requests
 from fransys_model.derive.facts.roles import plc_channel_facets
-from fransys_model.vocab.facets.plc import PlcChannelFacet, PlcRequestFacet
-from fransys_model.vocab.tables import conductors, facets_of, functions
+from fransys_model.vocab.tables import conductors, functions
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.aspects import AspectNode
 lazy from fransys_model.vocab.core import Item, Unit
@@ -27,6 +27,7 @@ from .texts.end_text import FAR_END, end_text
 
 if TYPE_CHECKING:
     from fransys_model.vocab.core import Function, Port
+    from fransys_model.vocab.facets.plc import PlcChannelFacet, PlcRequestFacet
 
 
 def _wired_to(
@@ -106,7 +107,7 @@ def plc_channel_pairs(
         context,
         unit,
         channel_devices(model),
-        {one.subject: one for one in facets_of(model, PlcRequestFacet).values()},
+        dict(plc_requests(model)),
     )
     channel_of = plc_channel_facets(model)
     racks = plc_racks(model)

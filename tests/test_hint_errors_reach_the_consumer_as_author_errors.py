@@ -1,4 +1,4 @@
-"""An order cycle is an ERROR finding naming the hints' Origins (R468, FLIP-NOW F2)."""
+"""Order hints: a cycle and a group that draws nothing are ERROR findings (R468, FLIP-NOW F2; R1841)."""
 
 from typing import TYPE_CHECKING, Any
 
@@ -43,3 +43,38 @@ def test_an_order_cycle_is_an_error_finding_naming_the_hints_origins() -> None:
     assert finding.severity is fr.Severity.ERROR
     here = __file__.rsplit("/", 1)[-1]
     assert finding.message.count(here) == 2
+
+
+def _draws_nothing(result: Any) -> list[Any]:
+    return [f for f in result.findings if f.code == "ORDER_GROUP_DRAWS_NOTHING"]
+
+
+def _empty(d: Any, groups: Any, _devices: Any) -> None:
+    with d.function("F3", "Three") as three:
+        pass
+    d.layout.order(groups[0], three)
+
+
+def test_an_order_hint_naming_a_group_with_no_member_is_an_error_naming_it_and_the_fix() -> None:
+    result = _build(_empty)
+    expect_codes(result, "ORDER_GROUP_DRAWS_NOTHING")
+    (found,) = _draws_nothing(result)
+    assert found.severity is fr.Severity.ERROR
+    assert "=F3" in found.message
+    assert "no member to draw" in found.message
+    assert "drop the hint" in found.message
+
+
+def test_an_order_hint_naming_drawn_groups_gives_no_such_error() -> None:
+    assert _draws_nothing(_build(lambda d, groups, _devices: d.layout.order(*groups))) == []
+
+
+def test_a_group_that_draws_one_function_of_its_split_relay_is_ordered_where_it_draws() -> None:
+    d = fr.design("demo_parts", place="CAB")
+    with d.function("MOD", "Module") as mod:
+        k1 = d.device("K1", "DEMO-RLY-2CO-24")
+    with d.function("RUN", "Run") as run:
+        g1 = d.device("G1", "DEMO-PSU-24")
+        d.series(g1.output["+"], k1.coil, g1.output["-"], wire=(BU, 0.5))
+    d.layout.order(mod, run)
+    assert _draws_nothing(fr.build(d)) == []

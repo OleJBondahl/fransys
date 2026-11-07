@@ -16,7 +16,6 @@ from fransys_model.derive.page_nav import outline_sheets
 from fransys_model.vocab import PageKind
 
 from ._background import page_background
-from ._labels import sheet_label
 from ._marks import sheet_mark
 from ._typst import literal
 
@@ -47,9 +46,7 @@ def diagram_source(
         image = f'#image(bytes({literal(svg)}), format: "svg")'
         key = SheetKey(record.id, PageKind.BLOCK_DIAGRAM, index)
         back = page_background(model, record, sheets, key)
-        numbering, start = sheet_label(entry.number)
-        mark = sheet_mark(entry)
-        pages.append(f"#page({size}, margin: 0mm, background: {back}{numbering})[{start}{mark}{image}]")
+        pages.append(f"#page({size}, margin: 0mm, background: {back})[{sheet_mark(entry)}{image}]")
     return "\n#pagebreak()\n".join(pages)
 
 

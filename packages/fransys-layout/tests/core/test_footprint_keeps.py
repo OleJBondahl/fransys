@@ -2,16 +2,23 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 from options_fixtures import core_options
 
+from fransys_layout.core import Facts, PlacementProblem
 from fransys_layout.core.clearance import footprint_keeps
+from fransys_layout.core.node_names import box_y_node
 from fransys_layout.core.pack_sep import hard_soft
 from fransys_layout.core.place_env import page_envs
-from fransys_layout.core.place_foreign import cell_keeps
+from fransys_layout.core.place_foreign import _foreign, cell_keeps
 from fransys_layout.core.place_x import place_x
+from fransys_layout.core.place_y import _spans
 from fransys_layout.core.values import Box
 
 from .conftest import MARKER
+from .cut_fixtures import AREA, box_sym, elem
+from .flow_builders import net
 from .pipeline_fixtures import cut_of
 from .place_fixtures import bundle_fan
 
@@ -75,3 +82,25 @@ def test_the_cells_of_own_symbols_give_no_keep() -> None:
     kept = list(cell_keeps(env, x, rows, own))
     assert kept == [k for k in everyone if k.owner not in own]
     assert len(kept) < len(everyone)
+
+
+def _two_cards():
+    """Box A1 fans p1 to k1 and k3; box A2 (a card too) is wired to its own element: foreign to that fan."""
+    syms = (box_sym(4), replace(box_sym(2), id="A2"), *(elem(s, 40) for s in ("k1", "k3", "k5")))
+    nets = [net("v", "A1.p1", "k1.n", "k3.n"), net("w", "A2.p1", "k5.n")]
+    opts = core_options(marker=MARKER)
+    prob = PlacementProblem(AREA, syms, tuple(nets), Facts())
+    (env,) = page_envs(cut_of(prob, opts), prob, opts)
+    return env, place_x(env)[0]
+
+
+def test_a_foreign_card_box_gives_a_footprint_keep_its_fans_trunk_clears() -> None:
+    """KI-731: a card is no column cell, yet its folded footprint (marker hangings) is foreign to the fan of another box."""
+    env, x = _two_cards()
+    span = next(s for s in _spans(env, x) if s.fan.startswith("f:v"))
+    keeps = list(_foreign(env, x, span, range(len(env.plan.rows))))
+    held = [k for k in keeps if k.owner == "A2"]
+    assert [(k.kind, k.node, k.box.y, k.box.h) for k in held] == [
+        ("footprint", box_y_node("A2"), env.syms["A2"].footprint.y, env.syms["A2"].footprint.h)
+    ]
+    assert not [k for k in keeps if k.owner == "A1"]

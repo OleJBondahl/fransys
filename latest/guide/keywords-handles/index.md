@@ -15,6 +15,7 @@ The design calls are in `keywords-design.md`, the `fr.*` functions in `keywords-
 | `priority` | `0` | A lower number is served first when channels are short. Ties go by the requesting function's key, then its id. | `k1.coil.plc(fr.DO, "pump-run", priority=1)` |
 | [`routing`](../authoring/index.md#the-wago-rack-xml-follows-the-cdp-reference) | `None` | The channel's CDP routing path, never parsed. `None` writes no `Routing`, `""` writes `Routing=""`, a path writes the path. | `k1.coil.plc(fr.DO, "pump-run", routing="Controller.Section.Pump_run")` |
 | [`configured`](../authoring/index.md#the-wago-rack-xml-follows-the-cdp-reference) | `True` | `False` on a module's channel handle leaves the channel out of the Wago rack XML; the other channels keep their `Nr`. It takes no name, routing or scale; a device refuses it. | `ai.ai_4.plc(configured=False)` |
+| [`description`](../authoring/index.md#request-a-plc-channel) | `None` | One line of text for the PLC list, which prints it in its own column beside the signal name. It stays in the list: the drawing does not print it, and it never reaches the Wago rack XML, where the channel `Name` stays the bare name. A blank string or one with a line break raises. | `k1.coil.plc(fr.DO, "pump-run", description="Start the main pump")` |
 
 `fn.plc(...).scale(...)` sets a per-channel engineering range; see `Fn.scale`. On a spare analogue channel's handle, `scale` scales that channel.
 

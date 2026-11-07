@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.0/guide/keywords-handles/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.1/guide/keywords-handles/">
       
       
       
@@ -956,6 +956,33 @@
     
   
   Settings
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../moving-to-0.23/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Moving to 0.23
 
     
   </span>
@@ -2157,6 +2184,12 @@ A call that takes only <code>*args</code> has no table, and one sentence says wh
 <td><code>False</code> on a module's channel handle leaves the channel out of the Wago rack XML; the other channels keep their <code>Nr</code>. It takes no name, routing or scale; a device refuses it.</td>
 <td><code>ai.ai_4.plc(configured=False)</code></td>
 </tr>
+<tr>
+<td><a href="../authoring/#request-a-plc-channel"><code>description</code></a></td>
+<td><code>None</code></td>
+<td>One line of text for the PLC list, which prints it in its own column beside the signal name. It stays in the list: the drawing does not print it, and it never reaches the Wago rack XML, where the channel <code>Name</code> stays the bare name. A blank string or one with a line break raises.</td>
+<td><code>k1.coil.plc(fr.DO, "pump-run", description="Start the main pump")</code></td>
+</tr>
 </tbody>
 </table>
 <p><code>fn.plc(...).scale(...)</code> sets a per-channel engineering range; see <code>Fn.scale</code>. On a spare analogue channel's handle, <code>scale</code> scales that channel.</p>
@@ -2340,7 +2373,7 @@ A call that takes only <code>*args</code> has no table, and one sentence says wh
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.0 documentation
+      Fransys 0.23.1 documentation
     </div>
   
   

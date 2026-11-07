@@ -8,11 +8,11 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.0/guide/moving-to-0.22/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.1/guide/moving-to-0.22/">
       
       
       
-        <link rel="prev" href="../settings/">
+        <link rel="prev" href="../moving-to-0.23/">
       
       
         <link rel="next" href="../moving-to-0.20/">
@@ -837,6 +837,33 @@
                   
   
   
+  
+  
+    <li class="md-nav__item">
+      <a href="../moving-to-0.23/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Moving to 0.23
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
     
   
   
@@ -947,6 +974,17 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         Removed in 0.22
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#new-in-0231" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        New in 0.23.1
       </span>
     </span>
   </a>
@@ -2130,6 +2168,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#new-in-0231" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        New in 0.23.1
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#new-in-0229" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -2416,6 +2465,10 @@ for example <code>fault_time_constant=fr.elecdef.Unit.MS(15)</code>. In a part f
 </tr>
 </tbody>
 </table>
+<h2 id="new-in-0231">New in 0.23.1</h2>
+<ul>
+<li><code>.plc(..., description="...")</code> gives a PLC channel a line of text. The PLC list prints it in a <code>description</code> column beside the signal name (PDF and <code>plc.csv</code>, which gains the column). The description lives in the PLC list only, and the Wago rack XML is unchanged. A blank description raises. listing_version 9: no listing text moves; a stored model of schema 25 is refused: rebuild it.</li>
+</ul>
 <h2 id="new-in-0229">New in 0.22.9</h2>
 <ul>
 <li>The Wago rack XML <code>&lt;Modules&gt;</code> follows the CDP reference, so every consumer's file changes. A module is named <code>&lt;order&gt;_&lt;channels&gt;&lt;kind&gt;_&lt;letter&gt;</code> with the kind DI, AI, DO or AO (an RTD is AI, a relay output DO, an analogue output AO). A module whose channels mix kinds is named by the bare order number. A channel is named by its bare signal name, else <code>&lt;kind&gt;&lt;Nr&gt;</code> (DO0, DI14). An analogue channel has no <code>Nr</code>. A mixed module lists outputs first and restarts <code>Nr</code> for each direction (decision wago-0003).</li>
@@ -2501,7 +2554,7 @@ for example <code>fault_time_constant=fr.elecdef.Unit.MS(15)</code>. In a part f
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.0 documentation
+      Fransys 0.23.1 documentation
     </div>
   
   

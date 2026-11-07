@@ -210,6 +210,7 @@ fr.write(result, Path("out"))
 
 ### Moving from an older release
 
+- `moving-to-0.23.md`: what 0.23 adds, what stays refused, and the known issues; no call changes from 0.22.9.
 - `moving-to-0.22.md`: the elecdef `Rating`, the new `Operating` fields and `Current` from `fr.elecdef`.
 - `moving-to-0.20.md`: the new `fr.rebaseline` call for baselines cut by an older release.
 - `moving-to-0.19.md`: the detail calls that moved to `d.detail`, and the rewrite from `d.wire` to `d.series`.

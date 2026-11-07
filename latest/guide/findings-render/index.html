@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.0/guide/findings-render/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.1/guide/findings-render/">
       
       
       
@@ -821,6 +821,33 @@
     
   
   Settings
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../moving-to-0.23/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Moving to 0.23
 
     
   </span>
@@ -1925,7 +1952,7 @@
 </tr>
 <tr>
 <td><a id="board_nets_not_drawn"></a>BOARD_NETS_NOT_DRAWN</td>
-<td>WARNING</td>
+<td>ERROR</td>
 <td>render</td>
 <td>consumer</td>
 <td>A board shares its unit with another top-level device, so layout draws it as a black box and drops the nets between its parts.</td>
@@ -2098,14 +2125,6 @@
 <td>consumer</td>
 <td>A trunk is cut by a page and its head stands on the page with fewer of its legs.</td>
 <td>Reorder the groups so the head and most of its legs share a page. Write: d.layout.order(a, b) with the head's group first.</td>
-</tr>
-<tr>
-<td><a id="keep_together_unmet"></a>KEEP_TOGETHER_UNMET</td>
-<td>WARNING</td>
-<td>render</td>
-<td>consumer</td>
-<td>A set of groups that must share a page could not be kept on one page (it does not fit, or its groups sit on different drawing sets).</td>
-<td>Shrink the set, or move its groups onto one drawing set. Write: d.function(name, text) to move a device to another group.</td>
 </tr>
 <tr>
 <td><a id="lane_wire_dropped"></a>LANE_WIRE_DROPPED</td>
@@ -2416,7 +2435,7 @@
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.0 documentation
+      Fransys 0.23.1 documentation
     </div>
   
   

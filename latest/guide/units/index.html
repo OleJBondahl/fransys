@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.0/guide/units/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.1/guide/units/">
       
       
       
@@ -956,6 +956,33 @@
     
   
   Settings
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../moving-to-0.23/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Moving to 0.23
 
     
   </span>
@@ -2343,7 +2370,7 @@ Nest that unit in the enclosure unit, which holds the receptacles. Join the boar
 connector to the receptacles with <code>d.series(..., wire=...)</code>; the wire crosses the unit
 boundary and draws as a boundary connection. The board's parts draw on the board unit's pages, not
 the enclosure's. A board that shares its unit with another top-level device draws as a black box,
-and <code>BOARD_NETS_NOT_DRAWN</code> names its dropped nets.</p>
+and <code>BOARD_NETS_NOT_DRAWN</code> is an ERROR that names its dropped nets.</p>
 <h2 id="task-a-board-unit-in-a-cabinet">Task: a board unit in a cabinet</h2>
 <p>The cabinet is the unit that holds the boards. It holds two identical io boards, <code>U1</code> and <code>U2</code>. A
 board has one connector the cabinet plugs into and one spare connector left open. Both boards share
@@ -2547,7 +2574,7 @@ documents and lists. A unit's release name is the <code>unit=</code> value. The 
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.0 documentation
+      Fransys 0.23.1 documentation
     </div>
   
   

@@ -6410,7 +6410,7 @@ One pin of a PLC channel.
 
 `pin` is its printed designation (`-A2:5`), `channel_name` the
 channel's own number, `wired_to` the printed far ends at that port joined with `CELL_SEPARATOR`
-(`None` for none). The device fields and `signal_name` are `None` for an unbound channel.
+(`None` for none). The device fields, `signal_name` and `description` are `None` for an unbound channel.
 
 ### PlcRackChannel
 

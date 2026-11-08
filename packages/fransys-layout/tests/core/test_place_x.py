@@ -99,7 +99,7 @@ def test_a_row_wider_than_the_page_is_left_packed_and_named() -> None:
     for word in (
         f"{'set ' + env.plan.unit + ', ' if env.plan.unit else ''}page {env.plan.page}, row 0 (devices e, wide)",
         "wider than the page",
-        f"{overflow} G",
+        f"{overflow // 8} G",
         "short_height",
     ):
         assert word in finding.text

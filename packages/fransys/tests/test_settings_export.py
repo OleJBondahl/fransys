@@ -1,9 +1,17 @@
 """`[export]`: which reports are written, how files are named, placed and encoded (SO-C part B)."""
 
+import io
+import itertools
+import xml.etree.ElementTree as ET
+import zipfile
+from typing import NamedTuple
 lazy from pathlib import Path
 
 import fransys as fr
 import pytest
+from fransys.colours import BK
+
+from fransys_model.derive import cable_list_rows, cable_rows, document_rows, document_unit, terminal_rows, wire_rows
 
 from ._settings_text_builds import consumer_file, skid_result
 
@@ -113,3 +121,103 @@ def test_csv_quoting_all_quotes_every_cell(tmp_path: Path) -> None:
     files = _written(tmp_path, '[export]\ncsv_quoting = "all"\n')
     bom = next(data for name, data in files.items() if name.endswith("bom.csv"))
     assert bom.decode("utf-8").splitlines()[0].startswith('"')
+
+
+_RING = '[export]\nreports = ["ring_out"]\n'
+_NS = "{http://schemas.openxmlformats.org/spreadsheetml/2006/main}"
+
+
+def _sheet_rows(data: bytes) -> list[list[str]]:
+    """The cell texts of the first sheet of an `.xlsx`, row by row, read from its zip and XML."""
+    with zipfile.ZipFile(io.BytesIO(data)) as book:
+        strings = ET.fromstring(book.read("xl/sharedStrings.xml"))  # noqa: S314 -- our own output
+        shared = ["".join(t.text or "" for t in si.iter(f"{_NS}t")) for si in strings.iter(f"{_NS}si")]
+        sheet = ET.fromstring(book.read("xl/worksheets/sheet1.xml"))  # noqa: S314 -- our own output
+    rows = []
+    for row in sheet.iter(f"{_NS}row"):
+        cells = {}
+        for cell in row.iter(f"{_NS}c"):
+            value = cell.find(f"{_NS}v")
+            if value is not None and value.text is not None:
+                text = value.text
+                cells[cell.get("r", "")] = shared[int(text)] if cell.get("t") == "s" else text
+        width = 11
+        rows.append([cells.get(f"{chr(65 + i)}{row.get('r')}", "") for i in range(width)])
+    return rows
+
+
+def _ring_files(tmp_path: Path, text: str = _RING) -> dict[str, bytes]:
+    return {name: data for name, data in _written(tmp_path, text).items() if name.endswith(".xlsx")}
+
+
+def test_ring_out_is_off_by_default(tmp_path: Path) -> None:
+    assert not _ring_files(tmp_path, '[export]\nreports = ["bom"]\n')
+    assert not [name for name in _written(tmp_path / "d", None) if name.endswith(".xlsx")]
+
+
+def test_ring_out_writes_one_sheet_per_pdf_with_its_stem(tmp_path: Path) -> None:
+    files = _written(tmp_path, _RING)
+    pdfs = {name.removesuffix(".pdf") for name in files if name.endswith(".pdf")}
+    assert pdfs
+    assert {name.removesuffix(".xlsx") for name in files if name.endswith(".xlsx")} == pdfs
+
+
+def test_ring_out_bytes_are_the_same_in_two_writes(tmp_path: Path) -> None:
+    assert _ring_files(tmp_path / "a") == _ring_files(tmp_path / "b")
+
+
+class _NoInterface(NamedTuple):
+    """The interface of the ring-out unit: nothing is reached from outside."""
+
+
+@fr.unit("ring-cab", revision=1, interface_version=1, date="2026-10-15", text="First issue", by="OJB", title="Ring", number="R-1")
+def _ring_cab(d: fr.Design) -> _NoInterface:
+    """A wire, a cable core to a motor and a bridged strip: one join of each kind."""
+    strip = d.terminal_strip("X1", "DEMO-TB-2.5")
+    d.terminal_strip("X2", "DEMO-TB-2.5", 4).run("P", 4, bridged=True)
+    d.series(strip[1], d.cable("W1", "DEMO-CBL-4G1.5"), d.device("M1", "DEMO-MOTOR-4KW")["U"], wire=(BK, 2.5))
+    d.series(strip[2], strip[3], wire=(BK, 2.5))
+    return _NoInterface()
+
+
+def _ring_cab_result(tmp_path: Path) -> fr.BuildResult:
+    d = fr.design("demo_parts", place="CAB")
+    d.project(title="Ring", number="R-1", customer="Co", revision=1, author="OJB")
+    d.revision(1, date="2026-10-15", text="First issue", created="XX")
+    d.location("CAB", "Cabinet")
+    d.add(_ring_cab, "U1", place="CAB")
+    cover = tmp_path / "cover.md"
+    cover.write_text("# Ring\n", encoding="utf-8")
+    document = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, "ring-cab", cover=cover)
+    return fr.build(d, document, settings=fr.settings(consumer_file(tmp_path, _RING)))
+
+
+def test_every_join_of_the_model_is_one_row_of_the_sheet(tmp_path: Path) -> None:
+    result = _ring_cab_result(tmp_path)
+    model = result.model
+    (record,) = document_rows(model)
+    unit = document_unit(model, record.id)
+    expected = [("Wire", w.from_, w.to) for w in wire_rows(model, unit=unit, context=record.location)]
+    expected += [
+        ("Core", c.end_a_designation, c.end_b_designation) for u in cable_list_rows(model, unit=unit) for c in cable_rows(model, u.cable, unit=unit)
+    ]
+    groups: dict[int, list[str]] = {}
+    for t in terminal_rows(model, unit=unit, context=record.location):
+        if t.jumper_group is not None:
+            groups.setdefault(t.jumper_group, []).append(t.designation)
+    expected += [("Bridge", a, b) for g in groups.values() for a, b in itertools.pairwise(g)]
+    fr.write(result, tmp_path / "out")
+    (path,) = (tmp_path / "out").glob("*.xlsx")
+    lines = [r for r in _sheet_rows(path.read_bytes()) if len(r) > 3 and r[0].isdigit()]
+    assert sorted((r[1], r[2], r[3]) for r in lines) == sorted(expected)
+    assert {kind for kind, _, _ in expected} == {"Wire", "Core", "Bridge"}
+    assert all(r[7].startswith("p") for r in lines if r[1] in {"Wire", "Core"})
+    assert all(r[7] == "" for r in lines if r[1] == "Bridge")
+
+
+def test_a_ring_out_word_is_the_consumers(tmp_path: Path) -> None:
+    (ours,) = _ring_files(tmp_path / "a").values()
+    (theirs,) = _ring_files(tmp_path / "b", _RING + '[words]\nring_status = "State"\n').values()
+    assert "Status" in _sheet_rows(ours)[1]
+    assert "State" in _sheet_rows(theirs)[1]
+    assert "Status" not in _sheet_rows(theirs)[1]

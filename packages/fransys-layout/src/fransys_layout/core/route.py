@@ -205,7 +205,7 @@ def through_bodies(env: RouteEnv, wires: Sequence[Wire]) -> list[Finding]:
     return out
 
 
-def route_page(env: RouteEnv, fixed: Fixed | None = None) -> tuple[PageRoutes, tuple[Refused, ...], tuple[Finding, ...]]:
+def route_page(env: RouteEnv, fixed: Fixed | None = None) -> PageResult:
     """One page's routes, the nets it gave up on, and its findings; `fixed` is stage 6a's, laid before the markers."""
     drawn = guard(env, _grid(env, ()), _fixed_wires(env, fixed or fixed_page(env)))
     labels, standing, unplaced, needs = page_labels(env, drawn.wires)
@@ -229,6 +229,23 @@ def route_page(env: RouteEnv, fixed: Fixed | None = None) -> tuple[PageRoutes, t
         needs,
     )
     return page, tuple(lost.values()), (*drawn.findings, *through_bodies(env, wires), *unplaced)
+
+
+PageResult = tuple[PageRoutes, tuple[Refused, ...], tuple[Finding, ...]]
+RouteMemo = dict[int, list[tuple["RouteEnv", Fixed, PageResult]]]
+
+
+def _memoised(env: RouteEnv, fixed: Fixed, memo: RouteMemo | None) -> PageResult:
+    """`route_page` once per equal (env, fixed): a page's route is a pure function of them, so a pass that leaves it as it was reuses it."""
+    if memo is None:
+        return route_page(env, fixed)
+    seen = memo.setdefault(env.page, [])
+    key = replace(env, lost=frozenset(k for k in env.lost if any(p.sym in env.placed for p in k[1])))  # a lost key with no pin here is never asked
+    for e, f, result in seen:
+        if e == key and f == fixed:
+            return result
+    seen.append((key, fixed, route_page(env, fixed)))
+    return seen[-1][2]
 
 
 def _laid_on(env: RouteEnv, problem: PlacementProblem, laid: Laid, runs: Sequence[StripRun]) -> RouteEnv:
@@ -263,7 +280,7 @@ def route_pages(
     fixed = fixed_wires(placement, cut, problem, options) if laid.fixed is None else laid.fixed
     envs = withheld(route_envs(placement, cut, problem, options, laid.keeps), laid.lost)
     runs = {p.page: p.runs for p in placement.pages}
-    results = [route_page(env, fixed[env.page]) for env in (_laid_on(e, problem, laid, runs[e.page]) for e in envs)]
+    results = [_memoised(env, fixed[env.page], laid.memo) for env in (_laid_on(e, problem, laid, runs[e.page]) for e in envs)]
     return Routes(
         tuple(r[0] for r in results),
         tuple(n for r in results for n in r[1]),

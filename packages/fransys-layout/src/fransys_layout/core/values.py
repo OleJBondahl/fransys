@@ -5,6 +5,7 @@ jsonform.py gives every value here a JSON form. Lengths are in G; x grows right,
 """
 
 from dataclasses import dataclass, field
+from decimal import Decimal
 from enum import StrEnum
 from typing import Literal
 lazy from collections.abc import Mapping
@@ -85,6 +86,11 @@ class Box:
     y: int
     w: int
     h: int
+
+
+def g_text(units: int) -> str:
+    """`units` layout units (eight to a G) as the engineer's G, an exact decimal: 2468 is "308.5", 960 is "120"."""
+    return f"{Decimal(units) / 8:f}"
 
 
 @dataclass(frozen=True, slots=True)

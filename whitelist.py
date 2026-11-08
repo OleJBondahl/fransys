@@ -255,8 +255,8 @@ _.dash_mm  # TESTS fransys-layout/tests/test_drawing.py:45
 _.tints  # TESTS fransys-layout/tests/test_drawing.py:44
 _.line_rule_mm  # TESTS fransys-layout/tests/test_drawing.py:50
 _.library_version  # FIELDS fransys-layout/src/fransys_layout/drawing.py:132
-_.height_g  # TESTS fransys-el/tests/test_write.py:237
-_.width_g  # TESTS fransys-el/tests/test_write.py:237
+_.height  # TESTS fransys-el/tests/test_write.py:237
+_.width  # TESTS fransys-el/tests/test_write.py:237
 _.width_mm  # TESTS fransys-el/tests/test_style.py:39
 _.height_mm  # OTHER fransys-render/src/fransys_render/draw.py:67
 _.W  # OTHER fransys/src/fransys/_link_boxes.py:18

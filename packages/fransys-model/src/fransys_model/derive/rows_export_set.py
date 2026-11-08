@@ -15,7 +15,7 @@ class ExportRow:
     """One file a write makes, before it is placed in `data/`.
 
     - `export_kind`: `"bom"`, `"plc"`, `"wires"`, `"designations"`, `"cables"`, `"cores"`,
-      `"overview"`, `"terminals"`, `"connectors"`, `"wago"` or `"pdf"`; `extension` ends the name.
+      `"overview"`, `"terminals"`, `"connectors"`, `"wago"`, `"pdf"` or `"ring_out"`; `extension` ends the name.
     - `subject`: the strip, board, rack or document id; `None` for a whole-model report.
     - `name`: `export_name` or `document_export_name`; `hint` the unit-set name a clash of two
       units of one release should keep one document of, else `None`.

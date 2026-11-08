@@ -61,7 +61,7 @@ _REASONED_ENTRY_RE = re.compile(r"^_\.(\w+)  # (FIELDS|DICT|OTHER|TESTS) (\S+):(
 # rows_device_chains and rows_pin_views fields read by fransys_layout's read package;
 # +2 (TABLE-T2): Footprints no_cells, nc_cells; cleanup lowers;
 # +2 (SHEETS, Ruling 128): SheetKind.BLOCK, LayoutSheet.sheet_kind
-# +2 (BUILD-ROWS, R1940): DrawnRow.height_g, width_g, read by the consumer
+# +2 (BUILD-ROWS, R1940): DrawnRow.height, width, read by the consumer
 WHITELIST_CEILING = (
     # +1 PageRoutes.dots (P3c, R535); -1 `_.pitch`; +2 PlacedWire.run_a/run_b (layout-0408);
     # -1 shape_key (LINT-ESCAPES-2 P5, its one reader was its test, deleted with it);

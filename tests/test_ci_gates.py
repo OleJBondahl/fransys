@@ -61,3 +61,19 @@ def test_the_internal_gate_joins_only_where_the_full_repo_has_its_recipes(tmp_pa
     (tmp_path / "internal").mkdir()
     (tmp_path / "internal" / "internal.just").write_text("", encoding="utf-8")
     assert ci_gates.all_groups(tmp_path) == (*ci_gates._GROUPS, (("just", "internal-gate"),))
+
+
+def test_the_pytest_group_starts_only_after_the_cheap_gates_are_green(tmp_path: Path, capfd) -> None:
+    """AWS-COST-1: a lint failure ends the run before pytest starts; a green lint runs every group, blocks in group order."""
+    started = tmp_path / "pytest-started"
+    pytest_group = ((*_gate(f"open({str(started)!r}, 'w').close(); print('pytest block')"), "cov"),)
+    lint_red = (_gate("print('ruff block'); raise SystemExit(4)"),)
+    assert ci_gates.run_all((pytest_group, lint_red)) == 4
+    out = capfd.readouterr().out
+    assert not started.exists()
+    assert "ruff block" in out
+    assert "pytest not started" in out
+    assert ci_gates.run_all((pytest_group, (_gate("print('ruff block')"),))) == 0
+    out = capfd.readouterr().out
+    assert started.exists()
+    assert out.index("pytest block") < out.index("ruff block")

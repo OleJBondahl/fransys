@@ -11,6 +11,7 @@ from .csv import (
     terminal_csv,
     wires_csv,
 )
+from .ring_out import ring_out_xlsx
 
 __all__ = [
     "bom_csv",
@@ -21,6 +22,7 @@ __all__ = [
     "cores_csv",
     "designations_csv",
     "plc_csv",
+    "ring_out_xlsx",
     "terminal_csv",
     "wires_csv",
 ]

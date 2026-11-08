@@ -71,3 +71,9 @@ def test_a_set_whose_write_skipped_its_output_steps_is_not_checked(tmp_path: Pat
     result = _build(tmp_path, crash=True)
     expect_codes(result, "WIDER_THAN_PAGE", "PAGE_OVERFLOW")
     assert not any(f.code == "CONNECTION_NOT_DRAWN" and "B1" in f.message for f in fr.check(result))
+    wide = [(d, r) for d in result.drawings.values() for r in d.rows if r.width > d.area.w]  # R1996: the skipped set's pages and rows are returned
+    assert len(wide) == 1
+    assert wide[0][1].devices
+    assert all(s.key != "marker" for s in wide[0][0].symbols)
+    with pytest.raises(fr.BuildFailedError):
+        fr.write(result, tmp_path / "out")

@@ -53,9 +53,8 @@ def write_layout_drawn(  # noqa: PLR0913 - `write_layout`'s inputs [internal bui
         library=library,
         where=where,
     )
-    if refuses(found):
-        return laid, found, {}, (), True  # the layout's ERROR stops the build before any drawing (KI-773)
     owner = drawing_set(unit, where)
     pages = {p.number: p for p in layout_of(laid, Page).values() if p.drawing_set == owner.id}
     written = Written(model, layout, problem, kit, library, pages, owner, unit)
-    return laid, found, draw_set(written), link_markers(written), False
+    skipped = refuses(found)  # a refused set draws its pages and rows, no markers and no checks (KI-773, R1991, R1996)
+    return laid, found, draw_set(written), () if skipped else link_markers(written), skipped

@@ -120,8 +120,8 @@ def _placement_fragment(model: Model, record: Document, scope: Id[Unit] | None) 
     return export_fragment(model, tag) if tag else None
 
 
-def document_export_name(model: Model, unit: Id[Unit] | None, record: Document) -> str:
-    """One document's PDF name, from its own subject, never its cover.
+def document_export_name(model: Model, unit: Id[Unit] | None, record: Document, extension: str = "pdf") -> str:
+    """One document's file name (`extension`, the PDF's by default), from its own subject, never its cover.
 
     Unit subject (`record.unit`, or `record.unit_name` via `document_unit`): its own prefix; a
     placement (no `unit_name`) adds the instance's tag in the system.
@@ -129,12 +129,12 @@ def document_export_name(model: Model, unit: Id[Unit] | None, record: Document) 
     """
     document_own_unit = document_unit(model, record.id)
     if document_own_unit is not None:
-        return export_name(model, document_own_unit, "pdf", fragment=_placement_fragment(model, record, unit))
+        return export_name(model, document_own_unit, extension, fragment=_placement_fragment(model, record, unit))
     if not export_prefix(model, unit):
-        return export_name(model, unit, "pdf", fragment=record.key[1])
+        return export_name(model, unit, extension, fragment=record.key[1])
     if record.location is not None:
         fragment = export_fragment(model, location_node_designation(model, record.location))
-        return export_name(model, unit, "pdf", fragment=fragment)
+        return export_name(model, unit, extension, fragment=fragment)
     if record.item is not None:
-        return export_name(model, unit, "pdf", fragment=export_ref(model, record.item, unit))
-    return export_name(model, unit, "pdf")
+        return export_name(model, unit, extension, fragment=export_ref(model, record.item, unit))
+    return export_name(model, unit, extension)

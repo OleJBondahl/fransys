@@ -626,6 +626,7 @@ def test_export_names_refuses_a_bad_unit_like_write(worked):
 def test_the_stale_patterns_are_the_exports_a_write_owns():
     assert set(stale_patterns()) == {
         "*.pdf",
+        "*.xlsx",
         "bom.csv",
         "plc.csv",
         "wire*.csv",

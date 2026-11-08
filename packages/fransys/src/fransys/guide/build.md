@@ -177,9 +177,8 @@ assert sorted(p.relative_to("out").as_posix() for p in written) == [
 ```
 
 `fr.export_names(result, *, unit=None)` gives the name `write` gives each export, by `(kind, subject)`,
-without writing anything. A kind is `bom`, `plc`, `wires`, `designations`, `overview`,
-`cables`, `cores`, `terminals` or `connectors` (subject `None`); `wago` with the rack's id; or `pdf` with
-the document's id. The key is a tuple: `("bom", None)` for a whole-set file, `("pdf", <document id>)`
+writing nothing. A kind is `bom`, `plc`, `wires`, `designations`, `overview`,
+`cables`, `cores`, `terminals` or `connectors` (subject `None`); `wago` with the rack's id; `pdf` or `ring_out` with the document's id. The key is a tuple: `("bom", None)` for a whole-set file, `("pdf", <document id>)`
 for a document.
 
 ```python

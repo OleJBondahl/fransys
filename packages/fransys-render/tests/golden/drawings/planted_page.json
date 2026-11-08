@@ -10,9 +10,9 @@
    "devices": [
     "item:ab12"
    ],
-   "height_g": 16,
+   "height": 16,
    "term": "body",
-   "width_g": 320
+   "width": 320
   }
  ],
  "symbols": [

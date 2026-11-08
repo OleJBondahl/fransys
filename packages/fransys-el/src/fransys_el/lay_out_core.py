@@ -51,6 +51,7 @@ class _Sink:
     markers: list[LinkMarker]
     pageless: list[tuple[DrawingScope, int]]
     failed: list[DrawingScope]  # sets whose layout raised or write skipped its output steps: not checked (KI-779, R1991)
+    refused_pages: set[Id[Page]]  # the pages of the skipped sets: returned, never read by a drawn-page check (R1996)
 
     def take(
         self,
@@ -109,6 +110,7 @@ def _one_set(
     run.sink.take(drawn, markers, (scope, number) if scope.symbols and not layout.pages else None)
     if skipped:
         run.sink.failed.append(scope)  # write skipped its output steps: the drawing is incomplete (KI-773, R1991)
+        run.sink.refused_pages.update(drawn)
     return laid, more
 
 
@@ -145,12 +147,13 @@ def lay_out_drawn(
 
     The drawings come straight from the layouts (F7).
     """
-    sink = _Sink({}, [], [], [])
+    sink = _Sink({}, [], [], [], set())
     run = _Run(model, problem, kit, options(conventions, library), conventions, library, sink)
     laid, found, lines = _lay_out(run)
     drawings = finish_drawings(laid, sink.drawn, sink.markers, ORIGIN, library)
     drawings = place_texts(laid, kit, library, drawings)
-    net = with_lines(drawn_netlist(laid, kit, drawings, sink.markers, library), laid, kit, lines)
+    checked = {k: v for k, v in drawings.items() if k not in sink.refused_pages}
+    net = with_lines(drawn_netlist(laid, kit, checked, sink.markers, library), laid, kit, lines)
     net.texted.update(where_joined(laid, net))
     net.skipped.update(skipped_ports(laid, kit, sink.failed))
     return (

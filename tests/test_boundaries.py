@@ -67,7 +67,7 @@ THIRD_PARTY: dict[str, frozenset[str]] = {
     "fransys_layout": frozenset({"symdef"}),
     "fransys_el": frozenset(),
     "fransys_render": frozenset({"symdef"}),
-    "fransys_reports": frozenset(),
+    "fransys_reports": frozenset({"xlsxwriter"}),
     "fransys_pdf": frozenset(),
     "fransys_kicad": frozenset(),
     "fransys_wago": frozenset(),

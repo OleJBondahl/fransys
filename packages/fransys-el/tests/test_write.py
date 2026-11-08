@@ -234,7 +234,7 @@ def test_a_page_overflow_names_the_set_the_page_and_the_designations_of_its_row(
 
 def test_a_page_drawing_carries_the_measured_rows_of_its_layout(written: Written) -> None:
     rows = [r for d in written.drawn.values() for r in d.rows]
-    assert [(r.height_g, r.width_g, r.term) for r in rows] == [(m.height, m.width, m.term) for m in written.layout.rows]
+    assert [(r.height, r.width, r.term) for r in rows] == [(m.height, m.width, m.term) for m in written.layout.rows]
     assert rows
     assert all(r.devices and all(drawn_designations(written.model, r.devices)) for r in rows)
     assert all(len(set(r.devices)) == len(r.devices) for r in rows)

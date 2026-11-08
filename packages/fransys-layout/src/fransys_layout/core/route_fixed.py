@@ -18,6 +18,7 @@ if TYPE_CHECKING:
     from .clearance import Keep
     from .flow_values import CutResult
     from .outputs import Marker, Placement, Wire
+    from .route import RouteMemo
     from .route_env import RouteEnv
     from .values import Options, PlacementProblem
 
@@ -37,6 +38,7 @@ class Laid(NamedTuple):
     lost: frozenset[LostKey] = frozenset[LostKey]()
     markers: Sequence[Marker] = ()
     leads: Sequence[Wire] = ()
+    memo: RouteMemo | None = None
 
 
 def fixed_page(env: RouteEnv) -> Fixed:

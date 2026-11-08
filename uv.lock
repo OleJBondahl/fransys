@@ -96,7 +96,7 @@ wheels = [
 
 [[package]]
 name = "demo-parts"
-version = "0.23.3"
+version = "0.23.4"
 source = { editable = "examples/demo-parts" }
 
 [[package]]
@@ -110,7 +110,7 @@ wheels = [
 
 [[package]]
 name = "electrical-symbols"
-version = "0.23.3"
+version = "0.23.4"
 source = { editable = "packages/electrical-symbols" }
 dependencies = [
     { name = "symdef" },
@@ -157,7 +157,7 @@ wheels = [
 
 [[package]]
 name = "fransys"
-version = "0.23.3"
+version = "0.23.4"
 source = { editable = "packages/fransys" }
 dependencies = [
     { name = "electrical-symbols" },
@@ -194,7 +194,7 @@ requires-dist = [
 
 [[package]]
 name = "fransys-author"
-version = "0.23.3"
+version = "0.23.4"
 source = { editable = "packages/fransys-author" }
 dependencies = [
     { name = "fransys-model" },
@@ -205,7 +205,7 @@ requires-dist = [{ name = "fransys-model", editable = "packages/fransys-model" }
 
 [[package]]
 name = "fransys-el"
-version = "0.23.3"
+version = "0.23.4"
 source = { editable = "packages/fransys-el" }
 dependencies = [
     { name = "electrical-symbols" },
@@ -222,7 +222,7 @@ requires-dist = [
 
 [[package]]
 name = "fransys-kernel"
-version = "0.23.3"
+version = "0.23.4"
 source = { editable = "packages/fransys-kernel" }
 dependencies = [
     { name = "elecdef" },
@@ -237,7 +237,7 @@ requires-dist = [
 
 [[package]]
 name = "fransys-kicad"
-version = "0.23.3"
+version = "0.23.4"
 source = { editable = "packages/fransys-kicad" }
 dependencies = [
     { name = "fransys-model" },
@@ -248,7 +248,7 @@ requires-dist = [{ name = "fransys-model", editable = "packages/fransys-model" }
 
 [[package]]
 name = "fransys-layout"
-version = "0.23.3"
+version = "0.23.4"
 source = { editable = "packages/fransys-layout" }
 dependencies = [
     { name = "electrical-symbols" },
@@ -265,7 +265,7 @@ requires-dist = [
 
 [[package]]
 name = "fransys-model"
-version = "0.23.3"
+version = "0.23.4"
 source = { editable = "packages/fransys-model" }
 dependencies = [
     { name = "elecdef" },
@@ -282,7 +282,7 @@ requires-dist = [
 
 [[package]]
 name = "fransys-overview"
-version = "0.23.3"
+version = "0.23.4"
 source = { editable = "packages/fransys-overview" }
 dependencies = [
     { name = "fransys-model" },
@@ -293,7 +293,7 @@ requires-dist = [{ name = "fransys-model", editable = "packages/fransys-model" }
 
 [[package]]
 name = "fransys-parts"
-version = "0.23.3"
+version = "0.23.4"
 source = { editable = "packages/fransys-parts" }
 dependencies = [
     { name = "fransys-model" },
@@ -304,7 +304,7 @@ requires-dist = [{ name = "fransys-model", editable = "packages/fransys-model" }
 
 [[package]]
 name = "fransys-pdf"
-version = "0.23.3"
+version = "0.23.4"
 source = { editable = "packages/fransys-pdf" }
 dependencies = [
     { name = "fransys-model" },
@@ -315,7 +315,7 @@ requires-dist = [{ name = "fransys-model", editable = "packages/fransys-model" }
 
 [[package]]
 name = "fransys-render"
-version = "0.23.3"
+version = "0.23.4"
 source = { editable = "packages/fransys-render" }
 dependencies = [
     { name = "electrical-symbols" },
@@ -334,18 +334,22 @@ requires-dist = [
 
 [[package]]
 name = "fransys-reports"
-version = "0.23.3"
+version = "0.23.4"
 source = { editable = "packages/fransys-reports" }
 dependencies = [
     { name = "fransys-model" },
+    { name = "xlsxwriter" },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "fransys-model", editable = "packages/fransys-model" }]
+requires-dist = [
+    { name = "fransys-model", editable = "packages/fransys-model" },
+    { name = "xlsxwriter", specifier = "==3.3.1" },
+]
 
 [[package]]
 name = "fransys-wago"
-version = "0.23.3"
+version = "0.23.4"
 source = { editable = "packages/fransys-wago" }
 dependencies = [
     { name = "fransys-model" },
@@ -376,7 +380,6 @@ dev = [
     { name = "pypdfium2" },
     { name = "pytest" },
     { name = "pytest-cov" },
-    { name = "pytest-testmon" },
     { name = "pytest-timeout" },
     { name = "pytest-xdist" },
     { name = "refdef" },
@@ -409,7 +412,6 @@ dev = [
     { name = "pypdfium2", specifier = "==5.15.1" },
     { name = "pytest", specifier = "==9.2.0" },
     { name = "pytest-cov", specifier = "==7.1.0" },
-    { name = "pytest-testmon", specifier = "==2.3.0" },
     { name = "pytest-timeout", specifier = "==2.4.0" },
     { name = "pytest-xdist", specifier = "==3.8.0" },
     { name = "refdef", specifier = "==0.3.1" },
@@ -681,19 +683,6 @@ wheels = [
 ]
 
 [[package]]
-name = "pytest-testmon"
-version = "2.3.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "coverage" },
-    { name = "pytest" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/10/c5/12ad97c49648f24768449822c5b032f87215060efa8c0cb214a1464d46d0/pytest_testmon-2.3.0.tar.gz", hash = "sha256:7bcd50afce305393edc6b530ee77a61c91949efafe0c54f799f12fe3da999623", size = 24373, upload-time = "2026-11-02T13:07:10.334Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/1b/f1/0312fca79f6695ce17426e8d30df0c4c2f6efa297094ea6fd81fe7a257b4/pytest_testmon-2.3.0-py3-none-any.whl", hash = "sha256:fd541506efa483e5a217e6cc5c07c73b382619c218d1ed4ffa80584c34defd77", size = 26512, upload-time = "2026-11-02T13:07:09.07Z" },
-]
-
-[[package]]
 name = "pytest-timeout"
 version = "2.4.0"
 source = { registry = "https://pypi.org/simple" }
@@ -882,6 +871,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/66/3e/4d08c5903b2c0c70cad583c170cc4a663fc6a61e2ad00b711fcda61358cd/vulture-2.16.tar.gz", hash = "sha256:f8d9f6e2af03011664a3c6c240c9765b3f392917d3135fddca6d6a68d359f717", size = 52680, upload-time = "2026-03-25T14:41:27.141Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/f5/be/f935130312330614811dae2ea9df3f395f6d63889eb6c2e68c14507152ee/vulture-2.16-py3-none-any.whl", hash = "sha256:6e0f1c312cef1c87856957e5c2ca9608834a7c794c2180477f30bf0e4cc58eee", size = 26993, upload-time = "2026-03-25T14:41:26.21Z" },
+]
+
+[[package]]
+name = "xlsxwriter"
+version = "3.3.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/9c/fb/31bdbf3737222d92ef7d2db4d50089b2253dbbb63ceb6d20a4447f6b7ed0/xlsxwriter-3.3.1.tar.gz", hash = "sha256:0867761912cceac76f97ffa76eeda18c623ae9217f601be8512f55b1af4bdb6e", size = 223040, upload-time = "2026-10-28T22:52:46.592Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/88/eb/1e6af9959a567901a7e7c7cef2e75883e487df223ed67f9a8977ff863bd8/xlsxwriter-3.3.1-py3-none-any.whl", hash = "sha256:8e2c89e59d733fe59e112317218c64fbbc276d90a8c144ebd6f7fa15e7ab184a", size = 180583, upload-time = "2026-10-28T22:52:45.048Z" },
 ]
 
 [[package]]

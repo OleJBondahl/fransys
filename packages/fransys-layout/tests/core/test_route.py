@@ -7,11 +7,12 @@ from dataclasses import replace
 import pytest
 from options_fixtures import core_options
 
-from fransys_layout.core import Box, PinRef, PlacementProblem, Size
+from fransys_layout.core import Box, PinRef, PlacementProblem, Size, route_astar
 from fransys_layout.core.junctions import page_junctions
 from fransys_layout.core.outputs import Placed, Routes, Wire
 from fransys_layout.core.route import route_page, route_pages
 from fransys_layout.core.route_counts import collinear, demand
+from fransys_layout.core.route_fixed import Laid
 
 from .conftest import MARKER
 from .cut_fixtures import elem
@@ -65,6 +66,23 @@ def test_no_two_nets_share_a_collinear_run(planted: PlacementProblem) -> None:
 
 def test_route_pages_twice_gives_equal_routes(planted: PlacementProblem) -> None:
     assert routed_of(planted) == routed_of(planted)
+
+
+def test_a_page_routed_again_with_equal_inputs_is_reused_and_expands_nothing(monkeypatch: pytest.MonkeyPatch) -> None:
+    """ROUTE-REROUTE-SCOPE: the memo returns the page's routes for an equal env and fixed wires; the expansions are counted, never timed."""
+    expanded = []
+    real = route_astar._expand
+    monkeypatch.setattr(route_astar, "_expand", lambda *a: (expanded.append(1), real(*a))[1])
+    prob, opts, memo = link_across_box(), core_options(marker=MARKER), {}
+    cut, placement = cut_of(prob, opts), placed_of(prob, opts)
+    first = route_pages(placement, cut, prob, opts, Laid(memo=memo))
+    cold = len(expanded)
+    again = route_pages(placement, cut, prob, opts, Laid(memo=memo))
+    assert cold > 0
+    assert (again, len(expanded) - cold) == (first, 0)
+    elsewhere = frozenset({("n9", frozenset({PinRef("off-page", "p")}))})  # a lost conductor with no pin on the page is never asked
+    route_pages(placement, cut, prob, opts, Laid(lost=elsewhere, memo=memo))
+    assert len(expanded) - cold == 0
 
 
 def test_demand_has_one_row_per_gap_and_the_page_counts_match_the_wires(

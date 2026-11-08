@@ -30,7 +30,7 @@ from .row_measure import page_rows
 from .row_names import row_where
 from .text_markers import placed_marks
 from .topology import build_flow
-from .values import Finding
+from .values import Finding, g_text
 from .widen_rounds import settled
 
 if TYPE_CHECKING:
@@ -40,6 +40,7 @@ if TYPE_CHECKING:
     from .arrow_reserve import RowReserve
     from .flow_values import BlockList, CutResult, FlowGraph
     from .outputs import Marker, PagePlacement, RowMeasure
+    from .route import RouteMemo
     from .route_fixed import Fixed
     from .values import Options, PinRef, PlacementProblem, Ref
 
@@ -125,7 +126,7 @@ def overflows(placement: Placement, cut: CutResult, problem: PlacementProblem, o
             rows = page_rows(page, plan, (blocks, columns, block_reserves(cut, problem.annexes, options)))
             row = _culprit(rows, tall=tall > 0)
             where = f"set {plan.unit or 'root'}, page {page.page}" if row is None else row_where(plan, row, blocks, columns)
-            by = f"{max(wide, 0)} G wide and {max(tall, 0)} G high"
+            by = f"{g_text(max(wide, 0))} G wide and {g_text(max(tall, 0))} G high"
             msg = f"{where}: the page is over by {by}; enlarge the page, split the unit or shorten the column"
             out.append(Finding("PAGE_OVERFLOW", msg, page.page, None if row is None else plan.rows[row].blocks[0]))
     return tuple(out)
@@ -234,6 +235,7 @@ class Standing(NamedTuple):
     markers: Sequence[Marker]
     fixed: Mapping[int, Fixed]
     lost: frozenset[LostKey] = frozenset[LostKey]()
+    memo: RouteMemo | None = None
 
 
 def routed(
@@ -249,7 +251,9 @@ def routed(
     for page in placement.pages:
         keeps = page_keeps(page, standing.markers, anchored, problem, options)
         leads = anchor_leads(anchored)
-        parts.append(route_pages(Placement((page,)), cut, problem, options, Laid(keeps, standing.fixed, standing.lost, standing.markers, leads)))
+        parts.append(
+            route_pages(Placement((page,)), cut, problem, options, Laid(keeps, standing.fixed, standing.lost, standing.markers, leads, standing.memo))
+        )
     return Routes(
         tuple(p for r in parts for p in r.pages),
         tuple(n for r in parts for n in r.failed),
@@ -269,26 +273,33 @@ class Round(NamedTuple):
     refs: tuple[Ref, ...]
     lost: tuple[Refused, ...] = ()
     asks: tuple[Demand, ...] = ()
+    memo: RouteMemo | None = None
 
 
 def _stand(
-    cut: CutResult, placement: Placement, problem: PlacementProblem, options: Options, held: tuple[Mapping[LostKey, Refused], Sequence[AnnexBox]]
+    cut: CutResult,
+    placement: Placement,
+    problem: PlacementProblem,
+    options: Options,
+    held: tuple[Mapping[LostKey, Refused], Sequence[AnnexBox], RouteMemo | None],
 ) -> Round:
     """One round of the loop: fixed wires, the references (planned and fallback) as markers, then labels and A* round their boxes (E11).
 
-    `held` is what the rounds before left: the conductors lost, and the labels, which do not move.
+    `held` is what the rounds before left: the conductors lost, the labels, which do not move, and the page routes already made.
     """
-    lost, labels = held
+    lost, labels, memo = held
     keys, refs = frozenset(lost), fallback(cut, placement, (*lost.values(), *(Refused(n, pair) for n, pair in cut.spec.unjoined)))
     fixed = {
         pg: f._replace(labels=tuple(a for a in labels if a.page == pg)) for pg, f in fixed_wires(placement, cut, problem, options, lost=keys).items()
     }
     planned = replace(cut, spec=replace(cut.spec, reference_plan=(*cut.spec.reference_plan, *refs)))
     markers, missed, asks = placed_marks(planned, placement, problem, options, fixed)
-    return Round(markers, missed, routed(placement, cut, problem, options, Standing(markers, fixed, keys)), refs, tuple(lost.values()), asks)
+    return Round(
+        markers, missed, routed(placement, cut, problem, options, Standing(markers, fixed, keys, memo)), refs, tuple(lost.values()), asks, memo
+    )
 
 
-def route_round(cut: CutResult, placement: Placement, problem: PlacementProblem, options: Options) -> Round:
+def route_round(cut: CutResult, placement: Placement, problem: PlacementProblem, options: Options, memo: RouteMemo | None = None) -> Round:
     """The routing and reference loop (R1222): round k routes what no earlier round lost; round k's losses stand as references in round k+1.
 
     It stops after the first round that loses nothing (R1245), or at `route_fallback_rounds`, where the
@@ -296,14 +307,15 @@ def route_round(cut: CutResult, placement: Placement, problem: PlacementProblem,
     """
     lost: dict[LostKey, Refused] = {}
     labels: Sequence[AnnexBox] = ()
+    memo = {} if memo is None else memo
     for _ in range(options.route_fallback_rounds):
-        rnd = _stand(cut, placement, problem, options, (lost, labels))
+        rnd = _stand(cut, placement, problem, options, (lost, labels, memo))
         new = {k: r for r in rnd.routes.failed if r.ends and (k := lost_key(r.net, r.ends)) not in lost}
         if not new:
             return rnd
         lost |= new
         labels = rnd.routes.labels
-    return _stand(cut, placement, problem, options, (lost, labels))
+    return _stand(cut, placement, problem, options, (lost, labels, memo))
 
 
 def tagged_by(problem: PlacementProblem, lost: Iterable[Refused]) -> PlacementProblem:
@@ -430,5 +442,5 @@ def widen(
         ):  # a room the page cannot hold is no room: the marker stays unplaced, the page does not overflow
             break
         cut, placement, over = grown
-        problem, rnd = problem2, route_round(cut, placement, problem2, options)
+        problem, rnd = problem2, route_round(cut, placement, problem2, options, rnd.memo)
     return cut, placement, rnd, problem, over

@@ -60,4 +60,4 @@ def test_a_row_wider_than_its_page_is_a_finding_and_a_page_with_none_holds_no_su
     assert {f.code for f in result.findings if f.severity == fr.Severity.ERROR} == {"WIDER_THAN_PAGE", "PAGE_OVERFLOW"}
     pages = built.drawings.values()
     margin = cast("tuple[int, int]", built.settings.layout["margin"])[0]
-    assert all(r.width_g <= p.area.w - 2 * margin for p in pages for r in p.rows)
+    assert all(r.width <= p.area.w - 2 * margin for p in pages for r in p.rows)

@@ -18,6 +18,7 @@ from fransys_reports import (
     cores_csv,
     designations_csv,
     plc_csv,
+    ring_out_xlsx,
     wires_csv,
 )
 from fransys_reports import (
@@ -211,6 +212,7 @@ def _producers(job: _Export) -> dict[str, Callable[[Id[Any]], Callable[[], str |
         "terminals": lambda _s: partial(terminal_csv_of, model, unit=unit),
         "connectors": lambda _s: partial(connectors_csv_of, model, unit=unit),
         "wago": lambda s: partial(modules_xml_of, model, s, unit=unit),
+        "ring_out": lambda s: partial(ring_out_xlsx, model, s),
         "pdf": lambda s: partial(_compile_pdf, job.drawn, s, job.settings),
     }
 
@@ -240,7 +242,7 @@ def export_names(result: BuildResult, *, unit: object = None) -> dict[tuple[str,
 
     A kind is `"bom"`, `"plc"`, `"wires"`, `"designations"`, `"overview"`, `"cables"` or `"cores"`
     (subject `None`), `"terminals"`, `"connectors"` or `"wago"` (the strip, board or rack id), or
-    `"pdf"` (the document id). `unit=` is `write`'s. Writes nothing and compiles no PDF; raises what
+    `"pdf"` or `"ring_out"` (the document id). `unit=` is `write`'s. Writes nothing and compiles no PDF; raises what
     `write` raises for a bad `unit` or a name two subjects share (`ExportNameClashError`).
 
     Does not write a file, compile a PDF or run `check`.
@@ -285,8 +287,8 @@ def write(
 ) -> tuple[Path, ...]:
     """Output: write a built model's exports into `out_dir` and return their paths, sorted.
 
-    Writes CSV reports, WAGO XML, overview HTML and one PDF per document; `unit=` restricts them to
-    that unit's own set (no `overview.html`). Intermediates (SVGs, netlists, `.typ`
+    Writes CSV reports, WAGO XML, overview HTML, one PDF per document and, if `[export] reports` names
+    `ring_out`, one `.xlsx` each; `unit=` restricts them to that unit's own set (no `overview.html`). Intermediates (SVGs, netlists, `.typ`
     sources) go only to `intermediates`, if given. `releases` is a release root as `release`'s
     `into`: with a stored release of the system there, `overview.html` marks what changed since it
     (the release at the model's revision, else the previous one); `None` marks nothing. Any

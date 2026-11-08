@@ -1,4 +1,4 @@
-"""The drawn values: what render draws from, in G, with every string final (SW5, layout-0315).
+"""The drawn values: what render draws from, in layout units (one G is eight; an A3 page is 1312 wide), with every string final (SW5, layout-0315).
 
 A `Drawing` is one page's things; a `Sheet` its frame; a `Style` the pens and sizes. Each is a
 frozen dataclass of numbers, strings and tuples, so `fransys_layout.core.to_plain` and `from_plain`
@@ -48,7 +48,7 @@ Corner = Literal["NW", "NE", "SW", "SE"]
 
 @dataclass(frozen=True, slots=True)
 class DrawnText:
-    """One text: its final string, its box in G and the corner of the box it is anchored by.
+    """One text: its final string, its box in layout units and the corner of the box it is anchored by.
 
     `owner` is the id of the drawn item the text annotates, `None` for a free text. `turned` is a text that reads bottom-up in a box
     already turned (its width the text's thickness); its `anchor` corner is where symdef starts the text.
@@ -64,15 +64,15 @@ class DrawnText:
 
 @dataclass(frozen=True, slots=True)
 class DrawnSymbol:
-    """A library symbol at (x, y) in G, turned to `orient`.
+    """A library symbol at (x, y) in layout units, turned to `orient`.
 
-    `stretch` is (axis, length G) pairs, `offsets` (port id, G along the stretch axis) pairs,
+    `stretch` is (axis, length) pairs, `offsets` (port id, units along the stretch axis) pairs,
     `sides` (box port id, `n` or `s`) pairs, `leads` the ports whose bound leads draw (none:
     no bound lead), `n` the rows of a table
     symbol, `poles` the pole count (the symbol repeated that many times), `slots` (slot id,
     string) pairs, `texts` the rows of cell strings that size a box or a table (empty for a
     plain library symbol). A marker and a contact table are DrawnSymbols too.
-    `outline` is the body box in G on the page, absolute: the box the core placed, or the
+    `outline` is the body box in layout units on the page, absolute: the box the core placed, or the
     symbol's own body at its origin; `None` when the producer knew no body. `ports` and `net`
     are identity strings with no meaning to the core or to render: the ports the symbol draws,
     and the net a marker stands for. `slot_ink` is the page box of each string in `slots`, measured from
@@ -126,21 +126,21 @@ class DrawnOutline:
 
 @dataclass(frozen=True, slots=True)
 class DrawnRow:
-    """One placed row of a page: the model ids of its items, its measured height and width in G and the term that set its height.
+    """One placed row of a page: the model ids of its items, its measured height and width in layout units and the term that set its height.
 
     `devices` are the item ids as text (the kernel's `render_id`, as `DrawnSymbol.id` is), each item once, in the order the row's finding names them.
-    `height_g`, `width_g` and `term` are the figures PAGE_OVERFLOW and WIDER_THAN_PAGE read (R1939); `term` is the term of `row_term`'s reach.
+    `height`, `width` and `term` are the figures PAGE_OVERFLOW and WIDER_THAN_PAGE read (R1939); `term` is the term of `row_term`'s reach.
     """
 
     devices: tuple[str, ...]
-    height_g: int
-    width_g: int
+    height: int
+    width: int
     term: RowTerm
 
 
 @dataclass(frozen=True, slots=True)
 class Drawing:
-    """One page: its area in G, the things drawn on it, its placed rows and the library version they name."""
+    """One page: its area in layout units, the things drawn on it, its placed rows and the library version they name."""
 
     area: Size
     symbols: tuple[DrawnSymbol, ...]

@@ -30,7 +30,9 @@ _REPORTS = {
     "cables": ("csv", "cables.csv"),
     "cores": ("csv", "cores.csv"),
 }
-REPORT_KINDS: tuple[str, ...] = tuple(_REPORTS)
+# Per-document kinds beside the PDF: `[export] reports` names them too; each is named as its PDF.
+_DOCUMENT_KINDS = {"ring_out": "xlsx"}
+REPORT_KINDS: tuple[str, ...] = (*_REPORTS, *_DOCUMENT_KINDS)
 _OVERVIEW = ("overview", "html", "overview.html")
 # (kind, extension) of the per-rack export: `wago-<ref>.xml`, bare `wago.xml` for a root.
 _ITEMS = (("wago", "xml"),)
@@ -46,11 +48,11 @@ def stale_patterns() -> tuple[str, ...]:
     """
     lists = tuple(p for kind in _LISTS for p in (f"{kind}-*.csv", f"{kind}.csv"))
     items = tuple(p for kind, ext in _ITEMS for p in (f"{kind}-*.{ext}", f"{kind}.{ext}"))
-    return ("*.pdf", *(pattern for _ext, pattern in _REPORTS.values()), *lists, *items, _OVERVIEW[2])
+    return ("*.pdf", "*.xlsx", *(pattern for _ext, pattern in _REPORTS.values()), *lists, *items, _OVERVIEW[2])
 
 
 def _report_rows(model: Model, unit: Id[Unit] | None) -> list[ExportRow]:
-    rows = [(kind, _REPORTS[kind][0]) for kind in export_form_of(model).reports]
+    rows = [(kind, _REPORTS[kind][0]) for kind in export_form_of(model).reports if kind in _REPORTS]
     if unit is None:
         rows.append(_OVERVIEW[:2])
     return [_whole_row(model, unit, kind, ext) for kind, ext in rows]
@@ -103,12 +105,18 @@ def _document_rows(model: Model, unit: Id[Unit] | None) -> list[ExportRow]:
     if unit is not None:
         entries = [(i, r) for i, r in entries if document_unit(model, r.id) == unit]
     release_by_name: dict[str, Id[Any]] = {}
+    kinds = [kind for kind in export_form_of(model).reports if kind in _DOCUMENT_KINDS]
     rows = []
     for document_id, record in entries:
         name = document_export_name(model, unit, record)
         own_unit = document_unit(model, record.id)
         hint = _clash_hint(model, own_unit, name, release_by_name)
         rows.append(ExportRow(export_kind="pdf", extension="pdf", subject=document_id, name=name, hint=hint))
+        for kind in kinds if own_unit is not None else ():
+            ext = _DOCUMENT_KINDS[kind]
+            rows.append(
+                ExportRow(export_kind=kind, extension=ext, subject=document_id, name=document_export_name(model, unit, record, ext), hint=hint)
+            )
     return rows
 
 
@@ -116,7 +124,7 @@ def export_set(model: Model, unit: Id[Unit] | None) -> tuple[ExportRow, ...]:
     """Every export a write of `unit` makes (the whole model with `unit=None`), in write order.
 
     The reports (and the overview for the whole model), one terminal CSV and one connector CSV for
-    all strips and boards, one WAGO XML per rack, then one PDF per document. Names are unplaced: the
-    caller puts CSV and XML into `data/`. Two rows may share a name; the caller refuses that.
+    all strips and boards, one WAGO XML per rack, then one PDF per document, each followed by its per-document kinds
+    (`ring_out`). Names are unplaced: the caller puts CSV and XML into `data/`. Two rows may share a name; the caller refuses that.
     """
     return (*_report_rows(model, unit), *_list_rows(model, unit), *_item_rows(model, unit), *_document_rows(model, unit))

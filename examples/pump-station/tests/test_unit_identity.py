@@ -170,7 +170,7 @@ LAYOUT_WARNINGS = {
     "POWER_SYMBOL_UNPLACED": 0,
     "SYMBOL_OVERLAP": 0,
     "JOIN_UNALIGNED": 0,
-    "OVERLAP": 2,  # measured on 0.23.5 (CUT-FOLDS-R recut by solved width)
+    "OVERLAP": 1,  # measured on 0.23.7 (CUT-FOLDS-R reverted; 0.23.4 value)
 }
 EXPECTED_WARNINGS = LAYOUT_WARNINGS
 

@@ -12,7 +12,7 @@ if TYPE_CHECKING:  # jsonform resolves these names from the module, so no run-ti
 
     from .annex_values import AnnexBox
     from .flow_values import FlowGraph
-    from .values import XY, Box, Finding, MarkerKind, Orientation, PagePlan, PinRef, PlacementProblem, Ref, Side, Size, WireKind
+    from .values import XY, Box, Finding, MarkerKind, Orientation, PagePlan, PinRef, PlacementProblem, Ref, RowTerm, Side, Size, WireKind
 
 
 @dataclass(frozen=True, slots=True)
@@ -75,6 +75,18 @@ class Trunk:
 
 
 @dataclass(frozen=True, slots=True)
+class StripRun:
+    """The terminals of one strip level in one page row, left to right, which print the strip's tag once (STRIP-TAG-ONCE).
+
+    `key` is the run's annex owner in the text stage: it names the strip and the leftmost terminal, and is no symbol's id.
+    """
+
+    strip: str
+    members: tuple[str, ...]
+    key: str
+
+
+@dataclass(frozen=True, slots=True)
 class PagePlacement:
     """One page's placed symbols, gaps, trunks, row sizes and row bands."""
 
@@ -90,6 +102,8 @@ class PagePlacement:
     """(top, bottom) the solve placed for each column id and block id, in G (layout-0374)."""
     hangings: Mapping[str, tuple[Box, ...]] = field(default_factory=dict)
     """By symbol, the absolute boxes of the markers hung at its placed pins, set once by the placer (layout-0547)."""
+    runs: tuple[StripRun, ...] = ()
+    """The runs of the strip terminals on the page, each terminal in one: the home of the fact is `place_align.strip_runs`."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -115,10 +129,18 @@ class Wire:
 
 @dataclass(frozen=True, slots=True)
 class Demand:
-    """How many tracks one gap needs for the wires routed through it."""
+    """How many tracks one gap needs for the wires routed through it.
+
+    A blocked label asks for room instead (LABEL-PLACE): `owner` is its owner's symbol id, `room` the G beside its cell on `side`
+    ("N" above, "S" below, R1961), `gap` empty; one blocked at its first rung asks for that rung in `box`, relative to the owner (R1831).
+    """
 
     gap: str
     tracks: int
+    room: int = 0
+    owner: str = ""
+    box: Box | None = field(default=None, kw_only=True)
+    side: str = field(default="N", kw_only=True)
 
 
 @dataclass(frozen=True, slots=True)
@@ -154,7 +176,7 @@ class PageRoutes:
     counts: Counts
     dots: tuple[Junction, ...]
     labels: tuple[AnnexBox, ...]
-    """The page's annexes, placed after its fixed wires and before its A* round, in the order the problem gives them (TEXT-CANDIDATES)."""
+    """The page's annexes, placed after its fixed wires and before its A* round, in the order the problem gives them (TAG-CORNERS)."""
     needs: tuple[Demand, ...]
     """The tracks the gap beside each label blocked at every candidate must hold for it: widen's first try, never a demand of a wire."""
 
@@ -264,6 +286,19 @@ class Score:
 
 
 @dataclass(frozen=True, slots=True)
+class RowMeasure:
+    """One placed row: devices (core symbol ids), height, width, height term and its reach; `_culprit` and `Drawing.rows` read the same."""
+
+    page: int
+    row: int
+    devices: tuple[str, ...]
+    height: int
+    width: int
+    term: RowTerm
+    reach: int
+
+
+@dataclass(frozen=True, slots=True)
 class CoreLayout:
     """The placer core's full result: area, pages, placement, routes, text, score, findings.
 
@@ -281,6 +316,8 @@ class CoreLayout:
     score: Score | None = None
     findings: tuple[Finding, ...] = ()
     drawn: frozenset[tuple[PinRef, PinRef]] = frozenset()
+    rows: tuple[RowMeasure, ...] = ()
+    """Each placed row with blocks, page by page, as `row_measures` measured it: the figures PAGE_OVERFLOW reads."""
 
 
 @dataclass(frozen=True, slots=True)

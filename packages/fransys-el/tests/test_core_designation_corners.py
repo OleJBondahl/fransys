@@ -15,6 +15,8 @@ from fransys_el.placement_options import options
 
 from electrical_symbols import LIBRARY
 from fransys_layout.core import Box, solve
+from fransys_layout.core.annex import place_labels, spot_box
+from fransys_layout.core.geometry import overlaps
 
 CORNERS = {"TL", "BL", "BR", "TR"}
 # The designations that do not stand top left, by their tag: the content box leaves no room at
@@ -51,7 +53,7 @@ def test_every_designation_stands_in_one_of_its_symbols_four_corners(page) -> No
 
 def _zone(body: Box, corner: str, label: Box) -> Box:
     """The corner zone: the body's half on that side and one label width past its edge."""
-    reach = 32  # the largest Options.slack
+    reach = 8  # the ladder's one step out (LABEL-PLACE)
     x = body.x - label.w if corner[1] == "L" else body.x + body.w // 2
     y = body.y + body.h if corner[0] == "B" else body.y - label.h - reach
     return Box(x, y, body.w // 2 + label.w, label.h + reach)
@@ -66,6 +68,18 @@ def test_each_designations_box_touches_its_symbols_corner_zone(page) -> None:
     bodies = {p.sym: p.body for pg in core.placement.pages for p in pg.placed}
     for x in core.annotations.annexes:
         assert _touches(x.box, _zone(bodies[x.owner], x.spot, x.box)), (x.owner, x.spot)
+
+
+def test_each_annex_passes_the_ladder_a_corner_and_one_step_out_in_the_order_tl_bl_tr_br(page) -> None:
+    """LABEL-PLACE 2: ten spots (a turned pair left of the body after BL), the turned one centred on the body last (R1849)."""
+    _, _, problem, _ = page
+    step = house().options.wiring_grid
+    assert problem.annexes
+    for annex in problem.annexes:
+        for spots in annex.spots.values():
+            assert [s.name for s in spots] == [*(c for c in ("TL", "BL", "TL", "TR", "BR") for _ in (0, 1)), "TL"]
+            assert [s.turned for s in spots] == [i in (4, 5, 10) for i in range(11)]
+            assert [s.clear - spots[0].clear for s in spots[:2]] == [0, step]
 
 
 def test_every_designation_stands_inside_the_content_box(page) -> None:
@@ -105,3 +119,24 @@ def test_no_designation_box_touches_a_drawn_line_but_its_own_symbols_body(page) 
     for x in core.annotations.annexes:
         hit = [line for owner, line in lines if owner != x.owner and _meets(x.box, line)]
         assert hit == [], (x.owner, x.spot, hit)
+
+
+def _pin_down(box: Box, keep: Box) -> Box:
+    """A small wall inside `box` and clear of `keep`, so `box` is blocked and `keep` is not."""
+    spots = [Box(x, y, 3, 3) for x in (box.x + 1, box.x + box.w - 4) for y in (box.y + 1, box.y + box.h - 4)]
+    return next(s for s in spots if not overlaps(s, keep))
+
+
+def test_a_tag_stands_at_the_centred_turned_rung_when_the_ten_before_it_are_blocked(page) -> None:
+    """R1849: rung 11 is the turned tag centred on the body's height on its left; with every other box walled it is where the tag stands."""
+    _, core, problem, _ = page
+    placed = {p.sym: p for pg in core.placement.pages for p in pg.placed}
+    annex = max((a for a in problem.annexes if a.turned is not None and a.turned.w), key=lambda a: placed[a.owner].body.h)
+    here = placed[annex.owner]
+    boxes = [spot_box(here, annex.turned if s.turned else annex.size, s, 0) for s in annex.spots[here.orient]]
+    walls = [_pin_down(b, boxes[-1]) for b in boxes[:-1]]
+    (label,), found, _ = place_labels([annex], {annex.owner: here}, ((), walls), (1, problem.area, 0, 2))
+    assert (label.spot, label.turned, label.box) == ("TL", True, boxes[-1])
+    assert found == []
+    assert label.box.x + label.box.w <= here.body.x
+    assert abs((label.box.y + label.box.h / 2) - (here.body.y + here.body.h / 2)) <= 1

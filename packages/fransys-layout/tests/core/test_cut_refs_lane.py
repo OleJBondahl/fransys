@@ -2,10 +2,14 @@
 
 from __future__ import annotations
 
+from contextlib import suppress
+from itertools import accumulate
 from types import SimpleNamespace
 from typing import Any
 
 import pytest
+from hypothesis import given, settings
+from hypothesis import strategies as st
 
 from fransys_layout.core import PinRef
 from fransys_layout.core.cut_ends import ReferenceLaneError, lane_ends
@@ -82,3 +86,54 @@ def test_an_arrow_end_lists_the_pin_of_each_other_crossing_lane_on_its_page_in_a
     """R1682: the one marker stands for every crossing lane, so its end names their pins."""
     ends = lane_ends("f:x", (A, B), ((1, "c1"), (2, "c2")), PAGE, {0: 0, 1: 0, 2: 0, 3: 0})
     assert [e.also for e in ends] == [(PinRef("B1", "p"),), (PinRef("B2", "p"),)]
+
+
+def test_an_arrow_end_drops_a_lane_whose_pins_on_its_page_all_lie_on_the_other_side_of_the_cut() -> None:
+    """R1902, R1904: lane L has its only page-2 pin past the cut, so the end before it does not name L (BUNDLE-ARROW)."""
+    runs_on = ((0, PinRef("A1", "p")), (1, PinRef("A2", "p")), (3, PinRef("A3", "p")))
+    late = ((0, PinRef("L1", "p")), (3, PinRef("L2", "p")))
+    ends = lane_ends("f:x", (runs_on, late), ((1, "c1"), (2, "c2")), {0: 1, 1: 2, 2: 2, 3: 2}, {0: 0, 1: 0, 2: 1, 3: 1})
+    assert [e.also for e in ends] == [(), ()]
+
+
+def test_an_arrow_end_keeps_a_lane_with_no_pin_on_its_page() -> None:
+    """R1904: a lane that only passes a page is named as before, by the end whose page holds its pin."""
+    runs_on = ((0, PinRef("A1", "p")), (2, PinRef("A2", "p")))
+    skips = ((1, PinRef("L1", "p")), (3, PinRef("L2", "p")))
+    ends = lane_ends("f:x", (runs_on, skips), ((1, "c1"), (2, "c2")), {0: 1, 1: 1, 2: 2, 3: 3}, {0: 0, 1: 0, 2: 0, 3: 0})
+    assert [e.also for e in ends] == [(PinRef("L1", "p"),), ()]
+
+
+@st.composite
+def _lane_cuts(draw: st.DrawFn) -> tuple[tuple[Any, ...], dict[int, int], dict[int, int], int]:
+    """Two or three lanes with pins at random positions, random monotone pages and rows, and a boundary."""
+    size = draw(st.integers(4, 9))
+    page = list(accumulate(draw(st.lists(st.integers(0, 1), min_size=size - 1, max_size=size - 1)), initial=0))
+    row = list(accumulate(draw(st.lists(st.integers(0, 1), min_size=size - 1, max_size=size - 1)), initial=0))
+    at = st.lists(st.integers(0, size - 1), min_size=2, max_size=4, unique=True)
+    lanes = tuple(tuple((i, PinRef(f"L{k}_{i}", "p")) for i in sorted(draw(at))) for k in range(draw(st.integers(2, 3))))
+    return lanes, dict(enumerate(page)), dict(enumerate(row)), draw(st.integers(0, size - 2))
+
+
+def _stands(lane: Any, at: int, cut: int, page_of: dict[int, int]) -> bool:
+    return any(page_of[i] == page_of[at] and (i <= cut) == (at <= cut) for i, _ in lane)
+
+
+@given(_lane_cuts())
+@settings(deadline=None, max_examples=300)
+def test_an_arrow_names_a_lane_and_pins_that_stand_on_each_ends_page_and_side_where_any_crossing_lane_does(case: Any) -> None:
+    """CUT-ROOT P1 (R1926): where a crossing lane has a pin on an end's page and side, the arrow's lane and each `also` pin stand there."""
+    lanes, page_of, row_of, cut = case
+    lane_of = {pin: ln for ln in lanes for _, pin in ln}
+    where = {pin: i for ln in lanes for i, pin in ln}
+    crossing = [ln for ln in lanes if min(i for i, _ in ln) <= cut < max(i for i, _ in ln)]
+    with suppress(ReferenceLaneError):
+        ends = lane_ends("f:x", lanes, ((cut, "c0"), (cut + 1, "c1")), page_of, row_of)
+        for end, at in zip(ends, (cut, cut + 1), strict=False):  # no crossing lane: no ends
+            assert end.pin is None or page_of[where[end.pin]] == page_of[at]
+            if any(_stands(ln, at, cut, page_of) for ln in crossing) and end.pin:
+                assert _stands(lane_of[end.pin], at, cut, page_of)
+                assert (where[end.pin] <= cut) == (at <= cut)
+            for pin in end.also:
+                assert page_of[where[pin]] == page_of[at]
+                assert (where[pin] <= cut) == (at <= cut)

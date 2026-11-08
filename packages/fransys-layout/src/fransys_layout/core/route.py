@@ -26,6 +26,7 @@ from .route_guard import guard
 from .route_labels import page_labels
 from .route_leads import lead_wires
 from .route_negotiate import Negotiated, negotiate
+from .route_runs import stand_runs
 from .route_tree import mark_anchors, tree
 from .route_wires import join_wires, lane_wires, nest_jogs
 from .score_wiring import bundles
@@ -37,7 +38,7 @@ if TYPE_CHECKING:
     from .clearance import Keep
     from .flow_values import CutResult
     from .jog_rows import Taken
-    from .outputs import Placement
+    from .outputs import Placement, StripRun
     from .route_env import RouteEnv
     from .values import Options, PlacementProblem
 
@@ -230,12 +231,18 @@ def route_page(env: RouteEnv, fixed: Fixed | None = None) -> tuple[PageRoutes, t
     return page, tuple(lost.values()), (*drawn.findings, *through_bodies(env, wires), *unplaced)
 
 
-def _laid_on(env: RouteEnv, problem: PlacementProblem, laid: Laid) -> RouteEnv:
-    """The page env with its markers, its annexes and the labels the round before stood."""
+def _laid_on(env: RouteEnv, problem: PlacementProblem, laid: Laid, runs: Sequence[StripRun]) -> RouteEnv:
+    """The page env with its markers, its annexes and the labels the round before stood.
+
+    The strip tags of its runs come last: a terminal's point takes the corner next to it, the strip tag the rung above.
+    """
+    tags, stood = stand_runs(problem, env.placed, runs)
     return replace(
         env,
         markers=tuple(m for m in laid.markers if m.page == env.page),
-        annexes=tuple(a for a in problem.annexes if a.owner in env.placed),
+        annexes=(*(a for a in problem.annexes if a.owner in env.placed), *tags),
+        runs=stood,
+        anchor_leads=tuple(w for w in laid.leads if w.page == env.page),
         labels=(laid.fixed or {}).get(env.page, Fixed(Drawn())).labels,
     )
 
@@ -255,7 +262,8 @@ def route_pages(
     laid = laid or Laid()
     fixed = fixed_wires(placement, cut, problem, options) if laid.fixed is None else laid.fixed
     envs = withheld(route_envs(placement, cut, problem, options, laid.keeps), laid.lost)
-    results = [route_page(env, fixed[env.page]) for env in (_laid_on(e, problem, laid) for e in envs)]
+    runs = {p.page: p.runs for p in placement.pages}
+    results = [route_page(env, fixed[env.page]) for env in (_laid_on(e, problem, laid, runs[e.page]) for e in envs)]
     return Routes(
         tuple(r[0] for r in results),
         tuple(n for r in results for n in r[1]),

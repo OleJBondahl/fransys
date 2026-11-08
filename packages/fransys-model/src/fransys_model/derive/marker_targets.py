@@ -7,16 +7,18 @@ The first of them is a terminal of the net when it has one (`target_order`, mode
 """
 
 from typing import TYPE_CHECKING
-lazy from collections.abc import Sequence
+lazy from collections.abc import Collection, Sequence
 
 from fransys_model.derive.facts.house_settings import frame_form_of, reference_text_of
 from fransys_model.derive.frame_labels import cell_labels
 from fransys_model.derive.frame_position import position_text, row_letter
 from fransys_model.derive.kinds import item_role
+from fransys_model.derive.order import widest_text
 from fransys_model.vocab.tables import documents, functions, ports
-lazy from fransys_model.derive.document_subject import widest_scope
+lazy from fransys_model.derive.document_subject import scope_path, widest_scope
 lazy from fransys_model.derive.page_reference_text import front_pages
-lazy from fransys_model.kernel import Model
+lazy from fransys_model.kernel import Id, Model
+lazy from fransys_model.vocab import Document
 
 if TYPE_CHECKING:
     from fransys_model.layout import LinkMarker, ReferenceText
@@ -57,14 +59,15 @@ def _wide_page(model: Model, count: int, digit: str) -> int:
     return int(digit * len(str(count + front)))
 
 
-def widest_position_text(model: Model, count: int, columns: int, rows: int, digit: str) -> str:
-    """The position text of a placement in another PDF: the widest document text, page number and cell every `digit`s.
+def widest_position_text(model: Model, digits: int, frame: tuple[int, int], digit: str, *, far: Collection[Id[Document]]) -> str:
+    """The position text of a placement: a page number of `digits` digits and the cell at the highest `frame` (columns, rows), every one `digit`.
 
-    `count` is the build's symbol count (a page holds at least one symbol), `columns` and `rows` the highest frame column and
-    row, `digit` the widest digit the caller measured. Layout sizes a text that names another placement with it before the pages exist.
+    `far` holds the documents that may print a placement in another PDF (the widest `scope_path` leads the text); empty is the same-PDF text.
+    Layout sizes a terminal's where-text with it before the pages exist.
     """
-    refs, labels = _widest_cells(model, columns, rows, digit)
-    return position_text(refs, _wide_page(model, count, digit), labels, widest_scope(model))
+    refs, labels = _widest_cells(model, *frame, digit)
+    prefixes = [scope_path(model, document) for document in far] or [""]
+    return widest_text(position_text(refs, int(digit * digits), labels, prefix) for prefix in prefixes)
 
 
 def _widest_cells(model: Model, columns: int, rows: int, digit: str) -> tuple[ReferenceText, tuple[str, str]]:

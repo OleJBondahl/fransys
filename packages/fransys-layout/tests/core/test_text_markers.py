@@ -17,7 +17,7 @@ from fransys_layout.core.errors import CoreError
 from fransys_layout.core.flow_values import Attach, Fan
 from fransys_layout.core.geometry import inside, marker_box, marker_box_at, marker_drawn_box, overlaps
 from fransys_layout.core.outline import outline_keeps
-from fransys_layout.core.outputs import Marker, Outline, Trunk, Wire
+from fransys_layout.core.outputs import Demand, Marker, Outline, Trunk, Wire
 from fransys_layout.core.place import place_pages
 from fransys_layout.core.route_env import Drawn
 from fransys_layout.core.route_fixed import Fixed
@@ -207,7 +207,7 @@ def test_markers_come_in_the_plans_order_and_stand_on_their_ends_pages(built, na
     env = mark_env(cut, pl, PLANTS[name](), OPTIONS)
     pairs = [p for ref in cut.spec.reference_plan for p in stand_ref(env, ref)]
     own = {r.net: bundle_nets(env, r.net) for r in cut.spec.reference_plan}
-    assert [m for m in stagger(pairs, OPTIONS, AREA, pin_keeps(env), own) if m is not None] == list(placed)
+    assert [m for m in stagger(pairs, OPTIONS, AREA, pin_keeps(env), own) if isinstance(m, Marker)] == list(placed)
     markers = [m for m, _ in pairs]
     want = [(r.net, r.kind, sorted(e.page for e in r.ends)) for r in cut.spec.reference_plan]
     got, i = [], 0
@@ -322,13 +322,14 @@ def test_a_copy_whose_hub_has_no_placed_pin_raises_naming_the_net() -> None:
 # the stagger (I8.7) and the cyclic far end (I8.4)
 
 
-def _all(markers: Sequence[Marker | None]) -> list[Marker]:
+def _all(markers: Sequence[Marker | Demand]) -> list[Marker]:
     """The markers, each placed (none dropped for want of room)."""
-    assert all(m is not None for m in markers)
-    return [m for m in markers if m is not None]
+    assert all(isinstance(m, Marker) for m in markers)
+    return [m for m in markers if isinstance(m, Marker)]
 
 
-def _box_of(m: Marker):
+def _box_of(m: Marker | Demand | None):
+    assert isinstance(m, Marker)
     return marker_box(m, OPTIONS)
 
 
@@ -363,24 +364,49 @@ def test_a_marker_lifted_past_the_page_top_fits_nowhere() -> None:
     """The pair's second level, moved one G over the page top, is None: no place (R436)."""
     pairs = stand_ref(_pair_env(), _pair_ref())
     lifted = stagger(pairs, OPTIONS, AREA, {}, {})[1]
-    assert lifted is not None
+    assert isinstance(lifted, Marker)
     dy = _box_of(lifted).y + 1
     up = [(replace(m, y=m.y - dy), replace(st, y=st.y - dy)) for m, st in pairs]
     got = stagger(up, OPTIONS, AREA, {}, {})
-    assert got[0] is not None
-    assert got[1] is None
+    assert isinstance(got[0], Marker)
+    assert isinstance(got[1], Demand)
+
+
+def test_a_tag_whose_drawn_box_leaves_the_page_gives_the_room_demand() -> None:
+    """OUT_OF_PAGE (bank:71): a tag is placed by its plain box and drawn stretched (R543); the page test is on the drawn box."""
+    assert OPTIONS.marker is not None
+    tall = replace(OPTIONS, link_fit={o: Box(b.x, b.y - 60, b.w, b.h + 60) for o, b in OPTIONS.marker.items()})
+    pairs = stand_ref(_pair_env(), _pair_ref())
+    assert isinstance(stagger(pairs, tall, AREA, {}, {})[0], Marker)
+    top = min(marker_box(m, tall).y for m, _ in pairs)
+    up = [(replace(m, y=m.y - top + 5), replace(st, y=st.y - top + 5)) for m, st in pairs]
+    assert all(inside(marker_box(m, tall), AREA) and not inside(marker_drawn_box(m, tall), AREA) for m, _ in up)
+    assert all(isinstance(k, Demand) for k in stagger(up, tall, AREA, {}, {}))
+
+
+def test_a_marker_with_no_slot_gives_the_room_demand_of_its_owner() -> None:
+    """Layout-0559: a box off the page is no slot; the marker gives the room above its owner, as a tag does, never None."""
+    pairs = stand_ref(_pair_env(), _pair_ref())
+    lifted = stagger(pairs, OPTIONS, AREA, {}, {})[1]
+    assert isinstance(lifted, Marker)
+    dy = _box_of(lifted).y + 1
+    up = [(replace(m, y=m.y - dy), replace(st, y=st.y - dy)) for m, st in pairs]
+    ask = stagger(up, OPTIONS, AREA, {}, {})[1]
+    assert isinstance(ask, Demand)
+    assert (ask.gap, ask.owner, ask.side) == ("", "S", pairs[0][1].side)
+    assert ask.room > OPTIONS.label_gap
 
 
 def test_a_marker_lifted_past_its_rows_band_fits_nowhere() -> None:
     """R1333: the row band is a hard limit of the fit test; the pair's second level, one G over the band top, is None."""
     pairs = stand_ref(_pair_env(), _pair_ref())
     lifted = stagger(pairs, OPTIONS, AREA, {}, {})[1]
-    assert lifted is not None
+    assert isinstance(lifted, Marker)
     top = _box_of(lifted).y + 1
     banded = [(m, replace(st, band=(top, m.y))) for m, st in pairs]
     got = stagger(banded, OPTIONS, AREA, {}, {})
-    assert got[0] is not None
-    assert got[1] is None
+    assert isinstance(got[0], Marker)
+    assert isinstance(got[1], Demand)
 
 
 def _pair_env() -> MarkEnv:
@@ -490,12 +516,12 @@ def test_no_stub_marker_on_another_nets_pin_or_lead_end() -> None:
     """R845: a slot whose box covers another net's pin is refused; the marker takes the next one."""
     pairs = stand_ref(_pair_env(), _pair_ref())
     first, second = stagger(pairs, OPTIONS, AREA, {}, {})
-    assert first is not None
-    assert second is not None
+    assert isinstance(first, Marker)
+    assert isinstance(second, Marker)
     keeps = {1: [_pin_at(_box_of(second))]}
     got = stagger(pairs, OPTIONS, AREA, keeps, {})
     assert got[0] == first
-    assert got[1] is not None
+    assert isinstance(got[1], Marker)
     assert got[1] != second
     assert clear(marker_box(got[1], OPTIONS), keeps[1], {}) == ()
 
@@ -504,18 +530,18 @@ def test_a_marker_with_every_slot_refused_is_none(monkeypatch: pytest.MonkeyPatc
     """R845: pins of another net all along its side leave no slot: None, which placed_marks reports as MARKER_UNPLACED."""
     pairs = stand_ref(_pair_env(), _pair_ref())
     lifted = stagger(pairs, OPTIONS, AREA, {}, {})[1]
-    assert lifted is not None
+    assert isinstance(lifted, Marker)
     box = _box_of(lifted)
     keeps = {1: [_pin_at(replace(box, y=y - 1)) for y in range(0, AREA.h, 8)]}
-    assert stagger(pairs, OPTIONS, AREA, keeps, {})[1] is None
-    assert stagger(pairs, OPTIONS, AREA, keeps, {"n": frozenset({"other"})})[1] is not None
+    assert isinstance(stagger(pairs, OPTIONS, AREA, keeps, {})[1], Demand)
+    assert isinstance(stagger(pairs, OPTIONS, AREA, keeps, {"n": frozenset({"other"})})[1], Marker)
     prob = _bundle_of_cut_pins(8, pole=0)
     cut = pipeline_fixtures.cut_of(prob, OPTIONS)
     pl = place_pages(cut, prob, OPTIONS)
     assert placed_marks(cut, pl, prob, OPTIONS, {})[1] == ()
     wall = [Keep("", Box(x, y, 0, 0), "pin", "other") for x in range(0, AREA.w, 8) for y in range(0, AREA.h, 8)]
     monkeypatch.setattr("fransys_layout.core.text_markers.pin_keeps", lambda _env: {1: wall})
-    marks, findings = placed_marks(cut, pl, prob, OPTIONS, {})
+    marks, findings, _ = placed_marks(cut, pl, prob, OPTIONS, {})
     assert marks == ()
     assert [f.code for f in findings] == ["MARKER_UNPLACED"]
 
@@ -528,7 +554,7 @@ def test_the_anchor_outlines_are_keeps_the_markers_clear(monkeypatch: pytest.Mon
     assert placed_marks(cut, pl, prob, OPTIONS, {})[1] == ()
     wall = Keep("", Box(0, 0, AREA.w, AREA.h), "anchor", "K1")
     monkeypatch.setattr("fransys_layout.core.text_markers.anchor_keeps", lambda *_: {1: [wall]})
-    marks, findings = placed_marks(cut, pl, prob, OPTIONS, {})
+    marks, findings, _ = placed_marks(cut, pl, prob, OPTIONS, {})
     assert marks == ()
     assert [f.code for f in findings] == ["MARKER_UNPLACED"]
 
@@ -541,7 +567,7 @@ def test_a_marker_fed_by_a_fixed_wire_never_moves_and_a_refused_stand_is_marker_
     through = Keep("", Box(box.x, box.y, box.w, 1), "wire", "", "other", None, ((box.x, box.y), (box.x + box.w, box.y)))
     own = Keep("", Box(marker.x, marker.y, 1, 1), "wire", "", "n", None, ((marker.x, marker.y), (marker.x - 40, marker.y)))
     fed = replace(marker, kind=RefKind.STUB)
-    assert stagger([(fed, stand)], OPTIONS, AREA, {1: [through, own]}, {"n": frozenset({"n"})}) == [None]
+    assert isinstance(stagger([(fed, stand)], OPTIONS, AREA, {1: [through, own]}, {"n": frozenset({"n"})})[0], Demand)
     assert stagger([(fed, stand)], OPTIONS, AREA, {1: [through]}, {"n": frozenset({"n"})})[0] != fed
 
 
@@ -554,7 +580,7 @@ def test_a_boundary_stub_steps_straight_out_until_its_box_is_clear_of_a_foreign_
     box = marker_box(free, OPTIONS)
     across = Wire("foreign", free.page, ((box.x + box.w // 2, box.y - 8), (box.x + box.w // 2, box.y + box.h + 8)), "trunk")
     foreign = {free.page: Fixed(Drawn(wires=(across,)))}
-    marks, findings = placed_marks(cut, pl, prob, OPTIONS, foreign)
+    marks, findings, _ = placed_marks(cut, pl, prob, OPTIONS, foreign)
     assert findings == ()
     assert [(m.kind, m.y, m.end) for m in marks] == [(RefKind.STUB, free.y, free.end)]
     assert marks[0].x != free.x  # R1007: the foreign wire blocks the first end, the stub takes the other
@@ -674,7 +700,7 @@ def test_an_arrow_whose_lane_end_found_no_stand_is_refused_so_its_marker_is_unpl
     env = replace(_fan_env(), trunks={(1, "f"): trunks})
     marker, stand = stand_ref(env, ref)[0]
     assert stand.stood is False
-    assert stagger([(marker, stand)], OPTIONS, AREA, {}, {}) == [None]
+    assert isinstance(stagger([(marker, stand)], OPTIONS, AREA, {}, {})[0], Demand)
     other = stand_ref(_fan_env(), ref)[0]
     assert stagger([other], OPTIONS, AREA, {}, {}) == [other[0]]
 
@@ -689,7 +715,7 @@ def test_the_order_of_ends_follows_the_rank_never_the_symbol_id_text(names) -> N
     assert sorted(ref.ends, key=lambda e: _order(env, ref, e)) == [ref.ends[1], ref.ends[0]]
 
 
-@pytest.mark.rule("TEXT-CANDIDATES")
+@pytest.mark.rule("TAG-CORNERS")
 def test_a_marker_keeps_clear_of_a_label_the_round_before_stood() -> None:
     """A3: the labels of the round before are keeps of the marker stage, so a marker that would stand on one steps off it."""
     prob = _bundle_of_cut_pins(8, pole=0)
@@ -697,7 +723,7 @@ def test_a_marker_keeps_clear_of_a_label_the_round_before_stood() -> None:
     pl = place_pages(cut, prob, OPTIONS)
     free = placed_marks(cut, pl, prob, OPTIONS, {})[0][0]
     label = AnnexBox("S", free.page, marker_drawn_box(free, OPTIONS), "TL")
-    marks, findings = placed_marks(cut, pl, prob, OPTIONS, {free.page: Fixed(Drawn(), (label,))})
+    marks, findings, _ = placed_marks(cut, pl, prob, OPTIONS, {free.page: Fixed(Drawn(), (label,))})
     assert findings == ()
     assert marks
     assert not any(overlaps(marker_drawn_box(m, OPTIONS), label.box) for m in marks)
@@ -711,8 +737,8 @@ def test_a_pair_marker_with_an_end_that_found_no_slot_stands_whole_or_not_at_all
     pair = Ref("n1", kind, tuple(RefEnd(1, None, PinRef("A1", f"p{i}")) for i in (1, 2)))
     cut = replace(cut, spec=replace(cut.spec, reference_plan=(pair,)))
     real = stagger
-    monkeypatch.setattr("fransys_layout.core.text_markers.stagger", lambda *a: [*real(*a)[:1], None])
-    marks, findings = placed_marks(cut, place_pages(cut, prob, OPTIONS), prob, OPTIONS, {})
+    monkeypatch.setattr("fransys_layout.core.text_markers.stagger", lambda *a: [*real(*a)[:1], Demand("", 0, 16, "A1")])
+    marks, findings, _ = placed_marks(cut, place_pages(cut, prob, OPTIONS), prob, OPTIONS, {})
     assert len(marks) in {0, 2}
     assert [f.code for f in findings] == ["MARKER_UNPLACED"]
 

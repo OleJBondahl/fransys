@@ -59,11 +59,12 @@ def _arrow_ends(ref: Ref, fan: Fan, page: int, row: int) -> list[CutEnd]:
 
 
 def _stub_ends(ref: Ref, fan: Fan, page: int) -> list[CutEnd]:
-    """The end of a bundle's cross-document stub on `page`: one end for every pole it stands for, at the right (CL2b, CL3)."""
-    if kind_of(ref) is not RefKind.STUB or not laned_stub(fan) or ref.net not in fan.nets:
+    """The end of a bundle's stub, or of a single-lane copy, standing at the trunk end on `page`: one for every pole it stands for (CL2b, KI-757)."""
+    kind = kind_of(ref)
+    if kind is not (RefKind.STUB if laned_stub(fan) else RefKind.COPY) or ref.net not in fan.nets:
         return []
     return [
-        CutEnd((e.pin, str(RefKind.STUB)), e, right=True, poles=frozenset(pole_of(fan, p) for p in (e.pin, *e.also)), lead=pole_of(fan, e.pin))
+        CutEnd((e.pin, str(kind)), e, right=True, poles=frozenset(pole_of(fan, p) for p in (e.pin, *e.also)), lead=pole_of(fan, e.pin))
         for e in ref.ends
         if e.stand is StandClass.TRUNK_END and e.page == page
     ]

@@ -13,12 +13,14 @@ from .draw_write import ORIGIN, write_layout_drawn
 from .drawn_netlist import drawn_netlist, with_lines
 from .drawn_sweep import drawing_sweep
 from .drawn_where import where_joined
+from .placement_env import make_env
 from .placement_kit import ProblemError, refuse
 from .placement_markers import facing_views, stub_fit
 from .placement_options import options, sheet_area
 from .placement_sets import bare_pins, cut_lines, drawing_scopes, restriction, scope_groups
+from .placement_syms import strip_tags
 from .placement_widest import link_fit
-from .set_findings import set_failure_finding, set_without_page_findings
+from .set_findings import set_failure_finding, set_without_page_findings, skipped_ports
 from .write_pages import SetPlace
 from .write_tables import place_texts
 
@@ -49,6 +51,7 @@ class _Sink:
     drawn: dict[Id[Page], Drawing]
     markers: list[LinkMarker]
     pageless: list[tuple[DrawingScope, int]]
+    failed: list[DrawingScope]  # sets whose layout ended in an ERROR: no drawing, so no drawn-page check reads them (KI-779)
 
     def take(
         self,
@@ -113,18 +116,18 @@ def _lay_out(run: _Run) -> tuple[Model, tuple[Finding, ...], Mapping[PinRef, str
     scopes = drawing_scopes(model, kit)
     if problem.symbols and not scopes:
         refuse("the kit", "has no function for the problem's symbols: pass the build's kit")
-    bare, lines = bare_pins(model, kit), cut_lines(model, kit)
-    laid = model
-    found: list[Finding] = []
+    bare, lines, tags = bare_pins(model, kit), cut_lines(model, kit), strip_tags(make_env(model, kit, run.conventions, run.library))
+    found: list[Finding] = []  # model becomes the laid model set by set
     for number, scope in enumerate(scopes, 1):
-        cuts = restriction(problem, scope, bare, lines, scopes)
+        cuts = restriction(problem, scope, bare, lines, scopes, options=run.conventions.options, tags=tags)
         try:
-            laid, more = _one_set(run, laid, cuts, scope, number)
+            model, more = _one_set(run, model, cuts, scope, number)
         except _SET_FAILURES as error:
-            found.append(set_failure_finding(error, cuts.problem, scope, number))
-        else:
-            found.extend(more)
-    return laid, tuple(found), lines
+            more = (set_failure_finding(error, cuts.problem, scope, number),)  # a PLACEMENT_PROBLEM ERROR
+        found.extend(more)
+        if refuses(more):
+            run.sink.failed.append(scope)
+    return model, tuple(found), lines
 
 
 def lay_out_drawn(
@@ -142,16 +145,14 @@ def lay_out_drawn(
 
     The drawings come straight from the layouts (F7).
     """
-    sink = _Sink({}, [], [])
+    sink = _Sink({}, [], [], [])
     run = _Run(model, problem, kit, options(conventions, library), conventions, library, sink)
     laid, found, lines = _lay_out(run)
-    if refuses(found):
-        undrawn: dict[Id[Page], Drawing] = {}
-        return laid, found, undrawn  # the layout stopped on an ERROR: nothing is drawn, so no drawing check runs (KI-773)
     drawings = finish_drawings(laid, sink.drawn, sink.markers, ORIGIN, library)
     drawings = place_texts(laid, kit, library, drawings)
     net = with_lines(drawn_netlist(laid, kit, drawings, sink.markers, library), laid, kit, lines)
     net.texted.update(where_joined(laid, net))
+    net.skipped.update(skipped_ports(laid, kit, sink.failed))
     return (
         laid,
         (

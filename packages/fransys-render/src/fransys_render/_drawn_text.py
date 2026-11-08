@@ -21,7 +21,7 @@ def text_tag(text: DrawnText, library: symdef.Library, style: Style) -> str:
     g, m = style.g_per_module, style.module_mm
     b = text.box
     box = Box(Point(b.x / g, b.y / g), Point((b.x + b.w) / g, (b.y + b.h) / g))
-    placed = symdef.corner_text(box, text.anchor, size_mm / m, font)
+    placed = symdef.corner_text(box, text.anchor, size_mm / m, font, turn=text.turned)
     return symdef.text_tag(
         text.text,
         Point(placed.point.x * m, placed.point.y * m),

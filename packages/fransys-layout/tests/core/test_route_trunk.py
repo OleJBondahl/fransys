@@ -369,3 +369,17 @@ def test_a_one_sided_pins_leg_stands_clear_of_every_body_because_leg_lines_place
 
     assert hits([p.footprint for p in env.placed.values()]) == [True], "control: a leg placed blind to the wall runs through it"
     assert hits([p.footprint for p in placed.values()]) == [False]
+
+
+@pytest.mark.rule("BUNDLE-LANE-END")
+def test_a_lone_tap_on_a_lane_of_no_length_draws_no_drop_while_another_lane_is_drawn() -> None:
+    """R1904: the tap joins nothing on that row (its pin stands a reference end, CL1); a sole zero-length lane still draws its drop."""
+    xs = [100, 124, 148]
+    env, trunk, _ = synthetic((0, 1, 2), xs, above=False)
+    env = replace(env, fans={"f:b": replace(env.fans["f:b"], crossed=())})
+    flat = replace(trunk, lane_ends=((100, 148), (124, 124), (100, 148)))
+    got = {w.points[0][0] for w in trunk_wires(replace(env, trunks=(flat,)), flat).wires if w.kind != "trunk"}
+    assert got == {100, 148}
+    alone = replace(trunk, lane_ends=((100, 100), (124, 124), (148, 148)))
+    kept = {w.points[0][0] for w in trunk_wires(replace(env, trunks=(alone,)), alone).wires if w.kind != "trunk"}
+    assert kept == {100, 124, 148}

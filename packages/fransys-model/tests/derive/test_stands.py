@@ -26,7 +26,7 @@ from fransys_model.derive import (
 )
 from fransys_model.derive.facts.conductor_facts import drawn_conductors
 from fransys_model.derive.lookups import item_of_port
-from fransys_model.derive.power import port_power_kind
+from fransys_model.derive.power import port_power_kind, port_power_text
 from fransys_model.derive.stands import stands
 from fransys_model.layout import PowerSymbol, layout_of
 from fransys_model.vocab import PowerKind
@@ -315,3 +315,43 @@ def test_hide_pe_leaves_no_pe_pin_ink_on_the_motor_page(tmp_path: Path) -> None:
     assert pe_lead not in hidden
     assert ">PE</text>" not in hidden
     assert all(f">{pin}</text>" in hidden for pin in "UVW")
+
+
+def _fused_rails(*, parallel: bool = False) -> tuple[Model, dict[str, Id[Port]]]:
+    """A supply and two fuses, in series or in parallel; each fed net declares a supply name and holds three ports."""
+    d = fr.design("demo_parts", place="PLANT")
+    d.location("PLANT", "Plant")
+    psu = d.device("T1", "DEMO-PSU-24")
+    f1, f2 = d.device("F1", "DEMO-FUSE-DC-160"), d.device("F2", "DEMO-FUSE-DC-160")
+    lamps = [d.device(f"H{i}", "DEMO-LAMP-24", place="L0").lamp for i in range(4)]
+    plus, minus = psu.output["+"], psu.output["-"]
+    d.dc_supply("S", plus=plus, minus=minus, voltage=24)
+    d.dc_supply("S2", plus=f1[2], minus=minus, voltage=24, names=("V1", "0V"))
+    hops = [(plus, f1[1]), (plus, lamps[0]["1"]), (f1[2], lamps[1]["1"])]
+    if parallel:
+        hops += [(plus, f2[1]), (f2[2], f1[2])]
+    else:
+        d.dc_supply("S3", plus=f2[2], minus=minus, voltage=24, names=("V2", "0V"))
+        hops += [(f1[2], f2[1]), (f2[2], lamps[2]["1"]), (f2[2], lamps[3]["1"])]
+    for a, b in hops:
+        d.series(a, b, wire=_WIRE)
+    for lamp in lamps[: 2 if parallel else 4]:
+        d.series(lamp["2"], minus, wire=_WIRE)
+    built = fr.build(d)
+    expect_codes(built, "POTENTIAL_IN_TWO_SUPPLIES")  # each fed net declares a supply of its own: the shared 0 V is the known price of the shape
+    return built.model, {"supply": plus.id, "f1": f1[2].id, "f2": f2[2].id}
+
+
+@pytest.mark.rule("G08-POWER")
+def test_a_net_behind_two_fuses_prints_its_nearest_device_and_the_supply_net_prints_plain() -> None:
+    """supply -> F1 -> F2 -> load: the supply keeps its name, the net behind F1 prints `V1 -F1`, the one behind F2 `V2 -F2`."""
+    model, at = _fused_rails()
+    assert [port_power_text(model, at[k]) for k in ("supply", "f1", "f2")] == ["24V", "V1 -F1", "V2 -F2"]
+
+
+@pytest.mark.rule("G08-POWER")
+def test_a_net_reached_through_two_fuses_at_one_distance_prints_its_plain_name() -> None:
+    """Two parallel fuses feed one net: no one device is nearest, so it prints its plain name (and stays refused where it shares one)."""
+    model, at = _fused_rails(parallel=True)
+    assert port_power_text(model, at["f1"]) == "V1"
+    assert port_power_text(model, at["supply"]) == "24V"

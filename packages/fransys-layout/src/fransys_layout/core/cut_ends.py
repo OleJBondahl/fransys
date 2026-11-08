@@ -75,6 +75,27 @@ def end_at(at: int, column: str, placed: Placed, page_of: Mapping[int, int], row
     return RefEnd(page, column, pin, row_of[at])
 
 
+def _near(ln: Placed, at: int, column: str, cut: int, maps: tuple[Mapping[int, int], Mapping[int, int]]) -> RefEnd:
+    """The end at `at` on lane `ln`: its pin on `at`'s page and side of the cut, else a pass-through lane's nearest pin on the page (BUNDLE-ARROW)."""
+    on_side = tuple(x for x in ln if _same_side(x[0], at, cut) and maps[0][x[0]] == maps[0][at])
+    return end_at(at, column, on_side or ln, *maps)
+
+
+def _same_side(i: int, at: int, cut: int) -> bool:
+    """Whether positions `i` and `at` lie on one side of the cut after position `cut`."""
+    return (i <= cut) == (at <= cut)
+
+
+def _has_pin(ln: Placed, at: int, cut: int, page_of: Mapping[int, int]) -> bool:
+    """Whether lane `ln` has a pin on `at`'s page and `at`'s side of the cut."""
+    return any(page_of[i] == page_of[at] and _same_side(i, at, cut) for i, _ in ln)
+
+
+def _runs(ln: Placed, at: int, cut: int, page_of: Mapping[int, int]) -> bool:
+    """False when lane `ln` has pins on `at`'s page and none on `at`'s side of the cut: a row cut keeps its page's lanes (BUNDLE-ARROW)."""
+    return _has_pin(ln, at, cut, page_of) or not any(page_of[i] == page_of[at] for i, _ in ln)
+
+
 def lane_ends(
     name: str,
     lanes: Lanes,
@@ -85,25 +106,24 @@ def lane_ends(
     """The two ends of a reference of `name`, both on one crossing lane.
 
     A cut that no lane crosses has no ends: the arrow is not planned (R547). A page where no
-    crossing lane has a pin names none. Crossing lanes that split the pages raise (R545).
+    crossing lane has a pin names none. Crossing lanes that split the ends raise (R545).
     """
     cut = ats[0][0]
     crossing = [ln for ln in lanes if ln and min(i for i, _ in ln) <= cut < max(i for i, _ in ln)]
     if not crossing:
         return ()
-    held = [{page_of[i] for i, _ in ln} for ln in crossing]
-    pages = {page_of[q] for q, _ in ats}
-    needed = {pg for pg in pages if any(pg in h for h in held)}  # a page with no tap names no pin
-    lane = next((ln for ln, h in zip(crossing, held, strict=True) if needed <= h), None)
+    needed = [q for q, _ in ats if any(_has_pin(ln, q, cut, page_of) for ln in crossing)]  # a page no crossing lane has a pin on names none
+    lane = next((ln for ln in crossing if all(_has_pin(ln, q, cut, page_of) for q in needed)), None)
     if lane is None:
         msg = (
-            f"cut: reference {name}: lanes cross the cut but none has a pin on each of pages "
-            f"{min(needed)} and {max(needed)}; an arrow joins one lane, so give the fan a lane "
-            "with a pin on each page"
+            f"cut: reference {name}: lanes cross the cut but none has a pin on each end's page and side "
+            f"(positions {min(needed)} and {max(needed)}); an arrow joins one lane, so give the fan a lane "
+            "with a pin on each"
         )
         raise ReferenceLaneError(msg)
     maps = (page_of, row_of)
-    return tuple(bundled(end_at(q, c, lane, *maps), [p for ln in crossing if ln is not lane if (p := end_at(q, c, ln, *maps).pin)]) for q, c in ats)
+    runs = [ln for ln in crossing if ln is not lane and all(_runs(ln, q, cut, page_of) for q, _ in ats)]
+    return tuple(bundled(_near(lane, q, c, cut, maps), [p for ln in runs if (p := _near(ln, q, c, cut, maps).pin)]) for q, c in ats)
 
 
 def link_over_pinless(refs: Sequence[Ref]) -> list[Ref]:

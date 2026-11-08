@@ -13,15 +13,17 @@ from fransys_model.derive import (
     board_netlist,
     bom_lines,
     designation_list,
+    drawn_designations,
     item_designation,
+    run_point_text,
+    strip_tag_text,
     takes_parents_designation,
 )
 from fransys_model.derive.designation_label import own_designation_or_none
 from fransys_model.derive.passes.numbering import number
-from fransys_model.derive.tag_text import run_point_text, strip_tag_text
 from fransys_model.derive.texts.context import PrintContext
 from fransys_model.derive.texts.terminal_text import terminal_text
-from fransys_model.kernel import make_id
+from fransys_model.kernel import make_id, render_id
 from fransys_model.vocab.enums import FunctionKind
 from fransys_model.vocab.facets.pcb import FootprintFacet
 from fransys_model.vocab.facets.terminal import TerminalFacet
@@ -57,6 +59,9 @@ def test_a_child_prints_its_tagged_holders_designation() -> None:
     link = plant.item("link", part=plant.part("F"), parent=holder)
     model, _ = number(plant.model())
     assert item_designation(model, link) == "F11"
+    assert drawn_designations(model, [render_id(link), render_id(holder)]) == ("F11", "F11")
+    with pytest.raises(KeyError):
+        drawn_designations(model, ["item:nope"])
 
 
 def test_a_child_prints_its_untagged_holders_numbered_designation() -> None:

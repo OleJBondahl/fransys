@@ -19,6 +19,7 @@ from electrical_symbols.box_ports import (
     default_sides,
     draw_order,
     is_generic_box,
+    marking_slot,
 )
 from electrical_symbols.bridge_mark import BridgePiece, bridge_mark, bridge_mark_room
 from electrical_symbols.drawn_symbol import box_marking_widths, drawn_slots, drawn_symbol
@@ -92,6 +93,7 @@ __all__ = [
     "is_generic_box",
     "library_version",
     "marker_symbol",
+    "marking_slot",
     "natural",
     "notice_table",
     "power_symbol_key",

@@ -15,7 +15,13 @@ from electrical_symbols import (
     draw_order,
     generic_box,
     is_generic_box,
+    marking_slot,
 )
+
+
+def test_a_marking_slot_is_marking_dot_the_port():
+    assert marking_slot("A1") == "marking.A1"
+    assert marking_slot(box_port_marking(box_port_name("K1", "x.y"))) == "marking.y"
 
 
 def test_only_the_box_key_is_a_generic_box():

@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Final
 from fransys_model.checks._finding import ordered
 from fransys_model.derive.facts.closure import link_groups
 from fransys_model.derive.facts.potentials import rail_potential
+from fransys_model.derive.facts.rail_reach import rail_scope
 from fransys_model.derive.facts.strips import strip_of
 from fransys_model.derive.facts.unit_index import item_unit
 from fransys_model.vocab.codes import finding
@@ -33,7 +34,7 @@ def _fused_text(model: Model, terminal: Id[Item]) -> str:
 def check_rails(model: Model) -> tuple[Finding, ...]:
     """Error on a rail group with no power potential, on a fused terminal, and on two groups of one potential in one unit."""
     fused = {g.item for g in link_groups(model, lambda role: role.protective)}
-    first: dict[tuple[object, str], RailGroup] = {}
+    first = rail_scope(model)
     found = []
     for group in rail_groups(model).values():
         potential = rail_potential(model, group)
@@ -42,8 +43,7 @@ def check_rails(model: Model) -> tuple[Finding, ...]:
             continue
         if (hit := next((t for t in group.terminals if t in fused), None)) is not None:
             found.append(finding(RAIL_ON_FUSED, (group.id,), _fused_text(model, hit)))
-        key = (item_unit(model, group.terminals[0]), potential)
-        if (other := first.setdefault(key, group)) is not group:
+        if (other := rail_groups(model)[first[item_unit(model, group.terminals[0]), potential]]) is not group:
             msg = f"{_where(model, group)} and {_where(model, other)} are both the {potential} rail of one unit: one group per potential"
             found.append(finding(RAIL_DUPLICATE_POTENTIAL, (other.id, group.id), msg))
     return ordered(found)

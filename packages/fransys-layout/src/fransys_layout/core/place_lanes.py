@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+from types import MappingProxyType
 from typing import TYPE_CHECKING, NamedTuple
 
-from .arrow_reserve import leg_fit, leg_pins, leg_rows, leg_unit, reserve
+from .arrow_reserve import leg_fit, leg_pins, leg_rows, leg_unit, legged_offsets, reserve, step_out
 from .band import arrow_box, lane_offset, lane_rows
 from .clearance import Keep
 from .cut_end_rooms import arrow_ends, arrow_leads, arrow_poles, cut_ends
@@ -43,6 +44,9 @@ class Stand(NamedTuple):
     leads: tuple[frozenset[int], frozenset[int]] = (frozenset[int](), frozenset[int]())  # the poles whose lane carries the cut end's marker
     right: int = 0  # the far x an arrow's end may stand at with its marker inside the content box; 0 sets none (R1010)
     keys: tuple[dict[int, Key], dict[int, Key]] = ({}, {})  # per end, each pole's arrow key
+    legged: Mapping[int, int] = MappingProxyType(
+        {}
+    )  # per pole standing legs at the right end, the offset past the cut of its last leg's start (R1684)
     fits: tuple[dict[int, Options], dict[int, Options]] = ({}, {})  # per end, each pole's options sized for the lines its ledger end holds (R1598)
     drop: int = (
         0  # the x of the last placed leg drop of the trunk's right end: an arrow's lane end stands one pitch past it; 0 sets none (BUNDLE-LEGS)
@@ -130,7 +134,9 @@ def _bare_ends(
 ) -> list[tuple[int, int] | None]:
     """Per lane j its hull stepped out where an arrow stands, before any walk."""
     arrows, stand = arrows_stand
-    return [_stepped(own, hull, (j, fan, away), arrows, stand) if own else None for j, own in enumerate(owns)]
+    through = stand.poles[0] & stand.poles[1]  # a lane cut at both ends of its row passes through it (BUNDLE-LANE-END)
+    starts = [own or (hull if j in through else None) for j, own in enumerate(owns)]
+    return [_stepped(start, hull, (j, fan, away), arrows, stand) if start else None for j, start in enumerate(starts)]
 
 
 class LaneEnds(NamedTuple):
@@ -188,18 +194,24 @@ def _lane_ends(
         _walked((j, end, owns[j] or end), stand.y + lane_offset(rows[j], stand.reach), stand, mine) if end and stand.keeps else (end, (True, True))
         for j, end in enumerate(bare)
     ]
-    return LaneEnds(_levelled(tuple(w[0] for w in walked), stand), tuple(w[1] for w in walked))
+    cut = step_out(max((v for _, v in taps), default=0), stand.reach)  # the x every leg of the trunk's end leaves from (arrow_reserve.leg_cut)
+    return LaneEnds(_levelled(tuple(w[0] for w in walked), stand, cut), tuple(w[1] for w in walked))
 
 
-def _levelled(out: tuple[tuple[int, int] | None, ...], stand: Stand) -> tuple[tuple[int, int] | None, ...]:
+def _levelled(out: tuple[tuple[int, int] | None, ...], stand: Stand, cut: int) -> tuple[tuple[int, int] | None, ...]:
     """A continuing lane that is not a cut end's marker lane ends at the x of the marker's lane: one marker stands for the bundle (R1351, R1676).
 
     A lane that is no pole of the cut end stops at its last attachment.
     """
     ends = [[e[s] for j in leads if (e := out[j])] for s, leads in enumerate(stand.leads)]
-    rest = [stand.poles[s] - stand.leads[s] for s in (0, 1)]
+    rest = [stand.poles[s] - stand.leads[s] if ends[s] else frozenset[int]() for s in (0, 1)]  # no marker lane: nothing to level to
     return tuple(
-        (min(ends[0], default=e[0]) if j in rest[0] else e[0], max(ends[1], default=e[1]) if j in rest[1] else e[1]) if e else e
+        (
+            min(ends[0], default=e[0]) if j in rest[0] else e[0],
+            cut + stand.legged[j] if j in stand.legged and j in rest[1] else max(ends[1], default=e[1]) if j in rest[1] else e[1],
+        )
+        if e
+        else e
         for j, e in enumerate(out)
     )
 
@@ -281,11 +293,13 @@ def drawn_lane_ends(env: PageEnv, x: Mapping[str, int], fan: Fan, r: int, stand:
     legs = leg_pins(fan, leg_rows(env.refs, env.plan.page), r)
     poles = arrow_poles(fan, env.refs, env.plan, r)
     ends = cut_ends(env.refs, env.plan, (fan,), r)
+    fit = leg_fit(env.options, env.refs, env.plan.page)
     keys, fits = (_keys(ends, right=False), _keys(ends, right=True)), (_fits(ends, env.options, right=False), _fits(ends, env.options, right=True))
     stand = stand._replace(
         poles=poles,
         leads=arrow_leads(fan, env.refs, env.plan, r),
-        legs=leg_unit(legs, leg_fit(env.options, env.refs, env.plan.page)),
+        legs=leg_unit(legs, fit),
+        legged=legged_offsets(legs, fit),
         keys=keys,
         fits=fits,
     )

@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any, NamedTuple
 
 import fransys as fr
 import fransys_parts
-from _drawn_pages import drawn_pages, markers_in  # noqa: F401 - re-exported to the dd tests
+from _drawn_pages import drawn_pages, markers_in, reads_tag  # noqa: F401 - re-exported to the dd tests
 from _model_build_cover import cabinet_document, printed
 from fransys_author.design import Design
 
@@ -106,14 +106,10 @@ def placed(model: Model, tag: str, symbol: str, poles: int = 1, marking: str | N
     `marking`, if given, must be among its slot strings.
     A symbol of that key is the answer when the nearest TAG text of the same device letters reads `tag`; one symbol is the answer.
     """
-    found = []
+    found: list[Placed] = []
     for page, drawing in drawn_pages(model).items():
         keyed = [s for s in drawing.symbols if s.key == symbol and s.poles == poles and (marking is None or marking in dict(s.slots).values())]
-        tags = [t for t in drawing.texts if t.kind == "TAG" and t.text[:2] == tag[:2]]
-        for sym in keyed:
-            nearest = min(tags, key=lambda t: abs(sym.x - t.box.x) + abs(sym.y - t.box.y), default=None)
-            if nearest is not None and nearest.text == tag:
-                found.append(Placed(page, drawing, sym))
+        found += [Placed(page, drawing, sym) for sym in keyed if reads_tag(sym, drawing, tag)]
     assert len(set(found)) == 1, f"{tag} {symbol}: {len(set(found))} symbols"
     return found[0]
 

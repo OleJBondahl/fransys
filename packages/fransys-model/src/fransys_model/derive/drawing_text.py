@@ -47,7 +47,6 @@ from fransys_model.derive.tag_text import (
     external_note,
     is_device_terminal,
     item_tag_text,
-    strip_tag_text,
     tag_text,
 )
 from fransys_model.derive.unit_nodes import own_nodes
@@ -139,7 +138,6 @@ __all__ = [
     "reference_slot",
     "release_title",
     "row_letter",
-    "strip_tag_text",
     "stub_far_end",
     "tag_text",
 ]

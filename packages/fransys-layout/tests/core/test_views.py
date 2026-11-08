@@ -34,7 +34,7 @@ def _planted() -> Sym:
     box = Box(-8, -16, 16, 32)
     base = views_of(box, box, box, pins, ("R0",), row_footprint=box)
     return Sym(
-        "U", None, "", Size(16, 8), pins, (("a",), ("b",)),
+        "U", None, "", {"": Size(16, 8)}, pins, (("a",), ("b",)),
         views=frozendict({**base, "R90": R90})     )  # fmt: skip
 
 

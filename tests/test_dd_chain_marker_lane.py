@@ -50,10 +50,10 @@ def _terminal_tags(model) -> dict[str, tuple[Any, ...]]:
     """The strip index of each terminal (the tag's last part) -> (page id, tag box, symbol)."""
     found = {}
     for page, drawing in drawn_pages(model).items():
-        tags = [t for t in drawing.texts if t.kind == "TAG" and t.text.startswith("-X1:")]
+        tags = [t for t in drawing.texts if t.kind == "TAG" and t.owner and t.text.isdigit()]  # a terminal prints its point (STRIP-TAG-ONCE)
         terminals = [s for s in drawing.symbols if s.key == "terminal"]
         for tag in tags:
-            found[tag.text.rsplit(":", 1)[1]] = (page, tag.box, terminals)
+            found[tag.text] = (page, tag.box, terminals)
     return found
 
 
@@ -108,8 +108,8 @@ def test_a_chain_split_over_two_pages_draws_every_terminal_once_and_marks_the_li
     model = result.model
     assert [f.code for f in result.findings if f.severity is Severity.ERROR] == []
     pages = drawn_pages(model)
-    tags = [t.text for d in pages.values() for t in d.texts if t.kind == "TAG" and t.text.startswith("-X1:")]
-    assert sorted(tags) == sorted(f"-X1:{k}" for k in range(1, 241))
+    tags = [t.text for d in pages.values() for t in d.texts if t.kind == "TAG" and t.owner and t.text.isdigit()]
+    assert sorted(tags) == sorted(str(k) for k in range(1, 241))
     assert len(pages) == 2
     markers = layout_of(model, LinkMarker)
     cross = [m for m in markers.values() if markers[m.partner].page != m.page]

@@ -27,7 +27,7 @@ from placement_fixtures import kit_for, planted_model
 
 from electrical_symbols import LIBRARY
 from fransys_layout.core import Finding, PinRef, Size, Wire, solve
-from fransys_model.derive import net_of, pdf_page, unit_label
+from fransys_model.derive import drawn_designations, net_of, pdf_page, unit_label
 from fransys_model.kernel import Origin, Severity, evolve, make_id
 from fransys_model.layout import (
     DrawingSet,
@@ -230,6 +230,14 @@ def test_a_page_overflow_names_the_set_the_page_and_the_designations_of_its_row(
     devices = first.message.partition("(devices ")[2].partition(")")[0].split(", ")
     assert devices == list(dict.fromkeys(devices))
     assert "enlarge the page" in first.message
+
+
+def test_a_page_drawing_carries_the_measured_rows_of_its_layout(written: Written) -> None:
+    rows = [r for d in written.drawn.values() for r in d.rows]
+    assert [(r.height_g, r.width_g, r.term) for r in rows] == [(m.height, m.width, m.term) for m in written.layout.rows]
+    assert rows
+    assert all(r.devices and all(drawn_designations(written.model, r.devices)) for r in rows)
+    assert all(len(set(r.devices)) == len(r.devices) for r in rows)
 
 
 def test_a_row_finding_prints_the_page_number_its_pdf_prints(written: Written) -> None:

@@ -90,6 +90,7 @@ RULED = frozenset(
         "csv_dialect",
         "current_chains",
         "designation_list",
+        "drawn_designations",
         "effective_placement",
         "export_bytes",
         "export_form_of",

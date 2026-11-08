@@ -39,6 +39,7 @@ from fransys_model.derive import (
     export_set_name,
     pdf_texts,
     reference_fragment,
+    refuses,
     release_names,
     stale_patterns,
     unit_name_unresolved,
@@ -325,7 +326,9 @@ def _write_result_intermediates(result: BuildResult, svgs: dict[str, str], inter
         return
     intermediates.mkdir(parents=True, exist_ok=True)
     drawn = _Drawn(result.model, result.drawings, result.diagrams, _library(result), result.page_svgs)
-    _write_intermediates(drawn, svgs, intermediates, result.settings.pdf)
+    _write_intermediates(
+        drawn, {} if refuses(result.findings) else svgs, intermediates, result.settings.pdf
+    )  # an errored build holds no drawn page (model-0077)
 
 
 def _raise_on_errors(findings: tuple[Finding, ...], model: Model) -> None:

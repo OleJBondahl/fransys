@@ -13,6 +13,7 @@ from .order import order_blocks
 from .outline import framed
 from .outputs import CoreLayout
 from .place import place_pages
+from .row_measure import row_measures
 from .solve_steps import annotate, scored
 from .topology import build_flow
 from .topology_elements import netted_pins
@@ -80,6 +81,7 @@ def _solve(problem: PlacementProblem, options: Options) -> CoreLayout:
         None,
         found,
         cut.spec.drawn,
+        row_measures(placement, cut, problem, options),
     )
     return scored(layout, problem, cut.flow)
 

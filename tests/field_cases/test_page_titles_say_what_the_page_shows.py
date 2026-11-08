@@ -15,7 +15,12 @@ if TYPE_CHECKING:
     from pathlib import Path
 
 # the drawn title block reads its values in slot-id order: ... number, page title, revision, ...
-_TITLE = re.compile(r"CAB-1\r\n(.+?)\r\n1\.1", re.DOTALL)
+# pdfium reads a page's glyphs in lines or in columns by their shapes and then drops the word spaces, so the text is compared without whitespace
+_TITLE = re.compile(r"CAB-1(.+?)1\.12026-10-12")
+
+
+def _flat(text: str) -> str:
+    return re.sub(r"\s+", "", text)
 
 
 def _build(root: Path, *, blocks: int) -> tuple[fr.BuildResult, list[str]]:
@@ -38,9 +43,9 @@ def _build(root: Path, *, blocks: int) -> tuple[fr.BuildResult, list[str]]:
     fr.write(result, out_dir=root / "out", intermediates=root / "inter")
     (pdf,) = (root / "out").glob("*.pdf")
     document = pypdfium2.PdfDocument(pdf)
-    texts = [page.get_textpage().get_text_range() for page in document]
-    titles = [m.group(1).replace("\r\n", " ") for t in texts if (m := _TITLE.search(t))]
-    return result, [t for t in titles if t not in {"Cover", "Sheets", "Terminal list", "BOM"}]
+    texts = [_flat(page.get_textpage().get_text_range()) for page in document]
+    titles = [m.group(1) for t in texts if (m := _TITLE.search(t))]
+    return result, [t for t in titles if t not in {"Cover", "Sheets", "Terminallist", "BOM"}]
 
 
 @pytest.fixture(scope="module")
@@ -55,10 +60,10 @@ def unhinted(tmp_path_factory: pytest.TempPathFactory) -> tuple[fr.BuildResult, 
 
 def test_the_blocks_texts_print_once_first_to_last_not_as_group_labels(titled) -> None:
     _, titles = titled
-    assert titles[0] == "Relay and lamp circuit 1 to 6"  # PAGE-PAD (layout-0187): the padded page holds six circuits
+    assert titles[0] == _flat("Relay and lamp circuit 1 to 6")  # PAGE-PAD (layout-0187): the padded page holds six circuits
     assert not any(re.search(r"=F\d", title) for title in titles)
 
 
 def test_without_blocks_the_page_reads_its_designations_in_drawn_order(unhinted) -> None:
     _, titles = unhinted
-    assert titles == ["-X1, -H1"]
+    assert titles == [_flat("-X1, -H1")]

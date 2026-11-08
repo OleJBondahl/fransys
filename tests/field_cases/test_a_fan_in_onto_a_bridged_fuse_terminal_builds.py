@@ -7,7 +7,7 @@ from itertools import pairwise
 from typing import TYPE_CHECKING, NamedTuple
 
 import fransys as fr
-from _drawn_pages import drawn_pages
+from _drawn_pages import drawn_pages, tag_texts
 from fransys.colours import BU
 
 from fransys_model.layout import DrawingSet, Page, layout_of
@@ -108,7 +108,7 @@ def _between(p: Pt, a: Pt, b: Pt) -> bool:
 
 def _terminal(drawing: Drawing, tag: str) -> DrawnSymbol:
     """The terminal whose own tag text `-tag` stands nearest to it."""
-    (text,) = (t for t in drawing.texts if t.text.endswith(tag))
+    (text,) = tag_texts(drawing, f"-{tag}")
     return min(
         (s for s in drawing.symbols if s.key == "terminal"),
         key=lambda s: abs(s.x - text.box.x) + abs(s.y - text.box.y),
@@ -122,7 +122,7 @@ def test_the_wire_from_the_fuse_terminal_reaches_the_fan_in_without_a_u_turn(
     d = fr.design("demo_parts")
     d.add(_cab, "U1")
     model = fr.build(d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, "cab", cover=tmp_path / "cover.md")).model
-    (page,) = (p for p in drawn_pages(model).values() if any(t.text.endswith("X1:24V:6") for t in p.texts))
+    (page,) = (p for p in drawn_pages(model).values() if tag_texts(p, "-X1:24V:6"))
     ends = [_terminal(page, "X2:1"), _terminal(page, "X2:2")]
     routes = _paths(page, _terminal(page, "X1:24V:6"), ends)
     assert len(routes) == 2  # one per X2 terminal

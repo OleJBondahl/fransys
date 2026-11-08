@@ -83,7 +83,7 @@ potentials on one wired net is `NONE`. So is a wired net of exactly two ports. A
 connection is a wire; only a net of three or more ports is a rail. A PE net stays `PE`. `port_power_kind(model, port)` gives the kind of a
 port's wired net. A DC supply declares its 0 V rail (`rails={"24V": ("24", None), "0V": ("0",
 None)}`). Without it, the 0 V net gets references, not a ground symbol. `power_text(model, net)`
-is the text a power symbol prints: the supply's name, else its potential. It is `None` for
+is the text a power symbol prints. It is the supply's name, else its potential, then the tag of the nearest protective device the net lies behind (`24V -F2`). It is `None` for
 `GROUND`, `PE` and `NONE`. `port_power_text(model, port)` gives the text of the symbol at a port.
 `is_rail_terminal(model, terminal)` is true for a terminal in a group flagged `rail=True`.
 A flagged terminal draws as its power symbol, an unflagged one as a terminal. A pin wired to one, or to another pin on a power net, draws the rail's power symbol. No wire joins two such pins. The terminal table and wire list hold every landing and wire.
@@ -181,6 +181,8 @@ Each of these takes further keyword-only options; their docstrings cover the exa
 
 `fransys.derive.item_label(model, item)` takes the item's id and is `item_designation`'s no-raise twin: an item's own
 text, or its authoring key joined by `/` when it has none yet.
+
+`fransys.derive.drawn_designations(model, ids)` gives the designation of each item whose id a drawing carries as text, such as `DrawnRow.devices`. See "Read the rows of a page" in the readability page.
 
 `fransys.derive.node_designation(model, node)` renders a node's signed
 designation by aspect: `+C1` for a location, `=G1` for a group. It is the segment

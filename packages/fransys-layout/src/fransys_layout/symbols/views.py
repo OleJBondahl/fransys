@@ -11,6 +11,7 @@ from fransys_layout.core.values import Box, Size
 
 from ._grid import symdef_orientation, to_box, to_reach
 from .table import TableAsk, placed_table
+from .text import label_sizes
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
@@ -51,7 +52,7 @@ class Ask:
 
 @dataclass(frozen=True, slots=True)
 class Views:
-    """The views of one symbol, its text slot's size at R0, and its table's keep-out at R0."""
+    """The views of one symbol, its text's size upright and turned (symdef's `text_footprint`), and its table's keep-out at R0."""
 
     views: Mapping[Orientation, Turned]
     label: Size
@@ -64,13 +65,11 @@ def _view(
     orient: Orientation,
     ask: Ask,
     drawn: tuple[float, LibrarySymbol | None],
-) -> tuple[Turned, Box | None, Box | None]:
-    """The view at `orient`, its measured text slot's box and its table's keep-out box."""
+) -> tuple[Turned, Box | None]:
+    """The view at `orient` and its table's keep-out box."""
     height, table = drawn
     turn = symdef_orientation(orient)
     bare = measure(symbol, turn, library, dict(ask.marks) or None, height)
-    text = {ask.text_slot: ask.text} if ask.text_slot in {s.id for s in symbol.slots} else {}
-    held = measure(symbol, turn, library, text or None, height)
     kept = None if table is None or orient != "R0" else measure(table, turn, library).keepout
     pitch = int(library.grid.wire_pitch)
     footprint = to_reach(bare.keepout, pitch)
@@ -78,9 +77,8 @@ def _view(
     row = to_reach(GridBox.union(bare.body, *others), pitch) if ask.strip else None
     ports = [bare.ports[p] for p in ask.order]
     pins = tuple(PinTurn(p.x, p.y, p.direction.name) for p in ports)
-    slot = held.slots.get(next(iter(text), ""))
     view = Turned(to_box(bare.body), footprint, footprint, pins, row)
-    return view, None if slot is None else to_box(slot), None if kept is None else to_box(kept)
+    return view, None if kept is None else to_box(kept)
 
 
 def symbol_views(symbol: LibrarySymbol, library: Library, ask: Ask) -> Views:
@@ -91,12 +89,9 @@ def symbol_views(symbol: LibrarySymbol, library: Library, ask: Ask) -> Views:
     height = from_divisions(library.grid, ask.text_height)
     table = None if ask.table is None else placed_table(ask.table, library, ask.text_height)
     found = {o: _view(symbol, library, o, ask, (height, table)) for o in ask.orientations}
-    slot = found["R0"][1]
-    return Views(
-        {o: view for o, (view, _, _) in found.items()},
-        Size(0, 0) if slot is None else Size(slot.w, slot.h),
-        found["R0"][2],
-    )
+    none = Size(0, 0)
+    upright = label_sizes(library, ask.text, ask.text_height) if ask.text_slot in {s.id for s in symbol.slots} else none
+    return Views({o: view for o, (view, _) in found.items()}, upright, found["R0"][1])
 
 
 def turned_view(symbol: LibrarySymbol, library: Library, orient: Orientation, order: Sequence[str] = ()) -> Turned:

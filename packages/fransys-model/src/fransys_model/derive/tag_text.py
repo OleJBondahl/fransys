@@ -46,15 +46,15 @@ def tag_text(model: Model, function: Id[Function], *, unit: Id[Unit] | None = No
     return item_tag_text(model, record.item, unit=unit)
 
 
-def strip_tag_text(model: Model, function: Id[Function]) -> str:
+def strip_tag_text(model: Model, function: Id[Function], *, unit: Id[Unit] | None = None) -> str:
     """A run's one strip tag: the item designation of the terminal's strip, "-X01".
 
-    Printed once, left of a run of terminals of one strip (`run_point_text` is each one's own
-    point); a unit's own set prints the unit-relative form instead. A device's
+    Printed once, above a run of terminals of one strip (`run_point_text` is each one's own
+    point); a unit's own set (`unit`) prints the unit-relative form. A device's
     own terminal (`is_device_terminal`) names the device itself, never the board it is mounted
     on.
     """
-    return item_tag_text(model, _strip_item(model, function))
+    return item_tag_text(model, _strip_item(model, function), unit=unit)
 
 
 def _strip_item(model: Model, function: Id[Function]) -> Id[Item]:

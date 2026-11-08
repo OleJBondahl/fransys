@@ -21,10 +21,10 @@ lazy from fransys_model.vocab import AspectNode, Function, Unit
 
 from .designation_label import terminal_of
 from .document_subject import unit_label
-from .drawing_text import page_title_groups, strip_tag_text
+from .drawing_text import page_title_groups
 from .facts.house_settings import word
 from .lookups import black_box_unit, unit_chain
-from .tag_text import tag_text
+from .tag_text import strip_tag_text, tag_text
 from .unit_nodes import own_nodes_by_unit
 
 _RANGE_ENTRIES = 2  # a range needs two entries

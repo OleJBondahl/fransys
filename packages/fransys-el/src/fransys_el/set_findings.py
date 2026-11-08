@@ -27,7 +27,7 @@ if TYPE_CHECKING:
     from .placement_kit import SymbolKit
     from .placement_sets import DrawingScope
 
-__all__ = ["set_failure_finding", "set_without_page_findings"]
+__all__ = ["set_failure_finding", "set_without_page_findings", "skipped_ports"]
 
 _INFO = {info.code: info for info in (*FINDING_CODES, *EL_CODES)}
 
@@ -55,7 +55,7 @@ def _nets_drawn(model: Model, owners: Mapping[str, Mapping[str, Id[Port]]], net:
     mine = {core_symbol_id(s) for s in scope.symbols}
     wired = {p.value for p in connected_ports(model)}
     ports = [p.value for sid, pins in owners.items() if sid in mine for p in pins.values() if p.value in wired]
-    return all(net.net(model, p) in drawn for p in ports)
+    return all(net.net(p) in drawn for p in ports)
 
 
 def set_without_page_findings(model: Model, kit: SymbolKit, net: Netlist, pageless: Iterable[tuple[DrawingScope, int]]) -> tuple[Finding, ...]:
@@ -63,7 +63,7 @@ def set_without_page_findings(model: Model, kit: SymbolKit, net: Netlist, pagele
 
     A black-box set drawn in its container counts as drawn when all its nets are drawn there.
     """
-    drawn = {net.net(model, p) for p in net.placed}
+    drawn = {net.net(p) for p in net.placed}
     owners = pin_owner(model, kit)
     found = []
     for scope, number in pageless:
@@ -90,3 +90,9 @@ def set_failure_finding(error: Exception, problem: PlacementProblem, scope: Draw
         subjects,
         f"drawing set {number} ({_symbols(problem, scope)}) could not be laid out, so it has no page: {type(error).__name__}: {error}",
     )
+
+
+def skipped_ports(model: Model, kit: SymbolKit, failed: Iterable[DrawingScope]) -> set[str]:
+    """The ports of the symbols of the sets whose layout failed: they have no drawing, so no drawn-page check expects them."""
+    mine = {core_symbol_id(s) for scope in failed for s in scope.symbols}
+    return {p.value for sid, pins in pin_owner(model, kit).items() if sid in mine for p in pins.values()}

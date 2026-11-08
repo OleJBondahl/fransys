@@ -1,8 +1,9 @@
 """`write_layout`: a `CoreLayout` written into the model as `layout.*` records (el-0003, E2)."""
 
+from dataclasses import replace
 from typing import TYPE_CHECKING
 
-from fransys_model.derive import refuses
+from fransys_model.derive import export_set_name, refuses
 from fransys_model.kernel import Origin, evolve
 
 from .write_findings import kernel_findings
@@ -25,6 +26,15 @@ __all__ = ["write_layout"]
 _ORIGIN = Origin(file="fransys_el/write.py", line=0, note="the placement core layout")
 
 
+def _named_skip(found: Finding, name: str) -> Finding:
+    """An ERROR names its drawing set (the printed set name) as not drawn and its drawn-page checks did not run."""
+    return (
+        replace(found, message=f"{found.message}; drawing set {name!r} is not drawn, its drawn-page checks did not run")
+        if refuses((found,))
+        else found
+    )
+
+
 def write_layout(  # noqa: PLR0913 - the library and the place join the five inputs [public keyword API kept, decision 0444]
     model: Model,
     unit: Id[Unit] | None,
@@ -44,8 +54,8 @@ def write_layout(  # noqa: PLR0913 - the library and the place join the five inp
     own = set_rows(model, sets[0].number, STAMP)
     paged = evolve(model, put=(*sets, *pages.values()), remove=own, origin=_ORIGIN)
     found = kernel_findings(paged, layout.findings, symbol_subjects(model, kit), pages)
-    if refuses(found):
-        return paged, found  # an ERROR in the layout's findings: no output step runs (KI-773, designer R1945)
+    if refuses(found):  # no output step runs for this set (KI-773, R1945); the other sets are checked (KI-779, R1978)
+        return paged, tuple(_named_skip(f, export_set_name(model, unit)) for f in found)
     records = (
         *power_symbols(model, layout, pages, kit, (STAMP, sets[0].number)),
         *link_markers(written),

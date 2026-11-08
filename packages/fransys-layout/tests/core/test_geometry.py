@@ -37,7 +37,7 @@ def make_sym(
         id=sym_id,
         group=None,
         unit="u",
-        label=Size(0, 0),
+        labels={"": Size(0, 0)},
         pins=pins,
         nodes=(),
         views=views_of(body, keepout, footprint, pins, R0_TO_R270, row_footprint=row_footprint),

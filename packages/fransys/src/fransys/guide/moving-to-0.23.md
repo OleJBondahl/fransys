@@ -4,6 +4,10 @@
 
 This page lists what 0.23 adds, what stays refused for now, and the known issues you can meet. No call changes from 0.22.9: no name is added to or removed from the API, and no call needs a new spelling.
 
+## New in 0.23.2
+
+- After a layout ERROR in one drawing set, the drawn-page checks (CONNECTION_NOT_DRAWN, OVERLAP and the rest) still run on the other sets; 0.23.1 skipped them all. The ERROR says its set is not drawn. `fr.write` still refuses.
+
 ## New in 0.23.1
 
 - A PLC channel's signal name and description print in the PLC list only, never at the pins. The pins draw as in 0.23.0. For `.plc(..., description=)` see `moving-to-0.22.md`, New in 0.23.1.
@@ -29,3 +33,7 @@ This page lists what 0.23 adds, what stays refused for now, and the known issues
 - KI-762: a hub alone on a page or in a short row can lose a tag pair (`MARKER_UNPLACED`), and a `CONNECTION_NOT_DRAWN` can follow. A fix is in progress and ships in the release after it lands.
 - KI-746, KI-747: a tag or `WHERE` marker text can overlap a wire or a slot text (`OVERLAP`, looks only).
 - KI-748: the `OVERLAP` message does not name both elements yet.
+
+## A supply net behind a fuse prints the fuse
+
+- A supply net behind a fuse or breaker prints its supply name and the tag of the nearest protective device, such as `24V -F2`. The net at the supply keeps `24V`. Two nets that share one name, with no unique protective device between them, raise `RAIL_IDENTITY_SHARED`: put a fuse or breaker between them.

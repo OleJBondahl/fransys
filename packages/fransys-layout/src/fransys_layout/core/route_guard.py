@@ -7,11 +7,12 @@ from itertools import pairwise
 from typing import TYPE_CHECKING, NamedTuple
 
 from .clearance import clear
+from .errors import CoreError
 from .flow_values import CrossLink
 from .net_keys import net_of_key
 from .outputs import Refused
 from .route_astar import Leg, anchor, astar, simplify, tidy
-from .route_env import hard_keeps, own_syms
+from .route_env import hard_keeps, own_syms, pin_side
 from .route_tree import tree
 from .values import Box, Finding, PinRef
 
@@ -43,20 +44,25 @@ def _snap(end: XY, toward: XY, step: int) -> XY:
     return x + (-x % step if tx > x else -(x % step)), y
 
 
+def _inside(box: Box, end: XY) -> bool:
+    """Whether `end` is in the interior of `box`."""
+    return box.x < end[0] < box.x + box.w and box.y < end[1] < box.y + box.h
+
+
 def _reach(env: RouteEnv, end: XY, toward: XY) -> tuple[XY, ...] | None:
     """From a wire's end to a wiring-grid point: along its own run, else out of its footprint."""
     step = env.options.wiring_grid
     snapped = _snap(end, toward, step)
     if not (snapped[0] % step or snapped[1] % step):
         return (end, snapped)
-    ex, ey = end
-    box = next(
-        (f for f in (p.footprint for p in env.placed.values()) if f.x <= ex <= f.x + f.w and f.y <= ey <= f.y + f.h),
-        None,
-    )
-    if box is None:
+    hit = next(((p, q.pin) for p in env.placed.values() for q in p.pin_xy if (q.x, q.y) == end), None)
+    if hit is None:
+        body = next((p for p in env.placed.values() if _inside(p.footprint, end)), None)
+        if body is not None:
+            msg = f"a wire end at {end} is inside the body of {body.sym} at none of its pins; end it at a pin or outside its footprint"
+            raise CoreError(msg)
         return None
-    out = anchor(end, box, step)
+    out = anchor(end, hit[0].footprint, step, pin_side(env, hit[0].sym, hit[1]))
     blocked = {(x // step, y // step) for pts in env.blocked_ends.values() for x, y in pts}
     return None if (out[-1][0] // step, out[-1][1] // step) in blocked else out  # R482, R472
 

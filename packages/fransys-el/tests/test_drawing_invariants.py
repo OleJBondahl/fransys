@@ -197,13 +197,13 @@ def _head_codes(*wires: tuple[Any, ...], key: str = "contact-head") -> list[str]
     return _codes({PAGE: drawing})
 
 
-@pytest.mark.rule("TEXT-CANDIDATES")
+@pytest.mark.rule("TAG-CORNERS")
 def test_a_wire_sharing_interior_with_a_table_head_raises_overlap_ending_inside_or_across():
     assert _head_codes(((0, 25), (30, 25))) == ["OVERLAP"]
     assert _head_codes(((0, 25), (60, 25))) == ["OVERLAP"]
 
 
-@pytest.mark.rule("TEXT-CANDIDATES")
+@pytest.mark.rule("TAG-CORNERS")
 def test_a_wire_running_along_a_table_heads_edge_raises_overlap_one_per_wire_and_a_corner_touch_is_clear():
     """R1828, layout-0556: an edge run counts as `core.through` says (R1135, R1164); a zero-length corner touch stays clear (R976, R977)."""
     assert _head_codes(((0, 20), (60, 20))) == ["OVERLAP"]
@@ -211,7 +211,7 @@ def test_a_wire_running_along_a_table_heads_edge_raises_overlap_one_per_wire_and
     assert _head_codes(((0, 30), (20, 30)), ((40, 30), (60, 30))) == []
 
 
-@pytest.mark.rule("TEXT-CANDIDATES")
+@pytest.mark.rule("TAG-CORNERS")
 def test_a_diagonal_wire_through_a_body_a_marker_or_a_text_raises_its_finding():
     """R1828: a diagonal segment is the true segment, not a horizontal at its first y."""
     assert _head_codes(((0, 0), (60, 60))) == ["OVERLAP", "WIRE_NOT_ORTHOGONAL"]

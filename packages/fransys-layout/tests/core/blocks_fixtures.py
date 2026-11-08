@@ -18,7 +18,7 @@ from fransys_layout.core.flow_values import Attach, Block, BlockList, Cell, Colu
 from .pack_fixtures import card as card_sym
 
 AREA = Size(1312, 854)  # a page width of 1280 inside the 16 G margins
-LABEL = Size(16, 8)
+LABEL = {"": Size(16, 8)}
 
 
 def sym(sid: str, group: str | None, unit: str = "", reach: tuple[int, int] | None = None) -> Sym:
@@ -37,7 +37,7 @@ def sym(sid: str, group: str | None, unit: str = "", reach: tuple[int, int] | No
 
 def box_sym(sid: str, group: str | None, pins: int, unit: str = "", north: int = 0) -> Sym:
     """A box with pins p1.. in marking order (the first `north` face north, the rest south)."""
-    return replace(card_sym(sid, pins, north=north), group=group, unit=unit, label=LABEL)
+    return replace(card_sym(sid, pins, north=north), group=group, unit=unit, labels=LABEL)
 
 
 def column(cid: str, *cells: str, pin: tuple[str, str] | None = None) -> Column:

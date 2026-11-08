@@ -15,7 +15,6 @@ from .kit_keys import function_of, held_ports
 from .placement_ids import pin_names, symbol_ids, symbol_key, symbol_of
 from .placement_kit import refuse
 from .placement_spares import spare_leads
-from .placement_where import where_line
 from .symbol_pins import undrawn_pins
 lazy from .kit_keys import PickKey
 
@@ -50,7 +49,6 @@ class Env:
     pins: frozendict[Id[Port], PinRef]
     parents: frozendict[Id[Item], Id[Item]]
     undrawn: frozenset[Id[Port]]
-    where: str
     spare: frozendict[PickKey, str] = frozendict()
     ranks: frozendict[PickKey, int] = frozendict()
 
@@ -82,7 +80,6 @@ def make_env(model: Model, kit: SymbolKit, conventions: Conventions, library: Li
         pins,
         item_parents(model),
         (undrawn_pins(model) - set(pins)) | {p for k in spare for p in held_ports(model, k)},
-        where_line(model, library, len(ids)),
         spare,
         _ranks(model, ids),
     )

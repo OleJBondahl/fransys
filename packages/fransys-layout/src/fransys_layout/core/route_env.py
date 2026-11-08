@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING
 
 from .arrow_reserve import arrow_rows, leg_feet, leg_fit, leg_lines, leg_rows
 from .clearance import Keep, fan_own, pin_points, through_keeps
+from .errors import CoreError
 from .net_keys import net_of_key, port_key
 from .outputs import Marker, Refused, Wire
 from .sides import step_out
@@ -119,9 +120,13 @@ class RouteEnv:
     lost: frozenset[LostKey] = frozenset()
     # the page's reference markers once they stand: a lead runs to the near edge of each one that stands out on its pin's line (MARKER-FREE-SIDE)
     markers: tuple[Marker, ...] = ()
-    # the annexes of the symbols on this page, in the problem's order, and the labels the round before stood (TEXT-CANDIDATES)
+    # the annexes of the symbols on this page, in the problem's order, and the labels the round before stood (TAG-CORNERS)
     annexes: tuple[Annex, ...] = ()
     labels: tuple[AnnexBox, ...] = ()
+    # the runs of a strip on this page, whose tags are among the annexes (STRIP-TAG-ONCE)
+    runs: Mapping[str, tuple[str, Placed]] = field(default_factory=dict)
+    # the anchors' leads on this page, pin to port: wire ink for the label stage only
+    anchor_leads: tuple[Wire, ...] = ()
 
 
 type LostKey = tuple[str, frozenset[PinRef]]
@@ -138,6 +143,15 @@ def pin_point(env: RouteEnv, sym: str, pin: str) -> XY | None:
     if placed is None:
         return None
     return next(((q.x, q.y) for q in placed.pin_xy if q.pin == pin), None)
+
+
+def pin_side(env: RouteEnv, sym: str, pin: str) -> Side:
+    """The one lookup of the side a placed pin faces; a pin `env.sides` lacks raises CoreError."""
+    key = (sym, pin, env.placed[sym].orient)
+    if key not in env.sides:
+        msg = f"the placed pin {sym}.{pin} turned {key[2]} has no side in the symdef layer's table; measure every orientation of every placed pin"
+        raise CoreError(msg)
+    return env.sides[key]
 
 
 def hard_keeps(env: RouteEnv) -> tuple[Keep, ...]:

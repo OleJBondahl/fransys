@@ -5,7 +5,7 @@ Fixed by layout-0120 (owner ruling 2026-10-06), a rail boundary terminal is draw
 from typing import TYPE_CHECKING, Any, NamedTuple
 
 import fransys as fr
-from _drawn_pages import drawn_pages, markers_in, ref_texts
+from _drawn_pages import drawn_pages, markers_in, ref_texts, tag_texts
 
 from fransys_model.layout import DrawingSet, Page, layout_of
 
@@ -71,7 +71,7 @@ def _drawn(model: Any, designation: str) -> list[tuple[Any, ...]]:
     for page, drawing in drawn_pages(model).items():
         if page not in container:
             continue
-        for tag in (t for t in drawing.texts if t.text == designation):
+        for tag in tag_texts(drawing, designation):
             mine = min(
                 drawing.symbols,
                 key=lambda s, tag=tag: abs(s.x - tag.box.x) + abs(s.y - tag.box.y),

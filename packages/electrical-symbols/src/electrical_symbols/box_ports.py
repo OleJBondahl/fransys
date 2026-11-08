@@ -37,6 +37,11 @@ def box_port_marking(name: str) -> str:
     return name.rsplit(".", 1)[-1]
 
 
+def marking_slot(port: str) -> str:
+    """The slot id that prints a port's marking on a box or a drawn symbol: `marking.<port>`."""
+    return f"marking.{port}"
+
+
 def default_sides(count: int) -> tuple[str, ...]:
     """The sides `count` ports take when none are chosen: N, S, N, S, ... in drawing order."""
     return tuple(NORTH if i % 2 == 0 else SOUTH for i in range(count))

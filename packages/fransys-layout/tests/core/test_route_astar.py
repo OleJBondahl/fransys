@@ -7,11 +7,15 @@ from dataclasses import replace
 import pytest
 from options_fixtures import core_options
 
-from fransys_layout.core import Box
+from fransys_layout.core import Box, Side
+from fransys_layout.core.errors import CoreError
 from fransys_layout.core.occupancy import Occupancy
 from fransys_layout.core.outputs import Wire
-from fransys_layout.core.route_astar import Leg, astar, simplify
+from fransys_layout.core.route_astar import Leg, anchor, astar, simplify
 from fransys_layout.core.route_counts import counts
+from fransys_layout.core.route_tree import end_anchors
+
+from .route_fixtures import link_env
 
 STEP = 8
 OPTIONS = core_options()
@@ -192,3 +196,18 @@ def test_at_an_exact_tie_the_path_with_fewer_crossings_wins(goal: tuple[int, int
     path = astar(grid, Leg("n", (0, 2), goal), options)
     assert path is not None
     assert sum(grid.crossing(c, "h", "n") for c in path) == 0
+
+
+@pytest.mark.rule("ROUTING")
+@pytest.mark.parametrize(("side", "last"), [("S", (632, 456)), ("N", (632, 368))])
+def test_a_pin_leaves_through_its_own_side_not_the_nearest_footprint_edge(side: Side, last: tuple[int, int]) -> None:
+    """KI-776: the pin at y 408 stands 32 below the footprint top and 40 above its bottom; an S pin still leaves south."""
+    assert anchor((632, 408), Box(584, 376, 136, 72), STEP, side)[-1] == last
+
+
+def test_a_pin_with_no_side_in_the_table_is_refused() -> None:
+    """The anchor takes its side from `RouteEnv.sides` and falls back on nothing."""
+    env = link_env({"a": (40, 40, "N"), "b": (120, 40, "N")}, {"n": ("a", "b")})
+    assert end_anchors(env, env.cross_links[0])
+    with pytest.raises(CoreError, match="has no side"):
+        end_anchors(replace(env, sides={}), env.cross_links[0])

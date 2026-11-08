@@ -32,12 +32,15 @@ share_penalty = 64
 history_step = 16
 ripup_worst = 3
 recut_rounds = 3
+# digit rises of a where-text page number the recut follows (R1883)
+where_digit_rounds = 2
 # standing labels a blocked label may move to their next free candidates before the recut (R1479)
 label_moves = 2
 route_fallback_rounds = 10
 solve_rounds = 3
-corner_order = ["TL", "BL", "BR", "TR"]
-slack = [0, 8, 16, 24, 32]
+# widen passes before it raises: grants only grow, so a pass past this is a loop (R1981)
+widen_rounds_limit = 50
+corner_order = ["TL", "BL", "TR", "BR"]
 cells = [8, 6]
 label_gap = 8
 open_stub = 0

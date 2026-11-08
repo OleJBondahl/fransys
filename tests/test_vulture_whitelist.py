@@ -61,11 +61,12 @@ _REASONED_ENTRY_RE = re.compile(r"^_\.(\w+)  # (FIELDS|DICT|OTHER|TESTS) (\S+):(
 # rows_device_chains and rows_pin_views fields read by fransys_layout's read package;
 # +2 (TABLE-T2): Footprints no_cells, nc_cells; cleanup lowers;
 # +2 (SHEETS, Ruling 128): SheetKind.BLOCK, LayoutSheet.sheet_kind
+# +2 (BUILD-ROWS, R1940): DrawnRow.height_g, width_g, read by the consumer
 WHITELIST_CEILING = (
     # +1 PageRoutes.dots (P3c, R535); -1 `_.pitch`; +2 PlacedWire.run_a/run_b (layout-0408);
     # -1 shape_key (LINT-ESCAPES-2 P5, its one reader was its test, deleted with it);
     # -6 DS-2 zero-use; -1 R608 band_ranks; +1 SlotSide.C (LAYOUT-LEFTOVERS, KI-034: a deleted TypeVar C had hidden it)
-    111  # FIELDS-1: 107 entries gone (84 no run flags, 23 fields deleted); cleanup lowers
+    113  # FIELDS-1: 107 entries gone (84 no run flags, 23 fields deleted); cleanup lowers
 )
 IGNORE_NAMES_CEILING = 14  # FIELDS-1: the 52 names no per-package vulture run flags are gone
 

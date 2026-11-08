@@ -17,7 +17,7 @@ from .geometry import around, inset, marker_drawn_box, overlaps, shift, union
 from .hang_levels import raised
 from .hangings import hung_keeps
 from .outline import outline_keeps
-from .outputs import Anchored
+from .outputs import Anchored, Wire
 from .values import Box, Finding, PinRef
 
 if TYPE_CHECKING:
@@ -299,3 +299,8 @@ def anchor_misses(
             if hit:
                 out.append((item, hit))
     return tuple(out)
+
+
+def anchor_leads(anchored: Sequence[Anchored]) -> tuple[Wire, ...]:
+    """Each anchor's lead, pin to port, as a straight wire: route geometry the label stage keeps clear of, no obstacle to the router."""
+    return tuple(Wire(o.sym, o.page, o.lead, "straight") for o in anchored)

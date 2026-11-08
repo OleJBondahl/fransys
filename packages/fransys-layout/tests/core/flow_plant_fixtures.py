@@ -11,7 +11,7 @@ from fransys_layout.core.values import Box, BoxSpec, Net, Pin, PlacementProblem,
 
 from .flow_builders import net, problem
 
-LABEL = Size(16, 8)
+LABEL = {"": Size(16, 8)}
 
 
 def _part(

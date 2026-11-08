@@ -7,7 +7,7 @@ from fransys_model.kernel import render_id
 from fransys_model.layout import sheet_format_of
 
 from .placement_anchors import anchors_of
-from .placement_annexes import label_annexes
+from .placement_annexes import label_annexes, wider_annexes
 from .placement_env import make_env
 from .placement_facts import facts_of
 from .placement_hints import hints_of
@@ -15,7 +15,7 @@ from .placement_loose import without_loose
 from .placement_nets import nets_of
 from .placement_options import sheet_area
 from .placement_skips import Skipped, in_order
-from .placement_syms import syms_of
+from .placement_syms import strip_tags, syms_of
 
 if TYPE_CHECKING:
     from electrical_symbols import Library
@@ -40,8 +40,10 @@ def build(model: Model, kit: SymbolKit, conventions: Conventions, library: Libra
     anchors = anchors_of(model, kit, library, conventions.text_height)
     syms, loose_skips = without_loose(env, syms, nets, anchors)
     facts, function_skips = facts_of(env, syms)
-    annexes = label_annexes(syms, conventions.options)
+    tags = strip_tags(env)
+    annexes = label_annexes(syms, conventions.options, "", tags)
     spare = {Skipped("function", render_id(k), why) for k, why in env.spare.items()}
     hints = hints_of(env, syms)
-    problem = PlacementProblem(sheet_area(sheet_format_of(model, None)), syms, nets, facts, hints, anchors, annexes)
+    wider = wider_annexes(syms, conventions.options, "", tags)
+    problem = PlacementProblem(sheet_area(sheet_format_of(model, None)), syms, nets, facts, hints, anchors, annexes, wider)
     return problem, in_order({*net_skips, *function_skips, *loose_skips, *spare})

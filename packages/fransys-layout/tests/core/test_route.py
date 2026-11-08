@@ -16,7 +16,7 @@ from fransys_layout.core.route_counts import collinear, demand
 from .conftest import MARKER
 from .cut_fixtures import elem
 from .cycle_fixtures import ring_problem
-from .pipeline_fixtures import cut_of, placed_of, routed_of
+from .pipeline_fixtures import cut_of, placed_of, routed_of, with_annexes
 from .place_fixtures import card_with_coils, row_group_three
 from .route_fixtures import (
     by_bundle,
@@ -35,7 +35,7 @@ PLANTED = {
     "ring": link_across_box,
     "two-rings": two_links_one_gap,
     "bundles": reversing_pair,
-    "row-group": lambda: row_group_three("g"),
+    "row-group": lambda: with_annexes(row_group_three("g"), core_options(marker=MARKER)),
 }
 
 

@@ -51,10 +51,10 @@ stock = 16
 # C3 (spec CONSOLIDATE; root-0356): `# noqa` codes and `# ty: ignore` rules in packages/*/src. The total is
 # the sum of the per-code table. What is left is kept with a reason on its line (decisions 0111, 0414, 0444, KI-125; KI-044).
 [escape_hatches]
-total = 36
+total = 37
 
 [escape_hatches_codes]
-PLR0913 = 28
+PLR0913 = 29
 ANN401 = 1
 ty-invalid-method-override = 5
 UP037 = 2
@@ -81,7 +81,7 @@ UP037 = 2
 # R1193 LEDGER-INTEGRATION: mcc 0 -> 9, the marker members of drawing_marker_overlap (KI-457)
 # SUPPLY-SLOT (R1619, TEXT-BOX-MEASURED): OVERLAP now sees slot ink, a looks rise: machine_panel 0 -> 2, panel_di16p 0 -> 1
 distribution_board = 0
-machine_panel = 0  # ONE-PAGE (R1830): the wider reserved marker lets the cards clear; measured 0 again with OVERLAP-CHECK (R1828) on the merged tree; was 3 (R1771, KI-688), before that 4 (R1730)
+machine_panel = 1  # KI-761 (looks, designer R1905): the WHERE text of a terminal touches a neighbour's slot text; ONE-PAGE (R1830): the wider reserved marker lets the cards clear; measured 0 again with OVERLAP-CHECK (R1828) on the merged tree; was 3 (R1771, KI-688), before that 4 (R1730)
 mcc = 20  # R1828 OVERLAP-CHECK (looks class, checker-only, owner 10-29 rule): edge runs and diagonals now count, one per member, mcc pages byte-identical to main; was 0, before that 3 (R1730)
 # R1165: R1138 looks trade (OVERLAP -1, WIRE_OVER_MARKER +1)
 panel_di16p = 0  # ONE-PAGE (R1830): as machine_panel; was 3. R1771 (looks class, KI-688): the N5c below-branch card reserve; was 1
@@ -105,9 +105,9 @@ skid = 0
 # R895 (KI-231, batch M lowers): machine_panel 20 -> 22, panel_di16p 9 -> 11: a replica's stub (a cross-document end) stands on a wire and a dot
 [drawing_wire_over_marker]
 # R1193 LEDGER-INTEGRATION: the ledger's leg and PE copy stubs stand where a wire or dot meets their box: distribution_board 0 -> 2, mcc 0 -> 2 (KI-457)
-distribution_board = 6  # R1715 falls, KI-636: was 7
+distribution_board = 5  # R1957 falls, KI-636: was 6 (R1715: was 7)
 machine_panel = 0
-mcc = 10  # R1730 (looks class): the cut flags the handed link it plans a tag for; was 16
+mcc = 9  # R1957 falls, KI-636: was 10; R1730 (looks class): the cut flags the handed link it plans a tag for; was 16
 # R1165: R1138 looks trade (OVERLAP -1, WIRE_OVER_MARKER +1)
 panel_di16p = 0  # R1693 and R1715 (looks falls, KI-636): was 1
 remote_io = 2  # ONE-PAGE (R1830, looks class): the wider reserved marker meets two wires; was 0
@@ -213,6 +213,42 @@ remote_io = 0
 skid = 0
 mcc_small_four_feeders = 0
 
+[drawing_rail_identity_shared]
+# RAIL_IDENTITY_SHARED (READ-RAILS, R1936/R1937): two unbonded nets print one rail identity in a cabinet (KI-764, S1-RAILS); earth-declared PE is one bond class (R1962). Measured 0 at salt "-".
+distribution_board = 0
+machine_panel = 0
+mcc = 0
+panel_di16p = 0
+remote_io = 0
+skid = 0
+
+[drawing_pin_marking_wrong]
+# PIN_MARKING_WRONG (READ-IDENTITY, R1): a symbol prints at a pin a marking other than the model's port_marking. Target 0 everywhere.
+distribution_board = 0
+machine_panel = 0
+mcc = 0
+panel_di16p = 0
+remote_io = 0
+skid = 0
+
+[drawing_dot_on_crossing]
+# DOT_ON_CROSSING (READ-DOT-CROSSING, R5): a junction dot stands where two wires cross. Target 0 everywhere.
+distribution_board = 0
+machine_panel = 0
+mcc = 0
+panel_di16p = 0
+remote_io = 0
+skid = 0
+
+[drawing_wire_over_pin_tip]
+# WIRE_OVER_PIN_TIP (READ-WIRE-OVER-TIP, R7): a wire passes over a pin tip with its interior. Target 0 everywhere.
+distribution_board = 0
+machine_panel = 0
+mcc = 0
+panel_di16p = 0
+remote_io = 0
+skid = 0
+
 # MARKER-FREE-SIDE spec 4.1: drawn pins that also carry a conductor not drawn. The stub of the
 # undrawn conductor goes with the drawn one; MF-WO3 rules on the number (R507, covered by MF-WO3).
 # model-0374 (NF-2): ports.function, items.unit and units.parent filtered out of a table walk where an
@@ -222,7 +258,7 @@ mcc_small_four_feeders = 0
 # (CLOSED at 0 by CORPUS-METRIC, R1132: dots and markers count as placed); bare conductors: see [drawing_connection_not_drawn];
 # lane_end_faults = trunk lane ends past their last tap. Correctness class, target 0 on every seed (piece CORPUS-SEED-DEFECTS).
 mcc_unplaced_symbols = 0
-mcc_lane_end_faults = 5  # R1715 falls, KI-636: was 17; R1684 (looks class, KI-636): 2-point legs whose lane overruns the leg start by one pitch; was 12
+mcc_lane_end_faults = 3  # R1957 falls, KI-636: was 5 (the legged lanes 1 and 2 of the page-3 bundle end at their legs); R1715 falls: was 17; R1684 (looks class, KI-636): 2-point legs whose lane overruns the leg start by one pitch; was 12
 distribution_board_lane_end_faults = 1  # R1800 (PE-EARTH-RATCHETS): falls 2 -> 1 with PE-EARTH-JOIN; R1715 falls, KI-636: was 6; R1684: as mcc; was 4
 
 [table_scans]

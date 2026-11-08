@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 from .keys import natural_key
 from .outputs import Wire
 from .route_astar import Leg, anchor, astar, simplify, tidy
-from .route_env import own_syms, pin_point
+from .route_env import own_syms, pin_point, pin_side
 
 if TYPE_CHECKING:
     from collections.abc import Collection, Sequence
@@ -29,7 +29,7 @@ def end_anchors(env: RouteEnv, link: CrossLink) -> list[tuple[XY, ...]]:
     step = env.options.wiring_grid
     found = [(a, pin) for a in link.ends if (pin := pin_point(env, a.pin.sym, a.pin.pin)) is not None]
     rest = sorted(found[2:], key=lambda e: natural_key(f"{e[0].pin.sym}.{e[0].pin.pin}"))
-    return [anchor(pin, env.placed[a.pin.sym].footprint, step) for a, pin in [*found[:2], *rest]]
+    return [anchor(pin, env.placed[a.pin.sym].footprint, step, pin_side(env, a.pin.sym, a.pin.pin)) for a, pin in [*found[:2], *rest]]
 
 
 def mark_anchors(env: RouteEnv, grid: Occupancy, link: CrossLink) -> None:
@@ -102,7 +102,7 @@ def tree(env: RouteEnv, grid: Occupancy, link: CrossLink, anchors: Sequence[tupl
 def rise_wire(env: RouteEnv, grid: Occupancy, r: Rise) -> Wire | None:
     """A rise to its trunk cell, the grid point nearest its target, then along the line to it; None when A* finds no path."""
     step = env.options.wiring_grid
-    pin = anchor(r.start, env.placed[r.pin.sym].footprint, step)
+    pin = anchor(r.start, env.placed[r.pin.sym].footprint, step, pin_side(env, r.pin.sym, r.pin.pin))
     start, goal = _cell(pin[-1], step), _cell((r.target[0] + step // 2, r.target[1] + step // 2), step)
     leg = Leg(r.net, start, goal, frozenset((start, goal)), own=own_syms(env, r.net, r.net))
     path = astar(grid, leg, env.options)

@@ -15,7 +15,7 @@ from symdef import (
 )
 from symdef import text_width as symdef_text_width
 
-from electrical_symbols.box_ports import G_PER_MODULE, GENERIC_BOX_KEY, box_port_marking
+from electrical_symbols.box_ports import G_PER_MODULE, GENERIC_BOX_KEY, box_port_marking, marking_slot
 from electrical_symbols.generic_box import generic_box
 
 if TYPE_CHECKING:
@@ -116,7 +116,7 @@ def drawn_slots(key: str, texts: Sequence[Sequence[str]]) -> dict[str, str]:
     if not texts:
         return {}
     if key == GENERIC_BOX_KEY:
-        return {f"marking.{row[0]}": box_port_marking(row[0]) for row in texts}
+        return {marking_slot(row[0]): box_port_marking(row[0]) for row in texts}
     head, *rows = texts
     found = _head_texts(key, head)
     for k, row in enumerate(rows, 1):

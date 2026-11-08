@@ -16,11 +16,15 @@ if TYPE_CHECKING:
 
 
 class Limits(NamedTuple):
-    """The hard limits of a marker box: the page `area` less a `margin` each side (OUT_OF_PAGE's `inside`) and the y-`band` of its row (R1333)."""
+    """The hard limits of a marker box: the page `area` less a `margin` each side (OUT_OF_PAGE's `inside`) and the y-`band` of its row (R1333).
+
+    `drawn` is the box a tag stretches to (R543); the page test reads it as well.
+    """
 
     area: Size
     band: tuple[int, int] | None = None
     margin: tuple[int, int] = (0, 0)
+    drawn: Box | None = None
 
 
 def _within(box: Box, limits: Limits) -> bool:
@@ -37,11 +41,11 @@ def fit(
     limits: Limits | None,
     origin: tuple[int, int] | None = None,
 ) -> tuple[Keep, ...] | None:
-    """None when `box` leaves the `limits`; else the keeps it hits, `()` when it fits.
+    """None when `box`, or the `limits.drawn` box it stretches to (R543, OUT_OF_PAGE), leaves the `limits`; else the keeps it hits, `()` when it fits.
 
     Keeps owned by `own` are skipped; a wire with an end at `origin` is the marker's own.
     """
-    if limits and not _within(box, limits):
+    if limits and (not _within(box, limits) or (limits.drawn is not None and not inside(limits.drawn, limits.area))):
         return None
     return clear(box, keeps, {}, own=frozenset(own)) if origin is None else blocked(box, keeps, frozenset(own), origin)
 

@@ -40,7 +40,7 @@ def place_pages(
         env = refolded(page, x)
         y, dropped = place_y(env, x)
         stages.append((env, x, y))
-        pages.append(assemble(env, x, y))
+        pages.append(assemble(env, x, y, {f.subject for f in dropped}))
         findings.extend((*wide, *dropped))
     placement = Placement(tuple(settled(stages, pages)))
     outlines, room = unit_hulls(placement, problem, options)

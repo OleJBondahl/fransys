@@ -8,9 +8,10 @@ import math
 from dataclasses import replace
 from typing import TYPE_CHECKING
 
-from symdef import text_divisions
+from symdef import from_divisions, text_divisions, text_footprint
 from symdef import text_width as symdef_text_width
 
+from fransys_layout.core.values import Size
 from fransys_model.derive.print_sizes import TextRole, role_height_mm
 
 if TYPE_CHECKING:
@@ -21,12 +22,29 @@ if TYPE_CHECKING:
 
     from .shape import SymbolLibrary
 
-__all__ = ("text_room_on", "text_width_g")
+__all__ = ("label_sizes", "line_pitch", "text_room_on", "text_width_g")
 
 
 def text_width_g(font: FontMetrics | None, text: str, *, height: int) -> int:
     """Width of `text` set `height` grid units high in `font`, rounded up to the grid."""
     return math.ceil(round(symdef_text_width(font, text, height), 9))
+
+
+def _footprint(library: SymbolLibrary, text: str, text_height: int) -> Size:
+    """The ink `text` draws at `text_height` grid units, upright, from symdef's `text_footprint`."""
+    font = library.font
+    cap = from_divisions(library.grid, text_height) * (font.cap_height / font.units_per_em if font else 1.0) * library.grid.module_mm
+    return Size(*text_footprint(font, text, cap, library.grid))
+
+
+def label_sizes(library: SymbolLibrary, text: str, text_height: int) -> Size:
+    """The ink `text` (one or more lines) draws at `text_height` grid units, upright."""
+    return _footprint(library, text, text_height)
+
+
+def line_pitch(library: SymbolLibrary, text_height: int) -> int:
+    """The grid units one more line adds to a block of text at `text_height`: symdef's own block height of two lines less one."""
+    return _footprint(library, "x\nx", text_height).h - _footprint(library, "x", text_height).h
 
 
 def text_room_on(model: Model, sheet: SheetFormat, library: SymbolLibrary) -> int:

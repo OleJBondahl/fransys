@@ -7,6 +7,7 @@ the symbol's port.
 
 from typing import TYPE_CHECKING
 
+from electrical_symbols import marking_slot
 from fransys_layout.drawing import DrawnSymbol, DrawnWire
 from fransys_layout.symbols import library_symbol
 from fransys_model.derive import port_power_text
@@ -31,7 +32,7 @@ def _supply_text(model: Model, r: PowerSymbol, library: Library) -> tuple[tuple[
     """(`marking.<its port>`, the rail's text) when the net prints one and the symbol declares that slot (G08-POWER)."""
     text = port_power_text(model, r.port)
     symbol = library_symbol(library, r.symbol)
-    named = {f"marking.{port.id}" for port in symbol.ports}
+    named = {marking_slot(port.id) for port in symbol.ports}
     return tuple((slot.id, text) for slot in symbol.slots if slot.id in named) if text else ()
 
 

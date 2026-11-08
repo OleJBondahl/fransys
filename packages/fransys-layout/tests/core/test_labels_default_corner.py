@@ -1,7 +1,7 @@
 """The default designation corner is top left, a gap from the wire, inside the content box.
 
 Owner 2026-10-18: "stanard position is top left corner, above the box, some distance from the
-wire", for all symbols. The other three corners are fallbacks in the order BL, BR, TR.
+wire", for all symbols. The other three corners are fallbacks in the order BL, TR, BR.
 """
 
 from __future__ import annotations
@@ -26,7 +26,7 @@ def test_the_default_corner_is_top_left_above_the_body() -> None:
 
 def test_a_wire_within_the_gap_moves_the_label_to_a_fallback_corner() -> None:
     wire = Wire("n1", 1, ((96, 64), (96, 80)), "straight")  # beside the TL box, 0 apart
-    label, _ = _corner(on_page((("S1", 88, 96),), wires=(wire,)), slack=(0,))
+    label, _ = _corner(on_page((("S1", 88, 96),), wires=(wire,)))
     assert label.spot == "BL"
 
 
@@ -54,7 +54,8 @@ def test_a_spot_with_only_a_near_wire_places_the_label_and_one_under_a_wire_refu
     """R1118: a wire inside label_gap that does not touch is soft, so the only spot places; a wire through it is hard."""
     near = Wire("n1", 1, ((100, 64), (100, 80)), "straight")  # 4 from the TL box, inside the gap of 8
     through = Wire("n1", 1, ((90, 64), (90, 80)), "straight")
-    soft, found = _corner(on_page((("S1", 88, 96),), wires=(near,)), corner_order=("TL",), slack=(0,))
+    side = Wire("n2", 1, ((76, 72), (76, 112)), "straight")  # walls the turned rungs left of the body (R1849), so only the upright spot is left
+    soft, found = _corner(on_page((("S1", 88, 96),), wires=(near, side)), corner_order=("TL",))
     assert (soft.spot, soft.box, found) == ("TL", Box(80, 72, 16, 8), ())
-    _, found = _corner(on_page((("S1", 88, 96),), wires=(through,)), corner_order=("TL",), slack=(0,))
+    _, found = _corner(on_page((("S1", 88, 96),), wires=(through, side)), corner_order=("TL",))
     assert {f.code for f in found} == {"ANNEX_UNPLACED"}

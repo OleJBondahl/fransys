@@ -228,6 +228,17 @@ def _lane_stand(env: MarkEnv, t: Trunk, key: tuple[PinRef, str], index: int) -> 
     return replace(abut(env.options, side, x1 if side == "E" else x0, y, key), walked=True, stood=stood[side == "E"])
 
 
+def _own_lane_stand(env: MarkEnv, ref: Ref, end: RefEnd, trunk: Trunk, key: tuple[PinRef, str]) -> Stand:
+    """A bundled stub with no leg line stands at the end of its own pole's lane (R1938); a pole with no lane end is an error."""
+    fan = env.fans[next(f.id for f in env.fans.values() if ref.net in f.nets)]
+    pole = pole_of(fan, key[0])
+    if not trunk.lane_ends[pole]:
+        msg = f"marks: {who(ref)} page {end.page}: pole {pole} of the bundle has no lane end for the stub at {key[0].sym}.{key[0].pin}; "
+        msg += "give the pole a pin on this page"
+        raise CoreError(msg)
+    return _lane_stand(env, trunk, key, 0)
+
+
 def _trunk_end_stand(env: MarkEnv, trunk: Trunk, key: tuple[PinRef, str]) -> Stand:
     """The stand at the first `arrow_sides` end of the trunk: its lane end was walked clear at placement (R1331)."""
     side = env.options.arrow_sides[0]
@@ -256,14 +267,11 @@ def pinned_stand(env: MarkEnv, ref: Ref, end: RefEnd) -> Stand:
     match end.stand:
         case StandClass.LEG if end.row is not None and end.pin in env.legs.get(end.page, {}):
             return leg_stand(env, ref, end, end.row)
-        case StandClass.TRUNK_END if (
-            bundled and (trunk := next(iter(env.trunks.get((end.page, fan), ())), None)) is not None and end.pin not in env.leads
-        ):
-            return _lane_stand(env, trunk, (end.pin, str(kind_of(ref))), 0)
         case StandClass.LEG | StandClass.TRUNK_END if (
             trunk := next(iter(env.trunks.get((end.page, fan), ())), None)
         ) is not None and end.pin not in env.leads:
-            return _trunk_end_stand(env, trunk, (end.pin, str(kind_of(ref))))
+            key = (end.pin, str(kind_of(ref)))
+            return _own_lane_stand(env, ref, end, trunk, key) if bundled else _trunk_end_stand(env, trunk, key)
     return pin_stand(env, end.pin, end.page, ref)
 
 

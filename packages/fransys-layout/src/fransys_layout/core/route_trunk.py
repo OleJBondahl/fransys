@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections import Counter
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
@@ -190,6 +191,14 @@ def _leg_wires(env: RouteEnv, line: Line) -> tuple[Wire, ...]:
     )
 
 
+def _lone_lanes(trunk: Trunk, placed: Sequence[Held]) -> frozenset[int]:
+    """Lanes with one tap on this row and no length while another lane is drawn: its drop joins nothing (BUNDLE-LANE-END)."""
+    if len(trunk.lane_ends) <= 1 or not any(e and e[0] != e[1] for e in trunk.lane_ends):
+        return frozenset()  # one tap on the page: a TRUNK_END copy stands where its drop ends
+    taps = Counter(a.pole for a, _ in placed)
+    return frozenset(j for j, e in enumerate(trunk.lane_ends) if taps[j] == 1 and e is not None and e[0] == e[1])
+
+
 def trunk_wires(env: RouteEnv, trunk: Trunk) -> Drawn:
     """The trunk line, one drop per attachment on its row; a bundle's lane j drops from line j.
 
@@ -204,10 +213,11 @@ def trunk_wires(env: RouteEnv, trunk: Trunk) -> Drawn:
     out = Drawn(wires=_trunk_line(line) + _leg_wires(env, line))
     permuted = dict(fan.crossed) if fan.lanes > 1 else {}
     held: dict[tuple[str, bool], list[Held]] = {}
-    for a, xy in _placed_attachments(env, line, env.bands[trunk.row]):
+    lone = _lone_lanes(trunk, placed := _placed_attachments(env, line, env.bands[trunk.row]))
+    for a, xy in placed:
         if a.pin.sym in permuted:
             held.setdefault((a.pin.sym, xy[1] < trunk.y), []).append((a, xy))
-        else:
+        elif a.pole not in lone:
             out += drop_or_rise(env, line, a, xy, a.pole)
     for (sym, above), atts in sorted(held.items()):
         out += crossed_drops(env, Crossed(line, permuted[sym], above), atts)

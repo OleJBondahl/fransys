@@ -9,7 +9,9 @@ from _model_build_cover import unit_document
 from conventions_fixtures import house
 from fransys.colours import BN
 from fransys_el import build, symbol_kit
+from fransys_el.placement_env import make_env
 from fransys_el.placement_sets import drawing_scopes, restriction, scope_groups
+from fransys_el.placement_syms import strip_tags
 
 from electrical_symbols import LIBRARY
 from fransys_layout.core import PagePlan
@@ -65,16 +67,17 @@ def test_the_scope_of_the_device_holds_a_replica_and_the_scope_of_the_strip_hold
 def test_the_net_is_whole_in_the_set_that_draws_the_copy_and_cut_where_one_pin_is_left(drawn) -> None:
     model, kit, problem = drawn
     scopes = drawing_scopes(model, kit)
+    tags = strip_tags(make_env(model, kit, house(), LIBRARY))
     (copied,) = (s for s in scopes if s.replicas)
-    made = restriction(problem, copied, scopes=scopes)
+    made = restriction(problem, copied, scopes=scopes, options=house().options, tags=tags)
     assert all(n.cut == () for n in made.problem.nets if {p.sym for p in n.pins} & copied.replicas)
-    units = {s.id: (s.unit, s.label) for s in problem.symbols}
+    units = {s.id: (s.unit, s.labels) for s in problem.symbols}
     mine = [s for s in made.problem.symbols if s.id in copied.replicas]
     assert mine
-    assert all(s.unit == ("" if copied.of_unit is None else copied.of_unit.value) and s.label == units[s.id][1] for s in mine)
+    assert all(s.unit == ("" if copied.of_unit is None else copied.of_unit.value) and s.labels == units[s.id][1] for s in mine)
     assert all(units[s.id][0] != s.unit for s in mine)  # the replica leaves its home unit, keeps its printed label
     home = next(s for s in scopes if s is not copied and s.symbols & copied.replicas)
-    alone = restriction(problem, home, scopes=scopes)
+    alone = restriction(problem, home, scopes=scopes, options=house().options, tags=tags)
     lone = [n for n in alone.problem.nets if len(n.pins) == 1 and n.pins[0].sym in copied.replicas]
     assert lone
     assert all(n.cut for n in lone)

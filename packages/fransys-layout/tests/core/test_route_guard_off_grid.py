@@ -8,7 +8,9 @@ from __future__ import annotations
 
 from dataclasses import replace
 
-from fransys_layout.core import Box, PinRef
+import pytest
+
+from fransys_layout.core import Box, CoreError, PinRef
 from fransys_layout.core.occupancy import Occupancy
 from fransys_layout.core.outputs import PinXY, Placed, Wire
 from fransys_layout.core.route_env import Drawn, RouteEnv
@@ -30,7 +32,8 @@ def _env_and_grid() -> tuple[RouteEnv, Occupancy, tuple[Box, Box]]:
         "long": (PinRef("B", "1"), PinRef("P", "in")),
         "short": (PinRef("B", "2"), PinRef("P", "out")),
     }
-    env = replace(env, placed=placed, net_pins=pins)
+    sides = {("B", "1", "R0"): "N", ("B", "2", "R0"): "S", ("P", "in", "R180"): "S", ("P", "out", "R180"): "N"}
+    env = replace(env, placed=placed, net_pins=pins, sides=sides)
     grid = Occupancy(100, 40, 8)
     for p in placed.values():
         grid.mark_box(p.footprint)
@@ -74,3 +77,10 @@ def test_an_anchored_end_is_refused_on_a_blocked_port_end_and_accepted_off_it() 
     assert _reach(blocked, end, toward) is None
     elsewhere = replace(env, blocked_ends={"other": ((out[-1][0] + 80, out[-1][1]),)})
     assert _reach(elsewhere, end, toward) == out
+
+
+def test_a_wire_end_inside_a_body_and_at_no_pin_is_a_core_error_and_a_free_end_is_not() -> None:
+    env, _, _ = _env_and_grid()
+    with pytest.raises(CoreError, match=r"inside the body of B"):
+        _reach(env, (X, 112), (X, 168))
+    assert _reach(env, (X, 60), (X, 168)) is None

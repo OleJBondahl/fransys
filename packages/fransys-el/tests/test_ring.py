@@ -83,7 +83,7 @@ def _flips_and_score(model: Any) -> tuple[int, Any, list[str]]:
     ("name", "model", "crossings", "pages"),
     [
         ("bank8", lambda: bank_model(8), 0, 1),
-        # TEXT-CANDIDATES: the tag of terminal 1 stands first; the wire round it has no room: one reference (looks)
+        # TAG-CORNERS: the tag of terminal 1 stands first; the wire round it has no room: one reference (looks)
         ("channels8", lambda: channels_model(8), 0, 1),
         ("bank16", lambda: bank_model(16), 24, 1),  # R745: ROW-SPREAD 21 -> 24, Covered by: RT3-FOLLOW
     ],
@@ -95,7 +95,9 @@ def test_a_pin_is_drawn_on_the_edge_its_column_hangs_from_so_no_column_flips(nam
     footprint edges, bank16 crosses 21 (R549, R664).
     """
     flips, score, missing = _flips_and_score(model())
-    assert len(missing) == (name == "channels8"), f"{name}: only channels8 draws a net as a reference for want of a route (looks)"
+    assert len(missing) == 2 * (name == "channels8"), (
+        f"{name}: only channels8 draws nets as a reference for want of a route (looks; STRIP-TAG-ONCE: 1 to 2)"
+    )
     assert (flips, score.pages) == (0, pages)
     assert crossings >= score.X, f"{name}: bank16 is 21 with every net drawn (R664); its old 11 had the X1:1 feed net missing"
 

@@ -199,7 +199,7 @@ def test_options_defaults_follow_the_design_with_e4():
 
 def test_c3_contract_shape():
     names = {c.__name__: {f.name for f in dataclasses.fields(c)} for c in CLASSES}
-    assert {"label"} <= names["Sym"]
+    assert {"labels"} <= names["Sym"]
     assert not {"text", "text_w", "table_rows", "table"} & names["Sym"]
     assert "row_tags" not in names["Facts"]
     assert "keep_whole" in names["Facts"]

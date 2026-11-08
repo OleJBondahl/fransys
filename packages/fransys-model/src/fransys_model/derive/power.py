@@ -2,6 +2,8 @@
 
 from fransys_model.derive.facts.closure import net_of, physical_nets
 from fransys_model.derive.facts.potentials import pe_firsts, physical_potentials
+from fransys_model.derive.facts.protected import protected_by
+from fransys_model.derive.facts.unit_index import item_unit
 from fransys_model.elecdef import Current
 from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, digest_cached
 from fransys_model.vocab import Item, Net, Port, PowerKind
@@ -10,6 +12,7 @@ from fransys_model.vocab.tables import nets, rail_groups, supply_of_potential
 from .facts.net_facts import net_potential
 from .lookups import item_of_port
 from .order import NaturalKey, natural_key
+from .tag_text import item_tag_text
 
 _WIRE_PORTS = 2  # a physical net of this many ports is one wire, not a rail
 
@@ -73,12 +76,16 @@ def power_text(model: Model, net: Id[Net]) -> str | None:
     """The text a power symbol of declared `net` prints, or `None` when it prints none.
 
     Only `SUPPLY` prints: `Net.name`, else `Net.potential` (which carries the sign of a negative
-    rail, `-15V`). `GROUND`, `PE` and `NONE` print none.
+    rail, `-15V`). A net behind a protective device adds the tag of the nearest one, `24V -F2`
+    (`protected_by`, G08-POWER). `GROUND`, `PE` and `NONE` print none.
     """
     if power_kind(model, net) is not PowerKind.SUPPLY:
         return None
     declared = nets(model)[net]
-    return declared.name if declared.name is not None else net_potential(model, net)
+    name = declared.name if declared.name is not None else net_potential(model, net)
+    physical = net_of(model, declared.ports[0])
+    device = None if name is None or physical is None else protected_by(model).get(physical.ports[0])
+    return name if device is None else f"{name} {item_tag_text(model, device, unit=item_unit(model, device))}"
 
 
 def _text_order(model: Model, net: Net) -> tuple[NaturalKey, Id[Net]]:

@@ -35,6 +35,7 @@ from fransys_layout.core.outputs import (
     Placement,
     Refused,
     Routes,
+    RowMeasure,
     Scene,
     SceneBox,
     SceneLabel,
@@ -42,6 +43,7 @@ from fransys_layout.core.outputs import (
     ScenePin,
     SceneWire,
     Score,
+    StripRun,
     Trunk,
     Wire,
 )
@@ -82,7 +84,7 @@ def problem() -> PlacementProblem:
         id="K1",
         group="G1",
         unit="U1",
-        label=Size(24, 8),
+        labels={"": Size(24, 8)},
         pins=pins,
         nodes=(("1",), ("2",)),
         views=views_of(BOX, BOX, BOX, pins, ("R0", "R180"), row_footprint=row_footprint),
@@ -92,6 +94,7 @@ def problem() -> PlacementProblem:
         item="I1",
         child_of="K0",
         rank=3,
+        wider=({"": Size(10, 8)},),
     )
     plain = dataclasses.replace(
         box_sym,
@@ -133,7 +136,8 @@ def problem() -> PlacementProblem:
             order_pairs=(("K1", "K2"),),
             frames=(("u", frozenset({"K1"})),),
         ),
-        annexes=(Annex("K1", Size(16, 8), "tags", {"R0": (Spot("TL", "TL", 0, -8, "up", 8),)}),),
+        annexes=(Annex("K1", Size(16, 8), "tags", {"R0": (Spot("TL", "TL", 0, -8, "up", 8, turned=True),)}, Size(8, 16)),),
+        wider=((Annex("K1", Size(20, 8), "tags", {"R0": ()}, Size(8, 20)),),),
     )
 
 
@@ -154,6 +158,7 @@ def layout() -> CoreLayout:
                     ((0, 64),),
                     {"C1": (0, 64)},
                     {"K1": (BOX,)},
+                    (StripRun("RG", ("K1",), "RG run at K1"),),
                 ),
             ),
             (Finding("PAGE_OVERFLOW", "too tall", 1, "K1"),),
@@ -167,15 +172,15 @@ def layout() -> CoreLayout:
                     (Demand("g1", 2),),
                     Counts(0, 1, 2, 8),
                     (Junction("N1", 1, 8, 0),),
-                    (AnnexBox("K1", 1, BOX, "TL"),),
-                    (Demand("g1", 5),),
+                    (AnnexBox("K1", 1, BOX, "TL", turned=True),),
+                    (Demand("g1", 5, 16, "K1", box=Box(0, -16, 8, 8), side="S"),),
                 ),
             ),
             (Refused("N2", (PinRef("K1", "1"), PinRef("K2", "1"))),),
             (Finding("WIRE_THROUGH_BODY", "N2"),),
         ),
         annotations=Annotations(
-            (AnnexBox("K1", 1, BOX, "TL"),),
+            (AnnexBox("K1", 1, BOX, "TL", turned=True),),
             (
                 OutMarker(
                     "N1",
@@ -200,6 +205,7 @@ def layout() -> CoreLayout:
         findings=(Finding("LANE_TURNED", "turned", 1, "K1"),),
         drawn=frozenset({(PinRef("K1", "1"), PinRef("K2", "1"))}),
         wired=frozenset({(PinRef("K1", "1"), "N1")}),
+        rows=(RowMeasure(1, 0, ("K1",), 64, 48, values.RowTerm.STUB, 64),),
     )
 
 

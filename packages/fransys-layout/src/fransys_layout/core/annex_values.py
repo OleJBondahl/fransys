@@ -22,7 +22,7 @@ class Spot:
 
     `corner` is the body corner the offsets count from (R353). A stack grows by the box heights
     before it: `down` adds them to y, `up` takes them off. `clear` is the distance the box keeps
-    beside the wire of the pins on the body edge it stands on; 0 keeps none.
+    beside the wire of the pins on the body edge it stands on; 0 keeps none. `turned` is a box that reads bottom-up: it takes `Annex.turned`'s size.
     """
 
     name: str
@@ -31,23 +31,26 @@ class Spot:
     dy: int
     grow: Literal["down", "up"]
     clear: int = 0
+    turned: bool = False
 
 
 @dataclass(frozen=True, slots=True)
 class Annex:
-    """A box of `size` that stands at one of `spots` of its owner, by the owner's turn."""
+    """A box of `size` that stands at one of `spots` of its owner, by the owner's turn; a turned spot takes the measured `turned` size."""
 
     owner: str
     size: Size
     stack: str | None
     spots: Mapping[Orientation, tuple[Spot, ...]]
+    turned: Size | None = None
 
 
 @dataclass(frozen=True, slots=True)
 class AnnexBox:
-    """An annex placed: its owner, page, absolute box and the spot it stands at."""
+    """An annex placed: its owner, page, absolute box, the spot it stands at and whether the box is turned."""
 
     owner: str
     page: int
     box: Box
     spot: str
+    turned: bool = False

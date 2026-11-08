@@ -1,8 +1,9 @@
-"""DRAWING_SHORTS_NETS, MISSING_JUNCTION_DOT and ROUTE_WRONG_PORT over the drawn netlist.
+"""DRAWING_SHORTS_NETS, MISSING_JUNCTION_DOT, DOT_ON_CROSSING, WIRE_OVER_PIN_TIP and ROUTE_WRONG_PORT over the drawn netlist.
 
 A piece of the drawings that holds ports of two physical nets is a short, unless a bundle trunk
 carries it. A wire that ends on another wire with no dot is a short when the two hold different
-nets, else a missing dot. A one-lane wire ends on ports of two nets: a wrong port.
+nets, else a missing dot; so is any end or vertex of three or more ink directions with no dot and no pin.
+A dot on a crossing and a wire over a pin tip are wrong. A one-lane wire ends on ports of two nets: a wrong port.
 """
 
 from collections import defaultdict
@@ -11,24 +12,25 @@ from typing import TYPE_CHECKING
 from .drawn_finding import drawn_finding
 
 if TYPE_CHECKING:
-    from fransys_model.kernel import Finding, Id, Model
+    from fransys_model.kernel import Finding, Id
     from fransys_model.layout import Page
     from fransys_model.vocab import Port
 
     from .drawn_netlist import Netlist
 
-__all__ = ["short_findings", "wrong_port_findings"]
+__all__ = ["ink_findings", "short_findings", "wrong_port_findings"]
 
 XY = tuple[int, int]
+_BARE = "three or more ink directions meet with no junction dot and no pin"
 
 
-def _piece_nets(model: Model, net: Netlist) -> dict[object, dict[str, Id[Port]]]:
+def _piece_nets(net: Netlist) -> dict[object, dict[str, Id[Port]]]:
     """For each piece, its reached ports' nets, each with one port of it."""
     found: dict[object, dict[str, Id[Port]]] = defaultdict(dict)
     for port in net.placed:
         if net.reached(port):
             for root in net.roots(port):
-                found[root].setdefault(net.net(model, port), net.ids[port])
+                found[root].setdefault(net.net(port), net.ids[port])
     return found
 
 
@@ -51,9 +53,9 @@ def _tee_finding(page: Id[Page], at: XY, here: dict[str, Id[Port]], there: dict[
     return drawn_finding("MISSING_JUNCTION_DOT", (page,), where)
 
 
-def short_findings(model: Model, net: Netlist) -> tuple[Finding, ...]:
+def short_findings(net: Netlist) -> tuple[Finding, ...]:
     """DRAWING_SHORTS_NETS per piece with two nets; each dotless T is a short or a missing dot."""
-    nets = _piece_nets(model, net)
+    nets = _piece_nets(net)
     roots = _wire_roots(net)
     found = [drawn_finding("DRAWING_SHORTS_NETS", tuple(held.values()), f"{len(held)} nets in one piece") for held in nets.values() if len(held) > 1]
     for page, part in net.pages.items():
@@ -64,17 +66,29 @@ def short_findings(model: Model, net: Netlist) -> tuple[Finding, ...]:
     return tuple(found)
 
 
+def ink_findings(net: Netlist) -> tuple[Finding, ...]:
+    """MISSING_JUNCTION_DOT per bare joint a dotless T does not name, DOT_ON_CROSSING and WIRE_OVER_PIN_TIP."""
+    found: list[Finding] = []
+    for page, part in net.pages.items():
+        graph = part.graph
+        tees = {at for at, _, _ in graph.tees}
+        found += [drawn_finding("MISSING_JUNCTION_DOT", (page,), f"{_BARE} at {at}") for at in graph.bare_joints if at not in tees]
+        found += [drawn_finding("DOT_ON_CROSSING", (page,), f"a junction dot at {at} stands where two wires cross") for at in graph.dot_crossings]
+        found += [drawn_finding("WIRE_OVER_PIN_TIP", (page,), f"wire {i} passes over the pin tip at {at}") for at, i in graph.over_tips]
+    return tuple(found)
+
+
 def _ends_at(part_ports: dict[str, XY], at: XY) -> list[str]:
     return [port for port, point in part_ports.items() if point == at]
 
 
-def wrong_port_findings(model: Model, net: Netlist) -> tuple[Finding, ...]:
+def wrong_port_findings(net: Netlist) -> tuple[Finding, ...]:
     """ROUTE_WRONG_PORT per wire whose two ends stand on ports of different nets."""
     found = []
     for part in net.pages.values():
         for wire in part.drawing.wires:
-            first = {net.net(model, p): p for p in _ends_at(part.ports, wire.points[0])}
-            last = {net.net(model, p): p for p in _ends_at(part.ports, wire.points[-1])}
+            first = {net.net(p): p for p in _ends_at(part.ports, wire.points[0])}
+            last = {net.net(p): p for p in _ends_at(part.ports, wire.points[-1])}
             if first and last and not first.keys() & last.keys():
                 ids = [net.ids[next(iter(m.values()))] for m in (first, last)]
                 found.append(drawn_finding("ROUTE_WRONG_PORT", ids, f"a wire joins ports of {len(ids)} nets"))

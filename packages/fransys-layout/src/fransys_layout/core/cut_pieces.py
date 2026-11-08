@@ -16,7 +16,7 @@ from .values import PinRef, RefKind
 if TYPE_CHECKING:
     from collections.abc import Collection, Hashable, Iterable, Mapping, Sequence
 
-    from .flow_values import Attach, Cell, FlowGraph
+    from .flow_values import Attach, Cell, Fan, FlowGraph
     from .values import Ref
 
 __all__ = ("components", "hole_pin", "join", "joined", "key", "pairs", "split", "trunked")
@@ -53,9 +53,17 @@ def components(group: Sequence[PinRef], where: Mapping[str, Hashable], piece: Un
     return parts
 
 
-def pairs(refs: Sequence[Ref]) -> set[Pair]:
-    """The pairs a planned arrow or tag joins: its ends, two by two. A stub or copy joins nothing (CL1, R1133)."""
-    return {pair for r in refs if r.kind in {RefKind.TAG, RefKind.ARROW} for pair in permutations([e.pin for e in r.ends if e.pin], 2)}
+def pairs(refs: Sequence[Ref], net_of: Mapping[PinRef, str]) -> set[Pair]:
+    """The pairs a planned arrow or tag joins: its ends, two by two, and each lane an end stands for (`also`) to its own net's pin at the other end.
+
+    A stub or copy joins nothing (CL1, R1133).
+    """
+    out: set[Pair] = set()
+    for r in refs:
+        if r.kind in {RefKind.TAG, RefKind.ARROW}:
+            out.update(permutations([e.pin for e in r.ends if e.pin], 2))
+            out.update((p, q) for a, b in permutations(r.ends, 2) for p in a.also for q in b.also if p in net_of and net_of[p] == net_of.get(q))
+    return out
 
 
 def _sides(attached: Iterable[Attach], where: Mapping[str, int]) -> list[list[PinRef]]:
@@ -67,13 +75,18 @@ def _sides(attached: Iterable[Attach], where: Mapping[str, int]) -> list[list[Pi
     return list(by_page.values())
 
 
+def _ties(fan: Fan) -> tuple[str | None, ...]:
+    """The nets one trunk wire ties: each lane of a bundle is its own net's wire; a plain or crossed fan's one wire ties all (CL1)."""
+    return fan.nets if fan.lanes > 1 and not fan.crossed else (None,)
+
+
 def trunked(flow: FlowGraph, where: Mapping[str, int], net_of: Mapping[PinRef, str]) -> set[Pair]:
     """The pairs one page's wire joins besides the ink: a fan's attachments share its trunk, a routed link's ends its wire, a lane its cells.
 
     A column's lane passes its net from cell to cell: through a cell whose two pins are on one net, and by the lane wire between
     consecutive cells (route_wires `_lane`).
     """
-    sides = [s for fan in flow.fans for s in _sides((*fan.drivers, *fan.legs), where)]
+    sides = [s for fan in flow.fans for net in _ties(fan) for s in _sides([a for a in (*fan.drivers, *fan.legs) if net in (None, a.net)], where)]
     sides += [s for link in flow.cross_links if not link.tagged for s in _sides(link.ends, where)]
     sides += [s for col in flow.columns if col.id in where for lane in col.lanes for s in _laned(lane.cells, net_of)]
     return {pair for side in sides for pair in permutations(side, 2)}

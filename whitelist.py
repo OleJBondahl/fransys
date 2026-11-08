@@ -119,6 +119,7 @@ _.terminal_strip  # TESTS fransys-author/tests/surface/test_terminal_strip.py:18
 # KI-049: read only by another package (fransys and fransys_render), so the layout package's vulture run needs them.
 _.sheet_places  # OTHER fransys/src/fransys/_layout_need.py:72
 _.at_sheet  # OTHER fransys-render/src/fransys_render/diagram.py:36
+_.where_digit_rounds  # OTHER fransys-el/src/fransys_el/placement_syms.py:94
 
 # PlacedWire.run_a/run_b (layout-0408): read only by fransys_render.cables, which draws them.
 _.run_a  # FIELDS fransys-layout/src/fransys_layout/engines/cable/values.py:147
@@ -254,6 +255,8 @@ _.dash_mm  # TESTS fransys-layout/tests/test_drawing.py:45
 _.tints  # TESTS fransys-layout/tests/test_drawing.py:44
 _.line_rule_mm  # TESTS fransys-layout/tests/test_drawing.py:50
 _.library_version  # FIELDS fransys-layout/src/fransys_layout/drawing.py:132
+_.height_g  # TESTS fransys-el/tests/test_write.py:237
+_.width_g  # TESTS fransys-el/tests/test_write.py:237
 _.width_mm  # TESTS fransys-el/tests/test_style.py:39
 _.height_mm  # OTHER fransys-render/src/fransys_render/draw.py:67
 _.W  # OTHER fransys/src/fransys/_link_boxes.py:18
@@ -299,3 +302,7 @@ _.dots  # OTHER fransys-el/src/fransys_el/draw_symbols.py:77
 # F8 (2026-10-02): data-only record fields, no reader yet (model-0125); renamed by model-0381
 _.nominal_power  # FIELDS fransys-model/src/fransys_model/vocab/operating.py:27
 _.resistance  # FIELDS fransys-model/src/fransys_model/vocab/operating.py:26
+# PageGraph (CP-S1 R6): findings fields computed in layout's page_graph, read by el's drawn_shorts
+_.bare_joints  # OTHER fransys-el/src/fransys_el/drawn_shorts.py:75
+_.dot_crossings  # OTHER fransys-el/src/fransys_el/drawn_shorts.py:76
+_.over_tips  # OTHER fransys-el/src/fransys_el/drawn_shorts.py:77

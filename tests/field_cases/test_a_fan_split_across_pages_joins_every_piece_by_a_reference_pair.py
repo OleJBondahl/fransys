@@ -72,7 +72,10 @@ def _built(tmp_path: Path, copied: list[tuple[int, int]], patch: pytest.MonkeyPa
 def test_a_split_fan_has_a_copy_end_on_every_page_beyond_the_hubs_and_no_connection_undrawn(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, salt: str
 ) -> None:
-    """KI-495: the fan reaches 3 pages; its copy has 2 ends and CONNECTION_NOT_DRAWN is 0 at every salt and MARKER_UNPLACED is 0 (KI-604 closed)."""
+    """KI-495: the fan reaches 3 pages; its copy has 2 ends and CONNECTION_NOT_DRAWN is 0 at every salt.
+
+    MARKER_UNPLACED is 0 (KI-604 closed); ANNEX_UNPLACED is 0 too (STRIP-TAG-ONCE: a run's tag is one annex).
+    """
     copied: list[tuple[int, int]] = []
 
     def salted() -> list[str]:
@@ -80,7 +83,7 @@ def test_a_split_fan_has_a_copy_end_on_every_page_beyond_the_hubs_and_no_connect
             id_namespace(salt)  # a context of its own: the salt never leaks into another test
         findings = _built(tmp_path, copied, monkeypatch).findings
         assert not [f.message for f in findings if f.severity.name == "ERROR"], "the drawing must be made for the check to mean anything"
-        return [f.code for f in findings if f.code in {"CONNECTION_NOT_DRAWN", "DANGLING_WIRE_END", "MARKER_UNPLACED"}]
+        return [f.code for f in findings if f.code in {"CONNECTION_NOT_DRAWN", "DANGLING_WIRE_END", "MARKER_UNPLACED", "ANNEX_UNPLACED"}]
 
     assert contextvars.copy_context().run(salted) == []
     assert copied

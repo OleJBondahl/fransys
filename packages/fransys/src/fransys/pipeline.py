@@ -370,9 +370,14 @@ def _library(result: BuildResult) -> Library:
     return result.library or library_of(result.settings)
 
 
+def _laid_out(result: BuildResult) -> bool:
+    """True when the build laid out: no `ERROR`, or a layout `ERROR` in some set while other sets drew (KI-779, R1978)."""
+    return not refuses(result.findings) or bool(result.drawings)
+
+
 def _result_svgs(result: BuildResult) -> dict[str, str]:
-    """The drawing of a laid-out `result` (no `ERROR`, a `Document`); `{}` otherwise."""
-    laid_out = not refuses(result.findings) and has_documents(result.model)
+    """The drawing of a laid-out `result` (a `Document`, and the sets that laid out); `{}` otherwise."""
+    laid_out = _laid_out(result) and has_documents(result.model)
     drawn = _Drawn(result.model, result.drawings, result.diagrams, _library(result), result.page_svgs)
     return _svgs(drawn) if laid_out else {}
 
@@ -387,9 +392,9 @@ def _raw_findings(result: BuildResult, svgs: dict[str, str]) -> tuple[Finding, .
     raw = list(result.findings)
     for board in _subjects.boards(model):
         raw.extend(kicad_check(model, board))
-    if not refuses(result.findings):
+    if _laid_out(result):
         raw.extend(_overview(_Read(model, _library(result)))[1])
-    if not refuses(result.findings) and has_documents(model):
+    if _laid_out(result) and has_documents(model):
         sheets = diagram_sheets_of(result.diagrams)
         raw.extend(
             fransys_pdf.check(

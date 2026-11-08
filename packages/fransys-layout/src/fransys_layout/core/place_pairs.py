@@ -55,5 +55,5 @@ def settled(stages: Sequence[tuple[PageEnv, Mapping[str, int], Mapping[str, int]
             out.append(page)
             continue
         again = assemble(replace(env, refs=tuple(live)), x, y)
-        out.append(replace(again, trunks=tuple(_unstood(t, fans[t.fan], dead, live, env.plan) for t in again.trunks)))
+        out.append(replace(again, runs=page.runs, trunks=tuple(_unstood(t, fans[t.fan], dead, live, env.plan) for t in again.trunks)))
     return out

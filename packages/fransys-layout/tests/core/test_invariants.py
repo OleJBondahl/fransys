@@ -11,7 +11,8 @@ from itertools import pairwise
 from typing import TYPE_CHECKING, Any
 
 from fransys_layout.core import Box, natural_key
-from fransys_layout.core.geometry import overlaps
+from fransys_layout.core.clearance import Keep, clear
+from fransys_layout.core.geometry import inside, overlaps
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -49,13 +50,6 @@ def check_one_label(placement: Placement, labels: Sequence[AnnexBox]) -> list[st
     return msgs
 
 
-def _near(wires: Sequence[Wire], box: Box, gap: int) -> bool:
-    """Whether a wire runs through the box grown by `gap` on every side (a wire that touches the box itself is not free)."""
-    from fransys_layout.core.annex import free
-
-    return not free(Box(box.x - gap, box.y - gap, box.w + 2 * gap, box.h + 2 * gap), [], wires, None)
-
-
 def check_label_conflicts(  # noqa: PLR0913, PLR0917 - the checker takes the whole stage result
     placement: Placement,
     routes: Routes,
@@ -66,7 +60,6 @@ def check_label_conflicts(  # noqa: PLR0913, PLR0917 - the checker takes the who
     options: Options,
 ) -> list[str]:
     """I8.2: a label shares no interior with a body, marker, wire or other label, and stands in the content box, unless flagged."""
-    from fransys_layout.core.annex import free
 
     msgs: list[str] = []
     for page in placement.pages:
@@ -88,39 +81,39 @@ def check_label_conflicts(  # noqa: PLR0913, PLR0917 - the checker takes the who
     return msgs
 
 
+def free(box: Box, solids: Sequence[Box], wires: Sequence[Wire], area: Size | None) -> bool:
+    """The oracle of a free label: inside `area`, and no solid or wire segment shares interior with `box` (clearance.clear on its inner box)."""
+    keeps = [Keep("", s, "body", "") for s in solids] + [
+        Keep("", Box(min(a[0], b[0]), min(a[1], b[1]), abs(b[0] - a[0]), abs(b[1] - a[1])), "wire", w.net)
+        for w in wires
+        for a, b in pairwise(w.points)
+    ]
+    return (area is None or inside(box, area)) and not clear(Box(box.x + 1, box.y + 1, box.w - 2, box.h - 2), keeps, {})
+
+
 def check_first_free(  # noqa: PLR0913, PLR0917 - the checker takes the whole stage result
     placement: Placement,
-    routes: Routes,
-    markers: Sequence[Marker],
+    routes: Routes,  # noqa: ARG001 - shared signature
+    markers: Sequence[Marker],  # noqa: ARG001 - shared signature
     labels: Sequence[AnnexBox],
     findings: Sequence[Finding],
     problem: PlacementProblem,
-    options: Options,
+    options: Options,  # noqa: ARG001 - shared signature
 ) -> list[str]:
-    """I8.3: an unflagged label sits at the first candidate free of bodies, markers, wires and the labels before it."""
-    from fransys_layout.core.annex import free, spot_box
+    """I8.3 (LABEL-PLACE ruling 5, R1867): an unflagged label stands at a candidate its annex was given."""
+    from fransys_layout.core.annex import _candidates
 
     annexes = {a.owner: a for a in problem.annexes}
     msgs: list[str] = []
     for page in placement.pages:
-        wires = {pr.page: pr.wires for pr in routes.pages}.get(page.page, ())
-        wires = tuple(w for w in wires if w.kind != "routed")  # the A* wires come after the labels and route round them
         placed = {p.sym: p for p in page.placed}
         flagged = _flagged(findings, page.page)
-        on_page = [lab for lab in labels if lab.page == page.page]
-        solid = _solids(page, markers, options)
-        for k, lab in enumerate(on_page):
-            if lab.owner in flagged or lab.owner not in placed:
-                continue
-            mine, at = annexes[lab.owner], placed[lab.owner]
-            cands = [spot_box(at, mine.size, s, 0) for s in mine.spots[at.orient]]
-            before = [o.box for o in on_page[:k] if o.owner not in flagged]
-            clear = [box for box in cands if free(box, [*solid, *before], wires, problem.area)]
-            first = next(
-                (box for box in clear if free(box, [], wires, None) and not _near(wires, box, options.label_gap)), clear[0] if clear else None
-            )
-            if lab.box != first:
-                msgs.append(f"I8.3 {lab.owner} on page {page.page}: label at {lab.box}, first free candidate is {first}")
+        on_page = [x for x in labels if x.page == page.page and x.owner not in flagged and x.owner in placed]
+        msgs.extend(
+            f"I8.3 {lab.owner} on page {page.page}: label at {lab.box} is none of its annex's candidates"
+            for lab in on_page
+            if lab.box not in [c.box for c in _candidates([annexes[lab.owner]], {lab.owner: placed[lab.owner]})[0]]
+        )
     return msgs
 
 

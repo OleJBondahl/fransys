@@ -9,7 +9,6 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
-from electrical_symbols import power_symbol_key
 from fransys_layout.core import PageGraph, page_graph
 from fransys_layout.drawing import port_points
 from fransys_model.derive import (
@@ -19,15 +18,16 @@ from fransys_model.derive import (
     is_bridge,
     link_groups,
     mate_ports,
-    net_of,
     port_function,
     set_unit,
 )
 from fransys_model.layout import DrawingSet, Page, StarKind, layout_of
 
 from .drawn_graph import Union
+from .drawn_identity_marks import declared_marks
 from .drawn_ids import core_symbol_id, symbol_id
-from .placement_ids import net_key, pin_names, symbol_ids
+from .drawn_power import POWER_KEYS, join_power, port_nets
+from .placement_ids import pin_names, symbol_ids
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Mapping, Sequence
@@ -50,13 +50,14 @@ _DOT = "junction-dot"
 
 @dataclass(frozen=True)
 class PagePart:
-    """One page: its drawing, port points (port value to point), graph, node set and anchors (the points its symbols offer a wire end)."""
+    """One page: its drawing, port points (by port value), graph, node set, anchors (where symbols offer a wire end) and power symbols' points."""
 
     drawing: Drawing
     ports: dict[str, XY]
     graph: PageGraph
     nodes: frozenset[XY]
     anchors: frozenset[XY]
+    powers: dict[str, XY] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -76,7 +77,10 @@ class Netlist:
     home: dict[str, frozenset[Id[Page]]] = field(default_factory=dict)
     owners: dict[str, str] = field(default_factory=dict)
     texted: set[str] = field(default_factory=set)
+    skipped: set[str] = field(default_factory=set)  # ports of a set whose layout failed: no drawing, not expected drawn (KI-779)
     pitch: int = 0
+    nets: dict[str, str] = field(default_factory=dict)
+    marks: dict[str, str] = field(default_factory=dict)
 
     def reached(self, port: str) -> bool:
         """True when a wire end, a dot or a marker stands on a point of the port, or on its link's."""
@@ -91,10 +95,9 @@ class Netlist:
         found = {self.union.find(place) for place in self.placed[self.linked.get(port, port)]}
         return found & self.live
 
-    def net(self, model: Model, port: str) -> str:
+    def net(self, port: str) -> str:
         """The physical net of the port, spelled as `Net.id` is (`net_key`)."""
-        found = net_of(model, self.ids[port])
-        return net_key(model, found.ports) if found else port
+        return self.nets[port]
 
 
 def is_marker(symbol: DrawnSymbol) -> bool:
@@ -110,26 +113,29 @@ def pin_owner(model: Model, kit: SymbolKit) -> dict[str, dict[str, Id[Port]]]:
     return by
 
 
-def _port_map(drawing: Drawing, by: Mapping[str, Mapping[str, Id[Port]]], library: Library) -> tuple[dict[str, XY], frozenset[XY]]:
-    """The model ports' points, and every symbol's own port points (a power symbol's wires end on its own)."""
+def _port_map(drawing: Drawing, by: Mapping[str, Mapping[str, Id[Port]]], library: Library) -> tuple[dict[str, XY], frozenset[XY], dict[str, XY]]:
+    """The model ports' points, every symbol's own port points (a power symbol's wires end on its own) and those of the power symbols by port."""
     found: dict[str, XY] = {}
+    powers: dict[str, XY] = {}
     anchors: set[XY] = set()
     for symbol in drawing.symbols:
         names = by.get(symbol.id, {})
         for at, pin in () if is_marker(symbol) else port_points(symbol, library):
             anchors.add(at)
+            if symbol.key in POWER_KEYS and symbol.ports:
+                powers.setdefault(symbol.ports[0], at)
             if pin in names:
                 found[names[pin].value] = at
-    return found, frozenset(anchors)
+    return found, frozenset(anchors), powers
 
 
 def _part(drawing: Drawing, by: Mapping[str, Mapping[str, Id[Port]]], library: Library) -> PagePart:
-    ports, anchors = _port_map(drawing, by, library)
+    ports, anchors, powers = _port_map(drawing, by, library)
     dots = {(s.x, s.y) for s in drawing.symbols if s.key == _DOT}
     graph = page_graph([w.points for w in drawing.wires], dots, list(ports.values()))
     marks = {(s.x, s.y) for s in drawing.symbols if is_marker(s)}
     nodes = {p for edge in graph.edges for p in edge} | graph.joints | (marks & set(ports.values()))
-    return PagePart(drawing, ports, graph, frozenset(nodes), anchors | dots | marks)
+    return PagePart(drawing, ports, graph, frozenset(nodes), anchors | dots | marks, powers)
 
 
 def _marker_nodes(pages: Mapping[Id[Page], PagePart]) -> dict[str, tuple[Id[Page], XY] | None]:
@@ -280,19 +286,6 @@ def _link(net: Netlist, model: Model, groups: Iterable[LinkGroup]) -> None:
             _unite(net, (a.value, b.value))
 
 
-POWER_KEYS = frozenset(power_symbol_key(kind) for kind in ("supply", "ground", "pe"))
-
-
-def _power(net: Netlist, model: Model) -> None:
-    """Join the reached ports of one net that carry a power symbol: a rail is one net."""
-    first: dict[str, tuple[Id[Page], XY]] = {}
-    for page, part in net.pages.items():
-        for symbol in part.drawing.symbols:
-            for port in symbol.ports if symbol.key in POWER_KEYS else ():
-                if (at := part.ports.get(port)) is not None and (at in part.nodes or port in net.linked):
-                    net.union.join(first.setdefault(net.net(model, port), (page, at)), (page, at))
-
-
 def _placed(pages: Mapping[Id[Page], PagePart]) -> dict[str, tuple[tuple[Id[Page], XY], ...]]:
     """Every drawn point of each port, in page order: a terminal copy adds one."""
     placed: dict[str, list[tuple[Id[Page], XY]]] = defaultdict(list)
@@ -345,9 +338,11 @@ def drawn_netlist(
         home=_homes(model, ids, placed),
         owners={p.value: sym for sym, pins in by.items() for p in pins.values()},
         pitch=library.grid.wire_pitch,
+        nets=port_nets(model, ids),
+        marks=declared_marks(drawings, by, library),
     )
     _link(found, model, groups)
-    _power(found, model)
+    join_power(found, model)
     found.live.update(union.find((page, at)) for page, part in pages.items() for at in part.nodes)
     return found
 

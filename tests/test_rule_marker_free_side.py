@@ -15,8 +15,8 @@ from typing import Any
 import fransys as fr
 import pytest
 from _direct_case import built_with_unlaid, laid_again
-from fransys_el import build, drawn_nets, house_conventions, lay_out_core, symbol_kit
-from fransys_el.drawn_nets import _powered
+from fransys_el import build, drawn_power, house_conventions, lay_out_core, symbol_kit
+from fransys_el.drawn_power import inked_power
 from fransys_el.placement_env import port_pins
 from test_drawn_symbols_placed_by_core import R825_STUBS
 
@@ -251,9 +251,10 @@ def test_port_pins_hold_every_pin_the_planner_has_a_conductor_at() -> None:
 @pytest.mark.private_input
 @pytest.mark.rule("G01-CONNECTED")
 @pytest.mark.parametrize(("key", "text"), [("ground", None), ("pe", None), ("supply", "24V"), ("supply", None)])
-def test_a_port_drawn_as_a_power_symbol_that_names_its_potential_is_a_carried_end(monkeypatch: pytest.MonkeyPatch, key: str, text: str | None):
-    """R1631: ground, PE and a texted supply carry their pin's end; a supply with no printed text names no potential."""
+def test_a_port_drawn_as_an_inked_power_symbol_that_names_its_potential_is_a_carried_end(monkeypatch: pytest.MonkeyPatch, key: str, text: str | None):
+    """R1631, R4: ground, PE and a texted supply with ink to their pin carry its end; a supply with no printed text names no potential."""
     symbols = [SimpleNamespace(key=power_symbol_key(key), ports=("a",))]
-    net: Any = SimpleNamespace(model=None, pages={"p": SimpleNamespace(drawing=SimpleNamespace(symbols=symbols))}, ids={"a": "a-id"})
-    monkeypatch.setattr(drawn_nets, "port_power_text", lambda *_: text)
-    assert (_powered(net.model, net) == {"a"}) is (key != "supply" or text is not None)
+    part = SimpleNamespace(drawing=SimpleNamespace(symbols=symbols), ports={"a": (0, 0)}, nodes={(0, 0)}, powers={})
+    net: Any = SimpleNamespace(pages={"p": part}, ids={"a": "a-id"}, linked={})
+    monkeypatch.setattr(drawn_power, "port_power_text", lambda *_: text)
+    assert (inked_power(net, None) == {"a"}) is (key != "supply" or text is not None)  # ty: ignore[invalid-argument-type] the read is monkeypatched

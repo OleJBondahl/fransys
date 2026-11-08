@@ -273,7 +273,7 @@ def _made(
     covered = _covered(problem, planned, (laned, joins))
     made = _crossing(problem, leads[1], where, covered | _drawn(far_ends, ink))
     made += _lead_stubs(leads[0], where, net_of, covered | {e.pin for r in made for e in r.ends if e.pin})
-    wired = joined([*ink, *pairs(planned), *trunked(leads[1], where, net_of), *(pair for j in joins for pair in permutations(j, 2))])
+    wired = joined([*ink, *pairs(planned, net_of), *trunked(leads[1], where, net_of), *(pair for j in joins for pair in permutations(j, 2))])
     seen = _Held(problem, where, piece, net_of, laned, joins, set(far_ends))
     return made, [pair for group in problem.facts.groups for pair in _mend(group, seen, (planned, made), wired)]
 

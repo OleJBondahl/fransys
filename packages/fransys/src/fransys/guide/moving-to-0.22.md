@@ -77,6 +77,8 @@ Each row is a name that 0.22 removed. A removed attribute raises an error that n
 - New spellings: `.plc(signal, name, routing=)`, `.plc(name=)` and `.plc(configured=False)` on a module's channel handle, `.scale(raw=, eng=)` with no unit, and `.scale(...)` on a spare analogue channel. `SCALING_UNIT_EMPTY` is gone: a blank unit raises at the call. `PLC_SIGNAL_NAME_TWICE` is new.
 - Page text: pages replace sheets. The title block shows "page m of N" and has no sheet cell. A reference prints the page number alone (`p<n>:<cell>`), led by the far PDF's scope path across PDFs. The PDF order is the cover, the drawings, then the index and the lists. Drawings can move: the wider reserved reference text re-lays out some pages.
 - listing_version 8: no listing text moves. A stored model of schema 24 is refused: rebuild it. A wire made inside a `d.function` block now carries that block. A pin wired only in one other block that draws a function of its own is drawn there. A terminal, supply, connector or PLC channel stays with its item (decision model-0442).
+- Tags stand at a symbol corner, top-left first, then bottom-left, top-right, bottom-right, one grid step out, then turned. Tags move on many pages; nothing to change in your code.
+- A unit's drawing no longer changes with the names of the units above it.
 - `OVERLAP` now also counts text resting on a wire's edge and diagonal runs. A new `OVERLAP` WARNING is a Fransys looks defect: report it.
 - Fixed: phantom loops around a part's internal links with no conductor (KI-732), and a trunk drawn through a neighbouring card (KI-731).
 - Fixed: a connection lost when a net crossed a page cut twice, as with two output cards (KI-739), and a reference leg starting inside its trunk (KI-736).

@@ -130,7 +130,7 @@ def test_a_small_unit_frame_grows_to_the_natural_size_of_its_symbol():
 
 def _sym(sid: str) -> Sym:
     box = Box(-8, 0, 16, 32)
-    return Sym(sid, None, "", Size(16, 8), (), (), {"R0": Turned(box, box, box, (), row_footprint=box)})
+    return Sym(sid, None, "", {"": Size(16, 8)}, (), (), {"R0": Turned(box, box, box, (), row_footprint=box)})
 
 
 def test_a_member_symbol_holds_the_margin_the_label_room_and_the_least_frame():

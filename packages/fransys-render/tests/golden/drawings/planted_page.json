@@ -5,6 +5,16 @@
  },
  "library_version": "planted",
  "outlines": [],
+ "rows": [
+  {
+   "devices": [
+    "item:ab12"
+   ],
+   "height_g": 16,
+   "term": "body",
+   "width_g": 320
+  }
+ ],
  "symbols": [
   {
    "id": "s1",

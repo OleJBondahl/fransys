@@ -8,13 +8,12 @@ when each piece carries an off stub that names a port of the group outside it (a
 from collections import defaultdict
 from typing import TYPE_CHECKING
 
-from electrical_symbols import power_symbol_key
-from fransys_model.derive import drawn_groups, drawn_stands, far_pins, port_power_text, rail_drawn_by
+from fransys_model.derive import drawn_groups, drawn_stands, far_pins, rail_drawn_by
 from fransys_model.layout import StarKind
 
 from .drawn_finding import drawn_finding
 from .drawn_graph import Union
-from .drawn_netlist import POWER_KEYS
+from .drawn_power import inked_power
 
 if TYPE_CHECKING:
     from fransys_model.kernel import Finding, Model
@@ -118,23 +117,11 @@ def _verdict(net: Netlist, members: list[str], stubs: dict[str, set[str]], joine
     return None
 
 
-def _powered(model: Model, net: Netlist) -> set[str]:
-    """The ports drawn as a power symbol that names its potential (R1631): a ground or PE symbol, or a supply symbol with a printed text."""
-    supply = power_symbol_key("supply")
-    return {
-        port
-        for part in net.pages.values()
-        for symbol in part.drawing.symbols
-        if symbol.key in POWER_KEYS
-        for port in symbol.ports
-        if symbol.key != supply or port_power_text(model, net.ids[port]) is not None
-    }
-
-
 def _carried(net: Netlist, stubs: dict[str, set[str]], joined: Union, powered: set[str], end: tuple[str, str]) -> bool:
-    """True when the end at `near` is drawn (R1573, R1617): joined to `far` in one piece, marked, or a power symbol that names its potential (R1631).
+    """True when the end at `near` is drawn (R1573, R1617): joined to `far` in one piece, marked, or a power symbol inked to its pin (R1631).
 
     A mark is a stub at either end that names the other, the stubbed line of `near`, or the where-text of its copy.
+    R4 (ink to the pin) replaces the model-net read.
     """
     near, far = end
     if set(end) & powered or _lined(net, near) or near in net.texted or far in stubs.get(near, ()) or near in stubs.get(far, ()):
@@ -145,7 +132,7 @@ def _carried(net: Netlist, stubs: dict[str, set[str]], joined: Union, powered: s
 def _unmarked(model: Model, net: Netlist, stubs: dict[str, set[str]], joined: Union) -> list[tuple[str, str]]:
     """Each `(near, far)` conductor end of a port drawn at its home that no wire, reference, stub or where-text draws."""
     held = [net.ids[p] for p in net.placed if net.at_home(p)]
-    powered = _powered(model, net)
+    powered = inked_power(net, model)
     return [(n.value, f.value) for n, f in far_pins(model, held) if not _carried(net, stubs, joined, powered, (n.value, f.value))]
 
 
@@ -169,7 +156,9 @@ def not_drawn_findings(model: Model, net: Netlist) -> tuple[Finding, ...]:
     found: list[Finding] = []
     stood, drawn_by = drawn_stands(model), rail_drawn_by(model)
     for group in drawn_groups(model):
-        members = [p.value for p in group if not any(s in stood and s in group for s in drawn_by.get(p, ()))]  # a rail terminal's stand draws it
+        members = [
+            p.value for p in group if p.value not in net.skipped and not any(s in stood and s in group for s in drawn_by.get(p, ()))
+        ]  # a rail terminal's stand draws it
         if len(members) < _MIN_PORTS or frozenset(members) in seen:
             continue
         seen.add(frozenset(members))

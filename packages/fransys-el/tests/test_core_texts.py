@@ -12,7 +12,7 @@ from _model_build_cover import cabinet_document
 from conventions_fixtures import house
 from fransys import colours
 from fransys_el import build, lay_out_drawn, symbol_kit
-from fransys_el.kit_keys import tag_of
+from fransys_el.kit_keys import strip_tag_of, tag_of
 from fransys_el.placement_ids import symbol_key
 from fransys_el.placement_markers import ARROW, KINDS, LONE, facing_views, stub_fit
 from fransys_el.placement_options import options
@@ -22,7 +22,7 @@ from symdef import repeat
 
 from electrical_symbols import LIBRARY
 from fransys_layout.core import PinRef, solve
-from fransys_model.derive import function_item
+from fransys_model.derive import function_item, strip_of
 from fransys_model.derive.drawing_text import port_marking
 from fransys_model.vocab.tables import items
 
@@ -66,7 +66,7 @@ def test_every_placed_symbol_has_one_designation_text(fixture) -> None:
     core = fixture[2]
     placed = [p for page in core.placement.pages for p in page.placed]
     assert len(placed) > 0
-    assert len(_texts(fixture, "TAG")) == len(placed)
+    assert len([t for t in _texts(fixture, "TAG") if t.owner]) == len(placed)  # a run's strip tag has no owner (STRIP-TAG-ONCE)
 
 
 def test_the_designation_texts_are_the_tag_text_of_the_placed_functions(fixture) -> None:
@@ -77,7 +77,22 @@ def test_the_designation_texts_are_the_tag_text_of_the_placed_functions(fixture)
         for f in kit
         if symbol_key(model, f) in placed
     )
-    assert sorted(t.text for t in _texts(fixture, "TAG")) == want
+    assert sorted(t.text for t in _texts(fixture, "TAG") if t.owner) == want
+
+
+@pytest.mark.rule("STRIP-TAG-ONCE")
+def test_a_strip_terminals_run_prints_its_strip_tag_over_the_points(fixture) -> None:
+    """STRIP-TAG-ONCE: each placed strip terminal prints its own point; its strip's tag stands as a text of no symbol, once or more per strip."""
+    model, kit, core, *_ = fixture
+    placed = {p.sym for page in core.placement.pages for p in page.placed}
+    want = {
+        strip_tag_of(model, f, unit=items(model)[function_item(model, f)].unit)
+        for f in kit
+        if symbol_key(model, f) in placed and strip_of(model, function_item(model, f))
+    }
+    got = [t.text for t in _texts(fixture, "TAG") if t.owner is None]
+    assert set(got) == want
+    assert len(got) >= len(want)
 
 
 def test_no_text_overlaps_and_every_text_box_is_inside_the_content_box(fixture) -> None:
@@ -201,8 +216,8 @@ def test_the_channels_23_page_draws_its_forty_three_marker_boxes() -> None:
     no arrow (the R1266 cap on a twin point re-cuts the card), and 3 more since three planned stubs that no leg carries stay at their pins
     (layout-0527: K12, K13, K15). R1581: a pin with several undrawn conductors draws one box with a line each, so the count stays."""
     page = _built(channels_model(23), generic=True)
-    assert len(page[2].annotations.markers) == 34  # 35 before R1693 grew the keep-outs to whole cells; 43 before GRID-WHOLE-GAPS
-    assert len(_drawn_markers(page)) == 34
+    assert len(page[2].annotations.markers) == 35  # 34 before the tag boxes were ink-true (LABEL-PLACE); 43 before GRID-WHOLE-GAPS
+    assert len(_drawn_markers(page)) == 35
 
 
 def test_a_marker_carries_the_tint_of_its_reference_number(fixture) -> None:
@@ -301,7 +316,7 @@ def test_every_flag_box_lies_inside_its_rows_solved_band(kind, generic, size) ->
 
 
 def test_a_tag_box_is_as_wide_as_the_tag_is_drawn(fixture) -> None:
-    """A tag box is never narrower than the tag drawn, at most two divisions wider (layout-0385)."""
+    """A tag box is never narrower than the tag drawn; a terminal's also holds the position lines it is measured with (layout-0385, LABEL-PLACE)."""
     from symdef import text_width
 
     from fransys_model.derive import mm_per_division
@@ -315,4 +330,4 @@ def test_a_tag_box_is_as_wide_as_the_tag_is_drawn(fixture) -> None:
     assert tags
     for t in tags:
         drawn_g = text_width(LIBRARY.font, t.text, float(em_mm)) / float(mm_per_division(model, sheet))
-        assert 0 <= t.box.w - float(drawn_g) <= 2  # em and width each round up one division
+        assert t.box.w >= float(drawn_g)

@@ -16,6 +16,8 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
     from collections.abc import Set as AbstractSet
 
+    from .values import Side
+
 INF = 1 << 60
 MOVES = ((1, 0, "h"), (-1, 0, "h"), (0, 1, "v"), (0, -1, "v"))
 State = tuple[XY, str]
@@ -50,15 +52,13 @@ def tidy(points: Sequence[XY]) -> tuple[XY, ...]:
     return tuple(out)
 
 
-def anchor(pin: XY, fp: Box, step: int) -> tuple[XY, ...]:
-    """From a pin to the grid point just outside the footprint edge nearest it.
+def anchor(pin: XY, fp: Box, step: int, side: Side) -> tuple[XY, ...]:
+    """From a pin to the grid point just outside the footprint edge on the pin's own `side`.
 
     The wire leaves along that edge's normal for at least one step, then steps to the grid. A*
     starts and ends at the last point.
     """
     px, py = pin
-    gap = {"N": py - fp.y, "S": fp.y + fp.h - py, "W": px - fp.x, "E": fp.x + fp.w - px}
-    side = min(gap, key=lambda k: (gap[k], "NSWE".index(k)))
     gx, gy = round(px / step) * step, round(py / step) * step
     if side == "S":
         gy = ((fp.y + fp.h) // step + 1) * step

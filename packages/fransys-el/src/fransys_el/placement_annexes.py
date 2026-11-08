@@ -1,24 +1,26 @@
 """The designation of each symbol as a core `Annex`: a corner of its body, top left first.
 
 Owner 2026-10-18: a designation stands in a corner of its symbol, "top left by default". The
-corners come from `Options.corner_order`, each moved out by `Options.slack`; the text stage takes
-the first one free of every body, wire and earlier annex. A corner box keeps `label_gap` plus its
-slack beside the wire of the pins on its body edge (`Spot.clear`, R353), so a slack step also
-clears a reference marker that stands on that wire.
+corners come from `Options.corner_order`, each tried at the corner and one wiring step out, the turned spot on the left after the
+second corner, the turned tag centred on the body's height last (TAG-CORNERS, designer R1812, R1831, R1849); the text stage takes
+the first one free of every body, wire and earlier annex. A corner
+box keeps `label_gap` plus its step beside the wire of the pins on its body edge (`Spot.clear`, R353),
+so the step also clears a reference marker that stands on that wire.
 """
 
+from itertools import chain
 from typing import TYPE_CHECKING, Literal
 
 from fransys_layout.core import Annex, Size, Spot
 
-from .placement_kit import ProblemError
+from .placement_kit import ProblemError, refuse
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Mapping, Sequence
 
     from fransys_layout.core import Options, Orientation, Sym
 
-__all__ = ["label_annexes"]
+__all__ = ["label_annexes", "wider_annexes"]
 
 Corner = Literal["TL", "TR", "BL", "BR"]
 
@@ -44,11 +46,47 @@ def corner_spot(corner: str, slack: int, size: Size, gap: int) -> Spot:
     return Spot(corner, known, dx, dy, "down", gap)
 
 
-def label_annexes(syms: Sequence[Sym], options: Options) -> tuple[Annex, ...]:
-    """One `Annex` per symbol, sized by its measured tag slot, in the order of `syms`."""
-    found = []
-    for sym in syms:
-        spots = tuple(corner_spot(c, s, sym.label, options.label_gap + s) for c in options.corner_order for s in options.slack)
-        turns: dict[Orientation, tuple[Spot, ...]] = dict.fromkeys(sym.views, spots)
-        found.append(Annex(sym.id, sym.label, None, turns))
-    return tuple(found)
+def turned_size(label: Size) -> Size:
+    """The tag turned a quarter: the thickness by the reading length, the two of its upright size exchanged."""
+    return Size(label.h, label.w)
+
+
+def _ladder(label: Size, options: Options, body_h: int) -> tuple[Spot, ...]:
+    """The ladder (LABEL-PLACE 2): two corners, the turned left pair, the rest, then the turned tag centred on the body's height (R1849)."""
+    step = options.wiring_grid
+    corners = [[corner_spot(c, s, label, options.label_gap + s) for s in (0, step)] for c in options.corner_order]
+    turned = turned_size(label)
+    if not turned.w:
+        return tuple(chain(*corners))
+    side = [Spot("TL", "TL", -turned.w, s, "down", options.label_gap, turned=True) for s in (0, step)]
+    centred = Spot("TL", "TL", -turned.w, (body_h - turned.h) // 2, "down", options.label_gap, turned=True)
+    return (*chain(*corners[:2]), *side, *chain(*corners[2:]), centred)
+
+
+def _annex(owner: str, sym: Sym, label: Size, options: Options) -> Annex:
+    """`owner`'s `Annex` of `label` size, its ladder for each turn of `sym`."""
+    turns: dict[Orientation, tuple[Spot, ...]] = {o: _ladder(label, options, v.body.h) for o, v in sym.views.items()}
+    return Annex(owner, label, None, turns, turned_size(label))
+
+
+def label_annexes(syms: Sequence[Sym], options: Options, home: str, tags: Mapping[str, Mapping[str, Size]], rise: int = 0) -> tuple[Annex, ...]:
+    """One `Annex` per symbol, sized by its tag text as the set of unit `home` prints it ("" the whole model), in the order of `syms`.
+
+    A `rise` of digits more in the where-text page number sizes a symbol by `Sym.wider` (R1883). A strip's first terminal also gives
+    the strip's `Annex`, sized by `tags`: the run tag template (STRIP-TAG-ONCE). A strip named like a symbol is refused.
+    """
+    strips: dict[str, Sym] = {}
+    for s in syms:
+        if s.row_group is not None and s.row_group in tags:
+            strips.setdefault(s.row_group, s)
+    if clash := next(iter(strips.keys() & {s.id for s in syms}), None):
+        refuse(f"strip {clash}", "a strip is named like a symbol: the run tag and the symbol's tag would share one annex owner", clash)
+    return (
+        *(_annex(s.id, s, (s.wider[rise - 1] if rise and s.wider else s.labels)[home], options) for s in syms),
+        *(_annex(g, s, tags[g][home], options) for g, s in strips.items()),
+    )
+
+
+def wider_annexes(syms: Sequence[Sym], options: Options, home: str, tags: Mapping[str, Mapping[str, Size]]) -> tuple[tuple[Annex, ...], ...]:
+    """The annexes of `label_annexes` at each rise of the where-text page number's digits the symbols were measured for."""
+    return tuple(label_annexes(syms, options, home, tags, rise) for rise in range(1, 1 + max((len(s.wider) for s in syms), default=0)))

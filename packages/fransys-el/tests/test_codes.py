@@ -44,6 +44,11 @@ _EL_ONLY = [
     "CONNECTION_DRAWN_TWICE",
     "WIRE_NOT_ORTHOGONAL",
     "MISSING_JUNCTION_DOT",
+    "POWER_SYMBOL_NOT_JOINED",
+    "RAIL_IDENTITY_SHARED",
+    "PIN_MARKING_WRONG",
+    "DOT_ON_CROSSING",
+    "WIRE_OVER_PIN_TIP",
 ]
 
 
@@ -90,3 +95,12 @@ def test_a_card_spill_is_an_info_because_tag_pairs_join_it() -> None:
     """CARD_OVERFULL states a spill joined by tag pairs and loses no fact (R1154)."""
     info = next(i for i in FINDING_CODES if i.code == "CARD_OVERFULL")
     assert info.severity is Severity.INFO
+
+
+def test_a_shared_supply_name_fix_names_only_the_protective_device():
+    """R1976: RAIL_IDENTITY_SHARED names the refused case and its one remedy, a protective device; the bond is withdrawn."""
+    fix = next(i for i in FINDING_CODES if i.code == "RAIL_IDENTITY_SHARED").fix
+    assert "no protective device" in fix
+    assert fix.startswith("No call clears this:")
+    assert "put a fuse or breaker between them" in fix
+    assert "bond" not in fix.split(":", 1)[1]

@@ -5,7 +5,7 @@ from _model_build_cover import unit_document
 from conventions_fixtures import house
 from fransys.colours import BU
 from fransys_el import build, symbol_kit
-from fransys_el.placement_sets import DrawingScope, restrict
+from fransys_el.placement_sets import DrawingScope, restriction
 from fransys_el.write_findings import kernel_findings
 from fransys_el.write_ids import symbol_subjects
 
@@ -37,7 +37,7 @@ def test_a_scoped_problem_keeps_its_own_annexes_and_drops_the_others() -> None:
     owners = {a.owner for a in problem.annexes}
     assert len(ids) == 3
     assert set(ids) <= owners
-    scoped = restrict(problem, DrawingScope(None, None, frozenset(ids[:2])))
+    scoped = restriction(problem, DrawingScope(None, None, frozenset(ids[:2])), options=house().options, tags={}).problem
     assert [s.id for s in scoped.symbols] == ids[:2]
     assert [a.owner for a in scoped.annexes] == ids[:2]
 
@@ -47,7 +47,7 @@ def test_a_scoped_problem_keeps_the_far_ends_of_its_own_symbols_even_to_one_outs
     problem = _problem()
     ids = [s.id for s in problem.symbols]
     assert {p.sym for pair in problem.facts.far_ends for p in pair} == set(ids)
-    scoped = restrict(problem, DrawingScope(None, None, frozenset(ids[:2])))
+    scoped = restriction(problem, DrawingScope(None, None, frozenset(ids[:2])), options=house().options, tags={}).problem
     assert {near.sym for near, _ in scoped.facts.far_ends} == set(ids[:2])
     assert any(far.sym == ids[2] for _, far in scoped.facts.far_ends)
 

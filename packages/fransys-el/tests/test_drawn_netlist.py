@@ -6,26 +6,35 @@ finished drawing: join two nets, move a wire end to a neighbour port, drop a jun
 
 from dataclasses import dataclass, replace
 from types import SimpleNamespace
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, NamedTuple, cast
 
+import fransys as fr
 import pytest
+from _card_case import card_case_drafts
+from _expected_codes import expect_codes
+from _model_build_cover import unit_document
 from conventions_fixtures import house
-from fransys_el import build, lay_out_core, lay_out_drawn
+from fransys.colours import GNYE
+from fransys_el import build, drawn_identity_marks, drawn_power, drawn_rails, lay_out_core, lay_out_drawn, symbol_kit
 from fransys_el import drawn_netlist as drawn_netlist_module
 from fransys_el.drawn_graph import Union
 from fransys_el.drawn_netlist import Netlist, drawn_netlist, is_marker, with_lines
 from fransys_el.drawn_nets import _ends, _pairs, _stubs, _unmarked, _verdict, not_drawn_findings
 from fransys_el.drawn_pairs import dangling_findings
-from fransys_el.drawn_shorts import short_findings
+from fransys_el.drawn_power import join_power, power_findings
+from fransys_el.drawn_rails import rail_findings
+from fransys_el.drawn_shorts import ink_findings, short_findings
 from fransys_el.drawn_sweep import drawing_sweep
+from fransys_el.placement_ids import net_key
 from ring_cases import bank_model, box_kit
 
-from electrical_symbols import LIBRARY
-from fransys_layout.core import Box
+from electrical_symbols import LIBRARY, power_symbol_key
+from fransys_layout.core import Box, page_graph
 from fransys_layout.drawing import DrawnSymbol, DrawnWire
-from fransys_model.derive import required_groups
+from fransys_model.derive import PowerKind, net_of, port_power_kind, required_groups
 from fransys_model.kernel import Id, make_id
 from fransys_model.layout import LinkMarker, MarkerPair, MarkerSide, Page, Side, StarKind
+from fransys_model.vocab.tables import ports
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -77,9 +86,13 @@ class Built:
         return {**self.drawings, page: replace(self.drawings[page], **fields)}
 
 
-def _built(bank: int, monkeypatch: pytest.MonkeyPatch) -> Built:
-    model = bank_model(bank)
-    conventions, kit = house(), box_kit(model)
+def _built(bank: int, monkeypatch: pytest.MonkeyPatch, *, symbols: bool = False) -> Built:
+    model = fr.build(*card_case_drafts(bank)).model if symbols else bank_model(bank)
+    return _built_of(model, symbol_kit(model, LIBRARY) if symbols else box_kit(model), monkeypatch)
+
+
+def _built_of(model: Any, kit: Any, monkeypatch: pytest.MonkeyPatch) -> Built:
+    conventions = house()
     problem, _ = build(model, kit, conventions, LIBRARY)
     caught: list[tuple[Any, ...]] = []
     original, lines_of = lay_out_core.drawn_netlist, lay_out_core.with_lines
@@ -103,6 +116,12 @@ def _built(bank: int, monkeypatch: pytest.MonkeyPatch) -> Built:
 def bank8():
     with pytest.MonkeyPatch.context() as patch:
         return _built(8, patch)
+
+
+@pytest.fixture(scope="module")
+def card16():
+    with pytest.MonkeyPatch.context() as patch:
+        return _built(16, patch, symbols=True)
 
 
 @pytest.fixture(scope="module")
@@ -136,7 +155,7 @@ def test_a_wire_that_joins_two_nets_is_a_short(bank8):
     net = bank8.netlist()
     page, part = next(iter(net.pages.items()))
     first = next(iter(part.ports))
-    other = next(p for p in part.ports if net.net(bank8.model, p) != net.net(bank8.model, first))
+    other = next(p for p in part.ports if net.net(p) != net.net(first))
     (ax, ay), (bx, by) = part.ports[first], part.ports[other]
     bridge = DrawnWire("bridge", ((ax, ay), (ax, by), (bx, by)), part.drawing.wires[0].style)
     planted = bank8.patched(page, wires=(*part.drawing.wires, bridge))
@@ -148,8 +167,8 @@ def test_a_wire_end_moved_to_a_neighbour_port_is_a_wrong_port(bank8):
     page, i = _wire_between_ports(bank8)
     part = bank8.netlist().pages[page]
     wire = part.drawing.wires[i]
-    mine = bank8.netlist().net(bank8.model, _at(part, wire.points[-1]))
-    other = next(at for p, at in part.ports.items() if bank8.netlist().net(bank8.model, p) != mine)
+    mine = bank8.netlist().net(_at(part, wire.points[-1]))
+    other = next(at for p, at in part.ports.items() if bank8.netlist().net(p) != mine)
     moved = replace(wire, points=(*wire.points[:-1], other))
     wires = tuple(moved if k == i else w for k, w in enumerate(part.drawing.wires))
     assert bank8.count("ROUTE_WRONG_PORT", bank8.patched(page, wires=wires)) > bank8.count("ROUTE_WRONG_PORT")
@@ -428,10 +447,9 @@ def _coincident(monkeypatch: pytest.MonkeyPatch, nets: dict[str, str]) -> Netlis
     syms = [SimpleNamespace(id=name, key="box", x=0, y=0, ports=(), net=None) for name in ("s1", "s2")]
     drawing = SimpleNamespace(symbols=tuple(syms), wires=())
     monkeypatch.setattr(drawn_netlist_module, "port_points", lambda _s, _lib: [((7, 7), "p")])
-    monkeypatch.setattr(Netlist, "net", lambda _self, _model, port: nets[port])
     part = drawn_netlist_module._part(cast("Any", drawing), {"s1": {"p": ids["a"]}, "s2": {"p": ids["b"]}}, LIBRARY)
     page = Id[Page](kind="page", value="p")
-    net = Netlist({page: part}, Union(), drawn_netlist_module._placed({page: part}), ids, {}, {})
+    net = Netlist({page: part}, Union(), drawn_netlist_module._placed({page: part}), ids, {}, {}, nets=nets)
     net.live.update(net.union.find((page, at)) for at in part.nodes)
     return net
 
@@ -441,9 +459,9 @@ def test_pins_at_one_point_are_one_node_and_a_short_when_their_nets_differ(monke
     """R922: two pins that coincide join with no wire between them; the same net is no finding, two nets are a short."""
     same = _coincident(monkeypatch, {"a": "n", "b": "n"})
     assert (7, 7) in next(iter(same.pages.values())).nodes
-    assert short_findings(cast("Any", None), same) == ()
+    assert short_findings(same) == ()
     apart = _coincident(monkeypatch, {"a": "n", "b": "m"})
-    assert [f.code for f in short_findings(cast("Any", None), apart)] == ["DRAWING_SHORTS_NETS"]
+    assert [f.code for f in short_findings(apart)] == ["DRAWING_SHORTS_NETS"]
 
 
 @pytest.mark.rule("G01-CONNECTED")
@@ -555,3 +573,286 @@ def test_a_lane_one_pitch_short_under_an_off_stub_is_met(short: int, listed: tup
 def test_a_lane_one_pitch_short_under_a_pair_marker_is_met_by_the_partner_chain(far: str, left: list[str]):
     """R1667: a pair marker's lane is met when its net also runs in the partner marker's lane chain on the partner's page."""
     assert _lanes_under_arrow(8, (), far) == left
+
+
+_Stands = dict[str, tuple[str, str | None, str | None, str]]
+
+
+def _powered(
+    monkeypatch: pytest.MonkeyPatch,
+    stands: _Stands,
+    *,
+    lead: bool = True,
+    ends: tuple[tuple[Id[Any], Id[Any]], ...] | None = None,
+    nets: dict[str, str] | None = None,
+) -> Netlist:
+    """One page per port of `stands` (port: symbol kind, printed text, cabinet, page): a pin at (0, 16), a power symbol at (0, 0), a lead or not."""
+    ids = {p: Id[Any](kind="port", value=p) for p in stands}
+    pages: dict[Any, Any] = {}
+    at: dict[str, Any] = {}
+    monkeypatch.setattr(drawn_netlist_module, "port_points", lambda s, _lib: at[s.id])
+    for port, (kind, _, _, page) in stands.items():
+        device = SimpleNamespace(id=f"d-{port}", key="box", x=0, y=16, ports=(), net=None)
+        bar = SimpleNamespace(id=f"p-{port}", key=power_symbol_key(kind), x=0, y=0, ports=(port,), net=None)
+        wires = (SimpleNamespace(points=((0, 16), (0, 0))),) if lead else ()
+        at[bar.id], at[device.id] = [((0, 0), "1")], [((0, 16), "p")]
+        pages[Id[Page](kind="page", value=page)] = drawn_netlist_module._part(
+            cast("Any", SimpleNamespace(symbols=(device, bar), wires=wires)), {device.id: {"p": ids[port]}}, LIBRARY
+        )
+    monkeypatch.setattr(drawn_power, "port_power_text", lambda _m, port: stands[port.value][1])
+    monkeypatch.setattr(drawn_power, "_scope", lambda _m, port: stands[port.value][2])
+    monkeypatch.setattr(drawn_power, "_identity", lambda _m, _port, _key, text: text)
+    monkeypatch.setattr(drawn_power, "_core_ends", lambda _m: iter(ends or ()))
+    monkeypatch.setattr(drawn_power, "rail_flagged", lambda _m, _joined: True)
+    monkeypatch.setattr(drawn_rails, "unit_label", lambda _m, unit: str(unit))
+    parts = {Id[Page](kind="page", value=v[3]): pages[Id[Page](kind="page", value=v[3])] for v in stands.values()}
+    return Netlist(parts, drawn_netlist_module._join(parts), drawn_netlist_module._placed(parts), ids, {}, {}, nets=nets or {})
+
+
+def _same_piece(net: Netlist, one: str, other: str) -> bool:
+    first, second = (next(iter(net.placed[p])) for p in (one, other))
+    return net.union.find(first) == net.union.find(second)
+
+
+@pytest.mark.rule("READ-RAILS")
+@pytest.mark.parametrize(
+    ("other", "joined"),
+    [
+        (("supply", "24V", "A", "p2"), True),
+        (("supply", "12V", "A", "p2"), False),
+        (("supply", "24V", "B", "p2"), False),
+        (("ground", "24V", "A", "p2"), False),
+        (("supply", "24V", None, "p2"), False),
+    ],
+    ids=["same-text-and-cabinet", "other-text", "other-cabinet", "other-symbol", "no-cabinet"],
+)
+def test_two_power_symbols_join_iff_they_print_one_potential_in_one_cabinet(
+    monkeypatch: pytest.MonkeyPatch, other: tuple[str, str, str, str], *, joined: bool
+):
+    """R3 first half: the join key is (cabinet, symbol, printed text), never the model's hidden net."""
+    net = _powered(monkeypatch, {"a": ("supply", "24V", "A", "p1"), "b": other})
+    join_power(net, None)  # ty: ignore[invalid-argument-type] the monkeypatched reads take no model
+    assert _same_piece(net, "a", "b") is joined
+
+
+@pytest.mark.rule("READ-RAILS")
+def test_a_model_conductor_between_two_inked_power_symbols_joins_them_across_cabinets(monkeypatch: pytest.MonkeyPatch):
+    """R1937 Q2: a conductor ending on two inked power symbols is the cross-cabinet join (interim, KI-770)."""
+    stands: _Stands = {"a": ("ground", None, "A", "p1"), "b": ("ground", None, None, "p2")}
+    ends = ((Id[Any](kind="port", value="a"), Id[Any](kind="port", value="b")),)
+    net = _powered(monkeypatch, stands, ends=ends)
+    join_power(net, None)  # ty: ignore[invalid-argument-type] the monkeypatched reads take no model
+    assert _same_piece(net, "a", "b")
+
+
+@pytest.mark.rule("READ-RAILS")
+@pytest.mark.parametrize("kind", ["pe", "ground"])
+@pytest.mark.parametrize(
+    ("nets", "shared"), [({"a": "PE:A", "b": "PE:A", "c": "PE:A"}, False), ({"a": "n1", "b": "n2", "c": "n1"}, True)], ids=["bonded", "unbonded"]
+)
+def test_unbonded_nets_printing_one_identity_in_a_flagged_cabinet_are_rail_identity_shared(
+    monkeypatch: pytest.MonkeyPatch, kind: str, nets: dict[str, str], *, shared: bool
+):
+    """R3 second half: three symbols of one flagged cabinet pass when their nets are one bonded class, and fail when two nets are not."""
+    stands: _Stands = {p: (kind, None, "A", f"p{p}") for p in "abc"}
+    net = _powered(monkeypatch, stands, nets=nets)
+    found = rail_findings(net, None)  # ty: ignore[invalid-argument-type] the monkeypatched reads take no model
+    if shared:
+        expect_codes(SimpleNamespace(findings=found), "RAIL_IDENTITY_SHARED")
+    else:
+        assert found == ()
+
+
+@pytest.mark.rule("READ-RAILS")
+@pytest.mark.parametrize(
+    ("kind", "nets", "shared"),
+    [("ground", {"a": "n1", "b": "n2"}, True), ("pe", {"a": "n1", "b": "n2"}, True), ("ground", {"a": "n1", "b": "n1"}, False)],
+)
+def test_with_no_flagged_rail_two_unbonded_nets_of_one_cabinet_share_an_identity_and_one_net_does_not(
+    monkeypatch: pytest.MonkeyPatch, kind: str, nets: dict[str, str], *, shared: bool
+):
+    """R1955: a missing flag alone raises nothing; two nets under the cabinet plus potential raise, naming both remedies."""
+    net = _powered(monkeypatch, {"a": (kind, None, "A", "p1"), "b": (kind, None, "A", "p2")}, nets=nets)
+    monkeypatch.setattr(drawn_power, "rail_flagged", lambda _m, _joined: False)
+    found = rail_findings(net, None)  # ty: ignore[invalid-argument-type] the monkeypatched reads take no model
+    if shared:
+        expect_codes(SimpleNamespace(findings=found), "RAIL_IDENTITY_SHARED")
+        assert "put a fuse or breaker between them" in found[0].message
+    else:
+        assert found == ()
+    join_power(net, None)  # ty: ignore[invalid-argument-type] the monkeypatched reads take no model
+    assert not _same_piece(net, "a", "b")
+
+
+@pytest.mark.rule("READ-POWER-INK")
+@pytest.mark.parametrize("lead", [True, False], ids=["lead", "no-ink"])
+def test_a_power_symbol_with_no_ink_to_its_pin_is_power_symbol_not_joined(monkeypatch: pytest.MonkeyPatch, *, lead: bool):
+    """R4: a power symbol is joined to its pin by a lead; one off its pin with no wire is an ERROR."""
+    net = _powered(monkeypatch, {"a": ("ground", None, "A", "p1")}, lead=lead)
+    found = power_findings(net, None)  # ty: ignore[invalid-argument-type] the monkeypatched reads take no model
+    if lead:
+        assert found == ()
+    else:
+        expect_codes(SimpleNamespace(findings=found), "POWER_SYMBOL_NOT_JOINED")
+        assert "report it" in found[0].message
+
+
+@pytest.mark.rule("READ-POWER-INK")
+def test_a_power_symbol_standing_on_its_pin_is_inked_with_no_wire(monkeypatch: pytest.MonkeyPatch):
+    """R4: a zero-length lead (the symbol's port point is the pin point) counts as ink."""
+    net = _powered(monkeypatch, {"a": ("ground", None, "A", "p1")}, lead=False)
+    part = next(iter(net.pages.values()))
+    zero = replace(part, powers={"a": part.ports["a"]})
+    assert power_findings(replace(net, pages={next(iter(net.pages)): zero}), None) == ()  # ty: ignore[invalid-argument-type] the monkeypatched reads take no model
+
+
+def _marked(built: Built) -> tuple[Any, Any, list[int]]:
+    """A page, the first placed symbol that prints two marking texts, and nothing else."""
+    for page, drawing in built.drawings.items():
+        for symbol in drawing.symbols:
+            marks = [i for i, (slot, text) in enumerate(symbol.slots) if slot.startswith("marking.") and text]
+            if len(marks) > 1:
+                return page, symbol, marks
+    missing = "no symbol with two markings"
+    raise AssertionError(missing)
+
+
+@pytest.mark.rule("READ-IDENTITY")
+def test_a_drawing_printing_every_pin_marking_as_the_model_gives_it_has_no_pin_marking_wrong(card16):
+    assert "PIN_MARKING_WRONG" not in card16.codes()
+    assert card16.netlist().marks
+
+
+@pytest.mark.rule("READ-IDENTITY")
+def test_two_pins_with_their_marking_texts_swapped_are_pin_marking_wrong(card16):
+    page, symbol, (a, b) = _marked(card16)
+    slots = list(symbol.slots)
+    (sa, ta), (sb, tb) = slots[a], slots[b]
+    slots[a], slots[b] = (sa, tb), (sb, ta)
+    swapped = replace(symbol, slots=tuple(slots))
+    drawing = card16.drawings[page]
+    patched = card16.patched(page, symbols=tuple(swapped if s.id == symbol.id else s for s in drawing.symbols))
+    found = drawing_sweep(card16.model, card16._net(patched))
+    expect_codes(SimpleNamespace(findings=found), "PIN_MARKING_WRONG")
+    assert sum(f.code == "PIN_MARKING_WRONG" for f in found) == 2
+
+
+@pytest.mark.rule("READ-IDENTITY")
+def test_a_pin_the_sheets_leave_off_is_not_read_for_its_marking(card16, monkeypatch):
+    monkeypatch.setattr(drawn_identity_marks, "hidden_pins", lambda _model: set(card16.netlist().ids.values()))
+    page, symbol, (a, _) = _marked(card16)
+    gone = replace(symbol, slots=tuple(s for i, s in enumerate(symbol.slots) if i != a))
+    drawing = card16.drawings[page]
+    patched = card16.patched(page, symbols=tuple(gone if s.id == symbol.id else s for s in drawing.symbols))
+    assert card16.count("PIN_MARKING_WRONG", patched) == 0
+
+
+H, V = [(-20, 0), (20, 0)], [(0, -20), (0, 20)]
+FOUR = [[(-20, 0), (0, 0)], [(0, 0), (20, 0)], [(0, 0), (0, 20)], [(0, 0), (0, -20)]]
+
+
+def _rule(rule: str, code: str, geometry: Any) -> Any:
+    return pytest.param(code, geometry, marks=pytest.mark.rule(rule), id=code)
+
+
+INK_CASES = [
+    _rule("READ-T-DOT", "MISSING_JUNCTION_DOT", (FOUR, set(), [])),
+    _rule("READ-DOT-CROSSING", "DOT_ON_CROSSING", ([H, V], {(0, 0)}, [])),
+    _rule("READ-WIRE-OVER-TIP", "WIRE_OVER_PIN_TIP", ([H], set(), [(0, 0)])),
+]
+INK_CLEAN = [
+    pytest.param((FOUR, {(0, 0)}, []), marks=pytest.mark.rule("READ-T-DOT"), id="four-way-with-dot"),
+    pytest.param(([H, V], set(), []), marks=pytest.mark.rule("READ-DOT-CROSSING"), id="crossing-no-dot"),
+    pytest.param(([[(-20, 0), (0, 0)]], set(), [(0, 0)]), marks=pytest.mark.rule("READ-WIRE-OVER-TIP"), id="wire-ends-at-tip"),
+]
+
+
+def _ink(wires: list[list[tuple[int, int]]], dots: set[tuple[int, int]], tips: list[tuple[int, int]]) -> tuple[Any, ...]:
+    page = Id[Page](kind="page", value="p")
+    return ink_findings(cast("Any", SimpleNamespace(pages={page: SimpleNamespace(graph=page_graph(wires, dots, tips))})))
+
+
+@pytest.mark.parametrize(("code", "geometry"), INK_CASES)
+def test_ink_the_page_graph_lists_is_an_error_of_its_code(code: str, geometry: Any):
+    """R5, R6, R7: a four-way with no dot, a dot on a crossing and a wire over a pin tip each give one finding."""
+    expect_codes(SimpleNamespace(findings=_ink(*geometry)), code)
+    assert len(_ink(*geometry)) == 1
+
+
+@pytest.mark.parametrize("geometry", INK_CLEAN)
+def test_ink_that_is_drawn_right_gives_no_finding(geometry: Any):
+    assert _ink(*geometry) == ()
+
+
+@pytest.mark.rule("READ-T-DOT")
+def test_a_dotless_three_way_is_reported_once_by_the_sweep_side_of_tees_only():
+    """R6: a dotless T is a tee, which short_findings reports; ink_findings leaves it to avoid a second finding."""
+    assert _ink([H, [(0, 0), (0, 20)]], set(), []) == ()
+
+
+def _ports_of(model, port):
+    """The ports of the physical net `port` stands on."""
+    physical = net_of(model, port)
+    assert physical is not None
+    return physical.ports
+
+
+def _pe_model():
+    """A pump cabinet with a flagged PE strip: M1 earthed by `d.earth`, M2 by a conductor to the strip, so two PE nets meet only there."""
+    d = fr.design("demo_parts", place="CAB")
+    cab = d.location("CAB", "Cabinet")
+    with d.function("G", "Group"):
+        pe = d.terminal_strip("X1", "DEMO-TB-2.5", pe="DEMO-TB-PE-2.5").run("PE", 2, bridged=True, rail=True)
+        m1, m2 = d.device("M1", "DEMO-MOTOR-4KW"), d.device("M2", "DEMO-MOTOR-4KW")
+    d.earth(pe[1].inner, m1.motor["PE"])
+    d.series(pe[2].outer, m2.motor["PE"], wire=(GNYE, 2.5))
+    return fr.build(d, unit_document(cab)).model
+
+
+@pytest.mark.rule("READ-RAILS")
+def test_two_pe_nets_a_conductor_reaches_from_a_flagged_strip_are_one_net_and_no_short(monkeypatch: pytest.MonkeyPatch):
+    """R1937: a real model, no patched net keys: the PE bond merges the nets, so the drawn PE symbols do not short."""
+    model = _pe_model()
+    ids = {p.value: p for p in ports(model)}
+    pe = [key for key, one in ids.items() if port_power_kind(model, one) is PowerKind.PE]
+    assert len({net_key(model, _ports_of(model, ids[k])) for k in pe}) == 2
+    assert len({drawn_power.port_nets(model, ids)[k] for k in pe}) == 1
+    built = _built_of(model, symbol_kit(model, LIBRARY), monkeypatch)
+    assert "DRAWING_SHORTS_NETS" not in built.codes()
+
+
+class _Io(NamedTuple):
+    X1: fr.TerminalStrip
+    X2: fr.TerminalStrip
+
+
+def _earthed_cabinets(cabinets: int):
+    """`cabinets` units, each with two strips earthed by their own function's `b.earth` and no flagged rail."""
+    d = fr.design("demo_parts")
+    names = [f"cab-{n}" for n in range(1, cabinets + 1)]
+    for n, name in enumerate(names, 1):
+
+        def body(b: fr.Design, n: int = n) -> _Io:
+            strips = []
+            for k in (1, 2):
+                with b.function(f"G{n}{k}", "Group"):
+                    strips.append(b.terminal_strip(f"X{n}{k}", "DEMO-TB-2.5", pe="DEMO-TB-PE-2.5"))
+                    b.earth(strips[-1].run("PE", 1)[1])
+            return _Io(*strips)
+
+        unit = fr.unit(name, revision=1, interface_version=1, date="2026-10-15", text="First issue", by="XX", title=name, number=f"C-{n}")
+        d.add(unit(body), f"U{n}")
+    return fr.build(d, *(unit_document(name) for name in names)).model
+
+
+@pytest.mark.rule("READ-RAILS")
+@pytest.mark.parametrize("cabinets", [1, 2])
+def test_earth_declared_pe_is_one_bond_class_per_cabinet_with_no_flag(monkeypatch: pytest.MonkeyPatch, cabinets: int):
+    """R1962: each cabinet's earth-declared PE nets are one class, two cabinets two; no RAIL_IDENTITY_SHARED."""
+    model = _earthed_cabinets(cabinets)
+    ids = {p.value: p for p in ports(model)}
+    pe = [key for key, one in ids.items() if port_power_kind(model, one) is PowerKind.PE]
+    assert len({net_key(model, _ports_of(model, ids[k])) for k in pe}) == 2 * cabinets
+    assert len({drawn_power.port_nets(model, ids)[k] for k in pe}) == cabinets
+    built = _built_of(model, symbol_kit(model, LIBRARY), monkeypatch)
+    assert "RAIL_IDENTITY_SHARED" not in built.codes()

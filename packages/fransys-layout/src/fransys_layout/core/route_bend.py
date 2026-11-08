@@ -4,8 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from .errors import CoreError
-from .route_env import pin_point
+from .route_env import pin_point, pin_side
 
 if TYPE_CHECKING:
     from .route_env import Jog, RouteEnv
@@ -13,18 +12,11 @@ if TYPE_CHECKING:
 
 
 def _facing(env: RouteEnv, jog: Jog, point: XY) -> Side | None:
-    """The side the jog's pin at `point` faces, None when the jog names no placed pin there; a placed pin `env.sides` lacks raises CoreError."""
+    """The side the jog's pin at `point` faces, None when the jog names no placed pin there (`pin_side` raises on a pin with no side)."""
     ref = next((r for r in jog.ends if pin_point(env, r.sym, r.pin) == point), None)
     if ref is None:
         return None
-    key = (ref.sym, ref.pin, env.placed[ref.sym].orient)
-    if key not in env.sides:
-        msg = (
-            f"the placed pin {ref.sym}.{ref.pin} turned {key[2]} has no side in the symdef layer's table; "
-            "measure every orientation of every placed pin"
-        )
-        raise CoreError(msg)
-    return env.sides[key]
+    return pin_side(env, ref.sym, ref.pin)
 
 
 def bend_side(env: RouteEnv, jog: Jog) -> int | None:

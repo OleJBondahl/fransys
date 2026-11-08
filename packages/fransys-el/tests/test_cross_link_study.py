@@ -53,13 +53,13 @@ def test_a_lamp_beside_its_coil_has_no_crossing(row: str, request: pytest.Fixtur
     assert (x, p["attached_off_pin"]) == (0, 0), shown
 
 
-def test_eight_coils_returned_to_channels_draw_one_net_as_a_reference_where_a_tag_stands_and_p1_zero(channels: Model) -> None:
-    """The returns' own crossings are 0 (field case); the cell is every net's: 0 crossings and one reference pair.
+def test_eight_coils_returned_to_channels_draw_two_nets_as_a_reference_where_a_tag_stands_and_p1_zero(channels: Model) -> None:
+    """The returns' own crossings are 0 (field case); the cell is every net's: 0 crossings and two reference pairs.
 
-    The wire round the tag of terminal 1 has no room (TEXT-CANDIDATES with the edge inset; WIRE_AS_REFERENCE is looks).
+    The wires round the tag of terminal 1 and its run tag have no room (STRIP-TAG-ONCE; WIRE_AS_REFERENCE is looks).
     """
     x, _, p, refs, shown = _cell(channels)
-    assert (x, refs, p["attached_off_pin"]) == (0, 1, 0), shown
+    assert (x, refs, p["attached_off_pin"]) == (0, 2, 0), shown
 
 
 UNITS_BAR = 0  # the core measures 0 on the w02 instance (today 1, Ruling 48); the bar only falls

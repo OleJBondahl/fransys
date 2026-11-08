@@ -7,6 +7,7 @@ from typing import Any, NamedTuple
 import fransys as fr
 import pytest
 from _model_build_cover import unit_document
+from conventions_fixtures import house
 from fransys_el.placement_sets import DrawingScope, restriction
 from test_placement_sets_annexes import _problem
 
@@ -25,7 +26,7 @@ def _split():
 def test_a_cut_net_with_a_carrier_is_cut_and_not_dropped() -> None:
     problem, scope, crossing = _split()
     assert len(crossing) == 2  # the ring: K2-K3 and K3-K1
-    result = restriction(problem, scope)
+    result = restriction(problem, scope, options=house().options, tags={})
     assert result.dropped == frozenset()
     assert [n.id for n in result.problem.nets if n.cut] == [n.id for n in crossing]
 
@@ -33,14 +34,14 @@ def test_a_cut_net_with_a_carrier_is_cut_and_not_dropped() -> None:
 def test_a_cut_net_whose_inside_pins_are_bare_is_dropped_and_not_cut() -> None:
     problem, scope, crossing = _split()
     bare = [p for p in crossing[0].pins if p.sym in scope.symbols]
-    result = restriction(problem, scope, bare)
+    result = restriction(problem, scope, bare, options=house().options, tags={})
     assert result.dropped == {crossing[0].id}
     assert crossing[0].id not in {n.id for n in result.problem.nets}
 
 
 def test_a_scope_holding_every_symbol_cuts_and_drops_nothing() -> None:
     problem = _problem()
-    result = restriction(problem, DrawingScope(None, None, frozenset(s.id for s in problem.symbols)))
+    result = restriction(problem, DrawingScope(None, None, frozenset(s.id for s in problem.symbols)), options=house().options, tags={})
     assert result.dropped == frozenset()
 
 

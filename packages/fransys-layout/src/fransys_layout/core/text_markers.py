@@ -22,7 +22,7 @@ from .hangings import hung_keeps
 from .keys import natural_key
 from .net_keys import net_of_key
 from .outline import outline_keeps
-from .outputs import Marker
+from .outputs import Demand, Marker
 from .ref_kind import kind_of
 from .stand_fit import Limits, fit
 from .text_cells import cell_of
@@ -106,10 +106,20 @@ def _fed(m: Marker, st: Stand, keeps: Mapping[int, Sequence[Keep]]) -> bool:
     return any(k.kind == "wire" and any(own_end(at, e) for e in k.ends) and not _toward(k.box, at, st.side) for k in keeps.get(m.page, ()))
 
 
-def _slot(m: Marker, st: Stand, step: int, ctx: tuple[Options, Size, Mapping[int, Sequence[Keep]], Mapping[str, frozenset[str]]]) -> Marker | None:
-    """The first slot from `m` outward whose box lies inside the page and on no other net's pin or lead end (R845).
+def _room(m: Marker, st: Stand, options: Options) -> Demand:
+    """The room on the marker's side of its owner that holds its drawn box: its reach from the stand and the label gap (layout-0559).
+
+    The room is a vertical reach: a marker beside its end (E, W) asks above, as every room did before R1961.
+    """
+    box = marker_drawn_box(m, options)
+    return Demand("", 0, max(st.y - box.y, box.y + box.h - st.y, 0) + options.label_gap, m.end.sym, side=st.side if st.side in "NS" else "N")
+
+
+def _slot(m: Marker, st: Stand, step: int, ctx: tuple[Options, Size, Mapping[int, Sequence[Keep]], Mapping[str, frozenset[str]]]) -> Marker | Demand:
+    """The first slot from `m` outward whose box lies inside the page and on no other net's pin or lead end (R845); none: the room Demand.
 
     A boundary stub steps straight out along its pin's side until its box is clear (R920); a step lands on no other symbol's footprint.
+    A box off the page or past the row band is no slot; the Demand goes the way a tag's does, through `roomed` (layout-0559).
     """
     options, area, keeps, own = ctx
     here = keeps.get(m.page, ())
@@ -117,18 +127,26 @@ def _slot(m: Marker, st: Stand, step: int, ctx: tuple[Options, Size, Mapping[int
     framed = own.get(m.end.sym, frozenset())  # a marker of any kind stands on its own unit's frame line (R1104)
     owner = own.get(m.net, frozenset()) | framed | {m.end.sym}
     mine = frozenset({m.net, net_of_key(m.net), m.end.sym})  # a sibling fan's lane is exempt beside the box, never under it (R1063)
-    fed, moved = _fed(m, st, keeps), False  # the wire that feeds a marker belongs to its stand, not to a slot
+    fed, moved, first = _fed(m, st, keeps), False, m  # the wire that feeds a marker belongs to its stand; `first` sizes the Demand, not the last step
     bounds = Limits(area, st.band)
     if st.walked:  # walked clear of every keep at placement, the one fit test (R1331, R1338); no stand: no room (layout-0507)
         anchors = [k for k in here if k.kind == "anchor"]  # anchors stand after the placement that walked this stand (ANCHOR-FIRST)
-        return m if st.stood and inside(marker_box(m, options), area) and fit(marker_box(m, options), anchors, owner, None) == () else None
-    while (hit := fit(box := marker_box(m, options), here if moved else stand, owner, bounds, (m.x, m.y))) is not None:
-        if not hit and not (m.kind == "stub" and clear(inset(box), [k for k in (here if moved else stand) if k.kind == "wire"], {}, own=mine)):
+        return (
+            m
+            if st.stood and inside(marker_drawn_box(m, options), area) and fit(marker_box(m, options), anchors, owner, None) == ()
+            else _room(m, st, options)
+        )
+    while (
+        hit := fit(marker_box(m, options), here if moved else stand, owner, bounds._replace(drawn=marker_drawn_box(m, options)), (m.x, m.y))
+    ) is not None:
+        if not hit and not (
+            m.kind == "stub" and clear(inset(marker_box(m, options)), [k for k in (here if moved else stand) if k.kind == "wire"], {}, own=mine)
+        ):
             return m
         if fed:
-            return None
+            return _room(first, st, options)
         m, moved = _moved(m, st, 1, step), True
-    return None
+    return _room(first, st, options)
 
 
 def stagger(
@@ -137,11 +155,11 @@ def stagger(
     area: Size,
     keeps: Mapping[int, Sequence[Keep]],
     own: Mapping[str, frozenset[str]],
-) -> list[Marker | None]:
+) -> list[Marker | Demand]:
     """Markers on one side of one row that overlap along the edge stand one drawn box further out each.
 
     A slot outside `area` (R436) or on another net's pin or lead end (R845) is refused, the next
-    one tried; none left is None. No other step; an overlap is counted (R453).
+    one tried; none left is the room Demand (layout-0559). No other step; an overlap is counted (R453).
     """
     ctx = (options, area, keeps, own)
     got = staggered(
@@ -171,8 +189,8 @@ def _all_keeps(env: MarkEnv, placement: Placement, problem: PlacementProblem, op
 
 def placed_marks(
     cut: CutResult, placement: Placement, problem: PlacementProblem, options: Options, fixed: Mapping[int, Fixed]
-) -> tuple[tuple[Marker, ...], tuple[Finding, ...]]:
-    """The markers inside the page, in the plan's order, and MARKER_UNPLACED for each other.
+) -> tuple[tuple[Marker, ...], tuple[Finding, ...], tuple[Demand, ...]]:
+    """The markers inside the page, in the plan's order, MARKER_UNPLACED for each other and the room Demand of each (layout-0559).
 
     A slot on a fixed wire is refused as on another net's pin (R872). A pair (not a stub or copy) keeps all its ends or none and raises one
     MARKER_UNPLACED: an arrow by `Trunk.stood` (R1488), a tag or star here (R1566).
@@ -187,17 +205,19 @@ def placed_marks(
     out = iter(stagger([p for ps in per_ref for p in ps], options, problem.area, keeps, own))
     kept: list[Marker] = []
     missed: list[Finding] = []
+    asks: list[Demand] = []
     for ref, ps in zip(cut.spec.reference_plan, per_ref, strict=True):
         got = [next(out) for _ in ps]
         missed += _missed(ref, ps, got)
-        if kind_of(ref) in _LONE or None not in got:
-            kept += [k for k in got if k is not None]
-    return tuple(kept), tuple(missed)
+        asks += [k for k in got if isinstance(k, Demand)]
+        if kind_of(ref) in _LONE or all(isinstance(k, Marker) for k in got):
+            kept += [k for k in got if isinstance(k, Marker)]
+    return tuple(kept), tuple(missed), tuple(asks)
 
 
-def _missed(ref: Ref, ps: Sequence[tuple[Marker, Stand]], got: Sequence[Marker | None]) -> list[Finding]:
+def _missed(ref: Ref, ps: Sequence[tuple[Marker, Stand]], got: Sequence[Marker | Demand]) -> list[Finding]:
     """MARKER_UNPLACED for each end of a stub or copy that found no slot, and one for an arrow or star whatever its unstood ends (R1488)."""
-    lone = [_unplaced(m) for (m, _), k in zip(ps, got, strict=True) if k is None]
+    lone = [_unplaced(m) for (m, _), k in zip(ps, got, strict=True) if isinstance(k, Demand)]
     return lone if kind_of(ref) in _LONE else lone[:1]
 
 

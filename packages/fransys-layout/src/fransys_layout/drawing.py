@@ -8,7 +8,7 @@ give its JSON form. Imports the standard library and the core's plain values onl
 from dataclasses import dataclass
 from typing import Literal
 
-lazy from .core.values import XY, Box, Orientation, Size
+lazy from .core.values import XY, Box, Orientation, RowTerm, Size
 lazy from .drawing_reads import (
     fill_percent,
     page_texts,
@@ -24,9 +24,11 @@ __all__ = (
     "Corner",
     "Drawing",
     "DrawnOutline",
+    "DrawnRow",
     "DrawnSymbol",
     "DrawnText",
     "DrawnWire",
+    "RowTerm",
     "Sheet",
     "Style",
     "TextStyle",
@@ -48,7 +50,8 @@ Corner = Literal["NW", "NE", "SW", "SE"]
 class DrawnText:
     """One text: its final string, its box in G and the corner of the box it is anchored by.
 
-    `owner` is the id of the drawn item the text annotates, `None` for a free text.
+    `owner` is the id of the drawn item the text annotates, `None` for a free text. `turned` is a text that reads bottom-up in a box
+    already turned (its width the text's thickness); its `anchor` corner is where symdef starts the text.
     """
 
     text: str
@@ -56,6 +59,7 @@ class DrawnText:
     kind: str
     anchor: Corner
     owner: str | None = None
+    turned: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -121,8 +125,22 @@ class DrawnOutline:
 
 
 @dataclass(frozen=True, slots=True)
+class DrawnRow:
+    """One placed row of a page: the model ids of its items, its measured height and width in G and the term that set its height.
+
+    `devices` are the item ids as text (the kernel's `render_id`, as `DrawnSymbol.id` is), each item once, in the order the row's finding names them.
+    `height_g`, `width_g` and `term` are the figures PAGE_OVERFLOW and WIDER_THAN_PAGE read (R1939); `term` is the term of `row_term`'s reach.
+    """
+
+    devices: tuple[str, ...]
+    height_g: int
+    width_g: int
+    term: RowTerm
+
+
+@dataclass(frozen=True, slots=True)
 class Drawing:
-    """One page: its area in G, the things drawn on it and the library version they name."""
+    """One page: its area in G, the things drawn on it, its placed rows and the library version they name."""
 
     area: Size
     symbols: tuple[DrawnSymbol, ...]
@@ -130,6 +148,7 @@ class Drawing:
     texts: tuple[DrawnText, ...]
     outlines: tuple[DrawnOutline, ...]
     library_version: str
+    rows: tuple[DrawnRow, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)

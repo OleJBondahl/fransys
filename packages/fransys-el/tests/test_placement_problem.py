@@ -3,20 +3,26 @@
 # NET_SHORTED 2 per default-salt build set (KI-461): planted_model or demo_model 24 V to 0 V short through strip and mate.
 # WIRE_ROW_UNRESOLVED 6 per default-salt build set (KI-461): planted_model or demo_model 24 V to 0 V short through strip and mate.
 
+import dataclasses
+
 import fransys as fr
 import pytest
 from conventions_fixtures import house
 from fransys.colours import BU
-from fransys_el import ProblemError, build
-from fransys_el import placement_widest as widest
-from fransys_el.kit_keys import function_of
+from fransys_el import ProblemError, build, placement_syms
+from fransys_el.kit_keys import PickKey, function_of
+from fransys_el.placement_annexes import label_annexes
 from fransys_el.placement_env import make_env
+from fransys_el.placement_ids import symbol_key
+from fransys_el.placement_sets import drawing_scopes, restriction
+from fransys_el.placement_syms import strip_tags, syms_of
 from fransys_el.placement_where import where_room
 from placement_fixtures import _feed, demo_model, kit_for, planted_model, sid
+from symdef import from_divisions, text_footprint
 
 from electrical_symbols import LIBRARY
-from fransys_layout.core import PlacementProblem, from_plain, to_plain
-from fransys_model.derive import port_designation
+from fransys_layout.core import PlacementProblem, Size, from_plain, to_plain
+from fransys_model.derive import function_role, function_scopes, port_designation, run_point_text, tag_text
 from fransys_model.derive.order import functions_in_order
 from fransys_model.vocab import ports
 lazy from fransys_model.kernel import Model
@@ -140,15 +146,84 @@ def test_missing_pick_raises_problem_with_fix(planted: tuple[Model, PlacementPro
     assert any(info.value.subject == f"port {port_designation(model, p)}" for p in own)
 
 
-def test_the_where_line_is_measured_once_per_build(planted: tuple[Model, PlacementProblem], monkeypatch: pytest.MonkeyPatch) -> None:
-    """`where_room` reads `Env.where`, measured once in `make_env`; terminals add no marker measure (BS2)."""
+def test_a_terminals_where_room_is_its_own_and_one_digit_wider_per_page_digit(planted: tuple[Model, PlacementProblem]) -> None:
+    """No document-wide line remains (R1883): the room is per terminal, one line per other scope, its page number `digits` long."""
     model, _ = planted
     env = make_env(model, kit_for(model), house(), LIBRARY)
-    calls: list[str | None] = []
-    real = widest.marker_boxes
-    monkeypatch.setattr(widest, "marker_boxes", lambda library, text=None: calls.append(text) or real(library, text))
-    rooms = [where_room(env, function_of(model, k)) for k in env.owner]
-    assert env.where in "".join(rooms)
-    assert not calls
-    make_env(model, kit_for(model), house(), LIBRARY)
-    assert len(calls) == 9  # one run of nine digits, not nine per terminal
+    assert not hasattr(env, "where")
+    pin = function_of(model, _pin_of(model))
+    one, two = where_room(env, pin), where_room(env, pin, 2)
+    assert one.count("\n") == len(function_scopes(model, pin)) - 1 >= 1
+    assert two.count("\n") == one.count("\n")
+    assert len(two.splitlines()[1]) == len(one.splitlines()[1]) + 1  # a digit more, no more
+    assert (
+        where_room(
+            env, function_of(model, next(k for k in env.owner if k != _pin_of(model) and not function_role(model, function_of(model, k)).terminal))
+        )
+        == ""
+    )
+
+
+def test_a_terminal_with_a_where_room_holds_its_label_again_per_extra_page_digit(planted: tuple[Model, PlacementProblem]) -> None:
+    """`Sym.wider` is the label at 2, 3, ... digits, growing; a symbol with no room holds none (R1883)."""
+    model, _ = planted
+    env = make_env(model, kit_for(model), house(), LIBRARY)
+    found = {s.id: s for s in syms_of(env)}
+    pin = found[symbol_key(model, _pin_of(model))]
+    widths = [pin.labels[""].w, *(w[""].w for w in pin.wider)]
+    assert len(pin.wider) == house().options.where_digit_rounds
+    assert widths == sorted(set(widths))
+    assert all(not s.wider for s in found.values() if s.row_group is None)
+
+
+def _pin_of(model: Model, text: str = "-U1-X1:2") -> PickKey:
+    """The kit key of the terminal whose full designation is `text` (a drawing prints its point only, STRIP-TAG-ONCE)."""
+    return next(f for f in kit_for(model) if tag_text(model, function_of(model, f)) == text)
+
+
+def _label_of_pin(model: Model) -> tuple[Size, float, str]:
+    """The label size of the pin `-U1-X1:2` over `model`, the cap height in mm, and its where room."""
+    env = make_env(model, kit_for(model), house(), LIBRARY)
+    pin = _pin_of(model)
+    label = next(s.labels[""] for s in syms_of(env) if s.id == symbol_key(model, pin))
+    cap = from_divisions(LIBRARY.grid, house().text_height) * LIBRARY.font.cap_height / LIBRARY.font.units_per_em * LIBRARY.grid.module_mm
+    return label, cap, where_room(env, function_of(model, pin))
+
+
+def test_a_tag_with_where_lines_is_measured_as_the_block_of_its_lines(planted: tuple[Model, PlacementProblem]) -> None:
+    """The tag and its where line are one block: the widest line wide, two lines tall, not the sum of both widths by one line."""
+    label, cap, room = _label_of_pin(planted[0])
+    assert room
+    point = run_point_text(planted[0], function_of(planted[0], _pin_of(planted[0])))
+    assert label == Size(*text_footprint(LIBRARY.font, point + room, cap, LIBRARY.grid))  # the point, the strip tag is the run's (STRIP-TAG-ONCE)
+    assert label.h > text_footprint(LIBRARY.font, point, cap, LIBRARY.grid)[1]
+
+
+def test_a_tag_in_a_unit_scoped_set_is_measured_as_that_set_prints_it(monkeypatch: pytest.MonkeyPatch) -> None:
+    """KI-734 (GAP-FLIP-734 in tests/gap_flip_other.toml): `-U1-X1` prints `-X1` in its unit's set: its run tag there has that width."""
+    monkeypatch.setattr(placement_syms, "where_room", lambda *_: "")
+    model = planted_model()
+    kit = kit_for(model)
+    problem = build(model, kit, house(), LIBRARY)[0]
+    tags = strip_tags(make_env(model, kit, house(), LIBRARY))
+    scopes = drawing_scopes(model, kit)
+    pin = _pin_of(model)
+    scope = next(s for s in scopes if s.of_unit is not None and symbol_key(model, pin) in s.symbols)
+    strip = next(sym.row_group for sym in problem.symbols if sym.id == symbol_key(model, pin))
+    label = next(a.size for a in restriction(problem, scope, scopes=scopes, options=house().options, tags=tags).problem.annexes if a.owner == strip)
+    cap = from_divisions(LIBRARY.grid, house().text_height) * LIBRARY.font.cap_height / LIBRARY.font.units_per_em * LIBRARY.grid.module_mm
+    assert label.w == text_footprint(LIBRARY.font, "-X1", cap, LIBRARY.grid)[0]
+
+
+def test_a_symbol_with_no_tag_slot_has_a_zero_label_in_every_set_that_draws_it(planted: tuple[Model, PlacementProblem]) -> None:
+    """`Sym.labels` holds every scope key the sets use, so `label_annexes` of a unit's set never misses a zero-label symbol."""
+    env = make_env(planted[0], kit_for(planted[0]), house(), LIBRARY)
+    got = placement_syms._labels(env, None, None, Size(0, 0), {"U1": "-X1:2"})  # ty: ignore[invalid-argument-type] a zero label reads neither
+    assert got == {"": Size(0, 0), "U1": Size(0, 0)}
+
+
+def test_a_strip_named_like_a_symbol_is_refused_naming_the_strip(planted: tuple[Model, PlacementProblem]) -> None:
+    """The strip owns its template annex and a symbol its own: one id space, so a clash raises."""
+    sym = planted[1].symbols[0]
+    with pytest.raises(ProblemError, match=sym.id):
+        label_annexes((dataclasses.replace(sym, row_group=sym.id),), house().options, "", {sym.id: {"": Size(8, 8)}})

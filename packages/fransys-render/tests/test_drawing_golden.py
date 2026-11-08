@@ -8,7 +8,7 @@ from fransys_render.draw import svg
 
 from electrical_symbols import LIBRARY
 from fransys_layout.core import Size, from_plain, to_plain
-from fransys_layout.drawing import Drawing, DrawnSymbol, DrawnWire
+from fransys_layout.drawing import Drawing, DrawnRow, DrawnSymbol, DrawnWire, RowTerm
 
 STYLE = style(LIBRARY)
 _GOLDEN = Path(__file__).parent / "golden" / "drawings" / "planted_page.json"
@@ -32,6 +32,7 @@ PLANTED = Drawing(
     texts=(),
     outlines=(),
     library_version="planted",
+    rows=(DrawnRow(("item:ab12",), 16, 320, RowTerm.BODY),),
 )
 
 

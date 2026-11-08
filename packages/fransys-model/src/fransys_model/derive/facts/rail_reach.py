@@ -9,18 +9,19 @@ from fractions import Fraction
 from typing import TYPE_CHECKING
 
 from fransys_model.derive.facts.closure import port_rails, rail_pairs
+from fransys_model.derive.facts.potentials import rail_potential
 from fransys_model.derive.indexes import build_indexes
 from fransys_model.elecdef import Current
-from fransys_model.kernel import DIGEST_CACHE_SIZE, digest_cached
-from fransys_model.vocab import voltage
-from fransys_model.vocab.tables import nets, ports, supply_of_potential, supply_systems
+from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, digest_cached
+from fransys_model.vocab import RailGroup, Unit, voltage
+from fransys_model.vocab.tables import nets, ports, rail_groups, supply_of_potential, supply_systems
 
 from .net_facts import is_earth_net, net_potential
+from .unit_index import item_unit
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
-    from fransys_model.kernel import Id, Model
     from fransys_model.vocab.core import Function, Port
 
 
@@ -154,3 +155,16 @@ def reached_supplies(model: Model) -> dict[Id[Function], set[str]]:
         names = reached.setdefault(port.function, set())
         names.update(lookup[name].supply for name in port_rails(model, port.id) if name in lookup)
     return reached
+
+
+@digest_cached(DIGEST_CACHE_SIZE)
+def rail_scope(model: Model) -> frozendict[tuple[Id[Unit] | None, str], Id[RailGroup]]:
+    """The flagged rail group of each (unit, potential), the first in `rail_groups` order; a group with no potential is skipped.
+
+    New because `rails_by_potential` is a supply-rail map keyed by potential, read by 6 rating/fault readers that cannot take a unit key.
+    """
+    found: dict[tuple[Id[Unit] | None, str], Id[RailGroup]] = {}
+    for group in rail_groups(model).values():
+        if (potential := rail_potential(model, group)) is not None:
+            found.setdefault((item_unit(model, group.terminals[0]), potential), group.id)
+    return frozendict(found)

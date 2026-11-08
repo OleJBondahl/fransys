@@ -14,6 +14,7 @@ from electrical_symbols.box_ports import (
     PORT_PITCH,
     SOUTH,
     default_sides,
+    marking_slot,
 )
 from electrical_symbols.errors import SymbolsError
 
@@ -78,7 +79,7 @@ def _marks(ports: tuple[Port, ...]) -> tuple[Slot, ...]:
     """A `marking.<port>` slot per port, E of its wire and just inside the body."""
     return tuple(
         Slot(
-            id=f"marking.{port.id}",
+            id=marking_slot(port.id),
             position=Point(
                 x=port.position.x + _MARK_OFFSET_X,
                 y=port.position.y + (_MARK_OFFSET_Y if port.direction is Direction.N else -_MARK_OFFSET_Y),

@@ -4,7 +4,7 @@ import fransys as fr
 from conventions_fixtures import house
 from fransys.colours import BU
 from fransys_el import build, symbol_kit
-from fransys_el.placement_sets import DrawingScope, _carried, _carriers, restrict
+from fransys_el.placement_sets import DrawingScope, _carried, _carriers, restriction
 
 from electrical_symbols import LIBRARY
 from fransys_layout.core import Facts, PinRef, Unit
@@ -28,7 +28,7 @@ def _shared(problem):
 
 
 def _scoped(problem, ids):
-    return restrict(problem, DrawingScope(None, None, frozenset(ids)))
+    return restriction(problem, DrawingScope(None, None, frozenset(ids)), options=house().options, tags={}).problem
 
 
 def test_a_net_cut_to_two_symbols_keeps_both_pins_and_marks_one_as_cut() -> None:
@@ -81,7 +81,10 @@ def test_a_scopes_frames_reach_the_restricted_problems_hints_whole_or_cut() -> N
     cut = sorted({p.sym for p in _shared(problem).pins})[:2]
     frames = (("unit:u", frozenset(cut[:1])),)
     for ids in ([s.id for s in problem.symbols], cut):
-        assert restrict(problem, DrawingScope(None, None, frozenset(ids), frames=frames)).hints.frames == frames
+        assert (
+            restriction(problem, DrawingScope(None, None, frozenset(ids), frames=frames), options=house().options, tags={}).problem.hints.frames
+            == frames
+        )
 
 
 def test_an_own_edge_boundary_pin_with_an_in_unit_wire_keeps_its_far_end_in_another_unit() -> None:

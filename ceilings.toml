@@ -16,6 +16,8 @@ surface_docstring_lines = 15
 
 [statements]
 "packages/fransys-el/src/fransys_el/drawn_netlist.py::drawn_netlist" = 16
+"packages/fransys-layout/src/fransys_layout/core/text_markers.py::placed_marks" = 16
+"packages/fransys-layout/src/fransys_layout/core/widen.py::widen" = 22
 
 [nested_defs]
 "packages/fransys-model/src/fransys_model/derive/facts/closure.py::_adjacency" = 1

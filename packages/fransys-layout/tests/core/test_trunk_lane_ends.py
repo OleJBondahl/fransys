@@ -160,6 +160,15 @@ def test_no_lane_end_lies_past_its_last_tap_without_a_standing_arrow(area: int, 
     assert not all(all(s) for s in got.stood) or area == 200  # a narrow content box leaves an arrow with no stand
 
 
+@pytest.mark.rule("BUNDLE-LANE-END")
+def test_a_lane_cut_at_both_ends_of_a_row_with_no_tap_in_it_runs_through_the_row() -> None:
+    """KI-755: a pass-through lane is a line from cut end to cut end, so the bundle's one marker stands on ink."""
+    both = (frozenset({0, 1}), frozenset({0, 1}))
+    got = _ends(fan_of(2), [tap(1, 8), tap(1, 30)], {0, 1}, (1, 1), Stand(3, poles=both, leads=(frozenset({0}), frozenset({0}))))
+    assert got[0] is not None
+    assert got[0] == got[1]
+
+
 def test_a_lane_steps_out_past_its_hull_only_if_its_pole_belongs_to_the_cut_end() -> None:
     """R1676: a continuing lane that is no pole of the cut end stops at its last attachment."""
     taps = [tap(0, 6), tap(0, 20), tap(1, 8), tap(1, 30)]

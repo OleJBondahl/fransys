@@ -24,7 +24,7 @@ def link_box(sid: str, wires: int, *, first: bool = False, last: bool = False) -
         id=sid,
         group=None,
         unit="",
-        label=Size(16, 8),
+        labels={"": Size(16, 8)},
         pins=tuple(pins),
         nodes=tuple((p.id,) for p in pins),
         views=views_of(body, body, body, pins, ("R0",)),

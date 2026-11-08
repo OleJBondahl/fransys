@@ -102,7 +102,7 @@ from .document_pages import (
     page_order_key,
 )
 from .document_scope import document_bom_lines, document_scope
-from .document_sets import set_unit
+from .document_sets import printing_document, set_unit
 from .document_sheets import (
     document_sheet_format,
     document_sheets,
@@ -110,6 +110,7 @@ from .document_sheets import (
 )
 from .document_sizes import sizes_of
 from .document_subject import scope_path, subject_label, unit_label
+from .drawn_designations import drawn_designations
 from .drawn_groups import function_group, function_moves, group_draws, group_members_drawn_in
 from .drawn_sheets import (
     cable_block_sizes,
@@ -181,6 +182,7 @@ from .facts.part import (
     template_throws,
 )
 from .facts.plc_wiring import channel_takes
+from .facts.rail_reach import rail_scope
 from .facts.roles import (
     changeover_functions,
     conductor_role,
@@ -538,7 +540,7 @@ from .stub_far import stub_far
 from .stub_text import stub_text_at
 from .supply_share import supply_share
 from .symbol_port_subject import symbol_port_subject
-from .tag_text import item_tag_text, run_point_text, tag_text
+from .tag_text import item_tag_text, run_point_text, strip_tag_text, tag_text
 from .title_block import document_facts, project_facts
 from .title_block_words import title_block_forms
 from .unit_nodes import own_nodes
@@ -848,6 +850,7 @@ __all__ = [
     "document_unit",
     "documents",
     "drawing_set_is_replica_only",
+    "drawn_designations",
     "drawn_groups",
     "drawn_net_of",
     "drawn_pages",
@@ -1073,6 +1076,7 @@ __all__ = [
     "previous_release_listing",
     "printed_designation",
     "printed_drawing_sets",
+    "printing_document",
     "profile_of",
     "project_facts",
     "prospective_fault",
@@ -1081,6 +1085,7 @@ __all__ = [
     "rail_pairs",
     "rail_phase_problem",
     "rail_row",
+    "rail_scope",
     "reading_cables",
     "rebaseline_subjects",
     "record_key_text",
@@ -1128,6 +1133,7 @@ __all__ = [
     "strip_of",
     "strip_side_headings",
     "strip_stubs",
+    "strip_tag_text",
     "strip_view",
     "stub_ends",
     "stub_far",

@@ -19,6 +19,7 @@ from fransys_layout.symbols import (
     frame_cell,
     frame_extent,
     library_symbol,
+    line_pitch,
     marker_views,
     outline_room,
     symbol_shape,
@@ -78,7 +79,8 @@ def test_the_text_widens_the_slot_and_the_label_is_that_slot() -> None:
     order = list(shape.pins)
     plain = views(symbol, ("R0",), order=order, text_slot="tag", text="K1", text_height=8)
     long = views(symbol, ("R0",), order=order, text_slot="tag", text="K1234567.12345", text_height=8)
-    assert plain.label.w == shape.slots["tag"].w
+    assert plain.label.h == 8
+    assert plain.label.w < shape.slots["tag"].w  # the ink, not the reserved slot
     assert long.label.w > plain.label.w
     assert long.views["R0"].footprint == plain.views["R0"].footprint  # text is no footprint (R327)
     assert long.views["R0"].keepout == plain.views["R0"].keepout  # the keep-out is as reserved
@@ -208,3 +210,13 @@ def test_the_outline_room_is_the_margin_and_the_label_slot_of_the_unit_outline_s
     assert room.margin == LIBRARY.grid.outline_margin == 4
     assert room.label == symbol_shape(library_symbol(LIBRARY, "unit-outline"), LIBRARY).slots["label"] == Box(2, 2, 48, 8)
     assert room.least == Size(64, 48)
+
+
+def test_line_pitch_is_what_each_further_line_adds_to_the_label_block() -> None:
+    """R1856: the block of N lines is the first line plus N-1 pitches, symdef's own rule."""
+    symbol, shape = _coil()
+    order = list(shape.pins)
+    one = views(symbol, ("R0",), order=order, text_slot="tag", text="K1", text_height=8).label
+    three = views(symbol, ("R0",), order=order, text_slot="tag", text="K1\nK1\nK1", text_height=8).label
+    assert line_pitch(LIBRARY, 8) > 0
+    assert three.h - one.h == 2 * line_pitch(LIBRARY, 8)

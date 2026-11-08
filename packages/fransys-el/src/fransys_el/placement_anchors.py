@@ -5,7 +5,7 @@ Read once from the symdef layer (SB11); the core moves the values and knows no p
 
 from typing import TYPE_CHECKING, cast
 
-from electrical_symbols import WIRING_GRID, power_symbol_key
+from electrical_symbols import WIRING_GRID, marking_slot, power_symbol_key
 from fransys_layout import Facing
 from fransys_layout.core import SIDE_STEP, Anchor, Box, PinRef, Pose
 from fransys_layout.symbols import library_symbol, measured_slots, turned_view
@@ -95,7 +95,7 @@ def _keeps(model: Model, key: str, port: Id[Port], library: Library, height: int
     symbol = library_symbol(library, key)
     found = {}
     for turn in _TURNS:
-        slot = f"marking.{_first_port(library, key)}"
+        slot = marking_slot(_first_port(library, key))
         found[turn] = measured_slots(symbol, turn.name, {slot: text} if text else {}, library, height)[1]
     return found
 

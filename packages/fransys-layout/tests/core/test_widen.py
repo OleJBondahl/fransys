@@ -11,6 +11,7 @@ from fransys_layout.core import Annex, Box, Facts, PinRef, PlacementProblem, Siz
 from fransys_layout.core.cut import cut_pages
 from fransys_layout.core.cut_costs import with_wires
 from fransys_layout.core.cut_measured import Measured
+from fransys_layout.core.geometry import overlaps
 from fransys_layout.core.outputs import Demand, PagePlacement
 from fransys_layout.core.place import place_pages
 from fransys_layout.core.row_extent import held
@@ -222,7 +223,7 @@ def wide_annex_columns(width: int) -> PlacementProblem:
     return replace(prob, annexes=tuple(Annex(s.id, Size(width, 8), None, {"R0": (Spot("TR", "TR", 0, 0, "down"),)}) for s in prob.symbols))
 
 
-@pytest.mark.rule("TEXT-CANDIDATES")
+@pytest.mark.rule("TAG-CORNERS")
 def test_a_label_blocked_at_every_candidate_widens_its_gap_before_it_is_a_finding() -> None:
     """A6: a box 100 wide beside a body stands in a gap of 8 nowhere; its need goes to the recut, the gaps grow, and every label stands."""
     layout = solve(wide_annex_columns(100), PLAIN)
@@ -231,7 +232,39 @@ def test_a_label_blocked_at_every_candidate_widens_its_gap_before_it_is_a_findin
     assert min(g.x1 - g.x0 for g in layout.placement.pages[0].gaps) >= 100
 
 
-@pytest.mark.rule("TEXT-CANDIDATES")
+def edge_column_annexes() -> PlacementProblem:
+    """three_columns() with a 100-wide box a symbol, first at its left (outside the page for the first column), then at its right."""
+    prob = three_columns()
+    spots = (Spot("TL", "TL", -100, 0, "down"), Spot("TR", "TR", 0, 0, "down"))
+    return replace(prob, annexes=tuple(Annex(s.id, Size(100, 8), None, {"R0": spots}) for s in prob.symbols))
+
+
+@pytest.mark.rule("TAG-CORNERS")
+def test_a_label_blocked_at_the_page_edge_widens_the_gap_at_its_other_side() -> None:
+    """LABEL-PLACE 3: the first column's left spot lies outside the page; its need goes to the gap on its right and every label stands."""
+    layout = solve(edge_column_annexes(), PLAIN)
+    assert [f for f in layout.findings if f.code == "ANNEX_UNPLACED"] == []
+    assert min(g.x1 - g.x0 for g in layout.placement.pages[0].gaps) >= 100
+
+
+def stacked_column_annexes() -> PlacementProblem:
+    """One column of two elements; the lower one has a 60-high box above it, where the upper one stands."""
+    names = ["a0", "a1"]
+    prob = PlacementProblem(AREA, tuple(elem(n) for n in names), tuple(chain(names, prefix="a0")), facts=Facts())
+    return replace(prob, annexes=(Annex("a1", Size(16, 60), None, {"R0": (Spot("TR", "TR", 0, -60, "down", 8),)}),))
+
+
+@pytest.mark.rule("TAG-CORNERS")
+def test_a_label_with_no_gap_beside_its_column_asks_for_room_above_its_owner() -> None:
+    """LABEL-PLACE 3: a column with no gap has no width to give; the tag's need is vertical room, and the label stands clear of both bodies."""
+    layout = solve(stacked_column_annexes(), PLAIN)
+    assert [f for f in layout.findings if f.code == "ANNEX_UNPLACED"] == []
+    bodies = [p.body for p in layout.placement.pages[0].placed]
+    assert len(layout.annotations.annexes) == 1
+    assert not any(overlaps(a.box, b) for a in layout.annotations.annexes for b in bodies)
+
+
+@pytest.mark.rule("TAG-CORNERS")
 def test_a_label_still_blocked_after_the_widen_is_a_finding_naming_it_and_stands_at_its_first_spot() -> None:
     """T6: a box wider than the page fits no gap; the finding names its owner and the label is neither dropped nor moved."""
     layout = solve(wide_annex_columns(AREA.w + 8), PLAIN)

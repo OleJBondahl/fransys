@@ -1,4 +1,4 @@
-"""One reference end in two drawing sets is two link markers, never one id twice (TEXT-CANDIDATES).
+"""One reference end in two drawing sets is two link markers, never one id twice (TAG-CORNERS).
 
 A net whose ends stand on page 1 of two sets gave the same `layout.link_marker` key from both
 sets' write, with a different page: `MergeConflictError` out of build. The set's number is in the key.

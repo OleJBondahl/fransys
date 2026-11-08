@@ -23,6 +23,7 @@ from .keys import natural_key
 from .node_names import HIGH, LOW, box_node, box_y_node, col_node
 from .outputs import Gap, PagePlacement, PinXY, Placed, Trunk
 from .pack import cell_node
+from .place_align import strip_runs
 from .place_lanes import _hull, _marker_keeps, drawn_lane_ends, stand_of, taps_x
 from .place_span import solved_spans
 from .place_trunk import box_pin_x, held_room, trunk_node
@@ -30,6 +31,7 @@ from .values import Box
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Mapping, Sequence
+    from collections.abc import Set as AbstractSet
 
     from .clearance import Keep
     from .flow_values import Cell, Fan
@@ -186,8 +188,9 @@ def assemble(
     env: PageEnv,
     x: Mapping[str, int],
     y: Mapping[str, int],
+    dropped: AbstractSet[str | None] = frozenset(),
 ) -> PagePlacement:
-    """The page's Placed symbols (by natural id order), gaps with no tracks yet, trunks, rows."""
+    """The page's Placed symbols (by natural id order), gaps with no tracks yet, trunks, rows, strip runs (`dropped`: subjects of lost Aligns)."""
     placed = {**_cells(env, x, y), **_boxes(env, x, y)}
     shown = replace(env, syms=env.bare) if env.bare else env
     seen = {**_cells(shown, x, y), **_boxes(shown, x, y)}
@@ -196,7 +199,9 @@ def assemble(
     marks = tuple(_marker_keeps(env, placed))
     trunks = _trunks(env, placed, (x, y), seen, marks)
     spans = solved_spans(env, placed, trunks, [t for t, _ in bands])
-    return PagePlacement(env.plan.page, ordered, _gaps(env, x, y), trunks, _rows(env, placed, y), bands, spans, _hung(marks))
+    return PagePlacement(
+        env.plan.page, ordered, _gaps(env, x, y), trunks, _rows(env, placed, y), bands, spans, _hung(marks), strip_runs(env, dropped)
+    )
 
 
 def _hung(marks: Iterable[Keep]) -> dict[str, tuple[Box, ...]]:

@@ -11,8 +11,9 @@ import pytest
 from _drawn_pages import drawn_pages
 from _export_signature import is_export
 
+from fransys_model.derive import function_item, run_point_text, strip_of, strip_tag_text
 from fransys_model.layout import DrawingSet, Page, layout_of
-from fransys_model.vocab.tables import items, ports
+from fransys_model.vocab.tables import functions, items, ports
 
 run: Any = None if is_export() else importlib.import_module("placement_corpus.run")
 
@@ -24,9 +25,15 @@ _CASES = (
 )
 
 
+def _run_forms(model: Any, unit: Any) -> set[str]:
+    """The forms a run prints (STRIP-TAG-ONCE): each strip terminal's own point and its strip's tag, in the set of `unit`."""
+    strip_terminals = [f for f in functions(model) if strip_of(model, function_item(model, f))]
+    return {run_point_text(model, f) for f in strip_terminals} | {strip_tag_text(model, f, unit=unit) for f in strip_terminals}
+
+
 def _forms(model: Any, unit: Any) -> set[str]:
     found = {fr.derive.printed_designation(model, i, unit=unit) for i in items(model)}
-    return found | {fr.derive.port_designation(model, p, unit=unit) for p in ports(model)}
+    return found | {fr.derive.port_designation(model, p, unit=unit) for p in ports(model)} | _run_forms(model, unit)
 
 
 def _tags_by_unit(model: Any) -> dict[Any, set[str]]:
@@ -49,3 +56,24 @@ def test_each_drawn_tag_of_a_set_is_a_text_its_lists_print(case: Any) -> None:
         if unit is not None:
             root_only = _forms(model, None) - own
             assert not tags & root_only, (unit, sorted(tags & root_only)[:5])
+
+
+@pytest.mark.private_input  # reads internal/ (R462)
+@pytest.mark.rule("STRIP-TAG-ONCE")
+@pytest.mark.parametrize("case", _CASES, ids=[c[0] for c in _CASES])
+def test_a_page_that_prints_a_strip_points_prints_the_strip_tag(case: Any) -> None:
+    """A page with a drawn run point (`L2:1`) also draws a strip tag of its set (`-X1`): no point stands without its run's tag."""
+    model = run.build(case[0], case).model
+    sets = layout_of(model, DrawingSet)
+    pages = layout_of(model, Page)
+    strip_terminals = [f for f in functions(model) if strip_of(model, function_item(model, f))]
+    points = {run_point_text(model, f) for f in strip_terminals}
+    printed_points: set[str] = set()
+    for page, drawing in drawn_pages(model).items():
+        unit = sets[pages[page].drawing_set].unit
+        tags = {t.text for t in drawing.texts if t.kind == "TAG"}
+        strips = {strip_tag_text(model, f, unit=unit) for f in strip_terminals}
+        printed_points |= tags & points - strips
+        if tags & points - strips:
+            assert tags & strips, (page, sorted(tags)[:8])
+    assert printed_points, "no page prints a run point: the test would pass vacuously"

@@ -74,15 +74,17 @@ def misses(request: pytest.FixtureRequest) -> list[tuple[Any, ...]]:
     return found
 
 
-#: R1193 (KI-455, ROW-BAND-TRACE): rows the spans do not fill after the ledger's leg stubs; a looks count, it only falls.
+#: R1193 (KI-455, ROW-BAND-TRACE): distinct rows the spans do not fill after the ledger's leg stubs; the same miss in more rounds counts once
+#: (R1899, WHERE-DIGITS-START, KI-758); a looks count, it only falls.
 _LOOKS = {
     "machine_panel": 2,  # R1800 (KI-705, looks): new p5 row 0 band 232 with -B15..-B20/-MB13..-MB17 (PE-EARTH-JOIN); was 1
-    "panel_di16p": 15,
+    "panel_di16p": 6,
     "remote_io": 3,
-    "mcc": 4,  # R1673/R1675: accepted move (3 -> 4)
+    "mcc": 1,  # R1673/R1675: accepted move (3 -> 4); distinct count 1 (R1899)
 }  # SUPPLY-SLOT (R1605) + ID-TEXT-ORDER (R1628): mcc has 3 rows 8 G short of their spans (power symbol keepout; order-text ids); looks
 
 
 @pytest.mark.rule("PAGE-CUT")
 def test_every_row_band_is_the_extent_of_its_spans(request: pytest.FixtureRequest, misses: list[tuple[Any, ...]]) -> None:
-    assert len(misses) <= _LOOKS.get(request.node.callspec.id, 0), misses[:8]
+    distinct = sorted(set(misses))
+    assert len(distinct) <= _LOOKS.get(request.node.callspec.id, 0), distinct[:8]

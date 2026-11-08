@@ -786,7 +786,6 @@
 "fransys_layout.core.place_room::step_rooms" = 1
 "fransys_layout.core.place_y::_cycle_text" = 1
 "fransys_layout.core.place_y::_loosened" = 1
-"fransys_layout.core.route_astar::anchor" = 2
 "fransys_layout.core.route_tree::end_anchors" = 2
 "fransys_layout.core.route_wires::_stair" = 1
 "fransys_layout.core.text_ends::hub_xy" = 1

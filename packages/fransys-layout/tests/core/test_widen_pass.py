@@ -8,16 +8,19 @@ from itertools import pairwise
 
 import pytest
 
-from fransys_layout.core import Box, Placement, PlacementProblem, Size
+from fransys_layout.core import Annex, Box, Placement, PlacementProblem, Size, Spot
 from fransys_layout.core.cut_measured import Measured
+from fransys_layout.core.errors import CoreError
 from fransys_layout.core.flow_values import FlowGraph
 from fransys_layout.core.geometry import marker_box
 from fransys_layout.core.hangings import hung_keeps
 from fransys_layout.core.occupancy import cells_between
-from fransys_layout.core.outputs import Demand, Routes
+from fransys_layout.core.outputs import Demand, Refused, Routes, RowMeasure
 from fransys_layout.core.route_fixed import fixed_wires
+from fransys_layout.core.row_measure import row_measures
 from fransys_layout.core.text_markers import placed_marks
-from fransys_layout.core.widen import Round, Standing, measured_of, overflows, routed, widen
+from fransys_layout.core.values import RowTerm
+from fransys_layout.core.widen import Round, Standing, _culprit, measured_of, overflows, routed, widen
 
 from .conftest import MARKER
 from .pipeline_fixtures import cut_of, placed_from, routed_from, widened_of
@@ -95,6 +98,26 @@ def test_a_page_over_its_room_gets_page_overflow_naming_page_overflow_and_fix() 
     assert "enlarge the page" in found[0].text
     assert found[0].text.startswith(f"{'set ' + cut2.spec.pages[0].unit + ', ' if cut2.spec.pages[0].unit else ''}page 1, row 0 (devices ")
     assert len(after.pages) == 1
+
+
+def test_a_measured_row_gives_the_figures_and_the_culprit_the_finding_names() -> None:
+    prob = overflowing_row()
+    _, (cut2, after, _, found) = run(prob)
+    rows = row_measures(after, cut2, prob, OPTS)
+    wide = max(rows, key=lambda m: (m.width, m.row))
+    assert wide.width - (prob.area.w - 2 * OPTS.margin.w) == int(found[0].text.partition(" G wide")[0].rpartition(" ")[2])
+    assert f"row {wide.row} (devices {', '.join(wide.devices)})" in found[0].text
+    assert (wide.height, wide.width) == after.pages[0].rows[wide.row]
+    assert wide.term == RowTerm.BODY
+
+
+@pytest.mark.rule("PAGE-CUT")
+def test_the_culprit_of_a_tall_page_is_the_row_of_the_tallest_term_reach_and_of_a_wide_page_the_widest() -> None:
+    """R1940 (2): `_culprit` reads `row_term`'s reach, not the band height; the later row wins an equal reach."""
+    rows = [RowMeasure(1, i, ("K1",), h, w, RowTerm.BODY, reach) for i, (h, w, reach) in enumerate([(90, 10, 40), (50, 30, 80), (60, 20, 80)])]
+    assert _culprit(rows, tall=True) == 2
+    assert _culprit(rows, tall=False) == 1
+    assert _culprit([], tall=True) is None
 
 
 def test_a_page_the_placement_gave_too_tall_is_cut_again_into_room() -> None:
@@ -186,9 +209,97 @@ def test_the_recut_returns_the_least_excess_attempt_the_latest_among_equals(monk
     attempts = iter([(f"cut{i}", f"placed{i}") for i in range(4)])
     excess = {"placed0": 0, "placed1": 9, "placed2": 0, "placed3": 142}
     monkeypatch.setattr(widen_module, "_attempt", lambda *_: next(attempts))
-    monkeypatch.setattr(widen_module, "_excess", lambda placed, *_: excess[placed])
+    monkeypatch.setattr(widen_module, "_excess", lambda placed, *_: (excess[placed], 0))
     monkeypatch.setattr(widen_module, "_short", lambda *_: True)
     monkeypatch.setattr(widen_module, "_spans_of", lambda *_: None)
     monkeypatch.setattr(widen_module, "_lanes", lambda lanes, *_: lanes + 1)
     options = replace(OPTS, recut_rounds=3)
     assert widen_module._recut((), FlowGraph((), (), (), (), ()), three_columns(), options, Measured()) == ("cut2", "placed2")
+
+
+def _wide_prob() -> PlacementProblem:
+    """`three_columns` with one annex at each of 1, 2 and 3 digits of a where-text page number (R1883), each a wider box."""
+    prob = three_columns()
+    sets = [
+        tuple(Annex(s.id, Size(8 * k, 8), None, {"R0": (Spot("TR", "TR", 0, 0, "down"),)}, Size(8, 8 * k)) for s in prob.symbols) for k in (1, 2, 3)
+    ]
+    return replace(prob, annexes=sets[0], wider=tuple(sets[1:]))
+
+
+def _pages_of(prob: PlacementProblem, count: int) -> Placement:
+    placement = placed_from(cut_of(prob, OPTS), prob, OPTS)
+    return replace(placement, pages=placement.pages * count)
+
+
+def test_the_annexes_follow_the_digits_of_the_page_count_and_the_digits_only_rise() -> None:
+    prob = _wide_prob()
+    one, risen = widen_module._digits(_pages_of(prob, 9), prob, 0)
+    assert (one is prob, risen) == (True, 0)
+    two, risen = widen_module._digits(_pages_of(prob, 10), prob, risen)
+    assert (two.annexes, risen) == (prob.wider[0], 1)
+    back, risen = widen_module._digits(_pages_of(prob, 2), two, risen)  # fewer pages leave the 2-digit annexes
+    assert (back is two, risen) == (True, 1)
+    capped, risen = widen_module._digits(_pages_of(prob, 1000), two, risen)  # 4 digits: only 3 are held
+    assert (capped.annexes, risen) == (prob.wider[1], 2)
+
+
+def test_a_round_whose_page_count_needs_more_digits_routes_again_with_the_wider_annexes(monkeypatch) -> None:
+    monkeypatch.setattr(widen_module, "_widened", lambda cut, placement, *_: (cut, placement, ()))  # the padded pages are no cut's
+    prob = _wide_prob()
+    cut = cut_of(prob, OPTS)
+    placement = _pages_of(prob, 10)
+    rnd = Round((), (), routed_from(cut, prob, OPTS), ())
+    _, _, _, problem, _ = widen(cut, placement, rnd, prob, OPTS)
+    assert problem.annexes == prob.wider[0]
+    _, _, _, same, _ = widen(cut, _pages_of(prob, 1), rnd, prob, OPTS)
+    assert same.annexes == prob.annexes
+
+
+def _grants_for(monkeypatch, rounds: int) -> int:
+    """`widen` over a problem that grants new room for `rounds` passes and then nothing; the passes it ran (R1967)."""
+    prob = three_columns()
+    cut = cut_of(prob, OPTS)
+    placement = placed_from(cut, prob, OPTS)
+    rnd = Round((), (), routed_from(cut, prob, OPTS), ())
+    ran: list[int] = []
+    monkeypatch.setattr(widen_module, "roomed", lambda p, _asked: replace(p) if len(ran) < rounds else p)
+    monkeypatch.setattr(widen_module, "_widened", lambda c, pl, *_: (ran.append(1), (c, pl, ()))[1])
+    monkeypatch.setattr(widen_module, "route_round", lambda *_: rnd)
+    widen(cut, placement, rnd, prob, OPTS)
+    return len(ran)
+
+
+@pytest.mark.parametrize("rounds", [2, 5, 9])
+def test_widen_runs_while_a_round_grants_new_room_however_many_rounds_that_takes(monkeypatch, rounds: int) -> None:
+    """R1967: bank:71 at salt d needs 5 passes; a cap of 3 left K9's tag marker unplaced."""
+    assert _grants_for(monkeypatch, rounds) == rounds
+
+
+def test_widen_stops_at_the_first_round_that_grants_nothing_new(monkeypatch) -> None:
+    assert _grants_for(monkeypatch, 0) == 0
+
+
+def test_a_lost_link_already_tagged_is_no_new_grant() -> None:
+    """R1967: the loop ends only when a round hands nothing new, so a loss met again is not tagged twice."""
+    prob = three_columns()
+    net = prob.nets[0]
+    ends = (net.pins[0], net.pins[1])
+    once = widen_module.tagged_by(prob, [Refused(net.id, ends), Refused(net.id, ends)])
+    assert once.nets[0].tagged == (ends,)
+    assert widen_module.tagged_by(once, [Refused(net.id, ends)]) is once
+
+
+@pytest.mark.timeout(30)
+def test_a_dedupe_that_grants_the_same_ask_again_raises_core_error_not_a_hang(monkeypatch) -> None:
+    """R1981: past `widen_rounds_limit` passes the loop raises, naming the rounds and the unmet asks."""
+    prob = three_columns()
+    cut = cut_of(prob, OPTS)
+    placement = placed_from(cut, prob, OPTS)
+    rnd = Round((), (), routed_from(cut, prob, OPTS), ())
+    ask = Demand("", 0, 1, "c:a0", side="E")
+    monkeypatch.setattr(widen_module, "_asked", lambda *_: ([ask], {}))
+    monkeypatch.setattr(widen_module, "roomed", lambda problem, _: replace(problem))
+    monkeypatch.setattr(widen_module, "_widened", lambda c, p, *_: (c, p, ()))
+    monkeypatch.setattr(widen_module, "route_round", lambda *_: rnd)
+    with pytest.raises(CoreError, match=r"after 4 rounds.*c:a0"):
+        widen(cut, placement, rnd, prob, replace(OPTS, widen_rounds_limit=4))

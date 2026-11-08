@@ -82,6 +82,17 @@ def test_a_stub_that_is_no_laned_bundles_is_no_cut_end() -> None:
     assert cut_ends((replace(stub, kind=RefKind.COPY),), _plan(2, ("c1",)), (fan,), 0) == ()
 
 
+def test_a_single_lane_copy_at_the_trunk_end_is_a_right_cut_end() -> None:
+    """KI-757: a copy standing at the trunk's end takes the room an arrow takes; a laned bundle's copy and a leg copy do not."""
+    fan, stub = _bundle("c1")
+    plain, copy = replace(fan, lanes=1), replace(stub, kind=RefKind.COPY)
+    (found,) = cut_ends((copy,), _plan(2, ("c1",)), (plain,), 0)
+    assert (found.key, found.right) == ((PinRef("a", "p"), "copy"), True)
+    assert arrow_ends((copy,), _plan(2, ("c1",)), (plain,), 0) == (0, 1)
+    leg = replace(copy, ends=(replace(copy.ends[0], stand=StandClass.LEG),))
+    assert cut_ends((leg,), _plan(2, ("c1",)), (plain,), 0) == ()
+
+
 def _arrow(page: int, row: int) -> Ref:
     """An arrow of f:n1 leaving the right end of (page, row) and entering the next row's left."""
     return Ref("f:n1", RefKind.ARROW, (RefEnd(page, None, None, row), RefEnd(page, None, None, row + 1)))

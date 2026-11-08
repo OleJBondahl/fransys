@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 
 from options_fixtures import core_options
 
-from fransys_layout.core import Options, Placement, PlacementProblem, build_flow, order_blocks
+from fransys_layout.core import Options, Placement, PlacementProblem, Size, build_flow, order_blocks
 lazy from fransys_layout.core.outputs import Routes
 
 if TYPE_CHECKING:
@@ -96,10 +96,11 @@ def widened_of(prob: PlacementProblem, options: Options | None = None) -> tuple[
 
 
 def with_annexes(prob: PlacementProblem, options: Options) -> PlacementProblem:
-    """The problem with el's designation annexes, one per symbol, as fransys_el builds them."""
+    """The problem with el's designation annexes, one per symbol and a 24 by 8 strip tag template per strip, as fransys_el builds them."""
     from fransys_el.placement_annexes import label_annexes
 
-    return replace(prob, annexes=label_annexes(prob.symbols, options))
+    tags = {s.row_group: {"": Size(24, 8)} for s in prob.symbols if s.row_group}
+    return replace(prob, annexes=label_annexes(prob.symbols, options, "", tags))
 
 
 def labelled_of(prob: PlacementProblem, options: Options | None = None) -> tuple[tuple[AnnexBox, ...], tuple[Finding, ...]]:

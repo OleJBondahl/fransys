@@ -2,8 +2,10 @@
 
 from derive_helpers import frozen_with_library
 
-from fransys_model.derive import widest_position_text, widest_target_line
+from fransys_model.derive import printing_document, widest_position_text, widest_target_line
+from fransys_model.derive.document_subject import scope_path
 from fransys_model.kernel import Draft
+from fransys_model.vocab.tables import documents
 
 MODEL = frozen_with_library(Draft())
 
@@ -23,7 +25,16 @@ def test_the_line_is_the_plus_form_so_no_printed_line_is_longer() -> None:
     assert all(len(line) <= len(widest_target_line(MODEL, 1, 8, 6, "9")) for line in two)
 
 
-def test_the_widest_position_text_counts_the_digits_of_the_symbol_count() -> None:
-    """With no document there is no front page and no far-document prefix: the text is the page and the cell."""
-    assert widest_position_text(MODEL, 1, 8, 6, "9") == "p9:9F"
-    assert widest_position_text(MODEL, 10, 12, 8, "9") == "p99:99H"
+def test_the_widest_position_text_counts_the_digits_of_the_page() -> None:
+    """With fewer than two documents there is no far-document prefix: the far text is the page and the cell too."""
+    assert widest_position_text(MODEL, 1, (8, 6), "9", far=()) == "p9:9F"
+    assert widest_position_text(MODEL, 2, (12, 8), "9", far=()) == "p99:99H"
+
+
+def test_a_far_document_leads_the_widest_position_text_with_its_own_scope_path(demo_cabinet) -> None:
+    """The prefix is that document's `scope_path`, not the widest of all (R1887); `printing_document` names a document of the model or none."""
+    model = demo_cabinet
+    doc = next(iter(documents(model)))
+    assert widest_position_text(model, 1, (8, 6), "9", far=[doc]) == f"{scope_path(model, doc)} p9:9F"
+    assert printing_document(model, None, None) in {None, *documents(model)}
+    assert printing_document(MODEL, None, None) is None

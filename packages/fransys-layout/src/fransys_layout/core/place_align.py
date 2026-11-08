@@ -9,12 +9,15 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from .errors import CoreError
 from .geometry import pin_xy
 from .keys import natural_key
+from .outputs import StripRun
 from .pack import cell_node
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
+    from collections.abc import Set as AbstractSet
 
     from .flow_values import Cell
     from .place_env import PageEnv
@@ -48,22 +51,53 @@ class Align:
     note: str = ""
 
 
-def row_group_aligns(env: PageEnv) -> tuple[Align, ...]:
-    """Each row group, per page row, with its cells at one end of their columns level, head and foot apart."""
-    found: dict[tuple[str, int, str], list[tuple[str, int]]] = {}
+def _ends(env: PageEnv) -> dict[tuple[str, int, str], list[tuple[str, str]]]:
+    """Per (row group, page row, head|foot): the (graph node, symbol id) of its cells at that end of their columns."""
+    found: dict[tuple[str, int, str], list[tuple[str, str]]] = {}
     for pc in env.pcs.values():
         for li, cells in enumerate(pc.lanes):
             for end, i in (("head", 0), ("foot", len(cells) - 1)):
-                group = env.syms[cells[i].sym].row_group
-                if group:
-                    found.setdefault((group, pc.row, end), []).append((cell_node(pc.id, li, i), 0))
+                if group := env.syms[cells[i].sym].row_group:
+                    found.setdefault((group, pc.row, end), []).append((cell_node(pc.id, li, i), cells[i].sym))
+    return found
+
+
+def row_group_aligns(env: PageEnv) -> tuple[Align, ...]:
+    """Each row group, per page row, with its cells at one end of their columns level, head and foot apart."""
+    found = _ends(env)
     out = []
     for g, row in sorted({(g, r) for g, r, _ in found}, key=lambda k: (natural_key(k[0]), k[1])):
-        lines = tuple(tuple(line) for end in ("head", "foot") if len(line := found.get((g, row, end), [])) > 1)
+        lines = tuple(tuple((n, 0) for n, _ in line) for end in ("head", "foot") if len(line := found.get((g, row, end), [])) > 1)
         if lines:
             subject = f"{g}, row {row}"
             out.append(Align("row_group", subject, lines, _ROW_GROUP.format(subject)))
     return tuple(out)
+
+
+def _parts(env: PageEnv, dropped: AbstractSet[str | None]) -> list[tuple[str, list[str]]]:
+    """(row group, symbol ids) of each run: a row group's cells level at one end, each alone when its Align was dropped, a mid-column one alone."""
+    seen: set[str] = set()
+    parts: list[tuple[str, list[str]]] = []
+    for (g, row, _), members in _ends(env).items():
+        ids = [s for _, s in members if s not in seen]
+        seen.update(ids)
+        each = [[i] for i in ids] if f"{g}, row {row}" in dropped else [ids]
+        parts.extend((g, part) for part in each if part)
+    parts.extend(
+        (g, [c.sym]) for pc in env.pcs.values() for cells in pc.lanes for c in cells if (g := env.syms[c.sym].row_group) and c.sym not in seen
+    )
+    return parts
+
+
+def strip_runs(env: PageEnv, dropped: AbstractSet[str | None]) -> tuple[StripRun, ...]:
+    """The runs of the strip terminals, each in one run, its members in column order, left to right; `dropped` are the Aligns lost."""
+    runs = []
+    for g, ids in _parts(env, dropped):
+        if (key := f"{g} run at {ids[0]}") in env.syms:
+            msg = f"strip {g}: the run key {key!r} is also a symbol id; ids share one space"
+            raise CoreError(msg)
+        runs.append(StripRun(g, tuple(ids), key))
+    return tuple(runs)
 
 
 def _topmost(env: PageEnv) -> dict[tuple[int, int], list[tuple[str, int]]]:

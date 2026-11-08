@@ -10,9 +10,11 @@ from dataclasses import replace
 import pytest
 from conventions_fixtures import house
 from fransys_el import build, lay_out_drawn, symbol_kit
+from fransys_el.placement_env import make_env
 from fransys_el.placement_markers import facing_views, stub_fit
 from fransys_el.placement_options import options
-from fransys_el.placement_sets import bare_pins, cut_lines, drawing_scopes, restrict
+from fransys_el.placement_sets import bare_pins, cut_lines, drawing_scopes, restriction
+from fransys_el.placement_syms import strip_tags
 from fransys_el.placement_widest import link_fit
 from fransys_el.read_markers import drawn_marker
 from fransys_el.write_stubs import far_port
@@ -58,7 +60,8 @@ def built():
     bare = bare_pins(model, kit)
     chosen = options(conventions, LIBRARY)
     lines = cut_lines(model, kit)
-    parts = [(one, restrict(problem, one, bare, lines)) for one in drawing_scopes(model, kit)]
+    tags = strip_tags(make_env(model, kit, conventions, LIBRARY))
+    parts = [(one, restriction(problem, one, bare, lines, options=conventions.options, tags=tags).problem) for one in drawing_scopes(model, kit)]
     core = [_solved(model, kit, one, part, chosen) for one, part in parts]
     written, *_ = lay_out_drawn(model, kit, problem, conventions, LIBRARY)
     stubs = [m for m in layout_of(written, LinkMarker).values() if m.key[:3] == _CORE and m.key[3] == "stub"]

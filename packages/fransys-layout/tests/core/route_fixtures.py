@@ -4,12 +4,14 @@ from __future__ import annotations
 
 from dataclasses import replace
 from itertools import combinations, pairwise
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from options_fixtures import core_options
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
+
+    from fransys_layout.core import Side
 
 from fransys_layout.core import (
     Box,
@@ -181,6 +183,7 @@ def link_env(
         or core_options(
             marker=MARKER,
         ),
+        sides={(sym, "p", "R0"): cast("Side", side) for sym, (_, _, side) in pins.items()},
     )
 
 

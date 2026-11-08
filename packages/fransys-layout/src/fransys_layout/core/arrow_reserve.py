@@ -158,9 +158,25 @@ def leg_unit(legs: Sequence[tuple[int, PinRef]], options: Options) -> int:
     return (max(widths) + options.wiring_grid) * len(legs) if widths else 0
 
 
+def leg_offsets(legs: Sequence[tuple[int, PinRef]], options: Options) -> dict[int, int]:
+    """Per leg index, the x its start takes past `leg_cut`: (rank+1) units, the rank counted by (pole, index) (R1454)."""
+    step = leg_unit(legs, options) // len(legs) if legs else 0
+    return {j: (sum(1 for i, (q, _) in enumerate(legs) if (q, i) < (p, j)) + 1) * step for j, (p, _) in enumerate(legs)}
+
+
+def legged_offsets(legs: Sequence[tuple[int, PinRef]], options: Options) -> dict[int, int]:
+    """Per pole that stands legs, the offset past `leg_cut` of its last leg's start: where its lane ends (R1684)."""
+    return {legs[j][0]: o for j, o in leg_offsets(legs, options).items()}
+
+
 def leg_hull(trunk: Trunk, reach: int) -> int:
     """The x of the trunk end's last tap: the hull for a many-lane trunk, the arrow's step-out `reach` back for a one-lane one."""
     return trunk.x1 if len(trunk.lane_ends) > 1 else trunk.x1 - reach
+
+
+def step_out(hull: int, grid: int) -> int:
+    """The common step-out of the lanes that stand legs: one `grid` past the trunk end's hull; the x every leg leaves from (BUNDLE-LANE-END)."""
+    return hull + grid
 
 
 def leg_cut(trunk: Trunk, legs: Sequence[tuple[int, PinRef]], reach: int, grid: int) -> int:
@@ -170,7 +186,7 @@ def leg_cut(trunk: Trunk, legs: Sequence[tuple[int, PinRef]], reach: int, grid: 
     counts as the lanes' common step-out, one `grid` past the hull: the legs never leave from the arrow's own end.
     """
     hull = leg_hull(trunk, reach)
-    ends = [min(e[1], hull + grid) for q, _ in legs if (e := trunk.lane_ends[q])] if len(trunk.lane_ends) > 1 else []
+    ends = [min(e[1], step_out(hull, grid)) for q, _ in legs if (e := trunk.lane_ends[q])] if len(trunk.lane_ends) > 1 else []
     return max(ends) if ends else hull
 
 
@@ -217,13 +233,15 @@ def leg_line(
     The run is clear of a footprint's pin tips (gap 0); the stand is the first x past cut + (rank+1)*unit clear of all (R1299, R1465, R887).
     """
     feet, placed, arrowed, lines, area = around
-    span = leg_unit(legs, options)
-    grid = options.wiring_grid
+    span, grid = leg_unit(legs, options), options.wiring_grid
     pole, pin = legs[leg]
     reach = (grid + span) * ((trunk.page, trunk.fan, trunk.row) in arrowed)
+    others = (
+        legged_offsets(legs, options).keys() - {pole} - {p for p, _ in arrowed.get((trunk.page, trunk.fan, trunk.row), ())}
+    )  # lanes that end at their leg
     cut = leg_cut(trunk, legs, reach, grid)
     end, y = (trunk.lane_ends[pole] or (0, cut))[1] if len(trunk.lane_ends) > 1 else cut, _lane_y(trunk, grid, pole)
-    x = cut + (sum(1 for j, (q, _) in enumerate(legs) if (q, j) < (pole, leg)) + 1) * (span // len(legs))
+    x = cut + leg_offsets(legs, options)[leg]
     low = _lane_y(trunk, grid) + grid
     box = marker_box_at(0, 0, options, options.marker_facing["S"], (pin, str(RefKind.STUB)))
     cells = [Keep("", f, "foot", "") for f in feet]
@@ -234,7 +252,9 @@ def leg_line(
             *(Keep("", Box(t.x0 - 1, t.y - 1, t.x1 - t.x0 + 2, 2), "foot", "") for t in lines if t.fan != trunk.fan and y < t.y <= low),
             *_arrow_keeps(trunk, lines, arrowed, options),
         ],
-        frozenset(d for e in trunk.lane_ends if e for d in e if not reach or d <= leg_hull(trunk, reach)),  # an arrow's step-out is no drop
+        frozenset(
+            d for i, e in enumerate(trunk.lane_ends) if e for d in e if not reach or d <= leg_hull(trunk, reach) or i in others
+        ),  # an arrow's step-out is no drop; another legged lane's end is one (R1684)
         area,
     )
     runs = takewhile(

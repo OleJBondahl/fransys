@@ -1,6 +1,6 @@
 """Field case: a long tag stands in a body corner clear of its wire and never widens the pitch.
 The bug: the designation's size was folded into each symbol's footprint, so long tags pushed the lamps apart.
-Fixed by layout-0371 (TEXT-CANDIDATES, R327): a tag is placed after the symbols in the first fitting corner, adding no pitch."""
+Fixed by layout-0371 (TAG-CORNERS, R327): a tag is placed after the symbols in the first fitting corner, adding no pitch."""
 
 from typing import TYPE_CHECKING
 

@@ -31,7 +31,7 @@ def sym(sid: str, pins: tuple[Pin, ...], **kw: Any) -> Sym:
         sid,
         None,
         "U1",
-        Size(8, 8),
+        {"": Size(8, 8)},
         pins,
         tuple((p.id,) for p in pins),
         views=views_of(BODY, BODY, BODY, pins, ALL_EIGHT),

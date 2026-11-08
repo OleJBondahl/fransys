@@ -37,6 +37,19 @@ class StandClass(StrEnum):
     LEG = "leg"
 
 
+class RowTerm(StrEnum):
+    """The term that set a placed row's height: its cells, its cards, the markers hung at them, its trunks' room or its annexes (R1939).
+
+    Members are in tie order: of equal reaches the earlier member wins (`row_measure.row_term`).
+    """
+
+    BODY = "body"
+    CARD = "card"
+    MARKER_ROOM = "marker_room"
+    STUB = "stub"
+    ANNEX = "annex"
+
+
 MarkerKind = RefKind
 WireKind = Literal["straight", "drop", "riser", "trunk", "routed", "join"]
 FindingCode = Literal[
@@ -225,6 +238,9 @@ class PlacementProblem:
     hints: Hints = field(default_factory=Hints)
     anchors: tuple[Anchor, ...] = ()
     annexes: tuple[Annex, ...] = ()
+    wider: tuple[
+        tuple[Annex, ...], ...
+    ] = ()  # the annexes at 2, 3, ... digits of a where-text page number (R1883): `widen` swaps them in as pages grow
 
 
 @dataclass(frozen=True, slots=True)
@@ -266,12 +282,13 @@ class Options:
     history_step: int = field(kw_only=True)  # added to a shared cell's history after each round
     ripup_worst: int = field(kw_only=True)  # links laid alone again after a negotiation, most crossings first
     recut_rounds: int = field(kw_only=True)
+    where_digit_rounds: int = field(kw_only=True)  # rises of the where-text page number's digit count `widen` follows (R1883)
     label_moves: int = field(kw_only=True)  # standing labels a blocked label may move before the recut (R1479)
     route_fallback_rounds: int = field(kw_only=True)  # routing and reference loop bound (R1246)
     solve_rounds: int = field(kw_only=True)  # layouts after the first that hold missed anchor outlines
+    widen_rounds_limit: int = field(kw_only=True)  # widen passes before it raises CoreError (R1981)
     # owner 2026-10-18: a designation stands in a corner of its symbol, top left by default
     corner_order: tuple[str, ...] = field(kw_only=True)
-    slack: tuple[int, ...] = field(kw_only=True)
     # layout-0305, SB4: the reference-marker symbol's keepout box at each orientation, in grid
     # units relative to its origin; the symdef layer measures it, so the core types no size
     marker: Mapping[Orientation, Box] | None = None

@@ -92,6 +92,15 @@ def test_every_branch_marker_the_loop_makes_has_room() -> None:
         assert codes.count("CONNECTION_NOT_DRAWN") == 0
 
 
+def _point_under(drawing, tag: str):
+    """The point text of the terminal printed `tag` (`-X3:1`): the point `1` standing nearest the strip tag `-X3` of its run (STRIP-TAG-ONCE)."""
+    strip, _, point = tag.partition(":")
+    texts = [t for t in drawing.texts if t.kind == "TAG"]
+    runs = [t for t in texts if t.owner is None and t.text == strip]
+    points = [t for t in texts if t.owner and t.text == point]
+    return min(points, key=lambda p: min(abs(p.box.x - r.box.x) + abs(p.box.y - r.box.y) for r in runs), default=None) if runs else None
+
+
 def _own_branches(model, tag: str) -> list[tuple[DrawnSymbol, DrawnSymbol]]:
     """The markers in a unit's own set standing at the terminal printed `tag`, with that terminal.
 
@@ -102,7 +111,7 @@ def _own_branches(model, tag: str) -> list[tuple[DrawnSymbol, DrawnSymbol]]:
     for page, drawing in drawn_pages(model).items():
         if sets[pages[page].drawing_set].unit is None:
             continue
-        text = next((t for t in drawing.texts if t.text == tag), None)
+        text = _point_under(drawing, tag)
         if text is None:  # the unit's set may span pages: only the terminal's own page counts
             continue
         terminal = min(

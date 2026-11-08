@@ -9,7 +9,8 @@ import fransys as fr
 import fransys_parts
 import pytest
 from _dd_core import pages_with, set_of
-from _dd_core_b import is_stub, marker_strings, markers, symbols_of, tags_of
+from _dd_core_b import is_stub, marker_strings, markers, symbols_of
+from _dd_core_c import stands
 from _drawn_pages import drawn_pages, markers_in
 from _model_build_cover import cabinet_document
 from _no_power_net import assert_no_power_net
@@ -138,7 +139,7 @@ def test_a_single_terminal_point_is_a_drop_of_the_trunk_beside_a_bigger_hub() ->
     # UNDO: as in the first fan-out test
     model = _star_of_relays(("K3.A1", "K1.A2"), ("K3.A1", "K2.A2"), strip=True)
     assert_no_power_net(model)
-    assert any(t.text == "-X1:1" for _, t in tags_of(model, "X1"))
+    assert stands(model, "-X1:1")
     (drawing,) = drawn_pages(model).values()
     # X1:1 once, plus the five terminals of X2 that close the relays' other coil pins
     assert len([s for s in drawing.symbols if s.key == "terminal"]) == 1 + 5

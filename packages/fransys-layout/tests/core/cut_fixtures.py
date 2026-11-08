@@ -31,7 +31,7 @@ if TYPE_CHECKING:
     from fransys_layout.core.values import Ref
 
 AREA = Size(1312, 854)
-LABEL = Size(16, 8)
+LABEL = {"": Size(16, 8)}
 
 
 def elem(sym_id: str, width: int = 16, height: int = 32, group: str | None = None) -> Sym:

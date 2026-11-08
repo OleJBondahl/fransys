@@ -5,7 +5,11 @@ from __future__ import annotations
 from dataclasses import replace
 from typing import TYPE_CHECKING
 
-from fransys_layout.core import Facts, PinRef
+import pytest
+from turn_fixtures import refit
+
+from fransys_layout.core import Facts, PinRef, PlacementProblem
+from fransys_layout.core.errors import CoreError
 from fransys_layout.core.geometry import pin_xy
 from fransys_layout.core.pack import cell_node
 from fransys_layout.core.place_align import (
@@ -16,8 +20,12 @@ from fransys_layout.core.place_align import (
     row_group_aligns,
     unmet_mates,
 )
+from fransys_layout.core.place_assemble import assemble
+from fransys_layout.core.place_x import place_x
+from fransys_layout.core.place_y import place_y
 
 from . import align_fixtures as fx
+from .cut_fixtures import AREA, chain, elem
 from .place_fixtures import row_group_three
 from .test_place_x import env_of
 
@@ -134,3 +142,37 @@ def test_aligns_are_in_natural_order_whatever_the_input_order() -> None:
     assert sorted(first.lines[0]) == sorted(other.lines[0])
     bands = band_aligns(env_of(fx.two_band_columns()))
     assert [b.subject for b in bands] == sorted(b.subject for b in bands)
+
+
+def _runs(prob: PlacementProblem, dropped: frozenset[str] = frozenset()) -> list[tuple[set[str], str]]:
+    """The strip runs the page is assembled with: (members as a set, key); each run's members stand left to right."""
+    env = env_of(prob)
+    x, _ = place_x(env)
+    page = assemble(env, x, place_y(env, x)[0], dropped)
+    at = {p.sym: p.body.x for p in page.placed}
+    assert all([at[m] for m in r.members] == sorted(at[m] for m in r.members) for r in page.runs)
+    return [(set(r.members), r.key) for r in page.runs]
+
+
+def test_strip_terminals_level_in_a_row_are_one_run_and_one_each_when_their_align_was_dropped() -> None:
+    """STRIP-TAG-ONCE: three hubs of a row group at the heads are one run; with the Align lost each is its own."""
+    ((members, key),) = _runs(row_group_three("G"))
+    assert members == {"h0", "h1", "h2"}
+    assert key.startswith("G run at h")
+    assert [m for m, _ in _runs(row_group_three("G"), frozenset({"G, row 0"}))] == [{"h0"}, {"h1"}, {"h2"}]
+    assert _runs(row_group_three(None)) == []
+
+
+def test_a_strip_terminal_at_neither_end_of_its_column_is_a_run_of_one() -> None:
+    """The middle of a column is no head and no foot: not level with any other, it stands alone."""
+    mid = refit(elem("m"), row_group="G")
+    prob = PlacementProblem(AREA, (elem("a"), mid, elem("b")), tuple(chain(["a", "m", "b"])), facts=Facts())
+    assert _runs(prob) == [({"m"}, "G run at m")]
+
+
+def test_a_run_key_that_is_a_symbol_id_is_refused_naming_the_strip() -> None:
+    """The key is the run's annex owner: one id space with the symbols."""
+    syms = (elem("a"), refit(elem("m"), row_group="G"), elem("b"), elem("G run at m"))
+    prob = PlacementProblem(AREA, syms, tuple(chain(["a", "m", "b", "G run at m"])), facts=Facts())
+    with pytest.raises(CoreError, match="strip G"):
+        _runs(prob)

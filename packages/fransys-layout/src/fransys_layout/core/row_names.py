@@ -15,11 +15,16 @@ if TYPE_CHECKING:
     from .values import PagePlan
 
 
-def row_where(plan: PagePlan, index: int, blocks: Mapping[str, Block], columns: Mapping[str, Column]) -> str:
-    """`[set U, ]page P, row I (devices a, b)`: where a row stands (the root set is named by no set) and what stands in it."""
+def row_devices(plan: PagePlan, index: int, blocks: Mapping[str, Block], columns: Mapping[str, Column]) -> tuple[str, ...]:
+    """The symbols standing in row `index`, once each: each block's card first, then the cells of the row's columns."""
     row = plan.rows[index]
     anchors = [a for b in row.blocks if (a := blocks[b].anchor)]
     cells = [cell.sym for c in row.columns for lane in columns[c].lanes for cell in lane.cells]
-    syms = ", ".join(dict.fromkeys([*anchors, *cells]))
+    return tuple(dict.fromkeys([*anchors, *cells]))
+
+
+def row_where(plan: PagePlan, index: int, blocks: Mapping[str, Block], columns: Mapping[str, Column]) -> str:
+    """`[set U, ]page P, row I (devices a, b)`: where a row stands (the root set is named by no set) and what stands in it."""
+    syms = ", ".join(row_devices(plan, index, blocks, columns))
     where = f"set {plan.unit}, " if plan.unit else ""
     return f"{where}page {plan.page}, row {index} (devices {syms})"

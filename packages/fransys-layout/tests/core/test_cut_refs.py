@@ -7,16 +7,20 @@ Size(16, 8) everywhere (cut_fixtures).
 from __future__ import annotations
 
 from dataclasses import replace
+from itertools import accumulate, permutations
 from types import SimpleNamespace
 from typing import Any
 
 import pytest
+from hypothesis import assume, given, reject, settings
+from hypothesis import strategies as st
 from options_fixtures import core_options
 
 from fransys_layout.core import (
     Facts,
     PinRef,
     PlacementProblem,
+    Size,
     Unit,
     build_flow,
     order_blocks,
@@ -24,10 +28,15 @@ from fransys_layout.core import (
 from fransys_layout.core.blocks import assign_blocks
 from fransys_layout.core.cut import cut_pages
 from fransys_layout.core.cut_bundle import leg_stubs
+from fransys_layout.core.cut_ends import ReferenceLaneError, lane_ends
 from fransys_layout.core.cut_ledger import account
 from fransys_layout.core.cut_refs import _column_pin, across
 from fransys_layout.core.errors import CoreError
 from fransys_layout.core.flow_values import Attach, CrossLink, CutResult, Fan, FlowGraph
+from fransys_layout.core.geometry import marker_box_at
+from fransys_layout.core.outputs import Trunk
+from fransys_layout.core.text_ends import MarkEnv, pinned_stand
+from fransys_layout.core.unionfind import UnionFind
 from fransys_layout.core.values import CutEnd, PagePlan, Ref, RefEnd, RefKind, RowPlan, StandClass
 
 from .conftest import MARKER
@@ -656,3 +665,125 @@ def test_a_lane_passes_its_net_through_a_cell_and_between_cells_so_the_ledger_se
     assert (PinRef("x1", "s"), relay) in pairs
     assert not any(relay in pair and PinRef("k1", "out") in pair for pair in pairs)  # two nets through one cell join nothing
     assert trunked(flow, {}, net_of) == set()  # a column on no page of this cut draws no lane
+
+
+def test_a_bundles_lanes_are_tied_per_net_so_one_lanes_tag_never_carries_the_other_lane() -> None:
+    """R1902 (CL1): the pins of two lanes of one fan on one page share no wire; a plain fan's attachments still share its trunk."""
+    from fransys_layout.core.cut_pieces import trunked
+
+    def fan(lanes: int) -> Any:
+        attach = [Attach("c", ln, 0, PinRef(f"s{ln}", "p"), net=f"n{ln}") for ln in range(2)]
+        return Fan("f", ("n0", "n1"), tuple(attach), (), None, lanes, "S")
+
+    pins = (PinRef("s0", "p"), PinRef("s1", "p"))
+    where = {"c": 1}
+    for lanes, tied in ((2, False), (1, True)):
+        flow: Any = SimpleNamespace(fans=(fan(lanes),), cross_links=(), columns=())
+        assert ((pins[0], pins[1]) in trunked(flow, where, {})) is tied
+
+
+def test_an_arrow_joins_each_lane_it_stands_for_to_that_lanes_pin_at_the_other_end() -> None:
+    """R1902 (CL1): with the per-net tie of a bundle, the arrow's `also` pins are the only link of a second lane across the cut."""
+    from fransys_layout.core.cut_pieces import pairs
+
+    a1, b1, a2, b2 = (PinRef(n, "p") for n in ("a1", "b1", "a2", "b2"))
+    ref = Ref("f", RefKind.ARROW, (RefEnd(1, "c", a1, also=(b1,)), RefEnd(2, "c", a2, also=(b2,))), cut=0)
+    got = pairs([ref], {a1: "n0", a2: "n0", b1: "n1", b2: "n1"})
+    assert (b1, b2) in got
+    assert (a1, a2) in got
+    assert (a1, b2) not in got
+
+
+@st.composite
+def _fan_cuts(draw: st.DrawFn) -> tuple[list[int], list[int], list[int], list[int]]:
+    """A two-lane fan over a sequence cut into pages and rows: each position's page, row and lane, and the two hubs."""
+    size = draw(st.integers(4, 9))
+    steps = st.lists(st.integers(0, 1), min_size=size - 1, max_size=size - 1)
+    page = list(accumulate(draw(steps), initial=0))
+    row: list[int] = [0]
+    for new_page, new_row in zip(draw(steps), draw(steps), strict=True):
+        row.append(0 if new_page else row[-1] + new_row)
+    lane_of = draw(st.lists(st.integers(0, 1), min_size=size, max_size=size))
+    assume(lane_of.count(0) > 1 and lane_of.count(1) > 1)
+    hubs = [draw(st.sampled_from([i for i in range(size) if lane_of[i] == k])) for k in (0, 1)]
+    return page, row, lane_of, hubs
+
+
+def _drawn(acc: Any, planned: list[Ref], lane_of: list[int], spot: list[tuple[int, int]]) -> tuple[UnionFind, set[PinRef]]:
+    """The drawn pieces: ink, a lane's trunk ink per (page, row), arrow ends, equal-lane `also` and join pairs; the pins a reference carries."""
+    uf, carried = UnionFind(), set[PinRef]()
+    for i, j in permutations(range(len(spot)), 2):
+        if spot[i] == spot[j] and lane_of[i] == lane_of[j]:
+            uf.union(f"{PinRef(f's{i}', 'e')}", f"{PinRef(f's{j}', 'e')}")
+    for a, b in [*acc.ink, *(pair for _, pair in acc.unjoined)]:
+        uf.union(f"{a}", f"{b}")
+    for ref in planned:
+        for a, b in permutations(ref.ends, 2):
+            uf.union(f"{a.pin}", f"{b.pin}")
+            for p, q in ((p, q) for p in a.also for q in b.also if lane_of[int(p.sym[1:])] == lane_of[int(q.sym[1:])]):
+                uf.union(f"{p}", f"{q}")
+    for ref in (*acc.refs, *planned):
+        carried |= {p for e in ref.ends for p in (e.pin, *e.also) if p}
+    return uf, carried
+
+
+@given(_fan_cuts())
+@settings(deadline=None, max_examples=300)
+def test_every_conductor_of_a_cut_fan_is_drawn_whole_or_carried_at_both_ends_by_a_reference(case: Any) -> None:
+    """KI-767 guard (R1938): the oracle is the drawn pieces (ink, a lane's trunk ink per page and row, arrow ends)."""
+    page, row, lane_of, hubs = case
+    size = len(page)
+    pin = [PinRef(f"s{i}", "e") for i in range(size)]
+    lanes = tuple(tuple((i, pin[i]) for i in range(size) if lane_of[i] == k) for k in (0, 1))
+    conductors = [(pin[i], pin[hubs[lane_of[i]]]) for i in range(size) if i != hubs[lane_of[i]]]
+    facts = Facts(far_ends=(*conductors, *((b, a) for a, b in conductors)), groups=tuple(conductors))
+    nets = [net(f"n{k}", *(f"s{i}.e" for i in range(size) if lane_of[i] == k)) for k in (0, 1)]
+    attach = [Attach(None, 0, 0, pin[i], lane_of[i], net=f"n{lane_of[i]}") for i in range(size)]
+    fan = Fan("f", ("n0", "n1"), tuple(attach[h] for h in hubs), tuple(a for i, a in enumerate(attach) if i not in hubs), None, 2, "S")
+    planned = []
+    for b in (b for b in range(size - 1) if (page[b], row[b]) != (page[b + 1], row[b + 1])):
+        try:
+            ends = lane_ends("f", lanes, ((b, f"s{b}"), (b + 1, f"s{b + 1}")), dict(enumerate(page)), dict(enumerate(row)))
+        except ReferenceLaneError:
+            reject()
+        if ends:
+            planned.append(Ref(f"n{lane_of[b]}", RefKind.ARROW, ends, b))
+    plan = tuple(
+        PagePlan(p, "U1", tuple(RowPlan(tuple(f"s{i}" for i in range(size) if (page[i], row[i]) == (p, r)), (), 0) for r in sorted(set(row))), ())
+        for p in sorted(set(page))
+    )
+    problem = PlacementProblem(AREA, tuple(side(f"s{i}", 100, 100) for i in range(size)), tuple(nets), facts)
+    acc = account(problem, replace(NO_FLOW, fans=(fan,)), {f"s{i}": page[i] for i in range(size)}, planned, plan)
+    drawn, carried = _drawn(acc, planned, lane_of, list(zip(page, row, strict=True)))
+    for a, b in conductors:
+        assert drawn.same(f"{a}", f"{b}") or (a in carried and b in carried), (a, b)
+
+
+def _stub_env(lane_ends: tuple[tuple[int, int] | None, ...]) -> tuple[MarkEnv, Ref, list[RefEnd]]:
+    """A page with one trunk of a 2-lane bundle, no leg lines, and a LEG and a TRUNK_END stub end at each pole's pin."""
+    pins = [PinRef(f"s{k}", "p") for k in (0, 1)]
+    attach = tuple(Attach(None, 0, k, pins[k], k, net=f"n{k}") for k in (0, 1))
+    fan = Fan("f", ("n0", "n1"), (), attach, None, 2, "S")
+    trunk = Trunk("f", 1, 256, 498, 530, 2, 0, lane_ends)
+    options = core_options(marker=MARKER, marker_vertical=frozenset({"R90", "R270", "MR90", "MR270"}), marker_above="R270", marker_below="R90")
+    env = MarkEnv(options, Size(1312, 854), {}, {}, {(1, "f"): (trunk,)}, {"f": fan})
+    ref = Ref("n0", RefKind.STUB, ())
+    ends = [RefEnd(1, None, p, row=0, stand=st_) for st_ in (StandClass.LEG, StandClass.TRUNK_END) for p in pins]
+    return env, ref, ends
+
+
+def test_a_bundled_stub_with_no_leg_line_stands_on_its_own_poles_lane_end() -> None:
+    """P2 (R1938): lane_ends ((498, 498), (530, 530)) and no leg line: pole 0's stub abuts x=498, pole 1's x=530."""
+    env, ref, ends = _stub_env(((498, 498), (530, 530)))
+    for end in ends:
+        assert end.pin is not None
+        pole = int(end.pin.sym[1:])
+        ref = replace(ref, net=f"n{pole}")
+        stand = pinned_stand(env, ref, end)
+        assert marker_box_at(stand.x, stand.y, env.options, stand.orient).x == (498, 530)[pole], end
+
+
+def test_a_bundled_stub_whose_pole_has_no_lane_end_raises_naming_the_stub_and_the_pole() -> None:
+    env, ref, ends = _stub_env(((498, 498), None))
+    with pytest.raises(CoreError, match=r"pole 1 of the bundle has no lane end for the stub at s1.p"):
+        pinned_stand(env, replace(ref, net="n1"), ends[1])

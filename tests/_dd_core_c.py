@@ -7,7 +7,7 @@ symbol nearest that text in x; a marker by the texts it prints, its star kind by
 from itertools import pairwise
 from typing import Any
 
-from _drawn_pages import drawn_pages, markers_in, ref_texts
+from _drawn_pages import drawn_pages, markers_in, reads_tag, ref_texts
 
 from fransys_model.layout import DrawingSet, Page, layout_of
 
@@ -21,30 +21,21 @@ def in_own_set(model, page) -> bool:
 
 
 def stands(model, tag: str, key: str = "terminal") -> dict[Any, Any]:
-    """The (page id, symbol) of the `key` symbol nearest the TAG text `tag`, by set.
+    """The (page id, symbol) of the `key` symbols that print the TAG text `tag` (`-X1:2`: the point `2` by the run tag `-X1`), by set.
 
     The unit's own set is `True`, the top-level one `False`; a set without the tag is absent.
     """
     found: dict[Any, Any] = {}
     for page, drawing in drawn_pages(model).items():
-        texts = [t for t in drawing.texts if t.kind == "TAG" and t.text == tag]
-        for text in texts:
-            near = min(
-                (s for s in drawing.symbols if s.key == key),
-                key=lambda s, text=text: abs(s.x - text.box.x) + abs(s.y - text.box.y),
-            )
-            found.setdefault(in_own_set(model, page), []).append((page, near))
+        for sym in drawing.symbols:
+            if sym.key == key and reads_tag(sym, drawing, tag):
+                found.setdefault(in_own_set(model, page), []).append((page, sym))
     return found
 
 
 def tags_by_set(model, tag: str) -> dict[Any, Any]:
-    """How many times each set (True: a unit's own) prints the TAG text `tag`."""
-    counts: dict[Any, Any] = {}
-    for page, drawing in drawn_pages(model).items():
-        n = sum(t.kind == "TAG" and t.text == tag for t in drawing.texts)
-        if n:
-            counts[in_own_set(model, page)] = counts.get(in_own_set(model, page), 0) + n
-    return counts
+    """How many `terminal` symbols each set (True: a unit's own) prints with the TAG text `tag`."""
+    return {own: len(spots) for own, spots in stands(model, tag).items()}
 
 
 def beside(model, a: tuple[Any, ...], b: tuple[Any, ...], key: str = "terminal") -> bool:

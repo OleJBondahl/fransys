@@ -9,7 +9,7 @@ from typing import Any
 import fransys as fr
 import fransys_parts
 from _dd_core import designation_of, pages_of, set_of
-from _drawn_pages import drawn_pages, markers_in
+from _drawn_pages import drawn_pages, markers_in, reads_tag
 from _model_build_cover import printed
 from fransys_author.design import Design
 
@@ -54,12 +54,12 @@ def _build():
 
 
 def _terminal_symbols(model) -> list[Any]:
-    """Every (page id, symbol) drawn for the terminal `X1`: a terminal symbol that an `X1` tag text annotates."""
+    """Every (page id, symbol) drawn for the terminal `X1`: a terminal symbol whose point text stands by the run tag `-X1`."""
     return [
         (page, s)
         for page, drawing in drawn_pages(model).items()
         for s in drawing.symbols
-        if s.key == "terminal" and any(t.owner == s.id and t.text.startswith("-X1") for t in drawing.texts)
+        if s.key == "terminal" and any(t.owner == s.id and reads_tag(s, drawing, f"-X1:{t.text}") for t in drawing.texts)
     ]
 
 

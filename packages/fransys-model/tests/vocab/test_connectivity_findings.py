@@ -191,3 +191,12 @@ def _wired_pair(name_a: str | None, name_b: str | None) -> Plant:
 def test_two_unnamed_declared_nets_joined_are_still_shorted() -> None:
     assert len(_of(_wired_pair(None, None), NET_SHORTED)) == 1
     assert len(_of(_wired_pair("BUS", None), NET_SHORTED)) == 1
+
+
+def test_two_differently_named_supplies_on_one_physical_net_are_shorted_naming_both() -> None:
+    """R1973: a printed name is never dropped; two names on one physical net are NET_SHORTED, one shared name is one intent."""
+    (found,) = _of(_wired_pair("24V", "P24"), NET_SHORTED)
+    assert found.severity is Severity.ERROR
+    assert "24V" in found.message
+    assert "P24" in found.message
+    assert _of(_wired_pair("24V", "24V"), NET_SHORTED) == []

@@ -5,7 +5,7 @@ Fixed by layout-0120, the container's page draws the child's boundary terminal a
 from typing import TYPE_CHECKING, Any, NamedTuple
 
 import fransys as fr
-from _drawn_pages import drawn_pages, markers_in, ref_texts
+from _drawn_pages import drawn_pages, markers_in, ref_texts, tag_texts
 
 from fransys_model.derive import boundary_rail_wires, conductor_ends
 from fransys_model.derive.stands import stands
@@ -71,7 +71,7 @@ def test_the_container_draws_the_boundary_terminal_and_the_unit_its_power_symbol
     owner = _set_unit_names(model)
     pages = drawn_pages(model)
     designation = "-U1-X1:24V:1"
-    tagged = {owner[page] for page, d in pages.items() if any(t.text == designation for t in d.texts)}
+    tagged = {owner[page] for page, d in pages.items() if tag_texts(d, designation)}
     assert tagged == {None}  # the unit's own pages draw it as no terminal
     # the container draws the boundary strip itself, wired to the lamp: no stub names the terminal (R729)
     assert not any(designation in text for d in pages.values() for m in markers_in(d) for text in ref_texts(m))

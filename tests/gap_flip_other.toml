@@ -162,8 +162,5 @@
 # KI-414, KI-419: the box beside the strip shows DANGLING_WIRE_END and NO_CELL (KI-413 closed, R1736)
 # KI-418, KI-420: the lamps build shows OUT_OF_PAGE and ANNEX_UNPLACED
 
-# KI-730 (LABEL-PLACE-2, R1850): a tag of remote_io stands off its symbol's corner since the wider reserved reference text
-"tests/test_text_candidates_rule.py::test_every_tag_of_a_compiled_case_stands_at_a_corner_of_its_symbol_and_nothing_crosses_it[remote_io]" = "GAP-FLIP-641"  # KI-730
-
 # KI-738 (CORRECTNESS-PROOF S0 R6, R1861): the dangling-end check meets a wire end that lies along another wire by a dot further along the run
 "packages/fransys-el/tests/test_drawn_netlist.py::test_a_wire_end_lying_along_another_wire_needs_a_dot_at_the_end_itself" = "GAP-FLIP-738"  # KI-738

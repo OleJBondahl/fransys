@@ -17,13 +17,13 @@ if TYPE_CHECKING:
     from .annex_values import AnnexBox
     from .clearance import Keep
     from .flow_values import CutResult
-    from .outputs import Marker, Placement
+    from .outputs import Marker, Placement, Wire
     from .route_env import RouteEnv
     from .values import Options, PlacementProblem
 
 
 class Fixed(NamedTuple):
-    """One page's trunk wires (with their drops), and the labels the round before stood on it: they do not move (TEXT-CANDIDATES)."""
+    """One page's trunk wires (with their drops), and the labels the round before stood on it: they do not move (TAG-CORNERS)."""
 
     trunks: Drawn
     labels: tuple[AnnexBox, ...] = ()
@@ -36,6 +36,7 @@ class Laid(NamedTuple):
     fixed: Mapping[int, Fixed] | None = None
     lost: frozenset[LostKey] = frozenset[LostKey]()
     markers: Sequence[Marker] = ()
+    leads: Sequence[Wire] = ()
 
 
 def fixed_page(env: RouteEnv) -> Fixed:

@@ -1,6 +1,6 @@
 """The drawing sets of the core path: one per location of the placed functions (PAGE-02, Ruling 50).
 
-`drawing_scopes` splits the kit's symbols by the location of their function; `restrict` cuts the
+`drawing_scopes` splits the kit's symbols by the location of their function; `restriction` cuts the
 whole problem down to one scope. A net cut by a scope keeps its in-set pins and ends in a stub.
 """
 
@@ -23,6 +23,7 @@ from fransys_model.derive.order import locations_in_order, units_in_order
 from fransys_model.kernel import render_id
 
 from .kit_keys import function_of
+from .placement_annexes import label_annexes, wider_annexes
 from .placement_ids import symbol_key
 from .placement_markers import pin_ports
 from .write_stubs import stub_ends
@@ -30,7 +31,7 @@ from .write_stubs import stub_ends
 if TYPE_CHECKING:
     from collections.abc import Collection, Iterable, Mapping, Sequence
 
-    from fransys_layout.core import Net, PagePlan, PinRef
+    from fransys_layout.core import Net, Options, PagePlan, PinRef, Size
     from fransys_model.kernel import Id, Model
     from fransys_model.vocab import AspectNode, Unit
 
@@ -42,7 +43,6 @@ __all__ = [
     "bare_pins",
     "cut_lines",
     "drawing_scopes",
-    "restrict",
     "restriction",
     "scope_groups",
 ]
@@ -340,22 +340,34 @@ def scope_groups(pages: tuple[PagePlan, ...], problem: PlacementProblem, scope: 
     return tuple(replace(p, groups=tuple(g for g in p.groups if g not in skip)) for p in pages)
 
 
-def restriction(
+def restriction(  # noqa: PLR0913 -- the scope's problem takes the set's cut facts and its options [R1867]
     problem: PlacementProblem,
     scope: DrawingScope,
     bare: Collection[PinRef] = (),
     lines: Mapping[PinRef, str] | None = None,
     scopes: Sequence[DrawingScope] = (),
+    *,
+    options: Options,
+    tags: Mapping[str, Mapping[str, Size]],
 ) -> Restriction:
     """The problem of one scope with its cut nets; the whole problem unchanged when it holds all.
 
     `scopes` are every set: a net they share a terminal of is whole where its ends stand (R652).
-    `bare` pins never end a cut; `lines` names a cut pin's line. A symbol no net touches is left out.
+    Labels are the scope's own (`Sym.labels`), annexes made again with `options`. `bare` pins never end a cut; `lines` names one's line.
     """
     home = "" if scope.of_unit is None else scope.of_unit.value  # a copy is paged with its set: its unit
     inside = tuple(replace(s, unit=home) if s.id in scope.away else s for s in problem.symbols if s.id in scope.symbols)
     if len(inside) == len(problem.symbols):
-        return Restriction(replace(problem, symbols=inside, hints=replace(problem.hints, frames=scope.frames)), frozenset())
+        return Restriction(
+            replace(
+                problem,
+                symbols=inside,
+                annexes=label_annexes(inside, options, home, tags),
+                wider=wider_annexes(inside, options, home, tags),
+                hints=replace(problem.hints, frames=scope.frames),
+            ),
+            frozenset(),
+        )
     nets, dropped = _scoped(problem, scope, bare, lines, scopes)
     anchors = tuple(a for a in problem.anchors if a.pin.sym in scope.symbols)
     touched = {p.sym for n in nets for p in n.pins} | {a.pin.sym for a in anchors}
@@ -365,7 +377,7 @@ def restriction(
     unit = {s.id: s.unit for s in problem.symbols}
     other = {i for i, u in unit.items() if u != home} - scope.symbols
     facts = _facts(_carried(problem.facts, scope, other, unit), frozenset(s.id for s in syms), bare, gone)
-    annexes = tuple(a for a in problem.annexes if a.owner in names)
+    annexes = label_annexes(syms, options, home, tags)
     part = PlacementProblem(
         problem.area,
         syms,
@@ -374,15 +386,6 @@ def restriction(
         _hints(problem.hints, names, scope),
         anchors,
         annexes,
+        wider_annexes(syms, options, home, tags),
     )
     return Restriction(part, dropped)
-
-
-def restrict(
-    problem: PlacementProblem,
-    scope: DrawingScope,
-    bare: Collection[PinRef] = (),
-    lines: Mapping[PinRef, str] | None = None,
-) -> PlacementProblem:
-    """The problem of one scope (`restriction`'s problem)."""
-    return restriction(problem, scope, bare, lines).problem

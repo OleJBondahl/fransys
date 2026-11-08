@@ -89,11 +89,67 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         page="findings-render",
     ),
     CodeInfo(
+        code="POWER_SYMBOL_NOT_JOINED",
+        severity=Severity.ERROR,
+        stage="render",
+        who="Fransys",
+        cause=("A power symbol is drawn for a pin with no wire to it and not on the pin, so the page does not show the pin on its rail."),
+        fix=_REPORT,
+        page="findings-render",
+    ),
+    CodeInfo(
+        code="PIN_MARKING_WRONG",
+        severity=Severity.ERROR,
+        stage="render",
+        who="Fransys",
+        cause=(
+            "A symbol prints at a pin a marking other than the one the model gives that port, "
+            "or prints none where the port is marked, or one where it is not."
+        ),
+        fix=_REPORT,
+        page="findings-render",
+    ),
+    CodeInfo(
+        code="RAIL_IDENTITY_SHARED",
+        severity=Severity.ERROR,
+        stage="render",
+        who="consumer",
+        cause=(
+            "Two unbonded nets of a cabinet print one rail identity (its flagged rail, else the cabinet plus the printed potential), "
+            "so the page would join nets the model keeps apart."
+        ),
+        fix=(
+            "No call clears this: two nets print one supply name with no protective device (fuse, breaker) between them, "
+            "or the nearest device is not unique: put a fuse or breaker between them."
+        ),
+        page="findings-render",
+    ),
+    CodeInfo(
         code="MISSING_JUNCTION_DOT",
         severity=Severity.ERROR,
         stage="render",
         who="Fransys",
-        cause=("A wire ends on the middle of another wire of the same net with no junction dot, so the page does not show them joined."),
+        cause=(
+            "Three or more ink directions meet at a wire end or vertex with no dot and no pin, so the page does not show the wires joined or apart."
+        ),
+        fix=_REPORT,
+        page="findings-render",
+    ),
+    CodeInfo(
+        code="DOT_ON_CROSSING",
+        severity=Severity.ERROR,
+        stage="render",
+        who="Fransys",
+        cause="A junction dot stands where two wires cross through each other, so the page shows them joined when they are not.",
+        fix=_REPORT,
+        page="findings-render",
+    ),
+    CodeInfo(
+        code="WIRE_OVER_PIN_TIP",
+        severity=Severity.ERROR,
+        stage="render",
+        who="Fransys",
+        cause="A wire passes over the tip of a pin with its interior and no dot, so the page does not show whether it joins the pin.",
         fix=_REPORT,
         page="findings-render",
     ),

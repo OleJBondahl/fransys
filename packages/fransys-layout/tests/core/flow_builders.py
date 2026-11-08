@@ -23,7 +23,7 @@ from fransys_layout.core.values import (
 lazy from fransys_layout.core.flow_values import FlowGraph
 
 AREA = Size(1312, 854)
-LABEL = Size(16, 8)
+LABEL = {"": Size(16, 8)}
 OPTIONS = core_options()
 _POLE_PINS: tuple[tuple[str, Side, int], ...] = (("n", "N", -16), ("s", "S", 16))
 

@@ -6,10 +6,9 @@ layout-0027: a MARKING text exists only where the drawn symbol defines the slot.
 
 from typing import TYPE_CHECKING
 
-from electrical_symbols import is_generic_box
+from electrical_symbols import is_generic_box, marking_slot
 from fransys_layout.symbols import library_symbol
-from fransys_model.derive import hidden_pins
-from fransys_model.derive.drawing_text import port_marking
+from fransys_model.derive import hidden_pins, port_marking
 
 if TYPE_CHECKING:
     from electrical_symbols import Library
@@ -33,7 +32,7 @@ def marking_slots(model: Model, pick: Pick, library: Library) -> dict[str, str]:
     for port, name in pick.ports.items():
         if port in hidden:  # a pin the sheets leave off prints no marking
             continue
-        slot = f"marking.{name}"
+        slot = marking_slot(name)
         text = port_marking(model, port)
         if slot in declared and text:
             found[slot] = text

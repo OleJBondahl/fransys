@@ -115,7 +115,7 @@ def _core_joins(model: Model, document: Id[Document], places: Mapping[tuple[Id[C
             to=core.end_b_designation,
             label=f"{core.cable_designation}.{core.index}",
             colour=core.colour,
-            cross_section_mm2=None,
+            cross_section_mm2=listed.gauge_mm2,
             drawing=places.get((core.conductor, render_id(core.end_a)), ""),
         )
         for listed in cable_list_rows(model, unit=unit)

@@ -79,7 +79,7 @@ def misses(request: pytest.FixtureRequest) -> list[tuple[Any, ...]]:
 _LOOKS = {
     "machine_panel": 2,  # R1800 (KI-705, looks): new p5 row 0 band 232 with -B15..-B20/-MB13..-MB17 (PE-EARTH-JOIN); was 1
     "panel_di16p": 6,
-    "remote_io": 3,
+    "remote_io": 4,  # R2000 (G09-PAGE): the cut reads the placed rows; a fourth page (looks): p4 row 0 band 112
     "mcc": 1,  # R1673/R1675: accepted move (3 -> 4); distinct count 1 (R1899)
 }  # SUPPLY-SLOT (R1605) + ID-TEXT-ORDER (R1628): mcc has 3 rows 8 G short of their spans (power symbol keepout; order-text ids); looks
 

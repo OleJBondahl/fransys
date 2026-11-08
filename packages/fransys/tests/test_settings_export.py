@@ -213,6 +213,9 @@ def test_every_join_of_the_model_is_one_row_of_the_sheet(tmp_path: Path) -> None
     assert {kind for kind, _, _ in expected} == {"Wire", "Core", "Bridge"}
     assert all(r[7].startswith("p") for r in lines if r[1] in {"Wire", "Core"})
     assert all(r[7] == "" for r in lines if r[1] == "Bridge")
+    cores = [r[6] for r in lines if r[1] == "Core"]
+    assert cores
+    assert set(cores) == {"1.5"}
 
 
 def test_a_ring_out_word_is_the_consumers(tmp_path: Path) -> None:

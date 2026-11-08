@@ -15,7 +15,7 @@ from .arrow_reserve import block_reserves, keep_legs
 from .blocks import assign_blocks
 from .cut import cut_pages
 from .cut_costs import with_wires
-from .cut_measured import Measured
+from .cut_measured import Measured, placed_rows
 from .errors import CoreError
 from .fallback import fallback
 from .geometry import union
@@ -34,7 +34,7 @@ from .values import Finding, g_text
 from .widen_rounds import settled
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable, Iterator, Mapping, Sequence
+    from collections.abc import Iterable, Mapping, Sequence
 
     from .annex_values import AnnexBox
     from .arrow_reserve import RowReserve
@@ -86,7 +86,8 @@ def _spans_of(measured: Measured, cut: CutResult, placement: Placement, env: tup
             if key in columns:
                 own[key] = with_wires(bottom - top, options)
                 rises[key] = top
-    return Measured(measured.reserves, heights, own, rises, keep_legs(measured.arrows, block_reserves(cut, problem.annexes, options)))
+    arrows = keep_legs(measured.arrows, block_reserves(cut, problem.annexes, options))
+    return Measured(measured.reserves, heights, own, rises, arrows, placed_rows(measured.rows, cut, placement))
 
 
 def _grew(placement: Placement, routes: Routes) -> bool:
@@ -139,32 +140,6 @@ def _excess(placement: Placement, problem: PlacementProblem, options: Options) -
     return max((max(h, 0) for _, h in over), default=0), max((max(w, 0) for w, _ in over), default=0)
 
 
-def _wider(placement: Placement) -> bool:
-    """True when the placer named a row wider than its page: the legs a cut makes stand are known only once it is placed (R1618)."""
-    return any(f.code == "WIDER_THAN_PAGE" for f in placement.findings)
-
-
-def _rows(cut: CutResult, placement: Placement) -> Iterator[tuple[int, int]]:
-    """Each row's cut height and the band the solve gave it, in page and row order."""
-    for plan, page in zip(cut.spec.pages, placement.pages, strict=True):
-        for row, (top, bottom) in zip(plan.rows, page.bands, strict=True):
-            yield row.height_est, bottom - top
-
-
-def _short(cut: CutResult, placement: Placement) -> bool:
-    """True when some row was cut shorter than the band the solve gave it (layout-0375)."""
-    return any(cut_h < band for cut_h, band in _rows(cut, placement))
-
-
-def _stale(cut: CutResult, placement: Placement, room_h: int) -> bool:
-    """True when a row was cut taller than the page from a height the placement no longer holds.
-
-    The measure came off the round before; a row that now stands within the page is cut again
-    from its own height, or the cut names PAGE_OVERFLOW for a page that fits.
-    """
-    return any(band <= room_h < cut_h for cut_h, band in _rows(cut, placement))
-
-
 def _attempt(
     lists: tuple[BlockList, ...],
     flow: FlowGraph,
@@ -215,7 +190,7 @@ def _recut(
     for _ in range(options.recut_rounds):
         excess, wide = _excess(placed, problem, options)
         best = _keep(best, (excess, wide), cut, placed)
-        if not excess and not _short(cut, placed) and not _stale(cut, placed, _room(problem, options)) and not _wider(placed):
+        if not excess and not wide:
             break
         lanes = _lanes(lanes, excess, measured := _spans_of(measured, cut, placed, (problem, options)), problem, options)
         if _room(problem, options) - lanes * options.wiring_grid <= 0:
@@ -424,14 +399,7 @@ def widen(
         if marker_only:
             asked, roomed_for = _asked(rnd.asks, roomed_for)
             problem2 = roomed(problem, asked)
-        if (
-            i == 0
-            and problem2 is problem
-            and not rose
-            and not _grew(placement, rnd.routes)
-            and not overflows(placement, cut, problem, options)
-            and not _wider(placement)
-        ):
+        if i == 0 and problem2 is problem and not rose and not _grew(placement, rnd.routes) and not overflows(placement, cut, problem, options):
             return cut, _counted(placement, reserves_of(placement, rnd.routes)), rnd, problem, ()
         if settled(i, options, asked, quiet=problem2 is problem and not rose):
             break

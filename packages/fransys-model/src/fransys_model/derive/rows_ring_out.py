@@ -21,7 +21,7 @@ class RingOutRow:
     """One join the electrician measures end to end.
 
     `from_`/`to` are the printed ends, `label` the wire label or the cable core text, `colour`
-    and `cross_section_mm2` the wire's (`""` and `None` for a core or a bridge), `drawing` the
+    and `cross_section_mm2` the wire's or the core's cable's (`""` and `None` for a bridge), `drawing` the
     page text of the first drawing of this document that shows an end, `""` for none.
     """
 

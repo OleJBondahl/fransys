@@ -505,7 +505,7 @@ def _legs_of(far: tuple[tuple[PinRef, PinRef], ...], ink: set[tuple[PinRef, PinR
 
     x = PinRef("x", "e")
     fan = Fan("f", ("m",), (Attach("c:x", 0, 0, x, net="m"),), (), None, 1, "H")
-    page = PagePlan(1, "", (RowPlan(("c:x",), (), 0),), ())
+    page = PagePlan(1, "", (RowPlan(("c:x",), ()),), ())
     problem = PlacementProblem(AREA, (side("x", 40, 40),), (net("m", "x.e", "y.e"),), Facts(far_ends=far))
     made = [Ref("m", RefKind.STUB, (RefEnd(1, None, x),))]
     flow: Any = SimpleNamespace(fans=[fan] if fanned else [])
@@ -590,9 +590,9 @@ def test_a_piece_whose_references_pair_among_themselves_is_joined_to_the_rest_by
     facts = Facts(units=(), far_ends=((a, b), (b, a), (c, d), (d, c)), groups=((a, b, c, d),))
     planned = (Ref("m", RefKind.TAG, (RefEnd(1, None, a), RefEnd(2, None, b))), Ref("m", RefKind.TAG, (RefEnd(2, None, c), RefEnd(3, None, d))))
     pages = (
-        PagePlan(1, "U1", (RowPlan(("a",), ("a",), 100),), ()),
-        PagePlan(2, "U1", (RowPlan(("b",), ("b",), 100), RowPlan(("c",), ("c",), 100)), ()),
-        PagePlan(3, "U1", (RowPlan(("d",), ("d",), 100),), ()),
+        PagePlan(1, "U1", (RowPlan(("a",), ("a",)),), ()),
+        PagePlan(2, "U1", (RowPlan(("b",), ("b",)), RowPlan(("c",), ("c",))), ()),
+        PagePlan(3, "U1", (RowPlan(("d",), ("d",)),), ()),
     )
     got = account(
         PlacementProblem(AREA, tuple(syms), (net("m", "a.e", "b.e", "c.e", "d.e"),), facts), NO_FLOW, {"a": 1, "b": 2, "c": 2, "d": 3}, planned, pages
@@ -616,8 +616,8 @@ def _copy_account(*, fanned: bool):
         Ref("m", RefKind.TAG, (RefEnd(1, None, a), RefEnd(1, None, z))),
     )
     pages = (
-        PagePlan(1, "U1", (RowPlan(("a", "c", "z"), ("a", "c", "z"), 100),), ()),
-        PagePlan(2, "U1", (RowPlan(("c:b", "d"), ("c:b", "d"), 100),), ()),
+        PagePlan(1, "U1", (RowPlan(("a", "c", "z"), ("a", "c", "z")),), ()),
+        PagePlan(2, "U1", (RowPlan(("c:b", "d"), ("c:b", "d")),), ()),
     )
     problem = PlacementProblem(AREA, tuple(syms), (net("m", "a.e", "b.e", "c.e", "z.e", "d.e"),), facts)
     fan = Fan("f", ("m",), (Attach("c:b", 0, 0, b, net="m"),), (), None, 1, "H")
@@ -749,7 +749,7 @@ def test_every_conductor_of_a_cut_fan_is_drawn_whole_or_carried_at_both_ends_by_
         if ends:
             planned.append(Ref(f"n{lane_of[b]}", RefKind.ARROW, ends, b))
     plan = tuple(
-        PagePlan(p, "U1", tuple(RowPlan(tuple(f"s{i}" for i in range(size) if (page[i], row[i]) == (p, r)), (), 0) for r in sorted(set(row))), ())
+        PagePlan(p, "U1", tuple(RowPlan(tuple(f"s{i}" for i in range(size) if (page[i], row[i]) == (p, r)), ()) for r in sorted(set(row))), ())
         for p in sorted(set(page))
     )
     problem = PlacementProblem(AREA, tuple(side(f"s{i}", 100, 100) for i in range(size)), tuple(nets), facts)

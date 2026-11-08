@@ -1,10 +1,10 @@
-# Fransys 0.23.1
+# Fransys 0.23.2
 
 > The whole guide, the part-file contracts and the API pages in one file.
 
 ---
 
-<!-- source: https://olejbondahl.github.io/fransys/0.23.1/guide/index.md -->
+<!-- source: https://olejbondahl.github.io/fransys/0.23.2/guide/index.md -->
 
 # Fransys
 
@@ -13,7 +13,7 @@ producing their schematics, parts lists and manufacturing exports from one model
 lists every consumer task with its one spelling, then the install and the shape of a script.
 
 Fransys is in Beta: the API may change between minor versions until 1.0.0, and each release's guide says what changed.
-Paste the block in [AGENTS.md](https://olejbondahl.github.io/fransys/0.23.1/guide/AGENTS/index.md) into your project's `AGENTS.md` or `CLAUDE.md`, so a coding agent finds the docs and `python -m fransys help KEY`.
+Paste the block in [AGENTS.md](https://olejbondahl.github.io/fransys/0.23.2/guide/AGENTS/index.md) into your project's `AGENTS.md` or `CLAUDE.md`, so a coding agent finds the docs and `python -m fransys help KEY`.
 
 ## The public surface
 
@@ -230,7 +230,7 @@ fr.write(result, Path("out"))
 
 ---
 
-<!-- source: https://olejbondahl.github.io/fransys/0.23.1/guide/parts/index.md -->
+<!-- source: https://olejbondahl.github.io/fransys/0.23.2/guide/parts/index.md -->
 
 # Parts
 
@@ -551,7 +551,7 @@ This port prints `1`, not `port_4_1`. A role function (plc_channel, supply, load
 
 ---
 
-<!-- source: https://olejbondahl.github.io/fransys/0.23.1/guide/authoring/index.md -->
+<!-- source: https://olejbondahl.github.io/fransys/0.23.2/guide/authoring/index.md -->
 
 # Authoring a design
 
@@ -862,7 +862,7 @@ adds a history line. Both are optional.
 
 ---
 
-<!-- source: https://olejbondahl.github.io/fransys/0.23.1/guide/series/index.md -->
+<!-- source: https://olejbondahl.github.io/fransys/0.23.2/guide/series/index.md -->
 
 # Wiring a design
 
@@ -1134,7 +1134,7 @@ d.earth(m1.motor["PE"], pe[1])
 
 ---
 
-<!-- source: https://olejbondahl.github.io/fransys/0.23.1/guide/drawn-ledger/index.md -->
+<!-- source: https://olejbondahl.github.io/fransys/0.23.2/guide/drawn-ledger/index.md -->
 
 # The required-drawn ledger
 
@@ -1176,7 +1176,7 @@ assert len(ends) % 2 == 0  # two rows per conductor
 
 ---
 
-<!-- source: https://olejbondahl.github.io/fransys/0.23.1/guide/detail/index.md -->
+<!-- source: https://olejbondahl.github.io/fransys/0.23.2/guide/detail/index.md -->
 
 # Detail calls
 
@@ -1450,7 +1450,7 @@ assert markers(own=True) == 4
 leaves the drawing a choice.
 A net from a pin on one half of a box to a column hung on the other half draws as a tag pair, not a wire round the box. It gives one `TAG_ACROSS_BODY` warning per box. Wire the parts to the box pins in one path with `d.series`.
 
-The profile keywords, and the rule that a unit sets its own, are in [`layout-numbers.md`](https://olejbondahl.github.io/fransys/0.23.1/guide/layout-numbers/index.md#profile-keywords).
+The profile keywords, and the rule that a unit sets its own, are in [`layout-numbers.md`](https://olejbondahl.github.io/fransys/0.23.2/guide/layout-numbers/index.md#profile-keywords).
 
 ```python
 import fransys as fr
@@ -1466,7 +1466,7 @@ d.layout.profile(hide_unused_pins=True)
 
 ---
 
-<!-- source: https://olejbondahl.github.io/fransys/0.23.1/guide/harnesses/index.md -->
+<!-- source: https://olejbondahl.github.io/fransys/0.23.2/guide/harnesses/index.md -->
 
 # Harnesses
 
@@ -1527,7 +1527,7 @@ prints it: on a unit's own document no text names that unit's tag.
 
 ---
 
-<!-- source: https://olejbondahl.github.io/fransys/0.23.1/guide/units/index.md -->
+<!-- source: https://olejbondahl.github.io/fransys/0.23.2/guide/units/index.md -->
 
 # Units
 
@@ -1991,7 +1991,7 @@ documents and lists. A unit's release name is the `unit=` value. The tuple `d.ad
 
 ---
 
-<!-- source: https://olejbondahl.github.io/fransys/0.23.1/guide/build/index.md -->
+<!-- source: https://olejbondahl.github.io/fransys/0.23.2/guide/build/index.md -->
 
 # Building a design
 
@@ -2137,7 +2137,7 @@ assert "/guide/findings-pdf/#document_no_drawings\n" in text
 assert text.endswith("notes: DOCUMENT_EMPTY_LIST 4\n")
 ```
 
-The fix and the URL come from the code's row in [`findings.md`](https://olejbondahl.github.io/fransys/0.23.1/guide/findings/index.md). Print the report on every build.
+The fix and the URL come from the code's row in [`findings.md`](https://olejbondahl.github.io/fransys/0.23.2/guide/findings/index.md). Print the report on every build.
 
 ## Which route carries which finding
 
@@ -2405,7 +2405,7 @@ assert fr.derive.item_designation(result.model, h1.id) == "H1"
 
 ---
 
-<!-- source: https://olejbondahl.github.io/fransys/0.23.1/guide/documents/index.md -->
+<!-- source: https://olejbondahl.github.io/fransys/0.23.2/guide/documents/index.md -->
 
 # Documents
 
@@ -2596,7 +2596,7 @@ document's subject, as the unit example on this page does.
 
 ---
 
-<!-- source: https://olejbondahl.github.io/fransys/0.23.1/guide/reading/index.md -->
+<!-- source: https://olejbondahl.github.io/fransys/0.23.2/guide/reading/index.md -->
 
 # Reading a model
 
@@ -2681,7 +2681,7 @@ potentials on one wired net is `NONE`. So is a wired net of exactly two ports. A
 connection is a wire; only a net of three or more ports is a rail. A PE net stays `PE`. `port_power_kind(model, port)` gives the kind of a
 port's wired net. A DC supply declares its 0 V rail (`rails={"24V": ("24", None), "0V": ("0",
 None)}`). Without it, the 0 V net gets references, not a ground symbol. `power_text(model, net)`
-is the text a power symbol prints: the supply's name, else its potential. It is `None` for
+is the text a power symbol prints. It is the supply's name, else its potential, then the tag of the nearest protective device the net lies behind (`24V -F2`). It is `None` for
 `GROUND`, `PE` and `NONE`. `port_power_text(model, port)` gives the text of the symbol at a port.
 `is_rail_terminal(model, terminal)` is true for a terminal in a group flagged `rail=True`.
 A flagged terminal draws as its power symbol, an unflagged one as a terminal. A pin wired to one, or to another pin on a power net, draws the rail's power symbol. No wire joins two such pins. The terminal table and wire list hold every landing and wire.
@@ -2779,6 +2779,8 @@ Each of these takes further keyword-only options; their docstrings cover the exa
 
 `fransys.derive.item_label(model, item)` takes the item's id and is `item_designation`'s no-raise twin: an item's own
 text, or its authoring key joined by `/` when it has none yet.
+
+`fransys.derive.drawn_designations(model, ids)` gives the designation of each item whose id a drawing carries as text, such as `DrawnRow.devices`. See "Read the rows of a page" in the readability page.
 
 `fransys.derive.node_designation(model, node)` renders a node's signed
 designation by aspect: `+C1` for a location, `=G1` for a group. It is the segment
@@ -2936,7 +2938,7 @@ assert cable_rating is not None and cable_rating.voltage[0].nom == fr.elecdef.Un
 
 ---
 
-<!-- source: https://olejbondahl.github.io/fransys/0.23.1/guide/layout-numbers/index.md -->
+<!-- source: https://olejbondahl.github.io/fransys/0.23.2/guide/layout-numbers/index.md -->
 
 # Layout numbers
 
@@ -2962,7 +2964,7 @@ The text sizes are the library's fixed heights, not a profile keyword and not a 
 
 ---
 
-<!-- source: https://olejbondahl.github.io/fransys/0.23.1/guide/reading-rows/index.md -->
+<!-- source: https://olejbondahl.github.io/fransys/0.23.2/guide/reading-rows/index.md -->
 
 # Reading: rows, columns and printed texts
 
@@ -2973,7 +2975,7 @@ This page covers `fr.derive`, the facade's read-only layer. It holds the column 
 The columns of each list are the `[[lists.<name>.columns]]` tables of the settings, so a settings file can reorder or drop them. Each column has a row `field` and two `[words]` keys: `pdf`, the key of its PDF heading, and `csv`, the key of its CSV header. The lists are `terminal`, `plc`, `bom`, `wires`, `designations`, `connectors`, `cables`, `contents` and `cores`. Each function takes the model first.
 
 - `export_form_of(model)` gives the `[export]` record of a build: the report kinds, the name signs, `data_dir` and the CSV delimiter, encoding, quoting and newline. `export_path(form, name)` is a file's path from `out_dir`, `export_bytes(form, name, text)` its bytes, and `csv_dialect(form)` the `csv` dialect of the CSV form.
-- `list_columns(model, name)` gives the row field names the list prints, in order. By default `bom` is `('mpn', 'revision', 'manufacturer', 'description', 'count', 'designations')`, `plc` is `('pin', 'channel_name', 'signal', 'signal_name', 'wired_to')` and `wires` is `('from_', 'to', 'colour', 'cross_section_mm2', 'label')`. `connectors` holds the connector fields, then the pin fields (`marking`, `net`, `mate_port_designation`, `ends`); a line repeats the connector fields on each pin.
+- `list_columns(model, name)` gives the row field names the list prints, in order. By default `bom` is `('mpn', 'revision', 'manufacturer', 'description', 'count', 'designations')`, `plc` is `('pin', 'channel_name', 'signal', 'signal_name', 'description', 'wired_to')` and `wires` is `('from_', 'to', 'colour', 'cross_section_mm2', 'label')`. `connectors` holds the connector fields, then the pin fields (`marking`, `net`, `mate_port_designation`, `ends`); a line repeats the connector fields on each pin.
 - `list_pdf_columns(model, name)` gives the columns the PDF prints, where they differ from the CSV: `terminal` leaves out `jumper_group`, `cables` leaves out `pairs`, and `connectors` prints the pin fields only. It raises for a list with no `pdf_columns`.
 - `list_pdf_heading(model, name, field)` gives the heading a PDF table prints for a column: the `[words]` text of its `pdf` key. It raises when the list has no such column.
 - `list_csv_header(model, name, field)` gives the header cell the CSV writes for a column: the `[words]` text of its `csv` key.
@@ -2991,7 +2993,7 @@ Every row is a frozen record. A row is the one shape an output reads, so the lay
 - `HarnessCore` is one core of a harness cable, with the label its wire carries. Fields: `conductor`, `index`, `colour`, `label`, `end_a`, `end_a_designation`, `end_b`, `end_b_designation`. The `label` is `None` when the wire has none. Every core of one cable runs from the same physical end to the same other end.
 - `HarnessEnd` is one item that a core lands on: a connector housing, a plain device, or a strip of terminals. Fields: `item`, `designation`, `connector`, `style`, `pincount`, `gender`, `mpn`, `pins`. The `designation` is the item's product designation for every end. The connector fields are `None` for a plain device or a strip. When a core lands on a terminal with a parent, `item` is the strip, and `pins` holds one `HarnessPin` per landed terminal.
 - `HarnessPin` is one port of a harness end that a core lands on. Fields: `port`, `marking`. The `marking` is the port's own name. For a terminal in a strip it is the bare `group:index` text, such as `L1:1`, without the strip's designation, because the end already prints the strip.
-- `PlcChannelRow` is one pin of a PLC channel. Fields: `channel`, `port`, `pin`, `channel_name`, `signal`, `wired_to`, `field_device`, `field_device_designation`, `signal_name`. The `pin` is the pin's printed designation (`-A2:5`) and `channel_name` the channel's own number. The `wired_to` joins the far ends of that pin's conductors with `CELL_SEPARATOR`, or is `None` when nothing is printed. The three field fields are `None` for a channel with no bound device.
+- `PlcChannelRow` is one pin of a PLC channel. Fields: `channel`, `port`, `pin`, `channel_name`, `signal`, `wired_to`, `field_device`, `field_device_designation`, `signal_name`, `description`. The `pin` is the pin's printed designation (`-A2:5`) and `channel_name` the channel's own number. The `wired_to` joins the far ends of that pin's conductors with `CELL_SEPARATOR`, or is `None` when nothing is printed. The `description` is the bound device's `.plc(..., description=)` text, `None` when none was given. The three field fields and `description` are `None` for a channel with no bound device.
 - `PlcRackChannel` is one channel of a rack module, bound or spare. Fields: `channel`, `number`, `signal`, `field_device`, `field_device_designation`, `signal_name`, `routing`, `configured`, `scaling`. The field fields are `None` for a spare channel. The `scaling` is `None` when the function that requests the channel (the bound device, else the channel's own function) has no scaling facet. The `signal_name` is the device's request name, else a spare's own name.
 - `PlcRackModule` is one PLC module of a rack, with its channels in order. Modules go by `position`, else by their own tag. Channels with one number go by the function names in the part file, in natural order. A block tag never changes the order of racks, modules or channels (model-0259). Fields: `module`, `designation`, `mpn`, `description`, `position`, `channels`. The `mpn` and `description` come from the part. The `position` is `None` when the author never gave one.
 - `PlcTable` is one table of the PLC list: the channels of one controller or module. Fields: `item`, `designation` and `rows`. `item` carries the channels, `designation` is its printed designation and the table's heading, and `rows` are its `PlcChannelRow`s in list order, never empty.
@@ -3030,7 +3032,7 @@ These functions give the one text and the one order that each list uses. A list 
 
 ---
 
-<!-- source: https://olejbondahl.github.io/fransys/0.23.1/guide/reading-records/index.md -->
+<!-- source: https://olejbondahl.github.io/fransys/0.23.2/guide/reading-records/index.md -->
 
 # Reading: records, lookups and ratings
 
@@ -3081,7 +3083,7 @@ Use `item_location` when a list needs an item's place and the place may be inher
 
 ---
 
-<!-- source: https://olejbondahl.github.io/fransys/0.23.1/guide/keywords/index.md -->
+<!-- source: https://olejbondahl.github.io/fransys/0.23.2/guide/keywords/index.md -->
 
 # Keywords and handles
 
@@ -3131,7 +3133,7 @@ Handles are the objects a design returns and the reader holds. A consumer does n
 - `Throw`: one throw of a changeover, `k1.co.no` or `k1.co.nc`. It stands in a `d.series` call as an element. A consumer does not build one (its `fns` are the changeover functions). A generated parts module declares it on every changeover function.
 - `TypedDevice`: the base a generated parts module subclasses once for each part. Its `mpn` is its whole contract. It adds no behaviour: the subclass only declares functions and pins.
 - `TypedFn`: the base a generated parts module subclasses for one function of one part. It adds no behaviour. Its subclass declares pins for the type checker.
-- `BuildResult`: the result of `fr.build`. It holds `model`, the frozen and laid-out `Model`, `findings`, every finding collected while building it, and `settings`, the `Settings` the build used. `page_svgs` holds each schematic page's SVG, drawn once and reused by `check` and `write`. `diagrams` holds the block-diagram sheets the document keeps, and is empty when it keeps none.
+- `BuildResult`: the result of `fr.build`. It holds `model`, the frozen and laid-out `Model`, `findings`, every finding collected while building it, and `settings`, the `Settings` the build used. `drawings` holds each schematic page's `Drawing`, with its placed `rows` (see `readability.md`). `page_svgs` holds each schematic page's SVG, drawn once and reused by `check` and `write`. `diagrams` holds the block-diagram sheets the document keeps, and is empty when it keeps none.
 - `Settings`: the frozen value of `fr.settings(...)`, with the fields `paper`, `paper_by_kind`, `pdf`, `look` and `layout` (settings.md).
 - `SettingsError`: raised by `fr.settings` for a file or `paper=` that is wrong. Its message names the file, the key and the keys known there.
 
@@ -3194,7 +3196,7 @@ rarely does.
 
 ---
 
-<!-- source: https://olejbondahl.github.io/fransys/0.23.1/guide/keywords-design/index.md -->
+<!-- source: https://olejbondahl.github.io/fransys/0.23.2/guide/keywords-design/index.md -->
 
 # Keywords of the d calls
 
@@ -3209,20 +3211,20 @@ The `fr.*` functions are in `keywords-output.md`, the handle methods and layout 
 | keyword | default | effect | example |
 |---|---|---|---|
 | `tag` | required | The printed tag, with no lowercase letter. `None` numbers the device from its class code and needs `name=`. | `d.device("Q1", P.Q)` |
-| [`part`](https://olejbondahl.github.io/fransys/0.23.1/guide/parts/index.md#the-typed-parts-module) | required | A part class or an MPN string. `None` makes an `external=True` box of `pins=`, with no BOM line. | `d.device("Q1", "DEMO-MCB-3P")` |
-| [`pins`](https://olejbondahl.github.io/fransys/0.23.1/guide/authoring/index.md#name-a-place-and-a-function-block) | `None` | Names the pins of a part-less box (`part=None`); each is an attribute too, `ext.U` as `ext["U"]`. | `d.device("A1", None, pins=("1", "2"), external=True)` |
-| [`place`](https://olejbondahl.github.io/fransys/0.23.1/guide/authoring/index.md#name-a-place-and-a-function-block) | `...` | Where the device stands. | `d.device("Q1", P.Q, place="HOLD")` |
-| [`parent`](https://olejbondahl.github.io/fransys/0.23.1/guide/parts/index.md#an-accessory-in-its-holder) | `None` | The device, strip or cable that holds this one; an accessory prints its holder's designation. | `d.device("J1", P.HSG, parent=k1)` |
+| [`part`](https://olejbondahl.github.io/fransys/0.23.2/guide/parts/index.md#the-typed-parts-module) | required | A part class or an MPN string. `None` makes an `external=True` box of `pins=`, with no BOM line. | `d.device("Q1", "DEMO-MCB-3P")` |
+| [`pins`](https://olejbondahl.github.io/fransys/0.23.2/guide/authoring/index.md#name-a-place-and-a-function-block) | `None` | Names the pins of a part-less box (`part=None`); each is an attribute too, `ext.U` as `ext["U"]`. | `d.device("A1", None, pins=("1", "2"), external=True)` |
+| [`place`](https://olejbondahl.github.io/fransys/0.23.2/guide/authoring/index.md#name-a-place-and-a-function-block) | `...` | Where the device stands. | `d.device("Q1", P.Q, place="HOLD")` |
+| [`parent`](https://olejbondahl.github.io/fransys/0.23.2/guide/parts/index.md#an-accessory-in-its-holder) | `None` | The device, strip or cable that holds this one; an accessory prints its holder's designation. | `d.device("J1", P.HSG, parent=k1)` |
 | `name` | `None` | The key a released number holds to. Needed when `tag=None`. | `d.device(None, P.Q, name="main-breaker")` |
-| [`interface`](https://olejbondahl.github.io/fransys/0.23.1/guide/units/index.md#the-interface) | `False` | Marks functions as the unit's boundary: `True` all, a tuple those. | `d.device("X1", P.CONN, interface=True)` |
-| [`unused`](https://olejbondahl.github.io/fransys/0.23.1/guide/units/index.md#the-interface) | `False` | Marks functions as unused, so no unused-pin finding is raised: `True` all, a tuple those. | `d.device("X1", P.CONN, unused=("x2",))` |
+| [`interface`](https://olejbondahl.github.io/fransys/0.23.2/guide/units/index.md#the-interface) | `False` | Marks functions as the unit's boundary: `True` all, a tuple those. | `d.device("X1", P.CONN, interface=True)` |
+| [`unused`](https://olejbondahl.github.io/fransys/0.23.2/guide/units/index.md#the-interface) | `False` | Marks functions as unused, so no unused-pin finding is raised: `True` all, a tuple those. | `d.device("X1", P.CONN, unused=("x2",))` |
 | `mounted_on` | `None` | Mounts the device on a carrier, as a contactor on a protective switch; the carrier's load pins join this device's line pins pole by pole. | `d.device("K1", P.CTR, mounted_on=q1)` |
-| [`joins`](https://olejbondahl.github.io/fransys/0.23.1/guide/harnesses/index.md#fit-a-housing-on-a-parts-leads) | `None` | Maps the housing's pins to the parent's pins, joined with no wire. Needs `parent=` to be a device. | `d.device("J1", P.HSG, parent=k1, joins={1: k1.coil["A1"]})` |
+| [`joins`](https://olejbondahl.github.io/fransys/0.23.2/guide/harnesses/index.md#fit-a-housing-on-a-parts-leads) | `None` | Maps the housing's pins to the parent's pins, joined with no wire. Needs `parent=` to be a device. | `d.device("J1", P.HSG, parent=k1, joins={1: k1.coil["A1"]})` |
 | `description` | `''` | Designation-list text in place of the part's description. | `d.device("Q1", P.Q, description="Pump breaker")` |
 | `position` | `None` | The physical order within the parent, such as a PLC module's slot. | `d.device("A2", P.DI8, parent=rack, position=2)` |
 | `installed` | `True` | `False` keeps the device in drawings but drops it from the BOM. | `d.device("Q9", P.Q, installed=False)` |
-| [`external`](https://olejbondahl.github.io/fransys/0.23.1/guide/authoring/index.md#name-a-place-and-a-function-block) | `False` | `True` marks the device as supplied by others: no BOM line, and drawings mark it dashed "(by others)". | `d.device("M1", P.MOTOR, external=True)` |
-| [`contacts`](https://olejbondahl.github.io/fransys/0.23.1/guide/harnesses/index.md#add-crimp-contacts) | `None` | Fits a contact part in every pin of a housing, or a pin-to-part mapping for mixed contacts. | `d.device("P1", P.HSG, parent=w1, contacts="DEMO-CRIMP-M")` |
+| [`external`](https://olejbondahl.github.io/fransys/0.23.2/guide/authoring/index.md#name-a-place-and-a-function-block) | `False` | `True` marks the device as supplied by others: no BOM line, and drawings mark it dashed "(by others)". | `d.device("M1", P.MOTOR, external=True)` |
+| [`contacts`](https://olejbondahl.github.io/fransys/0.23.2/guide/harnesses/index.md#add-crimp-contacts) | `None` | Fits a contact part in every pin of a housing, or a pin-to-part mapping for mixed contacts. | `d.device("P1", P.HSG, parent=w1, contacts="DEMO-CRIMP-M")` |
 
 ## `d.terminal_strip`
 
@@ -3230,16 +3232,16 @@ The `fr.*` functions are in `keywords-output.md`, the handle methods and layout 
 |---|---|---|---|
 | `tag` | required | The printed tag. `None` numbers the strip and needs `name=`. | `d.terminal_strip("X1", P.TB, 10)` |
 | `part` | required | The terminal part. `None` makes part-less terminals with only `.outer`; needs `external=True`. | `d.terminal_strip("X9", None, external=True)` |
-| [`count`](https://olejbondahl.github.io/fransys/0.23.1/guide/authoring/index.md#strips-and-terminals) | `None` | The number of terminals. `X1[3]` makes terminal 3 on first use. | `d.terminal_strip("X1", P.TB, count=10)` |
+| [`count`](https://olejbondahl.github.io/fransys/0.23.2/guide/authoring/index.md#strips-and-terminals) | `None` | The number of terminals. `X1[3]` makes terminal 3 on first use. | `d.terminal_strip("X1", P.TB, count=10)` |
 | `name` | `None` | The key a released number holds to. Needed when `tag=None`. | `d.terminal_strip(None, P.TB, name="field")` |
 | `description` | `''` | Designation-list text in place of the part's. | `d.terminal_strip("X1", P.TB, description="Field strip")` |
-| [`place`](https://olejbondahl.github.io/fransys/0.23.1/guide/authoring/index.md#name-a-place-and-a-function-block) | `...` | Where the strip stands. | `d.terminal_strip("X1", P.TB, place="HOLD")` |
-| [`pe`](https://olejbondahl.github.io/fransys/0.23.1/guide/authoring/index.md#strips-and-terminals) | `None` | The part of the strip's protective-earth terminals. A run labelled `"PE"` takes it and raises without one. | `d.terminal_strip("X1", P.TB, pe="DEMO-TB-PE-2.5")` |
-| [`interface`](https://olejbondahl.github.io/fransys/0.23.1/guide/authoring/index.md#strips-and-terminals) | `False` | Marks terminals as the unit's boundary: `True` all, a tuple those. | `d.terminal_strip("X1", P.TB, 4, interface=(1, 2))` |
-| [`unused`](https://olejbondahl.github.io/fransys/0.23.1/guide/authoring/index.md#strips-and-terminals) | `False` | Marks terminals as unused: `True` all, a tuple those. | `d.terminal_strip("X1", P.TB, 4, unused=(3, 4))` |
-| [`bridged`](https://olejbondahl.github.io/fransys/0.23.1/guide/authoring/index.md#bridges) | `False` | Bridges plain terminals: `True` bridges all, `(first, last)` a range, a tuple of ranges several. | `d.terminal_strip("X4", P.TB, 6, bridged=(2, 6))` |
-| [`rail`](https://olejbondahl.github.io/fransys/0.23.1/guide/authoring/index.md#power-rails) | `False` | Declares the strip's one bridged group a power rail; several ranges raise. | `d.terminal_strip("X1", P.TB, 4, bridged=True, rail=True)` |
-| [`external`](https://olejbondahl.github.io/fransys/0.23.1/guide/authoring/index.md#name-a-place-and-a-function-block) | `False` | `True` flags the strip and its terminals as by others. | `d.terminal_strip("X9", P.TB, 4, external=True)` |
+| [`place`](https://olejbondahl.github.io/fransys/0.23.2/guide/authoring/index.md#name-a-place-and-a-function-block) | `...` | Where the strip stands. | `d.terminal_strip("X1", P.TB, place="HOLD")` |
+| [`pe`](https://olejbondahl.github.io/fransys/0.23.2/guide/authoring/index.md#strips-and-terminals) | `None` | The part of the strip's protective-earth terminals. A run labelled `"PE"` takes it and raises without one. | `d.terminal_strip("X1", P.TB, pe="DEMO-TB-PE-2.5")` |
+| [`interface`](https://olejbondahl.github.io/fransys/0.23.2/guide/authoring/index.md#strips-and-terminals) | `False` | Marks terminals as the unit's boundary: `True` all, a tuple those. | `d.terminal_strip("X1", P.TB, 4, interface=(1, 2))` |
+| [`unused`](https://olejbondahl.github.io/fransys/0.23.2/guide/authoring/index.md#strips-and-terminals) | `False` | Marks terminals as unused: `True` all, a tuple those. | `d.terminal_strip("X1", P.TB, 4, unused=(3, 4))` |
+| [`bridged`](https://olejbondahl.github.io/fransys/0.23.2/guide/authoring/index.md#bridges) | `False` | Bridges plain terminals: `True` bridges all, `(first, last)` a range, a tuple of ranges several. | `d.terminal_strip("X4", P.TB, 6, bridged=(2, 6))` |
+| [`rail`](https://olejbondahl.github.io/fransys/0.23.2/guide/authoring/index.md#power-rails) | `False` | Declares the strip's one bridged group a power rail; several ranges raise. | `d.terminal_strip("X1", P.TB, 4, bridged=True, rail=True)` |
+| [`external`](https://olejbondahl.github.io/fransys/0.23.2/guide/authoring/index.md#name-a-place-and-a-function-block) | `False` | `True` flags the strip and its terminals as by others. | `d.terminal_strip("X9", P.TB, 4, external=True)` |
 
 ## `d.cable`
 
@@ -3248,8 +3250,8 @@ The `fr.*` functions are in `keywords-output.md`, the handle methods and layout 
 | `tag` | required | The printed tag. `None` numbers the cable and needs `name=`. | `d.cable("W1", P.CBL)` |
 | `part` | required | The cable part, which gives the cores. | `d.cable("W1", "DEMO-CBL-4G1.5")` |
 | `length_m` | `None` | The length in metres, stored as whole millimetres, printed in the cable list. | `d.cable("W1", P.CBL, length_m=5)` |
-| [`place`](https://olejbondahl.github.io/fransys/0.23.1/guide/authoring/index.md#name-a-place-and-a-function-block) | `...` | Where the cable stands. | `d.cable("W1", P.CBL, place="HOLD")` |
-| [`parent`](https://olejbondahl.github.io/fransys/0.23.1/guide/series/index.md#cables) | `None` | The harness that holds the cable. | `d.cable("W5", P.CBL, parent=h1)` |
+| [`place`](https://olejbondahl.github.io/fransys/0.23.2/guide/authoring/index.md#name-a-place-and-a-function-block) | `...` | Where the cable stands. | `d.cable("W1", P.CBL, place="HOLD")` |
+| [`parent`](https://olejbondahl.github.io/fransys/0.23.2/guide/series/index.md#cables) | `None` | The harness that holds the cable. | `d.cable("W5", P.CBL, parent=h1)` |
 | `name` | `None` | The key a released number holds to. Needed when `tag=None`. | `d.cable(None, P.CBL, name="motor-cable")` |
 | `external` | `False` | `True` flags the cable as supplied by others; its cores carry no flag. | `d.cable("W1", P.CBL, external=True)` |
 
@@ -3259,7 +3261,7 @@ The `fr.*` functions are in `keywords-output.md`, the handle methods and layout 
 |---|---|---|---|
 | `definition` | required | The unit made by `fr.unit`. The call returns the unit function's result. | `u1 = d.add(board, "U1")` |
 | `tag` | required | The instance's printed tag, with no lowercase letter. | `d.add(board, "U1")` |
-| [`place`](https://olejbondahl.github.io/fransys/0.23.1/guide/authoring/index.md#name-a-place-and-a-function-block) | `...` | Where the instance stands. | `d.add(board, "U1", place="HOLD")` |
+| [`place`](https://olejbondahl.github.io/fransys/0.23.2/guide/authoring/index.md#name-a-place-and-a-function-block) | `...` | Where the instance stands. | `d.add(board, "U1", place="HOLD")` |
 | `name` | `None` | The identity a released number holds to, when it must differ from the tag. | `d.add(board, "U1", name="module1")` |
 
 ## `d.unused`
@@ -3275,21 +3277,21 @@ listed twice are refused; see `units.md`, which holds the worked example.
 | keyword | default | effect | example |
 |---|---|---|---|
 | `name` | required | The supply's name. Its rails are `ac.L1` and so on. | `d.ac_supply("230V", 230, x0[1], n=x0[2])` |
-| [`voltage`](https://olejbondahl.github.io/fransys/0.23.1/guide/authoring/index.md#ac-or-dc-supply-and-rails) | required | Each phase's RMS voltage to the star point. | `d.ac_supply("400V", 400, q1["L1"], q1["L2"], q1["L3"])` |
-| [`n`](https://olejbondahl.github.io/fransys/0.23.1/guide/authoring/index.md#ac-or-dc-supply-and-rails) | `None` | The neutral pin. A series joins N only where an element has a pole. | `n=q1["N"]` |
-| [`names`](https://olejbondahl.github.io/fransys/0.23.1/guide/authoring/index.md#ac-or-dc-supply-and-rails) | `None` | Renames the potentials: one name per phase pin, then one for `n`. The rails keep their names. | `names=("A", "B", "C")` |
+| [`voltage`](https://olejbondahl.github.io/fransys/0.23.2/guide/authoring/index.md#ac-or-dc-supply-and-rails) | required | Each phase's RMS voltage to the star point. | `d.ac_supply("400V", 400, q1["L1"], q1["L2"], q1["L3"])` |
+| [`n`](https://olejbondahl.github.io/fransys/0.23.2/guide/authoring/index.md#ac-or-dc-supply-and-rails) | `None` | The neutral pin. A series joins N only where an element has a pole. | `n=q1["N"]` |
+| [`names`](https://olejbondahl.github.io/fransys/0.23.2/guide/authoring/index.md#ac-or-dc-supply-and-rails) | `None` | Renames the potentials: one name per phase pin, then one for `n`. The rails keep their names. | `names=("A", "B", "C")` |
 
 ## `d.dc_supply`
 
 | keyword | default | effect | example |
 |---|---|---|---|
 | `name` | required | The supply's name. Its rails are `dc.plus` and `dc.minus`. | `d.dc_supply("24VDC", psu.output)` |
-| [`source`](https://olejbondahl.github.io/fransys/0.23.1/guide/authoring/index.md#ac-or-dc-supply-and-rails) | `None` | A device or function whose L+ and L- pins and voltage are the supply. Without it, `plus`, `minus` and `voltage` are required. | `d.dc_supply("24VDC", g1.output)` |
-| [`plus`](https://olejbondahl.github.io/fransys/0.23.1/guide/authoring/index.md#ac-or-dc-supply-and-rails) | `None` | The plus pin, with no `source`. | `plus=x1[1]` |
-| [`minus`](https://olejbondahl.github.io/fransys/0.23.1/guide/authoring/index.md#ac-or-dc-supply-and-rails) | `None` | The minus pin, with no `source`. | `minus=x1[2]` |
-| [`mid`](https://olejbondahl.github.io/fransys/0.23.1/guide/authoring/index.md#ac-or-dc-supply-and-rails) | `None` | A middle conductor at 0 V; plus and minus are then plus and minus the voltage. | `mid=x1[3]` |
-| [`voltage`](https://olejbondahl.github.io/fransys/0.23.1/guide/authoring/index.md#ac-or-dc-supply-and-rails) | `None` | The voltage, required when no `source` or its part states none. | `voltage=24` |
-| [`names`](https://olejbondahl.github.io/fransys/0.23.1/guide/authoring/index.md#ac-or-dc-supply-and-rails) | `None` | Renames the potentials, in the order plus, minus, mid. | `names=("P24", "M24")` |
+| [`source`](https://olejbondahl.github.io/fransys/0.23.2/guide/authoring/index.md#ac-or-dc-supply-and-rails) | `None` | A device or function whose L+ and L- pins and voltage are the supply. Without it, `plus`, `minus` and `voltage` are required. | `d.dc_supply("24VDC", g1.output)` |
+| [`plus`](https://olejbondahl.github.io/fransys/0.23.2/guide/authoring/index.md#ac-or-dc-supply-and-rails) | `None` | The plus pin, with no `source`. | `plus=x1[1]` |
+| [`minus`](https://olejbondahl.github.io/fransys/0.23.2/guide/authoring/index.md#ac-or-dc-supply-and-rails) | `None` | The minus pin, with no `source`. | `minus=x1[2]` |
+| [`mid`](https://olejbondahl.github.io/fransys/0.23.2/guide/authoring/index.md#ac-or-dc-supply-and-rails) | `None` | A middle conductor at 0 V; plus and minus are then plus and minus the voltage. | `mid=x1[3]` |
+| [`voltage`](https://olejbondahl.github.io/fransys/0.23.2/guide/authoring/index.md#ac-or-dc-supply-and-rails) | `None` | The voltage, required when no `source` or its part states none. | `voltage=24` |
+| [`names`](https://olejbondahl.github.io/fransys/0.23.2/guide/authoring/index.md#ac-or-dc-supply-and-rails) | `None` | Renames the potentials, in the order plus, minus, mid. | `names=("P24", "M24")` |
 
 ## `d.earth`
 
@@ -3299,8 +3301,8 @@ listed twice are refused; see `units.md`, which holds the worked example.
 
 | keyword | default | effect | example |
 |---|---|---|---|
-| [`name`](https://olejbondahl.github.io/fransys/0.23.1/guide/authoring/index.md#name-a-place-and-a-function-block) | required | The function block's name, printed `=name`. Devices made inside the `with` block belong to it, which sets their designation. | `with d.function("RUN", "Pump run"):` |
-| [`text`](https://olejbondahl.github.io/fransys/0.23.1/guide/authoring/index.md#name-a-place-and-a-function-block) | required | The block's description, printed on the pages that draw it. | `with d.function("RUN", "Pump run"):` |
+| [`name`](https://olejbondahl.github.io/fransys/0.23.2/guide/authoring/index.md#name-a-place-and-a-function-block) | required | The function block's name, printed `=name`. Devices made inside the `with` block belong to it, which sets their designation. | `with d.function("RUN", "Pump run"):` |
+| [`text`](https://olejbondahl.github.io/fransys/0.23.2/guide/authoring/index.md#name-a-place-and-a-function-block) | required | The block's description, printed on the pages that draw it. | `with d.function("RUN", "Pump run"):` |
 
 A function block that holds only a connection draws nothing of its own. Put the devices of that circuit in the block, and the circuit draws there.
 
@@ -3308,9 +3310,9 @@ A function block that holds only a connection draws nothing of its own. Put the 
 
 | keyword | default | effect | example |
 |---|---|---|---|
-| [`name`](https://olejbondahl.github.io/fransys/0.23.1/guide/authoring/index.md#name-a-place-and-a-function-block) | required | The place's tag, printed `+name`. | `d.location("HOLD", "Engine hold")` |
-| [`text`](https://olejbondahl.github.io/fransys/0.23.1/guide/authoring/index.md#name-a-place-and-a-function-block) | required | The place's description. | `d.location("HOLD", "Engine hold")` |
-| [`within`](https://olejbondahl.github.io/fransys/0.23.1/guide/authoring/index.md#a-place-inside-a-place) | `None` | The outer place, which must exist; the place prints `+outer+name`. `None` puts it at the root. | `d.location("BATT", "Batteries", within="HOLD")` |
+| [`name`](https://olejbondahl.github.io/fransys/0.23.2/guide/authoring/index.md#name-a-place-and-a-function-block) | required | The place's tag, printed `+name`. | `d.location("HOLD", "Engine hold")` |
+| [`text`](https://olejbondahl.github.io/fransys/0.23.2/guide/authoring/index.md#name-a-place-and-a-function-block) | required | The place's description. | `d.location("HOLD", "Engine hold")` |
+| [`within`](https://olejbondahl.github.io/fransys/0.23.2/guide/authoring/index.md#a-place-inside-a-place) | `None` | The outer place, which must exist; the place prints `+outer+name`. `None` puts it at the root. | `d.location("BATT", "Batteries", within="HOLD")` |
 
 ## `d.harness`
 
@@ -3318,9 +3320,9 @@ Refused for 0.22 (`MATES_DISABLED`, an ERROR): draw the link as a cable or wires
 
 | keyword | default | effect | example |
 |---|---|---|---|
-| [`tag`](https://olejbondahl.github.io/fransys/0.23.1/guide/harnesses/index.md#add-a-harness) | `None` | The part-less harness's tag. `None` numbers it and needs `name=`. | `d.harness("H1")` |
+| [`tag`](https://olejbondahl.github.io/fransys/0.23.2/guide/harnesses/index.md#add-a-harness) | `None` | The part-less harness's tag. `None` numbers it and needs `name=`. | `d.harness("H1")` |
 | `name` | `None` | The key a released number holds to. | `d.harness(None, name="main-loom")` |
-| [`place`](https://olejbondahl.github.io/fransys/0.23.1/guide/authoring/index.md#name-a-place-and-a-function-block) | `...` | Where the harness stands. `None` gives it no place. | `d.harness("H1", place=None)` |
+| [`place`](https://olejbondahl.github.io/fransys/0.23.2/guide/authoring/index.md#name-a-place-and-a-function-block) | `...` | Where the harness stands. `None` gives it no place. | `d.harness("H1", place=None)` |
 | `external` | `False` | `True` flags the harness as by others. | `d.harness("H1", external=True)` |
 
 ## `d.rack`
@@ -3329,7 +3331,7 @@ Refused for 0.22 (`MATES_DISABLED`, an ERROR): draw the link as a cable or wires
 |---|---|---|---|
 | `tag` | required | The part-less PLC rack's tag. Modules go under it with `parent=`. | `d.rack("U1")` |
 | `name` | `None` | The key a released number holds to. | `d.rack("U1", name="plc")` |
-| [`place`](https://olejbondahl.github.io/fransys/0.23.1/guide/authoring/index.md#name-a-place-and-a-function-block) | `...` | Where the rack stands. `None` gives it no place. | `d.rack("U1", place="HOLD")` |
+| [`place`](https://olejbondahl.github.io/fransys/0.23.2/guide/authoring/index.md#name-a-place-and-a-function-block) | `...` | Where the rack stands. `None` gives it no place. | `d.rack("U1", place="HOLD")` |
 | `external` | `False` | `True` flags the rack as by others. | `d.rack("U1", external=True)` |
 
 ## `d.mate`
@@ -3338,8 +3340,8 @@ Refused in 0.22 (`MATES_DISABLED`, an ERROR): draw the link as a cable or wires.
 
 | keyword | default | effect | example |
 |---|---|---|---|
-| [`a`](https://olejbondahl.github.io/fransys/0.23.1/guide/authoring/index.md#plug-a-connector) | required | The connector to plug in: a one-function device, or that function. | `d.mate(j1, j2)` |
-| [`b`](https://olejbondahl.github.io/fransys/0.23.1/guide/authoring/index.md#plug-a-connector) | required | The connector `a` plugs into. | `d.mate(j1, j2)` |
+| [`a`](https://olejbondahl.github.io/fransys/0.23.2/guide/authoring/index.md#plug-a-connector) | required | The connector to plug in: a one-function device, or that function. | `d.mate(j1, j2)` |
+| [`b`](https://olejbondahl.github.io/fransys/0.23.2/guide/authoring/index.md#plug-a-connector) | required | The connector `a` plugs into. | `d.mate(j1, j2)` |
 
 ## `d.series`
 
@@ -3347,7 +3349,7 @@ Refused in 0.22 (`MATES_DISABLED`, an ERROR): draw the link as a cable or wires.
 
 | keyword | default | effect | example |
 |---|---|---|---|
-| [`wire`](https://olejbondahl.github.io/fransys/0.23.1/guide/series/index.md#colour-by-what-a-wire-carries) | `None` | The wire of every pole: a size, a table of rows that replaces only those rows, one `(colour, size)`, or a tuple of them in pole order. `None` uses the rows' defaults; a row with no size is `WIRE_ROW_UNRESOLVED`. A series through a cable whose part has a core table needs no `wire=`. | `d.series(dc.plus, k1.aux, h1.lamp, dc.minus, wire=(BU, 0.75))`; `d.series(x1[1:4], q1.element, wire=((BN, 1.5), (BK, 1.5), (GY, 1.5)))` |
+| [`wire`](https://olejbondahl.github.io/fransys/0.23.2/guide/series/index.md#colour-by-what-a-wire-carries) | `None` | The wire of every pole: a size, a table of rows that replaces only those rows, one `(colour, size)`, or a tuple of them in pole order. `None` uses the rows' defaults; a row with no size is `WIRE_ROW_UNRESOLVED`. A series through a cable whose part has a core table needs no `wire=`. | `d.series(dc.plus, k1.aux, h1.lamp, dc.minus, wire=(BU, 0.75))`; `d.series(x1[1:4], q1.element, wire=((BN, 1.5), (BK, 1.5), (GY, 1.5)))` |
 
 ## `d.pair`
 
@@ -3355,9 +3357,9 @@ Refused in 0.22 (`MATES_DISABLED`, an ERROR): draw the link as a cable or wires.
 
 | keyword | default | effect | example |
 |---|---|---|---|
-| [`a`](https://olejbondahl.github.io/fransys/0.23.1/guide/detail/index.md#when-a-detail-call-is-right) | required | The first end: terminals (`x8[1:3]`; field side), a function (`b1.sig`, pins in connector order), or pins (`b1.sig[1]`), as `d.series` reads them. | `x8[1:3]` |
-| [`cable`](https://olejbondahl.github.io/fransys/0.23.1/guide/detail/index.md#when-a-detail-call-is-right) | required | The cable between the ends. | `w3` |
-| [`b`](https://olejbondahl.github.io/fransys/0.23.1/guide/detail/index.md#when-a-detail-call-is-right) | required | The second end, with as many pins as `a`; a strip or a device raises. Both ends need the same number of pins, or the call raises. | `b1.sig` |
+| [`a`](https://olejbondahl.github.io/fransys/0.23.2/guide/detail/index.md#when-a-detail-call-is-right) | required | The first end: terminals (`x8[1:3]`; field side), a function (`b1.sig`, pins in connector order), or pins (`b1.sig[1]`), as `d.series` reads them. | `x8[1:3]` |
+| [`cable`](https://olejbondahl.github.io/fransys/0.23.2/guide/detail/index.md#when-a-detail-call-is-right) | required | The cable between the ends. | `w3` |
+| [`b`](https://olejbondahl.github.io/fransys/0.23.2/guide/detail/index.md#when-a-detail-call-is-right) | required | The second end, with as many pins as `a`; a strip or a device raises. Both ends need the same number of pins, or the call raises. | `b1.sig` |
 
 Example: `d.pair(x8[1:3], w3, b1.sig)`.
 
@@ -3371,31 +3373,31 @@ Example: `d.pair(x8[1:3], w3, b1.sig)`.
 
 | keyword | default | effect | example |
 |---|---|---|---|
-| [`selector`](https://olejbondahl.github.io/fransys/0.23.1/guide/series/index.md#contacts-that-switch-together) | `False` | `True` turns a changeover group's throws to the line side: a series enters at the throws, and the group draws turned. `False` keeps the line at the commons. It raises on a part that states a selector or a group that is not changeovers. | `q = d.poles(k1.co_1, k1.co_2, k1.co_3, selector=True)` |
+| [`selector`](https://olejbondahl.github.io/fransys/0.23.2/guide/series/index.md#contacts-that-switch-together) | `False` | `True` turns a changeover group's throws to the line side: a series enters at the throws, and the group draws turned. `False` keeps the line at the commons. It raises on a part that states a selector or a group that is not changeovers. | `q = d.poles(k1.co_1, k1.co_2, k1.co_3, selector=True)` |
 
 ## `d.project`
 
 | keyword | default | effect | example |
 |---|---|---|---|
-| [`title`](https://olejbondahl.github.io/fransys/0.23.1/guide/authoring/index.md#title-block-revision) | required | The project title, printed in every title block. | `d.project(title="Pump", ...)` |
-| [`number`](https://olejbondahl.github.io/fransys/0.23.1/guide/authoring/index.md#title-block-revision) | required | The drawing number, printed in the title block. | `number="DC-1"` |
-| [`customer`](https://olejbondahl.github.io/fransys/0.23.1/guide/authoring/index.md#title-block-revision) | required | The customer, printed in the title block. | `customer="Demo Ltd"` |
+| [`title`](https://olejbondahl.github.io/fransys/0.23.2/guide/authoring/index.md#title-block-revision) | required | The project title, printed in every title block. | `d.project(title="Pump", ...)` |
+| [`number`](https://olejbondahl.github.io/fransys/0.23.2/guide/authoring/index.md#title-block-revision) | required | The drawing number, printed in the title block. | `number="DC-1"` |
+| [`customer`](https://olejbondahl.github.io/fransys/0.23.2/guide/authoring/index.md#title-block-revision) | required | The customer, printed in the title block. | `customer="Demo Ltd"` |
 | `revision` | required | The current revision, an integer from 1; its date is the matching `d.revision` entry's. | `revision=2` |
-| [`author`](https://olejbondahl.github.io/fransys/0.23.1/guide/documents/index.md#presets-cover-and-notes-text) | required | The author, printed in the Author cell. | `author="AB"` |
-| [`notice`](https://olejbondahl.github.io/fransys/0.23.1/guide/documents/index.md#presets-cover-and-notes-text) | `None` | Not accepted: passing it raises `AuthorError`. Use `fr.document(notice=)`. | `fr.document(preset, None, cover=c, notice="...")` |
+| [`author`](https://olejbondahl.github.io/fransys/0.23.2/guide/documents/index.md#presets-cover-and-notes-text) | required | The author, printed in the Author cell. | `author="AB"` |
+| [`notice`](https://olejbondahl.github.io/fransys/0.23.2/guide/documents/index.md#presets-cover-and-notes-text) | `None` | Not accepted: passing it raises `AuthorError`. Use `fr.document(notice=)`. | `fr.document(preset, None, cover=c, notice="...")` |
 | `version` | `1` | The project's release version, which `d.revision` entries take by default. Set it before any `d.revision`. | `version=2` |
 
 ## `d.revision`
 
 | keyword | default | effect | example |
 |---|---|---|---|
-| [`revision`](https://olejbondahl.github.io/fransys/0.23.1/guide/units/index.md#recording-revisions) | required | The revision number of this history entry. | `d.revision(1, date="2026-01-01", text="first", created="AB")` |
-| [`date`](https://olejbondahl.github.io/fransys/0.23.1/guide/units/index.md#recording-revisions) | required | The entry's date, shown in the title block for the current revision. | `date="2026-01-01"` |
-| [`text`](https://olejbondahl.github.io/fransys/0.23.1/guide/units/index.md#recording-revisions) | required | What the revision changed. | `text="first issue"` |
-| [`created`](https://olejbondahl.github.io/fransys/0.23.1/guide/units/index.md#recording-revisions) | required | Who made the revision. | `created="AB"` |
+| [`revision`](https://olejbondahl.github.io/fransys/0.23.2/guide/units/index.md#recording-revisions) | required | The revision number of this history entry. | `d.revision(1, date="2026-01-01", text="first", created="AB")` |
+| [`date`](https://olejbondahl.github.io/fransys/0.23.2/guide/units/index.md#recording-revisions) | required | The entry's date, shown in the title block for the current revision. | `date="2026-01-01"` |
+| [`text`](https://olejbondahl.github.io/fransys/0.23.2/guide/units/index.md#recording-revisions) | required | What the revision changed. | `text="first issue"` |
+| [`created`](https://olejbondahl.github.io/fransys/0.23.2/guide/units/index.md#recording-revisions) | required | Who made the revision. | `created="AB"` |
 | `checked` | `''` | Who checked it. | `checked="CD"` |
 | `approved` | `''` | Who approved it. | `approved="EF"` |
-| [`version`](https://olejbondahl.github.io/fransys/0.23.1/guide/units/index.md#recording-revisions) | `None` | The entry's version. `None` takes the project's version, or 1 before `d.project`. | `version=2` |
+| [`version`](https://olejbondahl.github.io/fransys/0.23.2/guide/units/index.md#recording-revisions) | `None` | The entry's version. `None` takes the project's version, or 1 before `d.project`. | `version=2` |
 
 ## `d.draft`
 
@@ -3406,12 +3408,12 @@ Example: `d.pair(x8[1:3], w3, b1.sig)`.
 
 | keyword | default | effect | example |
 |---|---|---|---|
-| [`a`](https://olejbondahl.github.io/fransys/0.23.1/guide/detail/index.md#ddetailbusbar) | required | The first pin of the busbar. | `d.detail.busbar(x1[1], x1[2])` |
-| [`b`](https://olejbondahl.github.io/fransys/0.23.1/guide/detail/index.md#ddetailbusbar) | required | The second pin. The same pin twice raises. | `d.detail.busbar(x1[1], x1[2])` |
+| [`a`](https://olejbondahl.github.io/fransys/0.23.2/guide/detail/index.md#ddetailbusbar) | required | The first pin of the busbar. | `d.detail.busbar(x1[1], x1[2])` |
+| [`b`](https://olejbondahl.github.io/fransys/0.23.2/guide/detail/index.md#ddetailbusbar) | required | The second pin. The same pin twice raises. | `d.detail.busbar(x1[1], x1[2])` |
 
 ---
 
-<!-- source: https://olejbondahl.github.io/fransys/0.23.1/guide/keywords-handles/index.md -->
+<!-- source: https://olejbondahl.github.io/fransys/0.23.2/guide/keywords-handles/index.md -->
 
 # Keywords of the handle methods and layout hints
 
@@ -3425,12 +3427,12 @@ The design calls are in `keywords-design.md`, the `fr.*` functions in `keywords-
 
 | keyword | default | effect | example |
 |---|---|---|---|
-| [`signal`](https://olejbondahl.github.io/fransys/0.23.1/guide/authoring/index.md#how-channels-are-numbered) | `None` | Required on a device. The `fr.SignalType` of the PLC channel this function needs, such as `fr.DI`. It picks the channel kind allocated. A module's channel handle (`ai.ai_3`) already has its signal and takes none. | `k1.coil.plc(fr.DO, "pump-run")` |
-| [`name`](https://olejbondahl.github.io/fransys/0.23.1/guide/authoring/index.md#request-a-plc-channel) | `None` | Required on a device. The channel's name. It prints in the PLC lists and on the channel's address, and is the channel's `Name` in the Wago rack XML. On a spare channel's handle it names the spare (`unused`). | `k1.coil.plc(fr.DO, "pump-run")` |
+| [`signal`](https://olejbondahl.github.io/fransys/0.23.2/guide/authoring/index.md#how-channels-are-numbered) | `None` | Required on a device. The `fr.SignalType` of the PLC channel this function needs, such as `fr.DI`. It picks the channel kind allocated. A module's channel handle (`ai.ai_3`) already has its signal and takes none. | `k1.coil.plc(fr.DO, "pump-run")` |
+| [`name`](https://olejbondahl.github.io/fransys/0.23.2/guide/authoring/index.md#request-a-plc-channel) | `None` | Required on a device. The channel's name. It prints in the PLC lists and on the channel's address, and is the channel's `Name` in the Wago rack XML. On a spare channel's handle it names the spare (`unused`). | `k1.coil.plc(fr.DO, "pump-run")` |
 | `priority` | `0` | A lower number is served first when channels are short. Ties go by the requesting function's key, then its id. | `k1.coil.plc(fr.DO, "pump-run", priority=1)` |
-| [`routing`](https://olejbondahl.github.io/fransys/0.23.1/guide/authoring/index.md#the-wago-rack-xml-follows-the-cdp-reference) | `None` | The channel's CDP routing path, never parsed. `None` writes no `Routing`, `""` writes `Routing=""`, a path writes the path. | `k1.coil.plc(fr.DO, "pump-run", routing="Controller.Section.Pump_run")` |
-| [`configured`](https://olejbondahl.github.io/fransys/0.23.1/guide/authoring/index.md#the-wago-rack-xml-follows-the-cdp-reference) | `True` | `False` on a module's channel handle leaves the channel out of the Wago rack XML; the other channels keep their `Nr`. It takes no name, routing or scale; a device refuses it. | `ai.ai_4.plc(configured=False)` |
-| [`description`](https://olejbondahl.github.io/fransys/0.23.1/guide/authoring/index.md#request-a-plc-channel) | `None` | One line of text for the PLC list, which prints it in its own column beside the signal name. It stays in the list: the drawing does not print it, and it never reaches the Wago rack XML, where the channel `Name` stays the bare name. A blank string or one with a line break raises. | `k1.coil.plc(fr.DO, "pump-run", description="Start the main pump")` |
+| [`routing`](https://olejbondahl.github.io/fransys/0.23.2/guide/authoring/index.md#the-wago-rack-xml-follows-the-cdp-reference) | `None` | The channel's CDP routing path, never parsed. `None` writes no `Routing`, `""` writes `Routing=""`, a path writes the path. | `k1.coil.plc(fr.DO, "pump-run", routing="Controller.Section.Pump_run")` |
+| [`configured`](https://olejbondahl.github.io/fransys/0.23.2/guide/authoring/index.md#the-wago-rack-xml-follows-the-cdp-reference) | `True` | `False` on a module's channel handle leaves the channel out of the Wago rack XML; the other channels keep their `Nr`. It takes no name, routing or scale; a device refuses it. | `ai.ai_4.plc(configured=False)` |
+| [`description`](https://olejbondahl.github.io/fransys/0.23.2/guide/authoring/index.md#request-a-plc-channel) | `None` | One line of text for the PLC list, which prints it in its own column beside the signal name. It stays in the list: the drawing does not print it, and it never reaches the Wago rack XML, where the channel `Name` stays the bare name. A blank string or one with a line break raises. | `k1.coil.plc(fr.DO, "pump-run", description="Start the main pump")` |
 
 `fn.plc(...).scale(...)` sets a per-channel engineering range; see `Fn.scale`. On a spare analogue channel's handle, `scale` scales that channel.
 
@@ -3446,20 +3448,20 @@ A pin, or a tuple of one device's pins, is a series element anywhere. First, its
 
 | keyword | default | effect | example |
 |---|---|---|---|
-| [`unit`](https://olejbondahl.github.io/fransys/0.23.1/guide/authoring/index.md#request-a-plc-channel) | `None` | The engineering unit of the scaled value. It prints in the Wago rack XML only, not in the PLC list. `None` writes no `Unit`; `""` raises. | `ai.scale("bar", raw=(0, 27648), eng=("0", "10"))` |
-| [`raw`](https://olejbondahl.github.io/fransys/0.23.1/guide/authoring/index.md#request-a-plc-channel) | required | The raw range as two integers. | `raw=(0, 27648)` |
-| [`eng`](https://olejbondahl.github.io/fransys/0.23.1/guide/authoring/index.md#request-a-plc-channel) | required | The engineering range as two strings or Decimals. Floats are refused. | `eng=("0", "10")` |
+| [`unit`](https://olejbondahl.github.io/fransys/0.23.2/guide/authoring/index.md#request-a-plc-channel) | `None` | The engineering unit of the scaled value. It prints in the Wago rack XML only, not in the PLC list. `None` writes no `Unit`; `""` raises. | `ai.scale("bar", raw=(0, 27648), eng=("0", "10"))` |
+| [`raw`](https://olejbondahl.github.io/fransys/0.23.2/guide/authoring/index.md#request-a-plc-channel) | required | The raw range as two integers. | `raw=(0, 27648)` |
+| [`eng`](https://olejbondahl.github.io/fransys/0.23.2/guide/authoring/index.md#request-a-plc-channel) | required | The engineering range as two strings or Decimals. Floats are refused. | `eng=("0", "10")` |
 
 ## `TerminalStrip.run`
 
 | keyword | default | effect | example |
 |---|---|---|---|
-| [`label`](https://olejbondahl.github.io/fransys/0.23.1/guide/authoring/index.md#bridges) | required | The run's label. It prints on each terminal of the run. A run labelled `"PE"` takes the strip's `pe=` part. | `x1.run("24V", 4)` |
-| [`count`](https://olejbondahl.github.io/fransys/0.23.1/guide/authoring/index.md#bridges) | `None` | The number of terminals in the run. With none, the run is bridged and grows as it is used. | `x1.run("24V", 4)` |
-| [`bridged`](https://olejbondahl.github.io/fransys/0.23.1/guide/authoring/index.md#bridges) | `False` | Bridges the run's terminals with jumpers: `True` bridges all, `(first, last)` bridges a range. | `x1.run("24V", 4, bridged=True)` |
-| [`rail`](https://olejbondahl.github.io/fransys/0.23.1/guide/authoring/index.md#power-rails) | `False` | Declares the bridged run a power rail: its terminals draw as the rail's power symbol, not as terminals. A run of one terminal is allowed. A fused terminal in the group is `RAIL_ON_FUSED`: flag the supply side of the fuse. | `x1.run("24V", 4, bridged=True, rail=True)` |
-| [`interface`](https://olejbondahl.github.io/fransys/0.23.1/guide/units/index.md#the-interface) | `False` | Marks the run's terminals as the unit's boundary: `True` marks all, a tuple of terminal numbers marks those. | `x1.run("24V", 4, interface=True)` |
-| [`unused`](https://olejbondahl.github.io/fransys/0.23.1/guide/units/index.md#the-interface) | `False` | Marks the run's terminals as unused: `True` marks all, a tuple marks those. | `x1.run("SPARE", 2, unused=True)` |
+| [`label`](https://olejbondahl.github.io/fransys/0.23.2/guide/authoring/index.md#bridges) | required | The run's label. It prints on each terminal of the run. A run labelled `"PE"` takes the strip's `pe=` part. | `x1.run("24V", 4)` |
+| [`count`](https://olejbondahl.github.io/fransys/0.23.2/guide/authoring/index.md#bridges) | `None` | The number of terminals in the run. With none, the run is bridged and grows as it is used. | `x1.run("24V", 4)` |
+| [`bridged`](https://olejbondahl.github.io/fransys/0.23.2/guide/authoring/index.md#bridges) | `False` | Bridges the run's terminals with jumpers: `True` bridges all, `(first, last)` bridges a range. | `x1.run("24V", 4, bridged=True)` |
+| [`rail`](https://olejbondahl.github.io/fransys/0.23.2/guide/authoring/index.md#power-rails) | `False` | Declares the bridged run a power rail: its terminals draw as the rail's power symbol, not as terminals. A run of one terminal is allowed. A fused terminal in the group is `RAIL_ON_FUSED`: flag the supply side of the fuse. | `x1.run("24V", 4, bridged=True, rail=True)` |
+| [`interface`](https://olejbondahl.github.io/fransys/0.23.2/guide/units/index.md#the-interface) | `False` | Marks the run's terminals as the unit's boundary: `True` marks all, a tuple of terminal numbers marks those. | `x1.run("24V", 4, interface=True)` |
+| [`unused`](https://olejbondahl.github.io/fransys/0.23.2/guide/units/index.md#the-interface) | `False` | Marks the run's terminals as unused: `True` marks all, a tuple marks those. | `x1.run("SPARE", 2, unused=True)` |
 
 `TerminalStrip.label` is the strip's label as the design printed it (`"X5"`); `Run.label` is the run's own label (`"PE"`). Both are read-only.
 
@@ -3469,9 +3471,9 @@ Use `d.series` through the cable first: it takes the next free core. Use `core` 
 
 | keyword | default | effect | example |
 |---|---|---|---|
-| [`which`](https://olejbondahl.github.io/fransys/0.23.1/guide/detail/index.md#w1core) | required | The core, by colour or by 1-based number. | `w1.core(BN, a, b)` |
-| [`a`](https://olejbondahl.github.io/fransys/0.23.1/guide/detail/index.md#w1core) | required | The first pin of the core. With no `b`, the core is a shield core, refused for now (`SCREEN_DISABLED`). | `w1.core(1, x1[1], m1["U"])` |
-| [`b`](https://olejbondahl.github.io/fransys/0.23.1/guide/detail/index.md#w1core) | `None` | The second pin of the core. `None` is for a shield core only, which is refused for now. | `w1.core(BN, x1[1], m1["U"])` |
+| [`which`](https://olejbondahl.github.io/fransys/0.23.2/guide/detail/index.md#w1core) | required | The core, by colour or by 1-based number. | `w1.core(BN, a, b)` |
+| [`a`](https://olejbondahl.github.io/fransys/0.23.2/guide/detail/index.md#w1core) | required | The first pin of the core. With no `b`, the core is a shield core, refused for now (`SCREEN_DISABLED`). | `w1.core(1, x1[1], m1["U"])` |
+| [`b`](https://olejbondahl.github.io/fransys/0.23.2/guide/detail/index.md#w1core) | `None` | The second pin of the core. `None` is for a shield core only, which is refused for now. | `w1.core(BN, x1[1], m1["U"])` |
 
 ## `Cable.spare`
 
@@ -3493,7 +3495,7 @@ Use `d.series` through the cable first: it takes the next free core. Use `core` 
 
 ---
 
-<!-- source: https://olejbondahl.github.io/fransys/0.23.1/guide/keywords-output/index.md -->
+<!-- source: https://olejbondahl.github.io/fransys/0.23.2/guide/keywords-output/index.md -->
 
 # Keywords of the fr functions
 
@@ -3509,23 +3511,23 @@ The design calls are in `keywords-design.md`, the handle methods and layout hint
 
 | keyword | default | effect | example |
 |---|---|---|---|
-| [`place`](https://olejbondahl.github.io/fransys/0.23.1/guide/authoring/index.md#name-a-place-and-a-function-block) | `None` | Names the first location as a bare tag. With `None` the design has no location until you call `d.location`. | `fr.design("demo_parts", place="C1")` |
-| [`wiring`](https://olejbondahl.github.io/fransys/0.23.1/guide/series/index.md#colour-by-what-a-wire-carries) | `None` | Replaces the default wire colour and size of the rows it names, for this design. Rows not named keep the IEC 60204-1 default. | `fr.design("demo_parts", wiring={fr.DC_SUPPLY: (BU, 1.5)})` |
+| [`place`](https://olejbondahl.github.io/fransys/0.23.2/guide/authoring/index.md#name-a-place-and-a-function-block) | `None` | Names the first location as a bare tag. With `None` the design has no location until you call `d.location`. | `fr.design("demo_parts", place="C1")` |
+| [`wiring`](https://olejbondahl.github.io/fransys/0.23.2/guide/series/index.md#colour-by-what-a-wire-carries) | `None` | Replaces the default wire colour and size of the rows it names, for this design. Rows not named keep the IEC 60204-1 default. | `fr.design("demo_parts", wiring={fr.DC_SUPPLY: (BU, 1.5)})` |
 
 ## `fr.unit`
 
 | keyword | default | effect | example |
 |---|---|---|---|
 | `name` | required | The unit release name. Instances print it, and the release folder under `fr.release` carries it. | `@fr.unit("pump-board", revision=2, ...)` |
-| [`revision`](https://olejbondahl.github.io/fransys/0.23.1/guide/units/index.md#recording-revisions) | required | The current revision. It is the last entry of the unit's history. | `revision=2` |
+| [`revision`](https://olejbondahl.github.io/fransys/0.23.2/guide/units/index.md#recording-revisions) | required | The current revision. It is the last entry of the unit's history. | `revision=2` |
 | `interface_version` | required | The unit's boundary version. You bump it by hand when the interface changes. | `interface_version=1` |
-| [`date`](https://olejbondahl.github.io/fransys/0.23.1/guide/units/index.md#recording-revisions) | required | Date of the current revision, as written in its history entry. | `date="2026-01-01"` |
-| [`text`](https://olejbondahl.github.io/fransys/0.23.1/guide/units/index.md#recording-revisions) | required | What the current revision changed, as written in its history entry. | `text="added the fuse"` |
-| [`by`](https://olejbondahl.github.io/fransys/0.23.1/guide/units/index.md#recording-revisions) | required | Who made the current revision. It prints in the history as `created`. | `by="AB"` |
-| [`version`](https://olejbondahl.github.io/fransys/0.23.1/guide/units/index.md#recording-revisions) | `1` | The release version. Revisions count within a version, and `fr.release` names the folder `<version>.<revision>`. | `version=2` |
+| [`date`](https://olejbondahl.github.io/fransys/0.23.2/guide/units/index.md#recording-revisions) | required | Date of the current revision, as written in its history entry. | `date="2026-01-01"` |
+| [`text`](https://olejbondahl.github.io/fransys/0.23.2/guide/units/index.md#recording-revisions) | required | What the current revision changed, as written in its history entry. | `text="added the fuse"` |
+| [`by`](https://olejbondahl.github.io/fransys/0.23.2/guide/units/index.md#recording-revisions) | required | Who made the current revision. It prints in the history as `created`. | `by="AB"` |
+| [`version`](https://olejbondahl.github.io/fransys/0.23.2/guide/units/index.md#recording-revisions) | `1` | The release version. Revisions count within a version, and `fr.release` names the folder `<version>.<revision>`. | `version=2` |
 | `title` | `''` | The unit's own title-block title. Empty gives a `TITLE_BLOCK_UNIT_IDENTITY_MISSING` warning on its document. | `title="Pump board"` |
 | `number` | `''` | The unit's own title-block number. Empty gives a `TITLE_BLOCK_UNIT_IDENTITY_MISSING` warning on its document. | `number="DWG-101"` |
-| [`history`](https://olejbondahl.github.io/fransys/0.23.1/guide/units/index.md#recording-revisions) | `()` | Earlier revisions of the unit. Each entry is a mapping of the `d.revision` keywords `revision`, `date`, `text` and `created`. | `history=[{"revision": 1, "date": "2025-12-01", "text": "first", "created": "AB"}]` |
+| [`history`](https://olejbondahl.github.io/fransys/0.23.2/guide/units/index.md#recording-revisions) | `()` | Earlier revisions of the unit. Each entry is a mapping of the `d.revision` keywords `revision`, `date`, `text` and `created`. | `history=[{"revision": 1, "date": "2025-12-01", "text": "first", "created": "AB"}]` |
 
 ## `fr.document`
 
@@ -3533,11 +3535,11 @@ The design calls are in `keywords-design.md`, the handle methods and layout hint
 
 | keyword | default | effect | example |
 |---|---|---|---|
-| [`preset`](https://olejbondahl.github.io/fransys/0.23.1/guide/documents/index.md#presets-cover-and-notes-text) | required | The `fr.DocumentPreset` that fixes the deliverable's default page kinds (documents.md). | `fr.document(fr.DocumentPreset.SYSTEM, None, cover=Path("cover.md"))` |
-| [`subject`](https://olejbondahl.github.io/fransys/0.23.1/guide/documents/index.md#subjects) | required | What the document is about: what `d.location(...)` returns, a `Device`, a unit release name, or `None` for the system preset. Another value raises `TypeError`. | `fr.document(preset, "pump-board", cover=cover)` |
-| [`cover`](https://olejbondahl.github.io/fransys/0.23.1/guide/documents/index.md#presets-cover-and-notes-text) | required | The Markdown cover file, stored verbatim. Its stem is the document's key. A missing file raises `FileNotFoundError`. A `<stem>.notes.md` beside it becomes the notes page. | `cover=Path("cover.md")` |
-| [`logo`](https://olejbondahl.github.io/fransys/0.23.1/guide/documents/index.md#presets-cover-and-notes-text) | `None` | An SVG file for the title block's logo cell. `None` leaves the cell empty. A missing file raises. | `logo=Path("logo.svg")` |
-| [`notice`](https://olejbondahl.github.io/fransys/0.23.1/guide/documents/index.md#presets-cover-and-notes-text) | `''` | The title block's IP notice text, printed on every page of this document. Empty leaves the cell empty. | `notice="Property of Demo Ltd"` |
+| [`preset`](https://olejbondahl.github.io/fransys/0.23.2/guide/documents/index.md#presets-cover-and-notes-text) | required | The `fr.DocumentPreset` that fixes the deliverable's default page kinds (documents.md). | `fr.document(fr.DocumentPreset.SYSTEM, None, cover=Path("cover.md"))` |
+| [`subject`](https://olejbondahl.github.io/fransys/0.23.2/guide/documents/index.md#subjects) | required | What the document is about: what `d.location(...)` returns, a `Device`, a unit release name, or `None` for the system preset. Another value raises `TypeError`. | `fr.document(preset, "pump-board", cover=cover)` |
+| [`cover`](https://olejbondahl.github.io/fransys/0.23.2/guide/documents/index.md#presets-cover-and-notes-text) | required | The Markdown cover file, stored verbatim. Its stem is the document's key. A missing file raises `FileNotFoundError`. A `<stem>.notes.md` beside it becomes the notes page. | `cover=Path("cover.md")` |
+| [`logo`](https://olejbondahl.github.io/fransys/0.23.2/guide/documents/index.md#presets-cover-and-notes-text) | `None` | An SVG file for the title block's logo cell. `None` leaves the cell empty. A missing file raises. | `logo=Path("logo.svg")` |
+| [`notice`](https://olejbondahl.github.io/fransys/0.23.2/guide/documents/index.md#presets-cover-and-notes-text) | `''` | The title block's IP notice text, printed on every page of this document. Empty leaves the cell empty. | `notice="Property of Demo Ltd"` |
 
 ## `fr.readability`
 
@@ -3551,8 +3553,8 @@ The design calls are in `keywords-design.md`, the handle methods and layout hint
 
 | keyword | default | effect | example |
 |---|---|---|---|
-| [`path`](https://olejbondahl.github.io/fransys/0.23.1/guide/settings/index.md#the-toml-file) | `None` | The consumer's TOML file, merged key by key over our defaults. `None` gives our defaults. | `fr.settings("fransys.toml")` |
-| [`paper`](https://olejbondahl.github.io/fransys/0.23.1/guide/settings/index.md#the-paper-per-drawing-type) | `None` | A mapping of a `fr.PageKind` to a paper format's name, for that drawing type. | `fr.settings(paper={fr.PageKind.BLOCK_DIAGRAM: "A2"})` |
+| [`path`](https://olejbondahl.github.io/fransys/0.23.2/guide/settings/index.md#the-toml-file) | `None` | The consumer's TOML file, merged key by key over our defaults. `None` gives our defaults. | `fr.settings("fransys.toml")` |
+| [`paper`](https://olejbondahl.github.io/fransys/0.23.2/guide/settings/index.md#the-paper-per-drawing-type) | `None` | A mapping of a `fr.PageKind` to a paper format's name, for that drawing type. | `fr.settings(paper={fr.PageKind.BLOCK_DIAGRAM: "A2"})` |
 
 ## `fr.build`
 
@@ -3560,8 +3562,8 @@ The design calls are in `keywords-design.md`, the handle methods and layout hint
 
 | keyword | default | effect | example |
 |---|---|---|---|
-| [`releases`](https://olejbondahl.github.io/fransys/0.23.1/guide/build/index.md#keeping-designations-fixed-across-revisions) | `None` | A release root. Numbering pins are seeded from the releases stored there, so a released unit keeps its numbers. `None` numbers freely. | `fr.build(d, releases=Path("releases"))` |
-| [`settings`](https://olejbondahl.github.io/fransys/0.23.1/guide/settings/index.md#frsettings) | `None` | The `fr.Settings` from `fr.settings(...)`, used for this build. `None` uses our defaults. | `fr.build(d, settings=fr.settings(paper={fr.PageKind.BLOCK_DIAGRAM: "A2"}))` |
+| [`releases`](https://olejbondahl.github.io/fransys/0.23.2/guide/build/index.md#keeping-designations-fixed-across-revisions) | `None` | A release root. Numbering pins are seeded from the releases stored there, so a released unit keeps its numbers. `None` numbers freely. | `fr.build(d, releases=Path("releases"))` |
+| [`settings`](https://olejbondahl.github.io/fransys/0.23.2/guide/settings/index.md#frsettings) | `None` | The `fr.Settings` from `fr.settings(...)`, used for this build. `None` uses our defaults. | `fr.build(d, settings=fr.settings(paper={fr.PageKind.BLOCK_DIAGRAM: "A2"}))` |
 
 ## `fr.check`
 
@@ -3580,31 +3582,31 @@ The design calls are in `keywords-design.md`, the handle methods and layout hint
 | keyword | default | effect | example |
 |---|---|---|---|
 | `result` | required | The built model whose exports are written. Any ERROR in `fr.check(result)` raises `BuildFailedError` and writes nothing. | `fr.write(result, Path("out"))` |
-| [`out_dir`](https://olejbondahl.github.io/fransys/0.23.1/guide/build/index.md#export-file-names) | required | The folder that receives the exports: the CSV reports, WAGO XML, overview and one PDF per document. | `fr.write(result, Path("out"))` |
-| [`unit`](https://olejbondahl.github.io/fransys/0.23.1/guide/units/index.md#writing-one-unit) | `None` | Writes only that unit's own set, with no `overview.html`. `None` writes the whole model. | `fr.write(result, out, unit="pump-board")` |
-| [`intermediates`](https://olejbondahl.github.io/fransys/0.23.1/guide/build/index.md#export-file-names) | `None` | A folder for SVGs, netlists and `.typ` sources. `None` keeps them in memory. | `intermediates=Path(".fransys")` |
-| [`releases`](https://olejbondahl.github.io/fransys/0.23.1/guide/build/index.md#export-file-names) | `None` | A release root. With a stored release of the system there, `overview.html` marks what changed since it. `None` marks nothing. | `releases=Path("releases")` |
+| [`out_dir`](https://olejbondahl.github.io/fransys/0.23.2/guide/build/index.md#export-file-names) | required | The folder that receives the exports: the CSV reports, WAGO XML, overview and one PDF per document. | `fr.write(result, Path("out"))` |
+| [`unit`](https://olejbondahl.github.io/fransys/0.23.2/guide/units/index.md#writing-one-unit) | `None` | Writes only that unit's own set, with no `overview.html`. `None` writes the whole model. | `fr.write(result, out, unit="pump-board")` |
+| [`intermediates`](https://olejbondahl.github.io/fransys/0.23.2/guide/build/index.md#export-file-names) | `None` | A folder for SVGs, netlists and `.typ` sources. `None` keeps them in memory. | `intermediates=Path(".fransys")` |
+| [`releases`](https://olejbondahl.github.io/fransys/0.23.2/guide/build/index.md#export-file-names) | `None` | A release root. With a stored release of the system there, `overview.html` marks what changed since it. `None` marks nothing. | `releases=Path("releases")` |
 
 ## `fr.export_names`
 
 | keyword | default | effect | example |
 |---|---|---|---|
 | `result` | required | The `BuildResult`. Returns the file name `fr.write` gives each export, keyed by kind and subject. Writes nothing. | `fr.export_names(result)` |
-| [`unit`](https://olejbondahl.github.io/fransys/0.23.1/guide/build/index.md#export-file-names) | `None` | Names only that unit's exports, as `fr.write(unit=)` would. `None` names the whole model's. | `fr.export_names(result, unit="pump-board")` |
+| [`unit`](https://olejbondahl.github.io/fransys/0.23.2/guide/build/index.md#export-file-names) | `None` | Names only that unit's exports, as `fr.write(unit=)` would. `None` names the whole model's. | `fr.export_names(result, unit="pump-board")` |
 
 ## `fr.release`
 
 | keyword | default | effect | example |
 |---|---|---|---|
 | `result` | required | The built model to release. Any ERROR raises `BuildFailedError` and writes nothing. | `fr.release(result, Path("releases"))` |
-| [`into`](https://olejbondahl.github.io/fransys/0.23.1/guide/build/index.md#releasing-a-frozen-baseline) | required | The release root. The call writes `<into>/<name>/<version>.<revision>/`. An identical stored listing returns the existing path. | `fr.release(result, Path("releases"))` |
-| [`unit`](https://olejbondahl.github.io/fransys/0.23.1/guide/build/index.md#releasing-a-frozen-baseline) | `None` | Releases that unit instead of the system. | `fr.release(result, into, unit="pump-board")` |
+| [`into`](https://olejbondahl.github.io/fransys/0.23.2/guide/build/index.md#releasing-a-frozen-baseline) | required | The release root. The call writes `<into>/<name>/<version>.<revision>/`. An identical stored listing returns the existing path. | `fr.release(result, Path("releases"))` |
+| [`unit`](https://olejbondahl.github.io/fransys/0.23.2/guide/build/index.md#releasing-a-frozen-baseline) | `None` | Releases that unit instead of the system. | `fr.release(result, into, unit="pump-board")` |
 
 ## `fr.releases`
 
 | keyword | default | effect | example |
 |---|---|---|---|
-| [`root`](https://olejbondahl.github.io/fransys/0.23.1/guide/build/index.md#listing-the-releases) | required | The release root to read. Returns each release folder in name, version, revision order. A missing root gives `()`. | `fr.releases(Path("releases"))` |
+| [`root`](https://olejbondahl.github.io/fransys/0.23.2/guide/build/index.md#listing-the-releases) | required | The release root to read. Returns each release folder in name, version, revision order. A missing root gives `()`. | `fr.releases(Path("releases"))` |
 
 ## `fr.diff`
 
@@ -3620,7 +3622,7 @@ The design calls are in `keywords-design.md`, the handle methods and layout hint
 | keyword | default | effect | example |
 |---|---|---|---|
 | `result` | required | The rebuilt model. Returns one `BASELINE_DIFFERS` ERROR per unit instance, or the system, whose listing drifted, and an INFO (`BASELINE_RULES_MOVED`, `BASELINE_ROWS_UNCHECKED`) for a release cut by an older fransys: `fr.rebaseline` clears it. | `fr.verify(result, Path("releases"))` |
-| [`baselines`](https://olejbondahl.github.io/fransys/0.23.1/guide/build/index.md#checking-a-baseline-stays-true) | required | The release root with the stored baselines. A unit with no stored baseline is not reported. | `fr.verify(result, Path("releases"))` |
+| [`baselines`](https://olejbondahl.github.io/fransys/0.23.2/guide/build/index.md#checking-a-baseline-stays-true) | required | The release root with the stored baselines. A unit with no stored baseline is not reported. | `fr.verify(result, Path("releases"))` |
 
 ## `fr.rebaseline`
 
@@ -3644,7 +3646,7 @@ The design calls are in `keywords-design.md`, the handle methods and layout hint
 
 ---
 
-<!-- source: https://olejbondahl.github.io/fransys/0.23.1/guide/settings/index.md -->
+<!-- source: https://olejbondahl.github.io/fransys/0.23.2/guide/settings/index.md -->
 
 # Settings
 
@@ -3859,11 +3861,15 @@ with tempfile.TemporaryDirectory() as folder:
 
 ---
 
-<!-- source: https://olejbondahl.github.io/fransys/0.23.1/guide/moving-to-0.23/index.md -->
+<!-- source: https://olejbondahl.github.io/fransys/0.23.2/guide/moving-to-0.23/index.md -->
 
 # Moving to 0.23
 
 This page lists what 0.23 adds, what stays refused for now, and the known issues you can meet. No call changes from 0.22.9: no name is added to or removed from the API, and no call needs a new spelling.
+
+## New in 0.23.2
+
+- After a layout ERROR in one drawing set, the drawn-page checks (CONNECTION_NOT_DRAWN, OVERLAP and the rest) still run on the other sets; 0.23.1 skipped them all. The ERROR says its set is not drawn. `fr.write` still refuses.
 
 ## New in 0.23.1
 
@@ -3891,9 +3897,13 @@ This page lists what 0.23 adds, what stays refused for now, and the known issues
 - KI-746, KI-747: a tag or `WHERE` marker text can overlap a wire or a slot text (`OVERLAP`, looks only).
 - KI-748: the `OVERLAP` message does not name both elements yet.
 
+## A supply net behind a fuse prints the fuse
+
+- A supply net behind a fuse or breaker prints its supply name and the tag of the nearest protective device, such as `24V -F2`. The net at the supply keeps `24V`. Two nets that share one name, with no unique protective device between them, raise `RAIL_IDENTITY_SHARED`: put a fuse or breaker between them.
+
 ---
 
-<!-- source: https://olejbondahl.github.io/fransys/0.23.1/guide/moving-to-0.22/index.md -->
+<!-- source: https://olejbondahl.github.io/fransys/0.23.2/guide/moving-to-0.22/index.md -->
 
 # Moving to 0.22
 
@@ -3972,6 +3982,8 @@ Each row is a name that 0.22 removed. A removed attribute raises an error that n
 - New spellings: `.plc(signal, name, routing=)`, `.plc(name=)` and `.plc(configured=False)` on a module's channel handle, `.scale(raw=, eng=)` with no unit, and `.scale(...)` on a spare analogue channel. `SCALING_UNIT_EMPTY` is gone: a blank unit raises at the call. `PLC_SIGNAL_NAME_TWICE` is new.
 - Page text: pages replace sheets. The title block shows "page m of N" and has no sheet cell. A reference prints the page number alone (`p<n>:<cell>`), led by the far PDF's scope path across PDFs. The PDF order is the cover, the drawings, then the index and the lists. Drawings can move: the wider reserved reference text re-lays out some pages.
 - listing_version 8: no listing text moves. A stored model of schema 24 is refused: rebuild it. A wire made inside a `d.function` block now carries that block. A pin wired only in one other block that draws a function of its own is drawn there. A terminal, supply, connector or PLC channel stays with its item (decision model-0442).
+- Tags stand at a symbol corner, top-left first, then bottom-left, top-right, bottom-right, one grid step out, then turned. Tags move on many pages; nothing to change in your code.
+- A unit's drawing no longer changes with the names of the units above it.
 - `OVERLAP` now also counts text resting on a wire's edge and diagonal runs. A new `OVERLAP` WARNING is a Fransys looks defect: report it.
 - Fixed: phantom loops around a part's internal links with no conductor (KI-732), and a trunk drawn through a neighbouring card (KI-731).
 - Fixed: a connection lost when a net crossed a page cut twice, as with two output cards (KI-739), and a reference leg starting inside its trunk (KI-736).
@@ -4018,7 +4030,7 @@ Each row is a name that 0.22 removed. A removed attribute raises an error that n
 
 ---
 
-<!-- source: https://olejbondahl.github.io/fransys/0.23.1/guide/moving-to-0.20/index.md -->
+<!-- source: https://olejbondahl.github.io/fransys/0.23.2/guide/moving-to-0.20/index.md -->
 
 # Moving to 0.20
 
@@ -4054,7 +4066,7 @@ No alias keeps the old name. Only code that names the type changes; the fields a
 
 ---
 
-<!-- source: https://olejbondahl.github.io/fransys/0.23.1/guide/moving-to-0.19/index.md -->
+<!-- source: https://olejbondahl.github.io/fransys/0.23.2/guide/moving-to-0.19/index.md -->
 
 # Moving to 0.19
 
@@ -4175,7 +4187,7 @@ assert plc_list(fixed=True) == plc_list(fixed=False)  # equal: use the core form
 
 ---
 
-<!-- source: https://olejbondahl.github.io/fransys/0.23.1/guide/moving-to-0.16-and-0.17/index.md -->
+<!-- source: https://olejbondahl.github.io/fransys/0.23.2/guide/moving-to-0.16-and-0.17/index.md -->
 
 # Moving to 0.16 and 0.17
 
@@ -4262,7 +4274,7 @@ Drawings and PDFs change byte for byte. Re-check any golden you keep.
 
 ---
 
-<!-- source: https://olejbondahl.github.io/fransys/0.23.1/guide/moving-to-0.15/index.md -->
+<!-- source: https://olejbondahl.github.io/fransys/0.23.2/guide/moving-to-0.15/index.md -->
 
 # Moving to 0.15
 
@@ -4305,7 +4317,7 @@ A consumer script that used an old spelling changes as below. The version is rea
 
 ---
 
-<!-- source: https://olejbondahl.github.io/fransys/0.23.1/guide/moving-to-0.14/index.md -->
+<!-- source: https://olejbondahl.github.io/fransys/0.23.2/guide/moving-to-0.14/index.md -->
 
 # Moving to 0.14
 
@@ -4335,7 +4347,7 @@ This page lists every `fr.derive` name 0.14 removes, and what to use instead.
 
 ---
 
-<!-- source: https://olejbondahl.github.io/fransys/0.23.1/guide/findings/index.md -->
+<!-- source: https://olejbondahl.github.io/fransys/0.23.2/guide/findings/index.md -->
 
 # Finding codes
 
@@ -4347,21 +4359,21 @@ A finding's message names each thing as the drawings print it. An item reads as 
 
 Every `Finding` row carries its own `fix`: `<valid values>. Write: <corrected call>`, filled with that finding's names and values. A test reads `exc.findings` (from `BuildFailedError`) or `fr.check(result)` and finds the template: `<subject>` and `<other>` stand for the finding's first and second subject. `fr.report` and the `BuildFailedError` message print them filled with those subjects' names. A code no call clears starts with `No call clears this:`. The worked example is in `build.md`, under "write".
 
-- [`findings-validators.md`](https://olejbondahl.github.io/fransys/0.23.1/guide/findings-validators/index.md): the model checks.
-- [`findings-build.md`](https://olejbondahl.github.io/fransys/0.23.1/guide/findings-build/index.md): the build, `release` and the library load.
-- [`findings-release.md`](https://olejbondahl.github.io/fransys/0.23.1/guide/findings-release/index.md): the build, `release`, `verify` and the baseline check.
-- [`findings-render.md`](https://olejbondahl.github.io/fransys/0.23.1/guide/findings-render/index.md): layout and the drawing stage.
-- [`findings-pdf.md`](https://olejbondahl.github.io/fransys/0.23.1/guide/findings-pdf/index.md): the PDF output.
-- [`findings-kicad.md`](https://olejbondahl.github.io/fransys/0.23.1/guide/findings-kicad/index.md): the KiCad import.
-- [`findings-parts.md`](https://olejbondahl.github.io/fransys/0.23.1/guide/findings-parts/index.md): the part-file lint.
+- [`findings-validators.md`](https://olejbondahl.github.io/fransys/0.23.2/guide/findings-validators/index.md): the model checks.
+- [`findings-build.md`](https://olejbondahl.github.io/fransys/0.23.2/guide/findings-build/index.md): the build, `release` and the library load.
+- [`findings-release.md`](https://olejbondahl.github.io/fransys/0.23.2/guide/findings-release/index.md): the build, `release`, `verify` and the baseline check.
+- [`findings-render.md`](https://olejbondahl.github.io/fransys/0.23.2/guide/findings-render/index.md): layout and the drawing stage.
+- [`findings-pdf.md`](https://olejbondahl.github.io/fransys/0.23.2/guide/findings-pdf/index.md): the PDF output.
+- [`findings-kicad.md`](https://olejbondahl.github.io/fransys/0.23.2/guide/findings-kicad/index.md): the KiCad import.
+- [`findings-parts.md`](https://olejbondahl.github.io/fransys/0.23.2/guide/findings-parts/index.md): the part-file lint.
 
 ---
 
-<!-- source: https://olejbondahl.github.io/fransys/0.23.1/guide/findings-validators/index.md -->
+<!-- source: https://olejbondahl.github.io/fransys/0.23.2/guide/findings-validators/index.md -->
 
 # Finding codes: validators
 
-Codes the model checks emit. The build, release and library load codes are in [`findings-build.md`](https://olejbondahl.github.io/fransys/0.23.1/guide/findings-build/index.md). Who acts is explained in [`findings.md`](https://olejbondahl.github.io/fransys/0.23.1/guide/findings/index.md).
+Codes the model checks emit. The build, release and library load codes are in [`findings-build.md`](https://olejbondahl.github.io/fransys/0.23.2/guide/findings-build/index.md). Who acts is explained in [`findings.md`](https://olejbondahl.github.io/fransys/0.23.2/guide/findings/index.md).
 
 | Code | Severity | Stage | Who acts | Meaning | Fix |
 | --- | --- | --- | --- | --- | --- |
@@ -4432,11 +4444,11 @@ Codes the model checks emit. The build, release and library load codes are in [`
 
 ---
 
-<!-- source: https://olejbondahl.github.io/fransys/0.23.1/guide/findings-build/index.md -->
+<!-- source: https://olejbondahl.github.io/fransys/0.23.2/guide/findings-build/index.md -->
 
 # Finding codes: build, release and library load
 
-Codes the build, `release` and the library load emit when no model check names them. Who acts is explained in [`findings.md`](https://olejbondahl.github.io/fransys/0.23.1/guide/findings/index.md).
+Codes the build, `release` and the library load emit when no model check names them. Who acts is explained in [`findings.md`](https://olejbondahl.github.io/fransys/0.23.2/guide/findings/index.md).
 
 | Code | Severity | Stage | Who acts | Meaning | Fix |
 | --- | --- | --- | --- | --- | --- |
@@ -4460,11 +4472,11 @@ Codes the build, `release` and the library load emit when no model check names t
 
 ---
 
-<!-- source: https://olejbondahl.github.io/fransys/0.23.1/guide/findings-release/index.md -->
+<!-- source: https://olejbondahl.github.io/fransys/0.23.2/guide/findings-release/index.md -->
 
 # Finding codes: build, release and verify
 
-Codes the build, `release`, `verify` and the baseline check emit. Who acts is explained in [`findings.md`](https://olejbondahl.github.io/fransys/0.23.1/guide/findings/index.md).
+Codes the build, `release`, `verify` and the baseline check emit. Who acts is explained in [`findings.md`](https://olejbondahl.github.io/fransys/0.23.2/guide/findings/index.md).
 
 | Code | Severity | Stage | Who acts | Meaning | Fix |
 | --- | --- | --- | --- | --- | --- |
@@ -4487,11 +4499,13 @@ Codes the build, `release`, `verify` and the baseline check emit. Who acts is ex
 
 ---
 
-<!-- source: https://olejbondahl.github.io/fransys/0.23.1/guide/findings-render/index.md -->
+<!-- source: https://olejbondahl.github.io/fransys/0.23.2/guide/findings-render/index.md -->
 
 # Finding codes: layout and render
 
-Codes the layout and the drawing stage emit. Who acts is explained in [`findings.md`](https://olejbondahl.github.io/fransys/0.23.1/guide/findings/index.md).
+Codes the layout and the drawing stage emit. Who acts is explained in [`findings.md`](https://olejbondahl.github.io/fransys/0.23.2/guide/findings/index.md).
+
+A drawing set with a layout ERROR (PAGE_OVERFLOW, WIDER_THAN_PAGE) is not checked; the other drawing sets are, and fr.write still refuses.
 
 | Code | Severity | Stage | Who acts | Meaning | Fix |
 | --- | --- | --- | --- | --- | --- |
@@ -4514,6 +4528,7 @@ Codes the layout and the drawing stage emit. Who acts is explained in [`findings
 | DIAGRAM_LINE_THROUGH_BOX | ERROR | render | Fransys | A line of a block diagram or an overview view crosses a box other than its own two. | No call clears this: send the smallest model that shows it. |
 | DIAGRAM_LOOSE_WIRE | INFO | render | note | In the system reading, a wire with no cable joins two boxes and is not drawn. | Usually nothing to fix: the unit pages show it as stubs. Put it in a cable to give it a line. |
 | DIAGRAM_TEXT_OVERLAP | ERROR | render | Fransys | Two texts of a block diagram or an overview view overlap. | No call clears this: send the smallest model that shows it. |
+| DOT_ON_CROSSING | ERROR | render | Fransys | A junction dot stands where two wires cross through each other, so the page shows them joined when they are not. | No call clears this: send the smallest model that shows it. The message names the page. |
 | DRAWING_SHORTS_NETS | ERROR | render | Fransys | The wires, junction dots and references of the drawings join ports of two physical nets, or a wire ends on another net's wire with no junction dot. | No call clears this: send the smallest model that shows it. The message names the page. |
 | DRAW_PROBLEM | ERROR | render | Fransys | A drawing set holds a record the renderer cannot draw, such as an unknown symbol key or an outline that is not a rectangle; the set draws no page. | No call clears this: send the smallest model that shows it. The message names the record and what the renderer expected. |
 | FILL_UNDER_MIN | WARNING | render | consumer | A page is filled less than the minimum because no cut of the blocks fills it more. | Merge the group with its neighbour so the page fills. Write: d.function(name, text) to draw a device in the neighbour group. |
@@ -4523,7 +4538,7 @@ Codes the layout and the drawing stage emit. Who acts is explained in [`findings
 | LANE_WIRE_DROPPED | ERROR | render | consumer | Two consecutive cells of a lane have no pin facing each other, or a facing pin on no net, so no wire is drawn between them; the message names the cells. | Put the facing pins of <subject> and its neighbour on one net. Write: d.series(pin_a, pin_b). |
 | MARKER_UNPAIRED | ERROR | render | Fransys | A reference marker is drawn and the marker it refers to is drawn on no page. | No call clears this: send the smallest model that shows it. The message names the page. |
 | MARKER_UNPLACED | WARNING | render | Fransys | A reference marker has no place inside the page: every level of its stagger leaves the content box, so layout draws no marker there; the message names its pin and page. | No call clears this: send the smallest model that shows it. |
-| MISSING_JUNCTION_DOT | ERROR | render | Fransys | A wire ends on the middle of another wire of the same net with no junction dot, so the page does not show them joined. | No call clears this: send the smallest model that shows it. The message names the page. |
+| MISSING_JUNCTION_DOT | ERROR | render | Fransys | Three or more ink directions meet at a wire end or vertex with no dot and no pin, so the page does not show the wires joined or apart. | No call clears this: send the smallest model that shows it. The message names the page. |
 | NET_NOT_DRAWN | ERROR | render | consumer | A net of two or more ends has under two drawn pins, so it is left out. A lone pin gives none. The message names the port. | Give the net a second drawn pin. Write: d.series(a, <subject>) |
 | NOT_SERIES_PARALLEL | INFO | render | note | The named symbols are wired as a bridge, which no series or parallel holds. | Nothing is wrong; the symbols stay drawn, and CONNECTION_NOT_DRAWN names each wire of the bridge left undrawn. |
 | NO_BLOCK | ERROR | render | consumer | A box is drawn but belongs to no block, or to more than one, so layout places it by no rule; the message names it. | Wire <subject> to one function block, or remove it. Write: d.series(a, b, ...) to draw it in a block. |
@@ -4534,7 +4549,10 @@ Codes the layout and the drawing stage emit. Who acts is explained in [`findings
 | OVERLAP | WARNING | render | Fransys | Two drawn boxes (symbol bodies, and symbols drawn at a pin end such as a power symbol), a text and a body, two texts, or a wire and a text meet on one page; the message names the first of them. | No call clears this: every fact is drawn and only the looks suffer. Report it with the smallest model that shows it. The message names the page and the members. |
 | OVERVIEW_UNPLACED | ERROR | render | Fransys | The overview placer found no room plan for one view of the system overview, so the page would have no positions for it. | No call clears this: send the smallest model that shows it. |
 | PAGE_OVERFLOW | ERROR | render | consumer | A row of one block is taller than the page, so it stands on a page of its own. The message names the drawing set, the page and the devices standing in the row. | Split <block> into smaller function blocks, or use a taller sheet. Write: [paper] default = "A2" in the settings file, passed as fr.build(settings=fr.settings(path)) |
+| PIN_MARKING_WRONG | ERROR | render | Fransys | A symbol prints at a pin a marking other than the one the model gives that port, or prints none where the port is marked, or one where it is not. | No call clears this: send the smallest model that shows it. The message names the page. |
 | PLACEMENT_PROBLEM | ERROR | render | Fransys | The placement core cannot take the design, or a set of it; the set draws no page. The message names the thing and what the core expected. | No call clears this: send the smallest model that shows it. |
+| POWER_SYMBOL_NOT_JOINED | ERROR | render | Fransys | A power symbol is drawn for a pin with no wire to it and not on the pin, so the page does not show the pin on its rail. | No call clears this: send the smallest model that shows it. The message names the page. |
+| RAIL_IDENTITY_SHARED | ERROR | render | consumer | Two unbonded nets of a cabinet print one rail identity (its flagged rail, else the cabinet plus the printed potential), so the page would join nets the model keeps apart. | No call clears this: two nets print one supply name with no protective device (fuse, breaker) between them, or the nearest device is not unique: put a fuse or breaker between them. |
 | REFERENCE_OFF_DOCUMENT | WARNING | render | consumer | A printed reference points to a page that no page of its own document holds, and its text names no document, so a reader cannot tell which document to open. The message names the reference, its page and the target page. | Print both drawing sets in one document, or print the target's drawing set in a document so the reference names it. Write: fr.document(<preset>, <subject>, cover=<cover>) |
 | ROUTE_WRONG_PORT | ERROR | render | Fransys | A wire of one lane ends on a port of one net and on a port of another net. | No call clears this: send the smallest model that shows it. The message names the page. |
 | SET_WITHOUT_PAGE | ERROR | render | consumer | A drawing set holds symbols but every net of them has its other end in another set, so the core path gives it no page. The message names the set. | Put the set's functions in the unit and location of the functions they are wired to. Write: d.device("K1", "DEMO-RLY-2CO-24", place="R") with the same place. |
@@ -4553,15 +4571,16 @@ Codes the layout and the drawing stage emit. Who acts is explained in [`findings
 | WIRE_MEETS_NET | WARNING | render | consumer | A fixed wire (a lane wire, join, trunk or drop) meets another net's wire and no detour exists, so it is drawn as placed; the message names the wire and its ends. | Move a symbol of <subject> or widen the gap beside it so the wire has a free path. Write: d.add(unit, tag) to move the device into a unit. |
 | WIRE_NOT_ORTHOGONAL | ERROR | render | Fransys | A drawn wire has a segment that is neither horizontal nor vertical. | No call clears this: send the smallest model that shows it. The message names the page. |
 | WIRE_OVER_MARKER | WARNING | render | Fransys | A wire or a junction dot meets the box of a reference marker on one page, or a wire ends in it; the message names the first of them. | No call clears this: every fact is drawn and only the looks suffer. Report it with the smallest model that shows it. The message names the page and the members. |
+| WIRE_OVER_PIN_TIP | ERROR | render | Fransys | A wire passes over the tip of a pin with its interior and no dot, so the page does not show whether it joins the pin. | No call clears this: send the smallest model that shows it. The message names the page. |
 | WIRE_THROUGH_BODY | ERROR | render | consumer | A trunk is drawn through the drawn body of a symbol, or along its outline (a touch at a point or in its margin is not this error); the message names the net and the symbol. | No call clears this: send the smallest model that shows it. A wire never passes a symbol's body, so the model shows a drawing fault. |
 
 ---
 
-<!-- source: https://olejbondahl.github.io/fransys/0.23.1/guide/findings-pdf/index.md -->
+<!-- source: https://olejbondahl.github.io/fransys/0.23.2/guide/findings-pdf/index.md -->
 
 # Finding codes: PDF
 
-Codes the PDF output emits. Who acts is explained in [`findings.md`](https://olejbondahl.github.io/fransys/0.23.1/guide/findings/index.md).
+Codes the PDF output emits. Who acts is explained in [`findings.md`](https://olejbondahl.github.io/fransys/0.23.2/guide/findings/index.md).
 
 | Code | Severity | Stage | Who acts | Meaning | Fix |
 | --- | --- | --- | --- | --- | --- |
@@ -4576,11 +4595,11 @@ Codes the PDF output emits. Who acts is explained in [`findings.md`](https://ole
 
 ---
 
-<!-- source: https://olejbondahl.github.io/fransys/0.23.1/guide/findings-kicad/index.md -->
+<!-- source: https://olejbondahl.github.io/fransys/0.23.2/guide/findings-kicad/index.md -->
 
 # Finding codes: KiCad
 
-Codes the KiCad import emits. Who acts is explained in [`findings.md`](https://olejbondahl.github.io/fransys/0.23.1/guide/findings/index.md).
+Codes the KiCad import emits. Who acts is explained in [`findings.md`](https://olejbondahl.github.io/fransys/0.23.2/guide/findings/index.md).
 
 | Code | Severity | Stage | Who acts | Meaning | Fix |
 | --- | --- | --- | --- | --- | --- |
@@ -4595,11 +4614,11 @@ Codes the KiCad import emits. Who acts is explained in [`findings.md`](https://o
 
 ---
 
-<!-- source: https://olejbondahl.github.io/fransys/0.23.1/guide/findings-parts/index.md -->
+<!-- source: https://olejbondahl.github.io/fransys/0.23.2/guide/findings-parts/index.md -->
 
 # Finding codes: part files
 
-Codes the part-file lint emits, at `fr.lint` and when `fr.design` or `fr.parts` loads a library. Who acts is explained in [`findings.md`](https://olejbondahl.github.io/fransys/0.23.1/guide/findings/index.md).
+Codes the part-file lint emits, at `fr.lint` and when `fr.design` or `fr.parts` loads a library. Who acts is explained in [`findings.md`](https://olejbondahl.github.io/fransys/0.23.2/guide/findings/index.md).
 
 | Code | Severity | Stage | Who acts | Meaning | Fix |
 | --- | --- | --- | --- | --- | --- |
@@ -4654,7 +4673,7 @@ Codes the part-file lint emits, at `fr.lint` and when `fr.design` or `fr.parts` 
 
 ---
 
-<!-- source: https://olejbondahl.github.io/fransys/0.23.1/guide/examples/index.md -->
+<!-- source: https://olejbondahl.github.io/fransys/0.23.2/guide/examples/index.md -->
 
 # Examples
 
@@ -4827,7 +4846,7 @@ module's docstring states the engineering shape and the decision that fixed it.
 
 ---
 
-<!-- source: https://olejbondahl.github.io/fransys/0.23.1/guide/moving-to-0.6/index.md -->
+<!-- source: https://olejbondahl.github.io/fransys/0.23.2/guide/moving-to-0.6/index.md -->
 
 # Moving to 0.6
 
@@ -4914,7 +4933,7 @@ The model `SCHEMA_VERSION` went from 2 to 7. Rebuild every stored model with `fr
 
 ---
 
-<!-- source: https://olejbondahl.github.io/fransys/0.23.1/guide/kicad/index.md -->
+<!-- source: https://olejbondahl.github.io/fransys/0.23.2/guide/kicad/index.md -->
 
 # KiCad
 
@@ -4989,7 +5008,7 @@ under `[part]`. Each is an empty string marked `# TODO`. Then run `fr.lint` over
 
 ---
 
-<!-- source: https://olejbondahl.github.io/fransys/0.23.1/guide/moving-to-fransys/index.md -->
+<!-- source: https://olejbondahl.github.io/fransys/0.23.2/guide/moving-to-fransys/index.md -->
 
 # Moving to Fransys
 
@@ -5055,7 +5074,7 @@ Stored baselines verify unchanged: the rename moves no listing text.
 
 ---
 
-<!-- source: https://olejbondahl.github.io/fransys/0.23.1/guide/drawing/index.md -->
+<!-- source: https://olejbondahl.github.io/fransys/0.23.2/guide/drawing/index.md -->
 
 # Drawing well
 
@@ -5279,7 +5298,7 @@ The numbers that tell whether the printed pages can be read are in `fr.readabili
 
 ---
 
-<!-- source: https://olejbondahl.github.io/fransys/0.23.1/guide/readability/index.md -->
+<!-- source: https://olejbondahl.github.io/fransys/0.23.2/guide/readability/index.md -->
 
 # Reading the pages as numbers
 
@@ -5338,9 +5357,56 @@ assert report.pages
 assert all(page.wire_crossings >= 0 for page in report.pages)
 ```
 
+## Read the rows of a page
+
+`result.drawings` holds one `Drawing` for each page. Its `rows` are the placed rows that hold devices, top to bottom. A row has four fields.
+
+- `devices`: the ids of its items as text, each item once. `fr.derive.drawn_designations(result.model, row.devices)` gives their designations.
+- `height_g` and `width_g`: its size in G.
+- `term`: what set its height. It is `"body"` (a cell), `"card"`, `"marker_room"` (a marker hung at a cell), `"stub"` (a trunk's room) or `"annex"` (a label).
+
+`PAGE_OVERFLOW` and `WIDER_THAN_PAGE` read these same figures. The widest row is `max(page.rows, key=lambda r: r.width_g)`.
+
+```python
+from pathlib import Path
+from typing import NamedTuple
+
+import fransys as fr
+from fransys.colours import BU
+
+
+class Cabinet(NamedTuple):
+    pass
+
+
+Path("cover.md").write_text("# Cabinet\n", encoding="utf-8")
+
+
+@fr.unit(
+    "cab", revision=1, interface_version=1, date="2026-01-01", text="First", by="XX",
+    title="Cabinet", number="C-1",
+)
+def rows_unit(c):
+    dc = c.dc_supply("24VDC", c.device("G1", "DEMO-PSU-24").output)
+    k = c.device("K1", "DEMO-RLY-2CO-24")
+    h = c.device("H1", "DEMO-LAMP-24")
+    c.series(dc.plus, k.co_1.no, h.lamp, dc.minus, wire=(BU, 0.75))
+    return Cabinet()
+
+
+d = fr.design("demo_parts")
+d.add(rows_unit, "U1")
+result = fr.build(d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, "cab", cover=Path("cover.md")))
+page = next(iter(result.drawings.values()))
+widest = max(page.rows, key=lambda r: r.width_g)
+assert widest.width_g > 0
+assert widest.term in ("body", "card", "marker_room", "stub", "annex")
+assert {"U1-K1", "U1-H1"} <= set(fr.derive.drawn_designations(result.model, widest.devices))
+```
+
 ---
 
-<!-- source: https://olejbondahl.github.io/fransys/0.23.1/guide/overview/index.md -->
+<!-- source: https://olejbondahl.github.io/fransys/0.23.2/guide/overview/index.md -->
 
 # The system overview
 
@@ -5358,7 +5424,7 @@ With no document in the build there is no PDF, so the page has no links. The pag
 
 ---
 
-<!-- source: https://olejbondahl.github.io/fransys/0.23.1/guide/AGENTS/index.md -->
+<!-- source: https://olejbondahl.github.io/fransys/0.23.2/guide/AGENTS/index.md -->
 
 # For coding agents
 
@@ -5375,7 +5441,7 @@ your project's `CLAUDE.md` or `AGENTS.md` so every agent that works on the proje
 
 The part-file format is in
 [the part-file contract](https://olejbondahl.github.io/fransys/X.Y.Z/contracts/part-file/index.md), at the same version path.
-For type checking a design script, read [Type checking](https://olejbondahl.github.io/fransys/0.23.1/guide/keywords/index.md#type-checking).
+For type checking a design script, read [Type checking](https://olejbondahl.github.io/fransys/0.23.2/guide/keywords/index.md#type-checking).
 
 ## Offline fallback
 
@@ -5392,7 +5458,7 @@ are the reference.
 
 ---
 
-<!-- source: https://olejbondahl.github.io/fransys/0.23.1/contracts/part-file/index.md -->
+<!-- source: https://olejbondahl.github.io/fransys/0.23.2/contracts/part-file/index.md -->
 
 # Part-file contract
 
@@ -5733,7 +5799,7 @@ files, no Fransys code inside it.
 
 ---
 
-<!-- source: https://olejbondahl.github.io/fransys/0.23.1/contracts/part-file-connectors/index.md -->
+<!-- source: https://olejbondahl.github.io/fransys/0.23.2/contracts/part-file-connectors/index.md -->
 
 # Part-file contract: connectors
 
@@ -5804,18 +5870,18 @@ field yet.
 
 ---
 
-<!-- source: https://olejbondahl.github.io/fransys/0.23.1/api/index.md -->
+<!-- source: https://olejbondahl.github.io/fransys/0.23.2/api/index.md -->
 
 # API reference
 
 Every name each public surface exports.
 
-- [`fransys`](https://olejbondahl.github.io/fransys/0.23.1/api/fransys/index.md)
-- [`fransys_model.derive`](https://olejbondahl.github.io/fransys/0.23.1/api/derive/index.md)
+- [`fransys`](https://olejbondahl.github.io/fransys/0.23.2/api/fransys/index.md)
+- [`fransys_model.derive`](https://olejbondahl.github.io/fransys/0.23.2/api/derive/index.md)
 
 ---
 
-<!-- source: https://olejbondahl.github.io/fransys/0.23.1/api/fransys/index.md -->
+<!-- source: https://olejbondahl.github.io/fransys/0.23.2/api/fransys/index.md -->
 
 # `fransys`
 
@@ -6635,7 +6701,7 @@ elecdef: submodule
 
 ---
 
-<!-- source: https://olejbondahl.github.io/fransys/0.23.1/api/derive/index.md -->
+<!-- source: https://olejbondahl.github.io/fransys/0.23.2/api/derive/index.md -->
 
 # `fransys_model.derive`
 
@@ -7880,6 +7946,18 @@ content.
 
 Raises:
     SchemaError: `drawing_set` is not a `layout.drawing_set` of `model`.
+
+### drawn_designations
+
+```python
+def drawn_designations(model: Model, ids: Iterable[str]) -> tuple[str, ...]
+```
+
+The designation of each item whose id is written as `render_id` text, as `item_designation` prints it (`"U1-K1"`).
+
+A `DrawnRow.devices` entry is such a text. Raises `KeyError` for text that names no item of `model`.
+
+Example: `fr.derive.drawn_designations(result.model, row.devices)`.
 
 ### drawn_groups
 
@@ -10349,7 +10427,8 @@ def power_text(model: Model, net: Id[Net]) -> str | None
 The text a power symbol of declared `net` prints, or `None` when it prints none.
 
 Only `SUPPLY` prints: `Net.name`, else `Net.potential` (which carries the sign of a negative
-rail, `-15V`). `GROUND`, `PE` and `NONE` print none.
+rail, `-15V`). A net behind a protective device adds the tag of the nearest one, `24V -F2`
+(`protected_by`, G08-POWER). `GROUND`, `PE` and `NONE` print none.
 
 ### preset_headings
 
@@ -10404,6 +10483,14 @@ def printed_drawing_sets(model: Model) -> tuple[DrawingSet, ...]
 ```
 
 The sets some document of `model` prints, by `number`; none that no document prints.
+
+### printing_document
+
+```python
+def printing_document(model: Model, unit: Id[Unit] | None, location: Id[AspectNode] | None) -> Id[Document] | None
+```
+
+The one document printing the set of `unit` at `location`; none if no document does.
 
 ### profile_of
 
@@ -10505,6 +10592,16 @@ def rail_row(mark: ConductorMark, *, has_mid: bool=False) -> WiringRow
 ```
 
 The row of a supply rail: `L-` is 0 V without a mid, a supply rail with one.
+
+### rail_scope
+
+```python
+def rail_scope(model: Model) -> frozendict[tuple[Id[Unit] | None, str], Id[RailGroup]]
+```
+
+The flagged rail group of each (unit, potential), the first in `rail_groups` order; a group with no potential is skipped.
+
+New because `rails_by_potential` is a supply-rail map keyed by potential, read by 6 rating/fault readers that cannot take a unit key.
 
 ### reading_cables
 
@@ -11018,6 +11115,19 @@ The stubs of each terminal of `strip` opened on `unit`'s level, in strip order.
 
 A terminal wired to an item outside `unit` has one stub per far end, as the level's stubs are
 named (`stub_far_end`), standing at the terminal. A terminal with none has an empty tuple.
+
+### strip_tag_text
+
+```python
+def strip_tag_text(model: Model, function: Id[Function], *, unit: Id[Unit] | None=None) -> str
+```
+
+A run's one strip tag: the item designation of the terminal's strip, "-X01".
+
+Printed once, above a run of terminals of one strip (`run_point_text` is each one's own
+point); a unit's own set (`unit`) prints the unit-relative form. A device's
+own terminal (`is_device_terminal`) names the device itself, never the board it is mounted
+on.
 
 ### strip_view
 
@@ -11651,13 +11761,13 @@ Each drawn box's index by its reference; a place box also by each member it hold
 ### widest_position_text
 
 ```python
-def widest_position_text(model: Model, count: int, columns: int, rows: int, digit: str) -> str
+def widest_position_text(model: Model, digits: int, frame: tuple[int, int], digit: str, *, far: Collection[Id[Document]]) -> str
 ```
 
-The position text of a placement in another PDF: the widest document text, page number and cell every `digit`s.
+The position text of a placement: a page number of `digits` digits and the cell at the highest `frame` (columns, rows), every one `digit`.
 
-`count` is the build's symbol count (a page holds at least one symbol), `columns` and `rows` the highest frame column and
-row, `digit` the widest digit the caller measured. Layout sizes a text that names another placement with it before the pages exist.
+`far` holds the documents that may print a placement in another PDF (the widest `scope_path` leads the text); empty is the same-PDF text.
+Layout sizes a terminal's where-text with it before the pages exist.
 
 ### widest_target_line
 

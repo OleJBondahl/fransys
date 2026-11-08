@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.1/guide/moving-to-0.22/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.2/guide/moving-to-0.22/">
       
       
       
@@ -2475,6 +2475,8 @@ for example <code>fault_time_constant=fr.elecdef.Unit.MS(15)</code>. In a part f
 <li>New spellings: <code>.plc(signal, name, routing=)</code>, <code>.plc(name=)</code> and <code>.plc(configured=False)</code> on a module's channel handle, <code>.scale(raw=, eng=)</code> with no unit, and <code>.scale(...)</code> on a spare analogue channel. <code>SCALING_UNIT_EMPTY</code> is gone: a blank unit raises at the call. <code>PLC_SIGNAL_NAME_TWICE</code> is new.</li>
 <li>Page text: pages replace sheets. The title block shows "page m of N" and has no sheet cell. A reference prints the page number alone (<code>p&lt;n&gt;:&lt;cell&gt;</code>), led by the far PDF's scope path across PDFs. The PDF order is the cover, the drawings, then the index and the lists. Drawings can move: the wider reserved reference text re-lays out some pages.</li>
 <li>listing_version 8: no listing text moves. A stored model of schema 24 is refused: rebuild it. A wire made inside a <code>d.function</code> block now carries that block. A pin wired only in one other block that draws a function of its own is drawn there. A terminal, supply, connector or PLC channel stays with its item (decision model-0442).</li>
+<li>Tags stand at a symbol corner, top-left first, then bottom-left, top-right, bottom-right, one grid step out, then turned. Tags move on many pages; nothing to change in your code.</li>
+<li>A unit's drawing no longer changes with the names of the units above it.</li>
 <li><code>OVERLAP</code> now also counts text resting on a wire's edge and diagonal runs. A new <code>OVERLAP</code> WARNING is a Fransys looks defect: report it.</li>
 <li>Fixed: phantom loops around a part's internal links with no conductor (KI-732), and a trunk drawn through a neighbouring card (KI-731).</li>
 <li>Fixed: a connection lost when a net crossed a page cut twice, as with two output cards (KI-739), and a reference leg starting inside its trunk (KI-736).</li>
@@ -2554,7 +2556,7 @@ for example <code>fault_time_constant=fr.elecdef.Unit.MS(15)</code>. In a part f
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.1 documentation
+      Fransys 0.23.2 documentation
     </div>
   
   

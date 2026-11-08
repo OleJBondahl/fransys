@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.1/guide/findings-render/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.2/guide/findings-render/">
       
       
       
@@ -1914,6 +1914,7 @@
 
 <h1 id="finding-codes-layout-and-render">Finding codes: layout and render</h1>
 <p>Codes the layout and the drawing stage emit. Who acts is explained in <a href="../findings/"><code>findings.md</code></a>.</p>
+<p>A drawing set with a layout ERROR (PAGE_OVERFLOW, WIDER_THAN_PAGE) is not checked; the other drawing sets are, and fr.write still refuses.</p>
 <table>
 <thead>
 <tr>
@@ -2079,6 +2080,14 @@
 <td>No call clears this: send the smallest model that shows it.</td>
 </tr>
 <tr>
+<td><a id="dot_on_crossing"></a>DOT_ON_CROSSING</td>
+<td>ERROR</td>
+<td>render</td>
+<td>Fransys</td>
+<td>A junction dot stands where two wires cross through each other, so the page shows them joined when they are not.</td>
+<td>No call clears this: send the smallest model that shows it. The message names the page.</td>
+</tr>
+<tr>
 <td><a id="drawing_shorts_nets"></a>DRAWING_SHORTS_NETS</td>
 <td>ERROR</td>
 <td>render</td>
@@ -2155,7 +2164,7 @@
 <td>ERROR</td>
 <td>render</td>
 <td>Fransys</td>
-<td>A wire ends on the middle of another wire of the same net with no junction dot, so the page does not show them joined.</td>
+<td>Three or more ink directions meet at a wire end or vertex with no dot and no pin, so the page does not show the wires joined or apart.</td>
 <td>No call clears this: send the smallest model that shows it. The message names the page.</td>
 </tr>
 <tr>
@@ -2239,12 +2248,36 @@
 <td>Split <block> into smaller function blocks, or use a taller sheet. Write: [paper] default = "A2" in the settings file, passed as fr.build(settings=fr.settings(path))</td>
 </tr>
 <tr>
+<td><a id="pin_marking_wrong"></a>PIN_MARKING_WRONG</td>
+<td>ERROR</td>
+<td>render</td>
+<td>Fransys</td>
+<td>A symbol prints at a pin a marking other than the one the model gives that port, or prints none where the port is marked, or one where it is not.</td>
+<td>No call clears this: send the smallest model that shows it. The message names the page.</td>
+</tr>
+<tr>
 <td><a id="placement_problem"></a>PLACEMENT_PROBLEM</td>
 <td>ERROR</td>
 <td>render</td>
 <td>Fransys</td>
 <td>The placement core cannot take the design, or a set of it; the set draws no page. The message names the thing and what the core expected.</td>
 <td>No call clears this: send the smallest model that shows it.</td>
+</tr>
+<tr>
+<td><a id="power_symbol_not_joined"></a>POWER_SYMBOL_NOT_JOINED</td>
+<td>ERROR</td>
+<td>render</td>
+<td>Fransys</td>
+<td>A power symbol is drawn for a pin with no wire to it and not on the pin, so the page does not show the pin on its rail.</td>
+<td>No call clears this: send the smallest model that shows it. The message names the page.</td>
+</tr>
+<tr>
+<td><a id="rail_identity_shared"></a>RAIL_IDENTITY_SHARED</td>
+<td>ERROR</td>
+<td>render</td>
+<td>consumer</td>
+<td>Two unbonded nets of a cabinet print one rail identity (its flagged rail, else the cabinet plus the printed potential), so the page would join nets the model keeps apart.</td>
+<td>No call clears this: two nets print one supply name with no protective device (fuse, breaker) between them, or the nearest device is not unique: put a fuse or breaker between them.</td>
 </tr>
 <tr>
 <td><a id="reference_off_document"></a>REFERENCE_OFF_DOCUMENT</td>
@@ -2391,6 +2424,14 @@
 <td>No call clears this: every fact is drawn and only the looks suffer. Report it with the smallest model that shows it. The message names the page and the members.</td>
 </tr>
 <tr>
+<td><a id="wire_over_pin_tip"></a>WIRE_OVER_PIN_TIP</td>
+<td>ERROR</td>
+<td>render</td>
+<td>Fransys</td>
+<td>A wire passes over the tip of a pin with its interior and no dot, so the page does not show whether it joins the pin.</td>
+<td>No call clears this: send the smallest model that shows it. The message names the page.</td>
+</tr>
+<tr>
 <td><a id="wire_through_body"></a>WIRE_THROUGH_BODY</td>
 <td>ERROR</td>
 <td>render</td>
@@ -2435,7 +2476,7 @@
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.1 documentation
+      Fransys 0.23.2 documentation
     </div>
   
   

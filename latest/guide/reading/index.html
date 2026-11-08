@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.1/guide/reading/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.2/guide/reading/">
       
       
       
@@ -2225,7 +2225,7 @@ potentials on one wired net is <code>NONE</code>. So is a wired net of exactly t
 connection is a wire; only a net of three or more ports is a rail. A PE net stays <code>PE</code>. <code>port_power_kind(model, port)</code> gives the kind of a
 port's wired net. A DC supply declares its 0 V rail (<code>rails={"24V": ("24", None), "0V": ("0",
 None)}</code>). Without it, the 0 V net gets references, not a ground symbol. <code>power_text(model, net)</code>
-is the text a power symbol prints: the supply's name, else its potential. It is <code>None</code> for
+is the text a power symbol prints. It is the supply's name, else its potential, then the tag of the nearest protective device the net lies behind (<code>24V -F2</code>). It is <code>None</code> for
 <code>GROUND</code>, <code>PE</code> and <code>NONE</code>. <code>port_power_text(model, port)</code> gives the text of the symbol at a port.
 <code>is_rail_terminal(model, terminal)</code> is true for a terminal in a group flagged <code>rail=True</code>.
 A flagged terminal draws as its power symbol, an unflagged one as a terminal. A pin wired to one, or to another pin on a power net, draws the rail's power symbol. No wire joins two such pins. The terminal table and wire list hold every landing and wire.
@@ -2298,6 +2298,7 @@ dash-prefixed, product part only, with no location segment.</p>
 <p>Each of these takes further keyword-only options; their docstrings cover the exact rules.</p>
 <p><code>fransys.derive.item_label(model, item)</code> takes the item's id and is <code>item_designation</code>'s no-raise twin: an item's own
 text, or its authoring key joined by <code>/</code> when it has none yet.</p>
+<p><code>fransys.derive.drawn_designations(model, ids)</code> gives the designation of each item whose id a drawing carries as text, such as <code>DrawnRow.devices</code>. See "Read the rows of a page" in the readability page.</p>
 <p><code>fransys.derive.node_designation(model, node)</code> renders a node's signed
 designation by aspect: <code>+C1</code> for a location, <code>=G1</code> for a group. It is the segment
 <code>reference_designation</code> prints for an item there. A title block's scope cell prints a location's full path,
@@ -2459,7 +2460,7 @@ A pin handle such as <code>housing[1]</code> has an <code>.id</code>; an item is
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.1 documentation
+      Fransys 0.23.2 documentation
     </div>
   
   

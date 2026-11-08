@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.1/api/derive/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.2/api/derive/">
       
       
       
@@ -2995,6 +2995,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#drawn_designations" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        drawn_designations
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#drawn_groups" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -5470,6 +5481,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#printing_document" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        printing_document
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#profile_of" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -5551,6 +5573,17 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         rail_row
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rail_scope" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        rail_scope
       </span>
     </span>
   </a>
@@ -6068,6 +6101,17 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         strip_stubs
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#strip_tag_text" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        strip_tag_text
       </span>
     </span>
   </a>
@@ -10099,6 +10143,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#drawn_designations" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        drawn_designations
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#drawn_groups" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -12574,6 +12629,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#printing_document" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        printing_document
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#profile_of" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -12655,6 +12721,17 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         rail_row
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rail_scope" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        rail_scope
       </span>
     </span>
   </a>
@@ -13172,6 +13249,17 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         strip_stubs
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#strip_tag_text" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        strip_tag_text
       </span>
     </span>
   </a>
@@ -16772,6 +16860,12 @@ unit; an empty drawing set gives <code>True</code>, since it has no placement th
 content.</p>
 <p>Raises:
     SchemaError: <code>drawing_set</code> is not a <code>layout.drawing_set</code> of <code>model</code>.</p>
+<h3 id="drawn_designations">drawn_designations</h3>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">drawn_designations</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span> <span class="n">ids</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+</code></pre></div>
+<p>The designation of each item whose id is written as <code>render_id</code> text, as <code>item_designation</code> prints it (<code>"U1-K1"</code>).</p>
+<p>A <code>DrawnRow.devices</code> entry is such a text. Raises <code>KeyError</code> for text that names no item of <code>model</code>.</p>
+<p>Example: <code>fr.derive.drawn_designations(result.model, row.devices)</code>.</p>
 <h3 id="drawn_groups">drawn_groups</h3>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">drawn_groups</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">Id</span><span class="p">[</span><span class="n">Port</span><span class="p">],</span> <span class="o">...</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span>
 </code></pre></div>
@@ -18160,7 +18254,8 @@ A DC supply that declares no 0 V rail leaves its 0 V net <code>NONE</code>: decl
 </code></pre></div>
 <p>The text a power symbol of declared <code>net</code> prints, or <code>None</code> when it prints none.</p>
 <p>Only <code>SUPPLY</code> prints: <code>Net.name</code>, else <code>Net.potential</code> (which carries the sign of a negative
-rail, <code>-15V</code>). <code>GROUND</code>, <code>PE</code> and <code>NONE</code> print none.</p>
+rail, <code>-15V</code>). A net behind a protective device adds the tag of the nearest one, <code>24V -F2</code>
+(<code>protected_by</code>, G08-POWER). <code>GROUND</code>, <code>PE</code> and <code>NONE</code> print none.</p>
 <h3 id="preset_headings">preset_headings</h3>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">preset_headings</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="n">DocumentPreset</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span>
 </code></pre></div>
@@ -18191,6 +18286,10 @@ rail, <code>-15V</code>). <code>GROUND</code>, <code>PE</code> and <code>NONE</c
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">printed_drawing_sets</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">DrawingSet</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
 </code></pre></div>
 <p>The sets some document of <code>model</code> prints, by <code>number</code>; none that no document prints.</p>
+<h3 id="printing_document">printing_document</h3>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">printing_document</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">Id</span><span class="p">[</span><span class="n">Unit</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">location</span><span class="p">:</span> <span class="n">Id</span><span class="p">[</span><span class="n">AspectNode</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Id</span><span class="p">[</span><span class="n">Document</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span>
+</code></pre></div>
+<p>The one document printing the set of <code>unit</code> at <code>location</code>; none if no document does.</p>
 <h3 id="profile_of">profile_of</h3>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">profile_of</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">Id</span><span class="p">[</span><span class="n">Unit</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Profile</span>
 </code></pre></div>
@@ -18251,6 +18350,11 @@ calls this before it builds the record. A <code>phase</code> of the wrong type g
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">rail_row</span><span class="p">(</span><span class="n">mark</span><span class="p">:</span> <span class="n">ConductorMark</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">has_mid</span><span class="p">:</span> <span class="nb">bool</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">WiringRow</span>
 </code></pre></div>
 <p>The row of a supply rail: <code>L-</code> is 0 V without a mid, a supply rail with one.</p>
+<h3 id="rail_scope">rail_scope</h3>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">rail_scope</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">frozendict</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">Id</span><span class="p">[</span><span class="n">Unit</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">Id</span><span class="p">[</span><span class="n">RailGroup</span><span class="p">]]</span>
+</code></pre></div>
+<p>The flagged rail group of each (unit, potential), the first in <code>rail_groups</code> order; a group with no potential is skipped.</p>
+<p>New because <code>rails_by_potential</code> is a supply-rail map keyed by potential, read by 6 rating/fault readers that cannot take a unit key.</p>
 <h3 id="reading_cables">reading_cables</h3>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">reading_cables</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">Id</span><span class="p">[</span><span class="n">Unit</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">HarnessCable</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
 </code></pre></div>
@@ -18533,6 +18637,14 @@ boundary rail wire: the wire is drawn to the terminal's replica, not also to a s
 <p>The stubs of each terminal of <code>strip</code> opened on <code>unit</code>'s level, in strip order.</p>
 <p>A terminal wired to an item outside <code>unit</code> has one stub per far end, as the level's stubs are
 named (<code>stub_far_end</code>), standing at the terminal. A terminal with none has an empty tuple.</p>
+<h3 id="strip_tag_text">strip_tag_text</h3>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">strip_tag_text</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span> <span class="n">function</span><span class="p">:</span> <span class="n">Id</span><span class="p">[</span><span class="n">Function</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">Id</span><span class="p">[</span><span class="n">Unit</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span>
+</code></pre></div>
+<p>A run's one strip tag: the item designation of the terminal's strip, "-X01".</p>
+<p>Printed once, above a run of terminals of one strip (<code>run_point_text</code> is each one's own
+point); a unit's own set (<code>unit</code>) prints the unit-relative form. A device's
+own terminal (<code>is_device_terminal</code>) names the device itself, never the board it is mounted
+on.</p>
 <h3 id="strip_view">strip_view</h3>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">strip_view</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span> <span class="n">strip</span><span class="p">:</span> <span class="n">Id</span><span class="p">[</span><span class="n">Item</span><span class="p">],</span> <span class="n">unit</span><span class="p">:</span> <span class="n">Id</span><span class="p">[</span><span class="n">Unit</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">StripView</span>
 </code></pre></div>
@@ -18889,11 +19001,11 @@ instance of each: <code>units_named(model, "relay-board")</code> returns both id
 </code></pre></div>
 <p>Each drawn box's index by its reference; a place box also by each member it holds.</p>
 <h3 id="widest_position_text">widest_position_text</h3>
-<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">widest_position_text</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span> <span class="n">count</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">columns</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">rows</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">digit</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">widest_position_text</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span> <span class="n">digits</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">frame</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">digit</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">far</span><span class="p">:</span> <span class="n">Collection</span><span class="p">[</span><span class="n">Id</span><span class="p">[</span><span class="n">Document</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="nb">str</span>
 </code></pre></div>
-<p>The position text of a placement in another PDF: the widest document text, page number and cell every <code>digit</code>s.</p>
-<p><code>count</code> is the build's symbol count (a page holds at least one symbol), <code>columns</code> and <code>rows</code> the highest frame column and
-row, <code>digit</code> the widest digit the caller measured. Layout sizes a text that names another placement with it before the pages exist.</p>
+<p>The position text of a placement: a page number of <code>digits</code> digits and the cell at the highest <code>frame</code> (columns, rows), every one <code>digit</code>.</p>
+<p><code>far</code> holds the documents that may print a placement in another PDF (the widest <code>scope_path</code> leads the text); empty is the same-PDF text.
+Layout sizes a terminal's where-text with it before the pages exist.</p>
 <h3 id="widest_target_line">widest_target_line</h3>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">widest_target_line</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span> <span class="n">count</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">columns</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">rows</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">digit</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span>
 </code></pre></div>
@@ -20083,7 +20195,7 @@ for any other box.</p>
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.1 documentation
+      Fransys 0.23.2 documentation
     </div>
   
   

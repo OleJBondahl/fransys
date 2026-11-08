@@ -1242,6 +1242,18 @@ content.
 Raises:
     SchemaError: `drawing_set` is not a `layout.drawing_set` of `model`.
 
+### drawn_designations
+
+```python
+def drawn_designations(model: Model, ids: Iterable[str]) -> tuple[str, ...]
+```
+
+The designation of each item whose id is written as `render_id` text, as `item_designation` prints it (`"U1-K1"`).
+
+A `DrawnRow.devices` entry is such a text. Raises `KeyError` for text that names no item of `model`.
+
+Example: `fr.derive.drawn_designations(result.model, row.devices)`.
+
 ### drawn_groups
 
 ```python
@@ -3710,7 +3722,8 @@ def power_text(model: Model, net: Id[Net]) -> str | None
 The text a power symbol of declared `net` prints, or `None` when it prints none.
 
 Only `SUPPLY` prints: `Net.name`, else `Net.potential` (which carries the sign of a negative
-rail, `-15V`). `GROUND`, `PE` and `NONE` print none.
+rail, `-15V`). A net behind a protective device adds the tag of the nearest one, `24V -F2`
+(`protected_by`, G08-POWER). `GROUND`, `PE` and `NONE` print none.
 
 ### preset_headings
 
@@ -3765,6 +3778,14 @@ def printed_drawing_sets(model: Model) -> tuple[DrawingSet, ...]
 ```
 
 The sets some document of `model` prints, by `number`; none that no document prints.
+
+### printing_document
+
+```python
+def printing_document(model: Model, unit: Id[Unit] | None, location: Id[AspectNode] | None) -> Id[Document] | None
+```
+
+The one document printing the set of `unit` at `location`; none if no document does.
 
 ### profile_of
 
@@ -3866,6 +3887,16 @@ def rail_row(mark: ConductorMark, *, has_mid: bool=False) -> WiringRow
 ```
 
 The row of a supply rail: `L-` is 0 V without a mid, a supply rail with one.
+
+### rail_scope
+
+```python
+def rail_scope(model: Model) -> frozendict[tuple[Id[Unit] | None, str], Id[RailGroup]]
+```
+
+The flagged rail group of each (unit, potential), the first in `rail_groups` order; a group with no potential is skipped.
+
+New because `rails_by_potential` is a supply-rail map keyed by potential, read by 6 rating/fault readers that cannot take a unit key.
 
 ### reading_cables
 
@@ -4379,6 +4410,19 @@ The stubs of each terminal of `strip` opened on `unit`'s level, in strip order.
 
 A terminal wired to an item outside `unit` has one stub per far end, as the level's stubs are
 named (`stub_far_end`), standing at the terminal. A terminal with none has an empty tuple.
+
+### strip_tag_text
+
+```python
+def strip_tag_text(model: Model, function: Id[Function], *, unit: Id[Unit] | None=None) -> str
+```
+
+A run's one strip tag: the item designation of the terminal's strip, "-X01".
+
+Printed once, above a run of terminals of one strip (`run_point_text` is each one's own
+point); a unit's own set (`unit`) prints the unit-relative form. A device's
+own terminal (`is_device_terminal`) names the device itself, never the board it is mounted
+on.
 
 ### strip_view
 
@@ -5012,13 +5056,13 @@ Each drawn box's index by its reference; a place box also by each member it hold
 ### widest_position_text
 
 ```python
-def widest_position_text(model: Model, count: int, columns: int, rows: int, digit: str) -> str
+def widest_position_text(model: Model, digits: int, frame: tuple[int, int], digit: str, *, far: Collection[Id[Document]]) -> str
 ```
 
-The position text of a placement in another PDF: the widest document text, page number and cell every `digit`s.
+The position text of a placement: a page number of `digits` digits and the cell at the highest `frame` (columns, rows), every one `digit`.
 
-`count` is the build's symbol count (a page holds at least one symbol), `columns` and `rows` the highest frame column and
-row, `digit` the widest digit the caller measured. Layout sizes a text that names another placement with it before the pages exist.
+`far` holds the documents that may print a placement in another PDF (the widest `scope_path` leads the text); empty is the same-PDF text.
+Layout sizes a terminal's where-text with it before the pages exist.
 
 ### widest_target_line
 

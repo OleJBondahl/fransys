@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.1/guide/readability/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.2/guide/readability/">
       
       
       
@@ -1389,6 +1389,23 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Reading the pages as numbers
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="././" class="md-nav__link md-nav__link--active">
         
   
@@ -1404,6 +1421,37 @@
   
 
       </a>
+      
+        
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#read-the-rows-of-a-page" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Read the rows of a page
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -1881,6 +1929,11 @@
                       
                     
                     
+                      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+                      <div class="md-sidebar-button__wrapper">
+                        <label class="md-sidebar-button" for="__toc"></label>
+                      </div>
+                    
                   
                   <div class="md-sidebar__inner">
                     
@@ -1892,6 +1945,25 @@
   
     
   
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#read-the-rows-of-a-page" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Read the rows of a page
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
   
 </nav>
                   </div>
@@ -1963,6 +2035,49 @@
 <span class="k">assert</span> <span class="n">report</span><span class="o">.</span><span class="n">pages</span>
 <span class="k">assert</span> <span class="nb">all</span><span class="p">(</span><span class="n">page</span><span class="o">.</span><span class="n">wire_crossings</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">page</span> <span class="ow">in</span> <span class="n">report</span><span class="o">.</span><span class="n">pages</span><span class="p">)</span>
 </code></pre></div>
+<h2 id="read-the-rows-of-a-page">Read the rows of a page</h2>
+<p><code>result.drawings</code> holds one <code>Drawing</code> for each page. Its <code>rows</code> are the placed rows that hold devices, top to bottom. A row has four fields.</p>
+<ul>
+<li><code>devices</code>: the ids of its items as text, each item once. <code>fr.derive.drawn_designations(result.model, row.devices)</code> gives their designations.</li>
+<li><code>height_g</code> and <code>width_g</code>: its size in G.</li>
+<li><code>term</code>: what set its height. It is <code>"body"</code> (a cell), <code>"card"</code>, <code>"marker_room"</code> (a marker hung at a cell), <code>"stub"</code> (a trunk's room) or <code>"annex"</code> (a label).</li>
+</ul>
+<p><code>PAGE_OVERFLOW</code> and <code>WIDER_THAN_PAGE</code> read these same figures. The widest row is <code>max(page.rows, key=lambda r: r.width_g)</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">NamedTuple</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">fransys</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">fr</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fransys.colours</span><span class="w"> </span><span class="kn">import</span> <span class="n">BU</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Cabinet</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+
+<span class="n">Path</span><span class="p">(</span><span class="s2">"cover.md"</span><span class="p">)</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="s2">"# Cabinet</span><span class="se">\n</span><span class="s2">"</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
+
+
+<span class="nd">@fr</span><span class="o">.</span><span class="n">unit</span><span class="p">(</span>
+    <span class="s2">"cab"</span><span class="p">,</span> <span class="n">revision</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">interface_version</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">date</span><span class="o">=</span><span class="s2">"2026-01-01"</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s2">"First"</span><span class="p">,</span> <span class="n">by</span><span class="o">=</span><span class="s2">"XX"</span><span class="p">,</span>
+    <span class="n">title</span><span class="o">=</span><span class="s2">"Cabinet"</span><span class="p">,</span> <span class="n">number</span><span class="o">=</span><span class="s2">"C-1"</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">rows_unit</span><span class="p">(</span><span class="n">c</span><span class="p">):</span>
+    <span class="n">dc</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">dc_supply</span><span class="p">(</span><span class="s2">"24VDC"</span><span class="p">,</span> <span class="n">c</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">"G1"</span><span class="p">,</span> <span class="s2">"DEMO-PSU-24"</span><span class="p">)</span><span class="o">.</span><span class="n">output</span><span class="p">)</span>
+    <span class="n">k</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">"K1"</span><span class="p">,</span> <span class="s2">"DEMO-RLY-2CO-24"</span><span class="p">)</span>
+    <span class="n">h</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">"H1"</span><span class="p">,</span> <span class="s2">"DEMO-LAMP-24"</span><span class="p">)</span>
+    <span class="n">c</span><span class="o">.</span><span class="n">series</span><span class="p">(</span><span class="n">dc</span><span class="o">.</span><span class="n">plus</span><span class="p">,</span> <span class="n">k</span><span class="o">.</span><span class="n">co_1</span><span class="o">.</span><span class="n">no</span><span class="p">,</span> <span class="n">h</span><span class="o">.</span><span class="n">lamp</span><span class="p">,</span> <span class="n">dc</span><span class="o">.</span><span class="n">minus</span><span class="p">,</span> <span class="n">wire</span><span class="o">=</span><span class="p">(</span><span class="n">BU</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">Cabinet</span><span class="p">()</span>
+
+
+<span class="n">d</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">design</span><span class="p">(</span><span class="s2">"demo_parts"</span><span class="p">)</span>
+<span class="n">d</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">rows_unit</span><span class="p">,</span> <span class="s2">"U1"</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">fr</span><span class="o">.</span><span class="n">document</span><span class="p">(</span><span class="n">fr</span><span class="o">.</span><span class="n">DocumentPreset</span><span class="o">.</span><span class="n">CABINET_SCHEMATIC</span><span class="p">,</span> <span class="s2">"cab"</span><span class="p">,</span> <span class="n">cover</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="s2">"cover.md"</span><span class="p">)))</span>
+<span class="n">page</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">drawings</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
+<span class="n">widest</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">page</span><span class="o">.</span><span class="n">rows</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">r</span><span class="p">:</span> <span class="n">r</span><span class="o">.</span><span class="n">width_g</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">widest</span><span class="o">.</span><span class="n">width_g</span> <span class="o">&gt;</span> <span class="mi">0</span>
+<span class="k">assert</span> <span class="n">widest</span><span class="o">.</span><span class="n">term</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"body"</span><span class="p">,</span> <span class="s2">"card"</span><span class="p">,</span> <span class="s2">"marker_room"</span><span class="p">,</span> <span class="s2">"stub"</span><span class="p">,</span> <span class="s2">"annex"</span><span class="p">)</span>
+<span class="k">assert</span> <span class="p">{</span><span class="s2">"U1-K1"</span><span class="p">,</span> <span class="s2">"U1-H1"</span><span class="p">}</span> <span class="o">&lt;=</span> <span class="nb">set</span><span class="p">(</span><span class="n">fr</span><span class="o">.</span><span class="n">derive</span><span class="o">.</span><span class="n">drawn_designations</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">widest</span><span class="o">.</span><span class="n">devices</span><span class="p">))</span>
+</code></pre></div>
 
 
 
@@ -1998,7 +2113,7 @@
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.1 documentation
+      Fransys 0.23.2 documentation
     </div>
   
   

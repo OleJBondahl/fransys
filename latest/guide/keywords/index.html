@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.1/guide/keywords/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.2/guide/keywords/">
       
       
       
@@ -2192,7 +2192,7 @@ two digital kinds. Use the full member, <code>fr.SignalType.&lt;NAME&gt;</code>,
 <li><code>Throw</code>: one throw of a changeover, <code>k1.co.no</code> or <code>k1.co.nc</code>. It stands in a <code>d.series</code> call as an element. A consumer does not build one (its <code>fns</code> are the changeover functions). A generated parts module declares it on every changeover function.</li>
 <li><code>TypedDevice</code>: the base a generated parts module subclasses once for each part. Its <code>mpn</code> is its whole contract. It adds no behaviour: the subclass only declares functions and pins.</li>
 <li><code>TypedFn</code>: the base a generated parts module subclasses for one function of one part. It adds no behaviour. Its subclass declares pins for the type checker.</li>
-<li><code>BuildResult</code>: the result of <code>fr.build</code>. It holds <code>model</code>, the frozen and laid-out <code>Model</code>, <code>findings</code>, every finding collected while building it, and <code>settings</code>, the <code>Settings</code> the build used. <code>page_svgs</code> holds each schematic page's SVG, drawn once and reused by <code>check</code> and <code>write</code>. <code>diagrams</code> holds the block-diagram sheets the document keeps, and is empty when it keeps none.</li>
+<li><code>BuildResult</code>: the result of <code>fr.build</code>. It holds <code>model</code>, the frozen and laid-out <code>Model</code>, <code>findings</code>, every finding collected while building it, and <code>settings</code>, the <code>Settings</code> the build used. <code>drawings</code> holds each schematic page's <code>Drawing</code>, with its placed <code>rows</code> (see <code>readability.md</code>). <code>page_svgs</code> holds each schematic page's SVG, drawn once and reused by <code>check</code> and <code>write</code>. <code>diagrams</code> holds the block-diagram sheets the document keeps, and is empty when it keeps none.</li>
 <li><code>Settings</code>: the frozen value of <code>fr.settings(...)</code>, with the fields <code>paper</code>, <code>paper_by_kind</code>, <code>pdf</code>, <code>look</code> and <code>layout</code> (settings.md).</li>
 <li><code>SettingsError</code>: raised by <code>fr.settings</code> for a file or <code>paper=</code> that is wrong. Its message names the file, the key and the keys known there.</li>
 </ul>
@@ -2281,7 +2281,7 @@ rarely does.</p>
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.1 documentation
+      Fransys 0.23.2 documentation
     </div>
   
   

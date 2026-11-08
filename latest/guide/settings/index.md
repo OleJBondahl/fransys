@@ -156,7 +156,7 @@ assert [row["field"] for row in bom["columns"]] == ["mpn"]
 
 ## The export files
 
-`[export]` sets which files `fr.write` makes and how it names, places and encodes them. `reports` lists the whole-model reports, in order: `bom`, `plc`, `wires`, `designations`, `cables` and `cores`. A name outside those six raises `SettingsError`. `name_join` joins the prefix, the kind and the fragment of a file name, `version_sign` sits before the version, and `ref_sign` replaces each sign of a designation, so `=A1+C1-K1` gives `A1-C1-K1`.
+`[export]` sets which files `fr.write` makes and how it names, places and encodes them. `reports` lists the whole-model reports, in order: `bom`, `plc`, `wires`, `designations`, `cables` and `cores`. The default writes those six. `ring_out` is a seventh kind that is off by default (see below). A name outside those seven raises `SettingsError`. `name_join` joins the prefix, the kind and the fragment of a file name, `version_sign` sits before the version, and `ref_sign` replaces each sign of a designation, so `=A1+C1-K1` gives `A1-C1-K1`.
 
 `data_dir` is the folder of the files that end in one of `data_suffixes`. The CSV files follow `csv_delimiter`, `csv_encoding`, `csv_quoting` (`minimal`, `all`, `nonnumeric` or `none`) and `csv_newline`. Only a `.csv` file takes `csv_encoding`; the others stay UTF-8. `hide_pe` (default `false`, one choice for the whole build) leaves the PE rail's wires and PE symbols on device pins, with their markings, off every drawing sheet. The terminal list and the other lists keep them. `fr.derive.export_form_of(model)` gives the record a build holds.
 
@@ -175,6 +175,29 @@ with tempfile.TemporaryDirectory() as folder:
 
 assert s.table("export")["csv_delimiter"] == ";"
 assert s.table("export")["data_dir"] == "data"
+```
+
+## The ring-out sheet
+
+Add `"ring_out"` to `reports` and `fr.write` also writes one `.xlsx` for every PDF of a unit document, named with the PDF's stem (`pump.pdf`, `pump.xlsx`). A SYSTEM, item or location document gets none. The electrician rings out the cabinet line by line on a phone and marks each line. Files in the output folder are replaced on each write, so copy a filled-in sheet out of it before you rebuild.
+
+```toml
+[export]
+reports = ["bom", "ring_out"]
+```
+
+The sheet has a title row (the document's title, number and revision) and a frozen, filterable header. One line follows per wire, then per cable core, then per terminal bridge. A bridge line joins two consecutive bridged terminals. Each group keeps the order of its own list. Twenty empty lines headed `ring_extra` end the sheet for joins the drawing lacks. The columns are `No`, `Type`, `From`, `To`, `Wire / core`, `Colour`, `mm²`, `Drawing`, `Status`, `Found instead` and `Comment`. `Drawing` is the page and frame cell of the From end, empty for a bridge, which is not drawn. `Status` is a dropdown of `OK`, `Wrong` and `Not tested`; empty means not tested. OK shows green and Wrong red. The same model always gives the same bytes.
+
+Every word is a `[words]` key with an English default: `ring_sheet`, `ring_no`, `ring_type`, `ring_wire`, `ring_core`, `ring_from`, `ring_to`, `ring_label`, `ring_colour`, `ring_mm2`, `ring_drawing`, `ring_status`, `ring_ok`, `ring_wrong`, `ring_untested`, `ring_found`, `ring_comment` and `ring_extra`. The Bridge type and the revision word are the existing `bridge` and `revision` keys. Override a value to change a word, for example `ring_status = "State"`.
+
+```python
+with tempfile.TemporaryDirectory() as folder:
+    file = Path(folder) / "fransys.toml"
+    file.write_text('[export]\nreports = ["ring_out"]\n\n[words]\nring_status = "State"\n', encoding="utf-8")
+    s = fr.settings(file)
+
+assert s.table("export")["reports"] == ("ring_out",)
+assert s.table("words")["ring_status"] == "State"
 ```
 
 ## `SettingsError`

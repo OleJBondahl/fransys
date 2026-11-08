@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.3/guide/settings/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.4/guide/settings/">
       
       
       
@@ -942,6 +942,17 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         The export files
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-ring-out-sheet" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        The ring-out sheet
       </span>
     </span>
   </a>
@@ -2118,6 +2129,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#the-ring-out-sheet" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        The ring-out sheet
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#settingserror" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -2272,7 +2294,7 @@
 <span class="k">assert</span> <span class="p">[</span><span class="n">row</span><span class="p">[</span><span class="s2">"field"</span><span class="p">]</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">bom</span><span class="p">[</span><span class="s2">"columns"</span><span class="p">]]</span> <span class="o">==</span> <span class="p">[</span><span class="s2">"mpn"</span><span class="p">]</span>
 </code></pre></div>
 <h2 id="the-export-files">The export files</h2>
-<p><code>[export]</code> sets which files <code>fr.write</code> makes and how it names, places and encodes them. <code>reports</code> lists the whole-model reports, in order: <code>bom</code>, <code>plc</code>, <code>wires</code>, <code>designations</code>, <code>cables</code> and <code>cores</code>. A name outside those six raises <code>SettingsError</code>. <code>name_join</code> joins the prefix, the kind and the fragment of a file name, <code>version_sign</code> sits before the version, and <code>ref_sign</code> replaces each sign of a designation, so <code>=A1+C1-K1</code> gives <code>A1-C1-K1</code>.</p>
+<p><code>[export]</code> sets which files <code>fr.write</code> makes and how it names, places and encodes them. <code>reports</code> lists the whole-model reports, in order: <code>bom</code>, <code>plc</code>, <code>wires</code>, <code>designations</code>, <code>cables</code> and <code>cores</code>. The default writes those six. <code>ring_out</code> is a seventh kind that is off by default (see below). A name outside those seven raises <code>SettingsError</code>. <code>name_join</code> joins the prefix, the kind and the fragment of a file name, <code>version_sign</code> sits before the version, and <code>ref_sign</code> replaces each sign of a designation, so <code>=A1+C1-K1</code> gives <code>A1-C1-K1</code>.</p>
 <p><code>data_dir</code> is the folder of the files that end in one of <code>data_suffixes</code>. The CSV files follow <code>csv_delimiter</code>, <code>csv_encoding</code>, <code>csv_quoting</code> (<code>minimal</code>, <code>all</code>, <code>nonnumeric</code> or <code>none</code>) and <code>csv_newline</code>. Only a <code>.csv</code> file takes <code>csv_encoding</code>; the others stay UTF-8. <code>hide_pe</code> (default <code>false</code>, one choice for the whole build) leaves the PE rail's wires and PE symbols on device pins, with their markings, off every drawing sheet. The terminal list and the other lists keep them. <code>fr.derive.export_form_of(model)</code> gives the record a build holds.</p>
 <div class="highlight"><pre><span></span><code><span class="k">[export]</span>
 <span class="n">reports</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"bom"</span><span class="p">,</span><span class="w"> </span><span class="s2">"wires"</span><span class="p">]</span>
@@ -2286,6 +2308,21 @@
 
 <span class="k">assert</span> <span class="n">s</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="s2">"export"</span><span class="p">)[</span><span class="s2">"csv_delimiter"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">";"</span>
 <span class="k">assert</span> <span class="n">s</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="s2">"export"</span><span class="p">)[</span><span class="s2">"data_dir"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"data"</span>
+</code></pre></div>
+<h2 id="the-ring-out-sheet">The ring-out sheet</h2>
+<p>Add <code>"ring_out"</code> to <code>reports</code> and <code>fr.write</code> also writes one <code>.xlsx</code> for every PDF of a unit document, named with the PDF's stem (<code>pump.pdf</code>, <code>pump.xlsx</code>). A SYSTEM, item or location document gets none. The electrician rings out the cabinet line by line on a phone and marks each line. Files in the output folder are replaced on each write, so copy a filled-in sheet out of it before you rebuild.</p>
+<div class="highlight"><pre><span></span><code><span class="k">[export]</span>
+<span class="n">reports</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"bom"</span><span class="p">,</span><span class="w"> </span><span class="s2">"ring_out"</span><span class="p">]</span>
+</code></pre></div>
+<p>The sheet has a title row (the document's title, number and revision) and a frozen, filterable header. One line follows per wire, then per cable core, then per terminal bridge. A bridge line joins two consecutive bridged terminals. Each group keeps the order of its own list. Twenty empty lines headed <code>ring_extra</code> end the sheet for joins the drawing lacks. The columns are <code>No</code>, <code>Type</code>, <code>From</code>, <code>To</code>, <code>Wire / core</code>, <code>Colour</code>, <code>mm²</code>, <code>Drawing</code>, <code>Status</code>, <code>Found instead</code> and <code>Comment</code>. <code>Drawing</code> is the page and frame cell of the From end, empty for a bridge, which is not drawn. <code>Status</code> is a dropdown of <code>OK</code>, <code>Wrong</code> and <code>Not tested</code>; empty means not tested. OK shows green and Wrong red. The same model always gives the same bytes.</p>
+<p>Every word is a <code>[words]</code> key with an English default: <code>ring_sheet</code>, <code>ring_no</code>, <code>ring_type</code>, <code>ring_wire</code>, <code>ring_core</code>, <code>ring_from</code>, <code>ring_to</code>, <code>ring_label</code>, <code>ring_colour</code>, <code>ring_mm2</code>, <code>ring_drawing</code>, <code>ring_status</code>, <code>ring_ok</code>, <code>ring_wrong</code>, <code>ring_untested</code>, <code>ring_found</code>, <code>ring_comment</code> and <code>ring_extra</code>. The Bridge type and the revision word are the existing <code>bridge</code> and <code>revision</code> keys. Override a value to change a word, for example <code>ring_status = "State"</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span> <span class="k">as</span> <span class="n">folder</span><span class="p">:</span>
+    <span class="n">file</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">folder</span><span class="p">)</span> <span class="o">/</span> <span class="s2">"fransys.toml"</span>
+    <span class="n">file</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="s1">'[export]</span><span class="se">\n</span><span class="s1">reports = ["ring_out"]</span><span class="se">\n\n</span><span class="s1">[words]</span><span class="se">\n</span><span class="s1">ring_status = "State"</span><span class="se">\n</span><span class="s1">'</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">settings</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+
+<span class="k">assert</span> <span class="n">s</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="s2">"export"</span><span class="p">)[</span><span class="s2">"reports"</span><span class="p">]</span> <span class="o">==</span> <span class="p">(</span><span class="s2">"ring_out"</span><span class="p">,)</span>
+<span class="k">assert</span> <span class="n">s</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="s2">"words"</span><span class="p">)[</span><span class="s2">"ring_status"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"State"</span>
 </code></pre></div>
 <h2 id="settingserror"><code>SettingsError</code></h2>
 <p><code>fr.settings</code> raises <code>fr.SettingsError</code> for a file that is missing, is not TOML, or has a key Fransys does not know. It also raises for a value of another type than ours, for library data in a TOML file, and for a paper name that is not a format. Its message names the file, the key and the keys known there.</p>
@@ -2348,7 +2385,7 @@
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.3 documentation
+      Fransys 0.23.4 documentation
     </div>
   
   

@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.3/guide/moving-to-0.23/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.4/guide/moving-to-0.23/">
       
       
       
@@ -958,6 +958,17 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         A supply net behind a fuse prints the fuse
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#drawnrowheight_g-and-width_g-are-now-height-and-width" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>DrawnRow.height_g</code> and <code>width_g</code> are now <code>height</code> and <code>width</code>
       </span>
     </span>
   </a>
@@ -2073,6 +2084,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#drawnrowheight_g-and-width_g-are-now-height-and-width" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>DrawnRow.height_g</code> and <code>width_g</code> are now <code>height</code> and <code>width</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -2130,6 +2152,11 @@
 <ul>
 <li>A supply net behind a fuse or breaker prints its supply name and the tag of the nearest protective device, such as <code>24V -F2</code>. The net at the supply keeps <code>24V</code>. Two nets that share one name, with no unique protective device between them, raise <code>RAIL_IDENTITY_SHARED</code>: put a fuse or breaker between them.</li>
 </ul>
+<h2 id="drawnrowheight_g-and-width_g-are-now-height-and-width"><code>DrawnRow.height_g</code> and <code>width_g</code> are now <code>height</code> and <code>width</code></h2>
+<ul>
+<li>A <code>Drawing</code> is in layout units, one eighth of a G, and its rows were always in that unit, so the <code>_g</code> suffix was wrong. Rename <code>row.height_g</code> to <code>row.height</code> and <code>row.width_g</code> to <code>row.width</code>; the values are the same. An A3 page's <code>area.w</code> is 1312.</li>
+<li>A build with a layout ERROR now returns its pages and rows in <code>result.drawings</code>, so you can see why; <code>fr.write</code> still refuses it.</li>
+</ul>
 
 
 
@@ -2165,7 +2192,7 @@
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.3 documentation
+      Fransys 0.23.4 documentation
     </div>
   
   

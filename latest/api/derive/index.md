@@ -1090,10 +1090,10 @@ The drawing sets `document` prints, by `number`: `document_scope`'s `drawing_set
 ### document_export_name
 
 ```python
-def document_export_name(model: Model, unit: Id[Unit] | None, record: Document) -> str
+def document_export_name(model: Model, unit: Id[Unit] | None, record: Document, extension: str='pdf') -> str
 ```
 
-One document's PDF name, from its own subject, never its cover.
+One document's file name (`extension`, the PDF's by default), from its own subject, never its cover.
 
 Unit subject (`record.unit`, or `record.unit_name` via `document_unit`): its own prefix; a
 placement (no `unit_name`) adds the instance's tag in the system.
@@ -1456,8 +1456,8 @@ def export_set(model: Model, unit: Id[Unit] | None) -> tuple[ExportRow, ...]
 Every export a write of `unit` makes (the whole model with `unit=None`), in write order.
 
 The reports (and the overview for the whole model), one terminal CSV and one connector CSV for
-all strips and boards, one WAGO XML per rack, then one PDF per document. Names are unplaced: the
-caller puts CSV and XML into `data/`. Two rows may share a name; the caller refuses that.
+all strips and boards, one WAGO XML per rack, then one PDF per document, each followed by its per-document kinds
+(`ring_out`). Names are unplaced: the caller puts CSV and XML into `data/`. Two rows may share a name; the caller refuses that.
 
 ### export_set_name
 
@@ -4106,6 +4106,60 @@ The one home of the print form: a title block's Rev cell, a revision history row
 line's BOM `Revision` column, a black box title and a message naming a revision all call it.
 Nothing else formats the pair.
 
+### ring_out_cells
+
+```python
+def ring_out_cells(row: RingOutRow, number: int, words: RingOutWords) -> tuple[int | str, ...]
+```
+
+The first eight cells of `row`, numbered `number`: No to Drawing; Status to Comment are the electrician's.
+
+### ring_out_headers
+
+```python
+def ring_out_headers(words: RingOutWords) -> tuple[str, ...]
+```
+
+The header cells of the sheet, in column order.
+
+### ring_out_rows
+
+```python
+def ring_out_rows(model: Model, document: Id[Document]) -> tuple[RingOutRow, ...]
+```
+
+The wires, then the cores, then the bridges of `document`'s unit, each in its home's order.
+
+Wires are `wire_rows`, cores `cable_rows` of the unit's `cable_list_rows`, a bridge a pair of
+consecutive members of a `TerminalRow.jumper_group`; nothing is sorted here.
+
+Raises:
+    KeyError: `document` names no document of `model`.
+
+### ring_out_statuses
+
+```python
+def ring_out_statuses(words: RingOutWords) -> tuple[str, str, str]
+```
+
+The dropdown values of the Status column: OK, wrong, not tested.
+
+### ring_out_title
+
+```python
+def ring_out_title(model: Model, document: Id[Document]) -> str
+```
+
+`<title> <number> <revision word> <revision label>`: the title row, from the title block's own facts.
+
+### ring_out_words
+
+```python
+def ring_out_words(model: Model) -> RingOutWords
+```
+
+The words of the sheet from `[words]`; an absent key raises naming the key.
+
 ### run_point_text
 
 ```python
@@ -5609,7 +5663,7 @@ class ExportRow
 One file a write makes, before it is placed in `data/`.
 
 - `export_kind`: `"bom"`, `"plc"`, `"wires"`, `"designations"`, `"cables"`, `"cores"`,
-  `"overview"`, `"terminals"`, `"connectors"`, `"wago"` or `"pdf"`; `extension` ends the name.
+  `"overview"`, `"terminals"`, `"connectors"`, `"wago"`, `"pdf"` or `"ring_out"`; `extension` ends the name.
 - `subject`: the strip, board, rack or document id; `None` for a whole-model report.
 - `name`: `export_name` or `document_export_name`; `hint` the unit-set name a clash of two
   units of one release should keep one document of, else `None`.
@@ -6574,6 +6628,34 @@ class RevisionRow
 ```
 
 One revision-history entry as the table prints it; `label` is the printed revision.
+
+### RingOutKind
+
+```python
+class RingOutKind
+```
+
+What kind of join a ring-out row is: a panel wire, a cable core or a terminal bridge.
+
+### RingOutRow
+
+```python
+class RingOutRow
+```
+
+One join the electrician measures end to end.
+
+`from_`/`to` are the printed ends, `label` the wire label or the cable core text, `colour`
+and `cross_section_mm2` the wire's (`""` and `None` for a core or a bridge), `drawing` the
+page text of the first drawing of this document that shows an end, `""` for none.
+
+### RingOutWords
+
+```python
+class RingOutWords
+```
+
+Every word the sheet prints, read from `[words]`; the dropdown values are `ok`, `wrong`, `untested`.
 
 ### SeedRows
 

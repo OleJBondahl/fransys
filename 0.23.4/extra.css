@@ -1,0 +1,74 @@
+/* Phone widths: inline code wraps, images and tables stay inside the column. */
+.md-typeset :not(pre) > code {
+  overflow-wrap: anywhere;
+}
+
+.md-typeset img {
+  max-width: 100%;
+  height: auto;
+}
+
+.md-typeset table:not([class]) {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+/* Header (LOGO L4): CAD grey bar with the banner's grid in both colour schemes; the wordmark is the logo. */
+.md-header {
+  --md-primary-bg-color: #fff;
+  --md-primary-bg-color--light: rgba(255, 255, 255, 0.7);
+  color: #fff;
+  --grid-minor: rgba(255, 255, 255, 0.045);
+  --grid-major: rgba(255, 255, 255, 0.09);
+  background-color: #212830;
+  background-image:
+    linear-gradient(var(--grid-major) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-major) 1px, transparent 1px),
+    linear-gradient(var(--grid-minor) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-minor) 1px, transparent 1px);
+  background-size: 80px 80px, 80px 80px, 16px 16px, 16px 16px;
+}
+
+.md-header__button.md-logo img {
+  height: 26px;
+  width: auto;
+}
+
+/* The wordmark prints the name at every width: it shows in the logo slot the theme hides on phones. */
+.md-header__button.md-logo {
+  display: block;
+}
+
+.md-header__title > .md-header__ellipsis > .md-header__topic:first-child {
+  display: none;
+}
+
+/* The search box sits on the grey bar in both schemes: light text on a light veil. */
+.md-header .md-search__button {
+  color: #fff;
+  background-color: rgba(255, 255, 255, 0.12);
+}
+
+.md-header .md-search__button::before {
+  background-color: #fff;
+}
+
+/* Phone header order: menu button, wordmark, name, then palette toggle and search (as the theme's own phone header). */
+.md-header__button.md-logo,
+.md-header__title {
+  order: 1;
+}
+
+.md-header__option,
+.md-header__button[for="__search"],
+.md-header__source,
+.md-header .md-search {
+  order: 2;
+}
+
+/* The Ctrl+K chip is the dark scheme's: light text on a dark veil, in both schemes. */
+.md-header .md-search__button::after {
+  color: #fff;
+  background: rgba(0, 0, 0, 0.35);
+}

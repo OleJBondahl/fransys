@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.3/api/fransys/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.4/api/fransys/">
       
       
       
@@ -3685,7 +3685,7 @@ may share a cover path.</p>
 <p>Read: the path from out_dir that <code>write</code> gives each export of <code>result</code>, by <code>(kind, subject)</code>.</p>
 <p>A kind is <code>"bom"</code>, <code>"plc"</code>, <code>"wires"</code>, <code>"designations"</code>, <code>"overview"</code>, <code>"cables"</code> or <code>"cores"</code>
 (subject <code>None</code>), <code>"terminals"</code>, <code>"connectors"</code> or <code>"wago"</code> (the strip, board or rack id), or
-<code>"pdf"</code> (the document id). <code>unit=</code> is <code>write</code>'s. Writes nothing and compiles no PDF; raises what
+<code>"pdf"</code> or <code>"ring_out"</code> (the document id). <code>unit=</code> is <code>write</code>'s. Writes nothing and compiles no PDF; raises what
 <code>write</code> raises for a bad <code>unit</code> or a name two subjects share (<code>ExportNameClashError</code>).</p>
 <p>Does not write a file, compile a PDF or run <code>check</code>.</p>
 <h3 id="lint">lint</h3>
@@ -3799,8 +3799,8 @@ Meant for a consumer's test, wherever they want it.</p>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">write</span><span class="p">(</span><span class="n">result</span><span class="p">:</span> <span class="n">BuildResult</span><span class="p">,</span> <span class="n">out_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="nb">object</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">intermediates</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">releases</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Path</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
 </code></pre></div>
 <p>Output: write a built model's exports into <code>out_dir</code> and return their paths, sorted.</p>
-<p>Writes CSV reports, WAGO XML, overview HTML and one PDF per document; <code>unit=</code> restricts them to
-that unit's own set (no <code>overview.html</code>). Intermediates (SVGs, netlists, <code>.typ</code>
+<p>Writes CSV reports, WAGO XML, overview HTML, one PDF per document and, if <code>[export] reports</code> names
+<code>ring_out</code>, one <code>.xlsx</code> each; <code>unit=</code> restricts them to that unit's own set (no <code>overview.html</code>). Intermediates (SVGs, netlists, <code>.typ</code>
 sources) go only to <code>intermediates</code>, if given. <code>releases</code> is a release root as <code>release</code>'s
 <code>into</code>: with a stored release of the system there, <code>overview.html</code> marks what changed since it
 (the release at the model's revision, else the previous one); <code>None</code> marks nothing. Any
@@ -4128,7 +4128,7 @@ one and returns the other.</p>
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.3 documentation
+      Fransys 0.23.4 documentation
     </div>
   
   

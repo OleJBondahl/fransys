@@ -96,7 +96,7 @@ Read: the path from out_dir that `write` gives each export of `result`, by `(kin
 
 A kind is `"bom"`, `"plc"`, `"wires"`, `"designations"`, `"overview"`, `"cables"` or `"cores"`
 (subject `None`), `"terminals"`, `"connectors"` or `"wago"` (the strip, board or rack id), or
-`"pdf"` (the document id). `unit=` is `write`'s. Writes nothing and compiles no PDF; raises what
+`"pdf"` or `"ring_out"` (the document id). `unit=` is `write`'s. Writes nothing and compiles no PDF; raises what
 `write` raises for a bad `unit` or a name two subjects share (`ExportNameClashError`).
 
 Does not write a file, compile a PDF or run `check`.
@@ -287,8 +287,8 @@ def write(result: BuildResult, out_dir: Path, *, unit: object=None, intermediate
 
 Output: write a built model's exports into `out_dir` and return their paths, sorted.
 
-Writes CSV reports, WAGO XML, overview HTML and one PDF per document; `unit=` restricts them to
-that unit's own set (no `overview.html`). Intermediates (SVGs, netlists, `.typ`
+Writes CSV reports, WAGO XML, overview HTML, one PDF per document and, if `[export] reports` names
+`ring_out`, one `.xlsx` each; `unit=` restricts them to that unit's own set (no `overview.html`). Intermediates (SVGs, netlists, `.typ`
 sources) go only to `intermediates`, if given. `releases` is a release root as `release`'s
 `into`: with a stored release of the system there, `overview.html` marks what changed since it
 (the release at the model's revision, else the previous one); `None` marks nothing. Any

@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.3/guide/readability/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.4/guide/readability/">
       
       
       
@@ -1986,7 +1986,7 @@
 
 <h1 id="reading-the-pages-as-numbers">Reading the pages as numbers</h1>
 <p><code>fr.readability(result)</code> returns a <code>DrawnReading</code>: one <code>DrawnPageReading</code> row for each page the build drew, in <code>.pages</code>. Both types are in <code>fr.derive</code>. The same model gives equal rows, so compare a page between revisions by its rows. It writes no file, <code>fr.write</code> does not emit it, and it lays nothing out again.</p>
-<p>An error build has no drawings and gives no rows. The shape of the rows may change before 1.0.</p>
+<p>A set with a layout ERROR returns its pages and rows so you can see why; <code>fr.write</code> refuses the build.</p>
 <p>The findings these numbers back are in <code>drawing.md</code>.</p>
 <ul>
 <li><strong><code>page</code>.</strong> The page's id.</li>
@@ -1994,7 +1994,7 @@
 <li><strong><code>symbols</code> and <code>markers</code>.</strong> <code>symbols</code> counts every symbol drawn on the page. <code>markers</code> counts the reference markers among them, whatever their kind (every kind draws the one marker symbol, so the count is the total).</li>
 <li><strong><code>fill_percent</code>.</strong> The share, 0 to 100, of the page's content box that the placed ink spans: one box around every symbol body, text, wire and outline. Rounded down. A fuller page reads higher; it is a number to compare between revisions.</li>
 <li><strong><code>wire_crossings</code>.</strong> How often a wire runs across a wire of another id. A high number means a tangled page. Order the groups with <code>order</code>, or put the crossing nets on separate pages.</li>
-<li><strong><code>wire_bends</code> and <code>wire_length_g</code>.</strong> The direction changes and the total length in G of every wire on the page. Many bends or a long total mean a winding page. They are numbers to compare between revisions, not a target the layout optimises.</li>
+<li><strong><code>wire_bends</code> and <code>wire_length_g</code>.</strong> The direction changes and the total length of every wire on the page, in the Drawing unit of "Read the rows of a page". Many bends or a long total mean a winding page. They are numbers to compare between revisions, not a target the layout optimises.</li>
 <li><strong><code>struck_labels</code>.</strong> Texts a wire runs through.</li>
 <li><strong><code>text_overlaps</code>.</strong> Pairs of texts whose boxes overlap.</li>
 </ul>
@@ -2036,13 +2036,13 @@
 <span class="k">assert</span> <span class="nb">all</span><span class="p">(</span><span class="n">page</span><span class="o">.</span><span class="n">wire_crossings</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">page</span> <span class="ow">in</span> <span class="n">report</span><span class="o">.</span><span class="n">pages</span><span class="p">)</span>
 </code></pre></div>
 <h2 id="read-the-rows-of-a-page">Read the rows of a page</h2>
-<p><code>result.drawings</code> holds one <code>Drawing</code> for each page. Its <code>rows</code> are the placed rows that hold devices, top to bottom. A row has four fields.</p>
+<p><code>result.drawings</code> holds one <code>Drawing</code> for each page. A Drawing is in layout units, and a finding prints G, so divide a Drawing value by 8 for G. An A3 page is <code>area.w</code> 1312 wide, and every row, symbol, wire and text value reads in that unit. Its <code>rows</code> are the placed rows that hold devices, top to bottom. A row has four fields.</p>
 <ul>
 <li><code>devices</code>: the ids of its items as text, each item once. <code>fr.derive.drawn_designations(result.model, row.devices)</code> gives their designations.</li>
-<li><code>height_g</code> and <code>width_g</code>: its size in G.</li>
+<li><code>height</code> and <code>width</code>: its size in the Drawing unit.</li>
 <li><code>term</code>: what set its height. It is <code>"body"</code> (a cell), <code>"card"</code>, <code>"marker_room"</code> (a marker hung at a cell), <code>"stub"</code> (a trunk's room) or <code>"annex"</code> (a label).</li>
 </ul>
-<p><code>PAGE_OVERFLOW</code> and <code>WIDER_THAN_PAGE</code> read these same figures. The widest row is <code>max(page.rows, key=lambda r: r.width_g)</code>.</p>
+<p><code>PAGE_OVERFLOW</code> and <code>WIDER_THAN_PAGE</code> read these same figures. The widest row is <code>max(page.rows, key=lambda r: r.width)</code>.</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">NamedTuple</span>
 
@@ -2073,8 +2073,8 @@
 <span class="n">d</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">rows_unit</span><span class="p">,</span> <span class="s2">"U1"</span><span class="p">)</span>
 <span class="n">result</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">fr</span><span class="o">.</span><span class="n">document</span><span class="p">(</span><span class="n">fr</span><span class="o">.</span><span class="n">DocumentPreset</span><span class="o">.</span><span class="n">CABINET_SCHEMATIC</span><span class="p">,</span> <span class="s2">"cab"</span><span class="p">,</span> <span class="n">cover</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="s2">"cover.md"</span><span class="p">)))</span>
 <span class="n">page</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">drawings</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
-<span class="n">widest</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">page</span><span class="o">.</span><span class="n">rows</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">r</span><span class="p">:</span> <span class="n">r</span><span class="o">.</span><span class="n">width_g</span><span class="p">)</span>
-<span class="k">assert</span> <span class="n">widest</span><span class="o">.</span><span class="n">width_g</span> <span class="o">&gt;</span> <span class="mi">0</span>
+<span class="n">widest</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">page</span><span class="o">.</span><span class="n">rows</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">r</span><span class="p">:</span> <span class="n">r</span><span class="o">.</span><span class="n">width</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">widest</span><span class="o">.</span><span class="n">width</span> <span class="o">&gt;</span> <span class="mi">0</span>
 <span class="k">assert</span> <span class="n">widest</span><span class="o">.</span><span class="n">term</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"body"</span><span class="p">,</span> <span class="s2">"card"</span><span class="p">,</span> <span class="s2">"marker_room"</span><span class="p">,</span> <span class="s2">"stub"</span><span class="p">,</span> <span class="s2">"annex"</span><span class="p">)</span>
 <span class="k">assert</span> <span class="p">{</span><span class="s2">"U1-K1"</span><span class="p">,</span> <span class="s2">"U1-H1"</span><span class="p">}</span> <span class="o">&lt;=</span> <span class="nb">set</span><span class="p">(</span><span class="n">fr</span><span class="o">.</span><span class="n">derive</span><span class="o">.</span><span class="n">drawn_designations</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">widest</span><span class="o">.</span><span class="n">devices</span><span class="p">))</span>
 </code></pre></div>
@@ -2113,7 +2113,7 @@
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.3 documentation
+      Fransys 0.23.4 documentation
     </div>
   
   

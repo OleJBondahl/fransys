@@ -2,7 +2,7 @@
 
 `fr.readability(result)` returns a `DrawnReading`: one `DrawnPageReading` row for each page the build drew, in `.pages`. Both types are in `fr.derive`. The same model gives equal rows, so compare a page between revisions by its rows. It writes no file, `fr.write` does not emit it, and it lays nothing out again.
 
-An error build has no drawings and gives no rows. The shape of the rows may change before 1.0.
+A set with a layout ERROR returns its pages and rows so you can see why; `fr.write` refuses the build.
 
 The findings these numbers back are in `drawing.md`.
 
@@ -11,7 +11,7 @@ The findings these numbers back are in `drawing.md`.
 - **`symbols` and `markers`.** `symbols` counts every symbol drawn on the page. `markers` counts the reference markers among them, whatever their kind (every kind draws the one marker symbol, so the count is the total).
 - **`fill_percent`.** The share, 0 to 100, of the page's content box that the placed ink spans: one box around every symbol body, text, wire and outline. Rounded down. A fuller page reads higher; it is a number to compare between revisions.
 - **`wire_crossings`.** How often a wire runs across a wire of another id. A high number means a tangled page. Order the groups with `order`, or put the crossing nets on separate pages.
-- **`wire_bends` and `wire_length_g`.** The direction changes and the total length in G of every wire on the page. Many bends or a long total mean a winding page. They are numbers to compare between revisions, not a target the layout optimises.
+- **`wire_bends` and `wire_length_g`.** The direction changes and the total length of every wire on the page, in the Drawing unit of "Read the rows of a page". Many bends or a long total mean a winding page. They are numbers to compare between revisions, not a target the layout optimises.
 - **`struck_labels`.** Texts a wire runs through.
 - **`text_overlaps`.** Pairs of texts whose boxes overlap.
 
@@ -57,13 +57,13 @@ assert all(page.wire_crossings >= 0 for page in report.pages)
 
 ## Read the rows of a page
 
-`result.drawings` holds one `Drawing` for each page. Its `rows` are the placed rows that hold devices, top to bottom. A row has four fields.
+`result.drawings` holds one `Drawing` for each page. A Drawing is in layout units, and a finding prints G, so divide a Drawing value by 8 for G. An A3 page is `area.w` 1312 wide, and every row, symbol, wire and text value reads in that unit. Its `rows` are the placed rows that hold devices, top to bottom. A row has four fields.
 
 - `devices`: the ids of its items as text, each item once. `fr.derive.drawn_designations(result.model, row.devices)` gives their designations.
-- `height_g` and `width_g`: its size in G.
+- `height` and `width`: its size in the Drawing unit.
 - `term`: what set its height. It is `"body"` (a cell), `"card"`, `"marker_room"` (a marker hung at a cell), `"stub"` (a trunk's room) or `"annex"` (a label).
 
-`PAGE_OVERFLOW` and `WIDER_THAN_PAGE` read these same figures. The widest row is `max(page.rows, key=lambda r: r.width_g)`.
+`PAGE_OVERFLOW` and `WIDER_THAN_PAGE` read these same figures. The widest row is `max(page.rows, key=lambda r: r.width)`.
 
 ```python
 from pathlib import Path
@@ -96,8 +96,8 @@ d = fr.design("demo_parts")
 d.add(rows_unit, "U1")
 result = fr.build(d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, "cab", cover=Path("cover.md")))
 page = next(iter(result.drawings.values()))
-widest = max(page.rows, key=lambda r: r.width_g)
-assert widest.width_g > 0
+widest = max(page.rows, key=lambda r: r.width)
+assert widest.width > 0
 assert widest.term in ("body", "card", "marker_room", "stub", "annex")
 assert {"U1-K1", "U1-H1"} <= set(fr.derive.drawn_designations(result.model, widest.devices))
 ```

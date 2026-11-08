@@ -35,3 +35,8 @@ This page lists what 0.23 adds, what stays refused for now, and the known issues
 ## A supply net behind a fuse prints the fuse
 
 - A supply net behind a fuse or breaker prints its supply name and the tag of the nearest protective device, such as `24V -F2`. The net at the supply keeps `24V`. Two nets that share one name, with no unique protective device between them, raise `RAIL_IDENTITY_SHARED`: put a fuse or breaker between them.
+
+## `DrawnRow.height_g` and `width_g` are now `height` and `width`
+
+- A `Drawing` is in layout units, one eighth of a G, and its rows were always in that unit, so the `_g` suffix was wrong. Rename `row.height_g` to `row.height` and `row.width_g` to `row.width`; the values are the same. An A3 page's `area.w` is 1312.
+- A build with a layout ERROR now returns its pages and rows in `result.drawings`, so you can see why; `fr.write` still refuses it.

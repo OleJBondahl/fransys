@@ -1457,7 +1457,8 @@ Every export a write of `unit` makes (the whole model with `unit=None`), in writ
 
 The reports (and the overview for the whole model), one terminal CSV and one connector CSV for
 all strips and boards, one WAGO XML per rack, then one PDF per document, each followed by its per-document kinds
-(`ring_out`). Names are unplaced: the caller puts CSV and XML into `data/`. Two rows may share a name; the caller refuses that.
+(`ring_out`, for a document with drawings and a preset not in `ring_out_skip`).
+Names are unplaced: the caller puts CSV and XML into `data/`. Two rows may share a name; the caller refuses that.
 
 ### export_set_name
 

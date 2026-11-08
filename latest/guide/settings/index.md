@@ -179,7 +179,7 @@ assert s.table("export")["data_dir"] == "data"
 
 ## The ring-out sheet
 
-Add `"ring_out"` to `reports` and `fr.write` also writes one `.xlsx` for every PDF of a unit document, named with the PDF's stem (`pump.pdf`, `pump.xlsx`). A SYSTEM, item or location document gets none. The electrician rings out the cabinet line by line on a phone and marks each line. Files in the output folder are replaced on each write, so copy a filled-in sheet out of it before you rebuild.
+Add `"ring_out"` to `reports` and `fr.write` also writes one `.xlsx` for every PDF document that has drawings, named with the PDF's stem (`pump.pdf`, `pump.xlsx`). A unit's sheet lists its own joins; any other document's lists the wires and cores drawn on its pages and the bridges of its strips. `ring_out_skip = ["system"]` leaves the named document presets without a sheet (default empty). The electrician rings out the cabinet line by line on a phone and marks each line. Files in the output folder are replaced on each write, so copy a filled-in sheet out of it before you rebuild.
 
 ```toml
 [export]

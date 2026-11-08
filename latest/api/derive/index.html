@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.5/api/derive/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.6/api/derive/">
       
       
       
@@ -17177,7 +17177,8 @@ its set.</p>
 <p>Every export a write of <code>unit</code> makes (the whole model with <code>unit=None</code>), in write order.</p>
 <p>The reports (and the overview for the whole model), one terminal CSV and one connector CSV for
 all strips and boards, one WAGO XML per rack, then one PDF per document, each followed by its per-document kinds
-(<code>ring_out</code>). Names are unplaced: the caller puts CSV and XML into <code>data/</code>. Two rows may share a name; the caller refuses that.</p>
+(<code>ring_out</code>, for a document with drawings and a preset not in <code>ring_out_skip</code>).
+Names are unplaced: the caller puts CSV and XML into <code>data/</code>. Two rows may share a name; the caller refuses that.</p>
 <h3 id="export_set_name">export_set_name</h3>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">export_set_name</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">Id</span><span class="p">[</span><span class="n">Unit</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span>
 </code></pre></div>
@@ -20436,7 +20437,7 @@ for any other box.</p>
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.5 documentation
+      Fransys 0.23.6 documentation
     </div>
   
   

@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.5/api/fransys/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.6/api/fransys/">
       
       
       
@@ -3800,7 +3800,8 @@ Meant for a consumer's test, wherever they want it.</p>
 </code></pre></div>
 <p>Output: write a built model's exports into <code>out_dir</code> and return their paths, sorted.</p>
 <p>Writes CSV reports, WAGO XML, overview HTML, one PDF per document and, if <code>[export] reports</code> names
-<code>ring_out</code>, one <code>.xlsx</code> each; <code>unit=</code> restricts them to that unit's own set (no <code>overview.html</code>). Intermediates (SVGs, netlists, <code>.typ</code>
+<code>ring_out</code>, one <code>.xlsx</code> for each document with drawings, less <code>[export] ring_out_skip</code>;
+<code>unit=</code> restricts them to that unit's own set (no <code>overview.html</code>). Intermediates (SVGs, netlists, <code>.typ</code>
 sources) go only to <code>intermediates</code>, if given. <code>releases</code> is a release root as <code>release</code>'s
 <code>into</code>: with a stored release of the system there, <code>overview.html</code> marks what changed since it
 (the release at the model's revision, else the previous one); <code>None</code> marks nothing. Any
@@ -4128,7 +4129,7 @@ one and returns the other.</p>
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.5 documentation
+      Fransys 0.23.6 documentation
     </div>
   
   

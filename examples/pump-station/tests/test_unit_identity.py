@@ -170,7 +170,7 @@ LAYOUT_WARNINGS = {
     "POWER_SYMBOL_UNPLACED": 0,
     "SYMBOL_OVERLAP": 0,
     "JOIN_UNALIGNED": 0,
-    "OVERLAP": 4,  # measured on 0.22.9: -B12 text/text and wire/text (KI-658, old) + KI-746 (-DI1 tag on the 24V wire) + KI-747 (CTL p2:6A over breaker slot N 4)
+    "OVERLAP": 1,  # measured on 0.23.2 (was 4 on 0.22.9)
 }
 EXPECTED_WARNINGS = LAYOUT_WARNINGS
 

@@ -221,6 +221,7 @@ def test_export_toml_holds_todays_values() -> None:
         "csv_quoting": "minimal",
         "csv_newline": "\n",
         "hide_pe": False,
+        "ring_out_skip": [],
     }
     assert _table("export") == expected
 

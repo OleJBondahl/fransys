@@ -9,7 +9,9 @@ from typing import Any
 from fransys_model.vocab.tables import documents, units
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.core import Unit
+lazy from fransys_model.vocab.document import Document
 
+from .document_pages import drawn_pages
 from .document_unit import document_unit
 from .export_names import document_export_name, export_name, export_ref, export_set_name
 from .facts.house_settings import export_form_of
@@ -95,6 +97,13 @@ def _clash_hint(model: Model, own_unit: Id[Unit] | None, name: str, release_by_n
     return export_set_name(model, own_unit) if seen else None
 
 
+def _sheet_kinds(model: Model, record: Document, kinds: list[str]) -> list[str]:
+    """The per-document kinds `record` gets: none when its preset is in `ring_out_skip` or no page of it is drawn."""
+    if record.preset.value in export_form_of(model).ring_out_skip or not drawn_pages(model, record.id):
+        return []
+    return kinds
+
+
 def _document_rows(model: Model, unit: Id[Unit] | None) -> list[ExportRow]:
     """One PDF per document of `unit` (every document with `unit=None`).
 
@@ -112,7 +121,7 @@ def _document_rows(model: Model, unit: Id[Unit] | None) -> list[ExportRow]:
         own_unit = document_unit(model, record.id)
         hint = _clash_hint(model, own_unit, name, release_by_name)
         rows.append(ExportRow(export_kind="pdf", extension="pdf", subject=document_id, name=name, hint=hint))
-        for kind in kinds if own_unit is not None else ():
+        for kind in _sheet_kinds(model, record, kinds):
             ext = _DOCUMENT_KINDS[kind]
             rows.append(
                 ExportRow(export_kind=kind, extension=ext, subject=document_id, name=document_export_name(model, unit, record, ext), hint=hint)
@@ -125,6 +134,7 @@ def export_set(model: Model, unit: Id[Unit] | None) -> tuple[ExportRow, ...]:
 
     The reports (and the overview for the whole model), one terminal CSV and one connector CSV for
     all strips and boards, one WAGO XML per rack, then one PDF per document, each followed by its per-document kinds
-    (`ring_out`). Names are unplaced: the caller puts CSV and XML into `data/`. Two rows may share a name; the caller refuses that.
+    (`ring_out`, for a document with drawings and a preset not in `ring_out_skip`).
+    Names are unplaced: the caller puts CSV and XML into `data/`. Two rows may share a name; the caller refuses that.
     """
     return (*_report_rows(model, unit), *_list_rows(model, unit), *_item_rows(model, unit), *_document_rows(model, unit))

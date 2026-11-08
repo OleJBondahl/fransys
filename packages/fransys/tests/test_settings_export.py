@@ -180,16 +180,35 @@ def _ring_cab(d: fr.Design) -> _NoInterface:
     return _NoInterface()
 
 
-def _ring_cab_result(tmp_path: Path) -> fr.BuildResult:
+class _Io(NamedTuple):
+    """The boundary of the ring-io unit: two terminals the ship wires reach."""
+
+    x3: fr.TerminalStrip
+
+
+@fr.unit("ring-io", revision=1, interface_version=1, date="2026-10-15", text="First issue", by="OJB", title="Io", number="R-2")
+def _ring_io(d: fr.Design) -> _Io:
+    """A strip with two boundary terminals and nothing inside."""
+    return _Io(d.terminal_strip("X3", "DEMO-TB-2.5", 2, interface=(1, 2)))
+
+
+def _ring_cab_result(tmp_path: Path, *, ship: bool = False, text: str = _RING) -> fr.BuildResult:
     d = fr.design("demo_parts", place="CAB")
     d.project(title="Ring", number="R-1", customer="Co", revision=1, author="OJB")
     d.revision(1, date="2026-10-15", text="First issue", created="XX")
-    d.location("CAB", "Cabinet")
+    cab = d.location("CAB", "Cabinet")
     d.add(_ring_cab, "U1", place="CAB")
     cover = tmp_path / "cover.md"
     cover.write_text("# Ring\n", encoding="utf-8")
-    document = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, "ring-cab", cover=cover)
-    return fr.build(d, document, settings=fr.settings(consumer_file(tmp_path, _RING)))
+    documents = [fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, "ring-cab", cover=cover)]
+    if ship:
+        io = d.add(_ring_io, "U2", place="CAB")
+        d.series(io.x3[1], d.cable("W9", "DEMO-CBL-4G1.5"), d.device("M2", "DEMO-MOTOR-4KW")["U"])
+        d.series(io.x3[2], d.device("M3", "DEMO-MOTOR-4KW")["U"], wire=(BK, 2.5))
+        documents.append(fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover))
+        documents.append(fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, "ring-io", cover=cover))
+        documents.append(fr.document(fr.DocumentPreset.SYSTEM, None, cover=cover))
+    return fr.build(d, *documents, settings=fr.settings(consumer_file(tmp_path, text)))
 
 
 def test_every_join_of_the_model_is_one_row_of_the_sheet(tmp_path: Path) -> None:
@@ -224,3 +243,35 @@ def test_a_ring_out_word_is_the_consumers(tmp_path: Path) -> None:
     assert "Status" in _sheet_rows(ours)[1]
     assert "State" in _sheet_rows(theirs)[1]
     assert "Status" not in _sheet_rows(theirs)[1]
+
+
+def _ship_sheet(tmp_path: Path, text: str = _RING) -> tuple[fr.BuildResult, dict[str, list[list[str]]]]:
+    result = _ring_cab_result(tmp_path, ship=True, text=text)
+    fr.write(result, tmp_path / "out")
+    sheets = {p.stem: [r for r in _sheet_rows(p.read_bytes()) if r[0].isdigit()] for p in (tmp_path / "out").glob("*.xlsx")}
+    return result, sheets
+
+
+def test_a_ship_level_sheet_lists_its_drawn_joins_and_no_unit_join(tmp_path: Path) -> None:
+    result, sheets = _ship_sheet(tmp_path)
+    model = result.model
+    top = {c.end_a_designation for u in cable_list_rows(model) for c in cable_rows(model, u.cable)}
+    assert top
+    ship = sheets["R-1-v1.1-CAB"]
+    assert {r[2] for r in ship if r[1] == "Core"} == top
+    (wire,) = (r for r in ship if r[1] == "Wire")  # the ship-to-unit wire is drawn on the ship page
+    assert "-M3" in wire[2] + wire[3]
+    assert not [r for r in ship if any(tag in r[2] + r[3] for tag in ("X1", "X2", "M1"))]  # no join inside the ring-cab unit
+    assert not [r for r in ship if r[1] == "Bridge"]
+    ship_doc = next(r.id for r in document_rows(model) if r.location is not None)
+    assert ("ring_out", ship_doc) in fr.export_names(result)
+
+
+def test_ring_out_skip_leaves_a_preset_without_a_sheet(tmp_path: Path) -> None:
+    _result, sheets = _ship_sheet(tmp_path, _RING + 'ring_out_skip = ["cabinet_schematic"]\n')
+    assert not sheets
+
+
+def test_ring_out_skip_refuses_a_value_that_is_no_preset(tmp_path: Path) -> None:
+    with pytest.raises(fr.SettingsError, match=r'"ring_out_skip" is \'nope\'; known: cabinet_schematic, system'):
+        _ring_cab_result(tmp_path, text=_RING + 'ring_out_skip = ["nope"]\n')

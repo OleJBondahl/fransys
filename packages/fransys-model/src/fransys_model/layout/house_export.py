@@ -28,6 +28,7 @@ class ExportForm:
 
     `csv_quoting` is the name of a `csv` quoting mode: minimal, all, nonnumeric or none.
     `hide_pe` leaves the PE rail off the drawing sheets (lists keep it).
+    `ring_out_skip` lists the `DocumentPreset` values whose documents get no ring-out sheet.
     """
 
     id: Id[ExportForm]
@@ -43,4 +44,5 @@ class ExportForm:
     csv_quoting: str
     csv_newline: str
     hide_pe: bool
+    ring_out_skip: tuple[str, ...]
     ext: frozendict[str, Value] = frozendict()

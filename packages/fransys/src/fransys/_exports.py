@@ -288,7 +288,8 @@ def write(
     """Output: write a built model's exports into `out_dir` and return their paths, sorted.
 
     Writes CSV reports, WAGO XML, overview HTML, one PDF per document and, if `[export] reports` names
-    `ring_out`, one `.xlsx` each; `unit=` restricts them to that unit's own set (no `overview.html`). Intermediates (SVGs, netlists, `.typ`
+    `ring_out`, one `.xlsx` for each document with drawings, less `[export] ring_out_skip`;
+    `unit=` restricts them to that unit's own set (no `overview.html`). Intermediates (SVGs, netlists, `.typ`
     sources) go only to `intermediates`, if given. `releases` is a release root as `release`'s
     `into`: with a stored release of the system there, `overview.html` marks what changed since it
     (the release at the model's revision, else the previous one); `None` marks nothing. Any

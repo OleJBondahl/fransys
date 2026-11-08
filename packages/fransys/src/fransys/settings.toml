@@ -99,6 +99,7 @@ csv_encoding = "utf-8"  # a CSV file's encoding; "utf-8-sig" opens in Excel with
 csv_quoting = "minimal"  # minimal, all, nonnumeric or none
 csv_newline = "\n"  # ends a CSV line
 hide_pe = false  # true leaves the PE rail's wires and the PE symbols on device pins off every drawing sheet; the lists keep them
+ring_out_skip = []  # document presets ("system") whose documents get no ring-out sheet; every other PDF document gets one
 
 # The columns each list prints, in order: the row `field`, and the `[words]` keys of its PDF
 # heading (`pdf`) and its CSV header (`csv`). `pdf_columns` is the subset the PDF prints.

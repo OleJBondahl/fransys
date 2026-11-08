@@ -7,6 +7,7 @@ lazy from collections.abc import Iterable
 from fransys_model.derive import REPORT_KINDS
 from fransys_model.kernel import Draft, Origin, SchemaError, evolve
 from fransys_model.layout import CSV_QUOTINGS, HOUSE_TABLES, HOUSE_TEXT_KINDS, house_records
+from fransys_model.vocab import DocumentPreset
 
 from ._paper import refuse_authored_paper, with_paper
 from ._settings_merge import SettingsError
@@ -31,11 +32,20 @@ def _refused(table: str, key: str, value: object, known: Iterable[str]) -> NoRet
     raise SettingsError(msg)
 
 
+def _check_skip(skipped: tuple[str, ...]) -> None:
+    """Refuse a `ring_out_skip` value that is no `DocumentPreset`."""
+    presets = [p.value for p in DocumentPreset]
+    for preset in skipped:
+        if preset not in presets:
+            _refused("export", "ring_out_skip", preset, presets)
+
+
 def _check_export(table: Table) -> None:
     """Refuse a report kind, quoting, encoding or delimiter of `[export]`."""
     for kind in cast("tuple[str, ...]", table["reports"]):
         if kind not in REPORT_KINDS:
             _refused("export", "reports", kind, REPORT_KINDS)
+    _check_skip(cast("tuple[str, ...]", table["ring_out_skip"]))
     if table["csv_quoting"] not in CSV_QUOTINGS:
         _refused("export", "csv_quoting", table["csv_quoting"], CSV_QUOTINGS)
     if len(_str(table, "csv_delimiter")) != 1:

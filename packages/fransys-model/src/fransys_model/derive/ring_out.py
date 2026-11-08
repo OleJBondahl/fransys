@@ -3,22 +3,26 @@
 lazy from collections.abc import Mapping
 
 from fransys_model.kernel import render_id
-from fransys_model.vocab.tables import conductors
+from fransys_model.vocab.tables import conductors, units
 lazy from fransys_model.kernel import Id, Model
+lazy from fransys_model.vocab.aspects import AspectNode
 lazy from fransys_model.vocab.connectivity import Conductor
 lazy from fransys_model.vocab.document import Document
 
 from .cable_cores import cable_rows
 from .contact_places import conductor_places
+from .document_scope import document_scope
 from .document_unit import document_unit
 from .facts.house_settings import word
 from .harness import cable_list_rows
+from .report_scope import unit_strips
 from .rows_document_row import document_row
 from .rows_ring_out import RingOutKind, RingOutRow, RingOutWords
 from .title_block import document_facts
 from .wire_ends import ordered_wire_ends
 from .wire_list import wire_rows
 from .wiring import terminal_rows
+lazy from .rows import TerminalRow
 
 __all__ = ["ring_out_cells", "ring_out_headers", "ring_out_rows", "ring_out_statuses", "ring_out_title", "ring_out_words"]
 
@@ -86,10 +90,13 @@ def ring_out_title(model: Model, document: Id[Document]) -> str:
     return " ".join(part for part in (title, number, word(model, "revision"), revision) if part)
 
 
-def _wire_joins(model: Model, document: Id[Document], places: Mapping[tuple[Id[Conductor], str], str]) -> list[RingOutRow]:
+def _wire_joins(model: Model, document: Id[Document], places: Mapping[tuple[Id[Conductor], str], str], drawn: set[Id[Conductor]]) -> list[RingOutRow]:
     record = document_row(model, document)
     rows = []
-    for row in wire_rows(model, unit=document_unit(model, document), context=record.location):
+    unit = document_unit(model, document)
+    for row in wire_rows(model, unit=unit, context=record.location):
+        if unit is None and row.conductor not in drawn:
+            continue
         conductor = conductors(model)[row.conductor]
         first, _second = ordered_wire_ends(model, conductor.a, conductor.b)
         rows.append(
@@ -106,7 +113,7 @@ def _wire_joins(model: Model, document: Id[Document], places: Mapping[tuple[Id[C
     return rows
 
 
-def _core_joins(model: Model, document: Id[Document], places: Mapping[tuple[Id[Conductor], str], str]) -> list[RingOutRow]:
+def _core_joins(model: Model, document: Id[Document], places: Mapping[tuple[Id[Conductor], str], str], drawn: set[Id[Conductor]]) -> list[RingOutRow]:
     unit = document_unit(model, document)
     return [
         RingOutRow(
@@ -120,7 +127,18 @@ def _core_joins(model: Model, document: Id[Document], places: Mapping[tuple[Id[C
         )
         for listed in cable_list_rows(model, unit=unit)
         for core in cable_rows(model, listed.cable, unit=unit)
+        if unit is not None or core.conductor in drawn
     ]
+
+
+def _terminal_rows(model: Model, document: Id[Document], context: Id[AspectNode] | None) -> tuple[TerminalRow, ...]:
+    """A unit document's terminals; any other document's are those of the strips its scope covers that no unit owns."""
+    unit = document_unit(model, document)
+    if unit is not None:
+        return terminal_rows(model, unit=unit, context=context)
+    owned = {strip for unit in units(model) for strip in unit_strips(model, unit)}  # a unit's strip is its own sheet's
+    own = (strip for strip in document_scope(model, document).strips if strip not in owned)
+    return tuple(row for strip in own for row in terminal_rows(model, strip, context=context))
 
 
 def _bridge_joins(model: Model, document: Id[Document]) -> list[RingOutRow]:
@@ -128,7 +146,7 @@ def _bridge_joins(model: Model, document: Id[Document]) -> list[RingOutRow]:
     record = document_row(model, document)
     last: dict[int, str] = {}
     rows = []
-    for row in terminal_rows(model, unit=document_unit(model, document), context=record.location):
+    for row in _terminal_rows(model, document, record.location):
         if row.jumper_group is None:
             continue
         before = last.get(row.jumper_group)
@@ -150,4 +168,5 @@ def ring_out_rows(model: Model, document: Id[Document]) -> tuple[RingOutRow, ...
         KeyError: `document` names no document of `model`.
     """
     places = conductor_places(model, document)
-    return tuple(_wire_joins(model, document, places) + _core_joins(model, document, places) + _bridge_joins(model, document))
+    drawn = {conductor for conductor, _port in places}  # a non-unit document lists what its drawn pages show
+    return tuple(_wire_joins(model, document, places, drawn) + _core_joins(model, document, places, drawn) + _bridge_joins(model, document))

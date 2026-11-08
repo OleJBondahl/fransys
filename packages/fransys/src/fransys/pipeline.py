@@ -8,6 +8,7 @@ lazy from collections.abc import Mapping
 
 import fransys_pdf
 import fransys_render
+from fransys_el import block_wire_findings
 from fransys_kicad import check as kicad_check
 from fransys_parts import library_root
 from fransys_parts import lint as parts_lint
@@ -402,6 +403,7 @@ def _raw_findings(result: BuildResult, svgs: dict[str, str]) -> tuple[Finding, .
             )
         )
         raw.extend(fransys_render.sheet_check(model, document_sheets_of(model, sheets)))
+        raw.extend(block_wire_findings(model, _cables(_Read(model, _library(result)))))
         if needs_schematic_layout(model):
             raw.extend(fransys_render.check(model))
     return tuple(raw)

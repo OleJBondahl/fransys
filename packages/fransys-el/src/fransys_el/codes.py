@@ -2,7 +2,7 @@
 
 from fransys_model.kernel import CodeInfo, Severity
 
-from . import codes_netlist
+from . import codes_block, codes_netlist
 
 _CORE: tuple[CodeInfo, ...] = (
     CodeInfo(
@@ -296,7 +296,7 @@ _CORE: tuple[CodeInfo, ...] = (
         page="findings-render",
     ),
 )
-FINDING_CODES: tuple[CodeInfo, ...] = (*_CORE, *codes_netlist.FINDING_CODES)
+FINDING_CODES: tuple[CodeInfo, ...] = (*_CORE, *codes_netlist.FINDING_CODES, *codes_block.FINDING_CODES)
 """The `CodeInfo` rows of the codes only the placement core emits (layout-0358, el-0041).
 
 The mapper `write_findings.kernel_findings` reads them beside `fransys_layout.FINDING_CODES`;

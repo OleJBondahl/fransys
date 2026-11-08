@@ -602,7 +602,7 @@ def _powered(
     monkeypatch.setattr(drawn_power, "port_power_text", lambda _m, port: stands[port.value][1])
     monkeypatch.setattr(drawn_power, "_scope", lambda _m, port: stands[port.value][2])
     monkeypatch.setattr(drawn_power, "_identity", lambda _m, _port, _key, text: text)
-    monkeypatch.setattr(drawn_power, "_core_ends", lambda _m: iter(ends or ()))
+    monkeypatch.setattr(drawn_power, "required_groups", lambda _m: tuple(ends or ()))
     monkeypatch.setattr(drawn_power, "rail_flagged", lambda _m, _joined: True)
     monkeypatch.setattr(drawn_rails, "unit_label", lambda _m, unit: str(unit))
     parts = {Id[Page](kind="page", value=v[3]): pages[Id[Page](kind="page", value=v[3])] for v in stands.values()}

@@ -4,7 +4,6 @@ from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING
 
 from fransys_layout.core import CoreError, PinRef, solve
-from fransys_model.derive import refuses
 from fransys_model.layout import sheet_for
 from fransys_model.vocab import PageKind
 
@@ -51,7 +50,7 @@ class _Sink:
     drawn: dict[Id[Page], Drawing]
     markers: list[LinkMarker]
     pageless: list[tuple[DrawingScope, int]]
-    failed: list[DrawingScope]  # sets whose layout ended in an ERROR: no drawing, so no drawn-page check reads them (KI-779)
+    failed: list[DrawingScope]  # sets whose layout raised or write skipped its output steps: not checked (KI-779, R1991)
 
     def take(
         self,
@@ -98,7 +97,7 @@ def _one_set(
     base = replace(run.chosen, link_fit=wide, marker_vertical=turned, marker_above=above, marker_below=below)
     layout = solve(part, replace(base, marker_fit=fit, stub_lines=lines, stub_table=table))
     layout = replace(layout, pages=scope_groups(layout.pages, part, scope))
-    laid, more, drawn, markers = write_layout_drawn(
+    laid, more, drawn, markers, skipped = write_layout_drawn(
         laid,
         scope.of_unit,
         layout,
@@ -108,6 +107,8 @@ def _one_set(
         where=SetPlace(location=scope.location, number=number),
     )
     run.sink.take(drawn, markers, (scope, number) if scope.symbols and not layout.pages else None)
+    if skipped:
+        run.sink.failed.append(scope)  # write skipped its output steps: the drawing is incomplete (KI-773, R1991)
     return laid, more
 
 
@@ -124,9 +125,8 @@ def _lay_out(run: _Run) -> tuple[Model, tuple[Finding, ...], Mapping[PinRef, str
             model, more = _one_set(run, model, cuts, scope, number)
         except _SET_FAILURES as error:
             more = (set_failure_finding(error, cuts.problem, scope, number),)  # a PLACEMENT_PROBLEM ERROR
+            run.sink.failed.append(scope)  # a raised layout; a set whose drawing is complete is checked, whatever its findings (R1987, R1991)
         found.extend(more)
-        if refuses(more):
-            run.sink.failed.append(scope)
     return model, tuple(found), lines
 
 

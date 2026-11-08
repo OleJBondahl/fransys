@@ -9,8 +9,6 @@ from typing import TYPE_CHECKING
 from electrical_symbols import power_symbol_key
 from fransys_model.derive import (
     PowerKind,
-    build_indexes,
-    conductor_ends,
     item_of_port,
     item_unit,
     net_of,
@@ -18,6 +16,7 @@ from fransys_model.derive import (
     port_power_text,
     port_rails,
     rail_scope,
+    required_groups,
 )
 
 from .drawn_finding import drawn_finding
@@ -50,12 +49,6 @@ def _identity(model: Model, port: Id[Port], key: str, text: str | None) -> str |
     if key == _SUPPLY:
         return text
     return PowerKind.PE.name if key == PE_KEY else port_rails(model, port)
-
-
-def _core_ends(model: Model) -> Iterator[tuple[Id[Port], Id[Port]]]:
-    """The two ends of each model conductor, in conductor order."""
-    seen = dict.fromkeys(c for cs in build_indexes(model).conductors_by_port.values() for c in cs)
-    return (conductor_ends(model, c) for c in seen)
 
 
 def _pe_classes(model: Model, keys: dict[str, str], ids: Mapping[str, Id[Port]]) -> dict[str, str]:
@@ -116,7 +109,10 @@ def rail_flagged(model: Model, joined: RailClass) -> bool:
 
 
 def join_power(net: Netlist, model: Model) -> None:
-    """Join inked power symbols of one identity in one cabinet (a textless one only where its rail is flagged), then those a conductor ends."""
+    """Join inked power symbols of one identity in one cabinet (a textless one only where its rail is flagged).
+
+    Then those the model joins by a conductor, a link or a header join.
+    """
     first: dict[RailClass, tuple[Id[Page], tuple[int, int]]] = {}
     inked: dict[str, tuple[Id[Page], tuple[int, int]]] = {}
     for page, part, port, key, text in _symbols(net, model):
@@ -124,9 +120,10 @@ def join_power(net: Netlist, model: Model) -> None:
             at = inked[port] = (page, part.ports[port])
             if (joined := _class(model, net.ids[port], key, text)) is not None and rail_flagged(model, joined):
                 net.union.join(first.setdefault(joined, at), at)
-    for a, b in _core_ends(model):
-        if a.value in inked and b.value in inked:  # interim: trusts the model's conductor, not the ink (KI-770)
-            net.union.join(inked[a.value], inked[b.value])
+    for group in required_groups(model):  # interim: trusts the model's conductor, not the ink (KI-770): or link or join
+        ends = [inked[p.value] for p in group if p.value in inked]
+        for other in ends[1:]:
+            net.union.join(ends[0], other)
 
 
 def power_findings(net: Netlist, model: Model) -> tuple[Finding, ...]:

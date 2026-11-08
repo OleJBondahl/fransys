@@ -1,6 +1,6 @@
 """Field case: a layout ERROR on one drawing set must not mask the drawn-page checks of the sets that laid out.
 The bug (KI-779, consumer 0.23.1): after KI-773 any layout ERROR skipped every drawn-page check, so a real CONNECTION_NOT_DRAWN went unreported.
-Fixed (R1977, R1978): the checks run on every set that laid out, the failed set's ERROR says it was skipped; fr.write still refuses."""
+Fixed (R1977, R1978, R1991): the checks run on every set with a complete drawing, the skipped set's ERROR says so; fr.write still refuses."""
 
 from typing import TYPE_CHECKING, Any
 
@@ -35,13 +35,13 @@ def _build(tmp_path: Path, *, crash: bool) -> fr.BuildResult:
     return fr.build(d, cover, cabinet_document(room2), unit_document("demo-core-box"), *([unit_document("crash-wide")] if crash else []))
 
 
-def _force_drop(monkeypatch: pytest.MonkeyPatch) -> None:
+def _force_drop(monkeypatch: pytest.MonkeyPatch, symbol: str = "H1") -> None:
     real = placement_sets._net
 
     def drop(net: Any, symbols: Any, *rest: Any) -> Any:
         made = real(net, symbols, *rest)
-        lamp_cut = made is not None and bool(made.cut) and any(s.startswith("H1") for s in symbols)
-        return None if lamp_cut else made
+        hit = made is not None and (bool(made.cut) or symbol != "H1") and any(s.startswith(symbol) for s in symbols)
+        return None if hit else made
 
     monkeypatch.setattr(placement_sets, "_net", drop)
 
@@ -63,3 +63,11 @@ def test_the_same_forced_drop_without_the_layout_error_gives_connection_not_draw
     assert "CONNECTION_NOT_DRAWN" not in {f.code for f in _build(tmp_path, crash=False).findings}
     _force_drop(monkeypatch)
     expect_codes(_build(tmp_path, crash=False), "CONNECTION_NOT_DRAWN")
+
+
+def test_a_set_whose_write_skipped_its_output_steps_is_not_checked(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """a set is checked when its drawing is complete; crash-wide's ERROR makes write skip its steps, so its dropped net gives no CND."""
+    _force_drop(monkeypatch, "B1")
+    result = _build(tmp_path, crash=True)
+    expect_codes(result, "WIDER_THAN_PAGE", "PAGE_OVERFLOW")
+    assert not any(f.code == "CONNECTION_NOT_DRAWN" and "B1" in f.message for f in fr.check(result))

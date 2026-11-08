@@ -1,7 +1,7 @@
 """Field case: the report of a build that drops a lane wire prints the fix, not a SchemaError.
 The bug: LANE_WIRE_DROPPED named no model record, so `fr.report(result)` raised SchemaError (kind Finding) for it.
 Fixed by `kernel_findings`; no design drops a lane wire since R868 (the core turns a free hub), so the drop is forced."""
-# The forced drop is a layout ERROR, so no drawing check runs after it and no CONNECTION_NOT_DRAWN follows (KI-773).
+# The forced drop is a layout ERROR: write skips the set's output steps, so it is not checked and no CONNECTION_NOT_DRAWN follows (KI-773, R1991).
 
 from typing import TYPE_CHECKING, NamedTuple
 

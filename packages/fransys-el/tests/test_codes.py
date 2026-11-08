@@ -49,6 +49,7 @@ _EL_ONLY = [
     "PIN_MARKING_WRONG",
     "DOT_ON_CROSSING",
     "WIRE_OVER_PIN_TIP",
+    "HARNESS_WIRE_MISMATCH",  # PROOF-S5 (el-0122): el compares the cable block with the harness-wire rows
 ]
 
 

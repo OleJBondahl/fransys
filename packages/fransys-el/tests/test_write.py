@@ -54,7 +54,7 @@ class Written:
         self.problem: PlacementProblem
         self.problem, _ = build(self.model, self.kit, conventions, LIBRARY)
         self.layout: CoreLayout = solve(self.problem, options(conventions, LIBRARY))
-        self.out, self.findings, self.drawn, _ = write_layout_drawn(
+        self.out, self.findings, self.drawn, _, _ = write_layout_drawn(
             self.model,
             None,
             self.layout,

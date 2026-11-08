@@ -53,6 +53,7 @@
 "fransys_author.surface._units::unit" = 1
 "fransys_author.surface.design::parent" = 1
 "fransys_el.connection_findings::kind" = 1
+"fransys_el.block_findings::unit" = 1
 "fransys_el.placement_sets::unit" = 1
 "fransys_el.symbol_kit::kind" = 4
 "fransys_el.symbol_rules::kind" = 3

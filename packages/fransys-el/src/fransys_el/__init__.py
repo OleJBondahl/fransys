@@ -1,5 +1,6 @@
 """Fransys electrical conventions: the values the general layout core takes as options."""
 
+from .block_findings import block_wire_findings
 from .codes import FINDING_CODES
 from .lay_out_core import lay_out_drawn
 from .placement_kit import ProblemError
@@ -16,6 +17,7 @@ from .write_skipped import skipped_findings
 __all__ = [
     "FINDING_CODES",
     "ProblemError",
+    "block_wire_findings",
     "build",
     "house_conventions",
     "lay_out_drawn",

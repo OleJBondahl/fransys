@@ -74,8 +74,11 @@ def _ends(net: Netlist, piece: set[str], members: list[str], stubs: dict[str, se
 
 
 def _roots(net: Netlist, port: str, stubs: dict[str, set[str]]) -> set[object]:
-    """The live components the port joins by its home point; its copies join where a stub or each placement's where-text ends it (R798, R1396)."""
-    ended = port in stubs or _lined(net, port) or port in net.texted
+    """The live components the port joins by its home point; its copies join where a stub or each placement's where-text ends it (R798, R1396).
+
+    A port of a set that was not drawn has no home to read: its copies on the pages that did draw are all there is (KI-812).
+    """
+    ended = port in stubs or _lined(net, port) or port in net.texted or port in net.skipped
     port = net.linked.get(port, port)
     points = net.placed.get(port, ()) if ended else net.at_home(port)
     return {net.union.find(place) for place in points} & net.live

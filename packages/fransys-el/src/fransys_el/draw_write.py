@@ -38,8 +38,8 @@ def write_layout_drawn(  # noqa: PLR0913 - `write_layout`'s inputs [internal bui
     *,
     library: Library,
     where: SetPlace | None = None,
-) -> tuple[Model, tuple[Finding, ...], dict[Id[Page], Drawing], tuple[LinkMarker, ...]]:
-    """`write_layout`'s model and findings; the set's drawings without markers; its markers.
+) -> tuple[Model, tuple[Finding, ...], dict[Id[Page], Drawing], tuple[LinkMarker, ...], bool]:
+    """`write_layout`'s model and findings; the set's drawings without markers; its markers; whether the output steps were skipped.
 
     Finish them with `draw_layout.finish_drawings` once every set is written.
     """
@@ -54,8 +54,8 @@ def write_layout_drawn(  # noqa: PLR0913 - `write_layout`'s inputs [internal bui
         where=where,
     )
     if refuses(found):
-        return laid, found, {}, ()  # the layout's ERROR stops the build before any drawing (KI-773)
+        return laid, found, {}, (), True  # the layout's ERROR stops the build before any drawing (KI-773)
     owner = drawing_set(unit, where)
     pages = {p.number: p for p in layout_of(laid, Page).values() if p.drawing_set == owner.id}
     written = Written(model, layout, problem, kit, library, pages, owner, unit)
-    return laid, found, draw_set(written), link_markers(written)
+    return laid, found, draw_set(written), link_markers(written), False

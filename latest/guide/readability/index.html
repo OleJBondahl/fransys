@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.6/guide/readability/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.7/guide/readability/">
       
       
       
@@ -2039,7 +2039,7 @@
 <p><code>result.drawings</code> holds one <code>Drawing</code> for each page. A Drawing is in layout units, and a finding prints G, so divide a Drawing value by 8 for G. An A3 page is <code>area.w</code> 1312 wide, and every row, symbol, wire and text value reads in that unit. Its <code>rows</code> are the placed rows that hold devices, top to bottom. A row has four fields.</p>
 <ul>
 <li><code>devices</code>: the ids of its items as text, each item once. <code>fr.derive.drawn_designations(result.model, row.devices)</code> gives their designations.</li>
-<li><code>height</code> and <code>width</code>: its size in the Drawing unit. The width is what the row needs packed left, the figure <code>WIDER_THAN_PAGE</code> tests. The symbols stand justified, so it can be less than their span.</li>
+<li><code>height</code> and <code>width</code>: its size in the Drawing unit.</li>
 <li><code>term</code>: what set its height. It is <code>"body"</code> (a cell), <code>"card"</code>, <code>"marker_room"</code> (a marker hung at a cell), <code>"stub"</code> (a trunk's room) or <code>"annex"</code> (a label).</li>
 </ul>
 <p><code>PAGE_OVERFLOW</code> and <code>WIDER_THAN_PAGE</code> read these same figures. The widest row is <code>max(page.rows, key=lambda r: r.width)</code>.</p>
@@ -2113,7 +2113,7 @@
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.6 documentation
+      Fransys 0.23.7 documentation
     </div>
   
   

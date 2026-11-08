@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.2/guide/findings-render/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.3/guide/findings-render/">
       
       
       
@@ -1914,7 +1914,7 @@
 
 <h1 id="finding-codes-layout-and-render">Finding codes: layout and render</h1>
 <p>Codes the layout and the drawing stage emit. Who acts is explained in <a href="../findings/"><code>findings.md</code></a>.</p>
-<p>A drawing set with a layout ERROR (PAGE_OVERFLOW, WIDER_THAN_PAGE) is not checked; the other drawing sets are, and fr.write still refuses.</p>
+<p>A drawing set whose layout failed and drew nothing complete (PLACEMENT_PROBLEM, or an ERROR that stops its drawing) is not checked; every complete set is, and fr.write still refuses.</p>
 <table>
 <thead>
 <tr>
@@ -2126,6 +2126,14 @@
 <td>consumer</td>
 <td>An undeclared function's symbol is on no net, so the page leaves it off (reason function_unwired). The message names the function.</td>
 <td>Wire a pin of <subject> to another function, declare it spare, or remove it. Write: d.device("K1", "DEMO-RLY-2CO-24", unused=True)</td>
+</tr>
+<tr>
+<td><a id="harness_wire_mismatch"></a>HARNESS_WIRE_MISMATCH</td>
+<td>ERROR</td>
+<td>render</td>
+<td>Fransys</td>
+<td>A wire drawn in a cable or harness block page differs from the harness-wire row of the model: another core, other ends or another cable, or a row is not drawn once. The message names the cable, the core and the ends.</td>
+<td>No call clears this: send the smallest model that shows it. The message names the cable and the core.</td>
 </tr>
 <tr>
 <td><a id="head_off_legs"></a>HEAD_OFF_LEGS</td>
@@ -2476,7 +2484,7 @@
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.2 documentation
+      Fransys 0.23.3 documentation
     </div>
   
   

@@ -2,7 +2,7 @@
 
 Codes the layout and the drawing stage emit. Who acts is explained in [`findings.md`](../findings/index.md).
 
-A drawing set with a layout ERROR (PAGE_OVERFLOW, WIDER_THAN_PAGE) is not checked; the other drawing sets are, and fr.write still refuses.
+A drawing set whose layout failed and drew nothing complete (PLACEMENT_PROBLEM, or an ERROR that stops its drawing) is not checked; every complete set is, and fr.write still refuses.
 
 | Code | Severity | Stage | Who acts | Meaning | Fix |
 | --- | --- | --- | --- | --- | --- |
@@ -31,6 +31,7 @@ A drawing set with a layout ERROR (PAGE_OVERFLOW, WIDER_THAN_PAGE) is not checke
 | FILL_UNDER_MIN | WARNING | render | consumer | A page is filled less than the minimum because no cut of the blocks fills it more. | Merge the group with its neighbour so the page fills. Write: d.function(name, text) to draw a device in the neighbour group. |
 | FUNCTION_NOT_DRAWN | ERROR | render | consumer | A function of a connected set has no symbol (reason function_without_symbol), so the layout leaves it out of the drawing. The message names the function and the reason. | Give the function a part whose kind has a symbol. Write: d.device("K1", "DEMO-RLY-2CO-24") |
 | FUNCTION_NOT_WIRED | WARNING | render | consumer | An undeclared function's symbol is on no net, so the page leaves it off (reason function_unwired). The message names the function. | Wire a pin of <subject> to another function, declare it spare, or remove it. Write: d.device("K1", "DEMO-RLY-2CO-24", unused=True) |
+| HARNESS_WIRE_MISMATCH | ERROR | render | Fransys | A wire drawn in a cable or harness block page differs from the harness-wire row of the model: another core, other ends or another cable, or a row is not drawn once. The message names the cable, the core and the ends. | No call clears this: send the smallest model that shows it. The message names the cable and the core. |
 | HEAD_OFF_LEGS | WARNING | render | consumer | A trunk is cut by a page and its head stands on the page with fewer of its legs. | Reorder the groups so the head and most of its legs share a page. Write: d.layout.order(a, b) with the head's group first. |
 | LANE_WIRE_DROPPED | ERROR | render | consumer | Two consecutive cells of a lane have no pin facing each other, or a facing pin on no net, so no wire is drawn between them; the message names the cells. | Put the facing pins of <subject> and its neighbour on one net. Write: d.series(pin_a, pin_b). |
 | MARKER_UNPAIRED | ERROR | render | Fransys | A reference marker is drawn and the marker it refers to is drawn on no page. | No call clears this: send the smallest model that shows it. The message names the page. |

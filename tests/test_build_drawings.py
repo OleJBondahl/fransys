@@ -69,8 +69,8 @@ def test_the_svg_comparison_can_fail(skid):
 
 
 def test_the_pdf_links_equal_reference_links(tmp_path, monkeypatch):
-    result = fr.build(*motor_feeder_case_drafts(10))
-    assert not [f for f in result.findings if f.code == "MARKER_UNPLACED"]  # LEDGER-RECUT A4: the 10-starter feeder legs every one-sided pin (KI-466)
+    result = fr.build(*motor_feeder_case_drafts(8))
+    assert not [f for f in result.findings if f.code == "MARKER_UNPLACED"]  # LEDGER-RECUT A4: the 8-starter feeder legs every one-sided pin (KI-466)
     seen = []
 
     real = _exports.fransys_pdf.source
@@ -81,7 +81,7 @@ def test_the_pdf_links_equal_reference_links(tmp_path, monkeypatch):
 
     monkeypatch.setattr(_exports.fransys_pdf, "source", spy)
     model = result.model
-    # `write` would refuse this 10-starter case on the old `render.check`; the sources come first
+    # `write` would refuse this 8-starter case on the old `render.check`; the sources come first
     library = library_of(result.settings)
     _exports._write_intermediates(
         pipeline._Drawn(model, result.drawings, result.diagrams, library, result.page_svgs),

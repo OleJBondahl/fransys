@@ -356,10 +356,11 @@ class Options:
 
 @dataclass(frozen=True, slots=True)
 class RowPlan:
-    """One row of a page plan: its columns and its blocks."""
+    """One row of a page plan: its columns, its blocks and its estimated height."""
 
     columns: tuple[str, ...]
     blocks: tuple[str, ...]
+    height_est: int
 
 
 @dataclass(frozen=True, slots=True)

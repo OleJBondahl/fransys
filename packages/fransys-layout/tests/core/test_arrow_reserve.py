@@ -54,7 +54,7 @@ def _env():
 
 
 def _plan(rows: int, columns: tuple[str, ...] = ()) -> PagePlan:
-    return PagePlan(1, "u", tuple(RowPlan(columns if r == 0 else (), ()) for r in range(rows)), ())
+    return PagePlan(1, "u", tuple(RowPlan(columns if r == 0 else (), (), 0) for r in range(rows)), ())
 
 
 def _bundle(column: str | None) -> tuple[Fan, Ref]:

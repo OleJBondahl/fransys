@@ -15,7 +15,7 @@ from .cut_dp import Cut, cut_unit, page_findings
 from .cut_ends import ref_pins
 from .cut_guard import unplaced
 from .cut_ledger import account, copies
-from .cut_measured import Measured, measured_blocks, row_key, with_legs
+from .cut_measured import Measured, measured_blocks, with_legs
 from .cut_pack import left_pack
 from .cut_refs import across, copyable_fans, head_off_legs, on_pages, references, row_tags, spilled, tag_links
 from .cut_tall import split_tall
@@ -23,7 +23,7 @@ from .flow_values import CutResult
 from .values import PagePlan, PageSpec, RowPlan
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Iterable, Sequence
 
     from .blocks_members import Env
     from .cut_costs import Item
@@ -98,16 +98,7 @@ def plan_unit(
     by_id = {b.id: b for b in unit.blocks}
     if measured:
         seq, by_id = measured_blocks(seq, by_id, measured, options.short_height * page_h)
-    cut = Cut(
-        seq,
-        boundaries(seq, flow, by_id, copyable),
-        by_id,
-        page_w,
-        page_h,
-        options,
-        measured.arrows if measured else {},
-        measured.rows if measured else {},
-    )
+    cut = Cut(seq, boundaries(seq, flow, by_id, copyable), by_id, page_w, page_h, options, measured.arrows if measured else {})
     plan, relaxed = cut_unit(cut)
     return cut, plan, relaxed
 
@@ -130,13 +121,19 @@ def _cut_unit(
     done.where.update({n: page_of[i] for n, i in positions(cut.seq, cut.by_id).items()})
 
 
+def _distinct(ids: Iterable[str]) -> tuple[str, ...]:
+    return tuple(dict.fromkeys(ids))
+
+
 def _rows_of(seq: Sequence[Item], state: RowState, end: int) -> tuple[RowPlan, ...]:
     """The rows of a page, first to last, from its last row's state."""
     rows: list[RowPlan] = []
     st: RowState | None = state
     while st is not None:
         items = seq[st.start : end + 1]
-        rows.append(RowPlan(*row_key(items)))
+        height = st.height - (st.prev.height if st.prev else 0)
+        columns = tuple(it.column for it in items if not it.bare)
+        rows.append(RowPlan(columns, _distinct(it.block for it in items), height))
         end, st = st.start - 1, st.prev
     return tuple(reversed(rows))
 

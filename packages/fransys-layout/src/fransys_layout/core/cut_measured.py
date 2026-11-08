@@ -17,8 +17,7 @@ if TYPE_CHECKING:
 
     from .arrow_reserve import RowReserve
     from .cut_costs import Item
-    from .flow_values import Block, BlockList, CutResult
-    from .outputs import Placement
+    from .flow_values import Block, BlockList
 
 
 @dataclass(frozen=True, slots=True)
@@ -35,27 +34,6 @@ class Measured:
     rises: Mapping[str, int] = field(default_factory=dict)
     arrows: Mapping[str | tuple[str, str], RowReserve] = field(default_factory=dict)
     """A card's box id to what its row keeps free in G (`block_reserves`): the cut must see it."""
-    rows: Mapping[RowKey, tuple[int, int]] = field(default_factory=dict)
-    """A window's `row_key` to the (need width, band height) placement gave it, the larger over the rounds (R2000)."""
-
-
-type RowKey = tuple[tuple[str, ...], tuple[str, ...]]
-
-
-def placed_rows(rows: Mapping[RowKey, tuple[int, int]], cut: CutResult, placement: Placement) -> dict[RowKey, tuple[int, int]]:
-    """`rows` with each placed row's (need width, band height), the larger of this and the rounds before (R1673: the rounds end)."""
-    out = dict(rows)
-    for plan, page in zip(cut.spec.pages, placement.pages, strict=True):
-        for row, (_, width), (top, bottom) in zip(plan.rows, page.rows, page.bands, strict=True):
-            key = (row.columns, row.blocks)
-            old = out.get(key, (0, 0))
-            out[key] = (max(old[0], width), max(old[1], bottom - top))
-    return out
-
-
-def row_key(items: Sequence[Item]) -> RowKey:
-    """A window of items as the row plan keeps it: its columns (the bare ones left out) and its distinct blocks, in order."""
-    return tuple(it.column for it in items if not it.bare), tuple(dict.fromkeys(it.block for it in items))
 
 
 def measured_blocks(seq: Sequence[Item], by_id: Mapping[str, Block], measured: Measured, limit: float) -> tuple[tuple[Item, ...], dict[str, Block]]:

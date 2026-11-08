@@ -10,7 +10,7 @@ from options_fixtures import core_options
 from fransys_layout.core import Annex, Box, Facts, PinRef, PlacementProblem, Size, Spot, order_blocks
 from fransys_layout.core.cut import cut_pages
 from fransys_layout.core.cut_costs import with_wires
-from fransys_layout.core.cut_measured import Measured, RowKey
+from fransys_layout.core.cut_measured import Measured
 from fransys_layout.core.geometry import overlaps
 from fransys_layout.core.outputs import Demand, PagePlacement
 from fransys_layout.core.place import place_pages
@@ -174,6 +174,23 @@ def test_a_columns_measured_height_is_its_own_never_its_blocks_so_its_rows_stay_
     assert set(page_of(recut(prob, measured)).values()) == {1}
 
 
+def test_a_row_cut_taller_than_the_page_from_a_stale_height_is_cut_again() -> None:
+    """The measure came off the round before: a row now standing within the room is stale."""
+    from types import SimpleNamespace
+    from typing import Any
+
+    from fransys_layout.core.widen import _stale
+
+    def case(est: int, top: int, bottom: int) -> Any:
+        row = SimpleNamespace(height_est=est)
+        cut = SimpleNamespace(spec=SimpleNamespace(pages=[SimpleNamespace(rows=[row])]))
+        return cut, SimpleNamespace(pages=[SimpleNamespace(bands=[(top, bottom)])])
+
+    assert _stale(*case(832, 24, 816), 806)  # cut from 832, now 792 high: stale
+    assert not _stale(*case(832, 24, 856), 806)  # still 832 high: the page is over
+    assert not _stale(*case(700, 24, 716), 806)  # fits within the room
+
+
 def test_an_annex_owner_s_block_grows_by_the_annex_height_in_its_measure_and_its_reserve() -> None:
     """R1129: block_reserves and the solved span read one number, annex_room, so the recut leaves the annex room."""
     prob = card_with_coils()
@@ -302,47 +319,3 @@ def test_block_reserves_hold_the_arrow_room_under_the_lane_where_it_exceeds_the_
         assert held == want
         assert any(held)
         assert not any(r.y for r in block_reserves(replace(cut, spec=replace(cut.spec, reference_plan=())), (), options).values())
-
-
-def _window_cut(rows: dict[RowKey, tuple[int, int]]) -> CutResult:
-    prob = three_columns()
-    flow = flow_of(prob, PLAIN)
-    return cut_pages(order_blocks(blocks_of(prob, PLAIN), flow, PLAIN), flow, prob, PLAIN, Measured(rows=rows))
-
-
-@pytest.mark.parametrize("record", [(5000, 40), (100, 5000)], ids=["too wide", "too tall"])
-def test_a_window_recorded_over_the_page_is_not_cut_as_one_row_and_an_unrecorded_one_is(record: tuple[int, int]) -> None:
-    """R2000: `row_size` reads the placed (need width, band height) of a window; a first row over the page splits unless unbreakable."""
-    plain = _window_cut({})
-    (row,) = plain.spec.pages[0].rows
-    assert len(plain.spec.pages) == 1
-    recorded = _window_cut({row_key_of(row): record})
-    assert len(recorded.spec.pages[0].rows) > 1 or len(recorded.spec.pages) > 1
-
-
-def row_key_of(row):
-    return (row.columns, row.blocks)
-
-
-def test_the_placed_rows_keep_the_larger_of_every_round() -> None:
-    """R1673: a window placed too big stays too big, so no cut that did not fit is chosen twice."""
-    from fransys_layout.core.cut_measured import placed_rows
-
-    prob = three_columns()
-    cut = cut_of(prob, PLAIN)
-    placement = placed_from(cut, prob, PLAIN)
-    (key,) = {row_key_of(r) for r in cut.spec.pages[0].rows}
-    (top, bottom), width = placement.pages[0].bands[0], placement.pages[0].rows[0][1]
-    band = bottom - top
-    big = placed_rows({key: (width + 40, band - 8)}, cut, placement)
-    assert big[key] == (width + 40, band)
-    assert placed_rows({}, cut, placement)[key] == (width, band)
-
-
-def test_a_placed_row_is_as_wide_as_it_needs_not_as_justified() -> None:
-    """R2001: `PagePlacement.rows` holds the packed width, while the positions carry the justified x."""
-    prob = three_columns()
-    cut = cut_of(prob, PLAIN)
-    page = placed_from(cut, prob, PLAIN).pages[0]
-    spread = max(p.footprint.x + p.footprint.w for p in page.placed) - min(p.footprint.x for p in page.placed)
-    assert 0 < page.rows[0][1] < spread

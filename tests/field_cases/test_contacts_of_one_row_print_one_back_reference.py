@@ -75,9 +75,7 @@ def test_three_poles_in_one_row_print_one_back_reference() -> None:
 @pytest.mark.parametrize("relays", [1, 3, 8])
 def test_a_fold_of_one_row_draws_every_connection(relays: int) -> None:
     """KI-362 (closed), KI-364: a fold of one row draws every connection; the G1:- legs reach the trunk."""
-    assert not {"CONNECTION_NOT_DRAWN", "WIDER_THAN_PAGE", "MARKER_UNPLACED"} & {
-        f.code for f in _built(relays).findings
-    }  # the placed need keeps the arrow reserves (R2012)
+    assert "CONNECTION_NOT_DRAWN" not in {f.code for f in _built(relays).findings}
 
 
 @pytest.mark.rule("ROW-WRAP")

@@ -7,7 +7,7 @@ from dataclasses import replace
 from itertools import pairwise
 from typing import TYPE_CHECKING
 
-from .arrow_reserve import arrow_rows, leg_feet, leg_fit, leg_lines, leg_rows
+from .arrow_reserve import arrow_rows, lead_reserve, leg_feet, leg_fit, leg_lines, leg_rows, row_arrows, row_legs
 from .clearance import footprint_keeps
 from .flow_values import Lane
 from .geometry import (
@@ -23,12 +23,10 @@ from .keys import natural_key
 from .node_names import HIGH, LOW, box_node, box_y_node, col_node
 from .outputs import Gap, PagePlacement, PinXY, Placed, Trunk
 from .pack import cell_node
-from .pack_row import row_width
 from .place_align import strip_runs
 from .place_lanes import _hull, _marker_keeps, drawn_lane_ends, stand_of, taps_x
 from .place_span import solved_spans
 from .place_trunk import box_pin_x, held_room, trunk_node
-from .place_x import row_specs
 from .values import Box
 
 if TYPE_CHECKING:
@@ -166,16 +164,17 @@ def _stood(env: PageEnv, ctx: _Ctx, at: int, trunk: Trunk | None, drop: int) -> 
 
 
 def _rows(env: PageEnv, placed: Mapping[str, Placed], y: Mapping[str, int]) -> tuple[tuple[int, int], ...]:
-    """(height, need width) of each row: the row's span in y, and the width its packed graph needs (R2001).
-
-    The need is `row_width` of the row's spec, with its lead, tail and leg reserves; positions carry the justified x.
-    """
+    """(height, width) of each row: the row's span in y, its placed footprints' span in x."""
     out = []
-    for r, spec in enumerate(row_specs(env)):
+    for r, row in enumerate(env.plan.rows):
         syms = {c.sym for pc in env.pcs.values() if pc.row == r for ln in pc.lanes for c in ln}
-        syms |= {env.blocks[b].anchor or "" for b in env.plan.rows[r].blocks if env.blocks[b].is_card}
+        syms |= {env.blocks[b].anchor or "" for b in row.blocks if env.blocks[b].is_card}
+        fps = [placed[s].footprint for s in syms if s in placed]
         top, bottom = _row_bounds(env, y, r)
-        out.append((bottom - top, row_width(spec) if any(s in placed for s in syms) else 0))
+        width = max(f.x + f.w for f in fps) - min(f.x for f in fps) if fps else 0
+        left, right = row_arrows(env.refs, env.plan, env.blocks, env.flow.fans, r)
+        width += lead_reserve(left, env.options) + lead_reserve(right, env.options) + row_legs(env.refs, env.plan, env.flow.fans, r, env.options)
+        out.append((bottom - top, width))
     return tuple(out)
 
 

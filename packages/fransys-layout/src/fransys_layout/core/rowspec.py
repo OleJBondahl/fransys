@@ -36,7 +36,7 @@ def _window(
     columns = {c.id: c for c in flow.columns}
     by_id = {b.id: b for b in blocks}
     unit = blocks[0].unit if blocks else ""
-    plan = PagePlan(0, unit, (RowPlan(tuple(cols), tuple(by_id)),), groups=())
+    plan = PagePlan(0, unit, (RowPlan(tuple(cols), tuple(by_id), 0),), groups=())
     here = tuple(columns[c] for c in cols)
     attach = attachments(here, by_id)
     pcs = placed_columns(plan, columns, by_id, attach, syms)

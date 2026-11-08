@@ -142,7 +142,7 @@ def problem() -> PlacementProblem:
 
 
 def layout() -> CoreLayout:
-    plan = PagePlan(1, "U1", (RowPlan(("C1",), ("b1",)),), groups=("G1",))
+    plan = PagePlan(1, "U1", (RowPlan(("C1",), ("b1",), 64),), groups=("G1",))
     ends = (RefEnd(1, "C1", PinRef("K1", "1"), 0, values.StandClass.LEG, (PinRef("K1", "2"),), (PinRef("K2", "1"),)), RefEnd(2, None, None))
     return CoreLayout(
         area=Size(800, 600),
@@ -247,7 +247,7 @@ def flow_values() -> tuple[object, ...]:
         ),
         BlockList("U1", (block,), (finding,)),
         PageSpec(
-            (PagePlan(1, "U1", (RowPlan(("C1",), ("b1",)),), groups=("G1",)),),
+            (PagePlan(1, "U1", (RowPlan(("C1",), ("b1",), 64),), groups=("G1",)),),
             (Ref("N1", RefKind.TAG, (RefEnd(1, "C1", None),)),),
             (finding,),
             drawn=frozenset({(PinRef("K1", "1"), PinRef("K2", "1"))}),

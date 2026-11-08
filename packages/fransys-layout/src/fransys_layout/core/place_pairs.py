@@ -55,8 +55,5 @@ def settled(stages: Sequence[tuple[PageEnv, Mapping[str, int], Mapping[str, int]
             out.append(page)
             continue
         again = assemble(replace(env, refs=tuple(live)), x, y)
-        rows = tuple(
-            (h, w) for (h, _), (_, w) in zip(again.rows, page.rows, strict=True)
-        )  # the need is the width place_x solved, dead arrows' reserves in (R2012)
-        out.append(replace(again, rows=rows, runs=page.runs, trunks=tuple(_unstood(t, fans[t.fan], dead, live, env.plan) for t in again.trunks)))
+        out.append(replace(again, runs=page.runs, trunks=tuple(_unstood(t, fans[t.fan], dead, live, env.plan) for t in again.trunks)))
     return out

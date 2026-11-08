@@ -224,7 +224,7 @@ def test_a_page_overflow_names_the_set_the_page_and_the_designations_of_its_row(
     short = solve(replace(written.problem, area=Size(written.problem.area.w, 80)), options(house(), LIBRARY))
     found = kernel_findings(written.model, short.findings, symbol_subjects(written.model, written.kit), {})
     (first, *_) = (f for f in found if f.code == "PAGE_OVERFLOW")
-    assert first.message.startswith("page 1, row 0 (devices -")
+    assert first.message.startswith("page 1, row 0 (devices -B1, ")
     assert "set" not in first.message.partition("(devices")[0]
     assert "function:" not in first.message
     devices = first.message.partition("(devices ")[2].partition(")")[0].split(", ")

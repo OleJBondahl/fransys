@@ -181,7 +181,6 @@ def _respelled(prob: PlacementProblem, maps: dict[str, str]) -> PlacementProblem
         mates=tuple((pin(a), pin(b)) for a, b in facts.mates),
         far_ends=tuple((pin(a), pin(b)) for a, b in facts.far_ends),
         groups=tuple(tuple(map(pin, g)) for g in facts.groups),
-        joined=tuple((pin(a), pin(b)) for a, b in facts.joined),
     )
     hints = replace(
         hints,

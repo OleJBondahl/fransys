@@ -55,6 +55,14 @@ def _run(args: list[str], *, capture: bool = False) -> subprocess.CompletedProce
     )
 
 
+ADDED_NULL_KEYS = (  # (table, key) each schema added as a nullable field
+    ("conductor", "block"),  # schema 25 (model-0442)
+    ("port_template", "connector"),  # schema 28 (model-0448)
+    ("port_template", "connector_pin"),  # schema 28
+    ("function_template", "box_side"),  # schema 29 (model-0449)
+)
+
+
 def _migrate_laid_out() -> None:
     """Carry the two laid-out goldens to the current schema: a marker's `far` became `pairs` (R1334), its `carrier` a pair's (R1590); idempotent."""
     for path in (ROOT / LAYOUT_DIR / "golden").glob("cabinet_*_laid_out.json"):
@@ -65,11 +73,9 @@ def _migrate_laid_out() -> None:
         for row in data["tables"].get("layout.profile", ()):
             for key in REMOVED_PROFILE_KEYS:
                 row.pop(key, None)
-        for row in data["tables"].get("conductor", ()):
-            row.setdefault("block", None)  # schema 25: Conductor.block (model-0442)
-        for row in data["tables"].get("port_template", ()):
-            row.setdefault("connector", None)  # schema 28: PortTemplate.connector and connector_pin (model-0448)
-            row.setdefault("connector_pin", None)
+        for table, key in ADDED_NULL_KEYS:
+            for row in data["tables"].get(table, ()):
+                row.setdefault(key, None)
         for row in data["tables"].get("layout.link_marker", ()):
             if "far" in row:
                 far = row.pop("far")

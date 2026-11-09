@@ -53,6 +53,7 @@ def _add_function_template(
             kind=FunctionKind(entry["kind"]),
             protection_type=_protection_type(entry),
             energy=Energy(entry["energy"]) if "energy" in entry else None,
+            box_side=entry.get("box_side"),
         ),
         origin=origin,
     )

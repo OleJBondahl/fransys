@@ -19,13 +19,13 @@ from fransys_model.kernel import render_id
 from .placement_kit import Pick
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
+    from collections.abc import Iterable, Mapping
     from collections.abc import Set as AbstractSet
 
     from fransys_model.kernel import Id, Model
     from fransys_model.vocab import Function, Port
 
-__all__ = ["box_picks"]
+__all__ = ["box_picks", "named_picks"]
 
 
 def _candidate(model: Model, function: Function, channels: AbstractSet[Id[Function]]) -> BoxCandidate:
@@ -69,3 +69,34 @@ def box_picks(
             names = {p: port_name(model, p) for p in candidate.ports}
             found[candidate.function] = Pick(GENERIC_BOX_KEY, 1, frozendict(names))
     return found
+
+
+def named_picks(
+    model: Model, table: Mapping[Id[Function], Function], kit: dict[Id[Function], Pick], wired: AbstractSet[Id[Port]]
+) -> dict[Id[Function], Pick]:
+    """`kit` with each item whose functions all name one symbol on distinct ports drawn as one view on its lead (stages D5, the PSU)."""
+    candidates = [
+        BoxCandidate(
+            function=f,
+            item=table[f].item,
+            key=(table[f].name, render_id(f)),
+            band="",
+            plc_channel=False,
+            pin=False,
+            boxed=False,
+            ports=function_ports(model, f),
+            symbol=pick.key,
+            symbol_ports=tuple(pick.ports[p] for p in function_ports(model, f)),
+        )
+        for f, pick in kit.items()
+        if pick.poles == 1 and not pick.members
+    ]
+    merged = dict(kit)
+    for view in (v for v in item_box_views(model, candidates, wired) if v.named):
+        picks = [kit[f] for f in view.members]
+        for f in view.members:
+            del merged[f]
+        merged[view.lead] = Pick(
+            picks[0].key, 1, frozendict({p: s for pick in picks for p, s in pick.ports.items()}), tuple(f for f in view.members if f != view.lead)
+        )
+    return merged

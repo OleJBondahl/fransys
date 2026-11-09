@@ -1,0 +1,26 @@
+# The files a release bump writes (designer R2119): the 15 member pyproject.toml files, uv.lock and the engine-version file,
+# plus the three things `just build-electrical-symbols` regenerates: its `_version.py`, `bundle.json` and `build/**`.
+# Any other path in that package (a symbol, its source) is a real change since T and voids reuse.
+# test_release.py keeps this list equal to what release.py derives.
+files = [
+    "examples/demo-parts/pyproject.toml",
+    "packages/electrical-symbols/pyproject.toml",
+    "packages/fransys-author/pyproject.toml",
+    "packages/fransys-el/pyproject.toml",
+    "packages/fransys-kernel/pyproject.toml",
+    "packages/fransys-kicad/pyproject.toml",
+    "packages/fransys-layout/pyproject.toml",
+    "packages/fransys-model/pyproject.toml",
+    "packages/fransys-overview/pyproject.toml",
+    "packages/fransys-parts/pyproject.toml",
+    "packages/fransys-pdf/pyproject.toml",
+    "packages/fransys-render/pyproject.toml",
+    "packages/fransys-reports/pyproject.toml",
+    "packages/fransys-wago/pyproject.toml",
+    "packages/fransys/pyproject.toml",
+    "uv.lock",
+    "packages/fransys-layout/src/fransys_layout/_engine_version.py",
+    "packages/electrical-symbols/src/electrical_symbols/_version.py",
+    "packages/electrical-symbols/src/electrical_symbols/bundle.json",
+]
+prefixes = ["packages/electrical-symbols/build/"]

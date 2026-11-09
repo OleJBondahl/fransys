@@ -268,7 +268,7 @@
    "symbols": 14,
    "wiring": {
     "bends": 22,
-    "crossings": 4,
+    "crossings": 5,
     "detour_g": 368,
     "excess_bends": 6,
     "length_g": 2616
@@ -704,7 +704,7 @@
   "P": 58,
   "attached_off_pin": 16,
   "bends": 274,
-  "crossings": 156,
+  "crossings": 157,
   "detour_g": 4400,
   "excess_bends": 118,
   "head_off_legs": 2,

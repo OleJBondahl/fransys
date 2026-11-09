@@ -15,17 +15,21 @@ from fransys_model.vocab.tables import function_templates, functions
 _PART_FILES = Path(__file__).parents[4] / "examples" / "demo-parts" / "demo_parts" / "parts"
 
 
-def _demo_mpns() -> list[str]:
-    """The MPN of every demo part file, in file-name order."""
-    return [tomllib.loads(path.read_text(encoding="utf-8"))["part"]["mpn"] for path in sorted(_PART_FILES.glob("*.toml"))]
+def _demo_parts() -> list[tuple[str, bool]]:
+    """The MPN of every demo part file, in file-name order, and whether it has a terminal function (authored on a strip, R2102)."""
+    files = [tomllib.loads(path.read_text(encoding="utf-8")) for path in sorted(_PART_FILES.glob("*.toml"))]
+    return [(f["part"]["mpn"], any(fn.get("kind") == "terminal" for fn in f.get("function", ()))) for f in files]
 
 
 @pytest.fixture(scope="module")
 def model() -> fr.Model:
     """A design with one device of every demo part, built."""
     d = fr.design("demo_parts")
-    for number, mpn in enumerate(_demo_mpns(), start=1):
-        d.device(f"P{number}", mpn)
+    for number, (mpn, terminal) in enumerate(_demo_parts(), start=1):
+        if terminal:
+            d.terminal_strip(f"P{number}", mpn, 1)
+        else:
+            d.device(f"P{number}", mpn)
     return fr.build(d).model
 
 

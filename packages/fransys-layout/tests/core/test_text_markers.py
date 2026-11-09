@@ -482,6 +482,18 @@ def test_a_bundle_arrow_stands_at_the_hull_end_on_its_own_poles_lane() -> None:
     assert [(b.x, b.y + b.h // 2) for b in boxes] == [(408, 100 + 2 * step), (508, 100), (308, 100 + step)]
 
 
+def test_a_copy_of_a_bundle_stands_on_its_own_poles_lane_not_the_first() -> None:
+    """R2071: the copy of a pin on lane 1 of a two-lane bundle stands on that lane's y, where its drop ends, not on the trunk's first line."""
+    trunk = Trunk("f", 1, 100, 40, 500, 2, 0, ((40, 508), (80, 508)))
+    pin = PinRef("a", "1")
+    fan = Fan("f", ("fa",), (), (Attach(None, 0, 0, pin, 1, net="fa"),), "H", 2, "S")
+    env = replace(_env("E", "R0", (trunk,)), fans={"f": fan})
+    end = RefEnd(1, "c1", pin, 0, StandClass.TRUNK_END)
+    stand = end_stand(env, Ref("fa", RefKind.COPY, (end,)), end, 0)
+    box = marker_box_at(stand.x, stand.y, OPTIONS, stand.orient)
+    assert box.y + box.h // 2 == 100 + OPTIONS.wiring_grid
+
+
 def test_a_marker_names_the_cut_of_its_reference() -> None:
     """R550: Marker.ref is the Ref's cut, so a fan's two Refs are told apart downstream."""
     ((m, _),) = stand_ref(_env("E", "R0"), replace(STUB, cut=4))

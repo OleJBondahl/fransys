@@ -142,15 +142,3 @@ def test_far_ends_leave_with_a_symbol_that_is_not_placed(planted: tuple[Env, tup
     assert kept
     assert len(kept) < len(facts.far_ends)
     assert all(gone not in (a.sym, b.sym) for a, b in kept)
-
-
-def test_an_overloads_three_poles_are_link_joined_pin_pairs_and_a_relay_has_none() -> None:
-    """R1580: a conductive internal link gives one joined pair per pole, on one symbol; a relay's coil joins nothing."""
-    d = fr.design("demo_parts")
-    d.device("F1", "DEMO-OVERLOAD-3P")
-    d.device("K1", "DEMO-RLY-2CO-24")
-    model = fr.build(d).model
-    env = make_env(model, symbol_kit(model, LIBRARY), house(), LIBRARY)
-    facts = facts_of(env, syms_of(env))[0]
-    assert len(facts.joined) == 3
-    assert all(a.sym == b.sym and a != b for a, b in facts.joined)

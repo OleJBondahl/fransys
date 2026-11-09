@@ -6,7 +6,7 @@ lazy from decimal import Decimal
 
 from fransys_model.kernel import AuthoringKey, Id, make_id
 from fransys_model.layout import PoleGroup
-from fransys_model.vocab import CableFacet, Conductor, ConductorKind, Mate, Net, NetClass, RailGroup
+from fransys_model.vocab import CableFacet, Conductor, ConductorKind, FunctionKind, Mate, Net, NetClass, PartBundle, PartCategory, RailGroup
 from fransys_model.vocab import Item as ModelItem
 
 from ._decimal import as_decimal
@@ -76,10 +76,8 @@ class BuildScope:
             self._design._add(record, origin)
             handle = Item(id=record.id, key=key, functions=())
         else:
-            part = self._design._catalogue.find(mpn)
-            bundle = self._design._catalogue.bundle(part)
             stamped = instantiate(
-                bundle,
+                self._item_bundle(ident.name, mpn),
                 key,
                 tag=ident.tag,
                 parent=parent_id,
@@ -90,6 +88,15 @@ class BuildScope:
             handle = self._extend_stamped(key, stamped, origin, external=external)
         self._place_and_group(handle, at=at, group=group, origin=origin)
         return handle
+
+    def _item_bundle(self: Scope, name: str, mpn: str | tuple[str, str]) -> PartBundle:
+        """The bundle of `mpn` for `d.item`: a terminal is authored only on a strip (author-0072)."""
+        part = self._design._catalogue.find(mpn)
+        bundle = self._design._catalogue.bundle(part)
+        if part.category is PartCategory.TERMINAL and any(t.kind is FunctionKind.TERMINAL for t in bundle.function_templates):
+            msg = f"item {name!r}: part {part.mpn!r} is a terminal, authored only on a strip; use d.terminal_strip(tag, part)"
+            raise AuthorError(msg)
+        return bundle
 
     def _extend_stamped(self: Scope, key: AuthoringKey, stamped: tuple[Record, ...], origin: Origin, *, external: bool) -> Item:
         """Mark `stamped` with this scope's unit, add it to the design and return its item handle."""

@@ -19,12 +19,12 @@ def _build(*, attached: bool) -> fr.BuildResult:
     with d.function("G", "Group"):
         lamps = [d.device(f"P{n}", "DEMO-LAMP-24") for n in (1, 2, 3)]
         if attached:
-            x1 = d.device("X1", "DEMO-TB-2.5")
+            x1 = d.terminal_strip("X1", "DEMO-TB-2.5", 1)
     members = [lamp.lamp["1"] for lamp in lamps]
     for member in members[1:]:
         d.series(members[0], member, wire=(BU, 0.5))
     if x1 is not None:
-        d.series(x1.terminal["external"], members[2], wire=(BU, 0.5))
+        d.series(x1[1].outer, members[2], wire=(BU, 0.5))
     for lamp in lamps[1:]:
         d.series(lamps[0].lamp["2"], lamp.lamp["2"], wire=(BU, 0.5))
     doc = unit_document(cab)

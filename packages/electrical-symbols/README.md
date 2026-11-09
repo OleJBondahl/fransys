@@ -118,6 +118,7 @@ copied from the standard.
 | `title-block-notice` | Title block with notice | element |
 | `title-block-notice-line` | Title block notice line | element |
 | `transformer` | Transformer with two windings, general symbol | symbol |
+| `transformer-box` | Transformer with two windings, boxed | symbol |
 | `unit-outline` | Unit outline | element |
 | `unit-outline-by-others` | Unit outline, by others | element |
 | `wire-label-frame` | Wire label frame | element |

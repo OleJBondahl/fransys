@@ -131,5 +131,6 @@ class Port:
     boundary: PortBoundary
     marking: str | None = None
     pin_role: PinRole | None = None
+    # KI-873: omit_none breaks "canonical JSON writes every value" (BOX-SIDE-OMIT-NONE)
     source_row: WiringRow | None = dataclasses.field(default=None, metadata={"omit_none": True})
     ext: frozendict[str, Value] = frozendict()

@@ -133,22 +133,13 @@
 # OPEN-CROSSING: the n9 riser (a box pin) and the n2 trunk cross once in every y order
 "tests/test_placement_route_counts.py::test_crossings_are_at_most_todays[t02_box_device_contact]" = "GAP-FLIP-219"
 # THROUGH: both pins of a fuse on one net, a through device the oracle sees as 2 pieces; STAND-JUNCTION: a supply net is drawn as stands, no wire; OPEN-ROTATED-DROP: a bundle drop rotated against its pin or on a sibling pole; OPEN-PLAIN-TRUNK: a plain net with row trunks left unjoined (trace: s01)
-"tests/test_placement_route_counts.py::test_every_net_is_joined_or_referenced_on_every_page[s01_skid_v16_m3]" = "GAP-FLIP-214"
-# OPEN-ROTATED-DROP: a bundle drop rotated against its pin or on a sibling pole; STAND-JUNCTION: a supply net is drawn as stands, no wire (trace: w05)
-"tests/test_placement_route_counts.py::test_every_net_is_joined_or_referenced_on_every_page[w05_turned_marker]" = "GAP-FLIP-217"
 "tests/test_placement_route_counts.py::test_every_net_is_joined_or_referenced_on_every_page[w08_wide_relay_bank]" = "GAP-FLIP-213"
-# THROUGH: both pins of a fuse on one net, a through device the oracle sees as 2 pieces; STAND-JUNCTION: a supply net is drawn as stands, no wire; OPEN-ROTATED-DROP: a bundle drop rotated against its pin or on a sibling pole; OPEN-PLAIN-TRUNK: a plain net with row trunks left unjoined (trace: skid)
-"tests/test_placement_route_counts.py::test_the_large_skid_is_joined_or_referenced" = "GAP-FLIP-214"
 # OPEN-ALIGN-SUBJECT: ALIGN_DROPPED names a unit, trunk or terminal text, which no symbol, net or block id of the problem equals
 "tests/test_placement_solve_counts.py::test_the_solve_rule_holds[w08_wide_relay_bank-IS.5]" = "GAP-FLIP-215"
 # Ruling 91: draws on 3 pages against the bound 1; TEXT_OVERLAP x1
 "tests/test_short_groups_corpus_pages.py::test_the_instance_stacks_onto_no_more_pages_than_its_bound[w10_long_chain]" = "GAP-FLIP-204"
 # t02 is CHAIN_REFUSED; w10 draws 3 pages against the bound 1
 # OPEN-NET: the page leaves a net open and unreferenced; the same nets are the xfails of test_placement_route_counts (THROUGH, STAND-JUNCTION, OPEN-ROTATED-DROP, OPEN-PLAIN-TRUNK)
-"tests/test_placement_solve_counts.py::test_the_solve_rule_holds[skid_v64_m6-IS.3]" = "GAP-FLIP-214"
-"tests/test_placement_solve_counts.py::test_the_solve_rule_holds[skid_v48_m6-IS.3]" = "GAP-FLIP-214"
-"tests/test_placement_solve_counts.py::test_the_solve_rule_holds[s01_skid_v16_m3-IS.3]" = "GAP-FLIP-214"
-"tests/test_placement_solve_counts.py::test_the_solve_rule_holds[w05_turned_marker-IS.3]" = "GAP-FLIP-217"
 # OPEN-RESPELL: respelling the ids moves the layout; the first moved id is untraced
 "tests/test_placement_solve_counts.py::test_the_solve_rule_holds[w05_turned_marker-IS.7]" = "GAP-FLIP-217"
 

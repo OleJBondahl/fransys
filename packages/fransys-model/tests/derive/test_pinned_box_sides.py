@@ -4,12 +4,14 @@ Built from `examples/demo-parts` only. Can-fail probes: raise `_POTENTIALS` to 3
 supply test fails; put a ground pin on N and the symbol-pin test fails; make a supply pin "s" and
 """
 
+from dataclasses import replace
+
 import fransys as fr
 import pytest
 from fransys.colours import BU
 
 from fransys_model.derive import pinned_box_sides
-from fransys_model.vocab.tables import functions, items, ports
+from fransys_model.vocab.tables import function_templates, functions, items, ports
 
 
 def _model() -> fr.Model:
@@ -88,3 +90,18 @@ def test_a_supply_with_each_pin_on_a_wire_has_both_on_n() -> None:
 
 def test_a_box_with_a_signal_pin_keeps_supply_n_and_ground_s() -> None:
     assert _sides(_model(), "A2") == {"P": "n", "M": "s", "S": None}
+
+
+@pytest.mark.rule("BOX-SIDES")
+def test_a_part_box_side_pins_every_pin_of_its_function_over_the_power_rule() -> None:
+    """DEMO-PSU-24 states no `box_side`: its pins keep the power rule; the same part with one stated has all pins there."""
+    model = _supply_model()
+    (output,) = (f for f in functions(model).values() if f.name == "output")
+    tmpl = function_templates(model)
+    assert output.template is not None
+    own = [p.id for p in ports(model).values() if p.function == output.id]
+    assert set(pinned_box_sides(model, own).values()) == {"n"}
+    for word, side in (("top", "n"), ("bottom", "s")):
+        stated = replace(model, tables=model.tables | {"function_template": tmpl | {output.template: replace(tmpl[output.template], box_side=word)}})
+        found = pinned_box_sides(stated, own)
+        assert set(found.values()) == {side}

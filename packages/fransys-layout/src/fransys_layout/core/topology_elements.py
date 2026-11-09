@@ -10,7 +10,7 @@ from .values import Net, Pin, PinRef, PlacementProblem
 lazy from .sym_values import Sym
 
 if TYPE_CHECKING:
-    from collections.abc import Collection, Mapping, Sequence
+    from collections.abc import Mapping, Sequence
     from collections.abc import Set as AbstractSet
 
 
@@ -78,10 +78,10 @@ def _poles_and_singles(sym: Sym, pins: Sequence[Pin]) -> tuple[Elem, ...]:
     return tuple(out)
 
 
-def net_ends(net: Net, elem_of_pin: Mapping[PinRef, Elem], syms: Mapping[str, Sym], joined: Collection[frozenset[PinRef]]) -> tuple[NetEnd, ...]:
-    """The ends of one wiring net; a free element, or a pole whose pins a link joins, with both pins on it is one through end.
+def net_ends(net: Net, elem_of_pin: Mapping[PinRef, Elem], syms: Mapping[str, Sym]) -> tuple[NetEnd, ...]:
+    """The ends of one wiring net; a free element with both pins on it is one through end.
 
-    An unlinked pole with both pins on the net is a short: each pin is its own end (R1580).
+    A pole with both pins on the net is a short: each pin is its own end. A linked pole stands between two nets (R2071).
     """
     seen: set[str] = set()
     out: list[NetEnd] = []
@@ -91,7 +91,7 @@ def net_ends(net: Net, elem_of_pin: Mapping[PinRef, Elem], syms: Mapping[str, Sy
             out.append(NetEnd(net.id, None, ref, "boxpin"))
             continue
         elem = elem_of_pin.get(ref)
-        folds = elem is not None and _folds(elem, on_net, joined)
+        folds = elem is not None and _folds(elem, on_net)
         if elem is None or (elem.key in seen and (folds or elem.form == "free")):
             continue
         seen.add(elem.key)
@@ -100,12 +100,11 @@ def net_ends(net: Net, elem_of_pin: Mapping[PinRef, Elem], syms: Mapping[str, Sy
     return tuple(out)
 
 
-def _folds(elem: Elem, on_net: AbstractSet[PinRef], joined: Collection[frozenset[PinRef]]) -> bool:
-    """Both pins of the element are on the net and the element is free or a link joins them."""
-    if elem.n_pin is None or elem.s_pin is None:
+def _folds(elem: Elem, on_net: AbstractSet[PinRef]) -> bool:
+    """Both pins of a free element are on the net."""
+    if elem.form != "free" or elem.n_pin is None or elem.s_pin is None:
         return False
-    pair = frozenset((PinRef(elem.sym, elem.n_pin), PinRef(elem.sym, elem.s_pin)))
-    return pair <= on_net and (elem.form == "free" or pair in joined)
+    return {PinRef(elem.sym, elem.n_pin), PinRef(elem.sym, elem.s_pin)} <= on_net
 
 
 def _role(elem: Elem, ref: PinRef, sym: Sym, *, folds: bool, cut: bool) -> str:

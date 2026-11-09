@@ -316,8 +316,7 @@ def _facts(facts: Facts, symbols: frozenset[str], bare: Collection[PinRef], gone
     kept = tuple(c for c in (frozenset(s & symbols) for s in facts.keep_whole) if len(c) >= _MIN_ENDS)
     shown = (tuple(p for p in group if p not in bare and p not in gone) for group in facts.groups)
     groups = tuple(g for g in shown if len(g) >= _MIN_ENDS and any(_inside(p, symbols) for p in g))
-    joined = tuple((a, b) for a, b in facts.joined if _inside(a, symbols) and _inside(b, symbols))
-    return Facts(kept, units, mates, series=series, far_ends=far, groups=groups, joined=joined)
+    return Facts(kept, units, mates, series=series, far_ends=far, groups=groups)
 
 
 def _known[T](names: Iterable[T], known: Collection[T]) -> bool:

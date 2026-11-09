@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from fransys_layout.core import build_flow
-from fransys_layout.core.values import BoxSpec, Bundle, PinRef
+from fransys_layout.core.values import BoxSpec, Bundle
 
 from .flow_builders import OPTIONS, elem, free, net, poles, problem
 
@@ -28,9 +28,6 @@ def _box(sym: Sym, order: tuple[str, ...]) -> Sym:
     return replace(sym, box=BoxSpec(order, 16))
 
 
-_OVERLOAD = tuple((PinRef("B", f"n{k}"), PinRef("B", f"s{k}")) for k in range(POLES))  # the overload's poles are link-joined
-
-
 def _mounted_overload() -> tuple[list[Sym], list[Net], str]:
     """Pump Q21: a contactor, an overload mounted on it, a terminal per pole, a PSU on pole 1."""
     syms = [poles("F"), poles("Q"), poles("B"), _box(poles("P"), ("n0",))]
@@ -39,8 +36,8 @@ def _mounted_overload() -> tuple[list[Sym], list[Net], str]:
     for k in range(POLES):
         feed = [f"F.s{k}", f"Q.n{k}", *(["P.n0"] if k == 0 else [])]
         nets.append(net(f"a{k}", *feed, bundle=Bundle("a", k)))
-        out = [f"Q.s{k}", f"B.n{k}", f"B.s{k}", f"T{k}.n", f"T{k}.s"]
-        nets.append(net(f"b{k}", *out, bundle=Bundle("b", k)))
+        nets.append(net(f"b{k}", f"Q.s{k}", f"B.n{k}", bundle=Bundle("b", k)))
+        nets.append(net(f"c{k}", f"B.s{k}", f"T{k}.n", f"T{k}.s", bundle=Bundle("c", k)))
     return syms, nets, "Q"
 
 
@@ -74,7 +71,7 @@ def test_every_pole_of_a_device_takes_the_bundles_direction(
     shape: Callable[[], tuple[list[Sym], list[Net], str]],
 ) -> None:
     syms, nets, device = shape()
-    flow = build_flow(problem(syms, nets, joined=_OVERLOAD), ON)
+    flow = build_flow(problem(syms, nets), ON)
     assert flow.fans
     assert len(_orients(flow, device)) == 1
     for fan in flow.fans:

@@ -120,15 +120,6 @@ def test_every_trunk_that_crosses_a_page_cut_has_an_end_of_a_reference_on_each_p
     assert head == "hub" or pages[0] in ended
 
 
-def test_a_through_jumper_hub_is_not_copied() -> None:
-    """A jumper j0 has two nodes, so it is no free-sided symbol: the arrow stays."""
-    syms = [elem("j0"), elem("k1", 700, 400), elem("k2", 600, 400), elem("k3", 600, 400)]
-    result = cut_of(syms, [net("feed", "j0.n", "j0.s", "k1.n", "k2.n", "k3.n")], Facts(joined=((PinRef("j0", "n"), PinRef("j0", "s")),)))
-    assert result.flow.fans[0].hub == "j0"
-    assert [r.kind for r in result.spec.reference_plan] == ["arrow"]
-    assert [f.code for f in result.spec.findings] == ["HEAD_OFF_LEGS"]
-
-
 def test_a_row_wrap_inside_one_page_plans_no_copy_and_no_finding() -> None:
     """Twelve 150 G legs wrap to a second row of one page: the arrow pair stays, no page crossed."""
     legs = [f"l{i:02d}" for i in range(12)]
@@ -142,34 +133,16 @@ def test_a_row_wrap_inside_one_page_plans_no_copy_and_no_finding() -> None:
     assert result.spec.findings == ()
 
 
-def hub_case(widths: tuple[int, int, int], heights: tuple[int, int, int], *, free_hub: bool) -> CutResult:
-    """Trunk u (jumper j) joins k1, k2; trunk v (hub t) joins k2, k3; t is free-sided or not."""
-    hub = free("t") if free_hub else elem("t")
-    pins = ("t.e",) if free_hub else ("t.n", "t.s")
+def hub_case(widths: tuple[int, int, int], heights: tuple[int, int, int]) -> CutResult:
+    """Trunk u (a free-sided hub j) joins k1, k2; trunk v (a free-sided hub t) joins k2, k3."""
     cols = [elem(f"k{i}", w, h) for i, (w, h) in enumerate(zip(widths, heights, strict=True), 1)]
-    joined = tuple((PinRef(s, "n"), PinRef(s, "s")) for s in ("j", "t") if s == "j" or not free_hub)
-    return cut_of([*cols, elem("j"), hub], [net("u", "k1.s", "k2.s", "j.n", "j.s"), net("v", *pins, "k2.n", "k3.n")], Facts(joined=joined))
-
-
-def test_the_cut_prefers_the_break_where_the_arrow_is_a_copy() -> None:
-    """No page holds k1, k2 and k3 together, any two fit: the cut falls after k1 or after k2.
-
-    Each break costs one arrow, so with a jumper hub on v the fills decide: after k1. A free-sided
-    hub turns the break at v into a copy, which costs nothing: after k2, with the copy planned.
-    """
-    jumper = hub_case((600, 600, 200), (600, 600, 600), free_hub=False)
-    assert page_of(jumper) == {"c:k1": 1, "c:k2": 2, "c:k3": 2}
-    assert [(r.net, r.kind) for r in jumper.spec.reference_plan] == [("f:u", "arrow")]
-    free_sided = hub_case((600, 600, 200), (600, 600, 600), free_hub=True)
-    assert page_of(free_sided) == {"c:k1": 1, "c:k2": 1, "c:k3": 2}
-    assert free_sided.spec.reference_plan == (Ref("v", RefKind.COPY, (RefEnd(2, "c:k2", PinRef("k3", "n"), stand=StandClass.TRUNK_END),)),)
+    return cut_of([*cols, free("j"), free("t")], [net("u", "k1.s", "k2.s", "j.e"), net("v", "t.e", "k2.n", "k3.n")])
 
 
 def test_a_row_wrap_through_the_trunk_of_a_free_sided_hub_is_not_priced_as_a_copy() -> None:
-    """Short columns wrap inside one page, where v keeps its arrow pair, whatever the hub."""
-    for free_hub in (False, True):
-        (page,) = hub_case((600, 600, 600), (100, 210, 40), free_hub=free_hub).spec.pages
-        assert [row.columns for row in page.rows] == [("c:k1",), ("c:k2", "c:k3")]
+    """Short columns wrap inside one page, where v keeps its arrow pair."""
+    (page,) = hub_case((600, 600, 600), (100, 210, 40)).spec.pages
+    assert [row.columns for row in page.rows] == [("c:k1",), ("c:k2", "c:k3")]
 
 
 # stubs

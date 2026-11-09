@@ -1,0 +1,4 @@
+schema = 2
+name = "box-side-parts"
+version = "0.1.0"
+description = "Invented parts for the BOX-SIDE field case."

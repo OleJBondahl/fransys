@@ -77,8 +77,8 @@ def test_a_page_teaches_its_tasks_at_both_levels(page, minimum):
 def test_a_level_pair_that_differs_is_caught(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     base = "import fransys as fr\nd = fr.design('demo_parts', place='C1')\n"
-    one = base + "d.location('C1', 'One')\nd.device('X1', 'DEMO-TB-2.5')\n"
-    other = base + "d.location('C1', 'One')\nd.device('X2', 'DEMO-TB-2.5')\n"
+    one = base + "d.location('C1', 'One')\nd.terminal_strip('X1', 'DEMO-TB-2.5', 1)\n"
+    other = base + "d.location('C1', 'One')\nd.terminal_strip('X2', 'DEMO-TB-2.5', 1)\n"
     assert _digest(one) != _digest(other)
 
 

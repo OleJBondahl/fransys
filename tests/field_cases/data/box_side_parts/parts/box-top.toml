@@ -1,0 +1,22 @@
+schema = 2
+
+[part]
+mpn = "BOX-TOP"
+manufacturer = "Demo"
+description = "Signal box with four pins, every pin pinned to the top"
+category = "generic"
+class_code = "B"
+
+[[function]]
+name = "io"
+kind = "load"
+box_side = "top"
+ports = [
+    { name = "p1", role = "generic" },
+    { name = "p2", role = "generic" },
+    { name = "p3", role = "generic" },
+    { name = "p4", role = "generic" },
+]
+
+[function.operating]
+voltage = [{ nom = "24 V", at = ["DC"] }]

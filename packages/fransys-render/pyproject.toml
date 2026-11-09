@@ -1,13 +1,13 @@
 [project]
 name = "fransys-render"
-version = "0.23.11"
+version = "0.23.12"
 description = "Fransys output: laid-out model to SVG pages."
 requires-python = ">=3.15"
 dependencies = [
-    "fransys-model @ git+https://github.com/OleJBondahl/fransys@v0.23.11#subdirectory=packages/fransys-model",
-    "fransys-layout @ git+https://github.com/OleJBondahl/fransys@v0.23.11#subdirectory=packages/fransys-layout",
+    "fransys-model @ git+https://github.com/OleJBondahl/fransys@v0.23.12#subdirectory=packages/fransys-model",
+    "fransys-layout @ git+https://github.com/OleJBondahl/fransys@v0.23.12#subdirectory=packages/fransys-layout",
     "symdef==0.35.0",
-    "electrical-symbols @ git+https://github.com/OleJBondahl/fransys@v0.23.11#subdirectory=packages/electrical-symbols",
+    "electrical-symbols @ git+https://github.com/OleJBondahl/fransys@v0.23.12#subdirectory=packages/electrical-symbols",
 ]
 
 [build-system]

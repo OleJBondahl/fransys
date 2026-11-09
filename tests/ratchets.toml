@@ -107,7 +107,7 @@ skid = 0
 # R1193 LEDGER-INTEGRATION: the ledger's leg and PE copy stubs stand where a wire or dot meets their box: distribution_board 0 -> 2, mcc 0 -> 2 (KI-457)
 distribution_board = 5  # R1957 falls, KI-636: was 6 (R1715: was 7)
 machine_panel = 0
-mcc = 9  # R1957 falls, KI-636: was 10; R1730 (looks class): the cut flags the handed link it plans a tag for; was 16
+mcc = 6  # R2071 OVERLOAD-SERIES: a copy of a bundle stands on its own pole lane, falls from 9; R1957 falls, KI-636: was 10; R1730 (looks class): the cut flags the handed link it plans a tag for; was 16
 # R1165: R1138 looks trade (OVERLAP -1, WIRE_OVER_MARKER +1)
 panel_di16p = 0  # R1693 and R1715 (looks falls, KI-636): was 1
 remote_io = 2  # ONE-PAGE (R1830, looks class): the wider reserved marker meets two wires; was 0
@@ -268,7 +268,7 @@ skid = 0
 # (CLOSED at 0 by CORPUS-METRIC, R1132: dots and markers count as placed); bare conductors: see [drawing_connection_not_drawn];
 # lane_end_faults = trunk lane ends past their last tap. Correctness class, target 0 on every seed (piece CORPUS-SEED-DEFECTS).
 mcc_unplaced_symbols = 0
-mcc_lane_end_faults = 3  # R1957 falls, KI-636: was 5 (the legged lanes 1 and 2 of the page-3 bundle end at their legs); R1715 falls: was 17; R1684 (looks class, KI-636): 2-point legs whose lane overruns the leg start by one pitch; was 12
+mcc_lane_end_faults = 2  # R2071 falls: was 3; R1957 falls, KI-636: was 5 (the legged lanes 1 and 2 of the page-3 bundle end at their legs); R1715 falls: was 17; R1684 (looks class, KI-636): 2-point legs whose lane overruns the leg start by one pitch; was 12
 distribution_board_lane_end_faults = 1  # R1800 (PE-EARTH-RATCHETS): falls 2 -> 1 with PE-EARTH-JOIN; R1715 falls, KI-636: was 6; R1684: as mcc; was 4
 
 [table_scans]

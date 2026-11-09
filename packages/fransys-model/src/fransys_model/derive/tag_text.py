@@ -5,9 +5,11 @@ from fransys_model.derive.designation import (
     port_designation,
 )
 from fransys_model.derive.designation_label import own_label, terminal_of
+from fransys_model.derive.facts.children import parent_item
 from fransys_model.derive.indexes import build_indexes
 from fransys_model.derive.instance_tag import dashed
 from fransys_model.derive.order import first_terminal_port
+from fransys_model.kernel import SchemaError
 from fransys_model.vocab.tables import functions, items
 lazy from fransys_model.derive.facts.roles import function_role
 lazy from fransys_model.kernel import Id, Model
@@ -60,7 +62,12 @@ def strip_tag_text(model: Model, function: Id[Function], *, unit: Id[Unit] | Non
 def _strip_item(model: Model, function: Id[Function]) -> Id[Item]:
     """The item `function`'s strip tag names: a strip terminal's `parent`, a device's own item."""
     item = items(model)[functions(model)[function].item]
-    return item.id if is_device_terminal(model, function) else item.parent or item.id
+    if is_device_terminal(model, function):
+        return item.id
+    if (strip := parent_item(model, item.id)) is None:
+        msg = f"item {item.id.value}: a strip terminal has a parent strip"
+        raise SchemaError(msg, kind="item", record_id=item.id)
+    return strip
 
 
 def is_device_terminal(model: Model, function: Id[Function]) -> bool:

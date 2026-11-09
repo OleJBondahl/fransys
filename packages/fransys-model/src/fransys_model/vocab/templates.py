@@ -89,6 +89,7 @@ class FunctionTemplate:
     Guarded by `part_conformance`. `protection_type` is the device type of a protection function
     (decision model-0127; F3): `None` means not declared. `energy` says which way energy flows
     through a `supply` or `load` function (decision model-0131): `None` means the kind's default.
+    `box_side` (`"top"` or `"bottom"`, decision model-0449) pins every pin of the function to one box side.
     """
 
     id: Id[FunctionTemplate]
@@ -98,6 +99,7 @@ class FunctionTemplate:
     kind: FunctionKind
     protection_type: ProtectionType | None = None
     energy: Energy | None = None
+    box_side: str | None = None
     ext: frozendict[str, Value] = frozendict()
 
     def __post_init__(self) -> None:
@@ -137,6 +139,7 @@ class PortTemplate:
     pin_role: PinRole | None = None
     side: Side | None = None
     conductor_mark: ConductorMark | None = None
+    # KI-872: omit_none breaks "canonical JSON writes every value" (BOX-SIDE-OMIT-NONE)
     source_row: WiringRow | None = dataclasses.field(default=None, metadata={"omit_none": True})
     joins: Id[PortTemplate] | None = None
     connector: Id[FunctionTemplate] | None = None

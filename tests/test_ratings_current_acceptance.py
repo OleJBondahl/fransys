@@ -51,8 +51,8 @@ def _string(root: Path) -> tuple[Model, dict[str, Item]]:
         wire(string[port], fuse["1"])
         wire(fuse["2"], contactor["1"])
         # The string ends at the external switchboard's terminal: the outside closes its loop.
-        terminal = d.item("DEMO-TB-2.5", name=f"t-{pole}", external=True)
-        wire(contactor["2"], terminal["internal"])
+        terminal = d.strip(f"t-{pole}", external=True).terminal("DEMO-TB-2.5")
+        wire(contactor["2"], terminal.inner)
         items[f"f-{pole}"], items[f"k-{pole}"] = fuse, contactor
     return freeze(merge(library, d.draft())), items
 

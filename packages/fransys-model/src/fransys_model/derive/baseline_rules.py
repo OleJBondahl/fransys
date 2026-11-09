@@ -10,7 +10,7 @@ import re
 from dataclasses import dataclass, fields
 
 OLDEST_VERIFIABLE = "0.13.8"
-KEYED_LISTING_VERSION = 10  # keyed rows, no mate or harness line (0405); stored model schema 25 (0442), 26 (0443), 27 (0446), 28 (0448)
+KEYED_LISTING_VERSION = 10  # keyed rows, no mate or harness line (0405); stored model schema 25 (0442), 26 (0443), 27 (0446), 28 (0448), 29 (0449)
 READABLE_LISTING_VERSIONS = (
     6,
     7,

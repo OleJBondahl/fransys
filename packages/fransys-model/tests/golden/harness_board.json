@@ -1,6 +1,6 @@
 {
   "aliases": [],
-  "schema_version": 28,
+  "schema_version": 29,
   "tables": {
     "aspect_node": [
       {
@@ -400,6 +400,7 @@
     ],
     "function_template": [
       {
+        "box_side": null,
         "energy": null,
         "ext": {},
         "id": "function_template:347914ab0f2853458ee0a81e604e9488",
@@ -413,6 +414,7 @@
         "protection_type": null
       },
       {
+        "box_side": null,
         "energy": null,
         "ext": {},
         "id": "function_template:3e905337121856f4bb4dda2ee23f3cff",
@@ -426,6 +428,7 @@
         "protection_type": null
       },
       {
+        "box_side": null,
         "energy": null,
         "ext": {},
         "id": "function_template:7f13ca117870531585200b8b708056be",
@@ -439,6 +442,7 @@
         "protection_type": null
       },
       {
+        "box_side": null,
         "energy": null,
         "ext": {},
         "id": "function_template:9930cb359cbf573d9e79984e8e80d30f",
@@ -452,6 +456,7 @@
         "protection_type": null
       },
       {
+        "box_side": null,
         "energy": null,
         "ext": {},
         "id": "function_template:a1e03495e8225ed68b428363408868f6",
@@ -465,6 +470,7 @@
         "protection_type": null
       },
       {
+        "box_side": null,
         "energy": null,
         "ext": {},
         "id": "function_template:d5f2b27610c65d05991610ddd809b051",

@@ -1,6 +1,6 @@
 {
   "aliases": [],
-  "schema_version": 28,
+  "schema_version": 29,
   "tables": {
     "aspect_node": [
       {
@@ -1533,6 +1533,7 @@
     ],
     "function_template": [
       {
+        "box_side": null,
         "energy": null,
         "ext": {},
         "id": "function_template:0b3d0077725058c3bc457d25d4be051c",
@@ -1546,6 +1547,7 @@
         "protection_type": null
       },
       {
+        "box_side": null,
         "energy": null,
         "ext": {},
         "id": "function_template:1751c0310c6f5701b1b14b9eb4831b12",
@@ -1559,6 +1561,7 @@
         "protection_type": null
       },
       {
+        "box_side": null,
         "energy": null,
         "ext": {},
         "id": "function_template:179183d18264545eb2a35aff6363d395",
@@ -1572,6 +1575,7 @@
         "protection_type": null
       },
       {
+        "box_side": null,
         "energy": null,
         "ext": {},
         "id": "function_template:183a8946f11e5374a07ebb00daa3467d",
@@ -1585,6 +1589,7 @@
         "protection_type": null
       },
       {
+        "box_side": null,
         "energy": null,
         "ext": {},
         "id": "function_template:18b7d3911fe958e68181606e52f9bd15",
@@ -1598,6 +1603,7 @@
         "protection_type": null
       },
       {
+        "box_side": null,
         "energy": null,
         "ext": {},
         "id": "function_template:2ce28dbcab25593791b438dd5bf92351",
@@ -1611,6 +1617,7 @@
         "protection_type": null
       },
       {
+        "box_side": null,
         "energy": null,
         "ext": {},
         "id": "function_template:2fb5f5a1dc8354c9a82a4a3a256d2726",
@@ -1624,6 +1631,7 @@
         "protection_type": null
       },
       {
+        "box_side": null,
         "energy": null,
         "ext": {},
         "id": "function_template:44ead7da85a25bfd97773aa454c3f213",
@@ -1637,6 +1645,7 @@
         "protection_type": null
       },
       {
+        "box_side": null,
         "energy": null,
         "ext": {},
         "id": "function_template:519d591745465fc1b9c62aed75d791d2",
@@ -1650,6 +1659,7 @@
         "protection_type": null
       },
       {
+        "box_side": null,
         "energy": null,
         "ext": {},
         "id": "function_template:5433d5f6246159849f80cf57466f2ba7",
@@ -1663,6 +1673,7 @@
         "protection_type": null
       },
       {
+        "box_side": null,
         "energy": null,
         "ext": {},
         "id": "function_template:627e4be1a6255e8eaa97851d4d26bfd7",
@@ -1676,6 +1687,7 @@
         "protection_type": null
       },
       {
+        "box_side": null,
         "energy": null,
         "ext": {},
         "id": "function_template:637b0510614f588597bbd15f6ae06074",
@@ -1689,6 +1701,7 @@
         "protection_type": null
       },
       {
+        "box_side": null,
         "energy": null,
         "ext": {},
         "id": "function_template:653cca2aaa275ca98a7ef694cab9fee4",
@@ -1702,6 +1715,7 @@
         "protection_type": null
       },
       {
+        "box_side": null,
         "energy": null,
         "ext": {},
         "id": "function_template:701e7e5d48c65d5f8dd1d3d6210ed643",
@@ -1715,6 +1729,7 @@
         "protection_type": null
       },
       {
+        "box_side": null,
         "energy": null,
         "ext": {},
         "id": "function_template:a010c4ef896c5de2bf969777c9954a0b",
@@ -1728,6 +1743,7 @@
         "protection_type": null
       },
       {
+        "box_side": null,
         "energy": null,
         "ext": {},
         "id": "function_template:a525a7433c8c555eb4c5bcc73797a6fc",
@@ -1741,6 +1757,7 @@
         "protection_type": null
       },
       {
+        "box_side": null,
         "energy": null,
         "ext": {},
         "id": "function_template:b4a02103694c519382889e50b09dcd80",
@@ -1754,6 +1771,7 @@
         "protection_type": null
       },
       {
+        "box_side": null,
         "energy": null,
         "ext": {},
         "id": "function_template:ba7f33c23b6b5f15b023c2ace3559fb9",
@@ -1767,6 +1785,7 @@
         "protection_type": null
       },
       {
+        "box_side": null,
         "energy": null,
         "ext": {},
         "id": "function_template:c506250d18125601a53b9cfd1688249c",
@@ -1780,6 +1799,7 @@
         "protection_type": null
       },
       {
+        "box_side": null,
         "energy": null,
         "ext": {},
         "id": "function_template:c66a1050486655409cf32657c93c69fa",
@@ -1793,6 +1813,7 @@
         "protection_type": null
       },
       {
+        "box_side": null,
         "energy": null,
         "ext": {},
         "id": "function_template:ca798b2bbde7562bbaf36eb7619b3854",
@@ -1806,6 +1827,7 @@
         "protection_type": null
       },
       {
+        "box_side": null,
         "energy": null,
         "ext": {},
         "id": "function_template:dc13fce08ce15642a2c4969d494ef257",
@@ -1819,6 +1841,7 @@
         "protection_type": null
       },
       {
+        "box_side": null,
         "energy": null,
         "ext": {},
         "id": "function_template:df3176575de35e8aa855ac93f441f446",
@@ -1832,6 +1855,7 @@
         "protection_type": null
       },
       {
+        "box_side": null,
         "energy": null,
         "ext": {},
         "id": "function_template:e0b67c4fbdeb5dc9aec92642df9d962f",
@@ -1845,6 +1869,7 @@
         "protection_type": null
       },
       {
+        "box_side": null,
         "energy": null,
         "ext": {},
         "id": "function_template:ee0f2242f4d95c2b9a5b50a68448a6d8",
@@ -1858,6 +1883,7 @@
         "protection_type": null
       },
       {
+        "box_side": null,
         "energy": null,
         "ext": {},
         "id": "function_template:f8d13d14a1e3510cb7b599be406d30b8",

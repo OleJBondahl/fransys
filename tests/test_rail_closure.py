@@ -210,14 +210,14 @@ def test_physical_nets_join_a_conductive_link_and_never_a_switched_or_protective
     d, wire = _design()
     q1 = d.item("DEMO-CTR-3P-24", name="q1")
     f1 = d.item("DEMO-MCB-C6", name="f1")
-    x1 = d.item("DEMO-TB-2.5", name="x1").fn("terminal")
+    x1 = d.strip("X1").terminal("DEMO-TB-2.5")
     d.net("L1", q1.fn("main")["1"], cls="power", potential="L1")
-    wire(q1.fn("main")["2"], x1["internal"])
-    wire(x1["external"], f1["1"])
+    wire(q1.fn("main")["2"], x1.inner)
+    wire(x1.outer, f1["1"])
     model = _freeze(d)
     assert _all_rails(model)
     closure._closure.cache_clear()
-    joined = {q1.fn("main")["2"].id, x1["internal"].id, x1["external"].id, f1["1"].id}
+    joined = {q1.fn("main")["2"].id, x1.inner.id, x1.outer.id, f1["1"].id}
     expected = {frozenset(joined)} | {frozenset({port}) for port in ports(model) if port not in joined}
     assert {frozenset(net.ports) for net in physical_nets(model)} == expected
     assert len(expected) == len(ports(model)) - 3

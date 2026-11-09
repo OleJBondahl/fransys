@@ -21,6 +21,7 @@ This page lists what 0.23 adds, what stays refused for now, and the known issues
 ## Part-file key renamed
 
 - A port of a role function names its physical connector pin with `connector = "j3.1"`. Its list text is the connector's pin; the stored model schema is 28, so rebuild every release with this build.
+- A part function may state `box_side = "top"` or `"bottom"` to put its pins on that side of its box. The stored model schema is 29, so rebuild every release with this build.
 - `[function.connector]` states `poles = 4` where it stated `pincount = 4`. A part file that still says `pincount` is refused with `FIELD_UNKNOWN` (ERROR); there is no alias. `poles` below 1 is refused with `FIELD_TYPE`, in elecdef's words. `gender` keeps its spelling.
 - A stored model of schema 26 or older is refused, and the message says to rebuild the release with `fr.release`. Nothing is migrated. The listing version is now 10; a stored listing of version 6 to 9 still reads.
 

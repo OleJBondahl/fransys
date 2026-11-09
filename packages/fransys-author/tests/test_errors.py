@@ -255,7 +255,14 @@ def test_reauthoring_a_name_with_different_content_is_refused(parts):
     d = Design(parts)
     d.item("TEST-RLY-2CO", tag="K1")
     with pytest.raises(AuthorError, match="already names a different"):
-        d.item("TEST-TB", tag="K1")
+        d.item("TEST-CONN-2P", tag="K1")
+
+
+def test_an_item_of_a_terminal_part_is_refused_and_the_fix_names_the_strip(parts):
+    """R2102: a terminal is authored only on a strip, so `d.item` of a terminal-category part raises."""
+    # UNDO: author/_scope_build.py item: drop the TERMINAL function-template check: FAILED here
+    with pytest.raises(AuthorError, match=r"authored only on a strip; use d\.terminal_strip"):
+        Design(parts).item("TEST-TB", tag="X1")
 
 
 def test_adding_an_item_key_twice_is_refused_naming_both_calls(parts):

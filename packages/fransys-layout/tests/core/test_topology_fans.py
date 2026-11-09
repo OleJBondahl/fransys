@@ -25,8 +25,6 @@ from fransys_layout.core.values import PinRef
 from .flow_builders import elem, free, net
 from .topology_fixtures import box, read
 
-_JOINED = tuple((PinRef(h, "n"), PinRef(h, "s")) for h in ("h2", "h3"))  # a hub passes its net through
-
 
 def _lane(column: str, *syms: str) -> LaneDraft:
     return LaneDraft(column, 0, [Cell(s, "R0", "n", "s") for s in syms])
@@ -46,9 +44,9 @@ def test_a_two_end_net_of_a_box_pin_and_a_lane_end_is_an_attachment() -> None:
 
 def test_a_box_pin_and_a_through_end_is_an_attachment_but_two_throughs_are_not() -> None:
     """RL-W2 PORT-LINE: a terminal wired to a card pin stands on that pin."""
-    r = read([box("c"), elem("h2"), elem("h3")], [net("x", "c.s", "h2.n", "h2.s")], _JOINED)
+    r = read([box("c"), free("h2"), free("h3")], [net("x", "c.s", "h2.n", "h2.s")])
     assert attached_pin(r.ends_by_net["x"]) == PinRef("c", "s")
-    r = read([box("c"), elem("h2"), elem("h3")], [net("x", "c.s", "h2.n", "h2.s", "h3.n", "h3.s")], _JOINED)
+    r = read([box("c"), free("h2"), free("h3")], [net("x", "c.s", "h2.n", "h2.s", "h3.n", "h3.s")])
     assert attached_pin(r.ends_by_net["x"]) is None
 
 
@@ -69,7 +67,7 @@ def test_an_end_off_a_lane_end_is_a_cross_link_and_a_hub_is_a_through() -> None:
     _, _, throughs, cross = classify(r.ends_by_net["t"], slot, r.syms)
     assert cross
     assert throughs == []
-    r = read([elem("a"), elem("h2")], [net("t", "a.s", "h2.n", "h2.s")], _JOINED)
+    r = read([elem("a"), free("h2")], [net("t", "a.s", "h2.n", "h2.s")])
     assert classify(r.ends_by_net["t"], {}, r.syms)[2] == ["h2#0"]
 
 

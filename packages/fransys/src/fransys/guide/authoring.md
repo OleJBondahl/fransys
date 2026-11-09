@@ -116,6 +116,7 @@ is `P_1_L1`. `getattr(dev, "24V+")` reaches the raw name.
 and `X1[3]` takes terminal 3. `pe` names the protective-earth part, and a run labelled exactly `"PE"` (`X1.run("PE", 2)`) takes it; without `pe=` that run raises. A terminal has two sides: wiring
 inside the unit reaches its inner side, a field cable its outer side. A wire or a series enters a
 strip at the right side without you saying so.
+A terminal is authored only on a strip: `d.item` of a terminal part raises, and its message names `d.terminal_strip`.
 A series that starts on a strip and goes on to a function leaves the strip on its inner side.
 One that goes on to a cable leaves it on the outer side.
 

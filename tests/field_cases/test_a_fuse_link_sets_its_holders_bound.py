@@ -19,14 +19,14 @@ def _build(*, switch: bool = True) -> tuple[fr.BuildResult, Any]:
     f1 = d.device("F1", "DEMO-FUSE-HOLDER-PCB")
     link = d.device(None, "DEMO-FUSE-LINK-4A-T", name="link", parent=f1)
     s1 = d.device("S1", "DEMO-SWITCH-DC-2A") if switch else None
-    x1 = d.device("X1", "DEMO-TB-2.5", external=True)
-    x2 = d.device("X2", "DEMO-TB-2.5", external=True)
+    x1 = d.terminal_strip("X1", "DEMO-TB-2.5", 1, external=True)
+    x2 = d.terminal_strip("X2", "DEMO-TB-2.5", 1, external=True)
     dc = d.dc_supply("HV", g1.string)
     d.series(dc.plus.pin, f1[1], wire=("BK", 1.5))
-    d.series(f1[2], s1[1] if s1 else x1["internal"], wire=("BK", 1.5))
+    d.series(f1[2], s1[1] if s1 else x1[1].inner, wire=("BK", 1.5))
     if s1:
-        d.series(s1[2], x1["internal"], wire=("BK", 1.5))
-    d.series(dc.minus.pin, x2["internal"], wire=("BK", 1.5))
+        d.series(s1[2], x1[1].inner, wire=("BK", 1.5))
+    d.series(dc.minus.pin, x2[1].inner, wire=("BK", 1.5))
     return fr.build(d), link
 
 

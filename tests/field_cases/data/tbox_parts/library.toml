@@ -1,0 +1,4 @@
+schema = 2
+name = "tbox-parts"
+version = "0.1.0"
+description = "Invented parts for the TRANSFORMER-BOX field case."

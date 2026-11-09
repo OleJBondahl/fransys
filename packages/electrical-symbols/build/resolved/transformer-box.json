@@ -1,0 +1,268 @@
+{
+  "anchors": [],
+  "body_box": [
+    [
+      -3,
+      -3
+    ],
+    [
+      3,
+      3
+    ]
+  ],
+  "elements": [
+    {
+      "line": [
+        [
+          -1,
+          -3
+        ],
+        [
+          -1,
+          -2
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "line": [
+        [
+          1,
+          -3
+        ],
+        [
+          1,
+          -2
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "line": [
+        [
+          -1,
+          3
+        ],
+        [
+          -1,
+          2
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "line": [
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          2
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "closed": true,
+      "fill": "none",
+      "polyline": [
+        [
+          -3,
+          -2
+        ],
+        [
+          3,
+          -2
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          -3,
+          2
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "circle": [
+        -0.5,
+        0
+      ],
+      "fill": "none",
+      "r": 1,
+      "weight": "normal"
+    },
+    {
+      "circle": [
+        0.5,
+        0
+      ],
+      "fill": "none",
+      "r": 1,
+      "weight": "normal"
+    }
+  ],
+  "keepout_box": [
+    [
+      -3,
+      -3
+    ],
+    [
+      3,
+      3
+    ]
+  ],
+  "kind": "symbol",
+  "lint_allow": [
+    {
+      "reason": "an isolating transformer: no conductive path joins the primary to the secondary, so no path can be the through path",
+      "rule": "through-missing"
+    }
+  ],
+  "name": "Transformer with two windings, boxed",
+  "nodes": [
+    {
+      "ports": [
+        "p1"
+      ]
+    },
+    {
+      "ports": [
+        "p2"
+      ]
+    },
+    {
+      "ports": [
+        "s1"
+      ]
+    },
+    {
+      "ports": [
+        "s2"
+      ]
+    }
+  ],
+  "paths": [
+    {
+      "from": "p1",
+      "kind": "impedance",
+      "through": false,
+      "to": "p2"
+    },
+    {
+      "from": "s1",
+      "kind": "impedance",
+      "through": false,
+      "to": "s2"
+    }
+  ],
+  "ports": [
+    {
+      "at": [
+        -1,
+        -3
+      ],
+      "description": "primary winding, first end",
+      "dir": "N",
+      "id": "p1"
+    },
+    {
+      "at": [
+        1,
+        -3
+      ],
+      "description": "primary winding, second end",
+      "dir": "N",
+      "id": "p2"
+    },
+    {
+      "at": [
+        -1,
+        3
+      ],
+      "description": "secondary winding, first end",
+      "dir": "S",
+      "id": "s1"
+    },
+    {
+      "at": [
+        1,
+        3
+      ],
+      "description": "secondary winding, second end",
+      "dir": "S",
+      "id": "s2"
+    }
+  ],
+  "reference": {
+    "number": "transformer-box",
+    "standard": "IEC 60617"
+  },
+  "schema": 1,
+  "slots": {
+    "marking.p1": {
+      "at": [
+        -0.75,
+        -2.75
+      ],
+      "box": [
+        1.5,
+        1
+      ],
+      "side": "E"
+    },
+    "marking.p2": {
+      "at": [
+        1.25,
+        -2.75
+      ],
+      "box": [
+        1.5,
+        1
+      ],
+      "side": "E"
+    },
+    "marking.s1": {
+      "at": [
+        -0.75,
+        2.75
+      ],
+      "box": [
+        1.5,
+        1
+      ],
+      "side": "E"
+    },
+    "marking.s2": {
+      "at": [
+        1.25,
+        2.75
+      ],
+      "box": [
+        1.5,
+        1
+      ],
+      "side": "E"
+    },
+    "tag": {
+      "at": [
+        -3.5,
+        0
+      ],
+      "box": [
+        6,
+        1
+      ],
+      "side": "W"
+    }
+  },
+  "status": "unverified"
+}

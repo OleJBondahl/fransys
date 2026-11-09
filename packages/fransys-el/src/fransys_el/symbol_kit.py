@@ -41,7 +41,7 @@ from fransys_model.vocab import FunctionKind
 from .placement_ids import symbol_key
 from .placement_kit import Pick, PortMissingError, SymbolKit
 from .symbol_bind import Part, Shape, Target, member_of, port_of, through_ports
-from .symbol_boxes import box_picks
+from .symbol_boxes import box_picks, named_picks
 from .symbol_pins import Choice, pin_picks
 from .symbol_rules import Facts, port_shape, symbol_for
 from .symbol_unknown import is_unknown
@@ -273,4 +273,4 @@ def symbol_kit(model: Model, library: Library) -> SymbolKit:
     kit, boxed, channels, pins = _alone(model, library, order, table)
     wired = connected_ports(model)
     boxes = box_picks(model, [*boxed, *channels], {c.id for c in channels}, wired)
-    return frozendict({**kit, **boxes, **pin_picks(model, library, wired, pins)})
+    return frozendict({**named_picks(model, table, kit, wired), **boxes, **pin_picks(model, library, wired, pins)})

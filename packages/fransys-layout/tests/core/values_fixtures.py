@@ -124,7 +124,6 @@ def problem() -> PlacementProblem:
             mates=((PinRef("K1", "1"), PinRef("K2", "1")),),
             far_ends=((PinRef("K1", "2"), PinRef("K2", "2")),),
             groups=((PinRef("K1", "2"), PinRef("K2", "2")),),
-            joined=((PinRef("K1", "1"), PinRef("K1", "2")),),
             series=(
                 Series(("K1", Parallel(("K2", Series(("K3", "K4")))))),
                 Series(("K5",), "tail"),

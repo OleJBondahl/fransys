@@ -1,4 +1,4 @@
 """The electrical schema's version, registered with the kernel by `vocab` (model-0251)."""
 
-SCHEMA_VERSION = 28
+SCHEMA_VERSION = 29
 """The canonical-form version `freeze()` stamps and `from_data` demands (kernel-model.md 5.6)."""

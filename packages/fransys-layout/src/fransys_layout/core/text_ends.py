@@ -263,7 +263,7 @@ def pinned_stand(env: MarkEnv, ref: Ref, end: RefEnd) -> Stand:
         msg = f"marks: {who(ref)} page {end.page}: the end names no pin"
         raise CoreError(msg)
     fan = next((f.id for f in env.fans.values() if ref.net in f.nets), None)
-    bundled = kind_of(ref) is RefKind.STUB and fan is not None and laned_stub(env.fans[fan])
+    bundled = kind_of(ref) in (RefKind.STUB, RefKind.COPY) and fan is not None and laned_stub(env.fans[fan])
     match end.stand:
         case StandClass.LEG if end.row is not None and end.pin in env.legs.get(end.page, {}):
             return leg_stand(env, ref, end, end.row)

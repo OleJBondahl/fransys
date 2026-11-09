@@ -76,8 +76,8 @@ sym -U1-K2.main group=- body=-8,-16,72,32 keepout=-60,-16,138,32
 sym -U1-K1.coil group=- body=-16,-24,32,48 keepout=-68,-24,84,48
   pin in N 0,-24
   pin out S 0,24 stand=16
-net n2 [rail rank=0 power=NONE] -U1-K1.main.2.out -U1-K2.main.2.out =MAIN-U1-F1.main.2.in =MAIN-U1-F1.main.2.out =MAIN-U1-M1.motor.V
-net n3 [rail rank=2 power=NONE] -U1-K1.main.3.out -U1-K2.main.3.out =MAIN-U1-F1.main.3.in =MAIN-U1-F1.main.3.out =MAIN-U1-M1.motor.W
+net n2 [rail rank=0 power=NONE] -U1-K1.main.2.out -U1-K2.main.2.out =MAIN-U1-F1.main.2.in
+net n3 [rail rank=2 power=NONE] -U1-K1.main.3.out -U1-K2.main.3.out =MAIN-U1-F1.main.3.in
 net n4 [rail rank=3 power=NONE] -U1-K1.coil.in -U1-K2.coil.in =CTRL-U1-S0.sw.out
 net n5 [rail rank=0 power=NONE] -U1-X1:1.terminal.n -U1-X1:1.terminal.s =MAIN-U1-Q1.element.1.in
 net n6 [rail rank=1 power=NONE] -U1-X1:2.terminal.n -U1-X1:2.terminal.s =MAIN-U1-Q1.element.2.in
@@ -86,9 +86,12 @@ net n9 [rail rank=4 power=GROUND] -U1-K1.coil.out -U1-K2.coil.out -U1-X2:2.termi
 net n10 [rail rank=0 power=NONE] -U1-K1.main.1.in -U1-K2.main.2.in =MAIN-U1-Q1.element.1.out
 net n11 [rail rank=2 power=NONE] -U1-K1.main.3.in -U1-K2.main.3.in =MAIN-U1-Q1.element.3.out
 net n13 [rail rank=3 power=NONE] =CTRL-U1-S0.sw.in =MAIN-U1-F1.aux.out
-net n14 [rail rank=0 power=NONE] -U1-K1.main.1.out -U1-K2.main.1.out =MAIN-U1-F1.main.1.in =MAIN-U1-F1.main.1.out =MAIN-U1-M1.motor.U
+net n14 [rail rank=0 power=NONE] -U1-K1.main.1.out -U1-K2.main.1.out =MAIN-U1-F1.main.1.in
 net n17 [rail rank=0 power=NONE] -U1-K1.main.2.in -U1-K2.main.1.in =MAIN-U1-Q1.element.2.out
 net n18 [rail rank=3 power=SUPPLY] -U1-X2:1.terminal.n -U1-X2:1.terminal.s =MAIN-U1-F1.aux.in
+net n19 =MAIN-U1-F1.main.2.out =MAIN-U1-M1.motor.V
+net n20 =MAIN-U1-F1.main.3.out =MAIN-U1-M1.motor.W
+net n21 =MAIN-U1-F1.main.1.out =MAIN-U1-M1.motor.U
 # facts: not wires. 'item' = symbols that are parts of one device (a coil and its contacts).
 fact item =MAIN-U1-F1.main =MAIN-U1-F1.aux
 fact item -U1-K2.coil -U1-K2.main
@@ -100,14 +103,6 @@ fact head =MAIN-U1-F1.main =MAIN-U1-Q1.element
 fact attached -U1-K2.coil -U1-K1.coil
 fact strip -U1-X1 -U1-X1:1.terminal -U1-X1:3.terminal -U1-X1:2.terminal
 fact strip -U1-X2 -U1-X2:1.terminal -U1-X2:2.terminal
-fact joined =MAIN-U1-F1.main.2.in =MAIN-U1-F1.main.2.out
-fact joined =MAIN-U1-F1.main.3.in =MAIN-U1-F1.main.3.out
-fact joined -U1-X1:1.terminal.n -U1-X1:1.terminal.s
-fact joined -U1-X1:2.terminal.n -U1-X1:2.terminal.s
-fact joined -U1-X1:3.terminal.n -U1-X1:3.terminal.s
-fact joined -U1-X2:2.terminal.n -U1-X2:2.terminal.s
-fact joined =MAIN-U1-F1.main.1.in =MAIN-U1-F1.main.1.out
-fact joined -U1-X2:1.terminal.n -U1-X2:1.terminal.s
 # legend only: a general placer must not read a symbol's kind.
 kind =MAIN-U1-M1.motor actuator
 kind -U1-X1:1.terminal terminal
@@ -141,8 +136,8 @@ today -U1-K2.main page=2 at=48,112 orient=R0 set=1
 # today's routes: one polyline per line, vertices in order from a to b (page, net, ends).
 route n9 page=1 set=1 a=-U1-K2.coil.out b=-U1-X2:2.terminal.n 480,216 480,224 336,224 336,328
 route n5 page=1 set=1 a==MAIN-U1-Q1.element.1.in b=-U1-X1:1.terminal.n 56,208 56,112
-route n14 page=1 set=1 a==MAIN-U1-M1.motor.U b==MAIN-U1-F1.main.1.out 768,232 768,144
-route n2 page=1 set=1 a==MAIN-U1-F1.main.2.out b==MAIN-U1-M1.motor.V 800,144 800,216 784,216 784,232
+route n21 page=1 set=1 a==MAIN-U1-M1.motor.U b==MAIN-U1-F1.main.1.out 768,232 768,144
+route n19 page=1 set=1 a==MAIN-U1-F1.main.2.out b==MAIN-U1-M1.motor.V 800,144 800,216 784,216 784,232
 route n14 page=1 set=1 a=-U1-K1.main.1.out b==MAIN-U1-F1.main.1.in 920,128 920,160 736,160 736,88 768,88 768,96
 route n9 page=1 set=1 a=-U1-K1.coil.out b=-U1-X2:2.terminal.n 336,216 336,328
 route n6 page=1 set=1 a=-U1-X1:2.terminal.n b==MAIN-U1-Q1.element.2.in 88,112 88,208
@@ -151,7 +146,7 @@ route n4 page=1 set=1 a=-U1-K1.coil.in b==CTRL-U1-S0.sw.out 336,168 336,144 680,
 route n4 page=1 set=1 a==CTRL-U1-S0.sw.out b=-U1-K2.coil.in 680,136 680,144 480,144 480,168
 route n7 page=1 set=1 a=-U1-X1:3.terminal.n b==MAIN-U1-Q1.element.3.in 120,112 120,208
 route n18 page=1 set=1 a==MAIN-U1-F1.aux.in b=-U1-X2:1.terminal.n 240,232 240,112
-route n3 page=1 set=1 a==MAIN-U1-F1.main.3.out b==MAIN-U1-M1.motor.W 832,144 832,224 800,224 800,232
+route n20 page=1 set=1 a==MAIN-U1-F1.main.3.out b==MAIN-U1-M1.motor.W 832,144 832,224 800,224 800,232
 route n2 page=1 set=1 a==MAIN-U1-F1.main.2.in b=-U1-K1.main.2.out 800,96 800,32 888,32 888,144 952,144 952,128
 # today's reference markers: one per printed cross-reference (net, pin, page, place).
 marker n17 -U1-K1.main.2.in page=1 set=1 at=952,96 side=USER star=BRANCH partner==MAIN-U1-Q1.element.2.out@1.1

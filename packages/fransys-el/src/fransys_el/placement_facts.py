@@ -9,7 +9,6 @@ from fransys_model.derive import (
     function_ports,
     item_functions,
     keep_whole_sets,
-    link_groups,
     mate_ports,
     unit_boundary_pins,
     unit_chain,
@@ -108,13 +107,6 @@ def groups_of(env: Env) -> tuple[tuple[PinRef, ...], ...]:
     return tuple(dict.fromkeys(g for g in found if len(g) >= _WHOLE_SET))
 
 
-def joined_of(env: Env) -> tuple[tuple[PinRef, PinRef], ...]:
-    """Fact 15: each pair of drawn pins a conductive internal link joins (`derive.link_groups`): a pole of the pair passes its net through."""
-    pairs = ((g.ports[0], other) for g in link_groups(env.model, lambda role: role.joins_net) for other in g.ports[1:])
-    drawn = ((env.pins[a], env.pins[b]) for a, b in pairs if a in env.pins and b in env.pins and not env.undrawn.intersection((a, b)))
-    return tuple(dict.fromkeys(drawn))
-
-
 def facts_of(env: Env, syms: Sequence[Sym]) -> tuple[Facts, tuple[Skipped, ...]]:
     """The `Facts`, and the functions the keep-whole sets lost for want of a symbol."""
     mates = tuple((pin_ref(env, a), pin_ref(env, b)) for a, b in mate_ports(env.model) if not env.undrawn.intersection((a, b)))
@@ -122,5 +114,5 @@ def facts_of(env: Env, syms: Sequence[Sym]) -> tuple[Facts, tuple[Skipped, ...]]
     found = trees(env, syms)
     far_ends = far_ends_of(env, syms)
     series = (*series_of(found), *anchored(env, syms, far_ends))
-    facts = Facts(sets, units_of(env), mates, series=series, far_ends=far_ends, groups=groups_of(env), joined=joined_of(env))
+    facts = Facts(sets, units_of(env), mates, series=series, far_ends=far_ends, groups=groups_of(env))
     return facts, (*skipped, *bridges_of(env, found))

@@ -29,10 +29,10 @@ _PROJECT: dict[str, Any] = {
 
 def _close_coils(d: Design, relays: Any, at: Any, group: Any, tag: str = "X2") -> None:
     """Wire each relay's coil A2 to the terminal `tag` at `at`, so no coil is half connected."""
-    x2 = d.item("DEMO-TB-2.5", tag=tag, at=at, group=group)
+    x2 = d.strip(tag, at=at).terminal("DEMO-TB-2.5", group=group)
     wire, last = d.wiring(colour="BU", gauge="0.5"), None
     for relay in relays:  # the first coil takes the terminal; each next coil chains to the one before (a point takes one, R1266)
-        wire(relay.fn("coil")["A2"], x2["internal"] if last is None else last)
+        wire(relay.fn("coil")["A2"], x2.inner if last is None else last)
         last = relay.fn("coil")["A2"]
 
 
@@ -46,7 +46,7 @@ def _build(relay_pins: tuple[tuple[str, str], ...]):
     cab = d.scope("cab").unit("demo-pump-cabinet", revision=1, interface="1")
     cab.revision(1, date="2026-01-01", text="First release", created="XX")
     c1, group = cab.location("C1", "Cabinet"), d.group("PLC", "PLC")
-    terminal = cab.item("DEMO-TB-2.5-TWIN", tag="X1", at=c1, group=group)
+    terminal = cab.strip("X1", at=c1).terminal("DEMO-TB-2.5-TWIN", group=group)
     cab.boundary(terminal)
     fld = d.location("FLD", "Field")
     wire = d.wiring(colour="BU", gauge="0.5")
@@ -54,7 +54,7 @@ def _build(relay_pins: tuple[tuple[str, str], ...]):
     for tag, pin in relay_pins:
         if tag not in relays:
             relays[tag] = d.item("DEMO-RLY-2CO-24", tag=tag, at=fld, group=group)
-        wire(terminal["external"], relays[tag].fn("coil")[pin])
+        wire(terminal.outer, relays[tag].fn("coil")[pin])
     _close_coils(d, [r for tag, r in relays.items() if ("A2" not in {pin for t, pin in relay_pins if t == tag})], fld, group)
     return fr.build(parts, d.draft(), layout_trigger_document(), unit_document(cab), cabinet_document(fld)).model
 
@@ -96,13 +96,13 @@ def test_two_cables_to_one_far_port_build_and_name_both_cables() -> None:
     cab = d.scope("cab").unit("demo-pump-cabinet", revision=1, interface="1")
     cab.revision(1, date="2026-01-01", text="First release", created="XX")
     c1, group = cab.location("C1", "Cabinet"), d.group("PLC", "PLC")
-    x1 = cab.item("DEMO-TB-2.5-TWIN", tag="X1", at=c1, group=group)
+    x1 = cab.strip("X1", at=c1).terminal("DEMO-TB-2.5-TWIN", group=group)
     cab.boundary(x1)
     fld = d.location("FLD", "Field")
     k1 = d.item("DEMO-RLY-2CO-24", tag="K1", at=fld, group=group)
     _close_coils(d, [k1], fld, group)
     for name in ("ca", "cb"):
-        d.cable("DEMO-CBL-4G1.5", name=name, at=c1).core(1, x1["external"], k1.fn("coil")["A1"])
+        d.cable("DEMO-CBL-4G1.5", name=name, at=c1).core(1, x1.outer, k1.fn("coil")["A1"])
     model = fr.build(parts, d.draft(), layout_trigger_document(), unit_document(cab), cabinet_document(fld)).model
     (stub,) = _stubs_of_x1(model)
     assert sorted(line.split(" ")[0] for line in off_stub_text(model, stub).split("\n")) == ["-W1", "-W2"]

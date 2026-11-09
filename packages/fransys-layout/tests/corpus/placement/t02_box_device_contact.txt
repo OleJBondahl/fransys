@@ -83,12 +83,6 @@ fact boxpin =G+CAB-U1.item.di_1.1 =G+CAB-U1.item.di_2.2
 fact attached =G+CAB-K1.coil
 fact strip -X2 +CAB-X2:L:1.terminal +CAB-X2:L:2.terminal
 fact strip -X1 +CAB-X1:L:1.terminal +CAB-X1:L:2.terminal +CAB-X1:L:2.terminal@1 +CAB-X1:L:2.terminal@2
-fact joined +CAB-X1:L:1.terminal.n +CAB-X1:L:1.terminal.s
-fact joined +CAB-X1:L:2.terminal.n +CAB-X1:L:2.terminal.s
-fact joined +CAB-X1:L:2.terminal@1.n +CAB-X1:L:2.terminal@1.s
-fact joined +CAB-X1:L:2.terminal@2.n +CAB-X1:L:2.terminal@2.s
-fact joined +CAB-X2:L:1.terminal.n +CAB-X2:L:1.terminal.s
-fact joined +CAB-X2:L:2.terminal.n +CAB-X2:L:2.terminal.s
 # legend only: a general placer must not read a symbol's kind.
 kind +CAB-X2:L:1.terminal terminal
 kind +CAB-X2:L:2.terminal terminal

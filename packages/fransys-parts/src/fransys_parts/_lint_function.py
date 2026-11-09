@@ -54,10 +54,20 @@ def _check_function_entry(entry: _toml.Table, path: str, line: int, state: _Func
     findings.extend(_lint_ports.check_links(entry, path, line))
     findings.extend(_changeover.check(entry, path, line))
     findings.extend(_function_facts.check(entry, path, line))
+    findings.extend(_check_box_side(entry, path, line))
     findings.extend(_check_connector_facet(entry, path, line))
     findings.extend(_check_connector_marking_reused(entry, path, line, state))
     findings.extend(_check_plc_channel_facet(entry, path, line, state.plc_seen))
     return findings
+
+
+def _check_box_side(entry: _toml.Table, path: str, line: int) -> list[Finding]:
+    """`ENUM_VALUE`: `box_side` is `top` or `bottom` (model-0449); names the function and the two words."""
+    side = entry.get("box_side")
+    if side is None or side in ("top", "bottom"):
+        return []
+    text = f"function {entry.get('name')!r}: box_side must be 'top' or 'bottom', not {side!r}"
+    return [_toml.finding("ENUM_VALUE", path, line, text)]
 
 
 def _check_name_and_symbol(entry: _toml.Table, path: str, line: int, state: _FunctionState) -> list[Finding]:

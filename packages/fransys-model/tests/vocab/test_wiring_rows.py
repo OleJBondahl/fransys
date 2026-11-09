@@ -126,7 +126,7 @@ def test_every_row_name_is_its_value(row: WiringRow) -> None:
 def test_a_stored_v20_text_loads_and_writes_back_byte_identical() -> None:
     """Fails if `source_row` is written as `null` (the stored text has no such key)."""
     stored = (Path(__file__).resolve().parent.parent / "golden" / "cabinet.json").read_text(encoding="utf-8")
-    assert '"schema_version": 28' in stored
+    assert '"schema_version": 29' in stored
     assert "source_row" not in stored
     assert dumps(loads(stored)) == stored
 

@@ -45,14 +45,14 @@ class Read:
         )
 
 
-def read(syms: list[Sym], nets: list[Net], joined: tuple[tuple[PinRef, PinRef], ...] = ()) -> Read:
-    """Elements by key, ends of every wiring net, symbols by id, and pin to net; `joined` are the link-joined pin pairs."""
+def read(syms: list[Sym], nets: list[Net]) -> Read:
+    """Elements by key, ends of every wiring net, symbols by id, and pin to net."""
     prob = problem(syms, nets)
     wired = netted_pins(prob)
     elems = {e.key: e for s in prob.symbols for e in elements(s, wired)}
     elem_of_pin = {PinRef(e.sym, pin): e for e in elems.values() for pin in (e.n_pin, e.s_pin) if pin}
     by_id = {s.id: s for s in prob.symbols}
-    ends = {n.id: net_ends(n, elem_of_pin, by_id, {frozenset(p) for p in joined}) for n in prob.nets}
+    ends = {n.id: net_ends(n, elem_of_pin, by_id) for n in prob.nets}
     return Read(elems, ends, by_id, wired)
 
 

@@ -176,11 +176,7 @@ class Unit:
 
 @dataclass(frozen=True, slots=True)
 class Facts:
-    """Problem facts: groups kept whole, units, mated pins, series, page-free far ends, the model's required pin groups, link-joined pins.
-
-    `joined` holds each pin pair the part joins by a conductive internal link: a pole of such a pair passes its net through,
-    so layout never asks what the element is (R1580).
-    """
+    """Problem facts: groups kept whole, units, mated pins, series, page-free far ends, the model's required pin groups."""
 
     keep_whole: tuple[frozenset[str], ...] = ()
     units: tuple[Unit, ...] = ()
@@ -188,7 +184,6 @@ class Facts:
     series: tuple[Series, ...] = ()
     far_ends: tuple[tuple[PinRef, PinRef], ...] = ()
     groups: tuple[tuple[PinRef, ...], ...] = ()
-    joined: tuple[tuple[PinRef, PinRef], ...] = ()
 
 
 @dataclass(frozen=True, slots=True)

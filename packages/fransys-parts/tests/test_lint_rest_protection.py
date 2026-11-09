@@ -278,3 +278,23 @@ def test_a_switched_link_is_refused_for_every_type(tmp_path, type_):
 @pytest.mark.parametrize("link_kind", ["protective", "conductive"])
 def test_a_typeless_protection_accepts_both_kinds(tmp_path, link_kind):
     assert _link_findings(tmp_path, None, link_kind) == []
+
+
+def _boxed(side):
+    return f'[[function]]\nname = "s"\nkind = "load"\nbox_side = "{side}"\n{_PORTS}\n'
+
+
+@pytest.mark.parametrize("side", ["top", "bottom"])
+def test_a_box_side_loads_into_the_function_template(tmp_path, side):
+    model = freeze(fransys_parts.load_path(_one(tmp_path, _boxed(side))))
+    (function,) = function_templates(model).values()
+    assert function.box_side == side
+
+
+def test_a_box_side_that_is_not_top_or_bottom_is_refused_naming_the_function(tmp_path):
+    (bad,) = [f for f in _lint(tmp_path, _boxed("left")) if f.code == "ENUM_VALUE"]
+    assert "function 's'" in bad.message
+    assert "'top' or 'bottom'" in bad.message
+    assert [f.code for f in _lint(tmp_path, _boxed("top"))] == []
+    with pytest.raises(fransys_parts.PartLibraryError):
+        fransys_parts.load_path(_one(tmp_path, _boxed("left")))

@@ -374,26 +374,6 @@ fact boxpin
 fact attached -U1-K5.coil -U1-RL5.coil -U1-RL4.coil -U1-RL2.coil -U1-K0.coil -U1-K2.coil -U1-RL3.coil -U1-K3.coil -U1-K4.coil -U1-RL0.coil -U1-RL1.coil -U1-K1.coil
 fact head =BLK1-U1-F1_0.element =BLK1-U1-F1_2.element =BLK0-U1-F0_2.element =BLK0-U1-F0_0.element =BLK0-U1-F0_5.element =BLK0-U1-F0_4.element =BLK1-U1-F1_3.element =BLK1-U1-F1_4.element =BLK0-U1-F0_3.element =BLK1-U1-F1_5.element =BLK0-U1-F0_1.element =BLK1-U1-F1_1.element
 fact strip -U1-X1 -U1-X1:15.terminal =BLK0-U1-X1:1.terminal =CTRL-U1-X1:12.terminal =BLK0-U1-X1:3.terminal =BLK0-U1-X1:5.terminal =CTRL-U1-X1:11.terminal -U1-X1:14.terminal =BLK0-U1-X1:4.terminal -U1-X1:16.terminal =BLK0-U1-X1:2.terminal -U1-X1:20.terminal -U1-X1:17.terminal =CTRL-U1-X1:7.terminal -U1-X1:18.terminal =BLK0-U1-X1:6.terminal -U1-X1:13.terminal =CTRL-U1-X1:9.terminal -U1-X1:19.terminal =CTRL-U1-X1:8.terminal =CTRL-U1-X1:10.terminal
-fact joined =CTRL-U1-X1:11.terminal.n =CTRL-U1-X1:11.terminal.s
-fact joined =CTRL-U1-X1:12.terminal.n =CTRL-U1-X1:12.terminal.s
-fact joined =BLK0-U1-X1:6.terminal.n =BLK0-U1-X1:6.terminal.s
-fact joined =CTRL-U1-X1:10.terminal.n =CTRL-U1-X1:10.terminal.s
-fact joined =CTRL-U1-X1:9.terminal.n =CTRL-U1-X1:9.terminal.s
-fact joined =CTRL-U1-X1:8.terminal.n =CTRL-U1-X1:8.terminal.s
-fact joined =BLK0-U1-X1:2.terminal.n =BLK0-U1-X1:2.terminal.s
-fact joined =BLK0-U1-X1:5.terminal.n =BLK0-U1-X1:5.terminal.s
-fact joined =BLK0-U1-X1:3.terminal.n =BLK0-U1-X1:3.terminal.s
-fact joined -U1-X1:20.terminal.n -U1-X1:20.terminal.s
-fact joined =BLK0-U1-X1:1.terminal.n =BLK0-U1-X1:1.terminal.s
-fact joined =CTRL-U1-X1:7.terminal.n =CTRL-U1-X1:7.terminal.s
-fact joined =BLK0-U1-X1:4.terminal.n =BLK0-U1-X1:4.terminal.s
-fact joined -U1-X1:17.terminal.n -U1-X1:17.terminal.s
-fact joined -U1-X1:15.terminal.n -U1-X1:15.terminal.s
-fact joined -U1-X1:18.terminal.n -U1-X1:18.terminal.s
-fact joined -U1-X1:19.terminal.n -U1-X1:19.terminal.s
-fact joined -U1-X1:16.terminal.n -U1-X1:16.terminal.s
-fact joined -U1-X1:13.terminal.n -U1-X1:13.terminal.s
-fact joined -U1-X1:14.terminal.n -U1-X1:14.terminal.s
 # legend only: a general placer must not read a symbol's kind.
 kind =BLK0-U1-R0_3.lamp load
 kind -U1-K5.coil coil

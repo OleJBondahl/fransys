@@ -50,7 +50,7 @@ def model() -> Model:
     with d.function("F", "Func"):
         d.device("Q1", "DEMO-MCB-2P", place="L0")
         d.device(_LONG, "DEMO-MCB-2P", place="L0")
-        d.device("X1", "DEMO-TB-2.5", place="L0")
+        d.terminal_strip("X1", "DEMO-TB-2.5", 1, place="L0")
         d.device("K1", "DEMO-RLY-2CO-24", place="L0")
         d.device("A1", "DEMO-RELAY-MOD-2", place="L0")
     return fr.build(d).model
@@ -74,7 +74,7 @@ def _foot(model: Model, function: Id[Function], geometry: tuple[Any, ...]):
 def test_a_terminal_shrinks_to_its_body_in_a_strip_row_and_is_the_library_keepout_alone(
     model: Model,
 ) -> None:
-    terminal = _function(model, "-X1:internal", FunctionKind.TERMINAL)
+    terminal = _function(model, "-X1:1", FunctionKind.TERMINAL)
     assert text_width_g(LIBRARY.font, "-X1:internal", height=_HEIGHT) < 48  # a short designation: slot unchanged
     foot = _foot(model, terminal, _TERMINAL)
     assert foot.in_strip_row == _e(-8, -8, 16, 16)

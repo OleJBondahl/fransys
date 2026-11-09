@@ -137,27 +137,29 @@ def _deal_to_legs(fan: FanDraft, cells: Sequence[Cell]) -> Sequence[Cell]:
 
 
 def _hub_at_head(fan: FanDraft, hub: Cell) -> bool:
-    """Stand the hub over the first leg's lane; False when that leg is a box pin (no lane)."""
-    first = fan.legs[0]
-    if first.lane is None:
-        return False
-    first.lane.cells.insert(0, hub)
-    fan.drivers.append(Att(first.lane, "hub-head"))
-    fan.legs[0] = Att(first.lane, "after-hub")
-    fan.hub = hub.sym
-    return True
+    """Stand the hub over the first leg that has a lane; False when every leg is a box pin."""
+    for i, first in enumerate(fan.legs):
+        if first.lane is None:
+            continue
+        first.lane.cells.insert(0, hub)
+        fan.drivers.append(Att(first.lane, "hub-head"))
+        fan.legs[i] = Att(first.lane, "after-hub")
+        fan.hub = hub.sym
+        return True
+    return False
 
 
 def _hub_at_foot(fan: FanDraft, hub: Cell) -> bool:
-    """Stand the hub under the first driver's lane; False when that driver is a box pin."""
-    first = fan.drivers[0]
-    if first.lane is None:
-        return False
-    first.lane.cells.append(hub)
-    fan.drivers[0] = Att(first.lane, "before-hub")
-    fan.legs.append(Att(first.lane, "hub-foot"))
-    fan.hub = hub.sym
-    return True
+    """Stand the hub under the first driver that has a lane; False when every driver is a box pin."""
+    for i, first in enumerate(fan.drivers):
+        if first.lane is None:
+            continue
+        first.lane.cells.append(hub)
+        fan.drivers[i] = Att(first.lane, "before-hub")
+        fan.legs.append(Att(first.lane, "hub-foot"))
+        fan.hub = hub.sym
+        return True
+    return False
 
 
 def resolve(att: Att) -> Attach:

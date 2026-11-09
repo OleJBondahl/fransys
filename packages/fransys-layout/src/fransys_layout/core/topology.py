@@ -255,8 +255,7 @@ def _ends_of(
 ) -> Ends:
     elem_of_pin = {PinRef(e.sym, p.id): e for e in elems.values() for p in drawn[e.sym].pins if e.form == "free" or p.id in (e.n_pin, e.s_pin)}
     live = set(wired.values())
-    joined = {frozenset(pair) for pair in problem.facts.joined}
-    return {n.id: net_ends(n, elem_of_pin, drawn, joined) for n in problem.nets if n.id in live}
+    return {n.id: net_ends(n, elem_of_pin, drawn) for n in problem.nets if n.id in live}
 
 
 def _nets_of(fans: tuple[Fan, ...], cross: tuple[CrossLink, ...]) -> tuple[dict[str, str], set[str]]:

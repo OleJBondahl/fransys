@@ -80,18 +80,8 @@ def links_of(ends_by_net: Ends, elems: Mapping[str, Elem], syms: Mapping[str, Sy
         series = len(outer) == PAIR and outer[0].site != outer[1].site
         turns = any(_carries_turn(e, elems[e.elem], count, syms) for e in outer if e.elem)
         if len(outer) == PAIR and not others and (series or (turns and not throughs)):
-            out[net] = Link(net, outer[0], outer[1], _poles_first(throughs, elems, from_bottom=outer[0].site == "bottom"))
+            out[net] = Link(net, outer[0], outer[1], throughs)
     return out
-
-
-def _poles_first(throughs: tuple[str, ...], elems: Mapping[str, Elem], *, from_bottom: bool) -> tuple[str, ...]:
-    """The through elements in lane order: the poles stand next to the end the current leaves, the free ones after them.
-
-    A pole is in series on its conductors, so its two pins are consecutive on the lane; a free element is a branch (NET-END-THROUGH).
-    """
-    poles = tuple(t for t in throughs if elems[t].form == "pole")
-    free = tuple(t for t in throughs if elems[t].form != "pole")
-    return (*poles, *free) if from_bottom else (*free, *poles)
 
 
 def _carries_turn(end: NetEnd, elem: Elem, count: Mapping[str, int], syms: Mapping[str, Sym]) -> bool:

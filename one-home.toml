@@ -189,7 +189,6 @@
 "fransys_model.derive.rows_sheet::unit" = 2
 "fransys_model.derive.sheets::unit" = 1
 "fransys_model.derive.stub_text::unit" = 1
-"fransys_model.derive.tag_text::parent" = 1
 "fransys_model.derive.texts.designation_segments::unit" = 3
 "fransys_model.derive.unit_nodes::parent" = 1
 "fransys_model.derive.unit_nodes::unit" = 4
@@ -207,6 +206,7 @@
 "fransys_model.layout.tables::unit" = 2
 "fransys_model.vocab.document::unit" = 1
 "fransys_author.instantiate::kind" = 1
+"fransys_author._scope_build::kind" = 1
 "fransys_model.vocab.markings::kind" = 1
 "fransys_model.vocab.tables::kind" = 1
 "fransys_model.vocab.templates::kind" = 3
@@ -256,6 +256,7 @@
 "fransys_model.derive.facts.part_pins::LinkKind" = 1
 "fransys_author._earth_net::NetClass" = 1
 "fransys_author._partless::FunctionKind" = 2
+"fransys_author._scope_build::FunctionKind" = 1
 "fransys_author._scope_build::ConductorKind" = 1
 "fransys_author.handles::ConductorKind" = 1
 "fransys_author.surface._bare::FunctionKind" = 1

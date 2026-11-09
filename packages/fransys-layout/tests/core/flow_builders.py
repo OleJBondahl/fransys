@@ -102,12 +102,9 @@ def net(net_id: str, *pins: str, **kw: Any) -> Net:
     return Net(net_id, tuple(PinRef(*p.split(".")) for p in pins), **kw)
 
 
-def problem(
-    syms: list[Sym], nets: list[Net], hints: Hints | None = None, area: Size = AREA, joined: tuple[tuple[PinRef, PinRef], ...] = ()
-) -> PlacementProblem:
-    """A placement problem over the given symbols and nets, default hints and the test area; `joined` are link-joined pin pairs."""
-    facts = Facts(joined=joined)
-    return PlacementProblem(area, tuple(syms), tuple(nets), facts, hints or Hints())
+def problem(syms: list[Sym], nets: list[Net], hints: Hints | None = None, area: Size = AREA) -> PlacementProblem:
+    """A placement problem over the given symbols and nets, default hints and the test area."""
+    return PlacementProblem(area, tuple(syms), tuple(nets), Facts(), hints or Hints())
 
 
 def flow_of(syms: list[Sym], nets: list[Net]) -> FlowGraph:

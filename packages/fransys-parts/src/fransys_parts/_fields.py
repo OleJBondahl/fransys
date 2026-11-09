@@ -77,6 +77,7 @@ FUNCTION_FIELDS = {
     "kind": _Field(str, enum=FunctionKind),
     "symbol": _Field(str, required=False),
     "energy": _Field(str, required=False, enum=Energy),
+    "box_side": _Field(str, required=False),
     "ports": _Field(list),
     "links": _Field(list, required=False),
 }

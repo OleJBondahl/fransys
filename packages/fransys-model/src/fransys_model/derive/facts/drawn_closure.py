@@ -3,8 +3,9 @@
 Above `power` in the import order: which conductors a drawing leaves out can depend on a net's kind.
 """
 
-from fransys_model.derive.facts.closure import PhysicalNet, joined_nets, required_groups
+from fransys_model.derive.facts.closure import PhysicalNet, _physical, joined_nets, link_groups, required_groups
 from fransys_model.derive.facts.conductor_facts import drawn_conductors
+from fransys_model.derive.facts.item_predicates import terminal_items
 from fransys_model.derive.indexes import build_indexes
 from fransys_model.derive.lookups import item_of_port
 from fransys_model.derive.power import is_rail_terminal
@@ -35,8 +36,14 @@ def drawn_groups(model: Model) -> tuple[tuple[Id[Port], ...], ...]:
 
 @digest_cached(DIGEST_CACHE_SIZE)
 def drawn_physical_nets(model: Model) -> tuple[PhysicalNet, ...]:
-    """The nets a drawing joins: `physical_nets` built from `drawn_groups`, so a bridge joins nothing."""
-    return joined_nets(model, drawn_groups(model))
+    """The nets a drawing draws wires for: `drawn_groups` less the conductive links, so a bridge joins nothing.
+
+    A link's ports stand on two nets: a pole in series sits between them, as its conductors run (R2071, option A).
+    A terminal's link stays: its ports draw as one node.
+    """
+    terminals = terminal_items(model)
+    links = {g.ports for g in link_groups(model, _physical) if g.item not in terminals}
+    return joined_nets(model, (g for g in drawn_groups(model) if g not in links))
 
 
 @digest_cached(DIGEST_CACHE_SIZE)

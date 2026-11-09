@@ -1,0 +1,39 @@
+schema = 2
+
+[part]
+mpn = "TBOX-TRAFO"
+manufacturer = "Demo"
+description = "Isolating transformer drawn as a box with a winding sign"
+category = "generic"
+class_code = "T"
+
+[[function]]
+name = "primary"
+kind = "load"
+symbol = "transformer-box"
+ports = [
+    { name = "1U", role = "generic", side = "line", symbol_port = "p1" },
+    { name = "1V", role = "generic", side = "line", symbol_port = "p2" },
+]
+
+[function.rating]
+voltage = [{ nom = "440 V", at = ["AC"] }]
+
+[function.operating]
+voltage = [{ max = "440 V" }]
+
+[[function]]
+name = "secondary"
+kind = "supply"
+symbol = "transformer-box"
+ports = [
+    { name = "2U", role = "generic", side = "load", symbol_port = "s1" },
+    { name = "2V", role = "generic", side = "load", symbol_port = "s2" },
+]
+
+[function.rating]
+voltage = [{ nom = "230 V", at = ["AC"] }]
+current = [{ nom = "1.7 A", at = ["AC"] }]
+
+[function.operating]
+voltage = [{ nom = "230 V", max = "230 V" }]

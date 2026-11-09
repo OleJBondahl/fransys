@@ -3959,6 +3959,19 @@ The `<ref>` export-name fragment of `item`: a strip `+C1-X1` gives `C1-X1`.
 
 Names a per-item export in `out/all/` (`unit=None`) and a netlist intermediate.
 
+### reference_targets
+
+```python
+def reference_targets(model: Model) -> Mapping[tuple[Id[Page], tuple[int, str]], tuple[tuple[Id[LinkMarker], int, frozenset[Id[Port]], str], ...]]
+```
+
+Each reference marker's stored `(column, row letter)` on its page, to the candidate ends standing there.
+
+A candidate end is the marker's id, its `#n`, the ports of its whole reference group and the text its box
+draws (a mate of a box draws its lead's joined text), so a reader who finds a drawn marker by page, cell
+and text knows which markers are the same reference.
+Page numbers restart per drawing set, so the key is the page's id, never a printed `#n`.
+
 ### references_off_document
 
 ```python

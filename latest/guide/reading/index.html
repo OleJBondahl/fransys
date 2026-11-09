@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.7/guide/reading/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.8/guide/reading/">
       
       
       
@@ -2293,6 +2293,7 @@ and <code>fransys.derive.cores_text(core_count, pairs)</code> is the Cores cell:
 designation plus the port's name, dash-prefixed like every physical tag (<code>-K1:13</code>).</p>
 <p><code>fransys.derive.reference_designation(model, item)</code> renders an item's full reference: its
 location and its product designation together (<code>+C1-K1</code>).</p>
+<p><code>fransys.derive.reference_targets(model)</code> gives, per page and frame cell, the reference markers that stand there: each is the marker's id, its <code>#n</code> and the ports of its reference group. It is how a check reads a drawn marker back without parsing its text.</p>
 <p><code>fransys.derive.printed_designation(model, item)</code> renders an item the way a list prints it:
 dash-prefixed, product part only, with no location segment.</p>
 <p>Each of these takes further keyword-only options; their docstrings cover the exact rules.</p>
@@ -2460,7 +2461,7 @@ A pin handle such as <code>housing[1]</code> has an <code>.id</code>; an item is
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.7 documentation
+      Fransys 0.23.8 documentation
     </div>
   
   

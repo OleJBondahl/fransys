@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.7/api/derive/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.8/api/derive/">
       
       
       
@@ -5639,6 +5639,17 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         reference_fragment
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reference_targets" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        reference_targets
       </span>
     </span>
   </a>
@@ -12893,6 +12904,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#reference_targets" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        reference_targets
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#references_off_document" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -18587,6 +18609,14 @@ calls this before it builds the record. A <code>phase</code> of the wrong type g
 </code></pre></div>
 <p>The <code>&lt;ref&gt;</code> export-name fragment of <code>item</code>: a strip <code>+C1-X1</code> gives <code>C1-X1</code>.</p>
 <p>Names a per-item export in <code>out/all/</code> (<code>unit=None</code>) and a netlist intermediate.</p>
+<h3 id="reference_targets">reference_targets</h3>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">reference_targets</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">Id</span><span class="p">[</span><span class="n">Page</span><span class="p">],</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]],</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">Id</span><span class="p">[</span><span class="n">LinkMarker</span><span class="p">],</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">frozenset</span><span class="p">[</span><span class="n">Id</span><span class="p">[</span><span class="n">Port</span><span class="p">]],</span> <span class="nb">str</span><span class="p">],</span> <span class="o">...</span><span class="p">]]</span>
+</code></pre></div>
+<p>Each reference marker's stored <code>(column, row letter)</code> on its page, to the candidate ends standing there.</p>
+<p>A candidate end is the marker's id, its <code>#n</code>, the ports of its whole reference group and the text its box
+draws (a mate of a box draws its lead's joined text), so a reader who finds a drawn marker by page, cell
+and text knows which markers are the same reference.
+Page numbers restart per drawing set, so the key is the page's id, never a printed <code>#n</code>.</p>
 <h3 id="references_off_document">references_off_document</h3>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">references_off_document</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">OffDocumentReference</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
 </code></pre></div>
@@ -20437,7 +20467,7 @@ for any other box.</p>
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.7 documentation
+      Fransys 0.23.8 documentation
     </div>
   
   

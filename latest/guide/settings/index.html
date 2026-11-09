@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.7/guide/settings/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.8/guide/settings/">
       
       
       
@@ -2310,7 +2310,7 @@
 <span class="k">assert</span> <span class="n">s</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="s2">"export"</span><span class="p">)[</span><span class="s2">"data_dir"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"data"</span>
 </code></pre></div>
 <h2 id="the-ring-out-sheet">The ring-out sheet</h2>
-<p>Add <code>"ring_out"</code> to <code>reports</code> and <code>fr.write</code> also writes one <code>.xlsx</code> for every PDF document that has drawings, named with the PDF's stem (<code>pump.pdf</code>, <code>pump.xlsx</code>). A unit's sheet lists its own joins; any other document's lists the wires and cores drawn on its pages and the bridges of its strips. <code>ring_out_skip = ["system"]</code> leaves the named document presets without a sheet (default empty). The electrician rings out the cabinet line by line on a phone and marks each line. Files in the output folder are replaced on each write, so copy a filled-in sheet out of it before you rebuild.</p>
+<p>Add <code>"ring_out"</code> to <code>reports</code> and <code>fr.write</code> also writes one <code>.xlsx</code> for every PDF document that has drawings, named with the PDF's stem (<code>pump.pdf</code>, <code>pump.xlsx</code>). A unit's sheet lists its own joins; any other document's lists the wires and cores drawn on its pages and the bridges of its strips. <code>ring_out_skip = ["system"]</code> leaves the named document presets without a sheet (default empty). The electrician rings out the cabinet line by line on a phone and marks each line. Files in the output folder are replaced on each write, so copy a filled-in sheet out of it before you rebuild. Bridge rows carry no mm²: a bridge is a terminal accessory, not a wire.</p>
 <div class="highlight"><pre><span></span><code><span class="k">[export]</span>
 <span class="n">reports</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"bom"</span><span class="p">,</span><span class="w"> </span><span class="s2">"ring_out"</span><span class="p">]</span>
 </code></pre></div>
@@ -2385,7 +2385,7 @@
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.7 documentation
+      Fransys 0.23.8 documentation
     </div>
   
   

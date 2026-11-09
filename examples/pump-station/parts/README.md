@@ -82,7 +82,7 @@ existing 3NW7033 holder. The choice of aM over gG is flagged for the owner's loo
   403s, no port-numbering figure in the manual). The one port E3 mates `-W3` to is modelled as
   `"1"`, carried over from that documented convention, not read off a diagram.
 - **`-K1` (Phoenix FL SWITCH 1005N) `port_1` pin count fixed from 1 to 8 (ruling).**
-  Was modelled with a single port `"1"` despite `[function.connector].pincount = 8`, mismatching
+  Was modelled with a single port `"1"` despite `[function.connector].poles = 8`, mismatching
   the RJ45 plug part's 8-pin model and raising a `MATE_PORT_MISMATCH` finding. Checked whether
   fewer than 8 contacts are actually wired: web search (RS Online's listing) confirms the
   1005N is 10/100 Mbps (Fast Ethernet, pins 1/2/3/6 only electrically used); the manual PDF

@@ -12,7 +12,7 @@ schema = 2
 # flagged in the hand-back as not fully confirmed. No symbol: G5 (no symbol for RJ45).
 #
 # port_1 port count (fixing a MATE_PORT_MISMATCH bug): originally modelled
-# with a single port "1", even though [function.connector] already declared pincount = 8 -- this
+# with a single port "1", even though [function.connector] already declared poles = 8 -- this
 # mismatched the RJ45 plug part (rj45-plug-epic-data-21700601.toml), which correctly models all
 # 8 pins of the universal RJ45 8P8C pinout, and produced a MATE_PORT_MISMATCH finding at
 # d.mate(). Re-checked whether this switch's RJ45 jacks actually carry 8 wired contacts: the
@@ -50,5 +50,5 @@ ports = [
 
 [function.connector]
 style = "rj45"
-pincount = 8
+poles = 8
 gender = "female"

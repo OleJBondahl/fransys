@@ -29,5 +29,5 @@ ports = [
 
 [function.connector]
 style = "rj45"
-pincount = 8
+poles = 8
 gender = "male"

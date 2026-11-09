@@ -32,7 +32,7 @@ ports = [
 
 [function.connector]
 style = "rj45"
-pincount = 8
+poles = 8
 gender = "female"
 marking = "X1"
 
@@ -52,7 +52,7 @@ ports = [
 
 [function.connector]
 style = "rj45"
-pincount = 8
+poles = 8
 gender = "female"
 marking = "X2"
 

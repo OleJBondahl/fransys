@@ -24,7 +24,7 @@ ports = [
 
 [function.connector]
 style = "mstb-header-3p"
-pincount = 3
+poles = 3
 gender = "female"
 mates = ["1757022"]
 

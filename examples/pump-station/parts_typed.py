@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, ClassVar, Literal, Never, override
 from fransys import Pin, Throw, TypedDevice, TypedFn
 
 SOURCES = ("example_parts",)
-LIBRARY_DIGEST = "13663bc38051dfcacd1afbd4bbbbad2ef9de57c16c71fe973cd57250cf3db58f"
+LIBRARY_DIGEST = "e4e5a598694864c7526d2e113f8309b70986285b5e069da8dce966969d776761"
 
 
 class P_1085039__port_1(TypedFn):

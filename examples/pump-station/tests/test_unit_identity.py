@@ -170,7 +170,7 @@ LAYOUT_WARNINGS = {
     "POWER_SYMBOL_UNPLACED": 0,
     "SYMBOL_OVERLAP": 0,
     "JOIN_UNALIGNED": 0,
-    "OVERLAP": 1,  # measured on 0.23.7 (CUT-FOLDS-R reverted; 0.23.4 value)
+    "OVERLAP": 14,  # v0.23.10 layout: +13 (was 1 at 0.23.8) text/text and wire/text on CTL/0 and all/P1, traced in KI-903
 }
 EXPECTED_WARNINGS = LAYOUT_WARNINGS
 

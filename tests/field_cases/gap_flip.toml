@@ -105,12 +105,12 @@
 
 "test_a_wide_bank_of_relays_fed_from_a_controllers_pins_builds.py::test_no_reference_marker_overlaps_another_on_the_bank_of_forty" = "GAP-FLIP-640"  # KI-640 MARKER-LOOP-AVOID (R1732): the markers placed in the loop overlap one another on page 4f2c6ea0
 
-# KI-777 CUT-FOLDS-AS-PLACED (R1952): the cut folds with no reference plan; joins the KI-768 order
-"test_a_second_output_card_for_the_valve_coils_builds_with_no_error.py::test_the_cut_row_fits_its_page_with_unused_pins_hidden[-]" = "GAP-FLIP-777"  # KI-777 CUT-FOLDS-AS-PLACED (R1952): the cut folds with no reference plan; joins the KI-768 order
-"test_a_second_output_card_for_the_valve_coils_builds_with_no_error.py::test_the_cut_row_fits_its_page_with_unused_pins_hidden[a]" = "GAP-FLIP-777"  # KI-777 CUT-FOLDS-AS-PLACED (R1952): the cut folds with no reference plan; joins the KI-768 order
-"test_a_second_output_card_for_the_valve_coils_builds_with_no_error.py::test_the_cut_row_fits_its_page_with_unused_pins_hidden[b]" = "GAP-FLIP-777"  # KI-777 CUT-FOLDS-AS-PLACED (R1952): the cut folds with no reference plan; joins the KI-768 order
-"test_a_second_output_card_for_the_valve_coils_builds_with_no_error.py::test_the_cut_row_fits_its_page_with_unused_pins_hidden[c]" = "GAP-FLIP-777"  # KI-777 CUT-FOLDS-AS-PLACED (R1952): the cut folds with no reference plan; joins the KI-768 order
-"test_a_second_output_card_for_the_valve_coils_builds_with_no_error.py::test_the_cut_row_fits_its_page_with_unused_pins_hidden[d]" = "GAP-FLIP-777"  # KI-777 CUT-FOLDS-AS-PLACED (R1952): the cut folds with no reference plan; joins the KI-768 order
-"test_a_second_output_card_for_the_valve_coils_builds_with_no_error.py::test_the_cut_row_fits_its_page_with_unused_pins_hidden[e]" = "GAP-FLIP-777"  # KI-777 CUT-FOLDS-AS-PLACED (R1952): the cut folds with no reference plan; joins the KI-768 order
+# KI-777 KI-777-RETURN (R1952): the cut folds with no reference plan; joins the KI-768 order
+"test_a_second_output_card_for_the_valve_coils_builds_with_no_error.py::test_the_cut_row_fits_its_page_with_unused_pins_hidden[-]" = "GAP-FLIP-777"  # KI-777 KI-777-RETURN (R1952): the cut folds with no reference plan; joins the KI-768 order
+"test_a_second_output_card_for_the_valve_coils_builds_with_no_error.py::test_the_cut_row_fits_its_page_with_unused_pins_hidden[a]" = "GAP-FLIP-777"  # KI-777 KI-777-RETURN (R1952): the cut folds with no reference plan; joins the KI-768 order
+"test_a_second_output_card_for_the_valve_coils_builds_with_no_error.py::test_the_cut_row_fits_its_page_with_unused_pins_hidden[b]" = "GAP-FLIP-777"  # KI-777 KI-777-RETURN (R1952): the cut folds with no reference plan; joins the KI-768 order
+"test_a_second_output_card_for_the_valve_coils_builds_with_no_error.py::test_the_cut_row_fits_its_page_with_unused_pins_hidden[c]" = "GAP-FLIP-777"  # KI-777 KI-777-RETURN (R1952): the cut folds with no reference plan; joins the KI-768 order
+"test_a_second_output_card_for_the_valve_coils_builds_with_no_error.py::test_the_cut_row_fits_its_page_with_unused_pins_hidden[d]" = "GAP-FLIP-777"  # KI-777 KI-777-RETURN (R1952): the cut folds with no reference plan; joins the KI-768 order
+"test_a_second_output_card_for_the_valve_coils_builds_with_no_error.py::test_the_cut_row_fits_its_page_with_unused_pins_hidden[e]" = "GAP-FLIP-777"  # KI-777 KI-777-RETURN (R1952): the cut folds with no reference plan; joins the KI-768 order
 
 [raises]

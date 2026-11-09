@@ -27,6 +27,7 @@ from .drawn_graph import Union
 from .drawn_identity_marks import declared_marks
 from .drawn_ids import core_symbol_id, symbol_id
 from .drawn_power import POWER_KEYS, join_power, port_nets
+from .drawn_references import join_references
 from .placement_ids import pin_names, symbol_ids
 
 if TYPE_CHECKING:
@@ -81,6 +82,7 @@ class Netlist:
     pitch: int = 0
     nets: dict[str, str] = field(default_factory=dict)
     marks: dict[str, str] = field(default_factory=dict)
+    unreadable: tuple[tuple[Id[Page], Id[LinkMarker], str], ...] = ()
 
     def reached(self, port: str) -> bool:
         """True when a wire end, a dot or a marker stands on a point of the port, or on its link's."""
@@ -218,20 +220,6 @@ def _lanes(
                 union.join(first.setdefault(net, (page, end)), (page, end))
 
 
-def _pair(
-    union: Union,
-    markers: Mapping[str, tuple[Id[Page], XY] | None],
-    records: Mapping[str, LinkMarker],
-) -> None:
-    """Join each pairing marker (not an off stub) to its partner's node."""
-    for key, node in markers.items():
-        record = records.get(key)
-        if node is None or record is None or record.star is StarKind.OFF:
-            continue
-        if (other := markers.get(record.partner.value)) is not None:
-            union.join(node, other)
-
-
 def _join_copies(union: Union, markers: Mapping[str, tuple[Id[Page], XY] | None], records: Mapping[str, LinkMarker]) -> None:
     """Join the two stubs that name each other on two pages: a copy and its hub stand for one device.
 
@@ -324,7 +312,7 @@ def drawn_netlist(
     union = _join(pages)
     records = {m.id.value: m for m in links}
     markers = _marker_nodes(pages)
-    _pair(union, markers, records)
+    unreadable = join_references(model, pages, library, union)
     _join_copies(union, markers, records)
     placed = _placed(pages)
     _lanes(union, pages, markers, records, library.grid.wire_pitch)
@@ -340,6 +328,7 @@ def drawn_netlist(
         pitch=library.grid.wire_pitch,
         nets=port_nets(model, ids),
         marks=declared_marks(drawings, by, library),
+        unreadable=unreadable,
     )
     _link(found, model, groups)
     join_power(found, model)

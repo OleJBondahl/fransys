@@ -35,6 +35,8 @@ def test_each_salt_draws_one_net_per_reference(salt: str) -> None:
     assert sorted(built) == sorted(_CASES)
     assert [n for n, b in built.items() if not b["markers"]] == []
     assert {n: b["split"] for n, b in built.items() if b["split"]} == {}
+    assert sum(b["tag_ends"] for b in built.values()) > 0  # the guard below sees real TAG ends (mcc plans tags)
+    assert {n: b["pinless"] for n, b in built.items() if b["pinless"]} == {}
     assert {n: b["shorts"] for n, b in built.items() if b["shorts"]} == {}
     assert {n: b["errors"] for n, b in built.items() if b["errors"]} == {}
 

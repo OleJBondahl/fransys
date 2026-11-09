@@ -8,10 +8,9 @@ import fransys as fr
 from _model_build_cover import cabinet_document
 from fransys.colours import BU
 
-from fransys_model.derive import position_at
+from fransys_model.derive import position_at, reference_targets
 from fransys_model.derive.designation import port_designation
 from fransys_model.derive.drawing_text import marker_text
-from fransys_model.derive.marker_text import marker_cell
 from fransys_model.layout import LinkMarker, Page, layout_of
 
 if TYPE_CHECKING:
@@ -47,7 +46,8 @@ def _terminal_cell(model: Model) -> str:
     """The frame cell of the strip terminal's own marker, as its page reads it."""
     marker = _marker(model, "-X1:1")
     page = layout_of(model, Page)[marker.page]
-    return position_at(model, page, page, *marker_cell(model, marker))
+    cell = next(cell for (_, cell), ends in reference_targets(model).items() if any(end[0] == marker.id for end in ends))
+    return position_at(model, page, page, *cell)
 
 
 def test_a_relays_marker_names_the_terminal_first() -> None:

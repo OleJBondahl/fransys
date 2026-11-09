@@ -6,7 +6,7 @@ import pytest
 
 from fransys_layout.core.values import RefKind
 
-from .cut_fixtures import chain, cut_of, elem
+from .cut_fixtures import chain, cut_of, elem, net
 
 PAGE_H = 822
 
@@ -24,3 +24,15 @@ def test_a_column_of_four_pages_is_cut_into_pieces_that_each_fit_one() -> None:
     tags = [r for r in result.spec.reference_plan if r.kind is RefKind.TAG]
     assert len(tags) == len(columns) - 1
     assert not [f for f in result.spec.findings if f.code == "PAGE_OVERFLOW"]
+
+
+def test_every_piece_of_a_cut_column_has_one_head_and_one_foot_per_lane() -> None:
+    """KI-836: one element in parallel with k10 is a member lane shorter than the chain; the cut left it no foot, and the last piece two."""
+    ids = [f"k{i:02d}" for i in range(30)]
+    nets = [n for n in chain(ids) if n.id not in ("x9", "x10")]
+    nets += [net("x9", "k09.s", "k10.n", "m.n"), net("x10", "k10.s", "k11.n", "m.s")]
+    result = cut_of([*(elem(i, 40, 96) for i in ids), elem("m", 40, 96)], nets)
+    shapes = [(len(c.lanes), len(c.heads), len(c.feet)) for c in result.flow.columns]
+    assert len(result.flow.columns) > 2
+    assert any(lanes == 2 for lanes, _, _ in shapes)
+    assert all(lanes == heads == feet for lanes, heads, feet in shapes)

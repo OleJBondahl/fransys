@@ -256,6 +256,7 @@ from .lookups import (
 )
 from .loose import function_is_loose
 from .marker_targets import widest_position_text, widest_target_line
+from .marker_text import reference_targets
 from .mate_rows import mates
 from .netlist_pins import board_pins, pin_text
 from .numbering_moves import designation_moves, gone_or_moved
@@ -1096,6 +1097,7 @@ __all__ = [
     "record_key_text",
     "reference_designation",
     "reference_fragment",
+    "reference_targets",
     "references_off_document",
     "refuses",
     "release_identity",

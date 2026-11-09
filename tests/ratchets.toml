@@ -231,6 +231,15 @@ panel_di16p = 0
 remote_io = 0
 skid = 0
 
+[drawing_reference_not_readable]
+# REFERENCE_NOT_READABLE (READ-REFERENCES, R2): a reference marker whose drawn text or cell is not the model's, or one `#n` naming two groups in a set. Target 0 everywhere.
+distribution_board = 0
+machine_panel = 0
+mcc = 0
+panel_di16p = 0
+remote_io = 0
+skid = 0
+
 [drawing_dot_on_crossing]
 # DOT_ON_CROSSING (READ-DOT-CROSSING, R5): a junction dot stands where two wires cross. Target 0 everywhere.
 distribution_board = 0

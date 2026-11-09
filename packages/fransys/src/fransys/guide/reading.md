@@ -174,6 +174,8 @@ designation plus the port's name, dash-prefixed like every physical tag (`-K1:13
 `fransys.derive.reference_designation(model, item)` renders an item's full reference: its
 location and its product designation together (`+C1-K1`).
 
+`fransys.derive.reference_targets(model)` gives, per page and frame cell, the reference markers that stand there: each is the marker's id, its `#n` and the ports of its reference group. It is how a check reads a drawn marker back without parsing its text.
+
 `fransys.derive.printed_designation(model, item)` renders an item the way a list prints it:
 dash-prefixed, product part only, with no location segment.
 

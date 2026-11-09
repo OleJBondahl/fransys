@@ -150,6 +150,7 @@ RULED = frozenset(
         "prospective_fault",
         "reading_cables",
         "reference_designation",
+        "reference_targets",
         "release_order",
         "revision_history",
         "revision_text",

@@ -47,6 +47,7 @@ _EL_ONLY = [
     "POWER_SYMBOL_NOT_JOINED",
     "RAIL_IDENTITY_SHARED",
     "PIN_MARKING_WRONG",
+    "REFERENCE_NOT_READABLE",
     "DOT_ON_CROSSING",
     "WIRE_OVER_PIN_TIP",
     "HARNESS_WIRE_MISMATCH",  # PROOF-S5 (el-0122): el compares the cable block with the harness-wire rows

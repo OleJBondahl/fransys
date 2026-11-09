@@ -32,6 +32,7 @@ from derive_helpers import (
     tagged_item as _item,
 )
 
+from fransys_model.derive import reference_targets
 from fransys_model.derive.drawing_text import (
     marker_text,
     position_text,
@@ -112,8 +113,8 @@ def _conductor(new_id: Callable[[str], Id[Any]], *, a: Id[Port], b: Id[Port]) ->
 # --------------------------------------------------------------------------------------
 
 
-def _star_text(origin: Origin, branch_xs: tuple[int, ...], *, with_rows: bool = True) -> str:
-    """The reference marker's text for a star whose branches stand at `branch_xs` on one page."""
+def _star_model(origin: Origin, branch_xs: tuple[int, ...], *, with_rows: bool = True, boxed: bool = False) -> tuple[Any, list[LinkMarker]]:
+    """The model and markers (the reference first) of a star whose branches stand at `branch_xs`; `boxed` makes later ones mates of the first."""
     new_id = _ids()
     draft = Draft()
     sheet = _sheet(new_id)
@@ -141,7 +142,7 @@ def _star_text(origin: Origin, branch_xs: tuple[int, ...], *, with_rows: bool = 
         )
     ]
     ports = [_port(new_id, function=fn.id, name=str(i + 1)) for i in range(len(branch_xs))]
-    for port, x in zip(ports, branch_xs, strict=True):
+    for n, (port, x) in enumerate(zip(ports, branch_xs, strict=True)):
         id_ = new_id("layout.link_marker")
         markers.append(
             LinkMarker(
@@ -158,11 +159,28 @@ def _star_text(origin: Origin, branch_xs: tuple[int, ...], *, with_rows: bool = 
                 height=8,
                 produced_by=PRODUCED_BY,
                 facing=Side.E,
+                lead=not (boxed and n),
+                box_x=x if boxed else None,
             )
         )
     rows = [reference_row(m, 1 if m.x < 100 else 8, "A") for m in markers] if with_rows else []
     add_all(draft, sheet, ds, page_a, page_b, item, fn, ref_port, *ports, *markers, *rows, origin=origin)
-    return marker_text(frozen_with_library(draft), markers[0])
+    return frozen_with_library(draft), markers
+
+
+def _star_text(origin: Origin, branch_xs: tuple[int, ...], *, with_rows: bool = True) -> str:
+    """The reference marker's text for a star whose branches stand at `branch_xs` on one page."""
+    model, markers = _star_model(origin, branch_xs, with_rows=with_rows)
+    return marker_text(model, markers[0])
+
+
+def test_every_box_mate_candidate_carries_the_one_text_its_box_draws(origin: Origin) -> None:
+    """R1954: `reference_targets` gives a non-lead mate its lead's joined text, not its own."""
+    model, markers = _star_model(origin, (400, 400), boxed=True)
+    lead, mate = markers[1], markers[2]
+    assert marker_text(model, mate) != marker_text(model, lead)
+    texts = {end[0]: end[3] for ends in reference_targets(model).values() for end in ends}
+    assert texts[mate.id] == texts[lead.id] == marker_text(model, lead)
 
 
 def test_marker_text_keeps_two_different_lines(origin: Origin) -> None:

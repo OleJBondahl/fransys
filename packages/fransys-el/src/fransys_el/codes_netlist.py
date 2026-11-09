@@ -110,6 +110,19 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         page="findings-render",
     ),
     CodeInfo(
+        code="REFERENCE_NOT_READABLE",
+        severity=Severity.ERROR,
+        stage="render",
+        who="Fransys",
+        cause=(
+            "A reference marker is not drawn as the model gives it: it prints a text other than the one derived, "
+            "stands in another frame cell than the stored one, or one reference number names two groups in one drawing set. "
+            "A reader of the page then cannot find the other end."
+        ),
+        fix=_REPORT,
+        page="findings-render",
+    ),
+    CodeInfo(
         code="RAIL_IDENTITY_SHARED",
         severity=Severity.ERROR,
         stage="render",

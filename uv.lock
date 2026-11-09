@@ -96,21 +96,21 @@ wheels = [
 
 [[package]]
 name = "demo-parts"
-version = "0.23.7"
+version = "0.23.8"
 source = { editable = "examples/demo-parts" }
 
 [[package]]
 name = "elecdef"
-version = "0.6.0"
+version = "0.7.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/8d/2a/6f5182f078898f7b19acca60a822a371004ef1483d2068020b5cd5a65336/elecdef-0.6.0.tar.gz", hash = "sha256:55bcd7f2c4b13a0ec84142ae7512a49b8b9fd8753c0d53ac65754bf406e63629", size = 163990, upload-time = "2026-11-03T12:35:39.535Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/66/02/1c215e57bde813071451202e6db7b28dc0e84790add617dea8102e09fce8/elecdef-0.7.0.tar.gz", hash = "sha256:80192c56a866f2a8bf8bcb0b0e5cf78ef3ff27dfd6cc79cc779f9aa355c4df76", size = 164550, upload-time = "2026-11-06T16:42:26.384Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/2e/3e/3a528e80071d760d5afc2797598fae16884ec42681044962f9fb8e9f02c8/elecdef-0.6.0-py3-none-any.whl", hash = "sha256:1a3958df444f812743b6e7ac7f10778c390cf2071f3f3bbad5f7d5694de05d7e", size = 51084, upload-time = "2026-11-03T12:35:38.286Z" },
+    { url = "https://files.pythonhosted.org/packages/f3/f4/676f5cac286d5a715bbee4f2a25f4cde7e6895374a21e19e77de6d4623d7/elecdef-0.7.0-py3-none-any.whl", hash = "sha256:1fc12ea75a9c620ab3f89d557a2aea2ea4b5738452d0ca811f3a7bd75d1709c8", size = 51163, upload-time = "2026-11-06T16:42:24.744Z" },
 ]
 
 [[package]]
 name = "electrical-symbols"
-version = "0.23.7"
+version = "0.23.8"
 source = { editable = "packages/electrical-symbols" }
 dependencies = [
     { name = "symdef" },
@@ -157,7 +157,7 @@ wheels = [
 
 [[package]]
 name = "fransys"
-version = "0.23.7"
+version = "0.23.8"
 source = { editable = "packages/fransys" }
 dependencies = [
     { name = "electrical-symbols" },
@@ -194,7 +194,7 @@ requires-dist = [
 
 [[package]]
 name = "fransys-author"
-version = "0.23.7"
+version = "0.23.8"
 source = { editable = "packages/fransys-author" }
 dependencies = [
     { name = "fransys-model" },
@@ -205,7 +205,7 @@ requires-dist = [{ name = "fransys-model", editable = "packages/fransys-model" }
 
 [[package]]
 name = "fransys-el"
-version = "0.23.7"
+version = "0.23.8"
 source = { editable = "packages/fransys-el" }
 dependencies = [
     { name = "electrical-symbols" },
@@ -222,7 +222,7 @@ requires-dist = [
 
 [[package]]
 name = "fransys-kernel"
-version = "0.23.7"
+version = "0.23.8"
 source = { editable = "packages/fransys-kernel" }
 dependencies = [
     { name = "elecdef" },
@@ -231,13 +231,13 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "elecdef", specifier = "==0.6.0" },
+    { name = "elecdef", specifier = "==0.7.0" },
     { name = "refdef", specifier = "==0.3.1" },
 ]
 
 [[package]]
 name = "fransys-kicad"
-version = "0.23.7"
+version = "0.23.8"
 source = { editable = "packages/fransys-kicad" }
 dependencies = [
     { name = "fransys-model" },
@@ -248,7 +248,7 @@ requires-dist = [{ name = "fransys-model", editable = "packages/fransys-model" }
 
 [[package]]
 name = "fransys-layout"
-version = "0.23.7"
+version = "0.23.8"
 source = { editable = "packages/fransys-layout" }
 dependencies = [
     { name = "electrical-symbols" },
@@ -265,7 +265,7 @@ requires-dist = [
 
 [[package]]
 name = "fransys-model"
-version = "0.23.7"
+version = "0.23.8"
 source = { editable = "packages/fransys-model" }
 dependencies = [
     { name = "elecdef" },
@@ -275,14 +275,14 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "elecdef", specifier = "==0.6.0" },
+    { name = "elecdef", specifier = "==0.7.0" },
     { name = "fransys-kernel", editable = "packages/fransys-kernel" },
     { name = "refdef", specifier = "==0.3.1" },
 ]
 
 [[package]]
 name = "fransys-overview"
-version = "0.23.7"
+version = "0.23.8"
 source = { editable = "packages/fransys-overview" }
 dependencies = [
     { name = "fransys-model" },
@@ -293,7 +293,7 @@ requires-dist = [{ name = "fransys-model", editable = "packages/fransys-model" }
 
 [[package]]
 name = "fransys-parts"
-version = "0.23.7"
+version = "0.23.8"
 source = { editable = "packages/fransys-parts" }
 dependencies = [
     { name = "fransys-model" },
@@ -304,7 +304,7 @@ requires-dist = [{ name = "fransys-model", editable = "packages/fransys-model" }
 
 [[package]]
 name = "fransys-pdf"
-version = "0.23.7"
+version = "0.23.8"
 source = { editable = "packages/fransys-pdf" }
 dependencies = [
     { name = "fransys-model" },
@@ -315,7 +315,7 @@ requires-dist = [{ name = "fransys-model", editable = "packages/fransys-model" }
 
 [[package]]
 name = "fransys-render"
-version = "0.23.7"
+version = "0.23.8"
 source = { editable = "packages/fransys-render" }
 dependencies = [
     { name = "electrical-symbols" },
@@ -334,7 +334,7 @@ requires-dist = [
 
 [[package]]
 name = "fransys-reports"
-version = "0.23.7"
+version = "0.23.8"
 source = { editable = "packages/fransys-reports" }
 dependencies = [
     { name = "fransys-model" },
@@ -349,7 +349,7 @@ requires-dist = [
 
 [[package]]
 name = "fransys-wago"
-version = "0.23.7"
+version = "0.23.8"
 source = { editable = "packages/fransys-wago" }
 dependencies = [
     { name = "fransys-model" },
@@ -400,7 +400,7 @@ site = [
 dev = [
     { name = "ast-grep-cli", specifier = "==0.51.1" },
     { name = "demo-parts", editable = "examples/demo-parts" },
-    { name = "elecdef", specifier = "==0.6.0" },
+    { name = "elecdef", specifier = "==0.7.0" },
     { name = "electrical-symbols", editable = "packages/electrical-symbols" },
     { name = "fonttools", specifier = "==4.68.0" },
     { name = "fransys", editable = "packages/fransys" },

@@ -41,21 +41,29 @@ def _cases() -> dict[str, Any]:
     return cases
 
 
-def _lanes(build: Any) -> tuple[Any, list[Any], list[Any]]:
-    """`build()` with its solves caught, and the lane cells of every flow the core built, ids' hashes taken out."""
+def _lanes(build: Any) -> tuple[Any, list[Any], list[Any], list[tuple[str, bool]]]:
+    """`build()` with its solves caught, the lane cells of every flow, and the TAG and STUB ends stage 4 made, pinless or not (R2041 G1)."""
     solve = sys.modules["fransys_layout.core.solve"]
+    cut = sys.modules["fransys_layout.core.cut"]
     made: list[Any] = []
-    flow = solve.build_flow
+    marked: list[tuple[str, bool]] = []
+    flow, references = solve.build_flow, cut.references
 
     def building(*args: Any) -> Any:
         made.append(flow(*args))
         return made[-1]
 
+    def noting(*args: Any) -> Any:
+        refs = references(*args)
+        marked.extend((f"{r.net} {r.kind}", e.pin is None) for r in refs if str(r.kind) in ("tag", "stub") for e in r.ends)
+        return refs
+
     with pytest.MonkeyPatch.context() as patch:
         patch.setattr(solve, "build_flow", building)
+        patch.setattr(cut, "references", noting)
         built, caught = caught_solves(build)
     hexid = re.compile(r"[0-9a-f]{32}")
-    return built, caught, [[hexid.sub("", c.sym) for col in f.columns for lane in col.lanes for c in lane.cells] for f in made]
+    return built, caught, [[hexid.sub("", c.sym) for col in f.columns for lane in col.lanes for c in lane.cells] for f in made], marked
 
 
 def run(salt: str) -> dict[str, Any]:
@@ -67,12 +75,14 @@ def run(salt: str) -> dict[str, Any]:
 def _lanes_of_every_case() -> dict[str, Any]:
     out: dict[str, Any] = {}
     for name, build in _cases().items():
-        built, caught, lanes = _lanes(build)
+        built, caught, lanes, marked = _lanes(build)
         out[name] = {
             "shorts": sum(f.code == "DRAWING_SHORTS_NETS" for f in built.findings),
             "errors": [f.code for f in built.findings if f.severity == fr.Severity.ERROR],
             "split": [s for p, _, lay in caught for s in _split_references(p, lay)],
             "lanes": lanes,
+            "tag_ends": len(marked),
+            "pinless": [name for name, none in marked if none],
             "markers": sum(len(lay.annotations.markers) for _, _, lay in caught),
         }
     return out

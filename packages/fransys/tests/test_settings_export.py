@@ -275,3 +275,10 @@ def test_ring_out_skip_leaves_a_preset_without_a_sheet(tmp_path: Path) -> None:
 def test_ring_out_skip_refuses_a_value_that_is_no_preset(tmp_path: Path) -> None:
     with pytest.raises(fr.SettingsError, match=r'"ring_out_skip" is \'nope\'; known: cabinet_schematic, system'):
         _ring_cab_result(tmp_path, text=_RING + 'ring_out_skip = ["nope"]\n')
+
+
+def test_a_wire_with_both_ends_in_the_units_own_strip_is_a_row_of_its_sheet(tmp_path: Path) -> None:
+    fr.write(_ring_cab_result(tmp_path), tmp_path / "out")
+    (path,) = (tmp_path / "out").glob("*.xlsx")
+    wires = [r for r in _sheet_rows(path.read_bytes()) if r[0].isdigit() and r[1] == "Wire"]
+    assert wires == [["1", "Wire", "-X1:2", "-X1:3", "-X1:2 -X1:3", "BK", "2.5", "p2:2A", "", "", ""]]

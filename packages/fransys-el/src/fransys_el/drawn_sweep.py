@@ -8,6 +8,7 @@ from .drawn_nets import not_drawn_findings
 from .drawn_pairs import dangling_findings, loop_findings, unpaired_findings
 from .drawn_power import power_findings
 from .drawn_rails import rail_findings
+from .drawn_references import reference_findings
 from .drawn_shorts import ink_findings, short_findings, wrong_port_findings
 
 if TYPE_CHECKING:
@@ -31,5 +32,6 @@ def drawing_sweep(model: Model, net: Netlist) -> tuple[Finding, ...]:
         *marking_findings(net, model),
         *loop_findings(net),
         *unpaired_findings(net),
+        *reference_findings(net),
         *dangling_findings(net),
     )

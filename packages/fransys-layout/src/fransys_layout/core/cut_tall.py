@@ -195,16 +195,36 @@ def _split(c: Column, bounds: Sequence[tuple[int, ...]], env: Tall, piece_of: Se
         lane_of.append(tuple(held.index(i) if i in held else None for i in range(len(bounds))))
         left = c.lanes[held[0]].offset if piece_of is not None else 0
         lanes = tuple(Lane(c.lanes[i].cells[bounds[i][k] : bounds[i][k + 1]], c.lanes[i].offset - left) for i in held)
-        ends = _tall_ends(c, (k, n), tags) if piece_of is None else _wide_ends(c, held, piece_of)
+        ends = _tall_ends(c, bounds, k, tags) if piece_of is None else _wide_ends(c, held, piece_of)
         piece = build_column(f"{c.id}#{chr(97 + k)}", lanes, ends, env.syms, env.options)
         out.append(replace(piece, hops=c.hops[bounds[0][k] : bounds[0][k + 1] - 1] if piece_of is None else c.hops))
     return Fold(tuple(out), tuple(bounds), tuple(lane_of), tags, () if piece_of is None else _taps(c, piece_of, env))
 
 
-def _tall_ends(c: Column, at: tuple[int, int], tags: Sequence[tuple[tuple[Tag, ...], ...]]) -> tuple[tuple[End, ...], tuple[End, ...]]:
-    """A height cut's piece k of n: the column's own ends at its top and foot, open ends at the cuts."""
-    k, n = at
-    return (c.heads if k == 0 else _ends(tags[k - 1], below=True), c.feet if k == n - 1 else _ends(tags[k], below=False))
+def _tall_ends(
+    c: Column, bounds: Sequence[tuple[int, ...]], k: int, tags: Sequence[tuple[tuple[Tag, ...], ...]]
+) -> tuple[tuple[End, ...], tuple[End, ...]]:
+    """A height cut's piece k: one head and one foot per lane it holds, open where the lane crosses a cut, else the lane's own end."""
+    n = len(bounds[0]) - 1
+    held = [i for i, b in enumerate(bounds) if b[k] < b[k + 1]]
+    head_open = iter(_ends(tags[k - 1], below=True) if k else ())
+    foot_open = iter(_ends(tags[k], below=False) if k < n - 1 else ())
+    heads = tuple(next(head_open) if k else _own_end(c, bounds, (0, i, k), held) for i in held)
+    feet = tuple(next(foot_open) if k < n - 1 and bounds[i][k + 1] < bounds[i][k + 2] else _own_end(c, bounds, (1, i, k), held) for i in held)
+    return heads, feet
+
+
+def _own_end(c: Column, bounds: Sequence[tuple[int, ...]], at: tuple[int, int, int], held: Sequence[int]) -> End:
+    """A lane's own end in piece k, its lane renumbered; a join to a cell that stands in another piece takes the root's kind."""
+    side, i, k = at
+    end = (c.heads, c.feet)[side][i]
+    owner = _owner(c)
+    parted = False
+    if end.is_join and end.pin is not None and end.pin.sym in owner:
+        lane = owner[end.pin.sym]
+        cell = next(j for j, x in enumerate(c.lanes[lane].cells) if x.sym == end.pin.sym)
+        parted = not bounds[lane][k] <= cell < bounds[lane][k + 1]
+    return _lane_end(c, (c.heads, c.feet)[side], parted=parted, at=(i, held.index(i), side))
 
 
 def _owner(c: Column) -> dict[str, int]:

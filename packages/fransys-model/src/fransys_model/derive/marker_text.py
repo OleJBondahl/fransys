@@ -218,6 +218,27 @@ def reference_slot(model: Model, marker: LinkMarker) -> int | None:
     return None if number is None else (number - 1) % REF_SLOTS
 
 
+@digest_cached(DIGEST_CACHE_SIZE)
+def reference_targets(model: Model) -> Mapping[tuple[Id[Page], tuple[int, str]], tuple[tuple[Id[LinkMarker], int, frozenset[Id[Port]], str], ...]]:
+    """Each reference marker's stored `(column, row letter)` on its page, to the candidate ends standing there.
+
+    A candidate end is the marker's id, its `#n`, the ports of its whole reference group and the text its box
+    draws (a mate of a box draws its lead's joined text), so a reader who finds a drawn marker by page, cell
+    and text knows which markers are the same reference.
+    Page numbers restart per drawing set, so the key is the page's id, never a printed `#n`.
+    """
+    markers, branches = layout_of(model, LinkMarker), _branches_of(model)
+    found: dict[tuple[Id[Page], tuple[int, str]], list[tuple[Id[LinkMarker], int, frozenset[Id[Port]], str]]] = defaultdict(list)
+    lead_of = {mate.id: lead for lead, mates in _boxmates_of(model).items() for mate in mates}
+    for marker in markers.values():
+        if (group := _reference_group(marker, markers, branches)) is not None:
+            drawn = markers[lead_of.get(marker.id, marker.id)]
+            found[marker.page, marker_cell(model, marker)].append(
+                (marker.id, reference_number(model, marker), frozenset(one.port for one in group), marker_text(model, drawn))
+            )
+    return {key: tuple(ends) for key, ends in found.items()}
+
+
 def _marker_position(model: Model, marker: LinkMarker, partner: LinkMarker) -> str:
     """`partner`'s position, with its location label across drawing sets."""
     pages = layout_of(model, Page)

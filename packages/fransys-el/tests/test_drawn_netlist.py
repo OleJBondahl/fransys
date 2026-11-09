@@ -15,7 +15,7 @@ from _expected_codes import expect_codes
 from _model_build_cover import unit_document
 from conventions_fixtures import house
 from fransys.colours import GNYE
-from fransys_el import build, drawn_identity_marks, drawn_power, drawn_rails, lay_out_core, lay_out_drawn, symbol_kit
+from fransys_el import build, drawn_identity_marks, drawn_power, drawn_rails, drawn_references, lay_out_core, lay_out_drawn, symbol_kit
 from fransys_el import drawn_netlist as drawn_netlist_module
 from fransys_el.drawn_graph import Union
 from fransys_el.drawn_netlist import Netlist, drawn_netlist, is_marker, with_lines
@@ -28,12 +28,13 @@ from fransys_el.drawn_sweep import drawing_sweep
 from fransys_el.placement_ids import net_key
 from ring_cases import bank_model, box_kit
 
-from electrical_symbols import LIBRARY, power_symbol_key
+from electrical_symbols import LIBRARY, MARKER_SLOT, power_symbol_key
 from fransys_layout.core import Box, page_graph
 from fransys_layout.drawing import DrawnSymbol, DrawnWire
-from fransys_model.derive import PowerKind, net_of, port_power_kind, required_groups
+from fransys_layout.symbols import frame_cell
+from fransys_model.derive import PowerKind, net_of, port_power_kind, reference_targets, required_groups
 from fransys_model.kernel import Id, make_id
-from fransys_model.layout import LinkMarker, MarkerPair, MarkerSide, Page, Side, StarKind
+from fransys_model.layout import LinkMarker, MarkerPair, MarkerSide, Page, Side, StarKind, layout_of, sheet_format_of
 from fransys_model.vocab.tables import ports
 
 if TYPE_CHECKING:
@@ -856,3 +857,69 @@ def test_earth_declared_pe_is_one_bond_class_per_cabinet_with_no_flag(monkeypatc
     assert len({drawn_power.port_nets(model, ids)[k] for k in pe}) == cabinets
     built = _built_of(model, symbol_kit(model, LIBRARY), monkeypatch)
     assert "RAIL_IDENTITY_SHARED" not in built.codes()
+
+
+def _reference_symbol(built: Built) -> tuple[Any, Any]:
+    """The page and drawn symbol of the first reference marker `reference_targets` names."""
+    markers = layout_of(built.model, LinkMarker)
+    for (page, _), ends in reference_targets(built.model).items():
+        for marker, _, _, text in ends:
+            for symbol in built.drawings[page].symbols:
+                if symbol.ports[:1] == (markers[marker].port.value,) and (MARKER_SLOT, text) in symbol.slots:
+                    return page, symbol
+    pytest.fail("no drawn reference marker in the bank of 40")
+
+
+def _with(built: Built, page: Any, old: Any, **fields: Any) -> dict[Any, Any]:
+    return built.patched(page, symbols=tuple(replace(s, **fields) if s is old else s for s in built.drawings[page].symbols))
+
+
+@pytest.mark.rule("READ-REFERENCES")
+def test_a_marker_printing_another_text_than_derives_is_reference_not_readable(bank40):
+    """R2: the drawn text is compared whole with `marker_text`; any other text is REFERENCE_NOT_READABLE."""
+    page, symbol = _reference_symbol(bank40)
+    assert bank40.count("REFERENCE_NOT_READABLE") == 0
+    assert bank40.count("REFERENCE_NOT_READABLE", _with(bank40, page, symbol, slots=((MARKER_SLOT, dict(symbol.slots)[MARKER_SLOT] + " x"),))) == 1
+
+
+@pytest.mark.rule("READ-REFERENCES")
+def test_a_marker_drawn_in_another_frame_cell_than_the_stored_one_is_reference_not_readable(bank40):
+    """R2: the stored cell must equal `frame_cell` of the drawn point."""
+    page, symbol = _reference_symbol(bank40)
+    sheet = sheet_format_of(bank40.model, layout_of(bank40.model, Page)[page].sheet_format)
+    moved = symbol.x + 480
+    assert frame_cell(LIBRARY, sheet, moved, symbol.y) != frame_cell(LIBRARY, sheet, symbol.x, symbol.y)
+    assert bank40.count("REFERENCE_NOT_READABLE", _with(bank40, page, symbol, x=moved)) == 1
+
+
+@pytest.mark.rule("READ-REFERENCES")
+def test_one_number_naming_two_groups_in_one_drawing_set_is_reference_not_readable(bank40, monkeypatch: pytest.MonkeyPatch):
+    """R2: every `#n` of a set names one group; here all ends claim number 1, so each set's other groups collide with it."""
+    real = reference_targets(bank40.model)
+    renumbered = {key: tuple((marker, 1, group, text) for marker, _, group, text in ends) for key, ends in real.items()}
+    monkeypatch.setattr(drawn_references, "reference_targets", lambda _: renumbered)
+    assert bank40.count("REFERENCE_NOT_READABLE") > 0
+    assert any("names" in message for message in bank40.messages("REFERENCE_NOT_READABLE", bank40.drawings))
+
+
+def _group_roots(built: Built) -> dict[Any, list[Any]]:
+    """The roots of the drawn reference markers on a node, by reference group, in a union holding only `join_references`' joins."""
+    net, markers, union = built.netlist(), layout_of(built.model, LinkMarker), Union()
+    drawn_references.join_references(built.model, net.pages, LIBRARY, union)
+    found: dict[Any, list[Any]] = {}
+    for (page, _), ends in reference_targets(built.model).items():
+        for marker, _, group, text in ends:
+            for s in net.pages[page].drawing.symbols:
+                if s.ports[:1] == (markers[marker].port.value,) and (MARKER_SLOT, text) in s.slots and (s.x, s.y) in net.pages[page].nodes:
+                    found.setdefault(group, []).append(union.find((page, (s.x, s.y))))
+    return found
+
+
+@pytest.mark.rule("READ-REFERENCES")
+def test_the_references_join_the_markers_through_reference_targets_alone(bank40, monkeypatch: pytest.MonkeyPatch):
+    """R2: the drawn markers of one reference group are one piece; with no candidate ends the lexicon joins nothing."""
+    joined = _group_roots(bank40)
+    assert any(len(roots) > 1 for roots in joined.values())
+    assert all(len(set(roots)) == 1 for roots in joined.values())
+    monkeypatch.setattr(drawn_references, "reference_targets", lambda _: {})
+    assert all(len(set(roots)) == len(roots) for roots in _group_roots(bank40).values())

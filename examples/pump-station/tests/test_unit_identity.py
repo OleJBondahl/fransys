@@ -170,7 +170,7 @@ LAYOUT_WARNINGS = {
     "POWER_SYMBOL_UNPLACED": 0,
     "SYMBOL_OVERLAP": 0,
     "JOIN_UNALIGNED": 0,
-    "OVERLAP": 12,  # v0.23.12: 14 -> 12 (R2071 fan page); remaining text/text and wire/text on CTL/0 and all/P1, KI-903
+    "OVERLAP": 0,  # v0.23.13: 12 -> 0 (BY-OTHERS-UNTITLED, el-0127: the by-others frame carries no text); KI-903
 }
 EXPECTED_WARNINGS = LAYOUT_WARNINGS
 

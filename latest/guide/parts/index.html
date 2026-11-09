@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.8/guide/parts/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.10/guide/parts/">
       
       
       
@@ -2363,6 +2363,13 @@ task builds the same model with the typed module and a loop:</p>
 </tbody>
 </table>
 <p>A board with several connectors whose pins repeat (<code>P01</code> on each) models one function per connector (kind <code>connector</code>); a list end then reads <code>-U2-J3:P04</code>.</p>
+<p>A connector function states its shape in <code>[function.connector]</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="k">[function.connector]</span>
+<span class="n">style</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"header-4p"</span>
+<span class="n">poles</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">4</span>
+<span class="n">gender</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"female"</span>
+</code></pre></div>
+<p><code>style</code> and <code>poles</code> are required. <code>gender</code> (<code>male</code>, <code>female</code> or <code>genderless</code>) is optional; absent means the part does not state it. <code>marking</code> and <code>mates</code> are optional. <code>poles</code> is the elecdef <code>Connector</code> field of that name; <code>pincount</code> is no longer a key (decision model-0446).</p>
 <h2 id="loading-a-library-without-a-design">Loading a library without a design</h2>
 <p><code>fr.parts</code> takes the same import names and returns a single <code>Draft</code> holding every part,
 function, port and facet record, each carrying the file and line it came from. Use it to lint a
@@ -2548,7 +2555,7 @@ It prints its holder's designation and has no row or netlist line, and draws not
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.8 documentation
+      Fransys 0.23.10 documentation
     </div>
   
   

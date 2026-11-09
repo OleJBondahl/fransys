@@ -60,7 +60,7 @@ assert all(page.wire_crossings >= 0 for page in report.pages)
 `result.drawings` holds one `Drawing` for each page. A Drawing is in layout units, and a finding prints G, so divide a Drawing value by 8 for G. An A3 page is `area.w` 1312 wide, and every row, symbol, wire and text value reads in that unit. Its `rows` are the placed rows that hold devices, top to bottom. A row has four fields.
 
 - `devices`: the ids of its items as text, each item once. `fr.derive.drawn_designations(result.model, row.devices)` gives their designations.
-- `height` and `width`: its size in the Drawing unit.
+- `height` and `width`: its size in the Drawing unit. The width is what the row needs packed left, the figure `WIDER_THAN_PAGE` tests. The symbols stand justified inside the page, so it can be less than their span.
 - `term`: what set its height. It is `"body"` (a cell), `"card"`, `"marker_room"` (a marker hung at a cell), `"stub"` (a trunk's room) or `"annex"` (a label).
 
 `PAGE_OVERFLOW` and `WIDER_THAN_PAGE` read these same figures. The widest row is `max(page.rows, key=lambda r: r.width)`.

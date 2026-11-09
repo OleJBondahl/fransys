@@ -20,14 +20,14 @@ ports = [{ name = "1", role = "generic", symbol_port = "in" }, { name = "2", rol
 
 [function.connector]
 style = "header-2p"
-pincount = 2
+poles = 2
 gender = "male"
 ```
 
 | Field | Type | Meaning |
 |---|---|---|
 | `style` | string | |
-| `pincount` | integer | At least 1 |
+| `poles` | integer | At least 1 (elecdef's rule) |
 | `gender` | string | Optional. A `Gender` value: `"male"`, `"female"`, `"neutral"`. Absent means not stated, which is not `neutral` (model-0080) |
 | `marking` | string | Optional. The label printed on the part, e.g. `"X1"`. Omit it to print the function's name; write `""` for no label, and the connector's pins print under the item |
 | `mates` | list of strings | Optional. The MPNs of the parts this connector mates with, e.g. `["DEMO-HSG-4M"]`. Data only: no check reads it yet (parts-0016) |

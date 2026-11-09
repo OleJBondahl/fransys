@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.8/guide/moving-to-0.23/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.10/guide/moving-to-0.23/">
       
       
       
@@ -925,6 +925,17 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         New in 0.23.0
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-file-key-renamed" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Part-file key renamed
       </span>
     </span>
   </a>
@@ -2052,6 +2063,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#part-file-key-renamed" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Part-file key renamed
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#still-refused-for-now" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -2132,6 +2154,11 @@
 <li><code>WIDER_THAN_PAGE</code> and <code>PAGE_OVERFLOW</code> name the drawing set, the PDF page, the row and its devices, so you can find the overflow.</li>
 <li>A two-pole switch with a pin turned to the far side draws it as a cross-link; before, a second lane could claim the pin.</li>
 </ul>
+<h2 id="part-file-key-renamed">Part-file key renamed</h2>
+<ul>
+<li><code>[function.connector]</code> states <code>poles = 4</code> where it stated <code>pincount = 4</code>. A part file that still says <code>pincount</code> is refused with <code>FIELD_UNKNOWN</code> (ERROR); there is no alias. <code>poles</code> below 1 is refused with <code>FIELD_TYPE</code>, in elecdef's words. <code>gender</code> keeps its spelling.</li>
+<li>A stored model of schema 26 or older is refused, and the message says to rebuild the release with <code>fr.release</code>. Nothing is migrated. The listing version is now 10; a stored listing of version 6 to 9 still reads.</li>
+</ul>
 <h2 id="still-refused-for-now">Still refused, for now</h2>
 <ul>
 <li>Mated connectors, PCB board documents and harness lines raise an ERROR. A board unit draws as an ordinary unit.</li>
@@ -2192,7 +2219,7 @@
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.8 documentation
+      Fransys 0.23.10 documentation
     </div>
   
   

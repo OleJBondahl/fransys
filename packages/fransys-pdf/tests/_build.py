@@ -14,7 +14,7 @@ from library_records import freeze
 
 from electrical_symbols import LIBRARY, font_dir
 from fransys_model.derive import document_sheets_of
-from fransys_model.elecdef import Gender
+from fransys_model.elecdef import Connector, Gender
 from fransys_model.kernel import Draft, Origin, make_id, render_id
 from fransys_model.layout import (
     DrawingSet,
@@ -488,8 +488,7 @@ def connector(  # noqa: PLR0913 -- one keyword per invented fact, as `document()
         key=facet_key,
         subject=template.id,
         style=style,
-        pincount=len(markings),
-        gender=gender,
+        connector=Connector(poles=len(markings), gender=gender),
     )
     ports = tuple(
         Port(

@@ -43,9 +43,9 @@ def _framed(content: Sequence[Box], room: OutlineRoom) -> Box:
 
 
 def _grow(box: Box | None, room: OutlineRoom) -> Box | None:
-    """`box` with the margin on every side and the label room above, at least the least size (runs are unknown before placement)."""
+    """`box` with the margin on every side and the label room above."""
     top = room.label.y + room.label.h
-    return box and Box(box.x - room.margin, box.y - top, max(box.w + 2 * room.margin, room.least.w), max(box.h + top + room.margin, room.least.h))
+    return box and Box(box.x - room.margin, box.y - top, box.w + 2 * room.margin, box.h + top + room.margin)
 
 
 def framed(problem: PlacementProblem, options: Options) -> PlacementProblem:

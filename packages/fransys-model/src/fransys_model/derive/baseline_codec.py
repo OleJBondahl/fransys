@@ -228,7 +228,7 @@ def loads(text: str) -> Listing:
 
     Raises:
         SchemaError: the text is not valid canonical JSON, or its envelope is malformed.
-        SchemaVersionError: `text`'s `listing_version` is not 6, 7, 8 or 9, the versions this build reads (one shape:
+        SchemaVersionError: `text`'s `listing_version` is not 6 to 10, the versions this build reads (one shape:
             keyed rows with `rating` and `operating` in the kernel's canonical form).
     """
     data = _mapping(read_json(text))
@@ -258,7 +258,7 @@ def _version_of(data: Mapping[str, object]) -> int:
 
 
 def stored_version(text: str) -> int:
-    """The `listing_version` of stored listing `text`, whatever it is; `loads` refuses all but 6 to 9."""
+    """The `listing_version` of stored listing `text`, whatever it is; `loads` refuses all but 6 to 10."""
     return _version_of(_mapping(read_json(text)))
 
 

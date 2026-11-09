@@ -27,7 +27,7 @@ ports = [
 
 [function.connector]
 style = "port-1p"
-pincount = 1
+poles = 1
 gender = "male"
 marking = "S1"
 
@@ -40,7 +40,7 @@ ports = [
 
 [function.connector]
 style = "port-1p"
-pincount = 1
+poles = 1
 gender = "male"
 marking = "S2"
 
@@ -53,7 +53,7 @@ ports = [
 
 [function.connector]
 style = "port-1p"
-pincount = 1
+poles = 1
 gender = "male"
 marking = "S3"
 
@@ -66,7 +66,7 @@ ports = [
 
 [function.connector]
 style = "port-1p"
-pincount = 1
+poles = 1
 gender = "male"
 marking = "S4"
 
@@ -79,7 +79,7 @@ ports = [
 
 [function.connector]
 style = "port-1p"
-pincount = 1
+poles = 1
 gender = "male"
 marking = "S5"
 
@@ -92,7 +92,7 @@ ports = [
 
 [function.connector]
 style = "port-1p"
-pincount = 1
+poles = 1
 gender = "male"
 marking = "S6"
 
@@ -105,7 +105,7 @@ ports = [
 
 [function.connector]
 style = "port-1p"
-pincount = 1
+poles = 1
 gender = "male"
 marking = "S7"
 
@@ -118,7 +118,7 @@ ports = [
 
 [function.connector]
 style = "port-1p"
-pincount = 1
+poles = 1
 gender = "male"
 marking = "S8"
 
@@ -131,7 +131,7 @@ ports = [
 
 [function.connector]
 style = "port-1p"
-pincount = 1
+poles = 1
 gender = "male"
 marking = "S9"
 
@@ -144,7 +144,7 @@ ports = [
 
 [function.connector]
 style = "port-1p"
-pincount = 1
+poles = 1
 gender = "male"
 marking = "S10"
 
@@ -157,7 +157,7 @@ ports = [
 
 [function.connector]
 style = "port-1p"
-pincount = 1
+poles = 1
 gender = "male"
 marking = "S11"
 
@@ -170,7 +170,7 @@ ports = [
 
 [function.connector]
 style = "port-1p"
-pincount = 1
+poles = 1
 gender = "male"
 marking = "S12"
 
@@ -183,7 +183,7 @@ ports = [
 
 [function.connector]
 style = "port-1p"
-pincount = 1
+poles = 1
 gender = "male"
 marking = "S13"
 
@@ -196,7 +196,7 @@ ports = [
 
 [function.connector]
 style = "port-1p"
-pincount = 1
+poles = 1
 gender = "male"
 marking = "S14"
 
@@ -209,7 +209,7 @@ ports = [
 
 [function.connector]
 style = "port-1p"
-pincount = 1
+poles = 1
 gender = "male"
 marking = "S15"
 
@@ -222,7 +222,7 @@ ports = [
 
 [function.connector]
 style = "port-1p"
-pincount = 1
+poles = 1
 gender = "male"
 marking = "S16"
 
@@ -235,7 +235,7 @@ ports = [
 
 [function.connector]
 style = "port-1p"
-pincount = 1
+poles = 1
 gender = "male"
 marking = "S17"
 
@@ -248,7 +248,7 @@ ports = [
 
 [function.connector]
 style = "port-1p"
-pincount = 1
+poles = 1
 gender = "male"
 marking = "S18"
 
@@ -261,7 +261,7 @@ ports = [
 
 [function.connector]
 style = "port-1p"
-pincount = 1
+poles = 1
 gender = "male"
 marking = "S19"
 
@@ -274,6 +274,6 @@ ports = [
 
 [function.connector]
 style = "port-1p"
-pincount = 1
+poles = 1
 gender = "male"
 marking = "S20"

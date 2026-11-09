@@ -207,9 +207,9 @@ def test_a_point_outside_the_content_box_has_no_frame_cell() -> None:
 
 def test_the_outline_room_is_the_margin_and_the_label_slot_of_the_unit_outline_symbol() -> None:
     room = outline_room(LIBRARY)
-    assert room.margin == LIBRARY.grid.outline_margin == 4
+    assert room.margin == LIBRARY.grid.outline_margin == 8
     assert room.label == symbol_shape(library_symbol(LIBRARY, "unit-outline"), LIBRARY).slots["label"] == Box(2, 2, 48, 8)
-    assert room.least == Size(64, 48)
+    assert room.least == Size(56, 16)
 
 
 def test_line_pitch_is_what_each_further_line_adds_to_the_label_block() -> None:

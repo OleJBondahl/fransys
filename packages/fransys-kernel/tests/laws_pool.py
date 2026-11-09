@@ -12,7 +12,7 @@ lazy from collections.abc import Iterable
 from hypothesis import strategies as st
 
 from fransys_kernel import Id, make_id
-from fransys_model.elecdef import Gender, LinkKind
+from fransys_model.elecdef import Connector, Gender, LinkKind
 from fransys_model.vocab.connectivity import Conductor, Mate, Net
 from fransys_model.vocab.core import Function, Item, Port, Unit, UnitRelease
 from fransys_model.vocab.enums import ConductorKind, FunctionKind, NetClass, PartCategory, PortBoundary
@@ -142,8 +142,7 @@ class _Plant:
                 "conn",
                 subject=template.id,
                 style="JST-XH",
-                pincount=2,
-                gender=self.one(Gender),
+                connector=Connector(poles=2, gender=self.one(Gender)),
                 marking=self.draw(_MARKING),
             )
         return relay, strip, template

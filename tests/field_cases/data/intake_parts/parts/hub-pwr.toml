@@ -28,4 +28,4 @@ ports = [
 
 [function.connector]
 style = "RJ-45"
-pincount = 2
+poles = 2

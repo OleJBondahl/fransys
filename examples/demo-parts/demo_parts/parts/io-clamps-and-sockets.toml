@@ -37,7 +37,7 @@ ports = [
 
 [function.connector]
 style = "plug-8p"
-pincount = 8
+poles = 8
 gender = "female"
 marking = "X1"
 
@@ -57,7 +57,7 @@ ports = [
 
 [function.connector]
 style = "plug-8p"
-pincount = 8
+poles = 8
 gender = "female"
 marking = "X2"
 
@@ -78,6 +78,6 @@ ports = [
 
 [function.connector]
 style = "plug-9p"
-pincount = 9
+poles = 9
 gender = "female"
 marking = "X4"

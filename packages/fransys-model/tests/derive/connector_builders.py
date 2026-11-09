@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 from query_builders import make_part
 
-from fransys_model.elecdef import Gender
+from fransys_model.elecdef import Connector, Gender
 from fransys_model.kernel import Id, make_id
 from fransys_model.vocab.core import Function, Item, Port
 from fransys_model.vocab.enums import FunctionKind
@@ -54,8 +54,7 @@ def make_connector(  # noqa: PLR0913 -- one keyword per facet field the tests va
                 key=(item_key, name, "connector"),
                 subject=template.id,
                 style="header",
-                pincount=len(markings),
-                gender=gender,
+                connector=Connector(poles=len(markings), gender=gender),
                 marking=marking,
             )
         )

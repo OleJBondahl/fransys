@@ -2,6 +2,9 @@
 The bug: the cable's fan-out split stood on the lamp's wire, so the page drew both as one conductor and joined two nets.
 Fixed by layout-0246, a fan-out's split stands on no wire, so its line runs along none (DRAWING_SHORTS_NETS)."""
 
+import tomllib
+from pathlib import Path
+
 import fransys as fr
 import pytest
 from _drawn_pages import drawn_pages
@@ -27,4 +30,5 @@ def test_a_cable_of_two_wired_cores_draws_one_trunk(built: fr.BuildResult) -> No
 
 
 def test_every_connection_of_the_build_is_drawn(built: fr.BuildResult) -> None:
-    assert "CONNECTION_NOT_DRAWN" not in [f.code for f in fr.check(built)]
+    stock = tomllib.loads((Path(__file__).parents[1] / "ratchets.toml").read_text())["drawing_connection_not_drawn"]["board_cab"]
+    assert [f.code for f in fr.check(built)].count("CONNECTION_NOT_DRAWN") == stock

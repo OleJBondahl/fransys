@@ -48,7 +48,9 @@ def _lanes(fan: Fan, pos: Mapping[str, int]) -> Lanes:
 def ref_pins(flow: FlowGraph, pos: Mapping[str, int]) -> dict[str, Lanes]:
     """Every pin a fan (by lane) or a cross link names, with its position in the sequence."""
     out = {ref_name(f): _lanes(f, pos) for f in flow.fans}
-    out.update({link.net: (_placed(link.ends, pos),) for link in flow.cross_links})
+    for link in flow.cross_links:
+        first, *rest = out.get(link.net, ((),))
+        out[link.net] = (tuple(dict.fromkeys((*first, *_placed(link.ends, pos)))), *rest)
     return out
 
 

@@ -18,7 +18,7 @@ ports = [
 
 [function.connector]
 style = "Tyco Micro Mate-N-Lok"
-pincount = 8
+poles = 8
 
 [function.rating]
 

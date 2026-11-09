@@ -66,7 +66,7 @@ def _check_version(version: object) -> None:
         raise SchemaError(msg, kind=_KIND)
     expected = registry.registered_schema_version()
     if version != expected:
-        msg = f"this build reads schema version {expected}, not {version}"
+        msg = f"this build reads schema version {expected}, not {version}: rebuild the release with this build (`fr.release`); there is no migration"
         raise SchemaVersionError(msg, expected=expected, actual=version)
 
 

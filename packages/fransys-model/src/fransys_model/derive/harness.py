@@ -116,8 +116,8 @@ def _end(model: Model, item: Id[Item], landed: list[Id[Port]], facts: _Facts) ->
         designation=end_designation(model, item, PrintContext(reading=facts.unit, location=facts.context)),
         connector=None if outside else connector,
         style=None if outside or shape is None else shape.style,
-        pincount=None if outside or shape is None else shape.pincount,
-        gender=None if outside or shape is None else shape.gender,
+        pincount=None if outside or shape is None else shape.connector.poles,
+        gender=None if outside or shape is None else shape.connector.gender,
         mpn=None if outside or part_id is None else parts(model)[part_id].mpn,
         pins=tuple(
             HarnessPin(port=port, marking="" if outside else _pin_marking(model, port))

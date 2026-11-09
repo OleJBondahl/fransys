@@ -174,3 +174,12 @@ def test_the_lines_along_an_outline_by_others_only_fall() -> None:
     sides = [(p, e) for p, o in _outline_boxes() for e in _edges(o)]
     along = [(page, segment) for page, segment in _lines(cable=True) if any(p == page and _lies_on(segment, e) for p, e in sides)]
     assert len(along) <= _TIER_TWO_LINES
+
+
+def test_every_external_outline_run_is_the_dashed_by_others_frame_with_its_label() -> None:
+    """BY-OTHERS-P3 (R1256 O2 (c)): each run of the strip's frame is the `unit-outline-by-others` symbol and carries "by others"."""
+    outlines = [o for drawing in drawn_pages(_built().model).values() for o in drawing.outlines]
+    assert outlines
+    assert {o.key for o in outlines} == {"unit-outline-by-others"}
+    assert {o.label.text for o in outlines if o.label} == {external_note()}
+    assert all(o.label for o in outlines)

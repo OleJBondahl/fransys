@@ -105,7 +105,7 @@ def free_block(block_id: str, columns: tuple[str, ...]) -> Block:
 
 
 def row_of(columns: tuple[str, ...], blocks: tuple[str, ...]) -> RowPlan:
-    return RowPlan(columns, blocks, 0)
+    return RowPlan(columns, blocks)
 
 
 def placed(col_id: str, *syms: str, offset: int = 0, row: int = 0) -> PlacedColumn:

@@ -437,7 +437,7 @@
   "grid": {
     "divisions_per_module": 8,
     "module_mm": 2.5,
-    "outline_margin": 4,
+    "outline_margin": 8,
     "wire_pitch": 8,
     "wire_pitch_fine": 4
   },
@@ -13157,8 +13157,8 @@
           0
         ],
         [
-          8,
-          6
+          7,
+          2
         ]
       ],
       "elements": [
@@ -13171,16 +13171,16 @@
               0
             ],
             [
-              8,
+              7,
               0
             ],
             [
-              8,
-              6
+              7,
+              2
             ],
             [
               0,
-              6
+              2
             ]
           ],
           "style": "dash_dot",
@@ -13193,8 +13193,8 @@
           0
         ],
         [
-          8,
-          6
+          7,
+          2
         ]
       ],
       "kind": "element",
@@ -13229,11 +13229,11 @@
       "status": "unverified",
       "stretch": [
         {
-          "at": 4,
+          "at": 6.5,
           "axis": "x"
         },
         {
-          "at": 3,
+          "at": 1.5,
           "axis": "y"
         }
       ]
@@ -13246,8 +13246,8 @@
           0
         ],
         [
-          8,
-          6
+          7,
+          2
         ]
       ],
       "elements": [
@@ -13260,16 +13260,16 @@
               0
             ],
             [
-              8,
+              7,
               0
             ],
             [
-              8,
-              6
+              7,
+              2
             ],
             [
               0,
-              6
+              2
             ]
           ],
           "style": "dashed",
@@ -13282,8 +13282,8 @@
           0
         ],
         [
-          8,
-          6
+          7,
+          2
         ]
       ],
       "kind": "element",
@@ -13318,11 +13318,11 @@
       "status": "unverified",
       "stretch": [
         {
-          "at": 4,
+          "at": 6.5,
           "axis": "x"
         },
         {
-          "at": 3,
+          "at": 1.5,
           "axis": "y"
         }
       ]

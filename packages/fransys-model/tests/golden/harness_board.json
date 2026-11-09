@@ -1,6 +1,6 @@
 {
   "aliases": [],
-  "schema_version": 26,
+  "schema_version": 27,
   "tables": {
     "aspect_node": [
       {
@@ -118,8 +118,19 @@
     ],
     "facet.connector": [
       {
+        "connector": {
+          "body": null,
+          "coding": null,
+          "connection": null,
+          "family": null,
+          "gender": "MALE",
+          "locking": null,
+          "poles": 4,
+          "rating": null,
+          "shielded": false,
+          "symbol": null
+        },
         "ext": {},
-        "gender": "MALE",
         "id": "facet.connector:2a94c4d0a0055aaf9b7efee7deab65d7",
         "key": [
           "board",
@@ -128,13 +139,23 @@
         ],
         "marking": null,
         "mates": [],
-        "pincount": 4,
         "style": "header-4p",
         "subject": "function_template:347914ab0f2853458ee0a81e604e9488"
       },
       {
+        "connector": {
+          "body": null,
+          "coding": null,
+          "connection": null,
+          "family": null,
+          "gender": "FEMALE",
+          "locking": null,
+          "poles": 4,
+          "rating": null,
+          "shielded": false,
+          "symbol": null
+        },
         "ext": {},
-        "gender": "FEMALE",
         "id": "facet.connector:6a9ae88c2e1b52a6adaa37c9adba42a1",
         "key": [
           "housing-4p",
@@ -143,13 +164,23 @@
         ],
         "marking": null,
         "mates": [],
-        "pincount": 4,
         "style": "header-4p",
         "subject": "function_template:d5f2b27610c65d05991610ddd809b051"
       },
       {
+        "connector": {
+          "body": null,
+          "coding": null,
+          "connection": null,
+          "family": null,
+          "gender": "GENDERLESS",
+          "locking": null,
+          "poles": 1,
+          "rating": null,
+          "shielded": false,
+          "symbol": null
+        },
         "ext": {},
-        "gender": "GENDERLESS",
         "id": "facet.connector:b2ca7733cd9c567eb3c850a91bd71845",
         "key": [
           "housing-4p",
@@ -158,7 +189,6 @@
         ],
         "marking": "",
         "mates": [],
-        "pincount": 1,
         "style": "shell",
         "subject": "function_template:9930cb359cbf573d9e79984e8e80d30f"
       }

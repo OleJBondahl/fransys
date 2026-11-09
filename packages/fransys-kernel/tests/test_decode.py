@@ -78,7 +78,16 @@ def test_a_stored_version_1_document_is_refused_naming_both_versions() -> None:
         from_data(stored)
     assert (excinfo.value.expected, excinfo.value.actual) == (SCHEMA_VERSION, 1)
     assert f"version {SCHEMA_VERSION}" in str(excinfo.value)
-    assert "not 1" in str(excinfo.value)
+    assert "rebuild the release" in str(excinfo.value)
+
+
+def test_the_previous_revision_is_refused_with_a_rebuild_text_and_no_migration() -> None:
+    """A model stored one revision back (CONNECTOR-FACET-2: 26, before the Connector) is refused, never migrated."""
+    stored = dict(to_data(model_of(_ORIGIN, make_owner("1"))))
+    stored["schema_version"] = SCHEMA_VERSION - 1
+    with pytest.raises(SchemaVersionError, match="rebuild the release") as excinfo:
+        from_data(stored)
+    assert (excinfo.value.expected, excinfo.value.actual) == (SCHEMA_VERSION, SCHEMA_VERSION - 1)
 
 
 def test_an_extra_top_level_key_is_a_schema_error() -> None:

@@ -2,11 +2,22 @@
 
 from __future__ import annotations
 
-from fransys_layout.core import PinRef
-from fransys_layout.core.cut_ends import end_at, link_over_empty_rows
-from fransys_layout.core.values import Ref, RefEnd, RefKind
+import itertools
+from dataclasses import replace
+from fractions import Fraction
+
+from fransys_layout.core import PinRef, order_blocks
+from fransys_layout.core.cut import plan_unit
+from fransys_layout.core.cut_costs import positions
+from fransys_layout.core.cut_dp import RowState
+from fransys_layout.core.cut_ends import Lanes, end_at, link_over_empty_rows, ref_pins
+from fransys_layout.core.cut_refs import references
+from fransys_layout.core.values import PlacementProblem, Ref, RefEnd, RefKind
 
 from .cut_fixtures import cut_of, elem, free, net, refs_of, side
+from .pipeline_fixtures import blocks_of, flow_of
+from .solve_fixtures import ring_beside_a_tall_chain
+from .test_fallbacks import OPTIONS
 
 PAGE = {0: 1, 1: 1, 2: 1, 3: 2}
 ROW = {0: 0, 1: 0, 2: 1, 3: 0}
@@ -65,3 +76,40 @@ def test_an_arrow_left_with_an_end_in_a_row_without_a_trunk_is_dropped() -> None
     rows = {"f:x": frozenset({(1, 0)})}
     assert link_over_empty_rows([_arrow(0, 1)], rows) == []
     assert link_over_empty_rows([_arrow(0, 1)], {"f:x": frozenset({(1, 0), (1, 1)})}) == [_arrow(0, 1)]
+
+
+def _one_page_per_position(problem: PlacementProblem) -> tuple[dict[str, Lanes], list[Ref], list[int]]:
+    """The lanes, the references, and the positions the net n3's own links stand at (not read from ref_pins)."""
+    flow = flow_of(problem, OPTIONS)
+    (unit,) = order_blocks(blocks_of(problem, OPTIONS), flow, OPTIONS)
+    cut, _, _ = plan_unit(unit, (flow, problem, OPTIONS), frozenset())
+    n = len(cut.seq)
+    plan = [(i, i, RowState(Fraction(0), 0, 0, i, None)) for i in range(n)]
+    pos = positions(cut.seq, cut.by_id)
+    pins = ref_pins(flow, pos)
+    truth = [pos[a.column or a.pin.sym] for ln in flow.cross_links if ln.net == "n3" for a in ln.ends]
+    return pins, references(cut, plan, {i: i + 1 for i in range(n)}, frozenset(), pins), truth
+
+
+def test_a_net_with_two_lost_links_gets_one_tag_lane_and_a_pin_on_every_end() -> None:
+    """KI777-R1: a second source of one name must not overwrite the first's lane (a pinless tag end)."""
+    base = ring_beside_a_tall_chain()
+    n3 = next(n for n in base.nets if n.id == "n3")
+    for lost in itertools.combinations(n3.pins, 2):
+        tagged = tuple(replace(n, tagged=(lost,)) if n.id == "n3" else n for n in base.nets)
+        pins, refs, truth = _one_page_per_position(replace(base, nets=tagged))
+        for cut in range(min(truth), max(truth)):
+            assert any(r.net == "n3" and r.ends[0].page <= cut + 1 and r.ends[1].page >= cut + 2 for r in refs), (lost, cut)
+        assert len(pins["n3"]) == 1
+        assert {p for _, p in pins["n3"][0]} == set(n3.pins), lost
+        assert len({(r.net, r.kind, r.cut) for r in refs}) == len(refs), lost
+        for ref in refs:
+            for end in ref.ends:
+                assert end.pin is not None, (lost, ref.net, ref.cut)  # marks refuses an end with no pin (text_markers._order)
+                assert end.row is not None or ref.kind is not RefKind.ARROW, (lost, ref.net, ref.cut)  # and an arrow end with no row
+        for name, lanes in pins.items():
+            for lane in lanes:
+                at = [i for i, _ in lane]
+                for cut in range(min(at, default=0), max(at, default=0)):
+                    spans = [r for r in refs if r.net == name and r.ends[0].page <= cut + 1 and r.ends[1].page >= cut + 2]
+                    assert spans, (lost, name, cut)

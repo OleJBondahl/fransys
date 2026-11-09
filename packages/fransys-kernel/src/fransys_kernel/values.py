@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any, ClassVar, Protocol, cast, get_args, get_t
 
 import elecdef
 import refdef
-from elecdef import pins, plc, supply, terminal, vocab
+from elecdef import connector, pins, plc, supply, terminal, vocab
 
 from .errors import ValueTypeError
 from .ids import Id
@@ -51,7 +51,7 @@ MAX_EXPONENT = 1000
 # The family libraries' value classes (decision model-0370). Every class and enum named in a
 # door's `__all__` is registered here, once: enums are stored by member name, as `Unit` has tuple
 # values, and the tag is the door and the name, so `elecdef.Issue` and `refdef.Issue` differ.
-_FAMILY_DOORS = (elecdef, vocab, pins, terminal, plc, supply, refdef)
+_FAMILY_DOORS = (elecdef, vocab, connector, pins, terminal, plc, supply, refdef)
 
 
 def register_enum[E: Enum](cls: type[E]) -> type[E]:

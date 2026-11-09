@@ -17,8 +17,11 @@ from fransys_model.derive import (
     function_scopes,
     item_unit,
     port_function,
+    unit_index,
     unit_location,
+    unit_parent,
 )
+from fransys_model.derive.drawing_text import external_note, outline_title
 from fransys_model.derive.order import locations_in_order, units_in_order
 from fransys_model.kernel import render_id
 
@@ -43,6 +46,7 @@ __all__ = [
     "bare_pins",
     "cut_lines",
     "drawing_scopes",
+    "frame_titles",
     "restriction",
     "scope_groups",
 ]
@@ -92,7 +96,7 @@ def _filed(model: Model, kit: SymbolKit) -> tuple[_Filed, _Filed, _Filed, _Filed
     return found, copied, replicated, abroad
 
 
-type _Framed = dict[tuple[Id[Unit] | None, Id[AspectNode] | None], dict[Id[Unit], set[str]]]
+type _Framed = dict[tuple[Id[Unit] | None, Id[AspectNode] | None], dict[str, set[str]]]
 
 
 def home_unit(model: Model, function: PickKey) -> Id[Unit] | None:
@@ -100,19 +104,42 @@ def home_unit(model: Model, function: PickKey) -> Id[Unit] | None:
     return item_unit(model, function_item(model, function_of(model, function)))
 
 
-def frame_units(model: Model, kit: SymbolKit) -> dict[str, Id[Unit]]:
-    """The unit of each frame key `DrawingScope.frames` holds, by its render id."""
-    return {render_id(h): h for f in kit if (h := home_unit(model, f)) is not None}
+def frame_titles(model: Model, kit: SymbolKit) -> dict[str, tuple[str, str]]:
+    """Each frame key `DrawingScope.frames` holds -> its es symbol key and its title: a unit's, or "by others" for an external root."""
+    roots = unit_index(model).external_root
+    found: dict[str, tuple[str, str]] = {}
+    for function in kit:
+        if (home := home_unit(model, function)) is not None:
+            found[render_id(home)] = ("unit-outline", outline_title(model, home))
+        if (root := roots.get(function_item(model, function_of(model, function)))) is not None:
+            found[render_id(root)] = ("unit-outline-by-others", external_note())
+    return found
+
+
+def _replica_frames(model: Model, function: PickKey, found: _Framed) -> None:
+    """File `function`'s symbol under its home unit's frame in each unit set that draws it as a replica (R900 G9)."""
+    home = home_unit(model, function)
+    for key in function_replicas(model, function_of(model, function)):
+        if home is not None and key[0] is not None:
+            found.setdefault(key, {}).setdefault(render_id(home), set()).add(symbol_key(model, function))
+
+
+def _external_frames(model: Model, function: PickKey, found: _Framed) -> None:
+    """File an external `function`'s symbol under its root's frame in each set of a page with no unit above it (UNIT-SCOPE, R631 B6)."""
+    root = unit_index(model).external_root.get(function_item(model, function_of(model, function)))
+    if root is None:
+        return
+    for key in function_scopes(model, function_of(model, function)):
+        if key[0] is None or unit_parent(model, key[0]) is None:
+            found.setdefault(key, {}).setdefault(render_id(root), set()).add(symbol_key(model, function))
 
 
 def _framed(model: Model, kit: SymbolKit) -> _Framed:
-    """Per unit set (never a place set, R833), the symbols it draws as replicas grouped by their own unit, in kit order (R900 G9)."""
+    """Per set, the symbols it draws grouped by frame key: replicas by their own unit (never a place set, R833), external symbols by their root."""
     found: _Framed = {}
     for function in kit:
-        home = home_unit(model, function)
-        for key in function_replicas(model, function_of(model, function)):
-            if home is not None and key[0] is not None:
-                found.setdefault(key, {}).setdefault(home, set()).add(symbol_key(model, function))
+        _replica_frames(model, function, found)
+        _external_frames(model, function, found)
     return found
 
 
@@ -136,7 +163,7 @@ def drawing_scopes(model: Model, kit: SymbolKit) -> tuple[DrawingScope, ...]:
             frozenset(copied.get((unit, place), ())),
             frozenset(replicated.get((unit, place), ())),
             frozenset(abroad.get((unit, place), ())),
-            tuple((render_id(u), frozenset(s)) for u, s in framed.get((unit, place), {}).items()),
+            tuple((k, frozenset(s)) for k, s in framed.get((unit, place), {}).items()),
         )
         for unit, place in keys
     )

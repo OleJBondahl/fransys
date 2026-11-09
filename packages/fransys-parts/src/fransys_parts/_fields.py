@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 
-from fransys_model.elecdef import Gender, LinkKind, PinRole, Side, Unit
+from fransys_model.elecdef import Connector, Gender, LinkKind, PinRole, Side, Unit
 from fransys_model.vocab import (
     ConductorMark,
     Energy,
@@ -145,13 +145,19 @@ CABLE_PRODUCT_FIELDS = {
 }
 CONNECTOR_FIELDS = {
     "style": _Field(str),
-    "pincount": _Field(int),
+    "poles": _Field(int),
     "gender": _Field(str, required=False, enum=GENDER_WORDS),  # model-0080: absent means not stated
     # parts-0003: the label printed on the part ("X1"); absent means the function's name
     "marking": _Field(str, required=False),
     # parts-0016: the MPNs this connector mates with, data only
     "mates": _Field(list, required=False, elem_type=str),
 }
+
+
+def connector_of(table: Mapping[str, Any]) -> Connector:
+    """The elecdef `Connector` a `[function.connector]` table states; elecdef refuses poles below 1."""
+    gender = GENDER_WORDS[table["gender"]] if "gender" in table else None
+    return Connector(poles=table["poles"], gender=gender)
 
 
 # `[function.block]` (schema 2): the protection `type`; its type decides the breaking figures it may state

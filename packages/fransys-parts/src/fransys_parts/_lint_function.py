@@ -144,6 +144,7 @@ def _check_connector_facet(entry: _toml.Table, path: str, line: int) -> list[Fin
         return []
     connector = entry["connector"]
     findings = _fields.check_fields(connector, _fields.CONNECTOR_FIELDS, path=path, line=line, table_name="function.connector")
+    well_formed = not findings
     if entry.get("kind") != "connector":
         findings.append(
             _toml.finding(
@@ -153,9 +154,11 @@ def _check_connector_facet(entry: _toml.Table, path: str, line: int) -> list[Fin
                 "[function.connector] is set on a function whose kind is not connector",
             )
         )
-    pincount = connector.get("pincount") if type(connector) is dict else None
-    if type(pincount) is int and pincount < 1:
-        findings.append(_toml.finding("PINCOUNT", path, line, f"pincount {pincount} is below 1"))
+    if well_formed:
+        try:
+            _fields.connector_of(connector)
+        except TypeError as error:
+            findings.append(_toml.finding("FIELD_TYPE", path, line, f"function.connector: {error}"))
     return findings
 
 

@@ -17,7 +17,7 @@ ports = [
 
 [function.connector]
 style = "plug"
-pincount = 2
+poles = 2
 
 [[function]]
 name = "LB"
@@ -29,7 +29,7 @@ ports = [
 
 [function.connector]
 style = "plug"
-pincount = 2
+poles = 2
 
 [[function]]
 name = "K"
@@ -41,7 +41,7 @@ ports = [
 
 [function.connector]
 style = "plug"
-pincount = 2
+poles = 2
 
 [[function]]
 name = "measure"

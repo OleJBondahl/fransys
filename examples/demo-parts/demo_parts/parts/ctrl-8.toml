@@ -53,7 +53,7 @@ ports = [
 
 [function.connector]
 style = "rj45"
-pincount = 8
+poles = 8
 gender = "female"
 
 [[function]]
@@ -68,5 +68,5 @@ ports = [
 
 [function.connector]
 style = "header-4p"
-pincount = 4
+poles = 4
 gender = "female"

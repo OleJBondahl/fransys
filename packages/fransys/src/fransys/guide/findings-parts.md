@@ -34,7 +34,6 @@ Codes the part-file lint emits, at `fr.lint` and when `fr.design` or `fr.parts` 
 | LINK_SELF | ERROR | library load | part author | A `links` entry has the same port as `a` and `b`. | `a` and `b` name two different ports. Write: b = "12" |
 | PART_DUPLICATE | ERROR | library load | part author | Two part files declare the same `manufacturer` and `mpn` pair. | Each `manufacturer` and `mpn` pair is declared by one part file only. Write: mpn = "DEMO-RLY-2CO-24" |
 | PART_SCHEMA_OLD | ERROR | library load | part author | A part file or `library.toml` is written in schema 1. | Run `python -m fransys migrate-parts DIR` on the library folder; it rewrites each schema 1 file to schema 2. Write: schema = 2 |
-| PINCOUNT | ERROR | library load | part author | A `[function.connector]` has a `pincount` below 1. | A connector `pincount` is an integer of 1 or more. Write: pincount = 2 |
 | PLC_CHANNEL_DUPLICATE | ERROR | library load | part author | Two `[function.plc_channel]` tables of one part have the same `channel` and `signal`. | Each `[function.plc_channel]` has its own `channel` and `signal`. Write: channel = 4 |
 | PORT_NAME_DUPLICATE | ERROR | library load | part author | Two ports of one function have the same `name`. | Each port of one function has its own `name`. Write: name = "A2" |
 | PORT_NAME_SHARED | ERROR | library load | part author | Two functions of one part give a port the same name, and their printed designations would be the same. | Each port name is unique across the part, so the printed designations differ. Write: name = "A3" |

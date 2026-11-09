@@ -132,7 +132,7 @@ def _function(name, kind, marking=None):
     """One `[[function]]` with the port `1`; a connector gets its facet, `marking` if given."""
     text = f'[[function]]\nname = "{name}"\nkind = "{kind}"\n{_ONE_PORT}\n'
     if kind == "connector":
-        text += '\n[function.connector]\nstyle = "s"\npincount = 1\ngender = "male"\n'
+        text += '\n[function.connector]\nstyle = "s"\npoles = 1\ngender = "male"\n'
         if marking is not None:
             text += f"marking = {marking}\n"
     return text + "\n"

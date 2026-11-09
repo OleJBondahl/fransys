@@ -24,6 +24,6 @@ ports = [
 
 [function.connector]
 style = "housing-4w"
-pincount = 4
+poles = 4
 gender = "female"
 mates = ["DEMO-HSG-4M", "DEMO-CONN-4P"]

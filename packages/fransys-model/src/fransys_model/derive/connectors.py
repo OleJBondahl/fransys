@@ -136,8 +136,8 @@ def connector_rows_of(
                 connector=function.id,
                 designation=connector_designation(model, function.id, unit=unit),
                 style=shape.style,
-                pincount=shape.pincount,
-                gender=shape.gender,
+                pincount=len(shape.connector.pins),
+                gender=shape.connector.gender,
                 mate=mate,
                 mate_designation=(
                     None

@@ -68,7 +68,7 @@ def references(
     out: list[Ref] = []
     for b in sorted(row_only | page_cuts):
         for kind, names in ((RefKind.ARROW, cut.bounds[b].fans), (RefKind.TAG, cut.bounds[b].nets)):
-            for name in names:
+            for name in dict.fromkeys(names):
                 if kind is RefKind.ARROW and b in page_cuts and name in copyable:
                     continue
                 if kind is RefKind.TAG and b not in page_cuts:

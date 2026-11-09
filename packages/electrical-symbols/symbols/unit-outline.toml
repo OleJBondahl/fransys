@@ -7,10 +7,10 @@ status = "unverified"
 reference = { standard = "IEC 60617", number = "unit-outline" }
 
 elements = [
-  { polyline = [[0, 0], [8, 0], [8, 6], [0, 6]], closed = true, style = "dash_dot" },
+  { polyline = [[0, 0], [7, 0], [7, 2], [0, 2]], closed = true, style = "dash_dot" },
 ]
 
-stretch = [{ axis = "x", at = 4 }, { axis = "y", at = 3 }]
+stretch = [{ axis = "x", at = 6.5 }, { axis = "y", at = 1.5 }]
 
 lint_allow = [
   { rule = "slot-overlap-body", reason = "the label text box does not rotate and is wider than the frame is tall once rotated; the frame is drawn unrotated and the text stays inside the outline" },

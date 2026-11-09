@@ -16,6 +16,7 @@ from typing import TYPE_CHECKING
 
 from .arrow_reserve import lead_reserve, legs_x, reserve, reserve_x, reserve_y
 from .cut_costs import cut_cost
+from .cut_measured import row_key
 from .values import Finding
 
 if TYPE_CHECKING:
@@ -23,6 +24,7 @@ if TYPE_CHECKING:
 
     from .arrow_reserve import RowReserve
     from .cut_costs import Boundary, Item
+    from .cut_measured import RowKey
     from .flow_values import Block
     from .values import Options
 
@@ -46,6 +48,8 @@ class Cut:
     options: Options
     arrows: Mapping[str | tuple[str, str], RowReserve] = field(default_factory=dict)
     """Measured.arrows: a card's anchor to the arrow width its row kept free in the round before."""
+    rows: Mapping[RowKey, tuple[int, int]] = field(default_factory=dict)
+    """Measured.rows: a window to the (need width, band height) placement gave it: `row_size` reads it before any estimate."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -86,8 +90,10 @@ def splits_block(cut: Cut, i: int, j: int) -> bool:
 
 
 def row_size(cut: Cut, i: int, j: int) -> tuple[int, int]:
-    """Width (the pack modules' own) and estimated height of items i..j in one row."""
+    """Width and height of items i..j in one row: the placed record of that window, else the pack modules' width and an estimated height."""
     seq = cut.seq
+    if cut.rows and (placed := cut.rows.get(row_key(seq[i : j + 1]))):
+        return placed
     spans: list[tuple[int, int]] = []
     seen: set[str] = set()
     for item in seq[i : j + 1]:
@@ -148,7 +154,7 @@ def rows(cut: Cut, i: int, sizes: Sequence[Sequence[tuple[int, int]]]) -> list[d
             if _refused(cut, i, s, j):
                 continue
             for prev in [base] if s == i else states[s - 1].values():
-                state = _extend(cut, (prev, s), fit)
+                state = _extend(cut, (prev, s, j), fit)
                 if state is not None:
                     found.append(state)
         states[j] = _by_height(found)
@@ -171,13 +177,13 @@ def _by_height(found: Sequence[RowState]) -> dict[int, RowState]:
     return best
 
 
-def _extend(cut: Cut, row: tuple[RowState, int], fit: tuple[int, int]) -> RowState | None:
-    """The row starting at row[1] after row[0]; a page's first row may overflow its height."""
-    prev, s = row
+def _extend(cut: Cut, row: tuple[RowState, int, int], fit: tuple[int, int]) -> RowState | None:
+    """The row s..j after `prev`; a page's first row may overflow its height only when it is unbreakable (layout-0569)."""
+    prev, s, j = row
     width, height = fit
     options = cut.options
     total = prev.height + height + (options.row_gap if prev.height else 0)
-    if total > cut.page_h and prev.height:
+    if total > cut.page_h and (prev.height or not _unbreakable(cut, s, j)):
         return None
     cost = prev.cost + _q(options.w_row)
     if prev.height:

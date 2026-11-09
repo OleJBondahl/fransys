@@ -51,7 +51,7 @@ ports = [
 
 [function.connector]
 style = "header-4p"
-pincount = 4
+poles = 4
 gender = "male"
 marking = "J1"
 
@@ -66,6 +66,6 @@ ports = [
 
 [function.connector]
 style = "header-2p"
-pincount = 2
+poles = 2
 gender = "male"
 marking = "J2"

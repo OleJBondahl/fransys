@@ -58,6 +58,7 @@ _.footprint_library  # OTHER fransys-kicad/src/fransys_kicad/netlist.py:37
 _.footprint_name  # OTHER fransys-kicad/src/fransys_kicad/netlist.py:37
 _.mate_port_designation  # DICT fransys-model/src/fransys_model/derive/rows.py:765
 _.mate_designation  # DICT fransys-model/src/fransys_model/derive/rows.py:765
+_.pincount  # DICT fransys-model/src/fransys_model/derive/list_cells.py:64
 _.from_label  # DICT fransys-model/src/fransys_model/derive/rows.py:765
 _.to_label  # DICT fransys-model/src/fransys_model/derive/rows.py:765
 _.produced_by  # FIELDS fransys-kernel/src/fransys_kernel/schema.py:37

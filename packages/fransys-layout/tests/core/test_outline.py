@@ -133,10 +133,10 @@ def _sym(sid: str) -> Sym:
     return Sym(sid, None, "", {"": Size(16, 8)}, (), (), {"R0": Turned(box, box, box, (), row_footprint=box)})
 
 
-def test_a_member_symbol_holds_the_margin_the_label_room_and_the_least_frame():
+def test_a_member_symbol_holds_the_margin_and_the_label_room_only():
     problem = PlacementProblem(_AREA, (_sym("a"), _sym("z")), (), Facts(), Hints(frames=(("u", frozenset({"a"})),)))
     a, z = framed(problem, _opts(outline=_ROOM)).symbols
-    assert (a.footprint, a.row_footprint, z.footprint) == (Box(-12, -10, 64, 48), Box(-12, -10, 64, 48), Box(-8, 0, 16, 32))
+    assert (a.footprint, a.row_footprint, z.footprint) == (Box(-12, -10, 24, 46), Box(-12, -10, 24, 46), Box(-8, 0, 16, 32))
     assert framed(problem, _opts()) is problem
 
 

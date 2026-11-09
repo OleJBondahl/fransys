@@ -37,5 +37,5 @@ ports = [
 
 [function.connector]
 style = "D-Sub 9"
-pincount = 9
+poles = 9
 gender = "male"

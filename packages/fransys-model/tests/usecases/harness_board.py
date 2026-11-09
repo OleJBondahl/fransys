@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 
 from kit import Kit, PartSpec, Slot, template_of
 
-from fransys_model.elecdef import Gender, LinkKind, PinRole
+from fransys_model.elecdef import Connector, Gender, LinkKind, PinRole
 from fransys_model.kernel import make_id
 from fransys_model.vocab.core import Function, Item, Port
 from fransys_model.vocab.enums import Aspect, FunctionKind, NetClass, PartCategory, PortBoundary
@@ -100,8 +100,7 @@ def build_harness_board() -> Draft:
             (bundle.part.key[0], function, "connector"),
             subject=template_of(bundle, function),
             style="header-4p",
-            pincount=4,
-            gender=gender,
+            connector=Connector(poles=4, gender=gender),
         )
     # model-0071: the shell prints no label of its own, its `PE` pin prints under the housing.
     kit.facet(
@@ -109,8 +108,7 @@ def build_harness_board() -> Draft:
         (housing.part.key[0], "shell", "connector"),
         subject=template_of(housing, "shell"),
         style="shell",
-        pincount=1,
-        gender=Gender.GENDERLESS,
+        connector=Connector(poles=1, gender=Gender.GENDERLESS),
         marking="",
     )
     kit.facet(

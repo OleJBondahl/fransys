@@ -23,7 +23,7 @@ current = [{ nom = "0.5 A", at = ["DC"] }]
 
 [function.connector]
 style = "header-2p"
-pincount = 2
+poles = 2
 gender = "male"
 marking = "J1"
 
@@ -41,7 +41,7 @@ current = [{ nom = "0.5 A", at = ["DC"] }]
 
 [function.connector]
 style = "header-2p"
-pincount = 2
+poles = 2
 gender = "male"
 marking = "J2"
 
@@ -59,7 +59,7 @@ current = [{ nom = "0.5 A", at = ["DC"] }]
 
 [function.connector]
 style = "header-2p"
-pincount = 2
+poles = 2
 gender = "male"
 marking = "J3"
 
@@ -77,6 +77,6 @@ current = [{ nom = "0.5 A", at = ["DC"] }]
 
 [function.connector]
 style = "header-2p"
-pincount = 2
+poles = 2
 gender = "male"
 marking = "J4"

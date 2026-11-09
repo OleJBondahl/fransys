@@ -32,7 +32,7 @@ from .placement_ids import symbol_key
 from .placement_kit import refuse
 from .placement_nets import net_ports
 from .placement_options import sheet_area
-from .placement_sets import frame_units
+from .placement_sets import frame_titles
 from .placement_tables import is_table_spot
 from .read_markers import drawn_marker
 from .write_markings import marking_slots
@@ -171,7 +171,7 @@ def draw_set(w: Written) -> dict[Id[Page], Drawing]:
     texts = _in_place_order(_labels(w, keys))
     rows = _rows(w, keys)
     frames: dict[Id[Page], tuple[DrawnOutline, ...]] = {}
-    for page, outline in drawn_outlines(model, layout, pages, frame_units(model, kit), w.library):
+    for page, outline in drawn_outlines(layout, pages, frame_titles(model, kit), w.library):
         frames[page] = (*frames.get(page, ()), outline)
     drawn = _in_place_order((*_wires(wires, model, pages, w.owner.number), *power_leads(model, powers, layout.annotations.anchored)))
     return {

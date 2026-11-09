@@ -18,7 +18,7 @@ ports = [{ports}]
 
 [function.connector]
 style = "{style}"
-pincount = {n}
+poles = {n}
 gender = "{gender}"
 """
 

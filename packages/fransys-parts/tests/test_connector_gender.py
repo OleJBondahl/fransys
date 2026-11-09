@@ -35,15 +35,15 @@ ports = [{ name = "1", role = "generic" }]
 
 [function.connector]
 style = "s"
-pincount = 1
+poles = 1
 """
 _ORIGIN = Origin(file="tests/test_connector_gender.py", line=1, note="model-0080 tests")
 
 
-def _library(tmp_path, gender_line=""):
+def _library(tmp_path, gender_line="", poles="poles = 1\n"):
     (tmp_path / "library.toml").write_text(_LIBRARY)
     (tmp_path / "parts").mkdir()
-    (tmp_path / "parts" / "x.toml").write_text(_PART + gender_line)
+    (tmp_path / "parts" / "x.toml").write_text(_PART.replace("poles = 1\n", poles) + gender_line)
     return tmp_path
 
 
@@ -54,7 +54,7 @@ def test_an_absent_gender_lints_clean_loads_as_none_and_reaches_the_connector_ro
     draft = fransys_parts.load_path(root)
     model = freeze(draft)
     (facet,) = facets_of(model, ConnectorFacet).values()
-    assert facet.gender is None
+    assert facet.connector.gender is None
 
     (part,) = parts(model).values()
     bundle = PartBundle(
@@ -75,7 +75,7 @@ def test_a_present_gender_still_loads_onto_the_facet(tmp_path, word, gender):
     root = _library(tmp_path, f'gender = "{word}"\n')
     assert fransys_parts.lint(root) == ()
     (facet,) = facets_of(freeze(fransys_parts.load_path(root)), ConnectorFacet).values()
-    assert facet.gender is gender
+    assert facet.connector.gender is gender
 
 
 def test_a_gender_that_is_not_a_member_is_refused_by_lint_and_by_load(tmp_path):
@@ -88,3 +88,24 @@ def test_a_gender_that_is_not_a_member_is_refused_by_lint_and_by_load(tmp_path):
 def test_a_gender_that_is_not_a_string_is_a_type_finding(tmp_path):
     root = _library(tmp_path, "gender = 1\n")
     assert "FIELD_TYPE" in {finding.code for finding in fransys_parts.lint(root)}
+
+
+def test_poles_below_one_is_elecdefs_refusal_turned_into_a_finding(tmp_path):
+    root = _library(tmp_path, poles="poles = 0\n")
+    findings = [finding for finding in fransys_parts.lint(root) if finding.code == "FIELD_TYPE"]
+    assert findings
+    assert "positive int" in findings[0].message
+    with pytest.raises(PartLibraryError):
+        fransys_parts.load_path(root)
+
+
+def test_a_connector_without_poles_is_a_missing_field(tmp_path):
+    root = _library(tmp_path, poles="")
+    assert "FIELD_MISSING" in {finding.code for finding in fransys_parts.lint(root)}
+
+
+def test_the_old_pincount_key_is_an_unknown_field_and_the_load_refuses_it(tmp_path):
+    root = _library(tmp_path, poles="pincount = 3\n")
+    assert "FIELD_UNKNOWN" in {finding.code for finding in fransys_parts.lint(root)}
+    with pytest.raises(PartLibraryError):
+        fransys_parts.load_path(root)

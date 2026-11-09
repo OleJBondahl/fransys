@@ -150,7 +150,7 @@ def canon(result: CutResult, back: Callable[[str | None], str | None]) -> Canon:
     pages = tuple(
         (
             p.page,
-            tuple((tuple(map(back, r.columns)), tuple(map(back, r.blocks)), r.height_est) for r in p.rows),
+            tuple((tuple(map(back, r.columns)), tuple(map(back, r.blocks))) for r in p.rows),
             tuple(map(back, p.groups)),
         )
         for p in result.spec.pages

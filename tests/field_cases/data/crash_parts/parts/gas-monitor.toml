@@ -21,7 +21,7 @@ ports = [
 
 [function.connector]
 style = "plug"
-pincount = 6
+poles = 6
 
 [[function]]
 name = "sensor"
@@ -66,7 +66,7 @@ ports = [
 
 [function.connector]
 style = "plug"
-pincount = 2
+poles = 2
 
 [[function]]
 name = "X3"
@@ -78,5 +78,5 @@ ports = [
 
 [function.connector]
 style = "plug"
-pincount = 2
+poles = 2
 

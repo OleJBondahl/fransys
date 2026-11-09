@@ -51,7 +51,6 @@ def test_the_recut_stops_on_a_repeated_cut(monkeypatch: pytest.MonkeyPatch) -> N
     calls: list[int] = []
     monkeypatch.setattr(widen_module, "_attempt", lambda *a: (calls.append(a[3]), same)[1])
     monkeypatch.setattr(widen_module, "_excess", lambda *_: (8, 0))
-    monkeypatch.setattr(widen_module, "_short", lambda *_: False)
     monkeypatch.setattr(widen_module, "_spans_of", lambda measured, *_: measured)
     prob = PlacementProblem(Size(100, 4000), (elem("e", 40, 32),), (), facts=Facts())
     widen_module._recut((), cast("Any", None), prob, OPTS, Measured())
@@ -89,7 +88,6 @@ def test_a_fan_whose_span_jumps_at_attempt_zero_keeps_the_page_it_fits(
 
     monkeypatch.setattr(widen_module, "_attempt", attempt)
     monkeypatch.setattr(widen_module, "_excess", lambda *_: (114, 0))
-    monkeypatch.setattr(widen_module, "_short", lambda *_: False)
     monkeypatch.setattr(widen_module, "_spans_of", lambda *_: Measured(heights={"fan": 736}))
     widen_module._recut((), cast("Any", None), prob, OPTS, Measured(heights={"fan": 272}))
     assert max(lanes_used) > 0

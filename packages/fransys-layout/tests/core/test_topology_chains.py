@@ -5,6 +5,8 @@ from __future__ import annotations
 from dataclasses import replace
 from typing import TYPE_CHECKING
 
+import pytest
+
 from fransys_layout.core.topology_chains import (
     Node,
     break_cycles,
@@ -14,6 +16,7 @@ from fransys_layout.core.topology_chains import (
     links_of,
 )
 from fransys_layout.core.topology_orient import orient_chain
+from fransys_layout.core.values import PinRef
 
 from .flow_builders import Power, elem, free, net
 from .topology_fixtures import Read, box, read
@@ -153,3 +156,15 @@ def test_chains_sharing_a_symbol_are_one_column() -> None:
     one = (Node("a#0", "n", "s"),)
     two = (Node("b#0", "n", "s"),)
     assert group_columns((one, two, one), r.elems) == ((0, 2), (1,))
+
+
+@pytest.mark.rule("POLE-IN-SERIES")
+def test_a_chain_of_two_joined_poles_stands_together_next_to_the_end_the_current_leaves_and_the_free_element_after_them() -> None:
+    syms = [elem("a"), elem("b"), elem("p"), elem("q"), free("h")]
+    nets = [net("x", "a.s", "h.n", "h.s", "p.n", "p.s", "q.n", "q.s", "b.n")]
+    joined = tuple((PinRef(s, "n"), PinRef(s, "s")) for s in "pq")
+    r = read(syms, nets, joined)
+    link = links_of(r.ends_by_net, r.elems, r.syms)["x"]
+    expected = ["p#0", "q#0", "h#0"] if link.a.site == "bottom" else ["h#0", "p#0", "q#0"]
+    assert list(link.throughs) == expected
+    assert link.a.site != link.b.site

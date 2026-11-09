@@ -10,12 +10,13 @@ from conventions_fixtures import house
 from fransys.colours import BN
 from fransys_el import build, symbol_kit
 from fransys_el.placement_env import make_env
-from fransys_el.placement_sets import drawing_scopes, restriction, scope_groups
+from fransys_el.placement_sets import drawing_scopes, frame_titles, restriction, scope_groups
 from fransys_el.placement_syms import strip_tags
 
 from electrical_symbols import LIBRARY
 from fransys_layout.core import PagePlan
 from fransys_model.derive import function_replicas, function_scopes, item_functions
+from fransys_model.derive.tag_text import external_note
 
 
 class _Io(NamedTuple):
@@ -178,12 +179,15 @@ def test_a_terminal_copy_adds_no_group_to_a_page_title(drawn) -> None:
     assert dropped.groups == ("V1", "V2")
 
 
-def test_a_unit_set_frames_its_replicas_and_a_place_set_holding_replicas_frames_none(drawn, railed) -> None:
-    """R833, R1093: the skid set frames the strip's unit; the set of no unit (a place) holds the rail's replicas and frames none."""
+def test_a_unit_set_frames_its_replicas_and_a_place_set_frames_only_an_external_root(drawn, railed) -> None:
+    """R833, R1093, R2047: the skid set frames the strip's unit; the set of no unit (a place) frames no unit, only the external strip as by others."""
     model, kit, _ = drawn
     (framed,) = (s for s in drawing_scopes(model, kit) if s.frames)
     assert framed.of_unit is not None
     assert framed.replicas == frozenset().union(*(members for _, members in framed.frames))
-    (place,) = (s for s in drawing_scopes(railed.model, symbol_kit(railed.model, LIBRARY)) if s.of_unit is None)
+    rail_kit = symbol_kit(railed.model, LIBRARY)
+    (place,) = (s for s in drawing_scopes(railed.model, rail_kit) if s.of_unit is None)
     assert place.replicas
-    assert place.frames == ()
+    titles = frame_titles(railed.model, rail_kit)
+    assert place.frames
+    assert {titles[key] for key, _ in place.frames} == {("unit-outline-by-others", external_note())}

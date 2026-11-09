@@ -109,7 +109,7 @@ def open_boundaries(model: Model) -> tuple[tuple[Id[Unit], Id[Function]], ...]:
 
 @digest_cached(DIGEST_CACHE_SIZE)
 def _genders(model: Model) -> dict[Id[Function], Gender]:
-    by_template = {facet.subject: facet.gender for facet in facets_of(model, ConnectorFacet).values()}
+    by_template = {facet.subject: facet.connector.gender for facet in facets_of(model, ConnectorFacet).values()}
     return {
         function.id: gender
         for function in functions(model).values()

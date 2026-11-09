@@ -225,7 +225,7 @@ def test_connector_marking_loads_onto_the_connector_facet(tmp_path):
         'ports = [{{ name = "{name}1", role = "generic" }}]\n\n'
         "[function.connector]\n"
         'style = "s"\n'
-        "pincount = 1\n"
+        "poles = 1\n"
         'gender = "male"\n'
     )
     (tmp_path / "parts" / "x.toml").write_text(
@@ -522,4 +522,4 @@ def test_demo_housings_name_the_parts_they_mate_with():
         "DEMO-HSG-4F": ("DEMO-HSG-4M", "DEMO-CONN-4P"),
         "DEMO-HSG-4M": ("DEMO-HSG-4F",),
     }
-    assert SCHEMA_VERSION == 26
+    assert SCHEMA_VERSION == 27

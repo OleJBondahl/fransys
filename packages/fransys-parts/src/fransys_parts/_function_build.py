@@ -21,7 +21,7 @@ from fransys_model.vocab import (
 )
 
 from . import _joins, _pole_facts, _ratings, _toml
-from ._fields import GENDER_WORDS, REST_WORDS, SIDE_WORDS, port_roles
+from ._fields import REST_WORDS, SIDE_WORDS, connector_of, port_roles
 
 
 @dataclass(frozen=True, slots=True)
@@ -156,8 +156,7 @@ def _add_connector(
             key=key,
             subject=function_id,
             style=connector["style"],
-            pincount=connector["pincount"],
-            gender=GENDER_WORDS[connector["gender"]] if "gender" in connector else None,
+            connector=connector_of(connector),
             marking=connector.get("marking"),
             mates=tuple(connector.get("mates", ())),
         ),

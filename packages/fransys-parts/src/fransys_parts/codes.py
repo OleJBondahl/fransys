@@ -158,15 +158,6 @@ _OWN: tuple[CodeInfo, ...] = (
         page="findings-parts",
     ),
     CodeInfo(
-        code="PINCOUNT",
-        severity=Severity.ERROR,
-        stage="library load",
-        who="part author",
-        cause="A `[function.connector]` has a `pincount` below 1.",
-        fix="A connector `pincount` is an integer of 1 or more. Write: pincount = 2",
-        page="findings-parts",
-    ),
-    CodeInfo(
         code="RATING_TABLE_EMPTY",
         severity=Severity.ERROR,
         stage="library load",

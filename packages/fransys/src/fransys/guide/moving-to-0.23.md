@@ -18,6 +18,11 @@ This page lists what 0.23 adds, what stays refused for now, and the known issues
 - `WIDER_THAN_PAGE` and `PAGE_OVERFLOW` name the drawing set, the PDF page, the row and its devices, so you can find the overflow.
 - A two-pole switch with a pin turned to the far side draws it as a cross-link; before, a second lane could claim the pin.
 
+## Part-file key renamed
+
+- `[function.connector]` states `poles = 4` where it stated `pincount = 4`. A part file that still says `pincount` is refused with `FIELD_UNKNOWN` (ERROR); there is no alias. `poles` below 1 is refused with `FIELD_TYPE`, in elecdef's words. `gender` keeps its spelling.
+- A stored model of schema 26 or older is refused, and the message says to rebuild the release with `fr.release`. Nothing is migrated. The listing version is now 10; a stored listing of version 6 to 9 still reads.
+
 ## Still refused, for now
 
 - Mated connectors, PCB board documents and harness lines raise an ERROR. A board unit draws as an ordinary unit.

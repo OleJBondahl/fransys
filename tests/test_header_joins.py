@@ -51,7 +51,7 @@ ports = [
 
 [function.connector]
 style = "header-2p"
-pincount = 2
+poles = 2
 gender = "male"
 """
 

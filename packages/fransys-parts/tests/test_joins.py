@@ -47,7 +47,7 @@ ports = [{", ".join(ports)}]
 
 [function.connector]
 style = "s"
-pincount = {len(ports)}
+poles = {len(ports)}
 gender = "male"
 marking = "{marking}"
 """

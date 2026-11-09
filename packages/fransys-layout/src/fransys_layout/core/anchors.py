@@ -13,7 +13,7 @@ from types import MappingProxyType
 from typing import TYPE_CHECKING
 
 from .clearance import Keep, clear
-from .geometry import around, inset, marker_drawn_box, overlaps, shift, union
+from .geometry import inset, marker_drawn_box, overlaps, shift, union
 from .hang_levels import raised
 from .hangings import hung_keeps
 from .outline import outline_keeps
@@ -189,14 +189,14 @@ def folded(
     return _anchored(out, anchors)
 
 
-def _sym_reserved(sym: Sym, anchors: Sequence[Anchor], margin: int) -> Sym:
+def _sym_reserved(sym: Sym, anchors: Sequence[Anchor]) -> Sym:
     views = dict(sym.views)
     for anchor in anchors:
         index = _index(sym, anchor.pin.pin)
         for orient, view in views.items():
             turn = view.pins[index]
             if poses := _poses(anchor, turn.side):
-                views[orient] = _joined(view, (turn.dx, turn.dy), around(poses[0].outline, margin))
+                views[orient] = _joined(view, (turn.dx, turn.dy), poses[0].outline)
     return replace(sym, views=views)
 
 
@@ -210,17 +210,15 @@ def _owned(problem: PlacementProblem, missed: AbstractSet[tuple[str, str]]) -> d
     return by_sym
 
 
-def reserved(problem: PlacementProblem, options: Options, missed: AbstractSet[tuple[str, str]] = frozenset()) -> PlacementProblem:
+def reserved(problem: PlacementProblem, missed: AbstractSet[tuple[str, str]] = frozenset()) -> PlacementProblem:
     """The problem whose owners' views also hold their anchored outlines.
 
-    A card holds only those of `missed` (owner, pin) pairs; a frame member's outline joins with the frame margin (KI-691).
+    A card holds only those of `missed` (owner, pin) pairs.
     """
     if not problem.anchors:
         return problem
     by_sym = _owned(problem, missed)
-    members = frozenset().union(*(m for _, m in problem.hints.frames))
-    margin = 0 if options.outline is None else options.outline.margin
-    syms = tuple(_sym_reserved(s, by_sym[s.id], margin if s.id in members else 0) if s.id in by_sym else s for s in problem.symbols)
+    syms = tuple(_sym_reserved(s, by_sym[s.id]) if s.id in by_sym else s for s in problem.symbols)
     return replace(problem, symbols=syms)
 
 

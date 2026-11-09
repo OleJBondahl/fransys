@@ -27,7 +27,7 @@ ports = [
 
 [function.connector]
 style = "port-1p"
-pincount = 1
+poles = 1
 gender = "male"
 marking = "P1"
 
@@ -40,7 +40,7 @@ ports = [
 
 [function.connector]
 style = "port-1p"
-pincount = 1
+poles = 1
 gender = "male"
 marking = "P2"
 
@@ -53,7 +53,7 @@ ports = [
 
 [function.connector]
 style = "port-1p"
-pincount = 1
+poles = 1
 gender = "male"
 marking = "P3"
 
@@ -66,7 +66,7 @@ ports = [
 
 [function.connector]
 style = "port-1p"
-pincount = 1
+poles = 1
 gender = "male"
 marking = "P4"
 
@@ -79,7 +79,7 @@ ports = [
 
 [function.connector]
 style = "port-1p"
-pincount = 1
+poles = 1
 gender = "male"
 marking = "P5"
 
@@ -92,7 +92,7 @@ ports = [
 
 [function.connector]
 style = "port-1p"
-pincount = 1
+poles = 1
 gender = "male"
 marking = "P6"
 
@@ -105,7 +105,7 @@ ports = [
 
 [function.connector]
 style = "port-1p"
-pincount = 1
+poles = 1
 gender = "male"
 marking = "P7"
 
@@ -118,6 +118,6 @@ ports = [
 
 [function.connector]
 style = "port-1p"
-pincount = 1
+poles = 1
 gender = "male"
 marking = "P8"

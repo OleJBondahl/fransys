@@ -18,7 +18,7 @@ _HEAD = (
 _CONNECTOR = (
     '\n[[function]]\nname = "{name}"\nkind = "connector"\nsymbol = "connector-fixed"\n'
     "ports = [\n{ports}]\n\n[function.connector]\n"
-    'style = "header-2p"\npincount = 2\ngender = "male"\nmarking = "{marking}"\n'
+    'style = "header-2p"\npoles = 2\ngender = "male"\nmarking = "{marking}"\n'
 )
 
 

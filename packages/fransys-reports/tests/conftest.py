@@ -12,7 +12,7 @@ import pytest
 from hypothesis import settings
 from library_records import freeze
 
-from fransys_model.elecdef import Gender
+from fransys_model.elecdef import Connector, Gender
 from fransys_model.kernel import Draft, Id, Model, Origin, make_id
 from fransys_model.vocab.aspects import AspectNode, Placement
 from fransys_model.vocab.connectivity import Conductor, Mate, Net
@@ -325,8 +325,7 @@ class Plant:
             key=(*key, "connector"),
             subject=template.id,
             style=style,
-            pincount=len(markings) if pincount is None else pincount,
-            gender=gender,
+            connector=Connector(poles=len(markings) if pincount is None else pincount, gender=gender),
         )
         self.add(template, function, facet)
         return function.id, {marking: self.port(function.id, marking) for marking in markings}

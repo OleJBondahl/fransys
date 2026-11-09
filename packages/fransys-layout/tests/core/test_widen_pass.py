@@ -128,7 +128,7 @@ def test_a_page_the_placement_gave_too_tall_is_cut_again_into_room() -> None:
     tall = Placement((page,), placement.findings)
     routes = routed_from(cut, prob, OPTS)
     cut2, after, _, _, found = widen(cut, tall, Round((), (), routes, ()), prob, OPTS)
-    assert after.pages[0].placed == placement.pages[0].placed
+    assert len(cut2.spec.pages[0].rows) > len(cut.spec.pages[0].rows)  # the recorded 4984 G window is refused: the rows split (R2000)
     assert overflows(after, cut2, prob, OPTS) == ()
     assert found == ()
 
@@ -209,8 +209,7 @@ def test_the_recut_returns_the_least_excess_attempt_the_latest_among_equals(monk
     attempts = iter([(f"cut{i}", f"placed{i}") for i in range(4)])
     excess = {"placed0": 0, "placed1": 9, "placed2": 0, "placed3": 142}
     monkeypatch.setattr(widen_module, "_attempt", lambda *_: next(attempts))
-    monkeypatch.setattr(widen_module, "_excess", lambda placed, *_: (excess[placed], 0))
-    monkeypatch.setattr(widen_module, "_short", lambda *_: True)
+    monkeypatch.setattr(widen_module, "_excess", lambda placed, *_: (excess[placed], 1))  # width over: the loop goes on
     monkeypatch.setattr(widen_module, "_spans_of", lambda *_: None)
     monkeypatch.setattr(widen_module, "_lanes", lambda lanes, *_: lanes + 1)
     options = replace(OPTS, recut_rounds=3)

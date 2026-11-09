@@ -137,13 +137,12 @@ def _attach_y(g: Graph, pc: PlacedColumn, env: PageEnv, *, above: bool, slack: b
     body, cells = env.syms[box].body, pc.lanes[0]
     if above:
         dy = _pin_y(env, cells[-1], cells[-1].bottom_pin)
-        wire = max(_box_gap(env, cells[-1], above=True, dy=dy), body.y - env.syms[box].footprint.y + env.options.wire_min)
+        wire = _box_gap(env, cells[-1], above=True, dy=dy) + body.y - env.syms[box].footprint.y
         g.equal(box_y_node(box), cell_node(pc.id, 0, len(cells) - 1), body.y - wire - dy)
     else:
         dy = _pin_y(env, cells[0], cells[0].top_pin)
         fp = env.syms[box].footprint
-        need = fp.y + fp.h - (body.y + body.h) + env.options.wire_min
-        wire = grid_up(max(_box_gap(env, cells[0], above=False, dy=dy), need), env.options.wiring_grid)
+        wire = grid_up(_box_gap(env, cells[0], above=False, dy=dy) + fp.y + fp.h - body.y - body.h, env.options.wiring_grid)
         at = box_y_node(box), cell_node(pc.id, 0, 0), body.y + body.h + wire - dy
         g.after(*at) if slack else g.equal(*at)
 

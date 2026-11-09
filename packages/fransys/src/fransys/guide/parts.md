@@ -117,6 +117,17 @@ A part's `class_code` seeds its printed designation (`-Q1`, `-Q2`). Recommended 
 
 A board with several connectors whose pins repeat (`P01` on each) models one function per connector (kind `connector`); a list end then reads `-U2-J3:P04`.
 
+A connector function states its shape in `[function.connector]`:
+
+```toml
+[function.connector]
+style = "header-4p"
+poles = 4
+gender = "female"
+```
+
+`style` and `poles` are required. `gender` (`male`, `female` or `genderless`) is optional; absent means the part does not state it. `marking` and `mates` are optional. `poles` is the elecdef `Connector` field of that name; `pincount` is no longer a key (decision model-0446).
+
 ## Loading a library without a design
 
 `fr.parts` takes the same import names and returns a single `Draft` holding every part,

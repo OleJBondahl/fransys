@@ -153,6 +153,7 @@ mcc = 0  # was 1 (CND-D-FIX R963)
 panel_di16p = 0  # was 3 (CND-D-FIX R963)
 remote_io = 0  # KI-132 C1 9 plus C3 3, was 36 (WITNESS-W1 R916); STUB-SLOT (R954 R960): a fan-wired pin stands its stub on the free pin or a leg: 12 -> 0
 skid = 0
+board_cab = 0  # KI-806 (BOARD-RETURN), R-D16: the KI-615 witness build, tests/_field_shared.py board_cab
 
 [drawing_shorts_nets]
 distribution_board = 0

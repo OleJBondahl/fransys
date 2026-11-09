@@ -6,7 +6,7 @@ model alone. All identity here is invented for this repo; none of it names a rea
 
 from decimal import Decimal
 
-from fransys_model.elecdef import Gender, LinkKind
+from fransys_model.elecdef import Connector, Gender, LinkKind
 from fransys_model.kernel import Draft, Origin, make_id
 from fransys_model.vocab import (
     CableProductFacet,
@@ -184,8 +184,7 @@ def build_test_catalogue() -> Draft:
             key=key,
             subject=conn.id,
             style="test",
-            pincount=2,
-            gender=Gender.FEMALE,
+            connector=Connector(poles=2, gender=Gender.FEMALE),
         ),
         origin=_ORIGIN,
     )

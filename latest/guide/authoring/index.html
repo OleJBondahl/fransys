@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.11/guide/authoring/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.12/guide/authoring/">
       
       
       
@@ -2421,6 +2421,7 @@ is <code>P_1_L1</code>. <code>getattr(dev, "24V+")</code> reaches the raw name.<
 and <code>X1[3]</code> takes terminal 3. <code>pe</code> names the protective-earth part, and a run labelled exactly <code>"PE"</code> (<code>X1.run("PE", 2)</code>) takes it; without <code>pe=</code> that run raises. A terminal has two sides: wiring
 inside the unit reaches its inner side, a field cable its outer side. A wire or a series enters a
 strip at the right side without you saying so.
+A terminal is authored only on a strip: <code>d.item</code> of a terminal part raises, and its message names <code>d.terminal_strip</code>.
 A series that starts on a strip and goes on to a function leaves the strip on its inner side.
 One that goes on to a cable leaves it on the outer side.</p>
 <p>With <code>count</code>, the strip makes all its terminals at once, so spares exist and count in the lists. A
@@ -2619,7 +2620,7 @@ adds a history line. Both are optional.</p>
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.11 documentation
+      Fransys 0.23.12 documentation
     </div>
   
   

@@ -1292,7 +1292,10 @@ The drawn pages of `document` in set then page order, replica-only sets skipped.
 def drawn_physical_nets(model: Model) -> tuple[PhysicalNet, ...]
 ```
 
-The nets a drawing joins: `physical_nets` built from `drawn_groups`, so a bridge joins nothing.
+The nets a drawing draws wires for: `drawn_groups` less the conductive links, so a bridge joins nothing.
+
+A link's ports stand on two nets: a pole in series sits between them, as its conductors run (R2071, option A).
+A terminal's link stays: its ports draw as one node.
 
 ### drawn_stands
 
@@ -3359,15 +3362,16 @@ Returns:
 def pinned_box_sides(model: Model, ports: Sequence[Id[Port]]) -> dict[Id[Port], str | None]
 ```
 
-The side ("n" or "s") the power of a box decides for each of its `ports`, else `None`.
+The side ("n" or "s") a part or the power of a box decides for each of its `ports`, else `None`.
 
-A box with a pin on a supply, ground or earth net, drawn as a symbol: a supply pin N and the
+A pin whose function's part states `box_side` has that side (top N, bottom S), whatever else is true.
+Otherwise a box with a pin on a supply, ground or earth net, drawn as a symbol: a supply pin N and the
 rest of those S, but when it has an AC pin too (a port on no such net that carries AC), every
 AC pin N and all those S. A box whose pins are all on such nets has every pin N
 (CROSS-HALF-TAGS: a straight riser for the return). Without such a pin, a box on two or more
 declared potentials has every pin that carries one on N, so a supply whose + and - are
 wired stands both on N.
-Ports the power does not decide are `None`.
+Ports neither decides are `None`.
 
 ### place_members
 

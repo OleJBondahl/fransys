@@ -102,6 +102,8 @@ their published datasheets.
 
 [![pump-cabinet-v1.11, page 10](img/all/pump-cabinet-v1.11-p10.png)](img/all/pump-cabinet-v1.11-p10.png)
 
+[![pump-cabinet-v1.11, page 11](img/all/pump-cabinet-v1.11-p11.png)](img/all/pump-cabinet-v1.11-p11.png)
+
 - Open the overview page: [EX-1-v1.6-overview.html](files/all/EX-1-v1.6-overview.html)
 
 ## out/all/data
@@ -666,4 +668,6 @@ their published datasheets.
 [![pump-cabinet-v1.11, page 9](img/cabinet/pump-cabinet-v1.11-p09.png)](img/cabinet/pump-cabinet-v1.11-p09.png)
 
 [![pump-cabinet-v1.11, page 10](img/cabinet/pump-cabinet-v1.11-p10.png)](img/cabinet/pump-cabinet-v1.11-p10.png)
+
+[![pump-cabinet-v1.11, page 11](img/cabinet/pump-cabinet-v1.11-p11.png)](img/cabinet/pump-cabinet-v1.11-p11.png)
 

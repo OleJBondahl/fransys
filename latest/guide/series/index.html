@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.11/guide/series/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.12/guide/series/">
       
       
       
@@ -2237,7 +2237,7 @@ a size, a table of rows, or a tuple of <code>(colour, mm2)</code>, one per pole.
 <p><code>d.series(a, b, c, wire=(BU, 0.75))</code> wires elements end to end: each one's load side to the next
 one's line side, one wire per pole. A supply rail, a run, a device function, a cable and a strip
 are all elements. A function is a series element when its part names its line side; else the
-series raises and names it. A part-less external device may end a series: its pins meet the poles in
+series raises and names it (<code>no line/load pole pair</code>). A function with one port is not a series end: use <code>&lt;function&gt;.pins</code>. A part-less external device may end a series: its pins meet the poles in
 declared order; anywhere else it raises.</p>
 <h3 id="branch-inside-a-series">Branch inside a series</h3>
 <p><code>d.parallel(a, b)</code> is an element of a series: each member sits between the previous load and the next
@@ -2550,7 +2550,7 @@ It names the cable and both counts; pick a cable with that many non-earth cores.
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.11 documentation
+      Fransys 0.23.12 documentation
     </div>
   
   

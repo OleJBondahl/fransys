@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.11/guide/parts/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.12/guide/parts/">
       
       
       
@@ -501,6 +501,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#a-transformer-drawn-as-a-box" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        A transformer drawn as a box
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#ratings-from-a-datasheet" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -538,6 +549,17 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         The marking printed for a port
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#one-side-of-the-box-for-every-pin" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        One side of the box for every pin
       </span>
     </span>
   </a>
@@ -2162,6 +2184,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#a-transformer-drawn-as-a-box" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        A transformer drawn as a box
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#ratings-from-a-datasheet" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -2199,6 +2232,17 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         The marking printed for a port
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#one-side-of-the-box-for-every-pin" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        One side of the box for every pin
       </span>
     </span>
   </a>
@@ -2440,6 +2484,8 @@ with <code>parent=</code>:</p>
 <span class="n">second</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">"DEMO-BLOCK-1NC-21"</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"nc-2"</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">s1</span><span class="p">)</span>
 </code></pre></div>
 <p>Both blocks print <code>-S1</code>, and each draws the emergency-stop symbol.</p>
+<h2 id="a-transformer-drawn-as-a-box">A transformer drawn as a box</h2>
+<p>A transformer part states <code>symbol = "transformer-box"</code> on its primary and its secondary function. Each function names only its own pins with <code>symbol_port</code>: <code>p1</code> and <code>p2</code> for the primary, <code>s1</code> and <code>s2</code> for the secondary. The item then draws as one box with a two-winding sign, the primary pins above and the secondary pins below. A part without <code>symbol</code> draws as before.</p>
 <h2 id="ratings-from-a-datasheet">Ratings from a datasheet</h2>
 <p>A part's rating fields are read straight off its datasheet. But a battery or cell datasheet
 often states its rating as a C-rate against the part's capacity rather than as a current: 1C
@@ -2526,6 +2572,16 @@ It prints its holder's designation and has no row or netlist line, and draws not
 <span class="n">connector</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"j3.1"</span>
 </code></pre></div>
 <p>This port prints as pin <code>1</code> of connector <code>j3</code>, for example <code>-U2-J3:1</code>. The pin is one of the connector's <code>poles</code>. One port names it. A header pin does not also <code>joins</code> the port. <code>PORT_PIN_NOT_ON_CONNECTOR</code>, <code>PORT_PIN_TAKEN</code> and <code>PORT_CONNECTOR_AND_JOIN</code> (ERROR) refuse the rest. <code>connector</code> closes no net; <code>joins</code> does.</p>
+<h2 id="one-side-of-the-box-for-every-pin">One side of the box for every pin</h2>
+<p>A function drawn as a generic box splits its pins over the top and the bottom. A part pins every pin of a function to one side with <code>box_side</code>, whatever the pin count:</p>
+<div class="highlight"><pre><span></span><code><span class="k">[[function]]</span>
+<span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"io"</span>
+<span class="n">kind</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"load"</span>
+<span class="n">box_side</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"top"</span>
+<span class="n">ports</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[{</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"p1"</span><span class="p">,</span><span class="w"> </span><span class="n">role</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"generic"</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"p2"</span><span class="p">,</span><span class="w"> </span><span class="n">role</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"generic"</span><span class="w"> </span><span class="p">}]</span>
+</code></pre></div>
+<p><code>box_side</code> is <code>top</code> or <code>bottom</code>. Any other value is an <code>ENUM_VALUE</code> error that names the function.</p>
+<p>It decides before the power rule and the halves. A function without it keeps them.</p>
 
 
 
@@ -2561,7 +2617,7 @@ It prints its holder's designation and has no row or netlist line, and draws not
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.11 documentation
+      Fransys 0.23.12 documentation
     </div>
   
   

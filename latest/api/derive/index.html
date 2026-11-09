@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.11/api/derive/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.12/api/derive/">
       
       
       
@@ -17106,7 +17106,9 @@ is this net, not the electrical net <code>net_of</code> returns.</p>
 <h3 id="drawn_physical_nets">drawn_physical_nets</h3>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">drawn_physical_nets</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">PhysicalNet</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
 </code></pre></div>
-<p>The nets a drawing joins: <code>physical_nets</code> built from <code>drawn_groups</code>, so a bridge joins nothing.</p>
+<p>The nets a drawing draws wires for: <code>drawn_groups</code> less the conductive links, so a bridge joins nothing.</p>
+<p>A link's ports stand on two nets: a pole in series sits between them, as its conductors run (R2071, option A).
+A terminal's link stays: its ports draw as one node.</p>
 <h3 id="drawn_stands">drawn_stands</h3>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">drawn_stands</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">frozendict</span><span class="p">[</span><span class="n">Id</span><span class="p">[</span><span class="n">Port</span><span class="p">],</span> <span class="n">PowerKind</span><span class="p">]</span>
 </code></pre></div>
@@ -18258,14 +18260,15 @@ The marking is the pin's printed one, else its name.</p>
 <h3 id="pinned_box_sides">pinned_box_sides</h3>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">pinned_box_sides</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span> <span class="n">ports</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Id</span><span class="p">[</span><span class="n">Port</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Id</span><span class="p">[</span><span class="n">Port</span><span class="p">],</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span>
 </code></pre></div>
-<p>The side ("n" or "s") the power of a box decides for each of its <code>ports</code>, else <code>None</code>.</p>
-<p>A box with a pin on a supply, ground or earth net, drawn as a symbol: a supply pin N and the
+<p>The side ("n" or "s") a part or the power of a box decides for each of its <code>ports</code>, else <code>None</code>.</p>
+<p>A pin whose function's part states <code>box_side</code> has that side (top N, bottom S), whatever else is true.
+Otherwise a box with a pin on a supply, ground or earth net, drawn as a symbol: a supply pin N and the
 rest of those S, but when it has an AC pin too (a port on no such net that carries AC), every
 AC pin N and all those S. A box whose pins are all on such nets has every pin N
 (CROSS-HALF-TAGS: a straight riser for the return). Without such a pin, a box on two or more
 declared potentials has every pin that carries one on N, so a supply whose + and - are
 wired stands both on N.
-Ports the power does not decide are <code>None</code>.</p>
+Ports neither decides are <code>None</code>.</p>
 <h3 id="place_members">place_members</h3>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">place_members</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span> <span class="n">box</span><span class="p">:</span> <span class="n">ViewBox</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Id</span><span class="p">[</span><span class="n">Item</span><span class="p">]</span> <span class="o">|</span> <span class="n">Id</span><span class="p">[</span><span class="n">Unit</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span>
 </code></pre></div>
@@ -20468,7 +20471,7 @@ for any other box.</p>
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.11 documentation
+      Fransys 0.23.12 documentation
     </div>
   
   

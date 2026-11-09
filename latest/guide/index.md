@@ -153,7 +153,7 @@ class Cabinet(NamedTuple):
 
 @fr.unit("pump-cabinet", revision=1, interface_version=1, date="2026-01-01", text="First", by="AB")
 def cabinet(c):
-    c.device("X1", "DEMO-TB-2.5")
+    c.terminal_strip("X1", "DEMO-TB-2.5", 1)
     return Cabinet()
 
 

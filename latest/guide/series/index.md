@@ -12,7 +12,7 @@ a size, a table of rows, or a tuple of `(colour, mm2)`, one per pole.
 `d.series(a, b, c, wire=(BU, 0.75))` wires elements end to end: each one's load side to the next
 one's line side, one wire per pole. A supply rail, a run, a device function, a cable and a strip
 are all elements. A function is a series element when its part names its line side; else the
-series raises and names it. A part-less external device may end a series: its pins meet the poles in
+series raises and names it (`no line/load pole pair`). A function with one port is not a series end: use `<function>.pins`. A part-less external device may end a series: its pins meet the poles in
 declared order; anywhere else it raises.
 
 ### Branch inside a series

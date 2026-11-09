@@ -219,6 +219,10 @@ second = d.device(None, "DEMO-BLOCK-1NC-21", name="nc-2", parent=s1)
 
 Both blocks print `-S1`, and each draws the emergency-stop symbol.
 
+## A transformer drawn as a box
+
+A transformer part states `symbol = "transformer-box"` on its primary and its secondary function. Each function names only its own pins with `symbol_port`: `p1` and `p2` for the primary, `s1` and `s2` for the secondary. The item then draws as one box with a two-winding sign, the primary pins above and the secondary pins below. A part without `symbol` draws as before.
+
 ## Ratings from a datasheet
 
 A part's rating fields are read straight off its datasheet. But a battery or cell datasheet
@@ -335,3 +339,19 @@ connector = "j3.1"
 ```
 
 This port prints as pin `1` of connector `j3`, for example `-U2-J3:1`. The pin is one of the connector's `poles`. One port names it. A header pin does not also `joins` the port. `PORT_PIN_NOT_ON_CONNECTOR`, `PORT_PIN_TAKEN` and `PORT_CONNECTOR_AND_JOIN` (ERROR) refuse the rest. `connector` closes no net; `joins` does.
+
+## One side of the box for every pin
+
+A function drawn as a generic box splits its pins over the top and the bottom. A part pins every pin of a function to one side with `box_side`, whatever the pin count:
+
+```toml
+[[function]]
+name = "io"
+kind = "load"
+box_side = "top"
+ports = [{ name = "p1", role = "generic" }, { name = "p2", role = "generic" }]
+```
+
+`box_side` is `top` or `bottom`. Any other value is an `ENUM_VALUE` error that names the function.
+
+It decides before the power rule and the halves. A function without it keeps them.

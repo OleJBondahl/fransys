@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.11/guide/moving-to-0.23/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.12/guide/moving-to-0.23/">
       
       
       
@@ -2157,6 +2157,7 @@
 <h2 id="part-file-key-renamed">Part-file key renamed</h2>
 <ul>
 <li>A port of a role function names its physical connector pin with <code>connector = "j3.1"</code>. Its list text is the connector's pin; the stored model schema is 28, so rebuild every release with this build.</li>
+<li>A part function may state <code>box_side = "top"</code> or <code>"bottom"</code> to put its pins on that side of its box. The stored model schema is 29, so rebuild every release with this build.</li>
 <li><code>[function.connector]</code> states <code>poles = 4</code> where it stated <code>pincount = 4</code>. A part file that still says <code>pincount</code> is refused with <code>FIELD_UNKNOWN</code> (ERROR); there is no alias. <code>poles</code> below 1 is refused with <code>FIELD_TYPE</code>, in elecdef's words. <code>gender</code> keeps its spelling.</li>
 <li>A stored model of schema 26 or older is refused, and the message says to rebuild the release with <code>fr.release</code>. Nothing is migrated. The listing version is now 10; a stored listing of version 6 to 9 still reads.</li>
 </ul>
@@ -2220,7 +2221,7 @@
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.11 documentation
+      Fransys 0.23.12 documentation
     </div>
   
   

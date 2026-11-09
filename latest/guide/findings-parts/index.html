@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.10/guide/findings-parts/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.11/guide/findings-parts/">
       
       
       
@@ -2159,6 +2159,14 @@
 <td>Each <code>[function.plc_channel]</code> has its own <code>channel</code> and <code>signal</code>. Write: channel = 4</td>
 </tr>
 <tr>
+<td><a id="port_connector_and_join"></a>PORT_CONNECTOR_AND_JOIN</td>
+<td>ERROR</td>
+<td>library load</td>
+<td>part author</td>
+<td>A port names a <code>connector</code> pin and a header pin also <code>joins</code> it.</td>
+<td>A port has one home at a connector: name it with <code>connector</code>, or join it from a header pin, not both. Write: connector = "j3.1"</td>
+</tr>
+<tr>
 <td><a id="port_name_duplicate"></a>PORT_NAME_DUPLICATE</td>
 <td>ERROR</td>
 <td>library load</td>
@@ -2173,6 +2181,22 @@
 <td>part author</td>
 <td>Two functions of one part give a port the same name, and their printed designations would be the same.</td>
 <td>Each port name is unique across the part, so the printed designations differ. Write: name = "A3"</td>
+</tr>
+<tr>
+<td><a id="port_pin_not_on_connector"></a>PORT_PIN_NOT_ON_CONNECTOR</td>
+<td>ERROR</td>
+<td>library load</td>
+<td>part author</td>
+<td>A port's <code>connector</code> is not <code>&lt;function&gt;.&lt;pin&gt;</code> of a connector function of this part, or names a pin the connector lacks.</td>
+<td><code>connector</code> names a connector function of this part and one of its pins, <code>1</code> to its <code>poles</code>. Write: connector = "j3.1"</td>
+</tr>
+<tr>
+<td><a id="port_pin_taken"></a>PORT_PIN_TAKEN</td>
+<td>ERROR</td>
+<td>library load</td>
+<td>part author</td>
+<td>Two ports of one part name the same connector pin.</td>
+<td>Each connector pin is named by at most one port. Write: connector = "j3.2"</td>
 </tr>
 <tr>
 <td><a id="power_loss_twice"></a>POWER_LOSS_TWICE</td>
@@ -2339,7 +2363,7 @@
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.10 documentation
+      Fransys 0.23.11 documentation
     </div>
   
   

@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.10/api/derive/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.11/api/derive/">
       
       
       
@@ -17568,7 +17568,7 @@ as-installed length of a cable and stays that way.</p>
 <h3 id="is_pe_conductor">is_pe_conductor</h3>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">is_pe_conductor</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span> <span class="n">conductor</span><span class="p">:</span> <span class="n">Id</span><span class="p">[</span><span class="n">Conductor</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span>
 </code></pre></div>
-<p>Whether an end of <code>conductor</code> is a pin of a rail terminal on the PE net: the PE rail's own wire or link.</p>
+<p>Whether an end of <code>conductor</code> is a pin on the PE net, joined however (earth, bridge, strip run, cable core).</p>
 <p>The one home of what the hide-PE option leaves off the drawing sheets.</p>
 <h3 id="is_plc_module">is_plc_module</h3>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">is_plc_module</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span> <span class="n">item</span><span class="p">:</span> <span class="n">Item</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span>
@@ -18388,7 +18388,8 @@ its ports are (<code>function_is_unused</code>).</p>
 <p>What a port's MARKING label prints.</p>
 <p>The part's pin marking (<code>Port.marking</code>), else the port's name; "" when the part prints
 none. In <code>list_end</code> mode a list names its pin: the marking only when it is non-empty and no
-other port under the same printed prefix (<code>connector_designation</code>) prints it, else the name.</p>
+other port under the same printed prefix (<code>connector_designation</code>) prints it, else the name.
+A port that names a connector pin (<code>port_connector</code>) prints under that connector, as that pin.</p>
 <h3 id="port_name">port_name</h3>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">port_name</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span> <span class="n">port</span><span class="p">:</span> <span class="n">Id</span><span class="p">[</span><span class="n">Port</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span>
 </code></pre></div>
@@ -20467,7 +20468,7 @@ for any other box.</p>
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.10 documentation
+      Fransys 0.23.11 documentation
     </div>
   
   

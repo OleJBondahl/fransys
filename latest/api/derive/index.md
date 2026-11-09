@@ -2115,7 +2115,7 @@ Raises:
 def is_pe_conductor(model: Model, conductor: Id[Conductor]) -> bool
 ```
 
-Whether an end of `conductor` is a pin of a rail terminal on the PE net: the PE rail's own wire or link.
+Whether an end of `conductor` is a pin on the PE net, joined however (earth, bridge, strip run, cable core).
 
 The one home of what the hide-PE option leaves off the drawing sheets.
 
@@ -3580,6 +3580,7 @@ What a port's MARKING label prints.
 The part's pin marking (`Port.marking`), else the port's name; "" when the part prints
 none. In `list_end` mode a list names its pin: the marking only when it is non-empty and no
 other port under the same printed prefix (`connector_designation`) prints it, else the name.
+A port that names a connector pin (`port_connector`) prints under that connector, as that pin.
 
 ### port_name
 

@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.10/guide/parts/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.11/guide/parts/">
       
       
       
@@ -2519,7 +2519,13 @@ It prints its holder's designation and has no row or netlist line, and draws not
 <span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"port_4_1"</span>
 <span class="n">marking</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"1"</span>
 </code></pre></div>
-<p>This port prints <code>1</code>, not <code>port_4_1</code>. A role function (plc_channel, supply, load) prints the marking of its port and no connector designation. A port will name its physical connector in 0.23. Until then there is no spelling for a connector beside a pin of a role function.</p>
+<p>This port prints <code>1</code>, not <code>port_4_1</code>. A role function (plc_channel, supply, load) prints the marking of its port and no connector designation. </p>
+<p>A port of a role function names the connector pin it sits at. The key reads like <code>joins</code>: a connector function of the same part, a dot, the pin.</p>
+<div class="highlight"><pre><span></span><code><span class="k">[[function.port]]</span>
+<span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"A1"</span>
+<span class="n">connector</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"j3.1"</span>
+</code></pre></div>
+<p>This port prints as pin <code>1</code> of connector <code>j3</code>, for example <code>-U2-J3:1</code>. The pin is one of the connector's <code>poles</code>. One port names it. A header pin does not also <code>joins</code> the port. <code>PORT_PIN_NOT_ON_CONNECTOR</code>, <code>PORT_PIN_TAKEN</code> and <code>PORT_CONNECTOR_AND_JOIN</code> (ERROR) refuse the rest. <code>connector</code> closes no net; <code>joins</code> does.</p>
 
 
 
@@ -2555,7 +2561,7 @@ It prints its holder's designation and has no row or netlist line, and draws not
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.10 documentation
+      Fransys 0.23.11 documentation
     </div>
   
   

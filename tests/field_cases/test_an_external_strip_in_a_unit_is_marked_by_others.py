@@ -69,7 +69,7 @@ def _symbols() -> list[tuple[Any, Any]]:
 
 
 def test_the_strips_terminals_stand_in_dashed_outlines_with_one_note() -> None:
-    """Each terminal is inside an outline, no other symbol is, and the strip has one note."""
+    """Each terminal is inside an outline, no other symbol is, and the frame carries no note (R2127)."""
     outlines = _outline_boxes()
     assert outlines
 
@@ -83,7 +83,7 @@ def test_the_strips_terminals_stand_in_dashed_outlines_with_one_note() -> None:
         for t in (*drawing.texts, *(o.label for o in drawing.outlines if o.label))
         if t.text == external_note()
     ]
-    assert len(notes) == 1
+    assert notes == []
 
 
 def test_the_cable_end_box_of_the_strip_is_dashed() -> None:
@@ -177,9 +177,8 @@ def test_the_lines_along_an_outline_by_others_only_fall() -> None:
 
 
 def test_every_external_outline_run_is_the_dashed_by_others_frame_with_its_label() -> None:
-    """BY-OTHERS-P3 (R1256 O2 (c)): each run of the strip's frame is the `unit-outline-by-others` symbol and carries "by others"."""
+    """BY-OTHERS-P3 (R1256 O2 (c)): each run of the strip's frame is the `unit-outline-by-others` symbol with no corner text (R2127)."""
     outlines = [o for drawing in drawn_pages(_built().model).values() for o in drawing.outlines]
     assert outlines
     assert {o.key for o in outlines} == {"unit-outline-by-others"}
-    assert {o.label.text for o in outlines if o.label} == {external_note()}
-    assert all(o.label for o in outlines)
+    assert [o.label for o in outlines] == [None] * len(outlines)

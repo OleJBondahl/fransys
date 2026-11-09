@@ -25,7 +25,7 @@ __all__ = ["drawn_outlines"]
 def drawn_outlines(
     layout: CoreLayout, pages: Mapping[int, Page], titles: Mapping[str, tuple[str, str]], library: Library
 ) -> Iterator[tuple[Id[Page], DrawnOutline]]:
-    """The frames of the layout, each on its page, its title in the label slot at the top left."""
+    """The frames of the layout, each on its page, its title, when it has one, in the label slot at the top left."""
     slot = outline_room(library).label
     for o in layout.annotations.outlines:
         b = o.box
@@ -33,4 +33,4 @@ def drawn_outlines(
         label = Box(b.x + slot.x, b.y + slot.y, text_width_g(library.font, text, height=slot.h), slot.h)
         corners = ((b.x, b.y), (b.x + b.w, b.y), (b.x + b.w, b.y + b.h), (b.x, b.y + b.h))
         ident = outline_id(o.key, o.page, o.run)
-        yield pages[o.page].id, DrawnOutline(ident, key, corners, DrawnText(text, label, "TAG", "NW", ident))
+        yield pages[o.page].id, DrawnOutline(ident, key, corners, DrawnText(text, label, "TAG", "NW", ident) if text else None)

@@ -26,7 +26,6 @@
 "test_a_wide_box_cell_does_not_widen_every_lane.py::test_the_contact_lanes_stand_at_their_own_pitch" = "GAP-FLIP-70"
 "test_a_wire_does_not_run_on_a_harness_line.py::test_a_cable_of_two_wired_cores_draws_one_trunk" = "GAP-FLIP-408"  # CABLE-TRUNK: KI-171
 "test_an_external_strip_in_a_unit_is_marked_by_others.py::test_no_harness_line_runs_along_a_routed_wire" = "GAP-FLIP-3"  # KI-035: premise lost, the fixture draws no markers or references; piece XF-FORCING-FIXTURE builds one that does
-"test_an_external_strip_in_a_unit_is_marked_by_others.py::test_the_strips_terminals_stand_in_dashed_outlines_with_one_note" = "GAP-FLIP-3"  # KI-035: premise lost, the fixture draws no markers or references; piece XF-FORCING-FIXTURE builds one that does
 "test_an_input_card_prints_its_pins_in_marking_order_whatever_its_partners_order.py::test_a_fan_of_contacts_lands_on_pins_in_marking_order" = "GAP-FLIP-415"
 "test_an_input_card_prints_its_pins_in_marking_order_whatever_its_partners_order.py::test_interleaved_groups_hang_six_straight_drops_under_pins_in_order" = "GAP-FLIP-415"  # KI-302: INTERLEAVED-PIN-ORDER
 "test_an_input_card_prints_its_pins_in_marking_order_whatever_its_partners_order.py::test_the_fan_columns_stand_in_pin_order_and_cross_no_more_than_before_the_pins_moved" = "GAP-FLIP-415"

@@ -207,3 +207,10 @@ def test_a_marker_with_no_reference_row_raises(origin: Origin) -> None:
     """The cell is read from the marker's REFERENCE membership row; a missing row is no silent default (R897)."""
     with pytest.raises(SchemaError):
         _star_text(origin, (10,), with_rows=False)
+
+
+def test_external_frame_title_is_empty_by_default() -> None:
+    """The by-others frame carries no text unless a consumer sets one (R2127, el-0127)."""
+    from fransys_model.derive.drawing_text import external_frame_title
+
+    assert external_frame_title() == ""

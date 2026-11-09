@@ -16,7 +16,6 @@ from fransys_el.placement_syms import strip_tags
 from electrical_symbols import LIBRARY
 from fransys_layout.core import PagePlan
 from fransys_model.derive import function_replicas, function_scopes, item_functions
-from fransys_model.derive.tag_text import external_note
 
 
 class _Io(NamedTuple):
@@ -190,4 +189,4 @@ def test_a_unit_set_frames_its_replicas_and_a_place_set_frames_only_an_external_
     assert place.replicas
     titles = frame_titles(railed.model, rail_kit)
     assert place.frames
-    assert {titles[key] for key, _ in place.frames} == {("unit-outline-by-others", external_note())}
+    assert {titles[key] for key, _ in place.frames} == {("unit-outline-by-others", "")}

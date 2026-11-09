@@ -99,6 +99,11 @@ def outline_title(model: Model, unit: Id[Unit] | None) -> str:
     return release_title(revision_form_of(model), unit_release(model, unit))
 
 
+def external_frame_title() -> str:
+    """The corner text of every by-others frame: empty by default (R2127); KI-910 adds the consumer's text and the arguments it reads."""
+    return ""
+
+
 def page_title_groups(model: Model, page: Page) -> tuple[PageGroup, ...]:
     """Which of `page.groups` title `page` (model-0097).
 
@@ -120,6 +125,7 @@ __all__ = [
     "connector_designation",
     "contact_marks",
     "content_extent",
+    "external_frame_title",
     "external_note",
     "heads_group",
     "is_device_terminal",

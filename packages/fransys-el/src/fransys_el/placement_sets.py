@@ -21,7 +21,7 @@ from fransys_model.derive import (
     unit_location,
     unit_parent,
 )
-from fransys_model.derive.drawing_text import external_note, outline_title
+from fransys_model.derive.drawing_text import external_frame_title, outline_title
 from fransys_model.derive.order import locations_in_order, units_in_order
 from fransys_model.kernel import render_id
 
@@ -105,14 +105,14 @@ def home_unit(model: Model, function: PickKey) -> Id[Unit] | None:
 
 
 def frame_titles(model: Model, kit: SymbolKit) -> dict[str, tuple[str, str]]:
-    """Each frame key `DrawingScope.frames` holds -> its es symbol key and its title: a unit's, or "by others" for an external root."""
+    """Each frame key `DrawingScope.frames` holds -> its es symbol key and its title: a unit's, or the external root's own, empty by default."""
     roots = unit_index(model).external_root
     found: dict[str, tuple[str, str]] = {}
     for function in kit:
         if (home := home_unit(model, function)) is not None:
             found[render_id(home)] = ("unit-outline", outline_title(model, home))
         if (root := roots.get(function_item(model, function_of(model, function)))) is not None:
-            found[render_id(root)] = ("unit-outline-by-others", external_note())
+            found[render_id(root)] = ("unit-outline-by-others", external_frame_title())
     return found
 
 

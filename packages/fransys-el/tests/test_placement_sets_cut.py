@@ -10,7 +10,6 @@ from fransys_el.placement_sets import DrawingScope, _carried, _carriers, drawing
 
 from electrical_symbols import LIBRARY
 from fransys_layout.core import Facts, PinRef, Unit
-from fransys_model.derive.tag_text import external_note
 
 
 def _problem():
@@ -118,7 +117,7 @@ def test_an_external_root_is_framed_by_others_in_each_set_with_no_unit_above_it(
     model = fr.build(d).model
     kit = symbol_kit(model, LIBRARY)
     titles = frame_titles(model, kit)
-    by_others = {k for k, (es, text) in titles.items() if es == "unit-outline-by-others" and text == external_note()}
+    by_others = {k for k, (es, text) in titles.items() if es == "unit-outline-by-others" and text == ""}
     assert len(by_others) == 1
     framed = [dict(s.frames) for s in drawing_scopes(model, kit) if s.frames]
     assert framed

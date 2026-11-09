@@ -92,14 +92,19 @@ def _carries_turn(end: NetEnd, elem: Elem, count: Mapping[str, int], syms: Mappi
     return not any(p.end_bias for p in syms[elem.sym].pins if p.id == other)
 
 
-def break_cycles(links: Mapping[str, Link]) -> dict[str, Link]:
-    """Each element has two slots, so links form paths and cycles; a cycle loses its last net."""
+def break_cycles(links: Mapping[str, Link], elems: Mapping[str, Elem]) -> dict[str, Link]:
+    """Links form paths and cycles; a net that closes a cycle or brings a path back to a symbol it holds is dropped (layout-0576)."""
     uf = UnionFind()
+    held: dict[str, set[str]] = {}
     kept: dict[str, Link] = {}
     for net, link in links.items():
-        if uf.same(link.a.elem or "", link.b.elem or ""):
+        a, b = link.a.elem or "", link.b.elem or ""
+        (ra, _), (rb, _) = uf.find(a), uf.find(b)
+        sa, sb = held.setdefault(ra, {elems[a].sym}), held.setdefault(rb, {elems[b].sym})
+        if ra == rb or sa & sb:
             continue
-        uf.union(link.a.elem or "", link.b.elem or "")
+        uf.union(a, b)
+        held[uf.find(a)[0]] = sa | sb
         kept[net] = link
     return kept
 

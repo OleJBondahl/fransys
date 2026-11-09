@@ -79,7 +79,7 @@ def test_a_cycle_is_broken_at_the_natural_last_net() -> None:
     syms = [elem("a"), elem("b"), elem("c")]
     nets = [net("n2", "a.s", "b.n"), net("n9", "b.s", "c.n"), net("n10", "c.s", "a.n")]
     r = read(syms, nets)
-    kept = break_cycles(links_of(r.ends_by_net, r.elems, r.syms))
+    kept = break_cycles(links_of(r.ends_by_net, r.elems, r.syms), r.elems)
     assert set(kept) == {"n2", "n9"}
     (path,) = chains(kept, r.elems, NO_DEALT)
     assert _order(path) == ["a#0", "b#0", "c#0"]

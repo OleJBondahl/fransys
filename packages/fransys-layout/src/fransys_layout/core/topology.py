@@ -83,7 +83,7 @@ def build_flow(problem: PlacementProblem, options: Options) -> FlowGraph:
         {net: b.id for net, b in _bundles(problem).items()},
         anchor_signs(problem.facts.series),
     )
-    links = break_cycles(links_of(ends, elems, drawn, frozenset(n for n, b in _bundles(problem).items() if b.form in options.trunk_forms)))
+    links = break_cycles(links_of(ends, elems, drawn, frozenset(n for n, b in _bundles(problem).items() if b.form in options.trunk_forms)), elems)
     lanes, slot, joins = _laid(links, (ends, folds, tree), facts, (options, chain_lanes))
     fans, cross, attached, tagged = fans_split(
         ends,

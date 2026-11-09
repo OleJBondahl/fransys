@@ -2,11 +2,18 @@
 
 from typing import TYPE_CHECKING
 
+import pytest
+from connector_builders import make_connector
 from plant import Plant
-from query_builders import make_pin
+from query_builders import make_part, make_pin
 
 from fransys_model.derive import far_pins, port_designation, stub_far
-from fransys_model.derive.designation import port_marking
+from fransys_model.derive.designation import _marking_counts, port_marking
+from fransys_model.derive.designation_connector import connector_ports
+from fransys_model.kernel import make_id
+from fransys_model.vocab.core import Function
+from fransys_model.vocab.enums import FunctionKind, PortBoundary
+from fransys_model.vocab.templates import FunctionTemplate, PortTemplate
 
 if TYPE_CHECKING:
     from fransys_model.kernel import Id, Model
@@ -88,3 +95,53 @@ def test_a_list_end_prints_the_marking_and_the_name_where_the_marking_is_empty_o
     printed = {key: port_designation(model, port) for key, port in ports.items()}
     assert printed == {"plain": "-Q1:P01", "blank": "-Q1:2", "line": "-Q1:N1", "load": "-Q1:N2"}
     assert port_marking(model, ports["line"]) == port_marking(model, ports["load"]) == "N"
+
+
+def _named_pins(*named: tuple[str, str, str], head_markings: tuple[str, ...] = ("1",)) -> tuple[Model, dict[str, Id[Port]]]:
+    """Item U1 with connectors J1 and J2 (each holding header ports `head_markings`) and a role function `q`.
+
+    Each `(port, connector, pin)` of `named` is a port of `q` whose template names that pin of that connector.
+    """
+    plant = Plant()
+    item = plant.item("u", designation="U1")
+    ports = {f"{c}.{m}": port for c in ("j1", "j2") for m, port in make_connector(plant, ("u", c), head_markings, marking=c.upper())[1].items()}
+    role = plant.function(item, "q")
+    template = FunctionTemplate(
+        id=make_id(FunctionTemplate, ("q",)), key=("q",), part=make_part(plant, "cp-q", "CP-q"), name="q", kind=FunctionKind.GENERIC
+    )
+    plant.add(template)
+    for name, connector, pin in named:
+        port_template = PortTemplate(
+            id=make_id(PortTemplate, ("q", name)),
+            key=("q", name),
+            function=template.id,
+            name=name,
+            boundary=PortBoundary.GENERIC,
+            connector=make_id(FunctionTemplate, ("u", connector, "template")),
+            connector_pin=pin,
+        )
+        plant.add(port_template)
+        ports[name] = plant.port(role, name, template=port_template.id)
+    return plant.model(), ports
+
+
+@pytest.mark.rule("DESIGNATION-SCHEME")
+def test_two_ports_naming_one_pin_number_on_two_connectors_print_under_their_own_connector() -> None:
+    """R1990: the pin prints under the connector the port names, so `P01` on J1 and J2 stays `P01`."""
+    model, ports = _named_pins(("a", "j1", "P01"), ("b", "j2", "P01"), head_markings=("P09",))
+    assert port_designation(model, ports["a"]) == "-U1-J1:P01"
+    assert port_designation(model, ports["b"]) == "-U1-J2:P01"
+
+
+def test_a_port_naming_a_header_pin_prints_the_headers_text_and_is_counted_once_under_it() -> None:
+    """GAP-7: a port naming `j1.1` prints as the header port `j1.1` does, and the pin is counted once."""
+    model, ports = _named_pins(("a", "j1", "1"))
+    assert port_designation(model, ports["a"]) == port_designation(model, ports["j1.1"]) == "-U1-J1:1"
+    assert _marking_counts(model)["-U1-J1", "1"] == 1
+    assert _marking_counts(model)["-U1-J2", "1"] == 1
+
+
+def test_a_connectors_ports_are_its_own_and_those_naming_a_pin_it_has_no_port_for() -> None:
+    """GAP-8b: the one reader of a connector's ports (`connector_ports`) adds a named port only where no header port stands."""
+    model, ports = _named_pins(("a", "j1", "1"), ("b", "j1", "2"))
+    assert connector_ports(model, make_id(Function, ("u", "j1"))) == (ports["j1.1"], ports["b"])

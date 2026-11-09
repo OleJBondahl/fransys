@@ -124,7 +124,8 @@ class PortTemplate:
     for a drive's output or a PSU's secondary; its `Port` carries a copy. `None` means not
     stated. `pin_role` is the pin's elecdef role (PE, COMMON, BREAK, MAKE ...), `None` if not stated.
     `joins` (decision parts-0017; HA4) is a header pin's function port, on the same part: the two
-    are one pin with no conductor between, and net closure joins them.
+    are one pin with no conductor between, and net closure joins them. `connector` and `connector_pin`
+    (model-0448) name the connector pin a port sits at; unlike `joins` they close no net.
     """
 
     id: Id[PortTemplate]
@@ -138,6 +139,8 @@ class PortTemplate:
     conductor_mark: ConductorMark | None = None
     source_row: WiringRow | None = dataclasses.field(default=None, metadata={"omit_none": True})
     joins: Id[PortTemplate] | None = None
+    connector: Id[FunctionTemplate] | None = None
+    connector_pin: str | None = None
     ext: frozendict[str, Value] = frozendict()
 
 

@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 from fransys_model.derive import connector_label, connector_segments
 
-from . import _changeover, _fields, _function_facts, _joins, _lint_ports, _ratings, _toml
+from . import _changeover, _fields, _function_facts, _joins, _lint_ports, _port_connector, _ratings, _toml
 
 if TYPE_CHECKING:
     from fransys_model.kernel import Finding
@@ -41,7 +41,7 @@ def check_functions(data: _toml.Table, path: str, origins: _toml.Origins) -> lis
             continue
         findings.extend(_check_function_entry(entry, path, line, state, index))
         findings.extend(_ratings.check_function_tables(entry, path, origins, index, line))
-    return [*findings, *_joins.check(functions, path, origins)]
+    return [*findings, *_joins.check(functions, path, origins), *_port_connector.refusals(functions, path, origins)]
 
 
 def _check_function_entry(entry: _toml.Table, path: str, line: int, state: _FunctionState, index: int) -> list[Finding]:

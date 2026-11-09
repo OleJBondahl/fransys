@@ -20,7 +20,7 @@ from fransys_model.vocab import (
     WiringRow,
 )
 
-from . import _joins, _pole_facts, _ratings, _toml
+from . import _joins, _pole_facts, _port_connector, _ratings, _toml
 from ._fields import REST_WORDS, SIDE_WORDS, connector_of, port_roles
 
 
@@ -71,6 +71,7 @@ def _add_ports(
         port_key = (*function_key, "port", port["name"])
         port_id = make_id(PortTemplate, port_key)
         port_ids[port["name"]] = port_id
+        connector, connector_pin = _port_connector.of_port(function_key[:-2], port)
         boundary, pin_role = port_roles(port["role"], entry["kind"])
         template = PortTemplate(
             id=port_id,
@@ -85,6 +86,8 @@ def _add_ports(
             conductor_mark=ConductorMark(port["conductor"]) if "conductor" in port else None,
             source_row=WiringRow(port["source_row"]) if "source_row" in port else None,
             joins=_joins.target_id(function_key[:-2], port["joins"]) if "joins" in port else None,
+            connector=connector,
+            connector_pin=connector_pin,
         )
         draft.add(_pole_facts.with_facts(template, entry, pole_pins), origin=origin)
     return port_ids

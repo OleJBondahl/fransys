@@ -8,8 +8,7 @@ from fransys_model.derive.facts.house_settings import export_form_of
 from fransys_model.derive.facts.roles import conductor_role
 from fransys_model.kernel import DIGEST_CACHE_SIZE, digest_cached
 from fransys_model.vocab.tables import conductors
-lazy from fransys_model.derive.lookups import item_of_port
-lazy from fransys_model.derive.power import is_rail_terminal, port_power_kind
+lazy from fransys_model.derive.power import port_power_kind
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.connectivity import Conductor
 lazy from fransys_model.vocab.core import Port
@@ -22,13 +21,11 @@ def is_bridge(model: Model, conductor: Id[Conductor]) -> bool:
 
 
 def is_pe_conductor(model: Model, conductor: Id[Conductor]) -> bool:
-    """Whether an end of `conductor` is a pin of a rail terminal on the PE net: the PE rail's own wire or link.
+    """Whether an end of `conductor` is a pin on the PE net, joined however (earth, bridge, strip run, cable core).
 
     The one home of what the hide-PE option leaves off the drawing sheets.
     """
-    return any(
-        is_rail_terminal(model, item_of_port(model, p)) and port_power_kind(model, p) is PowerKind.PE for p in conductor_ends(model, conductor)
-    )
+    return any(port_power_kind(model, p) is PowerKind.PE for p in conductor_ends(model, conductor))
 
 
 @digest_cached(DIGEST_CACHE_SIZE)

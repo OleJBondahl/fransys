@@ -67,6 +67,9 @@ def _migrate_laid_out() -> None:
                 row.pop(key, None)
         for row in data["tables"].get("conductor", ()):
             row.setdefault("block", None)  # schema 25: Conductor.block (model-0442)
+        for row in data["tables"].get("port_template", ()):
+            row.setdefault("connector", None)  # schema 28: PortTemplate.connector and connector_pin (model-0448)
+            row.setdefault("connector_pin", None)
         for row in data["tables"].get("layout.link_marker", ()):
             if "far" in row:
                 far = row.pop("far")

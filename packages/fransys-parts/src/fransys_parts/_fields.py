@@ -120,6 +120,8 @@ PORT_FIELDS = {
     "source_row": _Field(str, required=False, enum=WiringRow),
     # parts-0017: a header pin's function port, "<function>.<port>" of the same part
     "joins": _Field(str, required=False),
+    # parts-0025: the connector pin a role function's port sits at, "<function>.<pin>" of the same part
+    "connector": _Field(str, required=False),
 }
 # The part file spells a switched link's rest state as a word; the model stores `closed_at_rest`.
 REST_WORDS = {"open": False, "closed": True}

@@ -1,6 +1,6 @@
 {
   "aliases": [],
-  "schema_version": 27,
+  "schema_version": 28,
   "tables": {
     "aspect_node": [
       {
@@ -1176,6 +1176,8 @@
       {
         "boundary": "generic",
         "conductor_mark": null,
+        "connector": null,
+        "connector_pin": null,
         "ext": {},
         "function": "function_template:3e905337121856f4bb4dda2ee23f3cff",
         "id": "port_template:01cd9469cbbc5dd4b5e181d62af2942d",
@@ -1193,6 +1195,8 @@
       {
         "boundary": "generic",
         "conductor_mark": null,
+        "connector": null,
+        "connector_pin": null,
         "ext": {},
         "function": "function_template:9930cb359cbf573d9e79984e8e80d30f",
         "id": "port_template:2244dca59b085c3d9e8dc634d55af4a4",
@@ -1210,6 +1214,8 @@
       {
         "boundary": "generic",
         "conductor_mark": null,
+        "connector": null,
+        "connector_pin": null,
         "ext": {},
         "function": "function_template:d5f2b27610c65d05991610ddd809b051",
         "id": "port_template:26a9e6856d2553ed8b8414cfca3d433d",
@@ -1227,6 +1233,8 @@
       {
         "boundary": "generic",
         "conductor_mark": null,
+        "connector": null,
+        "connector_pin": null,
         "ext": {},
         "function": "function_template:d5f2b27610c65d05991610ddd809b051",
         "id": "port_template:2a692e78c20b524f99dc584f025ca4e9",
@@ -1244,6 +1252,8 @@
       {
         "boundary": "generic",
         "conductor_mark": null,
+        "connector": null,
+        "connector_pin": null,
         "ext": {},
         "function": "function_template:347914ab0f2853458ee0a81e604e9488",
         "id": "port_template:52438f45c0315adfaccbec4aa210f8dc",
@@ -1261,6 +1271,8 @@
       {
         "boundary": "generic",
         "conductor_mark": null,
+        "connector": null,
+        "connector_pin": null,
         "ext": {},
         "function": "function_template:3e905337121856f4bb4dda2ee23f3cff",
         "id": "port_template:5cebd1647a9e5c77b53652fe5555adcc",
@@ -1278,6 +1290,8 @@
       {
         "boundary": "generic",
         "conductor_mark": null,
+        "connector": null,
+        "connector_pin": null,
         "ext": {},
         "function": "function_template:a1e03495e8225ed68b428363408868f6",
         "id": "port_template:68e535e74e0056bd8717516e9926aab5",
@@ -1295,6 +1309,8 @@
       {
         "boundary": "generic",
         "conductor_mark": null,
+        "connector": null,
+        "connector_pin": null,
         "ext": {},
         "function": "function_template:d5f2b27610c65d05991610ddd809b051",
         "id": "port_template:91c40786b3db51daac25049668af1135",
@@ -1312,6 +1328,8 @@
       {
         "boundary": "generic",
         "conductor_mark": null,
+        "connector": null,
+        "connector_pin": null,
         "ext": {},
         "function": "function_template:347914ab0f2853458ee0a81e604e9488",
         "id": "port_template:ab51b55467c0521893398a0b00b557c5",
@@ -1329,6 +1347,8 @@
       {
         "boundary": "generic",
         "conductor_mark": null,
+        "connector": null,
+        "connector_pin": null,
         "ext": {},
         "function": "function_template:d5f2b27610c65d05991610ddd809b051",
         "id": "port_template:b1578ce20f9053c1b9f6ff97863ffb33",
@@ -1346,6 +1366,8 @@
       {
         "boundary": "generic",
         "conductor_mark": null,
+        "connector": null,
+        "connector_pin": null,
         "ext": {},
         "function": "function_template:347914ab0f2853458ee0a81e604e9488",
         "id": "port_template:d130fa823b7659fea851d8283e56d9a4",
@@ -1363,6 +1385,8 @@
       {
         "boundary": "generic",
         "conductor_mark": null,
+        "connector": null,
+        "connector_pin": null,
         "ext": {},
         "function": "function_template:7f13ca117870531585200b8b708056be",
         "id": "port_template:d89733e355525e7ca660e66b9e9f0570",
@@ -1380,6 +1404,8 @@
       {
         "boundary": "generic",
         "conductor_mark": null,
+        "connector": null,
+        "connector_pin": null,
         "ext": {},
         "function": "function_template:347914ab0f2853458ee0a81e604e9488",
         "id": "port_template:dea50ecb18415f4daec73366d9f043dd",
@@ -1397,6 +1423,8 @@
       {
         "boundary": "generic",
         "conductor_mark": null,
+        "connector": null,
+        "connector_pin": null,
         "ext": {},
         "function": "function_template:a1e03495e8225ed68b428363408868f6",
         "id": "port_template:e78955861141585cbb7173ce07bfbb7c",
@@ -1414,6 +1442,8 @@
       {
         "boundary": "generic",
         "conductor_mark": null,
+        "connector": null,
+        "connector_pin": null,
         "ext": {},
         "function": "function_template:7f13ca117870531585200b8b708056be",
         "id": "port_template:fccfdea4485c5403a7e82780aa6f7d7e",

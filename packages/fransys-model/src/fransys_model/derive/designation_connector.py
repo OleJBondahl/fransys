@@ -6,11 +6,11 @@ lazy from collections.abc import Iterable
 from fransys_model.derive.facts.roles import function_role
 from fransys_model.derive.indexes import build_indexes
 from fransys_model.derive.instance_tag import dashed
-from fransys_model.kernel import SchemaError
+from fransys_model.kernel import DIGEST_CACHE_SIZE, SchemaError, digest_cached
 from fransys_model.vocab.facets.connector import ConnectorFacet
-from fransys_model.vocab.tables import facets_of, functions
+from fransys_model.vocab.tables import facets_of, functions, port_templates, ports
 lazy from fransys_model.kernel import Id, Model
-lazy from fransys_model.vocab.core import Function
+lazy from fransys_model.vocab.core import Function, Port
 
 
 def facet_on[F](model: Model, subject: Id[Any], facet_type: type[F]) -> F | None:
@@ -104,3 +104,46 @@ def connector_segment(model: Model, function: Id[Function]) -> str:
     siblings = build_indexes(model).functions_by_item.get(record.item, ())
     labels = [_connector_label(model, all_functions[sibling]) for sibling in siblings]
     return connector_segments(labels)[siblings.index(function)]
+
+
+@digest_cached(DIGEST_CACHE_SIZE)
+def _named(model: Model) -> dict[Id[Port], tuple[Id[Function], str]]:
+    """Each port whose template names a connector pin, with that connector's function on its item and the pin.
+
+    Read like `facts/joins.py`: by the item and the template. A connector the item lacks yields none.
+    """
+    all_functions = functions(model)
+    templates = port_templates(model)
+    function_of = {(f.item, f.template): f.id for f in all_functions.values() if f.template is not None}
+    found = {}
+    for port in ports(model).values():
+        template = None if port.template is None else templates.get(port.template)
+        if template is None or template.connector is None or template.connector_pin is None:
+            continue
+        target = function_of.get((all_functions[port.function].item, template.connector))
+        if target is not None:
+            found[port.id] = (target, template.connector_pin)
+    return found
+
+
+def port_connector(model: Model, port: Id[Port]) -> tuple[Id[Function], str | None]:
+    """The connector function `port` is a pin of, and the pin it names there (`None` when it names none).
+
+    A port that names a connector (`connector = "j3.1"`, decision model-0448) sits at that function's
+    pin; any other port sits on its own function. The one input of every printed prefix and count.
+    """
+    named = _named(model).get(port)
+    return (ports(model)[port].function, None) if named is None else named
+
+
+def pin_port(model: Model, function: Id[Function], pin: str) -> Id[Port] | None:
+    """`function`'s own port called `pin`: the header port a port naming that pin is counted under."""
+    held = build_indexes(model).ports_by_function.get(function, ())
+    return next((port for port in held if ports(model)[port].name == pin), None)
+
+
+def connector_ports(model: Model, connector: Id[Function]) -> tuple[Id[Port], ...]:
+    """The ports at `connector`: its own, then each port that names a pin it has no port for."""
+    own = build_indexes(model).ports_by_function.get(connector, ())
+    named = (port for port, (function, pin) in _named(model).items() if function == connector and pin_port(model, connector, pin) is None)
+    return (*own, *named)

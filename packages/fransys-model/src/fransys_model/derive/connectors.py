@@ -18,6 +18,7 @@ from .designation import (
     end_outside_nested_unit,
     unit_list_context,
 )
+from .designation_connector import connector_ports, port_connector
 from .facts.mates import mate_port_of
 from .far_ends import far_ends
 from .indexes import build_indexes
@@ -166,11 +167,10 @@ def _pins(
     unit: Id[Unit] | None,
     context: Id[AspectNode] | None,
 ) -> tuple[ConnectorPin, ...]:
-    idx = build_indexes(model)
     mate = min(mate_partners(model).get(connector, ()), default=None)
     pins = []
-    for port in idx.ports_by_function.get(connector, ()):
-        marking = ports(model)[port].name
+    for port in connector_ports(model, connector):
+        marking = port_connector(model, port)[1] or ports(model)[port].name
         mate_port = None if mate is None else mate_port_of(model, port, mate)
         blank = mate is not None and end_outside_nested_unit(model, functions(model)[mate].item, unit)
         pins.append(

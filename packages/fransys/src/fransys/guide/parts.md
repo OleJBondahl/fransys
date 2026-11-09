@@ -326,4 +326,14 @@ name = "port_4_1"
 marking = "1"
 ```
 
-This port prints `1`, not `port_4_1`. A role function (plc_channel, supply, load) prints the marking of its port and no connector designation. A port will name its physical connector in 0.23. Until then there is no spelling for a connector beside a pin of a role function.
+This port prints `1`, not `port_4_1`. A role function (plc_channel, supply, load) prints the marking of its port and no connector designation. 
+
+A port of a role function names the connector pin it sits at. The key reads like `joins`: a connector function of the same part, a dot, the pin.
+
+```toml
+[[function.port]]
+name = "A1"
+connector = "j3.1"
+```
+
+This port prints as pin `1` of connector `j3`, for example `-U2-J3:1`. The pin is one of the connector's `poles`. One port names it. A header pin does not also `joins` the port. `PORT_PIN_NOT_ON_CONNECTOR`, `PORT_PIN_TAKEN` and `PORT_CONNECTOR_AND_JOIN` (ERROR) refuse the rest. `connector` closes no net; `joins` does.

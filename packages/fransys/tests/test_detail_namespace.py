@@ -79,7 +79,8 @@ from fransys_author.surface._removed import REMOVED
 # RING-OUT (R2008) adds the ring_* keys to [words]: the digest moves again; it ended b1224a935cb6...
 # RING-OUT-DOCS (R2023) adds `ring_out_skip` to the `[export]` house record: it moves again; it ends 6d0ef4c52c79...
 # CONNECTOR-FACET-2: SCHEMA_VERSION 26 -> 27 moves it once more; the pin is recomputed on the merge with RING-OUT-DOCS: 35be4a84e32b...
-_DIGEST_BEFORE_THE_MOVE = "35be4a84e32b08fad697a990929b604d9e638292750eeaf392276e3bf5dc9b3f"
+# PORT-CONNECTOR (model-0448): SCHEMA_VERSION 27 -> 28 moves it once more (35be4a84e32b... before).
+_DIGEST_BEFORE_THE_MOVE = "7062cea82cfcacc74a459813b59bce6b41878115dcd2d789ff416a7cfefaf09b"
 
 
 def test_each_moved_call_builds_the_model_it_built_on_d():

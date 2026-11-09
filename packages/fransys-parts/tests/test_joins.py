@@ -125,3 +125,46 @@ resistance = "1600 ohm"
 """
     root = _library(tmp_path, relay + body)
     assert "PORT_NAME_SHARED" in _codes(root)
+
+
+def _named(*connectors):
+    """`_HEAD` with k1's ports A1 and A2 naming the given `connector` values."""
+    head = _HEAD
+    for name, connector in zip(("A1", "A2"), connectors, strict=False):
+        if connector:
+            old = f'{{ name = "{name}", role = "generic"'
+            head = head.replace(old, f'{old}, connector = "{connector}"')
+    return head
+
+
+def test_a_port_naming_a_connector_pin_stores_the_target_once_and_lints_clean(tmp_path):
+    (tmp_path / "library.toml").write_text(_LIBRARY)
+    (tmp_path / "parts").mkdir()
+    (tmp_path / "parts" / "x.toml").write_text(_named("j1.2", "j1.1") + _connector("j1", [_pin("1"), _pin("2", symbol_port="out")], "J1"))
+    assert fransys_parts.lint(tmp_path) == ()
+
+    templates = port_templates(freeze(fransys_parts.load_path(tmp_path)))
+    by_name = {t.name: t for t in templates.values() if t.name in {"A1", "A2", "1"}}
+    assert (by_name["A1"].connector_pin, by_name["A2"].connector_pin, by_name["1"].connector_pin) == ("2", "1", None)
+    assert by_name["A1"].connector == by_name["A2"].connector is not None
+    assert by_name["1"].connector is None
+
+
+@pytest.mark.parametrize(
+    ("connectors", "tail", "code"),
+    [
+        (("j1.3", None), _connector("j1", [_pin("1"), _pin("2", symbol_port="out")], "J1"), "PORT_PIN_NOT_ON_CONNECTOR"),
+        (("nope.1", None), _connector("j1", [_pin("1")], "J1"), "PORT_PIN_NOT_ON_CONNECTOR"),
+        (("k1.1", None), "", "PORT_PIN_NOT_ON_CONNECTOR"),
+        (("j1.1", "j1.1"), _connector("j1", [_pin("1"), _pin("2", symbol_port="out")], "J1"), "PORT_PIN_TAKEN"),
+        (("j1.2", None), _connector("j1", [_pin("1", "k1.A1"), _pin("2", "k1.A2", "out")], "J1"), "PORT_CONNECTOR_AND_JOIN"),
+    ],
+    ids=["pin-missing", "function-missing", "not-a-connector", "pin-taken", "also-joined"],
+)
+def test_a_bad_connector_key_is_an_error_finding_and_load_raises(tmp_path, connectors, tail, code):
+    (tmp_path / "library.toml").write_text(_LIBRARY)
+    (tmp_path / "parts").mkdir()
+    (tmp_path / "parts" / "x.toml").write_text(_named(*connectors) + tail)
+    assert _codes(tmp_path)[code].severity is Severity.ERROR
+    with pytest.raises(PartLibraryError):
+        fransys_parts.load_path(tmp_path)

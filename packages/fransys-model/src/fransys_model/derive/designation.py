@@ -13,6 +13,8 @@ from typing import TYPE_CHECKING, cast
 
 from fransys_model.derive.designation_connector import (
     connector_segment,
+    pin_port,
+    port_connector,
 )
 from fransys_model.derive.designation_label import own_label, terminal_of
 from fransys_model.derive.facts.strips import strip_of
@@ -162,18 +164,30 @@ def _drawn(record: Port) -> str:
     return record.name if record.marking is None else record.marking
 
 
+def _list_key(model: Model, record: Port) -> tuple[Id[Function], str, bool]:
+    """The connector function `record` prints under, its pin text there, and whether it is a header's own pin.
+
+    A port that names a connector pin prints that pin; where the connector has a port of that name (the
+    header port) it prints the header's text and is counted under it, once (decision model-0448).
+    """
+    function, pin = port_connector(model, record.id)
+    if pin is None:
+        return function, _drawn(record), True
+    header = pin_port(model, function, pin)
+    return function, pin if header is None else _drawn(ports(model)[header]), header is None
+
+
 @digest_cached(DIGEST_CACHE_SIZE)
 def _marking_counts(model: Model) -> dict[tuple[str, str], int]:
     idx = build_indexes(model)
-    return dict(
-        Counter(
-            (connector_designation(model, function), _drawn(ports(model)[port]))
-            for item, held in idx.functions_by_item.items()
-            if can_print_designation(model, item)
-            for function in held
-            for port in idx.ports_by_function.get(function, ())
-        )
+    keys = (
+        _list_key(model, ports(model)[port])
+        for item, held in idx.functions_by_item.items()
+        if can_print_designation(model, item)
+        for function in held
+        for port in idx.ports_by_function.get(function, ())
     )
+    return dict(Counter((connector_designation(model, function), text) for function, text, counted in keys if counted))
 
 
 def port_marking(model: HasTables, port: Id[Port], *, list_end: bool = False) -> str:
@@ -182,13 +196,15 @@ def port_marking(model: HasTables, port: Id[Port], *, list_end: bool = False) ->
     The part's pin marking (`Port.marking`), else the port's name; "" when the part prints
     none. In `list_end` mode a list names its pin: the marking only when it is non-empty and no
     other port under the same printed prefix (`connector_designation`) prints it, else the name.
+    A port that names a connector pin (`port_connector`) prints under that connector, as that pin.
     """
     record = ports(model)[port]
-    text = _drawn(record)
     if not list_end:
-        return text
-    prefix = connector_designation(cast("Model", model), record.function)
-    return text if text and _marking_counts(cast("Model", model))[prefix, text] == 1 else record.name
+        return _drawn(record)
+    function, text, _ = _list_key(cast("Model", model), record)
+    prefix = connector_designation(cast("Model", model), function)
+    named = port_connector(cast("Model", model), port)[1]
+    return text if text and _marking_counts(cast("Model", model))[prefix, text] == 1 else (record.name if named is None else named)
 
 
 def port_designation(model: Model, port: Id[Port], *, unit: Id[Unit] | None = None) -> str:
@@ -214,7 +230,7 @@ def port_designation(model: Model, port: Id[Port], *, unit: Id[Unit] | None = No
     if not text:
         return printed_designation(model, owner.id, unit=unit)
     if terminal_of(model, owner.id) is None:
-        return f"{connector_designation(model, record.function, unit=unit)}:{text}"
+        return f"{connector_designation(model, port_connector(model, port)[0], unit=unit)}:{text}"
     return terminal_of_item(model, owner.id, unit)
 
 

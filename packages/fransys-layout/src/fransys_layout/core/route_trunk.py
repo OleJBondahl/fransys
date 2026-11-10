@@ -11,16 +11,16 @@ from .band import lane_offset, lane_rows, level_offset
 from .clearance import fan_own, pin_points, through_keeps
 from .errors import CoreError
 from .outputs import Refused, Wire
-from .route_env import Drawn, Rise, hard_keeps, lost_key, pin_point, z_wire
+from .route_env import Drawn, Rise, hard_keeps, pin_point, z_wire
 from .values import Box
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping, Sequence
+    from collections.abc import Collection, Mapping, Sequence
 
     from .flow_values import Attach, Fan
     from .outputs import Trunk
     from .route_env import RouteEnv
-    from .values import XY, WireKind
+    from .values import XY, PinRef, WireKind
 
 Held = tuple["Attach", "XY"]
 
@@ -89,10 +89,7 @@ def drop_or_rise(env: RouteEnv, line: Line, a: Attach, xy: XY, lane: int) -> Dra
     """The straight drop, or a rise for A* when its vertical passes a foreign body."""
     y = line.y_of(lane)
     if xy[1] != y and _foreign_body(env, line.fan, xy, y):
-        net = line.member(lane)
-        if lost_key(net, (a.pin,)) in env.lost:
-            return Drawn()  # withheld: its pin carries a one-sided reference (A15)
-        return Drawn(rises=(Rise(net, a.pin, xy, (xy[0], y), drop_kind(line.fan, a)),))
+        return Drawn(rises=(Rise(line.member(lane), a.pin, xy, (xy[0], y), drop_kind(line.fan, a)),))
     return Drawn(wires=plain_drop(line, a, xy, lane))
 
 
@@ -143,8 +140,7 @@ def crossed_drops(env: RouteEnv, c: Crossed, atts: Sequence[Held]) -> Drawn:
     xs = {a.pole: xy[0] for a, xy in atts}
     rank = _ranks(c.perm, xs)
     if not _room(c, atts, rank):
-        drops = [Refused(c.line.member(lane_of.get(a.pole, a.pole)), (a.pin,)) for a, _ in atts]
-        return Drawn(lost=tuple(r for r in drops if lost_key(r.net, r.ends or ()) not in env.lost))
+        return Drawn(lost=tuple(Refused(c.line.member(lane_of.get(a.pole, a.pole)), (a.pin,)) for a, _ in atts))
     out = Drawn()
     for a, xy in atts:
         j = lane_of.get(a.pole, a.pole)
@@ -182,13 +178,28 @@ def _trunk_line(line: Line) -> tuple[Wire, ...]:
     )
 
 
-def _leg_wires(env: RouteEnv, line: Line) -> tuple[Wire, ...]:
+def _leg_wires(env: RouteEnv, line: Line, lost: Collection[tuple[str, PinRef]]) -> tuple[Wire, ...]:
     """The leg of each one-sided pin of the trunk: out from the cut x along its lane, then down below the bundle (ONE-SIDED-PIN)."""
     t = line.trunk
     return tuple(
         Wire(line.member(pole), t.page, tuple(dict.fromkeys(env.leg_lines[t.fan, t.row, pin])), "straight")
         for pole, pin in leg_pins(line.fan, env.legs, t.row)
+        if (line.member(pole), pin) not in lost
     )
+
+
+def _lane(permuted: Mapping[str, tuple[int, ...]], a: Attach) -> int:
+    """The lane an attachment drops to: its pole, or the lane a crossed function maps that pole to."""
+    perm = permuted.get(a.pin.sym)
+    return perm.index(a.pole) if perm and a.pole in perm else a.pole
+
+
+def _withheld(env: RouteEnv, line: Line, permuted: Mapping[str, tuple[int, ...]]) -> tuple[set[tuple[str, PinRef]], set[int]]:
+    """The (net, pin) pairs of lost conductors, and the lanes whose every attachment is lost (R2146)."""
+    lost = {(net, p) for net, pins in env.lost for p in pins}
+    atts = [(_lane(permuted, a), a) for a in (*line.fan.drivers, *line.fan.legs)]
+    live = {j for j, a in atts if (line.member(j), a.pin) not in lost}
+    return lost, {j for j, _ in atts} - live
 
 
 def _lone_lanes(trunk: Trunk, placed: Sequence[Held]) -> frozenset[int]:
@@ -199,22 +210,36 @@ def _lone_lanes(trunk: Trunk, placed: Sequence[Held]) -> frozenset[int]:
     return frozenset(j for j, e in enumerate(trunk.lane_ends) if taps[j] == 1 and e is not None and e[0] == e[1])
 
 
+def _lines(env: RouteEnv, line: Line, permuted: Mapping[str, tuple[int, ...]]) -> tuple[Drawn, set[tuple[str, PinRef]]]:
+    """The trunk lines and legs of the conductors not lost, and the lost (net, pin) pairs."""
+    lost, gone = _withheld(env, line, permuted)
+    return Drawn(wires=tuple(w for w in _trunk_line(line) if (w.lane or 0) not in gone) + _leg_wires(env, line, lost)), lost
+
+
+def _fan_of(env: RouteEnv, trunk: Trunk) -> Fan:
+    """The trunk's fan, with every attachment's pole checked; a trunk with no fan is a bug to report."""
+    if (fan := env.fans.get(trunk.fan)) is None:
+        msg = f"trunk of fan {trunk.fan} has no fan in the flow, so it is not drawn: report it"
+        raise CoreError(msg)
+    _check_poles(fan)
+    return fan
+
+
 def trunk_wires(env: RouteEnv, trunk: Trunk) -> Drawn:
     """The trunk line, one drop per attachment on its row; a bundle's lane j drops from line j.
 
     A bundle's trunk carries the bundle id; each drop carries its member's id (layout-0297, D.7).
     A function in `fan.crossed` takes its lanes in another index order; crossed_drops draws it.
     """
-    if (fan := env.fans.get(trunk.fan)) is None:
-        msg = f"trunk of fan {trunk.fan} has no fan in the flow, so it is not drawn: report it"
-        raise CoreError(msg)
-    _check_poles(fan)
+    fan = _fan_of(env, trunk)
     line = Line(fan, trunk, fan.nets[0] if fan.lanes == 1 else fan.id, env.options.wiring_grid)
-    out = Drawn(wires=_trunk_line(line) + _leg_wires(env, line))
     permuted = dict(fan.crossed) if fan.lanes > 1 else {}
+    out, lost = _lines(env, line, permuted)
     held: dict[tuple[str, bool], list[Held]] = {}
     lone = _lone_lanes(trunk, placed := _placed_attachments(env, line, env.bands[trunk.row]))
     for a, xy in placed:
+        if (line.member(_lane(permuted, a)), a.pin) in lost:
+            continue  # a lost conductor lays no drop (R2146)
         if a.pin.sym in permuted:
             held.setdefault((a.pin.sym, xy[1] < trunk.y), []).append((a, xy))
         elif a.pole not in lone:

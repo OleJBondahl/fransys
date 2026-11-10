@@ -365,7 +365,7 @@ def test_a_one_sided_pins_leg_stands_clear_of_every_body_because_leg_lines_place
     def hits(feet: list[Box]) -> list[bool]:
         lines = leg_lines([trunk], {fan.id: fan}, {pin: trunk.row}, env.options, (feet, {}, None))
         e = replace(env, placed=placed, legs={pin: trunk.row}, leg_lines=lines)
-        return [body_hit(e, w.net, w.points) is not None for w in _leg_wires(e, Line(fan, trunk, fan.id, STEP))]
+        return [body_hit(e, w.net, w.points) is not None for w in _leg_wires(e, Line(fan, trunk, fan.id, STEP), set())]
 
     assert hits([p.footprint for p in env.placed.values()]) == [True], "control: a leg placed blind to the wall runs through it"
     assert hits([p.footprint for p in placed.values()]) == [False]

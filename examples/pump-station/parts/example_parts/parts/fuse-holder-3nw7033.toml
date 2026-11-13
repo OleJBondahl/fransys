@@ -17,8 +17,8 @@ name = "pole_1"
 kind = "protection"
 symbol = "fuse"
 ports = [
-    { name = "1", role = "generic", symbol_port = "in" },
-    { name = "2", role = "generic", symbol_port = "out" },
+    { name = "1", role = "generic", side = "line", symbol_port = "in" },
+    { name = "2", role = "generic", side = "load", symbol_port = "out" },
 ]
 links = [{ a = "1", b = "2", kind = "conductive" }]
 
@@ -27,8 +27,8 @@ name = "pole_2"
 kind = "protection"
 symbol = "fuse"
 ports = [
-    { name = "3", role = "generic", symbol_port = "in" },
-    { name = "4", role = "generic", symbol_port = "out" },
+    { name = "3", role = "generic", side = "line", symbol_port = "in" },
+    { name = "4", role = "generic", side = "load", symbol_port = "out" },
 ]
 links = [{ a = "3", b = "4", kind = "conductive" }]
 
@@ -37,8 +37,8 @@ name = "pole_3"
 kind = "protection"
 symbol = "fuse"
 ports = [
-    { name = "5", role = "generic", symbol_port = "in" },
-    { name = "6", role = "generic", symbol_port = "out" },
+    { name = "5", role = "generic", side = "line", symbol_port = "in" },
+    { name = "6", role = "generic", side = "load", symbol_port = "out" },
 ]
 links = [{ a = "5", b = "6", kind = "conductive" }]
 

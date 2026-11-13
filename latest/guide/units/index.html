@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.15/guide/units/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.16/guide/units/">
       
       
       
@@ -2304,7 +2304,7 @@ takes the name, the revision and the variant, and returns the decorated unit.</p
 </code></pre></div>
 <h2 id="reaching-a-unit-from-outside">Reaching a unit from outside</h2>
 <p>A container reaches a unit's connector with a cable core onto its pin, <code>d.cable("W1", P.CBL).core(1, plug[1], io.X1[1])</code>.
-Mates are refused in 0.22 (<code>MATES_DISABLED</code>). A <code>d.series</code> wire onto a male or female connector of a nested
+A mate to a unit's connector draws an OFF stub at each mated pin; a mate inside one drawing is refused in 0.22 (<code>MATES_DISABLED</code>). A <code>d.series</code> wire onto a male or female connector of a nested
 unit gives the warning <code>CONNECTOR_WIRED_WITHOUT_MATE</code>; a cable core onto it and a screw terminal give none.</p>
 <p>A unit built alone, with nothing outside it, leaves its interface unconnected, and
 <code>BOUNDARY_UNCONNECTED</code> stays silent: an open interface is what the next integrator connects.
@@ -2574,7 +2574,7 @@ documents and lists. A unit's release name is the <code>unit=</code> value. The 
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.15 documentation
+      Fransys 0.23.16 documentation
     </div>
   
   

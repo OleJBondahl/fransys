@@ -391,6 +391,14 @@ def cdp_kind(signal: SignalType) -> str
 
 The CDP kind of a signal type: `DI`, `DO`, `AI` or `AO`; a Pt100 is `AI`, a relay output `DO`.
 
+### cell_destination
+
+```python
+def cell_destination(model: Model, page: Page, cell: FrameCell) -> str
+```
+
+`p3:B2`: the destination label of frame cell `cell` on `page`, the printed form of a position in the same PDF.
+
 ### cell_parts
 
 ```python
@@ -639,18 +647,6 @@ Every port a kept connection or net group ends on, a stranded end, or a rail end
 
 A connection or net group wholly on one opaque board is not drawn, so its ports are not
 connected by it. A net group loses the ports of removed rail terminals and rail ends first.
-
-### connector_at_line_end
-
-```python
-def connector_at_line_end(model: Model, function: Id[Function]) -> bool
-```
-
-Whether `function` is a plug, the function a plug mates, or a fan-out pin's function.
-
-Read from `harness_line_ends` of the lines `draws_as_line` holds, and nothing else. The box
-rule and the middle-outline edge rule call it and never ask again. A
-connector at no line gives `False`.
 
 ### connector_facets
 
@@ -1010,18 +1006,6 @@ Every pin still matched (as in `gone_or_moved`) whose current own text now diffe
 
 `own_designation_or_none` reads the authored tag first, as `NumberingItem.text` does.
 
-### device_chains
-
-```python
-def device_chains(model: Model, candidates: Sequence[ChainCandidate], wires: Sequence[tuple[Id[Port], Id[Port]]], netted: AbstractSet[Id[Port]], wired: AbstractSet[Id[Port]]) -> DeviceChains
-```
-
-Every device chain over `candidates` (function level, before pin views), in LC3 order.
-
-A mated function, or a unit's boundary function, keeps its device out of every chain, and so
-does a device with a function that is neither boxed nor a connector. `wires` are the kept
-conductors' port pairs, `netted` the ports of net groups, `wired` the engine's wired ports.
-
 ### diagram_sheet_key
 
 ```python
@@ -1316,7 +1300,7 @@ def draws_as_line(model: Model, item: Id[Item]) -> bool
 Whether `item`, a cable or a harness, draws as a harness line.
 
 True when its line carries two or more conductors, cores and single wires together; a cable
-on a harness answers for its harness. Layout, `connector_at_line_end` and `off_stub_text`
+on a harness answers for its harness. Layout and `off_stub_text`
 read it and never count again. Any other item, or an id that is no item, gives `False`.
 
 ### effective_placement
@@ -1514,9 +1498,9 @@ Raises:
 def far_pins(model: Model, near: Iterable[Id[Port]]) -> tuple[tuple[Id[Port], Id[Port]], ...]
 ```
 
-`(near, far)` for each conductor at a `near` port; the far end is `conductor_ends`'.
+`(near, far)` for each conductor or mate pair at a `near` port; the far end is `conductor_ends`'.
 
-Ordered by `order.stub_far_order`: the far port's printed designation, then the near port's, then the conductor.
+Ordered by `order.stub_far_order`: a conductor before a mate, the far port's printed designation, then the near port's, then the key.
 A bridge is no wire and gives no pair; a port no conductor reaches gives no pair; a conductor between two `near` ports gives two.
 `stub_far` reads `reach`.
 
@@ -2508,8 +2492,8 @@ def link_role(model: HasTables, link: Id[InternalLink]) -> LinkRole
 
 The role of an internal link: its kind's row, with the pole and rest the function adds.
 
-A protection's conductive link is a pole; a switched link rests as declared, else as its
-function's kind implies.
+A conductive link between a line and a load pin is a pole; a switched link rests as declared,
+else as its function's kind implies.
 
 ### link_state
 
@@ -2664,6 +2648,17 @@ The identity, history, part libraries and nested releases of `unit`'s manifest.
 `unit=None` is the system. Each nested row carries the sha256 of the nested listing's
 canonical text, hashed once here. Warning texts and package versions stay with the facade.
 
+### mate_pairs
+
+```python
+def mate_pairs(model: HasTables) -> tuple[tuple[Id[Mate], Id[Port], Id[Port]], ...]
+```
+
+Each mate's `(mate, a port, b port)` pairs, ports of equal name paired once, sorted.
+
+A name held by several ports of one side pairs each with the first port of that name
+on the other side, so equal-named ports stay one chain.
+
 ### mate_port_of
 
 ```python
@@ -2671,17 +2666,6 @@ def mate_port_of(model: Model, port: Id[Port], function: Id[Function]) -> Id[Por
 ```
 
 The port of `function` mated to `port` by name (the lowest id of that name), else `None`.
-
-### mate_ports
-
-```python
-def mate_ports(model: Model) -> tuple[tuple[Id[Port], Id[Port]], ...]
-```
-
-Each mate's `(a port, b port)` pairs, ports of equal name paired once, sorted by id.
-
-A name held by several ports of one side pairs each with the first port of that name
-on the other side, so equal-named ports stay one chain.
 
 ### mates
 
@@ -3359,7 +3343,7 @@ Returns:
 ### pinned_box_sides
 
 ```python
-def pinned_box_sides(model: Model, ports: Sequence[Id[Port]]) -> dict[Id[Port], str | None]
+def pinned_box_sides(model: Model, ports: Sequence[Id[Port]], *, stated_only: bool=False) -> dict[Id[Port], str | None]
 ```
 
 The side ("n" or "s") a part or the power of a box decides for each of its `ports`, else `None`.
@@ -3371,7 +3355,7 @@ AC pin N and all those S. A box whose pins are all on such nets has every pin N
 (CROSS-HALF-TAGS: a straight riser for the return). Without such a pin, a box on two or more
 declared potentials has every pin that carries one on N, so a supply whose + and - are
 wired stands both on N.
-Ports neither decides are `None`.
+Ports neither decides are `None`; with `stated_only`, the power decides none and only a part's `box_side` does.
 
 ### place_members
 
@@ -3494,12 +3478,12 @@ The first member leads and member k's ports are pole k. A group with a member no
 ### pole_pin_names
 
 ```python
-def pole_pin_names(kind: FunctionKind, links: Iterable[tuple[str, str, LinkKind]]) -> frozenset[str]
+def pole_pin_names(links: Iterable[tuple[str, str, LinkKind]]) -> frozenset[str]
 ```
 
-The names of the pins on a pole link of a function of `kind`; `links` are `(a, b, kind)`.
+The names of the pins on a switched or protective link; `links` are `(a, b, kind)`.
 
-A pole link is a switched or protective one (`is_pole_by_role`); `pin_side` reads these names.
+`pin_side` reads these names. A conductive link is a pole only through its stated sides (`poles_by_links`).
 
 ### poles_of_template
 
@@ -3509,7 +3493,7 @@ def poles_of_template(kind: FunctionKind, templates: Iterable[PortTemplate], lin
 
 The poles of a function of `kind` whose port templates are `templates`, in pole order.
 
-The links between its own templates that are poles (`poles_by_role`) give them. A function
+The links between its own templates that are poles (`poles_by_links`) give them. A function
 with none falls back on its pins, earth pins left out, in `port_order_key` order: consecutive
 pins pair, an odd last pin alone (`unlinked_poles`). `sideless` (the author's series) keeps
 only a lone pin, a line/load pair, or pins that all name a conductor (one pole each, a 3-phase
@@ -3973,7 +3957,7 @@ def reference_targets(model: Model) -> Mapping[tuple[Id[Page], tuple[int, str]],
 Each reference marker's stored `(column, row letter)` on its page, to the candidate ends standing there.
 
 A candidate end is the marker's id, its `#n`, the ports of its whole reference group and the text its box
-draws (a mate of a box draws its lead's joined text), so a reader who finds a drawn marker by page, cell
+draws, so a reader who finds a drawn marker by page, cell
 and text knows which markers are the same reference.
 Page numbers restart per drawing set, so the key is the page's id, never a printed `#n`.
 
@@ -4055,9 +4039,9 @@ The one home of this test: `harness_cables_for` reads it, since the
 def required_drawn(model: Model, scope: Iterable[Id[Port]]) -> tuple[Required, ...]
 ```
 
-The `ConductorEnd` at each `scope` port, then a `FunctionSymbol` per drawn function.
+The `ConductorEnd` or `MateEnd` at each `scope` port, then a `FunctionSymbol` per drawn function.
 
-Ends come in `order.stub_far_order` order (a conductor between two scope ports gives two); the
+Ends come in `order.stub_far_order` order (a conductor between two scope ports gives two, a conductor before a mate); the
 functions are `schematic_functions` less an accessory's, in id order. A scope port the model
 does not hold raises `SchemaError`.
 
@@ -4188,7 +4172,7 @@ def run_point_text(model: Model, function: Id[Function]) -> str
 A strip terminal's point text in a run, "L2:1".
 
 The terminal's own `group:index`, the strip's designation left out (`strip_tag_text` prints it).
-A terminal that is no part of a run prints `terminal_text`, never this.
+A terminal alone in its run (or a gap from its neighbour) prints `tag_text`, never this (STRIP-TAG-ONCE).
 
 ### same_version
 
@@ -4532,7 +4516,7 @@ def stub_far(model: Model, near: Sequence[Id[Port]], far: Collection[Id[Port]]=(
 `near` are the ports the pin draws. A wired pin names the far end (`conductor_ends`) of its conductor. A pin none wires
 (a terminal's unwired side) takes a port of its own function, the through path. `far`, the ports of the far end the stub names,
 picks every reach ending there; with none, every reach, by `order.stub_far_order`.
-`carrier` is the outermost item above the conductor's own cable, `None` for a wire: the `-W3` a stub prints.
+`carrier` is the outermost item above the conductor's own cable, `None` for a wire or a mate: the `-W3` a stub prints.
 
 ### stub_text_at
 
@@ -5147,6 +5131,7 @@ The longest line a marker can print: `target_lines`' `+k` form with every number
 
 `count` is the build's symbol count, `columns` and `rows` the highest frame column and row,
 `digit` the widest digit the caller measured. Layout sizes a marker box with it before the pages exist.
+No scope prefix leads it: every end of a reference stands in one drawing set, which one document prints (`far_prefix` is `""`).
 
 ### wire_rows
 
@@ -5175,9 +5160,9 @@ The ports a conductor ties within one unit, and those it ties across a unit boun
 class Aspect
 ```
 
-One of the three IEC 81346 views of the same objects.
+The tree a level belongs to; the value is its sign.
 
-Example: `-K1` is a `PRODUCT` designation; `+C1` is a `LOCATION` node.
+The first three are on in the shipped scheme; declaration order is the rank tie-break.
 
 ### AspectNode
 
@@ -5382,34 +5367,6 @@ the one CDP kind all its channels share (`cdp_kind`), `None` when they differ; `
 `description` is the part's catalogue wording, else its description. `channels` are the
 configured ones, outputs first, then inputs, each in channel order.
 
-### ChainCandidate
-
-```python
-class ChainCandidate
-```
-
-One function-level record offered to `device_chains`; the caller computes every flag once.
-
-`connector`: a connector function. `boxed`: no symbol names it. `plain`: no terminal and
-drawn here. `group_path`, `unit` and `location_path` tell its block. `rank`: its designation's
-natural rank. `ports` are in port order.
-
-### ChainHop
-
-```python
-class ChainHop
-```
-
-The wires from the upper device to the lower, upper pin order.
-
-### ChainPin
-
-```python
-class ChainPin
-```
-
-A pin of the fed device and the feeder's pin wired to it.
-
 ### ChannelScaling
 
 ```python
@@ -5562,14 +5519,6 @@ class DesignationRow
 ```
 
 One line of the tag/designation list (`designation_list`).
-
-### DeviceChains
-
-```python
-class DeviceChains
-```
-
-Every chain in order. `chained`, the items in any chain, keep their connectors whole.
 
 ### DiagramSheet
 
@@ -6139,6 +6088,16 @@ class LocationLine
 ```
 
 The cables between two places: `count` distinct cables, `a` before `b` in box order.
+
+### MateEnd
+
+```python
+class MateEnd
+```
+
+One end of a mate pair: it leaves `port` and reaches `far`, the pin the mate joins it to.
+
+A mate is no conductor, so it is no `ConductorEnd`; `far_pins.reach` gives both kinds.
 
 ### MateRow
 

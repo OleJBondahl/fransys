@@ -191,7 +191,7 @@ assert len(fr.derive.units(fr.build(d).model)) == 2
 ## Reaching a unit from outside
 
 A container reaches a unit's connector with a cable core onto its pin, `d.cable("W1", P.CBL).core(1, plug[1], io.X1[1])`.
-Mates are refused in 0.22 (`MATES_DISABLED`). A `d.series` wire onto a male or female connector of a nested
+A mate to a unit's connector draws an OFF stub at each mated pin; a mate inside one drawing is refused in 0.22 (`MATES_DISABLED`). A `d.series` wire onto a male or female connector of a nested
 unit gives the warning `CONNECTOR_WIRED_WITHOUT_MATE`; a cable core onto it and a screw terminal give none.
 
 A unit built alone, with nothing outside it, leaves its interface unconnected, and

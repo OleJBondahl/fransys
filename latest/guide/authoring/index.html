@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.15/guide/authoring/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.16/guide/authoring/">
       
       
       
@@ -2508,7 +2508,7 @@ A branch from the common feed is a second series; one looped at the line screws 
 <h2 id="plug-a-connector">Plug a connector</h2>
 <p><code>d.mate(a, b)</code> plugs connector <code>a</code> into connector <code>b</code>, each a device with one function
 (<code>units.md</code> covers a mate across a unit boundary).</p>
-<p>Refused in 0.22 (<code>MATES_DISABLED</code>, an ERROR): a mate has no correctness guarantee yet. Draw the link as a cable or wires.</p>
+<p>A mate between two drawings (two units, say) draws an OFF stub at each mated pin that names the partner pin. A mate inside one drawing, a function on two mates and a harness line are refused in 0.22 (<code>MATES_DISABLED</code>, an ERROR): draw the link as a cable or wires.</p>
 <h2 id="add-a-harness">Add a harness</h2>
 <p><code>d.harness("W5")</code> adds a harness item: see <code>harnesses.md</code>. Refused in 0.22 (<code>MATES_DISABLED</code>): its drawing has no correctness guarantee yet; use a cable.</p>
 <h2 id="request-a-plc-channel">Request a PLC channel</h2>
@@ -2620,7 +2620,7 @@ adds a history line. Both are optional.</p>
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.15 documentation
+      Fransys 0.23.16 documentation
     </div>
   
   

@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.15/guide/drawn-ledger/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.16/guide/drawn-ledger/">
       
       
       
@@ -2029,14 +2029,15 @@
 
 
 <h1 id="the-required-drawn-ledger">The required-drawn ledger</h1>
-<p><code>fr.derive.required_drawn</code> lists what a drawing of a model must show: both ends of each conductor, and each function that gets a symbol. Each row is drawn, carried by a named reason, or an error.</p>
+<p><code>fr.derive.required_drawn</code> lists what a drawing of a model must show: both ends of each conductor, the pin each mated pin reaches, and each function that gets a symbol. Each row is drawn, carried by a named reason, or an error.</p>
 <h2 id="rows">Rows</h2>
 <p><code>required_drawn(model, scope)</code> takes the model and the ports whose conductors count. It returns a tuple of rows.</p>
 <ul>
 <li><code>ConductorEnd(conductor, port, far)</code>: the conductor leaves <code>port</code> and reaches <code>far</code>. A conductor between two ports of the scope gives two rows.</li>
+<li><code>MateEnd(mate, port, far)</code>: the mate joins <code>port</code> to <code>far</code>, the pin of the same name on the other half. A mate is no conductor, so it is its own row; it is owed like a conductor end, and drawn as a stub at <code>port</code> that names <code>far</code>.</li>
 <li><code>FunctionSymbol(function)</code>: a function the schematic draws as a symbol. An accessory declared open on purpose is not listed.</li>
 </ul>
-<p><code>Required</code> names either row type. The end rows come first, lowest far port first; the function rows follow in id order.</p>
+<p><code>Required</code> names any row type. The end rows come first, a conductor end before a mate end, then lowest far port first; the function rows follow in id order.</p>
 <p>A port the model does not hold raises <code>SchemaError</code>. Pass the port ids of the same model.</p>
 <h2 id="carried">Carried</h2>
 <p><code>Carried(reason, end=, symbol=)</code> says a row stands undrawn on purpose. Exactly one of <code>end</code> and <code>symbol</code> is set. <code>CarriedReason</code> is a closed list: <code>SPARE</code>, <code>UNWIRED</code> and <code>OFF_DOCUMENT</code>.</p>
@@ -2090,7 +2091,7 @@
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.15 documentation
+      Fransys 0.23.16 documentation
     </div>
   
   

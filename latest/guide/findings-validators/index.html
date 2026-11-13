@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.15/guide/findings-validators/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.16/guide/findings-validators/">
       
       
       
@@ -2099,7 +2099,7 @@
 <td>ERROR</td>
 <td>validators</td>
 <td>consumer</td>
-<td>A mate or harness line is refused in 0.22.</td>
+<td>A mate inside one drawing, a function on two mates or a harness line is refused in 0.22.</td>
 <td>Use a cable. Write: d.cable("W1", P.CBL)</td>
 </tr>
 <tr>
@@ -2165,6 +2165,14 @@
 <td>consumer</td>
 <td>A <code>d.layout.order</code> hint names a group in which no function is drawn: its devices are drawn in another group (a series written there draws them there) or it holds none. The message names the group and where its members are drawn.</td>
 <td>Order the group the message names as the one its members are drawn in, or drop the hint. Write: d.layout.order(run, lamps)</td>
+</tr>
+<tr>
+<td><a id="part_pole_without_side"></a>PART_POLE_WITHOUT_SIDE</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>consumer</td>
+<td>A protecting function's conductive link joins pins that state no side, so it is no pole (model-0447).</td>
+<td>state side = line/load on its pins. Write: side = "line"</td>
 </tr>
 <tr>
 <td><a id="pe_not_gnye"></a>PE_NOT_GNYE</td>
@@ -2475,7 +2483,7 @@
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.15 documentation
+      Fransys 0.23.16 documentation
     </div>
   
   

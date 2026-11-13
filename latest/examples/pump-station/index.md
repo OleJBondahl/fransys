@@ -117,8 +117,8 @@ their published datasheets.
 | 1119304 |  | Lapp | OELFLEX CLASSIC 110, 4G1.5 | 2 | -W11; -W21 |
 | 1119405 |  | Lapp | OELFLEX CLASSIC 110, 5G2.5 | 1 | -W1 |
 | 1LE1003-0EB42-2AA4 |  | Innomotics | Induction motor, 4-pole, IE3, 400 V Y, frame 90, foot B3; 3.15 A; 1.5 kW | 2 | -M1; -M2 |
-| 2002-1201 |  | WAGO | TOPJOB S feed-through terminal block, 2.5 mm2, grey; 24 A; 800 V | 40 | -U1-X1:L1:1; -U1-X1:L2:1; -U1-X1:L3:1; -U1-X1:N:1; -U1-X2:24V:1; -U1-X2:24V:2; -U1-X2:24V:3; -U1-X2:24V:4; -U1-X2:24V:5; -U1-X2:24V:6; -U1-X2:24V:7; -U1-X2:24V:8; -U1-X2:24V:9; -U1-X2:24V:10; -U1-X2:24V:11; -U1-X2:GND:1; -U1-X2:GND:2; -U1-X2:GND:3; -U1-X2:GND:4; -U1-X2:GND:5; -U1-X2:GND:6; -U1-X2:GND:7; -U1-X3:U:1; -U1-X3:U:2; -U1-X3:V:1; -U1-X3:V:2; -U1-X3:W:1; -U1-X3:W:2; -U1-X4:L1:1; -U1-X4:L1:2; -U1-X4:L1:3; -U1-X4:L1:4; -U1-X4:L2:1; -U1-X4:L2:2; -U1-X4:L2:3; -U1-X4:L2:4; -U1-X4:L3:1; -U1-X4:L3:2; -U1-X4:L3:3; -U1-X4:L3:4 |
-| 2002-1207 |  | WAGO | TOPJOB S ground terminal block, 2.5 mm2, green-yellow | 3 | -U1-X1:PE:1; -U1-X3:PE:1; -U1-X3:PE:2 |
+| 2002-1201 |  | WAGO | TOPJOB S feed-through terminal block, 2.5 mm2, grey; 24 A; 800 V | 40 | -U1-X1; -U1-X2; -U1-X3; -U1-X4 |
+| 2002-1207 |  | WAGO | TOPJOB S ground terminal block, 2.5 mm2, green-yellow | 3 | -U1-X1; -U1-X3 |
 | 2170465 |  | Lapp | ETHERLINE Cat.6A P, industrial Ethernet cable, S/FTP | 1 | -W3 |
 | 3LD2054-0TK51 |  | Siemens | Switch-disconnector, 3-pole; 16 A | 1 | -U1-Q1 |
 | 3NW7033 |  | Siemens | Fuse holder, 3-pole, 10x38 mm; 32 A | 2 | -U1-F11; -U1-F21 |
@@ -406,8 +406,8 @@ their published datasheets.
 
 | mpn | revision | manufacturer | description | count | designations |
 | --- | --- | --- | --- | --- | --- |
-| 2002-1201 |  | WAGO | TOPJOB S feed-through terminal block, 2.5 mm2, grey; 24 A; 800 V | 40 | -X1:L1:1; -X1:L2:1; -X1:L3:1; -X1:N:1; -X2:24V:1; -X2:24V:2; -X2:24V:3; -X2:24V:4; -X2:24V:5; -X2:24V:6; -X2:24V:7; -X2:24V:8; -X2:24V:9; -X2:24V:10; -X2:24V:11; -X2:GND:1; -X2:GND:2; -X2:GND:3; -X2:GND:4; -X2:GND:5; -X2:GND:6; -X2:GND:7; -X3:U:1; -X3:U:2; -X3:V:1; -X3:V:2; -X3:W:1; -X3:W:2; -X4:L1:1; -X4:L1:2; -X4:L1:3; -X4:L1:4; -X4:L2:1; -X4:L2:2; -X4:L2:3; -X4:L2:4; -X4:L3:1; -X4:L3:2; -X4:L3:3; -X4:L3:4 |
-| 2002-1207 |  | WAGO | TOPJOB S ground terminal block, 2.5 mm2, green-yellow | 3 | -X1:PE:1; -X3:PE:1; -X3:PE:2 |
+| 2002-1201 |  | WAGO | TOPJOB S feed-through terminal block, 2.5 mm2, grey; 24 A; 800 V | 40 | -X1; -X2; -X3; -X4 |
+| 2002-1207 |  | WAGO | TOPJOB S ground terminal block, 2.5 mm2, green-yellow | 3 | -X1; -X3 |
 | 3LD2054-0TK51 |  | Siemens | Switch-disconnector, 3-pole; 16 A | 1 | -Q1 |
 | 3NW7033 |  | Siemens | Fuse holder, 3-pole, 10x38 mm; 32 A | 2 | -F11; -F21 |
 | 3NW8004-1 |  | Siemens | SENTRON cylindrical fuse link, 10x38 mm, aM; 4 A | 6 | -F11; -F21 |

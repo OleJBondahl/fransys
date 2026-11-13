@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.15/guide/moving-to-0.23/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.16/guide/moving-to-0.23/">
       
       
       
@@ -958,6 +958,17 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         Known issues in 0.23.0
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#a-fused-terminal-part-names-no-symbol" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        A fused terminal part names no symbol
       </span>
     </span>
   </a>
@@ -2096,6 +2107,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#a-fused-terminal-part-names-no-symbol" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        A fused terminal part names no symbol
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#a-supply-net-behind-a-fuse-prints-the-fuse" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -2177,6 +2199,10 @@
 <li>KI-746, KI-747: a tag or <code>WHERE</code> marker text can overlap a wire or a slot text (<code>OVERLAP</code>, looks only).</li>
 <li>KI-748: the <code>OVERLAP</code> message does not name both elements yet.</li>
 </ul>
+<h2 id="a-fused-terminal-part-names-no-symbol">A fused terminal part names no symbol</h2>
+<ul>
+<li>A fused terminal part no longer names <code>symbol=</code>. Its protective link chooses the symbol. Delete the line.</li>
+</ul>
 <h2 id="a-supply-net-behind-a-fuse-prints-the-fuse">A supply net behind a fuse prints the fuse</h2>
 <ul>
 <li>A supply net behind a fuse or breaker prints its supply name and the tag of the nearest protective device, such as <code>24V -F2</code>. The net at the supply keeps <code>24V</code>. Two nets that share one name, with no unique protective device between them, raise <code>RAIL_IDENTITY_SHARED</code>: put a fuse or breaker between them.</li>
@@ -2221,7 +2247,7 @@
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.15 documentation
+      Fransys 0.23.16 documentation
     </div>
   
   

@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.15/guide/series/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.16/guide/series/">
       
       
       
@@ -2433,7 +2433,7 @@ selecting supply A or B for M1:</p>
 </tr>
 <tr>
 <td><code>&lt;a&gt; leaves with N poles but &lt;b&gt; takes M</code></td>
-<td>a pin or a tuple of pins in the middle takes the series' width: name as many pins as the neighbours have poles</td>
+<td><code>&lt;a&gt;</code> has one pin: give <code>&lt;b&gt;</code> one pin for this connector, or use a part that models its contacts; <code>&lt;b&gt;</code> has one pin: use a function of N poles there, or wire the poles one by one with <code>d.series(pin, pin, wire=...)</code>; both have several: name as many pins as the neighbours have poles, or wire them with <code>d.series(pin, pin, wire=...)</code></td>
 </tr>
 <tr>
 <td><code>a changeover is two throws</code></td>
@@ -2550,7 +2550,7 @@ It names the cable and both counts; pick a cable with that many non-earth cores.
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.15 documentation
+      Fransys 0.23.16 documentation
     </div>
   
   

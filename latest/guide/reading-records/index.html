@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.15/guide/reading-records/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.16/guide/reading-records/">
       
       
       
@@ -2057,7 +2057,7 @@ table function that returns every record of that type, keyed by id. Every name h
 reached as <code>fr.derive.NAME</code>.</p>
 <h2 id="records">Records</h2>
 <ul>
-<li><code>Aspect</code> is one of the three IEC 81346 views of the same objects: <code>FUNCTION</code>, <code>PRODUCT</code> and <code>LOCATION</code>.</li>
+<li><code>Aspect</code> is refdef's enum of designation aspects; a model holds three IEC 81346 views of the same objects, <code>FUNCTION</code>, <code>PRODUCT</code> and <code>LOCATION</code>. Its value is the sign (<code>=</code>, <code>-</code>, <code>+</code>).</li>
 <li><code>AspectNode</code> is a node in one aspect tree. Its fields are <code>id</code>, <code>key</code>, <code>aspect</code>, <code>parent</code> (an <code>AspectNode</code> id, or <code>None</code> at the root), <code>label</code>, <code>description</code> and <code>ext</code>. A <code>LOCATION</code> node with label <code>C1</code> is the place <code>+C1</code>. The table is <code>aspect_nodes</code>.</li>
 <li><code>Placement</code> puts one item at one aspect node. Its fields are <code>id</code>, <code>key</code>, <code>item</code>, <code>node</code> and <code>ext</code>. An item has at most one placement per aspect, so one item can have a product placement and a location placement. The table is <code>placements</code>.</li>
 <li><code>Boundary</code> marks a function as part of a unit's interface. Its fields are <code>id</code>, <code>key</code>, <code>unit</code>, <code>function</code>, <code>name</code> and <code>ext</code>. <code>name</code> is the field name the unit gave the function, or <code>None</code>. One function can be the boundary of several units. The table is <code>boundaries</code>.</li>
@@ -2127,7 +2127,7 @@ reached as <code>fr.derive.NAME</code>.</p>
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.15 documentation
+      Fransys 0.23.16 documentation
     </div>
   
   

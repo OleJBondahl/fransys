@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 from rating_plant import figures, rated, states_block
 lazy from plant import Plant
 
-from fransys_model.elecdef import Fuse, LinkKind, PinRole, Range, Role, Unit
+from fransys_model.elecdef import Fuse, LinkKind, PinRole, Range, Role, Side, Unit
 from fransys_model.kernel import make_id
 from fransys_model.vocab import Operating, OperatingFacet, PartRatingFacet
 from fransys_model.vocab.core import Item
@@ -57,12 +57,13 @@ def device(  # noqa: PLR0913 -- one keyword per thing a test varies
     link: LinkKind | None = None,
     kind: FunctionKind = FunctionKind.GENERIC,
     partial: bool = False,
+    sided: bool = False,
     rails: Sequence[Sequence[str]] = (),
 ) -> Ports:
     """Item `key`: one function `f` with ports `1` and `2`, rated `amps`, limited `limit`.
 
     The `_ac` keywords give the AC values. With `link` the two pins are tied by an internal
-    link of that kind; without, the function is a two-port source or load. `rails` names, per
+    link of that kind; `sided` puts them on line and load; without, the function is a two-port source or load. `rails` names, per
     """
     part = rate(plant, key, amps, amps_ac=amps_ac)
     template = FunctionTemplate(id=make_id(FunctionTemplate, (key, "f")), key=(key, "f"), part=part, name="f", kind=kind)
@@ -73,8 +74,9 @@ def device(  # noqa: PLR0913 -- one keyword per thing a test varies
             function=template.id,
             name=name,
             boundary=PortBoundary.GENERIC,
+            side=side if sided else None,
         )
-        for name in ("1", "2")
+        for name, side in (("1", Side.A), ("2", Side.B))
     ]
     plant.add(template, *pins)
     if partial:

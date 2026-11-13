@@ -7,17 +7,16 @@ so every fact takes templates and links; `part.py` has the `PartBundle` entry.
 
 lazy from collections.abc import Collection, Iterable
 
+from fransys_model.derive.facts.part_pins import poles_by_links
 from fransys_model.elecdef import PinRole, Side
 from fransys_model.vocab.conductor_marks import CONDUCTOR_MARKS
 from fransys_model.vocab.enums import ConductorMark, FunctionKind
 from fransys_model.vocab.markings import (
     Pole,
-    is_pole_by_role,
     pole_between,
-    poles_by_role,
     port_order_key,
 )
-from fransys_model.vocab.roles import function_role_of
+from fransys_model.vocab.roles import LINK_ROLES
 lazy from fransys_model.elecdef import LinkKind
 lazy from fransys_model.kernel import Id
 lazy from fransys_model.vocab.templates import InternalLink, PortTemplate
@@ -71,7 +70,7 @@ def poles_of_template(
 ) -> tuple[Pole, ...]:
     """The poles of a function of `kind` whose port templates are `templates`, in pole order.
 
-    The links between its own templates that are poles (`poles_by_role`) give them. A function
+    The links between its own templates that are poles (`poles_by_links`) give them. A function
     with none falls back on its pins, earth pins left out, in `port_order_key` order: consecutive
     pins pair, an odd last pin alone (`unlinked_poles`). `sideless` (the author's series) keeps
     only a lone pin, a line/load pair, or pins that all name a conductor (one pole each, a 3-phase
@@ -80,7 +79,7 @@ def poles_of_template(
     """
     own = {t.id: t for t in templates}
     mine = [link for link in links if link.a in own and link.b in own]
-    found = poles_by_role(function_role_of(kind), mine, own)
+    found = poles_by_links(mine, own)
     pins = sorted((t for t in own.values() if t.pin_role is not PinRole.PE), key=port_order_key)
     return found or _fallback(pins, sideless=sideless or _loads_terminals(kind, pins))
 
@@ -127,10 +126,9 @@ def pole_count(poles: Iterable[Pole]) -> int:
     return len(groups)
 
 
-def pole_pin_names(kind: FunctionKind, links: Iterable[tuple[str, str, LinkKind]]) -> frozenset[str]:
-    """The names of the pins on a pole link of a function of `kind`; `links` are `(a, b, kind)`.
+def pole_pin_names(links: Iterable[tuple[str, str, LinkKind]]) -> frozenset[str]:
+    """The names of the pins on a switched or protective link; `links` are `(a, b, kind)`.
 
-    A pole link is a switched or protective one (`is_pole_by_role`); `pin_side` reads these names.
+    `pin_side` reads these names. A conductive link is a pole only through its stated sides (`poles_by_links`).
     """
-    role = function_role_of(kind)
-    return frozenset(name for a, b, link in links if is_pole_by_role(role, link) for name in (a, b))
+    return frozenset(name for a, b, link in links if LINK_ROLES[link].pole for name in (a, b))

@@ -9,10 +9,10 @@ from typing import Any
 
 from fransys_model.elecdef import LinkKind
 from fransys_model.kernel import Draft, Id, Model, Origin, Record, freeze, make_id
+from fransys_model.vocab import Aspect, ConductorKind, FunctionKind, NetClass, PartCategory, PortBoundary
 from fransys_model.vocab.aspects import AspectNode, Placement
 from fransys_model.vocab.connectivity import Conductor, Mate, Net, RailGroup
 from fransys_model.vocab.core import Function, Item, Port
-from fransys_model.vocab.enums import Aspect, ConductorKind, FunctionKind, NetClass, PartCategory, PortBoundary
 from fransys_model.vocab.instantiate import PartBundle
 from fransys_model.vocab.project import Project
 from fransys_model.vocab.templates import (

@@ -18,7 +18,7 @@ from test_units_worked_example import (
 
 from electrical_symbols import LIBRARY
 from fransys_layout import lay_out_cables
-from fransys_model.derive import bom_lines, external
+from fransys_model.derive import bom_lines, external, strip_of
 from fransys_model.derive.cable_drawing import cable_block_key, end_label
 from fransys_model.derive.designation import printed_designation
 from fransys_model.kernel import dumps, loads
@@ -64,6 +64,12 @@ def _by_key(model, key):
     return matches[0]
 
 
+def _strip_text(model, terminal):
+    strip = strip_of(model, terminal)
+    assert strip is not None
+    return printed_designation(model, strip)
+
+
 def _children(model, parent):
     return [i.id for i in items_of(model).values() if i.parent == parent]
 
@@ -105,6 +111,7 @@ def test_the_bom_has_neither_the_external_strips_terminals_nor_the_switch(defaul
     _lines, designations = _bom_designations(model)
     for terminal in x0_terminals:
         assert printed_designation(model, terminal) not in designations
+        assert _strip_text(model, terminal) not in designations
     assert printed_designation(model, switch) not in designations
     # the switch's part has no other instance, so its whole line is gone
     assert "DEMO-SWITCH-2P" not in {line.mpn for line in bom_lines(model)}
@@ -120,8 +127,8 @@ def test_the_cable_between_them_keeps_its_bom_line_and_a_control_terminal_stays(
     assert printed_designation(model, cable) in cable_lines[0].designations
     # the cables to the external switch are external-end cables, not external cables
     assert printed_designation(model, _by_key(model, "WM1S")) in cable_lines[0].designations
-    for terminal in x2_terminals:
-        assert printed_designation(model, terminal) in designations
+    for terminal in x2_terminals:  # a BOM lists the strip once, not its terminals (model-0454)
+        assert _strip_text(model, terminal) in designations
 
 
 def test_the_same_design_without_the_flags_puts_all_of_them_back_in_the_bom(unflagged_model):
@@ -129,8 +136,8 @@ def test_the_same_design_without_the_flags_puts_all_of_them_back_in_the_bom(unfl
     model = unflagged_model
     _x0, x0_terminals, switch, _x2_terminals = _fixture(model)
     _lines, designations = _bom_designations(model)
-    for terminal in x0_terminals:
-        assert printed_designation(model, terminal) in designations
+    for terminal in x0_terminals:  # the strip, once (model-0454)
+        assert _strip_text(model, terminal) in designations
     assert printed_designation(model, switch) in designations
 
 

@@ -32,7 +32,7 @@ def _stated_side(model: Model, port: Id[Port]) -> str | None:
     return None if template is None else _WORDS.get(function_templates(model)[template].box_side or "")
 
 
-def pinned_box_sides(model: Model, ports: Sequence[Id[Port]]) -> dict[Id[Port], str | None]:
+def pinned_box_sides(model: Model, ports: Sequence[Id[Port]], *, stated_only: bool = False) -> dict[Id[Port], str | None]:
     """The side ("n" or "s") a part or the power of a box decides for each of its `ports`, else `None`.
 
     A pin whose function's part states `box_side` has that side (top N, bottom S), whatever else is true.
@@ -42,9 +42,9 @@ def pinned_box_sides(model: Model, ports: Sequence[Id[Port]]) -> dict[Id[Port], 
     (CROSS-HALF-TAGS: a straight riser for the return). Without such a pin, a box on two or more
     declared potentials has every pin that carries one on N, so a supply whose + and - are
     wired stands both on N.
-    Ports neither decides are `None`.
+    Ports neither decides are `None`; with `stated_only`, the power decides none and only a part's `box_side` does.
     """
-    sides = _power_sides(model, ports)
+    sides: dict[Id[Port], str | None] = dict(zip(ports, repeat(None), strict=False)) if stated_only else _power_sides(model, ports)
     sides.update({p: s for p in ports if (s := _stated_side(model, p)) is not None})
     return sides
 

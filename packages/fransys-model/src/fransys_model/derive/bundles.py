@@ -12,11 +12,10 @@ from collections import defaultdict
 lazy from collections.abc import Collection
 
 from fransys_model.derive.facts.drawn_closure import drawn_net_of, drawn_physical_nets
-from fransys_model.derive.facts.roles import function_role
+from fransys_model.derive.facts.part_pins import poles_by_links
 from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, UnionFind, digest_cached
 from fransys_model.vocab import Function, Port, PortTemplate
 from fransys_model.vocab.facets.cable import CoreFacet
-from fransys_model.vocab.markings import poles_by_role
 from fransys_model.vocab.tables import conductors, facets_of, internal_links, port_templates, ports
 
 from .line_fact import line_conductors
@@ -35,7 +34,7 @@ def _function_ends(model: Model, function: Id[Function], own: dict[Id[PortTempla
     """Each port of `function` by end of a declared pole link; empty for one pole or a port that sits on two poles."""
     templates = {t: port_templates(model)[t] for t in own}
     links = (link for link in internal_links(model).values() if link.a in templates and link.b in templates)
-    found = poles_by_role(function_role(model, function), links, templates)
+    found = poles_by_links(links, templates)
     ends = {own[template.id].id: ((function, end), index) for index, pole in enumerate(found) for end, template in enumerate(pole.ends)}
     return ends if len(found) >= _MULTI and len(ends) == 2 * len(found) else {}
 

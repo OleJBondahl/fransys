@@ -74,24 +74,13 @@ def test_stand_pins_are_exactly_the_rail_ports(demo: tuple[Env, tuple[Sym, ...]]
                 assert PinRef(sym.id, pin.id) not in railed
 
 
-def test_unknown_symbol_key_raises_problem(planted: tuple[Env, tuple[Sym, ...]]) -> None:
-    """A pick naming no library symbol makes `syms_of` raise `ProblemError`."""
+@pytest.mark.parametrize("change", [lambda _: {"key": "no-such-symbol"}, lambda pick: {"ports": dict.fromkeys(pick.ports, "no-such-port")}])
+def test_a_pick_the_library_lacks_raises_problem_with_fix(planted: tuple[Env, tuple[Sym, ...]], change) -> None:
+    """A pick naming no library symbol, or mapping a port to a name its symbol lacks, makes `syms_of` raise `ProblemError` with a fix."""
     env, _ = planted
     lead = _lead(env, "coil")
     kit = dict(env.kit)
-    kit[lead] = dataclasses.replace(env.kit[lead], key="no-such-symbol")
-    with pytest.raises(ProblemError):
-        syms_of(dataclasses.replace(env, kit=kit))
-
-
-def test_unknown_port_name_raises_problem_with_fix(planted: tuple[Env, tuple[Sym, ...]]) -> None:
-    """A pick mapping a port to a name its symbol lacks raises `ProblemError` with a fix."""
-    env, _ = planted
-    lead = _lead(env, "coil")
-    pick = env.kit[lead]
-    bad = dataclasses.replace(pick, ports=dict.fromkeys(pick.ports, "no-such-port"))
-    kit = dict(env.kit)
-    kit[lead] = bad
+    kit[lead] = dataclasses.replace(env.kit[lead], **change(env.kit[lead]))
     with pytest.raises(ProblemError) as info:
         syms_of(dataclasses.replace(env, kit=kit))
     assert info.value.fix

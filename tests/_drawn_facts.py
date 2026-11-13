@@ -165,7 +165,7 @@ def symbol_boxes(key: str, *, poles: int = 1, orient: Orientation = "R0") -> tup
 
 def box_boxes(names: tuple[str, ...], sides: tuple[str, ...] = (), offsets: tuple[float, ...] = ()) -> tuple[GeoBox, GeoBox]:
     """The body and the keep-out of the generic box with ports `names`, relative to its origin."""
-    return _boxes(generic_box(names, sides, offsets, 0, marking_widths=box_marking_widths(LIBRARY, names)))
+    return _boxes(generic_box(names, sides, offsets, marking_widths=box_marking_widths(LIBRARY, names)))
 
 
 def pin_turns(key: str, *, orient: Orientation = "R0"):

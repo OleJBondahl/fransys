@@ -11,8 +11,7 @@ from plant import Plant
 from fransys_model.derive import group_role
 from fransys_model.kernel import make_id
 from fransys_model.layout import PageRole
-from fransys_model.vocab import AspectNode, Item, Net, Placement
-from fransys_model.vocab.enums import Aspect, NetClass
+from fransys_model.vocab import Aspect, AspectNode, Item, Net, NetClass, Placement
 
 GROUP = make_id(AspectNode, ("=G",))
 OTHER = make_id(AspectNode, ("=H",))

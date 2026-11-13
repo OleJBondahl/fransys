@@ -1,7 +1,7 @@
 """layout-0406, el-0073: a marker's drawn box has one home on all builds (R554, R555 B4, R557).
 
-Layout's `marker_drawn_box` (from `Options.link_fit`) equals the outline el draws by
-`marker_rule`; `link_fit` equals the rule at its own size; the PDF link area is that outline
+Layout's `marker_drawn_box` (from `Options.link_fit`) holds the outline el draws by
+`marker_rule` (equal for a stub, a tag's own-text box inside it); `link_fit` equals the rule at its own size; the PDF link area is that outline
 """
 
 import importlib.util

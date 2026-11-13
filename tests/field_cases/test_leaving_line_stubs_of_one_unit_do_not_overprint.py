@@ -3,77 +3,26 @@ The bug: every leaving line ran the same length and ended in a stub text, so the
 Fixed by layout-0256: stubs whose boxes meet stand in a staircase, each one tier further out, so no two boxes meet."""
 
 from itertools import pairwise
-from typing import TYPE_CHECKING, Any, NamedTuple
+from typing import TYPE_CHECKING, Any
 
 import fransys as fr
 import pytest
+from _cabinet_design import cabinet_design
 from _drawn_pages import drawn_pages, markers_in, ref_texts
 from _model_build_cover import cabinet_document
 
-from electrical_symbols import LIBRARY, MARKER_TURN_FACING
-from fransys_layout.geometry import G_PER_MODULE, Box, boxes_meet, text_width_g, through
+from electrical_symbols import G_PER_MODULE, LIBRARY, MARKER_TURN_FACING
+from fransys_layout.geometry import Box, overlaps, text_width_g, through
 from fransys_layout.geometry.units import Point
 from fransys_layout.symbols import text_room_on
 from fransys_model.layout import sheet_format_of
 
 _CABLES = 3
-_VALVE = (("coil", "A1"), ("coil", "A2"), ("co_1", "11"), ("co_1", "14"))
-
-
-class _Cabinet(NamedTuple):
-    F8: Any
-    K1: Any
-    K3: Any
-    K5: Any
-    DI: Any
-    XF: Any
-
-
-class _Top(NamedTuple):
-    T: Any
-
-
-@fr.unit("demo-inner", revision=1, interface_version=1, date="2026-01-01", text="r", by="XX")
-def _inner(d: fr.Design) -> _Cabinet:
-    d.layout.profile(hide_unused_pins=True)
-    relays = [d.device(f"K{k}", "DEMO-RLY-4CO-24", interface=("co_1",)) for k in (1, 3, 5)]
-    f8 = d.device("F8", "DEMO-MCB-2P", interface=("pole_1",))
-    xf = d.terminal_strip("XF", "DEMO-TB-2.5", 6, interface=(4, 5, 6), bridged=True)
-    d.series(f8.pole_1["1"], xf[1], wire=("BK", 1.5))
-    return _Cabinet(
-        f8,
-        relays[0],
-        relays[1],
-        relays[2],
-        d.device("DI", "DEMO-PLC-DI-16", interface=("di_9", "di_11", "di_13")),
-        xf,
-    )
-
-
-@fr.unit("demo-outer", revision=1, interface_version=1, date="2026-01-01", text="r", by="XX")
-def _outer(d: fr.Design) -> _Top:
-    d.layout.profile(hide_unused_pins=True)
-    cab = d.add(_inner, "CSC")
-    for n in range(_CABLES):
-        pins = (
-            cab.F8.pole_1["2"],
-            getattr(cab, f"K{2 * n + 1}").co_1["14"],
-            getattr(cab.DI, f"di_{9 + 2 * n}")[str(9 + 2 * n)],
-            cab.XF[4 + n],
-        )
-        with d.function(f"CV{n + 1}", f"Valve {n + 1}"):
-            valve = d.device(f"M{n + 1}", "DEMO-RLY-4CO-24")
-            cable = d.cable(f"W{n + 1:04d}", "DEMO-CBL-4G1.5")
-            for core, (pin, (name, port)) in enumerate(zip(pins, _VALVE, strict=True), start=1):
-                cable.core(core, pin, getattr(valve, name)[port])
-    return _Top(d.device("T", "DEMO-RLY-4CO-24"))
 
 
 @pytest.fixture(scope="module")
 def built() -> fr.BuildResult:
-    d = fr.design("demo_parts")
-    d.add(_outer, "U1")
-    return fr.build(d, cabinet_document("demo-outer"))
+    return fr.build(cabinet_design(_CABLES), cabinet_document("demo-outer"))
 
 
 def _box(marker: DrawnSymbol, text_height: int) -> Box:
@@ -106,7 +55,7 @@ def test_the_case_has_three_stubs_in_one_row(built: fr.BuildResult) -> None:
 def test_no_two_stub_boxes_meet(built: fr.BuildResult) -> None:
     boxes = [box for _, box in _stubs(built)]
     assert len(boxes) == _CABLES, "the check would pass over nothing"
-    meeting = [(a, b) for n, a in enumerate(boxes) for b in boxes[n + 1 :] if boxes_meet(a, b, closed=False)]
+    meeting = [(a, b) for n, a in enumerate(boxes) for b in boxes[n + 1 :] if overlaps(a, b)]
     assert meeting == []
 
 

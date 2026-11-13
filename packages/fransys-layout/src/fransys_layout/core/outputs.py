@@ -304,6 +304,7 @@ class CoreLayout:
 
     wired: each pin a wire or an anchored lead reaches, with its net (the empty net for an anchored lead), as `solve` computed them.
     drawn: the (pin, far pin) pairs drawn as a wire on their page, as the cut found them.
+    narrow: the symbols laid in their narrow view (`Sym.narrow`).
     """
 
     area: Size
@@ -318,6 +319,7 @@ class CoreLayout:
     drawn: frozenset[tuple[PinRef, PinRef]] = frozenset()
     rows: tuple[RowMeasure, ...] = ()
     """Each placed row with blocks, page by page, as `row_measures` measured it: the figures PAGE_OVERFLOW reads."""
+    narrow: frozenset[str] = frozenset()
 
 
 @dataclass(frozen=True, slots=True)

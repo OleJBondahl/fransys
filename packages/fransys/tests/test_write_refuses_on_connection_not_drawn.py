@@ -1,6 +1,6 @@
 """The release bar's standing witness (R1462, R1568): CONNECTION_NOT_DRAWN as an ERROR makes `fr.write` raise and write nothing.
 The finding is forced, so this file's one build carries it by its input (R1708); it was in test_layout_core_failures."""
-# CONNECTION_NOT_DRAWN 54 per default-salt build set (FORCED_FAILURES): forced core failure, asserted through expect_codes.
+# CONNECTION_NOT_DRAWN once per conductor end of the build (FORCED_FAILURES): forced core failure, asserted through expect_codes.
 
 from typing import Any
 
@@ -13,7 +13,7 @@ from fransys_el.set_findings import _INFO
 
 
 def test_write_refuses_on_connection_not_drawn_and_writes_nothing(monkeypatch: pytest.MonkeyPatch, tmp_path: Any) -> None:
-    monkeypatch.setattr(drawn_nets, "_verdict", lambda _net, members, *_: (members[:1], members[1:], 2))
+    monkeypatch.setattr(drawn_nets, "_carried", lambda *_: False)  # no end is drawn: CONNECTION_NOT_DRAWN per end (CP-S2c-1)
     result = cabinet_build()
     expect_codes(result, "CONNECTION_NOT_DRAWN")
     out = tmp_path / "out"

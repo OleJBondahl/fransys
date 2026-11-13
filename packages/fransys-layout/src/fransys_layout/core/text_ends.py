@@ -21,7 +21,7 @@ from .errors import CoreError
 from .geometry import sized
 from .keys import natural_key
 from .ref_kind import kind_of
-from .route_env import pin_sides
+from .route_env import body_keeps, pin_sides
 from .sides import step_out
 from .values import Box, PinRef, RefKind, StandClass
 
@@ -30,7 +30,7 @@ if TYPE_CHECKING:
 
     from .arrow_reserve import ArrowEnds
     from .flow_values import CutResult, Fan
-    from .outputs import Placement, Trunk
+    from .outputs import Placed, Placement, Trunk
     from .route_fixed import Fixed
     from .values import XY, Options, Orientation, PlacementProblem, Ref, RefEnd, Side, Size
 
@@ -54,7 +54,7 @@ class MarkEnv:
         default_factory=dict
     )  # a mixed pin -> by orientation, the pin its marker stands at
     legs: Mapping[int, Mapping[PinRef, int]] = field(default_factory=dict)  # a page -> its one-sided pins, each with the row of its leg's trunk end
-    footprints: Mapping[int, tuple[tuple[str, Box], ...]] = field(default_factory=dict)  # by page, each placed symbol and its footprint
+    placed: Mapping[int, tuple[Placed, ...]] = field(default_factory=dict)  # by page, each placed symbol: its footprint and its body keep
     arrowed: ArrowEnds = field(default_factory=dict)  # the page, fan and row of each trunk that stands an arrow at its right end
     keeps: Mapping[int, Sequence[Keep]] = field(default_factory=dict)  # by page, what a marker box keeps clear of
     leg_lines: Mapping[int, Mapping[tuple[str, int, PinRef], tuple[XY, XY, XY]]] = field(
@@ -113,7 +113,7 @@ def mark_env(cut: CutResult, placement: Placement, problem: PlacementProblem, op
         {(r.sym, r.pin): n.id for n in problem.nets for r in n.pins},
         cut_stands(problem, cut),
         rows,
-        {pg.page: tuple((p.sym, p.footprint) for p in pg.placed) for pg in placement.pages},
+        {pg.page: pg.placed for pg in placement.pages},
         arrowed,
         leg_lines=legs_by_page,
         bands={pg.page: pg.bands for pg in placement.pages},
@@ -124,7 +124,7 @@ def mark_env(cut: CutResult, placement: Placement, problem: PlacementProblem, op
 
 def pin_keeps(env: MarkEnv) -> dict[int, list[Keep]]:
     """By page, a point Keep per pin and a segment Keep per lead, owned by its net, and each footprint, owned by its symbol (R845, R920)."""
-    out: dict[int, list[Keep]] = {page: [Keep("", box, "footprint", sym) for sym, box in feet] for page, feet in env.footprints.items()}
+    out = {pg: [*(Keep("", p.footprint, "footprint", p.sym) for p in ps), *body_keeps(ps)] for pg, ps in env.placed.items()}
     for (sym, pin), (page, x, y, orient) in env.pins.items():
         if (net := env.pin_net.get((sym, pin))) is None:
             continue
@@ -188,7 +188,7 @@ def pin_stand(env: MarkEnv, pin: PinRef, page: int, ref: Ref) -> Stand:
     side = env.sides[(xy.sym, xy.pin, orient)]
     x, y = step_out(side, x, y, env.options.wiring_grid if xy in env.leads else 0)
     stand = abut(env.options, side, x, y, (pin, str(kind_of(ref))))
-    feet = next((box for sym, box in env.footprints.get(page, ()) if sym == xy.sym), None)
+    feet = next((p.footprint for p in env.placed.get(page, ()) if p.sym == xy.sym), None)
     band = None if feet is None else next((b for b in env.bands.get(page, ()) if b[0] <= feet.y < b[1]), None)
     return replace(stand, band=band)
 

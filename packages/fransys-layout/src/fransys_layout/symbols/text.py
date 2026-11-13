@@ -30,21 +30,16 @@ def text_width_g(font: FontMetrics | None, text: str, *, height: int) -> int:
     return math.ceil(round(symdef_text_width(font, text, height), 9))
 
 
-def _footprint(library: SymbolLibrary, text: str, text_height: int) -> Size:
-    """The ink `text` draws at `text_height` grid units, upright, from symdef's `text_footprint`."""
+def label_sizes(library: SymbolLibrary, text: str, text_height: int) -> Size:
+    """The ink `text` (one or more lines) draws at `text_height` grid units, upright, from symdef's `text_footprint`."""
     font = library.font
     cap = from_divisions(library.grid, text_height) * (font.cap_height / font.units_per_em if font else 1.0) * library.grid.module_mm
     return Size(*text_footprint(font, text, cap, library.grid))
 
 
-def label_sizes(library: SymbolLibrary, text: str, text_height: int) -> Size:
-    """The ink `text` (one or more lines) draws at `text_height` grid units, upright."""
-    return _footprint(library, text, text_height)
-
-
 def line_pitch(library: SymbolLibrary, text_height: int) -> int:
     """The grid units one more line adds to a block of text at `text_height`: symdef's own block height of two lines less one."""
-    return _footprint(library, "x\nx", text_height).h - _footprint(library, "x", text_height).h
+    return label_sizes(library, "x\nx", text_height).h - label_sizes(library, "x", text_height).h
 
 
 def text_room_on(model: Model, sheet: SheetFormat, library: SymbolLibrary) -> int:

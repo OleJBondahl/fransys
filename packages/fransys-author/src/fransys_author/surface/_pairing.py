@@ -39,13 +39,13 @@ PARTLESS_FIX = (
 _BY_HAND = "wire the poles one by one with d.series(pin, pin, wire=...)"
 
 
-def label_of(element: object) -> str:
+def label_of(el: object) -> str:
     """The printed name of a series element, for a message: `Q1`, `K1.coil`, `X1`, `230V`."""
-    fn = getattr(element, "_fn", None)
-    label = getattr(element, "_label", None) or getattr(element, "_tag", None) or getattr(element, "_name", None)
+    fn = getattr(el, "_fn", None)
+    label = getattr(el, "_label", None) or getattr(el, "_tag", None) or getattr(el, "_name", None)
     if fn is not None and label:
         return f"{label}.{fn.name}"
-    return str(label or type(element).__name__)
+    return str(label or (f"({', '.join(map(label_of, el))})" if isinstance(el, tuple) else getattr(el, "name", type(el).__name__)))
 
 
 class End(NamedTuple):
@@ -256,11 +256,10 @@ def pair(source: Sequence[End], load: Sequence[End], names: tuple[str, str] = ("
 
     Does not pair unequal counts: the message names both elements, their poles and the call.
     """
-    if len(source) != len(load):
-        msg = (
-            f"{names[0]} leaves with {_ends_text(source)} but {names[1]} takes "
-            f"{_ends_text(load)}: use a function of {len(source)} poles there, or {_BY_HAND}"
-        )
+    if (n := len(source)) != (m := len(load)):
+        fix = f"give {names[1]} one pin for this connector, or use a part that models its {m} contacts" if n == 1 else _BY_HAND
+        fix = f"use a function of {n} poles there, or {fix}" if m == 1 else fix
+        msg = f"{names[0]} leaves with {_ends_text(source)} but {names[1]} takes {_ends_text(load)}: {fix}"
         raise AuthorError(msg)
     if same := next((a.port for a, b in zip(source, load, strict=True) if a.port.id == b.port.id), None):
         msg = f"{names[0]} and {names[1]} are joined at the same pin {same.name}: a wire joins two different pins, so name another pin"

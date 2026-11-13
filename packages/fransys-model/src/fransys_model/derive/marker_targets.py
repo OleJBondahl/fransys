@@ -15,7 +15,7 @@ from fransys_model.derive.frame_position import position_text, row_letter
 from fransys_model.derive.kinds import item_role
 from fransys_model.derive.order import widest_text
 from fransys_model.vocab.tables import documents, functions, ports
-lazy from fransys_model.derive.document_subject import scope_path, widest_scope
+lazy from fransys_model.derive.document_subject import scope_path
 lazy from fransys_model.derive.page_reference_text import front_pages
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab import Document
@@ -80,8 +80,9 @@ def widest_target_line(model: Model, count: int, columns: int, rows: int, digit:
 
     `count` is the build's symbol count, `columns` and `rows` the highest frame column and row,
     `digit` the widest digit the caller measured. Layout sizes a marker box with it before the pages exist.
+    No scope prefix leads it: every end of a reference stands in one drawing set, which one document prints (`far_prefix` is `""`).
     """
     refs, labels = _widest_cells(model, columns, rows, digit)
     wide = _wide_page(model, count, digit)
-    position = position_text(refs, wide, labels, widest_scope(model))
+    position = position_text(refs, wide, labels)
     return target_lines(wide, [position])[0] + more_text(int(digit))

@@ -28,7 +28,6 @@ if TYPE_CHECKING:
     from .place_env import PageEnv
 
 Step = tuple[str, int, int]  # (column id, lane, index of the upper cell)
-CrossedRooms = dict[tuple[str, str], int]  # (fan id, symbol) -> crossed levels
 
 
 class _Jog(NamedTuple):
@@ -148,22 +147,3 @@ def step_rooms(env: PageEnv, x: Mapping[str, int], y: Mapping[str, int] | None =
             need = grid * (level + env.options.jog_lanes)
             rooms[j.step] = max(rooms.get(j.step, 0), need, env.options.wire_min)
     return rooms
-
-
-def crossed_levels(env: PageEnv, x: Mapping[str, int]) -> CrossedRooms:
-    """The levels stage 6 draws per (fan id, symbol), one per moved lane.
-
-    A lane moves when its index sits at another x than its own lane's; stage 6 gives each its level.
-    """
-    out: CrossedRooms = {}
-    for fan in env.flow.fans:
-        for sym, perm in fan.crossed:
-            xs = {
-                a.pole: x[col_node(a.column)] + env.pcs[a.column].offsets[a.lane]
-                for a in (*fan.drivers, *fan.legs)
-                if a.pin.sym == sym and a.column is not None and a.column in env.pcs
-            }
-            moved = [j for j, pole in enumerate(perm) if pole != j and j in xs and pole in xs]
-            if moved:
-                out[fan.id, sym] = len(moved)
-    return out

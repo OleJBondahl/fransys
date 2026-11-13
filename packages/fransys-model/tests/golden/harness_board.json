@@ -1,10 +1,10 @@
 {
   "aliases": [],
-  "schema_version": 29,
+  "schema_version": 31,
   "tables": {
     "aspect_node": [
       {
-        "aspect": "product",
+        "aspect": "PRODUCT",
         "description": "board",
         "ext": {},
         "id": "aspect_node:94924b63cc6b509a922e979a4d42fdbc",
@@ -15,7 +15,7 @@
         "parent": null
       },
       {
-        "aspect": "location",
+        "aspect": "LOCATION",
         "description": "remote panel",
         "ext": {},
         "id": "aspect_node:a2ada24110fb50bda76eadfe295fb28e",

@@ -9,10 +9,7 @@ lazy from fransys_model.vocab.core import Unit, UnitRelease
 from .designation import item_designation, location_node_designation
 from .document_unit import document_unit
 from .lookups import item_description
-from .order import widest_text
 from .unit_release import unit_release
-
-_TWO = 2
 
 
 def release_name(release: UnitRelease) -> str:
@@ -28,7 +25,7 @@ def unit_label(model: Model, unit: Id[Unit]) -> str:
     return release_name(unit_release(model, unit))
 
 
-__all__ = ["scope_path", "subject_label", "widest_scope"]
+__all__ = ["scope_path", "subject_label"]
 
 
 def subject_label(model: Model, document: Id[Document]) -> str:
@@ -60,10 +57,3 @@ def scope_path(model: Model, document: Id[Document]) -> str:
     if record.location is None:
         return subject_label(model, document)
     return location_node_designation(model, record.location)
-
-
-def widest_scope(model: Model) -> str:
-    """The longest `scope_path` among the documents, `""` with fewer than two: the widest prefix a reference into another PDF prints."""
-    if len(documents(model)) < _TWO:
-        return ""
-    return widest_text(scope_path(model, document) for document in documents(model))

@@ -47,10 +47,10 @@ DRAWING_TEXT_FORMATTERS = frozenset(
 SYMBOL_LIBRARIES = ("symdef", "electrical_symbols")
 SYMBOL_ADAPTER = SRC_ROOT / "geometry" / "adapter.py"
 SYMBOLS_LAYER = SRC_ROOT / "symbols"  # layout-0316: the symdef layer, gated by tests/symbols
-# `units.py` takes the two grid constants from the library's one home; the symbols layer
+# `units.py` takes the wiring grid from the library's one home; the symbols layer
 # imports `units`, so the constants cannot come through it. `units.py` may import nothing else.
 UNITS_MODULE = SRC_ROOT / "geometry" / "units.py"
-UNITS_ALLOWED = frozenset({"WIRING_GRID", "G_PER_MODULE"})
+UNITS_ALLOWED = frozenset({"WIRING_GRID"})
 
 # Inside `engines`, only the `read/` package may import `fransys_model.derive` or
 # `fransys_model.vocab` (the `drawing_text` formatters excepted), and only the `read/` and
@@ -299,8 +299,8 @@ def test_only_the_symbol_adapter_imports_the_symbol_libraries() -> None:
     assert problems == []
 
 
-def test_units_takes_only_the_two_grid_constants_from_the_symbol_libraries() -> None:
-    """`geometry/units.py` imports `WIRING_GRID` and `G_PER_MODULE`, and nothing else from them."""
+def test_units_takes_only_the_wiring_grid_from_the_symbol_libraries() -> None:
+    """`geometry/units.py` imports `WIRING_GRID`, and nothing else from them."""
     assert _units_library_names(UNITS_MODULE.read_text(encoding="utf-8")) == set()
 
 

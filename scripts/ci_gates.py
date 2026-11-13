@@ -6,15 +6,20 @@ lean hard, enforce, report), so a log reads as before. The exit code is the firs
 gate's; a failure never hides a later block of the same phase.
 """
 
+import os
 import subprocess
 import sys
-from collections.abc import Callable
+from collections.abc import Callable, MutableMapping
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+
+# the ratchets run in the cheap phase, apart from `just cov` (R2270): a red stock stops the run in seconds
+_RATCHETS = ("uv", "run", "pytest", "-q", "--override-ini=python_files=test_ratchet_*.py", "tests")
 
 _GROUPS: tuple[tuple[tuple[str, ...], ...], ...] = (
     (("just", "check"),),
     (("just", "dead-code"),),
+    (_RATCHETS,),
     (
         ("just", "cov"),
         (
@@ -78,6 +83,18 @@ def runs_pytest(group: tuple[tuple[str, ...], ...]) -> bool:
     return any(mark in argv for argv in group for mark in PYTEST_MARKS)
 
 
+def pytest_workers(env: MutableMapping[str, str]) -> str:
+    """R2270: the workers `just cov` runs on, set from the load unless PYTEST_WORKERS is set; the one line that says why."""
+    if "PYTEST_WORKERS" in env:
+        return f"pytest workers: {env['PYTEST_WORKERS']} (PYTEST_WORKERS set)"
+    if not hasattr(os, "getloadavg"):
+        env["PYTEST_WORKERS"] = "6"
+        return "pytest workers: 6 (no load average on this platform)"
+    load = os.getloadavg()[0]
+    env["PYTEST_WORKERS"] = str(max(2, min(6, (os.cpu_count() or 1) - round(load))))
+    return f"pytest workers: {env['PYTEST_WORKERS']} (load {load:.1f})"
+
+
 def run_phase(groups: Groups) -> list[list[Block]]:
     with ThreadPoolExecutor(max(1, len(groups))) as pool:
         return list(pool.map(run_group, groups))
@@ -114,4 +131,5 @@ def test_files(root: Path) -> list[Path]:
 
 
 if __name__ == "__main__":
+    sys.stdout.write(pytest_workers(os.environ) + "\n")
     sys.exit(run_all())

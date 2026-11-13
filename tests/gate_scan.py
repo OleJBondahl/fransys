@@ -4,16 +4,31 @@
 walks `packages/*/src`. A gate keeps its own rule; this file holds only the walk.
 """
 
+from __future__ import annotations
+
 import ast
 import importlib.util
 import subprocess
 import sys
 import tomllib
 from pathlib import Path
-from typing import Any, NamedTuple
+from typing import TYPE_CHECKING, Any, NamedTuple
+
+if TYPE_CHECKING:
+    from types import ModuleType
 
 ROOT = Path(__file__).resolve().parent.parent
 PACKAGES_ROOT = ROOT / "packages"
+
+
+def load_module(name: str, path: Path) -> ModuleType:
+    """The module `name` loaded from `path`: a corpus or script folder is no installed package."""
+    spec = importlib.util.spec_from_file_location(name, path)
+    assert spec is not None
+    assert spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
 
 def load_script(module_name: str, filename: str):

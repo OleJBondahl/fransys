@@ -17,7 +17,7 @@ class _Io(NamedTuple):
 def _unit(u: Any) -> _Io:
     with u.function("F1", "Monitoring"):
         monitor = u.device("B1", "FLD-GAS-MONITOR")
-        controller = u.device("A1", "FLD-AI-CTRL-20")
+        controller = u.device("A1", "FLD-AI-CTRL-80")
     u.series(monitor.X1["1"], controller.ai_1["ANALOG_INPUT_01_P"], wire=("BK", 1.0))
     strip = u.terminal_strip("X1", "DEMO-TB-2.5", 1, interface=True)
     u.series(strip[1].inner, monitor.X1["2"], wire=("BK", 1.0))

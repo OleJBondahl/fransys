@@ -28,8 +28,6 @@ __all__ = ["kernel_findings"]
 
 _DEVICES = re.compile(r"\(devices ([^)]*)\)")  # a row's devices as designations: a relay's contacts print its tag once
 
-_ROW_PAGE = re.compile(r"page \d+(, row)")  # the core's set-local page number in a row finding
-
 _BY_CODE = {info.code: info for info in (*LAYOUT_CODES, *FINDING_CODES)}
 
 
@@ -59,9 +57,11 @@ def _named(model: Model, symbols: Mapping[str, Id[object]], text: str) -> str:
 
 
 def _printed_page(model: Model, pages: Mapping[int, Page], found: CoreFinding) -> str:
-    """The text of `found` with its set-local page number replaced by the number the PDF prints (`derive.pdf_page`)."""
-    page = pages.get(found.page) if found.page is not None else None
-    return found.text if page is None else _ROW_PAGE.sub(lambda m: f"page {pdf_page(model, page)}{m[1]}", found.text)
+    """The text of `found` with its own set-local page number replaced by the sheet number the PDF prints (`derive.pdf_page`)."""
+    if found.page is None:
+        return found.text
+    page = pages.get(found.page) or refuse(f"finding {found.code} on page {found.page}", "pass the written layout's pages: it has no sheet number")
+    return re.sub(rf"\bpage {found.page}\b", f"page {pdf_page(model, page)}", found.text)
 
 
 def _message(text: str, unmapped: tuple[str, ...]) -> str:

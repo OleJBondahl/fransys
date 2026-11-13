@@ -3,8 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import replace
-from itertools import permutations
-from typing import Any
 
 import pytest
 from options_fixtures import core_options
@@ -22,9 +20,8 @@ from fransys_layout.core.score_wiring import bundles
 
 from .conftest import MARKER
 from .cycle_fixtures import acyclic_problem
-from .pipeline_fixtures import cut_of
 from .place_fixtures import all_pins, bundle_fan
-from .route_fixtures import envs_of, inherent, link_env, overlaps, own_crossings, reversing_pair, with_crossed
+from .route_fixtures import envs_of, link_env, reversing_pair
 
 STEP = core_options(
     marker=MARKER,
@@ -127,7 +124,6 @@ def synthetic(  # noqa: PLR0913 - a fixture builder; each knob is keyword-only
         None,
         n,
         "below",
-        (("K", perm),),
     )
     trunk = Trunk("f:b", 1, ty, min(xs), max(xs), n, 0, ((min(xs), max(xs)),) * n)
     band = (ty - 2 * grid * n - grid, ty + 2 * grid * n + grid)
@@ -163,44 +159,13 @@ def lanes_reached(wires: list[Wire], pin_y: int, xs: list[int]) -> dict[int, int
     return out
 
 
-@pytest.mark.parametrize("n", [3, 4])
-@pytest.mark.parametrize("above", [False, True], ids=["legs", "drivers"])
-@pytest.mark.parametrize("mirrored", [False, True], ids=["poles-rightward", "poles-leftward"])
-def test_every_permutation_draws_square_without_overlap_and_crosses_only_where_inverted(n: int, *, above: bool, mirrored: bool) -> None:
-    xs = [100 + 24 * (n - 1 - p if mirrored else p) for p in range(n)]
-    for perm in permutations(range(n)):
-        env, trunk, pin_y = synthetic(perm, xs, above=above)
-        wires = [w for w in trunk_wires(env, trunk).wires if w.kind != "trunk"]
-        runs = [s for w in wires for s in zip(w.points, w.points[1:], strict=False)]
-        assert all(a != b and (a[0] == b[0] or a[1] == b[1]) for a, b in runs), perm
-        assert lanes_reached(wires, pin_y, xs) == {perm[j]: trunk.y + STEP * j for j in range(n)}
-        assert own_crossings_of(wires) == inherent(xs, perm), perm
-        assert not overlaps_of(wires), perm
-        levels = [a[1] for a, b in runs if a[1] == b[1]]
-        assert all(pin_y < y <= trunk.y - STEP if above else trunk.y + STEP * n <= y < pin_y for y in levels), perm
-
-
-def own_crossings_of(wires: list[Wire]) -> int:
-    from fransys_layout.core.outputs import Counts, PageRoutes, Routes
-
-    page = PageRoutes(1, tuple(wires), (), Counts(0, 0, 0, 0), (), (), ())
-    return own_crossings(Routes((page,)))
-
-
-def overlaps_of(wires: list[Wire]) -> list[Any]:
-    from fransys_layout.core.outputs import Counts, PageRoutes, Routes
-
-    page = PageRoutes(1, tuple(wires), (), Counts(0, 0, 0, 0), (), (), ())
-    return overlaps(Routes((page,)))
-
-
 def test_with_pole_0_off_the_row_each_pin_present_drops_straight_to_its_own_lane() -> None:
     xs = [100, 124, 148]
-    env, trunk, pin_y = synthetic(FULL, xs, above=False, skip=0)
+    env, trunk, pin_y = synthetic((0, 1, 2), xs, above=False, skip=0)
     wires = [w for w in trunk_wires(env, trunk).wires if w.kind != "trunk"]
     assert sorted(w.points for w in wires) == [
         ((124, pin_y), (124, trunk.y + STEP)),
-        ((148, pin_y), (148, trunk.y)),
+        ((148, pin_y), (148, trunk.y + 2 * STEP)),
     ]
 
 
@@ -211,11 +176,10 @@ def test_a_trunks_lines_stand_the_wiring_grid_apart() -> None:
     assert lanes_reached(wires, pin_y, xs) == {p: trunk.y + 16 * p for p in range(3)}
 
 
-def crossed_env(*, lower: int) -> tuple[RouteEnv, Trunk]:
-    """The reversing pair through the stages with Fan.crossed set; K2 moved down by `lower`."""
+def reversing_env(*, lower: int) -> tuple[RouteEnv, Trunk]:
+    """The reversing pair through the stages; K2 moved down by `lower`."""
     prob = reversing_pair(FULL)
-    cut = with_crossed(cut_of(prob), "f:bL", (("K2", FULL),))
-    (env,) = envs_of(prob, cut=cut)
+    (env,) = envs_of(prob)
     k2 = env.placed["K2"]
     moved = replace(
         k2,
@@ -225,30 +189,6 @@ def crossed_env(*, lower: int) -> tuple[RouteEnv, Trunk]:
     )  # the body goes with its pins: a drop from a pin inside a body is a rise (R1290 ii)
     env = replace(env, placed={**env.placed, "K2": moved})
     return env, trunk_of(env, "f:bL")
-
-
-def test_a_reversing_pair_through_the_stages_draws_its_inherent_crossings() -> None:
-    env, trunk = crossed_env(lower=3 * STEP)
-    drawn = trunk_wires(env, trunk)
-    drops = [w for w in drawn.wires if w.kind != "trunk"]
-    assert drawn.findings == ()
-    assert own_crossings_of(drops) == 3
-    assert not overlaps_of(drops)
-
-
-def test_a_crossed_trunk_with_no_room_for_its_levels_loses_each_drop_and_draws_nothing() -> None:
-    """Stage 5 now leaves grid * (3 + 2); K2 raised by two steps leaves the lanes' share only."""
-    env, trunk = crossed_env(lower=-2 * STEP)
-    drawn = trunk_wires(env, trunk)
-    assert drawn.findings == ()
-    assert drawn.lost
-    assert {r.ends[0].sym for r in drawn.lost if r.ends} == {"K2"}
-    assert all(r.ends is not None and len(r.ends) == 1 for r in drawn.lost)
-    assert not [w for w in drawn.wires if w.points[0] in k2_pins(env)]
-
-
-def k2_pins(env: RouteEnv) -> set[tuple[int, int]]:
-    return {(q.x, q.y) for q in env.placed["K2"].pin_xy}
 
 
 def drawn_with_trunk(perm: tuple[int, ...], xs: list[int], *, above: bool) -> tuple[RouteEnv, list[Wire]]:
@@ -268,14 +208,6 @@ def test_a_bundle_trunk_of_k_lanes_with_k_drops_counts_no_crossing_and_no_collin
             assert collinear(wires) == 0, (k, above)
 
 
-def test_two_drops_of_one_bundle_that_cross_count_one_crossing() -> None:
-    xs = [100, 124]
-    env, wires = drawn_with_trunk((1, 0), xs, above=False)
-    drops = [w for w in wires if w.kind != "trunk"]
-    assert {w.net for w in drops} == {"L0", "L1"}
-    assert counts(drops, bundles(env.fans.values())).crossings == 1
-
-
 def test_a_drop_never_counts_against_its_own_trunk_but_counts_against_a_foreign_one() -> None:
     xs = [100, 124, 148]
     env, wires = drawn_with_trunk((0, 1, 2), xs, above=True)
@@ -287,13 +219,12 @@ def test_a_drop_never_counts_against_its_own_trunk_but_counts_against_a_foreign_
     assert counts([*drops, foreign], own).crossings == len(xs) - 1
 
 
-@pytest.mark.parametrize("perm", [(0, 1, 2, 3), (1, 0, 2, 3)], ids=["straight", "swapped"])
-def test_a_gapped_bundle_draws_each_drop_on_its_poles_line(perm: tuple[int, ...]) -> None:
+def test_a_gapped_bundle_draws_each_drop_on_its_poles_line() -> None:
     """Column lanes 1, 2, 3, 6 hold poles 0..3: the line is the pole's, never the column lane's."""
     xs = [100, 124, 148, 172]
-    env, trunk, pin_y = synthetic(perm, xs, above=False, columns=(1, 2, 3, 6))
+    env, trunk, pin_y = synthetic((0, 1, 2, 3), xs, above=False, columns=(1, 2, 3, 6))
     wires = [w for w in trunk_wires(env, trunk).wires if w.kind != "trunk"]
-    assert lanes_reached(wires, pin_y, xs) == {perm[j]: trunk.y + STEP * j for j in range(4)}
+    assert lanes_reached(wires, pin_y, xs) == {j: trunk.y + STEP * j for j in range(4)}
     assert {w.net for w in wires} == {f"L{k}" for k in range(4)}
 
 
@@ -316,7 +247,7 @@ def _runs_without_length(wires: list[Wire]) -> list[Wire]:
 
 
 @pytest.mark.rule("BUNDLE")
-@pytest.mark.parametrize("perm", [(0,), (0, 1, 2), FULL])
+@pytest.mark.parametrize("perm", [(0,), (0, 1, 2)])
 def test_a_trunk_with_one_x_draws_no_line_of_no_length_and_still_its_drops(perm) -> None:
     """Whole class: a trunk whose ends share one x draws no zero-length line (symdef refuses it)."""
     xs = [100 + 24 * p for p in range(len(perm))]
@@ -343,9 +274,9 @@ def test_a_rise_from_a_pin_off_the_wiring_grid_reaches_its_lane_line(lanes: int)
     assert rise.points[-1] == (42, y)
 
 
-def test_an_uncrossed_drop_of_a_crossed_bundle_through_a_foreign_body_is_a_rise_for_the_router() -> None:
-    """R1290 (ii), KI-394: crossed_drops asks the same keepout test as every drop; a body in the way sends the drop to A*."""
-    env, trunk = crossed_env(lower=3 * STEP)
+def test_a_drop_of_a_bundle_through_a_foreign_body_is_a_rise_for_the_router() -> None:
+    """R1290 (ii), KI-394: a drop asks the keepout test; a body in the way sends the drop to A*."""
+    env, trunk = reversing_env(lower=3 * STEP)
     assert not trunk_wires(env, trunk).rises, "control: nothing stands in the way"
     wall = replace(env.placed["K1"], sym="Z", body=Box(0, 90, 2000, 8), footprint=Box(0, 90, 2000, 8), pin_xy=())
     drawn = trunk_wires(replace(env, placed={**env.placed, "Z": wall}), trunk)
@@ -354,7 +285,7 @@ def test_an_uncrossed_drop_of_a_crossed_bundle_through_a_foreign_body_is_a_rise_
 
 def test_a_one_sided_pins_leg_stands_clear_of_every_body_because_leg_lines_places_it_around_them() -> None:
     """R1632, KI-626: leg_lines places each leg once around the page footprints, so _leg_wires needs no body test of its own."""
-    env, trunk = crossed_env(lower=3 * STEP)
+    env, trunk = reversing_env(lower=3 * STEP)
     fan, wall = env.fans[trunk.fan], Box(820, 70, 30, 10)
     pin = fan.drivers[0].pin
     placed = {
@@ -376,10 +307,24 @@ def test_a_lone_tap_on_a_lane_of_no_length_draws_no_drop_while_another_lane_is_d
     """R1904: the tap joins nothing on that row (its pin stands a reference end, CL1); a sole zero-length lane still draws its drop."""
     xs = [100, 124, 148]
     env, trunk, _ = synthetic((0, 1, 2), xs, above=False)
-    env = replace(env, fans={"f:b": replace(env.fans["f:b"], crossed=())})
     flat = replace(trunk, lane_ends=((100, 148), (124, 124), (100, 148)))
     got = {w.points[0][0] for w in trunk_wires(replace(env, trunks=(flat,)), flat).wires if w.kind != "trunk"}
     assert got == {100, 148}
     alone = replace(trunk, lane_ends=((100, 100), (124, 124), (148, 148)))
     kept = {w.points[0][0] for w in trunk_wires(replace(env, trunks=(alone,)), alone).wires if w.kind != "trunk"}
     assert kept == {100, 124, 148}
+
+
+@pytest.mark.rule("BUNDLE-LANE-END")
+def test_a_lone_tap_that_stands_a_leg_keeps_its_drop() -> None:
+    """R2211: the leg leaves the lane, so the lane draws its drop (KI-949) until the end stands at its pin."""
+    env, trunk, _ = synthetic((0, 1, 2), [100, 124, 148], above=False)
+    flat = replace(trunk, lane_ends=((100, 148), (124, 124), (100, 148)))
+    env = replace(env, trunks=(flat,))
+
+    def drops(e: RouteEnv) -> set[int]:
+        return {w.points[0][0] for w in trunk_wires(e, flat).wires if w.kind != "trunk"}
+
+    assert drops(env) == {100, 148}, "control: no leg, no drop"
+    legged = replace(env, leg_lines={("f:b", 0, PinRef("K", "n1")): ((124, 100), (124, 108), (124, 116))})
+    assert 124 in drops(legged)

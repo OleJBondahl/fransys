@@ -7,7 +7,8 @@ reading the printed string.
 
 from typing import TYPE_CHECKING
 
-from fransys_model.derive import function_placements, port_function, position_at
+from fransys_model.derive import cell_destination, function_placements, port_function, position_at
+from fransys_model.derive.page_nav import same_pdf
 from fransys_model.layout import FrameCell, Page, layout_of
 
 if TYPE_CHECKING:
@@ -15,7 +16,7 @@ if TYPE_CHECKING:
 
     from .drawn_netlist import Netlist
 
-__all__ = ["where_joined", "where_text"]
+__all__ = ["where_joined", "where_link", "where_text"]
 
 type _Place = tuple[Id[Page], FrameCell]
 
@@ -24,6 +25,14 @@ def where_text(model: Model, here: _Place, there: _Place) -> str:
     """The where-text of the placement `here`: where `there` is, read from `here`'s page (R1397)."""
     pages = layout_of(model, Page)
     return position_at(model, pages[here[0]], pages[there[0]], there[1].column, there[1].row)
+
+
+def where_link(model: Model, here: _Place, there: _Place) -> str | None:
+    """The destination label of the cell of `there`, or `None` when `there` is outside the PDF that prints `here` (PDF-LINKS R1, R3)."""
+    pages = layout_of(model, Page)
+    if not same_pdf(model, pages[here[0]], pages[there[0]], None):
+        return None
+    return cell_destination(model, pages[there[0]], there[1])
 
 
 def where_joined(model: Model, net: Netlist) -> set[str]:

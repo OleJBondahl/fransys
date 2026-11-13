@@ -57,6 +57,6 @@ def test_an_annex_finding_names_the_designation_not_the_symbol_key() -> None:
     model, kit = _built()
     symbols = symbol_subjects(model, kit)
     key = next(iter(symbols))
-    core = Finding("ANNEX_UNPLACED", f"annex of {key} on page 1 is blocked by 2 things", 1, key)
+    core = Finding("ANNEX_UNPLACED", f"annex of {key} on page 1 is blocked by 2 things", None, key)
     (found,) = kernel_findings(model, [core], symbols, {})
     assert found.message == "annex of -K1 on page 1 is blocked by 2 things"

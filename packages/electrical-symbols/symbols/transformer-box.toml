@@ -30,11 +30,12 @@ elements = [
 
 lint_allow = [
   { rule = "through-missing", reason = "an isolating transformer: no conductive path joins the primary to the secondary, so no path can be the through path" },
+  { rule = "slot-overlap-body", reason = "the name boxes are 3.5 M wide so a name reads outward from its pin; the text boxes do not rotate, so in a turned orientation a box crosses the outline; the box is drawn upright" },
 ]
 
 [slots]
 tag            = { at = [-3.5, 0],      side = "W", box = [6, 1] }
-"marking.p1"   = { at = [-0.75, -2.75], side = "E", box = [1.5, 1] }
-"marking.p2"   = { at = [1.25, -2.75],  side = "E", box = [1.5, 1] }
-"marking.s1"   = { at = [-0.75, 2.75],  side = "E", box = [1.5, 1] }
-"marking.s2"   = { at = [1.25, 2.75],   side = "E", box = [1.5, 1] }
+"marking.p1"   = { at = [-1.25, -2.75], side = "W", box = [3.5, 1] }
+"marking.p2"   = { at = [1.25, -2.75],  side = "E", box = [3.5, 1] }
+"marking.s1"   = { at = [-1.25, 2.75],  side = "W", box = [3.5, 1] }
+"marking.s2"   = { at = [1.25, 2.75],   side = "E", box = [3.5, 1] }

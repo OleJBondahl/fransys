@@ -9,6 +9,7 @@ lazy from collections.abc import Callable, Iterable, Iterator, Sequence
 
 from fransys_model.derive.facts.contacts import link_state
 from fransys_model.derive.facts.joins import port_joins
+from fransys_model.derive.facts.mates import mate_pairs
 from fransys_model.derive.facts.units import enclosing_boards, is_sole_unit_root
 from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, digest_cached, value
 from fransys_model.vocab.core import Function, Port
@@ -18,7 +19,6 @@ from fransys_model.vocab.tables import (
     functions,
     internal_links,
     items,
-    mates,
     nets,
     ports,
     supply_of_potential,
@@ -120,16 +120,9 @@ def link_groups(model: HasTables, select: Callable[[LinkRole], bool] = any_link)
 
 
 def mate_joins(model: HasTables) -> Iterator[Sequence[Id[Port]]]:
-    """Yield each header join's two ports, then, per port name, the ports of two mated functions."""
+    """Yield each header join's two ports, then each mate's `mate_pairs` ports."""
     yield from port_joins(model)
-    by_function: dict[Id[Function], list[Port]] = {}
-    for port in ports(model).values():
-        by_function.setdefault(port.function, []).append(port)
-    for mate in mates(model).values():
-        by_name: dict[str, list[Id[Port]]] = {}
-        for port in (*by_function.get(mate.a, ()), *by_function.get(mate.b, ())):
-            by_name.setdefault(port.name, []).append(port.id)
-        yield from by_name.values()
+    yield from ((a, b) for _, a, b in mate_pairs(model))
 
 
 def _on_sole_root_board(model: HasTables, net_ports: Iterable[Id[Port]]) -> bool:

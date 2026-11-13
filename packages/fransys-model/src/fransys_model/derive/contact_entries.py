@@ -6,10 +6,10 @@
 from typing import TYPE_CHECKING
 
 from fransys_model.derive.contacts import changeover_throws, link_state
+from fransys_model.derive.facts.part_pins import poles_by_links
 from fransys_model.derive.indexes import build_indexes
 from fransys_model.derive.pole_lists import poles_of
 from fransys_model.vocab.enums import FunctionKind
-from fransys_model.vocab.markings import poles_by_role
 from fransys_model.vocab.tables import functions, internal_links, port_templates, ports
 lazy from fransys_model.derive.facts.roles import function_role, link_role
 lazy from fransys_model.kernel import Id, Model, NaturalKey, natural_key
@@ -64,7 +64,7 @@ def _switch_entries(model: Model, function: Function) -> tuple[list[Entry], list
     for link in internal_links(model).values():
         if link.a not in templates or link.b not in templates or not link_role(model, link.id).switched:
             continue
-        (pole,) = poles_by_role(function_role(model, function.id), [link], templates)
+        (pole,) = poles_by_links([link], templates)
         a, b = (printed_name(model, own[end.id].id) for end in pole.ends)
         closed = link_state(model, function.id, link.id) == "rest"
         (nc if closed else no).append((_is_main(a, b), a, f"{a}-{b}"))

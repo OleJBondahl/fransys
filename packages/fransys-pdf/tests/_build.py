@@ -24,8 +24,8 @@ from fransys_model.layout import (
     SheetFormat,
     layout_of,
 )
+from fransys_model.refdef import Aspect
 from fransys_model.vocab import (
-    Aspect,
     AspectNode,
     Conductor,
     ConductorKind,

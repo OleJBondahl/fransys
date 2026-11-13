@@ -298,6 +298,13 @@ def test_a_sibling_child_is_served_by_the_parent_when_the_parent_declares() -> N
     assert _bound(bound) == {device: parent_channels[0]}
 
 
+def _chain(plant: Plant) -> tuple[Id[Unit], Id[Unit], Id[Unit]]:
+    """Three nested units: `grandparent`, its child `parent` and their child `grandchild`."""
+    grandparent = plant.unit("grandparent", name="grandparent")
+    parent = plant.unit("parent", name="parent", parent=grandparent)
+    return grandparent, parent, plant.unit("grandchild", name="grandchild", parent=parent)
+
+
 def test_a_top_level_unit_that_declares_no_channel_takes_a_top_level_rack() -> None:
     """The unit has no parent; the top level (`Item.unit` None) is the last link of its chain."""
     plant = Plant()
@@ -313,9 +320,7 @@ def test_a_top_level_unit_that_declares_no_channel_takes_a_top_level_rack() -> N
 def test_a_grandchild_uses_the_grandparents_channel_when_neither_it_nor_its_parent_declares() -> None:
     """The chain is walked past the parent to the grandparent."""
     plant = Plant()
-    grandparent = plant.unit("grandparent", name="grandparent")
-    parent = plant.unit("parent", name="parent", parent=grandparent)
-    grandchild = plant.unit("grandchild", name="grandchild", parent=parent)
+    grandparent, _, grandchild = _chain(plant)
     (channel,) = _site(plant, Site("rack-g1", "mod-g", "G1", 1, grandparent))
     device = _device(plant, "dev-g", grandchild, channel=channel)
     model, findings = allocate_plc(plant.model())
@@ -343,9 +348,7 @@ def test_a_unit_parent_loop_does_not_hang_the_allocation() -> None:
 def test_the_nearest_declaring_ancestor_serves_not_the_outermost() -> None:
     """The parent and the grandparent both declare DI; the grandparent's rack sorts first."""
     plant = Plant()
-    grandparent = plant.unit("grandparent", name="grandparent")
-    parent = plant.unit("parent", name="parent", parent=grandparent)
-    grandchild = plant.unit("grandchild", name="grandchild", parent=parent)
+    grandparent, parent, grandchild = _chain(plant)
     _site(plant, Site("rack-a1", "mod-g", "G1", 1, grandparent))
     (near,) = _site(plant, Site("rack-p9", "mod-p", "P1", 1, parent))
     device = _device(plant, "dev-g", grandchild)
@@ -357,9 +360,7 @@ def test_the_nearest_declaring_ancestor_serves_not_the_outermost() -> None:
 def test_an_exhausted_ancestor_queue_does_not_fall_on_to_the_grandparent_or_top_level() -> None:
     """The parent's one channel goes to the first request; the second falls no further."""
     plant = Plant()
-    grandparent = plant.unit("grandparent", name="grandparent")
-    parent = plant.unit("parent", name="parent", parent=grandparent)
-    grandchild = plant.unit("grandchild", name="grandchild", parent=parent)
+    grandparent, parent, grandchild = _chain(plant)
     _site(plant, Site("rack-a1", "mod-g", "G1", 2, grandparent))
     _site(plant, Site("rack-a2", "mod-t", "T1", 2))
     (near,) = _site(plant, Site("rack-p9", "mod-p", "P1", 1, parent))

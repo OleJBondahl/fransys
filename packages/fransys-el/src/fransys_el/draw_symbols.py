@@ -31,7 +31,7 @@ def placed_symbols(
     layout: CoreLayout,
     problem: PlacementProblem,
     pages: Mapping[int, Page],
-    shown: Mapping[str, tuple[str, tuple[tuple[str, ...], ...], int, tuple[str, ...]]],
+    shown: Mapping[str, tuple[str, tuple[tuple[str, ...], ...], int, tuple[str, ...], bool]],
     marks: Mapping[str, Mapping[str, str]],
 ) -> Iterator[tuple[Id[Page], DrawnSymbol]]:
     """One symbol per placed symbol: its key, texts, poles (`shown`), box, pins and slots."""
@@ -45,7 +45,7 @@ def placed_symbols(
                     "the kit has no pick for its function: pass the build's kit",
                     p.sym,
                 )
-            key, texts, poles, ports = shown[p.sym]
+            key, texts, poles, ports, turn = shown[p.sym]
             slots = {**drawn_slots(key, texts), **marks.get(p.sym, {})}
             yield (
                 pages[p.page].id,
@@ -58,6 +58,7 @@ def placed_symbols(
                     slots=tuple(slots.items()),
                     offsets=tuple(_offsets(p, syms[p.sym]).items()),
                     sides=tuple(_sides(syms[p.sym]).items()),
+                    turn=turn,
                     leads=_leads(syms[p.sym], wired),
                     poles=poles,
                     texts=texts,

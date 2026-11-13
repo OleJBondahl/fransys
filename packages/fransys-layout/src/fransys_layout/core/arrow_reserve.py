@@ -197,7 +197,7 @@ def _clear(c: int, mark: Box, start: XY, room: tuple[Sequence[Keep], frozenset[i
     if (area is not None and not inside(mark, area)) or c in drops or any(mark.x < d < mark.x + mark.w for d in drops):
         return False
     probes = (mark, Box(start[0], y, c - start[0], 0), Box(c, y, 0, mark.y - y))
-    return not any(clear(p, keeps, {}, gap=-1) for p in probes)
+    return not any(clear(p, keeps, {}, edge="open") for p in probes)
 
 
 def _arrow_keeps(trunk: Trunk, lines: Sequence[Trunk], arrowed: ArrowEnds, options: Options) -> list[Keep]:

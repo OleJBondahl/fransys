@@ -8,7 +8,7 @@ from pathlib import Path
 import fransys as fr
 import pytest
 from _drawn_pages import drawn_pages
-from _field_shared import build_board_cab
+from board_cab import build_board_cab
 
 
 @pytest.fixture(scope="module")

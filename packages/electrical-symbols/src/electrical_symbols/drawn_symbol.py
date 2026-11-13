@@ -43,6 +43,8 @@ def _box(
     library: Library,
     offsets: Mapping[str, int],
     sides: Mapping[str, str],
+    *,
+    turn: bool,
 ) -> Symbol:
     """A generic box: one port per row, named by its first cell, at its offset (G) when given."""
     names = tuple(row[0] for row in texts)
@@ -51,6 +53,7 @@ def _box(
         tuple(sides[n] for n in names) if sides else (),
         offsets=tuple(offsets[n] / G_PER_MODULE for n in names) if offsets else (),
         marking_widths=box_marking_widths(library, names),
+        turn=turn,
     )
 
 
@@ -81,13 +84,14 @@ def _table(key: str, texts: Sequence[Sequence[str]], library: Library) -> Symbol
     return translate(made, from_divisions(library.grid, -corner.x), from_divisions(library.grid, -corner.y))
 
 
-def drawn_symbol(
+def drawn_symbol(  # noqa: PLR0913 -- one keyword per fact of the box, `turn` the one R2069 adds
     key: str,
     texts: Sequence[Sequence[str]],
     *,
     library: Library,
     offsets: Mapping[str, int] | None = None,
     sides: Mapping[str, str] | None = None,
+    turn: bool = False,
 ) -> Symbol:
     """The symbol of library `key` over `texts`, the rows of cell strings a drawn record holds.
 
@@ -95,12 +99,13 @@ def drawn_symbol(
     row's first cell. A contact head key: the fitted table, head row first, its keep-out's
     top-left at the origin. Any other key with texts is refused. `offsets` (port name to G) put a
     box's ports at those x; the body then ends one pitch past the last (model-0129). `sides` (port
-    name to `n` or `s`) puts each box port on its side; none: the alternating sides.
+    name to `n` or `s`) puts each box port on its side; none: the alternating sides. `turn` reads a
+    box's markings bottom-up (PIN-MARK-PITCH).
     """
     if not texts:
         return library.get(key)
     if key == GENERIC_BOX_KEY:
-        return _box(texts, library, offsets or {}, sides or {})
+        return _box(texts, library, offsets or {}, sides or {}, turn=turn)
     if key in _HEADS:
         return _table(key, texts, library)
     msg = f"symbol {key!r} takes no texts; its drawn record carries {len(texts)} rows"

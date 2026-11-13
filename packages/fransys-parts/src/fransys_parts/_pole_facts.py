@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 def pole_ports(entry: _toml.Table) -> set[str]:
     """The names of the ports on a switched or protective link of this function."""
     links = ((link["a"], link["b"], LinkKind[link["kind"].upper()]) for link in entry.get("links", ()) if "kind" in link)
-    return set(pole_pin_names(FunctionKind(entry["kind"]), links))
+    return set(pole_pin_names(links))
 
 
 def with_facts(template: PortTemplate, entry: _toml.Table, pole_pins: set[str]) -> PortTemplate:

@@ -1,4 +1,4 @@
-"""Stage 5, y: trunks of one row and side that overlap in x take distinct levels."""
+"""Stage 5, y: trunks of one row that overlap in x take distinct levels."""
 
 from __future__ import annotations
 
@@ -35,7 +35,7 @@ class Span(NamedTuple):
 
 
 def trunk_levels(g: Graph, spans: Sequence[Span], options: Options) -> frozenset[str]:
-    """Overlapping trunks of one row and side take distinct levels, the order that crosses least.
+    """Overlapping trunks of one row take distinct levels, the order that crosses least.
 
     A trunk the stacks hold above another stays above it; each pair gets a depth edge.
     Returns the trunks at such an edge: their legs hang loose, so a row of terminals can level.
@@ -46,7 +46,7 @@ def trunk_levels(g: Graph, spans: Sequence[Span], options: Options) -> frozenset
         level = levels([(s.x0, s.x1) for s in order], range(len(order)))
         for i, upper in enumerate(order):
             for j in range(i + 1, len(order)):
-                if level[j] > level[i] and _overlap(upper, order[j]):
+                if level[j] > level[i] and upper.x0 <= order[j].x1 and order[j].x0 <= upper.x1:
                     a, b = trunk_node(upper.fan, upper.row), trunk_node(order[j].fan, order[j].row)
                     g.after(a, b, level_offset(upper.lanes, 0, options.wiring_grid))
                     below[g.uf.find(a)[0]].add(g.uf.find(b)[0])
@@ -54,16 +54,12 @@ def trunk_levels(g: Graph, spans: Sequence[Span], options: Options) -> frozenset
     return frozenset(lowered)
 
 
-def _overlap(a: Span, b: Span) -> bool:
-    return a.x0 <= b.x1 and b.x0 <= a.x1
-
-
 def _groups(spans: Sequence[Span]) -> list[list[Span]]:
-    """The trunks of one row and side that overlap in a chain, each group leftmost first."""
+    """The trunks of one row that overlap in a chain, each group leftmost first."""
     groups: list[list[Span]] = []
     right = 0
-    for s in sorted(spans, key=lambda s: (s.row, s.side, s.x0)):
-        if groups and (groups[-1][0].row, groups[-1][0].side) == (s.row, s.side) and s.x0 <= right:
+    for s in sorted(spans, key=lambda s: (s.row, s.x0)):
+        if groups and groups[-1][0].row == s.row and s.x0 <= right:
             groups[-1].append(s)
             right = max(right, s.x1)
         else:

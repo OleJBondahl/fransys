@@ -260,9 +260,8 @@ def test_conductor_of_stated_wins_then_the_marking_table_then_none() -> None:
 
 def test_pole_pin_names_are_the_pins_on_a_pole_link() -> None:
     """A switched link's ends are pole pins; a plain conductive link of a contact is not."""
-    links = [("13", "14", LinkKind.SWITCHED), ("x", "y", LinkKind.CONDUCTIVE)]
-    assert pole_pin_names(FunctionKind.CONTACT_NO, links) == {"13", "14"}
-    assert pole_pin_names(FunctionKind.PROTECTION, links) == {"13", "14", "x", "y"}
+    links = [("13", "14", LinkKind.SWITCHED), ("x", "y", LinkKind.CONDUCTIVE), ("a", "b", LinkKind.PROTECTIVE)]
+    assert pole_pin_names(links) == {"13", "14", "a", "b"}
 
 
 def test_contact_kinds_and_their_implied_rest() -> None:

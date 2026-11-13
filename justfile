@@ -1,7 +1,7 @@
 # Windows runs recipes in PowerShell, so no `sh` is needed on PATH; Linux keeps its default shell
 set windows-shell := ["powershell.exe", "-NoLogo", "-NoProfile", "-Command"]
 
-# 6 test workers locally; a CI runner sets PYTEST_WORKERS
+# 6 test workers unless PYTEST_WORKERS is set; scripts/ci_gates.py sets it from the load (R2270)
 pytest_workers := env_var_or_default("PYTEST_WORKERS", "6")
 
 check:
@@ -34,7 +34,7 @@ build-electrical-symbols:
 # fransys-author and the reports, kicad, wago, overview and pdf output packages and
 # the fransys facade are measured in the same run; each has a fixed 95% floor in coverage-floors.toml
 cov:
-    uv run pytest -n {{pytest_workers}} --dist worksteal --cov=electrical_symbols --cov=fransys_model --cov=fransys_kernel --cov=fransys_layout --cov=fransys_el --cov=fransys_parts --cov=fransys_author --cov=fransys_reports --cov=fransys_kicad --cov=fransys_wago --cov=fransys_overview --cov=fransys_pdf --cov=fransys_render --cov=fransys --cov-report=term-missing --cov-report=json:.fransys/coverage.json --durations=20
+    uv run pytest -n {{pytest_workers}} --dist worksteal --ignore-glob='tests/test_ratchet_*.py' --cov=electrical_symbols --cov=fransys_model --cov=fransys_kernel --cov=fransys_layout --cov=fransys_el --cov=fransys_parts --cov=fransys_author --cov=fransys_reports --cov=fransys_kicad --cov=fransys_wago --cov=fransys_overview --cov=fransys_pdf --cov=fransys_render --cov=fransys --cov-report=term-missing --cov-report=json:.fransys/coverage.json --durations=20
 
 # the gates run side by side and print as blocks in this order: check, dead-code, cov, the coverage
 # floors, lean hard, enforce, report (AW14); the exit code is the first failing gate's

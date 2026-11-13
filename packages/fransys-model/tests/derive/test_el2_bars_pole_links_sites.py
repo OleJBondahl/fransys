@@ -44,9 +44,9 @@ def _poles(kind: FunctionKind, link: LinkKind) -> list[tuple[str, str]]:
 
 @pytest.mark.parametrize("kind", list(FunctionKind))
 @pytest.mark.parametrize("link", list(LinkKind))
-def test_a_pole_is_a_switched_or_protective_link_or_a_protections_conductive_one(kind: FunctionKind, link: LinkKind) -> None:
-    """A pole link wins; otherwise the non-earth pins pair 1-2, 3-4."""
-    is_pole = link in _POLE_LINKS or (kind is FunctionKind.PROTECTION and link is LinkKind.CONDUCTIVE)
+def test_a_pole_is_a_switched_or_protective_link_never_a_sideless_conductive_one(kind: FunctionKind, link: LinkKind) -> None:
+    """A pole link wins, a conductive link with no sides is none even on a protection; otherwise the non-earth pins pair 1-2, 3-4."""
+    is_pole = link in _POLE_LINKS
     assert _poles(kind, link) == ([("3", "4")] if is_pole else [("1", "2"), ("3", "4")])
 
 

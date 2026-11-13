@@ -2,16 +2,17 @@
 
 > Offline copy. Read the official docs for your version at https://olejbondahl.github.io/fransys/X.Y.Z/ (X.Y.Z is `fransys.__version__`), or https://olejbondahl.github.io/fransys/X.Y.Z/llms.txt. Use this copy only offline.
 
-`fr.derive.required_drawn` lists what a drawing of a model must show: both ends of each conductor, and each function that gets a symbol. Each row is drawn, carried by a named reason, or an error.
+`fr.derive.required_drawn` lists what a drawing of a model must show: both ends of each conductor, the pin each mated pin reaches, and each function that gets a symbol. Each row is drawn, carried by a named reason, or an error.
 
 ## Rows
 
 `required_drawn(model, scope)` takes the model and the ports whose conductors count. It returns a tuple of rows.
 
 - `ConductorEnd(conductor, port, far)`: the conductor leaves `port` and reaches `far`. A conductor between two ports of the scope gives two rows.
+- `MateEnd(mate, port, far)`: the mate joins `port` to `far`, the pin of the same name on the other half. A mate is no conductor, so it is its own row; it is owed like a conductor end, and drawn as a stub at `port` that names `far`.
 - `FunctionSymbol(function)`: a function the schematic draws as a symbol. An accessory declared open on purpose is not listed.
 
-`Required` names either row type. The end rows come first, lowest far port first; the function rows follow in id order.
+`Required` names any row type. The end rows come first, a conductor end before a mate end, then lowest far port first; the function rows follow in id order.
 
 A port the model does not hold raises `SchemaError`. Pass the port ids of the same model.
 

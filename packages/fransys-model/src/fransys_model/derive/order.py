@@ -36,7 +36,7 @@ from fransys_model.layout import DrawingSet, FrameCell, OrderHint, Page, layout_
 from fransys_model.vocab.enums import SubjectKind
 from fransys_model.vocab.tables import aspect_nodes, conductors, functions, items, ports
 from fransys_model.vocab.tables import units as units_table
-lazy from fransys_model.derive.rows_drawn import ConductorEnd
+lazy from fransys_model.derive.rows_drawn import ConductorEnd, MateEnd
 lazy from fransys_model.derive.rows_series_parallel import SeriesRowPart
 lazy from fransys_model.vocab.aspects import AspectNode
 lazy from fransys_model.vocab.connectivity import Conductor
@@ -351,9 +351,19 @@ def placement_key(model: Model, page: Id[Page], cell: FrameCell) -> tuple[int, i
     return layout_of(model, DrawingSet)[placed.drawing_set].number, placed.number, cell.column, cell.row
 
 
-def stub_far_order(model: Model, ends: Iterable[ConductorEnd]) -> list[ConductorEnd]:
-    """A stub's conductor ends in print order: the far port's printed designation, the near port's, then the conductor's key (R1581)."""
-    return sorted(ends, key=lambda e: (port_designation_key(model, e.far), port_designation_key(model, e.port), conductors(model)[e.conductor].key))
+def stub_far_order(model: Model, ends: Iterable[ConductorEnd | MateEnd]) -> list[ConductorEnd | MateEnd]:
+    """A stub's ends in print order: a conductor end before a mate end (S3), the far and near ports' printed designations, then the key (R1581).
+
+    The first end is the one a pin names its line and carrier by: `cut_lines` and `far_port` read it.
+    """
+    return sorted(
+        ends, key=lambda e: (isinstance(e, MateEnd), port_designation_key(model, e.far), port_designation_key(model, e.port), _end_key(model, e))
+    )
+
+
+def _end_key(model: Model, end: ConductorEnd | MateEnd) -> tuple[str, ...]:
+    """A conductor end's own key, a mate end's mate id."""
+    return (end.mate.value,) if isinstance(end, MateEnd) else conductors(model)[end.conductor].key
 
 
 def cores_in_lane_order(index: Mapping[Id[Conductor], int], conductors: Iterable[Id[Conductor]]) -> list[Id[Conductor]]:

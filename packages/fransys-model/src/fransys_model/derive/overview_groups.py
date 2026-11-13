@@ -9,7 +9,8 @@ from typing import Any
 
 from fransys_model.derive.facts.units import unit_items
 from fransys_model.layout import OverviewRef, OverviewRefKind
-from fransys_model.vocab.enums import Aspect, ItemKind
+from fransys_model.refdef import Aspect
+from fransys_model.vocab.enums import ItemKind
 from fransys_model.vocab.tables import aspect_nodes
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.aspects import AspectNode

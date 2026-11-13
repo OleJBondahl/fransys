@@ -1,17 +1,25 @@
 """Tests: the `part_conformance` validator."""
 
 import dataclasses
+from pathlib import Path
 from typing import Any
 
+import fransys_parts
 import pytest
+from current_plant import device
 from examples import bundle_records, relay_part_bundle
+from fransys_author.design import Design as EngineDesign
 from fransys_author.instantiate import instantiate
+from fransys_author.surface.design import Design
+from plant import Plant
 
 from fransys_model.checks.part_conformance import (
     ITEM_PART_MISMATCH,
     ITEM_WITHOUT_PART,
+    PART_POLE_WITHOUT_SIDE,
     check_part_conformance,
 )
+from fransys_model.elecdef import LinkKind
 from fransys_model.kernel import (
     Draft,
     Finding,
@@ -22,11 +30,15 @@ from fransys_model.kernel import (
     Severity,
     freeze,
     make_id,
+    merge,
 )
 from fransys_model.vocab.core import Item, Port
+from fransys_model.vocab.enums import FunctionKind, PartCategory
+from fransys_model.vocab.tables import function_templates, parts
 lazy from fransys_model.vocab.instantiate import PartBundle
 
 _KEY = ("examples", "relay-1")
+_FIELD_DATA = Path(__file__).parents[4] / "tests/field_cases/data"
 
 
 def _freeze(records: tuple[Record, ...]) -> Model:
@@ -112,3 +124,40 @@ def test_a_marking_that_differs_from_the_template_is_one_finding(marking: str | 
 
 
 # ---- what every finding looks like -------------------------------------------------------
+
+
+# ---- a protecting function's conductive link needs sides (R2051) ---------------------------
+
+
+def _pole_codes(*, kind: FunctionKind, sided: bool) -> list[Finding]:
+    plant = Plant()
+    device(plant, "F", kind=kind, link=LinkKind.CONDUCTIVE, sided=sided)
+    return [f for f in check_part_conformance(plant.model()) if f.code == PART_POLE_WITHOUT_SIDE]
+
+
+def test_a_sideless_conductive_link_of_a_protecting_function_is_an_error() -> None:
+    """A protection with unsided pins fires; sided pins, a feedthrough and a non-protecting function stay clean."""
+    (found,) = _pole_codes(kind=FunctionKind.PROTECTION, sided=False)
+    assert found.severity is Severity.ERROR
+    assert "function 'f' of part" in found.message
+    assert found.fix.startswith("state side = line/load on its pins")
+    assert _pole_codes(kind=FunctionKind.PROTECTION, sided=True) == []
+    assert _pole_codes(kind=FunctionKind.GENERIC, sided=False) == []
+    assert _pole_codes(kind=FunctionKind.TERMINAL, sided=False) == []
+
+
+@pytest.mark.parametrize("library", ["demo_parts", *sorted(p.name for p in (_FIELD_DATA).iterdir() if p.is_dir())])
+def test_every_demo_and_field_case_part_states_its_poles_sides(library: str) -> None:
+    """No part of the demo library or of a field-case data set trips the check (it would break `fr.write`)."""
+    root = _FIELD_DATA / library
+    draft = fransys_parts.load(library) if library == "demo_parts" else fransys_parts.load_path(root)
+    engine = EngineDesign(draft)
+    strips = Design(draft, scope=engine)
+    templates = function_templates(freeze(draft))
+    for number, part in enumerate(parts(freeze(draft)).values()):
+        if part.category is PartCategory.TERMINAL and any(t.part == part.id and t.kind is FunctionKind.TERMINAL for t in templates.values()):
+            strips.terminal_strip(f"X{number}", part.mpn, 1).run("L", 1)
+        else:
+            engine.item(part.mpn, name=f"i{number}")
+    model = freeze(merge(draft, engine.draft()))
+    assert [f for f in check_part_conformance(model) if f.code == PART_POLE_WITHOUT_SIDE] == []

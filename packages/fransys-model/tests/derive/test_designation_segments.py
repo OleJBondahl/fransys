@@ -11,10 +11,10 @@ from fransys_model.derive.texts.context import PrintContext
 from fransys_model.derive.texts.designation_render import aspect_text, designation_text, node_text
 from fransys_model.derive.texts.designation_segments import designation_segments, node_segments
 from fransys_model.kernel import SchemaError, make_id
+from fransys_model.refdef import Aspect
 from fransys_model.vocab import DESIGNATION_SCHEME
 from fransys_model.vocab.aspects import AspectNode, Placement
 from fransys_model.vocab.core import Item, Unit
-from fransys_model.vocab.enums import Aspect
 
 if TYPE_CHECKING:
     from fransys_model.kernel import Id
@@ -82,7 +82,7 @@ def test_a_reference_prints_the_function_segment_before_the_location_segment() -
 def test_the_scheme_holds_a_sign_per_aspect_and_the_iec_letter_rules() -> None:
     """Every aspect has its sign; A, I, O are forbidden and D, L, V, Y, Z reserved."""
     scheme = DESIGNATION_SCHEME
-    assert {aspect: scheme.sign(aspect) for aspect in Aspect} == {
+    assert {aspect: scheme.sign(aspect) for aspect in (Aspect.FUNCTION, Aspect.PRODUCT, Aspect.LOCATION)} == {
         Aspect.FUNCTION: "=",
         Aspect.PRODUCT: "-",
         Aspect.LOCATION: "+",

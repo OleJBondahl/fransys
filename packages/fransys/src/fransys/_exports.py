@@ -34,6 +34,7 @@ from fransys_layout import DiagramLayout
 from fransys_layout.symbols import text_room_on
 from fransys_model.derive import (
     document_stems,
+    drawn_pages,
     errors_of,
     export_form_of,
     export_set,
@@ -58,7 +59,7 @@ lazy from fransys_model.vocab import Unit as ModelUnit
 from . import _args, _subjects
 from ._export_ledger import _export_name_clash, _ExportLedger
 from ._layout_need import diagram_sheets_of
-from ._link_boxes import link_boxes
+from ._link_boxes import link_boxes, where_links
 from ._release_checks import (
     _changes_since,
 )
@@ -119,15 +120,15 @@ def _write_intermediates(drawn: _Drawn, svgs: dict[str, str], intermediates: Pat
 def _pdf_source(drawn: _Drawn, document_id: Id[Any], svgs: Mapping[str, str], pdf: Mapping[str, object]) -> str:
     """One document's Typst source, with the numbers of the `[pdf]` settings."""
     model, library = drawn.model, drawn.library
-    known = frozenset(drawn.drawings)
     boxes = link_boxes(model, drawn.drawings, library)
+    pages = [page.id for page in drawn_pages(model, document_id)]
     return fransys_pdf.source(
         model,
         document_id,
         svgs,
         _sheets(drawn),
         fransys_render.bridge_pieces(library),
-        links={page: reference_links(model, page, known, boxes) for page in known},
+        links={page: (*reference_links(model, document_id, page, boxes), *where_links(drawn.drawings[page])) for page in pages},
         diagrams=diagram_sheets_of(drawn.diagrams),
         pdf=cast("Mapping[str, float]", pdf),
         **pdf_texts(model),

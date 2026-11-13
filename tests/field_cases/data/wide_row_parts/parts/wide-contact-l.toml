@@ -1,0 +1,17 @@
+schema = 2
+
+[part]
+mpn = "WIDE-CONTACT-1NO-L"
+manufacturer = "Demo"
+description = "Contact block, one make contact"
+category = "electromechanical"
+class_code = "S"
+
+[[function]]
+name = "no"
+kind = "switch"
+ports = [
+    { name = "13_WWWWWWWW", role = "generic", side = "line" },
+    { name = "14_WWWWWWWW", role = "generic", side = "load" },
+]
+links = [{ a = "13_WWWWWWWW", b = "14_WWWWWWWW", kind = "switched", rest = "open" }]

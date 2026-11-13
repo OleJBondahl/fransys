@@ -79,6 +79,28 @@ def test_a_request_wired_to_a_channel_of_another_unit_binds_to_it() -> None:
     assert _bound(model) == {wired: ch_b, unwired: ch_a}
 
 
+def _cab_board(plant: Plant) -> tuple[Id[Unit], Id[Unit]]:
+    """The units `cab` and `board`, `board` nested in `cab`."""
+    cab = plant.unit("cab", name="cab")
+    return cab, plant.unit("board", name="board", parent=cab)
+
+
+def _board_x1(plant: Plant) -> tuple[Id[Unit], Id[Unit], Id[Function]]:
+    """`cab`, `board` and connector function `x1`, the boundary of `board`."""
+    cab, board = _cab_board(plant)
+    x1 = plant.function(plant.item("conn-x1", designation="X1", unit=board), "x1")
+    plant.boundary(board, x1)
+    return cab, board, x1
+
+
+def _unservable(plant: Plant, request: Id[Function]) -> None:
+    """Allocation leaves nothing bound and reports `request` as PLC_REQUEST_UNSERVABLE."""
+    model, (finding,) = allocate_plc(plant.model())
+    assert finding.code == PLC_REQUEST_UNSERVABLE
+    assert request in finding.subjects
+    assert _bound(model) == {}
+
+
 def _board(*, with_cab_channel: bool) -> tuple[Model, Id[Function], Id[Function] | None]:
     """A relay board `board` (nested in `cab`) whose request is wired to its boundary function.
 
@@ -86,12 +108,8 @@ def _board(*, with_cab_channel: bool) -> tuple[Model, Id[Function], Id[Function]
     function `x1`, the boundary of `board`. With `with_cab_channel` the cab also holds a spare
     """
     plant = Plant()
-    cab = plant.unit("cab", name="cab")
-    board = plant.unit("board", name="board", parent=cab)
-    connector = plant.item("conn-x1", designation="X1", unit=board)
-    x1 = plant.function(connector, "x1")
+    cab, board, x1 = _board_x1(plant)
     x1_port = plant.port(x1, "1")
-    plant.boundary(board, x1)
     request = _request(plant, "dev-k1", board, to=x1_port)
     wired = None
     if with_cab_channel:
@@ -131,11 +149,7 @@ def test_wiring_never_changes_a_binding_a_wired_out_request_takes_its_units_free
     bind it there exactly as before, with no finding.
     """
     plant = Plant()
-    cab = plant.unit("cab", name="cab")
-    board = plant.unit("board", name="board", parent=cab)
-    connector = plant.item("conn-x1", designation="X1", unit=board)
-    x1 = plant.function(connector, "x1")
-    plant.boundary(board, x1)
+    _, board, x1 = _board_x1(plant)
     (own,) = _site(plant, Site("rack-b", "mod-b", "B1", 1, board))
     request = _request(plant, "dev-k1", board, to=plant.port(x1, "1"))
     model, findings = allocate_plc(plant.model())
@@ -149,17 +163,9 @@ def test_a_nested_request_with_no_declaring_unit_is_unservable_in_the_parent_bui
     on its chain declares a channel, and it is `PLC_REQUEST_UNSERVABLE` as before.
     """
     plant = Plant()
-    cab = plant.unit("cab", name="cab")
-    board = plant.unit("board", name="board", parent=cab)
-    connector = plant.item("conn-x1", designation="X1", unit=board)
-    x1 = plant.function(connector, "x1")
-    plant.boundary(board, x1)
+    cab, board, x1 = _board_x1(plant)
     plant.item("cab-item", designation="C1", unit=cab)
-    request = _request(plant, "dev-k1", board, to=plant.port(x1, "1"))
-    model, (finding,) = allocate_plc(plant.model())
-    assert finding.code == PLC_REQUEST_UNSERVABLE
-    assert request in finding.subjects
-    assert _bound(model) == {}
+    _unservable(plant, _request(plant, "dev-k1", board, to=plant.port(x1, "1")))
 
 
 def test_an_exhausted_serving_unit_stays_unservable_in_a_standalone_build() -> None:
@@ -168,11 +174,7 @@ def test_an_exhausted_serving_unit_stays_unservable_in_a_standalone_build() -> N
     `board` is standalone and the request reaches its boundary.
     """
     plant = Plant()
-    cab = plant.unit("cab", name="cab")
-    board = plant.unit("board", name="board", parent=cab)
-    connector = plant.item("conn-x1", designation="X1", unit=board)
-    x1 = plant.function(connector, "x1")
-    plant.boundary(board, x1)
+    _, board, x1 = _board_x1(plant)
     (own,) = _site(plant, Site("rack-b", "mod-b", "B1", 1, board))
     first = _request(plant, "dev-a", board)
     second = _request(plant, "dev-b", board, to=plant.port(x1, "1"))
@@ -187,14 +189,10 @@ def test_a_request_that_is_itself_a_boundary_function_is_not_outside() -> None:
     boundary function of its own unit and is wired to nothing else is unservable.
     """
     plant = Plant()
-    cab = plant.unit("cab", name="cab")
-    board = plant.unit("board", name="board", parent=cab)
+    _, board = _cab_board(plant)
     request = _request(plant, "dev-k1", board)
     plant.boundary(board, request)
-    model, (finding,) = allocate_plc(plant.model())
-    assert finding.code == PLC_REQUEST_UNSERVABLE
-    assert request in finding.subjects
-    assert _bound(model) == {}
+    _unservable(plant, request)
 
 
 def test_the_boundary_check_is_narrow_a_plain_function_is_not_a_boundary() -> None:
@@ -202,14 +200,9 @@ def test_the_boundary_check_is_narrow_a_plain_function_is_not_a_boundary() -> No
     channel anywhere, the request is still unservable.
     """
     plant = Plant()
-    cab = plant.unit("cab", name="cab")
-    board = plant.unit("board", name="board", parent=cab)
+    _, board = _cab_board(plant)
     _, plain_port = _plain(plant, "conn-x1", board)
-    request = _request(plant, "dev-k1", board, to=plain_port)
-    model, (finding,) = allocate_plc(plant.model())
-    assert finding.code == PLC_REQUEST_UNSERVABLE
-    assert request in finding.subjects
-    assert _bound(model) == {}
+    _unservable(plant, _request(plant, "dev-k1", board, to=plain_port))
 
 
 def test_a_request_wired_to_nothing_in_a_unit_with_no_channel_is_unservable() -> None:
@@ -217,15 +210,8 @@ def test_a_request_wired_to_nothing_in_a_unit_with_no_channel_is_unservable() ->
     boundary in the unit: one PLC_REQUEST_UNSERVABLE, no binding.
     """
     plant = Plant()
-    cab = plant.unit("cab", name="cab")
-    board = plant.unit("board", name="board", parent=cab)
-    connector = plant.item("conn-x1", designation="X1", unit=board)
-    plant.boundary(board, plant.function(connector, "x1"))
-    request = _request(plant, "dev-k1", board)
-    model, (finding,) = allocate_plc(plant.model())
-    assert finding.code == PLC_REQUEST_UNSERVABLE
-    assert request in finding.subjects
-    assert _bound(model) == {}
+    _, board, _ = _board_x1(plant)
+    _unservable(plant, _request(plant, "dev-k1", board))
 
 
 def test_the_boundary_check_is_narrow_a_sibling_units_boundary_is_not_on_the_chain() -> None:
@@ -239,11 +225,7 @@ def test_the_boundary_check_is_narrow_a_sibling_units_boundary_is_not_on_the_cha
     connector = plant.item("conn-y1", designation="Y1", unit=board_y)
     y1 = plant.function(connector, "y1")
     plant.boundary(board_y, y1)
-    request = _request(plant, "dev-k1", board_x, to=plant.port(y1, "1"))
-    model, (finding,) = allocate_plc(plant.model())
-    assert finding.code == PLC_REQUEST_UNSERVABLE
-    assert request in finding.subjects
-    assert _bound(model) == {}
+    _unservable(plant, _request(plant, "dev-k1", board_x, to=plant.port(y1, "1")))
 
 
 def test_a_do_request_wired_to_a_di_channel_binds_there_and_the_signal_check_reports_it() -> None:

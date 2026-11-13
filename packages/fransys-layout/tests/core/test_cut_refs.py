@@ -246,14 +246,12 @@ def test_the_split_keeps_every_field_of_the_fan_and_block_it_rewrites() -> None:
         marker=MARKER,
     )
     flow = build_flow(prob, options)
-    (tail,) = flow.fans
-    flow = replace(flow, fans=(replace(tail, crossed=(("w1", (1, 0)),)),))
+    (_tail,) = flow.fans
     lists = order_blocks(assign_blocks(flow, prob, options), flow, options)
     lists = tuple(replace(bl, blocks=tuple(replace(b, fixed_order=True) for b in bl.blocks)) for bl in lists)
     result = cut_pages(lists, flow, prob, options)
     (moved,) = result.flow.fans
     assert (moved.drivers[0].column, moved.drivers[0].cell) == ("c:k00#b", 11 - 7)
-    assert moved.crossed == (("w1", (1, 0)),)
     before = next(b for bl in lists for b in bl.blocks if "c:k00" in b.columns)
     after = next(b for bl in result.blocks for b in bl.blocks if "c:k00#a" in b.columns)
     assert after.fixed_order

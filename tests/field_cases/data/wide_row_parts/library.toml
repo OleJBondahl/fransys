@@ -1,0 +1,4 @@
+schema = 2
+name = "wide-row-parts"
+version = "0.1.0"
+description = "Invented parts for the wide-row field case."

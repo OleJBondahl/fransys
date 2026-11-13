@@ -16,6 +16,8 @@ from fransys_model.derive.drawing_text import marker_text, reference_slot
 from fransys_model.kernel import render_id
 
 from .drawn_identity import net_text
+from .placement_markers import LONE
+from .placement_views import marker_boxes
 from .ref_tints import REF_TINTS
 
 if TYPE_CHECKING:
@@ -34,14 +36,19 @@ def drawn_marker(model: Model, record: LinkMarker, library: Library) -> DrawnSym
     along = side in MARKER_TURN_FACING  # over or under a pin: the turned symbol, text along the wire
     key = MARKER_TURNED if along else marker_symbol(record.key[3])
     orient = cast("Orientation", (MARKER_TURN_FACING if along else MARKER_FACING)[side])
-    stretch, body = marker_rule(library_symbol(library, key), orient, (record.width, record.height), library, along=along)
+    text = marker_text(model, record)
+    size = (record.width, record.height)  # the reserve; a stub or copy is already fitted by `stub_fit`
+    if record.key[3] not in LONE:
+        own = marker_boxes(library, text)[cast("Orientation", MARKER_FACING[side])]  # keyed by the record's core orientation
+        size = (own.w, own.h)
+    stretch, body = marker_rule(library_symbol(library, key), orient, size, library, along=along)
     return DrawnSymbol(
         id=render_id(record.id),
         key=key,
         x=record.x,
         y=record.y,
         orient=orient,
-        slots=((MARKER_SLOT, marker_text(model, record)),),
+        slots=((MARKER_SLOT, text),),
         stretch=stretch,
         tint=None if slot is None else REF_TINTS[slot],
         outline=Box(record.x + body.x, record.y + body.y, body.w, body.h),

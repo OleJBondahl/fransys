@@ -125,6 +125,10 @@
     {
       "reason": "an isolating transformer: no conductive path joins the primary to the secondary, so no path can be the through path",
       "rule": "through-missing"
+    },
+    {
+      "reason": "the name boxes are 3.5 M wide so a name reads outward from its pin; the text boxes do not rotate, so in a turned orientation a box crosses the outline; the box is drawn upright",
+      "rule": "slot-overlap-body"
     }
   ],
   "name": "Transformer with two windings, boxed",
@@ -210,14 +214,14 @@
   "slots": {
     "marking.p1": {
       "at": [
-        -0.75,
+        -1.25,
         -2.75
       ],
       "box": [
-        1.5,
+        3.5,
         1
       ],
-      "side": "E"
+      "side": "W"
     },
     "marking.p2": {
       "at": [
@@ -225,21 +229,21 @@
         -2.75
       ],
       "box": [
-        1.5,
+        3.5,
         1
       ],
       "side": "E"
     },
     "marking.s1": {
       "at": [
-        -0.75,
+        -1.25,
         2.75
       ],
       "box": [
-        1.5,
+        3.5,
         1
       ],
-      "side": "E"
+      "side": "W"
     },
     "marking.s2": {
       "at": [
@@ -247,7 +251,7 @@
         2.75
       ],
       "box": [
-        1.5,
+        3.5,
         1
       ],
       "side": "E"

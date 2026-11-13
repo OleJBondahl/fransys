@@ -18,6 +18,7 @@ from .designation_label import designation_holder, takes_parents_designation
 from .external import external
 from .facts.house_settings import revision_form_of
 from .facts.revision_label import revision_label
+from .facts.strips import strip_of
 from .facts.subjects import subject_kind
 from .indexes import Indexes, build_indexes
 from .instance_tag import instance_name, unit_tag
@@ -140,7 +141,7 @@ def _bom_line_key(line: BomLine, order: ReleaseOrder) -> tuple[str, ReleaseOrder
     return (line.mpn, order, line.part is None, line.part)
 
 
-def _part_designations(model: Model, ordered: list[Id[Item]], unit: Id[Unit] | None) -> tuple[str, ...]:
+def _holder_designations(model: Model, ordered: list[Id[Item]], unit: Id[Unit] | None) -> tuple[str, ...]:
     """`ordered`'s printed designations; a holder and its accessories give one text, in any order.
 
     The key is `designation_holder` (itself when no accessory); a key already printed is skipped.
@@ -162,6 +163,16 @@ def _part_designations(model: Model, ordered: list[Id[Item]], unit: Id[Unit] | N
         printed.add(key)
         texts.append(printed_designation(model, item, unit=unit))
     return tuple(texts)
+
+
+def _part_designations(model: Model, ordered: list[Id[Item]], unit: Id[Unit] | None) -> tuple[str, ...]:
+    """`ordered`'s BOM designations: each terminal's strip once (model-0454), then the others'.
+
+    Terminals sort first (`bom_sort_key`), so the strips lead as the items did.
+    """
+    strips = dict.fromkeys(s for i in ordered if (s := strip_of(model, i)) is not None)
+    others = [i for i in ordered if strip_of(model, i) is None]
+    return (*(printed_designation(model, s, unit=unit) for s in strips), *_holder_designations(model, others, unit))
 
 
 def _contact_lines(model: Model, covered: frozenset[Id[Item]] | None, unit: Id[Unit] | None) -> list[tuple[ReleaseOrder, BomLine]]:

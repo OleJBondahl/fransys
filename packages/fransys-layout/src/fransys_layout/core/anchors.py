@@ -13,7 +13,7 @@ from types import MappingProxyType
 from typing import TYPE_CHECKING
 
 from .clearance import Keep, clear
-from .geometry import inset, marker_drawn_box, overlaps, shift, union
+from .geometry import marker_drawn_box, overlaps, shift, union
 from .hang_levels import raised
 from .hangings import hung_keeps
 from .outline import outline_keeps
@@ -76,11 +76,6 @@ def page_keeps(
     return (*_marker_keeps(page.page, markers, options), *_anchor_keeps(page.page, anchored, net_of), *hung_keeps(page.hangings))
 
 
-def _meets(box: Box, marks: Sequence[Keep]) -> bool:
-    """Whether `box` shares interior area with a keep (gap -1: touching is clear)."""
-    return bool(clear(box, marks, {}, gap=-1))
-
-
 def _fit(
     poses: Sequence[Pose],
     pin: tuple[int, int],
@@ -97,7 +92,7 @@ def _fit(
     for pose in poses:
         box = shift(pose.outline, *pin)
         on_pin = any(box.x <= x <= box.x + box.w and box.y <= y <= box.y + box.h for x, y in pins)
-        if _inside(box, frame) and not on_pin and not any(overlaps(box, b) for b in stops) and not _meets(box, taken):
+        if _inside(box, frame) and not on_pin and not any(overlaps(box, b) for b in stops) and not clear(box, taken, {}, edge="open"):
             return pose
     return None
 
@@ -258,10 +253,10 @@ def anchor_pages(
 
 
 def anchor_keeps(placement: Placement, problem: PlacementProblem, options: Options) -> dict[int, list[Keep]]:
-    """Each page's anchor outlines as keeps for the markers to clear (R1786); inset by one so that touching is clear, as in `_meets`."""
+    """Each page's anchor outlines as keeps for the markers to clear (R1786)."""
     net_of = {ref: n.id for n in problem.nets for ref in n.pins}
     anchored, _ = anchor_pages(placement, problem, options)
-    return {pg.page: [k._replace(box=inset(k.box)) for k in _anchor_keeps(pg.page, anchored, net_of)] for pg in placement.pages}
+    return {pg.page: list(_anchor_keeps(pg.page, anchored, net_of)) for pg in placement.pages}
 
 
 def _on_trunk(page: PagePlacement, at: tuple[int, int], step: int) -> bool:
@@ -293,7 +288,7 @@ def anchor_misses(
         marks = _marker_keeps(pg.page, markers, options)
         for item in mine:
             hit = _hits(item, pg, mine, frame, options.wiring_grid)
-            hit += ["marker"] * _meets(item.outline, marks)
+            hit += ["marker"] * bool(clear(item.outline, marks, {}, edge="open"))
             if hit:
                 out.append((item, hit))
     return tuple(out)

@@ -17,10 +17,10 @@ from fransys_model.kernel import (
     freeze,
 )
 from fransys_model.layout import PoleGroup
+from fransys_model.vocab import Aspect, ConductorKind, PortBoundary
 from fransys_model.vocab.aspects import AspectNode
 from fransys_model.vocab.connectivity import Conductor
 from fransys_model.vocab.core import Port
-from fransys_model.vocab.enums import Aspect, ConductorKind, PortBoundary
 
 _LOW_PORT: Id[Port] = Id[Port](kind="port", value="1" * 32)
 _HIGH_PORT: Id[Port] = Id[Port](kind="port", value="2" * 32)

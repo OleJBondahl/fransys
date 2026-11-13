@@ -4,7 +4,6 @@ from collections import defaultdict
 lazy from collections.abc import Mapping
 
 from fransys_model.derive.marker_targets import target_lines, target_order
-from fransys_model.derive.order import port_designation_key
 from fransys_model.derive.page_reference_text import position_at
 from fransys_model.derive.reference_heads import heads_group
 from fransys_model.derive.stub_text import off_stub_text
@@ -20,8 +19,7 @@ from fransys_model.layout import (
 )
 from fransys_model.vocab.core import Port
 
-# A marker's pin key; a reading key.
-type _PinKey = tuple[Id[Page], int, int, int, int, int, bool]
+# A reading key.
 type _ReadingKey = tuple[int, int, str, Id[Port]]
 
 
@@ -37,29 +35,40 @@ def marker_text(model: Model, marker: LinkMarker) -> str:
     its branches, a split or apart pair (two mutual branches, no reference) and a reference
     merged with an off stub (named by at least one branch) are the four shapes
     `_reference_group` covers. A pure off stub that no branch names keeps its own text,
-    unprefixed and unnumbered. The lead of markers that share one box at a pin (`_boxmates_of`)
-    returns every one's own text, joined in natural designation order. A text layout broke in two
-    (`wrap_at`) is split after that many words: the space becomes the line break.
+    unprefixed and unnumbered.
     """
-    group = _boxmates_of(model).get(marker.id)
-    text = _own_text(model, marker) if group is None else "\n".join(_own_text(model, one) for one in group)
-    if marker.wrap_at is None:
-        return text
-    words = text.split(" ")
-    return " ".join(words[: marker.wrap_at]) + "\n" + " ".join(words[marker.wrap_at :])
+    return "\n".join(line for line, _ in _own_text(model, marker))
 
 
-def _own_text(model: Model, marker: LinkMarker) -> str:
-    """`marker_text` for one marker alone: its reference lines, or its off stub's text."""
+def marker_line_targets(model: Model, marker: LinkMarker) -> tuple[LinkMarker | None, ...]:
+    """The end each printed line of `marker`'s box names, `None` for a line that names none (a stub's own text).
+
+    One entry per line of `marker_text`. Read
+    from the lines `marker_text` prints, so a line and its target cannot drift (PDF-LINKS R2).
+    """
+    return tuple(end for _, end in _own_text(model, marker))
+
+
+def _own_text(model: Model, marker: LinkMarker) -> list[tuple[str, LinkMarker | None]]:
+    """`marker` alone: each reference line with its first end, or its off stub's text with none."""
     markers = layout_of(model, LinkMarker)
     group = _reference_group(marker, markers, _branches_of(model))
     if group is None:
-        return off_stub_text(model, marker)
+        return _stub_lines(model, marker)
     ends = sorted(group, key=lambda one: _reading_key(model, layout_of(model, Page), one))
-    positions = [_marker_position(model, marker, one) for one in target_order(model, marker, ends)]
-    lines = target_lines(reference_number(model, marker), positions)
+    first: dict[str, LinkMarker] = {}
+    positions = []
+    for end in target_order(model, marker, ends):
+        positions.append(_marker_position(model, marker, end))
+        first.setdefault(positions[-1], end)
+    lines: list[tuple[str, LinkMarker | None]] = list(zip(target_lines(reference_number(model, marker), positions), first.values(), strict=False))
     # the merged stub's own text, last, unprefixed
-    return "\n".join([*lines, off_stub_text(model, marker)] if marker.star is StarKind.OFF else lines)
+    return [*lines, *_stub_lines(model, marker)] if marker.star is StarKind.OFF else lines
+
+
+def _stub_lines(model: Model, marker: LinkMarker) -> list[tuple[str, LinkMarker | None]]:
+    """The lines of `marker`'s off stub text, each naming no end."""
+    return [(line, None) for line in off_stub_text(model, marker).split("\n")]
 
 
 def _reference_group(
@@ -97,24 +106,6 @@ def _branches_of(model: Model) -> Mapping[Id[LinkMarker], tuple[LinkMarker, ...]
         if one.star is StarKind.BRANCH:
             found[one.partner].append(one)
     return {hub: tuple(ones) for hub, ones in found.items()}
-
-
-@digest_cached(DIGEST_CACHE_SIZE)
-def _boxmates_of(model: Model) -> Mapping[Id[LinkMarker], tuple[LinkMarker, ...]]:
-    """Each lead that shares its box with mates, to the lead and its mates by designation.
-
-    Markers with equal page, `x`, `y`, `stub_extra`, `width`, `height`, `vertical` stand at one pin.
-    Several leads at one key are not one box and get no entry. Built once per model digest.
-    """
-    keyed: dict[_PinKey, list[LinkMarker]] = defaultdict(list)
-    for one in layout_of(model, LinkMarker).values():
-        keyed[one.page, one.x, one.y, one.stub_extra, one.width, one.height, one.vertical].append(one)
-    found: dict[Id[LinkMarker], tuple[LinkMarker, ...]] = {}
-    for ones in keyed.values():
-        leads = [one for one in ones if one.lead]
-        if len(leads) == 1 and len(ones) > 1:
-            found[leads[0].id] = tuple(sorted(ones, key=lambda one: (port_designation_key(model, one.port), one.id)))
-    return found
 
 
 @digest_cached(DIGEST_CACHE_SIZE)
@@ -223,18 +214,16 @@ def reference_targets(model: Model) -> Mapping[tuple[Id[Page], tuple[int, str]],
     """Each reference marker's stored `(column, row letter)` on its page, to the candidate ends standing there.
 
     A candidate end is the marker's id, its `#n`, the ports of its whole reference group and the text its box
-    draws (a mate of a box draws its lead's joined text), so a reader who finds a drawn marker by page, cell
+    draws, so a reader who finds a drawn marker by page, cell
     and text knows which markers are the same reference.
     Page numbers restart per drawing set, so the key is the page's id, never a printed `#n`.
     """
     markers, branches = layout_of(model, LinkMarker), _branches_of(model)
     found: dict[tuple[Id[Page], tuple[int, str]], list[tuple[Id[LinkMarker], int, frozenset[Id[Port]], str]]] = defaultdict(list)
-    lead_of = {mate.id: lead for lead, mates in _boxmates_of(model).items() for mate in mates}
     for marker in markers.values():
         if (group := _reference_group(marker, markers, branches)) is not None:
-            drawn = markers[lead_of.get(marker.id, marker.id)]
             found[marker.page, marker_cell(model, marker)].append(
-                (marker.id, reference_number(model, marker), frozenset(one.port for one in group), marker_text(model, drawn))
+                (marker.id, reference_number(model, marker), frozenset(one.port for one in group), marker_text(model, marker))
             )
     return {key: tuple(ends) for key, ends in found.items()}
 

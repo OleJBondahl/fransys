@@ -10,7 +10,7 @@ from fransys_model.derive.lookups import effective_placement
 from fransys_model.derive.texts.context import PrintContext
 from fransys_model.derive.texts.designation_render import node_text
 from fransys_model.derive.unit_nodes import end_context, stub_place
-from fransys_model.vocab.enums import Aspect
+from fransys_model.refdef import Aspect
 from fransys_model.vocab.tables import functions, items, ports
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.aspects import AspectNode

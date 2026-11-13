@@ -15,7 +15,7 @@ statements = 15
 surface_docstring_lines = 15
 
 [statements]
-"packages/fransys-el/src/fransys_el/drawn_netlist.py::drawn_netlist" = 16
+"packages/fransys-el/src/fransys_el/drawn_references.py::join_references" = 17
 "packages/fransys-layout/src/fransys_layout/core/text_markers.py::placed_marks" = 16
 "packages/fransys-layout/src/fransys_layout/core/widen.py::widen" = 22
 
@@ -26,7 +26,7 @@ surface_docstring_lines = 15
 [module_code_lines]
 "packages/fransys-author/src/fransys_author/handles.py" = 304
 "packages/fransys-layout/src/fransys_layout/core/widen.py" = 312
-"packages/fransys/src/fransys/derive.py" = 323
+"packages/fransys/src/fransys/derive.py" = 325
 
 [surface_types]
 "packages/electrical-symbols/src/electrical_symbols/box_ports.py::default_order" = 1
@@ -57,6 +57,20 @@ surface_docstring_lines = 15
 "packages/electrical-symbols/CLAUDE.md" = 5
 "packages/fransys-layout/CLAUDE.md" = 2
 "packages/fransys-model/CLAUDE.md" = 3
+
+[authoring_keywords_unused]  # an authoring keyword no field case and no corpus build passes by name; the list only falls (internal-0004, decision 0488)
+"a" = "CORPUS-REFRESH-FIELDCASE"
+"approved" = "CORPUS-REFRESH-FIELDCASE"
+"b" = "CORPUS-REFRESH-FIELDCASE"
+"checked" = "CORPUS-REFRESH-FIELDCASE"
+"definition" = "CORPUS-REFRESH-FIELDCASE"
+"installed" = "CORPUS-REFRESH-FIELDCASE"
+"joins" = "CORPUS-REFRESH-FIELDCASE"
+"label" = "CORPUS-REFRESH-FIELDCASE"
+"priority" = "CORPUS-REFRESH-FIELDCASE"
+"signal" = "CORPUS-REFRESH-FIELDCASE"
+"source" = "CORPUS-REFRESH-FIELDCASE"
+"which" = "CORPUS-REFRESH-FIELDCASE"
 
 [fransys_defects]
 "packages/fransys-layout/tests/layout_cabinet.py::build_cabinet" = 0

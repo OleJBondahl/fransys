@@ -112,6 +112,7 @@ copied from the standard.
 | `sheet-strip-right` | Sheet strip cell (right) | element |
 | `sheet-strip-top` | Sheet strip cell (top) | element |
 | `terminal` | Terminal | symbol |
+| `terminal-fuse` | Terminal with fuse | symbol |
 | `thermal-overload` | Thermal overload relay, thermally operated release | symbol |
 | `title-block` | Title block | element |
 | `title-block-logo` | Title block logo cell | element |

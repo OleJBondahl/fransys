@@ -523,42 +523,49 @@
    "instances": {
     "ship": {
      "P": {
-      "attached_off_pin": 23,
-      "head_off_legs": 9,
-      "junction_off_line": 18,
-      "loose": 300,
-      "pair_cut": 124,
-      "row_broken": 2
+      "attached_off_pin": 50,
+      "head_off_legs": 20,
+      "junction_off_line": 10,
+      "loose": 2,
+      "pair_cut": 51,
+      "row_broken": 12
      },
-     "pages": 70,
-     "references": {},
-     "symbols": 414,
+     "errors": {
+      "CONNECTION_NOT_DRAWN": 1,
+      "DANGLING_WIRE_END": 1
+     },
+     "pages": 11,
+     "references": {
+      "stub": 109,
+      "tag_pair": 86
+     },
+     "symbols": 281,
      "wiring": {
-      "bends": 120,
-      "crossings": 57,
-      "detour_g": 3968,
-      "excess_bends": 100,
-      "length_g": 30416
+      "bends": 278,
+      "crossings": 222,
+      "detour_g": 13200,
+      "excess_bends": 150,
+      "length_g": 98065
      }
     }
    },
-   "sha": "5317054a9",
+   "sha": "50f48450b",
    "totals": {
-    "P": 476,
-    "attached_off_pin": 23,
-    "bends": 120,
-    "crossings": 57,
-    "detour_g": 3968,
-    "excess_bends": 100,
-    "head_off_legs": 9,
-    "junction_off_line": 18,
-    "length_g": 30416,
-    "loose": 300,
-    "pages": 70,
-    "pair_cut": 124,
-    "references": 0,
-    "row_broken": 2,
-    "symbols": 414
+    "P": 145,
+    "attached_off_pin": 50,
+    "bends": 278,
+    "crossings": 222,
+    "detour_g": 13200,
+    "excess_bends": 150,
+    "head_off_legs": 20,
+    "junction_off_line": 10,
+    "length_g": 98065,
+    "loose": 2,
+    "pages": 11,
+    "pair_cut": 51,
+    "references": 195,
+    "row_broken": 12,
+    "symbols": 281
    }
   },
   "standard": {

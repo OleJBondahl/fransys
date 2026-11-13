@@ -11,7 +11,7 @@ from typing import Any, cast
 from fransys_kernel import render_id
 from fransys_model.derive.facts.children import parent_item
 from fransys_model.derive.facts.item_predicates import is_cable
-from fransys_model.derive.facts.units import is_harness, item_chain, unit_own_roots
+from fransys_model.derive.facts.units import is_harness, item_root, unit_own_roots
 from fransys_model.kernel import Id, Model, value
 from fransys_model.layout import sheet_for
 from fransys_model.vocab.enums import PageKind
@@ -119,7 +119,7 @@ def box_of(model: Model, landed: Id[Item], unit: Id[Unit] | None) -> BoxKey | No
     A unit-held item climbs `unit_chain`, a unit-less one its `parent` chain. `None` when `landed`
     lies outside the reading or under a cable or harness.
     """
-    root = tuple(item_chain(model, landed))[-1]
+    root = item_root(model, landed)
     if is_cable(model, root) or is_harness(model, root):
         return None
     owner = items(model)[landed].unit

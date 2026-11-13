@@ -43,7 +43,7 @@ def draws_as_line(model: Model, item: Id[Item]) -> bool:
     """Whether `item`, a cable or a harness, draws as a harness line.
 
     True when its line carries two or more conductors, cores and single wires together; a cable
-    on a harness answers for its harness. Layout, `connector_at_line_end` and `off_stub_text`
+    on a harness answers for its harness. Layout and `off_stub_text`
     read it and never count again. Any other item, or an id that is no item, gives `False`.
     """
     if item not in items(model):

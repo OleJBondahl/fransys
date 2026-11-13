@@ -29,6 +29,7 @@ class Facts(NamedTuple):
     gender: str | None
     operated_by: str | None
     port_shape: str = "other"
+    link: str = "none"
 
 
 def port_shape(names: Collection[str]) -> str:
@@ -93,6 +94,7 @@ TABLE: tuple[Row, ...] = (
     _kind("plc-channel", "plc_channel"),
     _kind("make-contact", "switch"),
     # The part-less terminal names its outside port `external`; the symbol's is `s`.
+    Row("terminal-fuse", (("kind", "terminal"), ("link", "protective")), frozendict({"internal": "n", "external": "s"})),
     Row("terminal", (("kind", "terminal"),), frozendict({"external": "s"})),
     # A motor (Ruling 68 A1); the symbol's ports are lower case.
     Row(
@@ -111,6 +113,7 @@ def _subject(facts: Facts) -> dict[str, str | None]:
         "gender": facts.gender or "none",
         "operated_by": facts.operated_by or "none",
         "port_shape": facts.port_shape,
+        "link": facts.link,
     }
 
 

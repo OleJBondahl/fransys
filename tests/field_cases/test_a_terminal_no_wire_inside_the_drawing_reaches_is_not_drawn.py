@@ -105,23 +105,23 @@ def test_a_nested_units_strip_only_the_parent_wires_is_not_drawn_on_its_own_page
     written: _Written,
 ) -> None:
     inner = written.texts["demo-idle-inner"]
-    assert {"-X1", "SIG:1"} <= set(inner)  # drawn with its cut's reference (R937): the run tag once, the terminal its point
-    assert {"-X2", "A:1"} <= set(inner)
-    assert {"-U2-X1", "SIG:1"} <= set(written.texts["demo-idle-outer"])
+    assert "-X1:SIG:1" in inner  # drawn with its cut's reference (R937): a terminal alone prints its full tag (STRIP-TAG-ONCE)
+    assert "-X2:A:1" in inner
+    assert "-U2-X1:SIG:1" in written.texts["demo-idle-outer"]
 
 
 def test_a_top_level_units_terminal_wired_from_outside_stays_with_its_stub(
     written: _Written,
 ) -> None:
     texts = written.texts["demo-idle-box"]
-    assert {"-X4", "SIG:1"} <= set(texts)
+    assert "-X4:SIG:1" in texts
     assert any("H9" in t for t in texts)
 
 
 def test_a_bridged_terminal_is_no_wire(written: _Written) -> None:
     texts = written.texts["demo-idle-box"]
-    assert {"-X5", "B:1"} <= set(texts)
-    assert not {"B:2", "B:3"} & set(texts)
+    assert "-X5:B:1" in texts
+    assert not {"-X5:B:2", "-X5:B:3"} & set(texts)
 
 
 def test_each_terminal_table_lists_every_terminal_of_its_strip(written: _Written) -> None:

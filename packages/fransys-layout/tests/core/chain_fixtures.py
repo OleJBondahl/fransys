@@ -28,7 +28,7 @@ def link_box(sid: str, wires: int, *, first: bool = False, last: bool = False) -
         pins=tuple(pins),
         nodes=tuple((p.id,) for p in pins),
         views=views_of(body, body, body, pins, ("R0",)),
-        box=BoxSpec(tuple(p.id for p in pins), 16),
+        box=BoxSpec(tuple(p.id for p in pins), 16, 16),
     )
 
 

@@ -3,7 +3,7 @@
 Split from values.py (layout-0316); frozen plain data, lengths in G.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 lazy from collections.abc import Mapping
 
@@ -54,12 +54,16 @@ class Sym:
     nodes: tuple[tuple[str, ...], ...]
     views: Mapping[Orientation, Turned]
     box: BoxSpec | None = None
+    narrow: Sym | None = None
+    """The layer's second, narrower drawing of this symbol: the core lays it when the first does not fit its row (R2250)."""
     row_group: str | None = None
     band: int | None = None
     item: str | None = None
     child_of: str | None = None
     rank: int | None = None
     wider: tuple[Mapping[str, Size], ...] = ()
+    alone: Mapping[str, Size] = field(default_factory=dict)
+    """`labels` again for the full-form tag a terminal prints when it stands alone in its run (STRIP-TAG-ONCE); empty for any other symbol."""
 
     @property
     def r0(self) -> Turned:

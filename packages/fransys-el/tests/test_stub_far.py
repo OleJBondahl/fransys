@@ -11,7 +11,6 @@ import pytest
 from conventions_fixtures import house
 from fransys_el import build, lay_out_drawn, symbol_kit
 from fransys_el.placement_sets import drawing_scopes
-from fransys_el.write_stubs import stub_ends
 from kit_instances import INSTANCES
 
 from electrical_symbols import LIBRARY
@@ -85,8 +84,8 @@ def test_a_stub_names_the_far_end_it_is_given(w07) -> None:
     assert many
     for port in many:
         (_, first), *_, (_, last) = far_pins(w07, [port])
-        assert (stub_ends(w07, [port]) or ((None, None),))[0][1] == first
-        assert (stub_ends(w07, [port], [last]) or ((None, None),))[0][1] == last
+        assert (stub_far(w07, [port]) or ((None, None),))[0][1] == first
+        assert (stub_far(w07, [port], [last]) or ((None, None),))[0][1] == last
 
 
 def test_a_pin_no_conductor_reaches_has_no_far_end(p02) -> None:

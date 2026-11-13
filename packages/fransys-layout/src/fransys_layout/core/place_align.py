@@ -16,10 +16,11 @@ from .outputs import StripRun
 from .pack import cell_node
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Mapping, Sequence
     from collections.abc import Set as AbstractSet
 
     from .flow_values import Cell
+    from .outputs import Placed
     from .place_env import PageEnv
     from .values import PinRef
 
@@ -89,14 +90,27 @@ def _parts(env: PageEnv, dropped: AbstractSet[str | None]) -> list[tuple[str, li
     return parts
 
 
-def strip_runs(env: PageEnv, dropped: AbstractSet[str | None]) -> tuple[StripRun, ...]:
-    """The runs of the strip terminals, each in one run, its members in column order, left to right; `dropped` are the Aligns lost."""
+def _beside(ids: Sequence[str], placed: Mapping[str, Placed]) -> list[list[str]]:
+    """`ids` (left to right) cut where the gap to the previous one is over one pitch, its footprint width (STRIP-TAG-ONCE)."""
+    cuts: list[list[str]] = []
+    for i in ids:
+        prev = placed[cuts[-1][-1]].footprint if cuts else None
+        if prev is not None and placed[i].footprint.x <= prev.x + 2 * prev.w:
+            cuts[-1].append(i)
+        else:
+            cuts.append([i])
+    return cuts
+
+
+def strip_runs(env: PageEnv, dropped: AbstractSet[str | None], placed: Mapping[str, Placed]) -> tuple[StripRun, ...]:
+    """The runs of the strip terminals, each in one run, its members left to right and side by side; `dropped` are the Aligns lost."""
     runs = []
-    for g, ids in _parts(env, dropped):
-        if (key := f"{g} run at {ids[0]}") in env.syms:
-            msg = f"strip {g}: the run key {key!r} is also a symbol id; ids share one space"
-            raise CoreError(msg)
-        runs.append(StripRun(g, tuple(ids), key))
+    for g, whole in _parts(env, dropped):
+        for ids in _beside(whole, placed):
+            if (key := f"{g} run at {ids[0]}") in env.syms:
+                msg = f"strip {g}: the run key {key!r} is also a symbol id; ids share one space"
+                raise CoreError(msg)
+            runs.append(StripRun(g, tuple(ids), key))
     return tuple(runs)
 
 

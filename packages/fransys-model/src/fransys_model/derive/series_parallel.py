@@ -9,6 +9,8 @@ lazy from collections.abc import Mapping, Sequence
 from fransys_model.derive.facts.drawn_closure import drawn_physical_nets
 from fransys_model.derive.order import series_part_key
 from fransys_model.derive.rows_series_parallel import SeriesParallel, SeriesRow
+from fransys_model.derive.series_parallel_cut import cut
+from fransys_model.derive.series_parallel_cut import root as _root
 from fransys_model.derive.series_parallel_reduce import SINK, SOURCE, reduce_region
 from fransys_model.derive.stands import stands
 from fransys_model.layout import Side
@@ -39,8 +41,9 @@ def series_parallel(model: Model, ends: Ends) -> SeriesParallel:
     hubs = _hubs(model, ends, nets)
     regions: list[SeriesRow] = []
     bridges: list[tuple[str, ...]] = []
-    for group in _regions(_raw(*_nodes(ends, nets, hubs))):
-        legs = _legs(group)
+    node, stops = _nodes(ends, nets, hubs)
+    for group in (part for found in _regions(_raw(node, stops), stops) for part in cut(found, stops) if len(part) > 1):
+        legs = _legs(group, stops)
         part = reduce_region([(u, v, leaf) for leaf, u, v in legs])
         if part is None:
             bridges.append(tuple(leaf for leaf, _, _ in legs))
@@ -69,12 +72,6 @@ def _hubs(model: Model, ends: Ends, nets: Sequence[Net]) -> frozenset[str]:
         for port in net:
             groups.setdefault(ends[port][0], set()).add(table[port].function)
     return frozenset(leaf for leaf, found in groups.items() if len(found) > _HUB)
-
-
-def _root[T](parent: dict[T, T], x: T) -> T:
-    while parent.get(x, x) != x:
-        x = parent[x]
-    return x
 
 
 def _nodes(ends: Ends, nets: Sequence[Net], hubs: frozenset[str]) -> tuple[dict[End, int], set[int]]:
@@ -107,38 +104,38 @@ def _flows(end: End, hubs: frozenset[str]) -> bool:
 
 
 def _raw(node: Mapping[End, int], stops: set[int]) -> list[Raw]:
-    """Each symbol from its input node to its output node; an end on a hub or none is None."""
+    """Each symbol from its input node to its output node; an end on a hub keeps its node, one on no wire is None."""
     raw: list[Raw] = []
     for leaf in sorted({end[0] for end in node}, key=series_part_key):
         u, v = node.get((leaf, Side.N)), node.get((leaf, Side.S))
-        if u != v:
-            raw.append((leaf, None if u in stops else u, None if v in stops else v))
+        if (None if u in stops else u) != (None if v in stops else v):
+            raw.append((leaf, u, v))
     return raw
 
 
-def _regions(raw: Sequence[Raw]) -> list[list[Raw]]:
+def _regions(raw: Sequence[Raw], stops: set[int]) -> list[list[Raw]]:
     """The symbols joined by a node, a region of two symbols or more each, by first symbol."""
     parent: dict[int, int] = {}
     for _, u, v in raw:
-        if u is not None and v is not None:
+        if u is not None and v is not None and u not in stops and v not in stops:
             parent[_root(parent, u)] = _root(parent, v)
     groups: dict[object, list[Raw]] = {}
     for leaf, u, v in raw:
-        end = u if u is not None else v
+        end = u if u is not None and u not in stops else (None if v in stops else v)
         key = leaf if end is None else _root(parent, end)
         groups.setdefault(key, []).append((leaf, u, v))
     return [g for g in groups.values() if len(g) > 1]
 
 
-def _legs(raw: Sequence[Raw]) -> list[Leg]:
-    """Each symbol of one region as an edge; a node no symbol enters or leaves is SOURCE or SINK."""
+def _legs(raw: Sequence[Raw], stops: set[int]) -> list[Leg]:
+    """Each symbol of one region as an edge; a node no symbol enters or leaves, or a hub's, is SOURCE or SINK."""
     into = {v for _, _, v in raw}
     out_of = {u for _, u, _ in raw}
     return [
         (
             leaf,
-            SOURCE if u is None or u not in into else u,
-            SINK if v is None or v not in out_of else v,
+            SOURCE if u is None or u in stops or u not in into else u,
+            SINK if v is None or v in stops or v not in out_of else v,
         )
         for leaf, u, v in raw
     ]

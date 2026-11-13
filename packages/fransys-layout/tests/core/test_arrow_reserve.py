@@ -11,14 +11,19 @@ from dataclasses import replace
 
 import pytest
 from options_fixtures import core_options
+from turn_fixtures import marker_views
 
 from fransys_layout.core import Box, Facts, PinRef, PlacementProblem, Size
-from fransys_layout.core.arrow_reserve import lead_reserve, reserve
-from fransys_layout.core.cut_end_rooms import arrow_ends, arrow_poles, cut_ends
+from fransys_layout.core import arrow_reserve as ar
+from fransys_layout.core.arrow_reserve import lead_reserve, leg_depth, leg_feet, leg_line, leg_lines, leg_pins, leg_rows, leg_unit, reserve
+from fransys_layout.core.band import arrow_box, arrow_hang, trunk_room
+from fransys_layout.core.cut_end_rooms import arrow_ends, arrow_poles, arrow_room, cut_ends
 from fransys_layout.core.errors import CoreError
 from fransys_layout.core.flow_values import Attach, Fan
 from fransys_layout.core.geometry import marker_box_at, overlaps
+from fransys_layout.core.outputs import Trunk
 from fransys_layout.core.place_env import page_envs
+from fransys_layout.core.place_trunk import held_room
 from fransys_layout.core.place_x import place_x, row_specs
 from fransys_layout.core.place_y import _spans
 from fransys_layout.core.values import PagePlan, Ref, RefEnd, RefKind, RowPlan, StandClass
@@ -30,7 +35,6 @@ from .pipeline_fixtures import cut_of
 
 
 def _must(*args):
-    from fransys_layout.core.arrow_reserve import leg_line
 
     line = leg_line(*args)
     assert line is not None
@@ -163,10 +167,6 @@ def test_a_link_fit_box_sets_the_reserve_and_the_two_end_marker_boxes() -> None:
 
     A tag, star or stub keeps `Options.marker` (a stub's own fit is `marker_fit`'s)..
     """
-    from turn_fixtures import marker_views
-
-    from fransys_layout.core import PinRef
-    from fransys_layout.core.geometry import marker_box_at
 
     wide = replace(OPTIONS, link_fit=marker_views(Box(0, -8, 60, 16)))
     assert reserve(1, OPTIONS) == W
@@ -179,9 +179,6 @@ def test_a_link_fit_box_sets_the_reserve_and_the_two_end_marker_boxes() -> None:
 
 def _leg_plant():
     """A fan of three nets whose lanes 0 and 1 end at the cut x 508 and 308; poles 0 and 1 stand legs (ONE-SIDED-PIN)."""
-    from fransys_layout.core.flow_values import Attach
-    from fransys_layout.core.outputs import Trunk
-    from fransys_layout.core.values import PinRef, StandClass
 
     pins = [PinRef("a", "out"), PinRef("b", "out"), PinRef("c", "out")]
     drivers = tuple(Attach("c", 0, 0, p, i, net=f"n{i}") for i, p in enumerate(pins))
@@ -193,7 +190,6 @@ def _leg_plant():
 
 
 def test_the_legs_of_a_fan_are_the_one_sided_pins_that_stand_on_its_page_in_its_row() -> None:
-    from fransys_layout.core.arrow_reserve import leg_pins, leg_rows
 
     fan, _, pins, refs = _leg_plant()
     rows = leg_rows(refs, 1)
@@ -204,8 +200,6 @@ def test_the_legs_of_a_fan_are_the_one_sided_pins_that_stand_on_its_page_in_its_
 
 def _stands(ends: tuple[int, ...]) -> list[int]:
     """The x of every leg's drop of a three-lane fan whose lanes end at `ends`, as the page places them together."""
-    from fransys_layout.core.arrow_reserve import leg_lines, leg_pins, leg_rows
-    from fransys_layout.core.outputs import Trunk
 
     fan, _, _, refs = _leg_plant()
     rows = leg_rows(refs, 1)
@@ -215,7 +209,6 @@ def _stands(ends: tuple[int, ...]) -> list[int]:
 
 
 def test_each_leg_leaves_its_own_lane_and_stands_below_the_bundle_past_one_cut_x() -> None:
-    from fransys_layout.core.arrow_reserve import leg_pins, leg_rows
 
     fan, trunk, _, refs = _leg_plant()
     legs = leg_pins(fan, leg_rows(refs, 1), 0)
@@ -244,9 +237,6 @@ def test_no_two_legs_of_one_trunk_end_share_a_stand_whatever_the_lane_ends() -> 
 
 
 def test_the_leg_of_a_one_lane_bundle_drops_at_the_arrow_one_marker_width_back_from_the_stepped_out_end() -> None:
-    from fransys_layout.core.arrow_reserve import leg_line
-    from fransys_layout.core.outputs import Trunk
-    from fransys_layout.core.values import PinRef
 
     trunk = Trunk("f", 1, 100, 40, 500, 1, 0, ((40, 500),))
     grid = OPTIONS.wiring_grid
@@ -266,7 +256,6 @@ def test_the_leg_of_a_one_lane_bundle_drops_at_the_arrow_one_marker_width_back_f
 
 def test_a_leg_standing_at_or_past_its_trunk_end_starts_at_the_trunk_end() -> None:
     """R1861: a leg never starts inside its own trunk's run, so a stand past the end draws no undotted overlap."""
-    from fransys_layout.core.outputs import Trunk
 
     trunk = Trunk("f", 1, 100, 40, 500, 1, 0, ((40, 500),))
     legs = ((0, PinRef("a", "out")),)
@@ -278,8 +267,6 @@ def test_a_leg_standing_at_or_past_its_trunk_end_starts_at_the_trunk_end() -> No
 
 def test_a_leg_starts_at_its_lanes_end_so_it_draws_no_run_over_a_lane_that_runs_on() -> None:
     """R1679 point 2: a lane that runs past the leg's drop carries the leg; the leg is only the drop, no second run along the lane."""
-    from fransys_layout.core.outputs import Trunk
-    from fransys_layout.core.values import PinRef
 
     legs = ((1, PinRef("a", "out")),)
     short = _must(Trunk("f", 1, 100, 40, 500, 2, 0, ((40, 500), (40, 500 + OPTIONS.wiring_grid))), 0, legs, OPTIONS)
@@ -291,8 +278,6 @@ def test_a_leg_starts_at_its_lanes_end_so_it_draws_no_run_over_a_lane_that_runs_
 
 
 def test_a_leg_steps_out_from_its_slot_until_its_marker_box_hits_no_footprint() -> None:
-    from fransys_layout.core.outputs import Trunk
-    from fransys_layout.core.values import Box, PinRef
 
     trunk = Trunk("f", 1, 100, 40, 500, 1, 0, ((40, 500),))
     legs = ((0, PinRef("a", "out")),)
@@ -305,9 +290,6 @@ def test_a_leg_steps_out_from_its_slot_until_its_marker_box_hits_no_footprint() 
 
 def test_a_leg_clears_the_legs_already_placed_and_the_page_edge_else_has_no_place() -> None:
     """MARKER-FREE-SIDE (L2, L3): a placed leg's marker box and run are obstacles, the marker box stays inside the page, and no clear x is no leg."""
-    from fransys_layout.core.arrow_reserve import leg_line
-    from fransys_layout.core.outputs import Trunk
-    from fransys_layout.core.values import Box, PinRef, Size
 
     trunk = Trunk("f", 1, 100, 40, 500, 1, 0, ((40, 500),))
     legs = ((0, PinRef("a", "out")),)
@@ -325,9 +307,6 @@ def test_a_leg_clears_the_legs_already_placed_and_the_page_edge_else_has_no_plac
 
 def test_a_leg_stands_past_another_fans_trunk_it_would_end_on() -> None:
     """R1299: a sibling trunk below the lane is an obstacle: the leg steps out past it and always reaches its full length."""
-    from fransys_layout.core.arrow_reserve import leg_line
-    from fransys_layout.core.outputs import Trunk
-    from fransys_layout.core.values import PinRef
 
     grid = OPTIONS.wiring_grid
     trunk = Trunk("f", 1, 100, 40, 500, 1, 0, ((40, 500),))
@@ -348,9 +327,6 @@ def test_a_leg_stands_past_another_fans_trunk_it_would_end_on() -> None:
 @pytest.mark.parametrize("ahead", [0, 1, 3])
 def test_a_legs_run_never_lies_along_a_foreign_pin_tip(ahead: int) -> None:
     """ONE-SIDED-PIN (R1816, R1818): a footprint pin tip on the leg's run blocks it (no leg); a collinear placed run too; a crossing is none."""
-    from fransys_layout.core.arrow_reserve import leg_line
-    from fransys_layout.core.outputs import Trunk
-    from fransys_layout.core.values import PinRef
 
     grid = OPTIONS.wiring_grid
     page = Size(4000, 400)
@@ -371,9 +347,6 @@ def test_a_legs_run_never_lies_along_a_foreign_pin_tip(ahead: int) -> None:
 @pytest.mark.timeout(20)
 def test_a_run_blocked_on_a_page_of_no_edge_ends_the_search_with_no_leg() -> None:
     """ONE-SIDED-PIN: a footprint's pin tip on the run blocks every farther stand, so the search ends: no leg, never a loop."""
-    from fransys_layout.core.arrow_reserve import leg_line
-    from fransys_layout.core.outputs import Trunk
-    from fransys_layout.core.values import PinRef
 
     trunk = Trunk("f", 1, 100, 40, 500, 1, 0, ((40, 500),))
     legs = ((0, PinRef("a", "out")),)
@@ -382,10 +355,6 @@ def test_a_run_blocked_on_a_page_of_no_edge_ends_the_search_with_no_leg() -> Non
 
 def test_legs_of_two_fans_that_would_stand_on_one_x_take_two_xs() -> None:
     """ONE-SIDED-PIN: a leg that meets an earlier leg's span steps out past it, so two markers never coincide."""
-    from fransys_layout.core.arrow_reserve import leg_lines
-    from fransys_layout.core.flow_values import Attach
-    from fransys_layout.core.outputs import Trunk
-    from fransys_layout.core.values import PinRef
 
     grid = OPTIONS.wiring_grid
     pins = [PinRef("a", "in"), PinRef("b", "in")]
@@ -398,10 +367,6 @@ def test_legs_of_two_fans_that_would_stand_on_one_x_take_two_xs() -> None:
 
 def test_a_leg_never_drops_into_another_fans_arrow_box_at_its_trunk_end() -> None:
     """R1381: an arrowed trunk's end holds its arrow's box; another fan's leg run and drop stand clear of it."""
-    from fransys_layout.core.arrow_reserve import leg_lines
-    from fransys_layout.core.flow_values import Attach
-    from fransys_layout.core.outputs import Trunk
-    from fransys_layout.core.values import PinRef
 
     pin = PinRef("a", "in")
     fans = {"f0": Fan("f0", ("n0",), (Attach("c", 0, 0, pin, 0, net="n0"),), (), "H", 1, "S")}
@@ -421,10 +386,6 @@ def test_a_leg_never_drops_into_another_fans_arrow_box_at_its_trunk_end() -> Non
 @pytest.mark.rule("BUNDLE-LEGS")
 def test_a_leg_never_drops_into_the_arrow_standing_at_the_lane_end_of_a_three_lane_trunk() -> None:
     """R1514: the arrow of a bundle stands at its lane's end, past the trunk's x1; a leg stand clears that box, not one at x1."""
-    from fransys_layout.core.arrow_reserve import leg_lines
-    from fransys_layout.core.flow_values import Attach
-    from fransys_layout.core.outputs import Trunk
-    from fransys_layout.core.values import PinRef
 
     pin = PinRef("a", "in")
     fans = {"f0": Fan("f0", ("n0",), (Attach("c", 0, 0, pin, 0, net="n0"),), (), "H", 1, "S")}
@@ -445,10 +406,6 @@ def test_a_leg_never_drops_into_the_arrow_standing_at_the_lane_end_of_a_three_la
 
 def test_two_pins_on_one_pole_stand_two_legs_at_two_x() -> None:
     """R1235: a leg is one a pin, so two pins of a fan on one pole each take a slot and never share a leg x."""
-    from fransys_layout.core.arrow_reserve import leg_pins, leg_unit
-    from fransys_layout.core.flow_values import Attach
-    from fransys_layout.core.outputs import Trunk
-    from fransys_layout.core.values import PinRef
 
     pins = [PinRef("a", "out"), PinRef("b", "out")]
     fan = Fan("f", ("n0",), tuple(Attach("c", 0, 0, p, 0, net="n0") for p in pins), (), "H", 1, "S")
@@ -461,10 +418,6 @@ def test_two_pins_on_one_pole_stand_two_legs_at_two_x() -> None:
 
 def test_two_legs_of_one_pole_stand_in_the_fans_order_each_past_the_one_before() -> None:
     """R1237: a strict y gives no order between legs of one lane, so the tuple index does: the later leg stands past the earlier."""
-    from fransys_layout.core.arrow_reserve import leg_lines
-    from fransys_layout.core.flow_values import Attach
-    from fransys_layout.core.outputs import Trunk
-    from fransys_layout.core.values import PinRef
 
     pins = [PinRef("a", "out"), PinRef("b", "out")]
     fan = Fan("f", ("n0",), tuple(Attach("c", 0, 0, p, 0, net="n0") for p in pins), (), "H", 1, "S")
@@ -475,10 +428,6 @@ def test_two_legs_of_one_pole_stand_in_the_fans_order_each_past_the_one_before()
 
 def test_a_pin_with_no_clear_place_stands_no_leg_and_one_with_a_place_keeps_it() -> None:
     """MARKER-FREE-SIDE (L3): leg_lines omits a pin whose leg has no x inside the page; the other pin of the fan keeps its leg."""
-    from fransys_layout.core.arrow_reserve import leg_lines
-    from fransys_layout.core.flow_values import Attach
-    from fransys_layout.core.outputs import Trunk
-    from fransys_layout.core.values import PinRef, Size
 
     pins = [PinRef("a", "out"), PinRef("b", "out")]
     fan = Fan("f", ("n0",), tuple(Attach("c", 0, 0, p, 0, net="n0") for p in pins), (), "H", 1, "S")
@@ -494,7 +443,6 @@ def test_a_pin_with_no_clear_place_stands_no_leg_and_one_with_a_place_keeps_it()
 
 def test_a_leg_never_stands_on_a_drop_x_of_its_own_trunk() -> None:
     """MARKER-FREE-SIDE: a lane end x of the trunk is refused as a leg x, and so is one under its marker box."""
-    from fransys_layout.core.arrow_reserve import leg_pins, leg_rows
 
     fan, trunk, _, refs = _leg_plant()
     legs = leg_pins(fan, leg_rows(refs, 1), 0)
@@ -505,7 +453,6 @@ def test_a_leg_never_stands_on_a_drop_x_of_its_own_trunk() -> None:
 
 def test_a_lower_lanes_run_is_no_obstacle_to_the_leg_of_the_lane_above() -> None:
     """MARKER-FREE-SIDE (R887): the upper pole's leg drops across the run of the lower pole's leg and keeps its own slot."""
-    from fransys_layout.core.arrow_reserve import leg_lines, leg_pins, leg_rows
 
     fan, trunk, _, refs = _leg_plant()
     trunk = replace(trunk, lane_ends=((40, 308), (80, 300), (120, 208)))
@@ -517,10 +464,6 @@ def test_a_lower_lanes_run_is_no_obstacle_to_the_leg_of_the_lane_above() -> None
 
 def test_no_leg_foot_ends_on_another_fans_leg_run() -> None:
     """R1299: the foot of a leg one grid above another fan's lane never lands on that fan's leg run, which would end it on a wire."""
-    from fransys_layout.core.arrow_reserve import leg_lines
-    from fransys_layout.core.flow_values import Attach
-    from fransys_layout.core.outputs import Trunk
-    from fransys_layout.core.values import PinRef
 
     grid = OPTIONS.wiring_grid
     pins = [PinRef("a", "in"), PinRef("b", "in")]
@@ -535,8 +478,6 @@ def test_no_leg_foot_ends_on_another_fans_leg_run() -> None:
 
 def test_the_row_estimate_and_the_placed_sum_read_the_one_leg_unit(monkeypatch: pytest.MonkeyPatch) -> None:
     """R1627: `row_legs` (the estimate) and `column_legs` (the sum `legs_x` adds) take their x from `leg_unit`, the unit `leg_line` steps by."""
-    from fransys_layout.core import arrow_reserve as ar
-    from fransys_layout.core.flow_values import Attach
 
     pin = PinRef("a", "out")
     fan = Fan("f", ("n0",), (Attach("c", 0, 0, pin, 0, net="n0"),), (), "H", 1, "S")
@@ -550,7 +491,6 @@ def test_the_row_estimate_and_the_placed_sum_read_the_one_leg_unit(monkeypatch: 
 
 def test_a_row_reserves_the_y_of_its_tallest_stub_box_at_the_trunk_end() -> None:
     """R1634: `stub_room` is the box height `stub_views` gives the stub that stands at the row's trunk end, 0 for a row with none."""
-    from fransys_layout.core import arrow_reserve as ar
 
     _, _, pins, refs = _leg_plant()
     fars = [PinRef("x", "1"), PinRef("y", "1")]
@@ -566,7 +506,6 @@ def test_a_row_reserves_the_y_of_its_tallest_stub_box_at_the_trunk_end() -> None
 
 def test_two_plans_that_alternate_a_leg_reach_the_union_after_a_round_each_and_stay() -> None:
     """R1673: a column that stood a leg in any plan keeps it, so plans A, B, A, B end at the union within N+1 rounds."""
-    from fransys_layout.core import arrow_reserve as ar
 
     a: dict[str | tuple[str, str], ar.RowReserve] = {("b", "c1"): ar.RowReserve(5, legs=(("f", 20),), tail=4)}
     b: dict[str | tuple[str, str], ar.RowReserve] = {
@@ -585,8 +524,6 @@ def test_two_plans_that_alternate_a_leg_reach_the_union_after_a_round_each_and_s
 
 def test_a_row_reserves_the_arrow_room_under_its_lane_and_the_cuts_row_height_reads_it() -> None:
     """R1646: `arrow_room` is the arrow box's half height plus one grid for a keyed arrow end of the row, else 0; `RowReserve.y` takes it."""
-    from fransys_layout.core import arrow_reserve as ar
-    from fransys_layout.core.band import arrow_box
 
     legs = (Attach(None, 0, 0, PinRef("a", "p"), 0, net="n"), Attach(None, 0, 0, PinRef("b", "p"), 1, net="n"))
     fan = Fan("f:n1", ("n", "m"), (), legs, None, 2, "below")
@@ -602,9 +539,6 @@ def test_a_row_reserves_the_arrow_room_under_its_lane_and_the_cuts_row_height_re
 
 def test_the_held_room_of_a_trunk_holds_the_arrow_room_of_its_row() -> None:
     """R1646, R1719: `held_room`, read by `Trunk.room` and `place_span._band`, takes the arrow room of the row, so a recut sees it."""
-    from fransys_layout.core.band import arrow_hang, trunk_room
-    from fransys_layout.core.cut_end_rooms import arrow_room
-    from fransys_layout.core.place_trunk import held_room
 
     env = _env()
     pin = PinRef("L", "n0")
@@ -620,7 +554,6 @@ def test_the_held_room_of_a_trunk_holds_the_arrow_room_of_its_row() -> None:
 
 def test_leg_depth_is_the_deeper_of_the_tallest_marker_and_the_arrow_hang_never_their_sum() -> None:
     """R1719: the arrow and the leg markers hang in the same space under the band, so `leg_depth` takes the max."""
-    from fransys_layout.core.arrow_reserve import leg_depth
 
     fan, _ = _bundle("c1")
     rows = dict.fromkeys((a.pin for a in fan.legs), 0)
@@ -635,10 +568,6 @@ def test_leg_depth_is_the_deeper_of_the_tallest_marker_and_the_arrow_hang_never_
 
 def test_a_leg_stands_clear_of_a_hanging_at_a_placed_pin_as_of_a_footprint() -> None:
     """layout-0547: a symbol's hangings are part of its footprint for the legs, so a leg never drops into a planned marker's box."""
-    from fransys_layout.core.arrow_reserve import leg_feet, leg_lines
-    from fransys_layout.core.flow_values import Attach
-    from fransys_layout.core.outputs import Trunk
-    from fransys_layout.core.values import PinRef
 
     pin = PinRef("a", "in")
     fans = {"f0": Fan("f0", ("n0",), (Attach("c", 0, 0, pin, 0, net="n0"),), (), "H", 1, "S")}
@@ -652,9 +581,6 @@ def test_a_leg_stands_clear_of_a_hanging_at_a_placed_pin_as_of_a_footprint() -> 
 
 def test_a_tag_stood_at_a_pin_of_the_row_is_held_clear_under_its_trunk_and_other_rows_are_not() -> None:
     """CUT-CND, R1802: `arrow_room` is the tag box and one grid for a tag end with a pin on the row, else 0; `held_room` deepens the legs by it."""
-    from fransys_layout.core.band import arrow_hang
-    from fransys_layout.core.cut_end_rooms import arrow_room
-    from fransys_layout.core.place_trunk import held_room
 
     env = _env()
     pin = PinRef("L", "n0")

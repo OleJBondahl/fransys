@@ -338,3 +338,24 @@ def test_a_strips_terminals_share_one_strip_tag_and_print_only_their_own_point()
         assert strip_tag_text(model, function) == "-X1"
         assert run_point_text(model, function) == f"{group}:1"
         assert terminal_text(model, terminal, PrintContext()) == f"-X1:{group}:1"
+
+
+@pytest.mark.rule("BOM-STRIP-ONCE")
+@pytest.mark.parametrize(
+    ("strips", "designations"),
+    [((1,), ("-X1",)), ((4,), ("-X1",)), ((3, 2), ("-X1", "-X2"))],
+    ids=["one terminal", "many terminals", "two strips"],
+)
+def test_a_bom_lists_a_strip_once_and_counts_its_terminals(strips: tuple[int, ...], designations: tuple[str, ...]) -> None:
+    """Strips of 1, 4, and 3 + 2 terminals of one part: the line counts every terminal, prints each strip once."""
+    plant = Plant()
+    terminal_part = plant.part("Z")
+    for number_, size in enumerate(strips, start=1):
+        strip = plant.item(f"strip{number_}", part=plant.part(f"X{number_}"), designation=f"X{number_}")
+        for index in range(1, size + 1):
+            terminal = plant.item(f"t{number_}-{index}", part=terminal_part, parent=strip)
+            key = ("t", f"{number_}-{index}")
+            plant.add(TerminalFacet(id=make_id(TerminalFacet, key), key=key, subject=terminal, group="", index=index))
+    model, _ = number(plant.model())
+    (line,) = [ln for ln in bom_lines(model) if ln.part == terminal_part]
+    assert (line.count, line.designations) == (sum(strips), designations)

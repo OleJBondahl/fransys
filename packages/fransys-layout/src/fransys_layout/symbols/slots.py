@@ -2,7 +2,8 @@
 
 from typing import TYPE_CHECKING
 
-from symdef import from_divisions, measure
+from symdef import from_divisions, measure, orient
+from symdef import ink_boxes as symdef_ink_boxes
 
 from ._grid import symdef_orientation, to_box, to_reach
 
@@ -13,7 +14,7 @@ if TYPE_CHECKING:
 
     from .shape import LibrarySymbol, SymbolLibrary
 
-__all__ = ("measured_slots",)
+__all__ = ("ink_boxes", "measured_slots")
 
 
 def measured_slots(
@@ -30,3 +31,16 @@ def measured_slots(
     """
     found = measure(symbol, symdef_orientation(orient), library, texts or None, from_divisions(library.grid, height))
     return {name: to_box(box) for name, box in found.slots.items()}, to_reach(found.keepout, int(library.grid.wire_pitch))
+
+
+def ink_boxes(symbol: LibrarySymbol, orient_to: Orientation, texts: Mapping[str, str], library: SymbolLibrary, height: int) -> Mapping[str, Box]:
+    """Each string's ink in `texts` for `symbol` at `orient_to`: what is drawn, with no reserved room.
+
+    Boxes are relative to the symbol origin, in G, rounded outward by symdef (`ink_boxes(on_grid=True)`)
+    after the symbol is turned. `height` is the text height in G. A slot with no string has no box;
+    a string for a slot the symbol lacks raises symdef's `UnknownNameError`.
+    """
+    found = symdef_ink_boxes(
+        orient(symbol, symdef_orientation(orient_to)), texts, from_divisions(library.grid, height), library.font, library.grid, on_grid=True
+    )
+    return {name: to_box(box) for name, box in found.texts.items()}

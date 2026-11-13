@@ -19,7 +19,8 @@ from fransys_render import DrawError, svg
 
 from fransys_layout.symbols import text_room_on
 from fransys_model.kernel import render_id
-from fransys_model.layout import DrawingSet, Page, layout_of, sheet_format_of
+from fransys_model.layout import DrawingSet, Page, layout_of, sheet_for, sheet_format_of
+from fransys_model.vocab import PageKind
 lazy from fransys_model.kernel import Finding
 
 from ._codes import finding
@@ -60,6 +61,7 @@ def lay_out_on_core(model: Model, library: Library, layout: Mapping[str, object]
             settings().layout if layout is None else layout,
             library,
             text_height=text_room_on(model, sheet_format_of(model, None), library),
+            sheet=sheet_for(model, PageKind.SCHEMATIC),
         )
         problem, skipped = build(model, kit, conventions, library)
     except ProblemError as error:

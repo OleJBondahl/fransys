@@ -53,7 +53,7 @@ def test_net_end_roles_top_bottom_side_through_and_boxpin() -> None:
     through = _ends([free("t")], [net("x", "t.n", "t.s")], "x")
     side_pin = replace(elem("a"), pins=(Pin("e", "E", 8, 0, 0),), nodes=(("e",),))
     side = _ends([side_pin, elem("b")], [net("x", "a.e", "b.n")], "x")
-    box = replace(elem("c"), box=BoxSpec(("n", "s"), 16))
+    box = replace(elem("c"), box=BoxSpec(("n", "s"), 16, 16))
     boxed = _ends([elem("a"), box], [net("x", "c.s", "a.n")], "x")
     assert [e.site for e in top] == ["top", "top"]
     assert [e.site for e in bottom] == ["bottom", "bottom"]

@@ -10,9 +10,8 @@ import fransys as fr
 import fransys_pdf
 from fransys_pdf import _lists
 
-from fransys_model.derive import pdf_texts
+from fransys_model.derive import drawn_pages, pdf_texts
 from fransys_model.derive.page_nav import reference_links
-from fransys_model.layout import Page, layout_of
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -26,8 +25,7 @@ _FLOW = {
 
 def source(model, document, svgs, sheets, bridges=None):
     """`fransys_pdf.source` with the house list shares and the model's reference links."""
-    known = set(layout_of(model, Page))
-    links = {page: reference_links(model, page, known, {}) for page in known}
+    links = {page.id: reference_links(model, document, page.id, {}) for page in drawn_pages(model, document)}
     return fransys_pdf.source(
         model,
         document,

@@ -37,7 +37,7 @@ def _wider(env: PageEnv, index: int, overflow: int) -> Finding:
     first = env.plan.rows[index].blocks[0]
     text = (
         f"{row_where(env.plan, index, env.blocks, env.columns)}: {g_text(overflow)} G wider than the page; shorten the row, "
-        "lower the column count of the block, raise the page width or set Options.short_height"
+        "lower the column count of the block, split the device over two units or choose paper A2 in the settings"
     )
     return Finding("WIDER_THAN_PAGE", text, env.plan.page, first)
 

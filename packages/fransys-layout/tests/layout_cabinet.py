@@ -17,8 +17,8 @@ from fransys_model.layout import (
     SymbolChoice,
 )
 from fransys_model.layout import Profile as ModelProfile
+from fransys_model.refdef import Aspect
 from fransys_model.vocab import (
-    Aspect,
     AspectNode,
     CableProductFacet,
     Conductor,

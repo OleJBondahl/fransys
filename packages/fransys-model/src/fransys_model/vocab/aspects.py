@@ -1,9 +1,9 @@
 """Vocabulary: IEC 81346 aspect structure (design/vocabulary.md 6 "Structure")."""
 
 from fransys_model.kernel import AuthoringKey, Id, Value, record
+from fransys_model.refdef import Aspect
 
 from .core import Item
-from .enums import Aspect
 
 
 @record(kind="aspect_node")

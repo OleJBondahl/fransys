@@ -40,7 +40,6 @@ _EL_ONLY = [
     "DANGLING_WIRE_END",  # DRAWN-NETLIST (el-0086): a wire end that meets nothing
     "DRAWING_SHORTS_NETS",
     "ROUTE_WRONG_PORT",
-    "MARKER_UNPAIRED",
     "CONNECTION_DRAWN_TWICE",
     "WIRE_NOT_ORTHOGONAL",
     "MISSING_JUNCTION_DOT",
@@ -86,7 +85,7 @@ def test_a_net_function_lane_wire_set_page_or_print_left_out_is_an_error():
     from fransys_model.vocab import FINDING_CODES as MODEL_CODES
 
     wanted = {"NET_NOT_DRAWN", "FUNCTION_NOT_DRAWN", "LANE_WIRE_DROPPED", "SET_WITHOUT_PAGE", "UNPRINTED_SET", "NO_BLOCK"}
-    wanted |= {"MARKER_UNPAIRED", "CONNECTION_DRAWN_TWICE", "WIRE_NOT_ORTHOGONAL", "MISSING_JUNCTION_DOT", "WIDER_THAN_PAGE", "BOARD_NETS_NOT_DRAWN"}
+    wanted |= {"CONNECTION_DRAWN_TWICE", "WIRE_NOT_ORTHOGONAL", "MISSING_JUNCTION_DOT", "WIDER_THAN_PAGE", "BOARD_NETS_NOT_DRAWN"}
     from fransys_layout import FINDING_CODES as LAYOUT_CODES
 
     held = {info.code: info.severity for info in (*MODEL_CODES, *LAYOUT_CODES, *FINDING_CODES)}

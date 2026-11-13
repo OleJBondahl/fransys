@@ -11,15 +11,17 @@ from _model_build_cover import unit_document
 from fransys.colours import BU
 
 
-def _plant(d) -> None:
+def _plant(d, *, mains: bool = True) -> None:
+    """The contactor plant; `mains=True` adds the lamp P2 on the supply, the neighbour case leaves it out."""
     psu = d.device("T1", "DEMO-PSU-24")
-    mains = d.device("P2", "DEMO-LAMP-24")
+    mains_lamp = d.device("P2", "DEMO-LAMP-24") if mains else None
     lamp = d.device("P1", "DEMO-LAMP-24")
     motor = d.device("M1", "DEMO-MOTOR-4KW")
     q = d.device("Q1", "DEMO-CTR-3P-NC")
     blue = (BU, 0.5)
-    d.series(psu.input["L"], mains["1"], wire=blue)
-    d.series(psu.input["N"], mains["2"], wire=blue)
+    if mains_lamp is not None:
+        d.series(psu.input["L"], mains_lamp["1"], wire=blue)
+        d.series(psu.input["N"], mains_lamp["2"], wire=blue)
     d.series(psu.output["+"], q.coil["A1"], wire=blue)
     d.series(psu.output["-"], q.coil["A2"], wire=blue)
     d.series(psu.output["+"], q.aux["13"], wire=blue)
@@ -31,13 +33,13 @@ def _plant(d) -> None:
 
 
 @functools.cache
-def _built(*, hide: bool):
-    """The built result of `_plant` in one cabinet document, built once per switch setting."""
+def _built(*, hide: bool, mains: bool = True):
+    """The built result of `_plant` in one cabinet document, built once per switch and plant setting."""
     d = fr.design("demo_parts", place="CAB")
     if hide:
         d.layout.profile(hide_unused_pins=True)
     cab = d.location("CAB", "Cabinet")
-    _plant(d)
+    _plant(d, mains=mains)
     doc = unit_document(cab)
     return fr.build(d, doc)
 

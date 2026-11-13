@@ -8,8 +8,8 @@ from plant import Plant
 from fransys_model.derive.export_names import export_fragment
 from fransys_model.derive.location_text import product_designation_in
 from fransys_model.kernel import make_id
+from fransys_model.refdef import Aspect
 from fransys_model.vocab.aspects import AspectNode, Placement
-from fransys_model.vocab.enums import Aspect
 
 if TYPE_CHECKING:
     from fransys_model.kernel import Id

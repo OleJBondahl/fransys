@@ -16,7 +16,7 @@ from fransys_layout.core.errors import CoreError
 from fransys_layout.core.geometry import inside, overlaps, union
 from fransys_layout.core.outputs import Anchored, Demand, StripRun
 from fransys_layout.core.route_labels import roomed
-from fransys_layout.core.route_runs import named, stand_runs
+from fransys_layout.core.route_runs import alone_annexes, named, stand_runs
 from fransys_layout.core.values import Finding
 from fransys_layout.core.widen import route_round
 
@@ -351,20 +351,24 @@ def _runs_case(*, blocked: bool = False):
     syms = tuple(replace(s, row_group="S") for s in base.problem.symbols)
     problem = with_annexes(replace(base.problem, symbols=syms), bl_first_options())
     placed = {p.sym: p for p in base.placement.pages[0].placed}
-    tags, runs = stand_runs(problem, placed, (StripRun("S", ("T1", "T2"), "S run at T1"), StripRun("S", ("T3",), "S run at T3")))
-    members = [a for a in problem.annexes if a.owner in placed]
+    lone = (StripRun("S", ("T1", "T2"), "S run at T1"), StripRun("S", ("T3",), "S run at T3"))
+    tags, runs = stand_runs(problem, placed, lone)
+    members = alone_annexes(
+        [replace(a, alone=replace(a, size=Size(40, 8))) if a.owner == "T3" else a for a in problem.annexes if a.owner in placed], lone
+    )
     stood = {**placed, **{k: p for k, (_, p) in runs.items()}}
     ink = ((), [Box(0, 0, 400, 300)] if blocked else [])
     return runs, named(runs, *place_labels([*members, *tags], stood, ink, (1, problem.area, 0, 2)))
 
 
 @pytest.mark.rule("STRIP-TAG-ONCE")
-def test_a_strip_gets_one_tag_per_run_a_lone_terminal_being_a_run_of_one() -> None:
-    """Two terminals of one strip at one y are one run, the one at another y a second: two annexes owned by the strip, none by a terminal."""
+def test_a_strip_gets_one_tag_per_run_of_two_and_a_lone_terminal_its_full_annex() -> None:
+    """Two terminals of one strip at one y are one run with one strip annex; the one at another y has none and stands with its own full annex."""
     runs, (labels, found, _) = _runs_case()
-    assert sorted(p.sym for _, p in runs.values()) == ["T1", "T3"]
-    assert [a.owner for a in labels].count("S") == 2
+    assert [p.sym for _, p in runs.values()] == ["T1"]
+    assert [a.owner for a in labels].count("S") == 1
     assert {a.owner for a in labels} == {"S", "T1", "T2", "T3"}
+    assert next(a for a in labels if a.owner == "T3").box.w == 40
     assert found == []
 
 
@@ -372,7 +376,7 @@ def test_a_strip_gets_one_tag_per_run_a_lone_terminal_being_a_run_of_one() -> No
 def test_a_run_tag_that_cannot_stand_is_unplaced_naming_the_strip_and_demands_its_leftmost_terminal() -> None:
     """No silent fallback: the finding names the strip, the Demand its run's leftmost terminal so that its footprint holds the room."""
     _, (_, found, asks) = _runs_case(blocked=True)
-    assert [f.subject for f in found].count("S") == 2
+    assert [f.subject for f in found].count("S") == 1
     assert {d.owner for d in asks.values()} == {"T1", "T2", "T3"}
 
 
@@ -382,7 +386,7 @@ def test_a_run_of_a_strip_with_no_template_annex_is_refused_naming_the_strip() -
     base = on_page((("T1", 88, 96),))
     placed = {p.sym: p for p in base.placement.pages[0].placed}
     with pytest.raises(CoreError, match="strip S"):
-        stand_runs(base.problem, placed, (StripRun("S", ("T1",), "S run at T1"),))
+        stand_runs(base.problem, placed, (StripRun("S", ("T1", "T2"), "S run at T1"),))
 
 
 @pytest.mark.rule("TAG-CORNERS")

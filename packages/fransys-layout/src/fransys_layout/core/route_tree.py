@@ -6,6 +6,7 @@ from itertools import pairwise
 from typing import TYPE_CHECKING
 
 from .keys import natural_key
+from .occupancy import cells_between
 from .outputs import Wire
 from .route_astar import Leg, anchor, astar, simplify, tidy
 from .route_env import own_syms, pin_point, pin_side
@@ -36,6 +37,11 @@ def mark_anchors(env: RouteEnv, grid: Occupancy, link: CrossLink) -> None:
     """The link's anchor runs on the map, so another net's wire keeps off its ends (R391)."""
     for anchors in end_anchors(env, link):
         grid.mark_wire(link.net, anchors)
+
+
+def _on_text(grid: Occupancy, run: Sequence[XY]) -> bool:
+    """True when the anchor run covers a standing label's cell (layout-0582)."""
+    return any(c in grid.labelled for a, b in pairwise(run) for c in cells_between(a, b, grid.step))
 
 
 def _cell(p: XY, step: int) -> XY:
@@ -87,6 +93,8 @@ def tree(env: RouteEnv, grid: Occupancy, link: CrossLink, anchors: Sequence[tupl
     anchors = end_anchors(env, link) if anchors is None else anchors
     if len(anchors) < MIN_ENDS:
         return ()
+    if any(_on_text(grid, run) for run in anchors):
+        return None
     start, goal = _cell(anchors[0][-1], step), _cell(anchors[1][-1], step)
     leg = Leg(net, start, goal, frozenset((start, goal)), own=own_syms(env, net, net))
     path = astar(grid, leg, env.options)
@@ -103,6 +111,8 @@ def rise_wire(env: RouteEnv, grid: Occupancy, r: Rise) -> Wire | None:
     """A rise to its trunk cell, the grid point nearest its target, then along the line to it; None when A* finds no path."""
     step = env.options.wiring_grid
     pin = anchor(r.start, env.placed[r.pin.sym].footprint, step, pin_side(env, r.pin.sym, r.pin.pin))
+    if _on_text(grid, pin):
+        return None
     start, goal = _cell(pin[-1], step), _cell((r.target[0] + step // 2, r.target[1] + step // 2), step)
     leg = Leg(r.net, start, goal, frozenset((start, goal)), own=own_syms(env, r.net, r.net))
     path = astar(grid, leg, env.options)

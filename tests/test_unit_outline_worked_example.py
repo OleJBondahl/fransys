@@ -10,71 +10,11 @@ import fransys_parts
 from _core_boxes import box_rect, outline_rect
 from _drawn_pages import drawn_pages
 from _model_build_cover import printed
-from _worked_wiring import wire_field_to_motor, wire_field_to_switch
-from fransys_author.design import Design
+from test_units_worked_example import _system_design
 
 from electrical_symbols import LIBRARY
 from fransys_layout.symbols import text_room_on
 from fransys_model.layout import sheet_format_of
-
-_PROJECT: dict[str, Any] = {
-    "title": "Pump station",
-    "number": "P-1001",
-    "customer": "Example Co",
-    "revision": 1,
-    "author": "OJB",
-}
-
-
-def io_board(s, *, mark_boundary=True):
-    """Worked example: a board unit with one boundary connector, `X1`."""
-    u = s.unit("demo-io-board", revision=3, interface="2")
-    u.revision(3, date="2026-01-01", text="First release", created="XX")
-    grp = u.group("BRD", "I/O board")
-    board = u.item("DEMO-PCB-IO", name="board", group=grp)
-    x1 = u.item("DEMO-CONN-2P", tag="X1", parent=board, group=grp)
-    k1 = u.item("DEMO-RLY-2CO-24", name="k1", parent=board, group=grp)
-    wire = u.wiring(colour="BU", gauge="0.5")
-    wire(x1["1"], k1.fn("coil")["A1"])
-    wire(x1["2"], k1.fn("coil")["A2"])
-    u.net("internal", k1.fn("co_1")["11"], k1.fn("co_2")["21"])
-    if mark_boundary:
-        u.boundary(x1)
-    return x1
-
-
-def pump_cabinet(s, *, name):
-    """Worked example: a cabinet unit with two field-terminal boundaries."""
-    u = s.unit("demo-pump-cabinet", revision=2, interface="1")
-    u.revision(2, date="2026-01-01", text="First release", created="XX")
-    c = u.location(name, "Pump cabinet")
-    grp = u.group("FLD", "Field wiring")
-    x2 = u.strip("X2", at=c)
-    field = [x2.terminal("DEMO-TB-2.5-TWIN", group=grp) for _ in range(2)]
-    board_x1 = io_board(u.scope("io", at=c))
-    cable = u.cable("DEMO-CBL-4G1.5", name="w1c", at=c)
-    cable.core(1, field[0].outer, board_x1["1"])
-    cable.core(2, field[1].outer, board_x1["2"])
-    for t in field:
-        u.boundary(t)
-    return field
-
-
-def _system_design(parts, *, name1="C1", name2="C2"):
-    d = Design(parts)
-    d.project(**_PROJECT)
-    d.revision(1, date="2026-09-22", text="First issue", created="XX")
-    er = d.location("ER", "Engine room")
-    field1 = pump_cabinet(d.scope("pump1", at=er), name=name1)
-    field2 = pump_cabinet(d.scope("pump2", at=er), name=name2)
-    fld = d.location("FLD", "Field")
-    fld_grp = d.group("FLD", "Field wiring")
-    wire_field_to_motor(d, field1, fld=fld, grp=fld_grp, motor_tag="M1")
-    wire_field_to_motor(d, field2, fld=fld, grp=fld_grp, motor_tag="M2")
-    switch = d.item("DEMO-SWITCH-2P", tag="K1", at=fld, group=fld_grp)
-    wire_field_to_switch(d, field1[1], switch.fn("x1")["1"], cable_tag="WM1S")
-    wire_field_to_switch(d, field2[1], switch.fn("x1")["2"], cable_tag="WM2S")
-    return d, field1, field2
 
 
 def _build_system():

@@ -139,13 +139,16 @@ def test_the_demo_three_pole_parts_carry_pole_sides_and_conductors():
 _TWO_PINS = '{ name = "a", marking = "1", role = "generic" }, { name = "b", marking = "2", role = "generic" }'
 
 
-def test_an_overload_main_path_takes_side_from_its_markings(tmp_path):
-    """A protection function's conductive link is a pole too (parts-0012)."""
-    ports = _TWO_PINS
+def test_a_conductive_link_states_its_side_a_marking_gives_none(tmp_path):
+    """A conductive link is a pole by its stated sides (R2046); a protection's markings give it none."""
     links = 'links = [{ a = "a", b = "b", kind = "conductive" }]'
-    model = _model(tmp_path, _function("protection", ports, links))
-    assert _facts(model, "a")[0] is Side.A
-    assert _facts(model, "b")[0] is Side.B
+    model = _model(tmp_path, _function("protection", _TWO_PINS, links))
+    assert _facts(model, "a")[0] is None
+    stated = _TWO_PINS.replace('role = "generic" }, {', 'role = "generic", side = "line" }, {').replace(
+        '"2", role = "generic"', '"2", role = "generic", side = "load"'
+    )
+    model = _model(tmp_path, _function("protection", stated, links))
+    assert (_facts(model, "a")[0], _facts(model, "b")[0]) == (Side.A, Side.B)
 
 
 def test_a_terminals_conductive_link_states_no_side(tmp_path):

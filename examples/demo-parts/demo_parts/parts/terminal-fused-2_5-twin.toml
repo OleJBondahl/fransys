@@ -10,10 +10,9 @@ class_code = "X"
 [[function]]
 name = "terminal"
 kind = "terminal"
-symbol = "terminal"
 ports = [
-    { name = "internal", role = "internal", symbol_port = "n" },
-    { name = "external", role = "external", symbol_port = "s" },
+    { name = "internal", role = "internal" },
+    { name = "external", role = "external" },
 ]
 links = [{ a = "internal", b = "external", kind = "protective" }]
 

@@ -15,7 +15,7 @@ from fransys.colours import RD
 from fransys_model.kernel import id_namespace
 
 # KI-763: OUT_OF_PAGE (a row-end tag past the content box) shows at 13+13, 14+14 and others; it is not in _CODES.
-_CODES = ("CONNECTION_NOT_DRAWN", "DRAWING_SHORTS_NETS", "DANGLING_WIRE_END", "MARKER_UNPLACED")
+_CODES = ("CONNECTION_NOT_DRAWN", "DRAWING_SHORTS_NETS", "DANGLING_WIRE_END", "MARKER_UNPLACED", "REFERENCE_NOT_READABLE")
 _SHAPES = [
     (15, 15), (13, 13), (14, 14), (16, 16), (17, 17), (10, 20), (12, 18), (18, 12), (19, 11), (20, 10),
     (21, 9), (22, 8), (24, 6), (25, 5), (30, 2), (2, 30), (15, 1), (1, 15), (24, 24), (2, 40), (12, 40),

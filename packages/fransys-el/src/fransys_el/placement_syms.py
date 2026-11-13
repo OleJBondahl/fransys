@@ -17,7 +17,7 @@ from fransys_model.derive.contact_rows import table_geometry
 from .footprints import footprints
 from .kit_keys import PickKey, function_of, strip_tag_of, tag_of
 from .placement_groups import group_of
-from .placement_pins import box_of, nodes_of, pins_of, shape_of, symbol_of
+from .placement_pins import box_of, narrows, nodes_of, pins_of, shape_of, symbol_of
 from .placement_sets import drawing_scopes
 from .placement_where import where_room
 from .write_markings import marking_slots
@@ -95,6 +95,16 @@ def _wider(env: Env, symbol: LibrarySymbol, ask: Ask, lead: PickKey, homes: Coll
     return tuple({k: symbol_views(symbol, env.library, replace(one, text=t + room)).label for k, t in texts.items()} for room in rooms if room)
 
 
+def _full(env: Env, symbol: LibrarySymbol, ask: Ask, lead: PickKey, homes: Collection[Id[Unit] | None]) -> dict[str, Size]:
+    """The label size per set of the full tag a terminal prints alone in its run (STRIP-TAG-ONCE); none for a symbol that is no strip terminal."""
+    if strip_of(env.model, function_item(env.model, function_of(env.model, lead))) is None:
+        return {}
+    one = replace(ask, orientations=("R0",), table=None)
+    room = where_room(env, function_of(env.model, lead))
+    texts = {"": tag_of(env.model, lead, alone=True)} | {u.value: tag_of(env.model, lead, unit=u, alone=True) for u in homes if u}
+    return {k: symbol_views(symbol, env.library, replace(one, text=t + room)).label for k, t in texts.items()}
+
+
 def _ask(env: Env, lead: PickKey, pick: Pick, pins: tuple[Pin, ...], box: BoxSpec | None) -> Ask:
     """What symdef is asked about `lead`'s symbol drawn as `pick`: its pins, tag text, table and the markings."""
     function = function_of(env.model, lead)
@@ -129,11 +139,18 @@ def strip_tags(env: Env) -> dict[str, dict[str, Size]]:
 
 
 def sym_and_table(env: Env, lead: PickKey, pick: Pick, homes: Collection[Id[Unit] | None] = ()) -> tuple[Sym, Box | None]:
-    """The `Sym` of `lead` drawn as `pick`, and its contact table's keep-out (top-left at 0, 0).
+    """The `Sym` of `lead` drawn as `pick`, its second drawing in `narrow` where `narrows`, and its contact table's keep-out (top-left at 0, 0).
 
     `homes` are the units of the sets that draw it: its label is measured for each as that set prints the tag.
     """
-    symbol = symbol_of(env, lead, pick)
+    sym, table = _drawn(env, lead, pick, homes, symbol_of(env, lead, pick))
+    if narrows(env, pick):
+        sym = replace(sym, narrow=_drawn(env, lead, pick, homes, symbol_of(env, lead, pick, turn=True))[0])
+    return sym, table
+
+
+def _drawn(env: Env, lead: PickKey, pick: Pick, homes: Collection[Id[Unit] | None], symbol: LibrarySymbol) -> tuple[Sym, Box | None]:
+    """The `Sym` and contact-table keep-out of `lead` drawn as `symbol`."""
     shape = shape_of(env, lead, pick, symbol)
     pins = pins_of(env, pick, shape)
     box = box_of(pick, shape, pins)
@@ -158,6 +175,7 @@ def sym_and_table(env: Env, lead: PickKey, pick: Pick, homes: Collection[Id[Unit
         child_of=env.parents[item].value if item in env.parents else None,
         rank=env.ranks[lead],
         wider=_wider(env, symbol, ask, lead, homes),
+        alone=_full(env, symbol, ask, lead, homes),
     )
     return sym, drawn.table
 

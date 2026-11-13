@@ -6,10 +6,10 @@ A row is a conductor end or a function symbol. Each is drawn, `Carried` by a rea
 from enum import Enum
 
 from fransys_model.kernel import Id, SchemaError, register_enum, value
-from fransys_model.vocab.connectivity import Conductor
+from fransys_model.vocab.connectivity import Conductor, Mate
 from fransys_model.vocab.core import Function, Port
 
-__all__ = ["Carried", "CarriedReason", "ConductorEnd", "FunctionSymbol", "Required"]
+__all__ = ["Carried", "CarriedReason", "ConductorEnd", "FunctionSymbol", "MateEnd", "Required"]
 
 
 @value
@@ -22,13 +22,25 @@ class ConductorEnd:
 
 
 @value
+class MateEnd:
+    """One end of a mate pair: it leaves `port` and reaches `far`, the pin the mate joins it to.
+
+    A mate is no conductor, so it is no `ConductorEnd`; `far_pins.reach` gives both kinds.
+    """
+
+    mate: Id[Mate]
+    port: Id[Port]
+    far: Id[Port]
+
+
+@value
 class FunctionSymbol:
     """A function the schematic must draw as a symbol."""
 
     function: Id[Function]
 
 
-type Required = ConductorEnd | FunctionSymbol
+type Required = ConductorEnd | MateEnd | FunctionSymbol
 
 
 @register_enum

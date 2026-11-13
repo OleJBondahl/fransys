@@ -22,6 +22,7 @@ __all__ = (
     "Shape",
     "SymbolLibrary",
     "library_symbol",
+    "ports_at_one_node",
     "stretched_body",
     "symbol_shape",
 )
@@ -44,6 +45,14 @@ class Shape:
     slots: Mapping[str, Box]
     pins: Mapping[str, PinTurn]
     nodes: tuple[tuple[str, ...], ...]
+
+
+def ports_at_one_node(shape: Shape) -> frozenset[frozenset[str]]:
+    """The groups of two or more pins the symbol draws at one node: pins of a group are one point (a block's sides).
+
+    A pin in no group stands alone; two poles of a switch are two nodes and never a group. The one home of "one point of one symbol".
+    """
+    return frozenset(frozenset(node) for node in shape.nodes if len(node) > 1)
 
 
 def library_symbol(library: Library, key: str, repeats: int = 1) -> LibrarySymbol:
@@ -72,12 +81,7 @@ def symbol_shape(symbol: LibrarySymbol, library: Library) -> Shape:
     )
 
 
-def stretched_body(
-    symbol: LibrarySymbol,
-    orient: Orientation,
-    lengths: Mapping[Literal["x", "y"], int],
-    library: Library,
-) -> Box:
+def stretched_body(symbol: LibrarySymbol, orient: Orientation, lengths: Mapping[Literal["x", "y"], int], library: Library) -> Box:
     """The body of `symbol` stretched to `lengths` divisions along each axis, then turned to `orient`.
 
     Only the body is read: a stretched symbol's slot anchors may sit between divisions (R450.3).

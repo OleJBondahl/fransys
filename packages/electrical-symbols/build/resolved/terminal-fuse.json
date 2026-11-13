@@ -1,0 +1,154 @@
+{
+  "anchors": [],
+  "body_box": [
+    [
+      -0.5,
+      -2
+    ],
+    [
+      0.5,
+      2
+    ]
+  ],
+  "elements": [
+    {
+      "line": [
+        [
+          0,
+          -2
+        ],
+        [
+          0,
+          2
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "closed": true,
+      "fill": "none",
+      "polyline": [
+        [
+          -0.5,
+          -1
+        ],
+        [
+          0.5,
+          -1
+        ],
+        [
+          0.5,
+          1
+        ],
+        [
+          -0.5,
+          1
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "closed": true,
+      "fill": "solid",
+      "polyline": [
+        [
+          -0.5,
+          -1
+        ],
+        [
+          0.5,
+          -1
+        ],
+        [
+          0.5,
+          -0.5
+        ],
+        [
+          -0.5,
+          -0.5
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    }
+  ],
+  "keepout_box": [
+    [
+      -0.5,
+      -2
+    ],
+    [
+      0.5,
+      2
+    ]
+  ],
+  "kind": "symbol",
+  "lint_allow": [
+    {
+      "reason": "a terminal is designated by its tag only, so it carries a tag slot and no marking slots",
+      "rule": "slot-missing"
+    }
+  ],
+  "name": "Terminal with fuse",
+  "nodes": [
+    {
+      "ports": [
+        "n"
+      ]
+    },
+    {
+      "ports": [
+        "s"
+      ]
+    }
+  ],
+  "paths": [
+    {
+      "from": "n",
+      "kind": "conductor",
+      "through": true,
+      "to": "s"
+    }
+  ],
+  "ports": [
+    {
+      "at": [
+        0,
+        -2
+      ],
+      "description": "",
+      "dir": "N",
+      "id": "n"
+    },
+    {
+      "at": [
+        0,
+        2
+      ],
+      "description": "",
+      "dir": "S",
+      "id": "s"
+    }
+  ],
+  "reference": {
+    "number": "terminal-fuse",
+    "standard": "IEC 60617"
+  },
+  "schema": 1,
+  "slots": {
+    "tag": {
+      "at": [
+        -1.5,
+        0
+      ],
+      "box": [
+        6,
+        1
+      ],
+      "side": "W"
+    }
+  },
+  "status": "unverified"
+}

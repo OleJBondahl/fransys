@@ -1,9 +1,13 @@
 """Determinism: the authored date, never the clock."""
 
+from decimal import Decimal
+
 from _build import document, location, model, project, revision_entry
 from fransys_pdf._geometry import document_metadata
+from fransys_pdf._links import page_links
 
-from fransys_model.derive import document_row
+from fransys_model.derive import SheetRow, document_row
+from fransys_model.derive.page_nav import PageAnchor, ReferenceLink
 from fransys_model.vocab import DocumentPreset
 
 
@@ -33,3 +37,18 @@ def test_no_project_gives_date_none_and_empty_title_and_author():
     assert "date: none" in text
     assert 'title: ""' in text
     assert 'author: ""' in text
+
+
+def test_a_pages_links_and_anchors_are_the_same_source_every_time_and_name_each_destination_once():
+    """PDF-LINKS: a link and an anchor each print one Typst element, and the same inputs print the same text."""
+    sheet = SheetRow(
+        width_mm=420, height_mm=297, content_x_mm=15, content_y_mm=10, content_width_mm=390, content_height_mm=250, module_mm=Decimal("2.5")
+    )
+    links = (ReferenceLink(x=4, y=8, width=40, height=2, target="p2:B2"),)
+    anchors = (PageAnchor(label="p2:B2", x=Decimal(15), y=Decimal("41.25")),)
+    m = model()
+    text = page_links(m, sheet, links, anchors)
+    assert text == page_links(m, sheet, links, anchors)
+    assert text.count('#label("p2:B2")') == 1
+    assert text.count("link(<p2:B2>") == 1
+    assert "dx: 15.000mm, dy: 41.250mm" in text

@@ -68,7 +68,7 @@ def placed_of(prob: PlacementProblem, options: Options | None = None) -> Placeme
 
 
 def routed_from(cut: CutResult, prob: PlacementProblem, opts: Options) -> Routes:
-    """Stage 6 on a cut already made (a test may edit the cut first, e.g. Fan.crossed)."""
+    """Stage 6 on a cut already made (a test may edit the cut first)."""
     from fransys_layout.core.route import route_pages
 
     return route_pages(placed_from(cut, prob, opts), cut, prob, opts)

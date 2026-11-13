@@ -18,6 +18,7 @@ from fransys_pdf import _lists_terminal
 # `test_declared_dependencies.py`'s own pattern for importing a sibling root test module by
 from root_library import freeze
 from test_units_worked_example import _PROJECT, _system_design
+from test_write_unit_worked_example import _unit_id
 
 from fransys_model.derive import (
     allocate_plc,
@@ -27,7 +28,6 @@ from fransys_model.derive import (
     strip_side_headings,
     terminal_rows,
     terminal_strips,
-    unit_release,
     wire_rows,
 )
 from fransys_model.derive.passes.numbering import number as number_pass
@@ -36,11 +36,6 @@ from fransys_model.vocab.tables import (
     aspect_nodes,
     items,
 )
-from fransys_model.vocab.tables import units as units_table
-
-
-def _unit_id(model, *, name, prefix):
-    return next(unit_id for unit_id, unit in units_table(model).items() if unit_release(model, unit_id).name == name and unit.key[0] == prefix)
 
 
 @pytest.fixture(scope="module")
@@ -162,21 +157,12 @@ def test_the_same_wire_list_read_without_a_unit_prints_every_wire_in_full(nested
 # -- 5. unchanged: a top-level unit and `unit=None` -------------------------------------------
 
 
-def test_a_top_level_units_terminal_list_still_prints_its_outside_ends(worked):
+@pytest.mark.parametrize("scoped", [True, False])  # a top-level unit, then `unit=None`
+def test_a_terminal_list_still_prints_its_outside_ends(worked, scoped):
     result, cabinet, _board = worked
     model = result.model
     (strip,) = (s for s in terminal_strips(model) if items(model)[s].unit == cabinet)
-    rows = terminal_rows(model, strip, unit=cabinet, context=list_context(model, strip))
-    side_b = [end for row in rows for end in row.external_ends]
-    assert "+FLD-M1:U" in side_b
-    assert "+FLD-K1:1" in side_b
-
-
-def test_a_terminal_list_without_a_unit_still_prints_its_outside_ends(worked):
-    result, cabinet, _board = worked
-    model = result.model
-    (strip,) = (s for s in terminal_strips(model) if items(model)[s].unit == cabinet)
-    rows = terminal_rows(model, strip, context=list_context(model, strip))
+    rows = terminal_rows(model, strip, **({"unit": cabinet} if scoped else {}), context=list_context(model, strip))
     side_b = [end for row in rows for end in row.external_ends]
     assert "+FLD-M1:U" in side_b
     assert "+FLD-K1:1" in side_b

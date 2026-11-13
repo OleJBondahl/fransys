@@ -137,3 +137,33 @@ def test_an_arrow_names_a_lane_and_pins_that_stand_on_each_ends_page_and_side_wh
             for pin in end.also:
                 assert page_of[where[pin]] == page_of[at]
                 assert (where[pin] <= cut) == (at <= cut)
+
+
+def _lane(pins: str) -> Any:
+    return tuple((int(p[1]), PinRef(p, "p")) for p in pins.split())
+
+
+_FAN, _NONE = frozenset({"f:x"}), frozenset()
+
+
+@pytest.mark.rule("BUNDLE-ARROW")
+@pytest.mark.parametrize(
+    ("lanes", "copy", "arrows"),
+    [
+        (("A0 A1 A2", "B0 B3 B4"), _FAN, []),
+        (("A0 A1 A2", "B0 B3 B4"), _NONE, [(0, ("A0", "A1")), (2, ("B3", "B3"))]),
+        (("B0 B3",), _NONE, [(2, ("B0", "B3"))]),  # valve, lamp 15+19
+        (("B0 B3",), _FAN, []),
+        (("B2 B5",), _NONE, [(4, ("B2", "B5"))]),  # mcc
+        (("B0 B2 B3",), _FAN, [(2, ("B2", "B3"))]),
+    ],
+)
+def test_a_copied_fan_has_no_arrow_whose_end_lies_on_another_page(lanes: tuple[str, ...], copy: frozenset[str], arrows: list[Any]) -> None:
+    """R2252: a copied fan's arrows join one page, so a row cut counts only the pins on its own page (layout-0592)."""
+    row0 = SimpleNamespace(prev=None, start=1)
+    plan: Any = [(0, 0, STATE), (1, 4, SimpleNamespace(prev=row0, start=3)), (5, 5, SimpleNamespace(prev=None, start=5))]
+    cut: Any = SimpleNamespace(
+        bounds=[SimpleNamespace(fans=("f:x",), nets=()) for _ in range(5)], seq=[SimpleNamespace(column=f"c{i}") for i in range(6)]
+    )
+    refs = references(cut, plan, {0: 1, 1: 2, 2: 2, 3: 2, 4: 2, 5: 3}, copy, {"f:x": tuple(map(_lane, lanes))})
+    assert [(r.cut, tuple(e.pin.sym for e in r.ends if e.pin)) for r in refs if r.kind is RefKind.ARROW] == arrows

@@ -18,7 +18,7 @@ from .sides import step_out
 from .values import Box, Finding, PinRef
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping, Sequence
+    from collections.abc import Iterable, Mapping, Sequence
 
     from .annex_values import Annex, AnnexBox
     from .arrow_reserve import ArrowEnds
@@ -154,9 +154,14 @@ def pin_side(env: RouteEnv, sym: str, pin: str) -> Side:
     return env.sides[key]
 
 
+def body_keeps(placed: Iterable[Placed]) -> tuple[Keep, ...]:
+    """A keep for each placed body, never its soft tag room: the one build the router and the marker stand read (R2282)."""
+    return tuple(Keep("", p.body, "body", p.sym) for p in placed)
+
+
 def hard_keeps(env: RouteEnv) -> tuple[Keep, ...]:
-    """The one keep set a wire must not run through: each placed body (never its soft tag room) and the page obstacles (layout-0495)."""
-    return tuple(Keep("", p.body, "body", p.sym) for p in env.placed.values()) + tuple(env.obstacles)
+    """The one keep set a wire must not run through: each placed body and the page obstacles (layout-0495)."""
+    return body_keeps(env.placed.values()) + tuple(env.obstacles)
 
 
 def body_hit(env: RouteEnv, net: str, points: Sequence[XY]) -> Keep | None:

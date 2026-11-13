@@ -27,6 +27,7 @@ def body_g(symbol: DrawnSymbol) -> Rect:
             library=LIBRARY,
             offsets=dict(symbol.offsets),
             sides=dict(symbol.sides),
+            turn=symbol.turn,
         )
         if is_generic_box(symbol.key)
         else LIBRARY.get(symbol.key)
@@ -50,6 +51,7 @@ class Ink(NamedTuple):
 
 
 _TRANSLATE = re.compile(r"translate\(\s*([-\d.]+)[ ,]+([-\d.]+)\s*\)")
+_TURNED = re.compile(r"rotate\(\s*-90[ ,]+([-\d.]+)[ ,]+([-\d.]+)\s*\)")
 
 
 def _walk(node: ET.Element, at: tuple[float, float]) -> Iterator[tuple[ET.Element, tuple[float, float]]]:
@@ -64,7 +66,7 @@ def _walk(node: ET.Element, at: tuple[float, float]) -> Iterator[tuple[ET.Elemen
 
 
 def page_ink(svg: str) -> list[Ink]:
-    """The ink box of every text on a compiled page `svg`, measured in the library's font (anchor, size, cap height)."""
+    """The ink box of every text on a compiled page `svg`, measured in the library's font (anchor, size, cap height); a turned text as turned."""
     font = LIBRARY.font
     found = []
     for node, at in _walk(ET.fromstring(svg), (0.0, 0.0)):  # noqa: S314 - the page SVG is this build's own output
@@ -73,5 +75,10 @@ def page_ink(svg: str) -> list[Ink]:
         width = text_width(font, text, size)
         left = {"start": x, "middle": x - width / 2, "end": x - width}[node.get("text-anchor", "start")]
         cap = font.cap_height / font.units_per_em * size
-        found.append(Ink(text, at, (at[0] + left, at[1] + y - cap, at[0] + left + width, at[1] + y)))
+        box = (left, y - cap, left + width, y)
+        turned = _TURNED.search(node.get("transform") or "")
+        if turned:  # rotate(-90 cx cy) maps (px, py) to (cx + py - cy, cy - px + cx)
+            cx, cy = float(turned.group(1)), float(turned.group(2))
+            box = (cx + box[1] - cy, cy - box[2] + cx, cx + box[3] - cy, cy - box[0] + cx)
+        found.append(Ink(text, at, (at[0] + box[0], at[1] + box[1], at[0] + box[2], at[1] + box[3])))
     return found

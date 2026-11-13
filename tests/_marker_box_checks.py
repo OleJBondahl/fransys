@@ -25,7 +25,7 @@ lazy from fransys_layout.core.values import Box
 class Facts:
     """One layout marker: the record drawn at its spot with layout's box, and the other homes.
 
-    `matched` is false when no drawn marker at the spot has `marker_drawn_box` as its outline.
+    `matched` is false when no drawn marker at the spot has `marker_drawn_box` as its outline (a tag or arrow: inside it).
     """
 
     kind: str
@@ -40,16 +40,19 @@ def _link_box_from_outline(rec: LinkMarker, outline: Box, gap: int) -> tuple[int
     return outline.x + dx * gap, outline.y + dy * gap, outline.w, outline.h
 
 
+def _inside(box: Box, reserve: Box) -> bool:
+    return box.x >= reserve.x and box.y >= reserve.y and box.x + box.w <= reserve.x + reserve.w and box.y + box.h <= reserve.y + reserve.h
+
+
 def _facts(mark, options, pairs, gap: int, boxes) -> Facts:
     kind = str(mark.kind)
     want = marker_drawn_box(mark, options)
-    hits = [(rec, sym) for rec, sym in pairs if sym.outline == want]
+    link = kind in ("arrow", "tag")  # a tag or arrow draws the box of its own text, inside the reserve (REF-BOX-OWN-LENGTH)
+    hits = [(rec, sym) for rec, sym in pairs if sym.outline == want or (link and _inside(sym.outline, want))]
     if not hits:
         return Facts(kind, matched=False, pdf_ok=None, fit_ok=None)
     rec, sym = hits[0]
-    pdf_ok = None
-    if rec.via_x is None and rec.box_x is None and rec.stub_extra == 0:
-        pdf_ok = boxes[rec.id] == _link_box_from_outline(rec, sym.outline, gap)
+    pdf_ok = boxes[rec.id] == _link_box_from_outline(rec, sym.outline, gap)
     fit_ok = None
     if kind in ("arrow", "tag"):
         fit = options.link_fit[mark.orient]

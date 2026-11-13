@@ -1,7 +1,7 @@
 """Which ports carry any connection, and the two-port functions wired at one end only."""
 
 from fransys_model.derive.facts.joins import joined_ports
-from fransys_model.derive.facts.mates import mate_ports
+from fransys_model.derive.facts.mates import mate_pairs
 from fransys_model.derive.facts.net_facts import declared_nets_of
 from fransys_model.derive.facts.roles import function_role
 from fransys_model.derive.facts.unit_index import boundary_owners
@@ -18,7 +18,7 @@ _TWO_PORTS = 2
 @digest_cached(DIGEST_CACHE_SIZE)
 def mated_ports(model: Model) -> frozenset[Id[Port]]:
     """Every port that sits on a mate: a mate pairs the ports of equal name."""
-    return frozenset(port for pair in mate_ports(model) for port in pair)
+    return frozenset(port for _, a, b in mate_pairs(model) for port in (a, b))
 
 
 @digest_cached(DIGEST_CACHE_SIZE)

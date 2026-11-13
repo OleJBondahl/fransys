@@ -29,7 +29,7 @@ def _free(y: int, span: Span, taken: Sequence[Taken], keeps: Sequence[Keep], gri
     """No taken run on the grid row over the span, and no hard keep under it that the wire does not own."""
     x0, x1, own = span
     return not any(t[0] // grid == y // grid and t[1] <= x1 and x0 <= t[2] for t in taken) and not clear(
-        Box(x0, y, x1 - x0, 0), keeps, {}, gap=-1, own=own
+        Box(x0, y, x1 - x0, 0), keeps, {}, edge="open", own=own
     )
 
 

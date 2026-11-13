@@ -19,9 +19,9 @@ __all__ = ["required_drawn"]
 
 
 def required_drawn(model: Model, scope: Iterable[Id[Port]]) -> tuple[Required, ...]:
-    """The `ConductorEnd` at each `scope` port, then a `FunctionSymbol` per drawn function.
+    """The `ConductorEnd` or `MateEnd` at each `scope` port, then a `FunctionSymbol` per drawn function.
 
-    Ends come in `order.stub_far_order` order (a conductor between two scope ports gives two); the
+    Ends come in `order.stub_far_order` order (a conductor between two scope ports gives two, a conductor before a mate); the
     functions are `schematic_functions` less an accessory's, in id order. A scope port the model
     does not hold raises `SchemaError`.
     """

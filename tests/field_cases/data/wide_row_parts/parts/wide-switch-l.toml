@@ -1,0 +1,18 @@
+schema = 2
+
+[part]
+mpn = "WIDE-SWITCH-2P-L"
+manufacturer = "Demo"
+description = "Field switch, 2-pole"
+category = "electromechanical"
+class_code = "B"
+
+[[function]]
+name = "sw"
+kind = "switch"
+symbol = "make-contact"
+ports = [
+    { name = "A_WWWWWWWW", role = "generic", side = "line", symbol_port = "in" },
+    { name = "B_WWWWWWWW", role = "generic", side = "load", symbol_port = "out" },
+]
+links = [{ a = "A_WWWWWWWW", b = "B_WWWWWWWW", kind = "switched", rest = "open" }]

@@ -73,12 +73,13 @@ def test_sides_shorter_than_port_names_raises():
 
 def test_a_marking_slot_sits_beside_each_port():
     """One `marking.<port id>` slot per port, E of its wire, just inside the body."""
-    symbol = _box(("a", "b", "c"))
+    symbol = _box(("a", "b", "function.longmarking"))
     markings = symbol.slots[1:]
-    assert [marking.id for marking in markings] == ["marking.a", "marking.b", "marking.c"]
+    assert [marking.id for marking in markings] == ["marking.a", "marking.b", "marking.function.longmarking"]
+    # CAN-FAIL: generic_box.py `_marks`: `width / G_PER_MODULE` -> a fixed 1.5 gives 1.5, not 41/8, for the long one
+    assert [marking.box for marking in markings] == [(0.5, 1), (0.5, 1), (41 / 8, 1)]
     for marking, port in zip(markings, symbol.ports, strict=True):
         assert marking.side is Direction.E
-        assert marking.box == (1.5, 1)
         offset_y = 0.75 if port.direction is Direction.N else -0.75
         assert marking.position == Point(port.position.x + 0.25, port.position.y + offset_y)
 
@@ -115,23 +116,6 @@ def test_a_side_other_than_n_or_s_raises():
         _box(("a", "b"), sides=("n", "e"), offsets=(0.0, 2.0))
 
 
-def test_box_pitch_fits_the_widest_thing_standing_at_a_port():
-    """layout-0132: `stand` G wide needs `ceil(stand / 8 + 0.5)` M, never less than markings."""
-    # CAN-FAIL: generic_box.py `box_pitch`: `max(longest, stand)` -> `longest` gives 2 M, not 3 M
-    assert box_pitch(_widths(("+", "-"))) == 2.0
-    assert box_pitch(_widths(("+", "-")), stand=16) == 3.0
-    assert box_pitch(_widths(("+", "-")), stand=4) == 2.0
-    assert box_pitch(_widths(("function.longmarking",)), stand=16) == 6.0
-
-
-def test_a_stand_spaces_the_ports_at_the_wider_pitch_and_keeps_the_plain_body_margin():
-    """`stand` 20 G: ports 3 M apart; the body ends at the last port plus plain pitch plus 2 M."""
-    symbol = _box(("a", "b", "c"), stand=20)
-    assert [p.position.x for p in symbol.ports] == [0, 0, 3]
-    assert body_box(symbol) == Box(Point(-2, -2), Point(5, 2))
-    assert _box(("a", "b", "c"), stand=0) == _box(("a", "b", "c"))
-
-
 @pytest.mark.parametrize("count", [8, 9, 16])
 def test_the_kth_north_and_south_pin_of_a_half_split_box_share_one_x(count: int):
     """BOX-SIDES D: the half split (first half N, rest S) puts pin k over pin k at one pitch."""
@@ -150,3 +134,15 @@ def test_box_marking_widths_are_symdefs_widths_rounded_up_to_the_grid():
     from electrical_symbols import LIBRARY, box_marking_widths
 
     assert box_marking_widths(LIBRARY, ["1", "A1", "PE", "LONGNAME", "13"]) == (5, 10, 9, 42, 10)
+
+
+def test_turned_markings_stand_beside_their_wires_inside_a_body_that_holds_them():
+    """R2069: a turned slot is 1 M wide and as long as its text, from its edge; the pitch is 2 M and the body holds one from each edge."""
+    # CAN-FAIL: generic_box.py `_height` returns 4 M when turned: the body is shorter than the long slot's 5.25 M
+    symbol = generic_box(("function.longmarking", "b"), marking_widths=_widths(("function.longmarking", "b")), turn=True)
+    long, short = symbol.slots[1:]
+    assert (long.turn, long.side, long.box) == (True, Direction.S, (1.0, 41 / 8))
+    assert (short.turn, short.side) == (True, Direction.N)
+    assert body_box(symbol).max.y - body_box(symbol).min.y >= 2 * long.box[1]
+    assert [p.position.x for p in symbol.ports] == [0.0, 0.0]
+    assert [p.position.x for p in generic_box(("a", "b", "c", "d"), marking_widths=(41,) * 4, turn=True).ports] == [0.0, 0.0, 2.0, 2.0]

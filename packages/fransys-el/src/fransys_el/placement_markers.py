@@ -12,7 +12,6 @@ from fransys_model.derive import far_pins, stub_far, stub_text_at
 
 from .placement_ids import pin_names, symbol_ids
 from .placement_views import marker_boxes
-from .write_stubs import stub_ends
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Mapping, Sequence
@@ -72,7 +71,7 @@ def _lines(
     found: dict[tuple[PinRef, PinRef], list[str]] = {}
     for near in set(pins):
         for far in dict.fromkeys(pin_of[f] for _, f in far_pins(model, ports.get(near, ())) if f in pin_of):
-            found[near, far] = [stub_text_at(model, unit, end, north=False) for end in stub_ends(model, ports[near], ports[far])]
+            found[near, far] = [stub_text_at(model, unit, end, north=False) for end in stub_far(model, ports[near], ports[far])]
     return found
 
 

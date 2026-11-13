@@ -7,11 +7,13 @@ build's correctness code is asserted here, so `finding_rise` anchors it without 
 import importlib
 import os
 
+DECLARED: set[str] = set()  # codes a field-case module asserted through expect_codes; tests/field_cases/conftest.py gates the other ERRORs
 REFUSED: list[object] = []  # builds that showed MATES_DISABLED or SCREEN_DISABLED; conftest fails the test unless it asserts the refusal
 
 
 def expect_codes(result, *codes: str) -> None:
     """Assert that `result` (a `fr.build` result) shows every code in `codes`; the sweep reads the call."""
+    DECLARED.update(codes)
     shown = sorted({f.code for f in result.findings})
     missing = sorted(set(codes) - set(shown))
     if {"MATES_DISABLED", "SCREEN_DISABLED"} & set(codes):

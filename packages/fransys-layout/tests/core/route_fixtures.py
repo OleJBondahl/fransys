@@ -54,12 +54,6 @@ def reversing_pair(perm: Sequence[int] = (2, 1, 0)) -> PlacementProblem:
     return PlacementProblem(AREA, tuple(syms), tuple(nets), facts=Facts())
 
 
-def with_crossed(cut: CutResult, fan_id: str, crossed: tuple[tuple[str, tuple[int, ...]], ...]) -> CutResult:
-    """The cut with Fan.crossed set on one fan; stage 1 never fills it (layout-0275)."""
-    fans = tuple(replace(f, crossed=crossed) if f.id == fan_id else f for f in cut.flow.fans)
-    return replace(cut, flow=replace(cut.flow, fans=fans))
-
-
 def link_across_box() -> PlacementProblem:
     """The t01 ring: stage 1 splits it into one cross-link whose ends sit in three columns."""
     return ring_problem()
@@ -135,7 +129,7 @@ def inherent(xs: Sequence[int], perm: Sequence[int]) -> int:
 
 
 def envs_of(prob: PlacementProblem, options: Options | None = None, cut: CutResult | None = None) -> tuple[RouteEnv, ...]:
-    """The stage 6 environments of a problem; a test may pass an edited cut (Fan.crossed)."""
+    """The stage 6 environments of a problem; a test may pass an edited cut."""
     opts = options or core_options(
         marker=MARKER,
     )
@@ -253,7 +247,7 @@ def stub_of(drawn: Drawn) -> tuple[Wire, ...]:
 def by_bundle(routes: Routes, problem: PlacementProblem) -> Routes:
     """Routes with each bundle member's wires renamed to the bundle's fan id `f:<bundle>`.
 
-    Stage 1 does not fill Fan.crossed (layout-0275), so a reversing plant is drawn plain and a
+    A reversing plant is drawn plain and a
     pole's drop lands on another member's line: the plants check connection per bundle.
     """
     fan_of = {n.id: f"f:{n.bundle.id}" for n in problem.nets if n.bundle}

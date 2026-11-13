@@ -30,8 +30,8 @@ from fransys_model.derive.passes.numbering_units import unit_tag_duplicates
 from fransys_model.derive.unit_relative_key import unit_relative_key
 from fransys_model.derive.unit_release import unit_release
 from fransys_model.kernel import Finding, Model, evolve
+from fransys_model.refdef import Aspect
 from fransys_model.vocab.codes import finding
-from fransys_model.vocab.enums import Aspect
 from fransys_model.vocab.facets.reserved_designation import ReservedDesignationFacet
 from fransys_model.vocab.finding_ref import ref
 from fransys_model.vocab.tables import (

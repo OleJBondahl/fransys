@@ -93,7 +93,6 @@ def respell_flow(flow: FlowGraph, m: Maps) -> FlowGraph:
             drivers=tuple(_attach(a, m) for a in f.drivers),
             legs=tuple(_attach(a, m) for a in f.legs),
             hub=m[f.hub] if f.hub else None,
-            crossed=tuple((m[sym], perm) for sym, perm in f.crossed),
         )
         for f in flow.fans
     )

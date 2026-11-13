@@ -25,7 +25,7 @@ Shape = "tuple[list[Sym], list[Net], str]"
 
 
 def _box(sym: Sym, order: tuple[str, ...]) -> Sym:
-    return replace(sym, box=BoxSpec(order, 16))
+    return replace(sym, box=BoxSpec(order, 16, 16))
 
 
 def _mounted_overload() -> tuple[list[Sym], list[Net], str]:

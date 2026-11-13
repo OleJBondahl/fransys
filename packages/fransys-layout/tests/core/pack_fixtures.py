@@ -38,7 +38,7 @@ def card(sym_id: str, pin_count: int, pitch: int = 16, north: int = 0) -> Sym:
     """A box symbol whose pins p1.. face south in marking order; the first `north` face north."""
     body = Box(0, 0, pitch * (pin_count + 1), 32)
     pins = tuple(Pin(f"p{i}", "N", pitch * i, 0, i - 1) if i <= north else Pin(f"p{i}", "S", pitch * i, 32, i - 1) for i in range(1, pin_count + 1))
-    spec = BoxSpec(tuple(p.id for p in pins), pitch)
+    spec = BoxSpec(tuple(p.id for p in pins), pitch, pitch)
     return Sym(
         sym_id,
         None,

@@ -12,7 +12,6 @@ from options_fixtures import core_options
 from turn_fixtures import refit
 
 from fransys_layout.core import Facts, PlacementProblem, Sym
-from fransys_layout.core.intervals import levels
 from fransys_layout.core.place_env import page_envs
 from fransys_layout.core.place_x import place_x
 from fransys_layout.core.place_y import _spans
@@ -23,7 +22,7 @@ from .cut_fixtures import AREA, box_sym, elem
 from .flow_builders import net, poles
 from .pipeline_fixtures import cut_of, placed_from
 from .place_fixtures import all_pins
-from .route_fixtures import overlaps, reversing_pair, with_crossed
+from .route_fixtures import overlaps
 
 OPTIONS = core_options(
     marker=MARKER,
@@ -68,26 +67,6 @@ def test_four_fan_trunks_with_overlapping_spans_take_four_y_lines() -> None:
     placement = placed_from(cut, prob, OPTIONS)
     assert sorted(t.y for pg in placement.pages for t in pg.trunks) == [64, 72, 80, 88]
     assert overlaps(route_pages(placement, cut, prob, OPTIONS)) == []
-
-
-def test_crossed_fan_pins_hang_lanes_plus_levels_grid_steps_below_the_trunk() -> None:
-    """Input: reversing_pair((2,1,0)), fan f:bL crossed as K2 (2,1,0): three lanes, two levels.
-    Expected: the trunk line sits G * (3 + 2) = 40 above K2's pins (levels from intervals.levels).
-    """
-    perm = (2, 1, 0)
-    prob = reversing_pair(perm)
-    cut = with_crossed(cut_of(prob, OPTIONS), "f:bL", (("K2", perm),))
-    placement = placed_from(cut, prob, OPTIONS)
-    routes = route_pages(placement, cut, prob, OPTIONS)
-    pins = all_pins(placement)
-    xs = {lane: pins[("K2", f"n{perm[lane]}")][0] for lane in range(3)}
-    moved = [j for j in range(3) if perm[j] != j]
-    spans = [(min(xs[j], xs[perm[j]]), max(xs[j], xs[perm[j]])) for j in moved]
-    n_levels = max(levels(spans, range(len(spans)))) + 1
-    ws = [w for pg in routes.pages for w in pg.wires if w.kind == "trunk"]
-    (trunk,) = [w for w in ws if w.lane == 0 and w.net == "L1"]
-    clearance = min(pins[("K2", f"n{p}")][1] for p in perm) - trunk.points[0][1]
-    assert clearance == G * (3 + n_levels)
 
 
 def test_a_free_tall_column_inside_a_trunk_span_stands_below_the_trunk() -> None:

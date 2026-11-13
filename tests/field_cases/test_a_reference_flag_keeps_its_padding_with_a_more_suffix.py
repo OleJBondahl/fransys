@@ -61,7 +61,7 @@ def test_a_reference_flag_keeps_its_padding_with_a_more_suffix() -> None:
     assert suffixed, "the shape must print a flag with a ` +k` suffix"
     short = []
     for text, marker in suffixed:
-        along = marker.height if marker.vertical else marker.width  # a turned box's length
+        along = marker.width
         needed = max(text_width_g(LIBRARY.font, t, height=height) for t in text.split("\n")) + 2 * padding
         if along < needed:
             short.append((text, along, needed))

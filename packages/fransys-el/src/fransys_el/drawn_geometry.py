@@ -86,11 +86,29 @@ def dot_on_pin(a: DrawnSymbol, b: DrawnSymbol, ports: Mapping[str, XY]) -> bool:
     return (dot.x, dot.y) in {ports[p] for p in body.ports if p in ports}
 
 
+def _without_port_end(points: Sequence[XY], ports: Sequence[XY]) -> tuple[Sequence[XY], Sequence[XY]]:
+    """The wire's points less an end point at one of `ports`, and those less the far point of that entry segment too.
+
+    The first is the run the wire keeps; the second the points that may lie in a box: the entry segment is exempt whole (R2101).
+    """
+    kept, free = points, points
+    if any(own_end(q, kept[-1]) for q in ports):
+        kept, free = kept[:-1], free[:-2]
+    if kept and any(own_end(q, kept[0]) for q in ports):
+        kept, free = kept[1:], free[1:]
+    return kept, free
+
+
+def _meets_box(points: Sequence[XY], box: Box, ports: Sequence[XY]) -> bool:
+    kept, free = _without_port_end(points, ports)
+    return any(_in(p, box) for p in free) or _runs(kept, box, ports)
+
+
 def over_markers(part: PagePart) -> list[str]:
     """One member per (wire or dot, marker): `wire / <key>` or `dot / <key>`, in drawing order.
 
-    A wire with a point in the marker's box (its edge included) or crossing it counts; a wire
-    ending at the marker's own port does not, since the stub's wire ends there.
+    A wire with a point in the marker's box (its edge included) or crossing it counts. Only the end
+    segment that enters the marker's own port is exempt, so a wire that runs on through the box counts (R2062).
     """
     found: list[str] = []
     for marker in part.drawing.symbols:
@@ -98,11 +116,6 @@ def over_markers(part: PagePart) -> list[str]:
         if box is None or not is_marker(marker):
             continue
         ports = [(marker.x, marker.y), *(part.ports[p] for p in marker.ports if p in part.ports)]
-        found += [
-            f"wire / {marker.key}"
-            for w in part.drawing.wires
-            if not any(own_end(q, e) for q in ports for e in (w.points[0], w.points[-1]))
-            and (any(_in(p, box) for p in w.points) or _runs(w.points, box, ports))
-        ]
+        found += [f"wire / {marker.key}" for w in part.drawing.wires if _meets_box(w.points, box, ports)]
         found += [f"dot / {marker.key}" for d in part.drawing.symbols if dot_on_marker(d, marker) and not any(own_end(q, (d.x, d.y)) for q in ports)]
     return found

@@ -17,7 +17,7 @@ dev = [
     "fonttools==4.68.0",
     "typst==0.15.2",
     "vulture==2.16",
-    "symdef==0.35.0",
+    "symdef==0.36.0",
     "refdef==0.3.1",
     "elecdef==0.7.0",
     "electrical-symbols",
@@ -177,7 +177,7 @@ pythonpath = [
 ]
 addopts = "-ra --strict-markers --import-mode=importlib"
 markers = ["wp(name): the work package that implements this acceptance test", "rule(id): the docs/rules.toml row this test holds (RR3)", "private_input: reads internal/ or rules/, skipped in the export (R462)"]
-# A hung test stops itself (decision 0222): 180 s is over 5x the slowest gate entry (34.43 s setup, 18.22 s slowest call).
+# A hung test stops itself (decision 0222): 180 s; a build that needs more carries timeout(600) (slowest call 561.81 s under load ~20, R2270).
 timeout = 180
 # The cap charges the test function only, so a module fixture's build is not charged; a hung fixture is not covered.
 timeout_func_only = true

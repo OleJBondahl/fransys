@@ -9,6 +9,7 @@ from __future__ import annotations
 from dataclasses import replace
 from typing import TYPE_CHECKING
 
+import pytest
 from options_fixtures import core_options
 
 from fransys_layout.core import Hints, order_blocks
@@ -163,3 +164,31 @@ def test_every_seated_card_is_placed_on_its_page() -> None:
     ):
         pages = [pg for pg in placed_of(prob).pages if any(s.sym == box for s in pg.placed)]
         assert [pg.page for pg in pages] == [1], box
+
+
+def _star() -> PlacementProblem:
+    """Hub H wired to leaves L1 (at H.p2) and L2 (at H.p1): the host's pin order is L2, L1; tag order is L1, L2."""
+    boxes = [box_sym("H", "PLC", 2), box_sym("L1", "PLC", 1), box_sym("L2", "PLC", 1)]
+    return problem(boxes, [net("n1", "H.p2", "L1.p1"), net("n2", "H.p1", "L2.p1")])
+
+
+@pytest.mark.rule("BARE-CARD-2")
+def test_cards_wired_to_one_bare_card_follow_it_in_its_pin_order() -> None:
+    """BARE-CARD-2 (layout-0580): a bare peer hosts; its leaves stand in its pin order, not in tag order."""
+    assert _seated(_star()) == ["card:H", "card:L2", "card:L1"]
+
+
+@pytest.mark.rule("BARE-CARD-2")
+def test_a_card_in_a_chain_keeps_the_tag_order() -> None:
+    """R2099: a chain end whose peer has a second peer that is not a leaf is not hung on it."""
+    boxes = [box_sym(f"A{i}", "PLC", 2) for i in (1, 2, 3, 4)]
+    wires = [net("n1", "A1.p1", "A2.p1"), net("n2", "A2.p2", "A3.p1"), net("n3", "A3.p2", "A4.p1")]
+    assert _seated(problem(boxes, wires)) == ["card:A1", "card:A2", "card:A3", "card:A4"]
+
+
+def test_a_lone_pair_is_hosted_by_the_card_with_the_smaller_block_id() -> None:
+    assert _seated(_pair()) == ["card:P1", "card:P2"]
+
+
+def _pair() -> PlacementProblem:
+    return problem([box_sym("P2", "PLC", 1), box_sym("P1", "PLC", 1)], [net("n1", "P1.p1", "P2.p1")])

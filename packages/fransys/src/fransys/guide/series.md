@@ -177,7 +177,7 @@ A refusal starts with one of these texts. Each has one fix.
 | `conductors L1, L2 into L1, L3: name the pins` | pass elements whose conductor marks agree |
 | `<element> has N poles; a path from S takes` | pass the supply's phases, or the phases and N |
 | `row <row> value <n> is a bare number, a size` | give the colour and the size as a tuple, such as `("BK", 1.5)` |
-| `<a> leaves with N poles but <b> takes M` | a pin or a tuple of pins in the middle takes the series' width: name as many pins as the neighbours have poles |
+| `<a> leaves with N poles but <b> takes M` | `<a>` has one pin: give `<b>` one pin for this connector, or use a part that models its contacts; `<b>` has one pin: use a function of N poles there, or wire the poles one by one with `d.series(pin, pin, wire=...)`; both have several: name as many pins as the neighbours have poles, or wire them with `d.series(pin, pin, wire=...)` |
 | `a changeover is two throws` | pass `K1.co_1.no` or `K1.co_1.nc` |
 | `a cable sits between two elements that are not cables` | put a plain element on each side of the cable |
 | `<run a> and <run b> both take poles`, `<run> takes poles` | a bridged run in a series, alone or in a parallel, shorts its poles: give each pole its own sized run and take `(x1.run("L1", n, bridged=True)[1], ...)` as a tuple, one terminal per pole |

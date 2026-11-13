@@ -14,8 +14,11 @@ from fransys_el import build, house_conventions, lay_out_drawn, symbol_kit
 
 import fransys_layout
 from electrical_symbols import LIBRARY
+from fransys_model.layout import default_sheet_format
 
 LAYOUT = tomllib.loads((Path(fransys_layout.__file__).parent / "layout.toml").read_text(encoding="utf-8"))["layout"]
+
+SHEET = default_sheet_format()  # the A3 sheet
 
 
 def built_with_unlaid(build_it):
@@ -36,7 +39,7 @@ def built_with_unlaid(build_it):
 
 def laid_again(unlaid):
     """`lay_out_drawn` over `unlaid` with the house conventions: (laid model, Drawings)."""
-    conventions = house_conventions(fr.settings().layout, LIBRARY, text_height=8)
+    conventions = house_conventions(fr.settings().layout, LIBRARY, text_height=8, sheet=SHEET)
     kit = symbol_kit(unlaid, LIBRARY)
     problem, _ = build(unlaid, kit, conventions, LIBRARY)
     laid, _, drawn = lay_out_drawn(unlaid, kit, problem, conventions, LIBRARY)

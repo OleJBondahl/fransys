@@ -1,6 +1,6 @@
 """The side of each pin of a generic box (BOX-SIDES): one pin over the other.
 
-Rules in order: item functions of different V1 rank split (the first rank on N); a power pin keeps
+Rules in order: a part's `box_side` for each pin of its function; item functions of different V1 rank split (the first rank on N); a power pin keeps
 the side `derive.pinned_box_sides` gives; the rest take the first half in marking order on N, the
 other half on S. A bundle stays together.
 """
@@ -71,13 +71,11 @@ def _halves(model: Model, ports: Sequence[Id[Port]]) -> dict[Id[Port], str]:
 
 
 def box_sides(model: Model, pick: Pick, names: Sequence[str]) -> tuple[str, ...]:
-    """The side of each box port in `names` (marking order): hint, rank split, power, halves."""
+    """The side of each box port in `names` (marking order): a part's box_side, rank split, power, halves."""
     port_of = {name: port for port, name in pick.ports.items()}
     ports = [port_of[name] for name in names]
     split = _by_rank(model, ports)
-    if split:
-        return tuple(split[p] for p in ports)
-    pinned = pinned_box_sides(model, ports)
+    pinned = pinned_box_sides(model, ports, stated_only=bool(split))
     free = [p for p in ports if pinned[p] is None]
-    rest = _halves(model, free) if len(free) == len(ports) else dict.fromkeys(free, SOUTH)
+    rest = split or (_halves(model, free) if len(free) == len(ports) else dict.fromkeys(free, SOUTH))
     return tuple(pinned[p] or rest[p] for p in ports)

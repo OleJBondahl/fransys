@@ -1,6 +1,7 @@
 """Domain layer: record kinds, facets, built on kernel."""
 
 from fransys_model.kernel import register_namespaces, register_schema_version
+from fransys_model.refdef import Aspect
 
 from .aspects import AspectNode, Placement
 from .codes import FINDING_CODES
@@ -11,7 +12,6 @@ from .core import Function, Item, Port, Unit, UnitRelease
 from .designation_scheme import DESIGNATION_SCHEME
 from .document import Document
 from .enums import (
-    Aspect,
     ConductorKind,
     ConductorMark,
     DocumentPreset,

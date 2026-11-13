@@ -3,7 +3,7 @@
 from typing import TYPE_CHECKING, Any, Final
 
 from fransys_model.checks._finding import ordered
-from fransys_model.derive.facts.children import aspect_parent, parent_item, unit_parent
+from fransys_model.derive.facts.children import aspect_parent, aspect_word, parent_item, unit_parent
 from fransys_model.vocab.codes import finding
 from fransys_model.vocab.finding_ref import ref
 from fransys_model.vocab.tables import aspect_nodes, items, placements, units
@@ -60,7 +60,7 @@ def _aspect_findings(model: Model) -> list[Finding]:
         parent_id = aspect_parent(model, node.id)
         parent = None if parent_id is None else nodes[parent_id]
         if parent is not None and parent.aspect is not node.aspect:
-            message = f"{node.aspect.value} node {node.label} is parented under {parent.aspect.value} node {parent.label}"
+            message = f"{aspect_word(node.aspect)} node {node.label} is parented under {aspect_word(parent.aspect)} node {parent.label}"
             found.append(_finding(ASPECT_CROSS_PARENT, (node.id, parent.id), message))
     return found
 
@@ -69,7 +69,7 @@ def _placement_findings(model: Model) -> list[Finding]:
     nodes = aspect_nodes(model)
     by_item_aspect: dict[tuple[Id[Any], str], list[Id[Any]]] = {}
     for placement in placements(model).values():
-        aspect = nodes[placement.node].aspect.value
+        aspect = aspect_word(nodes[placement.node].aspect)
         by_item_aspect.setdefault((placement.item, aspect), []).append(placement.id)
     return [
         _finding(

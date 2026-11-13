@@ -1,0 +1,17 @@
+schema = 2
+
+[part]
+mpn = "FUSE-TB-2.5"
+manufacturer = "Demo"
+description = "Fused feed-through terminal block, the fuse insert sits between its two connections"
+category = "terminal"
+class_code = "X"
+
+[[function]]
+name = "terminal"
+kind = "terminal"
+ports = [
+    { name = "internal", role = "internal" },
+    { name = "external", role = "external" },
+]
+links = [{ a = "internal", b = "external", kind = "protective" }]

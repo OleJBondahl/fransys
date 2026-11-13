@@ -10,9 +10,9 @@ from fransys_model.layout import (
     PageRole,
     SheetFormat,
 )
+from fransys_model.vocab import Aspect, FunctionKind
 from fransys_model.vocab.aspects import AspectNode
 from fransys_model.vocab.core import Function, Item
-from fransys_model.vocab.enums import Aspect, FunctionKind
 
 PRODUCED_BY = "example-engine 0.0.0"
 

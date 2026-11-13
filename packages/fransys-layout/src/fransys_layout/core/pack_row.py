@@ -77,6 +77,12 @@ def _margin(spec: RowSpec, box: str) -> int:
     return box_spec.margin if box_spec else spec.options.box_margin
 
 
+def _pitch_floor(spec: RowSpec, box: str) -> int:
+    """The least distance between neighbouring pins of a box: the symbol's own pitch, which fits its pin names."""
+    box_spec = spec.syms[box].box
+    return box_spec.pitch if box_spec else 0
+
+
 def _sep(spec: RowSpec, a: str, b: str) -> int:
     return separation(spec.pcs[a], spec.pcs[b], spec.syms, spec.in_row, spec.options)
 
@@ -136,11 +142,10 @@ def _reserve(g: Graph, spec: RowSpec, extra: int) -> None:
             )
 
 
-def _run(g: Graph, spec: RowSpec, cols: Sequence[str], extra: int, *, free: bool = False) -> None:
-    """Chain neighbours at their separation; with `free`, only a pair with a column that has no card pin."""
+def _run(g: Graph, spec: RowSpec, cols: Sequence[str], extra: int) -> None:
+    """Chain neighbours at their separation."""
     for a, b in pairwise(cols):
-        if not free or a not in spec.attach or b not in spec.attach:
-            g.after(col_node(a), col_node(b), _sep(spec, a, b) + extra)
+        g.after(col_node(a), col_node(b), _sep(spec, a, b) + extra)
 
 
 def _card(g: Graph, spec: RowSpec, block: Block, cols: Sequence[str]) -> None:
@@ -156,7 +161,6 @@ def _card(g: Graph, spec: RowSpec, block: Block, cols: Sequence[str]) -> None:
             0,
         )
     _card_columns(g, spec, block.id, box, cols)
-    _run(g, spec, cols, 0, free=True)
     _pair_pins(g, spec, box, block)
     lead, tail = box_reach(spec.syms[box])
     g.after(slot_node(block.id, LOW), box_node(box, LOW), lead)
@@ -209,15 +213,16 @@ def _one_column(spec: RowSpec, a: str, b: str) -> bool:
 def pin_pitches(spec: RowSpec) -> dict[tuple[str, str, str], int]:
     """(box, pin, next pin) to its pitch: the column's reach plus a grid where one pin holds a column and the other none, else the minimum.
 
-    A block's value: `one_row` computes it over the block's own columns, so a cut window never changes it.
+    Never below the symbol's own pin spacing (G05-PIN-LINE). A block's value, so a cut window never changes it.
     """
     out: dict[tuple[str, str, str], int] = {}
     for block in spec.blocks:
         box = block.anchor or ""
         held = {pin: col for col, (b, pin, _) in spec.attach.items() if b == box}
+        dx = {p.id: p.dx for p in spec.syms[box].pins} if block.anchor else {}
         for edge in ("N", "S"):
             for a, b in pairwise([p for p, e in block.pin_edges if e == edge]):
-                out[box, a, b] = spec.options.box_pin_pitch_min
+                out[box, a, b] = max(_pitch_floor(spec, box), dx[b] - dx[a])
                 if (a in held) != (b in held):
                     lo, hi = extent(spec, held[a] if a in held else held[b])
                     out[box, a, b] = max(out[box, a, b], (hi if a in held else -lo) + spec.options.wiring_grid)

@@ -3,7 +3,7 @@
 import pytest
 from symdef import InvalidValueError, Polyline, Style, body_box, stretch
 
-from electrical_symbols import LIBRARY
+from electrical_symbols import G_PER_MODULE, LIBRARY, box_marking_widths
 
 CHANNELS = {"c1": 8, "c2": 40, "c3": 64, "c4": 104}
 
@@ -65,3 +65,16 @@ def test_by_others_variant_draws_the_body_dashed():
     assert outline(plain).style is Style.SOLID
     assert outline(others).style is Style.DASHED
     assert {p.id for p in plain.ports} == {p.id for p in others.ports}
+
+
+def test_transformer_box_names_grow_apart_and_never_overprint():
+    """TRANSFORMER-BOX-NAMES: a winding's two names read outward from their pins, each in a slot that holds it."""
+    symbol = LIBRARY.get("transformer-box")
+    for pair, names in ((("p1", "p2"), ("U_pri", "V_pri")), (("s1", "s2"), ("U_sec", "V_sec"))):
+        spans = []
+        for port, width in zip(pair, box_marking_widths(LIBRARY, names), strict=True):
+            slot = next(s for s in symbol.slots if s.id == f"marking.{port}")
+            assert slot.box[0] * G_PER_MODULE >= width
+            x = slot.position.x * G_PER_MODULE
+            spans.append((x - width, x) if slot.side.name == "W" else (x, x + width))
+        assert spans[0][1] <= spans[1][0]

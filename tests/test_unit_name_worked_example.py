@@ -12,18 +12,13 @@ from fransys_author.design import Design
 
 # `test_declared_dependencies.py`'s own pattern for importing a sibling root test module by
 from test_units_worked_example import _PROJECT, _system_design, pump_cabinet
+from test_write_unit_worked_example import _cover
 
 from fransys_model.checks.documents import DOCUMENT_UNIT_UNRESOLVED
 from fransys_model.derive import unit_name_unresolved, unit_release
 from fransys_model.derive.numbering_pins import name_findings
 from fransys_model.kernel import Finding, Severity
 from fransys_model.vocab.tables import units as units_table
-
-
-def _cover(tmp_path, name, text):
-    path = tmp_path / name
-    path.write_text(text, encoding="utf-8")
-    return path
 
 
 def _single_cabinet_design(parts, *, prefix="p", name="C1"):

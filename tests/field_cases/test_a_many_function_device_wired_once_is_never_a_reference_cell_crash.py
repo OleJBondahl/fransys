@@ -1,4 +1,4 @@
-"""Field case: a gas monitor joined to a 20-channel analog controller by one wire, with a unit document at A3.
+"""Field case: a gas monitor joined to an 80-channel analog controller by one wire, with a unit document at A3.
 The bug (KI-773 REFCELL-CRASH, consumer 0.23.0): the controller's unwired channels fill one row past the frame; `write_membership._row` raised
 `ReferenceCellError` before the layout's ERROR was judged. Fixed: the ERROR stops the build before any output step (designer R1945)."""
 
@@ -19,7 +19,7 @@ class _Io(NamedTuple):
 def _crash_wide(u: Any) -> _Io:
     with u.function("F1", "Monitoring"):
         monitor = u.device("B1", "FLD-GAS-MONITOR")
-        controller = u.device("A1", "FLD-AI-CTRL-20")
+        controller = u.device("A1", "FLD-AI-CTRL-80")
     u.series(monitor.X1["1"], controller.ai_1["ANALOG_INPUT_01_P"], wire=("BK", 1.0))
     return _Io(B1=monitor)
 

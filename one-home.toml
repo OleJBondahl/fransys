@@ -207,7 +207,6 @@
 "fransys_model.vocab.document::unit" = 1
 "fransys_author.instantiate::kind" = 1
 "fransys_author._scope_build::kind" = 1
-"fransys_model.vocab.markings::kind" = 1
 "fransys_model.vocab.tables::kind" = 1
 "fransys_model.vocab.templates::kind" = 3
 "fransys_model.vocab.templates::closed_at_rest" = 1
@@ -295,7 +294,6 @@
 "fransys_model.derive.overview_view_plain::kind==str" = 2
 "fransys_model.derive.report_scope::ConductorKind" = 1
 "fransys_model.derive.wire_list::ConductorKind" = 1
-"fransys_model.vocab.markings::LinkKind" = 1
 "fransys_model.vocab.templates::FunctionKind" = 3
 "fransys_model.vocab.templates::LinkKind" = 1
 "fransys_overview._data_places::kind==str" = 1
@@ -344,6 +342,7 @@
 "identifier" = 3
 
 [order_sites]
+"fransys_el.drawn_lanes::_feet" = 1
 "electrical_symbols.box_ports::default_order" = 1
 "fransys._exports::_clean_stale_exports" = 1
 "fransys._exports::_put_all" = 1
@@ -542,7 +541,7 @@
 "fransys_model.derive.facts.keep_whole::_item_boxes" = 1
 "fransys_model.derive.facts.keep_whole::_line_units" = 1
 "fransys_model.derive.facts.keep_whole::keep_whole_sets" = 1
-"fransys_model.derive.facts.mates::mate_ports" = 1
+"fransys_model.derive.facts.mates::mate_pairs" = 1
 "fransys_model.derive.facts.part_poles::poles_of_template" = 1
 "fransys_model.derive.facts.part_poles::unlinked_poles" = 1
 "fransys_model.derive.facts.potential_without_supply::declared_rails" = 1
@@ -569,7 +568,6 @@
 "fransys_model.derive.instance_tag::instance_tags" = 1
 "fransys_model.derive.jumper_lanes::jumper_lanes" = 1
 "fransys_model.derive.line_fact::line_conductors" = 1
-"fransys_model.derive.marker_text::_boxmates_of" = 1
 "fransys_model.derive.marker_text::_own_text" = 1
 "fransys_model.derive.marker_text::_rank_drawing_set" = 1
 "fransys_model.derive.mate_rows::mate_partners" = 1
@@ -581,8 +579,6 @@
 "fransys_model.derive.open_core_ends::_open_by_cable" = 1
 "fransys_model.derive.open_core_ends::open_ends_at" = 1
 "fransys_model.derive.order_groups::function_groups_in_order" = 1
-"fransys_model.derive.order_kit::candidates_in_order" = 1
-"fransys_model.derive.order_kit::chains_in_order" = 1
 "fransys_model.derive.order_kit::pin_mates_in_order" = 1
 "fransys_model.derive.overview::_links" = 3
 "fransys_model.derive.overview::_nodes" = 1
@@ -864,7 +860,7 @@
 "fransys_pdf._cable_checks::_too_big_messages" = 1
 "fransys_pdf._drawings::_cable_runs" = 1
 "fransys_pdf._geometry::preamble" = 7
-"fransys_pdf._links::page_links" = 1
+"fransys_pdf._links::page_links" = 2
 "fransys_pdf._lists::_connector_section" = 2
 "fransys_pdf._markdown::_deep_heading" = 1
 "fransys_pdf._markdown::_element_typst" = 3
@@ -891,6 +887,7 @@
 "name:fransys_layout.core.keys::natural_key" = 1
 "name:fransys_layout.core.place_align::Line" = 1
 "name:fransys_layout.core.route_trunk::Line" = 1
+"name:fransys_layout.symbols.slots::ink_boxes" = 1
 "name:fransys_layout.core.score_wiring::Polyline" = 1
 "name:fransys_layout.core.topology_chains::Node" = 1
 "name:fransys_layout.core.topology_fans::Slot" = 1
@@ -907,7 +904,6 @@
 "name:fransys_layout.geometry.units::Point" = 1
 "name:fransys_layout.options::TextPlacement" = 1
 "name:fransys_model.layout.enums::Orientation" = 1
-"name:fransys_model.vocab.enums::Aspect" = 1
 "name:fransys_parts._changeover::check" = 1
 "name:fransys_parts._function_facts::check" = 1
 "name:fransys_parts._joins::check" = 1
@@ -921,13 +917,13 @@
 "packages/fransys-layout/src/fransys_layout/core/keys.py" = 8
 "packages/fransys-model/src/fransys_model/derive/contacts.py" = 41
 "packages/fransys-model/src/fransys_model/derive/facts/function_ratings.py" = 72
-"packages/fransys-model/src/fransys_model/derive/facts/part_poles.py" = 107
+"packages/fransys-model/src/fransys_model/derive/facts/part_poles.py" = 105
 "packages/fransys-model/src/fransys_model/derive/facts/part_throws.py" = 25
 "packages/fransys-model/src/fransys_model/derive/texts/designation_render.py" = 34
 "packages/fransys-model/src/fransys_model/derive/texts/designation_segments.py" = 88
 "packages/fransys-model/src/fransys_model/vocab/colours.py" = 63
-"packages/fransys-model/src/fransys_model/vocab/designation_scheme.py" = 45
+"packages/fransys-model/src/fransys_model/vocab/designation_scheme.py" = 44
 "packages/fransys-model/src/fransys_model/vocab/facets/rating.py" = 54
-"packages/fransys-model/src/fransys_model/vocab/markings.py" = 50
+"packages/fransys-model/src/fransys_model/vocab/markings.py" = 38
 "packages/fransys-model/src/fransys_model/vocab/signal_types.py" = 28
 "packages/fransys-parts/src/fransys_parts/_protection.py" = 62

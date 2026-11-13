@@ -1,0 +1,165 @@
+schema = 2
+
+[part]
+mpn = "WIDE-DI-16P-L"
+manufacturer = "Demo"
+description = "Input module, 16 channels, module supply"
+category = "plc_module"
+class_code = "K"
+
+[[function]]
+name = "power"
+kind = "load"
+ports = [
+    { name = "24V", role = "generic", side = "line", conductor = "L+" },
+    { name = "0V", role = "generic", side = "load", conductor = "L-" },
+]
+
+[function.operating]
+voltage = [{ nom = "24 V", at = ["DC"] }]
+nominal_current = "0.1 A"
+
+[[function]]
+name = "di_1"
+kind = "plc_channel"
+ports = [{ name = "1_WWWWWWWW", role = "generic" }]
+
+[function.plc_channel]
+signal = "di"
+channel = 1
+
+[[function]]
+name = "di_2"
+kind = "plc_channel"
+ports = [{ name = "2_WWWWWWWW", role = "generic" }]
+
+[function.plc_channel]
+signal = "di"
+channel = 2
+
+[[function]]
+name = "di_3"
+kind = "plc_channel"
+ports = [{ name = "3_WWWWWWWW", role = "generic" }]
+
+[function.plc_channel]
+signal = "di"
+channel = 3
+
+[[function]]
+name = "di_4"
+kind = "plc_channel"
+ports = [{ name = "4_WWWWWWWW", role = "generic" }]
+
+[function.plc_channel]
+signal = "di"
+channel = 4
+
+[[function]]
+name = "di_5"
+kind = "plc_channel"
+ports = [{ name = "5_WWWWWWWW", role = "generic" }]
+
+[function.plc_channel]
+signal = "di"
+channel = 5
+
+[[function]]
+name = "di_6"
+kind = "plc_channel"
+ports = [{ name = "6_WWWWWWWW", role = "generic" }]
+
+[function.plc_channel]
+signal = "di"
+channel = 6
+
+[[function]]
+name = "di_7"
+kind = "plc_channel"
+ports = [{ name = "7_WWWWWWWW", role = "generic" }]
+
+[function.plc_channel]
+signal = "di"
+channel = 7
+
+[[function]]
+name = "di_8"
+kind = "plc_channel"
+ports = [{ name = "8_WWWWWWWW", role = "generic" }]
+
+[function.plc_channel]
+signal = "di"
+channel = 8
+
+[[function]]
+name = "di_9"
+kind = "plc_channel"
+ports = [{ name = "9_WWWWWWWW", role = "generic" }]
+
+[function.plc_channel]
+signal = "di"
+channel = 9
+
+[[function]]
+name = "di_10"
+kind = "plc_channel"
+ports = [{ name = "10_WWWWWWWW", role = "generic" }]
+
+[function.plc_channel]
+signal = "di"
+channel = 10
+
+[[function]]
+name = "di_11"
+kind = "plc_channel"
+ports = [{ name = "11_WWWWWWWW", role = "generic" }]
+
+[function.plc_channel]
+signal = "di"
+channel = 11
+
+[[function]]
+name = "di_12"
+kind = "plc_channel"
+ports = [{ name = "12_WWWWWWWW", role = "generic" }]
+
+[function.plc_channel]
+signal = "di"
+channel = 12
+
+[[function]]
+name = "di_13"
+kind = "plc_channel"
+ports = [{ name = "13_WWWWWWWW", role = "generic" }]
+
+[function.plc_channel]
+signal = "di"
+channel = 13
+
+[[function]]
+name = "di_14"
+kind = "plc_channel"
+ports = [{ name = "14_WWWWWWWW", role = "generic" }]
+
+[function.plc_channel]
+signal = "di"
+channel = 14
+
+[[function]]
+name = "di_15"
+kind = "plc_channel"
+ports = [{ name = "15_WWWWWWWW", role = "generic" }]
+
+[function.plc_channel]
+signal = "di"
+channel = 15
+
+[[function]]
+name = "di_16"
+kind = "plc_channel"
+ports = [{ name = "16_WWWWWWWW", role = "generic" }]
+
+[function.plc_channel]
+signal = "di"
+channel = 16
+

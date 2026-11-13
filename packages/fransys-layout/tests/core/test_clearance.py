@@ -19,11 +19,6 @@ def test_touch_is_a_hit_on_an_edge_and_not_past_it(hit: Box, miss: Box) -> None:
     assert clear(Box(0, 0, 10, 10), [_keep(miss)], {}) == ()
 
 
-def test_gap_widens_the_keep() -> None:
-    keep = _keep(Box(11, 0, 5, 5))
-    assert clear(Box(0, 0, 10, 10), [keep], {}, gap=2) == (keep,)
-
-
 def test_own_skips_by_owner() -> None:
     keep = _keep(Box(10, 0, 5, 5), owner="A1")
     assert clear(Box(0, 0, 10, 10), [keep], {}, own={"A1"}) == ()
@@ -129,7 +124,19 @@ def test_through_reads_a_diagonal_as_the_true_segment() -> None:
 
 
 @pytest.mark.rule("BUNDLE-LEGS")
-@pytest.mark.parametrize(("thin", "probe_w", "hit"), [(0, 5, 1), (1, 5, 1), (0, 10, 1), (0, 4, 0), (1, 4, 0)])
-def test_thin_keep_hits_at_its_true_extent_at_gap_minus_one(thin: int, probe_w: int, hit: int) -> None:
-    keep = _keep(Box(5, -3, thin, 20))
-    assert clear(Box(0, 0, probe_w, 10), [keep], {}, gap=-1) == (keep,) * hit
+@pytest.mark.parametrize(
+    ("probe", "keep_box", "hit"),
+    [
+        (Box(0, 0, 5, 10), Box(5, -3, 0, 20), 1),  # a thin keep keeps its true extent, so a probe reaching it hits
+        (Box(0, 0, 5, 10), Box(5, -3, 1, 20), 1),
+        (Box(0, 0, 10, 10), Box(5, -3, 0, 20), 1),
+        (Box(0, 0, 4, 10), Box(5, -3, 0, 20), 0),
+        (Box(0, 0, 4, 10), Box(5, -3, 1, 20), 0),
+        (Box(0, 0, 10, 10), Box(10, 0, 8, 8), 0),  # an area touching a keep's edge is clear
+        (Box(0, 8, 20, 0), Box(4, 8, 8, 8), 0),  # a zero-height run on a keep's edge is clear
+        (Box(0, 12, 20, 0), Box(4, 8, 8, 8), 1),  # one through its interior hits
+    ],
+)
+def test_open_edge_hits_the_interior_and_a_thin_keep_at_its_true_extent(probe: Box, keep_box: Box, hit: int) -> None:
+    keep = _keep(keep_box)
+    assert clear(probe, [keep], {}, edge="open") == (keep,) * hit

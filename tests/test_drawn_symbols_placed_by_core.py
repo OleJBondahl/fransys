@@ -8,6 +8,7 @@ import importlib
 import importlib.util
 import tomllib
 from collections import Counter
+from functools import cache
 from pathlib import Path
 
 import fransys as fr
@@ -121,9 +122,16 @@ BUILDS = {"skid": _skid, **{n: _corpus(n) for n in [*list(r308_unplaced_symbols)
 CASE_PARAMS = [n if n == "skid" else pytest.param(n, marks=pytest.mark.private_input) for n in BUILDS]
 
 
+@cache
+def _built_with_unlaid(name: str):
+    """(the build, the model its layout step gets) of case `name`, built once per process (R2158)."""
+    return built_with_unlaid(BUILDS[name])
+
+
+@cache
 def _drawn_and_layouts(name: str):
     """(all page Drawings, each drawing set's core layout, each set's layout with its pages)."""
-    _, unlaid = built_with_unlaid(BUILDS[name])
+    unlaid = _built_with_unlaid(name)[1]
     sets = []
     real = draw_write.draw_set
 
@@ -190,5 +198,5 @@ def test_every_drawn_route_point_is_a_core_route_point_but_a_falling_stock(case)
 
 @pytest.mark.parametrize("name", CASE_PARAMS)
 def test_annex_unplaced_findings_are_a_falling_stock(name):
-    findings = [f for f in BUILDS[name]().findings if f.code == "ANNEX_UNPLACED"]
+    findings = [f for f in _built_with_unlaid(name)[0].findings if f.code == "ANNEX_UNPLACED"]
     assert len(findings) == annex_unplaced[name]  # equal: a lower count lowers the stock

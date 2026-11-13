@@ -116,7 +116,6 @@ class Fan:
     hub: str | None
     lanes: int
     side: str
-    crossed: tuple[tuple[str, tuple[int, ...]], ...] = ()
     head: Attach | None = None
 
 

@@ -8,12 +8,13 @@ from typing import TYPE_CHECKING
 import pytest
 from turn_fixtures import refit
 
-from fransys_layout.core import Facts, PinRef, PlacementProblem
+from fransys_layout.core import Box, Facts, PinRef, Placed, PlacementProblem
 from fransys_layout.core.errors import CoreError
 from fransys_layout.core.geometry import pin_xy
 from fransys_layout.core.pack import cell_node
 from fransys_layout.core.place_align import (
     Align,
+    _beside,
     band_aligns,
     mate_aligns,
     page_aligns,
@@ -154,13 +155,25 @@ def _runs(prob: PlacementProblem, dropped: frozenset[str] = frozenset()) -> list
     return [(set(r.members), r.key) for r in page.runs]
 
 
-def test_strip_terminals_level_in_a_row_are_one_run_and_one_each_when_their_align_was_dropped() -> None:
-    """STRIP-TAG-ONCE: three hubs of a row group at the heads are one run; with the Align lost each is its own."""
-    ((members, key),) = _runs(row_group_three("G"))
-    assert members == {"h0", "h1", "h2"}
-    assert key.startswith("G run at h")
+def test_strip_terminals_level_in_a_row_a_gap_apart_are_one_run_each() -> None:
+    """STRIP-TAG-ONCE: three hubs of a row group at the heads stand a gap apart, so each is its own run, with its Align kept or lost."""
+    kept = _runs(row_group_three("G"))
+    assert [m for m, _ in kept] == [{"h0"}, {"h1"}, {"h2"}]
+    assert all(key.startswith("G run at h") for _, key in kept)
     assert [m for m, _ in _runs(row_group_three("G"), frozenset({"G, row 0"}))] == [{"h0"}, {"h1"}, {"h2"}]
     assert _runs(row_group_three(None)) == []
+
+
+def _at(sym: str, x: int) -> Placed:
+    return Placed(sym, 1, x, 0, "R0", Box(x, 0, 16, 16), Box(x, 0, 16, 16), ())
+
+
+def test_neighbours_within_one_pitch_stay_one_run_and_a_wider_gap_cuts_it() -> None:
+    """STRIP-TAG-ONCE, R2096: a gap of nothing or of one pitch (the footprint width) keeps one run, left to right; a wider gap starts another."""
+    placed = {s: _at(s, x) for s, x in (("a", 0), ("b", 16), ("c", 48), ("d", 64), ("e", 97))}
+    assert _beside(["a", "b", "c", "d"], placed) == [["a", "b", "c", "d"]]
+    assert _beside(["a", "b", "c", "d", "e"], placed) == [["a", "b", "c", "d"], ["e"]]
+    assert _beside(["a", "b"], {"a": placed["a"], "b": _at("b", 33)}) == [["a"], ["b"]]
 
 
 def test_a_strip_terminal_at_neither_end_of_its_column_is_a_run_of_one() -> None:

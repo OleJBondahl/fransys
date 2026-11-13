@@ -7,9 +7,10 @@ cable that carries it, as the layout engine prints a stub's `-W3`.
 lazy from collections.abc import Collection, Sequence
 
 from fransys_model.derive.facts.conductor_facts import is_bridge
-from fransys_model.derive.facts.units import item_chain
+from fransys_model.derive.facts.units import item_root
 from fransys_model.derive.far_pins import reach
 from fransys_model.derive.indexes import build_indexes
+from fransys_model.derive.rows_drawn import MateEnd
 from fransys_model.vocab.tables import conductors, ports
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.connectivity import Conductor
@@ -35,15 +36,15 @@ def stub_far(
     `near` are the ports the pin draws. A wired pin names the far end (`conductor_ends`) of its conductor. A pin none wires
     (a terminal's unwired side) takes a port of its own function, the through path. `far`, the ports of the far end the stub names,
     picks every reach ending there; with none, every reach, by `order.stub_far_order`.
-    `carrier` is the outermost item above the conductor's own cable, `None` for a wire: the `-W3` a stub prints.
+    `carrier` is the outermost item above the conductor's own cable, `None` for a wire or a mate: the `-W3` a stub prints.
     """
     by_port = build_indexes(model).conductors_by_port
     bridged = any(is_bridge(model, c) for port in near for c in by_port.get(port, ()))
     picks = reach(model, near) or ([] if bridged else reach(model, _function_ports(model, near)))
-    return tuple((p.port, p.far, _carrier(model, p.conductor)) for p in picks if not far or p.far in far)
+    return tuple((p.port, p.far, None if isinstance(p, MateEnd) else _carrier(model, p.conductor)) for p in picks if not far or p.far in far)
 
 
 def _carrier(model: Model, conductor: Id[Conductor]) -> Id[Item] | None:
     """The outermost item above the conductor's own cable, `None` for a wire."""
     cable = conductors(model)[conductor].carrier
-    return None if cable is None else list(item_chain(model, cable))[-1]
+    return None if cable is None else item_root(model, cable)

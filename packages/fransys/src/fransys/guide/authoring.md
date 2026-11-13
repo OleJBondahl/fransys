@@ -230,7 +230,7 @@ dc = d.dc_supply("24VDC", plus=x1[1], minus=x1[2], voltage=24)
 `d.mate(a, b)` plugs connector `a` into connector `b`, each a device with one function
 (`units.md` covers a mate across a unit boundary).
 
-Refused in 0.22 (`MATES_DISABLED`, an ERROR): a mate has no correctness guarantee yet. Draw the link as a cable or wires.
+A mate between two drawings (two units, say) draws an OFF stub at each mated pin that names the partner pin. A mate inside one drawing, a function on two mates and a harness line are refused in 0.22 (`MATES_DISABLED`, an ERROR): draw the link as a cable or wires.
 
 ## Add a harness
 

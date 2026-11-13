@@ -12,10 +12,10 @@ plain values this residue goes.
 from dataclasses import replace
 from typing import TYPE_CHECKING
 
-from electrical_symbols import library_version
+from electrical_symbols import drawn_symbol, library_version
 from fransys_layout.core import Box
 from fransys_layout.drawing import Drawing, DrawnOutline, DrawnRow, DrawnSymbol, DrawnText, DrawnWire
-from fransys_layout.symbols import library_symbol, measured_slots, text_room_on, text_width_g
+from fransys_layout.symbols import ink_boxes, library_symbol, text_room_on, text_width_g
 from fransys_model.derive import build_indexes, function_item, ordered_pages
 from fransys_model.derive.order import in_place_order
 from fransys_model.kernel import evolve, render_id
@@ -42,6 +42,7 @@ from .write_texts import symbol_keys
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator, Mapping
+    from collections.abc import Set as AbstractSet
 
     from electrical_symbols import Library
     from fransys_layout.core import Wire
@@ -92,20 +93,22 @@ def _in_place_order[T: DrawnSymbol | DrawnWire | DrawnText](
     return {page: in_place_order((*_place(item), item) for item in items) for page, items in pages.items()}
 
 
-def _tag(w: Written, keys: Mapping[str, PickKey], strips: Mapping[str, str], owner: str) -> str | None:
-    """The text of the label of `owner`: a symbol's tag, or a run's strip tag (the strip owns it, `strips` has a terminal of each); else None."""
+def _tag(w: Written, keys: Mapping[str, PickKey], strips: Mapping[str, str], owner: str, alone: AbstractSet[str]) -> str | None:
+    """The text of the label of `owner`: a symbol's tag (full when `alone` in its run), or a run's strip tag (the strip owns it); else None."""
     if owner in keys:
-        return tag_of(w.model, keys[owner], unit=w.within)
+        return tag_of(w.model, keys[owner], unit=w.within, alone=owner in alone)
     return strip_tag_of(w.model, keys[strips[owner]], unit=w.within) if owner in strips else None
 
 
 def _labels(w: Written, keys: Mapping[str, PickKey]) -> list[tuple[Id[Page], DrawnText]]:
     """One TAG text per core label, anchored NW at the label's box (CORE-TEXTS A); its box is its own line, the rest are the where lines'."""
     model, pages = w.model, w.pages
-    strips = {r.strip: r.members[0] for page in w.layout.placement.pages for r in page.runs}
+    runs = [r for page in w.layout.placement.pages for r in page.runs]
+    strips = {r.strip: r.members[0] for r in runs}
+    alone = {r.members[0] for r in runs if len(r.members) == 1}
     found = []
     for label in (a for a in w.layout.annotations.annexes if not is_table_spot(a.spot)):
-        text = _tag(w, keys, strips, label.owner) if label.page in pages else None
+        text = _tag(w, keys, strips, label.owner, alone) if label.page in pages else None
         if text is None:
             refuse(
                 f"label of {label.owner} on page {label.page}",
@@ -123,14 +126,16 @@ def _labels(w: Written, keys: Mapping[str, PickKey]) -> list[tuple[Id[Page], Dra
 
 
 def _inked(w: Written, items: Iterable[tuple[Id[Page], DrawnSymbol]]) -> Iterator[tuple[Id[Page], DrawnSymbol]]:
-    """Each symbol with the page box symdef measures around the strings in its slots (TEXT-BOX-MEASURED)."""
+    """Each symbol with the page box of the ink symdef gives the strings in its slots (TEXT-BOX-MEASURED)."""
     by_id = {p.id: p for p in w.pages.values()}
     for page, s in items:
-        if not s.slots or s.stretch or s.texts:  # a stretched symbol or a table fits its slots to its text already
-            yield page, s
-            continue
         height = text_room_on(w.model, sheet_format_of(w.model, by_id[page].sheet_format), w.library)
-        boxes, _ = measured_slots(library_symbol(w.library, s.key, s.poles), s.orient, dict(s.slots), w.library, height)
+        built = (
+            drawn_symbol(s.key, s.texts, library=w.library, offsets=dict(s.offsets), sides=dict(s.sides), turn=s.turn)
+            if s.texts
+            else library_symbol(w.library, s.key, s.poles)
+        )
+        boxes = ink_boxes(built, s.orient, dict(s.slots), w.library, height)
         ink = tuple((slot, Box(boxes[slot].x + s.x, boxes[slot].y + s.y, boxes[slot].w, boxes[slot].h)) for slot, _ in s.slots if slot in boxes)
         yield page, replace(s, slot_ink=ink)
 
@@ -144,6 +149,20 @@ def _rows(w: Written, keys: Mapping[str, PickKey]) -> dict[Id[Page], tuple[Drawn
     return {page: tuple(rows) for page, rows in found.items()}
 
 
+def _shown(w: Written, ports: Mapping[str, tuple[str, ...]]) -> dict[str, tuple[str, tuple[tuple[str, ...], ...], int, tuple[str, ...], bool]]:
+    """Per symbol: its key, box rows, poles, ports, and whether the core laid its box turned."""
+    return {
+        (sym := symbol_key(w.model, f)): (
+            pick.key,
+            box_rows(pick),
+            pick.poles,
+            ports.get(sym, ()),
+            sym in w.layout.narrow,
+        )
+        for f, pick in w.kit.items()
+    }
+
+
 def draw_set(w: Written) -> dict[Id[Page], Drawing]:
     """The drawing of each page of one set of `unit`, without its reference markers.
 
@@ -151,7 +170,7 @@ def draw_set(w: Written) -> dict[Id[Page], Drawing]:
     """
     model, layout, kit, pages = w.model, w.layout, w.kit, w.pages
     ports = ports_of(model, kit)
-    shown = {(sym := symbol_key(model, f)): (pick.key, box_rows(pick), pick.poles, ports.get(sym, ())) for f, pick in kit.items()}
+    shown = _shown(w, ports)
     marks = {symbol_key(model, f): marking_slots(model, pick, w.library) for f, pick in kit.items()}
     texts_of = table_texts(model, kit)
     wires = tuple(w for page in layout.routes.pages for w in page.wires)

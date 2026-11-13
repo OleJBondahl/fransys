@@ -10,7 +10,7 @@ import pytest
 from input_card_designs import built, counts, solve_problem, solved
 
 #: Options with the card's pins left at the card's own pitch: the family's rule off.
-PINS_NOT_SPREAD = {"box_pin_pitch_min": 1000}
+PINS_NOT_SPREAD = {"box_pins": "fixed"}
 
 
 @pytest.mark.parametrize("name", ["w01", "w09_interleaved"])

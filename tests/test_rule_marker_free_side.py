@@ -14,7 +14,7 @@ from typing import Any
 
 import fransys as fr
 import pytest
-from _direct_case import built_with_unlaid, laid_again
+from _direct_case import SHEET, built_with_unlaid, laid_again
 from fransys_el import build, drawn_power, house_conventions, lay_out_core, symbol_kit
 from fransys_el.drawn_power import inked_power
 from fransys_el.placement_env import port_pins
@@ -46,7 +46,7 @@ def _both(name: str) -> tuple[Any, Any]:
     run = importlib.import_module("placement_corpus.run")  # internal/ is not exported
     every = [*run.circuits("standard"), ("skid", run.load(run.SKID, "demo_skid"), {}, {})]
     circuit = next(c for c in every if c[0] == name)
-    return built_with_unlaid(lambda: run.build(name, circuit))
+    return built_with_unlaid(lambda: run.build(name, circuit, fresh=True))
 
 
 def _built(name: str) -> Any:
@@ -57,7 +57,7 @@ def _built(name: str) -> Any:
 def _unlaid(name: str) -> tuple[Any, tuple[tuple[PinRef, PinRef], ...], Any]:
     """(the model the layout step gets, its conductors as pin pairs, its port pins) of corpus build `name`."""
     unlaid = _both(name)[1]
-    pins = port_pins(unlaid, symbol_kit(unlaid, LIBRARY), house_conventions(fr.settings().layout, LIBRARY, text_height=8), LIBRARY)
+    pins = port_pins(unlaid, symbol_kit(unlaid, LIBRARY), house_conventions(fr.settings().layout, LIBRARY, text_height=8, sheet=SHEET), LIBRARY)
     return unlaid, model_conductors(unlaid, pins), pins
 
 
@@ -136,11 +136,11 @@ def test_every_undrawn_conductor_of_a_mixed_pin_has_a_reference_at_the_pin(solve
 
 
 # ONE-SIDED-PIN: a mixed pin with no free side has a reference for its undrawn conductors (a leg from the cut)
-@pytest.mark.private_input
 @pytest.mark.rule("MARKER-FREE-SIDE")
-def test_every_undrawn_conductor_of_a_one_sided_mixed_pin_has_a_reference() -> None:
-    found = {n: [c for problem, layout in _solved(n) for c in bare_conductors(problem, layout, one_sided=True)] for n in CASES}
-    assert not any(found.values()), {n: len(c) for n, c in found.items() if c}
+def test_every_undrawn_conductor_of_a_one_sided_mixed_pin_has_a_reference(solved) -> None:
+    name, runs = solved
+    found = [c for problem, layout in runs for c in bare_conductors(problem, layout, one_sided=True)]
+    assert not found, {name: len(found)}
 
 
 # R825: the r308 stock rises by exactly one per stub at a mixed pin
@@ -240,7 +240,7 @@ def test_no_stub_of_a_fan_wired_pin_is_left_unplaced(solved) -> None:
 def test_port_pins_hold_every_pin_the_planner_has_a_conductor_at() -> None:
     """The checker's pin map is the planner's: a pin of `build`'s own `far_ends` is a value of `port_pins`."""
     unlaid, _, _ = _unlaid("mcc")
-    conventions = house_conventions(fr.settings().layout, LIBRARY, text_height=8)
+    conventions = house_conventions(fr.settings().layout, LIBRARY, text_height=8, sheet=SHEET)
     kit = symbol_kit(unlaid, LIBRARY)
     problem, _ = build(unlaid, kit, conventions, LIBRARY)
     planned = {p for pair in problem.facts.far_ends for p in pair}
@@ -255,6 +255,6 @@ def test_a_port_drawn_as_an_inked_power_symbol_that_names_its_potential_is_a_car
     """R1631, R4: ground, PE and a texted supply with ink to their pin carry its end; a supply with no printed text names no potential."""
     symbols = [SimpleNamespace(key=power_symbol_key(key), ports=("a",))]
     part = SimpleNamespace(drawing=SimpleNamespace(symbols=symbols), ports={"a": (0, 0)}, nodes={(0, 0)}, powers={})
-    net: Any = SimpleNamespace(pages={"p": part}, ids={"a": "a-id"}, linked={})
+    net: Any = SimpleNamespace(pages={"p": part}, ids={"a": "a-id"})
     monkeypatch.setattr(drawn_power, "port_power_text", lambda *_: text)
     assert (inked_power(net, None) == {"a"}) is (key != "supply" or text is not None)  # ty: ignore[invalid-argument-type] the read is monkeypatched

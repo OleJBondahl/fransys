@@ -285,7 +285,7 @@ def test_a_reference_into_another_pdf_names_that_document_and_its_page(tmp_path)
 
 @pytest.mark.rule("PAGE-NUMBER")
 def test_every_printed_position_fits_the_marker_box_placement_reserves(tmp_path):
-    """The widest line of `link_fit` is at least as wide as `#n-<position>` for every page pair, cell and the `+k` form."""
+    """`link_fit` is as wide as `#n-<position>` for every page pair of one drawing set, cell and `+k` form (R2066)."""
     model = _two_documents(tmp_path).model
     reserved = link_fit(model, symbol_kit(model, LIBRARY), LIBRARY, None)["R0"].w
     pages = tuple(layout_of(model, Page).values())
@@ -293,8 +293,8 @@ def test_every_printed_position_fits_the_marker_box_placement_reserves(tmp_path)
         f"#{len(pages)}-{position_at(model, own, partner, column, row_letter(row))}{more_text(9)}"
         for own in pages
         for partner in pages
+        if partner.drawing_set == own.drawing_set
         for column in range(1, sheet_format_of(model, partner.sheet_format).frame_columns + 1)
         for row in range(sheet_format_of(model, partner.sheet_format).frame_rows)
     ]
-    assert any("+FLD p" in line for line in lines), "the build has references into another PDF"
     assert max(marker_boxes(LIBRARY, line)["R0"].w for line in lines) <= reserved

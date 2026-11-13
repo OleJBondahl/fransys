@@ -64,44 +64,19 @@ def test_identical_function_off_the_surface_is_never_measured(monkeypatch, tmp_p
 # --- One test per violation kind ------------------------------------------------------------
 
 
-def test_bare_dict_param_is_flagged(monkeypatch, tmp_path):
-    """A bare, unparameterised `dict` parameter is flagged."""
-    path = _write(tmp_path, "mod.py", "def f(x: dict) -> int:\n    return 0\n")
-    _mock_surface(monkeypatch, tmp_path, (_entry(path, "f"),))
-    assert lean_surface_types.measure_surface_types() == {"mod.py::f": 1}
-
-
-def test_bare_list_param_is_flagged(monkeypatch, tmp_path):
-    """A bare, unparameterised `list` parameter is flagged."""
-    path = _write(tmp_path, "mod.py", "def f(x: list) -> int:\n    return 0\n")
-    _mock_surface(monkeypatch, tmp_path, (_entry(path, "f"),))
-    assert lean_surface_types.measure_surface_types() == {"mod.py::f": 1}
-
-
-def test_bare_tuple_param_is_flagged(monkeypatch, tmp_path):
-    """A bare, unparameterised `tuple` parameter is flagged."""
-    path = _write(tmp_path, "mod.py", "def f(x: tuple) -> int:\n    return 0\n")
-    _mock_surface(monkeypatch, tmp_path, (_entry(path, "f"),))
-    assert lean_surface_types.measure_surface_types() == {"mod.py::f": 1}
-
-
-def test_object_return_is_flagged(monkeypatch, tmp_path):
-    """An `object` return annotation is flagged."""
-    path = _write(tmp_path, "mod.py", "def f(x: int) -> object:\n    return x\n")
-    _mock_surface(monkeypatch, tmp_path, (_entry(path, "f"),))
-    assert lean_surface_types.measure_surface_types() == {"mod.py::f": 1}
-
-
-def test_missing_param_annotation_is_flagged(monkeypatch, tmp_path):
-    """A parameter with no annotation at all is flagged."""
-    path = _write(tmp_path, "mod.py", "def f(x) -> int:\n    return 0\n")
-    _mock_surface(monkeypatch, tmp_path, (_entry(path, "f"),))
-    assert lean_surface_types.measure_surface_types() == {"mod.py::f": 1}
-
-
-def test_missing_return_annotation_is_flagged(monkeypatch, tmp_path):
-    """A function with no return annotation at all is flagged."""
-    path = _write(tmp_path, "mod.py", "def f(x: int):\n    return x\n")
+@pytest.mark.parametrize(
+    "source",
+    [
+        "def f(x: dict) -> int:\n    return 0\n",  # a bare, unparameterised `dict` parameter
+        "def f(x: list) -> int:\n    return 0\n",  # a bare `list` parameter
+        "def f(x: tuple) -> int:\n    return 0\n",  # a bare `tuple` parameter
+        "def f(x: int) -> object:\n    return x\n",  # an `object` return annotation
+        "def f(x) -> int:\n    return 0\n",  # a parameter with no annotation at all
+        "def f(x: int):\n    return x\n",  # no return annotation at all
+    ],
+)
+def test_each_violation_kind_is_flagged(monkeypatch, tmp_path, source):
+    path = _write(tmp_path, "mod.py", source)
     _mock_surface(monkeypatch, tmp_path, (_entry(path, "f"),))
     assert lean_surface_types.measure_surface_types() == {"mod.py::f": 1}
 

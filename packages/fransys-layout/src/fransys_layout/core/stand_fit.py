@@ -47,7 +47,8 @@ def fit(
     """
     if limits and (not _within(box, limits) or (limits.drawn is not None and not inside(limits.drawn, limits.area))):
         return None
-    return clear(box, keeps, {}, own=frozenset(own)) if origin is None else blocked(box, keeps, frozenset(own), origin)
+    hit = clear(box, keeps, {}, own=frozenset(own), edge="tags") if origin is None else blocked(box, keeps, frozenset(own), origin)
+    return (*(k for k in hit if k.kind != "anchor"), *clear(box, [k for k in keeps if k.kind == "anchor"], {}, own=frozenset(own), edge="open"))
 
 
 def _across(k: Keep, run: Box) -> bool:

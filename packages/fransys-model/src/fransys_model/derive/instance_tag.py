@@ -13,8 +13,8 @@ from fransys_model.derive.facts.units import (
 )
 from fransys_model.derive.indexes import build_indexes
 from fransys_model.derive.lookups import unit_chain
+from fransys_model.refdef import Aspect
 from fransys_model.vocab.designation_scheme import DESIGNATION_SCHEME
-from fransys_model.vocab.enums import Aspect
 from fransys_model.vocab.facets.assigned_unit_tag import AssignedUnitTagFacet
 from fransys_model.vocab.tables import facets_of
 from fransys_model.vocab.tables import units as units_table

@@ -144,13 +144,13 @@ def test_the_breaking_check_reads_a_function_that_protects() -> None:
     assert {f.subjects for f in check_breaking(model)} == {(_fn("FM"),)}
 
 
-def test_a_protections_conductive_link_is_a_pole_a_loads_is_not() -> None:
-    """`link_role` takes the pole from `protects`: only the protection's conductive link."""
-    for kind, pole in ((FunctionKind.PROTECTION, True), (FunctionKind.LOAD, False)):
-        plant, _ = _rated("F", kind, breaking=False)
+def test_a_conductive_link_is_a_pole_from_line_to_load_not_by_kind() -> None:
+    """`link_role` takes the pole from elecdef `poles`: a sided conductive link, whatever its kind."""
+    for kind, sided, pole in ((FunctionKind.PROTECTION, True, True), (FunctionKind.LOAD, True, True), (FunctionKind.PROTECTION, False, False)):
+        plant = Plant()
+        device(plant, "F", amps="400", kind=kind, link=LinkKind.CONDUCTIVE, sided=sided)
         model = plant.model()
         (link,) = internal_links(model).values()
-        assert link.kind is LinkKind.CONDUCTIVE
         assert link_role(model, link.id).pole is pole
 
 

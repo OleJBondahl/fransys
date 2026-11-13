@@ -77,6 +77,13 @@ def test_a_slot_text_on_a_neighbours_body_or_beyond_the_page_is_seen():
     assert _codes(out) == ["OUT_OF_PAGE"]
 
 
+def test_two_slot_texts_of_one_symbol_that_share_area_raise_overlap():
+    """TEXT-BOX-MEASURED: two pin names of one box that overprint are reported; names that only touch are not."""
+    names = (("marking.a", Box(20, 20, 40, 8)), ("marking.b", Box(36, 20, 40, 8)))
+    apart = (("marking.a", Box(20, 20, 16, 8)), ("marking.b", Box(36, 20, 40, 8)))
+    assert [_codes(_drawing(replace(_symbol("a", Box(1, 1, 10, 10)), slot_ink=ink))) for ink in (names, apart)] == [["OVERLAP"], []]
+
+
 def test_a_body_beyond_the_content_box_raises_out_of_page():
     planted = _drawing(_symbol("a", Box(95, 0, 10, 10)))
     (found,) = _findings(planted)
@@ -183,6 +190,19 @@ def test_a_wire_crossing_a_marker_box_or_a_dot_in_it_raises_wire_over_marker():
 
 def test_the_wire_that_ends_at_the_markers_own_port_and_a_far_wire_raise_nothing():
     assert _marker_codes(((0, 12), (10, 12)), ((40, 0), (40, 50)), dots=((60, 60),)) == []
+
+
+@pytest.mark.rule("MARKER-FREE-SIDE")
+def test_a_wire_that_runs_through_its_own_markers_box_before_its_port_raises_wire_over_marker():
+    assert _marker_codes(((12, 0), (12, 12), (10, 12))) == ["WIRE_OVER_MARKER"]
+    assert _marker_codes(((12, 0), (12, 30), (0, 30), (0, 12), (10, 12))) == ["WIRE_OVER_MARKER"]
+    assert _marker_codes(((0, 12), (10, 12))) == []
+
+
+@pytest.mark.rule("MARKER-FREE-SIDE")
+def test_an_entry_segment_along_the_marker_box_edge_is_exempt_but_one_through_the_interior_is_not():
+    assert _marker_codes(((10, 10), (10, 12))) == []  # R2101: ends at the port, runs along the west edge
+    assert _marker_codes(((12, 8), (12, 12), (10, 12))) == ["WIRE_OVER_MARKER"]
 
 
 def test_a_wire_through_a_body_that_is_no_marker_is_still_overlap():

@@ -3,6 +3,7 @@
 import fransys as fr
 import pytest
 from _model_build_cover import cabinet_document
+from conventions_fixtures import SHEET
 from fransys.colours import BU
 from fransys_el import build, house_conventions, symbol_kit
 
@@ -42,7 +43,9 @@ def test_chains_in_one_bundle_wired_to_box_pins_on_n_and_s_turn_each_by_its_own_
     fr.build(d, cabinet_document(cab))
     assert set(signs) == {True, False}
     built = fr.build(d)
-    problem, _ = build(built.model, symbol_kit(built.model, LIBRARY), house_conventions(fr.settings().layout, LIBRARY, text_height=8), LIBRARY)
+    problem, _ = build(
+        built.model, symbol_kit(built.model, LIBRARY), house_conventions(fr.settings().layout, LIBRARY, text_height=8, sheet=SHEET), LIBRARY
+    )
     anchored = {s.parts[0] for s in problem.facts.series if s.anchor}
     assert {str(a).split(" ")[0] for a in anchored} == {
         "Q1",

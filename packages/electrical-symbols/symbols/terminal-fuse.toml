@@ -1,0 +1,27 @@
+schema = 1
+name = "Terminal with fuse"
+kind = "symbol"
+status = "unverified"
+reference = { standard = "IEC 60617", number = "terminal-fuse" }
+
+ports = [
+  { id = "n", at = [0, -2], dir = "N" },
+  { id = "s", at = [0, 2],  dir = "S" },
+]
+
+paths = [
+  { from = "n", to = "s", kind = "conductor", through = true },
+]
+
+elements = [
+  { line = [[0, -2], [0, 2]] },
+  { polyline = [[-0.5, -1], [0.5, -1], [0.5, 1], [-0.5, 1]], closed = true },
+  { polyline = [[-0.5, -1], [0.5, -1], [0.5, -0.5], [-0.5, -0.5]], closed = true, fill = "solid" },
+]
+
+lint_allow = [
+  { rule = "slot-missing", reason = "a terminal is designated by its tag only, so it carries a tag slot and no marking slots" },
+]
+
+[slots]
+tag = { at = [-1.5, 0], side = "W", box = [6, 1] }

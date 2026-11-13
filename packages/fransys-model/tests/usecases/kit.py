@@ -12,11 +12,10 @@ from fransys_author.instantiate import instantiate
 
 from fransys_model.elecdef import Current, PinRole
 from fransys_model.kernel import Draft, Id, Origin, make_id
-from fransys_model.vocab import PartBundle
+from fransys_model.vocab import Aspect, ConductorKind, NetClass, PartBundle, PortBoundary
 from fransys_model.vocab.aspects import AspectNode, Placement
 from fransys_model.vocab.connectivity import Conductor, Mate, Net
 from fransys_model.vocab.core import Function, Item, Port
-from fransys_model.vocab.enums import Aspect, ConductorKind, NetClass, PortBoundary
 from fransys_model.vocab.facets.cable import CoreFacet
 from fransys_model.vocab.facets.wire import WireFacet
 from fransys_model.vocab.supply_system import Rail, SupplySystem

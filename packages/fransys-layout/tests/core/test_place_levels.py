@@ -1,4 +1,4 @@
-"""Trunk levels: nine overlapping trunks of one row and side take one order however ids read."""
+"""Trunk levels: overlapping trunks of one row, whatever their side, take distinct levels; nine take one order however ids read."""
 
 from __future__ import annotations
 
@@ -47,3 +47,14 @@ def test_nine_overlapping_trunks_do_not_depend_on_how_fan_ids_are_spelled(form: 
     spelled = {f: form.format(n) for n, f in enumerate(ranked, 1)}
     same = {f: f for f, *_ in TRUNKS}
     assert levels(spelled) == [spelled[f] for f in levels(same)]
+
+
+def test_two_fans_of_one_row_on_different_sides_never_share_a_y_where_their_spans_overlap() -> None:
+    spans = [Span("a", 0, 0, 100, 1, "above", (), (0, 100)), Span("b", 0, 50, 150, 1, "below", (50, 150), ())]
+    g = Graph()
+    for s in spans:
+        g.add(trunk_node(s.fan, 0))
+    trunk_levels(g, spans, core_options())
+    y = g.solve()
+    assert y is not None
+    assert y[trunk_node("a", 0)] != y[trunk_node("b", 0)]

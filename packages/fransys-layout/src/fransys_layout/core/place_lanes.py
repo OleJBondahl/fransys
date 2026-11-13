@@ -109,7 +109,7 @@ def _stepped(
     """
     j, fan, away = at
     tap_end = own[1]
-    if hull and j in away and not (fan.lanes == 1 or fan.crossed):
+    if hull and j in away and fan.lanes != 1:
         lo, hi = (arrows[s] and j in stand.poles[s] for s in (0, 1))
         own = (hull[0] - stand.reach if lo else own[0], hull[1] + stand.reach if hi else own[1])
         own = (own[0] - stand.reach * (j in stand.poles[0]), own[1] + (stand.reach + stand.legs) * (j in stand.poles[1]))
@@ -122,7 +122,7 @@ def _stepped(
 def _owns(fan: Fan, taps: Sequence[tuple[Attach, int]]) -> list[tuple[int, int] | None]:
     """Per lane j the hull of the taps of pole j; a plain fan's one lane takes them all."""
     hull = _hull([v for _, v in taps])
-    return [hull if fan.lanes == 1 or fan.crossed else _hull([v for a, v in taps if a.pole == j]) for j in range(fan.lanes)]
+    return [hull if fan.lanes == 1 else _hull([v for a, v in taps if a.pole == j]) for j in range(fan.lanes)]
 
 
 def _bare_ends(
@@ -183,7 +183,7 @@ def _lane_ends(
 ) -> LaneEnds:
     """Per lane j the hull of the taps of pole j; a plain fan's one lane takes them all.
 
-    A lane in `away` runs `stand.reach` past the hull where an arrow stands (`arrows`: left, right counts); a `crossed` fan keeps it.
+    A lane in `away` runs `stand.reach` past the hull where an arrow stands (`arrows`: left, right counts).
     A lane of `stand.poles` ends where its marker hits no `stand.keeps`.
     """
     mine = {a.pin.sym for a, _ in taps}

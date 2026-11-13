@@ -18,6 +18,7 @@ def test_only_a_table_spot_is_a_table_spot() -> None:
 
 def _lines_under(text: DrawnText, monkeypatch: pytest.MonkeyPatch) -> list[DrawnText]:
     monkeypatch.setattr(write_tables, "where_text", lambda _m, _here, there: f"p{there[0]}")
+    monkeypatch.setattr(write_tables, "where_link", lambda *_: None)
     rows = [("a", None), ("b", None), ("c", None)]
     return write_tables._lines(None, (LIBRARY, 3), text, rows, "a")  # ty: ignore[invalid-argument-type] - doubles
 

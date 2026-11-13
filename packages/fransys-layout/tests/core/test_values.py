@@ -212,7 +212,7 @@ def test_c3_contract_shape():
     assert "pin_class" not in names["Pin"]
     assert "PinClass" not in names
     assert "crossed" not in names["Bundle"]
-    assert "crossed" in names["Fan"]
+    assert "crossed" not in names["Fan"]
     assert not {"shape", "narrow"} & names["Column"]
     assert isinstance(CoreLayout, type)
 

@@ -8,7 +8,7 @@ and pole-group views are not here.
 from typing import TYPE_CHECKING
 
 from electrical_symbols import GENERIC_BOX_KEY
-from fransys_layout.symbols import library_symbol
+from fransys_layout.symbols import library_symbol, ports_at_one_node, symbol_shape
 from fransys_model.derive import (
     CarriedReason,
     accessory_functions,
@@ -40,6 +40,7 @@ from fransys_model.vocab import FunctionKind
 
 from .placement_ids import symbol_key
 from .placement_kit import Pick, PortMissingError, SymbolKit
+from .symbol_apart import link_fact, refuse_joined
 from .symbol_bind import Part, Shape, Target, member_of, port_of, through_ports
 from .symbol_boxes import box_picks, named_picks
 from .symbol_pins import Choice, pin_picks
@@ -85,6 +86,7 @@ def _facts(model: Model, function: Function) -> Facts:
         template_gender(model, template),
         None if operator is None else operator.value,
         port_shape([port_name(model, p) for p in function_ports(model, function.id)]),
+        link_fact(model, function),
     )
 
 
@@ -149,6 +151,7 @@ def bind(symbol: str, parts: tuple[Part, ...], model_and_library: tuple[Model, L
     bound: dict[Id[Port], str] = {}
     for part in parts:
         bound.update(_bind_part(part, symbol, (model, symbol_ports, drawn), set(bound.values())))
+        refuse_joined(model, part.function, bound, ports_at_one_node(symbol_shape(drawn, library)))
     return symbol, poles, frozendict(bound)
 
 

@@ -17,6 +17,7 @@ from fransys_model.derive import (
     function_scopes,
     item_unit,
     port_function,
+    stub_far,
     unit_index,
     unit_location,
     unit_parent,
@@ -29,7 +30,6 @@ from .kit_keys import function_of
 from .placement_annexes import label_annexes, wider_annexes
 from .placement_ids import symbol_key
 from .placement_markers import pin_ports
-from .write_stubs import stub_ends
 
 if TYPE_CHECKING:
     from collections.abc import Collection, Iterable, Mapping, Sequence
@@ -191,7 +191,7 @@ def cut_lines(model: Model, kit: SymbolKit) -> Mapping[PinRef, str]:
     """
     found = {}
     for pin, names in pin_ports(model, kit).items():
-        ends = stub_ends(model, names)
+        ends = stub_far(model, names)
         function = port_function(model, names[0])
         if ends and ends[0][2] is not None and function is not None:
             found[pin] = f"{ends[0][2].value}/{function.value}"

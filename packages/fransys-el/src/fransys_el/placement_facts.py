@@ -2,33 +2,37 @@
 
 from typing import TYPE_CHECKING
 
-from fransys_layout.core import Facts, Unit, natural_key
+from fransys_layout.core import Facts, Parallel, Series, Unit, natural_key
 from fransys_model.derive import (
+    SeriesRow,
     drawn_groups,
     far_pins,
     function_ports,
     item_functions,
     keep_whole_sets,
-    mate_ports,
+    mate_pairs,
+    series_parallel,
     unit_boundary_pins,
     unit_chain,
     unit_ids,
 )
 from fransys_model.kernel import render_id
+from fransys_model.layout import Side
 
 from .kit_keys import function_of
 from .placement_chains import anchored
 from .placement_env import drawn_pins, pin_ref
-from .placement_series import bridges_of, series_of, trees
+from .placement_series import bridges_of
 from .placement_skips import FUNCTION_WITHOUT_SYMBOL, Skipped, in_order, unwired_reason
 from .symbol_kit import drawn_functions
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
 
-    from fransys_layout.core import PinRef, Sym
+    from fransys_layout.core import PinRef, SeriesPart, Sym
+    from fransys_model.derive import SeriesRowPart
     from fransys_model.kernel import Id
-    from fransys_model.vocab import Function
+    from fransys_model.vocab import Function, Port
 
     from .placement_env import Env
 
@@ -107,12 +111,26 @@ def groups_of(env: Env) -> tuple[tuple[PinRef, ...], ...]:
     return tuple(dict.fromkeys(g for g in found if len(g) >= _WHOLE_SET))
 
 
+def _ends(env: Env, syms: Sequence[Sym]) -> dict[Id[Port], tuple[str, Side]]:
+    """Each drawn port of `syms`: its symbol id and the side its pin leaves by at R0."""
+    side = {(s.id, p.id): p.side for s in syms for p in s.pins}
+    drawn = {s.id for s in syms}
+    return {port: (ref.sym, Side(side[ref.sym, ref.pin].lower())) for port, ref in env.pins.items() if port not in env.undrawn and ref.sym in drawn}
+
+
+def _part(part: SeriesRowPart) -> SeriesPart:
+    if isinstance(part, str):
+        return part
+    parts = tuple(_part(p) for p in part.parts)
+    return Series(parts) if isinstance(part, SeriesRow) else Parallel(parts)
+
+
 def facts_of(env: Env, syms: Sequence[Sym]) -> tuple[Facts, tuple[Skipped, ...]]:
     """The `Facts`, and the functions the keep-whole sets lost for want of a symbol."""
-    mates = tuple((pin_ref(env, a), pin_ref(env, b)) for a, b in mate_ports(env.model) if not env.undrawn.intersection((a, b)))
+    mates = tuple((pin_ref(env, a), pin_ref(env, b)) for _, a, b in mate_pairs(env.model) if not env.undrawn.intersection((a, b)))
     sets, skipped = keep_whole(env)
-    found = trees(env, syms)
+    found = series_parallel(env.model, _ends(env, syms))
     far_ends = far_ends_of(env, syms)
-    series = (*series_of(found), *anchored(env, syms, far_ends))
+    series = (*(Series(tuple(_part(p) for p in row.parts)) for row in found.regions), *anchored(env, syms, far_ends))
     facts = Facts(sets, units_of(env), mates, series=series, far_ends=far_ends, groups=groups_of(env))
     return facts, (*skipped, *bridges_of(env, found))

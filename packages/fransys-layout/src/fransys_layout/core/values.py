@@ -127,10 +127,14 @@ class Pin:
 
 @dataclass(frozen=True, slots=True)
 class BoxSpec:
-    """Fact 16: movable pins in printed-marking order; margin is body beyond the end pins."""
+    """Fact 16: movable pins in printed-marking order; margin is body beyond the end pins.
+
+    pitch is the symbol's own distance between neighbouring pins of one edge, the one that fits its pin names (0: none read).
+    """
 
     order: tuple[str, ...]
     margin: int
+    pitch: int
 
 
 @dataclass(frozen=True, slots=True)
@@ -254,7 +258,6 @@ class Options:
     column_gap_min: int = field(kw_only=True)
     parallel_pitch: int = field(kw_only=True)  # G between the axes of two parallel branches
     row_gap: int = field(kw_only=True)
-    box_pin_pitch_min: int = field(kw_only=True)
     box_pins: str = field(kw_only=True)
     short_height: float = field(kw_only=True)
     min_fill: float = field(kw_only=True)

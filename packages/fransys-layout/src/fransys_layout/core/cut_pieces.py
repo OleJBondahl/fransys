@@ -76,8 +76,8 @@ def _sides(attached: Iterable[Attach], where: Mapping[str, int]) -> list[list[Pi
 
 
 def _ties(fan: Fan) -> tuple[str | None, ...]:
-    """The nets one trunk wire ties: each lane of a bundle is its own net's wire; a plain or crossed fan's one wire ties all (CL1)."""
-    return fan.nets if fan.lanes > 1 and not fan.crossed else (None,)
+    """The nets one trunk wire ties: each lane of a bundle is its own net's wire; a plain fan's one wire ties all (CL1)."""
+    return fan.nets if fan.lanes > 1 else (None,)
 
 
 def trunked(flow: FlowGraph, where: Mapping[str, int], net_of: Mapping[PinRef, str]) -> set[Pair]:

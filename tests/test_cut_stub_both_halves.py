@@ -36,7 +36,7 @@ def _circuit(name: str):
 def _solved(name: str) -> list[tuple[object, object]]:
     """(problem, CoreLayout) of every core solve the case's layout step makes."""
     run = importlib.import_module("placement_corpus.run")
-    _, unlaid = built_with_unlaid(lambda: run.build(name, _circuit(name)))
+    _, unlaid = built_with_unlaid(lambda: run.build(name, _circuit(name), fresh=True))
     solved = []
     real = lay_out_core.solve
 

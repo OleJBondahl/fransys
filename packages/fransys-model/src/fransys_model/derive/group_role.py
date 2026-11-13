@@ -8,7 +8,7 @@ from fransys_model.derive.lookups import effective_placement
 from fransys_model.derive.structure import schematic_functions
 from fransys_model.kernel import parent_chain
 from fransys_model.layout import PageRole
-from fransys_model.vocab.enums import Aspect, NetClass
+from fransys_model.vocab import Aspect, NetClass
 from fransys_model.vocab.tables import aspect_nodes, functions, items, nets
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab import AspectNode, Function, Net, Port

@@ -38,4 +38,4 @@ def texts() -> list[str]:
 
 def test_two_three_pole_breakers_print_pins_one_to_six_each(texts: list[str]) -> None:
     for pin in "123456":
-        assert texts.count(pin) - (pin in "123") == 2, pin  # X3's three terminals print their points 1 to 3 too (STRIP-TAG-ONCE)
+        assert texts.count(pin) == 2, pin

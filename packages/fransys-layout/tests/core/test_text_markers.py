@@ -12,10 +12,12 @@ from options_fixtures import core_options
 from turn_fixtures import marker_views, turn_pin
 
 from fransys_layout.core import AnnexBox, Facts, PinRef, PlacementProblem, Size, Unit
+from fransys_layout.core.arrow_reserve import leg_feet, leg_lines
 from fransys_layout.core.clearance import Keep, clear
 from fransys_layout.core.errors import CoreError
 from fransys_layout.core.flow_values import Attach, Fan
 from fransys_layout.core.geometry import inside, marker_box, marker_box_at, marker_drawn_box, overlaps
+from fransys_layout.core.hangings import hung_keeps
 from fransys_layout.core.outline import outline_keeps
 from fransys_layout.core.outputs import Demand, Marker, Outline, Trunk, Wire
 from fransys_layout.core.place import place_pages
@@ -23,7 +25,7 @@ from fransys_layout.core.route_env import Drawn
 from fransys_layout.core.route_fixed import Fixed
 from fransys_layout.core.text_cells import cell_of
 from fransys_layout.core.text_ends import MarkEnv, Stand, _trunk_end_stand, bundle_nets, end_stand, hub_xy, mark_env, pin_keeps, pin_stand, wire_keeps
-from fransys_layout.core.text_markers import _order, placed_marks, stagger, stand_ref
+from fransys_layout.core.text_markers import _missed, _order, placed_marks, stagger, stand_ref
 from fransys_layout.core.values import Box, Bundle, CutEnd, Finding, OutlineRoom, Pin, Ref, RefEnd, RefKind, StandClass
 
 from . import pipeline_fixtures
@@ -360,18 +362,6 @@ def test_the_spilled_pair_overlaps_without_the_levels() -> None:
     assert not overlaps(_box_of(staggered[0]), _box_of(staggered[1]))
 
 
-def test_a_marker_lifted_past_the_page_top_fits_nowhere() -> None:
-    """The pair's second level, moved one G over the page top, is None: no place (R436)."""
-    pairs = stand_ref(_pair_env(), _pair_ref())
-    lifted = stagger(pairs, OPTIONS, AREA, {}, {})[1]
-    assert isinstance(lifted, Marker)
-    dy = _box_of(lifted).y + 1
-    up = [(replace(m, y=m.y - dy), replace(st, y=st.y - dy)) for m, st in pairs]
-    got = stagger(up, OPTIONS, AREA, {}, {})
-    assert isinstance(got[0], Marker)
-    assert isinstance(got[1], Demand)
-
-
 def test_a_tag_whose_drawn_box_leaves_the_page_gives_the_room_demand() -> None:
     """OUT_OF_PAGE (bank:71): a tag is placed by its plain box and drawn stretched (R543); the page test is on the drawn box."""
     assert OPTIONS.marker is not None
@@ -384,17 +374,26 @@ def test_a_tag_whose_drawn_box_leaves_the_page_gives_the_room_demand() -> None:
     assert all(isinstance(k, Demand) for k in stagger(up, tall, AREA, {}, {}))
 
 
-def test_a_marker_with_no_slot_gives_the_room_demand_of_its_owner() -> None:
-    """Layout-0559: a box off the page is no slot; the marker gives the room above its owner, as a tag does, never None."""
-    pairs = stand_ref(_pair_env(), _pair_ref())
+@pytest.mark.parametrize(("kind", "drop"), [(RefKind.TAG, "the whole pair is dropped"), (RefKind.STUB, "this end is dropped")])
+def test_a_marker_with_no_slot_gives_the_room_demand_of_its_owner_and_its_finding_says_so(kind: RefKind, drop: str) -> None:
+    """Layout-0559 (R436): a box off the page is no slot; the marker gives the room above its owner, never None. KI-912: its finding names
+    the conductor, the unmet demand and what the drop costs."""
+    ref = replace(_pair_ref(), kind=kind)
+    pairs = stand_ref(_pair_env(), ref)
     lifted = stagger(pairs, OPTIONS, AREA, {}, {})[1]
     assert isinstance(lifted, Marker)
     dy = _box_of(lifted).y + 1
-    up = [(replace(m, y=m.y - dy), replace(st, y=st.y - dy)) for m, st in pairs]
-    ask = stagger(up, OPTIONS, AREA, {}, {})[1]
+    up = [(replace(m, y=m.y - dy, far=(PinRef("T", "1"),)), replace(st, y=st.y - dy)) for m, st in pairs]
+    got = stagger(up, OPTIONS, AREA, {}, {})
+    ask = got[1]
+    assert isinstance(got[0], Marker)
     assert isinstance(ask, Demand)
     assert (ask.gap, ask.owner, ask.side) == ("", "S", pairs[0][1].side)
     assert ask.room > OPTIONS.label_gap
+    (found,) = _missed(ref, up, got)
+    assert found.code == "MARKER_UNPLACED"
+    assert "of net n for the conductor to T/1" in found.text
+    assert f"room demand of {ask.room} G on side {ask.side} of S stays unmet, {drop}" in found.text
 
 
 def test_a_marker_lifted_past_its_rows_band_fits_nowhere() -> None:
@@ -571,16 +570,17 @@ def test_the_anchor_outlines_are_keeps_the_markers_clear(monkeypatch: pytest.Mon
     assert [f.code for f in findings] == ["MARKER_UNPLACED"]
 
 
-def test_a_marker_fed_by_a_fixed_wire_never_moves_and_a_refused_stand_is_marker_unplaced() -> None:
-    """R879: a fixed wire ends at the stub's stand; another net's wire through its box leaves no slot: refused, loud, never moved."""
+def test_a_marker_fed_by_a_fixed_wire_stands_unmoved_at_its_stand_and_only_a_stand_off_the_page_is_refused() -> None:
+    """R2210: a fixed wire ends at the stub's stand; another net's wire through its box leaves no slot: it stands there, unmoved."""
     pairs = [(m, st) for m, st in stand_ref(_pair_env(), _pair_ref())][:1]
     marker, stand = pairs[0]
     box = marker_box(marker, OPTIONS)
     through = Keep("", Box(box.x, box.y, box.w, 1), "wire", "", "other", None, ((box.x, box.y), (box.x + box.w, box.y)))
     own = Keep("", Box(marker.x, marker.y, 1, 1), "wire", "", "n", None, ((marker.x, marker.y), (marker.x - 40, marker.y)))
     fed = replace(marker, kind=RefKind.STUB)
-    assert isinstance(stagger([(fed, stand)], OPTIONS, AREA, {1: [through, own]}, {"n": frozenset({"n"})})[0], Demand)
+    assert stagger([(fed, stand)], OPTIONS, AREA, {1: [through, own]}, {"n": frozenset({"n"})})[0] == fed
     assert stagger([(fed, stand)], OPTIONS, AREA, {1: [through]}, {"n": frozenset({"n"})})[0] != fed
+    assert isinstance(stagger([(fed, stand)], OPTIONS, Size(1, 1), {1: [through, own]}, {"n": frozenset({"n"})})[0], Demand)
 
 
 def test_a_boundary_stub_steps_straight_out_until_its_box_is_clear_of_a_foreign_wire() -> None:
@@ -621,6 +621,32 @@ def test_a_leg_end_with_no_leg_line_stands_at_the_trunk_end_not_at_its_pin() -> 
     assert end_stand(env, ref, ref.ends[0], 0) == _trunk_end_stand(env, trunk, (PinRef("S", "p"), "stub"))
 
 
+@pytest.mark.parametrize("case", ["hanging", "fed-foreign-wire", "unfed-foreign-wire"])
+def test_a_leg_stub_touches_a_hanging_box_and_a_fed_stub_stands_over_a_foreign_wire(case: str) -> None:
+    """LEG-WALKED (layout-0591, R2222): a leg stub stands beside a hanging; fed it stands over a foreign wire (WOM counts it), unfed it is refused."""
+    pin = PinRef("a", "in")
+    fans = {"f0": Fan("f0", ("n0",), (Attach("c", 0, 0, pin, 0, net="n0"),), (), "H", 1, "S")}
+    trunks = [Trunk("f0", 1, 100, 40, 480, 1, 0, ((40, 480),))]
+    free = leg_lines(trunks, fans, {pin: 0}, OPTIONS, ((), {}, None))["f0", 0, pin]
+    hung = {"card": (Box(free[1][0] - 6, 100 + OPTIONS.wiring_grid, 12, 40),)}  # a planned tag at a card pin, over the free leg's drop
+    lines = leg_lines(trunks, fans, {pin: 0}, OPTIONS, (leg_feet((), hung), {}, None))
+    pins: dict[tuple[str, str], tuple[int, int, int, Orientation]] = {("a", "in"): (1, 40, 60, "R0")}
+    sides: dict[tuple[str, str, Orientation], Side] = {("a", "in", "R0"): "S"}
+    env = MarkEnv(
+        OPTIONS, AREA, pins, sides, {(1, "f0"): tuple(trunks)}, fans, legs={1: {pin: 0}}, leg_lines={1: lines}, ranks={"a": 0}, columns={"c": (0,)}
+    )
+    ((stub, stand),) = stand_ref(env, Ref("n0", RefKind.STUB, (RefEnd(1, "c", pin, 0, StandClass.LEG),)))
+    leg, edge = lines["f0", 0, pin], marker_box(stub, OPTIONS)
+    fixed = [
+        Keep("", Box(min(a[0], b[0]), min(a[1], b[1]), abs(b[0] - a[0]), abs(b[1] - a[1])), "wire", "n0", None, None, (a, b))
+        for a, b in itertools.pairwise(leg)
+    ]
+    foreign = [Keep("", Box(edge.x - 20, y := edge.y + edge.h // 2, 20, 0), "wire", "n1", None, None, ((edge.x - 20, y), (edge.x, y)))]
+    unfed, wires = case[0] == "u", hung_keeps(hung) if case == "hanging" else foreign  # unfed: the stub may move, and with no room it is the Demand
+    got = stagger([(stub, stand)], OPTIONS, Size(1, 1) if unfed else AREA, {1: [*wires, *([] if unfed else fixed)]}, {})
+    assert isinstance(got[0], Demand) if unfed else got[0] == stub  # fed: the Marker stands at `first`
+
+
 def test_a_marker_stands_beside_the_lanes_of_every_fan_that_meets_its_symbol() -> None:
     """R1007: the ring's arrows stand 48 apart beside each other's single-lane fans at one module; a fan at no shared symbol is another's."""
 
@@ -647,6 +673,25 @@ def test_a_stub_stands_beside_a_sibling_fans_wire_never_on_it() -> None:
     off = (wire(box.x - 4, box.y - 2, box.w + 8, 0), wire(box.x, box.y - 4, 0, box.h + 8))
     assert all(stagger([(stub, stand)], OPTIONS, AREA, {1: [w]}, own)[0] != stub for w in through)
     assert all(stagger([(stub, stand)], OPTIONS, AREA, {1: [w]}, own) == [stub] for w in off)
+
+
+@pytest.mark.rule("MARKER-FREE-SIDE")
+def test_a_stub_slot_whose_lead_runs_through_a_body_is_refused() -> None:
+    """R2281, KI-952: a foreign wire refuses the stand, a body the next slot, and the slot past it has a lead through that body."""
+    marker, stand = stand_ref(_pair_env(), _pair_ref())[0]
+    stub = replace(marker, kind=RefKind.STUB)
+    box = marker_box(stub, OPTIONS)
+    wire = Keep(
+        "",
+        Box(box.x - 4, box.y + box.h // 2, box.w + 8, 0),
+        "wire",
+        "other",
+        None,
+        None,
+        ((box.x - 4, box.y + box.h // 2), (box.x + box.w + 4, box.y + box.h // 2)),
+    )
+    wall = Keep("", Box(box.x - 4, box.y - box.h + 2, box.w + 8, box.h - 4), "body", "H")  # the slot above the stand, never the one past it
+    assert isinstance(stagger([(stub, stand)], OPTIONS, AREA, {1: [wire, wall]}, {})[0], Demand)
 
 
 @pytest.mark.rule("MARKER-STAGGER")

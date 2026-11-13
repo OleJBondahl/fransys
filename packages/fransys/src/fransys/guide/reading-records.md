@@ -9,7 +9,7 @@ reached as `fr.derive.NAME`.
 
 ## Records
 
-- `Aspect` is one of the three IEC 81346 views of the same objects: `FUNCTION`, `PRODUCT` and `LOCATION`.
+- `Aspect` is refdef's enum of designation aspects; a model holds three IEC 81346 views of the same objects, `FUNCTION`, `PRODUCT` and `LOCATION`. Its value is the sign (`=`, `-`, `+`).
 - `AspectNode` is a node in one aspect tree. Its fields are `id`, `key`, `aspect`, `parent` (an `AspectNode` id, or `None` at the root), `label`, `description` and `ext`. A `LOCATION` node with label `C1` is the place `+C1`. The table is `aspect_nodes`.
 - `Placement` puts one item at one aspect node. Its fields are `id`, `key`, `item`, `node` and `ext`. An item has at most one placement per aspect, so one item can have a product placement and a location placement. The table is `placements`.
 - `Boundary` marks a function as part of a unit's interface. Its fields are `id`, `key`, `unit`, `function`, `name` and `ext`. `name` is the field name the unit gave the function, or `None`. One function can be the boundary of several units. The table is `boundaries`.

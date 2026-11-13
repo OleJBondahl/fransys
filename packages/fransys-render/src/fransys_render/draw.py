@@ -129,6 +129,7 @@ def _built(drawn: DrawnSymbol, library: symdef.Library, style: Style) -> symdef.
         library=library,
         offsets=dict(drawn.offsets),
         sides=dict(drawn.sides),
+        turn=drawn.turn,
     )
     repeated = symdef.repeat(made, drawn.poles, port_format=library.port_format) if drawn.poles > 1 else made
     symbol = _stretched(repeated, drawn, style)

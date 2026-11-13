@@ -12,10 +12,10 @@ name = "pole"
 kind = "protection"
 symbol = "circuit-breaker"
 ports = [
-    { name = "1", role = "generic", symbol_port = "1.in" },
-    { name = "2", role = "generic", symbol_port = "1.out" },
-    { name = "3", role = "generic", symbol_port = "2.in" },
-    { name = "4", role = "generic", symbol_port = "2.out" },
+    { name = "1", role = "generic", side = "line", symbol_port = "1.in" },
+    { name = "2", role = "generic", side = "load", symbol_port = "1.out" },
+    { name = "3", role = "generic", side = "line", symbol_port = "2.in" },
+    { name = "4", role = "generic", side = "load", symbol_port = "2.out" },
 ]
 links = [
     { a = "1", b = "2", kind = "conductive" },

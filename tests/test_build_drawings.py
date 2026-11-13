@@ -14,15 +14,15 @@ import pytest
 from _direct_case import built_with_unlaid, laid_again
 from _motor_feeder_case import motor_feeder_case_drafts
 from fransys import _exports, _layout_core, pipeline
-from fransys._link_boxes import link_boxes
+from fransys._link_boxes import link_boxes, where_links
 from fransys._settings_library import library_of
 from fransys_el import style
 from fransys_render import svg
 
 from electrical_symbols import LIBRARY
+from fransys_model.derive import drawn_pages
 from fransys_model.derive.page_nav import reference_links
 from fransys_model.kernel import render_id
-from fransys_model.layout import Page, layout_of
 
 SKID = Path(__file__).resolve().parent.parent / "examples" / "demo-skid" / "skid.py"
 
@@ -76,7 +76,7 @@ def test_the_pdf_links_equal_reference_links(tmp_path, monkeypatch):
     real = _exports.fransys_pdf.source
 
     def spy(*args, **kwargs):
-        seen.append(kwargs["links"])
+        seen.append((args[1], kwargs["links"]))
         return real(*args, **kwargs)
 
     monkeypatch.setattr(_exports.fransys_pdf, "source", spy)
@@ -89,12 +89,17 @@ def test_the_pdf_links_equal_reference_links(tmp_path, monkeypatch):
         tmp_path,
         result.settings.pdf,
     )
-    known = set(layout_of(model, Page))
     boxes = link_boxes(model, result.drawings, library)
-    expected = {page: reference_links(model, page, known, boxes) for page in known}
-    assert sum(len(found) for found in expected.values()) == 2
+
+    def expected(document):
+        return {
+            page.id: (*reference_links(model, document, page.id, boxes), *where_links(result.drawings[page.id]))
+            for page in drawn_pages(model, document)
+        }
+
     assert seen
-    assert all(links == expected for links in seen)
+    assert sum(len(found) for _, links in seen for found in links.values()) == 2
+    assert all(links == expected(document) for document, links in seen)
 
 
 def test_a_result_kept_across_many_later_builds_still_writes(tmp_path):

@@ -35,9 +35,9 @@ def _split_references(problem: Any, layout: Any) -> list[str]:
 
 def _cases() -> dict[str, Any]:
     run = importlib.import_module("placement_corpus.run")
-    cases: dict[str, Any] = {c[0]: (lambda c=c: run.build(c[0], c)) for c in run.circuits("standard")}
+    cases: dict[str, Any] = {c[0]: (lambda c=c: run.build(c[0], c, fresh=True)) for c in run.circuits("standard")}
     skid: Any = (run.SKID.name, run.load(run.SKID, "demo_skid_lane"), {}, {})
-    cases["demo-skid"] = lambda: run.build("demo-skid", skid)
+    cases["demo-skid"] = lambda: run.build("demo-skid", skid, fresh=True)
     return cases
 
 
@@ -66,23 +66,16 @@ def _lanes(build: Any) -> tuple[Any, list[Any], list[Any], list[tuple[str, bool]
     return built, caught, [[hexid.sub("", c.sym) for col in f.columns for lane in col.lanes for c in lane.cells] for f in made], marked
 
 
-def run(salt: str) -> dict[str, Any]:
-    """Every build under `salt`, as plain values."""
+def run(salt: str, case: str) -> dict[str, Any]:
+    """One case built under `salt`, as plain values."""
     with id_namespace(salt) if salt != "-" else nullcontext():
-        return _lanes_of_every_case()
-
-
-def _lanes_of_every_case() -> dict[str, Any]:
-    out: dict[str, Any] = {}
-    for name, build in _cases().items():
-        built, caught, lanes, marked = _lanes(build)
-        out[name] = {
-            "shorts": sum(f.code == "DRAWING_SHORTS_NETS" for f in built.findings),
-            "errors": [f.code for f in built.findings if f.severity == fr.Severity.ERROR],
-            "split": [s for p, _, lay in caught for s in _split_references(p, lay)],
-            "lanes": lanes,
-            "tag_ends": len(marked),
-            "pinless": [name for name, none in marked if none],
-            "markers": sum(len(lay.annotations.markers) for _, _, lay in caught),
-        }
-    return out
+        built, caught, lanes, marked = _lanes(_cases()[case])
+    return {
+        "shorts": sum(f.code == "DRAWING_SHORTS_NETS" for f in built.findings),
+        "errors": [f.code for f in built.findings if f.severity == fr.Severity.ERROR],
+        "split": [s for p, _, lay in caught for s in _split_references(p, lay)],
+        "lanes": lanes,
+        "tag_ends": len(marked),
+        "pinless": [name for name, none in marked if none],
+        "markers": sum(len(lay.annotations.markers) for _, _, lay in caught),
+    }

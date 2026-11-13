@@ -79,12 +79,12 @@ def strip_references(result: fr.BuildResult) -> int:
 
 
 def strip_tags_drawn(result: fr.BuildResult) -> bool:
-    """True when the tag text of each strip is a drawn text (the row-group text, SW8)."""
+    """True when each strip's tag is drawn, alone (a run's) or ahead of a terminal's point (`-X1:3`, STRIP-TAG-ONCE)."""
     model = result.model
     texts = {one.text for drawing in drawn_pages(model).values() for one in drawing.texts}
     table = ports(model)
     strips = {strip for port in table.values() if (strip := strip_of(model, function_item(model, port.function))) is not None}
-    return bool(strips) and all(item_tag_text(model, strip) in texts for strip in strips)
+    return bool(strips) and all(any(t == (tag := item_tag_text(model, strip)) or t.startswith(f"{tag}:") for t in texts) for strip in strips)
 
 
 def test_a_strip_feeding_a_relay_bank_builds_on_the_core_path_with_no_failed_route(

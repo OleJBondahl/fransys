@@ -102,5 +102,4 @@
 
 "test_a_wide_bank_of_relays_fed_from_a_controllers_pins_builds.py::test_no_reference_marker_overlaps_another_on_the_bank_of_forty" = "GAP-FLIP-640"  # KI-640 MARKER-LOOP-AVOID (R1732): the markers placed in the loop overlap one another on page 4f2c6ea0
 
-
 [raises]

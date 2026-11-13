@@ -8,7 +8,7 @@ not the wires again.
 from collections import defaultdict
 from dataclasses import dataclass, field
 from itertools import pairwise
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 from .clearance import closed_cells
 
@@ -46,6 +46,7 @@ class Occupancy:
     ends: dict[XY, list[str]] = field(default_factory=dict)
     admitted: dict[XY, set[tuple[str, str]]] = field(default_factory=dict)
     history: dict[tuple[XY, str], int] = field(default_factory=dict)
+    labelled: set[XY] = field(default_factory=set)  # the cells a standing label covers, a subset of `hard`
     share_cost: int = 0  # above 0 a path may share a present cell and pays for it
 
     def _harden(self, cells: Iterable[XY], owners: frozenset[str]) -> None:
@@ -56,16 +57,16 @@ class Occupancy:
         s = self.step
         return [(i, j) for i in range(box.x // s, -(-(box.x + box.w) // s)) for j in range(box.y // s, -(-(box.y + box.h) // s))]
 
-    def mark_box(self, box: Box, owners: frozenset[str] = frozenset()) -> None:
-        self._harden(self._cells(box), owners)
+    def mark_box(self, box: Box, owners: frozenset[str] = frozenset(), *, edge: Literal["open", "closed"] = "open") -> None:
+        """Hard cells of the box; "closed" takes its far edges too, as `clearance` and el count (R535). A symbol in `owners` may enter them (R-A)."""
+        cells = [(i, j) for xs, ys in [closed_cells(box, self.step)] for i in xs for j in ys] if edge == "closed" else self._cells(box)
+        self._harden(cells, owners)
 
-    def mark_closed(self, box: Box, owners: frozenset[str] = frozenset()) -> None:
-        """Hard cells of the box with its far edges included, as `clearance` and el count (R535).
-
-        A wire of a symbol in `owners` may enter them (R-A); `admit` opens one cell.
-        """
-        xs, ys = closed_cells(box, self.step)
-        self._harden(((i, j) for i in xs for j in ys), owners)
+    def mark_text(self, box: Box) -> None:
+        """A standing label's interior: hard, and kept in `labelled` so an anchor run can be tested against labels alone (layout-0582)."""
+        cells = self._cells(box)
+        self._harden(cells, frozenset())
+        self.labelled.update(cells)
 
     def admit(self, cell: XY, owner: str, net: str) -> None:
         """A wire of `net` that belongs to `owner` may enter the hard `cell` of its pin (R-A)."""
@@ -161,20 +162,20 @@ class Occupancy:
     def _admits(self, cell: XY, net: str, own: frozenset[str]) -> bool:
         return any((o, net) in self.admitted.get(cell, ()) for o in own)
 
-    def touched(self, cell: XY, net: str, skip: frozenset[str] = frozenset()) -> bool:
-        """Another net (not in `skip`) has an end or a corner in the cell (R391)."""
-        return any(n != net and n not in skip for n in self.ends.get(cell, ()))
+    def touched(self, cell: XY, net: str) -> bool:
+        """Another net has an end or a corner in the cell (R391)."""
+        return any(n != net for n in self.ends.get(cell, ()))
 
-    def foreign(self, cell: XY, net: str, skip: frozenset[str] = frozenset()) -> bool:
+    def foreign(self, cell: XY, net: str) -> bool:
         """Another net's wire is in the cell: a path may cross it straight, never end or turn."""
-        return any(o != net and o not in skip for o, _ in self.used.get(cell, ()))
+        return any(o != net for o, _ in self.used.get(cell, ()))
 
     def crossing(self, cell: XY, axis: str, net: str) -> int:
         """The wires of other nets on the other axis in the cell."""
         return sum(1 for o, a in self.used.get(cell, ()) if o != net and a != axis)
 
-    def conflicts(self, net: str, points: Sequence[XY], skip: frozenset[str] = frozenset()) -> list[tuple[XY, str]]:
-        """Where the polyline meets a net not in `skip` (R391), as (cell, axis).
+    def conflicts(self, net: str, points: Sequence[XY]) -> list[tuple[XY, str]]:
+        """Where the polyline meets another net (R391), as (cell, axis).
 
         An end or corner on its wire lists both axes; a run along it or through its end, the run's.
         """
@@ -182,20 +183,16 @@ class Occupancy:
         out: list[tuple[XY, str]] = []
         for x, y in points:
             cell = (x // step, y // step)
-            if self.foreign(cell, net, skip):
+            if self.foreign(cell, net):
                 out += [(cell, "h"), (cell, "v")]
         for a, b in pairwise(points):
             axis = "h" if a[1] == b[1] else "v"
             out += [
                 (cell, axis)
                 for cell in cells_between(a, b, step)
-                if self.touched(cell, net, skip) or any(o != net and o not in skip and k == axis for o, k in self.used.get(cell, ()))
+                if self.touched(cell, net) or any(o != net and k == axis for o, k in self.used.get(cell, ()))
             ]
         return out
-
-    def free(self, box: Box) -> bool:
-        """No cell of the box is hard or carries a wire."""
-        return all(c not in self.hard and c not in self.used for c in self._cells(box))
 
     def collinear(self) -> int:
         """Pairs of runs of different nets on one line that share more than a point."""

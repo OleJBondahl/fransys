@@ -87,8 +87,6 @@
 # layout-0093 known limit (ruling (a), 2026-10-02): two OFF stubs of one carrier to one far end on stacked neighbouring S pins of one column should share one box, but the upper pin's stub runs into the lower pin's body, so no box stands clear of both; the pair keeps two boxes and the first stands on the lower pin
 # P6 is strict: the cut spreads a row group of three symbols over two rows
 "packages/fransys-layout/tests/core/test_cut_plants.py::test_a_row_group_the_cut_would_spread_over_two_rows_stays_in_one" = "GAP-FLIP-218"
-# stage 1 does not fill Fan.crossed (layout-0275): a reversing pair is plain
-"packages/fransys-layout/tests/core/test_route_plants.py::test_stage_one_marks_the_reversed_pole_order_of_a_reversing_pair" = "GAP-FLIP-218"
 # TEXT-CANDIDATES no-free-candidate (designer Q4), Ruling 105, 114, recount
 "tests/test_rule_routing_marker_boxes.py::test_no_wire_passes_through_a_marker_box[machine_panel]" = "GAP-FLIP-1"
 "tests/test_rule_routing_marker_boxes.py::test_no_wire_passes_through_a_marker_box[mcc]" = "GAP-FLIP-1"

@@ -21,7 +21,7 @@ from fransys_model.kernel import (
     natural_key,
     parent_chain,
 )
-from fransys_model.vocab.enums import Aspect
+from fransys_model.vocab import Aspect
 from fransys_model.vocab.facets.connector import ConnectorFacet
 from fransys_model.vocab.facets.plc import PlcBindingFacet
 from fransys_model.vocab.tables import (

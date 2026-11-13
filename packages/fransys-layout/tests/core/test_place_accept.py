@@ -28,8 +28,8 @@ def _base(prob: PlacementProblem) -> tuple[Graph, tuple[Align, ...]]:
     env = env_of(prob)
     x, _ = place_x(env)
     spans = _spans(env, x)
-    tangled, _ = _settle(env, spans, {}, {})
-    return _y_graph(env, spans, (tangled, frozenset()), {}, {})[0], tuple(page_aligns(env))
+    tangled, _ = _settle(env, spans, {})
+    return _y_graph(env, spans, (tangled, frozenset()), {})[0], tuple(page_aligns(env))
 
 
 def test_all_aligns_that_hold_solve_in_one_pass() -> None:

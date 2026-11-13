@@ -1,10 +1,10 @@
 {
   "aliases": [],
-  "schema_version": 29,
+  "schema_version": 31,
   "tables": {
     "aspect_node": [
       {
-        "aspect": "location",
+        "aspect": "LOCATION",
         "description": "main enclosure",
         "ext": {},
         "id": "aspect_node:6d32d2d71ca0520586f0e9a9b8caf9dc",
@@ -3696,7 +3696,7 @@
         ],
         "marking": null,
         "name": "2",
-        "pin_role": null,
+        "pin_role": "LOAD",
         "template": "port_template:10d0dedf6e4b5bf9b988ed4ebef643ea"
       },
       {
@@ -3977,7 +3977,7 @@
         ],
         "marking": null,
         "name": "1",
-        "pin_role": null,
+        "pin_role": "LINE",
         "template": "port_template:f354f861237f5b12a39cc3fbe7f13f05"
       },
       {
@@ -4553,7 +4553,7 @@
         ],
         "marking": null,
         "name": "2",
-        "pin_role": null,
+        "pin_role": "LOAD",
         "side": null
       },
       {
@@ -5427,7 +5427,7 @@
         ],
         "marking": null,
         "name": "1",
-        "pin_role": null,
+        "pin_role": "LINE",
         "side": null
       },
       {

@@ -52,8 +52,8 @@ def is_known(model: Model, key: PickKey) -> bool:
     return _function(model, key) is not None or port_function(model, cast("Id[Port]", key)) is not None
 
 
-def tag_of(model: Model, key: PickKey, *, unit: Id[Unit] | None = None) -> str:
-    """The tag a symbol prints: a pin's designation (`-X5:2`), a strip terminal's own point (`L2:1`), else its function's tag.
+def tag_of(model: Model, key: PickKey, *, unit: Id[Unit] | None = None, alone: bool = False) -> str:
+    """The tag a symbol prints: a pin's designation (`-X5:2`), a strip terminal's own point (`L2:1`) or, `alone` in its run, its full tag.
 
     The strip's designation is the run's, printed once above it (`strip_tag_of`, STRIP-TAG-ONCE).
     `unit` is the drawing set's unit: the text its own lists print (`None`: whole model).
@@ -61,7 +61,9 @@ def tag_of(model: Model, key: PickKey, *, unit: Id[Unit] | None = None) -> str:
     function = _function(model, key)
     if function is None:
         return port_designation(model, cast("Id[Port]", key), unit=unit)
-    return run_point_text(model, function) if strip_of(model, function_item(model, function)) else tag_text(model, function, unit=unit)
+    if alone or not strip_of(model, function_item(model, function)):
+        return tag_text(model, function, unit=unit)
+    return run_point_text(model, function)
 
 
 def strip_tag_of(model: Model, key: PickKey, *, unit: Id[Unit] | None = None) -> str:

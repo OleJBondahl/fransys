@@ -84,18 +84,20 @@ def _build(spec: tuple[tuple[str, int], ...], *, pair: bool = False):
     return result.model, tags
 
 
-def test_every_branch_marker_the_loop_makes_has_room() -> None:
+@pytest.mark.parametrize(("spec", "pair"), [pytest.param(_PUMPS, False, id="pumps"), pytest.param(_PAIR, True, id="pair")])
+def test_every_branch_marker_the_loop_makes_has_room(spec: tuple[tuple[str, int], ...], *, pair: bool) -> None:
     """The strap's tag pair is planned by the cut and reserved by the placement: no MARKER_UNPLACED (layout-0508)."""
-    for spec, pair in ((_PUMPS, False), (_PAIR, True)):
-        codes = [f.code for f in _built(spec, pair=pair)[0].findings]
-        assert "MARKER_UNPLACED" not in codes
-        assert codes.count("CONNECTION_NOT_DRAWN") == 0
+    codes = [f.code for f in _built(spec, pair=pair)[0].findings]
+    assert "MARKER_UNPLACED" not in codes
+    assert codes.count("CONNECTION_NOT_DRAWN") == 0
 
 
 def _point_under(drawing, tag: str):
-    """The point text of the terminal printed `tag` (`-X3:1`): the point `1` standing nearest the strip tag `-X3` of its run (STRIP-TAG-ONCE)."""
+    """The text of the terminal printed `tag` (`-X3:1`): its full tag when alone, else its point `1` nearest the strip tag `-X3`."""
     strip, _, point = tag.partition(":")
     texts = [t for t in drawing.texts if t.kind == "TAG"]
+    if alone := next((t for t in texts if t.owner and t.text == tag), None):
+        return alone
     runs = [t for t in texts if t.owner is None and t.text == strip]
     points = [t for t in texts if t.owner and t.text == point]
     return min(points, key=lambda p: min(abs(p.box.x - r.box.x) + abs(p.box.y - r.box.y) for r in runs), default=None) if runs else None

@@ -28,7 +28,7 @@ from fransys_model.derive.instance_tag import dashed
 from fransys_model.derive.lookups import effective_placement
 from fransys_model.derive.unit_nodes import chain_up, common_node
 from fransys_model.kernel import DIGEST_CACHE_SIZE, SchemaError, digest_cached
-from fransys_model.vocab.enums import Aspect
+from fransys_model.refdef import Aspect
 from fransys_model.vocab.tables import (
     HasTables,
     aspect_nodes,

@@ -9,7 +9,7 @@ from typing import Any, cast
 
 from fransys_model.kernel import parent_chain
 from fransys_model.layout import OverviewRef, OverviewRefKind
-from fransys_model.vocab.enums import Aspect, SubjectKind
+from fransys_model.vocab import Aspect, SubjectKind
 from fransys_model.vocab.tables import conductors, functions, items
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.connectivity import Conductor

@@ -31,9 +31,9 @@ from fransys_model.vocab.tables import (
     placements,
 )
 lazy from fransys_model.kernel import Id, Model
+lazy from fransys_model.refdef import Aspect
 lazy from fransys_model.vocab.aspects import AspectNode
 lazy from fransys_model.vocab.core import Item
-lazy from fransys_model.vocab.enums import Aspect
 
 if TYPE_CHECKING:
     from fransys_model.vocab.templates import Part

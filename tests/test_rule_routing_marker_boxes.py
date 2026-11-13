@@ -27,7 +27,7 @@ _CASES = (
 
 def _layouts(case: Any) -> list[tuple[Any, Any]]:
     """Each drawing set's (core layout, options), caught as the build solves it."""
-    _, caught = caught_solves(lambda: run.build(case[0], case))
+    _, caught = caught_solves(lambda: run.build(case[0], case, fresh=True))
     return [(layout, options) for _, options, layout in caught]
 
 

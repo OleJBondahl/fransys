@@ -1,7 +1,8 @@
-"""The PDF link box of each cross-reference marker: its drawn outline, one module out along its facing (SY7)."""
+"""The PDF link box of each cross-reference marker (its drawn outline, one module out along its facing, SY7) and of each where-text."""
 
 from typing import TYPE_CHECKING
 
+from fransys_model.derive.page_nav import ReferenceLink
 from fransys_model.kernel import render_id
 from fransys_model.layout import LinkMarker, Side, layout_of
 
@@ -13,7 +14,7 @@ if TYPE_CHECKING:
     from fransys_model.kernel import Id, Model
     from fransys_model.layout import Page
 
-__all__ = ["link_boxes"]
+__all__ = ["link_boxes", "where_links"]
 
 _STEP = {Side.N: (0, -1), Side.E: (1, 0), Side.S: (0, 1), Side.W: (-1, 0)}
 
@@ -32,3 +33,8 @@ def link_boxes(model: Model, drawings: Mapping[Id[Page], Drawing], library: Libr
             dx, dy = _STEP[marker.facing]
             found[marker.id] = (outline.x + dx * gap, outline.y + dy * gap, outline.w, outline.h)
     return found
+
+
+def where_links(drawing: Drawing) -> tuple[ReferenceLink, ...]:
+    """The link of each text that names a cell of its own PDF: its box and the destination el set on it (PDF-LINKS R1)."""
+    return tuple(ReferenceLink(x=t.box.x, y=t.box.y, width=t.box.w, height=t.box.h, target=t.link) for t in drawing.texts if t.link)

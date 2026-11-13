@@ -51,7 +51,8 @@ class DrawnText:
     """One text: its final string, its box in layout units and the corner of the box it is anchored by.
 
     `owner` is the id of the drawn item the text annotates, `None` for a free text. `turned` is a text that reads bottom-up in a box
-    already turned (its width the text's thickness); its `anchor` corner is where symdef starts the text.
+    already turned (its width the text's thickness); its `anchor` corner is where symdef starts the text. `link` is the label of the
+    destination the text jumps to when clicked, `None` for a text that links nowhere.
     """
 
     text: str
@@ -60,6 +61,7 @@ class DrawnText:
     anchor: Corner
     owner: str | None = None
     turned: bool = False
+    link: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -76,7 +78,8 @@ class DrawnSymbol:
     symbol's own body at its origin; `None` when the producer knew no body. `ports` and `net`
     are identity strings with no meaning to the core or to render: the ports the symbol draws,
     and the net a marker stands for. `slot_ink` is the page box of each string in `slots`, measured from
-    the string (TEXT-BOX-MEASURED): the box the overlap and page checks read.
+    the string (TEXT-BOX-MEASURED): the box the overlap and page checks read. `turn` reads a box's
+    markings bottom-up.
     """
 
     id: str
@@ -98,6 +101,7 @@ class DrawnSymbol:
     ports: tuple[str, ...] = ()
     net: str = ""
     slot_ink: tuple[tuple[str, Box], ...] = ()
+    turn: bool = False
 
 
 @dataclass(frozen=True, slots=True)

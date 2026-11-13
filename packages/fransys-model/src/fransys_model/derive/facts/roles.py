@@ -10,12 +10,12 @@ from typing import Any
 from fransys_model.derive.accessory_blocks import operating_item
 from fransys_model.derive.facts.figures import breaking
 from fransys_model.derive.facts.net_facts import net_class_of
+from fransys_model.derive.facts.part_pins import poles_by_links
 from fransys_model.derive.facts.rating_index import function_block
 from fransys_model.elecdef import LinkKind, PinRole
 from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, digest_cached
 from fransys_model.vocab.enums import FunctionKind, PortBoundary
 from fransys_model.vocab.facets.plc import PlcChannelFacet
-from fransys_model.vocab.markings import is_pole_by_role
 from fransys_model.vocab.roles import (
     CONDUCTOR_ROLES,
     LINK_ROLES,
@@ -95,13 +95,14 @@ def function_role(model: Model, function: Id[Function]) -> FunctionRole:
 def link_role(model: HasTables, link: Id[InternalLink]) -> LinkRole:
     """The role of an internal link: its kind's row, with the pole and rest the function adds.
 
-    A protection's conductive link is a pole; a switched link rests as declared, else as its
-    function's kind implies.
+    A conductive link between a line and a load pin is a pole; a switched link rests as declared,
+    else as its function's kind implies.
     """
     record = internal_links(model)[link]
     role = LINK_ROLES[record.kind]
-    kind = function_templates(model)[port_templates(model)[record.a].function].kind
-    role = replace(role, pole=is_pole_by_role(function_role_of(kind), record.kind))
+    ends = {end: port_templates(model)[end] for end in (record.a, record.b)}
+    kind = function_templates(model)[ends[record.a].function].kind
+    role = replace(role, pole=bool(poles_by_links([record], ends)))
     if record.kind is not LinkKind.SWITCHED:
         return role
     declared = record.closed_at_rest

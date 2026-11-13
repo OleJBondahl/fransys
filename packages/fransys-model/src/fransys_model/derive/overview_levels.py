@@ -11,9 +11,9 @@ lazy from collections.abc import Callable
 
 from fransys_model.derive.facts.item_predicates import terminal_items
 from fransys_model.derive.facts.unit_index import unit_index
-from fransys_model.derive.facts.units import boundary, item_chain, unit_items
+from fransys_model.derive.facts.units import boundary, item_chain, item_root, unit_items
 from fransys_model.layout import OverviewRef, OverviewRefKind
-from fransys_model.vocab.enums import Aspect, FunctionKind
+from fransys_model.vocab import Aspect, FunctionKind
 from fransys_model.vocab.tables import conductors, functions
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.core import Function, Item, Unit
@@ -163,7 +163,7 @@ def _merge(lines: list[OverviewLine]) -> tuple[OverviewLine, ...]:
 
 def stub_far_root(model: Model, item: Id[Item]) -> OverviewRef:
     """The far end a stub names: the root of `item`'s parents, so a terminal stands as its strip."""
-    return OverviewRef(kind=OverviewRefKind.ITEM, item=tuple(item_chain(model, item))[-1])
+    return OverviewRef(kind=OverviewRefKind.ITEM, item=item_root(model, item))
 
 
 def stubs_of(model: Model, unit: Id[Unit], link: OverviewLink, inside: BoxKey, outside: Id[Item]) -> list[OverviewStub]:

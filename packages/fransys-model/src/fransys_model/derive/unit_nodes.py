@@ -12,8 +12,8 @@ from fransys_model.derive.facts.unit_index import unit_index
 from fransys_model.derive.facts.units import in_reading, is_harness, item_chain, units
 from fransys_model.derive.lookups import effective_placement, require
 from fransys_model.kernel import DIGEST_CACHE_SIZE, digest_cached, parent_chain
+from fransys_model.refdef import Aspect
 from fransys_model.vocab.designation_scheme import DESIGNATION_SCHEME
-from fransys_model.vocab.enums import Aspect
 from fransys_model.vocab.tables import aspect_nodes, functions, items, ports
 from fransys_model.vocab.tables import units as units_table
 lazy from fransys_model.kernel import Id, Model

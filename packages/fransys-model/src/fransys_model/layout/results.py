@@ -32,20 +32,8 @@ def _check_size(rec: LinkMarker, owner: str, kind: str) -> None:
             _refuse(rec, kind, f"{owner} {name} must be positive, got {size}")
 
 
-def _check_marker_numbers(rec: LinkMarker) -> None:
-    kind = "layout.link_marker"
-    if (rec.via_x is None) != (rec.via_y is None):
-        _refuse(rec, kind, "a link marker's via_x and via_y are both set or both None")
-    if type(rec.stub_extra) is int and rec.stub_extra < 0:
-        _refuse(rec, kind, f"a link marker's stub_extra must not be negative, got {rec.stub_extra}")
-    if type(rec.wrap_at) is int and rec.wrap_at < 1:
-        _refuse(rec, kind, f"a link marker's wrap_at must be positive, got {rec.wrap_at}")
-
-
 def _check_marker_stub(rec: LinkMarker) -> None:
     kind = "layout.link_marker"
-    if rec.lead is False and rec.box_x is None:
-        _refuse(rec, kind, "a link marker that is not the lead of a shared box needs a box_x")
     is_off = rec.star is StarKind.OFF
     if rec.facing is None:
         _refuse(rec, kind, "a link marker always stores its facing")
@@ -133,13 +121,9 @@ class LinkMarker:
     keeps no pair: an `OFF` stub is its own partner, a `REF` points at one of its branches,
     a `BRANCH` at the reference. The reader's text is rendered from the partner, and the
     severed net is the physical net of `port`; neither is stored. `width`/`height` are the
-    reserved box's size in G, never re-measured. `box_x` is the left edge of a shared box,
-    `lead` marks the box's lead marker, `stub_extra` is extra stub length in G, `via_x`/`via_y`
-    are the stub's bend (both or neither), `star` is the star point drawn, or `None`.
+    reserved box's size in G, never re-measured. `star` is the star point drawn, or `None`.
     `pairs` (each conductor, a `MarkerPair` with its own carrier, its own first) are set only on an off stub; `far` is the first
-    pair's. `facing`, the side the box sits out from the port, is set on every marker and never re-derived. `vertical` is
-    layout's decision that the text reads along its wire, bottom to top; `width`/`height` are then the turned box's.
-    `wrap_at` is the words on the first line of a text layout broke in two, `None` for one line.
+    pair's. `facing`, the side the box sits out from the port, is set on every marker and never re-derived.
     """
 
     id: Id[LinkMarker]
@@ -153,26 +137,14 @@ class LinkMarker:
     width: int
     height: int
     produced_by: str
-    box_x: int | None = None
-    lead: bool = True
-    stub_extra: int = 0
-    via_x: int | None = None
-    via_y: int | None = None
     star: StarKind | None = None
     pairs: tuple[MarkerPair, ...] = ()
     facing: Side | None = None
-    vertical: bool = False
-    wrap_at: int | None = None
     ext: frozendict[str, Value] = frozendict()
 
     def __post_init__(self) -> None:
-        """Refuse a bad size, lone `via_x`/`via_y`, a negative `stub_extra`, a boxless non-lead.
-
-        Also a marker without `facing`, `pairs` on any but an off stub (or an off stub without
-        them) and a first pair not at `port`.
-        """
+        """Refuse a bad size, a marker without `facing`, wrong `pairs` for its star, a first pair not at `port`."""
         _check_size(self, "a link marker's", "layout.link_marker")
-        _check_marker_numbers(self)
         _check_marker_stub(self)
 
     @property

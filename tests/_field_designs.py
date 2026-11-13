@@ -6,9 +6,6 @@ from typing import Any, NamedTuple
 import fransys as fr
 from fransys.colours import BK
 
-from fransys_model.vocab.tables import items
-lazy from fransys_model.kernel import Id
-
 
 class Io(NamedTuple):
     X1_L1: Any
@@ -58,9 +55,3 @@ def wire_crossings(wires: tuple[Any, ...]) -> int:
             (h0, h1), (v0, v1) = ((a0, a1), (b0, b1)) if a0[1] == a1[1] else ((b0, b1), (a0, a1))
             found += min(h0[0], h1[0]) < v0[0] < max(h0[0], h1[0]) and min(v0[1], v1[1]) < h0[1] < max(v0[1], v1[1])
     return int(found)
-
-
-def harness_item(model: fr.Model, key: str) -> Id[Any]:
-    """The harness item whose key is `<key>/<key>`."""
-    (found,) = [i for i, item in items(model).items() if "/".join(item.key) == f"{key}/{key}"]
-    return found

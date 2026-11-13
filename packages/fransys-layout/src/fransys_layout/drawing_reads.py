@@ -11,6 +11,7 @@ from typing import Protocol
 lazy from collections.abc import Sequence
 
 lazy from .core.clearance import through
+lazy from .core.geometry import overlaps
 lazy from .core.values import XY, Box, Size
 
 __all__ = (
@@ -123,14 +124,9 @@ def wire_length(wires: Sequence[DrawnWire]) -> int:
     return sum(abs(b[0] - a[0]) + abs(b[1] - a[1]) for w in wires for a, b in _segments(w.points))
 
 
-def _overlap(one: DrawnText, other: DrawnText) -> bool:
-    p, q = one.box, other.box
-    return p.x < q.x + q.w and q.x < p.x + p.w and p.y < q.y + q.h and q.y < p.y + p.h
-
-
 def text_overlaps(texts: Sequence[DrawnText]) -> int:
     """Unordered pairs of texts whose boxes overlap with positive area; touching edges do not."""
-    return sum(_overlap(a, b) for i, a in enumerate(texts) for b in texts[i + 1 :])
+    return sum(overlaps(a.box, b.box) for i, a in enumerate(texts) for b in texts[i + 1 :])
 
 
 def struck_texts(wires: Sequence[DrawnWire], texts: Sequence[DrawnText]) -> int:

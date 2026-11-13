@@ -4,7 +4,6 @@ from typing import TYPE_CHECKING
 lazy from collections.abc import Iterable, Mapping
 
 lazy from fransys_model.derive.order import functions_in_order
-lazy from fransys_model.derive.rows_device_chains import ChainCandidate, ChainRow
 lazy from fransys_model.derive.rows_pin_views import PinMate
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.core import Function, Item
@@ -14,8 +13,6 @@ if TYPE_CHECKING:
 
 
 __all__ = [
-    "candidates_in_order",
-    "chains_in_order",
     "first_device",
     "lower_function",
     "pin_items_in_order",
@@ -39,16 +36,6 @@ def lower_function[D: SupportsRichComparison](one: Id[Function], other: Id[Funct
 def pin_items_in_order[K: SupportsRichComparison, V](pins: Mapping[K, V]) -> list[tuple[K, V]]:
     """A pin table's items by port handle."""
     return sorted(pins.items())
-
-
-def candidates_in_order(items: Iterable[ChainCandidate]) -> list[ChainCandidate]:
-    """One device's function candidates by function key."""
-    return sorted(items, key=lambda c: c.key)
-
-
-def chains_in_order(found: Iterable[ChainRow]) -> tuple[ChainRow, ...]:
-    """Chains by their member handles."""
-    return tuple(sorted(found, key=lambda chain: chain.members))
 
 
 def pin_mates_in_order(found: Iterable[PinMate]) -> tuple[PinMate, ...]:

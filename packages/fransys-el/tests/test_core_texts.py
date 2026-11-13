@@ -72,8 +72,9 @@ def test_every_placed_symbol_has_one_designation_text(fixture) -> None:
 def test_the_designation_texts_are_the_tag_text_of_the_placed_functions(fixture) -> None:
     model, kit, core, *_ = fixture
     placed = {p.sym for page in core.placement.pages for p in page.placed}
+    alone = {r.members[0] for page in core.placement.pages for r in page.runs if len(r.members) == 1}
     want = sorted(
-        tag_of(model, f, unit=items(model)[function_item(model, f)].unit)  # its own set's unit
+        tag_of(model, f, unit=items(model)[function_item(model, f)].unit, alone=symbol_key(model, f) in alone)  # its own set's unit
         for f in kit
         if symbol_key(model, f) in placed
     )
@@ -82,17 +83,16 @@ def test_the_designation_texts_are_the_tag_text_of_the_placed_functions(fixture)
 
 @pytest.mark.rule("STRIP-TAG-ONCE")
 def test_a_strip_terminals_run_prints_its_strip_tag_over_the_points(fixture) -> None:
-    """STRIP-TAG-ONCE: each placed strip terminal prints its own point; its strip's tag stands as a text of no symbol, once or more per strip."""
+    """STRIP-TAG-ONCE: a run of two or more prints its strip's tag as a text of no symbol, once per run; a terminal alone has none."""
     model, kit, core, *_ = fixture
-    placed = {p.sym for page in core.placement.pages for p in page.placed}
-    want = {
+    heads = {r.members[0] for page in core.placement.pages for r in page.runs if len(r.members) > 1}
+    want = [
         strip_tag_of(model, f, unit=items(model)[function_item(model, f)].unit)
         for f in kit
-        if symbol_key(model, f) in placed and strip_of(model, function_item(model, f))
-    }
+        if symbol_key(model, f) in heads and strip_of(model, function_item(model, f))
+    ]
     got = [t.text for t in _texts(fixture, "TAG") if t.owner is None]
-    assert set(got) == want
-    assert len(got) >= len(want)
+    assert sorted(got) == sorted(want)
 
 
 def test_no_text_overlaps_and_every_text_box_is_inside_the_content_box(fixture) -> None:
@@ -216,8 +216,8 @@ def test_the_channels_23_page_draws_its_forty_three_marker_boxes() -> None:
     no arrow (the R1266 cap on a twin point re-cuts the card), and 3 more since three planned stubs that no leg carries stay at their pins
     (layout-0527: K12, K13, K15). R1581: a pin with several undrawn conductors draws one box with a line each, so the count stays."""
     page = _built(channels_model(23), generic=True)
-    assert len(page[2].annotations.markers) == 35  # 34 before the tag boxes were ink-true (LABEL-PLACE); 43 before GRID-WHOLE-GAPS
-    assert len(_drawn_markers(page)) == 35
+    assert len(page[2].annotations.markers) == 37  # R2076: 35 + the K12.in / K8.in pair main dropped as MARKER_UNPLACED; 34 before LABEL-PLACE
+    assert len(_drawn_markers(page)) == 37
 
 
 def test_a_marker_carries_the_tint_of_its_reference_number(fixture) -> None:

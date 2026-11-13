@@ -12,9 +12,9 @@ from query_builders import make_pin, make_terminal
 
 from fransys_model.kernel import Id, Model, make_id
 from fransys_model.layout import OverviewRef, OverviewRefKind
+from fransys_model.vocab import Aspect, ConductorKind
 from fransys_model.vocab.aspects import AspectNode, Placement
 from fransys_model.vocab.core import Item, Unit
-from fransys_model.vocab.enums import Aspect, ConductorKind
 
 SUP = make_id(AspectNode, ("sup",))
 CTL = make_id(AspectNode, ("ctl",))

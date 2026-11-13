@@ -1,16 +1,15 @@
 """Helpers that several field cases and tests share: units, line crossings, wire ends, drawn joins."""
 
 import re
-import tempfile
 from functools import cache
 from itertools import combinations, pairwise
-from pathlib import Path
-from typing import TYPE_CHECKING, Any, NamedTuple
+from typing import TYPE_CHECKING, Any
+lazy from pathlib import Path
 
 import fransys as fr
 from _drawn_pages import drawn_pages
 from _model_build_cover import unit_document
-from fransys.colours import BK
+from board_cab import Open
 
 from electrical_symbols import LIBRARY
 from fransys_layout import DiagramLine, lay_out_diagrams
@@ -22,46 +21,6 @@ if TYPE_CHECKING:
     from _drawn_facts import Placed
 
 type Point = tuple[int, int]
-
-
-class Io(NamedTuple):
-    X7: fr.Device
-
-
-class Open(NamedTuple):
-    pass
-
-
-def board_fn(u: Any) -> Io:
-    pcb = u.device("A1", "DEMO-PCB-IO")
-    x7 = u.device("X7", "DEMO-HSG-4F", parent=pcb, interface=True, contacts="DEMO-CRIMP-F")
-    k1 = u.device("K1", "DEMO-LAMP-24", parent=pcb)
-    u.series(x7[1], k1["1"], wire=(BK, 0.5))
-    u.series(x7[2], k1["2"], wire=(BK, 0.5))
-    return Io(x7)
-
-
-board = fr.unit("demo-board", revision=1, interface_version=1, date="2026-01-01", text="first", by="AB")(board_fn)
-
-
-@fr.unit("demo-cab", revision=1, interface_version=1, date="2026-01-01", text="first", by="AB")
-def board_cab(u: Any) -> Open:
-    nested = u.add(board, "U1")
-    j1 = u.device("J1", "DEMO-HSG-4F", contacts="DEMO-CRIMP-F")
-    for n in (1, 2):
-        lamp = u.device(f"H{n}", "DEMO-LAMP-24")
-        u.series(j1[n], lamp["1"], wire=(BK, 0.5))
-        u.series(j1[n + 2], lamp["2"], wire=(BK, 0.5))
-    cable = u.cable("W1", "DEMO-CBL-4G1.5", length_m=1)
-    cable.core(1, nested.X7[1], j1[1])
-    cable.core(2, nested.X7[2], j1[2])
-    return Open()
-
-
-def build_board_cab() -> fr.BuildResult:
-    d = fr.design("demo_parts")
-    d.add(board_cab, "C1", place=None)
-    return fr.build(d, unit_document("demo-cab"))
 
 
 @fr.unit("demo-cab", revision=1, interface_version=1, date="2026-01-01", text="first", by="AB")
@@ -76,18 +35,10 @@ def relay_cab(u: Any) -> Open:
 
 @cache
 def relay_cab_with_cable_list() -> fr.BuildResult:
-    with tempfile.TemporaryDirectory() as tmp:
-        cover = Path(tmp) / "cover.md"
-        cover.write_text("# Cabinet\n", encoding="utf-8")
-        d = fr.design("demo_parts")
-        d.location("CAB", "Cabinet")
-        d.add(relay_cab, "U1", place="CAB")
-        schematic = fr.document(
-            fr.DocumentPreset.CABINET_SCHEMATIC,
-            "demo-cab",
-            cover=cover,
-        )
-        return fr.build(d, schematic)
+    d = fr.design("demo_parts")
+    d.location("CAB", "Cabinet")
+    d.add(relay_cab, "U1", place="CAB")
+    return fr.build(d, unit_document("demo-cab"))
 
 
 def unit_texts(model: Any, root: Path, name: str) -> list[str]:

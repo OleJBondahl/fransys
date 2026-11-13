@@ -106,6 +106,12 @@ def item_chain(model: HasTables, item: Id[Item]) -> Iterator[Id[Item]]:
     return parent_chain(lambda node: parent_item(model, node), item)
 
 
+def item_root(model: HasTables, item: Id[Item]) -> Id[Item]:
+    """The top ancestor of `item` by `Item.parent`: `item` itself when it has none; the set key of a top-level item (R2184)."""
+    *_, top = item_chain(model, item)
+    return top
+
+
 def enclosing_boards(model: HasTables, item: Id[Item]) -> tuple[Id[Item], ...]:
     """`item` and its ancestors by `Item.parent` that carry a `pcb` facet, outermost first.
 

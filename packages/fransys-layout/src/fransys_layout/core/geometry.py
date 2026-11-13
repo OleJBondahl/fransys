@@ -106,7 +106,7 @@ def marker_drawn_box_at(
     """The box a marker is drawn in at the origin (x, y): a tag is stretched to `link_fit`.
 
     `marker_box_at` places by the plain tag (R350); the drawing stretches it (R543), so a wire
-    keeps off this box. Equal to the outline `fransys_el` draws.
+    keeps off this box. This is the reserve; the outline `fransys_el` draws is inside it (a tag is drawn as long as its own text needs).
     """
     if key is not None and key[1] == RefKind.TAG and options.link_fit:
         if orient not in options.link_fit:

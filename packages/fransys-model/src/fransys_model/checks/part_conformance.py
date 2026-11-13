@@ -3,14 +3,16 @@
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Final
 
-from fransys_model.derive.facts.roles import port_boundary, port_pin_role
+from fransys_model.derive.facts.roles import function_role, link_role, port_boundary, port_pin_role
 from fransys_model.derive.facts.unit_index import unit_index
 from fransys_model.vocab.codes import finding
 from fransys_model.vocab.finding_ref import ref
 from fransys_model.vocab.tables import (
     function_templates,
     functions,
+    internal_links,
     items,
+    parts,
     port_templates,
     ports,
 )
@@ -21,10 +23,11 @@ if TYPE_CHECKING:
 
     from fransys_model.kernel import Id, Model
     from fransys_model.vocab.core import Function, Item, Port
-    from fransys_model.vocab.templates import FunctionTemplate, PortTemplate
+    from fransys_model.vocab.templates import FunctionTemplate, InternalLink, PortTemplate
 
 ITEM_PART_MISMATCH: Final[str] = "ITEM_PART_MISMATCH"
 ITEM_WITHOUT_PART: Final[str] = "ITEM_WITHOUT_PART"
+PART_POLE_WITHOUT_SIDE: Final[str] = "PART_POLE_WITHOUT_SIDE"
 
 
 @dataclass(frozen=True, slots=True)
@@ -45,6 +48,7 @@ class _Index:
     functions_of: frozendict[Id[Any], tuple[Function, ...]]
     pins_of: frozendict[Id[Any], tuple[PortTemplate, ...]]
     ports_of: frozendict[Id[Any], tuple[Port, ...]]
+    links_of: frozendict[Id[Any], tuple[InternalLink, ...]]
 
 
 def _group[K, R](records: Iterable[R], key_of: Callable[[R], K]) -> frozendict[K, tuple[R, ...]]:
@@ -101,6 +105,16 @@ def _port_findings(model: Model, item: Item, function: Function, template: Funct
     return found
 
 
+def _sideless_findings(model: Model, item: Item, function: Function, template: FunctionTemplate, index: _Index) -> list[Finding]:
+    """A protecting function's conductive link whose pins state no side is no pole (model-0447, R2051)."""
+    if not function_role(model, function.id).protects:
+        return []
+    name = parts(model)[template.part].mpn
+    message = f"function {function.name!r} of part {name!r} protects, but a conductive link joins pins that state no side"
+    sideless = (link for link in index.links_of.get(template.id, ()) if link_role(model, link.id).joins_net and not link_role(model, link.id).pole)
+    return [finding(PART_POLE_WITHOUT_SIDE, (item.id, function.id, link.id), message) for link in sideless]
+
+
 def _item_findings(model: Model, item: Item, templates: tuple[FunctionTemplate, ...], index: _Index) -> list[Finding]:
     where = f"item {ref(item)}"
     pairing = _pair_up(index.functions_of.get(item.id, ()), templates)
@@ -122,20 +136,22 @@ def _item_findings(model: Model, item: Item, templates: tuple[FunctionTemplate, 
             message = f"function {function.name!r} of {where} differs from template {template.name!r} in {differing}"
             found.append(_mismatch(message, item.id, function.id))
         found += _port_findings(model, item, function, template, index)
+        found += _sideless_findings(model, item, function, template, index)
     return found
 
 
 def check_part_conformance(model: Model) -> tuple[Finding, ...]:
     """Check every `Item` with a `part` has exactly its part's functions and ports.
 
-    `ITEM_PART_MISMATCH` (`ERROR`), one per discrepancy; `ITEM_WITHOUT_PART` (`INFO`): `part=None`
-    and not external. Findings come back sorted by `(code, subjects, message)`.
+    `ITEM_PART_MISMATCH` (`ERROR`), one per discrepancy; `ITEM_WITHOUT_PART` (`INFO`): `part=None` and not
+    external; `PART_POLE_WITHOUT_SIDE` (`ERROR`): a protecting function's conductive link has no sides.
     """
     index = _Index(
         templates_of=_group(function_templates(model).values(), lambda template: template.part),
         functions_of=_group(functions(model).values(), lambda function: function.item),
         pins_of=_group(port_templates(model).values(), lambda pin: pin.function),
         ports_of=_group(ports(model).values(), lambda port: port.function),
+        links_of=_group(internal_links(model).values(), lambda link: port_templates(model)[link.a].function),
     )
     found: list[Finding] = []
     outside = unit_index(model).external_root

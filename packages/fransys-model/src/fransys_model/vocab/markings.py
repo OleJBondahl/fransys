@@ -8,11 +8,9 @@ import re
 from typing import NamedTuple
 lazy from collections.abc import Iterable, Mapping
 
-from fransys_model.elecdef import LinkKind, Side
+from fransys_model.elecdef import Side
 from fransys_model.kernel import Id, NaturalKey, natural_key
 
-from .roles import LINK_ROLES
-lazy from .roles_types import FunctionRole
 lazy from .templates import InternalLink, PortTemplate
 
 
@@ -55,17 +53,3 @@ def pole_order(links: Iterable[InternalLink], templates: Mapping[Id[PortTemplate
     """The poles of `links` in natural order of each pole's markings (9 before 10)."""
     poles = (pole_between(templates[link.a], templates[link.b]) for link in links)
     return tuple(sorted(poles, key=lambda pole: (min(map(port_order_key, pole.ends)), max(map(port_order_key, pole.ends)))))
-
-
-def is_pole_by_role(role: FunctionRole, link: LinkKind) -> bool:
-    """A pole is a link whose role is `pole`, or a conductive link of a function that protects."""
-    return LINK_ROLES[link].pole or (role.protects and link is LinkKind.CONDUCTIVE)
-
-
-def poles_by_role(
-    role: FunctionRole,
-    links: Iterable[InternalLink],
-    templates: Mapping[Id[PortTemplate], PortTemplate],
-) -> tuple[Pole, ...]:
-    """The poles of a function of `role` from all its links, as `(line, load)` in order."""
-    return pole_order((link for link in links if is_pole_by_role(role, link.kind)), templates)

@@ -12,7 +12,7 @@ from fransys_model.derive import (
     system_has_no_top_level_cables,
 )
 from fransys_model.derive import replica_only_sets as matched_replica_only_sets
-from fransys_model.derive.page_nav import outline_sheets
+from fransys_model.derive.page_nav import outline_sheets, page_anchors
 from fransys_model.kernel import render_id
 from fransys_model.vocab import PageKind
 
@@ -32,7 +32,7 @@ if TYPE_CHECKING:
         ReplicaOnlySet,
         SheetRow,
     )
-    from fransys_model.derive.page_nav import OutlineSheet, ReferenceLink
+    from fransys_model.derive.page_nav import OutlineSheet, PageAnchor, ReferenceLink
     from fransys_model.kernel import Model
 
     from ._doc import Doc
@@ -60,9 +60,10 @@ def _sheet_extras(
     sheet: SheetRow,
     entry: OutlineSheet,
     links: tuple[ReferenceLink, ...],
+    anchors: tuple[PageAnchor, ...],
 ) -> tuple[str, str]:
-    """What precedes the page's image (its mark) and its links."""
-    return sheet_mark(entry), page_links(model, sheet, links)
+    """What precedes the page's image (its mark) and its links with the anchors they land on."""
+    return sheet_mark(entry), page_links(model, sheet, links, anchors)
 
 
 def _no_drawings_page(doc: Doc, kind: PageKind) -> str:
@@ -80,10 +81,9 @@ def schematic_source(doc: Doc, svgs: Mapping[str, str], links: Mapping[PageId, t
         return _no_drawings_page(doc, kind)
     blocks = []
     outline = outline_sheets(model, pages_found)
-    printed = {entry.destination for entry in outline}  # a link to a page not printed here dangles
     for index, (page, entry) in enumerate(zip(pages_found, outline, strict=True)):
         image = f'#image(bytes({literal(svgs[render_id(page)])}), format: "svg")'
-        before, boxes = _sheet_extras(model, sheet, entry, tuple(k for k in links[page] if k.target in printed))
+        before, boxes = _sheet_extras(model, sheet, entry, links[page], page_anchors(model, record.id, page))
         back = background(doc, kind, index)
         blocks.append(f"#page(margin: 0mm, background: {back})[{before}{image}{boxes}]")
     return "\n#pagebreak()\n".join(blocks)

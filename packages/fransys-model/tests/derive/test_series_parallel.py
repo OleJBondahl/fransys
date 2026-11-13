@@ -189,3 +189,16 @@ def test_a_lone_leaf_is_its_own_part_and_a_parallel_takes_natural_order() -> Non
     assert reduce_region([(SOURCE, SINK, "K1")]) == "K1"
     merged = reduce_region([(SOURCE, SINK, "S10"), (SOURCE, SINK, "S2")])
     assert merged == ParallelRow(parts=("S2", "S10"))
+
+
+def test_a_fan_whose_legs_end_on_distinct_open_nets_is_cut_where_the_legs_part() -> None:
+    from fransys_model.derive.series_parallel_cut import cut
+
+    fan = [("X1", 0, 3), *((f"V{k}", 3, 10 + k) for k in range(1, 4))]
+    assert cut(fan, set()) == [[fan[0]], *([leg] for leg in fan[1:])]
+    one_net = [("X1", 0, 3), ("V1", 3, 10), ("V2", 3, 10)]
+    assert cut(one_net, set()) == [one_net]
+    assert cut([("V1", 3, 10), ("V2", 3, 11)], set()) == [[("V1", 3, 10)], [("V2", 3, 11)]]
+    hubs = [("X1", 0, 3), *((f"V{k}", 3, 10 + k) for k in range(1, 4))]
+    assert cut(hubs, {11, 12, 13}) == [[hubs[0]], *([leg] for leg in hubs[1:])]  # each foot is a net of a hub
+    assert cut([("X1", 0, 3), ("V1", 3, None), ("V2", 3, None)], set()) == [[("X1", 0, 3), ("V1", 3, None), ("V2", 3, None)]]

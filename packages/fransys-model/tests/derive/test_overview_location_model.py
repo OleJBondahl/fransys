@@ -6,9 +6,9 @@ from plant import Plant
 
 from fransys_model.derive import location_fold, location_place_title
 from fransys_model.kernel import Id, Model, make_id
+from fransys_model.refdef import Aspect
 from fransys_model.vocab.aspects import AspectNode, Placement
 from fransys_model.vocab.core import Item
-from fransys_model.vocab.enums import Aspect
 from fransys_model.vocab.facets.cable import CableProductFacet, CoreFacet
 
 

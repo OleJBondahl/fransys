@@ -9,7 +9,7 @@ from fransys_model.derive.designation import product_designation
 from fransys_model.derive.designation_label import designation_holder
 from fransys_model.derive.facts.units import in_reading
 from fransys_model.derive.lookups import effective_placement, terminal_strip
-from fransys_model.vocab.enums import Aspect
+from fransys_model.refdef import Aspect
 from fransys_model.vocab.tables import aspect_nodes
 lazy from fransys_model.vocab.core import Item
 

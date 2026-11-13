@@ -34,6 +34,7 @@ def _turned(symbol: DrawnSymbol, library: symdef.Library) -> symdef.Symbol:
         library=library,
         offsets=dict(symbol.offsets),
         sides=dict(symbol.sides),
+        turn=symbol.turn,
     )
     built = symdef.repeat(made, symbol.poles, port_format=library.port_format) if symbol.poles > 1 else made
     for slot, text in symbol.slots if symbol.stretch else ():

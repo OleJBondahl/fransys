@@ -88,14 +88,16 @@ def problem() -> PlacementProblem:
         pins=pins,
         nodes=(("1",), ("2",)),
         views=views_of(BOX, BOX, BOX, pins, ("R0", "R180"), row_footprint=row_footprint),
-        box=BoxSpec(("1", "2"), 8),
+        box=BoxSpec(("1", "2"), 8, 16),
         row_group="RG",
         band=1,
         item="I1",
         child_of="K0",
         rank=3,
         wider=({"": Size(10, 8)},),
+        alone={"": Size(40, 8)},
     )
+    box_sym = dataclasses.replace(box_sym, narrow=dataclasses.replace(box_sym, box=BoxSpec(("1", "2"), 8, 8)))
     plain = dataclasses.replace(
         box_sym,
         id="K2",
@@ -135,7 +137,16 @@ def problem() -> PlacementProblem:
             order_pairs=(("K1", "K2"),),
             frames=(("u", frozenset({"K1"})),),
         ),
-        annexes=(Annex("K1", Size(16, 8), "tags", {"R0": (Spot("TL", "TL", 0, -8, "up", 8, turned=True),)}, Size(8, 16)),),
+        annexes=(
+            Annex(
+                "K1",
+                Size(16, 8),
+                "tags",
+                {"R0": (Spot("TL", "TL", 0, -8, "up", 8, turned=True),)},
+                Size(8, 16),
+                Annex("K1", Size(40, 8), "tags", {"R0": ()}, Size(8, 40)),
+            ),
+        ),
         wider=((Annex("K1", Size(20, 8), "tags", {"R0": ()}, Size(8, 20)),),),
     )
 
@@ -205,6 +216,7 @@ def layout() -> CoreLayout:
         drawn=frozenset({(PinRef("K1", "1"), PinRef("K2", "1"))}),
         wired=frozenset({(PinRef("K1", "1"), "N1")}),
         rows=(RowMeasure(1, 0, ("K1",), 64, 48, values.RowTerm.STUB, 64),),
+        narrow=frozenset({"K1"}),
     )
 
 
@@ -214,7 +226,7 @@ def flow_values() -> tuple[object, ...]:
     end = End("fan", "N1", PinRef("K1", "1"), "F1", 0)
     column = Column("C1", (Lane((cell,), 8),), (end,), (end,), 32, 16, (("n1",),))
     attach = Attach("C1", 0, 0, PinRef("K1", "1"), 1, net="N1")
-    fan = Fan("F1", ("N1",), (attach,), (attach,), "K1", 1, "E", (("K2", (1, 0)),), attach)
+    fan = Fan("F1", ("N1",), (attach,), (attach,), "K1", 1, "E", attach)
     block = Block(
         "b1",
         "card",

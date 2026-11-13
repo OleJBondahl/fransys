@@ -1,10 +1,10 @@
 {
   "aliases": [],
-  "schema_version": 29,
+  "schema_version": 31,
   "tables": {
     "aspect_node": [
       {
-        "aspect": "function",
+        "aspect": "FUNCTION",
         "description": "invented ES",
         "ext": {},
         "id": "aspect_node:1b8d0de423cb5777be00a4fd045954e2",
@@ -15,7 +15,7 @@
         "parent": null
       },
       {
-        "aspect": "function",
+        "aspect": "FUNCTION",
         "description": "invented SUP",
         "ext": {},
         "id": "aspect_node:755dcb1f961d5363a37b10d0f69d9193",
@@ -26,7 +26,7 @@
         "parent": null
       },
       {
-        "aspect": "location",
+        "aspect": "LOCATION",
         "description": "invented C1",
         "ext": {},
         "id": "aspect_node:7be722a473e857488038a1d0e32dc5ca",
@@ -37,7 +37,7 @@
         "parent": null
       },
       {
-        "aspect": "function",
+        "aspect": "FUNCTION",
         "description": "invented P2",
         "ext": {},
         "id": "aspect_node:a9b862943eca55daaac726ce45751069",
@@ -48,7 +48,7 @@
         "parent": null
       },
       {
-        "aspect": "function",
+        "aspect": "FUNCTION",
         "description": "invented P1",
         "ext": {},
         "id": "aspect_node:e63d1d18292b584b90ef567d8da62af9",
@@ -59,7 +59,7 @@
         "parent": null
       },
       {
-        "aspect": "location",
+        "aspect": "LOCATION",
         "description": "invented C2",
         "ext": {},
         "id": "aspect_node:fa996cd16a3b52ecbfbc64f6247e4fe3",
@@ -2020,7 +2020,6 @@
     ],
     "layout.link_marker": [
       {
-        "box_x": null,
         "ext": {},
         "facing": "n",
         "height": 53,
@@ -2043,7 +2042,6 @@
           "port",
           "14"
         ],
-        "lead": true,
         "page": "layout.page:ccc8957bfa8f54c4a43a32d328336255",
         "pairs": [
           {
@@ -2057,17 +2055,11 @@
         "produced_by": "fransys-layout/schematic 0.0.0",
         "side": "owner",
         "star": "off",
-        "stub_extra": 0,
-        "vertical": true,
-        "via_x": null,
-        "via_y": null,
         "width": 12,
-        "wrap_at": null,
         "x": 416,
         "y": 112
       },
       {
-        "box_x": null,
         "ext": {},
         "facing": "s",
         "height": 53,
@@ -2091,7 +2083,6 @@
           "port",
           "11"
         ],
-        "lead": true,
         "page": "layout.page:2c44b2c0c4075cc6a7e4c62981d5e93e",
         "pairs": [
           {
@@ -2105,17 +2096,11 @@
         "produced_by": "fransys-layout/schematic 0.0.0",
         "side": "owner",
         "star": "off",
-        "stub_extra": 16,
-        "vertical": true,
-        "via_x": null,
-        "via_y": null,
         "width": 12,
-        "wrap_at": null,
         "x": 720,
         "y": 440
       },
       {
-        "box_x": null,
         "ext": {},
         "facing": "s",
         "height": 53,
@@ -2138,7 +2123,6 @@
           "port",
           "13"
         ],
-        "lead": true,
         "page": "layout.page:2c44b2c0c4075cc6a7e4c62981d5e93e",
         "pairs": [
           {
@@ -2152,17 +2136,11 @@
         "produced_by": "fransys-layout/schematic 0.0.0",
         "side": "owner",
         "star": "off",
-        "stub_extra": 0,
-        "vertical": true,
-        "via_x": null,
-        "via_y": null,
         "width": 12,
-        "wrap_at": null,
         "x": 136,
         "y": 448
       },
       {
-        "box_x": null,
         "ext": {},
         "facing": "n",
         "height": 49,
@@ -2186,7 +2164,6 @@
           "port",
           "external"
         ],
-        "lead": true,
         "page": "layout.page:ccc8957bfa8f54c4a43a32d328336255",
         "pairs": [
           {
@@ -2200,12 +2177,7 @@
         "produced_by": "fransys-layout/schematic 0.0.0",
         "side": "owner",
         "star": "off",
-        "stub_extra": 0,
-        "vertical": true,
-        "via_x": null,
-        "via_y": null,
         "width": 12,
-        "wrap_at": null,
         "x": 56,
         "y": 120
       }

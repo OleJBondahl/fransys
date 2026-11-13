@@ -26,11 +26,29 @@ __all__ = ("solve",)
 
 
 def solve(problem: PlacementProblem, options: Options) -> CoreLayout:
+    """`_hung`, laid again with each symbol whose row passes the page in its narrow view; a view once narrow stays (R2250)."""
+    slim: frozenset[str] = frozenset()
+    while True:
+        laid = replace(problem, symbols=tuple(s.narrow if s.id in slim and s.narrow else s for s in problem.symbols)) if slim else problem
+        layout = _hung(laid, options)
+        more = _wide(layout, problem, options) - slim
+        if not more:
+            return replace(layout, narrow=slim)
+        slim |= more
+
+
+def _wide(layout: CoreLayout, problem: PlacementProblem, options: Options) -> frozenset[str]:
+    """The symbols with a narrow view that stand in a row wider than the page: the figure PAGE_OVERFLOW reads."""
+    room = layout.area.w - 2 * options.margin.w
+    over = {d for m in layout.rows if m.width > room for d in m.devices}
+    return frozenset(s.id for s in problem.symbols if s.narrow is not None and s.id in over)
+
+
+def _hung(problem: PlacementProblem, options: Options) -> CoreLayout:
     """The layout of `problem`, laid again while hangings miss and it gains (H12).
 
-    A hanging misses when its placed box meets a body, an outline or the frame. Only an anchor
-    has a miss test so far: a card's anchored outline joins its footprint once an earlier layout
-    left it missing, and a layout is kept only if fewer hangings miss.
+    A hanging misses when its placed box meets a body, an outline or the frame; only an anchor has a miss test so far:
+    its card's outline joins the footprint once a layout left it missing, and a layout is kept only if fewer miss.
     """
     best, held = _solve(reserved(problem), options), frozenset[tuple[str, str]]()
     for _ in range(options.solve_rounds):

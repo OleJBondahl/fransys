@@ -256,7 +256,7 @@ _CORE: tuple[CodeInfo, ...] = (
             "The message names the drawing set, the page and the devices standing in the row."
         ),
         fix=(
-            "Shorten the row, lower the column count of the block, or raise the page width. "
+            "Split the device over two units, or choose paper A2. "
             'Write: [paper] default = "A2" in the settings file, '
             "passed as fr.build(settings=fr.settings(path))."
         ),

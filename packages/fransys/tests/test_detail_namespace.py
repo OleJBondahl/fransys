@@ -81,7 +81,9 @@ from fransys_author.surface._removed import REMOVED
 # CONNECTOR-FACET-2: SCHEMA_VERSION 26 -> 27 moves it once more; the pin is recomputed on the merge with RING-OUT-DOCS: 35be4a84e32b...
 # PORT-CONNECTOR (model-0448): SCHEMA_VERSION 27 -> 28 moves it once more (35be4a84e32b... before).
 # BOX-SIDE (model-0449, R2070): SCHEMA_VERSION 28 -> 29 writes box_side always; it moves once more (7062cea82cfc... before).
-_DIGEST_BEFORE_THE_MOVE = "70e3b4c02ed6e0f9186f7d886fe96e25fc8690cf15cd846f57f3be31f7ec363a"
+# FUSE-TERMINAL (R2084 B1): the demo fused terminal parts drop `symbol` and `symbol_port`: it moves again (70e3b4c02ed6... before).
+# MARKER-ONE-BOX (R2228) and ASPECT-REFDEF (model-0457): SCHEMA_VERSION 31 (7b8d6372f81f... before).
+_DIGEST_BEFORE_THE_MOVE = "fbac771644fccfd27087b6534399e7c75f8b22cb4278c91f8a490e21b91140b9"
 
 
 def test_each_moved_call_builds_the_model_it_built_on_d():

@@ -1,10 +1,10 @@
 {
   "aliases": [],
-  "schema_version": 29,
+  "schema_version": 31,
   "tables": {
     "aspect_node": [
       {
-        "aspect": "function",
+        "aspect": "FUNCTION",
         "description": "invented ES",
         "ext": {},
         "id": "aspect_node:1b8d0de423cb5777be00a4fd045954e2",
@@ -15,7 +15,7 @@
         "parent": null
       },
       {
-        "aspect": "function",
+        "aspect": "FUNCTION",
         "description": "invented SUP",
         "ext": {},
         "id": "aspect_node:755dcb1f961d5363a37b10d0f69d9193",
@@ -26,7 +26,7 @@
         "parent": null
       },
       {
-        "aspect": "location",
+        "aspect": "LOCATION",
         "description": "invented C1",
         "ext": {},
         "id": "aspect_node:7be722a473e857488038a1d0e32dc5ca",
@@ -37,7 +37,7 @@
         "parent": null
       },
       {
-        "aspect": "function",
+        "aspect": "FUNCTION",
         "description": "invented P2",
         "ext": {},
         "id": "aspect_node:a9b862943eca55daaac726ce45751069",
@@ -48,7 +48,7 @@
         "parent": null
       },
       {
-        "aspect": "function",
+        "aspect": "FUNCTION",
         "description": "invented P1",
         "ext": {},
         "id": "aspect_node:e63d1d18292b584b90ef567d8da62af9",
@@ -1995,7 +1995,6 @@
     ],
     "layout.link_marker": [
       {
-        "box_x": null,
         "ext": {},
         "facing": "s",
         "height": 12,
@@ -2012,7 +2011,6 @@
           "drawing_set",
           "c1"
         ],
-        "lead": true,
         "page": "layout.page:2c44b2c0c4075cc6a7e4c62981d5e93e",
         "pairs": [
           {
@@ -2026,17 +2024,11 @@
         "produced_by": "fransys-layout/schematic 0.0.0",
         "side": "owner",
         "star": "off",
-        "stub_extra": 0,
-        "vertical": false,
-        "via_x": null,
-        "via_y": null,
         "width": 67,
-        "wrap_at": null,
         "x": 232,
         "y": 536
       },
       {
-        "box_x": 144,
         "ext": {},
         "facing": "e",
         "height": 12,
@@ -2055,7 +2047,6 @@
           "page",
           "3"
         ],
-        "lead": true,
         "page": "layout.page:a31d6b548d9c5efa99135060bcc9085f",
         "pairs": [
           {
@@ -2069,17 +2060,11 @@
         "produced_by": "fransys-layout/schematic 0.0.0",
         "side": "owner",
         "star": "off",
-        "stub_extra": 0,
-        "vertical": false,
-        "via_x": null,
-        "via_y": null,
         "width": 107,
-        "wrap_at": null,
         "x": 136,
         "y": 144
       },
       {
-        "box_x": null,
         "ext": {},
         "facing": "n",
         "height": 47,
@@ -2102,7 +2087,6 @@
           "port",
           "14"
         ],
-        "lead": true,
         "page": "layout.page:5d2945d71b4f5c4c804101f8a2ce06ba",
         "pairs": [],
         "partner": "layout.link_marker:de1d5a5fa9d45f42a6d80df494461f4b",
@@ -2110,17 +2094,11 @@
         "produced_by": "fransys-layout/schematic 0.0.0",
         "side": "user",
         "star": null,
-        "stub_extra": 0,
-        "vertical": true,
-        "via_x": null,
-        "via_y": null,
         "width": 12,
-        "wrap_at": null,
         "x": 48,
         "y": 96
       },
       {
-        "box_x": null,
         "ext": {},
         "facing": "s",
         "height": 47,
@@ -2143,7 +2121,6 @@
           "port",
           "13"
         ],
-        "lead": true,
         "page": "layout.page:2c44b2c0c4075cc6a7e4c62981d5e93e",
         "pairs": [],
         "partner": "layout.link_marker:87cd07ed002d5f3ea501ad97e7bf3f29",
@@ -2151,12 +2128,7 @@
         "produced_by": "fransys-layout/schematic 0.0.0",
         "side": "owner",
         "star": null,
-        "stub_extra": 0,
-        "vertical": true,
-        "via_x": null,
-        "via_y": null,
         "width": 12,
-        "wrap_at": null,
         "x": 136,
         "y": 400
       }

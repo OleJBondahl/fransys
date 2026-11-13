@@ -14,11 +14,11 @@ from library_records import freeze
 
 from fransys_model.elecdef import Connector, Gender
 from fransys_model.kernel import Draft, Id, Model, Origin, make_id
+from fransys_model.refdef import Aspect
 from fransys_model.vocab.aspects import AspectNode, Placement
 from fransys_model.vocab.connectivity import Conductor, Mate, Net
 from fransys_model.vocab.core import Function, Item, Port, Unit, UnitRelease
 from fransys_model.vocab.enums import (
-    Aspect,
     ConductorKind,
     FunctionKind,
     NetClass,

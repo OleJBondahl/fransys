@@ -1,9 +1,11 @@
 """The symbol, pins, nodes and box spec of one pick (facts 1, 5 and 16), read from the layer."""
 
+from itertools import combinations
 from typing import TYPE_CHECKING
 
 from electrical_symbols import (
     box_marking_widths,
+    box_pitch,
     default_order,
     generic_box,
     is_generic_box,
@@ -27,7 +29,7 @@ if TYPE_CHECKING:
     from .placement_env import Env
     from .placement_kit import Pick
 
-__all__ = ["box_of", "nodes_of", "pins_of", "shape_of", "symbol_of"]
+__all__ = ["box_of", "narrows", "nodes_of", "pins_of", "shape_of", "symbol_of"]
 
 EDGE = ("N", "S")
 
@@ -38,12 +40,18 @@ END_BIAS = {"SUPPLY": -1, "GROUND": 1, "PE": 1}
 UNRANKED = 1000
 
 
-def symbol_of(env: Env, lead: PickKey, pick: Pick) -> LibrarySymbol:
-    """The pick's library symbol; a generic box is built over the pick's port names."""
+def narrows(env: Env, pick: Pick) -> bool:
+    """Whether turning the markings of `pick`'s generic box narrows its pitch: it then has a second drawing."""
+    if not is_generic_box(pick.key):
+        return False
+    return box_pitch(box_marking_widths(env.library, default_order(pick.ports.values(), kernel_key))) > box_pitch(())
+
+
+def symbol_of(env: Env, lead: PickKey, pick: Pick, *, turn: bool = False) -> LibrarySymbol:
+    """The pick's library symbol in the view asked for; a generic box is built over the pick's port names, its markings turned when `turn`."""
     if is_generic_box(pick.key):
         names = default_order(pick.ports.values(), kernel_key)
-        widths = box_marking_widths(env.library, names)
-        return generic_box(names, box_sides(env.model, pick, names), marking_widths=widths)
+        return generic_box(names, box_sides(env.model, pick, names), marking_widths=box_marking_widths(env.library, names), turn=turn)
     try:
         return library_symbol(env.library, pick.key, pick.poles)
     except CoreError as error:
@@ -110,4 +118,5 @@ def box_of(pick: Pick, shape: Shape, pins: tuple[Pin, ...]) -> BoxSpec | None:
         return None
     order = default_order((p.id for p in edge), kernel_key)
     margin = min(p.dx for p in edge) - shape.body.x
-    return BoxSpec(order, margin)
+    pitch = min((abs(a.dx - b.dx) for a, b in combinations(edge, 2) if a.side == b.side and a.dx != b.dx), default=0)
+    return BoxSpec(order, margin, pitch)

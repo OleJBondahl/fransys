@@ -3,6 +3,7 @@
 import fransys as fr
 import pytest
 from _expected_codes import expect_codes
+from conventions_fixtures import SHEET
 from fransys.colours import BU
 from fransys_el import build, house_conventions, symbol_kit
 from fransys_el.placement_options import options
@@ -49,7 +50,7 @@ def _bridge_model() -> fr.Model:
 def test_a_bridge_in_a_build_is_skipped_once_and_its_symbols_stay_drawn() -> None:
     """Catches the bridge's warning dropped on the way out of el, or a bridge symbol left out."""
     model = _bridge_model()
-    problem, skipped = build(model, symbol_kit(model, LIBRARY), house_conventions(fr.settings().layout, LIBRARY, text_height=8), LIBRARY)
+    problem, skipped = build(model, symbol_kit(model, LIBRARY), house_conventions(fr.settings().layout, LIBRARY, text_height=8, sheet=SHEET), LIBRARY)
     bridges = [s for s in skipped if s.reason == NOT_SERIES_PARALLEL]
     assert len(bridges) == 1
     assert len(bridges[0].more) == len(problem.symbols) - 1 == 6
@@ -90,8 +91,8 @@ def test_a_nested_control_circuit_stands_as_one_column_source_first() -> None:
     expect_codes(built, "FUNCTION_HALF_CONNECTED")  # open ends; valid fixture is KI-657 (R1745)
     assert [f.code for f in built.findings].count("FUNCTION_HALF_CONNECTED") == 2
     model = built.model
-    problem, _ = build(model, symbol_kit(model, LIBRARY), house_conventions(fr.settings().layout, LIBRARY, text_height=8), LIBRARY)
-    laid = solve(problem, options(house_conventions(fr.settings().layout, LIBRARY, text_height=8), LIBRARY))
+    problem, _ = build(model, symbol_kit(model, LIBRARY), house_conventions(fr.settings().layout, LIBRARY, text_height=8, sheet=SHEET), LIBRARY)
+    laid = solve(problem, options(house_conventions(fr.settings().layout, LIBRARY, text_height=8, sheet=SHEET), LIBRARY))
     at = {p.sym.split(" ")[0]: (p.x, p.y) for page in laid.placement.pages for p in page.placed}
     assert at["S1"][0] == at["S2"][0] == at["H1"][0]
     assert at["S3"][0] == at["S4"][0] > at["S2"][0]

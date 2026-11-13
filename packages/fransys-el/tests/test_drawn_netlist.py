@@ -18,21 +18,23 @@ from fransys.colours import GNYE
 from fransys_el import build, drawn_identity_marks, drawn_power, drawn_rails, drawn_references, lay_out_core, lay_out_drawn, symbol_kit
 from fransys_el import drawn_netlist as drawn_netlist_module
 from fransys_el.drawn_graph import Union
+from fransys_el.drawn_lanes import Lanes
 from fransys_el.drawn_netlist import Netlist, drawn_netlist, is_marker, with_lines
-from fransys_el.drawn_nets import _ends, _pairs, _stubs, _unmarked, _verdict, not_drawn_findings
+from fransys_el.drawn_nets import _carried, _lined, _pairs, _stubs, _unmarked, not_drawn_findings
 from fransys_el.drawn_pairs import dangling_findings
 from fransys_el.drawn_power import join_power, power_findings
 from fransys_el.drawn_rails import rail_findings
 from fransys_el.drawn_shorts import ink_findings, short_findings
 from fransys_el.drawn_sweep import drawing_sweep
 from fransys_el.placement_ids import net_key
+from fransys_el.placement_joins import node_joins
 from ring_cases import bank_model, box_kit
 
 from electrical_symbols import LIBRARY, MARKER_SLOT, power_symbol_key
 from fransys_layout.core import Box, page_graph
 from fransys_layout.drawing import DrawnSymbol, DrawnWire
 from fransys_layout.symbols import frame_cell
-from fransys_model.derive import PowerKind, net_of, port_power_kind, reference_targets, required_groups
+from fransys_model.derive import PowerKind, link_groups, net_of, port_power_kind, reference_targets, required_groups, terminal_items
 from fransys_model.kernel import Id, make_id
 from fransys_model.layout import LinkMarker, MarkerPair, MarkerSide, Page, Side, StarKind, layout_of, sheet_format_of
 from fransys_model.vocab.tables import ports
@@ -46,7 +48,6 @@ CODES = {
     "CONNECTION_NOT_DRAWN",
     "DRAWING_SHORTS_NETS",
     "ROUTE_WRONG_PORT",
-    "MARKER_UNPAIRED",
     "CONNECTION_DRAWN_TWICE",
     "WIRE_NOT_ORTHOGONAL",
     "MISSING_JUNCTION_DOT",
@@ -148,7 +149,7 @@ def _wire_between_ports(built: Built):
 def test_a_clean_build_raises_none_of_the_sweeps_codes(bank8, bank40):
     """The bank of 8 raises no code of the sweep since ROUTING's guard (R439)."""
     assert bank8.codes() & CODES == set()
-    assert bank40.codes() & {"ROUTE_WRONG_PORT", "MARKER_UNPAIRED", "CONNECTION_DRAWN_TWICE"} == set()
+    assert bank40.codes() & {"ROUTE_WRONG_PORT", "CONNECTION_DRAWN_TWICE"} == set()
 
 
 @pytest.mark.rule("DRAWN-NETLIST")
@@ -210,8 +211,10 @@ def test_a_pair_with_an_end_off_the_document_is_drawn_only_when_its_near_end_sho
     assert count(right) < count(cut) == count(wrong)
 
     # R1573, R1611: a far port drawn in no piece is covered only by a stub at the near end naming it
-    owed = [(near, far) in _unmarked(bank8.model, n, s := _stubs(n), _pairs(n, s)) for n in (net, cut, right, wrong)]
-    assert owed == [False, True, False, True]
+    # S2b: a stub at the far end naming the near end is no mark of the near end (the either-end clause is gone)
+    far_only = replace(cut, **dict(zip(("records", "markers"), _off_stub(cut, far, near, cut.placed[near][0]), strict=True)))
+    owed = [(near, far) in _unmarked(bank8.model, n, s := _stubs(n), _pairs(n, s)) for n in (net, cut, right, wrong, far_only)]
+    assert owed == [False, True, False, True, True]
 
 
 @pytest.mark.rule("DRAWN-NETLIST")
@@ -234,43 +237,37 @@ def test_a_wire_cut_short_ends_on_nothing(bank8):
     assert bank8.messages("DANGLING_WIRE_END", bank8.patched(page, wires=wires)) == [f"wire end at {(x1 + x2) // 2}, {(y1 + y2) // 2}"]
 
 
-@pytest.mark.rule("DRAWN-NETLIST")
-def test_a_wire_end_lying_along_another_wire_is_not_met_by_it(bank8):
-    """KI-365: a wire laid collinear over part of another wire ends on nothing; only a wire end on its interior across, or a dot, meets."""
+def _overlap(bank8, *, dot: bool):
+    """The build with a wire laid collinear over part of a wire between ports (and a junction dot on the run if `dot`), and its two ends."""
     page, i = _wire_between_ports(bank8)
     wire = bank8.drawings[page].wires[i]
     (x1, y1), (x2, y2) = wire.points[-2:]
     a, b = (x1 + (x2 - x1) // 4, y1 + (y2 - y1) // 4), (x1 + (x2 - x1) * 3 // 4, y1 + (y2 - y1) * 3 // 4)
-    along = DrawnWire(wire.net, (a, b), wire.style)
-    planted = bank8.patched(page, wires=(*bank8.drawings[page].wires, along))
+    drawing = bank8.drawings[page]
+    symbols = drawing.symbols
+    if dot:
+        x, y = (a[0] + b[0]) // 2, (a[1] + b[1]) // 2
+        symbols = (*symbols, DrawnSymbol("planted-dot", "junction-dot", x, y, "R0", outline=Box(x - 1, y - 1, 2, 2)))
+    return bank8.patched(page, wires=(*drawing.wires, DrawnWire(wire.net, (a, b), wire.style)), symbols=symbols), a, b
+
+
+@pytest.mark.rule("DRAWN-NETLIST")
+def test_a_wire_end_lying_along_another_wire_is_not_met_by_it(bank8):
+    """KI-365: a wire laid collinear over part of another wire ends on nothing; only a wire end on its interior across, or a dot, meets."""
+    planted, a, b = _overlap(bank8, dot=False)
     assert sorted(bank8.messages("DANGLING_WIRE_END", planted)) == sorted(f"wire end at {x}, {y}" for x, y in (a, b))
 
 
 @pytest.mark.rule("DRAWN-NETLIST")
 def test_a_wire_end_lying_along_another_wire_is_met_where_a_dot_lies_on_the_run(bank8):
     """R1665: the same overlap with a junction dot on the shared run is a joined bus, so both ends are met."""
-    page, i = _wire_between_ports(bank8)
-    wire = bank8.drawings[page].wires[i]
-    (x1, y1), (x2, y2) = wire.points[-2:]
-    a, b = (x1 + (x2 - x1) // 4, y1 + (y2 - y1) // 4), (x1 + (x2 - x1) * 3 // 4, y1 + (y2 - y1) * 3 // 4)
-    x, y = (a[0] + b[0]) // 2, (a[1] + b[1]) // 2
-    dot = DrawnSymbol("planted-dot", "junction-dot", x, y, "R0", outline=Box(x - 1, y - 1, 2, 2))
-    drawing = bank8.drawings[page]
-    planted = bank8.patched(page, wires=(*drawing.wires, DrawnWire(wire.net, (a, b), wire.style)), symbols=(*drawing.symbols, dot))
-    assert bank8.messages("DANGLING_WIRE_END", planted) == []
+    assert bank8.messages("DANGLING_WIRE_END", _overlap(bank8, dot=True)[0]) == []
 
 
 @pytest.mark.rule("DRAWN-NETLIST")
 def test_a_wire_end_lying_along_another_wire_needs_a_dot_at_the_end_itself(bank8):
     """R1861 (CORRECTNESS-PROOF S0 R6, T needs a dot): a dot further along the shared run does not meet the start of the overlap."""
-    page, i = _wire_between_ports(bank8)
-    wire = bank8.drawings[page].wires[i]
-    (x1, y1), (x2, y2) = wire.points[-2:]
-    a, b = (x1 + (x2 - x1) // 4, y1 + (y2 - y1) // 4), (x1 + (x2 - x1) * 3 // 4, y1 + (y2 - y1) * 3 // 4)
-    x, y = (a[0] + b[0]) // 2, (a[1] + b[1]) // 2
-    dot = DrawnSymbol("planted-dot", "junction-dot", x, y, "R0", outline=Box(x - 1, y - 1, 2, 2))
-    drawing = bank8.drawings[page]
-    planted = bank8.patched(page, wires=(*drawing.wires, DrawnWire(wire.net, (a, b), wire.style)), symbols=(*drawing.symbols, dot))
+    planted, a, b = _overlap(bank8, dot=True)
     assert sorted(bank8.messages("DANGLING_WIRE_END", planted)) == sorted(f"wire end at {px}, {py}" for px, py in (a, b))
 
 
@@ -286,13 +283,13 @@ def _drop_first(built: Built, wanted, code: str) -> None:
 
 
 @pytest.mark.rule("DRAWN-NETLIST")
-def test_a_marker_whose_partner_is_not_drawn_is_unpaired(bank40):
+def test_a_marker_whose_partner_is_not_drawn_is_unreadable(bank40):
     net = bank40.netlist()
     for page, part in net.pages.items():
         marks = [s for s in part.drawing.symbols if is_marker(s) and (r := net.records.get(s.id.rpartition(":")[2])) and r.star is not StarKind.OFF]
         if marks:
             kept = tuple(s for s in part.drawing.symbols if s is not marks[0])
-            assert bank40.count("MARKER_UNPAIRED", bank40.patched(page, symbols=kept)) > bank40.count("MARKER_UNPAIRED")
+            assert bank40.count("REFERENCE_NOT_READABLE", bank40.patched(page, symbols=kept)) > bank40.count("REFERENCE_NOT_READABLE")
             return
     pytest.fail("no paired reference marker in the bank of 40")
 
@@ -331,10 +328,9 @@ def test_a_stub_on_a_line_ends_every_port_of_that_line_on_its_page():
     places: dict[Any, Any] = {"a": ((p1, (0, 0)),), "b": ((p2, (0, 0)),), "c": ((p1, (1, 1)),)}
     home = {"a": frozenset({p1}), "b": frozenset({p2}), "c": frozenset({p1})}
     net = Netlist({}, Union(), places, {}, {}, {}, lined={"a": "L", "b": "L", "c": "M"}, stub_lines={(p1, "L")}, home=home)
-    assert _ends(net, {"a"}, ["a", "z"], {})
-    assert not _ends(net, {"b"}, ["b", "z"], {})
-    assert not _ends(net, {"c"}, ["c", "z"], {})
-    assert not _ends(net, {"a"}, ["a"], {})
+    assert _lined(net, "a")
+    assert not _lined(net, "b")
+    assert not _lined(net, "c")
 
 
 def _homed(places: dict[Any, Any], joined: Sequence[Any] = (), bare: Sequence[Any] = ()) -> Netlist:
@@ -356,38 +352,30 @@ def _homed(places: dict[Any, Any], joined: Sequence[Any] = (), bare: Sequence[An
 P1, P2 = (Id[Page](kind="page", value=v) for v in ("p1", "p2"))
 
 
+def _drawn(net: Netlist, near: str, far: str, stubs: dict[str, set[str]] | None = None) -> bool:
+    """True when the end of `near` at `far` is carried: ink, a stub naming `far`, its line or its where-text (R1573)."""
+    held = stubs or {}
+    return _carried(net, held, _pairs(net, held), set(), (near, far))
+
+
 @pytest.mark.rule("DRAWN-NETLIST")
 def test_a_port_drawn_on_two_pages_counts_where_it_is_wired():
     """R717: a copy is a second point of its port; the group is drawn when a piece holds every member."""
     places = {"s": ((P2, (2, 2)),), "t": ((P1, (5, 5)), (P2, (1, 1)))}
-    assert _verdict(_homed(places, [((P2, (1, 1)), (P2, (2, 2)))]), ["s", "t"], {"t": {"s"}}) is None
-    assert _verdict(_homed(places), ["s", "t"], {}) is not None
+    assert _drawn(_homed(places, [((P2, (1, 1)), (P2, (2, 2)))]), "t", "s", {"t": {"s"}})
+    assert not _drawn(_homed(places), "t", "s")
 
 
 @pytest.mark.rule("G01-CONNECTED")
 def test_a_wired_copy_does_not_cover_an_unwired_home_port():
     net = _homed({"s": ((P2, (4, 4)),), "t": ((P1, (1, 1)), (P2, (3, 3)))}, [((P2, (3, 3)), (P2, (4, 4)))], [(P1, (1, 1))])
-    assert _verdict(net, ["s", "t"], {"s": {"t"}}) is not None
+    assert not _drawn(net, "t", "s", {"s": {"t"}})
 
 
 @pytest.mark.rule("G01-CONNECTED")
 def test_a_complete_piece_on_a_copy_page_is_not_whole():
     places = {"s": ((P1, (1, 1)), (P2, (3, 3))), "t": ((P1, (2, 2)), (P2, (4, 4)))}
-    assert _verdict(_homed(places, [((P2, (3, 3)), (P2, (4, 4)))]), ["s", "t"], {}) is not None
-
-
-@pytest.mark.rule("G01-CONNECTED")
-def test_a_group_with_every_member_drawn_nowhere_is_flagged():
-    assert _verdict(_homed({}), ["s", "t"], {}) is not None
-
-
-@pytest.mark.rule("G01-CONNECTED")
-def test_a_member_drawn_in_another_document_counts_as_drawn():
-    """R815: a conductor into another document stays a stub, so a group with a member drawn there is not drawn nowhere."""
-    net = _homed({"s": ((P2, (1, 1)),)})
-    net.home["s"] = frozenset()
-    assert _verdict(net, ["s", "t"], {}) is None
-    assert _verdict(_homed({}), ["s", "t"], {}) is not None
+    assert not _drawn(_homed(places, [((P2, (3, 3)), (P2, (4, 4)))]), "s", "t")
 
 
 @pytest.mark.rule("DRAWN-NETLIST")
@@ -396,8 +384,8 @@ def test_pieces_chained_by_reference_pairs_are_one_piece():
     p3 = Id[Page](kind="page", value="p3")
     net = _homed({"a": ((P1, (1, 1)),), "b": ((P2, (2, 2)),), "c": ((p3, (3, 3)),)})
     chained = {"a": {"b"}, "b": {"a", "c"}, "c": {"b"}}
-    assert _verdict(net, ["a", "c"], chained) is None  # fails without _pairs: no stub names a member outside its piece
-    assert _verdict(net, ["a", "c"], {"a": {"b"}, "b": {"a"}}) is not None  # no pair between pieces 2 and 3
+    assert _drawn(net, "a", "c", chained)  # fails without _pairs: no stub names a member outside its piece
+    assert not _drawn(net, "a", "c", {"a": {"b"}, "b": {"a"}})  # no pair between pieces 2 and 3
 
 
 @pytest.mark.rule("G01-CONNECTED")
@@ -466,38 +454,13 @@ def test_pins_at_one_point_are_one_node_and_a_short_when_their_nets_differ(monke
 
 
 @pytest.mark.rule("G01-CONNECTED")
-@pytest.mark.parametrize("bridge", [True, False], ids=["bridge", "plain-conductor"])
-def test_a_declared_bridge_joins_its_two_terminals_with_no_ink(monkeypatch: pytest.MonkeyPatch, *, bridge: bool):
-    """R1009: two terminals one pitch apart, each a node of its own piece; only a bridge conductor joins them."""
+@pytest.mark.parametrize(("pair", "page", "joined"), [(True, P1, True), (False, P1, False), (True, P2, False)], ids=["pair", "no-pair", "other-page"])
+def test_a_join_pair_joins_its_two_ports_on_a_page_with_no_ink_between_them(*, pair: bool, page: Any, joined: bool):
+    """R685, R2079 G2: two ports one pitch apart, each a node of its own piece; only a `Netlist.joins` pair joins them, on a page with both."""
     a, b = Id[Any](kind="port", value="a"), Id[Any](kind="port", value="b")
-    net = _homed({"a": ((P1, (0, 0)),), "b": ((P1, (8, 0)),)})
-    monkeypatch.setattr(drawn_netlist_module, "build_indexes", lambda _m: SimpleNamespace(conductors_by_port={a: ("c",), b: ("c",)}))
-    monkeypatch.setattr(drawn_netlist_module, "conductor_ends", lambda _m, _c: (a, b))
-    monkeypatch.setattr(drawn_netlist_module, "is_bridge", lambda _m, _c: bridge)
-    monkeypatch.setattr(drawn_netlist_module, "mate_ports", lambda _m: ())
-    drawn_netlist_module._link(net, cast("Any", None), ())
-    assert (_verdict(net, ["a", "b"], {}) is None) is bridge
-
-
-@pytest.mark.rule("G01-CONNECTED")
-@pytest.mark.parametrize(
-    ("bridge", "drawn", "page"),
-    [(True, True, P1), (True, False, P1), (False, True, P1), (True, True, P2), (True, False, P2)],
-    ids=["drawn", "undrawn-partner", "plain-conductor", "other-page", "other-page-undrawn"],
-)
-def test_linked_bridge_partners_join_when_neither_stands_on_a_node(monkeypatch: pytest.MonkeyPatch, *, bridge: bool, drawn: bool, page: Any):
-    """R1063, R1064: a partner with no ink of its own is drawn through its linked port; a bridge joins two drawn partners on any pages."""
-    a, b = Id[Any](kind="port", value="a"), Id[Any](kind="port", value="b")
-    places = {"a": ((P1, (0, 0)),), "b": ((page, (8, 0)),), "ha": ((P1, (0, 8)),), "hb": ((page, (8, 8)),)}
-    net = _homed(places, bare=[(P1, (0, 0)), (page, (8, 0))])
-    net.linked.update({"a": "ha", "b": "hb"} if drawn else {})
-    monkeypatch.setattr(drawn_netlist_module, "build_indexes", lambda _m: SimpleNamespace(conductors_by_port={a: ("c",), b: ("c",)}))
-    monkeypatch.setattr(drawn_netlist_module, "conductor_ends", lambda _m, _c: (a, b))
-    monkeypatch.setattr(drawn_netlist_module, "is_bridge", lambda _m, _c: bridge)
-    monkeypatch.setattr(drawn_netlist_module, "mate_ports", lambda _m: ())
-    drawn_netlist_module._link(net, cast("Any", None), ())
-    assert (net.union.find((P1, (0, 8))) == net.union.find((page, (8, 8)))) is (bridge and drawn)
-    assert net.union.find((P1, (0, 0))) != net.union.find((page, (8, 0)))
+    net = replace(_homed({"a": ((P1, (0, 0)),), "b": ((page, (8, 0)),)}), joins=((a, b),) if pair else ())
+    drawn_netlist_module._link(net)
+    assert (net.union.find((P1, (0, 0))) == net.union.find((page, (8, 0)))) is joined
 
 
 @pytest.mark.rule("DRAWN-NETLIST")
@@ -506,18 +469,9 @@ def test_a_copy_pair_joins_through_its_where_text_and_not_without_it():
     places = {"s": ((P1, (1, 1)), (P2, (3, 3))), "t": ((P2, (4, 4)), (P1, (2, 2)))}
     joined = [((P1, (1, 1)), (P1, (2, 2))), ((P2, (3, 3)), (P2, (4, 4)))]
     net = _homed(places, joined)
-    assert _verdict(net, ["s", "t"], {}) is not None
+    assert not _drawn(net, "s", "t")
     net.texted.update({"s", "t"})
-    assert _verdict(net, ["s", "t"], {}) is None
-
-
-@pytest.mark.rule("BUNDLE-ARROW")
-def test_ends_at_prefers_the_trunk_lane_to_a_same_net_drop_on_the_column():
-    """R1664: a pole drop of the net 128 below on the arrow's column is not the end; the trunk lane's end is."""
-    drop = DrawnWire("drop", ((240, 228), (240, 300)), "wire", net="n")
-    lane = DrawnWire("lane", ((200, 100), (240, 100)), "trunk", net="n")
-    part = cast("Any", SimpleNamespace(drawing=SimpleNamespace(wires=(drop, lane))))
-    assert drawn_netlist_module._ends_at(part, (240, 100), 10) == {"n": (240, 100)}
+    assert _drawn(net, "s", "t")
 
 
 def _page(wires: tuple[DrawnWire, ...], ports: dict[str, tuple[int, int]], anchors: set[tuple[int, int]]) -> Any:
@@ -530,50 +484,39 @@ def _page(wires: tuple[DrawnWire, ...], ports: dict[str, tuple[int, int]], ancho
     )
 
 
-def _lanes_under_arrow(short: int, listed: tuple[str, ...], far: str | None = None) -> list[str]:
-    """The DANGLING_WIRE_END messages of two trunk lanes under one arrow: the lead ends on it, the other `short` G before it.
-
-    `far` None: an off stub whose pairs list `listed`. Else a pair marker whose partner on P2 ends a lane chain of net `far`.
-    """
-    lead = DrawnWire("lead", ((200, 100), (240, 100)), "trunk", net="a")
-    lane = DrawnWire("lane", ((200, 108), (240 - short, 108)), "trunk", net="b")
-    ports = {"pa": (200, 100), "pb": (200, 108)}
-    union = Union()
-    union.join((P1, (200, 108)), (P1, (240 - short, 108)))
-    pair = lambda port: SimpleNamespace(port=SimpleNamespace(value=port))  # noqa: E731 - a one-line namespace
-    pages = {P1: _page((lead, lane), ports, {(240, 100)})}
-    markers: dict[str, Any] = {"k": (P1, (240, 100))}
-    star, partner = StarKind.OFF, None
-    if far is not None:
-        pages[P2] = _page(
-            (DrawnWire("far", ((300, 100), (340, 100)), "trunk", net="a"), DrawnWire("far2", ((300, 108), (340, 108)), "trunk", net=far)),
-            {},
-            {(x, y) for x in (300, 340) for y in (100, 108)},
-        )
-        markers["j"], star, partner = (P2, (340, 100)), StarKind.BRANCH, SimpleNamespace(value="j")
-    record = SimpleNamespace(pairs=tuple(map(pair, listed)), star=star, partner=partner)
-    net = Netlist(cast("Any", pages), union, {}, {}, markers, {"k": cast("Any", record)}, pitch=8)
-    return [f.message for f in dangling_findings(net)]
-
-
 @pytest.mark.rule("BUNDLE-ARROW")
-@pytest.mark.parametrize(
-    ("short", "listed", "left"),
-    [(8, ("pa", "pb"), []), (16, ("pa", "pb"), ["wire end at 224, 108"]), (8, ("pa",), ["wire end at 232, 108"])],
-    ids=["one-pitch-short-is-met", "two-pitches-short-dangles", "port-not-listed-dangles"],
-)
-def test_a_lane_one_pitch_short_under_an_off_stub_is_met(short: int, listed: tuple[str, ...], left: list[str]):
-    """R1666 (R1352): a trunk lane end within one pitch of the lead lane's end on the stub, whose pairs list the lane's port, is met."""
-    assert _lanes_under_arrow(short, listed) == left
+def test_a_lane_foot_whose_piece_holds_no_port_is_a_dangling_end_even_where_an_anchor_stands():
+    """R2014: a foot with no port is never skipped silently; it raises DANGLING_WIRE_END where the wire end alone would be met."""
+    lane = DrawnWire("lane", ((200, 108), (240, 108)), "trunk")
+    pages = cast("Any", {P1: _page((lane,), {}, {(200, 108), (240, 108)})})
+    assert dangling_findings(Netlist(pages, Union(), {}, {}, {}, {})) == ()
+    bare = dangling_findings(Netlist(pages, Union(), {}, {}, {}, {}, lanes=Lanes(bare={(P1, (240, 108))})))
+    assert [f.message for f in bare] == ["wire end at 240, 108"]
 
 
-@pytest.mark.rule("BUNDLE-ARROW")
-@pytest.mark.parametrize(
-    ("far", "left"), [("b", []), ("c", ["wire end at 232, 108"])], ids=["partner-chain-carries-the-net", "partner-chain-carries-another-net"]
-)
-def test_a_lane_one_pitch_short_under_a_pair_marker_is_met_by_the_partner_chain(far: str, left: list[str]):
-    """R1667: a pair marker's lane is met when its net also runs in the partner marker's lane chain on the partner's page."""
-    assert _lanes_under_arrow(8, (), far) == left
+@pytest.mark.rule("READ-REFERENCES")
+def test_an_off_stub_whose_printed_text_differs_by_one_character_is_not_read(bank40):
+    """S2b: a stub counts only where its whole text is drawn at its port; one character off is REFERENCE_NOT_READABLE and the stub is unread."""
+    net = bank40.netlist()
+    for page, part in net.pages.items():
+        for i, symbol in enumerate(part.drawing.symbols):
+            record = next(
+                (
+                    r
+                    for k, r in net.records.items()
+                    if r.star is StarKind.OFF and r.page == page and net.markers.get(k) == (page, (symbol.x, symbol.y))
+                ),
+                None,
+            )
+            if record is None or dict(symbol.slots).get(MARKER_SLOT) is None:
+                continue
+            slots = tuple((k, v + "x") if k == MARKER_SLOT else (k, v) for k, v in symbol.slots)
+            symbols = tuple(replace(s, slots=slots) if j == i else s for j, s in enumerate(part.drawing.symbols))
+            planted = bank40.patched(page, symbols=symbols)
+            assert bank40.count("REFERENCE_NOT_READABLE", planted) > bank40.count("REFERENCE_NOT_READABLE")
+            assert record.id.value not in bank40._net(planted).markers
+            return
+    pytest.fail("no read off stub in the bank of 40")
 
 
 _Stands = dict[str, tuple[str, str | None, str | None, str]]
@@ -584,7 +527,6 @@ def _powered(
     stands: _Stands,
     *,
     lead: bool = True,
-    ends: tuple[tuple[Id[Any], Id[Any]], ...] | None = None,
     nets: dict[str, str] | None = None,
 ) -> Netlist:
     """One page per port of `stands` (port: symbol kind, printed text, cabinet, page): a pin at (0, 16), a power symbol at (0, 0), a lead or not."""
@@ -603,7 +545,6 @@ def _powered(
     monkeypatch.setattr(drawn_power, "port_power_text", lambda _m, port: stands[port.value][1])
     monkeypatch.setattr(drawn_power, "_scope", lambda _m, port: stands[port.value][2])
     monkeypatch.setattr(drawn_power, "_identity", lambda _m, _port, _key, text: text)
-    monkeypatch.setattr(drawn_power, "required_groups", lambda _m: tuple(ends or ()))
     monkeypatch.setattr(drawn_power, "rail_flagged", lambda _m, _joined: True)
     monkeypatch.setattr(drawn_rails, "unit_label", lambda _m, unit: str(unit))
     parts = {Id[Page](kind="page", value=v[3]): pages[Id[Page](kind="page", value=v[3])] for v in stands.values()}
@@ -634,16 +575,6 @@ def test_two_power_symbols_join_iff_they_print_one_potential_in_one_cabinet(
     net = _powered(monkeypatch, {"a": ("supply", "24V", "A", "p1"), "b": other})
     join_power(net, None)  # ty: ignore[invalid-argument-type] the monkeypatched reads take no model
     assert _same_piece(net, "a", "b") is joined
-
-
-@pytest.mark.rule("READ-RAILS")
-def test_a_model_conductor_between_two_inked_power_symbols_joins_them_across_cabinets(monkeypatch: pytest.MonkeyPatch):
-    """R1937 Q2: a conductor ending on two inked power symbols is the cross-cabinet join (interim, KI-770)."""
-    stands: _Stands = {"a": ("ground", None, "A", "p1"), "b": ("ground", None, None, "p2")}
-    ends = ((Id[Any](kind="port", value="a"), Id[Any](kind="port", value="b")),)
-    net = _powered(monkeypatch, stands, ends=ends)
-    join_power(net, None)  # ty: ignore[invalid-argument-type] the monkeypatched reads take no model
-    assert _same_piece(net, "a", "b")
 
 
 @pytest.mark.rule("READ-RAILS")
@@ -923,3 +854,27 @@ def test_the_references_join_the_markers_through_reference_targets_alone(bank40,
     assert all(len(set(roots)) == 1 for roots in joined.values())
     monkeypatch.setattr(drawn_references, "reference_targets", lambda _: {})
     assert all(len(set(roots)) == len(roots) for roots in _group_roots(bank40).values())
+
+
+@pytest.mark.rule("G01-CONNECTED")
+def test_a_terminals_sides_are_joined_by_their_symbol_and_the_poles_of_an_overload_are_not():
+    """R2079 G1: both ports at one node of one symbol join; a conductive pole link of a switch stands at two nodes and joins nothing."""
+    d = fr.design("demo_parts")
+    f1, x1 = d.device("F1", "DEMO-OVERLOAD-3P"), d.terminal_strip("X1", "DEMO-TB-2.5")
+    runs = [x1.run(phase, 1) for phase in ("L1", "L2", "L3")]
+    d.series(f1.main, tuple(run[1] for run in runs), wire=(fr.colours.BK, 2.5))
+    model = fr.build(d).model
+    groups = tuple(link_groups(model, lambda role: role.joins_net))
+    terminals = terminal_items(model)
+    joins = node_joins(model, symbol_kit(model, LIBRARY), LIBRARY, groups)
+    assert {g.item for g in groups} - set(terminals)  # the overload's three pole links are conductive
+    assert len(joins) == sum(g.item in terminals for g in groups) > 0
+
+
+@pytest.mark.rule("G01-CONNECTED")
+@pytest.mark.parametrize(("bridged", "pairs"), [((2, 6), 4), (False, 0)], ids=["bridged", "plain"])
+def test_each_declared_bridge_of_a_strip_is_a_join_pair_and_a_plain_strip_has_none(*, bridged: tuple[int, int] | bool, pairs: int):
+    """R1009, R2079 G2: terminals 2 to 6 bridged give four consecutive pairs from `is_bridge` and the conductor's ends; no bridge gives none."""
+    d = fr.design("demo_parts")
+    d.terminal_strip("X4", "DEMO-TB-2.5", 6, bridged=bridged)
+    assert len(drawn_netlist_module._bridges(fr.build(d).model)) == pairs

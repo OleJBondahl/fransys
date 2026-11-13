@@ -174,18 +174,6 @@ class ConductorKind(Enum):
 
 
 @register_enum
-class Aspect(Enum):
-    """One of the three IEC 81346 views of the same objects.
-
-    Example: `-K1` is a `PRODUCT` designation; `+C1` is a `LOCATION` node.
-    """
-
-    FUNCTION = "function"
-    PRODUCT = "product"
-    LOCATION = "location"
-
-
-@register_enum
 class SignalType(Enum):
     """The electrical nature of a PLC channel or field request, read as `fr.SignalType`.
 

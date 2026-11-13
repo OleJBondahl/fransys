@@ -92,7 +92,7 @@ from `fransys.colours`.
 | name a place inside a place | `d.location("BATT", text, within="HOLD")` | authoring.md, A place inside a place |
 | take one pole of a multi-pole function | `s1.main.pole(2)` | keywords-handles.md, Fn.pole |
 | list a function's pins in order | `fn.pins` | detail.md, W1.core |
-| plug a connector | refused in 0.22 (`MATES_DISABLED`): draw a cable or wires | authoring.md, plug a connector |
+| plug a connector | `d.mate(a, b)` between two drawings; inside one drawing refused in 0.22 (`MATES_DISABLED`): draw a cable or wires | authoring.md, plug a connector |
 | add a harness | refused in 0.22 (`MATES_DISABLED`): use a cable | harnesses.md, add a harness |
 | group PLC modules in a rack | `d.rack` | authoring.md |
 | request a PLC channel, scale it | `K1.coil.plc(fr.DO, name)`, `.scale(...)` | authoring.md, request a PLC channel |

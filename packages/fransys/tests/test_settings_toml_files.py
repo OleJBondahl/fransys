@@ -55,7 +55,6 @@ LAYOUT_VALUES = {
     "column_gap_min": 8,
     "parallel_pitch": 48,
     "row_gap": 24,
-    "box_pin_pitch_min": 16,
     "box_pins": "spread",
     "short_height": 0.4,
     "min_fill": 0.25,

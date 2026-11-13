@@ -95,8 +95,8 @@ def test_a_pin_is_drawn_on_the_edge_its_column_hangs_from_so_no_column_flips(nam
     footprint edges, bank16 crosses 21 (R549, R664).
     """
     flips, score, missing = _flips_and_score(model())
-    assert len(missing) == 2 * (name == "channels8"), (
-        f"{name}: only channels8 draws nets as a reference for want of a route (looks; STRIP-TAG-ONCE: 1 to 2)"
+    assert len(missing) == (name == "channels8"), (
+        f"{name}: only channels8 draws nets as a reference for want of a route (looks; STRIP-TAG-ONCE: 2 to 1)"
     )
     assert (flips, score.pages) == (0, pages)
     assert crossings >= score.X, f"{name}: bank16 is 21 with every net drawn (R664); its old 11 had the X1:1 feed net missing"

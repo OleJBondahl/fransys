@@ -8,7 +8,7 @@ stock = 0
 
 [clones_tests]
 # Exact clones (bodies of 25+ AST nodes) among tests/ and packages/*/tests helpers. 5 -> 21 when the internal gates moved into tests/ (INTERNAL-TESTPATHS, R916); 16 are theirs (the unit_instances/unit_sets twins are 10); the cleanup round lowers it.
-stock = 19
+stock = 11
 
 [unread_doors]
 # E19: public names of the kernel, vocab and derive doors with no outside and no transitive reader (25 + 21 + 124).
@@ -46,15 +46,15 @@ clashes = 28
 # _g, _pt, _gap, _pitch, _margin, _height, _penalty or _width), in packages/*/src. Base 47, 45 after Part B,
 # 40 after SIZES-TOML phase 3, 39 after its phase 2 (R319.5, R338).
 [settings_literals]
-stock = 16
+stock = 15
 
 # C3 (spec CONSOLIDATE; root-0356): `# noqa` codes and `# ty: ignore` rules in packages/*/src. The total is
 # the sum of the per-code table. What is left is kept with a reason on its line (decisions 0111, 0414, 0444, KI-125; KI-044).
 [escape_hatches]
-total = 37
+total = 38
 
 [escape_hatches_codes]
-PLR0913 = 29
+PLR0913 = 30
 ANN401 = 1
 ty-invalid-method-override = 5
 UP037 = 2
@@ -81,11 +81,11 @@ UP037 = 2
 # R1193 LEDGER-INTEGRATION: mcc 0 -> 9, the marker members of drawing_marker_overlap (KI-457)
 # SUPPLY-SLOT (R1619, TEXT-BOX-MEASURED): OVERLAP now sees slot ink, a looks rise: machine_panel 0 -> 2, panel_di16p 0 -> 1
 distribution_board = 0
-machine_panel = 1  # KI-761 (looks, designer R1905): the WHERE text of a terminal touches a neighbour's slot text; ONE-PAGE (R1830): the wider reserved marker lets the cards clear; measured 0 again with OVERLAP-CHECK (R1828) on the merged tree; was 3 (R1771, KI-688), before that 4 (R1730)
+machine_panel = 0  # INK-PATH (R2219, layout-0595): slot ink is the string, not its room, so the WHERE text no longer touches the neighbour slot; was 1; KI-761 (looks, designer R1905): the WHERE text of a terminal touches a neighbour's slot text; ONE-PAGE (R1830): the wider reserved marker lets the cards clear; measured 0 again with OVERLAP-CHECK (R1828) on the merged tree; was 3 (R1771, KI-688), before that 4 (R1730)
 mcc = 20  # R1828 OVERLAP-CHECK (looks class, checker-only, owner 10-29 rule): edge runs and diagonals now count, one per member, mcc pages byte-identical to main; was 0, before that 3 (R1730)
 # R1165: R1138 looks trade (OVERLAP -1, WIRE_OVER_MARKER +1)
 panel_di16p = 0  # ONE-PAGE (R1830): as machine_panel; was 3. R1771 (looks class, KI-688): the N5c below-branch card reserve; was 1
-remote_io = 7  # ONE-PAGE (R1830, looks class): the widest reference text now names the far document; was 6, before R1822 0; R1822 (looks class, KI-711): the leg stands past a footprint edge on its lane, its tag meets a reference marker; was 0
+remote_io = 0  # B3 merged tree: falls from 1 (R2090); TRUNK-Y-SHARE (R2090): trunks of one row keep apart, 7 -> 1; ONE-PAGE (R1830, looks class): the widest reference text now names the far document; was 6, before R1822 0; R1822 (looks class, KI-711): the leg stands past a footprint edge on its lane, its tag meets a reference marker; was 0
 skid = 0
 
 # MARKER-FREE-SIDE (spec 4.4, note 6): the wire and dot members that meet a reference marker's box,
@@ -110,7 +110,7 @@ machine_panel = 0
 mcc = 6  # R2071 OVERLOAD-SERIES: a copy of a bundle stands on its own pole lane, falls from 9; R1957 falls, KI-636: was 10; R1730 (looks class): the cut flags the handed link it plans a tag for; was 16
 # R1165: R1138 looks trade (OVERLAP -1, WIRE_OVER_MARKER +1)
 panel_di16p = 0  # R1693 and R1715 (looks falls, KI-636): was 1
-remote_io = 2  # ONE-PAGE (R1830, looks class): the wider reserved marker meets two wires; was 0
+remote_io = 0  # R2101 REF-OFF-OWN-WIRE-A (KI-900): the checker counts the pin's own wire through its marker box, was 2; ONE-PAGE (R1830, looks class): the wider reserved marker meets two wires; was 0
 skid = 0
 
 # KI-017 (R867, R873): the OVERLAP members that name a marker (marker over marker, symbol or text), counted once per pair.
@@ -124,7 +124,7 @@ machine_panel = 0  # R1730 (looks class): the cut flags the handed link it plans
 mcc = 0  # R1730 (looks class): as machine_panel; was 3
 # R1165: R1138 looks trade (OVERLAP -1, WIRE_OVER_MARKER +1)
 panel_di16p = 0
-remote_io = 7  # ONE-PAGE (R1830, looks class): the widest reference text now names the far document; was 6, before R1822 0; R1822 (looks class, KI-711): the leg stands past a footprint edge on its lane, its tag meets a reference marker; was 0
+remote_io = 0  # B3 merged tree: falls from 1 (R2090); TRUNK-Y-SHARE (R2090): trunks of one row keep apart, 7 -> 1; ONE-PAGE (R1830, looks class): the widest reference text now names the far document; was 6, before R1822 0; R1822 (looks class, KI-711): the leg stands past a footprint edge on its lane, its tag meets a reference marker; was 0
 skid = 0
 
 # MARKER_UNPLACED counts findings (A9: it ends 0 or goes to the owner page); 0 on every case but
@@ -153,7 +153,7 @@ mcc = 0  # was 1 (CND-D-FIX R963)
 panel_di16p = 0  # was 3 (CND-D-FIX R963)
 remote_io = 0  # KI-132 C1 9 plus C3 3, was 36 (WITNESS-W1 R916); STUB-SLOT (R954 R960): a fan-wired pin stands its stub on the free pin or a leg: 12 -> 0
 skid = 0
-board_cab = 0  # KI-806 (BOARD-RETURN), R-D16: the KI-615 witness build, tests/_field_shared.py board_cab
+board_cab = 0  # KI-806 (BOARD-RETURN), R-D16: the KI-615 witness build, tests/board_cab.py board_cab
 
 [drawing_shorts_nets]
 distribution_board = 0
@@ -164,14 +164,6 @@ remote_io = 0
 skid = 0
 
 [drawing_route_wrong_port]
-distribution_board = 0
-machine_panel = 0
-mcc = 0
-panel_di16p = 0
-remote_io = 0
-skid = 0
-
-[drawing_marker_unpaired]
 distribution_board = 0
 machine_panel = 0
 mcc = 0

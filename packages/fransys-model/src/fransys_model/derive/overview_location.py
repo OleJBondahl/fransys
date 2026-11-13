@@ -7,7 +7,7 @@ share cables. The fold exists only when the model has two or more top places. Re
 
 from typing import Any, cast
 
-from fransys_model.vocab.enums import Aspect
+from fransys_model.refdef import Aspect
 from fransys_model.vocab.tables import aspect_nodes
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.aspects import AspectNode

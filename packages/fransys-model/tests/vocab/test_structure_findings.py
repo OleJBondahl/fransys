@@ -16,10 +16,10 @@ from fransys_model.checks.terminal_point_capacity import TERMINAL_POINT_OVERFILL
 from fransys_model.checks.terminal_two_pins import TERMINAL_MORE_THAN_TWO_PINS, check_terminal_two_pins
 from fransys_model.elecdef import Connection
 from fransys_model.kernel import Draft, Finding, Id, Model, Origin, Severity, freeze, make_id
+from fransys_model.vocab import Aspect, ConductorKind, FunctionKind, PartCategory, PortBoundary, SignalType
 from fransys_model.vocab.aspects import AspectNode, Placement
 from fransys_model.vocab.connectivity import Conductor
 from fransys_model.vocab.core import Function, Item, Port, Unit
-from fransys_model.vocab.enums import Aspect, ConductorKind, FunctionKind, PartCategory, PortBoundary, SignalType
 from fransys_model.vocab.facets import BlockFacet, ScalingFacet
 from fransys_model.vocab.facets.plc import PlcRequestFacet
 from fransys_model.vocab.templates import FunctionTemplate, Part
@@ -87,7 +87,7 @@ def test_a_node_parented_under_another_aspect_is_one_error_naming_both() -> None
     child = _node("c", Aspect.FUNCTION, parent="p")
     (finding,) = _of(_freeze(parent, child), ASPECT_CROSS_PARENT)
     assert finding.subjects == _ids(parent, child)
-    assert "is parented under" in finding.message
+    assert finding.message == "function node C is parented under location node P"
 
 
 # ---- PLACEMENT_DUPLICATE ------------------------------------------------------------------

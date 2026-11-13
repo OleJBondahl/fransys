@@ -40,7 +40,7 @@ def _layouts(monkeypatch: pytest.MonkeyPatch) -> list[tuple[Any, Any]]:
 
     monkeypatch.setattr(lay_out_core, "solve", spy)
     (circuit,) = (c for c in run.circuits("standard") if c[0] == "panel_di16p")
-    run.build("panel_di16p", circuit)
+    run.build("panel_di16p", circuit, fresh=True)
     return solved
 
 

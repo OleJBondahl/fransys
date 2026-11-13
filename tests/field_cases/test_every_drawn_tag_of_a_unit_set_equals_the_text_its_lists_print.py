@@ -18,6 +18,7 @@ from fransys_model.vocab.tables import functions, items, ports
 run: Any = None if is_export() else importlib.import_module("placement_corpus.run")
 
 _CORPUS = {"machine_panel", "panel_di16p", "remote_io", "distribution_board", "mcc"}
+_DRAW_RUNS = {"machine_panel", "panel_di16p", "distribution_board", "mcc", "demo-skid"}  # builds that draw a run (R2096)
 _CASES = (
     [("export",)]  # one placeholder, skipped by its marker (R462)
     if run is None
@@ -76,4 +77,5 @@ def test_a_page_that_prints_a_strip_points_prints_the_strip_tag(case: Any) -> No
         printed_points |= tags & points - strips
         if tags & points - strips:
             assert tags & strips, (page, sorted(tags)[:8])
-    assert printed_points, "no page prints a run point: the test would pass vacuously"
+    if case[0] in _DRAW_RUNS:
+        assert printed_points, "no page prints a run point: the test would pass vacuously"

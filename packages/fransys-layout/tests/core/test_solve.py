@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import dataclasses
 from typing import Any
 
 import pytest
@@ -12,7 +13,7 @@ from fransys_layout.core.route import route_pages
 from fransys_layout.core.solve import solve
 from fransys_layout.core.text_markers import placed_marks
 from fransys_layout.core.widen import route_round
-lazy from fransys_layout.core import PlacementProblem
+lazy from fransys_layout.core import PlacementProblem, Size
 
 from . import text_fixtures
 from .conftest import MARKER
@@ -106,3 +107,16 @@ def test_the_trade_check_names_a_penalty_that_drifts() -> None:
         )
     )
     assert "crossing_penalty" in msg
+
+
+def test_a_symbol_in_a_row_wider_than_the_page_is_laid_narrow_once_and_the_solve_ends() -> None:
+    """R2250: each symbol with a narrow view in an over-wide row takes it; a narrow view never goes back, so the loop ends."""
+    plain = ring_problem()
+    opts = core_options(marker=MARKER)
+    assert solve(plain, opts).narrow == frozenset()
+    room = 59  # one symbol's row is 60 wide: a page this wide holds no row of any symbol
+    page = dataclasses.replace(plain, area=Size(room + 2 * opts.margin.w, plain.area.h))
+    two = dataclasses.replace(page, symbols=tuple(dataclasses.replace(s, narrow=s) for s in page.symbols))
+    layout = solve(two, opts)
+    assert layout.narrow == {s.id for s in two.symbols}
+    assert solve(two, opts) == layout

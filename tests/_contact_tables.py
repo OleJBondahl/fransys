@@ -29,12 +29,6 @@ def entries(table: DrawnSymbol) -> tuple[list[str], list[str]]:
     return [r[0] for r in rows if r[0]], [r[1] for r in rows if r[1]]
 
 
-def contact_table(model: Model) -> tuple[list[str], list[str]]:
-    """The NO and NC entries of the one contact table of `model`."""
-    (table,) = table_symbols(model)
-    return entries(table)
-
-
 def table_body_g(symbol: DrawnSymbol) -> Rect:
     """`body_g` of a drawn symbol whose orient is the string a Drawing holds, turned to symdef's."""
     return body_g(dataclasses.replace(symbol, orient=Orientation(symbol.orient)))

@@ -102,14 +102,6 @@ def test_origin_is_the_calling_line(parts):
 # Each refusal below has a passing twin: the same call with the one fault removed.
 
 
-def test_an_ac_rail_above_zero_volts_needs_a_phase(parts):
-    d = Design(parts)
-    with pytest.raises(AuthorError, match=r"rail 'L1'.*AC at 230 V and needs a phase"):
-        d.supply("400V", current="ac", rails={"L1": ("230", None)})
-    d.supply("400V", current="ac", rails={"L1": ("230", 0)})
-    assert len(_supplies(d)) == 1
-
-
 def test_an_ac_rail_at_zero_volts_needs_no_phase_and_may_have_one(parts):
     d = Design(parts)
     d.supply("a", current="ac", rails={"N": ("0", None)})
@@ -118,35 +110,21 @@ def test_an_ac_rail_at_zero_volts_needs_no_phase_and_may_have_one(parts):
     assert phases == {"a": None, "b": 60}
 
 
-def test_an_ac_phase_must_be_a_multiple_of_sixty(parts):
+_REFUSALS = {
+    "ac-needs-phase": ({"L1": ("230", None)}, "ac", r"rail 'L1'.*AC at 230 V and needs a phase", {"L1": ("230", 0)}),
+    "phase-multiple-of-sixty": ({"L2": ("230", 100)}, "ac", r"rail 'L2'.*multiple of 60 degrees, not 100", {"L2": ("230", 300)}),
+    "dc-no-phase": ({"+24V": ("24", 0)}, "dc", r"rail '\+24V'.*DC and cannot have a phase \(0\)", {"+24V": ("24", None)}),
+    "current-not-ac-or-dc": (_DC_24, "mixed", r"'mixed' is not a valid current", _DC_24),
+    "float-max-v": ({"+24V": (24.0, None)}, "dc", r"rail '\+24V' max_v must be a str or Decimal.*24\.0", {"+24V": ("24.0", None)}),
+}
+
+
+@pytest.mark.parametrize(("rails", "current", "message", "good"), _REFUSALS.values(), ids=_REFUSALS)
+def test_a_refusal_has_a_passing_twin(parts, rails, current, message, good):
     d = Design(parts)
-    with pytest.raises(AuthorError, match=r"rail 'L2'.*multiple of 60 degrees, not 100"):
-        d.supply("400V", current="ac", rails={"L2": ("230", 100)})
-    d.supply("400V", current="ac", rails={"L2": ("230", 300)})
-    assert len(_supplies(d)) == 1
-
-
-def test_a_dc_rail_cannot_have_a_phase(parts):
-    d = Design(parts)
-    with pytest.raises(AuthorError, match=r"rail '\+24V'.*DC and cannot have a phase \(0\)"):
-        d.supply("24V", current="dc", rails={"+24V": ("24", 0)})
-    d.supply("24V", current="dc", rails={"+24V": ("24", None)})
-    assert len(_supplies(d)) == 1
-
-
-def test_current_must_be_ac_or_dc(parts):
-    d = Design(parts)
-    with pytest.raises(AuthorError, match=r"'mixed' is not a valid current"):
-        d.supply("24V", current="mixed", rails=_DC_24)
-    d.supply("24V", current="dc", rails=_DC_24)
-    assert len(_supplies(d)) == 1
-
-
-def test_a_float_max_v_is_refused_naming_the_rail(parts):
-    d = Design(parts)
-    with pytest.raises(AuthorError, match=r"rail '\+24V' max_v must be a str or Decimal.*24\.0"):
-        d.supply("24V", current="dc", rails={"+24V": (24.0, None)})  # ty: ignore[invalid-argument-type] -- a float max_v, testing the "must be a str or Decimal" refusal named in the match
-    d.supply("24V", current="dc", rails={"+24V": ("24.0", None)})
+    with pytest.raises(AuthorError, match=message):
+        d.supply("400V", current=current, rails=rails)
+    d.supply("400V", current="dc" if current == "mixed" else current, rails=good)
     assert len(_supplies(d)) == 1
 
 

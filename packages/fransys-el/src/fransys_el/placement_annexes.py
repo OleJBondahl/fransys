@@ -8,6 +8,7 @@ box keeps `label_gap` plus its step beside the wire of the pins on its body edge
 so the step also clears a reference marker that stands on that wire.
 """
 
+from dataclasses import replace
 from itertools import chain
 from typing import TYPE_CHECKING, Literal
 
@@ -69,6 +70,12 @@ def _annex(owner: str, sym: Sym, label: Size, options: Options) -> Annex:
     return Annex(owner, label, None, turns, turned_size(label))
 
 
+def _sym_annex(sym: Sym, home: str, options: Options, rise: int) -> Annex:
+    """`sym`'s `Annex`; a strip terminal's carries its full-form one as `alone` (STRIP-TAG-ONCE)."""
+    annex = _annex(sym.id, sym, (sym.wider[rise - 1] if rise and sym.wider else sym.labels)[home], options)
+    return replace(annex, alone=_annex(sym.id, sym, sym.alone[home], options)) if sym.alone else annex
+
+
 def label_annexes(syms: Sequence[Sym], options: Options, home: str, tags: Mapping[str, Mapping[str, Size]], rise: int = 0) -> tuple[Annex, ...]:
     """One `Annex` per symbol, sized by its tag text as the set of unit `home` prints it ("" the whole model), in the order of `syms`.
 
@@ -82,7 +89,7 @@ def label_annexes(syms: Sequence[Sym], options: Options, home: str, tags: Mappin
     if clash := next(iter(strips.keys() & {s.id for s in syms}), None):
         refuse(f"strip {clash}", "a strip is named like a symbol: the run tag and the symbol's tag would share one annex owner", clash)
     return (
-        *(_annex(s.id, s, (s.wider[rise - 1] if rise and s.wider else s.labels)[home], options) for s in syms),
+        *(_sym_annex(s, home, options, rise) for s in syms),
         *(_annex(g, s, tags[g][home], options) for g, s in strips.items()),
     )
 

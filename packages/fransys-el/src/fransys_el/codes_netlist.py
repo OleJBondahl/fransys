@@ -62,15 +62,6 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         page="findings-render",
     ),
     CodeInfo(
-        code="MARKER_UNPAIRED",
-        severity=Severity.ERROR,
-        stage="render",
-        who="Fransys",
-        cause="A reference marker is drawn and the marker it refers to is drawn on no page.",
-        fix=_REPORT,
-        page="findings-render",
-    ),
-    CodeInfo(
         code="CONNECTION_DRAWN_TWICE",
         severity=Severity.ERROR,
         stage="render",
@@ -116,7 +107,7 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         who="Fransys",
         cause=(
             "A reference marker is not drawn as the model gives it: it prints a text other than the one derived, "
-            "stands in another frame cell than the stored one, or one reference number names two groups in one drawing set. "
+            "stands in another cell than the stored one, stands on no wire of its net, or one reference number names two groups in one drawing set. "
             "A reader of the page then cannot find the other end."
         ),
         fix=_REPORT,

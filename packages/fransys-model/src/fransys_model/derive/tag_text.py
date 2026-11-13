@@ -84,7 +84,7 @@ def run_point_text(model: Model, function: Id[Function]) -> str:
     """A strip terminal's point text in a run, "L2:1".
 
     The terminal's own `group:index`, the strip's designation left out (`strip_tag_text` prints it).
-    A terminal that is no part of a run prints `terminal_text`, never this.
+    A terminal alone in its run (or a gap from its neighbour) prints `tag_text`, never this (STRIP-TAG-ONCE).
     """
     return own_label(model, functions(model)[function].item)
 

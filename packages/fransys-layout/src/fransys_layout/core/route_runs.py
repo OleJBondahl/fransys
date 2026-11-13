@@ -23,10 +23,12 @@ Runs = dict[str, "tuple[str, Placed]"]
 
 
 def stand_runs(problem: PlacementProblem, placed: Mapping[str, Placed], runs: Sequence[StripRun]) -> tuple[tuple[Annex, ...], Runs]:
-    """The strip annex of each run on the page, copied with the run's key as owner, and the key's strip and leftmost terminal.
+    """The strip annex of each run of two or more on the page, copied with the run's key as owner, and the key's strip and leftmost terminal.
 
+    A terminal alone in its run has no strip annex: its own annex is its `alone` one (`alone_annexes`).
     A run whose strip has no template annex raises: a strip tag is never skipped silently.
     """
+    runs = [r for r in runs if len(r.members) > 1]
     templates = {a.owner: a for a in problem.annexes}
     if (missing := next((r.strip for r in runs if templates.get(r.strip) is None), None)) is not None:
         msg = f"strip {missing}: its terminals stand in a run with no strip tag Annex owned by the strip; the builder gave none"
@@ -42,3 +44,9 @@ def named(
     labels = [replace(a, owner=runs[a.owner][0]) if a.owner in runs else a for a in labels]
     found = [replace(f, subject=runs[f.subject][0]) if f.subject is not None and f.subject in runs else f for f in found]
     return labels, found, {i: replace(d, owner=runs[d.owner][1].sym) if d.owner in runs else d for i, d in asks.items()}
+
+
+def alone_annexes(annexes: Sequence[Annex], runs: Sequence[StripRun]) -> tuple[Annex, ...]:
+    """`annexes` with each terminal alone in its run given its full-form annex (STRIP-TAG-ONCE)."""
+    alone = {r.members[0] for r in runs if len(r.members) == 1}
+    return tuple(a.alone if a.owner in alone and a.alone else a for a in annexes)

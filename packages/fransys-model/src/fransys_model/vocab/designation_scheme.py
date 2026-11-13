@@ -7,8 +7,7 @@ copied from the site named on it (EL-9 part B); no reader types a sign or a lett
 from dataclasses import dataclass
 lazy from collections.abc import Iterable
 
-from .enums import Aspect
-from .roles_types import complete
+from fransys_model.refdef import Aspect
 
 
 @dataclass(frozen=True, slots=True)
@@ -52,7 +51,7 @@ class DesignationScheme:
 
 DESIGNATION_SCHEME = DesignationScheme(
     # unit_nodes.py:26 SIGNS (function, location); author surface/_tags.py:6 _PREFIX (product)
-    signs=frozendict(complete({Aspect.FUNCTION: "=", Aspect.PRODUCT: "-", Aspect.LOCATION: "+"}, Aspect)),
+    signs=frozendict({Aspect.FUNCTION: "=", Aspect.PRODUCT: "-", Aspect.LOCATION: "+"}),
     reference_aspects=(Aspect.FUNCTION, Aspect.LOCATION),
     # parts/lint.py:36 _CLASS_CODE; author surface/_unit_tags.py:9 (same set of strings)
     class_code=r"[A-Z]{1,3}",

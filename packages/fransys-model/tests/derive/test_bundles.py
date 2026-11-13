@@ -308,8 +308,8 @@ def test_locations_of_one_label_stand_in_authoring_key_order_at_every_salt() -> 
     """Catches a location order broken by the Id hash (KI-384): the root's sets would follow the id seed."""
     from fransys_model.derive.order import locations_in_order
     from fransys_model.kernel import Draft, Origin, freeze, make_id
+    from fransys_model.refdef import Aspect
     from fransys_model.vocab.aspects import AspectNode
-    from fransys_model.vocab.enums import Aspect
     from fransys_model.vocab.tables import aspect_nodes
 
     def make() -> tuple[list[tuple[str, ...]], list[tuple[str, ...]]]:

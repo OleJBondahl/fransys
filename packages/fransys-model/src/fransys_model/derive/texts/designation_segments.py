@@ -23,8 +23,8 @@ from fransys_model.derive.rows_designation import Segment
 from fransys_model.derive.texts.context import PrintContext
 from fransys_model.derive.texts.designation_scope import kept_nodes, require_reading
 from fransys_model.derive.unit_nodes import chain_up
+from fransys_model.refdef import Aspect
 from fransys_model.vocab.designation_scheme import DESIGNATION_SCHEME
-from fransys_model.vocab.enums import Aspect
 from fransys_model.vocab.tables import aspect_nodes, items
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.aspects import AspectNode

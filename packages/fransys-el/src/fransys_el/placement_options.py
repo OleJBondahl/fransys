@@ -58,6 +58,7 @@ class Conventions:
 
     options: Options
     text_height: int
+    area: Size
     step: int
     pad: int
     tag_side: Side = Side.W
@@ -80,10 +81,11 @@ def sheet_area(sheet: SheetFormat) -> Size:
     return Size(int(sheet.content_width_mm * per_mm), int(sheet.content_height_mm * per_mm))
 
 
-def house_conventions(layout: Mapping[str, object], library: Library, *, text_height: int) -> Conventions:
+def house_conventions(layout: Mapping[str, object], library: Library, *, text_height: int, sheet: SheetFormat) -> Conventions:
     """The house conventions: the text values and core options Fransys draws with.
 
-    `text_height` is the profile's text room in G (`text_room_on`), a value the facade passes.
+    `text_height` is the profile's text room in G (`text_room_on`) and `sheet` the schematic page's format,
+    whose content box in G is `Conventions.area`; the facade passes both.
 
     `GENERAL` names the table's own keys; the rest are `Options`.
     """
@@ -92,6 +94,7 @@ def house_conventions(layout: Mapping[str, object], library: Library, *, text_he
     return Conventions(
         core_options(rest, library.grid.wire_pitch),
         text_height=text_height,
+        area=sheet_area(sheet),
         step=cast("int", general["step"]),
         pad=cast("int", general["pad"]),
     )

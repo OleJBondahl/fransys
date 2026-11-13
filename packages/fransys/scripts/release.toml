@@ -24,3 +24,8 @@ files = [
     "packages/electrical-symbols/src/electrical_symbols/bundle.json",
 ]
 prefixes = ["packages/electrical-symbols/build/"]
+
+# Paths no `just ci` input reads (R2308): a change to one reuses T's gate. Each names its only reader and why.
+gate_blind = [
+    { path = "internal/deps-lag.toml", reader = "internal/scripts/deps_latest.py via internal.just:18", reason = "no just ci input reads it" },
+]

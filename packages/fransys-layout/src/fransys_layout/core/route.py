@@ -26,7 +26,7 @@ from .route_guard import guard
 from .route_labels import page_labels
 from .route_leads import lead_wires
 from .route_negotiate import Negotiated, negotiate
-from .route_runs import stand_runs
+from .route_runs import alone_annexes, stand_runs
 from .route_tree import mark_anchors, tree
 from .route_wires import join_wires, lane_wires, nest_jogs
 from .score_wiring import bundles
@@ -94,12 +94,12 @@ def _mark_fixed(env: RouteEnv, grid: Occupancy) -> None:
     _mark_edge_ring(grid)
     nets = {(r.sym, r.pin): n for n, refs in env.net_pins.items() for r in refs}
     for sym, p in env.placed.items():
-        grid.mark_closed(p.footprint)
+        grid.mark_box(p.footprint, edge="closed")
         for q in p.pin_xy:
             if (sym, q.pin) in nets:
                 _admit_port(grid, (q.x, q.y), sym, nets[sym, q.pin])
     for k in env.obstacles:
-        grid.mark_closed(k.box)
+        grid.mark_box(k.box, edge="closed")
         if k.port is not None and k.net is not None:
             _admit_port(grid, k.port, k.owner, k.net)
     for net, points in env.blocked_ends.items():  # the blocked foreign port ends no wire passes (R472)
@@ -125,7 +125,7 @@ def _grid(env: RouteEnv, fixed: Sequence[Wire], texts: Sequence[Keep] = ()) -> O
     for w in fixed:
         grid.mark_wire(w.net, w.points)
     for k in texts:  # a label's interior: touching its side is clear, as it is for the label (layout-0472)
-        grid.mark_box(k.box)
+        grid.mark_text(k.box)
     return grid
 
 
@@ -257,7 +257,7 @@ def _laid_on(env: RouteEnv, problem: PlacementProblem, laid: Laid, runs: Sequenc
     return replace(
         env,
         markers=tuple(m for m in laid.markers if m.page == env.page),
-        annexes=(*(a for a in problem.annexes if a.owner in env.placed), *tags),
+        annexes=(*alone_annexes([a for a in problem.annexes if a.owner in env.placed], runs), *tags),
         runs=stood,
         anchor_leads=tuple(w for w in laid.leads if w.page == env.page),
         labels=(laid.fixed or {}).get(env.page, Fixed(Drawn())).labels,

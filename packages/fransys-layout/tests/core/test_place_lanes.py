@@ -60,9 +60,7 @@ def _stands(spec: RowSpec, x: dict[str, int]) -> list[bool]:
 
 def test_a_two_lane_column_stands_on_both_its_card_pins() -> None:
     """Lane 0 stands on its pin and lane 1 on the second, 16 G on."""
-    options = core_options(
-        box_pin_pitch_min=16,
-    )
+    options = core_options()
     env = _env(options)
     spec = row_specs(env)[0]
     assert spec.pcs["c:dual"].offsets == (0, 16)

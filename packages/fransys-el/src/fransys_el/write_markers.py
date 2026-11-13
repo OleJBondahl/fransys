@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING
 
 from electrical_symbols import MARKER_FACING
 from fransys_layout.core import stub_views
+from fransys_model.derive import stub_far
 from fransys_model.kernel import make_id
 from fransys_model.layout import LinkMarker, MarkerPair, MarkerSide, Side, StarKind
 
@@ -20,7 +21,7 @@ from .placement_markers import ARROW, LONE, pin_ports, stub_fit
 from .placement_views import marker_boxes
 from .placement_widest import link_fit
 from .write_pages import STAMP
-from .write_stubs import drawn_ports, far_port, stub_ends
+from .write_stubs import drawn_ports, far_port
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
@@ -108,7 +109,7 @@ def _ends(ctx: _Ctx, marker: Marker) -> tuple[tuple[Id[Port], Id[Port], Id[Item]
         return (far_port(ctx.model, near[0]),)
     found: list[tuple[Id[Port], Id[Port], Id[Item] | None]] = []
     for far in marker.far:
-        ends = next((e for ports in near if (e := stub_ends(ctx.model, ports, ctx.pin_ports.get(far, ())))), ())
+        ends = next((e for ports in near if (e := stub_far(ctx.model, ports, ctx.pin_ports.get(far, ())))), ())
         if not ends:
             refuse(f"stub at {marker.end}", f"no conductor to {far} leaves it, so its far end is unknown")
         found += [end for end in ends if end not in found]

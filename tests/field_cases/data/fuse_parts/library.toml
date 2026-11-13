@@ -1,0 +1,4 @@
+schema = 2
+name = "fuse-parts"
+version = "0.1.0"
+description = "Invented parts for the fused-terminal field case."

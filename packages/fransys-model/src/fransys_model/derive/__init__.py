@@ -14,8 +14,8 @@ from fransys_model.derive.facts.pe_cores import core_on_pe_not_gnye
 from fransys_model.derive.facts.rating_index import function_block
 from fransys_model.derive.pole_lists import function_poles
 from fransys_model.layout import OverviewRefKind, profile_of
+from fransys_model.refdef import Aspect
 from fransys_model.vocab import (
-    Aspect,
     AspectNode,
     Boundary,
     Conductor,
@@ -93,7 +93,6 @@ from .designation import (
 )
 from .designation_connector import connector_label, connector_segments
 from .designation_label import designation_holder, item_label, takes_parents_designation
-from .device_chains import device_chains
 from .diagram_sheet_order import diagram_sheet_order_key
 from .document_pages import (
     drawn_pages,
@@ -167,7 +166,7 @@ from .facts.fault.prospective import ProspectiveFault, prospective_fault
 from .facts.house_settings import export_form_of
 from .facts.ink_net import ink_net
 from .facts.keep_whole import KeepWhole, keep_whole_sets
-from .facts.mates import mate_port_of, mate_ports
+from .facts.mates import mate_pairs, mate_port_of
 from .facts.part import (
     THROW_WORDS,
     channel_signal,
@@ -235,7 +234,6 @@ from .jumper_lanes import (
 )
 from .kinds import cdp_kind, item_kind, item_role, signal_kind
 from .library_grid import font_family, mm_per_division
-from .line_end_fact import connector_at_line_end
 from .line_fact import draws_as_line, line_conductors
 from .line_text import line_designation, line_stub_line
 from .list_cells import (
@@ -305,7 +303,7 @@ from .overview_tree import (
 )
 from .overview_view_rows import overview_units, overview_view_rows
 from .overview_views import signal_lens, unit_matrix
-from .page_destination import ItemPage, item_pages, page_destination, sheet_title_text
+from .page_destination import ItemPage, cell_destination, item_pages, page_destination, sheet_title_text
 from .page_headings import continued_heading, page_headings, preset_headings
 from .page_presets import PRESET_PAGES, document_page_kinds, page_kinds, page_preset
 from .page_reference_text import page_reference_text, pdf_page, position_at
@@ -444,7 +442,6 @@ from .rows import (
 )
 from .rows_cable_run import CableBlockRef, CableRun
 from .rows_cores import CoreListRow, OpenCoreRow
-from .rows_device_chains import ChainCandidate, ChainHop, ChainPin, DeviceChains
 from .rows_document import DocumentScope
 from .rows_document_row import (
     DocumentRow,
@@ -453,7 +450,7 @@ from .rows_document_row import (
     document_rows,
     revision_rows,
 )
-from .rows_drawn import Carried, CarriedReason, ConductorEnd, FunctionSymbol, Required
+from .rows_drawn import Carried, CarriedReason, ConductorEnd, FunctionSymbol, MateEnd, Required
 from .rows_drawn_sheets import CableBlockSize, ReplicaOnlySet, SheetGroup, SheetRow
 from .rows_export_set import ExportRow
 from .rows_footprints import Extent, Footprints
@@ -585,9 +582,6 @@ __all__ = [
     "CarriedReason",
     "CdpChannel",
     "CdpRackModule",
-    "ChainCandidate",
-    "ChainHop",
-    "ChainPin",
     "ChannelScaling",
     "Conductor",
     "ConductorEnd",
@@ -602,7 +596,6 @@ __all__ = [
     "CurrentPosition",
     "DesignationMove",
     "DesignationRow",
-    "DeviceChains",
     "DiagramSheet",
     "DiffMark",
     "DiffRest",
@@ -659,6 +652,7 @@ __all__ = [
     "LocationBox",
     "LocationFold",
     "LocationLine",
+    "MateEnd",
     "MateRow",
     "MatrixCell",
     "Net",
@@ -784,6 +778,7 @@ __all__ = [
     "cable_title",
     "carried_functions",
     "cdp_kind",
+    "cell_destination",
     "cell_parts",
     "cell_text",
     "changeover_functions",
@@ -805,7 +800,6 @@ __all__ = [
     "conductors",
     "conductors_on_item",
     "connected_ports",
-    "connector_at_line_end",
     "connector_facets",
     "connector_item",
     "connector_items",
@@ -833,7 +827,6 @@ __all__ = [
     "designation_holder",
     "designation_list",
     "designation_moves",
-    "device_chains",
     "diagram_sheet_key",
     "diagram_sheet_order_key",
     "diagram_sheets",
@@ -981,8 +974,8 @@ __all__ = [
     "location_place_title",
     "location_texts",
     "manifest_rows",
+    "mate_pairs",
     "mate_port_of",
-    "mate_ports",
     "mates",
     "mixed_sheet_groups",
     "mm_per_division",

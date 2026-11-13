@@ -17,7 +17,7 @@ from fransys_layout.core.route import route_page
 from .cut_fixtures import net, side
 from .pipeline_fixtures import cut_of
 from .route_fixtures import link_env
-from .test_route_rename import OPTIONS
+from .test_respell import OPTIONS
 
 if TYPE_CHECKING:
     from collections.abc import Mapping

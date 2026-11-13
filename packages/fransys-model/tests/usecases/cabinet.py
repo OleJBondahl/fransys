@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 from kit import Kit, PartSpec, Ref, Slot, template_of
 
 from fransys_model.elecdef import LinkKind, PinRole
-from fransys_model.vocab.enums import Aspect, ConductorKind, FunctionKind, NetClass, PartCategory, PortBoundary, SignalType
+from fransys_model.vocab import Aspect, ConductorKind, FunctionKind, NetClass, PartCategory, PortBoundary, SignalType
 from fransys_model.vocab.facets.cable import CableProductFacet
 from fransys_model.vocab.facets.plc import PlcBindingFacet, PlcChannelFacet, PlcRequestFacet
 from fransys_model.vocab.facets.scaling import ScalingFacet
@@ -67,7 +67,7 @@ def _catalogue(kit: Kit) -> Catalogue:
             "SIM-FUSE-2A",
             "F",
             PartCategory.PROTECTION,
-            {"element": (FunctionKind.PROTECTION, _pins("1", "2"))},
+            {"element": (FunctionKind.PROTECTION, (("1", PinRole.LINE), ("2", PinRole.LOAD)))},
             ((("element", "1"), ("element", "2"), LinkKind.CONDUCTIVE),),
         ),
         PartSpec(

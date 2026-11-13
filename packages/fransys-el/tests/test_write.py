@@ -62,6 +62,11 @@ class Written:
             self.kit,
             library=LIBRARY,
         )
+        self.pages = {p.number: p for p in layout_of(self.out, Page).values()}
+        short = solve(replace(self.problem, area=Size(self.problem.area.w, 80)), options(conventions, LIBRARY))  # rows over a page 80 high
+        self.short_findings = short.findings
+        self.short_out, _ = write_layout(self.model, None, short, self.problem, self.kit, library=LIBRARY)
+        self.short_pages = {p.number: p for p in layout_of(self.short_out, Page).values()}
 
 
 @pytest.fixture(scope="module")
@@ -168,10 +173,10 @@ def test_writing_twice_gives_one_model(written: Written) -> None:
 def test_a_core_finding_keeps_its_code_text_and_the_registry_severity(written: Written) -> None:
     net = next(iter(net_ports(written.model)))
     found = kernel_findings(
-        written.model,
-        [Finding("WIRE_THROUGH_BODY", "no path", 1, net), Finding("NO_CELL", "nowhere")],
+        written.out,
+        [Finding("WIRE_THROUGH_BODY", "no path", min(written.pages), net), Finding("NO_CELL", "nowhere")],
         {},
-        {},
+        written.pages,
     )
     assert [(f.code, f.message) for f in found] == [
         ("WIRE_THROUGH_BODY", "no path"),
@@ -221,8 +226,7 @@ def test_a_core_symbol_id_maps_to_its_record(written: Written) -> None:
 
 
 def test_a_page_overflow_names_the_set_the_page_and_the_designations_of_its_row(written: Written) -> None:
-    short = solve(replace(written.problem, area=Size(written.problem.area.w, 80)), options(house(), LIBRARY))
-    found = kernel_findings(written.model, short.findings, symbol_subjects(written.model, written.kit), {})
+    found = kernel_findings(written.short_out, written.short_findings, symbol_subjects(written.model, written.kit), written.short_pages)
     (first, *_) = (f for f in found if f.code == "PAGE_OVERFLOW")
     assert first.message.startswith("page 1, row 0 (devices -")
     assert "set" not in first.message.partition("(devices")[0]
@@ -242,8 +246,6 @@ def test_a_page_drawing_carries_the_measured_rows_of_its_layout(written: Written
 
 def test_a_row_finding_prints_the_page_number_its_pdf_prints(written: Written) -> None:
     """A set drawn after another set's page prints its core page 1 as a later PDF page."""
-    short = solve(replace(written.problem, area=Size(written.problem.area.w, 80)), options(house(), LIBRARY))
-    laid, _ = write_layout(written.model, None, short, written.problem, written.kit, library=LIBRARY)
     earlier = DrawingSet(id=make_id(DrawingSet, ("e",)), key=("e",), location=None, number=0, produced_by="t")
     cover = Page(
         id=make_id(Page, ("e", "1")),
@@ -255,13 +257,18 @@ def test_a_row_finding_prints_the_page_number_its_pdf_prints(written: Written) -
         groups=(),
         produced_by="t",
     )
-    model = evolve(laid, put=(earlier, cover), origin=Origin(file="t", line=0, note="t"))
-    page = min(layout_of(laid, Page).values(), key=lambda p: p.number)
+    model = evolve(written.short_out, put=(earlier, cover), origin=Origin(file="t", line=0, note="t"))
+    page = min(layout_of(written.short_out, Page).values(), key=lambda p: p.number)
     core_number = page.number
     assert pdf_page(model, page) != core_number
-    found = kernel_findings(model, short.findings, symbol_subjects(written.model, written.kit), {core_number: page})
+    marker = Finding("MARKER_UNPLACED", f"tag marker at a/1 of net n: no place inside page {core_number}; stays unmet", core_number, "a,n")
+    found = kernel_findings(model, [*written.short_findings, marker], symbol_subjects(written.model, written.kit), written.short_pages)
     first = next(f for f in found if f.code == "PAGE_OVERFLOW")
     assert first.message.startswith(f"page {pdf_page(model, page)}, row 0 (devices ")
+    unplaced = next(f for f in found if f.code == "MARKER_UNPLACED")
+    assert f"inside page {pdf_page(model, page)};" in unplaced.message
+    with pytest.raises(ProblemError, match=f"on page {core_number}.*no sheet number"):
+        kernel_findings(model, [marker], {}, {})
 
 
 def test_a_code_the_registry_does_not_hold_is_refused(written: Written) -> None:
@@ -373,8 +380,8 @@ def test_a_call_without_the_symbol_map_is_a_type_error(written: Written) -> None
 
 def test_a_fill_under_min_text_names_the_unit_label_not_its_id(written: Written) -> None:
     unit = next(iter(written.model.tables["unit"]))
-    core = Finding("FILL_UNDER_MIN", f"unit {unit.value}, block b: page filled 5%", 2, "b")
-    (found,) = kernel_findings(written.model, [core], {}, {})
+    core = Finding("FILL_UNDER_MIN", f"unit {unit.value}, block b: page filled 5%", min(written.pages), "b")
+    (found,) = kernel_findings(written.out, [core], {}, written.pages)
     assert unit.value not in found.message
     assert found.message.startswith(f"unit {unit_label(written.model, unit)}, block b")
 

@@ -5,15 +5,15 @@ Can-fail probe: `natural_key` as a plain text sort fails the 9-before-10 and 1/2
 """
 
 import itertools
+from dataclasses import replace
 
+from fransys_model.derive.facts.part_pins import poles_by_links
 from fransys_model.elecdef import LinkKind, Side
 from fransys_model.kernel import Id
 from fransys_model.vocab.enums import PortBoundary
 from fransys_model.vocab.markings import (
-    is_pole_by_role,
     pole_order,
 )
-from fransys_model.vocab.roles_types import FunctionRole
 from fransys_model.vocab.templates import InternalLink, PortTemplate
 
 _FUNCTION = Id(kind="function_template", value="1" * 32)
@@ -53,10 +53,10 @@ def _names(poles) -> list[tuple[str, ...]]:
     return [tuple(p.name for p in pole.ends) for pole in poles]
 
 
-def test_a_conductive_link_is_a_pole_by_the_protects_flag_not_by_the_kind() -> None:
-    """`is_pole_by_role`: a role that protects makes its conductive link a pole; no other does."""
-    protects = FunctionRole(protects=True)
-    assert is_pole_by_role(protects, LinkKind.CONDUCTIVE)
-    assert not is_pole_by_role(FunctionRole(), LinkKind.CONDUCTIVE)
-    assert is_pole_by_role(FunctionRole(), LinkKind.SWITCHED)
-    assert is_pole_by_role(FunctionRole(), LinkKind.PROTECTIVE)
+def test_a_conductive_link_is_a_pole_only_from_a_line_pin_to_a_load_pin() -> None:
+    """`poles_by_links` (elecdef `poles`): a line-to-load conductive link is a pole; one with no sides is not."""
+    line, load, bare_a, bare_b = _port("1", Side.A), _port("2", Side.B), _port("3"), _port("4")
+    ports = {p.id: p for p in (line, load, bare_a, bare_b)}
+    conductive = [replace(_link(a, b), kind=LinkKind.CONDUCTIVE) for a, b in ((line, load), (bare_a, bare_b))]
+    assert [(a.name, b.name) for a, b in (p.ends for p in poles_by_links(conductive, ports))] == [("1", "2")]
+    assert poles_by_links([replace(_link(bare_a, bare_b), kind=LinkKind.PROTECTIVE)], ports)

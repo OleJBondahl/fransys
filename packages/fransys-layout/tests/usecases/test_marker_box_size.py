@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 from fransys_model.derive import effective_placement, item_of_port
 from fransys_model.kernel import loads
 from fransys_model.layout import DrawingSet, LinkMarker, Page, StarKind, layout_of
-from fransys_model.vocab.enums import Aspect
+from fransys_model.refdef import Aspect
 
 if TYPE_CHECKING:
     from fransys_model.kernel import Model
@@ -61,8 +61,8 @@ def _location_crossing_count(model: Model) -> int:
 
 
 def _along(marker: LinkMarker) -> int:
-    """The box's side its text reads along: its height when turned, else its width."""
-    return marker.height if marker.vertical else marker.width
+    """The box's long side, the one its text reads along (every stored box is a one-line text)."""
+    return max(marker.width, marker.height)
 
 
 def _widest_marker_width(model: Model) -> int:

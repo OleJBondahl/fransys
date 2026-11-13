@@ -268,10 +268,8 @@ _.SW  # FIELDS packages/fransys-model/src/fransys_model/layout/enums.py:133
 _.SE  # FIELDS packages/fransys-model/src/fransys_model/layout/enums.py:134
 _.no_cells  # FIELDS packages/fransys-model/src/fransys_model/derive/rows_footprints.py:29
 _.nc_cells  # FIELDS packages/fransys-model/src/fransys_model/derive/rows_footprints.py:30
-# KIT-FACTS: @value fields of derive/rows_device_chains.py and rows_pin_views.py,
+# KIT-FACTS: @value fields of derive/rows_pin_views.py,
 # read by fransys_layout's read package and generically via dataclasses.fields() (FIELDS).
-_.feeder  # FIELDS fransys-model/src/fransys_model/derive/rows_device_chains.py:36
-_.feeder  # FIELDS fransys-model/src/fransys_model/derive/rows_device_chains.py:44
 _.L1  # TESTS fransys-author/tests/surface/test_supplies.py:74
 _.L2  # TESTS fransys-author/tests/surface/test_supplies.py:74
 _.L3  # TESTS fransys-author/tests/surface/test_supplies.py:74

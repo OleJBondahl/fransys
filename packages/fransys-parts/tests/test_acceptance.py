@@ -102,7 +102,7 @@ def test_demo_library_record_counts_and_keys():
     assert len(function_templates(model)) == 264
     assert len(port_templates(model)) == 540
     assert len(internal_links(model)) == 98
-    assert len(model.tables["layout.symbol_choice"]) == 67  # Ruling 91: DEMO-LAMP-24 adds one, was 64; the two twin terminals (R1266) add two, was 65
+    assert len(model.tables["layout.symbol_choice"]) == 65  # R91: DEMO-LAMP-24 +1 (was 64); two fused terminals drop `symbol=` (R2084; was 67)
 
     relay = next(p for p in parts(model).values() if p.mpn == "DEMO-RLY-2CO-24")
     assert relay.key == ("part", "Demo", "DEMO-RLY-2CO-24")
@@ -522,4 +522,4 @@ def test_demo_housings_name_the_parts_they_mate_with():
         "DEMO-HSG-4F": ("DEMO-HSG-4M", "DEMO-CONN-4P"),
         "DEMO-HSG-4M": ("DEMO-HSG-4F",),
     }
-    assert SCHEMA_VERSION == 29
+    assert SCHEMA_VERSION == 31

@@ -113,7 +113,8 @@ installed, non-external part (by mpn, revision and part), or one line per nested
 own items and its directly nested units. And `fransys.derive.TOP_LEVEL` for items with no
 unit plus one line per top-level unit. `without=` names items that an item, aspect-node or
 whole-model scope leaves out; a unit or `TOP_LEVEL` scope ignores it. `TOP_LEVEL`'s type,
-`fransys.derive.TopLevelScope`, is exported only for annotations.
+`fransys.derive.TopLevelScope`, is exported only for annotations. A line's `designations` list a
+terminal strip once (`-X15`), and its `count` stays the number of terminals.
 
 `fransys.derive.NO_PLACE` is the text "N/A" a coil's contact table prints after the mark of a
 contact no conductor reaches, not a page position.

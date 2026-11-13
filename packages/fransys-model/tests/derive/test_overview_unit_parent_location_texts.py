@@ -5,8 +5,8 @@ from plant import Plant
 
 from fransys_model.derive import location_texts, unit_parent
 from fransys_model.kernel import make_id
+from fransys_model.refdef import Aspect
 from fransys_model.vocab.aspects import AspectNode
-from fransys_model.vocab.enums import Aspect
 
 
 def test_unit_parent_of_nested_and_root() -> None:

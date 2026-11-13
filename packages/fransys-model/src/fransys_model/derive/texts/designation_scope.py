@@ -10,7 +10,7 @@ from fransys_model.derive.instance_tag import below
 from fransys_model.derive.texts.context import PrintContext, Scope
 from fransys_model.derive.unit_nodes import chain_up, common_node, own_nodes
 from fransys_model.kernel import SchemaError
-from fransys_model.vocab.enums import Aspect
+from fransys_model.refdef import Aspect
 from fransys_model.vocab.tables import aspect_nodes, units
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.aspects import AspectNode

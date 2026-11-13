@@ -27,6 +27,11 @@ def card_env() -> RouteEnv:
     return envs_of(card_with_coils(3))[0]
 
 
+@pytest.fixture
+def env() -> RouteEnv:
+    return card_env()
+
+
 def free_env() -> RouteEnv:
     """The card env with no body standing: synthetic jog coordinates need none in their way (R1290 ii)."""
     return replace(card_env(), placed={})
@@ -51,25 +56,22 @@ def test_a_shifting_stair_nests_by_source_x_with_no_crossing(shift: int, order: 
     assert drawn.findings == ()
 
 
-def test_the_stair_with_e6_reversed_crosses_six_times() -> None:
+def test_the_stair_with_e6_reversed_crosses_six_times(env: RouteEnv) -> None:
     """The same jogs turned in the opposite order cross twice per pair: the counter sees it."""
-    env = card_env()
     grid = env.options.wiring_grid
     jogs = sorted(stair(-90), key=lambda j: -j.top[0])
     wires = [z_wire(j.net, 1, (j.top, j.bottom), 100 + grid * (k + 1)) for k, j in enumerate(jogs)]
     assert counts(wires).crossings == 6
 
 
-def test_jogs_with_disjoint_spans_share_one_level_and_overlapping_spans_take_three() -> None:
-    env = card_env()
+def test_jogs_with_disjoint_spans_share_one_level_and_overlapping_spans_take_three(env: RouteEnv) -> None:
     disjoint = [Jog(f"j{k}", (100 + 200 * k, 100), (40 + 200 * k, 200)) for k in range(3)]
     assert len(set(turns(env, disjoint).values())) == 1
     overlapping = [Jog(f"j{k}", (100 + 20 * k, 100), (20 + 20 * k, 200)) for k in range(3)]
     assert len(set(turns(env, overlapping).values())) == 3
 
 
-def test_more_jogs_than_levels_loses_the_jogs_with_no_row_and_names_their_pins() -> None:
-    env = card_env()
+def test_more_jogs_than_levels_loses_the_jogs_with_no_row_and_names_their_pins(env: RouteEnv) -> None:
     jogs = [Jog(f"j{k}", (100 + 40 * k, 100), (20 + 40 * k, 116), ends=(PinRef(f"a{k}", "1"), PinRef(f"b{k}", "2"))) for k in range(3)]
     drawn = nest_jogs(env, jogs)
     assert drawn.findings == ()
@@ -78,8 +80,7 @@ def test_more_jogs_than_levels_loses_the_jogs_with_no_row_and_names_their_pins()
     assert all(r == Refused(j.net, j.ends) for r in drawn.lost for j in jogs if j.net == r.net)
 
 
-def test_a_lane_wire_between_cells_and_a_box_wire_are_drawn() -> None:
-    env = card_env()
+def test_a_lane_wire_between_cells_and_a_box_wire_are_drawn(env: RouteEnv) -> None:
     drawn = lane_wires(env, env.columns[0])
     (box_wire,) = drawn.wires
     assert box_wire.net == "c1"
@@ -101,24 +102,21 @@ def test_a_connection_a_one_lane_fan_deals_is_the_trunks_and_draws_no_lane_wire(
     assert len(dealt.wires) + len(dealt.jogs) == len(whole.wires) + len(whole.jogs) - 1
 
 
-def test_a_lane_with_an_unplaced_cell_raises_naming_lane_and_cell() -> None:
-    env = card_env()
+def test_a_lane_with_an_unplaced_cell_raises_naming_lane_and_cell(env: RouteEnv) -> None:
     col = env.columns[0]
     cut_down = replace(env, placed={s: p for s, p in env.placed.items() if s != "k1"})
     with pytest.raises(CoreError, match=r"lane 0 of column .*k1"):
         lane_wires(cut_down, col)
 
 
-def test_a_box_pin_with_no_matching_cell_pin_raises_naming_box_and_pin() -> None:
-    env = card_env()
+def test_a_box_pin_with_no_matching_cell_pin_raises_naming_box_and_pin(env: RouteEnv) -> None:
     col = env.columns[0]
     wrong = replace(col.heads[0], pin=PinRef("A1", "p2"), net="c2")
     with pytest.raises(CoreError, match=r"box A1 pin p2 shares no net.*wire it"):
         lane_wires(env, replace(col, heads=(wrong,)))
 
 
-def test_an_end_that_names_a_lane_the_column_lacks_raises_not_a_wrap() -> None:
-    env = card_env()
+def test_an_end_that_names_a_lane_the_column_lacks_raises_not_a_wrap(env: RouteEnv) -> None:
     col = env.columns[0]
     with pytest.raises(CoreError, match="has a box end for no lane"):
         lane_wires(env, replace(col, heads=(replace(col.heads[0], lane=5),)))
@@ -153,9 +151,8 @@ def join_column(env: RouteEnv, home_pin: str, member_pin: str, *, foot: bool):
     ids=["head", "foot"],
 )
 def test_a_join_is_a_z_wire_nested_with_the_jogs_and_its_source_is_the_joined_lane(
-    *, foot: bool, home_pin: str, member_pin: str, source_top: bool
+    env: RouteEnv, *, foot: bool, home_pin: str, member_pin: str, source_top: bool
 ) -> None:
-    env = card_env()
     col = join_column(env, home_pin, member_pin, foot=foot)
     drawn = join_wires(env, col)
     (jog,) = drawn.jogs
@@ -184,24 +181,21 @@ def test_three_parallel_lanes_joining_lane_zero_nest_with_no_crossing_and_no_col
     assert drawn.findings == ()
 
 
-def test_three_lanes_joining_lane_zero_in_the_reverse_order_cross() -> None:
+def test_three_lanes_joining_lane_zero_in_the_reverse_order_cross(env: RouteEnv) -> None:
     """E6 reversed: the same joins turned the other way round cross (the part C probe)."""
-    env = card_env()
     grid = env.options.wiring_grid
     jogs = lanes_joining_lane_zero((2, 1, 0))
     wires = [z_wire(j.net, 1, (j.top, j.bottom), 100 + grid * (k + 1)) for k, j in enumerate(jogs)]
     assert counts(wires).crossings > 0
 
 
-def test_a_tie_in_source_x_is_broken_by_destination_x() -> None:
-    env = card_env()
+def test_a_tie_in_source_x_is_broken_by_destination_x(env: RouteEnv) -> None:
     jogs = [Jog("a", (100, 100), (40, 200)), Jog("b", (100, 100), (20, 200))]
     turn = turns(env, jogs)
     assert turn["b"] < turn["a"]
 
 
-def test_level_join_pins_are_one_run() -> None:
-    env = card_env()
+def test_level_join_pins_are_one_run(env: RouteEnv) -> None:
     col = join_column(env, "n", "n", foot=False)
     (wire,) = join_wires(env, col).wires
     assert wire.points == ((552, 152), (656, 152))
@@ -338,9 +332,8 @@ def test_a_bend_row_never_runs_through_another_jogs_pin() -> None:
     assert [r.net for r in drawn.lost] == ["q"], "q's one row is p's now: a reference pair, not a short"
 
 
-def test_a_stair_with_no_turn_row_draws_nothing_and_loses_the_jog() -> None:
+def test_a_stair_with_no_turn_row_draws_nothing_and_loses_the_jog(env: RouteEnv) -> None:
     """SHORTS-ROUTE: pin levels one grid apart left no row; the clamp bent on a pin row."""
-    env = card_env()
     grid = env.options.wiring_grid
     ends = (PinRef("a", "1"), PinRef("b", "2"))
     drawn = nest_jogs(env, [Jog("j", (100, 100), (40, 100 + grid), ends=ends)])
@@ -357,9 +350,8 @@ def _cells(points: tuple[tuple[int, int], ...]) -> set[tuple[int, int]]:
     return out
 
 
-def test_two_box_wires_beside_neighbouring_cells_share_no_point() -> None:
+def test_two_box_wires_beside_neighbouring_cells_share_no_point(env: RouteEnv) -> None:
     """Two box wires on one side: the second comes in on the first one's box column."""
-    env = card_env()
     box, cell = env.placed["A1"], env.placed["k2"]
     at = {"p1": 100, "p2": 116}
     pins = tuple(replace(q, x=at[q.pin], y=40) if q.pin in at else q for q in box.pin_xy)

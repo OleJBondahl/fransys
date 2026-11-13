@@ -39,6 +39,7 @@
    "stretch": [],
    "texts": [],
    "tint": null,
+   "turn": false,
    "x": 80,
    "y": 16
   },
@@ -77,6 +78,7 @@
    ],
    "texts": [],
    "tint": null,
+   "turn": false,
    "x": 160,
    "y": 16
   }

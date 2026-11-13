@@ -4,33 +4,11 @@ Fixed by place._keep_gap, a row keeps the column gap between any two neighbours 
 
 from typing import Any
 
-import fransys as fr
 from _drawn_facts import symbol_subjects
-from _model_build_cover import unit_document
-from fransys.colours import BU
+from test_spare_contact_in_contact_table import _built
 
 from electrical_symbols import LIBRARY
 from fransys_layout.symbols import library_symbol, symbol_shape
-
-
-def _built():
-    d = fr.design("demo_parts", place="CAB")
-    cab = d.location("CAB", "Cabinet")
-    psu = d.device("T1", "DEMO-PSU-24")
-    lamp = d.device("P1", "DEMO-LAMP-24")
-    motor = d.device("M1", "DEMO-MOTOR-4KW")
-    q = d.device("Q1", "DEMO-CTR-3P-NC")
-    blue = (BU, 0.5)
-    d.series(psu.output["+"], q.coil["A1"], wire=blue)
-    d.series(psu.output["-"], q.coil["A2"], wire=blue)
-    d.series(psu.output["+"], q.aux["13"], wire=blue)
-    d.series(q.aux["14"], lamp["1"], wire=blue)
-    d.series(psu.output["-"], lamp["2"], wire=blue)
-    for pole, pin in enumerate("UVW"):
-        d.series(psu.output["+"], q.main[str(2 * pole + 1)], wire=blue)
-        d.series(q.main[str(2 * pole + 2)], motor.motor[pin], wire=blue)
-    built = fr.build(d, unit_document(cab))
-    return built.findings, built.model
 
 
 def _clearance(model, first: str, second: str) -> Any:
@@ -50,6 +28,6 @@ def _clearance(model, first: str, second: str) -> Any:
 
 def test_neighbour_boxes_keep_a_gap() -> None:
     """No SYMBOL_OVERLAP, and the motor's and the lamp's drawn outlines have a positive gap."""
-    findings, model = _built()
-    assert not [f for f in findings if f.code == "SYMBOL_OVERLAP"]
-    assert _clearance(model, "M1", "P1") > 0
+    built = _built(hide=False, mains=False)
+    assert not [f for f in built.findings if f.code == "SYMBOL_OVERLAP"]
+    assert _clearance(built.model, "M1", "P1") > 0

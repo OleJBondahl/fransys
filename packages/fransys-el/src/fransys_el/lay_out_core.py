@@ -4,8 +4,6 @@ from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING
 
 from fransys_layout.core import CoreError, PinRef, solve
-from fransys_model.layout import sheet_for
-from fransys_model.vocab import PageKind
 
 from .draw_layout import finish_drawings
 from .draw_write import ORIGIN, write_layout_drawn
@@ -15,7 +13,7 @@ from .drawn_where import where_joined
 from .placement_env import make_env
 from .placement_kit import ProblemError, refuse
 from .placement_markers import facing_views, stub_fit
-from .placement_options import options, sheet_area
+from .placement_options import options
 from .placement_sets import bare_pins, cut_lines, drawing_scopes, restriction, scope_groups
 from .placement_syms import strip_tags
 from .placement_widest import link_fit
@@ -90,7 +88,7 @@ def _one_set(
 
     The set's drawings and markers are added to the run's sink (`write_layout_drawn`).
     """
-    part = replace(cuts.problem, area=sheet_area(sheet_for(run.model, PageKind.SCHEMATIC)))
+    part = cuts.problem
     pins = [PinRef(s.id, p.id) for s in part.symbols for p in s.pins]
     fit, lines, table = stub_fit(run.model, run.kit, (scope.of_unit, run.library), pins)
     wide = link_fit(run.model, run.kit, run.library, scope.of_unit)

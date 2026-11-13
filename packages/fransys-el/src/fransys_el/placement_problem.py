@@ -4,7 +4,6 @@ from typing import TYPE_CHECKING
 
 from fransys_layout.core import PlacementProblem
 from fransys_model.kernel import render_id
-from fransys_model.layout import sheet_format_of
 
 from .placement_anchors import anchors_of
 from .placement_annexes import label_annexes, wider_annexes
@@ -13,7 +12,6 @@ from .placement_facts import facts_of
 from .placement_hints import hints_of
 from .placement_loose import without_loose
 from .placement_nets import nets_of
-from .placement_options import sheet_area
 from .placement_skips import Skipped, in_order
 from .placement_syms import strip_tags, syms_of
 
@@ -45,5 +43,5 @@ def build(model: Model, kit: SymbolKit, conventions: Conventions, library: Libra
     spare = {Skipped("function", render_id(k), why) for k, why in env.spare.items()}
     hints = hints_of(env, syms)
     wider = wider_annexes(syms, conventions.options, "", tags)
-    problem = PlacementProblem(sheet_area(sheet_format_of(model, None)), syms, nets, facts, hints, anchors, annexes, wider)
+    problem = PlacementProblem(conventions.area, syms, nets, facts, hints, anchors, annexes, wider)
     return problem, in_order({*net_skips, *function_skips, *loose_skips, *spare})

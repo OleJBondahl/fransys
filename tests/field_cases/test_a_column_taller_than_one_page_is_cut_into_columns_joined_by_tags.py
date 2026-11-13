@@ -45,7 +45,7 @@ def test_forty_contacts_in_series_build_with_no_overflow_and_every_contact_drawn
 def _wide(u: Any) -> _Unit:
     with u.function("F1", "Monitoring"):
         monitor = u.device("B1", "FLD-GAS-MONITOR")
-        controller = u.device("A1", "FLD-AI-CTRL-20")
+        controller = u.device("A1", "FLD-AI-CTRL-80")
     u.series(monitor.X1["1"], controller.ai_1["ANALOG_INPUT_01_P"], wire=("BK", 1.0))
     return _Unit()
 

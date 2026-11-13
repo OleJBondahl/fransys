@@ -85,8 +85,10 @@ def _paths(drawing: Drawing, start: DrawnSymbol, ends: list[DrawnSymbol]) -> lis
                 graph[u].add(v)
                 graph[v].add(u)
 
-    def pin(s: DrawnSymbol) -> Pt:
-        return min((p for p in graph if p[0] == s.x), key=lambda p: abs(p[1] - s.y))
+    def pins(s: DrawnSymbol) -> list[Pt]:
+        """The wire vertices on `s`'s two pins, its outline's top and bottom edge."""
+        assert s.outline is not None
+        return [p for p in graph if p[0] == s.x and p[1] in (s.outline.y, s.outline.y + s.outline.h)]
 
     def walk(here: Pt, goal: Pt, seen: tuple[Pt, ...]) -> list[Pt] | None:
         if here == goal:
@@ -97,7 +99,17 @@ def _paths(drawing: Drawing, start: DrawnSymbol, ends: list[DrawnSymbol]) -> lis
                 return found
         return None
 
-    return [p for end in ends if (p := walk(pin(start), pin(end), ()))]
+    return [_straight(w) for end in ends if (w := next((w for a in pins(start) for b in pins(end) if (w := walk(a, b, ()))), None))]
+
+
+def _straight(route: list[Pt]) -> list[Pt]:
+    """The route without the vertices a junction dot adds on a straight run; a turn, even a reversal, stays."""
+    kept = [route[0]]
+    for prev, here, nxt in zip(route, route[1:], route[2:], strict=False):
+        ahead, back = (nxt[0] - here[0], nxt[1] - here[1]), (here[0] - prev[0], here[1] - prev[1])
+        if ahead[0] * back[1] != ahead[1] * back[0] or ahead[0] * back[0] + ahead[1] * back[1] < 0:
+            kept.append(here)
+    return [*kept, route[-1]]
 
 
 def _between(p: Pt, a: Pt, b: Pt) -> bool:
@@ -110,7 +122,7 @@ def _terminal(drawing: Drawing, tag: str) -> DrawnSymbol:
     """The terminal whose own tag text `-tag` stands nearest to it."""
     (text,) = tag_texts(drawing, f"-{tag}")
     return min(
-        (s for s in drawing.symbols if s.key == "terminal"),
+        (s for s in drawing.symbols if s.key.startswith("terminal")),
         key=lambda s: abs(s.x - text.box.x) + abs(s.y - text.box.y),
     )
 
@@ -146,3 +158,8 @@ def test_the_top_level_set_draws_no_terminal_that_no_wire_meets(tmp_path: Path) 
         met |= {s.x for s in drawing.symbols if s.key != "terminal"}
         loose += [(s.x, s.y) for s in drawing.symbols if s.key == "terminal" and s.x not in met]
     assert loose == []
+
+
+def test_a_dot_on_a_straight_run_is_no_vertex_and_a_reversal_stays_one() -> None:
+    assert _straight([(0, 0), (0, 8), (0, 16)]) == [(0, 0), (0, 16)]
+    assert _straight([(0, 0), (0, 16), (0, 8)]) == [(0, 0), (0, 16), (0, 8)]

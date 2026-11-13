@@ -10,7 +10,7 @@ lazy from typing import Any
 
 from fransys_model.kernel import natural_key
 from fransys_model.layout import OrderHint, layout_of
-from fransys_model.vocab.enums import Aspect
+from fransys_model.refdef import Aspect
 from fransys_model.vocab.tables import aspect_nodes
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.aspects import AspectNode

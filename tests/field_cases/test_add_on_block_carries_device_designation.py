@@ -41,6 +41,6 @@ def test_the_block_prints_the_contactors_designation_and_has_no_row() -> None:
     assert block.id not in rows
     assert item_designation(model, overload.id) != "K1"
     assert overload.id in rows
-    strip = {"-X1", "1", "2", "3"}  # the strip's run tag and its terminals' points (STRIP-TAG-ONCE)
+    strip = {"-X1", "1", "2", "3", "-X1:1", "-X1:2", "-X1:3"}  # the strip's run tag, its terminals' points or their full tags (STRIP-TAG-ONCE)
     tags = {t.text for drawing in drawn_pages(model).values() for t in drawing.texts if t.kind == "TAG" and t.text not in strip}
     assert tags == {"-K1"}

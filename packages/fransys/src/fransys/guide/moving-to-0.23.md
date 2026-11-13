@@ -41,6 +41,10 @@ This page lists what 0.23 adds, what stays refused for now, and the known issues
 - KI-746, KI-747: a tag or `WHERE` marker text can overlap a wire or a slot text (`OVERLAP`, looks only).
 - KI-748: the `OVERLAP` message does not name both elements yet.
 
+## A fused terminal part names no symbol
+
+- A fused terminal part no longer names `symbol=`. Its protective link chooses the symbol. Delete the line.
+
 ## A supply net behind a fuse prints the fuse
 
 - A supply net behind a fuse or breaker prints its supply name and the tag of the nearest protective device, such as `24V -F2`. The net at the supply keeps `24V`. Two nets that share one name, with no unique protective device between them, raise `RAIL_IDENTITY_SHARED`: put a fuse or breaker between them.

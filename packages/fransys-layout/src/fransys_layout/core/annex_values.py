@@ -43,6 +43,8 @@ class Annex:
     stack: str | None
     spots: Mapping[Orientation, tuple[Spot, ...]]
     turned: Size | None = None
+    alone: Annex | None = None
+    """The annex of a terminal that stands alone in its run: its full-form tag, sized for it (STRIP-TAG-ONCE); None for any other owner."""
 
 
 @dataclass(frozen=True, slots=True)

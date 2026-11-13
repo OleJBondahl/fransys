@@ -15,7 +15,7 @@ from fransys_model.derive.order import in_place_order
 from fransys_model.layout import Page, layout_of, sheet_format_of
 
 from .drawn_ids import core_symbol_id, symbol_id
-from .drawn_where import where_text
+from .drawn_where import where_link, where_text
 from .kit_keys import function_of
 from .placement_ids import symbol_key
 from .placement_tables import is_table_spot
@@ -90,15 +90,18 @@ def _lines(model: Model, on: tuple[Library, int], text: DrawnText, rows: Sequenc
     here = next((r for r in rows if r[0] == page), None)
     if here is None:
         return []
-    step, lines = line_pitch(library, height), [where_text(model, here, there) for there in rows if there[0] != page]
+    step, lines = (
+        line_pitch(library, height),
+        [(where_text(model, here, there), where_link(model, here, there)) for there in rows if there[0] != page],
+    )
     found = []
-    for i, line in enumerate(lines):
+    for i, (line, link) in enumerate(lines):
         width = text_width_g(library.font, line, height=height)
         if text.turned:
             box = Box(text.box.x + step * (i + 1), text.box.y + text.box.h - width, height, width)
         else:
             box = Box(text.box.x, text.box.y + step * (i + 1), width, height)
-        found.append(DrawnText(line, box, "WHERE", "SW" if text.turned else "NW", text.owner, text.turned))
+        found.append(DrawnText(line, box, "WHERE", "SW" if text.turned else "NW", text.owner, text.turned, link))
     return found
 
 

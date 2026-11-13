@@ -19,9 +19,9 @@ from fransys_model.derive import (
     port_name,
 )
 from fransys_model.kernel import Model, make_id
+from fransys_model.refdef import Aspect
 from fransys_model.vocab.aspects import AspectNode
 from fransys_model.vocab.core import Function, Item, Port, Unit
-from fransys_model.vocab.enums import Aspect
 from fransys_model.vocab.tables import ports
 
 CABINET = make_id(Unit, ("cabinet",))

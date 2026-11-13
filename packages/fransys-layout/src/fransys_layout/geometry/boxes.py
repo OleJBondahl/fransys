@@ -7,8 +7,6 @@ from fransys_model.kernel import value
 from .errors import GeometryError
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
-
     from .units import Coord
 
 
@@ -52,32 +50,6 @@ def contains(outer: Box, inner: Box) -> bool:
     )
 
 
-def union(a: Box, b: Box) -> Box:
-    """Return the smallest box covering both `a` and `b`."""
-    x = min(a.x, b.x)
-    y = min(a.y, b.y)
-    return Box(
-        x=x,
-        y=y,
-        width=max(a.x + a.width, b.x + b.width) - x,
-        height=max(a.y + a.height, b.y + b.height) - y,
-    )
-
-
-def pad(box: Box, by: Coord) -> Box:
-    """Return `box` grown by `by` on all four sides."""
-    return Box(x=box.x - by, y=box.y - by, width=box.width + 2 * by, height=box.height + 2 * by)
-
-
 def translate(box: Box, *, dx: Coord, dy: Coord) -> Box:
     """Return `box` moved by `(dx, dy)`."""
     return Box(x=box.x + dx, y=box.y + dy, width=box.width, height=box.height)
-
-
-def hull(boxes: Iterable[Box]) -> Box:
-    """The smallest box covering every one of `boxes`; none at all is a `ValueError`."""
-    held = tuple(boxes)
-    x0, y0 = min(b.x for b in held), min(b.y for b in held)
-    x1 = max(b.x + b.width for b in held)
-    y1 = max(b.y + b.height for b in held)
-    return Box(x=x0, y=y0, width=x1 - x0, height=y1 - y0)

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from fractions import Fraction
-from typing import TYPE_CHECKING, NamedTuple
+from typing import TYPE_CHECKING, Literal, NamedTuple
 
 from .values import Box
 
@@ -48,15 +48,15 @@ def closed_cells(box: Box, step: int = 1) -> tuple[range, range]:
     )
 
 
-def _grown(lo: int, size: int, gap: int) -> tuple[int, int]:
-    """One axis of a keep grown by `gap`; a negative gap never shrinks it past nothing, so a thin keep keeps its true extent (layout-0523)."""
-    return (lo - gap, size + 2 * gap) if size + 2 * gap >= 0 else (lo, size)
+def _shrunk(lo: int, size: int, *, open_: bool) -> tuple[int, int]:
+    """One axis of a keep; "open" takes one off each side, but a thin keep keeps its true extent (layout-0523)."""
+    return (lo + 1, size - 2) if open_ and size > 1 else (lo, size)
 
 
-def _hits(probe: Box, k: Keep, top: int, gap: int) -> bool:
-    """Edges closed on both axes: touching counts as a hit."""
+def _hits(probe: Box, k: Keep, top: int, *, open_: bool) -> bool:
+    """Edges closed on both axes: touching counts as a hit, unless `open_`."""
     b = k.box
-    (x, w), (y, h) = _grown(b.x, b.w, gap), _grown(top, b.h, gap)
+    (x, w), (y, h) = _shrunk(b.x, b.w, open_=open_), _shrunk(top, b.h, open_=open_)
     kx, ky = closed_cells(Box(x, y, w, h))
     px, py = closed_cells(probe)
     return kx.start < px.stop and px.start < kx.stop and ky.start < py.stop and py.start < ky.stop
@@ -67,23 +67,24 @@ def clear(
     keeps: Sequence[Keep],
     y: Mapping[str, int],
     *,
-    gap: int = 0,
+    edge: Literal["closed", "open", "tags"] = "closed",
     own: AbstractSet[str] = frozenset(),
 ) -> tuple[Keep, ...]:
-    """The keeps the probe hits, in input order; keeps owned by `own` are skipped."""
-    hit: list[Keep] = []
-    for k in keeps:
-        if k.owner in own:
-            continue
-        top = k.box.y + (y[k.node] if k.node else 0)
-        if _hits(probe, k, top, gap):
-            hit.append(k)
-    return tuple(hit)
+    """The keeps the probe hits, in input order; keeps owned by `own` are skipped.
+
+    "open" lets touching edges clear (a thin keep keeps its extent); "tags" does so for a marker box only (layout-0591).
+    """
+    return tuple(
+        k
+        for k in keeps
+        if k.owner not in own
+        and _hits(probe, k, k.box.y + (y[k.node] if k.node else 0), open_=edge == "open" or (edge == "tags" and k.kind == "marker"))
+    )
 
 
 def blocked(box: Box, keeps: Sequence[Keep], own: frozenset[str], origin: tuple[int, int]) -> tuple[Keep, ...]:
     """The keeps `box` hits, but not a wire with an end at the marker's origin: that wire is the marker's own (own_end)."""
-    return tuple(k for k in clear(box, keeps, {}, own=own) if not any(own_end(origin, e) for e in k.ends))
+    return tuple(k for k in clear(box, keeps, {}, own=own, edge="tags") if not any(own_end(origin, e) for e in k.ends))
 
 
 def _clip(lo: Fraction, hi: Fraction, p: int, q: int) -> tuple[Fraction, Fraction] | None:

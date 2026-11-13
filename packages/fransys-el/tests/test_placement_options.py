@@ -5,7 +5,7 @@ import typing
 from dataclasses import replace
 
 import pytest
-from conventions_fixtures import LAYOUT, house
+from conventions_fixtures import LAYOUT, SHEET, house
 from fransys_el import house_conventions
 from fransys_el.placement_options import GENERAL, options
 
@@ -60,7 +60,7 @@ def test_the_general_keys_reach_the_conventions() -> None:
     """`step` and `pad` of `[layout]`, and the text room passed, are the conventions' values."""
     got = house()
     assert (got.text_height, got.step, got.pad) == (8, 8, 2)
-    moved = house_conventions({**LAYOUT, "pad": 3}, LIBRARY, text_height=8)
+    moved = house_conventions({**LAYOUT, "pad": 3}, LIBRARY, text_height=8, sheet=SHEET)
     assert moved.pad == 3
 
 

@@ -48,7 +48,7 @@ OPTIONS = core_options()
 
 def problem() -> PlacementProblem:
     """K a box pin, A hung under it, F a fan head with a supply stand, T a strip terminal."""
-    k = sym("K", (pin("c1", "S", 16, 0),), box=BoxSpec(("c1",), 8))
+    k = sym("K", (pin("c1", "S", 16, 0),), box=BoxSpec(("c1",), 8, 16))
     a = sym("A", (pin("in", "N", -16, 0), pin("out", "S", 16, 1)))
     f = sym("F", (pin("out", "S", 16, 0), pin("p", "N", -16, 1, -1)), row_group=None)
     t = sym("T", (pin("s", "S", 16, 0),), row_group="X1")

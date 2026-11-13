@@ -319,45 +319,48 @@ def _move(a: Attach, folds: Mapping[str, Fold]) -> Attach:
 
 
 def _rewrite_blocks(bl: BlockList, folds: Mapping[str, Fold], env: Tall) -> BlockList:
-    """The unit's blocks with each cut column's pieces in place; a card's later pieces stand free after the cards."""
-    rewritten = [_rewrite_block(b, folds, env) for b in bl.blocks]
-    free = [x for _, spilled in rewritten for x in spilled]
-    return replace(bl, blocks=(*(b for b, _ in rewritten), *(replace(x, forced_break_before=i == 0) for i, x in enumerate(free))))
+    """Each cut column's pieces in place; a card's pieces off its pins follow it, its later pin pieces stand free after the cards."""
+    out: list[Block] = []
+    later: list[Block] = []
+    for b in bl.blocks:
+        block, loose, spilled = _rewrite_block(b, folds, env)
+        out += [block, *loose]
+        later += spilled
+    return replace(bl, blocks=(*out, *(replace(x, forced_break_before=i == 0) for i, x in enumerate(later))))
 
 
-def _rewrite_block(b: Block, folds: Mapping[str, Fold], env: Tall) -> tuple[Block, list[Block]]:
+def _column_block(b: Block, p: Column) -> Block:
+    """A cut piece that a card gave up, as a block of its own."""
+    return Block(
+        block_id("column", p.id),
+        "column",
+        b.unit,
+        (p.id,),
+        None,
+        None,
+        b.group,
+        p.width,
+        p.height,
+        short=b.short,
+        keep_whole=len(p.lanes) > 1,
+        forced_break_before=False,
+        seat="none",
+    )
+
+
+def _rewrite_block(b: Block, folds: Mapping[str, Fold], env: Tall) -> tuple[Block, list[Block], list[Block]]:
     """A block lists the pieces of a cut column in its place and is as tall as they are.
 
-    A card keeps the first piece of a width cut on its box pin; each later piece that meets a box pin is spilled (layout-0464).
+    A card keeps only the pieces that meet a box pin: the first of a width cut, and none of the pieces off its pins (they follow it free).
+    Each later piece of a width cut that meets a box pin is spilled (layout-0464).
     """
     if not any(c in folds for c in b.columns):
-        return b, []
-    later = [
-        p
-        for c in b.columns
-        if c in folds and None in folds[c].lane_of[0]
-        for p in folds[c].pieces[1:]
-        if b.is_card and any(e.lane is not None for e in (*p.heads, *p.feet))
-    ]
-    gone = {p.id for p in later}
+        return b, [], []
+    pieces = [p for c in b.columns if c in folds for p in folds[c].pieces]
+    loose = [p for p in pieces if b.is_card and not any(e.lane is not None for e in (*p.heads, *p.feet))]
+    later = [p for c in b.columns if c in folds and None in folds[c].lane_of[0] for p in folds[c].pieces[1:] if b.is_card and p not in loose]
+    gone = {p.id for p in (*loose, *later)}
     cols = tuple(i for c in b.columns for i in ((p.id for p in folds[c].pieces) if c in folds else (c,)) if i not in gone)
-    spilled = [
-        Block(
-            block_id("column", p.id),
-            "column",
-            b.unit,
-            (p.id,),
-            None,
-            None,
-            b.group,
-            p.width,
-            p.height,
-            short=b.short,
-            keep_whole=len(p.lanes) > 1,
-            forced_break_before=False,
-            seat="none",
-        )
-        for p in later
-    ]
     heights = ([p.height for p in folds[c].pieces] if c in folds else [env.height[c]] for c in b.columns)
-    return replace(b, columns=cols, height_est=env.extra[b.columns[0]] + max(h for hs in heights for h in hs)), spilled
+    height = env.extra[b.columns[0]] + max(h for hs in heights for h in hs)
+    return replace(b, columns=cols, height_est=height), [_column_block(b, p) for p in loose], [_column_block(b, p) for p in later]

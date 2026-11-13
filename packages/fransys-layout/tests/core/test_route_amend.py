@@ -16,7 +16,7 @@ from fransys_layout.core.route import _grid, route_page, route_pages
 from fransys_layout.core.route_astar import Leg, astar
 from fransys_layout.core.route_counts import collinear, demand
 from fransys_layout.core.route_env import route_envs
-from fransys_layout.core.route_tree import rise_wire
+from fransys_layout.core.route_tree import end_anchors, rise_wire, tree
 from fransys_layout.core.route_trunk import trunk_wires
 
 from .pipeline_fixtures import cut_of, placed_from
@@ -185,7 +185,31 @@ def test_a_standing_label_closes_its_interior_to_the_router_and_its_sides_stay_o
     env, _ = _rise_env()
     box = Box(64, 40, 24, 16)
     inner = Box(box.x + STEP, box.y + STEP, STEP, STEP)
-    assert _grid(env, ()).free(inner)
+    cell = (inner.x // STEP, inner.y // STEP)
+    assert cell not in _grid(env, ()).hard
     grid = _grid(env, (), (Keep("", box, "text", "S1:text"),))
-    assert not grid.free(inner)
-    assert grid.free(Box(box.x - STEP, box.y, STEP, STEP))
+    assert cell in grid.hard
+    assert ((box.x - STEP) // STEP, box.y // STEP) not in grid.hard
+
+
+def _label_on(env, end: tuple[int, int], fixed: tuple[Wire, ...] = ()) -> Occupancy:
+    """The page's map with a standing label one cell wide on the grid point `end`."""
+    grid = _grid(env, fixed)
+    grid.mark_text(Box(end[0], end[1], STEP, STEP))
+    return grid
+
+
+def test_a_link_whose_anchor_run_meets_a_label_is_lost_and_one_that_does_not_is_laid() -> None:
+    """layout-0582: the anchor run is tested against label cells; the free pair is routed, the blocked one is None."""
+    env = link_env({"a1": (24, 40, "E"), "a2": (200, 40, "W")}, {"A": ("a1", "a2")})
+    link = env.cross_links[0]
+    assert tree(env, _grid(env, ()), link) is not None
+    assert tree(env, _label_on(env, end_anchors(env, link)[0][-1]), link) is None
+
+
+def test_a_rise_whose_anchor_run_meets_a_label_is_lost_and_one_that_does_not_is_laid() -> None:
+    env, trunk = _rise_env()
+    drawn = trunk_wires(env, trunk)
+    pin = env.placed[drawn.rises[0].pin.sym].footprint
+    assert rise_wire(env, _grid(env, drawn.wires), drawn.rises[0]) is not None
+    assert rise_wire(env, _label_on(env, (drawn.rises[0].start[0], pin.y + pin.h + STEP), drawn.wires), drawn.rises[0]) is None

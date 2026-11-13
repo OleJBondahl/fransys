@@ -2,6 +2,7 @@
 
 from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, digest_cached, index_ids
 from fransys_model.vocab.tables import HasTables, aspect_nodes, items, units
+lazy from fransys_model.refdef import Aspect
 lazy from fransys_model.vocab.aspects import AspectNode
 lazy from fransys_model.vocab.core import Item, Unit
 
@@ -37,3 +38,8 @@ def item_parents(model: Model) -> frozendict[Id[Item], Id[Item]]:
     """Each child item's parent item, in the order the items table gives the parents."""
     index = children_index(model)
     return frozendict({c: p for p in items(model) for c in index.get(p, ())})
+
+
+def aspect_word(aspect: Aspect) -> str:
+    """The word a finding prints for `aspect`: "function", "product" or "location"."""
+    return aspect.name.lower()

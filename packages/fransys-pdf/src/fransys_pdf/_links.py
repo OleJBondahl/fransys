@@ -1,4 +1,4 @@
-"""The invisible links over a drawing: each cross reference opens the partner's sheet (NV1, NV2)."""
+"""The invisible links over a drawing, and the destinations they land on: each reference opens its end's cell (NV1, NV2, PDF-LINKS)."""
 
 from typing import TYPE_CHECKING
 
@@ -7,16 +7,16 @@ from fransys_model.derive.grid_mm import grid_to_mm
 
 if TYPE_CHECKING:
     from fransys_model.derive import SheetRow
-    from fransys_model.derive.page_nav import ReferenceLink
+    from fransys_model.derive.page_nav import PageAnchor, ReferenceLink
     from fransys_model.kernel import Model
 
 
-def page_links(model: Model, sheet: SheetRow, links: tuple[ReferenceLink, ...]) -> str:
-    """Typst placing one empty linked box per link of a page, in the drawing's own mm.
+def page_links(model: Model, sheet: SheetRow, links: tuple[ReferenceLink, ...], anchors: tuple[PageAnchor, ...] = ()) -> str:
+    """Typst placing one empty linked box per link of a page, in the drawing's own mm, and one label per anchor.
 
     The same transform as the drawing's: `grid_to_mm` from the content origin. Nothing prints.
     """
-    boxes = []
+    boxes = [f'#place(top + left, dx: {anchor.x:.3f}mm, dy: {anchor.y:.3f}mm)[#metadata(none)#label("{anchor.label}")]' for anchor in anchors]
     per_division = mm_per_division(model, sheet)
     for link in links:
         left = grid_to_mm(sheet.content_x_mm, link.x, per_division)

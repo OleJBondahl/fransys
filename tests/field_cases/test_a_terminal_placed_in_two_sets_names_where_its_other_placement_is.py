@@ -4,10 +4,13 @@ import itertools
 import re
 from functools import cache
 from typing import Any, NamedTuple
+lazy from pathlib import Path
 
 import fransys as fr
+import pypdfium2
 from _model_build_cover import cabinet_document, unit_document
 from fransys_el.drawn_where import where_text
+from pypdfium2 import raw
 
 from electrical_symbols import LIBRARY
 from fransys_layout.drawing import port_points
@@ -95,6 +98,18 @@ def _named(result: fr.BuildResult) -> tuple[int, int]:
 def test_each_placement_of_a_terminal_names_the_other() -> None:
     checked, most = _named(_built())
     assert (checked, most) == (4, 1)
+
+
+def test_a_where_line_into_another_pdf_has_no_link_and_its_pdf_no_annotation(tmp_path: Path) -> None:
+    """PDF-LINKS R3, acceptance 7: the two sets are two documents, so each where line names the far document and links nowhere."""
+    result = _built()
+    where = [t for drawing in result.drawings.values() for t in drawing.texts if t.kind == "WHERE"]
+    assert where
+    assert all(t.link is None for t in where)
+    fr.write(result, tmp_path)
+    pdfs = sorted(tmp_path.glob("*.pdf"))
+    assert len(pdfs) == 2
+    assert [sum(raw.FPDFPage_GetAnnotCount(page.raw) for page in pypdfium2.PdfDocument(pdf)) for pdf in pdfs] == [0, 0]
 
 
 def test_each_placement_of_a_terminal_in_three_sets_names_both_others() -> None:

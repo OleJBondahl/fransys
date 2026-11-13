@@ -31,7 +31,7 @@ def _cab(u: fr.Design) -> _Io:
 
 
 @pytest.fixture(scope="module")
-def boxes(tmp_path_factory) -> list[dict[str, Any]]:
+def built(tmp_path_factory) -> tuple[Any, dict[str, Any]]:
     d = fr.design("demo_parts", place="ER")
     d.project(title="FC", number="P-1", customer="Example Co", revision=1, author="OJB")
     d.revision(1, date="2026-10-14", text="First issue", created="XX")
@@ -43,11 +43,18 @@ def boxes(tmp_path_factory) -> list[dict[str, Any]]:
         neutral = d.terminal_strip("X9", "DEMO-TB-2.5", place="FLD")
         d.series(neutral[1].inner, lamp["2"], wire=(BU, 0.5))
         d.cable("W1", "DEMO-CBL-4G1.5", length_m=10).core(1, lamp["1"], unit.out[1])
-    written = fr.write(fr.build(d, system_document()), tmp_path_factory.mktemp("out"))
+    built = fr.build(d, system_document())
+    written = fr.write(built, tmp_path_factory.mktemp("out"))
     page = next(p for p in written if p.name.endswith("overview.html")).read_text()
     block = re.search(r'id="overview-data">(.*?)</script>', page, re.DOTALL)
     assert block is not None
-    return [box for view in json.loads(block.group(1))["views"] for box in view["boxes"]]
+    return built.model, json.loads(block.group(1))
+
+
+@pytest.fixture(scope="module")
+def boxes(built) -> list[dict[str, Any]]:
+    _, data = built
+    return [box for view in data["views"] for box in view["boxes"]]
 
 
 def _location_class(boxes: list[dict[str, Any]], first_line: str) -> Any:

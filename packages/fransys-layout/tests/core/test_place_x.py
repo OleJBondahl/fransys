@@ -100,7 +100,7 @@ def test_a_row_wider_than_the_page_is_left_packed_and_named() -> None:
         f"{'set ' + env.plan.unit + ', ' if env.plan.unit else ''}page {env.plan.page}, row 0 (devices e, wide)",
         "wider than the page",
         f"{overflow // 8} G",
-        "short_height",
+        "choose paper A2",
     ):
         assert word in finding.text
     left = column_extent(spec.syms, (Lane(spec.pcs["c:e"].lanes[0], 0),), spec.in_row)[0]
@@ -124,7 +124,7 @@ def test_fixed_box_pins_chain_at_the_pitch() -> None:
     )
     env = env_of(card_with_coils(4, 84), fixed)
     x, _ = place_x(env)
-    pitch = fixed.box_pin_pitch_min
+    pitch = 16  # box_sym's own pin pitch
     assert [b - a for a, b in pairwise(_pins(x, 4))] == [pitch] * 3
     assert any(x[col_node(c)] != x[pin_node(b, p)] for c, (b, p, _) in env.attach.items())
     spread, _ = place_x(env_of(card_with_coils(4, 84)))

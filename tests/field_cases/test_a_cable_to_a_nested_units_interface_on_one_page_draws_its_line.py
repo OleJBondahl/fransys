@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 
 from _drawn_extent import Rect, body_g
 from _drawn_pages import drawn_pages
-from _field_shared import build_board_cab
+from board_cab import build_board_cab
 lazy import fransys as fr
 
 from electrical_symbols import MARKER_TURNED, marker_symbol

@@ -5,8 +5,8 @@ from typing import Any
 from fransys_model.derive import function_groups_in_order
 from fransys_model.kernel import Draft, Id, Model, Origin, freeze, make_id
 from fransys_model.layout import OrderHint
+from fransys_model.refdef import Aspect
 from fransys_model.vocab.aspects import AspectNode
-from fransys_model.vocab.enums import Aspect
 
 _ORIGIN = Origin(file="test_order_groups.py", line=1, note="fixture")
 

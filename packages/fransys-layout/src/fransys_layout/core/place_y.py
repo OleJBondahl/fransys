@@ -20,7 +20,7 @@ from .place_align import page_aligns, unmet_mates
 from .place_foreign import clear_foreign
 from .place_levels import Span, trunk_levels
 from .place_ring import ring_symbols
-from .place_room import Step, crossed_levels, step_rooms
+from .place_room import Step, step_rooms
 from .place_trunk import (
     anchors_under,
     box_at,
@@ -43,7 +43,6 @@ if TYPE_CHECKING:
     from .pack import PlacedColumn
     from .place_align import Align
     from .place_env import PageEnv
-    from .place_room import CrossedRooms
     from .values import Box
 
 
@@ -176,7 +175,6 @@ def _y_graph(
     spans: Sequence[Span],
     give: tuple[AbstractSet[str], ...],
     rooms: Mapping[Step, int],
-    crossed: CrossedRooms,
 ) -> tuple[Graph, frozenset[str], frozenset[str]]:
     """The page graph, the trunks with a leg refused, and the trunks at a level edge.
 
@@ -187,7 +185,7 @@ def _y_graph(
     for r in range(len(env.plan.rows)):
         _row_graph(g, r, env, rooms, free)
     join_constraints(g, env)
-    refused = frozenset[str]().union(*(trunk_constraints(g, f, env, tangled, crossed) for f in _trunked(env)))
+    refused = frozenset[str]().union(*(trunk_constraints(g, f, env, tangled) for f in _trunked(env)))
     return g, refused, trunk_levels(g, spans, env.options)
 
 
@@ -222,12 +220,12 @@ def _spans(env: PageEnv, x: Mapping[str, int]) -> list[Span]:
     return out
 
 
-def _settle(env: PageEnv, spans: Sequence[Span], rooms: Mapping[Step, int], crossed: CrossedRooms) -> tuple[frozenset[str], frozenset[str]]:
+def _settle(env: PageEnv, spans: Sequence[Span], rooms: Mapping[Step, int]) -> tuple[frozenset[str], frozenset[str]]:
     """Rebuild with each newly found tangled trunk until none is new; (tangled, refused)."""
     tangled: frozenset[str] = frozenset[str]()
     refused: frozenset[str] = frozenset[str]()
     while True:
-        g, round_refused, lowered = _y_graph(env, spans, (tangled, frozenset()), rooms, crossed)
+        g, round_refused, lowered = _y_graph(env, spans, (tangled, frozenset()), rooms)
         refused |= round_refused
         found = round_refused | lowered | tangled_trunks(g)
         if found <= tangled:
@@ -265,19 +263,19 @@ def _larger(jogs: Mapping[Step, int], flags: Mapping[Step, int]) -> dict[Step, i
     return {k: max(jogs.get(k, 0), flags.get(k, 0)) for k in jogs.keys() | flags.keys()}
 
 
-def _steps(env: PageEnv, x: Mapping[str, int], spans: Sequence[Span], crossed: CrossedRooms) -> dict[Step, int]:
+def _steps(env: PageEnv, x: Mapping[str, int], spans: Sequence[Span]) -> dict[Step, int]:
     """The y steps: a foot join with no row of its own is levelled with the jogs of its step (R456), the page solved once without it."""
     flags = pair_steps(env)
     first = _larger(step_rooms(env, x), flags)
-    g, _, _ = _y_graph(env, spans, (frozenset(), frozenset()), first, crossed)
+    g, _, _ = _y_graph(env, spans, (frozenset(), frozenset()), first)
     solved = accept(g, page_aligns(env))
     return _larger(step_rooms(env, x, solved.y), flags) if solved else first
 
 
-def _with_spans(env: PageEnv, x: Mapping[str, int]) -> tuple[PageEnv, list[Span], CrossedRooms]:
-    """The env that knows which anchored pins each trunk runs over, the spans and the levels."""
+def _with_spans(env: PageEnv, x: Mapping[str, int]) -> tuple[PageEnv, list[Span]]:
+    """The env that knows which anchored pins each trunk runs over, and the spans."""
     spans = _spans(env, x)
-    return replace(env, under=anchors_under(env, x, spans)), spans, crossed_levels(env, x)
+    return replace(env, under=anchors_under(env, x, spans)), spans
 
 
 def place_y(env: PageEnv, x: Mapping[str, int]) -> tuple[dict[str, int], tuple[Finding, ...]]:
@@ -285,15 +283,15 @@ def place_y(env: PageEnv, x: Mapping[str, int]) -> tuple[dict[str, int], tuple[F
 
     Raises YCycleError (a CoreError) when the stacks, trunks and foreign clearances are cyclic.
     """
-    env, spans, crossed = _with_spans(env, x)
-    rooms = _steps(env, x, spans, crossed)
-    tangled, refused = _settle(env, spans, rooms, crossed)
-    base, _, _ = _y_graph(env, spans, (tangled, frozenset()), rooms, crossed)
+    env, spans = _with_spans(env, x)
+    rooms = _steps(env, x, spans)
+    tangled, refused = _settle(env, spans, rooms)
+    base, _, _ = _y_graph(env, spans, (tangled, frozenset()), rooms)
     pushed = clear_foreign(base, env, x, spans)
     result = accept(base, page_aligns(env))
     slack = {c for c in env.attach if any(n.startswith(f"cell:{c}:") for n in pushed)}
     if result is None and slack:
-        base, _, _ = _y_graph(env, spans, (tangled, slack), rooms, crossed)
+        base, _, _ = _y_graph(env, spans, (tangled, slack), rooms)
         clear_foreign(base, env, x, spans)
         result = accept(base, page_aligns(env))
     if result is None:

@@ -11,8 +11,8 @@ from kit import Kit, PartSpec, Slot, template_of
 
 from fransys_model.elecdef import Connector, Gender, LinkKind, PinRole
 from fransys_model.kernel import make_id
+from fransys_model.vocab import Aspect, FunctionKind, NetClass, PartCategory, PortBoundary
 from fransys_model.vocab.core import Function, Item, Port
-from fransys_model.vocab.enums import Aspect, FunctionKind, NetClass, PartCategory, PortBoundary
 from fransys_model.vocab.facets.cable import CableFacet, CableProductFacet
 from fransys_model.vocab.facets.connector import ConnectorFacet
 from fransys_model.vocab.facets.pcb import FootprintFacet, PcbFacet

@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING
 
 from .anchors import anchor_keeps
 from .annex import text_keeps
-from .clearance import clear, own_end
+from .clearance import clear, own_end, through_keeps
 from .errors import CoreError
 from .geometry import inset, inside, marker_box, marker_drawn_box
 from .hang_levels import staggered
@@ -115,6 +115,12 @@ def _room(m: Marker, st: Stand, options: Options) -> Demand:
     return Demand("", 0, max(st.y - box.y, box.y + box.h - st.y, 0) + options.label_gap, m.end.sym, side=st.side if st.side in "NS" else "N")
 
 
+def _lead_hit(m: Marker, st: Stand, keeps: Sequence[Keep]) -> tuple[Keep, ...]:
+    """The bodies but its own pin symbol's that the lead from the stand to the slot passes (R2282)."""
+    lead = Box(min(m.x, st.x), min(m.y, st.y), abs(m.x - st.x), abs(m.y - st.y))
+    return through_keeps(lead, [k for k in keeps if k.kind == "body" and k.owner != m.end.sym], ((st.x, st.y), (m.x, m.y)), frozenset(), {})
+
+
 def _slot(m: Marker, st: Stand, step: int, ctx: tuple[Options, Size, Mapping[int, Sequence[Keep]], Mapping[str, frozenset[str]]]) -> Marker | Demand:
     """The first slot from `m` outward whose box lies inside the page and on no other net's pin or lead end (R845); none: the room Demand.
 
@@ -123,7 +129,7 @@ def _slot(m: Marker, st: Stand, step: int, ctx: tuple[Options, Size, Mapping[int
     """
     options, area, keeps, own = ctx
     here = keeps.get(m.page, ())
-    stand = [k for k in here if k.kind != "footprint"]  # the stand itself is as the placement left it
+    stand = [k for k in here if k.kind not in ("footprint", "body")]  # the stand itself is as the placement left it
     framed = own.get(m.end.sym, frozenset())  # a marker of any kind stands on its own unit's frame line (R1104)
     owner = own.get(m.net, frozenset()) | framed | {m.end.sym}
     mine = frozenset({m.net, net_of_key(m.net), m.end.sym})  # a sibling fan's lane is exempt beside the box, never under it (R1063)
@@ -139,12 +145,12 @@ def _slot(m: Marker, st: Stand, step: int, ctx: tuple[Options, Size, Mapping[int
     while (
         hit := fit(marker_box(m, options), here if moved else stand, owner, bounds._replace(drawn=marker_drawn_box(m, options)), (m.x, m.y))
     ) is not None:
-        if not hit and not (
+        if not (hit or _lead_hit(m, st, here)) and not (
             m.kind == "stub" and clear(inset(marker_box(m, options)), [k for k in (here if moved else stand) if k.kind == "wire"], {}, own=mine)
         ):
             return m
         if fed:
-            return _room(first, st, options)
+            return m if inside(marker_drawn_box(m, options), area) else _room(first, st, options)  # a fed end always stands (R2210)
         m, moved = _moved(m, st, 1, step), True
     return _room(first, st, options)
 
@@ -217,10 +223,14 @@ def placed_marks(
 
 def _missed(ref: Ref, ps: Sequence[tuple[Marker, Stand]], got: Sequence[Marker | Demand]) -> list[Finding]:
     """MARKER_UNPLACED for each end of a stub or copy that found no slot, and one for an arrow or star whatever its unstood ends (R1488)."""
-    lone = [_unplaced(m) for (m, _), k in zip(ps, got, strict=True) if isinstance(k, Demand)]
+    lone = [_unplaced(m, k, alone=kind_of(ref) in _LONE) for (m, _), k in zip(ps, got, strict=True) if isinstance(k, Demand)]
     return lone if kind_of(ref) in _LONE else lone[:1]
 
 
-def _unplaced(m: Marker) -> Finding:
-    text = f"{m.kind} marker at {m.end.sym}/{m.end.pin}: no place inside page {m.page}"
+def _unplaced(m: Marker, ask: Demand, *, alone: bool) -> Finding:
+    """The finding names the conductor, the unmet room demand, and what the drop costs: one end, or the whole pair (R1566)."""
+    far = f" for the conductor to {', '.join(f'{p.sym}/{p.pin}' for p in m.far)}" if m.far else ""
+    drop = "this end is dropped" if alone else "the whole pair is dropped, so no marker carries the conductor"
+    text = f"{m.kind} marker at {m.end.sym}/{m.end.pin} of net {m.net}{far}: no place inside page {m.page}; "
+    text += f"its room demand of {ask.room} G on side {ask.side} of {ask.owner} stays unmet, {drop}"
     return Finding("MARKER_UNPLACED", text, m.page, f"{m.end.sym},{m.net}")

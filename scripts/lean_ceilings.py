@@ -50,6 +50,14 @@ LIMIT_NOTES: dict[str, str] = {
 }
 
 
+#: The inline comment printed after a section header; a section with no entry prints bare.
+SECTION_NOTES: dict[str, str] = {
+    "authoring_keywords_unused": (
+        "an authoring keyword no field case and no corpus build passes by name; the list only falls (internal-0004, decision 0488)"
+    ),
+}
+
+
 @dataclasses.dataclass(frozen=True)
 class CeilingsFile:
     """A parsed `ceilings.toml`.
@@ -98,10 +106,11 @@ def _quote(text: str) -> str:
     return f'"{escaped}"'
 
 
-def _render_int_table(name: str, entries: Mapping[str, int]) -> str:
+def _render_int_table(name: str, entries: Mapping[str, int | str]) -> str:
     """`[name]` followed by one sorted `"key" = value` line per entry."""
-    lines = [f"[{name}]"]
-    lines.extend(f"{_quote(key)} = {entries[key]}" for key in sorted(entries))
+    note = SECTION_NOTES.get(name)
+    lines = [f"[{name}]" + (f"  # {note}" if note else "")]
+    lines.extend(f"{_quote(key)} = {_quote(value) if isinstance(value := entries[key], str) else value}" for key in sorted(entries))
     return "\n".join(lines)
 
 

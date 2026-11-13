@@ -87,16 +87,14 @@ def test_justify_spreads_a_row_to_the_right_margin() -> None:
 
 
 @pytest.mark.rule("KEEP-OUT")
-@pytest.mark.parametrize("free", [0, 1, 3])
-def test_a_cards_attached_columns_stand_under_their_spread_pins(free: int) -> None:
-    """Pins keep box_pin_pitch_min apart though narrow columns would stand closer; a free column keeps its separation."""
-    syms = {"box": card("box", 3), "a": elem("a", body=Box(-2, -16, 4, 32))}
+def test_a_cards_attached_columns_stand_under_their_spread_pins() -> None:
+    """Pins keep the card symbol's pitch apart though narrow columns would stand closer."""
+    syms = {"box": card("box", 3, 40), "a": elem("a", body=Box(-2, -16, 4, 32))}
     cols = tuple(column(f"c{i}", lane("a"), head=boxpin_end("box", f"p{i}")) for i in (1, 2, 3))
-    cols += tuple(column(f"f{i}", lane("a")) for i in range(free))
     block = card_block("box", tuple(c.id for c in cols), tuple((f"p{i}", "S") for i in (1, 2, 3)))
     attach = attachments(cols, {block.id: block})
     pcs = {c.id: PlacedColumn(c.id, (c.lanes[0].cells,), (0,), 0, flipped=False) for c in cols}
-    options = core_options(box_pin_pitch_min=40)
+    options = core_options()
     spec = with_pitches(RowSpec(tuple(pcs), (block,), pcs, syms, NONE, options, attach, {}))
     x = _packed(spec)
     pins = [x[pin_node("box", f"p{i}")] for i in (1, 2, 3)]
@@ -145,7 +143,6 @@ def _two_edge_card(heads: dict[str, str] | None = None, **extra) -> tuple[RowSpe
     attach = attachments(cols, {block.id: block})
     pcs = {c.id: PlacedColumn(c.id, (c.lanes[0].cells,), (0,), 0, flipped=False) for c in cols}
     options = core_options(
-        box_pin_pitch_min=16,
         **extra,
     )
     return with_pitches(RowSpec(tuple(pcs), (block,), pcs, syms, NONE, options, attach, {})), syms

@@ -70,3 +70,7 @@ def _findings() -> list[fr.Finding]:
 
 def test_the_fan_out_draws_every_connection_and_no_shorted_nets() -> None:
     assert [f for f in _findings() if f.code in {"DRAWING_SHORTS_NETS", "CONNECTION_NOT_DRAWN"}] == []
+
+
+def test_the_fan_out_build_has_no_error() -> None:
+    assert [f.code for f in _findings() if f.severity is fr.Severity.ERROR] == []

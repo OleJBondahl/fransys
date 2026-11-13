@@ -4,6 +4,7 @@ from dataclasses import replace
 from decimal import Decimal
 
 import pytest
+import symdef
 from diagram_models import station
 from options_fixtures import core_options
 from symdef import ReferenceCellError
@@ -18,9 +19,11 @@ from fransys_layout.symbols import (
     TableAsk,
     frame_cell,
     frame_extent,
+    ink_boxes,
     library_symbol,
     line_pitch,
     marker_views,
+    measured_slots,
     outline_room,
     symbol_shape,
     symbol_views,
@@ -39,14 +42,7 @@ def test_the_marker_box_is_measured_at_all_eight_orientations() -> None:
     assert views["R0"] == Box(0, -8, 48, 16)
     assert len(views) == 8
     assert views["R90"] != views["R0"]
-    assert (
-        with_marker(
-            core_options(),
-            library_symbol(LIBRARY, "reference-marker"),
-            LIBRARY,
-        ).marker
-        == views
-    )
+    assert with_marker(core_options(), library_symbol(LIBRARY, "reference-marker"), LIBRARY).marker == views
 
 
 @pytest.mark.parametrize("key", ["marker-arrow", "marker-arrow-turned", "marker-box"])
@@ -94,14 +90,7 @@ def test_a_missing_text_slot_gives_no_label() -> None:
 
 def test_the_pins_follow_the_given_order_at_each_orientation() -> None:
     symbol, shape = _coil()
-    drawn = views(
-        symbol,
-        ("R0", "R180"),
-        order=["out", "in"],
-        text_slot="tag",
-        text="K1",
-        text_height=8,
-    )
+    drawn = views(symbol, ("R0", "R180"), order=["out", "in"], text_slot="tag", text="K1", text_height=8)
     assert drawn.views["R0"].pins == (shape.pins["out"], shape.pins["in"])
     assert drawn.views["R180"].pins[0].dy == -shape.pins["out"].dy
 
@@ -220,3 +209,16 @@ def test_line_pitch_is_what_each_further_line_adds_to_the_label_block() -> None:
     three = views(symbol, ("R0",), order=order, text_slot="tag", text="K1\nK1\nK1", text_height=8).label
     assert line_pitch(LIBRARY, 8) > 0
     assert three.h - one.h == 2 * line_pitch(LIBRARY, 8)
+
+
+@pytest.mark.parametrize("turn", ["R0", "R90", "R270"])
+def test_a_turned_slots_ink_is_symdefs_ink_of_the_turned_symbol(turn) -> None:
+    symbol, slot = library_symbol(LIBRARY, "power-supply"), "marking.supply"
+    turned, divisions = symdef.orient(symbol, symdef.Orientation[turn]), symdef.from_divisions(LIBRARY.grid, 8)
+    box = symdef.ink_boxes(turned, {slot: "24 V"}, divisions, LIBRARY.font, LIBRARY.grid, on_grid=True).texts[slot]
+    assert ink_boxes(symbol, turn, {slot: "24 V"}, LIBRARY, 8)[slot] == Box(box.min.x, box.min.y, box.width, box.height)
+
+
+def test_a_slot_text_narrower_than_its_room_gives_a_narrower_ink_than_the_measured_box() -> None:
+    symbol, slot = library_symbol(LIBRARY, "power-supply"), "marking.supply"
+    assert ink_boxes(symbol, "R0", {slot: "V"}, LIBRARY, 8)[slot].w < measured_slots(symbol, "R0", {slot: "V"}, LIBRARY, 8)[0][slot].w

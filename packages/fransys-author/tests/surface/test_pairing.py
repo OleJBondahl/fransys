@@ -118,10 +118,14 @@ def test_a_count_mismatch_names_both_counts(lib: Draft) -> None:
     _, coil = _fn(d, "K1", "TEST-KM-3P", "coil")
     with pytest.raises(
         AuthorError,
-        match=r"3 poles \(2, 4, 6\) but the load takes 1 pole \(.*\): .*d\.series",
+        match=r"3 poles \(2, 4, 6\) but the load takes 1 pole \(.*\): use a function of 3 poles there, or wire the poles one by one",
     ):
         pair(ends_of(facts, q1).load, ends_of(facts, coil).line)
     assert len(pair(ends_of(facts, coil).load, ends_of(facts, coil).line)) == 1
+    with pytest.raises(AuthorError, match=r"source leaves with 1 pole \(.*\) but the load takes 3 poles .*: give the load one pin .* its 3 contacts"):
+        pair(ends_of(facts, coil).load, ends_of(facts, q1).line)
+    with pytest.raises(AuthorError, match=r"3 poles .* but the load takes 2 poles \(.*\): wire the poles one by one with d\.series"):
+        pair(ends_of(facts, q1).load, ends_of(facts, q1).line[:2])
 
 
 def test_link_less_marked_pins_come_in_marking_order_not_mark_order(lib: Draft) -> None:

@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, NamedTuple
 
 from .arrow_reserve import leg_depth, leg_fit, leg_rows
-from .band import arrow_hang, level_offset, trunk_room
+from .band import arrow_hang, trunk_room
 from .clearance import reach
 from .cut_costs import ref_name
 from .cut_end_rooms import arrow_room
@@ -23,7 +23,6 @@ if TYPE_CHECKING:
     from .pack import PlacedColumn
     from .place_env import PageEnv
     from .place_levels import Span
-    from .place_room import CrossedRooms
     from .sym_values import Sym
 
 TRUNK = "trunk:"
@@ -73,12 +72,6 @@ def _cell_of(pc: PlacedColumn, a: Attach) -> tuple[Cell, int]:
     return cells[index], index
 
 
-def _clear(env: PageEnv, fan: Fan, a: Attach, crossed: CrossedRooms) -> int:
-    """The y from the trunk to a crossed attachment's pin: grid * (lanes + levels), else 0."""
-    levels = crossed.get((fan.id, a.pin.sym), 0)
-    return level_offset(fan.lanes, levels, env.options.wiring_grid) if levels else 0
-
-
 def anchors_under(env: PageEnv, x: Mapping[str, int], spans: Sequence[Span]) -> frozenset[tuple[str, str, str]]:
     """(fan, card, pin) of each hung pin on a card that the fan's trunk in the card's row runs over."""
     out: set[tuple[str, str, str]] = set()
@@ -109,9 +102,9 @@ def _steps_out(sym: Sym, cell: Cell, pin: str) -> bool:
     return all(pin_xy(sym, cell, p.id)[0] == dx for p in sym.pins)
 
 
-def _driver(g: Graph, fan: Fan, a: Attach, env: PageEnv, crossed: CrossedRooms) -> None:
-    """A driver's pin lies wire_min above the trunk at least; a crossed one, its levels more."""
-    rise = max(env.options.wire_min, _clear(env, fan, a, crossed), _reach(env, fan, a, north=False))
+def _driver(g: Graph, fan: Fan, a: Attach, env: PageEnv) -> None:
+    """A driver's pin lies wire_min above the trunk at least."""
+    rise = max(env.options.wire_min, _reach(env, fan, a, north=False))
     if a.column is None:
         at = box_at(env, a.pin.sym)
         if at is not None:
@@ -131,11 +124,10 @@ def _driver(g: Graph, fan: Fan, a: Attach, env: PageEnv, crossed: CrossedRooms) 
 
 
 class _Hang(NamedTuple):
-    """What a fan's legs hang by: the fan, the trunks held loose, the crossed levels, the arrow room of each row."""
+    """What a fan's legs hang by: the fan, the trunks held loose, the arrow room of each row."""
 
     fan: Fan
     tangled: AbstractSet[str]
-    crossed: CrossedRooms
     arrow: Mapping[int, int]
 
 
@@ -147,7 +139,6 @@ def _leg(g: Graph, h: _Hang, a: Attach, env: PageEnv) -> str | None:
     step = env.options.wiring_grid
     depth = max(
         trunk_room(h.fan.lanes, step, arrow_hang(h.fan.lanes, step, h.arrow.get(row, 0)))[1],
-        _clear(env, h.fan, a, h.crossed),
         _reach(env, h.fan, a, north=True),
     )
     if a.column is None:
@@ -203,7 +194,6 @@ def trunk_constraints(
     fan: Fan,
     env: PageEnv,
     tangled: AbstractSet[str],
-    crossed: CrossedRooms,
 ) -> frozenset[str]:
     """One trunk per fan and row: drivers drop to it from above, legs hang `depth` under it.
 
@@ -213,11 +203,11 @@ def trunk_constraints(
     opts = env.options
     drivers, legs = fan_roles(env, fan)
     for a in drivers:
-        _driver(g, fan, a, env, crossed)
+        _driver(g, fan, a, env)
     rows = {env.pcs[a.column].row for a in (*fan.drivers, *fan.legs) if a.column is not None and a.column in env.pcs} | {
         at[1] for a in (*fan.drivers, *fan.legs) if (at := box_at(env, a.pin.sym)) is not None
     }
-    hang = _Hang(fan, tangled, crossed, {row: arrow_room(env.refs, env.plan, [fan], row, opts) for row in rows})
+    hang = _Hang(fan, tangled, {row: arrow_room(env.refs, env.plan, [fan], row, opts) for row in rows})
     refused = {t for a in legs if (t := _leg(g, hang, a, env)) is not None}
     for row in rows:
         above, below = held_room(fan, env, row)

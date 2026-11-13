@@ -59,7 +59,8 @@ def _terminal_symbols(model) -> list[Any]:
         (page, s)
         for page, drawing in drawn_pages(model).items()
         for s in drawing.symbols
-        if s.key == "terminal" and any(t.owner == s.id and reads_tag(s, drawing, f"-X1:{t.text}") for t in drawing.texts)
+        if s.key == "terminal"
+        and any(t.owner == s.id and reads_tag(s, drawing, t.text if t.text.startswith("-X1") else f"-X1:{t.text}") for t in drawing.texts)
     ]
 
 

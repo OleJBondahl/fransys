@@ -10,13 +10,15 @@ lazy from fransys_el.placement_options import Conventions
 import fransys_layout
 from electrical_symbols import LIBRARY
 from fransys_layout.core import PinRef, PlacementProblem
+from fransys_model.layout import default_sheet_format
 
+SHEET = default_sheet_format()  # the A3 sheet
 LAYOUT = tomllib.loads((Path(fransys_layout.__file__).parent / "layout.toml").read_text(encoding="utf-8"))["layout"]
 
 
 def house() -> Conventions:
     """The house conventions of the stock library and `layout.toml`."""
-    return house_conventions(LAYOUT, LIBRARY, text_height=8)
+    return house_conventions(LAYOUT, LIBRARY, text_height=8, sheet=SHEET)
 
 
 def unwired(problem: PlacementProblem) -> PlacementProblem:

@@ -12,6 +12,8 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[1]
 _spec = importlib.util.spec_from_file_location("fransys_cov_floors", ROOT / "scripts" / "cov_floors.py")
 if _spec is None or _spec.loader is None:
@@ -56,7 +58,8 @@ def test_the_vacuous_pass_guard_fails_a_package_with_zero_matching_files():
 # --- grouping: by path segment, never by a name prefix --------------------------------------
 
 
-def test_files_are_grouped_by_path_segment_never_by_a_name_prefix():
+@pytest.mark.parametrize("sep", ["/", "\\"])  # coverage.py's real JSON report on Windows keys files with backslashes
+def test_files_are_grouped_by_path_segment_never_by_a_name_prefix(sep):
     # "fransys" is a literal string-prefix of "fransys_model": a name-prefix grouping bug
     # would fold fransys-model's file into fransys's total too.
     expected = {
@@ -65,26 +68,8 @@ def test_files_are_grouped_by_path_segment_never_by_a_name_prefix():
     }
     report = _report(
         {
-            "packages/fransys/src/fransys/x.py": (4, 0),  # 100%
-            "packages/fransys-model/src/fransys_model/y.py": (8, 4),  # 50%
-        }
-    )
-    measured = cov_floors.measure_packages(report, expected)
-    assert measured["fransys"] == Decimal(100)
-    assert measured["fransys_model"] == Decimal(50)
-
-
-def test_files_are_grouped_the_same_way_with_windows_backslash_keys():
-    # coverage.py's real JSON report on this machine keys files with backslashes; the same
-    # grouping must hold after normalizing the separator.
-    expected = {
-        "fransys": "packages/fransys",
-        "fransys_model": "packages/fransys-model",
-    }
-    report = _report(
-        {
-            "packages\\fransys\\src\\fransys\\x.py": (4, 0),
-            "packages\\fransys-model\\src\\fransys_model\\y.py": (8, 4),
+            sep.join(("packages", "fransys", "src", "fransys", "x.py")): (4, 0),  # 100%
+            sep.join(("packages", "fransys-model", "src", "fransys_model", "y.py")): (8, 4),  # 50%
         }
     )
     measured = cov_floors.measure_packages(report, expected)

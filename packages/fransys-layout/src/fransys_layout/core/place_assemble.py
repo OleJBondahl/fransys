@@ -201,7 +201,7 @@ def assemble(
     trunks = _trunks(env, placed, (x, y), seen, marks)
     spans = solved_spans(env, placed, trunks, [t for t, _ in bands])
     return PagePlacement(
-        env.plan.page, ordered, _gaps(env, x, y), trunks, _rows(env, placed, y), bands, spans, _hung(marks), strip_runs(env, dropped)
+        env.plan.page, ordered, _gaps(env, x, y), trunks, _rows(env, placed, y), bands, spans, _hung(marks), strip_runs(env, dropped, placed)
     )
 
 

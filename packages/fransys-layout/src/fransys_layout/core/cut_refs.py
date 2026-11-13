@@ -2,7 +2,6 @@
 
 Arrows and tags per cut, a tag for each column spilled off a card, the P3 check (HEAD_OFF_LEGS) and a stub at each unit boundary pin
 and each page-alone end.
-`Fan.crossed` is neither read nor filled (layout-0275).
 """
 
 from __future__ import annotations
@@ -69,12 +68,11 @@ def references(
     for b in sorted(row_only | page_cuts):
         for kind, names in ((RefKind.ARROW, cut.bounds[b].fans), (RefKind.TAG, cut.bounds[b].nets)):
             for name in dict.fromkeys(names):
-                if kind is RefKind.ARROW and b in page_cuts and name in copyable:
-                    continue
                 if kind is RefKind.TAG and b not in page_cuts:
                     continue  # rows.toml:98 one page one wire: a row cut keeps its wire, no tag
                 at = tuple((q, cut.seq[q].column) for q in (b, b + 1))
-                if ends := lane_ends(name, pins[name], at, page_of, row_of):
+                lanes = tuple(tuple(x for x in ln if page_of[x[0]] == page_of[b]) for ln in pins[name]) if name in copyable else pins[name]
+                if ends := lane_ends(name, lanes, at, page_of, row_of):
                     out.append(Ref(name, kind, ends, b))
     rows = {n: frozenset((page_of[i], row_of[i]) for p in lanes for i, _ in p) for n, lanes in pins.items()}
     return link_over_pinless(link_over_empty_rows(out, rows))
